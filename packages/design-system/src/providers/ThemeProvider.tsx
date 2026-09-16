@@ -1,10 +1,14 @@
-import { createContext, useContext, useSyncExternalStore, type ComponentProps } from 'react';
+'use client';
+
+import { createContext, useContext, useSyncExternalStore, type ComponentProps, type CSSProperties } from 'react';
+import { themeOverrideStyle, type ThemeOverride } from './themeOverride';
 
 export type Appearance = 'system' | 'light' | 'dark';
 export type ResolvedAppearance = 'light' | 'dark';
 
 export type ThemeProviderProps = {
   appearance?: Appearance;
+  overrides?: ThemeOverride;
 } & ComponentProps<'div'>;
 
 const QUERY = '(prefers-color-scheme: dark)';
@@ -24,12 +28,22 @@ function getServerSnapshot(): ResolvedAppearance {
   return 'light';
 }
 
-export function ThemeProvider({ appearance = 'system', ...props }: ThemeProviderProps) {
+export function ThemeProvider({
+  appearance = 'system',
+  overrides,
+  style,
+  ...props
+}: ThemeProviderProps) {
   const system = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const resolved: ResolvedAppearance = appearance === 'system' ? system : appearance;
+  const vars = themeOverrideStyle(overrides);
   return (
     <AppearanceContext.Provider value={resolved}>
-      <div {...props} data-appearance={resolved} />
+      <div
+        {...props}
+        style={{ ...style, ...vars } as CSSProperties}
+        data-appearance={resolved}
+      />
     </AppearanceContext.Provider>
   );
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useContext, type ComponentProps } from 'react';
 
 export type Density = 'compact' | 'comfortable' | 'spacious';

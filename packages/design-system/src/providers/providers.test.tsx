@@ -6,6 +6,7 @@ import { renderToString } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { DensityProvider, useDensity } from './DensityProvider';
 import { ThemeProvider, useAppearance } from './ThemeProvider';
+import { themeOverrideStyle } from './themeOverride';
 
 function AppearanceLabel() {
   return <span>{useAppearance()}</span>;
@@ -63,6 +64,23 @@ describe('ThemeProvider', () => {
     );
   });
 
+  it('applies allowlisted typed overrides as CSS vars', () => {
+    mockMatchMedia(false);
+    const { container } = render(
+      <ThemeProvider
+        appearance="light"
+        overrides={{
+          'color.accent.default': { colorSpace: 'oklch', components: [0.4, 0.12, 200] },
+        }}
+      />,
+    );
+    const el = container.querySelector('[data-appearance="light"]');
+    expect(el).toBeInstanceOf(HTMLElement);
+    expect((el as HTMLElement).style.getPropertyValue('--todae-color-accent-default')).toBe(
+      'oklch(0.4 0.12 200)',
+    );
+  });
+
   it('SSR snapshot for system is light', () => {
     const html = renderToString(
       <ThemeProvider appearance="system">
@@ -84,6 +102,36 @@ describe('DensityProvider', () => {
     );
     expect(document.querySelector('[data-density="compact"]')).not.toBeNull();
     expect(screen.getByText('compact')).toBeTruthy();
+  });
+});
+
+describe('themeOverrideStyle', () => {
+  it('rejects unknown keys', () => {
+    expect(() =>
+      themeOverrideStyle({
+        'color.evil': { colorSpace: 'oklch', components: [0.5, 0.1, 200] },
+      }),
+    ).toThrow(/Unknown theme override/);
+  });
+
+  it('rejects raw or malicious CSS values', () => {
+    expect(() =>
+      themeOverrideStyle({ 'color.accent.default': 'url("javascript:alert(1)")' }),
+    ).toThrow(/Invalid theme override value/);
+    expect(() => themeOverrideStyle({ 'color.accent.default': 'expression(alert(1))' })).toThrow(
+      /Invalid theme override value/,
+    );
+    expect(() => themeOverrideStyle({ 'color.accent.default': '</style><script>x</script>' })).toThrow(
+      /Invalid theme override value/,
+    );
+  });
+
+  it('applies a known key with a valid typed value', () => {
+    expect(
+      themeOverrideStyle({
+        'color.accent.default': { colorSpace: 'oklch', components: [0.55, 0.18, 255] },
+      }),
+    ).toEqual({ '--todae-color-accent-default': 'oklch(0.55 0.18 255)' });
   });
 });
 

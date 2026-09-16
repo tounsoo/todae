@@ -1,7 +1,18 @@
 'use client';
 
-import { Button, DensityProvider, Stack, Text, ThemeProvider } from '@tounsoo/todae';
-import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  Button,
+  DensityProvider,
+  Stack,
+  Text,
+  ThemeProvider,
+  cssVarName,
+  parseThemeColor,
+  themeColorCss,
+  type ThemeOverride,
+  type ThemeOverrideKey,
+} from '@tounsoo/todae';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 const PRIMARY = [
   'color.accent.default',
@@ -9,17 +20,13 @@ const PRIMARY = [
   'color.bg.canvas',
   'color.bg.surface',
   'color.border.default',
-] as const;
+] as const satisfies readonly ThemeOverrideKey[];
 
-const MORE = ['color.accent.hover', 'color.accent.active'] as const;
+const MORE = ['color.accent.hover', 'color.accent.active'] as const satisfies readonly ThemeOverrideKey[];
 const PATHS = [...PRIMARY, ...MORE];
 
 type AppearanceChoice = 'system' | 'light' | 'dark';
 type DensityChoice = 'compact' | 'comfortable' | 'spacious';
-
-function cssVar(path: string): string {
-  return `--todae-${path.replaceAll('.', '-')}`;
-}
 
 function toHex(value: string): string {
   if (/^#[0-9a-fA-F]{6}$/.test(value)) return value.toLowerCase();
@@ -42,7 +49,7 @@ function TokenField({
   value,
   onChange,
 }: {
-  path: string;
+  path: ThemeOverrideKey;
   value: string;
   onChange: (next: string) => void;
 }) {
@@ -76,39 +83,37 @@ export default function PlaygroundPage() {
   const stageRef = useRef<HTMLDivElement>(null);
   const [appearance, setAppearance] = useState<AppearanceChoice>('system');
   const [density, setDensity] = useState<DensityChoice>('comfortable');
-  const [overrides, setOverrides] = useState<Record<string, string>>({});
-  const [computed, setComputed] = useState<Record<string, string>>({});
+  const [overrides, setOverrides] = useState<ThemeOverride>({});
+  const [computed, setComputed] = useState<Partial<Record<ThemeOverrideKey, string>>>({});
   const [copyStatus, setCopyStatus] = useState('');
 
   useLayoutEffect(() => {
     const el = stageRef.current;
     if (!el) return;
     const cs = getComputedStyle(el);
-    const next: Record<string, string> = {};
+    const next: Partial<Record<ThemeOverrideKey, string>> = {};
     for (const path of PATHS) {
-      const key = cssVar(path);
-      next[key] = cs.getPropertyValue(key).trim();
+      next[path] = cs.getPropertyValue(cssVarName(path)).trim();
     }
     setComputed(next);
   }, [appearance, density, overrides]);
 
-  function valueFor(path: (typeof PATHS)[number]): string {
-    const key = cssVar(path);
-    return overrides[key] ?? computed[key] ?? '';
+  function valueFor(path: ThemeOverrideKey): string {
+    const typed = overrides[path];
+    if (typed) return themeColorCss(typed);
+    return computed[path] ?? '';
   }
 
-  function setToken(path: string, value: string) {
-    setOverrides((prev) => ({ ...prev, [cssVar(path)]: value }));
+  function setToken(path: ThemeOverrideKey, raw: string) {
+    const parsed = parseThemeColor(raw);
+    if (!parsed) return;
+    setOverrides((prev) => ({ ...prev, [path]: parsed }));
   }
 
-  async function copyCss() {
-    const body = Object.entries(overrides)
-      .map(([name, value]) => `  ${name}: ${value};`)
-      .join('\n');
-    const css = `[data-appearance],\n[data-density] {\n${body}\n}\n`;
+  async function exportOverrides() {
     try {
-      await navigator.clipboard.writeText(css);
-      setCopyStatus('Copied CSS overrides.');
+      await navigator.clipboard.writeText(`${JSON.stringify(overrides, null, 2)}\n`);
+      setCopyStatus('Copied theme override JSON.');
     } catch {
       setCopyStatus('Could not copy. Clipboard permission was denied.');
     }
@@ -168,8 +173,8 @@ export default function PlaygroundPage() {
           <Button type="button" variant="secondary" onClick={() => setOverrides({})}>
             Reset all
           </Button>
-          <Button type="button" onClick={() => void copyCss()}>
-            Copy CSS overrides
+          <Button type="button" onClick={() => void exportOverrides()}>
+            Export
           </Button>
         </div>
         <p className="playground-status" aria-live="polite">
@@ -177,11 +182,7 @@ export default function PlaygroundPage() {
         </p>
       </aside>
       <section className="playground-stage" aria-label="Live demos">
-        <ThemeProvider
-          ref={stageRef}
-          appearance={appearance}
-          style={overrides as CSSProperties}
-        >
+        <ThemeProvider ref={stageRef} appearance={appearance} overrides={overrides}>
           <DensityProvider density={density}>
             <Stack>
               <Text as="strong" weight="medium">

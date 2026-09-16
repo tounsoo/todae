@@ -124,6 +124,12 @@
           "default": "\"system\""
         },
         {
+          "name": "overrides",
+          "type": "ThemeOverride",
+          "required": false,
+          "description": "Allowlisted appearance color roles only. Values are typed OKLCH; unknown keys and raw CSS are rejected."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,

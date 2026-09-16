@@ -60,7 +60,7 @@ import { DensityProvider, ThemeProvider, Button } from '@tounsoo/todae';
 </ThemeProvider>
 ```
 
-`useAppearance()` and `useDensity()` read the nearest provider.
+`useAppearance()` and `useDensity()` read the nearest provider. `ThemeProvider` also accepts `overrides?: ThemeOverride` — a closed map of appearance color paths to typed OKLCH values, applied as CSS vars on the provider root. Unknown keys and raw CSS are rejected.
 
 ## Generate the component schema
 

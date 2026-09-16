@@ -5,7 +5,8 @@ function emitPackageCss(): Plugin {
     name: 'emit-package-css',
     transform(code, id) {
       if (id.endsWith('/src/index.ts')) {
-        return `import './styles/todae.css';\n${code}`;
+        const body = code.replace(/^['"]use client['"];\s*/, '');
+        return `'use client';\nimport './styles/todae.css';\n${body}`;
       }
     },
     generateBundle(_opts, bundle) {

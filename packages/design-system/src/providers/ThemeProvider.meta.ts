@@ -12,6 +12,13 @@ export const meta = {
       description: 'Resolved to light or dark before writing data-appearance. Never writes system.',
     },
     {
+      name: 'overrides',
+      type: 'ThemeOverride',
+      required: false,
+      description:
+        'Allowlisted appearance color roles only. Values are typed OKLCH; unknown keys and raw CSS are rejected.',
+    },
+    {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
