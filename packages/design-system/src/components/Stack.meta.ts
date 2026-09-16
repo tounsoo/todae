@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Stack',
-  description: 'Flex layout with a direction and a gap.',
+  description: 'Flex layout. Gap comes from the stack.gap contract token.',
   props: [
     {
       name: 'direction',
@@ -10,13 +10,6 @@ export const meta = {
       required: false,
       default: '"column"',
       description: 'Flex direction.',
-    },
-    {
-      name: 'gap',
-      type: '"s" | "m" | "l"',
-      required: false,
-      default: '"m"',
-      description: 'Space between children.',
     },
     {
       name: 'children',

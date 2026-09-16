@@ -1,0 +1,5 @@
+{
+  "stack": {
+    "gap": { "$type": "dimension", "$value": { "$ref": "space.stack.gap" } }
+  }
+}

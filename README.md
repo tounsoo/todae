@@ -23,7 +23,7 @@ Docs import the built `dist/` files through package exports. Build the package f
 pnpm build:ds
 ```
 
-The build writes `packages/design-system/dist/index.js`, `index.d.ts`, and `todae.css`. The CSS file declares `@layer todae.reset, todae.base, todae.components`.
+The build writes `packages/design-system/dist/index.js`, `index.d.ts`, and `todae.css`. The CSS file declares `@layer todae.reset, todae.base, todae.components` and includes generated token vars.
 
 Watch the package while you edit it:
 
@@ -32,6 +32,35 @@ pnpm dev:ds
 ```
 
 `dev:ds` does not rebuild `.d.ts` files. Run `pnpm build:ds` when you need fresh types.
+
+## Tokens
+
+DTCG source lives in `packages/design-system/tokens/`. The build emits CSS custom property **chains** (not resolved literals) plus `tokens/tokens.generated.json`.
+
+```sh
+pnpm tokens
+pnpm tokens:check
+```
+
+Commit both generated files. `tokens:check` fails if they drift.
+
+Layers: core (`:root` literals) → appearance (`[data-appearance]`, light also on `:root`) → density (`[data-density]`) → contract (`[data-appearance], [data-density]`) → button variants (`[data-button-variant]`). Flatten `a.b.c` → `--todae-a-b-c`. Import the catalog as `@tounsoo/todae/tokens.json`.
+
+## Providers
+
+Wrap the tree in `ThemeProvider` and `DensityProvider`. `appearance="system"` (default) follows `prefers-color-scheme` via `useSyncExternalStore` and writes only `data-appearance="light"` or `"dark"`. The SSR snapshot is `light`. `DensityProvider` writes `data-density` (`compact` | `comfortable` | `spacious`, default `comfortable`). Nested providers override. Seed components read contract vars only.
+
+```tsx
+import { DensityProvider, ThemeProvider, Button } from '@tounsoo/todae';
+
+<ThemeProvider appearance="system">
+  <DensityProvider density="comfortable">
+    <Button>Save</Button>
+  </DensityProvider>
+</ThemeProvider>
+```
+
+`useAppearance()` and `useDensity()` read the nearest provider.
 
 ## Generate the component schema
 
@@ -50,7 +79,13 @@ pnpm dev:docs
 
 `pnpm dev` is the same as `pnpm dev:docs`.
 
-Open `/`, `/button`, `/stack`, and `/text`. Each component page mounts a live example and a props table from the schema.
+Open `/`, `/button`, `/stack`, `/text`, `/tokens`, and `/playground`. Component pages mount a live example and a props table from the schema. `/tokens` tables the generated catalog. `/playground` is a left-rail theme controller (appearance, density, token inputs) and a right-stage live demo.
+
+## Test
+
+```sh
+pnpm test
+```
 
 ## Typecheck
 

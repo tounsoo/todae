@@ -14,7 +14,14 @@
       }
     ],
     "allowJs": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@tounsoo/todae": ["../../packages/design-system/src/index.ts"],
+      "@tounsoo/todae/todae.css": ["../../packages/design-system/src/styles/todae.css"],
+      "@tounsoo/todae/schema/components.json": ["../../packages/design-system/schema/components.json"],
+      "@tounsoo/todae/tokens.json": ["../../packages/design-system/tokens/tokens.generated.json"]
+    }
   },
   "include": [
     "next-env.d.ts",

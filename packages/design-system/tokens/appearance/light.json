@@ -1,0 +1,20 @@
+{
+  "color": {
+    "bg": {
+      "canvas": { "$type": "color", "$value": { "$ref": "color.gray.50" } },
+      "surface": { "$type": "color", "$value": { "$ref": "color.gray.50" } }
+    },
+    "fg": {
+      "default": { "$type": "color", "$value": { "$ref": "color.gray.900" } },
+      "muted": { "$type": "color", "$value": { "$ref": "color.gray.900" } }
+    },
+    "border": {
+      "default": { "$type": "color", "$value": { "$ref": "color.gray.900" } }
+    },
+    "accent": {
+      "default": { "$type": "color", "$value": { "$ref": "color.blue.500" } },
+      "hover": { "$type": "color", "$value": { "$ref": "color.blue.500" } },
+      "active": { "$type": "color", "$value": { "$ref": "color.blue.500" } }
+    }
+  }
+}

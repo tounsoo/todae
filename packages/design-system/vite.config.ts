@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, type Plugin } from 'vitest/config';
 
 function emitPackageCss(): Plugin {
   return {
@@ -37,5 +37,9 @@ export default defineConfig({
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
     cssCodeSplit: false,
+  },
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'scripts/**/*.test.ts'],
   },
 });

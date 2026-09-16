@@ -3,13 +3,13 @@
   "components": [
     {
       "name": "Button",
-      "description": "Native button with a variant.",
+      "description": "Native button styled through the button contract tokens.",
       "props": [
         {
           "name": "variant",
-          "type": "\"primary\" | \"secondary\"",
+          "type": "\"primary\" | \"secondary\" | \"ghost\"",
           "required": false,
-          "description": "Visual style.",
+          "description": "Visual style. Non-primary sets data-button-variant.",
           "default": "\"primary\""
         },
         {
@@ -35,8 +35,27 @@
       ]
     },
     {
+      "name": "DensityProvider",
+      "description": "Sets data-density for spacing-only compact, comfortable, or spacious.",
+      "props": [
+        {
+          "name": "density",
+          "type": "\"compact\" | \"comfortable\" | \"spacious\"",
+          "required": false,
+          "description": "Spacing density written to data-density.",
+          "default": "\"comfortable\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Subtree that inherits density tokens."
+        }
+      ]
+    },
+    {
       "name": "Stack",
-      "description": "Flex layout with a direction and a gap.",
+      "description": "Flex layout. Gap comes from the stack.gap contract token.",
       "props": [
         {
           "name": "direction",
@@ -44,13 +63,6 @@
           "required": false,
           "description": "Flex direction.",
           "default": "\"column\""
-        },
-        {
-          "name": "gap",
-          "type": "\"s\" | \"m\" | \"l\"",
-          "required": false,
-          "description": "Space between children.",
-          "default": "\"m\""
         },
         {
           "name": "children",
@@ -62,7 +74,7 @@
     },
     {
       "name": "Text",
-      "description": "Text in a semantic element.",
+      "description": "Text styled through the text contract tokens.",
       "props": [
         {
           "name": "as",
@@ -75,14 +87,47 @@
           "name": "size",
           "type": "\"s\" | \"m\" | \"l\"",
           "required": false,
-          "description": "Font size.",
+          "description": "Maps to text.size.2, text.size.3, text.size.4.",
           "default": "\"m\""
+        },
+        {
+          "name": "tone",
+          "type": "\"default\" | \"muted\" | \"accent\"",
+          "required": false,
+          "description": "Foreground role.",
+          "default": "\"default\""
+        },
+        {
+          "name": "weight",
+          "type": "\"regular\" | \"medium\" | \"bold\"",
+          "required": false,
+          "description": "Font weight.",
+          "default": "\"regular\""
         },
         {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
           "description": "Text content."
+        }
+      ]
+    },
+    {
+      "name": "ThemeProvider",
+      "description": "Sets data-appearance from system, light, or dark. Nested providers override.",
+      "props": [
+        {
+          "name": "appearance",
+          "type": "\"system\" | \"light\" | \"dark\"",
+          "required": false,
+          "description": "Resolved to light or dark before writing data-appearance. Never writes system.",
+          "default": "\"system\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Themed subtree."
         }
       ]
     }

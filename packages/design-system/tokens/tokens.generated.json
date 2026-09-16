@@ -1,0 +1,1310 @@
+{
+  "version": 1,
+  "tokens": [
+    {
+      "path": "color.blue.500",
+      "type": "color",
+      "cssVar": "--todae-color-blue-500",
+      "cssValue": "oklch(0.55 0.18 255)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.50",
+      "type": "color",
+      "cssVar": "--todae-color-gray-50",
+      "cssValue": "oklch(0.98 0.005 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.100",
+      "type": "color",
+      "cssVar": "--todae-color-gray-100",
+      "cssValue": "oklch(0.93 0.007 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.200",
+      "type": "color",
+      "cssVar": "--todae-color-gray-200",
+      "cssValue": "oklch(0.87 0.009 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.300",
+      "type": "color",
+      "cssVar": "--todae-color-gray-300",
+      "cssValue": "oklch(0.78 0.012 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.400",
+      "type": "color",
+      "cssVar": "--todae-color-gray-400",
+      "cssValue": "oklch(0.68 0.014 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.500",
+      "type": "color",
+      "cssVar": "--todae-color-gray-500",
+      "cssValue": "oklch(0.55 0.016 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.600",
+      "type": "color",
+      "cssVar": "--todae-color-gray-600",
+      "cssValue": "oklch(0.45 0.018 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.700",
+      "type": "color",
+      "cssVar": "--todae-color-gray-700",
+      "cssValue": "oklch(0.36 0.019 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.800",
+      "type": "color",
+      "cssVar": "--todae-color-gray-800",
+      "cssValue": "oklch(0.28 0.02 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.900",
+      "type": "color",
+      "cssVar": "--todae-color-gray-900",
+      "cssValue": "oklch(0.22 0.02 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.gray.950",
+      "type": "color",
+      "cssVar": "--todae-color-gray-950",
+      "cssValue": "oklch(0.16 0.02 260)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "font.leading.default",
+      "type": "number",
+      "cssVar": "--todae-font-leading-default",
+      "cssValue": "1.5",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "font.size.1",
+      "type": "dimension",
+      "cssVar": "--todae-font-size-1",
+      "cssValue": "0.75rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "font.size.2",
+      "type": "dimension",
+      "cssVar": "--todae-font-size-2",
+      "cssValue": "0.875rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "font.size.3",
+      "type": "dimension",
+      "cssVar": "--todae-font-size-3",
+      "cssValue": "1rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "font.size.4",
+      "type": "dimension",
+      "cssVar": "--todae-font-size-4",
+      "cssValue": "1.25rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "font.size.5",
+      "type": "dimension",
+      "cssVar": "--todae-font-size-5",
+      "cssValue": "1.5rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "font.size.6",
+      "type": "dimension",
+      "cssVar": "--todae-font-size-6",
+      "cssValue": "1.875rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "font.weight.bold",
+      "type": "fontWeight",
+      "cssVar": "--todae-font-weight-bold",
+      "cssValue": "700",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "font.weight.medium",
+      "type": "fontWeight",
+      "cssVar": "--todae-font-weight-medium",
+      "cssValue": "500",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "font.weight.regular",
+      "type": "fontWeight",
+      "cssVar": "--todae-font-weight-regular",
+      "cssValue": "400",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "radius.lg",
+      "type": "dimension",
+      "cssVar": "--todae-radius-lg",
+      "cssValue": "0.75rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "radius.md",
+      "type": "dimension",
+      "cssVar": "--todae-radius-md",
+      "cssValue": "0.5rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "radius.sm",
+      "type": "dimension",
+      "cssVar": "--todae-radius-sm",
+      "cssValue": "0.25rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.1",
+      "type": "dimension",
+      "cssVar": "--todae-space-1",
+      "cssValue": "0.25rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.2",
+      "type": "dimension",
+      "cssVar": "--todae-space-2",
+      "cssValue": "0.5rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.3",
+      "type": "dimension",
+      "cssVar": "--todae-space-3",
+      "cssValue": "0.75rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.4",
+      "type": "dimension",
+      "cssVar": "--todae-space-4",
+      "cssValue": "1rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.5",
+      "type": "dimension",
+      "cssVar": "--todae-space-5",
+      "cssValue": "1.25rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.6",
+      "type": "dimension",
+      "cssVar": "--todae-space-6",
+      "cssValue": "1.5rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.7",
+      "type": "dimension",
+      "cssVar": "--todae-space-7",
+      "cssValue": "1.75rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.8",
+      "type": "dimension",
+      "cssVar": "--todae-space-8",
+      "cssValue": "2rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.9",
+      "type": "dimension",
+      "cssVar": "--todae-space-9",
+      "cssValue": "2.25rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.10",
+      "type": "dimension",
+      "cssVar": "--todae-space-10",
+      "cssValue": "2.5rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.11",
+      "type": "dimension",
+      "cssVar": "--todae-space-11",
+      "cssValue": "2.75rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "space.12",
+      "type": "dimension",
+      "cssVar": "--todae-space-12",
+      "cssValue": "3rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "color.accent.active",
+      "type": "color",
+      "cssVar": "--todae-color-accent-active",
+      "cssValue": "var(--todae-color-blue-500)",
+      "ref": "color.blue.500",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.accent.default",
+      "type": "color",
+      "cssVar": "--todae-color-accent-default",
+      "cssValue": "var(--todae-color-blue-500)",
+      "ref": "color.blue.500",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.accent.hover",
+      "type": "color",
+      "cssVar": "--todae-color-accent-hover",
+      "cssValue": "var(--todae-color-blue-500)",
+      "ref": "color.blue.500",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.bg.canvas",
+      "type": "color",
+      "cssVar": "--todae-color-bg-canvas",
+      "cssValue": "var(--todae-color-gray-50)",
+      "ref": "color.gray.50",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.bg.surface",
+      "type": "color",
+      "cssVar": "--todae-color-bg-surface",
+      "cssValue": "var(--todae-color-gray-50)",
+      "ref": "color.gray.50",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.border.default",
+      "type": "color",
+      "cssVar": "--todae-color-border-default",
+      "cssValue": "var(--todae-color-gray-900)",
+      "ref": "color.gray.900",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.fg.default",
+      "type": "color",
+      "cssVar": "--todae-color-fg-default",
+      "cssValue": "var(--todae-color-gray-900)",
+      "ref": "color.gray.900",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.fg.muted",
+      "type": "color",
+      "cssVar": "--todae-color-fg-muted",
+      "cssValue": "var(--todae-color-gray-900)",
+      "ref": "color.gray.900",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.accent.active",
+      "type": "color",
+      "cssVar": "--todae-color-accent-active",
+      "cssValue": "var(--todae-color-blue-500)",
+      "ref": "color.blue.500",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.accent.default",
+      "type": "color",
+      "cssVar": "--todae-color-accent-default",
+      "cssValue": "var(--todae-color-blue-500)",
+      "ref": "color.blue.500",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.accent.hover",
+      "type": "color",
+      "cssVar": "--todae-color-accent-hover",
+      "cssValue": "var(--todae-color-blue-500)",
+      "ref": "color.blue.500",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.bg.canvas",
+      "type": "color",
+      "cssVar": "--todae-color-bg-canvas",
+      "cssValue": "var(--todae-color-gray-900)",
+      "ref": "color.gray.900",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.bg.surface",
+      "type": "color",
+      "cssVar": "--todae-color-bg-surface",
+      "cssValue": "var(--todae-color-gray-900)",
+      "ref": "color.gray.900",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.border.default",
+      "type": "color",
+      "cssVar": "--todae-color-border-default",
+      "cssValue": "var(--todae-color-gray-50)",
+      "ref": "color.gray.50",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.fg.default",
+      "type": "color",
+      "cssVar": "--todae-color-fg-default",
+      "cssValue": "var(--todae-color-gray-50)",
+      "ref": "color.gray.50",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.fg.muted",
+      "type": "color",
+      "cssVar": "--todae-color-fg-muted",
+      "cssValue": "var(--todae-color-gray-50)",
+      "ref": "color.gray.50",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "space.control.x",
+      "type": "dimension",
+      "cssVar": "--todae-space-control-x",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
+      "layer": "density",
+      "context": "compact"
+    },
+    {
+      "path": "space.control.y",
+      "type": "dimension",
+      "cssVar": "--todae-space-control-y",
+      "cssValue": "var(--todae-space-1)",
+      "ref": "space.1",
+      "layer": "density",
+      "context": "compact"
+    },
+    {
+      "path": "space.inline.gap",
+      "type": "dimension",
+      "cssVar": "--todae-space-inline-gap",
+      "cssValue": "var(--todae-space-1)",
+      "ref": "space.1",
+      "layer": "density",
+      "context": "compact"
+    },
+    {
+      "path": "space.stack.gap",
+      "type": "dimension",
+      "cssVar": "--todae-space-stack-gap",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
+      "layer": "density",
+      "context": "compact"
+    },
+    {
+      "path": "space.control.x",
+      "type": "dimension",
+      "cssVar": "--todae-space-control-x",
+      "cssValue": "var(--todae-space-3)",
+      "ref": "space.3",
+      "layer": "density",
+      "context": "comfortable"
+    },
+    {
+      "path": "space.control.y",
+      "type": "dimension",
+      "cssVar": "--todae-space-control-y",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
+      "layer": "density",
+      "context": "comfortable"
+    },
+    {
+      "path": "space.inline.gap",
+      "type": "dimension",
+      "cssVar": "--todae-space-inline-gap",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
+      "layer": "density",
+      "context": "comfortable"
+    },
+    {
+      "path": "space.stack.gap",
+      "type": "dimension",
+      "cssVar": "--todae-space-stack-gap",
+      "cssValue": "var(--todae-space-3)",
+      "ref": "space.3",
+      "layer": "density",
+      "context": "comfortable"
+    },
+    {
+      "path": "space.control.x",
+      "type": "dimension",
+      "cssVar": "--todae-space-control-x",
+      "cssValue": "var(--todae-space-4)",
+      "ref": "space.4",
+      "layer": "density",
+      "context": "spacious"
+    },
+    {
+      "path": "space.control.y",
+      "type": "dimension",
+      "cssVar": "--todae-space-control-y",
+      "cssValue": "var(--todae-space-3)",
+      "ref": "space.3",
+      "layer": "density",
+      "context": "spacious"
+    },
+    {
+      "path": "space.inline.gap",
+      "type": "dimension",
+      "cssVar": "--todae-space-inline-gap",
+      "cssValue": "var(--todae-space-3)",
+      "ref": "space.3",
+      "layer": "density",
+      "context": "spacious"
+    },
+    {
+      "path": "space.stack.gap",
+      "type": "dimension",
+      "cssVar": "--todae-space-stack-gap",
+      "cssValue": "var(--todae-space-5)",
+      "ref": "space.5",
+      "layer": "density",
+      "context": "spacious"
+    },
+    {
+      "path": "button.bg.active",
+      "type": "color",
+      "cssVar": "--todae-button-bg-active",
+      "cssValue": "var(--todae-color-accent-active)",
+      "ref": "color.accent.active",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.bg.default",
+      "type": "color",
+      "cssVar": "--todae-button-bg-default",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.bg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-bg-disabled",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.bg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-bg-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-bg-hover",
+      "cssValue": "var(--todae-color-accent-hover)",
+      "ref": "color.accent.hover",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.border.active",
+      "type": "color",
+      "cssVar": "--todae-button-border-active",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.border.default",
+      "type": "color",
+      "cssVar": "--todae-button-border-default",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.border.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-border-disabled",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.border.focus",
+      "type": "color",
+      "cssVar": "--todae-button-border-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.border.hover",
+      "type": "color",
+      "cssVar": "--todae-button-border-hover",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.fg.active",
+      "type": "color",
+      "cssVar": "--todae-button-fg-active",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.fg.default",
+      "type": "color",
+      "cssVar": "--todae-button-fg-default",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.fg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-fg-disabled",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.fg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-fg-focus",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.fg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-fg-hover",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-button-font-size",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-button-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.gap",
+      "type": "dimension",
+      "cssVar": "--todae-button-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-button-padding-x",
+      "cssValue": "var(--todae-space-control-x)",
+      "ref": "space.control.x",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-button-padding-y",
+      "cssValue": "var(--todae-space-control-y)",
+      "ref": "space.control.y",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.radius",
+      "type": "dimension",
+      "cssVar": "--todae-button-radius",
+      "cssValue": "var(--todae-radius-md)",
+      "ref": "radius.md",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-button-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "stack.gap",
+      "type": "dimension",
+      "cssVar": "--todae-stack-gap",
+      "cssValue": "var(--todae-space-stack-gap)",
+      "ref": "space.stack.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.fg.accent",
+      "type": "color",
+      "cssVar": "--todae-text-fg-accent",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.fg.default",
+      "type": "color",
+      "cssVar": "--todae-text-fg-default",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.fg.muted",
+      "type": "color",
+      "cssVar": "--todae-text-fg-muted",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.leading.default",
+      "type": "number",
+      "cssVar": "--todae-text-leading-default",
+      "cssValue": "var(--todae-font-leading-default)",
+      "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.size.1",
+      "type": "dimension",
+      "cssVar": "--todae-text-size-1",
+      "cssValue": "var(--todae-font-size-1)",
+      "ref": "font.size.1",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.size.2",
+      "type": "dimension",
+      "cssVar": "--todae-text-size-2",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.size.3",
+      "type": "dimension",
+      "cssVar": "--todae-text-size-3",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.size.4",
+      "type": "dimension",
+      "cssVar": "--todae-text-size-4",
+      "cssValue": "var(--todae-font-size-4)",
+      "ref": "font.size.4",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.size.5",
+      "type": "dimension",
+      "cssVar": "--todae-text-size-5",
+      "cssValue": "var(--todae-font-size-5)",
+      "ref": "font.size.5",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.size.6",
+      "type": "dimension",
+      "cssVar": "--todae-text-size-6",
+      "cssValue": "var(--todae-font-size-6)",
+      "ref": "font.size.6",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.weight.bold",
+      "type": "fontWeight",
+      "cssVar": "--todae-text-weight-bold",
+      "cssValue": "var(--todae-font-weight-bold)",
+      "ref": "font.weight.bold",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.weight.medium",
+      "type": "fontWeight",
+      "cssVar": "--todae-text-weight-medium",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.weight.regular",
+      "type": "fontWeight",
+      "cssVar": "--todae-text-weight-regular",
+      "cssValue": "var(--todae-font-weight-regular)",
+      "ref": "font.weight.regular",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.bg.active",
+      "type": "color",
+      "cssVar": "--todae-button-bg-active",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.bg.default",
+      "type": "color",
+      "cssVar": "--todae-button-bg-default",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.bg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-bg-disabled",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.bg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-bg-focus",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-bg-hover",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.border.active",
+      "type": "color",
+      "cssVar": "--todae-button-border-active",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.border.default",
+      "type": "color",
+      "cssVar": "--todae-button-border-default",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.border.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-border-disabled",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.border.focus",
+      "type": "color",
+      "cssVar": "--todae-button-border-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.border.hover",
+      "type": "color",
+      "cssVar": "--todae-button-border-hover",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.fg.active",
+      "type": "color",
+      "cssVar": "--todae-button-fg-active",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.fg.default",
+      "type": "color",
+      "cssVar": "--todae-button-fg-default",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.fg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-fg-disabled",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.fg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-fg-focus",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.fg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-fg-hover",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-button-font-size",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-button-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.gap",
+      "type": "dimension",
+      "cssVar": "--todae-button-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-button-padding-x",
+      "cssValue": "var(--todae-space-control-x)",
+      "ref": "space.control.x",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-button-padding-y",
+      "cssValue": "var(--todae-space-control-y)",
+      "ref": "space.control.y",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.radius",
+      "type": "dimension",
+      "cssVar": "--todae-button-radius",
+      "cssValue": "var(--todae-radius-md)",
+      "ref": "radius.md",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-button-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "variant",
+      "context": "secondary"
+    },
+    {
+      "path": "button.bg.active",
+      "type": "color",
+      "cssVar": "--todae-button-bg-active",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.bg.default",
+      "type": "color",
+      "cssVar": "--todae-button-bg-default",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.bg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-bg-disabled",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.bg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-bg-focus",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-bg-hover",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.border.active",
+      "type": "color",
+      "cssVar": "--todae-button-border-active",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.border.default",
+      "type": "color",
+      "cssVar": "--todae-button-border-default",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.border.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-border-disabled",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.border.focus",
+      "type": "color",
+      "cssVar": "--todae-button-border-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.border.hover",
+      "type": "color",
+      "cssVar": "--todae-button-border-hover",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.fg.active",
+      "type": "color",
+      "cssVar": "--todae-button-fg-active",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.fg.default",
+      "type": "color",
+      "cssVar": "--todae-button-fg-default",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.fg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-fg-disabled",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.fg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-fg-focus",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.fg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-fg-hover",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-button-font-size",
+      "cssValue": "var(--todae-font-size-3)",
+      "ref": "font.size.3",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-button-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.gap",
+      "type": "dimension",
+      "cssVar": "--todae-button-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-button-padding-x",
+      "cssValue": "var(--todae-space-control-x)",
+      "ref": "space.control.x",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-button-padding-y",
+      "cssValue": "var(--todae-space-control-y)",
+      "ref": "space.control.y",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.radius",
+      "type": "dimension",
+      "cssVar": "--todae-button-radius",
+      "cssValue": "var(--todae-radius-md)",
+      "ref": "radius.md",
+      "layer": "variant",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-button-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "variant",
+      "context": "ghost"
+    }
+  ]
+}

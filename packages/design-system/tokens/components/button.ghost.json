@@ -1,0 +1,38 @@
+{
+  "button": {
+    "bg": {
+      "default": { "$type": "color", "$value": { "$ref": "color.bg.canvas" } },
+      "hover": { "$type": "color", "$value": { "$ref": "color.bg.surface" } },
+      "active": { "$type": "color", "$value": { "$ref": "color.bg.surface" } },
+      "focus": { "$type": "color", "$value": { "$ref": "color.bg.canvas" } },
+      "disabled": { "$type": "color", "$value": { "$ref": "color.bg.canvas" } }
+    },
+    "fg": {
+      "default": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
+      "hover": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
+      "active": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
+      "focus": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
+      "disabled": { "$type": "color", "$value": { "$ref": "color.fg.muted" } }
+    },
+    "border": {
+      "default": { "$type": "color", "$value": { "$ref": "color.bg.canvas" } },
+      "hover": { "$type": "color", "$value": { "$ref": "color.bg.canvas" } },
+      "active": { "$type": "color", "$value": { "$ref": "color.bg.canvas" } },
+      "focus": { "$type": "color", "$value": { "$ref": "color.accent.default" } },
+      "disabled": { "$type": "color", "$value": { "$ref": "color.bg.canvas" } }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "color.accent.default" } }
+    },
+    "radius": { "$type": "dimension", "$value": { "$ref": "radius.md" } },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "$ref": "space.control.x" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "space.control.y" } }
+    },
+    "font": {
+      "size": { "$type": "dimension", "$value": { "$ref": "font.size.3" } },
+      "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.medium" } }
+    },
+    "gap": { "$type": "dimension", "$value": { "$ref": "space.inline.gap" } }
+  }
+}

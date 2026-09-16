@@ -1,0 +1,175 @@
+@layer todae.base {
+:root {
+  --todae-color-blue-500: oklch(0.55 0.18 255);
+  --todae-color-gray-50: oklch(0.98 0.005 260);
+  --todae-color-gray-100: oklch(0.93 0.007 260);
+  --todae-color-gray-200: oklch(0.87 0.009 260);
+  --todae-color-gray-300: oklch(0.78 0.012 260);
+  --todae-color-gray-400: oklch(0.68 0.014 260);
+  --todae-color-gray-500: oklch(0.55 0.016 260);
+  --todae-color-gray-600: oklch(0.45 0.018 260);
+  --todae-color-gray-700: oklch(0.36 0.019 260);
+  --todae-color-gray-800: oklch(0.28 0.02 260);
+  --todae-color-gray-900: oklch(0.22 0.02 260);
+  --todae-color-gray-950: oklch(0.16 0.02 260);
+  --todae-font-leading-default: 1.5;
+  --todae-font-size-1: 0.75rem;
+  --todae-font-size-2: 0.875rem;
+  --todae-font-size-3: 1rem;
+  --todae-font-size-4: 1.25rem;
+  --todae-font-size-5: 1.5rem;
+  --todae-font-size-6: 1.875rem;
+  --todae-font-weight-bold: 700;
+  --todae-font-weight-medium: 500;
+  --todae-font-weight-regular: 400;
+  --todae-radius-lg: 0.75rem;
+  --todae-radius-md: 0.5rem;
+  --todae-radius-sm: 0.25rem;
+  --todae-space-1: 0.25rem;
+  --todae-space-2: 0.5rem;
+  --todae-space-3: 0.75rem;
+  --todae-space-4: 1rem;
+  --todae-space-5: 1.25rem;
+  --todae-space-6: 1.5rem;
+  --todae-space-7: 1.75rem;
+  --todae-space-8: 2rem;
+  --todae-space-9: 2.25rem;
+  --todae-space-10: 2.5rem;
+  --todae-space-11: 2.75rem;
+  --todae-space-12: 3rem;
+}
+
+:root,
+[data-appearance="light"] {
+  --todae-color-accent-active: var(--todae-color-blue-500);
+  --todae-color-accent-default: var(--todae-color-blue-500);
+  --todae-color-accent-hover: var(--todae-color-blue-500);
+  --todae-color-bg-canvas: var(--todae-color-gray-50);
+  --todae-color-bg-surface: var(--todae-color-gray-50);
+  --todae-color-border-default: var(--todae-color-gray-900);
+  --todae-color-fg-default: var(--todae-color-gray-900);
+  --todae-color-fg-muted: var(--todae-color-gray-900);
+}
+
+[data-appearance="dark"] {
+  --todae-color-accent-active: var(--todae-color-blue-500);
+  --todae-color-accent-default: var(--todae-color-blue-500);
+  --todae-color-accent-hover: var(--todae-color-blue-500);
+  --todae-color-bg-canvas: var(--todae-color-gray-900);
+  --todae-color-bg-surface: var(--todae-color-gray-900);
+  --todae-color-border-default: var(--todae-color-gray-50);
+  --todae-color-fg-default: var(--todae-color-gray-50);
+  --todae-color-fg-muted: var(--todae-color-gray-50);
+}
+
+[data-density="compact"] {
+  --todae-space-control-x: var(--todae-space-2);
+  --todae-space-control-y: var(--todae-space-1);
+  --todae-space-inline-gap: var(--todae-space-1);
+  --todae-space-stack-gap: var(--todae-space-2);
+}
+
+[data-density="comfortable"] {
+  --todae-space-control-x: var(--todae-space-3);
+  --todae-space-control-y: var(--todae-space-2);
+  --todae-space-inline-gap: var(--todae-space-2);
+  --todae-space-stack-gap: var(--todae-space-3);
+}
+
+[data-density="spacious"] {
+  --todae-space-control-x: var(--todae-space-4);
+  --todae-space-control-y: var(--todae-space-3);
+  --todae-space-inline-gap: var(--todae-space-3);
+  --todae-space-stack-gap: var(--todae-space-5);
+}
+
+[data-appearance],
+[data-density] {
+  --todae-button-bg-active: var(--todae-color-accent-active);
+  --todae-button-bg-default: var(--todae-color-accent-default);
+  --todae-button-bg-disabled: var(--todae-color-bg-surface);
+  --todae-button-bg-focus: var(--todae-color-accent-default);
+  --todae-button-bg-hover: var(--todae-color-accent-hover);
+  --todae-button-border-active: var(--todae-color-border-default);
+  --todae-button-border-default: var(--todae-color-border-default);
+  --todae-button-border-disabled: var(--todae-color-border-default);
+  --todae-button-border-focus: var(--todae-color-accent-default);
+  --todae-button-border-hover: var(--todae-color-border-default);
+  --todae-button-fg-active: var(--todae-color-fg-default);
+  --todae-button-fg-default: var(--todae-color-fg-default);
+  --todae-button-fg-disabled: var(--todae-color-fg-muted);
+  --todae-button-fg-focus: var(--todae-color-fg-default);
+  --todae-button-fg-hover: var(--todae-color-fg-default);
+  --todae-button-font-size: var(--todae-font-size-3);
+  --todae-button-font-weight: var(--todae-font-weight-medium);
+  --todae-button-gap: var(--todae-space-inline-gap);
+  --todae-button-padding-x: var(--todae-space-control-x);
+  --todae-button-padding-y: var(--todae-space-control-y);
+  --todae-button-radius: var(--todae-radius-md);
+  --todae-button-ring-focus: var(--todae-color-accent-default);
+  --todae-stack-gap: var(--todae-space-stack-gap);
+  --todae-text-fg-accent: var(--todae-color-accent-default);
+  --todae-text-fg-default: var(--todae-color-fg-default);
+  --todae-text-fg-muted: var(--todae-color-fg-muted);
+  --todae-text-leading-default: var(--todae-font-leading-default);
+  --todae-text-size-1: var(--todae-font-size-1);
+  --todae-text-size-2: var(--todae-font-size-2);
+  --todae-text-size-3: var(--todae-font-size-3);
+  --todae-text-size-4: var(--todae-font-size-4);
+  --todae-text-size-5: var(--todae-font-size-5);
+  --todae-text-size-6: var(--todae-font-size-6);
+  --todae-text-weight-bold: var(--todae-font-weight-bold);
+  --todae-text-weight-medium: var(--todae-font-weight-medium);
+  --todae-text-weight-regular: var(--todae-font-weight-regular);
+}
+
+[data-button-variant="secondary"] {
+  --todae-button-bg-active: var(--todae-color-bg-canvas);
+  --todae-button-bg-default: var(--todae-color-bg-surface);
+  --todae-button-bg-disabled: var(--todae-color-bg-surface);
+  --todae-button-bg-focus: var(--todae-color-bg-surface);
+  --todae-button-bg-hover: var(--todae-color-bg-surface);
+  --todae-button-border-active: var(--todae-color-border-default);
+  --todae-button-border-default: var(--todae-color-border-default);
+  --todae-button-border-disabled: var(--todae-color-border-default);
+  --todae-button-border-focus: var(--todae-color-accent-default);
+  --todae-button-border-hover: var(--todae-color-border-default);
+  --todae-button-fg-active: var(--todae-color-fg-default);
+  --todae-button-fg-default: var(--todae-color-fg-default);
+  --todae-button-fg-disabled: var(--todae-color-fg-muted);
+  --todae-button-fg-focus: var(--todae-color-fg-default);
+  --todae-button-fg-hover: var(--todae-color-fg-default);
+  --todae-button-font-size: var(--todae-font-size-3);
+  --todae-button-font-weight: var(--todae-font-weight-medium);
+  --todae-button-gap: var(--todae-space-inline-gap);
+  --todae-button-padding-x: var(--todae-space-control-x);
+  --todae-button-padding-y: var(--todae-space-control-y);
+  --todae-button-radius: var(--todae-radius-md);
+  --todae-button-ring-focus: var(--todae-color-accent-default);
+}
+
+[data-button-variant="ghost"] {
+  --todae-button-bg-active: var(--todae-color-bg-surface);
+  --todae-button-bg-default: var(--todae-color-bg-canvas);
+  --todae-button-bg-disabled: var(--todae-color-bg-canvas);
+  --todae-button-bg-focus: var(--todae-color-bg-canvas);
+  --todae-button-bg-hover: var(--todae-color-bg-surface);
+  --todae-button-border-active: var(--todae-color-bg-canvas);
+  --todae-button-border-default: var(--todae-color-bg-canvas);
+  --todae-button-border-disabled: var(--todae-color-bg-canvas);
+  --todae-button-border-focus: var(--todae-color-accent-default);
+  --todae-button-border-hover: var(--todae-color-bg-canvas);
+  --todae-button-fg-active: var(--todae-color-fg-default);
+  --todae-button-fg-default: var(--todae-color-fg-default);
+  --todae-button-fg-disabled: var(--todae-color-fg-muted);
+  --todae-button-fg-focus: var(--todae-color-fg-default);
+  --todae-button-fg-hover: var(--todae-color-fg-default);
+  --todae-button-font-size: var(--todae-font-size-3);
+  --todae-button-font-weight: var(--todae-font-weight-medium);
+  --todae-button-gap: var(--todae-space-inline-gap);
+  --todae-button-padding-x: var(--todae-space-control-x);
+  --todae-button-padding-y: var(--todae-space-control-y);
+  --todae-button-radius: var(--todae-radius-md);
+  --todae-button-ring-focus: var(--todae-color-accent-default);
+}
+}
