@@ -1,0 +1,37 @@
+{
+  "name": "@todae/design-system",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./todae.css": "./dist/todae.css",
+    "./schema/components.json": "./schema/components.json"
+  },
+  "files": ["dist", "schema"],
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "dev": "vite build --watch",
+    "schema": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/generate-schema.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "graft:build": "npx -y @nanonets/graft@0.18.0 build",
+    "graft:check": "npx -y @nanonets/graft@0.18.0 check"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2"
+  }
+}

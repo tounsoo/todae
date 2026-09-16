@@ -1,0 +1,30 @@
+@layer todae.components {
+  .root {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid transparent;
+  }
+
+  .root:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .root:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .primary {
+    background: #111;
+    color: #fff;
+  }
+
+  .secondary {
+    background: #fff;
+    color: #111;
+    border-color: #111;
+  }
+}
