@@ -181,32 +181,36 @@ export default function PlaygroundPage() {
           {copyStatus}
         </p>
       </aside>
-      <section className="playground-stage" aria-label="Live demos">
-        <ThemeProvider ref={stageRef} appearance={appearance} overrides={overrides}>
-          <DensityProvider density={density}>
-            <Stack>
-              <Text as="strong" weight="medium">
-                Buttons
-              </Text>
-              <Stack direction="row">
-                <Button>Primary</Button>
-                <Button variant="secondary">Secondary</Button>
-                <Button variant="ghost">Ghost</Button>
-                <Button disabled>Disabled</Button>
-              </Stack>
-              <Text tone="muted" size="s">
-                Hover, press, and tab to a button to see hover / active / focus.
-              </Text>
-              <Text as="strong" weight="medium">
-                Text
-              </Text>
-              <Text>Default tone</Text>
-              <Text tone="muted">Muted tone</Text>
-              <Text tone="accent">Accent tone</Text>
+      <ThemeProvider
+        ref={stageRef}
+        className="playground-stage"
+        appearance={appearance}
+        overrides={overrides}
+        aria-label="Live demos"
+      >
+        <DensityProvider density={density}>
+          <Stack>
+            <Text as="strong" weight="medium">
+              Buttons
+            </Text>
+            <Stack direction="row">
+              <Button>Primary</Button>
+              <Button variant="secondary">Secondary</Button>
+              <Button variant="ghost">Ghost</Button>
+              <Button disabled>Disabled</Button>
             </Stack>
-          </DensityProvider>
-        </ThemeProvider>
-      </section>
+            <Text tone="muted" size="s">
+              Hover, press, and tab to a button to see hover / active / focus.
+            </Text>
+            <Text as="strong" weight="medium">
+              Text
+            </Text>
+            <Text>Default tone</Text>
+            <Text tone="muted">Muted tone</Text>
+            <Text tone="accent">Accent tone</Text>
+          </Stack>
+        </DensityProvider>
+      </ThemeProvider>
     </div>
   );
 }

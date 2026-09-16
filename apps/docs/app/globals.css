@@ -142,6 +142,7 @@ caption {
   flex: 1 1 20rem;
   min-width: 0;
   padding: 1.75rem 2rem;
+  color: var(--todae-color-fg-default);
   background: var(--todae-color-bg-canvas);
 }
 
