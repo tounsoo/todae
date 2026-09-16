@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "components": [
+    {
+      "name": "Button",
+      "description": "Native button with a variant.",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"primary\" | \"secondary\"",
+          "required": false,
+          "description": "Visual style.",
+          "default": "\"primary\""
+        },
+        {
+          "name": "type",
+          "type": "\"button\" | \"submit\" | \"reset\"",
+          "required": false,
+          "description": "Native button type.",
+          "default": "\"button\""
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables the control.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Button label."
+        }
+      ]
+    },
+    {
+      "name": "Stack",
+      "description": "Flex layout with a direction and a gap.",
+      "props": [
+        {
+          "name": "direction",
+          "type": "\"row\" | \"column\"",
+          "required": false,
+          "description": "Flex direction.",
+          "default": "\"column\""
+        },
+        {
+          "name": "gap",
+          "type": "\"s\" | \"m\" | \"l\"",
+          "required": false,
+          "description": "Space between children.",
+          "default": "\"m\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Laid-out children."
+        }
+      ]
+    },
+    {
+      "name": "Text",
+      "description": "Text in a semantic element.",
+      "props": [
+        {
+          "name": "as",
+          "type": "\"p\" | \"span\" | \"strong\"",
+          "required": false,
+          "description": "Rendered element.",
+          "default": "\"p\""
+        },
+        {
+          "name": "size",
+          "type": "\"s\" | \"m\" | \"l\"",
+          "required": false,
+          "description": "Font size.",
+          "default": "\"m\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Text content."
+        }
+      ]
+    }
+  ]
+}

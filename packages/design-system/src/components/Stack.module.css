@@ -1,0 +1,25 @@
+@layer todae.components {
+  .root {
+    display: flex;
+  }
+
+  .row {
+    flex-direction: row;
+  }
+
+  .column {
+    flex-direction: column;
+  }
+
+  .s {
+    gap: 0.25rem;
+  }
+
+  .m {
+    gap: 0.75rem;
+  }
+
+  .l {
+    gap: 1.5rem;
+  }
+}

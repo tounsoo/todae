@@ -1,0 +1,15 @@
+node_modules
+dist
+.next
+out
+*.log
+.DS_Store
+*.tsbuildinfo
+*.tmp
+.vercel
+/graft/
+/.graft/
+packages/*/graft/
+packages/*/.graft/
+apps/*/.next
+apps/*/.vercel
