@@ -1,4 +1,4 @@
-import schema from '@todae/design-system/schema/components.json';
+import schema from '@tounsoo/todae/schema/components.json';
 
 type PropRow = {
   name: string;

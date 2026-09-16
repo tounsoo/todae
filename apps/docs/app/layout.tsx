@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import '@todae/design-system/todae.css';
+import '@tounsoo/todae/todae.css';
 import './globals.css';
 
 export const metadata = {

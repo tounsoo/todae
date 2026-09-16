@@ -2,7 +2,7 @@
 
 What you need to do today.
 
-Todae is a pnpm workspace. `@todae/design-system` is a private Vite library. `apps/docs` is a Next.js 15 app that renders live MDX examples from that library.
+Todae is a pnpm workspace. `@tounsoo/todae` is a private Vite library. `apps/docs` is a Next.js 15 app that renders live MDX examples from that library.
 
 ## Requirements
 
@@ -60,7 +60,7 @@ pnpm typecheck
 
 ## Deploy docs
 
-Set the Vercel project Root Directory to `apps/docs`. `apps/docs/vercel.json` installs from the repo root, builds `@todae/design-system`, then builds the docs app.
+Set the Vercel project Root Directory to `apps/docs`. `apps/docs/vercel.json` installs from the repo root, builds `@tounsoo/todae`, then builds the docs app.
 
 ## Graft
 
@@ -78,7 +78,7 @@ pnpm graft:check
 
 ## Layout
 
-- `packages/design-system` is `@todae/design-system`, a private Vite library.
+- `packages/design-system` is `@tounsoo/todae`, a private Vite library.
 - `apps/docs` is the Next.js 15 docs app with MDX examples.
 
 Button, Stack, and Text are seed components that prove the pipeline. They are not a design system.
