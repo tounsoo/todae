@@ -6,7 +6,6 @@ const { execFileSync } = require('child_process');
 const dir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const BAKED = null;
 
-// The dist/claude dir of @nanonets/graft resolved from a base whose node_modules is searched.
 function fromPkg(base) {
   try {
     const pkg = require.resolve('@nanonets/graft/package.json', { paths: [base] });
@@ -14,22 +13,19 @@ function fromPkg(base) {
   } catch { return null; }
 }
 
-// The global node_modules dir per npm (handles Homebrew/Windows/volta). Queried on demand.
 function globalRoot() {
   try {
     const root = execFileSync('npm', ['root', '-g'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], shell: process.platform === 'win32' }).trim();
     return root || null;
-  } catch { return null; /* npm unavailable */ }
+  } catch { return null; }
 }
 
-// The version of the package a dist/claude dir belongs to, or null if unreadable.
 function versionOf(distClaude) {
   try {
     return JSON.parse(fs.readFileSync(path.join(distClaude, '..', '..', 'package.json'), 'utf8')).version || null;
   } catch { return null; }
 }
 
-// Numeric-dotted compare of the release part; an unreadable version loses to any known one.
 function newer(a, b) {
   if (!a) return false;
   if (!b) return true;
@@ -42,7 +38,6 @@ function newer(a, b) {
   return false;
 }
 
-// The highest-versioned dir in `dirs` that actually contains `name`, or null.
 function best(dirs, name) {
   let bestDir = null, bestVer = null;
   for (const d of dirs) {
@@ -54,14 +49,13 @@ function best(dirs, name) {
 }
 
 function entry(name) {
-  // Cheap candidates first, and only shell out to npm when every one of them misses.
   const cheap = [BAKED, fromPkg(dir), fromPkg(path.join(path.dirname(process.execPath), '..', 'lib'))];
   const hit = best(cheap, name);
   if (hit) return path.join(hit, name);
   const gr = globalRoot();
   const global = gr && path.join(gr, '@nanonets', 'graft', 'dist', 'claude');
   if (global && fs.existsSync(path.join(global, name))) return path.join(global, name);
-  return path.join(dir, 'dist', 'claude', name); // last-ditch; import will no-op if absent
+  return path.join(dir, 'dist', 'claude', name);
 }
 
-import(pathToFileURL(entry("hooks.js")).href).then((m) => m.main(process.argv[2])).catch(() => { /* graft unavailable — no-op */ });
+import(pathToFileURL(entry("hooks.js")).href).then((m) => m.main(process.argv[2])).catch(() => {});
