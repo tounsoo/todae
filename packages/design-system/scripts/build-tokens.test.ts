@@ -112,4 +112,27 @@ describe('committed token graph', () => {
     expect(graph.tokens.some((t) => t.layer === 'contract' && t.cssValue.startsWith('var('))).toBe(true);
     expect(catalogSelectors(graph.css)).toMatchSnapshot();
   });
+
+  it('emits distinct accent hover and active var chains', async () => {
+    const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
+    for (const context of ['light', 'dark'] as const) {
+      const accent = Object.fromEntries(
+        (['default', 'hover', 'active'] as const).map((slot) => {
+          const path = `color.accent.${slot}`;
+          const token = graph.tokens.find((t) => t.layer === 'appearance' && t.context === context && t.path === path);
+          expect(token, path).toBeDefined();
+          return [slot, token!.cssValue];
+        }),
+      );
+      expect(accent.hover).toMatch(/^var\(--todae-color-/);
+      expect(accent.active).toMatch(/^var\(--todae-color-/);
+      expect(accent.hover).not.toBe(accent.default);
+      expect(accent.active).not.toBe(accent.default);
+      expect(accent.hover).not.toBe(accent.active);
+    }
+    const buttonHover = graph.tokens.find((t) => t.layer === 'contract' && t.path === 'button.bg.hover');
+    const buttonActive = graph.tokens.find((t) => t.layer === 'contract' && t.path === 'button.bg.active');
+    expect(buttonHover?.cssValue).toBe('var(--todae-color-accent-hover)');
+    expect(buttonActive?.cssValue).toBe('var(--todae-color-accent-active)');
+  });
 });
