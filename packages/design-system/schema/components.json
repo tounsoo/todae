@@ -196,88 +196,6 @@
       ]
     },
     {
-      "name": "ChipField",
-      "description": "Controlled chips plus input. Commit does not mutate chips. maxRows uses model B.",
-      "props": [
-        {
-          "name": "chips",
-          "type": "string[]",
-          "required": true,
-          "description": "Controlled chip labels."
-        },
-        {
-          "name": "inputValue",
-          "type": "string",
-          "required": true,
-          "description": "Controlled input text."
-        },
-        {
-          "name": "onInputValueChange",
-          "type": "(value: string) => void",
-          "required": true,
-          "description": "Input text changes."
-        },
-        {
-          "name": "onCommit",
-          "type": "(value: string) => void",
-          "required": true,
-          "description": "Fires on a commit key with a trimmed non-empty value. Does not append chips."
-        },
-        {
-          "name": "onChipRemove",
-          "type": "(index: number, value: string) => void",
-          "required": true,
-          "description": "Dismiss click or Backspace on an empty input."
-        },
-        {
-          "name": "commitKeys",
-          "type": "ReadonlyArray<\"Enter\" | \"Tab\" | \",\" | \";\" | \" \">",
-          "required": false,
-          "description": "Closed allowlist of commit keys.",
-          "default": "[\"Enter\"]"
-        },
-        {
-          "name": "maxRows",
-          "type": "number",
-          "required": false,
-          "description": "Caps visual rows of chips plus input. Earlier chips fold into +N."
-        },
-        {
-          "name": "removeOnBackspace",
-          "type": "boolean",
-          "required": false,
-          "description": "Backspace on an empty input removes the last chip.",
-          "default": "true"
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "required": false,
-          "description": "Disables input and dismiss.",
-          "default": "false"
-        },
-        {
-          "name": "invalid",
-          "type": "boolean",
-          "required": false,
-          "description": "Marks the shell invalid.",
-          "default": "false"
-        }
-      ]
-    },
-    {
-      "name": "ChipField.Input",
-      "description": "Optional input slot. Rendered automatically when omitted.",
-      "props": [
-        {
-          "name": "placeholder",
-          "type": "string",
-          "required": false,
-          "description": "Native placeholder."
-        }
-      ]
-    },
-    {
       "name": "DensityProvider",
       "description": "Sets data-density for spacing-only compact, comfortable, or spacious.",
       "props": [
@@ -383,6 +301,174 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Title text."
+        }
+      ]
+    },
+    {
+      "name": "Field.Affix",
+      "description": "Order-only text adornment. Not clickable. No side prop.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Affix content. Strings render as text."
+        }
+      ]
+    },
+    {
+      "name": "Field.ChipInput",
+      "description": "Controlled chips plus input inside Field.Root. Commit does not mutate chips. maxRows uses model B.",
+      "props": [
+        {
+          "name": "chips",
+          "type": "string[]",
+          "required": true,
+          "description": "Controlled chip labels."
+        },
+        {
+          "name": "inputValue",
+          "type": "string",
+          "required": true,
+          "description": "Controlled input text."
+        },
+        {
+          "name": "onInputValueChange",
+          "type": "(value: string) => void",
+          "required": true,
+          "description": "Input text changes."
+        },
+        {
+          "name": "onCommit",
+          "type": "(value: string) => void",
+          "required": true,
+          "description": "Fires on a commit key with a trimmed non-empty value. Does not append chips."
+        },
+        {
+          "name": "onChipRemove",
+          "type": "(index: number, value: string) => void",
+          "required": true,
+          "description": "Dismiss click or Backspace on an empty input."
+        },
+        {
+          "name": "commitKeys",
+          "type": "ReadonlyArray<\"Enter\" | \"Tab\" | \",\" | \";\" | \" \">",
+          "required": false,
+          "description": "Closed allowlist of commit keys.",
+          "default": "[\"Enter\"]"
+        },
+        {
+          "name": "maxRows",
+          "type": "number",
+          "required": false,
+          "description": "Caps visual rows of chips plus input. Earlier chips fold into +N."
+        },
+        {
+          "name": "removeOnBackspace",
+          "type": "boolean",
+          "required": false,
+          "description": "Backspace on an empty input removes the last chip.",
+          "default": "true"
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false,
+          "description": "Native placeholder."
+        }
+      ]
+    },
+    {
+      "name": "Field.Icon",
+      "description": "Order-only icon. Decorative unless interactive. No side prop.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon or control."
+        },
+        {
+          "name": "interactive",
+          "type": "boolean",
+          "required": false,
+          "description": "When false, the wrapper is aria-hidden.",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "Field.Root",
+      "description": "Field chrome only. No value. Children render in source order.",
+      "props": [
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables the input and marks the shell.",
+          "default": "false"
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the shell invalid and sets aria-invalid on the input.",
+          "default": "false"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Input id. Auto-generated when omitted."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "Native input name."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "TextInput or ChipInput plus optional Icon and Affix. Order is leading/trailing."
+        }
+      ]
+    },
+    {
+      "name": "Field.TextInput",
+      "description": "Controlled text-ish input inside Field.Root.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Controlled value."
+        },
+        {
+          "name": "onChange",
+          "type": "(event: ChangeEvent<HTMLInputElement>) => void",
+          "required": true,
+          "description": "Native change handler."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Optional value callback."
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false,
+          "description": "Native placeholder."
+        },
+        {
+          "name": "type",
+          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\"",
+          "required": false,
+          "description": "Text-ish input types only.",
+          "default": "\"text\""
         }
       ]
     },
@@ -581,143 +667,6 @@
       ]
     },
     {
-      "name": "TextField",
-      "description": "Compound text field. One focus ring on the shared shell.",
-      "props": [
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "required": false,
-          "description": "Disables the input and marks the shell.",
-          "default": "false"
-        },
-        {
-          "name": "invalid",
-          "type": "boolean",
-          "required": false,
-          "description": "Marks the shell invalid and sets aria-invalid on the input.",
-          "default": "false"
-        },
-        {
-          "name": "id",
-          "type": "string",
-          "required": false,
-          "description": "Input id. Auto-generated when omitted."
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "required": false,
-          "description": "Native input name."
-        },
-        {
-          "name": "children",
-          "type": "React.ReactNode",
-          "required": false,
-          "description": "Input and optional IconStart, IconEnd, Prefix, Suffix."
-        }
-      ]
-    },
-    {
-      "name": "TextField.IconEnd",
-      "description": "Trailing icon slot. Decorative unless interactive.",
-      "props": [
-        {
-          "name": "children",
-          "type": "React.ReactNode",
-          "required": false,
-          "description": "Icon or control."
-        },
-        {
-          "name": "interactive",
-          "type": "boolean",
-          "required": false,
-          "description": "When false, the wrapper is aria-hidden.",
-          "default": "false"
-        }
-      ]
-    },
-    {
-      "name": "TextField.IconStart",
-      "description": "Leading icon slot. Decorative unless interactive.",
-      "props": [
-        {
-          "name": "children",
-          "type": "React.ReactNode",
-          "required": false,
-          "description": "Icon or control."
-        },
-        {
-          "name": "interactive",
-          "type": "boolean",
-          "required": false,
-          "description": "When false, the wrapper is aria-hidden.",
-          "default": "false"
-        }
-      ]
-    },
-    {
-      "name": "TextField.Input",
-      "description": "Controlled text-ish input inside TextField.",
-      "props": [
-        {
-          "name": "value",
-          "type": "string",
-          "required": true,
-          "description": "Controlled value."
-        },
-        {
-          "name": "onChange",
-          "type": "(event: ChangeEvent<HTMLInputElement>) => void",
-          "required": true,
-          "description": "Native change handler."
-        },
-        {
-          "name": "onValueChange",
-          "type": "(value: string) => void",
-          "required": false,
-          "description": "Optional value callback."
-        },
-        {
-          "name": "placeholder",
-          "type": "string",
-          "required": false,
-          "description": "Native placeholder."
-        },
-        {
-          "name": "type",
-          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\"",
-          "required": false,
-          "description": "Text-ish input types only.",
-          "default": "\"text\""
-        }
-      ]
-    },
-    {
-      "name": "TextField.Prefix",
-      "description": "Leading text or node before the input.",
-      "props": [
-        {
-          "name": "children",
-          "type": "React.ReactNode",
-          "required": false,
-          "description": "Prefix content. Strings render as text."
-        }
-      ]
-    },
-    {
-      "name": "TextField.Suffix",
-      "description": "Trailing text or node after the input.",
-      "props": [
-        {
-          "name": "children",
-          "type": "React.ReactNode",
-          "required": false,
-          "description": "Suffix content. Strings render as text."
-        }
-      ]
-    },
-    {
       "name": "ThemeProvider",
       "description": "Sets data-appearance from system, light, or dark. Nested providers override.",
       "props": [
@@ -744,7 +693,7 @@
     },
     {
       "name": "useChipField",
-      "description": "Optional state helper. ChipField stays fully controlled without it.",
+      "description": "Optional state helper. Field.ChipInput stays fully controlled without it.",
       "props": [
         {
           "name": "initialChips",

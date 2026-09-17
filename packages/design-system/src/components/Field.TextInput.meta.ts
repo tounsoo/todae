@@ -1,8 +1,8 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'TextField.Input',
-  description: 'Controlled text-ish input inside TextField.',
+  name: 'Field.TextInput',
+  description: 'Controlled text-ish input inside Field.Root.',
   props: [
     {
       name: 'value',

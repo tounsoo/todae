@@ -13,22 +13,18 @@ export {
 } from './components/OptionList';
 export { Popover, type PopoverCloseReason, type PopoverProps } from './components/Popover';
 export { Chip, ChipOverflow, type ChipOverflowProps, type ChipProps } from './components/Chip';
-export {
-  ChipField,
-  type ChipFieldInputProps,
-  type ChipFieldProps,
-} from './components/ChipField';
 export { CHIP_COMMIT_KEYS, type ChipCommitKey } from './components/commitKeys';
+export {
+  Field,
+  type FieldAffixProps,
+  type FieldChipInputProps,
+  type FieldIconProps,
+  type FieldRootProps,
+  type FieldTextInputProps,
+  type FieldTextInputType,
+} from './components/Field';
 export { Stack, type StackProps, type StackDirection } from './components/Stack';
 export { Text, type TextProps, type TextAs, type TextSize, type TextTone, type TextWeight } from './components/Text';
-export {
-  TextField,
-  type FieldAdornmentProps,
-  type FieldShellProps,
-  type TextFieldInputProps,
-  type TextFieldProps,
-  type TextFieldType,
-} from './components/TextField';
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
 export {
   ThemeProvider,

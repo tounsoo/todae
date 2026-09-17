@@ -1,8 +1,8 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'ChipField',
-  description: 'Controlled chips plus input. Commit does not mutate chips. maxRows uses model B.',
+  name: 'Field.ChipInput',
+  description: 'Controlled chips plus input inside Field.Root. Commit does not mutate chips. maxRows uses model B.',
   props: [
     {
       name: 'chips',
@@ -55,18 +55,10 @@ export const meta = {
       description: 'Backspace on an empty input removes the last chip.',
     },
     {
-      name: 'disabled',
-      type: 'boolean',
+      name: 'placeholder',
+      type: 'string',
       required: false,
-      default: 'false',
-      description: 'Disables input and dismiss.',
-    },
-    {
-      name: 'invalid',
-      type: 'boolean',
-      required: false,
-      default: 'false',
-      description: 'Marks the shell invalid.',
+      description: 'Native placeholder.',
     },
   ],
 } as const satisfies ComponentMeta;

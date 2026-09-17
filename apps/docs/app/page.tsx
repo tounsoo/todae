@@ -11,10 +11,7 @@ export default function HomePage() {
           <a href="/chip">Chip</a>
         </li>
         <li>
-          <a href="/textfield">TextField</a>
-        </li>
-        <li>
-          <a href="/chipfield">ChipField</a>
+          <a href="/field">Field</a>
         </li>
         <li>
           <a href="/dialog">Dialog</a>

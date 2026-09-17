@@ -1,34 +1,173 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { renderToString } from 'react-dom/server';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChipField } from './ChipField';
+import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import {
+  Field,
+  type FieldAffixProps,
+  type FieldChipInputProps,
+  type FieldIconProps,
+  type FieldRootProps,
+  type FieldTextInputProps,
+} from './Field';
+import * as api from '../index';
 
 afterEach(cleanup);
 
+describe('Field exports', () => {
+  it('hard-cuts old names and is not callable', () => {
+    expect(api).not.toHaveProperty('TextField');
+    expect(api).not.toHaveProperty('ChipField');
+    expect(api).not.toHaveProperty('FieldShell');
+    expect(api).not.toHaveProperty('IconStart');
+    expect(api).not.toHaveProperty('IconEnd');
+    expect(api).not.toHaveProperty('Prefix');
+    expect(api).not.toHaveProperty('Suffix');
+    expect(api.Field).toEqual({
+      Root: Field.Root,
+      TextInput: Field.TextInput,
+      ChipInput: Field.ChipInput,
+      Icon: Field.Icon,
+      Affix: Field.Affix,
+    });
+    expect(typeof api.Field).toBe('object');
+    expectTypeOf<typeof Field extends (...args: never[]) => unknown ? true : false>().toEqualTypeOf<false>();
+    expectTypeOf<FieldRootProps>().not.toHaveProperty('value');
+    expectTypeOf<FieldIconProps>().not.toHaveProperty('side');
+    expectTypeOf<FieldAffixProps>().not.toHaveProperty('side');
+  });
+});
+
+describe('Field.TextInput', () => {
+  it('wires id, disabled, and invalid onto one input and the shell', () => {
+    const { container } = render(
+      <Field.Root id="name" disabled invalid>
+        <Field.TextInput value="" onChange={() => undefined} />
+      </Field.Root>,
+    );
+    const input = container.querySelector('input');
+    expect(input).toHaveProperty('id', 'name');
+    expect(input).toHaveProperty('disabled', true);
+    expect(input?.getAttribute('aria-invalid')).toBe('true');
+    expect(container.querySelector('[data-disabled]')).not.toBeNull();
+    expect(container.querySelector('[data-invalid]')).not.toBeNull();
+    expect(container.querySelectorAll('input')).toHaveLength(1);
+  });
+
+  it('keeps source order for leading and trailing adornments', () => {
+    const { container } = render(
+      <Field.Root>
+        <Field.Affix>USD</Field.Affix>
+        <Field.TextInput value="1" onChange={() => undefined} />
+        <Field.Icon>
+          <span>go</span>
+        </Field.Icon>
+      </Field.Root>,
+    );
+    const shell = container.firstElementChild;
+    const kids = [...(shell?.children ?? [])];
+    expect(kids[0]?.textContent).toBe('USD');
+    expect(kids[1]?.tagName).toBe('INPUT');
+    expect(kids[2]?.textContent).toBe('go');
+  });
+
+  it('renders affixes as text, not HTML', () => {
+    const { container } = render(
+      <Field.Root>
+        <Field.Affix>{'<img onerror>'}</Field.Affix>
+        <Field.TextInput value="1" onChange={() => undefined} />
+        <Field.Affix>.00</Field.Affix>
+      </Field.Root>,
+    );
+    expect(screen.getByText('<img onerror>')).toBeTruthy();
+    expect(container.querySelector('img')).toBeNull();
+    expect(screen.getByText('.00')).toBeTruthy();
+  });
+
+  it('hides decorative icons and leaves interactive ones named', () => {
+    render(
+      <Field.Root>
+        <Field.Icon>
+          <span>search</span>
+        </Field.Icon>
+        <Field.TextInput value="" onChange={() => undefined} />
+        <Field.Icon interactive>
+          <button type="button">Clear</button>
+        </Field.Icon>
+      </Field.Root>,
+    );
+    expect(screen.getByText('search').parentElement?.getAttribute('aria-hidden')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Clear' }).parentElement?.getAttribute('aria-hidden')).toBeNull();
+  });
+
+  it('focuses the input from chrome, not from adornment buttons', () => {
+    render(
+      <Field.Root>
+        <Field.Affix>USD</Field.Affix>
+        <Field.TextInput value="" onChange={() => undefined} />
+        <Field.Icon interactive>
+          <button type="button">Clear</button>
+        </Field.Icon>
+      </Field.Root>,
+    );
+    const input = screen.getByRole('textbox');
+    fireEvent.mouseDown(screen.getByText('USD'));
+    expect(document.activeElement).toBe(input);
+    screen.getByRole('button', { name: 'Clear' }).focus();
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Clear' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Clear' }));
+  });
+
+  it('stays controlled', () => {
+    const onChange = vi.fn();
+    render(
+      <Field.Root>
+        <Field.TextInput value="kept" onChange={onChange} />
+      </Field.Root>,
+    );
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveProperty('value', 'kept');
+    fireEvent.change(input, { target: { value: 'next' } });
+    expect(onChange).toHaveBeenCalled();
+    expect(input).toHaveProperty('value', 'kept');
+  });
+
+  it('rejects file at the type level', () => {
+    expectTypeOf<FieldTextInputProps['type']>().extract<'file'>().toBeNever();
+    expectTypeOf<NonNullable<FieldTextInputProps['type']>>().toEqualTypeOf<
+      'text' | 'search' | 'email' | 'url' | 'tel' | 'password'
+    >();
+  });
+});
+
 function renderField(
-  props: Partial<ComponentProps<typeof ChipField>> & {
+  props: Partial<ComponentProps<typeof Field.ChipInput>> & {
     chips?: string[];
     inputValue?: string;
+    disabled?: boolean;
+    invalid?: boolean;
   } = {},
 ) {
   const onInputValueChange = props.onInputValueChange ?? vi.fn();
   const onCommit = props.onCommit ?? vi.fn();
   const onChipRemove = props.onChipRemove ?? vi.fn();
+  const { disabled, invalid, ...chip } = props;
   const result = render(
-    <ChipField
-      chips={props.chips ?? ['Alpha', 'Beta', 'Gamma']}
-      inputValue={props.inputValue ?? ''}
-      onInputValueChange={onInputValueChange}
-      onCommit={onCommit}
-      onChipRemove={onChipRemove}
-      {...props}
-    />,
+    <Field.Root disabled={disabled} invalid={invalid}>
+      <Field.ChipInput
+        chips={chip.chips ?? ['Alpha', 'Beta', 'Gamma']}
+        inputValue={chip.inputValue ?? ''}
+        onInputValueChange={onInputValueChange}
+        onCommit={onCommit}
+        onChipRemove={onChipRemove}
+        {...chip}
+      />
+    </Field.Root>,
   );
   return { ...result, onInputValueChange, onCommit, onChipRemove };
 }
 
-describe('ChipField', () => {
+describe('Field.ChipInput', () => {
   it('renders one chip per value plus a controlled input', () => {
     renderField({ chips: ['Alpha', 'Beta'], inputValue: 'x' });
     expect(screen.getByRole('button', { name: 'Remove Alpha' })).toBeTruthy();
@@ -72,14 +211,16 @@ describe('ChipField', () => {
     expect(comma).toHaveBeenCalledWith('tag');
 
     rerender(
-      <ChipField
-        chips={['Alpha']}
-        inputValue="tag"
-        onInputValueChange={() => undefined}
-        onCommit={onCommit}
-        onChipRemove={() => undefined}
-        commitKeys={['Escape' as 'Enter']}
-      />,
+      <Field.Root>
+        <Field.ChipInput
+          chips={['Alpha']}
+          inputValue="tag"
+          onInputValueChange={() => undefined}
+          onCommit={onCommit}
+          onChipRemove={() => undefined}
+          commitKeys={['Escape' as 'Enter']}
+        />
+      </Field.Root>,
     );
     fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
     expect(onCommit).toHaveBeenCalledWith('tag');
@@ -103,26 +244,30 @@ describe('ChipField', () => {
     expect(onChipRemove).toHaveBeenCalledWith(2, 'Gamma');
 
     rerender(
-      <ChipField
-        chips={['Alpha', 'Beta', 'Gamma']}
-        inputValue="x"
-        onInputValueChange={() => undefined}
-        onCommit={() => undefined}
-        onChipRemove={onChipRemove}
-      />,
+      <Field.Root>
+        <Field.ChipInput
+          chips={['Alpha', 'Beta', 'Gamma']}
+          inputValue="x"
+          onInputValueChange={() => undefined}
+          onCommit={() => undefined}
+          onChipRemove={onChipRemove}
+        />
+      </Field.Root>,
     );
     fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Backspace' });
     expect(onChipRemove).toHaveBeenCalledTimes(1);
 
     rerender(
-      <ChipField
-        chips={['Alpha']}
-        inputValue=""
-        onInputValueChange={() => undefined}
-        onCommit={() => undefined}
-        onChipRemove={onChipRemove}
-        removeOnBackspace={false}
-      />,
+      <Field.Root>
+        <Field.ChipInput
+          chips={['Alpha']}
+          inputValue=""
+          onInputValueChange={() => undefined}
+          onCommit={() => undefined}
+          onChipRemove={onChipRemove}
+          removeOnBackspace={false}
+        />
+      </Field.Root>,
     );
     fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Backspace' });
     expect(onChipRemove).toHaveBeenCalledTimes(1);
@@ -156,25 +301,32 @@ describe('ChipField', () => {
     expect(screen.getByRole('button', { name: 'Remove Beta' })).toBeTruthy();
   });
 
-  it('renders adornment parts in the same shell', () => {
-    render(
-      <ChipField
-        chips={['Alpha']}
-        inputValue=""
-        onInputValueChange={() => undefined}
-        onCommit={() => undefined}
-        onChipRemove={() => undefined}
-      >
-        <ChipField.IconEnd>
+  it('keeps ChipInput icons outside .flow', () => {
+    const { container } = render(
+      <Field.Root>
+        <Field.Icon>
           <span>chevron</span>
-        </ChipField.IconEnd>
-      </ChipField>,
+        </Field.Icon>
+        <Field.ChipInput
+          chips={['Alpha']}
+          inputValue=""
+          onInputValueChange={() => undefined}
+          onCommit={() => undefined}
+          onChipRemove={() => undefined}
+        />
+        <Field.Affix>tag</Field.Affix>
+      </Field.Root>,
     );
+    const flow = container.querySelector('input')?.parentElement;
+    expect(flow?.className).toContain('flow');
+    expect(flow?.contains(screen.getByText('chevron'))).toBe(false);
+    expect(flow?.contains(screen.getByText('tag'))).toBe(false);
+    expect(flow?.parentElement?.contains(screen.getByText('chevron'))).toBe(true);
     expect(screen.getByText('chevron')).toBeTruthy();
   });
 });
 
-describe('ChipField overflow', () => {
+describe('Field.ChipInput overflow', () => {
   const observers: Array<{ cb: ResizeObserverCallback }> = [];
 
   beforeEach(() => {
@@ -277,8 +429,8 @@ describe('ChipField overflow', () => {
   });
 });
 
-describe('ChipField maxRows SSR', () => {
-  const shared = {
+describe('Field.ChipInput maxRows SSR', () => {
+  const shared: FieldChipInputProps = {
     chips: ['Alpha', 'Beta', 'Gamma', 'Delta'],
     inputValue: '',
     onInputValueChange: () => undefined,
@@ -287,16 +439,24 @@ describe('ChipField maxRows SSR', () => {
   };
 
   it('SSR maxRows has data-max-rows and no data-measured', () => {
-    const html = renderToString(<ChipField {...shared} maxRows={1} />);
+    const html = renderToString(
+      <Field.Root>
+        <Field.ChipInput {...shared} maxRows={1} />
+      </Field.Root>,
+    );
     expect(html).toContain('data-max-rows');
     expect(html).not.toContain('data-measured');
-    expect(html).toContain('--todae-chipfield-rows');
+    expect(html).toContain('--todae-field-chip-rows');
   });
 
   it('SSR without maxRows stays unmarked', () => {
-    const html = renderToString(<ChipField {...shared} />);
+    const html = renderToString(
+      <Field.Root>
+        <Field.ChipInput {...shared} />
+      </Field.Root>,
+    );
     expect(html).not.toContain('data-max-rows');
     expect(html).not.toContain('data-measured');
-    expect(html).not.toContain('--todae-chipfield-rows');
+    expect(html).not.toContain('--todae-field-chip-rows');
   });
 });

@@ -1,0 +1,73 @@
+import {
+  ChipInputCommitKeys,
+  ChipInputControlled,
+  ChipInputHook,
+  ChipInputMaxRows,
+  ChipInputStates,
+  FieldAdornments,
+  FieldStates,
+} from '../../components/demos/FieldDemo';
+
+# Field
+
+Shared chrome. `Field.Root` is the shell. Value lives on `Field.TextInput` or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop.
+
+<Example block>
+  <FieldStates />
+</Example>
+
+`Affix` is text, not a control. Decorative `Icon` is `aria-hidden`. Interactive `Icon` keeps its name. Clear is not a built-in prop.
+
+<Example block>
+  <FieldAdornments />
+</Example>
+
+## Chip input
+
+Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow.
+
+When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. Hidden chips are unmounted from the live flow.
+
+Deferred this slice: built-in clear, label/hint/error slot, paste-split, clickable `+N`, chip arrow-key roving.
+
+<Example block>
+  <ChipInputControlled />
+</Example>
+
+Optional `useChipField` holds chips and input, then spreads onto `Field.ChipInput`.
+
+<Example block>
+  <ChipInputHook />
+</Example>
+
+`commitKeys={['Enter', ',']}`. Unknown keys are dropped.
+
+<Example block>
+  <ChipInputCommitKeys />
+</Example>
+
+`maxRows={1}` and `{2}` under compact and comfortable.
+
+<Example block>
+  <ChipInputMaxRows />
+</Example>
+
+Disabled and invalid live on `Field.Root`.
+
+<Example block>
+  <ChipInputStates />
+</Example>
+
+## Props
+
+<PropsTable name="Field.Root" />
+
+<PropsTable name="Field.TextInput" />
+
+<PropsTable name="Field.ChipInput" />
+
+<PropsTable name="Field.Icon" />
+
+<PropsTable name="Field.Affix" />
+
+<PropsTable name="useChipField" />

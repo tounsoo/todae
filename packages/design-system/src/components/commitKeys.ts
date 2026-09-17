@@ -12,7 +12,7 @@ export function resolveCommitKeys(keys?: readonly string[]): readonly ChipCommit
   if (!keys) return ['Enter'];
   const allowed = keys.filter(isCommitKey);
   if (allowed.length !== keys.length && process.env.NODE_ENV !== 'production') {
-    console.error('ChipField commitKeys must be a closed allowlist of Enter, Tab, comma, semicolon, or space');
+    console.error('Field.ChipInput commitKeys must be a closed allowlist of Enter, Tab, comma, semicolon, or space');
   }
   return allowed.length > 0 ? allowed : ['Enter'];
 }

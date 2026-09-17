@@ -1,6 +1,6 @@
 'use client';
 
-import { BottomSheet, Button, TextField } from '@tounsoo/todae';
+import { BottomSheet, Button, Field } from '@tounsoo/todae';
 import { useRef, useState } from 'react';
 
 const OPTIONS = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta'];
@@ -53,15 +53,15 @@ export function ComboboxTouchSketch() {
       >
         <BottomSheet.Header>
           <BottomSheet.Title>Search options</BottomSheet.Title>
-          <TextField>
-            <TextField.Input
+          <Field.Root>
+            <Field.TextInput
               ref={searchRef}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Filter"
               type="search"
             />
-          </TextField>
+          </Field.Root>
         </BottomSheet.Header>
         <BottomSheet.Body>
           <ul role="listbox" aria-label="Options">

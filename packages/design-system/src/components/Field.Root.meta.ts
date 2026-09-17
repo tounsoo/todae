@@ -1,8 +1,8 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'TextField',
-  description: 'Compound text field. One focus ring on the shared shell.',
+  name: 'Field.Root',
+  description: 'Field chrome only. No value. Children render in source order.',
   props: [
     {
       name: 'disabled',
@@ -34,7 +34,7 @@ export const meta = {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description: 'Input and optional IconStart, IconEnd, Prefix, Suffix.',
+      description: 'TextInput or ChipInput plus optional Icon and Affix. Order is leading/trailing.',
     },
   ],
 } as const satisfies ComponentMeta;

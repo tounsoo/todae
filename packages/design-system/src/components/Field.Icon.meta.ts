@@ -1,8 +1,8 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'TextField.IconEnd',
-  description: 'Trailing icon slot. Decorative unless interactive.',
+  name: 'Field.Icon',
+  description: 'Order-only icon. Decorative unless interactive. No side prop.',
   props: [
     {
       name: 'children',
