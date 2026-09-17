@@ -16,7 +16,7 @@ export const meta = {
       type: 'ThemeOverride',
       required: false,
       description:
-        'Allowlisted appearance color roles only. Values are typed OKLCH; unknown keys and raw CSS are rejected.',
+        'Closed allowlist of raw, semantic, and component token paths. Values are typed; unknown keys and raw CSS are rejected.',
     },
     {
       name: 'children',

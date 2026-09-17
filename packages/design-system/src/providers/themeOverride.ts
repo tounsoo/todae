@@ -1,4 +1,44 @@
-export const THEME_OVERRIDE_KEYS = [
+export const RAW_OVERRIDE_KEYS = [
+  'color.blue.500',
+  'color.gray.50',
+  'color.gray.100',
+  'color.gray.200',
+  'color.gray.300',
+  'color.gray.400',
+  'color.gray.500',
+  'color.gray.600',
+  'color.gray.700',
+  'color.gray.800',
+  'color.gray.900',
+  'color.gray.950',
+  'font.leading.default',
+  'font.size.1',
+  'font.size.2',
+  'font.size.3',
+  'font.size.4',
+  'font.size.5',
+  'font.size.6',
+  'font.weight.bold',
+  'font.weight.medium',
+  'font.weight.regular',
+  'radius.lg',
+  'radius.md',
+  'radius.sm',
+  'space.1',
+  'space.2',
+  'space.3',
+  'space.4',
+  'space.5',
+  'space.6',
+  'space.7',
+  'space.8',
+  'space.9',
+  'space.10',
+  'space.11',
+  'space.12',
+] as const;
+
+export const SEMANTIC_OVERRIDE_KEYS = [
   'color.bg.canvas',
   'color.bg.surface',
   'color.fg.default',
@@ -7,9 +47,59 @@ export const THEME_OVERRIDE_KEYS = [
   'color.accent.default',
   'color.accent.hover',
   'color.accent.active',
+  'space.control.x',
+  'space.control.y',
+  'space.stack.gap',
+  'space.inline.gap',
+] as const;
+
+export const COMPONENT_OVERRIDE_KEYS = [
+  'button.bg.default',
+  'button.bg.hover',
+  'button.bg.active',
+  'button.bg.focus',
+  'button.bg.disabled',
+  'button.fg.default',
+  'button.fg.hover',
+  'button.fg.active',
+  'button.fg.focus',
+  'button.fg.disabled',
+  'button.border.default',
+  'button.border.hover',
+  'button.border.active',
+  'button.border.focus',
+  'button.border.disabled',
+  'button.ring.focus',
+  'button.radius',
+  'button.padding.x',
+  'button.padding.y',
+  'button.font.size',
+  'button.font.weight',
+  'button.gap',
+  'stack.gap',
+  'text.fg.default',
+  'text.fg.muted',
+  'text.fg.accent',
+  'text.size.1',
+  'text.size.2',
+  'text.size.3',
+  'text.size.4',
+  'text.size.5',
+  'text.size.6',
+  'text.weight.regular',
+  'text.weight.medium',
+  'text.weight.bold',
+  'text.leading.default',
+] as const;
+
+export const THEME_OVERRIDE_KEYS = [
+  ...RAW_OVERRIDE_KEYS,
+  ...SEMANTIC_OVERRIDE_KEYS,
+  ...COMPONENT_OVERRIDE_KEYS,
 ] as const;
 
 export type ThemeOverrideKey = (typeof THEME_OVERRIDE_KEYS)[number];
+export type ThemeOverrideType = 'color' | 'dimension' | 'fontWeight' | 'number';
 
 export type ThemeColorValue = {
   colorSpace: 'oklch';
@@ -17,13 +107,47 @@ export type ThemeColorValue = {
   alpha?: number;
 };
 
-export type ThemeOverride = { [K in ThemeOverrideKey]?: ThemeColorValue };
+export type ThemeDimensionValue = {
+  value: number;
+  unit: 'rem';
+};
+
+export type ThemeOverrideValue = ThemeColorValue | ThemeDimensionValue | number;
+export type ThemeOverride = { [K in ThemeOverrideKey]?: ThemeOverrideValue };
 
 const KEYS = new Set<string>(THEME_OVERRIDE_KEYS);
 const DEV = process.env.NODE_ENV !== 'production';
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const OKLCH =
   /^oklch\(\s*(-?\d*\.?\d+)\s+(-?\d*\.?\d+)\s+(-?\d*\.?\d+)(?:\s*\/\s*(-?\d*\.?\d+))?\s*\)$/;
+const REM = /^(-?\d*\.?\d+)rem$/;
+const WEIGHT = /^(?:[1-9][0-9]{0,2}|1000)$/;
+const NUMBER = /^-?\d*\.?\d+$/;
+
+const COLOR_KEYS = new Set<string>([
+  ...RAW_OVERRIDE_KEYS.filter((key) => key.startsWith('color.')),
+  ...SEMANTIC_OVERRIDE_KEYS.filter((key) => key.startsWith('color.')),
+  ...COMPONENT_OVERRIDE_KEYS.filter(
+    (key) =>
+      key.startsWith('button.bg.') ||
+      key.startsWith('button.fg.') ||
+      key.startsWith('button.border.') ||
+      key === 'button.ring.focus' ||
+      key.startsWith('text.fg.'),
+  ),
+]);
+
+const WEIGHT_KEYS = new Set<string>([
+  'font.weight.bold',
+  'font.weight.medium',
+  'font.weight.regular',
+  'button.font.weight',
+  'text.weight.regular',
+  'text.weight.medium',
+  'text.weight.bold',
+]);
+
+const NUMBER_KEYS = new Set<string>(['font.leading.default', 'text.leading.default']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -35,6 +159,13 @@ function finite(n: unknown): n is number {
 
 export function isThemeOverrideKey(key: string): key is ThemeOverrideKey {
   return KEYS.has(key);
+}
+
+export function themeOverrideType(key: ThemeOverrideKey): ThemeOverrideType {
+  if (COLOR_KEYS.has(key)) return 'color';
+  if (WEIGHT_KEYS.has(key)) return 'fontWeight';
+  if (NUMBER_KEYS.has(key)) return 'number';
+  return 'dimension';
 }
 
 export function isThemeColorValue(value: unknown): value is ThemeColorValue {
@@ -52,6 +183,28 @@ export function isThemeColorValue(value: unknown): value is ThemeColorValue {
   return true;
 }
 
+export function isThemeDimensionValue(value: unknown): value is ThemeDimensionValue {
+  if (!isRecord(value)) return false;
+  const extra = Object.keys(value).filter((key) => !['value', 'unit'].includes(key));
+  return extra.length === 0 && finite(value.value) && value.value >= 0 && value.unit === 'rem';
+}
+
+function isFontWeight(value: unknown): value is number {
+  return finite(value) && Number.isInteger(value) && value >= 1 && value <= 1000;
+}
+
+function isUnitlessNumber(value: unknown): value is number {
+  return finite(value);
+}
+
+export function isThemeOverrideValue(key: ThemeOverrideKey, value: unknown): value is ThemeOverrideValue {
+  const type = themeOverrideType(key);
+  if (type === 'color') return isThemeColorValue(value);
+  if (type === 'dimension') return isThemeDimensionValue(value);
+  if (type === 'fontWeight') return isFontWeight(value);
+  return isUnitlessNumber(value);
+}
+
 export function parseThemeColor(raw: string): ThemeColorValue | null {
   const value = raw.trim();
   if (HEX.test(value)) return hexToOklch(value);
@@ -65,11 +218,34 @@ export function parseThemeColor(raw: string): ThemeColorValue | null {
   return isThemeColorValue(color) ? color : null;
 }
 
+export function parseThemeValue(key: ThemeOverrideKey, raw: string): ThemeOverrideValue | null {
+  const type = themeOverrideType(key);
+  const value = raw.trim();
+  if (type === 'color') return parseThemeColor(value);
+  if (type === 'dimension') {
+    const match = value.match(REM);
+    if (!match) return null;
+    const dimension: ThemeDimensionValue = { value: Number(match[1]), unit: 'rem' };
+    return isThemeDimensionValue(dimension) ? dimension : null;
+  }
+  if (type === 'fontWeight') return WEIGHT.test(value) ? Number(value) : null;
+  if (!NUMBER.test(value)) return null;
+  const n = Number(value);
+  return isUnitlessNumber(n) ? n : null;
+}
+
 export function themeColorCss(value: ThemeColorValue): string {
   const [l, c, h] = value.components;
   return value.alpha === undefined || value.alpha === 1
     ? `oklch(${l} ${c} ${h})`
     : `oklch(${l} ${c} ${h} / ${value.alpha})`;
+}
+
+export function themeValueCss(key: ThemeOverrideKey, value: ThemeOverrideValue): string {
+  if (themeOverrideType(key) === 'color' && isThemeColorValue(value)) return themeColorCss(value);
+  if (isThemeDimensionValue(value)) return `${value.value}${value.unit}`;
+  if (typeof value === 'number') return String(value);
+  return '';
 }
 
 export function cssVarName(path: ThemeOverrideKey): string {
@@ -93,11 +269,11 @@ export function themeOverrideStyle(overrides: unknown): Record<string, string> {
       reject(`Unknown theme override "${key}"`);
       continue;
     }
-    if (!isThemeColorValue(value)) {
+    if (!isThemeOverrideValue(key, value)) {
       reject(`Invalid theme override value for "${key}"`);
       continue;
     }
-    style[cssVarName(key)] = themeColorCss(value);
+    style[cssVarName(key)] = themeValueCss(key, value);
   }
   return style;
 }
@@ -119,11 +295,7 @@ function hexToOklch(hex: string): ThemeColorValue {
   const H = (Math.atan2(b2, a) * 180) / Math.PI;
   return {
     colorSpace: 'oklch',
-    components: [
-      round(L),
-      round(C),
-      round(H < 0 ? H + 360 : H),
-    ],
+    components: [round(L), round(C), round(H < 0 ? H + 360 : H)],
   };
 }
 

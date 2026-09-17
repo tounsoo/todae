@@ -60,7 +60,7 @@ import { DensityProvider, ThemeProvider, Button } from '@tounsoo/todae';
 </ThemeProvider>
 ```
 
-`useAppearance()` and `useDensity()` read the nearest provider. `ThemeProvider` also accepts `overrides?: ThemeOverride` — a closed map of appearance color paths to typed OKLCH values, applied as CSS vars on the provider root. Unknown keys and raw CSS are rejected.
+`useAppearance()` and `useDensity()` read the nearest provider. `ThemeProvider` also accepts `overrides?: ThemeOverride` — a closed map of raw, semantic, and component token paths to typed values, applied as CSS vars on the provider root. Unknown keys and raw CSS are rejected.
 
 ## Generate the component schema
 
@@ -79,7 +79,7 @@ pnpm dev:docs
 
 `pnpm dev` is the same as `pnpm dev:docs`.
 
-Open `/`, `/button`, `/stack`, `/text`, `/tokens`, and `/playground`. Component pages mount a live example and a props table from the schema. `/tokens` tables the generated catalog. `/playground` is a left-rail theme controller (appearance, density, token inputs) and a right-stage live demo.
+Open `/`, `/button`, `/stack`, `/text`, `/tokens`, and `/playground`. Component pages mount a live example and a props table from the schema. `/tokens` tables the generated catalog. `/playground` is a left-rail theme controller (appearance + density selectors, raw / semantic / component token tabs, Export) and a right-stage live demo.
 
 ## Test
 

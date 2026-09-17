@@ -2,29 +2,29 @@
 
 import {
   Button,
+  COMPONENT_OVERRIDE_KEYS,
   DensityProvider,
+  RAW_OVERRIDE_KEYS,
+  SEMANTIC_OVERRIDE_KEYS,
   Stack,
   Text,
   ThemeProvider,
   cssVarName,
-  parseThemeColor,
-  themeColorCss,
+  parseThemeValue,
+  themeOverrideType,
+  themeValueCss,
   type ThemeOverride,
   type ThemeOverrideKey,
 } from '@tounsoo/todae';
 import { useLayoutEffect, useRef, useState } from 'react';
 
-const PRIMARY = [
-  'color.accent.default',
-  'color.fg.default',
-  'color.bg.canvas',
-  'color.bg.surface',
-  'color.border.default',
-] as const satisfies readonly ThemeOverrideKey[];
+const TABS = {
+  raw: RAW_OVERRIDE_KEYS,
+  semantic: SEMANTIC_OVERRIDE_KEYS,
+  component: COMPONENT_OVERRIDE_KEYS,
+} as const;
 
-const MORE = ['color.accent.hover', 'color.accent.active'] as const satisfies readonly ThemeOverrideKey[];
-const PATHS = [...PRIMARY, ...MORE];
-
+type TokenTab = keyof typeof TABS;
 type AppearanceChoice = 'system' | 'light' | 'dark';
 type DensityChoice = 'compact' | 'comfortable' | 'spacious';
 
@@ -54,19 +54,22 @@ function TokenField({
   onChange: (next: string) => void;
 }) {
   const id = path.replaceAll('.', '-');
+  const color = themeOverrideType(path) === 'color';
   return (
     <div className="token-row">
       <label htmlFor={`${id}-text`}>
         <code>{path}</code>
       </label>
       <div className="token-row-inputs">
-        <input
-          id={`${id}-color`}
-          type="color"
-          aria-label={`${path} color`}
-          value={toHex(value || '#000000')}
-          onChange={(event) => onChange(event.target.value)}
-        />
+        {color ? (
+          <input
+            id={`${id}-color`}
+            type="color"
+            aria-label={`${path} color`}
+            value={toHex(value || '#000000')}
+            onChange={(event) => onChange(event.target.value)}
+          />
+        ) : null}
         <input
           id={`${id}-text`}
           type="text"
@@ -83,30 +86,32 @@ export default function PlaygroundPage() {
   const stageRef = useRef<HTMLDivElement>(null);
   const [appearance, setAppearance] = useState<AppearanceChoice>('system');
   const [density, setDensity] = useState<DensityChoice>('comfortable');
+  const [tab, setTab] = useState<TokenTab>('semantic');
   const [overrides, setOverrides] = useState<ThemeOverride>({});
   const [computed, setComputed] = useState<Partial<Record<ThemeOverrideKey, string>>>({});
   const [copyStatus, setCopyStatus] = useState('');
+  const paths = TABS[tab];
 
   useLayoutEffect(() => {
     const el = stageRef.current;
     if (!el) return;
     const cs = getComputedStyle(el);
     const next: Partial<Record<ThemeOverrideKey, string>> = {};
-    for (const path of PATHS) {
+    for (const path of paths) {
       next[path] = cs.getPropertyValue(cssVarName(path)).trim();
     }
-    setComputed(next);
-  }, [appearance, density, overrides]);
+    setComputed((prev) => ({ ...prev, ...next }));
+  }, [appearance, density, overrides, paths]);
 
   function valueFor(path: ThemeOverrideKey): string {
     const typed = overrides[path];
-    if (typed) return themeColorCss(typed);
+    if (typed !== undefined) return themeValueCss(path, typed);
     return computed[path] ?? '';
   }
 
   function setToken(path: ThemeOverrideKey, raw: string) {
-    const parsed = parseThemeColor(raw);
-    if (!parsed) return;
+    const parsed = parseThemeValue(path, raw);
+    if (parsed === null) return;
     setOverrides((prev) => ({ ...prev, [path]: parsed }));
   }
 
@@ -157,17 +162,42 @@ export default function PlaygroundPage() {
             ))}
           </div>
         </fieldset>
-        <section className="playground-tokens" aria-labelledby="playground-tokens-label">
-          <h2 id="playground-tokens-label">Tokens</h2>
-          {PRIMARY.map((path) => (
+        <div
+          className="playground-tabs"
+          role="tablist"
+          aria-label="Token layer"
+          onKeyDown={(event) => {
+            if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+            const names = Object.keys(TABS) as TokenTab[];
+            const index = names.indexOf(tab);
+            const next = names[(index + (event.key === 'ArrowRight' ? 1 : names.length - 1)) % names.length];
+            if (next) setTab(next);
+          }}
+        >
+          {(Object.keys(TABS) as TokenTab[]).map((name) => (
+            <button
+              key={name}
+              type="button"
+              role="tab"
+              id={`token-tab-${name}`}
+              aria-selected={tab === name}
+              aria-controls={`token-panel-${name}`}
+              tabIndex={tab === name ? 0 : -1}
+              onClick={() => setTab(name)}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+        <section
+          className="playground-tokens"
+          role="tabpanel"
+          id={`token-panel-${tab}`}
+          aria-labelledby={`token-tab-${tab}`}
+        >
+          {paths.map((path) => (
             <TokenField key={path} path={path} value={valueFor(path)} onChange={(value) => setToken(path, value)} />
           ))}
-          <details>
-            <summary>More</summary>
-            {MORE.map((path) => (
-              <TokenField key={path} path={path} value={valueFor(path)} onChange={(value) => setToken(path, value)} />
-            ))}
-          </details>
         </section>
         <div className="playground-actions">
           <Button type="button" variant="secondary" onClick={() => setOverrides({})}>
@@ -181,14 +211,14 @@ export default function PlaygroundPage() {
           {copyStatus}
         </p>
       </aside>
-      <ThemeProvider
-        ref={stageRef}
-        className="playground-stage"
-        appearance={appearance}
-        overrides={overrides}
-        aria-label="Live demos"
-      >
-        <DensityProvider density={density}>
+      <DensityProvider density={density} className="playground-density">
+        <ThemeProvider
+          ref={stageRef}
+          className="playground-stage"
+          appearance={appearance}
+          overrides={overrides}
+          aria-label="Live demos"
+        >
           <Stack>
             <Text as="strong" weight="medium">
               Buttons
@@ -209,8 +239,8 @@ export default function PlaygroundPage() {
             <Text tone="muted">Muted tone</Text>
             <Text tone="accent">Accent tone</Text>
           </Stack>
-        </DensityProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </DensityProvider>
     </div>
   );
 }

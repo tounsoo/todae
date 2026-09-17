@@ -95,6 +95,8 @@ caption {
   padding: 0.75rem 0.85rem 1rem;
   border-right: 1px solid var(--todae-color-border-default);
   background: var(--todae-color-bg-surface);
+  max-height: calc(100vh - 4rem);
+  min-height: 0;
 }
 
 .playground-rail h1 {
@@ -105,13 +107,53 @@ caption {
   text-transform: uppercase;
 }
 
-.playground-rail fieldset,
+.playground-rail fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.playground-tabs {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.playground-tabs button {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0.25rem 0.35rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playground-tabs button[aria-selected='true'] {
+  border-bottom-color: var(--todae-color-accent-default);
+}
+
+.playground-tabs button:focus-visible {
+  outline: 2px solid var(--todae-color-accent-default);
+  outline-offset: 2px;
+}
+
 .playground-tokens {
   margin: 0;
   padding: 0;
   border: 0;
   display: grid;
   gap: 0.35rem;
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .playground-rail legend,
@@ -138,8 +180,14 @@ caption {
   font-size: 0.8125rem;
 }
 
-.playground-stage {
+.playground-density {
   flex: 1 1 20rem;
+  min-width: 0;
+  display: flex;
+}
+
+.playground-stage {
+  flex: 1 1 auto;
   min-width: 0;
   padding: 1.75rem 2rem;
   color: var(--todae-color-fg-default);

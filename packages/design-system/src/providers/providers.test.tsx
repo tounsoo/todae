@@ -130,8 +130,20 @@ describe('themeOverrideStyle', () => {
     expect(
       themeOverrideStyle({
         'color.accent.default': { colorSpace: 'oklch', components: [0.55, 0.18, 255] },
+        'space.control.x': { value: 0.5, unit: 'rem' },
       }),
-    ).toEqual({ '--todae-color-accent-default': 'oklch(0.55 0.18 255)' });
+    ).toEqual({
+      '--todae-color-accent-default': 'oklch(0.55 0.18 255)',
+      '--todae-space-control-x': '0.5rem',
+    });
+  });
+
+  it('rejects a typed value that does not match the key', () => {
+    expect(() =>
+      themeOverrideStyle({
+        'space.1': { colorSpace: 'oklch', components: [0.5, 0.1, 200] },
+      }),
+    ).toThrow(/Invalid theme override value/);
   });
 });
 
