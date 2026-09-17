@@ -10,7 +10,7 @@ import {
 
 Controlled chips plus input. The field never appends chips. Parent `onCommit` decides.
 
-When `maxRows` is set, the first client frame may wrap fully before measurement folds earliest chips into `+N`. Hidden chips are unmounted from the live flow.
+When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. Hidden chips are unmounted from the live flow.
 
 Deferred this slice: built-in clear, label/hint/error slot, paste-split, clickable `+N`, chip arrow-key roving.
 

@@ -13,8 +13,9 @@ export function useChipMeasure({
   flowRef: RefObject<HTMLElement | null>;
   measureRef: RefObject<HTMLElement | null>;
   inputRef: RefObject<HTMLElement | null>;
-}): { visible: number; hidden: number } {
+}): { visible: number; hidden: number; measured: boolean } {
   const [plan, setPlan] = useState({ visible: chips.length, hidden: 0 });
+  const [measured, setMeasured] = useState(false);
 
   const measure = useCallback(() => {
     if (maxRows == null || maxRows < 1) {
@@ -41,6 +42,7 @@ export function useChipMeasure({
 
   useLayoutEffect(() => {
     measure();
+    setMeasured(true);
     const flow = flowRef.current;
     const layer = measureRef.current;
     if (typeof ResizeObserver === 'undefined') {
@@ -53,5 +55,5 @@ export function useChipMeasure({
     return () => ro.disconnect();
   }, [measure, flowRef, measureRef]);
 
-  return plan;
+  return { ...plan, measured };
 }

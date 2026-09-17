@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChipField } from './ChipField';
 
@@ -147,6 +148,14 @@ describe('ChipField', () => {
     expect(onCommit).not.toHaveBeenCalled();
   });
 
+  it('leaves the no-maxRows flow unmarked', () => {
+    const { container } = renderField({ chips: ['Alpha', 'Beta'] });
+    expect(container.querySelector('[data-max-rows]')).toBeNull();
+    expect(container.querySelector('[data-measured]')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Remove Alpha' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Remove Beta' })).toBeTruthy();
+  });
+
   it('renders adornment parts in the same shell', () => {
     render(
       <ChipField
@@ -227,6 +236,8 @@ describe('ChipField overflow', () => {
     });
     const live = liveNodes(container);
     const html = live.map((el) => el.outerHTML).join('');
+    expect(container.querySelector('[data-max-rows]')).not.toBeNull();
+    expect(container.querySelector('[data-measured]')).not.toBeNull();
     expect(html).toContain('2 more');
     expect(html).not.toContain('Remove Alpha');
     expect(html).not.toContain('Remove Beta');
@@ -263,5 +274,29 @@ describe('ChipField overflow', () => {
     const live = liveNodes(container).map((el) => el.outerHTML).join('');
     expect(live).not.toContain('data-overflow');
     expect(live).toContain('Remove Alpha');
+  });
+});
+
+describe('ChipField maxRows SSR', () => {
+  const shared = {
+    chips: ['Alpha', 'Beta', 'Gamma', 'Delta'],
+    inputValue: '',
+    onInputValueChange: () => undefined,
+    onCommit: () => undefined,
+    onChipRemove: () => undefined,
+  };
+
+  it('SSR maxRows has data-max-rows and no data-measured', () => {
+    const html = renderToString(<ChipField {...shared} maxRows={1} />);
+    expect(html).toContain('data-max-rows');
+    expect(html).not.toContain('data-measured');
+    expect(html).toContain('--todae-chipfield-rows');
+  });
+
+  it('SSR without maxRows stays unmarked', () => {
+    const html = renderToString(<ChipField {...shared} />);
+    expect(html).not.toContain('data-max-rows');
+    expect(html).not.toContain('data-measured');
+    expect(html).not.toContain('--todae-chipfield-rows');
   });
 });
