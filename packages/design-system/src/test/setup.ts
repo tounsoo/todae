@@ -52,6 +52,35 @@ function polyfillPointerEvent(): void {
   globalThis.PointerEvent = PointerEventPolyfill as typeof PointerEvent;
 }
 
+function polyfillPopover(): void {
+  if (typeof HTMLElement === 'undefined') return;
+  const proto = HTMLElement.prototype;
+  if (typeof proto.showPopover === 'function') return;
+
+  proto.showPopover = function showPopover() {
+    this.setAttribute('data-popover-open', '');
+  };
+  proto.hidePopover = function hidePopover() {
+    this.removeAttribute('data-popover-open');
+  };
+  proto.togglePopover = function togglePopover(force?: boolean) {
+    const shown = this.hasAttribute('data-popover-open');
+    if (force === true || (force !== false && !shown)) this.showPopover();
+    else this.hidePopover();
+    return this.hasAttribute('data-popover-open');
+  };
+}
+
+function polyfillCssSupports(): void {
+  const css = globalThis.CSS ?? {};
+  if (typeof css.supports === 'function') return;
+  globalThis.CSS = Object.assign(css, {
+    supports: () => false,
+  }) as typeof CSS;
+}
+
 polyfillDialog();
 polyfillInert();
 polyfillPointerEvent();
+polyfillPopover();
+polyfillCssSupports();

@@ -387,6 +387,141 @@
       ]
     },
     {
+      "name": "Option",
+      "description": "String-only option. Also available as OptionList.Option.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Selection value."
+        },
+        {
+          "name": "children",
+          "type": "string",
+          "required": true,
+          "description": "Visible label. Text only."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Skips pointer and keyboard selection.",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "OptionList",
+      "description": "Listbox. Single or multiple. Option children are strings. Does not close a Popover.",
+      "props": [
+        {
+          "name": "selectionMode",
+          "type": "\"single\" | \"multiple\"",
+          "required": false,
+          "description": "Single fires onChange(string). Multiple fires onChange(string[]).",
+          "default": "\"single\""
+        },
+        {
+          "name": "value",
+          "type": "string | null | readonly string[]",
+          "required": true,
+          "description": "Selected value, or values when selectionMode is multiple."
+        },
+        {
+          "name": "onChange",
+          "type": "(value: string | string[]) => void",
+          "required": true,
+          "description": "Selection change. Single passes a string. Multiple passes the next array."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name when no visible label is present."
+        }
+      ]
+    },
+    {
+      "name": "OptionList.Option",
+      "description": "String-only option. Same as the top-level Option export.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Selection value."
+        },
+        {
+          "name": "children",
+          "type": "string",
+          "required": true,
+          "description": "Visible label. Text only."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Skips pointer and keyboard selection.",
+          "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "Popover",
+      "description": "Non-modal popover=\"manual\". Controlled open. hidePopover only when open is false.",
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": true,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: PopoverCloseReason) => void",
+          "required": true,
+          "description": "Dismiss or trigger requests. Staying open keeps the popover open."
+        },
+        {
+          "name": "anchorRef",
+          "type": "RefObject<HTMLElement | null>",
+          "required": false,
+          "description": "Element that does not count as an outside press."
+        }
+      ]
+    },
+    {
+      "name": "Popover.Content",
+      "description": "Manual popover surface. Syncs showPopover and hidePopover to the open prop.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name for the surface."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Popover contents."
+        }
+      ]
+    },
+    {
+      "name": "Popover.Trigger",
+      "description": "Button that toggles the popover and owns the CSS anchor.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Button label."
+        }
+      ]
+    },
+    {
       "name": "Stack",
       "description": "Flex layout. Gap comes from the stack.gap contract token.",
       "props": [

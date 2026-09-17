@@ -407,6 +407,24 @@
       "context": "light"
     },
     {
+      "path": "color.accent.soft",
+      "type": "color",
+      "cssVar": "--todae-color-accent-soft",
+      "cssValue": "oklch(0.55 0.18 255 / 0.12)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.accent.soft-strong",
+      "type": "color",
+      "cssVar": "--todae-color-accent-soft-strong",
+      "cssValue": "oklch(0.55 0.18 255 / 0.2)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
       "path": "color.bg.canvas",
       "type": "color",
       "cssVar": "--todae-color-bg-canvas",
@@ -425,10 +443,28 @@
       "context": "light"
     },
     {
+      "path": "color.bg.highlight",
+      "type": "color",
+      "cssVar": "--todae-color-bg-highlight",
+      "cssValue": "oklch(0.22 0.02 260 / 0.08)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
       "path": "color.bg.scrim",
       "type": "color",
       "cssVar": "--todae-color-bg-scrim",
       "cssValue": "oklch(0.16 0.02 260 / 0.45)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.bg.selected",
+      "type": "color",
+      "cssVar": "--todae-color-bg-selected",
+      "cssValue": "oklch(0.55 0.18 255 / 0.12)",
       "ref": null,
       "layer": "appearance",
       "context": "light"
@@ -448,6 +484,15 @@
       "cssVar": "--todae-color-bg-surface",
       "cssValue": "var(--todae-color-gray-50)",
       "ref": "color.gray.50",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.bg.transparent",
+      "type": "color",
+      "cssVar": "--todae-color-bg-transparent",
+      "cssValue": "oklch(0.98 0.005 260 / 0)",
+      "ref": null,
       "layer": "appearance",
       "context": "light"
     },
@@ -542,6 +587,24 @@
       "context": "dark"
     },
     {
+      "path": "color.accent.soft",
+      "type": "color",
+      "cssVar": "--todae-color-accent-soft",
+      "cssValue": "oklch(0.55 0.18 255 / 0.12)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.accent.soft-strong",
+      "type": "color",
+      "cssVar": "--todae-color-accent-soft-strong",
+      "cssValue": "oklch(0.55 0.18 255 / 0.2)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
       "path": "color.bg.canvas",
       "type": "color",
       "cssVar": "--todae-color-bg-canvas",
@@ -560,10 +623,28 @@
       "context": "dark"
     },
     {
+      "path": "color.bg.highlight",
+      "type": "color",
+      "cssVar": "--todae-color-bg-highlight",
+      "cssValue": "oklch(0.98 0.005 260 / 0.1)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
       "path": "color.bg.scrim",
       "type": "color",
       "cssVar": "--todae-color-bg-scrim",
       "cssValue": "oklch(0.16 0.02 260 / 0.7)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.bg.selected",
+      "type": "color",
+      "cssVar": "--todae-color-bg-selected",
+      "cssValue": "oklch(0.55 0.18 255 / 0.12)",
       "ref": null,
       "layer": "appearance",
       "context": "dark"
@@ -583,6 +664,15 @@
       "cssVar": "--todae-color-bg-surface",
       "cssValue": "var(--todae-color-gray-900)",
       "ref": "color.gray.900",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.bg.transparent",
+      "type": "color",
+      "cssVar": "--todae-color-bg-transparent",
+      "cssValue": "oklch(0.22 0.02 260 / 0)",
+      "ref": null,
       "layer": "appearance",
       "context": "dark"
     },
@@ -2068,6 +2158,195 @@
       "cssVar": "--todae-sheet-snap-mid",
       "cssValue": "0.5",
       "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.bg",
+      "type": "color",
+      "cssVar": "--todae-popover-bg",
+      "cssValue": "var(--todae-color-bg-elevated)",
+      "ref": "color.bg.elevated",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.border",
+      "type": "color",
+      "cssVar": "--todae-popover-border",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.fg",
+      "type": "color",
+      "cssVar": "--todae-popover-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.gap",
+      "type": "dimension",
+      "cssVar": "--todae-popover-gap",
+      "cssValue": "var(--todae-space-overlay-gap)",
+      "ref": "space.overlay.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.max-height",
+      "type": "dimension",
+      "cssVar": "--todae-popover-max-height",
+      "cssValue": "20rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-popover-padding-x",
+      "cssValue": "var(--todae-space-overlay-padding)",
+      "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-popover-padding-y",
+      "cssValue": "var(--todae-space-overlay-padding)",
+      "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.radius",
+      "type": "dimension",
+      "cssVar": "--todae-popover-radius",
+      "cssValue": "var(--todae-radius-md)",
+      "ref": "radius.md",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.bg.default",
+      "type": "color",
+      "cssVar": "--todae-option-bg-default",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-option-bg-hover",
+      "cssValue": "var(--todae-color-bg-highlight)",
+      "ref": "color.bg.highlight",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.bg.selected",
+      "type": "color",
+      "cssVar": "--todae-option-bg-selected",
+      "cssValue": "var(--todae-color-bg-selected)",
+      "ref": "color.bg.selected",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.bg.selected-highlighted",
+      "type": "color",
+      "cssVar": "--todae-option-bg-selected-highlighted",
+      "cssValue": "var(--todae-color-accent-soft-strong)",
+      "ref": "color.accent.soft-strong",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.check.border",
+      "type": "color",
+      "cssVar": "--todae-option-check-border",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.check.fg",
+      "type": "color",
+      "cssVar": "--todae-option-check-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.fg.default",
+      "type": "color",
+      "cssVar": "--todae-option-fg-default",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.fg.selected",
+      "type": "color",
+      "cssVar": "--todae-option-fg-selected",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-option-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-option-font-weight",
+      "cssValue": "var(--todae-font-weight-regular)",
+      "ref": "font.weight.regular",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-option-padding-x",
+      "cssValue": "var(--todae-space-control-x)",
+      "ref": "space.control.x",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-option-padding-y",
+      "cssValue": "var(--todae-space-control-y)",
+      "ref": "space.control.y",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.radius",
+      "type": "dimension",
+      "cssVar": "--todae-option-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
       "layer": "contract",
       "context": null
     }

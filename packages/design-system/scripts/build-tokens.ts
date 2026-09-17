@@ -16,6 +16,8 @@ export const RESERVED_ROOTS = [
   'overlay',
   'dialog',
   'sheet',
+  'popover',
+  'option',
 ] as const;
 export const CHIP_SLOTS = ['default', 'hover', 'focus', 'disabled'] as const;
 export const FIELD_BORDER_SLOTS = ['default', 'hover', 'focus', 'disabled', 'invalid'] as const;
@@ -550,7 +552,17 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
   );
 
   const contract: FlatToken[] = [...base, ...BUTTON_PAINTS.flatMap((name) => paints[name])];
-  for (const file of ['stack.json', 'text.json', 'field.json', 'chip.json', 'overlay.json', 'dialog.json', 'sheet.json']) {
+  for (const file of [
+    'stack.json',
+    'text.json',
+    'field.json',
+    'chip.json',
+    'overlay.json',
+    'dialog.json',
+    'sheet.json',
+    'popover.json',
+    'option.json',
+  ]) {
     contract.push(
       ...flattenLayer(
         asTree(await readJson(join(tokensRoot, 'components', file), tokensRoot), `components/${file}`),

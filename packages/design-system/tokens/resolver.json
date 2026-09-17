@@ -17,7 +17,9 @@
         { "$ref": "./components/chip.json" },
         { "$ref": "./components/overlay.json" },
         { "$ref": "./components/dialog.json" },
-        { "$ref": "./components/sheet.json" }
+        { "$ref": "./components/sheet.json" },
+        { "$ref": "./components/popover.json" },
+        { "$ref": "./components/option.json" }
       ]
     }
   },
