@@ -49,35 +49,6 @@ function usePopover(): PopoverContextValue {
   return ctx;
 }
 
-function supports(query: string): boolean {
-  return typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports(query);
-}
-
-function supportsAnchor(): boolean {
-  return supports('top: anchor(bottom)');
-}
-
-function offsetPx(el: HTMLElement): number {
-  const probe = document.createElement('div');
-  probe.style.width = 'var(--todae-popover-offset)';
-  probe.style.position = 'absolute';
-  el.append(probe);
-  const px = probe.getBoundingClientRect().width;
-  probe.remove();
-  return px || 4;
-}
-
-function scrollParents(el: HTMLElement): EventTarget[] {
-  const targets: EventTarget[] = [window];
-  let node: HTMLElement | null = el.parentElement;
-  while (node) {
-    const { overflow, overflowX, overflowY } = getComputedStyle(node);
-    if (/(auto|scroll|overlay)/.test(`${overflow}${overflowX}${overflowY}`)) targets.push(node);
-    node = node.parentElement;
-  }
-  return targets;
-}
-
 function isPopoverOpen(el: HTMLElement): boolean {
   try {
     if (el.matches(':popover-open')) return true;
@@ -92,16 +63,6 @@ function eventInside(el: HTMLElement | null, event: Event): boolean {
   const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
   if (path.includes(el)) return true;
   return event.target instanceof Node && el.contains(event.target);
-}
-
-function pinToAnchor(content: HTMLElement, anchor: HTMLElement): void {
-  const gap = offsetPx(content);
-  const rect = anchor.getBoundingClientRect();
-  const height = content.offsetHeight;
-  const below = rect.bottom + gap;
-  const flip = below + height > window.innerHeight && rect.top - gap - height >= 0;
-  content.style.left = `${rect.left}px`;
-  content.style.top = flip ? `${rect.top - gap - height}px` : `${below}px`;
 }
 
 function PopoverTrigger({ onClick, style, ...props }: ButtonProps) {
@@ -146,27 +107,7 @@ function PopoverContent({
       return;
     }
     if (!isPopoverOpen(el)) el.showPopover();
-    const anchor = ctx.triggerRef.current ?? ctx.anchorRef?.current;
-    if (!anchor || supportsAnchor()) return;
-    const pin = () => pinToAnchor(el, anchor);
-    pin();
-    let frame = 0;
-    const onMove = () => {
-      if (frame) return;
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-        pin();
-      });
-    };
-    const targets = scrollParents(anchor);
-    for (const target of targets) target.addEventListener('scroll', onMove, { passive: true });
-    window.addEventListener('resize', onMove);
-    return () => {
-      cancelAnimationFrame(frame);
-      for (const target of targets) target.removeEventListener('scroll', onMove);
-      window.removeEventListener('resize', onMove);
-    };
-  }, [ctx.anchorRef, ctx.contentRef, ctx.open, ctx.triggerRef]);
+  }, [ctx.contentRef, ctx.open]);
 
   return (
     <div

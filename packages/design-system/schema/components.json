@@ -487,7 +487,7 @@
           "name": "anchorRef",
           "type": "RefObject<HTMLElement | null>",
           "required": false,
-          "description": "Positioning target when Popover.Trigger is omitted."
+          "description": "Element that does not count as an outside press."
         }
       ]
     },

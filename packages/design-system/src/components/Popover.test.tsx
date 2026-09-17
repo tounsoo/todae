@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Option, OptionList } from './OptionList';
@@ -88,70 +88,21 @@ describe('Popover', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false, 'trigger');
   });
 
-  it('stays non-modal and pins with a 4px gap when CSS anchors are missing', () => {
-    const supports = vi.spyOn(CSS, 'supports').mockReturnValue(false);
+  it('stays non-modal and does not write top or left', () => {
     const onOpenChange = vi.fn();
     render(<Harness open onOpenChange={onOpenChange} />);
     const content = screen.getByLabelText('Menu');
-    const trigger = screen.getByRole('button', { name: 'Open' }).parentElement as HTMLElement;
     expect(content.getAttribute('aria-modal')).toBeNull();
     expect(content.getAttribute('popover')).toBe('manual');
     expect(content.getAttribute('tabindex')).toBe('-1');
-    const rect = vi.spyOn(trigger, 'getBoundingClientRect');
-    rect.mockReturnValue({
-      top: 80,
-      bottom: 110,
-      left: 16,
-      right: 80,
-      width: 64,
-      height: 30,
-      x: 16,
-      y: 80,
-      toJSON() {
-        return {};
-      },
-    });
-    let frame: FrameRequestCallback | undefined;
-    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
-      frame = cb;
-      return 1;
-    });
-    fireEvent.scroll(window);
-    act(() => {
-      frame?.(0);
-    });
-    expect(content.style.top).toBe('114px');
-    expect(content.style.left).toBe('16px');
-    rect.mockReturnValue({
-      top: 40,
-      bottom: 70,
-      left: 16,
-      right: 80,
-      width: 64,
-      height: 30,
-      x: 16,
-      y: 40,
-      toJSON() {
-        return {};
-      },
-    });
-    fireEvent.scroll(window);
-    act(() => {
-      frame?.(0);
-    });
-    expect(content.style.top).toBe('74px');
-    raf.mockRestore();
-    supports.mockRestore();
-  });
-
-  it('does not pin when top: anchor(bottom) is supported', () => {
-    const supports = vi.spyOn(CSS, 'supports').mockImplementation((query: string) => query === 'top: anchor(bottom)');
-    const onOpenChange = vi.fn();
-    render(<Harness open onOpenChange={onOpenChange} />);
-    const content = screen.getByLabelText('Menu');
     expect(content.style.top).toBe('');
     expect(content.style.left).toBe('');
-    supports.mockRestore();
+  });
+
+  it('anchors in CSS with a 4px gap', () => {
+    expect(css).toMatch(/--todae-popover-offset:\s*var\(--todae-space-1\)/);
+    expect(css).toMatch(/top:\s*calc\(anchor\(bottom\) \+ var\(--todae-popover-offset\)\)/);
+    expect(css).toMatch(/@position-try --todae-popover-flip-block/);
   });
 
   it('owns the pointer on the popover box', () => {
@@ -161,7 +112,6 @@ describe('Popover', () => {
   });
 
   it('does not click through to a control under the popover', () => {
-    const supports = vi.spyOn(CSS, 'supports').mockReturnValue(false);
     const under = vi.fn();
     const onChange = vi.fn();
     function Through() {
@@ -196,6 +146,5 @@ describe('Popover', () => {
     fireEvent.click(option);
     expect(onChange).toHaveBeenCalledWith('apple');
     expect(under).not.toHaveBeenCalled();
-    supports.mockRestore();
   });
 });
