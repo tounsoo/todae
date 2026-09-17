@@ -13,6 +13,8 @@
     "tokens:check": "pnpm --filter @tounsoo/todae tokens:check",
     "test": "pnpm --filter @tounsoo/todae test",
     "typecheck": "pnpm -r --if-present typecheck",
+    "graft:build": "npx -y @nanonets/graft@0.18.0 build",
+    "graft:check": "npx -y @nanonets/graft@0.18.0 check",
     "clean": "pnpm -r --if-present clean && rm -rf node_modules"
   }
 }

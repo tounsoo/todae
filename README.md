@@ -99,17 +99,15 @@ Set the Vercel project Root Directory to `apps/docs`. `apps/docs/vercel.json` in
 
 ## Graft
 
-Graft is a package-local dev tool under `packages/design-system`. It is not a runtime dependency.
+Graft is a repo-root dev tool. It is not a runtime dependency. Cursor wiring
+lives in `.cursor/` (always-apply rule, MCP pin `@nanonets/graft@0.18.0`, hooks).
 
 ```sh
-cd packages/design-system
 pnpm graft:build
 pnpm graft:check
 ```
 
 `graft/` and `.graft/` stay on the machine that built them. Do not commit them.
-
-`packages/design-system/.cursor/mcp.json` may load only when that folder is the Cursor workspace root. `packages/design-system/.cursor/rules/graft.mdc` still applies when Cursor loads nested rules.
 
 ## Layout
 
