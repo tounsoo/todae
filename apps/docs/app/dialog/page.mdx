@@ -4,6 +4,8 @@ import { DialogBasic, DialogThemed } from '../../components/demos/DialogDemo';
 
 Centered native `<dialog>` via `showModal()`. Controlled `open`. Escape and backdrop dismiss are opt-out. No sheet morph.
 
+Enter uses `@starting-style` (opacity + scale). Engines without it snap to the open state. Exit stays mounted until `transitionend` (160ms fallback).
+
 <Example>
   <DialogBasic />
 </Example>

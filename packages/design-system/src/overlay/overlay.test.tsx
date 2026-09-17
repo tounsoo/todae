@@ -10,6 +10,7 @@ import { useFocusRestore } from './useFocusRestore';
 import { useFocusTrap } from './useFocusTrap';
 import { useInertOutside } from './useInertOutside';
 import { useScrollLock } from './useScrollLock';
+import { isExitTransition } from './useOverlayPresence';
 import { dragHeight, dragOrigin, resolveRelease } from './useSnapDrag';
 
 afterEach(cleanup);
@@ -125,7 +126,7 @@ function mockMatchMedia(dark: boolean) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: (query: string) => ({
-      matches: query.includes('prefers-color-scheme: dark') ? dark : !dark,
+      matches: query.includes('prefers-color-scheme: dark') ? dark : false,
       media: query,
       addEventListener: () => undefined,
       removeEventListener: () => undefined,
@@ -171,6 +172,19 @@ describe('OverlayPortal', () => {
     expect(portal.getAttribute('data-density')).toBe('compact');
     expect(portal.style.getPropertyValue('--todae-dialog-bg')).toBe('oklch(0.2 0.02 260)');
     expect(portal.textContent).toBe('sheet');
+  });
+});
+
+describe('exit transition', () => {
+  it('ignores bubbled child events', () => {
+    const parent = document.createElement('div');
+    const child = document.createElement('div');
+    parent.append(child);
+    expect(isExitTransition({ target: parent, currentTarget: parent, propertyName: 'opacity' }, 'opacity')).toBe(true);
+    expect(isExitTransition({ target: child, currentTarget: parent, propertyName: 'opacity' }, 'opacity')).toBe(false);
+    expect(isExitTransition({ target: parent, currentTarget: parent, propertyName: 'transform' }, 'opacity')).toBe(false);
+    expect(isExitTransition({ target: parent, currentTarget: parent, propertyName: '' }, 'opacity')).toBe(true);
+    expect(isExitTransition({ target: parent, currentTarget: null, propertyName: 'opacity' }, 'opacity')).toBe(true);
   });
 });
 

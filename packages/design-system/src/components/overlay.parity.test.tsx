@@ -155,7 +155,7 @@ for (const harness of [dialogHarness, sheetHarness]) {
       expect(blocked).not.toHaveBeenCalled();
     });
 
-    it('locks scroll while open and restores on close', () => {
+    it('locks scroll while open and restores on close', async () => {
       const h = harness();
       const { rerender } = render(
         h.name === 'Dialog' ? (
@@ -180,7 +180,10 @@ for (const harness of [dialogHarness, sheetHarness]) {
           </BottomSheet>
         ),
       );
-      expect(document.documentElement.style.overflow).not.toBe('hidden');
+      expect(h.getSurface()).not.toBeNull();
+      await waitFor(() => {
+        expect(document.documentElement.style.overflow).not.toBe('hidden');
+      }, { timeout: 500 });
     });
 
     it('restores focus to the trigger', async () => {

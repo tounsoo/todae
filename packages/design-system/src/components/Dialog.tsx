@@ -14,6 +14,7 @@ import {
 } from 'react';
 import { Button } from './Button';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
+import { DIALOG_EXIT_MS, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useScrollLock } from '../overlay/useScrollLock';
@@ -127,6 +128,7 @@ export function Dialog({
   children,
 }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [dialogNode, setDialogNode] = useState<HTMLDialogElement | null>(null);
   const pointerOnDialog = useRef(false);
   const openRef = useRef(open);
   openRef.current = open;
@@ -136,17 +138,22 @@ export function Dialog({
   });
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
+  const { present, exiting } = useOverlayPresence(open, DIALOG_EXIT_MS, dialogNode, 'opacity');
+  const setDialogRef = useCallback((node: HTMLDialogElement | null) => {
+    dialogRef.current = node;
+    setDialogNode(node);
+  }, []);
 
-  useScrollLock(open);
+  useScrollLock(present);
   useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: dialogRef });
   useInitialFocus(dialogRef, open, initialFocusRef);
 
   useLayoutEffect(() => {
     const el = dialogRef.current;
     if (!el) return;
-    if (open && !el.open) el.showModal();
-    if (!open && el.open) el.close();
-  }, [open]);
+    if (present && !el.open) el.showModal();
+    if (!present && el.open) el.close();
+  }, [present]);
 
   const onCancel = useCallback(
     (event: Event) => {
@@ -174,13 +181,14 @@ export function Dialog({
   return (
     <DialogContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
       <dialog
-        ref={dialogRef}
+        ref={setDialogRef}
         className={[styles.dialog, className].filter(Boolean).join(' ')}
         style={style}
         aria-label={ariaLabel}
         aria-labelledby={labelledBy}
         aria-describedby={describedBy}
         tabIndex={-1}
+        data-exiting={exiting ? '' : undefined}
         onPointerDown={(event) => {
           pointerOnDialog.current = event.target === dialogRef.current;
         }}

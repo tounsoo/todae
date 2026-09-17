@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi, expectTypeOf } from 'vitest';
 import { BottomSheet, type BottomSheetProps, type SheetCloseReason } from './BottomSheet';
 
@@ -109,6 +109,23 @@ describe('BottomSheet', () => {
     expect(document.documentElement.style.overflow).not.toBe('hidden');
     expect(sibling.inert).toBe(false);
     sibling.remove();
+  });
+
+  it('stays mounted while exiting then unmounts after the exit timeout', async () => {
+    const { rerender } = render(
+      <BottomSheet open onOpenChange={() => undefined}>
+        <BottomSheet.Title>Share</BottomSheet.Title>
+      </BottomSheet>,
+    );
+    rerender(
+      <BottomSheet open={false} onOpenChange={() => undefined}>
+        <BottomSheet.Title>Share</BottomSheet.Title>
+      </BottomSheet>,
+    );
+    const sheet = document.querySelector('[role="dialog"]') as HTMLElement;
+    expect(sheet).not.toBeNull();
+    expect(sheet.parentElement?.hasAttribute('data-exiting')).toBe(true);
+    await waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull(), { timeout: 500 });
   });
 
   it('types snapPoints and close reasons', () => {

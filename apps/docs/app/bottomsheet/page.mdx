@@ -4,6 +4,8 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../components/demos/Bo
 
 Modal custom portal. Not a native dialog. Scrim, focus trap, Escape, `aria-modal`, scroll lock. Mid and full snap. Drag from the grabber or from the body at `scrollTop === 0`. List scroll stays free.
 
+Enter slides from `translateY(100%)` via `@starting-style` into the snap height. Engines without it appear at the snap. Exit slides off and unmounts on `transitionend` (240ms fallback). Drag keeps `transition: none`.
+
 <Example>
   <BottomSheetBasic />
 </Example>

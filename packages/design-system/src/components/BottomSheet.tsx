@@ -19,6 +19,7 @@ import {
 import { Button } from './Button';
 import { OverlayPortal } from '../overlay/OverlayPortal';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
+import { SHEET_EXIT_MS, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useFocusTrap } from '../overlay/useFocusTrap';
@@ -216,16 +217,22 @@ export function BottomSheet({
     onOpenChange: onOpenChange as (open: boolean, reason: OverlayCloseReason) => void,
   });
   const sheetRef = useRef<HTMLDivElement>(null);
+  const [sheetNode, setSheetNode] = useState<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLElement | null>(null);
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
   const onDismiss = useCallback(() => requestClose('drag'), [requestClose]);
   const onEscape = useCallback(() => requestClose('escape'), [requestClose]);
+  const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'transform');
+  const setSheetRef = useCallback((node: HTMLDivElement | null) => {
+    sheetRef.current = node;
+    setSheetNode(node);
+  }, []);
 
-  useScrollLock(open);
+  useScrollLock(present);
   useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: sheetRef });
   useInitialFocus(sheetRef, open, initialFocusRef);
-  useFocusTrap(sheetRef, open);
+  useFocusTrap(sheetRef, present);
   useEscapeKey(open, dismissOnEscape, onEscape);
   useSnapDrag({
     sheetRef,
@@ -252,20 +259,20 @@ export function BottomSheet({
     [currentSnap, dismissOnDrag, points, requestClose, setSnap],
   );
 
-  if (!open) return null;
+  if (!present) return null;
 
   return (
     <OverlayPortal inertOutside>
       <SheetContext.Provider value={ctx}>
-        <div className={styles.root}>
+        <div className={styles.root} data-exiting={exiting ? '' : undefined}>
           <div
             className={styles.scrim}
             onClick={() => {
-              if (dismissOnScrim) requestClose('scrim');
+              if (dismissOnScrim && open) requestClose('scrim');
             }}
           />
           <div
-            ref={sheetRef}
+            ref={setSheetRef}
             className={[styles.sheet, className].filter(Boolean).join(' ')}
             style={style}
             role="dialog"
