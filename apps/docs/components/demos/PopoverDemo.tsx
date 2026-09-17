@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Option, OptionList, Popover } from '@tounsoo/todae';
+import { Button, Option, OptionList, Popover, Stack } from '@tounsoo/todae';
 import { useState } from 'react';
 
 export function PopoverMenu() {
@@ -38,10 +38,12 @@ export function PopoverVeto() {
     >
       <Popover.Trigger>Outside is vetoed</Popover.Trigger>
       <Popover.Content aria-label="Pinned">
-        Outside click calls onOpenChange but this stays open. Escape still closes.
-        <Button variant="secondary" onClick={() => setOpen(false)}>
-          Close
-        </Button>
+        <Stack>
+          Outside click calls onOpenChange but this stays open. Escape still closes.
+          <Button variant="secondary" onClick={() => setOpen(false)}>
+            Close
+          </Button>
+        </Stack>
       </Popover.Content>
     </Popover>
   );
