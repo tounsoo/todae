@@ -1,0 +1,29 @@
+import { DialogBasic, DialogThemed } from '../../components/demos/DialogDemo';
+
+# Dialog
+
+Centered native `<dialog>` via `showModal()`. Controlled `open`. Escape and backdrop dismiss are opt-out. No sheet morph.
+
+<Example>
+  <DialogBasic />
+</Example>
+
+Dark compact, backdrop dismiss off.
+
+<Example>
+  <DialogThemed />
+</Example>
+
+Overlays inherit tokens from `ThemeProvider` / `DensityProvider`. They do not inherit extra classes on the provider node.
+
+iOS may still rubber-band the page behind an open overlay. Chrome may ignore `cancel.preventDefault()` without user activation. State still resyncs from the native `close` event.
+
+## Props
+
+<PropsTable name="Dialog" />
+
+<PropsTable name="Dialog.Title" />
+
+<PropsTable name="Dialog.Description" />
+
+<PropsTable name="Dialog.Close" />

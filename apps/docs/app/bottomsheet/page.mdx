@@ -1,0 +1,29 @@
+import { BottomSheetBasic, ComboboxTouchSketch } from '../../components/demos/BottomSheetDemo';
+
+# BottomSheet
+
+Modal custom portal. Not a native dialog. Scrim, focus trap, Escape, `aria-modal`, scroll lock. Mid and full snap. Drag from the grabber or from the body at `scrollTop === 0`. List scroll stays free.
+
+<Example>
+  <BottomSheetBasic />
+</Example>
+
+The portal re-applies appearance, density, and theme overrides. Extra classes on the provider node do not follow the portal.
+
+## Consumer sketch
+
+Touch Combobox later. A button opens this sheet. Search plus options live in the sheet. Desktop typeahead-while-open stays a popover in the Combobox PRD.
+
+<Example>
+  <ComboboxTouchSketch />
+</Example>
+
+## Props
+
+<PropsTable name="BottomSheet" />
+
+<PropsTable name="BottomSheet.Grabber" />
+
+<PropsTable name="BottomSheet.Title" />
+
+<PropsTable name="BottomSheet.Close" />

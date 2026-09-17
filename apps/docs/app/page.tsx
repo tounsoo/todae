@@ -17,6 +17,12 @@ export default function HomePage() {
           <a href="/chipfield">ChipField</a>
         </li>
         <li>
+          <a href="/dialog">Dialog</a>
+        </li>
+        <li>
+          <a href="/bottomsheet">BottomSheet</a>
+        </li>
+        <li>
           <a href="/stack">Stack</a>
         </li>
         <li>
