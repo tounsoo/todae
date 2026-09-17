@@ -60,13 +60,23 @@ export function useOverlayPresence(
 
   useLayoutEffect(() => {
     if (!node) return;
+    let armed = !exiting;
+    let raf = 0;
+    if (exiting) {
+      raf = requestAnimationFrame(() => {
+        armed = true;
+      });
+    }
     const onEnd = (event: Event) => {
-      if (!exitingRef.current) return;
+      if (!exitingRef.current || !armed) return;
       if (isExitTransition(event, propertyName)) finishExit();
     };
     node.addEventListener('transitionend', onEnd);
-    return () => node.removeEventListener('transitionend', onEnd);
-  }, [finishExit, node, propertyName]);
+    return () => {
+      cancelAnimationFrame(raf);
+      node.removeEventListener('transitionend', onEnd);
+    };
+  }, [exiting, finishExit, node, propertyName]);
 
   return { present, exiting, finishExit };
 }

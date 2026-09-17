@@ -224,10 +224,28 @@ export function BottomSheet({
   const onDismiss = useCallback(() => requestClose('drag'), [requestClose]);
   const onEscape = useCallback(() => requestClose('escape'), [requestClose]);
   const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'transform');
+  const [entered, setEntered] = useState(false);
   const setSheetRef = useCallback((node: HTMLDivElement | null) => {
     sheetRef.current = node;
     setSheetNode(node);
   }, []);
+
+  useLayoutEffect(() => {
+    if (!present) {
+      setEntered(false);
+      return;
+    }
+    if (exiting) return;
+    let cancelled = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) setEntered(true);
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [exiting, present]);
 
   useScrollLock(present);
   useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: sheetRef });
@@ -264,7 +282,11 @@ export function BottomSheet({
   return (
     <OverlayPortal inertOutside>
       <SheetContext.Provider value={ctx}>
-        <div className={styles.root} data-exiting={exiting ? '' : undefined}>
+        <div
+          className={styles.root}
+          data-entered={entered ? '' : undefined}
+          data-exiting={exiting ? '' : undefined}
+        >
           <div
             className={styles.scrim}
             onClick={() => {
