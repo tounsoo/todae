@@ -1,0 +1,16 @@
+{
+  "button": {
+    "base": {
+      "radius": { "$type": "dimension", "$value": { "$ref": "radius.md" } },
+      "padding": {
+        "x": { "$type": "dimension", "$value": { "$ref": "space.control.x" } },
+        "y": { "$type": "dimension", "$value": { "$ref": "space.control.y" } }
+      },
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "font.size.3" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.medium" } }
+      },
+      "gap": { "$type": "dimension", "$value": { "$ref": "space.inline.gap" } }
+    }
+  }
+}

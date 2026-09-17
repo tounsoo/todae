@@ -1,0 +1,54 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/resolver.json",
+  "name": "todae",
+  "version": "2025.10",
+  "description": "Todae core, appearance, density, and seed component contract.",
+  "sets": {
+    "core": {
+      "sources": [{ "$ref": "./core.json" }]
+    },
+    "contract": {
+      "sources": [
+        { "$ref": "./components/button.base.json" },
+        { "$ref": "./components/button.primary.json" },
+        { "$ref": "./components/stack.json" },
+        { "$ref": "./components/text.json" }
+      ]
+    }
+  },
+  "modifiers": {
+    "appearance": {
+      "description": "Color appearance",
+      "default": "light",
+      "contexts": {
+        "light": [{ "$ref": "./appearance/light.json" }],
+        "dark": [{ "$ref": "./appearance/dark.json" }]
+      }
+    },
+    "density": {
+      "description": "Spacing density",
+      "default": "comfortable",
+      "contexts": {
+        "compact": [{ "$ref": "./density/compact.json" }],
+        "comfortable": [{ "$ref": "./density/comfortable.json" }],
+        "spacious": [{ "$ref": "./density/spacious.json" }]
+      }
+    },
+    "buttonVariant": {
+      "description": "Button variant value sets",
+      "default": "primary",
+      "contexts": {
+        "primary": [{ "$ref": "./components/button.primary.json" }],
+        "secondary": [{ "$ref": "./components/button.secondary.json" }],
+        "ghost": [{ "$ref": "./components/button.ghost.json" }]
+      }
+    }
+  },
+  "resolutionOrder": [
+    { "$ref": "#/sets/core" },
+    { "$ref": "#/modifiers/appearance" },
+    { "$ref": "#/modifiers/density" },
+    { "$ref": "#/sets/contract" },
+    { "$ref": "#/modifiers/buttonVariant" }
+  ]
+}

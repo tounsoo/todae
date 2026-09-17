@@ -1,17 +1,42 @@
 @layer todae.components {
   .root {
     margin: 0;
+    line-height: var(--todae-text-leading-default);
+  }
+
+  .default {
+    color: var(--todae-text-fg-default);
+  }
+
+  .muted {
+    color: var(--todae-text-fg-muted);
+  }
+
+  .accent {
+    color: var(--todae-text-fg-accent);
   }
 
   .s {
-    font-size: 0.875rem;
+    font-size: var(--todae-text-size-2);
   }
 
   .m {
-    font-size: 1rem;
+    font-size: var(--todae-text-size-3);
   }
 
   .l {
-    font-size: 1.25rem;
+    font-size: var(--todae-text-size-4);
+  }
+
+  .regular {
+    font-weight: var(--todae-text-weight-regular);
+  }
+
+  .medium {
+    font-weight: var(--todae-text-weight-medium);
+  }
+
+  .bold {
+    font-weight: var(--todae-text-weight-bold);
   }
 }

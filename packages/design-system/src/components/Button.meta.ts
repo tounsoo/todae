@@ -2,14 +2,14 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Button',
-  description: 'Native button with a variant.',
+  description: 'Native button styled through the button contract tokens.',
   props: [
     {
       name: 'variant',
-      type: '"primary" | "secondary"',
+      type: '"primary" | "secondary" | "ghost"',
       required: false,
       default: '"primary"',
-      description: 'Visual style.',
+      description: 'Visual style. Non-primary sets data-button-variant.',
     },
     {
       name: 'type',

@@ -1,0 +1,14 @@
+{
+  "space": {
+    "control": {
+      "x": { "$type": "dimension", "$value": { "$ref": "space.3" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "space.2" } }
+    },
+    "stack": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "space.3" } }
+    },
+    "inline": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "space.2" } }
+    }
+  }
+}

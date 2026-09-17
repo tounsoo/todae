@@ -9,6 +9,9 @@
     "dev:docs": "pnpm --filter docs dev",
     "dev": "pnpm dev:docs",
     "schema": "pnpm --filter @tounsoo/todae schema",
+    "tokens": "pnpm --filter @tounsoo/todae tokens",
+    "tokens:check": "pnpm --filter @tounsoo/todae tokens:check",
+    "test": "pnpm --filter @tounsoo/todae test",
     "typecheck": "pnpm -r --if-present typecheck",
     "clean": "pnpm -r --if-present clean && rm -rf node_modules"
   }

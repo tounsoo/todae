@@ -9,13 +9,17 @@
       "import": "./dist/index.js"
     },
     "./todae.css": "./dist/todae.css",
-    "./schema/components.json": "./schema/components.json"
+    "./schema/components.json": "./schema/components.json",
+    "./tokens.json": "./tokens/tokens.generated.json"
   },
-  "files": ["dist", "schema"],
+  "files": ["dist", "schema", "tokens/tokens.generated.json"],
   "scripts": {
-    "build": "vite build && tsc -p tsconfig.build.json",
+    "tokens": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts",
+    "tokens:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts --check",
+    "build": "pnpm tokens && vite build && tsc -p tsconfig.build.json",
     "dev": "vite build --watch",
     "schema": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/generate-schema.ts",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "clean": "rm -rf dist",
     "graft:build": "npx -y @nanonets/graft@0.18.0 build",
@@ -26,12 +30,16 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.2.0",
     "@types/node": "^22.13.10",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
+    "jsdom": "^26.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.8.2",
-    "vite": "^6.2.2"
+    "vite": "^6.2.2",
+    "vitest": "^3.0.9"
   }
 }
