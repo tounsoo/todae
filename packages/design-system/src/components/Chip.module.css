@@ -1,0 +1,84 @@
+@layer todae.components {
+  .root {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    gap: var(--todae-chip-gap);
+    padding: var(--todae-chip-padding-y) var(--todae-chip-padding-x);
+    border: 1px solid var(--todae-chip-border-default);
+    border-radius: var(--todae-chip-radius);
+    background: var(--todae-chip-bg-default);
+    color: var(--todae-chip-fg-default);
+    font-size: var(--todae-chip-font-size);
+    line-height: 1.25;
+  }
+
+  .root:hover:not([data-disabled]):not([data-overflow]) {
+    background: var(--todae-chip-bg-hover);
+    color: var(--todae-chip-fg-hover);
+    border-color: var(--todae-chip-border-hover);
+  }
+
+  .root:has(.dismiss:focus-visible) {
+    background: var(--todae-chip-bg-focus);
+    color: var(--todae-chip-fg-focus);
+    border-color: var(--todae-chip-border-focus);
+    outline: 2px solid var(--todae-chip-ring-focus);
+    outline-offset: 2px;
+  }
+
+  .root[data-disabled] {
+    background: var(--todae-chip-bg-disabled);
+    color: var(--todae-chip-fg-disabled);
+    border-color: var(--todae-chip-border-disabled);
+  }
+
+  .root[data-overflow] {
+    border-style: dashed;
+  }
+
+  .label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--todae-chip-dismiss-fg-default);
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .dismiss:hover:not(:disabled) {
+    color: var(--todae-chip-dismiss-fg-hover);
+  }
+
+  .dismiss:disabled {
+    cursor: not-allowed;
+  }
+
+  .dismiss:focus {
+    outline: none;
+  }
+
+  .vh {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

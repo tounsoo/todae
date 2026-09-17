@@ -8,6 +8,15 @@ export default function HomePage() {
           <a href="/button">Button</a>
         </li>
         <li>
+          <a href="/chip">Chip</a>
+        </li>
+        <li>
+          <a href="/textfield">TextField</a>
+        </li>
+        <li>
+          <a href="/chipfield">ChipField</a>
+        </li>
+        <li>
           <a href="/stack">Stack</a>
         </li>
         <li>

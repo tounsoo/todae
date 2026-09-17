@@ -134,6 +134,9 @@ describe('themeOverrideStyle', () => {
         'space.control.x': { value: 0.5, unit: 'rem' },
         'button.base.radius': { value: 0.5, unit: 'rem' },
         'button.primary.bg.hover': { colorSpace: 'oklch', components: [0.68, 0.16, 255] },
+        'chip.bg.default': { colorSpace: 'oklch', components: [0.93, 0.007, 260] },
+        'field.padding.x': { value: 0.75, unit: 'rem' },
+        'field.border.invalid': { colorSpace: 'oklch', components: [0.45, 0.19, 25] },
       }),
     ).toEqual({
       '--todae-color-accent-default': 'oklch(0.55 0.18 255)',
@@ -141,7 +144,18 @@ describe('themeOverrideStyle', () => {
       '--todae-space-control-x': '0.5rem',
       '--todae-button-base-radius': '0.5rem',
       '--todae-button-primary-bg-hover': 'oklch(0.68 0.16 255)',
+      '--todae-chip-bg-default': 'oklch(0.93 0.007 260)',
+      '--todae-field-padding-x': '0.75rem',
+      '--todae-field-border-invalid': 'oklch(0.45 0.19 25)',
     });
+  });
+
+  it('rejects unknown chip slots', () => {
+    expect(() =>
+      themeOverrideStyle({
+        'chip.bg.evil': { colorSpace: 'oklch', components: [0.5, 0.1, 200] },
+      }),
+    ).toThrow(/Unknown theme override/);
   });
 
   it('rejects collapsed button paint paths', () => {

@@ -1,0 +1,23 @@
+@layer todae.components {
+  .flow {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    min-width: 0;
+    gap: var(--todae-field-gap);
+    width: 100%;
+  }
+
+  .measure {
+    position: absolute;
+    inset: 0 auto auto 0;
+    display: flex;
+    visibility: hidden;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}

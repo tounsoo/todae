@@ -2,14 +2,20 @@
   "color": {
     "bg": {
       "canvas": { "$type": "color", "$value": { "$ref": "color.gray.900" } },
-      "surface": { "$type": "color", "$value": { "$ref": "color.gray.900" } }
+      "surface": { "$type": "color", "$value": { "$ref": "color.gray.900" } },
+      "subtle": { "$type": "color", "$value": { "$ref": "color.gray.800" } }
     },
     "fg": {
       "default": { "$type": "color", "$value": { "$ref": "color.gray.50" } },
-      "muted": { "$type": "color", "$value": { "$ref": "color.gray.50" } }
+      "muted": { "$type": "color", "$value": { "$ref": "color.gray.50" } },
+      "placeholder": { "$type": "color", "$value": { "$ref": "color.gray.400" } }
     },
     "border": {
-      "default": { "$type": "color", "$value": { "$ref": "color.gray.50" } }
+      "default": { "$type": "color", "$value": { "$ref": "color.gray.50" } },
+      "subtle": { "$type": "color", "$value": { "$ref": "color.gray.700" } }
+    },
+    "danger": {
+      "default": { "$type": "color", "$value": { "$ref": "color.red.400" } }
     },
     "accent": {
       "default": { "$type": "color", "$value": { "$ref": "color.blue.500" } },
