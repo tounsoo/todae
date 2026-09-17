@@ -174,6 +174,26 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'sheet.handle.hit',
   'sheet.snap.mid',
   'sheet.snap.full-inset',
+  'popover.bg',
+  'popover.fg',
+  'popover.border',
+  'popover.radius',
+  'popover.padding.x',
+  'popover.padding.y',
+  'popover.gap',
+  'popover.max-height',
+  'option.radius',
+  'option.padding.x',
+  'option.padding.y',
+  'option.font.size',
+  'option.font.weight',
+  'option.bg.default',
+  'option.bg.hover',
+  'option.bg.selected',
+  'option.fg.default',
+  'option.fg.selected',
+  'option.check.fg',
+  'option.check.border',
 ] as const;
 
 export const THEME_OVERRIDE_KEYS = [
@@ -215,7 +235,7 @@ const COLOR_KEYS = new Set<string>([
     (key) =>
       /^button\.(primary|secondary|ghost)\.(bg|fg|border)\./.test(key) ||
       /^button\.(primary|secondary|ghost)\.ring\.focus$/.test(key) ||
-      /^(field|chip|dialog|sheet|overlay)\.(bg|fg|border|ring|dismiss|grabber|scrim)(?:\.|$)/.test(key) ||
+      /^(field|chip|dialog|sheet|overlay|popover|option)\.(bg|fg|border|ring|dismiss|grabber|scrim|check)(?:\.|$)/.test(key) ||
       key.startsWith('text.fg.'),
   ),
 ]);
@@ -229,6 +249,7 @@ const WEIGHT_KEYS = new Set<string>([
   'text.weight.medium',
   'text.weight.bold',
   'dialog.title.font.weight',
+  'option.font.weight',
 ]);
 
 const NUMBER_KEYS = new Set<string>(['font.leading.default', 'text.leading.default', 'sheet.snap.mid']);

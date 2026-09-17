@@ -3,6 +3,15 @@
 export { BottomSheet, type BottomSheetProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet';
 export { Button, type ButtonProps, type ButtonVariant } from './components/Button';
 export { Dialog, type DialogCloseReason, type DialogProps } from './components/Dialog';
+export {
+  Option,
+  OptionList,
+  type OptionListMultipleProps,
+  type OptionListProps,
+  type OptionListSingleProps,
+  type OptionProps,
+} from './components/OptionList';
+export { Popover, type PopoverCloseReason, type PopoverProps } from './components/Popover';
 export { Chip, ChipOverflow, type ChipOverflowProps, type ChipProps } from './components/Chip';
 export {
   ChipField,

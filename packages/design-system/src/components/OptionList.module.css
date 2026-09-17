@@ -1,0 +1,95 @@
+@layer todae.components {
+  .list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    outline: none;
+  }
+
+  .list:focus-visible {
+    outline: 2px solid var(--todae-option-check-border);
+    outline-offset: 2px;
+  }
+
+  .option {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: var(--todae-option-padding-y) var(--todae-option-padding-x);
+    border: 0;
+    border-radius: var(--todae-option-radius);
+    background: var(--todae-option-bg-default);
+    color: var(--todae-option-fg-default);
+    font-size: var(--todae-option-font-size);
+    font-weight: var(--todae-option-font-weight);
+    line-height: 1.25;
+    text-align: start;
+    cursor: default;
+  }
+
+  .option[data-active] {
+    background: var(--todae-option-bg-hover);
+  }
+
+  .option[data-selected] {
+    background: var(--todae-option-bg-selected);
+    color: var(--todae-option-fg-selected);
+  }
+
+  .option[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .list[data-selection-mode='multiple'] .option {
+    padding-inline-start: calc(var(--todae-option-padding-x) + 1.25em);
+  }
+
+  .list[data-selection-mode='multiple'] .option::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: var(--todae-option-padding-x);
+    width: 0.85em;
+    height: 0.85em;
+    box-sizing: border-box;
+    border: 1px solid var(--todae-option-check-border);
+    border-radius: 0.125em;
+    background: transparent;
+  }
+
+  .list[data-selection-mode='multiple'] .option[data-selected]::before {
+    background: var(--todae-option-bg-selected);
+  }
+
+  .list[data-selection-mode='multiple'] .option[data-selected]::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: calc(var(--todae-option-padding-x) + 0.22em);
+    width: 0.28em;
+    height: 0.5em;
+    border-inline-end: 2px solid var(--todae-option-check-fg);
+    border-bottom: 2px solid var(--todae-option-check-fg);
+    transform: rotate(45deg);
+  }
+
+  .list[data-selection-mode='single'] .option[data-selected] {
+    padding-inline-start: calc(var(--todae-option-padding-x) + 1.25em);
+  }
+
+  .list[data-selection-mode='single'] .option[data-selected]::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: calc(var(--todae-option-padding-x) + 0.22em);
+    width: 0.28em;
+    height: 0.5em;
+    border-inline-end: 2px solid var(--todae-option-check-fg);
+    border-bottom: 2px solid var(--todae-option-check-fg);
+    transform: rotate(45deg);
+  }
+}

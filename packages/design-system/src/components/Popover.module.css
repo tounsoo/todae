@@ -1,0 +1,27 @@
+@layer todae.components {
+  .trigger {
+    display: inline-flex;
+    anchor-name: var(--todae-popover-anchor);
+  }
+
+  .content {
+    box-sizing: border-box;
+    margin: 0;
+    padding: var(--todae-popover-padding-y) var(--todae-popover-padding-x);
+    max-height: var(--todae-popover-max-height);
+    overflow: auto;
+    background: var(--todae-popover-bg);
+    color: var(--todae-popover-fg);
+    border: 1px solid var(--todae-popover-border);
+    border-radius: var(--todae-popover-radius);
+  }
+
+  @supports (anchor-name: --todae-popover) {
+    .content {
+      top: anchor(bottom);
+      left: anchor(left);
+      position-anchor: var(--todae-popover-anchor);
+      position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+    }
+  }
+}

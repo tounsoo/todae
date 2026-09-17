@@ -1,0 +1,26 @@
+{
+  "option": {
+    "radius": { "$type": "dimension", "$value": { "$ref": "radius.sm" } },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "$ref": "space.control.x" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "space.control.y" } }
+    },
+    "font": {
+      "size": { "$type": "dimension", "$value": { "$ref": "font.size.2" } },
+      "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.regular" } }
+    },
+    "bg": {
+      "default": { "$type": "color", "$value": { "$ref": "color.bg.elevated" } },
+      "hover": { "$type": "color", "$value": { "$ref": "color.bg.subtle" } },
+      "selected": { "$type": "color", "$value": { "$ref": "color.bg.subtle" } }
+    },
+    "fg": {
+      "default": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
+      "selected": { "$type": "color", "$value": { "$ref": "color.fg.default" } }
+    },
+    "check": {
+      "fg": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
+      "border": { "$type": "color", "$value": { "$ref": "color.border.default" } }
+    }
+  }
+}

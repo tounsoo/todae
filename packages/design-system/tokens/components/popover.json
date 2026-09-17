@@ -1,0 +1,14 @@
+{
+  "popover": {
+    "bg": { "$type": "color", "$value": { "$ref": "color.bg.elevated" } },
+    "fg": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
+    "border": { "$type": "color", "$value": { "$ref": "color.border.default" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "radius.md" } },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "$ref": "space.overlay.padding" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "space.overlay.padding" } }
+    },
+    "gap": { "$type": "dimension", "$value": { "$ref": "space.overlay.gap" } },
+    "max-height": { "$type": "dimension", "$value": { "value": 20, "unit": "rem" } }
+  }
+}
