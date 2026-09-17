@@ -16,6 +16,10 @@
     },
     "field": {
       "gap": { "$type": "dimension", "$value": { "$ref": "space.2" } }
+    },
+    "overlay": {
+      "padding": { "$type": "dimension", "$value": { "$ref": "space.5" } },
+      "gap": { "$type": "dimension", "$value": { "$ref": "space.3" } }
     }
   }
 }

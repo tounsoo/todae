@@ -3,7 +3,20 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const PATH_RE = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
-export const RESERVED_ROOTS = ['color', 'space', 'radius', 'font', 'button', 'stack', 'text', 'field', 'chip'] as const;
+export const RESERVED_ROOTS = [
+  'color',
+  'space',
+  'radius',
+  'font',
+  'button',
+  'stack',
+  'text',
+  'field',
+  'chip',
+  'overlay',
+  'dialog',
+  'sheet',
+] as const;
 export const CHIP_SLOTS = ['default', 'hover', 'focus', 'disabled'] as const;
 export const FIELD_BORDER_SLOTS = ['default', 'hover', 'focus', 'disabled', 'invalid'] as const;
 export const FIELD_RING_SLOTS = ['focus', 'invalid'] as const;
@@ -537,7 +550,7 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
   );
 
   const contract: FlatToken[] = [...base, ...BUTTON_PAINTS.flatMap((name) => paints[name])];
-  for (const file of ['stack.json', 'text.json', 'field.json', 'chip.json']) {
+  for (const file of ['stack.json', 'text.json', 'field.json', 'chip.json', 'overlay.json', 'dialog.json', 'sheet.json']) {
     contract.push(
       ...flattenLayer(
         asTree(await readJson(join(tokensRoot, 'components', file), tokensRoot), `components/${file}`),

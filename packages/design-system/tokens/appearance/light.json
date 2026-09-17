@@ -3,7 +3,9 @@
     "bg": {
       "canvas": { "$type": "color", "$value": { "$ref": "color.gray.50" } },
       "surface": { "$type": "color", "$value": { "$ref": "color.gray.50" } },
-      "subtle": { "$type": "color", "$value": { "$ref": "color.gray.100" } }
+      "subtle": { "$type": "color", "$value": { "$ref": "color.gray.100" } },
+      "elevated": { "$type": "color", "$value": { "$ref": "color.gray.50" } },
+      "scrim": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [0.16, 0.02, 260], "alpha": 0.45 } }
     },
     "fg": {
       "default": { "$type": "color", "$value": { "$ref": "color.gray.900" } },
