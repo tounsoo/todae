@@ -399,6 +399,7 @@ describe('Field.ChipInput overflow', () => {
 
     fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Backspace' });
     expect(onChipRemove).toHaveBeenCalledWith(3, 'Delta');
+    expect(container.querySelector('[data-ellipsis]')).toBeNull();
   });
 
   it('remeasures when ResizeObserver fires and does not loop', () => {
@@ -426,6 +427,48 @@ describe('Field.ChipInput overflow', () => {
     const live = liveNodes(container).map((el) => el.outerHTML).join('');
     expect(live).not.toContain('data-overflow');
     expect(live).toContain('Remove Alpha');
+    expect(container.querySelector('[data-ellipsis]')).toBeNull();
+  });
+
+  it('ellipsizes the last live chip to soak leftover before +N', () => {
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
+      const minWidth = el instanceof HTMLInputElement ? '40px' : '0px';
+      return {
+        columnGap: '8px',
+        gap: '8px',
+        minWidth,
+        getPropertyValue(name: string) {
+          if (name === 'min-width') return minWidth;
+          if (name === 'column-gap' || name === 'gap') return '8px';
+          return '';
+        },
+      } as CSSStyleDeclaration;
+    });
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('data-overflow') != null) {
+        return { width: 40, height: 24, top: 0, left: 0, bottom: 24, right: 40, x: 0, y: 0, toJSON() {} };
+      }
+      if (this.querySelector?.(':scope > input')) {
+        return { width: 300, height: 32, top: 0, left: 0, bottom: 32, right: 300, x: 0, y: 0, toJSON() {} };
+      }
+      const text = this.textContent ?? '';
+      const width = text.startsWith('…') ? 60 : text.startsWith('Gamma') ? 150 : 80;
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) {
+        return { width, height: 24, top: 0, left: 0, bottom: 24, right: width, x: 0, y: 0, toJSON() {} };
+      }
+      return { width: 0, height: 0, top: 0, left: 0, bottom: 0, right: 0, x: 0, y: 0, toJSON() {} };
+    });
+
+    const { container } = renderField({ chips: ['Alpha', 'Beta', 'Gamma'], maxRows: 1 });
+    const live = liveNodes(container);
+    const last = live.find((el) => el.hasAttribute('data-ellipsis'));
+    const overflow = live.find((el) => el.hasAttribute('data-overflow'));
+    expect(last?.textContent).toContain('Gamma');
+    expect((last as HTMLElement | undefined)?.style.maxWidth).toBe('116px');
+    expect(live.some((el) => el.textContent?.includes('Beta') && !el.hasAttribute('data-ellipsis'))).toBe(true);
+    expect(overflow?.hasAttribute('data-ellipsis')).toBe(false);
+    expect((overflow as HTMLElement | undefined)?.style.maxWidth).toBe('');
+    expect(live.map((el) => el.outerHTML).join('')).not.toContain('Remove Alpha');
   });
 });
 

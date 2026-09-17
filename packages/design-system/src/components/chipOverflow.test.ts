@@ -67,4 +67,46 @@ describe('planChipOverflow', () => {
       if (48 + 8 + 72 <= 320) expect(rowsFor(items, 320, 8)).toBeLessThanOrEqual(2);
     }
   });
+
+  it('soaks the last visible chip when leftover is between minChip and cLast', () => {
+    const plan = planChipOverflow({
+      W: 300,
+      g: 8,
+      c: [80, 80, 150],
+      p: 40,
+      m: 40,
+      R: 1,
+      minChip: 60,
+    });
+    expect(plan).toEqual({ visible: 2, hidden: 1, lastChipWidth: 116 });
+    expect(rowsFor([80, 116, 40, 40], 300, 8)).toBe(1);
+  });
+
+  it('does not soak when hidden is 0', () => {
+    expect(planChipOverflow({ W: 400, g: 8, c: [100, 100], p: 50, m: 80, R: 1, minChip: 60 })).toEqual({
+      visible: 2,
+      hidden: 0,
+    });
+  });
+
+  it('does not soak when natural fit already works', () => {
+    expect(planChipOverflow({ W: 400, g: 8, c: [100, 100, 100, 100], p: 50, m: 80, R: 1, minChip: 60 })).toEqual({
+      visible: 2,
+      hidden: 2,
+    });
+  });
+
+  it('hides more when minChip is unset', () => {
+    expect(planChipOverflow({ W: 300, g: 8, c: [80, 80, 150], p: 40, m: 40, R: 1 })).toEqual({
+      visible: 1,
+      hidden: 2,
+    });
+  });
+
+  it('hides more when leftover is below minChip', () => {
+    expect(planChipOverflow({ W: 200, g: 8, c: [80, 150], p: 50, m: 80, R: 1, minChip: 100 })).toEqual({
+      visible: 0,
+      hidden: 2,
+    });
+  });
 });

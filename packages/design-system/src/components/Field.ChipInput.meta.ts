@@ -45,7 +45,8 @@ export const meta = {
       name: 'maxRows',
       type: 'number',
       required: false,
-      description: 'Caps visual rows of chips plus input. Earlier chips fold into +N.',
+      description:
+        'Caps visual rows of chips plus input. Earlier chips fold into +N. The last visible chip ellipsizes to soak leftover width before +N.',
     },
     {
       name: 'removeOnBackspace',
