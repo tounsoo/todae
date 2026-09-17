@@ -88,10 +88,6 @@ export function Option({ value, children, disabled }: OptionProps) {
       data-selected={selected ? '' : undefined}
       data-highlighted={ctx.highlighted === value ? '' : undefined}
       className={styles.option}
-      onPointerDown={(event) => {
-        if (disabled) return;
-        event.preventDefault();
-      }}
       onClick={() => {
         if (disabled) return;
         ctx.select(value, true);

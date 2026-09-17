@@ -40,6 +40,7 @@
     text-align: start;
     cursor: default;
     pointer-events: auto;
+    user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
 
