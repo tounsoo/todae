@@ -8,6 +8,22 @@
     min-width: 0;
     gap: var(--todae-field-gap);
     width: 100%;
+    --todae-chipfield-row-h: calc(
+      var(--todae-chip-font-size) * 1.25 + 2 * var(--todae-chip-padding-y) + 2px
+    );
+  }
+
+  .flow[data-max-rows] {
+    max-height: calc(
+      var(--todae-chipfield-row-h) * var(--todae-chipfield-rows) +
+        var(--todae-field-gap) * (var(--todae-chipfield-rows) - 1)
+    );
+    overflow: hidden;
+    align-content: flex-start;
+  }
+
+  .flow[data-max-rows]:not([data-measured]) > :not(input) {
+    visibility: hidden;
   }
 
   .measure {

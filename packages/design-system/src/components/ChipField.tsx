@@ -4,6 +4,7 @@ import {
   useContext,
   useMemo,
   useRef,
+  type CSSProperties,
   type InputHTMLAttributes,
   type KeyboardEvent,
   type ReactNode,
@@ -125,7 +126,17 @@ function ChipFieldFlow({
 
   return (
     <ChipFieldContext.Provider value={{ inputValue, onInputValueChange, onKeyDown }}>
-      <div className={styles.flow} ref={flowRef}>
+      <div
+        className={styles.flow}
+        ref={flowRef}
+        data-max-rows={maxRows ?? undefined}
+        data-measured={maxRows != null && plan.measured ? '' : undefined}
+        style={
+          maxRows != null
+            ? ({ '--todae-chipfield-rows': maxRows } as CSSProperties)
+            : undefined
+        }
+      >
         {live.map(({ value, index }) => (
           <Chip
             key={`${index}:${value}`}
