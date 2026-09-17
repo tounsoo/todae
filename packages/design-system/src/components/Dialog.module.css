@@ -11,6 +11,9 @@
     border: 0;
     background: var(--todae-overlay-scrim-bg);
     color: var(--todae-dialog-fg);
+  }
+
+  .dialog[open] {
     display: grid;
     place-items: center;
   }
