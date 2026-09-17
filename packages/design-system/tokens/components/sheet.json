@@ -1,0 +1,25 @@
+{
+  "sheet": {
+    "bg": { "$type": "color", "$value": { "$ref": "color.bg.elevated" } },
+    "fg": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
+    "border": { "$type": "color", "$value": { "$ref": "color.border.default" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "radius.lg" } },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "$ref": "space.overlay.padding" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "space.overlay.padding" } }
+    },
+    "gap": { "$type": "dimension", "$value": { "$ref": "space.overlay.gap" } },
+    "grabber": {
+      "bg": { "$type": "color", "$value": { "$ref": "color.border.subtle" } },
+      "width": { "$type": "dimension", "$value": { "$ref": "space.9" } },
+      "height": { "$type": "dimension", "$value": { "$ref": "space.1" } }
+    },
+    "handle": {
+      "hit": { "$type": "dimension", "$value": { "$ref": "space.11" } }
+    },
+    "snap": {
+      "mid": { "$type": "number", "$value": 0.5 },
+      "full-inset": { "$type": "dimension", "$value": { "$ref": "space.6" } }
+    }
+  }
+}

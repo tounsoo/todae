@@ -1,4 +1,4 @@
-import type { ChangeEvent, InputHTMLAttributes, ReactNode } from 'react';
+import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from 'react';
 import {
   FieldRoot,
   IconEnd,
@@ -23,6 +23,7 @@ export type TextFieldInputProps = {
   onValueChange?: (value: string) => void;
   placeholder?: string;
   type?: TextFieldType;
+  ref?: Ref<HTMLInputElement>;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'type' | 'disabled' | 'onChange'>;
 
 function TextFieldInput({
@@ -31,13 +32,18 @@ function TextFieldInput({
   onValueChange,
   type = 'text',
   className,
+  ref,
   ...props
 }: TextFieldInputProps) {
   const ctx = useField();
   return (
     <input
       {...props}
-      ref={ctx.inputRef}
+      ref={(node) => {
+        ctx.inputRef.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) ref.current = node;
+      }}
       id={ctx.inputId}
       name={ctx.name}
       disabled={ctx.disabled}

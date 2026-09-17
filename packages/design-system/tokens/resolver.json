@@ -14,7 +14,10 @@
         { "$ref": "./components/stack.json" },
         { "$ref": "./components/text.json" },
         { "$ref": "./components/field.json" },
-        { "$ref": "./components/chip.json" }
+        { "$ref": "./components/chip.json" },
+        { "$ref": "./components/overlay.json" },
+        { "$ref": "./components/dialog.json" },
+        { "$ref": "./components/sheet.json" }
       ]
     }
   },

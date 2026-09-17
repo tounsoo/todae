@@ -50,6 +50,8 @@
   --todae-color-accent-default: var(--todae-color-blue-500);
   --todae-color-accent-hover: var(--todae-color-blue-400);
   --todae-color-bg-canvas: var(--todae-color-gray-50);
+  --todae-color-bg-elevated: var(--todae-color-gray-50);
+  --todae-color-bg-scrim: oklch(0.16 0.02 260 / 0.45);
   --todae-color-bg-subtle: var(--todae-color-gray-100);
   --todae-color-bg-surface: var(--todae-color-gray-50);
   --todae-color-border-default: var(--todae-color-gray-900);
@@ -66,6 +68,8 @@
   --todae-color-accent-default: var(--todae-color-blue-500);
   --todae-color-accent-hover: var(--todae-color-blue-400);
   --todae-color-bg-canvas: var(--todae-color-gray-900);
+  --todae-color-bg-elevated: var(--todae-color-gray-800);
+  --todae-color-bg-scrim: oklch(0.16 0.02 260 / 0.7);
   --todae-color-bg-subtle: var(--todae-color-gray-800);
   --todae-color-bg-surface: var(--todae-color-gray-900);
   --todae-color-border-default: var(--todae-color-gray-50);
@@ -84,6 +88,8 @@
   --todae-space-control-y: var(--todae-space-1);
   --todae-space-field-gap: var(--todae-space-1);
   --todae-space-inline-gap: var(--todae-space-1);
+  --todae-space-overlay-gap: var(--todae-space-2);
+  --todae-space-overlay-padding: var(--todae-space-4);
   --todae-space-stack-gap: var(--todae-space-2);
 }
 
@@ -94,6 +100,8 @@
   --todae-space-control-y: var(--todae-space-2);
   --todae-space-field-gap: var(--todae-space-2);
   --todae-space-inline-gap: var(--todae-space-2);
+  --todae-space-overlay-gap: var(--todae-space-3);
+  --todae-space-overlay-padding: var(--todae-space-5);
   --todae-space-stack-gap: var(--todae-space-3);
 }
 
@@ -104,6 +112,8 @@
   --todae-space-control-y: var(--todae-space-3);
   --todae-space-field-gap: var(--todae-space-2);
   --todae-space-inline-gap: var(--todae-space-3);
+  --todae-space-overlay-gap: var(--todae-space-4);
+  --todae-space-overlay-padding: var(--todae-space-6);
   --todae-space-stack-gap: var(--todae-space-5);
 }
 
@@ -216,6 +226,30 @@
   --todae-chip-padding-y: var(--todae-space-chip-y);
   --todae-chip-radius: var(--todae-radius-sm);
   --todae-chip-ring-focus: var(--todae-color-accent-default);
+  --todae-overlay-scrim-bg: var(--todae-color-bg-scrim);
+  --todae-dialog-bg: var(--todae-color-bg-elevated);
+  --todae-dialog-border: var(--todae-color-border-default);
+  --todae-dialog-fg: var(--todae-color-fg-default);
+  --todae-dialog-gap: var(--todae-space-overlay-gap);
+  --todae-dialog-max-width: 32rem;
+  --todae-dialog-padding-x: var(--todae-space-overlay-padding);
+  --todae-dialog-padding-y: var(--todae-space-overlay-padding);
+  --todae-dialog-radius: var(--todae-radius-lg);
+  --todae-dialog-title-font-size: var(--todae-font-size-4);
+  --todae-dialog-title-font-weight: var(--todae-font-weight-medium);
+  --todae-sheet-bg: var(--todae-color-bg-elevated);
+  --todae-sheet-border: var(--todae-color-border-default);
+  --todae-sheet-fg: var(--todae-color-fg-default);
+  --todae-sheet-gap: var(--todae-space-overlay-gap);
+  --todae-sheet-grabber-bg: var(--todae-color-border-subtle);
+  --todae-sheet-grabber-height: var(--todae-space-1);
+  --todae-sheet-grabber-width: var(--todae-space-9);
+  --todae-sheet-handle-hit: var(--todae-space-11);
+  --todae-sheet-padding-x: var(--todae-space-overlay-padding);
+  --todae-sheet-padding-y: var(--todae-space-overlay-padding);
+  --todae-sheet-radius: var(--todae-radius-lg);
+  --todae-sheet-snap-full-inset: var(--todae-space-6);
+  --todae-sheet-snap-mid: 0.5;
   --todae-button-font-size: var(--todae-button-base-font-size);
   --todae-button-font-weight: var(--todae-button-base-font-weight);
   --todae-button-gap: var(--todae-button-base-gap);

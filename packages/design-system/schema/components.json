@@ -2,6 +2,136 @@
   "version": 1,
   "components": [
     {
+      "name": "BottomSheet",
+      "description": "Modal bottom sheet. Custom portal, not a native dialog. Mid and full snap.",
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": true,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: SheetCloseReason) => void",
+          "required": true,
+          "description": "Dismiss requests. Staying open keeps the sheet open."
+        },
+        {
+          "name": "snap",
+          "type": "\"mid\" | \"full\"",
+          "required": false,
+          "description": "Controlled snap. Omit for uncontrolled."
+        },
+        {
+          "name": "defaultSnap",
+          "type": "\"mid\" | \"full\"",
+          "required": false,
+          "description": "Initial snap when uncontrolled.",
+          "default": "\"mid\""
+        },
+        {
+          "name": "snapPoints",
+          "type": "ReadonlyArray<\"mid\" | \"full\">",
+          "required": false,
+          "description": "Allowed snaps. [\"full\"] disables mid.",
+          "default": "[\"mid\", \"full\"]"
+        },
+        {
+          "name": "dismissOnEscape",
+          "type": "boolean",
+          "required": false,
+          "description": "Escape calls onOpenChange(false, \"escape\").",
+          "default": "true"
+        },
+        {
+          "name": "dismissOnScrim",
+          "type": "boolean",
+          "required": false,
+          "description": "Scrim click calls onOpenChange(false, \"scrim\").",
+          "default": "true"
+        },
+        {
+          "name": "dismissOnDrag",
+          "type": "boolean",
+          "required": false,
+          "description": "Drag past the threshold dismisses.",
+          "default": "true"
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name when BottomSheet.Title is omitted."
+        }
+      ]
+    },
+    {
+      "name": "BottomSheet.Body",
+      "description": "Scroll container. Drag starts only at scrollTop 0.",
+      "props": []
+    },
+    {
+      "name": "BottomSheet.Close",
+      "description": "Ghost Button that requests close-button dismiss.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name.",
+          "default": "\"Close\""
+        }
+      ]
+    },
+    {
+      "name": "BottomSheet.Description",
+      "description": "Supporting text. Wires aria-describedby.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Description text."
+        }
+      ]
+    },
+    {
+      "name": "BottomSheet.Footer",
+      "description": "Action row.",
+      "props": []
+    },
+    {
+      "name": "BottomSheet.Grabber",
+      "description": "Drag handle. Rendered by default if omitted. Arrow keys change snap.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name of the resize control.",
+          "default": "\"Resize sheet\""
+        }
+      ]
+    },
+    {
+      "name": "BottomSheet.Header",
+      "description": "Chrome. Drag-eligible.",
+      "props": []
+    },
+    {
+      "name": "BottomSheet.Title",
+      "description": "Heading. Wires aria-labelledby.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Title text."
+        }
+      ]
+    },
+    {
       "name": "Button",
       "description": "Native button styled through the button contract tokens.",
       "props": [
@@ -163,6 +293,96 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Subtree that inherits density tokens."
+        }
+      ]
+    },
+    {
+      "name": "Dialog",
+      "description": "Controlled native modal dialog. Stays centered. No sheet morph.",
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": true,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: DialogCloseReason) => void",
+          "required": true,
+          "description": "Dismiss requests. Staying open keeps the dialog open."
+        },
+        {
+          "name": "dismissOnEscape",
+          "type": "boolean",
+          "required": false,
+          "description": "Escape calls onOpenChange(false, \"escape\").",
+          "default": "true"
+        },
+        {
+          "name": "dismissOnBackdrop",
+          "type": "boolean",
+          "required": false,
+          "description": "Scrim click calls onOpenChange(false, \"backdrop\").",
+          "default": "true"
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name when Dialog.Title is omitted."
+        }
+      ]
+    },
+    {
+      "name": "Dialog.Body",
+      "description": "Scrollable body.",
+      "props": []
+    },
+    {
+      "name": "Dialog.Close",
+      "description": "Ghost Button that requests close-button dismiss.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name.",
+          "default": "\"Close\""
+        }
+      ]
+    },
+    {
+      "name": "Dialog.Description",
+      "description": "Supporting text. Wires aria-describedby on the dialog.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Description text."
+        }
+      ]
+    },
+    {
+      "name": "Dialog.Footer",
+      "description": "Action row.",
+      "props": []
+    },
+    {
+      "name": "Dialog.Header",
+      "description": "Optional header row.",
+      "props": []
+    },
+    {
+      "name": "Dialog.Title",
+      "description": "Heading. Wires aria-labelledby on the dialog.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Title text."
         }
       ]
     },

@@ -20,6 +20,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <a href="/chip">Chip</a>
               <a href="/textfield">TextField</a>
               <a href="/chipfield">ChipField</a>
+              <a href="/dialog">Dialog</a>
+              <a href="/bottomsheet">BottomSheet</a>
               <a href="/stack">Stack</a>
               <a href="/text">Text</a>
               <a href="/tokens">Tokens</a>

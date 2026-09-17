@@ -1,0 +1,103 @@
+@layer todae.components {
+  .dialog {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--todae-overlay-scrim-bg);
+    color: var(--todae-dialog-fg);
+  }
+
+  .dialog[open] {
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    transition: opacity 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  .dialog[open][data-entered] {
+    opacity: 1;
+  }
+
+  .dialog[open][data-exiting] {
+    opacity: 0;
+    transition-duration: 160ms;
+  }
+
+  .dialog::backdrop {
+    background: transparent;
+  }
+
+  .panel {
+    box-sizing: border-box;
+    width: min(100%, var(--todae-dialog-max-width));
+    max-height: calc(100vh - (2 * var(--todae-dialog-padding-y)));
+    max-height: calc(100dvh - (2 * var(--todae-dialog-padding-y)));
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-dialog-gap);
+    padding: var(--todae-dialog-padding-y) var(--todae-dialog-padding-x);
+    background: var(--todae-dialog-bg);
+    color: var(--todae-dialog-fg);
+    border: 1px solid var(--todae-dialog-border);
+    border-radius: var(--todae-dialog-radius);
+    opacity: 0;
+    transform: scale(0.96);
+    transition:
+      opacity 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    @starting-style {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+
+  .dialog[open][data-entered] .panel {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .dialog[open][data-exiting] .panel {
+    opacity: 0;
+    transform: scale(0.96);
+    transition-duration: 160ms;
+  }
+
+  .title {
+    margin: 0;
+    font-size: var(--todae-dialog-title-font-size);
+    font-weight: var(--todae-dialog-title-font-weight);
+  }
+
+  .description,
+  .header,
+  .body,
+  .footer {
+    margin: 0;
+  }
+
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--todae-dialog-gap);
+    justify-content: flex-end;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dialog,
+    .panel {
+      transition: none;
+    }
+  }
+}

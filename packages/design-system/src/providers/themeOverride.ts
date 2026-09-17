@@ -47,6 +47,8 @@ export const SEMANTIC_OVERRIDE_KEYS = [
   'color.bg.canvas',
   'color.bg.surface',
   'color.bg.subtle',
+  'color.bg.elevated',
+  'color.bg.scrim',
   'color.fg.default',
   'color.fg.muted',
   'color.fg.placeholder',
@@ -64,6 +66,8 @@ export const SEMANTIC_OVERRIDE_KEYS = [
   'space.chip.x',
   'space.chip.y',
   'space.field.gap',
+  'space.overlay.padding',
+  'space.overlay.gap',
 ] as const;
 
 const BUTTON_PAINT_OVERRIDE_KEYS = (['primary', 'secondary', 'ghost'] as const).flatMap((variant) => [
@@ -146,6 +150,30 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'chip.ring.focus',
   'chip.dismiss.fg.default',
   'chip.dismiss.fg.hover',
+  'overlay.scrim.bg',
+  'dialog.bg',
+  'dialog.fg',
+  'dialog.border',
+  'dialog.radius',
+  'dialog.padding.x',
+  'dialog.padding.y',
+  'dialog.gap',
+  'dialog.max-width',
+  'dialog.title.font.size',
+  'dialog.title.font.weight',
+  'sheet.bg',
+  'sheet.fg',
+  'sheet.border',
+  'sheet.radius',
+  'sheet.padding.x',
+  'sheet.padding.y',
+  'sheet.gap',
+  'sheet.grabber.bg',
+  'sheet.grabber.width',
+  'sheet.grabber.height',
+  'sheet.handle.hit',
+  'sheet.snap.mid',
+  'sheet.snap.full-inset',
 ] as const;
 
 export const THEME_OVERRIDE_KEYS = [
@@ -187,7 +215,7 @@ const COLOR_KEYS = new Set<string>([
     (key) =>
       /^button\.(primary|secondary|ghost)\.(bg|fg|border)\./.test(key) ||
       /^button\.(primary|secondary|ghost)\.ring\.focus$/.test(key) ||
-      /^(field|chip)\.(bg|fg|border|ring|dismiss)\./.test(key) ||
+      /^(field|chip|dialog|sheet|overlay)\.(bg|fg|border|ring|dismiss|grabber|scrim)(?:\.|$)/.test(key) ||
       key.startsWith('text.fg.'),
   ),
 ]);
@@ -200,9 +228,10 @@ const WEIGHT_KEYS = new Set<string>([
   'text.weight.regular',
   'text.weight.medium',
   'text.weight.bold',
+  'dialog.title.font.weight',
 ]);
 
-const NUMBER_KEYS = new Set<string>(['font.leading.default', 'text.leading.default']);
+const NUMBER_KEYS = new Set<string>(['font.leading.default', 'text.leading.default', 'sheet.snap.mid']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

@@ -137,6 +137,8 @@ describe('themeOverrideStyle', () => {
         'chip.bg.default': { colorSpace: 'oklch', components: [0.93, 0.007, 260] },
         'field.padding.x': { value: 0.75, unit: 'rem' },
         'field.border.invalid': { colorSpace: 'oklch', components: [0.45, 0.19, 25] },
+        'dialog.bg': { colorSpace: 'oklch', components: [0.98, 0.005, 260] },
+        'sheet.snap.mid': 0.5,
       }),
     ).toEqual({
       '--todae-color-accent-default': 'oklch(0.55 0.18 255)',
@@ -147,6 +149,8 @@ describe('themeOverrideStyle', () => {
       '--todae-chip-bg-default': 'oklch(0.93 0.007 260)',
       '--todae-field-padding-x': '0.75rem',
       '--todae-field-border-invalid': 'oklch(0.45 0.19 25)',
+      '--todae-dialog-bg': 'oklch(0.98 0.005 260)',
+      '--todae-sheet-snap-mid': '0.5',
     });
   });
 

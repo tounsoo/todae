@@ -1,0 +1,20 @@
+{
+  "dialog": {
+    "bg": { "$type": "color", "$value": { "$ref": "color.bg.elevated" } },
+    "fg": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
+    "border": { "$type": "color", "$value": { "$ref": "color.border.default" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "radius.lg" } },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "$ref": "space.overlay.padding" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "space.overlay.padding" } }
+    },
+    "gap": { "$type": "dimension", "$value": { "$ref": "space.overlay.gap" } },
+    "max-width": { "$type": "dimension", "$value": { "value": 32, "unit": "rem" } },
+    "title": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "font.size.4" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.medium" } }
+      }
+    }
+  }
+}

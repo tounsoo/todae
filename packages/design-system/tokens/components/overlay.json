@@ -1,0 +1,7 @@
+{
+  "overlay": {
+    "scrim": {
+      "bg": { "$type": "color", "$value": { "$ref": "color.bg.scrim" } }
+    }
+  }
+}
