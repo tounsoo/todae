@@ -1,0 +1,108 @@
+@layer todae.components {
+  .root {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+  }
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: var(--todae-overlay-scrim-bg);
+  }
+
+  .sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-sheet-gap);
+    height: calc(var(--todae-sheet-snap-mid) * 100vh);
+    height: calc(var(--todae-sheet-snap-mid) * 100dvh);
+    max-height: 100vh;
+    max-height: 100dvh;
+    padding: var(--todae-sheet-padding-y) var(--todae-sheet-padding-x);
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--todae-sheet-bg);
+    color: var(--todae-sheet-fg);
+    border: 1px solid var(--todae-sheet-border);
+    border-bottom: 0;
+    border-radius: var(--todae-sheet-radius) var(--todae-sheet-radius) 0 0;
+    transform: translateY(var(--todae-sheet-drag-y, 0px));
+    transition: height 160ms ease, transform 160ms ease;
+  }
+
+  .sheet[data-snap='full'] {
+    height: calc(100vh - var(--todae-sheet-snap-full-inset));
+    height: calc(100dvh - var(--todae-sheet-snap-full-inset));
+  }
+
+  .sheet[data-dragging] {
+    transition: none;
+  }
+
+  .sheet[data-dragging] .body {
+    overflow: hidden;
+  }
+
+  .handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--todae-sheet-handle-hit);
+    margin: calc(var(--todae-sheet-padding-y) * -1) 0 0;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .handle button {
+    width: var(--todae-sheet-grabber-width);
+    height: var(--todae-sheet-grabber-height);
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: var(--todae-sheet-grabber-bg);
+    cursor: grab;
+  }
+
+  .title {
+    margin: 0;
+    font-size: var(--todae-dialog-title-font-size);
+    font-weight: var(--todae-dialog-title-font-weight);
+  }
+
+  .description,
+  .header,
+  .footer {
+    margin: 0;
+  }
+
+  .header {
+    touch-action: none;
+  }
+
+  .body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--todae-sheet-gap);
+    justify-content: flex-end;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sheet {
+      transition: none;
+    }
+  }
+}
