@@ -10,6 +10,7 @@ exports[`committed token graph > builds and snapshots CSS selectors 1`] = `
   "[data-density="comfortable"]",
   "[data-density="spacious"]",
   "[data-appearance], [data-density]",
+  "[data-button-variant="primary"]",
   "[data-button-variant="secondary"]",
   "[data-button-variant="ghost"]",
 ]

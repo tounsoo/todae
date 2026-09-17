@@ -425,6 +425,15 @@
       "context": "light"
     },
     {
+      "path": "color.on-accent",
+      "type": "color",
+      "cssVar": "--todae-color-on-accent",
+      "cssValue": "var(--todae-color-gray-50)",
+      "ref": "color.gray.50",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
       "path": "color.accent.active",
       "type": "color",
       "cssVar": "--todae-color-accent-active",
@@ -491,6 +500,15 @@
       "path": "color.fg.muted",
       "type": "color",
       "cssVar": "--todae-color-fg-muted",
+      "cssValue": "var(--todae-color-gray-50)",
+      "ref": "color.gray.50",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.on-accent",
+      "type": "color",
+      "cssVar": "--todae-color-on-accent",
       "cssValue": "var(--todae-color-gray-50)",
       "ref": "color.gray.50",
       "layer": "appearance",
@@ -605,202 +623,490 @@
       "context": "spacious"
     },
     {
-      "path": "button.bg.active",
-      "type": "color",
-      "cssVar": "--todae-button-bg-active",
-      "cssValue": "var(--todae-color-accent-active)",
-      "ref": "color.accent.active",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.bg.default",
-      "type": "color",
-      "cssVar": "--todae-button-bg-default",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.bg.disabled",
-      "type": "color",
-      "cssVar": "--todae-button-bg-disabled",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.bg.focus",
-      "type": "color",
-      "cssVar": "--todae-button-bg-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.bg.hover",
-      "type": "color",
-      "cssVar": "--todae-button-bg-hover",
-      "cssValue": "var(--todae-color-accent-hover)",
-      "ref": "color.accent.hover",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.border.active",
-      "type": "color",
-      "cssVar": "--todae-button-border-active",
-      "cssValue": "var(--todae-color-border-default)",
-      "ref": "color.border.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.border.default",
-      "type": "color",
-      "cssVar": "--todae-button-border-default",
-      "cssValue": "var(--todae-color-border-default)",
-      "ref": "color.border.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.border.disabled",
-      "type": "color",
-      "cssVar": "--todae-button-border-disabled",
-      "cssValue": "var(--todae-color-border-default)",
-      "ref": "color.border.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.border.focus",
-      "type": "color",
-      "cssVar": "--todae-button-border-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.border.hover",
-      "type": "color",
-      "cssVar": "--todae-button-border-hover",
-      "cssValue": "var(--todae-color-border-default)",
-      "ref": "color.border.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.fg.active",
-      "type": "color",
-      "cssVar": "--todae-button-fg-active",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.fg.default",
-      "type": "color",
-      "cssVar": "--todae-button-fg-default",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.fg.disabled",
-      "type": "color",
-      "cssVar": "--todae-button-fg-disabled",
-      "cssValue": "var(--todae-color-fg-muted)",
-      "ref": "color.fg.muted",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.fg.focus",
-      "type": "color",
-      "cssVar": "--todae-button-fg-focus",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.fg.hover",
-      "type": "color",
-      "cssVar": "--todae-button-fg-hover",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "button.font.size",
+      "path": "button.base.font.size",
       "type": "dimension",
-      "cssVar": "--todae-button-font-size",
+      "cssVar": "--todae-button-base-font-size",
       "cssValue": "var(--todae-font-size-3)",
       "ref": "font.size.3",
       "layer": "contract",
       "context": null
     },
     {
-      "path": "button.font.weight",
+      "path": "button.base.font.weight",
       "type": "fontWeight",
-      "cssVar": "--todae-button-font-weight",
+      "cssVar": "--todae-button-base-font-weight",
       "cssValue": "var(--todae-font-weight-medium)",
       "ref": "font.weight.medium",
       "layer": "contract",
       "context": null
     },
     {
-      "path": "button.gap",
+      "path": "button.base.gap",
       "type": "dimension",
-      "cssVar": "--todae-button-gap",
+      "cssVar": "--todae-button-base-gap",
       "cssValue": "var(--todae-space-inline-gap)",
       "ref": "space.inline.gap",
       "layer": "contract",
       "context": null
     },
     {
-      "path": "button.padding.x",
+      "path": "button.base.padding.x",
       "type": "dimension",
-      "cssVar": "--todae-button-padding-x",
+      "cssVar": "--todae-button-base-padding-x",
       "cssValue": "var(--todae-space-control-x)",
       "ref": "space.control.x",
       "layer": "contract",
       "context": null
     },
     {
-      "path": "button.padding.y",
+      "path": "button.base.padding.y",
       "type": "dimension",
-      "cssVar": "--todae-button-padding-y",
+      "cssVar": "--todae-button-base-padding-y",
       "cssValue": "var(--todae-space-control-y)",
       "ref": "space.control.y",
       "layer": "contract",
       "context": null
     },
     {
-      "path": "button.radius",
+      "path": "button.base.radius",
       "type": "dimension",
-      "cssVar": "--todae-button-radius",
+      "cssVar": "--todae-button-base-radius",
       "cssValue": "var(--todae-radius-md)",
       "ref": "radius.md",
       "layer": "contract",
       "context": null
     },
     {
-      "path": "button.ring.focus",
+      "path": "button.primary.bg.active",
       "type": "color",
-      "cssVar": "--todae-button-ring-focus",
+      "cssVar": "--todae-button-primary-bg-active",
+      "cssValue": "var(--todae-color-accent-active)",
+      "ref": "color.accent.active",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.bg.default",
+      "type": "color",
+      "cssVar": "--todae-button-primary-bg-default",
       "cssValue": "var(--todae-color-accent-default)",
       "ref": "color.accent.default",
       "layer": "contract",
-      "context": null
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.bg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-primary-bg-disabled",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.bg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-primary-bg-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-primary-bg-hover",
+      "cssValue": "var(--todae-color-accent-hover)",
+      "ref": "color.accent.hover",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.border.active",
+      "type": "color",
+      "cssVar": "--todae-button-primary-border-active",
+      "cssValue": "var(--todae-color-accent-active)",
+      "ref": "color.accent.active",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.border.default",
+      "type": "color",
+      "cssVar": "--todae-button-primary-border-default",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.border.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-primary-border-disabled",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.border.focus",
+      "type": "color",
+      "cssVar": "--todae-button-primary-border-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.border.hover",
+      "type": "color",
+      "cssVar": "--todae-button-primary-border-hover",
+      "cssValue": "var(--todae-color-accent-hover)",
+      "ref": "color.accent.hover",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.fg.active",
+      "type": "color",
+      "cssVar": "--todae-button-primary-fg-active",
+      "cssValue": "var(--todae-color-on-accent)",
+      "ref": "color.on-accent",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.fg.default",
+      "type": "color",
+      "cssVar": "--todae-button-primary-fg-default",
+      "cssValue": "var(--todae-color-on-accent)",
+      "ref": "color.on-accent",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.fg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-primary-fg-disabled",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.fg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-primary-fg-focus",
+      "cssValue": "var(--todae-color-on-accent)",
+      "ref": "color.on-accent",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.fg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-primary-fg-hover",
+      "cssValue": "var(--todae-color-on-accent)",
+      "ref": "color.on-accent",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-button-primary-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.secondary.bg.active",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-bg-active",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.bg.default",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-bg-default",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.bg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-bg-disabled",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.bg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-bg-focus",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-bg-hover",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.border.active",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-border-active",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.border.default",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-border-default",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.border.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-border-disabled",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.border.focus",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-border-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.border.hover",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-border-hover",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.fg.active",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-fg-active",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.fg.default",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-fg-default",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.fg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-fg-disabled",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.fg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-fg-focus",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.fg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-fg-hover",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.secondary.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-button-secondary-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
+      "path": "button.ghost.bg.active",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-bg-active",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.bg.default",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-bg-default",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.bg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-bg-disabled",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.bg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-bg-focus",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-bg-hover",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.border.active",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-border-active",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.border.default",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-border-default",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.border.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-border-disabled",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.border.focus",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-border-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.border.hover",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-border-hover",
+      "cssValue": "var(--todae-color-bg-canvas)",
+      "ref": "color.bg.canvas",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.fg.active",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-fg-active",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.fg.default",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-fg-default",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.fg.disabled",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-fg-disabled",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.fg.focus",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-fg-focus",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.fg.hover",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-fg-hover",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-button-ghost-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": "ghost"
     },
     {
       "path": "stack.gap",
@@ -927,402 +1233,6 @@
       "ref": "font.weight.regular",
       "layer": "contract",
       "context": null
-    },
-    {
-      "path": "button.bg.active",
-      "type": "color",
-      "cssVar": "--todae-button-bg-active",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.bg.default",
-      "type": "color",
-      "cssVar": "--todae-button-bg-default",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.bg.disabled",
-      "type": "color",
-      "cssVar": "--todae-button-bg-disabled",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.bg.focus",
-      "type": "color",
-      "cssVar": "--todae-button-bg-focus",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.bg.hover",
-      "type": "color",
-      "cssVar": "--todae-button-bg-hover",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.border.active",
-      "type": "color",
-      "cssVar": "--todae-button-border-active",
-      "cssValue": "var(--todae-color-border-default)",
-      "ref": "color.border.default",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.border.default",
-      "type": "color",
-      "cssVar": "--todae-button-border-default",
-      "cssValue": "var(--todae-color-border-default)",
-      "ref": "color.border.default",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.border.disabled",
-      "type": "color",
-      "cssVar": "--todae-button-border-disabled",
-      "cssValue": "var(--todae-color-border-default)",
-      "ref": "color.border.default",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.border.focus",
-      "type": "color",
-      "cssVar": "--todae-button-border-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.border.hover",
-      "type": "color",
-      "cssVar": "--todae-button-border-hover",
-      "cssValue": "var(--todae-color-border-default)",
-      "ref": "color.border.default",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.fg.active",
-      "type": "color",
-      "cssVar": "--todae-button-fg-active",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.fg.default",
-      "type": "color",
-      "cssVar": "--todae-button-fg-default",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.fg.disabled",
-      "type": "color",
-      "cssVar": "--todae-button-fg-disabled",
-      "cssValue": "var(--todae-color-fg-muted)",
-      "ref": "color.fg.muted",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.fg.focus",
-      "type": "color",
-      "cssVar": "--todae-button-fg-focus",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.fg.hover",
-      "type": "color",
-      "cssVar": "--todae-button-fg-hover",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.font.size",
-      "type": "dimension",
-      "cssVar": "--todae-button-font-size",
-      "cssValue": "var(--todae-font-size-3)",
-      "ref": "font.size.3",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.font.weight",
-      "type": "fontWeight",
-      "cssVar": "--todae-button-font-weight",
-      "cssValue": "var(--todae-font-weight-medium)",
-      "ref": "font.weight.medium",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.gap",
-      "type": "dimension",
-      "cssVar": "--todae-button-gap",
-      "cssValue": "var(--todae-space-inline-gap)",
-      "ref": "space.inline.gap",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.padding.x",
-      "type": "dimension",
-      "cssVar": "--todae-button-padding-x",
-      "cssValue": "var(--todae-space-control-x)",
-      "ref": "space.control.x",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.padding.y",
-      "type": "dimension",
-      "cssVar": "--todae-button-padding-y",
-      "cssValue": "var(--todae-space-control-y)",
-      "ref": "space.control.y",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.radius",
-      "type": "dimension",
-      "cssVar": "--todae-button-radius",
-      "cssValue": "var(--todae-radius-md)",
-      "ref": "radius.md",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.ring.focus",
-      "type": "color",
-      "cssVar": "--todae-button-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
-      "layer": "variant",
-      "context": "secondary"
-    },
-    {
-      "path": "button.bg.active",
-      "type": "color",
-      "cssVar": "--todae-button-bg-active",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.bg.default",
-      "type": "color",
-      "cssVar": "--todae-button-bg-default",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.bg.disabled",
-      "type": "color",
-      "cssVar": "--todae-button-bg-disabled",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.bg.focus",
-      "type": "color",
-      "cssVar": "--todae-button-bg-focus",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.bg.hover",
-      "type": "color",
-      "cssVar": "--todae-button-bg-hover",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.border.active",
-      "type": "color",
-      "cssVar": "--todae-button-border-active",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.border.default",
-      "type": "color",
-      "cssVar": "--todae-button-border-default",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.border.disabled",
-      "type": "color",
-      "cssVar": "--todae-button-border-disabled",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.border.focus",
-      "type": "color",
-      "cssVar": "--todae-button-border-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.border.hover",
-      "type": "color",
-      "cssVar": "--todae-button-border-hover",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.fg.active",
-      "type": "color",
-      "cssVar": "--todae-button-fg-active",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.fg.default",
-      "type": "color",
-      "cssVar": "--todae-button-fg-default",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.fg.disabled",
-      "type": "color",
-      "cssVar": "--todae-button-fg-disabled",
-      "cssValue": "var(--todae-color-fg-muted)",
-      "ref": "color.fg.muted",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.fg.focus",
-      "type": "color",
-      "cssVar": "--todae-button-fg-focus",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.fg.hover",
-      "type": "color",
-      "cssVar": "--todae-button-fg-hover",
-      "cssValue": "var(--todae-color-fg-default)",
-      "ref": "color.fg.default",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.font.size",
-      "type": "dimension",
-      "cssVar": "--todae-button-font-size",
-      "cssValue": "var(--todae-font-size-3)",
-      "ref": "font.size.3",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.font.weight",
-      "type": "fontWeight",
-      "cssVar": "--todae-button-font-weight",
-      "cssValue": "var(--todae-font-weight-medium)",
-      "ref": "font.weight.medium",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.gap",
-      "type": "dimension",
-      "cssVar": "--todae-button-gap",
-      "cssValue": "var(--todae-space-inline-gap)",
-      "ref": "space.inline.gap",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.padding.x",
-      "type": "dimension",
-      "cssVar": "--todae-button-padding-x",
-      "cssValue": "var(--todae-space-control-x)",
-      "ref": "space.control.x",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.padding.y",
-      "type": "dimension",
-      "cssVar": "--todae-button-padding-y",
-      "cssValue": "var(--todae-space-control-y)",
-      "ref": "space.control.y",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.radius",
-      "type": "dimension",
-      "cssVar": "--todae-button-radius",
-      "cssValue": "var(--todae-radius-md)",
-      "ref": "radius.md",
-      "layer": "variant",
-      "context": "ghost"
-    },
-    {
-      "path": "button.ring.focus",
-      "type": "color",
-      "cssVar": "--todae-button-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
-      "layer": "variant",
-      "context": "ghost"
     }
   ]
 }

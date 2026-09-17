@@ -9,7 +9,8 @@
     },
     "contract": {
       "sources": [
-        { "$ref": "./components/button.json" },
+        { "$ref": "./components/button.base.json" },
+        { "$ref": "./components/button.primary.json" },
         { "$ref": "./components/stack.json" },
         { "$ref": "./components/text.json" }
       ]
@@ -37,7 +38,7 @@
       "description": "Button variant value sets",
       "default": "primary",
       "contexts": {
-        "primary": [{ "$ref": "./components/button.json" }],
+        "primary": [{ "$ref": "./components/button.primary.json" }],
         "secondary": [{ "$ref": "./components/button.secondary.json" }],
         "ghost": [{ "$ref": "./components/button.ghost.json" }]
       }

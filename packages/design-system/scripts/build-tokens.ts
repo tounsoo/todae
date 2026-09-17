@@ -2,10 +2,19 @@ import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-export const PATH_RE = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
+export const PATH_RE = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
 export const RESERVED_ROOTS = ['color', 'space', 'radius', 'font', 'button', 'stack', 'text'] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;
 export const INTERACTIVE_GROUPS = ['bg', 'fg', 'border'] as const;
+export const BUTTON_PAINTS = ['primary', 'secondary', 'ghost'] as const;
+export const BUTTON_BASE_PATHS = [
+  'button.base.radius',
+  'button.base.padding.x',
+  'button.base.padding.y',
+  'button.base.font.size',
+  'button.base.font.weight',
+  'button.base.gap',
+] as const;
 
 const LAYER_RANK = { core: 0, appearance: 1, density: 2, contract: 3, variant: 3 } as const;
 
@@ -117,12 +126,48 @@ function collectGroups(paths: Iterable<string>): Map<string, string[]> {
   return groups;
 }
 
+export function validateButtonBase(tokens: Map<string, TokenNode>, loc: string): void {
+  const keys = [...tokens.keys()].filter((path) => path.startsWith('button.base.')).sort();
+  const expected = [...BUTTON_BASE_PATHS].sort();
+  if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
+    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight, gap`);
+  }
+}
+
+function paintSuffixes(name: string, tokens: Map<string, TokenNode>): string[] {
+  const prefix = `button.${name}.`;
+  return [...tokens.keys()]
+    .filter((path) => path.startsWith(prefix))
+    .map((path) => path.slice(prefix.length))
+    .sort();
+}
+
+export function validatePaintPacks(packs: Record<string, Map<string, TokenNode>>): void {
+  const expected = paintSuffixes('primary', packs.primary ?? new Map());
+  if (expected.length === 0) fail('button.primary paint pack is empty');
+  for (const name of ['secondary', 'ghost'] as const) {
+    const keys = paintSuffixes(name, packs[name] ?? new Map());
+    if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
+      fail(`variant "${name}" paint keys must match button.primary`);
+    }
+  }
+}
+
 export function validateInteractive(tokens: Map<string, TokenNode>, loc: string): void {
   const groups = collectGroups(tokens.keys());
   for (const [group, leaves] of groups) {
     const parts = group.split('.');
     if (parts[0] !== 'button') continue;
-    const slot = parts[1];
+    const pack = parts[1];
+    if (!pack || pack === 'base') continue;
+    if (INTERACTIVE_GROUPS.includes(pack as (typeof INTERACTIVE_GROUPS)[number]) || pack === 'ring') {
+      fail(`${loc} "${group}" must live under button.primary|secondary|ghost`);
+    }
+    if (!(BUTTON_PAINTS as readonly string[]).includes(pack)) continue;
+    if (['radius', 'padding', 'font', 'gap'].includes(parts[2] ?? '')) {
+      fail(`${loc} "${group}" geometry belongs on button.base`);
+    }
+    const slot = parts[2];
     if (slot === 'ring') {
       if (leaves.length !== 1 || leaves[0] !== 'focus') {
         fail(`${loc} "${group}" must be ring.focus only`);
@@ -138,17 +183,10 @@ export function validateInteractive(tokens: Map<string, TokenNode>, loc: string)
   }
 }
 
-export function validateVariantTrees(
-  primary: Map<string, TokenNode>,
-  variants: Record<string, Map<string, TokenNode>>,
-): void {
-  const expected = [...primary.keys()].sort();
-  for (const [name, tokens] of Object.entries(variants)) {
-    const keys = [...tokens.keys()].sort();
-    if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
-      fail(`variant "${name}" key tree must match button.json`);
-    }
-  }
+export function consumeCssVar(path: string): string | null {
+  if (path.startsWith('button.base.')) return cssVarName(`button.${path.slice('button.base.'.length)}`);
+  const paint = path.match(/^button\.(primary|secondary|ghost)\.(.+)$/);
+  return paint ? cssVarName(`button.${paint[2]}`) : null;
 }
 
 export function serializeValue(token: TokenNode, path: string): { ref: string | null; cssValue: string } {
@@ -216,7 +254,11 @@ export function flattenLayer(
   const flat = flattenTokens(tree);
   validatePaths(flat.keys(), context ? `${layer}/${context}` : layer);
   if (layer === 'density') validateDensitySpaceOnly(flat, context ? `${layer}/${context}` : layer);
-  if (layer === 'contract' || layer === 'variant') validateInteractive(flat, context ? `${layer}/${context}` : layer);
+  if (layer === 'contract' || layer === 'variant') {
+    const loc = context ? `${layer}/${context}` : layer;
+    validateInteractive(flat, loc);
+    if ([...flat.keys()].some((path) => path.startsWith('button.base.'))) validateButtonBase(flat, loc);
+  }
   const tokens: FlatToken[] = [];
   for (const [path, node] of flat) {
     const { ref, cssValue } = serializeValue(node, path);
@@ -238,13 +280,25 @@ function decls(tokens: FlatToken[]): string {
   return tokens.map((t) => `  ${t.cssVar}: ${t.cssValue};`).join('\n');
 }
 
+function aliasDecls(tokens: FlatToken[]): string {
+  return tokens
+    .map((token) => {
+      const consume = consumeCssVar(token.path);
+      if (!consume || consume === token.cssVar) return null;
+      return `  ${consume}: var(${token.cssVar});`;
+    })
+    .filter((line): line is string => line !== null)
+    .join('\n');
+}
+
 export function emitCss(parts: {
   core: FlatToken[];
   light: FlatToken[];
   dark: FlatToken[];
   density: Record<string, FlatToken[]>;
   contract: FlatToken[];
-  variants: Record<string, FlatToken[]>;
+  base: FlatToken[];
+  paints: Record<(typeof BUTTON_PAINTS)[number], FlatToken[]>;
 }): string {
   const densityBlocks = ['compact', 'comfortable', 'spacious']
     .map((name) => {
@@ -253,13 +307,11 @@ export function emitCss(parts: {
       return `[data-density="${name}"] {\n${decls(tokens)}\n}`;
     })
     .join('\n\n');
-  const variantBlocks = ['secondary', 'ghost']
-    .map((name) => {
-      const tokens = parts.variants[name];
-      if (!tokens) fail(`Missing button variant "${name}"`);
-      return `[data-button-variant="${name}"] {\n${decls(tokens)}\n}`;
-    })
-    .join('\n\n');
+  const variantBlocks = BUTTON_PAINTS.map((name) => {
+    const tokens = parts.paints[name];
+    if (!tokens) fail(`Missing button variant "${name}"`);
+    return `[data-button-variant="${name}"] {\n${aliasDecls(tokens)}\n}`;
+  }).join('\n\n');
   return `@layer todae.base {
 :root {
 ${decls(parts.core)}
@@ -279,6 +331,8 @@ ${densityBlocks}
 [data-appearance],
 [data-density] {
 ${decls(parts.contract)}
+${aliasDecls(parts.base)}
+${aliasDecls(parts.paints.primary)}
 }
 
 ${variantBlocks}
@@ -421,9 +475,32 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
     );
   }
 
-  const contractFiles = ['button.json', 'stack.json', 'text.json'];
-  const contract: FlatToken[] = [];
-  for (const file of contractFiles) {
+  const base = flattenLayer(
+    asTree(await readJson(join(tokensRoot, 'components/button.base.json'), tokensRoot), 'components/button.base.json'),
+    'contract',
+  );
+  const paints = {} as Record<(typeof BUTTON_PAINTS)[number], FlatToken[]>;
+  for (const name of BUTTON_PAINTS) {
+    paints[name] = flattenLayer(
+      asTree(
+        await readJson(join(tokensRoot, `components/button.${name}.json`), tokensRoot),
+        `components/button.${name}.json`,
+      ),
+      'contract',
+      name,
+    );
+  }
+  validatePaintPacks(
+    Object.fromEntries(
+      BUTTON_PAINTS.map((name) => [
+        name,
+        new Map(paints[name].map((t) => [t.path, { $type: t.type, $value: t.value }])),
+      ]),
+    ),
+  );
+
+  const contract: FlatToken[] = [...base, ...BUTTON_PAINTS.flatMap((name) => paints[name])];
+  for (const file of ['stack.json', 'text.json']) {
     contract.push(
       ...flattenLayer(
         asTree(await readJson(join(tokensRoot, 'components', file), tokensRoot), `components/${file}`),
@@ -432,48 +509,16 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
     );
   }
 
-  const primary = flattenLayer(
-    asTree(await readJson(join(tokensRoot, 'components/button.json'), tokensRoot), 'components/button.json'),
-    'contract',
-  );
-  const variants: Record<string, FlatToken[]> = {};
-  for (const name of ['secondary', 'ghost'] as const) {
-    variants[name] = flattenLayer(
-      asTree(
-        await readJson(join(tokensRoot, `components/button.${name}.json`), tokensRoot),
-        `components/button.${name}.json`,
-      ),
-      'variant',
-      name,
-    );
-  }
-  validateVariantTrees(
-    new Map(primary.map((t) => [t.path, { $type: t.type, $value: t.value }])),
-    Object.fromEntries(
-      Object.entries(variants).map(([name, list]) => [
-        name,
-        new Map(list.map((t) => [t.path, { $type: t.type, $value: t.value }])),
-      ]),
-    ),
-  );
-
   const known = new Map<string, Layer>();
   for (const token of core) known.set(token.path, 'core');
   for (const token of light) known.set(token.path, 'appearance');
   for (const token of density.comfortable ?? []) known.set(token.path, 'density');
   for (const token of contract) known.set(token.path, 'contract');
 
-  const all = [
-    ...core,
-    ...light,
-    ...dark,
-    ...Object.values(density).flat(),
-    ...contract,
-    ...Object.values(variants).flat(),
-  ];
+  const all = [...core, ...light, ...dark, ...Object.values(density).flat(), ...contract];
   validateRefs(all, known);
 
-  const css = emitCss({ core, light, dark, density, contract, variants });
+  const css = emitCss({ core, light, dark, density, contract, base, paints });
   const json = emitCatalog(all);
   return { css, json, tokens: all };
 }

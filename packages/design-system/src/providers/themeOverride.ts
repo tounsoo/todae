@@ -49,35 +49,40 @@ export const SEMANTIC_OVERRIDE_KEYS = [
   'color.accent.default',
   'color.accent.hover',
   'color.accent.active',
+  'color.on-accent',
   'space.control.x',
   'space.control.y',
   'space.stack.gap',
   'space.inline.gap',
 ] as const;
 
+const BUTTON_PAINT_OVERRIDE_KEYS = (['primary', 'secondary', 'ghost'] as const).flatMap((variant) => [
+  `button.${variant}.bg.default`,
+  `button.${variant}.bg.hover`,
+  `button.${variant}.bg.active`,
+  `button.${variant}.bg.focus`,
+  `button.${variant}.bg.disabled`,
+  `button.${variant}.fg.default`,
+  `button.${variant}.fg.hover`,
+  `button.${variant}.fg.active`,
+  `button.${variant}.fg.focus`,
+  `button.${variant}.fg.disabled`,
+  `button.${variant}.border.default`,
+  `button.${variant}.border.hover`,
+  `button.${variant}.border.active`,
+  `button.${variant}.border.focus`,
+  `button.${variant}.border.disabled`,
+  `button.${variant}.ring.focus`,
+] as const);
+
 export const COMPONENT_OVERRIDE_KEYS = [
-  'button.bg.default',
-  'button.bg.hover',
-  'button.bg.active',
-  'button.bg.focus',
-  'button.bg.disabled',
-  'button.fg.default',
-  'button.fg.hover',
-  'button.fg.active',
-  'button.fg.focus',
-  'button.fg.disabled',
-  'button.border.default',
-  'button.border.hover',
-  'button.border.active',
-  'button.border.focus',
-  'button.border.disabled',
-  'button.ring.focus',
-  'button.radius',
-  'button.padding.x',
-  'button.padding.y',
-  'button.font.size',
-  'button.font.weight',
-  'button.gap',
+  'button.base.radius',
+  'button.base.padding.x',
+  'button.base.padding.y',
+  'button.base.font.size',
+  'button.base.font.weight',
+  'button.base.gap',
+  ...BUTTON_PAINT_OVERRIDE_KEYS,
   'stack.gap',
   'text.fg.default',
   'text.fg.muted',
@@ -131,10 +136,8 @@ const COLOR_KEYS = new Set<string>([
   ...SEMANTIC_OVERRIDE_KEYS.filter((key) => key.startsWith('color.')),
   ...COMPONENT_OVERRIDE_KEYS.filter(
     (key) =>
-      key.startsWith('button.bg.') ||
-      key.startsWith('button.fg.') ||
-      key.startsWith('button.border.') ||
-      key === 'button.ring.focus' ||
+      /^button\.(primary|secondary|ghost)\.(bg|fg|border)\./.test(key) ||
+      /^button\.(primary|secondary|ghost)\.ring\.focus$/.test(key) ||
       key.startsWith('text.fg.'),
   ),
 ]);
@@ -143,7 +146,7 @@ const WEIGHT_KEYS = new Set<string>([
   'font.weight.bold',
   'font.weight.medium',
   'font.weight.regular',
-  'button.font.weight',
+  'button.base.font.weight',
   'text.weight.regular',
   'text.weight.medium',
   'text.weight.bold',

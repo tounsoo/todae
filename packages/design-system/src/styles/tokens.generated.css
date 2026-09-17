@@ -51,6 +51,7 @@
   --todae-color-border-default: var(--todae-color-gray-900);
   --todae-color-fg-default: var(--todae-color-gray-900);
   --todae-color-fg-muted: var(--todae-color-gray-900);
+  --todae-color-on-accent: var(--todae-color-gray-50);
 }
 
 [data-appearance="dark"] {
@@ -62,6 +63,7 @@
   --todae-color-border-default: var(--todae-color-gray-50);
   --todae-color-fg-default: var(--todae-color-gray-50);
   --todae-color-fg-muted: var(--todae-color-gray-50);
+  --todae-color-on-accent: var(--todae-color-gray-50);
 }
 
 [data-density="compact"] {
@@ -87,28 +89,60 @@
 
 [data-appearance],
 [data-density] {
-  --todae-button-bg-active: var(--todae-color-accent-active);
-  --todae-button-bg-default: var(--todae-color-accent-default);
-  --todae-button-bg-disabled: var(--todae-color-bg-surface);
-  --todae-button-bg-focus: var(--todae-color-accent-default);
-  --todae-button-bg-hover: var(--todae-color-accent-hover);
-  --todae-button-border-active: var(--todae-color-border-default);
-  --todae-button-border-default: var(--todae-color-border-default);
-  --todae-button-border-disabled: var(--todae-color-border-default);
-  --todae-button-border-focus: var(--todae-color-accent-default);
-  --todae-button-border-hover: var(--todae-color-border-default);
-  --todae-button-fg-active: var(--todae-color-fg-default);
-  --todae-button-fg-default: var(--todae-color-fg-default);
-  --todae-button-fg-disabled: var(--todae-color-fg-muted);
-  --todae-button-fg-focus: var(--todae-color-fg-default);
-  --todae-button-fg-hover: var(--todae-color-fg-default);
-  --todae-button-font-size: var(--todae-font-size-3);
-  --todae-button-font-weight: var(--todae-font-weight-medium);
-  --todae-button-gap: var(--todae-space-inline-gap);
-  --todae-button-padding-x: var(--todae-space-control-x);
-  --todae-button-padding-y: var(--todae-space-control-y);
-  --todae-button-radius: var(--todae-radius-md);
-  --todae-button-ring-focus: var(--todae-color-accent-default);
+  --todae-button-base-font-size: var(--todae-font-size-3);
+  --todae-button-base-font-weight: var(--todae-font-weight-medium);
+  --todae-button-base-gap: var(--todae-space-inline-gap);
+  --todae-button-base-padding-x: var(--todae-space-control-x);
+  --todae-button-base-padding-y: var(--todae-space-control-y);
+  --todae-button-base-radius: var(--todae-radius-md);
+  --todae-button-primary-bg-active: var(--todae-color-accent-active);
+  --todae-button-primary-bg-default: var(--todae-color-accent-default);
+  --todae-button-primary-bg-disabled: var(--todae-color-bg-surface);
+  --todae-button-primary-bg-focus: var(--todae-color-accent-default);
+  --todae-button-primary-bg-hover: var(--todae-color-accent-hover);
+  --todae-button-primary-border-active: var(--todae-color-accent-active);
+  --todae-button-primary-border-default: var(--todae-color-accent-default);
+  --todae-button-primary-border-disabled: var(--todae-color-border-default);
+  --todae-button-primary-border-focus: var(--todae-color-accent-default);
+  --todae-button-primary-border-hover: var(--todae-color-accent-hover);
+  --todae-button-primary-fg-active: var(--todae-color-on-accent);
+  --todae-button-primary-fg-default: var(--todae-color-on-accent);
+  --todae-button-primary-fg-disabled: var(--todae-color-fg-muted);
+  --todae-button-primary-fg-focus: var(--todae-color-on-accent);
+  --todae-button-primary-fg-hover: var(--todae-color-on-accent);
+  --todae-button-primary-ring-focus: var(--todae-color-accent-default);
+  --todae-button-secondary-bg-active: var(--todae-color-bg-canvas);
+  --todae-button-secondary-bg-default: var(--todae-color-bg-surface);
+  --todae-button-secondary-bg-disabled: var(--todae-color-bg-surface);
+  --todae-button-secondary-bg-focus: var(--todae-color-bg-surface);
+  --todae-button-secondary-bg-hover: var(--todae-color-bg-surface);
+  --todae-button-secondary-border-active: var(--todae-color-border-default);
+  --todae-button-secondary-border-default: var(--todae-color-border-default);
+  --todae-button-secondary-border-disabled: var(--todae-color-border-default);
+  --todae-button-secondary-border-focus: var(--todae-color-accent-default);
+  --todae-button-secondary-border-hover: var(--todae-color-border-default);
+  --todae-button-secondary-fg-active: var(--todae-color-fg-default);
+  --todae-button-secondary-fg-default: var(--todae-color-fg-default);
+  --todae-button-secondary-fg-disabled: var(--todae-color-fg-muted);
+  --todae-button-secondary-fg-focus: var(--todae-color-fg-default);
+  --todae-button-secondary-fg-hover: var(--todae-color-fg-default);
+  --todae-button-secondary-ring-focus: var(--todae-color-accent-default);
+  --todae-button-ghost-bg-active: var(--todae-color-bg-surface);
+  --todae-button-ghost-bg-default: var(--todae-color-bg-canvas);
+  --todae-button-ghost-bg-disabled: var(--todae-color-bg-canvas);
+  --todae-button-ghost-bg-focus: var(--todae-color-bg-canvas);
+  --todae-button-ghost-bg-hover: var(--todae-color-bg-surface);
+  --todae-button-ghost-border-active: var(--todae-color-bg-canvas);
+  --todae-button-ghost-border-default: var(--todae-color-bg-canvas);
+  --todae-button-ghost-border-disabled: var(--todae-color-bg-canvas);
+  --todae-button-ghost-border-focus: var(--todae-color-accent-default);
+  --todae-button-ghost-border-hover: var(--todae-color-bg-canvas);
+  --todae-button-ghost-fg-active: var(--todae-color-fg-default);
+  --todae-button-ghost-fg-default: var(--todae-color-fg-default);
+  --todae-button-ghost-fg-disabled: var(--todae-color-fg-muted);
+  --todae-button-ghost-fg-focus: var(--todae-color-fg-default);
+  --todae-button-ghost-fg-hover: var(--todae-color-fg-default);
+  --todae-button-ghost-ring-focus: var(--todae-color-accent-default);
   --todae-stack-gap: var(--todae-space-stack-gap);
   --todae-text-fg-accent: var(--todae-color-accent-default);
   --todae-text-fg-default: var(--todae-color-fg-default);
@@ -123,55 +157,84 @@
   --todae-text-weight-bold: var(--todae-font-weight-bold);
   --todae-text-weight-medium: var(--todae-font-weight-medium);
   --todae-text-weight-regular: var(--todae-font-weight-regular);
+  --todae-button-font-size: var(--todae-button-base-font-size);
+  --todae-button-font-weight: var(--todae-button-base-font-weight);
+  --todae-button-gap: var(--todae-button-base-gap);
+  --todae-button-padding-x: var(--todae-button-base-padding-x);
+  --todae-button-padding-y: var(--todae-button-base-padding-y);
+  --todae-button-radius: var(--todae-button-base-radius);
+  --todae-button-bg-active: var(--todae-button-primary-bg-active);
+  --todae-button-bg-default: var(--todae-button-primary-bg-default);
+  --todae-button-bg-disabled: var(--todae-button-primary-bg-disabled);
+  --todae-button-bg-focus: var(--todae-button-primary-bg-focus);
+  --todae-button-bg-hover: var(--todae-button-primary-bg-hover);
+  --todae-button-border-active: var(--todae-button-primary-border-active);
+  --todae-button-border-default: var(--todae-button-primary-border-default);
+  --todae-button-border-disabled: var(--todae-button-primary-border-disabled);
+  --todae-button-border-focus: var(--todae-button-primary-border-focus);
+  --todae-button-border-hover: var(--todae-button-primary-border-hover);
+  --todae-button-fg-active: var(--todae-button-primary-fg-active);
+  --todae-button-fg-default: var(--todae-button-primary-fg-default);
+  --todae-button-fg-disabled: var(--todae-button-primary-fg-disabled);
+  --todae-button-fg-focus: var(--todae-button-primary-fg-focus);
+  --todae-button-fg-hover: var(--todae-button-primary-fg-hover);
+  --todae-button-ring-focus: var(--todae-button-primary-ring-focus);
+}
+
+[data-button-variant="primary"] {
+  --todae-button-bg-active: var(--todae-button-primary-bg-active);
+  --todae-button-bg-default: var(--todae-button-primary-bg-default);
+  --todae-button-bg-disabled: var(--todae-button-primary-bg-disabled);
+  --todae-button-bg-focus: var(--todae-button-primary-bg-focus);
+  --todae-button-bg-hover: var(--todae-button-primary-bg-hover);
+  --todae-button-border-active: var(--todae-button-primary-border-active);
+  --todae-button-border-default: var(--todae-button-primary-border-default);
+  --todae-button-border-disabled: var(--todae-button-primary-border-disabled);
+  --todae-button-border-focus: var(--todae-button-primary-border-focus);
+  --todae-button-border-hover: var(--todae-button-primary-border-hover);
+  --todae-button-fg-active: var(--todae-button-primary-fg-active);
+  --todae-button-fg-default: var(--todae-button-primary-fg-default);
+  --todae-button-fg-disabled: var(--todae-button-primary-fg-disabled);
+  --todae-button-fg-focus: var(--todae-button-primary-fg-focus);
+  --todae-button-fg-hover: var(--todae-button-primary-fg-hover);
+  --todae-button-ring-focus: var(--todae-button-primary-ring-focus);
 }
 
 [data-button-variant="secondary"] {
-  --todae-button-bg-active: var(--todae-color-bg-canvas);
-  --todae-button-bg-default: var(--todae-color-bg-surface);
-  --todae-button-bg-disabled: var(--todae-color-bg-surface);
-  --todae-button-bg-focus: var(--todae-color-bg-surface);
-  --todae-button-bg-hover: var(--todae-color-bg-surface);
-  --todae-button-border-active: var(--todae-color-border-default);
-  --todae-button-border-default: var(--todae-color-border-default);
-  --todae-button-border-disabled: var(--todae-color-border-default);
-  --todae-button-border-focus: var(--todae-color-accent-default);
-  --todae-button-border-hover: var(--todae-color-border-default);
-  --todae-button-fg-active: var(--todae-color-fg-default);
-  --todae-button-fg-default: var(--todae-color-fg-default);
-  --todae-button-fg-disabled: var(--todae-color-fg-muted);
-  --todae-button-fg-focus: var(--todae-color-fg-default);
-  --todae-button-fg-hover: var(--todae-color-fg-default);
-  --todae-button-font-size: var(--todae-font-size-3);
-  --todae-button-font-weight: var(--todae-font-weight-medium);
-  --todae-button-gap: var(--todae-space-inline-gap);
-  --todae-button-padding-x: var(--todae-space-control-x);
-  --todae-button-padding-y: var(--todae-space-control-y);
-  --todae-button-radius: var(--todae-radius-md);
-  --todae-button-ring-focus: var(--todae-color-accent-default);
+  --todae-button-bg-active: var(--todae-button-secondary-bg-active);
+  --todae-button-bg-default: var(--todae-button-secondary-bg-default);
+  --todae-button-bg-disabled: var(--todae-button-secondary-bg-disabled);
+  --todae-button-bg-focus: var(--todae-button-secondary-bg-focus);
+  --todae-button-bg-hover: var(--todae-button-secondary-bg-hover);
+  --todae-button-border-active: var(--todae-button-secondary-border-active);
+  --todae-button-border-default: var(--todae-button-secondary-border-default);
+  --todae-button-border-disabled: var(--todae-button-secondary-border-disabled);
+  --todae-button-border-focus: var(--todae-button-secondary-border-focus);
+  --todae-button-border-hover: var(--todae-button-secondary-border-hover);
+  --todae-button-fg-active: var(--todae-button-secondary-fg-active);
+  --todae-button-fg-default: var(--todae-button-secondary-fg-default);
+  --todae-button-fg-disabled: var(--todae-button-secondary-fg-disabled);
+  --todae-button-fg-focus: var(--todae-button-secondary-fg-focus);
+  --todae-button-fg-hover: var(--todae-button-secondary-fg-hover);
+  --todae-button-ring-focus: var(--todae-button-secondary-ring-focus);
 }
 
 [data-button-variant="ghost"] {
-  --todae-button-bg-active: var(--todae-color-bg-surface);
-  --todae-button-bg-default: var(--todae-color-bg-canvas);
-  --todae-button-bg-disabled: var(--todae-color-bg-canvas);
-  --todae-button-bg-focus: var(--todae-color-bg-canvas);
-  --todae-button-bg-hover: var(--todae-color-bg-surface);
-  --todae-button-border-active: var(--todae-color-bg-canvas);
-  --todae-button-border-default: var(--todae-color-bg-canvas);
-  --todae-button-border-disabled: var(--todae-color-bg-canvas);
-  --todae-button-border-focus: var(--todae-color-accent-default);
-  --todae-button-border-hover: var(--todae-color-bg-canvas);
-  --todae-button-fg-active: var(--todae-color-fg-default);
-  --todae-button-fg-default: var(--todae-color-fg-default);
-  --todae-button-fg-disabled: var(--todae-color-fg-muted);
-  --todae-button-fg-focus: var(--todae-color-fg-default);
-  --todae-button-fg-hover: var(--todae-color-fg-default);
-  --todae-button-font-size: var(--todae-font-size-3);
-  --todae-button-font-weight: var(--todae-font-weight-medium);
-  --todae-button-gap: var(--todae-space-inline-gap);
-  --todae-button-padding-x: var(--todae-space-control-x);
-  --todae-button-padding-y: var(--todae-space-control-y);
-  --todae-button-radius: var(--todae-radius-md);
-  --todae-button-ring-focus: var(--todae-color-accent-default);
+  --todae-button-bg-active: var(--todae-button-ghost-bg-active);
+  --todae-button-bg-default: var(--todae-button-ghost-bg-default);
+  --todae-button-bg-disabled: var(--todae-button-ghost-bg-disabled);
+  --todae-button-bg-focus: var(--todae-button-ghost-bg-focus);
+  --todae-button-bg-hover: var(--todae-button-ghost-bg-hover);
+  --todae-button-border-active: var(--todae-button-ghost-border-active);
+  --todae-button-border-default: var(--todae-button-ghost-border-default);
+  --todae-button-border-disabled: var(--todae-button-ghost-border-disabled);
+  --todae-button-border-focus: var(--todae-button-ghost-border-focus);
+  --todae-button-border-hover: var(--todae-button-ghost-border-hover);
+  --todae-button-fg-active: var(--todae-button-ghost-fg-active);
+  --todae-button-fg-default: var(--todae-button-ghost-fg-default);
+  --todae-button-fg-disabled: var(--todae-button-ghost-fg-disabled);
+  --todae-button-fg-focus: var(--todae-button-ghost-fg-focus);
+  --todae-button-fg-hover: var(--todae-button-ghost-fg-hover);
+  --todae-button-ring-focus: var(--todae-button-ghost-ring-focus);
 }
 }

@@ -1,0 +1,30 @@
+{
+  "button": {
+    "primary": {
+      "bg": {
+        "default": { "$type": "color", "$value": { "$ref": "color.accent.default" } },
+        "hover": { "$type": "color", "$value": { "$ref": "color.accent.hover" } },
+        "active": { "$type": "color", "$value": { "$ref": "color.accent.active" } },
+        "focus": { "$type": "color", "$value": { "$ref": "color.accent.default" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "color.bg.surface" } }
+      },
+      "fg": {
+        "default": { "$type": "color", "$value": { "$ref": "color.on-accent" } },
+        "hover": { "$type": "color", "$value": { "$ref": "color.on-accent" } },
+        "active": { "$type": "color", "$value": { "$ref": "color.on-accent" } },
+        "focus": { "$type": "color", "$value": { "$ref": "color.on-accent" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "color.fg.muted" } }
+      },
+      "border": {
+        "default": { "$type": "color", "$value": { "$ref": "color.accent.default" } },
+        "hover": { "$type": "color", "$value": { "$ref": "color.accent.hover" } },
+        "active": { "$type": "color", "$value": { "$ref": "color.accent.active" } },
+        "focus": { "$type": "color", "$value": { "$ref": "color.accent.default" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "color.border.default" } }
+      },
+      "ring": {
+        "focus": { "$type": "color", "$value": { "$ref": "color.accent.default" } }
+      }
+    }
+  }
+}

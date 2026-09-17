@@ -130,12 +130,26 @@ describe('themeOverrideStyle', () => {
     expect(
       themeOverrideStyle({
         'color.accent.default': { colorSpace: 'oklch', components: [0.55, 0.18, 255] },
+        'color.on-accent': { colorSpace: 'oklch', components: [0.98, 0.005, 260] },
         'space.control.x': { value: 0.5, unit: 'rem' },
+        'button.base.radius': { value: 0.5, unit: 'rem' },
+        'button.primary.bg.hover': { colorSpace: 'oklch', components: [0.68, 0.16, 255] },
       }),
     ).toEqual({
       '--todae-color-accent-default': 'oklch(0.55 0.18 255)',
+      '--todae-color-on-accent': 'oklch(0.98 0.005 260)',
       '--todae-space-control-x': '0.5rem',
+      '--todae-button-base-radius': '0.5rem',
+      '--todae-button-primary-bg-hover': 'oklch(0.68 0.16 255)',
     });
+  });
+
+  it('rejects collapsed button paint paths', () => {
+    expect(() =>
+      themeOverrideStyle({
+        'button.bg.hover': { colorSpace: 'oklch', components: [0.55, 0.18, 255] },
+      }),
+    ).toThrow(/Unknown theme override/);
   });
 
   it('rejects a typed value that does not match the key', () => {
@@ -151,7 +165,8 @@ describe('contract-only components', () => {
   it('forbids hard-coded color and appearance branches', () => {
     const root = join(import.meta.dirname, '../components');
     const files = readdirSync(root).map((name) => join(root, name));
-    const banned = /#(?:[0-9a-fA-F]{3}){1,2}\b|oklch\(|data-appearance|prefers-color-scheme/;
+    const banned =
+      /#(?:[0-9a-fA-F]{3}){1,2}\b|oklch\(|data-appearance|prefers-color-scheme|--todae-color-/;
     for (const file of files) {
       expect(readFileSync(file, 'utf8'), file).not.toMatch(banned);
     }

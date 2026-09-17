@@ -11,7 +11,7 @@ import {
   validateParity,
   validatePaths,
   validateRefs,
-  validateVariantTrees,
+  validatePaintPacks,
   type FlatToken,
   type TokenNode,
 } from './build-tokens';
@@ -25,6 +25,8 @@ function tokenMap(tree: Record<string, TokenNode>): Map<string, TokenNode> {
 describe('build-tokens validations', () => {
   it('accepts lowercase paths and rejects others', () => {
     expect(PATH_RE.test('color.gray.50')).toBe(true);
+    expect(PATH_RE.test('color.on-accent')).toBe(true);
+    expect(PATH_RE.test('color.fg.onAccent')).toBe(false);
     expect(() => validatePaths(['Color.Gray.50'], 'core')).toThrow(/lowercase/);
     expect(() => validatePaths(['hue.primary'], 'core')).toThrow(/hue/);
   });
@@ -45,7 +47,7 @@ describe('build-tokens validations', () => {
     expect(() =>
       validateInteractive(
         flattenTokens({
-          button: { bg: { default: color('color.accent.default') } },
+          button: { primary: { bg: { default: color('color.accent.default') } } },
         }),
         'contract',
       ),
@@ -53,17 +55,34 @@ describe('build-tokens validations', () => {
     expect(() =>
       validateInteractive(
         flattenTokens({
-          button: { ring: { default: color('color.accent.default'), focus: color('color.accent.default') } },
+          button: {
+            primary: { ring: { default: color('color.accent.default'), focus: color('color.accent.default') } },
+          },
         }),
         'contract',
       ),
     ).toThrow(/ring\.focus only/);
+    expect(() =>
+      validateInteractive(
+        flattenTokens({
+          button: { bg: { default: color('color.accent.default') } },
+        }),
+        'contract',
+      ),
+    ).toThrow(/button\.primary\|secondary\|ghost/);
   });
 
-  it('requires variant trees to match primary', () => {
-    const primary = flattenTokens({ button: { radius: { $type: 'dimension', $value: { $ref: 'radius.md' } } } });
-    const ghost = flattenTokens({ button: { gap: { $type: 'dimension', $value: { $ref: 'space.inline.gap' } } } });
-    expect(() => validateVariantTrees(primary, { ghost })).toThrow(/ghost/);
+  it('requires paint packs to match primary keys', () => {
+    const primary = flattenTokens({
+      button: { primary: { bg: { default: color('color.accent.default') } } },
+    });
+    const secondary = flattenTokens({
+      button: { secondary: { bg: { default: color('color.bg.surface') } } },
+    });
+    const ghost = flattenTokens({
+      button: { ghost: { fg: { default: color('color.fg.default') } } },
+    });
+    expect(() => validatePaintPacks({ primary, secondary, ghost })).toThrow(/ghost/);
   });
 
   it('rejects same-or-higher-layer refs and cycles', () => {
@@ -108,6 +127,7 @@ describe('committed token graph', () => {
     expect(graph.css).toContain('@layer todae.base');
     expect(graph.css).toContain(':root,\n[data-appearance="light"]');
     expect(graph.css).toContain('[data-appearance],\n[data-density]');
+    expect(graph.css).toContain('[data-button-variant="primary"]');
     expect(graph.css).toContain('[data-button-variant="ghost"]');
     expect(graph.tokens.some((t) => t.layer === 'contract' && t.cssValue.startsWith('var('))).toBe(true);
     expect(catalogSelectors(graph.css)).toMatchSnapshot();
@@ -130,9 +150,14 @@ describe('committed token graph', () => {
       expect(accent.active).not.toBe(accent.default);
       expect(accent.hover).not.toBe(accent.active);
     }
-    const buttonHover = graph.tokens.find((t) => t.layer === 'contract' && t.path === 'button.bg.hover');
-    const buttonActive = graph.tokens.find((t) => t.layer === 'contract' && t.path === 'button.bg.active');
+    const buttonHover = graph.tokens.find((t) => t.path === 'button.primary.bg.hover');
+    const buttonActive = graph.tokens.find((t) => t.path === 'button.primary.bg.active');
+    const buttonFg = graph.tokens.find((t) => t.path === 'button.primary.fg.default');
     expect(buttonHover?.cssValue).toBe('var(--todae-color-accent-hover)');
     expect(buttonActive?.cssValue).toBe('var(--todae-color-accent-active)');
+    expect(buttonFg?.cssValue).toBe('var(--todae-color-on-accent)');
+    expect(graph.css).toContain('--todae-button-bg-hover: var(--todae-button-primary-bg-hover)');
+    expect(graph.css).toContain('--todae-button-bg-active: var(--todae-button-primary-bg-active)');
+    expect(graph.css).toContain('--todae-button-radius: var(--todae-button-base-radius)');
   });
 });
