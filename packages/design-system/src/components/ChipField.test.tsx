@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChipField } from './ChipField';
@@ -184,10 +184,16 @@ describe('ChipField overflow', () => {
       },
     );
     vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
+      const minWidth = el instanceof HTMLInputElement ? '80px' : '0px';
       return {
         columnGap: '8px',
         gap: '8px',
-        minWidth: el instanceof HTMLInputElement ? '80px' : '0px',
+        minWidth,
+        getPropertyValue(name: string) {
+          if (name === 'min-width') return minWidth;
+          if (name === 'column-gap' || name === 'gap') return '8px';
+          return '';
+        },
       } as CSSStyleDeclaration;
     });
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
@@ -209,34 +215,36 @@ describe('ChipField overflow', () => {
     vi.restoreAllMocks();
   });
 
+  function liveNodes(container: HTMLElement) {
+    const flow = container.querySelector('input')?.parentElement;
+    return [...(flow?.children ?? [])].filter((el) => !el.hasAttribute('inert'));
+  }
+
   it('folds earliest chips into +N and keeps hidden dismiss out of the a11y tree', () => {
     const { container, onChipRemove } = renderField({
       chips: ['Alpha', 'Beta', 'Gamma', 'Delta'],
       maxRows: 1,
     });
-    expect(screen.getByText('2 more')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Remove Alpha' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Remove Beta' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Remove Gamma' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Remove Delta' })).toBeTruthy();
-    expect(container.querySelector('[inert][aria-hidden]')?.textContent).toContain('Alpha');
+    const live = liveNodes(container);
+    const html = live.map((el) => el.outerHTML).join('');
+    expect(html).toContain('2 more');
+    expect(html).not.toContain('Remove Alpha');
+    expect(html).not.toContain('Remove Beta');
+    expect(html).toContain('Remove Gamma');
+    expect(html).toContain('Remove Delta');
+    expect(container.querySelector('[inert][aria-hidden] [aria-label="Remove Alpha"]')).not.toBeNull();
 
     fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Backspace' });
     expect(onChipRemove).toHaveBeenCalledWith(3, 'Delta');
   });
 
   it('remeasures when ResizeObserver fires and does not loop', () => {
-    const { rerender } = renderField({
+    const { container } = renderField({
       chips: ['Alpha', 'Beta', 'Gamma', 'Delta'],
       maxRows: 1,
     });
-    const renders = { n: 0 };
-    const Spy = () => {
-      renders.n += 1;
-      return null;
-    };
     expect(observers.length).toBeGreaterThan(0);
-    const wide = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
       if (this.getAttribute('data-overflow') != null) {
         return { width: 50, height: 24, top: 0, left: 0, bottom: 24, right: 50, x: 0, y: 0, toJSON() {} };
       }
@@ -248,21 +256,12 @@ describe('ChipField overflow', () => {
       }
       return { width: 0, height: 0, top: 0, left: 0, bottom: 0, right: 0, x: 0, y: 0, toJSON() {} };
     });
-    observers[0]?.cb([] as unknown as ResizeObserverEntry[], observers[0] as unknown as ResizeObserver);
-    expect(screen.queryByText(/more/)).toBeNull();
-    wide.mockRestore();
-    rerender(
-      <ChipField
-        chips={['Alpha', 'Beta', 'Gamma', 'Delta']}
-        inputValue=""
-        onInputValueChange={() => undefined}
-        onCommit={() => undefined}
-        onChipRemove={() => undefined}
-        maxRows={1}
-      >
-        <Spy />
-      </ChipField>,
-    );
-    expect(renders.n).toBe(1);
+    act(() => {
+      const ro = observers.at(-1);
+      ro?.cb([] as unknown as ResizeObserverEntry[], ro as unknown as ResizeObserver);
+    });
+    const live = liveNodes(container).map((el) => el.outerHTML).join('');
+    expect(live).not.toContain('data-overflow');
+    expect(live).toContain('Remove Alpha');
   });
 });

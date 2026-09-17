@@ -29,8 +29,8 @@ export function useChipMeasure({
     const gap = getComputedStyle(flow).columnGap || getComputedStyle(flow).gap;
     const g = Number.parseFloat(gap) || 0;
     const kids = [...layer.children] as HTMLElement[];
-    if (kids.length === 0) return;
-    const overflowEl = kids[kids.length - 1];
+    const overflowEl = kids.at(-1);
+    if (!overflowEl) return;
     const chipEls = kids.slice(0, -1);
     const c = chipEls.map((el) => el.getBoundingClientRect().width);
     const p = overflowEl.getBoundingClientRect().width;

@@ -47,6 +47,6 @@ describe('Chip', () => {
     expect(container.querySelector('[tabindex]')).toBeNull();
     expect(container.querySelector('[data-overflow]')).not.toBeNull();
     expect(screen.getByText('4 more')).toBeTruthy();
-    expect(screen.getByText('+4')).toHaveAttribute('aria-hidden');
+    expect(screen.getByText('+4').getAttribute('aria-hidden')).not.toBeNull();
   });
 });

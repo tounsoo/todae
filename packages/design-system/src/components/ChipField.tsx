@@ -109,8 +109,11 @@ function ChipFieldFlow({
     if (disabled) return;
     if (event.nativeEvent.isComposing || event.key === 'Process') return;
     if (event.key === 'Backspace' && inputValue === '' && chips.length > 0 && removeOnBackspace) {
+      const index = chips.length - 1;
+      const value = chips[index];
+      if (value === undefined) return;
       event.preventDefault();
-      onChipRemove(chips.length - 1, chips[chips.length - 1]);
+      onChipRemove(index, value);
       return;
     }
     if (!keySet.has(event.key)) return;

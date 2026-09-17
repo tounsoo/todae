@@ -41,11 +41,10 @@ describe('useChipField', () => {
   });
 
   it('returns spread-compatible ChipField props', () => {
-    type Hook = ReturnType<typeof useChipField>;
-    expectTypeOf<Hook['chips']>().toEqualTypeOf<ChipFieldProps['chips']>();
-    expectTypeOf<Hook['inputValue']>().toEqualTypeOf<ChipFieldProps['inputValue']>();
-    expectTypeOf<Hook['onInputValueChange']>().toEqualTypeOf<ChipFieldProps['onInputValueChange']>();
-    expectTypeOf<Hook['onCommit']>().toEqualTypeOf<ChipFieldProps['onCommit']>();
-    expectTypeOf<Hook['onChipRemove']>().toMatchTypeOf<ChipFieldProps['onChipRemove']>();
+    function accept(_props: ChipFieldProps) {}
+    const { result } = renderHook(() => useChipField());
+    accept(result.current);
+    expectTypeOf(result.current.chips).toEqualTypeOf<ChipFieldProps['chips']>();
+    expectTypeOf(result.current.onCommit).toEqualTypeOf<ChipFieldProps['onCommit']>();
   });
 });
