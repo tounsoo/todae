@@ -21,9 +21,7 @@
     "schema": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/generate-schema.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "clean": "rm -rf dist",
-    "graft:build": "npx -y @nanonets/graft@0.18.0 build",
-    "graft:check": "npx -y @nanonets/graft@0.18.0 check"
+    "clean": "rm -rf dist"
   },
   "peerDependencies": {
     "react": "^19.0.0",
