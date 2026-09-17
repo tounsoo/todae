@@ -37,6 +37,30 @@ describe('BottomSheet', () => {
     expect(document.querySelector('[data-snap="full"]')).not.toBeNull();
   });
 
+  it('grows height with the pointer while dragging mid toward full', () => {
+    const onSnapChange = vi.fn();
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
+    render(
+      <BottomSheet open onOpenChange={() => undefined} snap="mid" onSnapChange={onSnapChange}>
+        <BottomSheet.Title>Resize</BottomSheet.Title>
+        <BottomSheet.Body>list</BottomSheet.Body>
+      </BottomSheet>,
+    );
+    const sheet = document.querySelector('[role="dialog"]') as HTMLElement;
+    const handle = document.querySelector('[data-sheet-drag-handle]');
+    expect(sheet).not.toBeNull();
+    expect(handle).not.toBeNull();
+    handle!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 7, clientY: 400 }));
+    window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 7, clientY: 200 }));
+    expect(sheet.getAttribute('data-dragging')).toBe('');
+    expect(sheet.style.getPropertyValue('--todae-sheet-drag-height')).toBe('600px');
+    expect(sheet.style.getPropertyValue('--todae-sheet-drag-y')).toBe('');
+    expect(sheet.style.transform).toBe('');
+    expect(onSnapChange).not.toHaveBeenCalled();
+    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 7, clientY: 200 }));
+    expect(onSnapChange).toHaveBeenCalledWith('full');
+  });
+
   it('dismisses from a handle drag past the threshold', () => {
     const onOpenChange = vi.fn();
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });

@@ -10,7 +10,7 @@ import { useFocusRestore } from './useFocusRestore';
 import { useFocusTrap } from './useFocusTrap';
 import { useInertOutside } from './useInertOutside';
 import { useScrollLock } from './useScrollLock';
-import { dragOrigin, resolveRelease } from './useSnapDrag';
+import { dragHeight, dragOrigin, resolveRelease } from './useSnapDrag';
 
 afterEach(cleanup);
 
@@ -175,13 +175,18 @@ describe('OverlayPortal', () => {
 });
 
 describe('useSnapDrag math', () => {
+  it('grows height when the pointer moves up', () => {
+    expect(dragHeight(400, -200, 736)).toBe(600);
+    expect(dragHeight(736, 200, 736)).toBe(536);
+    expect(dragHeight(400, 400, 736)).toBe(0);
+  });
+
   it('resolves dismiss and nearest snap from a table', () => {
     const heights = { mid: 400, full: 800 };
     expect(
       resolveRelease({
-        offset: 250,
+        height: 150,
         velocity: 0,
-        currentHeight: 400,
         heights,
         snapPoints: ['mid', 'full'],
         dismissOnDrag: true,
@@ -189,9 +194,8 @@ describe('useSnapDrag math', () => {
     ).toBe('dismiss');
     expect(
       resolveRelease({
-        offset: 10,
-        velocity: 0.8,
-        currentHeight: 400,
+        height: 270,
+        velocity: 0.4,
         heights,
         snapPoints: ['mid', 'full'],
         dismissOnDrag: true,
@@ -199,9 +203,8 @@ describe('useSnapDrag math', () => {
     ).toBe('dismiss');
     expect(
       resolveRelease({
-        offset: -300,
+        height: 700,
         velocity: -0.2,
-        currentHeight: 400,
         heights,
         snapPoints: ['mid', 'full'],
         dismissOnDrag: true,
@@ -209,9 +212,8 @@ describe('useSnapDrag math', () => {
     ).toBe('full');
     expect(
       resolveRelease({
-        offset: 250,
+        height: 150,
         velocity: 0,
-        currentHeight: 400,
         heights,
         snapPoints: ['full'],
         dismissOnDrag: false,

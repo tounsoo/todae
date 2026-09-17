@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
 export type SheetSnap = 'mid' | 'full';
 
@@ -12,18 +12,23 @@ export function dragOrigin(input: {
   return null;
 }
 
+export function dragHeight(startHeight: number, pointerDeltaY: number, maxHeight: number): number {
+  return Math.min(Math.max(startHeight - pointerDeltaY, 0), maxHeight);
+}
+
 export function resolveRelease(input: {
-  offset: number;
+  height: number;
   velocity: number;
-  currentHeight: number;
   heights: { mid: number; full: number };
   snapPoints: readonly SheetSnap[];
   dismissOnDrag: boolean;
 }): 'dismiss' | SheetSnap {
-  if (input.dismissOnDrag && (input.velocity > 0.5 || input.offset > input.currentHeight * 0.5)) {
-    return 'dismiss';
+  const projected = input.height - input.velocity * 150;
+  if (input.dismissOnDrag) {
+    const pulled = input.heights.mid - input.height;
+    if (input.velocity > 0 && pulled >= input.heights.mid * 0.3) return 'dismiss';
+    if (projected < input.heights.mid * 0.5) return 'dismiss';
   }
-  const projected = input.currentHeight - input.offset - input.velocity * 150;
   let best: SheetSnap = input.snapPoints[0] ?? 'mid';
   let bestDist = Number.POSITIVE_INFINITY;
   for (const snap of input.snapPoints) {
@@ -36,18 +41,19 @@ export function resolveRelease(input: {
   return best;
 }
 
-function readPx(el: HTMLElement, name: string): number {
+function readPx(el: HTMLElement, name: string, vh: number): number {
   const raw = getComputedStyle(el).getPropertyValue(name).trim();
   if (raw.endsWith('rem')) return parseFloat(raw) * 16;
   if (raw.endsWith('px')) return parseFloat(raw);
+  if (raw.endsWith('vh') || raw.endsWith('dvh')) return (parseFloat(raw) / 100) * vh;
   const n = Number.parseFloat(raw);
   return Number.isFinite(n) ? n : 0;
 }
 
 function sheetHeights(sheet: HTMLElement): { mid: number; full: number } {
   const vh = window.innerHeight;
-  const midRatio = readPx(sheet, '--todae-sheet-snap-mid') || 0.5;
-  const inset = readPx(sheet, '--todae-sheet-snap-full-inset');
+  const midRatio = readPx(sheet, '--todae-sheet-snap-mid', vh) || 0.5;
+  const inset = readPx(sheet, '--todae-sheet-snap-full-inset', vh);
   return { mid: midRatio * vh, full: Math.max(0, vh - inset) };
 }
 
@@ -70,22 +76,41 @@ export function useSnapDrag({
   enabled: boolean;
   dismissOnDrag: boolean;
 }): void {
+  const snapRef = useRef(snap);
+  const pointsRef = useRef(snapPoints);
+  const onSnapRef = useRef(onSnap);
+  const onDismissRef = useRef(onDismiss);
+  const dismissRef = useRef(dismissOnDrag);
+  snapRef.current = snap;
+  pointsRef.current = snapPoints;
+  onSnapRef.current = onSnap;
+  onDismissRef.current = onDismiss;
+  dismissRef.current = dismissOnDrag;
+
   useEffect(() => {
-    const root = sheetRef.current;
-    if (!root || !enabled) return;
-    const sheet = root;
+    const sheet = sheetRef.current;
+    if (!sheet || !enabled) return;
+    const root = sheet.parentElement;
 
     let pointerId: number | null = null;
     let origin: 'handle' | 'body' | null = null;
     let startY = 0;
+    let startHeight = 0;
     let armed = false;
     const samples: { t: number; y: number }[] = [];
 
-    function setDrag(y: number | null, dragging: boolean) {
-      if (!sheet) return;
+    function setDrag(height: number | null, dragging: boolean) {
       sheet.toggleAttribute('data-dragging', dragging);
-      if (y == null) sheet.style.removeProperty('--todae-sheet-drag-y');
-      else sheet.style.setProperty('--todae-sheet-drag-y', `${y}px`);
+      root?.toggleAttribute('data-dragging', dragging);
+      if (height == null) {
+        sheet.style.removeProperty('--todae-sheet-drag-height');
+        root?.style.removeProperty('--todae-sheet-scrim-progress');
+        return;
+      }
+      sheet.style.setProperty('--todae-sheet-drag-height', `${height}px`);
+      const heights = sheetHeights(sheet);
+      const progress = height >= heights.mid ? 1 : Math.max(0, height / heights.mid);
+      root?.style.setProperty('--todae-sheet-scrim-progress', String(progress));
     }
 
     function onPointerDown(event: PointerEvent) {
@@ -101,6 +126,9 @@ export function useSnapDrag({
       if (!origin) return;
       pointerId = event.pointerId;
       startY = event.clientY;
+      const heights = sheetHeights(sheet);
+      const measured = sheet.getBoundingClientRect().height;
+      startHeight = measured > 0 ? measured : heights[snapRef.current];
       armed = false;
       samples.length = 0;
       samples.push({ t: event.timeStamp, y: event.clientY });
@@ -124,10 +152,8 @@ export function useSnapDrag({
         }
       }
       const heights = sheetHeights(sheet);
-      const current = heights[snap];
-      const maxUp = snap === 'mid' && snapPoints.includes('full') ? current - heights.full : 0;
-      const y = Math.min(Math.max(dy, maxUp), current);
-      setDrag(y, true);
+      const maxHeight = pointsRef.current.includes('full') ? heights.full : heights.mid;
+      setDrag(dragHeight(startHeight, dy, maxHeight), true);
       samples.push({ t: event.timeStamp, y: event.clientY });
       while (samples.length > 1 && event.timeStamp - samples[0]!.t > 100) samples.shift();
     }
@@ -139,32 +165,36 @@ export function useSnapDrag({
       pointerId = null;
       origin = null;
       armed = false;
-      if (!wasArmed || lastOrigin == null) {
-        setDrag(null, false);
-        return;
-      }
-      if (cancelled) {
+      if (!wasArmed || lastOrigin == null || cancelled) {
         setDrag(null, false);
         return;
       }
       const heights = sheetHeights(sheet);
-      const current = heights[snap];
-      const offset = Number.parseFloat(sheet.style.getPropertyValue('--todae-sheet-drag-y')) || 0;
+      const height =
+        Number.parseFloat(sheet.style.getPropertyValue('--todae-sheet-drag-height')) || startHeight;
       const first = samples[0];
       const last = samples[samples.length - 1];
       const dt = first && last ? Math.max(1, last.t - first.t) : 1;
       const velocity = first && last ? (last.y - first.y) / dt : 0;
       const next = resolveRelease({
-        offset,
+        height,
         velocity,
-        currentHeight: current,
         heights,
-        snapPoints,
-        dismissOnDrag,
+        snapPoints: pointsRef.current,
+        dismissOnDrag: dismissRef.current,
       });
-      setDrag(null, false);
-      if (next === 'dismiss') onDismiss();
-      else if (next !== snap) onSnap(next);
+      setDrag(height, false);
+      if (next === 'dismiss') {
+        onDismissRef.current();
+        return;
+      }
+      if (next !== snapRef.current) onSnapRef.current(next);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (!sheet.isConnected) return;
+          sheet.style.removeProperty('--todae-sheet-drag-height');
+        });
+      });
     }
 
     function onPointerUp(event: PointerEvent) {
@@ -193,5 +223,5 @@ export function useSnapDrag({
       sheet.removeEventListener('touchmove', onTouchMove);
       setDrag(null, false);
     };
-  }, [bodyRef, dismissOnDrag, enabled, onDismiss, onSnap, sheetRef, snap, snapPoints]);
+  }, [bodyRef, enabled, sheetRef]);
 }
