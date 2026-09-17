@@ -1,0 +1,74 @@
+@layer todae.components {
+  .shell {
+    display: flex;
+    align-items: center;
+    gap: var(--todae-field-gap);
+    padding: var(--todae-field-padding-y) var(--todae-field-padding-x);
+    border: 1px solid var(--todae-field-border-default);
+    border-radius: var(--todae-field-radius);
+    background: var(--todae-field-bg-default);
+    color: var(--todae-field-fg-default);
+    font-size: var(--todae-field-font-size);
+  }
+
+  .shell:hover:not([data-disabled]) {
+    border-color: var(--todae-field-border-hover);
+  }
+
+  .shell:has(input:focus-visible) {
+    border-color: var(--todae-field-border-focus);
+    outline: 2px solid var(--todae-field-ring-focus);
+    outline-offset: 2px;
+  }
+
+  .shell[data-invalid] {
+    border-color: var(--todae-field-border-invalid);
+  }
+
+  .shell[data-invalid]:has(input:focus-visible) {
+    outline-color: var(--todae-field-ring-invalid);
+  }
+
+  .shell[data-disabled] {
+    background: var(--todae-field-bg-disabled);
+    color: var(--todae-field-fg-disabled);
+    border-color: var(--todae-field-border-disabled);
+  }
+
+  .body {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    min-width: 0;
+    gap: inherit;
+  }
+
+  .input {
+    flex: 1 1 var(--todae-field-min-width);
+    min-width: var(--todae-field-min-width);
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--todae-field-fg-default);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    outline: none;
+  }
+
+  .input::placeholder {
+    color: var(--todae-field-fg-placeholder);
+  }
+
+  .input:disabled {
+    color: var(--todae-field-fg-disabled);
+  }
+
+  .adornment {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    color: var(--todae-field-fg-adornment);
+  }
+}

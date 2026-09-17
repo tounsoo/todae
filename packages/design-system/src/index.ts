@@ -1,8 +1,24 @@
 'use client';
 
 export { Button, type ButtonProps, type ButtonVariant } from './components/Button';
+export { Chip, ChipOverflow, type ChipOverflowProps, type ChipProps } from './components/Chip';
+export {
+  ChipField,
+  type ChipFieldInputProps,
+  type ChipFieldProps,
+} from './components/ChipField';
+export { CHIP_COMMIT_KEYS, type ChipCommitKey } from './components/commitKeys';
 export { Stack, type StackProps, type StackDirection } from './components/Stack';
 export { Text, type TextProps, type TextAs, type TextSize, type TextTone, type TextWeight } from './components/Text';
+export {
+  TextField,
+  type FieldAdornmentProps,
+  type FieldShellProps,
+  type TextFieldInputProps,
+  type TextFieldProps,
+  type TextFieldType,
+} from './components/TextField';
+export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
 export {
   ThemeProvider,
   useAppearance,

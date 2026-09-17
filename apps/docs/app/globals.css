@@ -59,6 +59,11 @@ main:has(.playground) {
   background: var(--todae-color-bg-surface);
 }
 
+.example-block {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

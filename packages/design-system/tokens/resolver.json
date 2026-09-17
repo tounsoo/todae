@@ -12,7 +12,9 @@
         { "$ref": "./components/button.base.json" },
         { "$ref": "./components/button.primary.json" },
         { "$ref": "./components/stack.json" },
-        { "$ref": "./components/text.json" }
+        { "$ref": "./components/text.json" },
+        { "$ref": "./components/field.json" },
+        { "$ref": "./components/chip.json" }
       ]
     }
   },

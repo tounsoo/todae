@@ -3,7 +3,10 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const PATH_RE = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
-export const RESERVED_ROOTS = ['color', 'space', 'radius', 'font', 'button', 'stack', 'text'] as const;
+export const RESERVED_ROOTS = ['color', 'space', 'radius', 'font', 'button', 'stack', 'text', 'field', 'chip'] as const;
+export const CHIP_SLOTS = ['default', 'hover', 'focus', 'disabled'] as const;
+export const FIELD_BORDER_SLOTS = ['default', 'hover', 'focus', 'disabled', 'invalid'] as const;
+export const FIELD_RING_SLOTS = ['focus', 'invalid'] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;
 export const INTERACTIVE_GROUPS = ['bg', 'fg', 'border'] as const;
 export const BUTTON_PAINTS = ['primary', 'secondary', 'ghost'] as const;
@@ -153,6 +156,39 @@ export function validatePaintPacks(packs: Record<string, Map<string, TokenNode>>
   }
 }
 
+export function validateFieldChipSlots(tokens: Map<string, TokenNode>, loc: string): void {
+  const groups = collectGroups(tokens.keys());
+  for (const [group, leaves] of groups) {
+    const parts = group.split('.');
+    if (parts[0] === 'chip' && INTERACTIVE_GROUPS.includes(parts[1] as (typeof INTERACTIVE_GROUPS)[number]) && parts.length === 2) {
+      const sorted = [...leaves].sort();
+      const expected = [...CHIP_SLOTS].sort();
+      if (sorted.length !== expected.length || sorted.some((leaf, i) => leaf !== expected[i])) {
+        fail(`${loc} "${group}" must have exactly ${CHIP_SLOTS.join('|')}`);
+      }
+    }
+    if (parts[0] === 'chip' && parts[1] === 'ring' && parts.length === 2) {
+      if (leaves.length !== 1 || leaves[0] !== 'focus') {
+        fail(`${loc} "${group}" must be ring.focus only`);
+      }
+    }
+    if (parts[0] === 'field' && parts[1] === 'border' && parts.length === 2) {
+      const sorted = [...leaves].sort();
+      const expected = [...FIELD_BORDER_SLOTS].sort();
+      if (sorted.length !== expected.length || sorted.some((leaf, i) => leaf !== expected[i])) {
+        fail(`${loc} "${group}" must have exactly ${FIELD_BORDER_SLOTS.join('|')}`);
+      }
+    }
+    if (parts[0] === 'field' && parts[1] === 'ring' && parts.length === 2) {
+      const sorted = [...leaves].sort();
+      const expected = [...FIELD_RING_SLOTS].sort();
+      if (sorted.length !== expected.length || sorted.some((leaf, i) => leaf !== expected[i])) {
+        fail(`${loc} "${group}" must have exactly ${FIELD_RING_SLOTS.join('|')}`);
+      }
+    }
+  }
+}
+
 export function validateInteractive(tokens: Map<string, TokenNode>, loc: string): void {
   const groups = collectGroups(tokens.keys());
   for (const [group, leaves] of groups) {
@@ -257,6 +293,7 @@ export function flattenLayer(
   if (layer === 'contract' || layer === 'variant') {
     const loc = context ? `${layer}/${context}` : layer;
     validateInteractive(flat, loc);
+    validateFieldChipSlots(flat, loc);
     if ([...flat.keys()].some((path) => path.startsWith('button.base.'))) validateButtonBase(flat, loc);
   }
   const tokens: FlatToken[] = [];
@@ -500,7 +537,7 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
   );
 
   const contract: FlatToken[] = [...base, ...BUTTON_PAINTS.flatMap((name) => paints[name])];
-  for (const file of ['stack.json', 'text.json']) {
+  for (const file of ['stack.json', 'text.json', 'field.json', 'chip.json']) {
     contract.push(
       ...flattenLayer(
         asTree(await readJson(join(tokensRoot, 'components', file), tokensRoot), `components/${file}`),

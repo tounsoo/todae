@@ -11,6 +11,7 @@ import {
   validateParity,
   validatePaths,
   validateRefs,
+  validateFieldChipSlots,
   validatePaintPacks,
   type FlatToken,
   type TokenNode,
@@ -41,6 +42,25 @@ describe('build-tokens validations', () => {
     expect(() => validateDensitySpaceOnly(tokenMap({ 'color.bg.canvas': color('color.gray.50') }), 'density')).toThrow(
       /space\.\*/,
     );
+  });
+
+  it('requires chip and field slot packs', () => {
+    expect(() =>
+      validateFieldChipSlots(
+        flattenTokens({
+          chip: { bg: { default: color('color.bg.subtle') } },
+        }),
+        'contract',
+      ),
+    ).toThrow(/default\|hover\|focus\|disabled/);
+    expect(() =>
+      validateFieldChipSlots(
+        flattenTokens({
+          field: { border: { default: color('color.border.default'), invalid: color('color.danger.default') } },
+        }),
+        'contract',
+      ),
+    ).toThrow(/default\|hover\|focus\|disabled\|invalid/);
   });
 
   it('requires interactive slots and ring.focus only', () => {
@@ -131,6 +151,21 @@ describe('committed token graph', () => {
     expect(graph.css).toContain('[data-button-variant="ghost"]');
     expect(graph.tokens.some((t) => t.layer === 'contract' && t.cssValue.startsWith('var('))).toBe(true);
     expect(catalogSelectors(graph.css)).toMatchSnapshot();
+  });
+
+  it('loads field and chip contracts through danger and chip density chains', async () => {
+    const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
+    const invalid = graph.tokens.find((t) => t.path === 'field.border.invalid');
+    const pad = graph.tokens.find((t) => t.path === 'chip.padding.x');
+    expect(invalid?.cssValue).toBe('var(--todae-color-danger-default)');
+    expect(pad?.cssValue).toBe('var(--todae-space-chip-x)');
+    for (const context of ['light', 'dark'] as const) {
+      expect(
+        graph.tokens.some((t) => t.layer === 'appearance' && t.context === context && t.path === 'color.danger.default'),
+      ).toBe(true);
+    }
+    expect(graph.tokens.some((t) => t.path === 'field.radius')).toBe(true);
+    expect(graph.tokens.some((t) => t.path === 'chip.bg.default')).toBe(true);
   });
 
   it('emits distinct accent hover and active var chains', async () => {

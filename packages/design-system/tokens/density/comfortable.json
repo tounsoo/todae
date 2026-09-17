@@ -9,6 +9,13 @@
     },
     "inline": {
       "gap": { "$type": "dimension", "$value": { "$ref": "space.2" } }
+    },
+    "chip": {
+      "x": { "$type": "dimension", "$value": { "$ref": "space.2" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "space.1" } }
+    },
+    "field": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "space.2" } }
     }
   }
 }
