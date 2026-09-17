@@ -1,5 +1,7 @@
 export const RAW_OVERRIDE_KEYS = [
+  'color.blue.400',
   'color.blue.500',
+  'color.blue.600',
   'color.gray.50',
   'color.gray.100',
   'color.gray.200',

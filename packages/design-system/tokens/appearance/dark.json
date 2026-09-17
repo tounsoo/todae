@@ -13,8 +13,8 @@
     },
     "accent": {
       "default": { "$type": "color", "$value": { "$ref": "color.blue.500" } },
-      "hover": { "$type": "color", "$value": { "$ref": "color.blue.500" } },
-      "active": { "$type": "color", "$value": { "$ref": "color.blue.500" } }
+      "hover": { "$type": "color", "$value": { "$ref": "color.blue.400" } },
+      "active": { "$type": "color", "$value": { "$ref": "color.blue.600" } }
     }
   }
 }

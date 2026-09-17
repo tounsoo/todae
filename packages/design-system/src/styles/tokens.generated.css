@@ -1,6 +1,8 @@
 @layer todae.base {
 :root {
+  --todae-color-blue-400: oklch(0.68 0.16 255);
   --todae-color-blue-500: oklch(0.55 0.18 255);
+  --todae-color-blue-600: oklch(0.45 0.19 255);
   --todae-color-gray-50: oklch(0.98 0.005 260);
   --todae-color-gray-100: oklch(0.93 0.007 260);
   --todae-color-gray-200: oklch(0.87 0.009 260);
@@ -41,9 +43,9 @@
 
 :root,
 [data-appearance="light"] {
-  --todae-color-accent-active: var(--todae-color-blue-500);
+  --todae-color-accent-active: var(--todae-color-blue-600);
   --todae-color-accent-default: var(--todae-color-blue-500);
-  --todae-color-accent-hover: var(--todae-color-blue-500);
+  --todae-color-accent-hover: var(--todae-color-blue-400);
   --todae-color-bg-canvas: var(--todae-color-gray-50);
   --todae-color-bg-surface: var(--todae-color-gray-50);
   --todae-color-border-default: var(--todae-color-gray-900);
@@ -52,9 +54,9 @@
 }
 
 [data-appearance="dark"] {
-  --todae-color-accent-active: var(--todae-color-blue-500);
+  --todae-color-accent-active: var(--todae-color-blue-600);
   --todae-color-accent-default: var(--todae-color-blue-500);
-  --todae-color-accent-hover: var(--todae-color-blue-500);
+  --todae-color-accent-hover: var(--todae-color-blue-400);
   --todae-color-bg-canvas: var(--todae-color-gray-900);
   --todae-color-bg-surface: var(--todae-color-gray-900);
   --todae-color-border-default: var(--todae-color-gray-50);
