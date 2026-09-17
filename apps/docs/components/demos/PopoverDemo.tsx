@@ -6,23 +6,29 @@ import { useState } from 'react';
 export function PopoverMenu() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<string | null>(null);
+  const [under, setUnder] = useState(0);
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <Popover.Trigger>{value ?? 'Choose fruit'}</Popover.Trigger>
-      <Popover.Content aria-label="Fruit">
-        <OptionList
-          value={value}
-          onChange={(next) => {
-            setValue(next);
-            setOpen(false);
-          }}
-        >
-          <Option value="apple">Apple</Option>
-          <Option value="pear">Pear</Option>
-          <Option value="plum">Plum</Option>
-        </OptionList>
-      </Popover.Content>
-    </Popover>
+    <Stack>
+      <Popover open={open} onOpenChange={setOpen}>
+        <Popover.Trigger>{value ?? 'Choose fruit'}</Popover.Trigger>
+        <Popover.Content aria-label="Fruit">
+          <OptionList
+            value={value}
+            onChange={(next) => {
+              setValue(next);
+              setOpen(false);
+            }}
+          >
+            <Option value="apple">Apple</Option>
+            <Option value="pear">Pear</Option>
+            <Option value="plum">Plum</Option>
+          </OptionList>
+        </Popover.Content>
+      </Popover>
+      <Button variant="secondary" onClick={() => setUnder((count) => count + 1)}>
+        Page under {under}
+      </Button>
+    </Stack>
   );
 }
 

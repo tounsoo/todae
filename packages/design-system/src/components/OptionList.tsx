@@ -44,8 +44,8 @@ type OptionListContextValue = {
   listId: string;
   selectionMode: 'single' | 'multiple';
   selected: ReadonlySet<string>;
-  active: string | null;
-  select: (value: string) => void;
+  highlighted: string | null;
+  select: (value: string, fromPointer?: boolean) => void;
 };
 
 const OptionListContext = createContext<OptionListContextValue | null>(null);
@@ -86,12 +86,15 @@ export function Option({ value, children, disabled }: OptionProps) {
       aria-selected={selected}
       aria-disabled={disabled || undefined}
       data-selected={selected ? '' : undefined}
-      data-active={ctx.active === value ? '' : undefined}
+      data-highlighted={ctx.highlighted === value ? '' : undefined}
       className={styles.option}
       onPointerDown={(event) => {
         if (disabled) return;
         event.preventDefault();
-        ctx.select(value);
+      }}
+      onClick={() => {
+        if (disabled) return;
+        ctx.select(value, true);
       }}
     >
       {label}
@@ -111,10 +114,11 @@ export function OptionList(props: OptionListProps) {
   }, [props]);
   const selectedFirst = isMultiple(props) ? (props.value[0] ?? null) : props.value;
   const [active, setActive] = useState<string | null>(selectedFirst ?? enabled[0] ?? null);
+  const [highlighted, setHighlighted] = useState<string | null>(null);
   const activeValue = active && enabled.includes(active) ? active : (enabled[0] ?? null);
 
   const select = useCallback(
-    (value: string) => {
+    (value: string, fromPointer = false) => {
       if (isMultiple(props)) {
         props.onChange(
           props.value.includes(value) ? props.value.filter((item) => item !== value) : [...props.value, value],
@@ -123,6 +127,7 @@ export function OptionList(props: OptionListProps) {
         props.onChange(value);
       }
       setActive(value);
+      setHighlighted(fromPointer ? null : value);
     },
     [props],
   );
@@ -130,6 +135,7 @@ export function OptionList(props: OptionListProps) {
   function move(next: string | undefined) {
     if (!next) return;
     setActive(next);
+    setHighlighted(next);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -167,10 +173,10 @@ export function OptionList(props: OptionListProps) {
       listId,
       selectionMode: multiple ? 'multiple' : 'single',
       selected,
-      active: activeValue,
+      highlighted,
       select,
     }),
-    [activeValue, listId, multiple, select, selected],
+    [highlighted, listId, multiple, select, selected],
   );
 
   return (
@@ -185,6 +191,8 @@ export function OptionList(props: OptionListProps) {
         data-selection-mode={multiple ? 'multiple' : 'single'}
         className={[styles.list, className].filter(Boolean).join(' ')}
         onKeyDown={onKeyDown}
+        onPointerUp={() => setHighlighted(null)}
+        onPointerCancel={() => setHighlighted(null)}
       >
         {children}
       </div>

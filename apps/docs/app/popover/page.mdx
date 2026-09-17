@@ -6,7 +6,11 @@ Non-modal `popover="manual"`. Controlled `open`. Outside click and Escape call `
 
 No focus trap, no `aria-modal`, no scroll lock, no inert. No portal — the surface stays in the React tree so `ThemeProvider` vars inherit.
 
-Positioning uses CSS anchor when `anchor-name` is supported. Otherwise the first open pins `bottom-start` from `getBoundingClientRect`. No Floating UI, no arrow, no motion.
+Positioning uses CSS `top: anchor(bottom)` when that query is supported, with a `4px` gap (`--todae-popover-offset: var(--todae-space-1)`). Flip is `@position-try --todae-popover-flip-block` plus `flip-block` / `position-try: top`. Engines without `anchor()` pin `bottom-start` (or flip above) and re-pin on scroll and resize.
+
+The surface is the top-layer hit target: `position: fixed; inset: unset; pointer-events: auto`. Taps on content do not pass through. `Option` selects on `click` so closing the menu cannot leave a leftover click on the page.
+
+Safari 26+ has CSS anchors. Safari 26 documents `position-try` with `position-area` names; `flip-block` is Chrome’s tactic. iOS before 26 has popover but no CSS anchors — that path is the JS pin (4px gap, flip when it fits). This environment cannot run Mobile Safari.
 
 <Example>
   <PopoverMenu />

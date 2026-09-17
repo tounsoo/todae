@@ -42,7 +42,7 @@ describe('OptionList', () => {
         <Option value="pear">Pear</Option>
       </OptionList>,
     );
-    fireEvent.pointerDown(screen.getByRole('option', { name: 'Pear' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Pear' }));
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith('pear');
   });
@@ -57,7 +57,7 @@ describe('OptionList', () => {
     );
     expect(screen.getByRole('listbox').getAttribute('aria-multiselectable')).toBe('true');
     expect(screen.getByRole('listbox').getAttribute('data-selection-mode')).toBe('multiple');
-    fireEvent.pointerDown(screen.getByRole('option', { name: 'Pear' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Pear' }));
     expect(onChange).toHaveBeenCalledWith(['apple', 'pear']);
     rerender(
       <OptionList selectionMode="multiple" value={['apple', 'pear']} onChange={onChange} aria-label="Fruit">
@@ -65,7 +65,7 @@ describe('OptionList', () => {
         <Option value="pear">Pear</Option>
       </OptionList>,
     );
-    fireEvent.pointerDown(screen.getByRole('option', { name: 'Apple' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Apple' }));
     expect(onChange).toHaveBeenLastCalledWith(['pear']);
   });
 
@@ -93,8 +93,26 @@ describe('OptionList', () => {
     fireEvent.keyDown(list, { key: 'ArrowUp' });
     fireEvent.keyDown(list, { key: ' ' });
     expect(onChange).toHaveBeenLastCalledWith('apple');
-    fireEvent.pointerDown(screen.getByRole('option', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Skip' }));
     expect(onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('highlights only the keyboard row and clears after pointer select', () => {
+    const onChange = vi.fn();
+    render(
+      <OptionList value={null} onChange={onChange} aria-label="Fruit">
+        <Option value="apple">Apple</Option>
+        <Option value="pear">Pear</Option>
+      </OptionList>,
+    );
+    const list = screen.getByRole('listbox');
+    expect(screen.getByRole('option', { name: 'Apple' }).hasAttribute('data-highlighted')).toBe(false);
+    list.focus();
+    fireEvent.keyDown(list, { key: 'ArrowDown' });
+    expect(screen.getByRole('option', { name: 'Pear' }).hasAttribute('data-highlighted')).toBe(true);
+    fireEvent.click(screen.getByRole('option', { name: 'Apple' }));
+    expect(onChange).toHaveBeenCalledWith('apple');
+    expect(screen.getByRole('option', { name: 'Apple' }).hasAttribute('data-highlighted')).toBe(false);
   });
 
   it('lets Escape bubble', () => {
@@ -115,8 +133,13 @@ describe('OptionList', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('keeps selected weight at the regular token', () => {
+  it('keeps selected weight at the regular token and paints selected fill', () => {
     expect(css).toMatch(/font-weight:\s*var\(--todae-option-font-weight\)/);
     expect(css).not.toMatch(/data-selected[^{]*\{[^}]*font-weight/);
+    expect(css).toMatch(/--todae-option-list-gap:\s*2px/);
+    expect(css).toMatch(/-webkit-tap-highlight-color:\s*transparent/);
+    expect(css).toMatch(/@media\s*\(hover:\s*hover\)/);
+    expect(css).toMatch(/\.option\[data-selected\][^{]*\{[^}]*--todae-option-bg-selected/);
+    expect(css).not.toMatch(/\.list:hover[^{]*\{[^}]*--todae-option-bg-hover/);
   });
 });

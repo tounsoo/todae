@@ -49,8 +49,33 @@ function usePopover(): PopoverContextValue {
   return ctx;
 }
 
+function supports(query: string): boolean {
+  return typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports(query);
+}
+
 function supportsAnchor(): boolean {
-  return typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('anchor-name', '--todae-popover');
+  return supports('top: anchor(bottom)');
+}
+
+function offsetPx(el: HTMLElement): number {
+  const probe = document.createElement('div');
+  probe.style.width = 'var(--todae-popover-offset)';
+  probe.style.position = 'absolute';
+  el.append(probe);
+  const px = probe.getBoundingClientRect().width;
+  probe.remove();
+  return px || 4;
+}
+
+function scrollParents(el: HTMLElement): EventTarget[] {
+  const targets: EventTarget[] = [window];
+  let node: HTMLElement | null = el.parentElement;
+  while (node) {
+    const { overflow, overflowX, overflowY } = getComputedStyle(node);
+    if (/(auto|scroll|overlay)/.test(`${overflow}${overflowX}${overflowY}`)) targets.push(node);
+    node = node.parentElement;
+  }
+  return targets;
 }
 
 function isPopoverOpen(el: HTMLElement): boolean {
@@ -62,15 +87,21 @@ function isPopoverOpen(el: HTMLElement): boolean {
   return el.hasAttribute('data-popover-open');
 }
 
-function contains(el: HTMLElement | null, target: EventTarget | null): boolean {
-  return el != null && target instanceof Node && el.contains(target);
+function eventInside(el: HTMLElement | null, event: Event): boolean {
+  if (!el) return false;
+  const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+  if (path.includes(el)) return true;
+  return event.target instanceof Node && el.contains(event.target);
 }
 
-function pinFallback(content: HTMLElement, anchor: HTMLElement): void {
-  if (supportsAnchor()) return;
+function pinToAnchor(content: HTMLElement, anchor: HTMLElement): void {
+  const gap = offsetPx(content);
   const rect = anchor.getBoundingClientRect();
-  content.style.top = `${rect.bottom}px`;
+  const height = content.offsetHeight;
+  const below = rect.bottom + gap;
+  const flip = below + height > window.innerHeight && rect.top - gap - height >= 0;
   content.style.left = `${rect.left}px`;
+  content.style.top = flip ? `${rect.top - gap - height}px` : `${below}px`;
 }
 
 function PopoverTrigger({ onClick, style, ...props }: ButtonProps) {
@@ -110,13 +141,31 @@ function PopoverContent({
   useLayoutEffect(() => {
     const el = ctx.contentRef.current;
     if (!el) return;
-    if (ctx.open) {
-      if (!isPopoverOpen(el)) el.showPopover();
-      const anchor = ctx.triggerRef.current ?? ctx.anchorRef?.current;
-      if (anchor) pinFallback(el, anchor);
+    if (!ctx.open) {
+      if (isPopoverOpen(el)) el.hidePopover();
       return;
     }
-    if (isPopoverOpen(el)) el.hidePopover();
+    if (!isPopoverOpen(el)) el.showPopover();
+    const anchor = ctx.triggerRef.current ?? ctx.anchorRef?.current;
+    if (!anchor || supportsAnchor()) return;
+    const pin = () => pinToAnchor(el, anchor);
+    pin();
+    let frame = 0;
+    const onMove = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        pin();
+      });
+    };
+    const targets = scrollParents(anchor);
+    for (const target of targets) target.addEventListener('scroll', onMove, { passive: true });
+    window.addEventListener('resize', onMove);
+    return () => {
+      cancelAnimationFrame(frame);
+      for (const target of targets) target.removeEventListener('scroll', onMove);
+      window.removeEventListener('resize', onMove);
+    };
   }, [ctx.anchorRef, ctx.contentRef, ctx.open, ctx.triggerRef]);
 
   return (
@@ -129,6 +178,14 @@ function PopoverContent({
       popover="manual"
       tabIndex={-1}
       className={[styles.content, className].filter(Boolean).join(' ')}
+      onPointerDown={(event) => {
+        props.onPointerDown?.(event);
+        event.stopPropagation();
+      }}
+      onClick={(event) => {
+        props.onClick?.(event);
+        event.stopPropagation();
+      }}
       style={
         {
           ...style,
@@ -167,9 +224,9 @@ export function Popover({
   useEffect(() => {
     if (!open) return;
     function onPointerDown(event: PointerEvent) {
-      if (contains(contentRef.current, event.target)) return;
-      if (contains(triggerRef.current, event.target)) return;
-      if (contains(anchorRef?.current ?? null, event.target)) return;
+      if (eventInside(contentRef.current, event)) return;
+      if (eventInside(triggerRef.current, event)) return;
+      if (eventInside(anchorRef?.current ?? null, event)) return;
       requestClose('outside');
     }
     document.addEventListener('pointerdown', onPointerDown, true);

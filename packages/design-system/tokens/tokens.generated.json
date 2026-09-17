@@ -407,6 +407,24 @@
       "context": "light"
     },
     {
+      "path": "color.accent.soft",
+      "type": "color",
+      "cssVar": "--todae-color-accent-soft",
+      "cssValue": "oklch(0.55 0.18 255 / 0.12)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.accent.soft-strong",
+      "type": "color",
+      "cssVar": "--todae-color-accent-soft-strong",
+      "cssValue": "oklch(0.55 0.18 255 / 0.2)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
       "path": "color.bg.canvas",
       "type": "color",
       "cssVar": "--todae-color-bg-canvas",
@@ -425,10 +443,28 @@
       "context": "light"
     },
     {
+      "path": "color.bg.highlight",
+      "type": "color",
+      "cssVar": "--todae-color-bg-highlight",
+      "cssValue": "oklch(0.22 0.02 260 / 0.08)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
       "path": "color.bg.scrim",
       "type": "color",
       "cssVar": "--todae-color-bg-scrim",
       "cssValue": "oklch(0.16 0.02 260 / 0.45)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.bg.selected",
+      "type": "color",
+      "cssVar": "--todae-color-bg-selected",
+      "cssValue": "oklch(0.55 0.18 255 / 0.12)",
       "ref": null,
       "layer": "appearance",
       "context": "light"
@@ -448,6 +484,15 @@
       "cssVar": "--todae-color-bg-surface",
       "cssValue": "var(--todae-color-gray-50)",
       "ref": "color.gray.50",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.bg.transparent",
+      "type": "color",
+      "cssVar": "--todae-color-bg-transparent",
+      "cssValue": "oklch(0.98 0.005 260 / 0)",
+      "ref": null,
       "layer": "appearance",
       "context": "light"
     },
@@ -542,6 +587,24 @@
       "context": "dark"
     },
     {
+      "path": "color.accent.soft",
+      "type": "color",
+      "cssVar": "--todae-color-accent-soft",
+      "cssValue": "oklch(0.55 0.18 255 / 0.12)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.accent.soft-strong",
+      "type": "color",
+      "cssVar": "--todae-color-accent-soft-strong",
+      "cssValue": "oklch(0.55 0.18 255 / 0.2)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
       "path": "color.bg.canvas",
       "type": "color",
       "cssVar": "--todae-color-bg-canvas",
@@ -560,10 +623,28 @@
       "context": "dark"
     },
     {
+      "path": "color.bg.highlight",
+      "type": "color",
+      "cssVar": "--todae-color-bg-highlight",
+      "cssValue": "oklch(0.98 0.005 260 / 0.1)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
       "path": "color.bg.scrim",
       "type": "color",
       "cssVar": "--todae-color-bg-scrim",
       "cssValue": "oklch(0.16 0.02 260 / 0.7)",
+      "ref": null,
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.bg.selected",
+      "type": "color",
+      "cssVar": "--todae-color-bg-selected",
+      "cssValue": "oklch(0.55 0.18 255 / 0.12)",
       "ref": null,
       "layer": "appearance",
       "context": "dark"
@@ -583,6 +664,15 @@
       "cssVar": "--todae-color-bg-surface",
       "cssValue": "var(--todae-color-gray-900)",
       "ref": "color.gray.900",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.bg.transparent",
+      "type": "color",
+      "cssVar": "--todae-color-bg-transparent",
+      "cssValue": "oklch(0.22 0.02 260 / 0)",
+      "ref": null,
       "layer": "appearance",
       "context": "dark"
     },
@@ -2147,8 +2237,8 @@
       "path": "option.bg.default",
       "type": "color",
       "cssVar": "--todae-option-bg-default",
-      "cssValue": "var(--todae-color-bg-elevated)",
-      "ref": "color.bg.elevated",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": null
     },
@@ -2156,8 +2246,8 @@
       "path": "option.bg.hover",
       "type": "color",
       "cssVar": "--todae-option-bg-hover",
-      "cssValue": "var(--todae-color-bg-subtle)",
-      "ref": "color.bg.subtle",
+      "cssValue": "var(--todae-color-bg-highlight)",
+      "ref": "color.bg.highlight",
       "layer": "contract",
       "context": null
     },
@@ -2165,8 +2255,17 @@
       "path": "option.bg.selected",
       "type": "color",
       "cssVar": "--todae-option-bg-selected",
-      "cssValue": "var(--todae-color-bg-subtle)",
-      "ref": "color.bg.subtle",
+      "cssValue": "var(--todae-color-bg-selected)",
+      "ref": "color.bg.selected",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.bg.selected-highlighted",
+      "type": "color",
+      "cssVar": "--todae-option-bg-selected-highlighted",
+      "cssValue": "var(--todae-color-accent-soft-strong)",
+      "ref": "color.accent.soft-strong",
       "layer": "contract",
       "context": null
     },

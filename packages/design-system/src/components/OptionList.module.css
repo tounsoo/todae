@@ -1,12 +1,20 @@
 @layer todae.components {
   .list {
+    --todae-option-list-gap: 2px;
     display: flex;
     flex-direction: column;
+    gap: var(--todae-option-list-gap);
     margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
     outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .list:hover,
+  .list:active {
+    background: transparent;
   }
 
   .list:focus-visible {
@@ -31,15 +39,31 @@
     line-height: 1.25;
     text-align: start;
     cursor: default;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .option[data-active] {
+  .option[data-highlighted]:not([data-selected]) {
     background: var(--todae-option-bg-hover);
   }
 
   .option[data-selected] {
     background: var(--todae-option-bg-selected);
     color: var(--todae-option-fg-selected);
+  }
+
+  .option[data-selected][data-highlighted] {
+    background: var(--todae-option-bg-selected-highlighted);
+  }
+
+  @media (hover: hover) {
+    .option:hover:not([aria-disabled='true']):not([data-selected]) {
+      background: var(--todae-option-bg-hover);
+    }
+
+    .option[data-selected]:hover {
+      background: var(--todae-option-bg-selected-highlighted);
+    }
   }
 
   .option[aria-disabled='true'] {

@@ -4,7 +4,7 @@ import { OptionListMultiple, OptionListSingle } from '../../components/demos/Opt
 
 `role="listbox"` with `aria-activedescendant`. Options are strings. Keyboard is Arrow, Home, End, Enter, and Space. Escape is not handled so it can close a parent Popover.
 
-Single `value` is `string | null`. Multiple `value` is `string[]`. Selected options stay `font-weight: 400`.
+Single `value` is `string | null`. Multiple `value` is `string[]`. Selected options stay `font-weight: 400` and use an accent-soft row fill (`color.bg.selected`, 12% accent). Highlighted selected is 20% (`color.accent.soft-strong`). Rows are `2px` apart. Hover is gated with `@media (hover: hover)`.
 
 <Example>
   <OptionListSingle />
