@@ -107,7 +107,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .sheet {
+    .sheet,
+    .scrim {
       transition: none;
     }
   }
