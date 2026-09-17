@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 
 export type SheetSnap = 'mid' | 'full';
 
@@ -87,10 +87,16 @@ export function useSnapDrag({
   onDismissRef.current = onDismiss;
   dismissRef.current = dismissOnDrag;
 
+  const [sheet, setSheet] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const node = sheetRef.current;
+    setSheet((prev) => (prev === node ? prev : node));
+  });
+
   useEffect(() => {
-    const sheet = sheetRef.current;
     if (!sheet || !enabled) return;
     const root = sheet.parentElement;
+    const surface = sheet;
 
     let pointerId: number | null = null;
     let origin: 'handle' | 'body' | null = null;
@@ -100,15 +106,15 @@ export function useSnapDrag({
     const samples: { t: number; y: number }[] = [];
 
     function setDrag(height: number | null, dragging: boolean) {
-      sheet.toggleAttribute('data-dragging', dragging);
+      surface.toggleAttribute('data-dragging', dragging);
       root?.toggleAttribute('data-dragging', dragging);
       if (height == null) {
-        sheet.style.removeProperty('--todae-sheet-drag-height');
+        surface.style.removeProperty('--todae-sheet-drag-height');
         root?.style.removeProperty('--todae-sheet-scrim-progress');
         return;
       }
-      sheet.style.setProperty('--todae-sheet-drag-height', `${height}px`);
-      const heights = sheetHeights(sheet);
+      surface.style.setProperty('--todae-sheet-drag-height', `${height}px`);
+      const heights = sheetHeights(surface);
       const progress = height >= heights.mid ? 1 : Math.max(0, height / heights.mid);
       root?.style.setProperty('--todae-sheet-scrim-progress', String(progress));
     }
@@ -126,8 +132,8 @@ export function useSnapDrag({
       if (!origin) return;
       pointerId = event.pointerId;
       startY = event.clientY;
-      const heights = sheetHeights(sheet);
-      const measured = sheet.getBoundingClientRect().height;
+      const heights = sheetHeights(surface);
+      const measured = surface.getBoundingClientRect().height;
       startHeight = measured > 0 ? measured : heights[snapRef.current];
       armed = false;
       samples.length = 0;
@@ -146,12 +152,12 @@ export function useSnapDrag({
         }
         armed = true;
         try {
-          sheet.setPointerCapture(event.pointerId);
+          surface.setPointerCapture(event.pointerId);
         } catch {
           undefined;
         }
       }
-      const heights = sheetHeights(sheet);
+      const heights = sheetHeights(surface);
       const maxHeight = pointsRef.current.includes('full') ? heights.full : heights.mid;
       setDrag(dragHeight(startHeight, dy, maxHeight), true);
       samples.push({ t: event.timeStamp, y: event.clientY });
@@ -169,9 +175,9 @@ export function useSnapDrag({
         setDrag(null, false);
         return;
       }
-      const heights = sheetHeights(sheet);
+      const heights = sheetHeights(surface);
       const height =
-        Number.parseFloat(sheet.style.getPropertyValue('--todae-sheet-drag-height')) || startHeight;
+        Number.parseFloat(surface.style.getPropertyValue('--todae-sheet-drag-height')) || startHeight;
       const first = samples[0];
       const last = samples[samples.length - 1];
       const dt = first && last ? Math.max(1, last.t - first.t) : 1;
@@ -191,8 +197,8 @@ export function useSnapDrag({
       if (next !== snapRef.current) onSnapRef.current(next);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          if (!sheet.isConnected) return;
-          sheet.style.removeProperty('--todae-sheet-drag-height');
+          if (!surface.isConnected) return;
+          surface.style.removeProperty('--todae-sheet-drag-height');
         });
       });
     }
@@ -210,18 +216,18 @@ export function useSnapDrag({
       event.preventDefault();
     }
 
-    sheet.addEventListener('pointerdown', onPointerDown);
+    surface.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
     window.addEventListener('pointercancel', onPointerCancel);
-    sheet.addEventListener('touchmove', onTouchMove, { passive: false });
+    surface.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => {
-      sheet.removeEventListener('pointerdown', onPointerDown);
+      surface.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
-      sheet.removeEventListener('touchmove', onTouchMove);
+      surface.removeEventListener('touchmove', onTouchMove);
       setDrag(null, false);
     };
-  }, [bodyRef, enabled, sheetRef]);
+  }, [bodyRef, enabled, sheet]);
 }
