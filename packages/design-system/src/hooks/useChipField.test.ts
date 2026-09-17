@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import type { ChipFieldProps } from '../components/ChipField';
+import type { FieldChipInputProps } from '../components/Field';
 import { useChipField } from './useChipField';
 
 describe('useChipField', () => {
@@ -40,11 +40,11 @@ describe('useChipField', () => {
     expect(result.current.inputValue).toBe('q');
   });
 
-  it('returns spread-compatible ChipField props', () => {
-    function accept(_props: ChipFieldProps) {}
+  it('returns spread-compatible Field.ChipInput props', () => {
+    function accept(_props: FieldChipInputProps) {}
     const { result } = renderHook(() => useChipField());
     accept(result.current);
-    expectTypeOf(result.current.chips).toEqualTypeOf<ChipFieldProps['chips']>();
-    expectTypeOf(result.current.onCommit).toEqualTypeOf<ChipFieldProps['onCommit']>();
+    expectTypeOf(result.current.chips).toEqualTypeOf<FieldChipInputProps['chips']>();
+    expectTypeOf(result.current.onCommit).toEqualTypeOf<FieldChipInputProps['onCommit']>();
   });
 });

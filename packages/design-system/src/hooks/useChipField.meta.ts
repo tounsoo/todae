@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'useChipField',
-  description: 'Optional state helper. ChipField stays fully controlled without it.',
+  description: 'Optional state helper. Field.ChipInput stays fully controlled without it.',
   props: [
     {
       name: 'initialChips',
