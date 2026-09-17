@@ -21,6 +21,27 @@ export function isExitTransition(
   return !name || name === propertyName;
 }
 
+export function useEntered(present: boolean, exiting: boolean): boolean {
+  const [entered, setEntered] = useState(false);
+  useLayoutEffect(() => {
+    if (!present) {
+      setEntered(false);
+      return;
+    }
+    if (exiting) return;
+    let cancelled = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) setEntered(true);
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [exiting, present]);
+  return entered;
+}
+
 export function useOverlayPresence(
   open: boolean,
   exitMs: number,

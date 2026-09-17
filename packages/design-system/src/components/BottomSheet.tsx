@@ -19,7 +19,7 @@ import {
 import { Button } from './Button';
 import { OverlayPortal } from '../overlay/OverlayPortal';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
-import { SHEET_EXIT_MS, useOverlayPresence } from '../overlay/useOverlayPresence';
+import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useFocusTrap } from '../overlay/useFocusTrap';
@@ -224,28 +224,11 @@ export function BottomSheet({
   const onDismiss = useCallback(() => requestClose('drag'), [requestClose]);
   const onEscape = useCallback(() => requestClose('escape'), [requestClose]);
   const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'transform');
-  const [entered, setEntered] = useState(false);
+  const entered = useEntered(present, exiting);
   const setSheetRef = useCallback((node: HTMLDivElement | null) => {
     sheetRef.current = node;
     setSheetNode(node);
   }, []);
-
-  useLayoutEffect(() => {
-    if (!present) {
-      setEntered(false);
-      return;
-    }
-    if (exiting) return;
-    let cancelled = false;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!cancelled) setEntered(true);
-      });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [exiting, present]);
 
   useScrollLock(present);
   useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: sheetRef });

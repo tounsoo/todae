@@ -14,7 +14,7 @@ import {
 } from 'react';
 import { Button } from './Button';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
-import { DIALOG_EXIT_MS, useOverlayPresence } from '../overlay/useOverlayPresence';
+import { DIALOG_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useScrollLock } from '../overlay/useScrollLock';
@@ -139,6 +139,7 @@ export function Dialog({
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
   const { present, exiting } = useOverlayPresence(open, DIALOG_EXIT_MS, dialogNode, 'opacity');
+  const entered = useEntered(present, exiting);
   const setDialogRef = useCallback((node: HTMLDialogElement | null) => {
     dialogRef.current = node;
     setDialogNode(node);
@@ -188,6 +189,7 @@ export function Dialog({
         aria-labelledby={labelledBy}
         aria-describedby={describedBy}
         tabIndex={-1}
+        data-entered={entered ? '' : undefined}
         data-exiting={exiting ? '' : undefined}
         onPointerDown={(event) => {
           pointerOnDialog.current = event.target === dialogRef.current;

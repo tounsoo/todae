@@ -37,6 +37,22 @@ describe('Dialog', () => {
     close.mockRestore();
   });
 
+  it('sets data-entered after open so enter can tween without starting-style', async () => {
+    const { rerender } = render(
+      <Dialog open={false} onOpenChange={() => undefined}>
+        <Dialog.Title>Save</Dialog.Title>
+      </Dialog>,
+    );
+    rerender(
+      <Dialog open onOpenChange={() => undefined}>
+        <Dialog.Title>Save</Dialog.Title>
+      </Dialog>,
+    );
+    const el = document.querySelector('dialog');
+    expect(el?.hasAttribute('open')).toBe(true);
+    await waitFor(() => expect(el?.hasAttribute('data-entered')).toBe(true));
+  });
+
   it('never renders the open attribute from React', () => {
     const { container } = render(
       <Dialog open={false} onOpenChange={() => undefined}>
