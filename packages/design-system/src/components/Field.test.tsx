@@ -31,7 +31,7 @@ describe('Field exports', () => {
       Affix: Field.Affix,
     });
     expect(typeof api.Field).toBe('object');
-    expectTypeOf(Field).not.toBeCallable();
+    expectTypeOf<typeof Field extends (...args: never[]) => unknown ? true : false>().toEqualTypeOf<false>();
     expectTypeOf<FieldRootProps>().not.toHaveProperty('value');
     expectTypeOf<FieldIconProps>().not.toHaveProperty('side');
     expectTypeOf<FieldAffixProps>().not.toHaveProperty('side');
