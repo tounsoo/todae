@@ -20,6 +20,12 @@ export default function HomePage() {
           <a href="/dialog">Dialog</a>
         </li>
         <li>
+          <a href="/popover">Popover</a>
+        </li>
+        <li>
+          <a href="/optionlist">OptionList</a>
+        </li>
+        <li>
           <a href="/bottomsheet">BottomSheet</a>
         </li>
         <li>

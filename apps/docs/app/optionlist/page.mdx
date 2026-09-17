@@ -1,0 +1,27 @@
+import { OptionListMultiple, OptionListSingle } from '../../components/demos/OptionListDemo';
+
+# OptionList
+
+`role="listbox"` with `aria-activedescendant`. Options are strings. Keyboard is Arrow, Home, End, Enter, and Space. Escape is not handled so it can close a parent Popover.
+
+Single `value` is `string | null`. Multiple `value` is `string[]`. Selected options stay `font-weight: 400`.
+
+<Example>
+  <OptionListSingle />
+</Example>
+
+Multiple keeps a check gutter on every row. Selected fills the box and draws a CSS check.
+
+<Example>
+  <OptionListMultiple />
+</Example>
+
+`Option` is also `OptionList.Option`.
+
+## Props
+
+<PropsTable name="OptionList" />
+
+<PropsTable name="Option" />
+
+<PropsTable name="OptionList.Option" />

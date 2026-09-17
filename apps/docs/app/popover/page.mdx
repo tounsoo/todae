@@ -1,0 +1,31 @@
+import { PopoverMenu, PopoverVeto } from '../../components/demos/PopoverDemo';
+
+# Popover
+
+Non-modal `popover="manual"`. Controlled `open`. Outside click and Escape call `onOpenChange(false, reason)`. `hidePopover()` runs only after `open` is false, so a veto keeps it shown.
+
+No focus trap, no `aria-modal`, no scroll lock, no inert. No portal — the surface stays in the React tree so `ThemeProvider` vars inherit.
+
+Positioning uses CSS anchor when `anchor-name` is supported. Otherwise the first open pins `bottom-start` from `getBoundingClientRect`. No Floating UI, no arrow, no motion.
+
+<Example>
+  <PopoverMenu />
+</Example>
+
+Veto outside clicks. Escape still closes.
+
+<Example>
+  <PopoverVeto />
+</Example>
+
+`Popover.Trigger` is the anchor. `anchorRef` is the escape hatch when the trigger is omitted.
+
+Selecting in `OptionList` does not close the popover. The fruit demo closes on single select in the consumer.
+
+## Props
+
+<PropsTable name="Popover" />
+
+<PropsTable name="Popover.Trigger" />
+
+<PropsTable name="Popover.Content" />
