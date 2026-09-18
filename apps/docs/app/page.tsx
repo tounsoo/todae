@@ -5,6 +5,9 @@ export default function HomePage() {
       <p>Seed components that prove the token pipeline.</p>
       <ul>
         <li>
+          <a href="/composition">Composition</a>
+        </li>
+        <li>
           <a href="/button">Button</a>
         </li>
         <li>
