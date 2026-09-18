@@ -202,7 +202,7 @@ function ChipInput({
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const plan = useChipMeasure({ chips, maxRows, flowRef, measureRef, inputRef: field.inputRef });
   const hidden = maxRows == null ? 0 : plan.hidden;
-  const live = chips.map((value, index) => ({ value, index })).slice(hidden);
+  const live = chips.map((value, index) => ({ value, index })).slice(0, chips.length - hidden);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (field.disabled) return;
@@ -230,19 +230,24 @@ function ChipInput({
       data-measured={maxRows != null && plan.measured ? '' : undefined}
       style={maxRows != null ? ({ '--todae-field-chip-rows': maxRows } as CSSProperties) : undefined}
     >
-      {live.map(({ value, index }) => (
-        <Chip
-          key={`${index}:${value}`}
-          disabled={field.disabled}
-          dismissLabel={chipDismissLabel?.(value)}
-          onDismiss={() => {
-            onChipRemove(index, value);
-            field.inputRef.current?.focus();
-          }}
-        >
-          {value}
-        </Chip>
-      ))}
+      {live.map(({ value, index }, i) => {
+        const ellipsis = hidden > 0 && plan.lastChipWidth != null && i === live.length - 1;
+        return (
+          <Chip
+            key={`${index}:${value}`}
+            disabled={field.disabled}
+            dismissLabel={chipDismissLabel?.(value)}
+            data-ellipsis={ellipsis ? '' : undefined}
+            style={ellipsis ? { maxWidth: plan.lastChipWidth } : undefined}
+            onDismiss={() => {
+              onChipRemove(index, value);
+              field.inputRef.current?.focus();
+            }}
+          >
+            {value}
+          </Chip>
+        );
+      })}
       {hidden > 0 ? <Chip.Overflow overflowCount={hidden} overflowLabel={overflowLabel} /> : null}
       <input
         {...props}
@@ -267,6 +272,9 @@ function ChipInput({
               {value}
             </Chip>
           ))}
+          <Chip onDismiss={() => undefined} disabled={field.disabled}>
+            …
+          </Chip>
           <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
         </div>
       ) : null}
