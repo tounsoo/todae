@@ -10,13 +10,12 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type ComponentProps,
   type HTMLAttributes,
   type KeyboardEvent,
   type ReactNode,
   type RefObject,
 } from 'react';
-import { Button } from './Button';
+import { Button, type ButtonRootProps } from './Button';
 import { OverlayPortal } from '../overlay/OverlayPortal';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
@@ -164,10 +163,10 @@ function BottomSheetClose({
   'aria-label': ariaLabel = 'Close',
   onClick,
   ...props
-}: ComponentProps<typeof Button>) {
+}: ButtonRootProps) {
   const { requestClose } = useSheet();
   return (
-    <Button
+    <Button.Root
       variant="ghost"
       aria-label={ariaLabel}
       {...props}

@@ -200,12 +200,12 @@ export default function PlaygroundPage() {
           ))}
         </section>
         <div className="playground-actions">
-          <Button type="button" variant="secondary" onClick={() => setOverrides({})}>
+          <Button.Root type="button" variant="secondary" onClick={() => setOverrides({})}>
             Reset all
-          </Button>
-          <Button type="button" onClick={() => void exportOverrides()}>
+          </Button.Root>
+          <Button.Root type="button" onClick={() => void exportOverrides()}>
             Export
-          </Button>
+          </Button.Root>
         </div>
         <p className="playground-status" aria-live="polite">
           {copyStatus}
@@ -224,10 +224,10 @@ export default function PlaygroundPage() {
               Buttons
             </Text>
             <Stack direction="row">
-              <Button>Primary</Button>
-              <Button variant="secondary">Secondary</Button>
-              <Button variant="ghost">Ghost</Button>
-              <Button disabled>Disabled</Button>
+              <Button.Root>Primary</Button.Root>
+              <Button.Root variant="secondary">Secondary</Button.Root>
+              <Button.Root variant="ghost">Ghost</Button.Root>
+              <Button.Root disabled>Disabled</Button.Root>
             </Stack>
             <Text tone="muted" size="s">
               Hover, press, and tab to a button to see hover / active / focus.

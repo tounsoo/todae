@@ -73,7 +73,7 @@
     },
     {
       "name": "BottomSheet.Close",
-      "description": "Ghost Button that requests close-button dismiss.",
+      "description": "Ghost Button.Root that requests close-button dismiss.",
       "props": [
         {
           "name": "aria-label",
@@ -132,8 +132,20 @@
       ]
     },
     {
-      "name": "Button",
-      "description": "Native button styled through the button contract tokens.",
+      "name": "Button.Icon",
+      "description": "Order-only decorative icon. Always aria-hidden. No side prop.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon graphic."
+        }
+      ]
+    },
+    {
+      "name": "Button.Root",
+      "description": "Native button. Owns variant, type, and disabled. Default type is button.",
       "props": [
         {
           "name": "variant",
@@ -157,10 +169,34 @@
           "default": "false"
         },
         {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Required accessible name when the only child is Button.Icon."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Button label."
+          "description": "Label and optional Button.Icon. Order is leading or trailing."
+        }
+      ]
+    },
+    {
+      "name": "ButtonGroup",
+      "description": "Chrome-only attached row of Button.Root. role=group. No selection state.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name for the group."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Button.Root children. Horizontal only."
         }
       ]
     },
@@ -259,7 +295,7 @@
     },
     {
       "name": "Dialog.Close",
-      "description": "Ghost Button that requests close-button dismiss.",
+      "description": "Ghost Button.Root that requests close-button dismiss.",
       "props": [
         {
           "name": "aria-label",
@@ -597,7 +633,7 @@
     },
     {
       "name": "Popover.Trigger",
-      "description": "Button that toggles the popover and owns the CSS anchor.",
+      "description": "Button.Root that toggles the popover and owns the CSS anchor.",
       "props": [
         {
           "name": "children",

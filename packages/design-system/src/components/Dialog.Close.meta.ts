@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Dialog.Close',
-  description: 'Ghost Button that requests close-button dismiss.',
+  description: 'Ghost Button.Root that requests close-button dismiss.',
   props: [
     {
       name: 'aria-label',

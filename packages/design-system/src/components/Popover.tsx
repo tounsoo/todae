@@ -12,7 +12,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { Button, type ButtonProps } from './Button';
+import { Button, type ButtonRootProps } from './Button';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
@@ -65,7 +65,7 @@ function eventInside(el: HTMLElement | null, event: Event): boolean {
   return event.target instanceof Node && el.contains(event.target);
 }
 
-function PopoverTrigger({ onClick, style, ...props }: ButtonProps) {
+function PopoverTrigger({ onClick, style, ...props }: ButtonRootProps) {
   const ctx = usePopover();
   return (
     <span
@@ -75,7 +75,7 @@ function PopoverTrigger({ onClick, style, ...props }: ButtonProps) {
       className={styles.trigger}
       style={{ ['--todae-popover-anchor' as string]: ctx.anchorName, anchorName: ctx.anchorName }}
     >
-      <Button
+      <Button.Root
         {...props}
         style={style}
         aria-expanded={ctx.open}

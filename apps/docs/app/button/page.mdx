@@ -1,14 +1,33 @@
-import { Button } from '@tounsoo/todae';
+import { ButtonGroupAlign, ButtonIcons, ButtonVariants } from '../../components/demos/ButtonDemo';
 
 # Button
 
+`Button.Root` is the control. `Button.Icon` is a compound part. Icon position is DOM order. The icon is decorative (`aria-hidden`). Icon-only roots need `aria-label` on `Button.Root`.
+
+Variants use the existing paint packs. Default `type` is `button`.
+
 <Example>
-  <Button>Save</Button>
-  <Button variant="secondary">Cancel</Button>
-  <Button variant="ghost">Ghost</Button>
-  <Button disabled>Disabled</Button>
+  <ButtonVariants />
+</Example>
+
+Leading icon, trailing icon, icon-only.
+
+<Example>
+  <ButtonIcons />
+</Example>
+
+## ButtonGroup
+
+Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overlap by 1px and share the outer radius. No selection state.
+
+<Example>
+  <ButtonGroupAlign />
 </Example>
 
 ## Props
 
-<PropsTable name="Button" />
+<PropsTable name="Button.Root" />
+
+<PropsTable name="Button.Icon" />
+
+<PropsTable name="ButtonGroup" />

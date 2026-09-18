@@ -6,13 +6,12 @@ import {
   useRef,
   useId,
   useState,
-  type ComponentProps,
   type CSSProperties,
   type HTMLAttributes,
   type ReactNode,
   type RefObject,
 } from 'react';
-import { Button } from './Button';
+import { Button, type ButtonRootProps } from './Button';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { DIALOG_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
@@ -100,10 +99,10 @@ function DialogClose({
   'aria-label': ariaLabel = 'Close',
   onClick,
   ...props
-}: ComponentProps<typeof Button>) {
+}: ButtonRootProps) {
   const { requestClose } = useDialog();
   return (
-    <Button
+    <Button.Root
       variant="ghost"
       aria-label={ariaLabel}
       {...props}

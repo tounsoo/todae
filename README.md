@@ -55,7 +55,7 @@ import { DensityProvider, ThemeProvider, Button } from '@tounsoo/todae';
 
 <ThemeProvider appearance="system">
   <DensityProvider density="comfortable">
-    <Button>Save</Button>
+    <Button.Root>Save</Button.Root>
   </DensityProvider>
 </ThemeProvider>
 ```
