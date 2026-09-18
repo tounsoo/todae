@@ -25,9 +25,9 @@ export function PopoverMenu() {
           </OptionList>
         </Popover.Content>
       </Popover>
-      <Button variant="secondary" onClick={() => setUnder((count) => count + 1)}>
+      <Button.Root variant="secondary" onClick={() => setUnder((count) => count + 1)}>
         Page under {under}
-      </Button>
+      </Button.Root>
     </Stack>
   );
 }
@@ -46,9 +46,9 @@ export function PopoverVeto() {
       <Popover.Content aria-label="Pinned">
         <Stack>
           Outside click calls onOpenChange but this stays open. Escape still closes.
-          <Button variant="secondary" onClick={() => setOpen(false)}>
+          <Button.Root variant="secondary" onClick={() => setOpen(false)}>
             Close
-          </Button>
+          </Button.Root>
         </Stack>
       </Popover.Content>
     </Popover>

@@ -7,7 +7,7 @@ export function DialogBasic() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Open dialog</Button>
+      <Button.Root onClick={() => setOpen(true)}>Open dialog</Button.Root>
       <Dialog open={open} onOpenChange={setOpen}>
         <Dialog.Header>
           <Dialog.Title>Discard draft?</Dialog.Title>
@@ -16,10 +16,10 @@ export function DialogBasic() {
         <Dialog.Description>This cannot be undone.</Dialog.Description>
         <Dialog.Body>The dialog stays centered on every viewport. It does not become a sheet.</Dialog.Body>
         <Dialog.Footer>
-          <Button variant="secondary" onClick={() => setOpen(false)}>
+          <Button.Root variant="secondary" onClick={() => setOpen(false)}>
             Keep
-          </Button>
-          <Button onClick={() => setOpen(false)}>Discard</Button>
+          </Button.Root>
+          <Button.Root onClick={() => setOpen(false)}>Discard</Button.Root>
         </Dialog.Footer>
       </Dialog>
     </>
@@ -31,7 +31,7 @@ export function DialogThemed() {
   return (
     <ThemeProvider appearance="dark">
       <DensityProvider density="compact">
-        <Button onClick={() => setOpen(true)}>Dark compact</Button>
+        <Button.Root onClick={() => setOpen(true)}>Dark compact</Button.Root>
         <Dialog open={open} onOpenChange={setOpen} dismissOnBackdrop={false}>
           <Dialog.Title>Pinned scrim</Dialog.Title>
           <Dialog.Description>Backdrop clicks do nothing. Escape still closes.</Dialog.Description>

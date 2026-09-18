@@ -1,8 +1,8 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Button',
-  description: 'Native button styled through the button contract tokens.',
+  name: 'Button.Root',
+  description: 'Native button. Owns variant, type, and disabled. Default type is button.',
   props: [
     {
       name: 'variant',
@@ -26,10 +26,16 @@ export const meta = {
       description: 'Disables the control.',
     },
     {
+      name: 'aria-label',
+      type: 'string',
+      required: false,
+      description: 'Required accessible name when the only child is Button.Icon.',
+    },
+    {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description: 'Button label.',
+      description: 'Label and optional Button.Icon. Order is leading or trailing.',
     },
   ],
 } as const satisfies ComponentMeta;

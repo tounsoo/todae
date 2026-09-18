@@ -10,7 +10,7 @@ export function BottomSheetBasic() {
   const [snap, setSnap] = useState<'mid' | 'full'>('mid');
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Open sheet</Button>
+      <Button.Root onClick={() => setOpen(true)}>Open sheet</Button.Root>
       <BottomSheet open={open} onOpenChange={setOpen} snap={snap} onSnapChange={setSnap}>
         <BottomSheet.Header>
           <BottomSheet.Title>Share</BottomSheet.Title>
@@ -25,9 +25,9 @@ export function BottomSheetBasic() {
           </ul>
         </BottomSheet.Body>
         <BottomSheet.Footer>
-          <Button variant="secondary" onClick={() => setOpen(false)}>
+          <Button.Root variant="secondary" onClick={() => setOpen(false)}>
             Cancel
-          </Button>
+          </Button.Root>
         </BottomSheet.Footer>
       </BottomSheet>
     </>
@@ -42,7 +42,7 @@ export function ComboboxTouchSketch() {
   const matches = OPTIONS.filter((item) => item.toLowerCase().includes(query.toLowerCase()));
   return (
     <>
-      <Button onClick={() => setOpen(true)}>{value ?? 'Choose option'}</Button>
+      <Button.Root onClick={() => setOpen(true)}>{value ?? 'Choose option'}</Button.Root>
       <BottomSheet
         open={open}
         onOpenChange={(next) => {

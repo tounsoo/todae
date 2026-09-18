@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Popover.Trigger',
-  description: 'Button that toggles the popover and owns the CSS anchor.',
+  description: 'Button.Root that toggles the popover and owns the CSS anchor.',
   props: [
     {
       name: 'children',

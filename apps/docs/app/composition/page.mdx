@@ -8,7 +8,7 @@ The public ladder is Compounds, then Recipes. Recipes live in these docs. They a
 
 Public siblings. `Field`, `Button`, `Popover`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
 
-`Field.Icon` and `Field.Affix` are compound parts. Future `Button.Icon` is a compound part. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not a public rung.
+`Field.Icon`, `Field.Affix`, and `Button.Icon` are compound parts. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not a public rung.
 
 `Field.Root` is chrome only. Adornments follow DOM order. No `side` prop.
 
@@ -51,12 +51,12 @@ const cb = useCombobox({ presentation: 'popover' })
 
 Today only `Popover.Trigger` sets `anchor-name`. Anchoring Popover to a non-Trigger Field is part of the hook PRD.
 
-Touch (`presentation="sheet"`). The closed control is `Button`. Search Field lives inside the sheet.
+Touch (`presentation="sheet"`). The closed control is `Button.Root`. Search Field lives inside the sheet.
 
 ```tsx
 const cb = useCombobox({ presentation: 'sheet' })
 
-<Button {...cb.getTriggerProps()}>Pick…</Button>
+<Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
 <BottomSheet {...cb.getSheetProps()}>
   <Field.Root>
     <Field.Icon><Search /></Field.Icon>
@@ -66,14 +66,14 @@ const cb = useCombobox({ presentation: 'sheet' })
 </BottomSheet>
 ```
 
-That trigger becomes `Button.Root` when the Button compound PRD lands.
+The touch trigger is `Button.Root`.
 
 ## Coming
 
 `useCombobox` will ship headless. It owns open, value, aria, keyboard, and listbox ids. Exact `get*Props` names land in the hook PRD. The intent is:
 
 - `useCombobox({ presentation: 'popover' | 'sheet' })`
-- `getTriggerProps()` on `Field.Root` (desktop) or `Button` (touch)
+- `getTriggerProps()` on `Field.Root` (desktop) or `Button.Root` (touch)
 - `getPopoverProps()` on `Popover`
 - `getSheetProps()` on `BottomSheet`
 - `getListProps()` on `OptionList`
@@ -103,4 +103,4 @@ Product trees importing raw Icon or Affix instead of Field.Icon or Field.Affix
 Docs that treat Field.Icon or Button.Icon as free-floating atoms
 ```
 
-Deferred this slice. `useCombobox`, `Field.Label`, and the Button compound (`Button.Root`, `Button.Icon`).
+Deferred this slice. `useCombobox` and `Field.Label`.

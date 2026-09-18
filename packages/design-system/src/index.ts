@@ -1,7 +1,14 @@
 'use client';
 
 export { BottomSheet, type BottomSheetProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet';
-export { Button, type ButtonProps, type ButtonVariant } from './components/Button';
+export {
+  Button,
+  ButtonGroup,
+  type ButtonGroupProps,
+  type ButtonIconProps,
+  type ButtonRootProps,
+  type ButtonVariant,
+} from './components/Button';
 export { Dialog, type DialogCloseReason, type DialogProps } from './components/Dialog';
 export {
   Option,
