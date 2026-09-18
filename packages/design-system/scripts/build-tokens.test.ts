@@ -165,6 +165,8 @@ describe('committed token graph', () => {
       ).toBe(true);
     }
     expect(graph.tokens.some((t) => t.path === 'field.radius')).toBe(true);
+    expect(graph.tokens.some((t) => t.path === 'field.label.fg')).toBe(true);
+    expect(graph.tokens.find((t) => t.path === 'field.label.fg')?.cssValue).toBe('var(--todae-color-fg-default)');
     expect(graph.tokens.some((t) => t.path === 'chip.bg.default')).toBe(true);
   });
 

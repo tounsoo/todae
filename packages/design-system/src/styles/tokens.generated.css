@@ -210,6 +210,10 @@
   --todae-field-fg-placeholder: var(--todae-color-fg-placeholder);
   --todae-field-font-size: var(--todae-font-size-3);
   --todae-field-gap: var(--todae-space-field-gap);
+  --todae-field-label-fg: var(--todae-color-fg-default);
+  --todae-field-label-font-size: var(--todae-font-size-2);
+  --todae-field-label-font-weight: var(--todae-font-weight-medium);
+  --todae-field-label-gap: var(--todae-space-1);
   --todae-field-min-width: var(--todae-space-12);
   --todae-field-padding-x: var(--todae-space-control-x);
   --todae-field-padding-y: var(--todae-space-control-y);
