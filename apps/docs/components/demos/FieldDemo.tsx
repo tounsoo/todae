@@ -22,6 +22,52 @@ export function FieldStates() {
   );
 }
 
+export function FieldLabelStates() {
+  const [email, setEmail] = useState('');
+  return (
+    <>
+      <Field.Root>
+        <Field.Label>Email</Field.Label>
+        <Field.TextInput
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="you@example.com"
+        />
+      </Field.Root>
+      <Field.Root disabled>
+        <Field.Label>Email</Field.Label>
+        <Field.TextInput value="Disabled" onChange={() => undefined} />
+      </Field.Root>
+      <Field.Root invalid>
+        <Field.Label>Email</Field.Label>
+        <Field.TextInput value="Invalid" onChange={() => undefined} />
+      </Field.Root>
+    </>
+  );
+}
+
+export function FieldLabelAdornments() {
+  const [search, setSearch] = useState('query');
+  const [amount, setAmount] = useState('12');
+  return (
+    <>
+      <Field.Root>
+        <Field.Label>Search</Field.Label>
+        <Field.Icon>
+          <span>⌕</span>
+        </Field.Icon>
+        <Field.TextInput value={search} onChange={(event) => setSearch(event.target.value)} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Amount</Field.Label>
+        <Field.Affix>$</Field.Affix>
+        <Field.TextInput value={amount} onChange={(event) => setAmount(event.target.value)} />
+        <Field.Affix>USD</Field.Affix>
+      </Field.Root>
+    </>
+  );
+}
+
 export function FieldAdornments() {
   const [amount, setAmount] = useState('12');
   const [search, setSearch] = useState('query');
@@ -103,6 +149,28 @@ export function ChipInputMaxRows() {
       <MaxRowsDemo density="compact" maxRows={2} />
       <MaxRowsDemo density="comfortable" maxRows={1} />
       <MaxRowsDemo density="comfortable" maxRows={2} />
+    </>
+  );
+}
+
+export function ChipInputLabel() {
+  const field = useChipField({ initialChips: ['alpha'] });
+  return (
+    <>
+      <Field.Root>
+        <Field.Label>Tags</Field.Label>
+        <Field.ChipInput {...field} placeholder="Type and press Enter" />
+      </Field.Root>
+      <Field.Root invalid>
+        <Field.Label>Tags</Field.Label>
+        <Field.ChipInput
+          chips={['bad']}
+          inputValue=""
+          onInputValueChange={() => undefined}
+          onCommit={() => undefined}
+          onChipRemove={() => undefined}
+        />
+      </Field.Root>
     </>
   );
 }

@@ -2,18 +2,35 @@ import {
   ChipInputCommitKeys,
   ChipInputControlled,
   ChipInputHook,
+  ChipInputLabel,
   ChipInputMaxRows,
   ChipInputStates,
   FieldAdornments,
+  FieldLabelAdornments,
+  FieldLabelStates,
   FieldStates,
 } from '../../components/demos/FieldDemo';
 
 # Field
 
-Shared chrome. `Field.Root` is the shell. Value lives on `Field.TextInput` or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop.
+Shared chrome. `Field.Root` is the compound scope. The bordered shell lives inside it. Value lives on `Field.TextInput` or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Field.Label` is a direct child of Root and paints above the shell.
 
 <Example block>
   <FieldStates />
+</Example>
+
+## Label
+
+`Field.Label` auto-wires `htmlFor` to the input id from Root. Pass `id` on Root when you need a stable id. The label is not a second control. Invalid does not recolor the label. A required mark is authored in the label text.
+
+<Example block>
+  <FieldLabelStates />
+</Example>
+
+Label works with Icon, Affix, and ChipInput.
+
+<Example block>
+  <FieldLabelAdornments />
 </Example>
 
 `Affix` is text, not a control. Decorative `Icon` is `aria-hidden`. Interactive `Icon` keeps its name. Clear is not a built-in prop.
@@ -28,7 +45,7 @@ Controlled chips plus input. The field never appends chips. Parent `onCommit` de
 
 When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. When chips overflow, the last visible chip ellipsizes to soak leftover width before `+N`; earlier chips stay full and `+N` never shrinks.
 
-Deferred this slice: built-in clear, label/hint/error slot, paste-split, clickable `+N`, chip arrow-key roving.
+Deferred this slice: built-in clear, hint/error slot, paste-split, clickable `+N`, chip arrow-key roving.
 
 <Example block>
   <ChipInputControlled />
@@ -58,9 +75,15 @@ Disabled and invalid live on `Field.Root`.
   <ChipInputStates />
 </Example>
 
+<Example block>
+  <ChipInputLabel />
+</Example>
+
 ## Props
 
 <PropsTable name="Field.Root" />
+
+<PropsTable name="Field.Label" />
 
 <PropsTable name="Field.TextInput" />
 

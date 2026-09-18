@@ -8,9 +8,9 @@ The public ladder is Compounds, then Recipes. Recipes live in these docs. They a
 
 Public siblings. `Field`, `Button`, `Popover`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
 
-`Field.Icon`, `Field.Affix`, and `Button.Icon` are compound parts. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not a public rung.
+`Field.Icon`, `Field.Affix`, `Field.Label`, and `Button.Icon` are compound parts. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not a public rung.
 
-`Field.Root` is chrome only. Adornments follow DOM order. No `side` prop.
+`Field.Root` is the compound scope. `Field.Label` is a compound part like Icon and Affix. Adornments follow DOM order. No `side` prop.
 
 <Example block>
   <FieldPartsAllowed />
@@ -103,4 +103,4 @@ Product trees importing raw Icon or Affix instead of Field.Icon or Field.Affix
 Docs that treat Field.Icon or Button.Icon as free-floating atoms
 ```
 
-Deferred this slice. `useCombobox` and `Field.Label`.
+Deferred this slice. `useCombobox`.

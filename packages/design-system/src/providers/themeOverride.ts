@@ -135,6 +135,10 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'field.border.invalid',
   'field.ring.focus',
   'field.ring.invalid',
+  'field.label.gap',
+  'field.label.font.size',
+  'field.label.font.weight',
+  'field.label.fg',
   'chip.radius',
   'chip.padding.x',
   'chip.padding.y',
@@ -242,6 +246,7 @@ const COLOR_KEYS = new Set<string>([
       /^button\.(primary|secondary|ghost)\.(bg|fg|border)\./.test(key) ||
       /^button\.(primary|secondary|ghost)\.ring\.focus$/.test(key) ||
       /^(field|chip|dialog|sheet|overlay|popover|option)\.(bg|fg|border|ring|dismiss|grabber|scrim|check)(?:\.|$)/.test(key) ||
+      key === 'field.label.fg' ||
       key.startsWith('text.fg.'),
   ),
 ]);
@@ -255,6 +260,7 @@ const WEIGHT_KEYS = new Set<string>([
   'text.weight.medium',
   'text.weight.bold',
   'dialog.title.font.weight',
+  'field.label.font.weight',
   'option.font.weight',
 ]);
 

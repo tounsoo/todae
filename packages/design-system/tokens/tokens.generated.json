@@ -1712,6 +1712,42 @@
       "context": null
     },
     {
+      "path": "field.label.fg",
+      "type": "color",
+      "cssVar": "--todae-field-label-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.label.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-field-label-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.label.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-field-label-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.label.gap",
+      "type": "dimension",
+      "cssVar": "--todae-field-label-gap",
+      "cssValue": "var(--todae-space-1)",
+      "ref": "space.1",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.min-width",
       "type": "dimension",
       "cssVar": "--todae-field-min-width",

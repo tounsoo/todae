@@ -30,6 +30,14 @@
     "ring": {
       "focus": { "$type": "color", "$value": { "$ref": "color.accent.default" } },
       "invalid": { "$type": "color", "$value": { "$ref": "color.danger.default" } }
+    },
+    "label": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "space.1" } },
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "font.size.2" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.medium" } }
+      },
+      "fg": { "$type": "color", "$value": { "$ref": "color.fg.default" } }
     }
   }
 }
