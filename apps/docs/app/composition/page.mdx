@@ -24,9 +24,17 @@ A Field and a Popover sit next to each other. Neither wraps the other.
   <SiblingsAllowed />
 </Example>
 
+Field shell is not a button. This tree is never allowed.
+
+```tsx
+<Field.Root role="button" onClick={onOpen}>
+  <Field.TextInput value={q} onChange={(event) => setQ(event.target.value)} />
+</Field.Root>
+```
+
 ## Recipes
 
-Worked examples that compose compounds and hooks. Combobox is a recipe, not a package namespace. The blocks below are static. They do not run.
+Worked examples that compose compounds and hooks. Combobox is a recipe, not a package namespace. The blocks below are static. They do not run. The hook owns behavior. Compounds own chrome. There is no shipped Trigger sugar.
 
 Desktop (`presentation="popover"`). The closed control is a real Field. Spread hook trigger props onto `Field.Root`. The list lives in `Popover`.
 
@@ -43,6 +51,8 @@ const cb = useCombobox({ presentation: 'popover' })
 </Popover>
 ```
 
+Today only `Popover.Trigger` sets `anchor-name`. Anchoring Popover to a non-Trigger Field is part of the hook PRD.
+
 Touch (`presentation="sheet"`). The closed control is `Button`. Search Field lives inside the sheet.
 
 ```tsx
@@ -57,6 +67,8 @@ const cb = useCombobox({ presentation: 'sheet' })
   <OptionList>...</OptionList>
 </BottomSheet>
 ```
+
+That trigger becomes `Button.Root` when the Button compound PRD lands.
 
 ## Coming
 
@@ -92,3 +104,5 @@ Product trees importing the raw Icon atom instead of Field.Icon or Button.Icon
 
 Docs that call Field.Icon or Button.Icon an atom
 ```
+
+Deferred this slice. `useCombobox`, `Field.Label`, and the Button compound (`Button.Root`, `Button.Icon`).
