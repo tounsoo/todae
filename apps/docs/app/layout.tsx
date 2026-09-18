@@ -16,6 +16,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <header className="site-header">
             <a href="/">Todae</a>
             <nav className="site-nav" aria-label="Site">
+              <a href="/composition">Composition</a>
               <a href="/button">Button</a>
               <a href="/chip">Chip</a>
               <a href="/field">Field</a>

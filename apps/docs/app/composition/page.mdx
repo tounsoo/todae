@@ -1,0 +1,106 @@
+import { FieldPartsAllowed, SiblingsAllowed } from '../../components/demos/CompositionDemo';
+
+# Composition
+
+The public ladder is Compounds, then Recipes. Recipes live in these docs. They are not `Combobox.*` exports.
+
+## Compounds
+
+Public siblings. `Field`, `Button`, `Popover`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
+
+`Field.Icon` and `Field.Affix` are compound parts. Future `Button.Icon` is a compound part. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not a public rung.
+
+`Field.Root` is chrome only. Adornments follow DOM order. No `side` prop.
+
+<Example block>
+  <FieldPartsAllowed />
+</Example>
+
+A Field and a Popover sit next to each other. Neither wraps the other.
+
+<Example>
+  <SiblingsAllowed />
+</Example>
+
+Field shell is not a button. This tree is never allowed.
+
+```tsx
+<Field.Root role="button" onClick={onOpen}>
+  <Field.TextInput value={q} onChange={(event) => setQ(event.target.value)} />
+</Field.Root>
+```
+
+## Recipes
+
+Worked examples that compose compounds and hooks. Combobox is a recipe, not a package namespace. The blocks below are static. They do not run. The hook owns behavior. Compounds own chrome. There is no shipped Trigger sugar.
+
+Desktop (`presentation="popover"`). The closed control is a real Field. Spread hook trigger props onto `Field.Root`. The list lives in `Popover`.
+
+```tsx
+const cb = useCombobox({ presentation: 'popover' })
+
+<Field.Root {...cb.getTriggerProps()}>
+  <Field.Icon><Search /></Field.Icon>
+  <Field.ChipInput chips={chips} inputValue={q} onInputValueChange={setQ} onCommit={onCommit} onChipRemove={onRemove} />
+  <Field.Icon><ChevronDown /></Field.Icon>
+</Field.Root>
+<Popover {...cb.getPopoverProps()}>
+  <OptionList {...cb.getListProps()}>...</OptionList>
+</Popover>
+```
+
+Today only `Popover.Trigger` sets `anchor-name`. Anchoring Popover to a non-Trigger Field is part of the hook PRD.
+
+Touch (`presentation="sheet"`). The closed control is `Button`. Search Field lives inside the sheet.
+
+```tsx
+const cb = useCombobox({ presentation: 'sheet' })
+
+<Button {...cb.getTriggerProps()}>Pick…</Button>
+<BottomSheet {...cb.getSheetProps()}>
+  <Field.Root>
+    <Field.Icon><Search /></Field.Icon>
+    <Field.TextInput value={q} onChange={(event) => setQ(event.target.value)} />
+  </Field.Root>
+  <OptionList>...</OptionList>
+</BottomSheet>
+```
+
+That trigger becomes `Button.Root` when the Button compound PRD lands.
+
+## Coming
+
+`useCombobox` will ship headless. It owns open, value, aria, keyboard, and listbox ids. Exact `get*Props` names land in the hook PRD. The intent is:
+
+- `useCombobox({ presentation: 'popover' | 'sheet' })`
+- `getTriggerProps()` on `Field.Root` (desktop) or `Button` (touch)
+- `getPopoverProps()` on `Popover`
+- `getSheetProps()` on `BottomSheet`
+- `getListProps()` on `OptionList`
+
+No Trigger sugar component. No `Combobox.*` chrome.
+
+## Never
+
+```
+Field.Root
+  └─ Field.Button.Root          nested compound namespaces
+
+Field.Root as a button that also hosts TextInput
+  two roles on one root
+
+Combobox.Root, Combobox.Trigger, or Combobox.Icon
+  recipe chrome in the package
+
+Dual-wiring aria or open outside useCombobox while also using the hook
+
+Combobox behavior baked into Field
+
+Touch closed control = Field pretending to be a button
+
+Product trees importing raw Icon or Affix instead of Field.Icon or Field.Affix
+
+Docs that treat Field.Icon or Button.Icon as free-floating atoms
+```
+
+Deferred this slice. `useCombobox`, `Field.Label`, and the Button compound (`Button.Root`, `Button.Icon`).
