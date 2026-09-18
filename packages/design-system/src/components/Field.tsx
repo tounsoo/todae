@@ -1,18 +1,18 @@
 import {
-  Children,
   createContext,
-  isValidElement,
+  useCallback,
   useContext,
+  useEffect,
   useId,
   useMemo,
   useRef,
+  useState,
   type ChangeEvent,
   type CSSProperties,
   type InputHTMLAttributes,
   type KeyboardEvent,
   type LabelHTMLAttributes,
   type MouseEvent,
-  type ReactElement,
   type ReactNode,
   type Ref,
   type RefObject,
@@ -44,6 +44,10 @@ type FieldContextValue = {
   labelledBy?: string;
   ariaLabel?: string;
   inputRef: RefObject<HTMLInputElement | null>;
+  labels: Map<string, LabelRecord>;
+  registerLabel: (key: string, record: LabelRecord) => void;
+  unregisterLabel: (key: string) => void;
+  finishCollect: () => void;
 };
 
 const FieldContext = createContext<FieldContextValue | null>(null);
@@ -70,6 +74,8 @@ export type FieldLabelProps = {
   className?: string;
 } & Omit<LabelHTMLAttributes<HTMLLabelElement>, 'htmlFor' | 'children'>;
 
+type LabelRecord = FieldLabelProps;
+
 function Icon({ children, interactive, className }: FieldIconProps) {
   return (
     <span
@@ -85,27 +91,32 @@ function Affix({ children, className }: FieldAffixProps) {
   return <span className={[styles.adornment, className].filter(Boolean).join(' ')}>{children}</span>;
 }
 
+function sameRecord(prev: LabelRecord | undefined, next: LabelRecord): boolean {
+  if (!prev) return false;
+  const keys = new Set([...Object.keys(prev), ...Object.keys(next)]) as Set<keyof LabelRecord>;
+  for (const key of keys) {
+    if (!Object.is(prev[key], next[key])) return false;
+  }
+  return true;
+}
+
 function Label({ children, className, ...props }: FieldLabelProps) {
+  const key = useId();
   const ctx = useField();
-  return (
-    <label {...props} htmlFor={ctx.inputId} className={[styles.label, className].filter(Boolean).join(' ')}>
+  ctx.registerLabel(key, { children, className, ...props });
+  const unregister = ctx.unregisterLabel;
+  useEffect(() => () => unregister(key), [key, unregister]);
+  return null;
+}
+
+function LiftedLabels() {
+  const ctx = useField();
+  ctx.finishCollect();
+  return [...ctx.labels].map(([key, { children, className, ...props }]) => (
+    <label key={key} {...props} htmlFor={ctx.inputId} className={[styles.label, className].filter(Boolean).join(' ')}>
       {children}
     </label>
-  );
-}
-
-function isLabelElement(node: ReactNode): node is ReactElement<FieldLabelProps> {
-  return isValidElement(node) && node.type === Label;
-}
-
-function partitionFieldChildren(children: ReactNode): { labels: ReactNode[]; rest: ReactNode[] } {
-  const labels: ReactNode[] = [];
-  const rest: ReactNode[] = [];
-  for (const child of Children.toArray(children)) {
-    if (isLabelElement(child)) labels.push(child);
-    else rest.push(child);
-  }
-  return { labels, rest };
+  ));
 }
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
@@ -117,7 +128,35 @@ function Root({ disabled, invalid, id, name, className, style, children, ...aria
   const autoId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = id ?? autoId;
-  const { labels, rest } = partitionFieldChildren(children);
+  const labels = useRef(new Map<string, LabelRecord>());
+  const collecting = useRef(true);
+  const bumping = useRef(false);
+  const [, setGen] = useState(0);
+  collecting.current = true;
+
+  const bump = useCallback(() => {
+    if (collecting.current || bumping.current) return;
+    bumping.current = true;
+    queueMicrotask(() => {
+      bumping.current = false;
+      setGen((n) => n + 1);
+    });
+  }, []);
+
+  const registerLabel = useCallback((key: string, record: LabelRecord) => {
+    if (sameRecord(labels.current.get(key), record)) return;
+    labels.current.set(key, record);
+    bump();
+  }, [bump]);
+
+  const unregisterLabel = useCallback((key: string) => {
+    if (!labels.current.delete(key)) return;
+    bump();
+  }, [bump]);
+
+  const finishCollect = useCallback(() => {
+    collecting.current = false;
+  }, []);
 
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
     if (disabled || isInteractiveTarget(event.target)) return;
@@ -136,6 +175,10 @@ function Root({ disabled, invalid, id, name, className, style, children, ...aria
         labelledBy: aria['aria-labelledby'],
         ariaLabel: aria['aria-label'],
         inputRef,
+        labels: labels.current,
+        registerLabel,
+        unregisterLabel,
+        finishCollect,
       }}
     >
       <div
@@ -144,15 +187,15 @@ function Root({ disabled, invalid, id, name, className, style, children, ...aria
         data-disabled={disabled ? '' : undefined}
         data-invalid={invalid ? '' : undefined}
       >
-        {labels}
         <div
           className={styles.shell}
           data-disabled={disabled ? '' : undefined}
           data-invalid={invalid ? '' : undefined}
           onMouseDown={onMouseDown}
         >
-          {rest}
+          {children}
         </div>
+        <LiftedLabels />
       </div>
     </FieldContext.Provider>
   );

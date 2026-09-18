@@ -11,6 +11,10 @@
     color: var(--todae-field-label-fg);
   }
 
+  .root > .label {
+    order: -1;
+  }
+
   .root[data-disabled] .label {
     color: var(--todae-field-fg-disabled);
   }

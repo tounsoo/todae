@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import type { ComponentProps } from 'react';
+import { StrictMode, useState, type ComponentProps } from 'react';
+import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import {
@@ -197,7 +198,88 @@ describe('Field.Label', () => {
     expect(shell?.className).toContain('shell');
     expect(root?.contains(label)).toBe(true);
     expect(shell?.contains(label)).toBe(false);
-    expect(label && shell ? label.compareDocumentPosition(shell) & Node.DOCUMENT_POSITION_FOLLOWING : 0).not.toBe(0);
+    expect(label && shell ? shell.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING : 0).not.toBe(0);
+  });
+
+  it('lifts a Label through a wrapper under Root', () => {
+    const { container } = render(
+      <Field.Root>
+        <div>
+          <Field.Label>Email</Field.Label>
+        </div>
+        <Field.TextInput value="" onChange={() => undefined} />
+      </Field.Root>,
+    );
+    const input = screen.getByLabelText('Email');
+    const label = container.querySelector('label');
+    const shell = container.querySelector('input')?.parentElement;
+    expect(input).toBe(screen.getByRole('textbox'));
+    expect(label?.htmlFor).toBe(input.id);
+    expect(shell?.contains(label)).toBe(false);
+    expect(label && shell ? shell.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING : 0).not.toBe(0);
+  });
+
+  it('updates a wrapped Label without remounting Root', async () => {
+    function Wrapper() {
+      const [text, setText] = useState('Email');
+      return (
+        <div>
+          <button type="button" onClick={() => setText('Name')}>
+            rename
+          </button>
+          <Field.Label>{text}</Field.Label>
+        </div>
+      );
+    }
+    const { container } = render(
+      <Field.Root>
+        <Wrapper />
+        <Field.TextInput value="" onChange={() => undefined} />
+      </Field.Root>,
+    );
+    expect(screen.getByLabelText('Email')).toBe(screen.getByRole('textbox'));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'rename' }));
+    });
+    expect(screen.getByLabelText('Name')).toBe(screen.getByRole('textbox'));
+    expect(screen.queryByLabelText('Email')).toBeNull();
+    expect(container.querySelectorAll('label')).toHaveLength(1);
+    expect(container.querySelector('label')?.textContent).toBe('Name');
+  });
+
+  it('clears the lifted label on remount', () => {
+    function App() {
+      return (
+        <Field.Root>
+          <div>
+            <Field.Label>Email</Field.Label>
+          </div>
+          <Field.TextInput value="" onChange={() => undefined} />
+        </Field.Root>
+      );
+    }
+    const { unmount } = render(<App />);
+    expect(screen.getByLabelText('Email')).toBe(screen.getByRole('textbox'));
+    unmount();
+    expect(screen.queryByLabelText('Email')).toBeNull();
+    render(<App />);
+    expect(screen.getByLabelText('Email')).toBe(screen.getByRole('textbox'));
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+  });
+
+  it('keeps one label under StrictMode', () => {
+    const { container } = render(
+      <StrictMode>
+        <Field.Root>
+          <div>
+            <Field.Label>Email</Field.Label>
+          </div>
+          <Field.TextInput value="" onChange={() => undefined} />
+        </Field.Root>
+      </StrictMode>,
+    );
+    expect(container.querySelectorAll('label')).toHaveLength(1);
+    expect(screen.getByLabelText('Email')).toBe(screen.getByRole('textbox'));
   });
 
   it('is not a second interactive role', () => {
@@ -268,6 +350,57 @@ describe('Field.Label', () => {
     );
     expect(html).toContain('for="mail"');
     expect(html).toContain('id="mail"');
+    expect(html).toContain('Email');
+  });
+
+  it('SSR matches for and id through a wrapper', () => {
+    const html = renderToString(
+      <Field.Root id="mail">
+        <div>
+          <Field.Label>Email</Field.Label>
+        </div>
+        <Field.TextInput value="" onChange={() => undefined} />
+      </Field.Root>,
+    );
+    expect(html).toContain('for="mail"');
+    expect(html).toContain('id="mail"');
+    expect(html).toContain('Email');
+    expect(html).not.toMatch(/<label[^>]*>\s*<\/label>/);
+  });
+
+  it('hydrates a wrapped Label without mismatch', async () => {
+    const tree = (
+      <Field.Root id="mail">
+        <div>
+          <Field.Label>Email</Field.Label>
+        </div>
+        <Field.TextInput value="" onChange={() => undefined} />
+      </Field.Root>
+    );
+    const html = renderToString(tree);
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    document.body.appendChild(container);
+    const errors: string[] = [];
+    const spy = vi.spyOn(console, 'error').mockImplementation((...args) => {
+      errors.push(args.map(String).join(' '));
+    });
+    let root: ReturnType<typeof hydrateRoot>;
+    await act(async () => {
+      root = hydrateRoot(container, tree);
+    });
+    expect(errors.join('\n')).not.toMatch(/hydrat/i);
+    const label = container.querySelector('label');
+    const input = container.querySelector('input');
+    expect(label?.htmlFor).toBe('mail');
+    expect(input?.id).toBe('mail');
+    expect(label?.textContent).toBe('Email');
+    expect(label?.htmlFor).toBe(input?.id);
+    await act(async () => {
+      root.unmount();
+    });
+    spy.mockRestore();
+    container.remove();
   });
 
   it('renders root over shell with no empty label', () => {
