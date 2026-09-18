@@ -26,7 +26,6 @@ export {
   type FieldAffixProps,
   type FieldChipInputProps,
   type FieldIconProps,
-  type FieldLabelProps,
   type FieldRootProps,
   type FieldTextInputProps,
   type FieldTextInputType,

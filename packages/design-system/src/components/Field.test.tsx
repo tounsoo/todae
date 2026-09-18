@@ -7,7 +7,6 @@ import {
   type FieldAffixProps,
   type FieldChipInputProps,
   type FieldIconProps,
-  type FieldLabelProps,
   type FieldRootProps,
   type FieldTextInputProps,
 } from './Field';
@@ -24,14 +23,16 @@ describe('Field exports', () => {
     expect(api).not.toHaveProperty('IconEnd');
     expect(api).not.toHaveProperty('Prefix');
     expect(api).not.toHaveProperty('Suffix');
+    expect(api).not.toHaveProperty('FieldLabelProps');
     expect(api.Field).toEqual({
       Root: Field.Root,
-      Label: Field.Label,
       TextInput: Field.TextInput,
       ChipInput: Field.ChipInput,
       Icon: Field.Icon,
       Affix: Field.Affix,
     });
+    expect(api.Field).not.toHaveProperty('Label');
+    expectTypeOf<typeof Field>().not.toHaveProperty('Label');
     expect(typeof api.Field).toBe('object');
     expectTypeOf<typeof Field extends (...args: never[]) => unknown ? true : false>().toEqualTypeOf<false>();
     expectTypeOf<FieldRootProps>().not.toHaveProperty('value');
@@ -142,147 +143,34 @@ describe('Field.TextInput', () => {
   });
 });
 
-describe('Field.Label', () => {
-  it('associates a TextInput through htmlFor and getByLabelText', () => {
-    const { container, rerender } = render(
-      <Field.Root>
-        <Field.Label>Email</Field.Label>
-        <Field.TextInput value="" onChange={() => undefined} />
-      </Field.Root>,
-    );
-    const input = screen.getByLabelText('Email');
-    const label = container.querySelector('label');
-    expect(input).toBe(screen.getByRole('textbox'));
-    expect(label?.htmlFor).toBe(input.id);
-    expect(label?.htmlFor.length).toBeGreaterThan(0);
-
-    rerender(
-      <Field.Root id="x">
-        <Field.Label>Email</Field.Label>
-        <Field.TextInput value="" onChange={() => undefined} />
-      </Field.Root>,
-    );
-    expect(screen.getByLabelText('Email')).toHaveProperty('id', 'x');
-    expect(container.querySelector('label')?.htmlFor).toBe('x');
-  });
-
-  it('associates a ChipInput and keeps one textbox', () => {
-    render(
-      <Field.Root>
-        <Field.Label>Tags</Field.Label>
-        <Field.ChipInput
-          chips={['alpha']}
-          inputValue=""
-          onInputValueChange={() => undefined}
-          onCommit={() => undefined}
-          onChipRemove={() => undefined}
-        />
-      </Field.Root>,
-    );
-    expect(screen.getByLabelText('Tags')).toBe(screen.getByRole('textbox'));
-    expect(screen.getAllByRole('textbox')).toHaveLength(1);
-  });
-
-  it('paints above the shell and stays out of it', () => {
-    const { container } = render(
-      <Field.Root>
-        <Field.Label>Email</Field.Label>
-        <Field.TextInput value="" onChange={() => undefined} />
-      </Field.Root>,
-    );
-    const root = container.firstElementChild;
-    const label = container.querySelector('label');
-    const shell = container.querySelector('input')?.parentElement;
-    expect(root?.className).toContain('root');
-    expect(shell?.className).toContain('shell');
-    expect(root?.contains(label)).toBe(true);
-    expect(shell?.contains(label)).toBe(false);
-    expect(label && shell ? label.compareDocumentPosition(shell) & Node.DOCUMENT_POSITION_FOLLOWING : 0).not.toBe(0);
-  });
-
-  it('is not a second interactive role', () => {
-    const { container } = render(
-      <Field.Root>
-        <Field.Label>Email</Field.Label>
-        <Field.TextInput value="" onChange={() => undefined} />
-      </Field.Root>,
-    );
-    expect(container.querySelector('label')?.tagName).toBe('LABEL');
-    expect(screen.getAllByRole('textbox')).toHaveLength(1);
-    expect(screen.queryByRole('button')).toBeNull();
-  });
-
-  it('exposes the input as the native label control', () => {
-    const { container } = render(
-      <Field.Root>
-        <Field.Label>Email</Field.Label>
-        <Field.TextInput value="" onChange={() => undefined} />
-      </Field.Root>,
-    );
-    const input = screen.getByRole('textbox');
-    const label = container.querySelector('label') as HTMLLabelElement | null;
-    expect(label?.htmlFor).toBe(input.id);
-    expect(label?.control).toBe(input);
-  });
-
-  it('puts className and style on the root stack', () => {
+describe('Field.Root', () => {
+  it('puts className and style on the shell', () => {
     const { container } = render(
       <Field.Root className="wide" style={{ maxWidth: '18rem' }}>
         <Field.TextInput value="" onChange={() => undefined} />
       </Field.Root>,
     );
-    const root = container.firstElementChild as HTMLElement;
-    const shell = container.querySelector('input')?.parentElement;
-    expect(root.className).toContain('wide');
-    expect(root.style.maxWidth).toBe('18rem');
-    expect(shell?.className).not.toContain('wide');
-    expect(shell?.getAttribute('style')).toBeNull();
+    const shell = container.firstElementChild as HTMLElement;
+    expect(shell.className).toContain('shell');
+    expect(shell.className).toContain('wide');
+    expect(shell.style.maxWidth).toBe('18rem');
+    expect(shell.children).toHaveLength(1);
+    expect(container.querySelector('label')).toBeNull();
   });
 
-  it('mirrors disabled and invalid onto root and shell', () => {
+  it('marks disabled and invalid on the shell only', () => {
     const { container } = render(
       <Field.Root disabled invalid>
-        <Field.Label>Email</Field.Label>
         <Field.TextInput value="" onChange={() => undefined} />
       </Field.Root>,
     );
-    const root = container.firstElementChild;
-    const shell = container.querySelector('input')?.parentElement;
-    expect(root?.hasAttribute('data-disabled')).toBe(true);
-    expect(root?.hasAttribute('data-invalid')).toBe(true);
+    const shell = container.firstElementChild;
+    expect(shell?.className).toContain('shell');
     expect(shell?.hasAttribute('data-disabled')).toBe(true);
     expect(shell?.hasAttribute('data-invalid')).toBe(true);
+    expect(container.querySelectorAll('[data-disabled]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-invalid]')).toHaveLength(1);
     expect(screen.getByRole('textbox').getAttribute('aria-invalid')).toBe('true');
-  });
-
-  it('omits htmlFor from Label props', () => {
-    expectTypeOf<FieldLabelProps>().not.toHaveProperty('htmlFor');
-  });
-
-  it('SSR matches for and id', () => {
-    const html = renderToString(
-      <Field.Root id="mail">
-        <Field.Label>Email</Field.Label>
-        <Field.TextInput value="" onChange={() => undefined} />
-      </Field.Root>,
-    );
-    expect(html).toContain('for="mail"');
-    expect(html).toContain('id="mail"');
-  });
-
-  it('renders root over shell with no empty label', () => {
-    const { container } = render(
-      <Field.Root>
-        <Field.TextInput value="" onChange={() => undefined} />
-      </Field.Root>,
-    );
-    const root = container.firstElementChild;
-    const shell = container.querySelector('input')?.parentElement;
-    expect(root?.className).toContain('root');
-    expect(shell?.className).toContain('shell');
-    expect(shell != null && root?.contains(shell)).toBe(true);
-    expect(container.querySelector('label')).toBeNull();
-    expect(root?.children).toHaveLength(1);
   });
 });
 
