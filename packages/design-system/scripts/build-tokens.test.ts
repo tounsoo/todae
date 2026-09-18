@@ -167,6 +167,10 @@ describe('committed token graph', () => {
     expect(graph.tokens.some((t) => t.path === 'field.radius')).toBe(true);
     expect(graph.tokens.some((t) => t.path === 'field.label.fg')).toBe(true);
     expect(graph.tokens.find((t) => t.path === 'field.label.fg')?.cssValue).toBe('var(--todae-color-fg-default)');
+    const labelGap = graph.tokens.find((t) => t.path === 'field.label.gap');
+    expect(labelGap?.cssValue).toBe('0.4rem');
+    expect(labelGap?.ref).toBeNull();
+    expect(labelGap?.layer).toBe('contract');
     expect(graph.tokens.some((t) => t.path === 'chip.bg.default')).toBe(true);
   });
 

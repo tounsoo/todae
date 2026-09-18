@@ -1,9 +1,14 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { cleanup, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 import { Field } from './Field';
 import { Label, type LabelProps } from './Label';
 import * as api from '../index';
+
+const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Label.module.css'), 'utf8');
 
 afterEach(cleanup);
 
@@ -77,6 +82,23 @@ describe('Label', () => {
     expect(label?.className).toContain('label');
     expect(label?.className).toContain('extra');
     expect(label?.getAttribute('data-test')).toBe('caption');
+  });
+
+  it('carries no margin', () => {
+    expect(css).not.toMatch(/margin/);
+  });
+
+  it('is the previous sibling of the Field shell', () => {
+    const { container } = render(
+      <div className="labelled-field">
+        <Label htmlFor="mail">Email</Label>
+        <Field.Root id="mail">
+          <Field.TextInput value="" onChange={() => undefined} />
+        </Field.Root>
+      </div>,
+    );
+    const textbox = screen.getByRole('textbox');
+    expect(container.querySelector('label')?.nextElementSibling?.contains(textbox)).toBe(true);
   });
 
   it('SSR matches for and id', () => {

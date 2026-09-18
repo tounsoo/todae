@@ -1742,8 +1742,8 @@
       "path": "field.label.gap",
       "type": "dimension",
       "cssVar": "--todae-field-label-gap",
-      "cssValue": "var(--todae-space-1)",
-      "ref": "space.1",
+      "cssValue": "0.4rem",
+      "ref": null,
       "layer": "contract",
       "context": null
     },
