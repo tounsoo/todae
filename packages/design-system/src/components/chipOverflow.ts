@@ -37,7 +37,7 @@ export function planChipOverflow({ W, g, c, p, m, R, minChip }: ChipOverflowInpu
   if (R == null || R < 1) return { visible: n, hidden: 0 };
   for (let hidden = 0; hidden <= n; hidden++) {
     const visible = n - hidden;
-    const chips = c.slice(hidden);
+    const chips = c.slice(0, visible);
     const items = hidden > 0 ? [...chips, p, m] : [...chips, m];
     if (rowsFor(items, W, g) <= R) return { visible, hidden };
 

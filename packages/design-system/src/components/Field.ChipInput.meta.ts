@@ -46,7 +46,7 @@ export const meta = {
       type: 'number',
       required: false,
       description:
-        'Caps visual rows of chips plus input. Earlier chips fold into +N. The last visible chip ellipsizes to soak leftover width before +N.',
+        'Caps visual rows of chips plus input. Newest chips fold into +N. The last visible chip ellipsizes to soak leftover width before +N.',
     },
     {
       name: 'removeOnBackspace',

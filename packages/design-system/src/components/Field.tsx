@@ -202,7 +202,7 @@ function ChipInput({
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const plan = useChipMeasure({ chips, maxRows, flowRef, measureRef, inputRef: field.inputRef });
   const hidden = maxRows == null ? 0 : plan.hidden;
-  const live = chips.map((value, index) => ({ value, index })).slice(hidden);
+  const live = chips.map((value, index) => ({ value, index })).slice(0, chips.length - hidden);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (field.disabled) return;

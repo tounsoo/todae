@@ -26,7 +26,7 @@ Shared chrome. `Field.Root` is the shell. Value lives on `Field.TextInput` or `F
 
 Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow.
 
-When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. Hidden chips are unmounted from the live flow. When chips overflow, the last visible chip ellipsizes to soak leftover width before `+N`; earlier chips stay full and `+N` never shrinks.
+When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. When chips overflow, the last visible chip ellipsizes to soak leftover width before `+N`; earlier chips stay full and `+N` never shrinks.
 
 Deferred this slice: built-in clear, label/hint/error slot, paste-split, clickable `+N`, chip arrow-key roving.
 

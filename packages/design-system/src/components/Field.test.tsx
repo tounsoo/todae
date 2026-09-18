@@ -381,7 +381,7 @@ describe('Field.ChipInput overflow', () => {
     return [...(flow?.children ?? [])].filter((el) => !el.hasAttribute('inert'));
   }
 
-  it('folds earliest chips into +N and keeps hidden dismiss out of the a11y tree', () => {
+  it('folds newest chips into +N and keeps hidden dismiss out of the a11y tree', () => {
     const { container, onChipRemove } = renderField({
       chips: ['Alpha', 'Beta', 'Gamma', 'Delta'],
       maxRows: 1,
@@ -391,11 +391,11 @@ describe('Field.ChipInput overflow', () => {
     expect(container.querySelector('[data-max-rows]')).not.toBeNull();
     expect(container.querySelector('[data-measured]')).not.toBeNull();
     expect(html).toContain('2 more');
-    expect(html).not.toContain('Remove Alpha');
-    expect(html).not.toContain('Remove Beta');
-    expect(html).toContain('Remove Gamma');
-    expect(html).toContain('Remove Delta');
-    expect(container.querySelector('[inert][aria-hidden] [aria-label="Remove Alpha"]')).not.toBeNull();
+    expect(html).toContain('Remove Alpha');
+    expect(html).toContain('Remove Beta');
+    expect(html).not.toContain('Remove Gamma');
+    expect(html).not.toContain('Remove Delta');
+    expect(container.querySelector('[inert][aria-hidden] [aria-label="Remove Delta"]')).not.toBeNull();
 
     fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Backspace' });
     expect(onChipRemove).toHaveBeenCalledWith(3, 'Delta');
@@ -452,7 +452,7 @@ describe('Field.ChipInput overflow', () => {
         return { width: 300, height: 32, top: 0, left: 0, bottom: 32, right: 300, x: 0, y: 0, toJSON() {} };
       }
       const text = this.textContent ?? '';
-      const width = text.startsWith('…') ? 60 : text.startsWith('Gamma') ? 150 : 80;
+      const width = text.startsWith('…') ? 60 : text.startsWith('Beta') ? 150 : 80;
       if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) {
         return { width, height: 24, top: 0, left: 0, bottom: 24, right: width, x: 0, y: 0, toJSON() {} };
       }
@@ -463,12 +463,12 @@ describe('Field.ChipInput overflow', () => {
     const live = liveNodes(container);
     const last = live.find((el) => el.hasAttribute('data-ellipsis'));
     const overflow = live.find((el) => el.hasAttribute('data-overflow'));
-    expect(last?.textContent).toContain('Gamma');
+    expect(last?.textContent).toContain('Beta');
     expect((last as HTMLElement | undefined)?.style.maxWidth).toBe('116px');
-    expect(live.some((el) => el.textContent?.includes('Beta') && !el.hasAttribute('data-ellipsis'))).toBe(true);
+    expect(live.some((el) => el.textContent?.includes('Alpha') && !el.hasAttribute('data-ellipsis'))).toBe(true);
     expect(overflow?.hasAttribute('data-ellipsis')).toBe(false);
     expect((overflow as HTMLElement | undefined)?.style.maxWidth).toBe('');
-    expect(live.map((el) => el.outerHTML).join('')).not.toContain('Remove Alpha');
+    expect(live.map((el) => el.outerHTML).join('')).not.toContain('Remove Gamma');
   });
 });
 
