@@ -7,13 +7,14 @@ import {
   ChipInputStates,
   FieldAdornments,
   FieldLabelAdornments,
+  FieldLabelInWrapper,
   FieldLabelStates,
   FieldStates,
 } from '../../components/demos/FieldDemo';
 
 # Field
 
-Shared chrome. `Field.Root` is the compound scope. The bordered shell lives inside it. Value lives on `Field.TextInput` or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Field.Label` is a direct child of Root and paints above the shell.
+Shared chrome. `Field.Root` is the compound scope. The bordered shell lives inside it. Value lives on `Field.TextInput` or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Field.Label` paints above the shell. It may sit under a wrapper inside Root.
 
 <Example block>
   <FieldStates />
@@ -27,7 +28,11 @@ Shared chrome. `Field.Root` is the compound scope. The bordered shell lives insi
   <FieldLabelStates />
 </Example>
 
-Label works with Icon, Affix, and ChipInput.
+Label works with Icon, Affix, and ChipInput. A wrapper under Root still lifts the label above the shell.
+
+<Example block>
+  <FieldLabelInWrapper />
+</Example>
 
 <Example block>
   <FieldLabelAdornments />

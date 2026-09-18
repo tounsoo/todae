@@ -435,7 +435,7 @@
     },
     {
       "name": "Field.Label",
-      "description": "Visible label. Auto-wires htmlFor to the field input. Not a control.",
+      "description": "Visible label. Auto-wires htmlFor to the field input. May sit under a wrapper inside Root. Not a control.",
       "props": [
         {
           "name": "children",
@@ -485,7 +485,7 @@
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Optional Label, then TextInput or ChipInput plus optional Icon/Affix. Order is leading/trailing inside the shell. Label must be a direct child of Root."
+          "description": "Optional Label, then TextInput or ChipInput plus optional Icon/Affix. Order is leading/trailing inside the shell. Label may sit under a wrapper inside Root."
         }
       ]
     },

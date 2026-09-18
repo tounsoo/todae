@@ -46,6 +46,22 @@ export function FieldLabelStates() {
   );
 }
 
+export function FieldLabelInWrapper() {
+  const [email, setEmail] = useState('');
+  return (
+    <Field.Root>
+      <div>
+        <Field.Label>Email</Field.Label>
+      </div>
+      <Field.TextInput
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        placeholder="you@example.com"
+      />
+    </Field.Root>
+  );
+}
+
 export function FieldLabelAdornments() {
   const [search, setSearch] = useState('query');
   const [amount, setAmount] = useState('12');

@@ -2,7 +2,8 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Field.Label',
-  description: 'Visible label. Auto-wires htmlFor to the field input. Not a control.',
+  description:
+    'Visible label. Auto-wires htmlFor to the field input. May sit under a wrapper inside Root. Not a control.',
   props: [
     {
       name: 'children',

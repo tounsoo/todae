@@ -36,7 +36,7 @@ export const meta = {
       type: 'React.ReactNode',
       required: false,
       description:
-        'Optional Label, then TextInput or ChipInput plus optional Icon/Affix. Order is leading/trailing inside the shell. Label must be a direct child of Root.',
+        'Optional Label, then TextInput or ChipInput plus optional Icon/Affix. Order is leading/trailing inside the shell. Label may sit under a wrapper inside Root.',
     },
   ],
 } as const satisfies ComponentMeta;
