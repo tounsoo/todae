@@ -2,15 +2,13 @@ import { FieldPartsAllowed, SiblingsAllowed } from '../../components/demos/Compo
 
 # Composition
 
-The package ships atoms and compounds. Recipes live in these docs. They are not `Combobox.*` exports.
-
-## Atoms
-
-Shared internals. Icon, Affix, and shell chrome. Product trees import compound parts, not the raw atoms. `Field.Icon` is a Field part backed by the Icon atom. It is not an atom in the consumer tree.
+The public ladder is Compounds, then Recipes. Recipes live in these docs. They are not `Combobox.*` exports.
 
 ## Compounds
 
 Public siblings. `Field`, `Button`, `Popover`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
+
+`Field.Icon` and `Field.Affix` are Field parts. Future `Button.Icon` is a Button part. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not a public rung.
 
 `Field.Root` is chrome only. Adornments follow DOM order. No `side` prop.
 
@@ -100,9 +98,9 @@ Combobox behavior baked into Field
 
 Touch closed control = Field pretending to be a button
 
-Product trees importing the raw Icon atom instead of Field.Icon or Button.Icon
+Product trees importing raw Icon or Affix instead of Field.Icon or Field.Affix
 
-Docs that call Field.Icon or Button.Icon an atom
+Docs that treat Field.Icon or Button.Icon as free-floating atoms
 ```
 
 Deferred this slice. `useCombobox`, `Field.Label`, and the Button compound (`Button.Root`, `Button.Icon`).
