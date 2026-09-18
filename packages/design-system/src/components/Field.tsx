@@ -1,5 +1,7 @@
 import {
+  Children,
   createContext,
+  isValidElement,
   useContext,
   useId,
   useMemo,
@@ -8,7 +10,9 @@ import {
   type CSSProperties,
   type InputHTMLAttributes,
   type KeyboardEvent,
+  type LabelHTMLAttributes,
   type MouseEvent,
+  type ReactElement,
   type ReactNode,
   type Ref,
   type RefObject,
@@ -61,6 +65,11 @@ export type FieldAffixProps = {
   className?: string;
 };
 
+export type FieldLabelProps = {
+  children?: ReactNode;
+  className?: string;
+} & Omit<LabelHTMLAttributes<HTMLLabelElement>, 'htmlFor' | 'children'>;
+
 function Icon({ children, interactive, className }: FieldIconProps) {
   return (
     <span
@@ -76,6 +85,29 @@ function Affix({ children, className }: FieldAffixProps) {
   return <span className={[styles.adornment, className].filter(Boolean).join(' ')}>{children}</span>;
 }
 
+function Label({ children, className, ...props }: FieldLabelProps) {
+  const ctx = useField();
+  return (
+    <label {...props} htmlFor={ctx.inputId} className={[styles.label, className].filter(Boolean).join(' ')}>
+      {children}
+    </label>
+  );
+}
+
+function isLabelElement(node: ReactNode): node is ReactElement<FieldLabelProps> {
+  return isValidElement(node) && node.type === Label;
+}
+
+function partitionFieldChildren(children: ReactNode): { labels: ReactNode[]; rest: ReactNode[] } {
+  const labels: ReactNode[] = [];
+  const rest: ReactNode[] = [];
+  for (const child of Children.toArray(children)) {
+    if (isLabelElement(child)) labels.push(child);
+    else rest.push(child);
+  }
+  return { labels, rest };
+}
+
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   return Boolean(target.closest('button, a, input, textarea, select, [tabindex]'));
@@ -85,6 +117,7 @@ function Root({ disabled, invalid, id, name, className, style, children, ...aria
   const autoId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = id ?? autoId;
+  const { labels, rest } = partitionFieldChildren(children);
 
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
     if (disabled || isInteractiveTarget(event.target)) return;
@@ -106,13 +139,20 @@ function Root({ disabled, invalid, id, name, className, style, children, ...aria
       }}
     >
       <div
-        className={[styles.shell, className].filter(Boolean).join(' ')}
+        className={[styles.root, className].filter(Boolean).join(' ')}
         style={style}
         data-disabled={disabled ? '' : undefined}
         data-invalid={invalid ? '' : undefined}
-        onMouseDown={onMouseDown}
       >
-        {children}
+        {labels}
+        <div
+          className={styles.shell}
+          data-disabled={disabled ? '' : undefined}
+          data-invalid={invalid ? '' : undefined}
+          onMouseDown={onMouseDown}
+        >
+          {rest}
+        </div>
       </div>
     </FieldContext.Provider>
   );
@@ -282,4 +322,4 @@ function ChipInput({
   );
 }
 
-export const Field = { Root, TextInput, ChipInput, Icon, Affix } as const;
+export const Field = { Root, Label, TextInput, ChipInput, Icon, Affix } as const;

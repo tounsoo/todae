@@ -1,4 +1,20 @@
 @layer todae.components {
+  .root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-field-label-gap);
+  }
+
+  .label {
+    font-size: var(--todae-field-label-font-size);
+    font-weight: var(--todae-field-label-font-weight);
+    color: var(--todae-field-label-fg);
+  }
+
+  .root[data-disabled] .label {
+    color: var(--todae-field-fg-disabled);
+  }
+
   .shell {
     display: flex;
     align-items: center;
