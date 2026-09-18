@@ -21,15 +21,17 @@ Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. V
 
 ## Label
 
-`Label` is a sibling, not a compound part. It takes the same `id` you pass to `Field.Root`. Invalid does not recolor the label. A required mark is authored in the label text.
+`Label` is a sibling, not a compound part. It takes the same `id` you pass to `Field.Root`. Wrap the pair in one `.labelled-field`. The gap is `field.label.gap`. See [Label](/label) for the API.
 
 ```tsx
 const id = useId()
 
-<Label htmlFor={id}>Email</Label>
-<Field.Root id={id}>
-	<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
-</Field.Root>
+<div className="labelled-field">
+	<Label htmlFor={id}>Email</Label>
+	<Field.Root id={id}>
+		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+	</Field.Root>
+</div>
 ```
 
 <Example block>
@@ -91,8 +93,6 @@ Disabled and invalid live on `Field.Root`.
 ## Props
 
 <PropsTable name="Field.Root" />
-
-<PropsTable name="Label" />
 
 <PropsTable name="Field.TextInput" />
 

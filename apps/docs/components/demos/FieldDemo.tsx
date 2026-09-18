@@ -29,22 +29,28 @@ export function FieldLabelStates() {
   const [email, setEmail] = useState('');
   return (
     <>
-      <Label htmlFor={idleId}>Email</Label>
-      <Field.Root id={idleId}>
-        <Field.TextInput
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@example.com"
-        />
-      </Field.Root>
-      <Label htmlFor={disabledId}>Email</Label>
-      <Field.Root id={disabledId} disabled>
-        <Field.TextInput value="Disabled" onChange={() => undefined} />
-      </Field.Root>
-      <Label htmlFor={invalidId}>Email</Label>
-      <Field.Root id={invalidId} invalid>
-        <Field.TextInput value="Invalid" onChange={() => undefined} />
-      </Field.Root>
+      <div className="labelled-field">
+        <Label htmlFor={idleId}>Email</Label>
+        <Field.Root id={idleId}>
+          <Field.TextInput
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+          />
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={disabledId}>Email</Label>
+        <Field.Root id={disabledId} disabled>
+          <Field.TextInput value="Disabled" onChange={() => undefined} />
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={invalidId}>Email</Label>
+        <Field.Root id={invalidId} invalid>
+          <Field.TextInput value="Invalid" onChange={() => undefined} />
+        </Field.Root>
+      </div>
     </>
   );
 }
@@ -56,19 +62,23 @@ export function FieldLabelAdornments() {
   const [amount, setAmount] = useState('12');
   return (
     <>
-      <Label htmlFor={searchId}>Search</Label>
-      <Field.Root id={searchId}>
-        <Field.Icon>
-          <span>⌕</span>
-        </Field.Icon>
-        <Field.TextInput value={search} onChange={(event) => setSearch(event.target.value)} />
-      </Field.Root>
-      <Label htmlFor={amountId}>Amount</Label>
-      <Field.Root id={amountId}>
-        <Field.Affix>$</Field.Affix>
-        <Field.TextInput value={amount} onChange={(event) => setAmount(event.target.value)} />
-        <Field.Affix>USD</Field.Affix>
-      </Field.Root>
+      <div className="labelled-field">
+        <Label htmlFor={searchId}>Search</Label>
+        <Field.Root id={searchId}>
+          <Field.Icon>
+            <span>⌕</span>
+          </Field.Icon>
+          <Field.TextInput value={search} onChange={(event) => setSearch(event.target.value)} />
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={amountId}>Amount</Label>
+        <Field.Root id={amountId}>
+          <Field.Affix>$</Field.Affix>
+          <Field.TextInput value={amount} onChange={(event) => setAmount(event.target.value)} />
+          <Field.Affix>USD</Field.Affix>
+        </Field.Root>
+      </div>
     </>
   );
 }
@@ -164,20 +174,24 @@ export function ChipInputLabel() {
   const field = useChipField({ initialChips: ['alpha'] });
   return (
     <>
-      <Label htmlFor={tagsId}>Tags</Label>
-      <Field.Root id={tagsId}>
-        <Field.ChipInput {...field} placeholder="Type and press Enter" />
-      </Field.Root>
-      <Label htmlFor={invalidId}>Tags</Label>
-      <Field.Root id={invalidId} invalid>
-        <Field.ChipInput
-          chips={['bad']}
-          inputValue=""
-          onInputValueChange={() => undefined}
-          onCommit={() => undefined}
-          onChipRemove={() => undefined}
-        />
-      </Field.Root>
+      <div className="labelled-field">
+        <Label htmlFor={tagsId}>Tags</Label>
+        <Field.Root id={tagsId}>
+          <Field.ChipInput {...field} placeholder="Type and press Enter" />
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={invalidId}>Tags</Label>
+        <Field.Root id={invalidId} invalid>
+          <Field.ChipInput
+            chips={['bad']}
+            inputValue=""
+            onInputValueChange={() => undefined}
+            onCommit={() => undefined}
+            onChipRemove={() => undefined}
+          />
+        </Field.Root>
+      </div>
     </>
   );
 }

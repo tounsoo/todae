@@ -6,11 +6,11 @@ The public ladder is Compounds, then Recipes. Recipes live in these docs. They a
 
 ## Compounds
 
-Public siblings. `Field`, `Label`, `Button`, `Popover`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
+Public siblings. `Field`, [Label](/label), `Button`, `Popover`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
 
 `Field.Icon`, `Field.Affix`, and `Button.Icon` are compound parts. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not a public rung.
 
-`Field.Root` is chrome only. `Label` is a sibling component. Adornments follow DOM order. No `side` prop.
+`Field.Root` is chrome only. [Label](/label) is a sibling component. Adornments follow DOM order. No `side` prop.
 
 <Example block>
   <FieldPartsAllowed />
@@ -40,12 +40,14 @@ Desktop (`presentation="popover"`). The closed control is a real Field. Spread h
 const cb = useCombobox({ presentation: 'popover' })
 const id = useId()
 
-<Label htmlFor={id}>Tags</Label>
-<Field.Root {...cb.getTriggerProps()} id={id}>
-	<Field.Icon><Search /></Field.Icon>
-	<Field.ChipInput chips={chips} inputValue={q} onInputValueChange={setQ} onCommit={onCommit} onChipRemove={onRemove} />
-	<Field.Icon><ChevronDown /></Field.Icon>
-</Field.Root>
+<div className="labelled-field">
+	<Label htmlFor={id}>Tags</Label>
+	<Field.Root {...cb.getTriggerProps()} id={id}>
+		<Field.Icon><Search /></Field.Icon>
+		<Field.ChipInput chips={chips} inputValue={q} onInputValueChange={setQ} onCommit={onCommit} onChipRemove={onRemove} />
+		<Field.Icon><ChevronDown /></Field.Icon>
+	</Field.Root>
+</div>
 <Popover {...cb.getPopoverProps()}>
 	<OptionList {...cb.getListProps()}>...</OptionList>
 </Popover>
@@ -61,11 +63,13 @@ const searchId = useId()
 
 <Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
 <BottomSheet {...cb.getSheetProps()}>
-	<Label htmlFor={searchId}>Search</Label>
-	<Field.Root id={searchId}>
-		<Field.Icon><Search /></Field.Icon>
-		<Field.TextInput value={q} onChange={(event) => setQ(event.target.value)} />
-	</Field.Root>
+	<div className="labelled-field">
+		<Label htmlFor={searchId}>Search</Label>
+		<Field.Root id={searchId}>
+			<Field.Icon><Search /></Field.Icon>
+			<Field.TextInput value={q} onChange={(event) => setQ(event.target.value)} />
+		</Field.Root>
+	</div>
 	<OptionList>...</OptionList>
 </BottomSheet>
 ```
