@@ -79,8 +79,61 @@ function polyfillCssSupports(): void {
   }) as typeof CSS;
 }
 
+const matchMediaMatches = new Map<string, boolean>();
+const matchMediaListeners = new Map<string, Set<(event: MediaQueryListEvent) => void>>();
+
+export function setMatchMedia(query: string, matches: boolean): void {
+  matchMediaMatches.set(query, matches);
+  const event = { matches, media: query } as MediaQueryListEvent;
+  matchMediaListeners.get(query)?.forEach((listener) => listener(event));
+}
+
+export function resetMatchMedia(): void {
+  matchMediaMatches.clear();
+  matchMediaListeners.clear();
+}
+
+function polyfillMatchMedia(): void {
+  if (typeof window === 'undefined') return;
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: (query: string) => {
+      let listeners = matchMediaListeners.get(query);
+      if (!listeners) {
+        listeners = new Set<(event: MediaQueryListEvent) => void>();
+        matchMediaListeners.set(query, listeners);
+      }
+      return {
+        get matches() {
+          return matchMediaMatches.get(query) ?? false;
+        },
+        media: query,
+        addEventListener(_type: string, listener: (event: MediaQueryListEvent) => void) {
+          listeners.add(listener);
+        },
+        removeEventListener(_type: string, listener: (event: MediaQueryListEvent) => void) {
+          listeners.delete(listener);
+        },
+        addListener(listener: (event: MediaQueryListEvent) => void) {
+          listeners.add(listener);
+        },
+        removeListener(listener: (event: MediaQueryListEvent) => void) {
+          listeners.delete(listener);
+        },
+        dispatchEvent(event: Event) {
+          listeners.forEach((listener) => listener(event as MediaQueryListEvent));
+          return true;
+        },
+        onchange: null,
+      };
+    },
+  });
+}
+
 polyfillDialog();
 polyfillInert();
 polyfillPointerEvent();
 polyfillPopover();
 polyfillCssSupports();
+polyfillMatchMedia();

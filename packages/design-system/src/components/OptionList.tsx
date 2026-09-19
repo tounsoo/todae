@@ -8,9 +8,11 @@ import {
   useMemo,
   useState,
   type KeyboardEvent,
+  type MouseEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { optionDomId } from './OptionList.ids';
 import styles from './OptionList.module.css';
 
 export type OptionProps = {
@@ -22,6 +24,10 @@ export type OptionProps = {
 type OptionListBase = {
   children: ReactNode;
   className?: string;
+  id?: string;
+  tabIndex?: number;
+  activeValue?: string | null;
+  onActiveChange?: (value: string | null) => void;
   'aria-label'?: string;
   'aria-labelledby'?: string;
 };
@@ -68,10 +74,6 @@ function collectOptions(children: ReactNode): OptionProps[] {
   return Children.toArray(children).filter(isOptionElement).map((child) => child.props);
 }
 
-function optionDomId(listId: string, value: string): string {
-  return `${listId}-opt-${value.replace(/[^A-Za-z0-9_-]/g, '_')}`;
-}
-
 export function Option({ value, children, disabled }: OptionProps) {
   const ctx = useOptionList();
   if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
@@ -88,6 +90,10 @@ export function Option({ value, children, disabled }: OptionProps) {
       data-selected={selected ? '' : undefined}
       data-highlighted={ctx.highlighted === value ? '' : undefined}
       className={styles.option}
+      onMouseDown={(event: MouseEvent<HTMLDivElement>) => {
+        const list = event.currentTarget.closest('[role="listbox"]');
+        if (list instanceof HTMLElement && list.tabIndex < 0) event.preventDefault();
+      }}
       onClick={() => {
         if (disabled) return;
         ctx.select(value, true);
@@ -99,8 +105,18 @@ export function Option({ value, children, disabled }: OptionProps) {
 }
 
 export function OptionList(props: OptionListProps) {
-  const { children, className, 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby } = props;
-  const listId = useId();
+  const {
+    children,
+    className,
+    id,
+    tabIndex,
+    activeValue: activeValueProp,
+    onActiveChange,
+    'aria-label': ariaLabel,
+    'aria-labelledby': ariaLabelledby,
+  } = props;
+  const autoId = useId();
+  const listId = id ?? autoId;
   const multiple = isMultiple(props);
   const options = collectOptions(children);
   const enabled = options.filter((option) => !option.disabled).map((option) => option.value);
@@ -111,7 +127,13 @@ export function OptionList(props: OptionListProps) {
   const selectedFirst = isMultiple(props) ? (props.value[0] ?? null) : props.value;
   const [active, setActive] = useState<string | null>(selectedFirst ?? enabled[0] ?? null);
   const [highlighted, setHighlighted] = useState<string | null>(null);
-  const activeValue = active && enabled.includes(active) ? active : (enabled[0] ?? null);
+  const uncontrolledActive = active && enabled.includes(active) ? active : (enabled[0] ?? null);
+  const activeValue =
+    activeValueProp !== undefined
+      ? activeValueProp && enabled.includes(activeValueProp)
+        ? activeValueProp
+        : (enabled[0] ?? null)
+      : uncontrolledActive;
 
   const select = useCallback(
     (value: string, fromPointer = false) => {
@@ -124,14 +146,16 @@ export function OptionList(props: OptionListProps) {
       }
       setActive(value);
       setHighlighted(fromPointer ? null : value);
+      onActiveChange?.(value);
     },
-    [props],
+    [onActiveChange, props],
   );
 
   function move(next: string | undefined) {
     if (!next) return;
     setActive(next);
     setHighlighted(next);
+    onActiveChange?.(next);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -169,17 +193,18 @@ export function OptionList(props: OptionListProps) {
       listId,
       selectionMode: multiple ? 'multiple' : 'single',
       selected,
-      highlighted,
+      highlighted: activeValueProp !== undefined ? activeValue : highlighted,
       select,
     }),
-    [highlighted, listId, multiple, select, selected],
+    [activeValue, activeValueProp, highlighted, listId, multiple, select, selected],
   );
 
   return (
     <OptionListContext.Provider value={ctx}>
       <div
         role="listbox"
-        tabIndex={0}
+        id={listId}
+        tabIndex={tabIndex ?? 0}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledby}
         aria-multiselectable={multiple || undefined}

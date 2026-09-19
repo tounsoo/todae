@@ -1,0 +1,131 @@
+import {
+  ComboboxAsync,
+  ComboboxAuto,
+  ComboboxCreate,
+  ComboboxCreateMulti,
+  ComboboxEmpty,
+  ComboboxMulti,
+  ComboboxSheet,
+  ComboboxSingle,
+  PresentationBadge,
+} from '../../components/demos/ComboboxDemo';
+
+# Combobox
+
+A recipe, not a package namespace. `useCombobox` owns open, value, input, highlight, and ids. Compounds own chrome. There is no `Combobox.*` export. One interactive role per root.
+
+## Presentation
+
+`useSheetPresentation` chooses sheet when the pointer is coarse **or** the viewport is narrower than 640px. Otherwise it chooses popover. Server render and the first paint are popover. `isSheet` mirrors `presentation === "sheet"`. It is not `isTouch`.
+
+`useCombobox({ presentation: 'auto' })` uses the same helper. Force `popover` or `sheet` when a docs screenshot must stay still.
+
+If presentation flips while the list is open, the hook closes with `blur`.
+
+<Example>
+  <PresentationBadge />
+</Example>
+
+## Popover · single
+
+Sibling `Label` + `Field.Root` id. The input is the combobox. The list lives in `Popover`.
+
+```tsx
+const cb = useCombobox({ options, presentation: 'popover' })
+
+<div className="labelled-field">
+  <Label htmlFor={cb.ids.input}>Framework</Label>
+  <Field.Root {...cb.getAnchorProps()}>
+    <Field.TextInput {...cb.getInputProps()} />
+    <Field.Icon><Chevron /></Field.Icon>
+  </Field.Root>
+</div>
+<Popover {...cb.getPopoverProps()}>
+  <Popover.Content>
+    <OptionList {...cb.getListboxProps()}>
+      {cb.items.map((item) => (
+        <Option key={item.id} {...cb.getOptionProps(item)} />
+      ))}
+    </OptionList>
+  </Popover.Content>
+</Popover>
+```
+
+<Example block>
+  <ComboboxSingle />
+</Example>
+
+## Popover · multi
+
+`Field.ChipInput` via `getChipInputProps`. Chips are labels. Values dedupe.
+
+<Example block>
+  <ComboboxMulti />
+</Example>
+
+## Sheet
+
+The closed control is `Button.Root`. Search Field lives inside the sheet. Same `inputValue` and list as popover.
+
+```tsx
+const cb = useCombobox({ options, presentation: 'sheet' })
+
+<Button.Root {...cb.getTriggerProps()}>{selected}</Button.Root>
+<BottomSheet {...cb.getSheetProps()}>
+  <Field.Root id={cb.ids.input}>
+    <Field.TextInput {...cb.getInputProps()} />
+  </Field.Root>
+  <OptionList {...cb.getListboxProps()}>…</OptionList>
+</BottomSheet>
+```
+
+<Example block>
+  <ComboboxSheet />
+</Example>
+
+## Auto
+
+One hook. The tree flips with the presentation. Force `presentation` when you need a still frame.
+
+<Example block>
+  <ComboboxAuto />
+</Example>
+
+## Async
+
+`loadOptions(query, signal)` loads options. A newer query aborts the last controller and discards a stale resolve. The hook keeps the previous list while `loading` is true. Debounce, loading, and Retry chrome stay in the recipe. The hook does not debounce.
+
+Type `fail` to see the error row.
+
+<Example block>
+  <ComboboxAsync />
+</Example>
+
+## Empty and create
+
+No matches render a status row. `allowCreate` adds one `+ Create "{query}"` option in the same `OptionList` when the query has no case-insensitive label match. Click or Enter commits. Single selects and closes. Multi adds a chip and stays open. `onCreate` may return a canonical value and should append the new option to `options` so the list can show it selected.
+
+<Example block>
+  <ComboboxEmpty />
+</Example>
+
+<Example block>
+  <ComboboxCreate />
+</Example>
+
+<Example block>
+  <ComboboxCreateMulti />
+</Example>
+
+## Composition rules
+
+- Sibling [Label](/label) + `Field.Root` id. No `Field.Label`.
+- Do not add `Popover.Trigger` next to `getAnchorProps`. Dual-wire is a QA fail.
+- Do not bake combobox into Field. Do not export `Combobox.*` chrome.
+- Sheet trigger uses `aria-haspopup="dialog"`. Popover Field chrome has no `aria-haspopup`.
+
+## Props
+
+<PropsTable name="useSheetPresentation" />
+
+<PropsTable name="useCombobox" />

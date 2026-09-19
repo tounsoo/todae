@@ -34,59 +34,59 @@ Field shell is not a button. This tree is never allowed.
 
 Worked examples that compose compounds and hooks. Combobox is a recipe, not a package namespace. The blocks below are static. They do not run. The hook owns behavior. Compounds own chrome. There is no shipped Trigger sugar.
 
-Desktop (`presentation="popover"`). The closed control is a real Field. Spread hook trigger props onto `Field.Root`. The list lives in `Popover`.
+Desktop (`presentation="popover"`). The closed control is a real Field. Spread `getAnchorProps` onto `Field.Root`. The list lives in `Popover`. Worked recipes live on [Combobox](/combobox).
 
 ```tsx
 const cb = useCombobox({ presentation: 'popover' })
-const id = useId()
 
 <div className="labelled-field">
-	<Label htmlFor={id}>Tags</Label>
-	<Field.Root {...cb.getTriggerProps()} id={id}>
+	<Label htmlFor={cb.ids.input}>Tags</Label>
+	<Field.Root {...cb.getAnchorProps()}>
 		<Field.Icon><Search /></Field.Icon>
-		<Field.ChipInput chips={chips} inputValue={q} onInputValueChange={setQ} onCommit={onCommit} onChipRemove={onRemove} />
+		<Field.ChipInput {...cb.getChipInputProps()} />
 		<Field.Icon><ChevronDown /></Field.Icon>
 	</Field.Root>
 </div>
 <Popover {...cb.getPopoverProps()}>
-	<OptionList {...cb.getListProps()}>...</OptionList>
+	<OptionList {...cb.getListboxProps()}>...</OptionList>
 </Popover>
 ```
 
-Today only `Popover.Trigger` sets `anchor-name`. Anchoring Popover to a non-Trigger Field is part of the hook PRD.
+`anchorRef` is the CSS anchor when there is no `Popover.Trigger`.
 
 Touch (`presentation="sheet"`). The closed control is `Button.Root`. Search Field lives inside the sheet.
 
 ```tsx
 const cb = useCombobox({ presentation: 'sheet' })
-const searchId = useId()
 
 <Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
 <BottomSheet {...cb.getSheetProps()}>
 	<div className="labelled-field">
-		<Label htmlFor={searchId}>Search</Label>
-		<Field.Root id={searchId}>
+		<Label htmlFor={cb.ids.input}>Search</Label>
+		<Field.Root id={cb.ids.input}>
 			<Field.Icon><Search /></Field.Icon>
-			<Field.TextInput value={q} onChange={(event) => setQ(event.target.value)} />
+			<Field.TextInput {...cb.getInputProps()} />
 		</Field.Root>
 	</div>
-	<OptionList>...</OptionList>
+	<OptionList {...cb.getListboxProps()}>...</OptionList>
 </BottomSheet>
 ```
 
 The touch trigger is `Button.Root`.
 
-## Coming
+## Hook
 
-`useCombobox` will ship headless. It owns open, value, aria, keyboard, and listbox ids. Exact `get*Props` names land in the hook PRD. The intent is:
+`useCombobox` is headless. It owns open, value, aria, keyboard, and listbox ids.
 
-- `useCombobox({ presentation: 'popover' | 'sheet' })`
-- `getTriggerProps()` on `Field.Root` (desktop) or `Button.Root` (touch)
+- `useCombobox({ presentation: 'popover' | 'sheet' | 'auto' })`
+- `getAnchorProps()` on `Field.Root` (desktop)
+- `getTriggerProps()` on `Button.Root` (sheet)
+- `getInputProps()` / `getChipInputProps()` on the field input
 - `getPopoverProps()` on `Popover`
 - `getSheetProps()` on `BottomSheet`
-- `getListProps()` on `OptionList`
+- `getListboxProps()` on `OptionList`
 
-No Trigger sugar component. No `Combobox.*` chrome.
+No Trigger sugar component. No `Combobox.*` chrome. See [Combobox](/combobox).
 
 ## Never
 
@@ -111,4 +111,4 @@ Product trees importing raw Icon or Affix instead of Field.Icon or Field.Affix
 Docs that treat Field.Icon or Button.Icon as free-floating atoms
 ```
 
-Deferred this slice. `useCombobox`.
+See [Combobox](/combobox) for the live recipe.

@@ -50,12 +50,7 @@ function usePopover(): PopoverContextValue {
 }
 
 function isPopoverOpen(el: HTMLElement): boolean {
-  try {
-    if (el.matches(':popover-open')) return true;
-  } catch {
-    /* jsdom */
-  }
-  return el.hasAttribute('data-popover-open');
+  return el.matches(':popover-open') || el.hasAttribute('data-popover-open');
 }
 
 function eventInside(el: HTMLElement | null, event: Event): boolean {
@@ -161,6 +156,21 @@ export function Popover({
   useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: contentRef });
   useInitialFocus(contentRef, open, initialFocusRef);
   useEscapeKey(open, true, useCallback(() => requestClose('escape'), [requestClose]));
+
+  useLayoutEffect(() => {
+    const el = anchorRef?.current;
+    if (!el) return;
+    const prevName = el.style.getPropertyValue('anchor-name');
+    const prevVar = el.style.getPropertyValue('--todae-popover-anchor');
+    el.style.setProperty('anchor-name', anchorName);
+    el.style.setProperty('--todae-popover-anchor', anchorName);
+    return () => {
+      if (prevName) el.style.setProperty('anchor-name', prevName);
+      else el.style.removeProperty('anchor-name');
+      if (prevVar) el.style.setProperty('--todae-popover-anchor', prevVar);
+      else el.style.removeProperty('--todae-popover-anchor');
+    };
+  }, [anchorName, anchorRef]);
 
   useEffect(() => {
     if (!open) return;

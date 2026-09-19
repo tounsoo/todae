@@ -31,6 +31,12 @@ export const meta = {
       description: 'Native input name.',
     },
     {
+      name: 'ref',
+      type: 'Ref<HTMLDivElement>',
+      required: false,
+      description: 'Shell element. Use as a Popover anchorRef.',
+    },
+    {
       name: 'children',
       type: 'React.ReactNode',
       required: false,

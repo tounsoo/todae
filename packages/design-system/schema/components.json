@@ -464,6 +464,12 @@
           "description": "Native input name."
         },
         {
+          "name": "ref",
+          "type": "Ref<HTMLDivElement>",
+          "required": false,
+          "description": "Shell element. Use as a Popover anchorRef."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
@@ -581,6 +587,31 @@
           "description": "Selection change. Single passes a string. Multiple passes the next array."
         },
         {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Listbox id. Auto-generated when omitted. Option ids derive from it."
+        },
+        {
+          "name": "tabIndex",
+          "type": "number",
+          "required": false,
+          "description": "Listbox tabIndex. Pass -1 when a combobox input owns focus.",
+          "default": "0"
+        },
+        {
+          "name": "activeValue",
+          "type": "string | null",
+          "required": false,
+          "description": "Controlled highlighted value. Omit to keep highlight inside the list."
+        },
+        {
+          "name": "onActiveChange",
+          "type": "(value: string | null) => void",
+          "required": false,
+          "description": "Fires when keyboard or pointer moves the highlight."
+        },
+        {
           "name": "aria-label",
           "type": "string",
           "required": false,
@@ -633,7 +664,7 @@
           "name": "anchorRef",
           "type": "RefObject<HTMLElement | null>",
           "required": false,
-          "description": "Element that does not count as an outside press."
+          "description": "Sets CSS anchor-name on this element and excludes it from outside press."
         }
       ]
     },
@@ -781,6 +812,90 @@
           "type": "(raw: string) => string | null",
           "required": false,
           "description": "Normalize a commit. Null rejects. Default trims and rejects empty."
+        }
+      ]
+    },
+    {
+      "name": "useCombobox",
+      "description": "Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, and OptionList. No Combobox chrome.",
+      "props": [
+        {
+          "name": "selectionMode",
+          "type": "\"single\" | \"multiple\"",
+          "required": false,
+          "description": "Single uses TextInput. Multiple uses ChipInput.",
+          "default": "\"single\""
+        },
+        {
+          "name": "options",
+          "type": "readonly ComboboxOption[]",
+          "required": false,
+          "description": "Sync options. Ignored when loadOptions is set."
+        },
+        {
+          "name": "loadOptions",
+          "type": "(query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>",
+          "required": false,
+          "description": "Async options. Stale responses are discarded."
+        },
+        {
+          "name": "presentation",
+          "type": "\"popover\" | \"sheet\" | \"auto\"",
+          "required": false,
+          "description": "auto uses useSheetPresentation.",
+          "default": "\"auto\""
+        },
+        {
+          "name": "allowCreate",
+          "type": "boolean",
+          "required": false,
+          "description": "Show a create row when the query has no case-insensitive label match.",
+          "default": "false"
+        },
+        {
+          "name": "value",
+          "type": "string | null | readonly string[]",
+          "required": false,
+          "description": "Controlled value. Null for empty single. Array for multiple."
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open."
+        },
+        {
+          "name": "inputValue",
+          "type": "string",
+          "required": false,
+          "description": "Controlled filter text."
+        }
+      ]
+    },
+    {
+      "name": "useSheetPresentation",
+      "description": "Coarse pointer or narrow width selects sheet. SSR and first paint are popover. isSheet mirrors presentation.",
+      "props": [
+        {
+          "name": "narrowWidth",
+          "type": "number",
+          "required": false,
+          "description": "Viewport width that starts the narrow media query. Media is max-width: n - 1.",
+          "default": "640"
+        },
+        {
+          "name": "coarseQuery",
+          "type": "string",
+          "required": false,
+          "description": "matchMedia query treated as coarse pointer.",
+          "default": "'(pointer: coarse)'"
+        },
+        {
+          "name": "forced",
+          "type": "\"popover\" | \"sheet\" | \"auto\"",
+          "required": false,
+          "description": "Skip media when popover or sheet. auto uses coarse OR narrow.",
+          "default": "\"auto\""
         }
       ]
     }
