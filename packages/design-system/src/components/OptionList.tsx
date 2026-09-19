@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
   type KeyboardEvent,
+  type MouseEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -89,6 +90,10 @@ export function Option({ value, children, disabled }: OptionProps) {
       data-selected={selected ? '' : undefined}
       data-highlighted={ctx.highlighted === value ? '' : undefined}
       className={styles.option}
+      onMouseDown={(event: MouseEvent<HTMLDivElement>) => {
+        const list = event.currentTarget.closest('[role="listbox"]');
+        if (list instanceof HTMLElement && list.tabIndex < 0) event.preventDefault();
+      }}
       onClick={() => {
         if (disabled) return;
         ctx.select(value, true);

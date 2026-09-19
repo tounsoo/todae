@@ -70,7 +70,8 @@ function pointerSelect(option: HTMLElement) {
   const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
   option.dispatchEvent(down);
   if (!down.defaultPrevented) {
-    option.closest('[role="listbox"]')?.focus();
+    const list = option.closest('[role="listbox"]');
+    if (list instanceof HTMLElement) list.focus();
   }
   fireEvent.click(option);
 }
