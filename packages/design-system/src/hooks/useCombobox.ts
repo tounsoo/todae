@@ -15,7 +15,6 @@ import type { ButtonRootProps } from '../components/Button';
 import type { FieldChipInputProps, FieldRootProps, FieldTextInputProps } from '../components/Field';
 import type {
   OptionListMultipleProps,
-  OptionListProps,
   OptionListSingleProps,
   OptionProps,
 } from '../components/OptionList';
