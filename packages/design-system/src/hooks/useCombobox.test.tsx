@@ -5,6 +5,7 @@ import { Option, OptionList } from '../components/OptionList';
 import { Popover } from '../components/Popover';
 import { optionDomId } from '../components/OptionList.ids';
 import { resetMatchMedia, setMatchMedia } from '../test/setup';
+import * as api from '../index';
 import { useCombobox, type ComboboxOption, type UseComboboxSingleOptions } from './useCombobox';
 
 afterEach(() => {
@@ -40,6 +41,12 @@ function SingleBox(props: Partial<UseComboboxSingleOptions> = {}) {
 }
 
 describe('useCombobox', () => {
+  it('exports hooks and does not export Combobox chrome', () => {
+    expect(api).toHaveProperty('useCombobox');
+    expect(api).toHaveProperty('useSheetPresentation');
+    expect(api).not.toHaveProperty('Combobox');
+  });
+
   it('wires combobox aria to the input and listbox', () => {
     render(<SingleBox defaultOpen />);
     const input = screen.getByRole('combobox');
