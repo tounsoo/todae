@@ -13,7 +13,7 @@ import {
 
 # Field
 
-Shared chrome. `Field.Root` is the compound scope. The bordered shell lives inside it. Value lives on `Field.TextInput` or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Field.Label` is a direct child of Root and paints above the shell.
+Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput` or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label` is a sibling, not a compound part.
 
 <Example block>
   <FieldStates />
@@ -21,7 +21,18 @@ Shared chrome. `Field.Root` is the compound scope. The bordered shell lives insi
 
 ## Label
 
-`Field.Label` auto-wires `htmlFor` to the input id from Root. Pass `id` on Root when you need a stable id. The label is not a second control. Invalid does not recolor the label. A required mark is authored in the label text.
+`Label` is a sibling, not a compound part. It takes the same `id` you pass to `Field.Root`. Wrap the pair in one `.labelled-field`. The gap is `field.label.gap`. See [Label](/label) for the API.
+
+```tsx
+const id = useId()
+
+<div className="labelled-field">
+	<Label htmlFor={id}>Email</Label>
+	<Field.Root id={id}>
+		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+	</Field.Root>
+</div>
+```
 
 <Example block>
   <FieldLabelStates />
@@ -82,8 +93,6 @@ Disabled and invalid live on `Field.Root`.
 ## Props
 
 <PropsTable name="Field.Root" />
-
-<PropsTable name="Field.Label" />
 
 <PropsTable name="Field.TextInput" />
 

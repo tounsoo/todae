@@ -2,8 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Field.Root',
-  description:
-    'Field compound scope. Context plus vertical stack. Label sits above the bordered control shell; inputs and adornments sit inside it. No value.',
+  description: 'Field chrome only. No value. Children render in source order.',
   props: [
     {
       name: 'disabled',
@@ -35,8 +34,7 @@ export const meta = {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description:
-        'Optional Label, then TextInput or ChipInput plus optional Icon/Affix. Order is leading/trailing inside the shell. Label must be a direct child of Root.',
+      description: 'TextInput or ChipInput plus optional Icon and Affix. Order is leading/trailing.',
     },
   ],
 } as const satisfies ComponentMeta;

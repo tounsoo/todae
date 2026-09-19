@@ -64,6 +64,11 @@ main:has(.playground) {
   align-items: stretch;
 }
 
+.labelled-field {
+  display: grid;
+  gap: var(--todae-field-label-gap);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

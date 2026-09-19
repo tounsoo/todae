@@ -17,6 +17,9 @@ export default function HomePage() {
           <a href="/field">Field</a>
         </li>
         <li>
+          <a href="/label">Label</a>
+        </li>
+        <li>
           <a href="/dialog">Dialog</a>
         </li>
         <li>

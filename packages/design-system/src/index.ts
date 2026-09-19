@@ -26,11 +26,11 @@ export {
   type FieldAffixProps,
   type FieldChipInputProps,
   type FieldIconProps,
-  type FieldLabelProps,
   type FieldRootProps,
   type FieldTextInputProps,
   type FieldTextInputType,
 } from './components/Field';
+export { Label, type LabelProps } from './components/Label';
 export { Stack, type StackProps, type StackDirection } from './components/Stack';
 export { Text, type TextProps, type TextAs, type TextSize, type TextTone, type TextWeight } from './components/Text';
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';

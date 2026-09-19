@@ -1,9 +1,15 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Field.Label',
-  description: 'Visible label. Auto-wires htmlFor to the field input. Not a control.',
+  name: 'Label',
+  description: 'Visible label for a Field. Pass htmlFor the Root id. Not a control.',
   props: [
+    {
+      name: 'htmlFor',
+      type: 'string',
+      required: true,
+      description: 'Id of the labelled control. Must match Field.Root id when captioning a Field.',
+    },
     {
       name: 'children',
       type: 'React.ReactNode',

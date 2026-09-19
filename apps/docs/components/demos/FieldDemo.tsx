@@ -1,7 +1,7 @@
 'use client';
 
-import { DensityProvider, Field, useChipField } from '@tounsoo/todae';
-import { useState } from 'react';
+import { DensityProvider, Field, Label, useChipField } from '@tounsoo/todae';
+import { useId, useState } from 'react';
 
 const MANY = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta'];
 
@@ -23,47 +23,62 @@ export function FieldStates() {
 }
 
 export function FieldLabelStates() {
+  const idleId = useId();
+  const disabledId = useId();
+  const invalidId = useId();
   const [email, setEmail] = useState('');
   return (
     <>
-      <Field.Root>
-        <Field.Label>Email</Field.Label>
-        <Field.TextInput
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@example.com"
-        />
-      </Field.Root>
-      <Field.Root disabled>
-        <Field.Label>Email</Field.Label>
-        <Field.TextInput value="Disabled" onChange={() => undefined} />
-      </Field.Root>
-      <Field.Root invalid>
-        <Field.Label>Email</Field.Label>
-        <Field.TextInput value="Invalid" onChange={() => undefined} />
-      </Field.Root>
+      <div className="labelled-field">
+        <Label htmlFor={idleId}>Email</Label>
+        <Field.Root id={idleId}>
+          <Field.TextInput
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+          />
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={disabledId}>Email</Label>
+        <Field.Root id={disabledId} disabled>
+          <Field.TextInput value="Disabled" onChange={() => undefined} />
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={invalidId}>Email</Label>
+        <Field.Root id={invalidId} invalid>
+          <Field.TextInput value="Invalid" onChange={() => undefined} />
+        </Field.Root>
+      </div>
     </>
   );
 }
 
 export function FieldLabelAdornments() {
+  const searchId = useId();
+  const amountId = useId();
   const [search, setSearch] = useState('query');
   const [amount, setAmount] = useState('12');
   return (
     <>
-      <Field.Root>
-        <Field.Label>Search</Field.Label>
-        <Field.Icon>
-          <span>⌕</span>
-        </Field.Icon>
-        <Field.TextInput value={search} onChange={(event) => setSearch(event.target.value)} />
-      </Field.Root>
-      <Field.Root>
-        <Field.Label>Amount</Field.Label>
-        <Field.Affix>$</Field.Affix>
-        <Field.TextInput value={amount} onChange={(event) => setAmount(event.target.value)} />
-        <Field.Affix>USD</Field.Affix>
-      </Field.Root>
+      <div className="labelled-field">
+        <Label htmlFor={searchId}>Search</Label>
+        <Field.Root id={searchId}>
+          <Field.Icon>
+            <span>⌕</span>
+          </Field.Icon>
+          <Field.TextInput value={search} onChange={(event) => setSearch(event.target.value)} />
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={amountId}>Amount</Label>
+        <Field.Root id={amountId}>
+          <Field.Affix>$</Field.Affix>
+          <Field.TextInput value={amount} onChange={(event) => setAmount(event.target.value)} />
+          <Field.Affix>USD</Field.Affix>
+        </Field.Root>
+      </div>
     </>
   );
 }
@@ -154,23 +169,29 @@ export function ChipInputMaxRows() {
 }
 
 export function ChipInputLabel() {
+  const tagsId = useId();
+  const invalidId = useId();
   const field = useChipField({ initialChips: ['alpha'] });
   return (
     <>
-      <Field.Root>
-        <Field.Label>Tags</Field.Label>
-        <Field.ChipInput {...field} placeholder="Type and press Enter" />
-      </Field.Root>
-      <Field.Root invalid>
-        <Field.Label>Tags</Field.Label>
-        <Field.ChipInput
-          chips={['bad']}
-          inputValue=""
-          onInputValueChange={() => undefined}
-          onCommit={() => undefined}
-          onChipRemove={() => undefined}
-        />
-      </Field.Root>
+      <div className="labelled-field">
+        <Label htmlFor={tagsId}>Tags</Label>
+        <Field.Root id={tagsId}>
+          <Field.ChipInput {...field} placeholder="Type and press Enter" />
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={invalidId}>Tags</Label>
+        <Field.Root id={invalidId} invalid>
+          <Field.ChipInput
+            chips={['bad']}
+            inputValue=""
+            onInputValueChange={() => undefined}
+            onCommit={() => undefined}
+            onChipRemove={() => undefined}
+          />
+        </Field.Root>
+      </div>
     </>
   );
 }

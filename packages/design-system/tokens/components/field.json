@@ -32,7 +32,7 @@
       "invalid": { "$type": "color", "$value": { "$ref": "color.danger.default" } }
     },
     "label": {
-      "gap": { "$type": "dimension", "$value": { "$ref": "space.1" } },
+      "gap": { "$type": "dimension", "$value": { "value": 0.4, "unit": "rem" } },
       "font": {
         "size": { "$type": "dimension", "$value": { "$ref": "font.size.2" } },
         "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.medium" } }

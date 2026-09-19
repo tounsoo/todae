@@ -1,0 +1,41 @@
+import { LabelSibling } from '../../components/demos/LabelDemo';
+
+# Label
+
+Visible name for a control. A sibling, not a compound part. `htmlFor` is required and must equal the control id. For a Field that is the `Field.Root` id. Not a control.
+
+## With Field
+
+Label carries no margin. The gap between a label and its shell is `field.label.gap` (0.4rem). Put it on the wrapper that stacks the pair.
+
+```css
+.labelled-field {
+	display: grid;
+	gap: var(--todae-field-label-gap);
+}
+```
+
+```tsx
+const id = useId()
+
+<div className="labelled-field">
+	<Label htmlFor={id}>Email</Label>
+	<Field.Root id={id}>
+		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+	</Field.Root>
+</div>
+```
+
+<Example block>
+  <LabelSibling />
+</Example>
+
+One `.labelled-field` per pair. Do not wrap several pairs in one wrapper. Do not wrap the pair in `Stack`. `stack.gap` is the density gap between fields, not between a label and its shell. Put `.labelled-field` pairs inside `Stack`.
+
+## States
+
+Disabled and invalid live on `Field.Root`. Label does not repaint. A required mark is authored in the label text.
+
+## Props
+
+<PropsTable name="Label" />

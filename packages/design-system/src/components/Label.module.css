@@ -1,0 +1,8 @@
+@layer todae.components {
+  .label {
+    display: block;
+    font-size: var(--todae-field-label-font-size);
+    font-weight: var(--todae-field-label-font-weight);
+    color: var(--todae-field-label-fg);
+  }
+}
