@@ -262,7 +262,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const create = useCallback(() => {
     if (!showCreate) return;
     const label = trimmed;
-    void Promise.resolve(options.onCreate?.(label)).then((canonical) => {
+    const commit = (canonical: string | void) => {
       const next = canonical ?? label;
       if (selectionMode === 'multiple') {
         const current = [...multiValue];
@@ -273,7 +273,13 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       applySingle(next);
       setInputValue(label);
       setOpen(false, 'select');
-    });
+    };
+    const pending = options.onCreate?.(label);
+    if (pending != null && typeof pending === 'object' && 'then' in pending) {
+      void Promise.resolve(pending).then(commit);
+      return;
+    }
+    commit(pending);
   }, [
     applyMulti,
     applySingle,
