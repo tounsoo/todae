@@ -178,9 +178,15 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const lastPresentation = useRef(presentation);
 
   const source = options.loadOptions ? asyncOptions : (options.options ?? []);
+  const committedLabel =
+    selectionMode === 'single' && singleValue ? labelOf(source, singleValue) : '';
+  const filterQuery =
+    selectionMode === 'single' && committedLabel !== '' && inputValue === committedLabel
+      ? ''
+      : inputValue;
   const filtered = useMemo(
-    () => filterOptions(source, inputValue, filter),
-    [filter, inputValue, source],
+    () => filterOptions(source, filterQuery, filter),
+    [filter, filterQuery, source],
   );
   const trimmed = inputValue.trim();
   const showCreate = Boolean(
@@ -404,28 +410,17 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     (event: KeyboardEvent<HTMLInputElement>) => {
       if (options.disabled) return;
       if (event.nativeEvent.isComposing || event.key === 'Process') return;
-      if (event.key === 'ArrowDown') {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End') {
         event.preventDefault();
-        if (!open) setOpen(true, 'trigger');
-        move(1);
-        return;
-      }
-      if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        if (!open) setOpen(true, 'trigger');
-        move(-1);
-        return;
-      }
-      if (event.key === 'Home') {
-        event.preventDefault();
-        if (!open) setOpen(true, 'trigger');
-        move('home');
-        return;
-      }
-      if (event.key === 'End') {
-        event.preventDefault();
-        if (!open) setOpen(true, 'trigger');
-        move('end');
+        if (!open) {
+          setOpen(true, 'trigger');
+          if (event.key === 'ArrowUp' || event.key === 'End') move('end');
+          else if (event.key === 'Home') move('home');
+          return;
+        }
+        if (event.key === 'Home') move('home');
+        else if (event.key === 'End') move('end');
+        else move(event.key === 'ArrowDown' ? 1 : -1);
         return;
       }
       if (event.key === 'Enter') {
@@ -469,6 +464,23 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       if (selectionMode === 'single' && next === '') applySingle(null);
     },
     [applySingle, open, selectionMode, setInputValue, setOpen],
+  );
+
+  const onInputFocus = useCallback(() => {
+    if (isSheet || options.disabled) return;
+    if (!open) setOpen(true, 'trigger');
+  }, [isSheet, open, options.disabled, setOpen]);
+
+  const onInputBlur = useCallback(
+    (event: { relatedTarget: EventTarget | null }) => {
+      if (isSheet || options.disabled) return;
+      const next = event.relatedTarget;
+      if (!(next instanceof Node)) return;
+      if (anchorRef.current?.contains(next)) return;
+      if (document.getElementById(ids.listbox)?.contains(next)) return;
+      if (open) setOpen(false, 'blur');
+    },
+    [ids.listbox, isSheet, open, options.disabled, setOpen],
   );
 
   const comboboxAria = {
@@ -519,11 +531,10 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       value: inputValue,
       onChange: (event: ChangeEvent<HTMLInputElement>) => changeInput(event.target.value),
       onKeyDown: onInputKeyDown,
-      onFocus: () => {
-        if (isSheet && open) return;
-      },
+      onFocus: onInputFocus,
+      onBlur: onInputBlur,
     }),
-    [changeInput, comboboxAria, inputValue, isSheet, onInputKeyDown, open],
+    [changeInput, comboboxAria, inputValue, onInputBlur, onInputFocus, onInputKeyDown],
   );
 
   const getChipInputProps = useCallback(
@@ -546,6 +557,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         },
         commitKeys: ['Enter'],
         onKeyDown: onInputKeyDown,
+        onFocus: onInputFocus,
+        onBlur: onInputBlur,
       };
     },
     [
@@ -554,6 +567,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       create,
       inputValue,
       multiValue,
+      onInputBlur,
+      onInputFocus,
       onInputKeyDown,
       remove,
       resolvedActive,

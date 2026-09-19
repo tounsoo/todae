@@ -236,6 +236,12 @@ describe('Field.ChipInput', () => {
     expect(screen.getByRole('textbox')).toHaveProperty('value', '  foo ');
   });
 
+  it('composes a caller ref onto the input', () => {
+    const ref = { current: null as HTMLInputElement | null };
+    renderField({ ref });
+    expect(ref.current).toBe(screen.getByRole('textbox'));
+  });
+
   it('lets a caller onKeyDown run before commit and honors preventDefault', () => {
     const onKeyDown = vi.fn((event: { key: string; preventDefault: () => void }) => {
       if (event.key === 'Enter') event.preventDefault();

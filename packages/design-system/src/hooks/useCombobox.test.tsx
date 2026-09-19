@@ -58,6 +58,38 @@ describe('useCombobox', () => {
     expect(input.getAttribute('aria-haspopup')).toBeNull();
   });
 
+  it('opens on focus and ArrowDown from closed highlights the first option', () => {
+    const onOpenChange = vi.fn();
+    render(<SingleBox onOpenChange={onOpenChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    expect(onOpenChange).toHaveBeenCalledWith(true, 'trigger');
+    expect(input.getAttribute('aria-activedescendant')).toBe(
+      optionDomId(input.getAttribute('aria-controls') ?? '', 'react'),
+    );
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(input.getAttribute('aria-activedescendant')).toBe(
+      optionDomId(input.getAttribute('aria-controls') ?? '', 'redux'),
+    );
+  });
+
+  it('keeps sibling options visible while the input shows the selected label', () => {
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        defaultValue: 'react',
+        presentation: 'popover',
+      }),
+    );
+    expect(result.current.inputValue).toBe('React');
+    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual([
+      'react',
+      'redux',
+      'svelte',
+      'vue',
+    ]);
+  });
+
   it('opens and moves with arrows, clamps, skips disabled, and selects with Enter', () => {
     const onChange = vi.fn();
     const onOpenChange = vi.fn();
@@ -65,6 +97,9 @@ describe('useCombobox', () => {
     const input = screen.getByRole('combobox');
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(onOpenChange).toHaveBeenCalledWith(true, 'trigger');
+    expect(input.getAttribute('aria-activedescendant')).toBe(
+      optionDomId(input.getAttribute('aria-controls') ?? '', 'react'),
+    );
     fireEvent.keyDown(input, { key: 'End' });
     expect(input.getAttribute('aria-activedescendant')).toBe(
       optionDomId(input.getAttribute('aria-controls') ?? '', 'vue'),

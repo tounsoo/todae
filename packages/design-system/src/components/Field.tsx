@@ -178,6 +178,7 @@ export type FieldChipInputProps = {
   removeOnBackspace?: boolean;
   chipDismissLabel?: (value: string) => string;
   overflowLabel?: (n: number) => string;
+  ref?: Ref<HTMLInputElement>;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'disabled' | 'type' | 'children'>;
 
 function ChipInput({
@@ -193,6 +194,7 @@ function ChipInput({
   overflowLabel,
   className,
   onKeyDown: onKeyDownProp,
+  ref,
   setChips: _setChips,
   setInputValue: _setInputValue,
   reset: _reset,
@@ -256,7 +258,11 @@ function ChipInput({
       {hidden > 0 ? <Chip.Overflow overflowCount={hidden} overflowLabel={overflowLabel} /> : null}
       <input
         {...props}
-        ref={field.inputRef}
+        ref={(node) => {
+          field.inputRef.current = node;
+          if (typeof ref === 'function') ref(node);
+          else if (ref) ref.current = node;
+        }}
         id={field.inputId}
         name={field.name}
         disabled={field.disabled}
