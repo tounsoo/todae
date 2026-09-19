@@ -50,12 +50,7 @@ function usePopover(): PopoverContextValue {
 }
 
 function isPopoverOpen(el: HTMLElement): boolean {
-  try {
-    if (el.matches(':popover-open')) return true;
-  } catch {
-    /* jsdom */
-  }
-  return el.hasAttribute('data-popover-open');
+  return el.matches(':popover-open') || el.hasAttribute('data-popover-open');
 }
 
 function eventInside(el: HTMLElement | null, event: Event): boolean {
