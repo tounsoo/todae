@@ -40,6 +40,41 @@ function SingleBox(props: Partial<UseComboboxSingleOptions> = {}) {
   );
 }
 
+function MultiCreateBox({ onChange }: { onChange?: (value: string[]) => void } = {}) {
+  const cb = useCombobox({
+    selectionMode: 'multiple',
+    options: OPTIONS,
+    allowCreate: true,
+    presentation: 'popover',
+    onChange,
+  });
+  return (
+    <div>
+      <Field.Root {...cb.getAnchorProps()}>
+        <Field.ChipInput {...cb.getChipInputProps()} />
+      </Field.Root>
+      <Popover {...cb.getPopoverProps()}>
+        <Popover.Content aria-label="Options">
+          <OptionList {...cb.getListboxProps()}>
+            {cb.items.map((item) => (
+              <Option key={item.id} {...cb.getOptionProps(item)} />
+            ))}
+          </OptionList>
+        </Popover.Content>
+      </Popover>
+    </div>
+  );
+}
+
+function pointerSelect(option: HTMLElement) {
+  const down = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+  option.dispatchEvent(down);
+  if (!down.defaultPrevented) {
+    option.closest('[role="listbox"]')?.focus();
+  }
+  fireEvent.click(option);
+}
+
 describe('useCombobox', () => {
   it('exports hooks and does not export Combobox chrome', () => {
     expect(api).toHaveProperty('useCombobox');
@@ -253,46 +288,65 @@ describe('useCombobox', () => {
     const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'todae-x' } });
-    fireEvent.click(screen.getByRole('option', { name: 'Create "todae-x"' }));
+    pointerSelect(screen.getByRole('option', { name: 'Create "todae-x"' }));
     expect(onChange).toHaveBeenCalledWith('todae-x');
     expect(input).toHaveProperty('value', 'todae-x');
     expect(input.getAttribute('aria-expanded')).toBe('false');
   });
 
+  it('keeps the filter input focused after create click and Enter in single mode', async () => {
+    render(<SingleBox allowCreate />);
+    const input = screen.getByRole('combobox');
+    input.focus();
+    fireEvent.change(input, { target: { value: 'todae-x' } });
+    pointerSelect(screen.getByRole('option', { name: 'Create "todae-x"' }));
+    expect(document.activeElement).toBe(input);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(document.activeElement).toBe(input);
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+
+    fireEvent.change(input, { target: { value: 'todae-y' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(document.activeElement).toBe(input);
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('adds a create row as a chip and stays open in multiple mode', () => {
     const onChange = vi.fn();
-    function MultiCreate() {
-      const cb = useCombobox({
-        selectionMode: 'multiple',
-        options: OPTIONS,
-        allowCreate: true,
-        presentation: 'popover',
-        onChange,
-      });
-      return (
-        <div>
-          <Field.Root {...cb.getAnchorProps()}>
-            <Field.ChipInput {...cb.getChipInputProps()} />
-          </Field.Root>
-          <Popover {...cb.getPopoverProps()}>
-            <Popover.Content aria-label="Options">
-              <OptionList {...cb.getListboxProps()}>
-                {cb.items.map((item) => (
-                  <Option key={item.id} {...cb.getOptionProps(item)} />
-                ))}
-              </OptionList>
-            </Popover.Content>
-          </Popover>
-        </div>
-      );
-    }
-    render(<MultiCreate />);
+    render(<MultiCreateBox onChange={onChange} />);
     const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'todae-x' } });
-    fireEvent.click(screen.getByRole('option', { name: 'Create "todae-x"' }));
+    pointerSelect(screen.getByRole('option', { name: 'Create "todae-x"' }));
     expect(onChange).toHaveBeenCalledWith(['todae-x']);
     expect(screen.getByRole('button', { name: 'Remove todae-x' })).toBeTruthy();
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('keeps the chip filter focused after create click and Enter in multiple mode', async () => {
+    render(<MultiCreateBox />);
+    const input = screen.getByRole('combobox');
+    input.focus();
+    fireEvent.change(input, { target: { value: 'todae-x' } });
+    pointerSelect(screen.getByRole('option', { name: 'Create "todae-x"' }));
+    expect(document.activeElement).toBe(input);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(document.activeElement).toBe(input);
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+
+    fireEvent.change(input, { target: { value: 'todae-y' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(document.activeElement).toBe(input);
     expect(input.getAttribute('aria-expanded')).toBe('true');
   });
 
