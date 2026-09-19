@@ -247,6 +247,55 @@ describe('useCombobox', () => {
     expect(hidden.result.current.showCreate).toBe(false);
   });
 
+  it('commits a create row from click in the same turn and closes single mode', () => {
+    const onChange = vi.fn();
+    render(<SingleBox allowCreate onChange={onChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'todae-x' } });
+    fireEvent.click(screen.getByRole('option', { name: 'Create "todae-x"' }));
+    expect(onChange).toHaveBeenCalledWith('todae-x');
+    expect(input).toHaveProperty('value', 'todae-x');
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('adds a create row as a chip and stays open in multiple mode', () => {
+    const onChange = vi.fn();
+    function MultiCreate() {
+      const cb = useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        allowCreate: true,
+        presentation: 'popover',
+        onChange,
+      });
+      return (
+        <div>
+          <Field.Root {...cb.getAnchorProps()}>
+            <Field.ChipInput {...cb.getChipInputProps()} />
+          </Field.Root>
+          <Popover {...cb.getPopoverProps()}>
+            <Popover.Content aria-label="Options">
+              <OptionList {...cb.getListboxProps()}>
+                {cb.items.map((item) => (
+                  <Option key={item.id} {...cb.getOptionProps(item)} />
+                ))}
+              </OptionList>
+            </Popover.Content>
+          </Popover>
+        </div>
+      );
+    }
+    render(<MultiCreate />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'todae-x' } });
+    fireEvent.click(screen.getByRole('option', { name: 'Create "todae-x"' }));
+    expect(onChange).toHaveBeenCalledWith(['todae-x']);
+    expect(screen.getByRole('button', { name: 'Remove todae-x' })).toBeTruthy();
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('toggles multiple values and keeps the list open', () => {
     const onChange = vi.fn();
     const { result } = renderHook(() =>
