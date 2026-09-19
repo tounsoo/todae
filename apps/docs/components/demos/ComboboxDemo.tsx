@@ -245,12 +245,12 @@ export function ComboboxAsync() {
               Loading…
             </Text>
           ) : cb.error ? (
-            <Text role="status" aria-live="polite">
-              Couldn’t load options.{' '}
+            <div role="status" aria-live="polite">
+              <Text as="span">Couldn’t load options.</Text>{' '}
               <Button.Root variant="ghost" onClick={cb.retry}>
                 Retry
               </Button.Root>
-            </Text>
+            </div>
           ) : (
             <OptionList {...cb.getListboxProps()}>
               <Options items={cb.items} getOptionProps={cb.getOptionProps} />
