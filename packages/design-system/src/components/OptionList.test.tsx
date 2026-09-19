@@ -115,6 +115,60 @@ describe('OptionList', () => {
     expect(screen.getByRole('option', { name: 'Apple' }).hasAttribute('data-highlighted')).toBe(false);
   });
 
+  it('honors controlled activeValue, id, and tabIndex', () => {
+    const { rerender } = render(
+      <OptionList
+        id="fruit"
+        tabIndex={-1}
+        activeValue="pear"
+        value={null}
+        onChange={() => undefined}
+        aria-label="Fruit"
+      >
+        <Option value="apple">Apple</Option>
+        <Option value="pear">Pear</Option>
+      </OptionList>,
+    );
+    const list = screen.getByRole('listbox', { name: 'Fruit' });
+    expect(list).toHaveProperty('id', 'fruit');
+    expect(list).toHaveProperty('tabIndex', -1);
+    expect(list.getAttribute('aria-activedescendant')).toBe('fruit-opt-pear');
+    rerender(
+      <OptionList
+        id="fruit"
+        tabIndex={-1}
+        activeValue="apple"
+        value={null}
+        onChange={() => undefined}
+        aria-label="Fruit"
+      >
+        <Option value="apple">Apple</Option>
+        <Option value="pear">Pear</Option>
+      </OptionList>,
+    );
+    expect(screen.getByRole('listbox').getAttribute('aria-activedescendant')).toBe('fruit-opt-apple');
+    expect(screen.getByRole('option', { name: 'Apple' }).hasAttribute('data-highlighted')).toBe(true);
+  });
+
+  it('fires onActiveChange on arrow keys', () => {
+    const onActiveChange = vi.fn();
+    render(
+      <OptionList
+        id="fruit"
+        activeValue="apple"
+        onActiveChange={onActiveChange}
+        value={null}
+        onChange={() => undefined}
+        aria-label="Fruit"
+      >
+        <Option value="apple">Apple</Option>
+        <Option value="pear">Pear</Option>
+      </OptionList>,
+    );
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowDown' });
+    expect(onActiveChange).toHaveBeenCalledWith('pear');
+  });
+
   it('lets Escape bubble', () => {
     const onChange = vi.fn();
     const onEscape = vi.fn();

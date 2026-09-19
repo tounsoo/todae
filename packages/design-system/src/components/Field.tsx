@@ -28,6 +28,7 @@ export type FieldRootProps = {
   'aria-label'?: string;
   className?: string;
   style?: CSSProperties;
+  ref?: Ref<HTMLDivElement>;
   children?: ReactNode;
 };
 
@@ -81,7 +82,7 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
   return Boolean(target.closest('button, a, input, textarea, select, [tabindex]'));
 }
 
-function Root({ disabled, invalid, id, name, className, style, children, ...aria }: FieldRootProps) {
+function Root({ disabled, invalid, id, name, className, style, ref, children, ...aria }: FieldRootProps) {
   const autoId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = id ?? autoId;
@@ -106,6 +107,7 @@ function Root({ disabled, invalid, id, name, className, style, children, ...aria
       }}
     >
       <div
+        ref={ref}
         className={[styles.shell, className].filter(Boolean).join(' ')}
         style={style}
         data-disabled={disabled ? '' : undefined}
@@ -190,6 +192,7 @@ function ChipInput({
   chipDismissLabel,
   overflowLabel,
   className,
+  onKeyDown: onKeyDownProp,
   setChips: _setChips,
   setInputValue: _setInputValue,
   reset: _reset,
@@ -205,6 +208,8 @@ function ChipInput({
   const live = chips.map((value, index) => ({ value, index })).slice(0, chips.length - hidden);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    onKeyDownProp?.(event);
+    if (event.defaultPrevented) return;
     if (field.disabled) return;
     if (event.nativeEvent.isComposing || event.key === 'Process') return;
     if (event.key === 'Backspace' && inputValue === '' && chips.length > 0 && removeOnBackspace) {

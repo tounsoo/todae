@@ -22,7 +22,7 @@ Veto outside clicks. Escape still closes.
   <PopoverVeto />
 </Example>
 
-`Popover.Trigger` is the CSS anchor. `anchorRef` excludes an extra element from outside dismiss.
+`anchorRef` is the CSS anchor when there is no `Popover.Trigger`. `Popover.Trigger` still sets `anchor-name` on its wrapper. `anchorRef` also excludes that element from outside dismiss.
 
 Selecting in `OptionList` does not close the popover. The fruit demo closes on single select in the consumer.
 

@@ -464,6 +464,12 @@
           "description": "Native input name."
         },
         {
+          "name": "ref",
+          "type": "Ref<HTMLDivElement>",
+          "required": false,
+          "description": "Shell element. Use as a Popover anchorRef."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
@@ -581,6 +587,31 @@
           "description": "Selection change. Single passes a string. Multiple passes the next array."
         },
         {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Listbox id. Auto-generated when omitted. Option ids derive from it."
+        },
+        {
+          "name": "tabIndex",
+          "type": "number",
+          "required": false,
+          "description": "Listbox tabIndex. Pass -1 when a combobox input owns focus.",
+          "default": "0"
+        },
+        {
+          "name": "activeValue",
+          "type": "string | null",
+          "required": false,
+          "description": "Controlled highlighted value. Omit to keep highlight inside the list."
+        },
+        {
+          "name": "onActiveChange",
+          "type": "(value: string | null) => void",
+          "required": false,
+          "description": "Fires when keyboard or pointer moves the highlight."
+        },
+        {
           "name": "aria-label",
           "type": "string",
           "required": false,
@@ -633,7 +664,7 @@
           "name": "anchorRef",
           "type": "RefObject<HTMLElement | null>",
           "required": false,
-          "description": "Element that does not count as an outside press."
+          "description": "Sets CSS anchor-name on this element and excludes it from outside press."
         }
       ]
     },

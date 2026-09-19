@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Option, OptionList } from './OptionList';
 import { Popover } from './Popover';
@@ -97,6 +97,29 @@ describe('Popover', () => {
     expect(content.getAttribute('tabindex')).toBe('-1');
     expect(content.style.top).toBe('');
     expect(content.style.left).toBe('');
+  });
+
+  it('sets CSS anchor-name on anchorRef', () => {
+    function AnchorHarness() {
+      const anchorRef = useRef<HTMLDivElement>(null);
+      return (
+        <>
+          <div ref={anchorRef} data-testid="anchor">
+            Field
+          </div>
+          <Popover open onOpenChange={() => undefined} anchorRef={anchorRef}>
+            <Popover.Content aria-label="Menu">Hello</Popover.Content>
+          </Popover>
+        </>
+      );
+    }
+    render(<AnchorHarness />);
+    const anchor = screen.getByTestId('anchor');
+    expect(anchor.style.getPropertyValue('anchor-name')).toMatch(/^--todae-popover-/);
+    expect(anchor.style.getPropertyValue('--todae-popover-anchor')).toMatch(/^--todae-popover-/);
+    expect(anchor.style.getPropertyValue('anchor-name')).toBe(
+      anchor.style.getPropertyValue('--todae-popover-anchor'),
+    );
   });
 
   it('anchors in CSS with a 4px gap', () => {

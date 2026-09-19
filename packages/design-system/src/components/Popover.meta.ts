@@ -20,7 +20,7 @@ export const meta = {
       name: 'anchorRef',
       type: 'RefObject<HTMLElement | null>',
       required: false,
-      description: 'Element that does not count as an outside press.',
+      description: 'Sets CSS anchor-name on this element and excludes it from outside press.',
     },
   ],
 } as const satisfies ComponentMeta;

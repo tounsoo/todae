@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
+import { createRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import {
@@ -42,6 +43,18 @@ describe('Field exports', () => {
 });
 
 describe('Field.TextInput', () => {
+  it('exposes the shell through ref', () => {
+    const ref = createRef<HTMLDivElement>();
+    const { container } = render(
+      <Field.Root ref={ref} id="name">
+        <Field.TextInput value="" onChange={() => undefined} />
+      </Field.Root>,
+    );
+    expect(ref.current).toBe(container.querySelector('[class]') ?? container.firstElementChild);
+    expect(ref.current?.contains(container.querySelector('input'))).toBe(true);
+    expect(ref.current?.tagName).toBe('DIV');
+  });
+
   it('wires id, disabled, and invalid onto one input and the shell', () => {
     const { container } = render(
       <Field.Root id="name" disabled invalid>
@@ -221,6 +234,16 @@ describe('Field.ChipInput', () => {
     expect(onCommit).toHaveBeenCalledWith('foo');
     expect(screen.getAllByRole('button', { name: /Remove / })).toHaveLength(1);
     expect(screen.getByRole('textbox')).toHaveProperty('value', '  foo ');
+  });
+
+  it('lets a caller onKeyDown run before commit and honors preventDefault', () => {
+    const onKeyDown = vi.fn((event: { key: string; preventDefault: () => void }) => {
+      if (event.key === 'Enter') event.preventDefault();
+    });
+    const { onCommit } = renderField({ inputValue: 'tag', onKeyDown });
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
+    expect(onKeyDown).toHaveBeenCalled();
+    expect(onCommit).not.toHaveBeenCalled();
   });
 
   it('does not commit or prevent default on empty Enter', () => {
