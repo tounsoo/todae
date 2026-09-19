@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   BottomSheet,
   Button,
@@ -53,20 +54,11 @@ function Search() {
   );
 }
 
-function Options({
-  items,
-  getOptionProps,
-}: {
-  items: ReturnType<typeof useCombobox>['items'];
-  getOptionProps: ReturnType<typeof useCombobox>['getOptionProps'];
-}) {
-  return (
-    <>
-      {items.map((item) => (
-        <Option key={item.id} {...getOptionProps(item)} />
-      ))}
-    </>
-  );
+function optionNodes(
+  items: ReturnType<typeof useCombobox>['items'],
+  getOptionProps: ReturnType<typeof useCombobox>['getOptionProps'],
+) {
+  return items.map((item) => <Option key={item.id} {...getOptionProps(item)} />);
 }
 
 export function ComboboxSingle() {
@@ -87,7 +79,7 @@ export function ComboboxSingle() {
       <Popover {...cb.getPopoverProps()}>
         <Popover.Content aria-label="Framework">
           <OptionList {...cb.getListboxProps()}>
-            <Options items={cb.items} getOptionProps={cb.getOptionProps} />
+            {optionNodes(cb.items, cb.getOptionProps)}
           </OptionList>
         </Popover.Content>
       </Popover>
@@ -114,7 +106,7 @@ export function ComboboxMulti() {
       <Popover {...cb.getPopoverProps()}>
         <Popover.Content aria-label="Type">
           <OptionList {...cb.getListboxProps()}>
-            <Options items={cb.items} getOptionProps={cb.getOptionProps} />
+            {optionNodes(cb.items, cb.getOptionProps)}
           </OptionList>
         </Popover.Content>
       </Popover>
@@ -151,7 +143,7 @@ export function ComboboxSheet() {
             </Field.Root>
           </div>
           <OptionList {...cb.getListboxProps()}>
-            <Options items={cb.items} getOptionProps={cb.getOptionProps} />
+            {optionNodes(cb.items, cb.getOptionProps)}
           </OptionList>
         </BottomSheet.Body>
       </BottomSheet>
@@ -184,7 +176,7 @@ export function ComboboxAuto() {
                 <Field.TextInput {...cb.getInputProps()} />
               </Field.Root>
               <OptionList {...cb.getListboxProps()}>
-                <Options items={cb.items} getOptionProps={cb.getOptionProps} />
+                {optionNodes(cb.items, cb.getOptionProps)}
               </OptionList>
             </BottomSheet.Body>
           </BottomSheet>
@@ -198,7 +190,7 @@ export function ComboboxAuto() {
           <Popover {...cb.getPopoverProps()}>
             <Popover.Content aria-label="Framework">
               <OptionList {...cb.getListboxProps()}>
-                <Options items={cb.items} getOptionProps={cb.getOptionProps} />
+                {optionNodes(cb.items, cb.getOptionProps)}
               </OptionList>
             </Popover.Content>
           </Popover>
@@ -253,7 +245,7 @@ export function ComboboxAsync() {
             </div>
           ) : (
             <OptionList {...cb.getListboxProps()}>
-              <Options items={cb.items} getOptionProps={cb.getOptionProps} />
+              {optionNodes(cb.items, cb.getOptionProps)}
             </OptionList>
           )}
         </Popover.Content>
@@ -282,7 +274,7 @@ export function ComboboxEmpty() {
             <Text role="status">No matches</Text>
           ) : (
             <OptionList {...cb.getListboxProps()}>
-              <Options items={cb.items} getOptionProps={cb.getOptionProps} />
+              {optionNodes(cb.items, cb.getOptionProps)}
             </OptionList>
           )}
         </Popover.Content>
@@ -291,11 +283,22 @@ export function ComboboxEmpty() {
   );
 }
 
+function appendCreated(current: readonly ComboboxOption[], label: string): ComboboxOption[] {
+  if (current.some((item) => item.label.toLowerCase() === label.toLowerCase())) return [...current];
+  return [...current, { value: label, label }];
+}
+
 export function ComboboxCreate() {
+  const [options, setOptions] = useState(PACKAGES);
   const cb = useCombobox({
-    options: PACKAGES,
+    options,
     allowCreate: true,
     presentation: 'popover',
+    createLabel: (query) => `+ Create "${query}"`,
+    onCreate: (label) => {
+      setOptions((current) => appendCreated(current, label));
+      return label;
+    },
   });
   return (
     <div className="labelled-field">
@@ -308,13 +311,42 @@ export function ComboboxCreate() {
       </Field.Root>
       <Popover {...cb.getPopoverProps()}>
         <Popover.Content aria-label="Package">
-          {cb.isEmpty ? (
-            <Text role="status">No matches</Text>
-          ) : (
-            <OptionList {...cb.getListboxProps()}>
-              <Options items={cb.items} getOptionProps={cb.getOptionProps} />
-            </OptionList>
-          )}
+          <OptionList {...cb.getListboxProps()}>
+            {optionNodes(cb.items, cb.getOptionProps)}
+          </OptionList>
+        </Popover.Content>
+      </Popover>
+    </div>
+  );
+}
+
+export function ComboboxCreateMulti() {
+  const [options, setOptions] = useState(PACKAGES);
+  const cb = useCombobox({
+    selectionMode: 'multiple',
+    options,
+    allowCreate: true,
+    presentation: 'popover',
+    createLabel: (query) => `+ Create "${query}"`,
+    onCreate: (label) => {
+      setOptions((current) => appendCreated(current, label));
+      return label;
+    },
+  });
+  return (
+    <div className="labelled-field">
+      <Label htmlFor={cb.ids.input}>Tags</Label>
+      <Field.Root {...cb.getAnchorProps()}>
+        <Field.ChipInput {...cb.getChipInputProps()} />
+        <Field.Icon>
+          <Chevron />
+        </Field.Icon>
+      </Field.Root>
+      <Popover {...cb.getPopoverProps()}>
+        <Popover.Content aria-label="Tags">
+          <OptionList {...cb.getListboxProps()}>
+            {optionNodes(cb.items, cb.getOptionProps)}
+          </OptionList>
         </Popover.Content>
       </Popover>
     </div>

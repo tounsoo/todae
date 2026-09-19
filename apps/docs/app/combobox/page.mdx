@@ -2,6 +2,7 @@ import {
   ComboboxAsync,
   ComboboxAuto,
   ComboboxCreate,
+  ComboboxCreateMulti,
   ComboboxEmpty,
   ComboboxMulti,
   ComboboxSheet,
@@ -18,6 +19,8 @@ A recipe, not a package namespace. `useCombobox` owns open, value, input, highli
 `useSheetPresentation` chooses sheet when the pointer is coarse **or** the viewport is narrower than 640px. Otherwise it chooses popover. Server render and the first paint are popover. `isSheet` mirrors `presentation === "sheet"`. It is not `isTouch`.
 
 `useCombobox({ presentation: 'auto' })` uses the same helper. Force `popover` or `sheet` when a docs screenshot must stay still.
+
+If presentation flips while the list is open, the hook closes with `blur`.
 
 <Example>
   <PresentationBadge />
@@ -90,7 +93,7 @@ One hook. The tree flips with the presentation. Force `presentation` when you ne
 
 ## Async
 
-`loadOptions(query, signal)` loads options. A newer query aborts the last controller and discards a stale resolve. The hook keeps the previous list while `loading` is true. This recipe replaces the list with a status row. There is no built-in debounce.
+`loadOptions(query, signal)` loads options. A newer query aborts the last controller and discards a stale resolve. The hook keeps the previous list while `loading` is true. Debounce, loading, and Retry chrome stay in the recipe. The hook does not debounce.
 
 Type `fail` to see the error row.
 
@@ -100,7 +103,7 @@ Type `fail` to see the error row.
 
 ## Empty and create
 
-No matches render a status row. `allowCreate` adds a create option when the query has no case-insensitive label match. `onCreate` may return a canonical value.
+No matches render a status row. `allowCreate` adds one `+ Create "{query}"` option in the same `OptionList` when the query has no case-insensitive label match. Click or Enter commits. Single selects and closes. Multi adds a chip and stays open. `onCreate` may return a canonical value and should append the new option to `options` so the list can show it selected.
 
 <Example block>
   <ComboboxEmpty />
@@ -108,6 +111,10 @@ No matches render a status row. `allowCreate` adds a create option when the quer
 
 <Example block>
   <ComboboxCreate />
+</Example>
+
+<Example block>
+  <ComboboxCreateMulti />
 </Example>
 
 ## Composition rules
