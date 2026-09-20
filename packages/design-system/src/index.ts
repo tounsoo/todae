@@ -19,16 +19,10 @@ export {
   type OptionProps,
 } from './components/OptionList';
 export { Popover, type PopoverCloseReason, type PopoverProps } from './components/Popover';
-export {
-  Tooltip,
-  type TooltipContentName,
-  type TooltipContentProps,
-  type TooltipOpenReason,
-  type TooltipProps,
-  type TooltipTriggerProps,
-} from './components/Tooltip';
+export { Tooltip, type TooltipContentName, type TooltipProps } from './components/Tooltip';
 export {
   useTooltip,
+  type TooltipOpenReason,
   type TooltipTriggerUserProps,
   type TooltipTriggerWire,
   type TooltipWire,

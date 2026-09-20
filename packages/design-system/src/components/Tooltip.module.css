@@ -1,17 +1,4 @@
 @layer todae.components {
-  .trigger {
-    display: inline-flex;
-    anchor-name: var(--todae-tooltip-anchor);
-  }
-
-  .trigger > :disabled {
-    pointer-events: none;
-  }
-
-  .trigger:has(> :disabled) {
-    cursor: not-allowed;
-  }
-
   .content {
     box-sizing: border-box;
     position: fixed;

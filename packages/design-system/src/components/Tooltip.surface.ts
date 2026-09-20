@@ -63,8 +63,8 @@ export function isMounted(surface: TooltipSurface, open: boolean): boolean {
 export function contentPolicyError(surface: TooltipSurface, el: HTMLElement): string | null {
   const tabbables = getTabbables(el);
   if (surface.kind === 'tip') {
-    return tabbables.length > 0 ? 'Tooltip.Content is text-only. Add `interactive` for a link.' : null;
+    return tabbables.length > 0 ? 'Tooltip is text-only. Add `interactive` for a link.' : null;
   }
   const illegal = tabbables.some((node) => node.tagName !== 'A' || !node.hasAttribute('href'));
-  return illegal ? 'Interactive Tooltip.Content allows links only. Use Popover.' : null;
+  return illegal ? 'Interactive Tooltip allows links only. Use Popover.' : null;
 }

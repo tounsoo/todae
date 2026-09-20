@@ -3,8 +3,20 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Tooltip',
   description:
-    'One public Tooltip. Default is role=tooltip text. interactive is a non-modal tip dialog and allows links.',
+    'Tip surface only. Wire it with useTooltip getTooltipProps. Default is role=tooltip text. interactive is a non-modal tip dialog and allows links.',
   props: [
+    {
+      name: 'id',
+      type: 'string',
+      required: true,
+      description: 'Surface id. Spread from getTooltipProps.',
+    },
+    {
+      name: 'open',
+      type: 'boolean',
+      required: true,
+      description: 'Open state. Spread from getTooltipProps.',
+    },
     {
       name: 'interactive',
       type: 'boolean',
@@ -27,42 +39,10 @@ export const meta = {
       description: 'Id of the visible caption. Exactly one of aria-label or aria-labelledby when interactive.',
     },
     {
-      name: 'open',
-      type: 'boolean',
-      required: false,
-      description: 'Controlled open state.',
-    },
-    {
-      name: 'defaultOpen',
-      type: 'boolean',
-      required: false,
-      description: 'Initial open state when uncontrolled.',
-    },
-    {
-      name: 'onOpenChange',
-      type: '(open: boolean, reason: TooltipOpenReason) => void',
-      required: false,
-      description: 'Fires after a commit. Leaving open unchanged is a veto.',
-    },
-    {
-      name: 'showDelay',
-      type: 'number',
-      required: false,
-      default: '300',
-      description: 'Hover show delay in milliseconds. Focus shows at once.',
-    },
-    {
-      name: 'hideDelay',
-      type: 'number',
-      required: false,
-      default: '100',
-      description: 'Hide delay in milliseconds.',
-    },
-    {
       name: 'children',
       type: 'React.ReactNode',
-      required: true,
-      description: 'Tooltip.Trigger and Tooltip.Content.',
+      required: false,
+      description: 'Tooltip text, or short prose plus links when interactive.',
     },
   ],
 } as const satisfies ComponentMeta;

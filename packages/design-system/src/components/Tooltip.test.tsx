@@ -5,16 +5,10 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index';
+import { useTooltip, type TooltipOpenReason, type UseTooltipOptions } from '../hooks/useTooltip';
 import { resetMatchMedia, setMatchMedia } from '../test/setup';
 import { Chip } from './Chip';
-import {
-  Tooltip,
-  type TooltipContentName,
-  type TooltipContentProps,
-  type TooltipOpenReason,
-  type TooltipProps,
-  type TooltipTriggerProps,
-} from './Tooltip';
+import { Tooltip, type TooltipContentName, type TooltipProps } from './Tooltip';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, 'Tooltip.tsx'), 'utf8');
@@ -36,81 +30,87 @@ function advance(ms: number) {
   });
 }
 
-function wrapOf(el: HTMLElement) {
-  return el.parentElement as HTMLElement;
-}
-
 function DefaultTip(
-  props: Omit<Extract<TooltipProps, { interactive?: false }>, 'children'> & {
+  props: UseTooltipOptions & {
     label?: string;
     tip?: string;
   },
 ) {
-  const { label, tip, ...tooltipProps } = props;
+  const { label, tip, ...options } = props;
+  const tooltip = useTooltip(options);
   return (
-    <Tooltip {...tooltipProps}>
-      <Tooltip.Trigger>
-        <button type="button">{label ?? 'Hint'}</button>
-      </Tooltip.Trigger>
-      <Tooltip.Content>{tip ?? 'Archive'}</Tooltip.Content>
-    </Tooltip>
+    <>
+      <button type="button" {...tooltip.getTriggerProps()}>
+        {label ?? 'Hint'}
+      </button>
+      <Tooltip {...tooltip.getTooltipProps()}>{tip ?? 'Archive'}</Tooltip>
+    </>
   );
 }
 
 function InteractiveTip({
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledby,
-  ...props
-}: Omit<TooltipProps, 'children' | 'interactive'> & Partial<TooltipContentName>) {
+  ...options
+}: Omit<UseTooltipOptions<true>, 'interactive'> & Partial<TooltipContentName>) {
+  const tooltip = useTooltip({ ...options, interactive: true });
   const name =
     ariaLabelledby !== undefined
       ? { 'aria-labelledby': ariaLabelledby }
       : { 'aria-label': ariaLabel ?? 'Policy' };
   return (
-    <Tooltip interactive {...props} {...name}>
-      <Tooltip.Trigger>
-        <button type="button">Hint</button>
-      </Tooltip.Trigger>
-      <Tooltip.Content>
+    <>
+      <button type="button" {...tooltip.getTriggerProps()}>
+        Hint
+      </button>
+      <Tooltip {...tooltip.getTooltipProps()} {...name}>
         Short prose. <a href="/tooltip">Read the policy</a>
-      </Tooltip.Content>
-    </Tooltip>
+      </Tooltip>
+    </>
   );
 }
 
 describe('Tooltip exports', () => {
-  it('exports the public compound and reason union', () => {
+  it('exports the surface and hard-cuts Trigger and Content', () => {
     expect(api.Tooltip).toBe(Tooltip);
+    expect(api.useTooltip).toBeDefined();
+    expect(Tooltip).not.toHaveProperty('Trigger');
+    expect(Tooltip).not.toHaveProperty('Content');
+    expectTypeOf<TooltipProps>().toHaveProperty('id');
+    expectTypeOf<TooltipProps>().toHaveProperty('open');
     expectTypeOf<TooltipProps>().toHaveProperty('interactive');
-    expectTypeOf<TooltipTriggerProps>().toHaveProperty('children');
-    expectTypeOf<TooltipContentProps>().not.toHaveProperty('role');
-    expectTypeOf<TooltipContentProps>().not.toHaveProperty('popover');
-    expectTypeOf<TooltipContentProps>().not.toHaveProperty('tabIndex');
-    expectTypeOf<TooltipContentProps>().not.toHaveProperty('id');
+    expectTypeOf<TooltipProps>().not.toHaveProperty('showDelay');
     expectTypeOf<TooltipOpenReason>().toEqualTypeOf<'hover' | 'focus' | 'escape' | 'hover-bridge'>();
   });
 
-  it('accepts exactly one accessible name on interactive content', () => {
-    const labelled: TooltipContentProps = { 'aria-label': 'Policy' };
-    const captioned: TooltipContentProps = { 'aria-labelledby': 'policy-caption' };
+  it('accepts exactly one accessible name when interactive', () => {
+    const labelled: TooltipProps = { id: 'p', open: true, interactive: true, 'aria-label': 'Policy' };
+    const captioned: TooltipProps = {
+      id: 'p',
+      open: true,
+      interactive: true,
+      'aria-labelledby': 'policy-caption',
+    };
     expect(labelled['aria-label']).toBe('Policy');
     expect(captioned['aria-labelledby']).toBe('policy-caption');
     expectTypeOf<{ 'aria-label': string }>().toMatchTypeOf<TooltipContentName>();
     expectTypeOf<{ 'aria-labelledby': string }>().toMatchTypeOf<TooltipContentName>();
     expectTypeOf<{ 'aria-label': string; 'aria-labelledby': string }>().not.toMatchTypeOf<TooltipContentName>();
     expectTypeOf<Record<string, never>>().not.toMatchTypeOf<TooltipContentName>();
-    expectTypeOf<{ interactive: true; children: null }>().not.toMatchTypeOf<TooltipProps>();
+    expectTypeOf<{ interactive: true; id: string; open: boolean }>().not.toMatchTypeOf<TooltipProps>();
     expectTypeOf<{
       interactive: true;
-      children: null;
+      id: string;
+      open: boolean;
       'aria-label': string;
     }>().toMatchTypeOf<TooltipProps>();
     expectTypeOf<{
       interactive: true;
-      children: null;
+      id: string;
+      open: boolean;
       'aria-labelledby': string;
     }>().toMatchTypeOf<TooltipProps>();
-    expectTypeOf<{ children: null }>().toMatchTypeOf<TooltipProps>();
+    expectTypeOf<{ id: string; open: boolean }>().toMatchTypeOf<TooltipProps>();
   });
 });
 
@@ -150,36 +150,16 @@ describe('Tooltip', () => {
     expect(screen.getByRole('dialog', { name: 'Policy', hidden: true })).toBe(panel);
   });
 
-  it('lets Content replace the Tooltip name', () => {
-    render(
-      <>
-        <span id="policy-caption">Policy</span>
-        <Tooltip interactive aria-label="Root">
-          <Tooltip.Trigger>
-            <button type="button">Hint</button>
-          </Tooltip.Trigger>
-          <Tooltip.Content aria-labelledby="policy-caption">
-            Short prose. <a href="/tooltip">Read the policy</a>
-          </Tooltip.Content>
-        </Tooltip>
-      </>,
-    );
-    const panel = document.querySelector('[popover="manual"]');
-    expect(panel?.getAttribute('aria-labelledby')).toBe('policy-caption');
-    expect(panel?.hasAttribute('aria-label')).toBe(false);
-    expect(screen.getByRole('dialog', { name: 'Policy', hidden: true })).toBe(panel);
-  });
-
   it('shows on hover after 300ms and hides after 100ms', () => {
     render(<DefaultTip />);
-    const wrap = wrapOf(screen.getByRole('button', { name: 'Hint' }));
-    fireEvent.pointerEnter(wrap);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    fireEvent.pointerEnter(trigger);
     expect(screen.queryByRole('tooltip')).toBeNull();
     advance(299);
     expect(screen.queryByRole('tooltip')).toBeNull();
     advance(1);
     expect(screen.getByRole('tooltip').textContent).toBe('Archive');
-    fireEvent.pointerLeave(wrap, { relatedTarget: document.body });
+    fireEvent.pointerLeave(trigger, { relatedTarget: document.body });
     advance(99);
     expect(screen.getByRole('tooltip')).toBeTruthy();
     advance(1);
@@ -188,7 +168,7 @@ describe('Tooltip', () => {
 
   it('opens on focus without advancing the hover delay', () => {
     render(<DefaultTip />);
-    fireEvent.focusIn(screen.getByRole('button', { name: 'Hint' }));
+    fireEvent.focus(screen.getByRole('button', { name: 'Hint' }));
     expect(screen.getByRole('tooltip').textContent).toBe('Archive');
   });
 
@@ -196,82 +176,56 @@ describe('Tooltip', () => {
     setMatchMedia('(pointer: coarse)', true);
     render(<DefaultTip />);
     const button = screen.getByRole('button', { name: 'Hint' });
-    fireEvent.pointerEnter(wrapOf(button));
+    fireEvent.pointerEnter(button);
     advance(300);
     expect(screen.queryByRole('tooltip')).toBeNull();
-    fireEvent.focusIn(button);
+    fireEvent.focus(button);
     expect(screen.getByRole('tooltip')).toBeTruthy();
   });
 
-  it('opens from the wrap when the child is disabled', () => {
-    render(
-      <Tooltip>
-        <Tooltip.Trigger>
-          <button type="button" disabled>
-            Hint
-          </button>
-        </Tooltip.Trigger>
-        <Tooltip.Content>Archive</Tooltip.Content>
-      </Tooltip>,
-    );
-    const button = screen.getByRole('button', { name: 'Hint' });
-    fireEvent.pointerEnter(wrapOf(button));
-    advance(300);
-    expect(screen.getByRole('tooltip')).toBeTruthy();
+  it('describes a ChipOverflow wrap the author marks tabbable', () => {
+    function OverflowTip() {
+      const tooltip = useTooltip({ defaultOpen: true });
+      return (
+        <>
+          <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>
+            <Chip.Overflow overflowCount={2} />
+          </span>
+          <Tooltip {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip>
+        </>
+      );
+    }
+    render(<OverflowTip />);
+    const wrap = document.querySelector('[data-overflow]')?.parentElement;
+    const tip = screen.getByRole('tooltip');
+    expect(wrap?.tabIndex).toBe(0);
+    expect(wrap?.getAttribute('aria-describedby')).toBe(tip.id);
   });
 
-  it('makes a ChipOverflow wrap tabbable', () => {
-    render(
-      <Tooltip>
-        <Tooltip.Trigger>
-          <Chip.Overflow overflowCount={2} />
-        </Tooltip.Trigger>
-        <Tooltip.Content>Schema, Docs</Tooltip.Content>
-      </Tooltip>,
-    );
-    const overflow = document.querySelector('[data-overflow]');
-    expect(overflow).not.toBeNull();
-    expect(overflow?.parentElement?.tabIndex).toBe(0);
-  });
-
-  it('sets aria-describedby on the tabbable child while open and clears it when closed', () => {
+  it('sets aria-describedby on the trigger while open and clears it when closed', () => {
     render(<DefaultTip />);
     const button = screen.getByRole('button', { name: 'Hint' });
-    fireEvent.pointerEnter(wrapOf(button));
+    fireEvent.pointerEnter(button);
     advance(300);
     const tip = screen.getByRole('tooltip');
     expect(button.getAttribute('aria-describedby')).toBe(tip.id);
-    fireEvent.pointerLeave(wrapOf(button), { relatedTarget: document.body });
+    fireEvent.pointerLeave(button, { relatedTarget: document.body });
     advance(100);
     expect(button.getAttribute('aria-describedby')).toBeNull();
     expect(screen.queryByRole('tooltip')).toBeNull();
-  });
-
-  it('sets aria-describedby on the wrap when no descendant is tabbable', () => {
-    render(
-      <Tooltip defaultOpen>
-        <Tooltip.Trigger>
-          <Chip.Overflow overflowCount={2} />
-        </Tooltip.Trigger>
-        <Tooltip.Content>Schema, Docs</Tooltip.Content>
-      </Tooltip>,
-    );
-    const wrap = document.querySelector('[data-overflow]')?.parentElement;
-    const tip = screen.getByRole('tooltip');
-    expect(wrap?.getAttribute('aria-describedby')).toBe(tip.id);
   });
 
   it('supports controlled open, defaultOpen, and veto', () => {
     const onOpenChange = vi.fn();
     const { rerender } = render(<DefaultTip open={false} onOpenChange={onOpenChange} />);
     expect(screen.queryByRole('tooltip')).toBeNull();
-    const wrap = wrapOf(screen.getByRole('button', { name: 'Hint' }));
-    fireEvent.pointerEnter(wrap);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    fireEvent.pointerEnter(trigger);
     advance(300);
     expect(onOpenChange).toHaveBeenCalledTimes(1);
     expect(onOpenChange).toHaveBeenCalledWith(true, 'hover');
     expect(screen.queryByRole('tooltip')).toBeNull();
-    fireEvent.pointerEnter(wrap);
+    fireEvent.pointerEnter(trigger);
     expect(onOpenChange).toHaveBeenCalledTimes(1);
 
     rerender(<DefaultTip open onOpenChange={onOpenChange} />);
@@ -295,7 +249,7 @@ describe('Tooltip', () => {
     const after = screen.getByRole('button', { name: 'After' });
 
     expect(link.getAttribute('href')).toBe('/tooltip');
-    fireEvent.focusIn(trigger);
+    fireEvent.focus(trigger);
     expect(panel.getAttribute('data-open')).toBe('');
     expect(panel.hasAttribute('data-popover-open')).toBe(true);
 
@@ -309,11 +263,10 @@ describe('Tooltip', () => {
     expect(panel.getAttribute('data-open')).toBeNull();
     expect(panel.hasAttribute('data-popover-open')).toBe(false);
 
-    const wrap = wrapOf(trigger);
-    fireEvent.pointerEnter(wrap);
+    fireEvent.pointerEnter(trigger);
     advance(300);
     expect(panel.getAttribute('data-open')).toBe('');
-    fireEvent.pointerLeave(wrap, { relatedTarget: panel });
+    fireEvent.pointerLeave(trigger, { relatedTarget: panel });
     fireEvent.pointerEnter(panel);
     advance(100);
     expect(panel.getAttribute('data-open')).toBe('');
@@ -323,7 +276,7 @@ describe('Tooltip', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(document.activeElement).toBe(trigger);
     expect(panel.getAttribute('data-open')).toBeNull();
-    fireEvent.focusIn(trigger);
+    fireEvent.focus(trigger);
     expect(panel.getAttribute('data-open')).toBeNull();
   });
 
@@ -340,7 +293,9 @@ describe('Tooltip', () => {
     expect(panel.getAttribute('data-open')).toBe('');
   });
 
-  it('does not import Popover and keeps CSS anchors plus tip pointer-events', () => {
+  it('does not own a machine and keeps CSS anchors plus tip pointer-events', () => {
+    expect(source).not.toContain('useTooltip');
+    expect(source).not.toContain('createIntent');
     expect(source).not.toContain('./Popover');
     expect(source).not.toContain('useControlledOpen');
     expect(source).not.toContain('useFocusRestore');
@@ -348,20 +303,13 @@ describe('Tooltip', () => {
     expect(source).not.toContain('useFocusTrap');
     expect(source).not.toContain('useInertOutside');
     expect(source).not.toContain('useScrollLock');
+    expect(source).not.toContain('Tooltip.Trigger');
+    expect(source).not.toContain('Tooltip.Content');
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
-    expect(source).not.toContain('createIntent');
-    expect(source).not.toContain('useControlledState');
-    expect(source).not.toContain('useEscapeKey');
     expect(new Set(froms)).toEqual(
-      new Set([
-        'react',
-        '../hooks/useTooltip',
-        '../overlay/usePopoverSync',
-        '../overlay/tabbables',
-        './Tooltip.surface',
-        './Tooltip.module.css',
-      ]),
+      new Set(['react', '../overlay/usePopoverSync', './Tooltip.surface', './Tooltip.module.css']),
     );
+    expect(css).not.toContain('.trigger');
     expect(css).toContain('anchor(');
     expect(css).toContain(".content[data-surface='tip']");
     expect(css).toContain('.content:not([data-open])');
@@ -375,7 +323,7 @@ describe('Tooltip controlled harness', () => {
       return <DefaultTip open={open} onOpenChange={(next) => setOpen(next)} />;
     }
     render(<Harness />);
-    fireEvent.pointerEnter(wrapOf(screen.getByRole('button', { name: 'Hint' })));
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'Hint' }));
     advance(300);
     expect(screen.getByRole('tooltip')).toBeTruthy();
   });

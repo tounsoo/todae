@@ -50,7 +50,7 @@ describe('Tooltip.surface', () => {
     expect(contentPolicyError(tip, el)).toBeNull();
     el.innerHTML = '<a href="/tooltip">Read the policy</a>';
     expect(contentPolicyError(tip, el)).toBe(
-      'Tooltip.Content is text-only. Add `interactive` for a link.',
+      'Tooltip is text-only. Add `interactive` for a link.',
     );
   });
 
@@ -61,7 +61,7 @@ describe('Tooltip.surface', () => {
     expect(contentPolicyError(panel, el)).toBeNull();
     el.innerHTML = '<button type="button">No</button>';
     expect(contentPolicyError(panel, el)).toBe(
-      'Interactive Tooltip.Content allows links only. Use Popover.',
+      'Interactive Tooltip allows links only. Use Popover.',
     );
     el.innerHTML = '<a>Missing href</a>';
     expect(contentPolicyError(panel, el)).toBeNull();
