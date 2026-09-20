@@ -198,6 +198,13 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'popover.padding.y',
   'popover.gap',
   'popover.max-height',
+  'tooltip.bg',
+  'tooltip.fg',
+  'tooltip.border',
+  'tooltip.radius',
+  'tooltip.padding.x',
+  'tooltip.padding.y',
+  'tooltip.max-width',
   'option.radius',
   'option.padding.x',
   'option.padding.y',
@@ -271,7 +278,7 @@ const COLOR_KEYS = new Set<string>([
     (key) =>
       /^button\.(primary|secondary|ghost)\.(bg|fg|border)\./.test(key) ||
       /^button\.(primary|secondary|ghost)\.ring\.focus$/.test(key) ||
-      /^(field|chip|dialog|sheet|overlay|popover|option|selection)\.(bg|fg|border|ring|dismiss|grabber|scrim|check|indicator|track|thumb)(?:\.|$)/.test(key) ||
+      /^(field|chip|dialog|sheet|overlay|popover|tooltip|option|selection)\.(bg|fg|border|ring|dismiss|grabber|scrim|check|indicator|track|thumb)(?:\.|$)/.test(key) ||
       key === 'field.label.fg' ||
       key === 'field.description.fg' ||
       key === 'field.error.fg' ||

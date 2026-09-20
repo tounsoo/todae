@@ -17,6 +17,7 @@ export const RESERVED_ROOTS = [
   'dialog',
   'sheet',
   'popover',
+  'tooltip',
   'option',
   'selection',
 ] as const;
@@ -562,6 +563,7 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
     'dialog.json',
     'sheet.json',
     'popover.json',
+    'tooltip.json',
     'option.json',
     'selection.json',
   ]) {

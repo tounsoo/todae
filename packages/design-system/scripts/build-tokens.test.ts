@@ -188,6 +188,13 @@ describe('committed token graph', () => {
     expect(graph.tokens.find((t) => t.path === 'selection.indicator.fg')?.cssValue).toBe(
       'var(--todae-color-on-accent)',
     );
+    expect(graph.tokens.find((t) => t.path === 'tooltip.bg')?.cssValue).toBe(
+      'var(--todae-color-bg-elevated)',
+    );
+    expect(graph.tokens.find((t) => t.path === 'tooltip.max-width')?.cssValue).toBe('16rem');
+    expect(graph.tokens.find((t) => t.path === 'tooltip.padding.y')?.cssValue).toBe(
+      'var(--todae-space-1)',
+    );
   });
 
   it('emits distinct accent hover and active var chains', async () => {

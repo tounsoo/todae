@@ -285,6 +285,13 @@
   --todae-popover-padding-x: var(--todae-space-overlay-padding);
   --todae-popover-padding-y: var(--todae-space-overlay-padding);
   --todae-popover-radius: var(--todae-radius-md);
+  --todae-tooltip-bg: var(--todae-color-bg-elevated);
+  --todae-tooltip-border: var(--todae-color-border-default);
+  --todae-tooltip-fg: var(--todae-color-fg-default);
+  --todae-tooltip-max-width: 16rem;
+  --todae-tooltip-padding-x: var(--todae-space-2);
+  --todae-tooltip-padding-y: var(--todae-space-1);
+  --todae-tooltip-radius: var(--todae-radius-sm);
   --todae-option-bg-default: var(--todae-color-bg-transparent);
   --todae-option-bg-hover: var(--todae-color-bg-highlight);
   --todae-option-bg-selected: var(--todae-color-bg-selected);
