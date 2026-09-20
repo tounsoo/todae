@@ -201,6 +201,66 @@
       ]
     },
     {
+      "name": "Checkbox",
+      "description": "Native checkbox. Children are the visible label. Never indeterminate.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "Visible label. Clicking the text toggles the input."
+        },
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled checked state. Defined means controlled."
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial checked state when uncontrolled."
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "description": "Fires after the checked state changes."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables the input."
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the control invalid and sets aria-invalid."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "Native input name."
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "description": "Native input value."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the wrapping label."
+        }
+      ]
+    },
+    {
       "name": "Chip",
       "description": "Text-only label with optional named dismiss. Overflow +N is Chip.Overflow.",
       "props": [
@@ -247,6 +307,30 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Subtree that inherits density tokens."
+        }
+      ]
+    },
+    {
+      "name": "Description",
+      "description": "Supporting text below a control. Required id. Sibling, not a Field part. Author wires aria-describedby.",
+      "props": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "Id the author lists in aria-describedby on the control or Field.Root."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Hint text."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the span."
         }
       ]
     },
@@ -337,6 +421,30 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Title text."
+        }
+      ]
+    },
+    {
+      "name": "ErrorMessage",
+      "description": "Validation text below a control. Required id. No alert role. invalid lives on the control.",
+      "props": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "Id the author lists in aria-describedby on the control or Field.Root."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Error text."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the span."
         }
       ]
     },
@@ -458,6 +566,12 @@
           "description": "Input id. Auto-generated when omitted."
         },
         {
+          "name": "aria-describedby",
+          "type": "string",
+          "required": false,
+          "description": "Ids of Description and ErrorMessage. Put this on Root. TextInput overwrites input-level aria."
+        },
+        {
           "name": "name",
           "type": "string",
           "required": false,
@@ -516,7 +630,7 @@
     },
     {
       "name": "Label",
-      "description": "Visible label for a Field. Pass htmlFor the Root id. Not a control.",
+      "description": "Visible name for a control. Sibling, not a Field part. Pass htmlFor the control id.",
       "props": [
         {
           "name": "htmlFor",
@@ -565,7 +679,7 @@
     },
     {
       "name": "OptionList",
-      "description": "Listbox. Single or multiple. Option children are strings. Does not close a Popover.",
+      "description": "Overlay listbox. Single or multiple. Use Radio or Checkbox for a permanent choice on the page.",
       "props": [
         {
           "name": "selectionMode",
@@ -699,6 +813,109 @@
       ]
     },
     {
+      "name": "Radio",
+      "description": "One option in a RadioGroup. No checked, name, or invalid. Children are the visible label.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Option value. The group owns selection."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "Visible label."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables this option. The group disabled flag also applies."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the wrapping label."
+        }
+      ]
+    },
+    {
+      "name": "RadioGroup",
+      "description": "Exclusive choice. Requires aria-label or aria-labelledby. Owns value, name, disabled, and invalid.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name when no visible caption exists. Exactly one of aria-label or aria-labelledby."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of the visible caption. Exactly one of aria-label or aria-labelledby."
+        },
+        {
+          "name": "value",
+          "type": "string | null",
+          "required": false,
+          "description": "Controlled value. null is controlled with nothing selected. Omit for uncontrolled."
+        },
+        {
+          "name": "defaultValue",
+          "type": "string | null",
+          "required": false,
+          "description": "Initial value when uncontrolled."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Fires with the next selected value."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "Shared native name. Generated when omitted."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables every radio."
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks every radio invalid."
+        },
+        {
+          "name": "orientation",
+          "type": "\"vertical\" | \"horizontal\"",
+          "required": false,
+          "description": "Layout and aria-orientation.",
+          "default": "\"vertical\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Radio children."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the radiogroup."
+        }
+      ]
+    },
+    {
       "name": "Stack",
       "description": "Flex layout. Gap comes from the stack.gap contract token.",
       "props": [
@@ -714,6 +931,60 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Laid-out children."
+        }
+      ]
+    },
+    {
+      "name": "Switch",
+      "description": "On or off. Track and thumb. Children are the visible label. No check glyph.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "Visible label. Clicking the text toggles the switch."
+        },
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled on state. Defined means controlled."
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial on state when uncontrolled."
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "description": "Fires after the on state changes."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables the switch."
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the control invalid and sets aria-invalid."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "Native input name."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the wrapping label."
         }
       ]
     },

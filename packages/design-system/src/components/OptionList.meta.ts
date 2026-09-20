@@ -2,7 +2,8 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'OptionList',
-  description: 'Listbox. Single or multiple. Option children are strings. Does not close a Popover.',
+  description:
+    'Overlay listbox. Single or multiple. Use Radio or Checkbox for a permanent choice on the page.',
   props: [
     {
       name: 'selectionMode',

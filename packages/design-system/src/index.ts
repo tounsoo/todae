@@ -19,6 +19,7 @@ export {
   type OptionProps,
 } from './components/OptionList';
 export { Popover, type PopoverCloseReason, type PopoverProps } from './components/Popover';
+export { Checkbox, type CheckboxProps } from './components/Checkbox';
 export { Chip, ChipOverflow, type ChipOverflowProps, type ChipProps } from './components/Chip';
 export { Description, type DescriptionProps } from './components/Description';
 export { ErrorMessage, type ErrorMessageProps } from './components/ErrorMessage';
@@ -33,6 +34,14 @@ export {
   type FieldTextInputType,
 } from './components/Field';
 export { Label, type LabelProps } from './components/Label';
+export {
+  Radio,
+  RadioGroup,
+  type RadioGroupOrientation,
+  type RadioGroupProps,
+  type RadioProps,
+} from './components/Radio';
+export { Switch, type SwitchProps } from './components/Switch';
 export { Stack, type StackProps, type StackDirection } from './components/Stack';
 export { Text, type TextProps, type TextAs, type TextSize, type TextTone, type TextWeight } from './components/Text';
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
