@@ -1054,6 +1054,81 @@
       ]
     },
     {
+      "name": "Tooltip",
+      "description": "One public Tooltip. Default is role=tooltip text. interactive uses popover=manual and allows links.",
+      "props": [
+        {
+          "name": "interactive",
+          "type": "boolean",
+          "required": false,
+          "description": "Use the panel surface. Links only. Never role=tooltip.",
+          "default": "false"
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: TooltipOpenReason) => void",
+          "required": false,
+          "description": "Fires after a commit. Leaving open unchanged is a veto."
+        },
+        {
+          "name": "showDelay",
+          "type": "number",
+          "required": false,
+          "description": "Hover show delay in milliseconds. Focus shows at once.",
+          "default": "300"
+        },
+        {
+          "name": "hideDelay",
+          "type": "number",
+          "required": false,
+          "description": "Hide delay in milliseconds.",
+          "default": "100"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "Tooltip.Trigger and Tooltip.Content."
+        }
+      ]
+    },
+    {
+      "name": "Tooltip.Content",
+      "description": "Tip surface is text-only. Panel surface allows links only.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Tooltip text, or short prose plus links when interactive."
+        }
+      ]
+    },
+    {
+      "name": "Tooltip.Trigger",
+      "description": "Hit target wrap. Sets CSS anchor-name. Describes the first tabbable child, or itself.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "A single element. Disabled children let the wrap take pointer and keyboard."
+        }
+      ]
+    },
+    {
       "name": "useChipField",
       "description": "Optional state helper. Field.ChipInput stays fully controlled without it.",
       "props": [

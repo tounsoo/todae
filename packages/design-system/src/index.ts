@@ -19,6 +19,13 @@ export {
   type OptionProps,
 } from './components/OptionList';
 export { Popover, type PopoverCloseReason, type PopoverProps } from './components/Popover';
+export {
+  Tooltip,
+  type TooltipContentProps,
+  type TooltipOpenReason,
+  type TooltipProps,
+  type TooltipTriggerProps,
+} from './components/Tooltip';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
 export { Chip, ChipOverflow, type ChipOverflowProps, type ChipProps } from './components/Chip';
 export { Description, type DescriptionProps } from './components/Description';
