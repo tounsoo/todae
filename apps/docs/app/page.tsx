@@ -20,6 +20,21 @@ export default function HomePage() {
           <a href="/label">Label</a>
         </li>
         <li>
+          <a href="/description">Description</a>
+        </li>
+        <li>
+          <a href="/errormessage">ErrorMessage</a>
+        </li>
+        <li>
+          <a href="/checkbox">Checkbox</a>
+        </li>
+        <li>
+          <a href="/radio">Radio</a>
+        </li>
+        <li>
+          <a href="/switch">Switch</a>
+        </li>
+        <li>
           <a href="/dialog">Dialog</a>
         </li>
         <li>

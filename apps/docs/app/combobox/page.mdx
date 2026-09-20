@@ -121,6 +121,7 @@ No matches render a status row. `allowCreate` adds one `+ Create "{query}"` opti
 
 - Sibling [Label](/label) + `Field.Root` id. No `Field.Label`.
 - Do not add `Popover.Trigger` next to `getAnchorProps`. Dual-wire is a QA fail.
+- OptionList is the overlay list. Do not also render Radio or Checkbox for the same value.
 - Do not bake combobox into Field. Do not export `Combobox.*` chrome.
 - Sheet trigger uses `aria-haspopup="dialog"`. Popover Field chrome has no `aria-haspopup`.
 

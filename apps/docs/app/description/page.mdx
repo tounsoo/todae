@@ -1,0 +1,34 @@
+import { DescriptionSibling } from '../../components/demos/DescriptionDemo';
+
+# Description
+
+Supporting text below a control. A sibling, not a Field part. `id` is required so you can name it in `aria-describedby`. The component writes nothing onto the control.
+
+Put `aria-describedby` on `Field.Root`, not on `Field.TextInput`. Root copies the string onto the input. TextInput then overwrites input-level aria.
+
+## With Field
+
+Description carries no margin. Stack it under the control in `.labelled-field`.
+
+```tsx
+const id = useId()
+const hintId = useId()
+
+<div className="labelled-field">
+	<Label htmlFor={id}>Work email</Label>
+	<Field.Root id={id} aria-describedby={hintId}>
+		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+	</Field.Root>
+	<Description id={hintId}>We only use this for billing receipts.</Description>
+</div>
+```
+
+<Example block>
+  <DescriptionSibling />
+</Example>
+
+This is not `Dialog.Description`. Dialog Description wires `aria-describedby` for you. Form Description does not.
+
+## Props
+
+<PropsTable name="Description" />
