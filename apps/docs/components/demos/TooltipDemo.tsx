@@ -38,7 +38,7 @@ export function TooltipPolicy() {
       <Tooltip.Trigger>
         <Button.Root variant="ghost">Policy</Button.Root>
       </Tooltip.Trigger>
-      <Tooltip.Content>
+      <Tooltip.Content aria-label="Policy">
         Interactive tips allow links. <a href="/tooltip">Read the policy</a>
       </Tooltip.Content>
     </Tooltip>

@@ -56,7 +56,7 @@ function InteractiveTip(props: Omit<TooltipProps, 'children' | 'interactive'>) {
       <Tooltip.Trigger>
         <button type="button">Hint</button>
       </Tooltip.Trigger>
-      <Tooltip.Content>
+      <Tooltip.Content aria-label="Policy">
         Short prose. <a href="/tooltip">Read the policy</a>
       </Tooltip.Content>
     </Tooltip>
@@ -85,13 +85,15 @@ describe('Tooltip', () => {
     expect(document.querySelector('[popover]')).toBeNull();
   });
 
-  it('uses popover=manual and never role=tooltip when interactive', () => {
+  it('uses popover=manual and role=dialog with a name when interactive', () => {
     render(<InteractiveTip />);
     expect(screen.queryByRole('tooltip')).toBeNull();
     const panel = document.querySelector('[popover="manual"]');
     expect(panel).not.toBeNull();
-    expect(panel?.getAttribute('role')).toBeNull();
+    expect(panel?.getAttribute('role')).toBe('dialog');
+    expect(panel?.getAttribute('aria-label')).toBe('Policy');
     expect(panel?.getAttribute('data-surface')).toBe('panel');
+    expect(screen.getByRole('dialog', { name: 'Policy', hidden: true })).toBe(panel);
   });
 
   it('shows on hover after 300ms and hides after 100ms', () => {

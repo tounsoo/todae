@@ -17,7 +17,7 @@ describe('Tooltip.surface', () => {
     expect('popover' in surface.attrs).toBe(false);
   });
 
-  it('resolves panel attrs without role', () => {
+  it('resolves panel attrs as a named dialog, never tooltip', () => {
     const surface = resolveSurface(true, 'panel-1');
     expect(surface).toEqual({
       kind: 'panel',
@@ -25,11 +25,13 @@ describe('Tooltip.surface', () => {
       topLayer: true,
       attrs: {
         id: 'panel-1',
+        role: 'dialog',
         popover: 'manual',
         'data-surface': 'panel',
       },
     });
-    expect('role' in surface.attrs).toBe(false);
+    expect(surface.attrs.role).toBe('dialog');
+    expect(surface.attrs.role === 'tooltip').toBe(false);
   });
 
   it('mounts tip only while open and panel always', () => {
@@ -55,6 +57,7 @@ describe('Tooltip.surface', () => {
   it('allows only href links in panel content', () => {
     const panel = resolveSurface(true, 'panel-1');
     const el = document.createElement('div');
+    el.setAttribute('aria-label', 'Policy');
     el.innerHTML = '<a href="/tooltip">Read the policy</a>';
     expect(contentPolicyError(panel, el)).toBeNull();
     el.innerHTML = '<button type="button">No</button>';
@@ -62,6 +65,17 @@ describe('Tooltip.surface', () => {
       'Interactive Tooltip.Content allows links only. Use Popover.',
     );
     el.innerHTML = '<a>Missing href</a>';
+    expect(contentPolicyError(panel, el)).toBeNull();
+  });
+
+  it('requires an accessible name on panel content', () => {
+    const panel = resolveSurface(true, 'panel-1');
+    const el = document.createElement('div');
+    el.innerHTML = '<a href="/tooltip">Read the policy</a>';
+    expect(contentPolicyError(panel, el)).toBe(
+      'Interactive Tooltip.Content needs an accessible name. Set aria-label.',
+    );
+    el.setAttribute('aria-labelledby', 'policy-title');
     expect(contentPolicyError(panel, el)).toBeNull();
   });
 });

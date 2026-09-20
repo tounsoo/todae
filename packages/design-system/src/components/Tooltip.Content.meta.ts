@@ -2,8 +2,14 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Tooltip.Content',
-  description: 'Tip surface is text-only. Panel surface allows links only.',
+  description: 'Tip surface is text-only. Interactive surface is role=dialog and allows links only.',
   props: [
+    {
+      name: 'aria-label',
+      type: 'string',
+      required: false,
+      description: 'Accessible name. Required when Tooltip is interactive.',
+    },
     {
       name: 'children',
       type: 'React.ReactNode',

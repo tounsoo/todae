@@ -4,7 +4,7 @@ import { TooltipArchive, TooltipOverflow, TooltipPolicy } from '../../components
 
 Default `Tooltip` is text-only `role="tooltip"`. Hover waits 300ms. Focus opens at once. A coarse pointer uses focus only.
 
-`interactive` stays on the same `Tooltip`. The surface becomes `popover="manual"` and never uses `role="tooltip"`. Links are allowed. Tab moves into those links. Hover can cross onto the panel. Escape returns focus to the trigger and does not reopen until that hold is released.
+`interactive` stays on the same `Tooltip`. The surface becomes `popover="manual"` with `role="dialog"`. It never uses `role="tooltip"`. Set `aria-label` on `Tooltip.Content`. Links are allowed. Tab moves into those links. Hover can cross onto the panel. Escape returns focus to the trigger and does not reopen until that hold is released. There is no focus trap.
 
 Placement is CSS anchors. The tip sits above the trigger and flips below when it cannot fit. There is no arrow and no placement prop.
 

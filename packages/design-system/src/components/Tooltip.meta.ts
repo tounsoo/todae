@@ -9,7 +9,7 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'false',
-      description: 'Use the panel surface. Links only. Never role=tooltip.',
+      description: 'Use the dialog surface. Links only. Never role=tooltip. Name Tooltip.Content.',
     },
     {
       name: 'open',

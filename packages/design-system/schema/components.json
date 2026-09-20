@@ -1061,7 +1061,7 @@
           "name": "interactive",
           "type": "boolean",
           "required": false,
-          "description": "Use the panel surface. Links only. Never role=tooltip.",
+          "description": "Use the dialog surface. Links only. Never role=tooltip. Name Tooltip.Content.",
           "default": "false"
         },
         {
@@ -1106,8 +1106,14 @@
     },
     {
       "name": "Tooltip.Content",
-      "description": "Tip surface is text-only. Panel surface allows links only.",
+      "description": "Tip surface is text-only. Interactive surface is role=dialog and allows links only.",
       "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name. Required when Tooltip is interactive."
+        },
         {
           "name": "children",
           "type": "React.ReactNode",

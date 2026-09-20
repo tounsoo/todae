@@ -9,9 +9,9 @@ export type TipAttrs = {
 
 export type PanelAttrs = {
   readonly id: string;
+  readonly role: 'dialog';
   readonly popover: 'manual';
   readonly 'data-surface': 'panel';
-  readonly role?: never;
 };
 
 export type TipSurface = {
@@ -38,6 +38,7 @@ export function resolveSurface(interactive: boolean, id: string): TooltipSurface
       topLayer: true,
       attrs: {
         id,
+        role: 'dialog',
         popover: 'manual',
         'data-surface': 'panel',
       },
@@ -63,6 +64,9 @@ export function contentPolicyError(surface: TooltipSurface, el: HTMLElement): st
   const tabbables = getTabbables(el);
   if (surface.kind === 'tip') {
     return tabbables.length > 0 ? 'Tooltip.Content is text-only. Add `interactive` for a link.' : null;
+  }
+  if (!el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby')) {
+    return 'Interactive Tooltip.Content needs an accessible name. Set aria-label.';
   }
   const illegal = tabbables.some((node) => node.tagName !== 'A' || !node.hasAttribute('href'));
   return illegal ? 'Interactive Tooltip.Content allows links only. Use Popover.' : null;
