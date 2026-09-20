@@ -26,6 +26,10 @@
     border-radius: var(--todae-tooltip-radius);
   }
 
+  .content:not([data-open]) {
+    display: none;
+  }
+
   .content[data-surface='tip'] {
     pointer-events: none;
   }

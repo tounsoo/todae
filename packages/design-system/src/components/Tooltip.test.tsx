@@ -274,6 +274,7 @@ describe('Tooltip', () => {
     );
     expect(css).toContain('anchor(');
     expect(css).toContain(".content[data-surface='tip']");
+    expect(css).toContain('.content:not([data-open])');
   });
 });
 
