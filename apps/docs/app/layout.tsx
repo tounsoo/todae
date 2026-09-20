@@ -28,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <a href="/switch">Switch</a>
               <a href="/dialog">Dialog</a>
               <a href="/popover">Popover</a>
+              <a href="/tooltip">Tooltip</a>
               <a href="/optionlist">OptionList</a>
               <a href="/combobox">Combobox</a>
               <a href="/bottomsheet">BottomSheet</a>
