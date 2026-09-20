@@ -9,6 +9,7 @@ import { resetMatchMedia, setMatchMedia } from '../test/setup';
 import { Chip } from './Chip';
 import {
   Tooltip,
+  type TooltipContentName,
   type TooltipContentProps,
   type TooltipOpenReason,
   type TooltipProps,
@@ -39,24 +40,38 @@ function wrapOf(el: HTMLElement) {
   return el.parentElement as HTMLElement;
 }
 
-function DefaultTip(props: Omit<TooltipProps, 'children'> & { label?: string; tip?: string }) {
+function DefaultTip(
+  props: Omit<Extract<TooltipProps, { interactive?: false }>, 'children'> & {
+    label?: string;
+    tip?: string;
+  },
+) {
+  const { label, tip, ...tooltipProps } = props;
   return (
-    <Tooltip {...props}>
+    <Tooltip {...tooltipProps}>
       <Tooltip.Trigger>
-        <button type="button">{props.label ?? 'Hint'}</button>
+        <button type="button">{label ?? 'Hint'}</button>
       </Tooltip.Trigger>
-      <Tooltip.Content>{props.tip ?? 'Archive'}</Tooltip.Content>
+      <Tooltip.Content>{tip ?? 'Archive'}</Tooltip.Content>
     </Tooltip>
   );
 }
 
-function InteractiveTip(props: Omit<TooltipProps, 'children' | 'interactive'>) {
+function InteractiveTip({
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledby,
+  ...props
+}: Omit<TooltipProps, 'children' | 'interactive'> & Partial<TooltipContentName>) {
+  const name =
+    ariaLabelledby !== undefined
+      ? { 'aria-labelledby': ariaLabelledby }
+      : { 'aria-label': ariaLabel ?? 'Policy' };
   return (
-    <Tooltip interactive {...props}>
+    <Tooltip interactive {...props} {...name}>
       <Tooltip.Trigger>
         <button type="button">Hint</button>
       </Tooltip.Trigger>
-      <Tooltip.Content aria-label="Policy">
+      <Tooltip.Content>
         Short prose. <a href="/tooltip">Read the policy</a>
       </Tooltip.Content>
     </Tooltip>
@@ -74,6 +89,29 @@ describe('Tooltip exports', () => {
     expectTypeOf<TooltipContentProps>().not.toHaveProperty('id');
     expectTypeOf<TooltipOpenReason>().toEqualTypeOf<'hover' | 'focus' | 'escape' | 'hover-bridge'>();
   });
+
+  it('accepts exactly one accessible name on interactive content', () => {
+    const labelled: TooltipContentProps = { 'aria-label': 'Policy' };
+    const captioned: TooltipContentProps = { 'aria-labelledby': 'policy-caption' };
+    expect(labelled['aria-label']).toBe('Policy');
+    expect(captioned['aria-labelledby']).toBe('policy-caption');
+    expectTypeOf<{ 'aria-label': string }>().toMatchTypeOf<TooltipContentName>();
+    expectTypeOf<{ 'aria-labelledby': string }>().toMatchTypeOf<TooltipContentName>();
+    expectTypeOf<{ 'aria-label': string; 'aria-labelledby': string }>().not.toMatchTypeOf<TooltipContentName>();
+    expectTypeOf<Record<string, never>>().not.toMatchTypeOf<TooltipContentName>();
+    expectTypeOf<{ interactive: true; children: null }>().not.toMatchTypeOf<TooltipProps>();
+    expectTypeOf<{
+      interactive: true;
+      children: null;
+      'aria-label': string;
+    }>().toMatchTypeOf<TooltipProps>();
+    expectTypeOf<{
+      interactive: true;
+      children: null;
+      'aria-labelledby': string;
+    }>().toMatchTypeOf<TooltipProps>();
+    expectTypeOf<{ children: null }>().toMatchTypeOf<TooltipProps>();
+  });
 });
 
 describe('Tooltip', () => {
@@ -82,6 +120,8 @@ describe('Tooltip', () => {
     const tip = screen.getByRole('tooltip');
     expect(tip.getAttribute('data-surface')).toBe('tip');
     expect(tip.hasAttribute('popover')).toBe(false);
+    expect(tip.hasAttribute('aria-label')).toBe(false);
+    expect(tip.hasAttribute('aria-labelledby')).toBe(false);
     expect(document.querySelector('[popover]')).toBeNull();
   });
 
@@ -93,6 +133,40 @@ describe('Tooltip', () => {
     expect(panel?.getAttribute('role')).toBe('dialog');
     expect(panel?.getAttribute('aria-label')).toBe('Policy');
     expect(panel?.getAttribute('data-surface')).toBe('panel');
+    expect(screen.getByRole('dialog', { name: 'Policy', hidden: true })).toBe(panel);
+  });
+
+  it('names the dialog from aria-labelledby', () => {
+    render(
+      <>
+        <span id="policy-caption">Policy</span>
+        <InteractiveTip aria-labelledby="policy-caption" />
+      </>,
+    );
+    const panel = document.querySelector('[popover="manual"]');
+    expect(panel?.getAttribute('role')).toBe('dialog');
+    expect(panel?.getAttribute('aria-labelledby')).toBe('policy-caption');
+    expect(panel?.hasAttribute('aria-label')).toBe(false);
+    expect(screen.getByRole('dialog', { name: 'Policy', hidden: true })).toBe(panel);
+  });
+
+  it('lets Content replace the Tooltip name', () => {
+    render(
+      <>
+        <span id="policy-caption">Policy</span>
+        <Tooltip interactive aria-label="Root">
+          <Tooltip.Trigger>
+            <button type="button">Hint</button>
+          </Tooltip.Trigger>
+          <Tooltip.Content aria-labelledby="policy-caption">
+            Short prose. <a href="/tooltip">Read the policy</a>
+          </Tooltip.Content>
+        </Tooltip>
+      </>,
+    );
+    const panel = document.querySelector('[popover="manual"]');
+    expect(panel?.getAttribute('aria-labelledby')).toBe('policy-caption');
+    expect(panel?.hasAttribute('aria-label')).toBe(false);
     expect(screen.getByRole('dialog', { name: 'Policy', hidden: true })).toBe(panel);
   });
 

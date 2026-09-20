@@ -34,11 +34,11 @@ export function TooltipOverflow() {
 
 export function TooltipPolicy() {
   return (
-    <Tooltip interactive>
+    <Tooltip interactive aria-label="Policy">
       <Tooltip.Trigger>
         <Button.Root variant="ghost">Policy</Button.Root>
       </Tooltip.Trigger>
-      <Tooltip.Content aria-label="Policy">
+      <Tooltip.Content>
         Interactive tips allow links. <a href="/tooltip">Read the policy</a>
       </Tooltip.Content>
     </Tooltip>

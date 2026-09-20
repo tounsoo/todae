@@ -2,14 +2,29 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Tooltip',
-  description: 'One public Tooltip. Default is role=tooltip text. interactive uses popover=manual and allows links.',
+  description:
+    'One public Tooltip. Default is role=tooltip text. interactive is a non-modal tip dialog and allows links.',
   props: [
     {
       name: 'interactive',
       type: 'boolean',
       required: false,
       default: 'false',
-      description: 'Use the dialog surface. Links only. Never role=tooltip. Name Tooltip.Content.',
+      description:
+        'Use the non-modal tip dialog. Links only. Never role=tooltip. Exactly one of aria-label or aria-labelledby.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      required: false,
+      description:
+        'Accessible name when no visible caption exists. Exactly one of aria-label or aria-labelledby when interactive.',
+    },
+    {
+      name: 'aria-labelledby',
+      type: 'string',
+      required: false,
+      description: 'Id of the visible caption. Exactly one of aria-label or aria-labelledby when interactive.',
     },
     {
       name: 'open',

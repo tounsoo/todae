@@ -37,8 +37,23 @@ import styles from './Tooltip.module.css';
 
 export type { TooltipOpenReason };
 
-export type TooltipProps = {
-  interactive?: boolean;
+export type TooltipContentName =
+  | { 'aria-label': string; 'aria-labelledby'?: never }
+  | { 'aria-labelledby': string; 'aria-label'?: never };
+
+type TooltipContentChrome = Omit<
+  HTMLAttributes<HTMLDivElement>,
+  'role' | 'popover' | 'tabIndex' | 'id' | 'aria-label' | 'aria-labelledby'
+>;
+
+export type TooltipContentProps = TooltipContentChrome & TooltipContentName;
+
+type TooltipTextContentProps = TooltipContentChrome & {
+  'aria-label'?: never;
+  'aria-labelledby'?: never;
+};
+
+type TooltipSharedProps = {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean, reason: TooltipOpenReason) => void;
@@ -47,16 +62,27 @@ export type TooltipProps = {
   children: ReactNode;
 };
 
+export type TooltipProps =
+  | ({ interactive?: false } & TooltipSharedProps)
+  | ({ interactive: true } & TooltipSharedProps & TooltipContentName);
+
 export type TooltipTriggerProps = {
   children: ReactNode;
 };
 
-export type TooltipContentProps = Omit<HTMLAttributes<HTMLDivElement>, 'role' | 'popover' | 'tabIndex' | 'id'>;
+function contentNameOf(
+  props: { 'aria-label'?: string; 'aria-labelledby'?: string },
+): TooltipContentName | undefined {
+  if (typeof props['aria-label'] === 'string') return { 'aria-label': props['aria-label'] };
+  if (typeof props['aria-labelledby'] === 'string') return { 'aria-labelledby': props['aria-labelledby'] };
+  return undefined;
+}
 
 type TooltipContextValue = {
   open: boolean;
   interactive: boolean;
   contentId: string;
+  contentName: TooltipContentName | undefined;
   anchorName: string;
   triggerRef: RefObject<HTMLElement | null>;
   contentRef: RefObject<HTMLElement | null>;
@@ -87,15 +113,16 @@ function contentStyle(anchorName: string, style?: CSSProperties): CSSProperties 
   } as CSSProperties;
 }
 
-export function Tooltip({
-  interactive = false,
-  open: openProp,
-  defaultOpen,
-  onOpenChange,
-  showDelay = 300,
-  hideDelay = 100,
-  children,
-}: TooltipProps) {
+export function Tooltip(props: TooltipProps) {
+  const {
+    interactive = false,
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    showDelay = 300,
+    hideDelay = 100,
+    children,
+  } = props;
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
   const [restoreEpoch, setRestoreEpoch] = useState(0);
   const uid = useId().replaceAll(':', '');
@@ -210,18 +237,27 @@ export function Tooltip({
     [],
   );
 
+  const ariaLabel = 'aria-label' in props ? props['aria-label'] : undefined;
+  const ariaLabelledby = 'aria-labelledby' in props ? props['aria-labelledby'] : undefined;
+  const contentName = useMemo(
+    () =>
+      interactive ? contentNameOf({ 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby }) : undefined,
+    [ariaLabel, ariaLabelledby, interactive],
+  );
+
   const ctx = useMemo<TooltipContextValue>(
     () => ({
       open,
       interactive,
       contentId,
+      contentName,
       anchorName,
       triggerRef,
       contentRef,
       dispatch,
       pairContains,
     }),
-    [anchorName, contentId, dispatch, interactive, open, pairContains],
+    [anchorName, contentId, contentName, dispatch, interactive, open, pairContains],
   );
 
   return <TooltipContext.Provider value={ctx}>{children}</TooltipContext.Provider>;
@@ -295,7 +331,7 @@ function TooltipTip({
   children,
   surface,
   ...props
-}: TooltipContentProps & { surface: TipSurface }) {
+}: (TooltipContentProps | TooltipTextContentProps) & { surface: TipSurface }) {
   const ctx = useTooltip();
   useContentPolicy(surface, ctx.contentRef);
   return (
@@ -322,14 +358,16 @@ function TooltipPanel({
   onPointerEnter,
   onPointerLeave,
   ...props
-}: TooltipContentProps & { surface: PanelSurface }) {
+}: (TooltipContentProps | TooltipTextContentProps) & { surface: PanelSurface }) {
   const ctx = useTooltip();
   usePopoverSync(ctx.contentRef, ctx.open);
   useContentPolicy(surface, ctx.contentRef);
+  const name = contentNameOf(props) ?? ctx.contentName;
   return (
     <div
       {...props}
       {...surface.attrs}
+      {...name}
       ref={(node) => {
         ctx.contentRef.current = node;
       }}
@@ -352,7 +390,12 @@ function TooltipPanel({
   );
 }
 
-function TooltipContent({ className, style, children, ...props }: TooltipContentProps) {
+function TooltipContent({
+  className,
+  style,
+  children,
+  ...props
+}: TooltipContentProps | TooltipTextContentProps) {
   const ctx = useTooltip();
   const surface = resolveSurface(ctx.interactive, ctx.contentId);
   if (!isMounted(surface, ctx.open)) return null;

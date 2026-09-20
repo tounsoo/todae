@@ -57,7 +57,6 @@ describe('Tooltip.surface', () => {
   it('allows only href links in panel content', () => {
     const panel = resolveSurface(true, 'panel-1');
     const el = document.createElement('div');
-    el.setAttribute('aria-label', 'Policy');
     el.innerHTML = '<a href="/tooltip">Read the policy</a>';
     expect(contentPolicyError(panel, el)).toBeNull();
     el.innerHTML = '<button type="button">No</button>';
@@ -65,17 +64,6 @@ describe('Tooltip.surface', () => {
       'Interactive Tooltip.Content allows links only. Use Popover.',
     );
     el.innerHTML = '<a>Missing href</a>';
-    expect(contentPolicyError(panel, el)).toBeNull();
-  });
-
-  it('requires an accessible name on panel content', () => {
-    const panel = resolveSurface(true, 'panel-1');
-    const el = document.createElement('div');
-    el.innerHTML = '<a href="/tooltip">Read the policy</a>';
-    expect(contentPolicyError(panel, el)).toBe(
-      'Interactive Tooltip.Content needs an accessible name. Set aria-label.',
-    );
-    el.setAttribute('aria-labelledby', 'policy-title');
     expect(contentPolicyError(panel, el)).toBeNull();
   });
 });

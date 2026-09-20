@@ -2,13 +2,21 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Tooltip.Content',
-  description: 'Tip surface is text-only. Interactive surface is role=dialog and allows links only.',
+  description:
+    'Tip surface is text-only. Interactive surface is a non-modal tip dialog (role=dialog) and allows links only.',
   props: [
     {
       name: 'aria-label',
       type: 'string',
       required: false,
-      description: 'Accessible name. Required when Tooltip is interactive.',
+      description:
+        'Accessible name when no visible caption exists. Exactly one of aria-label or aria-labelledby when interactive.',
+    },
+    {
+      name: 'aria-labelledby',
+      type: 'string',
+      required: false,
+      description: 'Id of the visible caption. Exactly one of aria-label or aria-labelledby when interactive.',
     },
     {
       name: 'children',

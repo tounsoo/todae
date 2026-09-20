@@ -21,6 +21,7 @@ export {
 export { Popover, type PopoverCloseReason, type PopoverProps } from './components/Popover';
 export {
   Tooltip,
+  type TooltipContentName,
   type TooltipContentProps,
   type TooltipOpenReason,
   type TooltipProps,

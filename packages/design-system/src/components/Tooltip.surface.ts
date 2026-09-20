@@ -65,9 +65,6 @@ export function contentPolicyError(surface: TooltipSurface, el: HTMLElement): st
   if (surface.kind === 'tip') {
     return tabbables.length > 0 ? 'Tooltip.Content is text-only. Add `interactive` for a link.' : null;
   }
-  if (!el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby')) {
-    return 'Interactive Tooltip.Content needs an accessible name. Set aria-label.';
-  }
   const illegal = tabbables.some((node) => node.tagName !== 'A' || !node.hasAttribute('href'));
   return illegal ? 'Interactive Tooltip.Content allows links only. Use Popover.' : null;
 }
