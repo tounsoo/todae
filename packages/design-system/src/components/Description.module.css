@@ -1,0 +1,8 @@
+@layer todae.components {
+  .description {
+    display: block;
+    font-size: var(--todae-field-description-font-size);
+    font-weight: var(--todae-field-description-font-weight);
+    color: var(--todae-field-description-fg);
+  }
+}

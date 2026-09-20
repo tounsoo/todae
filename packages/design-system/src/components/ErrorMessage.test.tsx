@@ -1,0 +1,65 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { cleanup, render, screen } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
+import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
+import { ErrorMessage, type ErrorMessageProps } from './ErrorMessage';
+import { Field } from './Field';
+import * as api from '../index';
+
+const css = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), 'ErrorMessage.module.css'),
+  'utf8',
+);
+
+afterEach(cleanup);
+
+describe('ErrorMessage exports', () => {
+  it('is a top-level primitive', () => {
+    expect(api.ErrorMessage).toBe(ErrorMessage);
+    expectTypeOf<ErrorMessageProps>().toHaveProperty('id');
+    expectTypeOf<ErrorMessageProps['id']>().toEqualTypeOf<string>();
+  });
+});
+
+describe('ErrorMessage', () => {
+  it('renders a span with the required id and no alert role', () => {
+    const { container } = render(<ErrorMessage id="email-error">Enter an email.</ErrorMessage>);
+    const message = container.querySelector('#email-error');
+    expect(message?.tagName).toBe('SPAN');
+    expect(message?.getAttribute('role')).toBeNull();
+    expect(message?.getAttribute('aria-live')).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('does not set aria-invalid on itself', () => {
+    const { container } = render(<ErrorMessage id="email-error">Enter an email.</ErrorMessage>);
+    expect(container.querySelector('#email-error')?.getAttribute('aria-invalid')).toBeNull();
+  });
+
+  it('is named when the author wires Field.Root', () => {
+    render(
+      <div className="labelled-field">
+        <Field.Root id="mail" invalid aria-describedby="email-error">
+          <Field.TextInput value="bad" onChange={() => undefined} />
+        </Field.Root>
+        <ErrorMessage id="email-error">Enter an email.</ErrorMessage>
+      </div>,
+    );
+    const input = screen.getByRole('textbox');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(input.getAttribute('aria-describedby')).toBe('email-error');
+    expect(document.getElementById('email-error')?.textContent).toBe('Enter an email.');
+  });
+
+  it('carries no margin', () => {
+    expect(css).not.toMatch(/margin/);
+  });
+
+  it('SSR keeps the id and omits alert', () => {
+    const html = renderToString(<ErrorMessage id="email-error">Enter an email.</ErrorMessage>);
+    expect(html).toContain('id="email-error"');
+    expect(html).not.toContain('role="alert"');
+  });
+});

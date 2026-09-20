@@ -1,0 +1,8 @@
+@layer todae.components {
+  .error {
+    display: block;
+    font-size: var(--todae-field-error-font-size);
+    font-weight: var(--todae-field-error-font-weight);
+    color: var(--todae-field-error-fg);
+  }
+}

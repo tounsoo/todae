@@ -25,6 +25,13 @@ export const meta = {
       description: 'Input id. Auto-generated when omitted.',
     },
     {
+      name: 'aria-describedby',
+      type: 'string',
+      required: false,
+      description:
+        'Ids of Description and ErrorMessage. Put this on Root. TextInput overwrites input-level aria.',
+    },
+    {
       name: 'name',
       type: 'string',
       required: false,

@@ -20,6 +20,8 @@ export {
 } from './components/OptionList';
 export { Popover, type PopoverCloseReason, type PopoverProps } from './components/Popover';
 export { Chip, ChipOverflow, type ChipOverflowProps, type ChipProps } from './components/Chip';
+export { Description, type DescriptionProps } from './components/Description';
+export { ErrorMessage, type ErrorMessageProps } from './components/ErrorMessage';
 export { CHIP_COMMIT_KEYS, type ChipCommitKey } from './components/commitKeys';
 export {
   Field,
