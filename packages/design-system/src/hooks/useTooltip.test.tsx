@@ -38,13 +38,14 @@ function TipHarness({
   ...options
 }: UseTooltipOptions & { label?: string; tip?: string }) {
   const tooltip = useTooltip(options);
+  const wire = tooltip.getTooltipProps();
   return (
     <>
       <button type="button" {...tooltip.getTriggerProps()}>
         {label}
       </button>
       {tooltip.open ? (
-        <div role="tooltip" {...tooltip.getTooltipProps()}>
+        <div role="tooltip" id={wire.id} ref={wire.ref} style={wire.style}>
           {tip}
         </div>
       ) : null}
@@ -60,7 +61,16 @@ function PanelHarness(options: UseTooltipOptions<true> = { interactive: true }) 
       <button type="button" {...tooltip.getTriggerProps()}>
         Hint
       </button>
-      <div role="dialog" aria-label="Policy" data-open={tooltip.open ? '' : undefined} {...wire}>
+      <div
+        role="dialog"
+        aria-label="Policy"
+        id={wire.id}
+        ref={wire.ref}
+        style={wire.style}
+        data-open={tooltip.open ? '' : undefined}
+        onPointerEnter={wire.onPointerEnter}
+        onPointerLeave={wire.onPointerLeave}
+      >
         Short prose. <a href="/tooltip">Read the policy</a>
       </div>
     </>
