@@ -13,6 +13,15 @@
     font-size: var(--todae-button-font-size);
     font-weight: var(--todae-button-font-weight);
     gap: var(--todae-button-gap);
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .root:hover:not(:disabled) {
@@ -53,7 +62,7 @@
     align-items: stretch;
   }
 
-  .group > .root + .root {
+  .group > .root ~ .root {
     margin-inline-start: -1px;
   }
 
