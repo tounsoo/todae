@@ -95,6 +95,7 @@ describe('useTooltip exports', () => {
       new Set([
         'react',
         '../components/Tooltip.intent',
+        '../components/Tooltip.wire',
         '../overlay/tabbables',
         '../overlay/useEscapeKey',
         './useControlledState',

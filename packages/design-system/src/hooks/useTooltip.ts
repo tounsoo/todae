@@ -19,11 +19,12 @@ import {
   type TooltipEvent,
   type TooltipOpenReason,
 } from '../components/Tooltip.intent';
+import type { TooltipWire } from '../components/Tooltip.wire';
 import { getTabbables } from '../overlay/tabbables';
 import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useControlledState } from './useControlledState';
 
-export type { TooltipOpenReason };
+export type { TooltipOpenReason, TooltipWire };
 
 export type TooltipTriggerUserProps = HTMLAttributes<HTMLElement> & {
   ref?: Ref<HTMLElement | null>;
@@ -38,19 +39,6 @@ export type TooltipTriggerWire = {
   onFocus: (event: FocusEvent<HTMLElement>) => void;
   onBlur: (event: FocusEvent<HTMLElement>) => void;
 };
-
-export type TooltipWire<I extends boolean = false> = {
-  id: string;
-  open: boolean;
-  interactive: I;
-  ref: (node: HTMLElement | null) => void;
-  style: CSSProperties;
-} & (I extends true
-  ? {
-      onPointerEnter: (event: PointerEvent<HTMLElement>) => void;
-      onPointerLeave: (event: PointerEvent<HTMLElement>) => void;
-    }
-  : {});
 
 export type UseTooltipOptions<I extends boolean = false> = {
   interactive?: I;

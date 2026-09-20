@@ -50,7 +50,7 @@ describe('Tooltip.surface', () => {
     expect(contentPolicyError(tip, el)).toBeNull();
     el.innerHTML = '<a href="/tooltip">Read the policy</a>';
     expect(contentPolicyError(tip, el)).toBe(
-      'Tooltip is text-only. Add `interactive` for a link.',
+      'Tooltip is text-only. Use useTooltip({ interactive: true }) for a link.',
     );
   });
 

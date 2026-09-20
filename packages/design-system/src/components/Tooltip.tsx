@@ -1,12 +1,4 @@
-import {
-  useLayoutEffect,
-  useRef,
-  type CSSProperties,
-  type HTMLAttributes,
-  type ReactNode,
-  type Ref,
-  type RefObject,
-} from 'react';
+import { useLayoutEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import { usePopoverSync } from '../overlay/usePopoverSync';
 import {
   contentPolicyError,
@@ -15,25 +7,18 @@ import {
   type PanelSurface,
   type TipSurface,
 } from './Tooltip.surface';
+import type { TooltipWire } from './Tooltip.wire';
 import styles from './Tooltip.module.css';
 
 export type TooltipContentName =
   | { 'aria-label': string; 'aria-labelledby'?: never }
   | { 'aria-labelledby': string; 'aria-label'?: never };
 
-type TooltipChrome = Omit<
-  HTMLAttributes<HTMLDivElement>,
-  'role' | 'popover' | 'tabIndex' | 'id' | 'aria-label' | 'aria-labelledby'
-> & {
-  id: string;
-  open: boolean;
-  ref?: Ref<HTMLDivElement | null>;
-  children?: ReactNode;
-};
+export type TooltipChrome = { children?: ReactNode; className?: string; style?: CSSProperties };
 
 export type TooltipProps =
-  | ({ interactive?: false } & TooltipChrome)
-  | ({ interactive: true } & TooltipChrome & TooltipContentName);
+  | (TooltipWire<false> & TooltipChrome)
+  | (TooltipWire<true> & TooltipChrome & TooltipContentName);
 
 function contentNameOf(
   props: { 'aria-label'?: string; 'aria-labelledby'?: string },
@@ -41,15 +26,6 @@ function contentNameOf(
   if (typeof props['aria-label'] === 'string') return { 'aria-label': props['aria-label'] };
   if (typeof props['aria-labelledby'] === 'string') return { 'aria-labelledby': props['aria-labelledby'] };
   return undefined;
-}
-
-function assignRef<T>(ref: Ref<T> | undefined, value: T) {
-  if (typeof ref === 'function') ref(value);
-  else if (ref) ref.current = value;
-}
-
-function mergeStyle(anchorStyle: CSSProperties | undefined, style?: CSSProperties): CSSProperties {
-  return { ...style, ...anchorStyle };
 }
 
 function useContentPolicy(surface: TipSurface | PanelSurface, contentRef: RefObject<HTMLElement | null>) {
@@ -68,22 +44,20 @@ function TooltipTip({
   children,
   surface,
   open,
-  ref,
-  ...props
-}: TooltipChrome & { surface: TipSurface }) {
+  ref: setRef,
+}: TooltipChrome & { surface: TipSurface; open: boolean; ref: TooltipWire['ref'] }) {
   const localRef = useRef<HTMLDivElement | null>(null);
   useContentPolicy(surface, localRef);
   return (
     <div
-      {...props}
       {...surface.attrs}
       ref={(node) => {
         localRef.current = node;
-        assignRef(ref, node);
+        setRef(node);
       }}
       data-open={open ? '' : undefined}
       className={[styles.content, className].filter(Boolean).join(' ')}
-      style={mergeStyle(style)}
+      style={style}
     >
       {children}
     </div>
@@ -96,27 +70,32 @@ function TooltipPanel({
   children,
   surface,
   open,
-  ref,
+  ref: setRef,
   onPointerEnter,
   onPointerLeave,
-  ...props
-}: (TooltipChrome & TooltipContentName) & { surface: PanelSurface }) {
+  ...name
+}: TooltipChrome &
+  TooltipContentName & {
+    surface: PanelSurface;
+    open: boolean;
+    ref: TooltipWire<true>['ref'];
+    onPointerEnter: TooltipWire<true>['onPointerEnter'];
+    onPointerLeave: TooltipWire<true>['onPointerLeave'];
+  }) {
   const localRef = useRef<HTMLDivElement | null>(null);
   usePopoverSync(localRef, open);
   useContentPolicy(surface, localRef);
-  const name = contentNameOf(props);
   return (
     <div
-      {...props}
       {...surface.attrs}
-      {...name}
+      {...contentNameOf(name)}
       ref={(node) => {
         localRef.current = node;
-        assignRef(ref, node);
+        setRef(node);
       }}
       data-open={open ? '' : undefined}
       className={[styles.content, className].filter(Boolean).join(' ')}
-      style={mergeStyle(style)}
+      style={style}
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
     >
@@ -126,19 +105,34 @@ function TooltipPanel({
 }
 
 export function Tooltip(props: TooltipProps) {
-  const { id, open, interactive = false, children, ...rest } = props;
-  const surface = resolveSurface(interactive, id);
-  if (!isMounted(surface, open)) return null;
-  if (surface.kind === 'panel') {
+  const surface = resolveSurface(props.interactive, props.id);
+  if (!isMounted(surface, props.open)) return null;
+  if (props.interactive) {
+    const name = contentNameOf(props);
     return (
-      <TooltipPanel {...(rest as TooltipChrome & TooltipContentName)} surface={surface} id={id} open={open}>
-        {children}
+      <TooltipPanel
+        className={props.className}
+        style={props.style}
+        surface={surface as PanelSurface}
+        open={props.open}
+        ref={props.ref}
+        onPointerEnter={props.onPointerEnter}
+        onPointerLeave={props.onPointerLeave}
+        {...name!}
+      >
+        {props.children}
       </TooltipPanel>
     );
   }
   return (
-    <TooltipTip {...(rest as TooltipChrome)} surface={surface} id={id} open={open}>
-      {children}
+    <TooltipTip
+      className={props.className}
+      style={props.style}
+      surface={surface as TipSurface}
+      open={props.open}
+      ref={props.ref}
+    >
+      {props.children}
     </TooltipTip>
   );
 }

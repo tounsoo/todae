@@ -3,27 +3,31 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Tooltip',
   description:
-    'Tip surface only. Wire it with useTooltip getTooltipProps. Default is role=tooltip text. interactive is a non-modal tip dialog and allows links.',
+    'Tip chrome only. Spread getTooltipProps from useTooltip. children, className, style, and a dialog name when interactive.',
   props: [
-    {
-      name: 'id',
-      type: 'string',
-      required: true,
-      description: 'Surface id. Spread from getTooltipProps.',
-    },
-    {
-      name: 'open',
-      type: 'boolean',
-      required: true,
-      description: 'Open state. Spread from getTooltipProps.',
-    },
     {
       name: 'interactive',
       type: 'boolean',
+      required: true,
+      description: 'Do not set by hand; pass interactive to useTooltip.',
+    },
+    {
+      name: 'children',
+      type: 'React.ReactNode',
       required: false,
-      default: 'false',
-      description:
-        'Use the non-modal tip dialog. Links only. Never role=tooltip. Exactly one of aria-label or aria-labelledby.',
+      description: 'Tooltip text, or short prose plus links when interactive.',
+    },
+    {
+      name: 'className',
+      type: 'string',
+      required: false,
+      description: 'Class name for the tip surface.',
+    },
+    {
+      name: 'style',
+      type: 'React.CSSProperties',
+      required: false,
+      description: 'Style for the tip surface. Anchor position comes from getTooltipProps.',
     },
     {
       name: 'aria-label',
@@ -37,12 +41,6 @@ export const meta = {
       type: 'string',
       required: false,
       description: 'Id of the visible caption. Exactly one of aria-label or aria-labelledby when interactive.',
-    },
-    {
-      name: 'children',
-      type: 'React.ReactNode',
-      required: false,
-      description: 'Tooltip text, or short prose plus links when interactive.',
     },
   ],
 } as const satisfies ComponentMeta;

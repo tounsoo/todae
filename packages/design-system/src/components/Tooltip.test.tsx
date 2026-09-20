@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index';
 import { useTooltip, type TooltipOpenReason, type UseTooltipOptions } from '../hooks/useTooltip';
@@ -79,16 +79,35 @@ describe('Tooltip exports', () => {
     expectTypeOf<TooltipProps>().toHaveProperty('id');
     expectTypeOf<TooltipProps>().toHaveProperty('open');
     expectTypeOf<TooltipProps>().toHaveProperty('interactive');
+    expectTypeOf<TooltipProps>().toHaveProperty('ref');
+    expectTypeOf<TooltipProps>().toHaveProperty('style');
     expectTypeOf<TooltipProps>().not.toHaveProperty('showDelay');
+    expectTypeOf<TooltipProps>().not.toHaveProperty('hideDelay');
+    expectTypeOf<TooltipProps>().not.toHaveProperty('onOpenChange');
+    expectTypeOf<TooltipProps>().not.toHaveProperty('enabled');
+    expectTypeOf<TooltipProps>().not.toHaveProperty('onClick');
     expectTypeOf<TooltipOpenReason>().toEqualTypeOf<'hover' | 'focus' | 'escape' | 'hover-bridge'>();
   });
 
   it('accepts exactly one accessible name when interactive', () => {
-    const labelled: TooltipProps = { id: 'p', open: true, interactive: true, 'aria-label': 'Policy' };
+    const labelled: TooltipProps = {
+      id: 'p',
+      open: true,
+      interactive: true,
+      ref: () => {},
+      style: {},
+      onPointerEnter: () => {},
+      onPointerLeave: () => {},
+      'aria-label': 'Policy',
+    };
     const captioned: TooltipProps = {
       id: 'p',
       open: true,
       interactive: true,
+      ref: () => {},
+      style: {},
+      onPointerEnter: () => {},
+      onPointerLeave: () => {},
       'aria-labelledby': 'policy-caption',
     };
     expect(labelled['aria-label']).toBe('Policy');
@@ -102,15 +121,34 @@ describe('Tooltip exports', () => {
       interactive: true;
       id: string;
       open: boolean;
+      ref: (node: HTMLElement | null) => void;
+      style: CSSProperties;
+      onPointerEnter: () => void;
+      onPointerLeave: () => void;
       'aria-label': string;
     }>().toMatchTypeOf<TooltipProps>();
     expectTypeOf<{
       interactive: true;
       id: string;
       open: boolean;
+      ref: (node: HTMLElement | null) => void;
+      style: CSSProperties;
+      onPointerEnter: () => void;
+      onPointerLeave: () => void;
       'aria-labelledby': string;
     }>().toMatchTypeOf<TooltipProps>();
-    expectTypeOf<{ id: string; open: boolean }>().toMatchTypeOf<TooltipProps>();
+    expectTypeOf<{
+      interactive: true;
+      id: string;
+      open: boolean;
+      ref: (node: HTMLElement | null) => void;
+      style: CSSProperties;
+      onPointerEnter: () => void;
+      onPointerLeave: () => void;
+      'aria-label': string;
+      'aria-labelledby': string;
+    }>().not.toMatchTypeOf<TooltipProps>();
+    expectTypeOf<{ id: string; open: boolean }>().not.toMatchTypeOf<TooltipProps>();
   });
 });
 
@@ -307,7 +345,13 @@ describe('Tooltip', () => {
     expect(source).not.toContain('Tooltip.Content');
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../overlay/usePopoverSync', './Tooltip.surface', './Tooltip.module.css']),
+      new Set([
+        'react',
+        '../overlay/usePopoverSync',
+        './Tooltip.surface',
+        './Tooltip.wire',
+        './Tooltip.module.css',
+      ]),
     );
     expect(css).not.toContain('.trigger');
     expect(css).toContain('anchor(');
