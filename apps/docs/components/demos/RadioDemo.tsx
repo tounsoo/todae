@@ -21,7 +21,9 @@ export function RadioPlan() {
           Enterprise
         </Radio>
       </RadioGroup>
-      <Description id={proHintId}>Pro adds seats and audit logs.</Description>
+      <div className="messages">
+        <Description id={proHintId}>Pro adds seats and audit logs.</Description>
+      </div>
     </div>
   );
 }

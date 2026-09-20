@@ -13,6 +13,10 @@ Label carries no margin. The gap between a label and its shell is `field.label.g
 	display: grid;
 	gap: var(--todae-field-label-gap);
 }
+.messages {
+	display: grid;
+	gap: var(--todae-field-messages-gap);
+}
 ```
 
 ```tsx
@@ -30,7 +34,7 @@ const id = useId()
   <LabelSibling />
 </Example>
 
-One `.labelled-field` per stack. The order is Label, control, [Description](/description), [ErrorMessage](/errormessage). Do not wrap several stacks in one wrapper. Do not wrap the stack in `Stack`. `stack.gap` is the density gap between fields, not between a label and its shell. Put `.labelled-field` stacks inside `Stack`.
+One `.labelled-field` per stack. The order is Label, control, then a `.messages` stack of [Description](/description) and [ErrorMessage](/errormessage). The control-to-messages gap is `field.label.gap` (0.4rem). The gap between the two messages is `field.messages.gap` (0.2rem). Do not wrap several stacks in one wrapper. Do not wrap the stack in `Stack`. `stack.gap` is the density gap between fields, not between a label and its shell. Put `.labelled-field` stacks inside `Stack`.
 
 ## States
 

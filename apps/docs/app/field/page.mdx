@@ -53,7 +53,7 @@ Label works with Icon, Affix, and ChipInput.
 
 ## Messages
 
-[Description](/description) and [ErrorMessage](/errormessage) are siblings under the shell. They are not Field parts. Put `aria-describedby` on `Field.Root`. Root copies it onto the input. Do not set it on `Field.TextInput`.
+[Description](/description) and [ErrorMessage](/errormessage) sit in a `.messages` stack under the shell. They are not Field parts. Put `aria-describedby` on `Field.Root`. Root copies it onto the input. Do not set it on `Field.TextInput`.
 
 ```tsx
 const describedBy = invalid ? `${hintId} ${errorId}` : hintId
@@ -63,8 +63,10 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
 	<Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
 		<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
 	</Field.Root>
-	<Description id={hintId}>Use your work address.</Description>
-	{invalid ? <ErrorMessage id={errorId}>{error}</ErrorMessage> : null}
+	<div className="messages">
+		<Description id={hintId}>Use your work address.</Description>
+		{invalid ? <ErrorMessage id={errorId}>{error}</ErrorMessage> : null}
+	</div>
 </div>
 ```
 

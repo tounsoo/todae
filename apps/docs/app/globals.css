@@ -69,6 +69,11 @@ main:has(.playground) {
   gap: var(--todae-field-label-gap);
 }
 
+.messages {
+  display: grid;
+  gap: var(--todae-field-messages-gap);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

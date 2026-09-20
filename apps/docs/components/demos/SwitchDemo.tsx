@@ -13,7 +13,9 @@ export function SwitchStates() {
         <Switch checked={digest} onCheckedChange={setDigest} aria-describedby={hintId}>
           Send a weekly digest
         </Switch>
-        <Description id={hintId}>One email on Monday. No ads.</Description>
+        <div className="messages">
+          <Description id={hintId}>One email on Monday. No ads.</Description>
+        </div>
       </div>
       <Switch disabled>Beta channel</Switch>
     </>

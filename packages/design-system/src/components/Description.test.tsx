@@ -8,10 +8,9 @@ import { Description, type DescriptionProps } from './Description';
 import { Field } from './Field';
 import * as api from '../index';
 
-const css = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), 'Description.module.css'),
-  'utf8',
-);
+const here = dirname(fileURLToPath(import.meta.url));
+const css = readFileSync(join(here, 'Description.module.css'), 'utf8');
+const docsCss = readFileSync(join(here, '../../../../apps/docs/app/globals.css'), 'utf8');
 
 afterEach(cleanup);
 
@@ -55,18 +54,22 @@ describe('Description', () => {
     expect(document.getElementById('email-hint')?.textContent).toBe('Use your work address.');
   });
 
-  it('sits below the Field shell', () => {
+  it('sits in .messages below the Field shell', () => {
     const { container } = render(
       <div className="labelled-field">
         <Field.Root id="mail">
           <Field.TextInput value="" onChange={() => undefined} />
         </Field.Root>
-        <Description id="email-hint">Use your work address.</Description>
+        <div className="messages">
+          <Description id="email-hint">Use your work address.</Description>
+        </div>
       </div>,
     );
     const textbox = screen.getByRole('textbox');
     const hint = container.querySelector('#email-hint');
-    expect(textbox.parentElement?.nextElementSibling).toBe(hint);
+    const stack = textbox.parentElement?.nextElementSibling;
+    expect(stack?.className).toBe('messages');
+    expect(stack?.contains(hint)).toBe(true);
   });
 
   it('merges className and forwards extra attributes', () => {
@@ -83,6 +86,11 @@ describe('Description', () => {
 
   it('carries no margin', () => {
     expect(css).not.toMatch(/margin/);
+  });
+
+  it('uses the docs message stack recipe', () => {
+    expect(docsCss).toMatch(/\.labelled-field\s*\{[^}]*gap:\s*var\(--todae-field-label-gap\)/);
+    expect(docsCss).toMatch(/\.messages\s*\{[^}]*gap:\s*var\(--todae-field-messages-gap\)/);
   });
 
   it('SSR keeps the id', () => {

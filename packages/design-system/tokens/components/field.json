@@ -52,6 +52,9 @@
         "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.regular" } }
       },
       "fg": { "$type": "color", "$value": { "$ref": "color.danger.default" } }
+    },
+    "messages": {
+      "gap": { "$type": "dimension", "$value": { "value": 0.2, "unit": "rem" } }
     }
   }
 }

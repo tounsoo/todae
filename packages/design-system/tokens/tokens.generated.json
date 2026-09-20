@@ -1856,6 +1856,15 @@
       "context": null
     },
     {
+      "path": "field.messages.gap",
+      "type": "dimension",
+      "cssVar": "--todae-field-messages-gap",
+      "cssValue": "0.2rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.min-width",
       "type": "dimension",
       "cssVar": "--todae-field-min-width",

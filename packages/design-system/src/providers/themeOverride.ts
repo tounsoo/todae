@@ -145,6 +145,7 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'field.error.font.size',
   'field.error.font.weight',
   'field.error.fg',
+  'field.messages.gap',
   'chip.radius',
   'chip.padding.x',
   'chip.padding.y',

@@ -13,7 +13,9 @@ export function DescriptionSibling() {
       <Field.Root id={id} aria-describedby={hintId}>
         <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
       </Field.Root>
-      <Description id={hintId}>We only use this for billing receipts.</Description>
+      <div className="messages">
+        <Description id={hintId}>We only use this for billing receipts.</Description>
+      </div>
     </div>
   );
 }

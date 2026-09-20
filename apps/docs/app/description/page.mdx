@@ -8,7 +8,18 @@ Put `aria-describedby` on `Field.Root`, not on `Field.TextInput`. Root copies th
 
 ## With Field
 
-Description carries no margin. Stack it under the control in `.labelled-field`.
+Description carries no margin. Put messages in `.messages`. That stack sits `field.label.gap` (0.4rem) under the control. Two messages inside the stack use `field.messages.gap` (0.2rem).
+
+```css
+.labelled-field {
+	display: grid;
+	gap: var(--todae-field-label-gap);
+}
+.messages {
+	display: grid;
+	gap: var(--todae-field-messages-gap);
+}
+```
 
 ```tsx
 const id = useId()
@@ -19,7 +30,9 @@ const hintId = useId()
 	<Field.Root id={id} aria-describedby={hintId}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
-	<Description id={hintId}>We only use this for billing receipts.</Description>
+	<div className="messages">
+		<Description id={hintId}>We only use this for billing receipts.</Description>
+	</div>
 </div>
 ```
 

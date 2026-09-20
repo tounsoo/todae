@@ -20,7 +20,9 @@ export function CheckboxStates() {
         >
           I accept the terms
         </Checkbox>
-        {invalid ? <ErrorMessage id={errorId}>Accept the terms to continue.</ErrorMessage> : null}
+        <div className="messages">
+          {invalid ? <ErrorMessage id={errorId}>Accept the terms to continue.</ErrorMessage> : null}
+        </div>
       </div>
     </>
   );
