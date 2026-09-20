@@ -53,8 +53,18 @@ describe('ErrorMessage', () => {
     expect(document.getElementById('email-error')?.textContent).toBe('Enter an email.');
   });
 
-  it('carries no margin', () => {
-    expect(css).not.toMatch(/margin/);
+  it('owns control-to-message spacing and tightens after Description', () => {
+    expect(css).toMatch(/margin-block-start:\s*var\(--todae-field-label-gap\)/);
+    expect(css).toMatch(/margin-block-end:\s*0/);
+    expect(css).toMatch(/line-height:\s*1\.4/);
+    expect(css).toMatch(
+      /\[data-todae-description\]\)\s*\+\s*\.error[\s\S]*margin-block-start:\s*var\(--todae-field-messages-gap\)/,
+    );
+  });
+
+  it('marks itself for the sibling rule', () => {
+    const { container } = render(<ErrorMessage id="email-error">Enter an email.</ErrorMessage>);
+    expect(container.querySelector('#email-error')?.getAttribute('data-todae-error')).toBe('');
   });
 
   it('SSR keeps the id and omits alert', () => {

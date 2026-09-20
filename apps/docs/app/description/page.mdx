@@ -8,16 +8,20 @@ Put `aria-describedby` on `Field.Root`, not on `Field.TextInput`. Root copies th
 
 ## With Field
 
-Description carries no margin. Put messages in `.messages`. That stack sits `field.label.gap` (0.4rem) under the control. Two messages inside the stack use `field.messages.gap` (0.2rem).
+Description owns its spacing. `margin-block-start` is `field.label.gap` (0.4rem) from the control. `margin-block-end` is 0. Put it after the control. Do not wrap it.
+
+`.labelled-field` still spaces Label to the control. It does not space the control to Description.
 
 ```css
 .labelled-field {
-	display: grid;
-	gap: var(--todae-field-label-gap);
+	display: flex;
+	flex-direction: column;
 }
-.messages {
-	display: grid;
-	gap: var(--todae-field-messages-gap);
+
+.labelled-field
+	> :not([data-todae-description], [data-todae-error])
+	+ :not([data-todae-description], [data-todae-error]) {
+	margin-block-start: var(--todae-field-label-gap);
 }
 ```
 
@@ -30,9 +34,7 @@ const hintId = useId()
 	<Field.Root id={id} aria-describedby={hintId}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
-	<div className="messages">
-		<Description id={hintId}>We only use this for billing receipts.</Description>
-	</div>
+	<Description id={hintId}>We only use this for billing receipts.</Description>
 </div>
 ```
 

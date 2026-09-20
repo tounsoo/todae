@@ -1,8 +1,15 @@
 @layer todae.components {
   .error {
     display: block;
+    margin-block-start: var(--todae-field-label-gap);
+    margin-block-end: 0;
     font-size: var(--todae-field-error-font-size);
     font-weight: var(--todae-field-error-font-weight);
+    line-height: 1.4;
     color: var(--todae-field-error-fg);
+  }
+
+  :global([data-todae-description]) + .error {
+    margin-block-start: var(--todae-field-messages-gap);
   }
 }

@@ -12,6 +12,7 @@ export function Description({ id, className, ...props }: DescriptionProps) {
     <span
       {...props}
       id={id}
+      data-todae-description=""
       className={[styles.description, className].filter(Boolean).join(' ')}
     />
   );

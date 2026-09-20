@@ -16,10 +16,8 @@ export function ErrorMessageSibling() {
       <Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
         <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
       </Field.Root>
-      <div className="messages">
-        <Description id={hintId}>We only use this for billing receipts.</Description>
-        {invalid ? <ErrorMessage id={errorId}>Enter an address that contains an @.</ErrorMessage> : null}
-      </div>
+      <Description id={hintId}>We only use this for billing receipts.</Description>
+      {invalid ? <ErrorMessage id={errorId}>Enter an address that contains an @.</ErrorMessage> : null}
     </div>
   );
 }

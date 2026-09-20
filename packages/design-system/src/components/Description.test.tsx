@@ -54,22 +54,19 @@ describe('Description', () => {
     expect(document.getElementById('email-hint')?.textContent).toBe('Use your work address.');
   });
 
-  it('sits in .messages below the Field shell', () => {
+  it('is the next sibling of the Field shell', () => {
     const { container } = render(
       <div className="labelled-field">
         <Field.Root id="mail">
           <Field.TextInput value="" onChange={() => undefined} />
         </Field.Root>
-        <div className="messages">
-          <Description id="email-hint">Use your work address.</Description>
-        </div>
+        <Description id="email-hint">Use your work address.</Description>
       </div>,
     );
     const textbox = screen.getByRole('textbox');
     const hint = container.querySelector('#email-hint');
-    const stack = textbox.parentElement?.nextElementSibling;
-    expect(stack?.className).toBe('messages');
-    expect(stack?.contains(hint)).toBe(true);
+    expect(textbox.parentElement?.nextElementSibling).toBe(hint);
+    expect(hint?.getAttribute('data-todae-description')).toBe('');
   });
 
   it('merges className and forwards extra attributes', () => {
@@ -84,13 +81,28 @@ describe('Description', () => {
     expect(hint?.getAttribute('data-test')).toBe('hint');
   });
 
-  it('carries no margin', () => {
-    expect(css).not.toMatch(/margin/);
+  it('owns control-to-message spacing', () => {
+    expect(css).toMatch(/margin-block-start:\s*var\(--todae-field-label-gap\)/);
+    expect(css).toMatch(/margin-block-end:\s*0/);
+    expect(css).toMatch(/line-height:\s*1\.4/);
   });
 
-  it('uses the docs message stack recipe', () => {
-    expect(docsCss).toMatch(/\.labelled-field\s*\{[^}]*gap:\s*var\(--todae-field-label-gap\)/);
-    expect(docsCss).toMatch(/\.messages\s*\{[^}]*gap:\s*var\(--todae-field-messages-gap\)/);
+  it('does not use a docs .messages stack', () => {
+    expect(docsCss).not.toMatch(/\.messages/);
+    expect(docsCss).toMatch(
+      /\.labelled-field\s*>\s*:not\(\[data-todae-description\],\s*\[data-todae-error\]\)/,
+    );
+    const demos = join(here, '../../../../apps/docs/components/demos');
+    for (const name of [
+      'DescriptionDemo.tsx',
+      'ErrorMessageDemo.tsx',
+      'CheckboxDemo.tsx',
+      'RadioDemo.tsx',
+      'SwitchDemo.tsx',
+      'FieldDemo.tsx',
+    ]) {
+      expect(readFileSync(join(demos, name), 'utf8')).not.toMatch(/className=["']messages["']/);
+    }
   });
 
   it('SSR keeps the id', () => {

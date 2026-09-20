@@ -65,13 +65,14 @@ main:has(.playground) {
 }
 
 .labelled-field {
-  display: grid;
-  gap: var(--todae-field-label-gap);
+  display: flex;
+  flex-direction: column;
 }
 
-.messages {
-  display: grid;
-  gap: var(--todae-field-messages-gap);
+.labelled-field
+  > :not([data-todae-description], [data-todae-error])
+  + :not([data-todae-description], [data-todae-error]) {
+  margin-block-start: var(--todae-field-label-gap);
 }
 
 table {

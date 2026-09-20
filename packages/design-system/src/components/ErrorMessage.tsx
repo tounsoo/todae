@@ -12,6 +12,7 @@ export function ErrorMessage({ id, className, ...props }: ErrorMessageProps) {
     <span
       {...props}
       id={id}
+      data-todae-error=""
       className={[styles.error, className].filter(Boolean).join(' ')}
     />
   );
