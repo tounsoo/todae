@@ -27,6 +27,14 @@ export {
   type TooltipProps,
   type TooltipTriggerProps,
 } from './components/Tooltip';
+export {
+  useTooltip,
+  type TooltipTriggerUserProps,
+  type TooltipTriggerWire,
+  type TooltipWire,
+  type UseTooltipOptions,
+  type UseTooltipResult,
+} from './hooks/useTooltip';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
 export { Chip, ChipOverflow, type ChipOverflowProps, type ChipProps } from './components/Chip';
 export { Description, type DescriptionProps } from './components/Description';

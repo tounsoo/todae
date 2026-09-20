@@ -349,14 +349,15 @@ describe('Tooltip', () => {
     expect(source).not.toContain('useInertOutside');
     expect(source).not.toContain('useScrollLock');
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
+    expect(source).not.toContain('createIntent');
+    expect(source).not.toContain('useControlledState');
+    expect(source).not.toContain('useEscapeKey');
     expect(new Set(froms)).toEqual(
       new Set([
         'react',
-        '../hooks/useControlledState',
-        '../overlay/tabbables',
-        '../overlay/useEscapeKey',
+        '../hooks/useTooltip',
         '../overlay/usePopoverSync',
-        './Tooltip.intent',
+        '../overlay/tabbables',
         './Tooltip.surface',
         './Tooltip.module.css',
       ]),

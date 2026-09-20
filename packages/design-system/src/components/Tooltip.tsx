@@ -2,30 +2,18 @@ import {
   Children,
   createContext,
   isValidElement,
-  useCallback,
   useContext,
-  useEffect,
-  useId,
   useLayoutEffect,
   useMemo,
   useRef,
-  useState,
   type CSSProperties,
   type HTMLAttributes,
   type ReactNode,
   type RefObject,
 } from 'react';
-import { useControlledState } from '../hooks/useControlledState';
-import { getTabbables } from '../overlay/tabbables';
-import { useEscapeKey } from '../overlay/useEscapeKey';
+import { useTooltip, type TooltipOpenReason, type UseTooltipResult } from '../hooks/useTooltip';
 import { usePopoverSync } from '../overlay/usePopoverSync';
-import {
-  createIntent,
-  step,
-  type TooltipCommand,
-  type TooltipEvent,
-  type TooltipOpenReason,
-} from './Tooltip.intent';
+import { getTabbables } from '../overlay/tabbables';
 import {
   contentPolicyError,
   isMounted,
@@ -78,39 +66,20 @@ function contentNameOf(
   return undefined;
 }
 
-type TooltipContextValue = {
-  open: boolean;
-  interactive: boolean;
-  contentId: string;
+type TooltipParts = UseTooltipResult<boolean> & {
   contentName: TooltipContentName | undefined;
-  anchorName: string;
-  triggerRef: RefObject<HTMLElement | null>;
-  contentRef: RefObject<HTMLElement | null>;
-  dispatch: (event: TooltipEvent, restoreFocus?: boolean) => void;
-  pairContains: (node: EventTarget | null) => boolean;
 };
 
-const TooltipContext = createContext<TooltipContextValue | null>(null);
+const TooltipPartsContext = createContext<TooltipParts | null>(null);
 
-function useTooltip(): TooltipContextValue {
-  const ctx = useContext(TooltipContext);
+function useTooltipParts(): TooltipParts {
+  const ctx = useContext(TooltipPartsContext);
   if (!ctx) throw new Error('Tooltip parts must render inside Tooltip');
   return ctx;
 }
 
-function triggerStyle(anchorName: string): CSSProperties {
-  return {
-    ['--todae-tooltip-anchor' as string]: anchorName,
-    anchorName,
-  } as CSSProperties;
-}
-
-function contentStyle(anchorName: string, style?: CSSProperties): CSSProperties {
-  return {
-    ...style,
-    ['--todae-tooltip-anchor' as string]: anchorName,
-    positionAnchor: anchorName,
-  } as CSSProperties;
+function contentStyle(anchorStyle: CSSProperties, style?: CSSProperties): CSSProperties {
+  return { ...style, ...anchorStyle };
 }
 
 export function Tooltip(props: TooltipProps) {
@@ -119,124 +88,18 @@ export function Tooltip(props: TooltipProps) {
     open: openProp,
     defaultOpen,
     onOpenChange,
-    showDelay = 300,
-    hideDelay = 100,
+    showDelay,
+    hideDelay,
     children,
   } = props;
-  const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
-  const [restoreEpoch, setRestoreEpoch] = useState(0);
-  const uid = useId().replaceAll(':', '');
-  const contentId = `todae-tooltip-${uid}`;
-  const anchorName = `--todae-tooltip-${uid}`;
-  const triggerRef = useRef<HTMLElement | null>(null);
-  const contentRef = useRef<HTMLElement | null>(null);
-  const intentRef = useRef(createIntent());
-  const timerRef = useRef<number | null>(null);
-  const openRef = useRef(open);
-  const onOpenChangeRef = useRef(onOpenChange);
-  const showDelayRef = useRef(showDelay);
-  const hideDelayRef = useRef(hideDelay);
-  const dispatchRef = useRef<(event: TooltipEvent, restoreFocus?: boolean) => void>(() => undefined);
-  openRef.current = open;
-  onOpenChangeRef.current = onOpenChange;
-  showDelayRef.current = showDelay;
-  hideDelayRef.current = hideDelay;
-
-  const applyCommands = useCallback(
-    (commands: readonly TooltipCommand[]) => {
-      for (const command of commands) {
-        switch (command.kind) {
-          case 'clear-delay':
-            if (timerRef.current != null) {
-              window.clearTimeout(timerRef.current);
-              timerRef.current = null;
-            }
-            break;
-          case 'start-delay':
-            if (timerRef.current != null) window.clearTimeout(timerRef.current);
-            timerRef.current = window.setTimeout(() => {
-              timerRef.current = null;
-              dispatchRef.current({ kind: 'delay-elapsed', token: command.token });
-            }, command.ms);
-            break;
-          case 'commit':
-            setValue(command.open);
-            onOpenChangeRef.current?.(command.open, command.reason);
-            break;
-          case 'restore-trigger-focus':
-            setRestoreEpoch((epoch) => epoch + 1);
-            break;
-          default: {
-            const _exhaustive: never = command;
-            void _exhaustive;
-          }
-        }
-      }
-    },
-    [setValue],
-  );
-
-  const dispatch = useCallback(
-    (event: TooltipEvent, restoreFocus = false) => {
-      const fidelity = window.matchMedia('(pointer: coarse)').matches ? 'coarse' : 'fine';
-      const result = step({
-        policy: {
-          fidelity,
-          showDelayMs: showDelayRef.current,
-          hideDelayMs: hideDelayRef.current,
-        },
-        state: intentRef.current,
-        open: openRef.current,
-        event,
-        restoreFocus,
-      });
-      intentRef.current = result.state;
-      applyCommands(result.commands);
-    },
-    [applyCommands],
-  );
-  dispatchRef.current = dispatch;
-
-  const pairContains = useCallback((node: EventTarget | null) => {
-    if (!(node instanceof Node)) return false;
-    const trigger = triggerRef.current;
-    const content = contentRef.current;
-    return Boolean((trigger && trigger.contains(node)) || (content && content.contains(node)));
-  }, []);
-
-  const onEscape = useCallback(() => {
-    const content = contentRef.current;
-    const active = document.activeElement;
-    const restoreFocus = Boolean(content && active instanceof Node && content.contains(active));
-    dispatch({ kind: 'escape' }, restoreFocus);
-  }, [dispatch]);
-
-  useEscapeKey(open, true, onEscape);
-
-  useLayoutEffect(() => {
-    if (restoreEpoch === 0 || open) return;
-    const trigger = triggerRef.current;
-    if (!trigger) return;
-    (getTabbables(trigger)[0] ?? trigger).focus();
-  }, [open, restoreEpoch]);
-
-  useEffect(() => {
-    if (!open) return;
-    function onFocusIn(event: FocusEvent) {
-      if (pairContains(event.target)) return;
-      dispatch({ kind: 'release', hold: 'focus' });
-    }
-    document.addEventListener('focusin', onFocusIn);
-    return () => document.removeEventListener('focusin', onFocusIn);
-  }, [dispatch, open, pairContains]);
-
-  useEffect(
-    () => () => {
-      if (timerRef.current != null) window.clearTimeout(timerRef.current);
-    },
-    [],
-  );
-
+  const machine = useTooltip({
+    interactive,
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    showDelay,
+    hideDelay,
+  });
   const ariaLabel = 'aria-label' in props ? props['aria-label'] : undefined;
   const ariaLabelledby = 'aria-labelledby' in props ? props['aria-labelledby'] : undefined;
   const contentName = useMemo(
@@ -244,28 +107,18 @@ export function Tooltip(props: TooltipProps) {
       interactive ? contentNameOf({ 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby }) : undefined,
     [ariaLabel, ariaLabelledby, interactive],
   );
-
-  const ctx = useMemo<TooltipContextValue>(
-    () => ({
-      open,
-      interactive,
-      contentId,
-      contentName,
-      anchorName,
-      triggerRef,
-      contentRef,
-      dispatch,
-      pairContains,
-    }),
-    [anchorName, contentId, contentName, dispatch, interactive, open, pairContains],
+  const ctx = useMemo<TooltipParts>(
+    () => ({ ...machine, contentName }),
+    [contentName, machine],
   );
 
-  return <TooltipContext.Provider value={ctx}>{children}</TooltipContext.Provider>;
+  return <TooltipPartsContext.Provider value={ctx}>{children}</TooltipPartsContext.Provider>;
 }
 
 function TooltipTrigger({ children }: TooltipTriggerProps) {
-  const ctx = useTooltip();
+  const ctx = useTooltipParts();
   const wrapRef = useRef<HTMLSpanElement | null>(null);
+  const wire = ctx.getTriggerProps({ className: styles.trigger });
 
   if (process.env.NODE_ENV !== 'production' && (!isValidElement(children) || Children.count(children) !== 1)) {
     console.error('Tooltip.Trigger expects a single element child');
@@ -278,36 +131,21 @@ function TooltipTrigger({ children }: TooltipTriggerProps) {
     if (tabs.length === 0) wrap.tabIndex = 0;
     else wrap.removeAttribute('tabindex');
     const described = tabs[0] ?? wrap;
-    if (ctx.open) described.setAttribute('aria-describedby', ctx.contentId);
+    if (ctx.open) described.setAttribute('aria-describedby', ctx.ids.tooltip);
     else described.removeAttribute('aria-describedby');
     return () => {
       described.removeAttribute('aria-describedby');
     };
-  }, [children, ctx.contentId, ctx.open]);
+  }, [children, ctx.ids.tooltip, ctx.open]);
+
+  const { 'aria-describedby': _described, ref, ...triggerWire } = wire;
 
   return (
     <span
+      {...triggerWire}
       ref={(node) => {
         wrapRef.current = node;
-        ctx.triggerRef.current = node;
-      }}
-      className={styles.trigger}
-      style={triggerStyle(ctx.anchorName)}
-      onPointerEnter={() => {
-        ctx.dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover' });
-      }}
-      onPointerLeave={(event) => {
-        if (!ctx.pairContains(event.relatedTarget)) {
-          ctx.dispatch({ kind: 'release', hold: 'hover' });
-        }
-      }}
-      onFocus={() => {
-        ctx.dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
-      }}
-      onBlur={(event) => {
-        if (!ctx.pairContains(event.relatedTarget)) {
-          ctx.dispatch({ kind: 'release', hold: 'focus' });
-        }
+        ref(node);
       }}
     >
       {children}
@@ -332,18 +170,17 @@ function TooltipTip({
   surface,
   ...props
 }: (TooltipContentProps | TooltipTextContentProps) & { surface: TipSurface }) {
-  const ctx = useTooltip();
-  useContentPolicy(surface, ctx.contentRef);
+  const ctx = useTooltipParts();
+  const wire = ctx.getTooltipProps();
+  useContentPolicy(surface, ctx.tooltipRef);
   return (
     <div
       {...props}
       {...surface.attrs}
-      ref={(node) => {
-        ctx.contentRef.current = node;
-      }}
+      ref={wire.ref}
       data-open={ctx.open ? '' : undefined}
       className={[styles.content, className].filter(Boolean).join(' ')}
-      style={contentStyle(ctx.anchorName, style)}
+      style={contentStyle(wire.style, style)}
     >
       {children}
     </div>
@@ -359,30 +196,27 @@ function TooltipPanel({
   onPointerLeave,
   ...props
 }: (TooltipContentProps | TooltipTextContentProps) & { surface: PanelSurface }) {
-  const ctx = useTooltip();
-  usePopoverSync(ctx.contentRef, ctx.open);
-  useContentPolicy(surface, ctx.contentRef);
+  const ctx = useTooltipParts();
+  const wire = ctx.getTooltipProps();
+  usePopoverSync(ctx.tooltipRef, ctx.open);
+  useContentPolicy(surface, ctx.tooltipRef);
   const name = contentNameOf(props) ?? ctx.contentName;
   return (
     <div
       {...props}
       {...surface.attrs}
       {...name}
-      ref={(node) => {
-        ctx.contentRef.current = node;
-      }}
+      ref={wire.ref}
       data-open={ctx.open ? '' : undefined}
       className={[styles.content, className].filter(Boolean).join(' ')}
-      style={contentStyle(ctx.anchorName, style)}
+      style={contentStyle(wire.style, style)}
       onPointerEnter={(event) => {
         onPointerEnter?.(event);
-        ctx.dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover-bridge' });
+        if ('onPointerEnter' in wire) wire.onPointerEnter(event);
       }}
       onPointerLeave={(event) => {
         onPointerLeave?.(event);
-        if (!ctx.pairContains(event.relatedTarget)) {
-          ctx.dispatch({ kind: 'release', hold: 'hover', reason: 'hover-bridge' });
-        }
+        if ('onPointerLeave' in wire) wire.onPointerLeave(event);
       }}
     >
       {children}
@@ -396,8 +230,8 @@ function TooltipContent({
   children,
   ...props
 }: TooltipContentProps | TooltipTextContentProps) {
-  const ctx = useTooltip();
-  const surface = resolveSurface(ctx.interactive, ctx.contentId);
+  const ctx = useTooltipParts();
+  const surface = resolveSurface(ctx.interactive, ctx.ids.tooltip);
   if (!isMounted(surface, ctx.open)) return null;
   if (surface.kind === 'panel') {
     return (
