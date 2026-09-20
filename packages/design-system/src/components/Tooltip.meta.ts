@@ -2,15 +2,8 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Tooltip',
-  description:
-    'Tip chrome only. Spread getTooltipProps from useTooltip. children, className, style, and a dialog name when interactive.',
+  description: 'Tip chrome. Spread getTooltipProps for wire.',
   props: [
-    {
-      name: 'interactive',
-      type: 'boolean',
-      required: true,
-      description: 'Do not set by hand; pass interactive to useTooltip.',
-    },
     {
       name: 'children',
       type: 'React.ReactNode',
