@@ -1,8 +1,10 @@
-import { ButtonGroupAlign, ButtonIcons, ButtonVariants } from '../../components/demos/ButtonDemo';
+import { ButtonGroupAlign, ButtonIcons, ButtonOverflow, ButtonVariants } from '../../components/demos/ButtonDemo';
 
 # Button
 
-`Button.Root` is the control. `Button.Icon` is a compound part. Icon position is DOM order. The icon is decorative (`aria-hidden`). Icon-only roots need `aria-label` on `Button.Root`.
+`Button.Root` is the control. `Button.Icon` is a compound part. Icon position is DOM order. The icon is decorative (`aria-hidden`). Icon-only roots need `aria-label` or `aria-labelledby` on `Button.Root`.
+
+Icon-only roots tip that name. A labeled button tips the full string only while the label overflows. `tooltip={false}` opts out. Fitting labeled buttons do not tip. Auto tips are never interactive.
 
 Variants use the existing paint packs. Default `type` is `button`.
 
@@ -14,6 +16,12 @@ Leading icon, trailing icon, icon-only.
 
 <Example>
   <ButtonIcons />
+</Example>
+
+Overflowing label.
+
+<Example>
+  <ButtonOverflow />
 </Example>
 
 ## ButtonGroup

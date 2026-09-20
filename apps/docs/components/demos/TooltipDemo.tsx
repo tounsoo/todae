@@ -3,16 +3,12 @@
 import { Button, Chip, Stack, Tooltip, useTooltip } from '@tounsoo/todae';
 
 export function TooltipArchive() {
-  const tooltip = useTooltip();
   return (
-    <>
-      <Button.Root aria-label="Archive" {...tooltip.getTriggerProps()}>
-        <Button.Icon>
-          <span>+</span>
-        </Button.Icon>
-      </Button.Root>
-      <Tooltip {...tooltip.getTooltipProps()}>Archive</Tooltip>
-    </>
+    <Button.Root aria-label="Archive">
+      <Button.Icon>
+        <span>+</span>
+      </Button.Icon>
+    </Button.Root>
   );
 }
 
@@ -34,7 +30,7 @@ export function TooltipPolicy() {
   const tooltip = useTooltip({ interactive: true });
   return (
     <>
-      <Button.Root variant="ghost" {...tooltip.getTriggerProps()}>
+      <Button.Root variant="ghost" tooltip={false} {...tooltip.getTriggerProps()}>
         Policy
       </Button.Root>
       <Tooltip {...tooltip.getTooltipProps()} aria-label="Policy">

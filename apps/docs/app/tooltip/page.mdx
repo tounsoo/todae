@@ -2,25 +2,31 @@ import { TooltipArchive, TooltipOverflow, TooltipPolicy } from '../../components
 
 # Tooltip
 
+`useTooltip` is the open machine. Spread `getTriggerProps` on the trigger. Spread `getTooltipProps` on `Tooltip`. `Tooltip` is the tip surface only. There is no `Tooltip.Trigger` or `Tooltip.Content`.
+
 Default `Tooltip` is text-only `role="tooltip"`. Hover waits 300ms. Focus opens at once. A coarse pointer uses focus only.
 
-`useTooltip` owns the open machine. Spread `getTriggerProps` on the trigger and `getTooltipProps` on `Tooltip`. `interactive` stays on the same `Tooltip`. The surface is a non-modal tip dialog. It uses `popover="manual"` and `role="dialog"`. React Aria PreviewTrigger with Popover also forces `role="dialog"` on a hover tip that is not a modal. It never uses `role="tooltip"`. Set exactly one of `aria-label` or `aria-labelledby` on interactive `Tooltip`. Links are allowed. Tab moves into those links. Hover can cross onto the panel. Escape returns focus to the trigger and does not reopen until that hold is released. There is no focus trap.
+`interactive` stays on the same `Tooltip`. The surface is a non-modal tip dialog. It uses `popover="manual"` and `role="dialog"`. React Aria PreviewTrigger with Popover also forces `role="dialog"` on a hover tip that is not a modal. It never uses `role="tooltip"`. Set exactly one of `aria-label` or `aria-labelledby` on interactive `Tooltip`. Links are allowed. Tab moves into those links. Hover can cross onto the panel. Escape returns focus to the trigger and does not reopen until that hold is released. There is no focus trap.
 
 Placement is CSS anchors. The tip sits above the trigger and flips below when it cannot fit. There is no arrow and no placement prop.
 
-Icon-only trigger.
+## Button sugar
+
+Icon-only `Button.Root` tips its accessible name. Pass `aria-label` or `aria-labelledby`. A labeled button tips the full string only while the label overflows. `tooltip={false}` opts out. Fitting labeled buttons do not tip.
 
 <Example>
   <TooltipArchive />
 </Example>
 
-Overflow chips. Hidden labels live in the tip.
+## Hook recipe
+
+Overflow chips and other non-button triggers use `useTooltip`. Mark a non-tabbable wrap with `tabIndex={0}`.
 
 <Example>
   <TooltipOverflow />
 </Example>
 
-Interactive tip with a link.
+Interactive tip with a link. Set `tooltip={false}` on `Button.Root` so the hook owns the machine.
 
 <Example>
   <TooltipPolicy />
