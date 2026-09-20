@@ -171,7 +171,23 @@ describe('committed token graph', () => {
     expect(labelGap?.cssValue).toBe('0.4rem');
     expect(labelGap?.ref).toBeNull();
     expect(labelGap?.layer).toBe('contract');
+    const messagesGap = graph.tokens.find((t) => t.path === 'field.messages.gap');
+    expect(messagesGap?.cssValue).toBe('0.2rem');
+    expect(messagesGap?.ref).toBeNull();
+    expect(messagesGap?.layer).toBe('contract');
     expect(graph.tokens.some((t) => t.path === 'chip.bg.default')).toBe(true);
+    expect(graph.tokens.find((t) => t.path === 'field.description.fg')?.cssValue).toBe(
+      'var(--todae-color-fg-muted)',
+    );
+    expect(graph.tokens.find((t) => t.path === 'field.error.fg')?.cssValue).toBe(
+      'var(--todae-color-danger-default)',
+    );
+    expect(graph.tokens.find((t) => t.path === 'selection.size')?.cssValue).toBe(
+      'var(--todae-space-selection-size)',
+    );
+    expect(graph.tokens.find((t) => t.path === 'selection.indicator.fg')?.cssValue).toBe(
+      'var(--todae-color-on-accent)',
+    );
   });
 
   it('emits distinct accent hover and active var chains', async () => {

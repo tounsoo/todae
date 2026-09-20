@@ -6,7 +6,7 @@ The public ladder is Compounds, then Recipes. Recipes live in these docs. They a
 
 ## Compounds
 
-Public siblings. `Field`, [Label](/label), `Button`, `Popover`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
+Public siblings. `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [Radio](/radio), [Switch](/switch), `Button`, `Popover`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
 
 `Field.Icon`, `Field.Affix`, and `Button.Icon` are compound parts. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not a public rung.
 
@@ -101,6 +101,9 @@ Combobox.Root, Combobox.Trigger, or Combobox.Icon
   recipe chrome in the package
 
 Dual-wiring aria or open outside useCombobox while also using the hook
+
+OptionList and Radio or Checkbox bound to the same value
+  overlay listbox and permanent choice on one selection
 
 Combobox behavior baked into Field
 

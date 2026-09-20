@@ -21,6 +21,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <a href="/chip">Chip</a>
               <a href="/field">Field</a>
               <a href="/label">Label</a>
+              <a href="/description">Description</a>
+              <a href="/errormessage">ErrorMessage</a>
+              <a href="/checkbox">Checkbox</a>
+              <a href="/radio">Radio</a>
+              <a href="/switch">Switch</a>
               <a href="/dialog">Dialog</a>
               <a href="/popover">Popover</a>
               <a href="/optionlist">OptionList</a>

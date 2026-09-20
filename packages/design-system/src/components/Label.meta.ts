@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Label',
-  description: 'Visible label for a Field. Pass htmlFor the Root id. Not a control.',
+  description: 'Visible name for a control. Sibling, not a Field part. Pass htmlFor the control id.',
   props: [
     {
       name: 'htmlFor',

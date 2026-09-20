@@ -1,3 +1,4 @@
+import { ErrorMessageSibling } from '../../components/demos/ErrorMessageDemo';
 import {
   ChipInputCommitKeys,
   ChipInputControlled,
@@ -50,13 +51,34 @@ Label works with Icon, Affix, and ChipInput.
   <FieldAdornments />
 </Example>
 
+## Messages
+
+[Description](/description) and [ErrorMessage](/errormessage) sit under the shell as siblings. They are not Field parts. Each owns `margin-block-start`. Put `aria-describedby` on `Field.Root`. Root copies it onto the input. Do not set it on `Field.TextInput`.
+
+```tsx
+const describedBy = invalid ? `${hintId} ${errorId}` : hintId
+
+<div className="labelled-field">
+	<Label htmlFor={id}>Email</Label>
+	<Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
+		<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
+	</Field.Root>
+	<Description id={hintId}>Use your work address.</Description>
+	{invalid ? <ErrorMessage id={errorId}>{error}</ErrorMessage> : null}
+</div>
+```
+
+<Example block>
+  <ErrorMessageSibling />
+</Example>
+
 ## Chip input
 
 Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow.
 
 When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. When chips overflow, the last visible chip ellipsizes to soak leftover width before `+N`; earlier chips stay full and `+N` never shrinks.
 
-Deferred this slice: built-in clear, hint/error slot, paste-split, clickable `+N`, chip arrow-key roving.
+Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key roving.
 
 <Example block>
   <ChipInputControlled />

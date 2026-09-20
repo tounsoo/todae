@@ -18,6 +18,7 @@ export const RESERVED_ROOTS = [
   'sheet',
   'popover',
   'option',
+  'selection',
 ] as const;
 export const CHIP_SLOTS = ['default', 'hover', 'focus', 'disabled'] as const;
 export const FIELD_BORDER_SLOTS = ['default', 'hover', 'focus', 'disabled', 'invalid'] as const;
@@ -562,6 +563,7 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
     'sheet.json',
     'popover.json',
     'option.json',
+    'selection.json',
   ]) {
     contract.push(
       ...flattenLayer(

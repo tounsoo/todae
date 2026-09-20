@@ -139,6 +139,13 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'field.label.font.size',
   'field.label.font.weight',
   'field.label.fg',
+  'field.description.font.size',
+  'field.description.font.weight',
+  'field.description.fg',
+  'field.error.font.size',
+  'field.error.font.weight',
+  'field.error.fg',
+  'field.messages.gap',
   'chip.radius',
   'chip.padding.x',
   'chip.padding.y',
@@ -204,6 +211,25 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'option.fg.selected',
   'option.check.fg',
   'option.check.border',
+  'selection.size',
+  'selection.gap',
+  'selection.radius',
+  'selection.font.size',
+  'selection.font.weight',
+  'selection.bg.default',
+  'selection.bg.checked',
+  'selection.bg.disabled',
+  'selection.fg.default',
+  'selection.fg.disabled',
+  'selection.border.default',
+  'selection.border.checked',
+  'selection.border.invalid',
+  'selection.border.disabled',
+  'selection.ring.focus',
+  'selection.ring.invalid',
+  'selection.indicator.fg',
+  'selection.track.bg',
+  'selection.thumb.bg',
 ] as const;
 
 export const THEME_OVERRIDE_KEYS = [
@@ -245,8 +271,10 @@ const COLOR_KEYS = new Set<string>([
     (key) =>
       /^button\.(primary|secondary|ghost)\.(bg|fg|border)\./.test(key) ||
       /^button\.(primary|secondary|ghost)\.ring\.focus$/.test(key) ||
-      /^(field|chip|dialog|sheet|overlay|popover|option)\.(bg|fg|border|ring|dismiss|grabber|scrim|check)(?:\.|$)/.test(key) ||
+      /^(field|chip|dialog|sheet|overlay|popover|option|selection)\.(bg|fg|border|ring|dismiss|grabber|scrim|check|indicator|track|thumb)(?:\.|$)/.test(key) ||
       key === 'field.label.fg' ||
+      key === 'field.description.fg' ||
+      key === 'field.error.fg' ||
       key.startsWith('text.fg.'),
   ),
 ]);
@@ -261,7 +289,10 @@ const WEIGHT_KEYS = new Set<string>([
   'text.weight.bold',
   'dialog.title.font.weight',
   'field.label.font.weight',
+  'field.description.font.weight',
+  'field.error.font.weight',
   'option.font.weight',
+  'selection.font.weight',
 ]);
 
 const NUMBER_KEYS = new Set<string>(['font.leading.default', 'text.leading.default', 'sheet.snap.mid']);

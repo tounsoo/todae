@@ -1,0 +1,11 @@
+@layer todae.components {
+  .description {
+    display: block;
+    margin-block-start: var(--todae-field-label-gap);
+    margin-block-end: 0;
+    font-size: var(--todae-field-description-font-size);
+    font-weight: var(--todae-field-description-font-weight);
+    line-height: 1.4;
+    color: var(--todae-field-description-fg);
+  }
+}
