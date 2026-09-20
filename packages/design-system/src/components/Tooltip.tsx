@@ -9,6 +9,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
   type HTMLAttributes,
   type ReactNode,
@@ -96,6 +97,7 @@ export function Tooltip({
   children,
 }: TooltipProps) {
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
+  const [restoreEpoch, setRestoreEpoch] = useState(0);
   const uid = useId().replaceAll(':', '');
   const contentId = `todae-tooltip-${uid}`;
   const anchorName = `--todae-tooltip-${uid}`;
@@ -134,12 +136,9 @@ export function Tooltip({
             setValue(command.open);
             onOpenChangeRef.current?.(command.open, command.reason);
             break;
-          case 'restore-trigger-focus': {
-            const trigger = triggerRef.current;
-            if (!trigger) break;
-            (getTabbables(trigger)[0] ?? trigger).focus();
+          case 'restore-trigger-focus':
+            setRestoreEpoch((epoch) => epoch + 1);
             break;
-          }
           default: {
             const _exhaustive: never = command;
             void _exhaustive;
@@ -186,6 +185,13 @@ export function Tooltip({
   }, [dispatch]);
 
   useEscapeKey(open, true, onEscape);
+
+  useLayoutEffect(() => {
+    if (restoreEpoch === 0 || open) return;
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    (getTabbables(trigger)[0] ?? trigger).focus();
+  }, [open, restoreEpoch]);
 
   useEffect(() => {
     if (!open) return;

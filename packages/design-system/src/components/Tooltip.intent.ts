@@ -82,7 +82,7 @@ function escape(state: TooltipIntentState, open: boolean, restoreFocus: boolean)
   if (!open) return { state, commands: [] };
   const next: TooltipIntentState = {
     hover: nextHoldPhase(state.hover, 'escape', 'hover', 'fine'),
-    focus: nextHoldPhase(state.focus, 'escape', 'focus', 'fine'),
+    focus: 'spent',
     pending: null,
     seq: state.seq,
   };

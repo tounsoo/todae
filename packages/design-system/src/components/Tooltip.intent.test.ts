@@ -119,6 +119,7 @@ describe('Tooltip.intent', () => {
         const opened = run({ kind: 'delay-elapsed', token: 1 }, { state: run(acquireHover).state });
         const escaped = run({ kind: 'escape' }, { state: opened.state, open: true });
         expect(escaped.state.hover).toBe('spent');
+        expect(escaped.state.focus).toBe('spent');
         expect(escaped.commands).toEqual([
           { kind: 'clear-delay' },
           { kind: 'commit', open: false, reason: 'escape' },
@@ -126,6 +127,9 @@ describe('Tooltip.intent', () => {
         const inert = run(acquireHover, { state: escaped.state, open: false });
         expect(inert.state.hover).toBe('spent');
         expect(inert.commands).toEqual([]);
+        const inertFocus = run(acquireFocus, { state: escaped.state, open: false });
+        expect(inertFocus.state.focus).toBe('spent');
+        expect(inertFocus.commands).toEqual([]);
         const released = run(releaseHover, { state: inert.state, open: false });
         expect(released.state.hover).toBe('idle');
         const reopened = run(acquireHover, { state: released.state, open: false });

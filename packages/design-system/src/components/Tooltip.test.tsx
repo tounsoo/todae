@@ -251,6 +251,19 @@ describe('Tooltip', () => {
     expect(panel.getAttribute('data-open')).toBeNull();
   });
 
+  it('leaves focus on the link when Escape is vetoed', () => {
+    const onOpenChange = vi.fn();
+    render(<InteractiveTip open onOpenChange={onOpenChange} />);
+    const link = screen.getByRole('link', { name: 'Read the policy' });
+    const panel = document.querySelector('[data-surface="panel"]') as HTMLElement;
+    link.focus();
+    fireEvent.focusIn(link);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+    expect(document.activeElement).toBe(link);
+    expect(panel.getAttribute('data-open')).toBe('');
+  });
+
   it('does not import Popover and keeps CSS anchors plus tip pointer-events', () => {
     expect(source).not.toContain('./Popover');
     expect(source).not.toContain('useControlledOpen');
