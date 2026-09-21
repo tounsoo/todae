@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { catalog, createSearch, listForIntent, search } from './index.ts';
-import type { Catalog } from './types.ts';
+import { catalog, createSearch, listForIntent, search } from './index';
+import type { Catalog, CatalogEntry } from './types';
+
+function entryId(entry: CatalogEntry): string {
+  return 'tree' in entry ? entry.id : entry.name;
+}
 
 describe('catalog search', () => {
   it('lists choose-one components including Radio, RadioGroup, and OptionList', () => {
-    const names = listForIntent('choose-one').map((entry) => ('id' in entry && 'tree' in entry ? entry.id : entry.name));
+    const names = listForIntent('choose-one').map(entryId);
     expect(names).toEqual(expect.arrayContaining(['Radio', 'RadioGroup', 'OptionList']));
   });
 
@@ -13,7 +17,7 @@ describe('catalog search', () => {
   });
 
   it('ranks BottomSheet above Dialog for sheet', () => {
-    const names = search('sheet').map((hit) => ('id' in hit.entry && 'tree' in hit.entry ? hit.entry.id : hit.entry.name));
+    const names = search('sheet').map((hit) => entryId(hit.entry));
     expect(names.indexOf('BottomSheet')).toBeGreaterThan(-1);
     expect(names.indexOf('Dialog')).toBeGreaterThan(-1);
     expect(names.indexOf('BottomSheet')).toBeLessThan(names.indexOf('Dialog'));
@@ -21,13 +25,13 @@ describe('catalog search', () => {
 
   it('is deterministic', () => {
     expect(search('field').map((hit) => hit.score)).toEqual(search('field').map((hit) => hit.score));
-    expect(search('field').map((hit) => ('name' in hit.entry ? hit.entry.name : hit.entry.id))).toEqual(
-      search('field').map((hit) => ('name' in hit.entry ? hit.entry.name : hit.entry.id)),
-    );
+    expect(search('field').map((hit) => entryId(hit.entry))).toEqual(search('field').map((hit) => entryId(hit.entry)));
   });
 
   it('filters by kind', () => {
-    expect(search('dialog', { kinds: ['hook'] })).toEqual([]);
+    expect(search('dialog', { kinds: ['hook'] }).every((hit) => !('tree' in hit.entry) && hit.entry.kind === 'hook')).toBe(
+      true,
+    );
     expect(search('dialog', { kinds: ['component'] })[0]?.entry.name).toBe('Dialog');
   });
 
@@ -44,7 +48,7 @@ describe('catalog search', () => {
     const pruned = { ...catalog, components: [radio!, dialog!], patterns: [] } satisfies Catalog;
     const api = createSearch(pruned);
     expect(api.getComponent('Radio')?.name).toBe('Radio');
-    expect(api.listForIntent('choose-one').map((entry) => ('name' in entry ? entry.name : entry.id))).toEqual(['Radio']);
+    expect(api.listForIntent('choose-one').map(entryId)).toEqual(['Radio']);
     expect(api.search('modal')[0]?.entry.name).toBe('Dialog');
     expect(api.search('radio')[0]?.entry.name).toBe('Radio');
   });

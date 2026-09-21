@@ -27,7 +27,7 @@
       "kind": "component",
       "description": "Modal bottom sheet. Custom portal, not a native dialog. Mid and full snap.",
       "whenToUse": [
-        "Modal sheet from the bottom edge. Mid and full snap. Custom portal, not a native dialog."
+        "Sheet from the bottom edge. Mid and full snap. Custom portal, not a native dialog."
       ],
       "whenNotToUse": [
         "Use Dialog when the task stays centered. Do not morph a Dialog into a sheet."
@@ -672,7 +672,8 @@
       "kind": "component",
       "description": "Controlled native modal dialog. Stays centered. No sheet morph.",
       "whenToUse": [
-        "Centered native modal dialog. Controlled open. Escape and backdrop dismiss are opt-out."
+        "Centered native modal dialog. Controlled open. Escape and backdrop dismiss are opt-out.",
+        "Use Dialog for a modal confirm that stays on screen."
       ],
       "whenNotToUse": [
         "Use BottomSheet for a mobile sheet. No sheet morph."

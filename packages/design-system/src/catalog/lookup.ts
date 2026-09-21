@@ -1,4 +1,4 @@
-import type { Catalog, ComponentMeta, EntryKind, Intent, PatternMeta } from './types.ts';
+import type { Catalog, ComponentMeta, EntryKind, Intent, PatternMeta } from './types';
 
 export function getComponent(id: string, source: Catalog): ComponentMeta | undefined {
   return source.components.find((entry) => entry.name === id);

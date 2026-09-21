@@ -1,6 +1,6 @@
-import { getComponent, getPattern, listComponents, listForIntent, listPatterns } from './lookup.ts';
-import { tokenize } from './tokenize.ts';
-import type { Catalog, CatalogEntry, ComponentMeta, EntryKind, Intent, PatternMeta } from './types.ts';
+import { getComponent, getPattern, listComponents, listForIntent, listPatterns } from './lookup';
+import { tokenize } from './tokenize';
+import type { Catalog, CatalogEntry, ComponentMeta, EntryKind, Intent, PatternMeta } from './types';
 
 export type CatalogHit<T extends CatalogEntry = CatalogEntry> = {
   entry: T;
@@ -65,7 +65,7 @@ export function search(
 ): CatalogHit[] {
   const tokens = tokenize(query);
   if (tokens.length === 0) return [];
-  const includePatterns = opts?.includePatterns !== false;
+  const includePatterns = opts?.includePatterns ?? opts?.kinds === undefined;
   const rows: Indexed[] = [
     ...source.components
       .filter((entry) => !opts?.kinds || opts.kinds.includes(entry.kind))
@@ -106,7 +106,7 @@ export function createSearch(source: Catalog): {
     search(query, opts) {
       const tokens = tokenize(query);
       if (tokens.length === 0) return [];
-      const includePatterns = opts?.includePatterns !== false;
+      const includePatterns = opts?.includePatterns ?? opts?.kinds === undefined;
       return index
         .filter((row) => {
           if (isPattern(row.entry)) return includePatterns;

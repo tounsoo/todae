@@ -16,7 +16,7 @@ function packPaths(): string[] {
     encoding: 'utf8',
   });
   if (result.status !== 0) fail(result.stderr || result.stdout || 'pnpm pack --dry-run failed');
-  const raw = result.stdout.trim().split('\n').filter(Boolean).at(-1);
+  const raw = result.stdout.trim();
   if (!raw) fail('pnpm pack --dry-run produced no JSON');
   const parsed = JSON.parse(raw) as { files?: PackFile[] } | PackFile[];
   const files = Array.isArray(parsed) ? parsed : parsed.files;

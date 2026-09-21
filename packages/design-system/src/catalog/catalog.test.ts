@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import * as todae from '../index.ts';
 import catalogJson from '../../catalog/catalog.json';
-import { catalog } from './index.ts';
+import * as todae from '../index';
+import { catalog } from './index';
 
 const ALLOW_EXPORTS = new Set([
   'CHIP_COMMIT_KEYS',
@@ -28,7 +28,8 @@ const ALLOW_EXPORTS = new Set([
 function resolveExport(name: string): unknown {
   let current: unknown = todae;
   for (const part of name.split('.')) {
-    if (typeof current !== 'object' || current === null || !(part in current)) return undefined;
+    if (current == null || (typeof current !== 'object' && typeof current !== 'function')) return undefined;
+    if (!(part in (current as object))) return undefined;
     current = (current as Record<string, unknown>)[part];
   }
   return current;

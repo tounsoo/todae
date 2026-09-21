@@ -6,6 +6,7 @@ export const meta = {
   description: 'Controlled native modal dialog. Stays centered. No sheet morph.',
   whenToUse: [
     'Centered native modal dialog. Controlled open. Escape and backdrop dismiss are opt-out.',
+    'Use Dialog for a modal confirm that stays on screen.',
   ],
   whenNotToUse: [
     'Use BottomSheet for a mobile sheet. No sheet morph.',

@@ -5,11 +5,11 @@ import {
   listComponents as readComponents,
   listForIntent as readForIntent,
   listPatterns as readPatterns,
-} from './lookup.ts';
-import { search as searchCatalog } from './search.ts';
-import { INTENTS, type Catalog, type EntryKind, type Intent } from './types.ts';
+} from './lookup';
+import { search as searchCatalog } from './search';
+import { INTENTS, type Catalog, type EntryKind, type Intent } from './types';
 
-export const catalog: Catalog = catalogJson;
+export const catalog = catalogJson as Catalog;
 export { INTENTS };
 export type {
   Catalog,
@@ -22,9 +22,9 @@ export type {
   PropMeta,
   Relation,
   SlotMeta,
-} from './types.ts';
-export type { CatalogHit } from './search.ts';
-export { createSearch } from './search.ts';
+} from './types';
+export type { CatalogHit } from './search';
+export { createSearch } from './search';
 
 
 export function getComponent(id: string, source: Catalog = catalog) {

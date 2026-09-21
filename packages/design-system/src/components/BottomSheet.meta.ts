@@ -5,7 +5,7 @@ export const meta = {
   kind: 'component',
   description: 'Modal bottom sheet. Custom portal, not a native dialog. Mid and full snap.',
   whenToUse: [
-    'Modal sheet from the bottom edge. Mid and full snap. Custom portal, not a native dialog.',
+    'Sheet from the bottom edge. Mid and full snap. Custom portal, not a native dialog.',
   ],
   whenNotToUse: [
     'Use Dialog when the task stays centered. Do not morph a Dialog into a sheet.',

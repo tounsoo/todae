@@ -1,8 +1,8 @@
-import { mkdtemp, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { generateCatalog } from './generate-catalog.ts';
 
 const validMeta = `export const meta = {
   name: 'Dialog',
@@ -37,13 +37,23 @@ async function fixture(files: Record<string, string>) {
   }
   return {
     root,
-    run: () =>
-      generateCatalog({
-        root,
-        srcDir: join(root, 'src'),
-        catalogOut: join(root, 'catalog', 'catalog.json'),
-        schemaOut: join(root, 'schema', 'components.json'),
-      }),
+    run() {
+      const result = spawnSync(
+        process.execPath,
+        [
+          '--experimental-strip-types',
+          '--no-warnings=ExperimentalWarning',
+          join(import.meta.dirname, 'generate-catalog.ts'),
+          '--root',
+          root,
+        ],
+        { encoding: 'utf8' },
+      );
+      if (result.status !== 0) {
+        throw new Error((result.stderr || result.stdout || 'generate-catalog failed').trim());
+      }
+      return result.stdout;
+    },
   };
 }
 
@@ -52,14 +62,14 @@ describe('generate-catalog', () => {
     const { run } = await fixture({
       'src/components/Dialog.meta.ts': validMeta.replace('props:', 'extra: 1,\n  props:'),
     });
-    await expect(run()).rejects.toThrow(/unknown keys: extra/);
+    expect(run).toThrow(/unknown keys: extra/);
   });
 
   it('rejects a bad intent', async () => {
     const { run } = await fixture({
       'src/components/Dialog.meta.ts': validMeta.replace("'confirm'", "'nope'"),
     });
-    await expect(run()).rejects.toThrow(/unknown intent "nope"/);
+    expect(run).toThrow(/unknown intent "nope"/);
   });
 
   it('rejects dangling related', async () => {
@@ -69,7 +79,7 @@ describe('generate-catalog', () => {
         "related: [{ id: 'Missing', relation: 'pairsWith' }],\n  props:",
       ),
     });
-    await expect(run()).rejects.toThrow(/Dangling related "Missing"/);
+    expect(run).toThrow(/Dangling related "Missing"/);
   });
 
   it('rejects dangling uses', async () => {
@@ -77,7 +87,7 @@ describe('generate-catalog', () => {
       'src/components/Dialog.meta.ts': validMeta,
       'src/catalog/patterns/bad.pattern.ts': validPattern.replace("uses: ['Dialog']", "uses: ['Missing']"),
     });
-    await expect(run()).rejects.toThrow(/Dangling uses "Missing"/);
+    expect(run).toThrow(/Dangling uses "Missing"/);
   });
 
   it('rejects dangling tree.component', async () => {
@@ -85,7 +95,7 @@ describe('generate-catalog', () => {
       'src/components/Dialog.meta.ts': validMeta,
       'src/catalog/patterns/bad.pattern.ts': validPattern.replace("component: 'Dialog'", "component: 'Missing'"),
     });
-    await expect(run()).rejects.toThrow(/Dangling tree.component "Missing"/);
+    expect(run).toThrow(/Dangling tree.component "Missing"/);
   });
 
   it('rejects an undocumented $fill', async () => {
@@ -96,21 +106,21 @@ describe('generate-catalog', () => {
         'fills: []',
       ),
     });
-    await expect(run()).rejects.toThrow(/undocumented \$fill "body"/);
+    expect(run).toThrow(/undocumented \$fill "body"/);
   });
 
   it('rejects a two-dot id', async () => {
     const { run } = await fixture({
       'src/components/Dialog.meta.ts': validMeta.replace("name: 'Dialog'", "name: 'Field.Button.Root'"),
     });
-    await expect(run()).rejects.toThrow(/two-dot id "Field.Button.Root"/);
+    expect(run).toThrow(/two-dot id "Field.Button.Root"/);
   });
 
   it('rejects empty whenToUse', async () => {
     const { run } = await fixture({
       'src/components/Dialog.meta.ts': validMeta.replace("whenToUse: ['Ask for a confirm.']", 'whenToUse: []'),
     });
-    await expect(run()).rejects.toThrow(/whenToUse must have at least one bullet/);
+    expect(run).toThrow(/whenToUse must have at least one bullet/);
   });
 
   it('rejects a duplicate id', async () => {
@@ -118,7 +128,7 @@ describe('generate-catalog', () => {
       'src/components/Dialog.meta.ts': validMeta,
       'src/components/Other.meta.ts': validMeta,
     });
-    await expect(run()).rejects.toThrow(/Duplicate id "Dialog"/);
+    expect(run).toThrow(/Duplicate id "Dialog"/);
   });
 
   it('emits catalog.json and a name/description/props schema projection', async () => {
@@ -126,7 +136,14 @@ describe('generate-catalog', () => {
       'src/components/Dialog.meta.ts': validMeta,
       'src/catalog/patterns/confirm-dialog.pattern.ts': validPattern,
     });
-    const { catalog, schema } = await run();
+    run();
+    const catalog = JSON.parse(await readFile(join(root, 'catalog', 'catalog.json'), 'utf8')) as {
+      components: unknown[];
+      patterns: unknown[];
+    };
+    const schema = JSON.parse(await readFile(join(root, 'schema', 'components.json'), 'utf8')) as {
+      components: Array<{ name: string; description: string; props: unknown[] }>;
+    };
     expect(catalog.components).toHaveLength(1);
     expect(catalog.patterns).toHaveLength(1);
     expect(schema.components[0]).toEqual({
@@ -135,7 +152,5 @@ describe('generate-catalog', () => {
       props: [{ name: 'open', type: 'boolean', required: true, description: 'Open.' }],
     });
     expect(Object.keys(schema.components[0]!)).toEqual(['name', 'description', 'props']);
-    const written = JSON.parse(await readFile(join(root, 'schema', 'components.json'), 'utf8')) as typeof schema;
-    expect(written).toEqual(schema);
   });
 });

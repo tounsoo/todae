@@ -406,4 +406,8 @@ export async function generateCatalog(options?: {
 }
 
 const invoked = process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
-if (invoked) await generateCatalog();
+if (invoked) {
+  const rootFlag = process.argv.indexOf('--root');
+  const root = rootFlag >= 0 ? process.argv[rootFlag + 1] : undefined;
+  await generateCatalog(root ? { root } : undefined);
+}
