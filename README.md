@@ -113,6 +113,17 @@ State non-goals:
 - No `$state` in adapter output
 - No export named `toJevCriteria` or similar
 
+### Catalog MCP
+
+`packages/catalog-mcp` (`@tounsoo/todae-mcp`) is a stdio MCP server over the same `@tounsoo/todae/catalog.json`. Not a second schema. Not plug-and-play Jev. No Graft or secrets.
+
+```sh
+pnpm build:ds
+pnpm --filter @tounsoo/todae-mcp build
+node packages/catalog-mcp/dist/cli.js
+```
+
+Cursor: `.cursor/mcp.json` → `todae-catalog`. Tools wrap the package helpers. Resource `todae://catalog.json` is the raw file bytes.
 
 ## Run the docs
 
@@ -156,6 +167,7 @@ pnpm graft:check
 ## Layout
 
 - `packages/design-system` is `@tounsoo/todae`, a private Vite library.
+- `packages/catalog-mcp` is `@tounsoo/todae-mcp`, a stdio MCP server over the same `catalog.json`.
 - `apps/docs` is the Next.js 15 docs app with MDX examples.
 
 Button, Stack, and Text are seed components that prove the pipeline. They are not a design system.

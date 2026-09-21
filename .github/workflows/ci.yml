@@ -18,6 +18,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm tokens:check
       - run: pnpm catalog && git diff --exit-code -- packages/design-system/schema packages/design-system/catalog
+      - run: pnpm build:ds
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build

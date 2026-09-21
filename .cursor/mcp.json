@@ -3,6 +3,10 @@
     "graft": {
       "command": "npx",
       "args": ["-y", "@nanonets/graft@0.18.0", "mcp"]
+    },
+    "todae-catalog": {
+      "command": "node",
+      "args": ["packages/catalog-mcp/dist/cli.js"]
     }
   }
 }
