@@ -2,8 +2,23 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'usePopover',
+  kind: 'hook',
   description:
     'One open machine. Spread getTriggerProps onto the trigger and getPopoverProps onto Popover.',
+  whenToUse: [
+    'Open machine for Popover. Spread getTriggerProps on the trigger and getPopoverProps on Popover.',
+  ],
+  whenNotToUse: [
+    'Do not spread getTriggerProps and also pass anchorRef.',
+    'Combobox uses getAnchorProps on Field.Root instead of this trigger.',
+  ],
+  intents: [
+    'contextual-overlay',
+  ],
+  related: [
+    { id: 'Popover', relation: 'pairsWith' },
+  ],
+  docs: '/popover',
   props: [
     {
       name: 'open',

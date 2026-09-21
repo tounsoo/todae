@@ -2,8 +2,28 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'useCombobox',
+  kind: 'hook',
   description:
     'Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, and OptionList. No Combobox chrome.',
+  whenToUse: [
+    'Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, and OptionList.',
+    'presentation auto uses useSheetPresentation.',
+  ],
+  whenNotToUse: [
+    'No Combobox chrome. Do not export Combobox.Root, Combobox.Trigger, or Combobox.Icon.',
+    'Do not dual-wire aria or open outside the hook while also using it.',
+  ],
+  intents: [
+    'search-select',
+    'choose-one',
+    'choose-many',
+    'tag-entry',
+  ],
+  related: [
+    { id: 'OptionList', relation: 'requires' },
+    { id: 'useSheetPresentation', relation: 'pairsWith' },
+  ],
+  docs: '/combobox',
   props: [
     {
       name: 'selectionMode',

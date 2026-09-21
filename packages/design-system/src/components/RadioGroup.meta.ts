@@ -2,8 +2,31 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'RadioGroup',
+  kind: 'component',
   description:
     'Exclusive choice. Requires aria-label or aria-labelledby. Owns value, name, disabled, and invalid.',
+  whenToUse: [
+    'Exclusive choice that stays on the page. Requires aria-label or aria-labelledby.',
+    'Caption with Text and aria-labelledby. Do not point Label htmlFor at the group.',
+  ],
+  whenNotToUse: [
+    'Use OptionList when the options live in a popover or sheet.',
+    'Wiring Radio and OptionList to the same value is a QA fail.',
+  ],
+  intents: [
+    'choose-one',
+  ],
+  slots: [
+    { name: 'children', accepts: [
+      'Radio',
+    ], required: true, description: 'Radio children.' },
+  ],
+  related: [
+    { id: 'Radio', relation: 'requires' },
+    { id: 'OptionList', relation: 'alternative' },
+    { id: 'Checkbox', relation: 'alternative' },
+  ],
+  docs: '/radio',
   props: [
     {
       name: 'aria-label',

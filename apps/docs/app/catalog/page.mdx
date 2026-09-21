@@ -1,0 +1,42 @@
+import { CatalogSearchDemo } from '../../components/CatalogSearchDemo';
+import catalog from '@tounsoo/todae/catalog.json';
+
+# Catalog
+
+Machine-readable map of Todae components and patterns. Apps, MCP, and these docs read the same `@tounsoo/todae/catalog.json`. This is the capability surface, not a drop-in Jev config.
+
+## Search
+
+<CatalogSearchDemo />
+
+## Components
+
+<table>
+  <caption>Catalog components</caption>
+  <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Kind</th>
+      <th scope="col">Intents</th>
+    </tr>
+  </thead>
+  <tbody>
+    {catalog.components.map((entry) => (
+      <tr key={entry.name}>
+        <th scope="row">{entry.name}</th>
+        <td>{entry.kind}</td>
+        <td>{entry.intents.join(', ')}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+## Patterns
+
+{catalog.patterns.map((pattern) => (
+  <section key={pattern.id} id={pattern.id} aria-labelledby={`${pattern.id}-title`}>
+    <h3 id={`${pattern.id}-title`}>{pattern.name}</h3>
+    <p>{pattern.description}</p>
+    <WhenToUse name={pattern.id} headingLevel={3} />
+  </section>
+))}

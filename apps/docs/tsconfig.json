@@ -20,6 +20,8 @@
       "@tounsoo/todae": ["../../packages/design-system/src/index.ts"],
       "@tounsoo/todae/todae.css": ["../../packages/design-system/src/styles/todae.css"],
       "@tounsoo/todae/schema/components.json": ["../../packages/design-system/schema/components.json"],
+      "@tounsoo/todae/catalog.json": ["../../packages/design-system/catalog/catalog.json"],
+      "@tounsoo/todae/catalog": ["../../packages/design-system/src/catalog/index.ts"],
       "@tounsoo/todae/tokens.json": ["../../packages/design-system/tokens/tokens.generated.json"]
     }
   },

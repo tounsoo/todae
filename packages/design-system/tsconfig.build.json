@@ -5,8 +5,9 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "resolveJsonModule": true
   },
   "include": ["src"],
-  "exclude": ["src/**/*.meta.ts", "src/meta.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": ["src/**/*.meta.ts", "src/**/*.pattern.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }

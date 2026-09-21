@@ -17,7 +17,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm tokens:check
-      - run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
+      - run: pnpm catalog && git diff --exit-code -- packages/design-system/schema packages/design-system/catalog
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: pnpm check-publish

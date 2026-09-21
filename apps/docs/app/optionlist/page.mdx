@@ -18,13 +18,7 @@ Multiple keeps a check gutter on every row. Selected fills the box and draws a C
 
 `Option` is also `OptionList.Option`.
 
-## When to use
-
-OptionList is an overlay listbox. Keep it inside a Popover or BottomSheet. Use [Radio](/radio) when one choice stays on the page. Use [Checkbox](/checkbox) when several independent choices stay on the page.
-
-Do not wire OptionList and Radio or Checkbox to the same value. Dual-wire is a QA fail.
-
-A combobox can pass `id`, `activeValue`, `onActiveChange`, and `tabIndex={-1}` so the input owns focus and `aria-activedescendant`. Uncontrolled lists keep `tabIndex={0}`.
+<WhenToUse name="OptionList" />
 
 ## Props
 

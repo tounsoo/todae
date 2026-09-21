@@ -2,8 +2,23 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'useTooltip',
+  kind: 'hook',
   description:
     'One open machine. Spread getTriggerProps onto the trigger and getTooltipProps onto Tooltip. Interactive is a non-modal tip dialog.',
+  whenToUse: [
+    'Open machine for Tooltip. Spread getTriggerProps on the trigger and getTooltipProps on Tooltip.',
+    'Pass interactive: true for a non-modal tip dialog with links. Never role=tooltip in that mode.',
+  ],
+  whenNotToUse: [
+    'Set tooltip={false} on Button.Root when this hook owns the machine.',
+  ],
+  intents: [
+    'transient-hint',
+  ],
+  related: [
+    { id: 'Tooltip', relation: 'pairsWith' },
+  ],
+  docs: '/tooltip',
   props: [
     {
       name: 'interactive',

@@ -62,13 +62,30 @@ import { DensityProvider, ThemeProvider, Button } from '@tounsoo/todae';
 
 `useAppearance()` and `useDensity()` read the nearest provider. `ThemeProvider` also accepts `overrides?: ThemeOverride` — a closed map of raw, semantic, and component token paths to typed values, applied as CSS vars on the provider root. Unknown keys and raw CSS are rejected.
 
-## Generate the component schema
+## Agent catalog
+
+The published package ships `@tounsoo/todae/catalog.json` plus `@tounsoo/todae/catalog` helpers. Components come from `src/**/*.meta.ts`. Patterns live in `src/catalog/patterns/*.pattern.ts`. One generator writes both `catalog/catalog.json` and the `schema/components.json` projection (name/description/props only; kept one release).
 
 ```sh
-pnpm schema
+pnpm catalog
 ```
 
-The generator reads `packages/design-system/src/**/*.meta.ts` and writes `packages/design-system/schema/components.json`. Commit that file. A later `pnpm schema` must leave no diff.
+`pnpm schema` is an alias. Commit both generated files. A later `pnpm catalog` must leave no diff.
+
+```ts
+import catalog from '@tounsoo/todae/catalog.json'
+import { search, listForIntent, getComponent } from '@tounsoo/todae/catalog'
+
+search('modal')[0]?.entry.name // Dialog
+listForIntent('choose-one')
+getComponent('OptionList')
+```
+
+Search is lexical. No embeddings, no Jev, no Graft runtime. The catalog is not plug-and-play Jev — apps still supply concrete props, copy, and `$state`. Adapter helpers are a follow-up.
+
+Wren reviews `whenToUse` / `whenNotToUse` arrays in `*.meta.ts` and `*.pattern.ts` only. `pnpm catalog` regenerates JSON.
+
+`schema/components.json` is deprecated. Prefer `catalog.json`.
 
 ## Run the docs
 
@@ -79,7 +96,7 @@ pnpm dev:docs
 
 `pnpm dev` is the same as `pnpm dev:docs`.
 
-Open `/`, `/button`, `/stack`, `/text`, `/tokens`, and `/playground`. Component pages mount a live example and a props table from the schema. `/tokens` tables the generated catalog. `/playground` is a left-rail theme controller (appearance + density selectors, raw / semantic / component token tabs, Export) and a right-stage live demo.
+Open `/`, `/catalog`, `/button`, `/stack`, `/text`, `/tokens`, and `/playground`. Component pages mount a live example, when-to-use copy, and a props table from `catalog.json`. `/catalog` tables every entry and demos search. `/tokens` tables the generated token catalog. `/playground` is a left-rail theme controller (appearance + density selectors, raw / semantic / component token tabs, Export) and a right-stage live demo.
 
 ## Test
 

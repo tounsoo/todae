@@ -2,7 +2,22 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Label',
+  kind: 'component',
   description: 'Visible name for a control. Sibling, not a Field part. Pass htmlFor the control id.',
+  whenToUse: [
+    'Visible name for a control. Sibling, not a Field part. htmlFor must match the control id.',
+  ],
+  whenNotToUse: [
+    'A role=radiogroup is not labelable. Caption RadioGroup with Text and aria-labelledby.',
+    'Do not nest Label inside Field.Root.',
+  ],
+  intents: [
+    'label',
+  ],
+  related: [
+    { id: 'Field.Root', relation: 'pairsWith' },
+  ],
+  docs: '/label',
   props: [
     {
       name: 'htmlFor',

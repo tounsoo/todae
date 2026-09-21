@@ -2,7 +2,32 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'BottomSheet',
+  kind: 'component',
   description: 'Modal bottom sheet. Custom portal, not a native dialog. Mid and full snap.',
+  whenToUse: [
+    'Modal sheet from the bottom edge. Mid and full snap. Custom portal, not a native dialog.',
+  ],
+  whenNotToUse: [
+    'Use Dialog when the task stays centered. Do not morph a Dialog into a sheet.',
+  ],
+  intents: [
+    'contextual-overlay',
+  ],
+  slots: [
+    { name: 'children', accepts: [
+      'BottomSheet.Header',
+      'BottomSheet.Body',
+      'BottomSheet.Footer',
+      'BottomSheet.Grabber',
+      'BottomSheet.Close',
+      'BottomSheet.Title',
+      'BottomSheet.Description',
+    ], required: false, description: 'Sheet parts.' },
+  ],
+  related: [
+    { id: 'Dialog', relation: 'alternative' },
+  ],
+  docs: '/bottomsheet',
   props: [
     {
       name: 'open',

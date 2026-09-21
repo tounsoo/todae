@@ -2,8 +2,22 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'useSheetPresentation',
+  kind: 'hook',
   description:
     'Coarse pointer or narrow width selects sheet. SSR and first paint are popover. isSheet mirrors presentation.',
+  whenToUse: [
+    'Chooses sheet when the pointer is coarse or the viewport is narrower than 640px. Otherwise popover.',
+  ],
+  whenNotToUse: [
+    'isSheet mirrors presentation === "sheet". It is not isTouch. First paint is popover.',
+  ],
+  intents: [
+    'contextual-overlay',
+  ],
+  related: [
+    { id: 'useCombobox', relation: 'pairsWith' },
+  ],
+  docs: '/combobox',
   props: [
     {
       name: 'narrowWidth',

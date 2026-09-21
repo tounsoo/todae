@@ -2,7 +2,21 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Switch',
+  kind: 'component',
   description: 'On or off. Track and thumb. Children are the visible label. No check glyph.',
+  whenToUse: [
+    'On or off. Track and thumb. Children are the visible label. No check glyph.',
+  ],
+  whenNotToUse: [
+    'Use Checkbox for an independent item in a list of choices. Do not put Switch inside Field.Root.',
+  ],
+  intents: [
+    'toggle',
+  ],
+  related: [
+    { id: 'Checkbox', relation: 'alternative' },
+  ],
+  docs: '/switch',
   props: [
     {
       name: 'children',

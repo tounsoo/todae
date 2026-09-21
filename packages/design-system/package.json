@@ -10,15 +10,22 @@
     },
     "./todae.css": "./dist/todae.css",
     "./schema/components.json": "./schema/components.json",
+    "./catalog": {
+      "types": "./dist/catalog/index.d.ts",
+      "import": "./dist/catalog.js"
+    },
+    "./catalog.json": "./catalog/catalog.json",
     "./tokens.json": "./tokens/tokens.generated.json"
   },
-  "files": ["dist", "schema", "tokens/tokens.generated.json"],
+  "files": ["dist", "schema", "catalog", "tokens/tokens.generated.json"],
   "scripts": {
     "tokens": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts",
     "tokens:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts --check",
     "build": "pnpm tokens && vite build && tsc -p tsconfig.build.json",
     "dev": "vite build --watch",
-    "schema": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/generate-schema.ts",
+    "catalog": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/generate-catalog.ts",
+    "schema": "pnpm catalog",
+    "check-publish": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/check-publish.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "clean": "rm -rf dist"

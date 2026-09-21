@@ -2,7 +2,33 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Field.Root',
+  kind: 'component',
   description: 'Field chrome only. No value. Children render in source order.',
+  whenToUse: [
+    'Field chrome only. No value. Children render in source order. Label is a sibling.',
+  ],
+  whenNotToUse: [
+    'Field shell is not a button. Do not put role=button on Field.Root that also hosts TextInput.',
+    'Do not nest Checkbox or Radio inside Field.Root.',
+  ],
+  intents: [
+    'text-entry',
+    'tag-entry',
+  ],
+  slots: [
+    { name: 'children', accepts: [
+      'Field.TextInput',
+      'Field.ChipInput',
+      'Field.Icon',
+      'Field.Affix',
+    ], required: true, description: 'One input plus optional Icon and Affix. Order is leading or trailing.' },
+  ],
+  related: [
+    { id: 'Label', relation: 'pairsWith' },
+    { id: 'Description', relation: 'pairsWith' },
+    { id: 'ErrorMessage', relation: 'pairsWith' },
+  ],
+  docs: '/field',
   props: [
     {
       name: 'disabled',

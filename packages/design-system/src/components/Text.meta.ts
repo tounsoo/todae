@@ -2,7 +2,18 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Text',
+  kind: 'component',
   description: 'Text styled through the text contract tokens.',
+  whenToUse: [
+    'Text styled through the text contract tokens. Use it to caption a RadioGroup.',
+  ],
+  whenNotToUse: [
+    'Do not use Text as a label for a labelable control. Use Label with htmlFor.',
+  ],
+  intents: [
+    'typography',
+  ],
+  docs: '/text',
   props: [
     {
       name: 'as',

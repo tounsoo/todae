@@ -2,7 +2,20 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'ThemeProvider',
+  kind: 'provider',
   description: 'Sets data-appearance from system, light, or dark. Nested providers override.',
+  whenToUse: [
+    'Sets data-appearance from system, light, or dark. Nested providers override.',
+  ],
+  whenNotToUse: [
+    'Never writes data-appearance=system. The resolved value is light or dark.',
+  ],
+  intents: [
+    'theme',
+  ],
+  related: [
+    { id: 'DensityProvider', relation: 'pairsWith' },
+  ],
   props: [
     {
       name: 'appearance',

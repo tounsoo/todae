@@ -2,7 +2,33 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Dialog',
+  kind: 'component',
   description: 'Controlled native modal dialog. Stays centered. No sheet morph.',
+  whenToUse: [
+    'Centered native modal dialog. Controlled open. Escape and backdrop dismiss are opt-out.',
+  ],
+  whenNotToUse: [
+    'Use BottomSheet for a mobile sheet. No sheet morph.',
+  ],
+  intents: [
+    'confirm',
+    'destructive-confirm',
+    'contextual-overlay',
+  ],
+  slots: [
+    { name: 'children', accepts: [
+      'Dialog.Header',
+      'Dialog.Title',
+      'Dialog.Description',
+      'Dialog.Body',
+      'Dialog.Footer',
+      'Dialog.Close',
+    ], required: false, description: 'Dialog parts.' },
+  ],
+  related: [
+    { id: 'BottomSheet', relation: 'alternative' },
+  ],
+  docs: '/dialog',
   props: [
     {
       name: 'open',

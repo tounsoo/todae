@@ -2,7 +2,22 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Tooltip',
+  kind: 'component',
   description: 'Tip chrome. Spread getTooltipProps for wire.',
+  whenToUse: [
+    'Tip chrome. Spread getTooltipProps. Default is text-only role=tooltip.',
+  ],
+  whenNotToUse: [
+    'There is no Tooltip.Trigger or Tooltip.Content.',
+    'Do not set interactive on Tooltip. Pass interactive to useTooltip.',
+  ],
+  intents: [
+    'transient-hint',
+  ],
+  related: [
+    { id: 'useTooltip', relation: 'pairsWith' },
+  ],
+  docs: '/tooltip',
   props: [
     {
       name: 'children',

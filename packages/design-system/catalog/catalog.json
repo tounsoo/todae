@@ -1,0 +1,2767 @@
+{
+  "version": 1,
+  "package": "@tounsoo/todae",
+  "intents": [
+    "choose-one",
+    "choose-many",
+    "toggle",
+    "text-entry",
+    "tag-entry",
+    "search-select",
+    "confirm",
+    "destructive-confirm",
+    "contextual-overlay",
+    "transient-hint",
+    "label",
+    "helper-text",
+    "validation-message",
+    "layout",
+    "typography",
+    "action",
+    "theme",
+    "density"
+  ],
+  "components": [
+    {
+      "name": "BottomSheet",
+      "kind": "component",
+      "description": "Modal bottom sheet. Custom portal, not a native dialog. Mid and full snap.",
+      "whenToUse": [
+        "Modal sheet from the bottom edge. Mid and full snap. Custom portal, not a native dialog."
+      ],
+      "whenNotToUse": [
+        "Use Dialog when the task stays centered. Do not morph a Dialog into a sheet."
+      ],
+      "intents": [
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": true,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: SheetCloseReason) => void",
+          "required": true,
+          "description": "Dismiss requests. Staying open keeps the sheet open."
+        },
+        {
+          "name": "snap",
+          "type": "\"mid\" | \"full\"",
+          "required": false,
+          "description": "Controlled snap. Omit for uncontrolled."
+        },
+        {
+          "name": "defaultSnap",
+          "type": "\"mid\" | \"full\"",
+          "required": false,
+          "description": "Initial snap when uncontrolled.",
+          "default": "\"mid\""
+        },
+        {
+          "name": "snapPoints",
+          "type": "ReadonlyArray<\"mid\" | \"full\">",
+          "required": false,
+          "description": "Allowed snaps. [\"full\"] disables mid.",
+          "default": "[\"mid\", \"full\"]"
+        },
+        {
+          "name": "dismissOnEscape",
+          "type": "boolean",
+          "required": false,
+          "description": "Escape calls onOpenChange(false, \"escape\").",
+          "default": "true"
+        },
+        {
+          "name": "dismissOnScrim",
+          "type": "boolean",
+          "required": false,
+          "description": "Scrim click calls onOpenChange(false, \"scrim\").",
+          "default": "true"
+        },
+        {
+          "name": "dismissOnDrag",
+          "type": "boolean",
+          "required": false,
+          "description": "Drag past the threshold dismisses.",
+          "default": "true"
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name when BottomSheet.Title is omitted."
+        }
+      ],
+      "slots": [
+        {
+          "name": "children",
+          "accepts": [
+            "BottomSheet.Header",
+            "BottomSheet.Body",
+            "BottomSheet.Footer",
+            "BottomSheet.Grabber",
+            "BottomSheet.Close",
+            "BottomSheet.Title",
+            "BottomSheet.Description"
+          ],
+          "required": false,
+          "description": "Sheet parts."
+        }
+      ],
+      "related": [
+        {
+          "id": "Dialog",
+          "relation": "alternative"
+        }
+      ],
+      "docs": "/bottomsheet"
+    },
+    {
+      "name": "BottomSheet.Body",
+      "kind": "part",
+      "description": "Scroll container. Drag starts only at scrollTop 0.",
+      "whenToUse": [
+        "Scrollable sheet body. Drag starts only at scrollTop 0."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "contextual-overlay"
+      ],
+      "props": [],
+      "related": [
+        {
+          "id": "BottomSheet",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/bottomsheet"
+    },
+    {
+      "name": "BottomSheet.Close",
+      "kind": "part",
+      "description": "Ghost Button.Root that requests close-button dismiss.",
+      "whenToUse": [
+        "Ghost close control that requests close-button dismiss."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "action",
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name.",
+          "default": "\"Close\""
+        }
+      ],
+      "related": [
+        {
+          "id": "BottomSheet",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/bottomsheet"
+    },
+    {
+      "name": "BottomSheet.Description",
+      "kind": "part",
+      "description": "Supporting text. Wires aria-describedby.",
+      "whenToUse": [
+        "Supporting text wired as the sheet description."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "helper-text",
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Description text."
+        }
+      ],
+      "related": [
+        {
+          "id": "BottomSheet",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/bottomsheet"
+    },
+    {
+      "name": "BottomSheet.Footer",
+      "kind": "part",
+      "description": "Action row.",
+      "whenToUse": [
+        "Action row at the bottom of the sheet."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "action",
+        "contextual-overlay"
+      ],
+      "props": [],
+      "related": [
+        {
+          "id": "BottomSheet",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/bottomsheet"
+    },
+    {
+      "name": "BottomSheet.Grabber",
+      "kind": "part",
+      "description": "Drag handle. Rendered by default if omitted. Arrow keys change snap.",
+      "whenToUse": [
+        "Drag handle. Rendered by default if omitted. Arrow keys change snap."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name of the resize control.",
+          "default": "\"Resize sheet\""
+        }
+      ],
+      "related": [
+        {
+          "id": "BottomSheet",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/bottomsheet"
+    },
+    {
+      "name": "BottomSheet.Header",
+      "kind": "part",
+      "description": "Chrome. Drag-eligible.",
+      "whenToUse": [
+        "Title row for the sheet."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "contextual-overlay"
+      ],
+      "props": [],
+      "related": [
+        {
+          "id": "BottomSheet",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/bottomsheet"
+    },
+    {
+      "name": "BottomSheet.Title",
+      "kind": "part",
+      "description": "Heading. Wires aria-labelledby.",
+      "whenToUse": [
+        "Visible sheet title. Names the dialog when present."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "typography",
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Title text."
+        }
+      ],
+      "related": [
+        {
+          "id": "BottomSheet",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/bottomsheet"
+    },
+    {
+      "name": "Button.Icon",
+      "kind": "part",
+      "description": "Order-only decorative icon. Always aria-hidden. No side prop.",
+      "whenToUse": [
+        "Decorative icon inside Button.Root. Position is DOM order. Always aria-hidden."
+      ],
+      "whenNotToUse": [
+        "Not a free-floating atom. Do not import a raw Icon instead of Button.Icon."
+      ],
+      "intents": [
+        "action"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon graphic."
+        }
+      ],
+      "related": [
+        {
+          "id": "Button.Root",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/button"
+    },
+    {
+      "name": "Button.Root",
+      "kind": "component",
+      "description": "Native button. Owns variant, type, and disabled. Default type is button.",
+      "whenToUse": [
+        "Primary actions. Icon-only roots need aria-label or aria-labelledby. Default type is button."
+      ],
+      "whenNotToUse": [
+        "Do not nest Button.Root inside Field.Root as a second role. Fitting labeled buttons do not tip."
+      ],
+      "intents": [
+        "action"
+      ],
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"primary\" | \"secondary\" | \"ghost\"",
+          "required": false,
+          "description": "Visual style. Non-primary sets data-button-variant.",
+          "default": "\"primary\""
+        },
+        {
+          "name": "type",
+          "type": "\"button\" | \"submit\" | \"reset\"",
+          "required": false,
+          "description": "Native button type.",
+          "default": "\"button\""
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables the control.",
+          "default": "false"
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Required accessible name when the only child is Button.Icon. Auto-tip text for icon-only."
+        },
+        {
+          "name": "tooltip",
+          "type": "boolean",
+          "required": false,
+          "description": "Icon-only tips the accessible name. Overflowing labels tip the full string. False opts out. Never tips a fitting labeled button.",
+          "default": "true"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Label and optional Button.Icon. Order is leading or trailing."
+        }
+      ],
+      "slots": [
+        {
+          "name": "children",
+          "accepts": [
+            "Button.Icon"
+          ],
+          "required": false,
+          "description": "Label text and optional Button.Icon in DOM order."
+        }
+      ],
+      "related": [
+        {
+          "id": "Button.Icon",
+          "relation": "requires"
+        },
+        {
+          "id": "ButtonGroup",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/button"
+    },
+    {
+      "name": "ButtonGroup",
+      "kind": "component",
+      "description": "Chrome-only attached row of Button.Root. role=group. No selection state.",
+      "whenToUse": [
+        "Attached row of Button.Root. role=group. Chrome only."
+      ],
+      "whenNotToUse": [
+        "No selection state. Use RadioGroup or OptionList to choose."
+      ],
+      "intents": [
+        "layout",
+        "action"
+      ],
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name for the group."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Button.Root children. Horizontal only."
+        }
+      ],
+      "slots": [
+        {
+          "name": "children",
+          "accepts": [
+            "Button.Root"
+          ],
+          "required": true,
+          "description": "Button.Root children. Horizontal only."
+        }
+      ],
+      "related": [
+        {
+          "id": "Button.Root",
+          "relation": "requires"
+        }
+      ],
+      "docs": "/button"
+    },
+    {
+      "name": "Checkbox",
+      "kind": "component",
+      "description": "Native checkbox. Children are the visible label. Never indeterminate.",
+      "whenToUse": [
+        "Several independent choices that stay on the page. Children are the visible label. Never indeterminate."
+      ],
+      "whenNotToUse": [
+        "Use Radio when one exclusive choice stays on the page.",
+        "Use OptionList when the options live in a popover or sheet.",
+        "Do not put Checkbox inside Field.Root.",
+        "Do not wire Checkbox and OptionList to the same value."
+      ],
+      "intents": [
+        "choose-many",
+        "toggle"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "Visible label. Clicking the text toggles the input."
+        },
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled checked state. Defined means controlled."
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial checked state when uncontrolled."
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "description": "Fires after the checked state changes."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables the input."
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the control invalid and sets aria-invalid."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "Native input name."
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "description": "Native input value."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the wrapping label."
+        }
+      ],
+      "related": [
+        {
+          "id": "Radio",
+          "relation": "alternative"
+        },
+        {
+          "id": "OptionList",
+          "relation": "alternative"
+        },
+        {
+          "id": "Switch",
+          "relation": "alternative"
+        }
+      ],
+      "docs": "/checkbox"
+    },
+    {
+      "name": "Chip",
+      "kind": "component",
+      "description": "Text-only label with optional named dismiss. Overflow +N is Chip.Overflow.",
+      "whenToUse": [
+        "Text-only token with optional named dismiss. Overflow +N is ChipOverflow."
+      ],
+      "whenNotToUse": [
+        "+N is not a button and is not in the tab order. Do not use Chip as a filter control that owns selection."
+      ],
+      "intents": [
+        "tag-entry"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "string",
+          "required": true,
+          "description": "Chip label. Text only."
+        },
+        {
+          "name": "onDismiss",
+          "type": "() => void",
+          "required": false,
+          "description": "Renders a named dismiss button."
+        },
+        {
+          "name": "dismissLabel",
+          "type": "string",
+          "required": false,
+          "description": "Dismiss aria-label. Default is Remove {label}."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables dismiss.",
+          "default": "false"
+        }
+      ],
+      "related": [
+        {
+          "id": "Field.ChipInput",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/chip"
+    },
+    {
+      "name": "DensityProvider",
+      "kind": "provider",
+      "description": "Sets data-density for spacing-only compact, comfortable, or spacious.",
+      "whenToUse": [
+        "Sets data-density for spacing-only compact, comfortable, or spacious."
+      ],
+      "whenNotToUse": [
+        "Does not change type size or color. Nested providers override."
+      ],
+      "intents": [
+        "density"
+      ],
+      "props": [
+        {
+          "name": "density",
+          "type": "\"compact\" | \"comfortable\" | \"spacious\"",
+          "required": false,
+          "description": "Spacing density written to data-density.",
+          "default": "\"comfortable\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Subtree that inherits density tokens."
+        }
+      ],
+      "related": [
+        {
+          "id": "ThemeProvider",
+          "relation": "pairsWith"
+        }
+      ]
+    },
+    {
+      "name": "Description",
+      "kind": "component",
+      "description": "Supporting text below a control. Required id. Sibling, not a Field part. Author wires aria-describedby.",
+      "whenToUse": [
+        "Supporting hint below a control. Required id. Sibling, not a Field part. Author wires aria-describedby."
+      ],
+      "whenNotToUse": [
+        "Use ErrorMessage for validation text. Do not nest Description inside Field.Root."
+      ],
+      "intents": [
+        "helper-text"
+      ],
+      "props": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "Id the author lists in aria-describedby on the control or Field.Root."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Hint text."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the span."
+        }
+      ],
+      "related": [
+        {
+          "id": "ErrorMessage",
+          "relation": "pairsWith"
+        },
+        {
+          "id": "Field.Root",
+          "relation": "pairsWith"
+        },
+        {
+          "id": "Label",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/description"
+    },
+    {
+      "name": "Dialog",
+      "kind": "component",
+      "description": "Controlled native modal dialog. Stays centered. No sheet morph.",
+      "whenToUse": [
+        "Centered native modal dialog. Controlled open. Escape and backdrop dismiss are opt-out."
+      ],
+      "whenNotToUse": [
+        "Use BottomSheet for a mobile sheet. No sheet morph."
+      ],
+      "intents": [
+        "confirm",
+        "destructive-confirm",
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": true,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: DialogCloseReason) => void",
+          "required": true,
+          "description": "Dismiss requests. Staying open keeps the dialog open."
+        },
+        {
+          "name": "dismissOnEscape",
+          "type": "boolean",
+          "required": false,
+          "description": "Escape calls onOpenChange(false, \"escape\").",
+          "default": "true"
+        },
+        {
+          "name": "dismissOnBackdrop",
+          "type": "boolean",
+          "required": false,
+          "description": "Scrim click calls onOpenChange(false, \"backdrop\").",
+          "default": "true"
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name when Dialog.Title is omitted."
+        }
+      ],
+      "slots": [
+        {
+          "name": "children",
+          "accepts": [
+            "Dialog.Header",
+            "Dialog.Title",
+            "Dialog.Description",
+            "Dialog.Body",
+            "Dialog.Footer",
+            "Dialog.Close"
+          ],
+          "required": false,
+          "description": "Dialog parts."
+        }
+      ],
+      "related": [
+        {
+          "id": "BottomSheet",
+          "relation": "alternative"
+        }
+      ],
+      "docs": "/dialog"
+    },
+    {
+      "name": "Dialog.Body",
+      "kind": "part",
+      "description": "Scrollable body.",
+      "whenToUse": [
+        "Scrollable dialog body."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "contextual-overlay"
+      ],
+      "props": [],
+      "related": [
+        {
+          "id": "Dialog",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/dialog"
+    },
+    {
+      "name": "Dialog.Close",
+      "kind": "part",
+      "description": "Ghost Button.Root that requests close-button dismiss.",
+      "whenToUse": [
+        "Close control that requests dismiss."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "action",
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name.",
+          "default": "\"Close\""
+        }
+      ],
+      "related": [
+        {
+          "id": "Dialog",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/dialog"
+    },
+    {
+      "name": "Dialog.Description",
+      "kind": "part",
+      "description": "Supporting text. Wires aria-describedby on the dialog.",
+      "whenToUse": [
+        "Supporting text. Wires aria-describedby on the dialog."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "helper-text",
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Description text."
+        }
+      ],
+      "related": [
+        {
+          "id": "Dialog",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/dialog"
+    },
+    {
+      "name": "Dialog.Footer",
+      "kind": "part",
+      "description": "Action row.",
+      "whenToUse": [
+        "Action row for confirm and cancel."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "action",
+        "contextual-overlay"
+      ],
+      "props": [],
+      "related": [
+        {
+          "id": "Dialog",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/dialog"
+    },
+    {
+      "name": "Dialog.Header",
+      "kind": "part",
+      "description": "Optional header row.",
+      "whenToUse": [
+        "Title row for the dialog."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "contextual-overlay"
+      ],
+      "props": [],
+      "related": [
+        {
+          "id": "Dialog",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/dialog"
+    },
+    {
+      "name": "Dialog.Title",
+      "kind": "part",
+      "description": "Heading. Wires aria-labelledby on the dialog.",
+      "whenToUse": [
+        "Visible dialog title. Names the dialog when present."
+      ],
+      "whenNotToUse": [],
+      "intents": [
+        "typography",
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Title text."
+        }
+      ],
+      "related": [
+        {
+          "id": "Dialog",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/dialog"
+    },
+    {
+      "name": "ErrorMessage",
+      "kind": "component",
+      "description": "Validation text below a control. Required id. No alert role. invalid lives on the control.",
+      "whenToUse": [
+        "Validation text below a control. Required id. No alert role. invalid lives on the control."
+      ],
+      "whenNotToUse": [
+        "Use Description for hints. Do not nest ErrorMessage inside Field.Root."
+      ],
+      "intents": [
+        "validation-message"
+      ],
+      "props": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "Id the author lists in aria-describedby on the control or Field.Root."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Error text."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the span."
+        }
+      ],
+      "related": [
+        {
+          "id": "Description",
+          "relation": "pairsWith"
+        },
+        {
+          "id": "Field.Root",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/errormessage"
+    },
+    {
+      "name": "Field.Affix",
+      "kind": "part",
+      "description": "Order-only text adornment. Not clickable. No side prop.",
+      "whenToUse": [
+        "Order-only text adornment inside Field.Root. Not clickable. No side prop."
+      ],
+      "whenNotToUse": [
+        "Not a free-floating atom. Product trees import Field.Affix, not a raw Affix."
+      ],
+      "intents": [
+        "text-entry"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Affix content. Strings render as text."
+        }
+      ],
+      "related": [
+        {
+          "id": "Field.Root",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/field"
+    },
+    {
+      "name": "Field.ChipInput",
+      "kind": "part",
+      "description": "Controlled chips plus input inside Field.Root. Commit does not mutate chips. maxRows uses model B.",
+      "whenToUse": [
+        "Controlled chips plus input inside Field.Root. Parent onCommit decides. The field never appends chips."
+      ],
+      "whenNotToUse": [
+        "Do not use as a standalone control outside Field.Root. Built-in clear and paste-split are not shipped."
+      ],
+      "intents": [
+        "tag-entry"
+      ],
+      "props": [
+        {
+          "name": "chips",
+          "type": "string[]",
+          "required": true,
+          "description": "Controlled chip labels."
+        },
+        {
+          "name": "inputValue",
+          "type": "string",
+          "required": true,
+          "description": "Controlled input text."
+        },
+        {
+          "name": "onInputValueChange",
+          "type": "(value: string) => void",
+          "required": true,
+          "description": "Input text changes."
+        },
+        {
+          "name": "onCommit",
+          "type": "(value: string) => void",
+          "required": true,
+          "description": "Fires on a commit key with a trimmed non-empty value. Does not append chips."
+        },
+        {
+          "name": "onChipRemove",
+          "type": "(index: number, value: string) => void",
+          "required": true,
+          "description": "Dismiss click or Backspace on an empty input."
+        },
+        {
+          "name": "commitKeys",
+          "type": "ReadonlyArray<\"Enter\" | \"Tab\" | \",\" | \";\" | \" \">",
+          "required": false,
+          "description": "Closed allowlist of commit keys.",
+          "default": "[\"Enter\"]"
+        },
+        {
+          "name": "maxRows",
+          "type": "number",
+          "required": false,
+          "description": "Caps visual rows of chips plus input. Newest chips fold into +N. The last visible chip ellipsizes to soak leftover width before +N."
+        },
+        {
+          "name": "removeOnBackspace",
+          "type": "boolean",
+          "required": false,
+          "description": "Backspace on an empty input removes the last chip.",
+          "default": "true"
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false,
+          "description": "Native placeholder."
+        }
+      ],
+      "related": [
+        {
+          "id": "Field.Root",
+          "relation": "partOf"
+        },
+        {
+          "id": "useChipField",
+          "relation": "pairsWith"
+        },
+        {
+          "id": "Chip",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/field"
+    },
+    {
+      "name": "Field.Icon",
+      "kind": "part",
+      "description": "Order-only icon. Decorative unless interactive. No side prop.",
+      "whenToUse": [
+        "Order-only icon inside Field.Root. Decorative unless interactive. No side prop."
+      ],
+      "whenNotToUse": [
+        "Not a free-floating atom. Do not treat Field.Icon as a public Icon export."
+      ],
+      "intents": [
+        "text-entry",
+        "tag-entry"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon or control."
+        },
+        {
+          "name": "interactive",
+          "type": "boolean",
+          "required": false,
+          "description": "When false, the wrapper is aria-hidden.",
+          "default": "false"
+        }
+      ],
+      "related": [
+        {
+          "id": "Field.Root",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/field"
+    },
+    {
+      "name": "Field.Root",
+      "kind": "component",
+      "description": "Field chrome only. No value. Children render in source order.",
+      "whenToUse": [
+        "Field chrome only. No value. Children render in source order. Label is a sibling."
+      ],
+      "whenNotToUse": [
+        "Field shell is not a button. Do not put role=button on Field.Root that also hosts TextInput.",
+        "Do not nest Checkbox or Radio inside Field.Root."
+      ],
+      "intents": [
+        "text-entry",
+        "tag-entry"
+      ],
+      "props": [
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables the input and marks the shell.",
+          "default": "false"
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the shell invalid and sets aria-invalid on the input.",
+          "default": "false"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Input id. Auto-generated when omitted."
+        },
+        {
+          "name": "aria-describedby",
+          "type": "string",
+          "required": false,
+          "description": "Ids of Description and ErrorMessage. Put this on Root. TextInput overwrites input-level aria."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "Native input name."
+        },
+        {
+          "name": "ref",
+          "type": "Ref<HTMLDivElement>",
+          "required": false,
+          "description": "Shell element. Use as a Popover anchorRef."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "TextInput or ChipInput plus optional Icon and Affix. Order is leading/trailing."
+        }
+      ],
+      "slots": [
+        {
+          "name": "children",
+          "accepts": [
+            "Field.TextInput",
+            "Field.ChipInput",
+            "Field.Icon",
+            "Field.Affix"
+          ],
+          "required": true,
+          "description": "One input plus optional Icon and Affix. Order is leading or trailing."
+        }
+      ],
+      "related": [
+        {
+          "id": "Label",
+          "relation": "pairsWith"
+        },
+        {
+          "id": "Description",
+          "relation": "pairsWith"
+        },
+        {
+          "id": "ErrorMessage",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/field"
+    },
+    {
+      "name": "Field.TextInput",
+      "kind": "part",
+      "description": "Controlled text-ish input inside Field.Root.",
+      "whenToUse": [
+        "Controlled text-ish input inside Field.Root."
+      ],
+      "whenNotToUse": [
+        "Do not set aria-describedby on Field.TextInput. Put it on Field.Root."
+      ],
+      "intents": [
+        "text-entry"
+      ],
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Controlled value."
+        },
+        {
+          "name": "onChange",
+          "type": "(event: ChangeEvent<HTMLInputElement>) => void",
+          "required": true,
+          "description": "Native change handler."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Optional value callback."
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false,
+          "description": "Native placeholder."
+        },
+        {
+          "name": "type",
+          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\"",
+          "required": false,
+          "description": "Text-ish input types only.",
+          "default": "\"text\""
+        }
+      ],
+      "related": [
+        {
+          "id": "Field.Root",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/field"
+    },
+    {
+      "name": "Label",
+      "kind": "component",
+      "description": "Visible name for a control. Sibling, not a Field part. Pass htmlFor the control id.",
+      "whenToUse": [
+        "Visible name for a control. Sibling, not a Field part. htmlFor must match the control id."
+      ],
+      "whenNotToUse": [
+        "A role=radiogroup is not labelable. Caption RadioGroup with Text and aria-labelledby.",
+        "Do not nest Label inside Field.Root."
+      ],
+      "intents": [
+        "label"
+      ],
+      "props": [
+        {
+          "name": "htmlFor",
+          "type": "string",
+          "required": true,
+          "description": "Id of the labelled control. Must match Field.Root id when captioning a Field."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Label text. A required mark is authored here when needed."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the native label."
+        }
+      ],
+      "related": [
+        {
+          "id": "Field.Root",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/label"
+    },
+    {
+      "name": "Option",
+      "kind": "component",
+      "description": "String-only option. Also available as OptionList.Option.",
+      "whenToUse": [
+        "String-only option. Also available as OptionList.Option."
+      ],
+      "whenNotToUse": [
+        "Text children only. Do not nest interactive controls inside Option."
+      ],
+      "intents": [
+        "choose-one",
+        "choose-many"
+      ],
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Selection value."
+        },
+        {
+          "name": "children",
+          "type": "string",
+          "required": true,
+          "description": "Visible label. Text only."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Skips pointer and keyboard selection.",
+          "default": "false"
+        }
+      ],
+      "related": [
+        {
+          "id": "OptionList",
+          "relation": "partOf"
+        }
+      ],
+      "docs": "/optionlist"
+    },
+    {
+      "name": "OptionList",
+      "kind": "component",
+      "description": "Overlay listbox. Single or multiple. Use Radio or Checkbox for a permanent choice on the page.",
+      "whenToUse": [
+        "Overlay listbox. Keep it inside a Popover or BottomSheet.",
+        "A combobox can pass id, activeValue, onActiveChange, and tabIndex={-1} so the input owns focus."
+      ],
+      "whenNotToUse": [
+        "Use Radio when one choice stays on the page.",
+        "Use Checkbox when several independent choices stay on the page.",
+        "Do not wire OptionList and Radio or Checkbox to the same value."
+      ],
+      "intents": [
+        "choose-one",
+        "choose-many",
+        "search-select"
+      ],
+      "props": [
+        {
+          "name": "selectionMode",
+          "type": "\"single\" | \"multiple\"",
+          "required": false,
+          "description": "Single fires onChange(string). Multiple fires onChange(string[]).",
+          "default": "\"single\""
+        },
+        {
+          "name": "value",
+          "type": "string | null | readonly string[]",
+          "required": true,
+          "description": "Selected value, or values when selectionMode is multiple."
+        },
+        {
+          "name": "onChange",
+          "type": "(value: string | string[]) => void",
+          "required": true,
+          "description": "Selection change. Single passes a string. Multiple passes the next array."
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Listbox id. Auto-generated when omitted. Option ids derive from it."
+        },
+        {
+          "name": "tabIndex",
+          "type": "number",
+          "required": false,
+          "description": "Listbox tabIndex. Pass -1 when a combobox input owns focus.",
+          "default": "0"
+        },
+        {
+          "name": "activeValue",
+          "type": "string | null",
+          "required": false,
+          "description": "Controlled highlighted value. Omit to keep highlight inside the list."
+        },
+        {
+          "name": "onActiveChange",
+          "type": "(value: string | null) => void",
+          "required": false,
+          "description": "Fires when keyboard or pointer moves the highlight."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name when no visible label is present."
+        }
+      ],
+      "slots": [
+        {
+          "name": "children",
+          "accepts": [
+            "Option",
+            "OptionList.Option"
+          ],
+          "required": true,
+          "description": "String options."
+        }
+      ],
+      "related": [
+        {
+          "id": "Radio",
+          "relation": "alternative"
+        },
+        {
+          "id": "Checkbox",
+          "relation": "alternative"
+        },
+        {
+          "id": "Option",
+          "relation": "requires"
+        }
+      ],
+      "docs": "/optionlist"
+    },
+    {
+      "name": "OptionList.Option",
+      "kind": "part",
+      "description": "String-only option. Same as the top-level Option export.",
+      "whenToUse": [
+        "String-only option. Same as the top-level Option export."
+      ],
+      "whenNotToUse": [
+        "Text children only."
+      ],
+      "intents": [
+        "choose-one",
+        "choose-many"
+      ],
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Selection value."
+        },
+        {
+          "name": "children",
+          "type": "string",
+          "required": true,
+          "description": "Visible label. Text only."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Skips pointer and keyboard selection.",
+          "default": "false"
+        }
+      ],
+      "related": [
+        {
+          "id": "OptionList",
+          "relation": "partOf"
+        },
+        {
+          "id": "Option",
+          "relation": "alternative"
+        }
+      ],
+      "docs": "/optionlist"
+    },
+    {
+      "name": "Popover",
+      "kind": "component",
+      "description": "Surface chrome. Spread getPopoverProps for wire.",
+      "whenToUse": [
+        "Surface chrome for a non-modal popover. Spread getPopoverProps from usePopover or useCombobox."
+      ],
+      "whenNotToUse": [
+        "There is no Popover.Trigger or Popover.Content.",
+        "Do not spread getTriggerProps and also pass anchorRef."
+      ],
+      "intents": [
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Popover contents."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Class name for the surface."
+        },
+        {
+          "name": "style",
+          "type": "React.CSSProperties",
+          "required": false,
+          "description": "Style for the surface. Anchor position comes from getPopoverProps."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name when no visible caption exists."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of the visible caption."
+        }
+      ],
+      "related": [
+        {
+          "id": "usePopover",
+          "relation": "pairsWith"
+        },
+        {
+          "id": "OptionList",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/popover"
+    },
+    {
+      "name": "Radio",
+      "kind": "component",
+      "description": "One option in a RadioGroup. No checked, name, or invalid. Children are the visible label.",
+      "whenToUse": [
+        "One option in a RadioGroup. Children are the visible label. No checked, name, or invalid."
+      ],
+      "whenNotToUse": [
+        "A radio outside a group throws. Use OptionList when the options live in an overlay."
+      ],
+      "intents": [
+        "choose-one"
+      ],
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Option value. The group owns selection."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "Visible label."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables this option. The group disabled flag also applies."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the wrapping label."
+        }
+      ],
+      "related": [
+        {
+          "id": "RadioGroup",
+          "relation": "partOf"
+        },
+        {
+          "id": "OptionList",
+          "relation": "alternative"
+        }
+      ],
+      "docs": "/radio"
+    },
+    {
+      "name": "RadioGroup",
+      "kind": "component",
+      "description": "Exclusive choice. Requires aria-label or aria-labelledby. Owns value, name, disabled, and invalid.",
+      "whenToUse": [
+        "Exclusive choice that stays on the page. Requires aria-label or aria-labelledby.",
+        "Caption with Text and aria-labelledby. Do not point Label htmlFor at the group."
+      ],
+      "whenNotToUse": [
+        "Use OptionList when the options live in a popover or sheet.",
+        "Wiring Radio and OptionList to the same value is a QA fail."
+      ],
+      "intents": [
+        "choose-one"
+      ],
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name when no visible caption exists. Exactly one of aria-label or aria-labelledby."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of the visible caption. Exactly one of aria-label or aria-labelledby."
+        },
+        {
+          "name": "value",
+          "type": "string | null",
+          "required": false,
+          "description": "Controlled value. null is controlled with nothing selected. Omit for uncontrolled."
+        },
+        {
+          "name": "defaultValue",
+          "type": "string | null",
+          "required": false,
+          "description": "Initial value when uncontrolled."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Fires with the next selected value."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "Shared native name. Generated when omitted."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables every radio."
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks every radio invalid."
+        },
+        {
+          "name": "orientation",
+          "type": "\"vertical\" | \"horizontal\"",
+          "required": false,
+          "description": "Layout and aria-orientation.",
+          "default": "\"vertical\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Radio children."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the radiogroup."
+        }
+      ],
+      "slots": [
+        {
+          "name": "children",
+          "accepts": [
+            "Radio"
+          ],
+          "required": true,
+          "description": "Radio children."
+        }
+      ],
+      "related": [
+        {
+          "id": "Radio",
+          "relation": "requires"
+        },
+        {
+          "id": "OptionList",
+          "relation": "alternative"
+        },
+        {
+          "id": "Checkbox",
+          "relation": "alternative"
+        }
+      ],
+      "docs": "/radio"
+    },
+    {
+      "name": "Stack",
+      "kind": "component",
+      "description": "Flex layout. Gap comes from the stack.gap contract token.",
+      "whenToUse": [
+        "Flex layout between fields or sections. Gap comes from the stack.gap contract token."
+      ],
+      "whenNotToUse": [
+        "Do not wrap a label/control pair in Stack. Use .labelled-field for that gap."
+      ],
+      "intents": [
+        "layout"
+      ],
+      "props": [
+        {
+          "name": "direction",
+          "type": "\"row\" | \"column\"",
+          "required": false,
+          "description": "Flex direction.",
+          "default": "\"column\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Laid-out children."
+        }
+      ],
+      "docs": "/stack"
+    },
+    {
+      "name": "Switch",
+      "kind": "component",
+      "description": "On or off. Track and thumb. Children are the visible label. No check glyph.",
+      "whenToUse": [
+        "On or off. Track and thumb. Children are the visible label. No check glyph."
+      ],
+      "whenNotToUse": [
+        "Use Checkbox for an independent item in a list of choices. Do not put Switch inside Field.Root."
+      ],
+      "intents": [
+        "toggle"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "Visible label. Clicking the text toggles the switch."
+        },
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled on state. Defined means controlled."
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial on state when uncontrolled."
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "description": "Fires after the on state changes."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables the switch."
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the control invalid and sets aria-invalid."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "Native input name."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the wrapping label."
+        }
+      ],
+      "related": [
+        {
+          "id": "Checkbox",
+          "relation": "alternative"
+        }
+      ],
+      "docs": "/switch"
+    },
+    {
+      "name": "Text",
+      "kind": "component",
+      "description": "Text styled through the text contract tokens.",
+      "whenToUse": [
+        "Text styled through the text contract tokens. Use it to caption a RadioGroup."
+      ],
+      "whenNotToUse": [
+        "Do not use Text as a label for a labelable control. Use Label with htmlFor."
+      ],
+      "intents": [
+        "typography"
+      ],
+      "props": [
+        {
+          "name": "as",
+          "type": "\"p\" | \"span\" | \"strong\"",
+          "required": false,
+          "description": "Rendered element.",
+          "default": "\"p\""
+        },
+        {
+          "name": "size",
+          "type": "\"s\" | \"m\" | \"l\"",
+          "required": false,
+          "description": "Maps to text.size.2, text.size.3, text.size.4.",
+          "default": "\"m\""
+        },
+        {
+          "name": "tone",
+          "type": "\"default\" | \"muted\" | \"accent\"",
+          "required": false,
+          "description": "Foreground role.",
+          "default": "\"default\""
+        },
+        {
+          "name": "weight",
+          "type": "\"regular\" | \"medium\" | \"bold\"",
+          "required": false,
+          "description": "Font weight.",
+          "default": "\"regular\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Text content."
+        }
+      ],
+      "docs": "/text"
+    },
+    {
+      "name": "ThemeProvider",
+      "kind": "provider",
+      "description": "Sets data-appearance from system, light, or dark. Nested providers override.",
+      "whenToUse": [
+        "Sets data-appearance from system, light, or dark. Nested providers override."
+      ],
+      "whenNotToUse": [
+        "Never writes data-appearance=system. The resolved value is light or dark."
+      ],
+      "intents": [
+        "theme"
+      ],
+      "props": [
+        {
+          "name": "appearance",
+          "type": "\"system\" | \"light\" | \"dark\"",
+          "required": false,
+          "description": "Resolved to light or dark before writing data-appearance. Never writes system.",
+          "default": "\"system\""
+        },
+        {
+          "name": "overrides",
+          "type": "ThemeOverride",
+          "required": false,
+          "description": "Closed allowlist of raw, semantic, and component token paths. Values are typed; unknown keys and raw CSS are rejected."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Themed subtree."
+        }
+      ],
+      "related": [
+        {
+          "id": "DensityProvider",
+          "relation": "pairsWith"
+        }
+      ]
+    },
+    {
+      "name": "Tooltip",
+      "kind": "component",
+      "description": "Tip chrome. Spread getTooltipProps for wire.",
+      "whenToUse": [
+        "Tip chrome. Spread getTooltipProps. Default is text-only role=tooltip."
+      ],
+      "whenNotToUse": [
+        "There is no Tooltip.Trigger or Tooltip.Content.",
+        "Do not set interactive on Tooltip. Pass interactive to useTooltip."
+      ],
+      "intents": [
+        "transient-hint"
+      ],
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Tooltip text, or short prose plus links when interactive."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Class name for the tip surface."
+        },
+        {
+          "name": "style",
+          "type": "React.CSSProperties",
+          "required": false,
+          "description": "Style for the tip surface. Anchor position comes from getTooltipProps."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name when no visible caption exists. Exactly one of aria-label or aria-labelledby when interactive."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of the visible caption. Exactly one of aria-label or aria-labelledby when interactive."
+        }
+      ],
+      "related": [
+        {
+          "id": "useTooltip",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/tooltip"
+    },
+    {
+      "name": "useChipField",
+      "kind": "hook",
+      "description": "Optional state helper. Field.ChipInput stays fully controlled without it.",
+      "whenToUse": [
+        "Optional state helper. Holds chips and input, then spreads onto Field.ChipInput."
+      ],
+      "whenNotToUse": [
+        "Field.ChipInput stays fully controlled without it."
+      ],
+      "intents": [
+        "tag-entry"
+      ],
+      "props": [
+        {
+          "name": "initialChips",
+          "type": "string[]",
+          "required": false,
+          "description": "Starting chips.",
+          "default": "[]"
+        },
+        {
+          "name": "initialInputValue",
+          "type": "string",
+          "required": false,
+          "description": "Starting input text.",
+          "default": "\"\""
+        },
+        {
+          "name": "dedupe",
+          "type": "boolean",
+          "required": false,
+          "description": "Skip commits that already exist.",
+          "default": "true"
+        },
+        {
+          "name": "transform",
+          "type": "(raw: string) => string | null",
+          "required": false,
+          "description": "Normalize a commit. Null rejects. Default trims and rejects empty."
+        }
+      ],
+      "related": [
+        {
+          "id": "Field.ChipInput",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/field"
+    },
+    {
+      "name": "useCombobox",
+      "kind": "hook",
+      "description": "Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, and OptionList. No Combobox chrome.",
+      "whenToUse": [
+        "Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, and OptionList.",
+        "presentation auto uses useSheetPresentation."
+      ],
+      "whenNotToUse": [
+        "No Combobox chrome. Do not export Combobox.Root, Combobox.Trigger, or Combobox.Icon.",
+        "Do not dual-wire aria or open outside the hook while also using it."
+      ],
+      "intents": [
+        "search-select",
+        "choose-one",
+        "choose-many",
+        "tag-entry"
+      ],
+      "props": [
+        {
+          "name": "selectionMode",
+          "type": "\"single\" | \"multiple\"",
+          "required": false,
+          "description": "Single uses TextInput. Multiple uses ChipInput.",
+          "default": "\"single\""
+        },
+        {
+          "name": "options",
+          "type": "readonly ComboboxOption[]",
+          "required": false,
+          "description": "Sync options. Ignored when loadOptions is set."
+        },
+        {
+          "name": "loadOptions",
+          "type": "(query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>",
+          "required": false,
+          "description": "Async options. Stale responses are discarded."
+        },
+        {
+          "name": "presentation",
+          "type": "\"popover\" | \"sheet\" | \"auto\"",
+          "required": false,
+          "description": "auto uses useSheetPresentation.",
+          "default": "\"auto\""
+        },
+        {
+          "name": "allowCreate",
+          "type": "boolean",
+          "required": false,
+          "description": "Show a create row when the query has no case-insensitive label match.",
+          "default": "false"
+        },
+        {
+          "name": "value",
+          "type": "string | null | readonly string[]",
+          "required": false,
+          "description": "Controlled value. Null for empty single. Array for multiple."
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open."
+        },
+        {
+          "name": "inputValue",
+          "type": "string",
+          "required": false,
+          "description": "Controlled filter text."
+        }
+      ],
+      "related": [
+        {
+          "id": "OptionList",
+          "relation": "requires"
+        },
+        {
+          "id": "useSheetPresentation",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/combobox"
+    },
+    {
+      "name": "usePopover",
+      "kind": "hook",
+      "description": "One open machine. Spread getTriggerProps onto the trigger and getPopoverProps onto Popover.",
+      "whenToUse": [
+        "Open machine for Popover. Spread getTriggerProps on the trigger and getPopoverProps on Popover."
+      ],
+      "whenNotToUse": [
+        "Do not spread getTriggerProps and also pass anchorRef.",
+        "Combobox uses getAnchorProps on Field.Root instead of this trigger."
+      ],
+      "intents": [
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: PopoverCloseReason) => void",
+          "required": false,
+          "description": "Fires on toggle or dismiss. Leaving open unchanged is a veto."
+        },
+        {
+          "name": "anchorRef",
+          "type": "RefObject<HTMLElement | null>",
+          "required": false,
+          "description": "Sets CSS anchor-name on this element and excludes it from outside press."
+        },
+        {
+          "name": "initialFocusRef",
+          "type": "RefObject<HTMLElement | null>",
+          "required": false,
+          "description": "Focus this element when the popover opens."
+        },
+        {
+          "name": "restoreFocusRef",
+          "type": "RefObject<HTMLElement | null>",
+          "required": false,
+          "description": "Return focus here when the popover closes."
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": false,
+          "description": "False skips toggle, dismiss, and focus moves.",
+          "default": "true"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Popover id. Default is a generated id."
+        }
+      ],
+      "related": [
+        {
+          "id": "Popover",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/popover"
+    },
+    {
+      "name": "useSheetPresentation",
+      "kind": "hook",
+      "description": "Coarse pointer or narrow width selects sheet. SSR and first paint are popover. isSheet mirrors presentation.",
+      "whenToUse": [
+        "Chooses sheet when the pointer is coarse or the viewport is narrower than 640px. Otherwise popover."
+      ],
+      "whenNotToUse": [
+        "isSheet mirrors presentation === \"sheet\". It is not isTouch. First paint is popover."
+      ],
+      "intents": [
+        "contextual-overlay"
+      ],
+      "props": [
+        {
+          "name": "narrowWidth",
+          "type": "number",
+          "required": false,
+          "description": "Viewport width that starts the narrow media query. Media is max-width: n - 1.",
+          "default": "640"
+        },
+        {
+          "name": "coarseQuery",
+          "type": "string",
+          "required": false,
+          "description": "matchMedia query treated as coarse pointer.",
+          "default": "'(pointer: coarse)'"
+        },
+        {
+          "name": "forced",
+          "type": "\"popover\" | \"sheet\" | \"auto\"",
+          "required": false,
+          "description": "Skip media when popover or sheet. auto uses coarse OR narrow.",
+          "default": "\"auto\""
+        }
+      ],
+      "related": [
+        {
+          "id": "useCombobox",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/combobox"
+    },
+    {
+      "name": "useTooltip",
+      "kind": "hook",
+      "description": "One open machine. Spread getTriggerProps onto the trigger and getTooltipProps onto Tooltip. Interactive is a non-modal tip dialog.",
+      "whenToUse": [
+        "Open machine for Tooltip. Spread getTriggerProps on the trigger and getTooltipProps on Tooltip.",
+        "Pass interactive: true for a non-modal tip dialog with links. Never role=tooltip in that mode."
+      ],
+      "whenNotToUse": [
+        "Set tooltip={false} on Button.Root when this hook owns the machine."
+      ],
+      "intents": [
+        "transient-hint"
+      ],
+      "props": [
+        {
+          "name": "interactive",
+          "type": "boolean",
+          "required": false,
+          "description": "Use the non-modal tip dialog. Links only. Never role=tooltip.",
+          "default": "false"
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: TooltipOpenReason) => void",
+          "required": false,
+          "description": "Fires after a commit. Leaving open unchanged is a veto."
+        },
+        {
+          "name": "showDelay",
+          "type": "number",
+          "required": false,
+          "description": "Hover show delay in milliseconds. Focus shows at once.",
+          "default": "300"
+        },
+        {
+          "name": "hideDelay",
+          "type": "number",
+          "required": false,
+          "description": "Hide delay in milliseconds.",
+          "default": "100"
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": false,
+          "description": "False resets intent and commits close.",
+          "default": "true"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Tooltip id. Default is a generated id."
+        }
+      ],
+      "related": [
+        {
+          "id": "Tooltip",
+          "relation": "pairsWith"
+        }
+      ],
+      "docs": "/tooltip"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "choice-group",
+      "name": "Choice group",
+      "description": "On-page RadioGroup or Checkbox versus overlay OptionList. Never bind both to one value.",
+      "whenToUse": [
+        "Use RadioGroup when one exclusive choice stays on the page.",
+        "Use Checkbox when several independent choices stay on the page.",
+        "Use OptionList when the choices live in a Popover or BottomSheet."
+      ],
+      "whenNotToUse": [
+        "Do not wire OptionList and Radio or Checkbox to the same value.",
+        "Do not put Checkbox or Radio inside Field.Root."
+      ],
+      "intents": [
+        "choose-one",
+        "choose-many"
+      ],
+      "uses": [
+        "RadioGroup",
+        "Radio",
+        "Checkbox",
+        "OptionList"
+      ],
+      "tree": [
+        {
+          "component": "RadioGroup",
+          "props": {
+            "aria-labelledby": {
+              "$fill": "captionId"
+            },
+            "value": {
+              "$fill": "value"
+            }
+          },
+          "children": [
+            {
+              "$fill": "radios"
+            }
+          ]
+        }
+      ],
+      "fills": [
+        {
+          "name": "captionId",
+          "description": "Id of the visible Text caption. RadioGroup is not labelable via htmlFor."
+        },
+        {
+          "name": "value",
+          "description": "Selected radio value, or null when nothing is selected."
+        },
+        {
+          "name": "radios",
+          "description": "Radio children. Swap this tree for Checkbox siblings or an overlay OptionList."
+        }
+      ],
+      "docs": "/radio"
+    },
+    {
+      "id": "combobox-popover",
+      "name": "Combobox popover",
+      "description": "Desktop combobox recipe. Closed control is a Field. List lives in Popover.",
+      "whenToUse": [
+        "Search-select on a wide pointer viewport.",
+        "Spread getAnchorProps onto Field.Root. Do not also spread usePopover getTriggerProps."
+      ],
+      "whenNotToUse": [
+        "Use combobox-sheet when the closed control is a Button and the list is a BottomSheet.",
+        "Do not export Combobox.* chrome. This is a recipe, not a namespace."
+      ],
+      "intents": [
+        "search-select",
+        "tag-entry",
+        "choose-one",
+        "choose-many"
+      ],
+      "uses": [
+        "Label",
+        "Field.Root",
+        "Field.Icon",
+        "Field.ChipInput",
+        "Popover",
+        "OptionList"
+      ],
+      "tree": [
+        {
+          "component": "Label",
+          "props": {
+            "htmlFor": {
+              "$fill": "inputId"
+            },
+            "children": {
+              "$fill": "label"
+            }
+          }
+        },
+        {
+          "component": "Field.Root",
+          "spread": "cb.getAnchorProps()",
+          "children": [
+            {
+              "component": "Field.Icon",
+              "children": [
+                {
+                  "$fill": "leadingIcon"
+                }
+              ]
+            },
+            {
+              "component": "Field.ChipInput",
+              "spread": "cb.getChipInputProps()"
+            },
+            {
+              "component": "Field.Icon",
+              "children": [
+                {
+                  "$fill": "trailingIcon"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "component": "Popover",
+          "spread": "cb.getPopoverProps()",
+          "children": [
+            {
+              "component": "OptionList",
+              "spread": "cb.getListboxProps()",
+              "children": [
+                {
+                  "$fill": "options"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "fills": [
+        {
+          "name": "inputId",
+          "description": "Id shared by Label htmlFor and the combobox input."
+        },
+        {
+          "name": "label",
+          "description": "Visible field caption."
+        },
+        {
+          "name": "leadingIcon",
+          "description": "Decorative or search icon before the input."
+        },
+        {
+          "name": "trailingIcon",
+          "description": "Decorative chevron after the input."
+        },
+        {
+          "name": "options",
+          "description": "Option or OptionList.Option children for the current query."
+        }
+      ],
+      "hooks": [
+        {
+          "id": "useCombobox",
+          "as": "cb"
+        }
+      ],
+      "docs": "/combobox"
+    },
+    {
+      "id": "combobox-sheet",
+      "name": "Combobox sheet",
+      "description": "Touch combobox recipe. Closed control is Button.Root. Search Field lives inside BottomSheet.",
+      "whenToUse": [
+        "Search-select on a coarse pointer or a narrow viewport.",
+        "Spread getTriggerProps onto Button.Root. Put the search Field inside the sheet."
+      ],
+      "whenNotToUse": [
+        "Use combobox-popover when the closed control is a Field anchored to a Popover.",
+        "Do not pretend Field.Root is the touch trigger."
+      ],
+      "intents": [
+        "search-select",
+        "choose-one",
+        "choose-many",
+        "contextual-overlay"
+      ],
+      "uses": [
+        "Button.Root",
+        "BottomSheet",
+        "Label",
+        "Field.Root",
+        "Field.Icon",
+        "Field.TextInput",
+        "OptionList"
+      ],
+      "tree": [
+        {
+          "component": "Button.Root",
+          "spread": "cb.getTriggerProps()",
+          "children": [
+            {
+              "$fill": "triggerLabel"
+            }
+          ]
+        },
+        {
+          "component": "BottomSheet",
+          "spread": "cb.getSheetProps()",
+          "children": [
+            {
+              "component": "Label",
+              "props": {
+                "htmlFor": {
+                  "$fill": "inputId"
+                },
+                "children": {
+                  "$fill": "label"
+                }
+              }
+            },
+            {
+              "component": "Field.Root",
+              "props": {
+                "id": {
+                  "$fill": "inputId"
+                }
+              },
+              "children": [
+                {
+                  "component": "Field.Icon",
+                  "children": [
+                    {
+                      "$fill": "leadingIcon"
+                    }
+                  ]
+                },
+                {
+                  "component": "Field.TextInput",
+                  "spread": "cb.getInputProps()"
+                }
+              ]
+            },
+            {
+              "component": "OptionList",
+              "spread": "cb.getListboxProps()",
+              "children": [
+                {
+                  "$fill": "options"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "fills": [
+        {
+          "name": "triggerLabel",
+          "description": "Closed-control label on Button.Root."
+        },
+        {
+          "name": "inputId",
+          "description": "Id shared by the in-sheet Label and Field.Root."
+        },
+        {
+          "name": "label",
+          "description": "Visible search caption inside the sheet."
+        },
+        {
+          "name": "leadingIcon",
+          "description": "Decorative search icon."
+        },
+        {
+          "name": "options",
+          "description": "Option or OptionList.Option children for the current query."
+        }
+      ],
+      "hooks": [
+        {
+          "id": "useCombobox",
+          "as": "cb"
+        }
+      ],
+      "docs": "/combobox"
+    },
+    {
+      "id": "confirm-dialog",
+      "name": "Confirm dialog",
+      "description": "Centered Dialog with title, body, and footer actions. Stays a dialog. No sheet morph.",
+      "whenToUse": [
+        "Ask the user to confirm or cancel before a commit.",
+        "For a destructive commit, label the confirm action clearly and keep the dialog centered."
+      ],
+      "whenNotToUse": [
+        "Use BottomSheet when the task is a mobile sheet, not a confirm.",
+        "Do not morph this dialog into a sheet."
+      ],
+      "intents": [
+        "confirm",
+        "destructive-confirm"
+      ],
+      "uses": [
+        "Dialog",
+        "Dialog.Header",
+        "Dialog.Title",
+        "Dialog.Body",
+        "Dialog.Footer",
+        "Button.Root"
+      ],
+      "tree": [
+        {
+          "component": "Dialog",
+          "props": {
+            "open": {
+              "$fill": "open"
+            }
+          },
+          "children": [
+            {
+              "component": "Dialog.Header",
+              "children": [
+                {
+                  "component": "Dialog.Title",
+                  "children": [
+                    {
+                      "$fill": "title"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "component": "Dialog.Body",
+              "children": [
+                {
+                  "$fill": "body"
+                }
+              ]
+            },
+            {
+              "component": "Dialog.Footer",
+              "children": [
+                {
+                  "component": "Button.Root",
+                  "props": {
+                    "variant": "ghost"
+                  },
+                  "children": [
+                    {
+                      "$fill": "cancelLabel"
+                    }
+                  ]
+                },
+                {
+                  "component": "Button.Root",
+                  "children": [
+                    {
+                      "$fill": "confirmLabel"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "fills": [
+        {
+          "name": "open",
+          "description": "Controlled open flag."
+        },
+        {
+          "name": "title",
+          "description": "Dialog.Title copy."
+        },
+        {
+          "name": "body",
+          "description": "Explanation in Dialog.Body."
+        },
+        {
+          "name": "cancelLabel",
+          "description": "Ghost footer action that dismisses."
+        },
+        {
+          "name": "confirmLabel",
+          "description": "Primary footer action that commits. Name the destructive verb when needed."
+        }
+      ],
+      "docs": "/dialog"
+    },
+    {
+      "id": "labelled-field",
+      "name": "Labelled field",
+      "description": "Label + Field.Root + optional Description and ErrorMessage as siblings.",
+      "whenToUse": [
+        "Caption a text or chip field. Wrap the stack in one .labelled-field.",
+        "Put aria-describedby on Field.Root, not on the input."
+      ],
+      "whenNotToUse": [
+        "Do not nest Label inside Field.Root. Label is a sibling.",
+        "Do not wrap the label/control stack in Stack. stack.gap is the gap between fields."
+      ],
+      "intents": [
+        "text-entry",
+        "tag-entry",
+        "label",
+        "helper-text",
+        "validation-message"
+      ],
+      "uses": [
+        "Label",
+        "Field.Root",
+        "Field.TextInput",
+        "Description",
+        "ErrorMessage"
+      ],
+      "tree": [
+        {
+          "component": "Label",
+          "props": {
+            "htmlFor": {
+              "$fill": "fieldId"
+            },
+            "children": {
+              "$fill": "label"
+            }
+          }
+        },
+        {
+          "component": "Field.Root",
+          "props": {
+            "id": {
+              "$fill": "fieldId"
+            },
+            "invalid": {
+              "$fill": "invalid"
+            },
+            "aria-describedby": {
+              "$fill": "describedBy"
+            }
+          },
+          "children": [
+            {
+              "component": "Field.TextInput",
+              "props": {
+                "value": {
+                  "$fill": "value"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "component": "Description",
+          "props": {
+            "id": {
+              "$fill": "hintId"
+            },
+            "children": {
+              "$fill": "hint"
+            }
+          }
+        },
+        {
+          "component": "ErrorMessage",
+          "props": {
+            "id": {
+              "$fill": "errorId"
+            },
+            "children": {
+              "$fill": "error"
+            }
+          }
+        }
+      ],
+      "fills": [
+        {
+          "name": "fieldId",
+          "description": "Shared id for Label htmlFor and Field.Root."
+        },
+        {
+          "name": "label",
+          "description": "Visible caption. Author a required mark here when needed."
+        },
+        {
+          "name": "invalid",
+          "description": "When true, Field.Root marks the input invalid."
+        },
+        {
+          "name": "describedBy",
+          "description": "Space-separated hint and error ids listed on Field.Root."
+        },
+        {
+          "name": "value",
+          "description": "Controlled input value."
+        },
+        {
+          "name": "hintId",
+          "description": "Description id included in aria-describedby."
+        },
+        {
+          "name": "hint",
+          "description": "Supporting hint copy."
+        },
+        {
+          "name": "errorId",
+          "description": "ErrorMessage id included in aria-describedby when invalid."
+        },
+        {
+          "name": "error",
+          "description": "Validation copy. Render ErrorMessage only when invalid."
+        }
+      ],
+      "docs": "/field"
+    }
+  ]
+}

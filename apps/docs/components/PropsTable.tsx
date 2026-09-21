@@ -1,55 +1,8 @@
-import schema from '@tounsoo/todae/schema/components.json';
+import catalog from '@tounsoo/todae/catalog.json';
 
-type PropRow = {
-  name: string;
-  type: string;
-  required: boolean;
-  default?: string;
-  description: string;
-};
-
-type ComponentRow = {
-  name: string;
-  description: string;
-  props: PropRow[];
-};
-
-function isPropRow(value: unknown): value is PropRow {
-  if (typeof value !== 'object' || value === null) return false;
-  const row = value as Record<string, unknown>;
-  return (
-    typeof row.name === 'string' &&
-    typeof row.type === 'string' &&
-    typeof row.required === 'boolean' &&
-    typeof row.description === 'string' &&
-    (row.default === undefined || typeof row.default === 'string')
-  );
-}
-
-function isComponentRow(value: unknown): value is ComponentRow {
-  if (typeof value !== 'object' || value === null) return false;
-  const row = value as Record<string, unknown>;
-  return (
-    typeof row.name === 'string' &&
-    typeof row.description === 'string' &&
-    Array.isArray(row.props) &&
-    row.props.every(isPropRow)
-  );
-}
-
-function readComponent(name: string): ComponentRow {
-  if (
-    typeof schema !== 'object' ||
-    schema === null ||
-    !('components' in schema) ||
-    !Array.isArray(schema.components)
-  ) {
-    throw new Error('Invalid components schema document');
-  }
-  const match = schema.components.find((row) => isComponentRow(row) && row.name === name);
-  if (!match || !isComponentRow(match)) {
-    throw new Error(`Unknown component "${name}" in schema/components.json`);
-  }
+function readComponent(name: string) {
+  const match = catalog.components.find((row) => row.name === name);
+  if (!match) throw new Error(`Unknown component "${name}" in catalog.json`);
   return match;
 }
 

@@ -2,7 +2,27 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Checkbox',
+  kind: 'component',
   description: 'Native checkbox. Children are the visible label. Never indeterminate.',
+  whenToUse: [
+    'Several independent choices that stay on the page. Children are the visible label. Never indeterminate.',
+  ],
+  whenNotToUse: [
+    'Use Radio when one exclusive choice stays on the page.',
+    'Use OptionList when the options live in a popover or sheet.',
+    'Do not put Checkbox inside Field.Root.',
+    'Do not wire Checkbox and OptionList to the same value.',
+  ],
+  intents: [
+    'choose-many',
+    'toggle',
+  ],
+  related: [
+    { id: 'Radio', relation: 'alternative' },
+    { id: 'OptionList', relation: 'alternative' },
+    { id: 'Switch', relation: 'alternative' },
+  ],
+  docs: '/checkbox',
   props: [
     {
       name: 'children',

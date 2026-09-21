@@ -29,9 +29,12 @@ export default defineConfig({
   plugins: [emitPackageCss()],
   build: {
     lib: {
-      entry: new URL('./src/index.ts', import.meta.url).pathname,
+      entry: {
+        index: new URL('./src/index.ts', import.meta.url).pathname,
+        catalog: new URL('./src/catalog/index.ts', import.meta.url).pathname,
+      },
       formats: ['es'],
-      fileName: () => 'index.js',
+      fileName: (_format, name) => `${name}.js`,
       cssFileName: 'todae',
     },
     rollupOptions: {

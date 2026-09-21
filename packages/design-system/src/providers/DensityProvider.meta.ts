@@ -2,7 +2,20 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'DensityProvider',
+  kind: 'provider',
   description: 'Sets data-density for spacing-only compact, comfortable, or spacious.',
+  whenToUse: [
+    'Sets data-density for spacing-only compact, comfortable, or spacious.',
+  ],
+  whenNotToUse: [
+    'Does not change type size or color. Nested providers override.',
+  ],
+  intents: [
+    'density',
+  ],
+  related: [
+    { id: 'ThemeProvider', relation: 'pairsWith' },
+  ],
   props: [
     {
       name: 'density',
