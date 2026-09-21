@@ -436,7 +436,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       if (event.key === 'Escape') {
         event.preventDefault();
         if (open) {
-          setOpen(false, 'escape');
+          if (isSheet) setOpen(false, 'escape');
           return;
         }
         if (selectionMode === 'single' && !singleValue) setInputValue('');
@@ -448,6 +448,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     },
     [
       create,
+      isSheet,
       move,
       open,
       options.disabled,
