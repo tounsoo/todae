@@ -76,12 +76,10 @@ export function ComboboxSingle() {
           <Chevron />
         </Field.Icon>
       </Field.Root>
-      <Popover {...cb.getPopoverProps()}>
-        <Popover.Content aria-label="Framework">
-          <OptionList {...cb.getListboxProps()}>
-            {optionNodes(cb.items, cb.getOptionProps)}
-          </OptionList>
-        </Popover.Content>
+      <Popover {...cb.getPopoverProps()} aria-label="Framework">
+        <OptionList {...cb.getListboxProps()}>
+          {optionNodes(cb.items, cb.getOptionProps)}
+        </OptionList>
       </Popover>
     </div>
   );
@@ -103,12 +101,10 @@ export function ComboboxMulti() {
           <Chevron />
         </Field.Icon>
       </Field.Root>
-      <Popover {...cb.getPopoverProps()}>
-        <Popover.Content aria-label="Type">
-          <OptionList {...cb.getListboxProps()}>
-            {optionNodes(cb.items, cb.getOptionProps)}
-          </OptionList>
-        </Popover.Content>
+      <Popover {...cb.getPopoverProps()} aria-label="Type">
+        <OptionList {...cb.getListboxProps()}>
+          {optionNodes(cb.items, cb.getOptionProps)}
+        </OptionList>
       </Popover>
     </div>
   );
@@ -187,12 +183,10 @@ export function ComboboxAuto() {
           <Field.Root {...cb.getAnchorProps()}>
             <Field.TextInput {...cb.getInputProps()} />
           </Field.Root>
-          <Popover {...cb.getPopoverProps()}>
-            <Popover.Content aria-label="Framework">
-              <OptionList {...cb.getListboxProps()}>
-                {optionNodes(cb.items, cb.getOptionProps)}
-              </OptionList>
-            </Popover.Content>
+          <Popover {...cb.getPopoverProps()} aria-label="Framework">
+            <OptionList {...cb.getListboxProps()}>
+              {optionNodes(cb.items, cb.getOptionProps)}
+            </OptionList>
           </Popover>
         </>
       )}
@@ -230,25 +224,23 @@ export function ComboboxAsync() {
           <Chevron />
         </Field.Icon>
       </Field.Root>
-      <Popover {...cb.getPopoverProps()}>
-        <Popover.Content aria-label="Package">
-          {cb.loading ? (
-            <Text role="status" aria-live="polite">
-              Loading…
-            </Text>
-          ) : cb.error ? (
-            <div role="status" aria-live="polite">
-              <Text as="span">Couldn’t load options.</Text>{' '}
-              <Button.Root variant="ghost" onClick={cb.retry}>
-                Retry
-              </Button.Root>
-            </div>
-          ) : (
-            <OptionList {...cb.getListboxProps()}>
-              {optionNodes(cb.items, cb.getOptionProps)}
-            </OptionList>
-          )}
-        </Popover.Content>
+      <Popover {...cb.getPopoverProps()} aria-label="Package">
+        {cb.loading ? (
+          <Text role="status" aria-live="polite">
+            Loading…
+          </Text>
+        ) : cb.error ? (
+          <div role="status" aria-live="polite">
+            <Text as="span">Couldn’t load options.</Text>{' '}
+            <Button.Root variant="ghost" onClick={cb.retry}>
+              Retry
+            </Button.Root>
+          </div>
+        ) : (
+          <OptionList {...cb.getListboxProps()}>
+            {optionNodes(cb.items, cb.getOptionProps)}
+          </OptionList>
+        )}
       </Popover>
     </div>
   );
@@ -268,16 +260,14 @@ export function ComboboxEmpty() {
           <Chevron />
         </Field.Icon>
       </Field.Root>
-      <Popover {...cb.getPopoverProps()}>
-        <Popover.Content aria-label="Package">
-          {cb.isEmpty ? (
-            <Text role="status">No matches</Text>
-          ) : (
-            <OptionList {...cb.getListboxProps()}>
-              {optionNodes(cb.items, cb.getOptionProps)}
-            </OptionList>
-          )}
-        </Popover.Content>
+      <Popover {...cb.getPopoverProps()} aria-label="Package">
+        {cb.isEmpty ? (
+          <Text role="status">No matches</Text>
+        ) : (
+          <OptionList {...cb.getListboxProps()}>
+            {optionNodes(cb.items, cb.getOptionProps)}
+          </OptionList>
+        )}
       </Popover>
     </div>
   );
@@ -309,12 +299,10 @@ export function ComboboxCreate() {
           <Chevron />
         </Field.Icon>
       </Field.Root>
-      <Popover {...cb.getPopoverProps()}>
-        <Popover.Content aria-label="Package">
-          <OptionList {...cb.getListboxProps()}>
-            {optionNodes(cb.items, cb.getOptionProps)}
-          </OptionList>
-        </Popover.Content>
+      <Popover {...cb.getPopoverProps()} aria-label="Package">
+        <OptionList {...cb.getListboxProps()}>
+          {optionNodes(cb.items, cb.getOptionProps)}
+        </OptionList>
       </Popover>
     </div>
   );
@@ -342,12 +330,10 @@ export function ComboboxCreateMulti() {
           <Chevron />
         </Field.Icon>
       </Field.Root>
-      <Popover {...cb.getPopoverProps()}>
-        <Popover.Content aria-label="Tags">
-          <OptionList {...cb.getListboxProps()}>
-            {optionNodes(cb.items, cb.getOptionProps)}
-          </OptionList>
-        </Popover.Content>
+      <Popover {...cb.getPopoverProps()} aria-label="Tags">
+        <OptionList {...cb.getListboxProps()}>
+          {optionNodes(cb.items, cb.getOptionProps)}
+        </OptionList>
       </Popover>
     </div>
   );

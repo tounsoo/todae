@@ -1,6 +1,6 @@
 'use client';
 
-import { Field, Option, OptionList, Popover } from '@tounsoo/todae';
+import { Button, Field, Option, OptionList, Popover, usePopover } from '@tounsoo/todae';
 import { useState } from 'react';
 
 export function FieldPartsAllowed() {
@@ -20,6 +20,7 @@ export function SiblingsAllowed() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [sort, setSort] = useState<string | null>(null);
+  const popover = usePopover({ open, onOpenChange: setOpen });
   return (
     <>
       <Field.Root>
@@ -29,20 +30,20 @@ export function SiblingsAllowed() {
           placeholder="Filter"
         />
       </Field.Root>
-      <Popover open={open} onOpenChange={setOpen}>
-        <Popover.Trigger>{sort ?? 'Sort'}</Popover.Trigger>
-        <Popover.Content aria-label="Sort">
-          <OptionList
-            value={sort}
-            onChange={(next) => {
-              setSort(next);
-              setOpen(false);
-            }}
-          >
-            <Option value="name">Name</Option>
-            <Option value="recent">Recent</Option>
-          </OptionList>
-        </Popover.Content>
+      <Button.Root tooltip={false} {...popover.getTriggerProps()}>
+        {sort ?? 'Sort'}
+      </Button.Root>
+      <Popover {...popover.getPopoverProps()} aria-label="Sort">
+        <OptionList
+          value={sort}
+          onChange={(next) => {
+            setSort(next);
+            setOpen(false);
+          }}
+        >
+          <Option value="name">Name</Option>
+          <Option value="recent">Recent</Option>
+        </OptionList>
       </Popover>
     </>
   );

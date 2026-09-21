@@ -18,8 +18,9 @@ import type {
   OptionListSingleProps,
   OptionProps,
 } from '../components/OptionList';
-import type { PopoverProps } from '../components/Popover';
+import type { PopoverWire } from '../components/Popover.wire';
 import { createAsyncGate } from './useCombobox.async';
+import { usePopover } from './usePopover';
 import { defaultFilter, filterOptions } from './useCombobox.filter';
 import type {
   ComboboxCloseReason,
@@ -107,10 +108,7 @@ export type UseComboboxResult = {
   };
   getInputProps: () => FieldTextInputProps & { ref: RefObject<HTMLInputElement | null> };
   getChipInputProps: () => FieldChipInputProps & { ref: RefObject<HTMLInputElement | null> };
-  getPopoverProps: () => Pick<
-    PopoverProps,
-    'open' | 'onOpenChange' | 'anchorRef' | 'initialFocusRef' | 'restoreFocusRef'
-  >;
+  getPopoverProps: () => PopoverWire;
   getSheetProps: () => Pick<
     BottomSheetProps,
     'open' | 'onOpenChange' | 'initialFocusRef' | 'restoreFocusRef' | 'aria-label'
@@ -505,7 +503,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   } => {
     if (process.env.NODE_ENV !== 'production' && !isSheet) {
       console.warn(
-        'useCombobox: getTriggerProps is for sheet Button.Root. Popover mode uses getAnchorProps on Field.Root. Do not add Popover.Trigger.',
+        'useCombobox: getTriggerProps is for sheet Button.Root. Popover mode uses getAnchorProps on Field.Root. Do not spread usePopover getTriggerProps.',
       );
     }
     return {
@@ -585,19 +583,14 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     ],
   );
 
-  const getPopoverProps = useCallback(
-    (): Pick<
-      PopoverProps,
-      'open' | 'onOpenChange' | 'anchorRef' | 'initialFocusRef' | 'restoreFocusRef'
-    > => ({
-      open,
-      onOpenChange: (next, reason) => setOpen(next, reason),
-      anchorRef,
-      initialFocusRef: inputRef,
-      restoreFocusRef: inputRef,
-    }),
-    [open, setOpen],
-  );
+  const popover = usePopover({
+    open,
+    onOpenChange: setOpen,
+    anchorRef,
+    initialFocusRef: inputRef,
+    restoreFocusRef: inputRef,
+    enabled: !isSheet,
+  });
 
   const getSheetProps = useCallback(
     (): Pick<
@@ -687,7 +680,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     getAnchorProps,
     getInputProps,
     getChipInputProps,
-    getPopoverProps,
+    getPopoverProps: popover.getPopoverProps,
     getSheetProps,
     getListboxProps,
     getOptionProps,

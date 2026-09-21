@@ -2,29 +2,54 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useRef, useState } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { useRef, useState, type CSSProperties } from 'react';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import * as api from '../index';
+import { usePopover, type PopoverCloseReason, type UsePopoverOptions } from '../hooks/usePopover';
 import { Option, OptionList } from './OptionList';
-import { Popover } from './Popover';
+import { Popover, type PopoverProps } from './Popover';
 
-const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Popover.module.css'), 'utf8');
+const here = dirname(fileURLToPath(import.meta.url));
+const source = readFileSync(join(here, 'Popover.tsx'), 'utf8');
+const css = readFileSync(join(here, 'Popover.module.css'), 'utf8');
 
 afterEach(cleanup);
 
 function Harness({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean, reason: string) => void;
-}) {
+  label = 'Open',
+  children = 'Hello',
+  ...options
+}: UsePopoverOptions & { label?: string; children?: string }) {
+  const popover = usePopover(options);
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <Popover.Trigger>Open</Popover.Trigger>
-      <Popover.Content aria-label="Menu">Hello</Popover.Content>
-    </Popover>
+    <>
+      <button type="button" {...popover.getTriggerProps()}>
+        {label}
+      </button>
+      <Popover {...popover.getPopoverProps()} aria-label="Menu">
+        {children}
+      </Popover>
+    </>
   );
 }
+
+describe('Popover exports', () => {
+  it('exports the surface and hard-cuts Trigger and Content', () => {
+    expect(api.Popover).toBe(Popover);
+    expect(api.usePopover).toBeDefined();
+    expect(Popover).not.toHaveProperty('Trigger');
+    expect(Popover).not.toHaveProperty('Content');
+    expectTypeOf<PopoverProps>().toHaveProperty('id');
+    expectTypeOf<PopoverProps>().toHaveProperty('open');
+    expectTypeOf<PopoverProps>().toHaveProperty('ref');
+    expectTypeOf<PopoverProps>().toHaveProperty('style');
+    expectTypeOf<PopoverProps>().not.toHaveProperty('onOpenChange');
+    expectTypeOf<PopoverProps>().not.toHaveProperty('enabled');
+    expectTypeOf<PopoverProps>().not.toHaveProperty('anchorRef');
+    expectTypeOf<PopoverProps>().not.toHaveProperty('defaultOpen');
+    expectTypeOf<PopoverCloseReason>().toEqualTypeOf<'escape' | 'outside' | 'trigger'>();
+  });
+});
 
 describe('Popover', () => {
   it('calls showPopover when open and hidePopover only when open is false', () => {
@@ -55,39 +80,6 @@ describe('Popover', () => {
     hide.mockRestore();
   });
 
-  it('ignores outside presses on the trigger and content', () => {
-    const onOpenChange = vi.fn();
-    render(<Harness open onOpenChange={onOpenChange} />);
-    fireEvent.pointerDown(screen.getByRole('button', { name: 'Open' }));
-    fireEvent.pointerDown(screen.getByLabelText('Menu'));
-    expect(onOpenChange).not.toHaveBeenCalled();
-  });
-
-  it('treats composedPath hits as inside the popover', () => {
-    const onOpenChange = vi.fn();
-    render(<Harness open onOpenChange={onOpenChange} />);
-    const content = screen.getByLabelText('Menu');
-    const event = new PointerEvent('pointerdown', { bubbles: true, cancelable: true });
-    Object.defineProperty(event, 'target', { configurable: true, value: document.body });
-    vi.spyOn(event, 'composedPath').mockReturnValue([content, document.body, document]);
-    document.dispatchEvent(event);
-    expect(onOpenChange).not.toHaveBeenCalled();
-  });
-
-  it('toggles from the trigger with reason trigger', () => {
-    const onOpenChange = vi.fn();
-    const { rerender } = render(<Harness open={false} onOpenChange={onOpenChange} />);
-    const trigger = screen.getByRole('button', { name: 'Open' });
-    expect(trigger.getAttribute('aria-expanded')).toBe('false');
-    expect(trigger.getAttribute('aria-haspopup')).toBe('dialog');
-    expect(trigger.getAttribute('aria-controls')).toBe(screen.getByLabelText('Menu').id);
-    fireEvent.click(trigger);
-    expect(onOpenChange).toHaveBeenCalledWith(true, 'trigger');
-    rerender(<Harness open onOpenChange={onOpenChange} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
-    expect(onOpenChange).toHaveBeenCalledWith(false, 'trigger');
-  });
-
   it('stays non-modal and does not write top or left', () => {
     const onOpenChange = vi.fn();
     render(<Harness open onOpenChange={onOpenChange} />);
@@ -99,16 +91,22 @@ describe('Popover', () => {
     expect(content.style.left).toBe('');
   });
 
+  it('always mounts the surface', () => {
+    render(<Harness open={false} />);
+    expect(document.querySelector('[popover="manual"]')).not.toBeNull();
+  });
+
   it('sets CSS anchor-name on anchorRef', () => {
     function AnchorHarness() {
       const anchorRef = useRef<HTMLDivElement>(null);
+      const popover = usePopover({ open: true, anchorRef });
       return (
         <>
           <div ref={anchorRef} data-testid="anchor">
             Field
           </div>
-          <Popover open onOpenChange={() => undefined} anchorRef={anchorRef}>
-            <Popover.Content aria-label="Menu">Hello</Popover.Content>
+          <Popover {...popover.getPopoverProps()} aria-label="Menu">
+            Hello
           </Popover>
         </>
       );
@@ -139,24 +137,25 @@ describe('Popover', () => {
     const onChange = vi.fn();
     function Through() {
       const [open, setOpen] = useState(true);
+      const popover = usePopover({ open, onOpenChange: setOpen });
       return (
         <div>
           <button type="button" onClick={under}>
             Under
           </button>
-          <Popover open={open} onOpenChange={setOpen}>
-            <Popover.Trigger>Open</Popover.Trigger>
-            <Popover.Content aria-label="Menu">
-              <OptionList
-                value={null}
-                onChange={(value) => {
-                  onChange(value);
-                  setOpen(false);
-                }}
-              >
-                <Option value="apple">Apple</Option>
-              </OptionList>
-            </Popover.Content>
+          <button type="button" {...popover.getTriggerProps()}>
+            Open
+          </button>
+          <Popover {...popover.getPopoverProps()} aria-label="Menu">
+            <OptionList
+              value={null}
+              onChange={(value) => {
+                onChange(value);
+                setOpen(false);
+              }}
+            >
+              <Option value="apple">Apple</Option>
+            </OptionList>
           </Popover>
         </div>
       );
@@ -169,5 +168,32 @@ describe('Popover', () => {
     fireEvent.click(option);
     expect(onChange).toHaveBeenCalledWith('apple');
     expect(under).not.toHaveBeenCalled();
+  });
+
+  it('does not own a machine and keeps CSS anchors plus no trigger chrome', () => {
+    expect(source).not.toContain('usePopover');
+    expect(source).not.toContain('useControlledOpen');
+    expect(source).not.toContain('useFocusRestore');
+    expect(source).not.toContain('useInitialFocus');
+    expect(source).not.toContain('useFocusTrap');
+    expect(source).not.toContain('useInertOutside');
+    expect(source).not.toContain('useScrollLock');
+    expect(source).not.toContain('Popover.Trigger');
+    expect(source).not.toContain('Popover.Content');
+    const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
+    expect(new Set(froms)).toEqual(
+      new Set(['react', '../overlay/usePopoverSync', './Popover.wire', './Popover.module.css']),
+    );
+    expect(css).not.toContain('.trigger');
+    expect(css).toContain('anchor(');
+    expectTypeOf<{
+      id: string;
+      open: boolean;
+      ref: (node: HTMLElement | null) => void;
+      style: CSSProperties;
+      onPointerDown: () => void;
+      onClick: () => void;
+    }>().toMatchTypeOf<PopoverProps>();
+    expectTypeOf<{ open: boolean; onOpenChange: () => void }>().not.toMatchTypeOf<PopoverProps>();
   });
 });

@@ -40,14 +40,12 @@ const cb = useCombobox({ options, presentation: 'popover' })
     <Field.Icon><Chevron /></Field.Icon>
   </Field.Root>
 </div>
-<Popover {...cb.getPopoverProps()}>
-  <Popover.Content>
-    <OptionList {...cb.getListboxProps()}>
-      {cb.items.map((item) => (
-        <Option key={item.id} {...cb.getOptionProps(item)} />
-      ))}
-    </OptionList>
-  </Popover.Content>
+<Popover {...cb.getPopoverProps()} aria-label="Framework">
+  <OptionList {...cb.getListboxProps()}>
+    {cb.items.map((item) => (
+      <Option key={item.id} {...cb.getOptionProps(item)} />
+    ))}
+  </OptionList>
 </Popover>
 ```
 
@@ -120,7 +118,7 @@ No matches render a status row. `allowCreate` adds one `+ Create "{query}"` opti
 ## Composition rules
 
 - Sibling [Label](/label) + `Field.Root` id. No `Field.Label`.
-- Do not add `Popover.Trigger` next to `getAnchorProps`. Dual-wire is a QA fail.
+- Do not spread `usePopover` `getTriggerProps` next to `getAnchorProps`. Dual-wire is a QA fail.
 - OptionList is the overlay list. Do not also render Radio or Checkbox for the same value.
 - Do not bake combobox into Field. Do not export `Combobox.*` chrome.
 - Sheet trigger uses `aria-haspopup="dialog"`. Popover Field chrome has no `aria-haspopup`.

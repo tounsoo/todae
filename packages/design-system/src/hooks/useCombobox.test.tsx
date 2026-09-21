@@ -27,14 +27,12 @@ function SingleBox(props: Partial<UseComboboxSingleOptions> = {}) {
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
       </Field.Root>
-      <Popover {...cb.getPopoverProps()}>
-        <Popover.Content aria-label="Options">
-          <OptionList {...cb.getListboxProps()}>
-            {cb.items.map((item) => (
-              <Option key={item.id} {...cb.getOptionProps(item)} />
-            ))}
-          </OptionList>
-        </Popover.Content>
+      <Popover {...cb.getPopoverProps()} aria-label="Options">
+        <OptionList {...cb.getListboxProps()}>
+          {cb.items.map((item) => (
+            <Option key={item.id} {...cb.getOptionProps(item)} />
+          ))}
+        </OptionList>
       </Popover>
     </div>
   );
@@ -53,14 +51,12 @@ function MultiCreateBox({ onChange }: { onChange?: (value: string[]) => void } =
       <Field.Root {...cb.getAnchorProps()}>
         <Field.ChipInput {...cb.getChipInputProps()} />
       </Field.Root>
-      <Popover {...cb.getPopoverProps()}>
-        <Popover.Content aria-label="Options">
-          <OptionList {...cb.getListboxProps()}>
-            {cb.items.map((item) => (
-              <Option key={item.id} {...cb.getOptionProps(item)} />
-            ))}
-          </OptionList>
-        </Popover.Content>
+      <Popover {...cb.getPopoverProps()} aria-label="Options">
+        <OptionList {...cb.getListboxProps()}>
+          {cb.items.map((item) => (
+            <Option key={item.id} {...cb.getOptionProps(item)} />
+          ))}
+        </OptionList>
       </Popover>
     </div>
   );
