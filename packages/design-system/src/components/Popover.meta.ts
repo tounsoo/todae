@@ -2,25 +2,37 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Popover',
-  description: 'Non-modal popover="manual". Controlled open. hidePopover only when open is false.',
+  description: 'Surface chrome. Spread getPopoverProps for wire.',
   props: [
     {
-      name: 'open',
-      type: 'boolean',
-      required: true,
-      description: 'Controlled open state.',
-    },
-    {
-      name: 'onOpenChange',
-      type: '(open: boolean, reason: PopoverCloseReason) => void',
-      required: true,
-      description: 'Dismiss or trigger requests. Staying open keeps the popover open.',
-    },
-    {
-      name: 'anchorRef',
-      type: 'RefObject<HTMLElement | null>',
+      name: 'children',
+      type: 'React.ReactNode',
       required: false,
-      description: 'Sets CSS anchor-name on this element and excludes it from outside press.',
+      description: 'Popover contents.',
+    },
+    {
+      name: 'className',
+      type: 'string',
+      required: false,
+      description: 'Class name for the surface.',
+    },
+    {
+      name: 'style',
+      type: 'React.CSSProperties',
+      required: false,
+      description: 'Style for the surface. Anchor position comes from getPopoverProps.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      required: false,
+      description: 'Accessible name when no visible caption exists.',
+    },
+    {
+      name: 'aria-labelledby',
+      type: 'string',
+      required: false,
+      description: 'Id of the visible caption.',
     },
   ],
 } as const satisfies ComponentMeta;

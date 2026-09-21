@@ -27,14 +27,12 @@ function SingleBox(props: Partial<UseComboboxSingleOptions> = {}) {
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
       </Field.Root>
-      <Popover {...cb.getPopoverProps()}>
-        <Popover.Content aria-label="Options">
-          <OptionList {...cb.getListboxProps()}>
-            {cb.items.map((item) => (
-              <Option key={item.id} {...cb.getOptionProps(item)} />
-            ))}
-          </OptionList>
-        </Popover.Content>
+      <Popover {...cb.getPopoverProps()} aria-label="Options">
+        <OptionList {...cb.getListboxProps()}>
+          {cb.items.map((item) => (
+            <Option key={item.id} {...cb.getOptionProps(item)} />
+          ))}
+        </OptionList>
       </Popover>
     </div>
   );
@@ -53,14 +51,12 @@ function MultiCreateBox({ onChange }: { onChange?: (value: string[]) => void } =
       <Field.Root {...cb.getAnchorProps()}>
         <Field.ChipInput {...cb.getChipInputProps()} />
       </Field.Root>
-      <Popover {...cb.getPopoverProps()}>
-        <Popover.Content aria-label="Options">
-          <OptionList {...cb.getListboxProps()}>
-            {cb.items.map((item) => (
-              <Option key={item.id} {...cb.getOptionProps(item)} />
-            ))}
-          </OptionList>
-        </Popover.Content>
+      <Popover {...cb.getPopoverProps()} aria-label="Options">
+        <OptionList {...cb.getListboxProps()}>
+          {cb.items.map((item) => (
+            <Option key={item.id} {...cb.getOptionProps(item)} />
+          ))}
+        </OptionList>
       </Popover>
     </div>
   );
@@ -156,11 +152,33 @@ describe('useCombobox', () => {
     render(<SingleBox defaultOpen onOpenChange={onOpenChange} />);
     const input = screen.getByRole('combobox');
     fireEvent.keyDown(input, { key: 'Escape' });
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
     expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
     onOpenChange.mockClear();
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     fireEvent.keyDown(input, { key: 'Tab' });
     expect(onOpenChange).toHaveBeenCalledWith(false, 'blur');
+  });
+
+  it('closes the sheet once on Escape from the input', () => {
+    const onOpenChange = vi.fn();
+    function SheetBox() {
+      const cb = useCombobox({
+        options: OPTIONS,
+        presentation: 'sheet',
+        defaultOpen: true,
+        onOpenChange,
+      });
+      return (
+        <Field.Root>
+          <Field.TextInput {...cb.getInputProps()} />
+        </Field.Root>
+      );
+    }
+    render(<SheetBox />);
+    fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Escape' });
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
   });
 
   it('clears single value when the input is emptied', () => {

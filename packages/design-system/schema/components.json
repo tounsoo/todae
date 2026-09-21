@@ -767,55 +767,37 @@
     },
     {
       "name": "Popover",
-      "description": "Non-modal popover=\"manual\". Controlled open. hidePopover only when open is false.",
+      "description": "Surface chrome. Spread getPopoverProps for wire.",
       "props": [
-        {
-          "name": "open",
-          "type": "boolean",
-          "required": true,
-          "description": "Controlled open state."
-        },
-        {
-          "name": "onOpenChange",
-          "type": "(open: boolean, reason: PopoverCloseReason) => void",
-          "required": true,
-          "description": "Dismiss or trigger requests. Staying open keeps the popover open."
-        },
-        {
-          "name": "anchorRef",
-          "type": "RefObject<HTMLElement | null>",
-          "required": false,
-          "description": "Sets CSS anchor-name on this element and excludes it from outside press."
-        }
-      ]
-    },
-    {
-      "name": "Popover.Content",
-      "description": "Manual popover surface. Syncs showPopover and hidePopover to the open prop.",
-      "props": [
-        {
-          "name": "aria-label",
-          "type": "string",
-          "required": false,
-          "description": "Accessible name for the surface."
-        },
         {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
           "description": "Popover contents."
-        }
-      ]
-    },
-    {
-      "name": "Popover.Trigger",
-      "description": "Button.Root that toggles the popover and owns the CSS anchor.",
-      "props": [
+        },
         {
-          "name": "children",
-          "type": "React.ReactNode",
+          "name": "className",
+          "type": "string",
           "required": false,
-          "description": "Button label."
+          "description": "Class name for the surface."
+        },
+        {
+          "name": "style",
+          "type": "React.CSSProperties",
+          "required": false,
+          "description": "Style for the surface. Anchor position comes from getPopoverProps."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name when no visible caption exists."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of the visible caption."
         }
       ]
     },
@@ -1183,6 +1165,61 @@
           "type": "string",
           "required": false,
           "description": "Controlled filter text."
+        }
+      ]
+    },
+    {
+      "name": "usePopover",
+      "description": "One open machine. Spread getTriggerProps onto the trigger and getPopoverProps onto Popover.",
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: PopoverCloseReason) => void",
+          "required": false,
+          "description": "Fires on toggle or dismiss. Leaving open unchanged is a veto."
+        },
+        {
+          "name": "anchorRef",
+          "type": "RefObject<HTMLElement | null>",
+          "required": false,
+          "description": "Sets CSS anchor-name on this element and excludes it from outside press."
+        },
+        {
+          "name": "initialFocusRef",
+          "type": "RefObject<HTMLElement | null>",
+          "required": false,
+          "description": "Focus this element when the popover opens."
+        },
+        {
+          "name": "restoreFocusRef",
+          "type": "RefObject<HTMLElement | null>",
+          "required": false,
+          "description": "Return focus here when the popover closes."
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": false,
+          "description": "False skips toggle, dismiss, and focus moves.",
+          "default": "true"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Popover id. Default is a generated id."
         }
       ]
     },

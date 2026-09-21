@@ -1,9 +1,4 @@
 @layer todae.components {
-  .trigger {
-    display: inline-flex;
-    anchor-name: var(--todae-popover-anchor);
-  }
-
   .content {
     --todae-popover-offset: var(--todae-space-1);
     box-sizing: border-box;
