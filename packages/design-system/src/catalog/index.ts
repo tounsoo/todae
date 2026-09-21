@@ -25,7 +25,12 @@ export type {
 } from './types';
 export type { CatalogHit } from './search';
 export { createSearch } from './search';
-
+export { toRenderCatalog } from './adapters/render';
+export { toCandidateRecipe } from './adapters/recipe';
+export { toCriteria } from './adapters/criteria';
+export type { PropSchema, PropTypeSchema, RenderCatalog, RenderComponent, SlotSchema } from './adapters/render';
+export type { CandidateRecipe } from './adapters/recipe';
+export type { Criteria } from './adapters/criteria';
 
 export function getComponent(id: string, source: Catalog = catalog) {
   return readComponent(id, source);

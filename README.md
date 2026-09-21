@@ -81,11 +81,38 @@ listForIntent('choose-one')
 getComponent('OptionList')
 ```
 
-Search is lexical. No embeddings, no Jev, no Graft runtime. The catalog is not plug-and-play Jev — apps still supply concrete props, copy, and `$state`. Adapter helpers are a follow-up.
+Search is lexical. No embeddings, no Jev, no Graft runtime.
 
 Wren reviews `whenToUse` / `whenNotToUse` arrays in `*.meta.ts` and `*.pattern.ts` only. Roots, hooks, providers, and patterns require at least one `whenToUse` bullet. Parts may ship empty arrays until Wren fills them. `pnpm catalog` regenerates JSON.
 
 `schema/components.json` is deprecated. Prefer `catalog.json`.
+
+### Mapping to Jev (app-side)
+
+Todae adapters emit templates and criteria. They do not emit concrete Jev candidates.
+
+```ts
+import { catalog, toRenderCatalog, toCandidateRecipe, toCriteria } from '@tounsoo/todae/catalog'
+
+toRenderCatalog(catalog.components)
+toCandidateRecipe(catalog.patterns[0])
+toCriteria(catalog.components[0])
+```
+
+`toRenderCatalog` maps each component prop type string to a JSON Schema subset. `boolean`, `string`, `number`, and `"a" | "b"` unions become schema. Other TypeScript types stay opaque as `{ "x-todae-type": "..." }`.
+
+`toCandidateRecipe` copies a pattern tree and keeps every `$fill`. The `fills` array lists holes the app must supply. The adapter does not write domain copy or `$state`.
+
+`toCriteria` maps `whenToUse` / `whenNotToUse` to `prefer` / `avoid`. Use it to write candidate descriptions on the app side.
+
+The app supplies concrete props, copy, and `$state` bindings per request. This package does not import Jev.
+
+State non-goals:
+
+- No Jev import or runtime in this package
+- No `$state` in adapter output
+- No export named `toJevCriteria` or similar
+
 
 ## Run the docs
 

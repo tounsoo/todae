@@ -26,4 +26,16 @@ describe('catalog boundary', () => {
       expect(source, file).not.toMatch(/from ['"][^./]/);
     }
   });
+
+  it('adapter modules emit templates and never name Jev', async () => {
+    const files = await walk(join(import.meta.dirname, 'adapters'));
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const source = await readFile(file, 'utf8');
+      expect(source, file).not.toMatch(/Jev|toJev|\$state/);
+      expect(source, file).not.toMatch(/from ['"]react(?:\/|$)/);
+      expect(source, file).not.toMatch(/from ['"]node:/);
+      expect(source, file).not.toMatch(/from ['"][^./]/);
+    }
+  });
 });
