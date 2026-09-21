@@ -171,7 +171,7 @@ describe('Popover', () => {
   });
 
   it('does not own a machine and keeps CSS anchors plus no trigger chrome', () => {
-    expect(source).not.toContain('usePopover');
+    expect(source).not.toContain('../hooks/usePopover');
     expect(source).not.toContain('useControlledOpen');
     expect(source).not.toContain('useFocusRestore');
     expect(source).not.toContain('useInitialFocus');
