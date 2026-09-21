@@ -13,6 +13,14 @@ export function ButtonVariants() {
   );
 }
 
+export function ButtonOverflow() {
+  return (
+    <div style={{ width: 96 }}>
+      <Button.Root>Very long archive label</Button.Root>
+    </div>
+  );
+}
+
 export function ButtonIcons() {
   return (
     <>

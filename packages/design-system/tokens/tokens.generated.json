@@ -2387,6 +2387,69 @@
       "context": null
     },
     {
+      "path": "tooltip.bg",
+      "type": "color",
+      "cssVar": "--todae-tooltip-bg",
+      "cssValue": "var(--todae-color-bg-elevated)",
+      "ref": "color.bg.elevated",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.border",
+      "type": "color",
+      "cssVar": "--todae-tooltip-border",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.fg",
+      "type": "color",
+      "cssVar": "--todae-tooltip-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.max-width",
+      "type": "dimension",
+      "cssVar": "--todae-tooltip-max-width",
+      "cssValue": "16rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-tooltip-padding-x",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-tooltip-padding-y",
+      "cssValue": "var(--todae-space-1)",
+      "ref": "space.1",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.radius",
+      "type": "dimension",
+      "cssVar": "--todae-tooltip-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "option.bg.default",
       "type": "color",
       "cssVar": "--todae-option-bg-default",

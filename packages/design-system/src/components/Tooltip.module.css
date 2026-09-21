@@ -1,0 +1,54 @@
+@layer todae.components {
+  .content {
+    box-sizing: border-box;
+    position: fixed;
+    inset: unset;
+    margin: 0;
+    width: max-content;
+    max-width: var(--todae-tooltip-max-width);
+    padding: var(--todae-tooltip-padding-y) var(--todae-tooltip-padding-x);
+    background: var(--todae-tooltip-bg);
+    color: var(--todae-tooltip-fg);
+    border: 1px solid var(--todae-tooltip-border);
+    border-radius: var(--todae-tooltip-radius);
+  }
+
+  .content:not([data-open]) {
+    display: none;
+  }
+
+  .content[data-surface='tip'] {
+    pointer-events: none;
+  }
+
+  .content[data-surface='panel'] {
+    pointer-events: auto;
+  }
+
+  @supports (bottom: anchor(top)) {
+    .content {
+      position-anchor: var(--todae-tooltip-anchor);
+      bottom: calc(anchor(top) + var(--todae-space-1));
+      justify-self: anchor-center;
+      position-try-fallbacks: flip-block;
+    }
+  }
+
+  @position-try --todae-tooltip-flip-block {
+    bottom: unset;
+    top: calc(anchor(bottom) + var(--todae-space-1));
+    justify-self: anchor-center;
+  }
+
+  @supports (position-try-fallbacks: flip-block) {
+    .content {
+      position-try-fallbacks: --todae-tooltip-flip-block, flip-block, flip-inline, flip-block flip-inline;
+    }
+  }
+
+  @supports (position-try: bottom) {
+    .content {
+      position-try: --todae-tooltip-flip-block, bottom;
+    }
+  }
+}

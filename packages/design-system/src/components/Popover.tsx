@@ -17,6 +17,7 @@ import { useControlledOpen, type OverlayCloseReason } from '../overlay/useContro
 import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
+import { usePopoverSync } from '../overlay/usePopoverSync';
 import styles from './Popover.module.css';
 
 export type PopoverCloseReason = Extract<OverlayCloseReason, 'escape' | 'outside' | 'trigger'>;
@@ -47,10 +48,6 @@ function usePopover(): PopoverContextValue {
   const ctx = useContext(PopoverContext);
   if (!ctx) throw new Error('Popover parts must render inside Popover');
   return ctx;
-}
-
-function isPopoverOpen(el: HTMLElement): boolean {
-  return el.matches(':popover-open') || el.hasAttribute('data-popover-open');
 }
 
 function eventInside(el: HTMLElement | null, event: Event): boolean {
@@ -93,16 +90,7 @@ function PopoverContent({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   const ctx = usePopover();
-
-  useLayoutEffect(() => {
-    const el = ctx.contentRef.current;
-    if (!el) return;
-    if (!ctx.open) {
-      if (isPopoverOpen(el)) el.hidePopover();
-      return;
-    }
-    if (!isPopoverOpen(el)) el.showPopover();
-  }, [ctx.contentRef, ctx.open]);
+  usePopoverSync(ctx.contentRef, ctx.open);
 
   return (
     <div

@@ -172,7 +172,14 @@
           "name": "aria-label",
           "type": "string",
           "required": false,
-          "description": "Required accessible name when the only child is Button.Icon."
+          "description": "Required accessible name when the only child is Button.Icon. Auto-tip text for icon-only."
+        },
+        {
+          "name": "tooltip",
+          "type": "boolean",
+          "required": false,
+          "description": "Icon-only tips the accessible name. Overflowing labels tip the full string. False opts out. Never tips a fitting labeled button.",
+          "default": "true"
         },
         {
           "name": "children",
@@ -1054,6 +1061,42 @@
       ]
     },
     {
+      "name": "Tooltip",
+      "description": "Tip chrome. Spread getTooltipProps for wire.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Tooltip text, or short prose plus links when interactive."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Class name for the tip surface."
+        },
+        {
+          "name": "style",
+          "type": "React.CSSProperties",
+          "required": false,
+          "description": "Style for the tip surface. Anchor position comes from getTooltipProps."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name when no visible caption exists. Exactly one of aria-label or aria-labelledby when interactive."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of the visible caption. Exactly one of aria-label or aria-labelledby when interactive."
+        }
+      ]
+    },
+    {
       "name": "useChipField",
       "description": "Optional state helper. Field.ChipInput stays fully controlled without it.",
       "props": [
@@ -1167,6 +1210,64 @@
           "required": false,
           "description": "Skip media when popover or sheet. auto uses coarse OR narrow.",
           "default": "\"auto\""
+        }
+      ]
+    },
+    {
+      "name": "useTooltip",
+      "description": "One open machine. Spread getTriggerProps onto the trigger and getTooltipProps onto Tooltip. Interactive is a non-modal tip dialog.",
+      "props": [
+        {
+          "name": "interactive",
+          "type": "boolean",
+          "required": false,
+          "description": "Use the non-modal tip dialog. Links only. Never role=tooltip.",
+          "default": "false"
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: TooltipOpenReason) => void",
+          "required": false,
+          "description": "Fires after a commit. Leaving open unchanged is a veto."
+        },
+        {
+          "name": "showDelay",
+          "type": "number",
+          "required": false,
+          "description": "Hover show delay in milliseconds. Focus shows at once.",
+          "default": "300"
+        },
+        {
+          "name": "hideDelay",
+          "type": "number",
+          "required": false,
+          "description": "Hide delay in milliseconds.",
+          "default": "100"
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": false,
+          "description": "False resets intent and commits close.",
+          "default": "true"
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Tooltip id. Default is a generated id."
         }
       ]
     }
