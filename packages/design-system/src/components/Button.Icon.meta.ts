@@ -4,12 +4,8 @@ export const meta = {
   name: 'Button.Icon',
   kind: 'part',
   description: 'Order-only decorative icon. Always aria-hidden. No side prop.',
-  whenToUse: [
-    'Decorative icon inside Button.Root. Position is DOM order. Always aria-hidden.',
-  ],
-  whenNotToUse: [
-    'Not a free-floating atom. Do not import a raw Icon instead of Button.Icon.',
-  ],
+  whenToUse: [],
+  whenNotToUse: [],
   intents: [
     'action',
   ],

@@ -4,12 +4,8 @@ export const meta = {
   name: 'Field.TextInput',
   kind: 'part',
   description: 'Controlled text-ish input inside Field.Root.',
-  whenToUse: [
-    'Controlled text-ish input inside Field.Root.',
-  ],
-  whenNotToUse: [
-    'Do not set aria-describedby on Field.TextInput. Put it on Field.Root.',
-  ],
+  whenToUse: [],
+  whenNotToUse: [],
   intents: [
     'text-entry',
   ],

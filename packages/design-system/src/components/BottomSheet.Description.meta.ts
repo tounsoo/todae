@@ -4,9 +4,7 @@ export const meta = {
   name: 'BottomSheet.Description',
   kind: 'part',
   description: 'Supporting text. Wires aria-describedby.',
-  whenToUse: [
-    'Supporting text wired as the sheet description.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'helper-text',

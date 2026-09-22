@@ -4,9 +4,7 @@ export const meta = {
   name: 'Dialog.Description',
   kind: 'part',
   description: 'Supporting text. Wires aria-describedby on the dialog.',
-  whenToUse: [
-    'Supporting text. Wires aria-describedby on the dialog.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'helper-text',

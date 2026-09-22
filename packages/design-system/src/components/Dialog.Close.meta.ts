@@ -4,9 +4,7 @@ export const meta = {
   name: 'Dialog.Close',
   kind: 'part',
   description: 'Ghost Button.Root that requests close-button dismiss.',
-  whenToUse: [
-    'Close control that requests dismiss.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'action',

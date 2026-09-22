@@ -83,7 +83,7 @@ getComponent('OptionList')
 
 Search is lexical. No embeddings, no Jev, no Graft runtime. The catalog is not plug-and-play Jev — apps still supply concrete props, copy, and `$state`. Adapter helpers are a follow-up.
 
-Wren reviews `whenToUse` / `whenNotToUse` arrays in `*.meta.ts` and `*.pattern.ts` only. `pnpm catalog` regenerates JSON.
+Wren reviews `whenToUse` / `whenNotToUse` arrays in `*.meta.ts` and `*.pattern.ts` only. Roots, hooks, providers, and patterns require at least one `whenToUse` bullet. Parts may ship empty arrays until Wren fills them. `pnpm catalog` regenerates JSON.
 
 `schema/components.json` is deprecated. Prefer `catalog.json`.
 
@@ -96,7 +96,7 @@ pnpm dev:docs
 
 `pnpm dev` is the same as `pnpm dev:docs`.
 
-Open `/`, `/catalog`, `/button`, `/stack`, `/text`, `/tokens`, and `/playground`. Component pages mount a live example, when-to-use copy, and a props table from `catalog.json`. `/catalog` tables every entry and demos search. `/tokens` tables the generated token catalog. `/playground` is a left-rail theme controller (appearance + density selectors, raw / semantic / component token tabs, Export) and a right-stage live demo.
+Open `/`, `/catalog`, `/button`, `/stack`, `/text`, `/tokens`, and `/playground`. Component pages mount a live example and a props table from `catalog.json`. `/optionlist` shows `<WhenToUse />`. `/catalog` is an MCP hookup plus one `search` example. `/tokens` tables the generated token catalog. `/playground` is a left-rail theme controller (appearance + density selectors, raw / semantic / component token tabs, Export) and a right-stage live demo.
 
 ## Test
 

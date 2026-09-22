@@ -4,12 +4,8 @@ export const meta = {
   name: 'OptionList.Option',
   kind: 'part',
   description: 'String-only option. Same as the top-level Option export.',
-  whenToUse: [
-    'String-only option. Same as the top-level Option export.',
-  ],
-  whenNotToUse: [
-    'Text children only.',
-  ],
+  whenToUse: [],
+  whenNotToUse: [],
   intents: [
     'choose-one',
     'choose-many',

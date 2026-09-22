@@ -4,9 +4,7 @@ export const meta = {
   name: 'BottomSheet.Grabber',
   kind: 'part',
   description: 'Drag handle. Rendered by default if omitted. Arrow keys change snap.',
-  whenToUse: [
-    'Drag handle. Rendered by default if omitted. Arrow keys change snap.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'contextual-overlay',

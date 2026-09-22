@@ -4,9 +4,7 @@ export const meta = {
   name: 'BottomSheet.Close',
   kind: 'part',
   description: 'Ghost Button.Root that requests close-button dismiss.',
-  whenToUse: [
-    'Ghost close control that requests close-button dismiss.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'action',

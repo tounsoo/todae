@@ -124,9 +124,7 @@
       "name": "BottomSheet.Body",
       "kind": "part",
       "description": "Scroll container. Drag starts only at scrollTop 0.",
-      "whenToUse": [
-        "Scrollable sheet body. Drag starts only at scrollTop 0."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "contextual-overlay"
@@ -144,9 +142,7 @@
       "name": "BottomSheet.Close",
       "kind": "part",
       "description": "Ghost Button.Root that requests close-button dismiss.",
-      "whenToUse": [
-        "Ghost close control that requests close-button dismiss."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "action",
@@ -173,9 +169,7 @@
       "name": "BottomSheet.Description",
       "kind": "part",
       "description": "Supporting text. Wires aria-describedby.",
-      "whenToUse": [
-        "Supporting text wired as the sheet description."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "helper-text",
@@ -201,9 +195,7 @@
       "name": "BottomSheet.Footer",
       "kind": "part",
       "description": "Action row.",
-      "whenToUse": [
-        "Action row at the bottom of the sheet."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "action",
@@ -222,9 +214,7 @@
       "name": "BottomSheet.Grabber",
       "kind": "part",
       "description": "Drag handle. Rendered by default if omitted. Arrow keys change snap.",
-      "whenToUse": [
-        "Drag handle. Rendered by default if omitted. Arrow keys change snap."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "contextual-overlay"
@@ -250,9 +240,7 @@
       "name": "BottomSheet.Header",
       "kind": "part",
       "description": "Chrome. Drag-eligible.",
-      "whenToUse": [
-        "Title row for the sheet."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "contextual-overlay"
@@ -270,9 +258,7 @@
       "name": "BottomSheet.Title",
       "kind": "part",
       "description": "Heading. Wires aria-labelledby.",
-      "whenToUse": [
-        "Visible sheet title. Names the dialog when present."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "typography",
@@ -298,12 +284,8 @@
       "name": "Button.Icon",
       "kind": "part",
       "description": "Order-only decorative icon. Always aria-hidden. No side prop.",
-      "whenToUse": [
-        "Decorative icon inside Button.Root. Position is DOM order. Always aria-hidden."
-      ],
-      "whenNotToUse": [
-        "Not a free-floating atom. Do not import a raw Icon instead of Button.Icon."
-      ],
+      "whenToUse": [],
+      "whenNotToUse": [],
       "intents": [
         "action"
       ],
@@ -744,9 +726,7 @@
       "name": "Dialog.Body",
       "kind": "part",
       "description": "Scrollable body.",
-      "whenToUse": [
-        "Scrollable dialog body."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "contextual-overlay"
@@ -764,9 +744,7 @@
       "name": "Dialog.Close",
       "kind": "part",
       "description": "Ghost Button.Root that requests close-button dismiss.",
-      "whenToUse": [
-        "Close control that requests dismiss."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "action",
@@ -793,9 +771,7 @@
       "name": "Dialog.Description",
       "kind": "part",
       "description": "Supporting text. Wires aria-describedby on the dialog.",
-      "whenToUse": [
-        "Supporting text. Wires aria-describedby on the dialog."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "helper-text",
@@ -821,9 +797,7 @@
       "name": "Dialog.Footer",
       "kind": "part",
       "description": "Action row.",
-      "whenToUse": [
-        "Action row for confirm and cancel."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "action",
@@ -842,9 +816,7 @@
       "name": "Dialog.Header",
       "kind": "part",
       "description": "Optional header row.",
-      "whenToUse": [
-        "Title row for the dialog."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "contextual-overlay"
@@ -862,9 +834,7 @@
       "name": "Dialog.Title",
       "kind": "part",
       "description": "Heading. Wires aria-labelledby on the dialog.",
-      "whenToUse": [
-        "Visible dialog title. Names the dialog when present."
-      ],
+      "whenToUse": [],
       "whenNotToUse": [],
       "intents": [
         "typography",
@@ -935,12 +905,8 @@
       "name": "Field.Affix",
       "kind": "part",
       "description": "Order-only text adornment. Not clickable. No side prop.",
-      "whenToUse": [
-        "Order-only text adornment inside Field.Root. Not clickable. No side prop."
-      ],
-      "whenNotToUse": [
-        "Not a free-floating atom. Product trees import Field.Affix, not a raw Affix."
-      ],
+      "whenToUse": [],
+      "whenNotToUse": [],
       "intents": [
         "text-entry"
       ],
@@ -964,12 +930,8 @@
       "name": "Field.ChipInput",
       "kind": "part",
       "description": "Controlled chips plus input inside Field.Root. Commit does not mutate chips. maxRows uses model B.",
-      "whenToUse": [
-        "Controlled chips plus input inside Field.Root. Parent onCommit decides. The field never appends chips."
-      ],
-      "whenNotToUse": [
-        "Do not use as a standalone control outside Field.Root. Built-in clear and paste-split are not shipped."
-      ],
+      "whenToUse": [],
+      "whenNotToUse": [],
       "intents": [
         "tag-entry"
       ],
@@ -1051,12 +1013,8 @@
       "name": "Field.Icon",
       "kind": "part",
       "description": "Order-only icon. Decorative unless interactive. No side prop.",
-      "whenToUse": [
-        "Order-only icon inside Field.Root. Decorative unless interactive. No side prop."
-      ],
-      "whenNotToUse": [
-        "Not a free-floating atom. Do not treat Field.Icon as a public Icon export."
-      ],
+      "whenToUse": [],
+      "whenNotToUse": [],
       "intents": [
         "text-entry",
         "tag-entry"
@@ -1178,12 +1136,8 @@
       "name": "Field.TextInput",
       "kind": "part",
       "description": "Controlled text-ish input inside Field.Root.",
-      "whenToUse": [
-        "Controlled text-ish input inside Field.Root."
-      ],
-      "whenNotToUse": [
-        "Do not set aria-describedby on Field.TextInput. Put it on Field.Root."
-      ],
+      "whenToUse": [],
+      "whenNotToUse": [],
       "intents": [
         "text-entry"
       ],
@@ -1414,12 +1368,8 @@
       "name": "OptionList.Option",
       "kind": "part",
       "description": "String-only option. Same as the top-level Option export.",
-      "whenToUse": [
-        "String-only option. Same as the top-level Option export."
-      ],
-      "whenNotToUse": [
-        "Text children only."
-      ],
+      "whenToUse": [],
+      "whenNotToUse": [],
       "intents": [
         "choose-one",
         "choose-many"

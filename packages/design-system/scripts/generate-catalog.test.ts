@@ -116,11 +116,28 @@ describe('generate-catalog', () => {
     expect(run).toThrow(/two-dot id "Field.Button.Root"/);
   });
 
-  it('rejects empty whenToUse', async () => {
+  it('rejects empty whenToUse on roots', async () => {
     const { run } = await fixture({
       'src/components/Dialog.meta.ts': validMeta.replace("whenToUse: ['Ask for a confirm.']", 'whenToUse: []'),
     });
     expect(run).toThrow(/whenToUse must have at least one bullet/);
+  });
+
+  it('allows empty whenToUse on parts', async () => {
+    const { run } = await fixture({
+      'src/components/Dialog.meta.ts': validMeta,
+      'src/components/Dialog.Body.meta.ts': `export const meta = {
+  name: 'Dialog.Body',
+  kind: 'part',
+  description: 'Body.',
+  whenToUse: [],
+  whenNotToUse: [],
+  intents: ['confirm'],
+  props: [],
+};
+`,
+    });
+    expect(run).not.toThrow();
   });
 
   it('rejects a duplicate id', async () => {

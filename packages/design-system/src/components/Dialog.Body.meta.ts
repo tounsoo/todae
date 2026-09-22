@@ -4,9 +4,7 @@ export const meta = {
   name: 'Dialog.Body',
   kind: 'part',
   description: 'Scrollable body.',
-  whenToUse: [
-    'Scrollable dialog body.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'contextual-overlay',

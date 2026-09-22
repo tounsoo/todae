@@ -4,12 +4,8 @@ export const meta = {
   name: 'Field.ChipInput',
   kind: 'part',
   description: 'Controlled chips plus input inside Field.Root. Commit does not mutate chips. maxRows uses model B.',
-  whenToUse: [
-    'Controlled chips plus input inside Field.Root. Parent onCommit decides. The field never appends chips.',
-  ],
-  whenNotToUse: [
-    'Do not use as a standalone control outside Field.Root. Built-in clear and paste-split are not shipped.',
-  ],
+  whenToUse: [],
+  whenNotToUse: [],
   intents: [
     'tag-entry',
   ],

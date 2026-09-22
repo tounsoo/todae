@@ -4,9 +4,7 @@ export const meta = {
   name: 'BottomSheet.Header',
   kind: 'part',
   description: 'Chrome. Drag-eligible.',
-  whenToUse: [
-    'Title row for the sheet.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'contextual-overlay',

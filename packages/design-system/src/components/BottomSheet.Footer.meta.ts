@@ -4,9 +4,7 @@ export const meta = {
   name: 'BottomSheet.Footer',
   kind: 'part',
   description: 'Action row.',
-  whenToUse: [
-    'Action row at the bottom of the sheet.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'action',

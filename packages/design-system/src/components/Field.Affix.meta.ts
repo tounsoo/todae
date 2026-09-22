@@ -4,12 +4,8 @@ export const meta = {
   name: 'Field.Affix',
   kind: 'part',
   description: 'Order-only text adornment. Not clickable. No side prop.',
-  whenToUse: [
-    'Order-only text adornment inside Field.Root. Not clickable. No side prop.',
-  ],
-  whenNotToUse: [
-    'Not a free-floating atom. Product trees import Field.Affix, not a raw Affix.',
-  ],
+  whenToUse: [],
+  whenNotToUse: [],
   intents: [
     'text-entry',
   ],

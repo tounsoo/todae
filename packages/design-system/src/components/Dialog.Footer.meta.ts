@@ -4,9 +4,7 @@ export const meta = {
   name: 'Dialog.Footer',
   kind: 'part',
   description: 'Action row.',
-  whenToUse: [
-    'Action row for confirm and cancel.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'action',

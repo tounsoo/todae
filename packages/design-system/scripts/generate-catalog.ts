@@ -173,7 +173,9 @@ export function isComponent(value: unknown, loc: string): ComponentMeta {
   if (value.kind === 'part' && !value.name.includes('.')) fail(`${loc} part id must contain exactly one dot`);
   if (typeof value.description !== 'string') fail(`${loc}.description must be a string`);
   const whenToUse = isStringArray(value.whenToUse, `${loc}.whenToUse`);
-  if (whenToUse.length < 1) fail(`${loc}.whenToUse must have at least one bullet`);
+  if (value.kind !== 'part' && whenToUse.length < 1) {
+    fail(`${loc}.whenToUse must have at least one bullet`);
+  }
   const whenNotToUse = isStringArray(value.whenNotToUse, `${loc}.whenNotToUse`);
   const intents = isIntents(value.intents, `${loc}.intents`);
   if (!Array.isArray(value.props)) fail(`${loc}.props must be an array`);

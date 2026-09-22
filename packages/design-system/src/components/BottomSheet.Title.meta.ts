@@ -4,9 +4,7 @@ export const meta = {
   name: 'BottomSheet.Title',
   kind: 'part',
   description: 'Heading. Wires aria-labelledby.',
-  whenToUse: [
-    'Visible sheet title. Names the dialog when present.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'typography',

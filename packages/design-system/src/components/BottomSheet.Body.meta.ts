@@ -4,9 +4,7 @@ export const meta = {
   name: 'BottomSheet.Body',
   kind: 'part',
   description: 'Scroll container. Drag starts only at scrollTop 0.',
-  whenToUse: [
-    'Scrollable sheet body. Drag starts only at scrollTop 0.',
-  ],
+  whenToUse: [],
   whenNotToUse: [],
   intents: [
     'contextual-overlay',
