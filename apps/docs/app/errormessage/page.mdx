@@ -24,6 +24,12 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
 
 To announce a submit-time error, pass `role="alert"` on this component. The package does not choose announcement policy.
 
+## When to use
+
+**When:** Validation text below a control, after Description. Mount it and add its `id` to `aria-describedby` only while invalid; `invalid` lives on the control or `Field.Root`.
+
+**When not:** Standing hints → Description. Showing while valid. Expecting auto-announce (no `role="alert"` by default; pass it for submit-time errors).
+
 ## Props
 
 <PropsTable name="ErrorMessage" />

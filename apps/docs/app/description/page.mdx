@@ -44,6 +44,12 @@ const hintId = useId()
 
 This is not `Dialog.Description`. Dialog Description wires `aria-describedby` for you. Form Description does not.
 
+## When to use
+
+**When:** Hint text below a control, as a sibling after it. Needs `id`; list it in `aria-describedby` on the control, or on `Field.Root` inside a Field.
+
+**When not:** Validation errors → ErrorMessage. Dialog supporting text → `Dialog.Description` (wires itself). The visible name → Label.
+
 ## Props
 
 <PropsTable name="Description" />

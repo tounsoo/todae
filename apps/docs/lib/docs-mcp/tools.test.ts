@@ -2,7 +2,7 @@ import schema from '@tounsoo/todae/schema/components.json';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseWhen } from './mdx';
+import { missingWhenNote, parseWhen } from './mdx';
 import { getComponent, listComponents, whenToUse } from './tools';
 
 const jsonNames = schema.components.map((row) => row.name);
@@ -59,7 +59,8 @@ describe('docs mcp tools', () => {
     expect(listed['BottomSheet.Title']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed['BottomSheet.Close']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed['BottomSheet.Grabber']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
-    expect(listed.useSheetPresentation).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed.useSheetPresentation).toMatchObject({ hasWhenToUse: true });
+    expect(listed.useSheetPresentation).not.toHaveProperty('scope');
     expect(listed.useTooltip).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed.usePopover).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed.Option).toMatchObject({ hasWhenToUse: false, scope: 'page' });
@@ -70,6 +71,16 @@ describe('docs mcp tools', () => {
     const sheet = whenToUse('BottomSheet');
     const part = whenToUse('BottomSheet.Title');
     expect(part).toMatchObject({ status: 'present', scope: 'page', whenToUse: sheet.whenToUse });
+    const hook = whenToUse('useSheetPresentation');
+    const combobox = whenToUse('useCombobox');
+    expect(hook).toMatchObject({
+      status: 'present',
+      whenToUse: 'Choose popover or sheet at runtime: coarse pointer or width under 640px → sheet. SSR and first paint are popover. `forced` overrides.',
+      whenNotToUse: 'Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → `usePopover` alone.',
+    });
+    expect(hook).not.toHaveProperty('scope');
+    expect(combobox).toMatchObject({ status: 'present', scope: 'page' });
+    expect(hook.whenToUse).not.toBe(combobox.whenToUse);
   });
 
   it('prefers a name subsection over page-level copy', () => {
@@ -96,18 +107,25 @@ describe('docs mcp tools', () => {
   });
 
   it('resolves providers from the tokens page subsections', () => {
-    const missing = {
-      status: 'missing' as const,
-      whenToUse: null,
-      whenNotToUse: null,
+    expect(whenToUse('ThemeProvider')).toEqual({
+      status: 'present',
+      whenToUse:
+        'Set appearance (system / light / dark) for a subtree via `data-appearance`; nested providers override. `overrides` for allowlisted token paths only.',
+      whenNotToUse:
+        "Spacing density → DensityProvider. Raw CSS or unknown token keys (rejected). Styling via classes on the provider (overlays don't inherit them).",
       docsUrl: 'https://todae-rho.vercel.app/tokens',
-      note: "No 'When to use' section on /tokens. Not inferred.",
+      section: 'When to use',
       source: 'todae-docs',
-    };
-    expect(whenToUse('ThemeProvider')).toEqual(missing);
-    expect(whenToUse('DensityProvider')).toEqual(missing);
+    });
+    expect(whenToUse('DensityProvider')).toMatchObject({
+      status: 'present',
+      whenToUse: 'Set spacing density (compact / comfortable / spacious) for a subtree via `data-density`. Spacing only.',
+      whenNotToUse: 'Color or light / dark → ThemeProvider. Type size → Text `size`.',
+      docsUrl: 'https://todae-rho.vercel.app/tokens',
+    });
     const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));
-    expect(listed.ThemeProvider).toMatchObject({ hasWhenToUse: false, docsUrl: missing.docsUrl });
+    expect(listed.ThemeProvider).toMatchObject({ hasWhenToUse: true, docsUrl: 'https://todae-rho.vercel.app/tokens' });
+    expect(listed.DensityProvider).toMatchObject({ hasWhenToUse: true });
     expect(listed.ThemeProvider).not.toHaveProperty('scope');
 
     const tokens = `
@@ -138,20 +156,40 @@ describe('docs mcp tools', () => {
     expect(parseWhen('## When to use\n\n**When:** Page-level only.\n', 'ThemeProvider')).toBeNull();
   });
 
-  it('reports Dialog when-to-use as missing', () => {
-    expect(whenToUse('Dialog')).toEqual({
-      status: 'missing',
-      whenToUse: null,
-      whenNotToUse: null,
-      docsUrl: 'https://todae-rho.vercel.app/dialog',
-      note: "No 'When to use' section on /dialog. Not inferred.",
-      source: 'todae-docs',
+  it('reports Dialog own copy and Field page-level gap', () => {
+    expect(whenToUse('Dialog')).toMatchObject({
+      status: 'present',
+      whenToUse:
+        'Centered modal task or confirm (native `<dialog>`, controlled `open`). Name via `Dialog.Title` or `aria-label`. Escape + scrim dismiss by default.',
+      whenNotToUse:
+        'Mobile picker from the bottom → BottomSheet. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).',
     });
+    expect(whenToUse('Dialog')).not.toHaveProperty('scope');
     expect(whenToUse('Field')).toMatchObject({
       status: 'missing',
       docsUrl: 'https://todae-rho.vercel.app/field',
       note: "'When to use' on /field has no page-level copy; see its parts",
     });
+    expect(missingWhenNote('# Dialog\n\n## Props\n', 'dialog')).toBe("No 'When to use' section on /dialog. Not inferred.");
+  });
+
+  it('gives every listed name own copy or a parent page to inherit', () => {
+    const noDocsPage = [
+      'BottomSheet.Body',
+      'BottomSheet.Header',
+      'BottomSheet.Footer',
+      'BottomSheet.Description',
+      'Dialog.Body',
+      'Dialog.Header',
+      'Dialog.Footer',
+    ];
+    const gaps = listComponents().components.filter(
+      (row) => !row.hasWhenToUse && row.scope !== 'page' && !noDocsPage.includes(row.name),
+    );
+    expect(gaps.map((row) => row.name)).toEqual([]);
+    for (const name of noDocsPage) {
+      expect(whenToUse(name)).toMatchObject({ status: 'no-docs-page', docsUrl: null });
+    }
   });
 
   it('reads #24-style when lines and Field subsections', () => {

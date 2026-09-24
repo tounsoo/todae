@@ -32,6 +32,26 @@ Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overl
   <ButtonGroupAlign />
 </Example>
 
+## When to use
+
+### Button.Root
+
+**When:** One action in a native button. Variants primary / secondary / ghost; default `type="button"`. Icon-only needs `aria-label`, which it auto-tips.
+
+**When not:** Navigation → native link (no Link shipped). On/off state → Switch or Checkbox. Selected segment → Radio (ButtonGroup has no selection).
+
+### Button.Icon
+
+**When:** Decorative icon inside `Button.Root`. Position = DOM order. Always aria-hidden.
+
+**When not:** Icon in a field → `Field.Icon`. Icon as the only name with no `aria-label` on Root. Outside `Button.Root`.
+
+### ButtonGroup
+
+**When:** Attached horizontal row of related `Button.Root` actions (`role="group"`). Name it with `aria-label`.
+
+**When not:** Single choice or toggles → Radio / Checkbox (no selection state here). Vertical or wrapping rows → Stack. Unrelated actions → separate buttons in Stack.
+
 ## Props
 
 <PropsTable name="Button.Root" />
