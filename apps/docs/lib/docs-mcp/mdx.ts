@@ -157,10 +157,17 @@ export function missingWhenNote(markdown: string, slug: string): string {
   return `No 'When to use' section on /${slug}. Not inferred.`;
 }
 
-export function pageFor(name: string): PageDoc | null {
+function findPage(name: string): PageDoc | null {
   const host = PART_PAGE[name];
   if (host) return pages.find((page) => page.slug === host) ?? null;
   return pages.find((page) => page.props.includes(name) || page.title === name) ?? null;
+}
+
+export function pageFor(name: string): PageDoc | null {
+  const own = findPage(name);
+  if (own) return own;
+  const dot = name.indexOf('.');
+  return dot > 0 ? findPage(name.slice(0, dot)) : null;
 }
 
 export function docsUrlFor(name: string): string | null {

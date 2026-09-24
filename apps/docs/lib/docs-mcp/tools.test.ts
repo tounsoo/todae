@@ -75,6 +75,19 @@ describe('docs mcp tools', () => {
     const sheet = whenToUse('BottomSheet');
     const part = whenToUse('BottomSheet.Title');
     expect(part).toMatchObject({ status: 'present', scope: 'page', whenToUse: sheet.whenToUse });
+    expect(whenToUse('BottomSheet.Footer')).toMatchObject({
+      status: 'present',
+      scope: 'page',
+      whenToUse: sheet.whenToUse,
+      docsUrl: 'https://todae-rho.vercel.app/bottomsheet',
+    });
+    const dialog = whenToUse('Dialog');
+    expect(whenToUse('Dialog.Body')).toMatchObject({
+      status: 'present',
+      scope: 'page',
+      whenToUse: dialog.whenToUse,
+      docsUrl: 'https://todae-rho.vercel.app/dialog',
+    });
     const hook = whenToUse('useSheetPresentation');
     const combobox = whenToUse('useCombobox');
     expect(hook).toMatchObject({
@@ -184,22 +197,8 @@ describe('docs mcp tools', () => {
   });
 
   it('gives every listed name own copy or a parent page to inherit', () => {
-    const noDocsPage = [
-      'BottomSheet.Body',
-      'BottomSheet.Header',
-      'BottomSheet.Footer',
-      'BottomSheet.Description',
-      'Dialog.Body',
-      'Dialog.Header',
-      'Dialog.Footer',
-    ];
-    const gaps = listComponents().components.filter(
-      (row) => !row.hasWhenToUse && row.scope !== 'page' && !noDocsPage.includes(row.name),
-    );
+    const gaps = listComponents().components.filter((row) => !row.hasWhenToUse && row.scope !== 'page');
     expect(gaps.map((row) => row.name)).toEqual([]);
-    for (const name of noDocsPage) {
-      expect(whenToUse(name)).toMatchObject({ status: 'no-docs-page', docsUrl: null });
-    }
     const own = [
       'BottomSheet',
       'Checkbox',
