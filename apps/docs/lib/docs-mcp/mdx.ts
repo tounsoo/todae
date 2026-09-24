@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { listComponentMeta } from './meta';
 
 export const DOCS_ORIGIN = 'https://todae-rho.vercel.app';
 
@@ -167,7 +168,8 @@ export function pageFor(name: string): PageDoc | null {
   const own = findPage(name);
   if (own) return own;
   const dot = name.indexOf('.');
-  return dot > 0 ? findPage(name.slice(0, dot)) : null;
+  if (dot <= 0 || !listComponentMeta().some((row) => row.name === name)) return null;
+  return findPage(name.slice(0, dot));
 }
 
 export function docsUrlFor(name: string): string | null {

@@ -291,4 +291,20 @@ describe('docs mcp tools', () => {
     expect(() => getComponent('Nope')).toThrow('Unknown component "Nope". Call list_components.');
     expect(() => whenToUse('Nope')).toThrow('Unknown component "Nope". Call list_components.');
   });
+
+  it('does not inherit a parent page for unknown dotted names', () => {
+    for (const name of ['Dialog.Nope', 'Foo.Bar']) {
+      const message = `Unknown component "${name}". Call list_components.`;
+      expect(() => whenToUse(name)).toThrow(message);
+      expect(() => getComponent(name)).toThrow(message);
+    }
+  });
+
+  it('rejects path-like names before any page lookup', () => {
+    for (const name of ['../field', 'Dialog/../../etc', '/', 'Dialog.Body%2F..', '', 'Dialog.Body\n', 'a/b']) {
+      const message = `Unknown component "${name}". Call list_components.`;
+      expect(() => whenToUse(name)).toThrow(message);
+      expect(() => getComponent(name)).toThrow(message);
+    }
+  });
 });
