@@ -134,6 +134,9 @@ describe('docs mcp tools', () => {
     expect(listed.ThemeProvider).toMatchObject({ hasWhenToUse: true, docsUrl: 'https://todae-rho.vercel.app/tokens' });
     expect(listed.DensityProvider).toMatchObject({ hasWhenToUse: true });
     expect(listed.ThemeProvider).not.toHaveProperty('scope');
+    const tokensMdx = readFileSync(join(process.cwd(), 'app/tokens/page.mdx'), 'utf8');
+    const whenBody = tokensMdx.split('## When to use\n')[1]?.split('\n## ')[0] ?? '';
+    expect(whenBody).not.toContain('TokensCatalog');
 
     const tokens = `
 # Tokens
