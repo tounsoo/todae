@@ -10,11 +10,18 @@ import {
   FieldLabelAdornments,
   FieldLabelStates,
   FieldStates,
+  TextareaAutoGrow,
+  TextareaDark,
+  TextareaDensity,
+  TextareaMaxRows,
+  TextareaMessages,
+  TextareaResize,
+  TextareaRows,
 } from '../../components/demos/FieldDemo';
 
 # Field
 
-Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput` or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label` is a sibling, not a compound part.
+Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.Textarea`, or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label` is a sibling, not a compound part.
 
 <Example block>
   <FieldStates />
@@ -72,6 +79,50 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
   <ErrorMessageSibling />
 </Example>
 
+## Textarea
+
+Multi-line text. Height is CSS only: `rows` sets the height and the drag floor, and `maxRows` sets the cap. `autoGrow` uses `field-sizing: content` where the browser has it, and grows with no cap when `maxRows` is omitted. Browsers without `field-sizing` stay at `rows` and scroll inside. Do not set an inline `height` when `autoGrow` is on; it overrides the growth. Padding sits on the textarea, inside the shell. `Icon` and `Affix` are not supported next to Textarea in v1.
+
+<Example block>
+  <TextareaRows />
+</Example>
+
+`autoGrow` with `maxRows={6}`.
+
+<Example block>
+  <TextareaAutoGrow />
+</Example>
+
+`maxRows` without `rows` starts at `min(3, maxRows)`.
+
+<Example block>
+  <TextareaMaxRows />
+</Example>
+
+Drag-resize with `autoGrow` off stops at `rows` and at `maxRows`.
+
+<Example block>
+  <TextareaResize />
+</Example>
+
+Compact, comfortable, and spacious.
+
+<Example block>
+  <TextareaDensity />
+</Example>
+
+Dark appearance, for the native scrollbar.
+
+<Example block>
+  <TextareaDark />
+</Example>
+
+Label, description, error, invalid, and disabled.
+
+<Example block>
+  <TextareaMessages />
+</Example>
+
 ## Chip input
 
 Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow.
@@ -116,7 +167,7 @@ Disabled and invalid live on `Field.Root`.
 
 ### Field.Root
 
-**When:** Shared field chrome for one text or chip input — focus ring, disabled/invalid, density. Value lives on the input part.
+**When:** Shared field chrome for one text, textarea, or chip input — focus ring, disabled/invalid, density. Value lives on the input part.
 
 **When not:** Selection controls (Checkbox / Radio / Switch). Overlay triggers that are buttons. Nesting another compound root inside.
 
@@ -124,7 +175,12 @@ Disabled and invalid live on `Field.Root`.
 
 **When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password).
 
-**When not:** Multi-value tokens → `Field.ChipInput`. Multi-line → Textarea (not shipped). Standalone without Root.
+**When not:** Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
+
+### Field.Textarea
+
+**When:** Multi-line free text such as notes, messages or descriptions. `rows` sets the starting height, and `autoGrow` grows it up to `maxRows` with CSS only.
+**When not:** Single-line values, use `Field.TextInput`. Separate tags or tokens, use `Field.ChipInput`. Rich text or formatting, not shipped.
 
 ### Field.ChipInput
 
@@ -155,6 +211,8 @@ Disabled and invalid live on `Field.Root`.
 <PropsTable name="Field.Root" />
 
 <PropsTable name="Field.TextInput" />
+
+<PropsTable name="Field.Textarea" />
 
 <PropsTable name="Field.ChipInput" />
 

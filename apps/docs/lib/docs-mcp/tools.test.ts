@@ -188,6 +188,16 @@ describe('docs mcp tools', () => {
         'Mobile picker from the bottom → BottomSheet. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).',
     });
     expect(whenToUse('Dialog')).not.toHaveProperty('scope');
+    expect(whenToUse('Field.Textarea')).toMatchObject({
+      status: 'present',
+      docsUrl: 'https://todae-rho.vercel.app/field',
+      section: 'When to use',
+      whenToUse:
+        'Multi-line free text such as notes, messages or descriptions. `rows` sets the starting height, and `autoGrow` grows it up to `maxRows` with CSS only.',
+      whenNotToUse:
+        'Single-line values, use `Field.TextInput`. Separate tags or tokens, use `Field.ChipInput`. Rich text or formatting, not shipped.',
+    });
+    expect(whenToUse('Field.Textarea')).not.toHaveProperty('scope');
     expect(whenToUse('Field')).toMatchObject({
       status: 'missing',
       docsUrl: 'https://todae-rho.vercel.app/field',
@@ -207,6 +217,7 @@ describe('docs mcp tools', () => {
       'Field.Icon',
       'Field.Root',
       'Field.TextInput',
+      'Field.Textarea',
       'OptionList',
       'Popover',
       'Radio',

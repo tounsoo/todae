@@ -1,6 +1,6 @@
 'use client';
 
-import { DensityProvider, Field, Label, useChipField } from '@tounsoo/todae';
+import { DensityProvider, Description, ErrorMessage, Field, Label, ThemeProvider, useChipField } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 const MANY = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta'];
@@ -104,6 +104,95 @@ export function FieldAdornments() {
           </button>
         </Field.Icon>
       </Field.Root>
+    </>
+  );
+}
+
+export function TextareaRows() {
+  const [value, setValue] = useState('Notes');
+  return (
+    <Field.Root>
+      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
+    </Field.Root>
+  );
+}
+
+export function TextareaAutoGrow() {
+  const [value, setValue] = useState('Grows up to six rows.');
+  return (
+    <Field.Root>
+      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} autoGrow maxRows={6} />
+    </Field.Root>
+  );
+}
+
+export function TextareaMaxRows() {
+  const [value, setValue] = useState('maxRows only');
+  return (
+    <Field.Root>
+      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} maxRows={2} />
+    </Field.Root>
+  );
+}
+
+export function TextareaResize() {
+  const [value, setValue] = useState('Drag between rows and maxRows.');
+  return (
+    <Field.Root>
+      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} maxRows={6} />
+    </Field.Root>
+  );
+}
+
+export function TextareaDensity() {
+  const [value, setValue] = useState('Density');
+  return (
+    <>
+      {(['compact', 'comfortable', 'spacious'] as const).map((density) => (
+        <DensityProvider key={density} density={density}>
+          <Field.Root>
+            <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
+          </Field.Root>
+        </DensityProvider>
+      ))}
+    </>
+  );
+}
+
+export function TextareaDark() {
+  const [value, setValue] = useState('Dark scrollbar\n'.repeat(8).trim());
+  return (
+    <ThemeProvider appearance="dark">
+      <Field.Root>
+        <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={4} maxRows={4} />
+      </Field.Root>
+    </ThemeProvider>
+  );
+}
+
+export function TextareaMessages() {
+  const id = useId();
+  const hintId = useId();
+  const errorId = useId();
+  const disabledId = useId();
+  const [value, setValue] = useState('missing');
+  const invalid = value.trim().length < 8;
+  return (
+    <>
+      <div className="labelled-field">
+        <Label htmlFor={id}>Note</Label>
+        <Field.Root id={id} invalid={invalid} aria-describedby={invalid ? `${hintId} ${errorId}` : hintId}>
+          <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
+        </Field.Root>
+        <Description id={hintId}>A short description of the work.</Description>
+        {invalid ? <ErrorMessage id={errorId}>Use at least 8 characters.</ErrorMessage> : null}
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={disabledId}>Note</Label>
+        <Field.Root id={disabledId} disabled>
+          <Field.Textarea value="Disabled" onChange={() => undefined} />
+        </Field.Root>
+      </div>
     </>
   );
 }
