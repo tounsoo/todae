@@ -38,17 +38,104 @@ describe('docs mcp tools', () => {
   it('returns the OptionList when-to-use section from MDX', () => {
     const mdx = readFileSync(join(process.cwd(), 'app/optionlist/page.mdx'), 'utf8');
     const body = mdx.split('## When to use\n')[1]?.split('\n## ')[0]?.trim().replaceAll('](/', '](https://todae-rho.vercel.app/');
+    const line = (prefix: string) => body?.split('\n').find((item) => item.startsWith(prefix))?.slice(prefix.length).trim();
     const result = whenToUse('OptionList');
     expect(result).toEqual({
       status: 'present',
-      whenToUse: body,
-      whenNotToUse: null,
+      whenToUse: line('**When:**'),
+      whenNotToUse: line('**When not:**'),
       docsUrl: 'https://todae-rho.vercel.app/optionlist',
       section: 'When to use',
       source: 'todae-docs',
     });
     const part = whenToUse('OptionList.Option');
-    expect(part).toMatchObject({ status: 'present', whenToUse: body, scope: 'page' });
+    expect(part).toMatchObject({ status: 'present', whenToUse: line('**When:**'), scope: 'page' });
+  });
+
+  it('reports own copy separately from inherited page copy', () => {
+    const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));
+    expect(listed.BottomSheet).toMatchObject({ hasWhenToUse: true });
+    expect(listed.BottomSheet).not.toHaveProperty('scope');
+    expect(listed['BottomSheet.Title']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed['BottomSheet.Close']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed['BottomSheet.Grabber']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed.useSheetPresentation).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed.useTooltip).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed.usePopover).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed.Option).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed['OptionList.Option']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed['Field.Root']).toMatchObject({ hasWhenToUse: true });
+    expect(listed['Field.Root']).not.toHaveProperty('scope');
+
+    const sheet = whenToUse('BottomSheet');
+    const part = whenToUse('BottomSheet.Title');
+    expect(part).toMatchObject({ status: 'present', scope: 'page', whenToUse: sheet.whenToUse });
+  });
+
+  it('prefers a name subsection over page-level copy', () => {
+    const mdx = `
+## When to use
+
+**When:** Page copy for the combobox.
+
+**When not:** Not this hook.
+
+### useSheetPresentation
+
+**When:** Own sheet hook copy.
+**When not:** Not the page sentence.
+
+## Props
+`;
+    expect(parseWhen(mdx, 'useSheetPresentation')).toEqual({
+      whenToUse: 'Own sheet hook copy.',
+      whenNotToUse: 'Not the page sentence.',
+      shared: false,
+    });
+    expect(parseWhen(mdx, 'Combobox')).toMatchObject({ whenToUse: 'Page copy for the combobox.', shared: true });
+  });
+
+  it('resolves providers from the tokens page subsections', () => {
+    const missing = {
+      status: 'missing' as const,
+      whenToUse: null,
+      whenNotToUse: null,
+      docsUrl: 'https://todae-rho.vercel.app/tokens',
+      note: "No 'When to use' section on /tokens. Not inferred.",
+      source: 'todae-docs',
+    };
+    expect(whenToUse('ThemeProvider')).toEqual(missing);
+    expect(whenToUse('DensityProvider')).toEqual(missing);
+    const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));
+    expect(listed.ThemeProvider).toMatchObject({ hasWhenToUse: false, docsUrl: missing.docsUrl });
+    expect(listed.ThemeProvider).not.toHaveProperty('scope');
+
+    const tokens = `
+# Tokens
+
+## When to use
+
+**When:** Page-level token copy that providers must not inherit.
+
+### ThemeProvider
+
+**When:** Wrap the app once so contract vars exist.
+**When not:** Per-control color props.
+
+### DensityProvider
+
+**When:** Set compact or comfortable for a subtree.
+`;
+    expect(parseWhen(tokens, 'ThemeProvider')).toEqual({
+      whenToUse: 'Wrap the app once so contract vars exist.',
+      whenNotToUse: 'Per-control color props.',
+      shared: false,
+    });
+    expect(parseWhen(tokens, 'DensityProvider')).toMatchObject({
+      whenToUse: 'Set compact or comfortable for a subtree.',
+      shared: false,
+    });
+    expect(parseWhen('## When to use\n\n**When:** Page-level only.\n', 'ThemeProvider')).toBeNull();
   });
 
   it('reports Dialog when-to-use as missing', () => {
@@ -59,6 +146,11 @@ describe('docs mcp tools', () => {
       docsUrl: 'https://todae-rho.vercel.app/dialog',
       note: "No 'When to use' section on /dialog. Not inferred.",
       source: 'todae-docs',
+    });
+    expect(whenToUse('Field')).toMatchObject({
+      status: 'missing',
+      docsUrl: 'https://todae-rho.vercel.app/field',
+      note: "'When to use' on /field has no page-level copy; see its parts",
     });
   });
 

@@ -34,12 +34,10 @@ function readCatalog(): TokenRow[] {
 
 const LAYERS = ['core', 'appearance', 'density', 'contract', 'variant'] as const;
 
-export default function TokensPage() {
+export function TokensCatalog() {
   const tokens = readCatalog();
   return (
     <>
-      <h1>Tokens</h1>
-      <p>Generated catalog from the DTCG pipeline. Components consume contract vars only.</p>
       {LAYERS.map((layer) => {
         const rows = tokens.filter((row) => row.layer === layer);
         if (rows.length === 0) return null;
