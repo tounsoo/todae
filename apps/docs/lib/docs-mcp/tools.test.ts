@@ -74,6 +74,7 @@ describe('docs mcp tools', () => {
 ### Field.TextInput
 
 **When:** Single-line typed value inside \`Field.Root\` (text / search / email / url / tel / password).
+
 **When not:** Multi-value tokens → \`Field.ChipInput\`. Multi-line → Textarea (not shipped). Standalone without Root.
 
 ## Props
@@ -83,15 +84,17 @@ describe('docs mcp tools', () => {
       whenNotToUse: 'Multi-value tokens → `Field.ChipInput`. Multi-line → Textarea (not shipped). Standalone without Root.',
       shared: false,
     });
-    expect(parseWhen(field, 'Field.Root')?.whenToUse).toBe(
-      'Shared field chrome for one text or chip input — focus ring, disabled/invalid, density. Value lives on the input part.',
-    );
+    expect(parseWhen(field, 'Field.Root')).toMatchObject({
+      whenToUse: 'Shared field chrome for one text or chip input — focus ring, disabled/invalid, density. Value lives on the input part.',
+      whenNotToUse: 'Selection controls (Checkbox / Radio / Switch). Overlay triggers that are buttons. Nesting another compound root inside.',
+    });
     expect(parseWhen(field, 'Field.Label')).toBeNull();
 
     const tooltip = `
 ## When to use
 
 **When:** Short hint for a control (icon-only name, truncated label). Use \`useTooltip\` + surface-only \`Tooltip\`. Default tip is text-only (\`role="tooltip"\`). Button sugar tips icon-only / overflow labels.
+
 **When not:** Links inside the tip → \`useTooltip({ interactive: true })\` (non-modal tip dialog; links only). Menus or other actions → Popover. Long help → Description. Modal tasks → Dialog.
 
 ## Props
