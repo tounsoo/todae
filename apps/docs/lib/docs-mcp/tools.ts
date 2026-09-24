@@ -1,4 +1,4 @@
-import { DOCS_ORIGIN, docsUrlFor, pageFor, parseWhen } from './mdx';
+import { DOCS_ORIGIN, docsUrlFor, missingWhenNote, ownsPage, pageFor, parseWhen } from './mdx';
 import { listComponentMeta, partsOf, resolveName, type ComponentMeta } from './meta';
 
 const SOURCE = 'todae-docs' as const;
@@ -26,12 +26,15 @@ function componentBody(component: ComponentMeta) {
 export function listComponents() {
   const components = listComponentMeta().map((component) => {
     const page = pageFor(component.name);
+    const copy = page ? parseWhen(page.markdown, component.name) : null;
+    const inherited = page != null && copy?.shared === true && !ownsPage(page, component.name);
     return {
       name: component.name,
       description: component.description,
       parts: partsOf(component.name).map((part) => part.name),
       docsUrl: docsUrlFor(component.name),
-      hasWhenToUse: page != null && parseWhen(page.markdown, component.name)?.whenToUse != null,
+      hasWhenToUse: copy?.whenToUse != null && !inherited,
+      ...(inherited ? { scope: 'page' as const } : {}),
     };
   });
   return { components, count: components.length, source: SOURCE };
@@ -67,14 +70,14 @@ export function whenToUse(name: string) {
     };
   }
   const copy = parseWhen(page.markdown, canonical);
-  const scope = copy?.shared && page.title !== canonical ? ('page' as const) : undefined;
+  const scope = copy?.shared && !ownsPage(page, canonical) ? ('page' as const) : undefined;
   if (!copy) {
     return {
       status: 'missing' as const,
       whenToUse: null,
       whenNotToUse: null,
       docsUrl: `${DOCS_ORIGIN}/${page.slug}`,
-      note: `No 'When to use' section on /${page.slug}. Not inferred.`,
+      note: missingWhenNote(page.markdown, page.slug),
       source: SOURCE,
     };
   }

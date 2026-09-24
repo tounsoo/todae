@@ -20,6 +20,12 @@ Overlays inherit tokens from `ThemeProvider` / `DensityProvider`. They do not in
 
 iOS may still rubber-band the page behind an open overlay. Chrome may ignore `cancel.preventDefault()` without user activation. State still resyncs from the native `close` event.
 
+## When to use
+
+**When:** Centered modal task or confirm (native `<dialog>`, controlled `open`). Name via `Dialog.Title` or `aria-label`. Escape + scrim dismiss by default.
+
+**When not:** Mobile picker from the bottom → BottomSheet. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).
+
 ## Props
 
 <PropsTable name="Dialog" />

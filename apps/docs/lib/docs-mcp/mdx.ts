@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { listComponentMeta } from './meta';
 
 export const DOCS_ORIGIN = 'https://todae-rho.vercel.app';
 
@@ -19,6 +20,22 @@ export type WhenCopy = {
 
 const WHEN_TO_USE = 'When to use';
 const WHEN_NOT_TO_USE = 'When not to use';
+
+/** Names whose copy is only a `### Name` block on another page (same as Field parts). */
+const PART_PAGE: Record<string, string> = {
+  ThemeProvider: 'tokens',
+  DensityProvider: 'tokens',
+};
+
+/** Page-level When copy written for these names in addition to `page.title`. */
+const PAGE_OWNERS: Record<string, readonly string[]> = {
+  combobox: ['useCombobox'],
+  radio: ['RadioGroup'],
+};
+
+export function ownsPage(page: PageDoc, name: string): boolean {
+  return page.title === name || PAGE_OWNERS[page.slug]?.includes(name) === true;
+}
 
 function absolutize(markdown: string): string {
   return markdown.replace(/\]\(([^)\s]+)\)/g, (match, href: string) => {
@@ -81,7 +98,7 @@ function labeled(body: string, separate: string | null): Pick<WhenCopy, 'whenToU
   return { whenToUse: body.trim() || null, whenNotToUse: separate?.trim() || null };
 }
 
-/** Page section, or only the `### name` subsection. A dotted name with no h3 is missing. */
+/** Page section, or only the `### name` subsection. A dotted name or token provider with no h3 is missing. */
 export function parseWhen(markdown: string, name: string): WhenCopy | null {
   const sectionBody = section(markdown, WHEN_TO_USE);
   const separate = section(markdown, WHEN_NOT_TO_USE);
@@ -89,7 +106,7 @@ export function parseWhen(markdown: string, name: string): WhenCopy | null {
   const { preamble, blocks } = h3Blocks(sectionBody ?? '');
   const own = blocks.get(name);
   if (own != null) return { ...labeled(own, null), shared: false };
-  if (blocks.size > 0 && name.includes('.')) return null;
+  if (name in PART_PAGE || (blocks.size > 0 && name.includes('.'))) return null;
   const body = blocks.size > 0 ? preamble : (sectionBody ?? '');
   if (!body.trim() && !separate?.trim()) return null;
   return { ...labeled(body, separate), shared: true };
@@ -134,8 +151,25 @@ function readPages(): PageDoc[] {
 
 const pages = readPages();
 
-export function pageFor(name: string): PageDoc | null {
+export function missingWhenNote(markdown: string, slug: string): string {
+  if (section(markdown, WHEN_TO_USE) != null || section(markdown, WHEN_NOT_TO_USE) != null) {
+    return `'When to use' on /${slug} has no page-level copy; see its parts`;
+  }
+  return `No 'When to use' section on /${slug}. Not inferred.`;
+}
+
+function findPage(name: string): PageDoc | null {
+  const host = PART_PAGE[name];
+  if (host) return pages.find((page) => page.slug === host) ?? null;
   return pages.find((page) => page.props.includes(name) || page.title === name) ?? null;
+}
+
+export function pageFor(name: string): PageDoc | null {
+  const own = findPage(name);
+  if (own) return own;
+  const dot = name.indexOf('.');
+  if (dot <= 0 || !listComponentMeta().some((row) => row.name === name)) return null;
+  return findPage(name.slice(0, dot));
 }
 
 export function docsUrlFor(name: string): string | null {

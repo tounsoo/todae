@@ -2,7 +2,7 @@ import schema from '@tounsoo/todae/schema/components.json';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseWhen } from './mdx';
+import { missingWhenNote, parseWhen } from './mdx';
 import { getComponent, listComponents, whenToUse } from './tools';
 
 const jsonNames = schema.components.map((row) => row.name);
@@ -38,28 +38,202 @@ describe('docs mcp tools', () => {
   it('returns the OptionList when-to-use section from MDX', () => {
     const mdx = readFileSync(join(process.cwd(), 'app/optionlist/page.mdx'), 'utf8');
     const body = mdx.split('## When to use\n')[1]?.split('\n## ')[0]?.trim().replaceAll('](/', '](https://todae-rho.vercel.app/');
+    const line = (prefix: string) => body?.split('\n').find((item) => item.startsWith(prefix))?.slice(prefix.length).trim();
     const result = whenToUse('OptionList');
     expect(result).toEqual({
       status: 'present',
-      whenToUse: body,
-      whenNotToUse: null,
+      whenToUse: line('**When:**'),
+      whenNotToUse: line('**When not:**'),
       docsUrl: 'https://todae-rho.vercel.app/optionlist',
       section: 'When to use',
       source: 'todae-docs',
     });
     const part = whenToUse('OptionList.Option');
-    expect(part).toMatchObject({ status: 'present', whenToUse: body, scope: 'page' });
+    expect(part).toMatchObject({ status: 'present', whenToUse: line('**When:**'), scope: 'page' });
   });
 
-  it('reports Dialog when-to-use as missing', () => {
-    expect(whenToUse('Dialog')).toEqual({
-      status: 'missing',
-      whenToUse: null,
-      whenNotToUse: null,
+  it('reports own copy separately from inherited page copy', () => {
+    const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));
+    expect(listed.BottomSheet).toMatchObject({ hasWhenToUse: true });
+    expect(listed.BottomSheet).not.toHaveProperty('scope');
+    expect(listed['BottomSheet.Title']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed['BottomSheet.Close']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed['BottomSheet.Grabber']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed.useSheetPresentation).toMatchObject({ hasWhenToUse: true });
+    expect(listed.useSheetPresentation).not.toHaveProperty('scope');
+    expect(listed.useTooltip).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed.usePopover).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed.Option).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed['OptionList.Option']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed['Field.Root']).toMatchObject({ hasWhenToUse: true });
+    expect(listed['Field.Root']).not.toHaveProperty('scope');
+    expect(listed.useCombobox).toMatchObject({ hasWhenToUse: true });
+    expect(listed.useCombobox).not.toHaveProperty('scope');
+    expect(listed.RadioGroup).toMatchObject({ hasWhenToUse: true });
+    expect(listed.RadioGroup).not.toHaveProperty('scope');
+
+    const sheet = whenToUse('BottomSheet');
+    const part = whenToUse('BottomSheet.Title');
+    expect(part).toMatchObject({ status: 'present', scope: 'page', whenToUse: sheet.whenToUse });
+    expect(whenToUse('BottomSheet.Footer')).toMatchObject({
+      status: 'present',
+      scope: 'page',
+      whenToUse: sheet.whenToUse,
+      docsUrl: 'https://todae-rho.vercel.app/bottomsheet',
+    });
+    const dialog = whenToUse('Dialog');
+    expect(whenToUse('Dialog.Body')).toMatchObject({
+      status: 'present',
+      scope: 'page',
+      whenToUse: dialog.whenToUse,
       docsUrl: 'https://todae-rho.vercel.app/dialog',
-      note: "No 'When to use' section on /dialog. Not inferred.",
+    });
+    const hook = whenToUse('useSheetPresentation');
+    const combobox = whenToUse('useCombobox');
+    expect(hook).toMatchObject({
+      status: 'present',
+      whenToUse: 'Choose popover or sheet at runtime: coarse pointer or width under 640px → sheet. SSR and first paint are popover. `forced` overrides.',
+      whenNotToUse: 'Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → `usePopover` alone.',
+    });
+    expect(hook).not.toHaveProperty('scope');
+    expect(combobox).toMatchObject({ status: 'present' });
+    expect(combobox).not.toHaveProperty('scope');
+    expect(whenToUse('RadioGroup')).toMatchObject({ status: 'present' });
+    expect(whenToUse('RadioGroup')).not.toHaveProperty('scope');
+    expect(hook.whenToUse).not.toBe(combobox.whenToUse);
+  });
+
+  it('prefers a name subsection over page-level copy', () => {
+    const mdx = `
+## When to use
+
+**When:** Page copy for the combobox.
+
+**When not:** Not this hook.
+
+### useSheetPresentation
+
+**When:** Own sheet hook copy.
+**When not:** Not the page sentence.
+
+## Props
+`;
+    expect(parseWhen(mdx, 'useSheetPresentation')).toEqual({
+      whenToUse: 'Own sheet hook copy.',
+      whenNotToUse: 'Not the page sentence.',
+      shared: false,
+    });
+    expect(parseWhen(mdx, 'Combobox')).toMatchObject({ whenToUse: 'Page copy for the combobox.', shared: true });
+  });
+
+  it('resolves providers from the tokens page subsections', () => {
+    expect(whenToUse('ThemeProvider')).toEqual({
+      status: 'present',
+      whenToUse:
+        'Set appearance (system / light / dark) for a subtree via `data-appearance`; nested providers override. `overrides` for allowlisted token paths only.',
+      whenNotToUse:
+        "Spacing density → DensityProvider. Raw CSS or unknown token keys (rejected). Styling via classes on the provider (overlays don't inherit them).",
+      docsUrl: 'https://todae-rho.vercel.app/tokens',
+      section: 'When to use',
       source: 'todae-docs',
     });
+    expect(whenToUse('DensityProvider')).toMatchObject({
+      status: 'present',
+      whenToUse: 'Set spacing density (compact / comfortable / spacious) for a subtree via `data-density`. Spacing only.',
+      whenNotToUse: 'Color or light / dark → ThemeProvider. Type size → Text `size`.',
+      docsUrl: 'https://todae-rho.vercel.app/tokens',
+    });
+    const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));
+    expect(listed.ThemeProvider).toMatchObject({ hasWhenToUse: true, docsUrl: 'https://todae-rho.vercel.app/tokens' });
+    expect(listed.DensityProvider).toMatchObject({ hasWhenToUse: true });
+    expect(listed.ThemeProvider).not.toHaveProperty('scope');
+    const tokensMdx = readFileSync(join(process.cwd(), 'app/tokens/page.mdx'), 'utf8');
+    const whenBody = tokensMdx.split('## When to use\n')[1]?.split('\n## ')[0] ?? '';
+    expect(whenBody).not.toContain('TokensCatalog');
+
+    const tokens = `
+# Tokens
+
+## When to use
+
+**When:** Page-level token copy that providers must not inherit.
+
+### ThemeProvider
+
+**When:** Wrap the app once so contract vars exist.
+**When not:** Per-control color props.
+
+### DensityProvider
+
+**When:** Set compact or comfortable for a subtree.
+`;
+    expect(parseWhen(tokens, 'ThemeProvider')).toEqual({
+      whenToUse: 'Wrap the app once so contract vars exist.',
+      whenNotToUse: 'Per-control color props.',
+      shared: false,
+    });
+    expect(parseWhen(tokens, 'DensityProvider')).toMatchObject({
+      whenToUse: 'Set compact or comfortable for a subtree.',
+      shared: false,
+    });
+    expect(parseWhen('## When to use\n\n**When:** Page-level only.\n', 'ThemeProvider')).toBeNull();
+  });
+
+  it('reports Dialog own copy and Field page-level gap', () => {
+    expect(whenToUse('Dialog')).toMatchObject({
+      status: 'present',
+      whenToUse:
+        'Centered modal task or confirm (native `<dialog>`, controlled `open`). Name via `Dialog.Title` or `aria-label`. Escape + scrim dismiss by default.',
+      whenNotToUse:
+        'Mobile picker from the bottom → BottomSheet. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).',
+    });
+    expect(whenToUse('Dialog')).not.toHaveProperty('scope');
+    expect(whenToUse('Field')).toMatchObject({
+      status: 'missing',
+      docsUrl: 'https://todae-rho.vercel.app/field',
+      note: "'When to use' on /field has no page-level copy; see its parts",
+    });
+    expect(missingWhenNote('# Dialog\n\n## Props\n', 'dialog')).toBe("No 'When to use' section on /dialog. Not inferred.");
+  });
+
+  it('gives every listed name own copy or a parent page to inherit', () => {
+    const gaps = listComponents().components.filter((row) => !row.hasWhenToUse && row.scope !== 'page');
+    expect(gaps.map((row) => row.name)).toEqual([]);
+    const own = [
+      'BottomSheet',
+      'Checkbox',
+      'Field.Affix',
+      'Field.ChipInput',
+      'Field.Icon',
+      'Field.Root',
+      'Field.TextInput',
+      'OptionList',
+      'Popover',
+      'Radio',
+      'RadioGroup',
+      'Switch',
+      'Tooltip',
+      'useCombobox',
+      'Button.Icon',
+      'Button.Root',
+      'ButtonGroup',
+      'Chip',
+      'DensityProvider',
+      'Description',
+      'Dialog',
+      'ErrorMessage',
+      'Label',
+      'Stack',
+      'Text',
+      'ThemeProvider',
+      'useChipField',
+      'useSheetPresentation',
+    ];
+    const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));
+    for (const name of own) {
+      expect(listed[name]).toMatchObject({ hasWhenToUse: true });
+      expect(listed[name]).not.toHaveProperty('scope');
+    }
   });
 
   it('reads #24-style when lines and Field subsections', () => {
@@ -116,5 +290,21 @@ describe('docs mcp tools', () => {
   it('errors on an unknown name', () => {
     expect(() => getComponent('Nope')).toThrow('Unknown component "Nope". Call list_components.');
     expect(() => whenToUse('Nope')).toThrow('Unknown component "Nope". Call list_components.');
+  });
+
+  it('does not inherit a parent page for unknown dotted names', () => {
+    for (const name of ['Dialog.Nope', 'Foo.Bar']) {
+      const message = `Unknown component "${name}". Call list_components.`;
+      expect(() => whenToUse(name)).toThrow(message);
+      expect(() => getComponent(name)).toThrow(message);
+    }
+  });
+
+  it('rejects path-like names before any page lookup', () => {
+    for (const name of ['../field', 'Dialog/../../etc', '/', 'Dialog.Body%2F..', '', 'Dialog.Body\n', 'a/b']) {
+      const message = `Unknown component "${name}". Call list_components.`;
+      expect(() => whenToUse(name)).toThrow(message);
+      expect(() => getComponent(name)).toThrow(message);
+    }
   });
 });

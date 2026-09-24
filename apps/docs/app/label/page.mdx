@@ -42,6 +42,12 @@ One `.labelled-field` per stack. The order is Label, control, then [Description]
 
 Disabled and invalid live on `Field.Root`. Label does not repaint. A required mark is authored in the label text.
 
+## When to use
+
+**When:** Visible name for a control, placed as a sibling. `htmlFor` = control id (the `Field.Root` id for a Field). Required mark goes in the text.
+
+**When not:** Inside `Field.Root`. Checkbox / Radio / Switch (children are the label). Group caption → RadioGroup `aria-label` / `aria-labelledby`. Hint text → Description.
+
 ## Props
 
 <PropsTable name="Label" />
