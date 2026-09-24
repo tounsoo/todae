@@ -7,8 +7,14 @@ export type PageDoc = {
   slug: string;
   title: string;
   props: string[];
+  markdown: string;
+};
+
+export type WhenCopy = {
   whenToUse: string | null;
   whenNotToUse: string | null;
+  /** True when the copy is the page section, not a `### Name` subsection. */
+  shared: boolean;
 };
 
 const WHEN_TO_USE = 'When to use';
@@ -35,6 +41,58 @@ function section(markdown: string, heading: string): string | null {
     }
   }
   return absolutize(lines.slice(start + 1, end).join('\n').trim());
+}
+
+function marker(body: string, prefix: string): string | null {
+  const line = body.split('\n').find((item) => item.startsWith(prefix));
+  return line ? line.slice(prefix.length).trim() : null;
+}
+
+function h3Blocks(body: string): { preamble: string; blocks: Map<string, string> } {
+  const blocks = new Map<string, string>();
+  const preamble: string[] = [];
+  let current: string | null = null;
+  let buf: string[] = [];
+  const flush = () => {
+    const text = buf.join('\n').trim();
+    if (current === null) preamble.push(text);
+    else blocks.set(current, text);
+    buf = [];
+  };
+  for (const line of body.split('\n')) {
+    const heading = /^### (.+)$/.exec(line);
+    if (heading?.[1]) {
+      flush();
+      current = heading[1];
+      continue;
+    }
+    buf.push(line);
+  }
+  flush();
+  return { preamble: preamble.join('\n').trim(), blocks };
+}
+
+function labeled(body: string, separate: string | null): Pick<WhenCopy, 'whenToUse' | 'whenNotToUse'> {
+  const when = marker(body, '**When:**');
+  const inlineNot = marker(body, '**When not:**');
+  if (when != null || inlineNot != null) {
+    return { whenToUse: when, whenNotToUse: inlineNot ?? (separate?.trim() || null) };
+  }
+  return { whenToUse: body.trim() || null, whenNotToUse: separate?.trim() || null };
+}
+
+/** Page section, or only the `### name` subsection. A dotted name with no h3 is missing. */
+export function parseWhen(markdown: string, name: string): WhenCopy | null {
+  const sectionBody = section(markdown, WHEN_TO_USE);
+  const separate = section(markdown, WHEN_NOT_TO_USE);
+  if (sectionBody == null && separate == null) return null;
+  const { preamble, blocks } = h3Blocks(sectionBody ?? '');
+  const own = blocks.get(name);
+  if (own != null) return { ...labeled(own, null), shared: false };
+  if (blocks.size > 0 && name.includes('.')) return null;
+  const body = blocks.size > 0 ? preamble : (sectionBody ?? '');
+  if (!body.trim() && !separate?.trim()) return null;
+  return { ...labeled(body, separate), shared: true };
 }
 
 function readPages(): PageDoc[] {
@@ -68,8 +126,7 @@ function readPages(): PageDoc[] {
         slug,
         title: titleLine.slice(2),
         props,
-        whenToUse: section(markdown, WHEN_TO_USE),
-        whenNotToUse: section(markdown, WHEN_NOT_TO_USE),
+        markdown,
       },
     ];
   });

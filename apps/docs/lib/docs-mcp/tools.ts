@@ -1,4 +1,4 @@
-import { DOCS_ORIGIN, docsUrlFor, pageFor } from './mdx';
+import { DOCS_ORIGIN, docsUrlFor, pageFor, parseWhen } from './mdx';
 import { listComponentMeta, partsOf, resolveName, type ComponentMeta } from './meta';
 
 const SOURCE = 'todae-docs' as const;
@@ -31,7 +31,7 @@ export function listComponents() {
       description: component.description,
       parts: partsOf(component.name).map((part) => part.name),
       docsUrl: docsUrlFor(component.name),
-      hasWhenToUse: page?.whenToUse != null,
+      hasWhenToUse: page != null && parseWhen(page.markdown, component.name)?.whenToUse != null,
     };
   });
   return { components, count: components.length, source: SOURCE };
@@ -57,7 +57,6 @@ export function whenToUse(name: string) {
   const resolved = resolveName(name);
   const canonical = resolved.kind === 'namespace' ? resolved.name : resolved.component.name;
   const page = pageFor(canonical);
-  const scope = page && page.title !== canonical ? ('page' as const) : undefined;
   if (!page) {
     return {
       status: 'no-docs-page' as const,
@@ -67,21 +66,22 @@ export function whenToUse(name: string) {
       source: SOURCE,
     };
   }
-  if (page.whenToUse == null) {
+  const copy = parseWhen(page.markdown, canonical);
+  const scope = copy?.shared && page.title !== canonical ? ('page' as const) : undefined;
+  if (!copy) {
     return {
       status: 'missing' as const,
       whenToUse: null,
       whenNotToUse: null,
       docsUrl: `${DOCS_ORIGIN}/${page.slug}`,
       note: `No 'When to use' section on /${page.slug}. Not inferred.`,
-      ...(scope ? { scope } : {}),
       source: SOURCE,
     };
   }
   return {
     status: 'present' as const,
-    whenToUse: page.whenToUse,
-    whenNotToUse: page.whenNotToUse,
+    whenToUse: copy.whenToUse,
+    whenNotToUse: copy.whenNotToUse,
     docsUrl: `${DOCS_ORIGIN}/${page.slug}`,
     section: 'When to use',
     ...(scope ? { scope } : {}),
