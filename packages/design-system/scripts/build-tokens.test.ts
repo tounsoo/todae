@@ -155,6 +155,21 @@ describe('committed token graph', () => {
 
   it('loads field and chip contracts through danger and chip density chains', async () => {
     const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
+    expect(graph.tokens.find((t) => t.path === 'field.leading')?.cssValue).toBe(
+      'var(--todae-font-leading-default)',
+    );
+    const light = graph.css.slice(
+      graph.css.indexOf(':root,\n[data-appearance="light"]'),
+      graph.css.indexOf('[data-appearance="dark"]'),
+    );
+    const dark = graph.css.slice(
+      graph.css.indexOf('[data-appearance="dark"]'),
+      graph.css.indexOf('[data-density="compact"]'),
+    );
+    expect(light).toContain('color-scheme: light;');
+    expect(light).not.toContain('color-scheme: dark');
+    expect(dark).toContain('color-scheme: dark;');
+    expect(dark).not.toContain('color-scheme: light');
     const invalid = graph.tokens.find((t) => t.path === 'field.border.invalid');
     const pad = graph.tokens.find((t) => t.path === 'chip.padding.x');
     expect(invalid?.cssValue).toBe('var(--todae-color-danger-default)');

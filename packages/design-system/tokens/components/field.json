@@ -9,6 +9,7 @@
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "font.size.3" } }
     },
+    "leading": { "$type": "number", "$value": { "$ref": "font.leading.default" } },
     "min-width": { "$type": "dimension", "$value": { "$ref": "space.12" } },
     "bg": {
       "default": { "$type": "color", "$value": { "$ref": "color.bg.surface" } },

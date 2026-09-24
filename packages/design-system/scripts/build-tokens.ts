@@ -374,10 +374,12 @@ ${decls(parts.core)}
 :root,
 [data-appearance="light"] {
 ${decls(parts.light)}
+  color-scheme: light;
 }
 
 [data-appearance="dark"] {
 ${decls(parts.dark)}
+  color-scheme: dark;
 }
 
 ${densityBlocks}

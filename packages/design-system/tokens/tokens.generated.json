@@ -1856,6 +1856,15 @@
       "context": null
     },
     {
+      "path": "field.leading",
+      "type": "number",
+      "cssVar": "--todae-field-leading",
+      "cssValue": "var(--todae-font-leading-default)",
+      "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.messages.gap",
       "type": "dimension",
       "cssVar": "--todae-field-messages-gap",

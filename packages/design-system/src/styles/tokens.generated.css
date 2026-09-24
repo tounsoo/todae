@@ -66,6 +66,7 @@
   --todae-color-fg-muted: var(--todae-color-gray-900);
   --todae-color-fg-placeholder: var(--todae-color-gray-600);
   --todae-color-on-accent: var(--todae-color-gray-50);
+  color-scheme: light;
 }
 
 [data-appearance="dark"] {
@@ -89,6 +90,7 @@
   --todae-color-fg-muted: var(--todae-color-gray-50);
   --todae-color-fg-placeholder: var(--todae-color-gray-400);
   --todae-color-on-accent: var(--todae-color-gray-50);
+  color-scheme: dark;
 }
 
 [data-density="compact"] {
@@ -226,6 +228,7 @@
   --todae-field-label-font-size: var(--todae-font-size-2);
   --todae-field-label-font-weight: var(--todae-font-weight-medium);
   --todae-field-label-gap: 0.4rem;
+  --todae-field-leading: var(--todae-font-leading-default);
   --todae-field-messages-gap: 0.2rem;
   --todae-field-min-width: var(--todae-space-12);
   --todae-field-padding-x: var(--todae-space-control-x);
