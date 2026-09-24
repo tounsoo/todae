@@ -97,6 +97,16 @@ pnpm typecheck
 
 Set the Vercel project Root Directory to `apps/docs`. `apps/docs/vercel.json` installs from the repo root, builds `@tounsoo/todae`, then builds the docs app.
 
+## Docs MCP
+
+Read-only Streamable HTTP MCP at `https://todae-rho.vercel.app/api/mcp` (`apps/docs/app/api/[transport]`).
+
+```json
+"todae-docs": { "url": "https://todae-rho.vercel.app/api/mcp" }
+```
+
+Tools: `list_components`, `get_component`, `when_to_use`. They read `@tounsoo/todae/schema/components.json` and `apps/docs/app/*/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
+
 ## Graft
 
 Graft is a repo-root dev tool. It is not a runtime dependency. Cursor wiring

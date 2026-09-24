@@ -3,6 +3,9 @@
     "graft": {
       "command": "npx",
       "args": ["-y", "@nanonets/graft@0.18.0", "mcp"]
+    },
+    "todae-docs": {
+      "url": "https://todae-rho.vercel.app/api/mcp"
     }
   }
 }
