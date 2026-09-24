@@ -26,6 +26,16 @@ const PART_PAGE: Record<string, string> = {
   DensityProvider: 'tokens',
 };
 
+/** Page-level When copy written for these names in addition to `page.title`. */
+const PAGE_OWNERS: Record<string, readonly string[]> = {
+  combobox: ['useCombobox'],
+  radio: ['RadioGroup'],
+};
+
+export function ownsPage(page: PageDoc, name: string): boolean {
+  return page.title === name || PAGE_OWNERS[page.slug]?.includes(name) === true;
+}
+
 function absolutize(markdown: string): string {
   return markdown.replace(/\]\(([^)\s]+)\)/g, (match, href: string) => {
     if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('#')) return match;

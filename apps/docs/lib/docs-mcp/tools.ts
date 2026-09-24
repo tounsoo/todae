@@ -1,4 +1,4 @@
-import { DOCS_ORIGIN, docsUrlFor, missingWhenNote, pageFor, parseWhen } from './mdx';
+import { DOCS_ORIGIN, docsUrlFor, missingWhenNote, ownsPage, pageFor, parseWhen } from './mdx';
 import { listComponentMeta, partsOf, resolveName, type ComponentMeta } from './meta';
 
 const SOURCE = 'todae-docs' as const;
@@ -27,7 +27,7 @@ export function listComponents() {
   const components = listComponentMeta().map((component) => {
     const page = pageFor(component.name);
     const copy = page ? parseWhen(page.markdown, component.name) : null;
-    const inherited = page != null && copy?.shared === true && page.title !== component.name;
+    const inherited = page != null && copy?.shared === true && !ownsPage(page, component.name);
     return {
       name: component.name,
       description: component.description,
@@ -70,7 +70,7 @@ export function whenToUse(name: string) {
     };
   }
   const copy = parseWhen(page.markdown, canonical);
-  const scope = copy?.shared && page.title !== canonical ? ('page' as const) : undefined;
+  const scope = copy?.shared && !ownsPage(page, canonical) ? ('page' as const) : undefined;
   if (!copy) {
     return {
       status: 'missing' as const,

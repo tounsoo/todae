@@ -67,6 +67,10 @@ describe('docs mcp tools', () => {
     expect(listed['OptionList.Option']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed['Field.Root']).toMatchObject({ hasWhenToUse: true });
     expect(listed['Field.Root']).not.toHaveProperty('scope');
+    expect(listed.useCombobox).toMatchObject({ hasWhenToUse: true });
+    expect(listed.useCombobox).not.toHaveProperty('scope');
+    expect(listed.RadioGroup).toMatchObject({ hasWhenToUse: true });
+    expect(listed.RadioGroup).not.toHaveProperty('scope');
 
     const sheet = whenToUse('BottomSheet');
     const part = whenToUse('BottomSheet.Title');
@@ -79,7 +83,10 @@ describe('docs mcp tools', () => {
       whenNotToUse: 'Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → `usePopover` alone.',
     });
     expect(hook).not.toHaveProperty('scope');
-    expect(combobox).toMatchObject({ status: 'present', scope: 'page' });
+    expect(combobox).toMatchObject({ status: 'present' });
+    expect(combobox).not.toHaveProperty('scope');
+    expect(whenToUse('RadioGroup')).toMatchObject({ status: 'present' });
+    expect(whenToUse('RadioGroup')).not.toHaveProperty('scope');
     expect(hook.whenToUse).not.toBe(combobox.whenToUse);
   });
 
@@ -189,6 +196,41 @@ describe('docs mcp tools', () => {
     expect(gaps.map((row) => row.name)).toEqual([]);
     for (const name of noDocsPage) {
       expect(whenToUse(name)).toMatchObject({ status: 'no-docs-page', docsUrl: null });
+    }
+    const own = [
+      'BottomSheet',
+      'Checkbox',
+      'Field.Affix',
+      'Field.ChipInput',
+      'Field.Icon',
+      'Field.Root',
+      'Field.TextInput',
+      'OptionList',
+      'Popover',
+      'Radio',
+      'RadioGroup',
+      'Switch',
+      'Tooltip',
+      'useCombobox',
+      'Button.Icon',
+      'Button.Root',
+      'ButtonGroup',
+      'Chip',
+      'DensityProvider',
+      'Description',
+      'Dialog',
+      'ErrorMessage',
+      'Label',
+      'Stack',
+      'Text',
+      'ThemeProvider',
+      'useChipField',
+      'useSheetPresentation',
+    ];
+    const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));
+    for (const name of own) {
+      expect(listed[name]).toMatchObject({ hasWhenToUse: true });
+      expect(listed[name]).not.toHaveProperty('scope');
     }
   });
 
