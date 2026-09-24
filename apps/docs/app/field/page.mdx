@@ -117,26 +117,31 @@ Disabled and invalid live on `Field.Root`.
 ### Field.Root
 
 **When:** Shared field chrome for one text or chip input — focus ring, disabled/invalid, density. Value lives on the input part.
+
 **When not:** Selection controls (Checkbox / Radio / Switch). Overlay triggers that are buttons. Nesting another compound root inside.
 
 ### Field.TextInput
 
 **When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password).
+
 **When not:** Multi-value tokens → `Field.ChipInput`. Multi-line → Textarea (not shipped). Standalone without Root.
 
 ### Field.ChipInput
 
 **When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`.
+
 **When not:** Free-form single string → TextInput. Options from a list → Combobox recipe + OptionList.
 
 ### Field.Icon
 
 **When:** Leading/trailing icon or icon control inside Root. Position = DOM order. Decorative → `interactive={false}` (aria-hidden).
+
 **When not:** Text adornments → Affix. Clickable clear/reveal as a dedicated Action (not shipped).
 
 ### Field.Affix
 
 **When:** Static text adornment (currency, unit) inside Root. Order = position.
+
 **When not:** Icons → Icon. Interactive controls — Affix is not clickable.
 
 ## Props

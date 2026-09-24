@@ -69,6 +69,7 @@ Selecting in `OptionList` does not close the popover. The fruit demo closes on s
 ## When to use
 
 **When:** Non-modal anchored surface (menus, Combobox desktop list, light panels). Use `usePopover` + surface-only `Popover` — open/dismiss on the hook, chrome on the surface. Outside click + Escape dismiss. No focus trap.
+
 **When not:** Modal / focus-trapped work → Dialog. Mobile full-bleed picker → BottomSheet. Text-only hover hint → Tooltip.
 
 ## Props
