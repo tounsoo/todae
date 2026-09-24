@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { createRef } from 'react';
@@ -28,6 +31,7 @@ describe('Field exports', () => {
     expect(api.Field).toEqual({
       Root: Field.Root,
       TextInput: Field.TextInput,
+      Textarea: Field.Textarea,
       ChipInput: Field.ChipInput,
       Icon: Field.Icon,
       Affix: Field.Affix,
@@ -153,6 +157,156 @@ describe('Field.TextInput', () => {
     expectTypeOf<NonNullable<FieldTextInputProps['type']>>().toEqualTypeOf<
       'text' | 'search' | 'email' | 'url' | 'tel' | 'password'
     >();
+  });
+});
+
+const fieldCss = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Field.module.css'), 'utf8');
+
+describe('Field.Textarea', () => {
+  it('sets native rows, css vars, and data attributes from coerced integers', () => {
+    const { container } = render(
+      <Field.Root>
+        <Field.Textarea value="note" onChange={() => undefined} rows={4} maxRows={6} autoGrow />
+      </Field.Root>,
+    );
+    const textarea = container.querySelector('textarea');
+    expect(textarea).toHaveProperty('rows', 4);
+    expect(textarea?.style.getPropertyValue('--todae-field-rows')).toBe('4');
+    expect(textarea?.style.getPropertyValue('--todae-field-max-rows')).toBe('6');
+    expect(textarea?.hasAttribute('data-auto-grow')).toBe(true);
+    expect(textarea?.getAttribute('data-max-rows')).toBe('6');
+    expect(textarea?.hasAttribute('maxRows')).toBe(false);
+    expect(textarea?.hasAttribute('autoGrow')).toBe(false);
+    expect(textarea?.outerHTML).not.toContain('autoGrow');
+    expect(textarea?.outerHTML).not.toContain('maxRows');
+  });
+
+  it('omits the cap attributes when autoGrow and maxRows are off', () => {
+    const { container } = render(
+      <Field.Root>
+        <Field.Textarea value="" onChange={() => undefined} />
+      </Field.Root>,
+    );
+    const textarea = container.querySelector('textarea');
+    expect(textarea).toHaveProperty('rows', 3);
+    expect(textarea?.style.getPropertyValue('--todae-field-rows')).toBe('3');
+    expect(textarea?.style.getPropertyValue('--todae-field-max-rows')).toBe('');
+    expect(textarea?.hasAttribute('data-auto-grow')).toBe(false);
+    expect(textarea?.hasAttribute('data-max-rows')).toBe(false);
+  });
+
+  it('rejects a hostile rows value instead of injecting css', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { container } = render(
+      <Field.Root>
+        <Field.Textarea value="" onChange={() => undefined} rows={'3); color: red' as never} />
+      </Field.Root>,
+    );
+    const textarea = container.querySelector('textarea');
+    expect(textarea).toHaveProperty('rows', 3);
+    expect(textarea?.getAttribute('style')).toBe('--todae-field-rows: 3;');
+    expect(textarea?.getAttribute('style')).not.toContain('color');
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('wires label, description, invalid, disabled, name, and native props', () => {
+    const onBlur = vi.fn();
+    const onValueChange = vi.fn();
+    const ref = createRef<HTMLTextAreaElement>();
+    render(
+      <>
+        <label htmlFor="note">Note</label>
+        <Field.Root id="note" name="bio" disabled invalid aria-describedby="hint">
+          <Field.Textarea
+            ref={ref}
+            value="kept"
+            maxLength={20}
+            onBlur={onBlur}
+            onValueChange={onValueChange}
+            onChange={() => undefined}
+          />
+        </Field.Root>
+      </>,
+    );
+    const textarea = screen.getByLabelText('Note');
+    expect(textarea.tagName).toBe('TEXTAREA');
+    expect(textarea.getAttribute('aria-describedby')).toBe('hint');
+    expect(textarea.getAttribute('aria-invalid')).toBe('true');
+    expect(textarea).toHaveProperty('disabled', true);
+    expect(textarea).toHaveProperty('name', 'bio');
+    expect(textarea).toHaveProperty('maxLength', 20);
+    expect(textarea).toHaveProperty('value', 'kept');
+    expect(ref.current).toBe(textarea);
+    const shell = textarea.parentElement;
+    expect(shell?.hasAttribute('data-invalid')).toBe(true);
+    expect(shell?.hasAttribute('data-disabled')).toBe(true);
+    fireEvent.blur(textarea);
+    expect(onBlur).toHaveBeenCalled();
+    fireEvent.change(textarea, { target: { value: 'next' } });
+    expect(onValueChange).toHaveBeenCalledWith('next');
+    expect(textarea).toHaveProperty('value', 'kept');
+  });
+
+  it('focuses the textarea from the shell', () => {
+    const { container } = render(
+      <Field.Root>
+        <Field.Textarea value="" onChange={() => undefined} />
+      </Field.Root>,
+    );
+    const shell = container.firstElementChild as HTMLElement;
+    fireEvent.mouseDown(shell);
+    expect(document.activeElement).toBe(container.querySelector('textarea'));
+  });
+
+  it('matches SSR markup', () => {
+    const html = renderToString(
+      <Field.Root id="note" name="bio">
+        <Field.Textarea value="hi" onChange={() => undefined} rows={4} maxRows={6} />
+      </Field.Root>,
+    );
+    expect(html).toContain('<textarea');
+    expect(html).toContain('id="note"');
+    expect(html).toContain('name="bio"');
+    expect(html).toContain('rows="4"');
+    expect(html).toContain('--todae-field-rows:4');
+    expect(html).toContain('--todae-field-max-rows:6');
+    expect(html).not.toContain('data-auto-grow');
+  });
+
+  it('does not size with listeners', () => {
+    const observe = vi.fn();
+    class ResizeObserver {
+      observe = observe;
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    }
+    vi.stubGlobal('ResizeObserver', ResizeObserver);
+    const add = vi.spyOn(HTMLTextAreaElement.prototype, 'addEventListener');
+    const { container } = render(
+      <Field.Root>
+        <Field.Textarea value="hi" onChange={() => undefined} autoGrow maxRows={4} />
+      </Field.Root>,
+    );
+    expect(observe).not.toHaveBeenCalled();
+    const types = add.mock.calls.map(([type]) => type);
+    expect(types).not.toContain('input');
+    expect(container.querySelector('textarea')?.oninput).toBeNull();
+    add.mockRestore();
+    vi.unstubAllGlobals();
+  });
+
+  it('sizes with css only and floors resize at rows', () => {
+    const supports = fieldCss.indexOf('@supports (field-sizing: content)');
+    expect(supports).toBeGreaterThan(-1);
+    expect(fieldCss.slice(0, supports)).not.toContain('field-sizing');
+    expect(fieldCss.slice(supports)).toContain('field-sizing: content');
+    expect(fieldCss).toMatch(/\.textarea\[data-auto-grow\]\s*\{[^}]*resize:\s*none/);
+    expect(fieldCss).toContain('.shell:has(:is(input, textarea):focus-visible)');
+    expect(fieldCss).toMatch(/\.textarea\s*\{[^}]*outline:\s*none/);
+    expect(fieldCss).toContain('min-height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block))');
+    expect(fieldCss).not.toContain('min-height: calc(1lh');
+    expect(fieldCss).not.toContain('min-height: calc(var(--todae-field-leading) * 1em');
   });
 });
 

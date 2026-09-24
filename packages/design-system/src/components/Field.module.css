@@ -15,7 +15,13 @@
     border-color: var(--todae-field-border-hover);
   }
 
-  .shell:has(input:focus-visible) {
+  .shell:has(> .textarea) {
+    padding: 0;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .shell:has(:is(input, textarea):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: 2px solid var(--todae-field-ring-focus);
     outline-offset: 2px;
@@ -25,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(input:focus-visible) {
+  .shell[data-invalid]:has(:is(input, textarea):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 
@@ -54,6 +60,54 @@
   }
 
   .input:disabled {
+    color: var(--todae-field-fg-disabled);
+  }
+
+  .textarea {
+    --_pad-block: calc(2 * var(--todae-field-padding-y));
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: var(--todae-field-padding-y) var(--todae-field-padding-x);
+    border: 0;
+    background: transparent;
+    color: var(--todae-field-fg-default);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-field-leading);
+    outline: none;
+    overflow-y: auto;
+    resize: vertical;
+    height: calc(var(--todae-field-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
+    height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block));
+    min-height: calc(var(--todae-field-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
+    min-height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block));
+  }
+
+  .textarea[data-max-rows] {
+    max-height: calc(var(--todae-field-max-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
+    max-height: calc(var(--todae-field-max-rows) * 1lh + var(--_pad-block));
+  }
+
+  .textarea[data-auto-grow] {
+    resize: none;
+  }
+
+  @supports (field-sizing: content) {
+    .textarea[data-auto-grow] {
+      field-sizing: content;
+      height: auto;
+      min-height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block));
+    }
+  }
+
+  .textarea::placeholder {
+    color: var(--todae-field-fg-placeholder);
+  }
+
+  .textarea:disabled {
     color: var(--todae-field-fg-disabled);
   }
 

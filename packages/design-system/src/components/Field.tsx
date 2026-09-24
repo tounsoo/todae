@@ -12,10 +12,12 @@ import {
   type ReactNode,
   type Ref,
   type RefObject,
+  type TextareaHTMLAttributes,
 } from 'react';
 import { Chip } from './Chip';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
+import { resolveTextareaRows } from './textareaRows';
 import { useChipMeasure } from './useChipMeasure';
 
 export type FieldRootProps = {
@@ -40,7 +42,7 @@ type FieldContextValue = {
   describedBy?: string;
   labelledBy?: string;
   ariaLabel?: string;
-  inputRef: RefObject<HTMLInputElement | null>;
+  inputRef: RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
 };
 
 const FieldContext = createContext<FieldContextValue | null>(null);
@@ -84,7 +86,7 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 
 function Root({ disabled, invalid, id, name, className, style, ref, children, ...aria }: FieldRootProps) {
   const autoId = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const inputId = id ?? autoId;
 
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
@@ -159,6 +161,66 @@ function TextInput({
       value={value}
       type={type}
       className={[styles.input, className].filter(Boolean).join(' ')}
+      onChange={(event) => {
+        onChange(event);
+        onValueChange?.(event.target.value);
+      }}
+    />
+  );
+}
+
+export type FieldTextareaProps = {
+  value: string;
+  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  onValueChange?: (value: string) => void;
+  placeholder?: string;
+  rows?: number;
+  maxRows?: number;
+  autoGrow?: boolean;
+  ref?: Ref<HTMLTextAreaElement>;
+} & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'disabled' | 'onChange' | 'rows' | 'cols'>;
+
+function Textarea({
+  value,
+  onChange,
+  onValueChange,
+  rows: rowsProp,
+  maxRows: maxRowsProp,
+  autoGrow = false,
+  className,
+  style,
+  ref,
+  ...props
+}: FieldTextareaProps) {
+  const ctx = useField();
+  const resolved = resolveTextareaRows({ rows: rowsProp, maxRows: maxRowsProp });
+  return (
+    <textarea
+      {...props}
+      ref={(node) => {
+        ctx.inputRef.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) ref.current = node;
+      }}
+      id={ctx.inputId}
+      name={ctx.name}
+      disabled={ctx.disabled}
+      aria-invalid={ctx.invalid || undefined}
+      aria-describedby={ctx.describedBy}
+      aria-labelledby={ctx.labelledBy}
+      aria-label={ctx.ariaLabel}
+      value={value}
+      rows={resolved.rows}
+      data-auto-grow={autoGrow ? '' : undefined}
+      data-max-rows={resolved.maxRows}
+      className={[styles.textarea, className].filter(Boolean).join(' ')}
+      style={
+        {
+          ...style,
+          '--todae-field-rows': resolved.rows,
+          '--todae-field-max-rows': resolved.maxRows,
+        } as CSSProperties
+      }
       onChange={(event) => {
         onChange(event);
         onValueChange?.(event.target.value);
@@ -293,4 +355,4 @@ function ChipInput({
   );
 }
 
-export const Field = { Root, TextInput, ChipInput, Icon, Affix } as const;
+export const Field = { Root, TextInput, Textarea, ChipInput, Icon, Affix } as const;
