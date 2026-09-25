@@ -163,10 +163,6 @@
     white-space: nowrap;
     flex-shrink: 0;
     padding: 0;
-    font-size: var(--todae-field-description-font-size);
-    font-variant-numeric: tabular-nums;
-    font-weight: var(--todae-field-description-font-weight);
-    color: var(--todae-field-description-fg);
   }
 
   .shell:has(> .textarea):has(> [data-todae-counter]) {
@@ -178,25 +174,32 @@
     padding: 0 var(--todae-field-padding-x) var(--todae-field-padding-y);
   }
 
-  .shell:has(> [data-todae-counter]) > [data-todae-counter][data-limit] {
+  .counter {
+    font-size: var(--todae-field-description-font-size);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--todae-field-description-font-weight);
+    color: var(--todae-field-description-fg);
+  }
+
+  .counter[data-limit] {
     color: var(--todae-field-fg-default);
     font-weight: var(--todae-field-counter-emphasis-weight);
   }
 
-  .shell:has(> [data-todae-counter]) > [data-todae-counter][data-over],
-  .shell:has(> [data-todae-counter]) > [data-todae-counter][data-invalid] {
+  .counter[data-over],
+  .counter[data-invalid] {
     color: var(--todae-field-error-fg);
   }
 
-  .shell:has(> [data-todae-counter]) > [data-todae-counter][data-over] {
+  .counter[data-over] {
     font-weight: var(--todae-field-counter-emphasis-weight);
   }
 
-  .shell:has(> [data-todae-counter]) > [data-todae-counter][data-disabled] {
+  .counter[data-disabled] {
     color: var(--todae-field-fg-disabled);
   }
 
-  .shell:has(> [data-todae-counter]) .srOnly {
+  .srOnly {
     position: absolute;
     width: 1px;
     height: 1px;

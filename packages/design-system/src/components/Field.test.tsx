@@ -765,6 +765,24 @@ describe('Field.Counter', () => {
     expect(fieldCss).toContain('padding-right: var(--todae-field-gap)');
   });
 
+  it('keeps the hint hidden when the counter is not a shell child', () => {
+    const { container } = render(
+      <Field.Root>
+        <div>
+          <Field.TextInput value="hello" maxLength={10} onChange={() => undefined} />
+          <Field.Counter />
+        </div>
+      </Field.Root>,
+    );
+    const hidden = [...container.querySelectorAll('[class*="srOnly"]')];
+    expect(hidden.some((node) => node.textContent === 'Up to 10 characters')).toBe(true);
+    expect(hidden.some((node) => node.getAttribute('aria-live') === 'polite')).toBe(true);
+    for (const line of fieldCss.split('\n')) {
+      if (!line.includes('{')) continue;
+      if (line.includes('.srOnly') || line.includes('.counter')) expect(line).not.toContain(':has');
+    }
+  });
+
   it('server-renders the count and hydrates', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const trees = [
