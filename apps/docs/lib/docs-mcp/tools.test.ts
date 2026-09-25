@@ -198,6 +198,14 @@ describe('docs mcp tools', () => {
         'Single-line values, use `Field.TextInput`. Separate tags or tokens, use `Field.ChipInput`. Rich text or formatting, not shipped.',
     });
     expect(whenToUse('Field.Textarea')).not.toHaveProperty('scope');
+    expect(whenToUse('Field.Counter')).toMatchObject({
+      status: 'present',
+      whenToUse:
+        'Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise.',
+      whenNotToUse:
+        'For a hard limit with no visible count, set `maxLength` alone, and skip it on short fixed-length values like codes or PINs.',
+    });
+    expect(JSON.stringify(whenToUse('Field.Counter'))).not.toContain('Footer');
     expect(whenToUse('Field')).toMatchObject({
       status: 'missing',
       docsUrl: 'https://todae-rho.vercel.app/field',
@@ -214,6 +222,7 @@ describe('docs mcp tools', () => {
       'Checkbox',
       'Field.Affix',
       'Field.ChipInput',
+      'Field.Counter',
       'Field.Icon',
       'Field.Root',
       'Field.TextInput',

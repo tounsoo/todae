@@ -1712,6 +1712,15 @@
       "context": null
     },
     {
+      "path": "field.counter.emphasis.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-field-counter-emphasis-weight",
+      "cssValue": "600",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.description.fg",
       "type": "color",
       "cssVar": "--todae-field-description-fg",

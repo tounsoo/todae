@@ -285,6 +285,92 @@ export function ChipInputLabel() {
   );
 }
 
+export function CounterDefault() {
+  const [value, setValue] = useState('Hello');
+  return (
+    <Field.Root>
+      <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
+      <Field.Counter />
+    </Field.Root>
+  );
+}
+
+export function CounterInline() {
+  const [value, setValue] = useState('Hello');
+  const [note, setNote] = useState('Notes');
+  return (
+    <>
+      <Field.Root>
+        <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
+        <Field.Counter style={{ flexBasis: 'auto' }} />
+      </Field.Root>
+      <Field.Root>
+        <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={80} />
+        <Field.Counter style={{ flexBasis: 'auto' }} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} />
+      </Field.Root>
+    </>
+  );
+}
+
+export function CounterNarrow() {
+  const [value, setValue] = useState('Hi');
+  return (
+    <div style={{ width: 160 }}>
+      <Field.Root>
+        <Field.Affix>$</Field.Affix>
+        <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
+        <Field.Counter style={{ flexBasis: 'auto' }} />
+      </Field.Root>
+    </div>
+  );
+}
+
+export function CounterBefore() {
+  const [value, setValue] = useState('Hello');
+  return (
+    <Field.Root>
+      <Field.Counter />
+      <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
+    </Field.Root>
+  );
+}
+
+export function CounterTextarea() {
+  const [value, setValue] = useState('Notes');
+  return (
+    <Field.Root>
+      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} maxLength={80} />
+      <Field.Counter />
+    </Field.Root>
+  );
+}
+
+export function CounterOver() {
+  const [value, setValue] = useState('Too long');
+  return (
+    <Field.Root>
+      <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={4} />
+      <Field.Counter />
+    </Field.Root>
+  );
+}
+
+export function CounterPlain() {
+  const [value, setValue] = useState('Hello');
+  return (
+    <Field.Root>
+      <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
+      <Field.Counter />
+    </Field.Root>
+  );
+}
+
 export function ChipInputStates() {
   return (
     <>

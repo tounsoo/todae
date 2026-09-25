@@ -3,7 +3,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
-import { createRef } from 'react';
+import { createRef, Profiler, StrictMode, useState } from 'react';
+import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import {
@@ -35,6 +36,7 @@ describe('Field exports', () => {
       ChipInput: Field.ChipInput,
       Icon: Field.Icon,
       Affix: Field.Affix,
+      Counter: Field.Counter,
     });
     expect(api.Field).not.toHaveProperty('Label');
     expectTypeOf<typeof Field>().not.toHaveProperty('Label');
@@ -718,5 +720,328 @@ describe('Field.ChipInput maxRows SSR', () => {
     expect(html).not.toContain('data-max-rows');
     expect(html).not.toContain('data-measured');
     expect(html).not.toContain('--todae-field-chip-rows');
+  });
+});
+
+describe('Field.Counter', () => {
+  const bareInput =
+    '<div class="_shell_61a677"><input id="_R_0_" type="text" class="_input_61a677" value=""/></div>';
+  const bareArea =
+    '<div class="_shell_61a677"><textarea id="_R_0_" rows="3" class="_textarea_61a677" style="--todae-field-rows:3"></textarea></div>';
+
+  it('keeps bare server markup and scopes new layout rules under :has', () => {
+    expect(
+      renderToString(
+        <Field.Root>
+          <Field.TextInput value="" onChange={() => undefined} />
+        </Field.Root>,
+      ),
+    ).toBe(bareInput);
+    expect(
+      renderToString(
+        <Field.Root>
+          <Field.Textarea value="" onChange={() => undefined} />
+        </Field.Root>,
+      ),
+    ).toBe(bareArea);
+    expect(fieldCss).not.toContain('display: grid');
+    expect(fieldCss).not.toContain('grid-template');
+    expect(fieldCss).not.toContain('Field.Footer');
+    const layout = fieldCss.slice(fieldCss.indexOf('.shell:has(> [data-todae-counter])'));
+    expect(layout).toContain('flex-wrap: wrap');
+    expect(fieldCss.slice(0, fieldCss.indexOf('.shell:has(> [data-todae-counter])'))).not.toContain(
+      '.shell:has(> [data-todae-counter])',
+    );
+    expect(fieldCss).toContain('flex: 0 0 100%');
+    expect(fieldCss).toContain('order: 1');
+    expect(fieldCss).not.toContain('flex-basis: auto');
+    expect(fieldCss).toContain('row-gap: var(--todae-field-messages-gap)');
+    expect(fieldCss).toContain('row-gap: 0');
+    expect(fieldCss).toContain('border-end-end-radius: calc(var(--todae-field-radius) - 1px)');
+    expect(fieldCss).not.toMatch(/scrollbar|::?-webkit-resizer|grip/);
+    expect(fieldCss).toContain('.shell:has(> .textarea) > .adornment');
+    expect(fieldCss).toContain('height: 1lh');
+    expect(fieldCss).toContain('padding-left: var(--todae-field-gap)');
+    expect(fieldCss).toContain('padding-right: var(--todae-field-gap)');
+  });
+
+  it('server-renders the count and hydrates', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const trees = [
+      () => (
+        <Field.Root>
+          <Field.TextInput value="hello" onChange={() => undefined} maxLength={10} />
+          <Field.Counter />
+        </Field.Root>
+      ),
+      () => (
+        <Field.Root>
+          <Field.Textarea value="hello" onChange={() => undefined} maxLength={10} />
+          <Field.Counter />
+        </Field.Root>
+      ),
+    ];
+    for (const tree of trees) {
+      const html = renderToString(tree());
+      expect(html).toContain('5 / 10');
+      const host = document.createElement('div');
+      document.body.appendChild(host);
+      host.innerHTML = html;
+      await act(async () => {
+        hydrateRoot(host, tree());
+      });
+      host.remove();
+    }
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('types under StrictMode with the counter before or after the input', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    function Harness({ first }: { first: boolean }) {
+      const [value, setValue] = useState('a');
+      const counter = <Field.Counter />;
+      const input = (
+        <Field.TextInput value={value} maxLength={10} onChange={(event) => setValue(event.target.value)} />
+      );
+      return <Field.Root>{first ? <>{counter}{input}</> : <>{input}{counter}</>}</Field.Root>;
+    }
+    for (const first of [true, false]) {
+      const view = render(
+        <StrictMode>
+          <Harness first={first} />
+        </StrictMode>,
+      );
+      fireEvent.change(view.container.querySelector('input') as HTMLInputElement, { target: { value: 'ab' } });
+      expect(view.container.textContent).toContain('2 / 10');
+      view.unmount();
+    }
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('re-renders only the counter while typing', () => {
+    const counts = { root: 0, icon: 0, affix: 0, counter: 0 };
+    function Value() {
+      const [value, setValue] = useState('a');
+      return <Field.TextInput value={value} maxLength={10} onChange={(event) => setValue(event.target.value)} />;
+    }
+    function Probe({ name }: { name: 'root' | 'icon' | 'affix' }) {
+      counts[name] += 1;
+      return null;
+    }
+    const view = render(
+      <Field.Root>
+        <Probe name="root" />
+        <Probe name="icon" />
+        <Field.Icon>i</Field.Icon>
+        <Probe name="affix" />
+        <Field.Affix>$</Field.Affix>
+        <Value />
+        <Profiler id="counter" onRender={() => (counts.counter += 1)}>
+          <Field.Counter />
+        </Profiler>
+      </Field.Root>,
+    );
+    const before = { ...counts };
+    fireEvent.change(view.container.querySelector('input') as HTMLInputElement, { target: { value: 'ab' } });
+    expect(counts.root).toBe(before.root);
+    expect(counts.icon).toBe(before.icon);
+    expect(counts.affix).toBe(before.affix);
+    expect(counts.counter).toBeGreaterThan(before.counter);
+  });
+
+  it('does not listen on the input when a counter is present', () => {
+    const add = vi.spyOn(HTMLInputElement.prototype, 'addEventListener');
+    const addArea = vi.spyOn(HTMLTextAreaElement.prototype, 'addEventListener');
+    const view = render(
+      <Field.Root>
+        <Field.TextInput value="a" onChange={() => undefined} maxLength={10} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    expect(add.mock.calls.map(([type]) => type)).not.toContain('input');
+    view.unmount();
+    render(
+      <Field.Root>
+        <Field.Textarea value="a" onChange={() => undefined} maxLength={10} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    expect(addArea.mock.calls.map(([type]) => type)).not.toContain('input');
+    add.mockRestore();
+    addArea.mockRestore();
+  });
+
+  it('merges describedby on both inputs', () => {
+    for (const input of ['input', 'textarea'] as const) {
+      const view = render(
+        <Field.Root aria-describedby="desc err">
+          {input === 'input' ? (
+            <Field.TextInput value="hi" maxLength={10} aria-describedby="own" onChange={() => undefined} />
+          ) : (
+            <Field.Textarea value="hi" maxLength={10} aria-describedby="own" onChange={() => undefined} />
+          )}
+          <Field.Counter />
+        </Field.Root>,
+      );
+      const hint = view.container.querySelector('[id]') as HTMLElement;
+      const described = view.container.querySelector(input)?.getAttribute('aria-describedby');
+      const hintId = view.container.querySelector('.srOnly, [class*="srOnly"]')?.id;
+      expect(hintId).toBeTruthy();
+      expect(described).toBe(`desc err own ${hintId}`);
+      expect(hint).toBeTruthy();
+      view.unmount();
+    }
+  });
+
+  it('announces the limit from the first paint and hides the number', () => {
+    const view = render(
+      <Field.Root>
+        <Field.TextInput value="hello!!!!!" maxLength={12} onChange={() => undefined} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    const live = view.container.querySelector('[aria-live="polite"]');
+    expect(live).toBeTruthy();
+    expect(live?.textContent).toBe('2 characters left');
+    expect(view.container.querySelector('[aria-hidden="true"]')?.textContent).toBe('10 / 12');
+    view.unmount();
+    const one = render(
+      <Field.Root>
+        <Field.Textarea value="123456789" maxLength={10} onChange={() => undefined} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    expect(one.container.querySelector('[aria-live="polite"]')?.textContent).toBe('1 character left');
+    one.unmount();
+    const none = render(
+      <Field.Root>
+        <Field.TextInput value="1234567890" maxLength={10} onChange={() => undefined} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    expect(none.container.querySelector('[aria-live="polite"]')?.textContent).toBe('Character limit reached');
+    none.unmount();
+    const room = render(
+      <Field.Root>
+        <Field.TextInput value="a" maxLength={40} onChange={() => undefined} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    expect(room.container.querySelector('[aria-live="polite"]')?.textContent).toBe('');
+    expect(room.container.textContent).toContain('Up to 40 characters');
+  });
+
+  it('shows a plain count without a hint when maxLength is omitted', () => {
+    const { container } = render(
+      <Field.Root>
+        <Field.Textarea value="abcd" onChange={() => undefined} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    expect(container.textContent).toContain('4');
+    expect(container.textContent).not.toContain('/');
+    expect(container.querySelector('[aria-live]')).toBeNull();
+    expect(container.textContent).not.toContain('Up to');
+  });
+
+  it('uses different hint ids on two fields', () => {
+    const { container } = render(
+      <>
+        <Field.Root>
+          <Field.TextInput value="a" maxLength={5} onChange={() => undefined} />
+          <Field.Counter />
+        </Field.Root>
+        <Field.Root>
+          <Field.Textarea value="b" maxLength={5} onChange={() => undefined} />
+          <Field.Counter />
+        </Field.Root>
+      </>,
+    );
+    const ids = [...container.querySelectorAll('[id]')].map((node) => node.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.filter((id) => container.querySelector(`input, textarea`) && id).length).toBeGreaterThan(1);
+  });
+
+  it('warns once outside Root and once with no input', async () => {
+    vi.resetModules();
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const mod = await import('./Field');
+    const { render: renderFresh } = await import('@testing-library/react');
+    renderFresh(<mod.Field.Counter />);
+    renderFresh(<mod.Field.Counter />);
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    cleanup();
+    vi.resetModules();
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const again = await import('./Field');
+    renderFresh(
+      <again.Field.Root>
+        <again.Field.Counter />
+      </again.Field.Root>,
+    );
+    renderFresh(
+      <again.Field.Root>
+        <again.Field.Counter />
+      </again.Field.Root>,
+    );
+    expect(console.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('sets limit, over, invalid, and disabled without marking the shell for a long value', () => {
+    const over = render(
+      <Field.Root>
+        <Field.TextInput value="abcdef" maxLength={3} onChange={() => undefined} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    const counter = over.container.querySelector('[data-todae-counter]');
+    expect(counter?.hasAttribute('data-over')).toBe(true);
+    expect(counter?.hasAttribute('data-limit')).toBe(false);
+    expect(over.container.firstElementChild?.hasAttribute('data-invalid')).toBe(false);
+    over.unmount();
+    const limit = render(
+      <Field.Root invalid disabled>
+        <Field.Textarea value="abc" maxLength={3} onChange={() => undefined} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    const node = limit.container.querySelector('[data-todae-counter]');
+    expect(node?.hasAttribute('data-limit')).toBe(true);
+    expect(node?.hasAttribute('data-invalid')).toBe(true);
+    expect(node?.hasAttribute('data-disabled')).toBe(true);
+  });
+
+  it('orders a leading counter to the end and does not announce the number twice', () => {
+    const { container } = render(
+      <Field.Root>
+        <Field.Counter />
+        <Field.TextInput value="hello" maxLength={40} onChange={() => undefined} />
+      </Field.Root>,
+    );
+    expect(fieldCss).toMatch(/\[data-todae-counter\]\s*\{[^}]*order:\s*1/);
+    const counter = container.querySelector('[data-todae-counter]');
+    expect(counter?.querySelector('[aria-hidden="true"]')?.textContent).toBe('5 / 40');
+    expect(container.querySelectorAll('[aria-live="polite"]')).toHaveLength(1);
+    expect(container.querySelector('[aria-live="polite"]')?.textContent).toBe('');
+  });
+
+  it('warns once for a bad rows value', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    function Box() {
+      const [value, setValue] = useState('a');
+      return (
+        <Field.Root>
+          <Field.Textarea value={value} rows={0} onChange={(event) => setValue(event.target.value)} />
+        </Field.Root>
+      );
+    }
+    const view = render(<Box />);
+    const calls = warn.mock.calls.length;
+    fireEvent.change(view.container.querySelector('textarea') as HTMLTextAreaElement, { target: { value: 'ab' } });
+    expect(warn.mock.calls.length).toBe(calls);
+    expect(calls).toBeGreaterThan(0);
+    warn.mockRestore();
   });
 });

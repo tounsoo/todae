@@ -212,6 +212,7 @@
   --todae-field-border-focus: var(--todae-color-accent-default);
   --todae-field-border-hover: var(--todae-color-border-default);
   --todae-field-border-invalid: var(--todae-color-danger-default);
+  --todae-field-counter-emphasis-weight: 600;
   --todae-field-description-fg: var(--todae-color-fg-muted);
   --todae-field-description-font-size: var(--todae-font-size-2);
   --todae-field-description-font-weight: var(--todae-font-weight-regular);

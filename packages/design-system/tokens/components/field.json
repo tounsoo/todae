@@ -56,6 +56,11 @@
     },
     "messages": {
       "gap": { "$type": "dimension", "$value": { "value": 0.2, "unit": "rem" } }
+    },
+    "counter": {
+      "emphasis": {
+        "weight": { "$type": "fontWeight", "$value": 600 }
+      }
     }
   }
 }

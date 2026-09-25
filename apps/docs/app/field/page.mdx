@@ -10,6 +10,13 @@ import {
   FieldLabelAdornments,
   FieldLabelStates,
   FieldStates,
+  CounterBefore,
+  CounterDefault,
+  CounterInline,
+  CounterNarrow,
+  CounterOver,
+  CounterPlain,
+  CounterTextarea,
   TextareaAutoGrow,
   TextareaDark,
   TextareaDensity,
@@ -123,6 +130,48 @@ Label, description, error, invalid, and disabled.
   <TextareaMessages />
 </Example>
 
+## Counter
+
+`Field.Counter` shows a live count for `Field.TextInput` or `Field.Textarea`. It takes its own row. Write it after the input so the server HTML includes the count. One counter per `Field.Root`. The input stays controlled; `defaultValue` is not read.
+
+<Example block>
+  <CounterDefault />
+</Example>
+
+On the same row, set `flex-basis: auto` on the Counter and still write it last. On a textarea that inline count sits on the last line. The bare field under each pair is the height check.
+
+<Example block>
+  <CounterInline />
+</Example>
+
+A narrow field. An inline count wider than the row can wrap under the input.
+
+<Example block>
+  <CounterNarrow />
+</Example>
+
+A Counter written before the input still sits on the bottom row. Prefer writing it after the input so the count is in the server HTML.
+
+<Example block>
+  <CounterBefore />
+</Example>
+
+<Example block>
+  <CounterTextarea />
+</Example>
+
+Past `maxLength` the count uses the error color. The shell stays as it is.
+
+<Example block>
+  <CounterOver />
+</Example>
+
+Without `maxLength` the count is just the number.
+
+<Example block>
+  <CounterPlain />
+</Example>
+
 ## Chip input
 
 Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow.
@@ -200,6 +249,11 @@ Disabled and invalid live on `Field.Root`.
 
 **When not:** Icons → Icon. Interactive controls — Affix is not clickable.
 
+### Field.Counter
+
+**When:** Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise.
+**When not:** For a hard limit with no visible count, set `maxLength` alone, and skip it on short fixed-length values like codes or PINs.
+
 ### useChipField
 
 **When:** Optional state helper for `Field.ChipInput`: chips, input value, dedupe, and `transform` on commit.
@@ -219,5 +273,7 @@ Disabled and invalid live on `Field.Root`.
 <PropsTable name="Field.Icon" />
 
 <PropsTable name="Field.Affix" />
+
+<PropsTable name="Field.Counter" />
 
 <PropsTable name="useChipField" />

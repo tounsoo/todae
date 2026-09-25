@@ -47,6 +47,7 @@ export {
   Field,
   type FieldAffixProps,
   type FieldChipInputProps,
+  type FieldCounterProps,
   type FieldIconProps,
   type FieldRootProps,
   type FieldTextInputProps,

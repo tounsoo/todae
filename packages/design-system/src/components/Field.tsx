@@ -1,9 +1,12 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useId,
   useMemo,
   useRef,
+  useState,
+  useSyncExternalStore,
   type ChangeEvent,
   type CSSProperties,
   type InputHTMLAttributes,
@@ -34,8 +37,63 @@ export type FieldRootProps = {
   children?: ReactNode;
 };
 
+type CountEntry = { value: string; maxLength?: number };
+
+type CountStore = {
+  entry: CountEntry | null;
+  counters: number;
+  listeners: Set<() => void>;
+  presence: Set<() => void>;
+};
+
+function createCountStore(): CountStore {
+  return { entry: null, counters: 0, listeners: new Set(), presence: new Set() };
+}
+
+function publishCount(store: CountStore, value: string, maxLength: number | undefined) {
+  const prev = store.entry;
+  if (prev && prev.value === value && prev.maxLength === maxLength) return;
+  store.entry = { value, maxLength };
+}
+
+function subscribeCount(store: CountStore, listener: () => void) {
+  store.listeners.add(listener);
+  return () => {
+    store.listeners.delete(listener);
+  };
+}
+
+function subscribePresence(store: CountStore, listener: () => void) {
+  store.presence.add(listener);
+  return () => {
+    store.presence.delete(listener);
+  };
+}
+
+function counterMounted(store: CountStore) {
+  return store.counters > 0;
+}
+
+function mergeDescribedBy(root?: string, own?: string, hint?: string) {
+  const ids = [root, own, hint].filter((id): id is string => Boolean(id));
+  return ids.length > 0 ? ids.join(' ') : undefined;
+}
+
+function useTextEntry(store: CountStore, value: string, maxLength: number | undefined) {
+  publishCount(store, value, maxLength);
+  useEffect(() => {
+    for (const listener of store.listeners) listener();
+  });
+  return useSyncExternalStore(
+    (listener) => subscribePresence(store, listener),
+    () => counterMounted(store),
+    () => counterMounted(store),
+  );
+}
+
 type FieldContextValue = {
   inputId: string;
+  hintId: string;
   disabled: boolean;
   invalid: boolean;
   name?: string;
@@ -43,13 +101,14 @@ type FieldContextValue = {
   labelledBy?: string;
   ariaLabel?: string;
   inputRef: RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
+  store: CountStore;
 };
 
 const FieldContext = createContext<FieldContextValue | null>(null);
 
 function useField(): FieldContextValue {
   const ctx = useContext(FieldContext);
-  if (!ctx) throw new Error('Field parts must render inside Field.Root');
+  if (!ctx) throw new Error('Field parts must be rendered inside Field.Root');
   return ctx;
 }
 
@@ -86,7 +145,9 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 
 function Root({ disabled, invalid, id, name, className, style, ref, children, ...aria }: FieldRootProps) {
   const autoId = useId();
+  const hintId = useId();
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
 
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
@@ -99,6 +160,7 @@ function Root({ disabled, invalid, id, name, className, style, ref, children, ..
     <FieldContext.Provider
       value={{
         inputId,
+        hintId,
         disabled: Boolean(disabled),
         invalid: Boolean(invalid),
         name,
@@ -106,6 +168,7 @@ function Root({ disabled, invalid, id, name, className, style, ref, children, ..
         labelledBy: aria['aria-labelledby'],
         ariaLabel: aria['aria-label'],
         inputRef,
+        store,
       }}
     >
       <div
@@ -140,9 +203,13 @@ function TextInput({
   type = 'text',
   className,
   ref,
+  maxLength,
+  'aria-describedby': describedBy,
   ...props
 }: FieldTextInputProps) {
   const ctx = useField();
+  const limit = typeof maxLength === 'number' ? maxLength : undefined;
+  const counterMounted = useTextEntry(ctx.store, value, limit);
   return (
     <input
       {...props}
@@ -154,8 +221,9 @@ function TextInput({
       id={ctx.inputId}
       name={ctx.name}
       disabled={ctx.disabled}
+      maxLength={maxLength}
       aria-invalid={ctx.invalid || undefined}
-      aria-describedby={ctx.describedBy}
+      aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
       aria-labelledby={ctx.labelledBy}
       aria-label={ctx.ariaLabel}
       value={value}
@@ -190,10 +258,17 @@ function Textarea({
   className,
   style,
   ref,
+  maxLength,
+  'aria-describedby': describedBy,
   ...props
 }: FieldTextareaProps) {
   const ctx = useField();
-  const resolved = resolveTextareaRows({ rows: rowsProp, maxRows: maxRowsProp });
+  const resolved = useMemo(
+    () => resolveTextareaRows({ rows: rowsProp, maxRows: maxRowsProp }),
+    [rowsProp, maxRowsProp],
+  );
+  const limit = typeof maxLength === 'number' ? maxLength : undefined;
+  const counterMounted = useTextEntry(ctx.store, value, limit);
   return (
     <textarea
       {...props}
@@ -205,8 +280,9 @@ function Textarea({
       id={ctx.inputId}
       name={ctx.name}
       disabled={ctx.disabled}
+      maxLength={maxLength}
       aria-invalid={ctx.invalid || undefined}
-      aria-describedby={ctx.describedBy}
+      aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
       aria-labelledby={ctx.labelledBy}
       aria-label={ctx.ariaLabel}
       value={value}
@@ -355,4 +431,87 @@ function ChipInput({
   );
 }
 
-export const Field = { Root, TextInput, Textarea, ChipInput, Icon, Affix } as const;
+export type FieldCounterProps = {
+  className?: string;
+  style?: CSSProperties;
+};
+
+let warnedOutsideRoot = false;
+let warnedNoInput = false;
+
+function liveCopy(remaining: number) {
+  if (remaining <= 0) return 'Character limit reached';
+  if (remaining === 1) return '1 character left';
+  return `${remaining} characters left`;
+}
+
+function CounterMissing() {
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || warnedOutsideRoot) return;
+    warnedOutsideRoot = true;
+    console.warn('Field.Counter must render inside Field.Root');
+  }, []);
+  return null;
+}
+
+function CounterInner({
+  ctx,
+  className,
+  style,
+}: FieldCounterProps & { ctx: FieldContextValue }) {
+  const entry = useSyncExternalStore(
+    (listener) => subscribeCount(ctx.store, listener),
+    () => ctx.store.entry,
+    () => ctx.store.entry,
+  );
+  useEffect(() => {
+    ctx.store.counters += 1;
+    for (const listener of ctx.store.presence) listener();
+    return () => {
+      ctx.store.counters -= 1;
+      for (const listener of ctx.store.presence) listener();
+    };
+  }, [ctx.store]);
+  useEffect(() => {
+    if (ctx.store.entry || process.env.NODE_ENV === 'production' || warnedNoInput) return;
+    warnedNoInput = true;
+    console.warn('Field.Counter has no Field.TextInput or Field.Textarea');
+  });
+  if (!entry) return null;
+  const count = entry.value.length;
+  const max = entry.maxLength;
+  const atLimit = max !== undefined && count === max;
+  const over = max !== undefined && count > max;
+  const remaining = max === undefined ? undefined : max - count;
+  return (
+    <span
+      data-todae-counter=""
+      data-limit={atLimit ? '' : undefined}
+      data-over={over ? '' : undefined}
+      data-invalid={ctx.invalid ? '' : undefined}
+      data-disabled={ctx.disabled ? '' : undefined}
+      className={[styles.counter, className].filter(Boolean).join(' ')}
+      style={style}
+    >
+      <span aria-hidden="true">{max === undefined ? String(count) : `${count} / ${max}`}</span>
+      {max === undefined ? null : (
+        <>
+          <span id={ctx.hintId} className={styles.srOnly}>
+            {`Up to ${max} characters`}
+          </span>
+          <span className={styles.srOnly} aria-live="polite">
+            {remaining !== undefined && remaining <= 20 ? liveCopy(remaining) : ''}
+          </span>
+        </>
+      )}
+    </span>
+  );
+}
+
+function Counter({ className, style }: FieldCounterProps) {
+  const ctx = useContext(FieldContext);
+  if (!ctx) return <CounterMissing />;
+  return <CounterInner ctx={ctx} className={className} style={style} />;
+}
+
+export const Field = { Root, TextInput, Textarea, ChipInput, Icon, Affix, Counter } as const;
