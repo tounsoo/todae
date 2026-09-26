@@ -1712,6 +1712,15 @@
       "context": null
     },
     {
+      "path": "field.counter.emphasis.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-field-counter-emphasis-weight",
+      "cssValue": "600",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.description.fg",
       "type": "color",
       "cssVar": "--todae-field-description-fg",
@@ -1856,6 +1865,15 @@
       "context": null
     },
     {
+      "path": "field.leading",
+      "type": "number",
+      "cssVar": "--todae-field-leading",
+      "cssValue": "var(--todae-font-leading-default)",
+      "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.messages.gap",
       "type": "dimension",
       "cssVar": "--todae-field-messages-gap",
@@ -1915,6 +1933,15 @@
       "cssVar": "--todae-field-ring-invalid",
       "cssValue": "var(--todae-color-danger-default)",
       "ref": "color.danger.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.row.control.size",
+      "type": "dimension",
+      "cssVar": "--todae-field-row-control-size",
+      "cssValue": "1.625rem",
+      "ref": null,
       "layer": "contract",
       "context": null
     },

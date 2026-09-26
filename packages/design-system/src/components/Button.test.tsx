@@ -87,6 +87,12 @@ describe('Button.Icon', () => {
     );
     const button = screen.getByRole('button', { name: 'Add' });
     expect(button.querySelector('[aria-hidden="true"]')?.textContent).toBe('+');
+    expect(button.hasAttribute('data-icon-only')).toBe(true);
+  });
+
+  it('omits data-icon-only when the button has a label', () => {
+    render(<Button.Root>Save</Button.Root>);
+    expect(screen.getByRole('button', { name: 'Save' }).hasAttribute('data-icon-only')).toBe(false);
   });
 });
 

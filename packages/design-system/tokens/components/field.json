@@ -9,6 +9,7 @@
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "font.size.3" } }
     },
+    "leading": { "$type": "number", "$value": { "$ref": "font.leading.default" } },
     "min-width": { "$type": "dimension", "$value": { "$ref": "space.12" } },
     "bg": {
       "default": { "$type": "color", "$value": { "$ref": "color.bg.surface" } },
@@ -55,6 +56,16 @@
     },
     "messages": {
       "gap": { "$type": "dimension", "$value": { "value": 0.2, "unit": "rem" } }
+    },
+    "counter": {
+      "emphasis": {
+        "weight": { "$type": "fontWeight", "$value": 600 }
+      }
+    },
+    "row": {
+      "control": {
+        "size": { "$type": "dimension", "$value": { "value": 1.625, "unit": "rem" } }
+      }
     }
   }
 }

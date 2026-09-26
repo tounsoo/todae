@@ -1,7 +1,7 @@
 @layer todae.components {
   .shell {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--todae-field-gap);
     padding: var(--todae-field-padding-y) var(--todae-field-padding-x);
     border: 1px solid var(--todae-field-border-default);
@@ -15,7 +15,13 @@
     border-color: var(--todae-field-border-hover);
   }
 
-  .shell:has(input:focus-visible) {
+  .shell:has(> .textarea) {
+    padding: 0;
+    overflow: hidden;
+    gap: 0;
+  }
+
+  .shell:has(:is(input, textarea):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: 2px solid var(--todae-field-ring-focus);
     outline-offset: 2px;
@@ -25,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(input:focus-visible) {
+  .shell[data-invalid]:has(:is(input, textarea):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 
@@ -46,6 +52,7 @@
     color: var(--todae-field-fg-default);
     font: inherit;
     font-size: var(--todae-field-font-size);
+    line-height: var(--todae-font-leading-default);
     outline: none;
   }
 
@@ -57,11 +64,154 @@
     color: var(--todae-field-fg-disabled);
   }
 
+  .textarea {
+    --_pad-block: calc(2 * var(--todae-field-padding-y));
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: var(--todae-field-padding-y) var(--todae-field-padding-x);
+    border: 0;
+    background: transparent;
+    color: var(--todae-field-fg-default);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-field-leading);
+    outline: none;
+    overflow-y: auto;
+    resize: vertical;
+    border-end-end-radius: calc(var(--todae-field-radius) - 1px);
+    height: calc(var(--todae-field-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
+    height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block));
+    min-height: calc(var(--todae-field-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
+    min-height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block));
+  }
+
+  .textarea[data-max-rows] {
+    max-height: calc(var(--todae-field-max-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
+    max-height: calc(var(--todae-field-max-rows) * 1lh + var(--_pad-block));
+  }
+
+  .textarea[data-auto-grow] {
+    resize: none;
+  }
+
+  @supports (field-sizing: content) {
+    .textarea[data-auto-grow] {
+      field-sizing: content;
+      height: auto;
+      min-height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block));
+    }
+  }
+
+  .textarea::placeholder {
+    color: var(--todae-field-fg-placeholder);
+  }
+
+  .textarea:disabled {
+    color: var(--todae-field-fg-disabled);
+  }
+
   .adornment {
     display: inline-flex;
     align-items: center;
     flex: 0 0 auto;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-font-leading-default);
+    height: 1lh;
     color: var(--todae-field-fg-adornment);
+  }
+
+  .shell:has(> .textarea) > .adornment {
+    align-self: start;
+    height: 1lh;
+    margin-top: var(--todae-field-padding-y);
+  }
+
+  .shell:has(> .textarea) > .adornment:has(~ .textarea) {
+    padding-inline-start: var(--todae-field-padding-x);
+  }
+
+  .shell:has(> .textarea) > .textarea ~ .adornment {
+    padding-inline-end: var(--todae-field-padding-x);
+  }
+
+  .shell:has(> .adornment ~ .textarea) > .textarea {
+    padding-left: var(--todae-field-gap);
+  }
+
+  .shell:has(> .textarea ~ .adornment) > .textarea {
+    padding-right: var(--todae-field-gap);
+  }
+
+  .shell:has(> [data-todae-counter]) {
+    flex-wrap: wrap;
+    row-gap: var(--todae-field-messages-gap);
+  }
+
+  .shell:has(> [data-todae-counter]) > :is(.input, .textarea) {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .shell:has(> [data-todae-counter]) > .adornment {
+    flex-shrink: 0;
+  }
+
+  .shell:has(> [data-todae-counter]) > [data-todae-counter] {
+    flex: 0 0 100%;
+    order: 1;
+    text-align: end;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .shell:has(> .textarea):has(> [data-todae-counter]) {
+    row-gap: 0;
+  }
+
+  .shell:has(> .textarea):has(> [data-todae-counter]) > [data-todae-counter] {
+    align-self: end;
+    padding: 0 var(--todae-field-padding-x) var(--todae-field-padding-y);
+  }
+
+  .counter {
+    font-size: var(--todae-field-description-font-size);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--todae-field-description-font-weight);
+    color: var(--todae-field-description-fg);
+  }
+
+  .counter[data-limit] {
+    color: var(--todae-field-fg-default);
+    font-weight: var(--todae-field-counter-emphasis-weight);
+  }
+
+  .counter[data-over],
+  .counter[data-invalid] {
+    color: var(--todae-field-error-fg);
+  }
+
+  .counter[data-over] {
+    font-weight: var(--todae-field-counter-emphasis-weight);
+  }
+
+  .counter[data-disabled] {
+    color: var(--todae-field-fg-disabled);
+  }
+
+  .srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .flow {
@@ -73,9 +223,13 @@
     min-width: 0;
     gap: var(--todae-field-gap);
     width: 100%;
-    --todae-field-chip-row-h: calc(
-      var(--todae-chip-font-size) * 1.25 + 2 * var(--todae-chip-padding-y) + 2px
-    );
+    --todae-field-chip-row-h: calc(var(--todae-field-font-size) * var(--todae-font-leading-default));
+  }
+
+  .flow > span {
+    box-sizing: border-box;
+    height: var(--todae-field-chip-row-h);
+    padding-block: 0;
   }
 
   .flow[data-max-rows] {
@@ -100,5 +254,67 @@
     height: 0;
     overflow: hidden;
     white-space: nowrap;
+  }
+
+  .row {
+    box-sizing: border-box;
+    display: flex;
+    flex: 0 0 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--todae-field-gap);
+    min-width: 0;
+  }
+
+  .row:empty {
+    display: none;
+  }
+
+  .shell:has(> .row:not(:empty)) {
+    flex-wrap: wrap;
+  }
+
+  .shell:has(> .row:not(:empty)) > :is(.input, .textarea, .flow) {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .shell > .textarea ~ .row {
+    padding: 0 var(--todae-field-padding-x) var(--todae-field-padding-y);
+  }
+
+  .shell > .row:has(~ .textarea) {
+    padding: var(--todae-field-padding-y) var(--todae-field-padding-x) 0;
+  }
+
+  .shell > .textarea:has(~ .row:not(:empty)) {
+    border-end-end-radius: 0;
+  }
+
+  .row > [data-icon-only] {
+    box-sizing: border-box;
+    flex: none;
+    inline-size: var(--todae-field-row-control-size);
+    block-size: var(--todae-field-row-control-size);
+    padding: 0;
+  }
+
+  .flow > .row[data-max-rows] {
+    max-height: calc(
+      var(--todae-field-chip-row-h) * var(--todae-field-chip-rows) +
+        var(--todae-field-gap) * (var(--todae-field-chip-rows) - 1)
+    );
+    overflow: hidden;
+    align-content: flex-start;
+  }
+
+  .flow > .row[data-max-rows]:not([data-measured]) > * {
+    visibility: hidden;
+  }
+
+  .flow > .row > span {
+    box-sizing: border-box;
+    height: var(--todae-field-chip-row-h);
+    padding-block: 0;
   }
 }

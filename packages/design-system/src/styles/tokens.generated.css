@@ -66,6 +66,7 @@
   --todae-color-fg-muted: var(--todae-color-gray-900);
   --todae-color-fg-placeholder: var(--todae-color-gray-600);
   --todae-color-on-accent: var(--todae-color-gray-50);
+  color-scheme: light;
 }
 
 [data-appearance="dark"] {
@@ -89,6 +90,7 @@
   --todae-color-fg-muted: var(--todae-color-gray-50);
   --todae-color-fg-placeholder: var(--todae-color-gray-400);
   --todae-color-on-accent: var(--todae-color-gray-50);
+  color-scheme: dark;
 }
 
 [data-density="compact"] {
@@ -210,6 +212,7 @@
   --todae-field-border-focus: var(--todae-color-accent-default);
   --todae-field-border-hover: var(--todae-color-border-default);
   --todae-field-border-invalid: var(--todae-color-danger-default);
+  --todae-field-counter-emphasis-weight: 600;
   --todae-field-description-fg: var(--todae-color-fg-muted);
   --todae-field-description-font-size: var(--todae-font-size-2);
   --todae-field-description-font-weight: var(--todae-font-weight-regular);
@@ -226,6 +229,7 @@
   --todae-field-label-font-size: var(--todae-font-size-2);
   --todae-field-label-font-weight: var(--todae-font-weight-medium);
   --todae-field-label-gap: 0.4rem;
+  --todae-field-leading: var(--todae-font-leading-default);
   --todae-field-messages-gap: 0.2rem;
   --todae-field-min-width: var(--todae-space-12);
   --todae-field-padding-x: var(--todae-space-control-x);
@@ -233,6 +237,7 @@
   --todae-field-radius: var(--todae-radius-md);
   --todae-field-ring-focus: var(--todae-color-accent-default);
   --todae-field-ring-invalid: var(--todae-color-danger-default);
+  --todae-field-row-control-size: 1.625rem;
   --todae-chip-bg-default: var(--todae-color-bg-subtle);
   --todae-chip-bg-disabled: var(--todae-color-bg-subtle);
   --todae-chip-bg-focus: var(--todae-color-bg-subtle);

@@ -1,6 +1,6 @@
 'use client';
 
-import { DensityProvider, Field, Label, useChipField } from '@tounsoo/todae';
+import { Button, DensityProvider, Description, ErrorMessage, Field, Label, ThemeProvider, useChipField } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 const MANY = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta'];
@@ -108,6 +108,95 @@ export function FieldAdornments() {
   );
 }
 
+export function TextareaRows() {
+  const [value, setValue] = useState('Notes');
+  return (
+    <Field.Root>
+      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
+    </Field.Root>
+  );
+}
+
+export function TextareaAutoGrow() {
+  const [value, setValue] = useState('Grows up to six rows.');
+  return (
+    <Field.Root>
+      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} autoGrow maxRows={6} />
+    </Field.Root>
+  );
+}
+
+export function TextareaMaxRows() {
+  const [value, setValue] = useState('maxRows only');
+  return (
+    <Field.Root>
+      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} maxRows={2} />
+    </Field.Root>
+  );
+}
+
+export function TextareaResize() {
+  const [value, setValue] = useState('Drag between rows and maxRows.');
+  return (
+    <Field.Root>
+      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} maxRows={6} />
+    </Field.Root>
+  );
+}
+
+export function TextareaDensity() {
+  const [value, setValue] = useState('Density');
+  return (
+    <>
+      {(['compact', 'comfortable', 'spacious'] as const).map((density) => (
+        <DensityProvider key={density} density={density}>
+          <Field.Root>
+            <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
+          </Field.Root>
+        </DensityProvider>
+      ))}
+    </>
+  );
+}
+
+export function TextareaDark() {
+  const [value, setValue] = useState('Dark scrollbar\n'.repeat(8).trim());
+  return (
+    <ThemeProvider appearance="dark">
+      <Field.Root>
+        <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={4} maxRows={4} />
+      </Field.Root>
+    </ThemeProvider>
+  );
+}
+
+export function TextareaMessages() {
+  const id = useId();
+  const hintId = useId();
+  const errorId = useId();
+  const disabledId = useId();
+  const [value, setValue] = useState('missing');
+  const invalid = value.trim().length < 8;
+  return (
+    <>
+      <div className="labelled-field">
+        <Label htmlFor={id}>Note</Label>
+        <Field.Root id={id} invalid={invalid} aria-describedby={invalid ? `${hintId} ${errorId}` : hintId}>
+          <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
+        </Field.Root>
+        <Description id={hintId}>A short description of the work.</Description>
+        {invalid ? <ErrorMessage id={errorId}>Use at least 8 characters.</ErrorMessage> : null}
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={disabledId}>Note</Label>
+        <Field.Root id={disabledId} disabled>
+          <Field.Textarea value="Disabled" onChange={() => undefined} />
+        </Field.Root>
+      </div>
+    </>
+  );
+}
+
 export function ChipInputControlled() {
   const [chips, setChips] = useState(['alpha', 'beta']);
   const [inputValue, setInputValue] = useState('');
@@ -190,6 +279,210 @@ export function ChipInputLabel() {
             onCommit={() => undefined}
             onChipRemove={() => undefined}
           />
+        </Field.Root>
+      </div>
+    </>
+  );
+}
+
+export function CounterDefault() {
+  const [value, setValue] = useState('Hello');
+  return (
+    <Field.Root>
+      <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
+      <Field.Counter />
+    </Field.Root>
+  );
+}
+
+export function CounterInline() {
+  const [value, setValue] = useState('Hello');
+  const [note, setNote] = useState('Notes');
+  return (
+    <>
+      <Field.Root>
+        <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
+        <Field.Counter style={{ flexBasis: 'auto' }} />
+      </Field.Root>
+      <Field.Root>
+        <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={80} />
+        <Field.Counter style={{ flexBasis: 'auto' }} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} />
+      </Field.Root>
+    </>
+  );
+}
+
+export function CounterNarrow() {
+  const [value, setValue] = useState('Hi');
+  return (
+    <div style={{ width: 160 }}>
+      <Field.Root>
+        <Field.Affix>$</Field.Affix>
+        <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
+        <Field.Counter style={{ flexBasis: 'auto' }} />
+      </Field.Root>
+    </div>
+  );
+}
+
+export function CounterBefore() {
+  const [value, setValue] = useState('Hello');
+  return (
+    <Field.Root>
+      <Field.Counter />
+      <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
+    </Field.Root>
+  );
+}
+
+export function CounterTextarea() {
+  const [value, setValue] = useState('Notes');
+  return (
+    <Field.Root>
+      <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} maxLength={80} />
+      <Field.Counter />
+    </Field.Root>
+  );
+}
+
+export function CounterOver() {
+  const [value, setValue] = useState('Too long');
+  return (
+    <Field.Root>
+      <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={4} />
+      <Field.Counter />
+    </Field.Root>
+  );
+}
+
+export function CounterPlain() {
+  const [value, setValue] = useState('Hello');
+  return (
+    <Field.Root>
+      <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
+      <Field.Counter />
+    </Field.Root>
+  );
+}
+
+function attachIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M6 8.5 9.5 5a2 2 0 0 1 3 3L7 13.5a3 3 0 0 1-4.5-4L8 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
+function sendIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function Composer() {
+  const [value, setValue] = useState('');
+  return (
+    <Field.Root>
+      <Field.Textarea
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        autoGrow
+        maxRows={6}
+        maxLength={280}
+      />
+      <Field.Row>
+        <Button.Root variant="ghost" aria-label="Attach file">
+          <Button.Icon>{attachIcon()}</Button.Icon>
+        </Button.Root>
+        <Field.Counter />
+        <Button.Root aria-label="Send" disabled={value.trim() === ''} style={{ marginInlineStart: 'auto' }}>
+          <Button.Icon>{sendIcon()}</Button.Icon>
+        </Button.Root>
+      </Field.Row>
+    </Field.Root>
+  );
+}
+
+export function RowComposer() {
+  return <Composer />;
+}
+
+export function RowComposerDensity() {
+  return (
+    <>
+      {(['compact', 'comfortable', 'spacious'] as const).map((density) => (
+        <DensityProvider key={density} density={density}>
+          <Composer />
+        </DensityProvider>
+      ))}
+    </>
+  );
+}
+
+function ChipRow({ density, chips }: { density: 'compact' | 'comfortable' | 'spacious'; chips: string[] }) {
+  const id = useId();
+  const field = useChipField({ initialChips: chips });
+  return (
+    <DensityProvider density={density}>
+      <div className="labelled-field">
+        <Label htmlFor={id}>Tags</Label>
+        <Field.Root id={id} style={{ maxWidth: '18rem' }}>
+          <Field.Icon>
+            <span>⌕</span>
+          </Field.Icon>
+          <Field.ChipInput {...field} chipLayout="row" maxRows={2} placeholder="Tags" />
+          <Field.Affix>tag</Field.Affix>
+        </Field.Root>
+      </div>
+    </DensityProvider>
+  );
+}
+
+export function RowChipInput() {
+  const emptyId = useId();
+  const textId = useId();
+  const empty = useChipField({ initialChips: [] });
+  const [text, setText] = useState('');
+  return (
+    <>
+      {(['compact', 'comfortable', 'spacious'] as const).map((density) => (
+        <ChipRow key={density} density={density} chips={MANY} />
+      ))}
+      <div className="labelled-field">
+        <Label htmlFor={emptyId}>Tags</Label>
+        <Field.Root id={emptyId}>
+          <Field.Icon>
+            <span>⌕</span>
+          </Field.Icon>
+          <Field.ChipInput {...empty} chipLayout="row" placeholder="No chips" />
+          <Field.Affix>tag</Field.Affix>
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={textId}>Tags</Label>
+        <Field.Root id={textId}>
+          <Field.Icon>
+            <span>⌕</span>
+          </Field.Icon>
+          <Field.TextInput
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder="Same adornments"
+          />
+          <Field.Affix>tag</Field.Affix>
         </Field.Root>
       </div>
     </>

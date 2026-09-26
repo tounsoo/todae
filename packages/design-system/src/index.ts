@@ -47,10 +47,13 @@ export {
   Field,
   type FieldAffixProps,
   type FieldChipInputProps,
+  type FieldCounterProps,
   type FieldIconProps,
   type FieldRootProps,
+  type FieldRowProps,
   type FieldTextInputProps,
   type FieldTextInputType,
+  type FieldTextareaProps,
 } from './components/Field';
 export { Label, type LabelProps } from './components/Label';
 export {
