@@ -1,7 +1,7 @@
 @layer todae.components {
   .shell {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--todae-field-gap);
     padding: var(--todae-field-padding-y) var(--todae-field-padding-x);
     border: 1px solid var(--todae-field-border-default);
@@ -17,7 +17,6 @@
 
   .shell:has(> .textarea) {
     padding: 0;
-    align-items: stretch;
     overflow: hidden;
     gap: 0;
   }
@@ -53,6 +52,7 @@
     color: var(--todae-field-fg-default);
     font: inherit;
     font-size: var(--todae-field-font-size);
+    line-height: var(--todae-font-leading-default);
     outline: none;
   }
 
@@ -117,6 +117,9 @@
     display: inline-flex;
     align-items: center;
     flex: 0 0 auto;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-font-leading-default);
+    height: 1lh;
     color: var(--todae-field-fg-adornment);
   }
 
@@ -220,9 +223,13 @@
     min-width: 0;
     gap: var(--todae-field-gap);
     width: 100%;
-    --todae-field-chip-row-h: calc(
-      var(--todae-chip-font-size) * 1.25 + 2 * var(--todae-chip-padding-y) + 2px
-    );
+    --todae-field-chip-row-h: calc(var(--todae-field-font-size) * var(--todae-font-leading-default));
+  }
+
+  .flow > span {
+    box-sizing: border-box;
+    height: var(--todae-field-chip-row-h);
+    padding-block: 0;
   }
 
   .flow[data-max-rows] {
