@@ -225,6 +225,7 @@ describe('docs mcp tools', () => {
       'Field.Counter',
       'Field.Icon',
       'Field.Root',
+      'Field.Row',
       'Field.TextInput',
       'Field.Textarea',
       'OptionList',

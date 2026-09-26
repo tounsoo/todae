@@ -1937,6 +1937,15 @@
       "context": null
     },
     {
+      "path": "field.row.control.size",
+      "type": "dimension",
+      "cssVar": "--todae-field-row-control-size",
+      "cssValue": "1.625rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "chip.bg.default",
       "type": "color",
       "cssVar": "--todae-chip-bg-default",

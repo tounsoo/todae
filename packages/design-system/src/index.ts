@@ -50,6 +50,7 @@ export {
   type FieldCounterProps,
   type FieldIconProps,
   type FieldRootProps,
+  type FieldRowProps,
   type FieldTextInputProps,
   type FieldTextInputType,
   type FieldTextareaProps,

@@ -46,7 +46,15 @@ export const meta = {
       type: 'number',
       required: false,
       description:
-        'Caps visual rows of chips plus input. Newest chips fold into +N. The last visible chip ellipsizes to soak leftover width before +N.',
+        'Caps visual rows. inline: chips plus input. row: chip lines only; the input keeps its own line. Newest chips fold into +N. The last visible chip ellipsizes to soak leftover width before +N.',
+    },
+    {
+      name: 'chipLayout',
+      type: '"inline" | "row"',
+      required: false,
+      default: '"inline"',
+      description:
+        'inline: chips flow beside the input. row: chips sit in a full-width line above the input, inside the ChipInput; Icon and Affix sit on the first line; no chips renders a one-line field the height of TextInput.',
     },
     {
       name: 'removeOnBackspace',

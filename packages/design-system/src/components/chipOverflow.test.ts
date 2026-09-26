@@ -102,6 +102,17 @@ describe('planChipOverflow', () => {
     });
   });
 
+  it('plans a chip row without an input width', () => {
+    expect(planChipOverflow({ W: 400, g: 8, c: [100, 100, 100, 100], p: 50, R: 1 })).toEqual({
+      visible: 3,
+      hidden: 1,
+    });
+    const two = planChipOverflow({ W: 400, g: 8, c: [100, 100, 100], p: 40, R: 2 });
+    const items = [...Array(two.visible).fill(100), ...(two.hidden > 0 ? [40] : [])];
+    expect(rowsFor(items, 400, 8)).toBeLessThanOrEqual(2);
+    expect(two.lastChipWidth).not.toBeNaN();
+  });
+
   it('hides more when leftover is below minChip', () => {
     expect(planChipOverflow({ W: 200, g: 8, c: [150, 80], p: 50, m: 80, R: 1, minChip: 100 })).toEqual({
       visible: 0,

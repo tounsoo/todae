@@ -2,6 +2,9 @@ import { ErrorMessageSibling } from '../../components/demos/ErrorMessageDemo';
 import {
   ChipInputCommitKeys,
   ChipInputControlled,
+  RowChipInput,
+  RowComposer,
+  RowComposerDensity,
   ChipInputHook,
   ChipInputLabel,
   ChipInputMaxRows,
@@ -28,7 +31,7 @@ import {
 
 # Field
 
-Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.Textarea`, or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label` is a sibling, not a compound part.
+Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.Textarea`, or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
 
 <Example block>
   <FieldStates />
@@ -174,7 +177,7 @@ Without `maxLength` the count is just the number.
 
 ## Chip input
 
-Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow.
+Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow. Chips inside a ChipInput are one field line tall, the same as the input, at every density. `chipLayout="row"` puts them on a full-width line above the input, inside the ChipInput. Icon and Affix sit on the first line. With no chips it is a one-line field the same height as `Field.TextInput`. In a row, `maxRows` counts chip lines only and clips like the inline flow. Label it with `Label htmlFor` or Root's `aria-label`.
 
 When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. When chips overflow, the last visible chip ellipsizes to soak leftover width before `+N`; earlier chips stay full and `+N` never shrinks.
 
@@ -212,6 +215,24 @@ Disabled and invalid live on `Field.Root`.
   <ChipInputLabel />
 </Example>
 
+## Row
+
+A `Field.Row` is a full-width line. Write it before the input to sit above, or after to sit below. Put `Field.Counter` inside the Row when the field has a bottom row. Use `autoGrow` for a composer. Don't put bare text in a Row; wrap it in `Field.Affix`. Push trailing items to the end with `style={{ marginInlineStart: 'auto' }}` on the first of them. For chips, set `chipLayout="row"`; ChipInput draws its own chip line. Don't hand-roll chips in a `Field.Row`.
+
+<Example block>
+  <RowComposer />
+</Example>
+
+The same composer at compact, comfortable, and spacious.
+
+<Example block>
+  <RowComposerDensity />
+</Example>
+
+<Example block>
+  <RowChipInput />
+</Example>
+
 ## When to use
 
 ### Field.Root
@@ -243,6 +264,12 @@ Disabled and invalid live on `Field.Root`.
 
 **When not:** Text adornments → Affix. Clickable clear/reveal as a dedicated Action (not shipped).
 
+### Field.Row
+
+**When:** Group parts on their own full-width line inside the field, such as chips above a `Field.ChipInput` or attach, `Field.Counter` and send below a `Field.Textarea`.
+
+**When not:** For a single Icon or Affix beside the input, compose it inline without a Row, and don't use a Row to lay out separate fields.
+
 ### Field.Affix
 
 **When:** Static text adornment (currency, unit) inside Root. Order = position.
@@ -273,6 +300,8 @@ Disabled and invalid live on `Field.Root`.
 <PropsTable name="Field.Icon" />
 
 <PropsTable name="Field.Affix" />
+
+<PropsTable name="Field.Row" />
 
 <PropsTable name="Field.Counter" />
 

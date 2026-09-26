@@ -313,6 +313,7 @@ export type FieldChipInputProps = {
   onChipRemove: (index: number, value: string) => void;
   commitKeys?: readonly ChipCommitKey[];
   maxRows?: number;
+  chipLayout?: 'inline' | 'row';
   removeOnBackspace?: boolean;
   chipDismissLabel?: (value: string) => string;
   overflowLabel?: (n: number) => string;
@@ -327,6 +328,7 @@ function ChipInput({
   onChipRemove,
   commitKeys,
   maxRows,
+  chipLayout = 'inline',
   removeOnBackspace = true,
   chipDismissLabel,
   overflowLabel,
@@ -343,7 +345,14 @@ function ChipInput({
   const measureRef = useRef<HTMLDivElement>(null);
   const keys = useMemo(() => resolveCommitKeys(commitKeys), [commitKeys]);
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
-  const plan = useChipMeasure({ chips, maxRows, flowRef, measureRef, inputRef: field.inputRef });
+  const inRow = chipLayout === 'row';
+  const plan = useChipMeasure({
+    chips,
+    maxRows,
+    flowRef,
+    measureRef,
+    inputRef: inRow ? undefined : field.inputRef,
+  });
   const hidden = maxRows == null ? 0 : plan.hidden;
   const live = chips.map((value, index) => ({ value, index })).slice(0, chips.length - hidden);
 
@@ -367,6 +376,82 @@ function ChipInput({
     onCommit(trimmed);
   }
 
+  const chipNodes = live.map(({ value, index }, i) => {
+    const ellipsis = hidden > 0 && plan.lastChipWidth != null && i === live.length - 1;
+    return (
+      <Chip
+        key={`${index}:${value}`}
+        disabled={field.disabled}
+        dismissLabel={chipDismissLabel?.(value)}
+        data-ellipsis={ellipsis ? '' : undefined}
+        style={ellipsis ? { maxWidth: plan.lastChipWidth } : undefined}
+        onDismiss={() => {
+          onChipRemove(index, value);
+          field.inputRef.current?.focus();
+        }}
+      >
+        {value}
+      </Chip>
+    );
+  });
+  const overflow = hidden > 0 ? <Chip.Overflow overflowCount={hidden} overflowLabel={overflowLabel} /> : null;
+  const input = (
+    <input
+      {...props}
+      ref={(node) => {
+        field.inputRef.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) ref.current = node;
+      }}
+      id={field.inputId}
+      name={field.name}
+      disabled={field.disabled}
+      aria-invalid={field.invalid || undefined}
+      aria-describedby={field.describedBy}
+      aria-labelledby={field.labelledBy}
+      aria-label={field.ariaLabel}
+      value={inputValue}
+      type="text"
+      className={[styles.input, className].filter(Boolean).join(' ')}
+      onChange={(event) => onInputValueChange(event.target.value)}
+      onKeyDown={onKeyDown}
+    />
+  );
+  const measure =
+    maxRows != null ? (
+      <div ref={measureRef} className={styles.measure} aria-hidden inert>
+        {chips.map((value, index) => (
+          <Chip key={`m:${index}:${value}`} onDismiss={() => undefined} disabled={field.disabled}>
+            {value}
+          </Chip>
+        ))}
+        <Chip onDismiss={() => undefined} disabled={field.disabled}>
+          …
+        </Chip>
+        <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
+      </div>
+    ) : null;
+
+  if (inRow) {
+    return (
+      <div className={styles.flow} ref={flowRef} data-chip-layout="row">
+        {chips.length > 0 ? (
+          <div
+            className={styles.row}
+            data-max-rows={maxRows ?? undefined}
+            data-measured={maxRows != null && plan.measured ? '' : undefined}
+            style={maxRows != null ? ({ '--todae-field-chip-rows': maxRows } as CSSProperties) : undefined}
+          >
+            {chipNodes}
+            {overflow}
+          </div>
+        ) : null}
+        {input}
+        {measure}
+      </div>
+    );
+  }
+
   return (
     <div
       className={styles.flow}
@@ -375,58 +460,10 @@ function ChipInput({
       data-measured={maxRows != null && plan.measured ? '' : undefined}
       style={maxRows != null ? ({ '--todae-field-chip-rows': maxRows } as CSSProperties) : undefined}
     >
-      {live.map(({ value, index }, i) => {
-        const ellipsis = hidden > 0 && plan.lastChipWidth != null && i === live.length - 1;
-        return (
-          <Chip
-            key={`${index}:${value}`}
-            disabled={field.disabled}
-            dismissLabel={chipDismissLabel?.(value)}
-            data-ellipsis={ellipsis ? '' : undefined}
-            style={ellipsis ? { maxWidth: plan.lastChipWidth } : undefined}
-            onDismiss={() => {
-              onChipRemove(index, value);
-              field.inputRef.current?.focus();
-            }}
-          >
-            {value}
-          </Chip>
-        );
-      })}
-      {hidden > 0 ? <Chip.Overflow overflowCount={hidden} overflowLabel={overflowLabel} /> : null}
-      <input
-        {...props}
-        ref={(node) => {
-          field.inputRef.current = node;
-          if (typeof ref === 'function') ref(node);
-          else if (ref) ref.current = node;
-        }}
-        id={field.inputId}
-        name={field.name}
-        disabled={field.disabled}
-        aria-invalid={field.invalid || undefined}
-        aria-describedby={field.describedBy}
-        aria-labelledby={field.labelledBy}
-        aria-label={field.ariaLabel}
-        value={inputValue}
-        type="text"
-        className={[styles.input, className].filter(Boolean).join(' ')}
-        onChange={(event) => onInputValueChange(event.target.value)}
-        onKeyDown={onKeyDown}
-      />
-      {maxRows != null ? (
-        <div ref={measureRef} className={styles.measure} aria-hidden inert>
-          {chips.map((value, index) => (
-            <Chip key={`m:${index}:${value}`} onDismiss={() => undefined} disabled={field.disabled}>
-              {value}
-            </Chip>
-          ))}
-          <Chip onDismiss={() => undefined} disabled={field.disabled}>
-            …
-          </Chip>
-          <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
-        </div>
-      ) : null}
+      {chipNodes}
+      {overflow}
+      {input}
+      {measure}
     </div>
   );
 }
@@ -514,4 +551,13 @@ function Counter({ className, style }: FieldCounterProps) {
   return <CounterInner ctx={ctx} className={className} style={style} />;
 }
 
-export const Field = { Root, TextInput, Textarea, ChipInput, Icon, Affix, Counter } as const;
+export type FieldRowProps = {
+  children?: ReactNode;
+  className?: string;
+};
+
+function Row({ children, className }: FieldRowProps) {
+  return <div className={[styles.row, className].filter(Boolean).join(' ')}>{children}</div>;
+}
+
+export const Field = { Root, TextInput, Textarea, ChipInput, Icon, Affix, Counter, Row } as const;

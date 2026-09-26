@@ -3,7 +3,7 @@ export type ChipOverflowInput = {
   g: number;
   c: number[];
   p: number;
-  m: number;
+  m?: number;
   R?: number;
   minChip?: number;
 };
@@ -38,7 +38,8 @@ export function planChipOverflow({ W, g, c, p, m, R, minChip }: ChipOverflowInpu
   for (let hidden = 0; hidden <= n; hidden++) {
     const visible = n - hidden;
     const chips = c.slice(0, visible);
-    const items = hidden > 0 ? [...chips, p, m] : [...chips, m];
+    const tail = m == null ? [p] : [p, m];
+    const items = hidden > 0 ? [...chips, ...tail] : m == null ? chips : [...chips, m];
     if (rowsFor(items, W, g) <= R) return { visible, hidden };
 
     const cLast = chips.at(-1);
@@ -52,9 +53,13 @@ export function planChipOverflow({ W, g, c, p, m, R, minChip }: ChipOverflowInpu
     }
     const avail = cur === 0 ? W : W - cur - g;
     let best: number | undefined;
-    for (const w of [cLast, minChip, avail, avail - g - p, avail - g - p - g - m, W, W - g - p, W - g - p - g - m]) {
+    const widths =
+      m == null
+        ? [cLast, minChip, avail, avail - g - p, W, W - g - p]
+        : [cLast, minChip, avail, avail - g - p, avail - g - p - g - m, W, W - g - p, W - g - p - g - m];
+    for (const w of widths) {
       if (w < minChip || w > cLast) continue;
-      if (rowsFor([...head, w, p, m], W, g) > R) continue;
+      if (rowsFor([...head, w, ...tail], W, g) > R) continue;
       if (best == null || w > best) best = w;
     }
     if (best != null && best < cLast) return { visible, hidden, lastChipWidth: best };

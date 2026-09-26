@@ -512,7 +512,14 @@
           "name": "maxRows",
           "type": "number",
           "required": false,
-          "description": "Caps visual rows of chips plus input. Newest chips fold into +N. The last visible chip ellipsizes to soak leftover width before +N."
+          "description": "Caps visual rows. inline: chips plus input. row: chip lines only; the input keeps its own line. Newest chips fold into +N. The last visible chip ellipsizes to soak leftover width before +N."
+        },
+        {
+          "name": "chipLayout",
+          "type": "\"inline\" | \"row\"",
+          "required": false,
+          "description": "inline: chips flow beside the input. row: chips sit in a full-width line above the input, inside the ChipInput; Icon and Affix sit on the first line; no chips renders a one-line field the height of TextInput.",
+          "default": "\"inline\""
         },
         {
           "name": "removeOnBackspace",
@@ -613,6 +620,24 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "TextInput or ChipInput plus optional Icon and Affix. Order is leading/trailing."
+        }
+      ]
+    },
+    {
+      "name": "Field.Row",
+      "description": "Full-width line of parts inside Field.Root. Placement = where it is written. Empty Row renders nothing.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Parts for the line, such as chips, buttons or Field.Counter."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Extra class on the row."
         }
       ]
     },

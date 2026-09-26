@@ -144,6 +144,7 @@ function Root({
       type={type}
       className={[styles.root, className].filter(Boolean).join(' ')}
       data-button-variant={variant === 'primary' ? undefined : variant}
+      data-icon-only={iconOnly ? '' : undefined}
     >
       {content}
     </button>

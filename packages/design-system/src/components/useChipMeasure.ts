@@ -12,7 +12,7 @@ export function useChipMeasure({
   maxRows?: number;
   flowRef: RefObject<HTMLElement | null>;
   measureRef: RefObject<HTMLElement | null>;
-  inputRef: RefObject<HTMLElement | null>;
+  inputRef?: RefObject<HTMLElement | null>;
 }): { visible: number; hidden: number; lastChipWidth?: number; measured: boolean } {
   const [plan, setPlan] = useState<{ visible: number; hidden: number; lastChipWidth?: number }>({
     visible: chips.length,
@@ -31,8 +31,8 @@ export function useChipMeasure({
     }
     const flow = flowRef.current;
     const layer = measureRef.current;
-    const input = inputRef.current;
-    if (!flow || !layer || !input) return;
+    const input = inputRef?.current;
+    if (!flow || !layer || (inputRef && !input)) return;
     const W = flow.getBoundingClientRect().width;
     const gap = getComputedStyle(flow).columnGap || getComputedStyle(flow).gap;
     const g = Number.parseFloat(gap) || 0;
@@ -44,7 +44,7 @@ export function useChipMeasure({
     const c = chipEls.map((el) => el.getBoundingClientRect().width);
     const p = overflowEl.getBoundingClientRect().width;
     const minChip = probeEl.getBoundingClientRect().width;
-    const m = Number.parseFloat(getComputedStyle(input).minWidth) || 0;
+    const m = input ? Number.parseFloat(getComputedStyle(input).minWidth) || 0 : undefined;
     const next = planChipOverflow({ W, g, c, p, m, R: maxRows, minChip });
     setPlan((prev) =>
       prev.visible === next.visible && prev.hidden === next.hidden && prev.lastChipWidth === next.lastChipWidth

@@ -1,6 +1,6 @@
 'use client';
 
-import { DensityProvider, Description, ErrorMessage, Field, Label, ThemeProvider, useChipField } from '@tounsoo/todae';
+import { Button, DensityProvider, Description, ErrorMessage, Field, Label, ThemeProvider, useChipField } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 const MANY = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta'];
@@ -368,6 +368,124 @@ export function CounterPlain() {
       <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
       <Field.Counter />
     </Field.Root>
+  );
+}
+
+function attachIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M6 8.5 9.5 5a2 2 0 0 1 3 3L7 13.5a3 3 0 0 1-4.5-4L8 4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
+function sendIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function Composer() {
+  const [value, setValue] = useState('');
+  return (
+    <Field.Root>
+      <Field.Textarea
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        autoGrow
+        maxRows={6}
+        maxLength={280}
+      />
+      <Field.Row>
+        <Button.Root variant="ghost" aria-label="Attach file">
+          <Button.Icon>{attachIcon()}</Button.Icon>
+        </Button.Root>
+        <Field.Counter />
+        <Button.Root aria-label="Send" disabled={value.trim() === ''} style={{ marginInlineStart: 'auto' }}>
+          <Button.Icon>{sendIcon()}</Button.Icon>
+        </Button.Root>
+      </Field.Row>
+    </Field.Root>
+  );
+}
+
+export function RowComposer() {
+  return <Composer />;
+}
+
+export function RowComposerDensity() {
+  return (
+    <>
+      {(['compact', 'comfortable', 'spacious'] as const).map((density) => (
+        <DensityProvider key={density} density={density}>
+          <Composer />
+        </DensityProvider>
+      ))}
+    </>
+  );
+}
+
+function ChipRow({ density, chips }: { density: 'compact' | 'comfortable' | 'spacious'; chips: string[] }) {
+  const id = useId();
+  const field = useChipField({ initialChips: chips });
+  return (
+    <DensityProvider density={density}>
+      <div className="labelled-field">
+        <Label htmlFor={id}>Tags</Label>
+        <Field.Root id={id} style={{ maxWidth: '18rem' }}>
+          <Field.Icon>
+            <span>⌕</span>
+          </Field.Icon>
+          <Field.ChipInput {...field} chipLayout="row" maxRows={2} placeholder="Tags" />
+          <Field.Affix>tag</Field.Affix>
+        </Field.Root>
+      </div>
+    </DensityProvider>
+  );
+}
+
+export function RowChipInput() {
+  const emptyId = useId();
+  const textId = useId();
+  const empty = useChipField({ initialChips: [] });
+  const [text, setText] = useState('');
+  return (
+    <>
+      {(['compact', 'comfortable', 'spacious'] as const).map((density) => (
+        <ChipRow key={density} density={density} chips={MANY} />
+      ))}
+      <div className="labelled-field">
+        <Label htmlFor={emptyId}>Tags</Label>
+        <Field.Root id={emptyId}>
+          <Field.Icon>
+            <span>⌕</span>
+          </Field.Icon>
+          <Field.ChipInput {...empty} chipLayout="row" placeholder="No chips" />
+          <Field.Affix>tag</Field.Affix>
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={textId}>Tags</Label>
+        <Field.Root id={textId}>
+          <Field.Icon>
+            <span>⌕</span>
+          </Field.Icon>
+          <Field.TextInput
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder="Same adornments"
+          />
+          <Field.Affix>tag</Field.Affix>
+        </Field.Root>
+      </div>
+    </>
   );
 }
 

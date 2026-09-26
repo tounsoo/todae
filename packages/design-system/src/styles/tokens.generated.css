@@ -237,6 +237,7 @@
   --todae-field-radius: var(--todae-radius-md);
   --todae-field-ring-focus: var(--todae-color-accent-default);
   --todae-field-ring-invalid: var(--todae-color-danger-default);
+  --todae-field-row-control-size: 1.625rem;
   --todae-chip-bg-default: var(--todae-color-bg-subtle);
   --todae-chip-bg-disabled: var(--todae-color-bg-subtle);
   --todae-chip-bg-focus: var(--todae-color-bg-subtle);
