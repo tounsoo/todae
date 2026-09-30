@@ -112,6 +112,13 @@ function ChipList({
 
   useEffect(() => {
     if (!open || hidden === 0) return;
+    const panel = popover.popoverRef.current;
+    const button = panel?.querySelector('button');
+    (button ?? panel)?.focus({ preventScroll: true });
+  }, [open, popover.popoverRef]);
+
+  useEffect(() => {
+    if (!open || hidden === 0) return;
     function onKey(event: globalThis.KeyboardEvent) {
       if (event.key !== 'Tab') return;
       const panel = popover.popoverRef.current;

@@ -124,6 +124,13 @@ function ChipList({
 
   useEffect(() => {
     if (!open || hidden === 0) return;
+    const panel = popover.popoverRef.current;
+    const button = panel?.querySelector('button');
+    (button ?? panel)?.focus({ preventScroll: true });
+  }, [open, popover.popoverRef]);
+
+  useEffect(() => {
+    if (!open || hidden === 0) return;
     function onKey(event: globalThis.KeyboardEvent) {
       if (event.key !== 'Tab') return;
       const panel = popover.popoverRef.current;
@@ -274,11 +281,13 @@ function ChipList({
   outline-offset: var(--todae-chip-ring-offset);
 }
 .chip-list-panel {
-  display: flex;
   flex-wrap: wrap;
   gap: var(--todae-space-inline-gap);
   width: max-content;
   max-width: 18rem;
+}
+.chip-list-panel:popover-open {
+  display: flex;
 }
 .chip-list-panel:focus {
   outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);

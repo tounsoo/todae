@@ -38,7 +38,7 @@
 
   @supports (position-try: top) {
     .content {
-      position-try: --todae-popover-flip-block, top;
+      position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline;
     }
   }
 }

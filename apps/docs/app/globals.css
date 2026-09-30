@@ -112,11 +112,14 @@ body {
 }
 
 .chip-list-panel {
-  display: flex;
   flex-wrap: wrap;
   gap: var(--todae-space-inline-gap);
   width: max-content;
   max-width: 18rem;
+}
+
+.chip-list-panel:popover-open {
+  display: flex;
 }
 
 .chip-list-panel:focus {
@@ -126,7 +129,9 @@ body {
 
 main {
   max-width: 48rem;
+  min-width: 0;
   padding: 1.5rem;
+  overflow-x: auto;
 }
 
 main:has(.playground) {
