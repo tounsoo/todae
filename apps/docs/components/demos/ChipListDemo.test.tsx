@@ -10,6 +10,7 @@ import { ChipListDemo } from './ChipListDemo';
 const require = createRequire(import.meta.url);
 const EIGHT = ['aa', 'bb', 'cc', 'dd', 'ee', 'ff', 'gg', 'hh'];
 const ROW = 'calc(var(--todae-chip-font-size) * 1.25 + 2 * var(--todae-chip-padding-y) + 2px)';
+const GAP = 'var(--todae-space-inline-gap)';
 
 function rect(width: number, height = 24) {
   return { width, height, top: 0, left: 0, bottom: height, right: width, x: 0, y: 0, toJSON() {} };
@@ -86,6 +87,51 @@ describe('chip list recipe', () => {
     }
   });
 
+  it('pins the 18rem demo inside the 4px clip wrapper', () => {
+    const widths: Record<string, number> = {
+      design: 78.11,
+      tokens: 78.28,
+      accessibility: 111.88,
+      'a-very-long-tag-that-stays-put': 230.11,
+      react: 67.05,
+      density: 81.69,
+      'dark mode': 105.45,
+      docs: 64.53,
+    };
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('data-overflow') != null) return rect(34.03);
+      if (this.getAttribute('role') === 'list') return rect(288, 32);
+      const text = this.textContent ?? '';
+      if (text.startsWith('…')) return rect(45.09);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) {
+        const label = Object.keys(widths).find((key) => text.includes(key));
+        return rect(label ? widths[label] : 0);
+      }
+      return rect(0, 0);
+    });
+    for (const [maxRows, visibleCount, more, ellipsis] of [
+      [1, 3, '5 more', 'accessibility'],
+      [2, 4, '4 more', null],
+    ] as const) {
+      const view = render(<ChipListDemo maxRows={maxRows} />);
+      const list = view.getByRole('list', { name: 'Tags' });
+      const wrapper = list.parentElement as HTMLElement;
+      expect(wrapper.style.overflow).toBe('hidden');
+      expect(wrapper.style.padding).toBe('4px');
+      expect(wrapper.style.margin).toBe('-4px');
+      expect(wrapper.style.minHeight).toBe(`calc(${ROW} + 8px)`);
+      expect(wrapper.style.maxHeight).toBe(`calc(${ROW} * ${maxRows} + ${GAP} * ${maxRows - 1} + 8px)`);
+      expect(list.style.overflow).toBe('');
+      expect(list.style.maxHeight).toBe('');
+      expect(list.style.minHeight).toBe(ROW);
+      expect(live(view.container, 'button')).toHaveLength(visibleCount);
+      expect(live(view.container, '[data-overflow]')[0]?.textContent).toContain(more);
+      const truncated = [...list.children].filter((el) => (el as HTMLElement).style.maxWidth !== '');
+      expect(truncated.map((el) => el.textContent)).toEqual(ellipsis ? [expect.stringContaining(ellipsis)] : []);
+      view.unmount();
+    }
+  });
+
   it('makes every list child a listitem, including +N', () => {
     render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
     const list = screen.getByRole('list', { name: 'Tags' });
@@ -99,11 +145,11 @@ describe('chip list recipe', () => {
       if (this.getAttribute('data-overflow') != null) return rect(40);
       if (this.getAttribute('role') === 'list' || this.querySelector?.(':scope > input')) return rect(250, 32);
       const text = this.textContent ?? '';
-      const width = text.startsWith('…') ? 60 : text.startsWith('a-very-long-tag-that-truncates') ? 150 : 80;
+      const width = text.startsWith('…') ? 60 : text.startsWith('a-very-long-tag-that-stays-put') ? 150 : 80;
       if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) return rect(width);
       return rect(0, 0);
     });
-    const full = 'a-very-long-tag-that-truncates';
+    const full = 'a-very-long-tag-that-stays-put';
     render(<ChipListDemo maxRows={1} initialChips={['design', full, 'react']} />);
     const list = screen.getByRole('list', { name: 'Tags' });
     const truncated = [...list.children].find((el) => (el as HTMLElement).style.maxWidth !== '') as HTMLElement;

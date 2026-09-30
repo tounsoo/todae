@@ -332,6 +332,8 @@ describe('docs mcp tools', () => {
       '/',
       '/etc/passwd',
       '/recipes/chip-list',
+      'recipes/chip-list',
+      '../package',
       'Dialog.Body%2F..',
       '',
       'Dialog.Body\n',

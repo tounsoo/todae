@@ -69,7 +69,7 @@ export { Text, type TextProps, type TextAs, type TextSize, type TextTone, type T
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
 export {
   useChipList,
-  type ChipListItem,
+  type UseChipListItem,
   type UseChipListOptions,
   type UseChipListResult,
 } from './hooks/useChipList';

@@ -3,7 +3,7 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Chip, useChipList } from '@tounsoo/todae';
 
-const TAGS = ['design', 'tokens', 'accessibility', 'a-very-long-tag-that-truncates', 'react', 'density', 'dark mode', 'docs'];
+const TAGS = ['design', 'tokens', 'accessibility', 'a-very-long-tag-that-stays-put', 'react', 'density', 'dark mode', 'docs'];
 
 // 1.25 and 2px mirror Chip's line-height and 1px border on each side in packages/design-system/src/components/Chip.module.css; Chip has no tokens for those yet.
 const ROW = 'calc(var(--todae-chip-font-size) * 1.25 + 2 * var(--todae-chip-padding-y) + 2px)';
@@ -50,47 +50,56 @@ function ChipList({
   return (
     <div style={{ position: 'relative' }}>
       <div
-        ref={listRef}
-        role="list"
-        aria-label={label}
-        tabIndex={-1}
-        onFocus={(event) => {
-          if (event.target === event.currentTarget) setRing(true);
-        }}
-        onBlur={(event) => {
-          if (event.target === event.currentTarget) setRing(false);
-        }}
         style={{
-          width: '100%',
-          position: 'relative',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignContent: 'flex-start',
-          gap: GAP,
-          minHeight: ROW,
-          maxHeight: `calc(${ROW} * ${maxRows} + ${GAP} * ${maxRows - 1})`,
+          // 4px is Chip's 2px ring plus 2px offset from packages/design-system/src/components/Chip.module.css.
           overflow: 'hidden',
-          visibility: measured ? undefined : 'hidden',
-          outline: ring ? '2px solid var(--todae-chip-ring-focus)' : undefined,
-          // -2px is Chip's 2px ring offset from Chip.module.css, pulled inside so the list's clip doesn't cut the ring off.
-          outlineOffset: ring ? '-2px' : undefined,
+          padding: '4px',
+          margin: '-4px',
+          minHeight: `calc(${ROW} + 8px)`,
+          maxHeight: `calc(${ROW} * ${maxRows} + ${GAP} * ${maxRows - 1} + 8px)`,
         }}
       >
-        {visible.map((chip, index) => (
-          <Chip
-            key={chip.key}
-            role="listitem"
-            style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
-            onDismiss={() => {
-              removed.current = index;
-              layoutPass.current = 0;
-              onRemove(index);
-            }}
-          >
-            {chip.value}
-          </Chip>
-        ))}
-        {hidden > 0 ? <Chip.Overflow role="listitem" overflowCount={hidden} /> : null}
+        <div
+          ref={listRef}
+          role="list"
+          aria-label={label}
+          tabIndex={-1}
+          onFocus={(event) => {
+            if (event.target === event.currentTarget) setRing(true);
+          }}
+          onBlur={(event) => {
+            if (event.target === event.currentTarget) setRing(false);
+          }}
+          style={{
+            width: '100%',
+            position: 'relative',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignContent: 'flex-start',
+            gap: GAP,
+            minHeight: ROW,
+            visibility: measured ? undefined : 'hidden',
+            outline: ring ? '2px solid var(--todae-chip-ring-focus)' : undefined,
+            // -2px is Chip's 2px ring offset from Chip.module.css, pulled inside so the list's clip doesn't cut the ring off.
+            outlineOffset: ring ? '-2px' : undefined,
+          }}
+        >
+          {visible.map((chip, index) => (
+            <Chip
+              key={chip.key}
+              role="listitem"
+              style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
+              onDismiss={() => {
+                removed.current = index;
+                layoutPass.current = 0;
+                onRemove(index);
+              }}
+            >
+              {chip.value}
+            </Chip>
+          ))}
+          {hidden > 0 ? <Chip.Overflow role="listitem" overflowCount={hidden} /> : null}
+        </div>
       </div>
       <div ref={measureRef} aria-hidden inert style={MEASURE}>
         {chips.map((value, index) => (

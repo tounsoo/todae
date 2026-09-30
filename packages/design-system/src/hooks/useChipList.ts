@@ -8,7 +8,7 @@ export type UseChipListOptions = {
   reserveWidth?: RefObject<HTMLElement | null>;
 };
 
-export type ChipListItem = {
+export type UseChipListItem = {
   key: string;
   value: string;
   ellipsis?: true;
@@ -18,7 +18,7 @@ export type ChipListItem = {
 export type UseChipListResult = {
   listRef: RefObject<HTMLDivElement | null>;
   measureRef: RefObject<HTMLDivElement | null>;
-  visible: readonly ChipListItem[];
+  visible: readonly UseChipListItem[];
   hidden: number;
   measured: boolean;
 };
@@ -29,7 +29,7 @@ export function useChipList({ chips, maxRows, reserveWidth }: UseChipListOptions
   const plan = useChipMeasure({ chips, maxRows, flowRef: listRef, measureRef, inputRef: reserveWidth });
   const hidden = maxRows == null ? 0 : Math.min(plan.hidden, chips.length);
   const count = chips.length - hidden;
-  const visible = chips.slice(0, count).map((value, index): ChipListItem =>
+  const visible = chips.slice(0, count).map((value, index): UseChipListItem =>
     hidden > 0 && plan.lastChipWidth != null && index === count - 1
       ? { key: `${index}:${value}`, value, ellipsis: true, maxWidth: plan.lastChipWidth }
       : { key: `${index}:${value}`, value },
