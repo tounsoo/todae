@@ -16,6 +16,14 @@ describe('docs mcp tools', () => {
     expect(listed.source).toBe('todae-docs');
   });
 
+  it('shows Popover role and keeps the one-line when-to-use rule', () => {
+    const popover = getComponent('Popover');
+    expect(popover.props).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: 'role', type: '"dialog"', required: false })]),
+    );
+    expect(whenToUse('Popover').whenToUse).toContain('No focus trap');
+  });
+
   it('returns Dialog props equal to the schema', () => {
     const dialog = schema.components.find((row) => row.name === 'Dialog');
     const result = getComponent('dialog');
@@ -382,7 +390,8 @@ describe('docs mcp tools', () => {
     });
     expect(result).not.toHaveProperty('scope');
     expect(result.whenToUse).toContain('maxRows');
-    expect(result.whenNotToUse).toContain('not reachable by keyboard');
+    expect(result.whenNotToUse).not.toMatch(/not reachable/);
+    expect(result.whenNotToUse).toBeTruthy();
     expect(getComponent('useChipList').docsUrl).toBe('https://todae-rho.vercel.app/recipes/chip-list');
   });
 });

@@ -3,13 +3,28 @@ import { usePopoverSync } from '../overlay/usePopoverSync';
 import type { PopoverWire } from './Popover.wire';
 import styles from './Popover.module.css';
 
-export type PopoverChrome = {
+type PopoverBase = {
   children?: ReactNode;
   className?: string;
   style?: CSSProperties;
-  'aria-label'?: string;
-  'aria-labelledby'?: string;
 };
+
+export type PopoverChrome =
+  | (PopoverBase & {
+      role?: undefined;
+      'aria-label'?: string;
+      'aria-labelledby'?: string;
+    })
+  | (PopoverBase & {
+      role: 'dialog';
+      'aria-label': string;
+      'aria-labelledby'?: string;
+    })
+  | (PopoverBase & {
+      role: 'dialog';
+      'aria-labelledby': string;
+      'aria-label'?: string;
+    });
 
 export type PopoverProps = PopoverWire & PopoverChrome;
 
@@ -22,6 +37,7 @@ export function Popover({
   onClick,
   children,
   className,
+  role,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledby,
 }: PopoverProps) {
@@ -36,6 +52,7 @@ export function Popover({
       }}
       popover="manual"
       tabIndex={-1}
+      role={role}
       className={[styles.content, className].filter(Boolean).join(' ')}
       style={style}
       onPointerDown={onPointerDown}

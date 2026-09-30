@@ -20,9 +20,9 @@ body {
 
 .site-header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem 2rem;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--todae-color-border-default);
   background: var(--todae-color-bg-surface);
@@ -34,8 +34,94 @@ body {
 
 .site-nav {
   display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.site-nav-group {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  align-items: baseline;
+}
+
+.site-nav-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--todae-color-fg-muted);
+}
+
+.site-nav ul {
+  display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 2px 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.site-nav a {
+  overflow-wrap: anywhere;
+}
+
+.site-nav a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.site-nav a[aria-current='page'] {
+  font-weight: 700;
+  text-decoration-thickness: 2px;
+}
+
+@media (max-width: 40rem) {
+  .site-nav {
+    gap: 12px;
+  }
+
+  .site-nav-group {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 4px;
+  }
+}
+
+.chip-list-more {
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.chip-list-more:focus-visible {
+  outline: none;
+}
+
+.chip-list-more:hover [data-overflow],
+.chip-list-more[aria-expanded='true'] [data-overflow] {
+  background-image: linear-gradient(var(--todae-color-bg-highlight), var(--todae-color-bg-highlight));
+}
+
+.chip-list-more:focus-visible [data-overflow] {
+  outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
+  outline-offset: var(--todae-chip-ring-offset);
+}
+
+.chip-list-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--todae-space-inline-gap);
+  width: max-content;
+  max-width: 18rem;
+}
+
+.chip-list-panel:focus {
+  outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
+  outline-offset: var(--todae-chip-ring-offset);
 }
 
 main {

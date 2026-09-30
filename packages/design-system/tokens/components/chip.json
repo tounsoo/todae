@@ -30,6 +30,10 @@
     "ring": {
       "focus": { "$type": "color", "$value": { "$ref": "color.accent.default" } }
     },
+    "leading": { "$type": "number", "$value": 1.25 },
+    "border-width": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+    "ring-width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
+    "ring-offset": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
     "dismiss": {
       "fg": {
         "default": { "$type": "color", "$value": { "$ref": "color.fg.placeholder" } },
