@@ -21,7 +21,7 @@ import { Chip } from './Chip';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
-import { useChipMeasure } from './useChipMeasure';
+import { useChipList } from '../hooks/useChipList';
 
 export type FieldRootProps = {
   disabled?: boolean;
@@ -341,20 +341,10 @@ function ChipInput({
   ...props
 }: FieldChipInputProps & { setChips?: unknown; setInputValue?: unknown; reset?: unknown }) {
   const field = useField();
-  const flowRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLDivElement>(null);
   const keys = useMemo(() => resolveCommitKeys(commitKeys), [commitKeys]);
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const inRow = chipLayout === 'row';
-  const plan = useChipMeasure({
-    chips,
-    maxRows,
-    flowRef,
-    measureRef,
-    inputRef: inRow ? undefined : field.inputRef,
-  });
-  const hidden = maxRows == null ? 0 : plan.hidden;
-  const live = chips.map((value, index) => ({ value, index })).slice(0, chips.length - hidden);
+  const list = useChipList({ chips, maxRows, reserveWidth: inRow ? undefined : field.inputRef });
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     onKeyDownProp?.(event);
@@ -376,25 +366,22 @@ function ChipInput({
     onCommit(trimmed);
   }
 
-  const chipNodes = live.map(({ value, index }, i) => {
-    const ellipsis = hidden > 0 && plan.lastChipWidth != null && i === live.length - 1;
-    return (
-      <Chip
-        key={`${index}:${value}`}
-        disabled={field.disabled}
-        dismissLabel={chipDismissLabel?.(value)}
-        data-ellipsis={ellipsis ? '' : undefined}
-        style={ellipsis ? { maxWidth: plan.lastChipWidth } : undefined}
-        onDismiss={() => {
-          onChipRemove(index, value);
-          field.inputRef.current?.focus();
-        }}
-      >
-        {value}
-      </Chip>
-    );
-  });
-  const overflow = hidden > 0 ? <Chip.Overflow overflowCount={hidden} overflowLabel={overflowLabel} /> : null;
+  const chipNodes = list.visible.map((chip, index) => (
+    <Chip
+      key={chip.key}
+      disabled={field.disabled}
+      dismissLabel={chipDismissLabel?.(chip.value)}
+      data-ellipsis={chip.ellipsis ? '' : undefined}
+      style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
+      onDismiss={() => {
+        onChipRemove(index, chip.value);
+        field.inputRef.current?.focus();
+      }}
+    >
+      {chip.value}
+    </Chip>
+  ));
+  const overflow = list.hidden > 0 ? <Chip.Overflow overflowCount={list.hidden} overflowLabel={overflowLabel} /> : null;
   const input = (
     <input
       {...props}
@@ -419,7 +406,7 @@ function ChipInput({
   );
   const measure =
     maxRows != null ? (
-      <div ref={measureRef} className={styles.measure} aria-hidden inert>
+      <div ref={list.measureRef} className={styles.measure} aria-hidden inert>
         {chips.map((value, index) => (
           <Chip key={`m:${index}:${value}`} onDismiss={() => undefined} disabled={field.disabled}>
             {value}
@@ -434,12 +421,12 @@ function ChipInput({
 
   if (inRow) {
     return (
-      <div className={styles.flow} ref={flowRef} data-chip-layout="row">
+      <div className={styles.flow} ref={list.listRef} data-chip-layout="row">
         {chips.length > 0 ? (
           <div
             className={styles.row}
             data-max-rows={maxRows ?? undefined}
-            data-measured={maxRows != null && plan.measured ? '' : undefined}
+            data-measured={maxRows != null && list.measured ? '' : undefined}
             style={maxRows != null ? ({ '--todae-field-chip-rows': maxRows } as CSSProperties) : undefined}
           >
             {chipNodes}
@@ -455,9 +442,9 @@ function ChipInput({
   return (
     <div
       className={styles.flow}
-      ref={flowRef}
+      ref={list.listRef}
       data-max-rows={maxRows ?? undefined}
-      data-measured={maxRows != null && plan.measured ? '' : undefined}
+      data-measured={maxRows != null && list.measured ? '' : undefined}
       style={maxRows != null ? ({ '--todae-field-chip-rows': maxRows } as CSSProperties) : undefined}
     >
       {chipNodes}

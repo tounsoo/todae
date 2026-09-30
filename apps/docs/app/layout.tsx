@@ -34,6 +34,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <a href="/bottomsheet">BottomSheet</a>
               <a href="/stack">Stack</a>
               <a href="/text">Text</a>
+              <span>
+                Recipes: <a href="/recipes/chip-list">Chip list with overflow</a>
+              </span>
               <a href="/tokens">Tokens</a>
               <a href="/playground">Playground</a>
             </nav>

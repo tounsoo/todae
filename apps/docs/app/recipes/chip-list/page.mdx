@@ -1,0 +1,136 @@
+import { ChipListDemo } from '../../../components/demos/ChipListDemo';
+
+# Chip list with overflow
+
+A recipe, not a package export. `useChipList` measures and decides which chips fit. `Chip` owns the look. The code below owns the markup, list semantics, clamp CSS, and focus. Copy it.
+
+## One row / Two rows
+
+<Example>
+  <ChipListDemo maxRows={1} />
+</Example>
+
+<Example>
+  <ChipListDemo maxRows={2} />
+</Example>
+
+## Code
+
+```tsx
+const ROW = 'calc(var(--todae-chip-font-size) * 1.25 + 2 * var(--todae-chip-padding-y) + 2px)';
+const GAP = 'var(--todae-space-inline-gap)';
+const MEASURE: CSSProperties = {
+  position: 'absolute',
+  inset: '0 auto auto 0',
+  display: 'flex',
+  visibility: 'hidden',
+  pointerEvents: 'none',
+  height: 0,
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+};
+
+function ChipList({
+  label,
+  chips,
+  maxRows,
+  onRemove,
+}: {
+  label: string;
+  chips: readonly string[];
+  maxRows: number;
+  onRemove: (index: number) => void;
+}) {
+  const { listRef, measureRef, visible, hidden, measured } = useChipList({ chips, maxRows });
+  const removed = useRef<number | null>(null);
+  const layoutPass = useRef(0);
+  const [ring, setRing] = useState(false);
+
+  useLayoutEffect(() => {
+    const index = removed.current;
+    if (index == null) return;
+    const buttons = listRef.current?.querySelectorAll<HTMLElement>('[role="listitem"] button') ?? [];
+    layoutPass.current += 1;
+    if (layoutPass.current === 1 && buttons.length === 0 && hidden > 0) return;
+    removed.current = null;
+    layoutPass.current = 0;
+    (buttons[Math.min(index, buttons.length - 1)] ?? listRef.current)?.focus();
+  }, [chips, hidden, listRef]);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div
+        ref={listRef}
+        role="list"
+        aria-label={label}
+        tabIndex={-1}
+        onFocus={(event) => {
+          if (event.target === event.currentTarget) setRing(true);
+        }}
+        onBlur={(event) => {
+          if (event.target === event.currentTarget) setRing(false);
+        }}
+        style={{
+          width: '100%',
+          position: 'relative',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignContent: 'flex-start',
+          gap: GAP,
+          minHeight: ROW,
+          maxHeight: `calc(${ROW} * ${maxRows} + ${GAP} * ${maxRows - 1})`,
+          overflow: 'hidden',
+          visibility: measured ? undefined : 'hidden',
+          outline: ring ? '2px solid var(--todae-chip-ring-focus)' : undefined,
+          outlineOffset: ring ? '-2px' : undefined,
+        }}
+      >
+        {visible.map((chip, index) => (
+          <Chip
+            key={chip.key}
+            role="listitem"
+            style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
+            onDismiss={() => {
+              removed.current = index;
+              layoutPass.current = 0;
+              onRemove(index);
+            }}
+          >
+            {chip.value}
+          </Chip>
+        ))}
+        {hidden > 0 ? <Chip.Overflow role="listitem" overflowCount={hidden} /> : null}
+      </div>
+      <div ref={measureRef} aria-hidden inert style={MEASURE}>
+        {chips.map((value, index) => (
+          <Chip key={index} onDismiss={() => undefined}>
+            {value}
+          </Chip>
+        ))}
+        <Chip onDismiss={() => undefined}>…</Chip>
+        <Chip.Overflow overflowCount={chips.length || 1} />
+      </div>
+    </div>
+  );
+}
+```
+
+## How it works
+
+- **Measure row contract** (both hosts): every chip, then a "…" probe chip, then `Chip.Overflow` with `overflowCount={chips.length || 1}`, rendered into `measureRef`, `inert` and `aria-hidden`. Chips in the row must match live chips (same dismiss button). The probe is the narrowest a truncated chip may get.
+- `listRef` goes on the wrapping list; its width and `gap` drive the fold. Give that list a definite width (`width: 100%` inside a sized parent). A shrink-to-fit flex item collapses as chips leave. The measure row is a sibling, so every child of the list is a `listitem`.
+- First paint: hide the list until `measured`; the server always renders unmeasured.
+- Row height is the chip's own height (`--todae-chip-font-size`, `--todae-chip-padding-y`, and the 1px border). An empty list stays mounted at that min-height, with `tabIndex={-1}`, and keeps the chip focus ring inside the clip.
+- Focus after dismiss: the next chip, else the previous, else the list (never the body).
+- Chips folded into +N are not reachable by keyboard in v1.
+- `Field.ChipInput` is built on the same hook (`reserveWidth` holds room for its input).
+
+## When to use
+
+**When:** Chips outside a text field, such as applied filters, read-only tags or recipients, capped at `maxRows` with a +N count. Call `useChipList` for the visible/hidden split and build the list from this recipe.
+
+**When not:** Typing new chips → `Field.ChipInput` (already built on the hook). Picking from options → Combobox recipe. Selectable or toggle chips → Checkbox / Button.Root. One chip → `Chip`. Chip add/remove state → `useChipField`. Chips folded into +N are not reachable by keyboard in v1.
+
+## Props
+
+<PropsTable name="useChipList" />
