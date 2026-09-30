@@ -5,7 +5,7 @@ import { Chip, useChipList } from '@tounsoo/todae';
 
 const TAGS = ['design', 'tokens', 'accessibility', 'a-very-long-tag-that-truncates', 'react', 'density', 'dark mode', 'docs'];
 
-// Chip.module.css: line-height 1.25, padding-y, 1px border each side.
+// 1.25 and 2px mirror Chip's line-height and 1px border on each side in packages/design-system/src/components/Chip.module.css; Chip has no tokens for those yet.
 const ROW = 'calc(var(--todae-chip-font-size) * 1.25 + 2 * var(--todae-chip-padding-y) + 2px)';
 const GAP = 'var(--todae-space-inline-gap)';
 const MEASURE: CSSProperties = {
@@ -72,6 +72,7 @@ function ChipList({
           overflow: 'hidden',
           visibility: measured ? undefined : 'hidden',
           outline: ring ? '2px solid var(--todae-chip-ring-focus)' : undefined,
+          // -2px is Chip's 2px ring offset from Chip.module.css, pulled inside so the list's clip doesn't cut the ring off.
           outlineOffset: ring ? '-2px' : undefined,
         }}
       >
