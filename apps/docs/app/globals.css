@@ -49,7 +49,8 @@ body {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--todae-color-fg-muted);
+  /* Labels move back to --todae-color-fg-muted once that token is fixed (tracked separately). */
+  color: var(--todae-color-gray-600);
 }
 
 .site-nav ul {
@@ -77,12 +78,12 @@ body {
 
 @media (max-width: 40rem) {
   .site-nav {
-    gap: 12px;
+    gap: var(--todae-space-3);
   }
 
   .site-nav-group {
     grid-template-columns: minmax(0, 1fr);
-    row-gap: 4px;
+    row-gap: var(--todae-space-1);
   }
 }
 
@@ -129,8 +130,29 @@ body {
 
 main {
   max-width: 48rem;
-  min-width: 0;
   padding: 1.5rem;
+}
+
+.docs-pre {
+  max-width: 100%;
+  padding: calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
+  margin-block: 1rem;
+  margin-inline: calc((var(--todae-chip-ring-width) + var(--todae-chip-ring-offset)) * -1);
+}
+
+.docs-pre:has(pre:focus-visible) {
+  outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
+  outline-offset: var(--todae-chip-ring-offset);
+}
+
+.docs-pre pre {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.scroll-x {
+  max-width: 100%;
   overflow-x: auto;
 }
 

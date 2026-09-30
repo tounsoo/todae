@@ -100,6 +100,9 @@ export function usePopover(options: UsePopoverOptions = {}): UsePopoverResult {
   const anchorName = `--todae-popover-${uid}`;
   const triggerRef = useRef<HTMLElement | null>(null);
   const popoverRef = useRef<HTMLElement | null>(null);
+  const openRef = useRef(open);
+  openRef.current = open;
+  const outsideRestore = useRef<(() => void) | null>(null);
 
   const requestClose = useCallback(
     (reason: PopoverCloseReason) => {
@@ -129,6 +132,8 @@ export function usePopover(options: UsePopoverOptions = {}): UsePopoverResult {
     };
   }, [anchorName, anchorRef]);
 
+  useEffect(() => () => outsideRestore.current?.(), []);
+
   useEffect(() => {
     if (!open || !enabled) return;
     function onPointerDown(event: globalThis.PointerEvent) {
@@ -136,10 +141,26 @@ export function usePopover(options: UsePopoverOptions = {}): UsePopoverResult {
       if (eventInside(triggerRef.current, event)) return;
       if (eventInside(anchorRef?.current ?? null, event)) return;
       requestClose('outside');
+      const trigger = restoreFocusRef?.current ?? triggerRef.current;
+      outsideRestore.current?.();
+      const finish = () => {
+        document.removeEventListener('pointerup', finish, true);
+        document.removeEventListener('pointercancel', finish, true);
+        outsideRestore.current = null;
+        if (openRef.current) return;
+        const active = document.activeElement;
+        if (active == null || active === document.body) trigger?.focus({ preventScroll: true });
+      };
+      outsideRestore.current = () => {
+        document.removeEventListener('pointerup', finish, true);
+        document.removeEventListener('pointercancel', finish, true);
+      };
+      document.addEventListener('pointerup', finish, true);
+      document.addEventListener('pointercancel', finish, true);
     }
     document.addEventListener('pointerdown', onPointerDown, true);
     return () => document.removeEventListener('pointerdown', onPointerDown, true);
-  }, [anchorRef, enabled, open, requestClose]);
+  }, [anchorRef, enabled, open, requestClose, restoreFocusRef]);
 
   const getTriggerProps = useCallback(
     <P extends PopoverTriggerUserProps>(props?: P): P & PopoverTriggerWire => {

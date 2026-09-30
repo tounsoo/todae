@@ -435,9 +435,7 @@ describe('chip list recipe', () => {
     expect(wrapper.contains(dialog)).toBe(false);
   });
 
-  it('moves focus to the list before the popover unmounts when hidden drops to 0', async () => {
-    const body = watchBody();
-    let listWidth = 400;
+  function stubListWidth(width: { current: number }) {
     const ros: ResizeObserverCallback[] = [];
     vi.stubGlobal(
       'ResizeObserver',
@@ -452,21 +450,69 @@ describe('chip list recipe', () => {
     );
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
       if (this.getAttribute('data-overflow') != null) return rect(50);
-      if (this.getAttribute('role') === 'list') return rect(listWidth, 32);
-      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) return rect(100);
+      if (this.getAttribute('role') === 'list') return rect(width.current, 32);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(100);
       return rect(0, 0);
     });
+    return ros;
+  }
+
+  async function resizeTo(ros: ResizeObserverCallback[]) {
+    await act(async () => {
+      for (const cb of ros) cb([] as unknown as ResizeObserverEntry[], {} as ResizeObserver);
+    });
+  }
+
+  it('moves focus to the list before the popover unmounts when hidden drops to 0', async () => {
+    const body = watchBody();
+    const width = { current: 400 };
+    const ros = stubListWidth(width);
     render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
     });
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove dd' }));
-    listWidth = 4000;
-    await act(async () => {
-      for (const cb of ros) cb([] as unknown as ResizeObserverEntry[], {} as ResizeObserver);
-    });
+    width.current = 4000;
+    await resizeTo(ros);
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(screen.getByRole('list', { name: 'Tags' }));
+    body.assert();
+  });
+
+  it('moves focus to the list before a read-only popover unmounts when hidden drops to 0', async () => {
+    const body = watchBody();
+    const width = { current: 400 };
+    const ros = stubListWidth(width);
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} readOnly />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    expect(document.activeElement).toBe(screen.getByRole('dialog', { name: '5 more tags' }));
+    width.current = 4000;
+    await resizeTo(ros);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('list', { name: 'Tags' }));
+    body.assert();
+  });
+
+  it('moves focus to the same chip in the list when it leaves the popover', async () => {
+    const body = watchBody();
+    const width = { current: 400 };
+    const ros = stubListWidth(width);
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    const inPopover = screen.getByRole('button', { name: 'Remove dd' });
+    expect(document.activeElement).toBe(inPopover);
+    expect(inPopover.closest('[role="dialog"]')).toBeTruthy();
+    width.current = 500;
+    await resizeTo(ros);
+    const active = document.activeElement as HTMLElement;
+    expect(active.getAttribute('aria-label')).toBe('Remove dd');
+    expect(active.closest('[role="dialog"]')).toBeNull();
+    expect(active.closest('[role="list"]')).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: '4 more tags' })).toBeTruthy();
     body.assert();
   });
 

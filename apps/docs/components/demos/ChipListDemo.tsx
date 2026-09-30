@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Chip, Popover, useChipList, usePopover } from '@tounsoo/todae';
 
 const TAGS = ['design', 'tokens', 'accessibility', 'a-very-long-tag-that-stays-put', 'react', 'density', 'dark mode', 'docs'];
@@ -11,7 +11,9 @@ const GAP = 'var(--todae-space-inline-gap)';
 const PAD = 'calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset))';
 const MEASURE: CSSProperties = {
   position: 'absolute',
-  inset: '0 auto auto 0',
+  insetInline: 0,
+  top: 0,
+  width: '100%',
   display: 'flex',
   visibility: 'hidden',
   pointerEvents: 'none',
@@ -19,6 +21,7 @@ const MEASURE: CSSProperties = {
   overflow: 'hidden',
   whiteSpace: 'nowrap',
 };
+const CHIP: CSSProperties = { flex: 'none' };
 const TABBABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
 
@@ -33,6 +36,25 @@ function focusAfter(el: HTMLElement | null) {
     return (el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   });
   (next ?? el).focus();
+}
+
+function HoldFocus({ onLost, children }: { onLost: () => void; children: ReactNode }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const lost = useRef(onLost);
+  lost.current = onLost;
+  useLayoutEffect(() => {
+    const node = ref.current;
+    return () => {
+      const active = document.activeElement;
+      if (!(active instanceof Node) || !node?.contains(active)) return;
+      lost.current();
+    };
+  }, []);
+  return (
+    <span ref={ref} style={{ display: 'contents' }}>
+      {children}
+    </span>
+  );
 }
 
 function chipButtons(list: HTMLElement): HTMLElement[] {
@@ -59,12 +81,28 @@ function ChipList({
   const moreRef = useRef<HTMLButtonElement>(null);
   const parked = useRef(false);
   const pending = useRef<Pending | null>(null);
+  const moved = useRef<string | null>(null);
+  const hiddenNow = useRef(0);
+  hiddenNow.current = hidden;
 
   useLayoutEffect(() => {
-    if (hidden !== 0 || !open) return;
-    listRef.current?.focus();
-    setOpen(false);
-  }, [hidden, listRef, open]);
+    const value = moved.current;
+    if (hidden === 0 && open) {
+      moved.current = null;
+      parked.current = false;
+      listRef.current?.focus({ preventScroll: true });
+      setOpen(false);
+      return;
+    }
+    if (!value) return;
+    moved.current = null;
+    parked.current = false;
+    const list = listRef.current;
+    const button = list
+      ? [...list.querySelectorAll('button')].find((el) => el.getAttribute('aria-label') === `Remove ${value}`)
+      : undefined;
+    (button ?? moreRef.current)?.focus({ preventScroll: true });
+  }, [chips, hidden, listRef, open]);
 
   const popover = usePopover({
     open: open && hidden > 0,
@@ -201,12 +239,14 @@ function ChipList({
       </div>
       <div ref={measureRef} aria-hidden inert style={MEASURE}>
         {chips.map((value, index) => (
-          <Chip key={index} onDismiss={onRemove ? () => undefined : undefined}>
+          <Chip key={index} style={CHIP} onDismiss={onRemove ? () => undefined : undefined}>
             {value}
           </Chip>
         ))}
-        <Chip onDismiss={onRemove ? () => undefined : undefined}>…</Chip>
-        <Chip.Overflow overflowCount={chips.length || 1} />
+        <Chip style={CHIP} onDismiss={onRemove ? () => undefined : undefined}>
+          …
+        </Chip>
+        <Chip.Overflow style={CHIP} overflowCount={chips.length || 1} />
       </div>
       {open || hidden > 0 ? (
         <Popover
@@ -217,8 +257,15 @@ function ChipList({
           style={{ ...wire.style, maxWidth: '18rem' }}
         >
           {tail.map((value, index) => (
-            <Chip
+            <HoldFocus
               key={`${chips.length - hidden + index}:${value}`}
+              onLost={() => {
+                moved.current = value;
+                if (hiddenNow.current > 0) parked.current = true;
+                listRef.current?.focus({ preventScroll: true });
+              }}
+            >
+            <Chip
               onDismiss={
                 onRemove
                   ? () => {
@@ -240,6 +287,7 @@ function ChipList({
             >
               {value}
             </Chip>
+            </HoldFocus>
           ))}
         </Popover>
       ) : null}

@@ -30,9 +30,9 @@ const HREFS = [
 ];
 
 describe('SiteNav', () => {
-  it('groups the same links under Docs', () => {
+  it('groups the same links under Site', () => {
     render(<SiteNav />);
-    const nav = screen.getByRole('navigation', { name: 'Docs' });
+    const nav = screen.getByRole('navigation', { name: 'Site' });
     expect(screen.getAllByRole('list')).toHaveLength(4);
     for (const name of ['Components', 'Recipes', 'Foundations', 'Tools']) {
       expect(screen.getByRole('list', { name })).toBeTruthy();

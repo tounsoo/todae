@@ -47,7 +47,7 @@ const GROUPS = [
 export function SiteNav() {
   const path = usePathname();
   return (
-    <nav className="site-nav" aria-label="Docs">
+    <nav className="site-nav" aria-label="Site">
       {GROUPS.map((group) => (
         <div key={group.id} className="site-nav-group">
           <span id={`nav-${group.id}`} className="site-nav-label">

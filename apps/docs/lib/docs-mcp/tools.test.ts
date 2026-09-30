@@ -391,6 +391,7 @@ describe('docs mcp tools', () => {
     expect(result).not.toHaveProperty('scope');
     expect(result.whenToUse).toContain('maxRows');
     expect(result.whenNotToUse).not.toMatch(/not reachable/);
+    expect(result.whenNotToUse).not.toMatch(/non-modal popover/);
     expect(result.whenNotToUse).toBeTruthy();
     expect(getComponent('useChipList').docsUrl).toBe('https://todae-rho.vercel.app/recipes/chip-list');
   });
