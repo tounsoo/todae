@@ -105,7 +105,7 @@ describe('chip list recipe', () => {
       if (text.startsWith('…')) return rect(45.09);
       if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) {
         const label = Object.keys(widths).find((key) => text.includes(key));
-        return rect(label ? widths[label] : 0);
+        return rect(widths[label ?? ''] ?? 0);
       }
       return rect(0, 0);
     });
