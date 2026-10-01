@@ -29,7 +29,7 @@ const PART_PAGE: Record<string, string> = {
 
 /** Page-level When copy written for these names in addition to `page.title`. */
 const PAGE_OWNERS: Record<string, readonly string[]> = {
-  combobox: ['useCombobox'],
+  'recipes/combobox': ['useCombobox'],
   radio: ['RadioGroup'],
   'recipes/chip-list': ['useChipList'],
 };

@@ -107,6 +107,7 @@ describe('docs mcp tools', () => {
     expect(hook).not.toHaveProperty('scope');
     expect(combobox).toMatchObject({ status: 'present' });
     expect(combobox).not.toHaveProperty('scope');
+    expect(getComponent('useCombobox').docsUrl).toBe('https://todae-rho.vercel.app/recipes/combobox');
     expect(whenToUse('RadioGroup')).toMatchObject({ status: 'present' });
     expect(whenToUse('RadioGroup')).not.toHaveProperty('scope');
     expect(hook.whenToUse).not.toBe(combobox.whenToUse);
