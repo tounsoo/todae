@@ -179,7 +179,7 @@ Without `maxLength` the count is just the number.
 
 Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow. Chips inside a ChipInput are one field line tall, the same as the input, at every density. `chipLayout="row"` puts them on a full-width line above the input, inside the ChipInput. Icon and Affix sit on the first line. With no chips it is a one-line field the same height as `Field.TextInput`. In a row, `maxRows` counts chip lines only and clips like the inline flow. Label it with `Label htmlFor` or Root's `aria-label`.
 
-When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. A chip that does not fit at its full width moves into `+N`. The only chip that truncates is one wider than the row even after every other chip has folded into `+N`.
+When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. A later chip that does not fit at its full width moves into `+N`. The first chip truncates with an ellipsis when it, `+N`, and the input cannot share the row; its accessible name stays the full label.
 
 Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key roving.
 

@@ -258,8 +258,9 @@
     white-space: nowrap;
   }
 
-  .measure > * {
+  .measure > span {
     flex: none;
+    max-width: none;
   }
 
   .row {

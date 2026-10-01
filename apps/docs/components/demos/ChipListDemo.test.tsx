@@ -223,6 +223,23 @@ describe('chip list recipe', () => {
     cleanup();
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
       if (this.getAttribute('data-overflow') != null) return rect(40);
+      if (this.getAttribute('role') === 'list') return rect(240, 32);
+      const text = this.textContent ?? '';
+      const width = text.startsWith('…') ? 60 : text.includes(full) ? 230 : 80;
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(width);
+      return rect(0, 0);
+    });
+    render(<ChipListDemo maxRows={1} initialChips={[full, 'react', 'density']} />);
+    const narrow = screen.getByRole('list', { name: 'Tags' });
+    const alone = [...narrow.children].find((el) => (el as HTMLElement).style.maxWidth !== '') as HTMLElement;
+    expect(alone.style.maxWidth).toBe('192px');
+    expect(alone.textContent).toContain(full);
+    expect(alone.querySelector('button')?.getAttribute('aria-label')).toBe(`Remove ${full}`);
+    expect(screen.getByRole('button', { name: '+2 more' })).toBeTruthy();
+
+    cleanup();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('data-overflow') != null) return rect(40);
       if (this.getAttribute('role') === 'list' || this.querySelector?.(':scope > input')) return rect(200, 32);
       const text = this.textContent ?? '';
       const width = text.startsWith('…') ? 60 : text.startsWith(full) ? 400 : 80;

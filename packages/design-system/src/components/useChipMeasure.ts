@@ -43,9 +43,8 @@ export function useChipMeasure({
     const chipEls = kids.slice(0, -2);
     const c = chipEls.map((el) => el.getBoundingClientRect().width);
     const p = overflowEl.getBoundingClientRect().width;
-    const minChip = probeEl.getBoundingClientRect().width;
     const open = input ? Number.parseFloat(getComputedStyle(input).minWidth) || 0 : undefined;
-    const next = planChipOverflow({ W, g, c, p, m: open, R: maxRows, minChip });
+    const next = planChipOverflow({ W, g, c, p, m: open, R: maxRows });
     setPlan((prev) =>
       prev.visible === next.visible && prev.hidden === next.hidden && prev.lastChipWidth === next.lastChipWidth
         ? prev

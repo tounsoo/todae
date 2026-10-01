@@ -22,6 +22,29 @@ const MEASURE: CSSProperties = {
   whiteSpace: 'nowrap',
 };
 const CHIP: CSSProperties = { flex: 'none' };
+const MEASURE_CHIP: CSSProperties = { flex: 'none', maxWidth: 'none' };
+const PANEL_GAP = 4;
+const PANEL_INSET = 16;
+
+function placeChipPanel(trigger: HTMLElement, panel: HTMLElement) {
+  const vw = document.documentElement.clientWidth;
+  const vh = document.documentElement.clientHeight;
+  if (vw <= 0 || vh <= 0) return null;
+  const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const maxWidth = Math.max(0, Math.min(18 * rem, vw - PANEL_INSET * 2));
+  panel.style.maxWidth = `${maxWidth}px`;
+  const anchor = trigger.getBoundingClientRect();
+  const rect = panel.getBoundingClientRect();
+  let left = anchor.left;
+  const maxLeft = vw - PANEL_INSET - rect.width;
+  if (left > maxLeft) left = maxLeft;
+  if (left < PANEL_INSET) left = PANEL_INSET;
+  const spaceBelow = vh - anchor.bottom - PANEL_GAP;
+  let top = rect.height > spaceBelow ? anchor.top - PANEL_GAP - rect.height : anchor.bottom + PANEL_GAP;
+  if (top < 0) top = 0;
+  if (top + rect.height > vh) top = Math.max(0, vh - rect.height);
+  return { top, left, maxWidth };
+}
 const TABBABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
 
@@ -75,10 +98,9 @@ function ChipList({
   maxRows: number;
   onRemove?: (index: number) => void;
 }) {
-  const plan = useChipList({ chips, maxRows });
-  const { listRef, measureRef, measured } = plan;
-  const { visible, hidden } = plan;
+  const { listRef, measureRef, measured, visible, hidden } = useChipList({ chips, maxRows });
   const [open, setOpen] = useState(false);
+  const [panelBox, setPanelBox] = useState<{ top: number; left: number; maxWidth: number } | null>(null);
   const [ring, setRing] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
   const parked = useRef(false);
@@ -114,6 +136,28 @@ function ChipList({
   });
   const wire = popover.getPopoverProps();
   const tail = chips.slice(chips.length - hidden);
+  const shown = open && hidden > 0;
+
+  useLayoutEffect(() => {
+    if (!shown) return;
+    const trigger = moreRef.current;
+    const panel = popover.popoverRef.current;
+    if (!trigger || !panel) return;
+    const apply = () => {
+      const next = placeChipPanel(trigger, panel);
+      if (!next) return;
+      setPanelBox((prev) =>
+        prev && prev.top === next.top && prev.left === next.left && prev.maxWidth === next.maxWidth ? prev : next,
+      );
+    };
+    apply();
+    window.addEventListener('resize', apply);
+    window.addEventListener('scroll', apply, true);
+    return () => {
+      window.removeEventListener('resize', apply);
+      window.removeEventListener('scroll', apply, true);
+    };
+  }, [shown, popover.popoverRef, tail.length]);
 
   useLayoutEffect(() => {
     if (!pending.current) return;
@@ -242,14 +286,14 @@ function ChipList({
       </div>
       <div ref={measureRef} aria-hidden inert style={MEASURE}>
         {chips.map((value, index) => (
-          <Chip key={index} style={CHIP} onDismiss={onRemove ? () => undefined : undefined}>
+          <Chip key={index} style={MEASURE_CHIP} onDismiss={onRemove ? () => undefined : undefined}>
             {value}
           </Chip>
         ))}
-        <Chip style={CHIP} onDismiss={onRemove ? () => undefined : undefined}>
+        <Chip style={MEASURE_CHIP} onDismiss={onRemove ? () => undefined : undefined}>
           …
         </Chip>
-        <Chip.Overflow style={CHIP} overflowCount={chips.length || 1} />
+        <Chip.Overflow style={MEASURE_CHIP} overflowCount={chips.length || 1} />
       </div>
       {open || hidden > 0 ? (
         <Popover
@@ -257,7 +301,13 @@ function ChipList({
           role="dialog"
           aria-label={`${hidden} more ${hidden === 1 ? 'tag' : 'tags'}`}
           className="chip-list-panel"
-          style={{ ...wire.style, maxWidth: '18rem' }}
+          style={{
+            ...wire.style,
+            maxWidth: panelBox?.maxWidth ?? 'min(18rem, calc(100vw - 32px))',
+            positionTryFallbacks: panelBox ? 'none' : undefined,
+            top: panelBox?.top,
+            left: panelBox?.left,
+          }}
         >
           {tail.map((value, index) => (
             <HoldFocus
@@ -269,6 +319,7 @@ function ChipList({
               }}
             >
             <Chip
+              style={{ maxWidth: '100%', minWidth: 0 }}
               onDismiss={
                 onRemove
                   ? () => {

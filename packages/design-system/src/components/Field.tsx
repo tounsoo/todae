@@ -333,7 +333,6 @@ function ChipInput({
   chipDismissLabel,
   overflowLabel,
   className,
-  style,
   onKeyDown: onKeyDownProp,
   ref,
   setChips: _setChips,
@@ -383,11 +382,9 @@ function ChipInput({
     </Chip>
   ));
   const overflow = list.hidden > 0 ? <Chip.Overflow overflowCount={list.hidden} overflowLabel={overflowLabel} /> : null;
-  const inputStyle = style;
   const input = (
     <input
       {...props}
-      style={inputStyle}
       ref={(node) => {
         field.inputRef.current = node;
         if (typeof ref === 'function') ref(node);

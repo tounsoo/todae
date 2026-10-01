@@ -44,11 +44,13 @@ describe('planChipOverflow', () => {
     });
   });
 
-  it('counts gap so items that fit only without gap overflow', () => {
+  it('truncates a lone chip that fits the row but not beside the input', () => {
     expect(planChipOverflow({ W: 180, g: 8, c: [100], p: 50, m: 80, R: 1 })).toEqual({
-      visible: 0,
-      hidden: 1,
+      visible: 1,
+      hidden: 0,
+      lastChipWidth: 92,
     });
+    expect(rowsFor([92, 80], 180, 8)).toBe(1);
   });
 
   it('keeps a row that fills the width exactly', () => {
@@ -106,10 +108,12 @@ describe('planChipOverflow', () => {
     const folded = planChipOverflow({ W: 204, g: 8, c: [100, 100], p: 40, m: 48, R: 1 });
     expect(folded).toEqual({ visible: 1, hidden: 1 });
     expect(rowsFor([100, 40, 48], 204, 8)).toBe(1);
-    expect(planChipOverflow({ W: 203.9, g: 8, c: [100, 100], p: 40, m: 48, R: 1 })).toEqual({
-      visible: 0,
-      hidden: 2,
-    });
+    const tight = planChipOverflow({ W: 203.9, g: 8, c: [100, 100], p: 40, m: 48, R: 1 });
+    expect(tight.visible).toBe(1);
+    expect(tight.hidden).toBe(1);
+    expect(tight.lastChipWidth).toBeCloseTo(99.9, 5);
+    expect(rowsFor([100, 40, 48], 203.9, 8)).toBe(2);
+    expect(rowsFor([tight.lastChipWidth ?? 0, 40, 48], 203.9, 8)).toBe(1);
   });
 
   it('truncates only a chip wider than the row', () => {
@@ -122,6 +126,36 @@ describe('planChipOverflow', () => {
       visible: 1,
       hidden: 0,
       lastChipWidth: 200,
+    });
+  });
+
+  it('truncates the first chip when it fits alone but not beside +N', () => {
+    expect(planChipOverflow({ W: 240, g: 8, c: [230, 80, 80], p: 40, R: 1 })).toEqual({
+      visible: 1,
+      hidden: 2,
+      lastChipWidth: 192,
+    });
+    expect(planChipOverflow({ W: 260, g: 8, c: [230, 80], p: 40, R: 1 })).toEqual({
+      visible: 1,
+      hidden: 1,
+      lastChipWidth: 212,
+    });
+    expect(planChipOverflow({ W: 280, g: 8, c: [230, 80], p: 40, R: 1 })).toEqual({
+      visible: 1,
+      hidden: 1,
+    });
+  });
+
+  it('truncates an over-wide chip and keeps the input on the +N row', () => {
+    expect(planChipOverflow({ W: 270, g: 4, c: [434.69, 20], p: 26, m: 48, R: 1 })).toEqual({
+      visible: 1,
+      hidden: 1,
+      lastChipWidth: 188,
+    });
+    expect(planChipOverflow({ W: 382, g: 4, c: [434.69, 20], p: 26, m: 48, R: 1 })).toEqual({
+      visible: 1,
+      hidden: 1,
+      lastChipWidth: 300,
     });
   });
 
@@ -157,10 +191,11 @@ describe('planChipOverflow', () => {
     expect(two.lastChipWidth).not.toBeNaN();
   });
 
-  it('hides more when leftover is below minChip', () => {
+  it('truncates instead of hiding when the leftover is below the unused probe width', () => {
     expect(planChipOverflow({ W: 200, g: 8, c: [150, 80], p: 50, m: 80, R: 1, minChip: 100 })).toEqual({
-      visible: 0,
-      hidden: 2,
+      visible: 1,
+      hidden: 1,
+      lastChipWidth: 54,
     });
   });
 });
