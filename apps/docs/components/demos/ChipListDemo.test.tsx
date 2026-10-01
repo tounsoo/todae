@@ -835,6 +835,37 @@ describe('chip list recipe', () => {
     expect(fireEvent.keyDown(dialog, { key: 'ArrowDown' })).toBe(true);
   });
 
+  it('lets Home and End scroll the page when the panel is not capped', async () => {
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} readOnly />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    const dialog = screen.getByRole('dialog', { name: '5 more tags' });
+    Object.defineProperty(dialog, 'scrollHeight', { configurable: true, value: 80 });
+    Object.defineProperty(dialog, 'clientHeight', { configurable: true, value: 80 });
+    dialog.scrollTop = 0;
+    expect(fireEvent.keyDown(dialog, { key: 'Home' })).toBe(true);
+    expect(fireEvent.keyDown(dialog, { key: 'End' })).toBe(true);
+    expect(dialog.scrollTop).toBe(0);
+  });
+
+  it('starts a reopened panel at scrollTop 0', async () => {
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
+    const more = screen.getByRole('button', { name: '+5 more' });
+    await act(async () => {
+      fireEvent.click(more);
+    });
+    const dialog = screen.getByRole('dialog');
+    dialog.scrollTop = 16;
+    await act(async () => {
+      fireEvent.click(more);
+    });
+    await act(async () => {
+      fireEvent.click(more);
+    });
+    expect(screen.getByRole('dialog').scrollTop).toBe(0);
+  });
+
   it('scrolls arrows by the chip height plus the row gap', async () => {
     render(<ChipListDemo maxRows={1} initialChips={EIGHT} readOnly />);
     await act(async () => {
@@ -1019,6 +1050,88 @@ describe('chip list recipe', () => {
       expect(dialog.style.top).toBe('340px');
       expect(Number.parseFloat(dialog.style.top) + Math.min(176, Number.parseFloat(dialog.style.maxHeight))).toBeLessThanOrEqual(view.h);
       expect(520 - (Number.parseFloat(dialog.style.top) + Math.min(176, Number.parseFloat(dialog.style.maxHeight)))).toBe(4);
+    } finally {
+      Reflect.deleteProperty(root, 'clientWidth');
+      Reflect.deleteProperty(root, 'clientHeight');
+    }
+  });
+
+  it('moves to the side that can show a row after the QA scrolls and resize', async () => {
+    panelPad.value = '20px';
+    const view = { w: 320, h: 300 };
+    const anchor = { top: 140 };
+    const root = document.documentElement;
+    Object.defineProperty(root, 'clientWidth', { configurable: true, get: () => view.w });
+    Object.defineProperty(root, 'clientHeight', { configurable: true, get: () => view.h });
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('role') === 'dialog') return rect(200, 176);
+      if (this.classList.contains('chip-list-more')) return rect(40, 27.5, anchor.top, 32);
+      if (this.getAttribute('data-overflow') != null) return rect(50);
+      if (this.getAttribute('role') === 'list') return rect(400, 32);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(80, 27.5);
+      return rect(0, 0);
+    });
+    const inside = (dialog: HTMLElement) => {
+      const top = Number.parseFloat(dialog.style.top);
+      const height = Number.parseFloat(dialog.style.height);
+      const triggerBottom = anchor.top + 27.5;
+      expect(top).toBeGreaterThanOrEqual(16);
+      expect(top + height).toBeLessThanOrEqual(view.h - 16);
+      if (top >= triggerBottom) expect(top - triggerBottom).toBeGreaterThanOrEqual(4);
+      else {
+        expect(top + height).toBeLessThanOrEqual(anchor.top);
+        expect(anchor.top - (top + height)).toBeGreaterThanOrEqual(4);
+      }
+    };
+    try {
+      render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+      });
+      const dialog = screen.getByRole('dialog');
+      anchor.top = 80;
+      await act(async () => {
+        document.dispatchEvent(new Event('scroll'));
+      });
+      expect(dialog.style.top).toBe('111.5px');
+      expect(dialog.style.maxHeight).toBe('172.5px');
+      inside(dialog);
+
+      view.w = 320;
+      view.h = 220;
+      anchor.top = 96.25;
+      await act(async () => {
+        window.dispatchEvent(new Event('resize'));
+      });
+      anchor.top = 156.25;
+      await act(async () => {
+        document.dispatchEvent(new Event('scroll'));
+      });
+      expect(Number.parseFloat(dialog.style.top)).toBeGreaterThanOrEqual(16);
+      expect(Number.parseFloat(dialog.style.top) + Number.parseFloat(dialog.style.height)).toBeLessThanOrEqual(anchor.top);
+      inside(dialog);
+
+      const more = screen.getByRole('button', { name: '+5 more' });
+      await act(async () => {
+        fireEvent.click(more);
+      });
+      view.w = 400;
+      view.h = 568;
+      anchor.top = 150;
+      await act(async () => {
+        fireEvent.click(more);
+      });
+      const reopened = screen.getByRole('dialog');
+      expect(reopened.style.top).toBe('181.5px');
+      view.w = 320;
+      view.h = 240;
+      await act(async () => {
+        window.dispatchEvent(new Event('resize'));
+      });
+      expect(reopened.style.top).toBe('16px');
+      expect(Number.parseFloat(reopened.style.height)).toBeLessThanOrEqual(130);
+      expect(16 + Number.parseFloat(reopened.style.height)).toBeLessThanOrEqual(150);
+      inside(reopened);
     } finally {
       Reflect.deleteProperty(root, 'clientWidth');
       Reflect.deleteProperty(root, 'clientHeight');

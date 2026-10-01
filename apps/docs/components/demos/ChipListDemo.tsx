@@ -38,8 +38,8 @@ function chooseSide(
   const room = placedAbove ? above : below;
   const other = placedAbove ? below : above;
   if (content <= room || room >= minVisible) return placedAbove;
-  if (other > room) return !placedAbove;
-  return placedAbove;
+  if (other >= minVisible || content <= other) return !placedAbove;
+  return other > room ? !placedAbove : placedAbove;
 }
 
 function minVisibleHeight(panel: HTMLElement) {
@@ -59,6 +59,7 @@ function placeChipPanel(trigger: HTMLElement, panel: HTMLElement, placedAbove: b
   const maxWidth = Math.max(0, Math.min(18 * rem, vw - PANEL_INSET * 2));
   const scrollTop = panel.scrollTop;
   panel.style.maxWidth = `${maxWidth}px`;
+  panel.style.height = '';
   panel.style.maxHeight = '';
   const anchor = trigger.getBoundingClientRect();
   const rect = panel.getBoundingClientRect();
@@ -72,20 +73,32 @@ function placeChipPanel(trigger: HTMLElement, panel: HTMLElement, placedAbove: b
   let maxHeight = Math.max(0, placeAbove ? above : below);
   let height = Math.min(rect.height, maxHeight);
   let top = placeAbove ? anchor.top - PANEL_GAP - height : anchor.bottom + PANEL_GAP;
-  if (anchor.bottom > 0 && anchor.top < vh) {
-    if (top < 0) {
-      height = Math.max(0, height + top);
-      top = 0;
-      maxHeight = Math.min(maxHeight, height);
-    }
-    if (top + height > vh) {
-      height = Math.max(0, vh - top);
-      maxHeight = Math.min(maxHeight, height);
+  const fullyVisible = anchor.top >= 0 && anchor.bottom <= vh;
+  if (fullyVisible) {
+    const maxBottom = vh - PANEL_INSET;
+    if (placeAbove) {
+      const attach = anchor.top - PANEL_GAP;
+      if (top < PANEL_INSET) {
+        top = Math.min(PANEL_INSET, attach);
+        height = Math.max(0, attach - top);
+        maxHeight = height;
+      }
+      if (top + height > maxBottom) {
+        height = Math.max(0, maxBottom - top);
+        maxHeight = height;
+      }
+    } else {
+      const limit = Math.max(0, maxBottom - top);
+      if (height > limit) {
+        height = limit;
+        maxHeight = height;
+      }
     }
   }
+  panel.style.height = `${height}px`;
   panel.style.maxHeight = `${maxHeight}px`;
   if (panel.scrollTop !== scrollTop) panel.scrollTop = scrollTop;
-  return { top, left, maxWidth, maxHeight, above: placeAbove };
+  return { top, left, maxWidth, maxHeight, height, above: placeAbove };
 }
 
 function syncPanelTab(panel: HTMLElement) {
@@ -184,7 +197,13 @@ function ChipList({
 }) {
   const { listRef, measureRef, measured, visible, hidden } = useChipList({ chips, maxRows });
   const [open, setOpen] = useState(false);
-  const [panelBox, setPanelBox] = useState<{ top: number; left: number; maxWidth: number; maxHeight: number } | null>(
+  const [panelBox, setPanelBox] = useState<{
+    top: number;
+    left: number;
+    maxWidth: number;
+    maxHeight: number;
+    height: number;
+  } | null>(
     null,
   );
   const [ring, setRing] = useState(false);
@@ -229,19 +248,28 @@ function ChipList({
     const trigger = moreRef.current;
     const panel = popover.popoverRef.current;
     if (!trigger || !panel) return;
+    panel.scrollTop = 0;
+    rowScroll.delete(panel);
     const side = { above: null as boolean | null };
     const apply = () => {
       const next = placeChipPanel(trigger, panel, side.above);
       syncPanelTab(panel);
       if (!next) return;
       side.above = next.above;
-      const box = { top: next.top, left: next.left, maxWidth: next.maxWidth, maxHeight: next.maxHeight };
+      const box = {
+        top: next.top,
+        left: next.left,
+        maxWidth: next.maxWidth,
+        maxHeight: next.maxHeight,
+        height: next.height,
+      };
       setPanelBox((prev) =>
         prev &&
         prev.top === box.top &&
         prev.left === box.left &&
         prev.maxWidth === box.maxWidth &&
-        prev.maxHeight === box.maxHeight
+        prev.maxHeight === box.maxHeight &&
+        prev.height === box.height
           ? prev
           : box,
       );
@@ -335,6 +363,7 @@ function ChipList({
       const modified = event.altKey || event.ctrlKey || event.shiftKey || event.metaKey;
       if ((event.key === 'Home' || event.key === 'End' || line || page) && modified) return;
       if (event.key === 'Home' || event.key === 'End') {
+        if (panel.scrollHeight <= panel.clientHeight) return;
         panel.scrollTop = event.key === 'Home' ? 0 : panel.scrollHeight - panel.clientHeight;
         event.preventDefault();
         return;
@@ -455,6 +484,7 @@ function ChipList({
             ...wire.style,
             maxWidth: panelBox?.maxWidth ?? 'min(18rem, calc(100vw - 32px))',
             maxHeight: panelBox?.maxHeight,
+            height: panelBox?.height,
             positionTryFallbacks: panelBox ? 'none' : undefined,
             top: panelBox?.top,
             left: panelBox?.left,
