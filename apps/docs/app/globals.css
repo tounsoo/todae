@@ -117,6 +117,7 @@ body {
   gap: var(--todae-space-inline-gap);
   width: max-content;
   max-width: min(18rem, calc(100vw - 32px));
+  scroll-padding: calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
 }
 
 .chip-list-panel:popover-open {

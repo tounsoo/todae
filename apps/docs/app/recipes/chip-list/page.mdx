@@ -50,6 +50,7 @@ function placeChipPanel(trigger: HTMLElement, panel: HTMLElement) {
   if (vw <= 0 || vh <= 0) return null;
   const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
   const maxWidth = Math.max(0, Math.min(18 * rem, vw - PANEL_INSET * 2));
+  const scrollTop = panel.scrollTop;
   panel.style.maxWidth = `${maxWidth}px`;
   panel.style.maxHeight = '';
   const anchor = trigger.getBoundingClientRect();
@@ -61,11 +62,41 @@ function placeChipPanel(trigger: HTMLElement, panel: HTMLElement) {
   const below = vh - anchor.bottom - PANEL_GAP - PANEL_INSET;
   const above = anchor.top - PANEL_GAP - PANEL_INSET;
   const placeAbove = rect.height > below && (rect.height <= above || above > below);
-  const maxHeight = Math.max(0, placeAbove ? above : below);
+  let maxHeight = Math.max(0, placeAbove ? above : below);
+  let height = Math.min(rect.height, maxHeight);
+  let top = placeAbove ? anchor.top - PANEL_GAP - height : anchor.bottom + PANEL_GAP;
+  const minTop = PANEL_INSET;
+  const maxBottom = vh - PANEL_INSET;
+  if (top < minTop || top + height > maxBottom) {
+    maxHeight = Math.max(0, Math.min(maxHeight, maxBottom - minTop));
+    height = Math.min(rect.height, maxHeight);
+    if (top < minTop) top = minTop;
+    if (top + height > maxBottom) top = Math.max(minTop, maxBottom - height);
+  }
   panel.style.maxHeight = `${maxHeight}px`;
-  const height = Math.min(rect.height, maxHeight);
-  const top = placeAbove ? anchor.top - PANEL_GAP - height : anchor.bottom + PANEL_GAP;
+  if (panel.scrollTop !== scrollTop) panel.scrollTop = scrollTop;
   return { top, left, maxWidth, maxHeight };
+}
+
+function syncPanelTab(panel: HTMLElement) {
+  const overflows = panel.scrollHeight > panel.clientHeight;
+  const inward = panel.querySelector('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])');
+  panel.tabIndex = overflows && !inward ? 0 : -1;
+}
+
+function revealChip(panel: HTMLElement, target: EventTarget | null) {
+  if (!(target instanceof HTMLElement) || target === panel || !panel.contains(target) || panel.clientHeight <= 0) return;
+  const chip = target.closest<HTMLElement>('span[class]');
+  if (!chip) return;
+  const style = getComputedStyle(panel);
+  const padTop = Number.parseFloat(style.scrollPaddingTop) || 0;
+  const padBottom = Number.parseFloat(style.scrollPaddingBottom) || 0;
+  const viewTop = panel.getBoundingClientRect().top;
+  const box = chip.getBoundingClientRect();
+  const above = viewTop + padTop - box.top;
+  const below = box.bottom - (viewTop + panel.clientHeight - padBottom);
+  if (above > 0) panel.scrollTop -= above;
+  else if (below > 0) panel.scrollTop += below;
 }
 const TABBABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
@@ -77,7 +108,7 @@ function focusAfter(el: HTMLElement | null) {
   const panel = document.getElementById(el.getAttribute('aria-controls') ?? '');
   const next = [...document.querySelectorAll<HTMLElement>(TABBABLE)].find((node) => {
     if (node.closest('[inert],[hidden],[disabled]') || node.closest('[aria-hidden="true"]')) return false;
-    if (panel?.contains(node)) return false;
+    if (node === panel || panel?.contains(node)) return false;
     return (el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   });
   (next ?? el).focus();
@@ -169,6 +200,7 @@ function ChipList({
     if (!trigger || !panel) return;
     const apply = () => {
       const next = placeChipPanel(trigger, panel);
+      syncPanelTab(panel);
       if (!next) return;
       setPanelBox((prev) =>
         prev &&
@@ -180,14 +212,28 @@ function ChipList({
           : next,
       );
     };
+    const onScroll = (event: Event) => {
+      const target = event.target;
+      if (target instanceof Node && (target === panel || panel.contains(target))) return;
+      apply();
+    };
+    const onFocusIn = (event: FocusEvent) => revealChip(panel, event.target);
     apply();
     window.addEventListener('resize', apply);
-    window.addEventListener('scroll', apply, true);
+    window.addEventListener('scroll', onScroll, true);
+    panel.addEventListener('focusin', onFocusIn);
     return () => {
       window.removeEventListener('resize', apply);
-      window.removeEventListener('scroll', apply, true);
+      window.removeEventListener('scroll', onScroll, true);
+      panel.removeEventListener('focusin', onFocusIn);
     };
   }, [shown, popover.popoverRef, tail.length]);
+
+  useLayoutEffect(() => {
+    if (!shown) return;
+    const panel = popover.popoverRef.current;
+    if (panel) syncPanelTab(panel);
+  });
 
   useLayoutEffect(() => {
     if (!pending.current) return;
@@ -240,6 +286,9 @@ function ChipList({
       const line = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
       const page = event.key === 'PageDown' ? 1 : event.key === 'PageUp' ? -1 : 0;
       if (line || page) {
+        const maxScroll = panel.scrollHeight - panel.clientHeight;
+        const backward = line + page < 0;
+        if (backward ? panel.scrollTop <= 0 : panel.scrollTop >= maxScroll) return;
         const chip = panel.querySelector<HTMLElement>('span[class]');
         const gap = Number.parseFloat(getComputedStyle(panel).rowGap) || 0;
         panel.scrollBy({ top: line ? line * ((chip?.offsetHeight ?? 0) + gap) : page * panel.clientHeight });
@@ -415,6 +464,7 @@ function ChipList({
   gap: var(--todae-space-inline-gap);
   width: max-content;
   max-width: min(18rem, calc(100vw - 32px));
+  scroll-padding: calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
 }
 .chip-list-panel:popover-open {
   display: flex;
