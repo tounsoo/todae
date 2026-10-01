@@ -14,8 +14,8 @@ const ROW =
 const GAP = 'var(--todae-space-inline-gap)';
 const PAD = 'calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset))';
 
-function rect(width: number, height = 24) {
-  return { width, height, top: 0, left: 0, bottom: height, right: width, x: 0, y: 0, toJSON() {} };
+function rect(width: number, height = 24, top = 0, left = 0) {
+  return { width, height, top, left, bottom: top + height, right: left + width, x: left, y: top, toJSON() {} };
 }
 
 function live(container: HTMLElement, selector: string) {
@@ -349,6 +349,20 @@ describe('chip list recipe', () => {
     body.assert();
   });
 
+  it('scrolls the open panel from the arrow keys', async () => {
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} readOnly />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    const dialog = screen.getByRole('dialog', { name: '5 more tags' });
+    const scrollBy = vi.fn();
+    dialog.scrollBy = scrollBy;
+    expect(fireEvent.keyDown(dialog, { key: 'ArrowDown' })).toBe(false);
+    const chip = dialog.querySelector('span[class]') as HTMLElement | null;
+    expect(scrollBy).toHaveBeenCalledWith({ top: chip?.offsetHeight ?? 0 });
+    expect(dialog.getAttribute('role')).toBe('dialog');
+  });
+
   it('tabs out of a read-only panel to the control after +N', async () => {
     const body = watchBody();
     render(
@@ -460,6 +474,60 @@ describe('chip list recipe', () => {
     expect(screen.getByRole('button', { name: '+4 more' })).toBeTruthy();
     expect(list.style.outline).toBe('');
     body.assert();
+  });
+
+  it('caps the +N panel to the open side and keeps the 4px gap', async () => {
+    const view = { w: 400, h: 900 };
+    const root = document.documentElement;
+    Object.defineProperty(root, 'clientWidth', { configurable: true, get: () => view.w });
+    Object.defineProperty(root, 'clientHeight', { configurable: true, get: () => view.h });
+    const triggerH = 27.5;
+    const panelH = 176;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('role') === 'dialog') return rect(200, panelH);
+      if (this.classList.contains('chip-list-more')) return rect(40, triggerH, view.h / 2, 32);
+      if (this.getAttribute('data-overflow') != null) return rect(50);
+      if (this.getAttribute('role') === 'list' || this.querySelector?.(':scope > input')) return rect(400, 32);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(100);
+      return rect(0, 0);
+    });
+    const cases = [
+      { w: 320, h: 300, top: '16px', maxHeight: '130px' },
+      { w: 375, h: 360, top: '16px', maxHeight: '160px' },
+      { w: 400, h: 380, top: '16px', maxHeight: '170px' },
+      { w: 400, h: 568, top: '315.5px', maxHeight: '236.5px' },
+      { w: 400, h: 900, top: '481.5px', maxHeight: '402.5px' },
+    ] as const;
+    try {
+      for (const item of cases) {
+        view.w = item.w;
+        view.h = item.h;
+        const ui = render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
+        await act(async () => {
+          fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+        });
+        const dialog = screen.getByRole('dialog');
+        const top = Number.parseFloat(dialog.style.top);
+        const maxHeight = Number.parseFloat(dialog.style.maxHeight);
+        const used = Math.min(panelH, maxHeight);
+        const anchorTop = item.h / 2;
+        const anchorBottom = anchorTop + triggerH;
+        const gap = top + used <= anchorTop ? anchorTop - (top + used) : top - anchorBottom;
+        expect(dialog.style.top).toBe(item.top);
+        expect(dialog.style.maxHeight).toBe(item.maxHeight);
+        expect(dialog.style.left).toBe('32px');
+        expect(dialog.style.maxWidth).toBe('288px');
+        expect(gap).toBe(4);
+        expect(top + used <= anchorTop || top >= anchorBottom).toBe(true);
+        expect(top).toBeGreaterThanOrEqual(16);
+        expect(top + used).toBeLessThanOrEqual(item.h - 16);
+        expect(Number.parseFloat(dialog.style.left)).toBeGreaterThanOrEqual(16);
+        ui.unmount();
+      }
+    } finally {
+      Reflect.deleteProperty(root, 'clientWidth');
+      Reflect.deleteProperty(root, 'clientHeight');
+    }
   });
 
   it('keeps wrapper height when the popover opens', async () => {

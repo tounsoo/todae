@@ -51,17 +51,21 @@ function placeChipPanel(trigger: HTMLElement, panel: HTMLElement) {
   const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
   const maxWidth = Math.max(0, Math.min(18 * rem, vw - PANEL_INSET * 2));
   panel.style.maxWidth = `${maxWidth}px`;
+  panel.style.maxHeight = '';
   const anchor = trigger.getBoundingClientRect();
   const rect = panel.getBoundingClientRect();
   let left = anchor.left;
   const maxLeft = vw - PANEL_INSET - rect.width;
   if (left > maxLeft) left = maxLeft;
   if (left < PANEL_INSET) left = PANEL_INSET;
-  const spaceBelow = vh - anchor.bottom - PANEL_GAP;
-  let top = rect.height > spaceBelow ? anchor.top - PANEL_GAP - rect.height : anchor.bottom + PANEL_GAP;
-  if (top < 0) top = 0;
-  if (top + rect.height > vh) top = Math.max(0, vh - rect.height);
-  return { top, left, maxWidth };
+  const below = vh - anchor.bottom - PANEL_GAP - PANEL_INSET;
+  const above = anchor.top - PANEL_GAP - PANEL_INSET;
+  const placeAbove = rect.height > below && (rect.height <= above || above > below);
+  const maxHeight = Math.max(0, placeAbove ? above : below);
+  panel.style.maxHeight = `${maxHeight}px`;
+  const height = Math.min(rect.height, maxHeight);
+  const top = placeAbove ? anchor.top - PANEL_GAP - height : anchor.bottom + PANEL_GAP;
+  return { top, left, maxWidth, maxHeight };
 }
 const TABBABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
@@ -118,7 +122,9 @@ function ChipList({
 }) {
   const { listRef, measureRef, measured, visible, hidden } = useChipList({ chips, maxRows });
   const [open, setOpen] = useState(false);
-  const [panelBox, setPanelBox] = useState<{ top: number; left: number; maxWidth: number } | null>(null);
+  const [panelBox, setPanelBox] = useState<{ top: number; left: number; maxWidth: number; maxHeight: number } | null>(
+    null,
+  );
   const [ring, setRing] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
   const parked = useRef(false);
@@ -165,7 +171,13 @@ function ChipList({
       const next = placeChipPanel(trigger, panel);
       if (!next) return;
       setPanelBox((prev) =>
-        prev && prev.top === next.top && prev.left === next.left && prev.maxWidth === next.maxWidth ? prev : next,
+        prev &&
+        prev.top === next.top &&
+        prev.left === next.left &&
+        prev.maxWidth === next.maxWidth &&
+        prev.maxHeight === next.maxHeight
+          ? prev
+          : next,
       );
     };
     apply();
@@ -223,9 +235,18 @@ function ChipList({
   useEffect(() => {
     if (!open || hidden === 0) return;
     function onKey(event: globalThis.KeyboardEvent) {
-      if (event.key !== 'Tab') return;
       const panel = popover.popoverRef.current;
       if (!(event.target instanceof Node) || !panel?.contains(event.target)) return;
+      const line = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+      const page = event.key === 'PageDown' ? 1 : event.key === 'PageUp' ? -1 : 0;
+      if (line || page) {
+        const chip = panel.querySelector<HTMLElement>('span[class]');
+        const gap = Number.parseFloat(getComputedStyle(panel).rowGap) || 0;
+        panel.scrollBy({ top: line ? line * ((chip?.offsetHeight ?? 0) + gap) : page * panel.clientHeight });
+        event.preventDefault();
+        return;
+      }
+      if (event.key !== 'Tab') return;
       const buttons = [...panel.querySelectorAll<HTMLElement>('button:not([disabled])')];
       const edge = event.shiftKey ? buttons[0] : buttons[buttons.length - 1];
       if (event.target !== panel && buttons.length > 0 && event.target !== edge) return;
@@ -322,6 +343,7 @@ function ChipList({
           style={{
             ...wire.style,
             maxWidth: panelBox?.maxWidth ?? 'min(18rem, calc(100vw - 32px))',
+            maxHeight: panelBox?.maxHeight,
             positionTryFallbacks: panelBox ? 'none' : undefined,
             top: panelBox?.top,
             left: panelBox?.left,
