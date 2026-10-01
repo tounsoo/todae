@@ -6,10 +6,7 @@ export type ChipOverflowInput = {
   /** Input minimum. The same reserve is used while chips are folded, so the input stays on the +N row. */
   m?: number;
   R?: number;
-  /**
-   * Measured width of the "…" probe. Ignored. The probe stays in the measure DOM so
-   * Field.ChipInput server markup keeps its child order.
-   */
+  /** Smallest truncated chip: measured "…" probe plus one character. Below this, the chip folds into +N. */
   minChip?: number;
 };
 
@@ -41,7 +38,7 @@ export function rowsFor(items: number[], W: number, g: number): number {
   return rows;
 }
 
-export function planChipOverflow({ W, g, c, p, m, R }: ChipOverflowInput): ChipOverflowPlan {
+export function planChipOverflow({ W, g, c, p, m, R, minChip }: ChipOverflowInput): ChipOverflowPlan {
   const n = c.length;
   if (R == null || R < 1) return { visible: n, hidden: 0 };
   for (let hidden = 0; hidden <= n; hidden++) {
@@ -52,15 +49,18 @@ export function planChipOverflow({ W, g, c, p, m, R }: ChipOverflowInput): ChipO
     if (rowsFor([...chips, ...tail(hidden, p, m)], W, g) <= R) return { visible, hidden };
   }
 
-  // No full-width chip fits with +N and the input. Keep the first chip, truncated
-  // to the space those extras leave, so a row that has chips never shows only +N.
+  // No full-width chip fits with +N and the input. Keep the first chip, truncated,
+  // unless even one character plus the ellipsis cannot fit.
   const first = c[0];
+  const floor = minChip ?? 0;
   if (first != null && W > 0) {
     const hidden = n - 1;
     const extras = tail(hidden, p, m);
-    if (first > W && rowsFor([W, ...extras], W, g) <= R) return { visible: 1, hidden, lastChipWidth: W };
+    if (first > W && W >= floor && rowsFor([W, ...extras], W, g) <= R) {
+      return { visible: 1, hidden, lastChipWidth: W };
+    }
     const share = W - extras.reduce((sum, w) => sum + g + w, 0);
-    if (share > 0 && share < first && rowsFor([share, ...extras], W, g) <= R) {
+    if (share > 0 && share >= floor && share < first && rowsFor([share, ...extras], W, g) <= R) {
       return { visible: 1, hidden, lastChipWidth: share };
     }
   }

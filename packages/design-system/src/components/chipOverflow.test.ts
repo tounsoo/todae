@@ -191,11 +191,32 @@ describe('planChipOverflow', () => {
     expect(two.lastChipWidth).not.toBeNaN();
   });
 
-  it('truncates instead of hiding when the leftover is below the unused probe width', () => {
+  it('folds the chip when the leftover is below minChip', () => {
     expect(planChipOverflow({ W: 200, g: 8, c: [150, 80], p: 50, m: 80, R: 1, minChip: 100 })).toEqual({
+      visible: 0,
+      hidden: 2,
+    });
+  });
+
+  it('keeps a truncated chip when the leftover equals minChip', () => {
+    expect(planChipOverflow({ W: 200, g: 8, c: [150, 80], p: 50, m: 80, R: 1, minChip: 54 })).toEqual({
       visible: 1,
       hidden: 1,
       lastChipWidth: 54,
+    });
+  });
+
+  it('folds the chip when the leftover is 0.1px under minChip', () => {
+    expect(planChipOverflow({ W: 200, g: 8, c: [150, 80], p: 50, m: 80, R: 1, minChip: 54.1 })).toEqual({
+      visible: 0,
+      hidden: 2,
+    });
+  });
+
+  it('folds an over-wide chip when the row is under minChip', () => {
+    expect(planChipOverflow({ W: 90, g: 8, c: [400], p: 40, R: 1, minChip: 100 })).toEqual({
+      visible: 0,
+      hidden: 1,
     });
   });
 });

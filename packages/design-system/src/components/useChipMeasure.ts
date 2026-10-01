@@ -1,6 +1,17 @@
 import { useCallback, useLayoutEffect, useState, type RefObject } from 'react';
 import { planChipOverflow } from './chipOverflow';
 
+function firstCharWidth(chip: HTMLElement | undefined): number {
+  const text = chip?.querySelector('span')?.firstChild ?? chip?.firstChild;
+  if (!text || text.nodeType !== Node.TEXT_NODE) return 0;
+  const char = [...(text.textContent ?? '')][0];
+  if (!char || typeof Range === 'undefined') return 0;
+  const range = document.createRange();
+  range.setStart(text, 0);
+  range.setEnd(text, char.length);
+  return range.getBoundingClientRect?.().width || 0;
+}
+
 export function useChipMeasure({
   chips,
   maxRows,
@@ -43,8 +54,9 @@ export function useChipMeasure({
     const chipEls = kids.slice(0, -2);
     const c = chipEls.map((el) => el.getBoundingClientRect().width);
     const p = overflowEl.getBoundingClientRect().width;
+    const minChip = probeEl.getBoundingClientRect().width + firstCharWidth(chipEls[0]);
     const open = input ? Number.parseFloat(getComputedStyle(input).minWidth) || 0 : undefined;
-    const next = planChipOverflow({ W, g, c, p, m: open, R: maxRows });
+    const next = planChipOverflow({ W, g, c, p, m: open, R: maxRows, minChip });
     setPlan((prev) =>
       prev.visible === next.visible && prev.hidden === next.hidden && prev.lastChipWidth === next.lastChipWidth
         ? prev

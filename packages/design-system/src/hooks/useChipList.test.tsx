@@ -180,6 +180,37 @@ describe('useChipList', () => {
     expect(screen.getByTestId('hidden').textContent).toBe('2');
   });
 
+  it('measures minChip as the ellipsis probe plus one character', () => {
+    const proto = Range.prototype as unknown as { getBoundingClientRect?: () => { width: number } };
+    const previous = proto.getBoundingClientRect;
+    proto.getBoundingClientRect = () => rect(12);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('data-overflow') != null) return rect(30);
+      if (this.querySelector?.(':scope > input') || this.getAttribute('role') === 'list') return rect(box, 32);
+      const text = this.textContent ?? '';
+      if (text.startsWith('…')) return rect(40);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button')) return rect(80);
+      return rect(0, 0);
+    });
+    try {
+      box = 90;
+      const fit = render(<Host chips={['Alpha', 'Beta']} maxRows={1} />);
+      const chip = fit.container.querySelector('[data-chip]') as HTMLElement;
+      expect(chip.textContent).toBe('Alpha');
+      expect(chip.getAttribute('data-ellipsis')).toBe('');
+      expect(chip.style.maxWidth).toBe('52px');
+      expect(fit.getByTestId('hidden').textContent).toBe('1');
+      fit.unmount();
+      box = 89.9;
+      render(<Host chips={['Alpha', 'Beta']} maxRows={1} />);
+      expect(screen.getByTestId('count').textContent).toBe('0');
+      expect(screen.getByTestId('hidden').textContent).toBe('2');
+      expect(document.querySelector('[data-chip]')).toBeNull();
+    } finally {
+      proto.getBoundingClientRect = previous;
+    }
+  });
+
   it('truncates a chip wider than the row and keeps its full label', () => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
       if (this.getAttribute('data-overflow') != null) return rect(40);
