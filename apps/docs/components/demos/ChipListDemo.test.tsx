@@ -10,6 +10,7 @@ import { ChipListDemo } from './ChipListDemo';
 const require = createRequire(import.meta.url);
 const EIGHT = ['aa', 'bb', 'cc', 'dd', 'ee', 'ff', 'gg', 'hh'];
 const scrollPad = { value: '0px' };
+const panelPad = { value: '0px' };
 const ROW =
   'calc(var(--todae-chip-font-size) * var(--todae-chip-leading) + 2 * var(--todae-chip-padding-y) + 2 * var(--todae-chip-border-width))';
 const GAP = 'var(--todae-space-inline-gap)';
@@ -66,6 +67,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   scrollPad.value = '0px';
+  panelPad.value = '0px';
   document.body.querySelectorAll(':scope > button, :scope > [role="dialog"]').forEach((node) => node.remove());
 });
 
@@ -90,6 +92,8 @@ beforeEach(() => {
         content: 'none',
         scrollPaddingTop: scrollPad.value,
         scrollPaddingBottom: scrollPad.value,
+        paddingTop: panelPad.value,
+        paddingBottom: panelPad.value,
         getPropertyValue(name: string) {
           if (name === 'min-width') return minWidth;
           if (name === 'column-gap' || name === 'gap') return '8px';
@@ -717,6 +721,42 @@ describe('chip list recipe', () => {
     }
   });
 
+  it('leaves 4px between the ring and the panel edge', async () => {
+    scrollPad.value = '8px';
+    const root = document.documentElement;
+    Object.defineProperty(root, 'clientWidth', { configurable: true, get: () => 320 });
+    Object.defineProperty(root, 'clientHeight', { configurable: true, get: () => 300 });
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('role') === 'dialog') return rect(200, 100, 0, 32);
+      if (this.classList.contains('chip-list-more')) return rect(40, 27.5, 150, 32);
+      if (this.getAttribute('data-overflow') != null) return rect(50);
+      if (this.getAttribute('role') === 'list') return rect(400, 32);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(100, 28, -2, 32);
+      return rect(0, 0);
+    });
+    try {
+      render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+      });
+      const dialog = screen.getByRole('dialog');
+      Object.defineProperty(dialog, 'clientHeight', { configurable: true, value: 100 });
+      Object.defineProperty(dialog, 'clientTop', { configurable: true, value: 1 });
+      (document.activeElement as HTMLElement | null)?.blur();
+      dialog.scrollTop = 40;
+      await act(async () => {
+        screen.getByRole('button', { name: 'Remove hh' }).focus();
+      });
+      expect(dialog.scrollTop).toBe(40 - (1 + 8 - -2));
+      const reveal = 'scroll-padding: calc(2 * (var(--todae-chip-ring-width) + var(--todae-chip-ring-offset)))';
+      expect(readFileSync(require.resolve('../../app/globals.css'), 'utf8')).toContain(reveal);
+      expect(readFileSync(require.resolve('../../app/recipes/chip-list/page.mdx'), 'utf8')).toContain(reveal);
+    } finally {
+      Reflect.deleteProperty(root, 'clientWidth');
+      Reflect.deleteProperty(root, 'clientHeight');
+    }
+  });
+
   it('moves focus to the next chip without centering it', async () => {
     scrollPad.value = '4px';
     const root = document.documentElement;
@@ -897,7 +937,7 @@ describe('chip list recipe', () => {
     }
   });
 
-  it('keeps the open side across a 6px scroll until the other side can hold the panel', async () => {
+  it('keeps the open side across a 6px scroll while a row still fits', async () => {
     const view = { w: 400, h: 400 };
     const anchor = { top: 186.25 };
     const root = document.documentElement;
@@ -928,7 +968,57 @@ describe('chip list recipe', () => {
       await act(async () => {
         document.dispatchEvent(new Event('scroll'));
       });
-      expect(dialog.style.top).toBe('20px');
+      expect(dialog.style.top).toBe('231.5px');
+      expect(dialog.style.maxHeight).toBe('152.5px');
+    } finally {
+      Reflect.deleteProperty(root, 'clientWidth');
+      Reflect.deleteProperty(root, 'clientHeight');
+    }
+  });
+
+  it('flips when the open side can no longer show one chip row', async () => {
+    panelPad.value = '20px';
+    const view = { w: 400, h: 568 };
+    const anchor = { top: 160 };
+    const root = document.documentElement;
+    Object.defineProperty(root, 'clientWidth', { configurable: true, get: () => view.w });
+    Object.defineProperty(root, 'clientHeight', { configurable: true, get: () => view.h });
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('role') === 'dialog') return rect(200, 176);
+      if (this.classList.contains('chip-list-more')) return rect(40, 27.5, anchor.top, 32);
+      if (this.getAttribute('data-overflow') != null) return rect(50);
+      if (this.getAttribute('role') === 'list') return rect(400, 32);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(100, 24);
+      return rect(0, 0);
+    });
+    try {
+      render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+      });
+      const dialog = screen.getByRole('dialog');
+      expect(dialog.style.top).toBe('191.5px');
+      view.h = 300;
+      await act(async () => {
+        window.dispatchEvent(new Event('resize'));
+      });
+      expect(dialog.style.top).toBe('191.5px');
+      expect(dialog.style.maxHeight).toBe('92.5px');
+      view.h = 200;
+      await act(async () => {
+        window.dispatchEvent(new Event('resize'));
+      });
+      expect(dialog.style.top).toBe('16px');
+      expect(dialog.style.maxHeight).toBe('140px');
+      expect(16 + 140).toBeLessThanOrEqual(view.h);
+      anchor.top = 520;
+      view.h = 568;
+      await act(async () => {
+        window.dispatchEvent(new Event('resize'));
+      });
+      expect(dialog.style.top).toBe('340px');
+      expect(Number.parseFloat(dialog.style.top) + Math.min(176, Number.parseFloat(dialog.style.maxHeight))).toBeLessThanOrEqual(view.h);
+      expect(520 - (Number.parseFloat(dialog.style.top) + Math.min(176, Number.parseFloat(dialog.style.maxHeight)))).toBe(4);
     } finally {
       Reflect.deleteProperty(root, 'clientWidth');
       Reflect.deleteProperty(root, 'clientHeight');

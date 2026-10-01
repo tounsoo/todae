@@ -26,14 +26,29 @@ const MEASURE_CHIP: CSSProperties = { flex: 'none', maxWidth: 'none' };
 const PANEL_GAP = 4;
 const PANEL_INSET = 16;
 
-function chooseSide(content: number, below: number, above: number, placedAbove: boolean | null) {
+function chooseSide(
+  content: number,
+  below: number,
+  above: number,
+  placedAbove: boolean | null,
+  minVisible: number,
+) {
   const openAbove = content > below && (content <= above || above > below);
   if (placedAbove === null) return openAbove;
   const room = placedAbove ? above : below;
   const other = placedAbove ? below : above;
-  if (content <= room) return placedAbove;
-  if (content <= other && other > room) return !placedAbove;
+  if (content <= room || room >= minVisible) return placedAbove;
+  if (other > room) return !placedAbove;
   return placedAbove;
+}
+
+function minVisibleHeight(panel: HTMLElement) {
+  const chip = panel.querySelector<HTMLElement>('span[class]');
+  const row = chip?.getBoundingClientRect().height ?? 0;
+  const style = getComputedStyle(panel);
+  const pad = (Number.parseFloat(style.paddingTop) || 0) + (Number.parseFloat(style.paddingBottom) || 0);
+  const border = panel.clientTop + Math.max(0, panel.offsetHeight - panel.clientHeight - panel.clientTop);
+  return row + pad + border;
 }
 
 function placeChipPanel(trigger: HTMLElement, panel: HTMLElement, placedAbove: boolean | null) {
@@ -53,10 +68,21 @@ function placeChipPanel(trigger: HTMLElement, panel: HTMLElement, placedAbove: b
   if (left < PANEL_INSET) left = PANEL_INSET;
   const below = vh - anchor.bottom - PANEL_GAP - PANEL_INSET;
   const above = anchor.top - PANEL_GAP - PANEL_INSET;
-  const placeAbove = chooseSide(rect.height, below, above, placedAbove);
-  const maxHeight = Math.max(0, placeAbove ? above : below);
-  const height = Math.min(rect.height, maxHeight);
-  const top = placeAbove ? anchor.top - PANEL_GAP - height : anchor.bottom + PANEL_GAP;
+  const placeAbove = chooseSide(rect.height, below, above, placedAbove, minVisibleHeight(panel));
+  let maxHeight = Math.max(0, placeAbove ? above : below);
+  let height = Math.min(rect.height, maxHeight);
+  let top = placeAbove ? anchor.top - PANEL_GAP - height : anchor.bottom + PANEL_GAP;
+  if (anchor.bottom > 0 && anchor.top < vh) {
+    if (top < 0) {
+      height = Math.max(0, height + top);
+      top = 0;
+      maxHeight = Math.min(maxHeight, height);
+    }
+    if (top + height > vh) {
+      height = Math.max(0, vh - top);
+      maxHeight = Math.min(maxHeight, height);
+    }
+  }
   panel.style.maxHeight = `${maxHeight}px`;
   if (panel.scrollTop !== scrollTop) panel.scrollTop = scrollTop;
   return { top, left, maxWidth, maxHeight, above: placeAbove };
