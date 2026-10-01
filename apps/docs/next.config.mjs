@@ -5,6 +5,7 @@ const nextConfig = {
   outputFileTracingIncludes: {
     '/api/[transport]': ['./app/**/page.mdx'],
   },
+  redirects: async () => [{ source: '/combobox', destination: '/recipes/combobox', permanent: true }],
 };
 
 export default createMDX()(nextConfig);

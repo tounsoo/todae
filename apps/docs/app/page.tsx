@@ -47,9 +47,6 @@ export default function HomePage() {
           <a href="/optionlist">OptionList</a>
         </li>
         <li>
-          <a href="/combobox">Combobox</a>
-        </li>
-        <li>
           <a href="/bottomsheet">BottomSheet</a>
         </li>
         <li>
@@ -69,6 +66,9 @@ export default function HomePage() {
       <ul>
         <li>
           <a href="/recipes/chip-list">Chip list with overflow</a>
+        </li>
+        <li>
+          <a href="/recipes/combobox">Combobox</a>
         </li>
       </ul>
     </>
