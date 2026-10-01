@@ -87,20 +87,21 @@ function ChipList({
 
   useLayoutEffect(() => {
     const value = moved.current;
+    const list = listRef.current;
+    const button =
+      value && list
+        ? [...list.querySelectorAll('button')].find((el) => el.getAttribute('aria-label') === `Remove ${value}`)
+        : undefined;
     if (hidden === 0 && open) {
       moved.current = null;
       parked.current = false;
-      listRef.current?.focus({ preventScroll: true });
+      (button ?? list)?.focus({ preventScroll: true });
       setOpen(false);
       return;
     }
     if (!value) return;
     moved.current = null;
     parked.current = false;
-    const list = listRef.current;
-    const button = list
-      ? [...list.querySelectorAll('button')].find((el) => el.getAttribute('aria-label') === `Remove ${value}`)
-      : undefined;
     (button ?? moreRef.current)?.focus({ preventScroll: true });
   }, [chips, hidden, listRef, open]);
 
@@ -252,7 +253,7 @@ function ChipList({
         <Popover
           {...wire}
           role="dialog"
-          aria-label={`${hidden} more tags`}
+          aria-label={`${hidden} more ${hidden === 1 ? 'tag' : 'tags'}`}
           className="chip-list-panel"
           style={{ ...wire.style, maxWidth: '18rem' }}
         >

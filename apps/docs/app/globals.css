@@ -128,6 +128,11 @@ body {
   outline-offset: var(--todae-chip-ring-offset);
 }
 
+[role='list']:focus-visible {
+  outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
+  outline-offset: var(--todae-chip-ring-offset);
+}
+
 main {
   max-width: 48rem;
   padding: 1.5rem;
@@ -149,6 +154,10 @@ main {
   margin: 0;
   max-width: 100%;
   overflow-x: auto;
+}
+
+.docs-pre pre:focus-visible {
+  outline: none;
 }
 
 .scroll-x {

@@ -20,7 +20,7 @@ import type {
 } from '../components/OptionList';
 import type { PopoverWire } from '../components/Popover.wire';
 import { createAsyncGate } from './useCombobox.async';
-import { usePopover } from './usePopover';
+import { usePopoverInternal } from './usePopover';
 import { defaultFilter, filterOptions } from './useCombobox.filter';
 import type {
   ComboboxCloseReason,
@@ -584,14 +584,17 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     ],
   );
 
-  const popover = usePopover({
-    open,
-    onOpenChange: setOpen,
-    anchorRef,
-    initialFocusRef: inputRef,
-    restoreFocusRef: inputRef,
-    enabled: !isSheet,
-  });
+  const popover = usePopoverInternal(
+    {
+      open,
+      onOpenChange: setOpen,
+      anchorRef,
+      initialFocusRef: inputRef,
+      restoreFocusRef: inputRef,
+      enabled: !isSheet,
+    },
+    false,
+  );
 
   const getSheetProps = useCallback(
     (): Pick<

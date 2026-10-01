@@ -463,7 +463,7 @@ describe('chip list recipe', () => {
     });
   }
 
-  it('moves focus to the list before the popover unmounts when hidden drops to 0', async () => {
+  it('moves focus to the chip that entered the list before the popover unmounts when hidden drops to 0', async () => {
     const body = watchBody();
     const width = { current: 400 };
     const ros = stubListWidth(width);
@@ -475,7 +475,9 @@ describe('chip list recipe', () => {
     width.current = 4000;
     await resizeTo(ros);
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(document.activeElement).toBe(screen.getByRole('list', { name: 'Tags' }));
+    const active = document.activeElement as HTMLElement;
+    expect(active.getAttribute('aria-label')).toBe('Remove dd');
+    expect(active.closest('[role="list"]')).toBe(screen.getByRole('list', { name: 'Tags' }));
     body.assert();
   });
 

@@ -90,6 +90,23 @@ describe('useCombobox', () => {
     expect(input.getAttribute('aria-haspopup')).toBeNull();
   });
 
+  it('closes on an outside press and stays closed', () => {
+    render(<SingleBox defaultOpen />);
+    const input = screen.getByRole('combobox');
+    input.focus();
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('listbox')).toBeTruthy();
+    fireEvent.pointerDown(document.body);
+    input.blur();
+    fireEvent.pointerUp(document.body);
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(document.body);
+    // jsdom keeps the listbox mounted. A closed popover is what hides it in the browser.
+    const popover = screen.getByRole('listbox').closest('[popover]');
+    expect(popover?.matches(':popover-open')).toBe(false);
+    expect(popover?.hasAttribute('data-popover-open')).toBe(false);
+  });
+
   it('opens on focus and ArrowDown from closed highlights the first option', () => {
     const onOpenChange = vi.fn();
     render(<SingleBox onOpenChange={onOpenChange} />);

@@ -84,6 +84,14 @@ function stopBubble(event: { stopPropagation: () => void }) {
 }
 
 export function usePopover(options: UsePopoverOptions = {}): UsePopoverResult {
+  return usePopoverInternal(options, true);
+}
+
+/** Not re-exported from the package index. `restoreOnOutside` false skips the outside-click focus return. */
+export function usePopoverInternal(
+  options: UsePopoverOptions,
+  restoreOnOutside: boolean,
+): UsePopoverResult {
   const {
     open: openProp,
     defaultOpen,
@@ -141,6 +149,7 @@ export function usePopover(options: UsePopoverOptions = {}): UsePopoverResult {
       if (eventInside(triggerRef.current, event)) return;
       if (eventInside(anchorRef?.current ?? null, event)) return;
       requestClose('outside');
+      if (!restoreOnOutside) return;
       const trigger = restoreFocusRef?.current ?? triggerRef.current;
       outsideRestore.current?.();
       const finish = () => {
@@ -160,7 +169,7 @@ export function usePopover(options: UsePopoverOptions = {}): UsePopoverResult {
     }
     document.addEventListener('pointerdown', onPointerDown, true);
     return () => document.removeEventListener('pointerdown', onPointerDown, true);
-  }, [anchorRef, enabled, open, requestClose, restoreFocusRef]);
+  }, [anchorRef, enabled, open, requestClose, restoreFocusRef, restoreOnOutside]);
 
   const getTriggerProps = useCallback(
     <P extends PopoverTriggerUserProps>(props?: P): P & PopoverTriggerWire => {
