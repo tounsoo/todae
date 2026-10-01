@@ -26,7 +26,17 @@ const MEASURE_CHIP: CSSProperties = { flex: 'none', maxWidth: 'none' };
 const PANEL_GAP = 4;
 const PANEL_INSET = 16;
 
-function placeChipPanel(trigger: HTMLElement, panel: HTMLElement) {
+function chooseSide(content: number, below: number, above: number, placedAbove: boolean | null) {
+  const openAbove = content > below && (content <= above || above > below);
+  if (placedAbove === null) return openAbove;
+  const room = placedAbove ? above : below;
+  const other = placedAbove ? below : above;
+  if (content <= room) return placedAbove;
+  if (content <= other && other > room) return !placedAbove;
+  return placedAbove;
+}
+
+function placeChipPanel(trigger: HTMLElement, panel: HTMLElement, placedAbove: boolean | null) {
   const vw = document.documentElement.clientWidth;
   const vh = document.documentElement.clientHeight;
   if (vw <= 0 || vh <= 0) return null;
@@ -43,21 +53,13 @@ function placeChipPanel(trigger: HTMLElement, panel: HTMLElement) {
   if (left < PANEL_INSET) left = PANEL_INSET;
   const below = vh - anchor.bottom - PANEL_GAP - PANEL_INSET;
   const above = anchor.top - PANEL_GAP - PANEL_INSET;
-  const placeAbove = rect.height > below && (rect.height <= above || above > below);
-  let maxHeight = Math.max(0, placeAbove ? above : below);
-  let height = Math.min(rect.height, maxHeight);
-  let top = placeAbove ? anchor.top - PANEL_GAP - height : anchor.bottom + PANEL_GAP;
-  const minTop = PANEL_INSET;
-  const maxBottom = vh - PANEL_INSET;
-  if (top < minTop || top + height > maxBottom) {
-    maxHeight = Math.max(0, Math.min(maxHeight, maxBottom - minTop));
-    height = Math.min(rect.height, maxHeight);
-    if (top < minTop) top = minTop;
-    if (top + height > maxBottom) top = Math.max(minTop, maxBottom - height);
-  }
+  const placeAbove = chooseSide(rect.height, below, above, placedAbove);
+  const maxHeight = Math.max(0, placeAbove ? above : below);
+  const height = Math.min(rect.height, maxHeight);
+  const top = placeAbove ? anchor.top - PANEL_GAP - height : anchor.bottom + PANEL_GAP;
   panel.style.maxHeight = `${maxHeight}px`;
   if (panel.scrollTop !== scrollTop) panel.scrollTop = scrollTop;
-  return { top, left, maxWidth, maxHeight };
+  return { top, left, maxWidth, maxHeight, above: placeAbove };
 }
 
 function syncPanelTab(panel: HTMLElement) {
@@ -73,13 +75,34 @@ function revealChip(panel: HTMLElement, target: EventTarget | null) {
   const style = getComputedStyle(panel);
   const padTop = Number.parseFloat(style.scrollPaddingTop) || 0;
   const padBottom = Number.parseFloat(style.scrollPaddingBottom) || 0;
-  const viewTop = panel.getBoundingClientRect().top;
+  const padLeft = Number.parseFloat(style.scrollPaddingLeft) || 0;
+  const padRight = Number.parseFloat(style.scrollPaddingRight) || 0;
+  const origin = panel.getBoundingClientRect();
   const box = chip.getBoundingClientRect();
+  const viewTop = origin.top + panel.clientTop;
+  const viewLeft = origin.left + panel.clientLeft;
   const above = viewTop + padTop - box.top;
   const below = box.bottom - (viewTop + panel.clientHeight - padBottom);
-  if (above > 0) panel.scrollTop -= above;
-  else if (below > 0) panel.scrollTop += below;
+  if (above > 0.1) panel.scrollTop -= Math.ceil(above);
+  else if (below > 0.1) panel.scrollTop += Math.ceil(below);
+  if (panel.clientWidth <= 0) return;
+  const before = viewLeft + padLeft - box.left;
+  const after = box.right - (viewLeft + panel.clientWidth - padRight);
+  if (before > 0.1) panel.scrollLeft -= Math.ceil(before);
+  else if (after > 0.1) panel.scrollLeft += Math.ceil(after);
 }
+const rowScroll = new WeakMap<HTMLElement, number>();
+
+function scrollPanelBy(panel: HTMLElement, delta: number) {
+  const maxScroll = Math.max(0, panel.scrollHeight - panel.clientHeight);
+  const current = panel.scrollTop;
+  const carried = rowScroll.get(panel);
+  const base = carried != null && Math.abs(carried - current) < 1 ? carried : current;
+  const next = Math.min(maxScroll, Math.max(0, base + delta));
+  rowScroll.set(panel, next);
+  panel.scrollTop = next;
+}
+
 const TABBABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
 
@@ -180,18 +203,21 @@ function ChipList({
     const trigger = moreRef.current;
     const panel = popover.popoverRef.current;
     if (!trigger || !panel) return;
+    const side = { above: null as boolean | null };
     const apply = () => {
-      const next = placeChipPanel(trigger, panel);
+      const next = placeChipPanel(trigger, panel, side.above);
       syncPanelTab(panel);
       if (!next) return;
+      side.above = next.above;
+      const box = { top: next.top, left: next.left, maxWidth: next.maxWidth, maxHeight: next.maxHeight };
       setPanelBox((prev) =>
         prev &&
-        prev.top === next.top &&
-        prev.left === next.left &&
-        prev.maxWidth === next.maxWidth &&
-        prev.maxHeight === next.maxHeight
+        prev.top === box.top &&
+        prev.left === box.left &&
+        prev.maxWidth === box.maxWidth &&
+        prev.maxHeight === box.maxHeight
           ? prev
-          : next,
+          : box,
       );
     };
     const onScroll = (event: Event) => {
@@ -264,21 +290,49 @@ function ChipList({
     if (!open || hidden === 0) return;
     function onKey(event: globalThis.KeyboardEvent) {
       const panel = popover.popoverRef.current;
+      if (event.key === 'Tab' && !event.shiftKey && event.target === moreRef.current && panel) {
+        const enters =
+          panel.tabIndex >= 0 ||
+          !!panel.querySelector(
+            'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])',
+          );
+        if (!enters) {
+          event.preventDefault();
+          focusAfter(moreRef.current);
+          setOpen(false);
+          return;
+        }
+      }
       if (!(event.target instanceof Node) || !panel?.contains(event.target)) return;
       const line = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
       const page = event.key === 'PageDown' ? 1 : event.key === 'PageUp' ? -1 : 0;
+      const modified = event.altKey || event.ctrlKey || event.shiftKey || event.metaKey;
+      if ((event.key === 'Home' || event.key === 'End' || line || page) && modified) return;
+      if (event.key === 'Home' || event.key === 'End') {
+        panel.scrollTop = event.key === 'Home' ? 0 : panel.scrollHeight - panel.clientHeight;
+        event.preventDefault();
+        return;
+      }
       if (line || page) {
         const maxScroll = panel.scrollHeight - panel.clientHeight;
         const backward = line + page < 0;
         if (backward ? panel.scrollTop <= 0 : panel.scrollTop >= maxScroll) return;
         const chip = panel.querySelector<HTMLElement>('span[class]');
         const gap = Number.parseFloat(getComputedStyle(panel).rowGap) || 0;
-        panel.scrollBy({ top: line ? line * ((chip?.offsetHeight ?? 0) + gap) : page * panel.clientHeight });
+        const pitch = (chip?.getBoundingClientRect().height ?? 0) + gap;
+        scrollPanelBy(panel, line ? line * pitch : page * panel.clientHeight);
         event.preventDefault();
         return;
       }
       if (event.key !== 'Tab') return;
       const buttons = [...panel.querySelectorAll<HTMLElement>('button:not([disabled])')];
+      const index = buttons.indexOf(event.target as HTMLElement);
+      const next = index >= 0 ? buttons[index + (event.shiftKey ? -1 : 1)] : undefined;
+      if (next) {
+        event.preventDefault();
+        next.focus({ preventScroll: true });
+        return;
+      }
       const edge = event.shiftKey ? buttons[0] : buttons[buttons.length - 1];
       if (event.target !== panel && buttons.length > 0 && event.target !== edge) return;
       event.preventDefault();

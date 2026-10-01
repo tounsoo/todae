@@ -361,11 +361,11 @@ describe('chip list recipe', () => {
     const dialog = screen.getByRole('dialog', { name: '5 more tags' });
     Object.defineProperty(dialog, 'scrollHeight', { configurable: true, value: 200 });
     Object.defineProperty(dialog, 'clientHeight', { configurable: true, value: 100 });
-    const scrollBy = vi.fn();
-    dialog.scrollBy = scrollBy;
+    const before = dialog.scrollTop;
     expect(fireEvent.keyDown(dialog, { key: 'ArrowDown' })).toBe(false);
     const chip = dialog.querySelector('span[class]') as HTMLElement | null;
-    expect(scrollBy).toHaveBeenCalledWith({ top: chip?.offsetHeight ?? 0 });
+    const pitch = (chip?.getBoundingClientRect().height ?? 0) + (Number.parseFloat(getComputedStyle(dialog).rowGap) || 0);
+    expect(dialog.scrollTop).toBe(before + pitch);
     expect(dialog.getAttribute('role')).toBe('dialog');
   });
 
@@ -628,6 +628,7 @@ describe('chip list recipe', () => {
       });
       const dialog = screen.getByRole('dialog');
       Object.defineProperty(dialog, 'clientHeight', { configurable: true, value: 100 });
+      Object.defineProperty(dialog, 'clientTop', { configurable: true, value: 1 });
       dialog.scrollTop = 0;
       const button = screen.getByRole('button', { name: 'Remove hh' });
       await act(async () => {
@@ -636,7 +637,7 @@ describe('chip list recipe', () => {
       const pad = 4;
       const chipTop = 160;
       const chipHeight = 28;
-      expect(dialog.scrollTop).toBe(chipTop + chipHeight + pad - 100);
+      expect(dialog.scrollTop).toBe(chipTop + chipHeight + pad - (100 + 1));
     } finally {
       Reflect.deleteProperty(root, 'clientWidth');
       Reflect.deleteProperty(root, 'clientHeight');
@@ -683,7 +684,172 @@ describe('chip list recipe', () => {
     expect(removable.tabIndex).toBe(-1);
   });
 
-  it('keeps the panel inside the 16px insets when the trigger leaves the viewport', async () => {
+  it('scrolls a chip up past the panel border', async () => {
+    scrollPad.value = '4px';
+    const root = document.documentElement;
+    Object.defineProperty(root, 'clientWidth', { configurable: true, get: () => 320 });
+    Object.defineProperty(root, 'clientHeight', { configurable: true, get: () => 300 });
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('role') === 'dialog') return rect(200, 100, 0, 32);
+      if (this.classList.contains('chip-list-more')) return rect(40, 27.5, 150, 32);
+      if (this.getAttribute('data-overflow') != null) return rect(50);
+      if (this.getAttribute('role') === 'list') return rect(400, 32);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(100, 28, -2, 32);
+      return rect(0, 0);
+    });
+    try {
+      render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+      });
+      const dialog = screen.getByRole('dialog');
+      Object.defineProperty(dialog, 'clientHeight', { configurable: true, value: 100 });
+      Object.defineProperty(dialog, 'clientTop', { configurable: true, value: 1 });
+      (document.activeElement as HTMLElement | null)?.blur();
+      dialog.scrollTop = 40;
+      await act(async () => {
+        screen.getByRole('button', { name: 'Remove hh' }).focus();
+      });
+      expect(dialog.scrollTop).toBe(40 - (1 + 4 - -2));
+    } finally {
+      Reflect.deleteProperty(root, 'clientWidth');
+      Reflect.deleteProperty(root, 'clientHeight');
+    }
+  });
+
+  it('moves focus to the next chip without centering it', async () => {
+    scrollPad.value = '4px';
+    const root = document.documentElement;
+    Object.defineProperty(root, 'clientWidth', { configurable: true, get: () => 320 });
+    Object.defineProperty(root, 'clientHeight', { configurable: true, get: () => 220 });
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('role') === 'dialog') return rect(200, 80, 16, 16);
+      if (this.classList.contains('chip-list-more')) return rect(40, 27.5, 80, 16);
+      if (this.getAttribute('data-overflow') != null) return rect(50);
+      if (this.getAttribute('role') === 'list') return rect(400, 32);
+      if (this.getAttribute('aria-label') === 'Remove ee') return rect(16, 16, 200, 20);
+      if (this.tagName === 'SPAN' && this.textContent?.includes('ee')) return rect(80, 28, 180, 16);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(100);
+      return rect(0, 0);
+    });
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    try {
+      render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+      });
+      const dialog = screen.getByRole('dialog');
+      Object.defineProperty(dialog, 'clientHeight', { configurable: true, value: 80 });
+      Object.defineProperty(dialog, 'clientTop', { configurable: true, value: 1 });
+      dialog.scrollTop = 0;
+      focus.mockClear();
+      const first = screen.getByRole('button', { name: 'Remove dd' });
+      await act(async () => {
+        expect(fireEvent.keyDown(first, { key: 'Tab' })).toBe(false);
+      });
+      const next = screen.getByRole('button', { name: 'Remove ee' });
+      expect(document.activeElement).toBe(next);
+      expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+      expect(dialog.scrollTop).toBe(180 + 28 + 4 - (16 + 1 + 80));
+      expect(screen.getByRole('button', { name: '+5 more' }).getAttribute('aria-expanded')).toBe('true');
+    } finally {
+      Reflect.deleteProperty(root, 'clientWidth');
+      Reflect.deleteProperty(root, 'clientHeight');
+    }
+  });
+
+  it('closes a fitting read-only panel when Tab leaves +N', async () => {
+    render(
+      <>
+        <ChipListDemo maxRows={1} initialChips={EIGHT} readOnly />
+        <button>After</button>
+      </>,
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    const more = screen.getByRole('button', { name: '+5 more' });
+    expect(more.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('dialog').tabIndex).toBe(-1);
+    more.focus();
+    await act(async () => {
+      fireEvent.keyDown(more, { key: 'Tab' });
+    });
+    expect(more.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'After' }));
+  });
+
+  it('scrolls the panel to the ends on Home and End', async () => {
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} readOnly />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    const dialog = screen.getByRole('dialog', { name: '5 more tags' });
+    Object.defineProperty(dialog, 'scrollHeight', { configurable: true, value: 200 });
+    Object.defineProperty(dialog, 'clientHeight', { configurable: true, value: 80 });
+    dialog.scrollTop = 40;
+    expect(fireEvent.keyDown(dialog, { key: 'Home' })).toBe(false);
+    expect(dialog.scrollTop).toBe(0);
+    expect(fireEvent.keyDown(dialog, { key: 'End' })).toBe(false);
+    expect(dialog.scrollTop).toBe(dialog.scrollHeight - dialog.clientHeight);
+    expect(fireEvent.keyDown(dialog, { key: 'ArrowDown' })).toBe(true);
+  });
+
+  it('scrolls arrows by the chip height plus the row gap', async () => {
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} readOnly />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    const dialog = screen.getByRole('dialog', { name: '5 more tags' });
+    Object.defineProperty(dialog, 'scrollHeight', { configurable: true, value: 200 });
+    Object.defineProperty(dialog, 'clientHeight', { configurable: true, value: 100 });
+    const chip = dialog.querySelector('span[class]') as HTMLElement;
+    vi.spyOn(chip, 'getBoundingClientRect').mockReturnValue(rect(80, 27.5));
+    Object.defineProperty(chip, 'offsetHeight', { configurable: true, value: 28 });
+    const style = getComputedStyle(dialog);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
+      if (el === dialog) return { ...style, rowGap: '8px' } as CSSStyleDeclaration;
+      return style;
+    });
+    const applied: number[] = [];
+    let stored = 0;
+    Object.defineProperty(dialog, 'scrollTop', {
+      configurable: true,
+      get: () => stored,
+      set: (value: number) => {
+        applied.push(value);
+        stored = Math.round(value);
+      },
+    });
+    expect(fireEvent.keyDown(dialog, { key: 'ArrowDown' })).toBe(false);
+    expect(fireEvent.keyDown(dialog, { key: 'ArrowDown' })).toBe(false);
+    expect(applied).toEqual([35.5, 71]);
+    expect(stored).toBe(71);
+  });
+
+  it('leaves modified arrow, page, home, and end keys to the browser', async () => {
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} readOnly />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    const dialog = screen.getByRole('dialog', { name: '5 more tags' });
+    Object.defineProperty(dialog, 'scrollHeight', { configurable: true, value: 200 });
+    Object.defineProperty(dialog, 'clientHeight', { configurable: true, value: 100 });
+    const scrollBy = vi.fn();
+    dialog.scrollBy = scrollBy;
+    dialog.scrollTop = 40;
+    for (const key of ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End']) {
+      for (const mod of ['altKey', 'ctrlKey', 'shiftKey', 'metaKey'] as const) {
+        scrollBy.mockClear();
+        dialog.scrollTop = 40;
+        expect(fireEvent.keyDown(dialog, { key, [mod]: true })).toBe(true);
+        expect(scrollBy).not.toHaveBeenCalled();
+        expect(dialog.scrollTop).toBe(40);
+      }
+    }
+  });
+
+  it('keeps the panel on +N when the trigger leaves the viewport', async () => {
     const view = { w: 320, h: 900 };
     const anchor = { top: -203 };
     const root = document.documentElement;
@@ -703,23 +869,66 @@ describe('chip list recipe', () => {
         fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
       });
       const dialog = screen.getByRole('dialog');
-      expect(dialog.style.top).toBe('16px');
-      expect(Number.parseFloat(dialog.style.top) + 176).toBeLessThanOrEqual(view.h - 16);
+      const button = screen.getByRole('button', { name: 'Remove dd' });
+      expect(document.activeElement).toBe(button);
+      expect(dialog.style.top).toBe('-171.5px');
+      anchor.top = 200;
+      await act(async () => {
+        document.dispatchEvent(new Event('scroll'));
+      });
+      expect(dialog.style.top).toBe('231.5px');
+      expect(document.activeElement).toBe(button);
+      anchor.top = 40;
+      view.h = 568;
+      await act(async () => {
+        window.dispatchEvent(new Event('resize'));
+      });
+      expect(dialog.style.top).toBe('71.5px');
       view.h = 240;
       await act(async () => {
         window.dispatchEvent(new Event('resize'));
       });
-      const top = Number.parseFloat(dialog.style.top);
-      const maxHeight = Number.parseFloat(dialog.style.maxHeight);
-      const used = Math.min(176, maxHeight);
-      expect(top).toBeGreaterThanOrEqual(16);
-      expect(top + used).toBeLessThanOrEqual(view.h - 16);
-      anchor.top = 300;
+      expect(dialog.style.top).toBe('71.5px');
+      expect(dialog.style.maxHeight).toBe('152.5px');
+      expect(Number.parseFloat(dialog.style.top) - (40 + 27.5)).toBe(4);
+    } finally {
+      Reflect.deleteProperty(root, 'clientWidth');
+      Reflect.deleteProperty(root, 'clientHeight');
+    }
+  });
+
+  it('keeps the open side across a 6px scroll until the other side can hold the panel', async () => {
+    const view = { w: 400, h: 400 };
+    const anchor = { top: 186.25 };
+    const root = document.documentElement;
+    Object.defineProperty(root, 'clientWidth', { configurable: true, get: () => view.w });
+    Object.defineProperty(root, 'clientHeight', { configurable: true, get: () => view.h });
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('role') === 'dialog') return rect(200, 176);
+      if (this.classList.contains('chip-list-more')) return rect(40, 27.5, anchor.top, 32);
+      if (this.getAttribute('data-overflow') != null) return rect(50);
+      if (this.getAttribute('role') === 'list') return rect(400, 32);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(100);
+      return rect(0, 0);
+    });
+    try {
+      render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
       await act(async () => {
-        window.dispatchEvent(new Event('resize'));
+        fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
       });
-      expect(dialog.style.top).toBe('48px');
-      expect(Number.parseFloat(dialog.style.top) + Math.min(176, Number.parseFloat(dialog.style.maxHeight))).toBe(224);
+      const dialog = screen.getByRole('dialog');
+      expect(dialog.style.top).toBe('217.75px');
+      anchor.top = 192.25;
+      await act(async () => {
+        document.dispatchEvent(new Event('scroll'));
+      });
+      expect(dialog.style.top).toBe('223.75px');
+      expect(dialog.style.maxHeight).toBe('160.25px');
+      anchor.top = 200;
+      await act(async () => {
+        document.dispatchEvent(new Event('scroll'));
+      });
+      expect(dialog.style.top).toBe('20px');
     } finally {
       Reflect.deleteProperty(root, 'clientWidth');
       Reflect.deleteProperty(root, 'clientHeight');
