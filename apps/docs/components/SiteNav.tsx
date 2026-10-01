@@ -21,7 +21,6 @@ const GROUPS = [
       ['/popover', 'Popover'],
       ['/tooltip', 'Tooltip'],
       ['/optionlist', 'OptionList'],
-      ['/combobox', 'Combobox'],
       ['/bottomsheet', 'BottomSheet'],
       ['/stack', 'Stack'],
       ['/text', 'Text'],
@@ -30,7 +29,10 @@ const GROUPS = [
   {
     id: 'recipes',
     label: 'Recipes',
-    links: [['/recipes/chip-list', 'Chip list with overflow']],
+    links: [
+      ['/recipes/chip-list', 'Chip list with overflow'],
+      ['/recipes/combobox', 'Combobox'],
+    ],
   },
   {
     id: 'foundations',

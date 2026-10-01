@@ -20,11 +20,11 @@ const HREFS = [
   '/popover',
   '/tooltip',
   '/optionlist',
-  '/combobox',
   '/bottomsheet',
   '/stack',
   '/text',
   '/recipes/chip-list',
+  '/recipes/combobox',
   '/tokens',
   '/playground',
 ];
