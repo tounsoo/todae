@@ -68,6 +68,12 @@ export { Stack, type StackProps, type StackDirection } from './components/Stack'
 export { Text, type TextProps, type TextAs, type TextSize, type TextTone, type TextWeight } from './components/Text';
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
 export {
+  useChipList,
+  type UseChipListItem,
+  type UseChipListOptions,
+  type UseChipListResult,
+} from './hooks/useChipList';
+export {
   useSheetPresentation,
   resolveSheetPresentation,
   SHEET_NARROW_WIDTH,

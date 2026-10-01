@@ -65,6 +65,12 @@ export default function HomePage() {
           <a href="/playground">Playground</a>
         </li>
       </ul>
+      <h2>Recipes</h2>
+      <ul>
+        <li>
+          <a href="/recipes/chip-list">Chip list with overflow</a>
+        </li>
+      </ul>
     </>
   );
 }

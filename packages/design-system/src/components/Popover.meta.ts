@@ -34,5 +34,11 @@ export const meta = {
       required: false,
       description: 'Id of the visible caption.',
     },
+    {
+      name: 'role',
+      type: '"dialog"',
+      required: false,
+      description: 'Non-modal dialog role. Requires aria-label or aria-labelledby. Does not set aria-modal.',
+    },
   ],
 } as const satisfies ComponentMeta;

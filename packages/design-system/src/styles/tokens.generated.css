@@ -246,6 +246,7 @@
   --todae-chip-border-disabled: var(--todae-color-border-subtle);
   --todae-chip-border-focus: var(--todae-color-accent-default);
   --todae-chip-border-hover: var(--todae-color-border-default);
+  --todae-chip-border-width: 1px;
   --todae-chip-dismiss-fg-default: var(--todae-color-fg-placeholder);
   --todae-chip-dismiss-fg-hover: var(--todae-color-fg-default);
   --todae-chip-fg-default: var(--todae-color-fg-default);
@@ -254,10 +255,13 @@
   --todae-chip-fg-hover: var(--todae-color-fg-default);
   --todae-chip-font-size: var(--todae-font-size-2);
   --todae-chip-gap: var(--todae-space-inline-gap);
+  --todae-chip-leading: 1.25;
   --todae-chip-padding-x: var(--todae-space-chip-x);
   --todae-chip-padding-y: var(--todae-space-chip-y);
   --todae-chip-radius: var(--todae-radius-sm);
   --todae-chip-ring-focus: var(--todae-color-accent-default);
+  --todae-chip-ring-offset: 2px;
+  --todae-chip-ring-width: 2px;
   --todae-overlay-scrim-bg: var(--todae-color-bg-scrim);
   --todae-dialog-bg: var(--todae-color-bg-elevated);
   --todae-dialog-border: var(--todae-color-border-default);

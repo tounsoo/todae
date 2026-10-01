@@ -6,12 +6,12 @@
     max-width: 100%;
     gap: var(--todae-chip-gap);
     padding: var(--todae-chip-padding-y) var(--todae-chip-padding-x);
-    border: 1px solid var(--todae-chip-border-default);
+    border: var(--todae-chip-border-width) solid var(--todae-chip-border-default);
     border-radius: var(--todae-chip-radius);
     background: var(--todae-chip-bg-default);
     color: var(--todae-chip-fg-default);
     font-size: var(--todae-chip-font-size);
-    line-height: 1.25;
+    line-height: var(--todae-chip-leading);
   }
 
   .root:hover:not([data-disabled]):not([data-overflow]) {
@@ -24,8 +24,8 @@
     background: var(--todae-chip-bg-focus);
     color: var(--todae-chip-fg-focus);
     border-color: var(--todae-chip-border-focus);
-    outline: 2px solid var(--todae-chip-ring-focus);
-    outline-offset: 2px;
+    outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
+    outline-offset: var(--todae-chip-ring-offset);
   }
 
   .root[data-disabled] {

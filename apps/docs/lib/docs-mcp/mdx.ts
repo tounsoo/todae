@@ -1,5 +1,5 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { lstatSync, readdirSync, readFileSync, type Dirent } from 'node:fs';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { listComponentMeta } from './meta';
 
 export const DOCS_ORIGIN = 'https://todae-rho.vercel.app';
@@ -31,6 +31,7 @@ const PART_PAGE: Record<string, string> = {
 const PAGE_OWNERS: Record<string, readonly string[]> = {
   combobox: ['useCombobox'],
   radio: ['RadioGroup'],
+  'recipes/chip-list': ['useChipList'],
 };
 
 export function ownsPage(page: PageDoc, name: string): boolean {
@@ -112,41 +113,77 @@ export function parseWhen(markdown: string, name: string): WhenCopy | null {
   return { ...labeled(body, separate), shared: true };
 }
 
-function readPages(): PageDoc[] {
-  const appDir = join(process.cwd(), 'app');
-  let entries: string[];
-  try {
-    entries = readdirSync(appDir, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name);
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to read docs pages: ${detail}`);
-  }
+function staysInside(root: string, full: string): boolean {
+  const rel = relative(root, full);
+  return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
+}
 
-  return entries.flatMap((slug) => {
-    const file = join(appDir, slug, 'page.mdx');
-    let markdown: string;
+/** Nested `page.mdx` slugs under `appDir`. Skips symlinks and refuses paths that leave `appDir`. */
+function pageSlugs(appDir: string): string[] {
+  const slugs: string[] = [];
+  const walk = (dir: string) => {
+    let entries: Dirent[];
     try {
-      markdown = readFileSync(file, 'utf8');
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch (error) {
+      if (dir !== appDir) return;
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to read docs pages: ${detail}`);
+    }
+    for (const entry of entries) {
+      const full = join(dir, entry.name);
+      if (!staysInside(appDir, full)) continue;
+      let stat;
+      try {
+        stat = lstatSync(full);
+      } catch {
+        continue;
+      }
+      if (stat.isSymbolicLink()) continue;
+      if (stat.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!stat.isFile() || entry.name !== 'page.mdx') continue;
+      const slug = dirname(relative(appDir, full)).split(sep).join('/');
+      if (slug !== '.') slugs.push(slug);
+    }
+  };
+  walk(appDir);
+  return slugs;
+}
+
+export function loadPages(appDir: string): PageDoc[] {
+  return pageSlugs(appDir).flatMap((slug) => {
+    if (slug.split('/').includes('..') || isAbsolute(slug)) return [];
+    const file = join(appDir, slug, 'page.mdx');
+    if (!staysInside(appDir, file)) return [];
+    let stat;
+    try {
+      stat = lstatSync(file);
     } catch (error) {
       const code = typeof error === 'object' && error && 'code' in error ? error.code : undefined;
       if (code === 'ENOENT') return [];
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(`Failed to read ${slug}/page.mdx: ${detail}`);
     }
+    if (stat.isSymbolicLink() || !stat.isFile()) return [];
+    let markdown: string;
+    try {
+      markdown = readFileSync(file, 'utf8');
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to read ${slug}/page.mdx: ${detail}`);
+    }
     const titleLine = markdown.split('\n').find((line) => line.startsWith('# '));
     if (!titleLine) throw new Error(`Missing title in ${slug}/page.mdx`);
     const props = [...markdown.matchAll(/<PropsTable\s+name="([^"]+)"\s*\/>/g)].map((hit) => hit[1] ?? '');
-    return [
-      {
-        slug,
-        title: titleLine.slice(2),
-        props,
-        markdown,
-      },
-    ];
+    return [{ slug, title: titleLine.slice(2), props, markdown }];
   });
+}
+
+function readPages(): PageDoc[] {
+  return loadPages(join(process.cwd(), 'app'));
 }
 
 const pages = readPages();

@@ -8,6 +8,7 @@ import * as api from '../index';
 import { usePopover, type PopoverCloseReason, type UsePopoverOptions } from '../hooks/usePopover';
 import { Option, OptionList } from './OptionList';
 import { Popover, type PopoverProps } from './Popover';
+import type { PopoverWire } from './Popover.wire';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, 'Popover.tsx'), 'utf8');
@@ -195,5 +196,37 @@ describe('Popover', () => {
       onClick: () => void;
     }>().toMatchTypeOf<PopoverProps>();
     expectTypeOf<{ open: boolean; onOpenChange: () => void }>().not.toMatchTypeOf<PopoverProps>();
+  });
+
+  it('omits role unless set, and stays byte-identical aside from that', () => {
+    render(<Harness open />);
+    const content = screen.getByLabelText('Menu');
+    expect(content.hasAttribute('role')).toBe(false);
+    expect(content.outerHTML).not.toMatch(/\srole=/);
+    expect(content.getAttribute('aria-modal')).toBeNull();
+    expect(content.getAttribute('popover')).toBe('manual');
+    expect(content.getAttribute('tabindex')).toBe('-1');
+  });
+
+  it('forwards role=dialog without aria-modal', () => {
+    function Named() {
+      const popover = usePopover({ open: true });
+      return (
+        <Popover {...popover.getPopoverProps()} role="dialog" aria-label="Tags">
+          Hi
+        </Popover>
+      );
+    }
+    render(<Named />);
+    const content = screen.getByRole('dialog', { name: 'Tags' });
+    expect(content.getAttribute('aria-modal')).toBeNull();
+    expect(content.getAttribute('popover')).toBe('manual');
+  });
+
+  it('requires an accessible name when role is dialog', () => {
+    expectTypeOf<PopoverWire & { role: 'dialog' }>().not.toMatchTypeOf<PopoverProps>();
+    expectTypeOf<PopoverWire & { role: 'dialog'; 'aria-label': string }>().toMatchTypeOf<PopoverProps>();
+    expectTypeOf<PopoverWire & { role: 'dialog'; 'aria-labelledby': string }>().toMatchTypeOf<PopoverProps>();
+    expectTypeOf<PopoverWire>().toMatchTypeOf<PopoverProps>();
   });
 });

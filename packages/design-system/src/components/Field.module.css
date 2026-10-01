@@ -247,13 +247,20 @@
 
   .measure {
     position: absolute;
-    inset: 0 auto auto 0;
+    inset-inline: 0;
+    top: 0;
+    width: 100%;
     display: flex;
     visibility: hidden;
     pointer-events: none;
     height: 0;
     overflow: hidden;
     white-space: nowrap;
+  }
+
+  .measure > span {
+    flex: none;
+    max-width: none;
   }
 
   .row {

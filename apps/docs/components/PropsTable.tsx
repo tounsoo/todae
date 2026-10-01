@@ -1,4 +1,5 @@
 import schema from '@tounsoo/todae/schema/components.json';
+import { ScrollRegion } from './OverflowRegion';
 
 type PropRow = {
   name: string;
@@ -56,6 +57,7 @@ function readComponent(name: string): ComponentRow {
 export function PropsTable({ name }: { name: string }) {
   const component = readComponent(name);
   return (
+    <ScrollRegion>
     <table>
       <caption>{component.name} props</caption>
       <thead>
@@ -81,5 +83,6 @@ export function PropsTable({ name }: { name: string }) {
         ))}
       </tbody>
     </table>
+    </ScrollRegion>
   );
 }

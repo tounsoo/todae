@@ -1,8 +1,9 @@
 import schema from '@tounsoo/todae/schema/components.json';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { missingWhenNote, parseWhen } from './mdx';
+import { loadPages, missingWhenNote, parseWhen } from './mdx';
 import { getComponent, listComponents, whenToUse } from './tools';
 
 const jsonNames = schema.components.map((row) => row.name);
@@ -13,6 +14,14 @@ describe('docs mcp tools', () => {
     expect(listed.components.map((row) => row.name)).toEqual(jsonNames);
     expect(listed.count).toBe(jsonNames.length);
     expect(listed.source).toBe('todae-docs');
+  });
+
+  it('shows Popover role and keeps the one-line when-to-use rule', () => {
+    const popover = getComponent('Popover');
+    expect(popover.props).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: 'role', type: '"dialog"', required: false })]),
+    );
+    expect(whenToUse('Popover').whenToUse).toContain('No focus trap');
   });
 
   it('returns Dialog props equal to the schema', () => {
@@ -248,6 +257,7 @@ describe('docs mcp tools', () => {
       'Text',
       'ThemeProvider',
       'useChipField',
+      'useChipList',
       'useSheetPresentation',
     ];
     const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));
@@ -322,10 +332,67 @@ describe('docs mcp tools', () => {
   });
 
   it('rejects path-like names before any page lookup', () => {
-    for (const name of ['../field', 'Dialog/../../etc', '/', 'Dialog.Body%2F..', '', 'Dialog.Body\n', 'a/b']) {
+    for (const name of [
+      '../field',
+      '../x',
+      'recipes/../x',
+      'Dialog/../../etc',
+      '/',
+      '/etc/passwd',
+      '/recipes/chip-list',
+      'recipes/chip-list',
+      '../package',
+      'Dialog.Body%2F..',
+      '',
+      'Dialog.Body\n',
+      'a/b',
+    ]) {
       const message = `Unknown component "${name}". Call list_components.`;
       expect(() => whenToUse(name)).toThrow(message);
       expect(() => getComponent(name)).toThrow(message);
     }
+  });
+
+  it('reads nested recipe pages and skips symlinks that leave app/', () => {
+    const root = mkdtempSync(join(tmpdir(), 'todae-pages-'));
+    const app = join(root, 'app');
+    const outside = join(root, 'outside');
+    try {
+      mkdirSync(join(app, 'recipes', 'chip-list'), { recursive: true });
+      mkdirSync(join(app, 'field'), { recursive: true });
+      mkdirSync(join(outside, 'secret'), { recursive: true });
+      writeFileSync(join(app, 'field', 'page.mdx'), '# Field\n');
+      writeFileSync(
+        join(app, 'recipes', 'chip-list', 'page.mdx'),
+        '# Chip list with overflow\n\n<PropsTable name="useChipList" />\n',
+      );
+      writeFileSync(join(outside, 'secret', 'page.mdx'), '# Secret\n');
+      symlinkSync(outside, join(app, 'linked'));
+      symlinkSync(join(root, 'outside'), join(app, 'recipes', 'escape'));
+      symlinkSync(join(outside, 'secret', 'page.mdx'), join(app, 'recipes', 'page.mdx'));
+      const pages = loadPages(app);
+      expect(pages.map((page) => page.slug).sort()).toEqual(['field', 'recipes/chip-list']);
+      expect(pages.some((page) => page.markdown.includes('Secret'))).toBe(false);
+      expect(pages.find((page) => page.slug === 'recipes/chip-list')?.props).toEqual(['useChipList']);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('gives useChipList its own recipe page and does not list ChipList', () => {
+    const names = listComponents().components.map((row) => row.name);
+    expect(names).toContain('useChipList');
+    expect(names).not.toContain('ChipList');
+    const result = whenToUse('useChipList');
+    expect(result).toMatchObject({
+      status: 'present',
+      docsUrl: 'https://todae-rho.vercel.app/recipes/chip-list',
+    });
+    expect(result).not.toHaveProperty('scope');
+    expect(result.whenToUse).toContain('maxRows');
+    expect(result.whenNotToUse).not.toMatch(/not reachable/);
+    expect(result.whenNotToUse).not.toMatch(/non-modal popover/);
+    expect(result.whenNotToUse).toBeTruthy();
+    expect(getComponent('useChipList').docsUrl).toBe('https://todae-rho.vercel.app/recipes/chip-list');
   });
 });

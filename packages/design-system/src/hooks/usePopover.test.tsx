@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index';
 import {
@@ -137,6 +137,38 @@ describe('usePopover', () => {
     render(<UserClick />);
     fireEvent.click(screen.getByRole('button', { name: 'Open' }));
     expect(user).toHaveBeenCalledTimes(1);
+  });
+
+  it('focuses the trigger after an outside press blurs to the body', () => {
+    function CloseHarness() {
+      const [open, setOpen] = useState(true);
+      return <Harness open={open} onOpenChange={(next) => setOpen(next)} />;
+    }
+    render(<CloseHarness />);
+    const trigger = screen.getByRole('button', { name: 'Open' });
+    trigger.focus();
+    fireEvent.pointerDown(document.body);
+    trigger.blur();
+    expect(document.activeElement).toBe(document.body);
+    fireEvent.pointerUp(document.body);
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('keeps focus on a focusable element outside the popover', () => {
+    function CloseHarness() {
+      const [open, setOpen] = useState(true);
+      return <Harness open={open} onOpenChange={(next) => setOpen(next)} />;
+    }
+    render(<CloseHarness />);
+    const other = document.createElement('button');
+    other.type = 'button';
+    other.textContent = 'Other';
+    document.body.appendChild(other);
+    fireEvent.pointerDown(other);
+    other.focus();
+    fireEvent.pointerUp(other);
+    expect(document.activeElement).toBe(other);
+    other.remove();
   });
 
   it('returns click-through guards on the wire', () => {
