@@ -82,12 +82,18 @@ beforeEach(() => {
     return {
       columnGap: '8px',
       gap: '8px',
-      minWidth,
-      getPropertyValue(name: string) {
-        if (name === 'min-width') return minWidth;
-        if (name === 'column-gap' || name === 'gap') return '8px';
-        return '';
-      },
+        minWidth,
+        display: 'inline',
+        visibility: 'visible',
+        content: 'none',
+        getPropertyValue(name: string) {
+          if (name === 'min-width') return minWidth;
+          if (name === 'column-gap' || name === 'gap') return '8px';
+          if (name === 'display') return 'inline';
+          if (name === 'visibility') return 'visible';
+          if (name === 'content') return 'none';
+          return '';
+        },
     } as CSSStyleDeclaration;
   });
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
@@ -152,9 +158,9 @@ describe('chip list recipe', () => {
       }
       return rect(0, 0);
     });
-    for (const [maxRows, visibleCount, more, ellipsis] of [
-      [1, 3, '+5 more', 'accessibility'],
-      [2, 4, '+4 more', null],
+    for (const [maxRows, visibleCount, more] of [
+      [1, 2, '+6 more'],
+      [2, 4, '+4 more'],
     ] as const) {
       const view = render(<ChipListDemo maxRows={maxRows} />);
       const list = view.getByRole('list', { name: 'Tags' });
@@ -170,7 +176,7 @@ describe('chip list recipe', () => {
       expect(removes(list)).toHaveLength(visibleCount);
       expect(live(view.container, '[data-overflow]')[0]?.textContent).toContain(more);
       const truncated = [...list.children].filter((el) => (el as HTMLElement).style.maxWidth !== '');
-      expect(truncated.map((el) => el.textContent)).toEqual(ellipsis ? [expect.stringContaining(ellipsis)] : []);
+      expect(truncated).toEqual([]);
       view.unmount();
     }
   });
@@ -185,22 +191,24 @@ describe('chip list recipe', () => {
     expect(overflow?.closest('[role="listitem"]')?.querySelector('button')?.getAttribute('aria-haspopup')).toBe('dialog');
   });
 
-  it('truncates with max-width and ellipsis CSS, and names the full label', () => {
+  it('truncates only a chip wider than the row and keeps its full name', () => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
       if (this.getAttribute('data-overflow') != null) return rect(40);
-      if (this.getAttribute('role') === 'list' || this.querySelector?.(':scope > input')) return rect(250, 32);
+      if (this.getAttribute('role') === 'list' || this.querySelector?.(':scope > input')) return rect(200, 32);
       const text = this.textContent ?? '';
-      const width = text.startsWith('…') ? 60 : text.startsWith('a-very-long-tag-that-stays-put') ? 150 : 80;
+      const width = text.startsWith('…') ? 60 : text.startsWith('a-very-long-tag-that-stays-put') ? 400 : 80;
       if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) return rect(width);
       return rect(0, 0);
     });
     const full = 'a-very-long-tag-that-stays-put';
-    render(<ChipListDemo maxRows={1} initialChips={['design', full, 'react']} />);
+    render(<ChipListDemo maxRows={1} initialChips={[full, 'react']} />);
     const list = screen.getByRole('list', { name: 'Tags' });
     const truncated = [...list.children].find((el) => (el as HTMLElement).style.maxWidth !== '') as HTMLElement;
-    expect(truncated.style.maxWidth).toBe('114px');
+    expect(truncated.style.maxWidth).toBe('152px');
     expect(truncated.textContent).toContain(full);
     expect(truncated.textContent).not.toContain(`${full.slice(0, 8)}…`);
+    expect(truncated.getAttribute('aria-label')).toBeNull();
+    expect(truncated.getAttribute('title')).toBeNull();
     const label = truncated.querySelector('span');
     expect(label?.textContent).toBe(full);
     const css = readFileSync(require.resolve('@tounsoo/todae/todae.css'), 'utf8');
@@ -210,6 +218,24 @@ describe('chip list recipe', () => {
     expect(rule).toMatch(/text-overflow:\s*ellipsis/);
     expect(screen.getByRole('button', { name: `Remove ${full}` })).toBe(truncated.querySelector('button'));
     expect(screen.getByRole('button', { name: '+1 more' })).toBeTruthy();
+    expect(removes(list).map((button) => button.getAttribute('aria-label'))).toEqual([`Remove ${full}`]);
+
+    cleanup();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('data-overflow') != null) return rect(40);
+      if (this.getAttribute('role') === 'list' || this.querySelector?.(':scope > input')) return rect(200, 32);
+      const text = this.textContent ?? '';
+      const width = text.startsWith('…') ? 60 : text.startsWith(full) ? 400 : 80;
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(width);
+      return rect(0, 0);
+    });
+    render(<ChipListDemo maxRows={1} initialChips={[full, 'react']} readOnly />);
+    const readOnlyList = screen.getByRole('list', { name: 'Tags' });
+    const readOnlyChip = [...readOnlyList.children].find((el) => el.textContent === full) as HTMLElement;
+    expect(readOnlyChip.style.maxWidth).toBe('152px');
+    expect(readOnlyChip.getAttribute('aria-label')).toBeNull();
+    expect(readOnlyChip.getAttribute('title')).toBeNull();
+    expect(readOnlyChip.querySelector('span')?.textContent).toBe(full);
   });
 
   it('names +N more, and hides the measure row', () => {
@@ -598,6 +624,40 @@ describe('chip list recipe', () => {
     expect(document.activeElement).toBe(list);
     expect(list.style.outline).toContain('--todae-chip-ring-focus');
     expect(list.style.outlineOffset).toBe('var(--todae-chip-ring-offset)');
+  });
+
+  function mockSoakWidths() {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('data-overflow') != null) return rect(50);
+      if (this.getAttribute('role') === 'list') return rect(250, 32);
+      const text = this.textContent ?? '';
+      if (text.startsWith('…')) return rect(60);
+      if (text.includes('Beta')) return rect(150);
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden], span')) return rect(80);
+      return rect(0, 0);
+    });
+  }
+
+  it('moves a chip into the popover instead of shrinking it', () => {
+    mockSoakWidths();
+    render(<ChipListDemo maxRows={1} initialChips={['Alpha', 'Beta', 'Gamma']} />);
+    const list = screen.getByRole('list', { name: 'Tags' });
+    expect(removes(list).map((button) => button.getAttribute('aria-label'))).toEqual(['Remove Alpha']);
+    expect([...list.querySelectorAll<HTMLElement>('[role="listitem"]')].some((item) => item.style.maxWidth)).toBe(
+      false,
+    );
+    const dialog = screen.getByRole('dialog', { name: '2 more tags' });
+    expect(dialog.textContent).toContain('Beta');
+    expect(removes(dialog).map((button) => button.getAttribute('aria-label'))).toContain('Remove Beta');
+
+    cleanup();
+    mockSoakWidths();
+    render(<ChipListDemo maxRows={1} initialChips={['Alpha', 'Beta', 'Gamma']} readOnly />);
+    const readOnlyList = screen.getByRole('list', { name: 'Tags' });
+    const labels = [...readOnlyList.querySelectorAll<HTMLElement>('[role="listitem"]')]
+      .filter((item) => !item.querySelector('button.chip-list-more'))
+      .map((item) => item.textContent);
+    expect(labels).toEqual(['Alpha']);
   });
 
   it('server-renders the list hidden until measured', () => {

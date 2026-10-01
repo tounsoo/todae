@@ -30,7 +30,7 @@ export function useChipList({ chips, maxRows, reserveWidth }: UseChipListOptions
   const hidden = maxRows == null ? 0 : Math.min(plan.hidden, chips.length);
   const count = chips.length - hidden;
   const visible = chips.slice(0, count).map((value, index): UseChipListItem =>
-    hidden > 0 && plan.lastChipWidth != null && index === count - 1
+    plan.lastChipWidth != null && index === count - 1
       ? { key: `${index}:${value}`, value, ellipsis: true, maxWidth: plan.lastChipWidth }
       : { key: `${index}:${value}`, value },
   );

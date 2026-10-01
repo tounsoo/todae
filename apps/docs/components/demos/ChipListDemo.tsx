@@ -75,7 +75,9 @@ function ChipList({
   maxRows: number;
   onRemove?: (index: number) => void;
 }) {
-  const { listRef, measureRef, visible, hidden, measured } = useChipList({ chips, maxRows });
+  const plan = useChipList({ chips, maxRows });
+  const { listRef, measureRef, measured } = plan;
+  const { visible, hidden } = plan;
   const [open, setOpen] = useState(false);
   const [ring, setRing] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
@@ -214,7 +216,7 @@ function ChipList({
             <Chip
               key={chip.key}
               role="listitem"
-              style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
+              style={{ ...CHIP, ...(chip.ellipsis ? { maxWidth: chip.maxWidth } : {}) }}
               onDismiss={
                 onRemove
                   ? () => {

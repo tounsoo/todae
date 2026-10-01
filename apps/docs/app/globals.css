@@ -162,7 +162,22 @@ main {
 
 .scroll-x {
   max-width: 100%;
+  padding: calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
+  margin-inline: calc((var(--todae-chip-ring-width) + var(--todae-chip-ring-offset)) * -1);
+}
+
+.scroll-x:has(.scroll-x-body:focus-visible) {
+  outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
+  outline-offset: var(--todae-chip-ring-offset);
+}
+
+.scroll-x-body {
+  max-width: 100%;
   overflow-x: auto;
+}
+
+.scroll-x-body:focus-visible {
+  outline: none;
 }
 
 main:has(.playground) {

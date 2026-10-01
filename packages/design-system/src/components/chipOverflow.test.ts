@@ -51,11 +51,32 @@ describe('planChipOverflow', () => {
     });
   });
 
-  it('treats sums within 0.5px as fitting', () => {
+  it('keeps a row that fills the width exactly', () => {
     expect(planChipOverflow({ W: 188, g: 8, c: [100], p: 50, m: 80, R: 1 })).toEqual({
       visible: 1,
       hidden: 0,
     });
+  });
+
+  it('treats a fraction of a pixel of overflow as not fitting', () => {
+    // Four chips plus +N sum to 472, so 471.7 overflows by 0.3px (inside the old 0.5px window).
+    expect(planChipOverflow({ W: 471.7, g: 8, c: [100, 100, 100, 100, 100], p: 40, R: 1 })).toEqual({
+      visible: 3,
+      hidden: 2,
+    });
+    expect(rowsFor([100, 100, 100, 100, 40], 471.7, 8)).toBe(2);
+    expect(rowsFor([100, 100, 100, 100, 40], 472, 8)).toBe(1);
+  });
+
+  it('folds when the +N line is 0.296875px over the container', () => {
+    const c = [70.609375, 63.4375, 84.515625, 67.046875, 81.578125, 61.40625, 54.828125, 68.53125];
+    const p = 34.03125;
+    const over = planChipOverflow({ W: 267.765625, g: 8, c, p, R: 2 });
+    expect(over).toEqual({ visible: 5, hidden: 3 });
+    expect(rowsFor([...c.slice(0, 6), p], 267.765625, 8)).toBe(3);
+    const spare = planChipOverflow({ W: 268.4375, g: 8, c, p, R: 2 });
+    expect(spare).toEqual({ visible: 6, hidden: 2 });
+    expect(rowsFor([...c.slice(0, 6), p], 268.4375, 8)).toBe(2);
   });
 
   it('never exceeds maxRows when +N and input fit', () => {
@@ -67,28 +88,51 @@ describe('planChipOverflow', () => {
     }
   });
 
-  it('soaks the last visible chip when leftover is between minChip and cLast', () => {
-    const plan = planChipOverflow({
-      W: 300,
-      g: 8,
-      c: [80, 150, 80],
-      p: 40,
-      m: 40,
-      R: 1,
-      minChip: 60,
-    });
-    expect(plan).toEqual({ visible: 2, hidden: 1, lastChipWidth: 116 });
-    expect(rowsFor([80, 116, 40, 40], 300, 8)).toBe(1);
+  it('moves a chip that does not fit at full width into the overflow', () => {
+    expect(
+      planChipOverflow({
+        W: 300,
+        g: 8,
+        c: [80, 150, 80],
+        p: 40,
+        m: 40,
+        R: 1,
+        minChip: 60,
+      }),
+    ).toEqual({ visible: 1, hidden: 2 });
   });
 
-  it('does not soak when hidden is 0', () => {
+  it('keeps the input reserve on the +N row and rejects a fraction of a pixel', () => {
+    const folded = planChipOverflow({ W: 204, g: 8, c: [100, 100], p: 40, m: 48, R: 1 });
+    expect(folded).toEqual({ visible: 1, hidden: 1 });
+    expect(rowsFor([100, 40, 48], 204, 8)).toBe(1);
+    expect(planChipOverflow({ W: 203.9, g: 8, c: [100, 100], p: 40, m: 48, R: 1 })).toEqual({
+      visible: 0,
+      hidden: 2,
+    });
+  });
+
+  it('truncates only a chip wider than the row', () => {
+    expect(planChipOverflow({ W: 200, g: 8, c: [400, 80], p: 40, R: 1 })).toEqual({
+      visible: 1,
+      hidden: 1,
+      lastChipWidth: 152,
+    });
+    expect(planChipOverflow({ W: 200, g: 8, c: [400], p: 40, R: 1 })).toEqual({
+      visible: 1,
+      hidden: 0,
+      lastChipWidth: 200,
+    });
+  });
+
+  it('does not truncate chips that already fit', () => {
     expect(planChipOverflow({ W: 400, g: 8, c: [100, 100], p: 50, m: 80, R: 1, minChip: 60 })).toEqual({
       visible: 2,
       hidden: 0,
     });
   });
 
-  it('does not soak when natural fit already works', () => {
+  it('does not truncate when a full-width prefix already fits', () => {
     expect(planChipOverflow({ W: 400, g: 8, c: [100, 100, 100, 100], p: 50, m: 80, R: 1, minChip: 60 })).toEqual({
       visible: 2,
       hidden: 2,

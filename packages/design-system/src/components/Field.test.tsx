@@ -689,7 +689,7 @@ describe('Field.ChipInput overflow', () => {
     expect(row.outerHTML).not.toContain('data-overflow');
   });
 
-  it('ellipsizes the last live chip to soak leftover before +N', () => {
+  it('folds a chip that does not fit at full width instead of shrinking it', () => {
     vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
       const minWidth = el instanceof HTMLInputElement ? '40px' : '0px';
       return {
@@ -720,14 +720,68 @@ describe('Field.ChipInput overflow', () => {
 
     const { container } = renderField({ chips: ['Alpha', 'Beta', 'Gamma'], maxRows: 1 });
     const live = liveNodes(container);
-    const last = live.find((el) => el.hasAttribute('data-ellipsis'));
     const overflow = live.find((el) => el.hasAttribute('data-overflow'));
-    expect(last?.textContent).toContain('Beta');
-    expect((last as HTMLElement | undefined)?.style.maxWidth).toBe('116px');
-    expect(live.some((el) => el.textContent?.includes('Alpha') && !el.hasAttribute('data-ellipsis'))).toBe(true);
-    expect(overflow?.hasAttribute('data-ellipsis')).toBe(false);
+    expect(container.querySelector('[data-ellipsis]')).toBeNull();
+    expect(live.some((el) => el.textContent?.includes('Alpha'))).toBe(true);
+    expect(live.some((el) => el.textContent?.includes('Beta'))).toBe(false);
+    expect(overflow?.textContent).toContain('2 more');
     expect((overflow as HTMLElement | undefined)?.style.maxWidth).toBe('');
     expect(live.map((el) => el.outerHTML).join('')).not.toContain('Remove Gamma');
+  });
+
+  it('truncates a chip wider than the row and names its dismiss with the full label', () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('data-overflow') != null) {
+        return { width: 40, height: 24, top: 0, left: 0, bottom: 24, right: 40, x: 0, y: 0, toJSON() {} };
+      }
+      if (this.querySelector?.(':scope > input')) {
+        return { width: 200, height: 32, top: 0, left: 0, bottom: 32, right: 200, x: 0, y: 0, toJSON() {} };
+      }
+      const text = this.textContent ?? '';
+      const width = text.startsWith('…') ? 60 : text.includes('a-very-long-tag-that-stays-put') ? 400 : 80;
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) {
+        return { width, height: 24, top: 0, left: 0, bottom: 24, right: width, x: 0, y: 0, toJSON() {} };
+      }
+      return { width: 0, height: 0, top: 0, left: 0, bottom: 0, right: 0, x: 0, y: 0, toJSON() {} };
+    });
+    const full = 'a-very-long-tag-that-stays-put';
+    const { container } = renderField({ chips: [full, 'react'], maxRows: 1 });
+    const truncated = liveNodes(container).find((el) => el.hasAttribute('data-ellipsis')) as HTMLElement;
+    expect(truncated.style.maxWidth).toBe('64px');
+    expect(truncated.textContent).toContain(full);
+    expect(truncated.querySelector('button')?.getAttribute('aria-label')).toBe(`Remove ${full}`);
+    expect(truncated.getAttribute('title')).toBeNull();
+  });
+
+  it('keeps the folded input on the +N row at the field min width and lets an open row stretch', () => {
+    const folded = renderField({ chips: ['Alpha', 'Beta', 'Gamma', 'Delta'], maxRows: 1 });
+    const foldedLive = liveNodes(folded.container);
+    const foldedInput = folded.container.querySelector('input') as HTMLInputElement;
+    expect(foldedLive.some((el) => el.hasAttribute('data-overflow'))).toBe(true);
+    expect(foldedInput.parentElement).toBe(foldedLive[0]?.parentElement);
+    expect(foldedInput.style.minWidth).toBe('');
+    expect(foldedInput.style.flexBasis).toBe('');
+    expect(foldedInput.style.width).toBe('');
+    folded.unmount();
+
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('data-overflow') != null) {
+        return { width: 50, height: 24, top: 0, left: 0, bottom: 24, right: 50, x: 0, y: 0, toJSON() {} };
+      }
+      if (this.querySelector?.(':scope > input')) {
+        return { width: 800, height: 32, top: 0, left: 0, bottom: 32, right: 800, x: 0, y: 0, toJSON() {} };
+      }
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) {
+        return { width: 100, height: 24, top: 0, left: 0, bottom: 24, right: 100, x: 0, y: 0, toJSON() {} };
+      }
+      return { width: 0, height: 0, top: 0, left: 0, bottom: 0, right: 0, x: 0, y: 0, toJSON() {} };
+    });
+    const open = renderField({ chips: ['Alpha', 'Beta'], maxRows: 1 });
+    const openInput = open.container.querySelector('input') as HTMLInputElement;
+    expect(liveNodes(open.container).some((el) => el.hasAttribute('data-overflow'))).toBe(false);
+    expect(openInput.style.minWidth).toBe('');
+    expect(openInput.style.flexBasis).toBe('');
+    expect(openInput.style.width).toBe('');
   });
 });
 
@@ -749,6 +803,7 @@ describe('Field.ChipInput maxRows SSR', () => {
     expect(html).toContain('data-max-rows');
     expect(html).not.toContain('data-measured');
     expect(html).toContain('--todae-field-chip-rows');
+    expect(html).not.toContain('6ch');
   });
 
   it('SSR without maxRows stays unmarked', () => {

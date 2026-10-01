@@ -3,18 +3,24 @@ export type ChipOverflowInput = {
   g: number;
   c: number[];
   p: number;
+  /** Input minimum. The same reserve is used while chips are folded, so the input stays on the +N row. */
   m?: number;
   R?: number;
+  /** Measured width of the "…" probe. Callers still pass it; a full-width chip is never narrowed to it. */
   minChip?: number;
 };
 
 export type ChipOverflowPlan = {
   visible: number;
   hidden: number;
+  /** Set only when the last visible chip is wider than the row and must truncate. */
   lastChipWidth?: number;
 };
 
-const EPSILON = 0.5;
+function tail(hidden: number, p: number, m: number | undefined): number[] {
+  if (hidden > 0) return m == null ? [p] : [p, m];
+  return m == null ? [] : [m];
+}
 
 export function rowsFor(items: number[], W: number, g: number): number {
   if (items.length === 0) return 1;
@@ -22,7 +28,7 @@ export function rowsFor(items: number[], W: number, g: number): number {
   let rows = 1;
   for (const w of items) {
     const next = cur === 0 ? w : cur + g + w;
-    if (next > W + EPSILON) {
+    if (next > W) {
       rows += 1;
       cur = w;
     } else {
@@ -32,37 +38,26 @@ export function rowsFor(items: number[], W: number, g: number): number {
   return rows;
 }
 
-export function planChipOverflow({ W, g, c, p, m, R, minChip }: ChipOverflowInput): ChipOverflowPlan {
+export function planChipOverflow({ W, g, c, p, m, R }: ChipOverflowInput): ChipOverflowPlan {
   const n = c.length;
   if (R == null || R < 1) return { visible: n, hidden: 0 };
   for (let hidden = 0; hidden <= n; hidden++) {
     const visible = n - hidden;
+    if (visible === 0) break;
     const chips = c.slice(0, visible);
-    const tail = m == null ? [p] : [p, m];
-    const items = hidden > 0 ? [...chips, ...tail] : m == null ? chips : [...chips, m];
-    if (rowsFor(items, W, g) <= R) return { visible, hidden };
+    if (chips.some((w) => w > W)) continue;
+    if (rowsFor([...chips, ...tail(hidden, p, m)], W, g) <= R) return { visible, hidden };
+  }
 
-    const cLast = chips.at(-1);
-    if (minChip == null || hidden === 0 || cLast == null || cLast < minChip) continue;
-
-    const head = chips.slice(0, -1);
-    let cur = 0;
-    for (const w of head) {
-      const next = cur === 0 ? w : cur + g + w;
-      cur = next > W + EPSILON ? w : next;
+  const first = c[0];
+  if (first != null && W > 0 && first > W) {
+    const hidden = n - 1;
+    const extras = tail(hidden, p, m);
+    if (rowsFor([W, ...extras], W, g) <= R) return { visible: 1, hidden, lastChipWidth: W };
+    const share = W - extras.reduce((sum, w) => sum + g + w, 0);
+    if (share > 0 && rowsFor([share, ...extras], W, g) <= R) {
+      return { visible: 1, hidden, lastChipWidth: share };
     }
-    const avail = cur === 0 ? W : W - cur - g;
-    let best: number | undefined;
-    const widths =
-      m == null
-        ? [cLast, minChip, avail, avail - g - p, W, W - g - p]
-        : [cLast, minChip, avail, avail - g - p, avail - g - p - g - m, W, W - g - p, W - g - p - g - m];
-    for (const w of widths) {
-      if (w < minChip || w > cLast) continue;
-      if (rowsFor([...head, w, ...tail], W, g) > R) continue;
-      if (best == null || w > best) best = w;
-    }
-    if (best != null && best < cLast) return { visible, hidden, lastChipWidth: best };
   }
   return { visible: 0, hidden: n };
 }

@@ -151,7 +151,7 @@ describe('useChipList', () => {
     expect(screen.getByTestId('count').textContent).toBe('2');
   });
 
-  it('ellipsizes only the last visible chip', () => {
+  it('folds a chip that does not fit at full width instead of shrinking it', () => {
     vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
       const minWidth = el instanceof HTMLInputElement ? '40px' : '0px';
       return {
@@ -175,11 +175,26 @@ describe('useChipList', () => {
     });
     render(<Host chips={['Alpha', 'Beta', 'Gamma']} maxRows={1} reserve />);
     const chips = [...document.querySelectorAll('[data-chip]')] as HTMLElement[];
-    const ellipsis = chips.filter((el) => el.hasAttribute('data-ellipsis'));
-    expect(ellipsis).toHaveLength(1);
-    expect(ellipsis[0]?.textContent).toBe('Beta');
-    expect(ellipsis[0]?.style.maxWidth).toBe('116px');
-    expect(chips.some((el) => el.textContent === 'Alpha' && !el.hasAttribute('data-ellipsis'))).toBe(true);
+    expect(chips.map((el) => el.textContent)).toEqual(['Alpha']);
+    expect(document.querySelector('[data-ellipsis]')).toBeNull();
+    expect(screen.getByTestId('hidden').textContent).toBe('2');
+  });
+
+  it('truncates a chip wider than the row and keeps its full label', () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (this.getAttribute('data-overflow') != null) return rect(40);
+      if (this.querySelector?.(':scope > input') || this.getAttribute('role') === 'list') return rect(200, 32);
+      const text = this.textContent ?? '';
+      const width = text.startsWith('…') ? 60 : text.startsWith('a-very-long-tag') ? 400 : 80;
+      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) return rect(width);
+      return rect(0, 0);
+    });
+    const full = 'a-very-long-tag';
+    render(<Host chips={[full]} maxRows={1} />);
+    const chip = document.querySelector('[data-chip]') as HTMLElement;
+    expect(chip.textContent).toBe(full);
+    expect(chip.getAttribute('data-ellipsis')).toBe('');
+    expect(chip.style.maxWidth).toBe('200px');
   });
 
   it('re-plans from ResizeObserver without adding observers', () => {

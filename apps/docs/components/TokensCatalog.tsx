@@ -1,4 +1,5 @@
 import catalog from '@tounsoo/todae/tokens.json';
+import { ScrollRegion } from './OverflowRegion';
 
 type TokenRow = {
   path: string;
@@ -42,7 +43,7 @@ export function TokensCatalog() {
         const rows = tokens.filter((row) => row.layer === layer);
         if (rows.length === 0) return null;
         return (
-          <div key={layer} className="scroll-x">
+          <ScrollRegion key={layer}>
           <table>
             <caption>{layer}</caption>
             <thead>
@@ -72,7 +73,7 @@ export function TokensCatalog() {
               ))}
             </tbody>
           </table>
-          </div>
+          </ScrollRegion>
         );
       })}
     </>

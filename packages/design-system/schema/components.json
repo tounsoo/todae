@@ -512,7 +512,7 @@
           "name": "maxRows",
           "type": "number",
           "required": false,
-          "description": "Caps visual rows. inline: chips plus input. row: chip lines only; the input keeps its own line. Newest chips fold into +N. The last visible chip ellipsizes to soak leftover width before +N."
+          "description": "Caps visual rows. inline: chips plus input. row: chip lines only; the input keeps its own line. Newest chips fold into +N. A chip that does not fit at full width moves into +N. Only a chip wider than the row truncates."
         },
         {
           "name": "chipLayout",
