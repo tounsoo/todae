@@ -48,7 +48,7 @@ Layers: core (`:root` literals) → appearance (`[data-appearance]`, light also 
 
 ## Providers
 
-Wrap the tree in `ThemeProvider` and `DensityProvider`. `appearance="system"` (default) follows `prefers-color-scheme` via `useSyncExternalStore` and writes only `data-appearance="light"` or `"dark"`. The SSR snapshot is `light`. `DensityProvider` writes `data-density` (`compact` | `comfortable` | `spacious`, default `comfortable`). Nested providers override. Seed components read contract vars only.
+Wrap the tree in `ThemeProvider` and `DensityProvider`. `appearance="system"` (default) follows `prefers-color-scheme` via `useSyncExternalStore` and writes only `data-appearance="light"` or `"dark"`. The SSR snapshot is `light`. `DensityProvider` writes `data-density` (`compact` | `comfortable` | `spacious`, default `comfortable`). Nested providers override. Components read contract vars only.
 
 ```tsx
 import { DensityProvider, ThemeProvider, Button } from '@tounsoo/todae';
@@ -79,7 +79,7 @@ pnpm dev:docs
 
 `pnpm dev` is the same as `pnpm dev:docs`.
 
-Open `/`, `/button`, `/stack`, `/text`, `/tokens`, and `/playground`. Component pages mount a live example and a props table from the schema. `/tokens` tables the generated catalog. `/playground` is a left-rail theme controller (appearance + density selectors, raw / semantic / component token tabs, Export) and a right-stage live demo.
+Open `/` for the full index: component pages (one per component, e.g. `/button`), `/recipes/*`, `/tokens`, and `/playground`. Component pages mount a live example and a props table from the schema. `/tokens` tables the generated catalog. `/playground` is a left-rail theme controller (appearance + density selectors, raw / semantic / component token tabs, Export) and a right-stage live demo.
 
 ## Test
 
@@ -124,4 +124,4 @@ pnpm graft:check
 - `packages/design-system` is `@tounsoo/todae`, a private Vite library.
 - `apps/docs` is the Next.js 15 docs app with MDX examples.
 
-Button, Stack, and Text are seed components that prove the pipeline. They are not a design system.
+The component set is still growing and is not a finished design system.
