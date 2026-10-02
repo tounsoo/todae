@@ -31,7 +31,9 @@ function push(entry: Entry): () => void {
 
 /**
  * Calls `handler` on Escape while `active && enabled`. Overlays stack: only the most recently
- * opened one handles the key, so Escape in a popover inside a sheet closes the popover first.
+ * activated one handles the key, so Escape in a popover inside a sheet closes the popover first.
+ * Order is activation order. Layers that activate in the same commit register child-first, so
+ * open nested overlays one after another rather than together.
  */
 export function useEscapeKey(active: boolean, enabled: boolean, handler: () => void): void {
   const handlerRef = useRef(handler);

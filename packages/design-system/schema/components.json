@@ -1255,7 +1255,13 @@
           "name": "loadOptions",
           "type": "(query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>",
           "required": false,
-          "description": "Async options. Stale responses are discarded."
+          "description": "Async options. Stale responses are discarded. An inline function is fine; it is read at call time."
+        },
+        {
+          "name": "loadKey",
+          "type": "string | number",
+          "required": false,
+          "description": "Reloads options when it changes. Use it when loadOptions depends on state outside the query, such as a category."
         },
         {
           "name": "presentation",

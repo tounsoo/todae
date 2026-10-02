@@ -44,6 +44,8 @@ const CREATE_VALUE = '__create__';
 type BaseOptions = {
   options?: readonly ComboboxOption[];
   loadOptions?: (query: string, signal: AbortSignal) => Promise<readonly ComboboxOption[]>;
+  /** Reload when this changes. `loadOptions` is read at call time, so changes to it alone do not reload. */
+  loadKey?: string | number;
   filter?: (option: ComboboxOption, query: string) => boolean;
   presentation?: 'popover' | 'sheet' | 'auto';
   open?: boolean;
@@ -398,7 +400,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   useEffect(() => {
     if (!hasLoader) return;
     runLoad(inputValue);
-  }, [hasLoader, inputValue, runLoad]);
+  }, [hasLoader, inputValue, options.loadKey, runLoad]);
 
   useEffect(() => {
     return () => gate.current.abort();

@@ -304,6 +304,30 @@ describe('useCombobox', () => {
     expect(result.current.loading).toBe(false);
   });
 
+  it('reloads when loadKey changes even though loadOptions is read at call time', async () => {
+    const calls: string[] = [];
+    const { rerender } = renderHook(
+      ({ category }) =>
+        useCombobox({
+          loadKey: category,
+          loadOptions: async (query) => {
+            calls.push(`${category}:${query}`);
+            return [];
+          },
+          presentation: 'popover',
+        }),
+      { initialProps: { category: 'a' } },
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+    rerender({ category: 'b' });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(calls).toEqual(['a:', 'b:']);
+  });
+
   it('seeds the input label from a controlled single value', () => {
     const { result } = renderHook(() =>
       useCombobox({ options: OPTIONS, value: 'vue', presentation: 'popover' }),
