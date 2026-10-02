@@ -121,8 +121,14 @@ function isMultiple(options: UseComboboxOptions): options is UseComboboxMultiple
   return options.selectionMode === 'multiple';
 }
 
-function labelOf(options: readonly ComboboxOption[], value: string): string {
-  return options.find((option) => option.value === value)?.label ?? value;
+const EMPTY_OPTIONS: readonly ComboboxOption[] = [];
+
+function labelOf(
+  options: readonly ComboboxOption[],
+  value: string,
+  cache?: ReadonlyMap<string, string>,
+): string {
+  return options.find((option) => option.value === value)?.label ?? cache?.get(value) ?? value;
 }
 
 export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult {
@@ -146,10 +152,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const isSheet = presentation === 'sheet';
 
   const [open, setOpenState] = useControlledState(options.open, options.defaultOpen ?? false);
-  const selectedLabel =
-    !isMultiple(options) && options.defaultValue
-      ? labelOf(options.options ?? [], options.defaultValue)
-      : '';
+  const initialSingle = isMultiple(options) ? null : (options.value ?? options.defaultValue ?? null);
+  const selectedLabel = initialSingle ? labelOf(options.options ?? [], initialSingle) : '';
   const [inputValue, setInputState] = useControlledState(
     options.inputValue,
     options.defaultInputValue ?? selectedLabel,
@@ -175,9 +179,23 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const lastQuery = useRef(inputValue);
   const lastPresentation = useRef(presentation);
 
-  const source = options.loadOptions ? asyncOptions : (options.options ?? []);
+  // Callbacks read the latest options through this ref so their identity stays stable and
+  // inline `loadOptions` / `onChange` / `filter` functions never retrigger effects.
+  const latest = useRef(options);
+  latest.current = options;
+  const hasLoader = Boolean(options.loadOptions);
+
+  const source = hasLoader ? asyncOptions : (options.options ?? EMPTY_OPTIONS);
+  // Async result sets replace each other as the query changes; remember labels so selected
+  // chips and the committed input text do not fall back to raw values.
+  const labels = useRef(new Map<string, string>());
+  for (const option of source) labels.current.set(option.value, option.label);
+  const labelFor = useCallback(
+    (raw: string) => labelOf(source, raw, labels.current),
+    [source],
+  );
   const committedLabel =
-    selectionMode === 'single' && singleValue ? labelOf(source, singleValue) : '';
+    selectionMode === 'single' && singleValue ? labelFor(singleValue) : '';
   const filterQuery =
     selectionMode === 'single' && committedLabel !== '' && inputValue === committedLabel
       ? ''
@@ -224,17 +242,17 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const setOpen = useCallback(
     (next: boolean, reason: ComboboxCloseReason = 'trigger') => {
       setOpenState(next);
-      options.onOpenChange?.(next, reason);
+      latest.current.onOpenChange?.(next, reason);
     },
-    [options, setOpenState],
+    [setOpenState],
   );
 
   const setInputValue = useCallback(
     (next: string) => {
       setInputState(next);
-      options.onInputValueChange?.(next);
+      latest.current.onInputValueChange?.(next);
     },
-    [options, setInputState],
+    [setInputState],
   );
 
   const highlight = useCallback((next: string | null) => {
@@ -244,17 +262,19 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const applySingle = useCallback(
     (next: string | null) => {
       setSingleState(next);
-      if (!isMultiple(options)) options.onChange?.(next);
+      const current = latest.current;
+      if (!isMultiple(current)) current.onChange?.(next);
     },
-    [options, setSingleState],
+    [setSingleState],
   );
 
   const applyMulti = useCallback(
     (next: string[]) => {
       setMultiState(next);
-      if (isMultiple(options)) options.onChange?.(next);
+      const current = latest.current;
+      if (isMultiple(current)) current.onChange?.(next);
     },
-    [options, setMultiState],
+    [setMultiState],
   );
 
   const create = useCallback(() => {
@@ -272,7 +292,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       setInputValue(label);
       setOpen(false, 'select');
     };
-    const pending = options.onCreate?.(label);
+    const pending = latest.current.onCreate?.(label);
     if (pending != null && typeof pending === 'object' && 'then' in pending) {
       void Promise.resolve(pending).then(commit);
       return;
@@ -282,7 +302,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     applyMulti,
     applySingle,
     multiValue,
-    options,
     selectionMode,
     setInputValue,
     setOpen,
@@ -304,10 +323,10 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         return;
       }
       applySingle(raw);
-      setInputValue(labelOf(source, raw));
+      setInputValue(labelFor(raw));
       setOpen(false, 'select');
     },
-    [applyMulti, applySingle, create, multiValue, selectionMode, setInputValue, setOpen, source],
+    [applyMulti, applySingle, create, labelFor, multiValue, selectionMode, setInputValue, setOpen],
   );
 
   const remove = useCallback(
@@ -332,23 +351,33 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   }, [applyMulti, applySingle, selectionMode, setInputValue, setOpen]);
 
   const reset = useCallback(() => {
-    setOpenState(options.defaultOpen ?? false);
-    setInputState(options.defaultInputValue ?? '');
-    if (selectionMode === 'multiple') setMultiState(isMultiple(options) ? (options.defaultValue ?? []) : []);
-    else setSingleState(isMultiple(options) ? null : (options.defaultValue ?? null));
+    const initial = latest.current;
+    setOpenState(initial.defaultOpen ?? false);
+    if (isMultiple(initial)) {
+      setInputState(initial.defaultInputValue ?? '');
+      setMultiState(initial.defaultValue ?? []);
+    } else {
+      const defaultValue = initial.defaultValue ?? null;
+      setInputState(
+        initial.defaultInputValue ??
+          (defaultValue ? labelOf(initial.options ?? EMPTY_OPTIONS, defaultValue, labels.current) : ''),
+      );
+      setSingleState(defaultValue);
+    }
     setActiveValue(null);
     setAsyncOptions([]);
     setError(null);
     setLoading(false);
-  }, [options, selectionMode, setInputState, setMultiState, setOpenState, setSingleState]);
+  }, [setInputState, setMultiState, setOpenState, setSingleState]);
 
   const runLoad = useCallback(
     (query: string) => {
-      if (!options.loadOptions) return;
+      const load = latest.current.loadOptions;
+      if (!load) return;
       lastQuery.current = query;
       setLoading(true);
       setError(null);
-      void gate.current.next(query, options.loadOptions).then((result) => {
+      void gate.current.next(query, load).then((result) => {
         if (!gate.current.isCurrent(result.gen)) return;
         if ('aborted' in result && result.aborted) return;
         setLoading(false);
@@ -359,7 +388,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         setAsyncOptions(result.result);
       });
     },
-    [options.loadOptions],
+    [],
   );
 
   const retry = useCallback(() => {
@@ -367,9 +396,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   }, [runLoad]);
 
   useEffect(() => {
-    if (!options.loadOptions) return;
+    if (!hasLoader) return;
     runLoad(inputValue);
-  }, [inputValue, options.loadOptions, runLoad]);
+  }, [hasLoader, inputValue, runLoad]);
 
   useEffect(() => {
     return () => gate.current.abort();
@@ -412,7 +441,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
 
   const onInputKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
-      if (options.disabled) return;
+      if (latest.current.disabled) return;
       if (event.nativeEvent.isComposing || event.key === 'Process') return;
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End') {
         event.preventDefault();
@@ -451,7 +480,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       isSheet,
       move,
       open,
-      options.disabled,
       resolvedActive,
       select,
       selectionMode,
@@ -548,7 +576,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       return {
         ...comboboxAria,
         ref: inputRef,
-        chips: selected.map((item) => labelOf(source, item)),
+        chips: selected.map(labelFor),
         inputValue,
         onInputValueChange: changeInput,
         onCommit: () => {
@@ -580,7 +608,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       select,
       selectionMode,
       showCreate,
-      source,
+      labelFor,
     ],
   );
 

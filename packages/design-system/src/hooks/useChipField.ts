@@ -1,7 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 export type UseChipFieldOptions = {
-  initialChips?: string[];
+  initialChips?: readonly string[];
   initialInputValue?: string;
   dedupe?: boolean;
   transform?: (raw: string) => string | null;
@@ -9,7 +9,9 @@ export type UseChipFieldOptions = {
 
 export function useChipField(options: UseChipFieldOptions = {}) {
   const { initialChips = [], initialInputValue = '', dedupe = true, transform } = options;
-  const [chips, setChips] = useState(initialChips);
+  const [chips, setChips] = useState<readonly string[]>(initialChips);
+  const initial = useRef({ chips: initialChips, inputValue: initialInputValue });
+  initial.current = { chips: initialChips, inputValue: initialInputValue };
   const [inputValue, setInputValue] = useState(initialInputValue);
 
   const onInputValueChange = setInputValue;
@@ -29,9 +31,9 @@ export function useChipField(options: UseChipFieldOptions = {}) {
   }, []);
 
   const reset = useCallback(() => {
-    setChips(initialChips);
-    setInputValue(initialInputValue);
-  }, [initialChips, initialInputValue]);
+    setChips(initial.current.chips);
+    setInputValue(initial.current.inputValue);
+  }, []);
 
   return {
     chips,

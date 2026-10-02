@@ -306,7 +306,7 @@ function Textarea({
 }
 
 export type FieldChipInputProps = {
-  chips: string[];
+  chips: readonly string[];
   inputValue: string;
   onInputValueChange: (value: string) => void;
   onCommit: (value: string) => void;
@@ -334,6 +334,7 @@ function ChipInput({
   overflowLabel,
   className,
   onKeyDown: onKeyDownProp,
+  'aria-describedby': describedBy,
   ref,
   setChips: _setChips,
   setInputValue: _setInputValue,
@@ -394,7 +395,7 @@ function ChipInput({
       name={field.name}
       disabled={field.disabled}
       aria-invalid={field.invalid || undefined}
-      aria-describedby={field.describedBy}
+      aria-describedby={mergeDescribedBy(field.describedBy, describedBy)}
       aria-labelledby={field.labelledBy}
       aria-label={field.ariaLabel}
       value={inputValue}
