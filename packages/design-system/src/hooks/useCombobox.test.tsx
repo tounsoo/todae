@@ -285,6 +285,97 @@ describe('useCombobox', () => {
     expect(loadOptions).toHaveBeenLastCalledWith('boom', expect.any(AbortSignal));
   });
 
+  it('loads once per query when loadOptions is an inline function', async () => {
+    const calls: string[] = [];
+    const { result } = renderHook(() =>
+      useCombobox({
+        loadOptions: async (query) => {
+          calls.push(query);
+          return [{ value: 'a', label: 'A' }];
+        },
+        presentation: 'popover',
+      }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(calls).toEqual(['']);
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('reloads when loadKey changes even though loadOptions is read at call time', async () => {
+    const calls: string[] = [];
+    const { rerender } = renderHook(
+      ({ category }) =>
+        useCombobox({
+          loadKey: category,
+          loadOptions: async (query) => {
+            calls.push(`${category}:${query}`);
+            return [];
+          },
+          presentation: 'popover',
+        }),
+      { initialProps: { category: 'a' } },
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+    rerender({ category: 'b' });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(calls).toEqual(['a:', 'b:']);
+  });
+
+  it('does not fall back to defaultValue for a controlled null value', () => {
+    const { result } = renderHook(() =>
+      useCombobox({ options: OPTIONS, value: null, defaultValue: 'vue', presentation: 'popover' }),
+    );
+    expect(result.current.inputValue).toBe('');
+  });
+
+  it('does not seed the input with a raw value that has no known label', async () => {
+    const loadOptions = vi.fn(async () => []);
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, value: 'user_42', presentation: 'popover' }),
+    );
+    expect(result.current.inputValue).toBe('');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(loadOptions).toHaveBeenCalledWith('', expect.any(AbortSignal));
+  });
+
+  it('seeds the input label from a controlled single value', () => {
+    const { result } = renderHook(() =>
+      useCombobox({ options: OPTIONS, value: 'vue', presentation: 'popover' }),
+    );
+    expect(result.current.inputValue).toBe('Vue');
+  });
+
+  it('keeps chip labels for selections that left the async result set', async () => {
+    const { result } = renderHook(() =>
+      useCombobox({
+        selectionMode: 'multiple',
+        loadOptions: async (query) =>
+          query === '' ? [{ value: 'a', label: 'Alpha' }] : [{ value: 'b', label: 'Beta' }],
+        presentation: 'popover',
+      }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    act(() => result.current.select('a'));
+    act(() => result.current.setInputValue('b'));
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(result.current.getChipInputProps().chips).toEqual(['Alpha']);
+  });
+
   it('shows create when there is no case-insensitive match', async () => {
     const onCreate = vi.fn(() => 'todae');
     const onChange = vi.fn();

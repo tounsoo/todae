@@ -1577,4 +1577,20 @@ describe('Field.ChipInput row', () => {
     expect([...flow.children]).toEqual([input, measure]);
     expect(flow.querySelector('.measure, [class*="measure"] span')?.parentElement).not.toBe(flow);
   });
+
+  it('merges Field.Root and own aria-describedby on Field.ChipInput', () => {
+    render(
+      <Field.Root aria-describedby="root-hint">
+        <Field.ChipInput
+          chips={['a']}
+          inputValue=""
+          aria-describedby="own-hint"
+          onInputValueChange={() => undefined}
+          onCommit={() => undefined}
+          onChipRemove={() => undefined}
+        />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('textbox').getAttribute('aria-describedby')).toBe('root-hint own-hint');
+  });
 });

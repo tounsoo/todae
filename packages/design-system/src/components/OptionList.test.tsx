@@ -10,6 +10,29 @@ afterEach(cleanup);
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'OptionList.module.css'), 'utf8');
 
 describe('OptionList', () => {
+  it('skips disabled options wrapped in fragments during keyboard navigation', () => {
+    const onChange = vi.fn();
+    render(
+      <OptionList value={null} onChange={onChange} aria-label="Fruit">
+        <Option value="a">A</Option>
+        <>
+          <Option value="b" disabled>
+            B
+          </Option>
+          {['c', 'd'].map((v) => (
+            <Option key={v} value={v}>
+              {v.toUpperCase()}
+            </Option>
+          ))}
+        </>
+      </OptionList>,
+    );
+    const list = screen.getByRole('listbox');
+    fireEvent.keyDown(list, { key: 'ArrowDown' });
+    fireEvent.keyDown(list, { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledWith('c');
+  });
+
   it('exposes Option as OptionList.Option', () => {
     expect(OptionList.Option).toBe(Option);
   });

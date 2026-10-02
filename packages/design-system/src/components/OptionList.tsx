@@ -1,5 +1,6 @@
 import {
   Children,
+  Fragment,
   createContext,
   isValidElement,
   useCallback,
@@ -71,7 +72,15 @@ function isOptionElement(node: ReactNode): node is ReactElement<OptionProps> {
 }
 
 function collectOptions(children: ReactNode): OptionProps[] {
-  return Children.toArray(children).filter(isOptionElement).map((child) => child.props);
+  return Children.toArray(children).flatMap((child) => {
+    if (isOptionElement(child)) return [child.props];
+    // Children.toArray flattens arrays but not fragments; look through them so disabled
+    // state and keyboard order stay correct for `<>{items.map(...)}</>`.
+    if (isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment) {
+      return collectOptions(child.props.children);
+    }
+    return [];
+  });
 }
 
 export function Option({ value, children, disabled }: OptionProps) {

@@ -4,6 +4,18 @@ import type { FieldChipInputProps } from '../components/Field';
 import { useChipField } from './useChipField';
 
 describe('useChipField', () => {
+  it('keeps reset stable and restores the latest initial values', () => {
+    const { result, rerender } = renderHook(({ chips }) => useChipField({ initialChips: chips }), {
+      initialProps: { chips: ['a'] },
+    });
+    const reset = result.current.reset;
+    rerender({ chips: ['b'] });
+    expect(result.current.reset).toBe(reset);
+    act(() => result.current.onCommit('x'));
+    act(() => result.current.reset());
+    expect(result.current.chips).toEqual(['b']);
+  });
+
   it('appends trimmed unique commits and clears the input', () => {
     const { result } = renderHook(() => useChipField());
     act(() => result.current.onInputValueChange('  Alpha  '));
