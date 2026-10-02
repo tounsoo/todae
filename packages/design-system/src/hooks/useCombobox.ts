@@ -154,7 +154,11 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const isSheet = presentation === 'sheet';
 
   const [open, setOpenState] = useControlledState(options.open, options.defaultOpen ?? false);
-  const initialSingle = isMultiple(options) ? null : (options.value ?? options.defaultValue ?? null);
+  const initialSingle = isMultiple(options)
+    ? null
+    : options.value !== undefined
+      ? options.value
+      : (options.defaultValue ?? null);
   const selectedLabel = initialSingle ? labelOf(options.options ?? [], initialSingle) : '';
   const [inputValue, setInputState] = useControlledState(
     options.inputValue,

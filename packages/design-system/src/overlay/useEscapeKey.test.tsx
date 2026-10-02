@@ -4,8 +4,16 @@ import { useEscapeKey } from './useEscapeKey';
 
 afterEach(cleanup);
 
-function Layer({ active = true, onEscape }: { active?: boolean; onEscape: () => void }) {
-  useEscapeKey(active, true, onEscape);
+function Layer({
+  active = true,
+  enabled = true,
+  onEscape,
+}: {
+  active?: boolean;
+  enabled?: boolean;
+  onEscape: () => void;
+}) {
+  useEscapeKey(active, enabled, onEscape);
   return null;
 }
 
@@ -56,5 +64,40 @@ describe('useEscapeKey', () => {
     unmount();
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onEscape).not.toHaveBeenCalled();
+  });
+
+  it('keeps stack position when enabled toggles and skips disabled layers', () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    const { rerender } = render(
+      <>
+        <Layer onEscape={outer} />
+        <Layer onEscape={inner} />
+      </>,
+    );
+    rerender(
+      <>
+        <Layer enabled={false} onEscape={outer} />
+        <Layer onEscape={inner} />
+      </>,
+    );
+    rerender(
+      <>
+        <Layer enabled onEscape={outer} />
+        <Layer onEscape={inner} />
+      </>,
+    );
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+
+    rerender(
+      <>
+        <Layer onEscape={outer} />
+        <Layer enabled={false} onEscape={inner} />
+      </>,
+    );
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(outer).toHaveBeenCalledTimes(1);
   });
 });

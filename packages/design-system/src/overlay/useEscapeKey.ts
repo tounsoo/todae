@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react';
 
-type Entry = { handle: () => void };
+type Entry = { handle: () => void; enabled: () => boolean };
 
 const stack: Entry[] = [];
 let listening = false;
 
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;
-  const top = stack[stack.length - 1];
+  // A disabled layer keeps its place but lets Escape fall through to the next enabled one.
+  const top = [...stack].reverse().find((entry) => entry.enabled());
   if (!top) return;
   event.preventDefault();
   top.handle();
@@ -37,9 +38,12 @@ function push(entry: Entry): () => void {
  */
 export function useEscapeKey(active: boolean, enabled: boolean, handler: () => void): void {
   const handlerRef = useRef(handler);
+  const enabledRef = useRef(enabled);
   handlerRef.current = handler;
+  enabledRef.current = enabled;
+  // Keyed on `active` only: toggling `enabled` must not move the layer above overlays opened later.
   useEffect(() => {
-    if (!active || !enabled) return;
-    return push({ handle: () => handlerRef.current() });
-  }, [active, enabled]);
+    if (!active) return;
+    return push({ handle: () => handlerRef.current(), enabled: () => enabledRef.current });
+  }, [active]);
 }

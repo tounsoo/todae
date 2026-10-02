@@ -328,6 +328,13 @@ describe('useCombobox', () => {
     expect(calls).toEqual(['a:', 'b:']);
   });
 
+  it('does not fall back to defaultValue for a controlled null value', () => {
+    const { result } = renderHook(() =>
+      useCombobox({ options: OPTIONS, value: null, defaultValue: 'vue', presentation: 'popover' }),
+    );
+    expect(result.current.inputValue).toBe('');
+  });
+
   it('seeds the input label from a controlled single value', () => {
     const { result } = renderHook(() =>
       useCombobox({ options: OPTIONS, value: 'vue', presentation: 'popover' }),
