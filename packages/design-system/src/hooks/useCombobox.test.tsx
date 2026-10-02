@@ -335,6 +335,18 @@ describe('useCombobox', () => {
     expect(result.current.inputValue).toBe('');
   });
 
+  it('does not seed the input with a raw value that has no known label', async () => {
+    const loadOptions = vi.fn(async () => []);
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, value: 'user_42', presentation: 'popover' }),
+    );
+    expect(result.current.inputValue).toBe('');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(loadOptions).toHaveBeenCalledWith('', expect.any(AbortSignal));
+  });
+
   it('seeds the input label from a controlled single value', () => {
     const { result } = renderHook(() =>
       useCombobox({ options: OPTIONS, value: 'vue', presentation: 'popover' }),

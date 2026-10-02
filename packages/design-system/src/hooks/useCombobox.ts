@@ -159,7 +159,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     : options.value !== undefined
       ? options.value
       : (options.defaultValue ?? null);
-  const selectedLabel = initialSingle ? labelOf(options.options ?? [], initialSingle) : '';
+  // Only a label we actually know: never seed the input (and the first async query) with a raw id.
+  const selectedLabel =
+    options.options?.find((option) => option.value === initialSingle)?.label ?? '';
   const [inputValue, setInputState] = useControlledState(
     options.inputValue,
     options.defaultInputValue ?? selectedLabel,
@@ -366,7 +368,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       const defaultValue = initial.defaultValue ?? null;
       setInputState(
         initial.defaultInputValue ??
-          (defaultValue ? labelOf(initial.options ?? EMPTY_OPTIONS, defaultValue, labels.current) : ''),
+          (defaultValue
+            ? (initial.options ?? EMPTY_OPTIONS).find((option) => option.value === defaultValue)?.label ?? ''
+            : ''),
       );
       setSingleState(defaultValue);
     }
