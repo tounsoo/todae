@@ -2,7 +2,7 @@ export default function HomePage() {
   return (
     <>
       <h1>Todae</h1>
-      <p>Seed components that prove the token pipeline.</p>
+      <p>What you need to do today. Components, recipes, and tokens.</p>
       <ul>
         <li>
           <a href="/composition">Composition</a>
