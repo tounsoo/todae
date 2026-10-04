@@ -30,9 +30,13 @@ export type ThemeDimensionValue = {
 export type ThemeOverrideValue = ThemeColorValue | ThemeDimensionValue | number;
 export type ThemeOverride = { [K in ThemeOverrideKey]?: ThemeOverrideValue };
 
+/** Types of extra override keys, such as `THEME_OVERRIDE_TYPES` from a company's `todae-tokens build`. */
+export type ThemeOverrideTypes<Key extends string = string> = Readonly<Record<Key, ThemeOverrideType>>;
+
 const KEYS = new Set<string>(THEME_OVERRIDE_KEYS);
 const DEV = process.env.NODE_ENV !== 'production';
 const HEX = /^#[0-9a-fA-F]{6}$/;
+const PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
 const OKLCH =
   /^oklch\(\s*(-?\d*\.?\d+)\s+(-?\d*\.?\d+)\s+(-?\d*\.?\d+)(?:\s*\/\s*(-?\d*\.?\d+))?\s*\)$/;
 const REM = /^(-?\d*\.?\d+)rem$/;
@@ -53,6 +57,30 @@ export function isThemeOverrideKey(key: string): key is ThemeOverrideKey {
 
 export function themeOverrideType(key: ThemeOverrideKey): ThemeOverrideType {
   return THEME_OVERRIDE_TYPES[key];
+}
+
+const OVERRIDE_TYPES = new Set<string>(Object.values(THEME_OVERRIDE_TYPES));
+
+function typeOf(key: string, extra: ThemeOverrideTypes | undefined): ThemeOverrideType | undefined {
+  if (extra && Object.hasOwn(extra, key)) {
+    const type = extra[key];
+    return typeof type === 'string' && OVERRIDE_TYPES.has(type) ? type : undefined;
+  }
+  return isThemeOverrideKey(key) ? THEME_OVERRIDE_TYPES[key] : undefined;
+}
+
+function isValueOfType(type: ThemeOverrideType, value: unknown): value is ThemeOverrideValue {
+  if (type === 'color') return isThemeColorValue(value);
+  if (type === 'dimension') return isThemeDimensionValue(value);
+  if (type === 'fontWeight') return isFontWeight(value);
+  return isUnitlessNumber(value);
+}
+
+function valueCss(type: ThemeOverrideType, value: ThemeOverrideValue): string {
+  if (type === 'color' && isThemeColorValue(value)) return themeColorCss(value);
+  if (isThemeDimensionValue(value)) return `${value.value}${value.unit}`;
+  if (typeof value === 'number') return String(value);
+  return '';
 }
 
 export function isThemeColorValue(value: unknown): value is ThemeColorValue {
@@ -85,11 +113,7 @@ function isUnitlessNumber(value: unknown): value is number {
 }
 
 export function isThemeOverrideValue(key: ThemeOverrideKey, value: unknown): value is ThemeOverrideValue {
-  const type = themeOverrideType(key);
-  if (type === 'color') return isThemeColorValue(value);
-  if (type === 'dimension') return isThemeDimensionValue(value);
-  if (type === 'fontWeight') return isFontWeight(value);
-  return isUnitlessNumber(value);
+  return isValueOfType(themeOverrideType(key), value);
 }
 
 export function parseThemeColor(raw: string): ThemeColorValue | null {
@@ -129,13 +153,10 @@ export function themeColorCss(value: ThemeColorValue): string {
 }
 
 export function themeValueCss(key: ThemeOverrideKey, value: ThemeOverrideValue): string {
-  if (themeOverrideType(key) === 'color' && isThemeColorValue(value)) return themeColorCss(value);
-  if (isThemeDimensionValue(value)) return `${value.value}${value.unit}`;
-  if (typeof value === 'number') return String(value);
-  return '';
+  return valueCss(themeOverrideType(key), value);
 }
 
-export function cssVarName(path: ThemeOverrideKey): string {
+export function cssVarName(path: string): string {
   return `--todae-${path.replaceAll('.', '-')}`;
 }
 
@@ -143,7 +164,7 @@ function reject(message: string): void {
   if (DEV) throw new Error(message);
 }
 
-export function themeOverrideStyle(overrides: unknown): Record<string, string> {
+export function themeOverrideStyle(overrides: unknown, overrideTypes?: ThemeOverrideTypes): Record<string, string> {
   if (overrides == null) return {};
   if (!isRecord(overrides)) {
     reject('ThemeProvider overrides must be an object');
@@ -152,15 +173,16 @@ export function themeOverrideStyle(overrides: unknown): Record<string, string> {
   const style: Record<string, string> = {};
   for (const [key, value] of Object.entries(overrides)) {
     if (value === undefined) continue;
-    if (!isThemeOverrideKey(key)) {
+    const type = typeOf(key, overrideTypes);
+    if (!type || !PATH.test(key)) {
       reject(`Unknown theme override "${key}"`);
       continue;
     }
-    if (!isThemeOverrideValue(key, value)) {
+    if (!isValueOfType(type, value)) {
       reject(`Invalid theme override value for "${key}"`);
       continue;
     }
-    style[cssVarName(key)] = themeValueCss(key, value);
+    style[cssVarName(key)] = valueCss(type, value);
   }
   return style;
 }

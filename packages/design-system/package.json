@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "todae-tokens": "./dist/scripts/build-tokens.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -10,13 +13,17 @@
     },
     "./todae.css": "./dist/todae.css",
     "./schema/components.json": "./schema/components.json",
-    "./tokens.json": "./tokens/tokens.generated.json"
+    "./tokens.json": "./tokens/tokens.generated.json",
+    "./tokens-builder": {
+      "types": "./dist/scripts/build-tokens.d.ts",
+      "import": "./dist/scripts/build-tokens.js"
+    }
   },
-  "files": ["dist", "schema", "tokens/tokens.generated.json"],
+  "files": ["dist", "schema", "tokens"],
   "scripts": {
     "tokens": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts",
     "tokens:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts --check",
-    "build": "pnpm tokens && vite build && tsc -p tsconfig.build.json",
+    "build": "pnpm tokens && vite build && tsc -p tsconfig.build.json && tsc -p tsconfig.scripts.json",
     "dev": "vite build --watch",
     "schema": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/generate-schema.ts",
     "test": "vitest run",

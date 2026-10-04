@@ -200,6 +200,40 @@ describe('override keys', () => {
   });
 });
 
+describe('company override types', () => {
+  it('accepts extra keys typed by overrideTypes and still rejects others', () => {
+    const types = { 'brand.ink': 'color', 'brand.logo.size': 'dimension' } as const;
+    expect(
+      themeOverrideStyle(
+        { 'brand.ink': { colorSpace: 'oklch', components: [0.4, 0.1, 25] }, 'brand.logo.size': { value: 2, unit: 'rem' } },
+        types,
+      ),
+    ).toEqual({ '--todae-brand-ink': 'oklch(0.4 0.1 25)', '--todae-brand-logo-size': '2rem' });
+    expect(() => themeOverrideStyle({ 'brand.ink': 3 }, types)).toThrow(/Invalid theme override value for "brand.ink"/);
+    expect(() => themeOverrideStyle({ 'brand.other': 3 }, types)).toThrow(/Unknown theme override "brand.other"/);
+    expect(() => themeOverrideStyle({ 'brand.ink': { colorSpace: 'oklch', components: [0.4, 0.1, 25] } })).toThrow(
+      /Unknown theme override/,
+    );
+    expect(() => themeOverrideStyle({ 'Brand.Ink': 1 }, { 'Brand.Ink': 'number' })).toThrow(/Unknown theme override/);
+    expect(() => themeOverrideStyle({ 'brand.ink': 1 }, { 'brand.ink': 'url' } as never)).toThrow(/Unknown theme override/);
+    expect(() => themeOverrideStyle({ toString: 1 }, {})).toThrow(/Unknown theme override/);
+  });
+
+  it('writes company overrides on the ThemeProvider element', () => {
+    render(
+      <ThemeProvider
+        appearance="light"
+        data-testid="theme"
+        overrideTypes={{ 'brand.ink': 'color' }}
+        overrides={{ 'brand.ink': { colorSpace: 'oklch', components: [0.4, 0.1, 25] }, 'radius.md': { value: 1, unit: 'rem' } }}
+      />,
+    );
+    const el = screen.getByTestId('theme');
+    expect(el.style.getPropertyValue('--todae-brand-ink')).toBe('oklch(0.4 0.1 25)');
+    expect(el.style.getPropertyValue('--todae-radius-md')).toBe('1rem');
+  });
+});
+
 describe('contract-only components', () => {
   it('forbids hard-coded color and appearance branches', () => {
     const root = join(import.meta.dirname, '../components');

@@ -4,7 +4,10 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   PATH_RE,
+  buildCompanyTokens,
   buildTokensGraph,
+  cli,
+  todaeTokensRoot,
   catalogSelectors,
   flattenTokens,
   pathToPointer,
@@ -579,5 +582,166 @@ describe('resolver-driven build', () => {
     expect(
       parseExtension(ext({ layer: 'appearance', attribute: 'data-a', root: true, colorScheme: false }), 'modifier', 'm'),
     ).toEqual({ layer: 'appearance', attribute: 'data-a', root: true });
+  });
+});
+
+describe('company token build', () => {
+  const tokensDir = join(import.meta.dirname, '../tokens');
+  const acme = join(import.meta.dirname, '__fixtures__/acme');
+  const temps: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(temps.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
+  });
+
+  async function company(edit: (resolver: Record<string, any>, root: string) => Promise<void> | void): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'todae-acme-'));
+    temps.push(root);
+    await cp(acme, root, { recursive: true });
+    const resolver = JSON.parse(await readFile(join(root, 'resolver.json'), 'utf8'));
+    await edit(resolver, root);
+    await writeFile(join(root, 'resolver.json'), JSON.stringify(resolver));
+    return join(root, 'resolver.json');
+  }
+
+  function blockOf(css: string, selector: string): string {
+    const start = css.indexOf(`${selector} {`);
+    expect(start, selector).toBeGreaterThan(-1);
+    return css.slice(start, css.indexOf('\n}', start));
+  }
+
+  it('finds Todae tokens from the builder module', () => {
+    expect(todaeTokensRoot()).toBe(tokensDir);
+  });
+
+  it('emits only the company layer, after Todae\'s', async () => {
+    const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
+    expect(result.css.startsWith('@layer todae.reset, todae.base, todae.components, todae.theme;\n\n@layer todae.theme {')).toBe(
+      true,
+    );
+    expect(catalogSelectors(result.css.slice(result.css.indexOf('@layer todae.theme {')))).toEqual([
+      '@layer todae.theme',
+      ':root, [data-appearance="light"]',
+      '[data-appearance="dark"]',
+      '[data-density="roomy"]',
+      '[data-appearance], [data-density]',
+      '[data-button-variant="outline"]',
+    ]);
+    const light = blockOf(result.css, ':root,\n[data-appearance="light"]');
+    expect(light).toContain('--todae-color-accent-default: oklch(0.45 0.16 25);');
+    expect(light).toContain('--todae-brand-ink: var(--todae-color-gray-900);');
+    expect(light).not.toContain('--todae-color-bg-canvas');
+    const rescoped = blockOf(result.css, '[data-appearance],\n[data-density]');
+    expect(rescoped).toContain('--todae-button-outline-bg-default: var(--todae-color-bg-transparent);');
+    expect(rescoped).toContain('--todae-brand-logo-fg: var(--todae-brand-ink);');
+    expect(rescoped).not.toContain('--todae-button-primary-');
+    expect(blockOf(result.css, '[data-button-variant="outline"]')).toContain(
+      '--todae-button-bg-default: var(--todae-button-outline-bg-default);',
+    );
+    expect(blockOf(result.css, '[data-density="roomy"]')).toContain('--todae-space-overlay-padding: var(--todae-space-8);');
+  });
+
+  it('merges the catalog and types only the company tokens', async () => {
+    const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
+    const rows = JSON.parse(result.json).tokens as { path: string; context: string | null; cssValue: string }[];
+    expect(rows.some((row) => row.path === 'color.gray.50')).toBe(true);
+    expect(rows.some((row) => row.path === 'button.outline.bg.default' && row.context === 'outline')).toBe(true);
+    expect(rows.filter((row) => row.path === 'color.accent.default').map((row) => row.cssValue)).toEqual([
+      'oklch(0.45 0.16 25)',
+      'oklch(0.72 0.14 25)',
+    ]);
+    expect(rows.filter((row) => row.path === 'space.control.x').map((row) => row.context)).toEqual([
+      'compact',
+      'comfortable',
+      'spacious',
+      'roomy',
+    ]);
+    expect(result.overrideTypes).toContain("  'brand.ink': 'color',");
+    expect(result.overrideTypes).toContain("  'brand.logo.size': 'dimension',");
+    expect(result.overrideTypes).not.toContain("'color.gray.50'");
+  });
+
+  it('requires new contexts and additions to keep context parity with Todae', async () => {
+    const roomy = await company(async (_resolver, root) => {
+      const file = join(root, 'density/roomy.json');
+      const tokens = JSON.parse(await readFile(file, 'utf8'));
+      delete tokens.space.overlay;
+      await writeFile(file, JSON.stringify(tokens));
+    });
+    await expect(buildCompanyTokens({ resolver: roomy, base: tokensDir })).rejects.toThrow(
+      /modifier "density" comfortable\/roomy key trees differ/,
+    );
+    const brand = await company((resolver) => {
+      resolver.modifiers.appearance.contexts.dark = [{ color: {} }];
+    });
+    await expect(buildCompanyTokens({ resolver: brand, base: tokensDir })).rejects.toThrow(/appearance light\/dark key trees differ/);
+    const outline = await company(async (_resolver, root) => {
+      const file = join(root, 'button.outline.json');
+      const tokens = JSON.parse(await readFile(file, 'utf8'));
+      delete tokens.button.outline.ring;
+      await writeFile(file, JSON.stringify(tokens));
+    });
+    await expect(buildCompanyTokens({ resolver: outline, base: tokensDir })).rejects.toThrow(
+      /variant "outline" paint keys must match button\.primary/,
+    );
+  });
+
+  it('rejects extensions that change Todae\'s placement or redeclare its tokens', async () => {
+    const cases: [(resolver: Record<string, any>) => void, RegExp][] = [
+      [
+        (r) => (r.modifiers.density.$extensions['dev.todae'].attribute = 'data-space'),
+        /modifier "density" extends Todae's modifier "density", so its attribute must match/,
+      ],
+      [(r) => (r.modifiers.density.default = 'roomy'), /so its default must stay "comfortable"/],
+      [
+        (r) => (r.sets.brand.sources = [{ color: { gray: { 50: { $type: 'color', $value: { $ref: '#/brand/ink/$value' } } } } }]),
+        /token "color\.gray\.50" is declared by both set "core" and set "brand"/,
+      ],
+      [
+        (r) => {
+          r.modifiers.contrast = {
+            default: 'more',
+            contexts: { more: [{ space: { hairline: { $type: 'dimension', $value: { value: 2, unit: 'px' } } } }] },
+            $extensions: { 'dev.todae': { layer: 'density', attribute: 'data-appearance' } },
+          };
+          r.resolutionOrder.push({ $ref: '#/modifiers/contrast' });
+        },
+        /modifier "contrast" reuses attribute data-appearance/,
+      ],
+      [
+        (r) => (r.modifiers.buttonVariant.contexts.base = r.modifiers.buttonVariant.contexts.outline),
+        /context "base" is reserved/,
+      ],
+    ];
+    for (const [edit, error] of cases) {
+      const resolver = await company(edit);
+      await expect(buildCompanyTokens({ resolver, base: tokensDir })).rejects.toThrow(error);
+    }
+  });
+
+  it('writes, checks and reports drift from the CLI', async () => {
+    const out = await mkdtemp(join(tmpdir(), 'todae-cli-'));
+    temps.push(out);
+    const args = (...extra: string[]) => [
+      'build',
+      '--resolver',
+      join(acme, 'resolver.json'),
+      '--base',
+      tokensDir,
+      '--css',
+      join(out, 'acme.css'),
+      '--catalog',
+      join(out, 'acme.json'),
+      '--types',
+      join(out, 'acme.types.ts'),
+      ...extra,
+    ];
+    await expect(cli(args('--check'))).rejects.toThrow(/acme\.css is missing/);
+    await cli(args());
+    await expect(cli(args('--check'))).resolves.toBeUndefined();
+    expect(await readFile(join(out, 'acme.types.ts'), 'utf8')).toContain("'brand.ink': 'color'");
+    await writeFile(join(out, 'acme.css'), '');
+    await expect(cli(args('--check'))).rejects.toThrow(/acme\.css drifted/);
+    await expect(cli(['build'])).rejects.toThrow(/Usage: todae-tokens build/);
   });
 });

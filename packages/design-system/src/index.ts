@@ -114,6 +114,7 @@ export {
   type ThemeDimensionValue,
   type ThemeOverride,
   type ThemeOverrideKey,
+  type ThemeOverrideTypes,
   type ThemeOverrideValue,
 } from './providers/themeOverride';
 export {

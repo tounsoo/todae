@@ -1,6 +1,9 @@
+#!/usr/bin/env node
+import { existsSync, realpathSync } from 'node:fs';
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { parseArgs } from 'node:util';
 
 export const PATH_RE = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
 export const RESERVED_ROOTS = [
@@ -270,10 +273,21 @@ export function validateInteractive(
   }
 }
 
-export function consumeCssVar(path: string, paints: readonly string[] = BUTTON_PAINTS): string | null {
-  for (const pack of ['base', ...paints]) {
-    const prefix = `button.${pack}.`;
-    if (path.startsWith(prefix)) return cssVarName(`button.${path.slice(prefix.length)}`);
+/** An alias modifier's token root (`button`) and its contexts (`primary`, …). */
+export type AliasGroup = { root: string; contexts: readonly string[] };
+
+const BUTTON_ALIAS: AliasGroup = { root: 'button', contexts: BUTTON_PAINTS };
+
+/**
+ * The consume var a pack token aliases: `<root>.<context>.x` and the shared
+ * `<root>.base.x` both feed `--todae-<root>-x`.
+ */
+export function consumeCssVar(path: string, aliases: readonly AliasGroup[] = [BUTTON_ALIAS]): string | null {
+  for (const { root, contexts } of aliases) {
+    for (const pack of ['base', ...contexts]) {
+      const prefix = `${root}.${pack}.`;
+      if (path.startsWith(prefix)) return cssVarName(`${root}.${path.slice(prefix.length)}`);
+    }
   }
   return null;
 }
@@ -404,10 +418,10 @@ function decls(tokens: FlatToken[]): string {
   return tokens.map((t) => `  ${t.cssVar}: ${t.cssValue};`).join('\n');
 }
 
-function aliasDecls(tokens: FlatToken[], paints: readonly string[]): string {
+function aliasDecls(tokens: FlatToken[], aliases: readonly AliasGroup[]): string {
   return tokens
     .map((token) => {
-      const consume = consumeCssVar(token.path, paints);
+      const consume = consumeCssVar(token.path, aliases);
       if (!consume || consume === token.cssVar) return null;
       return `  ${consume}: var(${token.cssVar});`;
     })
@@ -415,8 +429,9 @@ function aliasDecls(tokens: FlatToken[], paints: readonly string[]): string {
     .join('\n');
 }
 
-function block(selector: string, lines: string[]): string {
-  return `${selector} {\n${lines.filter((line) => line !== '').join('\n')}\n}`;
+function block(selector: string, lines: string[]): string[] {
+  const body = lines.filter((line) => line !== '');
+  return body.length === 0 ? [] : [`${selector} {\n${body.join('\n')}\n}`];
 }
 
 /**
@@ -428,8 +443,17 @@ function block(selector: string, lines: string[]): string {
  *   context changes, along with the default context's consume aliases;
  * - the alias modifier emits one block per context that only swaps aliases.
  */
-export function emitCss(entries: ResolvedEntry[]): string {
-  const paints = aliasPaints(entries);
+export type EmitCssOptions = {
+  /** Cascade layer the blocks are emitted into. */
+  layer?: string;
+  /** Statements emitted before the layer block. */
+  preamble?: string;
+  /** Alias groups, when `entries` hold only part of the graph. */
+  aliases?: readonly AliasGroup[];
+};
+
+export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}): string {
+  const aliases = options.aliases ?? aliasGroups(entries);
   const root: FlatToken[] = [];
   const scopedBlocks: string[] = [];
   const attributes: string[] = [];
@@ -452,12 +476,13 @@ export function emitCss(entries: ResolvedEntry[]): string {
       if (alias) {
         rescoped.push(...tokens);
         if (context === entry.defaultContext) defaults.push(...tokens);
-        aliasBlocks.push(block(selector, [aliasDecls(tokens, paints)]));
+        aliasBlocks.push(...block(selector, [aliasDecls(tokens, aliases)]));
         continue;
       }
       const rootDefault = entry.extension.root && context === entry.defaultContext;
+      if (tokens.length === 0) continue;
       scopedBlocks.push(
-        block(rootDefault ? `:root,\n${selector}` : selector, [
+        ...block(rootDefault ? `:root,\n${selector}` : selector, [
           decls(tokens),
           colorScheme ? `  color-scheme: ${context};` : '',
         ]),
@@ -466,14 +491,12 @@ export function emitCss(entries: ResolvedEntry[]): string {
     if (!alias) attributes.push(`[${attribute}]`);
   }
   const blocks = [
-    ...(root.length > 0 ? [block(':root', [decls(root), aliasDecls(root, paints)])] : []),
+    ...block(':root', [decls(root), aliasDecls(root, aliases)]),
     ...scopedBlocks,
-    ...(rescoped.length > 0
-      ? [block(attributes.length > 0 ? attributes.join(',\n') : ':root', [decls(rescoped), aliasDecls(defaults, paints)])]
-      : []),
+    ...block(attributes.length > 0 ? attributes.join(',\n') : ':root', [decls(rescoped), aliasDecls(defaults, aliases)]),
     ...aliasBlocks,
   ];
-  return `@layer todae.base {\n${blocks.join('\n\n')}\n}\n`;
+  return `${options.preamble ?? ''}@layer ${options.layer ?? 'todae.base'} {\n${blocks.join('\n\n')}\n}\n`;
 }
 
 export function emitCatalog(tokens: FlatToken[]): string {
@@ -622,9 +645,15 @@ export type ResolvedEntry =
 const ATTRIBUTE_RE = /^data-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const CONTEXT_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 
-function aliasPaints(entries: ResolvedEntry[]): string[] {
-  const alias = entries.find((entry) => entry.kind === 'modifier' && entry.extension.alias);
-  return alias?.kind === 'modifier' ? [...alias.contexts.keys()] : [];
+export function aliasGroups(entries: ResolvedEntry[]): AliasGroup[] {
+  const groups: AliasGroup[] = [];
+  for (const entry of entries) {
+    if (entry.kind !== 'modifier' || !entry.extension.alias) continue;
+    const first = entry.contexts.get(entry.defaultContext)?.[0];
+    if (!first) fail(`alias modifier "${entry.name}" default context "${entry.defaultContext}" is empty`);
+    groups.push({ root: first.path.slice(0, first.path.indexOf('.')), contexts: [...entry.contexts.keys()] });
+  }
+  return groups;
 }
 
 const SLOT_GROUP_RE = /^(?:\*|[a-z0-9]+(?:-[a-z0-9]+)*)(?:\.(?:\*|[a-z0-9]+(?:-[a-z0-9]+)*))*$/;
@@ -728,10 +757,20 @@ function tokenMapOf(tokens: FlatToken[]): Map<string, TokenNode> {
   return new Map(tokens.map((t) => [t.path, { $type: t.type, $value: t.value }]));
 }
 
-export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[]> {
-  const resolver = await readJson(join(tokensRoot, 'resolver.json'), tokensRoot);
+const MATCHED_EXTENSION_KEYS = ['layer', 'attribute', 'root', 'colorScheme', 'alias'] as const;
+
+/**
+ * Loads a resolver and the token files it names. With `upstream` (Todae's own
+ * entries), a set or modifier that shares an upstream name extends it: it must
+ * keep the upstream layer and CSS placement, and a modifier inherits the
+ * upstream default context.
+ */
+export async function loadResolver(resolverFile: string, upstream: ResolvedEntry[] = []): Promise<ResolvedEntry[]> {
+  const tokensRoot = dirname(resolve(resolverFile));
+  const label = relative(process.cwd(), resolve(resolverFile)) || resolverFile;
+  const resolver = await readJson(resolve(resolverFile), tokensRoot);
   if (!isRecord(resolver) || resolver.version !== '2025.10' || !Array.isArray(resolver.resolutionOrder)) {
-    fail('resolver.json must be Resolver 2025.10 with resolutionOrder');
+    fail(`${label} must be Resolver 2025.10 with resolutionOrder`);
   }
   const fileRefs: string[] = [];
   collectFileRefs(resolver, fileRefs);
@@ -741,6 +780,8 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
   }
   const sets = isRecord(resolver.sets) ? resolver.sets : {};
   const modifiers = isRecord(resolver.modifiers) ? resolver.modifiers : {};
+  const upstreamOf = (kind: 'set' | 'modifier', name: string) =>
+    upstream.find((entry) => entry.kind === kind && entry.name === name);
 
   const order: { kind: 'set' | 'modifier'; name: string; def: Record<string, unknown>; extension: TodaeExtension }[] = [];
   const seen = new Set<string>();
@@ -754,19 +795,39 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
     if (!isRecord(def)) fail(`resolutionOrder[${i}] ${match[0]} does not exist`);
     if (seen.has(match[0])) fail(`resolutionOrder lists ${match[0]} twice`);
     seen.add(match[0]);
-    order.push({ kind, name, def, extension: parseExtension(def, kind, `${kind} "${name}"`) });
+    const loc = `${kind} "${name}"`;
+    const extension = parseExtension(def, kind, loc);
+    const base = upstreamOf(kind, name);
+    if (base) {
+      const changed = MATCHED_EXTENSION_KEYS.find((key) => extension[key] !== base.extension[key]);
+      if (changed) fail(`${loc} extends Todae's ${kind} "${name}", so its ${changed} must match`);
+    }
+    order.push({ kind, name, def, extension });
   }
 
-  const attributes = new Set<string>();
+  const attributes = new Map<string, string>();
+  for (const entry of upstream) {
+    if (entry.kind === 'modifier') attributes.set(entry.extension.attribute!, entry.name);
+  }
   for (const { kind, name, extension } of order) {
     if (kind !== 'modifier') continue;
-    if (attributes.has(extension.attribute!)) fail(`modifier "${name}" reuses attribute ${extension.attribute}`);
-    attributes.add(extension.attribute!);
+    const owner = attributes.get(extension.attribute!);
+    if (owner !== undefined && owner !== name) fail(`modifier "${name}" reuses attribute ${extension.attribute}`);
+    attributes.set(extension.attribute!, name);
   }
-  const aliases = order.filter((entry) => entry.kind === 'modifier' && entry.extension.alias);
-  if (aliases.length > 1) fail('resolver may declare at most one alias modifier');
-  const aliasContexts = aliases[0]?.def.contexts;
-  const paints = isRecord(aliasContexts) ? Object.keys(aliasContexts) : [];
+
+  // The button rule checks paint packs against every button alias context.
+  const paints = new Set<string>();
+  for (const entry of upstream) {
+    if (entry.kind === 'modifier' && entry.extension.alias && entry.extension.rules?.includes('button')) {
+      for (const context of entry.contexts.keys()) paints.add(context);
+    }
+  }
+  for (const { kind, def, extension } of order) {
+    if (kind === 'modifier' && extension.alias && extension.rules?.includes('button') && isRecord(def.contexts)) {
+      for (const context of Object.keys(def.contexts)) paints.add(context);
+    }
+  }
 
   const entries: ResolvedEntry[] = [];
   for (const { kind, name, def, extension } of order) {
@@ -776,13 +837,21 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
         kind,
         name,
         extension,
-        tokens: await loadTokens(def.sources, `${loc} sources`, tokensRoot, extension, undefined, paints),
+        tokens: await loadTokens(def.sources, `${loc} sources`, tokensRoot, extension, undefined, [...paints]),
       });
       continue;
     }
     if (!isRecord(def.contexts) || Object.keys(def.contexts).length === 0) fail(`${loc} must declare contexts`);
-    const defaultContext = def.default;
-    if (typeof defaultContext !== 'string' || !Object.hasOwn(def.contexts, defaultContext)) {
+    const base = upstreamOf(kind, name);
+    const inherited = base?.kind === 'modifier' ? base.defaultContext : undefined;
+    const defaultContext = def.default ?? inherited;
+    if (inherited !== undefined && defaultContext !== inherited) {
+      fail(`${loc} extends Todae's modifier "${name}", so its default must stay "${inherited}"`);
+    }
+    if (
+      typeof defaultContext !== 'string' ||
+      (inherited === undefined && !Object.hasOwn(def.contexts, defaultContext))
+    ) {
       fail(`${loc} default must name one of its contexts`);
     }
     const contexts = new Map<string, FlatToken[]>();
@@ -791,12 +860,25 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
       if (extension.colorScheme && context !== 'light' && context !== 'dark') {
         fail(`${loc} sets colorScheme, so its contexts must be light or dark, not "${context}"`);
       }
+      if (extension.alias && context === 'base') fail(`${loc} context "base" is reserved for shared <root>.base tokens`);
       contexts.set(
         context,
-        await loadTokens(sources, `${loc} context "${context}"`, tokensRoot, extension, context, paints),
+        await loadTokens(sources, `${loc} context "${context}"`, tokensRoot, extension, context, [...paints]),
       );
     }
-    const defaults = tokenMapOf(contexts.get(defaultContext)!);
+    entries.push({ kind, name, extension, defaultContext, contexts });
+  }
+  return entries;
+}
+
+/** Context-level checks that need a modifier's full set of contexts. */
+export function validateEntries(entries: ResolvedEntry[]): void {
+  for (const entry of entries) {
+    if (entry.kind !== 'modifier') continue;
+    const { extension, defaultContext, contexts } = entry;
+    const loc = `modifier "${entry.name}"`;
+    const defaults = contexts.get(defaultContext);
+    if (!defaults) fail(`${loc} default must name one of its contexts`);
     if (extension.alias) {
       if (extension.rules?.includes('button')) {
         validatePaintPacks(
@@ -809,21 +891,71 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
         defaultContext,
         loc,
       );
-    } else {
+      const root = aliasGroups([entry])[0]!.root;
       for (const [context, tokens] of contexts) {
-        if (context === defaultContext) continue;
-        const label = extension.layer === 'appearance' ? 'appearance' : `${loc}`;
-        validateParity(defaults, tokenMapOf(tokens), `${label} ${defaultContext}/${context}`);
+        const stray = tokens.find((t) => !t.path.startsWith(`${root}.${context}.`));
+        if (stray) fail(`${loc} context "${context}" token "${stray.path}" must be under ${root}.${context}.*`);
       }
+      continue;
     }
-    entries.push({ kind, name, extension, defaultContext, contexts });
+    for (const [context, tokens] of contexts) {
+      if (context === defaultContext) continue;
+      const label = extension.layer === 'appearance' ? 'appearance' : loc;
+      validateParity(tokenMapOf(defaults), tokenMapOf(tokens), `${label} ${defaultContext}/${context}`);
+    }
   }
-  return entries;
 }
 
-export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensResult> {
-  const entries = await resolveEntries(tokensRoot);
+function mergeTokens(base: FlatToken[], extra: FlatToken[]): FlatToken[] {
+  const merged = new Map(base.map((token) => [token.path, token]));
+  for (const token of extra) merged.set(token.path, token);
+  return [...merged.values()];
+}
 
+/**
+ * Layers a company's entries over Todae's. Entries sharing a name merge (the
+ * company's tokens win); new entries follow Todae's in the company's order.
+ * `merged` is the full graph; `company` keeps the same order with only the
+ * company's tokens, for emitting a CSS file layered after Todae's.
+ */
+export function mergeEntries(
+  base: ResolvedEntry[],
+  extra: ResolvedEntry[],
+): { merged: ResolvedEntry[]; company: ResolvedEntry[] } {
+  const merged: ResolvedEntry[] = base.map((entry) =>
+    entry.kind === 'set' ? { ...entry } : { ...entry, contexts: new Map(entry.contexts) },
+  );
+  const company: ResolvedEntry[] = base.map((entry) =>
+    entry.kind === 'set' ? { ...entry, tokens: [] } : { ...entry, contexts: new Map() },
+  );
+  for (const entry of extra) {
+    const index = merged.findIndex((candidate) => candidate.kind === entry.kind && candidate.name === entry.name);
+    if (index === -1) {
+      merged.push(entry);
+      company.push(entry);
+      continue;
+    }
+    const target = merged[index]!;
+    const view = company[index]!;
+    if (entry.kind === 'set' && target.kind === 'set' && view.kind === 'set') {
+      target.tokens = mergeTokens(target.tokens, entry.tokens);
+      view.tokens = entry.tokens;
+    } else if (entry.kind === 'modifier' && target.kind === 'modifier' && view.kind === 'modifier') {
+      for (const [context, tokens] of entry.contexts) {
+        target.contexts.set(context, mergeTokens(target.contexts.get(context) ?? [], tokens));
+        view.contexts.set(context, tokens);
+      }
+    }
+  }
+  return { merged, company };
+}
+
+function entryTokens(entry: ResolvedEntry): FlatToken[] {
+  return entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat();
+}
+
+/** Graph-level checks: one owner per token, refs, layer and resolution order. Returns every token. */
+export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
   const known = new Map<string, Layer>();
   const owner = new Map<string, string>();
   const position = new Map<string, number>();
@@ -842,7 +974,7 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
       position.set(token.path, index);
       known.set(token.path, token.layer);
     }
-    all.push(...(entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat()));
+    all.push(...entryTokens(entry));
   }
   validateRefs(all, known);
   // CSS places each entry by its resolutionOrder position, so an alias to a
@@ -862,8 +994,7 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
     return null;
   }
   for (const [index, entry] of entries.entries()) {
-    const tokens = entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat();
-    for (const token of tokens) {
+    for (const token of entryTokens(entry)) {
       if (!token.ref) continue;
       const target = position.get(token.ref) ?? -1;
       if (target >= index) {
@@ -879,10 +1010,66 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
       }
     }
   }
+  return all;
+}
 
-  const css = emitCss(entries);
-  const json = emitCatalog(all);
-  return { css, json, overrideKeys: emitOverrideKeys(all), tokens: all };
+export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[]> {
+  const entries = await loadResolver(join(tokensRoot, 'resolver.json'));
+  validateEntries(entries);
+  return entries;
+}
+
+export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensResult> {
+  const entries = await resolveEntries(tokensRoot);
+  const all = checkGraph(entries);
+  return { css: emitCss(entries), json: emitCatalog(all), overrideKeys: emitOverrideKeys(all), tokens: all };
+}
+
+/** Walks up from this file to the package that ships Todae's `tokens/resolver.json`. */
+export function todaeTokensRoot(from = import.meta.dirname): string {
+  for (let dir = from; ; dir = dirname(dir)) {
+    if (existsSync(join(dir, 'tokens', 'resolver.json')) && existsSync(join(dir, 'package.json'))) {
+      return join(dir, 'tokens');
+    }
+    if (dirname(dir) === dir) fail(`Could not find Todae's tokens/resolver.json above ${from}`);
+  }
+}
+
+export const COMPANY_LAYER = 'todae.theme';
+const COMPANY_PREAMBLE = `@layer todae.reset, todae.base, todae.components, ${COMPANY_LAYER};\n\n`;
+
+export type CompanyTokensResult = {
+  /** CSS for the company's tokens only, in a cascade layer after Todae's. */
+  css: string;
+  /** Catalog of Todae's and the company's tokens together. */
+  json: string;
+  /** `THEME_OVERRIDE_TYPES` for the company's tokens, for ThemeProvider `overrideTypes`. */
+  overrideTypes: string;
+  tokens: FlatToken[];
+};
+
+/**
+ * Builds a company token package layered on Todae's: `resolver` is the
+ * company's resolver.json, `base` Todae's tokens directory.
+ */
+export async function buildCompanyTokens(options: { resolver: string; base?: string }): Promise<CompanyTokensResult> {
+  const upstream = await resolveEntries(options.base ?? todaeTokensRoot());
+  const extra = await loadResolver(options.resolver, upstream);
+  const { merged, company } = mergeEntries(upstream, extra);
+  validateEntries(merged);
+  const all = checkGraph(merged);
+  const css = emitCss(company, { layer: COMPANY_LAYER, preamble: COMPANY_PREAMBLE, aliases: aliasGroups(merged) });
+  const own = company.flatMap(entryTokens);
+  const types = new Map(own.map((token) => [token.path, token.type]));
+  const overrideTypes = [
+    '// Generated by todae-tokens. Do not edit.',
+    '',
+    'export const THEME_OVERRIDE_TYPES = {',
+    ...[...types].map(([path, type]) => `  '${path}': '${type}',`),
+    '} as const;',
+    '',
+  ].join('\n');
+  return { css, json: emitCatalog(all), overrideTypes, tokens: all };
 }
 
 export async function buildTokens(options: { check?: boolean; root?: string } = {}): Promise<BuildTokensResult> {
@@ -917,7 +1104,75 @@ export async function buildTokens(options: { check?: boolean; root?: string } = 
   return result;
 }
 
-const invoked = process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
-if (invoked) {
-  await buildTokens({ check: process.argv.includes('--check') });
+async function writeOrCheck(outputs: [file: string, contents: string][], check: boolean, label: string): Promise<void> {
+  if (!check) {
+    for (const [file, contents] of outputs) await atomicWrite(file, contents);
+    return;
+  }
+  for (const [file, contents] of outputs) {
+    let current: string;
+    try {
+      current = await readFile(file, 'utf8');
+    } catch {
+      fail(`${label} failed: ${file} is missing`);
+    }
+    if (current !== contents) fail(`${label} failed: ${file} drifted`);
+  }
+}
+
+const USAGE = `Usage: todae-tokens build --resolver <file> [options]
+
+Builds a company token package layered on Todae's tokens.
+
+Options:
+  --resolver <file>  Company DTCG 2025.10 resolver (required)
+  --css <file>       CSS output, layered after Todae's (default: todae-theme.css)
+  --catalog <file>   Merged token catalog (default: tokens.catalog.json)
+  --types <file>     ThemeProvider overrideTypes module (default: todae-theme.types.ts)
+  --base <dir>       Todae tokens directory (default: the installed package's)
+  --check            Fail if the outputs are missing or out of date instead of writing
+`;
+
+export async function cli(argv: string[]): Promise<void> {
+  const { positionals, values } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: {
+      resolver: { type: 'string' },
+      css: { type: 'string', default: 'todae-theme.css' },
+      catalog: { type: 'string', default: 'tokens.catalog.json' },
+      types: { type: 'string', default: 'todae-theme.types.ts' },
+      base: { type: 'string' },
+      check: { type: 'boolean', default: false },
+      help: { type: 'boolean', default: false },
+    },
+  });
+  if (values.help) {
+    process.stdout.write(USAGE);
+    return;
+  }
+  if (positionals[0] !== 'build' || positionals.length !== 1 || !values.resolver) fail(USAGE);
+  const result = await buildCompanyTokens({
+    resolver: values.resolver,
+    ...(values.base ? { base: resolve(values.base) } : {}),
+  });
+  const outputs: [string, string][] = [
+    [resolve(values.css), result.css],
+    [resolve(values.catalog), result.json],
+    [resolve(values.types), result.overrideTypes],
+  ];
+  await writeOrCheck(outputs, values.check, 'todae-tokens --check');
+  if (!values.check) process.stdout.write(`Wrote ${outputs.map(([file]) => relative(process.cwd(), file)).join(', ')}\n`);
+}
+
+const entry = process.argv[1] ? realpathSync(resolve(process.argv[1])) : '';
+if (entry && pathToFileURL(entry).href === import.meta.url) {
+  const args = process.argv.slice(2);
+  try {
+    if (args[0] === 'build' || args.includes('--help')) await cli(args);
+    else await buildTokens({ check: args.includes('--check') });
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  }
 }
