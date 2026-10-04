@@ -742,8 +742,9 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
 
   const known = new Map<string, Layer>();
   const owner = new Map<string, string>();
+  const position = new Map<string, number>();
   const all: FlatToken[] = [];
-  for (const entry of entries) {
+  for (const [index, entry] of entries.entries()) {
     const declared =
       entry.kind === 'set'
         ? entry.tokens
@@ -754,11 +755,24 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
       const previous = owner.get(token.path);
       if (previous) fail(`token "${token.path}" is declared by both ${previous} and ${entry.kind} "${entry.name}"`);
       owner.set(token.path, `${entry.kind} "${entry.name}"`);
+      position.set(token.path, index);
       known.set(token.path, token.layer);
     }
     all.push(...(entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat()));
   }
   validateRefs(all, known);
+  // CSS places each entry by its resolutionOrder position, so an alias to a
+  // later entry would resolve before that entry's context is applied.
+  for (const [index, entry] of entries.entries()) {
+    const tokens = entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat();
+    for (const token of tokens) {
+      if (token.ref && (position.get(token.ref) ?? -1) >= index) {
+        fail(
+          `token "${token.path}" references "${token.ref}" from ${owner.get(token.ref)}, which must come earlier in resolutionOrder`,
+        );
+      }
+    }
+  }
 
   const css = emitCss(entries);
   const json = emitCatalog(all);

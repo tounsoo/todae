@@ -353,6 +353,19 @@ describe('resolver-driven build', () => {
 
   it('emits consume aliases for sets declared on :root', async () => {
     const root = await fixture((resolver) => {
+      const px = (value: number) => ({ $type: 'dimension', $value: { value, unit: 'px' } });
+      resolver.sets.button!.sources = [
+        {
+          button: {
+            base: {
+              radius: px(4),
+              padding: { x: px(12), y: px(6) },
+              font: { size: px(14), weight: { $type: 'fontWeight', $value: 500 } },
+              gap: px(8),
+            },
+          },
+        },
+      ];
       resolver.resolutionOrder = [
         { $ref: '#/sets/core' },
         { $ref: '#/sets/button' },
@@ -365,6 +378,22 @@ describe('resolver-driven build', () => {
     const graph = await buildTokensGraph(root);
     const rootBlock = graph.css.slice(graph.css.indexOf(':root {'), graph.css.indexOf(':root,\n'));
     expect(rootBlock).toContain('--todae-button-radius: var(--todae-button-base-radius);');
+  });
+
+  it('rejects an alias to a token from a later resolution entry', async () => {
+    const root = await fixture((resolver) => {
+      resolver.resolutionOrder = [
+        { $ref: '#/sets/core' },
+        { $ref: '#/sets/button' },
+        { $ref: '#/sets/contract' },
+        { $ref: '#/modifiers/appearance' },
+        { $ref: '#/modifiers/density' },
+        { $ref: '#/modifiers/buttonVariant' },
+      ];
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(
+      /token "button\.base\.[a-z.]+" references "space\.[a-z0-9.-]+" from modifier "density", which must come earlier/,
+    );
   });
 
   it('requires every context of a scoped modifier to declare the same tokens', async () => {
