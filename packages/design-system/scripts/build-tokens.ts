@@ -345,7 +345,16 @@ export function flattenLayer(
   context?: string,
   paints: readonly string[] = BUTTON_PAINTS,
 ): FlatToken[] {
-  const flat = flattenTokens(tree);
+  return layerTokens(flattenTokens(tree), layer, context, paints);
+}
+
+/** Validates one merged set or context and serializes its tokens. */
+export function layerTokens(
+  flat: Map<string, TokenNode>,
+  layer: Layer,
+  context?: string,
+  paints: readonly string[] = BUTTON_PAINTS,
+): FlatToken[] {
   validatePaths(flat.keys(), context ? `${layer}/${context}` : layer);
   if (layer === 'density') validateDensitySpaceOnly(flat, context ? `${layer}/${context}` : layer);
   if (layer === 'contract' || layer === 'variant') {
@@ -437,7 +446,7 @@ export function emitCss(entries: ResolvedEntry[]): string {
     if (!alias) attributes.push(`[${attribute}]`);
   }
   const blocks = [
-    ...(root.length > 0 ? [block(':root', [decls(root)])] : []),
+    ...(root.length > 0 ? [block(':root', [decls(root), aliasDecls(root, paints)])] : []),
     ...scopedBlocks,
     ...(rescoped.length > 0
       ? [block(attributes.length > 0 ? attributes.join(',\n') : ':root', [decls(rescoped), aliasDecls(defaults, paints)])]
@@ -631,11 +640,11 @@ async function loadTokens(
   context: string | undefined,
   paints: readonly string[],
 ): Promise<FlatToken[]> {
-  const merged = new Map<string, FlatToken>();
+  const merged = new Map<string, TokenNode>();
   for (const source of await loadSources(sources, loc, tokensRoot)) {
-    for (const token of flattenLayer(source.tree, layer, context, paints)) merged.set(token.path, token);
+    for (const [path, node] of flattenTokens(source.tree)) merged.set(path, node);
   }
-  return [...merged.values()];
+  return layerTokens(merged, layer, context, paints);
 }
 
 function tokenMapOf(tokens: FlatToken[]): Map<string, TokenNode> {
@@ -671,6 +680,12 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
     order.push({ kind, name, def, extension: parseExtension(def, kind, `${kind} "${name}"`) });
   }
 
+  const attributes = new Set<string>();
+  for (const { kind, name, extension } of order) {
+    if (kind !== 'modifier') continue;
+    if (attributes.has(extension.attribute!)) fail(`modifier "${name}" reuses attribute ${extension.attribute}`);
+    attributes.add(extension.attribute!);
+  }
   const aliases = order.filter((entry) => entry.kind === 'modifier' && entry.extension.alias);
   if (aliases.length > 1) fail('resolver may declare at most one alias modifier');
   const aliasContexts = aliases[0]?.def.contexts;
@@ -696,6 +711,9 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
     const contexts = new Map<string, FlatToken[]>();
     for (const [context, sources] of Object.entries(def.contexts)) {
       if (!CONTEXT_RE.test(context)) fail(`${loc} context "${context}" must be lowercase`);
+      if (extension.colorScheme && context !== 'light' && context !== 'dark') {
+        fail(`${loc} sets colorScheme, so its contexts must be light or dark, not "${context}"`);
+      }
       contexts.set(
         context,
         await loadTokens(sources, `${loc} context "${context}"`, tokensRoot, extension.layer, context, paints),

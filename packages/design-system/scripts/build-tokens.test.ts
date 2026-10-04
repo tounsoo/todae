@@ -337,6 +337,36 @@ describe('resolver-driven build', () => {
     expect(graph.tokens.find((t) => t.path === 'tooltip.max-width')?.cssValue).toBe('20rem');
   });
 
+  it('validates slot completeness after merging, so a later source can override part of a group', async () => {
+    const root = await fixture((resolver) => {
+      (resolver.sets.button!.sources as unknown[]).push({
+        button: { base: { radius: { $type: 'dimension', $value: { value: 2, unit: 'px' } } } },
+      });
+      (resolver.sets.contract!.sources as unknown[]).push({
+        field: { border: { hover: { $type: 'color', $value: { $ref: '#/color/accent/default/$value' } } } },
+      });
+    });
+    const graph = await buildTokensGraph(root);
+    expect(graph.tokens.find((t) => t.path === 'button.base.radius')?.cssValue).toBe('2px');
+    expect(graph.tokens.find((t) => t.path === 'field.border.hover')?.cssValue).toBe('var(--todae-color-accent-default)');
+  });
+
+  it('emits consume aliases for sets declared on :root', async () => {
+    const root = await fixture((resolver) => {
+      resolver.resolutionOrder = [
+        { $ref: '#/sets/core' },
+        { $ref: '#/sets/button' },
+        { $ref: '#/modifiers/appearance' },
+        { $ref: '#/modifiers/density' },
+        { $ref: '#/modifiers/buttonVariant' },
+        { $ref: '#/sets/contract' },
+      ];
+    });
+    const graph = await buildTokensGraph(root);
+    const rootBlock = graph.css.slice(graph.css.indexOf(':root {'), graph.css.indexOf(':root,\n'));
+    expect(rootBlock).toContain('--todae-button-radius: var(--todae-button-base-radius);');
+  });
+
   it('requires every context of a scoped modifier to declare the same tokens', async () => {
     const root = await fixture((resolver) => {
       resolver.modifiers.density!.contexts.compact = [
@@ -362,6 +392,14 @@ describe('resolver-driven build', () => {
       [(r) => void delete r.sets.core!.$extensions, /set "core" must declare \$extensions\["dev.todae"\]/],
       [(r) => void (r.sets.core!.sources = [{ $ref: '../package.json' }]), /escapes tokens/],
       [(r) => void (r.sets.core!.sources = [{ $ref: '#/sets/contract' }]), /relative token file path/],
+      [
+        (r) => void ((r.modifiers.density!.$extensions as Record<string, Record<string, unknown>>)['dev.todae']!.attribute = 'data-appearance'),
+        /modifier "density" reuses attribute data-appearance/,
+      ],
+      [
+        (r) => void (r.modifiers.appearance!.contexts['high-contrast'] = r.modifiers.appearance!.contexts.dark!),
+        /contexts must be light or dark, not "high-contrast"/,
+      ],
     ];
     for (const [edit, error] of cases) {
       const root = await fixture(edit);
