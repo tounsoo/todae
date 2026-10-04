@@ -202,12 +202,36 @@ export function validateSlots(tokens: Map<string, TokenNode>, slots: SlotRules, 
   const groups = collectGroups(tokens.keys());
   for (const [pattern, expected] of Object.entries(slots)) {
     const want = [...expected].sort();
+    let matched = false;
     for (const [group, leaves] of groups) {
       if (!matchesGroup(pattern, group)) continue;
+      matched = true;
       const have = [...leaves].sort();
       if (have.length !== want.length || have.some((leaf, i) => leaf !== want[i])) {
         fail(`${loc} "${group}" must have exactly ${expected.join('|')}`);
       }
+    }
+    if (!matched) fail(`${loc} slot group "${pattern}" matches no tokens`);
+  }
+}
+
+/**
+ * Every context of an alias modifier declares `<root>.<context>.…`; with the
+ * context segment removed, each must declare the same tokens as the default.
+ */
+export function validateAliasParity(contexts: Map<string, Iterable<string>>, defaultContext: string, loc: string): void {
+  const shape = (context: string, paths: Iterable<string>) =>
+    [...paths]
+      .map((path) => {
+        const parts = path.split('.');
+        return parts[1] === context ? [parts[0], ...parts.slice(2)].join('.') : path;
+      })
+      .sort();
+  const expected = shape(defaultContext, contexts.get(defaultContext) ?? []);
+  for (const [context, paths] of contexts) {
+    const keys = shape(context, paths);
+    if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
+      fail(`${loc} context "${context}" must declare the same tokens as "${defaultContext}"`);
     }
   }
 }
@@ -756,6 +780,11 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
           defaultContext,
         );
       }
+      validateAliasParity(
+        new Map([...contexts].map(([context, tokens]) => [context, tokens.map((t) => t.path)])),
+        defaultContext,
+        loc,
+      );
     } else {
       for (const [context, tokens] of contexts) {
         if (context === defaultContext) continue;

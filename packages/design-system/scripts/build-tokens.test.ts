@@ -18,6 +18,7 @@ import {
   validateRefs,
   validateReservedRoots,
   validateSlots,
+  validateAliasParity,
   validatePaintPacks,
   type FlatToken,
   type TokenNode,
@@ -52,28 +53,28 @@ describe('build-tokens validations', () => {
   });
 
   it('requires declared slot groups to have exactly their leaves', () => {
-    const slots = {
-      'chip.bg': ['default', 'hover', 'focus', 'disabled'],
-      'field.border': ['default', 'hover', 'focus', 'disabled', 'invalid'],
-      'card.*.bg': ['default', 'hover'],
-    };
+    const chip = { 'chip.bg': ['default', 'hover', 'focus', 'disabled'] };
+    const field = { 'field.border': ['default', 'hover', 'focus', 'disabled', 'invalid'] };
+    const card = { 'card.*.bg': ['default', 'hover'] };
     expect(() =>
-      validateSlots(flattenTokens({ chip: { bg: { default: color('color.bg.subtle') } } }), slots, 'contract'),
+      validateSlots(flattenTokens({ chip: { bg: { default: color('color.bg.subtle') } } }), chip, 'contract'),
     ).toThrow(/"chip\.bg" must have exactly default\|hover\|focus\|disabled/);
     expect(() =>
       validateSlots(
         flattenTokens({
           field: { border: { default: color('color.border.default'), invalid: color('color.danger.default') } },
         }),
-        slots,
+        field,
         'contract',
       ),
     ).toThrow(/default\|hover\|focus\|disabled\|invalid/);
-    const card = (leaves: string[]) =>
+    const cards = (leaves: string[]) =>
       flattenTokens({ card: { raised: { bg: Object.fromEntries(leaves.map((leaf) => [leaf, color('color.bg.subtle')])) } } });
-    expect(() => validateSlots(card(['default', 'hover']), slots, 'contract')).not.toThrow();
-    expect(() => validateSlots(card(['default']), slots, 'contract')).toThrow(/"card\.raised\.bg" must have exactly/);
-    expect(() => validateSlots(flattenTokens({ chip: { gap: color('color.bg.subtle') } }), slots, 'contract')).not.toThrow();
+    expect(() => validateSlots(cards(['default', 'hover']), card, 'contract')).not.toThrow();
+    expect(() => validateSlots(cards(['default']), card, 'contract')).toThrow(/"card\.raised\.bg" must have exactly/);
+    expect(() => validateSlots(flattenTokens({ chip: { gap: color('color.bg.subtle') } }), chip, 'contract')).toThrow(
+      /slot group "chip\.bg" matches no tokens/,
+    );
   });
 
   it('requires interactive slots and ring.focus only', () => {
@@ -469,6 +470,30 @@ describe('resolver-driven build', () => {
       resolver.resolutionOrder.push({ $ref: '#/sets/brand' });
     });
     await expect(buildTokensGraph(strict)).rejects.toThrow(/token "brand\.ink" uses reserved-root-violating category "brand"/);
+  });
+
+  it('checks alias contexts against the default even without the button rule', () => {
+    const contexts = new Map([
+      ['solid', ['badge.solid.bg', 'badge.solid.fg']],
+      ['soft', ['badge.soft.bg']],
+    ]);
+    expect(() => validateAliasParity(contexts, 'solid', 'modifier "badge"')).toThrow(
+      /modifier "badge" context "soft" must declare the same tokens as "solid"/,
+    );
+    contexts.set('soft', ['badge.soft.bg', 'badge.soft.fg']);
+    expect(() => validateAliasParity(contexts, 'solid', 'modifier "badge"')).not.toThrow();
+  });
+
+  it('rejects a ghost variant missing a token when the button rule is off', async () => {
+    const root = await fixture(async (resolver, dir) => {
+      const ext = (resolver.modifiers.buttonVariant!.$extensions as Record<string, Record<string, unknown>>)['dev.todae']!;
+      ext.rules = ['reserved-roots'];
+      const file = join(dir, 'components/button.ghost.json');
+      const ghost = JSON.parse(await readFile(file, 'utf8'));
+      delete ghost.button.ghost.bg.hover;
+      await writeFile(file, JSON.stringify(ghost));
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(/context "ghost" must declare the same tokens as "primary"/);
   });
 
   it('lets a company opt its own components into slot rules', async () => {
