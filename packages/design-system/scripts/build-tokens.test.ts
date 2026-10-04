@@ -16,7 +16,8 @@ import {
   validateParity,
   validatePaths,
   validateRefs,
-  validateFieldChipSlots,
+  validateReservedRoots,
+  validateSlots,
   validatePaintPacks,
   type FlatToken,
   type TokenNode,
@@ -34,7 +35,8 @@ describe('build-tokens validations', () => {
     expect(PATH_RE.test('color.on-accent')).toBe(true);
     expect(PATH_RE.test('color.fg.onAccent')).toBe(false);
     expect(() => validatePaths(['Color.Gray.50'], 'core')).toThrow(/lowercase/);
-    expect(() => validatePaths(['hue.primary'], 'core')).toThrow(/hue/);
+    expect(() => validatePaths(['hue.primary'], 'core')).not.toThrow();
+    expect(() => validateReservedRoots(['hue.primary'], 'core')).toThrow(/hue/);
   });
 
   it('requires light/dark parity', () => {
@@ -49,23 +51,29 @@ describe('build-tokens validations', () => {
     );
   });
 
-  it('requires chip and field slot packs', () => {
+  it('requires declared slot groups to have exactly their leaves', () => {
+    const slots = {
+      'chip.bg': ['default', 'hover', 'focus', 'disabled'],
+      'field.border': ['default', 'hover', 'focus', 'disabled', 'invalid'],
+      'card.*.bg': ['default', 'hover'],
+    };
     expect(() =>
-      validateFieldChipSlots(
-        flattenTokens({
-          chip: { bg: { default: color('color.bg.subtle') } },
-        }),
-        'contract',
-      ),
-    ).toThrow(/default\|hover\|focus\|disabled/);
+      validateSlots(flattenTokens({ chip: { bg: { default: color('color.bg.subtle') } } }), slots, 'contract'),
+    ).toThrow(/"chip\.bg" must have exactly default\|hover\|focus\|disabled/);
     expect(() =>
-      validateFieldChipSlots(
+      validateSlots(
         flattenTokens({
           field: { border: { default: color('color.border.default'), invalid: color('color.danger.default') } },
         }),
+        slots,
         'contract',
       ),
     ).toThrow(/default\|hover\|focus\|disabled\|invalid/);
+    const card = (leaves: string[]) =>
+      flattenTokens({ card: { raised: { bg: Object.fromEntries(leaves.map((leaf) => [leaf, color('color.bg.subtle')])) } } });
+    expect(() => validateSlots(card(['default', 'hover']), slots, 'contract')).not.toThrow();
+    expect(() => validateSlots(card(['default']), slots, 'contract')).toThrow(/"card\.raised\.bg" must have exactly/);
+    expect(() => validateSlots(flattenTokens({ chip: { gap: color('color.bg.subtle') } }), slots, 'contract')).not.toThrow();
   });
 
   it('requires interactive slots and ring.focus only', () => {
@@ -444,6 +452,36 @@ describe('resolver-driven build', () => {
     );
   });
 
+  it('applies Todae rules only to sets that opt in', async () => {
+    const brand = { brand: { ink: { $type: 'color', $value: { $ref: '#/color/gray/900/$value' } } } };
+    const generic = await fixture((resolver) => {
+      resolver.sets.brand = { sources: [brand], $extensions: { 'dev.todae': { layer: 'contract' } } };
+      resolver.resolutionOrder.push({ $ref: '#/sets/brand' });
+    });
+    const graph = await buildTokensGraph(generic);
+    expect(graph.tokens.find((t) => t.path === 'brand.ink')?.cssValue).toBe('var(--todae-color-gray-900)');
+
+    const strict = await fixture((resolver) => {
+      resolver.sets.brand = {
+        sources: [brand],
+        $extensions: { 'dev.todae': { layer: 'contract', rules: ['reserved-roots'] } },
+      };
+      resolver.resolutionOrder.push({ $ref: '#/sets/brand' });
+    });
+    await expect(buildTokensGraph(strict)).rejects.toThrow(/token "brand\.ink" uses reserved-root-violating category "brand"/);
+  });
+
+  it('lets a company opt its own components into slot rules', async () => {
+    const root = await fixture((resolver) => {
+      resolver.sets.card = {
+        sources: [{ card: { bg: { default: { $type: 'color', $value: { $ref: '#/color/bg/surface/$value' } } } } }],
+        $extensions: { 'dev.todae': { layer: 'contract', slots: { 'card.bg': ['default', 'hover'] } } },
+      };
+      resolver.resolutionOrder.push({ $ref: '#/sets/card' });
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(/"card\.bg" must have exactly default\|hover/);
+  });
+
   it('requires every context of a scoped modifier to declare the same tokens', async () => {
     const root = await fixture((resolver) => {
       resolver.modifiers.density!.contexts.compact = [
@@ -491,8 +529,24 @@ describe('resolver-driven build', () => {
     expect(() => parseExtension(ext({ layer: 'brand' }), 'set', 'set "x"')).toThrow(/layer must be one of/);
     expect(() => parseExtension(ext({ layer: 'toString' }), 'set', 'set "x"')).toThrow(/layer must be one of/);
     expect(() => parseExtension(ext({ layer: 'core', attribute: 'data-x' }), 'set', 'set "x"')).toThrow(
-      /only apply to modifiers/,
+      /unknown dev\.todae key "attribute" \(allowed: layer, rules, slots\)/,
     );
+    expect(() => parseExtension(ext({ layer: 'core', rule: ['button'] }), 'set', 'set "x"')).toThrow(/unknown dev\.todae key "rule"/);
+    expect(() => parseExtension(ext({ layer: 'core', rules: ['slots'] }), 'set', 'set "x"')).toThrow(
+      /rule "slots" must be one of reserved-roots\|density-space\|button/,
+    );
+    expect(() => parseExtension(ext({ layer: 'core', rules: ['button', 'button'] }), 'set', 'set "x"')).toThrow(
+      /must not repeat/,
+    );
+    expect(() => parseExtension(ext({ layer: 'core', slots: { 'Chip.bg': ['default'] } }), 'set', 'set "x"')).toThrow(
+      /slot group "Chip\.bg"/,
+    );
+    expect(() => parseExtension(ext({ layer: 'core', slots: { 'chip.bg': [] } }), 'set', 'set "x"')).toThrow(
+      /distinct lowercase leaf names/,
+    );
+    expect(
+      parseExtension(ext({ layer: 'contract', rules: ['button'], slots: { 'card.*.bg': ['default'] } }), 'set', 'set "x"'),
+    ).toEqual({ layer: 'contract', rules: ['button'], slots: { 'card.*.bg': ['default'] } });
     expect(() => parseExtension(ext({ layer: 'density' }), 'modifier', 'modifier "x"')).toThrow(/data-\* attribute/);
     expect(() =>
       parseExtension(ext({ layer: 'contract', attribute: 'data-x', alias: true, root: true }), 'modifier', 'modifier "x"'),

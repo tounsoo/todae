@@ -6,12 +6,12 @@
   "sets": {
     "core": {
       "sources": [{ "$ref": "./core.json" }],
-      "$extensions": { "dev.todae": { "layer": "core" } }
+      "$extensions": { "dev.todae": { "layer": "core", "rules": ["reserved-roots"] } }
     },
     "button": {
       "description": "Button geometry shared by every variant",
       "sources": [{ "$ref": "./components/button.base.json" }],
-      "$extensions": { "dev.todae": { "layer": "contract" } }
+      "$extensions": { "dev.todae": { "layer": "contract", "rules": ["reserved-roots", "button"] } }
     },
     "contract": {
       "sources": [
@@ -27,7 +27,20 @@
         { "$ref": "./components/option.json" },
         { "$ref": "./components/selection.json" }
       ],
-      "$extensions": { "dev.todae": { "layer": "contract" } }
+      "$extensions": {
+        "dev.todae": {
+          "layer": "contract",
+          "rules": ["reserved-roots", "button"],
+          "slots": {
+            "chip.bg": ["default", "hover", "focus", "disabled"],
+            "chip.fg": ["default", "hover", "focus", "disabled"],
+            "chip.border": ["default", "hover", "focus", "disabled"],
+            "chip.ring": ["focus"],
+            "field.border": ["default", "hover", "focus", "disabled", "invalid"],
+            "field.ring": ["focus", "invalid"]
+          }
+        }
+      }
     }
   },
   "modifiers": {
@@ -39,7 +52,13 @@
         "dark": [{ "$ref": "./appearance/dark.json" }]
       },
       "$extensions": {
-        "dev.todae": { "layer": "appearance", "attribute": "data-appearance", "root": true, "colorScheme": true }
+        "dev.todae": {
+          "layer": "appearance",
+          "rules": ["reserved-roots"],
+          "attribute": "data-appearance",
+          "root": true,
+          "colorScheme": true
+        }
       }
     },
     "density": {
@@ -50,7 +69,9 @@
         "comfortable": [{ "$ref": "./density/comfortable.json" }],
         "spacious": [{ "$ref": "./density/spacious.json" }]
       },
-      "$extensions": { "dev.todae": { "layer": "density", "attribute": "data-density" } }
+      "$extensions": {
+        "dev.todae": { "layer": "density", "rules": ["reserved-roots", "density-space"], "attribute": "data-density" }
+      }
     },
     "buttonVariant": {
       "description": "Button variant value sets",
@@ -60,7 +81,14 @@
         "secondary": [{ "$ref": "./components/button.secondary.json" }],
         "ghost": [{ "$ref": "./components/button.ghost.json" }]
       },
-      "$extensions": { "dev.todae": { "layer": "contract", "attribute": "data-button-variant", "alias": true } }
+      "$extensions": {
+        "dev.todae": {
+          "layer": "contract",
+          "rules": ["reserved-roots", "button"],
+          "attribute": "data-button-variant",
+          "alias": true
+        }
+      }
     }
   },
   "resolutionOrder": [
