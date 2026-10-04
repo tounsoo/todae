@@ -1,27 +1,27 @@
 {
   "option": {
-    "radius": { "$type": "dimension", "$value": { "$ref": "radius.sm" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "padding": {
-      "x": { "$type": "dimension", "$value": { "$ref": "space.control.x" } },
-      "y": { "$type": "dimension", "$value": { "$ref": "space.control.y" } }
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
     },
     "font": {
-      "size": { "$type": "dimension", "$value": { "$ref": "font.size.2" } },
-      "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.regular" } }
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
+      "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
     },
     "bg": {
-      "default": { "$type": "color", "$value": { "$ref": "color.bg.transparent" } },
-      "hover": { "$type": "color", "$value": { "$ref": "color.bg.highlight" } },
-      "selected": { "$type": "color", "$value": { "$ref": "color.bg.selected" } },
-      "selected-highlighted": { "$type": "color", "$value": { "$ref": "color.accent.soft-strong" } }
+      "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+      "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } },
+      "selected": { "$type": "color", "$value": { "$ref": "#/color/bg/selected/$value" } },
+      "selected-highlighted": { "$type": "color", "$value": { "$ref": "#/color/accent/soft-strong/$value" } }
     },
     "fg": {
-      "default": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
-      "selected": { "$type": "color", "$value": { "$ref": "color.fg.default" } }
+      "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "selected": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
     },
     "check": {
-      "fg": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
-      "border": { "$type": "color", "$value": { "$ref": "color.border.default" } }
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
     }
   }
 }

@@ -1,16 +1,16 @@
 {
   "button": {
     "base": {
-      "radius": { "$type": "dimension", "$value": { "$ref": "radius.md" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
       "padding": {
-        "x": { "$type": "dimension", "$value": { "$ref": "space.control.x" } },
-        "y": { "$type": "dimension", "$value": { "$ref": "space.control.y" } }
+        "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },
+        "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
       },
       "font": {
-        "size": { "$type": "dimension", "$value": { "$ref": "font.size.3" } },
-        "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.medium" } }
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
       },
-      "gap": { "$type": "dimension", "$value": { "$ref": "space.inline.gap" } }
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } }
     }
   }
 }

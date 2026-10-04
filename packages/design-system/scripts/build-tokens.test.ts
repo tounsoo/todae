@@ -5,6 +5,8 @@ import {
   buildTokensGraph,
   catalogSelectors,
   flattenTokens,
+  pathToPointer,
+  pointerToPath,
   serializeValue,
   validateDensitySpaceOnly,
   validateInteractive,
@@ -17,7 +19,7 @@ import {
   type TokenNode,
 } from './build-tokens';
 
-const color = (ref: string): TokenNode => ({ $type: 'color', $value: { $ref: ref } });
+const color = (ref: string): TokenNode => ({ $type: 'color', $value: { $ref: pathToPointer(ref) } });
 
 function tokenMap(tree: Record<string, TokenNode>): Map<string, TokenNode> {
   return new Map(Object.entries(tree));
@@ -110,7 +112,7 @@ describe('build-tokens validations', () => {
       {
         path: 'color.bg.canvas',
         type: 'color',
-        value: { $ref: 'button.bg.default' },
+        value: { $ref: '#/button/bg/default/$value' },
         ref: 'button.bg.default',
         cssVar: '--todae-color-bg-canvas',
         cssValue: 'var(--todae-button-bg-default)',
@@ -120,7 +122,7 @@ describe('build-tokens validations', () => {
       {
         path: 'button.bg.default',
         type: 'color',
-        value: { $ref: 'color.bg.canvas' },
+        value: { $ref: '#/color/bg/canvas/$value' },
         ref: 'color.bg.canvas',
         cssVar: '--todae-button-bg-default',
         cssValue: 'var(--todae-color-bg-canvas)',
@@ -134,14 +136,48 @@ describe('build-tokens validations', () => {
     expect(() => validateRefs(tokens, known)).toThrow(/lower layer/);
   });
 
+  it('parses DTCG JSON Pointer aliases to token paths', () => {
+    expect(pointerToPath('#/color/gray/50/$value', 'test')).toBe('color.gray.50');
+    expect(pointerToPath('#/color/on-accent/$value', 'test')).toBe('color.on-accent');
+    expect(pathToPointer('color.gray.50')).toBe('#/color/gray/50/$value');
+  });
+
+  it('rejects the old dot form and unsupported pointers', () => {
+    expect(() => pointerToPath('color.gray.50', 'test')).toThrow(/JSON Pointer.*write "#\/color\/gray\/50\/\$value"/);
+    expect(() => pointerToPath('#/color/gray/50', 'test')).toThrow(/\/\$value/);
+    expect(() => pointerToPath('#/color/gray/50/$value/components/0', 'test')).toThrow(/\/\$value/);
+    expect(() => pointerToPath('#/color/gray/50/$value/$value', 'test')).toThrow(/whole-value/);
+    expect(() => pointerToPath('#/color/gray.50/$value', 'test')).toThrow(/lowercase segments/);
+    expect(() => pointerToPath('#/color//50/$value', 'test')).toThrow(/lowercase segments/);
+    expect(() => pointerToPath('#/Color/Gray/$value', 'test')).toThrow(/lowercase segments/);
+    expect(() => pointerToPath('#/$value', 'test')).toThrow(/lowercase segments/);
+    expect(() =>
+      serializeValue({ $type: 'color', $value: { $ref: 'color.accent.default' } }, 'button.bg.default'),
+    ).toThrow(/Token "button\.bg\.default" \$ref "color\.accent\.default" must be a JSON Pointer/);
+  });
+
   it('emits var chains, not resolved literals', () => {
-    const serialized = serializeValue({ $type: 'color', $value: { $ref: 'color.accent.default' } }, 'button.bg.default');
+    const serialized = serializeValue(
+      { $type: 'color', $value: { $ref: '#/color/accent/default/$value' } },
+      'button.bg.default',
+    );
+    expect(serialized.ref).toBe('color.accent.default');
     expect(serialized.cssValue).toBe('var(--todae-color-accent-default)');
     expect(serialized.cssValue).not.toMatch(/oklch\(/);
   });
 });
 
 describe('committed token graph', () => {
+  it('writes every source alias as a JSON Pointer and keeps dot paths in the catalog', async () => {
+    const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
+    const aliases = graph.tokens.filter((t) => t.ref !== null);
+    expect(aliases.length).toBeGreaterThan(0);
+    for (const token of aliases) {
+      expect((token.value as { $ref: string }).$ref).toBe(pathToPointer(token.ref!));
+      expect(token.ref).toMatch(PATH_RE);
+    }
+  });
+
   it('builds and snapshots CSS selectors', async () => {
     const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
     expect(graph.css).toContain('@layer todae.base');

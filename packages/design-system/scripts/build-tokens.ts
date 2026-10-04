@@ -242,12 +242,41 @@ export function consumeCssVar(path: string): string | null {
   return paint ? cssVarName(`button.${paint[2]}`) : null;
 }
 
+export function pathToPointer(path: string): string {
+  return `#/${path.split('.').join('/')}/$value`;
+}
+
+/**
+ * Parses a DTCG 2025.10 JSON Pointer alias (`#/color/gray/50/$value`) into the
+ * dot path of the token it names. Only whole-value aliases are supported.
+ */
+export function pointerToPath(pointer: string, loc: string): string {
+  if (!pointer.startsWith('#/')) {
+    const hint = PATH_RE.test(pointer) ? `; write "${pathToPointer(pointer)}"` : '';
+    fail(`${loc} $ref "${pointer}" must be a JSON Pointer like "#/color/gray/50/$value"${hint}`);
+  }
+  const segments = pointer
+    .slice(2)
+    .split('/')
+    .map((segment) => segment.replaceAll('~1', '/').replaceAll('~0', '~'));
+  if (segments.at(-1) !== '$value') {
+    fail(`${loc} $ref "${pointer}" must end at a token's /$value`);
+  }
+  const tokenSegments = segments.slice(0, -1);
+  if (tokenSegments.includes('$value')) {
+    fail(`${loc} $ref "${pointer}" points inside a value; only whole-value aliases are supported`);
+  }
+  const path = tokenSegments.join('.');
+  if (tokenSegments.some((segment) => segment === '' || segment.includes('.')) || !PATH_RE.test(path)) {
+    fail(`${loc} $ref "${pointer}" must name a token with lowercase segments`);
+  }
+  return path;
+}
+
 export function serializeValue(token: TokenNode, path: string): { ref: string | null; cssValue: string } {
   if (isRef(token.$value)) {
-    if (!PATH_RE.test(token.$value.$ref)) {
-      fail(`Token "${path}" $ref "${token.$value.$ref}" must be a lowercase path`);
-    }
-    return { ref: token.$value.$ref, cssValue: `var(${cssVarName(token.$value.$ref)})` };
+    const ref = pointerToPath(token.$value.$ref, `Token "${path}"`);
+    return { ref, cssValue: `var(${cssVarName(ref)})` };
   }
   if (token.$type === 'color') {
     if (!isRecord(token.$value) || token.$value.colorSpace !== 'oklch' || !Array.isArray(token.$value.components)) {

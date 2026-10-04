@@ -1,19 +1,19 @@
 {
   "dialog": {
-    "bg": { "$type": "color", "$value": { "$ref": "color.bg.elevated" } },
-    "fg": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
-    "border": { "$type": "color", "$value": { "$ref": "color.border.default" } },
-    "radius": { "$type": "dimension", "$value": { "$ref": "radius.lg" } },
+    "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
+    "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+    "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/lg/$value" } },
     "padding": {
-      "x": { "$type": "dimension", "$value": { "$ref": "space.overlay.padding" } },
-      "y": { "$type": "dimension", "$value": { "$ref": "space.overlay.padding" } }
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } }
     },
-    "gap": { "$type": "dimension", "$value": { "$ref": "space.overlay.gap" } },
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/gap/$value" } },
     "max-width": { "$type": "dimension", "$value": { "value": 32, "unit": "rem" } },
     "title": {
       "font": {
-        "size": { "$type": "dimension", "$value": { "$ref": "font.size.4" } },
-        "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.medium" } }
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/4/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
       }
     }
   }
