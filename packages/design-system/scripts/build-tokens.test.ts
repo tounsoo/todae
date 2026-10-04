@@ -396,6 +396,19 @@ describe('resolver-driven build', () => {
     );
   });
 
+  it('rejects an alias from one scoped modifier to another', async () => {
+    const root = await fixture((resolver) => {
+      for (const context of Object.keys(resolver.modifiers.density!.contexts)) {
+        resolver.modifiers.density!.contexts[context]!.push({
+          space: { tint: { $type: 'color', $value: { $ref: '#/color/accent/default/$value' } } },
+        });
+      }
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(
+      /token "space\.tint" in modifier "density" references "color\.accent\.default" from modifier "appearance"; scoped modifiers may not alias each other/,
+    );
+  });
+
   it('requires every context of a scoped modifier to declare the same tokens', async () => {
     const root = await fixture((resolver) => {
       resolver.modifiers.density!.contexts.compact = [

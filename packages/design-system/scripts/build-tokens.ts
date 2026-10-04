@@ -762,13 +762,23 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
   }
   validateRefs(all, known);
   // CSS places each entry by its resolutionOrder position, so an alias to a
-  // later entry would resolve before that entry's context is applied.
+  // later entry would resolve before that entry's context is applied. Scoped
+  // modifier blocks are not re-declared when another modifier's context
+  // changes, so they may not alias each other either.
+  const scoped = (entry: ResolvedEntry | undefined) => entry?.kind === 'modifier' && !entry.extension.alias;
   for (const [index, entry] of entries.entries()) {
     const tokens = entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat();
     for (const token of tokens) {
-      if (token.ref && (position.get(token.ref) ?? -1) >= index) {
+      if (!token.ref) continue;
+      const target = position.get(token.ref) ?? -1;
+      if (target >= index) {
         fail(
           `token "${token.path}" references "${token.ref}" from ${owner.get(token.ref)}, which must come earlier in resolutionOrder`,
+        );
+      }
+      if (scoped(entry) && scoped(entries[target])) {
+        fail(
+          `token "${token.path}" in ${entry.kind} "${entry.name}" references "${token.ref}" from ${owner.get(token.ref)}; scoped modifiers may not alias each other`,
         );
       }
     }
