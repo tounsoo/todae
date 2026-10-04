@@ -405,7 +405,42 @@ describe('resolver-driven build', () => {
       }
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(
-      /token "space\.tint" in modifier "density" references "color\.accent\.default" from modifier "appearance"; scoped modifiers may not alias each other/,
+      /token "space\.tint" in modifier "density" depends on "color\.accent\.default" from modifier "appearance"; scoped modifiers may not alias each other/,
+    );
+  });
+
+  it('rejects a scoped modifier depending on another through an intermediate set', async () => {
+    // Todae's own layer ranks rule this chain out, so build a minimal resolver
+    // whose second modifier sits on a higher layer than the set between them.
+    const color = (ref: string) => ({ $type: 'color', $value: { $ref: ref } });
+    const oklch = { $type: 'color', $value: { colorSpace: 'oklch', components: [0.5, 0.1, 30] } };
+    const root = await fixture((resolver) => {
+      const ext = (value: Record<string, unknown>) => ({ $extensions: { 'dev.todae': value } });
+      resolver.sets = {
+        core: { sources: [{ color: { base: oklch } }], ...ext({ layer: 'core' }) },
+        tint: { sources: [{ space: { accent: color('#/color/accent/$value') } }], ...ext({ layer: 'density' }) },
+      };
+      resolver.modifiers = {
+        appearance: {
+          default: 'light',
+          contexts: { light: [{ color: { accent: color('#/color/base/$value') } }] },
+          ...ext({ layer: 'appearance', attribute: 'data-appearance' }),
+        },
+        size: {
+          default: 'm',
+          contexts: { m: [{ space: { tint: color('#/space/accent/$value') } }] },
+          ...ext({ layer: 'contract', attribute: 'data-size' }),
+        },
+      };
+      resolver.resolutionOrder = [
+        { $ref: '#/sets/core' },
+        { $ref: '#/modifiers/appearance' },
+        { $ref: '#/sets/tint' },
+        { $ref: '#/modifiers/size' },
+      ];
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(
+      /token "space\.tint" in modifier "size" depends on "color\.accent" from modifier "appearance"/,
     );
   });
 

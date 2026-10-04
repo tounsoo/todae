@@ -766,6 +766,17 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
   // modifier blocks are not re-declared when another modifier's context
   // changes, so they may not alias each other either.
   const scoped = (entry: ResolvedEntry | undefined) => entry?.kind === 'modifier' && !entry.extension.alias;
+  const byPath = new Map<string, FlatToken[]>();
+  for (const token of all) byPath.set(token.path, [...(byPath.get(token.path) ?? []), token]);
+  // First token path reached through `ref` (at any depth) that a scoped modifier declares.
+  function scopedDependency(ref: string): string | null {
+    const queue = [ref];
+    for (let path = queue.shift(); path !== undefined; path = queue.shift()) {
+      if (scoped(entries[position.get(path) ?? -1])) return path;
+      for (const token of byPath.get(path) ?? []) if (token.ref) queue.push(token.ref);
+    }
+    return null;
+  }
   for (const [index, entry] of entries.entries()) {
     const tokens = entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat();
     for (const token of tokens) {
@@ -776,9 +787,10 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
           `token "${token.path}" references "${token.ref}" from ${owner.get(token.ref)}, which must come earlier in resolutionOrder`,
         );
       }
-      if (scoped(entry) && scoped(entries[target])) {
+      const dependency = scoped(entry) ? scopedDependency(token.ref) : null;
+      if (dependency) {
         fail(
-          `token "${token.path}" in ${entry.kind} "${entry.name}" references "${token.ref}" from ${owner.get(token.ref)}; scoped modifiers may not alias each other`,
+          `token "${token.path}" in ${entry.kind} "${entry.name}" depends on "${dependency}" from ${owner.get(dependency)}; scoped modifiers may not alias each other`,
         );
       }
     }
