@@ -418,6 +418,7 @@ describe('resolver-driven build', () => {
       [(r) => r.resolutionOrder.push({ $ref: '#/sets/missing' }), /#\/sets\/missing does not exist/],
       [(r) => r.resolutionOrder.push({ $ref: '#/sets/core' }), /lists #\/sets\/core twice/],
       [(r) => void (r.modifiers.density!.default = 'huge'), /default must name one of its contexts/],
+      [(r) => void (r.modifiers.density!.default = 'toString'), /default must name one of its contexts/],
       [(r) => void delete r.sets.core!.$extensions, /set "core" must declare \$extensions\["dev.todae"\]/],
       [(r) => void (r.sets.core!.sources = [{ $ref: '../package.json' }]), /escapes tokens/],
       [(r) => void (r.sets.core!.sources = [{ $ref: '#/sets/contract' }]), /relative token file path/],
@@ -440,6 +441,7 @@ describe('resolver-driven build', () => {
     const ext = (value: unknown) => ({ $extensions: { 'dev.todae': value } });
     expect(parseExtension(ext({ layer: 'core' }), 'set', 'set "x"')).toEqual({ layer: 'core' });
     expect(() => parseExtension(ext({ layer: 'brand' }), 'set', 'set "x"')).toThrow(/layer must be one of/);
+    expect(() => parseExtension(ext({ layer: 'toString' }), 'set', 'set "x"')).toThrow(/layer must be one of/);
     expect(() => parseExtension(ext({ layer: 'core', attribute: 'data-x' }), 'set', 'set "x"')).toThrow(
       /only apply to modifiers/,
     );

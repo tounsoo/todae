@@ -586,7 +586,7 @@ export function parseExtension(def: Record<string, unknown>, kind: 'set' | 'modi
   const ext = isRecord(extensions) ? extensions[TODAE_EXTENSION] : undefined;
   if (!isRecord(ext)) fail(`${loc} must declare $extensions["${TODAE_EXTENSION}"]`);
   const { layer, attribute, root, colorScheme, alias } = ext;
-  if (typeof layer !== 'string' || !(layer in LAYER_RANK)) {
+  if (typeof layer !== 'string' || !Object.hasOwn(LAYER_RANK, layer)) {
     fail(`${loc} layer must be one of ${Object.keys(LAYER_RANK).join('|')}`);
   }
   for (const [key, value] of Object.entries({ root, colorScheme, alias })) {
@@ -705,7 +705,7 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
     }
     if (!isRecord(def.contexts) || Object.keys(def.contexts).length === 0) fail(`${loc} must declare contexts`);
     const defaultContext = def.default;
-    if (typeof defaultContext !== 'string' || !(defaultContext in def.contexts)) {
+    if (typeof defaultContext !== 'string' || !Object.hasOwn(def.contexts, defaultContext)) {
       fail(`${loc} default must name one of its contexts`);
     }
     const contexts = new Map<string, FlatToken[]>();
