@@ -118,11 +118,15 @@ export function validatePaths(paths: Iterable<string>, loc: string): void {
   }
 }
 
-export function validateParity(light: Map<string, TokenNode>, dark: Map<string, TokenNode>): void {
+export function validateParity(
+  light: Map<string, TokenNode>,
+  dark: Map<string, TokenNode>,
+  label = 'appearance light/dark',
+): void {
   const lightKeys = [...light.keys()].sort();
   const darkKeys = [...dark.keys()].sort();
   if (lightKeys.length !== darkKeys.length || lightKeys.some((key, i) => key !== darkKeys[i])) {
-    fail(`appearance light/dark key trees differ`);
+    fail(`${label} key trees differ`);
   }
 }
 
@@ -162,13 +166,14 @@ function paintSuffixes(name: string, tokens: Map<string, TokenNode>): string[] {
     .sort();
 }
 
-export function validatePaintPacks(packs: Record<string, Map<string, TokenNode>>): void {
-  const expected = paintSuffixes('primary', packs.primary ?? new Map());
-  if (expected.length === 0) fail('button.primary paint pack is empty');
-  for (const name of ['secondary', 'ghost'] as const) {
+export function validatePaintPacks(packs: Record<string, Map<string, TokenNode>>, defaultPaint = 'primary'): void {
+  const expected = paintSuffixes(defaultPaint, packs[defaultPaint] ?? new Map());
+  if (expected.length === 0) fail(`button.${defaultPaint} paint pack is empty`);
+  for (const name of Object.keys(packs)) {
+    if (name === defaultPaint) continue;
     const keys = paintSuffixes(name, packs[name] ?? new Map());
     if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
-      fail(`variant "${name}" paint keys must match button.primary`);
+      fail(`variant "${name}" paint keys must match button.${defaultPaint}`);
     }
   }
 }
@@ -206,7 +211,11 @@ export function validateFieldChipSlots(tokens: Map<string, TokenNode>, loc: stri
   }
 }
 
-export function validateInteractive(tokens: Map<string, TokenNode>, loc: string): void {
+export function validateInteractive(
+  tokens: Map<string, TokenNode>,
+  loc: string,
+  paints: readonly string[] = BUTTON_PAINTS,
+): void {
   const groups = collectGroups(tokens.keys());
   for (const [group, leaves] of groups) {
     const parts = group.split('.');
@@ -214,9 +223,9 @@ export function validateInteractive(tokens: Map<string, TokenNode>, loc: string)
     const pack = parts[1];
     if (!pack || pack === 'base') continue;
     if (INTERACTIVE_GROUPS.includes(pack as (typeof INTERACTIVE_GROUPS)[number]) || pack === 'ring') {
-      fail(`${loc} "${group}" must live under button.primary|secondary|ghost`);
+      fail(`${loc} "${group}" must live under button.${paints.join('|')}`);
     }
-    if (!(BUTTON_PAINTS as readonly string[]).includes(pack)) continue;
+    if (!paints.includes(pack)) continue;
     if (['radius', 'padding', 'font', 'gap'].includes(parts[2] ?? '')) {
       fail(`${loc} "${group}" geometry belongs on button.base`);
     }
@@ -236,10 +245,12 @@ export function validateInteractive(tokens: Map<string, TokenNode>, loc: string)
   }
 }
 
-export function consumeCssVar(path: string): string | null {
-  if (path.startsWith('button.base.')) return cssVarName(`button.${path.slice('button.base.'.length)}`);
-  const paint = path.match(/^button\.(primary|secondary|ghost)\.(.+)$/);
-  return paint ? cssVarName(`button.${paint[2]}`) : null;
+export function consumeCssVar(path: string, paints: readonly string[] = BUTTON_PAINTS): string | null {
+  for (const pack of ['base', ...paints]) {
+    const prefix = `button.${pack}.`;
+    if (path.startsWith(prefix)) return cssVarName(`button.${path.slice(prefix.length)}`);
+  }
+  return null;
 }
 
 export function pathToPointer(path: string): string {
@@ -332,13 +343,14 @@ export function flattenLayer(
   tree: TokenTree,
   layer: Layer,
   context?: string,
+  paints: readonly string[] = BUTTON_PAINTS,
 ): FlatToken[] {
   const flat = flattenTokens(tree);
   validatePaths(flat.keys(), context ? `${layer}/${context}` : layer);
   if (layer === 'density') validateDensitySpaceOnly(flat, context ? `${layer}/${context}` : layer);
   if (layer === 'contract' || layer === 'variant') {
     const loc = context ? `${layer}/${context}` : layer;
-    validateInteractive(flat, loc);
+    validateInteractive(flat, loc, paints);
     validateFieldChipSlots(flat, loc);
     if ([...flat.keys()].some((path) => path.startsWith('button.base.'))) validateButtonBase(flat, loc);
   }
@@ -363,10 +375,10 @@ function decls(tokens: FlatToken[]): string {
   return tokens.map((t) => `  ${t.cssVar}: ${t.cssValue};`).join('\n');
 }
 
-function aliasDecls(tokens: FlatToken[]): string {
+function aliasDecls(tokens: FlatToken[], paints: readonly string[]): string {
   return tokens
     .map((token) => {
-      const consume = consumeCssVar(token.path);
+      const consume = consumeCssVar(token.path, paints);
       if (!consume || consume === token.cssVar) return null;
       return `  ${consume}: var(${token.cssVar});`;
     })
@@ -374,55 +386,65 @@ function aliasDecls(tokens: FlatToken[]): string {
     .join('\n');
 }
 
-export function emitCss(parts: {
-  core: FlatToken[];
-  light: FlatToken[];
-  dark: FlatToken[];
-  density: Record<string, FlatToken[]>;
-  contract: FlatToken[];
-  base: FlatToken[];
-  paints: Record<(typeof BUTTON_PAINTS)[number], FlatToken[]>;
-}): string {
-  const densityBlocks = ['compact', 'comfortable', 'spacious']
-    .map((name) => {
-      const tokens = parts.density[name];
-      if (!tokens) fail(`Missing density "${name}"`);
-      return `[data-density="${name}"] {\n${decls(tokens)}\n}`;
-    })
-    .join('\n\n');
-  const variantBlocks = BUTTON_PAINTS.map((name) => {
-    const tokens = parts.paints[name];
-    if (!tokens) fail(`Missing button variant "${name}"`);
-    return `[data-button-variant="${name}"] {\n${aliasDecls(tokens)}\n}`;
-  }).join('\n\n');
-  return `@layer todae.base {
-:root {
-${decls(parts.core)}
+function block(selector: string, lines: string[]): string {
+  return `${selector} {\n${lines.filter((line) => line !== '').join('\n')}\n}`;
 }
 
-:root,
-[data-appearance="light"] {
-${decls(parts.light)}
-  color-scheme: light;
-}
-
-[data-appearance="dark"] {
-${decls(parts.dark)}
-  color-scheme: dark;
-}
-
-${densityBlocks}
-
-[data-appearance],
-[data-density] {
-${decls(parts.contract)}
-${aliasDecls(parts.base)}
-${aliasDecls(parts.paints.primary)}
-}
-
-${variantBlocks}
-}
-`;
+/**
+ * Emits one CSS layer from the resolved entries, in resolutionOrder:
+ * - sets before the first scoped modifier are declared on `:root`;
+ * - a scoped modifier emits one `[attribute="context"]` block per context;
+ * - later sets and every context of the alias modifier are re-declared on each
+ *   scoped modifier's attribute, so their var() chains re-resolve wherever a
+ *   context changes, along with the default context's consume aliases;
+ * - the alias modifier emits one block per context that only swaps aliases.
+ */
+export function emitCss(entries: ResolvedEntry[]): string {
+  const paints = aliasPaints(entries);
+  const root: FlatToken[] = [];
+  const scopedBlocks: string[] = [];
+  const attributes: string[] = [];
+  const rescoped: FlatToken[] = [];
+  const defaults: FlatToken[] = [];
+  const aliasBlocks: string[] = [];
+  for (const entry of entries) {
+    if (entry.kind === 'set') {
+      if (attributes.length === 0) root.push(...entry.tokens);
+      else {
+        rescoped.push(...entry.tokens);
+        defaults.push(...entry.tokens);
+      }
+      continue;
+    }
+    const { attribute, alias, colorScheme } = entry.extension;
+    if (!attribute) fail(`modifier "${entry.name}" is missing an attribute`);
+    for (const [context, tokens] of entry.contexts) {
+      const selector = `[${attribute}="${context}"]`;
+      if (alias) {
+        rescoped.push(...tokens);
+        if (context === entry.defaultContext) defaults.push(...tokens);
+        aliasBlocks.push(block(selector, [aliasDecls(tokens, paints)]));
+        continue;
+      }
+      const rootDefault = entry.extension.root && context === entry.defaultContext;
+      scopedBlocks.push(
+        block(rootDefault ? `:root,\n${selector}` : selector, [
+          decls(tokens),
+          colorScheme ? `  color-scheme: ${context};` : '',
+        ]),
+      );
+    }
+    if (!alias) attributes.push(`[${attribute}]`);
+  }
+  const blocks = [
+    ...(root.length > 0 ? [block(':root', [decls(root)])] : []),
+    ...scopedBlocks,
+    ...(rescoped.length > 0
+      ? [block(attributes.length > 0 ? attributes.join(',\n') : ':root', [decls(rescoped), aliasDecls(defaults, paints)])]
+      : []),
+    ...aliasBlocks,
+  ];
+  return `@layer todae.base {\n${blocks.join('\n\n')}\n}\n`;
 }
 
 export function emitCatalog(tokens: FlatToken[]): string {
@@ -522,7 +544,105 @@ export type BuildTokensResult = {
   tokens: FlatToken[];
 };
 
-export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensResult> {
+export const TODAE_EXTENSION = 'dev.todae';
+
+export type TodaeExtension = {
+  layer: Layer;
+  attribute?: string;
+  root?: boolean;
+  colorScheme?: boolean;
+  alias?: boolean;
+};
+
+export type ResolvedEntry =
+  | { kind: 'set'; name: string; extension: TodaeExtension; tokens: FlatToken[] }
+  | {
+      kind: 'modifier';
+      name: string;
+      extension: TodaeExtension;
+      defaultContext: string;
+      contexts: Map<string, FlatToken[]>;
+    };
+
+const ATTRIBUTE_RE = /^data-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+const CONTEXT_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+
+function aliasPaints(entries: ResolvedEntry[]): string[] {
+  const alias = entries.find((entry) => entry.kind === 'modifier' && entry.extension.alias);
+  return alias?.kind === 'modifier' ? [...alias.contexts.keys()] : [];
+}
+
+export function parseExtension(def: Record<string, unknown>, kind: 'set' | 'modifier', loc: string): TodaeExtension {
+  const extensions = def.$extensions;
+  const ext = isRecord(extensions) ? extensions[TODAE_EXTENSION] : undefined;
+  if (!isRecord(ext)) fail(`${loc} must declare $extensions["${TODAE_EXTENSION}"]`);
+  const { layer, attribute, root, colorScheme, alias } = ext;
+  if (typeof layer !== 'string' || !(layer in LAYER_RANK)) {
+    fail(`${loc} layer must be one of ${Object.keys(LAYER_RANK).join('|')}`);
+  }
+  for (const [key, value] of Object.entries({ root, colorScheme, alias })) {
+    if (value !== undefined && typeof value !== 'boolean') fail(`${loc} ${key} must be a boolean`);
+  }
+  if (kind === 'set') {
+    if (attribute !== undefined || root !== undefined || colorScheme !== undefined || alias !== undefined) {
+      fail(`${loc} attribute, root, colorScheme and alias only apply to modifiers`);
+    }
+    return { layer: layer as Layer };
+  }
+  if (typeof attribute !== 'string' || !ATTRIBUTE_RE.test(attribute)) {
+    fail(`${loc} attribute must be a lowercase data-* attribute`);
+  }
+  if (alias && (root || colorScheme)) fail(`${loc} an alias modifier cannot set root or colorScheme`);
+  return {
+    layer: layer as Layer,
+    attribute,
+    ...(root === true ? { root } : {}),
+    ...(colorScheme === true ? { colorScheme } : {}),
+    ...(alias === true ? { alias } : {}),
+  };
+}
+
+async function loadSources(sources: unknown, loc: string, tokensRoot: string): Promise<{ loc: string; tree: TokenTree }[]> {
+  if (!Array.isArray(sources) || sources.length === 0) fail(`${loc} must be a non-empty array of sources`);
+  const out: { loc: string; tree: TokenTree }[] = [];
+  for (const [i, source] of sources.entries()) {
+    if (!isRecord(source)) fail(`${loc}[${i}] must be an object`);
+    if (!('$ref' in source)) {
+      out.push({ loc: `${loc}[${i}]`, tree: asTree(source, `${loc}[${i}]`) });
+      continue;
+    }
+    const ref = source.$ref;
+    if (typeof ref !== 'string' || ref.includes('#')) {
+      fail(`${loc}[${i}] $ref must be a relative token file path`);
+    }
+    const abs = resolve(tokensRoot, ref);
+    if (!insideRoot(tokensRoot, abs)) fail(`resolver $ref "${ref}" escapes tokens/`);
+    const file = relative(tokensRoot, abs).split(sep).join('/');
+    out.push({ loc: file, tree: asTree(await readJson(abs, tokensRoot), file) });
+  }
+  return out;
+}
+
+async function loadTokens(
+  sources: unknown,
+  loc: string,
+  tokensRoot: string,
+  layer: Layer,
+  context: string | undefined,
+  paints: readonly string[],
+): Promise<FlatToken[]> {
+  const merged = new Map<string, FlatToken>();
+  for (const source of await loadSources(sources, loc, tokensRoot)) {
+    for (const token of flattenLayer(source.tree, layer, context, paints)) merged.set(token.path, token);
+  }
+  return [...merged.values()];
+}
+
+function tokenMapOf(tokens: FlatToken[]): Map<string, TokenNode> {
+  return new Map(tokens.map((t) => [t.path, { $type: t.type, $value: t.value }]));
+}
+
+export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[]> {
   const resolver = await readJson(join(tokensRoot, 'resolver.json'), tokensRoot);
   if (!isRecord(resolver) || resolver.version !== '2025.10' || !Array.isArray(resolver.resolutionOrder)) {
     fail('resolver.json must be Resolver 2025.10 with resolutionOrder');
@@ -533,89 +653,96 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
     const abs = resolve(tokensRoot, ref);
     if (!insideRoot(tokensRoot, abs)) fail(`resolver $ref "${ref}" escapes tokens/`);
   }
+  const sets = isRecord(resolver.sets) ? resolver.sets : {};
+  const modifiers = isRecord(resolver.modifiers) ? resolver.modifiers : {};
 
-  const core = flattenLayer(asTree(await readJson(join(tokensRoot, 'core.json'), tokensRoot), 'core.json'), 'core');
-  const light = flattenLayer(
-    asTree(await readJson(join(tokensRoot, 'appearance/light.json'), tokensRoot), 'appearance/light.json'),
-    'appearance',
-    'light',
-  );
-  const dark = flattenLayer(
-    asTree(await readJson(join(tokensRoot, 'appearance/dark.json'), tokensRoot), 'appearance/dark.json'),
-    'appearance',
-    'dark',
-  );
-  validateParity(
-    new Map(light.map((t) => [t.path, { $type: t.type, $value: t.value }])),
-    new Map(dark.map((t) => [t.path, { $type: t.type, $value: t.value }])),
-  );
-
-  const densityNames = ['compact', 'comfortable', 'spacious'] as const;
-  const density: Record<string, FlatToken[]> = {};
-  for (const name of densityNames) {
-    density[name] = flattenLayer(
-      asTree(await readJson(join(tokensRoot, `density/${name}.json`), tokensRoot), `density/${name}.json`),
-      'density',
-      name,
-    );
+  const order: { kind: 'set' | 'modifier'; name: string; def: Record<string, unknown>; extension: TodaeExtension }[] = [];
+  const seen = new Set<string>();
+  for (const [i, item] of resolver.resolutionOrder.entries()) {
+    const ref = isRecord(item) ? item.$ref : undefined;
+    const match = typeof ref === 'string' ? ref.match(/^#\/(sets|modifiers)\/([^/]+)$/) : null;
+    if (!match) fail(`resolutionOrder[${i}] must be { "$ref": "#/sets/…" } or { "$ref": "#/modifiers/…" }`);
+    const kind = match[1] === 'sets' ? 'set' : 'modifier';
+    const name = match[2]!.replaceAll('~1', '/').replaceAll('~0', '~');
+    const def = (kind === 'set' ? sets : modifiers)[name];
+    if (!isRecord(def)) fail(`resolutionOrder[${i}] ${match[0]} does not exist`);
+    if (seen.has(match[0])) fail(`resolutionOrder lists ${match[0]} twice`);
+    seen.add(match[0]);
+    order.push({ kind, name, def, extension: parseExtension(def, kind, `${kind} "${name}"`) });
   }
 
-  const base = flattenLayer(
-    asTree(await readJson(join(tokensRoot, 'components/button.base.json'), tokensRoot), 'components/button.base.json'),
-    'contract',
-  );
-  const paints = {} as Record<(typeof BUTTON_PAINTS)[number], FlatToken[]>;
-  for (const name of BUTTON_PAINTS) {
-    paints[name] = flattenLayer(
-      asTree(
-        await readJson(join(tokensRoot, `components/button.${name}.json`), tokensRoot),
-        `components/button.${name}.json`,
-      ),
-      'contract',
-      name,
-    );
-  }
-  validatePaintPacks(
-    Object.fromEntries(
-      BUTTON_PAINTS.map((name) => [
+  const aliases = order.filter((entry) => entry.kind === 'modifier' && entry.extension.alias);
+  if (aliases.length > 1) fail('resolver may declare at most one alias modifier');
+  const aliasContexts = aliases[0]?.def.contexts;
+  const paints = isRecord(aliasContexts) ? Object.keys(aliasContexts) : [];
+
+  const entries: ResolvedEntry[] = [];
+  for (const { kind, name, def, extension } of order) {
+    const loc = `${kind} "${name}"`;
+    if (kind === 'set') {
+      entries.push({
+        kind,
         name,
-        new Map(paints[name].map((t) => [t.path, { $type: t.type, $value: t.value }])),
-      ]),
-    ),
-  );
-
-  const contract: FlatToken[] = [...base, ...BUTTON_PAINTS.flatMap((name) => paints[name])];
-  for (const file of [
-    'stack.json',
-    'text.json',
-    'field.json',
-    'chip.json',
-    'overlay.json',
-    'dialog.json',
-    'sheet.json',
-    'popover.json',
-    'tooltip.json',
-    'option.json',
-    'selection.json',
-  ]) {
-    contract.push(
-      ...flattenLayer(
-        asTree(await readJson(join(tokensRoot, 'components', file), tokensRoot), `components/${file}`),
-        'contract',
-      ),
-    );
+        extension,
+        tokens: await loadTokens(def.sources, `${loc} sources`, tokensRoot, extension.layer, undefined, paints),
+      });
+      continue;
+    }
+    if (!isRecord(def.contexts) || Object.keys(def.contexts).length === 0) fail(`${loc} must declare contexts`);
+    const defaultContext = def.default;
+    if (typeof defaultContext !== 'string' || !(defaultContext in def.contexts)) {
+      fail(`${loc} default must name one of its contexts`);
+    }
+    const contexts = new Map<string, FlatToken[]>();
+    for (const [context, sources] of Object.entries(def.contexts)) {
+      if (!CONTEXT_RE.test(context)) fail(`${loc} context "${context}" must be lowercase`);
+      contexts.set(
+        context,
+        await loadTokens(sources, `${loc} context "${context}"`, tokensRoot, extension.layer, context, paints),
+      );
+    }
+    const defaults = tokenMapOf(contexts.get(defaultContext)!);
+    if (extension.alias) {
+      validatePaintPacks(
+        Object.fromEntries([...contexts].map(([context, tokens]) => [context, tokenMapOf(tokens)])),
+        defaultContext,
+      );
+    } else {
+      for (const [context, tokens] of contexts) {
+        if (context === defaultContext) continue;
+        const label = extension.layer === 'appearance' ? 'appearance' : `${loc}`;
+        validateParity(defaults, tokenMapOf(tokens), `${label} ${defaultContext}/${context}`);
+      }
+    }
+    entries.push({ kind, name, extension, defaultContext, contexts });
   }
+  return entries;
+}
+
+export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensResult> {
+  const entries = await resolveEntries(tokensRoot);
 
   const known = new Map<string, Layer>();
-  for (const token of core) known.set(token.path, 'core');
-  for (const token of light) known.set(token.path, 'appearance');
-  for (const token of density.comfortable ?? []) known.set(token.path, 'density');
-  for (const token of contract) known.set(token.path, 'contract');
-
-  const all = [...core, ...light, ...dark, ...Object.values(density).flat(), ...contract];
+  const owner = new Map<string, string>();
+  const all: FlatToken[] = [];
+  for (const entry of entries) {
+    const declared =
+      entry.kind === 'set'
+        ? entry.tokens
+        : entry.extension.alias
+          ? [...entry.contexts.values()].flat()
+          : entry.contexts.get(entry.defaultContext)!;
+    for (const token of declared) {
+      const previous = owner.get(token.path);
+      if (previous) fail(`token "${token.path}" is declared by both ${previous} and ${entry.kind} "${entry.name}"`);
+      owner.set(token.path, `${entry.kind} "${entry.name}"`);
+      known.set(token.path, token.layer);
+    }
+    all.push(...(entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat()));
+  }
   validateRefs(all, known);
 
-  const css = emitCss({ core, light, dark, density, contract, base, paints });
+  const css = emitCss(entries);
   const json = emitCatalog(all);
   return { css, json, tokens: all };
 }

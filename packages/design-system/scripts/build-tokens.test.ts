@@ -1,11 +1,14 @@
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   PATH_RE,
   buildTokensGraph,
   catalogSelectors,
   flattenTokens,
   pathToPointer,
+  parseExtension,
   pointerToPath,
   serializeValue,
   validateDensitySpaceOnly,
@@ -274,5 +277,111 @@ describe('committed token graph', () => {
     expect(graph.css).toContain('--todae-button-bg-hover: var(--todae-button-primary-bg-hover)');
     expect(graph.css).toContain('--todae-button-bg-active: var(--todae-button-primary-bg-active)');
     expect(graph.css).toContain('--todae-button-radius: var(--todae-button-base-radius)');
+  });
+});
+
+describe('resolver-driven build', () => {
+  const tokensDir = join(import.meta.dirname, '../tokens');
+  const temps: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(temps.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
+  });
+
+  type Resolver = {
+    sets: Record<string, Record<string, unknown>>;
+    modifiers: Record<string, { default: string; contexts: Record<string, unknown[]>; [key: string]: unknown }>;
+    resolutionOrder: unknown[];
+  };
+
+  async function fixture(edit: (resolver: Resolver, root: string) => Promise<void> | void): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'todae-tokens-'));
+    temps.push(root);
+    await cp(tokensDir, root, { recursive: true });
+    const resolver = JSON.parse(await readFile(join(root, 'resolver.json'), 'utf8')) as Resolver;
+    await edit(resolver, root);
+    await writeFile(join(root, 'resolver.json'), JSON.stringify(resolver));
+    return root;
+  }
+
+  it('takes density and button variant names from the resolver contexts', async () => {
+    const root = await fixture(async (resolver, dir) => {
+      const roomy = await readFile(join(dir, 'density/spacious.json'), 'utf8');
+      await writeFile(join(dir, 'density/roomy.json'), roomy);
+      const outline = (await readFile(join(dir, 'components/button.secondary.json'), 'utf8')).replace(
+        '"secondary"',
+        '"outline"',
+      );
+      await writeFile(join(dir, 'components/button.outline.json'), outline);
+      resolver.modifiers.density!.contexts.roomy = [{ $ref: './density/roomy.json' }];
+      resolver.modifiers.buttonVariant!.contexts.outline = [{ $ref: './components/button.outline.json' }];
+    });
+    const graph = await buildTokensGraph(root);
+    expect(catalogSelectors(graph.css)).toContain('[data-density="roomy"]');
+    expect(catalogSelectors(graph.css)).toContain('[data-button-variant="outline"]');
+    expect(graph.css).toContain('--todae-button-bg-default: var(--todae-button-outline-bg-default)');
+    expect(graph.tokens.find((t) => t.path === 'button.outline.bg.default')).toMatchObject({
+      layer: 'contract',
+      context: 'outline',
+    });
+  });
+
+  it('merges sources in order, accepting inline token trees', async () => {
+    const root = await fixture((resolver) => {
+      (resolver.sets.contract!.sources as unknown[]).push({
+        tooltip: { 'max-width': { $type: 'dimension', $value: { value: 20, unit: 'rem' } } },
+      });
+    });
+    const graph = await buildTokensGraph(root);
+    expect(graph.tokens.filter((t) => t.path === 'tooltip.max-width')).toHaveLength(1);
+    expect(graph.tokens.find((t) => t.path === 'tooltip.max-width')?.cssValue).toBe('20rem');
+  });
+
+  it('requires every context of a scoped modifier to declare the same tokens', async () => {
+    const root = await fixture((resolver) => {
+      resolver.modifiers.density!.contexts.compact = [
+        { space: { 1: { $type: 'dimension', $value: { value: 1, unit: 'px' } } } },
+      ];
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(/modifier "density" comfortable\/compact key trees differ/);
+  });
+
+  it('rejects a token declared by two resolution entries', async () => {
+    const root = await fixture((resolver) => {
+      (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/button.base.json' });
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(/token "button\.base\.[a-z.]+" is declared by both set "button" and set "contract"/);
+  });
+
+  it('rejects malformed resolver entries', async () => {
+    const cases: [(resolver: Resolver) => void, RegExp][] = [
+      [(r) => r.resolutionOrder.push({ type: 'set', name: 'inline', sources: [] }), /resolutionOrder\[6\] must be/],
+      [(r) => r.resolutionOrder.push({ $ref: '#/sets/missing' }), /#\/sets\/missing does not exist/],
+      [(r) => r.resolutionOrder.push({ $ref: '#/sets/core' }), /lists #\/sets\/core twice/],
+      [(r) => void (r.modifiers.density!.default = 'huge'), /default must name one of its contexts/],
+      [(r) => void delete r.sets.core!.$extensions, /set "core" must declare \$extensions\["dev.todae"\]/],
+      [(r) => void (r.sets.core!.sources = [{ $ref: '../package.json' }]), /escapes tokens/],
+      [(r) => void (r.sets.core!.sources = [{ $ref: '#/sets/contract' }]), /relative token file path/],
+    ];
+    for (const [edit, error] of cases) {
+      const root = await fixture(edit);
+      await expect(buildTokensGraph(root)).rejects.toThrow(error);
+    }
+  });
+
+  it('validates the dev.todae extension', () => {
+    const ext = (value: unknown) => ({ $extensions: { 'dev.todae': value } });
+    expect(parseExtension(ext({ layer: 'core' }), 'set', 'set "x"')).toEqual({ layer: 'core' });
+    expect(() => parseExtension(ext({ layer: 'brand' }), 'set', 'set "x"')).toThrow(/layer must be one of/);
+    expect(() => parseExtension(ext({ layer: 'core', attribute: 'data-x' }), 'set', 'set "x"')).toThrow(
+      /only apply to modifiers/,
+    );
+    expect(() => parseExtension(ext({ layer: 'density' }), 'modifier', 'modifier "x"')).toThrow(/data-\* attribute/);
+    expect(() =>
+      parseExtension(ext({ layer: 'contract', attribute: 'data-x', alias: true, root: true }), 'modifier', 'modifier "x"'),
+    ).toThrow(/alias modifier cannot/);
+    expect(
+      parseExtension(ext({ layer: 'appearance', attribute: 'data-a', root: true, colorScheme: false }), 'modifier', 'm'),
+    ).toEqual({ layer: 'appearance', attribute: 'data-a', root: true });
   });
 });
