@@ -21,8 +21,8 @@
   },
   "files": ["dist", "schema", "tokens"],
   "scripts": {
-    "tokens": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts",
-    "tokens:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts --check",
+    "tokens": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts self",
+    "tokens:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts self --check",
     "build": "pnpm tokens && vite build && tsc -p tsconfig.build.json && tsc -p tsconfig.scripts.json",
     "dev": "vite build --watch",
     "schema": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/generate-schema.ts",

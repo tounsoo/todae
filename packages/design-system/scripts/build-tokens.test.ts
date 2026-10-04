@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -621,13 +622,13 @@ describe('company token build', () => {
     );
     expect(catalogSelectors(result.css.slice(result.css.indexOf('@layer todae.theme {')))).toEqual([
       '@layer todae.theme',
-      ':root, [data-appearance="light"]',
+      ':root:not([data-appearance]), [data-appearance="light"]',
       '[data-appearance="dark"]',
       '[data-density="roomy"]',
       '[data-appearance], [data-density]',
       '[data-button-variant="outline"]',
     ]);
-    const light = blockOf(result.css, ':root,\n[data-appearance="light"]');
+    const light = blockOf(result.css, ':root:not([data-appearance]),\n[data-appearance="light"]');
     expect(light).toContain('--todae-color-accent-default: oklch(0.45 0.16 25);');
     expect(light).toContain('--todae-brand-ink: var(--todae-color-gray-900);');
     expect(light).not.toContain('--todae-color-bg-canvas');
@@ -639,6 +640,45 @@ describe('company token build', () => {
       '--todae-button-bg-default: var(--todae-button-outline-bg-default);',
     );
     expect(blockOf(result.css, '[data-density="roomy"]')).toContain('--todae-space-overlay-padding: var(--todae-space-8);');
+  });
+
+  it('never re-points Todae aliases from the company layer', async () => {
+    const resolver = await company((r) => {
+      r.sets.button = {
+        sources: [{ button: { base: { radius: { $type: 'dimension', $value: { value: 1, unit: 'rem' } } } } }],
+        $extensions: { 'dev.todae': { layer: 'contract' } },
+      };
+      r.modifiers.buttonVariant.contexts.primary = [
+        { button: { primary: { bg: { default: { $type: 'color', $value: { $ref: '#/color/red/500/$value' } } } } } },
+      ];
+      r.resolutionOrder.splice(2, 0, { $ref: '#/sets/button' });
+    });
+    const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
+    const rescoped = blockOf(css, '[data-appearance],\n[data-density]');
+    expect(rescoped).toContain('--todae-button-primary-bg-default: var(--todae-color-red-500);');
+    expect(rescoped).toContain('--todae-button-base-radius: 1rem;');
+    expect(rescoped).not.toMatch(/--todae-button-(bg-default|radius): /);
+    expect(css.match(/--todae-button-(bg-default|radius): /g)).toHaveLength(1);
+    expect(css).not.toContain('[data-button-variant="primary"]');
+    expect(blockOf(css, '[data-button-variant="outline"]')).toContain('--todae-button-bg-default: var(--todae-button-outline-bg-default);');
+  });
+
+  it('declares default aliases for a company-only alias modifier', async () => {
+    const resolver = await company((r) => {
+      const color = (ref: string) => ({ $type: 'color', $value: { $ref: ref } });
+      r.modifiers.badgeTone = {
+        default: 'solid',
+        contexts: {
+          solid: [{ badge: { solid: { bg: color('#/color/accent/default/$value') } } }],
+          soft: [{ badge: { soft: { bg: color('#/color/accent/soft/$value') } } }],
+        },
+        $extensions: { 'dev.todae': { layer: 'contract', attribute: 'data-badge-tone', alias: true } },
+      };
+      r.resolutionOrder.push({ $ref: '#/modifiers/badgeTone' });
+    });
+    const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
+    expect(blockOf(css, '[data-appearance],\n[data-density]')).toContain('--todae-badge-bg: var(--todae-badge-solid-bg);');
+    expect(blockOf(css, '[data-badge-tone="soft"]')).toContain('--todae-badge-bg: var(--todae-badge-soft-bg);');
   });
 
   it('merges the catalog and types only the company tokens', async () => {
@@ -719,6 +759,22 @@ describe('company token build', () => {
     }
   });
 
+  it('can be imported when argv[1] is not a file', () => {
+    const out = execFileSync(
+      process.execPath,
+      [
+        '--experimental-strip-types',
+        '--no-warnings',
+        '--input-type=module',
+        '-e',
+        `await import(${JSON.stringify(join(import.meta.dirname, 'build-tokens.ts'))}); process.stdout.write('ok');`,
+        'not-a-file',
+      ],
+      { encoding: 'utf8' },
+    );
+    expect(out).toBe('ok');
+  });
+
   it('writes, checks and reports drift from the CLI', async () => {
     const out = await mkdtemp(join(tmpdir(), 'todae-cli-'));
     temps.push(out);
@@ -743,5 +799,7 @@ describe('company token build', () => {
     await writeFile(join(out, 'acme.css'), '');
     await expect(cli(args('--check'))).rejects.toThrow(/acme\.css drifted/);
     await expect(cli(['build'])).rejects.toThrow(/Usage: todae-tokens build/);
+    await expect(cli(['buld', '--resolver', join(acme, 'resolver.json')])).rejects.toThrow(/Usage: todae-tokens build/);
+    await expect(cli([])).rejects.toThrow(/Usage: todae-tokens build/);
   });
 });

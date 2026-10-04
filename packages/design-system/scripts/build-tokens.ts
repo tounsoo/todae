@@ -378,7 +378,13 @@ export function validateRefs(
   }
 }
 
-export type LayerChecks = { rules?: readonly Rule[]; slots?: SlotRules; paints?: readonly string[] };
+export type LayerChecks = {
+  rules?: readonly Rule[];
+  slots?: SlotRules;
+  paints?: readonly string[];
+  /** Tokens these extend (Todae's, for a company layer); group rules see them merged. */
+  inherited?: Map<string, TokenNode>;
+};
 
 /** Validates one merged set or context and serializes its tokens. */
 export function layerTokens(
@@ -392,11 +398,12 @@ export function layerTokens(
   validatePaths(flat.keys(), loc);
   if (rules.includes('reserved-roots')) validateReservedRoots(flat.keys(), loc);
   if (rules.includes('density-space')) validateDensitySpaceOnly(flat, loc);
+  const whole = checks.inherited ? new Map([...checks.inherited, ...flat]) : flat;
   if (rules.includes('button')) {
-    validateInteractive(flat, loc, checks.paints ?? BUTTON_PAINTS);
-    if ([...flat.keys()].some((path) => path.startsWith('button.base.'))) validateButtonBase(flat, loc);
+    validateInteractive(whole, loc, checks.paints ?? BUTTON_PAINTS);
+    if ([...whole.keys()].some((path) => path.startsWith('button.base.'))) validateButtonBase(whole, loc);
   }
-  if (checks.slots) validateSlots(flat, checks.slots, loc);
+  if (checks.slots) validateSlots(whole, checks.slots, loc);
   const tokens: FlatToken[] = [];
   for (const [path, node] of flat) {
     const { ref, cssValue } = serializeValue(node, path);
@@ -450,11 +457,23 @@ export type EmitCssOptions = {
   preamble?: string;
   /** Alias groups, when `entries` hold only part of the graph. */
   aliases?: readonly AliasGroup[];
+  /**
+   * Entries (`set:name`, `modifier:name`) and alias contexts
+   * (`modifier:name/context`) whose consume aliases another stylesheet already
+   * declares. A later layer must not re-declare them, or it would beat that
+   * stylesheet's own variant blocks.
+   */
+  inherited?: ReadonlySet<string>;
 };
 
 export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}): string {
   const aliases = options.aliases ?? aliasGroups(entries);
+  const inherited = options.inherited ?? new Set<string>();
+  // In a later layer, a bare :root default would beat an earlier layer's
+  // other contexts on the root element itself.
+  const layered = options.inherited !== undefined;
   const root: FlatToken[] = [];
+  const rootAliases: FlatToken[] = [];
   const scopedBlocks: string[] = [];
   const attributes: string[] = [];
   const rescoped: FlatToken[] = [];
@@ -462,10 +481,13 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
   const aliasBlocks: string[] = [];
   for (const entry of entries) {
     if (entry.kind === 'set') {
-      if (attributes.length === 0) root.push(...entry.tokens);
-      else {
+      const own = inherited.has(`set:${entry.name}`) ? [] : entry.tokens;
+      if (attributes.length === 0) {
+        root.push(...entry.tokens);
+        rootAliases.push(...own);
+      } else {
         rescoped.push(...entry.tokens);
-        defaults.push(...entry.tokens);
+        defaults.push(...own);
       }
       continue;
     }
@@ -475,14 +497,16 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
       const selector = `[${attribute}="${context}"]`;
       if (alias) {
         rescoped.push(...tokens);
+        if (inherited.has(`modifier:${entry.name}/${context}`)) continue;
         if (context === entry.defaultContext) defaults.push(...tokens);
         aliasBlocks.push(...block(selector, [aliasDecls(tokens, aliases)]));
         continue;
       }
       const rootDefault = entry.extension.root && context === entry.defaultContext;
       if (tokens.length === 0) continue;
+      const rootSelector = layered ? `:root:not([${attribute}])` : ':root';
       scopedBlocks.push(
-        ...block(rootDefault ? `:root,\n${selector}` : selector, [
+        ...block(rootDefault ? `${rootSelector},\n${selector}` : selector, [
           decls(tokens),
           colorScheme ? `  color-scheme: ${context};` : '',
         ]),
@@ -491,7 +515,7 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
     if (!alias) attributes.push(`[${attribute}]`);
   }
   const blocks = [
-    ...block(':root', [decls(root), aliasDecls(root, aliases)]),
+    ...block(':root', [decls(root), aliasDecls(rootAliases, aliases)]),
     ...scopedBlocks,
     ...block(attributes.length > 0 ? attributes.join(',\n') : ':root', [decls(rescoped), aliasDecls(defaults, aliases)]),
     ...aliasBlocks,
@@ -744,13 +768,14 @@ async function loadTokens(
   extension: TodaeExtension,
   context: string | undefined,
   paints: readonly string[],
+  inherited: FlatToken[] = [],
 ): Promise<FlatToken[]> {
   const merged = new Map<string, TokenNode>();
   for (const source of await loadSources(sources, loc, tokensRoot)) {
     for (const [path, node] of flattenTokens(source.tree)) merged.set(path, node);
   }
   const { layer, rules, slots } = extension;
-  return layerTokens(merged, layer, context, { rules, slots, paints });
+  return layerTokens(merged, layer, context, { rules, slots, paints, inherited: tokenMapOf(inherited) });
 }
 
 function tokenMapOf(tokens: FlatToken[]): Map<string, TokenNode> {
@@ -833,11 +858,20 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
   for (const { kind, name, def, extension } of order) {
     const loc = `${kind} "${name}"`;
     if (kind === 'set') {
+      const upstreamSet = upstreamOf(kind, name);
       entries.push({
         kind,
         name,
         extension,
-        tokens: await loadTokens(def.sources, `${loc} sources`, tokensRoot, extension, undefined, [...paints]),
+        tokens: await loadTokens(
+          def.sources,
+          `${loc} sources`,
+          tokensRoot,
+          extension,
+          undefined,
+          [...paints],
+          upstreamSet?.kind === 'set' ? upstreamSet.tokens : [],
+        ),
       });
       continue;
     }
@@ -863,7 +897,15 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
       if (extension.alias && context === 'base') fail(`${loc} context "base" is reserved for shared <root>.base tokens`);
       contexts.set(
         context,
-        await loadTokens(sources, `${loc} context "${context}"`, tokensRoot, extension, context, [...paints]),
+        await loadTokens(
+          sources,
+          `${loc} context "${context}"`,
+          tokensRoot,
+          extension,
+          context,
+          [...paints],
+          base?.kind === 'modifier' ? (base.contexts.get(context) ?? []) : [],
+        ),
       );
     }
     entries.push({ kind, name, extension, defaultContext, contexts });
@@ -921,13 +963,20 @@ function mergeTokens(base: FlatToken[], extra: FlatToken[]): FlatToken[] {
 export function mergeEntries(
   base: ResolvedEntry[],
   extra: ResolvedEntry[],
-): { merged: ResolvedEntry[]; company: ResolvedEntry[] } {
+): { merged: ResolvedEntry[]; company: ResolvedEntry[]; inherited: Set<string> } {
   const merged: ResolvedEntry[] = base.map((entry) =>
     entry.kind === 'set' ? { ...entry } : { ...entry, contexts: new Map(entry.contexts) },
   );
   const company: ResolvedEntry[] = base.map((entry) =>
     entry.kind === 'set' ? { ...entry, tokens: [] } : { ...entry, contexts: new Map() },
   );
+  const inherited = new Set<string>();
+  for (const entry of base) {
+    inherited.add(`${entry.kind}:${entry.name}`);
+    if (entry.kind === 'modifier') {
+      for (const context of entry.contexts.keys()) inherited.add(`modifier:${entry.name}/${context}`);
+    }
+  }
   for (const entry of extra) {
     const index = merged.findIndex((candidate) => candidate.kind === entry.kind && candidate.name === entry.name);
     if (index === -1) {
@@ -947,7 +996,7 @@ export function mergeEntries(
       }
     }
   }
-  return { merged, company };
+  return { merged, company, inherited };
 }
 
 function entryTokens(entry: ResolvedEntry): FlatToken[] {
@@ -1055,10 +1104,15 @@ export type CompanyTokensResult = {
 export async function buildCompanyTokens(options: { resolver: string; base?: string }): Promise<CompanyTokensResult> {
   const upstream = await resolveEntries(options.base ?? todaeTokensRoot());
   const extra = await loadResolver(options.resolver, upstream);
-  const { merged, company } = mergeEntries(upstream, extra);
+  const { merged, company, inherited } = mergeEntries(upstream, extra);
   validateEntries(merged);
   const all = checkGraph(merged);
-  const css = emitCss(company, { layer: COMPANY_LAYER, preamble: COMPANY_PREAMBLE, aliases: aliasGroups(merged) });
+  const css = emitCss(company, {
+    layer: COMPANY_LAYER,
+    preamble: COMPANY_PREAMBLE,
+    aliases: aliasGroups(merged),
+    inherited,
+  });
   const own = company.flatMap(entryTokens);
   const types = new Map(own.map((token) => [token.path, token.type]));
   const overrideTypes = [
@@ -1165,12 +1219,21 @@ export async function cli(argv: string[]): Promise<void> {
   if (!values.check) process.stdout.write(`Wrote ${outputs.map(([file]) => relative(process.cwd(), file)).join(', ')}\n`);
 }
 
-const entry = process.argv[1] ? realpathSync(resolve(process.argv[1])) : '';
+function invokedPath(): string | null {
+  try {
+    return process.argv[1] ? realpathSync(resolve(process.argv[1])) : null;
+  } catch {
+    return null;
+  }
+}
+
+const entry = invokedPath();
 if (entry && pathToFileURL(entry).href === import.meta.url) {
   const args = process.argv.slice(2);
   try {
-    if (args[0] === 'build' || args.includes('--help')) await cli(args);
-    else await buildTokens({ check: args.includes('--check') });
+    // `self` rebuilds Todae's own generated files; it is for this repo's scripts only.
+    if (args[0] === 'self') await buildTokens({ check: args.includes('--check') });
+    else await cli(args);
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
     process.exitCode = 1;
