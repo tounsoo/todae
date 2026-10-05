@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../components/Field';
-import { Option, OptionList } from '../components/OptionList';
+import { OptionList } from '../components/OptionList';
 import { Popover } from '../components/Popover';
 import { optionDomId } from '../components/OptionList.ids';
 import { resetMatchMedia, setMatchMedia } from '../test/setup';
@@ -27,13 +27,13 @@ function SingleBox(props: Partial<UseComboboxSingleOptions> = {}) {
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
       </Field.Root>
-      <Popover {...cb.getPopoverProps()} aria-label="Options">
-        <OptionList {...cb.getListboxProps()}>
+      <Popover.Root {...cb.getPopoverProps()} aria-label="Options">
+        <OptionList.Root {...cb.getListboxProps()}>
           {cb.items.map((item) => (
-            <Option key={item.id} {...cb.getOptionProps(item)} />
+            <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
           ))}
-        </OptionList>
-      </Popover>
+        </OptionList.Root>
+      </Popover.Root>
     </div>
   );
 }
@@ -51,13 +51,13 @@ function MultiCreateBox({ onChange }: { onChange?: (value: string[]) => void } =
       <Field.Root {...cb.getAnchorProps()}>
         <Field.ChipInput {...cb.getChipInputProps()} />
       </Field.Root>
-      <Popover {...cb.getPopoverProps()} aria-label="Options">
-        <OptionList {...cb.getListboxProps()}>
+      <Popover.Root {...cb.getPopoverProps()} aria-label="Options">
+        <OptionList.Root {...cb.getListboxProps()}>
           {cb.items.map((item) => (
-            <Option key={item.id} {...cb.getOptionProps(item)} />
+            <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
           ))}
-        </OptionList>
-      </Popover>
+        </OptionList.Root>
+      </Popover.Root>
     </div>
   );
 }

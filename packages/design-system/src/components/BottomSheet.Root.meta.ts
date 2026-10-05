@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'BottomSheet',
+  name: 'BottomSheet.Root',
   description: 'Modal bottom sheet. Custom portal, not a native dialog. Mid and full snap.',
   props: [
     {

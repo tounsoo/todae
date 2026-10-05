@@ -7,15 +7,15 @@ afterEach(cleanup);
 describe('Chip', () => {
   it('renders text-only children and stringifies markup', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const { container, rerender } = render(<Chip>Alpha</Chip>);
+    const { container, rerender } = render(<Chip.Root>Alpha</Chip.Root>);
     expect(screen.getByText('Alpha')).toBeTruthy();
     expect(container.querySelector('b')).toBeNull();
 
-    rerender(<Chip>{'<b>x</b>'}</Chip>);
+    rerender(<Chip.Root>{'<b>x</b>'}</Chip.Root>);
     expect(screen.getByText('<b>x</b>')).toBeTruthy();
     expect(container.querySelector('b')).toBeNull();
 
-    rerender(<Chip>{['nope'] as unknown as string}</Chip>);
+    rerender(<Chip.Root>{['nope'] as unknown as string}</Chip.Root>);
     expect(error).toHaveBeenCalled();
     expect(screen.getByText('nope')).toBeTruthy();
     error.mockRestore();
@@ -24,16 +24,16 @@ describe('Chip', () => {
   it('names dismiss and ignores clicks when disabled', () => {
     const onDismiss = vi.fn();
     const { rerender } = render(
-      <Chip onDismiss={onDismiss}>Alpha</Chip>,
+      <Chip.Root onDismiss={onDismiss}>Alpha</Chip.Root>,
     );
     const button = screen.getByRole('button', { name: 'Remove Alpha' });
     fireEvent.click(button);
     expect(onDismiss).toHaveBeenCalledTimes(1);
 
     rerender(
-      <Chip onDismiss={onDismiss} disabled>
+      <Chip.Root onDismiss={onDismiss} disabled>
         Alpha
-      </Chip>,
+      </Chip.Root>,
     );
     const disabled = screen.getByRole('button', { name: 'Remove Alpha' });
     expect(disabled).toHaveProperty('disabled', true);

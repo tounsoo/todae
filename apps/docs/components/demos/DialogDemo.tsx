@@ -8,7 +8,7 @@ export function DialogBasic() {
   return (
     <>
       <Button.Root onClick={() => setOpen(true)}>Open dialog</Button.Root>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Header>
           <Dialog.Title>Discard draft?</Dialog.Title>
           <Dialog.Close>Close</Dialog.Close>
@@ -21,7 +21,7 @@ export function DialogBasic() {
           </Button.Root>
           <Button.Root onClick={() => setOpen(false)}>Discard</Button.Root>
         </Dialog.Footer>
-      </Dialog>
+      </Dialog.Root>
     </>
   );
 }
@@ -32,13 +32,13 @@ export function DialogThemed() {
     <ThemeProvider appearance="dark">
       <DensityProvider density="compact">
         <Button.Root onClick={() => setOpen(true)}>Dark compact</Button.Root>
-        <Dialog open={open} onOpenChange={setOpen} dismissOnBackdrop={false}>
+        <Dialog.Root open={open} onOpenChange={setOpen} dismissOnBackdrop={false}>
           <Dialog.Title>Pinned scrim</Dialog.Title>
           <Dialog.Description>Backdrop clicks do nothing. Escape still closes.</Dialog.Description>
           <Dialog.Footer>
             <Dialog.Close>Close</Dialog.Close>
           </Dialog.Footer>
-        </Dialog>
+        </Dialog.Root>
       </DensityProvider>
     </ThemeProvider>
   );

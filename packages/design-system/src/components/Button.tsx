@@ -229,7 +229,7 @@ function Root({
   return (
     <>
       {button}
-      {tipText == null ? null : <Tooltip {...tip.getTooltipProps()}>{tipText}</Tooltip>}
+      {tipText == null ? null : <Tooltip.Root {...tip.getTooltipProps()}>{tipText}</Tooltip.Root>}
     </>
   );
 }
@@ -245,7 +245,7 @@ function Icon({ className, ...props }: ButtonIconProps) {
   );
 }
 
-export function ButtonGroup({ className, children, ...props }: ButtonGroupProps) {
+function Group({ className, children, ...props }: ButtonGroupProps) {
   return (
     <div {...props} role="group" className={[styles.group, className].filter(Boolean).join(' ')}>
       {children}
@@ -253,4 +253,4 @@ export function ButtonGroup({ className, children, ...props }: ButtonGroupProps)
   );
 }
 
-export const Button = { Root, Icon } as const;
+export const Button = { Root, Icon, Group } as const;

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Option, OptionList, Popover, Stack, usePopover } from '@tounsoo/todae';
+import { Button, OptionList, Popover, Stack, usePopover } from '@tounsoo/todae';
 import { useState } from 'react';
 
 export function PopoverMenu() {
@@ -13,19 +13,19 @@ export function PopoverMenu() {
       <Button.Root tooltip={false} {...popover.getTriggerProps()}>
         {value ?? 'Choose fruit'}
       </Button.Root>
-      <Popover {...popover.getPopoverProps()} aria-label="Fruit">
-        <OptionList
+      <Popover.Root {...popover.getPopoverProps()} aria-label="Fruit">
+        <OptionList.Root
           value={value}
           onChange={(next) => {
             setValue(next);
             setOpen(false);
           }}
         >
-          <Option value="apple">Apple</Option>
-          <Option value="pear">Pear</Option>
-          <Option value="plum">Plum</Option>
-        </OptionList>
-      </Popover>
+          <OptionList.Option value="apple">Apple</OptionList.Option>
+          <OptionList.Option value="pear">Pear</OptionList.Option>
+          <OptionList.Option value="plum">Plum</OptionList.Option>
+        </OptionList.Root>
+      </Popover.Root>
       <Button.Root variant="secondary" onClick={() => setUnder((count) => count + 1)}>
         Page under {under}
       </Button.Root>
@@ -47,14 +47,14 @@ export function PopoverVeto() {
       <Button.Root tooltip={false} {...popover.getTriggerProps()}>
         Outside is vetoed
       </Button.Root>
-      <Popover {...popover.getPopoverProps()} aria-label="Pinned">
+      <Popover.Root {...popover.getPopoverProps()} aria-label="Pinned">
         <Stack>
           Outside click calls onOpenChange but this stays open. Escape still closes.
           <Button.Root variant="secondary" onClick={() => setOpen(false)}>
             Close
           </Button.Root>
         </Stack>
-      </Popover>
+      </Popover.Root>
     </>
   );
 }

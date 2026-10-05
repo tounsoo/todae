@@ -16,12 +16,12 @@ export function TooltipOverflow() {
   const tooltip = useTooltip();
   return (
     <Stack direction="row">
-      <Chip>Design</Chip>
-      <Chip>Tokens</Chip>
+      <Chip.Root>Design</Chip.Root>
+      <Chip.Root>Tokens</Chip.Root>
       <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>
         <Chip.Overflow overflowCount={2} />
       </span>
-      <Tooltip {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip>
+      <Tooltip.Root {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip.Root>
     </Stack>
   );
 }
@@ -33,9 +33,9 @@ export function TooltipPolicy() {
       <Button.Root variant="ghost" tooltip={false} {...tooltip.getTriggerProps()}>
         Policy
       </Button.Root>
-      <Tooltip {...tooltip.getTooltipProps()} aria-label="Policy">
+      <Tooltip.Root {...tooltip.getTooltipProps()} aria-label="Policy">
         Interactive tips allow links. <a href="/tooltip">Read the policy</a>
-      </Tooltip>
+      </Tooltip.Root>
     </>
   );
 }

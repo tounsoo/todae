@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Chip',
+  name: 'Chip.Root',
   description: 'Text-only label with optional named dismiss. Overflow +N is Chip.Overflow.',
   props: [
     {

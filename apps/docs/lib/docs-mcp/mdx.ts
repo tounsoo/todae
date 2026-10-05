@@ -27,15 +27,15 @@ const PART_PAGE: Record<string, string> = {
   DensityProvider: 'tokens',
 };
 
-/** Page-level When copy written for these names in addition to `page.title`. */
+/** Page-level When copy written for these names in addition to `page.title` and its `.Root`. */
 const PAGE_OWNERS: Record<string, readonly string[]> = {
   'recipes/combobox': ['useCombobox'],
-  radio: ['RadioGroup'],
+  radio: ['RadioGroup', 'RadioGroup.Root', 'RadioGroup.Item'],
   'recipes/chip-list': ['useChipList'],
 };
 
 export function ownsPage(page: PageDoc, name: string): boolean {
-  return page.title === name || PAGE_OWNERS[page.slug]?.includes(name) === true;
+  return page.title === name || name === `${page.title}.Root` || PAGE_OWNERS[page.slug]?.includes(name) === true;
 }
 
 function absolutize(markdown: string): string {
@@ -198,7 +198,12 @@ export function missingWhenNote(markdown: string, slug: string): string {
 function findPage(name: string): PageDoc | null {
   const host = PART_PAGE[name];
   if (host) return pages.find((page) => page.slug === host) ?? null;
-  return pages.find((page) => page.props.includes(name) || page.title === name) ?? null;
+  return (
+    pages.find((page) => page.props.includes(name) || page.title === name) ??
+    // A namespace with no page of its own, such as RadioGroup, lives where its parts do.
+    (name.includes('.') ? undefined : pages.find((page) => page.props.some((prop) => prop.startsWith(`${name}.`)))) ??
+    null
+  );
 }
 
 export function pageFor(name: string): PageDoc | null {

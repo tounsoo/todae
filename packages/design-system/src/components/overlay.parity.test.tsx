@@ -20,7 +20,7 @@ function dialogHarness(): Harness {
     renderSurface(open, props) {
       const onOpenChange = (props.onOpenChange as (open: boolean, reason: string) => void) ?? (() => undefined);
       render(
-        <Dialog
+        <Dialog.Root
           open={open}
           onOpenChange={onOpenChange}
           dismissOnEscape={props.dismissOnEscape as boolean | undefined}
@@ -31,7 +31,7 @@ function dialogHarness(): Harness {
           <Dialog.Description>This cannot be undone.</Dialog.Description>
           <button type="button">First</button>
           <Dialog.Close>X</Dialog.Close>
-        </Dialog>,
+        </Dialog.Root>,
       );
     },
     getSurface() {
@@ -47,7 +47,7 @@ function sheetHarness(): Harness {
     renderSurface(open, props) {
       const onOpenChange = (props.onOpenChange as (open: boolean, reason: string) => void) ?? (() => undefined);
       render(
-        <BottomSheet
+        <BottomSheet.Root
           open={open}
           onOpenChange={onOpenChange}
           dismissOnEscape={props.dismissOnEscape as boolean | undefined}
@@ -58,7 +58,7 @@ function sheetHarness(): Harness {
           <BottomSheet.Description>This cannot be undone.</BottomSheet.Description>
           <button type="button">First</button>
           <BottomSheet.Close>X</BottomSheet.Close>
-        </BottomSheet>,
+        </BottomSheet.Root>,
       );
     },
     getSurface() {
@@ -89,19 +89,19 @@ for (const harness of [dialogHarness, sheetHarness]) {
       extra.focus();
       render(
         harness().name === 'Dialog' ? (
-          <Dialog open onOpenChange={() => undefined} initialFocusRef={initialFocusRef}>
+          <Dialog.Root open onOpenChange={() => undefined} initialFocusRef={initialFocusRef}>
             <Dialog.Title>Save file</Dialog.Title>
             <button type="button" ref={initialFocusRef}>
               Target
             </button>
-          </Dialog>
+          </Dialog.Root>
         ) : (
-          <BottomSheet open onOpenChange={() => undefined} initialFocusRef={initialFocusRef}>
+          <BottomSheet.Root open onOpenChange={() => undefined} initialFocusRef={initialFocusRef}>
             <BottomSheet.Title>Save file</BottomSheet.Title>
             <button type="button" ref={initialFocusRef}>
               Target
             </button>
-          </BottomSheet>
+          </BottomSheet.Root>
         ),
       );
       await waitFor(() => {
@@ -159,25 +159,25 @@ for (const harness of [dialogHarness, sheetHarness]) {
       const h = harness();
       const { rerender } = render(
         h.name === 'Dialog' ? (
-          <Dialog open onOpenChange={() => undefined}>
+          <Dialog.Root open onOpenChange={() => undefined}>
             <Dialog.Title>Save file</Dialog.Title>
-          </Dialog>
+          </Dialog.Root>
         ) : (
-          <BottomSheet open onOpenChange={() => undefined}>
+          <BottomSheet.Root open onOpenChange={() => undefined}>
             <BottomSheet.Title>Save file</BottomSheet.Title>
-          </BottomSheet>
+          </BottomSheet.Root>
         ),
       );
       expect(document.documentElement.style.overflow).toBe('hidden');
       rerender(
         h.name === 'Dialog' ? (
-          <Dialog open={false} onOpenChange={() => undefined}>
+          <Dialog.Root open={false} onOpenChange={() => undefined}>
             <Dialog.Title>Save file</Dialog.Title>
-          </Dialog>
+          </Dialog.Root>
         ) : (
-          <BottomSheet open={false} onOpenChange={() => undefined}>
+          <BottomSheet.Root open={false} onOpenChange={() => undefined}>
             <BottomSheet.Title>Save file</BottomSheet.Title>
-          </BottomSheet>
+          </BottomSheet.Root>
         ),
       );
       expect(h.getSurface()).not.toBeNull();
@@ -194,28 +194,28 @@ for (const harness of [dialogHarness, sheetHarness]) {
       const h = harness();
       const { rerender } = render(
         h.name === 'Dialog' ? (
-          <Dialog open onOpenChange={() => undefined}>
+          <Dialog.Root open onOpenChange={() => undefined}>
             <Dialog.Title>Save file</Dialog.Title>
             <button type="button">First</button>
-          </Dialog>
+          </Dialog.Root>
         ) : (
-          <BottomSheet open onOpenChange={() => undefined}>
+          <BottomSheet.Root open onOpenChange={() => undefined}>
             <BottomSheet.Title>Save file</BottomSheet.Title>
             <button type="button">First</button>
-          </BottomSheet>
+          </BottomSheet.Root>
         ),
       );
       rerender(
         h.name === 'Dialog' ? (
-          <Dialog open={false} onOpenChange={() => undefined}>
+          <Dialog.Root open={false} onOpenChange={() => undefined}>
             <Dialog.Title>Save file</Dialog.Title>
             <button type="button">First</button>
-          </Dialog>
+          </Dialog.Root>
         ) : (
-          <BottomSheet open={false} onOpenChange={() => undefined}>
+          <BottomSheet.Root open={false} onOpenChange={() => undefined}>
             <BottomSheet.Title>Save file</BottomSheet.Title>
             <button type="button">First</button>
-          </BottomSheet>
+          </BottomSheet.Root>
         ),
       );
       await Promise.resolve();

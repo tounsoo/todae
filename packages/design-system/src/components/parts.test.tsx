@@ -6,19 +6,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   BottomSheet,
   Button,
-  ButtonGroup,
   Checkbox,
   Chip,
-  ChipOverflow,
   Description,
   Dialog,
   ErrorMessage,
   Field,
   Label,
-  Option,
   OptionList,
   Popover,
-  Radio,
   RadioGroup,
   Stack,
   Switch,
@@ -42,9 +38,9 @@ function PopoverCase({ p }: { p: Native }) {
   const popover = usePopover({ open: true });
   const { ref: wireRef, ...wire } = popover.getPopoverProps();
   return (
-    <Popover {...wire} ref={composeRefs(wireRef, p.ref)} data-testid={p['data-testid']} aria-label="Menu">
+    <Popover.Root {...wire} ref={composeRefs(wireRef, p.ref)} data-testid={p['data-testid']} aria-label="Menu">
       Menu
-    </Popover>
+    </Popover.Root>
   );
 }
 
@@ -52,9 +48,9 @@ function TooltipCase({ p }: { p: Native }) {
   const tip = useTooltip({ open: true });
   const { ref: wireRef, ...wire } = tip.getTooltipProps();
   return (
-    <Tooltip {...wire} ref={composeRefs(wireRef, p.ref)} data-testid={p['data-testid']}>
+    <Tooltip.Root {...wire} ref={composeRefs(wireRef, p.ref)} data-testid={p['data-testid']}>
       Tip
-    </Tooltip>
+    </Tooltip.Root>
   );
 }
 
@@ -64,19 +60,19 @@ const cases: Case[] = [
   ['Label', (p) => <Label {...p} htmlFor="x" />],
   ['Description', (p) => <Description {...p} id="d" />],
   ['ErrorMessage', (p) => <ErrorMessage {...p} id="e" />],
-  ['Chip', (p) => <Chip {...p}>a</Chip>],
-  ['ChipOverflow', (p) => <ChipOverflow {...p} overflowCount={2} />],
+  ['Chip.Root', (p) => <Chip.Root {...p}>a</Chip.Root>],
+  ['Chip.Overflow', (p) => <Chip.Overflow {...p} overflowCount={2} />],
   ['Checkbox', (p) => <Checkbox {...p}>c</Checkbox>],
   ['Switch', (p) => <Switch {...p}>s</Switch>],
-  ['RadioGroup', (p) => <RadioGroup {...p} aria-label="g" />],
+  ['RadioGroup.Root', (p) => <RadioGroup.Root {...p} aria-label="g" />],
   [
-    'Radio',
+    'RadioGroup.Item',
     (p) => (
-      <RadioGroup aria-label="g">
-        <Radio {...p} value="a">
+      <RadioGroup.Root aria-label="g">
+        <RadioGroup.Item {...p} value="a">
           a
-        </Radio>
-      </RadioGroup>
+        </RadioGroup.Item>
+      </RadioGroup.Root>
     ),
   ],
   ['Button.Root', (p) => <Button.Root {...p}>Go</Button.Root>],
@@ -89,7 +85,7 @@ const cases: Case[] = [
       </Button.Root>
     ),
   ],
-  ['ButtonGroup', (p) => <ButtonGroup {...p} aria-label="g" />],
+  ['Button.Group', (p) => <Button.Group {...p} aria-label="g" />],
   ['Field.Root', (p) => <Field.Root {...p} />],
   ...(['Icon', 'Affix', 'Row'] as const).map(
     (part): Case => [
@@ -145,11 +141,11 @@ const cases: Case[] = [
     ),
   ],
   [
-    'Dialog',
+    'Dialog.Root',
     (p) => (
-      <Dialog {...p} open onOpenChange={noop} aria-label="d">
+      <Dialog.Root {...p} open onOpenChange={noop} aria-label="d">
         x
-      </Dialog>
+      </Dialog.Root>
     ),
   ],
   ...(['Title', 'Description', 'Header', 'Body', 'Footer', 'Close'] as const).map(
@@ -158,47 +154,47 @@ const cases: Case[] = [
       (p) => {
         const Part = Dialog[part] as (props: Native) => ReactNode;
         return (
-          <Dialog open onOpenChange={noop} aria-label="d">
+          <Dialog.Root open onOpenChange={noop} aria-label="d">
             <Part {...p} />
-          </Dialog>
+          </Dialog.Root>
         );
       },
     ],
   ),
-  ['BottomSheet', (p) => <BottomSheet {...p} open onOpenChange={noop} aria-label="s" />],
+  ['BottomSheet.Root', (p) => <BottomSheet.Root {...p} open onOpenChange={noop} aria-label="s" />],
   ...(['Grabber', 'Header', 'Title', 'Description', 'Body', 'Footer', 'Close'] as const).map(
     (part): Case => [
       `BottomSheet.${part}`,
       (p) => {
         const Part = BottomSheet[part] as (props: Native) => ReactNode;
         return (
-          <BottomSheet open onOpenChange={noop} aria-label="s">
+          <BottomSheet.Root open onOpenChange={noop} aria-label="s">
             <Part {...p} />
-          </BottomSheet>
+          </BottomSheet.Root>
         );
       },
     ],
   ),
   [
-    'OptionList',
+    'OptionList.Root',
     (p) => (
-      <OptionList {...p} aria-label="l" value={null} onChange={noop}>
-        <Option value="a">a</Option>
-      </OptionList>
+      <OptionList.Root {...p} aria-label="l" value={null} onChange={noop}>
+        <OptionList.Option value="a">a</OptionList.Option>
+      </OptionList.Root>
     ),
   ],
   [
-    'Option',
+    'OptionList.Option',
     (p) => (
-      <OptionList aria-label="l" value={null} onChange={noop}>
-        <Option {...p} value="a">
+      <OptionList.Root aria-label="l" value={null} onChange={noop}>
+        <OptionList.Option {...p} value="a">
           a
-        </Option>
-      </OptionList>
+        </OptionList.Option>
+      </OptionList.Root>
     ),
   ],
-  ['Popover', (p) => <PopoverCase p={p} />],
-  ['Tooltip', (p) => <TooltipCase p={p} />],
+  ['Popover.Root', (p) => <PopoverCase p={p} />],
+  ['Tooltip.Root', (p) => <TooltipCase p={p} />],
 ];
 
 describe('every exported part', () => {
@@ -215,7 +211,7 @@ describe('composed handlers', () => {
     const onChange = vi.fn();
     function List({ block }: { block: boolean }) {
       return (
-        <OptionList
+        <OptionList.Root
           aria-label="l"
           value={null}
           onChange={onChange}
@@ -223,8 +219,8 @@ describe('composed handlers', () => {
             if (block) event.preventDefault();
           }}
         >
-          <Option value="a">a</Option>
-        </OptionList>
+          <OptionList.Option value="a">a</OptionList.Option>
+        </OptionList.Root>
       );
     }
     const { rerender } = render(<List block />);
@@ -250,18 +246,18 @@ describe('composed handlers', () => {
 
   it('keeps built-in names and focusability when a wrapper passes undefined through', () => {
     render(
-      <Dialog open onOpenChange={noop} aria-labelledby={undefined} tabIndex={undefined} data-testid="dlg">
+      <Dialog.Root open onOpenChange={noop} aria-labelledby={undefined} tabIndex={undefined} data-testid="dlg">
         <Dialog.Title>Save</Dialog.Title>
-      </Dialog>,
+      </Dialog.Root>,
     );
     const dialog = screen.getByTestId('dlg');
     expect(dialog.getAttribute('aria-labelledby')).toBe(screen.getByText('Save').id);
     expect(dialog.tabIndex).toBe(-1);
     cleanup();
     render(
-      <BottomSheet open onOpenChange={noop} aria-describedby={undefined} tabIndex={undefined} data-testid="sheet">
+      <BottomSheet.Root open onOpenChange={noop} aria-describedby={undefined} tabIndex={undefined} data-testid="sheet">
         <BottomSheet.Description>More</BottomSheet.Description>
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     const sheet = screen.getByTestId('sheet');
     expect(sheet.getAttribute('aria-describedby')).toBe(screen.getByText('More').id);
@@ -272,9 +268,9 @@ describe('composed handlers', () => {
     function Harness() {
       const popover = usePopover({ open: true });
       return (
-        <Popover {...popover.getPopoverProps()} tabIndex={0} aria-label="Menu">
+        <Popover.Root {...popover.getPopoverProps()} tabIndex={0} aria-label="Menu">
           Menu
-        </Popover>
+        </Popover.Root>
       );
     }
     render(<Harness />);
@@ -299,9 +295,9 @@ describe('composed handlers', () => {
     function Harness() {
       const ref = useRef<HTMLDialogElement>(null);
       return (
-        <Dialog ref={ref} open onOpenChange={onOpenChange} onClick={onClick} aria-label="d" data-testid="dlg">
+        <Dialog.Root ref={ref} open onOpenChange={onOpenChange} onClick={onClick} aria-label="d" data-testid="dlg">
           x
-        </Dialog>
+        </Dialog.Root>
       );
     }
     render(<Harness />);
@@ -328,22 +324,22 @@ describe('composeRefs', () => {
 describe('wrapped parts', () => {
   function AcmeOption({ value, label, disabled }: { value: string; label: string; disabled?: boolean }) {
     return (
-      <Option value={value} disabled={disabled}>
+      <OptionList.Option value={value} disabled={disabled}>
         {label}
-      </Option>
+      </OptionList.Option>
     );
   }
 
   it('keeps keyboard order and disabled state for options inside a company wrapper', () => {
     const onChange = vi.fn();
     render(
-      <OptionList aria-label="Fruit" value={null} onChange={onChange}>
+      <OptionList.Root aria-label="Fruit" value={null} onChange={onChange}>
         <AcmeOption value="a" label="A" />
         <div>
           <AcmeOption value="b" label="B" disabled />
         </div>
         <AcmeOption value="c" label="C" />
-      </OptionList>,
+      </OptionList.Root>,
     );
     const list = screen.getByRole('listbox');
     fireEvent.keyDown(list, { key: 'ArrowDown' });
@@ -355,11 +351,11 @@ describe('wrapped parts', () => {
     const onChange = vi.fn();
     function List({ order }: { order: string[] }) {
       return (
-        <OptionList aria-label="Fruit" value={null} onChange={onChange}>
+        <OptionList.Root aria-label="Fruit" value={null} onChange={onChange}>
           {order.map((v) => (
             <AcmeOption key={v} value={v} label={v.toUpperCase()} />
           ))}
-        </OptionList>
+        </OptionList.Root>
       );
     }
     const { rerender } = render(<List order={['a', 'b', 'c']} />);
@@ -398,9 +394,9 @@ describe('wrapped parts', () => {
       return <BottomSheet.Grabber data-testid="acme-grabber" aria-label="Drag" />;
     }
     render(
-      <BottomSheet open onOpenChange={noop} aria-label="s">
+      <BottomSheet.Root open onOpenChange={noop} aria-label="s">
         <AcmeGrabber />
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     expect(screen.getByTestId('acme-grabber')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: /drag|resize sheet/i })).toHaveLength(1);
@@ -433,15 +429,15 @@ describe('wrapped parts that change on their own', () => {
       const [order, setOrder] = useState(['a', 'b', 'c']);
       reverse = () => setOrder(['c', 'b', 'a']);
       return order.map((v) => (
-        <Option key={v} value={v}>
+        <OptionList.Option key={v} value={v}>
           {v.toUpperCase()}
-        </Option>
+        </OptionList.Option>
       ));
     }
     render(
-      <OptionList aria-label="Fruit" value={null} onChange={onChange}>
+      <OptionList.Root aria-label="Fruit" value={null} onChange={onChange}>
         <AcmeOptions />
-      </OptionList>,
+      </OptionList.Root>,
     );
     act(() => reverse());
     const list = screen.getByRole('listbox');
@@ -466,9 +462,9 @@ describe('wrapped parts that change on their own', () => {
       return <BottomSheet.Grabber aria-label="Drag" />;
     }
     render(
-      <BottomSheet open onOpenChange={noop} aria-label="s">
+      <BottomSheet.Root open onOpenChange={noop} aria-label="s">
         <AcmeGrabber />
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Drag' })));
   });
@@ -493,13 +489,13 @@ it('sorts a large option list a bounded number of times while mounting', () => {
   const values = Array.from({ length: 300 }, (_, i) => `v${i}`);
   const compare = vi.spyOn(Node.prototype, 'compareDocumentPosition');
   render(
-    <OptionList aria-label="Many" value={null} onChange={noop}>
+    <OptionList.Root aria-label="Many" value={null} onChange={noop}>
       {values.map((v) => (
-        <Option key={v} value={v}>
+        <OptionList.Option key={v} value={v}>
           {v}
-        </Option>
+        </OptionList.Option>
       ))}
-    </OptionList>,
+    </OptionList.Root>,
   );
   // A few renders of one n·log n sort each, not one sort per option.
   expect(compare.mock.calls.length).toBeLessThan(300 * 9 * 6);
@@ -524,10 +520,10 @@ it('tips only the overflowing label text, not nested badges', () => {
 
 it('marks the active option in server HTML', () => {
   const html = renderToString(
-    <OptionList aria-label="Fruit" value="b" onChange={noop}>
-      <Option value="a">A</Option>
-      <Option value="b">B</Option>
-    </OptionList>,
+    <OptionList.Root aria-label="Fruit" value="b" onChange={noop}>
+      <OptionList.Option value="a">A</OptionList.Option>
+      <OptionList.Option value="b">B</OptionList.Option>
+    </OptionList.Root>,
   );
   expect(html).toMatch(/aria-activedescendant="[^"]*b[^"]*"/);
 });

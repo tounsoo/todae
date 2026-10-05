@@ -24,7 +24,7 @@ Overflowing label.
   <ButtonOverflow />
 </Example>
 
-## ButtonGroup
+## Button.Group
 
 Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overlap by 1px and share the outer radius. No selection state.
 
@@ -38,7 +38,7 @@ Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overl
 
 **When:** One action in a native button. Variants primary / secondary / ghost; default `type="button"`. Icon-only needs `aria-label`, which it auto-tips.
 
-**When not:** Navigation → native link (no Link shipped). On/off state → Switch or Checkbox. Selected segment → Radio (ButtonGroup has no selection).
+**When not:** Navigation → native link (no Link shipped). On/off state → Switch or Checkbox. Selected segment → Radio (Button.Group has no selection).
 
 ### Button.Icon
 
@@ -46,7 +46,7 @@ Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overl
 
 **When not:** Icon in a field → `Field.Icon`. Icon as the only name with no `aria-label` on Root. Outside `Button.Root`.
 
-### ButtonGroup
+### Button.Group
 
 **When:** Attached horizontal row of related `Button.Root` actions (`role="group"`). Name it with `aria-label`.
 
@@ -58,4 +58,4 @@ Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overl
 
 <PropsTable name="Button.Icon" />
 
-<PropsTable name="ButtonGroup" />
+<PropsTable name="Button.Group" />

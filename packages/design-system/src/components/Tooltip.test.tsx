@@ -8,7 +8,7 @@ import * as api from '../index';
 import { useTooltip, type TooltipOpenReason, type UseTooltipOptions } from '../hooks/useTooltip';
 import { resetMatchMedia, setMatchMedia } from '../test/setup';
 import { Chip } from './Chip';
-import { Tooltip, type TooltipContentName, type TooltipProps } from './Tooltip';
+import { Tooltip, type TooltipContentName, type TooltipRootProps } from './Tooltip';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, 'Tooltip.tsx'), 'utf8');
@@ -43,7 +43,7 @@ function DefaultTip(
       <button type="button" {...tooltip.getTriggerProps()}>
         {label ?? 'Hint'}
       </button>
-      <Tooltip {...tooltip.getTooltipProps()}>{tip ?? 'Archive'}</Tooltip>
+      <Tooltip.Root {...tooltip.getTooltipProps()}>{tip ?? 'Archive'}</Tooltip.Root>
     </>
   );
 }
@@ -63,9 +63,9 @@ function InteractiveTip({
       <button type="button" {...tooltip.getTriggerProps()}>
         Hint
       </button>
-      <Tooltip {...tooltip.getTooltipProps()} {...name}>
+      <Tooltip.Root {...tooltip.getTooltipProps()} {...name}>
         Short prose. <a href="/tooltip">Read the policy</a>
-      </Tooltip>
+      </Tooltip.Root>
     </>
   );
 }
@@ -76,21 +76,21 @@ describe('Tooltip exports', () => {
     expect(api.useTooltip).toBeDefined();
     expect(Tooltip).not.toHaveProperty('Trigger');
     expect(Tooltip).not.toHaveProperty('Content');
-    expectTypeOf<TooltipProps>().toHaveProperty('id');
-    expectTypeOf<TooltipProps>().toHaveProperty('open');
-    expectTypeOf<TooltipProps>().toHaveProperty('interactive');
-    expectTypeOf<TooltipProps>().toHaveProperty('ref');
-    expectTypeOf<TooltipProps>().toHaveProperty('style');
-    expectTypeOf<TooltipProps>().not.toHaveProperty('showDelay');
-    expectTypeOf<TooltipProps>().not.toHaveProperty('hideDelay');
-    expectTypeOf<TooltipProps>().not.toHaveProperty('onOpenChange');
-    expectTypeOf<TooltipProps>().not.toHaveProperty('enabled');
-    expectTypeOf<TooltipProps>().not.toHaveProperty('onClick');
+    expectTypeOf<TooltipRootProps>().toHaveProperty('id');
+    expectTypeOf<TooltipRootProps>().toHaveProperty('open');
+    expectTypeOf<TooltipRootProps>().toHaveProperty('interactive');
+    expectTypeOf<TooltipRootProps>().toHaveProperty('ref');
+    expectTypeOf<TooltipRootProps>().toHaveProperty('style');
+    expectTypeOf<TooltipRootProps>().not.toHaveProperty('showDelay');
+    expectTypeOf<TooltipRootProps>().not.toHaveProperty('hideDelay');
+    expectTypeOf<TooltipRootProps>().not.toHaveProperty('onOpenChange');
+    expectTypeOf<TooltipRootProps>().not.toHaveProperty('enabled');
+    expectTypeOf<TooltipRootProps>().not.toHaveProperty('onClick');
     expectTypeOf<TooltipOpenReason>().toEqualTypeOf<'hover' | 'focus' | 'escape' | 'hover-bridge'>();
   });
 
   it('accepts exactly one accessible name when interactive', () => {
-    const labelled: TooltipProps = {
+    const labelled: TooltipRootProps = {
       id: 'p',
       open: true,
       interactive: true,
@@ -100,7 +100,7 @@ describe('Tooltip exports', () => {
       onPointerLeave: () => {},
       'aria-label': 'Policy',
     };
-    const captioned: TooltipProps = {
+    const captioned: TooltipRootProps = {
       id: 'p',
       open: true,
       interactive: true,
@@ -116,7 +116,7 @@ describe('Tooltip exports', () => {
     expectTypeOf<{ 'aria-labelledby': string }>().toMatchTypeOf<TooltipContentName>();
     expectTypeOf<{ 'aria-label': string; 'aria-labelledby': string }>().not.toMatchTypeOf<TooltipContentName>();
     expectTypeOf<Record<string, never>>().not.toMatchTypeOf<TooltipContentName>();
-    expectTypeOf<{ interactive: true; id: string; open: boolean }>().not.toMatchTypeOf<TooltipProps>();
+    expectTypeOf<{ interactive: true; id: string; open: boolean }>().not.toMatchTypeOf<TooltipRootProps>();
     expectTypeOf<{
       interactive: true;
       id: string;
@@ -126,7 +126,7 @@ describe('Tooltip exports', () => {
       onPointerEnter: () => void;
       onPointerLeave: () => void;
       'aria-label': string;
-    }>().toMatchTypeOf<TooltipProps>();
+    }>().toMatchTypeOf<TooltipRootProps>();
     expectTypeOf<{
       interactive: true;
       id: string;
@@ -136,7 +136,7 @@ describe('Tooltip exports', () => {
       onPointerEnter: () => void;
       onPointerLeave: () => void;
       'aria-labelledby': string;
-    }>().toMatchTypeOf<TooltipProps>();
+    }>().toMatchTypeOf<TooltipRootProps>();
     expectTypeOf<{
       interactive: true;
       id: string;
@@ -147,8 +147,8 @@ describe('Tooltip exports', () => {
       onPointerLeave: () => void;
       'aria-label': string;
       'aria-labelledby': string;
-    }>().not.toMatchTypeOf<TooltipProps>();
-    expectTypeOf<{ id: string; open: boolean }>().not.toMatchTypeOf<TooltipProps>();
+    }>().not.toMatchTypeOf<TooltipRootProps>();
+    expectTypeOf<{ id: string; open: boolean }>().not.toMatchTypeOf<TooltipRootProps>();
   });
 });
 
@@ -221,7 +221,7 @@ describe('Tooltip', () => {
     expect(screen.getByRole('tooltip')).toBeTruthy();
   });
 
-  it('describes a ChipOverflow wrap the author marks tabbable', () => {
+  it('describes a Chip.Overflow wrap the author marks tabbable', () => {
     function OverflowTip() {
       const tooltip = useTooltip({ defaultOpen: true });
       return (
@@ -229,7 +229,7 @@ describe('Tooltip', () => {
           <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>
             <Chip.Overflow overflowCount={2} />
           </span>
-          <Tooltip {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip>
+          <Tooltip.Root {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip.Root>
         </>
       );
     }

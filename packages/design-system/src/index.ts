@@ -1,26 +1,24 @@
 'use client';
 
-export { BottomSheet, type BottomSheetProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet';
+export { BottomSheet, type BottomSheetRootProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet';
 export {
   Button,
-  ButtonGroup,
   type ButtonGroupProps,
   type ButtonIconProps,
   type ButtonRootProps,
   type ButtonVariant,
   type ButtonVariants,
 } from './components/Button';
-export { Dialog, type DialogCloseReason, type DialogProps } from './components/Dialog';
+export { Dialog, type DialogCloseReason, type DialogRootProps } from './components/Dialog';
 export { composeRefs } from './components/props';
 export {
-  Option,
   OptionList,
   type OptionListMultipleProps,
-  type OptionListProps,
+  type OptionListOptionProps,
+  type OptionListRootProps,
   type OptionListSingleProps,
-  type OptionProps,
 } from './components/OptionList';
-export { Popover, type PopoverProps } from './components/Popover';
+export { Popover, type PopoverRootProps } from './components/Popover';
 export {
   usePopover,
   type PopoverCloseReason,
@@ -30,7 +28,7 @@ export {
   type UsePopoverOptions,
   type UsePopoverResult,
 } from './hooks/usePopover';
-export { Tooltip, type TooltipContentName, type TooltipProps } from './components/Tooltip';
+export { Tooltip, type TooltipContentName, type TooltipRootProps } from './components/Tooltip';
 export {
   useTooltip,
   type TooltipOpenReason,
@@ -41,7 +39,7 @@ export {
   type UseTooltipResult,
 } from './hooks/useTooltip';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
-export { Chip, ChipOverflow, type ChipOverflowProps, type ChipProps } from './components/Chip';
+export { Chip, type ChipOverflowProps, type ChipRootProps } from './components/Chip';
 export { Description, type DescriptionProps } from './components/Description';
 export { ErrorMessage, type ErrorMessageProps } from './components/ErrorMessage';
 export { CHIP_COMMIT_KEYS, type ChipCommitKey } from './components/commitKeys';
@@ -59,11 +57,10 @@ export {
 } from './components/Field';
 export { Label, type LabelProps } from './components/Label';
 export {
-  Radio,
   RadioGroup,
   type RadioGroupOrientation,
-  type RadioGroupProps,
-  type RadioProps,
+  type RadioGroupItemProps,
+  type RadioGroupRootProps,
 } from './components/Radio';
 export { Switch, type SwitchProps } from './components/Switch';
 export { Stack, type StackProps, type StackDirection } from './components/Stack';

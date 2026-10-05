@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Popover',
+  name: 'Popover.Root',
   description: 'Surface chrome. Spread getPopoverProps for wire.',
   props: [
     {

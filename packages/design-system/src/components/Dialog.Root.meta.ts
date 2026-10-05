@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Dialog',
+  name: 'Dialog.Root',
   description: 'Controlled native modal dialog. Stays centered. No sheet morph.',
   props: [
     {

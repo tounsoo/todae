@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Tooltip',
+  name: 'Tooltip.Root',
   description: 'Tip chrome. Spread getTooltipProps for wire.',
   props: [
     {

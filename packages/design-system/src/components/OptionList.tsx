@@ -21,7 +21,7 @@ import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './OptionList.module.css';
 
 /** `id` is derived from the list and value so `aria-activedescendant` can point at it. */
-export type OptionProps = {
+export type OptionListOptionProps = {
   value: string;
   children: string;
   disabled?: boolean;
@@ -50,7 +50,7 @@ export type OptionListMultipleProps = OptionListBase & {
   onChange: (value: string[]) => void;
 };
 
-export type OptionListProps = OptionListSingleProps | OptionListMultipleProps;
+export type OptionListRootProps = OptionListSingleProps | OptionListMultipleProps;
 
 type OptionListContextValue = {
   listId: string;
@@ -71,7 +71,7 @@ function useOptionList(): OptionListContextValue {
   return ctx;
 }
 
-function isMultiple(props: OptionListProps): props is OptionListMultipleProps {
+function isMultiple(props: OptionListRootProps): props is OptionListMultipleProps {
   return props.selectionMode === 'multiple';
 }
 
@@ -87,14 +87,23 @@ function byDocumentOrder(a: OptionEntry, b: OptionEntry): number {
 function hintOptions(children: ReactNode): { value: string; disabled: boolean }[] {
   return Children.toArray(children).flatMap((child) => {
     if (!isValidElement<{ value?: unknown; disabled?: boolean; children?: ReactNode }>(child)) return [];
-    if (child.type === Option && typeof child.props.value === 'string') {
+    if (child.type === OptionListOption && typeof child.props.value === 'string') {
       return [{ value: child.props.value, disabled: Boolean(child.props.disabled) }];
     }
     return child.type === Fragment ? hintOptions(child.props.children) : [];
   });
 }
 
-export function Option({ value, children, disabled, className, onMouseDown, onClick, ref, ...props }: OptionProps) {
+function OptionListOption({
+  value,
+  children,
+  disabled,
+  className,
+  onMouseDown,
+  onClick,
+  ref,
+  ...props
+}: OptionListOptionProps) {
   const ctx = useOptionList();
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const refs = useComposedRefs(nodeRef, ref);
@@ -133,7 +142,7 @@ export function Option({ value, children, disabled, className, onMouseDown, onCl
   );
 }
 
-export function OptionList(props: OptionListProps) {
+function OptionListRoot(props: OptionListRootProps) {
   const {
     children,
     className,
@@ -288,4 +297,4 @@ export function OptionList(props: OptionListProps) {
   );
 }
 
-OptionList.Option = Option;
+export const OptionList = { Root: OptionListRoot, Option: OptionListOption } as const;

@@ -1,6 +1,6 @@
 'use client';
 
-import { Description, Radio, RadioGroup, Text } from '@tounsoo/todae';
+import { Description, RadioGroup, Text } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 export function RadioPlan() {
@@ -12,15 +12,15 @@ export function RadioPlan() {
       <Text as="span" id={captionId} size="s" weight="medium">
         Plan
       </Text>
-      <RadioGroup aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
-        <Radio value="free">Free</Radio>
-        <Radio value="pro" aria-describedby={proHintId}>
+      <RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
+        <RadioGroup.Item value="free">Free</RadioGroup.Item>
+        <RadioGroup.Item value="pro" aria-describedby={proHintId}>
           Pro
-        </Radio>
-        <Radio value="enterprise" disabled>
+        </RadioGroup.Item>
+        <RadioGroup.Item value="enterprise" disabled>
           Enterprise
-        </Radio>
-      </RadioGroup>
+        </RadioGroup.Item>
+      </RadioGroup.Root>
       <Description id={proHintId}>Pro adds seats and audit logs.</Description>
     </div>
   );

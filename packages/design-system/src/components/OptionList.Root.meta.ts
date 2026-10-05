@@ -1,9 +1,9 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'OptionList',
+  name: 'OptionList.Root',
   description:
-    'Overlay listbox. Single or multiple. Use Radio or Checkbox for a permanent choice on the page.',
+    'Overlay listbox. Single or multiple. Use RadioGroup or Checkbox for a permanent choice on the page.',
   props: [
     {
       name: 'selectionMode',

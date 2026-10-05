@@ -1,16 +1,16 @@
 'use client';
 
-import { Chip, ChipOverflow } from '@tounsoo/todae';
+import { Chip } from '@tounsoo/todae';
 
 export function ChipExamples() {
   return (
     <>
-      <Chip>Default</Chip>
-      <Chip onDismiss={() => undefined}>Dismissible</Chip>
-      <Chip disabled onDismiss={() => undefined}>
+      <Chip.Root>Default</Chip.Root>
+      <Chip.Root onDismiss={() => undefined}>Dismissible</Chip.Root>
+      <Chip.Root disabled onDismiss={() => undefined}>
         Disabled
-      </Chip>
-      <ChipOverflow overflowCount={4} />
+      </Chip.Root>
+      <Chip.Overflow overflowCount={4} />
     </>
   );
 }
