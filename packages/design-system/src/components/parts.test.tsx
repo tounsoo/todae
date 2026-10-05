@@ -1,5 +1,6 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { createRef, useRef, type ReactNode, type RefObject } from 'react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { createRef, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   BottomSheet,
@@ -403,4 +404,86 @@ describe('wrapped parts', () => {
     expect(screen.getByTestId('acme-grabber')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: /drag|resize sheet/i })).toHaveLength(1);
   });
+});
+
+describe('wrapped parts that change on their own', () => {
+  it('re-reads a button whose child swaps an icon for text from its own state', async () => {
+    let swap: () => void = noop;
+    function Toggle() {
+      const [text, setText] = useState(false);
+      swap = () => setText(true);
+      return text ? <>Saved</> : <Button.Icon>+</Button.Icon>;
+    }
+    render(
+      <Button.Root aria-label="Save" data-testid="btn">
+        <Toggle />
+      </Button.Root>,
+    );
+    const button = screen.getByTestId('btn');
+    expect(button.hasAttribute('data-icon-only')).toBe(true);
+    act(() => swap());
+    await waitFor(() => expect(button.hasAttribute('data-icon-only')).toBe(false));
+  });
+
+  it('re-sorts options that a wrapper reorders from its own state', async () => {
+    const onChange = vi.fn();
+    let reverse: () => void = noop;
+    function AcmeOptions() {
+      const [order, setOrder] = useState(['a', 'b', 'c']);
+      reverse = () => setOrder(['c', 'b', 'a']);
+      return order.map((v) => (
+        <Option key={v} value={v}>
+          {v.toUpperCase()}
+        </Option>
+      ));
+    }
+    render(
+      <OptionList aria-label="Fruit" value={null} onChange={onChange}>
+        <AcmeOptions />
+      </OptionList>,
+    );
+    act(() => reverse());
+    const list = screen.getByRole('listbox');
+    await waitFor(() => {
+      fireEvent.keyDown(list, { key: 'Home' });
+      fireEvent.keyDown(list, { key: 'Enter' });
+      expect(onChange).toHaveBeenLastCalledWith('c');
+    });
+  });
+
+  it('marks a direct icon-only button in server HTML', () => {
+    const html = renderToString(
+      <Button.Root aria-label="Add">
+        <Button.Icon>+</Button.Icon>
+      </Button.Root>,
+    );
+    expect(html).toContain('data-icon-only');
+  });
+
+  it('focuses the placed grabber when a sheet mounts open with one', async () => {
+    function AcmeGrabber() {
+      return <BottomSheet.Grabber aria-label="Drag" />;
+    }
+    render(
+      <BottomSheet open onOpenChange={noop} aria-label="s">
+        <AcmeGrabber />
+      </BottomSheet>,
+    );
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Drag' })));
+  });
+});
+
+it('keeps the same button element when it gains a tooltip', () => {
+  function Late() {
+    return <Button.Icon>+</Button.Icon>;
+  }
+  const { rerender } = render(<Button.Root aria-label="Add" data-testid="b" />);
+  const first = screen.getByTestId('b');
+  rerender(
+    <Button.Root aria-label="Add" data-testid="b">
+      <Late />
+    </Button.Root>,
+  );
+  expect(screen.getByTestId('b')).toBe(first);
+  expect(first.hasAttribute('data-icon-only')).toBe(true);
 });

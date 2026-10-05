@@ -1,5 +1,7 @@
 import {
   Children,
+  isValidElement,
+  useCallback,
   useLayoutEffect,
   useRef,
   useState,
@@ -57,7 +59,26 @@ function readContent(button: HTMLElement): { hasIcon: boolean; text: string } {
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     if (node.nodeType === Node.TEXT_NODE) text += node.textContent ?? '';
   }
-  return { hasIcon: button.querySelector(`[${ICON_ATTR}]`) !== null, text: text.trim() };
+  return {
+    hasIcon: button.querySelector(`[${ICON_ATTR}]`) !== null,
+    text: text.trim(),
+  };
+}
+
+type Content = { hasIcon: boolean; text: string };
+
+// Server-render hint only, used until the button can be read: icon-only when
+// every direct child is a Button.Icon. The read after layout is what counts,
+// and it also sees icons inside wrappers.
+function hint(children: ReactNode): { iconOnly: boolean; text: string } {
+  const items = Children.toArray(children);
+  return {
+    iconOnly: items.length > 0 && items.every((child) => isValidElement(child) && child.type === Icon),
+    text: items
+      .map((child) => (typeof child === 'string' || typeof child === 'number' ? String(child) : ''))
+      .join('')
+      .trim(),
+  };
 }
 
 function Root({
@@ -75,8 +96,10 @@ function Root({
   ...props
 }: ButtonRootProps) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const [content, setContent] = useState({ hasIcon: false, text: '' });
-  const iconOnly = content.hasIcon && content.text === '';
+  const [read, setRead] = useState<Content | null>(null);
+  const guess = read ? null : hint(children);
+  const iconOnly = read ? read.hasIcon && read.text === '' : guess!.iconOnly;
+  const contentText = read ? read.text : guess!.text;
   const [labelledbyText, setLabelledbyText] = useState<string | null | undefined>(undefined);
   const [overflowing, setOverflowing] = useState(false);
   const labelRef = useRef<HTMLSpanElement | null>(null);
@@ -91,12 +114,28 @@ function Root({
     setLabelledbyText(text || null);
   }, [labelledby]);
 
-  useLayoutEffect(() => {
+  const readButton = useCallback(() => {
     const button = buttonRef.current;
     if (!button) return;
     const next = readContent(button);
-    setContent((prev) => (prev.hasIcon === next.hasIcon && prev.text === next.text ? prev : next));
-  });
+    setRead((prev) => (prev?.hasIcon === next.hasIcon && prev.text === next.text ? prev : next));
+  }, []);
+
+  useLayoutEffect(readButton);
+
+  // A child can swap an icon for text from its own state without this
+  // component rendering again.
+  useLayoutEffect(() => {
+    const button = buttonRef.current;
+    if (!button || typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(readButton);
+    observer.observe(button, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    return () => observer.disconnect();
+  }, [readButton]);
 
   useLayoutEffect(() => {
     const el = labelRef.current;
@@ -124,7 +163,7 @@ function Root({
     }
   }, [unnamed]);
 
-  const textName = iconOnly ? null : content.text;
+  const textName = iconOnly ? null : contentText;
   const tipText = !tooltip ? null : iconOnly ? iconName : overflowing && textName ? textName : null;
   const tip = useTooltip({ enabled: tipText != null });
   const refs = useComposedRefs(buttonRef, ref);
@@ -140,18 +179,18 @@ function Root({
         })
       : { ref: refs, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
 
-  const rendered = iconOnly
-    ? children
-    : Children.map(children, (child) => {
-        if (typeof child === 'string' || typeof child === 'number') {
-          return (
-            <span className={styles.label} ref={labelRef}>
-              {child}
-            </span>
-          );
-        }
-        return child;
-      });
+  // Always mapped: switching between mapped and raw children would re-key
+  // and remount them whenever icon-only detection changes.
+  const rendered = Children.map(children, (child) => {
+    if (typeof child === 'string' || typeof child === 'number') {
+      return (
+        <span className={styles.label} ref={labelRef}>
+          {child}
+        </span>
+      );
+    }
+    return child;
+  });
 
   const button = (
     <button
@@ -166,11 +205,12 @@ function Root({
     </button>
   );
 
-  if (tipText == null) return button;
+  // One shape whether or not a tip shows, so gaining a tip never remounts
+  // the button and its children.
   return (
     <>
       {button}
-      <Tooltip {...tip.getTooltipProps()}>{tipText}</Tooltip>
+      {tipText == null ? null : <Tooltip {...tip.getTooltipProps()}>{tipText}</Tooltip>}
     </>
   );
 }

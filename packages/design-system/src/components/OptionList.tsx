@@ -131,8 +131,11 @@ export function OptionList(props: OptionListProps) {
     onKeyDown: onKeyDownProp,
     onPointerUp,
     onPointerCancel,
+    ref,
     ...rest
   } = props;
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const listRefs = useComposedRefs(listRef, ref);
   const autoId = useId();
   const listId = id ?? autoId;
   const multiple = isMultiple(props);
@@ -141,13 +144,22 @@ export function OptionList(props: OptionListProps) {
     setEntries((prev) => [...prev, entry].sort(byDocumentOrder));
     return () => setEntries((prev) => prev.filter((item) => item !== entry));
   }, []);
-  // Keyed options can move without re-registering; re-sort once they have.
-  useLayoutEffect(() => {
+  // Keyed options can move without re-registering, and a wrapper can move them
+  // from its own state without this list rendering; re-sort when they do.
+  const resort = useCallback(() => {
     setEntries((prev) => {
       const sorted = [...prev].sort(byDocumentOrder);
       return sorted.every((entry, i) => entry === prev[i]) ? prev : sorted;
     });
-  });
+  }, []);
+  useLayoutEffect(resort);
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(resort);
+    observer.observe(list, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [resort]);
   const enabled = entries.filter((option) => !option.disabled).map((option) => option.value);
   const selected = useMemo(() => {
     if (isMultiple(props)) return new Set(props.value);
@@ -233,6 +245,7 @@ export function OptionList(props: OptionListProps) {
     <OptionListContext.Provider value={ctx}>
       <div
         {...rest}
+        ref={listRefs}
         role="listbox"
         id={listId}
         tabIndex={tabIndex ?? 0}
