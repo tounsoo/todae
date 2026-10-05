@@ -60,9 +60,10 @@ describe('docs demos under axe', () => {
 });
 
 // Overlays are closed on first render, so axe above never sees their contents.
-// Open each one from its demo's first button and check again.
+// Open each one and check again: from a combobox field when the demo has one,
+// else from its first button.
 describe('docs demos under axe, overlay open', () => {
-  const overlayDemos = demos.filter(({ file }) => OVERLAY_DEMOS.has(file));
+  const overlayDemos = demos.filter(({ file, name }) => OVERLAY_DEMOS.has(file) && !NO_OVERLAY.has(name));
 
   it('found the overlay demos', () => {
     expect(new Set(overlayDemos.map((d) => d.file))).toEqual(OVERLAY_DEMOS);
@@ -80,17 +81,30 @@ describe('docs demos under axe, overlay open', () => {
         </Providers>,
       );
       await settle();
-      const [first] = within(container).queryAllByRole('button');
-      if (!first) return;
-      await userEvent.click(first);
-      await settle();
-      if (!openOverlay()) return;
+      await openFirstOverlay(container);
+      expect(openOverlay(), 'no overlay opened').toBe(true);
       expect(await violations()).toEqual([]);
     });
   }
 });
 
 const OVERLAY_DEMOS = new Set(['BottomSheetDemo.tsx', 'DialogDemo.tsx', 'PopoverDemo.tsx', 'ComboboxDemo.tsx']);
+
+async function openFirstOverlay(container: HTMLElement) {
+  const scope = within(container);
+  const [field] = scope.queryAllByRole('combobox').filter((el) => el.tagName === 'INPUT');
+  if (field) {
+    await userEvent.click(field);
+    await userEvent.keyboard('{ArrowDown}');
+  } else {
+    const [first] = scope.queryAllByRole('button');
+    if (first) await userEvent.click(first);
+  }
+  await settle();
+}
+
+// Exports in those files that render no overlay.
+const NO_OVERLAY = new Set(['PresentationBadge']);
 
 function openOverlay(): boolean {
   return document.querySelector('dialog[open], [role="dialog"][aria-modal="true"], :popover-open') != null;

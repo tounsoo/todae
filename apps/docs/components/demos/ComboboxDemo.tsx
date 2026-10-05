@@ -119,7 +119,7 @@ export function ComboboxSheet() {
         <BottomSheet.Body>
           <div className="labelled-field">
             <Label htmlFor={cb.ids.input}>Search</Label>
-            <Field.Root>
+            <Field.Root id={cb.ids.input}>
               <Field.Icon>
                 <Search />
               </Field.Icon>
@@ -156,7 +156,7 @@ export function ComboboxAuto() {
           </Button.Root>
           <BottomSheet.Root {...cb.getSheetProps()}>
             <BottomSheet.Body>
-              <Field.Root aria-label="Framework">
+              <Field.Root id={cb.ids.input} aria-label="Framework">
                 <Field.TextInput {...cb.getInputProps()} />
               </Field.Root>
               <OptionList.Root {...cb.getListboxProps()}>
@@ -224,11 +224,11 @@ export function ComboboxAsync() {
               Retry
             </Button.Root>
           </div>
-        ) : (
-          <OptionList.Root {...cb.getListboxProps()}>
-            {optionNodes(cb.items, cb.getOptionProps)}
-          </OptionList.Root>
-        )}
+        ) : null}
+        {/* Keep the listbox mounted: the input's aria-controls points at it. */}
+        <OptionList.Root {...cb.getListboxProps()} hidden={cb.loading || cb.error != null}>
+          {optionNodes(cb.items, cb.getOptionProps)}
+        </OptionList.Root>
       </Popover.Root>
     </div>
   );

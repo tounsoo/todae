@@ -70,7 +70,7 @@ const cb = useCombobox({ options, presentation: 'sheet' })
 
 <Button.Root {...cb.getTriggerProps()}>{selected}</Button.Root>
 <BottomSheet.Root {...cb.getSheetProps()}>
-  <Field.Root aria-label="Search">
+  <Field.Root id={cb.ids.input} aria-label="Search">
     <Field.TextInput {...cb.getInputProps()} />
   </Field.Root>
   <OptionList.Root {...cb.getListboxProps()}>…</OptionList.Root>
