@@ -14,7 +14,8 @@ export const meta = {
       name: 'onOpenChange',
       type: '(open: boolean, reason: DialogCloseReason) => void',
       required: true,
-      description: 'Dismiss requests. Staying open keeps the dialog open.',
+      description:
+        'Dismiss requests. Staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method="dialog"> submit; the submitter value is on the element returnValue), native (something else closed the element).',
     },
     {
       name: 'dismissOnEscape',

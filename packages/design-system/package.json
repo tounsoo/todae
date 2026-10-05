@@ -11,6 +11,18 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./stack": {
+      "types": "./dist/server/stack.d.ts",
+      "import": "./dist/stack.js"
+    },
+    "./text": {
+      "types": "./dist/server/text.d.ts",
+      "import": "./dist/text.js"
+    },
+    "./label": {
+      "types": "./dist/server/label.d.ts",
+      "import": "./dist/label.js"
+    },
     "./todae.css": "./dist/todae.css",
     "./schema/components.json": "./schema/components.json",
     "./tokens.json": "./tokens/tokens.generated.json",

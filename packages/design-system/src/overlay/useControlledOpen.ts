@@ -7,7 +7,9 @@ export type OverlayCloseReason =
   | 'drag'
   | 'close-button'
   | 'outside'
-  | 'trigger';
+  | 'trigger'
+  | 'form'
+  | 'native';
 
 export function useControlledOpen({
   open,

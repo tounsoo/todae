@@ -20,7 +20,18 @@ import { useScrollLock } from '../overlay/useScrollLock';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Dialog.module.css';
 
-export type DialogCloseReason = Extract<OverlayCloseReason, 'escape' | 'backdrop' | 'close-button'>;
+const CANCEL_CLOSE_WINDOW_MS = 500;
+
+/**
+ * Why the dialog asked to close. `form` is a `<form method="dialog">` submit
+ * (read the submitter's value from the element's `returnValue`); `native` is
+ * anything else that closed the `<dialog>` element, such as a script calling
+ * `close()`.
+ */
+export type DialogCloseReason = Extract<
+  OverlayCloseReason,
+  'escape' | 'backdrop' | 'close-button' | 'form' | 'native'
+>;
 
 export type DialogRootProps = {
   open: boolean;
@@ -127,6 +138,7 @@ function DialogRoot({
   ref,
   onPointerDown,
   onClick,
+  onSubmit,
   ...props
 }: DialogRootProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -159,16 +171,25 @@ function DialogRoot({
     if (!present && el.open) el.close();
   }, [present]);
 
+  // Chrome may close on Escape even though cancel was prevented. Its close
+  // event comes a task later, so a close shortly after a cancel is an Escape.
+  const cancelledAt = useRef(-Infinity);
   const onCancel = useCallback(
     (event: Event) => {
+      cancelledAt.current = performance.now();
       event.preventDefault();
       if (dismissOnEscape) requestClose('escape');
     },
     [dismissOnEscape, requestClose],
   );
 
+  // Something outside Todae closed the element. Report it so the owner can
+  // sync `open`; the element is already closed, so there is no exit motion.
   const onNativeClose = useCallback(() => {
-    if (openRef.current) onOpenChange(false, 'escape');
+    if (!openRef.current) return;
+    const escaped = performance.now() - cancelledAt.current < CANCEL_CLOSE_WINDOW_MS;
+    cancelledAt.current = -Infinity;
+    onOpenChange(false, escaped ? 'escape' : 'native');
   }, [onOpenChange]);
 
   useLayoutEffect(() => {
@@ -198,6 +219,24 @@ function DialogRoot({
           // Always tracked, even when the consumer prevents it, so a later click
           // is judged by where its own press started.
           pointerOnDialog.current = event.target === dialogRef.current;
+        }}
+        onSubmit={(event) => {
+          onSubmit?.(event);
+          // A form inside that already prevented its submit keeps the dialog open, as natively.
+          if (event.defaultPrevented) return;
+          const native = event.nativeEvent as SubmitEvent;
+          const form = event.target as HTMLFormElement;
+          const submitter = native.submitter as HTMLButtonElement | HTMLInputElement | null;
+          const method = submitter?.getAttribute('formmethod') ?? form.getAttribute('method') ?? '';
+          // Natively the form closes its own nearest <dialog>, so a form portaled
+          // out of this element (still inside it in the React tree) is not ours.
+          if (method.toLowerCase() !== 'dialog' || form.closest('dialog') !== dialogRef.current) return;
+          // Close through onOpenChange instead of letting the browser close the
+          // element: the owner stays in control of `open`, and the exit motion runs.
+          event.preventDefault();
+          const dialog = dialogRef.current;
+          if (dialog) dialog.returnValue = submitter?.value ?? '';
+          requestClose('form');
         }}
         onClick={composeHandlers(onClick, (event) => {
           if (
