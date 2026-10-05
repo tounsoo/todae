@@ -26,6 +26,8 @@ const HREFS = [
   '/recipes/chip-list',
   '/recipes/combobox',
   '/tokens',
+  '/guides/build-on-todae',
+  '/platform',
   '/playground',
 ];
 
