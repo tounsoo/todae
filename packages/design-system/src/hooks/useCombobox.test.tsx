@@ -27,7 +27,7 @@ function SingleBox(props: Partial<UseComboboxSingleOptions> = {}) {
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
       </Field.Root>
-      <Popover.Root {...cb.getPopoverProps()} aria-label="Options">
+      <Popover.Root {...cb.getPopoverProps()}>
         <OptionList.Root {...cb.getListboxProps()}>
           {cb.items.map((item) => (
             <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
@@ -51,7 +51,7 @@ function MultiCreateBox({ onChange }: { onChange?: (value: string[]) => void } =
       <Field.Root {...cb.getAnchorProps()}>
         <Field.ChipInput {...cb.getChipInputProps()} />
       </Field.Root>
-      <Popover.Root {...cb.getPopoverProps()} aria-label="Options">
+      <Popover.Root {...cb.getPopoverProps()}>
         <OptionList.Root {...cb.getListboxProps()}>
           {cb.items.map((item) => (
             <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />

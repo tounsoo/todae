@@ -33,8 +33,9 @@ export function SiblingsAllowed() {
       <Button.Root tooltip={false} {...popover.getTriggerProps()}>
         {sort ?? 'Sort'}
       </Button.Root>
-      <Popover.Root {...popover.getPopoverProps()} aria-label="Sort">
+      <Popover.Root {...popover.getPopoverProps()}>
         <OptionList.Root
+          aria-label="Sort"
           value={sort}
           onChange={(next) => {
             setSort(next);

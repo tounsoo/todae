@@ -1,4 +1,5 @@
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, within } from '@testing-library/react';
+import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import type { ComponentType } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -52,9 +53,50 @@ describe('docs demos under axe', () => {
           </main>
         </Providers>,
       );
-      // Let effects, measurement and anchored layout settle.
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await settle();
       expect(await violations()).toEqual([]);
     });
   }
 });
+
+// Overlays are closed on first render, so axe above never sees their contents.
+// Open each one from its demo's first button and check again.
+describe('docs demos under axe, overlay open', () => {
+  const overlayDemos = demos.filter(({ file }) => OVERLAY_DEMOS.has(file));
+
+  it('found the overlay demos', () => {
+    expect(new Set(overlayDemos.map((d) => d.file))).toEqual(OVERLAY_DEMOS);
+  });
+
+  for (const { file, name, Demo } of overlayDemos) {
+    it(`${file} ${name}`, async () => {
+      const { container } = render(
+        <Providers>
+          <main>
+            <Example>
+              <Demo />
+            </Example>
+          </main>
+        </Providers>,
+      );
+      await settle();
+      const [first] = within(container).queryAllByRole('button');
+      if (!first) return;
+      await userEvent.click(first);
+      await settle();
+      if (!openOverlay()) return;
+      expect(await violations()).toEqual([]);
+    });
+  }
+});
+
+const OVERLAY_DEMOS = new Set(['BottomSheetDemo.tsx', 'DialogDemo.tsx', 'PopoverDemo.tsx', 'ComboboxDemo.tsx']);
+
+function openOverlay(): boolean {
+  return document.querySelector('dialog[open], [role="dialog"][aria-modal="true"], :popover-open') != null;
+}
+
+// Let effects, measurement, anchored layout and entry transitions settle.
+async function settle() {
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}

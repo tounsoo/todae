@@ -53,7 +53,7 @@ export function ComboboxTouchSketch() {
       >
         <BottomSheet.Header>
           <BottomSheet.Title>Search options</BottomSheet.Title>
-          <Field.Root>
+          <Field.Root aria-label="Filter options">
             <Field.TextInput
               ref={searchRef}
               value={query}
@@ -64,7 +64,7 @@ export function ComboboxTouchSketch() {
           </Field.Root>
         </BottomSheet.Header>
         <BottomSheet.Body>
-          <ul role="listbox" aria-label="Options">
+          <ul aria-label="Options">
             {matches.map((item) => (
               <li key={item}>
                 <button

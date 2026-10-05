@@ -2,7 +2,7 @@ import { PopoverMenu, PopoverVeto } from '../../components/demos/PopoverDemo';
 
 # Popover
 
-`usePopover` is the open machine. Spread `getTriggerProps` on the trigger. Spread `getPopoverProps` on `Popover.Root`. `Popover.Root` is surface chrome only: `children`, `className`, `style`, and an accessible name. There is no `Popover.Trigger` or `Popover.Content`. The TypeScript type limits `role` to `'dialog'` and then requires `aria-label` or `aria-labelledby`; a plain JS caller can pass any string and it will render.
+`usePopover` is the open machine. Spread `getTriggerProps` on the trigger. Spread `getPopoverProps` on `Popover.Root`. `Popover.Root` is surface chrome only: `children`, `className`, `style`, and, with `role="dialog"`, an accessible name. There is no `Popover.Trigger` or `Popover.Content`. ARIA prohibits a name on an element with no role, so a role-less popover takes none: the type rejects `aria-label` and `aria-labelledby` there, and the element drops them. Name what is inside instead, such as the `OptionList.Root` of a menu or combobox. With `role="dialog"`, the type requires `aria-label` or `aria-labelledby`.
 
 Non-modal `popover="manual"`. Outside click and Escape call `onOpenChange(false, reason)`. `hidePopover()` runs only after `open` is false, so a veto keeps it shown.
 
@@ -21,8 +21,8 @@ const { getTriggerProps, getPopoverProps } = usePopover()
 
 <>
   <Button.Root tooltip={false} {...getTriggerProps()}>Open</Button.Root>
-  <Popover.Root {...getPopoverProps()} aria-label="Menu">
-    <OptionList.Root selectionMode="single">…</OptionList.Root>
+  <Popover.Root {...getPopoverProps()}>
+    <OptionList.Root aria-label="Menu" selectionMode="single">…</OptionList.Root>
   </Popover.Root>
 </>
 ```

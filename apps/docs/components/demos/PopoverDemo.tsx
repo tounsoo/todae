@@ -13,8 +13,9 @@ export function PopoverMenu() {
       <Button.Root tooltip={false} {...popover.getTriggerProps()}>
         {value ?? 'Choose fruit'}
       </Button.Root>
-      <Popover.Root {...popover.getPopoverProps()} aria-label="Fruit">
+      <Popover.Root {...popover.getPopoverProps()}>
         <OptionList.Root
+          aria-label="Fruit"
           value={value}
           onChange={(next) => {
             setValue(next);
@@ -47,7 +48,7 @@ export function PopoverVeto() {
       <Button.Root tooltip={false} {...popover.getTriggerProps()}>
         Outside is vetoed
       </Button.Root>
-      <Popover.Root {...popover.getPopoverProps()} aria-label="Pinned">
+      <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Pinned">
         <Stack>
           Outside click calls onOpenChange but this stays open. Escape still closes.
           <Button.Root variant="secondary" onClick={() => setOpen(false)}>

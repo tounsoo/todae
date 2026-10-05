@@ -40,7 +40,7 @@ const cb = useCombobox({ options, presentation: 'popover' })
     <Field.Icon><Chevron /></Field.Icon>
   </Field.Root>
 </div>
-<Popover.Root {...cb.getPopoverProps()} aria-label="Framework">
+<Popover.Root {...cb.getPopoverProps()}>
   <OptionList.Root {...cb.getListboxProps()}>
     {cb.items.map((item) => (
       <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
@@ -70,7 +70,7 @@ const cb = useCombobox({ options, presentation: 'sheet' })
 
 <Button.Root {...cb.getTriggerProps()}>{selected}</Button.Root>
 <BottomSheet.Root {...cb.getSheetProps()}>
-  <Field.Root id={cb.ids.input}>
+  <Field.Root aria-label="Search">
     <Field.TextInput {...cb.getInputProps()} />
   </Field.Root>
   <OptionList.Root {...cb.getListboxProps()}>…</OptionList.Root>
