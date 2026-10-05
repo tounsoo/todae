@@ -560,3 +560,16 @@ it('detects an icon-only button rendered into an iframe', () => {
   act(() => root.unmount());
   frame.remove();
 });
+
+it('does not treat an icon beside an image as icon-only', () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(noop);
+  render(
+    <Button.Root data-testid="b">
+      <Button.Icon>*</Button.Icon>
+      <img alt="Settings" src="data:," />
+    </Button.Root>,
+  );
+  expect(screen.getByTestId('b').hasAttribute('data-icon-only')).toBe(false);
+  expect(error).not.toHaveBeenCalled();
+  error.mockRestore();
+});

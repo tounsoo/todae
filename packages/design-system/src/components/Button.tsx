@@ -48,10 +48,15 @@ export type ButtonGroupProps = {
 
 const ICON_ATTR = 'data-todae-button-icon';
 
+// Media outside an icon is content too: an <img alt> or a spinner can name or
+// fill the button.
+const MEDIA = new Set(['IMG', 'SVG', 'svg', 'CANVAS', 'VIDEO', 'PICTURE', 'OBJECT', 'IFRAME', 'INPUT']);
+
 // Icons are found in the rendered button, not by component type, so a
 // Button.Icon inside a company's own icon wrapper still counts.
-function readContent(button: HTMLElement): { hasIcon: boolean; text: string } {
+function readContent(button: HTMLElement): { hasIcon: boolean; text: string; media: boolean } {
   let text = '';
+  let media = false;
   // nodeType rather than instanceof, so a button rendered into an iframe works.
   const walker = button.ownerDocument.createTreeWalker(button, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
     acceptNode: (node) =>
@@ -61,14 +66,20 @@ function readContent(button: HTMLElement): { hasIcon: boolean; text: string } {
   });
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     if (node.nodeType === Node.TEXT_NODE) text += node.textContent ?? '';
+    else if (MEDIA.has((node as Element).tagName)) media = true;
   }
   return {
     hasIcon: button.querySelector(`[${ICON_ATTR}]`) !== null,
     text: text.trim(),
+    media,
   };
 }
 
-type Content = { hasIcon: boolean; text: string };
+type Content = { hasIcon: boolean; text: string; media: boolean };
+
+function isIconOnly(content: Content): boolean {
+  return content.hasIcon && content.text === '' && !content.media;
+}
 
 // From direct children: the label text that can overflow (and so feeds the
 // overflow tooltip), and a server-render icon-only hint used until the button
@@ -102,7 +113,7 @@ function Root({
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [read, setRead] = useState<Content | null>(null);
   const direct = hint(children);
-  const iconOnly = read ? read.hasIcon && read.text === '' : direct.iconOnly;
+  const iconOnly = read ? isIconOnly(read) : direct.iconOnly;
   const [labelledbyText, setLabelledbyText] = useState<string | null | undefined>(undefined);
   const [overflowing, setOverflowing] = useState(false);
   const labelRef = useRef<HTMLSpanElement | null>(null);
@@ -121,7 +132,9 @@ function Root({
     const button = buttonRef.current;
     if (!button) return;
     const next = readContent(button);
-    setRead((prev) => (prev?.hasIcon === next.hasIcon && prev.text === next.text ? prev : next));
+    setRead((prev) =>
+      prev?.hasIcon === next.hasIcon && prev.text === next.text && prev.media === next.media ? prev : next,
+    );
   }, []);
 
   useLayoutEffect(readButton);
@@ -165,7 +178,7 @@ function Root({
     // `read` can trail a render that swapped content and label together.
     const button = buttonRef.current;
     const fresh = button ? readContent(button) : null;
-    if (fresh && !(fresh.hasIcon && fresh.text === '')) return;
+    if (fresh && !isIconOnly(fresh)) return;
     console.error('Button.Root icon-only requires aria-label or aria-labelledby');
   }, [unnamed]);
 
