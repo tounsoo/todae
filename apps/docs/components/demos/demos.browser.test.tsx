@@ -88,6 +88,30 @@ describe('docs demos under axe, overlay open', () => {
   }
 });
 
+describe('docs demos under axe, no matches', () => {
+  it('ComboboxDemo.tsx ComboboxEmpty', async () => {
+    const Demo = demos.find((d) => d.name === 'ComboboxEmpty')?.Demo;
+    expect(Demo).toBeDefined();
+    if (!Demo) return;
+    const { container } = render(
+      <Providers>
+        <main>
+          <Example>
+            <Demo />
+          </Example>
+        </main>
+      </Providers>,
+    );
+    const field = within(container).getByRole('combobox');
+    await userEvent.click(field);
+    await userEvent.keyboard('zzz');
+    await settle();
+    expect(within(document.body).getByRole('status').textContent).toBe('No matches');
+    expect(openOverlay(), 'no overlay opened').toBe(true);
+    expect(await violations()).toEqual([]);
+  });
+});
+
 const OVERLAY_DEMOS = new Set(['BottomSheetDemo.tsx', 'DialogDemo.tsx', 'PopoverDemo.tsx', 'ComboboxDemo.tsx']);
 
 async function openFirstOverlay(container: HTMLElement) {

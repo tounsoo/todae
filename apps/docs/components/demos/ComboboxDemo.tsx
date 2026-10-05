@@ -249,13 +249,11 @@ export function ComboboxEmpty() {
         </Field.Icon>
       </Field.Root>
       <Popover.Root {...cb.getPopoverProps()}>
-        {cb.isEmpty ? (
-          <Text role="status">No matches</Text>
-        ) : (
-          <OptionList.Root {...cb.getListboxProps()}>
-            {optionNodes(cb.items, cb.getOptionProps)}
-          </OptionList.Root>
-        )}
+        {cb.isEmpty ? <Text role="status">No matches</Text> : null}
+        {/* Keep the listbox mounted: the input's aria-controls points at it. */}
+        <OptionList.Root {...cb.getListboxProps()} hidden={cb.isEmpty}>
+          {optionNodes(cb.items, cb.getOptionProps)}
+        </OptionList.Root>
       </Popover.Root>
     </div>
   );
