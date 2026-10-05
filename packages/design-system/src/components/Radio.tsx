@@ -76,7 +76,7 @@ function RadioGroupRoot({
   ...props
 }: RadioGroupRootProps) {
   if (process.env.NODE_ENV !== 'production' && valueProp !== undefined && defaultValue !== undefined) {
-    console.error('RadioGroup cannot take both value and defaultValue');
+    console.error('RadioGroup.Root cannot take both value and defaultValue');
   }
   const autoName = useId();
   const name = nameProp ?? autoName;

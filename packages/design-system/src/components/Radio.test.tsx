@@ -69,7 +69,18 @@ describe('RadioGroup', () => {
     expect(onValueChange).toHaveBeenCalledWith('free');
   });
 
-  it('throws when Radio renders outside RadioGroup', () => {
+  it('names RadioGroup.Root when both value and defaultValue are set', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <RadioGroup.Root aria-label="Plan" value="free" defaultValue="pro" onValueChange={() => undefined}>
+        <RadioGroup.Item value="free">Free</RadioGroup.Item>
+      </RadioGroup.Root>,
+    );
+    expect(error).toHaveBeenCalledWith('RadioGroup.Root cannot take both value and defaultValue');
+    error.mockRestore();
+  });
+
+  it('throws when RadioGroup.Item renders outside RadioGroup.Root', () => {
     expect(() => render(<RadioGroup.Item value="free">Free</RadioGroup.Item>)).toThrow(
       'RadioGroup.Item must render inside RadioGroup.Root',
     );

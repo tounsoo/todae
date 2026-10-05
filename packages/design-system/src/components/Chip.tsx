@@ -26,7 +26,7 @@ function ChipRoot({
   ...props
 }: ChipRootProps) {
   if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
-    console.error('Chip children must be a string');
+    console.error('Chip.Root children must be a string');
   }
   const label = typeof children === 'string' ? children : String(children);
   return (

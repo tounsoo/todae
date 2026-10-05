@@ -16,7 +16,7 @@ describe('Chip', () => {
     expect(container.querySelector('b')).toBeNull();
 
     rerender(<Chip.Root>{['nope'] as unknown as string}</Chip.Root>);
-    expect(error).toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith('Chip.Root children must be a string');
     expect(screen.getByText('nope')).toBeTruthy();
     error.mockRestore();
   });
