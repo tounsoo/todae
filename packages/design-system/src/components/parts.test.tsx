@@ -322,3 +322,85 @@ describe('composeRefs', () => {
     expect(seen).toEqual([expect.any(HTMLDivElement), null]);
   });
 });
+
+describe('wrapped parts', () => {
+  function AcmeOption({ value, label, disabled }: { value: string; label: string; disabled?: boolean }) {
+    return (
+      <Option value={value} disabled={disabled}>
+        {label}
+      </Option>
+    );
+  }
+
+  it('keeps keyboard order and disabled state for options inside a company wrapper', () => {
+    const onChange = vi.fn();
+    render(
+      <OptionList aria-label="Fruit" value={null} onChange={onChange}>
+        <AcmeOption value="a" label="A" />
+        <div>
+          <AcmeOption value="b" label="B" disabled />
+        </div>
+        <AcmeOption value="c" label="C" />
+      </OptionList>,
+    );
+    const list = screen.getByRole('listbox');
+    fireEvent.keyDown(list, { key: 'ArrowDown' });
+    fireEvent.keyDown(list, { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledWith('c');
+  });
+
+  it('follows options that move without remounting', () => {
+    const onChange = vi.fn();
+    function List({ order }: { order: string[] }) {
+      return (
+        <OptionList aria-label="Fruit" value={null} onChange={onChange}>
+          {order.map((v) => (
+            <AcmeOption key={v} value={v} label={v.toUpperCase()} />
+          ))}
+        </OptionList>
+      );
+    }
+    const { rerender } = render(<List order={['a', 'b', 'c']} />);
+    rerender(<List order={['c', 'b', 'a']} />);
+    const list = screen.getByRole('listbox');
+    fireEvent.keyDown(list, { key: 'Home' });
+    fireEvent.keyDown(list, { key: 'Enter' });
+    expect(onChange).toHaveBeenLastCalledWith('c');
+  });
+
+  it('detects an icon-only button when Button.Icon sits inside a company icon', () => {
+    function AcmeIcon() {
+      return (
+        <span className="acme">
+          <Button.Icon>+</Button.Icon>
+        </span>
+      );
+    }
+    render(
+      <>
+        <Button.Root aria-label="Add">
+          <AcmeIcon />
+        </Button.Root>
+        <Button.Root>
+          <AcmeIcon />
+          Save
+        </Button.Root>
+      </>,
+    );
+    expect(screen.getByRole('button', { name: 'Add' }).hasAttribute('data-icon-only')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Save' }).hasAttribute('data-icon-only')).toBe(false);
+  });
+
+  it('drops the default grabber when a company wrapper places its own', () => {
+    function AcmeGrabber() {
+      return <BottomSheet.Grabber data-testid="acme-grabber" aria-label="Drag" />;
+    }
+    render(
+      <BottomSheet open onOpenChange={noop} aria-label="s">
+        <AcmeGrabber />
+      </BottomSheet>,
+    );
+    expect(screen.getByTestId('acme-grabber')).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: /drag|resize sheet/i })).toHaveLength(1);
+  });
+});

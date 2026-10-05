@@ -1,7 +1,5 @@
 import {
-  Children,
   createContext,
-  isValidElement,
   useCallback,
   useContext,
   useId,
@@ -58,6 +56,7 @@ type SheetContextValue = {
   snapPoints: readonly SheetSnap[];
   setSnap: (snap: SheetSnap) => void;
   dismissOnDrag: boolean;
+  registerGrabber: () => () => void;
 };
 
 const SheetContext = createContext<SheetContextValue | null>(null);
@@ -68,7 +67,7 @@ function useSheet(): SheetContextValue {
   return ctx;
 }
 
-function BottomSheetGrabber({
+function GrabberHandle({
   'aria-label': ariaLabel = 'Resize sheet',
   className,
   ...props
@@ -96,6 +95,15 @@ function BottomSheetGrabber({
       <button type="button" aria-label={ariaLabel} onKeyDown={onKeyDown} />
     </div>
   );
+}
+
+// A placed Grabber registers with the sheet, which then drops its default one.
+// Registering instead of matching the child's component type keeps this
+// working when a company wraps Grabber in its own component.
+function BottomSheetGrabber(props: ComponentPropsWithRef<'div'>) {
+  const { registerGrabber } = useSheet();
+  useLayoutEffect(registerGrabber, [registerGrabber]);
+  return <GrabberHandle {...props} />;
 }
 
 function BottomSheetHeader({ className, ...props }: ComponentPropsWithRef<'div'>) {
@@ -178,10 +186,6 @@ function BottomSheetClose({
   );
 }
 
-function hasPart(children: ReactNode, type: unknown): boolean {
-  return Children.toArray(children).some((child) => isValidElement(child) && child.type === type);
-}
-
 export function BottomSheet({
   open,
   onOpenChange,
@@ -220,6 +224,11 @@ export function BottomSheet({
   const bodyRef = useRef<HTMLElement | null>(null);
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
+  const [grabbers, setGrabbers] = useState(0);
+  const registerGrabber = useCallback(() => {
+    setGrabbers((n) => n + 1);
+    return () => setGrabbers((n) => n - 1);
+  }, []);
   const onDismiss = useCallback(() => requestClose('drag'), [requestClose]);
   const onEscape = useCallback(() => requestClose('escape'), [requestClose]);
   const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'transform');
@@ -256,8 +265,9 @@ export function BottomSheet({
       snapPoints: points,
       setSnap,
       dismissOnDrag,
+      registerGrabber,
     }),
-    [currentSnap, dismissOnDrag, points, requestClose, setSnap],
+    [currentSnap, dismissOnDrag, points, registerGrabber, requestClose, setSnap],
   );
 
   if (!present) return null;
@@ -287,7 +297,7 @@ export function BottomSheet({
             aria-modal="true"
             data-snap={currentSnap}
           >
-            {hasPart(children, BottomSheetGrabber) ? null : <BottomSheetGrabber />}
+            {grabbers > 0 ? null : <GrabberHandle />}
             {children}
           </div>
         </div>

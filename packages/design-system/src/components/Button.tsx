@@ -1,17 +1,16 @@
 import {
   Children,
-  isValidElement,
   useLayoutEffect,
   useRef,
   useState,
   type ButtonHTMLAttributes,
   type ComponentPropsWithRef,
-  type ReactElement,
   type ReactNode,
   type Ref,
 } from 'react';
 import { useTooltip } from '../hooks/useTooltip';
 import styles from './Button.module.css';
+import { useComposedRefs } from './props';
 import { Tooltip } from './Tooltip';
 
 /**
@@ -45,21 +44,20 @@ export type ButtonGroupProps = {
   children?: ReactNode;
 } & Omit<ComponentPropsWithRef<'div'>, 'role'>;
 
-function isIconElement(child: ReactNode): child is ReactElement {
-  return isValidElement(child) && child.type === Icon;
-}
+const ICON_ATTR = 'data-todae-button-icon';
 
-function isIconOnly(children: ReactNode): boolean {
-  const items = Children.toArray(children);
-  return items.length > 0 && items.every(isIconElement);
-}
-
-function labelText(children: ReactNode): string {
-  return Children.toArray(children)
-    .filter((child) => !isIconElement(child))
-    .map((child) => (typeof child === 'string' || typeof child === 'number' ? String(child) : ''))
-    .join('')
-    .trim();
+// Icons are found in the rendered button, not by component type, so a
+// Button.Icon inside a company's own icon wrapper still counts.
+function readContent(button: HTMLElement): { hasIcon: boolean; text: string } {
+  let text = '';
+  const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
+    acceptNode: (node) =>
+      node instanceof Element && node.hasAttribute(ICON_ATTR) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+  });
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node.nodeType === Node.TEXT_NODE) text += node.textContent ?? '';
+  }
+  return { hasIcon: button.querySelector(`[${ICON_ATTR}]`) !== null, text: text.trim() };
 }
 
 function Root({
@@ -76,7 +74,9 @@ function Root({
   onBlur,
   ...props
 }: ButtonRootProps) {
-  const iconOnly = isIconOnly(children);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [content, setContent] = useState({ hasIcon: false, text: '' });
+  const iconOnly = content.hasIcon && content.text === '';
   const [labelledbyText, setLabelledbyText] = useState<string | null | undefined>(undefined);
   const [overflowing, setOverflowing] = useState(false);
   const labelRef = useRef<HTMLSpanElement | null>(null);
@@ -90,6 +90,13 @@ function Root({
     const text = document.getElementById(labelledby)?.textContent?.trim() ?? '';
     setLabelledbyText(text || null);
   }, [labelledby]);
+
+  useLayoutEffect(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+    const next = readContent(button);
+    setContent((prev) => (prev.hasIcon === next.hasIcon && prev.text === next.text ? prev : next));
+  });
 
   useLayoutEffect(() => {
     const el = labelRef.current;
@@ -110,34 +117,32 @@ function Root({
   const ariaLabel = typeof props['aria-label'] === 'string' ? props['aria-label'].trim() : '';
   const iconName = iconOnly ? ariaLabel || (typeof labelledbyText === 'string' ? labelledbyText : null) : null;
 
-  if (
-    process.env.NODE_ENV !== 'production' &&
-    iconOnly &&
-    iconName == null &&
-    (!labelledby || labelledbyText === null)
-  ) {
-    console.error('Button.Root icon-only requires aria-label or aria-labelledby');
-  }
+  const unnamed = iconOnly && iconName == null && (!labelledby || labelledbyText === null);
+  useLayoutEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && unnamed) {
+      console.error('Button.Root icon-only requires aria-label or aria-labelledby');
+    }
+  }, [unnamed]);
 
-  const textName = iconOnly ? null : labelText(children);
+  const textName = iconOnly ? null : content.text;
   const tipText = !tooltip ? null : iconOnly ? iconName : overflowing && textName ? textName : null;
   const tip = useTooltip({ enabled: tipText != null });
+  const refs = useComposedRefs(buttonRef, ref);
   const trigger =
     tipText != null
       ? tip.getTriggerProps({
-          ref: ref as Ref<HTMLElement | null>,
+          ref: refs as Ref<HTMLElement | null>,
           style,
           onPointerEnter,
           onPointerLeave,
           onFocus,
           onBlur,
         })
-      : { ref, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
+      : { ref: refs, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
 
-  const content = iconOnly
+  const rendered = iconOnly
     ? children
     : Children.map(children, (child) => {
-        if (isIconElement(child)) return child;
         if (typeof child === 'string' || typeof child === 'number') {
           return (
             <span className={styles.label} ref={labelRef}>
@@ -157,7 +162,7 @@ function Root({
       data-button-variant={variant === 'primary' ? undefined : variant}
       data-icon-only={iconOnly ? '' : undefined}
     >
-      {content}
+      {rendered}
     </button>
   );
 
@@ -174,6 +179,7 @@ function Icon({ className, ...props }: ButtonIconProps) {
   return (
     <span
       {...props}
+      {...{ [ICON_ATTR]: '' }}
       aria-hidden={props['aria-hidden'] ?? true}
       className={[styles.icon, className].filter(Boolean).join(' ')}
     />
