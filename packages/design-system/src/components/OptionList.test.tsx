@@ -34,6 +34,14 @@ describe('OptionList', () => {
     expect(onChange).toHaveBeenCalledWith('c');
   });
 
+  it('names OptionList.Root when an option renders outside it', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => render(<OptionList.Option value="a">A</OptionList.Option>)).toThrow(
+      'OptionList.Option must render inside OptionList.Root',
+    );
+    spy.mockRestore();
+  });
+
   it('exposes Option only as OptionList.Option', () => {
     expect(typeof OptionList.Option).toBe('function');
     expect('Option' in api).toBe(false);

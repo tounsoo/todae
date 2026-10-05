@@ -67,7 +67,7 @@ const OptionListContext = createContext<OptionListContextValue | null>(null);
 
 function useOptionList(): OptionListContextValue {
   const ctx = useContext(OptionListContext);
-  if (!ctx) throw new Error('Option must render inside OptionList');
+  if (!ctx) throw new Error('OptionList.Option must render inside OptionList.Root');
   return ctx;
 }
 
