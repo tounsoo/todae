@@ -18,6 +18,9 @@
     "baseUrl": ".",
     "paths": {
       "@tounsoo/todae": ["../../packages/design-system/src/index.ts"],
+      "@tounsoo/todae/stack": ["../../packages/design-system/src/server/stack.ts"],
+      "@tounsoo/todae/text": ["../../packages/design-system/src/server/text.ts"],
+      "@tounsoo/todae/label": ["../../packages/design-system/src/server/label.ts"],
       "@tounsoo/todae/todae.css": ["../../packages/design-system/src/styles/todae.css"],
       "@tounsoo/todae/schema/components.json": ["../../packages/design-system/schema/components.json"],
       "@tounsoo/todae/tokens.json": ["../../packages/design-system/tokens/tokens.generated.json"]

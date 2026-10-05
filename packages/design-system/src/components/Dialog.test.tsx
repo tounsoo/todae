@@ -1,7 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createPortal } from 'react-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Dialog } from './Dialog';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import type { ComboboxCloseReason } from '../hooks/useCombobox.types';
+import type { SheetCloseReason } from './BottomSheet';
+import { Dialog, type DialogCloseReason } from './Dialog';
 
 afterEach(cleanup);
 
@@ -94,6 +96,15 @@ describe('Dialog', () => {
     onOpenChange.mockClear();
     el.dispatchEvent(new Event('close'));
     expect(onOpenChange).toHaveBeenCalledWith(false, 'native');
+  });
+});
+
+describe('Dialog close reasons', () => {
+  it('adds form and native to Dialog only', () => {
+    expectTypeOf<DialogCloseReason>().toEqualTypeOf<'escape' | 'backdrop' | 'close-button' | 'form' | 'native'>();
+    expectTypeOf<'form'>().not.toMatchTypeOf<ComboboxCloseReason>();
+    expectTypeOf<'native'>().not.toMatchTypeOf<ComboboxCloseReason>();
+    expectTypeOf<'form'>().not.toMatchTypeOf<SheetCloseReason>();
   });
 });
 

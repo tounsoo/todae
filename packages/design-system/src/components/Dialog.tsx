@@ -28,10 +28,7 @@ const CANCEL_CLOSE_WINDOW_MS = 500;
  * anything else that closed the `<dialog>` element, such as a script calling
  * `close()`.
  */
-export type DialogCloseReason = Extract<
-  OverlayCloseReason,
-  'escape' | 'backdrop' | 'close-button' | 'form' | 'native'
->;
+export type DialogCloseReason = Extract<OverlayCloseReason, 'escape' | 'backdrop' | 'close-button'> | 'form' | 'native';
 
 export type DialogRootProps = {
   open: boolean;
@@ -148,7 +145,7 @@ function DialogRoot({
   openRef.current = open;
   const { requestClose } = useControlledOpen({
     open,
-    onOpenChange: onOpenChange as (open: boolean, reason: OverlayCloseReason) => void,
+    onOpenChange,
   });
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
