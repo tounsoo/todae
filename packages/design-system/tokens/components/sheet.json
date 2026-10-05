@@ -1,25 +1,25 @@
 {
   "sheet": {
-    "bg": { "$type": "color", "$value": { "$ref": "color.bg.elevated" } },
-    "fg": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
-    "border": { "$type": "color", "$value": { "$ref": "color.border.default" } },
-    "radius": { "$type": "dimension", "$value": { "$ref": "radius.lg" } },
+    "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
+    "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+    "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/lg/$value" } },
     "padding": {
-      "x": { "$type": "dimension", "$value": { "$ref": "space.overlay.padding" } },
-      "y": { "$type": "dimension", "$value": { "$ref": "space.overlay.padding" } }
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } }
     },
-    "gap": { "$type": "dimension", "$value": { "$ref": "space.overlay.gap" } },
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/gap/$value" } },
     "grabber": {
-      "bg": { "$type": "color", "$value": { "$ref": "color.border.subtle" } },
-      "width": { "$type": "dimension", "$value": { "$ref": "space.9" } },
-      "height": { "$type": "dimension", "$value": { "$ref": "space.1" } }
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+      "width": { "$type": "dimension", "$value": { "$ref": "#/space/9/$value" } },
+      "height": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
     },
     "handle": {
-      "hit": { "$type": "dimension", "$value": { "$ref": "space.11" } }
+      "hit": { "$type": "dimension", "$value": { "$ref": "#/space/11/$value" } }
     },
     "snap": {
       "mid": { "$type": "number", "$value": 0.5 },
-      "full-inset": { "$type": "dimension", "$value": { "$ref": "space.6" } }
+      "full-inset": { "$type": "dimension", "$value": { "$ref": "#/space/6/$value" } }
     }
   }
 }

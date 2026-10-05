@@ -1,39 +1,39 @@
 {
   "selection": {
-    "size": { "$type": "dimension", "$value": { "$ref": "space.selection.size" } },
-    "gap": { "$type": "dimension", "$value": { "$ref": "space.selection.gap" } },
-    "radius": { "$type": "dimension", "$value": { "$ref": "radius.sm" } },
+    "size": { "$type": "dimension", "$value": { "$ref": "#/space/selection/size/$value" } },
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/selection/gap/$value" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "font": {
-      "size": { "$type": "dimension", "$value": { "$ref": "font.size.2" } },
-      "weight": { "$type": "fontWeight", "$value": { "$ref": "font.weight.regular" } }
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
+      "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
     },
     "bg": {
-      "default": { "$type": "color", "$value": { "$ref": "color.bg.surface" } },
-      "checked": { "$type": "color", "$value": { "$ref": "color.accent.default" } },
-      "disabled": { "$type": "color", "$value": { "$ref": "color.bg.subtle" } }
+      "default": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
+      "checked": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+      "disabled": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } }
     },
     "fg": {
-      "default": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
-      "disabled": { "$type": "color", "$value": { "$ref": "color.fg.placeholder" } }
+      "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "disabled": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } }
     },
     "border": {
-      "default": { "$type": "color", "$value": { "$ref": "color.border.default" } },
-      "checked": { "$type": "color", "$value": { "$ref": "color.accent.default" } },
-      "invalid": { "$type": "color", "$value": { "$ref": "color.danger.default" } },
-      "disabled": { "$type": "color", "$value": { "$ref": "color.border.subtle" } }
+      "default": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+      "checked": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+      "invalid": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } },
+      "disabled": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "color.accent.default" } },
-      "invalid": { "$type": "color", "$value": { "$ref": "color.danger.default" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+      "invalid": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } }
     },
     "indicator": {
-      "fg": { "$type": "color", "$value": { "$ref": "color.on-accent" } }
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/on-accent/$value" } }
     },
     "track": {
-      "bg": { "$type": "color", "$value": { "$ref": "color.bg.subtle" } }
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } }
     },
     "thumb": {
-      "bg": { "$type": "color", "$value": { "$ref": "color.bg.surface" } }
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } }
     }
   }
 }

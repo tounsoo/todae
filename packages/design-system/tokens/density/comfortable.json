@@ -1,29 +1,29 @@
 {
   "space": {
     "control": {
-      "x": { "$type": "dimension", "$value": { "$ref": "space.3" } },
-      "y": { "$type": "dimension", "$value": { "$ref": "space.2" } }
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "stack": {
-      "gap": { "$type": "dimension", "$value": { "$ref": "space.3" } }
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } }
     },
     "inline": {
-      "gap": { "$type": "dimension", "$value": { "$ref": "space.2" } }
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "chip": {
-      "x": { "$type": "dimension", "$value": { "$ref": "space.2" } },
-      "y": { "$type": "dimension", "$value": { "$ref": "space.1" } }
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
     },
     "field": {
-      "gap": { "$type": "dimension", "$value": { "$ref": "space.2" } }
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "selection": {
-      "size": { "$type": "dimension", "$value": { "$ref": "space.5" } },
-      "gap": { "$type": "dimension", "$value": { "$ref": "space.2" } }
+      "size": { "$type": "dimension", "$value": { "$ref": "#/space/5/$value" } },
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "overlay": {
-      "padding": { "$type": "dimension", "$value": { "$ref": "space.5" } },
-      "gap": { "$type": "dimension", "$value": { "$ref": "space.3" } }
+      "padding": { "$type": "dimension", "$value": { "$ref": "#/space/5/$value" } },
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } }
     }
   }
 }

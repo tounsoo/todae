@@ -1,12 +1,12 @@
 {
   "tooltip": {
-    "bg": { "$type": "color", "$value": { "$ref": "color.bg.elevated" } },
-    "fg": { "$type": "color", "$value": { "$ref": "color.fg.default" } },
-    "border": { "$type": "color", "$value": { "$ref": "color.border.default" } },
-    "radius": { "$type": "dimension", "$value": { "$ref": "radius.sm" } },
+    "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
+    "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+    "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "padding": {
-      "x": { "$type": "dimension", "$value": { "$ref": "space.2" } },
-      "y": { "$type": "dimension", "$value": { "$ref": "space.1" } }
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
     },
     "max-width": { "$type": "dimension", "$value": { "value": 16, "unit": "rem" } }
   }
