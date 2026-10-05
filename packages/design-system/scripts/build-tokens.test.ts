@@ -663,6 +663,70 @@ describe('company token build', () => {
     expect(blockOf(css, '[data-button-variant="outline"]')).toContain('--todae-button-bg-default: var(--todae-button-outline-bg-default);');
   });
 
+  it('declares aliases for new tokens in Todae entries', async () => {
+    const px = (value: number) => ({ $type: 'dimension', $value: { value, unit: 'px' } });
+    const resolver = await company((r) => {
+      r.sets.button = {
+        sources: [{ button: { base: { lift: px(1) } } }],
+        $extensions: { 'dev.todae': { layer: 'contract' } },
+      };
+      r.resolutionOrder.splice(2, 0, { $ref: '#/sets/button' });
+      for (const paint of ['primary', 'secondary', 'ghost', 'outline']) {
+        r.modifiers.buttonVariant.contexts[paint] = [
+          ...(r.modifiers.buttonVariant.contexts[paint] ?? []),
+          { button: { [paint]: { shadow: px(2) } } },
+        ];
+      }
+    });
+    const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
+    const rescoped = blockOf(css, '[data-appearance],\n[data-density]');
+    expect(rescoped).toContain('--todae-button-lift: var(--todae-button-base-lift);');
+    expect(rescoped).toContain('--todae-button-shadow: var(--todae-button-primary-shadow);');
+    expect(rescoped).not.toContain('--todae-button-bg-default:');
+    expect(blockOf(css, '[data-button-variant="secondary"]')).toBe(
+      '[data-button-variant="secondary"] {\n  --todae-button-shadow: var(--todae-button-secondary-shadow);',
+    );
+  });
+
+  it('keeps each token one $type, across contexts and over Todae', async () => {
+    const mixed = await company((r) => {
+      r.modifiers.appearance.contexts.dark = [
+        { color: { accent: { default: { $type: 'color', $value: { $ref: '#/color/gray/50/$value' } } } } },
+        { brand: { ink: { $type: 'dimension', $value: { value: 1, unit: 'rem' } } } },
+      ];
+    });
+    await expect(buildCompanyTokens({ resolver: mixed, base: tokensDir })).rejects.toThrow(
+      /token "brand\.ink" has \$type color and dimension across contexts/,
+    );
+    const retyped = await company((r) => {
+      r.sets.core = {
+        sources: [{ radius: { md: { $type: 'number', $value: 3 } } }],
+        $extensions: { 'dev.todae': { layer: 'core' } },
+      };
+      r.resolutionOrder.unshift({ $ref: '#/sets/core' });
+    });
+    await expect(buildCompanyTokens({ resolver: retyped, base: tokensDir })).rejects.toThrow(
+      /set "core" token "radius\.md" overrides a dimension with a number/,
+    );
+  });
+
+  it('places new entries where the company lists them', async () => {
+    const resolver = await company((r) => {
+      r.sets.palette = {
+        sources: [{ palette: { ember: { $type: 'color', $value: { colorSpace: 'oklch', components: [0.5, 0.17, 30] } } } }],
+        $extensions: { 'dev.todae': { layer: 'core' } },
+      };
+      r.resolutionOrder.unshift({ $ref: '#/sets/palette' });
+      r.modifiers.appearance.contexts.light = [
+        { color: { accent: { default: { $type: 'color', $value: { $ref: '#/palette/ember/$value' } } } } },
+        { brand: { ink: { $type: 'color', $value: { $ref: '#/color/gray/900/$value' } } } },
+      ];
+    });
+    const { css, tokens } = await buildCompanyTokens({ resolver, base: tokensDir });
+    expect(blockOf(css, ':root')).toContain('--todae-palette-ember: oklch(0.5 0.17 30);');
+    expect(tokens.find((t) => t.path === 'color.accent.default' && t.context === 'light')?.ref).toBe('palette.ember');
+  });
+
   it('declares default aliases for a company-only alias modifier', async () => {
     const resolver = await company((r) => {
       const color = (ref: string) => ({ $type: 'color', $value: { $ref: ref } });

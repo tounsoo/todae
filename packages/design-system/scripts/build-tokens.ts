@@ -458,10 +458,9 @@ export type EmitCssOptions = {
   /** Alias groups, when `entries` hold only part of the graph. */
   aliases?: readonly AliasGroup[];
   /**
-   * Entries (`set:name`, `modifier:name`) and alias contexts
-   * (`modifier:name/context`) whose consume aliases another stylesheet already
-   * declares. A later layer must not re-declare them, or it would beat that
-   * stylesheet's own variant blocks.
+   * Token paths whose consume aliases another stylesheet already declares. A
+   * later layer must not re-declare those, or it would beat that stylesheet's
+   * own variant blocks.
    */
   inherited?: ReadonlySet<string>;
 };
@@ -481,7 +480,7 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
   const aliasBlocks: string[] = [];
   for (const entry of entries) {
     if (entry.kind === 'set') {
-      const own = inherited.has(`set:${entry.name}`) ? [] : entry.tokens;
+      const own = entry.tokens.filter((token) => !inherited.has(token.path));
       if (attributes.length === 0) {
         root.push(...entry.tokens);
         rootAliases.push(...own);
@@ -497,9 +496,9 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
       const selector = `[${attribute}="${context}"]`;
       if (alias) {
         rescoped.push(...tokens);
-        if (inherited.has(`modifier:${entry.name}/${context}`)) continue;
-        if (context === entry.defaultContext) defaults.push(...tokens);
-        aliasBlocks.push(...block(selector, [aliasDecls(tokens, aliases)]));
+        const own = tokens.filter((token) => !inherited.has(token.path));
+        if (context === entry.defaultContext) defaults.push(...own);
+        aliasBlocks.push(...block(selector, [aliasDecls(own, aliases)]));
         continue;
       }
       const rootDefault = entry.extension.root && context === entry.defaultContext;
@@ -948,17 +947,25 @@ export function validateEntries(entries: ResolvedEntry[]): void {
   }
 }
 
-function mergeTokens(base: FlatToken[], extra: FlatToken[]): FlatToken[] {
+function mergeTokens(base: FlatToken[], extra: FlatToken[], loc: string): FlatToken[] {
   const merged = new Map(base.map((token) => [token.path, token]));
-  for (const token of extra) merged.set(token.path, token);
+  for (const token of extra) {
+    const previous = merged.get(token.path);
+    if (previous && previous.type !== token.type) {
+      fail(`${loc} token "${token.path}" overrides a ${previous.type} with a ${token.type}`);
+    }
+    merged.set(token.path, token);
+  }
   return [...merged.values()];
 }
 
 /**
  * Layers a company's entries over Todae's. Entries sharing a name merge (the
- * company's tokens win); new entries follow Todae's in the company's order.
- * `merged` is the full graph; `company` keeps the same order with only the
- * company's tokens, for emitting a CSS file layered after Todae's.
+ * company's tokens win). A new entry is placed just before the next Todae
+ * entry the company lists after it, or at the end. `merged` is the full
+ * graph; `company` keeps the same order with only the company's tokens, for
+ * emitting a CSS file layered after Todae's; `inherited` holds the token paths
+ * whose consume aliases Todae's CSS already declares.
  */
 export function mergeEntries(
   base: ResolvedEntry[],
@@ -970,32 +977,33 @@ export function mergeEntries(
   const company: ResolvedEntry[] = base.map((entry) =>
     entry.kind === 'set' ? { ...entry, tokens: [] } : { ...entry, contexts: new Map() },
   );
-  const inherited = new Set<string>();
-  for (const entry of base) {
-    inherited.add(`${entry.kind}:${entry.name}`);
-    if (entry.kind === 'modifier') {
-      for (const context of entry.contexts.keys()) inherited.add(`modifier:${entry.name}/${context}`);
-    }
-  }
+  const inherited = new Set(base.flatMap(entryTokens).map((token) => token.path));
+  let pending: ResolvedEntry[] = [];
   for (const entry of extra) {
     const index = merged.findIndex((candidate) => candidate.kind === entry.kind && candidate.name === entry.name);
     if (index === -1) {
-      merged.push(entry);
-      company.push(entry);
+      pending.push(entry);
       continue;
     }
-    const target = merged[index]!;
-    const view = company[index]!;
+    merged.splice(index, 0, ...pending);
+    company.splice(index, 0, ...pending);
+    const at = index + pending.length;
+    pending = [];
+    const target = merged[at]!;
+    const view = company[at]!;
+    const loc = `${entry.kind} "${entry.name}"`;
     if (entry.kind === 'set' && target.kind === 'set' && view.kind === 'set') {
-      target.tokens = mergeTokens(target.tokens, entry.tokens);
+      target.tokens = mergeTokens(target.tokens, entry.tokens, loc);
       view.tokens = entry.tokens;
     } else if (entry.kind === 'modifier' && target.kind === 'modifier' && view.kind === 'modifier') {
       for (const [context, tokens] of entry.contexts) {
-        target.contexts.set(context, mergeTokens(target.contexts.get(context) ?? [], tokens));
+        target.contexts.set(context, mergeTokens(target.contexts.get(context) ?? [], tokens, `${loc} context "${context}"`));
         view.contexts.set(context, tokens);
       }
     }
   }
+  merged.push(...pending);
+  company.push(...pending);
   return { merged, company, inherited };
 }
 
@@ -1024,6 +1032,12 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
       known.set(token.path, token.layer);
     }
     all.push(...entryTokens(entry));
+  }
+  const types = new Map<string, string>();
+  for (const token of all) {
+    const seen = types.get(token.path);
+    if (seen && seen !== token.type) fail(`token "${token.path}" has $type ${seen} and ${token.type} across contexts`);
+    types.set(token.path, token.type);
   }
   validateRefs(all, known);
   // CSS places each entry by its resolutionOrder position, so an alias to a
