@@ -14,7 +14,22 @@ export const THEME_OVERRIDE_KEYS = [
 ] as const;
 
 export type ThemeOverrideKey = (typeof THEME_OVERRIDE_KEYS)[number];
-export type ThemeOverrideType = (typeof THEME_OVERRIDE_TYPES)[ThemeOverrideKey];
+
+/** Every DTCG `$type` the token builder emits, so company keys may use types Todae's own tokens don't. */
+export const THEME_OVERRIDE_TYPE_NAMES = [
+  'color',
+  'dimension',
+  'fontWeight',
+  'number',
+  'duration',
+  'cubicBezier',
+  'fontFamily',
+  'shadow',
+] as const;
+export type ThemeOverrideType = (typeof THEME_OVERRIDE_TYPE_NAMES)[number];
+type GeneratedTypesAreKnown = (typeof THEME_OVERRIDE_TYPES)[ThemeOverrideKey] extends ThemeOverrideType ? true : never;
+const generatedTypesAreKnown: GeneratedTypesAreKnown = true;
+void generatedTypesAreKnown;
 
 export type ThemeColorValue = {
   colorSpace: 'oklch';
@@ -27,7 +42,40 @@ export type ThemeDimensionValue = {
   unit: 'rem';
 };
 
-export type ThemeOverrideValue = ThemeColorValue | ThemeDimensionValue | number;
+export type ThemeDurationValue = {
+  value: number;
+  unit: 'ms' | 's';
+};
+
+export type ThemeCubicBezierValue = readonly [number, number, number, number];
+
+/** One family name, or a fallback list. Generic families such as `sans-serif` are left unquoted. */
+export type ThemeFontFamilyValue = string | readonly string[];
+
+export type ThemeShadowLayer = {
+  color: ThemeColorValue;
+  offsetX: ThemeLengthValue;
+  offsetY: ThemeLengthValue;
+  blur: ThemeLengthValue;
+  spread: ThemeLengthValue;
+  inset?: boolean;
+};
+
+export type ThemeLengthValue = {
+  value: number;
+  unit: 'px' | 'rem';
+};
+
+export type ThemeShadowValue = ThemeShadowLayer | readonly ThemeShadowLayer[];
+
+export type ThemeOverrideValue =
+  | ThemeColorValue
+  | ThemeDimensionValue
+  | number
+  | ThemeDurationValue
+  | ThemeCubicBezierValue
+  | ThemeFontFamilyValue
+  | ThemeShadowValue;
 export type ThemeOverride = { [K in ThemeOverrideKey]?: ThemeOverrideValue };
 
 /** Types of extra override keys, such as `THEME_OVERRIDE_TYPES` from a company's `todae-tokens build`. */
@@ -59,7 +107,26 @@ export function themeOverrideType(key: ThemeOverrideKey): ThemeOverrideType {
   return THEME_OVERRIDE_TYPES[key];
 }
 
-const OVERRIDE_TYPES = new Set<string>(Object.values(THEME_OVERRIDE_TYPES));
+const OVERRIDE_TYPES = new Set<string>(THEME_OVERRIDE_TYPE_NAMES);
+const GENERIC_FONT_FAMILIES = new Set([
+  'serif',
+  'sans-serif',
+  'monospace',
+  'cursive',
+  'fantasy',
+  'system-ui',
+  'ui-serif',
+  'ui-sans-serif',
+  'ui-monospace',
+  'ui-rounded',
+  'math',
+  'emoji',
+  'fangsong',
+]);
+// Same character set as the token builder: names can't close a quote or the declaration.
+const FONT_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 _-]*$/;
+const DURATION = /^(\d*\.?\d+)(ms|s)$/;
+const LENGTH = /^(-?\d*\.?\d+)(px|rem)$/;
 
 // Todae's own keys keep their catalog type whatever overrideTypes says.
 function typeOf(key: string, extra: ThemeOverrideTypes | undefined): ThemeOverrideType | undefined {
@@ -73,14 +140,84 @@ function isValueOfType(type: ThemeOverrideType, value: unknown): value is ThemeO
   if (type === 'color') return isThemeColorValue(value);
   if (type === 'dimension') return isThemeDimensionValue(value);
   if (type === 'fontWeight') return isFontWeight(value);
+  if (type === 'duration') return isThemeDurationValue(value);
+  if (type === 'cubicBezier') return isThemeCubicBezierValue(value);
+  if (type === 'fontFamily') return isThemeFontFamilyValue(value);
+  if (type === 'shadow') return isThemeShadowValue(value);
   return isUnitlessNumber(value);
 }
 
 function valueCss(type: ThemeOverrideType, value: ThemeOverrideValue): string {
   if (type === 'color' && isThemeColorValue(value)) return themeColorCss(value);
-  if (isThemeDimensionValue(value)) return `${value.value}${value.unit}`;
+  if (type === 'dimension' && isThemeDimensionValue(value)) return `${value.value}${value.unit}`;
+  if (type === 'duration' && isThemeDurationValue(value)) return `${value.value}${value.unit}`;
+  if (type === 'cubicBezier' && isThemeCubicBezierValue(value)) return `cubic-bezier(${value.join(', ')})`;
+  if (type === 'fontFamily' && isThemeFontFamilyValue(value)) {
+    const names: readonly string[] = typeof value === 'string' ? [value] : value;
+    return names.map((name) => (GENERIC_FONT_FAMILIES.has(name) ? name : `"${name}"`)).join(', ');
+  }
+  if (type === 'shadow' && isThemeShadowValue(value)) {
+    const layers: readonly ThemeShadowLayer[] = Array.isArray(value) ? value : [value as ThemeShadowLayer];
+    return layers
+      .map((layer) => {
+        const lengths = [layer.offsetX, layer.offsetY, layer.blur, layer.spread].map((l) => `${l.value}${l.unit}`);
+        return `${layer.inset ? 'inset ' : ''}${lengths.join(' ')} ${themeColorCss(layer.color)}`;
+      })
+      .join(', ');
+  }
   if (typeof value === 'number') return String(value);
   return '';
+}
+
+function onlyKeys(value: Record<string, unknown>, keys: readonly string[]): boolean {
+  return Object.keys(value).every((key) => keys.includes(key));
+}
+
+export function isThemeDurationValue(value: unknown): value is ThemeDurationValue {
+  return (
+    isRecord(value) &&
+    onlyKeys(value, ['value', 'unit']) &&
+    finite(value.value) &&
+    value.value >= 0 &&
+    (value.unit === 'ms' || value.unit === 's')
+  );
+}
+
+export function isThemeCubicBezierValue(value: unknown): value is ThemeCubicBezierValue {
+  if (!Array.isArray(value) || value.length !== 4 || !value.every(finite)) return false;
+  const [x1, , x2] = value as number[];
+  return x1! >= 0 && x1! <= 1 && x2! >= 0 && x2! <= 1;
+}
+
+export function isThemeFontFamilyValue(value: unknown): value is ThemeFontFamilyValue {
+  const names = typeof value === 'string' ? [value] : value;
+  return (
+    Array.isArray(names) &&
+    names.length > 0 &&
+    names.every((name) => typeof name === 'string' && FONT_FAMILY.test(name))
+  );
+}
+
+function isLength(value: unknown): value is ThemeLengthValue {
+  return (
+    isRecord(value) &&
+    onlyKeys(value, ['value', 'unit']) &&
+    finite(value.value) &&
+    (value.unit === 'px' || value.unit === 'rem')
+  );
+}
+
+function isShadowLayer(value: unknown): value is ThemeShadowLayer {
+  if (!isRecord(value) || !onlyKeys(value, ['color', 'offsetX', 'offsetY', 'blur', 'spread', 'inset'])) return false;
+  if (value.inset !== undefined && typeof value.inset !== 'boolean') return false;
+  if (!isThemeColorValue(value.color)) return false;
+  if (![value.offsetX, value.offsetY, value.blur, value.spread].every(isLength)) return false;
+  return (value.blur as ThemeLengthValue).value >= 0;
+}
+
+export function isThemeShadowValue(value: unknown): value is ThemeShadowValue {
+  if (Array.isArray(value)) return value.length > 0 && value.every(isShadowLayer);
+  return isShadowLayer(value);
 }
 
 export function isThemeColorValue(value: unknown): value is ThemeColorValue {
@@ -140,9 +277,47 @@ export function parseThemeValue(key: ThemeOverrideKey, raw: string): ThemeOverri
     return isThemeDimensionValue(dimension) ? dimension : null;
   }
   if (type === 'fontWeight') return WEIGHT.test(value) ? Number(value) : null;
+  if (type === 'duration') {
+    const match = value.match(DURATION);
+    return match ? { value: Number(match[1]), unit: match[2] as ThemeDurationValue['unit'] } : null;
+  }
+  if (type === 'cubicBezier') {
+    const inner = value.match(/^cubic-bezier\((.*)\)$/)?.[1] ?? value;
+    const parts = inner.split(',').map((part) => part.trim());
+    if (!parts.every((part) => NUMBER.test(part))) return null;
+    const curve = parts.map(Number);
+    return isThemeCubicBezierValue(curve) ? curve : null;
+  }
+  if (type === 'fontFamily') {
+    const names = value.split(',').map((name) => name.trim().replace(/^(["'])(.*)\1$/, '$2'));
+    return isThemeFontFamilyValue(names) ? names : null;
+  }
+  if (type === 'shadow') return parseShadow(value);
   if (!NUMBER.test(value)) return null;
   const n = Number(value);
   return isUnitlessNumber(n) ? n : null;
+}
+
+// `[inset] <x> <y> <blur> <spread> <color>` layers, comma-separated. Colors are
+// hex or oklch(), neither of which contains a comma.
+function parseShadow(raw: string): ThemeShadowValue | null {
+  const layers: ThemeShadowLayer[] = [];
+  for (const part of raw.split(',')) {
+    const match = part.trim().match(/^(inset\s+)?(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/);
+    if (!match) return null;
+    const lengths = match.slice(2, 6).map((length) => {
+      const m = length!.match(LENGTH);
+      return m ? { value: Number(m[1]), unit: m[2] as ThemeLengthValue['unit'] } : null;
+    });
+    const color = parseThemeColor(match[6]!);
+    if (!color || lengths.some((length) => length === null)) return null;
+    const [offsetX, offsetY, blur, spread] = lengths as ThemeLengthValue[];
+    const layer: ThemeShadowLayer = { color, offsetX: offsetX!, offsetY: offsetY!, blur: blur!, spread: spread! };
+    if (match[1]) layer.inset = true;
+    layers.push(layer);
+  }
+  if (!isThemeShadowValue(layers)) return null;
+  return layers.length === 1 ? layers[0]! : layers;
 }
 
 export function themeColorCss(value: ThemeColorValue): string {

@@ -7,7 +7,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { ButtonVariant, ButtonVariants } from '../components/Button';
 import { DensityProvider, useDensity, type Densities, type Density } from './DensityProvider';
 import { ThemeProvider, useAppearance } from './ThemeProvider';
-import { THEME_OVERRIDE_KEYS, themeOverrideStyle, themeOverrideType } from './themeOverride';
+import { THEME_OVERRIDE_KEYS, parseThemeValue, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride';
 
 function AppearanceLabel() {
   return <span>{useAppearance()}</span>;
@@ -248,7 +248,73 @@ describe('company override types', () => {
   });
 });
 
+describe('motion, font family and shadow overrides', () => {
+  const types = {
+    'brand.motion.fast': 'duration',
+    'brand.motion.ease': 'cubicBezier',
+    'brand.font.body': 'fontFamily',
+    'brand.shadow.card': 'shadow',
+  } as const;
+  const layer = {
+    color: { colorSpace: 'oklch', components: [0, 0, 0], alpha: 0.2 },
+    offsetX: { value: 0, unit: 'px' },
+    offsetY: { value: 4, unit: 'px' },
+    blur: { value: 12, unit: 'px' },
+    spread: { value: 0, unit: 'px' },
+  } as const;
+
+  it('writes typed values as CSS', () => {
+    expect(
+      themeOverrideStyle(
+        {
+          'motion.duration.fast': { value: 120, unit: 'ms' },
+          'motion.easing.standard': [0.4, 0, 0.2, 1],
+          'brand.font.body': ['Inter', 'sans-serif'],
+          'brand.shadow.card': [layer, { ...layer, inset: true }],
+        },
+        types,
+      ),
+    ).toEqual({
+      '--todae-motion-duration-fast': '120ms',
+      '--todae-motion-easing-standard': 'cubic-bezier(0.4, 0, 0.2, 1)',
+      '--todae-brand-font-body': '"Inter", sans-serif',
+      '--todae-brand-shadow-card': '0px 4px 12px 0px oklch(0 0 0 / 0.2), inset 0px 4px 12px 0px oklch(0 0 0 / 0.2)',
+    });
+  });
+
+  it('rejects values that could escape the declaration or do not fit the type', () => {
+    const bad: [string, unknown][] = [
+      ['motion.duration.fast', { value: 120, unit: 'px' }],
+      ['motion.duration.fast', '120ms'],
+      ['motion.easing.standard', [2, 0, 0, 1]],
+      ['brand.font.body', 'Inter"; background: url(x)'],
+      ['brand.font.body', []],
+      ['brand.shadow.card', { ...layer, blur: { value: -1, unit: 'px' } }],
+      ['brand.shadow.card', { ...layer, color: 'black' }],
+    ];
+    for (const [key, value] of bad) {
+      expect(() => themeOverrideStyle({ [key]: value }, types), key).toThrow(/Invalid theme override value/);
+    }
+  });
+
+  it('parses playground text for the new types', () => {
+    expect(parseThemeValue('motion.duration.fast', '0.12s')).toEqual({ value: 0.12, unit: 's' });
+    expect(parseThemeValue('motion.duration.fast', '12px')).toBeNull();
+    expect(parseThemeValue('motion.easing.standard', 'cubic-bezier(0.4, 0, 0.2, 1)')).toEqual([0.4, 0, 0.2, 1]);
+    expect(parseThemeValue('motion.easing.standard', '0.4, 0, 0.2')).toBeNull();
+    const value = parseThemeValue('motion.duration.fast', '90ms');
+    expect(value && themeValueCss('motion.duration.fast', value)).toBe('90ms');
+  });
+});
+
 describe('contract-only components', () => {
+  it('takes motion and stacking from tokens', () => {
+    for (const name of ['Dialog.module.css', 'BottomSheet.module.css']) {
+      const css = readFileSync(join(import.meta.dirname, '../components', name), 'utf8');
+      expect(css, name).not.toMatch(/\d(?:ms|s)\b|cubic-bezier|z-index:\s*\d{2,}/);
+    }
+  });
+
   it('forbids hard-coded color and appearance branches', () => {
     const root = join(import.meta.dirname, '../components');
     const files = readdirSync(root).map((name) => join(root, name));

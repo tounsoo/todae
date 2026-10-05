@@ -27,6 +27,12 @@
   --todae-font-weight-bold: 700;
   --todae-font-weight-medium: 500;
   --todae-font-weight-regular: 400;
+  --todae-motion-duration-fast: 160ms;
+  --todae-motion-duration-moderate: 240ms;
+  --todae-motion-duration-normal: 200ms;
+  --todae-motion-duration-slow: 280ms;
+  --todae-motion-duration-slower: 300ms;
+  --todae-motion-easing-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --todae-radius-lg: 0.75rem;
   --todae-radius-md: 0.5rem;
   --todae-radius-sm: 0.25rem;
@@ -42,6 +48,7 @@
   --todae-space-10: 2.5rem;
   --todae-space-11: 2.75rem;
   --todae-space-12: 3rem;
+  --todae-z-overlay: 1000;
 }
 
 :root,
@@ -262,12 +269,16 @@
   --todae-chip-ring-focus: var(--todae-color-accent-default);
   --todae-chip-ring-offset: 2px;
   --todae-chip-ring-width: 2px;
+  --todae-overlay-motion-easing: var(--todae-motion-easing-standard);
   --todae-overlay-scrim-bg: var(--todae-color-bg-scrim);
+  --todae-overlay-z: var(--todae-z-overlay);
   --todae-dialog-bg: var(--todae-color-bg-elevated);
   --todae-dialog-border: var(--todae-color-border-default);
   --todae-dialog-fg: var(--todae-color-fg-default);
   --todae-dialog-gap: var(--todae-space-overlay-gap);
   --todae-dialog-max-width: 32rem;
+  --todae-dialog-motion-enter: var(--todae-motion-duration-normal);
+  --todae-dialog-motion-exit: var(--todae-motion-duration-fast);
   --todae-dialog-padding-x: var(--todae-space-overlay-padding);
   --todae-dialog-padding-y: var(--todae-space-overlay-padding);
   --todae-dialog-radius: var(--todae-radius-lg);
@@ -281,6 +292,9 @@
   --todae-sheet-grabber-height: var(--todae-space-1);
   --todae-sheet-grabber-width: var(--todae-space-9);
   --todae-sheet-handle-hit: var(--todae-space-11);
+  --todae-sheet-motion-enter: var(--todae-motion-duration-slow);
+  --todae-sheet-motion-exit: var(--todae-motion-duration-moderate);
+  --todae-sheet-motion-resize: var(--todae-motion-duration-slower);
   --todae-sheet-padding-x: var(--todae-space-overlay-padding);
   --todae-sheet-padding-y: var(--todae-space-overlay-padding);
   --todae-sheet-radius: var(--todae-radius-lg);

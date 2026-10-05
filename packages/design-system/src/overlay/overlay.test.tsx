@@ -10,7 +10,7 @@ import { useFocusRestore } from './useFocusRestore';
 import { useFocusTrap } from './useFocusTrap';
 import { useInertOutside } from './useInertOutside';
 import { useScrollLock } from './useScrollLock';
-import { isExitTransition } from './useOverlayPresence';
+import { isExitTransition, transitionMs } from './useOverlayPresence';
 import { dragHeight, dragOrigin, resolveRelease } from './useSnapDrag';
 
 afterEach(cleanup);
@@ -242,3 +242,22 @@ describe('useSnapDrag math', () => {
     expect(dragOrigin({ fromHandle: false, inBody: false, scrollTop: 0 })).toBeNull();
   });
 });
+
+describe('transitionMs', () => {
+  it('reads the named property, falling back to all, and adds the delay', () => {
+    const el = document.createElement('div');
+    el.style.transitionProperty = 'height, transform';
+    el.style.transitionDuration = '300ms, 0.28s';
+    el.style.transitionDelay = '0s, 20ms';
+    document.body.append(el);
+    expect(transitionMs(el, 'transform')).toBe(300);
+    expect(transitionMs(el, 'height')).toBe(300);
+    expect(transitionMs(el, 'opacity')).toBeNull();
+    el.style.transitionProperty = 'all';
+    el.style.transitionDuration = '160ms';
+    el.style.transitionDelay = '';
+    expect(transitionMs(el, 'opacity')).toBe(160);
+    el.remove();
+  });
+});
+

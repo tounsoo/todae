@@ -2,6 +2,10 @@
   "overlay": {
     "scrim": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/scrim/$value" } }
+    },
+    "z": { "$type": "number", "$value": { "$ref": "#/z/overlay/$value" } },
+    "motion": {
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } }
     }
   }
 }

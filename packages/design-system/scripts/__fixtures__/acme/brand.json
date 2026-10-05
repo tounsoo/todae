@@ -3,6 +3,24 @@
     "logo": {
       "size": { "$type": "dimension", "$value": { "value": 2, "unit": "rem" } },
       "fg": { "$type": "color", "$value": { "$ref": "#/brand/ink/$value" } }
+    },
+    "font": {
+      "body": { "$type": "fontFamily", "$value": ["Acme Sans", "system-ui", "sans-serif"] }
+    },
+    "shadow": {
+      "card": {
+        "$type": "shadow",
+        "$value": {
+          "color": { "colorSpace": "oklch", "components": [0.2, 0.02, 25], "alpha": 0.18 },
+          "offsetX": { "value": 0, "unit": "px" },
+          "offsetY": { "value": 6, "unit": "px" },
+          "blur": { "value": 16, "unit": "px" },
+          "spread": { "value": -4, "unit": "px" }
+        }
+      }
+    },
+    "motion": {
+      "settle": { "$type": "duration", "$value": { "$ref": "#/motion/duration/slow/$value" } }
     }
   }
 }

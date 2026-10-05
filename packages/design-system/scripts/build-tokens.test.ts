@@ -203,6 +203,38 @@ describe('build-tokens validations', () => {
     expect(() => serializeValue(color(['0.5', 0.1, 30]), 'x')).toThrow(/number or a component \$ref/);
   });
 
+  it('serializes motion, font family and shadow types', () => {
+    const v = ($type: string, $value: unknown) => serializeValue({ $type, $value }, 'x').cssValue;
+    expect(v('duration', { value: 200, unit: 'ms' })).toBe('200ms');
+    expect(v('duration', { value: 0.3, unit: 's' })).toBe('0.3s');
+    expect(() => v('duration', { value: 200, unit: 'px' })).toThrow(/duration must be/);
+    expect(() => v('duration', { value: -1, unit: 'ms' })).toThrow(/non-negative/);
+    expect(v('cubicBezier', [0.2, 0.8, 0.2, 1])).toBe('cubic-bezier(0.2, 0.8, 0.2, 1)');
+    expect(v('cubicBezier', [0.3, -0.5, 0.7, 1.5])).toBe('cubic-bezier(0.3, -0.5, 0.7, 1.5)');
+    expect(() => v('cubicBezier', [1.2, 0, 0, 1])).toThrow(/x values must be in \[0, 1\]/);
+    expect(() => v('cubicBezier', [0, 0, 1])).toThrow(/four numbers/);
+    expect(v('fontFamily', 'Inter')).toBe('"Inter"');
+    expect(v('fontFamily', ['Inter Variable', 'system-ui', 'sans-serif'])).toBe('"Inter Variable", system-ui, sans-serif');
+    expect(() => v('fontFamily', 'Inter"; color: red')).toThrow(/fontFamily names may only use/);
+    expect(() => v('fontFamily', [])).toThrow(/at least one family/);
+    const layer = {
+      color: { colorSpace: 'oklch', components: [0, 0, 0], alpha: 0.2 },
+      offsetX: { value: 0, unit: 'px' },
+      offsetY: { value: 4, unit: 'px' },
+      blur: { value: 12, unit: 'px' },
+      spread: { value: -2, unit: 'px' },
+    };
+    expect(v('shadow', layer)).toBe('0px 4px 12px -2px oklch(0 0 0 / 0.2)');
+    expect(v('shadow', [layer, { ...layer, inset: true }])).toBe(
+      '0px 4px 12px -2px oklch(0 0 0 / 0.2), inset 0px 4px 12px -2px oklch(0 0 0 / 0.2)',
+    );
+    expect(() => v('shadow', { ...layer, color: { $ref: '#/color/gray/950/$value' } })).toThrow(/literal OKLCH/);
+    expect(() => v('shadow', { ...layer, blur: { $ref: '#/space/2/$value' } })).toThrow(/literal dimension/);
+    expect(() => v('shadow', { ...layer, extra: 1 })).toThrow(/unknown key "extra"/);
+    expect(() => v('shadow', [])).toThrow(/at least one layer/);
+    expect(() => v('number', Number.NaN)).toThrow(/must be a number/);
+  });
+
   it('emits var chains, not resolved literals', () => {
     const serialized = serializeValue(
       { $type: 'color', $value: { $ref: '#/color/accent/default/$value' } },
@@ -846,7 +878,12 @@ describe('company token build', () => {
     ]);
     expect(result.overrideTypes).toContain("  'brand.ink': 'color',");
     expect(result.overrideTypes).toContain("  'brand.logo.size': 'dimension',");
+    expect(result.overrideTypes).toContain("  'brand.font.body': 'fontFamily',");
+    expect(result.overrideTypes).toContain("  'brand.shadow.card': 'shadow',");
     expect(result.overrideTypes).not.toContain("'color.gray.50'");
+    expect(result.css).toContain('--todae-brand-font-body: "Acme Sans", system-ui, sans-serif;');
+    expect(result.css).toContain('--todae-brand-shadow-card: 0px 6px 16px -4px oklch(0.2 0.02 25 / 0.18);');
+    expect(result.css).toContain('--todae-brand-motion-settle: var(--todae-motion-duration-slow);');
   });
 
   it('requires new contexts and additions to keep context parity with Todae', async () => {
