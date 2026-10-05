@@ -85,6 +85,20 @@ function mergeDescribedBy(root?: string, own?: string, hint?: string) {
   return ids.length > 0 ? ids.join(' ') : undefined;
 }
 
+type LabelAttrs = { 'aria-label'?: string; 'aria-labelledby'?: string };
+
+/**
+ * An input that names itself keeps both of its own label attributes and takes
+ * neither from the Root: a Root `aria-labelledby` would outrank the input's
+ * own `aria-label`.
+ */
+function inputLabel(own: LabelAttrs, field: { ariaLabel?: string; labelledBy?: string }): LabelAttrs {
+  if (own['aria-label'] != null || own['aria-labelledby'] != null) {
+    return { 'aria-label': own['aria-label'], 'aria-labelledby': own['aria-labelledby'] };
+  }
+  return { 'aria-label': field.ariaLabel, 'aria-labelledby': field.labelledBy };
+}
+
 function useTextEntry(store: CountStore, value: string, maxLength: number | undefined) {
   publishCount(store, value, maxLength);
   useEffect(() => {
@@ -240,8 +254,7 @@ function TextInput({
       maxLength={maxLength}
       aria-invalid={ctx.invalid || undefined}
       aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
-      aria-labelledby={props['aria-labelledby'] ?? ctx.labelledBy}
-      aria-label={props['aria-label'] ?? ctx.ariaLabel}
+      {...inputLabel(props, ctx)}
       value={value}
       type={type}
       className={[styles.input, className].filter(Boolean).join(' ')}
@@ -299,8 +312,7 @@ function Textarea({
       maxLength={maxLength}
       aria-invalid={ctx.invalid || undefined}
       aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
-      aria-labelledby={props['aria-labelledby'] ?? ctx.labelledBy}
-      aria-label={props['aria-label'] ?? ctx.ariaLabel}
+      {...inputLabel(props, ctx)}
       value={value}
       rows={resolved.rows}
       data-auto-grow={autoGrow ? '' : undefined}
@@ -412,8 +424,7 @@ function ChipInput({
       disabled={field.disabled}
       aria-invalid={field.invalid || undefined}
       aria-describedby={mergeDescribedBy(field.describedBy, describedBy)}
-      aria-labelledby={props['aria-labelledby'] ?? field.labelledBy}
-      aria-label={props['aria-label'] ?? field.ariaLabel}
+      {...inputLabel(props, field)}
       value={inputValue}
       type="text"
       className={[styles.input, className].filter(Boolean).join(' ')}

@@ -1618,6 +1618,26 @@ describe('Field input labels', () => {
       expect(input.getAttribute('aria-labelledby')).toBe('own-label');
     });
 
+    it(`${name} takes neither Root label when it names itself`, () => {
+      const { unmount } = render(
+        <Field.Root aria-label="Root name" aria-labelledby="root-label">
+          <Part aria-label="Own name" />
+        </Field.Root>,
+      );
+      const input = screen.getByRole('textbox');
+      expect(input.getAttribute('aria-label')).toBe('Own name');
+      expect(input.hasAttribute('aria-labelledby')).toBe(false);
+      unmount();
+      render(
+        <Field.Root aria-label="Root name" aria-labelledby="root-label">
+          <Part aria-labelledby="own-label" />
+        </Field.Root>,
+      );
+      const second = screen.getByRole('textbox');
+      expect(second.getAttribute('aria-labelledby')).toBe('own-label');
+      expect(second.hasAttribute('aria-label')).toBe(false);
+    });
+
     it(`${name} falls back to the Root's labels`, () => {
       render(
         <Field.Root aria-label="Root name" aria-labelledby="root-label">
