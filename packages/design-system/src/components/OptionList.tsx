@@ -5,6 +5,7 @@ import {
   useId,
   useLayoutEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
   type ComponentPropsWithRef,
@@ -139,18 +140,26 @@ export function OptionList(props: OptionListProps) {
   const autoId = useId();
   const listId = id ?? autoId;
   const multiple = isMultiple(props);
+  // Registration only records the option; ordering happens once per render
+  // below, so mounting N options costs one sort, not N.
+  const registered = useRef(new Set<OptionEntry>());
   const [entries, setEntries] = useState<readonly OptionEntry[]>([]);
+  const [, registrationChanged] = useReducer((n: number) => n + 1, 0);
   const register = useCallback((entry: OptionEntry) => {
-    setEntries((prev) => [...prev, entry].sort(byDocumentOrder));
-    return () => setEntries((prev) => prev.filter((item) => item !== entry));
+    registered.current.add(entry);
+    registrationChanged();
+    return () => {
+      registered.current.delete(entry);
+      registrationChanged();
+    };
   }, []);
   // Keyed options can move without re-registering, and a wrapper can move them
   // from its own state without this list rendering; re-sort when they do.
   const resort = useCallback(() => {
-    setEntries((prev) => {
-      const sorted = [...prev].sort(byDocumentOrder);
-      return sorted.every((entry, i) => entry === prev[i]) ? prev : sorted;
-    });
+    const sorted = [...registered.current].sort(byDocumentOrder);
+    setEntries((prev) =>
+      prev.length === sorted.length && sorted.every((entry, i) => entry === prev[i]) ? prev : sorted,
+    );
   }, []);
   useLayoutEffect(resort);
   useLayoutEffect(() => {

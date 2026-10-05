@@ -487,3 +487,20 @@ it('keeps the same button element when it gains a tooltip', () => {
   expect(screen.getByTestId('b')).toBe(first);
   expect(first.hasAttribute('data-icon-only')).toBe(true);
 });
+
+it('sorts a large option list a bounded number of times while mounting', () => {
+  const values = Array.from({ length: 300 }, (_, i) => `v${i}`);
+  const compare = vi.spyOn(Node.prototype, 'compareDocumentPosition');
+  render(
+    <OptionList aria-label="Many" value={null} onChange={noop}>
+      {values.map((v) => (
+        <Option key={v} value={v}>
+          {v}
+        </Option>
+      ))}
+    </OptionList>,
+  );
+  // A few renders of one n·log n sort each, not one sort per option.
+  expect(compare.mock.calls.length).toBeLessThan(300 * 9 * 6);
+  compare.mockRestore();
+});
