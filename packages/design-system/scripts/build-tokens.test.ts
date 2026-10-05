@@ -232,6 +232,10 @@ describe('build-tokens validations', () => {
     expect(() => v('shadow', { ...layer, blur: { $ref: '#/space/2/$value' } })).toThrow(/literal dimension/);
     expect(() => v('shadow', { ...layer, extra: 1 })).toThrow(/unknown key "extra"/);
     expect(() => v('shadow', [])).toThrow(/at least one layer/);
+    expect(() => v('shadow', { ...layer, blur: { value: -1, unit: 'px' } })).toThrow(/blur must not be negative/);
+    expect(() => v('shadow', { ...layer, offsetY: { value: 4, unit: 'ms' } })).toThrow(/offsetY must be in px or rem/);
+    expect(() => serializeValue({ $type: 'number', $value: 1000.5 }, 'z.overlay')).toThrow(/z-index must be an integer/);
+    expect(serializeValue({ $type: 'number', $value: 0.5 }, 'sheet.snap.mid').cssValue).toBe('0.5');
     expect(() => v('number', Number.NaN)).toThrow(/must be a number/);
   });
 

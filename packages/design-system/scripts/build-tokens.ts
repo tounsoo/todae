@@ -379,6 +379,7 @@ export function serializeValue(token: TokenNode, path: string): { ref: string | 
   if (token.$type === 'dimension') return { ref: null, cssValue: serializeDimension(token.$value, path) };
   if (token.$type === 'fontWeight' || token.$type === 'number') {
     if (!isFiniteNumber(token.$value)) fail(`Token "${path}" ${token.$type} must be a number`);
+    if (path.startsWith('z.') && !Number.isInteger(token.$value)) fail(`Token "${path}" z-index must be an integer`);
     return { ref: null, cssValue: String(token.$value) };
   }
   if (token.$type === 'duration') {
@@ -459,8 +460,14 @@ function serializeShadowLayer(layer: unknown, path: string): string {
   const color = serializeColor(layer.color, path);
   if (color.ref) fail(`Token "${path}" shadow color must be a literal OKLCH color`);
   const lengths = (['offsetX', 'offsetY', 'blur', 'spread'] as const).map((key) => {
-    if (isRef(layer[key])) fail(`Token "${path}" shadow ${key} must be a literal dimension`);
-    return serializeDimension(layer[key], path);
+    const length = layer[key];
+    if (isRef(length)) fail(`Token "${path}" shadow ${key} must be a literal dimension`);
+    // Same units and blur floor as ThemeProvider overrides accept.
+    if (!isRecord(length) || (length.unit !== 'px' && length.unit !== 'rem')) {
+      fail(`Token "${path}" shadow ${key} must be in px or rem`);
+    }
+    if (key === 'blur' && isFiniteNumber(length.value) && length.value < 0) fail(`Token "${path}" shadow blur must not be negative`);
+    return serializeDimension(length, path);
   });
   return `${layer.inset ? 'inset ' : ''}${lengths.join(' ')} ${color.cssValue}`;
 }

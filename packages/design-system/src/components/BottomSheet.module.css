@@ -2,7 +2,8 @@
   .root {
     position: fixed;
     inset: 0;
-    z-index: var(--todae-overlay-z);
+    /* calc() rounds a fractional override to the integer z-index needs. */
+    z-index: calc(var(--todae-overlay-z));
   }
 
   .scrim {
