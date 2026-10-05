@@ -113,7 +113,7 @@ function OptionListOption({
     return register({ value, disabled: Boolean(disabled), node: nodeRef.current });
   }, [disabled, register, value]);
   if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
-    console.error('Option children must be a string');
+    console.error('OptionList.Option children must be a string');
   }
   const label = typeof children === 'string' ? children : String(children);
   const selected = ctx.selected.has(value);

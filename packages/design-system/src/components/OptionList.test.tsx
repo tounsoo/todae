@@ -63,7 +63,7 @@ describe('OptionList', () => {
     expect(options[1]?.getAttribute('aria-selected')).toBe('true');
     expect(list.getAttribute('aria-activedescendant')).toBe(options[1]?.id);
     expect(options.every((el) => el.getAttribute('tabindex') === null)).toBe(true);
-    expect(error).toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith('OptionList.Option children must be a string');
     error.mockRestore();
   });
 
