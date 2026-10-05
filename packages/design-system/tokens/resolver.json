@@ -5,12 +5,16 @@
   "description": "Todae core, appearance, density, and seed component contract.",
   "sets": {
     "core": {
-      "sources": [{ "$ref": "./core.json" }]
+      "sources": [{ "$ref": "./core.json" }],
+      "$extensions": { "dev.todae": { "layer": "core" } }
+    },
+    "button": {
+      "description": "Button geometry shared by every variant",
+      "sources": [{ "$ref": "./components/button.base.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
     },
     "contract": {
       "sources": [
-        { "$ref": "./components/button.base.json" },
-        { "$ref": "./components/button.primary.json" },
         { "$ref": "./components/stack.json" },
         { "$ref": "./components/text.json" },
         { "$ref": "./components/field.json" },
@@ -22,7 +26,8 @@
         { "$ref": "./components/tooltip.json" },
         { "$ref": "./components/option.json" },
         { "$ref": "./components/selection.json" }
-      ]
+      ],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
     }
   },
   "modifiers": {
@@ -32,6 +37,9 @@
       "contexts": {
         "light": [{ "$ref": "./appearance/light.json" }],
         "dark": [{ "$ref": "./appearance/dark.json" }]
+      },
+      "$extensions": {
+        "dev.todae": { "layer": "appearance", "attribute": "data-appearance", "root": true, "colorScheme": true }
       }
     },
     "density": {
@@ -41,7 +49,8 @@
         "compact": [{ "$ref": "./density/compact.json" }],
         "comfortable": [{ "$ref": "./density/comfortable.json" }],
         "spacious": [{ "$ref": "./density/spacious.json" }]
-      }
+      },
+      "$extensions": { "dev.todae": { "layer": "density", "attribute": "data-density" } }
     },
     "buttonVariant": {
       "description": "Button variant value sets",
@@ -50,14 +59,16 @@
         "primary": [{ "$ref": "./components/button.primary.json" }],
         "secondary": [{ "$ref": "./components/button.secondary.json" }],
         "ghost": [{ "$ref": "./components/button.ghost.json" }]
-      }
+      },
+      "$extensions": { "dev.todae": { "layer": "contract", "attribute": "data-button-variant", "alias": true } }
     }
   },
   "resolutionOrder": [
     { "$ref": "#/sets/core" },
     { "$ref": "#/modifiers/appearance" },
     { "$ref": "#/modifiers/density" },
-    { "$ref": "#/sets/contract" },
-    { "$ref": "#/modifiers/buttonVariant" }
+    { "$ref": "#/sets/button" },
+    { "$ref": "#/modifiers/buttonVariant" },
+    { "$ref": "#/sets/contract" }
   ]
 }
