@@ -14,7 +14,18 @@ import { useTooltip } from '../hooks/useTooltip';
 import styles from './Button.module.css';
 import { Tooltip } from './Tooltip';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+/**
+ * Button variants, one per `buttonVariant` context in the token resolver. A
+ * company that adds a context declares it here too:
+ * `declare module '@tounsoo/todae' { interface ButtonVariants { outline: true } }`.
+ */
+export interface ButtonVariants {
+  primary: true;
+  secondary: true;
+  ghost: true;
+}
+
+export type ButtonVariant = keyof ButtonVariants;
 
 export type ButtonRootProps = {
   variant?: ButtonVariant;

@@ -2,7 +2,18 @@
 
 import { createContext, useContext, type ComponentProps } from 'react';
 
-export type Density = 'compact' | 'comfortable' | 'spacious';
+/**
+ * Densities, one per `density` context in the token resolver. A company that
+ * adds a context declares it here too:
+ * `declare module '@tounsoo/todae' { interface Densities { roomy: true } }`.
+ */
+export interface Densities {
+  compact: true;
+  comfortable: true;
+  spacious: true;
+}
+
+export type Density = keyof Densities;
 
 export type DensityProviderProps = {
   density?: Density;
