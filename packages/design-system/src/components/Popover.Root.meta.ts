@@ -26,13 +26,13 @@ export const meta = {
       name: 'aria-label',
       type: 'string',
       required: false,
-      description: 'Accessible name when no visible caption exists.',
+      description: 'Accessible name when no visible caption exists. Only with role="dialog"; a role-less popover drops it, so name its contents instead.',
     },
     {
       name: 'aria-labelledby',
       type: 'string',
       required: false,
-      description: 'Id of the visible caption.',
+      description: 'Id of the visible caption. Only with role="dialog"; a role-less popover drops it.',
     },
     {
       name: 'role',
