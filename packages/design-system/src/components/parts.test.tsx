@@ -246,6 +246,26 @@ describe('composed handlers', () => {
     expect(document.activeElement).toBe(screen.getByRole('textbox'));
   });
 
+  it('keeps built-in names and focusability when a wrapper passes undefined through', () => {
+    render(
+      <Dialog open onOpenChange={noop} aria-labelledby={undefined} tabIndex={undefined} data-testid="dlg">
+        <Dialog.Title>Save</Dialog.Title>
+      </Dialog>,
+    );
+    const dialog = screen.getByTestId('dlg');
+    expect(dialog.getAttribute('aria-labelledby')).toBe(screen.getByText('Save').id);
+    expect(dialog.tabIndex).toBe(-1);
+    cleanup();
+    render(
+      <BottomSheet open onOpenChange={noop} aria-describedby={undefined} tabIndex={undefined} data-testid="sheet">
+        <BottomSheet.Description>More</BottomSheet.Description>
+      </BottomSheet>,
+    );
+    const sheet = screen.getByTestId('sheet');
+    expect(sheet.getAttribute('aria-describedby')).toBe(screen.getByText('More').id);
+    expect(sheet.tabIndex).toBe(-1);
+  });
+
   it('lets Popover take a consumer tabIndex', () => {
     function Harness() {
       const popover = usePopover({ open: true });

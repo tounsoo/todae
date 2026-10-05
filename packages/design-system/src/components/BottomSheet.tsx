@@ -277,10 +277,10 @@ export function BottomSheet({
             }}
           />
           <div
-            aria-labelledby={labelledBy}
-            aria-describedby={describedBy}
-            tabIndex={-1}
             {...props}
+            aria-labelledby={props['aria-labelledby'] ?? labelledBy}
+            aria-describedby={props['aria-describedby'] ?? describedBy}
+            tabIndex={props.tabIndex ?? -1}
             ref={sheetRefs}
             className={cx(styles.sheet, className)}
             role="dialog"

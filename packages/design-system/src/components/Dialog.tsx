@@ -185,10 +185,10 @@ export function Dialog({
   return (
     <DialogContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
       <dialog
-        aria-labelledby={labelledBy}
-        aria-describedby={describedBy}
-        tabIndex={-1}
         {...props}
+        aria-labelledby={props['aria-labelledby'] ?? labelledBy}
+        aria-describedby={props['aria-describedby'] ?? describedBy}
+        tabIndex={props.tabIndex ?? -1}
         ref={dialogRefs}
         className={cx(styles.dialog, className)}
         data-entered={entered ? '' : undefined}

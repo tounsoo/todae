@@ -171,7 +171,13 @@ function Root({
 }
 
 function Icon({ className, ...props }: ButtonIconProps) {
-  return <span aria-hidden {...props} className={[styles.icon, className].filter(Boolean).join(' ')} />;
+  return (
+    <span
+      {...props}
+      aria-hidden={props['aria-hidden'] ?? true}
+      className={[styles.icon, className].filter(Boolean).join(' ')}
+    />
+  );
 }
 
 export function ButtonGroup({ className, children, ...props }: ButtonGroupProps) {

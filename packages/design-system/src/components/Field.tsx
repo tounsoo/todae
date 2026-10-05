@@ -130,7 +130,13 @@ export type FieldAffixProps = {
 } & ComponentPropsWithRef<'span'>;
 
 function Icon({ interactive, className, ...props }: FieldIconProps) {
-  return <span aria-hidden={interactive ? undefined : true} {...props} className={cx(styles.adornment, className)} />;
+  return (
+    <span
+      {...props}
+      aria-hidden={props['aria-hidden'] ?? (interactive ? undefined : true)}
+      className={cx(styles.adornment, className)}
+    />
+  );
 }
 
 function Affix({ className, ...props }: FieldAffixProps) {

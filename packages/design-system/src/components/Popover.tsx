@@ -55,8 +55,8 @@ export function Popover({
   usePopoverSync(localRef, open);
   return (
     <div
-      tabIndex={-1}
       {...props}
+      tabIndex={props.tabIndex ?? -1}
       id={id}
       ref={(node) => {
         localRef.current = node;
