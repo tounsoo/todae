@@ -298,7 +298,8 @@ export function pathToPointer(path: string): string {
 
 /**
  * Parses a DTCG 2025.10 JSON Pointer alias (`#/color/gray/50/$value`) into the
- * dot path of the token it names. Only whole-value aliases are supported.
+ * dot path of the token it names. Only whole-value aliases are supported here;
+ * color channels use {@link parseComponentPointer}.
  */
 export function pointerToPath(pointer: string, loc: string): string {
   if (!pointer.startsWith('#/')) {
@@ -323,22 +324,53 @@ export function pointerToPath(pointer: string, loc: string): string {
   return path;
 }
 
+const OKLCH_CHANNELS = ['l', 'c', 'h'] as const;
+
+/**
+ * Parses a property-level pointer to one OKLCH channel of another color token,
+ * `#/color/accent/default/$value/components/0`, into its token path and channel.
+ */
+export function parseComponentPointer(pointer: string, loc: string): { path: string; channel: 'l' | 'c' | 'h' } {
+  const match = typeof pointer === 'string' ? pointer.match(/^(#\/.+\/\$value)\/components\/([0-2])$/) : null;
+  if (!match) fail(`${loc} component $ref "${String(pointer)}" must point at "#/<token>/$value/components/0|1|2"`);
+  return { path: pointerToPath(match[1]!, loc), channel: OKLCH_CHANNELS[Number(match[2])]! };
+}
+
+function serializeColor(value: unknown, path: string): { ref: string | null; cssValue: string } {
+  if (!isRecord(value) || value.colorSpace !== 'oklch' || !Array.isArray(value.components)) {
+    fail(`Token "${path}" color must be OKLCH`);
+  }
+  if (value.components.length !== 3) fail(`Token "${path}" OKLCH must have three components`);
+  const alpha = value.alpha;
+  if (alpha !== undefined && typeof alpha !== 'number') fail(`Token "${path}" alpha must be a number`);
+  let origin: string | null = null;
+  const channels = value.components.map((component, i) => {
+    if (typeof component === 'number') return String(component);
+    if (!isRef(component)) fail(`Token "${path}" OKLCH component ${i} must be a number or a component $ref`);
+    const ref = parseComponentPointer(component.$ref, `Token "${path}"`);
+    if (origin !== null && origin !== ref.path) {
+      fail(`Token "${path}" component $refs must all point at one color, not ${origin} and ${ref.path}`);
+    }
+    origin = ref.path;
+    return ref.channel;
+  });
+  const [l, c, h] = channels;
+  if (origin !== null) {
+    // Relative color syntax keeps the origin live: overriding it at runtime
+    // re-tints this color too.
+    const suffix = alpha === undefined ? '' : ` / ${alpha}`;
+    return { ref: origin, cssValue: `oklch(from var(${cssVarName(origin)}) ${l} ${c} ${h}${suffix})` };
+  }
+  const base = `oklch(${l} ${c} ${h})`;
+  return { ref: null, cssValue: alpha === undefined || alpha === 1 ? base : `oklch(${l} ${c} ${h} / ${alpha})` };
+}
+
 export function serializeValue(token: TokenNode, path: string): { ref: string | null; cssValue: string } {
   if (isRef(token.$value)) {
     const ref = pointerToPath(token.$value.$ref, `Token "${path}"`);
     return { ref, cssValue: `var(${cssVarName(ref)})` };
   }
-  if (token.$type === 'color') {
-    if (!isRecord(token.$value) || token.$value.colorSpace !== 'oklch' || !Array.isArray(token.$value.components)) {
-      fail(`Token "${path}" color must be OKLCH`);
-    }
-    const [l, c, h] = token.$value.components;
-    if (![l, c, h].every((n) => typeof n === 'number')) fail(`Token "${path}" OKLCH components must be numbers`);
-    const alpha = token.$value.alpha;
-    if (alpha !== undefined && typeof alpha !== 'number') fail(`Token "${path}" alpha must be a number`);
-    const base = `oklch(${l} ${c} ${h})`;
-    return { ref: null, cssValue: alpha === undefined || alpha === 1 ? base : `oklch(${l} ${c} ${h} / ${alpha})` };
-  }
+  if (token.$type === 'color') return serializeColor(token.$value, path);
   if (token.$type === 'dimension') {
     if (!isRecord(token.$value) || typeof token.$value.value !== 'number' || typeof token.$value.unit !== 'string') {
       fail(`Token "${path}" dimension must be { value, unit }`);
@@ -353,28 +385,34 @@ export function serializeValue(token: TokenNode, path: string): { ref: string | 
   fail(`Token "${path}" has unsupported $type "${token.$type ?? ''}"`);
 }
 
+/**
+ * Refs must exist, form no cycle, and point at a lower layer, or at a token
+ * declared alongside in the same set or modifier context (`sameEntry`).
+ */
 export function validateRefs(
   tokens: FlatToken[],
   known: Map<string, Layer>,
+  sameEntry: (from: string, to: string) => boolean = () => false,
 ): void {
   const layerPaths = new Map<string, Layer>();
   for (const [path, layer] of known) layerPaths.set(path, layer);
 
-  function resolveLayer(path: string, from: Layer, stack: string[]): Layer {
+  function resolveLayer(path: string, from: Layer, fromPath: string, stack: string[]): Layer {
     if (stack.includes(path)) fail(`$ref cycle: ${[...stack, path].join(' -> ')}`);
     const targetLayer = layerPaths.get(path);
     if (!targetLayer) fail(`$ref "${path}" does not exist`);
-    if (LAYER_RANK[targetLayer] >= LAYER_RANK[from]) {
+    if (LAYER_RANK[targetLayer] >= LAYER_RANK[from] && !sameEntry(fromPath, path)) {
       fail(`$ref "${path}" must point at a lower layer than ${from}`);
     }
-    const target = tokens.find((t) => t.path === path && t.layer === targetLayer);
-    if (target?.ref) resolveLayer(target.ref, targetLayer, [...stack, path]);
+    for (const target of tokens.filter((t) => t.path === path && t.layer === targetLayer)) {
+      if (target.ref) resolveLayer(target.ref, targetLayer, path, [...stack, path]);
+    }
     return targetLayer;
   }
 
   for (const token of tokens) {
     if (!token.ref) continue;
-    resolveLayer(token.ref, token.layer, [token.path]);
+    resolveLayer(token.ref, token.layer, token.path, [token.path]);
   }
 }
 
@@ -1047,7 +1085,12 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
     if (seen && seen !== token.type) fail(`token "${token.path}" has $type ${seen} and ${token.type} across contexts`);
     types.set(token.path, token.type);
   }
-  validateRefs(all, known);
+  for (const token of all) {
+    if (token.ref && types.has(token.ref) && types.get(token.ref) !== token.type) {
+      fail(`token "${token.path}" is a ${token.type} but references the ${types.get(token.ref)} "${token.ref}"`);
+    }
+  }
+  validateRefs(all, known, (from, to) => position.get(from) === position.get(to));
   // CSS places each entry by its resolutionOrder position, so an alias to a
   // later entry would resolve before that entry's context is applied. Scoped
   // modifier blocks are not re-declared when another modifier's context
@@ -1056,10 +1099,11 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
   const byPath = new Map<string, FlatToken[]>();
   for (const token of all) byPath.set(token.path, [...(byPath.get(token.path) ?? []), token]);
   // First token path reached through `ref` (at any depth) that a scoped modifier declares.
-  function scopedDependency(ref: string): string | null {
+  function scopedDependency(ref: string, from: number): string | null {
     const queue = [ref];
     for (let path = queue.shift(); path !== undefined; path = queue.shift()) {
-      if (scoped(entries[position.get(path) ?? -1])) return path;
+      const at = position.get(path) ?? -1;
+      if (at !== from && scoped(entries[at])) return path;
       for (const token of byPath.get(path) ?? []) if (token.ref) queue.push(token.ref);
     }
     return null;
@@ -1068,12 +1112,12 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
     for (const token of entryTokens(entry)) {
       if (!token.ref) continue;
       const target = position.get(token.ref) ?? -1;
-      if (target >= index) {
+      if (target > index) {
         fail(
           `token "${token.path}" references "${token.ref}" from ${owner.get(token.ref)}, which must come earlier in resolutionOrder`,
         );
       }
-      const dependency = scoped(entry) ? scopedDependency(token.ref) : null;
+      const dependency = scoped(entry) ? scopedDependency(token.ref, index) : null;
       if (dependency) {
         fail(
           `token "${token.path}" in ${entry.kind} "${entry.name}" depends on "${dependency}" from ${owner.get(dependency)}; scoped modifiers may not alias each other`,

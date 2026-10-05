@@ -12,6 +12,7 @@ import {
   catalogSelectors,
   flattenTokens,
   pathToPointer,
+  parseComponentPointer,
   parseExtension,
   pointerToPath,
   serializeValue,
@@ -172,6 +173,36 @@ describe('build-tokens validations', () => {
     ).toThrow(/Token "button\.bg\.default" \$ref "color\.accent\.default" must be a JSON Pointer/);
   });
 
+  it('parses pointers to OKLCH channels', () => {
+    expect(parseComponentPointer('#/color/accent/default/$value/components/0', 't')).toEqual({
+      path: 'color.accent.default',
+      channel: 'l',
+    });
+    expect(parseComponentPointer('#/color/gray/950/$value/components/2', 't').channel).toBe('h');
+    expect(() => parseComponentPointer('#/color/gray/950/$value/components/3', 't')).toThrow(/components\/0\|1\|2/);
+    expect(() => parseComponentPointer('#/color/gray/950/$value/alpha', 't')).toThrow(/components\/0\|1\|2/);
+    expect(() => parseComponentPointer('color.gray.950', 't')).toThrow(/components\/0\|1\|2/);
+  });
+
+  it('emits relative color syntax for channel refs', () => {
+    const ref = (path: string, i: number) => ({ $ref: `#/${path.replaceAll('.', '/')}/$value/components/${i}` });
+    const color = (components: unknown[], alpha?: number) => ({
+      $type: 'color',
+      $value: { colorSpace: 'oklch', components, ...(alpha === undefined ? {} : { alpha }) },
+    });
+    expect(
+      serializeValue(color([ref('color.accent.default', 0), ref('color.accent.default', 1), ref('color.accent.default', 2)], 0.12), 'x'),
+    ).toEqual({ ref: 'color.accent.default', cssValue: 'oklch(from var(--todae-color-accent-default) l c h / 0.12)' });
+    expect(serializeValue(color([0.4, ref('color.accent.default', 1), ref('color.accent.default', 2)]), 'x').cssValue).toBe(
+      'oklch(from var(--todae-color-accent-default) 0.4 c h)',
+    );
+    expect(() => serializeValue(color([ref('color.gray.50', 0), ref('color.gray.900', 1), 0]), 'x')).toThrow(
+      /must all point at one color/,
+    );
+    expect(() => serializeValue(color([0.5, 0.1]), 'x')).toThrow(/three components/);
+    expect(() => serializeValue(color(['0.5', 0.1, 30]), 'x')).toThrow(/number or a component \$ref/);
+  });
+
   it('emits var chains, not resolved literals', () => {
     const serialized = serializeValue(
       { $type: 'color', $value: { $ref: '#/color/accent/default/$value' } },
@@ -189,7 +220,10 @@ describe('committed token graph', () => {
     const aliases = graph.tokens.filter((t) => t.ref !== null);
     expect(aliases.length).toBeGreaterThan(0);
     for (const token of aliases) {
-      expect((token.value as { $ref: string }).$ref).toBe(pathToPointer(token.ref!));
+      const value = token.value as { $ref?: string; components?: { $ref: string }[] };
+      const pointers = value.$ref ? [value.$ref] : (value.components ?? []).map((component) => component.$ref);
+      expect(pointers.length, token.path).toBeGreaterThan(0);
+      for (const pointer of pointers) expect(pointer.startsWith(pathToPointer(token.ref!)), token.path).toBe(true);
       expect(token.ref).toMatch(PATH_RE);
     }
   });
@@ -262,6 +296,19 @@ describe('committed token graph', () => {
     expect(graph.tokens.find((t) => t.path === 'tooltip.padding.y')?.cssValue).toBe(
       'var(--todae-space-1)',
     );
+  });
+
+  it('derives translucent semantic colors from their base color', async () => {
+    const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
+    for (const context of ['light', 'dark'] as const) {
+      const value = (path: string) =>
+        graph.tokens.find((t) => t.layer === 'appearance' && t.context === context && t.path === path)?.cssValue;
+      expect(value('color.bg.selected')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.12)');
+      expect(value('color.accent.soft')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.12)');
+      expect(value('color.accent.soft-strong')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.2)');
+      expect(value('color.bg.scrim')).toMatch(/^oklch\(from var\(--todae-color-gray-950\) l c h \/ 0\.\d+\)$/);
+    }
+    expect(graph.tokens.filter((t) => t.type === 'color' && t.layer === 'appearance' && t.ref === null)).toEqual([]);
   });
 
   it('emits distinct accent hover and active var chains', async () => {
@@ -454,6 +501,40 @@ describe('resolver-driven build', () => {
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(
       /token "space\.tint" in modifier "size" depends on "color\.accent" from modifier "appearance"/,
+    );
+  });
+
+  it('allows refs within one set or context, but not cycles or type changes', async () => {
+    const color = (ref: string) => ({ $type: 'color', $value: { $ref: ref } });
+    const within = await fixture((resolver) => {
+      (resolver.sets.contract!.sources as unknown[]).push({
+        field: { tint: { a: color('#/field/bg/default/$value') } },
+      });
+    });
+    const graph = await buildTokensGraph(within);
+    expect(graph.tokens.find((t) => t.path === 'field.tint.a')?.cssValue).toBe('var(--todae-field-bg-default)');
+
+    const cycle = await fixture((resolver) => {
+      (resolver.sets.contract!.sources as unknown[]).push({
+        field: { tint: { a: color('#/field/tint/b/$value'), b: color('#/field/tint/a/$value') } },
+      });
+    });
+    await expect(buildTokensGraph(cycle)).rejects.toThrow(/\$ref cycle: field\.tint\.a -> field\.tint\.b -> field\.tint\.a/);
+
+    const across = await fixture((resolver) => {
+      (resolver.sets.button!.sources as unknown[]).push({
+        button: { base: { radius: { $type: 'dimension', $value: { $ref: '#/field/radius/$value' } } } },
+      });
+    });
+    await expect(buildTokensGraph(across)).rejects.toThrow(/must point at a lower layer than contract/);
+
+    const retyped = await fixture((resolver) => {
+      (resolver.sets.contract!.sources as unknown[]).push({
+        field: { tint: { a: { $type: 'dimension', $value: { $ref: '#/color/gray/50/$value' } } } },
+      });
+    });
+    await expect(buildTokensGraph(retyped)).rejects.toThrow(
+      /token "field\.tint\.a" is a dimension but references the color "color\.gray\.50"/,
     );
   });
 
