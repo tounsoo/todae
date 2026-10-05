@@ -229,14 +229,8 @@ export function OptionList(props: OptionListProps) {
         data-selection-mode={multiple ? 'multiple' : 'single'}
         className={cx(styles.list, className)}
         onKeyDown={composeHandlers(onKeyDownProp, onKeyDown)}
-        onPointerUp={(event) => {
-          onPointerUp?.(event);
-          setHighlighted(null);
-        }}
-        onPointerCancel={(event) => {
-          onPointerCancel?.(event);
-          setHighlighted(null);
-        }}
+        onPointerUp={composeHandlers(onPointerUp, () => setHighlighted(null))}
+        onPointerCancel={composeHandlers(onPointerCancel, () => setHighlighted(null))}
       >
         {children}
       </div>

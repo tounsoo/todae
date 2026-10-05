@@ -36,16 +36,18 @@ export function useComposedRefs<T>(...refs: (Ref<T> | undefined)[]): RefCallback
 }
 
 /**
- * Runs the consumer's handler first, then the part's own behavior unless the
- * consumer called `event.preventDefault()`.
+ * Runs the consumer's handler first, then the part's own behavior unless that
+ * handler called `event.preventDefault()`. A child that prevented the event on
+ * its way up does not switch the part's behavior off.
  */
 export function composeHandlers<E extends SyntheticEvent>(
   theirs: ((event: E) => void) | undefined,
   ours: (event: E) => void,
 ): (event: E) => void {
   return (event) => {
+    const preventedBefore = event.defaultPrevented;
     theirs?.(event);
-    if (!event.defaultPrevented) ours(event);
+    if (preventedBefore || !event.defaultPrevented) ours(event);
   };
 }
 

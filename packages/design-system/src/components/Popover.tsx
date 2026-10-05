@@ -55,6 +55,7 @@ export function Popover({
   usePopoverSync(localRef, open);
   return (
     <div
+      tabIndex={-1}
       {...props}
       id={id}
       ref={(node) => {
@@ -62,7 +63,6 @@ export function Popover({
         setRef(node);
       }}
       popover="manual"
-      tabIndex={-1}
       role={role}
       className={[styles.content, className].filter(Boolean).join(' ')}
       style={style}

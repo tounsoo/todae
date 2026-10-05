@@ -195,6 +195,8 @@ export function Dialog({
         data-exiting={exiting ? '' : undefined}
         onPointerDown={(event) => {
           onPointerDown?.(event);
+          // Always tracked, even when the consumer prevents it, so a later click
+          // is judged by where its own press started.
           pointerOnDialog.current = event.target === dialogRef.current;
         }}
         onClick={composeHandlers(onClick, (event) => {

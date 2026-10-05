@@ -233,6 +233,32 @@ describe('composed handlers', () => {
     expect(onChange).toHaveBeenCalledWith('a');
   });
 
+  it('ignores a preventDefault from a child, which is not the consumer opting out', () => {
+    render(
+      <Field.Root aria-label="t" data-testid="shell">
+        <Field.Icon data-testid="icon" onMouseDown={(event) => event.preventDefault()}>
+          *
+        </Field.Icon>
+        <Field.TextInput value="" onChange={noop} />
+      </Field.Root>,
+    );
+    fireEvent.mouseDown(screen.getByTestId('icon'));
+    expect(document.activeElement).toBe(screen.getByRole('textbox'));
+  });
+
+  it('lets Popover take a consumer tabIndex', () => {
+    function Harness() {
+      const popover = usePopover({ open: true });
+      return (
+        <Popover {...popover.getPopoverProps()} tabIndex={0} aria-label="Menu">
+          Menu
+        </Popover>
+      );
+    }
+    render(<Harness />);
+    expect(screen.getByText('Menu').tabIndex).toBe(0);
+  });
+
   it('keeps Field.Root focusing its input after a consumer onMouseDown', () => {
     const onMouseDown = vi.fn();
     render(
