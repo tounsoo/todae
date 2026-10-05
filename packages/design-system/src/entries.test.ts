@@ -1,9 +1,28 @@
-import { readFileSync, readdirSync } from 'node:fs';
+// @vitest-environment node
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { build } from 'vite';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-// Reads the built package, so run `pnpm build` first (CI builds before testing).
-const dist = join(import.meta.dirname, '../dist');
+// Builds the package fresh into a temp dir, so this never reads a stale dist.
+const dist = mkdtempSync(join(tmpdir(), 'todae-dist-'));
+beforeAll(async () => {
+  // Vitest runs with NODE_ENV=test, which would make Vite emit the dev JSX runtime.
+  const env = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'production';
+  try {
+    await build({
+      configFile: join(import.meta.dirname, '../vite.config.ts'),
+      logLevel: 'silent',
+      mode: 'production',
+      build: { outDir: dist, emptyOutDir: true },
+    });
+  } finally {
+    process.env.NODE_ENV = env;
+  }
+}, 60_000);
+afterAll(() => rmSync(dist, { recursive: true, force: true }));
 const read = (file: string) => readFileSync(join(dist, file), 'utf8');
 const pkg = JSON.parse(readFileSync(join(import.meta.dirname, '../package.json'), 'utf8')) as {
   exports: Record<string, { import: string; types: string } | string>;
@@ -35,6 +54,6 @@ describe('package entries', () => {
       expect(code, file).not.toMatch(/\.css["']/);
       for (const [, spec] of code.matchAll(/from\s+["']([^."'][^"']*)["']/g)) expect(spec, file).toBe('react/jsx-runtime');
     }
-    expect(readdirSync(join(dist, 'server'))).toContain(`${name}.d.ts`);
+    expect(readFileSync(join(import.meta.dirname, '../tsconfig.build.json'), 'utf8')).toContain('"include": ["src"]');
   });
 });

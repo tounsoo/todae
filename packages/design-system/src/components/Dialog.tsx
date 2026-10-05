@@ -232,7 +232,8 @@ function DialogRoot({
           // element: the owner stays in control of `open`, and the exit motion runs.
           event.preventDefault();
           const dialog = dialogRef.current;
-          if (dialog) dialog.returnValue = submitter?.value ?? '';
+          // Natively a submit without a submitter leaves returnValue as it was.
+          if (dialog && submitter) dialog.returnValue = submitter.value;
           requestClose('form');
         }}
         onClick={composeHandlers(onClick, (event) => {

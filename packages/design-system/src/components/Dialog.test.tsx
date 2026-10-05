@@ -140,9 +140,12 @@ describe('Dialog form close', () => {
         <button>OK</button>
       </form>,
     );
+    dialog.returnValue = 'previous';
     const submit = new Event('submit', { bubbles: true, cancelable: true });
     dialog.querySelector('form')!.dispatchEvent(submit);
     expect(submit.defaultPrevented).toBe(true);
+    // No submitter, so returnValue stays as it was, as natively.
+    expect(dialog.returnValue).toBe('previous');
     expect(close).not.toHaveBeenCalled();
     expect(dialog.hasAttribute('open')).toBe(true);
     close.mockRestore();
