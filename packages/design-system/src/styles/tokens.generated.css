@@ -1,8 +1,5 @@
 @layer todae.base {
 :root {
-  --todae-color-blue-400: oklch(0.68 0.16 255);
-  --todae-color-blue-500: oklch(0.55 0.18 255);
-  --todae-color-blue-600: oklch(0.45 0.19 255);
   --todae-color-gray-50: oklch(0.98 0.005 260);
   --todae-color-gray-100: oklch(0.93 0.007 260);
   --todae-color-gray-200: oklch(0.87 0.009 260);
@@ -14,6 +11,7 @@
   --todae-color-gray-800: oklch(0.28 0.02 260);
   --todae-color-gray-900: oklch(0.22 0.02 260);
   --todae-color-gray-950: oklch(0.16 0.02 260);
+  --todae-color-red-300: oklch(0.8 0.1 25);
   --todae-color-red-400: oklch(0.68 0.16 25);
   --todae-color-red-500: oklch(0.55 0.18 25);
   --todae-color-red-600: oklch(0.45 0.19 25);
@@ -53,9 +51,9 @@
 
 :root,
 [data-appearance="light"] {
-  --todae-color-accent-active: var(--todae-color-blue-600);
-  --todae-color-accent-default: var(--todae-color-blue-500);
-  --todae-color-accent-hover: var(--todae-color-blue-400);
+  --todae-color-accent-active: var(--todae-color-gray-950);
+  --todae-color-accent-default: var(--todae-color-gray-900);
+  --todae-color-accent-hover: var(--todae-color-gray-800);
   --todae-color-accent-soft: oklch(from var(--todae-color-accent-default) l c h / 0.12);
   --todae-color-accent-soft-strong: oklch(from var(--todae-color-accent-default) l c h / 0.2);
   --todae-color-bg-canvas: var(--todae-color-gray-50);
@@ -70,16 +68,16 @@
   --todae-color-border-subtle: var(--todae-color-gray-300);
   --todae-color-danger-default: var(--todae-color-red-600);
   --todae-color-fg-default: var(--todae-color-gray-900);
-  --todae-color-fg-muted: var(--todae-color-gray-900);
-  --todae-color-fg-placeholder: var(--todae-color-gray-600);
+  --todae-color-fg-muted: var(--todae-color-gray-600);
+  --todae-color-fg-placeholder: var(--todae-color-gray-500);
   --todae-color-on-accent: var(--todae-color-gray-50);
   color-scheme: light;
 }
 
 [data-appearance="dark"] {
-  --todae-color-accent-active: var(--todae-color-blue-600);
-  --todae-color-accent-default: var(--todae-color-blue-500);
-  --todae-color-accent-hover: var(--todae-color-blue-400);
+  --todae-color-accent-active: var(--todae-color-gray-200);
+  --todae-color-accent-default: var(--todae-color-gray-50);
+  --todae-color-accent-hover: var(--todae-color-gray-100);
   --todae-color-accent-soft: oklch(from var(--todae-color-accent-default) l c h / 0.12);
   --todae-color-accent-soft-strong: oklch(from var(--todae-color-accent-default) l c h / 0.2);
   --todae-color-bg-canvas: var(--todae-color-gray-900);
@@ -92,11 +90,11 @@
   --todae-color-bg-transparent: oklch(from var(--todae-color-gray-900) l c h / 0);
   --todae-color-border-default: var(--todae-color-gray-50);
   --todae-color-border-subtle: var(--todae-color-gray-700);
-  --todae-color-danger-default: var(--todae-color-red-400);
+  --todae-color-danger-default: var(--todae-color-red-300);
   --todae-color-fg-default: var(--todae-color-gray-50);
-  --todae-color-fg-muted: var(--todae-color-gray-50);
-  --todae-color-fg-placeholder: var(--todae-color-gray-400);
-  --todae-color-on-accent: var(--todae-color-gray-50);
+  --todae-color-fg-muted: var(--todae-color-gray-200);
+  --todae-color-fg-placeholder: var(--todae-color-gray-300);
+  --todae-color-on-accent: var(--todae-color-gray-950);
   color-scheme: dark;
 }
 

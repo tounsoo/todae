@@ -5,6 +5,9 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   PATH_RE,
+  apcaContrast,
+  contrastResults,
+  resolveEntries,
   buildCompanyTokens,
   buildTokensGraph,
   cli,
@@ -347,6 +350,44 @@ describe('committed token graph', () => {
     expect(graph.tokens.filter((t) => t.type === 'color' && t.layer === 'appearance' && t.ref === null)).toEqual([]);
   });
 
+  it('matches the APCA-W3 reference values', () => {
+    const hex = (value: string) => [0, 2, 4].map((i) => parseInt(value.slice(i, i + 2), 16) / 255) as [number, number, number];
+    expect(apcaContrast(hex('000000'), hex('ffffff'))).toBeCloseTo(106.04, 2);
+    expect(apcaContrast(hex('ffffff'), hex('000000'))).toBeCloseTo(-107.88, 2);
+    expect(apcaContrast(hex('888888'), hex('ffffff'))).toBeCloseTo(63.06, 2);
+    expect(apcaContrast(hex('ffffff'), hex('888888'))).toBeCloseTo(-68.54, 2);
+    expect(apcaContrast(hex('777777'), hex('777777'))).toBe(0);
+  });
+
+  it('checks every Todae text pair with APCA in both appearances', async () => {
+    const results = contrastResults(await resolveEntries(join(import.meta.dirname, '../tokens')));
+    expect(new Set(results.map((r) => r.where))).toEqual(new Set(['appearance "light"', 'appearance "dark"']));
+    for (const r of results) expect(r.lc, `${r.fg} on ${r.bg} in ${r.where}`).toBeGreaterThanOrEqual(r.min);
+    const pairs = results.map((r) => `${r.fg} on ${r.bg}`);
+    for (const pair of [
+      'color.fg.default on color.bg.surface',
+      'color.fg.muted on color.bg.elevated',
+      'color.on-accent on color.accent.hover',
+      'color.danger.default on color.bg.surface',
+    ]) {
+      expect(pairs, pair).toContain(pair);
+    }
+  });
+
+  it('uses a neutral ink accent and a muted color distinct from the default', async () => {
+    const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
+    const at = (path: string, context: string) =>
+      graph.tokens.find((t) => t.path === path && t.context === context)?.cssValue;
+    for (const context of ['light', 'dark']) {
+      expect(at('color.fg.muted', context)).not.toBe(at('color.fg.default', context));
+      expect(at('color.fg.muted', context)).not.toBe(at('color.fg.placeholder', context));
+      for (const slot of ['default', 'hover', 'active']) {
+        expect(at(`color.accent.${slot}`, context)).toMatch(/^var\(--todae-color-gray-\d+\)$/);
+      }
+    }
+    expect(graph.tokens.some((t) => t.path.startsWith('color.blue.'))).toBe(false);
+  });
+
   it('emits distinct accent hover and active var chains', async () => {
     const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
     for (const context of ['light', 'dark'] as const) {
@@ -684,7 +725,7 @@ describe('resolver-driven build', () => {
     expect(() => parseExtension(ext({ layer: 'brand' }), 'set', 'set "x"')).toThrow(/layer must be one of/);
     expect(() => parseExtension(ext({ layer: 'toString' }), 'set', 'set "x"')).toThrow(/layer must be one of/);
     expect(() => parseExtension(ext({ layer: 'core', attribute: 'data-x' }), 'set', 'set "x"')).toThrow(
-      /unknown dev\.todae key "attribute" \(allowed: layer, rules, slots\)/,
+      /unknown dev\.todae key "attribute" \(allowed: layer, rules, slots, contrast\)/,
     );
     expect(() => parseExtension(ext({ layer: 'core', rule: ['button'] }), 'set', 'set "x"')).toThrow(/unknown dev\.todae key "rule"/);
     expect(() => parseExtension(ext({ layer: 'core', rules: ['slots'] }), 'set', 'set "x"')).toThrow(
@@ -702,6 +743,20 @@ describe('resolver-driven build', () => {
     expect(
       parseExtension(ext({ layer: 'contract', rules: ['button'], slots: { 'card.*.bg': ['default'] } }), 'set', 'set "x"'),
     ).toEqual({ layer: 'contract', rules: ['button'], slots: { 'card.*.bg': ['default'] } });
+    const pair = { fg: 'color.fg.default', bg: 'color.bg.canvas', min: 75 };
+    expect(parseExtension(ext({ layer: 'core', contrast: [pair] }), 'set', 'set "x"')).toEqual({ layer: 'core', contrast: [pair] });
+    expect(() => parseExtension(ext({ layer: 'core', contrast: [] }), 'set', 'set "x"')).toThrow(/non-empty array/);
+    expect(() => parseExtension(ext({ layer: 'core', contrast: [{ ...pair, fg: 'Color.fg' }] }), 'set', 'set "x"')).toThrow(
+      /contrast\[0\] fg must be a token path/,
+    );
+    expect(() => parseExtension(ext({ layer: 'core', contrast: [{ ...pair, min: 0 }] }), 'set', 'set "x"')).toThrow(/min must be/);
+    expect(() => parseExtension(ext({ layer: 'core', contrast: [{ ...pair, min: 120 }] }), 'set', 'set "x"')).toThrow(/min must be/);
+    expect(() => parseExtension(ext({ layer: 'core', contrast: [{ ...pair, ratio: 4.5 }] }), 'set', 'set "x"')).toThrow(
+      /unknown key "ratio"/,
+    );
+    expect(() => parseExtension(ext({ layer: 'core', contrast: [pair, pair] }), 'set', 'set "x"')).toThrow(
+      /repeats color\.fg\.default on color\.bg\.canvas/,
+    );
     expect(() => parseExtension(ext({ layer: 'density' }), 'modifier', 'modifier "x"')).toThrow(/data-\* attribute/);
     expect(() =>
       parseExtension(ext({ layer: 'contract', attribute: 'data-x', alias: true, root: true }), 'modifier', 'modifier "x"'),
@@ -865,6 +920,59 @@ describe('company token build', () => {
     expect(blockOf(css, '[data-badge-tone="soft"]')).toContain('--todae-badge-bg: var(--todae-badge-soft-bg);');
   });
 
+  it('holds a company to Todae\'s contrast pairs, which it may retune or extend', async () => {
+    const darkAccent = (components: number[]) => async (_r: Record<string, any>, root: string) => {
+      const file = join(root, 'appearance/dark.json');
+      const tree = JSON.parse(await readFile(file, 'utf8'));
+      tree.color.accent.default.$value.components = components;
+      await writeFile(file, JSON.stringify(tree));
+    };
+    const dim = await company(darkAccent([0.6, 0.14, 25]));
+    await expect(buildCompanyTokens({ resolver: dim, base: tokensDir })).rejects.toThrow(
+      /"color\.on-accent" on "color\.accent\.default" in appearance "dark" is Lc \d+\.\d, below 60/,
+    );
+
+    const retuned = await company(async (r, root) => {
+      await darkAccent([0.6, 0.14, 25])(r, root);
+      r.modifiers.appearance.$extensions['dev.todae'].contrast = [
+        { fg: 'color.on-accent', bg: 'color.accent.default', min: 20 },
+        { fg: 'color.accent.default', bg: 'color.bg.canvas', min: 20 },
+      ];
+    });
+    await expect(buildCompanyTokens({ resolver: retuned, base: tokensDir })).resolves.toBeDefined();
+
+    const own = await company((r) => {
+      r.modifiers.appearance.$extensions['dev.todae'].contrast = [{ fg: 'brand.ink', bg: 'color.bg.canvas', min: 105 }];
+    });
+    const error = await buildCompanyTokens({ resolver: own, base: tokensDir }).catch((e: Error) => e.message);
+    expect(error).toMatch(/^contrast: 2 pair\(s\) fail APCA/);
+    expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "light" is Lc 100.2, below 105');
+    expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "dark" is Lc 102.0, below 105');
+  });
+
+  it('composites a translucent text color and rejects a translucent background', async () => {
+    const translucent = await company((r) => {
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.bg.selected', bg: 'color.bg.canvas', min: 1 }];
+    });
+    await expect(buildCompanyTokens({ resolver: translucent, base: tokensDir })).resolves.toBeDefined();
+    const faint = await company((r) => {
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.bg.selected', bg: 'color.bg.canvas', min: 30 }];
+    });
+    await expect(buildCompanyTokens({ resolver: faint, base: tokensDir })).rejects.toThrow(
+      /"color\.bg\.selected" on "color\.bg\.canvas" in set "brand" is Lc \d+\.\d, below 30/,
+    );
+    const scrim = await company((r) => {
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.fg.default', bg: 'color.bg.scrim', min: 1 }];
+    });
+    await expect(buildCompanyTokens({ resolver: scrim, base: tokensDir })).rejects.toThrow(
+      /background "color\.bg\.scrim" must be opaque/,
+    );
+    const missing = await company((r) => {
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.fg.nope', bg: 'color.bg.canvas', min: 1 }];
+    });
+    await expect(buildCompanyTokens({ resolver: missing, base: tokensDir })).rejects.toThrow(/token "color\.fg\.nope" does not exist/);
+  });
+
   it('merges the catalog and types only the company tokens', async () => {
     const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
     const rows = JSON.parse(result.json).tokens as { path: string; context: string | null; cssValue: string }[];
@@ -872,7 +980,7 @@ describe('company token build', () => {
     expect(rows.some((row) => row.path === 'button.outline.bg.default' && row.context === 'outline')).toBe(true);
     expect(rows.filter((row) => row.path === 'color.accent.default').map((row) => row.cssValue)).toEqual([
       'oklch(0.45 0.16 25)',
-      'oklch(0.72 0.14 25)',
+      'oklch(0.78 0.13 25)',
     ]);
     expect(rows.filter((row) => row.path === 'space.control.x').map((row) => row.context)).toEqual([
       'compact',

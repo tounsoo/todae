@@ -12,23 +12,23 @@
     },
     "fg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/gray/50/$value" } },
-      "muted": { "$type": "color", "$value": { "$ref": "#/color/gray/50/$value" } },
-      "placeholder": { "$type": "color", "$value": { "$ref": "#/color/gray/400/$value" } }
+      "muted": { "$type": "color", "$value": { "$ref": "#/color/gray/200/$value" } },
+      "placeholder": { "$type": "color", "$value": { "$ref": "#/color/gray/300/$value" } }
     },
     "border": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/gray/50/$value" } },
       "subtle": { "$type": "color", "$value": { "$ref": "#/color/gray/700/$value" } }
     },
     "danger": {
-      "default": { "$type": "color", "$value": { "$ref": "#/color/red/400/$value" } }
+      "default": { "$type": "color", "$value": { "$ref": "#/color/red/300/$value" } }
     },
     "accent": {
-      "default": { "$type": "color", "$value": { "$ref": "#/color/blue/500/$value" } },
-      "hover": { "$type": "color", "$value": { "$ref": "#/color/blue/400/$value" } },
-      "active": { "$type": "color", "$value": { "$ref": "#/color/blue/600/$value" } },
+      "default": { "$type": "color", "$value": { "$ref": "#/color/gray/50/$value" } },
+      "hover": { "$type": "color", "$value": { "$ref": "#/color/gray/100/$value" } },
+      "active": { "$type": "color", "$value": { "$ref": "#/color/gray/200/$value" } },
       "soft": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": 0.12 } },
       "soft-strong": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": 0.2 } }
     },
-    "on-accent": { "$type": "color", "$value": { "$ref": "#/color/gray/50/$value" } }
+    "on-accent": { "$type": "color", "$value": { "$ref": "#/color/gray/950/$value" } }
   }
 }
