@@ -217,6 +217,12 @@ describe('company override types', () => {
     expect(() => themeOverrideStyle({ 'Brand.Ink': 1 }, { 'Brand.Ink': 'number' })).toThrow(/Unknown theme override/);
     expect(() => themeOverrideStyle({ 'brand.ink': 1 }, { 'brand.ink': 'url' } as never)).toThrow(/Unknown theme override/);
     expect(() => themeOverrideStyle({ toString: 1 }, {})).toThrow(/Unknown theme override/);
+    expect(() => themeOverrideStyle({ 'color.bg.canvas': 0.5 }, { 'color.bg.canvas': 'number' } as never)).toThrow(
+      /Invalid theme override value for "color.bg.canvas"/,
+    );
+    expect(
+      themeOverrideStyle({ 'radius.md': { value: 1, unit: 'rem' } }, { 'radius.md': 'url' } as never),
+    ).toEqual({ '--todae-radius-md': '1rem' });
   });
 
   it('writes company overrides on the ThemeProvider element', () => {

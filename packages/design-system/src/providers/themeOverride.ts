@@ -61,12 +61,12 @@ export function themeOverrideType(key: ThemeOverrideKey): ThemeOverrideType {
 
 const OVERRIDE_TYPES = new Set<string>(Object.values(THEME_OVERRIDE_TYPES));
 
+// Todae's own keys keep their catalog type whatever overrideTypes says.
 function typeOf(key: string, extra: ThemeOverrideTypes | undefined): ThemeOverrideType | undefined {
-  if (extra && Object.hasOwn(extra, key)) {
-    const type = extra[key];
-    return typeof type === 'string' && OVERRIDE_TYPES.has(type) ? type : undefined;
-  }
-  return isThemeOverrideKey(key) ? THEME_OVERRIDE_TYPES[key] : undefined;
+  if (isThemeOverrideKey(key)) return THEME_OVERRIDE_TYPES[key];
+  if (!extra || !Object.hasOwn(extra, key)) return undefined;
+  const type = extra[key];
+  return typeof type === 'string' && OVERRIDE_TYPES.has(type) ? type : undefined;
 }
 
 function isValueOfType(type: ThemeOverrideType, value: unknown): value is ThemeOverrideValue {
