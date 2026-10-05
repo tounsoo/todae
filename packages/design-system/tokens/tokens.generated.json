@@ -464,7 +464,7 @@
       "path": "color.accent.soft-strong",
       "type": "color",
       "cssVar": "--todae-color-accent-soft-strong",
-      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.2)",
+      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.28)",
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "light"
@@ -509,7 +509,7 @@
       "path": "color.bg.selected",
       "type": "color",
       "cssVar": "--todae-color-bg-selected",
-      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.12)",
+      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.2)",
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "light"
@@ -644,7 +644,7 @@
       "path": "color.accent.soft-strong",
       "type": "color",
       "cssVar": "--todae-color-accent-soft-strong",
-      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.2)",
+      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.28)",
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "dark"
@@ -689,7 +689,7 @@
       "path": "color.bg.selected",
       "type": "color",
       "cssVar": "--todae-color-bg-selected",
-      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.12)",
+      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.2)",
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "dark"

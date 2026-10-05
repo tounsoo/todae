@@ -342,9 +342,9 @@ describe('committed token graph', () => {
     for (const context of ['light', 'dark'] as const) {
       const value = (path: string) =>
         graph.tokens.find((t) => t.layer === 'appearance' && t.context === context && t.path === path)?.cssValue;
-      expect(value('color.bg.selected')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.12)');
+      expect(value('color.bg.selected')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.2)');
       expect(value('color.accent.soft')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.12)');
-      expect(value('color.accent.soft-strong')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.2)');
+      expect(value('color.accent.soft-strong')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.28)');
       expect(value('color.bg.scrim')).toMatch(/^oklch\(from var\(--todae-color-gray-950\) l c h \/ 0\.\d+\)$/);
     }
     expect(graph.tokens.filter((t) => t.type === 'color' && t.layer === 'appearance' && t.ref === null)).toEqual([]);
@@ -386,6 +386,19 @@ describe('committed token graph', () => {
       }
     }
     expect(graph.tokens.some((t) => t.path.startsWith('color.blue.'))).toBe(false);
+  });
+
+  it('keeps hover, selected and selected-hover option fills apart under a neutral accent', async () => {
+    const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
+    for (const context of ['light', 'dark']) {
+      const alpha = (path: string) => {
+        const token = graph.tokens.find((t) => t.path === path && t.context === context);
+        return (token?.value as { alpha: number }).alpha;
+      };
+      // option.bg.hover is color.bg.highlight, selected is color.bg.selected, selected-highlighted is accent.soft-strong.
+      expect(alpha('color.bg.selected'), context).toBeGreaterThanOrEqual(2 * alpha('color.bg.highlight'));
+      expect(alpha('color.accent.soft-strong') - alpha('color.bg.selected'), context).toBeGreaterThanOrEqual(0.08);
+    }
   });
 
   it('emits distinct accent hover and active var chains', async () => {
