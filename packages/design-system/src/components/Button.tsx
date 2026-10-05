@@ -158,9 +158,12 @@ function Root({
 
   const unnamed = iconOnly && iconName == null && (!labelledby || labelledbyText === null);
   useLayoutEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && unnamed) {
-      console.error('Button.Root icon-only requires aria-label or aria-labelledby');
-    }
+    if (process.env.NODE_ENV === 'production' || !unnamed) return;
+    // `read` can trail a render that swapped content and label together.
+    const button = buttonRef.current;
+    const fresh = button ? readContent(button) : null;
+    if (fresh && !(fresh.hasIcon && fresh.text === '')) return;
+    console.error('Button.Root icon-only requires aria-label or aria-labelledby');
   }, [unnamed]);
 
   const textName = iconOnly ? null : direct.text;

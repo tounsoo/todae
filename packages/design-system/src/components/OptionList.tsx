@@ -1,5 +1,8 @@
 import {
+  Children,
+  Fragment,
   createContext,
+  isValidElement,
   useCallback,
   useContext,
   useId,
@@ -77,6 +80,18 @@ function isMultiple(props: OptionListProps): props is OptionListMultipleProps {
 // counts. Keyboard order is document order.
 function byDocumentOrder(a: OptionEntry, b: OptionEntry): number {
   return a.node.compareDocumentPosition(b.node) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+}
+
+// Server-render hint only, used until options have registered: direct Option
+// children, looking through fragments.
+function hintOptions(children: ReactNode): { value: string; disabled: boolean }[] {
+  return Children.toArray(children).flatMap((child) => {
+    if (!isValidElement<{ value?: unknown; disabled?: boolean; children?: ReactNode }>(child)) return [];
+    if (child.type === Option && typeof child.props.value === 'string') {
+      return [{ value: child.props.value, disabled: Boolean(child.props.disabled) }];
+    }
+    return child.type === Fragment ? hintOptions(child.props.children) : [];
+  });
 }
 
 export function Option({ value, children, disabled, className, onMouseDown, onClick, ref, ...props }: OptionProps) {
@@ -169,7 +184,8 @@ export function OptionList(props: OptionListProps) {
     observer.observe(list, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [resort]);
-  const enabled = entries.filter((option) => !option.disabled).map((option) => option.value);
+  const known = entries.length > 0 || registered.current.size > 0 ? entries : hintOptions(children);
+  const enabled = known.filter((option) => !option.disabled).map((option) => option.value);
   const selected = useMemo(() => {
     if (isMultiple(props)) return new Set(props.value);
     return new Set(props.value ? [props.value] : []);

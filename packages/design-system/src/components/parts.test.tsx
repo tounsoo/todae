@@ -520,3 +520,25 @@ it('tips only the overflowing label text, not nested badges', () => {
   widths.mockRestore();
   client.mockRestore();
 });
+
+it('marks the active option in server HTML', () => {
+  const html = renderToString(
+    <OptionList aria-label="Fruit" value="b" onChange={noop}>
+      <Option value="a">A</Option>
+      <Option value="b">B</Option>
+    </OptionList>,
+  );
+  expect(html).toMatch(/aria-activedescendant="[^"]*b[^"]*"/);
+});
+
+it('does not warn when a button swaps an icon and its label for text in one render', () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(noop);
+  const { rerender } = render(
+    <Button.Root aria-label="Save">
+      <Button.Icon>+</Button.Icon>
+    </Button.Root>,
+  );
+  rerender(<Button.Root>Save</Button.Root>);
+  expect(error).not.toHaveBeenCalled();
+  error.mockRestore();
+});
