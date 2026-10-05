@@ -168,7 +168,7 @@ export function AcmeButton({ variant = 'outline', ...props }: ButtonRootProps) {
 }
 ```
 
-Child parts register with their parent through context, not by component type, so wrapped children work too. A wrapped `OptionList.Option` still selects and navigates, and a wrapped `Button.Icon` still marks its button as icon-only:
+Parents never find their children by component type, so wrapped children work too. `OptionList.Option` registers with its list through context, so a wrapped option still selects and navigates. `Button.Root` finds `Button.Icon` by a data attribute it renders, so a wrapper that renders `Button.Icon` still counts as the button's icon:
 
 ```tsx
 function AcmeOption(props: OptionListOptionProps) {

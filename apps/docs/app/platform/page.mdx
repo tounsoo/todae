@@ -2,7 +2,7 @@
 
 Todae builds on the browser instead of reimplementing it. It uses the features below with no JavaScript fallbacks, so a browser that has them is a browser Todae supports. There is no separate support matrix.
 
-- **[CSS anchor positioning](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: placing popovers and tooltips next to their trigger, and flipping them at the viewport edge with `position-try-fallbacks`. Without it: the surface keeps the browser's default popover placement and does not follow its trigger.
+- **[CSS anchor positioning](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: placing popovers and tooltips next to their trigger, and flipping them at the viewport edge with `position-try-fallbacks`. Without it: the surface is not placed next to its trigger and sits near the top-left corner of the viewport.
 - **[Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API)**: showing `Popover.Root` and `Tooltip.Root` in the top layer. Todae needs it.
 - **[`<dialog>`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog) and `showModal()`**: `Dialog.Root`, for the top layer, `::backdrop`, focus containment, Escape, and `<form method="dialog">`. Todae needs it.
 - **[`inert`](https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert)**: making the page behind a `BottomSheet` unreachable, and hiding the chip measuring copy. Todae needs it.
