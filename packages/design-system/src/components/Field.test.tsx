@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { createRef, Profiler, StrictMode, useState } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
@@ -1482,7 +1482,7 @@ describe('Field.ChipInput row', () => {
       const field = useChipField({ initialChips: ['Alpha', 'Beta', 'Gamma'] });
       return (
         <Field.Root id="tags" aria-describedby="hint err" invalid>
-          <Field.ChipInput {...field} chipLayout="row" aria-label="ignored" />
+          <Field.ChipInput {...field} chipLayout="row" />
         </Field.Root>
       );
     }
@@ -1593,4 +1593,40 @@ describe('Field.ChipInput row', () => {
     );
     expect(screen.getByRole('textbox').getAttribute('aria-describedby')).toBe('root-hint own-hint');
   });
+});
+
+describe('Field input labels', () => {
+  const noop = () => undefined;
+  type LabelProps = { 'aria-label'?: string; 'aria-labelledby'?: string };
+  const parts: Record<string, (p: LabelProps) => ReactNode> = {
+    TextInput: (p) => <Field.TextInput value="" onChange={noop} {...p} />,
+    Textarea: (p) => <Field.Textarea value="" onChange={noop} {...p} />,
+    ChipInput: (p) => (
+      <Field.ChipInput chips={[]} inputValue="" onInputValueChange={noop} onCommit={noop} onChipRemove={noop} {...p} />
+    ),
+  };
+
+  for (const [name, Part] of Object.entries(parts)) {
+    it(`${name} keeps its own aria-label and aria-labelledby`, () => {
+      render(
+        <Field.Root aria-label="Root name" aria-labelledby="root-label">
+          <Part aria-label="Own name" aria-labelledby="own-label" />
+        </Field.Root>,
+      );
+      const input = screen.getByRole('textbox');
+      expect(input.getAttribute('aria-label')).toBe('Own name');
+      expect(input.getAttribute('aria-labelledby')).toBe('own-label');
+    });
+
+    it(`${name} falls back to the Root's labels`, () => {
+      render(
+        <Field.Root aria-label="Root name" aria-labelledby="root-label">
+          <Part />
+        </Field.Root>,
+      );
+      const input = screen.getByRole('textbox');
+      expect(input.getAttribute('aria-label')).toBe('Root name');
+      expect(input.getAttribute('aria-labelledby')).toBe('root-label');
+    });
+  }
 });

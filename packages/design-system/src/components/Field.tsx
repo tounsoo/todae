@@ -240,8 +240,8 @@ function TextInput({
       maxLength={maxLength}
       aria-invalid={ctx.invalid || undefined}
       aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
-      aria-labelledby={ctx.labelledBy}
-      aria-label={ctx.ariaLabel}
+      aria-labelledby={props['aria-labelledby'] ?? ctx.labelledBy}
+      aria-label={props['aria-label'] ?? ctx.ariaLabel}
       value={value}
       type={type}
       className={[styles.input, className].filter(Boolean).join(' ')}
@@ -299,8 +299,8 @@ function Textarea({
       maxLength={maxLength}
       aria-invalid={ctx.invalid || undefined}
       aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
-      aria-labelledby={ctx.labelledBy}
-      aria-label={ctx.ariaLabel}
+      aria-labelledby={props['aria-labelledby'] ?? ctx.labelledBy}
+      aria-label={props['aria-label'] ?? ctx.ariaLabel}
       value={value}
       rows={resolved.rows}
       data-auto-grow={autoGrow ? '' : undefined}
@@ -412,8 +412,8 @@ function ChipInput({
       disabled={field.disabled}
       aria-invalid={field.invalid || undefined}
       aria-describedby={mergeDescribedBy(field.describedBy, describedBy)}
-      aria-labelledby={field.labelledBy}
-      aria-label={field.ariaLabel}
+      aria-labelledby={props['aria-labelledby'] ?? field.labelledBy}
+      aria-label={props['aria-label'] ?? field.ariaLabel}
       value={inputValue}
       type="text"
       className={[styles.input, className].filter(Boolean).join(' ')}
