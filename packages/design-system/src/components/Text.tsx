@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react';
+import type { HTMLAttributes, Ref } from 'react';
 import styles from './Text.module.css';
 
 export type TextAs = 'p' | 'span' | 'strong';
@@ -11,6 +11,7 @@ export type TextProps = {
   size?: TextSize;
   tone?: TextTone;
   weight?: TextWeight;
+  ref?: Ref<HTMLElement>;
 } & HTMLAttributes<HTMLElement>;
 
 export function Text({
@@ -19,10 +20,12 @@ export function Text({
   tone = 'default',
   weight = 'regular',
   className,
+  ref,
   ...props
 }: TextProps) {
   const classes = [styles.root, styles[size], styles[tone], styles[weight], className]
     .filter(Boolean)
     .join(' ');
-  return <Tag {...props} className={classes} />;
+  // Each tag's element type extends HTMLElement; the ref is typed to the common base.
+  return <Tag {...props} ref={ref as Ref<HTMLParagraphElement>} className={classes} />;
 }

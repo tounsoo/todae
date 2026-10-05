@@ -1,11 +1,11 @@
-import type { HTMLAttributes, ReactNode } from 'react';
+import type { ComponentPropsWithRef, ReactNode } from 'react';
 import styles from './Description.module.css';
 
 export type DescriptionProps = {
   id: string;
   children?: ReactNode;
   className?: string;
-} & Omit<HTMLAttributes<HTMLSpanElement>, 'id' | 'children'>;
+} & Omit<ComponentPropsWithRef<'span'>, 'id' | 'children'>;
 
 export function Description({ id, className, ...props }: DescriptionProps) {
   return (
