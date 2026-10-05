@@ -951,16 +951,26 @@ describe('company token build', () => {
   });
 
   it('composites a translucent text color and rejects a translucent background', async () => {
-    const translucent = await company((r) => {
-      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.bg.selected', bg: 'color.bg.canvas', min: 1 }];
-    });
-    await expect(buildCompanyTokens({ resolver: translucent, base: tokensDir })).resolves.toBeDefined();
-    const faint = await company((r) => {
-      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.bg.selected', bg: 'color.bg.canvas', min: 30 }];
-    });
-    await expect(buildCompanyTokens({ resolver: faint, base: tokensDir })).rejects.toThrow(
-      /"color\.bg\.selected" on "color\.bg\.canvas" in set "brand" is Lc \d+\.\d, below 30/,
+    const veil = (alpha: number, min: number) =>
+      company((r) => {
+        const ch = (i: number) => ({ $ref: `#/color/fg/default/$value/components/${i}` });
+        r.sets.brand.sources.push({
+          brand: { veil: { $type: 'color', $value: { colorSpace: 'oklch', components: [ch(0), ch(1), ch(2)], alpha } } },
+        });
+        r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'brand.veil', bg: 'color.bg.canvas', min }];
+      });
+    // fg.default at 60% over the canvas is well above Lc 45 in both appearances, but below its opaque Lc 100.
+    await expect(buildCompanyTokens({ resolver: await veil(0.6, 45), base: tokensDir })).resolves.toBeDefined();
+    await expect(buildCompanyTokens({ resolver: await veil(0.6, 90), base: tokensDir })).rejects.toThrow(
+      /"brand\.veil" on "color\.bg\.canvas" in appearance "light" is Lc \d+\.\d, below 90/,
     );
+    // A set's pairs run in every appearance, not just the default one.
+    const darkOnly = await company((r) => {
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.red.400', bg: 'color.bg.canvas', min: 50 }];
+    });
+    const darkError = await buildCompanyTokens({ resolver: darkOnly, base: tokensDir }).catch((e: Error) => e.message);
+    expect(darkError).toMatch(/^contrast: 1 pair\(s\) fail APCA/);
+    expect(darkError).toMatch(/"color\.red\.400" on "color\.bg\.canvas" in appearance "dark" is Lc 43\.0, below 50/);
     const scrim = await company((r) => {
       r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.fg.default', bg: 'color.bg.scrim', min: 1 }];
     });

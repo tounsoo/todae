@@ -1352,18 +1352,25 @@ export type ContrastResult = ContrastPair & {
 };
 
 /**
- * Measures every declared contrast pair. A modifier's pairs run once per
- * context, with other modifiers at their defaults; a set's pairs run against
- * the defaults.
+ * Measures every declared contrast pair. Each pair runs once per combination
+ * of the declaring modifier's contexts and every color-scheme modifier's
+ * contexts, so a set's pairs are checked in light and dark too. Other
+ * modifiers stay at their defaults.
  */
 export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
   const results: ContrastResult[] = [];
   for (const declaring of entries) {
     const pairs = declaring.extension.contrast;
     if (!pairs) continue;
-    const contexts =
-      declaring.kind === 'modifier' && !declaring.extension.alias ? [...declaring.contexts.keys()] : [undefined];
-    for (const context of contexts) {
+    const varied = entries.filter(
+      (entry): entry is Extract<ResolvedEntry, { kind: 'modifier' }> =>
+        entry.kind === 'modifier' && !entry.extension.alias && (entry === declaring || entry.extension.colorScheme === true),
+    );
+    let combos: Map<ResolvedEntry, string>[] = [new Map()];
+    for (const modifier of varied) {
+      combos = combos.flatMap((combo) => [...modifier.contexts.keys()].map((context) => new Map([...combo, [modifier, context]])));
+    }
+    for (const combo of combos) {
       const view = new Map<string, FlatToken>();
       for (const entry of entries) {
         const tokens =
@@ -1371,10 +1378,13 @@ export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
             ? entry.tokens
             : entry.extension.alias
               ? [...entry.contexts.values()].flat()
-              : (entry.contexts.get(entry === declaring && context ? context : entry.defaultContext) ?? []);
+              : (entry.contexts.get(combo.get(entry) ?? entry.defaultContext) ?? []);
         for (const token of tokens) view.set(token.path, token);
       }
-      const where = context ? `${declaring.name} "${context}"` : `${declaring.kind} "${declaring.name}"`;
+      const where =
+        combo.size > 0
+          ? [...combo].map(([entry, context]) => `${entry.name} "${context}"`).join(', ')
+          : `${declaring.kind} "${declaring.name}"`;
       for (const pair of pairs) results.push({ ...pair, where, lc: Math.abs(contrastOf(pair.fg, pair.bg, view)) });
     }
   }
