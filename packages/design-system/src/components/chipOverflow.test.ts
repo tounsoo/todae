@@ -86,7 +86,7 @@ describe('planChipOverflow', () => {
       const c = Array(n).fill(40 + (n % 3) * 10);
       const plan = planChipOverflow({ W: 320, g: 8, c, p: 48, m: 72, R: 2 });
       const items = [...c.slice(0, plan.visible), ...(plan.hidden > 0 ? [48] : []), 72];
-      if (48 + 8 + 72 <= 320) expect(rowsFor(items, 320, 8)).toBeLessThanOrEqual(2);
+      expect(rowsFor(items, 320, 8)).toBeLessThanOrEqual(2);
     }
   });
 

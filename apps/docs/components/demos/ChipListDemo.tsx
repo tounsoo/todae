@@ -195,12 +195,13 @@ function ChipList({
     });
   }, [chips, listRef, popover.popoverRef]);
 
+  const hasHidden = hidden > 0;
   useEffect(() => {
-    if (!open || hidden === 0) return;
+    if (!open || !hasHidden) return;
     const panel = popover.popoverRef.current;
     const button = panel?.querySelector('button');
     (button ?? panel)?.focus({ preventScroll: true });
-  }, [open, popover.popoverRef]);
+  }, [open, hasHidden, popover.popoverRef]);
 
   useEffect(() => {
     if (!open || hidden === 0) return;

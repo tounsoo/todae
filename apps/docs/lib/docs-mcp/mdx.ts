@@ -128,7 +128,7 @@ function pageSlugs(appDir: string): string[] {
     } catch (error) {
       if (dir !== appDir) return;
       const detail = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to read docs pages: ${detail}`);
+      throw new Error(`Failed to read docs pages: ${detail}`, { cause: error });
     }
     for (const entry of entries) {
       const full = join(dir, entry.name);
@@ -165,7 +165,7 @@ export function loadPages(appDir: string): PageDoc[] {
       const code = typeof error === 'object' && error && 'code' in error ? error.code : undefined;
       if (code === 'ENOENT') return [];
       const detail = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to read ${slug}/page.mdx: ${detail}`);
+      throw new Error(`Failed to read ${slug}/page.mdx: ${detail}`, { cause: error });
     }
     if (stat.isSymbolicLink() || !stat.isFile()) return [];
     let markdown: string;
@@ -173,7 +173,7 @@ export function loadPages(appDir: string): PageDoc[] {
       markdown = readFileSync(file, 'utf8');
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to read ${slug}/page.mdx: ${detail}`);
+      throw new Error(`Failed to read ${slug}/page.mdx: ${detail}`, { cause: error });
     }
     const titleLine = markdown.split('\n').find((line) => line.startsWith('# '));
     if (!titleLine) throw new Error(`Missing title in ${slug}/page.mdx`);

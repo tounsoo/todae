@@ -32,6 +32,7 @@ export function composeRefs<T>(...refs: (Ref<T> | undefined)[]): RefCallback<T> 
 /** {@link composeRefs} that only changes when one of the refs does. */
 export function useComposedRefs<T>(...refs: (Ref<T> | undefined)[]): RefCallback<T> {
   // The refs themselves are the dependency list.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback(composeRefs(...refs), refs);
 }
 

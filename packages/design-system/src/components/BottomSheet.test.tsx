@@ -1,3 +1,4 @@
+import { Profiler, memo } from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi, expectTypeOf } from 'vitest';
 import { BottomSheet, type BottomSheetRootProps, type SheetCloseReason } from './BottomSheet';
@@ -132,5 +133,29 @@ describe('BottomSheet', () => {
     expectTypeOf<NonNullable<BottomSheetRootProps['snapPoints']>>().toEqualTypeOf<readonly ('mid' | 'full')[]>();
     expectTypeOf<SheetCloseReason>().toEqualTypeOf<'escape' | 'scrim' | 'drag' | 'close-button'>();
     expectTypeOf(['peek'] as const).not.toMatchTypeOf<NonNullable<BottomSheetRootProps['snapPoints']>>();
+  });
+
+  it('keeps its context stable across renders with the default snap points', () => {
+    const onRender = vi.fn();
+    const Parts = memo(function Parts() {
+      return (
+        <Profiler id="title" onRender={onRender}>
+          <BottomSheet.Title>Pick</BottomSheet.Title>
+        </Profiler>
+      );
+    });
+    const onOpenChange = vi.fn();
+    const { rerender } = render(
+      <BottomSheet.Root open onOpenChange={onOpenChange}>
+        <Parts />
+      </BottomSheet.Root>,
+    );
+    const before = onRender.mock.calls.length;
+    rerender(
+      <BottomSheet.Root open onOpenChange={onOpenChange}>
+        <Parts />
+      </BottomSheet.Root>,
+    );
+    expect(onRender.mock.calls.length).toBe(before);
   });
 });

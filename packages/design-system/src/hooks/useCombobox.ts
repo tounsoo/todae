@@ -133,10 +133,14 @@ function labelOf(
   return options.find((option) => option.value === value)?.label ?? cache?.get(value) ?? value;
 }
 
+function defaultCreateLabel(query: string): string {
+  return `Create "${query}"`;
+}
+
 export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult {
   const selectionMode = isMultiple(options) ? 'multiple' : 'single';
   const filter = options.filter ?? defaultFilter;
-  const createLabel = options.createLabel ?? ((query: string) => `Create "${query}"`);
+  const createLabel = options.createLabel ?? defaultCreateLabel;
   const autoId = useId();
   const uid = (options.id ?? autoId).replaceAll(':', '');
   const ids = {
@@ -411,7 +415,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   }, [hasLoader, inputValue, options.loadKey, runLoad]);
 
   useEffect(() => {
-    return () => gate.current.abort();
+    const current = gate.current;
+    return () => current.abort();
   }, []);
 
   useEffect(() => {
@@ -526,16 +531,19 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [ids.listbox, isSheet, open, options.disabled, setOpen],
   );
 
-  const comboboxAria = {
-    role: 'combobox' as const,
-    'aria-expanded': open,
-    'aria-controls': ids.listbox,
-    'aria-activedescendant': open ? activeId ?? undefined : undefined,
-    'aria-autocomplete': 'list' as const,
-    autoComplete: 'off',
-    id: ids.input,
-    disabled: options.disabled,
-  };
+  const comboboxAria = useMemo(
+    () => ({
+      role: 'combobox' as const,
+      'aria-expanded': open,
+      'aria-controls': ids.listbox,
+      'aria-activedescendant': open ? activeId ?? undefined : undefined,
+      'aria-autocomplete': 'list' as const,
+      autoComplete: 'off',
+      id: ids.input,
+      disabled: options.disabled,
+    }),
+    [activeId, ids.input, ids.listbox, open, options.disabled],
+  );
 
   const getTriggerProps = useCallback((): ButtonRootProps & {
     ref: RefObject<HTMLButtonElement | null>;

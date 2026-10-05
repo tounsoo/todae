@@ -11,4 +11,4 @@ export type TooltipWire<I extends boolean = false> = {
       onPointerEnter: (event: PointerEvent<HTMLElement>) => void;
       onPointerLeave: (event: PointerEvent<HTMLElement>) => void;
     }
-  : {});
+  : Record<never, never>);
