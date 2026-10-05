@@ -504,3 +504,19 @@ it('sorts a large option list a bounded number of times while mounting', () => {
   expect(compare.mock.calls.length).toBeLessThan(300 * 9 * 6);
   compare.mockRestore();
 });
+
+it('tips only the overflowing label text, not nested badges', () => {
+  const widths = vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(200);
+  const client = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(50);
+  render(
+    <Button.Root>
+      Save changes
+      <span>3</span>
+    </Button.Root>,
+  );
+  const button = screen.getByRole('button');
+  fireEvent.focus(button);
+  expect(screen.getByRole('tooltip', { hidden: true }).textContent).toBe('Save changes');
+  widths.mockRestore();
+  client.mockRestore();
+});

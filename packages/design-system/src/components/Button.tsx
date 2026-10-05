@@ -67,9 +67,10 @@ function readContent(button: HTMLElement): { hasIcon: boolean; text: string } {
 
 type Content = { hasIcon: boolean; text: string };
 
-// Server-render hint only, used until the button can be read: icon-only when
-// every direct child is a Button.Icon. The read after layout is what counts,
-// and it also sees icons inside wrappers.
+// From direct children: the label text that can overflow (and so feeds the
+// overflow tooltip), and a server-render icon-only hint used until the button
+// can be read. The read after layout decides icon-only, and it also sees icons
+// inside wrappers.
 function hint(children: ReactNode): { iconOnly: boolean; text: string } {
   const items = Children.toArray(children);
   return {
@@ -97,9 +98,8 @@ function Root({
 }: ButtonRootProps) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [read, setRead] = useState<Content | null>(null);
-  const guess = read ? null : hint(children);
-  const iconOnly = read ? read.hasIcon && read.text === '' : guess!.iconOnly;
-  const contentText = read ? read.text : guess!.text;
+  const direct = hint(children);
+  const iconOnly = read ? read.hasIcon && read.text === '' : direct.iconOnly;
   const [labelledbyText, setLabelledbyText] = useState<string | null | undefined>(undefined);
   const [overflowing, setOverflowing] = useState(false);
   const labelRef = useRef<HTMLSpanElement | null>(null);
@@ -163,7 +163,7 @@ function Root({
     }
   }, [unnamed]);
 
-  const textName = iconOnly ? null : contentText;
+  const textName = iconOnly ? null : direct.text;
   const tipText = !tooltip ? null : iconOnly ? iconName : overflowing && textName ? textName : null;
   const tip = useTooltip({ enabled: tipText != null });
   const refs = useComposedRefs(buttonRef, ref);
