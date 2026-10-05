@@ -8,6 +8,7 @@ export {
   type ButtonIconProps,
   type ButtonRootProps,
   type ButtonVariant,
+  type ButtonVariants,
 } from './components/Button';
 export { Dialog, type DialogCloseReason, type DialogProps } from './components/Dialog';
 export {
@@ -121,5 +122,6 @@ export {
   DensityProvider,
   useDensity,
   type Density,
+  type Densities,
   type DensityProviderProps,
 } from './providers/DensityProvider';

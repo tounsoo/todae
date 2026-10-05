@@ -666,11 +666,6 @@ describe('company token build', () => {
   it('declares aliases for new tokens in Todae entries', async () => {
     const px = (value: number) => ({ $type: 'dimension', $value: { value, unit: 'px' } });
     const resolver = await company((r) => {
-      r.sets.button = {
-        sources: [{ button: { base: { lift: px(1) } } }],
-        $extensions: { 'dev.todae': { layer: 'contract' } },
-      };
-      r.resolutionOrder.splice(2, 0, { $ref: '#/sets/button' });
       for (const paint of ['primary', 'secondary', 'ghost', 'outline']) {
         r.modifiers.buttonVariant.contexts[paint] = [
           ...(r.modifiers.buttonVariant.contexts[paint] ?? []),
@@ -680,7 +675,6 @@ describe('company token build', () => {
     });
     const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
     const rescoped = blockOf(css, '[data-appearance],\n[data-density]');
-    expect(rescoped).toContain('--todae-button-lift: var(--todae-button-base-lift);');
     expect(rescoped).toContain('--todae-button-shadow: var(--todae-button-primary-shadow);');
     expect(rescoped).not.toContain('--todae-button-bg-default:');
     expect(blockOf(css, '[data-button-variant="secondary"]')).toBe(
@@ -815,6 +809,35 @@ describe('company token build', () => {
       [
         (r) => (r.modifiers.buttonVariant.contexts.base = r.modifiers.buttonVariant.contexts.outline),
         /context "base" is reserved/,
+      ],
+      [
+        (r) => {
+          delete r.modifiers.density.$extensions['dev.todae'].rules;
+          r.modifiers.density.contexts.comfortable = [
+            { radius: { huge: { $type: 'dimension', $value: { value: 2, unit: 'rem' } } } },
+          ];
+        },
+        /density token "radius\.huge" must be under space\.\*/,
+      ],
+      [
+        (r) => {
+          r.sets.button = {
+            sources: [{ button: { base: { lift: { $type: 'dimension', $value: { value: 1, unit: 'px' } } } } }],
+            $extensions: { 'dev.todae': { layer: 'contract' } },
+          };
+          r.resolutionOrder.push({ $ref: '#/sets/button' });
+        },
+        /button\.base must be radius, padding\.x\/y, font\.size\/weight, gap/,
+      ],
+      [
+        (r) => {
+          r.sets.contract = {
+            sources: [{ chip: { bg: { pressed: { $type: 'color', $value: { $ref: '#/color/bg/subtle/$value' } } } } }],
+            $extensions: { 'dev.todae': { layer: 'contract' } },
+          };
+          r.resolutionOrder.push({ $ref: '#/sets/contract' });
+        },
+        /"chip\.bg" must have exactly default\|hover\|focus\|disabled/,
       ],
     ];
     for (const [edit, error] of cases) {

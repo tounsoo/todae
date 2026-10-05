@@ -3,8 +3,9 @@ import { afterEach } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToString } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
-import { DensityProvider, useDensity } from './DensityProvider';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import type { ButtonVariant, ButtonVariants } from '../components/Button';
+import { DensityProvider, useDensity, type Densities, type Density } from './DensityProvider';
 import { ThemeProvider, useAppearance } from './ThemeProvider';
 import { THEME_OVERRIDE_KEYS, themeOverrideStyle, themeOverrideType } from './themeOverride';
 
@@ -197,6 +198,13 @@ describe('override keys', () => {
     expect(themeOverrideStyle({ 'field.counter.emphasis.weight': 700 })).toEqual({
       '--todae-field-counter-emphasis-weight': '700',
     });
+  });
+});
+
+describe('extensible densities', () => {
+  it('derives Density from the Densities interface companies can augment', () => {
+    expectTypeOf<Density>().toEqualTypeOf<keyof Densities>();
+    expectTypeOf<ButtonVariant>().toEqualTypeOf<keyof ButtonVariants>();
   });
 });
 

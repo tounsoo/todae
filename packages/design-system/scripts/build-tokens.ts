@@ -825,6 +825,14 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
     if (base) {
       const changed = MATCHED_EXTENSION_KEYS.find((key) => extension[key] !== base.extension[key]);
       if (changed) fail(`${loc} extends Todae's ${kind} "${name}", so its ${changed} must match`);
+      // An extension keeps Todae's structural rules and slot shapes, plus its
+      // own. reserved-roots guards Todae's own namespace, so a company's
+      // brand.* tokens are not held to it.
+      const inheritedRules = (base.extension.rules ?? []).filter((rule) => rule !== 'reserved-roots');
+      const rules = [...new Set([...inheritedRules, ...(extension.rules ?? [])])];
+      const slots = { ...base.extension.slots, ...extension.slots };
+      if (rules.length > 0) extension.rules = rules;
+      if (Object.keys(slots).length > 0) extension.slots = slots;
     }
     order.push({ kind, name, def, extension });
   }
