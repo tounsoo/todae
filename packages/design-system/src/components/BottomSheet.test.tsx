@@ -158,4 +158,21 @@ describe('BottomSheet', () => {
     );
     expect(onRender.mock.calls.length).toBe(before);
   });
+
+  it('wraps Tab inside the portaled sheet', () => {
+    render(
+      <BottomSheet.Root open onOpenChange={() => undefined}>
+        <BottomSheet.Title>Sort</BottomSheet.Title>
+        <button type="button">First</button>
+        <button type="button">Last</button>
+      </BottomSheet.Root>,
+    );
+    const grabber = screen.getByRole('button', { name: 'Resize sheet' });
+    const last = screen.getByRole('button', { name: 'Last' });
+    last.focus();
+    expect(fireEvent.keyDown(last, { key: 'Tab' })).toBe(false);
+    expect(document.activeElement).toBe(grabber);
+    expect(fireEvent.keyDown(grabber, { key: 'Tab', shiftKey: true })).toBe(false);
+    expect(document.activeElement).toBe(last);
+  });
 });

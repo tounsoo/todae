@@ -244,7 +244,7 @@ function BottomSheetRoot({
   useScrollLock(present);
   useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: sheetRef });
   useInitialFocus(sheetRef, open, initialFocusRef);
-  useFocusTrap(sheetRef, present);
+  useFocusTrap(sheetNode, present);
   useEscapeKey(open, dismissOnEscape, onEscape);
   useSnapDrag({
     sheetRef,

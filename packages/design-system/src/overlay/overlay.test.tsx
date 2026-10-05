@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { DensityProvider } from '../providers/DensityProvider';
 import { ThemeProvider } from '../providers/ThemeProvider';
@@ -26,10 +26,10 @@ function Restore({ active, restore }: { active: boolean; restore?: { current: HT
 }
 
 function Trap() {
-  const ref = useRef<HTMLDivElement>(null);
-  useFocusTrap(ref, true);
+  const [node, setNode] = useState<HTMLDivElement | null>(null);
+  useFocusTrap(node, true);
   return (
-    <div ref={ref} tabIndex={-1} data-testid="trap">
+    <div ref={setNode} tabIndex={-1} data-testid="trap">
       <button type="button">one</button>
       <button type="button" disabled>
         skip

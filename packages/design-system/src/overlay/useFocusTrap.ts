@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { useEffect } from 'react';
 import { getTabbables } from './tabbables';
 
 function attachTrap(root: HTMLElement): () => void {
@@ -38,10 +38,13 @@ function attachTrap(root: HTMLElement): () => void {
   };
 }
 
-export function useFocusTrap(containerRef: RefObject<HTMLElement | null>, active: boolean): void {
+/**
+ * Takes the container node, not a ref: a portaled container can mount a commit
+ * after its owner, and an effect keyed on a ref would never see it arrive.
+ */
+export function useFocusTrap(root: HTMLElement | null, active: boolean): void {
   useEffect(() => {
-    const root = containerRef.current;
     if (!active || !root) return;
     return attachTrap(root);
-  }, [active, containerRef]);
+  }, [active, root]);
 }
