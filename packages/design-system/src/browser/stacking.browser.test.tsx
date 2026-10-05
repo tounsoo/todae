@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { BottomSheet, type SheetCloseReason } from '../components/BottomSheet';
 import { Button } from '../components/Button';
 import { Dialog } from '../components/Dialog';
+import { OptionList } from '../components/OptionList';
 import { Popover } from '../components/Popover';
 import { Tooltip } from '../components/Tooltip';
 import { usePopover } from '../hooks/usePopover';
@@ -154,5 +155,19 @@ describe('BottomSheet drag in a browser', () => {
     await waitFor(() => expect(grabber.getBoundingClientRect().height).toBeGreaterThan(0));
     await userEvent.dragAndDrop(grabber, screen.getByTestId('floor'));
     await waitFor(() => expect(onClose).toHaveBeenCalledWith('drag'));
+  });
+});
+
+describe('OptionList in a browser', () => {
+  it('hides when given the hidden attribute', () => {
+    render(
+      <Themed>
+        <OptionList.Root aria-label="Fruit" hidden>
+          <OptionList.Option value="apple">Apple</OptionList.Option>
+        </OptionList.Root>
+      </Themed>,
+    );
+    const list = screen.getByRole('listbox', { hidden: true });
+    expect(getComputedStyle(list).display).toBe('none');
   });
 });

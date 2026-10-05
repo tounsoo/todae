@@ -12,6 +12,11 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /* `display: flex` above beats the UA [hidden] rule, so restate it. */
+  .list[hidden] {
+    display: none;
+  }
+
   .list:hover,
   .list:active {
     background: transparent;
