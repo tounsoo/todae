@@ -194,7 +194,7 @@ describe('build-tokens validations', () => {
       serializeValue(color([ref('color.accent.default', 0), ref('color.accent.default', 1), ref('color.accent.default', 2)], 0.12), 'x'),
     ).toEqual({ ref: 'color.accent.default', cssValue: 'oklch(from var(--todae-color-accent-default) l c h / 0.12)' });
     expect(serializeValue(color([0.4, ref('color.accent.default', 1), ref('color.accent.default', 2)]), 'x').cssValue).toBe(
-      'oklch(from var(--todae-color-accent-default) 0.4 c h)',
+      'oklch(from var(--todae-color-accent-default) 0.4 c h / 1)',
     );
     expect(() => serializeValue(color([ref('color.gray.50', 0), ref('color.gray.900', 1), 0]), 'x')).toThrow(
       /must all point at one color/,
@@ -520,6 +520,15 @@ describe('resolver-driven build', () => {
       });
     });
     await expect(buildTokensGraph(cycle)).rejects.toThrow(/\$ref cycle: field\.tint\.a -> field\.tint\.b -> field\.tint\.a/);
+
+    const crossed = await fixture((resolver) => {
+      const light = resolver.modifiers.appearance!.contexts.light!;
+      const dark = resolver.modifiers.appearance!.contexts.dark!;
+      light.push({ color: { pair: { a: color('#/color/pair/b/$value'), b: color('#/color/gray/50/$value') } } });
+      dark.push({ color: { pair: { a: color('#/color/gray/900/$value'), b: color('#/color/pair/a/$value') } } });
+    });
+    const crossedGraph = await buildTokensGraph(crossed);
+    expect(crossedGraph.tokens.find((t) => t.path === 'color.pair.b' && t.context === 'dark')?.ref).toBe('color.pair.a');
 
     const across = await fixture((resolver) => {
       (resolver.sets.button!.sources as unknown[]).push({

@@ -357,9 +357,12 @@ function serializeColor(value: unknown, path: string): { ref: string | null; css
   const [l, c, h] = channels;
   if (origin !== null) {
     // Relative color syntax keeps the origin live: overriding it at runtime
-    // re-tints this color too.
-    const suffix = alpha === undefined ? '' : ` / ${alpha}`;
-    return { ref: origin, cssValue: `oklch(from var(${cssVarName(origin)}) ${l} ${c} ${h}${suffix})` };
+    // re-tints this color too. Alpha is always written, since a missing DTCG
+    // alpha means opaque while relative syntax would inherit the origin's.
+    return {
+      ref: origin,
+      cssValue: `oklch(from var(${cssVarName(origin)}) ${l} ${c} ${h} / ${alpha ?? 1})`,
+    };
   }
   const base = `oklch(${l} ${c} ${h})`;
   return { ref: null, cssValue: alpha === undefined || alpha === 1 ? base : `oklch(${l} ${c} ${h} / ${alpha})` };
@@ -397,22 +400,26 @@ export function validateRefs(
   const layerPaths = new Map<string, Layer>();
   for (const [path, layer] of known) layerPaths.set(path, layer);
 
-  function resolveLayer(path: string, from: Layer, fromPath: string, stack: string[]): Layer {
+  // Follows a ref chain within one modifier context: light and dark may each
+  // alias the other way round without forming a cycle.
+  function resolveLayer(path: string, from: Layer, fromPath: string, context: string | undefined, stack: string[]): Layer {
     if (stack.includes(path)) fail(`$ref cycle: ${[...stack, path].join(' -> ')}`);
     const targetLayer = layerPaths.get(path);
     if (!targetLayer) fail(`$ref "${path}" does not exist`);
     if (LAYER_RANK[targetLayer] >= LAYER_RANK[from] && !sameEntry(fromPath, path)) {
       fail(`$ref "${path}" must point at a lower layer than ${from}`);
     }
-    for (const target of tokens.filter((t) => t.path === path && t.layer === targetLayer)) {
-      if (target.ref) resolveLayer(target.ref, targetLayer, path, [...stack, path]);
+    const candidates = tokens.filter((t) => t.path === path && t.layer === targetLayer);
+    const inContext = candidates.filter((t) => t.context === context);
+    for (const target of inContext.length > 0 ? inContext : candidates) {
+      if (target.ref) resolveLayer(target.ref, targetLayer, path, target.context ?? context, [...stack, path]);
     }
     return targetLayer;
   }
 
   for (const token of tokens) {
     if (!token.ref) continue;
-    resolveLayer(token.ref, token.layer, token.path, [token.path]);
+    resolveLayer(token.ref, token.layer, token.path, token.context, [token.path]);
   }
 }
 
@@ -1101,7 +1108,10 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
   // First token path reached through `ref` (at any depth) that a scoped modifier declares.
   function scopedDependency(ref: string, from: number): string | null {
     const queue = [ref];
+    const seen = new Set<string>();
     for (let path = queue.shift(); path !== undefined; path = queue.shift()) {
+      if (seen.has(path)) continue;
+      seen.add(path);
       const at = position.get(path) ?? -1;
       if (at !== from && scoped(entries[at])) return path;
       for (const token of byPath.get(path) ?? []) if (token.ref) queue.push(token.ref);
