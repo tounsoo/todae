@@ -52,9 +52,12 @@ const ICON_ATTR = 'data-todae-button-icon';
 // Button.Icon inside a company's own icon wrapper still counts.
 function readContent(button: HTMLElement): { hasIcon: boolean; text: string } {
   let text = '';
-  const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
+  // nodeType rather than instanceof, so a button rendered into an iframe works.
+  const walker = button.ownerDocument.createTreeWalker(button, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
     acceptNode: (node) =>
-      node instanceof Element && node.hasAttribute(ICON_ATTR) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+      node.nodeType === Node.ELEMENT_NODE && (node as Element).hasAttribute(ICON_ATTR)
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT,
   });
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     if (node.nodeType === Node.TEXT_NODE) text += node.textContent ?? '';

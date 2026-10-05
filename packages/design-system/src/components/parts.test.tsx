@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createRef, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { createRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -541,4 +542,21 @@ it('does not warn when a button swaps an icon and its label for text in one rend
   rerender(<Button.Root>Save</Button.Root>);
   expect(error).not.toHaveBeenCalled();
   error.mockRestore();
+});
+
+it('detects an icon-only button rendered into an iframe', () => {
+  const frame = document.createElement('iframe');
+  document.body.append(frame);
+  const container = frame.contentDocument!.body;
+  const root = createRoot(container);
+  act(() =>
+    root.render(
+      <Button.Root aria-label="Add">
+        <Button.Icon>+</Button.Icon>
+      </Button.Root>,
+    ),
+  );
+  expect(container.querySelector('button')!.hasAttribute('data-icon-only')).toBe(true);
+  act(() => root.unmount());
+  frame.remove();
 });
