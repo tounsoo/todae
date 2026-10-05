@@ -21,9 +21,6 @@ export const RESERVED_ROOTS = [
   'option',
   'selection',
 ] as const;
-export const CHIP_SLOTS = ['default', 'hover', 'focus', 'disabled'] as const;
-export const FIELD_BORDER_SLOTS = ['default', 'hover', 'focus', 'disabled', 'invalid'] as const;
-export const FIELD_RING_SLOTS = ['focus', 'invalid'] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;
 export const INTERACTIVE_GROUPS = ['bg', 'fg', 'border'] as const;
 export const BUTTON_PAINTS = ['primary', 'secondary', 'ghost'] as const;
@@ -36,7 +33,19 @@ export const BUTTON_BASE_PATHS = [
   'button.base.gap',
 ] as const;
 
-const LAYER_RANK = { core: 0, appearance: 1, density: 2, contract: 3, variant: 3 } as const;
+const LAYER_RANK = { core: 0, appearance: 1, density: 2, contract: 3 } as const;
+
+/**
+ * Todae-specific checks a set or modifier opts into with
+ * `$extensions["dev.todae"].rules`. Every set always gets the generic checks:
+ * path format, a $type per token, value shapes, ref existence, cycles, layer
+ * order, resolution order, and context parity.
+ */
+export const RULES = ['reserved-roots', 'density-space', 'button'] as const;
+export type Rule = (typeof RULES)[number];
+
+/** Token groups (`*` matches one segment) mapped to the exact leaves each must have. */
+export type SlotRules = Record<string, string[]>;
 
 export type Layer = keyof typeof LAYER_RANK;
 
@@ -111,6 +120,11 @@ export function flattenTokens(tree: TokenTree, inheritedType?: string): Map<stri
 export function validatePaths(paths: Iterable<string>, loc: string): void {
   for (const path of paths) {
     if (!PATH_RE.test(path)) fail(`${loc} token "${path}" must be lowercase dot segments`);
+  }
+}
+
+export function validateReservedRoots(paths: Iterable<string>, loc: string): void {
+  for (const path of paths) {
     const root = path.slice(0, path.indexOf('.'));
     if (!RESERVED_ROOTS.includes(root as (typeof RESERVED_ROOTS)[number])) {
       fail(`${loc} token "${path}" uses reserved-root-violating category "${root}"`);
@@ -178,35 +192,46 @@ export function validatePaintPacks(packs: Record<string, Map<string, TokenNode>>
   }
 }
 
-export function validateFieldChipSlots(tokens: Map<string, TokenNode>, loc: string): void {
+function matchesGroup(pattern: string, group: string): boolean {
+  const want = pattern.split('.');
+  const have = group.split('.');
+  return want.length === have.length && want.every((segment, i) => segment === '*' || segment === have[i]);
+}
+
+export function validateSlots(tokens: Map<string, TokenNode>, slots: SlotRules, loc: string): void {
   const groups = collectGroups(tokens.keys());
-  for (const [group, leaves] of groups) {
-    const parts = group.split('.');
-    if (parts[0] === 'chip' && INTERACTIVE_GROUPS.includes(parts[1] as (typeof INTERACTIVE_GROUPS)[number]) && parts.length === 2) {
-      const sorted = [...leaves].sort();
-      const expected = [...CHIP_SLOTS].sort();
-      if (sorted.length !== expected.length || sorted.some((leaf, i) => leaf !== expected[i])) {
-        fail(`${loc} "${group}" must have exactly ${CHIP_SLOTS.join('|')}`);
+  for (const [pattern, expected] of Object.entries(slots)) {
+    const want = [...expected].sort();
+    let matched = false;
+    for (const [group, leaves] of groups) {
+      if (!matchesGroup(pattern, group)) continue;
+      matched = true;
+      const have = [...leaves].sort();
+      if (have.length !== want.length || have.some((leaf, i) => leaf !== want[i])) {
+        fail(`${loc} "${group}" must have exactly ${expected.join('|')}`);
       }
     }
-    if (parts[0] === 'chip' && parts[1] === 'ring' && parts.length === 2) {
-      if (leaves.length !== 1 || leaves[0] !== 'focus') {
-        fail(`${loc} "${group}" must be ring.focus only`);
-      }
-    }
-    if (parts[0] === 'field' && parts[1] === 'border' && parts.length === 2) {
-      const sorted = [...leaves].sort();
-      const expected = [...FIELD_BORDER_SLOTS].sort();
-      if (sorted.length !== expected.length || sorted.some((leaf, i) => leaf !== expected[i])) {
-        fail(`${loc} "${group}" must have exactly ${FIELD_BORDER_SLOTS.join('|')}`);
-      }
-    }
-    if (parts[0] === 'field' && parts[1] === 'ring' && parts.length === 2) {
-      const sorted = [...leaves].sort();
-      const expected = [...FIELD_RING_SLOTS].sort();
-      if (sorted.length !== expected.length || sorted.some((leaf, i) => leaf !== expected[i])) {
-        fail(`${loc} "${group}" must have exactly ${FIELD_RING_SLOTS.join('|')}`);
-      }
+    if (!matched) fail(`${loc} slot group "${pattern}" matches no tokens`);
+  }
+}
+
+/**
+ * Every context of an alias modifier declares `<root>.<context>.…`; with the
+ * context segment removed, each must declare the same tokens as the default.
+ */
+export function validateAliasParity(contexts: Map<string, Iterable<string>>, defaultContext: string, loc: string): void {
+  const shape = (context: string, paths: Iterable<string>) =>
+    [...paths]
+      .map((path) => {
+        const parts = path.split('.');
+        return parts[1] === context ? [parts[0], ...parts.slice(2)].join('.') : path;
+      })
+      .sort();
+  const expected = shape(defaultContext, contexts.get(defaultContext) ?? []);
+  for (const [context, paths] of contexts) {
+    const keys = shape(context, paths);
+    if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
+      fail(`${loc} context "${context}" must declare the same tokens as "${defaultContext}"`);
     }
   }
 }
@@ -339,30 +364,25 @@ export function validateRefs(
   }
 }
 
-export function flattenLayer(
-  tree: TokenTree,
-  layer: Layer,
-  context?: string,
-  paints: readonly string[] = BUTTON_PAINTS,
-): FlatToken[] {
-  return layerTokens(flattenTokens(tree), layer, context, paints);
-}
+export type LayerChecks = { rules?: readonly Rule[]; slots?: SlotRules; paints?: readonly string[] };
 
 /** Validates one merged set or context and serializes its tokens. */
 export function layerTokens(
   flat: Map<string, TokenNode>,
   layer: Layer,
-  context?: string,
-  paints: readonly string[] = BUTTON_PAINTS,
+  context: string | undefined,
+  checks: LayerChecks = {},
 ): FlatToken[] {
-  validatePaths(flat.keys(), context ? `${layer}/${context}` : layer);
-  if (layer === 'density') validateDensitySpaceOnly(flat, context ? `${layer}/${context}` : layer);
-  if (layer === 'contract' || layer === 'variant') {
-    const loc = context ? `${layer}/${context}` : layer;
-    validateInteractive(flat, loc, paints);
-    validateFieldChipSlots(flat, loc);
+  const loc = context ? `${layer}/${context}` : layer;
+  const rules = checks.rules ?? [];
+  validatePaths(flat.keys(), loc);
+  if (rules.includes('reserved-roots')) validateReservedRoots(flat.keys(), loc);
+  if (rules.includes('density-space')) validateDensitySpaceOnly(flat, loc);
+  if (rules.includes('button')) {
+    validateInteractive(flat, loc, checks.paints ?? BUTTON_PAINTS);
     if ([...flat.keys()].some((path) => path.startsWith('button.base.'))) validateButtonBase(flat, loc);
   }
+  if (checks.slots) validateSlots(flat, checks.slots, loc);
   const tokens: FlatToken[] = [];
   for (const [path, node] of flat) {
     const { ref, cssValue } = serializeValue(node, path);
@@ -557,6 +577,8 @@ export const TODAE_EXTENSION = 'dev.todae';
 
 export type TodaeExtension = {
   layer: Layer;
+  rules?: Rule[];
+  slots?: SlotRules;
   attribute?: string;
   root?: boolean;
   colorScheme?: boolean;
@@ -581,29 +603,59 @@ function aliasPaints(entries: ResolvedEntry[]): string[] {
   return alias?.kind === 'modifier' ? [...alias.contexts.keys()] : [];
 }
 
+const SLOT_GROUP_RE = /^(?:\*|[a-z0-9]+(?:-[a-z0-9]+)*)(?:\.(?:\*|[a-z0-9]+(?:-[a-z0-9]+)*))*$/;
+const SLOT_LEAF_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function parseRules(rules: unknown, loc: string): { rules?: Rule[] } {
+  if (rules === undefined) return {};
+  if (!Array.isArray(rules)) fail(`${loc} rules must be an array`);
+  for (const rule of rules) {
+    if (!RULES.includes(rule as Rule)) fail(`${loc} rule "${String(rule)}" must be one of ${RULES.join('|')}`);
+  }
+  if (new Set(rules).size !== rules.length) fail(`${loc} rules must not repeat`);
+  return { rules: rules as Rule[] };
+}
+
+function parseSlots(slots: unknown, loc: string): { slots?: SlotRules } {
+  if (slots === undefined) return {};
+  if (!isRecord(slots)) fail(`${loc} slots must map token groups to leaf names`);
+  for (const [group, leaves] of Object.entries(slots)) {
+    if (!SLOT_GROUP_RE.test(group)) fail(`${loc} slot group "${group}" must be lowercase dot segments or *`);
+    if (
+      !Array.isArray(leaves) ||
+      leaves.length === 0 ||
+      leaves.some((leaf) => typeof leaf !== 'string' || !SLOT_LEAF_RE.test(leaf)) ||
+      new Set(leaves).size !== leaves.length
+    ) {
+      fail(`${loc} slot group "${group}" must list distinct lowercase leaf names`);
+    }
+  }
+  return { slots: slots as SlotRules };
+}
+
 export function parseExtension(def: Record<string, unknown>, kind: 'set' | 'modifier', loc: string): TodaeExtension {
   const extensions = def.$extensions;
   const ext = isRecord(extensions) ? extensions[TODAE_EXTENSION] : undefined;
   if (!isRecord(ext)) fail(`${loc} must declare $extensions["${TODAE_EXTENSION}"]`);
-  const { layer, attribute, root, colorScheme, alias } = ext;
+  const { layer, attribute, root, colorScheme, alias, rules, slots } = ext;
+  const known = ['layer', 'rules', 'slots', ...(kind === 'modifier' ? ['attribute', 'root', 'colorScheme', 'alias'] : [])];
+  const unknown = Object.keys(ext).find((key) => !known.includes(key));
+  if (unknown) fail(`${loc} has unknown ${TODAE_EXTENSION} key "${unknown}" (allowed: ${known.join(', ')})`);
   if (typeof layer !== 'string' || !Object.hasOwn(LAYER_RANK, layer)) {
     fail(`${loc} layer must be one of ${Object.keys(LAYER_RANK).join('|')}`);
   }
+  const checks = { ...parseRules(rules, loc), ...parseSlots(slots, loc) };
   for (const [key, value] of Object.entries({ root, colorScheme, alias })) {
     if (value !== undefined && typeof value !== 'boolean') fail(`${loc} ${key} must be a boolean`);
   }
-  if (kind === 'set') {
-    if (attribute !== undefined || root !== undefined || colorScheme !== undefined || alias !== undefined) {
-      fail(`${loc} attribute, root, colorScheme and alias only apply to modifiers`);
-    }
-    return { layer: layer as Layer };
-  }
+  if (kind === 'set') return { layer: layer as Layer, ...checks };
   if (typeof attribute !== 'string' || !ATTRIBUTE_RE.test(attribute)) {
     fail(`${loc} attribute must be a lowercase data-* attribute`);
   }
   if (alias && (root || colorScheme)) fail(`${loc} an alias modifier cannot set root or colorScheme`);
   return {
     layer: layer as Layer,
+    ...checks,
     attribute,
     ...(root === true ? { root } : {}),
     ...(colorScheme === true ? { colorScheme } : {}),
@@ -636,7 +688,7 @@ async function loadTokens(
   sources: unknown,
   loc: string,
   tokensRoot: string,
-  layer: Layer,
+  extension: TodaeExtension,
   context: string | undefined,
   paints: readonly string[],
 ): Promise<FlatToken[]> {
@@ -644,7 +696,8 @@ async function loadTokens(
   for (const source of await loadSources(sources, loc, tokensRoot)) {
     for (const [path, node] of flattenTokens(source.tree)) merged.set(path, node);
   }
-  return layerTokens(merged, layer, context, paints);
+  const { layer, rules, slots } = extension;
+  return layerTokens(merged, layer, context, { rules, slots, paints });
 }
 
 function tokenMapOf(tokens: FlatToken[]): Map<string, TokenNode> {
@@ -699,7 +752,7 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
         kind,
         name,
         extension,
-        tokens: await loadTokens(def.sources, `${loc} sources`, tokensRoot, extension.layer, undefined, paints),
+        tokens: await loadTokens(def.sources, `${loc} sources`, tokensRoot, extension, undefined, paints),
       });
       continue;
     }
@@ -716,14 +769,21 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
       }
       contexts.set(
         context,
-        await loadTokens(sources, `${loc} context "${context}"`, tokensRoot, extension.layer, context, paints),
+        await loadTokens(sources, `${loc} context "${context}"`, tokensRoot, extension, context, paints),
       );
     }
     const defaults = tokenMapOf(contexts.get(defaultContext)!);
     if (extension.alias) {
-      validatePaintPacks(
-        Object.fromEntries([...contexts].map(([context, tokens]) => [context, tokenMapOf(tokens)])),
+      if (extension.rules?.includes('button')) {
+        validatePaintPacks(
+          Object.fromEntries([...contexts].map(([context, tokens]) => [context, tokenMapOf(tokens)])),
+          defaultContext,
+        );
+      }
+      validateAliasParity(
+        new Map([...contexts].map(([context, tokens]) => [context, tokens.map((t) => t.path)])),
         defaultContext,
+        loc,
       );
     } else {
       for (const [context, tokens] of contexts) {
