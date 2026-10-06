@@ -156,6 +156,43 @@ describe('useField', () => {
     expect(document.activeElement).toBe(screen.getByRole('textbox'));
   });
 
+  it("keeps a native control's own name", () => {
+    function Named() {
+      const field = useField();
+      return <input {...field.getControlProps({ name: 'rating' })} />;
+    }
+    render(
+      <Field.Root aria-label="Rating">
+        <Named />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('textbox').getAttribute('name')).toBe('rating');
+  });
+
+  it('a press beside a select opens its picker', () => {
+    const showPicker = vi.fn();
+    const proto = HTMLSelectElement.prototype as unknown as { showPicker?: () => void };
+    const original = proto.showPicker;
+    proto.showPicker = showPicker;
+    try {
+      render(
+        <Field.Root aria-label="Size">
+          <Field.Icon data-testid="icon">
+            <svg />
+          </Field.Icon>
+          <Field.Select value="s" onValueChange={() => {}}>
+            <option value="s">Small</option>
+          </Field.Select>
+        </Field.Root>,
+      );
+      fireEvent.mouseDown(screen.getByTestId('icon'));
+      expect(document.activeElement).toBe(screen.getByRole('combobox'));
+      expect(showPicker).toHaveBeenCalledTimes(1);
+    } finally {
+      proto.showPicker = original;
+    }
+  });
+
   it('Field.Select works with onValueChange alone', () => {
     const onValueChange = vi.fn();
     render(

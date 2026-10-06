@@ -356,6 +356,21 @@ describe('useRovingFocus', () => {
     }
   });
 
+  it('re-reads items when a class hides the tab stop', async () => {
+    const original = HTMLElement.prototype.checkVisibility;
+    HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {
+      return !this.classList.contains('gone');
+    };
+    try {
+      render(<Group activeValue="banana" />);
+      expect(tabStops()).toEqual(['banana']);
+      await act(async () => screen.getByRole('button', { name: 'banana' }).classList.add('gone'));
+      expect(tabStops()).toEqual(['apple']);
+    } finally {
+      HTMLElement.prototype.checkVisibility = original;
+    }
+  });
+
   it('a new active value takes the tab stop in one render', () => {
     let commits = 0;
     const { rerender } = render(

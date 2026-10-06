@@ -209,19 +209,19 @@ function Content({
   const localRef = useRef<HTMLDivElement | null>(null);
   usePopoverSync(localRef, open);
   const { openEnd, initialFocusRef, roving } = ctx;
-  const { values, getItemNode } = roving;
+  const { reachableValues, getItemNode } = roving;
   // However the menu opens, it starts on an end of the list, never on the
   // item focused last time. This runs before Root's initial focus.
   useLayoutEffect(() => {
     if (!open) return;
     // Items focus can reach: a hidden first item does not take the open.
-    const enabled = values().filter((value) => getItemNode(value) !== null);
+    const enabled = reachableValues();
     // The key's choice holds for the open that follows it, however late the
     // owner applies it, while the trigger keeps focus.
     const target = openEnd.current === 'last' ? enabled.at(-1) : enabled[0];
     initialFocusRef.current = target === undefined ? null : getItemNode(target);
     openEnd.current = null;
-  }, [getItemNode, initialFocusRef, open, openEnd, values]);
+  }, [getItemNode, initialFocusRef, open, openEnd, reachableValues]);
   const container = roving.getContainerProps({
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
       // Tab leaves the menu: close it, and focus returns to the trigger.

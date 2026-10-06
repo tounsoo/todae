@@ -5,6 +5,8 @@ import { useStableComposedRef } from '../components/props';
 /** `id` and `name` are not taken here: they come from `Field.Root`, which a `Label htmlFor` and the form use. */
 export type FieldControlUserProps = {
   ref?: Ref<HTMLElement | null>;
+  /** The control's own name, used instead of the Root's. */
+  name?: string;
   /** Disables the control on top of the Root's `disabled`. */
   disabled?: boolean;
   /** Marks the control invalid on top of the Root's `invalid`. */
@@ -75,7 +77,7 @@ export function useField(): UseFieldResult {
         ...user,
         ref: composedRef(user.ref),
         id: ctx.inputId,
-        name: native ? ctx.name : undefined,
+        name: native ? (user.name ?? ctx.name) : undefined,
         disabled: native ? disabled : undefined,
         'aria-disabled': !native && disabled ? true : undefined,
         // The Root's invalid wins; otherwise the control's own value, such as `spelling`, stays.

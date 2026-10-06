@@ -184,6 +184,14 @@ function Root({
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
     control?.focus();
+    // A press beside a select opens it, as a press on the select would.
+    if (control instanceof HTMLSelectElement) {
+      try {
+        control.showPicker?.();
+      } catch {
+        // Not allowed here, or not supported: focus is enough.
+      }
+    }
   }
 
   return (

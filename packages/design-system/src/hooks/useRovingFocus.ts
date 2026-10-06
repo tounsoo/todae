@@ -75,6 +75,8 @@ export type UseRovingFocusResult = {
   getItemNode: (value: string) => HTMLElement | null;
   /** Enabled item values in document order, read from the DOM. */
   values: () => string[];
+  /** Of those, the ones focus can reach now: not inert and not hidden by style. */
+  reachableValues: () => string[];
   getContainerProps: <P extends RovingContainerUserProps>(props?: P) => Omit<P, keyof RovingContainerWire> & RovingContainerWire;
   getItemProps: <P extends RovingItemUserProps>(
     value: string,
@@ -151,6 +153,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   const valueOf = (node: HTMLElement) => node.getAttribute('data-todae-roving-value') ?? '';
 
   const values = useCallback(() => enabledItems().map(valueOf), [enabledItems]);
+  const reachableValues = useCallback(() => items().map(valueOf), [items]);
 
   // Re-read when the container mounts and on DOM changes: items can appear,
   // move, hide or turn disabled without this hook's owner rendering.
@@ -206,18 +209,12 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['data-todae-roving-disabled', 'data-todae-roving-value', 'hidden', 'inert'],
+      // class and style too: either can hide an item.
+      attributeFilter: ['data-todae-roving-disabled', 'data-todae-roving-value', 'hidden', 'inert', 'class', 'style'],
     });
     observer.current = { node, observer: watcher };
     latestSync.current();
   }, []);
-  useLayoutEffect(
-    () => () => {
-      observer.current?.observer.disconnect();
-      observer.current = null;
-    },
-    [],
-  );
 
   const commit = useCallback(
     (value: string) => {
@@ -388,9 +385,10 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       getItemNode,
       isTypingAhead,
       values,
+      reachableValues,
       getContainerProps,
       getItemProps,
     }),
-    [commit, focus, focusFirst, focusLast, getContainerProps, getItemNode, getItemProps, isTypingAhead, tabStop, values],
+    [commit, focus, focusFirst, focusLast, getContainerProps, getItemNode, getItemProps, isTypingAhead, reachableValues, tabStop, values],
   );
 }
