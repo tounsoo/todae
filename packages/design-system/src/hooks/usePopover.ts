@@ -16,7 +16,7 @@ import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useStableComposedRef } from '../components/props';
-import { anchorTriggerStyle } from '../overlay/anchorName';
+import { anchorTriggerStyle, mergeAnchorNames } from '../overlay/anchorName';
 import { useControlledState } from './useControlledState';
 
 export type { PopoverWire };
@@ -127,7 +127,8 @@ export function usePopoverInternal(
     if (!el) return;
     const prevName = el.style.getPropertyValue('anchor-name');
     const prevVar = el.style.getPropertyValue('--todae-popover-anchor');
-    el.style.setProperty('anchor-name', anchorName);
+    // Join any anchor name the element already has, such as a tooltip's.
+    el.style.setProperty('anchor-name', mergeAnchorNames(prevName, anchorName));
     el.style.setProperty('--todae-popover-anchor', anchorName);
     return () => {
       if (prevName) el.style.setProperty('anchor-name', prevName);

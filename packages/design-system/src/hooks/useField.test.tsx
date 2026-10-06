@@ -148,6 +148,21 @@ describe('useField', () => {
     expect(onValueChange).toHaveBeenCalledWith('m');
   });
 
+  it('a press on non-editable content still focuses the control', () => {
+    render(
+      <Field.Root aria-label="Amount">
+        <Field.Affix>
+          <span contentEditable={false} data-testid="unit">
+            kg
+          </span>
+        </Field.Affix>
+        <Field.TextInput value="" onChange={() => {}} />
+      </Field.Root>,
+    );
+    fireEvent.mouseDown(screen.getByTestId('unit'));
+    expect(document.activeElement).toBe(screen.getByRole('textbox'));
+  });
+
   it('a shell press never falls back to an input inside an Affix', () => {
     function Custom() {
       const field = useField();

@@ -19,6 +19,7 @@ import {
 } from 'react';
 import { Chip } from './Chip';
 import {
+  FIELD_CONTROL_SELECTOR,
   FieldContext,
   inputLabel,
   mergeDescribedBy,
@@ -120,7 +121,9 @@ function Affix({ className, ...props }: FieldAffixProps) {
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   return Boolean(
-    target.closest('button, a, input, textarea, select, [tabindex], [contenteditable], [data-todae-field-control]'),
+    target.closest(
+      `button, a, [tabindex], [contenteditable]:not([contenteditable='false']), ${FIELD_CONTROL_SELECTOR}`,
+    ),
   );
 }
 
@@ -167,7 +170,7 @@ function Root({
     // still in the shell takes the press, never one inside an Icon or Affix.
     const control = inputRef.current?.isConnected
       ? inputRef.current
-      : [...event.currentTarget.querySelectorAll<HTMLElement>('input, textarea, select, [data-todae-field-control]')].find(
+      : [...event.currentTarget.querySelectorAll<HTMLElement>(FIELD_CONTROL_SELECTOR)].find(
           (node) => !node.parentElement?.closest(`.${styles.adornment}`),
         );
     control?.focus();

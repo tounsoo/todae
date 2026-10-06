@@ -71,6 +71,12 @@ type TabsContextValue = {
 
 const TabsContext = createContext<TabsContextValue | null>(null);
 
+// Panels read only the selection, so arrowing through the list, which moves
+// the tab stop, does not render them.
+type TabsPanelContextValue = { baseId: string; value: string };
+
+const TabsPanelContext = createContext<TabsPanelContextValue | null>(null);
+
 function useTabs(part: string): TabsContextValue {
   const ctx = useContext(TabsContext);
   if (!ctx) throw new Error(`Tabs.${part} must render inside Tabs.Root`);
@@ -124,11 +130,14 @@ function Root({
     () => ({ baseId, value, select, orientation, activation, roving, leave, release }),
     [activation, baseId, leave, orientation, release, roving, select, value],
   );
+  const panelCtx = useMemo(() => ({ baseId, value }), [baseId, value]);
   return (
     <TabsContext.Provider value={ctx}>
-      <div {...props} className={cx(styles.root, className)} data-orientation={orientation}>
-        {children}
-      </div>
+      <TabsPanelContext.Provider value={panelCtx}>
+        <div {...props} className={cx(styles.root, className)} data-orientation={orientation}>
+          {children}
+        </div>
+      </TabsPanelContext.Provider>
     </TabsContext.Provider>
   );
 }
@@ -199,7 +208,8 @@ function Tab({ value, children, disabled, className, onClick, onFocus, ...props 
 }
 
 function Panel({ value, children, keepMounted = false, className, ...props }: TabsPanelProps) {
-  const ctx = useTabs('Panel');
+  const ctx = useContext(TabsPanelContext);
+  if (!ctx) throw new Error('Tabs.Panel must render inside Tabs.Root');
   const selected = ctx.value === value;
   return (
     <div

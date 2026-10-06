@@ -279,6 +279,13 @@ describe('useRovingFocus', () => {
     expect(tabStops()).toEqual(['b']);
   });
 
+  it('typeahead matches a character outside the basic plane', () => {
+    render(<Group typeahead items={[{ value: 'sad', label: '😢 Sad' }, { value: 'happy', label: '😀 Happy' }]} />);
+    screen.getByText('😢 Sad').focus();
+    fireEvent.keyDown(document.activeElement!, { key: '😀', timeStamp: 1000 });
+    expect(focused()).toBe('😀 Happy');
+  });
+
   it('typeahead is off by default', () => {
     render(<Group />);
     screen.getByText('apple').focus();

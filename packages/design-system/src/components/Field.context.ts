@@ -31,6 +31,9 @@ export function useFieldContext(): FieldContextValue {
   return ctx;
 }
 
+/** The elements a press on the shell can focus, and that draw its focus ring. */
+export const FIELD_CONTROL_SELECTOR = 'input, textarea, select, [data-todae-field-control]';
+
 /**
  * A stable ref callback that makes a control the one the shell focuses. On
  * detach it clears the Root's ref only if it still points at this control, so

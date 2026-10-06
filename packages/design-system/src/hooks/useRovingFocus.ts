@@ -244,8 +244,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       const onContainer = target === containerRef.current;
       if (!onContainer && target.getAttribute('data-todae-roving') !== scope) return;
       // Only these keys move focus; leave the rest without reading the DOM.
+      // A typed character is one code point, so an emoji counts too.
       const isMove = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key);
-      if (!isMove && !(typeahead && event.key.length === 1)) return;
+      if (!isMove && !(typeahead && [...event.key].length === 1)) return;
       const nodes = items();
       if (nodes.length === 0) return;
       // Where focus sits among the enabled items. A focused item that turned
@@ -271,7 +272,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         next = nodes[0];
       } else if (event.key === 'End') {
         next = nodes.at(-1);
-      } else if (typeahead && event.key.length === 1 && (event.key !== ' ' || isTypingAhead(event))) {
+      } else if (typeahead && [...event.key].length === 1 && (event.key !== ' ' || isTypingAhead(event))) {
         const state = buffer.current;
         const now = event.timeStamp;
         state.text = now - state.at > TYPEAHEAD_RESET_MS ? event.key : state.text + event.key;
