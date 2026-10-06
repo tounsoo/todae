@@ -169,6 +169,23 @@ describe('Tabs', () => {
     expect(stops).toEqual([tab('Account')]);
   });
 
+  it('returns the tab stop on leaving even if the consumer prevents the blur', () => {
+    render(
+      <Tabs.Root defaultValue="a" activation="manual">
+        <Tabs.List aria-label="Docs" onBlur={(event) => event.preventDefault()}>
+          <Tabs.Tab value="a">A</Tabs.Tab>
+          <Tabs.Tab value="b">B</Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="a">Panel A</Tabs.Panel>
+      </Tabs.Root>,
+    );
+    act(() => tab('A').focus());
+    key('ArrowRight');
+    act(() => screen.getByRole('tabpanel').focus());
+    const stops = screen.getAllByRole('tab').filter((el) => el.tabIndex === 0);
+    expect(stops).toEqual([tab('A')]);
+  });
+
   it('moves the tab stop to a tab selected while focus is outside the list', () => {
     function Outside() {
       const [value, setValue] = useState('a');

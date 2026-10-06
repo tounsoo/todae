@@ -157,7 +157,10 @@ function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListP
         clearTimeout(pending.current);
         pending.current = undefined;
       })}
-      onBlur={composeHandlers(onBlur, (event: FocusEvent<HTMLDivElement>) => {
+      // The tab stop must return to the selected tab whatever the consumer's
+      // handler does, so this runs even if it prevented the event.
+      onBlur={(event: FocusEvent<HTMLDivElement>) => {
+        onBlur?.(event);
         const next = event.relatedTarget;
         const list = event.currentTarget;
         if (next instanceof Node && list.contains(next)) return;
@@ -172,7 +175,7 @@ function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListP
           return;
         }
         leave();
-      })}
+      }}
     >
       {children}
     </div>

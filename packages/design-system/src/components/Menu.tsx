@@ -13,7 +13,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { useControlledState, useControlledValue } from '../hooks/useControlledState';
+import { useControlledValue } from '../hooks/useControlledState';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { usePopoverSync } from '../overlay/usePopoverSync';
@@ -354,14 +354,13 @@ function CheckboxItem({
   ...props
 }: MenuCheckboxItemProps) {
   const ctx = useMenu('CheckboxItem');
-  const [checked, setChecked] = useControlledState(checkedProp, defaultChecked ?? false);
+  const [checked, setChecked] = useControlledValue(checkedProp, defaultChecked ?? false, onCheckedChange);
   const item = useItem(
     ctx,
     'menuitemcheckbox',
     props,
     () => {
       setChecked(!checked);
-      onCheckedChange?.(!checked);
       if (closeOnSelect) ctx.setOpen(false, 'select');
     },
     checked,

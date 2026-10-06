@@ -247,7 +247,7 @@ function TextInput({
       name={ctx.name}
       disabled={ctx.disabled}
       maxLength={maxLength}
-      aria-invalid={ctx.invalid || undefined}
+      aria-invalid={ctx.invalid ? true : props['aria-invalid']}
       aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
       {...inputLabel(props, ctx)}
       value={value}
@@ -302,7 +302,7 @@ function Textarea({
       name={ctx.name}
       disabled={ctx.disabled}
       maxLength={maxLength}
-      aria-invalid={ctx.invalid || undefined}
+      aria-invalid={ctx.invalid ? true : props['aria-invalid']}
       aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
       {...inputLabel(props, ctx)}
       value={value}
@@ -414,7 +414,7 @@ function ChipInput({
       id={field.inputId}
       name={field.name}
       disabled={field.disabled}
-      aria-invalid={field.invalid || undefined}
+      aria-invalid={field.invalid ? true : props['aria-invalid']}
       aria-describedby={mergeDescribedBy(field.describedBy, describedBy)}
       {...inputLabel(props, field)}
       value={inputValue}

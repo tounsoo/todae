@@ -22,6 +22,21 @@ import * as api from '../index';
 afterEach(cleanup);
 
 describe('Field exports', () => {
+  it("keeps a text input's own aria-invalid value unless the Root is invalid", () => {
+    const { rerender } = render(
+      <Field.Root aria-label="Note">
+        <Field.TextInput value="" onChange={() => {}} aria-invalid="spelling" />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('textbox').getAttribute('aria-invalid')).toBe('spelling');
+    rerender(
+      <Field.Root aria-label="Note" invalid>
+        <Field.TextInput value="" onChange={() => {}} aria-invalid="spelling" />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('textbox').getAttribute('aria-invalid')).toBe('true');
+  });
+
   it('hard-cuts old names and is not callable', () => {
     expect(api).not.toHaveProperty('TextField');
     expect(api).not.toHaveProperty('ChipField');
