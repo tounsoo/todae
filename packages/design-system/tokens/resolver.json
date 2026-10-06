@@ -57,7 +57,24 @@
           "rules": ["reserved-roots"],
           "attribute": "data-appearance",
           "root": true,
-          "colorScheme": true
+          "colorScheme": true,
+          "contrast": [
+            { "fg": "color.fg.default", "bg": "color.bg.canvas", "min": 75 },
+            { "fg": "color.fg.default", "bg": "color.bg.surface", "min": 75 },
+            { "fg": "color.fg.default", "bg": "color.bg.subtle", "min": 75 },
+            { "fg": "color.fg.default", "bg": "color.bg.elevated", "min": 75 },
+            { "fg": "color.fg.muted", "bg": "color.bg.canvas", "min": 60 },
+            { "fg": "color.fg.muted", "bg": "color.bg.surface", "min": 60 },
+            { "fg": "color.fg.muted", "bg": "color.bg.subtle", "min": 60 },
+            { "fg": "color.fg.muted", "bg": "color.bg.elevated", "min": 60 },
+            { "fg": "color.fg.placeholder", "bg": "color.bg.surface", "min": 60 },
+            { "fg": "color.danger.default", "bg": "color.bg.surface", "min": 60 },
+            { "fg": "color.danger.default", "bg": "color.bg.elevated", "min": 60 },
+            { "fg": "color.on-accent", "bg": "color.accent.default", "min": 60 },
+            { "fg": "color.on-accent", "bg": "color.accent.hover", "min": 60 },
+            { "fg": "color.on-accent", "bg": "color.accent.active", "min": 60 },
+            { "fg": "color.accent.default", "bg": "color.bg.canvas", "min": 45 }
+          ]
         }
       }
     },

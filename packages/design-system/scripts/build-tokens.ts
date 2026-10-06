@@ -774,10 +774,18 @@ export function emitOverrideKeys(tokens: FlatToken[]): string {
 
 export const TODAE_EXTENSION = 'dev.todae';
 
+/**
+ * A text color and the background it sits on, checked with APCA in every
+ * context of the set or modifier that declares it. `min` is the lowest
+ * absolute Lc allowed.
+ */
+export type ContrastPair = { fg: string; bg: string; min: number };
+
 export type TodaeExtension = {
   layer: Layer;
   rules?: Rule[];
   slots?: SlotRules;
+  contrast?: ContrastPair[];
   attribute?: string;
   root?: boolean;
   colorScheme?: boolean;
@@ -838,18 +846,46 @@ function parseSlots(slots: unknown, loc: string): { slots?: SlotRules } {
   return { slots: slots as SlotRules };
 }
 
+function parseContrast(contrast: unknown, loc: string): { contrast?: ContrastPair[] } {
+  if (contrast === undefined) return {};
+  if (!Array.isArray(contrast) || contrast.length === 0) fail(`${loc} contrast must be a non-empty array of pairs`);
+  const seen = new Set<string>();
+  for (const [i, pair] of contrast.entries()) {
+    const at = `${loc} contrast[${i}]`;
+    if (!isRecord(pair)) fail(`${at} must be { fg, bg, min }`);
+    const extra = Object.keys(pair).find((key) => !['fg', 'bg', 'min'].includes(key));
+    if (extra) fail(`${at} has unknown key "${extra}"`);
+    for (const key of ['fg', 'bg'] as const) {
+      if (typeof pair[key] !== 'string' || !PATH_RE.test(pair[key])) fail(`${at} ${key} must be a token path`);
+    }
+    if (!isFiniteNumber(pair.min) || pair.min <= 0 || pair.min > 108) fail(`${at} min must be an APCA Lc above 0 and at most 108`);
+    const key = `${pair.fg} on ${pair.bg}`;
+    if (seen.has(key)) fail(`${at} repeats ${key}`);
+    seen.add(key);
+  }
+  return { contrast: contrast as ContrastPair[] };
+}
+
+/** Upstream pairs plus the extension's own; a pair naming the same fg and bg replaces the upstream one. */
+function mergeContrast(base: readonly ContrastPair[] = [], own: readonly ContrastPair[] = []): ContrastPair[] {
+  const key = (pair: ContrastPair) => `${pair.fg} on ${pair.bg}`;
+  const merged = new Map(base.map((pair) => [key(pair), pair]));
+  for (const pair of own) merged.set(key(pair), pair);
+  return [...merged.values()];
+}
+
 export function parseExtension(def: Record<string, unknown>, kind: 'set' | 'modifier', loc: string): TodaeExtension {
   const extensions = def.$extensions;
   const ext = isRecord(extensions) ? extensions[TODAE_EXTENSION] : undefined;
   if (!isRecord(ext)) fail(`${loc} must declare $extensions["${TODAE_EXTENSION}"]`);
-  const { layer, attribute, root, colorScheme, alias, rules, slots } = ext;
-  const known = ['layer', 'rules', 'slots', ...(kind === 'modifier' ? ['attribute', 'root', 'colorScheme', 'alias'] : [])];
+  const { layer, attribute, root, colorScheme, alias, rules, slots, contrast } = ext;
+  const known = ['layer', 'rules', 'slots', 'contrast', ...(kind === 'modifier' ? ['attribute', 'root', 'colorScheme', 'alias'] : [])];
   const unknown = Object.keys(ext).find((key) => !known.includes(key));
   if (unknown) fail(`${loc} has unknown ${TODAE_EXTENSION} key "${unknown}" (allowed: ${known.join(', ')})`);
   if (typeof layer !== 'string' || !Object.hasOwn(LAYER_RANK, layer)) {
     fail(`${loc} layer must be one of ${Object.keys(LAYER_RANK).join('|')}`);
   }
-  const checks = { ...parseRules(rules, loc), ...parseSlots(slots, loc) };
+  const checks = { ...parseRules(rules, loc), ...parseSlots(slots, loc), ...parseContrast(contrast, loc) };
   for (const [key, value] of Object.entries({ root, colorScheme, alias })) {
     if (value !== undefined && typeof value !== 'boolean') fail(`${loc} ${key} must be a boolean`);
   }
@@ -962,6 +998,8 @@ export async function loadResolver(resolverFile: string, upstream: ResolvedEntry
       const slots = { ...base.extension.slots, ...extension.slots };
       if (rules.length > 0) extension.rules = rules;
       if (Object.keys(slots).length > 0) extension.slots = slots;
+      const contrast = mergeContrast(base.extension.contrast, extension.contrast);
+      if (contrast.length > 0) extension.contrast = contrast;
     }
     order.push({ kind, name, def, extension });
   }
@@ -1129,6 +1167,8 @@ export function mergeEntries(
     const target = merged[at]!;
     const view = company[at]!;
     const loc = `${entry.kind} "${entry.name}"`;
+    // The company's extension already carries Todae's pairs plus its own.
+    if (entry.extension.contrast) target.extension = { ...target.extension, contrast: entry.extension.contrast };
     if (entry.kind === 'set' && target.kind === 'set' && view.kind === 'set') {
       target.tokens = mergeTokens(target.tokens, entry.tokens, loc);
       view.tokens = entry.tokens;
@@ -1222,6 +1262,143 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
   return all;
 }
 
+// APCA lightness contrast (Lc), with the APCA-W3 0.0.98G-4g constants the
+// WCAG 3 drafts reference. Lc is positive for dark text on a light
+// background and negative for light on dark; checks compare its magnitude.
+type Oklch = { l: number; c: number; h: number; alpha: number };
+type Rgb = [r: number, g: number, b: number];
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+function encodeSrgb(linear: number): number {
+  const v = clamp01(linear);
+  return v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055;
+}
+
+/** OKLCH to gamma-encoded sRGB in [0, 1], clipped to the sRGB gamut. */
+export function oklchToSrgb({ l, c, h }: Pick<Oklch, 'l' | 'c' | 'h'>): Rgb {
+  const rad = (h * Math.PI) / 180;
+  const a = c * Math.cos(rad);
+  const b = c * Math.sin(rad);
+  const l_ = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m_ = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s_ = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  return [
+    encodeSrgb(4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_),
+    encodeSrgb(-1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_),
+    encodeSrgb(-0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_),
+  ];
+}
+
+/** Paints `top` with its alpha over an opaque `bottom`, in gamma-encoded sRGB as browsers composite. */
+export function composite(top: Oklch, bottom: Rgb): Rgb {
+  const rgb = oklchToSrgb(top);
+  return rgb.map((channel, i) => channel * top.alpha + bottom[i]! * (1 - top.alpha)) as Rgb;
+}
+
+function screenLuminance([r, g, b]: Rgb): number {
+  const y = 0.2126729 * r ** 2.4 + 0.7151522 * g ** 2.4 + 0.072175 * b ** 2.4;
+  return y > 0.022 ? y : y + (0.022 - y) ** 1.414;
+}
+
+/** APCA Lc of `text` on `background`, both gamma-encoded sRGB. */
+export function apcaContrast(text: Rgb, background: Rgb): number {
+  const yt = screenLuminance(text);
+  const yb = screenLuminance(background);
+  if (Math.abs(yb - yt) < 0.0005) return 0;
+  if (yb > yt) {
+    const sapc = (yb ** 0.56 - yt ** 0.57) * 1.14;
+    return sapc < 0.1 ? 0 : (sapc - 0.027) * 100;
+  }
+  const sapc = (yb ** 0.65 - yt ** 0.62) * 1.14;
+  return sapc > -0.1 ? 0 : (sapc + 0.027) * 100;
+}
+
+const CHANNEL_INDEX = { l: 0, c: 1, h: 2 } as const;
+
+/** The literal OKLCH a color token resolves to in one view of the graph. */
+function resolveOklch(path: string, view: Map<string, FlatToken>, stack: string[] = []): Oklch {
+  if (stack.includes(path)) fail(`contrast: color "${path}" refers to itself through ${stack.join(' → ')}`);
+  const token = view.get(path);
+  if (!token) fail(`contrast: token "${path}" does not exist`);
+  if (token.type !== 'color') fail(`contrast: token "${path}" is a ${token.type}, not a color`);
+  const value = token.value;
+  if (isRef(value)) return resolveOklch(pointerToPath(value.$ref, `Token "${path}"`), view, [...stack, path]);
+  const record = value as { components: unknown[]; alpha?: number };
+  const channels = record.components.map((component, i) => {
+    if (typeof component === 'number') return component;
+    const ref = parseComponentPointer((component as { $ref: string }).$ref, `Token "${path}"`);
+    const origin = resolveOklch(ref.path, view, [...stack, path]);
+    return [origin.l, origin.c, origin.h][CHANNEL_INDEX[ref.channel]]!;
+  });
+  return { l: channels[0]!, c: channels[1]!, h: channels[2]!, alpha: record.alpha ?? 1 };
+}
+
+/** APCA Lc of `fg` painted on `bg`. `bg` must be opaque; a translucent `fg` is composited over it. */
+export function contrastOf(fg: string, bg: string, view: Map<string, FlatToken>): number {
+  const back = resolveOklch(bg, view);
+  if (back.alpha !== 1) fail(`contrast: background "${bg}" must be opaque`);
+  const base = oklchToSrgb(back);
+  return apcaContrast(composite(resolveOklch(fg, view), base), base);
+}
+
+export type ContrastResult = ContrastPair & {
+  /** The declaring set, or the modifier and context, e.g. `appearance "dark"`. */
+  where: string;
+  /** Absolute APCA Lc. */
+  lc: number;
+};
+
+/**
+ * Measures every declared contrast pair. Each pair runs once per combination
+ * of the declaring modifier's contexts and every color-scheme modifier's
+ * contexts, so a set's pairs are checked in light and dark too. Other
+ * modifiers stay at their defaults.
+ */
+export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
+  const results: ContrastResult[] = [];
+  for (const declaring of entries) {
+    const pairs = declaring.extension.contrast;
+    if (!pairs) continue;
+    const varied = entries.filter(
+      (entry): entry is Extract<ResolvedEntry, { kind: 'modifier' }> =>
+        entry.kind === 'modifier' && !entry.extension.alias && (entry === declaring || entry.extension.colorScheme === true),
+    );
+    let combos: Map<ResolvedEntry, string>[] = [new Map()];
+    for (const modifier of varied) {
+      combos = combos.flatMap((combo) => [...modifier.contexts.keys()].map((context) => new Map([...combo, [modifier, context]])));
+    }
+    for (const combo of combos) {
+      const view = new Map<string, FlatToken>();
+      for (const entry of entries) {
+        const tokens =
+          entry.kind === 'set'
+            ? entry.tokens
+            : entry.extension.alias
+              ? [...entry.contexts.values()].flat()
+              : (entry.contexts.get(combo.get(entry) ?? entry.defaultContext) ?? []);
+        for (const token of tokens) view.set(token.path, token);
+      }
+      const where =
+        combo.size > 0
+          ? [...combo].map(([entry, context]) => `${entry.name} "${context}"`).join(', ')
+          : `${declaring.kind} "${declaring.name}"`;
+      for (const pair of pairs) results.push({ ...pair, where, lc: Math.abs(contrastOf(pair.fg, pair.bg, view)) });
+    }
+  }
+  return results;
+}
+
+/** Fails with every contrast pair below its minimum. */
+export function validateContrast(entries: ResolvedEntry[]): void {
+  const failures = contrastResults(entries)
+    .filter((result) => result.lc < result.min)
+    .map(({ fg, bg, where, lc, min }) => `"${fg}" on "${bg}" in ${where} is Lc ${lc.toFixed(1)}, below ${min}`);
+  if (failures.length > 0) fail(`contrast: ${failures.length} pair(s) fail APCA\n  ${failures.join('\n  ')}`);
+}
+
 export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[]> {
   const entries = await loadResolver(join(tokensRoot, 'resolver.json'));
   validateEntries(entries);
@@ -1231,6 +1408,7 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
 export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensResult> {
   const entries = await resolveEntries(tokensRoot);
   const all = checkGraph(entries);
+  validateContrast(entries);
   return { css: emitCss(entries), json: emitCatalog(all), overrideKeys: emitOverrideKeys(all), tokens: all };
 }
 
@@ -1267,6 +1445,7 @@ export async function buildCompanyTokens(options: { resolver: string; base?: str
   const { merged, company, inherited } = mergeEntries(upstream, extra);
   validateEntries(merged);
   const all = checkGraph(merged);
+  validateContrast(merged);
   const css = emitCss(company, {
     layer: COMPANY_LAYER,
     preamble: COMPANY_PREAMBLE,

@@ -18,6 +18,14 @@ Generated catalog from the DTCG pipeline. Components consume contract vars only.
 
 **When not:** Color or light / dark → ThemeProvider. Type size → Text `size`.
 
+## Contrast
+
+The token build measures text pairs with APCA, not WCAG 2 ratios. Each pair names a text color, an opaque background and the lowest Lc allowed, for example `color.fg.muted` on `color.bg.elevated` at Lc 60. The build fails when a pair falls short in any appearance.
+
+The pairs live in `$extensions["dev.todae"].contrast` on the appearance modifier in `tokens/resolver.json`. A company token package inherits them, so a rebranded accent is checked too. A company can list a pair with the same `fg` and `bg` to change its minimum, or add pairs for its own tokens.
+
+A brand accent is four tokens per appearance: `color.accent.default`, `color.accent.hover`, `color.accent.active` and `color.on-accent`. Set them together, since Todae's dark `on-accent` is near-black to sit on its near-white ink. Put the brand accent in a company token package so the build checks it. `ThemeProvider` overrides apply at runtime and are not checked.
+
 ## Catalog
 
 <TokensCatalog />

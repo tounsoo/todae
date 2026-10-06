@@ -23,7 +23,7 @@ export const meta = {
       type: '"default" | "muted" | "accent"',
       required: false,
       default: '"default"',
-      description: 'Foreground role.',
+      description: 'Foreground role. accent follows color.accent.default, which is neutral ink in Todae, so it matches default until a theme sets a brand accent.',
     },
     {
       name: 'weight',

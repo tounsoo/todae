@@ -1073,7 +1073,7 @@
           "name": "tone",
           "type": "\"default\" | \"muted\" | \"accent\"",
           "required": false,
-          "description": "Foreground role.",
+          "description": "Foreground role. accent follows color.accent.default, which is neutral ink in Todae, so it matches default until a theme sets a brand accent.",
           "default": "\"default\""
         },
         {
