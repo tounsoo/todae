@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Field, Option, OptionList, Popover, usePopover } from '@tounsoo/todae';
+import { Button, Field, OptionList, Popover, usePopover } from '@tounsoo/todae';
 import { useState } from 'react';
 
 export function FieldPartsAllowed() {
@@ -33,18 +33,18 @@ export function SiblingsAllowed() {
       <Button.Root tooltip={false} {...popover.getTriggerProps()}>
         {sort ?? 'Sort'}
       </Button.Root>
-      <Popover {...popover.getPopoverProps()} aria-label="Sort">
-        <OptionList
+      <Popover.Root {...popover.getPopoverProps()} aria-label="Sort">
+        <OptionList.Root
           value={sort}
           onChange={(next) => {
             setSort(next);
             setOpen(false);
           }}
         >
-          <Option value="name">Name</Option>
-          <Option value="recent">Recent</Option>
-        </OptionList>
-      </Popover>
+          <OptionList.Option value="name">Name</OptionList.Option>
+          <OptionList.Option value="recent">Recent</OptionList.Option>
+        </OptionList.Root>
+      </Popover.Root>
     </>
   );
 }

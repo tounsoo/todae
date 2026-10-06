@@ -257,7 +257,7 @@ function ChipList({
           }}
         >
           {visible.map((chip, index) => (
-            <Chip
+            <Chip.Root
               key={chip.key}
               role="listitem"
               style={{ ...CHIP, ...(chip.ellipsis ? { maxWidth: chip.maxWidth } : {}) }}
@@ -273,7 +273,7 @@ function ChipList({
               }
             >
               {chip.value}
-            </Chip>
+            </Chip.Root>
           ))}
           {hidden > 0 ? (
             <span role="listitem">
@@ -286,17 +286,17 @@ function ChipList({
       </div>
       <div ref={measureRef} aria-hidden inert style={MEASURE}>
         {chips.map((value, index) => (
-          <Chip key={index} style={MEASURE_CHIP} onDismiss={onRemove ? () => undefined : undefined}>
+          <Chip.Root key={index} style={MEASURE_CHIP} onDismiss={onRemove ? () => undefined : undefined}>
             {value}
-          </Chip>
+          </Chip.Root>
         ))}
-        <Chip style={MEASURE_CHIP} onDismiss={onRemove ? () => undefined : undefined}>
+        <Chip.Root style={MEASURE_CHIP} onDismiss={onRemove ? () => undefined : undefined}>
           …
-        </Chip>
+        </Chip.Root>
         <Chip.Overflow style={MEASURE_CHIP} overflowCount={chips.length || 1} />
       </div>
       {open || hidden > 0 ? (
-        <Popover
+        <Popover.Root
           {...wire}
           role="dialog"
           aria-label={`${hidden} more ${hidden === 1 ? 'tag' : 'tags'}`}
@@ -318,7 +318,7 @@ function ChipList({
                 listRef.current?.focus({ preventScroll: true });
               }}
             >
-            <Chip
+            <Chip.Root
               style={{ maxWidth: '100%', minWidth: 0 }}
               onDismiss={
                 onRemove
@@ -340,10 +340,10 @@ function ChipList({
               }
             >
               {value}
-            </Chip>
+            </Chip.Root>
             </HoldFocus>
           ))}
-        </Popover>
+        </Popover.Root>
       ) : null}
     </div>
   );

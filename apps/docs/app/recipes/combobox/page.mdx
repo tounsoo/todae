@@ -28,7 +28,7 @@ If presentation flips while the list is open, the hook closes with `blur`.
 
 ## Popover · single
 
-Sibling `Label` + `Field.Root` id. The input is the combobox. The list lives in `Popover`.
+Sibling `Label` + `Field.Root` id. The input is the combobox. The list lives in `Popover.Root`.
 
 ```tsx
 const cb = useCombobox({ options, presentation: 'popover' })
@@ -40,13 +40,13 @@ const cb = useCombobox({ options, presentation: 'popover' })
     <Field.Icon><Chevron /></Field.Icon>
   </Field.Root>
 </div>
-<Popover {...cb.getPopoverProps()} aria-label="Framework">
-  <OptionList {...cb.getListboxProps()}>
+<Popover.Root {...cb.getPopoverProps()} aria-label="Framework">
+  <OptionList.Root {...cb.getListboxProps()}>
     {cb.items.map((item) => (
-      <Option key={item.id} {...cb.getOptionProps(item)} />
+      <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
     ))}
-  </OptionList>
-</Popover>
+  </OptionList.Root>
+</Popover.Root>
 ```
 
 <Example block>
@@ -69,12 +69,12 @@ The closed control is `Button.Root`. Search Field lives inside the sheet. Same `
 const cb = useCombobox({ options, presentation: 'sheet' })
 
 <Button.Root {...cb.getTriggerProps()}>{selected}</Button.Root>
-<BottomSheet {...cb.getSheetProps()}>
+<BottomSheet.Root {...cb.getSheetProps()}>
   <Field.Root id={cb.ids.input}>
     <Field.TextInput {...cb.getInputProps()} />
   </Field.Root>
-  <OptionList {...cb.getListboxProps()}>…</OptionList>
-</BottomSheet>
+  <OptionList.Root {...cb.getListboxProps()}>…</OptionList.Root>
+</BottomSheet.Root>
 ```
 
 <Example block>

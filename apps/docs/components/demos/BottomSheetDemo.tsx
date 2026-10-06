@@ -11,7 +11,7 @@ export function BottomSheetBasic() {
   return (
     <>
       <Button.Root onClick={() => setOpen(true)}>Open sheet</Button.Root>
-      <BottomSheet open={open} onOpenChange={setOpen} snap={snap} onSnapChange={setSnap}>
+      <BottomSheet.Root open={open} onOpenChange={setOpen} snap={snap} onSnapChange={setSnap}>
         <BottomSheet.Header>
           <BottomSheet.Title>Share</BottomSheet.Title>
           <BottomSheet.Close>Close</BottomSheet.Close>
@@ -29,7 +29,7 @@ export function BottomSheetBasic() {
             Cancel
           </Button.Root>
         </BottomSheet.Footer>
-      </BottomSheet>
+      </BottomSheet.Root>
     </>
   );
 }
@@ -43,7 +43,7 @@ export function ComboboxTouchSketch() {
   return (
     <>
       <Button.Root onClick={() => setOpen(true)}>{value ?? 'Choose option'}</Button.Root>
-      <BottomSheet
+      <BottomSheet.Root
         open={open}
         onOpenChange={(next) => {
           setOpen(next);
@@ -81,7 +81,7 @@ export function ComboboxTouchSketch() {
             ))}
           </ul>
         </BottomSheet.Body>
-      </BottomSheet>
+      </BottomSheet.Root>
     </>
   );
 }

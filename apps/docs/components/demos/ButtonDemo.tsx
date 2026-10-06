@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, ButtonGroup } from '@tounsoo/todae';
+import { Button } from '@tounsoo/todae';
 
 export function ButtonVariants() {
   return (
@@ -47,7 +47,7 @@ export function ButtonIcons() {
 
 export function ButtonGroupAlign() {
   return (
-    <ButtonGroup aria-label="Align">
+    <Button.Group aria-label="Align">
       <Button.Root variant="secondary" aria-label="Left">
         <Button.Icon>
           <span>L</span>
@@ -63,6 +63,6 @@ export function ButtonGroupAlign() {
           <span>R</span>
         </Button.Icon>
       </Button.Root>
-    </ButtonGroup>
+    </Button.Group>
   );
 }

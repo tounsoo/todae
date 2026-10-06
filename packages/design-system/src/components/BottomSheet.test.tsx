@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi, expectTypeOf } from 'vitest';
-import { BottomSheet, type BottomSheetProps, type SheetCloseReason } from './BottomSheet';
+import { BottomSheet, type BottomSheetRootProps, type SheetCloseReason } from './BottomSheet';
 
 afterEach(cleanup);
 
@@ -9,17 +9,17 @@ describe('BottomSheet', () => {
     const onOpenChange = vi.fn();
     const onSnapChange = vi.fn();
     const { rerender } = render(
-      <BottomSheet open onOpenChange={onOpenChange} snap="mid" onSnapChange={onSnapChange}>
+      <BottomSheet.Root open onOpenChange={onOpenChange} snap="mid" onSnapChange={onSnapChange}>
         <BottomSheet.Title>Pick</BottomSheet.Title>
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     expect(document.querySelector('[data-snap="mid"]')).not.toBeNull();
     fireEvent.keyDown(screen.getByRole('button', { name: 'Resize sheet' }), { key: 'ArrowUp' });
     expect(onSnapChange).toHaveBeenCalledWith('full');
     rerender(
-      <BottomSheet open onOpenChange={onOpenChange} snap="full" onSnapChange={onSnapChange}>
+      <BottomSheet.Root open onOpenChange={onOpenChange} snap="full" onSnapChange={onSnapChange}>
         <BottomSheet.Title>Pick</BottomSheet.Title>
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     expect(document.querySelector('[data-snap="full"]')).not.toBeNull();
     fireEvent.keyDown(screen.getByRole('button', { name: 'Resize sheet' }), { key: 'ArrowDown' });
@@ -28,9 +28,9 @@ describe('BottomSheet', () => {
 
   it('disables mid when snapPoints is full only', () => {
     render(
-      <BottomSheet open onOpenChange={() => undefined} snapPoints={['full']}>
+      <BottomSheet.Root open onOpenChange={() => undefined} snapPoints={['full']}>
         <BottomSheet.Title>Full</BottomSheet.Title>
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     expect(document.querySelector('[data-snap="full"]')).not.toBeNull();
     fireEvent.keyDown(screen.getByRole('button', { name: 'Resize sheet' }), { key: 'ArrowDown' });
@@ -41,10 +41,10 @@ describe('BottomSheet', () => {
     const onSnapChange = vi.fn();
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
     render(
-      <BottomSheet open onOpenChange={() => undefined} snap="mid" onSnapChange={onSnapChange}>
+      <BottomSheet.Root open onOpenChange={() => undefined} snap="mid" onSnapChange={onSnapChange}>
         <BottomSheet.Title>Resize</BottomSheet.Title>
         <BottomSheet.Body>list</BottomSheet.Body>
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     const sheet = document.querySelector('[role="dialog"]') as HTMLElement;
     const handle = document.querySelector('[data-sheet-drag-handle]');
@@ -65,10 +65,10 @@ describe('BottomSheet', () => {
     const onOpenChange = vi.fn();
     Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
     render(
-      <BottomSheet open onOpenChange={onOpenChange}>
+      <BottomSheet.Root open onOpenChange={onOpenChange}>
         <BottomSheet.Title>Drag</BottomSheet.Title>
         <BottomSheet.Body>list</BottomSheet.Body>
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     const handle = document.querySelector('[data-sheet-drag-handle]');
     expect(handle).not.toBeNull();
@@ -81,10 +81,10 @@ describe('BottomSheet', () => {
   it('does not drag from a scrolled body', () => {
     const onOpenChange = vi.fn();
     render(
-      <BottomSheet open onOpenChange={onOpenChange}>
+      <BottomSheet.Root open onOpenChange={onOpenChange}>
         <BottomSheet.Title>List</BottomSheet.Title>
         <BottomSheet.Body>items</BottomSheet.Body>
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     const body = document.querySelector('[role="dialog"] .todae_body') ?? document.querySelector('[class*="body"]');
     expect(body).toBeInstanceOf(HTMLElement);
@@ -99,9 +99,9 @@ describe('BottomSheet', () => {
     const sibling = document.createElement('div');
     document.body.appendChild(sibling);
     const { unmount } = render(
-      <BottomSheet open onOpenChange={() => undefined}>
+      <BottomSheet.Root open onOpenChange={() => undefined}>
         <BottomSheet.Title>Gone</BottomSheet.Title>
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     expect(document.documentElement.style.overflow).toBe('hidden');
     expect(sibling.inert).toBe(true);
@@ -113,14 +113,14 @@ describe('BottomSheet', () => {
 
   it('stays mounted while exiting then unmounts after the exit timeout', async () => {
     const { rerender } = render(
-      <BottomSheet open onOpenChange={() => undefined}>
+      <BottomSheet.Root open onOpenChange={() => undefined}>
         <BottomSheet.Title>Share</BottomSheet.Title>
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     rerender(
-      <BottomSheet open={false} onOpenChange={() => undefined}>
+      <BottomSheet.Root open={false} onOpenChange={() => undefined}>
         <BottomSheet.Title>Share</BottomSheet.Title>
-      </BottomSheet>,
+      </BottomSheet.Root>,
     );
     const sheet = document.querySelector('[role="dialog"]') as HTMLElement;
     expect(sheet).not.toBeNull();
@@ -129,8 +129,8 @@ describe('BottomSheet', () => {
   });
 
   it('types snapPoints and close reasons', () => {
-    expectTypeOf<NonNullable<BottomSheetProps['snapPoints']>>().toEqualTypeOf<readonly ('mid' | 'full')[]>();
+    expectTypeOf<NonNullable<BottomSheetRootProps['snapPoints']>>().toEqualTypeOf<readonly ('mid' | 'full')[]>();
     expectTypeOf<SheetCloseReason>().toEqualTypeOf<'escape' | 'scrim' | 'drag' | 'close-button'>();
-    expectTypeOf(['peek'] as const).not.toMatchTypeOf<NonNullable<BottomSheetProps['snapPoints']>>();
+    expectTypeOf(['peek'] as const).not.toMatchTypeOf<NonNullable<BottomSheetRootProps['snapPoints']>>();
   });
 });

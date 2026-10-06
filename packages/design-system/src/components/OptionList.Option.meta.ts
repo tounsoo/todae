@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'OptionList.Option',
-  description: 'String-only option. Same as the top-level Option export.',
+  description: 'String-only option inside OptionList.Root.',
   props: [
     {
       name: 'value',

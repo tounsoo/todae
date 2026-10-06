@@ -29,7 +29,7 @@ import styles from './BottomSheet.module.css';
 export type { SheetSnap };
 export type SheetCloseReason = Extract<OverlayCloseReason, 'escape' | 'scrim' | 'drag' | 'close-button'>;
 
-export type BottomSheetProps = {
+export type BottomSheetRootProps = {
   open: boolean;
   onOpenChange: (open: boolean, reason: SheetCloseReason) => void;
   snap?: SheetSnap;
@@ -63,7 +63,7 @@ const SheetContext = createContext<SheetContextValue | null>(null);
 
 function useSheet(): SheetContextValue {
   const ctx = useContext(SheetContext);
-  if (!ctx) throw new Error('BottomSheet parts must render inside BottomSheet');
+  if (!ctx) throw new Error('BottomSheet parts must render inside BottomSheet.Root');
   return ctx;
 }
 
@@ -186,7 +186,7 @@ function BottomSheetClose({
   );
 }
 
-export function BottomSheet({
+function BottomSheetRoot({
   open,
   onOpenChange,
   snap,
@@ -202,7 +202,7 @@ export function BottomSheet({
   children,
   ref,
   ...props
-}: BottomSheetProps) {
+}: BottomSheetRootProps) {
   const points = snapPoints ?? (['mid', 'full'] as const);
   const [uncontrolled, setUncontrolled] = useState<SheetSnap>(
     points.includes(defaultSnap) ? defaultSnap : (points[0] ?? 'mid'),
@@ -306,10 +306,13 @@ export function BottomSheet({
   );
 }
 
-BottomSheet.Grabber = BottomSheetGrabber;
-BottomSheet.Header = BottomSheetHeader;
-BottomSheet.Title = BottomSheetTitle;
-BottomSheet.Description = BottomSheetDescription;
-BottomSheet.Body = BottomSheetBody;
-BottomSheet.Footer = BottomSheetFooter;
-BottomSheet.Close = BottomSheetClose;
+export const BottomSheet = {
+  Root: BottomSheetRoot,
+  Grabber: BottomSheetGrabber,
+  Header: BottomSheetHeader,
+  Title: BottomSheetTitle,
+  Description: BottomSheetDescription,
+  Body: BottomSheetBody,
+  Footer: BottomSheetFooter,
+  Close: BottomSheetClose,
+} as const;

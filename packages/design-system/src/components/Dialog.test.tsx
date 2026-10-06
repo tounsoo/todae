@@ -10,22 +10,22 @@ describe('Dialog', () => {
     const close = vi.spyOn(HTMLDialogElement.prototype, 'close');
     const onOpenChange = vi.fn();
     const { rerender } = render(
-      <Dialog open={false} onOpenChange={onOpenChange}>
+      <Dialog.Root open={false} onOpenChange={onOpenChange}>
         <Dialog.Title>Save</Dialog.Title>
-      </Dialog>,
+      </Dialog.Root>,
     );
     expect(showModal).not.toHaveBeenCalled();
     rerender(
-      <Dialog open onOpenChange={onOpenChange}>
+      <Dialog.Root open onOpenChange={onOpenChange}>
         <Dialog.Title>Save</Dialog.Title>
-      </Dialog>,
+      </Dialog.Root>,
     );
     expect(showModal).toHaveBeenCalledTimes(1);
     expect(document.querySelector('dialog')?.hasAttribute('open')).toBe(true);
     rerender(
-      <Dialog open={false} onOpenChange={onOpenChange}>
+      <Dialog.Root open={false} onOpenChange={onOpenChange}>
         <Dialog.Title>Save</Dialog.Title>
-      </Dialog>,
+      </Dialog.Root>,
     );
     const el = document.querySelector('dialog');
     expect(el?.hasAttribute('open')).toBe(true);
@@ -39,14 +39,14 @@ describe('Dialog', () => {
 
   it('sets data-entered after open so enter can tween without starting-style', async () => {
     const { rerender } = render(
-      <Dialog open={false} onOpenChange={() => undefined}>
+      <Dialog.Root open={false} onOpenChange={() => undefined}>
         <Dialog.Title>Save</Dialog.Title>
-      </Dialog>,
+      </Dialog.Root>,
     );
     rerender(
-      <Dialog open onOpenChange={() => undefined}>
+      <Dialog.Root open onOpenChange={() => undefined}>
         <Dialog.Title>Save</Dialog.Title>
-      </Dialog>,
+      </Dialog.Root>,
     );
     const el = document.querySelector('dialog');
     expect(el?.hasAttribute('open')).toBe(true);
@@ -55,9 +55,9 @@ describe('Dialog', () => {
 
   it('never renders the open attribute from React', () => {
     const { container } = render(
-      <Dialog open={false} onOpenChange={() => undefined}>
+      <Dialog.Root open={false} onOpenChange={() => undefined}>
         Title
-      </Dialog>,
+      </Dialog.Root>,
     );
     expect(container.querySelector('dialog')?.getAttribute('open')).toBeNull();
   });
@@ -65,9 +65,9 @@ describe('Dialog', () => {
   it('resyncs a native close while the prop is still open', () => {
     const onOpenChange = vi.fn();
     render(
-      <Dialog open onOpenChange={onOpenChange}>
+      <Dialog.Root open onOpenChange={onOpenChange}>
         <Dialog.Title>Save</Dialog.Title>
-      </Dialog>,
+      </Dialog.Root>,
     );
     const el = document.querySelector('dialog');
     el?.dispatchEvent(new Event('close'));

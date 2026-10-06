@@ -3,7 +3,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Option, OptionList } from './OptionList';
+import * as api from '../index';
+import { OptionList } from './OptionList';
 
 afterEach(cleanup);
 
@@ -13,19 +14,19 @@ describe('OptionList', () => {
   it('skips disabled options wrapped in fragments during keyboard navigation', () => {
     const onChange = vi.fn();
     render(
-      <OptionList value={null} onChange={onChange} aria-label="Fruit">
-        <Option value="a">A</Option>
+      <OptionList.Root value={null} onChange={onChange} aria-label="Fruit">
+        <OptionList.Option value="a">A</OptionList.Option>
         <>
-          <Option value="b" disabled>
+          <OptionList.Option value="b" disabled>
             B
-          </Option>
+          </OptionList.Option>
           {['c', 'd'].map((v) => (
-            <Option key={v} value={v}>
+            <OptionList.Option key={v} value={v}>
               {v.toUpperCase()}
-            </Option>
+            </OptionList.Option>
           ))}
         </>
-      </OptionList>,
+      </OptionList.Root>,
     );
     const list = screen.getByRole('listbox');
     fireEvent.keyDown(list, { key: 'ArrowDown' });
@@ -33,18 +34,27 @@ describe('OptionList', () => {
     expect(onChange).toHaveBeenCalledWith('c');
   });
 
-  it('exposes Option as OptionList.Option', () => {
-    expect(OptionList.Option).toBe(Option);
+  it('names OptionList.Root when an option renders outside it', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => render(<OptionList.Option value="a">A</OptionList.Option>)).toThrow(
+      'OptionList.Option must render inside OptionList.Root',
+    );
+    spy.mockRestore();
+  });
+
+  it('exposes Option only as OptionList.Option', () => {
+    expect(typeof OptionList.Option).toBe('function');
+    expect('Option' in api).toBe(false);
   });
 
   it('renders a listbox with string options and activedescendant', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
-      <OptionList value="pear" onChange={() => undefined} aria-label="Fruit">
-        <Option value="apple">Apple</Option>
-        <Option value="pear">Pear</Option>
-        <Option value="bad">{['nope'] as unknown as string}</Option>
-      </OptionList>,
+      <OptionList.Root value="pear" onChange={() => undefined} aria-label="Fruit">
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+        <OptionList.Option value="bad">{['nope'] as unknown as string}</OptionList.Option>
+      </OptionList.Root>,
     );
     const list = screen.getByRole('listbox', { name: 'Fruit' });
     expect(list.getAttribute('aria-multiselectable')).toBeNull();
@@ -53,17 +63,17 @@ describe('OptionList', () => {
     expect(options[1]?.getAttribute('aria-selected')).toBe('true');
     expect(list.getAttribute('aria-activedescendant')).toBe(options[1]?.id);
     expect(options.every((el) => el.getAttribute('tabindex') === null)).toBe(true);
-    expect(error).toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith('OptionList.Option children must be a string');
     error.mockRestore();
   });
 
   it('fires onChange(string) for single selection', () => {
     const onChange = vi.fn();
     render(
-      <OptionList value={null} onChange={onChange} aria-label="Fruit">
-        <Option value="apple">Apple</Option>
-        <Option value="pear">Pear</Option>
-      </OptionList>,
+      <OptionList.Root value={null} onChange={onChange} aria-label="Fruit">
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+      </OptionList.Root>,
     );
     fireEvent.click(screen.getByRole('option', { name: 'Pear' }));
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -73,20 +83,20 @@ describe('OptionList', () => {
   it('toggles values for multiple selection', () => {
     const onChange = vi.fn();
     const { rerender } = render(
-      <OptionList selectionMode="multiple" value={['apple']} onChange={onChange} aria-label="Fruit">
-        <Option value="apple">Apple</Option>
-        <Option value="pear">Pear</Option>
-      </OptionList>,
+      <OptionList.Root selectionMode="multiple" value={['apple']} onChange={onChange} aria-label="Fruit">
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+      </OptionList.Root>,
     );
     expect(screen.getByRole('listbox').getAttribute('aria-multiselectable')).toBe('true');
     expect(screen.getByRole('listbox').getAttribute('data-selection-mode')).toBe('multiple');
     fireEvent.click(screen.getByRole('option', { name: 'Pear' }));
     expect(onChange).toHaveBeenCalledWith(['apple', 'pear']);
     rerender(
-      <OptionList selectionMode="multiple" value={['apple', 'pear']} onChange={onChange} aria-label="Fruit">
-        <Option value="apple">Apple</Option>
-        <Option value="pear">Pear</Option>
-      </OptionList>,
+      <OptionList.Root selectionMode="multiple" value={['apple', 'pear']} onChange={onChange} aria-label="Fruit">
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+      </OptionList.Root>,
     );
     fireEvent.click(screen.getByRole('option', { name: 'Apple' }));
     expect(onChange).toHaveBeenLastCalledWith(['pear']);
@@ -95,13 +105,13 @@ describe('OptionList', () => {
   it('moves with arrows home end and selects with enter or space', () => {
     const onChange = vi.fn();
     render(
-      <OptionList value={null} onChange={onChange} aria-label="Fruit">
-        <Option value="apple">Apple</Option>
-        <Option value="skip" disabled>
+      <OptionList.Root value={null} onChange={onChange} aria-label="Fruit">
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="skip" disabled>
           Skip
-        </Option>
-        <Option value="pear">Pear</Option>
-      </OptionList>,
+        </OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+      </OptionList.Root>,
     );
     const list = screen.getByRole('listbox');
     list.focus();
@@ -123,10 +133,10 @@ describe('OptionList', () => {
   it('highlights only the keyboard row and clears after pointer select', () => {
     const onChange = vi.fn();
     render(
-      <OptionList value={null} onChange={onChange} aria-label="Fruit">
-        <Option value="apple">Apple</Option>
-        <Option value="pear">Pear</Option>
-      </OptionList>,
+      <OptionList.Root value={null} onChange={onChange} aria-label="Fruit">
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+      </OptionList.Root>,
     );
     const list = screen.getByRole('listbox');
     expect(screen.getByRole('option', { name: 'Apple' }).hasAttribute('data-highlighted')).toBe(false);
@@ -140,7 +150,7 @@ describe('OptionList', () => {
 
   it('honors controlled activeValue, id, and tabIndex', () => {
     const { rerender } = render(
-      <OptionList
+      <OptionList.Root
         id="fruit"
         tabIndex={-1}
         activeValue="pear"
@@ -148,16 +158,16 @@ describe('OptionList', () => {
         onChange={() => undefined}
         aria-label="Fruit"
       >
-        <Option value="apple">Apple</Option>
-        <Option value="pear">Pear</Option>
-      </OptionList>,
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+      </OptionList.Root>,
     );
     const list = screen.getByRole('listbox', { name: 'Fruit' });
     expect(list).toHaveProperty('id', 'fruit');
     expect(list).toHaveProperty('tabIndex', -1);
     expect(list.getAttribute('aria-activedescendant')).toBe('fruit-opt-pear');
     rerender(
-      <OptionList
+      <OptionList.Root
         id="fruit"
         tabIndex={-1}
         activeValue="apple"
@@ -165,9 +175,9 @@ describe('OptionList', () => {
         onChange={() => undefined}
         aria-label="Fruit"
       >
-        <Option value="apple">Apple</Option>
-        <Option value="pear">Pear</Option>
-      </OptionList>,
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+      </OptionList.Root>,
     );
     expect(screen.getByRole('listbox').getAttribute('aria-activedescendant')).toBe('fruit-opt-apple');
     expect(screen.getByRole('option', { name: 'Apple' }).hasAttribute('data-highlighted')).toBe(true);
@@ -176,7 +186,7 @@ describe('OptionList', () => {
   it('fires onActiveChange on arrow keys', () => {
     const onActiveChange = vi.fn();
     render(
-      <OptionList
+      <OptionList.Root
         id="fruit"
         activeValue="apple"
         onActiveChange={onActiveChange}
@@ -184,9 +194,9 @@ describe('OptionList', () => {
         onChange={() => undefined}
         aria-label="Fruit"
       >
-        <Option value="apple">Apple</Option>
-        <Option value="pear">Pear</Option>
-      </OptionList>,
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+        <OptionList.Option value="pear">Pear</OptionList.Option>
+      </OptionList.Root>,
     );
     fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowDown' });
     expect(onActiveChange).toHaveBeenCalledWith('pear');
@@ -197,9 +207,9 @@ describe('OptionList', () => {
     const onEscape = vi.fn();
     render(
       <div onKeyDown={(event) => event.key === 'Escape' && onEscape()}>
-        <OptionList value={null} onChange={onChange} aria-label="Fruit">
-          <Option value="apple">Apple</Option>
-        </OptionList>
+        <OptionList.Root value={null} onChange={onChange} aria-label="Fruit">
+          <OptionList.Option value="apple">Apple</OptionList.Option>
+        </OptionList.Root>
       </div>,
     );
     const list = screen.getByRole('listbox');

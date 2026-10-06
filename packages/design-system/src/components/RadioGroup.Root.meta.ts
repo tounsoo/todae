@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'RadioGroup',
+  name: 'RadioGroup.Root',
   description:
     'Exclusive choice. Requires aria-label or aria-labelledby. Owns value, name, disabled, and invalid.',
   props: [
@@ -64,7 +64,7 @@ export const meta = {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description: 'Radio children.',
+      description: 'RadioGroup.Item children.',
     },
     {
       name: 'className',

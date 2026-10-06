@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'ButtonGroup',
+  name: 'Button.Group',
   description: 'Chrome-only attached row of Button.Root. role=group. No selection state.',
   props: [
     {

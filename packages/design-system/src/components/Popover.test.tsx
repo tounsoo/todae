@@ -6,8 +6,8 @@ import { useRef, useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index';
 import { usePopover, type PopoverCloseReason, type UsePopoverOptions } from '../hooks/usePopover';
-import { Option, OptionList } from './OptionList';
-import { Popover, type PopoverProps } from './Popover';
+import { OptionList } from './OptionList';
+import { Popover, type PopoverRootProps } from './Popover';
 import type { PopoverWire } from './Popover.wire';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -27,9 +27,9 @@ function Harness({
       <button type="button" {...popover.getTriggerProps()}>
         {label}
       </button>
-      <Popover {...popover.getPopoverProps()} aria-label="Menu">
+      <Popover.Root {...popover.getPopoverProps()} aria-label="Menu">
         {children}
-      </Popover>
+      </Popover.Root>
     </>
   );
 }
@@ -40,14 +40,14 @@ describe('Popover exports', () => {
     expect(api.usePopover).toBeDefined();
     expect(Popover).not.toHaveProperty('Trigger');
     expect(Popover).not.toHaveProperty('Content');
-    expectTypeOf<PopoverProps>().toHaveProperty('id');
-    expectTypeOf<PopoverProps>().toHaveProperty('open');
-    expectTypeOf<PopoverProps>().toHaveProperty('ref');
-    expectTypeOf<PopoverProps>().toHaveProperty('style');
-    expectTypeOf<PopoverProps>().not.toHaveProperty('onOpenChange');
-    expectTypeOf<PopoverProps>().not.toHaveProperty('enabled');
-    expectTypeOf<PopoverProps>().not.toHaveProperty('anchorRef');
-    expectTypeOf<PopoverProps>().not.toHaveProperty('defaultOpen');
+    expectTypeOf<PopoverRootProps>().toHaveProperty('id');
+    expectTypeOf<PopoverRootProps>().toHaveProperty('open');
+    expectTypeOf<PopoverRootProps>().toHaveProperty('ref');
+    expectTypeOf<PopoverRootProps>().toHaveProperty('style');
+    expectTypeOf<PopoverRootProps>().not.toHaveProperty('onOpenChange');
+    expectTypeOf<PopoverRootProps>().not.toHaveProperty('enabled');
+    expectTypeOf<PopoverRootProps>().not.toHaveProperty('anchorRef');
+    expectTypeOf<PopoverRootProps>().not.toHaveProperty('defaultOpen');
     expectTypeOf<PopoverCloseReason>().toEqualTypeOf<'escape' | 'outside' | 'trigger'>();
   });
 });
@@ -106,9 +106,9 @@ describe('Popover', () => {
           <div ref={anchorRef} data-testid="anchor">
             Field
           </div>
-          <Popover {...popover.getPopoverProps()} aria-label="Menu">
+          <Popover.Root {...popover.getPopoverProps()} aria-label="Menu">
             Hello
-          </Popover>
+          </Popover.Root>
         </>
       );
     }
@@ -147,17 +147,17 @@ describe('Popover', () => {
           <button type="button" {...popover.getTriggerProps()}>
             Open
           </button>
-          <Popover {...popover.getPopoverProps()} aria-label="Menu">
-            <OptionList
+          <Popover.Root {...popover.getPopoverProps()} aria-label="Menu">
+            <OptionList.Root
               value={null}
               onChange={(value) => {
                 onChange(value);
                 setOpen(false);
               }}
             >
-              <Option value="apple">Apple</Option>
-            </OptionList>
-          </Popover>
+              <OptionList.Option value="apple">Apple</OptionList.Option>
+            </OptionList.Root>
+          </Popover.Root>
         </div>
       );
     }
@@ -194,8 +194,8 @@ describe('Popover', () => {
       style: CSSProperties;
       onPointerDown: () => void;
       onClick: () => void;
-    }>().toMatchTypeOf<PopoverProps>();
-    expectTypeOf<{ open: boolean; onOpenChange: () => void }>().not.toMatchTypeOf<PopoverProps>();
+    }>().toMatchTypeOf<PopoverRootProps>();
+    expectTypeOf<{ open: boolean; onOpenChange: () => void }>().not.toMatchTypeOf<PopoverRootProps>();
   });
 
   it('omits role unless set, and stays byte-identical aside from that', () => {
@@ -212,9 +212,9 @@ describe('Popover', () => {
     function Named() {
       const popover = usePopover({ open: true });
       return (
-        <Popover {...popover.getPopoverProps()} role="dialog" aria-label="Tags">
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Tags">
           Hi
-        </Popover>
+        </Popover.Root>
       );
     }
     render(<Named />);
@@ -224,9 +224,9 @@ describe('Popover', () => {
   });
 
   it('requires an accessible name when role is dialog', () => {
-    expectTypeOf<PopoverWire & { role: 'dialog' }>().not.toMatchTypeOf<PopoverProps>();
-    expectTypeOf<PopoverWire & { role: 'dialog'; 'aria-label': string }>().toMatchTypeOf<PopoverProps>();
-    expectTypeOf<PopoverWire & { role: 'dialog'; 'aria-labelledby': string }>().toMatchTypeOf<PopoverProps>();
-    expectTypeOf<PopoverWire>().toMatchTypeOf<PopoverProps>();
+    expectTypeOf<PopoverWire & { role: 'dialog' }>().not.toMatchTypeOf<PopoverRootProps>();
+    expectTypeOf<PopoverWire & { role: 'dialog'; 'aria-label': string }>().toMatchTypeOf<PopoverRootProps>();
+    expectTypeOf<PopoverWire & { role: 'dialog'; 'aria-labelledby': string }>().toMatchTypeOf<PopoverRootProps>();
+    expectTypeOf<PopoverWire>().toMatchTypeOf<PopoverRootProps>();
   });
 });

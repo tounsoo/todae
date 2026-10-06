@@ -42,7 +42,7 @@ export type TooltipNativeProps = Omit<
   | 'style'
 >;
 
-export type TooltipProps =
+export type TooltipRootProps =
   | (TooltipWire<false> & TooltipChrome & TooltipNativeProps)
   | (TooltipWire<true> & TooltipChrome & TooltipContentName & TooltipNativeProps);
 
@@ -136,7 +136,7 @@ function TooltipPanel({
   );
 }
 
-export function Tooltip(props: TooltipProps) {
+function TooltipRoot(props: TooltipRootProps) {
   const surface = resolveSurface(props.interactive, props.id);
   if (!isMounted(surface, props.open)) return null;
   if (props.interactive) {
@@ -155,3 +155,5 @@ export function Tooltip(props: TooltipProps) {
     </TooltipTip>
   );
 }
+
+export const Tooltip = { Root: TooltipRoot } as const;

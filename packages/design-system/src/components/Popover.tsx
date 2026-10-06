@@ -35,9 +35,9 @@ export type PopoverNativeProps = Omit<
   keyof PopoverWire | 'popover' | 'role' | 'aria-label' | 'aria-labelledby' | 'children' | 'className' | 'style'
 >;
 
-export type PopoverProps = PopoverWire & PopoverChrome & PopoverNativeProps;
+export type PopoverRootProps = PopoverWire & PopoverChrome & PopoverNativeProps;
 
-export function Popover({
+function PopoverRoot({
   id,
   open,
   ref: setRef,
@@ -50,7 +50,7 @@ export function Popover({
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledby,
   ...props
-}: PopoverProps) {
+}: PopoverRootProps) {
   const localRef = useRef<HTMLDivElement | null>(null);
   usePopoverSync(localRef, open);
   return (
@@ -75,3 +75,5 @@ export function Popover({
     </div>
   );
 }
+
+export const Popover = { Root: PopoverRoot } as const;

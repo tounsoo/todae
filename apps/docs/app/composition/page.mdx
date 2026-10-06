@@ -34,7 +34,7 @@ Field shell is not a button. This tree is never allowed.
 
 Worked examples that compose compounds and hooks. Combobox is a recipe, not a package namespace. The blocks below are static. They do not run. The hook owns behavior. Compounds own chrome. There is no shipped Trigger sugar.
 
-Desktop (`presentation="popover"`). The closed control is a real Field. Spread `getAnchorProps` onto `Field.Root`. The list lives in `Popover`. Worked recipes live on [Combobox](/recipes/combobox).
+Desktop (`presentation="popover"`). The closed control is a real Field. Spread `getAnchorProps` onto `Field.Root`. The list lives in `Popover.Root`. Worked recipes live on [Combobox](/recipes/combobox).
 
 ```tsx
 const cb = useCombobox({ presentation: 'popover' })
@@ -47,9 +47,9 @@ const cb = useCombobox({ presentation: 'popover' })
 		<Field.Icon><ChevronDown /></Field.Icon>
 	</Field.Root>
 </div>
-<Popover {...cb.getPopoverProps()}>
-	<OptionList {...cb.getListboxProps()}>...</OptionList>
-</Popover>
+<Popover.Root {...cb.getPopoverProps()}>
+	<OptionList.Root {...cb.getListboxProps()}>...</OptionList.Root>
+</Popover.Root>
 ```
 
 `anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks. Combobox uses `getAnchorProps` on `Field.Root`. Do not also spread `usePopover` `getTriggerProps`.
@@ -60,7 +60,7 @@ Touch (`presentation="sheet"`). The closed control is `Button.Root`. Search Fiel
 const cb = useCombobox({ presentation: 'sheet' })
 
 <Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
-<BottomSheet {...cb.getSheetProps()}>
+<BottomSheet.Root {...cb.getSheetProps()}>
 	<div className="labelled-field">
 		<Label htmlFor={cb.ids.input}>Search</Label>
 		<Field.Root id={cb.ids.input}>
@@ -68,8 +68,8 @@ const cb = useCombobox({ presentation: 'sheet' })
 			<Field.TextInput {...cb.getInputProps()} />
 		</Field.Root>
 	</div>
-	<OptionList {...cb.getListboxProps()}>...</OptionList>
-</BottomSheet>
+	<OptionList.Root {...cb.getListboxProps()}>...</OptionList.Root>
+</BottomSheet.Root>
 ```
 
 The touch trigger is `Button.Root`.
@@ -82,9 +82,9 @@ The touch trigger is `Button.Root`.
 - `getAnchorProps()` on `Field.Root` (desktop)
 - `getTriggerProps()` on `Button.Root` (sheet)
 - `getInputProps()` / `getChipInputProps()` on the field input
-- `getPopoverProps()` on `Popover`
-- `getSheetProps()` on `BottomSheet`
-- `getListboxProps()` on `OptionList`
+- `getPopoverProps()` on `Popover.Root`
+- `getSheetProps()` on `BottomSheet.Root`
+- `getListboxProps()` on `OptionList.Root`
 
 No Trigger sugar component. No `Combobox.*` chrome. See [Combobox](/recipes/combobox).
 

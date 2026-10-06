@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Radio',
+  name: 'RadioGroup.Item',
   description: 'One option in a RadioGroup. No checked, name, or invalid. Children are the visible label.',
   props: [
     {

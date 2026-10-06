@@ -2,34 +2,35 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Radio, RadioGroup, type RadioGroupProps, type RadioProps } from './Radio';
+import { RadioGroup, type RadioGroupItemProps, type RadioGroupRootProps } from './Radio';
 import * as api from '../index';
 
 afterEach(cleanup);
 
 describe('Radio exports', () => {
-  it('is a top-level pair', () => {
-    expect(api.Radio).toBe(Radio);
+  it('is a namespace with Root and Item', () => {
+    expect(RadioGroup.Item).toBeTypeOf('function');
+    expect('Radio' in api).toBe(false);
     expect(api.RadioGroup).toBe(RadioGroup);
-    expectTypeOf<RadioProps>().toHaveProperty('value');
-    expectTypeOf<RadioGroupProps>().toHaveProperty('onValueChange');
+    expectTypeOf<RadioGroupItemProps>().toHaveProperty('value');
+    expectTypeOf<RadioGroupRootProps>().toHaveProperty('onValueChange');
   });
 });
 
 describe('RadioGroup', () => {
   it('accepts exactly one accessible name', () => {
-    const labelled: RadioGroupProps = { 'aria-label': 'Plan' };
-    const captioned: RadioGroupProps = { 'aria-labelledby': 'plan-caption' };
+    const labelled: RadioGroupRootProps = { 'aria-label': 'Plan' };
+    const captioned: RadioGroupRootProps = { 'aria-labelledby': 'plan-caption' };
     expect(labelled['aria-label']).toBe('Plan');
     expect(captioned['aria-labelledby']).toBe('plan-caption');
   });
 
   it('selects one value and shares a name', () => {
     render(
-      <RadioGroup aria-label="Plan" defaultValue="free">
-        <Radio value="free">Free</Radio>
-        <Radio value="pro">Pro</Radio>
-      </RadioGroup>,
+      <RadioGroup.Root aria-label="Plan" defaultValue="free">
+        <RadioGroup.Item value="free">Free</RadioGroup.Item>
+        <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+      </RadioGroup.Root>,
     );
     const free = screen.getByRole('radio', { name: 'Free' });
     const pro = screen.getByRole('radio', { name: 'Pro' });
@@ -45,10 +46,10 @@ describe('RadioGroup', () => {
     function Harness() {
       const [plan, setPlan] = useState<string | null>('free');
       return (
-        <RadioGroup aria-label="Plan" value={plan} onValueChange={setPlan}>
-          <Radio value="free">Free</Radio>
-          <Radio value="pro">Pro</Radio>
-        </RadioGroup>
+        <RadioGroup.Root aria-label="Plan" value={plan} onValueChange={setPlan}>
+          <RadioGroup.Item value="free">Free</RadioGroup.Item>
+          <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+        </RadioGroup.Root>
       );
     }
     render(<Harness />);
@@ -59,26 +60,37 @@ describe('RadioGroup', () => {
   it('keeps a controlled empty group empty until the caller updates', () => {
     const onValueChange = vi.fn();
     render(
-      <RadioGroup aria-label="Plan" value={null} onValueChange={onValueChange}>
-        <Radio value="free">Free</Radio>
-      </RadioGroup>,
+      <RadioGroup.Root aria-label="Plan" value={null} onValueChange={onValueChange}>
+        <RadioGroup.Item value="free">Free</RadioGroup.Item>
+      </RadioGroup.Root>,
     );
     fireEvent.click(screen.getByRole('radio', { name: 'Free' }));
     expect(screen.getByRole('radio')).toHaveProperty('checked', false);
     expect(onValueChange).toHaveBeenCalledWith('free');
   });
 
-  it('throws when Radio renders outside RadioGroup', () => {
-    expect(() => render(<Radio value="free">Free</Radio>)).toThrow(
-      'Radio must render inside RadioGroup',
+  it('names RadioGroup.Root when both value and defaultValue are set', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <RadioGroup.Root aria-label="Plan" value="free" defaultValue="pro" onValueChange={() => undefined}>
+        <RadioGroup.Item value="free">Free</RadioGroup.Item>
+      </RadioGroup.Root>,
+    );
+    expect(error).toHaveBeenCalledWith('RadioGroup.Root cannot take both value and defaultValue');
+    error.mockRestore();
+  });
+
+  it('throws when RadioGroup.Item renders outside RadioGroup.Root', () => {
+    expect(() => render(<RadioGroup.Item value="free">Free</RadioGroup.Item>)).toThrow(
+      'RadioGroup.Item must render inside RadioGroup.Root',
     );
   });
 
   it('marks every radio invalid from the group', () => {
     render(
-      <RadioGroup aria-label="Plan" invalid>
-        <Radio value="free">Free</Radio>
-      </RadioGroup>,
+      <RadioGroup.Root aria-label="Plan" invalid>
+        <RadioGroup.Item value="free">Free</RadioGroup.Item>
+      </RadioGroup.Root>,
     );
     expect(screen.getByRole('radio').getAttribute('aria-invalid')).toBe('true');
     expect(screen.getByRole('radiogroup').getAttribute('aria-invalid')).toBe('true');
@@ -86,9 +98,9 @@ describe('RadioGroup', () => {
 
   it('SSR keeps the radiogroup name', () => {
     const html = renderToString(
-      <RadioGroup aria-label="Plan" name="plan">
-        <Radio value="free">Free</Radio>
-      </RadioGroup>,
+      <RadioGroup.Root aria-label="Plan" name="plan">
+        <RadioGroup.Item value="free">Free</RadioGroup.Item>
+      </RadioGroup.Root>,
     );
     expect(html).toContain('role="radiogroup"');
     expect(html).toContain('aria-label="Plan"');

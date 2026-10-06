@@ -2,7 +2,60 @@
   "version": 1,
   "components": [
     {
-      "name": "BottomSheet",
+      "name": "BottomSheet.Body",
+      "description": "Scroll container. Drag starts only at scrollTop 0.",
+      "props": []
+    },
+    {
+      "name": "BottomSheet.Close",
+      "description": "Ghost Button.Root that requests close-button dismiss.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name.",
+          "default": "\"Close\""
+        }
+      ]
+    },
+    {
+      "name": "BottomSheet.Description",
+      "description": "Supporting text. Wires aria-describedby.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Description text."
+        }
+      ]
+    },
+    {
+      "name": "BottomSheet.Footer",
+      "description": "Action row.",
+      "props": []
+    },
+    {
+      "name": "BottomSheet.Grabber",
+      "description": "Drag handle. Rendered by default if omitted. Arrow keys change snap.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name of the resize control.",
+          "default": "\"Resize sheet\""
+        }
+      ]
+    },
+    {
+      "name": "BottomSheet.Header",
+      "description": "Chrome. Drag-eligible.",
+      "props": []
+    },
+    {
+      "name": "BottomSheet.Root",
       "description": "Modal bottom sheet. Custom portal, not a native dialog. Mid and full snap.",
       "props": [
         {
@@ -67,59 +120,6 @@
       ]
     },
     {
-      "name": "BottomSheet.Body",
-      "description": "Scroll container. Drag starts only at scrollTop 0.",
-      "props": []
-    },
-    {
-      "name": "BottomSheet.Close",
-      "description": "Ghost Button.Root that requests close-button dismiss.",
-      "props": [
-        {
-          "name": "aria-label",
-          "type": "string",
-          "required": false,
-          "description": "Accessible name.",
-          "default": "\"Close\""
-        }
-      ]
-    },
-    {
-      "name": "BottomSheet.Description",
-      "description": "Supporting text. Wires aria-describedby.",
-      "props": [
-        {
-          "name": "children",
-          "type": "React.ReactNode",
-          "required": false,
-          "description": "Description text."
-        }
-      ]
-    },
-    {
-      "name": "BottomSheet.Footer",
-      "description": "Action row.",
-      "props": []
-    },
-    {
-      "name": "BottomSheet.Grabber",
-      "description": "Drag handle. Rendered by default if omitted. Arrow keys change snap.",
-      "props": [
-        {
-          "name": "aria-label",
-          "type": "string",
-          "required": false,
-          "description": "Name of the resize control.",
-          "default": "\"Resize sheet\""
-        }
-      ]
-    },
-    {
-      "name": "BottomSheet.Header",
-      "description": "Chrome. Drag-eligible.",
-      "props": []
-    },
-    {
       "name": "BottomSheet.Title",
       "description": "Heading. Wires aria-labelledby.",
       "props": [
@@ -128,6 +128,24 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Title text."
+        }
+      ]
+    },
+    {
+      "name": "Button.Group",
+      "description": "Chrome-only attached row of Button.Root. role=group. No selection state.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name for the group."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Button.Root children. Horizontal only."
         }
       ]
     },
@@ -186,24 +204,6 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Label and optional Button.Icon. Order is leading or trailing."
-        }
-      ]
-    },
-    {
-      "name": "ButtonGroup",
-      "description": "Chrome-only attached row of Button.Root. role=group. No selection state.",
-      "props": [
-        {
-          "name": "aria-label",
-          "type": "string",
-          "required": false,
-          "description": "Accessible name for the group."
-        },
-        {
-          "name": "children",
-          "type": "React.ReactNode",
-          "required": false,
-          "description": "Button.Root children. Horizontal only."
         }
       ]
     },
@@ -268,7 +268,7 @@
       ]
     },
     {
-      "name": "Chip",
+      "name": "Chip.Root",
       "description": "Text-only label with optional named dismiss. Overflow +N is Chip.Overflow.",
       "props": [
         {
@@ -342,44 +342,6 @@
       ]
     },
     {
-      "name": "Dialog",
-      "description": "Controlled native modal dialog. Stays centered. No sheet morph.",
-      "props": [
-        {
-          "name": "open",
-          "type": "boolean",
-          "required": true,
-          "description": "Controlled open state."
-        },
-        {
-          "name": "onOpenChange",
-          "type": "(open: boolean, reason: DialogCloseReason) => void",
-          "required": true,
-          "description": "Dismiss requests. Staying open keeps the dialog open."
-        },
-        {
-          "name": "dismissOnEscape",
-          "type": "boolean",
-          "required": false,
-          "description": "Escape calls onOpenChange(false, \"escape\").",
-          "default": "true"
-        },
-        {
-          "name": "dismissOnBackdrop",
-          "type": "boolean",
-          "required": false,
-          "description": "Scrim click calls onOpenChange(false, \"backdrop\").",
-          "default": "true"
-        },
-        {
-          "name": "aria-label",
-          "type": "string",
-          "required": false,
-          "description": "Name when Dialog.Title is omitted."
-        }
-      ]
-    },
-    {
       "name": "Dialog.Body",
       "description": "Scrollable body.",
       "props": []
@@ -418,6 +380,44 @@
       "name": "Dialog.Header",
       "description": "Optional header row.",
       "props": []
+    },
+    {
+      "name": "Dialog.Root",
+      "description": "Controlled native modal dialog. Stays centered. No sheet morph.",
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": true,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: DialogCloseReason) => void",
+          "required": true,
+          "description": "Dismiss requests. Staying open keeps the dialog open."
+        },
+        {
+          "name": "dismissOnEscape",
+          "type": "boolean",
+          "required": false,
+          "description": "Escape calls onOpenChange(false, \"escape\").",
+          "default": "true"
+        },
+        {
+          "name": "dismissOnBackdrop",
+          "type": "boolean",
+          "required": false,
+          "description": "Scrim click calls onOpenChange(false, \"backdrop\").",
+          "default": "true"
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name when Dialog.Title is omitted."
+        }
+      ]
     },
     {
       "name": "Dialog.Title",
@@ -753,8 +753,8 @@
       ]
     },
     {
-      "name": "Option",
-      "description": "String-only option. Also available as OptionList.Option.",
+      "name": "OptionList.Option",
+      "description": "String-only option inside OptionList.Root.",
       "props": [
         {
           "name": "value",
@@ -778,8 +778,8 @@
       ]
     },
     {
-      "name": "OptionList",
-      "description": "Overlay listbox. Single or multiple. Use Radio or Checkbox for a permanent choice on the page.",
+      "name": "OptionList.Root",
+      "description": "Overlay listbox. Single or multiple. Use RadioGroup or Checkbox for a permanent choice on the page.",
       "props": [
         {
           "name": "selectionMode",
@@ -834,32 +834,7 @@
       ]
     },
     {
-      "name": "OptionList.Option",
-      "description": "String-only option. Same as the top-level Option export.",
-      "props": [
-        {
-          "name": "value",
-          "type": "string",
-          "required": true,
-          "description": "Selection value."
-        },
-        {
-          "name": "children",
-          "type": "string",
-          "required": true,
-          "description": "Visible label. Text only."
-        },
-        {
-          "name": "disabled",
-          "type": "boolean",
-          "required": false,
-          "description": "Skips pointer and keyboard selection.",
-          "default": "false"
-        }
-      ]
-    },
-    {
-      "name": "Popover",
+      "name": "Popover.Root",
       "description": "Surface chrome. Spread getPopoverProps for wire.",
       "props": [
         {
@@ -901,7 +876,7 @@
       ]
     },
     {
-      "name": "Radio",
+      "name": "RadioGroup.Item",
       "description": "One option in a RadioGroup. No checked, name, or invalid. Children are the visible label.",
       "props": [
         {
@@ -931,7 +906,7 @@
       ]
     },
     {
-      "name": "RadioGroup",
+      "name": "RadioGroup.Root",
       "description": "Exclusive choice. Requires aria-label or aria-labelledby. Owns value, name, disabled, and invalid.",
       "props": [
         {
@@ -993,7 +968,7 @@
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Radio children."
+          "description": "RadioGroup.Item children."
         },
         {
           "name": "className",
@@ -1148,7 +1123,7 @@
       ]
     },
     {
-      "name": "Tooltip",
+      "name": "Tooltip.Root",
       "description": "Tip chrome. Spread getTooltipProps for wire.",
       "props": [
         {

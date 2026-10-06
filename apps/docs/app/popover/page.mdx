@@ -2,7 +2,7 @@ import { PopoverMenu, PopoverVeto } from '../../components/demos/PopoverDemo';
 
 # Popover
 
-`usePopover` is the open machine. Spread `getTriggerProps` on the trigger. Spread `getPopoverProps` on `Popover`. `Popover` is surface chrome only: `children`, `className`, `style`, and an accessible name. There is no `Popover.Trigger` or `Popover.Content`. The TypeScript type limits `role` to `'dialog'` and then requires `aria-label` or `aria-labelledby`; a plain JS caller can pass any string and it will render.
+`usePopover` is the open machine. Spread `getTriggerProps` on the trigger. Spread `getPopoverProps` on `Popover.Root`. `Popover.Root` is surface chrome only: `children`, `className`, `style`, and an accessible name. There is no `Popover.Trigger` or `Popover.Content`. The TypeScript type limits `role` to `'dialog'` and then requires `aria-label` or `aria-labelledby`; a plain JS caller can pass any string and it will render.
 
 Non-modal `popover="manual"`. Outside click and Escape call `onOpenChange(false, reason)`. `hidePopover()` runs only after `open` is false, so a veto keeps it shown.
 
@@ -12,7 +12,7 @@ Positioning is CSS anchors only. `getTriggerProps` sets `anchor-name`. `anchorRe
 
 A browser without CSS anchors keeps the UA popover default. The surface does not follow scroll and does not flip. Todae does not polyfill that. Safari 26+ has anchors. Safari 26 documents `position-try` with `position-area` names. `flip-block` is Chrome’s tactic. iOS before 26 has `popover` and no CSS anchors.
 
-The surface is the top-layer hit target: `position: fixed; inset: unset; pointer-events: auto`. Taps on content do not pass through. `Option` selects on `click` so closing the menu cannot leave a leftover click on the page.
+The surface is the top-layer hit target: `position: fixed; inset: unset; pointer-events: auto`. Taps on content do not pass through. `OptionList.Option` selects on `click` so closing the menu cannot leave a leftover click on the page.
 
 ## Hook recipe
 
@@ -21,9 +21,9 @@ const { getTriggerProps, getPopoverProps } = usePopover()
 
 <>
   <Button.Root tooltip={false} {...getTriggerProps()}>Open</Button.Root>
-  <Popover {...getPopoverProps()} aria-label="Menu">
-    <OptionList selectionMode="single">…</OptionList>
-  </Popover>
+  <Popover.Root {...getPopoverProps()} aria-label="Menu">
+    <OptionList.Root selectionMode="single">…</OptionList.Root>
+  </Popover.Root>
 </>
 ```
 
@@ -80,4 +80,4 @@ Selecting in `OptionList` does not close the popover. The fruit demo closes on s
 
 ### Chrome
 
-<PropsTable name="Popover" />
+<PropsTable name="Popover.Root" />

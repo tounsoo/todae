@@ -384,7 +384,7 @@ function ChipInput({
   }
 
   const chipNodes = list.visible.map((chip, index) => (
-    <Chip
+    <Chip.Root
       key={chip.key}
       disabled={field.disabled}
       dismissLabel={chipDismissLabel?.(chip.value)}
@@ -396,7 +396,7 @@ function ChipInput({
       }}
     >
       {chip.value}
-    </Chip>
+    </Chip.Root>
   ));
   const overflow = list.hidden > 0 ? <Chip.Overflow overflowCount={list.hidden} overflowLabel={overflowLabel} /> : null;
   const input = (
@@ -425,13 +425,13 @@ function ChipInput({
     maxRows != null ? (
       <div ref={list.measureRef} className={styles.measure} aria-hidden inert>
         {chips.map((value, index) => (
-          <Chip key={`m:${index}:${value}`} onDismiss={() => undefined} disabled={field.disabled}>
+          <Chip.Root key={`m:${index}:${value}`} onDismiss={() => undefined} disabled={field.disabled}>
             {value}
-          </Chip>
+          </Chip.Root>
         ))}
-        <Chip onDismiss={() => undefined} disabled={field.disabled}>
+        <Chip.Root onDismiss={() => undefined} disabled={field.disabled}>
           …
-        </Chip>
+        </Chip.Root>
         <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
       </div>
     ) : null;

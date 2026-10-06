@@ -17,7 +17,7 @@ type RadioGroupName =
 
 export type RadioGroupOrientation = 'vertical' | 'horizontal';
 
-export type RadioGroupProps = {
+export type RadioGroupRootProps = {
   children?: ReactNode;
   value?: string | null;
   defaultValue?: string | null;
@@ -32,7 +32,7 @@ export type RadioGroupProps = {
 } & RadioGroupName &
   Omit<HTMLAttributes<HTMLDivElement>, 'role' | 'children' | 'aria-label' | 'aria-labelledby' | 'id'>;
 
-export type RadioProps = {
+export type RadioGroupItemProps = {
   value: string;
   children: ReactNode;
   disabled?: boolean;
@@ -55,11 +55,11 @@ const RadioGroupContext = createContext<RadioGroupContextValue | null>(null);
 
 function useRadioGroup(): RadioGroupContextValue {
   const ctx = useContext(RadioGroupContext);
-  if (!ctx) throw new Error('Radio must render inside RadioGroup');
+  if (!ctx) throw new Error('RadioGroup.Item must render inside RadioGroup.Root');
   return ctx;
 }
 
-export function RadioGroup({
+function RadioGroupRoot({
   children,
   value: valueProp,
   defaultValue,
@@ -74,9 +74,9 @@ export function RadioGroup({
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledBy,
   ...props
-}: RadioGroupProps) {
+}: RadioGroupRootProps) {
   if (process.env.NODE_ENV !== 'production' && valueProp !== undefined && defaultValue !== undefined) {
-    console.error('RadioGroup cannot take both value and defaultValue');
+    console.error('RadioGroup.Root cannot take both value and defaultValue');
   }
   const autoName = useId();
   const name = nameProp ?? autoName;
@@ -113,7 +113,7 @@ export function RadioGroup({
   );
 }
 
-export function Radio({ value, children, disabled, className, ...props }: RadioProps) {
+function RadioGroupItem({ value, children, disabled, className, ...props }: RadioGroupItemProps) {
   const group = useRadioGroup();
   return (
     <SelectionControl
@@ -131,3 +131,5 @@ export function Radio({ value, children, disabled, className, ...props }: RadioP
     </SelectionControl>
   );
 }
+
+export const RadioGroup = { Root: RadioGroupRoot, Item: RadioGroupItem } as const;

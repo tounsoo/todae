@@ -17,7 +17,7 @@ describe('docs mcp tools', () => {
   });
 
   it('shows Popover role and keeps the one-line when-to-use rule', () => {
-    const popover = getComponent('Popover');
+    const popover = getComponent('Popover.Root');
     expect(popover.props).toEqual(
       expect.arrayContaining([expect.objectContaining({ name: 'role', type: '"dialog"', required: false })]),
     );
@@ -25,11 +25,33 @@ describe('docs mcp tools', () => {
   });
 
   it('returns Dialog props equal to the schema', () => {
-    const dialog = schema.components.find((row) => row.name === 'Dialog');
-    const result = getComponent('dialog');
+    const dialog = schema.components.find((row) => row.name === 'Dialog.Root');
+    const result = getComponent('dialog.root');
     expect(result.props).toEqual(dialog?.props);
     expect(result.docsUrl).toBe('https://todae-rho.vercel.app/dialog');
     expect(result.source).toBe('todae-docs');
+  });
+
+  it('resolves every compound as a namespace with a Root part', () => {
+    for (const [name, slug] of [
+      ['Dialog', 'dialog'],
+      ['BottomSheet', 'bottomsheet'],
+      ['OptionList', 'optionlist'],
+      ['Popover', 'popover'],
+      ['Tooltip', 'tooltip'],
+      ['Chip', 'chip'],
+      ['RadioGroup', 'radio'],
+    ] as const) {
+      const result = getComponent(name);
+      expect(result).toMatchObject({ name, namespace: true, docsUrl: `https://todae-rho.vercel.app/${slug}` });
+      expect(result.parts.map((part) => part.name)).toContain(`${name}.Root`);
+      expect(whenToUse(`${name}.Root`)).toMatchObject({ status: 'present' });
+      expect(whenToUse(`${name}.Root`)).not.toHaveProperty('scope');
+    }
+    expect(getComponent('Button').parts.map((part) => part.name)).toContain('Button.Group');
+    for (const old of ['Option', 'Radio', 'ButtonGroup', 'ChipOverflow']) {
+      expect(jsonNames).not.toContain(old);
+    }
   });
 
   it('returns Field.* for the Field namespace', () => {
@@ -63,8 +85,8 @@ describe('docs mcp tools', () => {
 
   it('reports own copy separately from inherited page copy', () => {
     const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));
-    expect(listed.BottomSheet).toMatchObject({ hasWhenToUse: true });
-    expect(listed.BottomSheet).not.toHaveProperty('scope');
+    expect(listed['BottomSheet.Root']).toMatchObject({ hasWhenToUse: true });
+    expect(listed['BottomSheet.Root']).not.toHaveProperty('scope');
     expect(listed['BottomSheet.Title']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed['BottomSheet.Close']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed['BottomSheet.Grabber']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
@@ -72,14 +94,15 @@ describe('docs mcp tools', () => {
     expect(listed.useSheetPresentation).not.toHaveProperty('scope');
     expect(listed.useTooltip).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed.usePopover).toMatchObject({ hasWhenToUse: false, scope: 'page' });
-    expect(listed.Option).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed['OptionList.Option']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed['Field.Root']).toMatchObject({ hasWhenToUse: true });
     expect(listed['Field.Root']).not.toHaveProperty('scope');
     expect(listed.useCombobox).toMatchObject({ hasWhenToUse: true });
     expect(listed.useCombobox).not.toHaveProperty('scope');
-    expect(listed.RadioGroup).toMatchObject({ hasWhenToUse: true });
-    expect(listed.RadioGroup).not.toHaveProperty('scope');
+    expect(listed['RadioGroup.Root']).toMatchObject({ hasWhenToUse: true });
+    expect(listed['RadioGroup.Root']).not.toHaveProperty('scope');
+    expect(listed['RadioGroup.Item']).toMatchObject({ hasWhenToUse: true });
+    expect(listed['RadioGroup.Item']).not.toHaveProperty('scope');
 
     const sheet = whenToUse('BottomSheet');
     const part = whenToUse('BottomSheet.Title');
@@ -228,7 +251,7 @@ describe('docs mcp tools', () => {
     const gaps = listComponents().components.filter((row) => !row.hasWhenToUse && row.scope !== 'page');
     expect(gaps.map((row) => row.name)).toEqual([]);
     const own = [
-      'BottomSheet',
+      'BottomSheet.Root',
       'Checkbox',
       'Field.Affix',
       'Field.ChipInput',
@@ -238,20 +261,20 @@ describe('docs mcp tools', () => {
       'Field.Row',
       'Field.TextInput',
       'Field.Textarea',
-      'OptionList',
-      'Popover',
-      'Radio',
-      'RadioGroup',
+      'OptionList.Root',
+      'Popover.Root',
+      'RadioGroup.Item',
+      'RadioGroup.Root',
       'Switch',
-      'Tooltip',
+      'Tooltip.Root',
       'useCombobox',
       'Button.Icon',
       'Button.Root',
-      'ButtonGroup',
-      'Chip',
+      'Button.Group',
+      'Chip.Root',
       'DensityProvider',
       'Description',
-      'Dialog',
+      'Dialog.Root',
       'ErrorMessage',
       'Label',
       'Stack',

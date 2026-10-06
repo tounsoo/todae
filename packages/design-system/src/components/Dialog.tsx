@@ -22,7 +22,7 @@ import styles from './Dialog.module.css';
 
 export type DialogCloseReason = Extract<OverlayCloseReason, 'escape' | 'backdrop' | 'close-button'>;
 
-export type DialogProps = {
+export type DialogRootProps = {
   open: boolean;
   onOpenChange: (open: boolean, reason: DialogCloseReason) => void;
   dismissOnEscape?: boolean;
@@ -45,7 +45,7 @@ const DialogContext = createContext<DialogContextValue | null>(null);
 
 function useDialog(): DialogContextValue {
   const ctx = useContext(DialogContext);
-  if (!ctx) throw new Error('Dialog parts must render inside Dialog');
+  if (!ctx) throw new Error('Dialog parts must render inside Dialog.Root');
   return ctx;
 }
 
@@ -115,7 +115,7 @@ function DialogClose({
   );
 }
 
-export function Dialog({
+function DialogRoot({
   open,
   onOpenChange,
   dismissOnEscape = true,
@@ -128,7 +128,7 @@ export function Dialog({
   onPointerDown,
   onClick,
   ...props
-}: DialogProps) {
+}: DialogRootProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [dialogNode, setDialogNode] = useState<HTMLDialogElement | null>(null);
   const pointerOnDialog = useRef(false);
@@ -217,9 +217,12 @@ export function Dialog({
   );
 }
 
-Dialog.Title = DialogTitle;
-Dialog.Description = DialogDescription;
-Dialog.Header = DialogHeader;
-Dialog.Body = DialogBody;
-Dialog.Footer = DialogFooter;
-Dialog.Close = DialogClose;
+export const Dialog = {
+  Root: DialogRoot,
+  Title: DialogTitle,
+  Description: DialogDescription,
+  Header: DialogHeader,
+  Body: DialogBody,
+  Footer: DialogFooter,
+  Close: DialogClose,
+} as const;

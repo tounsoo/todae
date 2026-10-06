@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { createRef } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Button, ButtonGroup, type ButtonIconProps, type ButtonRootProps } from './Button';
+import { Button, type ButtonIconProps, type ButtonRootProps } from './Button';
 import * as api from '../index';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -23,10 +23,10 @@ describe('Button exports', () => {
     expect(api.Button).toEqual({
       Root: Button.Root,
       Icon: Button.Icon,
+      Group: Button.Group,
     });
     expect(typeof api.Button).toBe('object');
-    expect(api.Button).not.toHaveProperty('Group');
-    expect(api.ButtonGroup).toBe(ButtonGroup);
+    expect('ButtonGroup' in api).toBe(false);
     expectTypeOf<typeof Button extends (...args: never[]) => unknown ? true : false>().toEqualTypeOf<false>();
     expectTypeOf<ButtonRootProps>().toHaveProperty('variant');
     expectTypeOf<ButtonRootProps>().toHaveProperty('tooltip');
@@ -96,10 +96,10 @@ describe('Button.Icon', () => {
   });
 });
 
-describe('ButtonGroup', () => {
+describe('Button.Group', () => {
   it('is a named group of buttons with no pressed state', () => {
     render(
-      <ButtonGroup aria-label="Align">
+      <Button.Group aria-label="Align">
         <Button.Root variant="secondary" aria-label="Left">
           <Button.Icon>L</Button.Icon>
         </Button.Root>
@@ -109,7 +109,7 @@ describe('ButtonGroup', () => {
         <Button.Root variant="secondary" aria-label="Right">
           <Button.Icon>R</Button.Icon>
         </Button.Root>
-      </ButtonGroup>,
+      </Button.Group>,
     );
     const group = screen.getByRole('group', { name: 'Align' });
     const buttons = screen.getAllByRole('button');

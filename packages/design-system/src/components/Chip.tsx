@@ -1,7 +1,7 @@
 import type { ComponentPropsWithRef } from 'react';
 import styles from './Chip.module.css';
 
-export type ChipProps = {
+export type ChipRootProps = {
   children: string;
   onDismiss?: () => void;
   dismissLabel?: string;
@@ -17,16 +17,16 @@ function chipClass(className?: string): string {
   return [styles.root, className].filter(Boolean).join(' ');
 }
 
-export function Chip({
+function ChipRoot({
   children,
   onDismiss,
   dismissLabel,
   disabled,
   className,
   ...props
-}: ChipProps) {
+}: ChipRootProps) {
   if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
-    console.error('Chip children must be a string');
+    console.error('Chip.Root children must be a string');
   }
   const label = typeof children === 'string' ? children : String(children);
   return (
@@ -47,7 +47,7 @@ export function Chip({
   );
 }
 
-export function ChipOverflow({
+function ChipOverflow({
   overflowCount,
   overflowLabel,
   className,
@@ -64,4 +64,4 @@ export function ChipOverflow({
   );
 }
 
-Chip.Overflow = ChipOverflow;
+export const Chip = { Root: ChipRoot, Overflow: ChipOverflow } as const;

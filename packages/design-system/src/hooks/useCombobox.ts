@@ -10,13 +10,13 @@ import {
   type RefObject,
 } from 'react';
 import { optionDomId } from '../components/OptionList.ids';
-import type { BottomSheetProps } from '../components/BottomSheet';
+import type { BottomSheetRootProps } from '../components/BottomSheet';
 import type { ButtonRootProps } from '../components/Button';
 import type { FieldChipInputProps, FieldRootProps, FieldTextInputProps } from '../components/Field';
 import type {
   OptionListMultipleProps,
   OptionListSingleProps,
-  OptionProps,
+  OptionListOptionProps,
 } from '../components/OptionList';
 import type { PopoverWire } from '../components/Popover.wire';
 import { createAsyncGate } from './useCombobox.async';
@@ -112,11 +112,11 @@ export type UseComboboxResult = {
   getChipInputProps: () => FieldChipInputProps & { ref: RefObject<HTMLInputElement | null> };
   getPopoverProps: () => PopoverWire;
   getSheetProps: () => Pick<
-    BottomSheetProps,
+    BottomSheetRootProps,
     'open' | 'onOpenChange' | 'initialFocusRef' | 'restoreFocusRef' | 'aria-label'
   >;
   getListboxProps: () => Omit<OptionListSingleProps, 'children'> | Omit<OptionListMultipleProps, 'children'>;
-  getOptionProps: (item: ComboboxItem) => OptionProps;
+  getOptionProps: (item: ComboboxItem) => OptionListOptionProps;
 };
 
 function isMultiple(options: UseComboboxOptions): options is UseComboboxMultipleOptions {
@@ -636,7 +636,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
 
   const getSheetProps = useCallback(
     (): Pick<
-      BottomSheetProps,
+      BottomSheetRootProps,
       'open' | 'onOpenChange' | 'initialFocusRef' | 'restoreFocusRef' | 'aria-label'
     > => ({
       open,
@@ -680,7 +680,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     };
   }, [highlight, ids.input, ids.listbox, multiValue, resolvedActive, select, selectionMode, singleValue]);
 
-  const getOptionProps = useCallback((item: ComboboxItem): OptionProps => {
+  const getOptionProps = useCallback((item: ComboboxItem): OptionListOptionProps => {
     if (item.kind === 'create') {
       return { value: CREATE_VALUE, children: item.label };
     }
