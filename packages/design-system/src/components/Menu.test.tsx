@@ -319,12 +319,47 @@ describe('Menu', () => {
     render(<Gate />);
     act(() => trigger().focus());
     key('ArrowUp');
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve));
-    });
+    const later = performance.now() + 5000;
+    const now = vi.spyOn(performance, 'now').mockReturnValue(later);
     fireEvent.click(screen.getByRole('button', { name: 'Show' }));
     await raf();
+    now.mockRestore();
     expect(document.activeElement).toBe(item('Rename'));
+  });
+
+  it('an ArrowUp open an owner applies a little later still starts at the end', async () => {
+    function Later() {
+      const [open, setOpen] = useState(false);
+      return <Actions open={open} onOpenChange={(next) => setTimeout(() => setOpen(next), 20)} />;
+    }
+    render(<Later />);
+    act(() => trigger().focus());
+    key('ArrowUp');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 40));
+    });
+    await raf();
+    expect(document.activeElement).toBe(item('Date'));
+  });
+
+  it('re-rendering the menu does not re-observe its items', async () => {
+    const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+    const { rerender } = render(<Actions defaultOpen data-tick={1} />);
+    await raf();
+    observe.mockClear();
+    rerender(<Actions defaultOpen data-tick={2} />);
+    expect(observe).not.toHaveBeenCalled();
+    observe.mockRestore();
+  });
+
+  it('Shift+Tab closes the menu and stops on the trigger', async () => {
+    render(<Actions />);
+    fireEvent.click(trigger());
+    await raf();
+    const kept = fireEvent.keyDown(document.activeElement!, { key: 'Tab', shiftKey: true });
+    expect(kept).toBe(false);
+    await raf();
+    expect(document.activeElement).toBe(trigger());
   });
 
   it('moving focus across items does not render the menu', async () => {

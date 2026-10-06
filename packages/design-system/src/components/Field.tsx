@@ -22,11 +22,12 @@ import {
   FieldContext,
   inputLabel,
   mergeDescribedBy,
+  useControlSetter,
   useFieldContext,
   type CountStore,
   type FieldContextValue,
 } from './Field.context';
-import { composeHandlers, cx } from './props';
+import { composeHandlers, cx, useComposedRefs } from './props';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
@@ -206,16 +207,13 @@ function TextInput({
   ...props
 }: FieldTextInputProps) {
   const ctx = useFieldContext();
+  const controlRef = useComposedRefs(useControlSetter(ctx.inputRef), ref);
   const limit = typeof maxLength === 'number' ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
   return (
     <input
       {...props}
-      ref={(node) => {
-        ctx.inputRef.current = node;
-        if (typeof ref === 'function') ref(node);
-        else if (ref) ref.current = node;
-      }}
+      ref={controlRef}
       id={ctx.inputId}
       name={ctx.name}
       disabled={ctx.disabled}
@@ -260,6 +258,7 @@ function Textarea({
   ...props
 }: FieldTextareaProps) {
   const ctx = useFieldContext();
+  const controlRef = useComposedRefs(useControlSetter(ctx.inputRef), ref);
   const resolved = useMemo(
     () => resolveTextareaRows({ rows: rowsProp, maxRows: maxRowsProp }),
     [rowsProp, maxRowsProp],
@@ -269,11 +268,7 @@ function Textarea({
   return (
     <textarea
       {...props}
-      ref={(node) => {
-        ctx.inputRef.current = node;
-        if (typeof ref === 'function') ref(node);
-        else if (ref) ref.current = node;
-      }}
+      ref={controlRef}
       id={ctx.inputId}
       name={ctx.name}
       disabled={ctx.disabled}
@@ -338,6 +333,7 @@ function ChipInput({
   ...props
 }: FieldChipInputProps & { setChips?: unknown; setInputValue?: unknown; reset?: unknown }) {
   const field = useFieldContext();
+  const controlRef = useComposedRefs(useControlSetter(field.inputRef), ref);
   const keys = useMemo(() => resolveCommitKeys(commitKeys), [commitKeys]);
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const inRow = chipLayout === 'row';
@@ -382,11 +378,7 @@ function ChipInput({
   const input = (
     <input
       {...props}
-      ref={(node) => {
-        field.inputRef.current = node;
-        if (typeof ref === 'function') ref(node);
-        else if (ref) ref.current = node;
-      }}
+      ref={controlRef}
       id={field.inputId}
       name={field.name}
       disabled={field.disabled}

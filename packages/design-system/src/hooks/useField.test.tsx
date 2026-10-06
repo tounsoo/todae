@@ -102,6 +102,25 @@ describe('useField', () => {
     expect(document.activeElement).toBe(screen.getByRole('slider', { name: 'first' }));
   });
 
+  it('a text input that re-renders does not take the shell press from a later control', () => {
+    function Custom() {
+      const field = useField();
+      return <span {...field.getControlProps({}, { native: false })} role="slider" aria-label="custom" tabIndex={0} />;
+    }
+    function Both({ text }: { text: string }) {
+      return (
+        <Field.Root aria-label="Both" data-testid="shell">
+          <Field.TextInput value={text} onChange={() => {}} />
+          <Custom />
+        </Field.Root>
+      );
+    }
+    const { rerender } = render(<Both text="a" />);
+    rerender(<Both text="b" />);
+    fireEvent.mouseDown(screen.getByTestId('shell'));
+    expect(document.activeElement).toBe(screen.getByRole('slider'));
+  });
+
   it("does not reattach a control's ref on every render", () => {
     const attach = vi.fn();
     const { rerender } = render(

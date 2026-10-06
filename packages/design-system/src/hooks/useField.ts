@@ -1,5 +1,5 @@
-import { useCallback, useRef, type Ref } from 'react';
-import { inputLabel, mergeDescribedBy, useFieldContext } from '../components/Field.context';
+import { useCallback, type Ref } from 'react';
+import { inputLabel, mergeDescribedBy, useControlSetter, useFieldContext } from '../components/Field.context';
 import { useStableComposedRef } from '../components/props';
 
 /** `id` and `name` are not taken here: they come from `Field.Root`, which a `Label htmlFor` and the form use. */
@@ -61,17 +61,7 @@ export type UseFieldResult = {
 export function useField(): UseFieldResult {
   const ctx = useFieldContext();
   const { inputRef } = ctx;
-  // On detach, clear the Root's ref only if it still points at this control,
-  // so another control under the same Root stays the one a shell press focuses.
-  const own = useRef<HTMLElement | null>(null);
-  const setControl = useCallback(
-    (node: HTMLElement | null) => {
-      if (node) inputRef.current = node;
-      else if (inputRef.current === own.current) inputRef.current = null;
-      own.current = node;
-    },
-    [inputRef],
-  );
+  const setControl = useControlSetter(inputRef);
   const composedRef = useStableComposedRef(setControl);
   const getControlProps = useCallback(
     <P extends FieldControlUserProps>(

@@ -1,4 +1,4 @@
-import { createContext, useContext, type RefObject } from 'react';
+import { createContext, useCallback, useContext, useRef, type RefObject } from 'react';
 
 type CountEntry = { value: string; maxLength?: number };
 
@@ -29,6 +29,23 @@ export function useFieldContext(): FieldContextValue {
   const ctx = useContext(FieldContext);
   if (!ctx) throw new Error('Field parts must be rendered inside Field.Root');
   return ctx;
+}
+
+/**
+ * A stable ref callback that makes a control the one the shell focuses. On
+ * detach it clears the Root's ref only if it still points at this control, so
+ * another control under the same Root keeps it.
+ */
+export function useControlSetter(inputRef: RefObject<HTMLElement | null>): (node: HTMLElement | null) => void {
+  const own = useRef<HTMLElement | null>(null);
+  return useCallback(
+    (node: HTMLElement | null) => {
+      if (node) inputRef.current = node;
+      else if (inputRef.current === own.current) inputRef.current = null;
+      own.current = node;
+    },
+    [inputRef],
+  );
 }
 
 export function mergeDescribedBy(root?: string, own?: string, hint?: string) {

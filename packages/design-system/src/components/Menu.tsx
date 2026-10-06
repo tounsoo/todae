@@ -92,13 +92,17 @@ export type MenuSeparatorProps = {
   className?: string;
 } & Omit<ComponentPropsWithRef<'div'>, 'role' | 'children'>;
 
+type OpenEnd = { end: 'first' | 'last'; at: number };
+
+const OPEN_END_MS = 1000;
+
 type MenuContextValue = {
   open: boolean;
   setOpen: (open: boolean, reason: MenuOpenChangeReason) => void;
   triggerId: string;
   triggerRef: RefObject<HTMLButtonElement | null>;
-  /** Which end the next open focuses. Reset to first after each open. */
-  openEnd: RefObject<'first' | 'last'>;
+  /** The end a trigger key asked the next open to focus, and when. */
+  openEnd: RefObject<OpenEnd | null>;
   initialFocusRef: RefObject<HTMLElement | null>;
   popover: UsePopoverResult;
   roving: UseRovingFocusResult;
@@ -120,7 +124,7 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
   const triggerId = `${useId().replaceAll(':', '')}-trigger`;
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const openEnd = useRef<'first' | 'last'>('first');
+  const openEnd = useRef<OpenEnd | null>(null);
   const initialFocusRef = useRef<HTMLElement | null>(null);
   const setOpen = useCallback(
     (next: boolean, reason: MenuOpenChangeReason) => {
@@ -156,7 +160,7 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTri
     ...props,
     ref: refs,
     onClick: composeHandlers(onClick, () => {
-      ctx.openEnd.current = 'first';
+      ctx.openEnd.current = null;
     }),
   });
   return (
@@ -179,14 +183,8 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTri
           else ctx.roving.focusLast();
           return;
         }
-        ctx.openEnd.current = end;
+        ctx.openEnd.current = { end, at: performance.now() };
         ctx.setOpen(true, 'trigger');
-        // An accepted open has rendered and used `end` by now. A refused one
-        // must not leave it for the next open, which may come from code.
-        const { openEnd } = ctx;
-        setTimeout(() => {
-          openEnd.current = 'first';
-        });
       })}
     />
   );
@@ -216,14 +214,22 @@ function Content({
   useLayoutEffect(() => {
     if (!open) return;
     const enabled = values();
-    const target = openEnd.current === 'last' ? enabled.at(-1) : enabled[0];
+    // The key's choice holds for an open that follows it, even one an owner
+    // applies a little later; a refused one goes stale instead of lingering
+    // for an open from code.
+    const asked = openEnd.current;
+    const fromKey = asked !== null && performance.now() - asked.at < OPEN_END_MS;
+    const target = fromKey && asked.end === 'last' ? enabled.at(-1) : enabled[0];
     initialFocusRef.current = target === undefined ? null : getItemNode(target);
-    openEnd.current = 'first';
+    openEnd.current = null;
   }, [getItemNode, initialFocusRef, open, openEnd, values]);
   const container = roving.getContainerProps({
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
-      // Tab leaves the menu: close it and let the browser move focus on.
+      // Tab leaves the menu: close it, and focus returns to the trigger.
+      // Tab then moves on past the trigger. Shift+Tab stops on the trigger,
+      // since moving back from it would skip it.
       if (event.key === 'Tab') {
+        if (event.shiftKey) event.preventDefault();
         ctx.setOpen(false, 'tab');
         return;
       }

@@ -4,6 +4,7 @@ import {
   useContext,
   useId,
   useLayoutEffect,
+  useMemo,
   useState,
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -97,15 +98,19 @@ function Root({
 }: TabsRootProps) {
   const baseId = useId().replaceAll(':', '');
   const [value, setValue] = useControlledState(valueProp, defaultValue ?? '');
-  const select = (next: string) => {
-    if (next === value) return;
-    setValue(next);
-    onValueChange?.(next);
-  };
+  const select = useCallback(
+    (next: string) => {
+      if (next === value) return;
+      setValue(next);
+      onValueChange?.(next);
+    },
+    [onValueChange, setValue, value],
+  );
   // The tab stop is the selected tab, except while focus moves inside the
   // list: then it is the focused tab. Leaving the list returns it to the
   // selected tab, so focus always enters on the selected tab.
   const [navigating, setNavigating] = useState<string | null>(null);
+  const leave = useCallback(() => setNavigating(null), []);
   const release = useCallback(
     (gone: string) => setNavigating((current) => (current === gone ? null : current)),
     [],
@@ -115,19 +120,12 @@ function Root({
     activeValue: navigating ?? value,
     onActiveValueChange: setNavigating,
   });
+  const ctx = useMemo(
+    () => ({ baseId, value, select, orientation, activation, roving, leave, release }),
+    [activation, baseId, leave, orientation, release, roving, select, value],
+  );
   return (
-    <TabsContext.Provider
-      value={{
-        baseId,
-        value,
-        select,
-        orientation,
-        activation,
-        roving,
-        leave: () => setNavigating(null),
-        release,
-      }}
-    >
+    <TabsContext.Provider value={ctx}>
       <div {...props} className={cx(styles.root, className)} data-orientation={orientation}>
         {children}
       </div>

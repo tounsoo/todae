@@ -204,18 +204,25 @@ export function usePopoverInternal(
     [anchorName, contentId, enabled, haspopup, onOpenChange, open, requestClose, setValue],
   );
 
+  // Stable, so a part that composes it with its own refs is not detached and
+  // reattached on every render.
+  const setPopover = useCallback(
+    (node: HTMLElement | null) => {
+      popoverRef.current = node;
+    },
+    [popoverRef],
+  );
+
   const getPopoverProps = useCallback(
     (): PopoverWire => ({
       id: contentId,
       open,
-      ref: (node: HTMLElement | null) => {
-        popoverRef.current = node;
-      },
+      ref: setPopover,
       style: popoverStyle(anchorName),
       onPointerDown: stopBubble,
       onClick: stopBubble,
     }),
-    [anchorName, contentId, open],
+    [anchorName, contentId, open, setPopover],
   );
 
   return useMemo(
