@@ -9,15 +9,15 @@ export type OverlayCloseReason =
   | 'outside'
   | 'trigger';
 
-export function useControlledOpen({
+export function useControlledOpen<Reason extends string = OverlayCloseReason>({
   open,
   onOpenChange,
 }: {
   open: boolean;
-  onOpenChange: (open: boolean, reason: OverlayCloseReason) => void;
-}): { requestClose: (reason: OverlayCloseReason) => void } {
+  onOpenChange: (open: boolean, reason: Reason) => void;
+}): { requestClose: (reason: Reason) => void } {
   const requestClose = useCallback(
-    (reason: OverlayCloseReason) => {
+    (reason: Reason) => {
       if (open) onOpenChange(false, reason);
     },
     [open, onOpenChange],

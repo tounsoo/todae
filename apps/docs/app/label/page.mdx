@@ -4,6 +4,8 @@ import { LabelSibling } from '../../components/demos/LabelDemo';
 
 Visible name for a control. A sibling, not a compound part. `htmlFor` is required and must equal the control id. For a Field that is the `Field.Root` id. Not a control.
 
+Server Components can import it from `@tounsoo/todae/label`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
+
 ## With Field
 
 Label carries no margin. The gap between a label and its shell is `field.label.gap` (0.4rem). Put it on the wrapper that stacks the pair. Do not let that wrapper space Description or ErrorMessage. Those components own `margin-block-start`.
