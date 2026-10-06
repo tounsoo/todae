@@ -159,7 +159,14 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTri
       onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLButtonElement>) => {
         if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
         event.preventDefault();
-        ctx.openEnd.current = event.key === 'ArrowDown' ? 'first' : 'last';
+        const end = event.key === 'ArrowDown' ? 'first' : 'last';
+        // Already open, say controlled with focus left on the trigger: go in.
+        if (ctx.open) {
+          if (end === 'first') ctx.roving.focusFirst();
+          else ctx.roving.focusLast();
+          return;
+        }
+        ctx.openEnd.current = end;
         ctx.setOpen(true, 'trigger');
       })}
     />
@@ -201,15 +208,8 @@ function Content({
         ctx.setOpen(false, 'tab');
         return;
       }
-      // Focus can land on the menu itself, from a press on its padding.
-      if (event.target !== event.currentTarget) return;
-      if (event.key === 'ArrowDown' || event.key === 'Home') {
-        event.preventDefault();
-        roving.focusFirst();
-      } else if (event.key === 'ArrowUp' || event.key === 'End') {
-        event.preventDefault();
-        roving.focusLast();
-      }
+      // Focus on the menu itself, from a press on its padding, is handled
+      // by roving focus: Down and typeahead start at the first item.
     }),
   });
   const refs = useComposedRefs(localRef, wireRef, container.ref, ref);

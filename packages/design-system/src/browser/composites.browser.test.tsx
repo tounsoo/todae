@@ -165,6 +165,24 @@ describe('Field.Select in a browser', () => {
     expect(select.value).toBe('s');
   });
 
+  it('keeps the shell padding beside an Icon and drops it where the select meets the edge', () => {
+    render(
+      <Themed>
+        <Field.Root aria-label="Size" data-testid="shell">
+          <Field.Icon>
+            <svg width="16" height="16" aria-hidden="true" />
+          </Field.Icon>
+          <Field.Select value="s" onChange={() => undefined}>
+            <option value="s">Small</option>
+          </Field.Select>
+        </Field.Root>
+      </Themed>,
+    );
+    const shell = getComputedStyle(screen.getByTestId('shell'));
+    expect(parseFloat(shell.paddingInlineStart)).toBeGreaterThan(0);
+    expect(shell.paddingInlineEnd).toBe('0px');
+  });
+
   it('draws the focus ring when focus is inside a custom control', async () => {
     function Group() {
       const field = useField();

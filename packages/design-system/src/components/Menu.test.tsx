@@ -260,6 +260,17 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(item('Rename'));
   });
 
+  it('arrow keys on the trigger of an open menu move into it', async () => {
+    render(<Actions open onOpenChange={() => undefined} />);
+    await raf();
+    act(() => trigger().focus());
+    key('ArrowUp');
+    expect(document.activeElement).toBe(item('Date'));
+    act(() => trigger().focus());
+    key('ArrowDown');
+    expect(document.activeElement).toBe(item('Rename'));
+  });
+
   it('arrow keys work when focus is on the menu itself', async () => {
     render(<Actions />);
     fireEvent.click(trigger());

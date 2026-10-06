@@ -325,9 +325,18 @@
     padding-block: 0;
   }
 
-  /* The select fills the shell, so a press anywhere opens it. */
+  /* The select fills the shell, so a press anywhere opens it. An Icon or
+     Affix beside it keeps the shell's padding on its own side. */
   .shell:has(> .select) {
-    padding: 0;
+    padding-block: 0;
+  }
+
+  .shell:has(> .select:first-child) {
+    padding-inline-start: 0;
+  }
+
+  .shell:has(> .select:last-child) {
+    padding-inline-end: 0;
   }
 
   .select {

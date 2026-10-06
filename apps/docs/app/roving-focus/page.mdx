@@ -7,7 +7,7 @@ One tab stop for a group of controls. Tab enters the group on one item and leave
 Spread `getContainerProps()` on the group and `getItemProps(value, { disabled })` on each item. Items are found in the DOM by an attribute the hook owns, so an item inside your own wrapper still counts, and order is document order. Disabled items are skipped. The browser has no built-in focus group yet, so this stays in JavaScript.
 
 ```tsx
-const roving = useRovingFocus({ orientation: 'horizontal' })
+const roving = useRovingFocus({ orientation: 'horizontal', defaultActiveValue: 'bold' })
 
 <div role="toolbar" aria-label="Text style" {...roving.getContainerProps()}>
 	<Button.Root {...roving.getItemProps('bold')}>Bold</Button.Root>

@@ -5,7 +5,7 @@ import { Button, useRovingFocus } from '@tounsoo/todae';
 const TOOLS = ['Bold', 'Italic', 'Underline', 'Strike'];
 
 export function RovingToolbar() {
-  const roving = useRovingFocus({ orientation: 'horizontal' });
+  const roving = useRovingFocus({ orientation: 'horizontal', defaultActiveValue: 'Bold' });
   return (
     <div role="toolbar" aria-label="Text style" className="demo-toolbar" {...roving.getContainerProps()}>
       {TOOLS.map((tool) => (

@@ -320,6 +320,58 @@ describe('useRovingFocus', () => {
     expect(tabStops()).toEqual(['b']);
   });
 
+  it('lets go of a container that unmounts while the owner stays', () => {
+    const disconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
+    function Owner({ show }: { show: boolean }) {
+      const roving = useRovingFocus();
+      return show ? (
+        <div {...roving.getContainerProps()}>
+          <button type="button" {...roving.getItemProps('a')}>
+            a
+          </button>
+        </div>
+      ) : null;
+    }
+    const { rerender } = render(<Owner show />);
+    disconnect.mockClear();
+    rerender(<Owner show={false} />);
+    expect(disconnect).toHaveBeenCalledTimes(1);
+    disconnect.mockRestore();
+  });
+
+  it('moves from a focused item that turned disabled to its neighbours', async () => {
+    function Owner({ off }: { off: boolean }) {
+      const roving = useRovingFocus({ loop: false });
+      return (
+        <div {...roving.getContainerProps()}>
+          {['a', 'b', 'c'].map((v) => (
+            <button key={v} type="button" {...roving.getItemProps(v, { disabled: off && v === 'b' })}>
+              {v}
+            </button>
+          ))}
+        </div>
+      );
+    }
+    const { rerender } = render(<Owner off={false} />);
+    const b = screen.getByRole('button', { name: 'b' });
+    act(() => b.focus());
+    await act(async () => rerender(<Owner off />));
+    act(() => b.focus());
+    fireEvent.keyDown(b, { key: 'ArrowDown' });
+    expect(focused()).toBe('c');
+    act(() => b.focus());
+    fireEvent.keyDown(b, { key: 'ArrowUp' });
+    expect(focused()).toBe('a');
+  });
+
+  it('a controlled tab stop the owner keeps does not follow focus', () => {
+    render(<Group activeValue="banana" />);
+    act(() => screen.getByRole('button', { name: 'banana' }).focus());
+    key('ArrowDown');
+    expect(focused()).toBe('blueberry');
+    expect(tabStops()).toEqual(['banana']);
+  });
+
   it('returns a stable container ref when the caller has none', () => {
     const refs = new Set<unknown>();
     function Probe({ tick }: { tick: number }) {

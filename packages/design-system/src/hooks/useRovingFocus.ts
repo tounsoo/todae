@@ -115,6 +115,8 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   const [active, setActive] = useControlledState(activeProp, defaultActiveValue ?? null);
   // The value that holds tabIndex 0. It follows `active`, falling back to the
   // first enabled item when `active` is null, disabled or not rendered.
+  // Before the first effect no items are known, so with no `active` nothing
+  // holds the tab stop yet: server HTML needs `activeValue` for one.
   const [tabStop, setTabStop] = useState<string | null>(active);
   const containerRef = useRef<HTMLElement | null>(null);
   const buffer = useRef({ text: '', at: 0 });
@@ -147,16 +149,15 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   useLayoutEffect(() => latestSync.current(), [active]);
 
   // Watch whichever element is the container now, including one that mounts
-  // after the owner or replaces an earlier one.
-  // A null between two calls with the same element (a ref callback that
-  // changed identity) keeps the observer instead of rebuilding it.
+  // after the owner or replaces an earlier one, and let go of one that
+  // unmounts while the owner stays.
   const observer = useRef<{ node: HTMLElement; observer: MutationObserver } | null>(null);
   const setContainer = useCallback((node: HTMLElement | null) => {
     containerRef.current = node;
-    if (!node || observer.current?.node === node) return;
+    if (node && observer.current?.node === node) return;
     observer.current?.observer.disconnect();
     observer.current = null;
-    if (typeof MutationObserver === 'undefined') return;
+    if (!node || typeof MutationObserver === 'undefined') return;
     const watcher = new MutationObserver(() => latestSync.current());
     watcher.observe(node, {
       childList: true,
@@ -177,14 +178,13 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
 
   const commit = useCallback(
     (value: string) => {
-      // Only an enabled, rendered item can hold the tab stop; anything else
-      // would leave the group with no tab stop at all.
-      if (values().includes(value)) setTabStop(value);
+      // The tab stop follows `active` through the sync effect, so a
+      // controlled owner that keeps its value keeps the tab stop too.
       if (value === active) return;
       setActive(value);
       onActiveValueChange?.(value);
     },
-    [active, onActiveValueChange, setActive, values],
+    [active, onActiveValueChange, setActive],
   );
 
   const getItemNode = useCallback(
@@ -233,7 +233,15 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       if (!onContainer && target.getAttribute('data-todae-roving') !== scope) return;
       const nodes = items();
       if (nodes.length === 0) return;
+      // Where focus sits among the enabled items. A focused item that turned
+      // disabled is not one of them: it sits between its enabled neighbours.
       const index = onContainer ? -1 : nodes.indexOf(target);
+      const after = onContainer
+        ? 0
+        : index >= 0
+          ? index + 1
+          : nodes.filter((node) => node.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING).length;
+      const before = index >= 0 ? index - 1 : after - 1;
       const rtl = () => {
         const container = containerRef.current;
         return container ? getComputedStyle(container).direction === 'rtl' : false;
@@ -241,9 +249,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       let next: HTMLElement | undefined;
       const step = nextKey(event.key, orientation, rtl);
       if (step === 'next') {
-        next = index + 1 < nodes.length ? nodes[index + 1] : loop ? nodes[0] : undefined;
+        next = after < nodes.length ? nodes[after] : loop ? nodes[0] : undefined;
       } else if (step === 'prev') {
-        next = index > 0 ? nodes[index - 1] : loop || onContainer ? nodes.at(-1) : undefined;
+        next = before >= 0 ? nodes[before] : loop || onContainer ? nodes.at(-1) : undefined;
       } else if (event.key === 'Home') {
         next = nodes[0];
       } else if (event.key === 'End') {
@@ -260,7 +268,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         // that start with it; a longer prefix keeps matching the current item.
         const cycling = [...query].every((char) => char === query[0]);
         const needle = cycling ? query.slice(0, 1) : query;
-        const start = cycling ? index + 1 : Math.max(index, 0);
+        const start = cycling || index < 0 ? after : index;
         const ordered = [...nodes.slice(start), ...nodes.slice(0, start)];
         next = ordered.find((node) => text(node).startsWith(needle));
         // A Space that joined the search is the search's, match or not.

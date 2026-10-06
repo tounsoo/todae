@@ -65,7 +65,8 @@
     top: 0.12em;
     width: 0.28em;
     height: 0.55em;
-    border-inline-end: 2px solid var(--todae-menu-item-check-fg);
+    /* Physical sides: the rotation is physical too, so the check keeps its shape in rtl. */
+    border-right: 2px solid var(--todae-menu-item-check-fg);
     border-bottom: 2px solid var(--todae-menu-item-check-fg);
     transform: rotate(45deg);
   }
