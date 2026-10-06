@@ -304,6 +304,8 @@ function useItem(
     // trigger, which some browsers click, reopening the menu. A Space typed
     // into a typeahead search is part of the search, not a choice.
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLDivElement>) => {
+      // Keys in a control inside the item belong to that control.
+      if (event.target !== event.currentTarget) return;
       if (event.key === 'Enter') {
         event.preventDefault();
         // A held Enter chooses once; its repeats must not reach the trigger.
@@ -315,7 +317,7 @@ function useItem(
       }
     }),
     onKeyUp: composeHandlers(onKeyUp, (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key !== ' ') return;
+      if (event.key !== ' ' || event.target !== event.currentTarget) return;
       event.preventDefault();
       const pressed = spacePressed.current;
       spacePressed.current = false;

@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { useRef, useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index';
 import {
@@ -163,6 +163,39 @@ describe('usePopover', () => {
     expect(anchor.style.getPropertyValue('anchor-name')).toBe(
       anchor.style.getPropertyValue('--todae-popover-anchor'),
     );
+  });
+
+  it('keeps the anchor variable on a popover still anchored, whichever unmounts first', () => {
+    function Anchored({ anchorRef }: { anchorRef: RefObject<HTMLDivElement | null> }) {
+      usePopover({ open: true, anchorRef });
+      return null;
+    }
+    function Shared({ a, b }: { a: boolean; b: boolean }) {
+      const anchorRef = useRef<HTMLDivElement>(null);
+      return (
+        <>
+          <div ref={anchorRef} data-testid="anchor" />
+          {a && <Anchored anchorRef={anchorRef} />}
+          {b && <Anchored anchorRef={anchorRef} />}
+        </>
+      );
+    }
+    const variable = () => screen.getByTestId('anchor').style.getPropertyValue('--todae-popover-anchor');
+    const names = () => screen.getByTestId('anchor').style.getPropertyValue('anchor-name').split(', ');
+    let { rerender } = render(<Shared a b />);
+    const [, second] = names();
+    expect(variable()).toBe(second);
+    // The first one goes: the second keeps the variable.
+    rerender(<Shared a={false} b />);
+    expect(names()).toEqual([second]);
+    expect(variable()).toBe(second);
+    cleanup();
+    // The second one goes: the variable goes back to the first.
+    ({ rerender } = render(<Shared a b />));
+    const [first] = names();
+    rerender(<Shared a b={false} />);
+    expect(names()).toEqual([first]);
+    expect(variable()).toBe(first);
   });
 
   it('uses a provided id on the surface', () => {

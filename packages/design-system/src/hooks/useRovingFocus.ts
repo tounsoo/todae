@@ -195,7 +195,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   // Watch whichever element is the container now, including one that mounts
   // after the owner or replaces an earlier one, and let go of one that
   // unmounts while the owner stays.
-  const observer = useRef<{ node: HTMLElement; disconnect: () => void } | null>(null);
+  const observer = useRef<{ node: HTMLElement; disconnect: () => void; flush: () => void } | null>(null);
   const keepRef = useRef(keepTabStop);
   const setContainer = useCallback((node: HTMLElement | null) => {
     containerRef.current = node;
@@ -204,29 +204,21 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     observer.current = null;
     // Without a tab stop there is nothing to keep in sync.
     if (!node || !keepRef.current || typeof MutationObserver === 'undefined') return;
-    // Changes come in bursts, say a style written every animation frame, so
-    // one read per frame covers them all.
-    let frame = 0;
-    const scheduleSync = () => {
-      if (frame) return;
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-        latestSync.current();
-      });
-    };
     // Only changes that add, remove, hide or change an item, or a wrapper
-    // around items, can move the tab stop.
+    // around items, can move the tab stop. The observer hands over each
+    // burst of changes in one batch, so a burst costs one read.
     const touchesItem = (node: Node) =>
       node instanceof Element && (node.hasAttribute('data-todae-roving') || node.querySelector('[data-todae-roving]') !== null);
-    const watcher = new MutationObserver((records) => {
+    const handle = (records: MutationRecord[]) => {
       const relevant = records.some(
         (record) =>
           (record.type === 'attributes' && touchesItem(record.target)) ||
           [...record.addedNodes].some(touchesItem) ||
           [...record.removedNodes].some(touchesItem),
       );
-      if (relevant) scheduleSync();
-    });
+      if (relevant) latestSync.current();
+    };
+    const watcher = new MutationObserver(handle);
     watcher.observe(node, {
       childList: true,
       subtree: true,
@@ -254,11 +246,17 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       disconnect: () => {
         watcher.disconnect();
         resize?.disconnect();
-        cancelAnimationFrame(frame);
       },
+      flush: () => handle(watcher.takeRecords()),
     };
     latestSync.current();
   }, []);
+
+  // Items the owner itself just changed are read before paint, so a tab
+  // added and made active in one render takes the tab stop at once.
+  useLayoutEffect(() => {
+    observer.current?.flush();
+  });
 
   // Turning the tab stop on or off later starts or stops watching.
   useLayoutEffect(() => {

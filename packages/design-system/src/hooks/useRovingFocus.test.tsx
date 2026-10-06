@@ -26,7 +26,7 @@ function Group({ items = FRUIT, ...options }: UseRovingFocusOptions & { items?: 
 const tabStops = () => screen.getAllByRole('button').filter((b) => b.tabIndex === 0).map((b) => b.textContent);
 const key = (k: string) => fireEvent.keyDown(document.activeElement ?? document.body, { key: k });
 const focused = () => document.activeElement?.textContent;
-// DOM changes are read once per animation frame.
+// Lets DOM changes made outside a render reach the observer first.
 const frame = () => act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
 
 describe('useRovingFocus', () => {
@@ -511,6 +511,14 @@ describe('useRovingFocus', () => {
     expect(onActiveValueChange).toHaveBeenCalledExactlyOnceWith('apple');
     key('ArrowDown');
     expect(onActiveValueChange).toHaveBeenLastCalledWith('banana');
+  });
+
+  it('an item added and made active in one render takes the tab stop before paint', () => {
+    const { rerender } = render(<Group activeValue="apple" />);
+    rerender(<Group activeValue="date" items={[...FRUIT, { value: 'date' }]} />);
+    expect(tabStops()).toEqual(['date']);
+    rerender(<Group activeValue="apple" items={FRUIT.filter((item) => item.value !== 'apple')} />);
+    expect(tabStops()).toEqual(['banana']);
   });
 
   it('a new active value takes the tab stop in one render', () => {

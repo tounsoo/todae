@@ -330,6 +330,25 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(item('Rename'));
   });
 
+  it('leaves Enter and Space in a control inside an item to that control', () => {
+    const onSelect = vi.fn();
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item onSelect={onSelect}>
+            Rename <input aria-label="New name" />
+          </Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    const input = screen.getByRole('textbox', { name: 'New name' });
+    expect(fireEvent.keyDown(input, { key: ' ' })).toBe(true);
+    fireEvent.keyUp(input, { key: ' ' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
   it('a refused ArrowUp open is forgotten even when the trigger blur is prevented', async () => {
     function Gate() {
       const [open, setOpen] = useState(false);

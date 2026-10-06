@@ -131,7 +131,12 @@ export function usePopoverInternal(
       const rest = removeAnchorName(el.style.getPropertyValue('anchor-name'), anchorName);
       if (rest) el.style.setProperty('anchor-name', rest);
       else el.style.removeProperty('anchor-name');
-      if (prevVar) el.style.setProperty('--todae-popover-anchor', prevVar);
+      // The variable names the last popover anchored here. Hand it back to
+      // the one before only if that one is still anchored, and leave it alone
+      // if a later popover has taken it.
+      if (el.style.getPropertyValue('--todae-popover-anchor') !== anchorName) return;
+      const stillAnchored = rest.split(',').some((n) => n.trim() === prevVar);
+      if (prevVar && stillAnchored) el.style.setProperty('--todae-popover-anchor', prevVar);
       else el.style.removeProperty('--todae-popover-anchor');
     };
   }, [anchorName, anchorRef]);
