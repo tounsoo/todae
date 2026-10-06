@@ -94,6 +94,8 @@ describe('useTooltip exports', () => {
     expect(new Set(froms)).toEqual(
       new Set([
         'react',
+        '../components/props',
+        '../overlay/anchorName',
         '../components/Tooltip.intent',
         '../components/Tooltip.wire',
         '../overlay/tabbables',
@@ -105,6 +107,21 @@ describe('useTooltip exports', () => {
 });
 
 describe('useTooltip', () => {
+  it("keeps the trigger's ref attached across renders", () => {
+    const attach = vi.fn();
+    function Probe({ tick }: { tick: number }) {
+      const tip = api.useTooltip();
+      return (
+        <button type="button" data-tick={tick} {...tip.getTriggerProps({ ref: attach })}>
+          Go
+        </button>
+      );
+    }
+    const { rerender } = render(<Probe tick={1} />);
+    rerender(<Probe tick={2} />);
+    expect(attach).toHaveBeenCalledTimes(1);
+  });
+
   it('shows on hover after 300ms and hides after 100ms', () => {
     render(<TipHarness />);
     const trigger = screen.getByRole('button', { name: 'Hint' });

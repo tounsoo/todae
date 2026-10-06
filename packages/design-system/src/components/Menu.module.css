@@ -44,9 +44,8 @@
     outline-offset: -2px;
   }
 
-  .item[data-disabled],
-  .item[data-disabled]:focus {
-    background: var(--todae-menu-item-bg-default);
+  /* Disabled items still take keyboard focus, and show it, so they are found. */
+  .item[data-disabled] {
     color: var(--todae-menu-item-fg-disabled);
     cursor: not-allowed;
   }

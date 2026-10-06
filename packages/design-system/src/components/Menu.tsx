@@ -173,6 +173,11 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTri
           event.preventDefault();
           return;
         }
+        // Tab away from the trigger of a menu left open closes it too.
+        if (event.key === 'Tab' && ctx.open) {
+          ctx.setOpen(false, 'tab');
+          return;
+        }
         if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
         event.preventDefault();
         const end = event.key === 'ArrowDown' ? 'first' : 'last';
@@ -280,7 +285,9 @@ function useItem(
 ) {
   const value = useId();
   const spacePressed = useRef(false);
-  const item = ctx.roving.getItemProps(value, { disabled, textValue }, props);
+  // Disabled items stay in the arrow-key order, as menus conventionally do,
+  // so a screen reader announces them as unavailable; they just can't be chosen.
+  const item = ctx.roving.getItemProps(value, { textValue }, props);
   return {
     ...item,
     role,

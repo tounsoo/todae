@@ -16,6 +16,7 @@ import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useStableComposedRef } from '../components/props';
+import { anchorTriggerStyle } from '../overlay/anchorName';
 import { useControlledState } from './useControlledState';
 
 export type { PopoverWire };
@@ -66,17 +67,6 @@ function eventInside(el: HTMLElement | null, event: Event): boolean {
   return event.target instanceof Node && el.contains(event.target);
 }
 
-// `anchor-name` takes a list, so a trigger that is also another overlay's
-// anchor (a menu trigger with a tooltip) keeps both names.
-function triggerStyle(anchorName: string, existing?: CSSProperties): CSSProperties {
-  const other = existing?.anchorName;
-  return {
-    ['--todae-popover-anchor' as string]: anchorName,
-    anchorName: other && other !== 'none' && !other.split(',').map((n) => n.trim()).includes(anchorName)
-      ? `${other}, ${anchorName}`
-      : anchorName,
-  } as CSSProperties;
-}
 
 function popoverStyle(anchorName: string): CSSProperties {
   return {
@@ -194,7 +184,7 @@ export function usePopoverInternal(
         // Stable while the caller's ref is, so the caller's ref is not
         // detached and reattached, and its cleanup kept, across renders.
         ref: triggerComposed(user.ref),
-        style: { ...user.style, ...triggerStyle(anchorName, user.style) },
+        style: { ...user.style, ...anchorTriggerStyle('--todae-popover-anchor', anchorName, user.style) },
         'aria-expanded': open,
         'aria-controls': contentId,
         'aria-haspopup': haspopup,

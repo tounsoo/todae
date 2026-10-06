@@ -134,6 +134,20 @@ describe('useField', () => {
     expect(fireEvent.mouseDown(screen.getByRole('textbox'))).toBe(true);
   });
 
+  it('Field.Select works with onValueChange alone', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Field.Root aria-label="Size">
+        <Field.Select value="s" onValueChange={onValueChange}>
+          <option value="s">Small</option>
+          <option value="m">Medium</option>
+        </Field.Select>
+      </Field.Root>,
+    );
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'm' } });
+    expect(onValueChange).toHaveBeenCalledWith('m');
+  });
+
   it('a shell press never falls back to an input inside an Affix', () => {
     function Custom() {
       const field = useField();

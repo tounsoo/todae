@@ -85,7 +85,7 @@ describe('Menu', () => {
     key('ArrowDown');
     await raf();
     key('ArrowDown');
-    expect(document.activeElement).toBe(item('Delete'));
+    expect(document.activeElement).toBe(item('Duplicate'));
     key('Escape');
     await raf();
     expect(isOpen()).toBe(false);
@@ -94,12 +94,17 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(item('Rename'));
   });
 
-  it('moves with arrows, skips disabled items, loops, and uses typeahead', async () => {
+  it('moves with arrows through disabled items too, loops, and uses typeahead', async () => {
     render(<Actions />);
     fireEvent.click(trigger());
     await raf();
     key('ArrowDown');
+    expect(document.activeElement).toBe(item('Duplicate'));
+    key('Enter');
+    expect(isOpen()).toBe(true);
+    key('ArrowDown');
     expect(document.activeElement).toBe(item('Delete'));
+    key('ArrowUp');
     key('ArrowUp');
     key('ArrowUp');
     expect(document.activeElement).toBe(item('Date'));
@@ -386,6 +391,15 @@ describe('Menu', () => {
     fireEvent.click(trigger());
     expect(onOpenChange).not.toHaveBeenCalled();
     expect(trigger().getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('Tab from the trigger of an open menu closes it', async () => {
+    const onOpenChange = vi.fn();
+    render(<Actions open onOpenChange={onOpenChange} />);
+    await raf();
+    act(() => trigger().focus());
+    key('Tab');
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'tab');
   });
 
   it('Shift+Tab closes the menu and stops on the trigger', async () => {

@@ -454,7 +454,8 @@ function ChipInput({
  */
 export type FieldSelectProps = {
   value: string;
-  onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  /** Optional: `onValueChange` alone is enough when the event is not needed. */
+  onChange?: (event: ChangeEvent<HTMLSelectElement>) => void;
   onValueChange?: (value: string) => void;
   children?: ReactNode;
   ref?: Ref<HTMLSelectElement>;
@@ -471,7 +472,7 @@ function Select({ value, onChange, onValueChange, className, children, ...props 
       value={value}
       className={cx(styles.select, className)}
       onChange={(event) => {
-        onChange(event);
+        onChange?.(event);
         onValueChange?.(event.target.value);
       }}
     >
