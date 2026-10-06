@@ -16,7 +16,7 @@ import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useRefSetter, useStableComposedRef } from '../components/props';
-import { anchorTriggerStyle, mergeAnchorNames } from '../overlay/anchorName';
+import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from '../overlay/anchorName';
 import { useControlledState } from './useControlledState';
 
 export type { PopoverWire };
@@ -131,7 +131,10 @@ export function usePopoverInternal(
     el.style.setProperty('anchor-name', mergeAnchorNames(prevName, anchorName));
     el.style.setProperty('--todae-popover-anchor', anchorName);
     return () => {
-      if (prevName) el.style.setProperty('anchor-name', prevName);
+      // Take out only this popover's name: another overlay may have added
+      // its own since.
+      const rest = removeAnchorName(el.style.getPropertyValue('anchor-name'), anchorName);
+      if (rest) el.style.setProperty('anchor-name', rest);
       else el.style.removeProperty('anchor-name');
       if (prevVar) el.style.setProperty('--todae-popover-anchor', prevVar);
       else el.style.removeProperty('--todae-popover-anchor');

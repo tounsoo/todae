@@ -53,6 +53,28 @@ describe('usePopover exports', () => {
     expect(link.getAttribute('aria-expanded')).toBe('true');
   });
 
+  it('keeps each ref stable when the getter is used on two elements', () => {
+    const a = vi.fn();
+    const b = vi.fn();
+    function Two({ tick }: { tick: number }) {
+      const popover = usePopover();
+      return (
+        <div data-tick={tick}>
+          <button type="button" {...popover.getTriggerProps({ ref: a })}>
+            A
+          </button>
+          <button type="button" {...popover.getTriggerProps({ ref: b })}>
+            B
+          </button>
+        </div>
+      );
+    }
+    const { rerender } = render(<Two tick={1} />);
+    rerender(<Two tick={2} />);
+    expect(a).toHaveBeenCalledTimes(1);
+    expect(b).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps another overlay's anchor name on the trigger", () => {
     let style: Record<string, unknown> = {};
     function Probe() {

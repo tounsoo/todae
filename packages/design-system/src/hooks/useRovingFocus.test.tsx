@@ -371,6 +371,46 @@ describe('useRovingFocus', () => {
     }
   });
 
+  it('re-reads items when the group itself is shown, through its size', () => {
+    const callbacks: (() => void)[] = [];
+    const OriginalRO = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class {
+      constructor(cb: () => void) {
+        callbacks.push(cb);
+      }
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    } as unknown as typeof ResizeObserver;
+    const original = HTMLElement.prototype.checkVisibility;
+    let shown = false;
+    HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {
+      return shown && this.textContent !== 'banana';
+    };
+    try {
+      render(<Group activeValue="banana" />);
+      expect(tabStops()).toEqual(['banana']);
+      shown = true;
+      act(() => callbacks.forEach((cb) => cb()));
+      expect(tabStops()).toEqual(['apple']);
+    } finally {
+      HTMLElement.prototype.checkVisibility = original;
+      globalThis.ResizeObserver = OriginalRO;
+    }
+  });
+
+  it('focus on the item that already holds the tab stop is no change', () => {
+    const onActiveValueChange = vi.fn();
+    render(<Group onActiveValueChange={onActiveValueChange} />);
+    act(() => screen.getByRole('button', { name: 'apple' }).focus());
+    expect(onActiveValueChange).not.toHaveBeenCalled();
+  });
+
+  it('with tabStop false, no item is a Tab stop', () => {
+    render(<Group tabStop={false} />);
+    expect(tabStops()).toEqual([]);
+  });
+
   it('a new active value takes the tab stop in one render', () => {
     let commits = 0;
     const { rerender } = render(

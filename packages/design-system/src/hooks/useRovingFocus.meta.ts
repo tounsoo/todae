@@ -27,6 +27,13 @@ export const meta = {
       description: 'Typing focuses the next item whose text starts with the typed characters.',
     },
     {
+      name: 'tabStop',
+      type: 'boolean',
+      required: false,
+      default: 'true',
+      description: 'Keep one item tabbable. False when focus only enters from code, as in a menu: every item gets tabIndex -1.',
+    },
+    {
       name: 'activeValue',
       type: 'string | null',
       required: false,

@@ -173,7 +173,8 @@ function Root({
   );
 
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
-    if (disabled || isInteractiveTarget(event.target)) return;
+    // Only a primary press: a right or middle click keeps its own meaning.
+    if (event.button !== 0 || disabled || isInteractiveTarget(event.target)) return;
     event.preventDefault();
     // The ref is the last control to mount. If that one has gone, a control
     // still in the shell takes the press, never one inside an Icon or Affix.

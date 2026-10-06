@@ -19,9 +19,9 @@ const roving = useRovingFocus({ orientation: 'horizontal', defaultActiveValue: '
   <RovingToolbar />
 </Example>
 
-`orientation` picks the arrow keys: `vertical` (default), `horizontal`, or `both`. Left and Right swap when the container's `direction` is `rtl`. `loop` (default `true`) wraps at the ends. `typeahead` moves to the next item whose text starts with what was typed; pass `textValue` when an item's text is not its label.
+`orientation` picks the arrow keys: `vertical` (default), `horizontal`, or `both`. Left and Right swap when the container's `direction` is `rtl`. `loop` (default `true`) wraps at the ends. `typeahead` moves to the next item whose text starts with what was typed; pass `textValue` when an item's text is not its label. `tabStop: false` makes every item `tabIndex={-1}`, for a widget that focus only enters from code, such as a menu opened from its trigger.
 
-The tab stop follows `activeValue`, falling back to the first enabled item when it is `null`, disabled or not rendered. Items are read from the DOM, so server-rendered HTML has a tab stop only on the item named by `activeValue` or `defaultActiveValue`; set one when the group must be reachable before hydration. `onActiveValueChange` fires whenever focus moves to a different item, from a key, a click or a script. `focus(value)`, `focusFirst()` and `focusLast()` move focus from your own handlers, `getItemNode(value)` finds an item's element, and `values()` reads the enabled values in order.
+The tab stop follows `activeValue`, falling back to the first enabled item when it is `null`, disabled or not rendered. Items are read from the DOM, so server-rendered HTML has a tab stop only on the item named by `activeValue` or `defaultActiveValue`; set one when the group must be reachable before hydration. `onActiveValueChange` fires whenever focus moves to a different item, from a key, a click or a script. `focus(value)`, `focusFirst()` and `focusLast()` move focus from your own handlers, `getItemNode(value)` finds an item's element, `values()` reads the enabled values in order, and `reachableItems()` returns the enabled items focus can reach now.
 
 The hook does not set roles. Give the container the role your widget needs, such as `toolbar`, `tablist`, `menu` or `radiogroup`.
 

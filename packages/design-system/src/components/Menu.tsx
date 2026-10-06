@@ -126,10 +126,10 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
     { open, onOpenChange: setOpen, restoreFocusRef: triggerRef, initialFocusRef, haspopup: 'menu' },
     true,
   );
-  // Every open starts at an end of the list, so the menu never needs to
-  // remember the focused item. Held at null, focus moving across items under
-  // the pointer does not render the menu.
-  const roving = useRovingFocus({ orientation: 'vertical', typeahead: true, activeValue: null });
+  // Every open starts at an end of the list and focus enters only from the
+  // trigger, so the menu tracks no tab stop: items are never Tab stops, and
+  // focus moving across them under the pointer does not render the menu.
+  const roving = useRovingFocus({ orientation: 'vertical', typeahead: true, activeValue: null, tabStop: false });
   const ctx = useMemo(
     () => ({ open, setOpen, triggerId, triggerRef, openEnd, initialFocusRef, popover, roving }),
     [open, setOpen, triggerId, popover, roving],
@@ -209,19 +209,18 @@ function Content({
   const localRef = useRef<HTMLDivElement | null>(null);
   usePopoverSync(localRef, open);
   const { openEnd, initialFocusRef, roving } = ctx;
-  const { reachableValues, getItemNode } = roving;
+  const { reachableItems } = roving;
   // However the menu opens, it starts on an end of the list, never on the
   // item focused last time. This runs before Root's initial focus.
   useLayoutEffect(() => {
     if (!open) return;
     // Items focus can reach: a hidden first item does not take the open.
-    const enabled = reachableValues();
+    const reachable = reachableItems();
     // The key's choice holds for the open that follows it, however late the
     // owner applies it, while the trigger keeps focus.
-    const target = openEnd.current === 'last' ? enabled.at(-1) : enabled[0];
-    initialFocusRef.current = target === undefined ? null : getItemNode(target);
+    initialFocusRef.current = (openEnd.current === 'last' ? reachable.at(-1) : reachable[0]) ?? null;
     openEnd.current = null;
-  }, [getItemNode, initialFocusRef, open, openEnd, reachableValues]);
+  }, [initialFocusRef, open, openEnd, reachableItems]);
   const container = roving.getContainerProps({
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
       // Tab leaves the menu: close it, and focus returns to the trigger.
@@ -289,9 +288,6 @@ function useItem(
   const item = ctx.roving.getItemProps(value, { textValue }, props);
   return {
     ...item,
-    // Focus enters a menu only from its trigger, never by Tab, so even when an
-    // owner keeps the menu open, Tab from the trigger moves past it.
-    tabIndex: -1,
     role,
     'aria-checked': checked,
     'aria-disabled': disabled || undefined,

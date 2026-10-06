@@ -169,6 +169,16 @@ describe('useField', () => {
     expect(screen.getByRole('textbox').getAttribute('name')).toBe('rating');
   });
 
+  it('a right-click on the shell keeps its default', () => {
+    render(
+      <Field.Root aria-label="Name" data-testid="shell">
+        <Field.TextInput value="" onChange={() => {}} />
+      </Field.Root>,
+    );
+    expect(fireEvent.mouseDown(screen.getByTestId('shell'), { button: 2 })).toBe(true);
+    expect(document.activeElement).not.toBe(screen.getByRole('textbox'));
+  });
+
   it('a press beside a select opens its picker', () => {
     const showPicker = vi.fn();
     const proto = HTMLSelectElement.prototype as unknown as { showPicker?: () => void };

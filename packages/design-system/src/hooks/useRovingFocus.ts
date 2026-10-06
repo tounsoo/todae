@@ -21,6 +21,12 @@ export type UseRovingFocusOptions = {
   loop?: boolean;
   /** Typing a printable character focuses the next item whose text starts with it. */
   typeahead?: boolean;
+  /**
+   * Keep one item tabbable. False for a widget focus only enters from code,
+   * such as a menu opened from its trigger: every item gets tabIndex -1, and
+   * the hook skips tracking the tab stop.
+   */
+  tabStop?: boolean;
   /** Controlled tab stop. `null` is controlled with no preference: the first enabled item. */
   activeValue?: string | null;
   defaultActiveValue?: string | null;
@@ -75,8 +81,8 @@ export type UseRovingFocusResult = {
   getItemNode: (value: string) => HTMLElement | null;
   /** Enabled item values in document order, read from the DOM. */
   values: () => string[];
-  /** Of those, the ones focus can reach now: not inert and not hidden by style. */
-  reachableValues: () => string[];
+  /** Enabled item elements focus can reach now, in document order: not inert and not hidden by style. */
+  reachableItems: () => HTMLElement[];
   getContainerProps: <P extends RovingContainerUserProps>(props?: P) => Omit<P, keyof RovingContainerWire> & RovingContainerWire;
   getItemProps: <P extends RovingItemUserProps>(
     value: string,
@@ -116,6 +122,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     orientation = 'vertical',
     loop = true,
     typeahead = false,
+    tabStop: keepTabStop = true,
     activeValue: activeProp,
     defaultActiveValue,
     onActiveValueChange,
@@ -153,11 +160,11 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   const valueOf = (node: HTMLElement) => node.getAttribute('data-todae-roving-value') ?? '';
 
   const values = useCallback(() => enabledItems().map(valueOf), [enabledItems]);
-  const reachableValues = useCallback(() => items().map(valueOf), [items]);
 
   // Re-read when the container mounts and on DOM changes: items can appear,
   // move, hide or turn disabled without this hook's owner rendering.
   const syncTabStop = () => {
+    if (!keepTabStop) return;
     const enabled = values();
     const reachable = items().map(valueOf);
     setKnown((prev) =>
@@ -176,21 +183,26 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   // enabled item: a group rendered while hidden still has a tab stop when
   // shown. Before anything is read from the DOM, as in server HTML, only
   // `active` can.
-  const tabStop = !known.read
+  const derivedStop = !known.read
     ? active
     : active !== null && known.reachable.includes(active)
       ? active
       : (known.reachable[0] ??
         (active !== null && known.enabled.includes(active) ? active : (known.enabled[0] ?? null)));
+  const tabStop = keepTabStop ? derivedStop : null;
+  const tabStopRef = useRef(tabStop);
+  useLayoutEffect(() => {
+    tabStopRef.current = tabStop;
+  });
 
   // Watch whichever element is the container now, including one that mounts
   // after the owner or replaces an earlier one, and let go of one that
   // unmounts while the owner stays.
-  const observer = useRef<{ node: HTMLElement; observer: MutationObserver } | null>(null);
+  const observer = useRef<{ node: HTMLElement; disconnect: () => void } | null>(null);
   const setContainer = useCallback((node: HTMLElement | null) => {
     containerRef.current = node;
     if (node && observer.current?.node === node) return;
-    observer.current?.observer.disconnect();
+    observer.current?.disconnect();
     observer.current = null;
     if (!node || typeof MutationObserver === 'undefined') return;
     // Only changes that add, remove or change an item can move the tab stop.
@@ -212,15 +224,26 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       // class and style too: either can hide an item.
       attributeFilter: ['data-todae-roving-disabled', 'data-todae-roving-value', 'hidden', 'inert', 'class', 'style'],
     });
-    observer.current = { node, observer: watcher };
+    // A size change catches the group itself being shown or hidden, say by
+    // an ancestor opening, which no mutation inside it reports.
+    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => latestSync.current());
+    resize?.observe(node);
+    observer.current = {
+      node,
+      disconnect: () => {
+        watcher.disconnect();
+        resize?.disconnect();
+      },
+    };
     latestSync.current();
   }, []);
 
   const commit = useCallback(
     (value: string) => {
-      // The tab stop follows `active` through the sync effect, so a
-      // controlled owner that keeps its value keeps the tab stop too.
-      if (value === active) return;
+      // The tab stop is derived from `active`, so a controlled owner that
+      // keeps its value keeps the tab stop too. Focus on the item that
+      // already holds the tab stop is no change.
+      if (value === active || value === tabStopRef.current) return;
       setActive(value);
       onActiveValueChange?.(value);
     },
@@ -385,10 +408,10 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       getItemNode,
       isTypingAhead,
       values,
-      reachableValues,
+      reachableItems: items,
       getContainerProps,
       getItemProps,
     }),
-    [commit, focus, focusFirst, focusLast, getContainerProps, getItemNode, getItemProps, isTypingAhead, reachableValues, tabStop, values],
+    [commit, focus, focusFirst, focusLast, getContainerProps, getItemNode, getItemProps, isTypingAhead, items, tabStop, values],
   );
 }

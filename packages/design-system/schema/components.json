@@ -1865,6 +1865,13 @@
           "default": "false"
         },
         {
+          "name": "tabStop",
+          "type": "boolean",
+          "required": false,
+          "description": "Keep one item tabbable. False when focus only enters from code, as in a menu: every item gets tabIndex -1.",
+          "default": "true"
+        },
+        {
           "name": "activeValue",
           "type": "string | null",
           "required": false,

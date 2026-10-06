@@ -20,3 +20,12 @@ export function mergeAnchorNames(existing: string | undefined, name: string): st
     .filter((n) => n !== '' && n !== 'none' && n !== name);
   return [...names, name].join(', ');
 }
+
+/** Takes `name` out of an `anchor-name` list, leaving the other names. */
+export function removeAnchorName(existing: string | undefined, name: string): string {
+  return (existing ?? '')
+    .split(',')
+    .map((n) => n.trim())
+    .filter((n) => n !== '' && n !== 'none' && n !== name)
+    .join(', ');
+}

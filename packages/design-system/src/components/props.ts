@@ -53,14 +53,20 @@ export function useRefSetter<T>(ref: RefObject<T | null>): RefCallback<T> {
  * same, so React does not detach and reattach it on every render.
  */
 export function useStableComposedRef<T>(own: RefCallback<T>): (theirs: Ref<T> | undefined) => RefCallback<T> {
-  const last = useRef<{ own: RefCallback<T>; theirs: Ref<T>; composed: RefCallback<T> } | null>(null);
+  // One composed callback per caller ref, so a getter used on several
+  // elements keeps each one stable. Rebuilt when `own` changes.
+  const cache = useRef<{ own: RefCallback<T>; map: WeakMap<object, RefCallback<T>> } | null>(null);
   return useCallback(
     (theirs: Ref<T> | undefined) => {
       if (!theirs) return own;
-      const cached = last.current;
-      if (cached?.own === own && cached.theirs === theirs) return cached.composed;
-      last.current = { own, theirs, composed: composeRefs(own, theirs) };
-      return last.current.composed;
+      if (cache.current?.own !== own) cache.current = { own, map: new WeakMap() };
+      const { map } = cache.current;
+      let composed = map.get(theirs);
+      if (!composed) {
+        composed = composeRefs(own, theirs);
+        map.set(theirs, composed);
+      }
+      return composed;
     },
     [own],
   );
