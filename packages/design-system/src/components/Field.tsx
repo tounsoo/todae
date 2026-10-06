@@ -20,6 +20,7 @@ import {
 import { Chip } from './Chip';
 import {
   FIELD_CONTROL_SELECTOR,
+  FOCUSABLE_FIELD_CONTROL_SELECTOR,
   FieldContext,
   inputLabel,
   mergeDescribedBy,
@@ -178,7 +179,7 @@ function Root({
     // still in the shell takes the press, never one inside an Icon or Affix.
     const control = inputRef.current?.isConnected
       ? inputRef.current
-      : [...event.currentTarget.querySelectorAll<HTMLElement>(FIELD_CONTROL_SELECTOR)].find(
+      : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(
           (node) => !inAdornment(node, event.currentTarget),
         );
     control?.focus();

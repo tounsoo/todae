@@ -401,6 +401,14 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(trigger());
   });
 
+  it('a forward Tab leaves the menu even when the owner keeps it open', async () => {
+    render(<Actions open onOpenChange={() => undefined} />);
+    await raf();
+    act(() => menu().focus());
+    fireEvent.keyDown(menu(), { key: 'Tab' });
+    expect(document.activeElement).toBe(trigger());
+  });
+
   it('Tab from the trigger of an open menu closes it', async () => {
     const onOpenChange = vi.fn();
     render(<Actions open onOpenChange={onOpenChange} />);

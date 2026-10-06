@@ -286,6 +286,30 @@ describe('useRovingFocus', () => {
     expect(focused()).toBe('😀 Happy');
   });
 
+  it('skips hidden items and never gives them the tab stop', () => {
+    function Hidden() {
+      const roving = useRovingFocus();
+      return (
+        <div {...roving.getContainerProps()}>
+          <button type="button" hidden {...roving.getItemProps('ghost')}>
+            ghost
+          </button>
+          <button type="button" {...roving.getItemProps('a')}>
+            a
+          </button>
+          <button type="button" {...roving.getItemProps('b')}>
+            b
+          </button>
+        </div>
+      );
+    }
+    render(<Hidden />);
+    expect(screen.getAllByRole('button').filter((b) => b.tabIndex === 0).map((b) => b.textContent)).toEqual(['a']);
+    act(() => screen.getByRole('button', { name: 'b' }).focus());
+    key('ArrowDown');
+    expect(focused()).toBe('a');
+  });
+
   it('typeahead is off by default', () => {
     render(<Group />);
     screen.getByText('apple').focus();

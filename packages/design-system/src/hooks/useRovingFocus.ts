@@ -126,9 +126,12 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     const container = containerRef.current;
     if (!container) return [];
     // The scope comes from useId, which never contains a quote or backslash.
+    // A hidden or inert item can't take focus, so it is not a target either.
     return [
-      ...container.querySelectorAll<HTMLElement>(`[data-todae-roving="${scope}"]:not([data-todae-roving-disabled])`),
-    ];
+      ...container.querySelectorAll<HTMLElement>(
+        `[data-todae-roving="${scope}"]:not([data-todae-roving-disabled]):not([hidden])`,
+      ),
+    ].filter((node) => !node.closest('[inert]') && (node.checkVisibility?.() ?? true));
   }, [scope]);
 
   const valueOf = (node: HTMLElement) => node.getAttribute('data-todae-roving-value') ?? '';
@@ -175,7 +178,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['data-todae-roving-disabled', 'data-todae-roving-value'],
+      attributeFilter: ['data-todae-roving-disabled', 'data-todae-roving-value', 'hidden', 'inert'],
     });
     observer.current = { node, observer: watcher };
     latestSync.current();

@@ -185,6 +185,26 @@ describe('useField', () => {
     expect(document.activeElement).toBe(screen.getByRole('textbox'));
   });
 
+  it('a shell press skips a hidden input when falling back', () => {
+    function Custom({ label }: { label: string }) {
+      const field = useField();
+      return <span {...field.getControlProps({}, { native: false })} role="slider" aria-label={label} tabIndex={0} />;
+    }
+    function Shell({ extra }: { extra: boolean }) {
+      return (
+        <Field.Root aria-label="Shell" data-testid="shell">
+          <input type="hidden" name="companion" value="x" />
+          <Custom label="main" />
+          {extra ? <Custom label="extra" /> : null}
+        </Field.Root>
+      );
+    }
+    const { rerender } = render(<Shell extra />);
+    rerender(<Shell extra={false} />);
+    fireEvent.mouseDown(screen.getByTestId('shell'));
+    expect(document.activeElement).toBe(screen.getByRole('slider', { name: 'main' }));
+  });
+
   it('a shell press never falls back to an input inside an Affix', () => {
     function Custom() {
       const field = useField();
