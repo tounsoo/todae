@@ -186,6 +186,8 @@ function BottomSheetClose({
   );
 }
 
+const DEFAULT_SNAP_POINTS: readonly SheetSnap[] = ['mid', 'full'];
+
 function BottomSheetRoot({
   open,
   onOpenChange,
@@ -203,7 +205,7 @@ function BottomSheetRoot({
   ref,
   ...props
 }: BottomSheetRootProps) {
-  const points = snapPoints ?? (['mid', 'full'] as const);
+  const points = snapPoints ?? DEFAULT_SNAP_POINTS;
   const [uncontrolled, setUncontrolled] = useState<SheetSnap>(
     points.includes(defaultSnap) ? defaultSnap : (points[0] ?? 'mid'),
   );

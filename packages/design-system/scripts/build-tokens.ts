@@ -1327,7 +1327,7 @@ function resolveOklch(path: string, view: Map<string, FlatToken>, stack: string[
   const value = token.value;
   if (isRef(value)) return resolveOklch(pointerToPath(value.$ref, `Token "${path}"`), view, [...stack, path]);
   const record = value as { components: unknown[]; alpha?: number };
-  const channels = record.components.map((component, i) => {
+  const channels = record.components.map((component) => {
     if (typeof component === 'number') return component;
     const ref = parseComponentPointer((component as { $ref: string }).$ref, `Token "${path}"`);
     const origin = resolveOklch(ref.path, view, [...stack, path]);

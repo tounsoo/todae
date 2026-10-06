@@ -19,6 +19,7 @@ jobs:
       - run: pnpm tokens:check
       - run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
       - run: pnpm typecheck
+      - run: pnpm lint
       - name: Build @tounsoo/todae
         run: pnpm --filter @tounsoo/todae build
       - name: Test

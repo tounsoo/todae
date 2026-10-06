@@ -88,6 +88,9 @@ export function useSnapDrag({
   dismissRef.current = dismissOnDrag;
 
   const [sheet, setSheet] = useState<HTMLElement | null>(null);
+  // Runs after every render on purpose: the ref has no change signal, and the
+  // updater bails out when the node is the same.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
     const node = sheetRef.current;
     setSheet((prev) => (prev === node ? prev : node));
@@ -154,7 +157,7 @@ export function useSnapDrag({
         try {
           surface.setPointerCapture(event.pointerId);
         } catch {
-          undefined;
+          // The pointer may already be gone; the drag still works without capture.
         }
       }
       const heights = sheetHeights(surface);

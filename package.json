@@ -13,8 +13,16 @@
     "tokens:check": "pnpm --filter @tounsoo/todae tokens:check",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "eslint .",
     "graft:build": "npx -y @nanonets/graft@0.18.0 build",
     "graft:check": "npx -y @nanonets/graft@0.18.0 check",
     "clean": "pnpm -r --if-present clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "typescript-eslint": "^8.71.0"
   }
 }

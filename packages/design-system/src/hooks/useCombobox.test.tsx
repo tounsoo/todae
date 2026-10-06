@@ -517,4 +517,15 @@ describe('useCombobox', () => {
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(input);
   });
+
+  it('keeps input prop getters stable across renders when nothing changed', () => {
+    const { result, rerender } = renderHook(() =>
+      useCombobox({ options: OPTIONS, presentation: 'popover', allowCreate: true }),
+    );
+    const input = result.current.getInputProps;
+    const items = result.current.items;
+    rerender();
+    expect(result.current.getInputProps).toBe(input);
+    expect(result.current.items).toBe(items);
+  });
 });
