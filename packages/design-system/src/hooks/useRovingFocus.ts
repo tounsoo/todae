@@ -30,7 +30,7 @@ export type UseRovingFocusOptions = {
   /** Controlled tab stop. `null` is controlled with no preference: the first enabled item. */
   activeValue?: string | null;
   defaultActiveValue?: string | null;
-  /** Fires when focus moves to a different item, from a key, a click or a script. */
+  /** Fires when an item other than the active one takes focus, from a key, a click or a script. */
   onActiveValueChange?: (value: string) => void;
 };
 
@@ -97,6 +97,8 @@ type KnownItems = { read: boolean; enabled: string[]; reachable: string[] };
 
 const NO_ITEMS: KnownItems = { read: false, enabled: [], reachable: [] };
 
+const isReachable = (node: HTMLElement) => !node.closest('[inert]') && (node.checkVisibility?.() ?? true);
+
 const sameValues = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
 
 // `rtl` is a function so direction, which costs a style read, is only
@@ -151,11 +153,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
 
   // Of those, the ones focus can move to now: not inert and not hidden by
   // style. Read only when moving, since checking visibility costs a style pass.
-  const items = useCallback(
-    (): HTMLElement[] =>
-      enabledItems().filter((node) => !node.closest('[inert]') && (node.checkVisibility?.() ?? true)),
-    [enabledItems],
-  );
+  const items = useCallback((): HTMLElement[] => enabledItems().filter(isReachable), [enabledItems]);
 
   const valueOf = (node: HTMLElement) => node.getAttribute('data-todae-roving-value') ?? '';
 
@@ -165,8 +163,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   // move, hide or turn disabled without this hook's owner rendering.
   const syncTabStop = () => {
     if (!keepTabStop) return;
-    const enabled = values();
-    const reachable = items().map(valueOf);
+    const nodes = enabledItems();
+    const enabled = nodes.map(valueOf);
+    const reachable = nodes.filter(isReachable).map(valueOf);
     setKnown((prev) =>
       prev.read && sameValues(prev.enabled, enabled) && sameValues(prev.reachable, reachable)
         ? prev
@@ -190,21 +189,19 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       : (known.reachable[0] ??
         (active !== null && known.enabled.includes(active) ? active : (known.enabled[0] ?? null)));
   const tabStop = keepTabStop ? derivedStop : null;
-  const tabStopRef = useRef(tabStop);
-  useLayoutEffect(() => {
-    tabStopRef.current = tabStop;
-  });
 
   // Watch whichever element is the container now, including one that mounts
   // after the owner or replaces an earlier one, and let go of one that
   // unmounts while the owner stays.
   const observer = useRef<{ node: HTMLElement; disconnect: () => void } | null>(null);
+  const keepRef = useRef(keepTabStop);
   const setContainer = useCallback((node: HTMLElement | null) => {
     containerRef.current = node;
     if (node && observer.current?.node === node) return;
     observer.current?.disconnect();
     observer.current = null;
-    if (!node || typeof MutationObserver === 'undefined') return;
+    // Without a tab stop there is nothing to keep in sync.
+    if (!node || !keepRef.current || typeof MutationObserver === 'undefined') return;
     // Only changes that add, remove or change an item can move the tab stop.
     const touchesItem = (node: Node) =>
       node instanceof Element && (node.hasAttribute('data-todae-roving') || node.querySelector('[data-todae-roving]') !== null);
@@ -238,12 +235,21 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     latestSync.current();
   }, []);
 
+  // Turning the tab stop on or off later starts or stops watching.
+  useLayoutEffect(() => {
+    if (keepRef.current === keepTabStop) return;
+    keepRef.current = keepTabStop;
+    const node = containerRef.current;
+    observer.current?.disconnect();
+    observer.current = null;
+    if (node) setContainer(node);
+  }, [keepTabStop, setContainer]);
+
   const commit = useCallback(
     (value: string) => {
       // The tab stop is derived from `active`, so a controlled owner that
-      // keeps its value keeps the tab stop too. Focus on the item that
-      // already holds the tab stop is no change.
-      if (value === active || value === tabStopRef.current) return;
+      // keeps its value keeps the tab stop too.
+      if (value === active) return;
       setActive(value);
       onActiveValueChange?.(value);
     },
@@ -297,6 +303,8 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       // Only these keys move focus; leave the rest without reading the DOM.
       // A typed character is one code point, so an emoji counts too.
       const isMove = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key);
+      // Shift with a move key is left to the owner, say to extend a selection.
+      if (isMove && event.shiftKey) return;
       if (!isMove && !(typeahead && [...event.key].length === 1)) return;
       const nodes = items();
       if (nodes.length === 0) return;

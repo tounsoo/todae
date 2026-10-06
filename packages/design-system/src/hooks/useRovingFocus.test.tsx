@@ -399,11 +399,19 @@ describe('useRovingFocus', () => {
     }
   });
 
-  it('focus on the item that already holds the tab stop is no change', () => {
-    const onActiveValueChange = vi.fn();
-    render(<Group onActiveValueChange={onActiveValueChange} />);
+  it('turning the tab stop on later makes the group reachable', () => {
+    const { rerender } = render(<Group tabStop={false} />);
+    expect(tabStops()).toEqual([]);
+    rerender(<Group />);
+    expect(tabStops()).toEqual(['apple']);
+  });
+
+  it('leaves Shift with an arrow key to the owner', () => {
+    render(<Group />);
     act(() => screen.getByRole('button', { name: 'apple' }).focus());
-    expect(onActiveValueChange).not.toHaveBeenCalled();
+    const kept = fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown', shiftKey: true });
+    expect(kept).toBe(true);
+    expect(focused()).toBe('apple');
   });
 
   it('with tabStop false, no item is a Tab stop', () => {

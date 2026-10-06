@@ -49,7 +49,7 @@ export const meta = {
       name: 'onActiveValueChange',
       type: '(value: string) => void',
       required: false,
-      description: 'Fires when focus moves to a different item.',
+      description: 'Fires when an item other than the active one takes focus.',
     },
   ],
 } as const satisfies ComponentMeta;

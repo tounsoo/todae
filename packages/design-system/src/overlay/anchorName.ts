@@ -12,20 +12,20 @@ export function anchorTriggerStyle(variable: string, name: string, existing?: CS
   } as CSSProperties;
 }
 
-/** Adds `name` to an `anchor-name` list, once. */
-export function mergeAnchorNames(existing: string | undefined, name: string): string {
-  const names = (existing ?? '')
+// The names in an `anchor-name` value, other than `none` and `name`.
+function otherNames(existing: string | undefined, name: string): string[] {
+  return (existing ?? '')
     .split(',')
     .map((n) => n.trim())
     .filter((n) => n !== '' && n !== 'none' && n !== name);
-  return [...names, name].join(', ');
+}
+
+/** Adds `name` to an `anchor-name` list, once. */
+export function mergeAnchorNames(existing: string | undefined, name: string): string {
+  return [...otherNames(existing, name), name].join(', ');
 }
 
 /** Takes `name` out of an `anchor-name` list, leaving the other names. */
 export function removeAnchorName(existing: string | undefined, name: string): string {
-  return (existing ?? '')
-    .split(',')
-    .map((n) => n.trim())
-    .filter((n) => n !== '' && n !== 'none' && n !== name)
-    .join(', ');
+  return otherNames(existing, name).join(', ');
 }

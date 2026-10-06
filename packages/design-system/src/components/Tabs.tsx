@@ -149,10 +149,18 @@ function List({ children, className, ref, onBlur, ...props }: TabsListProps) {
       className={cx(styles.list, className)}
       onBlur={composeHandlers(onBlur, (event: FocusEvent<HTMLDivElement>) => {
         const next = event.relatedTarget;
-        // The window losing focus is not leaving the list: focus comes back
-        // to the same tab, which must still be the tab stop.
-        if (next === null && !document.hasFocus()) return;
-        if (!(next instanceof Node && event.currentTarget.contains(next))) leave();
+        const list = event.currentTarget;
+        if (next instanceof Node && list.contains(next)) return;
+        // With no relatedTarget, focus may have gone to the page, an iframe,
+        // or another window. Look once it has landed: the window losing focus
+        // leaves the tab focused, which is not leaving the list.
+        if (next === null) {
+          setTimeout(() => {
+            if (!list.contains(document.activeElement)) leave();
+          });
+          return;
+        }
+        leave();
       })}
     >
       {children}

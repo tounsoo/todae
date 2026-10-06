@@ -44,7 +44,7 @@ export type MenuContentProps = {
   children?: ReactNode;
   className?: string;
 } & MenuName &
-  Omit<ComponentPropsWithRef<'div'>, 'role' | 'popover' | 'children' | 'aria-label' | 'aria-labelledby'>;
+  Omit<ComponentPropsWithRef<'div'>, 'role' | 'popover' | 'children' | 'aria-label' | 'aria-labelledby' | 'id'>;
 
 type ItemBase = {
   children?: ReactNode;

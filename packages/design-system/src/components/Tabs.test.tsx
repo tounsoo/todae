@@ -142,17 +142,31 @@ describe('Tabs', () => {
     expect(stops).toEqual([tab('Billing')]);
   });
 
-  it('keeps the focused tab as the tab stop when the window loses focus', () => {
+  it('keeps the focused tab as the tab stop when the window loses focus', async () => {
     render(<Example activation="manual" />);
     act(() => tab('Account').focus());
     key('ArrowRight');
-    const hasFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(false);
-    act(() => {
-      fireEvent.blur(tab('Billing'), { relatedTarget: null });
-    });
-    hasFocus.mockRestore();
+    // The window losing focus fires blur with no relatedTarget, and the tab stays focused.
+    fireEvent.blur(tab('Billing'), { relatedTarget: null });
+    await act(async () => new Promise((resolve) => setTimeout(resolve)));
     const stops = screen.getAllByRole('tab').filter((el) => el.tabIndex === 0);
     expect(stops).toEqual([tab('Billing')]);
+  });
+
+  it('returns the tab stop when focus goes somewhere with no relatedTarget, such as an iframe', async () => {
+    render(
+      <>
+        <Example activation="manual" />
+        <iframe title="embed" />
+      </>,
+    );
+    act(() => tab('Account').focus());
+    key('ArrowRight');
+    act(() => screen.getByTitle('embed').focus());
+    fireEvent.blur(tab('Billing'), { relatedTarget: null });
+    await act(async () => new Promise((resolve) => setTimeout(resolve)));
+    const stops = screen.getAllByRole('tab').filter((el) => el.tabIndex === 0);
+    expect(stops).toEqual([tab('Account')]);
   });
 
   it('moves the tab stop to a tab selected while focus is outside the list', () => {
