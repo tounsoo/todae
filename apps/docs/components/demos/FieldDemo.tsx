@@ -9,13 +9,13 @@ export function FieldStates() {
   const [value, setValue] = useState('');
   return (
     <>
-      <Field.Root>
+      <Field.Root aria-label="Idle field">
         <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} placeholder="Idle" />
       </Field.Root>
-      <Field.Root disabled>
+      <Field.Root aria-label="Disabled field" disabled>
         <Field.TextInput value="Disabled" onChange={() => undefined} />
       </Field.Root>
-      <Field.Root invalid>
+      <Field.Root aria-label="Invalid field" invalid>
         <Field.TextInput value="Invalid" onChange={() => undefined} />
       </Field.Root>
     </>
@@ -88,12 +88,12 @@ export function FieldAdornments() {
   const [search, setSearch] = useState('query');
   return (
     <>
-      <Field.Root>
+      <Field.Root aria-label="Amount">
         <Field.Affix>$</Field.Affix>
         <Field.TextInput value={amount} onChange={(event) => setAmount(event.target.value)} />
         <Field.Affix>.00</Field.Affix>
       </Field.Root>
-      <Field.Root>
+      <Field.Root aria-label="Search">
         <Field.Icon>
           <span>⌕</span>
         </Field.Icon>
@@ -111,7 +111,7 @@ export function FieldAdornments() {
 export function TextareaRows() {
   const [value, setValue] = useState('Notes');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Note">
       <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
     </Field.Root>
   );
@@ -120,7 +120,7 @@ export function TextareaRows() {
 export function TextareaAutoGrow() {
   const [value, setValue] = useState('Grows up to six rows.');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Note">
       <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} autoGrow maxRows={6} />
     </Field.Root>
   );
@@ -129,7 +129,7 @@ export function TextareaAutoGrow() {
 export function TextareaMaxRows() {
   const [value, setValue] = useState('maxRows only');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Note">
       <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} maxRows={2} />
     </Field.Root>
   );
@@ -138,7 +138,7 @@ export function TextareaMaxRows() {
 export function TextareaResize() {
   const [value, setValue] = useState('Drag between rows and maxRows.');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Note">
       <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} maxRows={6} />
     </Field.Root>
   );
@@ -150,7 +150,7 @@ export function TextareaDensity() {
     <>
       {(['compact', 'comfortable', 'spacious'] as const).map((density) => (
         <DensityProvider key={density} density={density}>
-          <Field.Root>
+          <Field.Root aria-label="Note">
             <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
           </Field.Root>
         </DensityProvider>
@@ -163,7 +163,7 @@ export function TextareaDark() {
   const [value, setValue] = useState('Dark scrollbar\n'.repeat(8).trim());
   return (
     <ThemeProvider appearance="dark">
-      <Field.Root>
+      <Field.Root aria-label="Note">
         <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={4} maxRows={4} />
       </Field.Root>
     </ThemeProvider>
@@ -201,7 +201,7 @@ export function ChipInputControlled() {
   const [chips, setChips] = useState(['alpha', 'beta']);
   const [inputValue, setInputValue] = useState('');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Tags">
       <Field.ChipInput
         chips={chips}
         inputValue={inputValue}
@@ -220,7 +220,7 @@ export function ChipInputControlled() {
 export function ChipInputHook() {
   const field = useChipField({ initialChips: ['react'] });
   return (
-    <Field.Root>
+    <Field.Root aria-label="Tags">
       <Field.ChipInput {...field} placeholder="useChipField" />
     </Field.Root>
   );
@@ -229,7 +229,7 @@ export function ChipInputHook() {
 export function ChipInputCommitKeys() {
   const field = useChipField({ initialChips: ['one'] });
   return (
-    <Field.Root>
+    <Field.Root aria-label="Tags">
       <Field.ChipInput {...field} commitKeys={['Enter', ',']} placeholder="Enter or comma" />
     </Field.Root>
   );
@@ -239,7 +239,7 @@ function MaxRowsDemo({ density, maxRows }: { density: 'compact' | 'comfortable';
   const field = useChipField({ initialChips: MANY });
   return (
     <DensityProvider density={density}>
-      <Field.Root style={{ maxWidth: '18rem' }}>
+      <Field.Root aria-label="Tags" style={{ maxWidth: '18rem' }}>
         <Field.ChipInput {...field} maxRows={maxRows} placeholder={`${density} maxRows=${maxRows}`} />
       </Field.Root>
     </DensityProvider>
@@ -288,7 +288,7 @@ export function ChipInputLabel() {
 export function CounterDefault() {
   const [value, setValue] = useState('Hello');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Username">
       <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
       <Field.Counter />
     </Field.Root>
@@ -300,18 +300,18 @@ export function CounterInline() {
   const [note, setNote] = useState('Notes');
   return (
     <>
-      <Field.Root>
+      <Field.Root aria-label="Username">
         <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
         <Field.Counter style={{ flexBasis: 'auto' }} />
       </Field.Root>
-      <Field.Root>
+      <Field.Root aria-label="Username">
         <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
       </Field.Root>
-      <Field.Root>
+      <Field.Root aria-label="Note">
         <Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={80} />
         <Field.Counter style={{ flexBasis: 'auto' }} />
       </Field.Root>
-      <Field.Root>
+      <Field.Root aria-label="Note">
         <Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} />
       </Field.Root>
     </>
@@ -322,7 +322,7 @@ export function CounterNarrow() {
   const [value, setValue] = useState('Hi');
   return (
     <div style={{ width: 160 }}>
-      <Field.Root>
+      <Field.Root aria-label="Price">
         <Field.Affix>$</Field.Affix>
         <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
         <Field.Counter style={{ flexBasis: 'auto' }} />
@@ -334,7 +334,7 @@ export function CounterNarrow() {
 export function CounterBefore() {
   const [value, setValue] = useState('Hello');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Username">
       <Field.Counter />
       <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={20} />
     </Field.Root>
@@ -344,7 +344,7 @@ export function CounterBefore() {
 export function CounterTextarea() {
   const [value, setValue] = useState('Notes');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Note">
       <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} maxLength={80} />
       <Field.Counter />
     </Field.Root>
@@ -354,7 +354,7 @@ export function CounterTextarea() {
 export function CounterOver() {
   const [value, setValue] = useState('Too long');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Code">
       <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} maxLength={4} />
       <Field.Counter />
     </Field.Root>
@@ -364,7 +364,7 @@ export function CounterOver() {
 export function CounterPlain() {
   const [value, setValue] = useState('Hello');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Username">
       <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
       <Field.Counter />
     </Field.Root>
@@ -395,7 +395,7 @@ function sendIcon() {
 function Composer() {
   const [value, setValue] = useState('');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Message">
       <Field.Textarea
         value={value}
         onChange={(event) => setValue(event.target.value)}
@@ -492,7 +492,7 @@ export function RowChipInput() {
 export function ChipInputStates() {
   return (
     <>
-      <Field.Root disabled>
+      <Field.Root aria-label="Locked tags" disabled>
         <Field.ChipInput
           chips={['locked']}
           inputValue=""
@@ -501,7 +501,7 @@ export function ChipInputStates() {
           onChipRemove={() => undefined}
         />
       </Field.Root>
-      <Field.Root invalid>
+      <Field.Root aria-label="Invalid tags" invalid>
         <Field.ChipInput
           chips={['bad']}
           inputValue=""

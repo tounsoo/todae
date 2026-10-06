@@ -6,7 +6,7 @@ import { useState } from 'react';
 export function FieldPartsAllowed() {
   const [value, setValue] = useState('12');
   return (
-    <Field.Root>
+    <Field.Root aria-label="Amount">
       <Field.Icon>
         <span>⌕</span>
       </Field.Icon>
@@ -23,7 +23,7 @@ export function SiblingsAllowed() {
   const popover = usePopover({ open, onOpenChange: setOpen });
   return (
     <>
-      <Field.Root>
+      <Field.Root aria-label="Filter">
         <Field.TextInput
           value={query}
           onChange={(event) => setQuery(event.target.value)}

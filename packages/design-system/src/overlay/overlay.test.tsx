@@ -75,6 +75,16 @@ describe('useFocusRestore', () => {
     expect(document.activeElement).toBe(trigger);
     trigger.remove();
   });
+
+  it('does not move focus when it mounts closed', async () => {
+    const restore = { current: document.createElement('button') };
+    document.body.appendChild(restore.current);
+    const { rerender } = render(<Restore active={false} restore={restore} />);
+    rerender(<Restore active={false} restore={restore} />);
+    await Promise.resolve();
+    expect(document.activeElement).toBe(document.body);
+    restore.current.remove();
+  });
 });
 
 describe('tabbables and trap', () => {
