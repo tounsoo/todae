@@ -21,7 +21,7 @@ The list holds one tab stop, on the selected tab. Arrow keys, Home and End move 
   <TabsBasic />
 </Example>
 
-`activation="automatic"` (default) selects a tab as soon as it takes focus. Use `activation="manual"` when a panel is slow to render: arrow keys only move focus, and Enter, Space or a click selects. `orientation="vertical"` puts the list beside the panels and moves with Up and Down.
+`activation="automatic"` (default) selects a tab as soon as it takes focus. Use `activation="manual"` when a panel is slow to render: arrow keys only move focus, and Enter, Space or a click selects. When focus leaves the list, its tab stop returns to the selected tab. `orientation="vertical"` puts the list beside the panels and moves with Up and Down.
 
 The root takes `value` with `onValueChange`, or `defaultValue`. One tab is always selected, so there is no empty state. Only the selected panel renders its children; pass `keepMounted` to keep a hidden panel's state, such as a half-filled form.
 

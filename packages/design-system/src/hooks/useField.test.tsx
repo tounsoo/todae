@@ -151,3 +151,24 @@ describe('Field.Select', () => {
     expect(select.getAttribute('aria-invalid')).toBe('true');
   });
 });
+
+describe('useField identity', () => {
+  it('keeps getControlProps stable across Root renders with the same props', () => {
+    const seen = new Set<unknown>();
+    function Probe() {
+      const field = useField();
+      seen.add(field.getControlProps);
+      return <input {...field.getControlProps()} aria-label="x" />;
+    }
+    function Owner({ tick }: { tick: number }) {
+      return (
+        <Field.Root data-tick={tick}>
+          <Probe />
+        </Field.Root>
+      );
+    }
+    const { rerender } = render(<Owner tick={1} />);
+    rerender(<Owner tick={2} />);
+    expect(seen.size).toBe(1);
+  });
+});

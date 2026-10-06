@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useId,
+  useLayoutEffect,
   useRef,
   type ComponentPropsWithRef,
   type KeyboardEvent,
@@ -29,7 +30,8 @@ export type MenuRootProps = {
   children?: ReactNode;
 };
 
-export type MenuTriggerProps = ButtonRootProps;
+/** The id is the menu's: the content is named by it. */
+export type MenuTriggerProps = Omit<ButtonRootProps, 'id'>;
 
 type MenuName =
   | { 'aria-label'?: undefined; 'aria-labelledby'?: string }
@@ -93,6 +95,9 @@ type MenuContextValue = {
   setOpen: (open: boolean, reason: MenuOpenChangeReason) => void;
   triggerId: string;
   triggerRef: RefObject<HTMLButtonElement | null>;
+  /** Which end the next open focuses. Reset to first after each open. */
+  openEnd: RefObject<'first' | 'last'>;
+  initialFocusRef: RefObject<HTMLElement | null>;
   popover: UsePopoverResult;
   roving: UseRovingFocusResult;
 };
@@ -113,6 +118,8 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
   const triggerId = `${useId().replaceAll(':', '')}-trigger`;
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const openEnd = useRef<'first' | 'last'>('first');
+  const initialFocusRef = useRef<HTMLElement | null>(null);
   const setOpen = useCallback(
     (next: boolean, reason: MenuOpenChangeReason) => {
       if (next === open) return;
@@ -122,42 +129,36 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
     [onOpenChange, open, setValue],
   );
   const popover = usePopoverInternal(
-    { open, onOpenChange: setOpen, restoreFocusRef: triggerRef, haspopup: 'menu' },
+    { open, onOpenChange: setOpen, restoreFocusRef: triggerRef, initialFocusRef, haspopup: 'menu' },
     true,
   );
   const roving = useRovingFocus({ orientation: 'vertical', typeahead: true });
   return (
-    <MenuContext.Provider value={{ open, setOpen, triggerId, triggerRef, popover, roving }}>
+    <MenuContext.Provider value={{ open, setOpen, triggerId, triggerRef, openEnd, initialFocusRef, popover, roving }}>
       {children}
     </MenuContext.Provider>
   );
 }
 
-function Trigger({ id, tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTriggerProps) {
+function Trigger({ tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTriggerProps) {
   const ctx = useMenu('Trigger');
   const refs = useComposedRefs(ctx.triggerRef, ref);
-  // Opening always starts on an end of the list, never on the last item focused.
-  const openAt = (end: 'first' | 'last') => {
-    const values = ctx.roving.values();
-    const target = end === 'first' ? values[0] : values.at(-1);
-    if (target !== undefined) ctx.roving.setActiveValue(target);
-  };
   const wire = ctx.popover.getTriggerProps({
     ...props,
     ref: refs,
     onClick: composeHandlers(onClick, () => {
-      if (!ctx.open) openAt('first');
+      ctx.openEnd.current = 'first';
     }),
   });
   return (
     <Button.Root
       {...wire}
-      id={id ?? ctx.triggerId}
+      id={ctx.triggerId}
       tooltip={tooltip}
       onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLButtonElement>) => {
         if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
         event.preventDefault();
-        openAt(event.key === 'ArrowDown' ? 'first' : 'last');
+        ctx.openEnd.current = event.key === 'ArrowDown' ? 'first' : 'last';
         ctx.setOpen(true, 'trigger');
       })}
     />
@@ -170,18 +171,43 @@ function Content({
   style,
   ref,
   onKeyDown,
+  onPointerDown,
+  onClick,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledby,
   ...props
 }: MenuContentProps) {
   const ctx = useMenu('Content');
-  const { ref: wireRef, open, id, style: wireStyle, onPointerDown, onClick } = ctx.popover.getPopoverProps();
+  const { ref: wireRef, open, id, style: wireStyle, onPointerDown: wirePointerDown, onClick: wireClick } =
+    ctx.popover.getPopoverProps();
   const localRef = useRef<HTMLDivElement | null>(null);
   usePopoverSync(localRef, open);
-  const container = ctx.roving.getContainerProps({
+  const { openEnd, initialFocusRef, roving } = ctx;
+  // However the menu opens, it starts on an end of the list, never on the
+  // item focused last time. This runs before Root's initial focus.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const values = roving.values();
+    const target = openEnd.current === 'last' ? values.at(-1) : values[0];
+    initialFocusRef.current = target === undefined ? null : roving.getItemNode(target);
+    openEnd.current = 'first';
+  }, [initialFocusRef, open, openEnd, roving]);
+  const container = roving.getContainerProps({
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
       // Tab leaves the menu: close it and let the browser move focus on.
-      if (event.key === 'Tab') ctx.setOpen(false, 'tab');
+      if (event.key === 'Tab') {
+        ctx.setOpen(false, 'tab');
+        return;
+      }
+      // Focus can land on the menu itself, from a press on its padding.
+      if (event.target !== event.currentTarget) return;
+      if (event.key === 'ArrowDown' || event.key === 'Home') {
+        event.preventDefault();
+        roving.focusFirst();
+      } else if (event.key === 'ArrowUp' || event.key === 'End') {
+        event.preventDefault();
+        roving.focusLast();
+      }
     }),
   });
   const refs = useComposedRefs(localRef, wireRef, container.ref, ref);
@@ -197,8 +223,8 @@ function Content({
       aria-labelledby={ariaLabel ? undefined : (ariaLabelledby ?? ctx.triggerId)}
       className={cx(popoverStyles.content, styles.menu, className)}
       style={{ ...wireStyle, ...style }}
-      onPointerDown={onPointerDown}
-      onClick={onClick}
+      onPointerDown={composeHandlers(onPointerDown, wirePointerDown)}
+      onClick={composeHandlers(onClick, wireClick)}
       onKeyDown={container.onKeyDown}
     >
       {children}

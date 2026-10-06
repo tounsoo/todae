@@ -140,6 +140,23 @@ function Root({
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
 
+  // Stable while these inputs are, so parts and useField callbacks keep their identity.
+  const ctx = useMemo(
+    () => ({
+      inputId,
+      hintId,
+      disabled: Boolean(disabled),
+      invalid: Boolean(invalid),
+      name,
+      describedBy,
+      labelledBy,
+      ariaLabel,
+      inputRef,
+      store,
+    }),
+    [ariaLabel, describedBy, disabled, hintId, inputId, invalid, labelledBy, name, store],
+  );
+
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
     if (disabled || isInteractiveTarget(event.target)) return;
     event.preventDefault();
@@ -147,20 +164,7 @@ function Root({
   }
 
   return (
-    <FieldContext.Provider
-      value={{
-        inputId,
-        hintId,
-        disabled: Boolean(disabled),
-        invalid: Boolean(invalid),
-        name,
-        describedBy,
-        labelledBy,
-        ariaLabel,
-        inputRef,
-        store,
-      }}
-    >
+    <FieldContext.Provider value={ctx}>
       <div
         {...props}
         className={cx(styles.shell, className)}

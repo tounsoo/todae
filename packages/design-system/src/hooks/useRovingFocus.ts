@@ -61,8 +61,14 @@ export type UseRovingFocusResult = {
   activeValue: string | null;
   /** Moves the tab stop without moving focus. */
   setActiveValue: (value: string) => void;
-  /** Focuses an item by value, or the first or last enabled item. Returns the value it focused. */
-  focus: (target: string | 'first' | 'last') => string | null;
+  /** Focuses the enabled item with this value. Returns false when there is none. */
+  focus: (value: string) => boolean;
+  /** Focuses the first enabled item and returns its value. */
+  focusFirst: () => string | null;
+  /** Focuses the last enabled item and returns its value. */
+  focusLast: () => string | null;
+  /** The enabled item element with this value, or null. */
+  getItemNode: (value: string) => HTMLElement | null;
   /** Enabled item values in document order, read from the DOM. */
   values: () => string[];
   getContainerProps: <P extends RovingContainerUserProps>(props?: P) => Omit<P, keyof RovingContainerWire> & RovingContainerWire;
@@ -138,18 +144,32 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     latestSync.current = syncTabStop;
   });
   useLayoutEffect(syncTabStop);
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container || typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver(() => latestSync.current());
-    observer.observe(container, {
+
+  // Watch whichever element is the container now, including one that mounts
+  // after the owner or replaces an earlier one.
+  const observer = useRef<MutationObserver | null>(null);
+  const setContainer = useCallback((node: HTMLElement | null) => {
+    if (containerRef.current === node) return;
+    containerRef.current = node;
+    observer.current?.disconnect();
+    observer.current = null;
+    if (!node || typeof MutationObserver === 'undefined') return;
+    observer.current = new MutationObserver(() => latestSync.current());
+    observer.current.observe(node, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: ['data-todae-roving-disabled', 'data-todae-roving-value'],
     });
-    return () => observer.disconnect();
+    latestSync.current();
   }, []);
+  useLayoutEffect(
+    () => () => {
+      observer.current?.disconnect();
+      observer.current = null;
+    },
+    [],
+  );
 
   const commit = useCallback(
     (value: string) => {
@@ -161,17 +181,33 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     [active, onActiveValueChange, setActive],
   );
 
+  const getItemNode = useCallback(
+    (value: string): HTMLElement | null => items().find((node) => valueOf(node) === value) ?? null,
+    [items],
+  );
+
   const focus = useCallback(
-    (target: string): string | null => {
+    (value: string): boolean => {
+      const node = getItemNode(value);
+      node?.focus();
+      return node !== null;
+    },
+    [getItemNode],
+  );
+
+  const focusEdge = useCallback(
+    (edge: 'first' | 'last'): string | null => {
       const nodes = items();
-      const node =
-        target === 'first' ? nodes[0] : target === 'last' ? nodes.at(-1) : nodes.find((n) => valueOf(n) === target);
+      const node = edge === 'first' ? nodes[0] : nodes.at(-1);
       if (!node) return null;
       node.focus();
       return valueOf(node);
     },
     [items],
   );
+
+  const focusFirst = useCallback(() => focusEdge('first'), [focusEdge]);
+  const focusLast = useCallback(() => focusEdge('last'), [focusEdge]);
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
@@ -225,7 +261,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       return {
         ...user,
         ref: (node: HTMLElement | null) => {
-          containerRef.current = node;
+          setContainer(node);
           assignRef(user.ref, node);
         },
         onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
@@ -234,7 +270,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         },
       };
     },
-    [onKeyDown],
+    [onKeyDown, setContainer],
   );
 
   const getItemProps = useCallback(
@@ -265,6 +301,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     activeValue: tabStop,
     setActiveValue: commit,
     focus,
+    focusFirst,
+    focusLast,
+    getItemNode,
     values,
     getContainerProps,
     getItemProps,

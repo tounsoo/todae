@@ -198,13 +198,13 @@ describe('useRovingFocus', () => {
     expect(focused()).toBe('apple');
   });
 
-  it('focus() targets first, last or a value and returns it', () => {
+  it('focuses by value or by edge, and finds item nodes', () => {
     let roving: ReturnType<typeof useRovingFocus> | undefined;
     function Probe() {
       roving = useRovingFocus();
       return (
         <div {...roving.getContainerProps()}>
-          {['x', 'y', 'z'].map((v) => (
+          {['last', 'first', 'z'].map((v) => (
             <button key={v} type="button" {...roving!.getItemProps(v, { disabled: v === 'z' })}>
               {v}
             </button>
@@ -213,11 +213,42 @@ describe('useRovingFocus', () => {
       );
     }
     render(<Probe />);
-    expect(roving!.values()).toEqual(['x', 'y']);
-    expect(roving!.focus('last')).toBe('y');
-    expect(focused()).toBe('y');
-    expect(roving!.focus('first')).toBe('x');
-    expect(roving!.focus('z')).toBeNull();
+    expect(roving!.values()).toEqual(['last', 'first']);
+    expect(roving!.focusLast()).toBe('first');
+    expect(focused()).toBe('first');
+    expect(roving!.focusFirst()).toBe('last');
+    expect(roving!.focus('first')).toBe(true);
+    expect(focused()).toBe('first');
+    expect(roving!.focus('z')).toBe(false);
+    expect(roving!.getItemNode('last')?.textContent).toBe('last');
+    expect(roving!.getItemNode('z')).toBeNull();
+  });
+
+  it('watches a container that mounts after the owner', async () => {
+    let disable: (() => void) | undefined;
+    function Item({ roving, value }: { roving: ReturnType<typeof useRovingFocus>; value: string }) {
+      const [disabled, setDisabled] = useState(false);
+      if (value === 'a') disable = () => setDisabled(true);
+      return (
+        <button type="button" {...roving.getItemProps(value, { disabled })}>
+          {value}
+        </button>
+      );
+    }
+    function Owner({ show }: { show: boolean }) {
+      const roving = useRovingFocus();
+      return show ? (
+        <div {...roving.getContainerProps()}>
+          <Item roving={roving} value="a" />
+          <Item roving={roving} value="b" />
+        </div>
+      ) : null;
+    }
+    const { rerender } = render(<Owner show={false} />);
+    rerender(<Owner show />);
+    expect(tabStops()).toEqual(['a']);
+    await act(async () => disable?.());
+    expect(tabStops()).toEqual(['b']);
   });
 
   it('works controlled', () => {

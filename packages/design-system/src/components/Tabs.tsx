@@ -3,6 +3,7 @@ import {
   useContext,
   useId,
   type ComponentPropsWithRef,
+  type FocusEvent,
   type ReactNode,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState';
@@ -68,8 +69,10 @@ function useTabs(part: string): TabsContextValue {
   return ctx;
 }
 
+// One-to-one, so two values never share an id: every character outside
+// [A-Za-z0-9-], `_` included, becomes `_<hex>_`.
 function domSafe(value: string): string {
-  return value.replace(/[^A-Za-z0-9_-]/g, '_');
+  return value.replace(/[^A-Za-z0-9-]/gu, (char) => `_${char.codePointAt(0)!.toString(16)}_`);
 }
 
 const tabId = (baseId: string, value: string) => `${baseId}-tab-${domSafe(value)}`;
@@ -92,9 +95,12 @@ function Root({
     setValue(next);
     onValueChange?.(next);
   };
+  // Automatic: the tab stop is the selected tab. Manual: it follows focus,
+  // and Tabs.List puts it back on the selected tab when focus leaves.
   const roving = useRovingFocus({
     orientation,
-    activeValue: value,
+    activeValue: activation === 'automatic' ? value : undefined,
+    defaultActiveValue: value,
     onActiveValueChange: activation === 'automatic' ? select : undefined,
   });
   return (
@@ -106,9 +112,10 @@ function Root({
   );
 }
 
-function List({ children, className, ref, ...props }: TabsListProps) {
+function List({ children, className, ref, onBlur, ...props }: TabsListProps) {
   const ctx = useTabs('List');
   const container = ctx.roving.getContainerProps(props);
+  const { activation, roving, value } = ctx;
   const refs = useComposedRefs(container.ref, ref);
   return (
     <div
@@ -118,6 +125,12 @@ function List({ children, className, ref, ...props }: TabsListProps) {
       aria-orientation={ctx.orientation}
       data-orientation={ctx.orientation}
       className={cx(styles.list, className)}
+      onBlur={composeHandlers(onBlur, (event: FocusEvent<HTMLDivElement>) => {
+        const next = event.relatedTarget;
+        if (activation === 'manual' && !(next instanceof Node && event.currentTarget.contains(next))) {
+          roving.setActiveValue(value);
+        }
+      })}
     >
       {children}
     </div>

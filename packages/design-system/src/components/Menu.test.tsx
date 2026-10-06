@@ -185,6 +185,67 @@ describe('Menu', () => {
     expect(isOpen()).toBe(true);
   });
 
+  it('focuses the first item when open on mount', async () => {
+    render(<Actions defaultOpen />);
+    await raf();
+    expect(isOpen()).toBe(true);
+    expect(document.activeElement).toBe(item('Rename'));
+  });
+
+  it('a controlled reopen starts on the first item, not the last one focused', async () => {
+    function Controlled() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Shortcut
+          </button>
+          <Actions open={open} onOpenChange={setOpen} />
+        </>
+      );
+    }
+    render(<Controlled />);
+    fireEvent.click(screen.getByRole('button', { name: 'Shortcut' }));
+    await raf();
+    key('End');
+    expect(document.activeElement).toBe(item('Date'));
+    key('Escape');
+    await raf();
+    expect(isOpen()).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Shortcut' }));
+    await raf();
+    expect(document.activeElement).toBe(item('Rename'));
+  });
+
+  it('arrow keys work when focus is on the menu itself', async () => {
+    render(<Actions />);
+    fireEvent.click(trigger());
+    await raf();
+    act(() => menu().focus());
+    key('ArrowDown');
+    expect(document.activeElement).toBe(item('Rename'));
+    act(() => menu().focus());
+    key('End');
+    expect(document.activeElement).toBe(item('Date'));
+  });
+
+  it('runs consumer pointer and click handlers on the content', async () => {
+    const onClick = vi.fn();
+    const onPointerDown = vi.fn();
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Content onClick={onClick} onPointerDown={onPointerDown}>
+          <Menu.Item>New</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    fireEvent.pointerDown(menu());
+    fireEvent.click(menu());
+    expect(onPointerDown).toHaveBeenCalledTimes(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
   it('takes its own name', () => {
     render(
       <Menu.Root>

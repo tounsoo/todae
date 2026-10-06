@@ -45,6 +45,23 @@ describe('Tabs', () => {
     expect(panel.tabIndex).toBe(0);
   });
 
+  it('never gives two values the same id', () => {
+    render(
+      <Tabs.Root defaultValue="a b">
+        <Tabs.List aria-label="Ids">
+          {['a b', 'a_b', 'a.b'].map((v) => (
+            <Tabs.Tab key={v} value={v}>
+              {v}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
+      </Tabs.Root>,
+    );
+    const ids = screen.getAllByRole('tab').map((el) => el.id);
+    expect(new Set(ids).size).toBe(3);
+    for (const id of ids) expect(id).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+
   it('gives values with spaces safe, distinct ids', () => {
     render(<Example />);
     const team = tab('Team members');
@@ -93,6 +110,17 @@ describe('Tabs', () => {
     expect(tab('Account').getAttribute('aria-selected')).toBe('true');
     fireEvent.click(tab('Billing'));
     expect(onValueChange).toHaveBeenCalledWith('b');
+  });
+
+  it('manual activation keeps one tab stop on the focused tab, and returns it to the selected tab on leaving', () => {
+    render(<Example activation="manual" />);
+    act(() => tab('Account').focus());
+    key('ArrowRight');
+    key('ArrowRight');
+    const stops = () => screen.getAllByRole('tab').filter((el) => el.tabIndex === 0);
+    expect(stops()).toEqual([tab('Team members')]);
+    act(() => screen.getByRole('tabpanel').focus());
+    expect(stops()).toEqual([tab('Account')]);
   });
 
   it('skips disabled tabs', () => {
