@@ -352,6 +352,42 @@ describe('Menu', () => {
     observe.mockRestore();
   });
 
+  it("keeps the trigger's ref attached across renders", async () => {
+    const attach = vi.fn();
+    function WithRef({ tick }: { tick: number }) {
+      return (
+        <Menu.Root>
+          <Menu.Trigger ref={attach} data-tick={tick}>
+            Actions
+          </Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>One</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      );
+    }
+    const { rerender } = render(<WithRef tick={1} />);
+    rerender(<WithRef tick={2} />);
+    fireEvent.click(trigger());
+    await raf();
+    expect(attach).toHaveBeenCalledTimes(1);
+  });
+
+  it('a trigger click the consumer prevents does not open', () => {
+    const onOpenChange = vi.fn();
+    render(
+      <Menu.Root onOpenChange={onOpenChange}>
+        <Menu.Trigger onClick={(event) => event.preventDefault()}>Actions</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>One</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    fireEvent.click(trigger());
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(trigger().getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('Shift+Tab closes the menu and stops on the trigger', async () => {
     render(<Actions />);
     fireEvent.click(trigger());

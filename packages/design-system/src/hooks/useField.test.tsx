@@ -121,6 +121,28 @@ describe('useField', () => {
     expect(document.activeElement).toBe(screen.getByRole('slider'));
   });
 
+  it('a shell press never falls back to an input inside an Affix', () => {
+    function Custom() {
+      const field = useField();
+      return <span {...field.getControlProps({}, { native: false })} role="slider" aria-label="custom" tabIndex={0} />;
+    }
+    function Shell({ custom }: { custom: boolean }) {
+      return (
+        <Field.Root aria-label="Shell" data-testid="shell">
+          <Field.Affix>
+            <input aria-label="unit" />
+          </Field.Affix>
+          <Field.TextInput value="" onChange={() => {}} aria-label="main" />
+          {custom ? <Custom /> : null}
+        </Field.Root>
+      );
+    }
+    const { rerender } = render(<Shell custom />);
+    rerender(<Shell custom={false} />);
+    fireEvent.mouseDown(screen.getByTestId('shell'));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'main' }));
+  });
+
   it("does not reattach a control's ref on every render", () => {
     const attach = vi.fn();
     const { rerender } = render(

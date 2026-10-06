@@ -159,7 +159,18 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     observer.current?.observer.disconnect();
     observer.current = null;
     if (!node || typeof MutationObserver === 'undefined') return;
-    const watcher = new MutationObserver(() => latestSync.current());
+    // Only changes that add, remove or change an item can move the tab stop.
+    const touchesItem = (node: Node) =>
+      node instanceof Element && (node.hasAttribute('data-todae-roving') || node.querySelector('[data-todae-roving]') !== null);
+    const watcher = new MutationObserver((records) => {
+      const relevant = records.some(
+        (record) =>
+          record.type === 'attributes' ||
+          [...record.addedNodes].some(touchesItem) ||
+          [...record.removedNodes].some(touchesItem),
+      );
+      if (relevant) latestSync.current();
+    });
     watcher.observe(node, {
       childList: true,
       subtree: true,
@@ -232,6 +243,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       // on a press between items. Its index is -1: the next item is the first.
       const onContainer = target === containerRef.current;
       if (!onContainer && target.getAttribute('data-todae-roving') !== scope) return;
+      // Only these keys move focus; leave the rest without reading the DOM.
+      const isMove = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key);
+      if (!isMove && !(typeahead && event.key.length === 1)) return;
       const nodes = items();
       if (nodes.length === 0) return;
       // Where focus sits among the enabled items. A focused item that turned
@@ -319,7 +333,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         tabIndex: value === tabStop && !itemOptions.disabled ? 0 : -1,
         onFocus: (event: FocusEvent<HTMLElement>) => {
           user.onFocus?.(event);
-          if (event.target !== event.currentTarget || itemOptions.disabled) return;
+          if (event.defaultPrevented || event.target !== event.currentTarget || itemOptions.disabled) return;
           commit(value);
         },
         'data-todae-roving': scope,

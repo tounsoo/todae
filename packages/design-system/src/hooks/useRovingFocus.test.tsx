@@ -416,6 +416,27 @@ describe('useRovingFocus', () => {
     expect(attach).toHaveBeenCalledTimes(1);
   });
 
+  it('an item focus the consumer prevents does not move the tab stop', () => {
+    const onActiveValueChange = vi.fn();
+    function Prevented() {
+      const roving = useRovingFocus({ onActiveValueChange });
+      return (
+        <div {...roving.getContainerProps()}>
+          <button type="button" {...roving.getItemProps('a')}>
+            a
+          </button>
+          <button type="button" {...roving.getItemProps('b', {}, { onFocus: (event) => event.preventDefault() })}>
+            b
+          </button>
+        </div>
+      );
+    }
+    render(<Prevented />);
+    act(() => screen.getByRole('button', { name: 'b' }).focus());
+    expect(onActiveValueChange).not.toHaveBeenCalled();
+    expect(tabStops()).toEqual(['a']);
+  });
+
   it('works controlled', () => {
     function Controlled() {
       const [active, setActive] = useState<string | null>('banana');

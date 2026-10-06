@@ -15,6 +15,7 @@ import type { PopoverWire } from '../components/Popover.wire';
 import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
+import { useStableComposedRef } from '../components/props';
 import { useControlledState } from './useControlledState';
 
 export type { PopoverWire };
@@ -57,11 +58,6 @@ export type UsePopoverResult = {
   getTriggerProps: <P extends PopoverTriggerUserProps>(props?: P) => P & PopoverTriggerWire;
   getPopoverProps: () => PopoverWire;
 };
-
-function assignRef<T>(ref: Ref<T> | undefined, value: T) {
-  if (typeof ref === 'function') ref(value);
-  else if (ref) ref.current = value;
-}
 
 function eventInside(el: HTMLElement | null, event: Event): boolean {
   if (!el) return false;
@@ -177,22 +173,29 @@ export function usePopoverInternal(
     return () => document.removeEventListener('pointerdown', onPointerDown, true);
   }, [anchorRef, enabled, open, requestClose, restoreFocusRef, restoreOnOutside]);
 
+  const setTrigger = useCallback(
+    (node: HTMLElement | null) => {
+      triggerRef.current = node;
+    },
+    [triggerRef],
+  );
+  const triggerComposed = useStableComposedRef(setTrigger);
+
   const getTriggerProps = useCallback(
     <P extends PopoverTriggerUserProps>(props?: P): P & PopoverTriggerWire => {
       const user = (props ?? {}) as P;
       return {
         ...user,
-        ref: (node: HTMLElement | null) => {
-          triggerRef.current = node;
-          assignRef(user.ref, node);
-        },
+        // Stable while the caller's ref is, so the caller's ref is not
+        // detached and reattached, and its cleanup kept, across renders.
+        ref: triggerComposed(user.ref),
         style: { ...user.style, ...triggerStyle(anchorName) },
         'aria-expanded': open,
         'aria-controls': contentId,
         'aria-haspopup': haspopup,
         onClick: (event: MouseEvent<HTMLElement>) => {
           user.onClick?.(event);
-          if (!enabled) return;
+          if (!enabled || event.defaultPrevented) return;
           if (open) requestClose('trigger');
           else {
             setValue(true);
@@ -201,7 +204,7 @@ export function usePopoverInternal(
         },
       };
     },
-    [anchorName, contentId, enabled, haspopup, onOpenChange, open, requestClose, setValue],
+    [anchorName, contentId, enabled, haspopup, onOpenChange, open, requestClose, setValue, triggerComposed],
   );
 
   // Stable, so a part that composes it with its own refs is not detached and

@@ -161,11 +161,13 @@ function Root({
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
     if (disabled || isInteractiveTarget(event.target)) return;
     event.preventDefault();
-    // The ref is the last control to mount. If that one has gone, any control
-    // still in the shell takes the press.
+    // The ref is the last control to mount. If that one has gone, a control
+    // still in the shell takes the press, never one inside an Icon or Affix.
     const control = inputRef.current?.isConnected
       ? inputRef.current
-      : event.currentTarget.querySelector<HTMLElement>('input, textarea, select, [data-todae-field-control]');
+      : [...event.currentTarget.querySelectorAll<HTMLElement>('input, textarea, select, [data-todae-field-control]')].find(
+          (node) => !node.parentElement?.closest(`.${styles.adornment}`),
+        );
     control?.focus();
   }
 

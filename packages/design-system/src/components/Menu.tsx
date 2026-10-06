@@ -378,13 +378,17 @@ function Group({ children, className, ...props }: MenuGroupProps) {
 
 function RadioGroup({ value: valueProp, defaultValue, onValueChange, ...props }: MenuRadioGroupProps) {
   const [value, setValue] = useControlledState(valueProp, defaultValue ?? null);
-  const select = (next: string) => {
-    if (next === value) return;
-    setValue(next);
-    onValueChange?.(next);
-  };
+  const select = useCallback(
+    (next: string) => {
+      if (next === value) return;
+      setValue(next);
+      onValueChange?.(next);
+    },
+    [onValueChange, setValue, value],
+  );
+  const radio = useMemo(() => ({ value, select }), [select, value]);
   return (
-    <RadioContext.Provider value={{ value, select }}>
+    <RadioContext.Provider value={radio}>
       <Group {...props} />
     </RadioContext.Provider>
   );
