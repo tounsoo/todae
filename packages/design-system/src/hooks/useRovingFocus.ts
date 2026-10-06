@@ -8,6 +8,7 @@ import {
   type KeyboardEvent,
   type Ref,
 } from 'react';
+import { composeRefs } from '../components/props';
 import { useControlledState } from './useControlledState';
 
 export type RovingOrientation = 'horizontal' | 'vertical' | 'both';
@@ -81,18 +82,15 @@ export type UseRovingFocusResult = {
 
 const TYPEAHEAD_RESET_MS = 500;
 
-function assignRef<T>(ref: Ref<T> | undefined, value: T) {
-  if (typeof ref === 'function') ref(value);
-  else if (ref) ref.current = value;
-}
-
-function nextKey(key: string, orientation: RovingOrientation, rtl: boolean): 'next' | 'prev' | null {
+// `rtl` is a function so direction, which costs a style read, is only
+// checked for Left and Right.
+function nextKey(key: string, orientation: RovingOrientation, rtl: () => boolean): 'next' | 'prev' | null {
   const vertical = orientation !== 'horizontal';
   const horizontal = orientation !== 'vertical';
   if (vertical && key === 'ArrowDown') return 'next';
   if (vertical && key === 'ArrowUp') return 'prev';
-  if (horizontal && key === 'ArrowRight') return rtl ? 'prev' : 'next';
-  if (horizontal && key === 'ArrowLeft') return rtl ? 'next' : 'prev';
+  if (horizontal && key === 'ArrowRight') return rtl() ? 'prev' : 'next';
+  if (horizontal && key === 'ArrowLeft') return rtl() ? 'next' : 'prev';
   return null;
 }
 
@@ -218,8 +216,10 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       const nodes = items();
       if (nodes.length === 0) return;
       const index = nodes.indexOf(target);
-      const container = containerRef.current;
-      const rtl = container ? getComputedStyle(container).direction === 'rtl' : false;
+      const rtl = () => {
+        const container = containerRef.current;
+        return container ? getComputedStyle(container).direction === 'rtl' : false;
+      };
       let next: HTMLElement | undefined;
       const step = nextKey(event.key, orientation, rtl);
       if (step === 'next') {
@@ -260,10 +260,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       const user = (props ?? {}) as P;
       return {
         ...user,
-        ref: (node: HTMLElement | null) => {
-          setContainer(node);
-          assignRef(user.ref, node);
-        },
+        // Stable unless the caller brings its own ref, so React does not
+        // detach and re-observe the container on every render.
+        ref: user.ref ? composeRefs(setContainer, user.ref) : setContainer,
         onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
           user.onKeyDown?.(event);
           if (!event.defaultPrevented) onKeyDown(event);

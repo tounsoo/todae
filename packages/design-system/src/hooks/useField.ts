@@ -1,6 +1,8 @@
 import { useCallback, type Ref } from 'react';
 import { inputLabel, mergeDescribedBy, useFieldContext } from '../components/Field.context';
+import { composeRefs } from '../components/props';
 
+/** `id` and `name` are not taken here: they come from `Field.Root`, which a `Label htmlFor` and the form use. */
 export type FieldControlUserProps = {
   ref?: Ref<HTMLElement | null>;
   'aria-describedby'?: string;
@@ -36,26 +38,25 @@ export type UseFieldResult = {
   getControlProps: <P extends FieldControlUserProps>(props?: P) => Omit<P, keyof FieldControlWire> & FieldControlWire;
 };
 
-function assignRef<T>(ref: Ref<T> | undefined, value: T) {
-  if (typeof ref === 'function') ref(value);
-  else if (ref) ref.current = value;
-}
-
 /**
  * Joins a custom control to the nearest `Field.Root`, the way `Field.TextInput`
  * joins it. Throws outside `Field.Root`.
  */
 export function useField(): UseFieldResult {
   const ctx = useFieldContext();
+  const { inputRef } = ctx;
+  const setControl = useCallback(
+    (node: HTMLElement | null) => {
+      inputRef.current = node;
+    },
+    [inputRef],
+  );
   const getControlProps = useCallback(
     <P extends FieldControlUserProps>(props?: P): Omit<P, keyof FieldControlWire> & FieldControlWire => {
       const user = (props ?? {}) as P;
       return {
         ...user,
-        ref: (node: HTMLElement | null) => {
-          ctx.inputRef.current = node;
-          assignRef(user.ref, node);
-        },
+        ref: user.ref ? composeRefs(setControl, user.ref) : setControl,
         id: ctx.inputId,
         name: ctx.name,
         disabled: ctx.disabled,
@@ -65,7 +66,7 @@ export function useField(): UseFieldResult {
         'data-todae-field-control': '',
       } as Omit<P, keyof FieldControlWire> & FieldControlWire;
     },
-    [ctx],
+    [ctx, setControl],
   );
   return {
     id: ctx.inputId,

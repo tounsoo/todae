@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useId,
+  useState,
   type ComponentPropsWithRef,
   type FocusEvent,
   type ReactNode,
@@ -59,6 +60,8 @@ type TabsContextValue = {
   orientation: TabsOrientation;
   activation: TabsActivation;
   roving: UseRovingFocusResult;
+  /** Focus left the list. */
+  leave: () => void;
 };
 
 const TabsContext = createContext<TabsContextValue | null>(null);
@@ -95,16 +98,19 @@ function Root({
     setValue(next);
     onValueChange?.(next);
   };
-  // Automatic: the tab stop is the selected tab. Manual: it follows focus,
-  // and Tabs.List puts it back on the selected tab when focus leaves.
+  // The tab stop is the selected tab, except while focus moves inside the
+  // list: then it is the focused tab. Leaving the list returns it to the
+  // selected tab, so focus always enters on the selected tab.
+  const [navigating, setNavigating] = useState<string | null>(null);
   const roving = useRovingFocus({
     orientation,
-    activeValue: activation === 'automatic' ? value : undefined,
-    defaultActiveValue: value,
-    onActiveValueChange: activation === 'automatic' ? select : undefined,
+    activeValue: navigating ?? value,
+    onActiveValueChange: setNavigating,
   });
   return (
-    <TabsContext.Provider value={{ baseId, value, select, orientation, activation, roving }}>
+    <TabsContext.Provider
+      value={{ baseId, value, select, orientation, activation, roving, leave: () => setNavigating(null) }}
+    >
       <div {...props} className={cx(styles.root, className)} data-orientation={orientation}>
         {children}
       </div>
@@ -115,7 +121,7 @@ function Root({
 function List({ children, className, ref, onBlur, ...props }: TabsListProps) {
   const ctx = useTabs('List');
   const container = ctx.roving.getContainerProps(props);
-  const { activation, roving, value } = ctx;
+  const { leave } = ctx;
   const refs = useComposedRefs(container.ref, ref);
   return (
     <div
@@ -127,9 +133,7 @@ function List({ children, className, ref, onBlur, ...props }: TabsListProps) {
       className={cx(styles.list, className)}
       onBlur={composeHandlers(onBlur, (event: FocusEvent<HTMLDivElement>) => {
         const next = event.relatedTarget;
-        if (activation === 'manual' && !(next instanceof Node && event.currentTarget.contains(next))) {
-          roving.setActiveValue(value);
-        }
+        if (!(next instanceof Node && event.currentTarget.contains(next))) leave();
       })}
     >
       {children}
@@ -137,10 +141,19 @@ function List({ children, className, ref, onBlur, ...props }: TabsListProps) {
   );
 }
 
-function Tab({ value, children, disabled, className, onClick, ...props }: TabsTabProps) {
+function Tab({ value, children, disabled, className, onClick, onFocus, ...props }: TabsTabProps) {
   const ctx = useTabs('Tab');
   const selected = ctx.value === value;
-  const item = ctx.roving.getItemProps(value, { disabled }, props);
+  const item = ctx.roving.getItemProps(value, { disabled }, {
+    ...props,
+    // Automatic activation selects a tab that focus moved to from another
+    // tab, never one focus entered on from outside the list.
+    onFocus: composeHandlers(onFocus, (event: FocusEvent<HTMLButtonElement>) => {
+      const from = event.relatedTarget;
+      const list = event.currentTarget.closest('[role="tablist"]');
+      if (ctx.activation === 'automatic' && from instanceof Node && list?.contains(from)) ctx.select(value);
+    }),
+  });
   return (
     <button
       {...item}

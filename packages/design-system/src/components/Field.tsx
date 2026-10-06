@@ -449,7 +449,7 @@ function ChipInput({
 /**
  * A native `<select>`. Browsers with `appearance: base-select` draw the picker
  * from tokens; others keep their native picker. Children are `<option>` and
- * `<optgroup>` elements.
+ * `<optgroup>` elements. `id` and `name` go on `Field.Root`.
  */
 export type FieldSelectProps = {
   value: string;
@@ -459,7 +459,7 @@ export type FieldSelectProps = {
   ref?: Ref<HTMLSelectElement>;
 } & Omit<
   SelectHTMLAttributes<HTMLSelectElement>,
-  'value' | 'defaultValue' | 'disabled' | 'onChange' | 'multiple' | 'size' | 'children'
+  'value' | 'defaultValue' | 'disabled' | 'onChange' | 'multiple' | 'size' | 'children' | 'id' | 'name'
 >;
 
 function Select({ value, onChange, onValueChange, className, children, ...props }: FieldSelectProps) {

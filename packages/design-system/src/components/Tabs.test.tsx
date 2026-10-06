@@ -123,6 +123,40 @@ describe('Tabs', () => {
     expect(stops()).toEqual([tab('Account')]);
   });
 
+  it('moves the tab stop to a tab selected while focus is outside the list', () => {
+    function Outside() {
+      const [value, setValue] = useState('a');
+      return (
+        <>
+          <button type="button" onClick={() => setValue('b')}>
+            Next
+          </button>
+          <Example activation="manual" value={value} onValueChange={setValue} />
+        </>
+      );
+    }
+    render(<Outside />);
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    const stops = screen.getAllByRole('tab').filter((el) => el.tabIndex === 0);
+    expect(stops).toEqual([tab('Billing')]);
+  });
+
+  it('does not select when focus enters the list from outside', () => {
+    const onValueChange = vi.fn();
+    render(
+      <>
+        <button type="button">Before</button>
+        <Example value="b" disabledB onValueChange={onValueChange} />
+      </>,
+    );
+    act(() => screen.getByRole('button', { name: 'Before' }).focus());
+    expect(tab('Account').tabIndex).toBe(0);
+    act(() => tab('Account').focus());
+    expect(onValueChange).not.toHaveBeenCalled();
+    key('ArrowRight');
+    expect(onValueChange).toHaveBeenLastCalledWith('c d');
+  });
+
   it('skips disabled tabs', () => {
     render(<Example disabledB />);
     expect((tab('Billing') as HTMLButtonElement).disabled).toBe(true);

@@ -183,15 +183,16 @@ function Content({
   const localRef = useRef<HTMLDivElement | null>(null);
   usePopoverSync(localRef, open);
   const { openEnd, initialFocusRef, roving } = ctx;
+  const { values, getItemNode } = roving;
   // However the menu opens, it starts on an end of the list, never on the
   // item focused last time. This runs before Root's initial focus.
   useLayoutEffect(() => {
     if (!open) return;
-    const values = roving.values();
-    const target = openEnd.current === 'last' ? values.at(-1) : values[0];
-    initialFocusRef.current = target === undefined ? null : roving.getItemNode(target);
+    const enabled = values();
+    const target = openEnd.current === 'last' ? enabled.at(-1) : enabled[0];
+    initialFocusRef.current = target === undefined ? null : getItemNode(target);
     openEnd.current = 'first';
-  }, [initialFocusRef, open, openEnd, roving]);
+  }, [getItemNode, initialFocusRef, open, openEnd, values]);
   const container = roving.getContainerProps({
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
       // Tab leaves the menu: close it and let the browser move focus on.
@@ -243,6 +244,7 @@ function useItem(
     className,
     onClick,
     onKeyDown,
+    onKeyUp,
     onPointerMove,
     ...props
   }: Omit<ItemBase, 'children'>,
@@ -261,8 +263,16 @@ function useItem(
     onClick: composeHandlers(onClick, () => {
       if (!disabled) activate();
     }),
+    // Enter chooses on keydown. Space chooses on keyup, like a native button:
+    // choosing on keydown would close the menu and hand the keyup to the
+    // trigger, which some browsers click, reopening the menu.
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      if (event.key === 'Enter' && !disabled) activate();
+    }),
+    onKeyUp: composeHandlers(onKeyUp, (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== ' ') return;
       event.preventDefault();
       if (!disabled) activate();
     }),

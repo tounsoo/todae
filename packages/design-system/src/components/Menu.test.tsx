@@ -122,6 +122,19 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(trigger());
   });
 
+  it('chooses an item with Space on keyup, not keydown', async () => {
+    const onRename = vi.fn();
+    render(<Actions onRename={onRename} />);
+    fireEvent.click(trigger());
+    await raf();
+    key(' ');
+    expect(onRename).not.toHaveBeenCalled();
+    expect(isOpen()).toBe(true);
+    fireEvent.keyUp(document.activeElement!, { key: ' ' });
+    expect(onRename).toHaveBeenCalledTimes(1);
+    expect(isOpen()).toBe(false);
+  });
+
   it('chooses an item with a click and ignores disabled items', async () => {
     const onDelete = vi.fn();
     render(<Actions onDelete={onDelete} />);
@@ -142,6 +155,8 @@ describe('Menu', () => {
     expect(item('Show grid').getAttribute('aria-checked')).toBe('true');
     act(() => item('Date').focus());
     key(' ');
+    expect(item('Date').getAttribute('aria-checked')).toBe('false');
+    fireEvent.keyUp(document.activeElement!, { key: ' ' });
     expect(item('Date').getAttribute('aria-checked')).toBe('true');
     expect(item('Name').getAttribute('aria-checked')).toBe('false');
     expect(isOpen()).toBe(true);

@@ -251,6 +251,19 @@ describe('useRovingFocus', () => {
     expect(tabStops()).toEqual(['b']);
   });
 
+  it('returns a stable container ref when the caller has none', () => {
+    const refs = new Set<unknown>();
+    function Probe({ tick }: { tick: number }) {
+      const roving = useRovingFocus();
+      const props = roving.getContainerProps();
+      refs.add(props.ref);
+      return <div data-tick={tick} {...props} />;
+    }
+    const { rerender } = render(<Probe tick={1} />);
+    rerender(<Probe tick={2} />);
+    expect(refs.size).toBe(1);
+  });
+
   it('works controlled', () => {
     function Controlled() {
       const [active, setActive] = useState<string | null>('banana');
