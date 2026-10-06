@@ -1,15 +1,14 @@
 @layer todae.components {
   .menu {
-    display: flex;
     flex-direction: column;
     gap: var(--todae-menu-gap);
     min-width: 10rem;
     outline: none;
   }
 
-  /* `display: flex` above beats the UA rule that hides a closed popover. */
-  .menu:not(:popover-open) {
-    display: none;
+  /* Flex only while open, so a closed menu keeps the UA's hidden popover. */
+  .menu:popover-open {
+    display: flex;
   }
 
   .item {

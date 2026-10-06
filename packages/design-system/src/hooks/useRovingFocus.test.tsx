@@ -26,6 +26,8 @@ function Group({ items = FRUIT, ...options }: UseRovingFocusOptions & { items?: 
 const tabStops = () => screen.getAllByRole('button').filter((b) => b.tabIndex === 0).map((b) => b.textContent);
 const key = (k: string) => fireEvent.keyDown(document.activeElement ?? document.body, { key: k });
 const focused = () => document.activeElement?.textContent;
+// DOM changes are read once per animation frame.
+const frame = () => act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
 
 describe('useRovingFocus', () => {
   it('is exported from the package', () => {
@@ -60,6 +62,7 @@ describe('useRovingFocus', () => {
     render(<Owner />);
     expect(tabStops()).toEqual(['a']);
     await act(async () => disable?.());
+    await frame();
     expect(tabStops()).toEqual(['b']);
   });
 
@@ -75,6 +78,7 @@ describe('useRovingFocus', () => {
     await act(async () =>
       rerender(<Group activeValue="banana" items={[{ value: 'apple' }, { value: 'banana', disabled: true }]} />),
     );
+    await frame();
     expect(tabStops()).toEqual(['apple']);
     rerender(<Group activeValue="gone" />);
     expect(tabStops()).toEqual(['apple']);
@@ -365,6 +369,7 @@ describe('useRovingFocus', () => {
       render(<Group activeValue="banana" />);
       expect(tabStops()).toEqual(['banana']);
       await act(async () => screen.getByRole('button', { name: 'banana' }).classList.add('gone'));
+      await frame();
       expect(tabStops()).toEqual(['apple']);
     } finally {
       HTMLElement.prototype.checkVisibility = original;
@@ -444,6 +449,37 @@ describe('useRovingFocus', () => {
     expect(tabStops()).toEqual([]);
   });
 
+  it('re-reads items when a wrapper around them is hidden by a class', async () => {
+    const original = HTMLElement.prototype.checkVisibility;
+    HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {
+      return !this.closest('.collapsed');
+    };
+    try {
+      function Wrapped() {
+        const roving = useRovingFocus({ activeValue: 'b' });
+        return (
+          <div {...roving.getContainerProps()}>
+            <button type="button" {...roving.getItemProps('a')}>
+              a
+            </button>
+            <div data-testid="wrap">
+              <button type="button" {...roving.getItemProps('b')}>
+                b
+              </button>
+            </div>
+          </div>
+        );
+      }
+      render(<Wrapped />);
+      expect(tabStops()).toEqual(['b']);
+      await act(async () => screen.getByTestId('wrap').classList.add('collapsed'));
+      await frame();
+      expect(tabStops()).toEqual(['a']);
+    } finally {
+      HTMLElement.prototype.checkVisibility = original;
+    }
+  });
+
   it('a new active value takes the tab stop in one render', () => {
     let commits = 0;
     const { rerender } = render(
@@ -518,6 +554,7 @@ describe('useRovingFocus', () => {
     rerender(<Owner show />);
     expect(tabStops()).toEqual(['a']);
     await act(async () => disable?.());
+    await frame();
     expect(tabStops()).toEqual(['b']);
   });
 
@@ -557,6 +594,7 @@ describe('useRovingFocus', () => {
     const b = screen.getByRole('button', { name: 'b' });
     act(() => b.focus());
     await act(async () => rerender(<Owner off />));
+    await frame();
     act(() => b.focus());
     fireEvent.keyDown(b, { key: 'ArrowDown' });
     expect(focused()).toBe('c');

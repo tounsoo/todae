@@ -204,22 +204,28 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     observer.current = null;
     // Without a tab stop there is nothing to keep in sync.
     if (!node || !keepRef.current || typeof MutationObserver === 'undefined') return;
-    // Only changes that add, remove or change an item can move the tab stop.
+    // Changes come in bursts, say a style written every animation frame, so
+    // one read per frame covers them all.
+    let frame = 0;
+    const scheduleSync = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        latestSync.current();
+      });
+    };
+    // Only changes that add, remove, hide or change an item, or a wrapper
+    // around items, can move the tab stop.
     const touchesItem = (node: Node) =>
       node instanceof Element && (node.hasAttribute('data-todae-roving') || node.querySelector('[data-todae-roving]') !== null);
     const watcher = new MutationObserver((records) => {
       const relevant = records.some(
         (record) =>
-          (record.type === 'attributes' &&
-            // A class or style write matters on an item; hidden or inert also
-            // on a wrapper around items. Style churn elsewhere is ignored.
-            (record.attributeName === 'class' || record.attributeName === 'style'
-              ? record.target instanceof Element && record.target.hasAttribute('data-todae-roving')
-              : touchesItem(record.target))) ||
+          (record.type === 'attributes' && touchesItem(record.target)) ||
           [...record.addedNodes].some(touchesItem) ||
           [...record.removedNodes].some(touchesItem),
       );
-      if (relevant) latestSync.current();
+      if (relevant) scheduleSync();
     });
     watcher.observe(node, {
       childList: true,
@@ -248,6 +254,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       disconnect: () => {
         watcher.disconnect();
         resize?.disconnect();
+        cancelAnimationFrame(frame);
       },
     };
     latestSync.current();

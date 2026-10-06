@@ -15,6 +15,7 @@ import {
 import { useControlledValue } from '../hooks/useControlledState';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { composeHandlers, cx, useComposedRefs } from './props';
+import { domSafe } from './domId';
 import styles from './Tabs.module.css';
 
 export type TabsOrientation = 'horizontal' | 'vertical';
@@ -85,11 +86,6 @@ function useTabs(part: string): TabsContextValue {
   return ctx;
 }
 
-// One-to-one, so two values never share an id: every character outside
-// [A-Za-z0-9-], `_` included, becomes `_<hex>_`.
-function domSafe(value: string): string {
-  return value.replace(/[^A-Za-z0-9-]/gu, (char) => `_${char.codePointAt(0)!.toString(16)}_`);
-}
 
 const tabId = (baseId: string, value: string) => `${baseId}-tab-${domSafe(value)}`;
 const panelId = (baseId: string, value: string) => `${baseId}-panel-${domSafe(value)}`;
