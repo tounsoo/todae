@@ -38,7 +38,7 @@ function PopoverCase({ p }: { p: Native }) {
   const popover = usePopover({ open: true });
   const { ref: wireRef, ...wire } = popover.getPopoverProps();
   return (
-    <Popover.Root {...wire} ref={composeRefs(wireRef, p.ref)} data-testid={p['data-testid']} aria-label="Menu">
+    <Popover.Root {...wire} ref={composeRefs(wireRef, p.ref)} data-testid={p['data-testid']} role="dialog" aria-label="Menu">
       Menu
     </Popover.Root>
   );
@@ -268,7 +268,7 @@ describe('composed handlers', () => {
     function Harness() {
       const popover = usePopover({ open: true });
       return (
-        <Popover.Root {...popover.getPopoverProps()} tabIndex={0} aria-label="Menu">
+        <Popover.Root {...popover.getPopoverProps()} tabIndex={0} role="dialog" aria-label="Menu">
           Menu
         </Popover.Root>
       );

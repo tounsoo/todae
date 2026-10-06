@@ -9,11 +9,16 @@ type PopoverBase = {
   style?: CSSProperties;
 };
 
+/**
+ * A name needs a role: ARIA prohibits `aria-label` on a plain element, so a
+ * role-less popover takes no name. Name what is inside it instead, such as
+ * the listbox of a combobox, or make it `role="dialog"`.
+ */
 export type PopoverChrome =
   | (PopoverBase & {
       role?: undefined;
-      'aria-label'?: string;
-      'aria-labelledby'?: string;
+      'aria-label'?: never;
+      'aria-labelledby'?: never;
     })
   | (PopoverBase & {
       role: 'dialog';
@@ -68,8 +73,8 @@ function PopoverRoot({
       style={style}
       onPointerDown={onPointerDown}
       onClick={onClick}
-      aria-label={ariaLabel}
-      aria-labelledby={ariaLabelledby}
+      aria-label={role ? ariaLabel : undefined}
+      aria-labelledby={role ? ariaLabelledby : undefined}
     >
       {children}
     </div>

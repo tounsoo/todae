@@ -27,7 +27,7 @@ function Harness({
       <button type="button" {...popover.getTriggerProps()}>
         {label}
       </button>
-      <Popover.Root {...popover.getPopoverProps()} aria-label="Menu">
+      <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Menu">
         {children}
       </Popover.Root>
     </>
@@ -106,7 +106,7 @@ describe('Popover', () => {
           <div ref={anchorRef} data-testid="anchor">
             Field
           </div>
-          <Popover.Root {...popover.getPopoverProps()} aria-label="Menu">
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Menu">
             Hello
           </Popover.Root>
         </>
@@ -147,7 +147,7 @@ describe('Popover', () => {
           <button type="button" {...popover.getTriggerProps()}>
             Open
           </button>
-          <Popover.Root {...popover.getPopoverProps()} aria-label="Menu">
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Menu">
             <OptionList.Root
               value={null}
               onChange={(value) => {
@@ -199,8 +199,16 @@ describe('Popover', () => {
   });
 
   it('omits role unless set, and stays byte-identical aside from that', () => {
-    render(<Harness open />);
-    const content = screen.getByLabelText('Menu');
+    function Bare() {
+      const popover = usePopover({ open: true });
+      return (
+        <Popover.Root {...popover.getPopoverProps()} data-testid="bare">
+          Hi
+        </Popover.Root>
+      );
+    }
+    render(<Bare />);
+    const content = screen.getByTestId('bare');
     expect(content.hasAttribute('role')).toBe(false);
     expect(content.outerHTML).not.toMatch(/\srole=/);
     expect(content.getAttribute('aria-modal')).toBeNull();
@@ -228,5 +236,24 @@ describe('Popover', () => {
     expectTypeOf<PopoverWire & { role: 'dialog'; 'aria-label': string }>().toMatchTypeOf<PopoverRootProps>();
     expectTypeOf<PopoverWire & { role: 'dialog'; 'aria-labelledby': string }>().toMatchTypeOf<PopoverRootProps>();
     expectTypeOf<PopoverWire>().toMatchTypeOf<PopoverRootProps>();
+  });
+
+  it('takes no name without a role, since ARIA prohibits one there', () => {
+    expectTypeOf<PopoverWire & { 'aria-label': string }>().not.toMatchTypeOf<PopoverRootProps>();
+    expectTypeOf<PopoverWire & { 'aria-labelledby': string }>().not.toMatchTypeOf<PopoverRootProps>();
+    // A plain JS caller can still pass one; the element drops it.
+    const loose = { 'aria-label': 'Menu', 'aria-labelledby': 'x' } as unknown as Record<string, never>;
+    function Unnamed() {
+      const popover = usePopover({ defaultOpen: true });
+      return (
+        <Popover.Root {...popover.getPopoverProps()} {...loose} data-testid="unnamed">
+          Hi
+        </Popover.Root>
+      );
+    }
+    render(<Unnamed />);
+    const content = screen.getByTestId('unnamed');
+    expect(content.hasAttribute('aria-label')).toBe(false);
+    expect(content.hasAttribute('aria-labelledby')).toBe(false);
   });
 });

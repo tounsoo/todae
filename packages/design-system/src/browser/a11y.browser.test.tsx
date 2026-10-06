@@ -140,7 +140,7 @@ function ComboboxHarness() {
       <Field.Root {...cb.getAnchorProps()} aria-labelledby={labelId}>
         <Field.TextInput {...cb.getInputProps()} />
       </Field.Root>
-      <Popover.Root {...cb.getPopoverProps()} aria-label="Frameworks">
+      <Popover.Root {...cb.getPopoverProps()}>
         <OptionList.Root {...cb.getListboxProps()} aria-labelledby={labelId}>
           {cb.items.map((item) => (
             <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />

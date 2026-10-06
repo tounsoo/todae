@@ -1,4 +1,5 @@
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, within } from '@testing-library/react';
+import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import type { ComponentType } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -52,9 +53,88 @@ describe('docs demos under axe', () => {
           </main>
         </Providers>,
       );
-      // Let effects, measurement and anchored layout settle.
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await settle();
       expect(await violations()).toEqual([]);
     });
   }
 });
+
+// Overlays are closed on first render, so axe above never sees their contents.
+// Open each one and check again: from a combobox field when the demo has one,
+// else from its first button.
+describe('docs demos under axe, overlay open', () => {
+  const overlayDemos = demos.filter(({ file, name }) => OVERLAY_DEMOS.has(file) && !NO_OVERLAY.has(name));
+
+  it('found the overlay demos', () => {
+    expect(new Set(overlayDemos.map((d) => d.file))).toEqual(OVERLAY_DEMOS);
+  });
+
+  for (const { file, name, Demo } of overlayDemos) {
+    it(`${file} ${name}`, async () => {
+      const { container } = render(
+        <Providers>
+          <main>
+            <Example>
+              <Demo />
+            </Example>
+          </main>
+        </Providers>,
+      );
+      await settle();
+      await openFirstOverlay(container);
+      expect(openOverlay(), 'no overlay opened').toBe(true);
+      expect(await violations()).toEqual([]);
+    });
+  }
+});
+
+describe('docs demos under axe, no matches', () => {
+  it('ComboboxDemo.tsx ComboboxEmpty', async () => {
+    const Demo = demos.find((d) => d.name === 'ComboboxEmpty')?.Demo;
+    expect(Demo).toBeDefined();
+    if (!Demo) return;
+    const { container } = render(
+      <Providers>
+        <main>
+          <Example>
+            <Demo />
+          </Example>
+        </main>
+      </Providers>,
+    );
+    const field = within(container).getByRole('combobox');
+    await userEvent.click(field);
+    await userEvent.keyboard('zzz');
+    await settle();
+    expect(within(document.body).getByRole('status').textContent).toBe('No matches');
+    expect(openOverlay(), 'no overlay opened').toBe(true);
+    expect(await violations()).toEqual([]);
+  });
+});
+
+const OVERLAY_DEMOS = new Set(['BottomSheetDemo.tsx', 'DialogDemo.tsx', 'PopoverDemo.tsx', 'ComboboxDemo.tsx']);
+
+async function openFirstOverlay(container: HTMLElement) {
+  const scope = within(container);
+  const [field] = scope.queryAllByRole('combobox').filter((el) => el.tagName === 'INPUT');
+  if (field) {
+    await userEvent.click(field);
+    await userEvent.keyboard('{ArrowDown}');
+  } else {
+    const [first] = scope.queryAllByRole('button');
+    if (first) await userEvent.click(first);
+  }
+  await settle();
+}
+
+// Exports in those files that render no overlay.
+const NO_OVERLAY = new Set(['PresentationBadge']);
+
+function openOverlay(): boolean {
+  return document.querySelector('dialog[open], [role="dialog"][aria-modal="true"], :popover-open') != null;
+}
+
+// Let effects, measurement, anchored layout and entry transitions settle.
+async function settle() {
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
