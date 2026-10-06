@@ -1,0 +1,186 @@
+# Build your design system on Todae
+
+A company design system on Todae is three things: a token package layered on Todae's tokens, a few TypeScript declarations, and thin wrappers around Todae's parts. Nothing is forked. When Todae updates, the company rebuilds its tokens and keeps its wrappers.
+
+## Token layers
+
+Todae's tokens are DTCG 2025.10 files driven by `tokens/resolver.json`. Each set and modifier names its layer in `$extensions["dev.todae"].layer`, and a token may only reference tokens in its own layer or a lower one.
+
+- `core`: raw scales, such as `color.gray.900` and `space.4`.
+- `appearance`: semantic colors for light and dark, such as `color.fg.muted` and `color.accent.default`.
+- `density`: spacing for each density, such as `space.control.x`.
+- `contract`: what components read, such as `button.bg.default` and `field.border.focus`.
+
+Components read contract tokens only. A rebrand changes the appearance layer, and the contract follows.
+
+In CSS, every token is a custom property named after its path: `color.accent.default` is `--todae-color-accent-default`. Todae's tokens sit in the `todae.base` cascade layer.
+
+## A company resolver
+
+A company writes its own resolver next to its token files. It may add sets, add contexts to Todae's modifiers, and replace tokens in them. Todae's resolver is loaded first, so every reference can point at Todae's tokens.
+
+```json
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/resolver.json",
+  "name": "acme",
+  "version": "2025.10",
+  "sets": {
+    "brand": {
+      "sources": [{ "$ref": "./brand.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
+    }
+  },
+  "modifiers": {
+    "appearance": {
+      "contexts": {
+        "light": [{ "$ref": "./appearance/light.json" }],
+        "dark": [{ "$ref": "./appearance/dark.json" }]
+      },
+      "$extensions": {
+        "dev.todae": { "layer": "appearance", "attribute": "data-appearance", "root": true, "colorScheme": true }
+      }
+    }
+  },
+  "resolutionOrder": [{ "$ref": "#/modifiers/appearance" }, { "$ref": "#/sets/brand" }]
+}
+```
+
+References are JSON Pointers into the merged token tree:
+
+```json
+{
+  "brand": {
+    "ink": { "$type": "color", "$value": { "$ref": "#/color/gray/900/$value" } }
+  }
+}
+```
+
+Build it with the `todae-tokens` CLI:
+
+```sh
+todae-tokens build --resolver ./tokens/resolver.json
+```
+
+It writes three files:
+
+- `todae-theme.css`: the company's tokens only, in the `todae.theme` layer, which comes after Todae's.
+- `tokens.catalog.json`: Todae's and the company's tokens together.
+- `todae-theme.types.ts`: `THEME_OVERRIDE_TYPES` for the company's keys, for `ThemeProvider`.
+
+`--css`, `--catalog` and `--types` change the output paths. Add `--check` in CI to fail when the outputs are missing or out of date. The same build is a function, `buildCompanyTokens` from `@tounsoo/todae/tokens-builder`.
+
+The build runs every check Todae's own build runs: path format, reference cycles, layer order, light and dark parity, and APCA contrast. The contrast pairs in Todae's resolver apply to the company's colors too, so a brand accent that fails them fails the build. See the Contrast section of [Tokens](/tokens) for the pairs and how to change a minimum.
+
+Load the CSS after Todae's:
+
+```tsx
+import '@tounsoo/todae/todae.css';
+import './todae-theme.css';
+```
+
+## Overrides: CSS or ThemeProvider
+
+There are two ways to change a token for part of a page.
+
+**CSS** is for anything known at build time. Put it in a company token package when you can, so the build checks it. Otherwise write it in the `todae.theme` layer, or unlayered, which beats every layer:
+
+```css
+@layer todae.theme {
+  [data-appearance='dark'] {
+    --todae-color-accent-default: oklch(0.78 0.13 25);
+  }
+}
+```
+
+Set it on an element that carries `data-appearance` or `data-density`. Contract tokens are computed there, so an override on a descendant does not reach them.
+
+**`ThemeProvider` `overrides`** is for values that arrive at runtime, such as a customer's brand color. It takes token paths and DTCG values, sets them as custom properties on its own element, and rejects unknown paths. The values are not contrast checked.
+
+```tsx
+<ThemeProvider overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.5, 0.15, 150] } }}>
+  …
+</ThemeProvider>
+```
+
+Company tokens are unknown to Todae, so pass their generated types to allow them:
+
+```tsx
+import { THEME_OVERRIDE_TYPES } from './todae-theme.types';
+
+<ThemeProvider
+  overrideTypes={THEME_OVERRIDE_TYPES}
+  overrides={{ 'brand.ink': { colorSpace: 'oklch', components: [0.3, 0.05, 25] } }}
+>
+  …
+</ThemeProvider>
+```
+
+TypeScript then accepts `brand.*` keys and still rejects misspelled ones.
+
+## Adding a variant or a density
+
+Button variants and densities are modifier contexts, so a company adds one in its resolver.
+
+A button variant is a `buttonVariant` context with the same token shape as Todae's: `bg`, `fg` and `border` for `default`, `hover`, `active`, `focus` and `disabled`, plus `ring.focus`. Opt into the `button` rule so the build checks that shape:
+
+```json
+"buttonVariant": {
+  "contexts": { "outline": [{ "$ref": "./button.outline.json" }] },
+  "$extensions": {
+    "dev.todae": { "layer": "contract", "rules": ["button"], "attribute": "data-button-variant", "alias": true }
+  }
+}
+```
+
+A density is a `density` context that sets spacing tokens only:
+
+```json
+"density": {
+  "contexts": { "roomy": [{ "$ref": "./density/roomy.json" }] },
+  "$extensions": { "dev.todae": { "layer": "density", "rules": ["density-space"], "attribute": "data-density" } }
+}
+```
+
+Then tell TypeScript about the new names:
+
+```ts
+declare module '@tounsoo/todae' {
+  interface ButtonVariants {
+    outline: true;
+  }
+  interface Densities {
+    roomy: true;
+  }
+}
+```
+
+`<Button.Root variant="outline">` and `<DensityProvider density="roomy">` now type check and pick up the new tokens.
+
+## Wrapping a component
+
+Wrap a part to fix a company default or add a company prop. Spread the rest of the props and pass `ref` through, since every part forwards native attributes and its ref:
+
+```tsx
+import { Button, type ButtonRootProps } from '@tounsoo/todae';
+
+export function AcmeButton({ variant = 'outline', ...props }: ButtonRootProps) {
+  return <Button.Root {...props} variant={variant} />;
+}
+```
+
+Parents never find their children by component type, so wrapped children work too. `OptionList.Option` registers with its list through context, so a wrapped option still selects and navigates. `Button.Root` finds `Button.Icon` by a data attribute it renders, so a wrapper that renders `Button.Icon` still counts as the button's icon:
+
+```tsx
+function AcmeOption(props: OptionListOptionProps) {
+  return <OptionList.Option {...props} className="acme-option" />;
+}
+
+<OptionList.Root aria-label="Size" value={size} onChange={setSize}>
+  <AcmeOption value="s">Small</AcmeOption>
+  <AcmeOption value="m">Medium</AcmeOption>
+</OptionList.Root>
+```
+
+To keep your own ref alongside one a hook gives you, combine them with `composeRefs`.
+
+Restyle through tokens first. A class on a part works for layout, but colors and spacing set through tokens follow appearance and density, and a class does not.

@@ -37,7 +37,11 @@ const GROUPS = [
   {
     id: 'foundations',
     label: 'Foundations',
-    links: [['/tokens', 'Tokens']],
+    links: [
+      ['/tokens', 'Tokens'],
+      ['/guides/build-on-todae', 'Build on Todae'],
+      ['/platform', 'Native platform'],
+    ],
   },
   {
     id: 'tools',

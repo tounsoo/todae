@@ -59,6 +59,12 @@ export default function HomePage() {
           <a href="/tokens">Tokens</a>
         </li>
         <li>
+          <a href="/guides/build-on-todae">Build on Todae</a>
+        </li>
+        <li>
+          <a href="/platform">Native platform</a>
+        </li>
+        <li>
           <a href="/playground">Playground</a>
         </li>
       </ul>
