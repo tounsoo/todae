@@ -214,7 +214,8 @@ function Content({
   // item focused last time. This runs before Root's initial focus.
   useLayoutEffect(() => {
     if (!open) return;
-    const enabled = values();
+    // Items focus can reach: a hidden first item does not take the open.
+    const enabled = values().filter((value) => getItemNode(value) !== null);
     // The key's choice holds for the open that follows it, however late the
     // owner applies it, while the trigger keeps focus.
     const target = openEnd.current === 'last' ? enabled.at(-1) : enabled[0];

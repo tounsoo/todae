@@ -422,6 +422,21 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(menu());
   });
 
+  it('opens on the first item focus can reach', async () => {
+    const original = HTMLElement.prototype.checkVisibility;
+    HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {
+      return this.textContent !== 'Rename';
+    };
+    try {
+      render(<Actions />);
+      fireEvent.click(trigger());
+      await raf();
+      expect(document.activeElement).toBe(item('Duplicate'));
+    } finally {
+      HTMLElement.prototype.checkVisibility = original;
+    }
+  });
+
   it('Tab from the trigger of an open menu closes it', async () => {
     const onOpenChange = vi.fn();
     render(<Actions open onOpenChange={onOpenChange} />);

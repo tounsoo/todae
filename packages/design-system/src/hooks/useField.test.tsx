@@ -252,6 +252,21 @@ describe('useField', () => {
     expect(document.activeElement).not.toBe(screen.getByRole('slider'));
   });
 
+  it('a shell press focuses the main input, not a select inside an Affix that mounted later', () => {
+    render(
+      <Field.Root aria-label="Price" data-testid="shell">
+        <Field.TextInput value="" onChange={() => {}} />
+        <Field.Affix>
+          <Field.Select value="usd" onValueChange={() => {}} aria-label="Currency">
+            <option value="usd">USD</option>
+          </Field.Select>
+        </Field.Affix>
+      </Field.Root>,
+    );
+    fireEvent.mouseDown(screen.getByTestId('shell'));
+    expect(document.activeElement).toBe(screen.getByRole('textbox'));
+  });
+
   it('a shell press never falls back to an input inside an Affix', () => {
     function Custom() {
       const field = useField();

@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState, type ReactNode } from 'react';
+import { Profiler, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as api from '../index';
 import { useRovingFocus, type UseRovingFocusOptions } from './useRovingFocus';
@@ -326,6 +326,51 @@ describe('useRovingFocus', () => {
     screen.getByText('😀 Happy').focus();
     fireEvent.keyDown(document.activeElement!, { key: '😀', timeStamp: 1000 });
     expect(focused()).toBe('😀 Smile');
+  });
+
+  it('moves the tab stop off an active item hidden by style, and focus() reports it unreachable', () => {
+    const original = HTMLElement.prototype.checkVisibility;
+    HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {
+      return this.textContent !== 'banana';
+    };
+    try {
+      let roving: ReturnType<typeof useRovingFocus> | undefined;
+      function Probe() {
+        const r = useRovingFocus({ activeValue: 'banana' });
+        roving = r;
+        return (
+          <div {...r.getContainerProps()}>
+            {['apple', 'banana'].map((v) => (
+              <button key={v} type="button" {...r.getItemProps(v)}>
+                {v}
+              </button>
+            ))}
+          </div>
+        );
+      }
+      render(<Probe />);
+      expect(tabStops()).toEqual(['apple']);
+      expect(roving!.focus('banana')).toBe(false);
+    } finally {
+      HTMLElement.prototype.checkVisibility = original;
+    }
+  });
+
+  it('a new active value takes the tab stop in one render', () => {
+    let commits = 0;
+    const { rerender } = render(
+      <Profiler id="g" onRender={() => (commits += 1)}>
+        <Group activeValue="apple" />
+      </Profiler>,
+    );
+    commits = 0;
+    rerender(
+      <Profiler id="g" onRender={() => (commits += 1)}>
+        <Group activeValue="cherry" />
+      </Profiler>,
+    );
+    expect(tabStops()).toEqual(['cherry']);
+    expect(commits).toBe(1);
   });
 
   it('typeahead is off by default', () => {

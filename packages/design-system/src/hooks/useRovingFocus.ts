@@ -63,7 +63,7 @@ export type UseRovingFocusResult = {
   activeValue: string | null;
   /** Moves the tab stop without moving focus. */
   setActiveValue: (value: string) => void;
-  /** Focuses the enabled item with this value. Returns false when there is none. */
+  /** Focuses the enabled item with this value. Returns false when there is none focus can reach. */
   focus: (value: string) => boolean;
   /** Focuses the first enabled item and returns its value. */
   focusFirst: () => string | null;
@@ -71,7 +71,7 @@ export type UseRovingFocusResult = {
   focusLast: () => string | null;
   /** True while a typeahead search is under way, when a Space adds to it instead of activating. */
   isTypingAhead: (event: { timeStamp: number }) => boolean;
-  /** The enabled item element with this value, or null. */
+  /** The element of the enabled item with this value that focus can reach, or null. */
   getItemNode: (value: string) => HTMLElement | null;
   /** Enabled item values in document order, read from the DOM. */
   values: () => string[];
@@ -84,6 +84,12 @@ export type UseRovingFocusResult = {
 };
 
 const TYPEAHEAD_RESET_MS = 500;
+
+type KnownItems = { read: boolean; enabled: string[]; reachable: string[] };
+
+const NO_ITEMS: KnownItems = { read: false, enabled: [], reachable: [] };
+
+const sameValues = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
 
 // `rtl` is a function so direction, which costs a style read, is only
 // checked for Left and Right.
@@ -114,11 +120,10 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   } = options;
   const scope = useId();
   const [active, setActive] = useControlledState(activeProp, defaultActiveValue ?? null);
-  // The value that holds tabIndex 0. It follows `active`, falling back to the
-  // first enabled item when `active` is null, disabled or not rendered.
-  // Before the first effect no items are known, so with no `active` nothing
-  // holds the tab stop yet: server HTML needs `activeValue` for one.
-  const [tabStop, setTabStop] = useState<string | null>(active);
+  // The items last read from the DOM: enabled ones, and of those the ones
+  // focus can reach now. The tab stop is derived from these and `active`
+  // during render, so a new `active` takes the tab stop in the same render.
+  const [known, setKnown] = useState<KnownItems>(NO_ITEMS);
   const containerRef = useRef<HTMLElement | null>(null);
   const buffer = useRef({ text: '', at: 0 });
 
@@ -147,21 +152,33 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
 
   const values = useCallback(() => enabledItems().map(valueOf), [enabledItems]);
 
-  // Re-check when `active` changes, when the container mounts, and on DOM
-  // changes: items can appear, move or turn disabled without this hook's
-  // owner rendering.
+  // Re-read when the container mounts and on DOM changes: items can appear,
+  // move, hide or turn disabled without this hook's owner rendering.
   const syncTabStop = () => {
     const enabled = values();
-    const next = active !== null && enabled.includes(active) ? active : (enabled[0] ?? null);
-    // Only the fallback needs visibility: prefer an item focus can reach.
-    const fallback = next === active ? next : (items().map(valueOf)[0] ?? next);
-    setTabStop((prev) => (prev === fallback ? prev : fallback));
+    const reachable = items().map(valueOf);
+    setKnown((prev) =>
+      prev.read && sameValues(prev.enabled, enabled) && sameValues(prev.reachable, reachable)
+        ? prev
+        : { read: true, enabled, reachable },
+    );
   };
   const latestSync = useRef(syncTabStop);
   useLayoutEffect(() => {
     latestSync.current = syncTabStop;
   });
-  useLayoutEffect(() => latestSync.current(), [active]);
+
+  // `active` holds the tab stop when focus can reach it. Otherwise the first
+  // reachable item does, then `active` if it is merely hidden, then the first
+  // enabled item: a group rendered while hidden still has a tab stop when
+  // shown. Before anything is read from the DOM, as in server HTML, only
+  // `active` can.
+  const tabStop = !known.read
+    ? active
+    : active !== null && known.reachable.includes(active)
+      ? active
+      : (known.reachable[0] ??
+        (active !== null && known.enabled.includes(active) ? active : (known.enabled[0] ?? null)));
 
   // Watch whichever element is the container now, including one that mounts
   // after the owner or replaces an earlier one, and let go of one that
@@ -179,7 +196,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     const watcher = new MutationObserver((records) => {
       const relevant = records.some(
         (record) =>
-          record.type === 'attributes' ||
+          (record.type === 'attributes' && touchesItem(record.target)) ||
           [...record.addedNodes].some(touchesItem) ||
           [...record.removedNodes].some(touchesItem),
       );
@@ -214,8 +231,8 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   );
 
   const getItemNode = useCallback(
-    (value: string): HTMLElement | null => enabledItems().find((node) => valueOf(node) === value) ?? null,
-    [enabledItems],
+    (value: string): HTMLElement | null => items().find((node) => valueOf(node) === value) ?? null,
+    [items],
   );
 
   const focus = useCallback(
