@@ -1,6 +1,9 @@
+#!/usr/bin/env node
+import { existsSync, realpathSync } from 'node:fs';
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { parseArgs } from 'node:util';
 
 export const PATH_RE = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
 export const RESERVED_ROOTS = [
@@ -21,9 +24,6 @@ export const RESERVED_ROOTS = [
   'option',
   'selection',
 ] as const;
-export const CHIP_SLOTS = ['default', 'hover', 'focus', 'disabled'] as const;
-export const FIELD_BORDER_SLOTS = ['default', 'hover', 'focus', 'disabled', 'invalid'] as const;
-export const FIELD_RING_SLOTS = ['focus', 'invalid'] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;
 export const INTERACTIVE_GROUPS = ['bg', 'fg', 'border'] as const;
 export const BUTTON_PAINTS = ['primary', 'secondary', 'ghost'] as const;
@@ -36,7 +36,19 @@ export const BUTTON_BASE_PATHS = [
   'button.base.gap',
 ] as const;
 
-const LAYER_RANK = { core: 0, appearance: 1, density: 2, contract: 3, variant: 3 } as const;
+const LAYER_RANK = { core: 0, appearance: 1, density: 2, contract: 3 } as const;
+
+/**
+ * Todae-specific checks a set or modifier opts into with
+ * `$extensions["dev.todae"].rules`. Every set always gets the generic checks:
+ * path format, a $type per token, value shapes, ref existence, cycles, layer
+ * order, resolution order, and context parity.
+ */
+export const RULES = ['reserved-roots', 'density-space', 'button'] as const;
+export type Rule = (typeof RULES)[number];
+
+/** Token groups (`*` matches one segment) mapped to the exact leaves each must have. */
+export type SlotRules = Record<string, string[]>;
 
 export type Layer = keyof typeof LAYER_RANK;
 
@@ -111,6 +123,11 @@ export function flattenTokens(tree: TokenTree, inheritedType?: string): Map<stri
 export function validatePaths(paths: Iterable<string>, loc: string): void {
   for (const path of paths) {
     if (!PATH_RE.test(path)) fail(`${loc} token "${path}" must be lowercase dot segments`);
+  }
+}
+
+export function validateReservedRoots(paths: Iterable<string>, loc: string): void {
+  for (const path of paths) {
     const root = path.slice(0, path.indexOf('.'));
     if (!RESERVED_ROOTS.includes(root as (typeof RESERVED_ROOTS)[number])) {
       fail(`${loc} token "${path}" uses reserved-root-violating category "${root}"`);
@@ -118,11 +135,15 @@ export function validatePaths(paths: Iterable<string>, loc: string): void {
   }
 }
 
-export function validateParity(light: Map<string, TokenNode>, dark: Map<string, TokenNode>): void {
+export function validateParity(
+  light: Map<string, TokenNode>,
+  dark: Map<string, TokenNode>,
+  label = 'appearance light/dark',
+): void {
   const lightKeys = [...light.keys()].sort();
   const darkKeys = [...dark.keys()].sort();
   if (lightKeys.length !== darkKeys.length || lightKeys.some((key, i) => key !== darkKeys[i])) {
-    fail(`appearance light/dark key trees differ`);
+    fail(`${label} key trees differ`);
   }
 }
 
@@ -162,51 +183,67 @@ function paintSuffixes(name: string, tokens: Map<string, TokenNode>): string[] {
     .sort();
 }
 
-export function validatePaintPacks(packs: Record<string, Map<string, TokenNode>>): void {
-  const expected = paintSuffixes('primary', packs.primary ?? new Map());
-  if (expected.length === 0) fail('button.primary paint pack is empty');
-  for (const name of ['secondary', 'ghost'] as const) {
+export function validatePaintPacks(packs: Record<string, Map<string, TokenNode>>, defaultPaint = 'primary'): void {
+  const expected = paintSuffixes(defaultPaint, packs[defaultPaint] ?? new Map());
+  if (expected.length === 0) fail(`button.${defaultPaint} paint pack is empty`);
+  for (const name of Object.keys(packs)) {
+    if (name === defaultPaint) continue;
     const keys = paintSuffixes(name, packs[name] ?? new Map());
     if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
-      fail(`variant "${name}" paint keys must match button.primary`);
+      fail(`variant "${name}" paint keys must match button.${defaultPaint}`);
     }
   }
 }
 
-export function validateFieldChipSlots(tokens: Map<string, TokenNode>, loc: string): void {
+function matchesGroup(pattern: string, group: string): boolean {
+  const want = pattern.split('.');
+  const have = group.split('.');
+  return want.length === have.length && want.every((segment, i) => segment === '*' || segment === have[i]);
+}
+
+export function validateSlots(tokens: Map<string, TokenNode>, slots: SlotRules, loc: string): void {
   const groups = collectGroups(tokens.keys());
-  for (const [group, leaves] of groups) {
-    const parts = group.split('.');
-    if (parts[0] === 'chip' && INTERACTIVE_GROUPS.includes(parts[1] as (typeof INTERACTIVE_GROUPS)[number]) && parts.length === 2) {
-      const sorted = [...leaves].sort();
-      const expected = [...CHIP_SLOTS].sort();
-      if (sorted.length !== expected.length || sorted.some((leaf, i) => leaf !== expected[i])) {
-        fail(`${loc} "${group}" must have exactly ${CHIP_SLOTS.join('|')}`);
+  for (const [pattern, expected] of Object.entries(slots)) {
+    const want = [...expected].sort();
+    let matched = false;
+    for (const [group, leaves] of groups) {
+      if (!matchesGroup(pattern, group)) continue;
+      matched = true;
+      const have = [...leaves].sort();
+      if (have.length !== want.length || have.some((leaf, i) => leaf !== want[i])) {
+        fail(`${loc} "${group}" must have exactly ${expected.join('|')}`);
       }
     }
-    if (parts[0] === 'chip' && parts[1] === 'ring' && parts.length === 2) {
-      if (leaves.length !== 1 || leaves[0] !== 'focus') {
-        fail(`${loc} "${group}" must be ring.focus only`);
-      }
-    }
-    if (parts[0] === 'field' && parts[1] === 'border' && parts.length === 2) {
-      const sorted = [...leaves].sort();
-      const expected = [...FIELD_BORDER_SLOTS].sort();
-      if (sorted.length !== expected.length || sorted.some((leaf, i) => leaf !== expected[i])) {
-        fail(`${loc} "${group}" must have exactly ${FIELD_BORDER_SLOTS.join('|')}`);
-      }
-    }
-    if (parts[0] === 'field' && parts[1] === 'ring' && parts.length === 2) {
-      const sorted = [...leaves].sort();
-      const expected = [...FIELD_RING_SLOTS].sort();
-      if (sorted.length !== expected.length || sorted.some((leaf, i) => leaf !== expected[i])) {
-        fail(`${loc} "${group}" must have exactly ${FIELD_RING_SLOTS.join('|')}`);
-      }
+    if (!matched) fail(`${loc} slot group "${pattern}" matches no tokens`);
+  }
+}
+
+/**
+ * Every context of an alias modifier declares `<root>.<context>.…`; with the
+ * context segment removed, each must declare the same tokens as the default.
+ */
+export function validateAliasParity(contexts: Map<string, Iterable<string>>, defaultContext: string, loc: string): void {
+  const shape = (context: string, paths: Iterable<string>) =>
+    [...paths]
+      .map((path) => {
+        const parts = path.split('.');
+        return parts[1] === context ? [parts[0], ...parts.slice(2)].join('.') : path;
+      })
+      .sort();
+  const expected = shape(defaultContext, contexts.get(defaultContext) ?? []);
+  for (const [context, paths] of contexts) {
+    const keys = shape(context, paths);
+    if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
+      fail(`${loc} context "${context}" must declare the same tokens as "${defaultContext}"`);
     }
   }
 }
 
-export function validateInteractive(tokens: Map<string, TokenNode>, loc: string): void {
+export function validateInteractive(
+  tokens: Map<string, TokenNode>,
+  loc: string,
+  paints: readonly string[] = BUTTON_PAINTS,
+): void {
   const groups = collectGroups(tokens.keys());
   for (const [group, leaves] of groups) {
     const parts = group.split('.');
@@ -214,9 +251,9 @@ export function validateInteractive(tokens: Map<string, TokenNode>, loc: string)
     const pack = parts[1];
     if (!pack || pack === 'base') continue;
     if (INTERACTIVE_GROUPS.includes(pack as (typeof INTERACTIVE_GROUPS)[number]) || pack === 'ring') {
-      fail(`${loc} "${group}" must live under button.primary|secondary|ghost`);
+      fail(`${loc} "${group}" must live under button.${paints.join('|')}`);
     }
-    if (!(BUTTON_PAINTS as readonly string[]).includes(pack)) continue;
+    if (!paints.includes(pack)) continue;
     if (['radius', 'padding', 'font', 'gap'].includes(parts[2] ?? '')) {
       fail(`${loc} "${group}" geometry belongs on button.base`);
     }
@@ -236,10 +273,23 @@ export function validateInteractive(tokens: Map<string, TokenNode>, loc: string)
   }
 }
 
-export function consumeCssVar(path: string): string | null {
-  if (path.startsWith('button.base.')) return cssVarName(`button.${path.slice('button.base.'.length)}`);
-  const paint = path.match(/^button\.(primary|secondary|ghost)\.(.+)$/);
-  return paint ? cssVarName(`button.${paint[2]}`) : null;
+/** An alias modifier's token root (`button`) and its contexts (`primary`, …). */
+export type AliasGroup = { root: string; contexts: readonly string[] };
+
+const BUTTON_ALIAS: AliasGroup = { root: 'button', contexts: BUTTON_PAINTS };
+
+/**
+ * The consume var a pack token aliases: `<root>.<context>.x` and the shared
+ * `<root>.base.x` both feed `--todae-<root>-x`.
+ */
+export function consumeCssVar(path: string, aliases: readonly AliasGroup[] = [BUTTON_ALIAS]): string | null {
+  for (const { root, contexts } of aliases) {
+    for (const pack of ['base', ...contexts]) {
+      const prefix = `${root}.${pack}.`;
+      if (path.startsWith(prefix)) return cssVarName(`${root}.${path.slice(prefix.length)}`);
+    }
+  }
+  return null;
 }
 
 export function pathToPointer(path: string): string {
@@ -248,7 +298,8 @@ export function pathToPointer(path: string): string {
 
 /**
  * Parses a DTCG 2025.10 JSON Pointer alias (`#/color/gray/50/$value`) into the
- * dot path of the token it names. Only whole-value aliases are supported.
+ * dot path of the token it names. Only whole-value aliases are supported here;
+ * color channels use {@link parseComponentPointer}.
  */
 export function pointerToPath(pointer: string, loc: string): string {
   if (!pointer.startsWith('#/')) {
@@ -273,22 +324,56 @@ export function pointerToPath(pointer: string, loc: string): string {
   return path;
 }
 
+const OKLCH_CHANNELS = ['l', 'c', 'h'] as const;
+
+/**
+ * Parses a property-level pointer to one OKLCH channel of another color token,
+ * `#/color/accent/default/$value/components/0`, into its token path and channel.
+ */
+export function parseComponentPointer(pointer: string, loc: string): { path: string; channel: 'l' | 'c' | 'h' } {
+  const match = typeof pointer === 'string' ? pointer.match(/^(#\/.+\/\$value)\/components\/([0-2])$/) : null;
+  if (!match) fail(`${loc} component $ref "${String(pointer)}" must point at "#/<token>/$value/components/0|1|2"`);
+  return { path: pointerToPath(match[1]!, loc), channel: OKLCH_CHANNELS[Number(match[2])]! };
+}
+
+function serializeColor(value: unknown, path: string): { ref: string | null; cssValue: string } {
+  if (!isRecord(value) || value.colorSpace !== 'oklch' || !Array.isArray(value.components)) {
+    fail(`Token "${path}" color must be OKLCH`);
+  }
+  if (value.components.length !== 3) fail(`Token "${path}" OKLCH must have three components`);
+  const alpha = value.alpha;
+  if (alpha !== undefined && typeof alpha !== 'number') fail(`Token "${path}" alpha must be a number`);
+  let origin: string | null = null;
+  const channels = value.components.map((component, i) => {
+    if (typeof component === 'number') return String(component);
+    if (!isRef(component)) fail(`Token "${path}" OKLCH component ${i} must be a number or a component $ref`);
+    const ref = parseComponentPointer(component.$ref, `Token "${path}"`);
+    if (origin !== null && origin !== ref.path) {
+      fail(`Token "${path}" component $refs must all point at one color, not ${origin} and ${ref.path}`);
+    }
+    origin = ref.path;
+    return ref.channel;
+  });
+  const [l, c, h] = channels;
+  if (origin !== null) {
+    // Relative color syntax keeps the origin live: overriding it at runtime
+    // re-tints this color too. Alpha is always written, since a missing DTCG
+    // alpha means opaque while relative syntax would inherit the origin's.
+    return {
+      ref: origin,
+      cssValue: `oklch(from var(${cssVarName(origin)}) ${l} ${c} ${h} / ${alpha ?? 1})`,
+    };
+  }
+  const base = `oklch(${l} ${c} ${h})`;
+  return { ref: null, cssValue: alpha === undefined || alpha === 1 ? base : `oklch(${l} ${c} ${h} / ${alpha})` };
+}
+
 export function serializeValue(token: TokenNode, path: string): { ref: string | null; cssValue: string } {
   if (isRef(token.$value)) {
     const ref = pointerToPath(token.$value.$ref, `Token "${path}"`);
     return { ref, cssValue: `var(${cssVarName(ref)})` };
   }
-  if (token.$type === 'color') {
-    if (!isRecord(token.$value) || token.$value.colorSpace !== 'oklch' || !Array.isArray(token.$value.components)) {
-      fail(`Token "${path}" color must be OKLCH`);
-    }
-    const [l, c, h] = token.$value.components;
-    if (![l, c, h].every((n) => typeof n === 'number')) fail(`Token "${path}" OKLCH components must be numbers`);
-    const alpha = token.$value.alpha;
-    if (alpha !== undefined && typeof alpha !== 'number') fail(`Token "${path}" alpha must be a number`);
-    const base = `oklch(${l} ${c} ${h})`;
-    return { ref: null, cssValue: alpha === undefined || alpha === 1 ? base : `oklch(${l} ${c} ${h} / ${alpha})` };
-  }
+  if (token.$type === 'color') return serializeColor(token.$value, path);
   if (token.$type === 'dimension') {
     if (!isRecord(token.$value) || typeof token.$value.value !== 'number' || typeof token.$value.unit !== 'string') {
       fail(`Token "${path}" dimension must be { value, unit }`);
@@ -303,45 +388,67 @@ export function serializeValue(token: TokenNode, path: string): { ref: string | 
   fail(`Token "${path}" has unsupported $type "${token.$type ?? ''}"`);
 }
 
+/**
+ * Refs must exist, form no cycle, and point at a lower layer, or at a token
+ * declared alongside in the same set or modifier context (`sameEntry`).
+ */
 export function validateRefs(
   tokens: FlatToken[],
   known: Map<string, Layer>,
+  sameEntry: (from: string, to: string) => boolean = () => false,
 ): void {
   const layerPaths = new Map<string, Layer>();
   for (const [path, layer] of known) layerPaths.set(path, layer);
 
-  function resolveLayer(path: string, from: Layer, stack: string[]): Layer {
+  // Follows a ref chain within one modifier context: light and dark may each
+  // alias the other way round without forming a cycle.
+  function resolveLayer(path: string, from: Layer, fromPath: string, context: string | undefined, stack: string[]): Layer {
     if (stack.includes(path)) fail(`$ref cycle: ${[...stack, path].join(' -> ')}`);
     const targetLayer = layerPaths.get(path);
     if (!targetLayer) fail(`$ref "${path}" does not exist`);
-    if (LAYER_RANK[targetLayer] >= LAYER_RANK[from]) {
+    if (LAYER_RANK[targetLayer] >= LAYER_RANK[from] && !sameEntry(fromPath, path)) {
       fail(`$ref "${path}" must point at a lower layer than ${from}`);
     }
-    const target = tokens.find((t) => t.path === path && t.layer === targetLayer);
-    if (target?.ref) resolveLayer(target.ref, targetLayer, [...stack, path]);
+    const candidates = tokens.filter((t) => t.path === path && t.layer === targetLayer);
+    const inContext = candidates.filter((t) => t.context === context);
+    for (const target of inContext.length > 0 ? inContext : candidates) {
+      if (target.ref) resolveLayer(target.ref, targetLayer, path, target.context ?? context, [...stack, path]);
+    }
     return targetLayer;
   }
 
   for (const token of tokens) {
     if (!token.ref) continue;
-    resolveLayer(token.ref, token.layer, [token.path]);
+    resolveLayer(token.ref, token.layer, token.path, token.context, [token.path]);
   }
 }
 
-export function flattenLayer(
-  tree: TokenTree,
+export type LayerChecks = {
+  rules?: readonly Rule[];
+  slots?: SlotRules;
+  paints?: readonly string[];
+  /** Tokens these extend (Todae's, for a company layer); group rules see them merged. */
+  inherited?: Map<string, TokenNode>;
+};
+
+/** Validates one merged set or context and serializes its tokens. */
+export function layerTokens(
+  flat: Map<string, TokenNode>,
   layer: Layer,
-  context?: string,
+  context: string | undefined,
+  checks: LayerChecks = {},
 ): FlatToken[] {
-  const flat = flattenTokens(tree);
-  validatePaths(flat.keys(), context ? `${layer}/${context}` : layer);
-  if (layer === 'density') validateDensitySpaceOnly(flat, context ? `${layer}/${context}` : layer);
-  if (layer === 'contract' || layer === 'variant') {
-    const loc = context ? `${layer}/${context}` : layer;
-    validateInteractive(flat, loc);
-    validateFieldChipSlots(flat, loc);
-    if ([...flat.keys()].some((path) => path.startsWith('button.base.'))) validateButtonBase(flat, loc);
+  const loc = context ? `${layer}/${context}` : layer;
+  const rules = checks.rules ?? [];
+  validatePaths(flat.keys(), loc);
+  if (rules.includes('reserved-roots')) validateReservedRoots(flat.keys(), loc);
+  if (rules.includes('density-space')) validateDensitySpaceOnly(flat, loc);
+  const whole = checks.inherited ? new Map([...checks.inherited, ...flat]) : flat;
+  if (rules.includes('button')) {
+    validateInteractive(whole, loc, checks.paints ?? BUTTON_PAINTS);
+    if ([...whole.keys()].some((path) => path.startsWith('button.base.'))) validateButtonBase(whole, loc);
   }
+  if (checks.slots) validateSlots(whole, checks.slots, loc);
   const tokens: FlatToken[] = [];
   for (const [path, node] of flat) {
     const { ref, cssValue } = serializeValue(node, path);
@@ -363,10 +470,10 @@ function decls(tokens: FlatToken[]): string {
   return tokens.map((t) => `  ${t.cssVar}: ${t.cssValue};`).join('\n');
 }
 
-function aliasDecls(tokens: FlatToken[]): string {
+function aliasDecls(tokens: FlatToken[], aliases: readonly AliasGroup[]): string {
   return tokens
     .map((token) => {
-      const consume = consumeCssVar(token.path);
+      const consume = consumeCssVar(token.path, aliases);
       if (!consume || consume === token.cssVar) return null;
       return `  ${consume}: var(${token.cssVar});`;
     })
@@ -374,55 +481,90 @@ function aliasDecls(tokens: FlatToken[]): string {
     .join('\n');
 }
 
-export function emitCss(parts: {
-  core: FlatToken[];
-  light: FlatToken[];
-  dark: FlatToken[];
-  density: Record<string, FlatToken[]>;
-  contract: FlatToken[];
-  base: FlatToken[];
-  paints: Record<(typeof BUTTON_PAINTS)[number], FlatToken[]>;
-}): string {
-  const densityBlocks = ['compact', 'comfortable', 'spacious']
-    .map((name) => {
-      const tokens = parts.density[name];
-      if (!tokens) fail(`Missing density "${name}"`);
-      return `[data-density="${name}"] {\n${decls(tokens)}\n}`;
-    })
-    .join('\n\n');
-  const variantBlocks = BUTTON_PAINTS.map((name) => {
-    const tokens = parts.paints[name];
-    if (!tokens) fail(`Missing button variant "${name}"`);
-    return `[data-button-variant="${name}"] {\n${aliasDecls(tokens)}\n}`;
-  }).join('\n\n');
-  return `@layer todae.base {
-:root {
-${decls(parts.core)}
+function block(selector: string, lines: string[]): string[] {
+  const body = lines.filter((line) => line !== '');
+  return body.length === 0 ? [] : [`${selector} {\n${body.join('\n')}\n}`];
 }
 
-:root,
-[data-appearance="light"] {
-${decls(parts.light)}
-  color-scheme: light;
-}
+/**
+ * Emits one CSS layer from the resolved entries, in resolutionOrder:
+ * - sets before the first scoped modifier are declared on `:root`;
+ * - a scoped modifier emits one `[attribute="context"]` block per context;
+ * - later sets and every context of the alias modifier are re-declared on each
+ *   scoped modifier's attribute, so their var() chains re-resolve wherever a
+ *   context changes, along with the default context's consume aliases;
+ * - the alias modifier emits one block per context that only swaps aliases.
+ */
+export type EmitCssOptions = {
+  /** Cascade layer the blocks are emitted into. */
+  layer?: string;
+  /** Statements emitted before the layer block. */
+  preamble?: string;
+  /** Alias groups, when `entries` hold only part of the graph. */
+  aliases?: readonly AliasGroup[];
+  /**
+   * Token paths whose consume aliases another stylesheet already declares. A
+   * later layer must not re-declare those, or it would beat that stylesheet's
+   * own variant blocks.
+   */
+  inherited?: ReadonlySet<string>;
+};
 
-[data-appearance="dark"] {
-${decls(parts.dark)}
-  color-scheme: dark;
-}
-
-${densityBlocks}
-
-[data-appearance],
-[data-density] {
-${decls(parts.contract)}
-${aliasDecls(parts.base)}
-${aliasDecls(parts.paints.primary)}
-}
-
-${variantBlocks}
-}
-`;
+export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}): string {
+  const aliases = options.aliases ?? aliasGroups(entries);
+  const inherited = options.inherited ?? new Set<string>();
+  // In a later layer, a bare :root default would beat an earlier layer's
+  // other contexts on the root element itself.
+  const layered = options.inherited !== undefined;
+  const root: FlatToken[] = [];
+  const rootAliases: FlatToken[] = [];
+  const scopedBlocks: string[] = [];
+  const attributes: string[] = [];
+  const rescoped: FlatToken[] = [];
+  const defaults: FlatToken[] = [];
+  const aliasBlocks: string[] = [];
+  for (const entry of entries) {
+    if (entry.kind === 'set') {
+      const own = entry.tokens.filter((token) => !inherited.has(token.path));
+      if (attributes.length === 0) {
+        root.push(...entry.tokens);
+        rootAliases.push(...own);
+      } else {
+        rescoped.push(...entry.tokens);
+        defaults.push(...own);
+      }
+      continue;
+    }
+    const { attribute, alias, colorScheme } = entry.extension;
+    if (!attribute) fail(`modifier "${entry.name}" is missing an attribute`);
+    for (const [context, tokens] of entry.contexts) {
+      const selector = `[${attribute}="${context}"]`;
+      if (alias) {
+        rescoped.push(...tokens);
+        const own = tokens.filter((token) => !inherited.has(token.path));
+        if (context === entry.defaultContext) defaults.push(...own);
+        aliasBlocks.push(...block(selector, [aliasDecls(own, aliases)]));
+        continue;
+      }
+      const rootDefault = entry.extension.root && context === entry.defaultContext;
+      if (tokens.length === 0) continue;
+      const rootSelector = layered ? `:root:not([${attribute}])` : ':root';
+      scopedBlocks.push(
+        ...block(rootDefault ? `${rootSelector},\n${selector}` : selector, [
+          decls(tokens),
+          colorScheme ? `  color-scheme: ${context};` : '',
+        ]),
+      );
+    }
+    if (!alias) attributes.push(`[${attribute}]`);
+  }
+  const blocks = [
+    ...block(':root', [decls(root), aliasDecls(rootAliases, aliases)]),
+    ...scopedBlocks,
+    ...block(attributes.length > 0 ? attributes.join(',\n') : ':root', [decls(rescoped), aliasDecls(defaults, aliases)]),
+    ...aliasBlocks,
+  ];
+  return `${options.preamble ?? ''}@layer ${options.layer ?? 'todae.base'} {\n${blocks.join('\n\n')}\n}\n`;
 }
 
 export function emitCatalog(tokens: FlatToken[]): string {
@@ -519,13 +661,185 @@ async function atomicWrite(file: string, contents: string): Promise<void> {
 export type BuildTokensResult = {
   css: string;
   json: string;
+  overrideKeys: string;
   tokens: FlatToken[];
 };
 
-export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensResult> {
-  const resolver = await readJson(join(tokensRoot, 'resolver.json'), tokensRoot);
+const OVERRIDE_GROUPS = [
+  ['RAW_OVERRIDE_KEYS', ['core']],
+  ['SEMANTIC_OVERRIDE_KEYS', ['appearance', 'density']],
+  ['COMPONENT_OVERRIDE_KEYS', ['contract']],
+] as const;
+
+/** Emits the ThemeProvider override keys and their types, grouped by layer. */
+export function emitOverrideKeys(tokens: FlatToken[]): string {
+  const types = new Map<string, string>();
+  for (const token of tokens) {
+    const seen = types.get(token.path);
+    if (seen && seen !== token.type) fail(`token "${token.path}" has $type ${seen} and ${token.type} across contexts`);
+    types.set(token.path, token.type);
+  }
+  const lines = ['// Generated by scripts/build-tokens.ts from tokens/resolver.json. Do not edit.', ''];
+  for (const [name, layers] of OVERRIDE_GROUPS) {
+    const paths = [...new Set(tokens.filter((t) => (layers as readonly string[]).includes(t.layer)).map((t) => t.path))];
+    lines.push(`export const ${name} = [`, ...paths.map((path) => `  '${path}',`), '] as const;', '');
+  }
+  lines.push('export const THEME_OVERRIDE_TYPES = {', ...[...types].map(([path, type]) => `  '${path}': '${type}',`), '} as const;');
+  return `${lines.join('\n')}\n`;
+}
+
+export const TODAE_EXTENSION = 'dev.todae';
+
+export type TodaeExtension = {
+  layer: Layer;
+  rules?: Rule[];
+  slots?: SlotRules;
+  attribute?: string;
+  root?: boolean;
+  colorScheme?: boolean;
+  alias?: boolean;
+};
+
+export type ResolvedEntry =
+  | { kind: 'set'; name: string; extension: TodaeExtension; tokens: FlatToken[] }
+  | {
+      kind: 'modifier';
+      name: string;
+      extension: TodaeExtension;
+      defaultContext: string;
+      contexts: Map<string, FlatToken[]>;
+    };
+
+const ATTRIBUTE_RE = /^data-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+const CONTEXT_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
+
+export function aliasGroups(entries: ResolvedEntry[]): AliasGroup[] {
+  const groups: AliasGroup[] = [];
+  for (const entry of entries) {
+    if (entry.kind !== 'modifier' || !entry.extension.alias) continue;
+    const first = entry.contexts.get(entry.defaultContext)?.[0];
+    if (!first) fail(`alias modifier "${entry.name}" default context "${entry.defaultContext}" is empty`);
+    groups.push({ root: first.path.slice(0, first.path.indexOf('.')), contexts: [...entry.contexts.keys()] });
+  }
+  return groups;
+}
+
+const SLOT_GROUP_RE = /^(?:\*|[a-z0-9]+(?:-[a-z0-9]+)*)(?:\.(?:\*|[a-z0-9]+(?:-[a-z0-9]+)*))*$/;
+const SLOT_LEAF_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function parseRules(rules: unknown, loc: string): { rules?: Rule[] } {
+  if (rules === undefined) return {};
+  if (!Array.isArray(rules)) fail(`${loc} rules must be an array`);
+  for (const rule of rules) {
+    if (!RULES.includes(rule as Rule)) fail(`${loc} rule "${String(rule)}" must be one of ${RULES.join('|')}`);
+  }
+  if (new Set(rules).size !== rules.length) fail(`${loc} rules must not repeat`);
+  return { rules: rules as Rule[] };
+}
+
+function parseSlots(slots: unknown, loc: string): { slots?: SlotRules } {
+  if (slots === undefined) return {};
+  if (!isRecord(slots)) fail(`${loc} slots must map token groups to leaf names`);
+  for (const [group, leaves] of Object.entries(slots)) {
+    if (!SLOT_GROUP_RE.test(group)) fail(`${loc} slot group "${group}" must be lowercase dot segments or *`);
+    if (
+      !Array.isArray(leaves) ||
+      leaves.length === 0 ||
+      leaves.some((leaf) => typeof leaf !== 'string' || !SLOT_LEAF_RE.test(leaf)) ||
+      new Set(leaves).size !== leaves.length
+    ) {
+      fail(`${loc} slot group "${group}" must list distinct lowercase leaf names`);
+    }
+  }
+  return { slots: slots as SlotRules };
+}
+
+export function parseExtension(def: Record<string, unknown>, kind: 'set' | 'modifier', loc: string): TodaeExtension {
+  const extensions = def.$extensions;
+  const ext = isRecord(extensions) ? extensions[TODAE_EXTENSION] : undefined;
+  if (!isRecord(ext)) fail(`${loc} must declare $extensions["${TODAE_EXTENSION}"]`);
+  const { layer, attribute, root, colorScheme, alias, rules, slots } = ext;
+  const known = ['layer', 'rules', 'slots', ...(kind === 'modifier' ? ['attribute', 'root', 'colorScheme', 'alias'] : [])];
+  const unknown = Object.keys(ext).find((key) => !known.includes(key));
+  if (unknown) fail(`${loc} has unknown ${TODAE_EXTENSION} key "${unknown}" (allowed: ${known.join(', ')})`);
+  if (typeof layer !== 'string' || !Object.hasOwn(LAYER_RANK, layer)) {
+    fail(`${loc} layer must be one of ${Object.keys(LAYER_RANK).join('|')}`);
+  }
+  const checks = { ...parseRules(rules, loc), ...parseSlots(slots, loc) };
+  for (const [key, value] of Object.entries({ root, colorScheme, alias })) {
+    if (value !== undefined && typeof value !== 'boolean') fail(`${loc} ${key} must be a boolean`);
+  }
+  if (kind === 'set') return { layer: layer as Layer, ...checks };
+  if (typeof attribute !== 'string' || !ATTRIBUTE_RE.test(attribute)) {
+    fail(`${loc} attribute must be a lowercase data-* attribute`);
+  }
+  if (alias && (root || colorScheme)) fail(`${loc} an alias modifier cannot set root or colorScheme`);
+  return {
+    layer: layer as Layer,
+    ...checks,
+    attribute,
+    ...(root === true ? { root } : {}),
+    ...(colorScheme === true ? { colorScheme } : {}),
+    ...(alias === true ? { alias } : {}),
+  };
+}
+
+async function loadSources(sources: unknown, loc: string, tokensRoot: string): Promise<{ loc: string; tree: TokenTree }[]> {
+  if (!Array.isArray(sources) || sources.length === 0) fail(`${loc} must be a non-empty array of sources`);
+  const out: { loc: string; tree: TokenTree }[] = [];
+  for (const [i, source] of sources.entries()) {
+    if (!isRecord(source)) fail(`${loc}[${i}] must be an object`);
+    if (!('$ref' in source)) {
+      out.push({ loc: `${loc}[${i}]`, tree: asTree(source, `${loc}[${i}]`) });
+      continue;
+    }
+    const ref = source.$ref;
+    if (typeof ref !== 'string' || ref.includes('#')) {
+      fail(`${loc}[${i}] $ref must be a relative token file path`);
+    }
+    const abs = resolve(tokensRoot, ref);
+    if (!insideRoot(tokensRoot, abs)) fail(`resolver $ref "${ref}" escapes tokens/`);
+    const file = relative(tokensRoot, abs).split(sep).join('/');
+    out.push({ loc: file, tree: asTree(await readJson(abs, tokensRoot), file) });
+  }
+  return out;
+}
+
+async function loadTokens(
+  sources: unknown,
+  loc: string,
+  tokensRoot: string,
+  extension: TodaeExtension,
+  context: string | undefined,
+  paints: readonly string[],
+  inherited: FlatToken[] = [],
+): Promise<FlatToken[]> {
+  const merged = new Map<string, TokenNode>();
+  for (const source of await loadSources(sources, loc, tokensRoot)) {
+    for (const [path, node] of flattenTokens(source.tree)) merged.set(path, node);
+  }
+  const { layer, rules, slots } = extension;
+  return layerTokens(merged, layer, context, { rules, slots, paints, inherited: tokenMapOf(inherited) });
+}
+
+function tokenMapOf(tokens: FlatToken[]): Map<string, TokenNode> {
+  return new Map(tokens.map((t) => [t.path, { $type: t.type, $value: t.value }]));
+}
+
+const MATCHED_EXTENSION_KEYS = ['layer', 'attribute', 'root', 'colorScheme', 'alias'] as const;
+
+/**
+ * Loads a resolver and the token files it names. With `upstream` (Todae's own
+ * entries), a set or modifier that shares an upstream name extends it: it must
+ * keep the upstream layer and CSS placement, and a modifier inherits the
+ * upstream default context.
+ */
+export async function loadResolver(resolverFile: string, upstream: ResolvedEntry[] = []): Promise<ResolvedEntry[]> {
+  const tokensRoot = dirname(resolve(resolverFile));
+  const label = relative(process.cwd(), resolve(resolverFile)) || resolverFile;
+  const resolver = await readJson(resolve(resolverFile), tokensRoot);
   if (!isRecord(resolver) || resolver.version !== '2025.10' || !Array.isArray(resolver.resolutionOrder)) {
-    fail('resolver.json must be Resolver 2025.10 with resolutionOrder');
+    fail(`${label} must be Resolver 2025.10 with resolutionOrder`);
   }
   const fileRefs: string[] = [];
   collectFileRefs(resolver, fileRefs);
@@ -533,91 +847,359 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
     const abs = resolve(tokensRoot, ref);
     if (!insideRoot(tokensRoot, abs)) fail(`resolver $ref "${ref}" escapes tokens/`);
   }
+  const sets = isRecord(resolver.sets) ? resolver.sets : {};
+  const modifiers = isRecord(resolver.modifiers) ? resolver.modifiers : {};
+  const upstreamOf = (kind: 'set' | 'modifier', name: string) =>
+    upstream.find((entry) => entry.kind === kind && entry.name === name);
 
-  const core = flattenLayer(asTree(await readJson(join(tokensRoot, 'core.json'), tokensRoot), 'core.json'), 'core');
-  const light = flattenLayer(
-    asTree(await readJson(join(tokensRoot, 'appearance/light.json'), tokensRoot), 'appearance/light.json'),
-    'appearance',
-    'light',
-  );
-  const dark = flattenLayer(
-    asTree(await readJson(join(tokensRoot, 'appearance/dark.json'), tokensRoot), 'appearance/dark.json'),
-    'appearance',
-    'dark',
-  );
-  validateParity(
-    new Map(light.map((t) => [t.path, { $type: t.type, $value: t.value }])),
-    new Map(dark.map((t) => [t.path, { $type: t.type, $value: t.value }])),
-  );
-
-  const densityNames = ['compact', 'comfortable', 'spacious'] as const;
-  const density: Record<string, FlatToken[]> = {};
-  for (const name of densityNames) {
-    density[name] = flattenLayer(
-      asTree(await readJson(join(tokensRoot, `density/${name}.json`), tokensRoot), `density/${name}.json`),
-      'density',
-      name,
-    );
+  const order: { kind: 'set' | 'modifier'; name: string; def: Record<string, unknown>; extension: TodaeExtension }[] = [];
+  const seen = new Set<string>();
+  for (const [i, item] of resolver.resolutionOrder.entries()) {
+    const ref = isRecord(item) ? item.$ref : undefined;
+    const match = typeof ref === 'string' ? ref.match(/^#\/(sets|modifiers)\/([^/]+)$/) : null;
+    if (!match) fail(`resolutionOrder[${i}] must be { "$ref": "#/sets/…" } or { "$ref": "#/modifiers/…" }`);
+    const kind = match[1] === 'sets' ? 'set' : 'modifier';
+    const name = match[2]!.replaceAll('~1', '/').replaceAll('~0', '~');
+    const def = (kind === 'set' ? sets : modifiers)[name];
+    if (!isRecord(def)) fail(`resolutionOrder[${i}] ${match[0]} does not exist`);
+    if (seen.has(match[0])) fail(`resolutionOrder lists ${match[0]} twice`);
+    seen.add(match[0]);
+    const loc = `${kind} "${name}"`;
+    const extension = parseExtension(def, kind, loc);
+    const base = upstreamOf(kind, name);
+    if (base) {
+      const changed = MATCHED_EXTENSION_KEYS.find((key) => extension[key] !== base.extension[key]);
+      if (changed) fail(`${loc} extends Todae's ${kind} "${name}", so its ${changed} must match`);
+      // An extension keeps Todae's structural rules and slot shapes, plus its
+      // own. reserved-roots guards Todae's own namespace, so a company's
+      // brand.* tokens are not held to it.
+      const inheritedRules = (base.extension.rules ?? []).filter((rule) => rule !== 'reserved-roots');
+      const rules = [...new Set([...inheritedRules, ...(extension.rules ?? [])])];
+      const slots = { ...base.extension.slots, ...extension.slots };
+      if (rules.length > 0) extension.rules = rules;
+      if (Object.keys(slots).length > 0) extension.slots = slots;
+    }
+    order.push({ kind, name, def, extension });
   }
 
-  const base = flattenLayer(
-    asTree(await readJson(join(tokensRoot, 'components/button.base.json'), tokensRoot), 'components/button.base.json'),
-    'contract',
-  );
-  const paints = {} as Record<(typeof BUTTON_PAINTS)[number], FlatToken[]>;
-  for (const name of BUTTON_PAINTS) {
-    paints[name] = flattenLayer(
-      asTree(
-        await readJson(join(tokensRoot, `components/button.${name}.json`), tokensRoot),
-        `components/button.${name}.json`,
-      ),
-      'contract',
-      name,
-    );
+  const attributes = new Map<string, string>();
+  for (const entry of upstream) {
+    if (entry.kind === 'modifier') attributes.set(entry.extension.attribute!, entry.name);
   }
-  validatePaintPacks(
-    Object.fromEntries(
-      BUTTON_PAINTS.map((name) => [
+  for (const { kind, name, extension } of order) {
+    if (kind !== 'modifier') continue;
+    const owner = attributes.get(extension.attribute!);
+    if (owner !== undefined && owner !== name) fail(`modifier "${name}" reuses attribute ${extension.attribute}`);
+    attributes.set(extension.attribute!, name);
+  }
+
+  // The button rule checks paint packs against every button alias context.
+  const paints = new Set<string>();
+  for (const entry of upstream) {
+    if (entry.kind === 'modifier' && entry.extension.alias && entry.extension.rules?.includes('button')) {
+      for (const context of entry.contexts.keys()) paints.add(context);
+    }
+  }
+  for (const { kind, def, extension } of order) {
+    if (kind === 'modifier' && extension.alias && extension.rules?.includes('button') && isRecord(def.contexts)) {
+      for (const context of Object.keys(def.contexts)) paints.add(context);
+    }
+  }
+
+  const entries: ResolvedEntry[] = [];
+  for (const { kind, name, def, extension } of order) {
+    const loc = `${kind} "${name}"`;
+    if (kind === 'set') {
+      const upstreamSet = upstreamOf(kind, name);
+      entries.push({
+        kind,
         name,
-        new Map(paints[name].map((t) => [t.path, { $type: t.type, $value: t.value }])),
-      ]),
-    ),
-  );
-
-  const contract: FlatToken[] = [...base, ...BUTTON_PAINTS.flatMap((name) => paints[name])];
-  for (const file of [
-    'stack.json',
-    'text.json',
-    'field.json',
-    'chip.json',
-    'overlay.json',
-    'dialog.json',
-    'sheet.json',
-    'popover.json',
-    'tooltip.json',
-    'option.json',
-    'selection.json',
-  ]) {
-    contract.push(
-      ...flattenLayer(
-        asTree(await readJson(join(tokensRoot, 'components', file), tokensRoot), `components/${file}`),
-        'contract',
-      ),
-    );
+        extension,
+        tokens: await loadTokens(
+          def.sources,
+          `${loc} sources`,
+          tokensRoot,
+          extension,
+          undefined,
+          [...paints],
+          upstreamSet?.kind === 'set' ? upstreamSet.tokens : [],
+        ),
+      });
+      continue;
+    }
+    if (!isRecord(def.contexts) || Object.keys(def.contexts).length === 0) fail(`${loc} must declare contexts`);
+    const base = upstreamOf(kind, name);
+    const inherited = base?.kind === 'modifier' ? base.defaultContext : undefined;
+    const defaultContext = def.default ?? inherited;
+    if (inherited !== undefined && defaultContext !== inherited) {
+      fail(`${loc} extends Todae's modifier "${name}", so its default must stay "${inherited}"`);
+    }
+    if (
+      typeof defaultContext !== 'string' ||
+      (inherited === undefined && !Object.hasOwn(def.contexts, defaultContext))
+    ) {
+      fail(`${loc} default must name one of its contexts`);
+    }
+    const contexts = new Map<string, FlatToken[]>();
+    for (const [context, sources] of Object.entries(def.contexts)) {
+      if (!CONTEXT_RE.test(context)) fail(`${loc} context "${context}" must be lowercase`);
+      if (extension.colorScheme && context !== 'light' && context !== 'dark') {
+        fail(`${loc} sets colorScheme, so its contexts must be light or dark, not "${context}"`);
+      }
+      if (extension.alias && context === 'base') fail(`${loc} context "base" is reserved for shared <root>.base tokens`);
+      contexts.set(
+        context,
+        await loadTokens(
+          sources,
+          `${loc} context "${context}"`,
+          tokensRoot,
+          extension,
+          context,
+          [...paints],
+          base?.kind === 'modifier' ? (base.contexts.get(context) ?? []) : [],
+        ),
+      );
+    }
+    entries.push({ kind, name, extension, defaultContext, contexts });
   }
+  return entries;
+}
 
+/** Context-level checks that need a modifier's full set of contexts. */
+export function validateEntries(entries: ResolvedEntry[]): void {
+  for (const entry of entries) {
+    if (entry.kind !== 'modifier') continue;
+    const { extension, defaultContext, contexts } = entry;
+    const loc = `modifier "${entry.name}"`;
+    const defaults = contexts.get(defaultContext);
+    if (!defaults) fail(`${loc} default must name one of its contexts`);
+    if (extension.alias) {
+      if (extension.rules?.includes('button')) {
+        validatePaintPacks(
+          Object.fromEntries([...contexts].map(([context, tokens]) => [context, tokenMapOf(tokens)])),
+          defaultContext,
+        );
+      }
+      validateAliasParity(
+        new Map([...contexts].map(([context, tokens]) => [context, tokens.map((t) => t.path)])),
+        defaultContext,
+        loc,
+      );
+      const root = aliasGroups([entry])[0]!.root;
+      for (const [context, tokens] of contexts) {
+        const stray = tokens.find((t) => !t.path.startsWith(`${root}.${context}.`));
+        if (stray) fail(`${loc} context "${context}" token "${stray.path}" must be under ${root}.${context}.*`);
+      }
+      continue;
+    }
+    for (const [context, tokens] of contexts) {
+      if (context === defaultContext) continue;
+      const label = extension.layer === 'appearance' ? 'appearance' : loc;
+      validateParity(tokenMapOf(defaults), tokenMapOf(tokens), `${label} ${defaultContext}/${context}`);
+    }
+  }
+}
+
+function mergeTokens(base: FlatToken[], extra: FlatToken[], loc: string): FlatToken[] {
+  const merged = new Map(base.map((token) => [token.path, token]));
+  for (const token of extra) {
+    const previous = merged.get(token.path);
+    if (previous && previous.type !== token.type) {
+      fail(`${loc} token "${token.path}" overrides a ${previous.type} with a ${token.type}`);
+    }
+    merged.set(token.path, token);
+  }
+  return [...merged.values()];
+}
+
+/**
+ * Layers a company's entries over Todae's. Entries sharing a name merge (the
+ * company's tokens win). A new entry is placed just before the next Todae
+ * entry the company lists after it, or at the end. `merged` is the full
+ * graph; `company` keeps the same order with only the company's tokens, for
+ * emitting a CSS file layered after Todae's; `inherited` holds the token paths
+ * whose consume aliases Todae's CSS already declares.
+ */
+export function mergeEntries(
+  base: ResolvedEntry[],
+  extra: ResolvedEntry[],
+): { merged: ResolvedEntry[]; company: ResolvedEntry[]; inherited: Set<string> } {
+  const merged: ResolvedEntry[] = base.map((entry) =>
+    entry.kind === 'set' ? { ...entry } : { ...entry, contexts: new Map(entry.contexts) },
+  );
+  const company: ResolvedEntry[] = base.map((entry) =>
+    entry.kind === 'set' ? { ...entry, tokens: [] } : { ...entry, contexts: new Map() },
+  );
+  const inherited = new Set(base.flatMap(entryTokens).map((token) => token.path));
+  let pending: ResolvedEntry[] = [];
+  for (const entry of extra) {
+    const index = merged.findIndex((candidate) => candidate.kind === entry.kind && candidate.name === entry.name);
+    if (index === -1) {
+      pending.push(entry);
+      continue;
+    }
+    merged.splice(index, 0, ...pending);
+    company.splice(index, 0, ...pending);
+    const at = index + pending.length;
+    pending = [];
+    const target = merged[at]!;
+    const view = company[at]!;
+    const loc = `${entry.kind} "${entry.name}"`;
+    if (entry.kind === 'set' && target.kind === 'set' && view.kind === 'set') {
+      target.tokens = mergeTokens(target.tokens, entry.tokens, loc);
+      view.tokens = entry.tokens;
+    } else if (entry.kind === 'modifier' && target.kind === 'modifier' && view.kind === 'modifier') {
+      for (const [context, tokens] of entry.contexts) {
+        target.contexts.set(context, mergeTokens(target.contexts.get(context) ?? [], tokens, `${loc} context "${context}"`));
+        view.contexts.set(context, tokens);
+      }
+    }
+  }
+  merged.push(...pending);
+  company.push(...pending);
+  return { merged, company, inherited };
+}
+
+function entryTokens(entry: ResolvedEntry): FlatToken[] {
+  return entry.kind === 'set' ? entry.tokens : [...entry.contexts.values()].flat();
+}
+
+/** Graph-level checks: one owner per token, refs, layer and resolution order. Returns every token. */
+export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
   const known = new Map<string, Layer>();
-  for (const token of core) known.set(token.path, 'core');
-  for (const token of light) known.set(token.path, 'appearance');
-  for (const token of density.comfortable ?? []) known.set(token.path, 'density');
-  for (const token of contract) known.set(token.path, 'contract');
+  const owner = new Map<string, string>();
+  const position = new Map<string, number>();
+  const all: FlatToken[] = [];
+  for (const [index, entry] of entries.entries()) {
+    const declared =
+      entry.kind === 'set'
+        ? entry.tokens
+        : entry.extension.alias
+          ? [...entry.contexts.values()].flat()
+          : entry.contexts.get(entry.defaultContext)!;
+    for (const token of declared) {
+      const previous = owner.get(token.path);
+      if (previous) fail(`token "${token.path}" is declared by both ${previous} and ${entry.kind} "${entry.name}"`);
+      owner.set(token.path, `${entry.kind} "${entry.name}"`);
+      position.set(token.path, index);
+      known.set(token.path, token.layer);
+    }
+    all.push(...entryTokens(entry));
+  }
+  const types = new Map<string, string>();
+  for (const token of all) {
+    const seen = types.get(token.path);
+    if (seen && seen !== token.type) fail(`token "${token.path}" has $type ${seen} and ${token.type} across contexts`);
+    types.set(token.path, token.type);
+  }
+  for (const token of all) {
+    if (token.ref && types.has(token.ref) && types.get(token.ref) !== token.type) {
+      fail(`token "${token.path}" is a ${token.type} but references the ${types.get(token.ref)} "${token.ref}"`);
+    }
+  }
+  validateRefs(all, known, (from, to) => position.get(from) === position.get(to));
+  // CSS places each entry by its resolutionOrder position, so an alias to a
+  // later entry would resolve before that entry's context is applied. Scoped
+  // modifier blocks are not re-declared when another modifier's context
+  // changes, so they may not alias each other either.
+  const scoped = (entry: ResolvedEntry | undefined) => entry?.kind === 'modifier' && !entry.extension.alias;
+  const byPath = new Map<string, FlatToken[]>();
+  for (const token of all) byPath.set(token.path, [...(byPath.get(token.path) ?? []), token]);
+  // First token path reached through `ref` (at any depth) that a scoped modifier declares.
+  function scopedDependency(ref: string, from: number): string | null {
+    const queue = [ref];
+    const seen = new Set<string>();
+    for (let path = queue.shift(); path !== undefined; path = queue.shift()) {
+      if (seen.has(path)) continue;
+      seen.add(path);
+      const at = position.get(path) ?? -1;
+      if (at !== from && scoped(entries[at])) return path;
+      for (const token of byPath.get(path) ?? []) if (token.ref) queue.push(token.ref);
+    }
+    return null;
+  }
+  for (const [index, entry] of entries.entries()) {
+    for (const token of entryTokens(entry)) {
+      if (!token.ref) continue;
+      const target = position.get(token.ref) ?? -1;
+      if (target > index) {
+        fail(
+          `token "${token.path}" references "${token.ref}" from ${owner.get(token.ref)}, which must come earlier in resolutionOrder`,
+        );
+      }
+      const dependency = scoped(entry) ? scopedDependency(token.ref, index) : null;
+      if (dependency) {
+        fail(
+          `token "${token.path}" in ${entry.kind} "${entry.name}" depends on "${dependency}" from ${owner.get(dependency)}; scoped modifiers may not alias each other`,
+        );
+      }
+    }
+  }
+  return all;
+}
 
-  const all = [...core, ...light, ...dark, ...Object.values(density).flat(), ...contract];
-  validateRefs(all, known);
+export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[]> {
+  const entries = await loadResolver(join(tokensRoot, 'resolver.json'));
+  validateEntries(entries);
+  return entries;
+}
 
-  const css = emitCss({ core, light, dark, density, contract, base, paints });
-  const json = emitCatalog(all);
-  return { css, json, tokens: all };
+export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensResult> {
+  const entries = await resolveEntries(tokensRoot);
+  const all = checkGraph(entries);
+  return { css: emitCss(entries), json: emitCatalog(all), overrideKeys: emitOverrideKeys(all), tokens: all };
+}
+
+/** Walks up from this file to the package that ships Todae's `tokens/resolver.json`. */
+export function todaeTokensRoot(from = import.meta.dirname): string {
+  for (let dir = from; ; dir = dirname(dir)) {
+    if (existsSync(join(dir, 'tokens', 'resolver.json')) && existsSync(join(dir, 'package.json'))) {
+      return join(dir, 'tokens');
+    }
+    if (dirname(dir) === dir) fail(`Could not find Todae's tokens/resolver.json above ${from}`);
+  }
+}
+
+export const COMPANY_LAYER = 'todae.theme';
+const COMPANY_PREAMBLE = `@layer todae.reset, todae.base, todae.components, ${COMPANY_LAYER};\n\n`;
+
+export type CompanyTokensResult = {
+  /** CSS for the company's tokens only, in a cascade layer after Todae's. */
+  css: string;
+  /** Catalog of Todae's and the company's tokens together. */
+  json: string;
+  /** `THEME_OVERRIDE_TYPES` for the company's tokens, for ThemeProvider `overrideTypes`. */
+  overrideTypes: string;
+  tokens: FlatToken[];
+};
+
+/**
+ * Builds a company token package layered on Todae's: `resolver` is the
+ * company's resolver.json, `base` Todae's tokens directory.
+ */
+export async function buildCompanyTokens(options: { resolver: string; base?: string }): Promise<CompanyTokensResult> {
+  const upstream = await resolveEntries(options.base ?? todaeTokensRoot());
+  const extra = await loadResolver(options.resolver, upstream);
+  const { merged, company, inherited } = mergeEntries(upstream, extra);
+  validateEntries(merged);
+  const all = checkGraph(merged);
+  const css = emitCss(company, {
+    layer: COMPANY_LAYER,
+    preamble: COMPANY_PREAMBLE,
+    aliases: aliasGroups(merged),
+    inherited,
+  });
+  const own = company.flatMap(entryTokens);
+  const types = new Map(own.map((token) => [token.path, token.type]));
+  const overrideTypes = [
+    '// Generated by todae-tokens. Do not edit.',
+    '',
+    'export const THEME_OVERRIDE_TYPES = {',
+    ...[...types].map(([path, type]) => `  '${path}': '${type}',`),
+    '} as const;',
+    '',
+  ].join('\n');
+  return { css, json: emitCatalog(all), overrideTypes, tokens: all };
 }
 
 export async function buildTokens(options: { check?: boolean; root?: string } = {}): Promise<BuildTokensResult> {
@@ -626,27 +1208,110 @@ export async function buildTokens(options: { check?: boolean; root?: string } = 
   const result = await buildTokensGraph(tokensRoot);
   const cssFile = join(pkgRoot, 'src/styles/tokens.generated.css');
   const jsonFile = join(tokensRoot, 'tokens.generated.json');
+  const keysFile = join(pkgRoot, 'src/providers/themeOverrideKeys.generated.ts');
   if (options.check) {
     let css: string;
     let json: string;
+    let keys: string;
     try {
       css = await readFile(cssFile, 'utf8');
       json = await readFile(jsonFile, 'utf8');
+      keys = await readFile(keysFile, 'utf8');
     } catch {
       fail('tokens:check failed: generated files are missing');
     }
-    if (css !== result.css || json !== result.json) fail('tokens:check failed: generated tokens drifted');
+    if (css !== result.css || json !== result.json || keys !== result.overrideKeys) {
+      fail('tokens:check failed: generated tokens drifted');
+    }
     return result;
   }
   await atomicWrite(cssFile, result.css);
   await atomicWrite(jsonFile, result.json);
+  await atomicWrite(keysFile, result.overrideKeys);
   process.stdout.write(
-    `Wrote ${relative(pkgRoot, cssFile)} and ${relative(pkgRoot, jsonFile)} (${result.tokens.length} tokens)\n`,
+    `Wrote ${relative(pkgRoot, cssFile)}, ${relative(pkgRoot, jsonFile)} and ${relative(pkgRoot, keysFile)} (${result.tokens.length} tokens)\n`,
   );
   return result;
 }
 
-const invoked = process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
-if (invoked) {
-  await buildTokens({ check: process.argv.includes('--check') });
+async function writeOrCheck(outputs: [file: string, contents: string][], check: boolean, label: string): Promise<void> {
+  if (!check) {
+    for (const [file, contents] of outputs) await atomicWrite(file, contents);
+    return;
+  }
+  for (const [file, contents] of outputs) {
+    let current: string;
+    try {
+      current = await readFile(file, 'utf8');
+    } catch {
+      fail(`${label} failed: ${file} is missing`);
+    }
+    if (current !== contents) fail(`${label} failed: ${file} drifted`);
+  }
+}
+
+const USAGE = `Usage: todae-tokens build --resolver <file> [options]
+
+Builds a company token package layered on Todae's tokens.
+
+Options:
+  --resolver <file>  Company DTCG 2025.10 resolver (required)
+  --css <file>       CSS output, layered after Todae's (default: todae-theme.css)
+  --catalog <file>   Merged token catalog (default: tokens.catalog.json)
+  --types <file>     ThemeProvider overrideTypes module (default: todae-theme.types.ts)
+  --base <dir>       Todae tokens directory (default: the installed package's)
+  --check            Fail if the outputs are missing or out of date instead of writing
+`;
+
+export async function cli(argv: string[]): Promise<void> {
+  const { positionals, values } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: {
+      resolver: { type: 'string' },
+      css: { type: 'string', default: 'todae-theme.css' },
+      catalog: { type: 'string', default: 'tokens.catalog.json' },
+      types: { type: 'string', default: 'todae-theme.types.ts' },
+      base: { type: 'string' },
+      check: { type: 'boolean', default: false },
+      help: { type: 'boolean', default: false },
+    },
+  });
+  if (values.help) {
+    process.stdout.write(USAGE);
+    return;
+  }
+  if (positionals[0] !== 'build' || positionals.length !== 1 || !values.resolver) fail(USAGE);
+  const result = await buildCompanyTokens({
+    resolver: values.resolver,
+    ...(values.base ? { base: resolve(values.base) } : {}),
+  });
+  const outputs: [string, string][] = [
+    [resolve(values.css), result.css],
+    [resolve(values.catalog), result.json],
+    [resolve(values.types), result.overrideTypes],
+  ];
+  await writeOrCheck(outputs, values.check, 'todae-tokens --check');
+  if (!values.check) process.stdout.write(`Wrote ${outputs.map(([file]) => relative(process.cwd(), file)).join(', ')}\n`);
+}
+
+function invokedPath(): string | null {
+  try {
+    return process.argv[1] ? realpathSync(resolve(process.argv[1])) : null;
+  } catch {
+    return null;
+  }
+}
+
+const entry = invokedPath();
+if (entry && pathToFileURL(entry).href === import.meta.url) {
+  const args = process.argv.slice(2);
+  try {
+    // `self` rebuilds Todae's own generated files; it is for this repo's scripts only.
+    if (args[0] === 'self') await buildTokens({ check: args.includes('--check') });
+    else await cli(args);
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  }
 }

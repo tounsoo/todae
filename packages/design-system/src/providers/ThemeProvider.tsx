@@ -1,14 +1,21 @@
 'use client';
 
 import { createContext, useContext, useSyncExternalStore, type ComponentProps, type CSSProperties } from 'react';
-import { themeOverrideStyle, type ThemeOverride } from './themeOverride';
+import {
+  themeOverrideStyle,
+  type ThemeOverride,
+  type ThemeOverrideTypes,
+  type ThemeOverrideValue,
+} from './themeOverride';
 
 export type Appearance = 'system' | 'light' | 'dark';
 export type ResolvedAppearance = 'light' | 'dark';
 
-export type ThemeProviderProps = {
+export type ThemeProviderProps<Extra extends string = never> = {
   appearance?: Appearance;
-  overrides?: ThemeOverride;
+  overrides?: ThemeOverride & { [K in NoInfer<Extra>]?: ThemeOverrideValue };
+  /** Types for extra override keys, such as a company's generated `THEME_OVERRIDE_TYPES`. */
+  overrideTypes?: ThemeOverrideTypes<Extra>;
 } & ComponentProps<'div'>;
 
 const QUERY = '(prefers-color-scheme: dark)';
@@ -29,15 +36,16 @@ function getServerSnapshot(): ResolvedAppearance {
   return 'light';
 }
 
-export function ThemeProvider({
+export function ThemeProvider<Extra extends string = never>({
   appearance = 'system',
   overrides,
+  overrideTypes,
   style,
   ...props
-}: ThemeProviderProps) {
+}: ThemeProviderProps<Extra>) {
   const system = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const resolved: ResolvedAppearance = appearance === 'system' ? system : appearance;
-  const vars = themeOverrideStyle(overrides);
+  const vars = themeOverrideStyle(overrides, overrideTypes);
   return (
     <AppearanceContext.Provider value={resolved}>
       <ThemeVarsContext.Provider value={vars}>

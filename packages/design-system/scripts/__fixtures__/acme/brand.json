@@ -1,0 +1,8 @@
+{
+  "brand": {
+    "logo": {
+      "size": { "$type": "dimension", "$value": { "value": 2, "unit": "rem" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/brand/ink/$value" } }
+    }
+  }
+}

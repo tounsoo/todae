@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "outDir": "dist/scripts",
+    "rootDir": "scripts",
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["scripts/build-tokens.ts"]
+}

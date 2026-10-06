@@ -1,0 +1,43 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/resolver.json",
+  "name": "acme",
+  "version": "2025.10",
+  "description": "Example company layer: brand tokens, a rebranded accent, a roomy density and an outline button.",
+  "sets": {
+    "brand": {
+      "sources": [{ "$ref": "./brand.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
+    }
+  },
+  "modifiers": {
+    "appearance": {
+      "contexts": {
+        "light": [{ "$ref": "./appearance/light.json" }],
+        "dark": [{ "$ref": "./appearance/dark.json" }]
+      },
+      "$extensions": {
+        "dev.todae": { "layer": "appearance", "attribute": "data-appearance", "root": true, "colorScheme": true }
+      }
+    },
+    "density": {
+      "contexts": {
+        "roomy": [{ "$ref": "./density/roomy.json" }]
+      },
+      "$extensions": { "dev.todae": { "layer": "density", "rules": ["density-space"], "attribute": "data-density" } }
+    },
+    "buttonVariant": {
+      "contexts": {
+        "outline": [{ "$ref": "./button.outline.json" }]
+      },
+      "$extensions": {
+        "dev.todae": { "layer": "contract", "rules": ["button"], "attribute": "data-button-variant", "alias": true }
+      }
+    }
+  },
+  "resolutionOrder": [
+    { "$ref": "#/modifiers/appearance" },
+    { "$ref": "#/modifiers/density" },
+    { "$ref": "#/modifiers/buttonVariant" },
+    { "$ref": "#/sets/brand" }
+  ]
+}

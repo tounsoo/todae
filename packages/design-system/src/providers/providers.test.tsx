@@ -3,10 +3,11 @@ import { afterEach } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToString } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
-import { DensityProvider, useDensity } from './DensityProvider';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import type { ButtonVariant, ButtonVariants } from '../components/Button';
+import { DensityProvider, useDensity, type Densities, type Density } from './DensityProvider';
 import { ThemeProvider, useAppearance } from './ThemeProvider';
-import { themeOverrideStyle } from './themeOverride';
+import { THEME_OVERRIDE_KEYS, themeOverrideStyle, themeOverrideType } from './themeOverride';
 
 function AppearanceLabel() {
   return <span>{useAppearance()}</span>;
@@ -176,6 +177,74 @@ describe('themeOverrideStyle', () => {
         'space.1': { colorSpace: 'oklch', components: [0.5, 0.1, 200] },
       }),
     ).toThrow(/Invalid theme override value/);
+  });
+});
+
+describe('override keys', () => {
+  it('match every token in the generated catalog, with its type', () => {
+    const catalog = JSON.parse(readFileSync(join(import.meta.dirname, '../../tokens/tokens.generated.json'), 'utf8')) as {
+      tokens: { path: string; type: string }[];
+    };
+    const types = new Map(catalog.tokens.map((token) => [token.path, token.type]));
+    expect([...THEME_OVERRIDE_KEYS].sort()).toEqual([...types.keys()].sort());
+    expect(new Set(THEME_OVERRIDE_KEYS).size).toBe(THEME_OVERRIDE_KEYS.length);
+    for (const key of THEME_OVERRIDE_KEYS) expect(themeOverrideType(key), key).toBe(types.get(key));
+  });
+
+  it('accept tokens the hand-written list used to miss', () => {
+    expect(themeOverrideStyle({ 'space.selection.gap': { value: 0.5, unit: 'rem' } })).toEqual({
+      '--todae-space-selection-gap': '0.5rem',
+    });
+    expect(themeOverrideStyle({ 'field.counter.emphasis.weight': 700 })).toEqual({
+      '--todae-field-counter-emphasis-weight': '700',
+    });
+  });
+});
+
+describe('extensible densities', () => {
+  it('derives Density from the Densities interface companies can augment', () => {
+    expectTypeOf<Density>().toEqualTypeOf<keyof Densities>();
+    expectTypeOf<ButtonVariant>().toEqualTypeOf<keyof ButtonVariants>();
+  });
+});
+
+describe('company override types', () => {
+  it('accepts extra keys typed by overrideTypes and still rejects others', () => {
+    const types = { 'brand.ink': 'color', 'brand.logo.size': 'dimension' } as const;
+    expect(
+      themeOverrideStyle(
+        { 'brand.ink': { colorSpace: 'oklch', components: [0.4, 0.1, 25] }, 'brand.logo.size': { value: 2, unit: 'rem' } },
+        types,
+      ),
+    ).toEqual({ '--todae-brand-ink': 'oklch(0.4 0.1 25)', '--todae-brand-logo-size': '2rem' });
+    expect(() => themeOverrideStyle({ 'brand.ink': 3 }, types)).toThrow(/Invalid theme override value for "brand.ink"/);
+    expect(() => themeOverrideStyle({ 'brand.other': 3 }, types)).toThrow(/Unknown theme override "brand.other"/);
+    expect(() => themeOverrideStyle({ 'brand.ink': { colorSpace: 'oklch', components: [0.4, 0.1, 25] } })).toThrow(
+      /Unknown theme override/,
+    );
+    expect(() => themeOverrideStyle({ 'Brand.Ink': 1 }, { 'Brand.Ink': 'number' })).toThrow(/Unknown theme override/);
+    expect(() => themeOverrideStyle({ 'brand.ink': 1 }, { 'brand.ink': 'url' } as never)).toThrow(/Unknown theme override/);
+    expect(() => themeOverrideStyle({ toString: 1 }, {})).toThrow(/Unknown theme override/);
+    expect(() => themeOverrideStyle({ 'color.bg.canvas': 0.5 }, { 'color.bg.canvas': 'number' } as never)).toThrow(
+      /Invalid theme override value for "color.bg.canvas"/,
+    );
+    expect(
+      themeOverrideStyle({ 'radius.md': { value: 1, unit: 'rem' } }, { 'radius.md': 'url' } as never),
+    ).toEqual({ '--todae-radius-md': '1rem' });
+  });
+
+  it('writes company overrides on the ThemeProvider element', () => {
+    render(
+      <ThemeProvider
+        appearance="light"
+        data-testid="theme"
+        overrideTypes={{ 'brand.ink': 'color' }}
+        overrides={{ 'brand.ink': { colorSpace: 'oklch', components: [0.4, 0.1, 25] }, 'radius.md': { value: 1, unit: 'rem' } }}
+      />,
+    );
+    const el = screen.getByTestId('theme');
+    expect(el.style.getPropertyValue('--todae-brand-ink')).toBe('oklch(0.4 0.1 25)');
+    expect(el.style.getPropertyValue('--todae-radius-md')).toBe('1rem');
   });
 });
 
