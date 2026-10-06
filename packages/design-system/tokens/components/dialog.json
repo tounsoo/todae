@@ -15,6 +15,10 @@
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/4/$value" } },
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
       }
+    },
+    "motion": {
+      "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
+      "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/fast/$value" } }
     }
   }
 }

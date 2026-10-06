@@ -245,6 +245,60 @@
       "context": null
     },
     {
+      "path": "motion.duration.fast",
+      "type": "duration",
+      "cssVar": "--todae-motion-duration-fast",
+      "cssValue": "160ms",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "motion.duration.moderate",
+      "type": "duration",
+      "cssVar": "--todae-motion-duration-moderate",
+      "cssValue": "240ms",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "motion.duration.normal",
+      "type": "duration",
+      "cssVar": "--todae-motion-duration-normal",
+      "cssValue": "200ms",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "motion.duration.slow",
+      "type": "duration",
+      "cssVar": "--todae-motion-duration-slow",
+      "cssValue": "280ms",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "motion.duration.slower",
+      "type": "duration",
+      "cssVar": "--todae-motion-duration-slower",
+      "cssValue": "300ms",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "motion.easing.standard",
+      "type": "cubicBezier",
+      "cssVar": "--todae-motion-easing-standard",
+      "cssValue": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "radius.lg",
       "type": "dimension",
       "cssVar": "--todae-radius-lg",
@@ -375,6 +429,15 @@
       "type": "dimension",
       "cssVar": "--todae-space-12",
       "cssValue": "3rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "z.overlay",
+      "type": "number",
+      "cssVar": "--todae-z-overlay",
+      "cssValue": "1000",
       "ref": null,
       "layer": "core",
       "context": null
@@ -2162,11 +2225,29 @@
       "context": null
     },
     {
+      "path": "overlay.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-overlay-motion-easing",
+      "cssValue": "var(--todae-motion-easing-standard)",
+      "ref": "motion.easing.standard",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "overlay.scrim.bg",
       "type": "color",
       "cssVar": "--todae-overlay-scrim-bg",
       "cssValue": "var(--todae-color-bg-scrim)",
       "ref": "color.bg.scrim",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "overlay.z",
+      "type": "number",
+      "cssVar": "--todae-overlay-z",
+      "cssValue": "var(--todae-z-overlay)",
+      "ref": "z.overlay",
       "layer": "contract",
       "context": null
     },
@@ -2212,6 +2293,24 @@
       "cssVar": "--todae-dialog-max-width",
       "cssValue": "32rem",
       "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "dialog.motion.enter",
+      "type": "duration",
+      "cssVar": "--todae-dialog-motion-enter",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "dialog.motion.exit",
+      "type": "duration",
+      "cssVar": "--todae-dialog-motion-exit",
+      "cssValue": "var(--todae-motion-duration-fast)",
+      "ref": "motion.duration.fast",
       "layer": "contract",
       "context": null
     },
@@ -2329,6 +2428,33 @@
       "cssVar": "--todae-sheet-handle-hit",
       "cssValue": "var(--todae-space-11)",
       "ref": "space.11",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "sheet.motion.enter",
+      "type": "duration",
+      "cssVar": "--todae-sheet-motion-enter",
+      "cssValue": "var(--todae-motion-duration-slow)",
+      "ref": "motion.duration.slow",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "sheet.motion.exit",
+      "type": "duration",
+      "cssVar": "--todae-sheet-motion-exit",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "sheet.motion.resize",
+      "type": "duration",
+      "cssVar": "--todae-sheet-motion-resize",
+      "cssValue": "var(--todae-motion-duration-slower)",
+      "ref": "motion.duration.slower",
       "layer": "contract",
       "context": null
     },

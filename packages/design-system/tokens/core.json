@@ -111,5 +111,20 @@
     "leading": {
       "default": { "$type": "number", "$value": 1.5 }
     }
+  },
+  "motion": {
+    "duration": {
+      "fast": { "$type": "duration", "$value": { "value": 160, "unit": "ms" } },
+      "normal": { "$type": "duration", "$value": { "value": 200, "unit": "ms" } },
+      "moderate": { "$type": "duration", "$value": { "value": 240, "unit": "ms" } },
+      "slow": { "$type": "duration", "$value": { "value": 280, "unit": "ms" } },
+      "slower": { "$type": "duration", "$value": { "value": 300, "unit": "ms" } }
+    },
+    "easing": {
+      "standard": { "$type": "cubicBezier", "$value": [0.2, 0.8, 0.2, 1] }
+    }
+  },
+  "z": {
+    "overlay": { "$type": "number", "$value": 1000 }
   }
 }

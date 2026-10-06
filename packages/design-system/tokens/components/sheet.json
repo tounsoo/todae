@@ -20,6 +20,11 @@
     "snap": {
       "mid": { "$type": "number", "$value": 0.5 },
       "full-inset": { "$type": "dimension", "$value": { "$ref": "#/space/6/$value" } }
+    },
+    "motion": {
+      "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/slow/$value" } },
+      "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/moderate/$value" } },
+      "resize": { "$type": "duration", "$value": { "$ref": "#/motion/duration/slower/$value" } }
     }
   }
 }

@@ -11,6 +11,8 @@ export const RESERVED_ROOTS = [
   'space',
   'radius',
   'font',
+  'motion',
+  'z',
   'button',
   'stack',
   'text',
@@ -374,18 +376,100 @@ export function serializeValue(token: TokenNode, path: string): { ref: string | 
     return { ref, cssValue: `var(${cssVarName(ref)})` };
   }
   if (token.$type === 'color') return serializeColor(token.$value, path);
-  if (token.$type === 'dimension') {
-    if (!isRecord(token.$value) || typeof token.$value.value !== 'number' || typeof token.$value.unit !== 'string') {
-      fail(`Token "${path}" dimension must be { value, unit }`);
-    }
-    if (!/^[a-z]+$/.test(token.$value.unit)) fail(`Token "${path}" has an invalid dimension unit`);
-    return { ref: null, cssValue: `${token.$value.value}${token.$value.unit}` };
-  }
+  if (token.$type === 'dimension') return { ref: null, cssValue: serializeDimension(token.$value, path) };
   if (token.$type === 'fontWeight' || token.$type === 'number') {
-    if (typeof token.$value !== 'number') fail(`Token "${path}" ${token.$type} must be a number`);
+    if (!isFiniteNumber(token.$value)) fail(`Token "${path}" ${token.$type} must be a number`);
+    if (path.startsWith('z.') && !Number.isInteger(token.$value)) fail(`Token "${path}" z-index must be an integer`);
     return { ref: null, cssValue: String(token.$value) };
   }
+  if (token.$type === 'duration') {
+    const value = token.$value;
+    if (!isRecord(value) || !isFiniteNumber(value.value) || value.value < 0 || (value.unit !== 'ms' && value.unit !== 's')) {
+      fail(`Token "${path}" duration must be { value, unit: "ms" | "s" } with a non-negative value`);
+    }
+    return { ref: null, cssValue: `${value.value}${value.unit}` };
+  }
+  if (token.$type === 'cubicBezier') {
+    const value = token.$value;
+    if (!Array.isArray(value) || value.length !== 4 || !value.every(isFiniteNumber)) {
+      fail(`Token "${path}" cubicBezier must be four numbers`);
+    }
+    if ([value[0]!, value[2]!].some((x) => x < 0 || x > 1)) fail(`Token "${path}" cubicBezier x values must be in [0, 1]`);
+    return { ref: null, cssValue: `cubic-bezier(${value.join(', ')})` };
+  }
+  if (token.$type === 'fontFamily') return { ref: null, cssValue: serializeFontFamily(token.$value, path) };
+  if (token.$type === 'shadow') {
+    const layers = Array.isArray(token.$value) ? token.$value : [token.$value];
+    if (layers.length === 0) fail(`Token "${path}" shadow must have at least one layer`);
+    return { ref: null, cssValue: layers.map((layer) => serializeShadowLayer(layer, path)).join(', ') };
+  }
   fail(`Token "${path}" has unsupported $type "${token.$type ?? ''}"`);
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function serializeDimension(value: unknown, path: string): string {
+  if (!isRecord(value) || !isFiniteNumber(value.value) || typeof value.unit !== 'string') {
+    fail(`Token "${path}" dimension must be { value, unit }`);
+  }
+  if (!/^[a-z]+$/.test(value.unit)) fail(`Token "${path}" has an invalid dimension unit`);
+  return `${value.value}${value.unit}`;
+}
+
+const GENERIC_FONT_FAMILIES = new Set([
+  'serif',
+  'sans-serif',
+  'monospace',
+  'cursive',
+  'fantasy',
+  'system-ui',
+  'ui-serif',
+  'ui-sans-serif',
+  'ui-monospace',
+  'ui-rounded',
+  'math',
+  'emoji',
+  'fangsong',
+]);
+
+// Family names are quoted unless generic; the character set keeps them from
+// closing the quote or the declaration.
+function serializeFontFamily(value: unknown, path: string): string {
+  const names = Array.isArray(value) ? value : [value];
+  if (names.length === 0) fail(`Token "${path}" fontFamily must name at least one family`);
+  return names
+    .map((name) => {
+      if (typeof name !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9 _-]*$/.test(name)) {
+        fail(`Token "${path}" fontFamily names may only use letters, digits, spaces, "-" and "_"`);
+      }
+      return GENERIC_FONT_FAMILIES.has(name) ? name : `"${name}"`;
+    })
+    .join(', ');
+}
+
+const SHADOW_KEYS = ['color', 'offsetX', 'offsetY', 'blur', 'spread', 'inset'];
+
+function serializeShadowLayer(layer: unknown, path: string): string {
+  if (!isRecord(layer)) fail(`Token "${path}" shadow layers must be objects`);
+  const unknown = Object.keys(layer).filter((key) => !SHADOW_KEYS.includes(key));
+  if (unknown.length > 0) fail(`Token "${path}" shadow has unknown key "${unknown[0]}"`);
+  if (layer.inset !== undefined && typeof layer.inset !== 'boolean') fail(`Token "${path}" shadow inset must be a boolean`);
+  if (isRef(layer.color)) fail(`Token "${path}" shadow color must be a literal OKLCH color`);
+  const color = serializeColor(layer.color, path);
+  if (color.ref) fail(`Token "${path}" shadow color must be a literal OKLCH color`);
+  const lengths = (['offsetX', 'offsetY', 'blur', 'spread'] as const).map((key) => {
+    const length = layer[key];
+    if (isRef(length)) fail(`Token "${path}" shadow ${key} must be a literal dimension`);
+    // Same units and blur floor as ThemeProvider overrides accept.
+    if (!isRecord(length) || (length.unit !== 'px' && length.unit !== 'rem')) {
+      fail(`Token "${path}" shadow ${key} must be in px or rem`);
+    }
+    if (key === 'blur' && isFiniteNumber(length.value) && length.value < 0) fail(`Token "${path}" shadow blur must not be negative`);
+    return serializeDimension(length, path);
+  });
+  return `${layer.inset ? 'inset ' : ''}${lengths.join(' ')} ${color.cssValue}`;
 }
 
 /**
