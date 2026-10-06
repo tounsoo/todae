@@ -4,6 +4,7 @@ import {
   useContext,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   type ComponentPropsWithRef,
   type KeyboardEvent,
@@ -133,9 +134,16 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
     { open, onOpenChange: setOpen, restoreFocusRef: triggerRef, initialFocusRef, haspopup: 'menu' },
     true,
   );
-  const roving = useRovingFocus({ orientation: 'vertical', typeahead: true });
+  // Every open starts at an end of the list, so the menu never needs to
+  // remember the focused item. Held at null, focus moving across items under
+  // the pointer does not render the menu.
+  const roving = useRovingFocus({ orientation: 'vertical', typeahead: true, activeValue: null });
+  const ctx = useMemo(
+    () => ({ open, setOpen, triggerId, triggerRef, openEnd, initialFocusRef, popover, roving }),
+    [open, setOpen, triggerId, popover, roving],
+  );
   return (
-    <MenuContext.Provider value={{ open, setOpen, triggerId, triggerRef, openEnd, initialFocusRef, popover, roving }}>
+    <MenuContext.Provider value={ctx}>
       {children}
     </MenuContext.Provider>
   );
@@ -157,6 +165,11 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTri
       id={ctx.triggerId}
       tooltip={tooltip}
       onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLButtonElement>) => {
+        // A held key opens once; repeats, Enter's included, would toggle it.
+        if (event.repeat && ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) {
+          event.preventDefault();
+          return;
+        }
         if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
         event.preventDefault();
         const end = event.key === 'ArrowDown' ? 'first' : 'last';
@@ -168,6 +181,12 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTri
         }
         ctx.openEnd.current = end;
         ctx.setOpen(true, 'trigger');
+        // An accepted open has rendered and used `end` by now. A refused one
+        // must not leave it for the next open, which may come from code.
+        const { openEnd } = ctx;
+        setTimeout(() => {
+          openEnd.current = 'first';
+        });
       })}
     />
   );
@@ -248,6 +267,7 @@ function useItem(
     onKeyUp,
     onMouseDown,
     onPointerMove,
+    onBlur,
     ...props
   }: Omit<ItemBase, 'children'>,
   activate: () => void,
@@ -273,7 +293,8 @@ function useItem(
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Enter') {
         event.preventDefault();
-        if (!disabled) activate();
+        // A held Enter chooses once; its repeats must not reach the trigger.
+        if (!disabled && !event.repeat) activate();
       } else if (event.key === ' ') {
         // Left unprevented while typing, so the menu's typeahead still sees it.
         spacePressed.current = !ctx.roving.isTypingAhead(event);
@@ -286,6 +307,10 @@ function useItem(
       const pressed = spacePressed.current;
       spacePressed.current = false;
       if (pressed && !disabled) activate();
+    }),
+    // A Space released on another item chooses nothing.
+    onBlur: composeHandlers(onBlur, () => {
+      spacePressed.current = false;
     }),
     // A press must not focus a disabled item.
     onMouseDown: composeHandlers(onMouseDown, (event: MouseEvent<HTMLDivElement>) => {

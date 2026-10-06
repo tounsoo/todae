@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { Profiler, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Menu, type MenuRootProps } from '../index';
 
@@ -258,6 +258,93 @@ describe('Menu', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Shortcut' }));
     await raf();
     expect(document.activeElement).toBe(item('Rename'));
+  });
+
+  it('a Space released on another item chooses nothing', async () => {
+    const chosen: string[] = [];
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Open</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item closeOnSelect={false} onSelect={() => chosen.push('A')}>
+            Alpha
+          </Menu.Item>
+          <Menu.Item closeOnSelect={false} onSelect={() => chosen.push('B')}>
+            Beta
+          </Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await raf();
+    const alpha = item('Alpha');
+    const beta = item('Beta');
+    act(() => alpha.focus());
+    fireEvent.keyDown(alpha, { key: ' ' });
+    act(() => beta.focus());
+    fireEvent.keyUp(beta, { key: ' ' });
+    fireEvent.keyDown(beta, { key: ' ' });
+    act(() => alpha.focus());
+    fireEvent.keyUp(alpha, { key: ' ' });
+    expect(chosen).toEqual([]);
+  });
+
+  it('a held Enter chooses once and does not toggle the trigger', async () => {
+    const onRename = vi.fn();
+    const onOpenChange = vi.fn();
+    render(<Actions onRename={onRename} onOpenChange={onOpenChange} />);
+    fireEvent.click(trigger());
+    await raf();
+    key('Enter');
+    expect(onRename).toHaveBeenCalledTimes(1);
+    act(() => trigger().focus());
+    onOpenChange.mockClear();
+    const repeat = fireEvent.keyDown(trigger(), { key: 'Enter', repeat: true });
+    expect(repeat).toBe(false);
+    fireEvent.keyDown(trigger(), { key: 'ArrowDown', repeat: true });
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('a refused ArrowUp open does not make the next open start at the end', async () => {
+    function Gate() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Show
+          </button>
+          <Actions open={open} onOpenChange={(next, reason) => reason !== 'trigger' && setOpen(next)} />
+        </>
+      );
+    }
+    render(<Gate />);
+    act(() => trigger().focus());
+    key('ArrowUp');
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve));
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Show' }));
+    await raf();
+    expect(document.activeElement).toBe(item('Rename'));
+  });
+
+  it('moving focus across items does not render the menu', async () => {
+    let commits = 0;
+    render(
+      <Profiler id="menu" onRender={() => (commits += 1)}>
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>Open</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>One</Menu.Item>
+            <Menu.Item>Two</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      </Profiler>,
+    );
+    await raf();
+    const before = commits;
+    act(() => item('Two').focus());
+    act(() => item('One').focus());
+    expect(commits).toBe(before);
   });
 
   it('arrow keys on the trigger of an open menu move into it', async () => {

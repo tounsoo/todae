@@ -207,10 +207,29 @@ describe('useRovingFocus', () => {
   it('a space that joined a search is consumed even when nothing matches', () => {
     render(<Group typeahead items={[{ value: 'new' }, { value: 'open' }]} />);
     screen.getByText('open').focus();
-    fireEvent.keyDown(document.activeElement!, { key: 'z', timeStamp: 1000 });
+    fireEvent.keyDown(document.activeElement!, { key: 'n', timeStamp: 1000 });
+    expect(focused()).toBe('new');
     const kept = fireEvent.keyDown(document.activeElement!, { key: ' ', timeStamp: 1050 });
     expect(kept).toBe(false);
-    expect(focused()).toBe('open');
+    expect(focused()).toBe('new');
+  });
+
+  it('a search that matched nothing ends, so a Space after it is not part of it', () => {
+    let roving: ReturnType<typeof useRovingFocus> | undefined;
+    function Probe() {
+      roving = useRovingFocus({ typeahead: true });
+      return (
+        <div {...roving.getContainerProps()}>
+          <button type="button" {...roving.getItemProps('open')}>
+            open
+          </button>
+        </div>
+      );
+    }
+    render(<Probe />);
+    screen.getByText('open').focus();
+    fireEvent.keyDown(document.activeElement!, { key: 'z', timeStamp: 1000 });
+    expect(roving!.isTypingAhead({ timeStamp: 1050 })).toBe(false);
   });
 
   it('handles keys on a focused container as if before the first item', () => {

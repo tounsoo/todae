@@ -2,6 +2,7 @@ import {
   useCallback,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type FocusEvent,
@@ -273,6 +274,8 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         next = ordered.find((node) => text(node).startsWith(needle));
         // A Space that joined the search is the search's, match or not.
         if (!next) {
+          // A failed search ends, so a Space right after it chooses again.
+          state.text = '';
           if (event.key === ' ') event.preventDefault();
           return;
         }
@@ -328,16 +331,19 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     [commit, scope, tabStop],
   );
 
-  return {
-    activeValue: tabStop,
-    setActiveValue: commit,
-    focus,
-    focusFirst,
-    focusLast,
-    getItemNode,
-    isTypingAhead,
-    values,
-    getContainerProps,
-    getItemProps,
-  };
+  return useMemo(
+    () => ({
+      activeValue: tabStop,
+      setActiveValue: commit,
+      focus,
+      focusFirst,
+      focusLast,
+      getItemNode,
+      isTypingAhead,
+      values,
+      getContainerProps,
+      getItemProps,
+    }),
+    [commit, focus, focusFirst, focusLast, getContainerProps, getItemNode, getItemProps, isTypingAhead, tabStop, values],
+  );
 }

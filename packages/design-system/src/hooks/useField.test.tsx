@@ -81,6 +81,27 @@ describe('useField', () => {
     expect(input().getAttribute('aria-invalid')).toBe('true');
   });
 
+  it('a control that unmounts leaves a sibling control focusable from the shell', () => {
+    function Custom({ label }: { label: string }) {
+      const field = useField();
+      return <span {...field.getControlProps({}, { native: false })} role="slider" aria-label={label} tabIndex={0} />;
+    }
+    function Both({ second }: { second: boolean }) {
+      return (
+        <Field.Root aria-label="Both" data-testid="shell">
+          {second ? <Custom label="second" /> : null}
+          <Custom label="first" />
+        </Field.Root>
+      );
+    }
+    // The first control mounts last, so the Root's ref points at it.
+    const { rerender } = render(<Both second={false} />);
+    rerender(<Both second />);
+    rerender(<Both second={false} />);
+    fireEvent.mouseDown(screen.getByTestId('shell'));
+    expect(document.activeElement).toBe(screen.getByRole('slider', { name: 'first' }));
+  });
+
   it("does not reattach a control's ref on every render", () => {
     const attach = vi.fn();
     const { rerender } = render(

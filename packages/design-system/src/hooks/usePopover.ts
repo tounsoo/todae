@@ -3,6 +3,7 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   type CSSProperties,
   type HTMLAttributes,
@@ -217,12 +218,15 @@ export function usePopoverInternal(
     [anchorName, contentId, open],
   );
 
-  return {
-    open,
-    ids: { popover: contentId },
-    triggerRef,
-    popoverRef,
-    getTriggerProps,
-    getPopoverProps,
-  };
+  return useMemo(
+    () => ({
+      open,
+      ids: { popover: contentId },
+      triggerRef,
+      popoverRef,
+      getTriggerProps,
+      getPopoverProps,
+    }),
+    [contentId, getPopoverProps, getTriggerProps, open, popoverRef, triggerRef],
+  );
 }
