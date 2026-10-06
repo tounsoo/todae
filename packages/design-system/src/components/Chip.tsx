@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import styles from './Chip.module.css';
 
 export type ChipProps = {
@@ -6,12 +6,12 @@ export type ChipProps = {
   onDismiss?: () => void;
   dismissLabel?: string;
   disabled?: boolean;
-} & Omit<HTMLAttributes<HTMLSpanElement>, 'children'>;
+} & Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
 export type ChipOverflowProps = {
   overflowCount: number;
   overflowLabel?: (n: number) => string;
-} & Omit<HTMLAttributes<HTMLSpanElement>, 'children'>;
+} & Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
 function chipClass(className?: string): string {
   return [styles.root, className].filter(Boolean).join(' ');

@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
   type ButtonHTMLAttributes,
-  type HTMLAttributes,
+  type ComponentPropsWithRef,
   type ReactElement,
   type ReactNode,
   type Ref,
@@ -36,14 +36,14 @@ export type ButtonRootProps = {
 export type ButtonIconProps = {
   children?: ReactNode;
   className?: string;
-};
+} & ComponentPropsWithRef<'span'>;
 
 export type ButtonGroupProps = {
   'aria-label'?: string;
   'aria-labelledby'?: string;
   className?: string;
   children?: ReactNode;
-} & Omit<HTMLAttributes<HTMLDivElement>, 'role'>;
+} & Omit<ComponentPropsWithRef<'div'>, 'role'>;
 
 function isIconElement(child: ReactNode): child is ReactElement {
   return isValidElement(child) && child.type === Icon;
@@ -170,11 +170,13 @@ function Root({
   );
 }
 
-function Icon({ children, className }: ButtonIconProps) {
+function Icon({ className, ...props }: ButtonIconProps) {
   return (
-    <span className={[styles.icon, className].filter(Boolean).join(' ')} aria-hidden>
-      {children}
-    </span>
+    <span
+      {...props}
+      aria-hidden={props['aria-hidden'] ?? true}
+      className={[styles.icon, className].filter(Boolean).join(' ')}
+    />
   );
 }
 

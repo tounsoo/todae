@@ -9,8 +9,8 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentPropsWithRef,
   type CSSProperties,
-  type HTMLAttributes,
   type KeyboardEvent,
   type ReactNode,
   type RefObject,
@@ -25,6 +25,7 @@ import { useFocusTrap } from '../overlay/useFocusTrap';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useScrollLock } from '../overlay/useScrollLock';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag';
+import { cx, useComposedRefs } from './props';
 import styles from './BottomSheet.module.css';
 
 export type { SheetSnap };
@@ -46,7 +47,7 @@ export type BottomSheetProps = {
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
-};
+} & Omit<ComponentPropsWithRef<'div'>, 'role' | 'children'>;
 
 type SheetContextValue = {
   requestClose: (reason: SheetCloseReason) => void;
@@ -71,7 +72,7 @@ function BottomSheetGrabber({
   'aria-label': ariaLabel = 'Resize sheet',
   className,
   ...props
-}: HTMLAttributes<HTMLDivElement> & { 'aria-label'?: string }) {
+}: ComponentPropsWithRef<'div'>) {
   const { snap, snapPoints, setSnap, dismissOnDrag, requestClose } = useSheet();
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
@@ -97,7 +98,7 @@ function BottomSheetGrabber({
   );
 }
 
-function BottomSheetHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+function BottomSheetHeader({ className, ...props }: ComponentPropsWithRef<'div'>) {
   return (
     <div
       {...props}
@@ -107,7 +108,7 @@ function BottomSheetHeader({ className, ...props }: HTMLAttributes<HTMLDivElemen
   );
 }
 
-function BottomSheetTitle({ className, id: idProp, children, ...props }: HTMLAttributes<HTMLHeadingElement>) {
+function BottomSheetTitle({ className, id: idProp, children, ...props }: ComponentPropsWithRef<'h2'>) {
   const { setLabelledBy } = useSheet();
   const uid = useId();
   const id = idProp ?? uid;
@@ -127,7 +128,7 @@ function BottomSheetDescription({
   id: idProp,
   children,
   ...props
-}: HTMLAttributes<HTMLParagraphElement>) {
+}: ComponentPropsWithRef<'p'>) {
   const { setDescribedBy } = useSheet();
   const uid = useId();
   const id = idProp ?? uid;
@@ -142,20 +143,19 @@ function BottomSheetDescription({
   );
 }
 
-function BottomSheetBody({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+function BottomSheetBody({ className, ref, ...props }: ComponentPropsWithRef<'div'>) {
   const { bodyRef } = useSheet();
+  const refs = useComposedRefs(bodyRef as RefObject<HTMLDivElement | null>, ref);
   return (
     <div
       {...props}
-      ref={(node) => {
-        bodyRef.current = node;
-      }}
+      ref={refs}
       className={[styles.body, className].filter(Boolean).join(' ')}
     />
   );
 }
 
-function BottomSheetFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+function BottomSheetFooter({ className, ...props }: ComponentPropsWithRef<'div'>) {
   return <div {...props} className={[styles.footer, className].filter(Boolean).join(' ')} />;
 }
 
@@ -194,10 +194,10 @@ export function BottomSheet({
   dismissOnDrag = true,
   initialFocusRef,
   restoreFocusRef,
-  'aria-label': ariaLabel,
   className,
-  style,
   children,
+  ref,
+  ...props
 }: BottomSheetProps) {
   const points = snapPoints ?? (['mid', 'full'] as const);
   const [uncontrolled, setUncontrolled] = useState<SheetSnap>(
@@ -228,6 +228,7 @@ export function BottomSheet({
     sheetRef.current = node;
     setSheetNode(node);
   }, []);
+  const sheetRefs = useComposedRefs(setSheetRef, ref);
 
   useScrollLock(present);
   useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: sheetRef });
@@ -276,15 +277,14 @@ export function BottomSheet({
             }}
           />
           <div
-            ref={setSheetRef}
-            className={[styles.sheet, className].filter(Boolean).join(' ')}
-            style={style}
+            {...props}
+            aria-labelledby={props['aria-labelledby'] ?? labelledBy}
+            aria-describedby={props['aria-describedby'] ?? describedBy}
+            tabIndex={props.tabIndex ?? -1}
+            ref={sheetRefs}
+            className={cx(styles.sheet, className)}
             role="dialog"
             aria-modal="true"
-            aria-label={ariaLabel}
-            aria-labelledby={labelledBy}
-            aria-describedby={describedBy}
-            tabIndex={-1}
             data-snap={currentSnap}
           >
             {hasPart(children, BottomSheetGrabber) ? null : <BottomSheetGrabber />}

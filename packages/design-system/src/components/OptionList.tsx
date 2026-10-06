@@ -8,19 +8,22 @@ import {
   useId,
   useMemo,
   useState,
+  type ComponentPropsWithRef,
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import { optionDomId } from './OptionList.ids';
+import { composeHandlers, cx } from './props';
 import styles from './OptionList.module.css';
 
+/** `id` is derived from the list and value so `aria-activedescendant` can point at it. */
 export type OptionProps = {
   value: string;
   children: string;
   disabled?: boolean;
-};
+} & Omit<ComponentPropsWithRef<'div'>, 'children' | 'role' | 'id'>;
 
 type OptionListBase = {
   children: ReactNode;
@@ -31,7 +34,7 @@ type OptionListBase = {
   onActiveChange?: (value: string | null) => void;
   'aria-label'?: string;
   'aria-labelledby'?: string;
-};
+} & Omit<ComponentPropsWithRef<'div'>, 'children' | 'role' | 'onChange' | 'defaultValue'>;
 
 export type OptionListSingleProps = OptionListBase & {
   selectionMode?: 'single';
@@ -71,7 +74,7 @@ function isOptionElement(node: ReactNode): node is ReactElement<OptionProps> {
   return isValidElement(node) && node.type === Option;
 }
 
-function collectOptions(children: ReactNode): OptionProps[] {
+function collectOptions(children: ReactNode): Pick<OptionProps, 'value' | 'disabled'>[] {
   return Children.toArray(children).flatMap((child) => {
     if (isOptionElement(child)) return [child.props];
     // Children.toArray flattens arrays but not fragments; look through them so disabled
@@ -83,7 +86,7 @@ function collectOptions(children: ReactNode): OptionProps[] {
   });
 }
 
-export function Option({ value, children, disabled }: OptionProps) {
+export function Option({ value, children, disabled, className, onMouseDown, onClick, ...props }: OptionProps) {
   const ctx = useOptionList();
   if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
     console.error('Option children must be a string');
@@ -92,21 +95,22 @@ export function Option({ value, children, disabled }: OptionProps) {
   const selected = ctx.selected.has(value);
   return (
     <div
+      {...props}
       id={optionDomId(ctx.listId, value)}
       role="option"
       aria-selected={selected}
       aria-disabled={disabled || undefined}
       data-selected={selected ? '' : undefined}
       data-highlighted={ctx.highlighted === value ? '' : undefined}
-      className={styles.option}
-      onMouseDown={(event: MouseEvent<HTMLDivElement>) => {
+      className={cx(styles.option, className)}
+      onMouseDown={composeHandlers(onMouseDown, (event: MouseEvent<HTMLDivElement>) => {
         const list = event.currentTarget.closest('[role="listbox"]');
         if (list instanceof HTMLElement && list.tabIndex < 0) event.preventDefault();
-      }}
-      onClick={() => {
+      })}
+      onClick={composeHandlers(onClick, () => {
         if (disabled) return;
         ctx.select(value, true);
-      }}
+      })}
     >
       {label}
     </div>
@@ -121,8 +125,13 @@ export function OptionList(props: OptionListProps) {
     tabIndex,
     activeValue: activeValueProp,
     onActiveChange,
-    'aria-label': ariaLabel,
-    'aria-labelledby': ariaLabelledby,
+    selectionMode: _selectionMode,
+    value: _value,
+    onChange: _onChange,
+    onKeyDown: onKeyDownProp,
+    onPointerUp,
+    onPointerCancel,
+    ...rest
   } = props;
   const autoId = useId();
   const listId = id ?? autoId;
@@ -211,18 +220,17 @@ export function OptionList(props: OptionListProps) {
   return (
     <OptionListContext.Provider value={ctx}>
       <div
+        {...rest}
         role="listbox"
         id={listId}
         tabIndex={tabIndex ?? 0}
-        aria-label={ariaLabel}
-        aria-labelledby={ariaLabelledby}
         aria-multiselectable={multiple || undefined}
         aria-activedescendant={activeValue ? optionDomId(listId, activeValue) : undefined}
         data-selection-mode={multiple ? 'multiple' : 'single'}
-        className={[styles.list, className].filter(Boolean).join(' ')}
-        onKeyDown={onKeyDown}
-        onPointerUp={() => setHighlighted(null)}
-        onPointerCancel={() => setHighlighted(null)}
+        className={cx(styles.list, className)}
+        onKeyDown={composeHandlers(onKeyDownProp, onKeyDown)}
+        onPointerUp={composeHandlers(onPointerUp, () => setHighlighted(null))}
+        onPointerCancel={composeHandlers(onPointerCancel, () => setHighlighted(null))}
       >
         {children}
       </div>

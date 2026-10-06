@@ -1,4 +1,11 @@
-import { useLayoutEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import {
+  useLayoutEffect,
+  useRef,
+  type ComponentPropsWithoutRef,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { usePopoverSync } from '../overlay/usePopoverSync';
 import {
   contentPolicyError,
@@ -16,9 +23,28 @@ export type TooltipContentName =
 
 export type TooltipChrome = { children?: ReactNode; className?: string; style?: CSSProperties };
 
+type WithoutHandlers<T> = { [K in keyof T as K extends `on${string}` ? never : K]: T[K] };
+
+/**
+ * Other native attributes land on the tooltip element, except event handlers:
+ * the trigger owns the tooltip's behavior. Its `ref` is the wire's; keep your
+ * own with `composeRefs(wire.ref, yourRef)`.
+ */
+export type TooltipNativeProps = Omit<
+  WithoutHandlers<ComponentPropsWithoutRef<'div'>>,
+  | keyof TooltipWire<true>
+  | 'popover'
+  | 'role'
+  | 'aria-label'
+  | 'aria-labelledby'
+  | 'children'
+  | 'className'
+  | 'style'
+>;
+
 export type TooltipProps =
-  | (TooltipWire<false> & TooltipChrome)
-  | (TooltipWire<true> & TooltipChrome & TooltipContentName);
+  | (TooltipWire<false> & TooltipChrome & TooltipNativeProps)
+  | (TooltipWire<true> & TooltipChrome & TooltipContentName & TooltipNativeProps);
 
 function contentNameOf(
   props: { 'aria-label'?: string; 'aria-labelledby'?: string },
@@ -45,11 +71,13 @@ function TooltipTip({
   surface,
   open,
   ref: setRef,
-}: TooltipChrome & { surface: TipSurface; open: boolean; ref: TooltipWire['ref'] }) {
+  ...props
+}: TooltipChrome & TooltipNativeProps & { surface: TipSurface; open: boolean; ref: TooltipWire['ref'] }) {
   const localRef = useRef<HTMLDivElement | null>(null);
   useContentPolicy(surface, localRef);
   return (
     <div
+      {...props}
       {...surface.attrs}
       ref={(node) => {
         localRef.current = node;
@@ -73,8 +101,11 @@ function TooltipPanel({
   ref: setRef,
   onPointerEnter,
   onPointerLeave,
-  ...name
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledby,
+  ...props
 }: TooltipChrome &
+  TooltipNativeProps &
   TooltipContentName & {
     surface: PanelSurface;
     open: boolean;
@@ -87,8 +118,9 @@ function TooltipPanel({
   useContentPolicy(surface, localRef);
   return (
     <div
+      {...props}
       {...surface.attrs}
-      {...contentNameOf(name)}
+      {...contentNameOf({ 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby })}
       ref={(node) => {
         localRef.current = node;
         setRef(node);
@@ -108,30 +140,17 @@ export function Tooltip(props: TooltipProps) {
   const surface = resolveSurface(props.interactive, props.id);
   if (!isMounted(surface, props.open)) return null;
   if (props.interactive) {
+    const { id: _id, interactive: _interactive, 'aria-label': _label, 'aria-labelledby': _labelledby, ...rest } = props;
     const name = contentNameOf(props);
     return (
-      <TooltipPanel
-        className={props.className}
-        style={props.style}
-        surface={surface as PanelSurface}
-        open={props.open}
-        ref={props.ref}
-        onPointerEnter={props.onPointerEnter}
-        onPointerLeave={props.onPointerLeave}
-        {...name!}
-      >
+      <TooltipPanel {...rest} {...name!} surface={surface as PanelSurface}>
         {props.children}
       </TooltipPanel>
     );
   }
+  const { id: _id, interactive: _interactive, ...rest } = props;
   return (
-    <TooltipTip
-      className={props.className}
-      style={props.style}
-      surface={surface as TipSurface}
-      open={props.open}
-      ref={props.ref}
-    >
+    <TooltipTip {...rest} surface={surface as TipSurface}>
       {props.children}
     </TooltipTip>
   );

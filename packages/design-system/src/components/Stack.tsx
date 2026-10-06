@@ -1,11 +1,11 @@
-import type { HTMLAttributes } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import styles from './Stack.module.css';
 
 export type StackDirection = 'row' | 'column';
 
 export type StackProps = {
   direction?: StackDirection;
-} & HTMLAttributes<HTMLDivElement>;
+} & ComponentPropsWithRef<'div'>;
 
 export function Stack({
   direction = 'column',

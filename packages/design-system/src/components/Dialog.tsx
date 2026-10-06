@@ -6,8 +6,8 @@ import {
   useRef,
   useId,
   useState,
+  type ComponentPropsWithRef,
   type CSSProperties,
-  type HTMLAttributes,
   type ReactNode,
   type RefObject,
 } from 'react';
@@ -17,6 +17,7 @@ import { DIALOG_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOv
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useScrollLock } from '../overlay/useScrollLock';
+import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Dialog.module.css';
 
 export type DialogCloseReason = Extract<OverlayCloseReason, 'escape' | 'backdrop' | 'close-button'>;
@@ -32,7 +33,7 @@ export type DialogProps = {
   className?: string;
   style?: CSSProperties;
   children: ReactNode;
-};
+} & Omit<ComponentPropsWithRef<'dialog'>, 'open' | 'children'>;
 
 type DialogContextValue = {
   requestClose: (reason: DialogCloseReason) => void;
@@ -48,7 +49,7 @@ function useDialog(): DialogContextValue {
   return ctx;
 }
 
-function DialogTitle({ className, children, id: idProp, ...props }: HTMLAttributes<HTMLHeadingElement>) {
+function DialogTitle({ className, children, id: idProp, ...props }: ComponentPropsWithRef<'h2'>) {
   const { setLabelledBy } = useDialog();
   const uid = useId();
   const id = idProp ?? uid;
@@ -68,7 +69,7 @@ function DialogDescription({
   children,
   id: idProp,
   ...props
-}: HTMLAttributes<HTMLParagraphElement>) {
+}: ComponentPropsWithRef<'p'>) {
   const { setDescribedBy } = useDialog();
   const uid = useId();
   const id = idProp ?? uid;
@@ -83,15 +84,15 @@ function DialogDescription({
   );
 }
 
-function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+function DialogHeader({ className, ...props }: ComponentPropsWithRef<'div'>) {
   return <div {...props} className={[styles.header, className].filter(Boolean).join(' ')} />;
 }
 
-function DialogBody({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+function DialogBody({ className, ...props }: ComponentPropsWithRef<'div'>) {
   return <div {...props} className={[styles.body, className].filter(Boolean).join(' ')} />;
 }
 
-function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+function DialogFooter({ className, ...props }: ComponentPropsWithRef<'div'>) {
   return <div {...props} className={[styles.footer, className].filter(Boolean).join(' ')} />;
 }
 
@@ -121,10 +122,12 @@ export function Dialog({
   dismissOnBackdrop = true,
   initialFocusRef,
   restoreFocusRef,
-  'aria-label': ariaLabel,
   className,
-  style,
   children,
+  ref,
+  onPointerDown,
+  onClick,
+  ...props
 }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [dialogNode, setDialogNode] = useState<HTMLDialogElement | null>(null);
@@ -143,6 +146,7 @@ export function Dialog({
     dialogRef.current = node;
     setDialogNode(node);
   }, []);
+  const dialogRefs = useComposedRefs(setDialogRef, ref);
 
   useScrollLock(present);
   useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: dialogRef });
@@ -181,19 +185,21 @@ export function Dialog({
   return (
     <DialogContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
       <dialog
-        ref={setDialogRef}
-        className={[styles.dialog, className].filter(Boolean).join(' ')}
-        style={style}
-        aria-label={ariaLabel}
-        aria-labelledby={labelledBy}
-        aria-describedby={describedBy}
-        tabIndex={-1}
+        {...props}
+        aria-labelledby={props['aria-labelledby'] ?? labelledBy}
+        aria-describedby={props['aria-describedby'] ?? describedBy}
+        tabIndex={props.tabIndex ?? -1}
+        ref={dialogRefs}
+        className={cx(styles.dialog, className)}
         data-entered={entered ? '' : undefined}
         data-exiting={exiting ? '' : undefined}
         onPointerDown={(event) => {
+          onPointerDown?.(event);
+          // Always tracked, even when the consumer prevents it, so a later click
+          // is judged by where its own press started.
           pointerOnDialog.current = event.target === dialogRef.current;
         }}
-        onClick={(event) => {
+        onClick={composeHandlers(onClick, (event) => {
           if (
             dismissOnBackdrop &&
             pointerOnDialog.current &&
@@ -201,7 +207,7 @@ export function Dialog({
           ) {
             requestClose('backdrop');
           }
-        }}
+        })}
       >
         <div className={styles.panel} role="document">
           {children}

@@ -11,6 +11,7 @@ export {
   type ButtonVariants,
 } from './components/Button';
 export { Dialog, type DialogCloseReason, type DialogProps } from './components/Dialog';
+export { composeRefs } from './components/props';
 export {
   Option,
   OptionList,

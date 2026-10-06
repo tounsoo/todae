@@ -8,6 +8,7 @@ import {
   useState,
   useSyncExternalStore,
   type ChangeEvent,
+  type ComponentPropsWithRef,
   type CSSProperties,
   type InputHTMLAttributes,
   type KeyboardEvent,
@@ -18,11 +19,16 @@ import {
   type TextareaHTMLAttributes,
 } from 'react';
 import { Chip } from './Chip';
+import { composeHandlers, cx } from './props';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
 
+/**
+ * `id`, `name` and the three naming ARIA props go to the input; every other
+ * native attribute lands on the shell `div`.
+ */
 export type FieldRootProps = {
   disabled?: boolean;
   invalid?: boolean;
@@ -35,7 +41,7 @@ export type FieldRootProps = {
   style?: CSSProperties;
   ref?: Ref<HTMLDivElement>;
   children?: ReactNode;
-};
+} & Omit<ComponentPropsWithRef<'div'>, 'id'>;
 
 type CountEntry = { value: string; maxLength?: number };
 
@@ -116,26 +122,25 @@ export type FieldIconProps = {
   children?: ReactNode;
   interactive?: boolean;
   className?: string;
-};
+} & ComponentPropsWithRef<'span'>;
 
 export type FieldAffixProps = {
   children?: ReactNode;
   className?: string;
-};
+} & ComponentPropsWithRef<'span'>;
 
-function Icon({ children, interactive, className }: FieldIconProps) {
+function Icon({ interactive, className, ...props }: FieldIconProps) {
   return (
     <span
-      className={[styles.adornment, className].filter(Boolean).join(' ')}
-      aria-hidden={interactive ? undefined : true}
-    >
-      {children}
-    </span>
+      {...props}
+      aria-hidden={props['aria-hidden'] ?? (interactive ? undefined : true)}
+      className={cx(styles.adornment, className)}
+    />
   );
 }
 
-function Affix({ children, className }: FieldAffixProps) {
-  return <span className={[styles.adornment, className].filter(Boolean).join(' ')}>{children}</span>;
+function Affix({ className, ...props }: FieldAffixProps) {
+  return <span {...props} className={cx(styles.adornment, className)} />;
 }
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
@@ -143,7 +148,19 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
   return Boolean(target.closest('button, a, input, textarea, select, [tabindex]'));
 }
 
-function Root({ disabled, invalid, id, name, className, style, ref, children, ...aria }: FieldRootProps) {
+function Root({
+  disabled,
+  invalid,
+  id,
+  name,
+  className,
+  children,
+  'aria-describedby': describedBy,
+  'aria-labelledby': labelledBy,
+  'aria-label': ariaLabel,
+  onMouseDown: onMouseDownProp,
+  ...props
+}: FieldRootProps) {
   const autoId = useId();
   const hintId = useId();
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
@@ -164,20 +181,19 @@ function Root({ disabled, invalid, id, name, className, style, ref, children, ..
         disabled: Boolean(disabled),
         invalid: Boolean(invalid),
         name,
-        describedBy: aria['aria-describedby'],
-        labelledBy: aria['aria-labelledby'],
-        ariaLabel: aria['aria-label'],
+        describedBy,
+        labelledBy,
+        ariaLabel,
         inputRef,
         store,
       }}
     >
       <div
-        ref={ref}
-        className={[styles.shell, className].filter(Boolean).join(' ')}
-        style={style}
+        {...props}
+        className={cx(styles.shell, className)}
         data-disabled={disabled ? '' : undefined}
         data-invalid={invalid ? '' : undefined}
-        onMouseDown={onMouseDown}
+        onMouseDown={composeHandlers(onMouseDownProp, onMouseDown)}
       >
         {children}
       </div>
@@ -459,7 +475,7 @@ function ChipInput({
 export type FieldCounterProps = {
   className?: string;
   style?: CSSProperties;
-};
+} & Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
 let warnedOutsideRoot = false;
 let warnedNoInput = false;
@@ -479,11 +495,7 @@ function CounterMissing() {
   return null;
 }
 
-function CounterInner({
-  ctx,
-  className,
-  style,
-}: FieldCounterProps & { ctx: FieldContextValue }) {
+function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: FieldContextValue }) {
   const entry = useSyncExternalStore(
     (listener) => subscribeCount(ctx.store, listener),
     () => ctx.store.entry,
@@ -510,13 +522,13 @@ function CounterInner({
   const remaining = max === undefined ? undefined : max - count;
   return (
     <span
+      {...props}
       data-todae-counter=""
       data-limit={atLimit ? '' : undefined}
       data-over={over ? '' : undefined}
       data-invalid={ctx.invalid ? '' : undefined}
       data-disabled={ctx.disabled ? '' : undefined}
-      className={[styles.counter, className].filter(Boolean).join(' ')}
-      style={style}
+      className={cx(styles.counter, className)}
     >
       <span aria-hidden="true">{max === undefined ? String(count) : `${count} / ${max}`}</span>
       {max === undefined ? null : (
@@ -533,19 +545,19 @@ function CounterInner({
   );
 }
 
-function Counter({ className, style }: FieldCounterProps) {
+function Counter(props: FieldCounterProps) {
   const ctx = useContext(FieldContext);
   if (!ctx) return <CounterMissing />;
-  return <CounterInner ctx={ctx} className={className} style={style} />;
+  return <CounterInner {...props} ctx={ctx} />;
 }
 
 export type FieldRowProps = {
   children?: ReactNode;
   className?: string;
-};
+} & ComponentPropsWithRef<'div'>;
 
-function Row({ children, className }: FieldRowProps) {
-  return <div className={[styles.row, className].filter(Boolean).join(' ')}>{children}</div>;
+function Row({ className, ...props }: FieldRowProps) {
+  return <div {...props} className={cx(styles.row, className)} />;
 }
 
 export const Field = { Root, TextInput, Textarea, ChipInput, Icon, Affix, Counter, Row } as const;

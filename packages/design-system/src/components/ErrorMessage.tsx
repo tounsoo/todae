@@ -1,11 +1,11 @@
-import type { HTMLAttributes, ReactNode } from 'react';
+import type { ComponentPropsWithRef, ReactNode } from 'react';
 import styles from './ErrorMessage.module.css';
 
 export type ErrorMessageProps = {
   id: string;
   children?: ReactNode;
   className?: string;
-} & Omit<HTMLAttributes<HTMLSpanElement>, 'id' | 'children'>;
+} & Omit<ComponentPropsWithRef<'span'>, 'id' | 'children'>;
 
 export function ErrorMessage({ id, className, ...props }: ErrorMessageProps) {
   return (
