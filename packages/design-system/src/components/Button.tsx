@@ -1,17 +1,18 @@
 import {
   Children,
   isValidElement,
+  useCallback,
   useLayoutEffect,
   useRef,
   useState,
   type ButtonHTMLAttributes,
   type ComponentPropsWithRef,
-  type ReactElement,
   type ReactNode,
   type Ref,
 } from 'react';
 import { useTooltip } from '../hooks/useTooltip';
 import styles from './Button.module.css';
+import { useComposedRefs } from './props';
 import { Tooltip } from './Tooltip';
 
 /**
@@ -45,21 +46,54 @@ export type ButtonGroupProps = {
   children?: ReactNode;
 } & Omit<ComponentPropsWithRef<'div'>, 'role'>;
 
-function isIconElement(child: ReactNode): child is ReactElement {
-  return isValidElement(child) && child.type === Icon;
+const ICON_ATTR = 'data-todae-button-icon';
+
+// Media outside an icon is content too: an <img alt> or a spinner can name or
+// fill the button.
+const MEDIA = new Set(['IMG', 'SVG', 'svg', 'CANVAS', 'VIDEO', 'PICTURE', 'OBJECT', 'IFRAME', 'INPUT']);
+
+// Icons are found in the rendered button, not by component type, so a
+// Button.Icon inside a company's own icon wrapper still counts.
+function readContent(button: HTMLElement): { hasIcon: boolean; text: string; media: boolean } {
+  let text = '';
+  let media = false;
+  // nodeType rather than instanceof, so a button rendered into an iframe works.
+  const walker = button.ownerDocument.createTreeWalker(button, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
+    acceptNode: (node) =>
+      node.nodeType === Node.ELEMENT_NODE && (node as Element).hasAttribute(ICON_ATTR)
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT,
+  });
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node.nodeType === Node.TEXT_NODE) text += node.textContent ?? '';
+    else if (MEDIA.has((node as Element).tagName)) media = true;
+  }
+  return {
+    hasIcon: button.querySelector(`[${ICON_ATTR}]`) !== null,
+    text: text.trim(),
+    media,
+  };
 }
 
-function isIconOnly(children: ReactNode): boolean {
+type Content = { hasIcon: boolean; text: string; media: boolean };
+
+function isIconOnly(content: Content): boolean {
+  return content.hasIcon && content.text === '' && !content.media;
+}
+
+// From direct children: the label text that can overflow (and so feeds the
+// overflow tooltip), and a server-render icon-only hint used until the button
+// can be read. The read after layout decides icon-only, and it also sees icons
+// inside wrappers.
+function hint(children: ReactNode): { iconOnly: boolean; text: string } {
   const items = Children.toArray(children);
-  return items.length > 0 && items.every(isIconElement);
-}
-
-function labelText(children: ReactNode): string {
-  return Children.toArray(children)
-    .filter((child) => !isIconElement(child))
-    .map((child) => (typeof child === 'string' || typeof child === 'number' ? String(child) : ''))
-    .join('')
-    .trim();
+  return {
+    iconOnly: items.length > 0 && items.every((child) => isValidElement(child) && child.type === Icon),
+    text: items
+      .map((child) => (typeof child === 'string' || typeof child === 'number' ? String(child) : ''))
+      .join('')
+      .trim(),
+  };
 }
 
 function Root({
@@ -76,7 +110,10 @@ function Root({
   onBlur,
   ...props
 }: ButtonRootProps) {
-  const iconOnly = isIconOnly(children);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [read, setRead] = useState<Content | null>(null);
+  const direct = hint(children);
+  const iconOnly = read ? isIconOnly(read) : direct.iconOnly;
   const [labelledbyText, setLabelledbyText] = useState<string | null | undefined>(undefined);
   const [overflowing, setOverflowing] = useState(false);
   const labelRef = useRef<HTMLSpanElement | null>(null);
@@ -90,6 +127,31 @@ function Root({
     const text = document.getElementById(labelledby)?.textContent?.trim() ?? '';
     setLabelledbyText(text || null);
   }, [labelledby]);
+
+  const readButton = useCallback(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+    const next = readContent(button);
+    setRead((prev) =>
+      prev?.hasIcon === next.hasIcon && prev.text === next.text && prev.media === next.media ? prev : next,
+    );
+  }, []);
+
+  useLayoutEffect(readButton);
+
+  // A child can swap an icon for text from its own state without this
+  // component rendering again.
+  useLayoutEffect(() => {
+    const button = buttonRef.current;
+    if (!button || typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(readButton);
+    observer.observe(button, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    return () => observer.disconnect();
+  }, [readButton]);
 
   useLayoutEffect(() => {
     const el = labelRef.current;
@@ -110,43 +172,44 @@ function Root({
   const ariaLabel = typeof props['aria-label'] === 'string' ? props['aria-label'].trim() : '';
   const iconName = iconOnly ? ariaLabel || (typeof labelledbyText === 'string' ? labelledbyText : null) : null;
 
-  if (
-    process.env.NODE_ENV !== 'production' &&
-    iconOnly &&
-    iconName == null &&
-    (!labelledby || labelledbyText === null)
-  ) {
+  const unnamed = iconOnly && iconName == null && (!labelledby || labelledbyText === null);
+  useLayoutEffect(() => {
+    if (process.env.NODE_ENV === 'production' || !unnamed) return;
+    // `read` can trail a render that swapped content and label together.
+    const button = buttonRef.current;
+    const fresh = button ? readContent(button) : null;
+    if (fresh && !isIconOnly(fresh)) return;
     console.error('Button.Root icon-only requires aria-label or aria-labelledby');
-  }
+  }, [unnamed]);
 
-  const textName = iconOnly ? null : labelText(children);
+  const textName = iconOnly ? null : direct.text;
   const tipText = !tooltip ? null : iconOnly ? iconName : overflowing && textName ? textName : null;
   const tip = useTooltip({ enabled: tipText != null });
+  const refs = useComposedRefs(buttonRef, ref);
   const trigger =
     tipText != null
       ? tip.getTriggerProps({
-          ref: ref as Ref<HTMLElement | null>,
+          ref: refs as Ref<HTMLElement | null>,
           style,
           onPointerEnter,
           onPointerLeave,
           onFocus,
           onBlur,
         })
-      : { ref, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
+      : { ref: refs, style, onPointerEnter, onPointerLeave, onFocus, onBlur };
 
-  const content = iconOnly
-    ? children
-    : Children.map(children, (child) => {
-        if (isIconElement(child)) return child;
-        if (typeof child === 'string' || typeof child === 'number') {
-          return (
-            <span className={styles.label} ref={labelRef}>
-              {child}
-            </span>
-          );
-        }
-        return child;
-      });
+  // Always mapped: switching between mapped and raw children would re-key
+  // and remount them whenever icon-only detection changes.
+  const rendered = Children.map(children, (child) => {
+    if (typeof child === 'string' || typeof child === 'number') {
+      return (
+        <span className={styles.label} ref={labelRef}>
+          {child}
+        </span>
+      );
+    }
+    return child;
+  });
 
   const button = (
     <button
@@ -157,15 +220,16 @@ function Root({
       data-button-variant={variant === 'primary' ? undefined : variant}
       data-icon-only={iconOnly ? '' : undefined}
     >
-      {content}
+      {rendered}
     </button>
   );
 
-  if (tipText == null) return button;
+  // One shape whether or not a tip shows, so gaining a tip never remounts
+  // the button and its children.
   return (
     <>
       {button}
-      <Tooltip {...tip.getTooltipProps()}>{tipText}</Tooltip>
+      {tipText == null ? null : <Tooltip {...tip.getTooltipProps()}>{tipText}</Tooltip>}
     </>
   );
 }
@@ -174,6 +238,7 @@ function Icon({ className, ...props }: ButtonIconProps) {
   return (
     <span
       {...props}
+      {...{ [ICON_ATTR]: '' }}
       aria-hidden={props['aria-hidden'] ?? true}
       className={[styles.icon, className].filter(Boolean).join(' ')}
     />

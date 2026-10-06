@@ -6,16 +6,18 @@ import {
   useCallback,
   useContext,
   useId,
+  useLayoutEffect,
   useMemo,
+  useReducer,
+  useRef,
   useState,
   type ComponentPropsWithRef,
   type KeyboardEvent,
   type MouseEvent,
-  type ReactElement,
   type ReactNode,
 } from 'react';
 import { optionDomId } from './OptionList.ids';
-import { composeHandlers, cx } from './props';
+import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './OptionList.module.css';
 
 /** `id` is derived from the list and value so `aria-activedescendant` can point at it. */
@@ -56,7 +58,10 @@ type OptionListContextValue = {
   selected: ReadonlySet<string>;
   highlighted: string | null;
   select: (value: string, fromPointer?: boolean) => void;
+  register: (entry: OptionEntry) => () => void;
 };
+
+type OptionEntry = { value: string; disabled: boolean; node: HTMLElement };
 
 const OptionListContext = createContext<OptionListContextValue | null>(null);
 
@@ -70,24 +75,34 @@ function isMultiple(props: OptionListProps): props is OptionListMultipleProps {
   return props.selectionMode === 'multiple';
 }
 
-function isOptionElement(node: ReactNode): node is ReactElement<OptionProps> {
-  return isValidElement(node) && node.type === Option;
+// Options register themselves instead of being found by component type, so an
+// Option inside a company's wrapper, a fragment or any other element still
+// counts. Keyboard order is document order.
+function byDocumentOrder(a: OptionEntry, b: OptionEntry): number {
+  return a.node.compareDocumentPosition(b.node) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
 }
 
-function collectOptions(children: ReactNode): Pick<OptionProps, 'value' | 'disabled'>[] {
+// Server-render hint only, used until options have registered: direct Option
+// children, looking through fragments.
+function hintOptions(children: ReactNode): { value: string; disabled: boolean }[] {
   return Children.toArray(children).flatMap((child) => {
-    if (isOptionElement(child)) return [child.props];
-    // Children.toArray flattens arrays but not fragments; look through them so disabled
-    // state and keyboard order stay correct for `<>{items.map(...)}</>`.
-    if (isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment) {
-      return collectOptions(child.props.children);
+    if (!isValidElement<{ value?: unknown; disabled?: boolean; children?: ReactNode }>(child)) return [];
+    if (child.type === Option && typeof child.props.value === 'string') {
+      return [{ value: child.props.value, disabled: Boolean(child.props.disabled) }];
     }
-    return [];
+    return child.type === Fragment ? hintOptions(child.props.children) : [];
   });
 }
 
-export function Option({ value, children, disabled, className, onMouseDown, onClick, ...props }: OptionProps) {
+export function Option({ value, children, disabled, className, onMouseDown, onClick, ref, ...props }: OptionProps) {
   const ctx = useOptionList();
+  const nodeRef = useRef<HTMLDivElement | null>(null);
+  const refs = useComposedRefs(nodeRef, ref);
+  const { register } = ctx;
+  useLayoutEffect(() => {
+    if (!nodeRef.current) return;
+    return register({ value, disabled: Boolean(disabled), node: nodeRef.current });
+  }, [disabled, register, value]);
   if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
     console.error('Option children must be a string');
   }
@@ -96,6 +111,7 @@ export function Option({ value, children, disabled, className, onMouseDown, onCl
   return (
     <div
       {...props}
+      ref={refs}
       id={optionDomId(ctx.listId, value)}
       role="option"
       aria-selected={selected}
@@ -131,13 +147,45 @@ export function OptionList(props: OptionListProps) {
     onKeyDown: onKeyDownProp,
     onPointerUp,
     onPointerCancel,
+    ref,
     ...rest
   } = props;
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const listRefs = useComposedRefs(listRef, ref);
   const autoId = useId();
   const listId = id ?? autoId;
   const multiple = isMultiple(props);
-  const options = collectOptions(children);
-  const enabled = options.filter((option) => !option.disabled).map((option) => option.value);
+  // Registration only records the option; ordering happens once per render
+  // below, so mounting N options costs one sort, not N.
+  const registered = useRef(new Set<OptionEntry>());
+  const [entries, setEntries] = useState<readonly OptionEntry[]>([]);
+  const [, registrationChanged] = useReducer((n: number) => n + 1, 0);
+  const register = useCallback((entry: OptionEntry) => {
+    registered.current.add(entry);
+    registrationChanged();
+    return () => {
+      registered.current.delete(entry);
+      registrationChanged();
+    };
+  }, []);
+  // Keyed options can move without re-registering, and a wrapper can move them
+  // from its own state without this list rendering; re-sort when they do.
+  const resort = useCallback(() => {
+    const sorted = [...registered.current].sort(byDocumentOrder);
+    setEntries((prev) =>
+      prev.length === sorted.length && sorted.every((entry, i) => entry === prev[i]) ? prev : sorted,
+    );
+  }, []);
+  useLayoutEffect(resort);
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(resort);
+    observer.observe(list, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [resort]);
+  const known = entries.length > 0 || registered.current.size > 0 ? entries : hintOptions(children);
+  const enabled = known.filter((option) => !option.disabled).map((option) => option.value);
   const selected = useMemo(() => {
     if (isMultiple(props)) return new Set(props.value);
     return new Set(props.value ? [props.value] : []);
@@ -213,14 +261,16 @@ export function OptionList(props: OptionListProps) {
       selected,
       highlighted: activeValueProp !== undefined ? activeValue : highlighted,
       select,
+      register,
     }),
-    [activeValue, activeValueProp, highlighted, listId, multiple, select, selected],
+    [activeValue, activeValueProp, highlighted, listId, multiple, register, select, selected],
   );
 
   return (
     <OptionListContext.Provider value={ctx}>
       <div
         {...rest}
+        ref={listRefs}
         role="listbox"
         id={listId}
         tabIndex={tabIndex ?? 0}
