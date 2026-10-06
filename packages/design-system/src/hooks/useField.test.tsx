@@ -59,6 +59,47 @@ describe('useField', () => {
     expect(slider.getAttribute('aria-invalid')).toBe('true');
   });
 
+  it("adds a control's own disabled and aria-invalid to the Root's", () => {
+    function Own({ busy, error }: { busy?: boolean; error?: 'true' | 'spelling' }) {
+      const field = useField();
+      return <input {...field.getControlProps({ disabled: busy, 'aria-invalid': error })} />;
+    }
+    const { rerender } = render(
+      <Field.Root aria-label="Own">
+        <Own busy error="spelling" />
+      </Field.Root>,
+    );
+    const input = () => screen.getByRole('textbox') as HTMLInputElement;
+    expect(input().disabled).toBe(true);
+    expect(input().getAttribute('aria-invalid')).toBe('spelling');
+    rerender(
+      <Field.Root aria-label="Own" invalid>
+        <Own error="spelling" />
+      </Field.Root>,
+    );
+    expect(input().disabled).toBe(false);
+    expect(input().getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it("does not reattach a control's ref on every render", () => {
+    const attach = vi.fn();
+    const { rerender } = render(
+      <Field.Root aria-label="Size" data-tick={1}>
+        <Field.Select value="s" onChange={() => {}} ref={attach}>
+          <option value="s">Small</option>
+        </Field.Select>
+      </Field.Root>,
+    );
+    rerender(
+      <Field.Root aria-label="Size" data-tick={2}>
+        <Field.Select value="s" onChange={() => {}} ref={attach}>
+          <option value="s">Small</option>
+        </Field.Select>
+      </Field.Root>,
+    );
+    expect(attach).toHaveBeenCalledTimes(1);
+  });
+
   it('gives a native control name and disabled, and no aria-disabled', () => {
     function Native() {
       const field = useField();

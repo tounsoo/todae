@@ -204,6 +204,62 @@ describe('useRovingFocus', () => {
     expect(focused()).toBe('new file');
   });
 
+  it('a space that joined a search is consumed even when nothing matches', () => {
+    render(<Group typeahead items={[{ value: 'new' }, { value: 'open' }]} />);
+    screen.getByText('open').focus();
+    fireEvent.keyDown(document.activeElement!, { key: 'z', timeStamp: 1000 });
+    const kept = fireEvent.keyDown(document.activeElement!, { key: ' ', timeStamp: 1050 });
+    expect(kept).toBe(false);
+    expect(focused()).toBe('open');
+  });
+
+  it('handles keys on a focused container as if before the first item', () => {
+    function Focusable() {
+      const roving = useRovingFocus({ typeahead: true });
+      return (
+        <div role="menu" tabIndex={-1} data-testid="box" {...roving.getContainerProps()}>
+          {['apple', 'banana', 'cherry'].map((v) => (
+            <button key={v} type="button" {...roving.getItemProps(v)}>
+              {v}
+            </button>
+          ))}
+        </div>
+      );
+    }
+    render(<Focusable />);
+    const box = screen.getByTestId('box');
+    act(() => box.focus());
+    key('b');
+    expect(focused()).toBe('banana');
+    act(() => box.focus());
+    key('ArrowDown');
+    expect(focused()).toBe('apple');
+    act(() => box.focus());
+    key('ArrowUp');
+    expect(focused()).toBe('cherry');
+  });
+
+  it('setActiveValue on a disabled item leaves a tab stop', () => {
+    let roving: ReturnType<typeof useRovingFocus> | undefined;
+    function Probe() {
+      roving = useRovingFocus({ activeValue: 'a' });
+      return (
+        <div {...roving.getContainerProps()}>
+          <button type="button" {...roving.getItemProps('a', { disabled: true })}>
+            a
+          </button>
+          <button type="button" {...roving.getItemProps('b')}>
+            b
+          </button>
+        </div>
+      );
+    }
+    render(<Probe />);
+    expect(tabStops()).toEqual(['b']);
+    act(() => roving!.setActiveValue('a'));
+    expect(tabStops()).toEqual(['b']);
+  });
+
   it('typeahead is off by default', () => {
     render(<Group />);
     screen.getByText('apple').focus();
@@ -275,6 +331,18 @@ describe('useRovingFocus', () => {
     const { rerender } = render(<Probe tick={1} />);
     rerender(<Probe tick={2} />);
     expect(refs.size).toBe(1);
+  });
+
+  it('keeps the container ref stable while the caller ref is', () => {
+    const attach = vi.fn();
+    function Probe({ tick }: { tick: number }) {
+      const roving = useRovingFocus();
+      return <div data-tick={tick} {...roving.getContainerProps({ ref: attach })} />;
+    }
+    const { rerender } = render(<Probe tick={1} />);
+    rerender(<Probe tick={2} />);
+    rerender(<Probe tick={3} />);
+    expect(attach).toHaveBeenCalledTimes(1);
   });
 
   it('works controlled', () => {

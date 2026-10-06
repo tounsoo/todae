@@ -8,7 +8,7 @@ import {
   type KeyboardEvent,
   type Ref,
 } from 'react';
-import { composeRefs } from '../components/props';
+import { useStableComposedRef } from '../components/props';
 import { useControlledState } from './useControlledState';
 
 export type RovingOrientation = 'horizontal' | 'vertical' | 'both';
@@ -177,12 +177,14 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
 
   const commit = useCallback(
     (value: string) => {
-      setTabStop(value);
+      // Only an enabled, rendered item can hold the tab stop; anything else
+      // would leave the group with no tab stop at all.
+      if (values().includes(value)) setTabStop(value);
       if (value === active) return;
       setActive(value);
       onActiveValueChange?.(value);
     },
-    [active, onActiveValueChange, setActive],
+    [active, onActiveValueChange, setActive, values],
   );
 
   const getItemNode = useCallback(
@@ -225,10 +227,13 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       if (event.altKey || event.ctrlKey || event.metaKey) return;
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
-      if (target.getAttribute('data-todae-roving') !== scope) return;
+      // The container itself counts too, when it takes focus, as a menu does
+      // on a press between items. Its index is -1: the next item is the first.
+      const onContainer = target === containerRef.current;
+      if (!onContainer && target.getAttribute('data-todae-roving') !== scope) return;
       const nodes = items();
       if (nodes.length === 0) return;
-      const index = nodes.indexOf(target);
+      const index = onContainer ? -1 : nodes.indexOf(target);
       const rtl = () => {
         const container = containerRef.current;
         return container ? getComputedStyle(container).direction === 'rtl' : false;
@@ -238,7 +243,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       if (step === 'next') {
         next = index + 1 < nodes.length ? nodes[index + 1] : loop ? nodes[0] : undefined;
       } else if (step === 'prev') {
-        next = index > 0 ? nodes[index - 1] : loop ? nodes.at(-1) : undefined;
+        next = index > 0 ? nodes[index - 1] : loop || onContainer ? nodes.at(-1) : undefined;
       } else if (event.key === 'Home') {
         next = nodes[0];
       } else if (event.key === 'End') {
@@ -258,7 +263,11 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         const start = cycling ? index + 1 : Math.max(index, 0);
         const ordered = [...nodes.slice(start), ...nodes.slice(0, start)];
         next = ordered.find((node) => text(node).startsWith(needle));
-        if (!next) return;
+        // A Space that joined the search is the search's, match or not.
+        if (!next) {
+          if (event.key === ' ') event.preventDefault();
+          return;
+        }
       } else {
         return;
       }
@@ -268,21 +277,23 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     [isTypingAhead, items, loop, orientation, scope, typeahead],
   );
 
+  const composedRef = useStableComposedRef(setContainer);
+
   const getContainerProps = useCallback(
     <P extends RovingContainerUserProps>(props?: P): Omit<P, keyof RovingContainerWire> & RovingContainerWire => {
       const user = (props ?? {}) as P;
       return {
         ...user,
-        // Stable unless the caller brings its own ref, so React does not
-        // detach and re-observe the container on every render.
-        ref: user.ref ? composeRefs(setContainer, user.ref) : setContainer,
+        // Stable while the caller's ref is, so React does not detach and
+        // re-observe the container on every render.
+        ref: composedRef(user.ref),
         onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
           user.onKeyDown?.(event);
           if (!event.defaultPrevented) onKeyDown(event);
         },
       };
     },
-    [onKeyDown, setContainer],
+    [composedRef, onKeyDown],
   );
 
   const getItemProps = useCallback(

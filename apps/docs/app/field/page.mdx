@@ -255,7 +255,7 @@ The same composer at compact, comfortable, and spacious.
 
 ## Custom controls
 
-`useField()` joins your own control to the nearest `Field.Root`, the way the built-in parts join it. Spread `getControlProps()` on the control: it carries the Root's `id`, `name`, `disabled`, `aria-invalid`, the merged `aria-describedby`, the Root's name unless the control names itself, and a ref so a press on the shell focuses the control. The shell draws its focus ring for it too. For a control that is not a native form element, call `getControlProps(props, { native: false })`: it sets `aria-disabled` instead of `disabled` and leaves out `name`, which only form elements submit. Read `disabled` from `useField()` to skip the tab stop and ignore keys. `Label htmlFor` only names labelable elements, so name a custom element through `aria-labelledby` on the Root.
+`useField()` joins your own control to the nearest `Field.Root`, the way the built-in parts join it. Spread `getControlProps()` on the control: it carries the Root's `id`, `name`, `disabled`, `aria-invalid`, the merged `aria-describedby`, the Root's name unless the control names itself, and a ref so a press on the shell focuses the control. The shell draws its focus ring for it too. For a control that is not a native form element, call `getControlProps(props, { native: false })`: it sets `aria-disabled` instead of `disabled` and leaves out `name`, which only form elements submit. Read `disabled` from `useField()` to skip the tab stop and ignore keys. A `disabled` or `aria-invalid` you pass in adds to the Root's; it never clears it. `Label htmlFor` only names labelable elements, so name a custom element through `aria-labelledby` on the Root.
 
 ```tsx
 function Stars(props) {

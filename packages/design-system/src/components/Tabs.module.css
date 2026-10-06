@@ -44,7 +44,9 @@
 
   .tab[data-orientation='vertical'] {
     justify-content: flex-start;
-    border-radius: var(--todae-tabs-radius) 0 0 var(--todae-tabs-radius);
+    border-radius: 0;
+    border-start-start-radius: var(--todae-tabs-radius);
+    border-end-start-radius: var(--todae-tabs-radius);
     text-align: start;
   }
 

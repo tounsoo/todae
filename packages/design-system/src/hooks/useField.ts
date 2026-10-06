@@ -1,10 +1,14 @@
 import { useCallback, type Ref } from 'react';
 import { inputLabel, mergeDescribedBy, useFieldContext } from '../components/Field.context';
-import { composeRefs } from '../components/props';
+import { useStableComposedRef } from '../components/props';
 
 /** `id` and `name` are not taken here: they come from `Field.Root`, which a `Label htmlFor` and the form use. */
 export type FieldControlUserProps = {
   ref?: Ref<HTMLElement | null>;
+  /** Disables the control on top of the Root's `disabled`. */
+  disabled?: boolean;
+  /** Marks the control invalid on top of the Root's `invalid`. */
+  'aria-invalid'?: boolean | 'true' | 'false' | 'grammar' | 'spelling';
   'aria-describedby'?: string;
   'aria-label'?: string;
   'aria-labelledby'?: string;
@@ -25,7 +29,7 @@ export type FieldControlWire = {
   name: string | undefined;
   disabled: boolean | undefined;
   'aria-disabled': true | undefined;
-  'aria-invalid': true | undefined;
+  'aria-invalid': FieldControlUserProps['aria-invalid'];
   'aria-describedby': string | undefined;
   'aria-label': string | undefined;
   'aria-labelledby': string | undefined;
@@ -63,26 +67,29 @@ export function useField(): UseFieldResult {
     },
     [inputRef],
   );
+  const composedRef = useStableComposedRef(setControl);
   const getControlProps = useCallback(
     <P extends FieldControlUserProps>(
       props?: P,
       { native = true }: FieldControlOptions = {},
     ): Omit<P, keyof FieldControlWire> & FieldControlWire => {
       const user = (props ?? {}) as P;
+      const disabled = ctx.disabled || Boolean(user.disabled);
       return {
         ...user,
-        ref: user.ref ? composeRefs(setControl, user.ref) : setControl,
+        ref: composedRef(user.ref),
         id: ctx.inputId,
         name: native ? ctx.name : undefined,
-        disabled: native ? ctx.disabled : undefined,
-        'aria-disabled': !native && ctx.disabled ? true : undefined,
-        'aria-invalid': ctx.invalid || undefined,
+        disabled: native ? disabled : undefined,
+        'aria-disabled': !native && disabled ? true : undefined,
+        // The Root's invalid wins; otherwise the control's own value, such as `spelling`, stays.
+        'aria-invalid': ctx.invalid ? true : user['aria-invalid'],
         'aria-describedby': mergeDescribedBy(ctx.describedBy, user['aria-describedby']),
         ...inputLabel(user, ctx),
         'data-todae-field-control': '',
       } as Omit<P, keyof FieldControlWire> & FieldControlWire;
     },
-    [ctx, setControl],
+    [composedRef, ctx],
   );
   return {
     id: ctx.inputId,

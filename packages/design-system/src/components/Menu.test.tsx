@@ -270,6 +270,9 @@ describe('Menu', () => {
     act(() => menu().focus());
     key('End');
     expect(document.activeElement).toBe(item('Date'));
+    act(() => menu().focus());
+    key('r');
+    expect(document.activeElement).toBe(item('Rename'));
   });
 
   it('runs consumer pointer and click handlers on the content', async () => {
