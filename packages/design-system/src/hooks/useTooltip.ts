@@ -63,7 +63,6 @@ export type UseTooltipResult<I extends boolean = false> = {
   getTooltipProps: () => TooltipWire<I>;
 };
 
-
 function tooltipStyle(anchorName: string): CSSProperties {
   return {
     ['--todae-tooltip-anchor' as string]: anchorName,
@@ -221,7 +220,7 @@ export function useTooltip<I extends boolean = false>(
         ...user,
         // Stable while the caller's ref is; see usePopover.
         ref: triggerComposed(user.ref),
-        style: { ...user.style, ...anchorTriggerStyle('--todae-tooltip-anchor', anchorName, user.style) },
+        style: anchorTriggerStyle('--todae-tooltip-anchor', anchorName, user.style),
         'aria-describedby': open && enabled ? contentId : user['aria-describedby'],
         onPointerEnter: (event: PointerEvent<HTMLElement>) => {
           user.onPointerEnter?.(event);

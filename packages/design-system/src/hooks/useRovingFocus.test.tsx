@@ -503,14 +503,14 @@ describe('useRovingFocus', () => {
     expect(focused()).toBe('c');
   });
 
-  it('does not report focus landing on the item that already holds the tab stop', () => {
+  it('reports a fallback tab stop that takes focus once, so an owner can pin it', () => {
     const onActiveValueChange = vi.fn();
-    render(<Group onActiveValueChange={onActiveValueChange} />);
+    render(<Group activeValue="missing" onActiveValueChange={onActiveValueChange} />);
     expect(tabStops()).toEqual(['apple']);
     act(() => screen.getByText('apple').focus());
-    expect(onActiveValueChange).not.toHaveBeenCalled();
+    expect(onActiveValueChange).toHaveBeenCalledExactlyOnceWith('apple');
     key('ArrowDown');
-    expect(onActiveValueChange).toHaveBeenCalledWith('banana');
+    expect(onActiveValueChange).toHaveBeenLastCalledWith('banana');
   });
 
   it('a new active value takes the tab stop in one render', () => {

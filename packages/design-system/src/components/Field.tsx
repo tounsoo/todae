@@ -119,7 +119,6 @@ function Affix({ className, ...props }: FieldAffixProps) {
   return <span {...props} className={cx(styles.adornment, className)} />;
 }
 
-// Walks up by class list rather than a selector, so any hashed class name works.
 // Whether a select's picker is showing. A browser without `:open` throws,
 // and treats the picker as closed.
 function isOpen(select: HTMLSelectElement): boolean {
@@ -130,6 +129,7 @@ function isOpen(select: HTMLSelectElement): boolean {
   }
 }
 
+// Walks up by class list rather than a selector, so any hashed class name works.
 function inAdornment(node: HTMLElement, shell: HTMLElement): boolean {
   for (let el = node.parentElement; el && el !== shell; el = el.parentElement) {
     if (styles.adornment && el.classList.contains(styles.adornment)) return true;
@@ -185,6 +185,8 @@ function Root({
   );
 
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
+    // Each press decides afresh whether its click opens a picker.
+    pendingPicker.current = null;
     // Only a primary press: a right or middle click keeps its own meaning.
     if (event.button !== 0 || disabled || isInteractiveTarget(event.target)) return;
     event.preventDefault();
@@ -206,7 +208,9 @@ function Root({
   function onClick(event: MouseEvent<HTMLDivElement>) {
     const select = pendingPicker.current;
     pendingPicker.current = null;
-    if (!select?.isConnected || isInteractiveTarget(event.target)) return;
+    // Only the click that ends this press: one from the keyboard or from
+    // assistive technology has no press (detail 0) and opens nothing.
+    if (!select?.isConnected || event.detail === 0 || isInteractiveTarget(event.target)) return;
     try {
       select.showPicker?.();
     } catch {

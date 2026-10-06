@@ -233,7 +233,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         kind: 'create',
         label: createLabel(trimmed),
         value: trimmed,
-        id: `${ids.listbox}-opt-${CREATE_VALUE}`,
+        id: optionDomId(ids.listbox, CREATE_VALUE),
       });
     }
     return rows;

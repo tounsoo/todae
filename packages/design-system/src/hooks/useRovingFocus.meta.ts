@@ -49,7 +49,7 @@ export const meta = {
       name: 'onActiveValueChange',
       type: '(value: string) => void',
       required: false,
-      description: 'Fires when an item other than the active one takes focus.',
+      description: 'Fires when an item other than activeValue takes focus, including a fallback tab stop, so a controlled owner can pin it.',
     },
   ],
 } as const satisfies ComponentMeta;

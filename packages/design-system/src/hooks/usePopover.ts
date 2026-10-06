@@ -67,7 +67,6 @@ function eventInside(el: HTMLElement | null, event: Event): boolean {
   return event.target instanceof Node && el.contains(event.target);
 }
 
-
 function popoverStyle(anchorName: string): CSSProperties {
   return {
     ['--todae-popover-anchor' as string]: anchorName,
@@ -179,7 +178,7 @@ export function usePopoverInternal(
         // Stable while the caller's ref is, so the caller's ref is not
         // detached and reattached, and its cleanup kept, across renders.
         ref: triggerComposed(user.ref),
-        style: { ...user.style, ...anchorTriggerStyle('--todae-popover-anchor', anchorName, user.style) },
+        style: anchorTriggerStyle('--todae-popover-anchor', anchorName, user.style),
         'aria-expanded': open,
         'aria-controls': contentId,
         'aria-haspopup': haspopup,

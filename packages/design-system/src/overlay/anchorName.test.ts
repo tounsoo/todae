@@ -10,7 +10,11 @@ describe('mergeAnchorNames', () => {
   });
 
   it('builds a trigger style that keeps an existing anchor name', () => {
-    expect(anchorTriggerStyle('--v', '--a', { anchorName: '--tip' })).toEqual({ '--v': '--a', anchorName: '--tip, --a' });
+    expect(anchorTriggerStyle('--v', '--a', { anchorName: '--tip', color: 'red' })).toEqual({
+      color: 'red',
+      '--v': '--a',
+      anchorName: '--tip, --a',
+    });
   });
 
   it('takes out only its own name', () => {

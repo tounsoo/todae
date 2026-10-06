@@ -1,12 +1,13 @@
 import type { CSSProperties } from 'react';
 
 /**
- * The trigger style for an overlay anchored by `name`. `anchor-name` takes a
- * list, so a trigger that is also another overlay's anchor (a menu trigger
- * with a tooltip) keeps both names.
+ * The trigger's own style plus what an overlay anchored by `name` needs.
+ * `anchor-name` takes a list, so a trigger that is also another overlay's
+ * anchor (a menu trigger with a tooltip) keeps both names.
  */
 export function anchorTriggerStyle(variable: string, name: string, existing?: CSSProperties): CSSProperties {
   return {
+    ...existing,
     [variable as string]: name,
     anchorName: mergeAnchorNames(existing?.anchorName, name),
   } as CSSProperties;

@@ -275,11 +275,12 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       // The tab stop is derived from `active`, so a controlled owner that
       // keeps its value keeps the tab stop too.
       if (value === active) return;
-      // Pin a fallback tab stop that takes focus, but only report a move.
+      // A fallback tab stop that takes focus is reported too, so a controlled
+      // owner can pin it before a DOM change moves the fallback elsewhere.
       setActive(value);
-      if (value !== tabStop) onActiveValueChange?.(value);
+      onActiveValueChange?.(value);
     },
-    [active, onActiveValueChange, setActive, tabStop],
+    [active, onActiveValueChange, setActive],
   );
 
   const getItemNode = useCallback(

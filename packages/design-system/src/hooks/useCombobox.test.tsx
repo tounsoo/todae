@@ -409,6 +409,25 @@ describe('useCombobox', () => {
     expect(hidden.result.current.showCreate).toBe(false);
   });
 
+  it('gives the create row the id activeId names when it is highlighted', () => {
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        allowCreate: true,
+        defaultInputValue: 'Zzz',
+        defaultOpen: true,
+        presentation: 'popover',
+      }),
+    );
+    const row = result.current.items.at(-1)!;
+    expect(row.kind).toBe('create');
+    act(() => {
+      result.current.getInputProps().onKeyDown?.({ key: 'ArrowDown', preventDefault() {}, nativeEvent: {} } as never);
+    });
+    expect(result.current.activeId).not.toBeNull();
+    expect(result.current.activeId).toBe(row.id);
+  });
+
   it('commits a create row from click in the same turn and closes single mode', () => {
     const onChange = vi.fn();
     render(<SingleBox allowCreate onChange={onChange} />);

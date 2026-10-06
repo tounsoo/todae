@@ -86,7 +86,6 @@ function useTabs(part: string): TabsContextValue {
   return ctx;
 }
 
-
 const tabId = (baseId: string, value: string) => `${baseId}-tab-${domSafe(value)}`;
 const panelId = (baseId: string, value: string) => `${baseId}-panel-${domSafe(value)}`;
 
@@ -164,6 +163,7 @@ function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListP
         // or another window. Look once it has landed: the window losing focus
         // leaves the tab focused, which is not leaving the list.
         if (next === null) {
+          clearTimeout(pending.current);
           pending.current = setTimeout(() => {
             pending.current = undefined;
             if (!list.contains(document.activeElement)) leave();

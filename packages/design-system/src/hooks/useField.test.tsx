@@ -223,10 +223,20 @@ describe('useField', () => {
       expect(document.activeElement).toBe(screen.getByRole('combobox'));
       // The picker opens on the click that ends the press.
       expect(showPicker).not.toHaveBeenCalled();
-      fireEvent.click(screen.getByTestId('icon'));
+      fireEvent.click(screen.getByTestId('icon'), { detail: 1 });
       expect(showPicker).toHaveBeenCalledTimes(1);
       // A click with no press before it opens nothing.
-      fireEvent.click(screen.getByTestId('icon'));
+      fireEvent.click(screen.getByTestId('icon'), { detail: 1 });
+      expect(showPicker).toHaveBeenCalledTimes(1);
+      // Nor does one after a press that ended elsewhere, then a press the
+      // shell left alone.
+      fireEvent.mouseDown(screen.getByTestId('icon'));
+      fireEvent.mouseDown(screen.getByTestId('icon'), { button: 2 });
+      fireEvent.click(screen.getByTestId('icon'), { detail: 1 });
+      expect(showPicker).toHaveBeenCalledTimes(1);
+      // Nor a click from the keyboard or assistive technology.
+      fireEvent.mouseDown(screen.getByTestId('icon'));
+      fireEvent.click(screen.getByTestId('icon'), { detail: 0 });
       expect(showPicker).toHaveBeenCalledTimes(1);
     } finally {
       proto.showPicker = original;
