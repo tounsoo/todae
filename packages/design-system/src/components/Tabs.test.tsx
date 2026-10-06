@@ -123,6 +123,25 @@ describe('Tabs', () => {
     expect(stops()).toEqual([tab('Account')]);
   });
 
+  it('returns the tab stop to the selected tab when the focused tab turns disabled', async () => {
+    const { rerender } = render(<Example activation="manual" defaultValue="c d" />);
+    act(() => tab('Team members').focus());
+    key('ArrowLeft');
+    expect(document.activeElement).toBe(tab('Billing'));
+    await act(async () => rerender(<Example activation="manual" defaultValue="c d" disabledB />));
+    const stops = screen.getAllByRole('tab').filter((el) => el.tabIndex === 0);
+    expect(stops).toEqual([tab('Team members')]);
+  });
+
+  it('keeps the tab stop on the focused tab across re-renders', () => {
+    const { rerender } = render(<Example activation="manual" />);
+    act(() => tab('Account').focus());
+    key('ArrowRight');
+    rerender(<Example activation="manual" />);
+    const stops = screen.getAllByRole('tab').filter((el) => el.tabIndex === 0);
+    expect(stops).toEqual([tab('Billing')]);
+  });
+
   it('moves the tab stop to a tab selected while focus is outside the list', () => {
     function Outside() {
       const [value, setValue] = useState('a');

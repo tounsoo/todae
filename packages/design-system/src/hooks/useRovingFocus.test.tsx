@@ -68,10 +68,13 @@ describe('useRovingFocus', () => {
     expect(tabStops()).toEqual(['cherry']);
   });
 
-  it('falls back when the active item is disabled or missing', () => {
+  // DOM changes reach the hook through a MutationObserver, a microtask later.
+  it('falls back when the active item is disabled or missing', async () => {
     const { rerender } = render(<Group activeValue="banana" />);
     expect(tabStops()).toEqual(['banana']);
-    rerender(<Group activeValue="banana" items={[{ value: 'apple' }, { value: 'banana', disabled: true }]} />);
+    await act(async () =>
+      rerender(<Group activeValue="banana" items={[{ value: 'apple' }, { value: 'banana', disabled: true }]} />),
+    );
     expect(tabStops()).toEqual(['apple']);
     rerender(<Group activeValue="gone" />);
     expect(tabStops()).toEqual(['apple']);
@@ -189,6 +192,16 @@ describe('useRovingFocus', () => {
     expect(focused()).toBe('blueberry');
     fireEvent.keyDown(document.activeElement!, { key: 'z', timeStamp: 5000 });
     expect(focused()).toBe('blueberry');
+  });
+
+  it('a space joins a search under way and is ignored otherwise', () => {
+    render(<Group typeahead items={[{ value: 'new window' }, { value: 'new file' }, { value: 'open' }]} />);
+    screen.getByText('open').focus();
+    const press = (k: string, t: number) => fireEvent.keyDown(document.activeElement!, { key: k, timeStamp: t });
+    press(' ', 1000);
+    expect(focused()).toBe('open');
+    for (const [i, k] of [...'new f'].entries()) press(k, 2000 + i * 50);
+    expect(focused()).toBe('new file');
   });
 
   it('typeahead is off by default', () => {

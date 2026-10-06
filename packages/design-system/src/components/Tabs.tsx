@@ -1,7 +1,9 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useId,
+  useLayoutEffect,
   useState,
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -62,6 +64,8 @@ type TabsContextValue = {
   roving: UseRovingFocusResult;
   /** Focus left the list. */
   leave: () => void;
+  /** A tab went away or turned disabled; it can no longer hold the tab stop. */
+  release: (value: string) => void;
 };
 
 const TabsContext = createContext<TabsContextValue | null>(null);
@@ -102,6 +106,10 @@ function Root({
   // list: then it is the focused tab. Leaving the list returns it to the
   // selected tab, so focus always enters on the selected tab.
   const [navigating, setNavigating] = useState<string | null>(null);
+  const release = useCallback(
+    (gone: string) => setNavigating((current) => (current === gone ? null : current)),
+    [],
+  );
   const roving = useRovingFocus({
     orientation,
     activeValue: navigating ?? value,
@@ -109,7 +117,16 @@ function Root({
   });
   return (
     <TabsContext.Provider
-      value={{ baseId, value, select, orientation, activation, roving, leave: () => setNavigating(null) }}
+      value={{
+        baseId,
+        value,
+        select,
+        orientation,
+        activation,
+        roving,
+        leave: () => setNavigating(null),
+        release,
+      }}
     >
       <div {...props} className={cx(styles.root, className)} data-orientation={orientation}>
         {children}
@@ -144,6 +161,12 @@ function List({ children, className, ref, onBlur, ...props }: TabsListProps) {
 function Tab({ value, children, disabled, className, onClick, onFocus, ...props }: TabsTabProps) {
   const ctx = useTabs('Tab');
   const selected = ctx.value === value;
+  const { release } = ctx;
+  // Hand the tab stop back to the selected tab when this one goes away.
+  useLayoutEffect(() => {
+    if (disabled) release(value);
+    return () => release(value);
+  }, [disabled, release, value]);
   const item = ctx.roving.getItemProps(value, { disabled }, {
     ...props,
     // Automatic activation selects a tab that focus moved to from another

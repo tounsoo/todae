@@ -68,6 +68,8 @@ export type UseRovingFocusResult = {
   focusFirst: () => string | null;
   /** Focuses the last enabled item and returns its value. */
   focusLast: () => string | null;
+  /** True while a typeahead search is under way, when a Space adds to it instead of activating. */
+  isTypingAhead: (event: { timeStamp: number }) => boolean;
   /** The enabled item element with this value, or null. */
   getItemNode: (value: string) => HTMLElement | null;
   /** Enabled item values in document order, read from the DOM. */
@@ -130,8 +132,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
 
   const values = useCallback(() => items().map(valueOf), [items]);
 
-  // Items can appear, move or turn disabled without this hook's owner
-  // rendering, so re-check after every render and on DOM changes.
+  // Re-check when `active` changes, when the container mounts, and on DOM
+  // changes: items can appear, move or turn disabled without this hook's
+  // owner rendering.
   const syncTabStop = () => {
     const enabled = values();
     const next = active !== null && enabled.includes(active) ? active : (enabled[0] ?? null);
@@ -141,29 +144,32 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   useLayoutEffect(() => {
     latestSync.current = syncTabStop;
   });
-  useLayoutEffect(syncTabStop);
+  useLayoutEffect(() => latestSync.current(), [active]);
 
   // Watch whichever element is the container now, including one that mounts
   // after the owner or replaces an earlier one.
-  const observer = useRef<MutationObserver | null>(null);
+  // A null between two calls with the same element (a ref callback that
+  // changed identity) keeps the observer instead of rebuilding it.
+  const observer = useRef<{ node: HTMLElement; observer: MutationObserver } | null>(null);
   const setContainer = useCallback((node: HTMLElement | null) => {
-    if (containerRef.current === node) return;
     containerRef.current = node;
-    observer.current?.disconnect();
+    if (!node || observer.current?.node === node) return;
+    observer.current?.observer.disconnect();
     observer.current = null;
-    if (!node || typeof MutationObserver === 'undefined') return;
-    observer.current = new MutationObserver(() => latestSync.current());
-    observer.current.observe(node, {
+    if (typeof MutationObserver === 'undefined') return;
+    const watcher = new MutationObserver(() => latestSync.current());
+    watcher.observe(node, {
       childList: true,
       subtree: true,
       attributes: true,
       attributeFilter: ['data-todae-roving-disabled', 'data-todae-roving-value'],
     });
+    observer.current = { node, observer: watcher };
     latestSync.current();
   }, []);
   useLayoutEffect(
     () => () => {
-      observer.current?.disconnect();
+      observer.current?.observer.disconnect();
       observer.current = null;
     },
     [],
@@ -207,6 +213,13 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   const focusFirst = useCallback(() => focusEdge('first'), [focusEdge]);
   const focusLast = useCallback(() => focusEdge('last'), [focusEdge]);
 
+  // A space only joins a search already under way; otherwise it activates.
+  const isTypingAhead = useCallback(
+    (event: { timeStamp: number }) =>
+      typeahead && buffer.current.text !== '' && event.timeStamp - buffer.current.at <= TYPEAHEAD_RESET_MS,
+    [typeahead],
+  );
+
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
       if (event.altKey || event.ctrlKey || event.metaKey) return;
@@ -230,7 +243,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         next = nodes[0];
       } else if (event.key === 'End') {
         next = nodes.at(-1);
-      } else if (typeahead && event.key.length === 1 && event.key !== ' ') {
+      } else if (typeahead && event.key.length === 1 && (event.key !== ' ' || isTypingAhead(event))) {
         const state = buffer.current;
         const now = event.timeStamp;
         state.text = now - state.at > TYPEAHEAD_RESET_MS ? event.key : state.text + event.key;
@@ -252,7 +265,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       event.preventDefault();
       next?.focus();
     },
-    [items, loop, orientation, scope, typeahead],
+    [isTypingAhead, items, loop, orientation, scope, typeahead],
   );
 
   const getContainerProps = useCallback(
@@ -303,6 +316,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     focusFirst,
     focusLast,
     getItemNode,
+    isTypingAhead,
     values,
     getContainerProps,
     getItemProps,

@@ -10,11 +10,21 @@ export type FieldControlUserProps = {
   'aria-labelledby'?: string;
 };
 
+export type FieldControlOptions = {
+  /**
+   * False for a control that is not a native form element, such as a
+   * `role="slider"` div: it gets `aria-disabled` instead of `disabled`, and
+   * no `name`, which only a form element submits. Default true.
+   */
+  native?: boolean;
+};
+
 export type FieldControlWire = {
   ref: (node: HTMLElement | null) => void;
   id: string;
   name: string | undefined;
-  disabled: boolean;
+  disabled: boolean | undefined;
+  'aria-disabled': true | undefined;
   'aria-invalid': true | undefined;
   'aria-describedby': string | undefined;
   'aria-label': string | undefined;
@@ -31,11 +41,13 @@ export type UseFieldResult = {
   /**
    * Props for the one control inside `Field.Root`: id, name, disabled,
    * aria-invalid, merged aria-describedby, the Root's name unless the control
-   * names itself, and a ref so a press on the shell focuses it. A control that
-   * is not a native form element reads `disabled` and sets `aria-disabled`
-   * itself.
+   * names itself, and a ref so a press on the shell focuses it. Pass
+   * `{ native: false }` for a control that is not a native form element.
    */
-  getControlProps: <P extends FieldControlUserProps>(props?: P) => Omit<P, keyof FieldControlWire> & FieldControlWire;
+  getControlProps: <P extends FieldControlUserProps>(
+    props?: P,
+    options?: FieldControlOptions,
+  ) => Omit<P, keyof FieldControlWire> & FieldControlWire;
 };
 
 /**
@@ -52,14 +64,18 @@ export function useField(): UseFieldResult {
     [inputRef],
   );
   const getControlProps = useCallback(
-    <P extends FieldControlUserProps>(props?: P): Omit<P, keyof FieldControlWire> & FieldControlWire => {
+    <P extends FieldControlUserProps>(
+      props?: P,
+      { native = true }: FieldControlOptions = {},
+    ): Omit<P, keyof FieldControlWire> & FieldControlWire => {
       const user = (props ?? {}) as P;
       return {
         ...user,
         ref: user.ref ? composeRefs(setControl, user.ref) : setControl,
         id: ctx.inputId,
-        name: ctx.name,
-        disabled: ctx.disabled,
+        name: native ? ctx.name : undefined,
+        disabled: native ? ctx.disabled : undefined,
+        'aria-disabled': !native && ctx.disabled ? true : undefined,
         'aria-invalid': ctx.invalid || undefined,
         'aria-describedby': mergeDescribedBy(ctx.describedBy, user['aria-describedby']),
         ...inputLabel(user, ctx),

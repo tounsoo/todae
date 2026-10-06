@@ -72,6 +72,7 @@ export {
 } from './components/Field';
 export {
   useField,
+  type FieldControlOptions,
   type FieldControlUserProps,
   type FieldControlWire,
   type UseFieldResult,

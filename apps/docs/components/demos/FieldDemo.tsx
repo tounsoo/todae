@@ -537,14 +537,13 @@ export function FieldSelectSize() {
 // A company control that is not a native input, joined to Field.Root with useField.
 function Stars({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   const field = useField();
-  const { disabled, ...control } = field.getControlProps();
+  const { disabled } = field;
   const step = (delta: number) => onChange(Math.min(5, Math.max(0, value + delta)));
   return (
     <span
-      {...control}
+      {...field.getControlProps({}, { native: false })}
       role="slider"
       tabIndex={disabled ? -1 : 0}
-      aria-disabled={disabled || undefined}
       aria-valuemin={0}
       aria-valuemax={5}
       aria-valuenow={value}

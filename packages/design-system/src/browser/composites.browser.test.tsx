@@ -6,6 +6,7 @@ import { Field } from '../components/Field';
 import { Label } from '../components/Label';
 import { Menu } from '../components/Menu';
 import { Tabs } from '../components/Tabs';
+import { useField } from '../hooks/useField';
 import { useRovingFocus } from '../hooks/useRovingFocus';
 
 function Themed({ children, dir }: { children: ReactNode; dir?: 'rtl' }) {
@@ -162,5 +163,26 @@ describe('Field.Select in a browser', () => {
     expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
     await userEvent.selectOptions(select, 's');
     expect(select.value).toBe('s');
+  });
+
+  it('draws the focus ring when focus is inside a custom control', async () => {
+    function Group() {
+      const field = useField();
+      return (
+        <div {...field.getControlProps({}, { native: false })} role="group">
+          <button type="button">One</button>
+        </div>
+      );
+    }
+    render(
+      <Themed>
+        <Field.Root aria-label="Choice" data-testid="shell">
+          <Group />
+        </Field.Root>
+      </Themed>,
+    );
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'One' }));
+    expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
   });
 });

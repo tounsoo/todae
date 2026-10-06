@@ -135,6 +135,34 @@ describe('Menu', () => {
     expect(isOpen()).toBe(false);
   });
 
+  it('a space inside a typeahead search searches instead of choosing', async () => {
+    const onSelect = vi.fn();
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>File</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item onSelect={onSelect}>New window</Menu.Item>
+          <Menu.Item onSelect={onSelect}>New file</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await raf();
+    for (const [i, k] of [...'new f'].entries()) {
+      fireEvent.keyDown(document.activeElement!, { key: k, timeStamp: 1000 + i * 50 });
+      fireEvent.keyUp(document.activeElement!, { key: k, timeStamp: 1000 + i * 50 });
+    }
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(item('New file'));
+  });
+
+  it('a press does not focus a disabled item', async () => {
+    render(<Actions />);
+    fireEvent.click(trigger());
+    await raf();
+    const pressed = fireEvent.mouseDown(item('Duplicate'));
+    expect(pressed).toBe(false);
+  });
+
   it('chooses an item with a click and ignores disabled items', async () => {
     const onDelete = vi.fn();
     render(<Actions onDelete={onDelete} />);

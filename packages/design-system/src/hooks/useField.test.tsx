@@ -8,14 +8,13 @@ afterEach(cleanup);
 // A company control that is not a native input.
 function Rating({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   const field = useField();
-  const props = field.getControlProps({ 'aria-describedby': 'own-hint' });
-  const { disabled, ...rest } = props;
+  const props = field.getControlProps({ 'aria-describedby': 'own-hint' }, { native: false });
+  const { disabled } = field;
   return (
     <div
-      {...rest}
+      {...props}
       role="slider"
       tabIndex={disabled ? -1 : 0}
-      aria-disabled={disabled || undefined}
       aria-valuemin={0}
       aria-valuemax={5}
       aria-valuenow={value}
@@ -45,7 +44,8 @@ describe('useField', () => {
     render(<Harness />);
     const slider = screen.getByRole('slider');
     expect(slider.id).toBe('rating');
-    expect(slider.getAttribute('name')).toBe('rating');
+    // A div submits nothing, so a non-native control gets no name.
+    expect(slider.hasAttribute('name')).toBe(false);
     expect(slider.getAttribute('aria-describedby')).toBe('root-hint own-hint');
     expect(slider.hasAttribute('aria-invalid')).toBe(false);
     expect(slider.hasAttribute('data-todae-field-control')).toBe(true);
@@ -55,7 +55,24 @@ describe('useField', () => {
     render(<Harness disabled invalid />);
     const slider = screen.getByRole('slider');
     expect(slider.getAttribute('aria-disabled')).toBe('true');
+    expect(slider.hasAttribute('disabled')).toBe(false);
     expect(slider.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('gives a native control name and disabled, and no aria-disabled', () => {
+    function Native() {
+      const field = useField();
+      return <input {...field.getControlProps()} />;
+    }
+    render(
+      <Field.Root aria-label="Native" name="n" disabled>
+        <Native />
+      </Field.Root>,
+    );
+    const input = screen.getByRole('textbox');
+    expect(input.getAttribute('name')).toBe('n');
+    expect((input as HTMLInputElement).disabled).toBe(true);
+    expect(input.hasAttribute('aria-disabled')).toBe(false);
   });
 
   it('a press on the shell focuses the control', () => {

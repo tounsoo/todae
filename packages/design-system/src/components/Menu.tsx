@@ -7,6 +7,7 @@ import {
   useRef,
   type ComponentPropsWithRef,
   type KeyboardEvent,
+  type MouseEvent,
   type PointerEvent,
   type ReactNode,
   type RefObject,
@@ -245,6 +246,7 @@ function useItem(
     onClick,
     onKeyDown,
     onKeyUp,
+    onMouseDown,
     onPointerMove,
     ...props
   }: Omit<ItemBase, 'children'>,
@@ -252,6 +254,7 @@ function useItem(
   checked?: boolean,
 ) {
   const value = useId();
+  const spacePressed = useRef(false);
   const item = ctx.roving.getItemProps(value, { disabled, textValue }, props);
   return {
     ...item,
@@ -265,16 +268,28 @@ function useItem(
     }),
     // Enter chooses on keydown. Space chooses on keyup, like a native button:
     // choosing on keydown would close the menu and hand the keyup to the
-    // trigger, which some browsers click, reopening the menu.
+    // trigger, which some browsers click, reopening the menu. A Space typed
+    // into a typeahead search is part of the search, not a choice.
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      if (event.key === 'Enter' && !disabled) activate();
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (!disabled) activate();
+      } else if (event.key === ' ') {
+        // Left unprevented while typing, so the menu's typeahead still sees it.
+        spacePressed.current = !ctx.roving.isTypingAhead(event);
+        if (spacePressed.current) event.preventDefault();
+      }
     }),
     onKeyUp: composeHandlers(onKeyUp, (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key !== ' ') return;
       event.preventDefault();
-      if (!disabled) activate();
+      const pressed = spacePressed.current;
+      spacePressed.current = false;
+      if (pressed && !disabled) activate();
+    }),
+    // A press must not focus a disabled item.
+    onMouseDown: composeHandlers(onMouseDown, (event: MouseEvent<HTMLDivElement>) => {
+      if (disabled) event.preventDefault();
     }),
     // The pointer moves focus, so the highlight and the keyboard agree.
     onPointerMove: composeHandlers(onPointerMove, (event: PointerEvent<HTMLDivElement>) => {

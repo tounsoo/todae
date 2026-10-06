@@ -31,7 +31,7 @@ Enter, Space, a click or ArrowDown on the trigger opens the menu on its first it
   <MenuOptions />
 </Example>
 
-`onOpenChange(open, reason)` reports `trigger`, `escape`, `outside`, `select` or `tab`. A controlled `open` that is not updated vetoes the change. Submenus are not shipped.
+`onOpenChange(open, reason)` reports `trigger`, `escape`, `outside`, `select` or `tab`. A controlled `open` that is not updated vetoes the change; a vetoed `tab` still lets focus move on, the way a vetoed `outside` still lets the press land. Submenus are not shipped.
 
 ## When to use
 

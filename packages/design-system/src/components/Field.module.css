@@ -21,7 +21,7 @@
     gap: 0;
   }
 
-  .shell:has(:is(input, textarea, [data-todae-field-control]):focus-visible) {
+  .shell:has(:is(input, textarea, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: 2px solid var(--todae-field-ring-focus);
     outline-offset: 2px;
@@ -31,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(:is(input, textarea, [data-todae-field-control]):focus-visible) {
+  .shell[data-invalid]:has(:is(input, textarea, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 

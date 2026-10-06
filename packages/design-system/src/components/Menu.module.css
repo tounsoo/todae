@@ -44,7 +44,9 @@
     outline-offset: -2px;
   }
 
-  .item[data-disabled] {
+  .item[data-disabled],
+  .item[data-disabled]:focus {
+    background: var(--todae-menu-item-bg-default);
     color: var(--todae-menu-item-fg-disabled);
     cursor: not-allowed;
   }
