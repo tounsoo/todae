@@ -15,7 +15,7 @@ import type { PopoverWire } from '../components/Popover.wire';
 import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
-import { useStableComposedRef } from '../components/props';
+import { useRefSetter, useStableComposedRef } from '../components/props';
 import { anchorTriggerStyle, mergeAnchorNames } from '../overlay/anchorName';
 import { useControlledState } from './useControlledState';
 
@@ -169,12 +169,7 @@ export function usePopoverInternal(
     return () => document.removeEventListener('pointerdown', onPointerDown, true);
   }, [anchorRef, enabled, open, requestClose, restoreFocusRef, restoreOnOutside]);
 
-  const setTrigger = useCallback(
-    (node: HTMLElement | null) => {
-      triggerRef.current = node;
-    },
-    [triggerRef],
-  );
+  const setTrigger = useRefSetter(triggerRef);
   const triggerComposed = useStableComposedRef(setTrigger);
 
   const getTriggerProps = useCallback(
@@ -205,12 +200,7 @@ export function usePopoverInternal(
 
   // Stable, so a part that composes it with its own refs is not detached and
   // reattached on every render.
-  const setPopover = useCallback(
-    (node: HTMLElement | null) => {
-      popoverRef.current = node;
-    },
-    [popoverRef],
-  );
+  const setPopover = useRefSetter(popoverRef);
 
   const getPopoverProps = useCallback(
     (): PopoverWire => ({

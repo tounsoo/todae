@@ -13,7 +13,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { useControlledState } from '../hooks/useControlledState';
+import { useControlledState, useControlledValue } from '../hooks/useControlledState';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { usePopoverSync } from '../overlay/usePopoverSync';
@@ -92,17 +92,13 @@ export type MenuSeparatorProps = {
   className?: string;
 } & Omit<ComponentPropsWithRef<'div'>, 'role' | 'children'>;
 
-type OpenEnd = { end: 'first' | 'last'; at: number };
-
-const OPEN_END_MS = 1000;
-
 type MenuContextValue = {
   open: boolean;
   setOpen: (open: boolean, reason: MenuOpenChangeReason) => void;
   triggerId: string;
   triggerRef: RefObject<HTMLButtonElement | null>;
-  /** The end a trigger key asked the next open to focus, and when. */
-  openEnd: RefObject<OpenEnd | null>;
+  /** The end a trigger key asked the next open to focus. Cleared when the trigger loses focus. */
+  openEnd: RefObject<'first' | 'last' | null>;
   initialFocusRef: RefObject<HTMLElement | null>;
   popover: UsePopoverResult;
   roving: UseRovingFocusResult;
@@ -121,19 +117,11 @@ type RadioContextValue = { value: string | null; select: (value: string) => void
 const RadioContext = createContext<RadioContextValue | null>(null);
 
 function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootProps) {
-  const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
+  const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
   const triggerId = `${useId().replaceAll(':', '')}-trigger`;
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const openEnd = useRef<OpenEnd | null>(null);
+  const openEnd = useRef<'first' | 'last' | null>(null);
   const initialFocusRef = useRef<HTMLElement | null>(null);
-  const setOpen = useCallback(
-    (next: boolean, reason: MenuOpenChangeReason) => {
-      if (next === open) return;
-      setValue(next);
-      onOpenChange?.(next, reason);
-    },
-    [onOpenChange, open, setValue],
-  );
   const popover = usePopoverInternal(
     { open, onOpenChange: setOpen, restoreFocusRef: triggerRef, initialFocusRef, haspopup: 'menu' },
     true,
@@ -153,10 +141,19 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   );
 }
 
-function Trigger({ tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTriggerProps) {
+function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }: MenuTriggerProps) {
   const ctx = useMenu('Trigger');
   const refs = useComposedRefs(ctx.triggerRef, ref);
-  const wire = ctx.popover.getTriggerProps({ ...props, ref: refs });
+  const { openEnd } = ctx;
+  const wire = ctx.popover.getTriggerProps({
+    ...props,
+    ref: refs,
+    // A key's request for an end lasts while the trigger has focus, so one
+    // the owner refused does not carry over to a later open from code.
+    onBlur: composeHandlers(onBlur, () => {
+      openEnd.current = null;
+    }),
+  });
   return (
     <Button.Root
       {...wire}
@@ -187,7 +184,7 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTri
           else ctx.roving.focusLast();
           return;
         }
-        ctx.openEnd.current = { end, at: performance.now() };
+        ctx.openEnd.current = end;
         ctx.setOpen(true, 'trigger');
       })}
     />
@@ -218,12 +215,9 @@ function Content({
   useLayoutEffect(() => {
     if (!open) return;
     const enabled = values();
-    // The key's choice holds for an open that follows it, even one an owner
-    // applies a little later; a refused one goes stale instead of lingering
-    // for an open from code.
-    const asked = openEnd.current;
-    const fromKey = asked !== null && performance.now() - asked.at < OPEN_END_MS;
-    const target = fromKey && asked.end === 'last' ? enabled.at(-1) : enabled[0];
+    // The key's choice holds for the open that follows it, however late the
+    // owner applies it, while the trigger keeps focus.
+    const target = openEnd.current === 'last' ? enabled.at(-1) : enabled[0];
     initialFocusRef.current = target === undefined ? null : getItemNode(target);
     openEnd.current = null;
   }, [getItemNode, initialFocusRef, open, openEnd, values]);
@@ -393,15 +387,9 @@ function Group({ children, className, ...props }: MenuGroupProps) {
 }
 
 function RadioGroup({ value: valueProp, defaultValue, onValueChange, ...props }: MenuRadioGroupProps) {
-  const [value, setValue] = useControlledState(valueProp, defaultValue ?? null);
-  const select = useCallback(
-    (next: string) => {
-      if (next === value) return;
-      setValue(next);
-      onValueChange?.(next);
-    },
-    [onValueChange, setValue, value],
-  );
+  // Only items select, so a change is never back to null.
+  const notify = useCallback((next: string | null) => next !== null && onValueChange?.(next), [onValueChange]);
+  const [value, select] = useControlledValue<string | null>(valueProp, defaultValue ?? null, notify);
   const radio = useMemo(() => ({ value, select }), [select, value]);
   return (
     <RadioContext.Provider value={radio}>

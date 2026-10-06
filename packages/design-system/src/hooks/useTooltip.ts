@@ -22,7 +22,7 @@ import {
 import type { TooltipWire } from '../components/Tooltip.wire';
 import { getTabbables } from '../overlay/tabbables';
 import { useEscapeKey } from '../overlay/useEscapeKey';
-import { useStableComposedRef } from '../components/props';
+import { useRefSetter, useStableComposedRef } from '../components/props';
 import { anchorTriggerStyle } from '../overlay/anchorName';
 import { useControlledState } from './useControlledState';
 
@@ -211,12 +211,7 @@ export function useTooltip<I extends boolean = false>(
     [],
   );
 
-  const setTrigger = useCallback(
-    (node: HTMLElement | null) => {
-      triggerRef.current = node;
-    },
-    [triggerRef],
-  );
+  const setTrigger = useRefSetter(triggerRef);
   const triggerComposed = useStableComposedRef(setTrigger);
 
   const getTriggerProps = useCallback(

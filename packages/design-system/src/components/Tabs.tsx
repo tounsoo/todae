@@ -10,7 +10,7 @@ import {
   type FocusEvent,
   type ReactNode,
 } from 'react';
-import { useControlledState } from '../hooks/useControlledState';
+import { useControlledValue } from '../hooks/useControlledState';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Tabs.module.css';
@@ -103,15 +103,7 @@ function Root({
   ...props
 }: TabsRootProps) {
   const baseId = useId().replaceAll(':', '');
-  const [value, setValue] = useControlledState(valueProp, defaultValue ?? '');
-  const select = useCallback(
-    (next: string) => {
-      if (next === value) return;
-      setValue(next);
-      onValueChange?.(next);
-    },
-    [onValueChange, setValue, value],
-  );
+  const [value, select] = useControlledValue(valueProp, defaultValue ?? '', onValueChange);
   // The tab stop is the selected tab, except while focus moves inside the
   // list: then it is the focused tab. Leaving the list returns it to the
   // selected tab, so focus always enters on the selected tab.

@@ -324,24 +324,22 @@ describe('Menu', () => {
     render(<Gate />);
     act(() => trigger().focus());
     key('ArrowUp');
-    const later = performance.now() + 5000;
-    const now = vi.spyOn(performance, 'now').mockReturnValue(later);
+    act(() => screen.getByRole('button', { name: 'Show' }).focus());
     fireEvent.click(screen.getByRole('button', { name: 'Show' }));
     await raf();
-    now.mockRestore();
     expect(document.activeElement).toBe(item('Rename'));
   });
 
   it('an ArrowUp open an owner applies a little later still starts at the end', async () => {
     function Later() {
       const [open, setOpen] = useState(false);
-      return <Actions open={open} onOpenChange={(next) => setTimeout(() => setOpen(next), 20)} />;
+      return <Actions open={open} onOpenChange={(next) => setTimeout(() => setOpen(next), 1500)} />;
     }
     render(<Later />);
     act(() => trigger().focus());
     key('ArrowUp');
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 40));
+      await new Promise((resolve) => setTimeout(resolve, 1600));
     });
     await raf();
     expect(document.activeElement).toBe(item('Date'));
