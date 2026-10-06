@@ -177,8 +177,9 @@ function Root({
     event.preventDefault();
     // The ref is the last control to mount. If that one has gone, a control
     // still in the shell takes the press, never one inside an Icon or Affix.
-    const control = inputRef.current?.isConnected
-      ? inputRef.current
+    const current = inputRef.current;
+    const control = current?.isConnected && current.matches(FOCUSABLE_FIELD_CONTROL_SELECTOR)
+      ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(
           (node) => !inAdornment(node, event.currentTarget),
         );

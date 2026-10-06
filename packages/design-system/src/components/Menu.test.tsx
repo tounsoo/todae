@@ -409,6 +409,21 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(trigger());
   });
 
+  it('items are never Tab stops, so Tab cannot enter a menu the owner keeps open', async () => {
+    render(<Actions open onOpenChange={() => undefined} />);
+    await raf();
+    expect(screen.getAllByRole('menuitem').every((el) => el.tabIndex === -1)).toBe(true);
+  });
+
+  it('hovering a disabled item clears the highlight from the last item', async () => {
+    render(<Actions />);
+    fireEvent.click(trigger());
+    await raf();
+    expect(document.activeElement).toBe(item('Rename'));
+    fireEvent.pointerMove(item('Duplicate'), { pointerType: 'mouse' });
+    expect(document.activeElement).toBe(menu());
+  });
+
   it('Tab from the trigger of an open menu closes it', async () => {
     const onOpenChange = vi.fn();
     render(<Actions open onOpenChange={onOpenChange} />);

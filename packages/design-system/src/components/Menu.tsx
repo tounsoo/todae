@@ -294,6 +294,9 @@ function useItem(
   const item = ctx.roving.getItemProps(value, { textValue }, props);
   return {
     ...item,
+    // Focus enters a menu only from its trigger, never by Tab, so even when an
+    // owner keeps the menu open, Tab from the trigger moves past it.
+    tabIndex: -1,
     role,
     'aria-checked': checked,
     'aria-disabled': disabled || undefined,
@@ -333,9 +336,12 @@ function useItem(
       if (disabled) event.preventDefault();
     }),
     // The pointer moves focus, so the highlight and the keyboard agree.
+    // On a disabled item the menu itself takes focus, so no other item stays
+    // highlighted for Enter to choose.
     onPointerMove: composeHandlers(onPointerMove, (event: PointerEvent<HTMLDivElement>) => {
-      if (disabled || event.pointerType === 'touch') return;
-      if (document.activeElement !== event.currentTarget) event.currentTarget.focus({ preventScroll: true });
+      if (event.pointerType === 'touch') return;
+      const target = disabled ? event.currentTarget.closest<HTMLElement>('[role="menu"]') : event.currentTarget;
+      if (target && document.activeElement !== target) target.focus({ preventScroll: true });
     }),
   };
 }

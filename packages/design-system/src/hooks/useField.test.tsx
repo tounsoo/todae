@@ -238,6 +238,20 @@ describe('useField', () => {
     error.mockRestore();
   });
 
+  it('a shell press does not focus a control marked disabled', () => {
+    function Custom() {
+      const field = useField();
+      return <span {...field.getControlProps({ disabled: true }, { native: false })} role="slider" aria-label="off" tabIndex={0} />;
+    }
+    render(
+      <Field.Root aria-label="Shell" data-testid="shell">
+        <Custom />
+      </Field.Root>,
+    );
+    fireEvent.mouseDown(screen.getByTestId('shell'));
+    expect(document.activeElement).not.toBe(screen.getByRole('slider'));
+  });
+
   it('a shell press never falls back to an input inside an Affix', () => {
     function Custom() {
       const field = useField();

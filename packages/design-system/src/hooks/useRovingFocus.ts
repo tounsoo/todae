@@ -296,8 +296,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
           (node.getAttribute('data-todae-roving-text') ?? node.textContent ?? '').trim().toLowerCase();
         // One letter, or the same letter repeated, cycles through the items
         // that start with it; a longer prefix keeps matching the current item.
-        const cycling = [...query].every((char) => char === query[0]);
-        const needle = cycling ? query.slice(0, 1) : query;
+        const chars = [...query];
+        const cycling = chars.every((char) => char === chars[0]);
+        const needle = cycling ? (chars[0] ?? query) : query;
         const start = cycling || index < 0 ? after : index;
         const ordered = [...nodes.slice(start), ...nodes.slice(0, start)];
         next = ordered.find((node) => text(node).startsWith(needle));

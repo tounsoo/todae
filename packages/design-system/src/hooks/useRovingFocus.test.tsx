@@ -321,6 +321,13 @@ describe('useRovingFocus', () => {
     }
   });
 
+  it('a repeated emoji cycles through the items that start with it', () => {
+    render(<Group typeahead items={[{ value: 'h', label: '😀 Happy' }, { value: 's', label: '😀 Smile' }]} />);
+    screen.getByText('😀 Happy').focus();
+    fireEvent.keyDown(document.activeElement!, { key: '😀', timeStamp: 1000 });
+    expect(focused()).toBe('😀 Smile');
+  });
+
   it('typeahead is off by default', () => {
     render(<Group />);
     screen.getByText('apple').focus();
