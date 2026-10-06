@@ -205,6 +205,39 @@ describe('useField', () => {
     expect(document.activeElement).toBe(screen.getByRole('slider', { name: 'main' }));
   });
 
+  it('a shell press skips a disabled custom control when falling back', () => {
+    function Custom({ label, off }: { label: string; off?: boolean }) {
+      const field = useField();
+      return <span {...field.getControlProps({ disabled: off }, { native: false })} role="slider" aria-label={label} tabIndex={0} />;
+    }
+    function Shell({ extra }: { extra: boolean }) {
+      return (
+        <Field.Root aria-label="Shell" data-testid="shell">
+          <Custom label="off" off />
+          <Custom label="on" />
+          {extra ? <Custom label="extra" /> : null}
+        </Field.Root>
+      );
+    }
+    const { rerender } = render(<Shell extra />);
+    rerender(<Shell extra={false} />);
+    fireEvent.mouseDown(screen.getByTestId('shell'));
+    expect(document.activeElement).toBe(screen.getByRole('slider', { name: 'on' }));
+  });
+
+  it('a select with no change handler is read-only, and React warns', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <Field.Root aria-label="Size">
+        <Field.Select value="s">
+          <option value="s">Small</option>
+        </Field.Select>
+      </Field.Root>,
+    );
+    expect(error.mock.calls.some((call) => String(call[0]).includes('onChange'))).toBe(true);
+    error.mockRestore();
+  });
+
   it('a shell press never falls back to an input inside an Affix', () => {
     function Custom() {
       const field = useField();

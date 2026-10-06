@@ -310,6 +310,17 @@ describe('useRovingFocus', () => {
     expect(focused()).toBe('a');
   });
 
+  it('a group that renders while hidden still has a tab stop', () => {
+    const original = HTMLElement.prototype.checkVisibility;
+    HTMLElement.prototype.checkVisibility = () => false;
+    try {
+      render(<Group />);
+      expect(tabStops()).toEqual(['apple']);
+    } finally {
+      HTMLElement.prototype.checkVisibility = original;
+    }
+  });
+
   it('typeahead is off by default', () => {
     render(<Group />);
     screen.getByText('apple').focus();

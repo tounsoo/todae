@@ -36,7 +36,7 @@ export const FIELD_CONTROL_SELECTOR = 'input, textarea, select, [data-todae-fiel
 
 /** Of those, the ones a press can actually focus. */
 export const FOCUSABLE_FIELD_CONTROL_SELECTOR =
-  "input:not([type='hidden']):not(:disabled), textarea:not(:disabled), select:not(:disabled), [data-todae-field-control]";
+  "input:not([type='hidden']):not(:disabled), textarea:not(:disabled), select:not(:disabled), [data-todae-field-control]:not(:disabled):not([aria-disabled='true'])";
 
 /**
  * A stable ref callback that makes a control the one the shell focuses. On

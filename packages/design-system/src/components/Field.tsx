@@ -486,10 +486,15 @@ function Select({ value, onChange, onValueChange, className, children, ...props 
       {...field.getControlProps(props)}
       value={value}
       className={cx(styles.select, className)}
-      onChange={(event) => {
-        onChange?.(event);
-        onValueChange?.(event.target.value);
-      }}
+      // Without either handler the select is read-only, and React says so.
+      onChange={
+        onChange || onValueChange
+          ? (event) => {
+              onChange?.(event);
+              onValueChange?.(event.target.value);
+            }
+          : undefined
+      }
     >
       {children}
     </select>

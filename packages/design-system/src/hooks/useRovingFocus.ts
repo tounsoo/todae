@@ -122,21 +122,30 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   const containerRef = useRef<HTMLElement | null>(null);
   const buffer = useRef({ text: '', at: 0 });
 
-  const items = useCallback((): HTMLElement[] => {
+  // Enabled items, by attribute alone. These decide the tab stop, so a group
+  // that renders while hidden still has one when it is shown.
+  const enabledItems = useCallback((): HTMLElement[] => {
     const container = containerRef.current;
     if (!container) return [];
     // The scope comes from useId, which never contains a quote or backslash.
-    // A hidden or inert item can't take focus, so it is not a target either.
     return [
       ...container.querySelectorAll<HTMLElement>(
         `[data-todae-roving="${scope}"]:not([data-todae-roving-disabled]):not([hidden])`,
       ),
-    ].filter((node) => !node.closest('[inert]') && (node.checkVisibility?.() ?? true));
+    ];
   }, [scope]);
+
+  // Of those, the ones focus can move to now: not inert and not hidden by
+  // style. Read only when moving, since checking visibility costs a style pass.
+  const items = useCallback(
+    (): HTMLElement[] =>
+      enabledItems().filter((node) => !node.closest('[inert]') && (node.checkVisibility?.() ?? true)),
+    [enabledItems],
+  );
 
   const valueOf = (node: HTMLElement) => node.getAttribute('data-todae-roving-value') ?? '';
 
-  const values = useCallback(() => items().map(valueOf), [items]);
+  const values = useCallback(() => enabledItems().map(valueOf), [enabledItems]);
 
   // Re-check when `active` changes, when the container mounts, and on DOM
   // changes: items can appear, move or turn disabled without this hook's
@@ -144,7 +153,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   const syncTabStop = () => {
     const enabled = values();
     const next = active !== null && enabled.includes(active) ? active : (enabled[0] ?? null);
-    setTabStop((prev) => (prev === next ? prev : next));
+    // Only the fallback needs visibility: prefer an item focus can reach.
+    const fallback = next === active ? next : (items().map(valueOf)[0] ?? next);
+    setTabStop((prev) => (prev === fallback ? prev : fallback));
   };
   const latestSync = useRef(syncTabStop);
   useLayoutEffect(() => {
@@ -203,8 +214,8 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   );
 
   const getItemNode = useCallback(
-    (value: string): HTMLElement | null => items().find((node) => valueOf(node) === value) ?? null,
-    [items],
+    (value: string): HTMLElement | null => enabledItems().find((node) => valueOf(node) === value) ?? null,
+    [enabledItems],
   );
 
   const focus = useCallback(
