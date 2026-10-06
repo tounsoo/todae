@@ -25,7 +25,7 @@ Enter, Space, a click or ArrowDown on the trigger opens the menu on its first it
 
 ## Checkbox and radio items
 
-`Menu.CheckboxItem` toggles `aria-checked`. `Menu.RadioGroup` owns one value for its `Menu.RadioItem` children. Both stay open after a choice so several settings can change in one visit; set `closeOnSelect` to close. `Menu.Group` and `Menu.RadioGroup` need `aria-label` or `aria-labelledby`.
+An item's children are presentational to assistive technology, as ARIA defines for `menuitem`, so keep links, inputs and buttons out of items; keys pressed in one are left alone, but a click on it also chooses the item. `Menu.CheckboxItem` toggles `aria-checked`. `Menu.RadioGroup` owns one value for its `Menu.RadioItem` children. Both stay open after a choice so several settings can change in one visit; set `closeOnSelect` to close. `Menu.Group` and `Menu.RadioGroup` need `aria-label` or `aria-labelledby`.
 
 <Example>
   <MenuOptions />

@@ -19,6 +19,7 @@ import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } fr
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { usePopoverSync } from '../overlay/usePopoverSync';
 import { Button, type ButtonRootProps } from './Button';
+import { useDomId } from './domId';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import popoverStyles from './Popover.module.css';
 import styles from './Menu.module.css';
@@ -119,7 +120,7 @@ const RadioContext = createContext<RadioContextValue | null>(null);
 
 function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootProps) {
   const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
-  const triggerId = `${useId().replaceAll(':', '')}-trigger`;
+  const triggerId = `${useDomId()}-trigger`;
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const openEnd = useRef<'first' | 'last' | null>(null);
   const initialFocusRef = useRef<HTMLElement | null>(null);

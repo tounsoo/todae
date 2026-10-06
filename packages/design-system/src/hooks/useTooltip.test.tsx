@@ -95,6 +95,7 @@ describe('useTooltip exports', () => {
       new Set([
         'react',
         '../components/props',
+        '../components/domId',
         '../overlay/anchorName',
         '../components/Tooltip.intent',
         '../components/Tooltip.wire',

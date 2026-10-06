@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -23,6 +22,7 @@ import type { TooltipWire } from '../components/Tooltip.wire';
 import { getTabbables } from '../overlay/tabbables';
 import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useRefSetter, useStableComposedRef } from '../components/props';
+import { useDomId } from '../components/domId';
 import { anchorTriggerStyle } from '../overlay/anchorName';
 import { useControlledState } from './useControlledState';
 
@@ -85,7 +85,7 @@ export function useTooltip<I extends boolean = false>(
   } = options;
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
   const [restoreEpoch, setRestoreEpoch] = useState(0);
-  const uid = useId().replaceAll(':', '');
+  const uid = useDomId();
   const contentId = id ?? `todae-tooltip-${uid}`;
   const anchorName = `--todae-tooltip-${uid}`;
   const triggerRef = useRef<HTMLElement | null>(null);

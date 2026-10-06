@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useId,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -15,7 +14,7 @@ import {
 import { useControlledValue } from '../hooks/useControlledState';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { composeHandlers, cx, useComposedRefs } from './props';
-import { domSafe } from './domId';
+import { domSafe, useDomId } from './domId';
 import styles from './Tabs.module.css';
 
 export type TabsOrientation = 'horizontal' | 'vertical';
@@ -99,7 +98,7 @@ function Root({
   className,
   ...props
 }: TabsRootProps) {
-  const baseId = useId().replaceAll(':', '');
+  const baseId = useDomId();
   const [value, select] = useControlledValue(valueProp, defaultValue ?? '', onValueChange);
   // The tab stop is the selected tab, except while focus moves inside the
   // list: then it is the focused tab. Leaving the list returns it to the
@@ -191,11 +190,12 @@ function Tab({ value, children, disabled, className, onClick, onFocus, ...props 
     ...props,
     // Automatic activation selects a tab that focus moved to from another
     // tab, never one focus entered on from outside the tabs, such as from an
-    // add button inside the list.
+    // add button inside the list, and never a fallback tab stop entered on
+    // while the selected tab is disabled: selecting takes a key or a press.
     onFocus: composeHandlers(onFocus, (event: FocusEvent<HTMLButtonElement>) => {
       const from = event.relatedTarget;
-      const list = event.currentTarget.closest('[role="tablist"]');
-      const fromTab = from instanceof Element && from.getAttribute('role') === 'tab' && list?.contains(from);
+      const scope = event.currentTarget.getAttribute('data-todae-roving');
+      const fromTab = from instanceof Element && from.getAttribute('data-todae-roving') === scope;
       if (ctx.activation === 'automatic' && fromTab) ctx.select(value);
     }),
   });

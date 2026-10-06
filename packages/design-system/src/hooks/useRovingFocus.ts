@@ -205,18 +205,31 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     // Without a tab stop there is nothing to keep in sync.
     if (!node || !keepRef.current || typeof MutationObserver === 'undefined') return;
     // Only changes that add, remove, hide or change an item, or a wrapper
-    // around items, can move the tab stop. The observer hands over each
-    // burst of changes in one batch, so a burst costs one read.
+    // around items, can move the tab stop. Those are read at once. A class or
+    // style change only might hide something, and can come every frame from
+    // an animation, so those are read at most once per frame.
     const touchesItem = (node: Node) =>
       node instanceof Element && (node.hasAttribute('data-todae-roving') || node.querySelector('[data-todae-roving]') !== null);
+    let frame = 0;
+    const syncNow = () => {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      latestSync.current();
+    };
     const handle = (records: MutationRecord[]) => {
-      const relevant = records.some(
-        (record) =>
-          (record.type === 'attributes' && touchesItem(record.target)) ||
-          [...record.addedNodes].some(touchesItem) ||
-          [...record.removedNodes].some(touchesItem),
-      );
-      if (relevant) latestSync.current();
+      let now = false;
+      let later = false;
+      for (const record of records) {
+        if (record.type === 'attributes') {
+          if (!touchesItem(record.target)) continue;
+          if (record.attributeName === 'class' || record.attributeName === 'style') later = true;
+          else now = true;
+        } else if ([...record.addedNodes].some(touchesItem) || [...record.removedNodes].some(touchesItem)) {
+          now = true;
+        }
+      }
+      if (now) syncNow();
+      else if (later && !frame) frame = requestAnimationFrame(syncNow);
     };
     const watcher = new MutationObserver(handle);
     watcher.observe(node, {
@@ -246,6 +259,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       disconnect: () => {
         watcher.disconnect();
         resize?.disconnect();
+        cancelAnimationFrame(frame);
       },
       flush: () => handle(watcher.takeRecords()),
     };

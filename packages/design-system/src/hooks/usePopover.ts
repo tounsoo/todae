@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -16,6 +15,7 @@ import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useRefSetter, useStableComposedRef } from '../components/props';
+import { useDomId } from '../components/domId';
 import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from '../overlay/anchorName';
 import { useControlledValue } from './useControlledState';
 
@@ -99,7 +99,7 @@ export function usePopoverInternal(
     haspopup = 'dialog',
   } = options;
   const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
-  const uid = useId().replaceAll(':', '');
+  const uid = useDomId();
   const contentId = id ?? `todae-popover-${uid}`;
   const anchorName = `--todae-popover-${uid}`;
   const triggerRef = useRef<HTMLElement | null>(null);
