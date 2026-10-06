@@ -180,11 +180,13 @@ function Tab({ value, children, disabled, className, onClick, onFocus, ...props 
   const item = ctx.roving.getItemProps(value, { disabled }, {
     ...props,
     // Automatic activation selects a tab that focus moved to from another
-    // tab, never one focus entered on from outside the list.
+    // tab, never one focus entered on from outside the tabs, such as from an
+    // add button inside the list.
     onFocus: composeHandlers(onFocus, (event: FocusEvent<HTMLButtonElement>) => {
       const from = event.relatedTarget;
       const list = event.currentTarget.closest('[role="tablist"]');
-      if (ctx.activation === 'automatic' && from instanceof Node && list?.contains(from)) ctx.select(value);
+      const fromTab = from instanceof Element && from.getAttribute('role') === 'tab' && list?.contains(from);
+      if (ctx.activation === 'automatic' && fromTab) ctx.select(value);
     }),
   });
   return (

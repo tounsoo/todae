@@ -118,6 +118,14 @@ function Affix({ className, ...props }: FieldAffixProps) {
   return <span {...props} className={cx(styles.adornment, className)} />;
 }
 
+// Walks up by class list rather than a selector, so any hashed class name works.
+function inAdornment(node: HTMLElement, shell: HTMLElement): boolean {
+  for (let el = node.parentElement; el && el !== shell; el = el.parentElement) {
+    if (styles.adornment && el.classList.contains(styles.adornment)) return true;
+  }
+  return false;
+}
+
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   return Boolean(
@@ -171,7 +179,7 @@ function Root({
     const control = inputRef.current?.isConnected
       ? inputRef.current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FIELD_CONTROL_SELECTOR)].find(
-          (node) => !node.parentElement?.closest(`.${styles.adornment}`),
+          (node) => !inAdornment(node, event.currentTarget),
         );
     control?.focus();
   }

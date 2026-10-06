@@ -1,4 +1,4 @@
-import { useCallback, type Ref } from 'react';
+import { useCallback, useMemo, type Ref } from 'react';
 import { inputLabel, mergeDescribedBy, useControlSetter, useFieldContext } from '../components/Field.context';
 import { useStableComposedRef } from '../components/props';
 
@@ -40,6 +40,7 @@ export type UseFieldResult = {
   /** The id a `Label htmlFor` points at. */
   id: string;
   name: string | undefined;
+  /** The Root's disabled. A control that also takes its own `disabled` combines the two. */
   disabled: boolean;
   invalid: boolean;
   /**
@@ -86,11 +87,8 @@ export function useField(): UseFieldResult {
     },
     [composedRef, ctx],
   );
-  return {
-    id: ctx.inputId,
-    name: ctx.name,
-    disabled: ctx.disabled,
-    invalid: ctx.invalid,
-    getControlProps,
-  };
+  return useMemo(
+    () => ({ id: ctx.inputId, name: ctx.name, disabled: ctx.disabled, invalid: ctx.invalid, getControlProps }),
+    [ctx.disabled, ctx.inputId, ctx.invalid, ctx.name, getControlProps],
+  );
 }

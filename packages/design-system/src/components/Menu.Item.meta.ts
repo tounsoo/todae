@@ -22,7 +22,7 @@ export const meta = {
       name: 'disabled',
       type: 'boolean',
       required: false,
-      description: 'aria-disabled. Skipped by arrow keys and ignores choosing.',
+      description: 'aria-disabled. Stays in the arrow-key order, so it is announced, but cannot be chosen.',
     },
     {
       name: 'textValue',

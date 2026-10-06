@@ -189,6 +189,22 @@ describe('Tabs', () => {
     expect(onValueChange).toHaveBeenLastCalledWith('c d');
   });
 
+  it('does not select when focus comes from a non-tab control inside the list', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Tabs.Root defaultValue="a" onValueChange={onValueChange}>
+        <Tabs.List aria-label="Docs">
+          <Tabs.Tab value="a">A</Tabs.Tab>
+          <Tabs.Tab value="b">B</Tabs.Tab>
+          <button type="button">Add</button>
+        </Tabs.List>
+      </Tabs.Root>,
+    );
+    act(() => screen.getByRole('button', { name: 'Add' }).focus());
+    act(() => tab('B').focus());
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
   it('skips disabled tabs', () => {
     render(<Example disabledB />);
     expect((tab('Billing') as HTMLButtonElement).disabled).toBe(true);
