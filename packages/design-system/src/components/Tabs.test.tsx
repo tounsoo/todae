@@ -142,6 +142,19 @@ describe('Tabs', () => {
     expect(stops).toEqual([tab('Billing')]);
   });
 
+  it('keeps the focused tab as the tab stop when the window loses focus', () => {
+    render(<Example activation="manual" />);
+    act(() => tab('Account').focus());
+    key('ArrowRight');
+    const hasFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+    act(() => {
+      fireEvent.blur(tab('Billing'), { relatedTarget: null });
+    });
+    hasFocus.mockRestore();
+    const stops = screen.getAllByRole('tab').filter((el) => el.tabIndex === 0);
+    expect(stops).toEqual([tab('Billing')]);
+  });
+
   it('moves the tab stop to a tab selected while focus is outside the list', () => {
     function Outside() {
       const [value, setValue] = useState('a');

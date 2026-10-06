@@ -125,10 +125,10 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   const items = useCallback((): HTMLElement[] => {
     const container = containerRef.current;
     if (!container) return [];
-    const all = container.querySelectorAll<HTMLElement>('[data-todae-roving]');
-    return [...all].filter(
-      (node) => node.getAttribute('data-todae-roving') === scope && !node.hasAttribute('data-todae-roving-disabled'),
-    );
+    // The scope comes from useId, which never contains a quote or backslash.
+    return [
+      ...container.querySelectorAll<HTMLElement>(`[data-todae-roving="${scope}"]:not([data-todae-roving-disabled])`),
+    ];
   }, [scope]);
 
   const valueOf = (node: HTMLElement) => node.getAttribute('data-todae-roving-value') ?? '';

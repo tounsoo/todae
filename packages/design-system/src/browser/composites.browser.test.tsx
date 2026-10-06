@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
+import { Button } from '../components/Button';
 import { Field } from '../components/Field';
 import { Label } from '../components/Label';
 import { Menu } from '../components/Menu';
@@ -95,6 +96,34 @@ function MenuHarness() {
 }
 
 describe('Menu in a browser', () => {
+  it('stays anchored to an icon-only trigger that also shows a tooltip', async () => {
+    render(
+      <Themed>
+        <div style={{ paddingLeft: 200, paddingTop: 100 }}>
+          <Menu.Root>
+            <Menu.Trigger tooltip aria-label="More actions">
+              <Button.Icon>
+                <svg width="16" height="16" aria-hidden="true" />
+              </Button.Icon>
+            </Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>Rename</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+        </div>
+      </Themed>,
+    );
+    const trigger = screen.getByRole('button', { name: 'More actions' });
+    await waitFor(() => expect(getComputedStyle(trigger).getPropertyValue('anchor-name').split(',').length).toBe(2));
+    await userEvent.click(trigger);
+    const menu = screen.getByRole('menu');
+    await waitFor(() => expect(menu.matches(':popover-open')).toBe(true));
+    const t = trigger.getBoundingClientRect();
+    const m = menu.getBoundingClientRect();
+    expect(Math.abs(m.left - t.left)).toBeLessThan(2);
+    expect(m.top).toBeGreaterThanOrEqual(t.bottom);
+  });
+
   it('opens in the top layer under its trigger and focuses the first item', async () => {
     render(<MenuHarness />);
     const trigger = screen.getByRole('button', { name: 'Actions' });

@@ -119,7 +119,9 @@ function Affix({ className, ...props }: FieldAffixProps) {
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
-  return Boolean(target.closest('button, a, input, textarea, select, [tabindex]'));
+  return Boolean(
+    target.closest('button, a, input, textarea, select, [tabindex], [contenteditable], [data-todae-field-control]'),
+  );
 }
 
 function Root({

@@ -66,10 +66,15 @@ function eventInside(el: HTMLElement | null, event: Event): boolean {
   return event.target instanceof Node && el.contains(event.target);
 }
 
-function triggerStyle(anchorName: string): CSSProperties {
+// `anchor-name` takes a list, so a trigger that is also another overlay's
+// anchor (a menu trigger with a tooltip) keeps both names.
+function triggerStyle(anchorName: string, existing?: CSSProperties): CSSProperties {
+  const other = existing?.anchorName;
   return {
     ['--todae-popover-anchor' as string]: anchorName,
-    anchorName,
+    anchorName: other && other !== 'none' && !other.split(',').map((n) => n.trim()).includes(anchorName)
+      ? `${other}, ${anchorName}`
+      : anchorName,
   } as CSSProperties;
 }
 
@@ -189,13 +194,13 @@ export function usePopoverInternal(
         // Stable while the caller's ref is, so the caller's ref is not
         // detached and reattached, and its cleanup kept, across renders.
         ref: triggerComposed(user.ref),
-        style: { ...user.style, ...triggerStyle(anchorName) },
+        style: { ...user.style, ...triggerStyle(anchorName, user.style) },
         'aria-expanded': open,
         'aria-controls': contentId,
         'aria-haspopup': haspopup,
         onClick: (event: MouseEvent<HTMLElement>) => {
           user.onClick?.(event);
-          if (!enabled || event.defaultPrevented) return;
+          if (!enabled) return;
           if (open) requestClose('trigger');
           else {
             setValue(true);

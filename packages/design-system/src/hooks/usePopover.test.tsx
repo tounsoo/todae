@@ -38,6 +38,32 @@ function Harness({
 }
 
 describe('usePopover exports', () => {
+  it('a trigger whose own click prevents its default still toggles', () => {
+    function Link() {
+      const popover = usePopover();
+      return (
+        <a href="#x" {...popover.getTriggerProps({ onClick: (event) => event.preventDefault() })}>
+          Open
+        </a>
+      );
+    }
+    render(<Link />);
+    const link = screen.getByText('Open');
+    fireEvent.click(link);
+    expect(link.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it("keeps another overlay's anchor name on the trigger", () => {
+    let style: Record<string, unknown> = {};
+    function Probe() {
+      const popover = usePopover();
+      style = popover.getTriggerProps({ style: { anchorName: '--other' } }).style as unknown as Record<string, unknown>;
+      return null;
+    }
+    render(<Probe />);
+    expect(String(style.anchorName)).toMatch(/^--other, --todae-popover-/);
+  });
+
   it('exports the hook and prop getters', () => {
     expect(api.usePopover).toBe(usePopover);
     expectTypeOf<UsePopoverResult>().toHaveProperty('getTriggerProps');

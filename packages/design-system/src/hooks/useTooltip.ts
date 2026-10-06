@@ -66,10 +66,15 @@ function assignRef<T>(ref: Ref<T> | undefined, value: T) {
   else if (ref) ref.current = value;
 }
 
-function triggerStyle(anchorName: string): CSSProperties {
+// `anchor-name` takes a list, so a trigger that is also another overlay's
+// anchor (a menu trigger with a tooltip) keeps both names.
+function triggerStyle(anchorName: string, existing?: CSSProperties): CSSProperties {
+  const other = existing?.anchorName;
   return {
     ['--todae-tooltip-anchor' as string]: anchorName,
-    anchorName,
+    anchorName: other && other !== 'none' && !other.split(',').map((n) => n.trim()).includes(anchorName)
+      ? `${other}, ${anchorName}`
+      : anchorName,
   } as CSSProperties;
 }
 
@@ -229,7 +234,7 @@ export function useTooltip<I extends boolean = false>(
           triggerRef.current = node;
           assignRef(user.ref, node);
         },
-        style: { ...user.style, ...triggerStyle(anchorName) },
+        style: { ...user.style, ...triggerStyle(anchorName, user.style) },
         'aria-describedby': open && enabled ? contentId : user['aria-describedby'],
         onPointerEnter: (event: PointerEvent<HTMLElement>) => {
           user.onPointerEnter?.(event);

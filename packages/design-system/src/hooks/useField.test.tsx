@@ -121,6 +121,19 @@ describe('useField', () => {
     expect(document.activeElement).toBe(screen.getByRole('slider'));
   });
 
+  it('a press inside a custom control keeps its default, for caret and selection', () => {
+    function Editable() {
+      const field = useField();
+      return <div {...field.getControlProps({}, { native: false })} contentEditable suppressContentEditableWarning role="textbox" aria-label="note">text</div>;
+    }
+    render(
+      <Field.Root aria-label="Note">
+        <Editable />
+      </Field.Root>,
+    );
+    expect(fireEvent.mouseDown(screen.getByRole('textbox'))).toBe(true);
+  });
+
   it('a shell press never falls back to an input inside an Affix', () => {
     function Custom() {
       const field = useField();

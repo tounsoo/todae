@@ -156,16 +156,15 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
 function Trigger({ tooltip = false, ref, onClick, onKeyDown, ...props }: MenuTriggerProps) {
   const ctx = useMenu('Trigger');
   const refs = useComposedRefs(ctx.triggerRef, ref);
-  const wire = ctx.popover.getTriggerProps({
-    ...props,
-    ref: refs,
-    onClick: composeHandlers(onClick, () => {
-      ctx.openEnd.current = null;
-    }),
-  });
+  const wire = ctx.popover.getTriggerProps({ ...props, ref: refs });
   return (
     <Button.Root
       {...wire}
+      // A click the consumer prevents does not open the menu.
+      onClick={composeHandlers(onClick, (event: MouseEvent<HTMLButtonElement>) => {
+        ctx.openEnd.current = null;
+        wire.onClick(event);
+      })}
       id={ctx.triggerId}
       tooltip={tooltip}
       onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLButtonElement>) => {
