@@ -348,11 +348,14 @@ function ChipInput({
   ...props
 }: FieldChipInputProps & { setChips?: unknown; setInputValue?: unknown; reset?: unknown }) {
   const field = useFieldContext();
-  const controlRef = useComposedRefs(useControlSetter(field.inputRef), ref);
+  // Its own input, for chip measuring and refocus; the Root's inputRef may
+  // point at another control.
+  const ownInput = useRef<HTMLInputElement | null>(null);
+  const controlRef = useComposedRefs(useControlSetter(field.inputRef), ownInput, ref);
   const keys = useMemo(() => resolveCommitKeys(commitKeys), [commitKeys]);
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const inRow = chipLayout === 'row';
-  const list = useChipList({ chips, maxRows, reserveWidth: inRow ? undefined : field.inputRef });
+  const list = useChipList({ chips, maxRows, reserveWidth: inRow ? undefined : ownInput });
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     onKeyDownProp?.(event);
@@ -383,7 +386,7 @@ function ChipInput({
       style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
       onDismiss={() => {
         onChipRemove(index, chip.value);
-        field.inputRef.current?.focus();
+        ownInput.current?.focus();
       }}
     >
       {chip.value}

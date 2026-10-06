@@ -233,8 +233,13 @@ function Content({
       // Tab then moves on past the trigger. Shift+Tab stops on the trigger,
       // since moving back from it would skip it.
       if (event.key === 'Tab') {
-        if (event.shiftKey) event.preventDefault();
         ctx.setOpen(false, 'tab');
+        // Focus goes to the trigger whether or not the owner lets the menu
+        // close, so focus always leaves the menu, as a forward Tab does.
+        if (event.shiftKey) {
+          event.preventDefault();
+          ctx.triggerRef.current?.focus();
+        }
         return;
       }
       // Focus on the menu itself, from a press on its padding, is handled

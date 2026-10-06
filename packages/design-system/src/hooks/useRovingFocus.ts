@@ -24,7 +24,7 @@ export type UseRovingFocusOptions = {
   /** Controlled tab stop. `null` is controlled with no preference: the first enabled item. */
   activeValue?: string | null;
   defaultActiveValue?: string | null;
-  /** Fires when an item takes focus, from a key, a click or a script. */
+  /** Fires when focus moves to a different item, from a key, a click or a script. */
   onActiveValueChange?: (value: string) => void;
 };
 

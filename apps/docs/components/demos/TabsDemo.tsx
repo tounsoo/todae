@@ -20,6 +20,9 @@ export function TabsBasic() {
       <Tabs.Panel value="billing">
         <Text>Plan, invoices and payment method.</Text>
       </Tabs.Panel>
+      <Tabs.Panel value="audit">
+        <Text>Sign-ins and changes, for admins.</Text>
+      </Tabs.Panel>
       <Tabs.Panel value="team">
         <Text>Members and roles.</Text>
       </Tabs.Panel>

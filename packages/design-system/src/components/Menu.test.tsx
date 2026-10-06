@@ -393,6 +393,14 @@ describe('Menu', () => {
     expect(trigger().getAttribute('aria-expanded')).toBe('false');
   });
 
+  it('Shift+Tab leaves the menu even when the owner keeps it open', async () => {
+    render(<Actions open onOpenChange={() => undefined} />);
+    await raf();
+    act(() => item('Rename').focus());
+    fireEvent.keyDown(item('Rename'), { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(trigger());
+  });
+
   it('Tab from the trigger of an open menu closes it', async () => {
     const onOpenChange = vi.fn();
     render(<Actions open onOpenChange={onOpenChange} />);

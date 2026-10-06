@@ -134,6 +134,28 @@ describe('useField', () => {
     expect(fireEvent.mouseDown(screen.getByRole('textbox'))).toBe(true);
   });
 
+  it('ChipInput refocuses its own input after a chip is removed, beside another control', () => {
+    function Custom() {
+      const field = useField();
+      return <span {...field.getControlProps({}, { native: false })} role="slider" aria-label="custom" tabIndex={0} />;
+    }
+    render(
+      <Field.Root aria-label="Tags">
+        <Field.ChipInput
+          chips={['one']}
+          inputValue=""
+          onInputValueChange={() => {}}
+          onCommit={() => {}}
+          onChipRemove={() => {}}
+          chipDismissLabel={(v) => `Remove ${v}`}
+        />
+        <Custom />
+      </Field.Root>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Remove one' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox'));
+  });
+
   it('Field.Select works with onValueChange alone', () => {
     const onValueChange = vi.fn();
     render(
