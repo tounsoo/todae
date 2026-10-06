@@ -12,6 +12,7 @@
     "tokens": "pnpm --filter @tounsoo/todae tokens",
     "tokens:check": "pnpm --filter @tounsoo/todae tokens:check",
     "test": "pnpm -r --if-present test",
+    "test:browser": "pnpm --filter @tounsoo/todae test:browser",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
     "graft:build": "npx -y @nanonets/graft@0.18.0 build",

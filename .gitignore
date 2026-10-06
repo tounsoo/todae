@@ -13,3 +13,4 @@ packages/*/graft/
 packages/*/.graft/
 apps/*/.next
 apps/*/.vercel
+__screenshots__/

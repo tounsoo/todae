@@ -24,4 +24,8 @@ jobs:
         run: pnpm --filter @tounsoo/todae build
       - name: Test
         run: pnpm test
+      - name: Install Chromium for browser tests
+        run: pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium
+      - name: Browser tests
+        run: pnpm test:browser
       - run: pnpm build
