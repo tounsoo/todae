@@ -76,6 +76,34 @@ describe('Tabs in a browser', () => {
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('tabpanel'));
   });
+
+  it('keeps a hidden panel hidden when an unlayered consumer class sets display', () => {
+    const style = document.createElement('style');
+    style.textContent = '.consumer-grid { display: grid; }';
+    document.head.append(style);
+    try {
+      render(
+        <Themed>
+          <Tabs.Root defaultValue="a">
+            <Tabs.List aria-label="Sections">
+              <Tabs.Tab value="a">Alpha</Tabs.Tab>
+              <Tabs.Tab value="b">Beta</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel value="a" className="consumer-grid">
+              Alpha panel
+            </Tabs.Panel>
+            <Tabs.Panel value="b" className="consumer-grid" data-testid="beta">
+              Beta panel
+            </Tabs.Panel>
+          </Tabs.Root>
+        </Themed>,
+      );
+      expect(getComputedStyle(screen.getByTestId('beta')).display).toBe('none');
+      expect(getComputedStyle(screen.getByRole('tabpanel')).display).toBe('grid');
+    } finally {
+      style.remove();
+    }
+  });
 });
 
 function MenuHarness() {
@@ -192,6 +220,30 @@ describe('Field.Select in a browser', () => {
     expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
     await userEvent.selectOptions(select, 's');
     expect(select.value).toBe('s');
+  });
+
+  it('opens a focused select on a press beside it and closes an open one', async () => {
+    render(
+      <Themed>
+        <Label htmlFor="fruit">Fruit</Label>
+        <Field.Root id="fruit" data-testid="shell">
+          <Field.Icon data-testid="icon">*</Field.Icon>
+          <Field.Select value="a" onValueChange={() => {}}>
+            <option value="a">Apple</option>
+            <option value="b">Banana</option>
+          </Field.Select>
+        </Field.Root>
+      </Themed>,
+    );
+    const select = screen.getByRole('combobox', { name: 'Fruit' }) as HTMLSelectElement;
+    const icon = screen.getByTestId('icon');
+    await userEvent.tab();
+    expect(document.activeElement).toBe(select);
+    expect(select.matches(':open')).toBe(false);
+    await userEvent.click(icon);
+    await waitFor(() => expect(select.matches(':open')).toBe(true));
+    await userEvent.click(icon);
+    await waitFor(() => expect(select.matches(':open')).toBe(false));
   });
 
   it('keeps the shell padding beside an Icon and drops it where the select meets the edge', () => {

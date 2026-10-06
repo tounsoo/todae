@@ -98,8 +98,9 @@
     outline-offset: 2px;
   }
 
-  /* `display` on a consumer class must not reveal a hidden panel. */
+  /* `display` on a consumer class must not reveal a hidden panel. A layered
+     rule loses to any unlayered one, so only !important holds here. */
   .panel[hidden] {
-    display: none;
+    display: none !important;
   }
 }

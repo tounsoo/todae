@@ -148,7 +148,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     // The scope comes from useId, which never contains a quote or backslash.
     return [
       ...container.querySelectorAll<HTMLElement>(
-        `[data-todae-roving="${scope}"]:not([data-todae-roving-disabled]):not([hidden])`,
+        `[data-todae-roving="${scope}"]:not([data-todae-roving-disabled]):not([hidden]):not(:disabled)`,
       ),
     ];
   }, [scope]);
@@ -232,7 +232,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       subtree: true,
       attributes: true,
       // class and style too: either can hide an item.
-      attributeFilter: ['data-todae-roving-disabled', 'data-todae-roving-value', 'hidden', 'inert', 'class', 'style'],
+      attributeFilter: ['data-todae-roving-disabled', 'data-todae-roving-value', 'hidden', 'inert', 'disabled', 'class', 'style'],
     });
     // A size change catches the group itself being shown or hidden, say by
     // an ancestor opening, which no mutation inside it reports.
@@ -275,10 +275,11 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       // The tab stop is derived from `active`, so a controlled owner that
       // keeps its value keeps the tab stop too.
       if (value === active) return;
+      // Pin a fallback tab stop that takes focus, but only report a move.
       setActive(value);
-      onActiveValueChange?.(value);
+      if (value !== tabStop) onActiveValueChange?.(value);
     },
-    [active, onActiveValueChange, setActive],
+    [active, onActiveValueChange, setActive, tabStop],
   );
 
   const getItemNode = useCallback(

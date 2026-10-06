@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   type ComponentPropsWithRef,
+  type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
@@ -149,10 +150,12 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
     ...props,
     ref: refs,
     // A key's request for an end lasts while the trigger has focus, so one
-    // the owner refused does not carry over to a later open from code.
-    onBlur: composeHandlers(onBlur, () => {
+    // the owner refused does not carry over to a later open from code. This
+    // runs even when the consumer's handler prevents the event.
+    onBlur: (event: FocusEvent<HTMLButtonElement>) => {
+      onBlur?.(event);
       openEnd.current = null;
-    }),
+    },
   });
   return (
     <Button.Root

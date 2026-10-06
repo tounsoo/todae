@@ -480,6 +480,39 @@ describe('useRovingFocus', () => {
     }
   });
 
+  it('skips natively disabled items and moves the tab stop off one', async () => {
+    function Native({ off }: { off: string[] }) {
+      const roving = useRovingFocus({ activeValue: 'b' });
+      return (
+        <div {...roving.getContainerProps()}>
+          {['a', 'b', 'c'].map((v) => (
+            <button key={v} type="button" disabled={off.includes(v)} {...roving.getItemProps(v)}>
+              {v}
+            </button>
+          ))}
+        </div>
+      );
+    }
+    const { rerender } = render(<Native off={[]} />);
+    expect(tabStops()).toEqual(['b']);
+    rerender(<Native off={['b']} />);
+    await frame();
+    expect(tabStops()).toEqual(['a']);
+    act(() => screen.getByText('a').focus());
+    key('ArrowDown');
+    expect(focused()).toBe('c');
+  });
+
+  it('does not report focus landing on the item that already holds the tab stop', () => {
+    const onActiveValueChange = vi.fn();
+    render(<Group onActiveValueChange={onActiveValueChange} />);
+    expect(tabStops()).toEqual(['apple']);
+    act(() => screen.getByText('apple').focus());
+    expect(onActiveValueChange).not.toHaveBeenCalled();
+    key('ArrowDown');
+    expect(onActiveValueChange).toHaveBeenCalledWith('banana');
+  });
+
   it('a new active value takes the tab stop in one render', () => {
     let commits = 0;
     const { rerender } = render(

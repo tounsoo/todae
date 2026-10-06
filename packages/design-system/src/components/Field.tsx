@@ -120,6 +120,16 @@ function Affix({ className, ...props }: FieldAffixProps) {
 }
 
 // Walks up by class list rather than a selector, so any hashed class name works.
+// Whether a select's picker is showing. A browser without `:open` throws,
+// and treats the picker as closed.
+function isOpen(select: HTMLSelectElement): boolean {
+  try {
+    return select.matches(':open');
+  } catch {
+    return false;
+  }
+}
+
 function inAdornment(node: HTMLElement, shell: HTMLElement): boolean {
   for (let el = node.parentElement; el && el !== shell; el = el.parentElement) {
     if (styles.adornment && el.classList.contains(styles.adornment)) return true;
@@ -147,11 +157,13 @@ function Root({
   'aria-labelledby': labelledBy,
   'aria-label': ariaLabel,
   onMouseDown: onMouseDownProp,
+  onClick: onClickProp,
   ...props
 }: FieldRootProps) {
   const autoId = useId();
   const hintId = useId();
   const inputRef = useRef<HTMLElement>(null);
+  const pendingPicker = useRef<HTMLSelectElement | null>(null);
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
 
@@ -184,17 +196,21 @@ function Root({
     const control = current?.isConnected && usable(current)
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
-    // A press beside a select opens it, as a press on the select would. One
-    // that was already focused may have had its picker open; the press that
-    // closed it must not open it again.
-    const wasFocused = control === document.activeElement;
     control?.focus();
-    if (control instanceof HTMLSelectElement && !wasFocused) {
-      try {
-        control.showPicker?.();
-      } catch {
-        // Not allowed here, or not supported: focus is enough.
-      }
+    // A press beside a select opens it, as a press on the select would. The
+    // picker opens on click: one opened now would close again as the press
+    // goes on. The press that closes an open picker must not open it again.
+    pendingPicker.current = control instanceof HTMLSelectElement && !isOpen(control) ? control : null;
+  }
+
+  function onClick(event: MouseEvent<HTMLDivElement>) {
+    const select = pendingPicker.current;
+    pendingPicker.current = null;
+    if (!select?.isConnected || isInteractiveTarget(event.target)) return;
+    try {
+      select.showPicker?.();
+    } catch {
+      // Not allowed here, or not supported: focus is enough.
     }
   }
 
@@ -206,6 +222,7 @@ function Root({
         data-disabled={disabled ? '' : undefined}
         data-invalid={invalid ? '' : undefined}
         onMouseDown={composeHandlers(onMouseDownProp, onMouseDown)}
+        onClick={composeHandlers(onClickProp, onClick)}
       >
         {children}
       </div>

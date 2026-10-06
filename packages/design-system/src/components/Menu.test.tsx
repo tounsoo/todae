@@ -330,6 +330,33 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(item('Rename'));
   });
 
+  it('a refused ArrowUp open is forgotten even when the trigger blur is prevented', async () => {
+    function Gate() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Show
+          </button>
+          <Menu.Root open={open} onOpenChange={(next, reason) => reason !== 'trigger' && setOpen(next)}>
+            <Menu.Trigger onBlur={(event) => event.preventDefault()}>Actions</Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>Rename</Menu.Item>
+              <Menu.Item>Delete</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+        </>
+      );
+    }
+    render(<Gate />);
+    act(() => trigger().focus());
+    key('ArrowUp');
+    act(() => screen.getByRole('button', { name: 'Show' }).focus());
+    fireEvent.click(screen.getByRole('button', { name: 'Show' }));
+    await raf();
+    expect(document.activeElement).toBe(item('Rename'));
+  });
+
   it('an ArrowUp open an owner applies a little later still starts at the end', async () => {
     function Later() {
       const [open, setOpen] = useState(false);

@@ -17,7 +17,7 @@ import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useRefSetter, useStableComposedRef } from '../components/props';
 import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from '../overlay/anchorName';
-import { useControlledState } from './useControlledState';
+import { useControlledValue } from './useControlledState';
 
 export type { PopoverWire };
 
@@ -99,7 +99,7 @@ export function usePopoverInternal(
     id,
     haspopup = 'dialog',
   } = options;
-  const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
+  const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
   const uid = useId().replaceAll(':', '');
   const contentId = id ?? `todae-popover-${uid}`;
   const anchorName = `--todae-popover-${uid}`;
@@ -110,12 +110,8 @@ export function usePopoverInternal(
   const outsideRestore = useRef<(() => void) | null>(null);
 
   const requestClose = useCallback(
-    (reason: PopoverCloseReason) => {
-      if (!open) return;
-      setValue(false);
-      onOpenChange?.(false, reason);
-    },
-    [onOpenChange, open, setValue],
+    (reason: PopoverCloseReason) => setOpen(false, reason),
+    [setOpen],
   );
 
   useFocusRestore(enabled && open, { restoreTo: restoreFocusRef, containerRef: popoverRef });
@@ -190,15 +186,11 @@ export function usePopoverInternal(
         onClick: (event: MouseEvent<HTMLElement>) => {
           user.onClick?.(event);
           if (!enabled) return;
-          if (open) requestClose('trigger');
-          else {
-            setValue(true);
-            onOpenChange?.(true, 'trigger');
-          }
+          setOpen(!open, 'trigger');
         },
       };
     },
-    [anchorName, contentId, enabled, haspopup, onOpenChange, open, requestClose, setValue, triggerComposed],
+    [anchorName, contentId, enabled, haspopup, open, setOpen, triggerComposed],
   );
 
   // Stable, so a part that composes it with its own refs is not detached and

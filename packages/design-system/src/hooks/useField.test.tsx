@@ -221,6 +221,12 @@ describe('useField', () => {
       );
       fireEvent.mouseDown(screen.getByTestId('icon'));
       expect(document.activeElement).toBe(screen.getByRole('combobox'));
+      // The picker opens on the click that ends the press.
+      expect(showPicker).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByTestId('icon'));
+      expect(showPicker).toHaveBeenCalledTimes(1);
+      // A click with no press before it opens nothing.
+      fireEvent.click(screen.getByTestId('icon'));
       expect(showPicker).toHaveBeenCalledTimes(1);
     } finally {
       proto.showPicker = original;
