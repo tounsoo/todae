@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, DensityProvider, Description, ErrorMessage, Field, Label, ThemeProvider, useChipField } from '@tounsoo/todae';
+import { Button, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, useChipField, useField } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 const MANY = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta'];
@@ -511,5 +511,73 @@ export function ChipInputStates() {
         />
       </Field.Root>
     </>
+  );
+}
+
+export function FieldSelectSize() {
+  const id = useId();
+  const [size, setSize] = useState('m');
+  return (
+    <div className="labelled-field">
+      <Label htmlFor={id}>Size</Label>
+      <Field.Root id={id}>
+        <Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
+          <option value="s">Small</option>
+          <option value="m">Medium</option>
+          <option value="l">Large</option>
+          <option value="xl" disabled>
+            Extra large (sold out)
+          </option>
+        </Field.Select>
+      </Field.Root>
+    </div>
+  );
+}
+
+// A company control that is not a native input, joined to Field.Root with useField.
+function Stars({ value, onChange }: { value: number; onChange: (value: number) => void }) {
+  const field = useField();
+  const { disabled, ...control } = field.getControlProps();
+  const step = (delta: number) => onChange(Math.min(5, Math.max(0, value + delta)));
+  return (
+    <span
+      {...control}
+      role="slider"
+      tabIndex={disabled ? -1 : 0}
+      aria-disabled={disabled || undefined}
+      aria-valuemin={0}
+      aria-valuemax={5}
+      aria-valuenow={value}
+      aria-valuetext={`${value} of 5 stars`}
+      className="demo-stars"
+      onKeyDown={(event) => {
+        if (disabled) return;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowUp') step(1);
+        else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') step(-1);
+        else return;
+        event.preventDefault();
+      }}
+    >
+      {'★'.repeat(value)}
+      {'☆'.repeat(5 - value)}
+    </span>
+  );
+}
+
+// A span is not labelable, so the caption names it through aria-labelledby.
+export function FieldUseField() {
+  const captionId = useId();
+  const hintId = useId();
+  const [stars, setStars] = useState(3);
+  return (
+    <div className="labelled-field">
+      <Text as="span" id={captionId} size="s" weight="medium">
+        Rating
+      </Text>
+      <Field.Root aria-labelledby={captionId} aria-describedby={hintId}>
+        <Stars value={stars} onChange={setStars} />
+      </Field.Root>
+      <Description id={hintId}>Arrow keys change the rating.</Description>
+    </div>
   );
 }

@@ -7,7 +7,7 @@ export function PopoverMenu() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<string | null>(null);
   const [under, setUnder] = useState(0);
-  const popover = usePopover({ open, onOpenChange: setOpen });
+  const popover = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' });
   return (
     <Stack>
       <Button.Root tooltip={false} {...popover.getTriggerProps()}>

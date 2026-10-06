@@ -20,6 +20,9 @@ export type { PopoverWire };
 
 export type PopoverCloseReason = 'escape' | 'outside' | 'trigger';
 
+/** What the trigger opens, for `aria-haspopup`. A role-less popover around an OptionList is a listbox. */
+export type PopoverHaspopup = 'dialog' | 'menu' | 'listbox' | 'tree' | 'grid';
+
 export type PopoverTriggerUserProps = HTMLAttributes<HTMLElement> & {
   ref?: Ref<HTMLElement | null>;
 };
@@ -29,7 +32,7 @@ export type PopoverTriggerWire = {
   style: CSSProperties;
   'aria-expanded': boolean;
   'aria-controls': string;
-  'aria-haspopup': 'dialog';
+  'aria-haspopup': PopoverHaspopup;
   onClick: (event: MouseEvent<HTMLElement>) => void;
 };
 
@@ -42,6 +45,7 @@ export type UsePopoverOptions = {
   restoreFocusRef?: RefObject<HTMLElement | null>;
   enabled?: boolean;
   id?: string;
+  haspopup?: PopoverHaspopup;
 };
 
 export type UsePopoverResult = {
@@ -101,6 +105,7 @@ export function usePopoverInternal(
     restoreFocusRef,
     enabled = true,
     id,
+    haspopup = 'dialog',
   } = options;
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
   const uid = useId().replaceAll(':', '');
@@ -183,7 +188,7 @@ export function usePopoverInternal(
         style: { ...user.style, ...triggerStyle(anchorName) },
         'aria-expanded': open,
         'aria-controls': contentId,
-        'aria-haspopup': 'dialog',
+        'aria-haspopup': haspopup,
         onClick: (event: MouseEvent<HTMLElement>) => {
           user.onClick?.(event);
           if (!enabled) return;
@@ -195,7 +200,7 @@ export function usePopoverInternal(
         },
       };
     },
-    [anchorName, contentId, enabled, onOpenChange, open, requestClose, setValue],
+    [anchorName, contentId, enabled, haspopup, onOpenChange, open, requestClose, setValue],
   );
 
   const getPopoverProps = useCallback(

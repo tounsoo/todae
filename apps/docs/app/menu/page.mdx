@@ -1,0 +1,60 @@
+import { MenuActions, MenuOptions } from '../../components/demos/MenuDemo';
+
+# Menu
+
+A button that opens a list of actions. `Menu.Trigger` is a `Button.Root` with `aria-haspopup="menu"` and `aria-expanded`. `Menu.Content` is a `role="menu"` in a non-modal popover anchored to the trigger with CSS anchor positioning, the same surface as [Popover](/popover). The menu is named by its trigger unless it gets `aria-label` or `aria-labelledby`.
+
+```tsx
+<Menu.Root>
+	<Menu.Trigger variant="secondary">Actions</Menu.Trigger>
+	<Menu.Content>
+		<Menu.Item onSelect={rename}>Rename</Menu.Item>
+		<Menu.Separator />
+		<Menu.Item onSelect={remove}>Delete</Menu.Item>
+	</Menu.Content>
+</Menu.Root>
+```
+
+<Example>
+  <MenuActions />
+</Example>
+
+## Keyboard
+
+Enter, Space, a click or ArrowDown on the trigger opens the menu on its first item; ArrowUp opens it on the last. In the menu, Up and Down move and loop, Home and End jump, and typing a letter moves to the next item that starts with it. Enter, Space or a click chooses an item. Escape closes and returns focus to the trigger; Tab closes and lets focus move on. Pointer movement focuses the item under it, so the pointer and the keyboard share one highlight. Disabled items are announced with `aria-disabled` and skipped.
+
+## Checkbox and radio items
+
+`Menu.CheckboxItem` toggles `aria-checked`. `Menu.RadioGroup` owns one value for its `Menu.RadioItem` children. Both stay open after a choice so several settings can change in one visit; set `closeOnSelect` to close. `Menu.Group` and `Menu.RadioGroup` need `aria-label` or `aria-labelledby`.
+
+<Example>
+  <MenuOptions />
+</Example>
+
+`onOpenChange(open, reason)` reports `trigger`, `escape`, `outside`, `select` or `tab`. A controlled `open` that is not updated vetoes the change. Submenus are not shipped.
+
+## When to use
+
+**When:** A short list of commands or view settings behind one button, such as row actions or a toolbar overflow.
+
+**When not:** Picking a value for a form → `Field.Select` or the Combobox recipe. Navigation between pages → links. Content with its own controls or text → Popover with `role="dialog"`.
+
+## Props
+
+<PropsTable name="Menu.Root" />
+
+<PropsTable name="Menu.Trigger" />
+
+<PropsTable name="Menu.Content" />
+
+<PropsTable name="Menu.Item" />
+
+<PropsTable name="Menu.CheckboxItem" />
+
+<PropsTable name="Menu.Group" />
+
+<PropsTable name="Menu.RadioGroup" />
+
+<PropsTable name="Menu.RadioItem" />
+
+<PropsTable name="Menu.Separator" />

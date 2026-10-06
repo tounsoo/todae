@@ -21,7 +21,7 @@
     gap: 0;
   }
 
-  .shell:has(:is(input, textarea):focus-visible) {
+  .shell:has(:is(input, textarea, [data-todae-field-control]):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: 2px solid var(--todae-field-ring-focus);
     outline-offset: 2px;
@@ -31,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(:is(input, textarea):focus-visible) {
+  .shell[data-invalid]:has(:is(input, textarea, [data-todae-field-control]):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 
@@ -323,5 +323,79 @@
     box-sizing: border-box;
     height: var(--todae-field-chip-row-h);
     padding-block: 0;
+  }
+
+  /* The select fills the shell, so a press anywhere opens it. */
+  .shell:has(> .select) {
+    padding: 0;
+  }
+
+  .select {
+    appearance: base-select;
+    flex: 1 1 var(--todae-field-min-width);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--todae-field-gap);
+    min-width: var(--todae-field-min-width);
+    width: 100%;
+    margin: 0;
+    padding: var(--todae-field-padding-y) var(--todae-field-padding-x);
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: var(--todae-field-fg-default);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-font-leading-default);
+    outline: none;
+    cursor: pointer;
+  }
+
+  .select:disabled {
+    color: var(--todae-field-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .select::picker-icon {
+    color: var(--todae-field-fg-placeholder);
+  }
+
+  .select::picker(select) {
+    appearance: base-select;
+    box-sizing: border-box;
+    margin-block: var(--todae-space-1);
+    padding: var(--todae-popover-padding-y) var(--todae-popover-padding-x);
+    border: 1px solid var(--todae-popover-border);
+    border-radius: var(--todae-popover-radius);
+    background: var(--todae-popover-bg);
+    color: var(--todae-popover-fg);
+    max-height: var(--todae-popover-max-height);
+  }
+
+  .select option {
+    padding: var(--todae-option-padding-y) var(--todae-option-padding-x);
+    border-radius: var(--todae-option-radius);
+    background: var(--todae-option-bg-default);
+    color: var(--todae-option-fg-default);
+    font-size: var(--todae-option-font-size);
+  }
+
+  .select option:is(:hover, :focus-visible) {
+    background: var(--todae-option-bg-hover);
+    outline: none;
+  }
+
+  .select option:checked {
+    background: var(--todae-option-bg-selected);
+    color: var(--todae-option-fg-selected);
+  }
+
+  .select option::checkmark {
+    color: var(--todae-option-check-fg);
+  }
+
+  .select option:disabled {
+    opacity: 0.5;
   }
 }

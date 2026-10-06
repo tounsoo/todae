@@ -41,6 +41,8 @@ describe('docs mcp tools', () => {
       ['Tooltip', 'tooltip'],
       ['Chip', 'chip'],
       ['RadioGroup', 'radio'],
+      ['Menu', 'menu'],
+      ['Tabs', 'tabs'],
     ] as const) {
       const result = getComponent(name);
       expect(result).toMatchObject({ name, namespace: true, docsUrl: `https://todae-rho.vercel.app/${slug}` });

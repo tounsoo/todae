@@ -642,6 +642,42 @@
       ]
     },
     {
+      "name": "Field.Select",
+      "description": "Controlled native <select> inside Field.Root. The picker is styled from tokens where appearance: base-select is supported.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Controlled value."
+        },
+        {
+          "name": "onChange",
+          "type": "(event: ChangeEvent<HTMLSelectElement>) => void",
+          "required": true,
+          "description": "Native change handler."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Optional value callback."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Native <option> and <optgroup> elements."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the select."
+        }
+      ]
+    },
+    {
       "name": "Field.Textarea",
       "description": "Controlled multi-line text inside Field.Root. Height is CSS only.",
       "props": [
@@ -749,6 +785,323 @@
           "type": "string",
           "required": false,
           "description": "Optional class on the native label."
+        }
+      ]
+    },
+    {
+      "name": "Menu.CheckboxItem",
+      "description": "role=\"menuitemcheckbox\". Toggles aria-checked; stays open by default.",
+      "props": [
+        {
+          "name": "checked",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled checked state."
+        },
+        {
+          "name": "defaultChecked",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial checked state when uncontrolled."
+        },
+        {
+          "name": "onCheckedChange",
+          "type": "(checked: boolean) => void",
+          "required": false,
+          "description": "Fires with the next checked state."
+        },
+        {
+          "name": "closeOnSelect",
+          "type": "boolean",
+          "required": false,
+          "description": "Close the menu after toggling.",
+          "default": "false"
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "aria-disabled. Skipped by arrow keys."
+        },
+        {
+          "name": "textValue",
+          "type": "string",
+          "required": false,
+          "description": "Typeahead text when children are not plain text."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Item label."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class."
+        }
+      ]
+    },
+    {
+      "name": "Menu.Content",
+      "description": "role=\"menu\" in a popover anchored to the trigger. Named by the trigger unless aria-label or aria-labelledby is given.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the menu instead of the trigger."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of the element that names the menu. Default is the trigger."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Items, groups and separators."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class."
+        }
+      ]
+    },
+    {
+      "name": "Menu.Group",
+      "description": "role=\"group\" inside a menu. Requires aria-label or aria-labelledby.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Group name. Exactly one of aria-label or aria-labelledby."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of a visible group caption."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Items."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class."
+        }
+      ]
+    },
+    {
+      "name": "Menu.Item",
+      "description": "role=\"menuitem\". Enter, Space or a click runs onSelect and closes the menu.",
+      "props": [
+        {
+          "name": "onSelect",
+          "type": "() => void",
+          "required": false,
+          "description": "Runs when the item is chosen."
+        },
+        {
+          "name": "closeOnSelect",
+          "type": "boolean",
+          "required": false,
+          "description": "Close the menu after choosing.",
+          "default": "true"
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "aria-disabled. Skipped by arrow keys and ignores choosing."
+        },
+        {
+          "name": "textValue",
+          "type": "string",
+          "required": false,
+          "description": "Typeahead text when children are not plain text."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Item label."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class."
+        }
+      ]
+    },
+    {
+      "name": "Menu.RadioGroup",
+      "description": "A Menu.Group that owns one value for its Menu.RadioItem children.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string | null",
+          "required": false,
+          "description": "Controlled value. null is controlled with nothing checked."
+        },
+        {
+          "name": "defaultValue",
+          "type": "string | null",
+          "required": false,
+          "description": "Initial value when uncontrolled."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Fires with the next value."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Group name. Exactly one of aria-label or aria-labelledby."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of a visible group caption."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Menu.RadioItem children."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class."
+        }
+      ]
+    },
+    {
+      "name": "Menu.RadioItem",
+      "description": "role=\"menuitemradio\" in a Menu.RadioGroup. Stays open by default.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Value this item sets on its group."
+        },
+        {
+          "name": "closeOnSelect",
+          "type": "boolean",
+          "required": false,
+          "description": "Close the menu after choosing.",
+          "default": "false"
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "aria-disabled. Skipped by arrow keys."
+        },
+        {
+          "name": "textValue",
+          "type": "string",
+          "required": false,
+          "description": "Typeahead text when children are not plain text."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Item label."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class."
+        }
+      ]
+    },
+    {
+      "name": "Menu.Root",
+      "description": "Owns open state for one action menu. Renders no element.",
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: MenuOpenChangeReason) => void",
+          "required": false,
+          "description": "Fires on open and close. reason is trigger, escape, outside, select or tab. Leaving open unchanged is a veto."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Menu.Trigger and Menu.Content."
+        }
+      ]
+    },
+    {
+      "name": "Menu.Separator",
+      "description": "role=\"separator\" between items or groups.",
+      "props": [
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class."
+        }
+      ]
+    },
+    {
+      "name": "Menu.Trigger",
+      "description": "Button.Root wired as the menu button: aria-haspopup=\"menu\", aria-expanded, ArrowDown and ArrowUp open.",
+      "props": [
+        {
+          "name": "variant",
+          "type": "ButtonVariant",
+          "required": false,
+          "description": "Button variant.",
+          "default": "\"primary\""
+        },
+        {
+          "name": "tooltip",
+          "type": "boolean",
+          "required": false,
+          "description": "Button tooltip. Off by default on a menu trigger.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Trigger label."
         }
       ]
     },
@@ -1052,6 +1405,147 @@
       ]
     },
     {
+      "name": "Tabs.List",
+      "description": "The tablist. Holds one tab stop; arrow keys, Home and End move between tabs.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the tablist when no visible caption exists."
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of a visible caption for the tablist."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Tabs.Tab children."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the tablist."
+        }
+      ]
+    },
+    {
+      "name": "Tabs.Panel",
+      "description": "role=\"tabpanel\", labelled by its tab. Hidden unless its tab is selected.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Matches a Tabs.Tab value."
+        },
+        {
+          "name": "keepMounted",
+          "type": "boolean",
+          "required": false,
+          "description": "Keep children mounted while hidden, so their state survives a tab switch.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Panel content."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the panel."
+        }
+      ]
+    },
+    {
+      "name": "Tabs.Root",
+      "description": "Owns the selected tab. Takes value with onValueChange, or defaultValue.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "description": "Controlled selected tab. Pass with onValueChange."
+        },
+        {
+          "name": "defaultValue",
+          "type": "string",
+          "required": false,
+          "description": "Initial selected tab when uncontrolled."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Fires with the next selected tab."
+        },
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false,
+          "description": "Arrow keys, layout and aria-orientation.",
+          "default": "\"horizontal\""
+        },
+        {
+          "name": "activation",
+          "type": "\"automatic\" | \"manual\"",
+          "required": false,
+          "description": "automatic selects on focus. manual waits for Enter, Space or a click.",
+          "default": "\"automatic\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Tabs.List and Tabs.Panel."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the root."
+        }
+      ]
+    },
+    {
+      "name": "Tabs.Tab",
+      "description": "A native button with role=\"tab\". Controls the Tabs.Panel with the same value.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Matches a Tabs.Panel value."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Native disabled. Skipped by arrow keys."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Tab label."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the tab."
+        }
+      ]
+    },
+    {
       "name": "Text",
       "description": "Text styled through the text contract tokens.",
       "props": [
@@ -1279,6 +1773,11 @@
       ]
     },
     {
+      "name": "useField",
+      "description": "Joins a custom control to the nearest Field.Root. Spread getControlProps on the control. Takes no options.",
+      "props": []
+    },
+    {
       "name": "usePopover",
       "description": "One open machine. Spread getTriggerProps onto the trigger and getPopoverProps onto Popover.",
       "props": [
@@ -1326,10 +1825,62 @@
           "default": "true"
         },
         {
+          "name": "haspopup",
+          "type": "\"dialog\" | \"menu\" | \"listbox\" | \"tree\" | \"grid\"",
+          "required": false,
+          "description": "aria-haspopup on the trigger. Use \"listbox\" for an OptionList in a role-less popover.",
+          "default": "\"dialog\""
+        },
+        {
           "name": "id",
           "type": "string",
           "required": false,
           "description": "Popover id. Default is a generated id."
+        }
+      ]
+    },
+    {
+      "name": "useRovingFocus",
+      "description": "One tab stop for a composite. Spread getContainerProps on the group and getItemProps(value) on each item.",
+      "props": [
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\" | \"both\"",
+          "required": false,
+          "description": "Which arrow keys move focus. Left and Right swap in a right-to-left container.",
+          "default": "\"vertical\""
+        },
+        {
+          "name": "loop",
+          "type": "boolean",
+          "required": false,
+          "description": "Wrap from the last item to the first and back.",
+          "default": "true"
+        },
+        {
+          "name": "typeahead",
+          "type": "boolean",
+          "required": false,
+          "description": "Typing focuses the next item whose text starts with the typed characters.",
+          "default": "false"
+        },
+        {
+          "name": "activeValue",
+          "type": "string | null",
+          "required": false,
+          "description": "Controlled tab stop. Falls back to the first enabled item when null, disabled or missing."
+        },
+        {
+          "name": "defaultActiveValue",
+          "type": "string | null",
+          "required": false,
+          "description": "Initial tab stop when uncontrolled."
+        },
+        {
+          "name": "onActiveValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Fires when an item takes focus."
         }
       ]
     },

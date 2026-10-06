@@ -1,0 +1,77 @@
+import { useCallback, type Ref } from 'react';
+import { inputLabel, mergeDescribedBy, useFieldContext } from '../components/Field.context';
+
+export type FieldControlUserProps = {
+  ref?: Ref<HTMLElement | null>;
+  'aria-describedby'?: string;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+};
+
+export type FieldControlWire = {
+  ref: (node: HTMLElement | null) => void;
+  id: string;
+  name: string | undefined;
+  disabled: boolean;
+  'aria-invalid': true | undefined;
+  'aria-describedby': string | undefined;
+  'aria-label': string | undefined;
+  'aria-labelledby': string | undefined;
+  'data-todae-field-control': '';
+};
+
+export type UseFieldResult = {
+  /** The id a `Label htmlFor` points at. */
+  id: string;
+  name: string | undefined;
+  disabled: boolean;
+  invalid: boolean;
+  /**
+   * Props for the one control inside `Field.Root`: id, name, disabled,
+   * aria-invalid, merged aria-describedby, the Root's name unless the control
+   * names itself, and a ref so a press on the shell focuses it. A control that
+   * is not a native form element reads `disabled` and sets `aria-disabled`
+   * itself.
+   */
+  getControlProps: <P extends FieldControlUserProps>(props?: P) => Omit<P, keyof FieldControlWire> & FieldControlWire;
+};
+
+function assignRef<T>(ref: Ref<T> | undefined, value: T) {
+  if (typeof ref === 'function') ref(value);
+  else if (ref) ref.current = value;
+}
+
+/**
+ * Joins a custom control to the nearest `Field.Root`, the way `Field.TextInput`
+ * joins it. Throws outside `Field.Root`.
+ */
+export function useField(): UseFieldResult {
+  const ctx = useFieldContext();
+  const getControlProps = useCallback(
+    <P extends FieldControlUserProps>(props?: P): Omit<P, keyof FieldControlWire> & FieldControlWire => {
+      const user = (props ?? {}) as P;
+      return {
+        ...user,
+        ref: (node: HTMLElement | null) => {
+          ctx.inputRef.current = node;
+          assignRef(user.ref, node);
+        },
+        id: ctx.inputId,
+        name: ctx.name,
+        disabled: ctx.disabled,
+        'aria-invalid': ctx.invalid || undefined,
+        'aria-describedby': mergeDescribedBy(ctx.describedBy, user['aria-describedby']),
+        ...inputLabel(user, ctx),
+        'data-todae-field-control': '',
+      } as Omit<P, keyof FieldControlWire> & FieldControlWire;
+    },
+    [ctx],
+  );
+  return {
+    id: ctx.inputId,
+    name: ctx.name,
+    disabled: ctx.disabled,
+    invalid: ctx.invalid,
+    getControlProps,
+  };
+}

@@ -18,10 +18,24 @@ export {
   type OptionListRootProps,
   type OptionListSingleProps,
 } from './components/OptionList';
+export {
+  Menu,
+  type MenuCheckboxItemProps,
+  type MenuContentProps,
+  type MenuGroupProps,
+  type MenuItemProps,
+  type MenuOpenChangeReason,
+  type MenuRadioGroupProps,
+  type MenuRadioItemProps,
+  type MenuRootProps,
+  type MenuSeparatorProps,
+  type MenuTriggerProps,
+} from './components/Menu';
 export { Popover, type PopoverRootProps } from './components/Popover';
 export {
   usePopover,
   type PopoverCloseReason,
+  type PopoverHaspopup,
   type PopoverTriggerUserProps,
   type PopoverTriggerWire,
   type PopoverWire,
@@ -51,10 +65,17 @@ export {
   type FieldIconProps,
   type FieldRootProps,
   type FieldRowProps,
+  type FieldSelectProps,
   type FieldTextInputProps,
   type FieldTextInputType,
   type FieldTextareaProps,
 } from './components/Field';
+export {
+  useField,
+  type FieldControlUserProps,
+  type FieldControlWire,
+  type UseFieldResult,
+} from './hooks/useField';
 export { Label, type LabelProps } from './components/Label';
 export {
   RadioGroup,
@@ -63,6 +84,15 @@ export {
   type RadioGroupRootProps,
 } from './components/Radio';
 export { Switch, type SwitchProps } from './components/Switch';
+export {
+  Tabs,
+  type TabsActivation,
+  type TabsListProps,
+  type TabsOrientation,
+  type TabsPanelProps,
+  type TabsRootProps,
+  type TabsTabProps,
+} from './components/Tabs';
 export { Stack, type StackProps, type StackDirection } from './components/Stack';
 export { Text, type TextProps, type TextAs, type TextSize, type TextTone, type TextWeight } from './components/Text';
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
@@ -72,6 +102,17 @@ export {
   type UseChipListOptions,
   type UseChipListResult,
 } from './hooks/useChipList';
+export {
+  useRovingFocus,
+  type RovingContainerUserProps,
+  type RovingContainerWire,
+  type RovingItemOptions,
+  type RovingItemUserProps,
+  type RovingItemWire,
+  type RovingOrientation,
+  type UseRovingFocusOptions,
+  type UseRovingFocusResult,
+} from './hooks/useRovingFocus';
 export {
   useSheetPresentation,
   resolveSheetPresentation,

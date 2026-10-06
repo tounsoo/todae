@@ -4,6 +4,8 @@ import { PopoverMenu, PopoverVeto } from '../../components/demos/PopoverDemo';
 
 `usePopover` is the open machine. Spread `getTriggerProps` on the trigger. Spread `getPopoverProps` on `Popover.Root`. `Popover.Root` is surface chrome only: `children`, `className`, `style`, and, with `role="dialog"`, an accessible name. There is no `Popover.Trigger` or `Popover.Content`. ARIA prohibits a name on an element with no role, so a role-less popover takes none: the type rejects `aria-label` and `aria-labelledby` there, and the element drops them. Name what is inside instead, such as the `OptionList.Root` of a menu or combobox. With `role="dialog"`, the type requires `aria-label` or `aria-labelledby`.
 
+`haspopup` sets the trigger's `aria-haspopup`: `dialog` by default, `listbox` for an OptionList in a role-less popover, `menu` for an action menu. For action menus, use [Menu](/menu).
+
 Non-modal `popover="manual"`. Outside click and Escape call `onOpenChange(false, reason)`. `hidePopover()` runs only after `open` is false, so a veto keeps it shown.
 
 No focus trap, no `aria-modal`, no scroll lock, no inert. No portal — the surface stays in the React tree so `ThemeProvider` vars inherit.
@@ -17,7 +19,7 @@ The surface is the top-layer hit target: `position: fixed; inset: unset; pointer
 ## Hook recipe
 
 ```tsx
-const { getTriggerProps, getPopoverProps } = usePopover()
+const { getTriggerProps, getPopoverProps } = usePopover({ haspopup: 'listbox' })
 
 <>
   <Button.Root tooltip={false} {...getTriggerProps()}>Open</Button.Root>

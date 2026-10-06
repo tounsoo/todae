@@ -1,5 +1,4 @@
 import {
-  createContext,
   useContext,
   useEffect,
   useId,
@@ -15,15 +14,24 @@ import {
   type MouseEvent,
   type ReactNode,
   type Ref,
-  type RefObject,
+  type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
 import { Chip } from './Chip';
+import {
+  FieldContext,
+  inputLabel,
+  mergeDescribedBy,
+  useFieldContext,
+  type CountStore,
+  type FieldContextValue,
+} from './Field.context';
 import { composeHandlers, cx } from './props';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
+import { useField } from '../hooks/useField';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -42,15 +50,6 @@ export type FieldRootProps = {
   ref?: Ref<HTMLDivElement>;
   children?: ReactNode;
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
-
-type CountEntry = { value: string; maxLength?: number };
-
-type CountStore = {
-  entry: CountEntry | null;
-  counters: number;
-  listeners: Set<() => void>;
-  presence: Set<() => void>;
-};
 
 function createCountStore(): CountStore {
   return { entry: null, counters: 0, listeners: new Set(), presence: new Set() };
@@ -80,25 +79,6 @@ function counterMounted(store: CountStore) {
   return store.counters > 0;
 }
 
-function mergeDescribedBy(root?: string, own?: string, hint?: string) {
-  const ids = [root, own, hint].filter((id): id is string => Boolean(id));
-  return ids.length > 0 ? ids.join(' ') : undefined;
-}
-
-type LabelAttrs = { 'aria-label'?: string; 'aria-labelledby'?: string };
-
-/**
- * An input that names itself keeps both of its own label attributes and takes
- * neither from the Root: a Root `aria-labelledby` would outrank the input's
- * own `aria-label`.
- */
-function inputLabel(own: LabelAttrs, field: { ariaLabel?: string; labelledBy?: string }): LabelAttrs {
-  if (own['aria-label'] != null || own['aria-labelledby'] != null) {
-    return { 'aria-label': own['aria-label'], 'aria-labelledby': own['aria-labelledby'] };
-  }
-  return { 'aria-label': field.ariaLabel, 'aria-labelledby': field.labelledBy };
-}
-
 function useTextEntry(store: CountStore, value: string, maxLength: number | undefined) {
   publishCount(store, value, maxLength);
   useEffect(() => {
@@ -109,27 +89,6 @@ function useTextEntry(store: CountStore, value: string, maxLength: number | unde
     () => counterMounted(store),
     () => counterMounted(store),
   );
-}
-
-type FieldContextValue = {
-  inputId: string;
-  hintId: string;
-  disabled: boolean;
-  invalid: boolean;
-  name?: string;
-  describedBy?: string;
-  labelledBy?: string;
-  ariaLabel?: string;
-  inputRef: RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
-  store: CountStore;
-};
-
-const FieldContext = createContext<FieldContextValue | null>(null);
-
-function useField(): FieldContextValue {
-  const ctx = useContext(FieldContext);
-  if (!ctx) throw new Error('Field parts must be rendered inside Field.Root');
-  return ctx;
 }
 
 export type FieldIconProps = {
@@ -177,7 +136,7 @@ function Root({
 }: FieldRootProps) {
   const autoId = useId();
   const hintId = useId();
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLElement>(null);
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
 
@@ -237,7 +196,7 @@ function TextInput({
   'aria-describedby': describedBy,
   ...props
 }: FieldTextInputProps) {
-  const ctx = useField();
+  const ctx = useFieldContext();
   const limit = typeof maxLength === 'number' ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
   return (
@@ -291,7 +250,7 @@ function Textarea({
   'aria-describedby': describedBy,
   ...props
 }: FieldTextareaProps) {
-  const ctx = useField();
+  const ctx = useFieldContext();
   const resolved = useMemo(
     () => resolveTextareaRows({ rows: rowsProp, maxRows: maxRowsProp }),
     [rowsProp, maxRowsProp],
@@ -369,7 +328,7 @@ function ChipInput({
   reset: _reset,
   ...props
 }: FieldChipInputProps & { setChips?: unknown; setInputValue?: unknown; reset?: unknown }) {
-  const field = useField();
+  const field = useFieldContext();
   const keys = useMemo(() => resolveCommitKeys(commitKeys), [commitKeys]);
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const inRow = chipLayout === 'row';
@@ -483,6 +442,39 @@ function ChipInput({
   );
 }
 
+/**
+ * A native `<select>`. Browsers with `appearance: base-select` draw the picker
+ * from tokens; others keep their native picker. Children are `<option>` and
+ * `<optgroup>` elements.
+ */
+export type FieldSelectProps = {
+  value: string;
+  onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  onValueChange?: (value: string) => void;
+  children?: ReactNode;
+  ref?: Ref<HTMLSelectElement>;
+} & Omit<
+  SelectHTMLAttributes<HTMLSelectElement>,
+  'value' | 'defaultValue' | 'disabled' | 'onChange' | 'multiple' | 'size' | 'children'
+>;
+
+function Select({ value, onChange, onValueChange, className, children, ...props }: FieldSelectProps) {
+  const field = useField();
+  return (
+    <select
+      {...field.getControlProps(props)}
+      value={value}
+      className={cx(styles.select, className)}
+      onChange={(event) => {
+        onChange(event);
+        onValueChange?.(event.target.value);
+      }}
+    >
+      {children}
+    </select>
+  );
+}
+
 export type FieldCounterProps = {
   className?: string;
   style?: CSSProperties;
@@ -571,4 +563,4 @@ function Row({ className, ...props }: FieldRowProps) {
   return <div {...props} className={cx(styles.row, className)} />;
 }
 
-export const Field = { Root, TextInput, Textarea, ChipInput, Icon, Affix, Counter, Row } as const;
+export const Field = { Root, TextInput, Textarea, ChipInput, Select, Icon, Affix, Counter, Row } as const;

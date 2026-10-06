@@ -24,6 +24,8 @@ export const RESERVED_ROOTS = [
   'popover',
   'tooltip',
   'option',
+  'menu',
+  'tabs',
   'selection',
 ] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;

@@ -1,0 +1,260 @@
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState, type ReactNode } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as api from '../index';
+import { useRovingFocus, type UseRovingFocusOptions } from './useRovingFocus';
+
+afterEach(cleanup);
+
+type Item = { value: string; label?: string; disabled?: boolean };
+
+const FRUIT: Item[] = [{ value: 'apple' }, { value: 'banana' }, { value: 'blueberry' }, { value: 'cherry' }];
+
+function Group({ items = FRUIT, ...options }: UseRovingFocusOptions & { items?: Item[] }) {
+  const roving = useRovingFocus(options);
+  return (
+    <div role="toolbar" aria-label="Fruit" {...roving.getContainerProps()}>
+      {items.map((item) => (
+        <button key={item.value} type="button" {...roving.getItemProps(item.value, { disabled: item.disabled })}>
+          {item.label ?? item.value}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const tabStops = () => screen.getAllByRole('button').filter((b) => b.tabIndex === 0).map((b) => b.textContent);
+const key = (k: string) => fireEvent.keyDown(document.activeElement ?? document.body, { key: k });
+const focused = () => document.activeElement?.textContent;
+
+describe('useRovingFocus', () => {
+  it('is exported from the package', () => {
+    expect(api.useRovingFocus).toBe(useRovingFocus);
+  });
+
+  it('keeps one tab stop, on the first enabled item by default', () => {
+    render(<Group items={[{ value: 'a', disabled: true }, { value: 'b' }, { value: 'c' }]} />);
+    expect(tabStops()).toEqual(['b']);
+  });
+
+  it('moves the tab stop when an item disables itself without the owner rendering', async () => {
+    let disable: (() => void) | undefined;
+    function Item({ roving, value }: { roving: ReturnType<typeof useRovingFocus>; value: string }) {
+      const [disabled, setDisabled] = useState(false);
+      if (value === 'a') disable = () => setDisabled(true);
+      return (
+        <button type="button" {...roving.getItemProps(value, { disabled })}>
+          {value}
+        </button>
+      );
+    }
+    function Owner() {
+      const roving = useRovingFocus();
+      return (
+        <div {...roving.getContainerProps()}>
+          <Item roving={roving} value="a" />
+          <Item roving={roving} value="b" />
+        </div>
+      );
+    }
+    render(<Owner />);
+    expect(tabStops()).toEqual(['a']);
+    await act(async () => disable?.());
+    expect(tabStops()).toEqual(['b']);
+  });
+
+  it('starts on defaultActiveValue', () => {
+    render(<Group defaultActiveValue="cherry" />);
+    expect(tabStops()).toEqual(['cherry']);
+  });
+
+  it('falls back when the active item is disabled or missing', () => {
+    const { rerender } = render(<Group activeValue="banana" />);
+    expect(tabStops()).toEqual(['banana']);
+    rerender(<Group activeValue="banana" items={[{ value: 'apple' }, { value: 'banana', disabled: true }]} />);
+    expect(tabStops()).toEqual(['apple']);
+    rerender(<Group activeValue="gone" />);
+    expect(tabStops()).toEqual(['apple']);
+  });
+
+  it('moves with vertical arrows, Home and End, and loops', () => {
+    const onActiveValueChange = vi.fn();
+    render(<Group onActiveValueChange={onActiveValueChange} />);
+    screen.getByText('apple').focus();
+    key('ArrowDown');
+    expect(focused()).toBe('banana');
+    expect(tabStops()).toEqual(['banana']);
+    expect(onActiveValueChange).toHaveBeenLastCalledWith('banana');
+    key('End');
+    expect(focused()).toBe('cherry');
+    key('ArrowDown');
+    expect(focused()).toBe('apple');
+    key('ArrowUp');
+    expect(focused()).toBe('cherry');
+    key('Home');
+    expect(focused()).toBe('apple');
+    key('ArrowRight');
+    expect(focused()).toBe('apple');
+  });
+
+  it('stops at the ends when loop is false', () => {
+    render(<Group loop={false} />);
+    screen.getByText('cherry').focus();
+    key('ArrowDown');
+    expect(focused()).toBe('cherry');
+    screen.getByText('apple').focus();
+    key('ArrowUp');
+    expect(focused()).toBe('apple');
+  });
+
+  it('skips disabled items', () => {
+    render(<Group items={[{ value: 'a' }, { value: 'b', disabled: true }, { value: 'c' }]} />);
+    screen.getByText('a').focus();
+    key('ArrowDown');
+    expect(focused()).toBe('c');
+  });
+
+  // Right-to-left needs computed style, so the browser suite covers it.
+  it('uses Left and Right for horizontal', () => {
+    render(<Group orientation="horizontal" />);
+    screen.getByText('apple').focus();
+    key('ArrowDown');
+    expect(focused()).toBe('apple');
+    key('ArrowRight');
+    expect(focused()).toBe('banana');
+    key('ArrowLeft');
+    expect(focused()).toBe('apple');
+  });
+
+  it('takes all four arrows with orientation both', () => {
+    render(<Group orientation="both" />);
+    screen.getByText('apple').focus();
+    key('ArrowRight');
+    key('ArrowDown');
+    expect(focused()).toBe('blueberry');
+  });
+
+  it('ignores modified keys and keys from nested elements', () => {
+    render(<Group />);
+    screen.getByText('apple').focus();
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown', ctrlKey: true });
+    expect(focused()).toBe('apple');
+  });
+
+  it('moves the tab stop when an item is clicked or focused', () => {
+    render(<Group />);
+    act(() => screen.getByText('cherry').focus());
+    expect(tabStops()).toEqual(['cherry']);
+  });
+
+  it('does not move focus between nested groups', () => {
+    function Nested({ children }: { children?: ReactNode }) {
+      const outer = useRovingFocus();
+      return (
+        <div {...outer.getContainerProps()}>
+          <button type="button" {...outer.getItemProps('outer-1')}>
+            outer-1
+          </button>
+          {children}
+          <button type="button" {...outer.getItemProps('outer-2')}>
+            outer-2
+          </button>
+        </div>
+      );
+    }
+    render(
+      <Nested>
+        <Group />
+      </Nested>,
+    );
+    screen.getByText('apple').focus();
+    key('ArrowUp');
+    expect(focused()).toBe('cherry');
+    screen.getByText('outer-1').focus();
+    key('ArrowDown');
+    expect(focused()).toBe('outer-2');
+  });
+
+  it('typeahead cycles by first letter and matches longer prefixes', () => {
+    render(<Group typeahead />);
+    screen.getByText('apple').focus();
+    fireEvent.keyDown(document.activeElement!, { key: 'b', timeStamp: 1000 });
+    expect(focused()).toBe('banana');
+    fireEvent.keyDown(document.activeElement!, { key: 'b', timeStamp: 1100 });
+    expect(focused()).toBe('blueberry');
+    fireEvent.keyDown(document.activeElement!, { key: 'b', timeStamp: 2000 });
+    expect(focused()).toBe('banana');
+    fireEvent.keyDown(document.activeElement!, { key: 'b', timeStamp: 3000 });
+    fireEvent.keyDown(document.activeElement!, { key: 'l', timeStamp: 3100 });
+    expect(focused()).toBe('blueberry');
+    fireEvent.keyDown(document.activeElement!, { key: 'z', timeStamp: 5000 });
+    expect(focused()).toBe('blueberry');
+  });
+
+  it('typeahead is off by default', () => {
+    render(<Group />);
+    screen.getByText('apple').focus();
+    key('c');
+    expect(focused()).toBe('apple');
+  });
+
+  it('focus() targets first, last or a value and returns it', () => {
+    let roving: ReturnType<typeof useRovingFocus> | undefined;
+    function Probe() {
+      roving = useRovingFocus();
+      return (
+        <div {...roving.getContainerProps()}>
+          {['x', 'y', 'z'].map((v) => (
+            <button key={v} type="button" {...roving!.getItemProps(v, { disabled: v === 'z' })}>
+              {v}
+            </button>
+          ))}
+        </div>
+      );
+    }
+    render(<Probe />);
+    expect(roving!.values()).toEqual(['x', 'y']);
+    expect(roving!.focus('last')).toBe('y');
+    expect(focused()).toBe('y');
+    expect(roving!.focus('first')).toBe('x');
+    expect(roving!.focus('z')).toBeNull();
+  });
+
+  it('works controlled', () => {
+    function Controlled() {
+      const [active, setActive] = useState<string | null>('banana');
+      return (
+        <>
+          <output>{active}</output>
+          <Group activeValue={active} onActiveValueChange={setActive} />
+        </>
+      );
+    }
+    render(<Controlled />);
+    expect(tabStops()).toEqual(['banana']);
+    act(() => screen.getByRole('button', { name: 'banana' }).focus());
+    key('ArrowDown');
+    expect(screen.getByRole('status').textContent).toBe('blueberry');
+    expect(tabStops()).toEqual(['blueberry']);
+  });
+
+  it('keeps consumer handlers and lets them prevent the move', () => {
+    function Prevent() {
+      const roving = useRovingFocus();
+      return (
+        <div {...roving.getContainerProps({ onKeyDown: (event) => event.preventDefault() })}>
+          <button type="button" {...roving.getItemProps('a')}>
+            a
+          </button>
+          <button type="button" {...roving.getItemProps('b')}>
+            b
+          </button>
+        </div>
+      );
+    }
+    render(<Prevent />);
+    screen.getByText('a').focus();
+    key('ArrowDown');
+    expect(focused()).toBe('a');
+  });
+});

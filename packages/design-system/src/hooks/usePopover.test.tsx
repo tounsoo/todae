@@ -48,6 +48,17 @@ describe('usePopover exports', () => {
   });
 });
 
+describe('usePopover haspopup', () => {
+  it('defaults to dialog and takes listbox or menu', () => {
+    const { rerender } = render(<Harness />);
+    expect(screen.getByRole('button').getAttribute('aria-haspopup')).toBe('dialog');
+    rerender(<Harness haspopup="listbox" />);
+    expect(screen.getByRole('button').getAttribute('aria-haspopup')).toBe('listbox');
+    rerender(<Harness haspopup="menu" />);
+    expect(screen.getByRole('button').getAttribute('aria-haspopup')).toBe('menu');
+  });
+});
+
 describe('usePopover', () => {
   it('toggles from the trigger with reason trigger', () => {
     const onOpenChange = vi.fn();
