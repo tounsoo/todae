@@ -21,7 +21,7 @@ A button that opens a list of actions. `Menu.Trigger` is a `Button.Root` with `a
 
 ## Keyboard
 
-Enter, Space, a click or ArrowDown on the trigger opens the menu on its first item; ArrowUp opens it on the last. In the menu, Up and Down move and loop, Home and End jump, and typing a letter moves to the next item that starts with it. Enter, Space or a click chooses an item. Escape closes and returns focus to the trigger; Tab closes and moves focus past the trigger; Shift+Tab closes and stops on the trigger. Pointer movement focuses the item under it, so the pointer and the keyboard share one highlight. Disabled items carry `aria-disabled` and stay in the arrow-key order, as menus conventionally do, so a screen reader announces them as unavailable; they cannot be chosen, and a press or hover does not focus them.
+Enter, Space, a click or ArrowDown on the trigger opens the menu on its first item; ArrowUp opens it on the last. In the menu, Up and Down move and loop, Home and End jump, and typing a letter moves to the next item that starts with it. Enter, Space or a click chooses an item. Escape closes and returns focus to the trigger; Tab closes and moves focus past the trigger; Shift+Tab closes and stops on the trigger. Pointer movement focuses the item under it, so the pointer and the keyboard share one highlight. Disabled items carry `aria-disabled` and stay in the arrow-key order, as menus conventionally do, so a screen reader announces them as unavailable; they cannot be chosen. Hovering one focuses it, as the arrow keys do, so the highlight never stays on another item.
 
 ## Checkbox and radio items
 

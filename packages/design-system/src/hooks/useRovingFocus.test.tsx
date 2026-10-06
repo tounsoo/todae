@@ -372,10 +372,10 @@ describe('useRovingFocus', () => {
   });
 
   it('re-reads items when the group itself is shown, through its size', () => {
-    const callbacks: (() => void)[] = [];
+    const callbacks: ((entries: { contentRect: { width: number; height: number } }[]) => void)[] = [];
     const OriginalRO = globalThis.ResizeObserver;
     globalThis.ResizeObserver = class {
-      constructor(cb: () => void) {
+      constructor(cb: (entries: { contentRect: { width: number; height: number } }[]) => void) {
         callbacks.push(cb);
       }
       observe() {}
@@ -389,12 +389,37 @@ describe('useRovingFocus', () => {
     };
     try {
       render(<Group activeValue="banana" />);
+      act(() => callbacks.forEach((cb) => cb([{ contentRect: { width: 0, height: 0 } }])));
       expect(tabStops()).toEqual(['banana']);
       shown = true;
-      act(() => callbacks.forEach((cb) => cb()));
+      act(() => callbacks.forEach((cb) => cb([{ contentRect: { width: 200, height: 40 } }])));
       expect(tabStops()).toEqual(['apple']);
     } finally {
       HTMLElement.prototype.checkVisibility = original;
+      globalThis.ResizeObserver = OriginalRO;
+    }
+  });
+
+  it('ignores a resize that keeps the group shown', () => {
+    const callbacks: ((entries: { contentRect: { width: number; height: number } }[]) => void)[] = [];
+    const OriginalRO = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class {
+      constructor(cb: (entries: { contentRect: { width: number; height: number } }[]) => void) {
+        callbacks.push(cb);
+      }
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    } as unknown as typeof ResizeObserver;
+    const query = vi.spyOn(HTMLElement.prototype, 'querySelectorAll');
+    try {
+      render(<Group />);
+      act(() => callbacks.forEach((cb) => cb([{ contentRect: { width: 200, height: 40 } }])));
+      query.mockClear();
+      act(() => callbacks.forEach((cb) => cb([{ contentRect: { width: 300, height: 40 } }])));
+      expect(query).not.toHaveBeenCalled();
+    } finally {
+      query.mockRestore();
       globalThis.ResizeObserver = OriginalRO;
     }
   });

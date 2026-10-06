@@ -184,9 +184,12 @@ function Root({
     const control = current?.isConnected && usable(current)
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
+    // A press beside a select opens it, as a press on the select would. One
+    // that was already focused may have had its picker open; the press that
+    // closed it must not open it again.
+    const wasFocused = control === document.activeElement;
     control?.focus();
-    // A press beside a select opens it, as a press on the select would.
-    if (control instanceof HTMLSelectElement) {
+    if (control instanceof HTMLSelectElement && !wasFocused) {
       try {
         control.showPicker?.();
       } catch {

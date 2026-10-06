@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { createRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field, Label, useField } from '../index';
@@ -167,6 +167,30 @@ describe('useField', () => {
       </Field.Root>,
     );
     expect(screen.getByRole('textbox').getAttribute('name')).toBe('rating');
+  });
+
+  it('a press beside an already focused select does not reopen its picker', () => {
+    const showPicker = vi.fn();
+    const proto = HTMLSelectElement.prototype as unknown as { showPicker?: () => void };
+    const original = proto.showPicker;
+    proto.showPicker = showPicker;
+    try {
+      render(
+        <Field.Root aria-label="Size">
+          <Field.Icon data-testid="icon">
+            <svg />
+          </Field.Icon>
+          <Field.Select value="s" onValueChange={() => {}}>
+            <option value="s">Small</option>
+          </Field.Select>
+        </Field.Root>,
+      );
+      act(() => screen.getByRole('combobox').focus());
+      fireEvent.mouseDown(screen.getByTestId('icon'));
+      expect(showPicker).not.toHaveBeenCalled();
+    } finally {
+      proto.showPicker = original;
+    }
   });
 
   it('a right-click on the shell keeps its default', () => {

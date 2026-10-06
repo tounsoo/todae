@@ -327,12 +327,11 @@ function useItem(
       if (disabled) event.preventDefault();
     }),
     // The pointer moves focus, so the highlight and the keyboard agree.
-    // On a disabled item the menu itself takes focus, so no other item stays
-    // highlighted for Enter to choose.
+    // Disabled items take focus too, as they do from the keyboard, so no
+    // other item stays highlighted for Enter and the arrow keys keep their place.
     onPointerMove: composeHandlers(onPointerMove, (event: PointerEvent<HTMLDivElement>) => {
       if (event.pointerType === 'touch') return;
-      const target = disabled ? event.currentTarget.closest<HTMLElement>('[role="menu"]') : event.currentTarget;
-      if (target && document.activeElement !== target) target.focus({ preventScroll: true });
+      if (document.activeElement !== event.currentTarget) event.currentTarget.focus({ preventScroll: true });
     }),
   };
 }

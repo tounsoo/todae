@@ -97,7 +97,9 @@ type KnownItems = { read: boolean; enabled: string[]; reachable: string[] };
 
 const NO_ITEMS: KnownItems = { read: false, enabled: [], reachable: [] };
 
-const isReachable = (node: HTMLElement) => !node.closest('[inert]') && (node.checkVisibility?.() ?? true);
+// `visibility: hidden` blocks focus too, so it counts as hidden.
+const isReachable = (node: HTMLElement) =>
+  !node.closest('[inert]') && (node.checkVisibility?.({ visibilityProperty: true }) ?? true);
 
 const sameValues = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
 
@@ -208,7 +210,12 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     const watcher = new MutationObserver((records) => {
       const relevant = records.some(
         (record) =>
-          (record.type === 'attributes' && touchesItem(record.target)) ||
+          (record.type === 'attributes' &&
+            // A class or style write matters on an item; hidden or inert also
+            // on a wrapper around items. Style churn elsewhere is ignored.
+            (record.attributeName === 'class' || record.attributeName === 'style'
+              ? record.target instanceof Element && record.target.hasAttribute('data-todae-roving')
+              : touchesItem(record.target))) ||
           [...record.addedNodes].some(touchesItem) ||
           [...record.removedNodes].some(touchesItem),
       );
@@ -223,7 +230,18 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     });
     // A size change catches the group itself being shown or hidden, say by
     // an ancestor opening, which no mutation inside it reports.
-    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => latestSync.current());
+    // Only a change between no size and some size matters, not every resize.
+    let shown: boolean | null = null;
+    const resize =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver((entries) => {
+            const rect = entries.at(-1)?.contentRect;
+            const now = rect ? rect.width > 0 || rect.height > 0 : true;
+            if (now === shown) return;
+            shown = now;
+            latestSync.current();
+          });
     resize?.observe(node);
     observer.current = {
       node,

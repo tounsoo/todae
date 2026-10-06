@@ -3,8 +3,10 @@ import {
   useCallback,
   useContext,
   useId,
+  useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -134,8 +136,12 @@ function Root({
   );
 }
 
-function List({ children, className, ref, onBlur, ...props }: TabsListProps) {
+function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListProps) {
   const ctx = useTabs('List');
+  // The check a blur with no relatedTarget schedules; dropped when focus
+  // comes back first or the list unmounts.
+  const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(pending.current), []);
   const container = ctx.roving.getContainerProps(props);
   const { leave } = ctx;
   const refs = useComposedRefs(container.ref, ref);
@@ -147,6 +153,10 @@ function List({ children, className, ref, onBlur, ...props }: TabsListProps) {
       aria-orientation={ctx.orientation}
       data-orientation={ctx.orientation}
       className={cx(styles.list, className)}
+      onFocus={composeHandlers(onFocus, () => {
+        clearTimeout(pending.current);
+        pending.current = undefined;
+      })}
       onBlur={composeHandlers(onBlur, (event: FocusEvent<HTMLDivElement>) => {
         const next = event.relatedTarget;
         const list = event.currentTarget;
@@ -155,7 +165,8 @@ function List({ children, className, ref, onBlur, ...props }: TabsListProps) {
         // or another window. Look once it has landed: the window losing focus
         // leaves the tab focused, which is not leaving the list.
         if (next === null) {
-          setTimeout(() => {
+          pending.current = setTimeout(() => {
+            pending.current = undefined;
             if (!list.contains(document.activeElement)) leave();
           });
           return;

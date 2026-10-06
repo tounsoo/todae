@@ -413,13 +413,18 @@ describe('Menu', () => {
     expect(screen.getAllByRole('menuitem').every((el) => el.tabIndex === -1)).toBe(true);
   });
 
-  it('hovering a disabled item clears the highlight from the last item', async () => {
-    render(<Actions />);
+  it('hovering a disabled item focuses it, so Enter chooses nothing and arrows keep their place', async () => {
+    const onRename = vi.fn();
+    render(<Actions onRename={onRename} />);
     fireEvent.click(trigger());
     await raf();
-    expect(document.activeElement).toBe(item('Rename'));
     fireEvent.pointerMove(item('Duplicate'), { pointerType: 'mouse' });
-    expect(document.activeElement).toBe(menu());
+    expect(document.activeElement).toBe(item('Duplicate'));
+    key('Enter');
+    expect(onRename).not.toHaveBeenCalled();
+    expect(isOpen()).toBe(true);
+    key('ArrowDown');
+    expect(document.activeElement).toBe(item('Delete'));
   });
 
   it('opens on the first item focus can reach', async () => {
