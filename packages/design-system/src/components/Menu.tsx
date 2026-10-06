@@ -6,6 +6,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type ComponentPropsWithRef,
   type FocusEvent,
   type KeyboardEvent,
@@ -99,6 +100,9 @@ type MenuContextValue = {
   setOpen: (open: boolean, reason: MenuOpenChangeReason) => void;
   triggerId: string;
   triggerRef: RefObject<HTMLButtonElement | null>;
+  /** A Menu.Trigger is mounted, so its id can name the menu. */
+  hasTrigger: boolean;
+  setHasTrigger: (mounted: boolean) => void;
   /** The end a trigger key asked the next open to focus. Cleared when the trigger loses focus. */
   openEnd: RefObject<'first' | 'last' | null>;
   initialFocusRef: RefObject<HTMLElement | null>;
@@ -122,6 +126,7 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
   const triggerId = `${useDomId()}-trigger`;
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [hasTrigger, setHasTrigger] = useState(false);
   const openEnd = useRef<'first' | 'last' | null>(null);
   const initialFocusRef = useRef<HTMLElement | null>(null);
   const popover = usePopoverInternal(
@@ -133,8 +138,8 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   // focus moving across them under the pointer does not render the menu.
   const roving = useRovingFocus({ orientation: 'vertical', typeahead: true, activeValue: null, tabStop: false });
   const ctx = useMemo(
-    () => ({ open, setOpen, triggerId, triggerRef, openEnd, initialFocusRef, popover, roving }),
-    [open, setOpen, triggerId, popover, roving],
+    () => ({ open, setOpen, triggerId, triggerRef, hasTrigger, setHasTrigger, openEnd, initialFocusRef, popover, roving }),
+    [open, setOpen, triggerId, hasTrigger, popover, roving],
   );
   return (
     <MenuContext.Provider value={ctx}>
@@ -146,7 +151,11 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
 function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }: MenuTriggerProps) {
   const ctx = useMenu('Trigger');
   const refs = useComposedRefs(ctx.triggerRef, ref);
-  const { openEnd } = ctx;
+  const { openEnd, setHasTrigger } = ctx;
+  useLayoutEffect(() => {
+    setHasTrigger(true);
+    return () => setHasTrigger(false);
+  }, [setHasTrigger]);
   const wire = ctx.popover.getTriggerProps({
     ...props,
     ref: refs,
@@ -250,7 +259,9 @@ function Content({
       role="menu"
       tabIndex={-1}
       aria-label={ariaLabel}
-      aria-labelledby={ariaLabel ? undefined : (ariaLabelledby ?? ctx.triggerId)}
+      // The trigger names the menu when there is one; a menu opened from code
+      // needs aria-label or aria-labelledby.
+      aria-labelledby={ariaLabel ? undefined : (ariaLabelledby ?? (ctx.hasTrigger ? ctx.triggerId : undefined))}
       className={cx(popoverStyles.content, styles.menu, className)}
       style={{ ...wireStyle, ...style }}
       onPointerDown={composeHandlers(onPointerDown, wirePointerDown)}

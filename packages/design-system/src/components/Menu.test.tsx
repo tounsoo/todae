@@ -330,6 +330,27 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(item('Rename'));
   });
 
+  it('is named by its trigger only when one is mounted', () => {
+    const { rerender } = render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Rename</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    const menu = () => screen.getByRole('menu', { hidden: true });
+    expect(menu().getAttribute('aria-labelledby')).toBe(trigger().id);
+    rerender(
+      <Menu.Root defaultOpen>
+        <Menu.Content>
+          <Menu.Item>Rename</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    expect(menu().hasAttribute('aria-labelledby')).toBe(false);
+  });
+
   it('leaves Enter and Space in a control inside an item to that control', () => {
     const onSelect = vi.fn();
     render(

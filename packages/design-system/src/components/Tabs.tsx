@@ -177,8 +177,12 @@ function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListP
   );
 }
 
-function Tab({ value, children, disabled, className, onClick, onFocus, ...props }: TabsTabProps) {
+function Tab({ value, children, disabled, className, onClick, onFocus, onBlur, onPointerDown, ...props }: TabsTabProps) {
   const ctx = useTabs('Tab');
+  // A press that focuses this tab selects it on focus; the click ending that
+  // press must not ask the owner a second time.
+  const pressing = useRef(false);
+  const selectedOnFocus = useRef(false);
   const selected = ctx.value === value;
   const { release } = ctx;
   // Hand the tab stop back to the selected tab when this one goes away.
@@ -196,7 +200,10 @@ function Tab({ value, children, disabled, className, onClick, onFocus, ...props 
       const from = event.relatedTarget;
       const scope = event.currentTarget.getAttribute('data-todae-roving');
       const fromTab = from instanceof Element && from.getAttribute('data-todae-roving') === scope;
-      if (ctx.activation === 'automatic' && fromTab) ctx.select(value);
+      if (ctx.activation === 'automatic' && fromTab) {
+        selectedOnFocus.current = pressing.current;
+        ctx.select(value);
+      }
     }),
   });
   return (
@@ -211,8 +218,20 @@ function Tab({ value, children, disabled, className, onClick, onFocus, ...props 
       data-selected={selected ? '' : undefined}
       data-orientation={ctx.orientation}
       className={cx(styles.tab, className)}
+      onPointerDown={composeHandlers(onPointerDown, () => {
+        pressing.current = true;
+      })}
+      onBlur={composeHandlers(onBlur, () => {
+        pressing.current = false;
+        selectedOnFocus.current = false;
+      })}
       // Enter and Space click a native button, which is how manual activation selects.
-      onClick={composeHandlers(onClick, () => ctx.select(value))}
+      onClick={composeHandlers(onClick, () => {
+        const skip = selectedOnFocus.current;
+        pressing.current = false;
+        selectedOnFocus.current = false;
+        if (!skip) ctx.select(value);
+      })}
     >
       {children}
     </button>

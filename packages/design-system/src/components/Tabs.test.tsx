@@ -86,6 +86,19 @@ describe('Tabs', () => {
     expect(screen.getByRole('tabpanel').textContent).toBe('Billing panel');
   });
 
+  it('asks the owner once when a press focuses and clicks another tab', () => {
+    const onValueChange = vi.fn();
+    render(<Example value="a" onValueChange={onValueChange} />);
+    act(() => tab('Account').focus());
+    fireEvent.pointerDown(tab('Billing'));
+    act(() => tab('Billing').focus());
+    fireEvent.click(tab('Billing'));
+    expect(onValueChange).toHaveBeenCalledExactlyOnceWith('b');
+    // A later click on the focused tab asks again, since the owner kept A.
+    fireEvent.click(tab('Billing'));
+    expect(onValueChange).toHaveBeenCalledTimes(2);
+  });
+
   it('selects on arrow keys with automatic activation', () => {
     const onValueChange = vi.fn();
     render(<Example onValueChange={onValueChange} />);
