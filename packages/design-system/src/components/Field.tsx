@@ -185,8 +185,6 @@ function Root({
   );
 
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
-    // Each press decides afresh whether its click opens a picker.
-    pendingPicker.current = null;
     // Only a primary press: a right or middle click keeps its own meaning.
     if (event.button !== 0 || disabled || isInteractiveTarget(event.target)) return;
     event.preventDefault();
@@ -225,7 +223,12 @@ function Root({
         className={cx(styles.shell, className)}
         data-disabled={disabled ? '' : undefined}
         data-invalid={invalid ? '' : undefined}
-        onMouseDown={composeHandlers(onMouseDownProp, onMouseDown)}
+        onMouseDown={(event: MouseEvent<HTMLDivElement>) => {
+          // Each press decides afresh whether its click opens a picker, even
+          // one whose consumer handler turns the shell's handling off.
+          pendingPicker.current = null;
+          composeHandlers(onMouseDownProp, onMouseDown)(event);
+        }}
         onClick={composeHandlers(onClickProp, onClick)}
       >
         {children}

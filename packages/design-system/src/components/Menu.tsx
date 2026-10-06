@@ -163,7 +163,7 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
       {...wire}
       // A click the consumer prevents does not open the menu.
       onClick={composeHandlers(onClick, (event: MouseEvent<HTMLButtonElement>) => {
-        ctx.openEnd.current = null;
+        openEnd.current = null;
         wire.onClick(event);
       })}
       id={ctx.triggerId}
@@ -188,7 +188,7 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
           else ctx.roving.focusLast();
           return;
         }
-        ctx.openEnd.current = end;
+        openEnd.current = end;
         ctx.setOpen(true, 'trigger');
       })}
     />
@@ -227,14 +227,11 @@ function Content({
   }, [initialFocusRef, open, openEnd, reachableItems]);
   const container = roving.getContainerProps({
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
-      // Tab leaves the menu: close it, and focus returns to the trigger.
-      // Tab then moves on past the trigger. Shift+Tab stops on the trigger,
-      // since moving back from it would skip it.
+      // Tab leaves the menu: close it and focus the trigger, whether or not
+      // the owner lets the menu close. A forward Tab then moves on past the
+      // trigger. Shift+Tab stops on it, since moving back would skip it.
       if (event.key === 'Tab') {
         ctx.setOpen(false, 'tab');
-        // Focus goes to the trigger whether or not the owner lets the menu
-        // close, so it always leaves the menu: a forward Tab then moves on
-        // from the trigger, and Shift+Tab stops on it.
         ctx.triggerRef.current?.focus();
         if (event.shiftKey) event.preventDefault();
         return;

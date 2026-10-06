@@ -243,6 +243,34 @@ describe('useField', () => {
     }
   });
 
+  it('a press the consumer opts out of also forgets an earlier pending picker', () => {
+    const showPicker = vi.fn();
+    const proto = HTMLSelectElement.prototype as unknown as { showPicker?: () => void };
+    const original = proto.showPicker;
+    proto.showPicker = showPicker;
+    let optOut = false;
+    try {
+      render(
+        <Field.Root aria-label="Size" onMouseDown={(event) => optOut && event.preventDefault()}>
+          <Field.Icon data-testid="icon">
+            <svg />
+          </Field.Icon>
+          <Field.Select value="s" onValueChange={() => {}}>
+            <option value="s">Small</option>
+          </Field.Select>
+        </Field.Root>,
+      );
+      // A press that ends off the shell leaves its picker pending.
+      fireEvent.mouseDown(screen.getByTestId('icon'));
+      optOut = true;
+      fireEvent.mouseDown(screen.getByTestId('icon'));
+      fireEvent.click(screen.getByTestId('icon'), { detail: 1 });
+      expect(showPicker).not.toHaveBeenCalled();
+    } finally {
+      proto.showPicker = original;
+    }
+  });
+
   it('Field.Select works with onValueChange alone', () => {
     const onValueChange = vi.fn();
     render(
