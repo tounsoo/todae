@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { UntranslatedPage } from '../../../components/UntranslatedPage';
 import { ENGLISH_PAGES } from '../../../lib/i18n/englishPages';
@@ -8,6 +9,12 @@ export const dynamicParams = false;
 
 export function generateStaticParams() {
   return untranslatedSlugs('ko').map((slug) => ({ slug: slug.split('/') }));
+}
+
+// The English page is the original; search engines should index that one.
+export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
+  const { slug } = await params;
+  return { alternates: { canonical: `/${slug.join('/')}` } };
 }
 
 export default async function KoreanFallbackPage({ params }: { params: Promise<{ slug: string[] }> }) {

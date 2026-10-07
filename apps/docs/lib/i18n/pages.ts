@@ -4,7 +4,7 @@ import type { Locale } from './config';
 import { ENGLISH_PAGES } from './englishPages';
 
 // next.config pageExtensions.
-const PAGE_FILES = ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'].map((ext) => `page.${ext}`);
+export const PAGE_FILES = ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'].map((ext) => `page.${ext}`);
 
 /** Whether `app/<locale>/<slug>` has a page of its own. Build time only: it reads the file system. */
 export function isTranslated(locale: Locale, slug: string, appDir = join(process.cwd(), 'app')): boolean {

@@ -1,8 +1,9 @@
 import { lstatSync, readdirSync, readFileSync, type Dirent } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { DOCS_ORIGIN } from '../origin';
 import { listComponentMeta } from './meta';
 
-export const DOCS_ORIGIN = 'https://todae-rho.vercel.app';
+export { DOCS_ORIGIN };
 
 export type PageDoc = {
   slug: string;

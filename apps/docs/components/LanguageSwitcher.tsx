@@ -17,6 +17,10 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
               hrefLang={target}
               lang={target}
               aria-current={target === locale ? 'true' : undefined}
+              // usePathname has no query or hash; add them on click so the reader keeps their place.
+              onClick={(event) => {
+                event.currentTarget.href = localizePath(path + window.location.search + window.location.hash, target);
+              }}
             >
               {LOCALE_NAMES[target]}
             </a>

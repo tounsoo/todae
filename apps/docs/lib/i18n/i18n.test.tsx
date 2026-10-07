@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HomeContent } from '../../components/HomeContent';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
@@ -12,13 +12,12 @@ import { UntranslatedPage } from '../../components/UntranslatedPage';
 import { LOCALES } from './config';
 import { DICTIONARIES } from './dictionaries';
 import { ENGLISH_PAGES } from './englishPages';
-import { untranslatedSlugs } from './pages';
+import { PAGE_FILES, untranslatedSlugs } from './pages';
 
 const path = vi.hoisted(() => ({ current: '/ko/button' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
 
 const APP = join(process.cwd(), 'app');
-const PAGE_FILES = ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'].map((ext) => `page.${ext}`);
 
 // Static page slugs under `dir`; dynamic segments are not pages of their own.
 function slugs(dir: string, prefix = ''): string[] {
@@ -79,6 +78,17 @@ describe('docs locales', () => {
     expect(links.map((link) => link.getAttribute('aria-current'))).toEqual([null, 'true']);
   });
 
+  it('keeps the query and hash when switching', () => {
+    path.current = '/tokens';
+    window.history.replaceState(null, '', '/tokens?x=1#contrast');
+    render(<LanguageSwitcher locale="en" />);
+    const korean = screen.getByRole('link', { name: '한국어' });
+    korean.addEventListener('click', (event) => event.preventDefault());
+    fireEvent.click(korean);
+    expect(korean.getAttribute('href')).toBe('/ko/tokens?x=1#contrast');
+    window.history.replaceState(null, '', '/');
+  });
+
   it('switches from the English home page to the Korean one', () => {
     path.current = '/';
     render(<LanguageSwitcher locale="en" />);
@@ -105,6 +115,17 @@ describe('docs locales', () => {
     );
     expect(screen.getByRole('link', { name: 'Tokens' }).getAttribute('href')).toBe('/ko/tokens');
     expect(screen.getByRole('link', { name: 'External' }).getAttribute('href')).toBe('https://example.com');
+  });
+
+  it('localizes every same-site link in a page or demo', () => {
+    // MDX maps markdown links to LocalizedLink, but not a JSX <a>, so those must use LocalizedLink themselves.
+    const files = [join(APP, '(en)'), join(APP, 'ko'), join(process.cwd(), 'components/demos')].flatMap((dir) =>
+      readdirSync(dir, { recursive: true, encoding: 'utf8' })
+        .filter((file) => /\.(mdx|tsx)$/.test(file) && !file.includes('.test.'))
+        .map((file) => join(dir, file)),
+    );
+    expect(files.length).toBeGreaterThan(30);
+    expect(files.filter((file) => /<a\s[^>]*href=["']\/(?!\/)/.test(readFileSync(file, 'utf8')))).toEqual([]);
   });
 
   it('marks an untranslated page as English and links the guide', () => {

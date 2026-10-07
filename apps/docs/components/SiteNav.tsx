@@ -1,10 +1,10 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { DEFAULT_LOCALE, localizePath, type Locale } from '../lib/i18n/config';
+import { localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';
 
-export function SiteNav({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
+export function SiteNav({ locale }: { locale: Locale }) {
   const path = usePathname();
   return (
     <nav className="site-nav" aria-label={DICTIONARIES[locale].siteNav}>

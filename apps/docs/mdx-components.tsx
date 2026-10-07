@@ -16,6 +16,7 @@ function Table(props: ComponentProps<'table'>) {
 
 const components = {
   a: LocalizedLink,
+  LocalizedLink,
   Example,
   PropsTable,
   pre: DocsPre,
