@@ -226,6 +226,35 @@ describe('Menu', () => {
     expect(document.activeElement).toBe(trigger());
   });
 
+  it('closes when focus moves outside some other way, with reason outside', async () => {
+    const onOpenChange = vi.fn();
+    render(<Actions onOpenChange={onOpenChange} />);
+    fireEvent.click(trigger());
+    await raf();
+    act(() => item('Delete').focus());
+    act(() => item('Rename').focus());
+    expect(isOpen()).toBe(true);
+    act(() => screen.getByRole('button', { name: 'After' }).focus());
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'outside');
+    expect(isOpen()).toBe(false);
+  });
+
+  it('stays open when focus goes nowhere or back to the trigger', async () => {
+    const onOpenChange = vi.fn();
+    render(<Actions onOpenChange={onOpenChange} />);
+    fireEvent.click(trigger());
+    await raf();
+    onOpenChange.mockClear();
+    // A focused item removed or a window losing focus: no next target, and
+    // focus is not on anything outside.
+    fireEvent.blur(item('Rename'), { relatedTarget: null });
+    await raf();
+    act(() => trigger().focus());
+    await raf();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(isOpen()).toBe(true);
+  });
+
   it('closes on Tab with reason tab', async () => {
     const onOpenChange = vi.fn();
     render(<Actions onOpenChange={onOpenChange} />);
