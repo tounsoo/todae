@@ -46,7 +46,10 @@ function Root({
       className={cx(styles.root, className)}
       style={separator === undefined ? style : ({ '--todae-breadcrumbs-glyph': cssString(separator), ...style } as CSSProperties)}
     >
-      <ol className={styles.list}>{children}</ol>
+      {/* Safari drops the list role from a list without markers; role="list" keeps it. */}
+      <ol role="list" className={styles.list}>
+        {children}
+      </ol>
     </nav>
   );
 }

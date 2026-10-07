@@ -24,6 +24,7 @@ describe('Breadcrumbs', () => {
     const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
     const list = within(nav).getByRole('list');
     expect(list.tagName).toBe('OL');
+    expect(list.getAttribute('role')).toBe('list');
     expect(within(list).getAllByRole('listitem')).toHaveLength(3);
   });
 

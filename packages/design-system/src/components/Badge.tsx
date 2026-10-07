@@ -1,8 +1,9 @@
 import type { ComponentPropsWithRef } from 'react';
+import type { AlertTone } from './Alert';
 import { cx } from './props';
 import styles from './Badge.module.css';
 
-export type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'critical';
+export type BadgeTone = 'neutral' | AlertTone;
 
 /** A static label. It has no role, so it is read as part of the text around it. */
 export type BadgeRootProps = {

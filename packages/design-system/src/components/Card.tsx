@@ -22,7 +22,7 @@ function Header({ className, ...props }: CardHeaderProps) {
 }
 
 function Body({ className, ...props }: CardBodyProps) {
-  return <div {...props} className={cx(styles.body, className)} />;
+  return <div {...props} className={className} />;
 }
 
 function Footer({ className, ...props }: CardFooterProps) {
