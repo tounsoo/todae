@@ -20,7 +20,8 @@ const getServerSuffix = () => '';
 
 /** Links to the current page in each language, or to each home page with `toHome`. Each name is written in its own language. */
 export function LanguageSwitcher({ locale, toHome = false }: { locale: Locale; toHome?: boolean }) {
-  const path = usePathname();
+  // Null outside the app router, such as in a component test.
+  const path = usePathname() ?? '/';
   const suffix = useSyncExternalStore(subscribe, getSuffix, getServerSuffix);
   return (
     <nav className="language-switcher" aria-label={DICTIONARIES[locale].languageNav}>

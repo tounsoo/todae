@@ -30,7 +30,6 @@ type TokenTab = keyof typeof TABS;
 type AppearanceChoice = 'system' | 'light' | 'dark';
 type DensityChoice = 'compact' | 'comfortable' | 'spacious';
 
-
 function toHex(value: string): string {
   if (/^#[0-9a-fA-F]{6}$/.test(value)) return value.toLowerCase();
   if (typeof document === 'undefined') return '#000000';
