@@ -166,10 +166,11 @@ describe('content parts in a browser', () => {
         <a href="#c" aria-current="false">
           False
         </a>
-        <a href="#d" aria-current="FALSE">
+        {/* React types allow only the ARIA tokens, but markup can carry these. */}
+        <a href="#d" {...{ 'aria-current': 'FALSE' as 'false' }}>
           Upper false
         </a>
-        <a href="#e" aria-current="">
+        <a href="#e" {...{ 'aria-current': '' as 'false' }}>
           Empty
         </a>
       </Themed>,
