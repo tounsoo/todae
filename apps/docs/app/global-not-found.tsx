@@ -9,7 +9,7 @@ export const metadata = localeMetadata('en');
 // It is static and cannot tell which language the reader wanted, so it speaks all of them.
 export default function GlobalNotFound() {
   return (
-    <SiteShell locale="en">
+    <SiteShell locale="en" notFound>
       <h1>404</h1>
       {LOCALES.map((locale) => (
         <p key={locale} lang={locale}>

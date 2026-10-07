@@ -37,6 +37,31 @@ describe('docs locales', () => {
     expect(Object.keys(ENGLISH_PAGES).sort()).toEqual(slugs(join(APP, '(en)')).sort());
   });
 
+  it('keeps each translation in step with its English page', () => {
+    // A translation changes prose only. When an English page changes its imports, demos, props tables,
+    // code or links, its translations must change with it.
+    const fences = (text: string) => text.match(/^```[^\n]*\n[\s\S]*?^```$/gm) ?? [];
+    const outsideCode = (text: string) => fences(text).reduce((rest, block) => rest.replace(block, ''), text);
+    const shape = (text: string) => {
+      const prose = outsideCode(text);
+      return {
+        imports: prose.match(/^import .*$/gm) ?? [],
+        code: fences(text),
+        tags: (prose.match(/<\/?[A-Z][\w.]*/g) ?? []).sort(),
+        props: prose.match(/<PropsTable\s+name="[^"]+"/g) ?? [],
+        links: (prose.match(/\]\([^)\s]+\)|href=["'][^"']+["']/g) ?? []).sort(),
+      };
+    };
+    for (const locale of LOCALES.filter((item) => item !== 'en')) {
+      for (const slug of slugs(join(APP, locale))) {
+        const file = join(APP, locale, slug, 'page.mdx');
+        if (!existsSync(file)) continue;
+        const english = readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8');
+        expect(shape(readFileSync(file, 'utf8')), `${locale}/${slug}`).toEqual(shape(english));
+      }
+    }
+  });
+
   it('translates only pages that exist in English', () => {
     const english = new Set(Object.keys(ENGLISH_PAGES));
     for (const locale of LOCALES.filter((item) => item !== 'en')) {
@@ -118,6 +143,13 @@ describe('docs locales', () => {
     });
     expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/tokens#props');
     window.history.replaceState(null, '', '/');
+  });
+
+  it('sends a 404 to each home page, since the path is missing in every language', () => {
+    path.current = '/ko/nope';
+    render(<LanguageSwitcher locale="en" toHome />);
+    const hrefs = [...screen.getByRole('navigation', { name: 'Language' }).querySelectorAll('a')].map((link) => link.getAttribute('href'));
+    expect(hrefs).toEqual(['/', '/ko']);
   });
 
   it('switches from the English home page to the Korean one', () => {

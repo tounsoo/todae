@@ -31,10 +31,12 @@ export function stripLocale(path: string): string {
 
 /**
  * The same page in another locale. Only same-site absolute paths change;
- * external links, protocol-relative URLs, hashes and the API keep theirs.
+ * external links, protocol-relative URLs, hashes, the API, Next's assets and
+ * files such as `/favicon.ico` keep theirs.
  */
 export function localizePath(href: string, locale: Locale): string {
-  if (!href.startsWith('/') || href.startsWith('//') || /^\/api(\/|$)/.test(href)) return href;
+  if (!href.startsWith('/') || href.startsWith('//') || /^\/(api|_next)(\/|$)/.test(href)) return href;
+  if (/\.[a-z0-9]+$/i.test(href.split(/[?#]/)[0] ?? '')) return href;
   const path = stripLocale(href);
   if (locale === DEFAULT_LOCALE) return path;
   return path === '/' || /^\/[?#]/.test(path) ? `/${locale}${path.slice(1)}` : `/${locale}${path}`;

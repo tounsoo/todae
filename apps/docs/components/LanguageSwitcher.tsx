@@ -18,8 +18,8 @@ function subscribe(onChange: () => void) {
 const getSuffix = () => window.location.search + window.location.hash;
 const getServerSuffix = () => '';
 
-/** Links to the current page in each language. Each name is written in its own language. */
-export function LanguageSwitcher({ locale }: { locale: Locale }) {
+/** Links to the current page in each language, or to each home page with `toHome`. Each name is written in its own language. */
+export function LanguageSwitcher({ locale, toHome = false }: { locale: Locale; toHome?: boolean }) {
   const path = usePathname();
   const suffix = useSyncExternalStore(subscribe, getSuffix, getServerSuffix);
   return (
@@ -28,7 +28,7 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
         {LOCALES.map((target) => (
           <li key={target}>
             <a
-              href={localizePath(path + suffix, target)}
+              href={localizePath(toHome ? '/' : path + suffix, target)}
               hrefLang={target}
               lang={target}
               aria-current={target === locale ? 'true' : undefined}

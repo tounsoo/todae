@@ -10,8 +10,8 @@ const nextConfig = {
   experimental: { globalNotFound: true },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   outputFileTracingIncludes: {
-    // The MCP reads English pages only. Parentheses are glob syntax, so escape the route group.
-    '/api/[transport]': ['./app/\\(en\\)/**/page.mdx'],
+    // The MCP reads English pages only.
+    '/api/[transport]': ['./app/(en)/**/page.mdx'],
   },
   // Every English redirect also applies under each locale prefix.
   redirects: async () =>
