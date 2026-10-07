@@ -30,6 +30,10 @@ describe('locale paths', () => {
     expect(localizePath('/button', 'en')).toBe('/button');
   });
 
+  it('localizes a page whose slug has a dot', () => {
+    expect(localizePath('/guides/v2.0', 'ko')).toBe('/ko/guides/v2.0');
+  });
+
   it('leaves other links alone', () => {
     for (const href of ['https://example.com/x', '//cdn.example.com/x', '#props', 'mailto:a@b.c', '/api/mcp', '/_next/static/x.js', '/favicon.ico', '/todae-theme.json?v=1', 'relative']) {
       expect(localizePath(href, 'ko')).toBe(href);

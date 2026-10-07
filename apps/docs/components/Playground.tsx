@@ -148,7 +148,7 @@ export function Playground({ locale }: { locale: Locale }) {
                   checked={appearance === value}
                   onChange={() => setAppearance(value)}
                 />
-                {value}
+                <span lang="en">{value}</span>
               </label>
             ))}
           </div>
@@ -165,7 +165,7 @@ export function Playground({ locale }: { locale: Locale }) {
                   checked={density === value}
                   onChange={() => setDensity(value)}
                 />
-                {value}
+                <span lang="en">{value}</span>
               </label>
             ))}
           </div>
@@ -193,7 +193,7 @@ export function Playground({ locale }: { locale: Locale }) {
               tabIndex={tab === name ? 0 : -1}
               onClick={() => setTab(name)}
             >
-              {name}
+              <span lang="en">{name}</span>
             </button>
           ))}
         </div>
@@ -231,7 +231,8 @@ export function Playground({ locale }: { locale: Locale }) {
             <Text as="strong" weight="medium">
               {t.buttons}
             </Text>
-            <Stack direction="row">
+            {/* Variant names and the Text component name are Todae's own names, in English. */}
+            <Stack direction="row" lang="en">
               <Button.Root>Primary</Button.Root>
               <Button.Root variant="secondary">Secondary</Button.Root>
               <Button.Root variant="ghost">Ghost</Button.Root>
@@ -240,7 +241,7 @@ export function Playground({ locale }: { locale: Locale }) {
             <Text tone="muted" size="s">
               {t.buttonHint}
             </Text>
-            <Text as="strong" weight="medium">
+            <Text as="strong" weight="medium" lang="en">
               Text
             </Text>
             <Text>{t.defaultTone}</Text>

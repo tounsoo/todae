@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HomeContent } from '../../components/HomeContent';
+import { Example } from '../../components/Example';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { LocalizedLink } from '../../components/LocalizedLink';
 import { SiteNav } from '../../components/SiteNav';
@@ -191,6 +192,26 @@ describe('docs locales', () => {
     // <a> or next/link's <Link> with href="/x", href={'/x'} or href={`/x`}.
     const sameSite = /<(a|Link)\s[^>]*href=\{?["'`]\/(?!\/)/;
     expect(files.filter((file) => sameSite.test(readFileSync(file, 'utf8')))).toEqual([]);
+  });
+
+  it('names examples in the page language and marks their English demo copy', () => {
+    path.current = '/ko/button';
+    render(
+      <Example>
+        <button type="button">Save</button>
+      </Example>,
+    );
+    const group = screen.getByRole('group', { name: '예시' });
+    expect(group.getAttribute('lang')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Save' }).closest('[lang]')?.getAttribute('lang')).toBe('en');
+    cleanup();
+    path.current = '/button';
+    render(
+      <Example>
+        <button type="button">Save</button>
+      </Example>,
+    );
+    expect(screen.getByRole('group', { name: 'Example' }).querySelector('[lang]')).toBeNull();
   });
 
   it('marks an untranslated page as English and links the guide', () => {

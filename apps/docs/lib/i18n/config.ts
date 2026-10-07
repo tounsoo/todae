@@ -36,7 +36,7 @@ export function stripLocale(path: string): string {
  */
 export function localizePath(href: string, locale: Locale): string {
   if (!href.startsWith('/') || href.startsWith('//') || /^\/(api|_next)(\/|$)/.test(href)) return href;
-  if (/\.[a-z0-9]+$/i.test(href.split(/[?#]/)[0] ?? '')) return href;
+  if (/\.(css|gif|ico|jpe?g|js|json|pdf|png|svg|txt|webmanifest|webp|woff2?|xml)$/i.test(href.split(/[?#]/)[0] ?? '')) return href;
   const path = stripLocale(href);
   if (locale === DEFAULT_LOCALE) return path;
   return path === '/' || /^\/[?#]/.test(path) ? `/${locale}${path.slice(1)}` : `/${locale}${path}`;

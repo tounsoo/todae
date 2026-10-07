@@ -1,22 +1,22 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
-import { DEFAULT_LOCALE, localeOf } from '../lib/i18n/config';
+import { DEFAULT_LOCALE } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
+import { useLocale } from '../lib/i18n/useLocale';
 
 export function Example({ children, block }: { children: ReactNode; block?: boolean }) {
-  // Null outside the app router, such as in a demo's own test.
-  const locale = localeOf(usePathname() ?? '/');
+  const locale = useLocale();
   return (
-    <div
-      className={block ? 'example example-block' : 'example'}
-      role="group"
-      aria-label={DICTIONARIES[locale].example}
-      // Demo copy is written in English; mark it so it is read as English on other locales' pages.
-      lang={locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE}
-    >
-      {children}
+    <div className={block ? 'example example-block' : 'example'} role="group" aria-label={DICTIONARIES[locale].example}>
+      {locale === DEFAULT_LOCALE ? (
+        children
+      ) : (
+        // Demo copy is written in English; mark it so other locales' pages read it as English.
+        <div lang={DEFAULT_LOCALE} style={{ display: 'contents' }}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }
