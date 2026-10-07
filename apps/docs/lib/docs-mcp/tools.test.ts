@@ -128,7 +128,7 @@ describe('docs mcp tools', () => {
     const combobox = whenToUse('useCombobox');
     expect(hook).toMatchObject({
       status: 'present',
-      whenToUse: 'Choose popover or sheet at runtime: coarse pointer or width under 640px → sheet. SSR and first paint are popover. `forced` overrides.',
+      whenToUse: 'Choose popover or sheet at runtime: coarse pointer or width under 640px (by default) → sheet. SSR and first paint are popover. `forced` overrides.',
       whenNotToUse: 'Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → [usePopover](https://todae-rho.vercel.app/utilities/use-popover) alone.',
     });
     expect(hook).not.toHaveProperty('scope');
