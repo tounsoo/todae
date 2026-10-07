@@ -170,6 +170,19 @@ describe('Fieldset', () => {
     expect(label().hasAttribute('data-disabled')).toBe(true);
   });
 
+  it('keeps a control in the legend out of the fieldset invalid state', () => {
+    render(
+      <Fieldset.Root invalid>
+        <Fieldset.Legend>
+          <Checkbox>Select all</Checkbox>
+        </Fieldset.Legend>
+        <Checkbox>Item</Checkbox>
+      </Fieldset.Root>,
+    );
+    expect(screen.getByRole('checkbox', { name: 'Select all' }).hasAttribute('aria-invalid')).toBe(false);
+    expect(screen.getByRole('checkbox', { name: 'Item' }).getAttribute('aria-invalid')).toBe('true');
+  });
+
   it('leaves controls outside a fieldset alone', () => {
     render(<Checkbox>Alone</Checkbox>);
     const box = screen.getByRole('checkbox');

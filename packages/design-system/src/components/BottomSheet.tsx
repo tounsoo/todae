@@ -261,7 +261,7 @@ function BottomSheetRoot({
   // Records the focus to return to, so it runs before showModal moves focus.
   // Keyed on present: the page behind stays inert until the element leaves
   // at the end of the exit motion, and only then can focus go back.
-  useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: sheetRef });
+  useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: sheetRef, nativeReturn: true });
   // A modal <dialog> puts the sheet in the top layer, makes the rest of the
   // page inert and keeps focus inside, so no portal or focus trap is needed.
   // closedby="none" turns Escape off natively when dismissOnEscape is false.

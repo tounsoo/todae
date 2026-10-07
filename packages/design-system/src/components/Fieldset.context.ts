@@ -7,8 +7,9 @@ const NONE: FieldsetContextValue = { disabled: false, invalid: false };
 export const FieldsetContext = createContext<FieldsetContextValue>(NONE);
 
 /**
- * What the controls in a fieldset's legend see. Natively they are not
- * disabled by the fieldset the legend names, only by fieldsets around it.
+ * What the controls in a fieldset's legend see: the fieldsets around it.
+ * Natively they are not disabled by the fieldset the legend names, and they
+ * are not part of the group its invalid state is about.
  */
 export const FieldsetLegendContext = createContext<FieldsetContextValue>(NONE);
 

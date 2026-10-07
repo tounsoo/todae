@@ -22,10 +22,9 @@ function Root({ disabled, invalid, className, ...props }: FieldsetRootProps) {
   const outer = useContext(FieldsetContext);
   const { disabled: isDisabled, invalid: isInvalid } = useFieldsetState({ disabled, invalid });
   const ctx = useMemo(() => ({ disabled: isDisabled, invalid: isInvalid }), [isDisabled, isInvalid]);
-  const legendCtx = useMemo(() => ({ disabled: outer.disabled, invalid: isInvalid }), [outer.disabled, isInvalid]);
   return (
     <FieldsetContext.Provider value={ctx}>
-      <FieldsetLegendContext.Provider value={legendCtx}>
+      <FieldsetLegendContext.Provider value={outer}>
         <fieldset
           {...props}
           disabled={disabled}
