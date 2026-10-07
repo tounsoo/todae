@@ -438,6 +438,9 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'breadcrumbs.font.size',
   'breadcrumbs.gap',
   'breadcrumbs.separator.fg',
+  'toolbar.gap',
+  'toolbar.separator.color',
+  'toolbar.separator.thickness',
 ] as const;
 
 export const THEME_OVERRIDE_TYPES = {
@@ -872,4 +875,7 @@ export const THEME_OVERRIDE_TYPES = {
   'breadcrumbs.font.size': 'dimension',
   'breadcrumbs.gap': 'dimension',
   'breadcrumbs.separator.fg': 'color',
+  'toolbar.gap': 'dimension',
+  'toolbar.separator.color': 'color',
+  'toolbar.separator.thickness': 'dimension',
 } as const;

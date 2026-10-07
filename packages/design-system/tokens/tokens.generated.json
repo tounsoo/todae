@@ -4365,6 +4365,33 @@
       "ref": "color.fg.muted",
       "layer": "contract",
       "context": null
+    },
+    {
+      "path": "toolbar.gap",
+      "type": "dimension",
+      "cssVar": "--todae-toolbar-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toolbar.separator.color",
+      "type": "color",
+      "cssVar": "--todae-toolbar-separator-color",
+      "cssValue": "var(--todae-color-border-subtle)",
+      "ref": "color.border.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toolbar.separator.thickness",
+      "type": "dimension",
+      "cssVar": "--todae-toolbar-separator-thickness",
+      "cssValue": "1px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
     }
   ]
 }

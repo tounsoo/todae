@@ -181,6 +181,18 @@
     "children": {
       "en": "Label and optional Button.Icon. Order is leading or trailing.",
       "ko": "레이블과 선택적 Button.Icon. 순서에 따라 앞쪽 또는 뒤쪽에 놓입니다."
+    },
+    "pressed": {
+      "en": "Controlled pressed state. Makes the button a toggle with aria-pressed.",
+      "ko": "제어되는 눌림 상태. 버튼을 aria-pressed가 있는 토글로 만듭니다."
+    },
+    "defaultPressed": {
+      "en": "Starting pressed state for an uncontrolled toggle. Makes the button a toggle with aria-pressed.",
+      "ko": "제어되지 않는 토글의 처음 눌림 상태. 버튼을 aria-pressed가 있는 토글로 만듭니다."
+    },
+    "onPressedChange": {
+      "en": "Called with the new state when a toggle is clicked. onClick runs first; preventDefault() there skips the change.",
+      "ko": "토글을 클릭하면 새 상태로 호출됩니다. onClick이 먼저 실행되며, 거기서 preventDefault()를 부르면 바뀌지 않습니다."
     }
   },
   "Card.Body": {
@@ -1027,6 +1039,82 @@
     "children": {
       "en": "Text content.",
       "ko": "텍스트 내용."
+    }
+  },
+  "ToggleGroup.Item": {
+    "value": {
+      "en": "Identifies the item in the group value.",
+      "ko": "묶음 값에서 항목을 식별합니다."
+    },
+    "disabled": {
+      "en": "Disables this item.",
+      "ko": "이 항목을 비활성화합니다."
+    },
+    "children": {
+      "en": "Label, or a Button.Icon with aria-label.",
+      "ko": "레이블, 또는 aria-label이 있는 Button.Icon."
+    }
+  },
+  "ToggleGroup.Root": {
+    "aria-label": {
+      "en": "Names the group, such as \"Alignment\".",
+      "ko": "\"Alignment\"처럼 묶음의 이름을 붙입니다."
+    },
+    "selectionMode": {
+      "en": "Single presses one item at most; pressing it again clears it. Multiple presses any number.",
+      "ko": "single은 많아야 한 항목을 누르며, 다시 누르면 해제됩니다. multiple은 몇 개든 누릅니다."
+    },
+    "value": {
+      "en": "Controlled pressed value: a value or null for single, an array for multiple.",
+      "ko": "제어되는 눌림 값: single은 값이나 null, multiple은 배열."
+    },
+    "defaultValue": {
+      "en": "Starting pressed value when uncontrolled.",
+      "ko": "제어되지 않을 때의 처음 눌림 값."
+    },
+    "onChange": {
+      "en": "Called with the new pressed value when an item is pressed.",
+      "ko": "항목을 누르면 새 눌림 값으로 호출됩니다."
+    },
+    "orientation": {
+      "en": "Arrow keys that move focus. Horizontal items join like Button.Group.",
+      "ko": "포커스를 옮기는 화살표 키. 가로 항목은 Button.Group처럼 붙습니다."
+    },
+    "disabled": {
+      "en": "Disables every item.",
+      "ko": "모든 항목을 비활성화합니다."
+    },
+    "children": {
+      "en": "ToggleGroup.Item elements.",
+      "ko": "ToggleGroup.Item 요소."
+    }
+  },
+  "Toolbar.Group": {
+    "aria-label": {
+      "en": "Names the group, such as \"Text style\".",
+      "ko": "\"Text style\"처럼 묶음의 이름을 붙입니다."
+    },
+    "children": {
+      "en": "Controls in the group.",
+      "ko": "묶음 안의 컨트롤."
+    }
+  },
+  "Toolbar.Root": {
+    "aria-label": {
+      "en": "Names the toolbar. Pass this or aria-labelledby.",
+      "ko": "툴바의 이름. 이 값이나 aria-labelledby를 전달하세요."
+    },
+    "orientation": {
+      "en": "Left and Right move focus in a horizontal toolbar, Up and Down in a vertical one. Left and Right follow the text direction.",
+      "ko": "가로 툴바에서는 왼쪽, 오른쪽 키가, 세로 툴바에서는 위, 아래 키가 포커스를 옮깁니다. 왼쪽, 오른쪽은 텍스트 방향을 따릅니다."
+    },
+    "loop": {
+      "en": "Wrap from the last control to the first and back.",
+      "ko": "마지막 컨트롤에서 처음으로, 처음에서 마지막으로 돌아갑니다."
+    },
+    "children": {
+      "en": "Buttons, toggles, menu triggers and other controls, with Toolbar.Group and Toolbar.Separator between them.",
+      "ko": "버튼, 토글, 메뉴 트리거 등의 컨트롤과 그 사이의 Toolbar.Group, Toolbar.Separator."
     }
   },
   "Tooltip.Root": {

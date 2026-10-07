@@ -507,6 +507,9 @@
   --todae-breadcrumbs-font-size: var(--todae-font-size-2);
   --todae-breadcrumbs-gap: var(--todae-space-inline-gap);
   --todae-breadcrumbs-separator-fg: var(--todae-color-fg-muted);
+  --todae-toolbar-gap: var(--todae-space-inline-gap);
+  --todae-toolbar-separator-color: var(--todae-color-border-subtle);
+  --todae-toolbar-separator-thickness: 1px;
   --todae-button-font-size: var(--todae-button-base-font-size);
   --todae-button-font-weight: var(--todae-button-base-font-weight);
   --todae-button-gap: var(--todae-button-base-gap);

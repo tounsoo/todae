@@ -26,6 +26,8 @@ import {
   Switch,
   Tabs,
   Text,
+  ToggleGroup,
+  Toolbar,
   Tooltip,
   composeRefs,
   usePopover,
@@ -336,6 +338,20 @@ const cases: Case[] = [
       <Breadcrumbs.Root>
         <Breadcrumbs.Item {...p}>Home</Breadcrumbs.Item>
       </Breadcrumbs.Root>
+    ),
+  ],
+  ['Toolbar.Root', (p) => <Toolbar.Root {...p} aria-label="t" />],
+  ['Toolbar.Group', (p) => <Toolbar.Root aria-label="t"><Toolbar.Group {...p} /></Toolbar.Root>],
+  ['Toolbar.Separator', (p) => <Toolbar.Root aria-label="t"><Toolbar.Separator {...p} /></Toolbar.Root>],
+  ['ToggleGroup.Root', (p) => <ToggleGroup.Root {...p} aria-label="g" />],
+  [
+    'ToggleGroup.Item',
+    (p) => (
+      <ToggleGroup.Root aria-label="g">
+        <ToggleGroup.Item {...p} value="a">
+          a
+        </ToggleGroup.Item>
+      </ToggleGroup.Root>
     ),
   ],
 ];

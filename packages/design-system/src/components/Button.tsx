@@ -7,9 +7,11 @@ import {
   useState,
   type ButtonHTMLAttributes,
   type ComponentPropsWithRef,
+  type MouseEvent,
   type ReactNode,
   type Ref,
 } from 'react';
+import { useControlledState } from '../hooks/useControlledState';
 import { useTooltip } from '../hooks/useTooltip';
 import styles from './Button.module.css';
 import { useComposedRefs } from './props';
@@ -28,9 +30,16 @@ export interface ButtonVariants {
 
 export type ButtonVariant = keyof ButtonVariants;
 
+/**
+ * Passing `pressed` or `defaultPressed` makes the button a toggle: it sets
+ * `aria-pressed` and flips on click, unless `onClick` calls `preventDefault()`.
+ */
 export type ButtonRootProps = {
   variant?: ButtonVariant;
   tooltip?: boolean;
+  pressed?: boolean;
+  defaultPressed?: boolean;
+  onPressedChange?: (pressed: boolean) => void;
   ref?: Ref<HTMLButtonElement | null>;
 } & ButtonHTMLAttributes<HTMLButtonElement>;
 
@@ -101,6 +110,10 @@ function Root({
   className,
   type = 'button',
   tooltip = true,
+  pressed: pressedProp,
+  defaultPressed,
+  onPressedChange,
+  onClick,
   ref,
   children,
   style,
@@ -111,6 +124,14 @@ function Root({
   ...props
 }: ButtonRootProps) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const toggle = pressedProp !== undefined || defaultPressed !== undefined;
+  const [pressed, setPressed] = useControlledState(pressedProp, defaultPressed ?? false);
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event);
+    if (!toggle || event.defaultPrevented) return;
+    setPressed(!pressed);
+    onPressedChange?.(!pressed);
+  };
   const [read, setRead] = useState<Content | null>(null);
   const direct = hint(children);
   const iconOnly = read ? isIconOnly(read) : direct.iconOnly;
@@ -216,6 +237,8 @@ function Root({
       {...props}
       {...trigger}
       type={type}
+      aria-pressed={toggle ? pressed : props['aria-pressed']}
+      onClick={handleClick}
       className={[styles.root, className].filter(Boolean).join(' ')}
       data-button-variant={variant === 'primary' ? undefined : variant}
       data-icon-only={iconOnly ? '' : undefined}

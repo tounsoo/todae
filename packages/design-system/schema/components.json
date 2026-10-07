@@ -363,6 +363,24 @@
           "default": "true"
         },
         {
+          "name": "pressed",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled pressed state. Makes the button a toggle with aria-pressed."
+        },
+        {
+          "name": "defaultPressed",
+          "type": "boolean",
+          "required": false,
+          "description": "Starting pressed state for an uncontrolled toggle. Makes the button a toggle with aria-pressed."
+        },
+        {
+          "name": "onPressedChange",
+          "type": "(pressed: boolean) => void",
+          "required": false,
+          "description": "Called with the new state when a toggle is clicked. onClick runs first; preventDefault() there skips the change."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
@@ -1870,6 +1888,143 @@
           "description": "Themed subtree."
         }
       ]
+    },
+    {
+      "name": "ToggleGroup.Item",
+      "description": "A secondary Button.Root with aria-pressed from the group. Takes Button.Root props except the pressed ones.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Identifies the item in the group value."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables this item.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Label, or a Button.Icon with aria-label."
+        }
+      ]
+    },
+    {
+      "name": "ToggleGroup.Root",
+      "description": "role=\"group\" of toggle buttons with one tab stop and arrow-key focus. Inside a Toolbar, the toolbar owns the arrow keys. Takes native div attributes.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the group, such as \"Alignment\"."
+        },
+        {
+          "name": "selectionMode",
+          "type": "\"single\" | \"multiple\"",
+          "required": false,
+          "description": "Single presses one item at most; pressing it again clears it. Multiple presses any number.",
+          "default": "\"single\""
+        },
+        {
+          "name": "value",
+          "type": "string | null | readonly string[]",
+          "required": false,
+          "description": "Controlled pressed value: a value or null for single, an array for multiple."
+        },
+        {
+          "name": "defaultValue",
+          "type": "string | null | readonly string[]",
+          "required": false,
+          "description": "Starting pressed value when uncontrolled."
+        },
+        {
+          "name": "onChange",
+          "type": "(value: string | null) => void | (value: string[]) => void",
+          "required": false,
+          "description": "Called with the new pressed value when an item is pressed."
+        },
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false,
+          "description": "Arrow keys that move focus. Horizontal items join like Button.Group.",
+          "default": "\"horizontal\", or the toolbar's"
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables every item.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "ToggleGroup.Item elements."
+        }
+      ]
+    },
+    {
+      "name": "Toolbar.Group",
+      "description": "role=\"group\" around controls that belong together. Takes native div attributes.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the group, such as \"Text style\"."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Controls in the group."
+        }
+      ]
+    },
+    {
+      "name": "Toolbar.Root",
+      "description": "role=\"toolbar\" with one tab stop. Arrow keys, Home and End move focus between the focusable controls inside, wrappers included. Takes native div attributes.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the toolbar. Pass this or aria-labelledby."
+        },
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false,
+          "description": "Left and Right move focus in a horizontal toolbar, Up and Down in a vertical one. Left and Right follow the text direction.",
+          "default": "\"horizontal\""
+        },
+        {
+          "name": "loop",
+          "type": "boolean",
+          "required": false,
+          "description": "Wrap from the last control to the first and back.",
+          "default": "true"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Buttons, toggles, menu triggers and other controls, with Toolbar.Group and Toolbar.Separator between them."
+        }
+      ]
+    },
+    {
+      "name": "Toolbar.Separator",
+      "description": "role=\"separator\" drawn across the toolbar: a vertical rule in a horizontal toolbar, a horizontal one in a vertical toolbar. Not focusable.",
+      "props": []
     },
     {
       "name": "Tooltip.Root",

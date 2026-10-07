@@ -1,0 +1,38 @@
+@layer todae.components {
+  .root {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--todae-toolbar-gap);
+  }
+
+  .root[data-orientation='vertical'] {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+
+  .group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--todae-toolbar-gap);
+  }
+
+  .root[data-orientation='vertical'] > .group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .separator {
+    flex: none;
+    align-self: stretch;
+    inline-size: var(--todae-toolbar-separator-thickness);
+    background: var(--todae-toolbar-separator-color);
+  }
+
+  .root[data-orientation='vertical'] > .separator {
+    inline-size: auto;
+    block-size: var(--todae-toolbar-separator-thickness);
+  }
+}

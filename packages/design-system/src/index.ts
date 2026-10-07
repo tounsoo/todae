@@ -28,6 +28,15 @@ export {
   type ButtonVariant,
   type ButtonVariants,
 } from './components/Button';
+export { Toolbar, type ToolbarGroupProps, type ToolbarOrientation, type ToolbarRootProps, type ToolbarSeparatorProps } from './components/Toolbar';
+export {
+  ToggleGroup,
+  type ToggleGroupItemProps,
+  type ToggleGroupMultipleProps,
+  type ToggleGroupOrientation,
+  type ToggleGroupRootProps,
+  type ToggleGroupSingleProps,
+} from './components/ToggleGroup';
 export { Dialog, type DialogCloseReason, type DialogRootProps } from './components/Dialog';
 export { composeRefs } from './components/props';
 export {
