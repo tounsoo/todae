@@ -23,9 +23,16 @@ const path = vi.hoisted(() => ({ current: '/ko/button' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
 // Lets a test pretend a page is untranslated; every page is translated today.
 const untranslated = vi.hoisted(() => ({ current: undefined as Record<string, string[]> | undefined }));
+const untranslatedRead = vi.hoisted(() => ({ current: undefined as (() => void) | undefined }));
 vi.mock('./pages', async (importOriginal) => {
   const pages = await importOriginal<typeof import('./pages')>();
-  return { ...pages, untranslatedByLocale: (appDir?: string) => untranslated.current ?? pages.untranslatedByLocale(appDir) };
+  return {
+    ...pages,
+    untranslatedByLocale: (appDir?: string) => {
+      untranslatedRead.current?.();
+      return untranslated.current ?? pages.untranslatedByLocale(appDir);
+    },
+  };
 });
 
 const APP = join(process.cwd(), 'app');
@@ -87,6 +94,7 @@ describe('docs locales', () => {
       mkdirSync(join(app, 'ko', 'guides', 'build-on-todae'), { recursive: true });
       writeFileSync(join(app, 'ko', 'guides', 'build-on-todae', 'page.mdx'), '# Guide\n');
       const fallback = untranslatedSlugs('ko', app);
+      expect(untranslatedByLocale(app)).toEqual({ ko: fallback });
       expect(fallback).toContain('button');
       expect(fallback).not.toContain('guides/build-on-todae');
       expect(fallback).toHaveLength(Object.keys(ENGLISH_PAGES).length - 1);
@@ -226,7 +234,6 @@ describe('docs locales', () => {
   });
 
   it('gives the shell each locale’s untranslated pages, and no alternates on a 404', () => {
-    expect(untranslatedByLocale()).toEqual({ ko: untranslatedSlugs('ko') });
     const alternates = (markup: string) => [...markup.matchAll(/<link[^>]*rel="alternate"[^>]*>/g)].length;
     path.current = '/ko/tokens';
     try {
@@ -234,11 +241,16 @@ describe('docs locales', () => {
       expect(alternates(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>))).toBe(3);
       untranslated.current = { ko: ['tokens'] };
       expect(alternates(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>))).toBe(0);
-      untranslated.current = { ko: [] };
+      // A 404 has no page to pair, so it does not read which pages exist at all.
+      untranslated.current = undefined;
+      untranslatedRead.current = vi.fn();
       path.current = '/_not-found';
       expect(alternates(renderToStaticMarkup(<SiteShell locale="en" notFound>x</SiteShell>))).toBe(0);
+      expect(untranslatedRead.current).not.toHaveBeenCalled();
     } finally {
       untranslated.current = undefined;
+      untranslatedRead.current = undefined;
+      path.current = '/ko/button';
     }
   });
 
