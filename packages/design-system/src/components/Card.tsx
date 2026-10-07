@@ -3,9 +3,9 @@ import { cx } from './props';
 import styles from './Card.module.css';
 
 /**
- * A bordered surface that groups related content. It has no role: render it as
- * the element you need with native attributes, such as `role="region"` and a
- * name for a card that is a landmark. A card is not a button or a link; put the
+ * A bordered surface that groups related content. It is a `div` with no role: pass
+ * native attributes, such as `role="region"` and a name for a card that is a
+ * landmark. A card is not a button or a link; put the
  * actions inside it.
  */
 export type CardRootProps = ComponentPropsWithRef<'div'>;

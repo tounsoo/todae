@@ -12,6 +12,12 @@ export const meta = {
       description: 'Landmark name. The default is English, so pass a name in your app\'s language.',
     },
     {
+      name: 'aria-labelledby',
+      type: 'string',
+      required: false,
+      description: 'Id of an element that names the landmark. When set, the default name is dropped.',
+    },
+    {
       name: 'separator',
       type: 'string',
       required: false,

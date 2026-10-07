@@ -16,7 +16,7 @@ export function BreadcrumbsTrail() {
 
 export function BreadcrumbsChevron() {
   return (
-    <Breadcrumbs.Root separator="›" aria-label="이동 경로">
+    <Breadcrumbs.Root separator="›" aria-label="이동 경로" lang="ko">
       <Breadcrumbs.Item>
         <a href="#home">홈</a>
       </Breadcrumbs.Item>

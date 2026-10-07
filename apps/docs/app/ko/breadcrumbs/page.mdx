@@ -2,7 +2,7 @@ import { BreadcrumbsChevron, BreadcrumbsTrail } from '../../../components/demos/
 
 # Breadcrumbs
 
-현재 페이지 위에 있는 페이지들의 경로입니다. `Breadcrumbs.Root`는 순서 있는 목록을 감싼 `nav` 랜드마크이고, 각 `Breadcrumbs.Item`은 목록 항목입니다. 각 항목에는 `a`나 라우터의 링크 같은 링크를 넣고, 마지막 항목에는 일반 텍스트를 넣어 `current`로 표시하세요. 그러면 `aria-current="page"`가 붙습니다.
+현재 페이지 위에 있는 페이지들의 경로입니다. `Breadcrumbs.Root`는 순서 있는 목록을 감싼 `nav` 랜드마크이고, 각 `Breadcrumbs.Item`은 목록 항목입니다. 각 항목에는 `a`나 라우터의 링크 같은 링크를 넣고, 마지막 항목에는 일반 텍스트를 넣어 `current`로 표시하세요. 그러면 그 텍스트가 `aria-current="page"`가 있는 `span`으로 감싸집니다.
 
 ```tsx
 <Breadcrumbs.Root>

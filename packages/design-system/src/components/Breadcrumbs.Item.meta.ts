@@ -9,7 +9,7 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'false',
-      description: 'Marks the page you are on with aria-current="page". Give it plain text, not a link.',
+      description: 'Wraps the text in a span with aria-current="page", marking the page you are on. Give it plain text, not a link.',
     },
     {
       name: 'children',

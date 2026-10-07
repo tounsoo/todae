@@ -2,7 +2,7 @@ import { BreadcrumbsChevron, BreadcrumbsTrail } from '../../../components/demos/
 
 # Breadcrumbs
 
-The trail of pages above the current one. `Breadcrumbs.Root` is a `nav` landmark around an ordered list, and each `Breadcrumbs.Item` is a list item. Put a link in each item, such as an `a` or your router's link, and plain text in the last one, marked `current`, which gives it `aria-current="page"`.
+The trail of pages above the current one. `Breadcrumbs.Root` is a `nav` landmark around an ordered list, and each `Breadcrumbs.Item` is a list item. Put a link in each item, such as an `a` or your router's link, and plain text in the last one, marked `current`, which wraps that text in a `span` with `aria-current="page"`.
 
 ```tsx
 <Breadcrumbs.Root>

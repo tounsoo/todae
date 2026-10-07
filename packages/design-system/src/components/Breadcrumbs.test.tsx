@@ -57,7 +57,7 @@ describe('Breadcrumbs', () => {
     expect(screen.getByRole('navigation').style.getPropertyValue('--todae-breadcrumbs-glyph')).toBe('"a\\"\\\\\\a "');
   });
 
-  it('leaves the default glyph to the stylesheet, so a theme can change it', () => {
+  it('leaves the default glyph to the stylesheet, so a CSS rule can change it', () => {
     render(<Trail />);
     expect(screen.getByRole('navigation').style.getPropertyValue('--todae-breadcrumbs-glyph')).toBe('');
   });

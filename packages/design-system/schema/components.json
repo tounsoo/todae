@@ -251,7 +251,7 @@
           "name": "current",
           "type": "boolean",
           "required": false,
-          "description": "Marks the page you are on with aria-current=\"page\". Give it plain text, not a link.",
+          "description": "Wraps the text in a span with aria-current=\"page\", marking the page you are on. Give it plain text, not a link.",
           "default": "false"
         },
         {
@@ -272,6 +272,12 @@
           "required": false,
           "description": "Landmark name. The default is English, so pass a name in your app's language.",
           "default": "\"Breadcrumb\""
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of an element that names the landmark. When set, the default name is dropped."
         },
         {
           "name": "separator",

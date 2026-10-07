@@ -12,12 +12,6 @@
     color: var(--todae-card-fg);
   }
 
-  .header,
-  .body,
-  .footer {
-    min-inline-size: 0;
-  }
-
   .header > :where(h1, h2, h3, h4, h5, h6, p) {
     margin: 0;
   }

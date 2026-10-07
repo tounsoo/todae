@@ -115,8 +115,8 @@
   },
   "Breadcrumbs.Item": {
     "current": {
-      "en": "Marks the page you are on with aria-current=\"page\". Give it plain text, not a link.",
-      "ko": "현재 페이지를 aria-current=\"page\"로 표시합니다. 링크가 아닌 일반 텍스트를 넣으세요."
+      "en": "Wraps the text in a span with aria-current=\"page\", marking the page you are on. Give it plain text, not a link.",
+      "ko": "텍스트를 aria-current=\"page\"가 있는 span으로 감싸 현재 페이지를 표시합니다. 링크가 아닌 일반 텍스트를 넣으세요."
     },
     "children": {
       "en": "A link to the page, such as an a element or your router's link.",
@@ -127,6 +127,10 @@
     "aria-label": {
       "en": "Landmark name. The default is English, so pass a name in your app's language.",
       "ko": "랜드마크 이름. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
+    },
+    "aria-labelledby": {
+      "en": "Id of an element that names the landmark. When set, the default name is dropped.",
+      "ko": "랜드마크의 이름이 되는 요소의 id. 이 값을 주면 기본 이름은 쓰지 않습니다."
     },
     "separator": {
       "en": "Text drawn between items. Screen readers skip it.",
