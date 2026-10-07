@@ -5,6 +5,7 @@ import {
   useId,
   useLayoutEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
   type ComponentPropsWithRef,
@@ -27,11 +28,15 @@ import styles from './BottomSheet.module.css';
 
 export type { SheetSnap };
 /**
- * Why the sheet asked to close. `native` is anything outside Todae that closed
- * the `<dialog>` element, such as a script calling `close()` or a
- * `<form method="dialog">` submit.
+ * Why the sheet asked to close. `form` is a `<form method="dialog">` submit
+ * (read the submitter's value from the element's `returnValue`); `native` is
+ * anything else outside Todae that closed the `<dialog>` element, such as a
+ * script calling `close()`. If the owner keeps `open`, the sheet shows again.
  */
-export type SheetCloseReason = Extract<OverlayCloseReason, 'escape' | 'scrim' | 'drag' | 'close-button'> | 'native';
+export type SheetCloseReason =
+  | Extract<OverlayCloseReason, 'escape' | 'scrim' | 'drag' | 'close-button'>
+  | 'form'
+  | 'native';
 
 export type BottomSheetRootProps = {
   open: boolean;
@@ -218,6 +223,7 @@ function BottomSheetRoot({
   ref,
   onPointerDown,
   onClick,
+  onSubmit,
   ...props
 }: BottomSheetRootProps) {
   const points = snapPoints ?? DEFAULT_SNAP_POINTS;
@@ -235,6 +241,12 @@ function BottomSheetRoot({
   const { requestClose } = useControlledOpen<SheetCloseReason>({ open, onOpenChange });
   const openRef = useRef(open);
   openRef.current = open;
+  // Read from the listeners below, so they bind once per element.
+  const latest = useRef({ dismissOnEscape, onOpenChange, requestClose });
+  latest.current = { dismissOnEscape, onOpenChange, requestClose };
+  // Bumped when the element closes natively, so the open effect runs again
+  // and shows it while the owner keeps it open.
+  const [nativeCloses, noteNativeClose] = useReducer((n: number) => n + 1, 0);
   const sheetRef = useRef<HTMLDialogElement>(null);
   const [sheetNode, setSheetNode] = useState<HTMLDialogElement | null>(null);
   const bodyRef = useRef<HTMLElement | null>(null);
@@ -263,9 +275,10 @@ function BottomSheetRoot({
   useLayoutEffect(() => {
     // The ref, not sheetNode: the node state lands a render later, and the
     // dialog must be open before useInitialFocus runs in this commit.
+    // Not while exiting: a sheet closed natively on its way out stays closed.
     const el = sheetRef.current;
-    if (present && el && !el.open) el.showModal();
-  }, [present, sheetNode]);
+    if (present && open && el && !el.open) el.showModal();
+  }, [present, open, sheetNode, nativeCloses]);
   // After showModal, which focuses the first focusable element by itself.
   useInitialFocus(sheetRef, open, initialFocusRef);
   // A placed Grabber replaces the default one a commit after mount. If the
@@ -300,14 +313,18 @@ function BottomSheetRoot({
     function onCancel(event: Event) {
       cancelledAt.current = performance.now();
       event.preventDefault();
-      if (dismissOnEscape) requestClose('escape');
+      if (latest.current.dismissOnEscape) latest.current.requestClose('escape');
     }
     function onClose() {
       // Something closed the element while the owner still has it open.
       if (!openRef.current) return;
       const escaped = performance.now() - cancelledAt.current < CANCEL_CLOSE_WINDOW_MS;
       cancelledAt.current = -Infinity;
-      onOpenChange(false, escaped ? 'escape' : 'native');
+      noteNativeClose();
+      // An Escape the browser forced through, in one that ignores closedby,
+      // is not a dismiss the owner turned off: the sheet just shows again.
+      if (escaped && !latest.current.dismissOnEscape) return;
+      latest.current.onOpenChange(false, escaped ? 'escape' : 'native');
     }
     el.addEventListener('cancel', onCancel);
     el.addEventListener('close', onClose);
@@ -315,7 +332,7 @@ function BottomSheetRoot({
       el.removeEventListener('cancel', onCancel);
       el.removeEventListener('close', onClose);
     };
-  }, [dismissOnEscape, onOpenChange, requestClose, sheetNode]);
+  }, [sheetNode]);
 
   const ctx = useMemo<SheetContextValue>(
     () => ({
@@ -351,6 +368,22 @@ function BottomSheetRoot({
           onPointerDown?.(event);
           // Always tracked, so a click is judged by where its own press began.
           pressOnBackdrop.current = onBackdrop(sheetRef.current, event);
+        }}
+        onSubmit={(event) => {
+          onSubmit?.(event);
+          // A form inside that already prevented its submit keeps the sheet open, as natively.
+          if (event.defaultPrevented) return;
+          const native = event.nativeEvent as SubmitEvent;
+          const form = event.target as HTMLFormElement;
+          const submitter = native.submitter as HTMLButtonElement | HTMLInputElement | null;
+          const method = submitter?.getAttribute('formmethod') ?? form.getAttribute('method') ?? '';
+          // Natively the form closes its own nearest <dialog>.
+          if (method.toLowerCase() !== 'dialog' || form.closest('dialog') !== sheetRef.current) return;
+          // Close through onOpenChange, as Dialog does, so the exit motion runs.
+          event.preventDefault();
+          const sheet = sheetRef.current;
+          if (sheet && submitter) sheet.returnValue = submitter.value;
+          requestClose('form');
         }}
         onClick={composeHandlers(onClick, (event) => {
           const fromBackdrop = pressOnBackdrop.current && onBackdrop(sheetRef.current, event);

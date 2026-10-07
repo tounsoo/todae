@@ -93,6 +93,33 @@ describe('Fieldset', () => {
     expect(screen.getByRole('checkbox').closest('label')!.hasAttribute('data-disabled')).toBe(true);
   });
 
+  it('keeps a control in the legend enabled, as natively, unless an outer fieldset is disabled', () => {
+    render(
+      <>
+        <Fieldset.Root disabled>
+          <Fieldset.Legend>
+            <Switch>Enable alerts</Switch>
+          </Fieldset.Legend>
+          <Checkbox>Email</Checkbox>
+        </Fieldset.Root>
+        <Fieldset.Root disabled>
+          <Fieldset.Legend>Outer</Fieldset.Legend>
+          <Fieldset.Root>
+            <Fieldset.Legend>
+              <Switch>Nested toggle</Switch>
+            </Fieldset.Legend>
+          </Fieldset.Root>
+        </Fieldset.Root>
+      </>,
+    );
+    const toggle = screen.getByRole('switch', { name: 'Enable alerts' });
+    expect(toggle.hasAttribute('disabled')).toBe(false);
+    expect(toggle.closest('label')!.hasAttribute('data-disabled')).toBe(false);
+    expect(screen.getByRole('checkbox').hasAttribute('disabled')).toBe(true);
+    const nested = screen.getByRole('switch', { name: 'Nested toggle' });
+    expect(nested.closest('label')!.hasAttribute('data-disabled')).toBe(true);
+  });
+
   it('leaves controls outside a fieldset alone', () => {
     render(<Checkbox>Alone</Checkbox>);
     const box = screen.getByRole('checkbox');

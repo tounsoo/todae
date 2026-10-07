@@ -1,5 +1,5 @@
 import { Profiler, memo } from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi, expectTypeOf } from 'vitest';
 import { BottomSheet, type BottomSheetRootProps, type SheetCloseReason } from './BottomSheet';
 
@@ -153,6 +153,75 @@ describe('BottomSheet', () => {
     expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape');
   });
 
+  it('shows again after a native close while the owner keeps it open', () => {
+    render(<BottomSheet.Root open onOpenChange={() => undefined} aria-label="s" />);
+    const sheet = screen.getByRole('dialog') as HTMLDialogElement;
+    act(() => sheet.close());
+    expect(sheet.open).toBe(true);
+    expect(sheet.getAttribute('aria-modal')).toBe('true');
+  });
+
+  it('ignores an Escape close the browser forced through when dismissOnEscape is false', () => {
+    const onOpenChange = vi.fn();
+    render(<BottomSheet.Root open onOpenChange={onOpenChange} dismissOnEscape={false} aria-label="s" />);
+    const sheet = screen.getByRole('dialog') as HTMLDialogElement;
+    sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
+    act(() => sheet.close());
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(sheet.open).toBe(true);
+  });
+
+  it('binds its cancel and close listeners once, not on every render', () => {
+    const add = vi.spyOn(HTMLDialogElement.prototype, 'addEventListener');
+    const { rerender } = render(<BottomSheet.Root open onOpenChange={() => undefined} aria-label="s" />);
+    const count = () => add.mock.calls.filter(([type]) => type === 'cancel').length;
+    const first = count();
+    rerender(<BottomSheet.Root open onOpenChange={() => undefined} dismissOnEscape={false} aria-label="s" />);
+    expect(count()).toBe(first);
+    add.mockRestore();
+  });
+
+  it('closes through the owner on a method="dialog" form submit and keeps the submitter value', () => {
+    const onOpenChange = vi.fn();
+    const close = vi.spyOn(HTMLDialogElement.prototype, 'close');
+    render(
+      <BottomSheet.Root open onOpenChange={onOpenChange} aria-label="s">
+        <BottomSheet.Body>
+          <form method="dialog">
+            <button value="later">Later</button>
+            <button value="apply">Apply</button>
+          </form>
+        </BottomSheet.Body>
+      </BottomSheet.Root>,
+    );
+    fireEvent.click(screen.getByText('Apply'));
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'form');
+    const sheet = screen.getByRole('dialog') as HTMLDialogElement;
+    expect(sheet.returnValue).toBe('apply');
+    expect(close).not.toHaveBeenCalled();
+    close.mockRestore();
+  });
+
+  it('leaves a form submit alone when the form prevents it or is not method="dialog"', () => {
+    const onOpenChange = vi.fn();
+    render(
+      <BottomSheet.Root open onOpenChange={onOpenChange} aria-label="s">
+        <BottomSheet.Body>
+          <form method="dialog" onSubmit={(event) => event.preventDefault()}>
+            <button>Prevented</button>
+          </form>
+          <form onSubmit={(event) => event.preventDefault()}>
+            <button>Plain</button>
+          </form>
+        </BottomSheet.Body>
+      </BottomSheet.Root>,
+    );
+    fireEvent.click(screen.getByText('Prevented'));
+    fireEvent.click(screen.getByText('Plain'));
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
   it('closes on a press and click on the backdrop, not on the sheet itself', () => {
     const onOpenChange = vi.fn();
     const onClick = vi.fn();
@@ -209,7 +278,7 @@ describe('BottomSheet', () => {
 
   it('types snapPoints and close reasons', () => {
     expectTypeOf<NonNullable<BottomSheetRootProps['snapPoints']>>().toEqualTypeOf<readonly ('mid' | 'full')[]>();
-    expectTypeOf<SheetCloseReason>().toEqualTypeOf<'escape' | 'scrim' | 'drag' | 'close-button' | 'native'>();
+    expectTypeOf<SheetCloseReason>().toEqualTypeOf<'escape' | 'scrim' | 'drag' | 'close-button' | 'form' | 'native'>();
     expectTypeOf(['peek'] as const).not.toMatchTypeOf<NonNullable<BottomSheetRootProps['snapPoints']>>();
   });
 

@@ -1,5 +1,5 @@
 import { useContext, useMemo, type ComponentPropsWithRef, type ReactNode } from 'react';
-import { FieldsetContext } from './Fieldset.context';
+import { FieldsetContext, FieldsetLegendContext } from './Fieldset.context';
 import { cx } from './props';
 import styles from './Fieldset.module.css';
 
@@ -23,21 +23,30 @@ function Root({ disabled, invalid, className, ...props }: FieldsetRootProps) {
   const isDisabled = Boolean(disabled) || outer.disabled;
   const isInvalid = Boolean(invalid) || outer.invalid;
   const ctx = useMemo(() => ({ disabled: isDisabled, invalid: isInvalid }), [isDisabled, isInvalid]);
+  const legendCtx = useMemo(() => ({ disabled: outer.disabled, invalid: isInvalid }), [outer.disabled, isInvalid]);
   return (
     <FieldsetContext.Provider value={ctx}>
-      <fieldset
-        {...props}
-        disabled={disabled}
-        data-disabled={isDisabled ? '' : undefined}
-        data-invalid={isInvalid ? '' : undefined}
-        className={cx(styles.root, className)}
-      />
+      <FieldsetLegendContext.Provider value={legendCtx}>
+        <fieldset
+          {...props}
+          disabled={disabled}
+          data-disabled={isDisabled ? '' : undefined}
+          data-invalid={isInvalid ? '' : undefined}
+          className={cx(styles.root, className)}
+        />
+      </FieldsetLegendContext.Provider>
     </FieldsetContext.Provider>
   );
 }
 
+/** Controls inside the legend stay enabled when only this fieldset is disabled, as natively. */
 function Legend({ className, ...props }: FieldsetLegendProps) {
-  return <legend {...props} className={cx(styles.legend, className)} />;
+  const ctx = useContext(FieldsetLegendContext);
+  return (
+    <FieldsetContext.Provider value={ctx}>
+      <legend {...props} className={cx(styles.legend, className)} />
+    </FieldsetContext.Provider>
+  );
 }
 
 export const Fieldset = { Root, Legend } as const;

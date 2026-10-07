@@ -100,13 +100,13 @@ describe('Dialog', () => {
 });
 
 describe('Dialog close reasons', () => {
-  it('adds form to Dialog only, and native to every <dialog>-backed surface', () => {
+  it('adds form and native to every <dialog>-backed surface', () => {
     expectTypeOf<DialogCloseReason>().toEqualTypeOf<'escape' | 'backdrop' | 'close-button' | 'form' | 'native'>();
-    expectTypeOf<'form'>().not.toMatchTypeOf<ComboboxCloseReason>();
-    expectTypeOf<'form'>().not.toMatchTypeOf<SheetCloseReason>();
     // BottomSheet is a <dialog> too, and a combobox can present as one.
-    expectTypeOf<'native'>().toMatchTypeOf<SheetCloseReason>();
-    expectTypeOf<'native'>().toMatchTypeOf<ComboboxCloseReason>();
+    for (const reason of ['form', 'native'] as const) {
+      expectTypeOf(reason).toMatchTypeOf<SheetCloseReason>();
+      expectTypeOf(reason).toMatchTypeOf<ComboboxCloseReason>();
+    }
   });
 });
 

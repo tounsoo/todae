@@ -4,7 +4,7 @@ Todae builds on the browser instead of reimplementing it. It uses the features b
 
 - **[CSS anchor positioning](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: placing popovers and tooltips next to their trigger, and flipping them at the viewport edge with `position-try-fallbacks`. Without it: the surface is not placed next to its trigger and sits near the top-left corner of the viewport.
 - **[Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API)**: showing `Popover.Root` and `Tooltip.Root` in the top layer. Todae needs it.
-- **[`<dialog>`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog) and `showModal()`**: `Dialog.Root` and `BottomSheet.Root`, for the top layer, `::backdrop`, an inert page behind, Escape, and `<form method="dialog">`. Todae needs it.
+- **[`<dialog>`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog) and `showModal()`**: `Dialog.Root` and `BottomSheet.Root`, for the top layer, `::backdrop`, an inert page behind, Escape, and `<form method="dialog">`. Todae needs it. The scrim reads Todae's custom properties from `::backdrop`, which inherits them from its dialog in current browsers; an older engine that does not shows no scrim color.
 - **[`closedby`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog#closedby)**: `BottomSheet` with `dismissOnEscape={false}`, so the browser ignores Escape. Without it: Escape still asks to close, and Todae holds the sheet open.
 - **[`inert`](https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert)**: hiding the chip measuring copy. Todae needs it.
 - **[`<details name>`](https://developer.mozilla.org/docs/Web/HTML/Element/details#name)**: exclusive accordions. Without it: several disclosures in a group can be open at once.

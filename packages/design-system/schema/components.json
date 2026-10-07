@@ -161,7 +161,7 @@
           "name": "onOpenChange",
           "type": "(open: boolean, reason: SheetCloseReason) => void",
           "required": true,
-          "description": "Dismiss requests. Staying open keeps the sheet open. reason is \"native\" when something outside Todae closed the <dialog>."
+          "description": "Dismiss requests. Staying open keeps the sheet open. reason is \"form\" for a <form method=\"dialog\"> submit (read returnValue) and \"native\" when something else outside Todae closed the <dialog>; it shows again while open stays true."
         },
         {
           "name": "snap",
