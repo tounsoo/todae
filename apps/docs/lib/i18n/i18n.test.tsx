@@ -60,6 +60,15 @@ describe('docs locales', () => {
     expect(() => untranslatedSlugs('ko', join(APP, 'missing'))).toThrow(/No ko pages/);
   });
 
+  it('keeps component and pattern names in English in Korean link text', () => {
+    // A recipe is named after the component or pattern it builds; that name stays as it is in English.
+    const recipes = SITE_GROUPS.find((group) => group.id === 'recipes')?.links ?? [];
+    for (const [href, label] of recipes) {
+      const name = label.replace(/ with .*$/, '');
+      expect(DICTIONARIES.ko.links[href] ?? label, href).toContain(name);
+    }
+  });
+
   it('names every section in Korean', () => {
     expect(SITE_GROUPS.filter((group) => !DICTIONARIES.ko.groups[group.id])).toEqual([]);
   });
