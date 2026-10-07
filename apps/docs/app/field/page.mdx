@@ -18,7 +18,6 @@ import {
   FieldLabelStates,
   FieldSelectSize,
   FieldStates,
-  FieldUseField,
   RowChipInput,
   RowComposer,
   RowComposerDensity,
@@ -255,18 +254,7 @@ The same composer at compact, comfortable, and spacious.
 
 ## Custom controls
 
-`useField()` joins your own control to the nearest `Field.Root`, the way the built-in parts join it. Spread `getControlProps()` on the control: it carries the Root's `id`, `name`, `disabled`, `aria-invalid`, the merged `aria-describedby`, the Root's name unless the control names itself, and a ref so a press on the shell focuses the control. The shell draws its focus ring for it too. For a control that is not a native form element, call `getControlProps(props, { native: false })`: it sets `aria-disabled` instead of `disabled` and leaves out `name`, which only form elements submit. Read `disabled` from `useField()`, the Root's, to skip the tab stop and ignore keys; a `disabled` or `aria-invalid` you pass in adds to the Root's and never clears it, so combine your own with it in the same checks. `Label htmlFor` only names labelable elements, so name a custom element through `aria-labelledby` on the Root.
-
-```tsx
-function Stars(props) {
-	const field = useField()
-	return <span {...field.getControlProps({}, { native: false })} role="slider" tabIndex={field.disabled ? -1 : 0} … />
-}
-```
-
-<Example block>
-  <FieldUseField />
-</Example>
+Your own control, such as a rating or a color well, joins a `Field.Root` through [useField](/utilities/use-field).
 
 ## When to use
 
@@ -298,12 +286,6 @@ function Stars(props) {
 **When:** Pick one value from a short, fixed list inside a form, with the native picker and keyboard.
 
 **When not:** Filtering or searching a long list → Combobox recipe. Several values → Checkbox or `Field.ChipInput`. Commands rather than values → Menu.
-
-### useField
-
-**When:** Your own control, such as a rating or a color well, sits inside `Field.Root` and needs its id, name, description and invalid state.
-
-**When not:** A built-in part already fits → use it. A control outside any `Field.Root` → wire its own ids.
 
 ### Field.Icon
 
@@ -345,8 +327,6 @@ function Stars(props) {
 <PropsTable name="Field.ChipInput" />
 
 <PropsTable name="Field.Select" />
-
-<PropsTable name="useField" />
 
 <PropsTable name="Field.Icon" />
 

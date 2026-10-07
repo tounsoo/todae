@@ -26,7 +26,14 @@ const GROUPS = [
       ['/bottomsheet', 'BottomSheet'],
       ['/stack', 'Stack'],
       ['/text', 'Text'],
-      ['/roving-focus', 'useRovingFocus'],
+    ],
+  },
+  {
+    id: 'utilities',
+    label: 'Utilities',
+    links: [
+      ['/utilities/use-field', 'useField'],
+      ['/utilities/use-roving-focus', 'useRovingFocus'],
     ],
   },
   {

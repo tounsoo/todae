@@ -4,7 +4,7 @@ import { TabsBasic, TabsManualVertical } from '../../components/demos/TabsDemo';
 
 Panels that share one place on the page, one shown at a time. `Tabs.Root` owns the selected value. `Tabs.List` is the `role="tablist"`; each `Tabs.Tab` is a native button with `role="tab"`, and each `Tabs.Panel` is a `role="tabpanel"` labelled by its tab. A tab and a panel pair by `value`.
 
-The list holds one tab stop, on the selected tab. Arrow keys, Home and End move between tabs through [useRovingFocus](/roving-focus). Left and Right swap in a right-to-left page. A disabled tab is a native `disabled` button, so arrow keys skip it.
+The list holds one tab stop, on the selected tab. Arrow keys, Home and End move between tabs through [useRovingFocus](/utilities/use-roving-focus). Left and Right swap in a right-to-left page. A disabled tab is a native `disabled` button, so arrow keys skip it.
 
 ```tsx
 <Tabs.Root defaultValue="account">

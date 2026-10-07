@@ -68,6 +68,15 @@ export default function HomePage() {
           <a href="/playground">Playground</a>
         </li>
       </ul>
+      <h2>Utilities</h2>
+      <ul>
+        <li>
+          <a href="/utilities/use-field">useField</a>
+        </li>
+        <li>
+          <a href="/utilities/use-roving-focus">useRovingFocus</a>
+        </li>
+      </ul>
       <h2>Recipes</h2>
       <ul>
         <li>
