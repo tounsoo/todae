@@ -1,0 +1,24 @@
+import { LinkInText } from '../../components/demos/NativeDemo';
+
+# Link
+
+Links are native `<a href>` elements. There is no Link component: Todae styles every `a:any-link` in the `todae.base` layer, from the `link` contract tokens. A link keeps the text color and stands out by its underline, which darkens on hover, so it suits a neutral ink palette. An `<a>` without `href` is not a link and gets no link style.
+
+<Example>
+  <LinkInText />
+</Example>
+
+The rules sit in `:where()`, so they add no specificity, and in `todae.base`, under every component. Any class you add wins, including your router's link component:
+
+```tsx
+// Next.js renders an <a href>, so it gets the link style as it is.
+<NextLink href="/billing">Billing</NextLink>
+```
+
+Restyle every link through the `link.fg.*`, `link.decoration.*` and `link.ring.focus` tokens.
+
+## When to use
+
+**When:** Moving to another page or place: inline in text, in navigation, or as an action in an Alert.
+
+**When not:** Doing something on this page, such as saving or opening a dialog → Button. A list of actions → Menu.

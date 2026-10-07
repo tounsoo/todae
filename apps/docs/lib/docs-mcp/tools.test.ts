@@ -185,7 +185,7 @@ describe('docs mcp tools', () => {
       whenToUse:
         'Set appearance (system / light / dark) for a subtree via `data-appearance`; nested providers override. `overrides` for allowlisted token paths only.',
       whenNotToUse:
-        "Spacing density → DensityProvider. Raw CSS or unknown token keys (rejected). Styling via classes on the provider (overlays don't inherit them).",
+        'Spacing density → DensityProvider. Raw CSS or unknown token keys (rejected).',
       docsUrl: 'https://todae-rho.vercel.app/tokens',
       section: 'When to use',
       source: 'todae-docs',

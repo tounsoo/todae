@@ -534,6 +534,37 @@ export function FieldSelectSize() {
   );
 }
 
+export function FieldDateTime() {
+  const quantityId = useId();
+  const dateId = useId();
+  const timeId = useId();
+  const [quantity, setQuantity] = useState('2');
+  const [date, setDate] = useState('2026-10-07');
+  const [time, setTime] = useState('14:30');
+  return (
+    <>
+      <div className="labelled-field">
+        <Label htmlFor={quantityId}>Seats</Label>
+        <Field.Root id={quantityId}>
+          <Field.TextInput type="number" min={1} max={20} value={quantity} onValueChange={setQuantity} onChange={() => undefined} />
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={dateId}>Start date</Label>
+        <Field.Root id={dateId}>
+          <Field.TextInput type="date" value={date} onValueChange={setDate} onChange={() => undefined} />
+        </Field.Root>
+      </div>
+      <div className="labelled-field">
+        <Label htmlFor={timeId}>Start time</Label>
+        <Field.Root id={timeId}>
+          <Field.TextInput type="time" step={900} value={time} onValueChange={setTime} onChange={() => undefined} />
+        </Field.Root>
+      </div>
+    </>
+  );
+}
+
 // A company control that is not a native input, joined to Field.Root with useField.
 function Stars({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   const field = useField();

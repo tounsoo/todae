@@ -13,6 +13,7 @@ import {
   CounterPlain,
   CounterTextarea,
   FieldAdornments,
+  FieldDateTime,
   FieldLabelAdornments,
   FieldLabelStates,
   FieldSelectSize,
@@ -229,6 +230,16 @@ The same composer at compact, comfortable, and spacious.
   <RowChipInput />
 </Example>
 
+## Number, date and time
+
+`Field.TextInput` takes `type="number"`, `"date"`, `"time"` and `"datetime-local"`. They stay native inputs, with the browser's own spinner, date picker and locale format, styled from the field tokens with figures lined up. `value` is the input's string: `"2"`, `"2026-10-07"`, `"14:30"`, or an empty string while the input is incomplete. Constrain them with the native `min`, `max` and `step`.
+
+<Example block>
+  <FieldDateTime />
+</Example>
+
+Stepper buttons and a calendar grid are app compositions; build them around these inputs when the native ones are not enough.
+
 ## Select
 
 `Field.Select` is a native `<select>`. In browsers with `appearance: base-select` the button and its picker are drawn from field, popover and option tokens; elsewhere the browser's own picker shows, with the same value and keyboard. There is no JavaScript listbox. Children are native `<option>` and `<optgroup>` elements, and a `Label htmlFor` names it like any other field.
@@ -261,7 +272,7 @@ Your own control, such as a rating or a color well, joins a `Field.Root` through
 
 ### Field.TextInput
 
-**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password).
+**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password), or a native number, date or time.
 
 **When not:** Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
 

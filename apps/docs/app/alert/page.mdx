@@ -1,0 +1,55 @@
+import { AlertDismissible, AlertTones } from '../../components/demos/AlertDemo';
+
+# Alert
+
+A message about the page or a task, in one of four tones: `info`, `success`, `warning` and `critical`. Each tone takes its colors from the `color.status.<tone>` tokens through the `alert.<tone>` contract tokens, and each pair passes an APCA check when tokens build. `info` is neutral ink, like the rest of Todae; a company theme can give it a hue.
+
+```tsx
+<Alert.Root tone="warning">
+	<Alert.Icon>
+		<YourWarningIcon />
+	</Alert.Icon>
+	<Alert.Title>Storage almost full</Alert.Title>
+	<Alert.Description>You have used 92% of your plan.</Alert.Description>
+	<Alert.Actions>
+		<Button.Root variant="secondary">Upgrade</Button.Root>
+	</Alert.Actions>
+	<Alert.Close onClick={hide}>×</Alert.Close>
+</Alert.Root>
+```
+
+<Example block>
+  <AlertTones />
+</Example>
+
+Todae ships no icons. `Alert.Icon` is a slot: put any icon from your own set in it, and it sits before the text, hidden from assistive technology. The columns follow the parts you render, so an alert without an icon or a close button leaves no gap.
+
+## Announcements
+
+`Alert.Root` is a live region by default: `role="status"` for `info` and `success`, which waits for a pause, and `role="alert"` for `warning` and `critical`, which interrupts. A screen reader announces a live region when its content changes, so for a message that appears after an action, keep the region on the page and change what is inside it. Pass `role="none"` for a banner that is part of the page from the start and needs no announcement, as the examples above do.
+
+`Alert.Close` is a ghost `Button.Root` named "Dismiss". The alert has no open state; remove it in `onClick`.
+
+<Example block>
+  <AlertDismissible />
+</Example>
+
+## When to use
+
+**When:** A message about the page or the last action that stays until it is fixed or dismissed: a failed payment, a maintenance window, a saved confirmation next to the form.
+
+**When not:** A field's own error → ErrorMessage. A choice that blocks the task → Dialog. A count or label on an item → Chip. Hover help → Tooltip.
+
+## Props
+
+<PropsTable name="Alert.Root" />
+
+<PropsTable name="Alert.Icon" />
+
+<PropsTable name="Alert.Title" />
+
+<PropsTable name="Alert.Description" />
+
+<PropsTable name="Alert.Actions" />
+
+<PropsTable name="Alert.Close" />
