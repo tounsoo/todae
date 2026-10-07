@@ -78,7 +78,7 @@ describe('useHighlight', () => {
     expect(painted('search')).toEqual(['foo', 'foo']);
   });
 
-  it('matches text hidden by CSS but not the text of script and style elements', () => {
+  it('matches every text node under ref, including text CSS hides', () => {
     function Partly() {
       const highlight = useHighlight({ name: 'search', query: 'tea' });
       return (
@@ -92,7 +92,7 @@ describe('useHighlight', () => {
       );
     }
     render(<Partly />);
-    expect(painted('search')).toEqual(['tea', 'tea', 'tea']);
+    expect(painted('search')).toEqual(['tea', 'tea', 'tea', 'tea', 'tea']);
   });
 
   it('searches once where MutationObserver is missing', () => {
@@ -209,20 +209,6 @@ describe('useHighlight', () => {
     rerender(<Inline tick={1} />);
     expect(add).not.toHaveBeenCalled();
     expect(clear).not.toHaveBeenCalled();
-  });
-
-  it('skips the text inside a textarea', () => {
-    function Form() {
-      const highlight = useHighlight({ name: 'search', query: 'tea' });
-      return (
-        <div ref={highlight.ref}>
-          <p>tea</p>
-          <textarea defaultValue="tea" />
-        </div>
-      );
-    }
-    render(<Form />);
-    expect(painted('search')).toEqual(['tea']);
   });
 
   it('moves the same Highlight, with its priority, when the name changes', () => {

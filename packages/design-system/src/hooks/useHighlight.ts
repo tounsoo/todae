@@ -37,17 +37,12 @@ function patternSource(query: string | readonly string[] | undefined): string {
     .join('|');
 }
 
-// Elements whose child text is never painted as page text.
-const UNPAINTED = new Set(['script', 'style', 'textarea', 'noscript']);
-
 function findMatches(root: HTMLElement, pattern: RegExp): Range[] {
   const doc = root.ownerDocument;
   const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const found: Range[] = [];
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     const text = node as Text;
-    const parent = text.parentElement;
-    if (!parent || UNPAINTED.has(parent.localName)) continue;
     for (const match of text.data.matchAll(pattern)) {
       const range = doc.createRange();
       range.setStart(text, match.index);
