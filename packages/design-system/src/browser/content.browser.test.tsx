@@ -204,6 +204,7 @@ describe('content parts in a browser', () => {
     await userEvent.hover(screen.getByText('Current'));
     expect(style('Current').color).toBe('rgb(7, 8, 9)');
     expect(style('Current').textDecorationColor).toBe('rgb(10, 11, 12)');
+    await userEvent.unhover(screen.getByText('Current'));
   });
 
   it('hides visually hidden text from the screen but keeps it in the page', async () => {
