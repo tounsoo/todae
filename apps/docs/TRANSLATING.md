@@ -37,7 +37,8 @@ Edit the locale's entry in `lib/i18n/dictionaries.ts`. Every string is required 
 1. Add the locale to `LOCALES` and its name, written in that language, to `LOCALE_NAMES` in `lib/i18n/config.ts`.
 2. Add its dictionary to `DICTIONARIES` in `lib/i18n/dictionaries.ts`.
 3. Copy `app/ko/layout.tsx`, `app/ko/page.tsx` and `app/ko/[...slug]/page.tsx` into `app/<locale>/`, and change `ko` to the new locale in each.
-4. Run `pnpm --filter docs test` and `pnpm build`.
+4. In `next.config.mjs`, copy the `/ko/combobox` redirect for the new locale.
+5. Run `pnpm --filter docs test` and `pnpm build`.
 
 ## Add an English page
 

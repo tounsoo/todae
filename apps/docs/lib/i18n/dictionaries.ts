@@ -15,6 +15,9 @@ export type Dictionary = {
   /** Shown above a page that has no translation yet. */
   untranslated: string;
   contribute: string;
+  /** The 404 page, which shows every language. */
+  notFound: string;
+  home: string;
   /** Section names; a missing one keeps its English name from `siteGroups.ts`. */
   groups: Partial<Record<GroupId, string>>;
   /** Link text by href; a missing one keeps its English text. Component and hook names stay as they are in code. */
@@ -28,6 +31,8 @@ const en: Dictionary = {
   languageNav: 'Language',
   untranslated: 'This page is not translated yet, so it is shown in English.',
   contribute: 'Help translate it',
+  notFound: 'Page not found.',
+  home: 'Todae home',
   groups: {},
   links: {},
 };
@@ -39,6 +44,8 @@ const ko: Dictionary = {
   languageNav: '언어',
   untranslated: '이 페이지는 아직 한국어로 번역되지 않아 영어 원문으로 보여 드립니다.',
   contribute: '번역에 참여하기',
+  notFound: '페이지를 찾을 수 없습니다.',
+  home: 'Todae 홈',
   groups: {
     components: '컴포넌트',
     utilities: '유틸리티',

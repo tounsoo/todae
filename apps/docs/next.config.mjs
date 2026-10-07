@@ -5,7 +5,8 @@ const nextConfig = {
   experimental: { globalNotFound: true },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   outputFileTracingIncludes: {
-    '/api/[transport]': ['./app/**/page.mdx'],
+    // The MCP reads English pages only. Parentheses are glob syntax, so escape the route group.
+    '/api/[transport]': ['./app/\\(en\\)/**/page.mdx'],
   },
   redirects: async () => [
     { source: '/combobox', destination: '/recipes/combobox', permanent: true },

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HomeContent } from '../../components/HomeContent';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
@@ -82,10 +82,12 @@ describe('docs locales', () => {
     path.current = '/tokens';
     window.history.replaceState(null, '', '/tokens?x=1#contrast');
     render(<LanguageSwitcher locale="en" />);
-    const korean = screen.getByRole('link', { name: '한국어' });
-    korean.addEventListener('click', (event) => event.preventDefault());
-    fireEvent.click(korean);
-    expect(korean.getAttribute('href')).toBe('/ko/tokens?x=1#contrast');
+    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/tokens?x=1#contrast');
+    act(() => {
+      window.history.replaceState(null, '', '/tokens#props');
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/tokens#props');
     window.history.replaceState(null, '', '/');
   });
 
