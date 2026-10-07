@@ -1,4 +1,4 @@
-import { createContext, useContext, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { useControlledState } from '../hooks/useControlledState';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { Button, type ButtonRootProps } from './Button';
@@ -69,8 +69,11 @@ function Root(props: ToggleGroupRootProps) {
     valueProp,
     defaultValue ?? (multiple ? [] : null),
   );
-  const list: readonly string[] = Array.isArray(value) ? value : typeof value === 'string' ? [value] : [];
-  const pressed = new Set(list);
+  const list = useMemo<readonly string[]>(
+    () => (Array.isArray(value) ? value : typeof value === 'string' ? [value] : []),
+    [value],
+  );
+  const pressed = useMemo(() => new Set(list), [list]);
 
   const toggle = (item: string) => {
     if (multiple) {
@@ -85,10 +88,11 @@ function Root(props: ToggleGroupRootProps) {
   };
 
   // Inside a toolbar the toolbar owns the arrow keys and the tab stop.
+  // Single mode puts the tab stop on the pressed item; multiple on the first item.
   const roving = useRovingFocus({
     orientation,
     tabStop: toolbar === null,
-    activeValue: list[0] ?? null,
+    activeValue: multiple ? null : (list[0] ?? null),
   });
   const container = toolbar ? { ref: undefined, onKeyDown } : roving.getContainerProps({ onKeyDown });
   const refs = useComposedRefs(container.ref, ref);

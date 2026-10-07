@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Button } from './Button';
@@ -35,17 +35,37 @@ describe('Toolbar', () => {
     expect(screen.getByRole('toolbar', { name: 'Format' }).hasAttribute('aria-orientation')).toBe(false);
     expect(tabbable()).toEqual([button('Bold')]);
     expect(button('Italic').tabIndex).toBe(-1);
-    expect(screen.getByRole('textbox').tabIndex).toBe(-1);
+    // A text input keeps its own tab stop.
+    expect(screen.getByRole('textbox').hasAttribute('tabindex')).toBe(false);
   });
 
-  it('moves focus with arrow keys, skipping disabled controls and following wrappers', () => {
+  it('moves focus with arrow keys, skipping disabled controls and text inputs, and following wrappers', () => {
     render(<Editor />);
     button('Bold').focus();
     fireEvent.keyDown(button('Bold'), { key: 'ArrowRight' });
     expect(document.activeElement).toBe(button('Italic'));
     fireEvent.keyDown(button('Italic'), { key: 'ArrowRight' });
-    expect(document.activeElement).toBe(screen.getByRole('textbox'));
-    expect(tabbable()).toEqual([screen.getByRole('textbox')]);
+    expect(document.activeElement).toBe(button('Link'));
+    expect(tabbable()).toEqual([button('Link')]);
+  });
+
+  it('skips controls disabled by a fieldset, and composites with their own arrow keys', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <fieldset disabled>
+          <Button.Root>Off</Button.Root>
+        </fieldset>
+        <button type="button" data-todae-roving="x" tabIndex={0}>
+          Own
+        </button>
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(button('B'));
+    expect(button('Own').tabIndex).toBe(0);
   });
 
   it('leaves arrow keys in a text input to the input', () => {
@@ -99,7 +119,7 @@ describe('Toolbar', () => {
     expect(sep.getAttribute('aria-orientation')).toBe('vertical');
   });
 
-  it('keeps the tab stop on a control that was clicked, and moves it off one that goes away', () => {
+  it('keeps the tab stop on a control that was clicked, and moves it off one that goes away', async () => {
     function Removable() {
       const [shown, setShown] = useState(true);
       return (
@@ -113,7 +133,7 @@ describe('Toolbar', () => {
     button('B').focus();
     expect(tabbable()).toEqual([button('B')]);
     fireEvent.click(button('B'));
-    expect(tabbable()).toEqual([button('A')]);
+    await waitFor(() => expect(tabbable()).toEqual([button('A')]));
   });
 
   it('skips controls inside a popover that opens from it', () => {

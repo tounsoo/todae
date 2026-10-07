@@ -22,7 +22,7 @@ A row of controls, such as an editor's formatting bar, that takes one stop in th
   <ToolbarEditor />
 </Example>
 
-Any focusable control inside counts, in document order, even inside your own wrappers: buttons, links, inputs, menu triggers. Disabled controls are skipped. The toolbar sets each control's `tabIndex`, so do not pass one yourself. The control that last had focus keeps the tab stop. A text input keeps its own arrow keys for the caret, so put it last or at an end. Controls inside a popover or dialog that opens from the toolbar keep their own keyboard model.
+Any focusable control inside counts, in document order, even inside your own wrappers: buttons, links, checkboxes, menu triggers. Disabled controls are skipped. The toolbar sets each control's `tabIndex`, so do not pass one yourself. The control that last had focus keeps the tab stop. A text input, or a composite with its own arrow keys such as RadioGroup, keeps its own tab stop and keys, and the toolbar's arrow keys skip it. Controls inside a popover or dialog that opens from the toolbar keep their own keyboard model.
 
 Name the toolbar with `aria-label` or `aria-labelledby`. Set `orientation="vertical"` for a column, which moves focus with Up and Down instead. Arrow keys wrap from the last control to the first unless you pass `loop={false}`.
 

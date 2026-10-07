@@ -76,4 +76,16 @@ describe('Toolbar in a browser', () => {
     expect(getComputedStyle(button('Bold')).boxShadow).not.toBe('none');
     expect(getComputedStyle(button('Italic')).boxShadow).toBe('none');
   });
+
+  it('moves the tab stop off a control a class hides', async () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    expect(button('A').tabIndex).toBe(0);
+    button('A').style.display = 'none';
+    await expect.poll(() => button('B').tabIndex).toBe(0);
+  });
 });

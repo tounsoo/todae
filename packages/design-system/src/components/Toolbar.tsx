@@ -18,7 +18,8 @@ export type ToolbarOrientation = 'horizontal' | 'vertical';
  * A row (or column) of controls with one tab stop. Arrow keys move focus
  * between the controls inside, Home and End jump to the ends, and Tab leaves.
  * Any focusable control counts, inside wrappers too, except those in a popover
- * or dialog that opens from the toolbar. Name it with `aria-label` or
+ * or dialog that opens from the toolbar. Text inputs and composites with their
+ * own arrow keys keep their own tab stop. Name it with `aria-label` or
  * `aria-labelledby`.
  */
 export type ToolbarRootProps = {
@@ -39,8 +40,11 @@ const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex], [conten
 // A layer that opens from the toolbar keeps its own keyboard model.
 const BOUNDARY = '[role="toolbar"], [popover], dialog';
 
-// Controls whose own arrow keys move a caret or a value, which the toolbar must not take.
+// Controls whose own arrow keys move a caret or a value, and composites with
+// their own roving focus. They keep their own tab stop and keys, outside the
+// toolbar's, so focus is never stuck in them.
 function ownsArrows(el: HTMLElement): boolean {
+  if (el.hasAttribute('data-todae-roving')) return true;
   if (el.isContentEditable || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true;
   if (el.tagName !== 'INPUT') return false;
   return !['button', 'checkbox', 'radio', 'reset', 'submit', 'image', 'color', 'file'].includes((el as HTMLInputElement).type);
@@ -50,8 +54,9 @@ function itemsOf(root: HTMLElement): HTMLElement[] {
   return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
     (el) =>
       !el.matches(BOUNDARY) &&
+      !ownsArrows(el) &&
       el.parentElement?.closest(BOUNDARY) === root &&
-      !(el as HTMLButtonElement).disabled &&
+      !el.matches(':disabled') &&
       !el.closest('[inert]') &&
       (el.checkVisibility?.({ visibilityProperty: true }) ?? true),
   );
@@ -80,15 +85,19 @@ function Root({
     for (const item of items) item.tabIndex = item === active.current ? 0 : -1;
   }, []);
 
-  // Every commit, as children can change what is inside without a new prop.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(sync);
-
+  // On mount, then whenever controls come, go, or change what can take focus.
+  // Class and style count, as they can hide a control.
   useLayoutEffect(() => {
+    sync();
     const root = rootRef.current;
     if (!root || typeof MutationObserver === 'undefined') return;
     const observer = new MutationObserver(sync);
-    observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'hidden', 'inert'] });
+    observer.observe(root, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['disabled', 'hidden', 'inert', 'class', 'style', 'type', 'contenteditable', 'data-todae-roving'],
+    });
     return () => observer.disconnect();
   }, [sync]);
 
@@ -109,7 +118,7 @@ function Root({
     const target = event.target as HTMLElement;
     const items = itemsOf(root);
     const index = items.indexOf(target);
-    if (index === -1 || ownsArrows(target)) return;
+    if (index === -1) return;
     const rtl = () => getComputedStyle(root).direction === 'rtl';
     let next: number | null = null;
     const step = (delta: number) => {

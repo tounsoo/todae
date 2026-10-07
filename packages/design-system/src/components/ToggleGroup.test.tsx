@@ -97,6 +97,17 @@ describe('ToggleGroup', () => {
     expect(pressed('Right')).toBe('false');
   });
 
+  it('puts the tab stop on the first item in multiple mode', () => {
+    render(
+      <ToggleGroup.Root aria-label="Style" selectionMode="multiple" defaultValue={['italic', 'bold']}>
+        <ToggleGroup.Item value="bold">Bold</ToggleGroup.Item>
+        <ToggleGroup.Item value="italic">Italic</ToggleGroup.Item>
+        <ToggleGroup.Item value="code">Code</ToggleGroup.Item>
+      </ToggleGroup.Root>,
+    );
+    expect([button('Bold').tabIndex, button('Italic').tabIndex, button('Code').tabIndex]).toEqual([0, -1, -1]);
+  });
+
   it('disables every item from the root', () => {
     render(
       <ToggleGroup.Root aria-label="Align" disabled>
