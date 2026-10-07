@@ -1,0 +1,72 @@
+import { PopoverMenu, PopoverVeto } from '../../../components/demos/PopoverDemo';
+
+# Popover
+
+[usePopover](/utilities/use-popover) is the open machine. Spread `getTriggerProps` on the trigger. Spread `getPopoverProps` on `Popover.Root`. `Popover.Root` is surface chrome only: `children`, `className`, `style`, and, with `role="dialog"`, an accessible name. There is no `Popover.Trigger` or `Popover.Content`. ARIA prohibits a name on an element with no role, so a role-less popover takes none: the type rejects `aria-label` and `aria-labelledby` there, and the element drops them. Name what is inside instead, such as the `OptionList.Root` of a menu or combobox. With `role="dialog"`, the type requires `aria-label` or `aria-labelledby`.
+
+`haspopup` sets the trigger's `aria-haspopup`: `dialog` by default, `listbox` for an OptionList in a role-less popover, `menu` for an action menu. For action menus, use [Menu](/menu).
+
+Non-modal `popover="manual"`. Outside click and Escape call `onOpenChange(false, reason)`. `hidePopover()` runs only after `open` is false, so a veto keeps it shown.
+
+No focus trap, no `aria-modal`, no scroll lock, no inert. No portal — the surface stays in the React tree so `ThemeProvider` vars inherit.
+
+Positioning is CSS anchors only. `getTriggerProps` sets `anchor-name`. `anchorRef` does the same when the trigger is not the anchor (Combobox Field). Content uses `position-anchor` and `top: calc(anchor(bottom) + var(--todae-popover-offset))` with `--todae-popover-offset: var(--todae-space-1)` (`4px`). Flip is `@position-try --todae-popover-flip-block` plus `position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline`. There is no JS pin, no `getBoundingClientRect` follow, and no rAF scroll glue.
+
+A browser without CSS anchors does not place the surface next to its trigger. The surface resets the UA popover centering, so it sits near the top-left corner of the viewport, and it does not follow scroll or flip. Todae does not polyfill that. Safari 26+ has anchors. Safari 26 documents `position-try` with `position-area` names. `flip-block` is Chrome’s tactic. iOS before 26 has `popover` and no CSS anchors.
+
+The surface is the top-layer hit target: `position: fixed; inset: unset; pointer-events: auto`. Taps on content do not pass through. `OptionList.Option` selects on `click` so closing the list cannot leave a leftover click on the page.
+
+## Examples
+
+A trimmed version of the fruit picker's code is on [usePopover](/utilities/use-popover).
+
+<Example>
+  <PopoverMenu />
+</Example>
+
+Veto outside clicks. Escape still closes. `onOpenChange` still receives `reason` so Combobox and this veto can ignore `outside`.
+
+<Example>
+  <PopoverVeto />
+</Example>
+
+`anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks. It also excludes that element from outside dismiss. Do not spread `getTriggerProps` and also pass `anchorRef` — dual-wire is a QA fail.
+
+Selecting in `OptionList` does not close the popover. The fruit demo closes on single select in the consumer.
+
+## What goes where
+
+<table>
+  <thead>
+    <tr>
+      <th scope="col">Concern</th>
+      <th scope="col">API</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">Behavior</th>
+      <td>
+        <a href="/utilities/use-popover"><code>usePopover</code></a> — <code>open</code> / <code>defaultOpen</code> / <code>onOpenChange</code>, <code>haspopup</code>, <code>anchorRef</code>, focus refs, <code>enabled</code>, <code>id</code>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row">Chrome</th>
+      <td>
+        <code>Popover</code> — <code>children</code>, <code>className</code>, <code>style</code>, accessible name
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## When to use
+
+**When:** Non-modal anchored surface (listbox pickers, Combobox desktop list, light panels). Use [usePopover](/utilities/use-popover) + surface-only `Popover` — open/dismiss on the hook, chrome on the surface. Outside click + Escape dismiss. No focus trap.
+
+**When not:** Action menu → [Menu](/menu). Modal / focus-trapped work → Dialog. Mobile full-bleed picker → BottomSheet. Text-only hover hint → Tooltip.
+
+## Props
+
+The open machine's props are on [usePopover](/utilities/use-popover).
+
+<PropsTable name="Popover.Root" />

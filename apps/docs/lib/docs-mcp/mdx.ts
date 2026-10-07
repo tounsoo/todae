@@ -181,7 +181,8 @@ export function loadPages(appDir: string): PageDoc[] {
 }
 
 function readPages(): PageDoc[] {
-  return loadPages(join(process.cwd(), 'app'));
+  // English pages; translations live in app/<locale> and are not read here.
+  return loadPages(join(process.cwd(), 'app', '(en)'));
 }
 
 const pages = readPages();

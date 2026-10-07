@@ -1,0 +1,120 @@
+// @vitest-environment jsdom
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { HomeContent } from '../../components/HomeContent';
+import { LanguageSwitcher } from '../../components/LanguageSwitcher';
+import { LocalizedLink } from '../../components/LocalizedLink';
+import { SiteNav } from '../../components/SiteNav';
+import { SITE_GROUPS } from '../../components/siteGroups';
+import { UntranslatedPage } from '../../components/UntranslatedPage';
+import { LOCALES } from './config';
+import { DICTIONARIES } from './dictionaries';
+import { ENGLISH_PAGES } from './englishPages';
+import { untranslatedSlugs } from './pages';
+
+const path = vi.hoisted(() => ({ current: '/ko/button' }));
+vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
+
+const APP = join(process.cwd(), 'app');
+const PAGE_FILES = ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'].map((ext) => `page.${ext}`);
+
+// Static page slugs under `dir`; dynamic segments are not pages of their own.
+function slugs(dir: string, prefix = ''): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (!entry.isDirectory() || /^[_[@(]/.test(entry.name)) return [];
+    const slug = `${prefix}${entry.name}`;
+    const own = PAGE_FILES.some((file) => existsSync(join(dir, entry.name, file))) ? [slug] : [];
+    return [...own, ...slugs(join(dir, entry.name), `${slug}/`)];
+  });
+}
+
+describe('docs locales', () => {
+  afterEach(cleanup);
+
+  it('can fall back to every English page', () => {
+    expect(Object.keys(ENGLISH_PAGES).sort()).toEqual(slugs(join(APP, '(en)')).sort());
+  });
+
+  it('translates only pages that exist in English', () => {
+    const english = new Set(Object.keys(ENGLISH_PAGES));
+    for (const locale of LOCALES.filter((item) => item !== 'en')) {
+      for (const slug of slugs(join(APP, locale))) expect(english.has(slug), `${locale}/${slug}`).toBe(true);
+    }
+  });
+
+  it('falls back only where there is no translation', () => {
+    const fallback = untranslatedSlugs('ko');
+    expect(fallback).toContain('button');
+    expect(fallback).not.toContain('guides/build-on-todae');
+    expect(fallback.length + slugs(join(APP, 'ko')).length).toBe(Object.keys(ENGLISH_PAGES).length);
+  });
+
+  it('names every section in Korean', () => {
+    expect(SITE_GROUPS.filter((group) => !DICTIONARIES.ko.groups[group.id])).toEqual([]);
+  });
+
+  it('keeps the Korean sidebar in Korean URLs', () => {
+    path.current = '/ko/guides/build-on-todae';
+    render(<SiteNav locale="ko" />);
+    const nav = screen.getByRole('navigation', { name: '사이트' });
+    const hrefs = [...nav.querySelectorAll('a')].map((link) => link.getAttribute('href'));
+    expect(hrefs).toHaveLength(SITE_GROUPS.reduce((count, group) => count + group.links.length, 0));
+    expect(hrefs.every((href) => href?.startsWith('/ko/'))).toBe(true);
+    expect(screen.getByRole('list', { name: '컴포넌트' })).toBeTruthy();
+    const current = [...nav.querySelectorAll('[aria-current="page"]')];
+    expect(current.map((link) => link.textContent)).toEqual(['Todae로 디자인 시스템 만들기']);
+  });
+
+  it('switches to the same page in each language', () => {
+    path.current = '/ko/utilities/use-field';
+    render(<LanguageSwitcher locale="ko" />);
+    const nav = screen.getByRole('navigation', { name: '언어' });
+    const links = [...nav.querySelectorAll('a')];
+    expect(links.map((link) => [link.getAttribute('href'), link.getAttribute('lang'), link.textContent])).toEqual([
+      ['/utilities/use-field', 'en', 'English'],
+      ['/ko/utilities/use-field', 'ko', '한국어'],
+    ]);
+    expect(links.map((link) => link.getAttribute('aria-current'))).toEqual([null, 'true']);
+  });
+
+  it('switches from the English home page to the Korean one', () => {
+    path.current = '/';
+    render(<LanguageSwitcher locale="en" />);
+    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko');
+  });
+
+  it('lists the Korean home page in Korean', () => {
+    const { container } = render(<HomeContent locale="ko" />);
+    for (const name of SITE_GROUPS.map((group) => DICTIONARIES.ko.groups[group.id] ?? '')) {
+      expect(screen.getByRole('heading', { level: 2, name })).toBeTruthy();
+    }
+    const hrefs = [...container.querySelectorAll('a')].map((link) => link.getAttribute('href') ?? '');
+    const pages = new Set([...Object.keys(ENGLISH_PAGES)].map((slug) => `/ko/${slug}`));
+    for (const href of hrefs) expect(pages.has(href), href).toBe(true);
+  });
+
+  it('keeps MDX links in the reader’s language', () => {
+    path.current = '/ko/button';
+    render(
+      <>
+        <LocalizedLink href="/tokens">Tokens</LocalizedLink>
+        <LocalizedLink href="https://example.com">External</LocalizedLink>
+      </>,
+    );
+    expect(screen.getByRole('link', { name: 'Tokens' }).getAttribute('href')).toBe('/ko/tokens');
+    expect(screen.getByRole('link', { name: 'External' }).getAttribute('href')).toBe('https://example.com');
+  });
+
+  it('marks an untranslated page as English and links the guide', () => {
+    const { container } = render(
+      <UntranslatedPage locale="ko">
+        <h1>Button</h1>
+      </UntranslatedPage>,
+    );
+    expect(screen.getByRole('note').textContent).toContain(DICTIONARIES.ko.untranslated);
+    expect(screen.getByRole('link', { name: DICTIONARIES.ko.contribute }).getAttribute('href')).toMatch(/TRANSLATING\.md$/);
+    expect(container.querySelector('[lang="en"] h1')?.textContent).toBe('Button');
+  });
+});

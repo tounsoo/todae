@@ -1,0 +1,55 @@
+import { LabelSibling } from '../../../components/demos/LabelDemo';
+
+# Label
+
+Visible name for a control. A sibling, not a compound part. `htmlFor` is required and must equal the control id. For a Field that is the `Field.Root` id. Not a control.
+
+Server Components can import it from `@tounsoo/todae/label`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
+
+## With Field
+
+Label carries no margin. The gap between a label and its shell is `field.label.gap` (0.4rem). Put it on the wrapper that stacks the pair. Do not let that wrapper space Description or ErrorMessage. Those components own `margin-block-start`.
+
+```css
+.labelled-field {
+	display: flex;
+	flex-direction: column;
+}
+
+.labelled-field
+	> :not([data-todae-description], [data-todae-error])
+	+ :not([data-todae-description], [data-todae-error]) {
+	margin-block-start: var(--todae-field-label-gap);
+}
+```
+
+```tsx
+const id = useId()
+
+<div className="labelled-field">
+	<Label htmlFor={id}>Email</Label>
+	<Field.Root id={id}>
+		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+	</Field.Root>
+</div>
+```
+
+<Example block>
+  <LabelSibling />
+</Example>
+
+One `.labelled-field` per stack. The order is Label, control, then [Description](/description) and [ErrorMessage](/errormessage) as siblings. The control-to-message gap is the component `margin-block-start` of 0.4rem. When ErrorMessage follows Description, that start margin is 0.2rem. Do not wrap several stacks in one wrapper. Do not wrap the stack in `Stack`. `stack.gap` is the density gap between fields, not between a label and its shell. Put `.labelled-field` stacks inside `Stack`.
+
+## States
+
+Disabled and invalid live on `Field.Root`. Label does not repaint. A required mark is authored in the label text.
+
+## When to use
+
+**When:** Visible name for a control, placed as a sibling. `htmlFor` = control id (the `Field.Root` id for a Field). Required mark goes in the text.
+
+**When not:** Inside `Field.Root`. Checkbox / Radio / Switch (children are the label). Group caption → RadioGroup `aria-label` / `aria-labelledby`. Hint text → Description.
+
+## Props
+
+<PropsTable name="Label" />

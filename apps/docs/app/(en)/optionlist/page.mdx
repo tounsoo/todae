@@ -1,0 +1,33 @@
+import { OptionListMultiple, OptionListSingle } from '../../../components/demos/OptionListDemo';
+
+# OptionList
+
+`role="listbox"` with `aria-activedescendant`. Options are strings. Keyboard is Arrow, Home, End, Enter, and Space. Escape is not handled so it can close a parent Popover.
+
+Single `value` is `string | null`. Multiple `value` is `string[]`. Selected options stay `font-weight: 400` and use an accent-soft row fill (`color.bg.selected`, 12% accent). Highlighted selected is 20% (`color.accent.soft-strong`). Rows are `2px` apart. Hover is gated with `@media (hover: hover)`.
+
+<Example>
+  <OptionListSingle />
+</Example>
+
+Multiple keeps a check gutter on every row. Selected fills the box and draws a CSS check.
+
+<Example>
+  <OptionListMultiple />
+</Example>
+
+Options are `OptionList.Option` parts inside `OptionList.Root`.
+
+A combobox can pass `id`, `activeValue`, `onActiveChange`, and `tabIndex={-1}` so the input owns focus and `aria-activedescendant`. Uncontrolled lists keep `tabIndex={0}`.
+
+## When to use
+
+**When:** Overlay listbox inside Popover or BottomSheet. Single or multiple string options. Keyboard listbox pattern.
+
+**When not:** Choices that stay on the page → Radio or Checkbox. Do not dual-wire the same value to Radio/Checkbox.
+
+## Props
+
+<PropsTable name="OptionList.Root" />
+
+<PropsTable name="OptionList.Option" />

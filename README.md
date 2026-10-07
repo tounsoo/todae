@@ -81,6 +81,8 @@ pnpm dev:docs
 
 Open `/` for the full index, grouped as the sidebar is: Components (one page per component, e.g. `/button`), Utilities (one page per headless hook, `/utilities/*`; `useAppearance` and `useDensity` sit with their providers on `/tokens`), Recipes (`/recipes/*`), Foundations (Composition, `/tokens`, guides, `/platform`) and Tools (`/playground`). Component and hook pages mount a live example and a props table from the schema. `/tokens` tables the generated catalog. `/playground` is a left-rail theme controller (appearance + density selectors, raw / semantic / component token tabs, Export) and a right-stage live demo.
 
+The docs come in English and Korean. English pages live in `apps/docs/app/(en)` at unprefixed URLs. Korean pages live in `apps/docs/app/ko` under `/ko`, and a page with no Korean version shows the English one under a notice. The header links to the same page in each language. To translate a page or add a language, see [`apps/docs/TRANSLATING.md`](apps/docs/TRANSLATING.md).
+
 ## Test
 
 ```sh
@@ -105,7 +107,7 @@ Read-only Streamable HTTP MCP at `https://todae-rho.vercel.app/api/mcp` (`apps/d
 "todae-docs": { "url": "https://todae-rho.vercel.app/api/mcp" }
 ```
 
-Tools: `list_components`, `get_component`, `when_to_use`. They read `@tounsoo/todae/schema/components.json` and `apps/docs/app/*/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
+Tools: `list_components`, `get_component`, `when_to_use`. They read `@tounsoo/todae/schema/components.json` and the English pages, `apps/docs/app/(en)/**/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
 
 ## Graft
 
