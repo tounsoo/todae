@@ -4,6 +4,14 @@ import { ChipInputHook } from '../../../components/demos/FieldDemo';
 
 `useChipField` holds the chips and the input value for a [Field.ChipInput](/field), then spreads onto it. Each commit goes through `transform`, or by default is trimmed with an empty value dropped, and a chip already in the list is dropped unless `dedupe` is false. The field itself never appends chips, so without the hook the parent's `onCommit` decides.
 
+```tsx
+const field = useChipField({ initialChips: ['react'] })
+
+<Field.Root aria-label="Tags">
+  <Field.ChipInput {...field} placeholder="useChipField" />
+</Field.Root>
+```
+
 <Example block>
   <ChipInputHook />
 </Example>

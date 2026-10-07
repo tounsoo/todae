@@ -13,7 +13,8 @@ const PAGE_FILES = ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'].map((ext) => `page.${
 // private folders, dynamic segments and parallel slots are not plain links.
 function pagePaths(dir: string, path = ''): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (!entry.isDirectory() || /^[_[@]/.test(entry.name)) return [];
+    // `(.)x` and `(..)x` intercept other routes; they are not pages of their own.
+    if (!entry.isDirectory() || /^([_[@]|\(\.)/.test(entry.name)) return [];
     const child = entry.name.startsWith('(') ? path : `${path}/${entry.name}`;
     const own = PAGE_FILES.some((file) => existsSync(join(dir, entry.name, file))) ? [child] : [];
     return [...own, ...pagePaths(join(dir, entry.name), child)];

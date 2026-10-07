@@ -2,7 +2,7 @@ import { PresentationBadge } from '../../../components/demos/ComboboxDemo';
 
 # useSheetPresentation
 
-`useSheetPresentation` chooses a sheet when the pointer is coarse **or** the viewport is narrower than 640px, and a popover otherwise. Those are defaults: `coarseQuery` and `narrowWidth` change them. Server render and the first paint are popover. `isSheet` mirrors `presentation === "sheet"`; it is not `isTouch`. [useCombobox](/utilities/use-combobox) uses it for `presentation: 'auto'`.
+`useSheetPresentation` chooses a sheet when the pointer is coarse **or** the viewport is narrower than 640px, and a popover otherwise. Those are defaults: `coarseQuery` and `narrowWidth` change them. Unless `forced` sets one, server render and the first paint are popover. `isSheet` mirrors `presentation === "sheet"`; it is not `isTouch`. [useCombobox](/utilities/use-combobox) uses it for `presentation: 'auto'`.
 
 <Example>
   <PresentationBadge />
