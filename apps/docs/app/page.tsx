@@ -41,7 +41,13 @@ export default function HomePage() {
           <a href="/popover">Popover</a>
         </li>
         <li>
+          <a href="/menu">Menu</a>
+        </li>
+        <li>
           <a href="/tooltip">Tooltip</a>
+        </li>
+        <li>
+          <a href="/tabs">Tabs</a>
         </li>
         <li>
           <a href="/optionlist">OptionList</a>
@@ -66,6 +72,15 @@ export default function HomePage() {
         </li>
         <li>
           <a href="/playground">Playground</a>
+        </li>
+      </ul>
+      <h2>Utilities</h2>
+      <ul>
+        <li>
+          <a href="/utilities/use-field">useField</a>
+        </li>
+        <li>
+          <a href="/utilities/use-roving-focus">useRovingFocus</a>
         </li>
       </ul>
       <h2>Recipes</h2>

@@ -19,11 +19,21 @@ const GROUPS = [
       ['/switch', 'Switch'],
       ['/dialog', 'Dialog'],
       ['/popover', 'Popover'],
+      ['/menu', 'Menu'],
       ['/tooltip', 'Tooltip'],
+      ['/tabs', 'Tabs'],
       ['/optionlist', 'OptionList'],
       ['/bottomsheet', 'BottomSheet'],
       ['/stack', 'Stack'],
       ['/text', 'Text'],
+    ],
+  },
+  {
+    id: 'utilities',
+    label: 'Utilities',
+    links: [
+      ['/utilities/use-field', 'useField'],
+      ['/utilities/use-roving-focus', 'useRovingFocus'],
     ],
   },
   {

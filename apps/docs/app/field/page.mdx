@@ -2,17 +2,10 @@ import { ErrorMessageSibling } from '../../components/demos/ErrorMessageDemo';
 import {
   ChipInputCommitKeys,
   ChipInputControlled,
-  RowChipInput,
-  RowComposer,
-  RowComposerDensity,
   ChipInputHook,
   ChipInputLabel,
   ChipInputMaxRows,
   ChipInputStates,
-  FieldAdornments,
-  FieldLabelAdornments,
-  FieldLabelStates,
-  FieldStates,
   CounterBefore,
   CounterDefault,
   CounterInline,
@@ -20,6 +13,14 @@ import {
   CounterOver,
   CounterPlain,
   CounterTextarea,
+  FieldAdornments,
+  FieldLabelAdornments,
+  FieldLabelStates,
+  FieldSelectSize,
+  FieldStates,
+  RowChipInput,
+  RowComposer,
+  RowComposerDensity,
   TextareaAutoGrow,
   TextareaDark,
   TextareaDensity,
@@ -233,6 +234,28 @@ The same composer at compact, comfortable, and spacious.
   <RowChipInput />
 </Example>
 
+## Select
+
+`Field.Select` is a native `<select>`. In browsers with `appearance: base-select` the button and its picker are drawn from field, popover and option tokens; elsewhere the browser's own picker shows, with the same value and keyboard. There is no JavaScript listbox. Children are native `<option>` and `<optgroup>` elements, and a `Label htmlFor` names it like any other field.
+
+```tsx
+<Label htmlFor={id}>Size</Label>
+<Field.Root id={id}>
+	<Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
+		<option value="s">Small</option>
+		<option value="m">Medium</option>
+	</Field.Select>
+</Field.Root>
+```
+
+<Example block>
+  <FieldSelectSize />
+</Example>
+
+## Custom controls
+
+Your own control, such as a rating or a color well, joins a `Field.Root` through [useField](/utilities/use-field).
+
 ## When to use
 
 ### Field.Root
@@ -257,6 +280,12 @@ The same composer at compact, comfortable, and spacious.
 **When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`.
 
 **When not:** Free-form single string → TextInput. Options from a list → Combobox recipe + OptionList.
+
+### Field.Select
+
+**When:** Pick one value from a short, fixed list inside a form, with the native picker and keyboard.
+
+**When not:** Filtering or searching a long list → Combobox recipe. Several values → Checkbox or `Field.ChipInput`. Commands rather than values → Menu.
 
 ### Field.Icon
 
@@ -296,6 +325,8 @@ The same composer at compact, comfortable, and spacious.
 <PropsTable name="Field.Textarea" />
 
 <PropsTable name="Field.ChipInput" />
+
+<PropsTable name="Field.Select" />
 
 <PropsTable name="Field.Icon" />
 

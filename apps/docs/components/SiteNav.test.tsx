@@ -18,11 +18,15 @@ const HREFS = [
   '/switch',
   '/dialog',
   '/popover',
+  '/menu',
   '/tooltip',
+  '/tabs',
   '/optionlist',
   '/bottomsheet',
   '/stack',
   '/text',
+  '/utilities/use-field',
+  '/utilities/use-roving-focus',
   '/recipes/chip-list',
   '/recipes/combobox',
   '/tokens',
@@ -35,8 +39,8 @@ describe('SiteNav', () => {
   it('groups the same links under Site', () => {
     render(<SiteNav />);
     const nav = screen.getByRole('navigation', { name: 'Site' });
-    expect(screen.getAllByRole('list')).toHaveLength(4);
-    for (const name of ['Components', 'Recipes', 'Foundations', 'Tools']) {
+    expect(screen.getAllByRole('list')).toHaveLength(5);
+    for (const name of ['Components', 'Utilities', 'Recipes', 'Foundations', 'Tools']) {
       expect(screen.getByRole('list', { name })).toBeTruthy();
       expect(screen.getByText(name).tagName).toBe('SPAN');
     }

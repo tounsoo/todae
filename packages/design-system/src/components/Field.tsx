@@ -1,5 +1,4 @@
 import {
-  createContext,
   useContext,
   useEffect,
   useId,
@@ -15,15 +14,27 @@ import {
   type MouseEvent,
   type ReactNode,
   type Ref,
-  type RefObject,
+  type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
 import { Chip } from './Chip';
-import { composeHandlers, cx } from './props';
+import {
+  FIELD_CONTROL_SELECTOR,
+  FOCUSABLE_FIELD_CONTROL_SELECTOR,
+  FieldContext,
+  inputLabel,
+  mergeDescribedBy,
+  useControlSetter,
+  useFieldContext,
+  type CountStore,
+  type FieldContextValue,
+} from './Field.context';
+import { composeHandlers, cx, useComposedRefs } from './props';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
+import { useField } from '../hooks/useField';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -42,15 +53,6 @@ export type FieldRootProps = {
   ref?: Ref<HTMLDivElement>;
   children?: ReactNode;
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
-
-type CountEntry = { value: string; maxLength?: number };
-
-type CountStore = {
-  entry: CountEntry | null;
-  counters: number;
-  listeners: Set<() => void>;
-  presence: Set<() => void>;
-};
 
 function createCountStore(): CountStore {
   return { entry: null, counters: 0, listeners: new Set(), presence: new Set() };
@@ -80,25 +82,6 @@ function counterMounted(store: CountStore) {
   return store.counters > 0;
 }
 
-function mergeDescribedBy(root?: string, own?: string, hint?: string) {
-  const ids = [root, own, hint].filter((id): id is string => Boolean(id));
-  return ids.length > 0 ? ids.join(' ') : undefined;
-}
-
-type LabelAttrs = { 'aria-label'?: string; 'aria-labelledby'?: string };
-
-/**
- * An input that names itself keeps both of its own label attributes and takes
- * neither from the Root: a Root `aria-labelledby` would outrank the input's
- * own `aria-label`.
- */
-function inputLabel(own: LabelAttrs, field: { ariaLabel?: string; labelledBy?: string }): LabelAttrs {
-  if (own['aria-label'] != null || own['aria-labelledby'] != null) {
-    return { 'aria-label': own['aria-label'], 'aria-labelledby': own['aria-labelledby'] };
-  }
-  return { 'aria-label': field.ariaLabel, 'aria-labelledby': field.labelledBy };
-}
-
 function useTextEntry(store: CountStore, value: string, maxLength: number | undefined) {
   publishCount(store, value, maxLength);
   useEffect(() => {
@@ -109,27 +92,6 @@ function useTextEntry(store: CountStore, value: string, maxLength: number | unde
     () => counterMounted(store),
     () => counterMounted(store),
   );
-}
-
-type FieldContextValue = {
-  inputId: string;
-  hintId: string;
-  disabled: boolean;
-  invalid: boolean;
-  name?: string;
-  describedBy?: string;
-  labelledBy?: string;
-  ariaLabel?: string;
-  inputRef: RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
-  store: CountStore;
-};
-
-const FieldContext = createContext<FieldContextValue | null>(null);
-
-function useField(): FieldContextValue {
-  const ctx = useContext(FieldContext);
-  if (!ctx) throw new Error('Field parts must be rendered inside Field.Root');
-  return ctx;
 }
 
 export type FieldIconProps = {
@@ -157,9 +119,31 @@ function Affix({ className, ...props }: FieldAffixProps) {
   return <span {...props} className={cx(styles.adornment, className)} />;
 }
 
+// Whether a select's picker is showing. A browser without `:open` throws,
+// and treats the picker as closed.
+function isOpen(select: HTMLSelectElement): boolean {
+  try {
+    return select.matches(':open');
+  } catch {
+    return false;
+  }
+}
+
+// Walks up by class list rather than a selector, so any hashed class name works.
+function inAdornment(node: HTMLElement, shell: HTMLElement): boolean {
+  for (let el = node.parentElement; el && el !== shell; el = el.parentElement) {
+    if (styles.adornment && el.classList.contains(styles.adornment)) return true;
+  }
+  return false;
+}
+
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
-  return Boolean(target.closest('button, a, input, textarea, select, [tabindex]'));
+  return Boolean(
+    target.closest(
+      `button, a, [tabindex], [contenteditable]:not([contenteditable='false']), ${FIELD_CONTROL_SELECTOR}`,
+    ),
+  );
 }
 
 function Root({
@@ -173,41 +157,83 @@ function Root({
   'aria-labelledby': labelledBy,
   'aria-label': ariaLabel,
   onMouseDown: onMouseDownProp,
+  onClick: onClickProp,
   ...props
 }: FieldRootProps) {
   const autoId = useId();
   const hintId = useId();
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLElement>(null);
+  const pendingPicker = useRef<HTMLSelectElement | null>(null);
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
 
+  // Stable while these inputs are, so parts and useField callbacks keep their identity.
+  const ctx = useMemo(
+    () => ({
+      inputId,
+      hintId,
+      disabled: Boolean(disabled),
+      invalid: Boolean(invalid),
+      name,
+      describedBy,
+      labelledBy,
+      ariaLabel,
+      inputRef,
+      store,
+    }),
+    [ariaLabel, describedBy, disabled, hintId, inputId, invalid, labelledBy, name, store],
+  );
+
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
-    if (disabled || isInteractiveTarget(event.target)) return;
+    // Only a primary press: a right or middle click keeps its own meaning.
+    if (event.button !== 0 || disabled || isInteractiveTarget(event.target)) return;
     event.preventDefault();
-    inputRef.current?.focus();
+    // The ref is the last control to mount. If that one has gone, a control
+    // still in the shell takes the press, never one inside an Icon or Affix.
+    const current = inputRef.current;
+    const usable = (node: HTMLElement) =>
+      node.matches(FOCUSABLE_FIELD_CONTROL_SELECTOR) && !inAdornment(node, event.currentTarget);
+    const control = current?.isConnected && usable(current)
+      ? current
+      : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
+    control?.focus();
+    // A press beside a select opens it, as a press on the select would. The
+    // picker opens on click: one opened now would close again as the press
+    // goes on. The press that closes an open picker must not open it again.
+    pendingPicker.current = control instanceof HTMLSelectElement && !isOpen(control) ? control : null;
+  }
+
+  function onClick(event: MouseEvent<HTMLDivElement>) {
+    const select = pendingPicker.current;
+    pendingPicker.current = null;
+    // Only the click that ends this press: one from the keyboard or from
+    // assistive technology has no press (detail 0) and opens nothing.
+    if (!select?.isConnected || event.detail === 0 || isInteractiveTarget(event.target)) return;
+    try {
+      select.showPicker?.();
+    } catch {
+      // Not allowed here, or not supported: focus is enough.
+    }
   }
 
   return (
-    <FieldContext.Provider
-      value={{
-        inputId,
-        hintId,
-        disabled: Boolean(disabled),
-        invalid: Boolean(invalid),
-        name,
-        describedBy,
-        labelledBy,
-        ariaLabel,
-        inputRef,
-        store,
-      }}
-    >
+    <FieldContext.Provider value={ctx}>
       <div
         {...props}
         className={cx(styles.shell, className)}
         data-disabled={disabled ? '' : undefined}
         data-invalid={invalid ? '' : undefined}
-        onMouseDown={composeHandlers(onMouseDownProp, onMouseDown)}
+        onMouseDown={(event: MouseEvent<HTMLDivElement>) => {
+          // Each press decides afresh whether its click opens a picker, even
+          // one whose consumer handler turns the shell's handling off.
+          pendingPicker.current = null;
+          composeHandlers(onMouseDownProp, onMouseDown)(event);
+        }}
+        onClick={(event: MouseEvent<HTMLDivElement>) => {
+          composeHandlers(onClickProp, onClick)(event);
+          // The press's click is over, whether the shell handled it or not.
+          pendingPicker.current = null;
+        }}
       >
         {children}
       </div>
@@ -237,22 +263,19 @@ function TextInput({
   'aria-describedby': describedBy,
   ...props
 }: FieldTextInputProps) {
-  const ctx = useField();
+  const ctx = useFieldContext();
+  const controlRef = useComposedRefs(useControlSetter(ctx.inputRef), ref);
   const limit = typeof maxLength === 'number' ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
   return (
     <input
       {...props}
-      ref={(node) => {
-        ctx.inputRef.current = node;
-        if (typeof ref === 'function') ref(node);
-        else if (ref) ref.current = node;
-      }}
+      ref={controlRef}
       id={ctx.inputId}
       name={ctx.name}
       disabled={ctx.disabled}
       maxLength={maxLength}
-      aria-invalid={ctx.invalid || undefined}
+      aria-invalid={ctx.invalid ? true : props['aria-invalid']}
       aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
       {...inputLabel(props, ctx)}
       value={value}
@@ -291,7 +314,8 @@ function Textarea({
   'aria-describedby': describedBy,
   ...props
 }: FieldTextareaProps) {
-  const ctx = useField();
+  const ctx = useFieldContext();
+  const controlRef = useComposedRefs(useControlSetter(ctx.inputRef), ref);
   const resolved = useMemo(
     () => resolveTextareaRows({ rows: rowsProp, maxRows: maxRowsProp }),
     [rowsProp, maxRowsProp],
@@ -301,16 +325,12 @@ function Textarea({
   return (
     <textarea
       {...props}
-      ref={(node) => {
-        ctx.inputRef.current = node;
-        if (typeof ref === 'function') ref(node);
-        else if (ref) ref.current = node;
-      }}
+      ref={controlRef}
       id={ctx.inputId}
       name={ctx.name}
       disabled={ctx.disabled}
       maxLength={maxLength}
-      aria-invalid={ctx.invalid || undefined}
+      aria-invalid={ctx.invalid ? true : props['aria-invalid']}
       aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
       {...inputLabel(props, ctx)}
       value={value}
@@ -369,11 +389,15 @@ function ChipInput({
   reset: _reset,
   ...props
 }: FieldChipInputProps & { setChips?: unknown; setInputValue?: unknown; reset?: unknown }) {
-  const field = useField();
+  const field = useFieldContext();
+  // Its own input, for chip measuring and refocus; the Root's inputRef may
+  // point at another control.
+  const ownInput = useRef<HTMLInputElement | null>(null);
+  const controlRef = useComposedRefs(useControlSetter(field.inputRef), ownInput, ref);
   const keys = useMemo(() => resolveCommitKeys(commitKeys), [commitKeys]);
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const inRow = chipLayout === 'row';
-  const list = useChipList({ chips, maxRows, reserveWidth: inRow ? undefined : field.inputRef });
+  const list = useChipList({ chips, maxRows, reserveWidth: inRow ? undefined : ownInput });
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     onKeyDownProp?.(event);
@@ -404,7 +428,7 @@ function ChipInput({
       style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
       onDismiss={() => {
         onChipRemove(index, chip.value);
-        field.inputRef.current?.focus();
+        ownInput.current?.focus();
       }}
     >
       {chip.value}
@@ -414,15 +438,11 @@ function ChipInput({
   const input = (
     <input
       {...props}
-      ref={(node) => {
-        field.inputRef.current = node;
-        if (typeof ref === 'function') ref(node);
-        else if (ref) ref.current = node;
-      }}
+      ref={controlRef}
       id={field.inputId}
       name={field.name}
       disabled={field.disabled}
-      aria-invalid={field.invalid || undefined}
+      aria-invalid={field.invalid ? true : props['aria-invalid']}
       aria-describedby={mergeDescribedBy(field.describedBy, describedBy)}
       {...inputLabel(props, field)}
       value={inputValue}
@@ -480,6 +500,45 @@ function ChipInput({
       {input}
       {measure}
     </div>
+  );
+}
+
+/**
+ * A native `<select>`. Browsers with `appearance: base-select` draw the picker
+ * from tokens; others keep their native picker. Children are `<option>` and
+ * `<optgroup>` elements. `id` and `name` go on `Field.Root`.
+ */
+export type FieldSelectProps = {
+  value: string;
+  /** Optional: `onValueChange` alone is enough when the event is not needed. */
+  onChange?: (event: ChangeEvent<HTMLSelectElement>) => void;
+  onValueChange?: (value: string) => void;
+  children?: ReactNode;
+  ref?: Ref<HTMLSelectElement>;
+} & Omit<
+  SelectHTMLAttributes<HTMLSelectElement>,
+  'value' | 'defaultValue' | 'disabled' | 'onChange' | 'multiple' | 'size' | 'children' | 'id' | 'name'
+>;
+
+function Select({ value, onChange, onValueChange, className, children, ...props }: FieldSelectProps) {
+  const field = useField();
+  return (
+    <select
+      {...field.getControlProps(props)}
+      value={value}
+      className={cx(styles.select, className)}
+      // Without either handler the select is read-only, and React says so.
+      onChange={
+        onChange || onValueChange
+          ? (event) => {
+              onChange?.(event);
+              onValueChange?.(event.target.value);
+            }
+          : undefined
+      }
+    >
+      {children}
+    </select>
   );
 }
 
@@ -571,4 +630,4 @@ function Row({ className, ...props }: FieldRowProps) {
   return <div {...props} className={cx(styles.row, className)} />;
 }
 
-export const Field = { Root, TextInput, Textarea, ChipInput, Icon, Affix, Counter, Row } as const;
+export const Field = { Root, TextInput, Textarea, ChipInput, Select, Icon, Affix, Counter, Row } as const;

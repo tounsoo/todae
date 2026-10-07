@@ -49,6 +49,13 @@ export const meta = {
       description: 'False skips toggle, dismiss, and focus moves.',
     },
     {
+      name: 'haspopup',
+      type: '"dialog" | "menu" | "listbox" | "tree" | "grid"',
+      required: false,
+      default: '"dialog"',
+      description: 'aria-haspopup on the trigger. Use "listbox" for an OptionList in a role-less popover.',
+    },
+    {
       name: 'id',
       type: 'string',
       required: false,

@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { useRef, useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index';
 import {
@@ -38,6 +38,54 @@ function Harness({
 }
 
 describe('usePopover exports', () => {
+  it('a trigger whose own click prevents its default still toggles', () => {
+    function Link() {
+      const popover = usePopover();
+      return (
+        <a href="#x" {...popover.getTriggerProps({ onClick: (event) => event.preventDefault() })}>
+          Open
+        </a>
+      );
+    }
+    render(<Link />);
+    const link = screen.getByText('Open');
+    fireEvent.click(link);
+    expect(link.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('keeps each ref stable when the getter is used on two elements', () => {
+    const a = vi.fn();
+    const b = vi.fn();
+    function Two({ tick }: { tick: number }) {
+      const popover = usePopover();
+      return (
+        <div data-tick={tick}>
+          <button type="button" {...popover.getTriggerProps({ ref: a })}>
+            A
+          </button>
+          <button type="button" {...popover.getTriggerProps({ ref: b })}>
+            B
+          </button>
+        </div>
+      );
+    }
+    const { rerender } = render(<Two tick={1} />);
+    rerender(<Two tick={2} />);
+    expect(a).toHaveBeenCalledTimes(1);
+    expect(b).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps another overlay's anchor name on the trigger", () => {
+    let style: Record<string, unknown> = {};
+    function Probe() {
+      const popover = usePopover();
+      style = popover.getTriggerProps({ style: { anchorName: '--other' } }).style as unknown as Record<string, unknown>;
+      return null;
+    }
+    render(<Probe />);
+    expect(String(style.anchorName)).toMatch(/^--other, --todae-popover-/);
+  });
+
   it('exports the hook and prop getters', () => {
     expect(api.usePopover).toBe(usePopover);
     expectTypeOf<UsePopoverResult>().toHaveProperty('getTriggerProps');
@@ -45,6 +93,17 @@ describe('usePopover exports', () => {
     expectTypeOf<UsePopoverOptions>().toHaveProperty('enabled');
     expectTypeOf<PopoverWire>().toHaveProperty('onPointerDown');
     expectTypeOf<PopoverWire>().toHaveProperty('onClick');
+  });
+});
+
+describe('usePopover haspopup', () => {
+  it('defaults to dialog and takes listbox or menu', () => {
+    const { rerender } = render(<Harness />);
+    expect(screen.getByRole('button').getAttribute('aria-haspopup')).toBe('dialog');
+    rerender(<Harness haspopup="listbox" />);
+    expect(screen.getByRole('button').getAttribute('aria-haspopup')).toBe('listbox');
+    rerender(<Harness haspopup="menu" />);
+    expect(screen.getByRole('button').getAttribute('aria-haspopup')).toBe('menu');
   });
 });
 
@@ -104,6 +163,39 @@ describe('usePopover', () => {
     expect(anchor.style.getPropertyValue('anchor-name')).toBe(
       anchor.style.getPropertyValue('--todae-popover-anchor'),
     );
+  });
+
+  it('keeps the anchor variable on a popover still anchored, whichever unmounts first', () => {
+    function Anchored({ anchorRef }: { anchorRef: RefObject<HTMLDivElement | null> }) {
+      usePopover({ open: true, anchorRef });
+      return null;
+    }
+    function Shared({ a, b }: { a: boolean; b: boolean }) {
+      const anchorRef = useRef<HTMLDivElement>(null);
+      return (
+        <>
+          <div ref={anchorRef} data-testid="anchor" />
+          {a && <Anchored anchorRef={anchorRef} />}
+          {b && <Anchored anchorRef={anchorRef} />}
+        </>
+      );
+    }
+    const variable = () => screen.getByTestId('anchor').style.getPropertyValue('--todae-popover-anchor');
+    const names = () => screen.getByTestId('anchor').style.getPropertyValue('anchor-name').split(', ');
+    let { rerender } = render(<Shared a b />);
+    const [, second] = names();
+    expect(variable()).toBe(second);
+    // The first one goes: the second keeps the variable.
+    rerender(<Shared a={false} b />);
+    expect(names()).toEqual([second]);
+    expect(variable()).toBe(second);
+    cleanup();
+    // The second one goes: the variable goes back to the first.
+    ({ rerender } = render(<Shared a b />));
+    const [first] = names();
+    rerender(<Shared a b={false} />);
+    expect(names()).toEqual([first]);
+    expect(variable()).toBe(first);
   });
 
   it('uses a provided id on the surface', () => {

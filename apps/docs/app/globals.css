@@ -403,3 +403,13 @@ caption {
   font-size: 0.75rem;
   color: var(--todae-color-fg-muted);
 }
+
+.demo-toolbar {
+  display: flex;
+  gap: var(--todae-space-1);
+}
+
+.demo-stars {
+  letter-spacing: 0.1em;
+  outline: none;
+}

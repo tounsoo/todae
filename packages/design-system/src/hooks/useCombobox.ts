@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -9,6 +8,7 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from 'react';
+import { useDomId } from '../components/domId';
 import { optionDomId } from '../components/OptionList.ids';
 import type { BottomSheetRootProps } from '../components/BottomSheet';
 import type { ButtonRootProps } from '../components/Button';
@@ -141,8 +141,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const selectionMode = isMultiple(options) ? 'multiple' : 'single';
   const filter = options.filter ?? defaultFilter;
   const createLabel = options.createLabel ?? defaultCreateLabel;
-  const autoId = useId();
-  const uid = (options.id ?? autoId).replaceAll(':', '');
+  const autoId = useDomId();
+  const uid = options.id?.replaceAll(':', '') ?? autoId;
   const ids = {
     input: `todae-cb-input-${uid}`,
     listbox: `todae-cb-list-${uid}`,
@@ -233,7 +233,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         kind: 'create',
         label: createLabel(trimmed),
         value: trimmed,
-        id: `${ids.listbox}-opt-${CREATE_VALUE}`,
+        id: optionDomId(ids.listbox, CREATE_VALUE),
       });
     }
     return rows;

@@ -25,6 +25,8 @@
         { "$ref": "./components/popover.json" },
         { "$ref": "./components/tooltip.json" },
         { "$ref": "./components/option.json" },
+        { "$ref": "./components/menu.json" },
+        { "$ref": "./components/tabs.json" },
         { "$ref": "./components/selection.json" }
       ],
       "$extensions": {

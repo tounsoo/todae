@@ -22,6 +22,21 @@ import * as api from '../index';
 afterEach(cleanup);
 
 describe('Field exports', () => {
+  it("keeps a text input's own aria-invalid value unless the Root is invalid", () => {
+    const { rerender } = render(
+      <Field.Root aria-label="Note">
+        <Field.TextInput value="" onChange={() => {}} aria-invalid="spelling" />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('textbox').getAttribute('aria-invalid')).toBe('spelling');
+    rerender(
+      <Field.Root aria-label="Note" invalid>
+        <Field.TextInput value="" onChange={() => {}} aria-invalid="spelling" />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('textbox').getAttribute('aria-invalid')).toBe('true');
+  });
+
   it('hard-cuts old names and is not callable', () => {
     expect(api).not.toHaveProperty('TextField');
     expect(api).not.toHaveProperty('ChipField');
@@ -36,6 +51,7 @@ describe('Field exports', () => {
       TextInput: Field.TextInput,
       Textarea: Field.Textarea,
       ChipInput: Field.ChipInput,
+      Select: Field.Select,
       Icon: Field.Icon,
       Affix: Field.Affix,
       Counter: Field.Counter,
@@ -310,7 +326,7 @@ describe('Field.Textarea', () => {
     expect(fieldCss.slice(0, supports)).not.toContain('field-sizing');
     expect(fieldCss.slice(supports)).toContain('field-sizing: content');
     expect(fieldCss).toMatch(/\.textarea\[data-auto-grow\]\s*\{[^}]*resize:\s*none/);
-    expect(fieldCss).toContain('.shell:has(:is(input, textarea):focus-visible)');
+    expect(fieldCss).toContain('.shell:has(:is(input, textarea, [data-todae-field-control], [data-todae-field-control] *):focus-visible)');
     expect(fieldCss).toMatch(/\.textarea\s*\{[^}]*outline:\s*none/);
     expect(fieldCss).toContain('min-height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block))');
     expect(fieldCss).not.toContain('min-height: calc(1lh');

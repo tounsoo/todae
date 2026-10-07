@@ -1,8 +1,8 @@
 import {
   useCallback,
   useEffect,
-  useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   type CSSProperties,
   type HTMLAttributes,
@@ -14,11 +14,17 @@ import type { PopoverWire } from '../components/Popover.wire';
 import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
-import { useControlledState } from './useControlledState';
+import { useComposedRefs, useStableComposedRef } from '../components/props';
+import { useDomId } from '../components/domId';
+import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from '../overlay/anchorName';
+import { useControlledValue } from './useControlledState';
 
 export type { PopoverWire };
 
 export type PopoverCloseReason = 'escape' | 'outside' | 'trigger';
+
+/** What the trigger opens, for `aria-haspopup`. A role-less popover around an OptionList is a listbox. */
+export type PopoverHaspopup = 'dialog' | 'menu' | 'listbox' | 'tree' | 'grid';
 
 export type PopoverTriggerUserProps = HTMLAttributes<HTMLElement> & {
   ref?: Ref<HTMLElement | null>;
@@ -29,7 +35,7 @@ export type PopoverTriggerWire = {
   style: CSSProperties;
   'aria-expanded': boolean;
   'aria-controls': string;
-  'aria-haspopup': 'dialog';
+  'aria-haspopup': PopoverHaspopup;
   onClick: (event: MouseEvent<HTMLElement>) => void;
 };
 
@@ -42,6 +48,7 @@ export type UsePopoverOptions = {
   restoreFocusRef?: RefObject<HTMLElement | null>;
   enabled?: boolean;
   id?: string;
+  haspopup?: PopoverHaspopup;
 };
 
 export type UsePopoverResult = {
@@ -53,23 +60,11 @@ export type UsePopoverResult = {
   getPopoverProps: () => PopoverWire;
 };
 
-function assignRef<T>(ref: Ref<T> | undefined, value: T) {
-  if (typeof ref === 'function') ref(value);
-  else if (ref) ref.current = value;
-}
-
 function eventInside(el: HTMLElement | null, event: Event): boolean {
   if (!el) return false;
   const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
   if (path.includes(el)) return true;
   return event.target instanceof Node && el.contains(event.target);
-}
-
-function triggerStyle(anchorName: string): CSSProperties {
-  return {
-    ['--todae-popover-anchor' as string]: anchorName,
-    anchorName,
-  } as CSSProperties;
 }
 
 function popoverStyle(anchorName: string): CSSProperties {
@@ -101,9 +96,10 @@ export function usePopoverInternal(
     restoreFocusRef,
     enabled = true,
     id,
+    haspopup = 'dialog',
   } = options;
-  const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
-  const uid = useId().replaceAll(':', '');
+  const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
+  const uid = useDomId();
   const contentId = id ?? `todae-popover-${uid}`;
   const anchorName = `--todae-popover-${uid}`;
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -113,12 +109,8 @@ export function usePopoverInternal(
   const outsideRestore = useRef<(() => void) | null>(null);
 
   const requestClose = useCallback(
-    (reason: PopoverCloseReason) => {
-      if (!open) return;
-      setValue(false);
-      onOpenChange?.(false, reason);
-    },
-    [onOpenChange, open, setValue],
+    (reason: PopoverCloseReason) => setOpen(false, reason),
+    [setOpen],
   );
 
   useFocusRestore(enabled && open, { restoreTo: restoreFocusRef, containerRef: popoverRef });
@@ -130,12 +122,21 @@ export function usePopoverInternal(
     if (!el) return;
     const prevName = el.style.getPropertyValue('anchor-name');
     const prevVar = el.style.getPropertyValue('--todae-popover-anchor');
-    el.style.setProperty('anchor-name', anchorName);
+    // Join any anchor name the element already has, such as a tooltip's.
+    el.style.setProperty('anchor-name', mergeAnchorNames(prevName, anchorName));
     el.style.setProperty('--todae-popover-anchor', anchorName);
     return () => {
-      if (prevName) el.style.setProperty('anchor-name', prevName);
+      // Take out only this popover's name: another overlay may have added
+      // its own since.
+      const rest = removeAnchorName(el.style.getPropertyValue('anchor-name'), anchorName);
+      if (rest) el.style.setProperty('anchor-name', rest);
       else el.style.removeProperty('anchor-name');
-      if (prevVar) el.style.setProperty('--todae-popover-anchor', prevVar);
+      // The variable names the last popover anchored here. Hand it back to
+      // the one before only if that one is still anchored, and leave it alone
+      // if a later popover has taken it.
+      if (el.style.getPropertyValue('--todae-popover-anchor') !== anchorName) return;
+      const stillAnchored = rest.split(',').some((n) => n.trim() === prevVar);
+      if (prevVar && stillAnchored) el.style.setProperty('--todae-popover-anchor', prevVar);
       else el.style.removeProperty('--todae-popover-anchor');
     };
   }, [anchorName, anchorRef]);
@@ -171,53 +172,56 @@ export function usePopoverInternal(
     return () => document.removeEventListener('pointerdown', onPointerDown, true);
   }, [anchorRef, enabled, open, requestClose, restoreFocusRef, restoreOnOutside]);
 
+  const setTrigger = useComposedRefs(triggerRef);
+  const triggerComposed = useStableComposedRef(setTrigger);
+
   const getTriggerProps = useCallback(
     <P extends PopoverTriggerUserProps>(props?: P): P & PopoverTriggerWire => {
       const user = (props ?? {}) as P;
       return {
         ...user,
-        ref: (node: HTMLElement | null) => {
-          triggerRef.current = node;
-          assignRef(user.ref, node);
-        },
-        style: { ...user.style, ...triggerStyle(anchorName) },
+        // Stable while the caller's ref is, so the caller's ref is not
+        // detached and reattached, and its cleanup kept, across renders.
+        ref: triggerComposed(user.ref),
+        style: anchorTriggerStyle('--todae-popover-anchor', anchorName, user.style),
         'aria-expanded': open,
         'aria-controls': contentId,
-        'aria-haspopup': 'dialog',
+        'aria-haspopup': haspopup,
         onClick: (event: MouseEvent<HTMLElement>) => {
           user.onClick?.(event);
           if (!enabled) return;
-          if (open) requestClose('trigger');
-          else {
-            setValue(true);
-            onOpenChange?.(true, 'trigger');
-          }
+          setOpen(!open, 'trigger');
         },
       };
     },
-    [anchorName, contentId, enabled, onOpenChange, open, requestClose, setValue],
+    [anchorName, contentId, enabled, haspopup, open, setOpen, triggerComposed],
   );
+
+  // Stable, so a part that composes it with its own refs is not detached and
+  // reattached on every render.
+  const setPopover = useComposedRefs(popoverRef);
 
   const getPopoverProps = useCallback(
     (): PopoverWire => ({
       id: contentId,
       open,
-      ref: (node: HTMLElement | null) => {
-        popoverRef.current = node;
-      },
+      ref: setPopover,
       style: popoverStyle(anchorName),
       onPointerDown: stopBubble,
       onClick: stopBubble,
     }),
-    [anchorName, contentId, open],
+    [anchorName, contentId, open, setPopover],
   );
 
-  return {
-    open,
-    ids: { popover: contentId },
-    triggerRef,
-    popoverRef,
-    getTriggerProps,
-    getPopoverProps,
-  };
+  return useMemo(
+    () => ({
+      open,
+      ids: { popover: contentId },
+      triggerRef,
+      popoverRef,
+      getTriggerProps,
+      getPopoverProps,
+    }),
+    [contentId, getPopoverProps, getTriggerProps, open, popoverRef, triggerRef],
+  );
 }

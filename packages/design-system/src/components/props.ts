@@ -1,4 +1,4 @@
-import { useCallback, type Ref, type RefCallback, type SyntheticEvent } from 'react';
+import { useCallback, useRef, type Ref, type RefCallback, type SyntheticEvent } from 'react';
 
 function setRef<T>(ref: Ref<T> | undefined, node: T | null): (() => void) | undefined {
   if (typeof ref === 'function') {
@@ -34,6 +34,32 @@ export function useComposedRefs<T>(...refs: (Ref<T> | undefined)[]): RefCallback
   // The refs themselves are the dependency list.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback(composeRefs(...refs), refs);
+}
+
+/**
+ * For prop getters, which compose a caller's ref inside a callback where
+ * {@link useComposedRefs} cannot run. Returns `own` when there is no caller
+ * ref, and the same composed callback for as long as the caller's ref is the
+ * same, so React does not detach and reattach it on every render.
+ */
+export function useStableComposedRef<T>(own: RefCallback<T>): (theirs: Ref<T> | undefined) => RefCallback<T> {
+  // One composed callback per caller ref, so a getter used on several
+  // elements keeps each one stable. Rebuilt when `own` changes.
+  const cache = useRef<{ own: RefCallback<T>; map: WeakMap<object, RefCallback<T>> } | null>(null);
+  return useCallback(
+    (theirs: Ref<T> | undefined) => {
+      if (!theirs) return own;
+      if (cache.current?.own !== own) cache.current = { own, map: new WeakMap() };
+      const { map } = cache.current;
+      let composed = map.get(theirs);
+      if (!composed) {
+        composed = composeRefs(own, theirs);
+        map.set(theirs, composed);
+      }
+      return composed;
+    },
+    [own],
+  );
 }
 
 /**

@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useId,
   useLayoutEffect,
   useRef,
   useState,
@@ -22,6 +21,9 @@ import {
 import type { TooltipWire } from '../components/Tooltip.wire';
 import { getTabbables } from '../overlay/tabbables';
 import { useEscapeKey } from '../overlay/useEscapeKey';
+import { useComposedRefs, useStableComposedRef } from '../components/props';
+import { useDomId } from '../components/domId';
+import { anchorTriggerStyle } from '../overlay/anchorName';
 import { useControlledState } from './useControlledState';
 
 export type { TooltipOpenReason, TooltipWire };
@@ -61,18 +63,6 @@ export type UseTooltipResult<I extends boolean = false> = {
   getTooltipProps: () => TooltipWire<I>;
 };
 
-function assignRef<T>(ref: Ref<T> | undefined, value: T) {
-  if (typeof ref === 'function') ref(value);
-  else if (ref) ref.current = value;
-}
-
-function triggerStyle(anchorName: string): CSSProperties {
-  return {
-    ['--todae-tooltip-anchor' as string]: anchorName,
-    anchorName,
-  } as CSSProperties;
-}
-
 function tooltipStyle(anchorName: string): CSSProperties {
   return {
     ['--todae-tooltip-anchor' as string]: anchorName,
@@ -95,7 +85,7 @@ export function useTooltip<I extends boolean = false>(
   } = options;
   const [open, setValue] = useControlledState(openProp, defaultOpen ?? false);
   const [restoreEpoch, setRestoreEpoch] = useState(0);
-  const uid = useId().replaceAll(':', '');
+  const uid = useDomId();
   const contentId = id ?? `todae-tooltip-${uid}`;
   const anchorName = `--todae-tooltip-${uid}`;
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -220,16 +210,17 @@ export function useTooltip<I extends boolean = false>(
     [],
   );
 
+  const setTrigger = useComposedRefs(triggerRef);
+  const triggerComposed = useStableComposedRef(setTrigger);
+
   const getTriggerProps = useCallback(
     <P extends TooltipTriggerUserProps>(props?: P): P & TooltipTriggerWire => {
       const user = (props ?? {}) as P;
       return {
         ...user,
-        ref: (node: HTMLElement | null) => {
-          triggerRef.current = node;
-          assignRef(user.ref, node);
-        },
-        style: { ...user.style, ...triggerStyle(anchorName) },
+        // Stable while the caller's ref is; see usePopover.
+        ref: triggerComposed(user.ref),
+        style: anchorTriggerStyle('--todae-tooltip-anchor', anchorName, user.style),
         'aria-describedby': open && enabled ? contentId : user['aria-describedby'],
         onPointerEnter: (event: PointerEvent<HTMLElement>) => {
           user.onPointerEnter?.(event);
@@ -253,7 +244,7 @@ export function useTooltip<I extends boolean = false>(
         },
       };
     },
-    [anchorName, contentId, dispatch, enabled, open, pairContains],
+    [anchorName, contentId, dispatch, enabled, open, pairContains, triggerComposed],
   );
 
   const getTooltipProps = useCallback((): TooltipWire<I> => {

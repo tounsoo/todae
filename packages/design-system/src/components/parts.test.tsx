@@ -13,11 +13,13 @@ import {
   ErrorMessage,
   Field,
   Label,
+  Menu,
   OptionList,
   Popover,
   RadioGroup,
   Stack,
   Switch,
+  Tabs,
   Text,
   Tooltip,
   composeRefs,
@@ -132,6 +134,16 @@ const cases: Case[] = [
     ),
   ],
   [
+    'Field.Select',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.Select {...p} value="a" onChange={noop}>
+          <option value="a">a</option>
+        </Field.Select>
+      </Field.Root>
+    ),
+  ],
+  [
     'Field.Counter',
     (p) => (
       <Field.Root aria-label="t">
@@ -194,6 +206,85 @@ const cases: Case[] = [
     ),
   ],
   ['Popover.Root', (p) => <PopoverCase p={p} />],
+  ['Menu.Trigger', (p) => (
+    <Menu.Root>
+      <Menu.Trigger {...p}>Open</Menu.Trigger>
+    </Menu.Root>
+  )],
+  ['Menu.Content', (p) => (
+    <Menu.Root>
+      <Menu.Content {...p} aria-label="m" />
+    </Menu.Root>
+  )],
+  ...(['Item', 'CheckboxItem', 'Separator'] as const).map(
+    (part): Case => [
+      `Menu.${part}`,
+      (p) => {
+        const Part = Menu[part] as (props: Native & { children?: ReactNode }) => ReactNode;
+        return (
+          <Menu.Root>
+            <Menu.Content aria-label="m">
+              <Part {...p}>x</Part>
+            </Menu.Content>
+          </Menu.Root>
+        );
+      },
+    ],
+  ),
+  ['Menu.Group', (p) => (
+    <Menu.Root>
+      <Menu.Content aria-label="m">
+        <Menu.Group {...p} aria-label="g" />
+      </Menu.Content>
+    </Menu.Root>
+  )],
+  ['Menu.RadioGroup', (p) => (
+    <Menu.Root>
+      <Menu.Content aria-label="m">
+        <Menu.RadioGroup {...p} aria-label="g" />
+      </Menu.Content>
+    </Menu.Root>
+  )],
+  ['Menu.RadioItem', (p) => (
+    <Menu.Root>
+      <Menu.Content aria-label="m">
+        <Menu.RadioGroup aria-label="g">
+          <Menu.RadioItem {...p} value="a">
+            a
+          </Menu.RadioItem>
+        </Menu.RadioGroup>
+      </Menu.Content>
+    </Menu.Root>
+  )],
+  ['Tabs.Root', (p) => <Tabs.Root {...p} defaultValue="a" />],
+  [
+    'Tabs.List',
+    (p) => (
+      <Tabs.Root defaultValue="a">
+        <Tabs.List {...p} aria-label="t" />
+      </Tabs.Root>
+    ),
+  ],
+  [
+    'Tabs.Tab',
+    (p) => (
+      <Tabs.Root defaultValue="a">
+        <Tabs.List aria-label="t">
+          <Tabs.Tab {...p} value="a">
+            A
+          </Tabs.Tab>
+        </Tabs.List>
+      </Tabs.Root>
+    ),
+  ],
+  [
+    'Tabs.Panel',
+    (p) => (
+      <Tabs.Root defaultValue="a">
+        <Tabs.Panel {...p} value="a" />
+      </Tabs.Root>
+    ),
+  ],
   ['Tooltip.Root', (p) => <TooltipCase p={p} />],
 ];
 

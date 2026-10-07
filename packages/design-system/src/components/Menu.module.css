@@ -1,0 +1,92 @@
+@layer todae.components {
+  .menu {
+    flex-direction: column;
+    gap: var(--todae-menu-gap);
+    min-width: 10rem;
+    outline: none;
+  }
+
+  /* Flex only while open, so a closed menu keeps the UA's hidden popover. */
+  .menu:popover-open {
+    display: flex;
+  }
+
+  .item {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--todae-menu-gap);
+    width: 100%;
+    margin: 0;
+    padding: var(--todae-menu-item-padding-y) var(--todae-menu-item-padding-x);
+    border-radius: var(--todae-menu-item-radius);
+    background: var(--todae-menu-item-bg-default);
+    color: var(--todae-menu-item-fg-default);
+    font-size: var(--todae-menu-item-font-size);
+    font-weight: var(--todae-menu-item-font-weight);
+    line-height: 1.25;
+    text-align: start;
+    cursor: default;
+    outline: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Pointer and keyboard both move focus, so focus is the highlight. */
+  .item:focus {
+    background: var(--todae-menu-item-bg-highlight);
+  }
+
+  .item:focus-visible {
+    outline: 2px solid var(--todae-menu-item-fg-default);
+    outline-offset: -2px;
+  }
+
+  /* Disabled items still take keyboard focus, and show it, so they are found. */
+  .item[data-disabled] {
+    color: var(--todae-menu-item-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .indicator {
+    flex: none;
+    position: relative;
+    width: 1em;
+    height: 1em;
+  }
+
+  [role='menuitemcheckbox'][aria-checked='true'] > .indicator::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0.36em;
+    top: 0.12em;
+    width: 0.28em;
+    height: 0.55em;
+    /* Physical sides: the rotation is physical too, so the check keeps its shape in rtl. */
+    border-right: 2px solid var(--todae-menu-item-check-fg);
+    border-bottom: 2px solid var(--todae-menu-item-check-fg);
+    transform: rotate(45deg);
+  }
+
+  [role='menuitemradio'][aria-checked='true'] > .indicator::before {
+    content: '';
+    position: absolute;
+    inset: 0.3em;
+    border-radius: 50%;
+    background: var(--todae-menu-item-check-fg);
+  }
+
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-menu-gap);
+  }
+
+  .separator {
+    flex: none;
+    height: 1px;
+    margin-block: var(--todae-menu-gap);
+    background: var(--todae-menu-separator);
+  }
+}

@@ -20,7 +20,7 @@ export function SiblingsAllowed() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [sort, setSort] = useState<string | null>(null);
-  const popover = usePopover({ open, onOpenChange: setOpen });
+  const popover = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' });
   return (
     <>
       <Field.Root aria-label="Filter">
