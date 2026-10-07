@@ -78,25 +78,31 @@ describe('useHighlight', () => {
     expect(painted('search')).toEqual(['foo', 'foo']);
   });
 
-  it('skips text the browser does not show', () => {
-    const original = HTMLElement.prototype.checkVisibility;
-    HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {
-      return !this.hidden;
-    };
+  it('matches text hidden by CSS but not the text of script and style elements', () => {
+    function Partly() {
+      const highlight = useHighlight({ name: 'search', query: 'tea' });
+      return (
+        <div ref={highlight.ref}>
+          <p>tea</p>
+          <p hidden>tea</p>
+          <p style={{ display: 'none' }}>tea</p>
+          <script type="text/plain">tea</script>
+          <style>{'.tea {}'}</style>
+        </div>
+      );
+    }
+    render(<Partly />);
+    expect(painted('search')).toEqual(['tea', 'tea', 'tea']);
+  });
+
+  it('searches once where MutationObserver is missing', () => {
+    const original = globalThis.MutationObserver;
+    delete (globalThis as { MutationObserver?: unknown }).MutationObserver;
     try {
-      function Partly() {
-        const highlight = useHighlight({ name: 'search', query: 'tea' });
-        return (
-          <div ref={highlight.ref}>
-            <p>tea</p>
-            <p hidden>tea</p>
-          </div>
-        );
-      }
-      render(<Partly />);
-      expect(painted('search')).toEqual(['tea']);
+      render(<Search query="apple" />);
+      expect(count()).toBe('2');
     } finally {
-      HTMLElement.prototype.checkVisibility = original;
+      globalThis.MutationObserver = original;
     }
   });
 

@@ -37,25 +37,17 @@ function patternSource(query: string | readonly string[] | undefined): string {
     .join('|');
 }
 
-// `visibility: hidden` text paints nothing, so it counts as hidden too.
-const isVisible = (element: Element) => element.checkVisibility?.({ visibilityProperty: true }) ?? true;
+// Elements whose child text is never painted as page text.
+const UNPAINTED = new Set(['script', 'style', 'textarea', 'noscript']);
 
 function findMatches(root: HTMLElement, pattern: RegExp): Range[] {
   const doc = root.ownerDocument;
   const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const visible = new Map<Element, boolean>();
   const found: Range[] = [];
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     const text = node as Text;
     const parent = text.parentElement;
-    // A textarea paints its live value, not its child text.
-    if (!parent || parent.localName === 'textarea') continue;
-    let shown = visible.get(parent);
-    if (shown === undefined) {
-      shown = isVisible(parent);
-      visible.set(parent, shown);
-    }
-    if (!shown) continue;
+    if (!parent || UNPAINTED.has(parent.localName)) continue;
     for (const match of text.data.matchAll(pattern)) {
       const range = doc.createRange();
       range.setStart(text, match.index);
@@ -108,14 +100,9 @@ export function useHighlight({
       setMatches((prev) => (sameRanges(prev, next) ? prev : next.length === 0 ? NO_MATCHES : next));
     };
     search();
+    if (typeof MutationObserver === 'undefined') return;
     const observer = new MutationObserver(search);
-    observer.observe(node, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-      // Only the attributes that commonly show or hide text.
-      attributeFilter: ['hidden', 'class', 'style', 'open'],
-    });
+    observer.observe(node, { subtree: true, childList: true, characterData: true });
     return () => observer.disconnect();
   }, [node, source, flags]);
 

@@ -17,24 +17,23 @@ function Search({ query }: { query: string }) {
 }
 
 describe('useHighlight in a real browser', () => {
-  it('registers a native Highlight with the visible matches and removes it on unmount', () => {
+  it('registers a native Highlight with the matches and removes it on unmount', () => {
     const { unmount } = render(<Search query="tea" />);
     const highlight = CSS.highlights.get('browser-search');
     expect(highlight).toBeInstanceOf(Highlight);
     expect(highlight!.priority).toBe(2);
-    expect([...highlight!].map((range) => range.toString())).toEqual(['Tea', 'tea', 'tea']);
-    expect(screen.getByRole('status').textContent).toBe('3');
+    expect([...highlight!].map((range) => range.toString())).toEqual(['Tea', 'tea', 'tea', 'tea', 'tea']);
+    expect(screen.getByRole('status').textContent).toBe('5');
     unmount();
     expect(CSS.highlights.has('browser-search')).toBe(false);
   });
 
-  it('searches again when text is added or shown', async () => {
+  it('searches again when text is added', async () => {
     render(<Search query="tea" />);
     const body = screen.getByTestId('body');
     await act(async () => {
       body.append('More tea.');
-      (body.children[1] as HTMLElement).style.display = '';
     });
-    expect(CSS.highlights.get('browser-search')?.size).toBe(5);
+    expect(CSS.highlights.get('browser-search')?.size).toBe(6);
   });
 });

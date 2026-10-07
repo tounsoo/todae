@@ -4,7 +4,7 @@ import { HighlightSearch } from '../../../../components/demos/HighlightDemo';
 
 Marks text matches, such as search results, with the browser's CSS Custom Highlight API. The hook finds each match as a `Range` and adds it to a `Highlight` in `CSS.highlights`; your CSS paints it with `::highlight(name)`. No `<mark>` elements are added, so the DOM, the selection and focus stay as they are.
 
-Put `ref` on the element to search and pass `query`. The hook searches again when text or elements under `ref` change, or a `hidden`, `class`, `style` or `open` attribute there does. Matching ignores letter case unless `caseSensitive` is set, and the query is plain text, not a pattern. A list finds every term.
+Put `ref` on the element to search and pass `query`. The hook searches again when text or elements under `ref` change. Matching ignores letter case unless `caseSensitive` is set, and the query is plain text, not a pattern. A list finds every term.
 
 ```tsx
 const found = useHighlight({ name: 'search', query })
@@ -24,7 +24,7 @@ const found = useHighlight({ name: 'search', query })
   <HighlightSearch />
 </Example>
 
-`matches` holds a live `Range` per match, in document order. Where the browser supports `checkVisibility()`, it skips text hidden with `display: none` or `visibility: hidden` when it searches. A match must sit inside one text node, so a word split by markup, such as `fo<b>o</b>`, is not found.
+`matches` holds a live `Range` per match, in document order. Text hidden by CSS is still matched. A match must sit inside one text node, so a word split by markup, such as `fo<b>o</b>`, is not found.
 
 To mark the current result, pass it to a second hook as `ranges` under another name, with a higher `priority` so it paints on top. The demo above does this. Give each hook its own `name`; to style several the same way, list them: `::highlight(a), ::highlight(b)`. `type` sets `spelling-error` or `grammar-error` for spelling and grammar marks.
 

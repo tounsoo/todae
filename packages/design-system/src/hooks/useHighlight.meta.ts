@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'useHighlight',
   description:
-    'Returns { ref, matches }. Put ref on the element to search. matches holds a live Range per match of query, in document order, and is empty on the server. Ranges paint through CSS.highlights under name, so nothing is added to the DOM; style them with ::highlight(name). The hook searches again when text, elements or the hidden, class, style or open attributes under ref change.',
+    'Returns { ref, matches }. Put ref on the element to search. matches holds a live Range per match of query, in document order, and is empty on the server. Ranges paint through CSS.highlights under name, so nothing is added to the DOM; style them with ::highlight(name). The hook searches again when text or elements under ref change.',
   props: [
     {
       name: 'name',
