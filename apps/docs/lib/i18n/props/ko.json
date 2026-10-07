@@ -164,7 +164,7 @@
     },
     "className": {
       "en": "Optional class on the span.",
-      "ko": "span에 붙는 선택 클래스."
+      "ko": "span에 붙는 선택적 클래스."
     }
   },
   "Dialog.Close": {
@@ -194,11 +194,11 @@
     },
     "dismissOnBackdrop": {
       "en": "Scrim click calls onOpenChange(false, \"backdrop\").",
-      "ko": "스크림 클릭이 onOpenChange(false, \"backdrop\")를 호출합니다."
+      "ko": "스크림 클릭이 onOpenChange(false, \"backdrop\")을 호출합니다."
     },
     "aria-label": {
       "en": "Name when Dialog.Title is omitted.",
-      "ko": "Dialog.Title을 생략할 때의 이름."
+      "ko": "Dialog.Title을 생략했을 때의 이름."
     }
   },
   "Dialog.Title": {
@@ -218,13 +218,13 @@
     },
     "className": {
       "en": "Optional class on the span.",
-      "ko": "span에 붙는 선택 클래스."
+      "ko": "span에 붙는 선택적 클래스."
     }
   },
   "Field.Affix": {
     "children": {
       "en": "Affix content. Strings render as text.",
-      "ko": "접사 내용. 문자열은 텍스트로 렌더링됩니다."
+      "ko": "Affix 내용. 문자열은 텍스트로 렌더링됩니다."
     }
   },
   "Field.ChipInput": {
@@ -250,7 +250,7 @@
     },
     "commitKeys": {
       "en": "Closed allowlist of commit keys.",
-      "ko": "확정 키의 닫힌 허용 목록."
+      "ko": "확정 키로 쓸 수 있는 키의 고정 목록."
     },
     "maxRows": {
       "en": "Caps visual rows. inline: chips plus input. row: chip lines only; the input keeps its own line. Newest chips fold into +N. A chip that does not fit at full width moves into +N. Only a chip wider than the row truncates.",
@@ -292,7 +292,7 @@
   "Field.Root": {
     "disabled": {
       "en": "Disables the input and marks the shell.",
-      "ko": "입력을 비활성화하고 셸에 표시합니다."
+      "ko": "입력을 비활성화하고 셸도 비활성 상태로 표시합니다."
     },
     "invalid": {
       "en": "Marks the shell invalid and sets aria-invalid on the input.",
@@ -362,7 +362,7 @@
     },
     "onValueChange": {
       "en": "Optional value callback.",
-      "ko": "선택적인 값 콜백."
+      "ko": "선택적 값 콜백."
     },
     "placeholder": {
       "en": "Native placeholder.",
@@ -484,7 +484,7 @@
     },
     "className": {
       "en": "Optional class.",
-      "ko": "선택 클래스."
+      "ko": "선택적 클래스."
     }
   },
   "Menu.Item": {
@@ -540,7 +540,7 @@
     },
     "className": {
       "en": "Optional class.",
-      "ko": "선택 클래스."
+      "ko": "선택적 클래스."
     }
   },
   "Menu.RadioItem": {
@@ -590,7 +590,7 @@
   "Menu.Separator": {
     "className": {
       "en": "Optional class.",
-      "ko": "선택 클래스."
+      "ko": "선택적 클래스."
     }
   },
   "Menu.Trigger": {
@@ -624,7 +624,7 @@
   "OptionList.Root": {
     "selectionMode": {
       "en": "Single fires onChange(string). Multiple fires onChange(string[]).",
-      "ko": "Single은 onChange(string)을, Multiple은 onChange(string[])을 호출합니다."
+      "ko": "single은 onChange(string)을, multiple은 onChange(string[])을 호출합니다."
     },
     "value": {
       "en": "Selected value, or values when selectionMode is multiple.",
@@ -632,7 +632,7 @@
     },
     "onChange": {
       "en": "Selection change. Single passes a string. Multiple passes the next array.",
-      "ko": "선택 변경. Single은 문자열을, Multiple은 다음 배열을 전달합니다."
+      "ko": "선택 변경. single은 문자열을, multiple은 다음 배열을 전달합니다."
     },
     "id": {
       "en": "Listbox id. Auto-generated when omitted. Option ids derive from it.",
@@ -804,7 +804,7 @@
     },
     "className": {
       "en": "Optional class on the tablist.",
-      "ko": "tablist에 붙는 선택 클래스."
+      "ko": "tablist에 붙는 선택적 클래스."
     }
   },
   "Tabs.Panel": {
@@ -822,7 +822,7 @@
     },
     "className": {
       "en": "Optional class on the panel.",
-      "ko": "패널에 붙는 선택 클래스."
+      "ko": "패널에 붙는 선택적 클래스."
     }
   },
   "Tabs.Root": {
@@ -932,7 +932,7 @@
     },
     "transform": {
       "en": "Normalize a commit. Null rejects. Default trims and rejects empty.",
-      "ko": "커밋을 정규화합니다. Null이면 거부합니다. 기본값은 공백을 다듬고 빈 값을 거부합니다."
+      "ko": "커밋을 정규화합니다. null이면 거부합니다. 기본 동작은 공백을 제거하고 빈 값을 거부합니다."
     }
   },
   "useChipList": {
@@ -1029,7 +1029,7 @@
   "useRovingFocus": {
     "orientation": {
       "en": "Which arrow keys move focus. Left and Right swap in a right-to-left container.",
-      "ko": "포커스를 옮기는 화살표 키. 오른쪽에서 왼쪽 컨테이너에서는 Left와 Right가 바뀝니다."
+      "ko": "포커스를 옮기는 화살표 키. 오른쪽에서 왼쪽으로 쓰는(RTL) 컨테이너에서는 Left와 Right가 바뀝니다."
     },
     "loop": {
       "en": "Wrap from the last item to the first and back.",
@@ -1041,7 +1041,7 @@
     },
     "tabStop": {
       "en": "Keep one item tabbable. False when focus only enters from code, as in a menu: every item gets tabIndex -1.",
-      "ko": "항목 하나를 탭으로 이동 가능하게 유지합니다. 메뉴처럼 포커스가 코드로만 들어올 때는 False이며, 모든 항목이 tabIndex -1을 받습니다."
+      "ko": "항목 하나를 탭으로 이동 가능하게 유지합니다. 메뉴처럼 포커스가 코드로만 들어올 때는 false이며, 모든 항목이 tabIndex -1을 받습니다."
     },
     "activeValue": {
       "en": "Controlled tab stop. Falls back to the first enabled item when null, disabled or missing.",
@@ -1085,7 +1085,7 @@
     },
     "onOpenChange": {
       "en": "Fires after a commit. Leaving open unchanged is a veto.",
-      "ko": "커밋 뒤에 호출됩니다. open을 바꾸지 않으면 거부입니다."
+      "ko": "커밋 뒤에 호출됩니다. open을 바꾸지 않으면 거부로 처리됩니다."
     },
     "showDelay": {
       "en": "Hover show delay in milliseconds. Focus shows at once.",

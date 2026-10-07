@@ -58,9 +58,12 @@ function readComponent(name: string): ComponentRow {
 
 export function PropsTable({ name }: { name: string }) {
   const component = readComponent(name);
-  // Every language's descriptions; the view shows the page's own.
-  const descriptions = Object.fromEntries(
-    LOCALES.map((locale) => [locale, component.props.map((prop) => propDescription(locale, component.name, prop.name, prop.description))]),
-  ) as Record<Locale, PropDescription[]>;
-  return <PropsTableView component={component} descriptions={descriptions} />;
+  // Each prop's description in every language; the view shows the page's own.
+  const rows = component.props.map(({ description, ...prop }) => ({
+    ...prop,
+    descriptions: Object.fromEntries(
+      LOCALES.map((locale) => [locale, propDescription(locale, component.name, prop.name, description)]),
+    ) as Record<Locale, PropDescription>,
+  }));
+  return <PropsTableView name={component.name} rows={rows} />;
 }

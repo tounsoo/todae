@@ -1,26 +1,29 @@
 'use client';
 
-import { DEFAULT_LOCALE, type Locale } from '../lib/i18n/config';
+import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { useLocale } from '../lib/i18n/useLocale';
 import { ScrollRegion } from './OverflowRegion';
-import type { ComponentRow } from './PropsTable';
+import type { PropRow } from './PropsTable';
 
 export type PropDescription = { text: string; lang: Locale };
 
+export type PropsTableRow = Omit<PropRow, 'description'> & { descriptions: Record<Locale, PropDescription> };
+
 export function PropsTableView({
-  component,
-  descriptions,
+  name,
+  rows,
 }: {
-  component: ComponentRow;
-  descriptions: Record<Locale, PropDescription[]>;
+  name: string;
+  rows: PropsTableRow[];
 }) {
   const locale = useLocale();
   const words = DICTIONARIES[locale].propsTable;
   return (
     <ScrollRegion>
-    <table>
-      <caption>{words.caption.replace('{name}', component.name)}</caption>
+    // Its own lang: an untranslated page wraps its English content in lang="en".
+    <table lang={locale}>
+      <caption>{words.caption.replace('{name}', name)}</caption>
       <thead>
         <tr>
           <th scope="col">{words.name}</th>
@@ -31,8 +34,8 @@ export function PropsTableView({
         </tr>
       </thead>
       <tbody>
-        {component.props.map((prop, index) => {
-          const description = descriptions[locale][index] ?? { text: prop.description, lang: DEFAULT_LOCALE };
+        {rows.map((prop) => {
+          const description = prop.descriptions[locale];
           return (
             <tr key={prop.name}>
               <th scope="row">{prop.name}</th>
@@ -41,7 +44,7 @@ export function PropsTableView({
               </td>
               <td>{prop.required ? words.yes : words.no}</td>
               <td>{prop.default ?? '—'}</td>
-              <td lang={description.lang === locale ? undefined : description.lang}>{description.text}</td>
+              <td lang={description.lang}>{description.text}</td>
             </tr>
           );
         })}

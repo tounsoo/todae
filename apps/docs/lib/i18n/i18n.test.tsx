@@ -309,7 +309,8 @@ describe('docs locales', () => {
     path.current = '/button';
     const english = renderToStaticMarkup(<PropsTable name="Button.Root" />);
     expect(english).toContain('<th scope="col">Description</th>');
-    expect(english).toContain('<td>Visual style. Non-primary sets data-button-variant.</td>');
+    expect(english).toContain('<td lang="en">Visual style. Non-primary sets data-button-variant.</td>');
+    expect(korean).toContain('<table lang="ko">');
     path.current = '/ko/button';
   });
 
