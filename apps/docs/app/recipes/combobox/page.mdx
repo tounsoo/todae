@@ -16,7 +16,7 @@ A recipe, not a package namespace. [useCombobox](/utilities/use-combobox) owns o
 
 ## Presentation
 
-`useCombobox({ presentation: 'auto' })` picks a sheet on a coarse pointer or a narrow viewport, and a popover on the server and the first paint, through [useSheetPresentation](/utilities/use-sheet-presentation). Force `popover` or `sheet` when a docs screenshot must stay still.
+`useCombobox({ presentation: 'auto' })` picks a sheet on a coarse pointer or a narrow viewport and a popover otherwise, always a popover on the server and the first paint, through [useSheetPresentation](/utilities/use-sheet-presentation). Force `popover` or `sheet` when a docs screenshot must stay still.
 
 If presentation flips while the list is open, the hook closes with `blur`.
 

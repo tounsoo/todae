@@ -61,7 +61,7 @@ Icon-only `Button.Root` tips its accessible name. Pass `aria-label` or `aria-lab
 
 **When:** Short hint for a control (icon-only name, truncated label). A `Button.Root` tips its own icon-only or truncated label; any other trigger uses [useTooltip](/utilities/use-tooltip) + surface-only `Tooltip.Root`. Default tip is text-only (`role="tooltip"`).
 
-**When not:** Links inside the tip → `useTooltip({ interactive: true })` (non-modal tip dialog; links only). Action menus → [Menu](/menu). Other actions → Popover. Long help → Description. Modal tasks → Dialog.
+**When not:** A plain tip for links inside it → set `interactive: true` on [useTooltip](/utilities/use-tooltip) (non-modal tip dialog; links only). Action menus → [Menu](/menu). Other actions → Popover. Long help → Description. Modal tasks → Dialog.
 
 ## Props
 
