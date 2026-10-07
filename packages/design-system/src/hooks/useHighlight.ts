@@ -56,17 +56,24 @@ const inDocumentOrder = (a: Node, b: Node) => (a.compareDocumentPosition(b) & No
  */
 function createSearch(root: HTMLElement, pattern: RegExp) {
   const byText = new Map<Text, Range[]>();
+  let changed = false;
   const scanText = (text: Text) => {
     const found = rangesIn(text, pattern);
-    if (found.length > 0) byText.set(text, found);
-    else byText.delete(text);
+    if (found.length > 0) {
+      byText.set(text, found);
+      changed = true;
+    } else if (byText.delete(text)) {
+      changed = true;
+    }
   };
   const scan = (node: Node) => {
     if (node.nodeType === Node.TEXT_NODE) return scanText(node as Text);
     const walker = root.ownerDocument.createTreeWalker(node, NodeFilter.SHOW_TEXT);
     for (let text = walker.nextNode(); text; text = walker.nextNode()) scanText(text as Text);
   };
-  const update = (records: readonly MutationRecord[]) => {
+  /** Applies a mutation batch; returns whether any match changed. */
+  const update = (records: readonly MutationRecord[]): boolean => {
+    changed = false;
     let removed = false;
     for (const record of records) {
       if (record.type === 'characterData') {
@@ -77,8 +84,14 @@ function createSearch(root: HTMLElement, pattern: RegExp) {
       if (record.removedNodes.length > 0) removed = true;
       for (const added of record.addedNodes) if (root.contains(added)) scan(added);
     }
-    if (!removed) return;
-    for (const text of byText.keys()) if (!root.contains(text)) byText.delete(text);
+    if (removed) {
+      for (const text of byText.keys()) {
+        if (root.contains(text)) continue;
+        byText.delete(text);
+        changed = true;
+      }
+    }
+    return changed;
   };
   const matches = () => [...byText.keys()].sort(inDocumentOrder).flatMap((text) => byText.get(text)!);
   scan(root);
@@ -151,8 +164,7 @@ export function useHighlight({
     publish();
     if (typeof MutationObserver === 'undefined') return;
     const observer = new MutationObserver((records) => {
-      search.update(records);
-      publish();
+      if (search.update(records)) publish();
     });
     observer.observe(node, { subtree: true, childList: true, characterData: true });
     return () => observer.disconnect();

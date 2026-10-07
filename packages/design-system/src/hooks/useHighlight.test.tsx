@@ -234,6 +234,21 @@ describe('useHighlight', () => {
     expect(after[1]).not.toBe(before[1]);
   });
 
+  it('follows text moved and edited within one batch', async () => {
+    render(<Search query="pie" text="pie" />);
+    const body = screen.getByTestId('body');
+    const holder = document.createElement('div');
+    body.after(holder);
+    await act(async () => {
+      const text = body.firstChild as Text;
+      holder.append(text);
+      body.append(text);
+      text.data = 'pie and pie';
+    });
+    expect(painted('search')).toEqual(['pie', 'pie']);
+    holder.remove();
+  });
+
   it('keeps document order and drops removed text as nodes come and go', async () => {
     render(<Search query="pie" text="pie" />);
     const body = screen.getByTestId('body');
