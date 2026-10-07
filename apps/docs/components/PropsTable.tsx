@@ -1,7 +1,9 @@
 import schema from '@tounsoo/todae/schema/components.json';
-import { ScrollRegion } from './OverflowRegion';
+import { LOCALES, type Locale } from '../lib/i18n/config';
+import { propDescription } from '../lib/i18n/propDescriptions';
+import { PropsTableView, type PropDescription } from './PropsTableView';
 
-type PropRow = {
+export type PropRow = {
   name: string;
   type: string;
   required: boolean;
@@ -9,7 +11,7 @@ type PropRow = {
   description: string;
 };
 
-type ComponentRow = {
+export type ComponentRow = {
   name: string;
   description: string;
   props: PropRow[];
@@ -56,33 +58,9 @@ function readComponent(name: string): ComponentRow {
 
 export function PropsTable({ name }: { name: string }) {
   const component = readComponent(name);
-  return (
-    <ScrollRegion>
-    <table>
-      <caption>{component.name} props</caption>
-      <thead>
-        <tr>
-          <th scope="col">Name</th>
-          <th scope="col">Type</th>
-          <th scope="col">Required</th>
-          <th scope="col">Default</th>
-          <th scope="col">Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        {component.props.map((prop) => (
-          <tr key={prop.name}>
-            <th scope="row">{prop.name}</th>
-            <td>
-              <code>{prop.type}</code>
-            </td>
-            <td>{prop.required ? 'yes' : 'no'}</td>
-            <td>{prop.default ?? '—'}</td>
-            <td>{prop.description}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-    </ScrollRegion>
-  );
+  // Every language's descriptions; the view shows the page's own.
+  const descriptions = Object.fromEntries(
+    LOCALES.map((locale) => [locale, component.props.map((prop) => propDescription(locale, component.name, prop.name, prop.description))]),
+  ) as Record<Locale, PropDescription[]>;
+  return <PropsTableView component={component} descriptions={descriptions} />;
 }

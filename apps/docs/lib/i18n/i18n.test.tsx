@@ -10,6 +10,7 @@ import { Example } from '../../components/Example';
 import { LanguageAlternates } from '../../components/LanguageAlternates';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { LocalizedLink } from '../../components/LocalizedLink';
+import { PropsTable } from '../../components/PropsTable';
 import { SiteNav } from '../../components/SiteNav';
 import { SiteShell } from '../../components/SiteShell';
 import { SITE_GROUPS } from '../../components/siteGroups';
@@ -18,6 +19,8 @@ import { LOCALES } from './config';
 import { DICTIONARIES } from './dictionaries';
 import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
+import { PROP_TRANSLATIONS, propDescription } from './propDescriptions';
+import schema from '@tounsoo/todae/schema/components.json';
 
 const path = vi.hoisted(() => ({ current: '/ko/button' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
@@ -275,6 +278,49 @@ describe('docs locales', () => {
       </Example>,
     );
     expect(screen.getByRole('group', { name: 'Example' }).querySelector('[lang]')).toBeNull();
+  });
+
+  it('translates every prop description a page shows, from the current English', () => {
+    const shown = new Set(
+      readdirSync(join(APP, '(en)'), { recursive: true, encoding: 'utf8' })
+        .filter((file) => file.endsWith('page.mdx'))
+        .flatMap((file) => [...readFileSync(join(APP, '(en)', file), 'utf8').matchAll(/<PropsTable\s+name="([^"]+)"/g)].map((hit) => hit[1])),
+    );
+    const english = Object.fromEntries(
+      schema.components.filter((component) => shown.has(component.name)).map((component) => [component.name, Object.fromEntries(component.props.map((prop) => [prop.name, prop.description]))]),
+    );
+    for (const locale of LOCALES.filter((other) => other !== 'en')) {
+      const translations = PROP_TRANSLATIONS[locale] ?? {};
+      // The English each translation was made from must still be the English: when a description changes, its translation must too.
+      const sources = Object.fromEntries(
+        Object.entries(translations).map(([component, props]) => [component, Object.fromEntries(Object.entries(props).map(([prop, entry]) => [prop, entry.en]))]),
+      );
+      expect(sources, `${locale} prop translations`).toEqual(english);
+      for (const props of Object.values(translations)) for (const entry of Object.values(props)) expect(entry[locale]).toBeTruthy();
+    }
+  });
+
+  it('shows a props table in the page language', () => {
+    path.current = '/ko/button';
+    const korean = renderToStaticMarkup(<PropsTable name="Button.Root" />);
+    expect(korean).toContain('<caption>Button.Root props</caption>');
+    expect(korean).toContain('<th scope="col">설명</th>');
+    expect(korean).toContain('시각 스타일. primary가 아니면 data-button-variant를 설정합니다.');
+    path.current = '/button';
+    const english = renderToStaticMarkup(<PropsTable name="Button.Root" />);
+    expect(english).toContain('<th scope="col">Description</th>');
+    expect(english).toContain('<td>Visual style. Non-primary sets data-button-variant.</td>');
+    path.current = '/ko/button';
+  });
+
+  it('shows the current English, marked as English, where a translation is missing or out of date', () => {
+    expect(propDescription('ko', 'Button.Root', 'variant', 'Visual style. Non-primary sets data-button-variant.')).toEqual({
+      text: '시각 스타일. primary가 아니면 data-button-variant를 설정합니다.',
+      lang: 'ko',
+    });
+    expect(propDescription('ko', 'Button.Root', 'variant', 'Newer English.')).toEqual({ text: 'Newer English.', lang: 'en' });
+    expect(propDescription('ko', 'Button.Root', 'nope', 'New prop.')).toEqual({ text: 'New prop.', lang: 'en' });
+    expect(propDescription('en', 'Button.Root', 'variant', 'Visual style.')).toEqual({ text: 'Visual style.', lang: 'en' });
   });
 
   it('marks an untranslated page as English and links the guide', () => {

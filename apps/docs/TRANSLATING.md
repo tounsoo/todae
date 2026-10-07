@@ -7,7 +7,7 @@ The docs are written in English and translated into Korean (한국어). Translat
 - English is the default. Its pages live in `app/(en)/` and have no URL prefix, so `app/(en)/button/page.mdx` is `/button`.
 - Every other language has a folder named after its locale. Korean pages live in `app/ko/` under `/ko`, so a Korean `app/ko/button/page.mdx` is `/ko/button`.
 - A page with no translation still has a URL in every language. `/ko/button` shows the English page, marked `lang="en"`, under a notice that links here. `app/ko/[...slug]/page.tsx` does this for every page listed in `lib/i18n/englishPages.ts`.
-- The site's own words (sidebar sections, link text, the language switcher, the notice, the playground's controls) live in `lib/i18n/dictionaries.ts`. Component and hook names, such as `Button` or `useField`, stay as they are in code.
+- The site's own words (sidebar sections, link text, the language switcher, the notice, the playground's controls, props table headings) live in `lib/i18n/dictionaries.ts`. Prop descriptions live in `lib/i18n/props/`. Component and hook names, such as `Button` or `useField`, stay as they are in code.
 
 ## Translate a page
 
@@ -33,10 +33,25 @@ A translation does not change when its English page does. When you change an Eng
 
 Edit the locale's entry in `lib/i18n/dictionaries.ts`. Every string is required except `groups` and `links`, which fall back to the English names in `components/siteGroups.ts`. TypeScript reports a missing string.
 
+## Translate prop descriptions
+
+Props tables come from the design system's JSDoc, in English. Their translations live in `lib/i18n/props/<locale>.json`, by component and prop. Each entry keeps the English it was translated from:
+
+```json
+"Button.Root": {
+  "variant": {
+    "en": "Visual style. Non-primary sets data-button-variant.",
+    "ko": "시각 스타일. primary가 아니면 data-button-variant를 설정합니다."
+  }
+}
+```
+
+A test fails when a prop a page shows has no translation, or when its English has changed since it was translated. So when you change a prop's JSDoc in `packages/design-system`, run `pnpm schema`, then update each locale's entry: copy the new English to `en` and fix the translation. Until it is updated, the site shows the new English.
+
 ## Add a language
 
 1. Add the locale to `LOCALES` and its name, written in that language, to `LOCALE_NAMES` in `lib/i18n/config.ts`.
-2. Add its dictionary to `DICTIONARIES` in `lib/i18n/dictionaries.ts`.
+2. Add its dictionary to `DICTIONARIES` in `lib/i18n/dictionaries.ts`, and its prop descriptions to `PROP_TRANSLATIONS` in `lib/i18n/propDescriptions.ts`.
 3. Copy `app/ko/layout.tsx`, `app/ko/page.tsx` and `app/ko/[...slug]/page.tsx` into `app/<locale>/`, and change `ko` to the new locale in each.
 4. Add `/<locale>` to `LOCALE_PREFIXES` in `next.config.mjs`, so old URLs redirect in the new language too.
 5. Run `pnpm --filter docs test` and `pnpm build`.

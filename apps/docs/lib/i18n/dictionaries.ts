@@ -22,6 +22,8 @@ export type Dictionary = {
   example: string;
   /** The playground's interface. */
   playground: Record<'appearance' | 'density' | 'rail' | 'title' | 'tokenLayer' | 'color' | 'reset' | 'export' | 'copied' | 'copyFailed' | 'stage' | 'buttons' | 'buttonHint' | 'defaultTone' | 'mutedTone' | 'accentTone', string>;
+  /** Props table headings. `{name}` in the caption is the component name. */
+  propsTable: Record<'caption' | 'name' | 'type' | 'required' | 'default' | 'description' | 'yes' | 'no', string>;
   /** Section names; a missing one keeps its English name from `siteGroups.ts`. */
   groups: Partial<Record<GroupId, string>>;
   /** Link text by href; a missing one keeps its English text. Component, hook and pattern names (Button, useField, Combobox, Chip list) stay in English. */
@@ -54,6 +56,16 @@ const en: Dictionary = {
     mutedTone: 'Muted tone',
     accentTone: 'Accent tone',
   },
+  propsTable: {
+    caption: '{name} props',
+    name: 'Name',
+    type: 'Type',
+    required: 'Required',
+    default: 'Default',
+    description: 'Description',
+    yes: 'yes',
+    no: 'no',
+  },
   notFound: 'Page not found.',
   home: 'Todae home',
   groups: {},
@@ -85,6 +97,16 @@ const ko: Dictionary = {
     defaultTone: '기본 톤',
     mutedTone: 'Muted 톤',
     accentTone: 'Accent 톤',
+  },
+  propsTable: {
+    caption: '{name} props',
+    name: '이름',
+    type: '타입',
+    required: '필수',
+    default: '기본값',
+    description: '설명',
+    yes: '예',
+    no: '아니요',
   },
   notFound: '페이지를 찾을 수 없습니다.',
   home: 'Todae 홈',
