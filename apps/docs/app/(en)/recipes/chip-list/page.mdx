@@ -2,9 +2,9 @@ import { ChipListDemo } from '../../../../components/demos/ChipListDemo';
 
 # Chip list with overflow
 
-A recipe, not a package export. [useChipList](/utilities/use-chip-list) measures and decides which chips fit. `Chip.Root` owns the look. The code below owns the markup, list semantics, clamp CSS, and focus. Copy it.
+A recipe, not a package export. [useChipList](/utilities/use-chip-list) measures and decides which chips fit. `Chip.Root` owns the look. The code below owns the markup, list semantics, clamp CSS, and focus.
 
-This recipe carries hard behavior of its own (focus management, Tab handling, ARIA wiring and panel positioning), which [Composition](/composition) says belongs in Todae. It is planned to become a component, so treat that code as a stopgap rather than glue to restyle freely.
+This recipe is the exception to [Composition](/composition)'s thin-glue rule: it carries hard behavior of its own (focus management, Tab handling, ARIA wiring and panel positioning). It is planned to become a component. Until then, copy it as a stopgap and change its styles, not its behavior.
 
 ## One row / Two rows
 
