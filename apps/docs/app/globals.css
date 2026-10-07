@@ -51,7 +51,6 @@ body {
 
 .language-switcher a[aria-current='true'] {
   font-weight: 700;
-  text-decoration-thickness: 2px;
 }
 
 .untranslated-notice {
@@ -101,7 +100,6 @@ body {
 
 .site-nav a[aria-current='page'] {
   font-weight: 700;
-  text-decoration-thickness: 2px;
 }
 
 @media (max-width: 40rem) {

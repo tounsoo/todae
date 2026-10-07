@@ -156,7 +156,7 @@ describe('content parts in a browser', () => {
     expect(getComputedStyle(screen.getByText('Placeholder')).textDecorationLine).toBe('none');
   });
 
-  it('marks the current link with a thicker underline', () => {
+  it('marks the current link from its tokens and treats false and empty as not current', () => {
     render(
       <Themed>
         <a href="#a">Other</a>
@@ -164,14 +164,28 @@ describe('content parts in a browser', () => {
           Current
         </a>
         <a href="#c" aria-current="false">
-          Not current
+          False
+        </a>
+        <a href="#d" aria-current="FALSE">
+          Upper false
+        </a>
+        <a href="#e" aria-current="">
+          Empty
         </a>
       </Themed>,
     );
-    const thickness = (text: string) => getComputedStyle(screen.getByText(text)).textDecorationThickness;
-    expect(thickness('Other')).toBe('1px');
-    expect(thickness('Current')).toBe('2px');
-    expect(thickness('Not current')).toBe('1px');
+    const style = (text: string) => getComputedStyle(screen.getByText(text));
+    expect(style('Current').textDecorationThickness).toBe('2px');
+    // Point each current token at a distinct color to prove the rule reads it.
+    const root = screen.getByText('Current').closest('main') as HTMLElement;
+    root.style.setProperty('--todae-link-fg-current', 'rgb(1, 2, 3)');
+    root.style.setProperty('--todae-link-decoration-current', 'rgb(4, 5, 6)');
+    expect(style('Current').color).toBe('rgb(1, 2, 3)');
+    expect(style('Current').textDecorationColor).toBe('rgb(4, 5, 6)');
+    for (const text of ['Other', 'False', 'Upper false', 'Empty']) {
+      expect(style(text).textDecorationThickness).toBe('1px');
+      expect(style(text).color).not.toBe('rgb(1, 2, 3)');
+    }
   });
 
   it('hides visually hidden text from the screen but keeps it in the page', async () => {
