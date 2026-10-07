@@ -2,7 +2,9 @@ import { ChipListDemo } from '../../../../components/demos/ChipListDemo';
 
 # Chip list with overflow
 
-A recipe, not a package export. [useChipList](/utilities/use-chip-list) measures and decides which chips fit. `Chip.Root` owns the look. The code below owns the markup, list semantics, clamp CSS, and focus. Copy it.
+A recipe, not a package export. [useChipList](/utilities/use-chip-list) measures and decides which chips fit. `Chip.Root` owns the look. The code below owns the markup, list semantics, clamp CSS, and focus.
+
+This recipe is the exception to [Composition](/composition)'s thin-glue rule: it carries hard behavior of its own (focus management, Tab handling, ARIA wiring and panel positioning). It is planned to become a component. Until then, copy it as a stopgap and restyle it through tokens. Leave its behavior alone, along with the measure row's styles that useChipList reads and the clamp height that has to agree with `maxRows`.
 
 ## One row / Two rows
 

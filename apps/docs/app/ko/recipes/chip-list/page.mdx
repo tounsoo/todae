@@ -2,7 +2,9 @@ import { ChipListDemo } from '../../../../components/demos/ChipListDemo';
 
 # 오버플로를 처리하는 Chip list
 
-패키지 export가 아닌 레시피입니다. [useChipList](/utilities/use-chip-list)가 칩을 측정하고 어떤 칩이 들어갈지 정합니다. `Chip.Root`는 모양을 맡습니다. 아래 코드는 마크업, 목록 시맨틱, 클램프 CSS, 포커스를 맡습니다. 복사해서 쓰세요.
+패키지 export가 아닌 레시피입니다. [useChipList](/utilities/use-chip-list)가 칩을 측정하고 어떤 칩이 들어갈지 정합니다. `Chip.Root`는 모양을 맡습니다. 아래 코드는 마크업, 목록 시맨틱, 클램프 CSS, 포커스를 맡습니다.
+
+이 레시피는 [조합](/composition)의 얇은 연결 코드 규칙에서 예외입니다. 자체적인 어려운 동작(포커스 관리, Tab 처리, ARIA 연결, 패널 위치 지정)이 있습니다. 컴포넌트로 바꿀 예정입니다. 그때까지는 임시방편으로 복사하고 토큰으로 스타일을 바꾸세요. 동작은 그대로 두고, useChipList가 읽는 측정 행의 스타일과 `maxRows`에 맞아야 하는 클램프 높이도 그대로 두세요.
 
 ## 한 줄 / 두 줄
 
