@@ -11,6 +11,7 @@ import { LanguageAlternates } from '../../components/LanguageAlternates';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { LocalizedLink } from '../../components/LocalizedLink';
 import { PropsTable } from '../../components/PropsTable';
+import { TokensCatalog } from '../../components/TokensCatalog';
 import { SiteNav } from '../../components/SiteNav';
 import { SiteShell } from '../../components/SiteShell';
 import { SITE_GROUPS } from '../../components/siteGroups';
@@ -313,6 +314,17 @@ describe('docs locales', () => {
       expect(english).toMatch(/data-overflow-kind="table"><table lang="en">/);
       expect(english).toContain('<th scope="col">Description</th>');
       expect(english).toContain('<td>Visual style. Non-primary sets data-button-variant.</td>');
+    } finally {
+      path.current = '/ko/button';
+    }
+  });
+
+  it('shows token catalog headings in the page language', () => {
+    try {
+      path.current = '/ko/tokens';
+      expect(renderToStaticMarkup(<TokensCatalog />)).toContain('<th scope="col">경로</th><th scope="col">컨텍스트</th><th scope="col">CSS 변수</th>');
+      path.current = '/tokens';
+      expect(renderToStaticMarkup(<TokensCatalog />)).toContain('<th scope="col">Path</th><th scope="col">Context</th><th scope="col">CSS variable</th>');
     } finally {
       path.current = '/ko/button';
     }

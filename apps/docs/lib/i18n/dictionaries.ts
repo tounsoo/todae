@@ -24,6 +24,8 @@ export type Dictionary = {
   playground: Record<'appearance' | 'density' | 'rail' | 'title' | 'tokenLayer' | 'color' | 'reset' | 'export' | 'copied' | 'copyFailed' | 'stage' | 'buttons' | 'buttonHint' | 'defaultTone' | 'mutedTone' | 'accentTone', string>;
   /** Accessible names of scrollable code examples and tables, before the nearest heading. */
   regions: Record<'code' | 'table', string>;
+  /** Token catalog headings. */
+  tokensTable: Record<'path' | 'context' | 'cssVar' | 'value' | 'ref', string>;
   /** Props table headings. `{name}` in the caption is the component name. */
   propsTable: Record<'caption' | 'name' | 'type' | 'required' | 'default' | 'description' | 'yes' | 'no', string>;
   /** Section names; a missing one keeps its English name from `siteGroups.ts`. */
@@ -59,6 +61,7 @@ const en: Dictionary = {
     accentTone: 'Accent tone',
   },
   regions: { code: 'Code example', table: 'Table' },
+  tokensTable: { path: 'Path', context: 'Context', cssVar: 'CSS variable', value: 'Value', ref: 'Ref' },
   propsTable: {
     caption: '{name} props',
     name: 'Name',
@@ -102,6 +105,7 @@ const ko: Dictionary = {
     accentTone: 'Accent 톤',
   },
   regions: { code: '코드 예시', table: '표' },
+  tokensTable: { path: '경로', context: '컨텍스트', cssVar: 'CSS 변수', value: '값', ref: '참조' },
   propsTable: {
     caption: '{name} props',
     name: '이름',
