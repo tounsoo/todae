@@ -2,10 +2,10 @@ import { FieldPartsAllowed, SiblingsAllowed } from '../../../components/demos/Co
 
 # Composition
 
-Todae ships four kinds of thing. Each component, hook and pattern is one of them.
+Todae splits UI into four kinds. Every component and pattern in these docs is one of them. Providers and helpers, such as `ThemeProvider` and `composeRefs`, are foundations and sit outside this split.
 
-- **Native + CSS.** HTML already has the element and all of its behavior. Todae only styles it from tokens. [Link](/link) and [Disclosure](/disclosure) are native. A native element can also be a thin part of a component, such as `Field.Select`, so it joins that component's wiring.
-- **Component.** One UI concept under one namespace, built from its own parts. Its whole API can be written without knowing anything about the product. It may own behavior, like [Menu](/menu) and [Tabs](/tabs), or only chrome, like [Stack](/stack) and [Alert](/alert). A component with parts ships as a `*.Root` compound; a single-element one, like `Stack` or `Checkbox`, is a plain export.
+- **Native + CSS.** HTML already has the element and all of its behavior. Todae adds only styles from tokens. [Link](/link) and [Disclosure](/disclosure) are native. A native element can also be a thin part of a component, such as `Field.Select`, so it joins that component's label and error wiring.
+- **Component.** One UI concept whose whole API and behavior Todae can fix without knowing anything about the product. It owns something of its own: behavior, like [Menu](/menu) and [Tabs](/tabs), or styles from tokens, like [Stack](/stack) and [Alert](/alert). When consumers compose its parts, it ships as a compound: a namespace with a `Root` and named parts, like `Menu.Root` and `Menu.Item`. Otherwise it is one export, like `Stack` or `Checkbox`.
 - **Hook.** The behavior of a component or recipe with no markup, for products that need their own markup. [useRovingFocus](/utilities/use-roving-focus) and [useField](/utilities/use-field) are hooks.
 - **Recipe.** Two or more exports wired to each other around product data or a product flow: what to search, how results load, what happens on pick. The wiring is the point, and it differs per product. A recipe is code in these docs to copy. It is never a package export, so there is no `Combobox.*`.
 
@@ -13,20 +13,20 @@ Todae ships four kinds of thing. Each component, hook and pattern is one of them
 
 Ask these in order. The first answer that decides wins.
 
-1. Does a native element already do all of it, so Todae would only add styles? Then it is native, styled with CSS.
+1. Does a native element already do all of it, so Todae would add only styles? Then it is native, styled with CSS.
 2. Can every prop be written without naming product data, fetching, routing or business rules? If not, it is a recipe.
-3. Is it built only from its own parts? If it has to wire together parts of other components that sit side by side, such as a Field, a Popover and an OptionList, it is a recipe.
-4. Is the behavior the same in every product? Then it is a component. If the behavior is shared but the arrangement varies, the behavior becomes a hook and the arrangement a recipe, as with [Combobox](/recipes/combobox) and [Chip list](/recipes/chip-list). If the behavior itself differs per product, it is a recipe.
+3. Does it wire parts of other components to each other, such as a Field's input to an OptionList's active option? Then it is a recipe. The behavior that wiring needs in every product becomes a hook, as with [Combobox](/recipes/combobox) and [Chip list](/recipes/chip-list).
+4. Otherwise it is a component.
 
-A container that gives context or keyboard handling to whatever children it receives is a component. [Fieldset](/fieldset) is one: beyond what the native `<fieldset>` does, it hands `disabled` and `invalid` to any Todae control inside it. A composition that wires specific exports to each other is a recipe. Combobox connects one Field's input to one OptionList's active option.
+A component may hold whatever children it receives and give them context or keyboard handling, as long as it does not wire them to each other. [Fieldset](/fieldset) does this: beyond what the native `<fieldset>` does, it hands `disabled` and `invalid` to any Todae control inside it.
 
-A wrapper with no behavior and no chrome of its own, one that only arranges other exports, is neither. Todae does not ship it.
+A wrapper that adds nothing of its own, no behavior, styles or tokens, and only arranges other exports is neither. Todae does not ship it.
 
 ## Components
 
-Components compose as siblings, for example `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [Radio](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per root element.
+Components compose as siblings, for example `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
 
-`Field.Icon`, `Field.Affix`, and `Button.Icon` are compound parts. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not a public rung.
+`Field.Icon`, `Field.Affix`, and `Button.Icon` are compound parts. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not public exports.
 
 `Field.Root` is chrome only. [Label](/label) is a sibling component. Adornments follow DOM order. No `side` prop.
 
