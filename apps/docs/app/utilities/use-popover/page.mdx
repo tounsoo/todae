@@ -4,7 +4,7 @@ import { PopoverMenu } from '../../../components/demos/PopoverDemo';
 
 `usePopover` is the open machine behind [Popover](/popover). Spread `getTriggerProps` on the trigger and `getPopoverProps` on `Popover.Root`, which is surface chrome only. [Menu](/menu) and the [Combobox recipe](/recipes/combobox) are built on it.
 
-An outside press, Escape and the trigger call `onOpenChange(false, reason)` with `outside`, `escape` or `trigger`, so an owner can veto one reason and keep the others. `haspopup` sets the trigger's `aria-haspopup`. `anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks; do not pass it and also spread `getTriggerProps`.
+An outside press and Escape call `onOpenChange(false, reason)` with `outside` or `escape`. The trigger toggles, so it reports `trigger` on both open and close. An owner can veto one reason and keep the others; check `next === false` before vetoing a `trigger` close. `haspopup` sets the trigger's `aria-haspopup`. `anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks; do not pass it and also spread `getTriggerProps`.
 
 ```tsx
 const [open, setOpen] = useState(false)
@@ -30,7 +30,7 @@ const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: se
 
 **When:** A non-modal surface anchored to a trigger, with open and dismiss on the hook and chrome on `Popover.Root`.
 
-**When not:** An action menu → [Menu](/menu). Modal, focus-trapped work → Dialog. A mobile full-bleed picker → BottomSheet, or [useSheetPresentation](/utilities/use-sheet-presentation) to choose at runtime. A text-only hover hint → [useTooltip](/utilities/use-tooltip).
+**When not:** An action menu → [Menu](/menu). Modal, focus-trapped work → Dialog. A mobile full-bleed picker → BottomSheet, or [useSheetPresentation](/utilities/use-sheet-presentation) to choose at runtime. A text-only hover hint → [Tooltip](/tooltip).
 
 ## Props
 
