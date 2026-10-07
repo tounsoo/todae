@@ -15,17 +15,13 @@ Ask these in order.
 
 1. Does plain HTML do the job with only base CSS, either because every such element should look this way, like every `<a>`, or as an opt-in utility class, like `.todae-visually-hidden`? Then it is native. Anything else goes on to question 2, including an element that needs props, a typed contract or another component's state. That is why `Stack` (a direction), `Text` (a size), [Label](/label) (a required `htmlFor`) and `Field.Select` (its Field's label and error wiring) are not native.
 2. Can Todae fix its markup, every prop and its behavior without knowing the product's data, fetching, routing, business rules or screen layout? Then it is a component. `Stack` passes: it fixes spacing from tokens, not where things go on a screen. If a recipe or products' own markup need its behavior, that behavior is a hook too, like [useRovingFocus](/utilities/use-roving-focus).
-3. Otherwise it belongs to the product. When it puts Todae exports together, Todae documents it as a recipe. The behavior every product needs becomes a hook that the recipe uses, such as [useCombobox](/utilities/use-combobox) for [Combobox](/recipes/combobox).
+3. Otherwise it belongs to the product. When it puts Todae exports together, Todae documents it as a recipe, and the behavior that recipe needs becomes a hook, such as [useCombobox](/utilities/use-combobox) for [Combobox](/recipes/combobox).
 
-A component may use other components inside it when Todae can fix how they fit together. `Field.ChipInput` renders `Chip`, and `Menu.Trigger` is a `Button`. That reuse happens inside Todae's own parts. A [Chip list](/recipes/chip-list) on its own is a recipe because its list markup, how many rows show and what the list means vary per product. Inside a field, Todae fixes all of that, so `Field.ChipInput` is a component.
-
-A component may also hold whatever children it receives and give them context or keyboard handling. [Fieldset](/fieldset) passes its `disabled` and `invalid` state through context to the Todae controls inside it.
-
-A wrapper that adds nothing of its own, no behavior, styles or tokens, and only arranges other exports is never a Todae component. If the arrangement is worth showing, it is a recipe.
+A component can contain other components, as `Menu.Trigger` is a `Button`, and can share state with the children it holds, as [Fieldset](/fieldset) shares `disabled` and `invalid`. It is still a component because Todae can fix how those pieces fit together. A wrapper that adds nothing of its own, no behavior, styles or tokens, and only arranges other exports is never a Todae component. If the arrangement is worth showing, it is a recipe.
 
 ## Components
 
-Components either sit side by side or go inside a container. `Fieldset`, `Popover`, `Dialog` and `BottomSheet` are containers that hold other components. `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Tooltip`, `Chip` and `OptionList` sit side by side. Never nest namespaces. In your markup, never put another compound root inside a control such as `Field.Root` or `Button.Root`; only Todae's own parts, like `Field.ChipInput`, do that. One interactive role per compound root.
+Public siblings. `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces, as in `Field.Button.Root`. One interactive role per compound root.
 
 `Field.Icon`, `Field.Affix`, and `Button.Icon` are compound parts. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not public exports.
 

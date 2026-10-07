@@ -15,17 +15,13 @@ Todae가 UI를 만들기 위해 제공하는 것은 네 종류로 나뉩니다. 
 
 1. 모든 `<a>`처럼 그 요소 전부가 이렇게 보여야 하거나 `.todae-visually-hidden`처럼 골라 쓰는 유틸리티 클래스여서, 기본 CSS만으로 일반 HTML이 그 일을 하나요? 그렇다면 네이티브입니다. 그 밖의 경우는 모두 2번 질문으로 넘어갑니다. props, 타입으로 강제하는 계약, 다른 컴포넌트의 상태가 필요한 요소도 마찬가지입니다. 그래서 `Stack`(방향), `Text`(크기), [Label](/label)(필수 `htmlFor`), `Field.Select`(Field의 레이블과 오류 연결)는 네이티브가 아닙니다.
 2. 제품의 데이터, 데이터 요청, 라우팅, 비즈니스 규칙, 화면 배치를 몰라도 Todae가 마크업, 모든 prop, 동작을 정할 수 있나요? 그렇다면 컴포넌트입니다. `Stack`도 여기에 해당합니다. 화면에서 무엇이 어디에 놓일지가 아니라 토큰에서 온 간격만 정합니다. 레시피나 제품의 자체 마크업이 그 동작을 써야 한다면 [useRovingFocus](/utilities/use-roving-focus)처럼 그 동작은 훅도 됩니다.
-3. 그 밖에는 제품의 몫입니다. Todae export를 묶는 것이라면 Todae는 레시피로 문서화합니다. 모든 제품에 필요한 동작은 레시피가 쓰는 훅이 됩니다. 예를 들어 [Combobox](/recipes/combobox)는 [useCombobox](/utilities/use-combobox)를 씁니다.
+3. 그 밖에는 제품의 몫입니다. Todae export를 묶는 것이라면 Todae는 레시피로 문서화하고, 그 레시피에 필요한 동작은 훅이 됩니다. 예를 들어 [Combobox](/recipes/combobox)는 [useCombobox](/utilities/use-combobox)를 씁니다.
 
-Todae가 어떻게 맞물리는지 정할 수 있다면 컴포넌트는 안에서 다른 컴포넌트를 쓸 수 있습니다. `Field.ChipInput`은 `Chip`을 렌더링하고, `Menu.Trigger`는 `Button`입니다. 이런 재사용은 Todae 자체 파트 안에서 일어납니다. [Chip list](/recipes/chip-list) 자체는 목록 마크업, 몇 줄을 보여 줄지, 목록이 무슨 의미인지가 제품마다 달라서 레시피입니다. 필드 안에서는 Todae가 이를 모두 정하므로 `Field.ChipInput`은 컴포넌트입니다.
-
-컴포넌트는 받은 자식이 무엇이든 담아서 컨텍스트나 키보드 처리를 넘겨줄 수도 있습니다. [Fieldset](/fieldset)은 `disabled`와 `invalid` 상태를 컨텍스트로 안의 Todae 컨트롤에 넘깁니다.
-
-동작도, 스타일도, 토큰도 더하지 않고 다른 export를 배치하기만 하는 래퍼는 절대 Todae 컴포넌트가 아닙니다. 배치를 보여 줄 가치가 있다면 레시피입니다.
+컴포넌트는 `Menu.Trigger`가 `Button`인 것처럼 다른 컴포넌트를 담을 수 있고, [Fieldset](/fieldset)이 `disabled`와 `invalid`를 공유하는 것처럼 담은 자식과 상태를 나눌 수 있습니다. Todae가 그 조각들이 어떻게 맞물리는지 정할 수 있으므로 여전히 컴포넌트입니다. 동작도, 스타일도, 토큰도 더하지 않고 다른 export를 배치하기만 하는 래퍼는 절대 Todae 컴포넌트가 아닙니다. 배치를 보여 줄 가치가 있다면 레시피입니다.
 
 ## 컴포넌트
 
-컴포넌트는 나란히 놓이거나 컨테이너 안에 들어갑니다. `Fieldset`, `Popover`, `Dialog`, `BottomSheet`는 다른 컴포넌트를 담는 컨테이너입니다. `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Tooltip`, `Chip`, `OptionList`는 나란히 놓입니다. 네임스페이스를 중첩하지 마세요. 여러분의 마크업에서는 `Field.Root`나 `Button.Root` 같은 컨트롤 안에 다른 컴파운드 루트를 두지 마세요. `Field.ChipInput` 같은 Todae 자체 파트만 그렇게 합니다. 컴파운드 루트 하나에는 인터랙티브 역할 하나만 둡니다.
+공개된 형제 컴포넌트입니다. `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, `BottomSheet`입니다. 나란히 놓아 조합하세요. `Field.Button.Root`처럼 네임스페이스를 중첩하지 마세요. 컴파운드 루트 하나에는 인터랙티브 역할 하나만 둡니다.
 
 `Field.Icon`, `Field.Affix`, `Button.Icon`은 컴파운드 파트입니다. 따로 떠다니는 원자가 아닙니다. 공유되는 Icon, Affix, Shell은 내부에 있습니다. 공개 export가 아닙니다.
 
