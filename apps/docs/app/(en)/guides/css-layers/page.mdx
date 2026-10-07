@@ -39,7 +39,7 @@ Tailwind 4 uses the layers `theme`, `base`, `components` and `utilities`, and it
 @import './todae-theme.css';
 ```
 
-Preflight then loses to Todae's styles, and utilities such as `bg-red-500` or `px-8` on a part win over Todae's. With Todae ahead of `base`, preflight removes button backgrounds and link underlines; with Todae after `utilities`, utilities on a part have no effect.
+Preflight then loses to Todae's styles, and utilities such as `bg-red-500` or `px-8` on a part win over Todae's. With Todae ahead of `base`, preflight removes button backgrounds and link underlines; with Todae after `utilities`, a utility on a part loses wherever Todae sets the same property.
 
 To use Todae's tokens in utilities, map them with `@theme inline`:
 
@@ -54,7 +54,7 @@ Without `inline`, Tailwind sets the variable on `:root`, so every utility takes 
 
 ## Tailwind CSS 3
 
-Tailwind 3 writes no cascade layers: its `@layer` is its own directive, and the output is unlayered, so preflight beats every Todae layer. Put preflight in a layer with `postcss-import`, listed before `tailwindcss` in your PostCSS config. postcss-import does not read the package's `exports`, so import Todae's CSS by its file path:
+Tailwind 3 writes no cascade layers: its `@layer` is its own directive, and the output is unlayered, so preflight beats every Todae layer. Put preflight in a layer with `postcss-import` 15 or later, listed before `tailwindcss` in your PostCSS config. postcss-import does not read the package's `exports`, so import Todae's CSS by its file path:
 
 ```css
 @layer tw-base, todae;

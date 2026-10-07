@@ -39,7 +39,7 @@ Tailwind 4는 `theme`, `base`, `components`, `utilities` 레이어를 쓰고, �
 @import './todae-theme.css';
 ```
 
-그러면 preflight는 Todae 스타일에 지고, 파트에 붙인 `bg-red-500`이나 `px-8` 같은 유틸리티는 Todae 스타일을 이깁니다. Todae가 `base` 앞에 있으면 preflight가 버튼 배경과 링크 밑줄을 지우고, `utilities` 뒤에 있으면 파트에 붙인 유틸리티가 효과가 없습니다.
+그러면 preflight는 Todae 스타일에 지고, 파트에 붙인 `bg-red-500`이나 `px-8` 같은 유틸리티는 Todae 스타일을 이깁니다. Todae가 `base` 앞에 있으면 preflight가 버튼 배경과 링크 밑줄을 지우고, `utilities` 뒤에 있으면 파트에 붙인 유틸리티는 Todae가 같은 속성을 정하는 곳마다 집니다.
 
 유틸리티에서 Todae 토큰을 쓰려면 `@theme inline`으로 연결합니다.
 
@@ -54,7 +54,7 @@ Tailwind 4는 `theme`, `base`, `components`, `utilities` 레이어를 쓰고, �
 
 ## Tailwind CSS 3
 
-Tailwind 3는 캐스케이드 레이어를 쓰지 않습니다. 그 `@layer`는 Tailwind 자체 지시어이고 출력은 레이어 밖에 있으므로, preflight가 모든 Todae 레이어를 이깁니다. PostCSS 설정에서 `tailwindcss`보다 앞에 둔 `postcss-import`로 preflight를 레이어에 넣습니다. postcss-import는 패키지의 `exports`를 읽지 않으므로 Todae의 CSS는 파일 경로로 import합니다.
+Tailwind 3는 캐스케이드 레이어를 쓰지 않습니다. 그 `@layer`는 Tailwind 자체 지시어이고 출력은 레이어 밖에 있으므로, preflight가 모든 Todae 레이어를 이깁니다. PostCSS 설정에서 `tailwindcss`보다 앞에 둔 `postcss-import` 15 이상으로 preflight를 레이어에 넣습니다. postcss-import는 패키지의 `exports`를 읽지 않으므로 Todae의 CSS는 파일 경로로 import합니다.
 
 ```css
 @layer tw-base, todae;

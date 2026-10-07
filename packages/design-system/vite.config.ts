@@ -1,17 +1,30 @@
 import { defineConfig, type Plugin } from 'vitest/config';
 
+const src = (path: string) => new URL(`./src/${path}`, import.meta.url).pathname;
+
+const entries = {
+  index: src('index.ts'),
+  // Server-safe parts: no hooks, no context, no 'use client'.
+  stack: src('server/stack.ts'),
+  text: src('server/text.ts'),
+  label: src('server/label.ts'),
+};
+
 function emitPackageCss(): Plugin {
+  const entryFiles = new Set(Object.values(entries));
   return {
     name: 'emit-package-css',
     transform(code, id) {
+      if (!entryFiles.has(id)) return;
       // A layer's place is fixed where it is first named, and the bundled CSS
-      // starts with whichever entry comes first. Every entry imports the layer
-      // order before any component CSS.
-      if (id.endsWith('/src/index.ts')) {
+      // starts with whichever entry comes first, so every entry imports the
+      // layer order before any component CSS.
+      const layers = `import ${JSON.stringify(src('styles/layers.css'))};\n`;
+      if (id === entries.index) {
         const body = code.replace(/^['"]use client['"];\s*/, '');
-        return `'use client';\nimport './styles/layers.css';\nimport './styles/todae.css';\n${body}`;
+        return `'use client';\n${layers}import './styles/todae.css';\n${body}`;
       }
-      if (/\/src\/server\/\w+\.ts$/.test(id)) return `import '../styles/layers.css';\n${code}`;
+      return `${layers}${code}`;
     },
     generateBundle(_opts, bundle) {
       for (const item of Object.values(bundle)) {
@@ -33,13 +46,7 @@ export default defineConfig({
   plugins: [emitPackageCss()],
   build: {
     lib: {
-      entry: {
-        index: new URL('./src/index.ts', import.meta.url).pathname,
-        // Server-safe parts: no hooks, no context, no 'use client'.
-        stack: new URL('./src/server/stack.ts', import.meta.url).pathname,
-        text: new URL('./src/server/text.ts', import.meta.url).pathname,
-        label: new URL('./src/server/label.ts', import.meta.url).pathname,
-      },
+      entry: entries,
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
       cssFileName: 'todae',
