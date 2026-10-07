@@ -4,16 +4,16 @@ import { FieldPartsAllowed, SiblingsAllowed } from '../../../components/demos/Co
 
 Todae가 UI를 만들기 위해 제공하는 것은 네 종류로 나뉩니다. 새로 만드는 것은 아래 질문으로 자리를 정하세요. `ThemeProvider`, `useDensity`, `composeRefs` 같은 프로바이더와 그 훅, 헬퍼 함수, 상수는 이 구분 밖에 있습니다.
 
-- **네이티브 + CSS.** HTML이 이미 그 일을 합니다. Todae는 기본 스타일의 CSS만 제공하고 export는 없습니다. [Link](/link)와 [Disclosure](/disclosure)처럼 요소 자체에 입히는 스타일이거나, [VisuallyHidden](/visually-hidden)처럼 골라 쓰는 유틸리티 클래스입니다.
+- **네이티브 + CSS.** HTML이 이미 그 일을 합니다. Todae는 기본 스타일의 CSS만 제공하고 export는 없습니다. [Link](/link)와 [Disclosure](/disclosure)처럼 요소 자체에 입히는 스타일이거나, [VisuallyHidden](/visually-hidden)처럼 골라 쓰는 유틸리티 클래스입니다. 찾기 쉽도록 이 페이지들은 사이드바에서 컴포넌트와 함께 있습니다.
 - **컴포넌트.** 제품에 대해 아무것도 몰라도 Todae가 마크업, props, 동작을 정할 수 있는 UI 개념 하나입니다. [Menu](/menu)와 [Tabs](/tabs)처럼 동작을 맡을 수도 있고, [Stack](/stack)과 [Text](/text)처럼 토큰에서 온 스타일만 맡을 수도 있습니다. 대부분의 컴포넌트는 컴파운드로 제공됩니다. 컴파운드는 `Menu.Root`, `Menu.Item`처럼 `Root`와 필요한 파트를 가진 네임스페이스입니다. `Stack`, `Text`, `Label`, `Checkbox`처럼 파트가 없는 컴포넌트는 export 하나입니다.
-- **훅.** 마크업 없이 컴포넌트나 레시피의 동작만 담은 것으로, 레시피와 자체 마크업이 필요한 제품을 위한 것입니다. [useRovingFocus](/utilities/use-roving-focus)와 [useField](/utilities/use-field)가 훅입니다.
+- **훅.** 마크업 없이 컴포넌트나 레시피의 동작만 담은 것으로, 레시피와 자체 마크업이 필요한 제품을 위한 것입니다. [useRovingFocus](/utilities/use-roving-focus)와 [useCombobox](/utilities/use-combobox)가 훅입니다.
 - **레시피.** 둘 이상의 export를 제품에 따라 달라지는 방식으로 묶은 것입니다. 제품의 데이터, 흐름(무엇을 검색할지, 결과를 어떻게 불러올지, 선택하면 무슨 일이 일어날지), 레이아웃이 그 예입니다. 레시피는 이 문서에 있는 복사용 코드입니다. 패키지 export가 아니므로 `Combobox.*`는 없습니다.
 
-## 컴포넌트인가, 레시피인가
+## 새로 만드는 것의 자리 정하기
 
 순서대로 물어보세요.
 
-1. 기본 CSS만으로 일반 HTML이 그 일을 하나요? 모든 `<a>`처럼 그 요소 전부가 이렇게 보여야 하거나, `.todae-visually-hidden`처럼 골라 쓰는 유틸리티 클래스라면 네이티브입니다. 요소에 props, 타입으로 강제하는 계약, 다른 컴포넌트의 상태가 필요하다면 네이티브가 아니므로 2번 질문으로 넘어가세요. 그래서 `Stack`(방향), `Text`(크기), [Label](/label)(필수 `htmlFor`), `Field.Select`(Field의 레이블과 오류 연결)는 네이티브가 아닙니다.
+1. 모든 `<a>`처럼 그 요소 전부가 이렇게 보여야 하거나 `.todae-visually-hidden`처럼 골라 쓰는 유틸리티 클래스여서, 기본 CSS만으로 일반 HTML이 그 일을 하나요? 그렇다면 네이티브입니다. 그 밖의 경우는 모두 2번 질문으로 넘어갑니다. props, 타입으로 강제하는 계약, 다른 컴포넌트의 상태가 필요한 요소도 마찬가지입니다. 그래서 `Stack`(방향), `Text`(크기), [Label](/label)(필수 `htmlFor`), `Field.Select`(Field의 레이블과 오류 연결)는 네이티브가 아닙니다.
 2. 제품의 데이터, 데이터 요청, 라우팅, 비즈니스 규칙, 레이아웃을 몰라도 Todae가 마크업, 모든 prop, 동작을 정할 수 있나요? 그렇다면 컴포넌트입니다. 제품이 자체 마크업으로 그 동작을 써야 한다면 [useRovingFocus](/utilities/use-roving-focus)처럼 그 동작은 훅도 됩니다.
 3. 그 밖에는 제품의 몫입니다. Todae export를 묶는 것이라면 Todae는 레시피로 문서화합니다. 모든 제품에 필요한 동작은 레시피가 쓰는 훅이 됩니다. 예를 들어 [Combobox](/recipes/combobox)는 [useCombobox](/utilities/use-combobox)를 씁니다.
 
@@ -25,7 +25,7 @@ Todae가 어떻게 맞물리는지 정할 수 있다면 컴포넌트는 안에�
 
 ## 컴포넌트
 
-컴포넌트는 형제로 조합됩니다. 예를 들어 `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, `BottomSheet`입니다. 나란히 놓아 조합하세요. 네임스페이스를 중첩하지 마세요. 컴파운드 루트 하나에는 인터랙티브 역할 하나만 둡니다.
+컴포넌트는 형제로 조합됩니다. 예를 들어 `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, `BottomSheet`입니다. 나란히 놓아 조합하세요. 네임스페이스를 중첩하지 마세요. `Field.Root`나 `Button.Root` 같은 컨트롤 안에 다른 컴파운드 루트를 두지 마세요. `Fieldset`, `Popover`, `Dialog` 같은 컨테이너는 다른 컴포넌트를 담습니다. 컴파운드 루트 하나에는 인터랙티브 역할 하나만 둡니다.
 
 `Field.Icon`, `Field.Affix`, `Button.Icon`은 컴파운드 파트입니다. 따로 떠다니는 원자가 아닙니다. 공유되는 Icon, Affix, Shell은 내부에 있습니다. 공개 export가 아닙니다.
 

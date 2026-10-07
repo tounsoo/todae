@@ -4,16 +4,16 @@ import { FieldPartsAllowed, SiblingsAllowed } from '../../../components/demos/Co
 
 What Todae offers for building UI comes in four kinds. Use the questions below to place something new. Providers and their hooks, helper functions and constants, such as `ThemeProvider`, `useDensity` and `composeRefs`, sit outside this split.
 
-- **Native + CSS.** HTML already does the job. Todae ships only CSS in its base styles and no export: styles on the element itself, like [Link](/link) and [Disclosure](/disclosure), or opt-in utility classes, like [VisuallyHidden](/visually-hidden).
+- **Native + CSS.** HTML already does the job. Todae ships only CSS in its base styles and no export: styles on the element itself, like [Link](/link) and [Disclosure](/disclosure), or opt-in utility classes, like [VisuallyHidden](/visually-hidden). Their pages sit with the components in the sidebar so they are easy to find.
 - **Component.** One UI concept whose markup, props and behavior Todae can fix without knowing anything about the product. It may own behavior, like [Menu](/menu) and [Tabs](/tabs), or only styles from tokens, like [Stack](/stack) and [Text](/text). Most components ship as a compound: a namespace with a `Root` and any named parts, like `Menu.Root` and `Menu.Item`. Components with no parts, like `Stack`, `Text`, `Label` and `Checkbox`, are one export.
-- **Hook.** The behavior of a component or recipe with no markup, for recipes and for products that need their own markup. [useRovingFocus](/utilities/use-roving-focus) and [useField](/utilities/use-field) are hooks.
+- **Hook.** The behavior of a component or recipe with no markup, for recipes and for products that need their own markup. [useRovingFocus](/utilities/use-roving-focus) and [useCombobox](/utilities/use-combobox) are hooks.
 - **Recipe.** Two or more exports put together in a way that depends on the product: its data, its flow (what to search, how results load, what happens on pick) or its layout. A recipe is code in these docs to copy. It is never a package export, so there is no `Combobox.*`.
 
-## Component or recipe
+## Placing something new
 
 Ask these in order.
 
-1. Does plain HTML do the job with only base CSS? If every such element should look this way, like every `<a>`, or the style is an opt-in utility class, like `.todae-visually-hidden`, it is native. If the element needs props, a typed contract or another component's state, it is not native; go on to question 2. That is why `Stack` (a direction), `Text` (a size), [Label](/label) (a required `htmlFor`) and `Field.Select` (its Field's label and error wiring) are not native.
+1. Does plain HTML do the job with only base CSS, either because every such element should look this way, like every `<a>`, or as an opt-in utility class, like `.todae-visually-hidden`? Then it is native. Anything else goes on to question 2, including an element that needs props, a typed contract or another component's state. That is why `Stack` (a direction), `Text` (a size), [Label](/label) (a required `htmlFor`) and `Field.Select` (its Field's label and error wiring) are not native.
 2. Can Todae fix its markup, every prop and its behavior without knowing the product's data, fetching, routing, business rules or layout? Then it is a component. If products also need its behavior under their own markup, that behavior is a hook too, like [useRovingFocus](/utilities/use-roving-focus).
 3. Otherwise it belongs to the product. When it puts Todae exports together, Todae documents it as a recipe. The behavior every product needs becomes a hook that the recipe uses, such as [useCombobox](/utilities/use-combobox) for [Combobox](/recipes/combobox).
 
@@ -25,7 +25,7 @@ A wrapper that adds nothing of its own, no behavior, styles or tokens, and only 
 
 ## Components
 
-Components compose as siblings, for example `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
+Components compose as siblings, for example `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces, and never put another compound root inside a control such as `Field.Root` or `Button.Root`. Containers such as `Fieldset`, `Popover` and `Dialog` hold other components. One interactive role per compound root.
 
 `Field.Icon`, `Field.Affix`, and `Button.Icon` are compound parts. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not public exports.
 
