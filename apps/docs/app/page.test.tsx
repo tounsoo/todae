@@ -6,13 +6,16 @@ import { describe, expect, it } from 'vitest';
 import { SITE_GROUPS } from '../components/siteGroups';
 import HomePage from './page';
 
+// next.config pageExtensions.
+const PAGE_FILES = ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'].map((ext) => `page.${ext}`);
+
 // Every page folder under app/, as a URL path.
 function pagePaths(dir: string, path = ''): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     // Route groups, private folders and dynamic segments are not plain links.
     if (!entry.isDirectory() || /^[(_[]/.test(entry.name)) return [];
     const child = `${path}/${entry.name}`;
-    const own = ['page.mdx', 'page.tsx'].some((file) => existsSync(join(dir, entry.name, file))) ? [child] : [];
+    const own = PAGE_FILES.some((file) => existsSync(join(dir, entry.name, file))) ? [child] : [];
     return [...own, ...pagePaths(join(dir, entry.name), child)];
   });
 }
@@ -27,7 +30,7 @@ describe('HomePage', () => {
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {
       const dir = join(__dirname, href);
-      expect(['page.mdx', 'page.tsx'].some((file) => existsSync(join(dir, file))), href).toBe(true);
+      expect(PAGE_FILES.some((file) => existsSync(join(dir, file))), href).toBe(true);
     }
   });
 
