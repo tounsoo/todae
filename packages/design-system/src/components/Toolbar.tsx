@@ -36,9 +36,11 @@ type ToolbarContextValue = { orientation: ToolbarOrientation };
 /** Set inside a toolbar, so a composite inside, such as ToggleGroup, leaves arrow keys to it. */
 export const ToolbarContext = createContext<ToolbarContextValue | null>(null);
 
-const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex], [contenteditable=""], [contenteditable="true"]';
+// Selects, textareas and editable text own their arrow keys, so they are never items.
+const FOCUSABLE = 'button, a[href], input, [tabindex]';
 // A layer that opens from the toolbar keeps its own keyboard model.
-const BOUNDARY = '[role="toolbar"], [popover], dialog';
+export const TOOLBAR_BOUNDARY = '[role="toolbar"], [popover], dialog';
+const BOUNDARY = TOOLBAR_BOUNDARY;
 
 // Controls whose own arrow keys move a caret or a value, and composites with
 // their own roving focus. They keep their own tab stop and keys, outside the
@@ -47,7 +49,8 @@ function ownsArrows(el: HTMLElement): boolean {
   if (el.hasAttribute('data-todae-roving')) return true;
   if (el.isContentEditable || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true;
   if (el.tagName !== 'INPUT') return false;
-  return !['button', 'checkbox', 'radio', 'reset', 'submit', 'image', 'color', 'file'].includes((el as HTMLInputElement).type);
+  // A radio's arrow keys select the next radio in its group.
+  return !['button', 'checkbox', 'reset', 'submit', 'image', 'color', 'file'].includes((el as HTMLInputElement).type);
 }
 
 function itemsOf(root: HTMLElement): HTMLElement[] {
@@ -75,14 +78,29 @@ function Root({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const refs = useComposedRefs(rootRef, ref);
   const active = useRef<HTMLElement | null>(null);
+  // Each element the toolbar set a tabindex on, with the attribute it had
+  // before, so one that stops being an item gets its own back.
+  const managed = useRef(new Map<HTMLElement, string | null>());
 
-  // One control keeps tabindex 0: the last one focused, else the first.
-  const sync = useCallback(() => {
+  // One control keeps tabindex 0: `focused` when it is an item, else the last
+  // one focused, else the first.
+  const sync = useCallback((focused?: HTMLElement) => {
     const root = rootRef.current;
     if (!root) return;
     const items = itemsOf(root);
+    if (focused && items.includes(focused)) active.current = focused;
     if (!active.current || !items.includes(active.current)) active.current = items[0] ?? null;
-    for (const item of items) item.tabIndex = item === active.current ? 0 : -1;
+    const now = new Set(items);
+    for (const [el, original] of managed.current) {
+      if (now.has(el)) continue;
+      if (original === null) el.removeAttribute('tabindex');
+      else el.setAttribute('tabindex', original);
+      managed.current.delete(el);
+    }
+    for (const item of items) {
+      if (!managed.current.has(item)) managed.current.set(item, item.getAttribute('tabindex'));
+      item.tabIndex = item === active.current ? 0 : -1;
+    }
   }, []);
 
   // On mount, then whenever controls come, go, or change what can take focus.
@@ -91,7 +109,11 @@ function Root({
     sync();
     const root = rootRef.current;
     if (!root || typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver(sync);
+    // Changes inside a layer that opens from the toolbar, such as an open
+    // menu, cannot change the toolbar's items.
+    const observer = new MutationObserver((records) => {
+      if (records.some((record) => record.target === root || record.target.parentElement?.closest(BOUNDARY) === root)) sync();
+    });
     observer.observe(root, {
       childList: true,
       subtree: true,
@@ -103,12 +125,7 @@ function Root({
 
   const handleFocus = (event: FocusEvent<HTMLDivElement>) => {
     onFocus?.(event);
-    const root = rootRef.current;
-    const target = event.target as HTMLElement;
-    if (root && itemsOf(root).includes(target) && active.current !== target) {
-      active.current = target;
-      sync();
-    }
+    if (event.target !== active.current) sync(event.target as HTMLElement);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {

@@ -1,11 +1,11 @@
-import { createContext, useContext, useMemo, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { useControlledState } from '../hooks/useControlledState';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { Button, type ButtonRootProps } from './Button';
 import buttonStyles from './Button.module.css';
 import { cx } from './cx';
 import { useComposedRefs } from './props';
-import { ToolbarContext } from './Toolbar';
+import { TOOLBAR_BOUNDARY, ToolbarContext } from './Toolbar';
 import styles from './ToggleGroup.module.css';
 
 export type ToggleGroupOrientation = 'horizontal' | 'vertical';
@@ -50,7 +50,16 @@ type ToggleGroupContextValue = {
 const ToggleGroupContext = createContext<ToggleGroupContextValue | null>(null);
 
 function Root(props: ToggleGroupRootProps) {
-  const toolbar = useContext(ToolbarContext);
+  const toolbarContext = useContext(ToolbarContext);
+  // Context crosses a popover or dialog that opens from the toolbar, but the
+  // toolbar leaves the controls in those alone, so check the DOM too.
+  const nodeRef = useRef<HTMLDivElement | null>(null);
+  const [inLayer, setInLayer] = useState(false);
+  useLayoutEffect(() => {
+    const layer = nodeRef.current?.parentElement?.closest(TOOLBAR_BOUNDARY);
+    setInLayer(layer != null && layer.getAttribute('role') !== 'toolbar');
+  }, []);
+  const toolbar = inLayer ? null : toolbarContext;
   const {
     selectionMode = 'single',
     value: valueProp,
@@ -95,7 +104,7 @@ function Root(props: ToggleGroupRootProps) {
     activeValue: multiple ? null : (list[0] ?? null),
   });
   const container = toolbar ? { ref: undefined, onKeyDown } : roving.getContainerProps({ onKeyDown });
-  const refs = useComposedRefs(container.ref, ref);
+  const refs = useComposedRefs(container.ref, nodeRef, ref);
 
   return (
     <ToggleGroupContext.Provider value={{ pressed, toggle, disabled, roving: toolbar ? null : roving }}>

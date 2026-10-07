@@ -168,4 +168,52 @@ describe('Toolbar', () => {
     fireEvent.keyDown(button('Right'), { key: 'ArrowRight' });
     expect(document.activeElement).toBe(button('More'));
   });
+
+  it('leaves native radios their own arrow keys and tab stop', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <input type="radio" name="size" aria-label="Small" defaultChecked />
+        <input type="radio" name="size" aria-label="Large" />
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    expect(screen.getByRole('radio', { name: 'Small' }).hasAttribute('tabindex')).toBe(false);
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(button('B'));
+  });
+
+  it('gives a control back its own tabindex when it stops being an item', async () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <input type="button" value="Mode" />
+      </Toolbar.Root>,
+    );
+    const mode = screen.getByRole('button', { name: 'Mode' }) as HTMLInputElement;
+    expect(mode.tabIndex).toBe(-1);
+    mode.type = 'text';
+    await waitFor(() => expect(mode.hasAttribute('tabindex')).toBe(false));
+  });
+
+  it('leaves a toggle group inside a popover from the toolbar its own roving focus', async () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <div popover="manual">
+          <ToggleGroup.Root aria-label="Align" defaultValue="left">
+            <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+            <ToggleGroup.Item value="right">Right</ToggleGroup.Item>
+          </ToggleGroup.Root>
+        </div>
+      </Toolbar.Root>,
+    );
+    const left = screen.getByRole('button', { name: 'Left', hidden: true });
+    const right = screen.getByRole('button', { name: 'Right', hidden: true });
+    await waitFor(() => expect([left.tabIndex, right.tabIndex]).toEqual([0, -1]));
+    left.focus();
+    fireEvent.keyDown(left, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(right);
+  });
 });
