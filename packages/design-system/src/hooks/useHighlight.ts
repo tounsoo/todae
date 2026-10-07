@@ -37,20 +37,74 @@ function patternSource(query: string | readonly string[] | undefined): string {
     .join('|');
 }
 
-function findMatches(root: HTMLElement, pattern: RegExp): Range[] {
-  const doc = root.ownerDocument;
-  const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+function rangesIn(text: Text, pattern: RegExp): Range[] {
   const found: Range[] = [];
-  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    const text = node as Text;
-    for (const match of text.data.matchAll(pattern)) {
-      const range = doc.createRange();
-      range.setStart(text, match.index);
-      range.setEnd(text, match.index + match[0].length);
-      found.push(range);
-    }
+  for (const match of text.data.matchAll(pattern)) {
+    const range = text.ownerDocument.createRange();
+    range.setStart(text, match.index);
+    range.setEnd(text, match.index + match[0].length);
+    found.push(range);
   }
   return found;
+}
+
+const inDocumentOrder = (a: Node, b: Node) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+
+/**
+ * Keeps matches per text node, so a change only rescans the text it touched
+ * instead of the whole element: text streaming into a long page stays cheap.
+ */
+function createSearch(root: HTMLElement, pattern: RegExp) {
+  const byText = new Map<Text, Range[]>();
+  const scanText = (text: Text) => {
+    const found = rangesIn(text, pattern);
+    if (found.length > 0) byText.set(text, found);
+    else byText.delete(text);
+  };
+  const scan = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) return scanText(node as Text);
+    const walker = root.ownerDocument.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    for (let text = walker.nextNode(); text; text = walker.nextNode()) scanText(text as Text);
+  };
+  const update = (records: readonly MutationRecord[]) => {
+    let removed = false;
+    for (const record of records) {
+      if (record.type === 'characterData') {
+        if (root.contains(record.target)) scan(record.target);
+        else removed = true;
+        continue;
+      }
+      if (record.removedNodes.length > 0) removed = true;
+      for (const added of record.addedNodes) if (root.contains(added)) scan(added);
+    }
+    if (!removed) return;
+    for (const text of byText.keys()) if (!root.contains(text)) byText.delete(text);
+  };
+  const matches = () => [...byText.keys()].sort(inDocumentOrder).flatMap((text) => byText.get(text)!);
+  scan(root);
+  return { update, matches };
+}
+
+// Hooks holding each name, oldest first. The newest is registered; when it
+// unmounts, the one before it takes the name back.
+const holders = new Map<string, Highlight[]>();
+
+function claim(name: string, highlight: Highlight): void {
+  const list = holders.get(name) ?? [];
+  list.push(highlight);
+  holders.set(name, list);
+  CSS.highlights.set(name, highlight);
+}
+
+function release(name: string, highlight: Highlight): void {
+  const list = (holders.get(name) ?? []).filter((held) => held !== highlight);
+  if (list.length > 0) holders.set(name, list);
+  else holders.delete(name);
+  // Page code removed or replaced the name since; leave its choice alone.
+  if (CSS.highlights.get(name) !== highlight) return;
+  const previous = list.at(-1);
+  if (previous) CSS.highlights.set(name, previous);
+  else CSS.highlights.delete(name);
 }
 
 const sameItems = (a: readonly AbstractRange[], b: readonly AbstractRange[]) =>
@@ -89,14 +143,17 @@ export function useHighlight({
       setMatches(NO_MATCHES);
       return;
     }
-    const pattern = new RegExp(source, flags);
-    const search = () => {
-      const next = findMatches(node, pattern);
+    const search = createSearch(node, new RegExp(source, flags));
+    const publish = () => {
+      const next = search.matches();
       setMatches((prev) => (sameRanges(prev, next) ? prev : next.length === 0 ? NO_MATCHES : next));
     };
-    search();
+    publish();
     if (typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver(search);
+    const observer = new MutationObserver((records) => {
+      search.update(records);
+      publish();
+    });
     observer.observe(node, { subtree: true, childList: true, characterData: true });
     return () => observer.disconnect();
   }, [node, source, flags]);
@@ -111,11 +168,8 @@ export function useHighlight({
 
   useEffect(() => {
     if (!highlight) return;
-    CSS.highlights.set(name, highlight);
-    return () => {
-      // A later hook may have taken the name; leave it alone.
-      if (CSS.highlights.get(name) === highlight) CSS.highlights.delete(name);
-    };
+    claim(name, highlight);
+    return () => release(name, highlight);
   }, [highlight, name]);
 
   useEffect(() => {
@@ -128,11 +182,8 @@ export function useHighlight({
     if (!highlight) return;
     const extra = ranges ?? NO_MATCHES;
     const last = painted.current;
-    // Re-register if page code removed the name since, but not over a later hook.
-    const missing = !CSS.highlights.has(name);
-    if (missing) CSS.highlights.set(name, highlight);
     // `ranges={[current]}` is a new array each render; skip the repaint when its items are the same.
-    if (!missing && sameItems(last.matches, matches) && sameItems(last.ranges, extra)) return;
+    if (sameItems(last.matches, matches) && sameItems(last.ranges, extra)) return;
     highlight.clear();
     for (const range of matches) highlight.add(range);
     for (const range of extra) highlight.add(range);

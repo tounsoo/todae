@@ -189,11 +189,65 @@ describe('useHighlight', () => {
     expect(painted('search')).toEqual(['pie']);
   });
 
-  it('registers again when page code clears the registry', () => {
+  it('leaves the name removed when page code clears the registry', () => {
     const { rerender } = render(<Search query="apple" />);
     highlights.clear();
     rerender(<Search query="pie" />);
+    expect(highlights.has('search')).toBe(false);
+  });
+
+  it('gives the name back to an earlier hook when a later one with that name unmounts', () => {
+    function Two({ later }: { later: boolean }) {
+      return (
+        <>
+          <Search query="apple" />
+          {later ? <Search query="pie" /> : null}
+        </>
+      );
+    }
+    const { rerender } = render(<Two later />);
     expect(painted('search')).toEqual(['pie']);
+    rerender(<Two later={false} />);
+    expect(painted('search')).toEqual(['Apple', 'apple']);
+  });
+
+  it('rescans only the text a change touched', async () => {
+    function Paragraphs() {
+      const highlight = useHighlight({ name: 'search', query: 'tea' });
+      return (
+        <div ref={highlight.ref} data-testid="root">
+          <p>tea one</p>
+          <p data-testid="second">tea two</p>
+          <output data-testid="count">{highlight.matches.length}</output>
+        </div>
+      );
+    }
+    render(<Paragraphs />);
+    const before = [...highlights.get('search')!];
+    await act(async () => {
+      screen.getByTestId('second').firstChild!.textContent = 'tea, more tea';
+    });
+    const after = [...highlights.get('search')!];
+    expect(after.map(String)).toEqual(['tea', 'tea', 'tea']);
+    // The untouched paragraph keeps its Range object.
+    expect(after[0]).toBe(before[0]);
+    expect(after[1]).not.toBe(before[1]);
+  });
+
+  it('keeps document order and drops removed text as nodes come and go', async () => {
+    render(<Search query="pie" text="pie" />);
+    const body = screen.getByTestId('body');
+    await act(async () => {
+      const first = document.createElement('span');
+      first.innerHTML = '<b>pie</b> first ';
+      body.prepend(first);
+    });
+    expect(painted('search')).toEqual(['pie', 'pie']);
+    expect(highlights.get('search')![Symbol.iterator]().next().value!.startContainer.parentElement!.localName).toBe('b');
+    await act(async () => {
+      body.querySelector('span')!.remove();
+    });
+    expect(count()).toBe('1');
   });
 
   it('does not repaint a new array holding the same ranges', () => {
