@@ -2,9 +2,27 @@ import { FieldPartsAllowed, SiblingsAllowed } from '../../../components/demos/Co
 
 # 조합
 
-공개된 단계는 컴파운드, 그다음 레시피입니다. 레시피는 이 문서에 있습니다. `Combobox.*` export가 아닙니다.
+Todae가 제공하는 것은 네 종류입니다. 모든 컴포넌트, 훅, 패턴은 정확히 그중 하나입니다.
 
-## 컴파운드
+- **네이티브 + CSS.** HTML에 이미 요소와 동작이 있습니다. Todae는 토큰으로 스타일만 입힙니다. [Link](/link), [Disclosure](/disclosure), `Field.Select`, 날짜 입력이 네이티브입니다.
+- **컴포넌트.** 루트 하나와 인터랙티브 역할 최대 하나를 가진 UI 개념 하나입니다. 제품에 대해 아무것도 몰라도 API 전체를 쓸 수 있습니다. [Menu](/menu)와 [Tabs](/tabs)처럼 동작을 맡을 수도 있고, [Stack](/stack)과 [Alert](/alert)처럼 외형만 맡을 수도 있습니다. `*.Root` 컴파운드로 제공됩니다.
+- **훅.** 마크업 없이 컴포넌트나 레시피의 동작만 담은 것으로, 자체 마크업이 필요한 제품을 위한 것입니다. [useRovingFocus](/utilities/use-roving-focus)와 [useField](/utilities/use-field)가 훅입니다.
+- **레시피.** 둘 이상의 export를 제품 데이터나 제품 흐름(무엇을 검색할지, 결과를 어떻게 불러올지, 선택하면 무슨 일이 일어날지)을 중심으로 서로 연결한 것입니다. 연결 자체가 핵심이고, 제품마다 다릅니다. 레시피는 이 문서에 있는 복사용 코드입니다. 패키지 export가 아니므로 `Combobox.*`는 없습니다.
+
+## 컴포넌트인가, 레시피인가
+
+순서대로 물어보세요. 처음으로 답이 정해지는 질문이 결정합니다.
+
+1. 네이티브 요소가 이미 하나요? 그렇다면 CSS로 스타일을 입힌 네이티브입니다.
+2. 제품 데이터, 데이터 요청, 라우팅, 비즈니스 규칙을 언급하지 않고 모든 prop을 쓸 수 있나요? 아니라면 레시피입니다.
+3. 루트 하나에 인터랙티브 역할 하나인가요? Field, Popover, OptionList처럼 나란히 놓인 여러 컴파운드 루트를 조율해야 한다면 레시피입니다.
+4. 모든 제품에서 동작이 같나요? 그렇다면 컴포넌트입니다. 동작은 공유되지만 배치가 다르다면, [Combobox](/recipes/combobox)와 [Chip list](/recipes/chip-list)처럼 동작은 훅이 되고 배치는 레시피가 됩니다.
+
+받은 자식이 무엇이든 컨텍스트나 키보드 처리를 넘겨주는 컨테이너는 컴포넌트입니다. [Fieldset](/fieldset)은 안에 있는 모든 컨트롤에 `disabled`를 넘기고, 툴바는 안에 있는 모든 버튼에 화살표 키 포커스를 줍니다. 특정 export끼리 서로 연결하는 조합은 레시피입니다. Combobox는 한 Field의 입력을 한 OptionList의 활성 옵션에 연결합니다.
+
+자체 동작도 외형도 없이 다른 export를 배치하기만 하는 래퍼는 어느 쪽도 아닙니다. Todae는 이런 것을 제공하지 않습니다.
+
+## 컴포넌트
 
 공개된 형제 컴포넌트입니다. `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [Radio](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, `BottomSheet`입니다. 나란히 놓아 조합하세요. 네임스페이스를 중첩하지 마세요. 컴파운드 루트 하나에는 인터랙티브 역할 하나만 둡니다.
 
@@ -32,7 +50,7 @@ Field 셸은 버튼이 아닙니다. 이런 트리는 절대 허용되지 않습
 
 ## 레시피
 
-컴파운드와 훅을 조합한 작동 예시입니다. Combobox는 패키지 네임스페이스가 아니라 레시피입니다. 아래 블록은 정적입니다. 실행되지 않습니다. 동작은 훅이 맡습니다. 외형은 컴파운드가 맡습니다. 제공되는 Trigger 편의 컴포넌트는 없습니다.
+컴포넌트와 훅을 조합한 작동 예시입니다. Combobox는 패키지 네임스페이스가 아니라 레시피입니다. 아래 블록은 정적입니다. 실행되지 않습니다. 동작은 훅이 맡습니다. 외형은 컴포넌트가 맡습니다. 제공되는 Trigger 편의 컴포넌트는 없습니다.
 
 데스크톱(`presentation="popover"`). 닫힌 컨트롤은 실제 Field입니다. `getAnchorProps`를 `Field.Root`에 펼치세요. 목록은 `Popover.Root` 안에 있습니다. 작동하는 레시피는 [Combobox](/recipes/combobox)에 있습니다.
 

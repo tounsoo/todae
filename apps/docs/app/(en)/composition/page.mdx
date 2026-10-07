@@ -2,9 +2,27 @@ import { FieldPartsAllowed, SiblingsAllowed } from '../../../components/demos/Co
 
 # Composition
 
-The public ladder is Compounds, then Recipes. Recipes live in these docs. They are not `Combobox.*` exports.
+Todae ships four kinds of thing. Every component, hook and pattern is exactly one of them.
 
-## Compounds
+- **Native + CSS.** HTML already has the element and its behavior. Todae only styles it from tokens. [Link](/link), [Disclosure](/disclosure), `Field.Select` and the date inputs are native.
+- **Component.** One UI concept with one root and at most one interactive role. Its whole API can be written without knowing anything about the product. It may own behavior, like [Menu](/menu) and [Tabs](/tabs), or only chrome, like [Stack](/stack) and [Alert](/alert). It ships as a `*.Root` compound.
+- **Hook.** The behavior of a component or recipe with no markup, for products that need their own markup. [useRovingFocus](/utilities/use-roving-focus) and [useField](/utilities/use-field) are hooks.
+- **Recipe.** Two or more exports wired to each other around product data or a product flow: what to search, how results load, what happens on pick. The wiring is the point, and it differs per product. A recipe is code in these docs to copy. It is never a package export, so there is no `Combobox.*`.
+
+## Component or recipe
+
+Ask these in order. The first answer that decides wins.
+
+1. Does a native element already do it? Then it is native, styled with CSS.
+2. Can every prop be written without naming product data, fetching, routing or business rules? If not, it is a recipe.
+3. Is it one root with one interactive role? If it has to coordinate several compound roots that sit side by side, such as a Field, a Popover and an OptionList, it is a recipe.
+4. Is the behavior the same in every product? Then it is a component. If the behavior is shared but the arrangement varies, the behavior becomes a hook and the arrangement a recipe, as with [Combobox](/recipes/combobox) and [Chip list](/recipes/chip-list).
+
+A container that gives context or keyboard handling to whatever children it receives is a component. [Fieldset](/fieldset) hands `disabled` to any control inside it, and a toolbar gives arrow-key focus to any buttons inside it. A composition that wires specific exports to each other is a recipe. Combobox connects one Field's input to one OptionList's active option.
+
+A wrapper with no behavior and no chrome of its own, one that only arranges other exports, is neither. Todae does not ship it.
+
+## Components
 
 Public siblings. `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [Radio](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces. One interactive role per compound root.
 
@@ -32,7 +50,7 @@ Field shell is not a button. This tree is never allowed.
 
 ## Recipes
 
-Worked examples that compose compounds and hooks. Combobox is a recipe, not a package namespace. The blocks below are static. They do not run. The hook owns behavior. Compounds own chrome. There is no shipped Trigger sugar.
+Worked examples that compose components and hooks. Combobox is a recipe, not a package namespace. The blocks below are static. They do not run. The hook owns behavior. Components own chrome. There is no shipped Trigger sugar.
 
 Desktop (`presentation="popover"`). The closed control is a real Field. Spread `getAnchorProps` onto `Field.Root`. The list lives in `Popover.Root`. Worked recipes live on [Combobox](/recipes/combobox).
 
