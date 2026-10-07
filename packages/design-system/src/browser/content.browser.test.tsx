@@ -57,6 +57,34 @@ function Gallery() {
         <summary>Does it ship icons?</summary>
         <p>No. Pass your own.</p>
       </details>
+      <hr />
+      <table>
+        <caption>Invoices</caption>
+        <thead>
+          <tr>
+            <th scope="col">Month</th>
+            <th scope="col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">May</th>
+            <td>$120</td>
+          </tr>
+        </tbody>
+      </table>
+      <label>
+        Upload
+        <progress value={40} max={100} />
+      </label>
+      <label>
+        Storage
+        <meter value={0.9} low={0.5} high={0.8} optimum={0.2} />
+      </label>
+      <label>
+        Volume
+        <input type="range" defaultValue={30} />
+      </label>
       <a href="#gallery-end" className="todae-visually-hidden-focusable">
         Skip to content
       </a>
@@ -198,5 +226,50 @@ describe('content parts in a browser', () => {
     expect(screen.getByTestId('two').hasAttribute('open')).toBe(true);
     expect(screen.getByTestId('one').hasAttribute('open')).toBe(false);
     expect(getComputedStyle(screen.getByTestId('one')).borderBottomStyle).toBe('solid');
+  });
+
+  it('styles native tables, progress, meter and range from their tokens', () => {
+    render(
+      <Themed>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" data-testid="col">
+                Month
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" data-testid="row">
+                May
+              </th>
+              <td data-testid="cell">$120</td>
+            </tr>
+          </tbody>
+        </table>
+        <progress data-testid="progress" value={40} max={100} />
+        <progress data-testid="busy" />
+        <meter data-testid="good" value={0.1} low={0.5} high={0.8} optimum={0.2} />
+                <input data-testid="range" type="range" />
+      </Themed>,
+    );
+    const style = (id: string, pseudo?: string) => getComputedStyle(screen.getByTestId(id), pseudo);
+    // Row and column headers share one weight; only column headers get the stronger rule.
+    expect(style('row').fontWeight).toBe(style('col').fontWeight);
+    expect(style('col').borderBottomColor).not.toBe(style('cell').borderBottomColor);
+    expect(style('cell').borderBottomStyle).toBe('solid');
+    // Chromium does not report the bar's pseudo-elements, so check the tokens they read.
+    const token = (id: string, name: string) => style(id).getPropertyValue(name).trim();
+    expect(token('progress', '--todae-progress-fill')).not.toBe(token('progress', '--todae-progress-track'));
+    expect(style('busy').animationName).toBe('todae-progress-sweep');
+    expect(
+      new Set(
+        ['--todae-meter-fill-optimum', '--todae-meter-fill-suboptimum', '--todae-meter-fill-critical'].map((name) =>
+          token('good', name),
+        ),
+      ).size,
+    ).toBe(3);
+    expect(style('range').accentColor).not.toBe('auto');
   });
 });

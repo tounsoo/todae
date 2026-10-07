@@ -3935,11 +3935,11 @@
       "context": null
     },
     {
-      "path": "table.header.bg",
+      "path": "table.header.border",
       "type": "color",
-      "cssVar": "--todae-table-header-bg",
-      "cssValue": "var(--todae-color-bg-subtle)",
-      "ref": "color.bg.subtle",
+      "cssVar": "--todae-table-header-border",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
       "layer": "contract",
       "context": null
     },
@@ -3958,6 +3958,15 @@
       "cssVar": "--todae-table-header-font-weight",
       "cssValue": "var(--todae-font-weight-medium)",
       "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "table.rule.thickness",
+      "type": "dimension",
+      "cssVar": "--todae-table-rule-thickness",
+      "cssValue": "1px",
+      "ref": null,
       "layer": "contract",
       "context": null
     },
@@ -4028,8 +4037,8 @@
       "path": "progress.track",
       "type": "color",
       "cssVar": "--todae-progress-track",
-      "cssValue": "var(--todae-color-bg-subtle)",
-      "ref": "color.bg.subtle",
+      "cssValue": "var(--todae-color-border-subtle)",
+      "ref": "color.border.subtle",
       "layer": "contract",
       "context": null
     },

@@ -2,7 +2,7 @@ import { SliderVolume } from '../../../components/demos/NativeControlsDemo';
 
 # Slider
 
-A slider is a native `<input type="range">`. There is no component: the browser already handles arrow keys, Page Up and Down, Home and End, and announces the value. Todae tints the thumb and the filled track with `accent-color`, from the `slider` contract tokens, in the `todae.base` layer.
+A slider is a native `<input type="range">`. There is no component: the browser already handles arrow keys, Page Up and Down, Home and End, and announces the value. Todae sets `accent-color` from the `slider` contract tokens in the `todae.base` layer, and the browser uses it to tint the thumb and filled track. How much of the control that color reaches differs by browser.
 
 <Example>
   <SliderVolume />

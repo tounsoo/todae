@@ -1,21 +1,70 @@
 {
   "table": {
-    "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
-    "border": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+    "fg": {
+      "$type": "color",
+      "$value": {
+        "$ref": "#/color/fg/default/$value"
+      }
+    },
+    "border": {
+      "$type": "color",
+      "$value": {
+        "$ref": "#/color/border/subtle/$value"
+      }
+    },
     "header": {
-      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
-      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "fg": {
+        "$type": "color",
+        "$value": {
+          "$ref": "#/color/fg/default/$value"
+        }
+      },
       "font": {
-        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+        "weight": {
+          "$type": "fontWeight",
+          "$value": {
+            "$ref": "#/font/weight/medium/$value"
+          }
+        }
+      },
+      "border": {
+        "$type": "color",
+        "$value": {
+          "$ref": "#/color/border/default/$value"
+        }
       }
     },
     "caption": {
-      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
+      "fg": {
+        "$type": "color",
+        "$value": {
+          "$ref": "#/color/fg/muted/$value"
+        }
+      }
     },
     "cell": {
       "padding": {
-        "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },
-        "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
+        "x": {
+          "$type": "dimension",
+          "$value": {
+            "$ref": "#/space/control/x/$value"
+          }
+        },
+        "y": {
+          "$type": "dimension",
+          "$value": {
+            "$ref": "#/space/control/y/$value"
+          }
+        }
+      }
+    },
+    "rule": {
+      "thickness": {
+        "$type": "dimension",
+        "$value": {
+          "value": 1,
+          "unit": "px"
+        }
       }
     }
   }

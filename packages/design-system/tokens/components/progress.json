@@ -1,6 +1,6 @@
 {
   "progress": {
-    "track": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
+    "track": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
     "fill": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
     "height": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
