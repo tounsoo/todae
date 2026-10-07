@@ -148,6 +148,10 @@ describe('docs mcp tools', () => {
       expect(copy).toMatchObject({ status: 'present' });
       expect(copy).not.toHaveProperty('scope');
     }
+    // Including any hook added later: every listed `use*` name lives under Utilities.
+    for (const row of listComponents().components.filter((item) => /^use[A-Z]/.test(item.name))) {
+      expect(row.docsUrl, row.name).toMatch(/^https:\/\/todae-rho\.vercel\.app\/utilities\//);
+    }
     const popoverNot = whenToUse('usePopover').whenNotToUse;
     expect(popoverNot).toContain('[Menu](https://todae-rho.vercel.app/menu)');
     expect(popoverNot).toContain('BottomSheet');

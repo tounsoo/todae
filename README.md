@@ -79,7 +79,7 @@ pnpm dev:docs
 
 `pnpm dev` is the same as `pnpm dev:docs`.
 
-Open `/` for the full index, grouped as the sidebar is: Components (one page per component, e.g. `/button`), Utilities (one page per hook, `/utilities/*`), Recipes (`/recipes/*`), Foundations (Composition, `/tokens`, guides) and Tools (`/playground`). Component and hook pages mount a live example and a props table from the schema. `/tokens` tables the generated catalog. `/playground` is a left-rail theme controller (appearance + density selectors, raw / semantic / component token tabs, Export) and a right-stage live demo.
+Open `/` for the full index, grouped as the sidebar is: Components (one page per component, e.g. `/button`), Utilities (one page per headless hook, `/utilities/*`; `useAppearance` and `useDensity` sit with their providers on `/tokens`), Recipes (`/recipes/*`), Foundations (Composition, `/tokens`, guides) and Tools (`/playground`). Component and hook pages mount a live example and a props table from the schema. `/tokens` tables the generated catalog. `/playground` is a left-rail theme controller (appearance + density selectors, raw / semantic / component token tabs, Export) and a right-stage live demo.
 
 ## Test
 
