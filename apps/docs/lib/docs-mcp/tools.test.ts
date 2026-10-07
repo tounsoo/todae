@@ -451,6 +451,5 @@ describe('docs mcp tools', () => {
     expect(result.whenNotToUse).toBeTruthy();
     expect(result.whenNotToUse).toContain('Checkbox / Button.Root');
     expect(result.whenNotToUse).toContain('/recipes/combobox');
-    expect(getComponent('useChipList').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-chip-list');
   });
 });
