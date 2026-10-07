@@ -18,7 +18,7 @@ export function untranslatedSlugs(locale: Locale, appDir = join(process.cwd(), '
   return Object.keys(ENGLISH_PAGES).filter((slug) => !isTranslated(locale, slug, appDir));
 }
 
-/** `untranslatedSlugs` for every non-default locale. */
+/** `untranslatedSlugs` for every non-default locale. Build time only, like `untranslatedSlugs`: it reads the file system and throws without the locale folders. */
 export function untranslatedByLocale(appDir = join(process.cwd(), 'app')): Partial<Record<Locale, string[]>> {
   return Object.fromEntries(
     LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map((locale) => [locale, untranslatedSlugs(locale, appDir)]),

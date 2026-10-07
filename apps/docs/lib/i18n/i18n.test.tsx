@@ -241,6 +241,9 @@ describe('docs locales', () => {
       expect(alternates(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>))).toBe(3);
       untranslated.current = { ko: ['tokens'] };
       expect(alternates(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>))).toBe(0);
+      // The English page has no Korean version to pair with either.
+      path.current = '/tokens';
+      expect(alternates(renderToStaticMarkup(<SiteShell locale="en">x</SiteShell>))).toBe(0);
       // A 404 has no page to pair, so it does not read which pages exist at all.
       untranslated.current = undefined;
       untranslatedRead.current = vi.fn();
