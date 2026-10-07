@@ -20,7 +20,7 @@ function emitPackageCss(): Plugin {
             // A layer's place is fixed where it is first named. The server
             // entries' component CSS comes before styles/todae.css in the
             // bundle, so its order statement moves to the top of the file.
-            const order = /@layer todae\.reset\s*,\s*todae\.base\s*,\s*todae\.components\s*;/;
+            const order = /@layer todae\.reset\b[^;{]*;/;
             const statement = item.source.match(order)?.[0];
             if (!statement) this.error('styles/todae.css must declare the todae layer order.');
             item.source = `${statement}${item.source.replace(order, '')}`;

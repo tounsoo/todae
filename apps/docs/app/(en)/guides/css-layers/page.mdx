@@ -3,7 +3,7 @@
 All of Todae's CSS sits in one cascade layer, `todae`, so a company design system or an app places Todae with a single name. Inside it, in order:
 
 - `todae.reset`: reserved for a reset. It is empty.
-- `todae.base`: tokens, and styles for native elements such as links and disclosures.
+- `todae.base`: tokens, styles for native elements such as links and disclosures, and the visually hidden classes.
 - `todae.components`: the styles of every part.
 - `todae.theme`: a company's tokens, written by `todae-tokens build`. See [Build on Todae](/guides/build-on-todae).
 
@@ -11,7 +11,7 @@ A later layer beats an earlier one whatever the selectors, and CSS outside any l
 
 ## Unlayered CSS needs no setup
 
-Plain stylesheets, CSS Modules and vanilla-extract's default output are unlayered, so they beat Todae with no setup. A class you put on a part wins over Todae's styles for that part.
+Plain stylesheets, CSS Modules and vanilla-extract's default output are unlayered, so they beat Todae with no setup. A class you put on a part wins over Todae's styles for that part, except the few `!important` rules described below.
 
 ## Declare the order once, first
 
@@ -61,6 +61,7 @@ Tailwind 3 writes no cascade layers: its `@layer` is its own directive, and the 
 
 @import 'tailwindcss/base' layer(tw-base);
 @import '@tounsoo/todae/todae.css';
+@import './todae-theme.css';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 ```

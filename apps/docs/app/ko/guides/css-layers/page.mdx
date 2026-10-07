@@ -3,7 +3,7 @@
 Todae의 CSS는 모두 `todae`라는 캐스케이드 레이어 하나에 있습니다. 그래서 회사 디자인 시스템이나 앱은 이름 하나로 Todae의 자리를 정합니다. 그 안의 순서는 다음과 같습니다.
 
 - `todae.reset`: 리셋용으로 비워 둔 레이어입니다.
-- `todae.base`: 토큰, 그리고 링크와 디스클로저 같은 네이티브 요소의 스타일.
+- `todae.base`: 토큰, 링크와 디스클로저 같은 네이티브 요소의 스타일, 그리고 시각적으로 숨기는 클래스.
 - `todae.components`: 모든 파트의 스타일.
 - `todae.theme`: `todae-tokens build`가 쓰는 회사 토큰. [Todae로 디자인 시스템 만들기](/guides/build-on-todae)를 보세요.
 
@@ -11,7 +11,7 @@ Todae의 CSS는 모두 `todae`라는 캐스케이드 레이어 하나에 있습�
 
 ## 레이어 밖 CSS는 설정이 필요 없습니다
 
-일반 스타일시트, CSS Modules, vanilla-extract의 기본 출력은 레이어 밖에 있으므로 설정 없이 Todae를 이깁니다. 파트에 붙인 클래스는 그 파트의 Todae 스타일을 이깁니다.
+일반 스타일시트, CSS Modules, vanilla-extract의 기본 출력은 레이어 밖에 있으므로 설정 없이 Todae를 이깁니다. 파트에 붙인 클래스는 그 파트의 Todae 스타일을 이깁니다. 아래에서 설명하는 몇 가지 `!important` 규칙만 예외입니다.
 
 ## 순서는 한 번, 가장 먼저 선언합니다
 
@@ -61,6 +61,7 @@ Tailwind 3는 캐스케이드 레이어를 쓰지 않습니다. 그 `@layer`는 
 
 @import 'tailwindcss/base' layer(tw-base);
 @import '@tounsoo/todae/todae.css';
+@import './todae-theme.css';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 ```
