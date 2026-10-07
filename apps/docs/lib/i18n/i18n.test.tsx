@@ -207,6 +207,16 @@ describe('docs locales', () => {
     ]);
   });
 
+  it('leaves out a language that only shows the English page', () => {
+    path.current = '/ko/tokens';
+    render(<LanguageAlternates untranslated={{ ko: ['tokens'] }} />);
+    expect(document.head.querySelectorAll('link[rel="alternate"]')).toHaveLength(0);
+    cleanup();
+    path.current = '/ko/recipes/combobox';
+    render(<LanguageAlternates untranslated={{ ko: ['tokens'] }} />);
+    expect([...document.head.querySelectorAll('link[rel="alternate"]')].map((link) => link.getAttribute('hreflang'))).toEqual(['en', 'ko', 'x-default']);
+  });
+
   it('names examples in the page language and marks their English demo copy', () => {
     path.current = '/ko/button';
     render(
