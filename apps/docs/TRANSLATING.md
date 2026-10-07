@@ -51,7 +51,7 @@ A test fails when a prop a page shows has no translation, or when its English ha
 ## Add a language
 
 1. Add the locale to `LOCALES` and its name, written in that language, to `LOCALE_NAMES` in `lib/i18n/config.ts`.
-2. Add its dictionary to `DICTIONARIES` in `lib/i18n/dictionaries.ts`, and its prop descriptions to `PROP_TRANSLATIONS` in `lib/i18n/propDescriptions.ts`.
+2. Add its dictionary to `DICTIONARIES` in `lib/i18n/dictionaries.ts`, and its prop descriptions to `PROP_TRANSLATIONS` in `lib/i18n/propDescriptions.ts`. The tests require every prop a page shows to be translated, so translate them all in the same pull request (copy `lib/i18n/props/ko.json` and replace each `ko` with the new locale).
 3. Copy `app/ko/layout.tsx`, `app/ko/page.tsx` and `app/ko/[...slug]/page.tsx` into `app/<locale>/`, and change `ko` to the new locale in each.
 4. Add `/<locale>` to `LOCALE_PREFIXES` in `next.config.mjs`, so old URLs redirect in the new language too.
 5. Run `pnpm --filter docs test` and `pnpm build`.

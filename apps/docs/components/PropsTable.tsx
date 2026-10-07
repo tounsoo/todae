@@ -1,7 +1,7 @@
 import schema from '@tounsoo/todae/schema/components.json';
 import { LOCALES, type Locale } from '../lib/i18n/config';
 import { propDescription } from '../lib/i18n/propDescriptions';
-import { PropsTableView, type PropDescription } from './PropsTableView';
+import { PropsTableView, type PropDescription, type PropsTableRow } from './PropsTableView';
 
 export type PropRow = {
   name: string;
@@ -11,7 +11,7 @@ export type PropRow = {
   description: string;
 };
 
-export type ComponentRow = {
+type ComponentRow = {
   name: string;
   description: string;
   props: PropRow[];
@@ -59,7 +59,7 @@ function readComponent(name: string): ComponentRow {
 export function PropsTable({ name }: { name: string }) {
   const component = readComponent(name);
   // Each prop's description in every language; the view shows the page's own.
-  const rows = component.props.map(({ description, ...prop }) => ({
+  const rows: PropsTableRow[] = component.props.map(({ description, ...prop }) => ({
     ...prop,
     descriptions: Object.fromEntries(
       LOCALES.map((locale) => [locale, propDescription(locale, component.name, prop.name, description)]),

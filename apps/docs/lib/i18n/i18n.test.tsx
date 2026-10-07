@@ -287,7 +287,7 @@ describe('docs locales', () => {
         .flatMap((file) => [...readFileSync(join(APP, '(en)', file), 'utf8').matchAll(/<PropsTable\s+name="([^"]+)"/g)].map((hit) => hit[1])),
     );
     const english = Object.fromEntries(
-      schema.components.filter((component) => shown.has(component.name)).map((component) => [component.name, Object.fromEntries(component.props.map((prop) => [prop.name, prop.description]))]),
+      schema.components.filter((component) => shown.has(component.name) && component.props.length > 0).map((component) => [component.name, Object.fromEntries(component.props.map((prop) => [prop.name, prop.description]))]),
     );
     for (const locale of LOCALES.filter((other) => other !== 'en')) {
       const translations = PROP_TRANSLATIONS[locale] ?? {};

@@ -987,7 +987,6 @@
       "ko": "제어 필터 텍스트."
     }
   },
-  "useField": {},
   "usePopover": {
     "open": {
       "en": "Controlled open state.",
