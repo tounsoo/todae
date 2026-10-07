@@ -9,6 +9,8 @@ export type FieldControlUserProps = {
   name?: string;
   /** Disables the control on top of the Root's `disabled`. */
   disabled?: boolean;
+  /** The control's own, for one that stays focusable while unavailable. Kept unless the Field disables a non-native control. */
+  'aria-disabled'?: boolean | 'true' | 'false';
   /** Marks the control invalid on top of the Root's `invalid`. */
   'aria-invalid'?: boolean | 'true' | 'false' | 'grammar' | 'spelling';
   'aria-describedby'?: string;
@@ -30,7 +32,7 @@ export type FieldControlWire = {
   id: string;
   name: string | undefined;
   disabled: boolean | undefined;
-  'aria-disabled': true | undefined;
+  'aria-disabled': FieldControlUserProps['aria-disabled'];
   'aria-invalid': FieldControlUserProps['aria-invalid'];
   'aria-describedby': string | undefined;
   'aria-label': string | undefined;
@@ -79,7 +81,8 @@ export function useField(): UseFieldResult {
         id: ctx.inputId,
         name: native ? (user.name ?? ctx.name) : undefined,
         disabled: native ? disabled : undefined,
-        'aria-disabled': !native && disabled ? true : undefined,
+        // A control's own aria-disabled stays unless the Field disables it.
+        'aria-disabled': !native && disabled ? true : user['aria-disabled'],
         // The Root's invalid wins; otherwise the control's own value, such as `spelling`, stays.
         'aria-invalid': ctx.invalid ? true : user['aria-invalid'],
         'aria-describedby': mergeDescribedBy(ctx.describedBy, user['aria-describedby']),

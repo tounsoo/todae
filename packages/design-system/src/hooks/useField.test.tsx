@@ -169,6 +169,25 @@ describe('useField', () => {
     expect(screen.getByRole('textbox').getAttribute('name')).toBe('rating');
   });
 
+  it("keeps a control's own aria-disabled unless the Field disables it", () => {
+    function Control({ native }: { native: boolean }) {
+      const field = useField();
+      return <button type="button" {...field.getControlProps({ 'aria-disabled': true }, { native })} />;
+    }
+    const { rerender } = render(
+      <Field.Root aria-label="Own">
+        <Control native />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('button').getAttribute('aria-disabled')).toBe('true');
+    rerender(
+      <Field.Root aria-label="Own">
+        <Control native={false} />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('button').getAttribute('aria-disabled')).toBe('true');
+  });
+
   it('a press beside an already focused select does not reopen its picker', () => {
     const showPicker = vi.fn();
     const proto = HTMLSelectElement.prototype as unknown as { showPicker?: () => void };
