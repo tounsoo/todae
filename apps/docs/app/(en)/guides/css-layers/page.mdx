@@ -50,17 +50,17 @@ To use Todae's tokens in utilities, map them with `@theme inline`:
 }
 ```
 
-Without `inline`, Tailwind resolves the variable once on `:root`. Contract tokens such as `--todae-button-bg-default` are not set there, so the utility gets no value, and appearance tokens stop following `data-appearance`.
+Without `inline`, Tailwind sets the variable on `:root`, so every utility takes the value computed there. It does not follow `data-appearance`, `ThemeProvider` or button variants below the root.
 
 ## Tailwind CSS 3
 
-Tailwind 3 writes no cascade layers: its `@layer` is its own directive, and the output is unlayered, so preflight beats every Todae layer. Put preflight in a layer with `postcss-import`, listed before `tailwindcss` in your PostCSS config:
+Tailwind 3 writes no cascade layers: its `@layer` is its own directive, and the output is unlayered, so preflight beats every Todae layer. Put preflight in a layer with `postcss-import`, listed before `tailwindcss` in your PostCSS config. postcss-import does not read the package's `exports`, so import Todae's CSS by its file path:
 
 ```css
 @layer tw-base, todae;
 
 @import 'tailwindcss/base' layer(tw-base);
-@import '@tounsoo/todae/todae.css';
+@import '@tounsoo/todae/dist/todae.css';
 @import './todae-theme.css';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';

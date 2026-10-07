@@ -61,8 +61,8 @@ describe('package entries', () => {
     // A layer's place is fixed where it is first named, so a component rule
     // ahead of this statement would put todae.components below todae.base.
     const css = read('todae.css');
-    const statements = css.match(/@layer [^;{]*;/g);
-    expect(statements).toEqual(['@layer todae.reset,todae.base,todae.components;']);
-    expect(css.indexOf('@layer')).toBe(css.indexOf(statements![0]!));
+    const order = '@layer todae.reset,todae.base,todae.components;';
+    expect(css.startsWith(order)).toBe(true);
+    for (const statement of css.match(/@layer [^;{]*;/g)!) expect(statement).toBe(order);
   });
 });

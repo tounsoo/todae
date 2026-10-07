@@ -50,17 +50,17 @@ Tailwind 4는 `theme`, `base`, `components`, `utilities` 레이어를 쓰고, �
 }
 ```
 
-`inline`이 없으면 Tailwind는 변수를 `:root`에서 한 번만 계산합니다. `--todae-button-bg-default` 같은 contract 토큰은 그곳에 없으므로 유틸리티는 값을 얻지 못하고, appearance 토큰은 `data-appearance`를 따라가지 않습니다.
+`inline`이 없으면 Tailwind는 변수를 `:root`에 두므로, 모든 유틸리티가 그곳에서 계산된 값을 씁니다. 루트 아래의 `data-appearance`, `ThemeProvider`, 버튼 변형을 따라가지 않습니다.
 
 ## Tailwind CSS 3
 
-Tailwind 3는 캐스케이드 레이어를 쓰지 않습니다. 그 `@layer`는 Tailwind 자체 지시어이고 출력은 레이어 밖에 있으므로, preflight가 모든 Todae 레이어를 이깁니다. PostCSS 설정에서 `tailwindcss`보다 앞에 둔 `postcss-import`로 preflight를 레이어에 넣습니다.
+Tailwind 3는 캐스케이드 레이어를 쓰지 않습니다. 그 `@layer`는 Tailwind 자체 지시어이고 출력은 레이어 밖에 있으므로, preflight가 모든 Todae 레이어를 이깁니다. PostCSS 설정에서 `tailwindcss`보다 앞에 둔 `postcss-import`로 preflight를 레이어에 넣습니다. postcss-import는 패키지의 `exports`를 읽지 않으므로 Todae의 CSS는 파일 경로로 import합니다.
 
 ```css
 @layer tw-base, todae;
 
 @import 'tailwindcss/base' layer(tw-base);
-@import '@tounsoo/todae/todae.css';
+@import '@tounsoo/todae/dist/todae.css';
 @import './todae-theme.css';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
