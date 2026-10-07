@@ -6,9 +6,9 @@ Put `listRef` on the wrapping list and render the measure row into `measureRef`.
 
 ## When to use
 
-**When:** Chips outside a text field, such as applied filters, read-only tags or recipients, capped at `maxRows` with a +N count.
+**When:** Chips outside a text field, such as applied filters, read-only tags or recipients, capped at `maxRows` with a +N count. Call `useChipList` for the visible/hidden split and build the list from the [recipe](/recipes/chip-list).
 
-**When not:** Typing new chips → `Field.ChipInput`, already built on the hook. Picking from options → [useCombobox](/utilities/use-combobox). Selectable or toggle chips → Checkbox / Button.Root. Chip add and remove state → [useChipField](/utilities/use-chip-field). One chip → `Chip.Root`.
+**When not:** Typing new chips → `Field.ChipInput` (already built on the hook). Picking from options → [Combobox recipe](/recipes/combobox). Selectable or toggle chips → Checkbox / Button.Root. One chip → `Chip.Root`. Chip add/remove state → [useChipField](/utilities/use-chip-field).
 
 ## Props
 

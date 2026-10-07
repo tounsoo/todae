@@ -1,13 +1,13 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { SITE_GROUPS as GROUPS } from './siteGroups';
+import { SITE_GROUPS } from './siteGroups';
 
 export function SiteNav() {
   const path = usePathname();
   return (
     <nav className="site-nav" aria-label="Site">
-      {GROUPS.map((group) => (
+      {SITE_GROUPS.map((group) => (
         <div key={group.id} className="site-nav-group">
           <span id={`nav-${group.id}`} className="site-nav-label">
             {group.label}

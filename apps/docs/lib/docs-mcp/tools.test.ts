@@ -144,9 +144,14 @@ describe('docs mcp tools', () => {
       ['useTooltip', 'use-tooltip'],
     ] as const) {
       expect(getComponent(name).docsUrl).toBe(`https://todae-rho.vercel.app/utilities/${slug}`);
-      expect(whenToUse(name)).toMatchObject({ status: 'present' });
+      const copy = whenToUse(name);
+      expect(copy).toMatchObject({ status: 'present' });
+      expect(copy).not.toHaveProperty('scope');
     }
-    expect(whenToUse('usePopover').whenNotToUse).toContain('BottomSheet');
+    expect(whenToUse('usePopover').whenNotToUse).toBe(
+      'An action menu → [Menu](https://todae-rho.vercel.app/menu). Modal, focus-trapped work → Dialog. A mobile full-bleed picker → BottomSheet, or [useSheetPresentation](https://todae-rho.vercel.app/utilities/use-sheet-presentation) to choose at runtime. A text-only hover hint → [useTooltip](https://todae-rho.vercel.app/utilities/use-tooltip).',
+    );
+    expect(whenToUse('useCombobox').whenNotToUse).toContain('Exporting `Combobox.*` chrome (forbidden)');
     expect(getComponent('useField').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-field');
     expect(getComponent('useRovingFocus').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-roving-focus');
     expect(whenToUse('useField')).toMatchObject({ status: 'present' });
@@ -437,7 +442,7 @@ describe('docs mcp tools', () => {
     expect(result.whenNotToUse).not.toMatch(/non-modal popover/);
     expect(result.whenNotToUse).toBeTruthy();
     expect(result.whenNotToUse).toContain('Checkbox / Button.Root');
-    expect(result.whenNotToUse).toContain('/utilities/use-combobox');
+    expect(result.whenNotToUse).toContain('/recipes/combobox');
     expect(getComponent('useChipList').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-chip-list');
   });
 });

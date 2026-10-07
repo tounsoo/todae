@@ -12,9 +12,9 @@ import { ComboboxSingle } from '../../../components/demos/ComboboxDemo';
 
 ## When to use
 
-**When:** A searchable select: typing filters a list, and the hook owns open, value and input.
+**When:** Searchable select — typeahead + list. Hook owns open/value/input; Field + Popover/BottomSheet + OptionList own chrome, as the [recipe](/recipes/combobox) shows. Auto sheet on coarse/narrow.
 
-**When not:** A static, on-page exclusive choice → Radio. A list with no search → [usePopover](/utilities/use-popover) and `OptionList`. An action menu → [Menu](/menu).
+**When not:** Static on-page exclusive → Radio. Non-search list → [usePopover](/utilities/use-popover) + OptionList only. Action menu → [Menu](/menu). Exporting `Combobox.*` chrome (forbidden).
 
 ## Props
 

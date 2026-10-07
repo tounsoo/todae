@@ -7,12 +7,17 @@ import { PopoverMenu } from '../../../components/demos/PopoverDemo';
 Outside click and Escape call `onOpenChange(false, reason)`, so an owner can veto one reason and keep the others. `haspopup` sets the trigger's `aria-haspopup`. `anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks; do not pass it and also spread `getTriggerProps`.
 
 ```tsx
-const { getTriggerProps, getPopoverProps } = usePopover({ haspopup: 'listbox' })
+const [open, setOpen] = useState(false)
+const [value, setValue] = useState<string | null>(null)
+const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' })
 
 <>
-  <Button.Root tooltip={false} {...getTriggerProps()}>Open</Button.Root>
+  <Button.Root tooltip={false} {...getTriggerProps()}>{value ?? 'Choose fruit'}</Button.Root>
   <Popover.Root {...getPopoverProps()}>
-    <OptionList.Root aria-label="Menu" selectionMode="single">…</OptionList.Root>
+    {/* Selecting does not close the popover: the owner closes it. */}
+    <OptionList.Root aria-label="Fruit" value={value} onChange={(next) => { setValue(next); setOpen(false) }}>
+      <OptionList.Option value="apple">Apple</OptionList.Option>
+    </OptionList.Root>
   </Popover.Root>
 </>
 ```
