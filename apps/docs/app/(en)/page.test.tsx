@@ -4,10 +4,8 @@ import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { SITE_GROUPS } from '../../components/siteGroups';
+import { PAGE_FILES } from '../../lib/i18n/pages';
 import HomePage from './page';
-
-// next.config pageExtensions.
-const PAGE_FILES = ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'].map((ext) => `page.${ext}`);
 
 // Every page under app/, as a URL path. A route group adds no segment;
 // private folders, dynamic segments and parallel slots are not plain links.

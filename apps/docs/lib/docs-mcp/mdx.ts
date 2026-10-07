@@ -3,8 +3,6 @@ import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { DOCS_ORIGIN } from '../origin';
 import { listComponentMeta } from './meta';
 
-export { DOCS_ORIGIN };
-
 export type PageDoc = {
   slug: string;
   title: string;

@@ -1,5 +1,10 @@
 import createMDX from '@next/mdx';
 
+// The non-default locales in lib/i18n/config.ts, as URL prefixes.
+const LOCALE_PREFIXES = ['/ko'];
+
+const REDIRECTS = [['/combobox', '/recipes/combobox']];
+
 const nextConfig = {
   // Each locale has its own root layout (app/(en), app/ko), so a 404 needs a page with its own <html>.
   experimental: { globalNotFound: true },
@@ -8,10 +13,11 @@ const nextConfig = {
     // The MCP reads English pages only. Parentheses are glob syntax, so escape the route group.
     '/api/[transport]': ['./app/\\(en\\)/**/page.mdx'],
   },
-  redirects: async () => [
-    { source: '/combobox', destination: '/recipes/combobox', permanent: true },
-    { source: '/ko/combobox', destination: '/ko/recipes/combobox', permanent: true },
-  ],
+  // Every English redirect also applies under each locale prefix.
+  redirects: async () =>
+    REDIRECTS.flatMap(([source, destination]) =>
+      ['', ...LOCALE_PREFIXES].map((prefix) => ({ source: prefix + source, destination: prefix + destination, permanent: true })),
+    ),
 };
 
 export default createMDX()(nextConfig);

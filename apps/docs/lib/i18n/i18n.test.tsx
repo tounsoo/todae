@@ -50,6 +50,16 @@ describe('docs locales', () => {
     expect(fallback.length + slugs(join(APP, 'ko')).length).toBe(Object.keys(ENGLISH_PAGES).length);
   });
 
+  it('redirects old URLs in every locale', () => {
+    const config = readFileSync(join(process.cwd(), 'next.config.mjs'), 'utf8');
+    const prefixes = /LOCALE_PREFIXES = (\[[^\]]*\])/.exec(config)?.[1]?.replaceAll("'", '"');
+    expect(JSON.parse(prefixes ?? '[]')).toEqual(LOCALES.filter((locale) => locale !== 'en').map((locale) => `/${locale}`));
+  });
+
+  it('refuses to guess when the app directory is wrong', () => {
+    expect(() => untranslatedSlugs('ko', join(APP, 'missing'))).toThrow(/No ko pages/);
+  });
+
   it('names every section in Korean', () => {
     expect(SITE_GROUPS.filter((group) => !DICTIONARIES.ko.groups[group.id])).toEqual([]);
   });
