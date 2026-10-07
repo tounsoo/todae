@@ -37,6 +37,7 @@ export const SITE_GROUPS = [
       ['/utilities/use-chip-list', 'useChipList'],
       ['/utilities/use-combobox', 'useCombobox'],
       ['/utilities/use-field', 'useField'],
+      ['/utilities/use-highlight', 'useHighlight'],
       ['/utilities/use-popover', 'usePopover'],
       ['/utilities/use-roving-focus', 'useRovingFocus'],
       ['/utilities/use-sheet-presentation', 'useSheetPresentation'],

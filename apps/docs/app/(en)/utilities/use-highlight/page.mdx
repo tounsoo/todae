@@ -1,0 +1,41 @@
+import { HighlightSearch } from '../../../../components/demos/HighlightDemo';
+
+# useHighlight
+
+Marks text matches, such as search results, with the browser's CSS Custom Highlight API. The hook finds each match as a `Range` and adds it to a `Highlight` in `CSS.highlights`; your CSS paints it with `::highlight(name)`. No `<mark>` elements are added, so the DOM, the selection and focus stay as they are.
+
+Put `ref` on the element to search and pass `query`. The hook searches its text again whenever the DOM under `ref` changes. Matching ignores letter case unless `caseSensitive` is set, and the query is plain text, not a pattern. A list finds every term.
+
+```tsx
+const found = useHighlight({ name: 'search', query })
+
+<article ref={found.ref}>{children}</article>
+<output>{found.matches.length} results</output>
+```
+
+```css
+::highlight(search) {
+	background-color: var(--todae-color-status-warning-bg);
+	color: var(--todae-color-fg-default);
+}
+```
+
+<Example>
+  <HighlightSearch />
+</Example>
+
+`matches` holds a live `Range` per match, in document order. It skips text the browser does not show (`display: none`, `visibility: hidden`), so its length is a result count. A match must sit inside one text node, so a word split by markup, such as `fo<b>o</b>`, is not found.
+
+To mark the current result, pass it to a second hook as `ranges` under another name, with a higher `priority` so it paints on top. The demo above does this. Hooks that share a `name` paint into one highlight, so two panels can both use `search`. `type` sets `spelling-error` or `grammar-error` for spelling and grammar marks.
+
+The hook does not announce anything. Show the count in an `<output>` or other live region when a screen reader user needs it.
+
+## When to use
+
+**When:** Marking text without changing the DOM: find in page, search results in a list or document, matched letters in a filter.
+
+**When not:** Highlighting that must be in the accessibility tree → a real `<mark>` element. A single selected item in a list → `aria-selected` and a style, as OptionList does.
+
+## Props
+
+<PropsTable name="useHighlight" />

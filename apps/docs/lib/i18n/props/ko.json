@@ -1059,6 +1059,32 @@
       "ko": "제어 필터 텍스트."
     }
   },
+  "useHighlight": {
+    "name": {
+      "en": "Name to style with ::highlight(name). Hooks that share a name paint into one highlight.",
+      "ko": "::highlight(name)으로 스타일을 줄 이름. 이름이 같은 훅은 하나의 하이라이트에 칠합니다."
+    },
+    "query": {
+      "en": "Text to find inside the element on ref. A list finds every term; empty strings are skipped.",
+      "ko": "ref가 가리키는 요소 안에서 찾을 텍스트. 목록이면 모든 단어를 찾으며, 빈 문자열은 건너뜁니다."
+    },
+    "caseSensitive": {
+      "en": "Match letter case exactly.",
+      "ko": "대소문자를 정확히 구분해 일치시킵니다."
+    },
+    "ranges": {
+      "en": "More ranges to paint, such as the current match. They need no ref and are not added to matches.",
+      "ko": "현재 일치 항목처럼 추가로 칠할 범위. ref가 필요 없으며 matches에는 더해지지 않습니다."
+    },
+    "priority": {
+      "en": "Which highlight paints on top where two overlap. Higher wins.",
+      "ko": "두 하이라이트가 겹칠 때 위에 칠해지는 쪽. 높은 값이 이깁니다."
+    },
+    "type": {
+      "en": "Highlight type, for spelling and grammar marks.",
+      "ko": "하이라이트 유형. 맞춤법과 문법 표시에 씁니다."
+    }
+  },
   "usePopover": {
     "open": {
       "en": "Controlled open state.",
