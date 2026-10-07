@@ -29,7 +29,7 @@ const HEADING_SIZE: Record<TextHeading, TextSize> = {
 const SIZE_CLASS: Record<TextSize, string> = { s: 's', m: 'm', l: 'l', xl: 'xl', '2xl': 'xxl' };
 
 function isHeading(tag: TextAs): tag is TextHeading {
-  return tag in HEADING_SIZE;
+  return Object.hasOwn(HEADING_SIZE, tag);
 }
 
 export function Text({ as: Tag = 'p', size, tone = 'default', weight, className, ref, ...props }: TextProps) {

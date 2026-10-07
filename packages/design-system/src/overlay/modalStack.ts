@@ -20,3 +20,8 @@ export function frontModal(): HTMLDialogElement | null {
   }
   return null;
 }
+
+/** For tests: the elements the stack holds. */
+export function heldModals(): readonly HTMLDialogElement[] {
+  return open;
+}

@@ -51,14 +51,31 @@ function Actions({ className, ...props }: AlertActionsProps) {
   return <div {...props} className={cx(styles.actions, className)} />;
 }
 
-const WORD = /[\p{L}\p{N}]/u;
+/**
+ * Two or more letters or digits name the button, such as "Got it" or "닫기";
+ * a symbol such as × or a lone "x" glyph does not.
+ */
+function isWorded(text: string): boolean {
+  return (text.match(/[\p{L}\p{N}]/gu) ?? []).length >= 2;
+}
 
-/** Text with a letter or digit names the button itself; a symbol such as × or an icon does not. */
 function hasWords(children: ReactNode): boolean {
-  if (typeof children === 'string' || typeof children === 'number') return WORD.test(String(children));
+  if (typeof children === 'string' || typeof children === 'number') return isWorded(String(children));
   if (Array.isArray(children)) return children.some(hasWords);
-  if (isValidElement<{ children?: ReactNode }>(children)) return hasWords(children.props.children);
+  if (isValidElement<{ children?: ReactNode; 'aria-hidden'?: unknown }>(children)) {
+    const hidden = children.props['aria-hidden'];
+    return hidden !== true && hidden !== 'true' && hasWords(children.props.children);
+  }
   return false;
+}
+
+/** The text a screen reader reads from the button's content: not aria-hidden parts or SVG titles. */
+function spokenText(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+  if (!(node instanceof Element) || node.getAttribute('aria-hidden') === 'true' || node.namespaceURI === 'http://www.w3.org/2000/svg') {
+    return '';
+  }
+  return [...node.childNodes].map(spokenText).join('');
 }
 
 /**
@@ -74,7 +91,8 @@ function Close({ 'aria-label': ariaLabel, className, children, ref, ...props }: 
   // Every commit, as the text can change; the same value bails out.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
-    setWorded(WORD.test(buttonRef.current?.textContent ?? ''));
+    const button = buttonRef.current;
+    setWorded(button ? isWorded(spokenText(button)) : false);
   });
   const label = ariaLabel ?? (worded ? undefined : 'Dismiss');
   return (

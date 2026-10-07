@@ -1,6 +1,7 @@
 import { Profiler, memo } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi, expectTypeOf } from 'vitest';
+import { heldModals } from '../overlay/modalStack';
 import { BottomSheet, type BottomSheetRootProps, type SheetCloseReason } from './BottomSheet';
 
 afterEach(cleanup);
@@ -271,6 +272,17 @@ describe('BottomSheet', () => {
     fireEvent.pointerDown(sheet, { clientX: 10, clientY: 100 });
     fireEvent.click(sheet, { clientX: 10, clientY: 100 });
     expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('leaves the modal stack when it unmounts, open or not', async () => {
+    const { rerender, unmount } = render(<BottomSheet.Root open onOpenChange={() => undefined} aria-label="s" />);
+    expect(heldModals()).toHaveLength(1);
+    rerender(<BottomSheet.Root open={false} onOpenChange={() => undefined} aria-label="s" />);
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(heldModals()).toHaveLength(0);
+    rerender(<BottomSheet.Root open onOpenChange={() => undefined} aria-label="s" />);
+    unmount();
+    expect(heldModals()).toHaveLength(0);
   });
 
   it('stays mounted while exiting then unmounts after the exit timeout', async () => {

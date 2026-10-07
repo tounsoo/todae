@@ -75,6 +75,23 @@ describe('Alert', () => {
     expect(screen.getByRole('button', { name: 'Hide notice' }).hasAttribute('aria-label')).toBe(false);
   });
 
+  it('keeps Dismiss for a glyph or hidden icon text', () => {
+    render(
+      <Alert.Root>
+        <Alert.Close>x</Alert.Close>
+        <Alert.Close>
+          <svg aria-hidden="true">
+            <title>Close</title>
+          </svg>
+        </Alert.Close>
+        <Alert.Close>
+          <span aria-hidden="true">Close</span>
+        </Alert.Close>
+      </Alert.Root>,
+    );
+    expect(screen.getAllByRole('button', { name: 'Dismiss' })).toHaveLength(3);
+  });
+
   it('reads the rendered text, so a component that renders a label names the button', () => {
     function Translated() {
       return <>닫기</>;

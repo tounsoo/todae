@@ -86,7 +86,8 @@ export function useModalDialog({
     el.addEventListener('close', drop);
     return () => {
       el.removeEventListener('close', drop);
-      drop();
+      // Gone from the page, open or not: a removed <dialog> keeps open set.
+      dropModal(el);
     };
   }, [node]);
 
