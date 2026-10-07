@@ -227,20 +227,19 @@ describe('docs locales', () => {
 
   it('gives the shell each locale’s untranslated pages, and no alternates on a 404', () => {
     expect(untranslatedByLocale()).toEqual({ ko: untranslatedSlugs('ko') });
+    const alternates = (markup: string) => [...markup.matchAll(/<link[^>]*rel="alternate"[^>]*>/g)].length;
     path.current = '/ko/tokens';
-    expect(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>)).toContain('rel="alternate" hrefLang="ko"');
-    untranslated.current = { ko: ['tokens'] };
     try {
-      expect(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>)).not.toContain('rel="alternate"');
+      untranslated.current = { ko: [] };
+      expect(alternates(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>))).toBe(3);
+      untranslated.current = { ko: ['tokens'] };
+      expect(alternates(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>))).toBe(0);
+      untranslated.current = { ko: [] };
+      path.current = '/_not-found';
+      expect(alternates(renderToStaticMarkup(<SiteShell locale="en" notFound>x</SiteShell>))).toBe(0);
     } finally {
       untranslated.current = undefined;
     }
-    path.current = '/_not-found';
-    expect(renderToStaticMarkup(<SiteShell locale="en" notFound>x</SiteShell>)).not.toContain('rel="alternate"');
-  });
-
-  it('lists every locale when the page sources are not on the server', () => {
-    expect(untranslatedByLocale(join(tmpdir(), 'todae-no-app'))).toEqual({});
   });
 
   it('names examples in the page language and marks their English demo copy', () => {

@@ -18,22 +18,9 @@ export function untranslatedSlugs(locale: Locale, appDir = join(process.cwd(), '
   return Object.keys(ENGLISH_PAGES).filter((slug) => !isTranslated(locale, slug, appDir));
 }
 
-let byLocale: Partial<Record<Locale, string[]>> | undefined;
-
-/**
- * `untranslatedSlugs` for every non-default locale, read once per production build.
- * Only hreflang links depend on it, so a server without the page sources (a page
- * rendered at request time) lists every locale instead of failing the page.
- */
+/** `untranslatedSlugs` for every non-default locale. */
 export function untranslatedByLocale(appDir = join(process.cwd(), 'app')): Partial<Record<Locale, string[]>> {
-  // In dev, adding a translation must show without a restart.
-  if (byLocale && process.env.NODE_ENV === 'production') return byLocale;
-  try {
-    byLocale = Object.fromEntries(
-      LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map((locale) => [locale, untranslatedSlugs(locale, appDir)]),
-    );
-  } catch {
-    byLocale = {};
-  }
-  return byLocale;
+  return Object.fromEntries(
+    LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map((locale) => [locale, untranslatedSlugs(locale, appDir)]),
+  );
 }
