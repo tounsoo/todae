@@ -14,7 +14,7 @@ Positioning is CSS anchors only. `getTriggerProps` sets `anchor-name`. `anchorRe
 
 A browser without CSS anchors does not place the surface next to its trigger. The surface resets the UA popover centering, so it sits near the top-left corner of the viewport, and it does not follow scroll or flip. Todae does not polyfill that. Safari 26+ has anchors. Safari 26 documents `position-try` with `position-area` names. `flip-block` is Chrome’s tactic. iOS before 26 has `popover` and no CSS anchors.
 
-The surface is the top-layer hit target: `position: fixed; inset: unset; pointer-events: auto`. Taps on content do not pass through. `OptionList.Option` selects on `click` so closing the menu cannot leave a leftover click on the page.
+The surface is the top-layer hit target: `position: fixed; inset: unset; pointer-events: auto`. Taps on content do not pass through. `OptionList.Option` selects on `click` so closing the list cannot leave a leftover click on the page.
 
 ## Examples
 

@@ -134,23 +134,17 @@ describe('docs mcp tools', () => {
     expect(hook).not.toHaveProperty('scope');
     expect(combobox).toMatchObject({ status: 'present' });
     expect(combobox).not.toHaveProperty('scope');
-    // Every hook has its own page under Utilities.
-    for (const [name, slug] of [
-      ['useChipField', 'use-chip-field'],
-      ['useChipList', 'use-chip-list'],
-      ['useCombobox', 'use-combobox'],
-      ['usePopover', 'use-popover'],
-      ['useSheetPresentation', 'use-sheet-presentation'],
-      ['useTooltip', 'use-tooltip'],
-    ] as const) {
-      expect(getComponent(name).docsUrl).toBe(`https://todae-rho.vercel.app/utilities/${slug}`);
+    // Every listed hook has its own page under Utilities, slugged from its name.
+    // useAppearance and useDensity read the providers and are documented with them on Tokens.
+    const PROVIDER_HOOKS = ['useAppearance', 'useDensity'];
+    const hooks = listComponents().components.filter((row) => /^use[A-Z]/.test(row.name) && !PROVIDER_HOOKS.includes(row.name));
+    expect(hooks.map((row) => row.name)).toEqual(expect.arrayContaining(['useChipField', 'useChipList', 'useCombobox', 'usePopover', 'useSheetPresentation', 'useTooltip']));
+    for (const { name } of hooks) {
+      const slug = name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
+      expect(getComponent(name).docsUrl, name).toBe(`https://todae-rho.vercel.app/utilities/${slug}`);
       const copy = whenToUse(name);
-      expect(copy).toMatchObject({ status: 'present' });
-      expect(copy).not.toHaveProperty('scope');
-    }
-    // Including any hook added later: every listed `use*` name lives under Utilities.
-    for (const row of listComponents().components.filter((item) => /^use[A-Z]/.test(item.name))) {
-      expect(row.docsUrl, row.name).toMatch(/^https:\/\/todae-rho\.vercel\.app\/utilities\//);
+      expect(copy, name).toMatchObject({ status: 'present' });
+      expect(copy, name).not.toHaveProperty('scope');
     }
     const popoverNot = whenToUse('usePopover').whenNotToUse;
     expect(popoverNot).toContain('[Menu](https://todae-rho.vercel.app/menu)');
