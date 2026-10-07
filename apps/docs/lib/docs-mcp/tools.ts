@@ -1,4 +1,5 @@
-import { DOCS_ORIGIN, docsUrlFor, missingWhenNote, ownsPage, pageFor, parseWhen } from './mdx';
+import { DOCS_ORIGIN } from '../origin';
+import { docsUrlFor, missingWhenNote, ownsPage, pageFor, parseWhen } from './mdx';
 import { listComponentMeta, partsOf, resolveName, type ComponentMeta } from './meta';
 
 const SOURCE = 'todae-docs' as const;

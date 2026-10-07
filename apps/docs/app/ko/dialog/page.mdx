@@ -1,0 +1,37 @@
+import { DialogBasic, DialogThemed } from '../../../components/demos/DialogDemo';
+
+# Dialog
+
+`showModal()`로 여는 가운데 정렬 네이티브 `<dialog>`입니다. `open`은 제어 방식입니다. Escape와 배경 클릭으로 닫기는 기본으로 켜져 있고 끌 수 있습니다. 시트로 변하지 않습니다.
+
+열릴 때는 200ms 동안 opacity와 scale(0.96→1)이 변합니다. 지원되는 곳에서는 `@starting-style`을 쓰고, `data-entered`가 대체 수단이라 지원하지 않는 엔진에서도 전환이 일어납니다. 닫힐 때는 `transitionend`까지 마운트된 채로 있습니다(대체 시간 160ms).
+
+<Example>
+  <DialogBasic />
+</Example>
+
+다크, compact, 배경 클릭으로 닫기 꺼짐.
+
+<Example>
+  <DialogThemed />
+</Example>
+
+오버레이는 `ThemeProvider` / `DensityProvider`에서 토큰을 상속합니다. 프로바이더 노드에 붙은 추가 클래스는 상속하지 않습니다.
+
+iOS에서는 열린 오버레이 뒤의 페이지가 여전히 고무줄처럼 튕길 수 있습니다. Chrome은 사용자 활성화가 없으면 `cancel.preventDefault()`를 무시할 수 있습니다. 그래도 상태는 네이티브 `close` 이벤트로 다시 동기화됩니다.
+
+## 언제 쓰나요
+
+**언제:** 가운데 정렬 모달 작업이나 확인(네이티브 `<dialog>`, 제어 `open`). 이름은 `Dialog.Title`이나 `aria-label`로 붙입니다. Escape와 스크림 클릭으로 닫기가 기본입니다.
+
+**쓰지 않을 때:** 아래에서 올라오는 모바일 선택기 → BottomSheet. 앵커에 고정된 비모달 패널 → Popover. 짧은 힌트 → Tooltip. 모바일에서 시트로 바뀌어야 할 때(Dialog는 절대 모양이 바뀌지 않습니다).
+
+## Props
+
+<PropsTable name="Dialog.Root" />
+
+<PropsTable name="Dialog.Title" />
+
+<PropsTable name="Dialog.Description" />
+
+<PropsTable name="Dialog.Close" />

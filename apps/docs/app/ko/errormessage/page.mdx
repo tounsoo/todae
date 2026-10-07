@@ -1,0 +1,35 @@
+import { ErrorMessageSibling } from '../../../components/demos/ErrorMessageDemo';
+
+# ErrorMessage
+
+컨트롤 아래에 두는 검증 텍스트입니다. Field 파트가 아닌 형제 요소입니다. `id`는 필수입니다. 기본 `role="alert"`도 `aria-live`도 없습니다. `invalid`는 컨트롤이나 `Field.Root`에 둡니다.
+
+오류는 해당될 때만 마운트하고, 그때만 그 id를 `aria-describedby`에 포함하세요.
+
+ErrorMessage는 자신의 간격을 직접 관리합니다. 컨트롤 다음에서는 `margin-block-start`가 `field.label.gap`(0.4rem)입니다. Description 다음에서는 형제 규칙이 이를 `field.messages.gap`(0.2rem)으로 줄입니다. `margin-block-end`는 0입니다.
+
+```tsx
+const describedBy = invalid ? `${hintId} ${errorId}` : hintId
+
+<Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
+	<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
+</Field.Root>
+<Description id={hintId}>We only use this for billing receipts.</Description>
+{invalid ? <ErrorMessage id={errorId}>Enter an address that contains an @.</ErrorMessage> : null}
+```
+
+<Example block>
+  <ErrorMessageSibling />
+</Example>
+
+제출 시점의 오류를 알리려면 이 컴포넌트에 `role="alert"`를 넘기세요. 패키지는 알림 정책을 정하지 않습니다.
+
+## 언제 쓰나요
+
+**언제:** 컨트롤 아래, Description 다음에 오는 검증 텍스트. 유효하지 않을 때만 마운트하고 그 `id`를 `aria-describedby`에 더하세요. `invalid`는 컨트롤이나 `Field.Root`에 둡니다.
+
+**쓰지 않을 때:** 늘 보이는 힌트 → Description. 유효할 때 보여 주기. 자동 알림을 기대할 때(기본으로 `role="alert"`가 없습니다. 제출 시점의 오류에는 넘기세요).
+
+## Props
+
+<PropsTable name="ErrorMessage" />

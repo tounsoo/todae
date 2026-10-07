@@ -1,8 +1,7 @@
 import { lstatSync, readdirSync, readFileSync, type Dirent } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { DOCS_ORIGIN } from '../origin';
 import { listComponentMeta } from './meta';
-
-export const DOCS_ORIGIN = 'https://todae-rho.vercel.app';
 
 export type PageDoc = {
   slug: string;
@@ -181,7 +180,8 @@ export function loadPages(appDir: string): PageDoc[] {
 }
 
 function readPages(): PageDoc[] {
-  return loadPages(join(process.cwd(), 'app'));
+  // English pages; translations live in app/<locale> and are not read here.
+  return loadPages(join(process.cwd(), 'app', '(en)'));
 }
 
 const pages = readPages();

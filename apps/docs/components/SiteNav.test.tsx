@@ -48,7 +48,7 @@ const HREFS = [
 
 describe('SiteNav', () => {
   it('groups the same links under Site', () => {
-    render(<SiteNav />);
+    render(<SiteNav locale="en" />);
     const nav = screen.getByRole('navigation', { name: 'Site' });
     expect(screen.getAllByRole('list')).toHaveLength(5);
     for (const name of ['Components', 'Utilities', 'Recipes', 'Foundations', 'Tools']) {

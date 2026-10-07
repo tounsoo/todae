@@ -1,5 +1,6 @@
 import catalog from '@tounsoo/todae/tokens.json';
 import { ScrollRegion } from './OverflowRegion';
+import { TokensTableHead } from './TokensTableHead';
 
 type TokenRow = {
   path: string;
@@ -46,15 +47,7 @@ export function TokensCatalog() {
           <ScrollRegion key={layer}>
           <table>
             <caption>{layer}</caption>
-            <thead>
-              <tr>
-                <th scope="col">Path</th>
-                <th scope="col">Context</th>
-                <th scope="col">CSS variable</th>
-                <th scope="col">Value</th>
-                <th scope="col">Ref</th>
-              </tr>
-            </thead>
+            <TokensTableHead />
             <tbody>
               {rows.map((row) => (
                 <tr key={`${row.layer}:${row.context ?? ''}:${row.path}`}>

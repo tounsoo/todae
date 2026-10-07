@@ -1,0 +1,37 @@
+import { TokensCatalog } from '../../../components/TokensCatalog';
+
+# Tokens
+
+Generated catalog from the DTCG pipeline. Components consume contract vars only.
+
+To read the providers from code, `useAppearance()` returns the nearest ThemeProvider's resolved appearance (`light` or `dark`) and `useDensity()` the nearest DensityProvider's density. With no provider above, they return `light` and `comfortable`.
+
+## When to use
+
+### ThemeProvider
+
+**When:** Set appearance (system / light / dark) for a subtree via `data-appearance`; nested providers override. `overrides` for allowlisted token paths only.
+
+**When not:** Spacing density → DensityProvider. Raw CSS or unknown token keys (rejected).
+
+### DensityProvider
+
+**When:** Set spacing density (compact / comfortable / spacious) for a subtree via `data-density`. Spacing only.
+
+**When not:** Color or light / dark → ThemeProvider. Type size → Text `size`.
+
+## Contrast
+
+The token build measures text pairs with APCA, not WCAG 2 ratios. Each pair names a text color, an opaque background and the lowest Lc allowed, for example `color.fg.muted` on `color.bg.elevated` at Lc 60. The build fails when a pair falls short in any appearance.
+
+The pairs live in `$extensions["dev.todae"].contrast` on the appearance modifier in `tokens/resolver.json`. A company token package inherits them, so a rebranded accent is checked too. A company can list a pair with the same `fg` and `bg` to change its minimum, or add pairs for its own tokens.
+
+A brand accent is four tokens per appearance: `color.accent.default`, `color.accent.hover`, `color.accent.active` and `color.on-accent`. Set them together, since Todae's dark `on-accent` is near-black to sit on its near-white ink. Put the brand accent in a company token package so the build checks it. `ThemeProvider` overrides apply at runtime and are not checked.
+
+## Status tones
+
+Four tones carry status: `info`, `success`, `warning` and `critical`. Each is three tokens per appearance: `color.status.<tone>.fg` for text and icons, `.bg` for the fill, and `.border`. The build checks `fg` on `bg` at Lc 75 and `fg` on `color.bg.surface` at Lc 60. [Alert](/alert) reads them through its `alert.<tone>` contract tokens. `info` is neutral ink, matching the accent; a company can give it a hue in its token package.
+
+## Catalog
+
+<TokensCatalog />

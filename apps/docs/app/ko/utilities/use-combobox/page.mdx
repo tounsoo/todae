@@ -1,0 +1,21 @@
+import { ComboboxSingle } from '../../../../components/demos/ComboboxDemo';
+
+# useCombobox
+
+`useCombobox`는 Combobox의 열림 상태, 값, 입력, 하이라이트, id를 관리합니다. 외형은 컴파운드가 담당합니다. 입력은 `Field`, 표면은 `Popover`나 `BottomSheet`, 목록은 `OptionList`입니다. `Combobox.*` export는 없습니다. [Combobox 레시피](/recipes/combobox)에서 단일, 다중, 시트, 비동기, 생성을 보여 줍니다.
+
+`presentation`의 기본값은 `'auto'`이며, [useSheetPresentation](/utilities/use-sheet-presentation)을 통해 coarse 포인터나 좁은 뷰포트에서 시트를 고릅니다. 고정하려면 `popover`나 `sheet`를 강제하세요. 아래 데모는 `popover`를 강제합니다. 어느 getter가 어느 파트에 가는지는 [Composition](/composition)에 나와 있습니다.
+
+<Example>
+  <ComboboxSingle />
+</Example>
+
+## 언제 쓰나요
+
+**언제:** 검색 가능한 선택 — 타입어헤드 + 목록. 훅이 열림/값/입력을 관리하고, [레시피](/recipes/combobox)처럼 Field + Popover/BottomSheet + OptionList가 외형을 담당합니다. coarse/좁은 화면에서는 자동으로 시트.
+
+**쓰지 않을 때:** 페이지에 고정된 배타적 선택 → Radio. 검색 없는 목록 → [usePopover](/utilities/use-popover) + OptionList만. 동작 메뉴 → [Menu](/menu). `Combobox.*` 외형 export(금지).
+
+## Props
+
+<PropsTable name="useCombobox" />
