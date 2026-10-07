@@ -316,7 +316,7 @@
     },
     "children": {
       "en": "TextInput or ChipInput plus optional Icon and Affix. Order is leading/trailing.",
-      "ko": "TextInput 또는 ChipInput과 선택적인 Icon, Affix. 순서가 leading/trailing을 정합니다."
+      "ko": "TextInput 또는 ChipInput과 선택적인 Icon, Affix. 순서에 따라 앞쪽 또는 뒤쪽에 놓입니다."
     }
   },
   "Field.Row": {
@@ -670,11 +670,11 @@
     },
     "aria-label": {
       "en": "Accessible name when no visible caption exists. Only with role=\"dialog\"; a role-less popover drops it, so name its contents instead.",
-      "ko": "보이는 캡션이 없을 때의 접근 가능한 이름. role=\"dialog\"일 때만 쓰입니다. role이 없는 popover는 이를 버리므로 대신 내용에 이름을 붙이세요."
+      "ko": "보이는 캡션이 없을 때의 접근 가능한 이름. role=\"dialog\"일 때만 쓰입니다. role이 없는 팝오버는 이를 버리므로 대신 내용에 이름을 붙이세요."
     },
     "aria-labelledby": {
       "en": "Id of the visible caption. Only with role=\"dialog\"; a role-less popover drops it.",
-      "ko": "보이는 캡션의 id. role=\"dialog\"일 때만 쓰입니다. role이 없는 popover는 이를 버립니다."
+      "ko": "보이는 캡션의 id. role=\"dialog\"일 때만 쓰입니다. role이 없는 팝오버는 이를 버립니다."
     },
     "role": {
       "en": "Non-modal dialog role. Requires aria-label or aria-labelledby. Does not set aria-modal.",
@@ -782,7 +782,7 @@
     },
     "name": {
       "en": "Native input name.",
-      "ko": "네이티브 input name."
+      "ko": "네이티브 입력 name."
     },
     "className": {
       "en": "Optional class on the wrapping label.",

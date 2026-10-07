@@ -301,17 +301,21 @@ describe('docs locales', () => {
   });
 
   it('shows a props table in the page language', () => {
-    path.current = '/ko/button';
-    const korean = renderToStaticMarkup(<PropsTable name="Button.Root" />);
-    expect(korean).toContain('<caption>Button.Root props</caption>');
-    expect(korean).toContain('<th scope="col">설명</th>');
-    expect(korean).toContain('시각 스타일. primary가 아니면 data-button-variant를 설정합니다.');
-    path.current = '/button';
-    const english = renderToStaticMarkup(<PropsTable name="Button.Root" />);
-    expect(english).toContain('<th scope="col">Description</th>');
-    expect(english).toContain('<td lang="en">Visual style. Non-primary sets data-button-variant.</td>');
-    expect(korean).toContain('<table lang="ko">');
-    path.current = '/ko/button';
+    try {
+      path.current = '/ko/button';
+      const korean = renderToStaticMarkup(<PropsTable name="Button.Root" />);
+      // Nothing but the table inside its scroll region.
+      expect(korean).toMatch(/data-overflow-kind="table"><table lang="ko"><caption>Button.Root props<\/caption>/);
+      expect(korean).toContain('<th scope="col">설명</th>');
+      expect(korean).toContain('<td>시각 스타일. primary가 아니면 data-button-variant를 설정합니다.</td>');
+      path.current = '/button';
+      const english = renderToStaticMarkup(<PropsTable name="Button.Root" />);
+      expect(english).toMatch(/data-overflow-kind="table"><table lang="en">/);
+      expect(english).toContain('<th scope="col">Description</th>');
+      expect(english).toContain('<td>Visual style. Non-primary sets data-button-variant.</td>');
+    } finally {
+      path.current = '/ko/button';
+    }
   });
 
   it('shows the current English, marked as English, where a translation is missing or out of date', () => {

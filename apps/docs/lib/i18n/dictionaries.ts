@@ -22,6 +22,8 @@ export type Dictionary = {
   example: string;
   /** The playground's interface. */
   playground: Record<'appearance' | 'density' | 'rail' | 'title' | 'tokenLayer' | 'color' | 'reset' | 'export' | 'copied' | 'copyFailed' | 'stage' | 'buttons' | 'buttonHint' | 'defaultTone' | 'mutedTone' | 'accentTone', string>;
+  /** Accessible names of scrollable code examples and tables, before the nearest heading. */
+  regions: Record<'code' | 'table', string>;
   /** Props table headings. `{name}` in the caption is the component name. */
   propsTable: Record<'caption' | 'name' | 'type' | 'required' | 'default' | 'description' | 'yes' | 'no', string>;
   /** Section names; a missing one keeps its English name from `siteGroups.ts`. */
@@ -56,6 +58,7 @@ const en: Dictionary = {
     mutedTone: 'Muted tone',
     accentTone: 'Accent tone',
   },
+  regions: { code: 'Code example', table: 'Table' },
   propsTable: {
     caption: '{name} props',
     name: 'Name',
@@ -98,6 +101,7 @@ const ko: Dictionary = {
     mutedTone: 'Muted 톤',
     accentTone: 'Accent 톤',
   },
+  regions: { code: '코드 예시', table: '표' },
   propsTable: {
     caption: '{name} props',
     name: '이름',

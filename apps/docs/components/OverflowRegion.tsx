@@ -1,6 +1,8 @@
 'use client';
 
 import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { DICTIONARIES } from '../lib/i18n/dictionaries';
+import { useLocale } from '../lib/i18n/useLocale';
 
 type Kind = 'code' | 'table';
 
@@ -14,8 +16,7 @@ function nearestHeading(el: HTMLElement): string {
   return found;
 }
 
-function regionLabel(el: HTMLElement, kind: Kind): string {
-  const noun = kind === 'code' ? 'Code example' : 'Table';
+function regionLabel(el: HTMLElement, noun: string, kind: Kind): string {
   const heading = nearestHeading(el);
   const base = heading ? `${noun}, ${heading}` : noun;
   const peers = [...document.querySelectorAll<HTMLElement>(`[data-overflow-kind="${kind}"]`)].filter(
@@ -35,20 +36,21 @@ export function useOverflowRegion<T extends HTMLElement>(kind: Kind): {
   const ref = useRef<T>(null);
   const [overflows, setOverflows] = useState(false);
   const [focused, setFocused] = useState(false);
-  const [label, setLabel] = useState(kind === 'code' ? 'Code example' : 'Table');
+  const noun = DICTIONARIES[useLocale()].regions[kind];
+  const [label, setLabel] = useState(noun);
 
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const measure = () => {
       setOverflows(el.scrollWidth > el.clientWidth);
-      setLabel(regionLabel(el, kind));
+      setLabel(regionLabel(el, noun, kind));
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [kind]);
+  }, [kind, noun]);
 
   return {
     ref,

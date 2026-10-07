@@ -19,9 +19,9 @@ export function PropsTableView({
 }) {
   const locale = useLocale();
   const words = DICTIONARIES[locale].propsTable;
+  // The table carries its own lang: an untranslated page wraps its English content in lang="en".
   return (
     <ScrollRegion>
-    // Its own lang: an untranslated page wraps its English content in lang="en".
     <table lang={locale}>
       <caption>{words.caption.replace('{name}', name)}</caption>
       <thead>
@@ -44,7 +44,7 @@ export function PropsTableView({
               </td>
               <td>{prop.required ? words.yes : words.no}</td>
               <td>{prop.default ?? '—'}</td>
-              <td lang={description.lang}>{description.text}</td>
+              <td lang={description.lang === locale ? undefined : description.lang}>{description.text}</td>
             </tr>
           );
         })}
