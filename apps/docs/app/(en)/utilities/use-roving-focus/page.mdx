@@ -1,0 +1,36 @@
+import { RovingToolbar } from '../../../../components/demos/RovingFocusDemo';
+
+# useRovingFocus
+
+One tab stop for a group of controls. Tab enters the group on one item and leaves it on the next Tab; arrow keys, Home and End move between items. Tabs and Menu are built on it, and a company uses it for its own toolbars, segmented controls and grids of cards.
+
+Spread `getContainerProps()` on the group and `getItemProps(value, { disabled })` on each item. Items are found in the DOM by an attribute the hook owns, so an item inside your own wrapper still counts, and order is document order. Disabled items are skipped. The browser has no built-in focus group yet, so this stays in JavaScript.
+
+```tsx
+const roving = useRovingFocus({ orientation: 'horizontal', defaultActiveValue: 'bold' })
+
+<div role="toolbar" aria-label="Text style" {...roving.getContainerProps()}>
+	<Button.Root {...roving.getItemProps('bold')}>Bold</Button.Root>
+	<Button.Root {...roving.getItemProps('italic')}>Italic</Button.Root>
+</div>
+```
+
+<Example>
+  <RovingToolbar />
+</Example>
+
+`orientation` picks the arrow keys: `vertical` (default), `horizontal`, or `both`. Left and Right swap when the container's `direction` is `rtl`. `loop` (default `true`) wraps at the ends. `typeahead` moves to the next item whose text starts with what was typed; pass `textValue` when an item's text is not its label. `tabStop: false` makes every item `tabIndex={-1}`, for a widget that focus only enters from code, such as a menu opened from its trigger.
+
+The tab stop follows `activeValue`, falling back to the first enabled item when it is `null`, disabled or not rendered. Items are read from the DOM, so server-rendered HTML has a tab stop only on the item named by `activeValue` or `defaultActiveValue`; set one when the group must be reachable before hydration. `onActiveValueChange` fires whenever an item other than `activeValue` takes focus, from a key, a click or a script. That includes a fallback tab stop, so a controlled owner can keep it. Natively `disabled` items are skipped like ones passed `{ disabled: true }`. Shift with an arrow key, Home or End is left to you, for example to extend a selection. `focus(value)`, `focusFirst()` and `focusLast()` move focus from your own handlers, `getItemNode(value)` finds an item's element, `values()` reads the enabled values in order, and `reachableItems()` returns the enabled items focus can reach now.
+
+The hook does not set roles. Give the container the role your widget needs, such as `toolbar`, `tablist`, `menu` or `radiogroup`.
+
+## When to use
+
+**When:** A composite widget where one Tab stop and arrow keys are expected: toolbars, segmented controls, tab lists, menus, card grids.
+
+**When not:** A form or a list of links where each control is its own tab stop. A listbox that keeps focus on an input → `aria-activedescendant`, as OptionList and the Combobox recipe do.
+
+## Props
+
+<PropsTable name="useRovingFocus" />

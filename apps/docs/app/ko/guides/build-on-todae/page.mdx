@@ -1,0 +1,186 @@
+# Todae로 디자인 시스템 만들기
+
+Todae 위에 만드는 회사 디자인 시스템은 세 가지로 이루어집니다. Todae 토큰 위에 쌓는 토큰 패키지, 몇 가지 TypeScript 선언, 그리고 Todae 파트를 감싸는 얇은 래퍼입니다. 포크하는 것은 없습니다. Todae가 업데이트되면 회사는 토큰을 다시 빌드하고 래퍼는 그대로 유지합니다.
+
+## 토큰 레이어
+
+Todae의 토큰은 `tokens/resolver.json`이 구동하는 DTCG 2025.10 파일입니다. 각 세트와 모디파이어는 `$extensions["dev.todae"].layer`에 자신의 레이어를 적고, 토큰은 같은 레이어나 그보다 낮은 레이어의 토큰만 참조할 수 있습니다.
+
+- `core`: `color.gray.900`, `space.4` 같은 원시 스케일.
+- `appearance`: `color.fg.muted`, `color.accent.default` 같은 라이트와 다크용 시맨틱 색상.
+- `density`: `space.control.x` 같은 밀도별 간격.
+- `contract`: `button.bg.default`, `field.border.focus` 같은 컴포넌트가 읽는 값.
+
+컴포넌트는 contract 토큰만 읽습니다. 리브랜딩은 appearance 레이어를 바꾸고, contract는 그 변경을 따라갑니다.
+
+CSS에서 모든 토큰은 경로를 이름으로 하는 커스텀 프로퍼티입니다. `color.accent.default`는 `--todae-color-accent-default`입니다. Todae의 토큰은 `todae.base` 캐스케이드 레이어에 있습니다.
+
+## 회사 리졸버
+
+회사는 토큰 파일 옆에 자체 리졸버를 작성합니다. 세트를 추가하고, Todae의 모디파이어에 컨텍스트를 추가하고, 그 안의 토큰을 교체할 수 있습니다. Todae의 리졸버가 먼저 로드되므로 모든 참조는 Todae의 토큰을 가리킬 수 있습니다.
+
+```json
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/resolver.json",
+  "name": "acme",
+  "version": "2025.10",
+  "sets": {
+    "brand": {
+      "sources": [{ "$ref": "./brand.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract" } }
+    }
+  },
+  "modifiers": {
+    "appearance": {
+      "contexts": {
+        "light": [{ "$ref": "./appearance/light.json" }],
+        "dark": [{ "$ref": "./appearance/dark.json" }]
+      },
+      "$extensions": {
+        "dev.todae": { "layer": "appearance", "attribute": "data-appearance", "root": true, "colorScheme": true }
+      }
+    }
+  },
+  "resolutionOrder": [{ "$ref": "#/modifiers/appearance" }, { "$ref": "#/sets/brand" }]
+}
+```
+
+참조는 병합된 토큰 트리를 가리키는 JSON Pointer입니다.
+
+```json
+{
+  "brand": {
+    "ink": { "$type": "color", "$value": { "$ref": "#/color/gray/900/$value" } }
+  }
+}
+```
+
+`todae-tokens` CLI로 빌드합니다.
+
+```sh
+todae-tokens build --resolver ./tokens/resolver.json
+```
+
+세 개의 파일을 씁니다.
+
+- `todae-theme.css`: 회사 토큰만 담으며, Todae 다음에 오는 `todae.theme` 레이어에 있습니다.
+- `tokens.catalog.json`: Todae와 회사의 토큰을 함께 담습니다.
+- `todae-theme.types.ts`: `ThemeProvider`에 쓸 회사 키의 `THEME_OVERRIDE_TYPES`.
+
+`--css`, `--catalog`, `--types`로 출력 경로를 바꿉니다. CI에서는 `--check`를 더해 출력이 없거나 오래되었을 때 실패하게 합니다. 같은 빌드를 함수로도 쓸 수 있습니다. `@tounsoo/todae/tokens-builder`의 `buildCompanyTokens`입니다.
+
+빌드는 Todae 자체 빌드가 하는 모든 검사를 실행합니다. 경로 형식, 참조 순환, 레이어 순서, 라이트와 다크의 대응, APCA 대비입니다. Todae 리졸버의 대비 쌍은 회사 색상에도 적용되므로, 대비 기준을 통과하지 못하는 브랜드 액센트는 빌드를 실패시킵니다. 대비 쌍과 최솟값을 바꾸는 방법은 [토큰](/tokens)의 Contrast 섹션을 보세요.
+
+CSS는 Todae 다음에 로드합니다.
+
+```tsx
+import '@tounsoo/todae/todae.css';
+import './todae-theme.css';
+```
+
+## 오버라이드: CSS 또는 ThemeProvider
+
+페이지 일부의 토큰을 바꾸는 방법은 두 가지입니다.
+
+**CSS**는 빌드 시점에 알 수 있는 모든 것에 씁니다. 가능하면 회사 토큰 패키지에 넣어 빌드가 검사하게 하세요. 그렇지 않으면 `todae.theme` 레이어에 쓰거나, 모든 레이어를 이기는 레이어 밖에 씁니다.
+
+```css
+@layer todae.theme {
+  [data-appearance='dark'] {
+    --todae-color-accent-default: oklch(0.78 0.13 25);
+  }
+}
+```
+
+`data-appearance`나 `data-density`가 있는 요소에 설정하세요. contract 토큰은 그 요소에서 계산되므로, 하위 요소에 둔 오버라이드는 contract 토큰에 닿지 않습니다.
+
+**`ThemeProvider`의 `overrides`**는 고객의 브랜드 색상처럼 런타임에 들어오는 값에 씁니다. 토큰 경로와 DTCG 값을 받아 자신의 요소에 커스텀 프로퍼티로 설정하고, 모르는 경로는 거부합니다. 이 값은 대비 검사를 거치지 않습니다.
+
+```tsx
+<ThemeProvider overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.5, 0.15, 150] } }}>
+  …
+</ThemeProvider>
+```
+
+회사 토큰은 Todae가 알지 못하므로, 생성된 타입을 넘겨 허용합니다.
+
+```tsx
+import { THEME_OVERRIDE_TYPES } from './todae-theme.types';
+
+<ThemeProvider
+  overrideTypes={THEME_OVERRIDE_TYPES}
+  overrides={{ 'brand.ink': { colorSpace: 'oklch', components: [0.3, 0.05, 25] } }}
+>
+  …
+</ThemeProvider>
+```
+
+그러면 TypeScript가 `brand.*` 키를 받아들이면서도 철자가 틀린 키는 여전히 거부합니다.
+
+## 변형이나 밀도 추가하기
+
+버튼 변형과 밀도는 모디파이어 컨텍스트이므로, 회사는 리졸버에서 추가합니다.
+
+버튼 변형은 Todae와 같은 토큰 구조를 가진 `buttonVariant` 컨텍스트입니다. `default`, `hover`, `active`, `focus`, `disabled` 각각의 `bg`, `fg`, `border`와 `ring.focus`입니다. 빌드가 그 구조를 검사하도록 `button` 규칙을 켜세요.
+
+```json
+"buttonVariant": {
+  "contexts": { "outline": [{ "$ref": "./button.outline.json" }] },
+  "$extensions": {
+    "dev.todae": { "layer": "contract", "rules": ["button"], "attribute": "data-button-variant", "alias": true }
+  }
+}
+```
+
+밀도는 간격 토큰만 설정하는 `density` 컨텍스트입니다.
+
+```json
+"density": {
+  "contexts": { "roomy": [{ "$ref": "./density/roomy.json" }] },
+  "$extensions": { "dev.todae": { "layer": "density", "rules": ["density-space"], "attribute": "data-density" } }
+}
+```
+
+그다음 TypeScript에 새 이름을 알려 줍니다.
+
+```ts
+declare module '@tounsoo/todae' {
+  interface ButtonVariants {
+    outline: true;
+  }
+  interface Densities {
+    roomy: true;
+  }
+}
+```
+
+이제 `<Button.Root variant="outline">`과 `<DensityProvider density="roomy">`가 타입 검사를 통과하고 새 토큰을 사용합니다.
+
+## 컴포넌트 감싸기
+
+회사 기본값을 고정하거나 회사용 prop을 더하려면 파트를 감싸세요. 모든 파트는 네이티브 속성과 ref를 전달하므로, 나머지 props를 펼치고 `ref`를 넘겨 주세요.
+
+```tsx
+import { Button, type ButtonRootProps } from '@tounsoo/todae';
+
+export function AcmeButton({ variant = 'outline', ...props }: ButtonRootProps) {
+  return <Button.Root {...props} variant={variant} />;
+}
+```
+
+부모는 컴포넌트 타입으로 자식을 찾지 않으므로 감싼 자식도 동작합니다. `OptionList.Option`은 컨텍스트로 목록에 등록되므로 감싼 옵션도 선택과 탐색이 됩니다. `Button.Root`는 `Button.Icon`이 렌더링하는 data 속성으로 아이콘을 찾으므로, `Button.Icon`을 렌더링하는 래퍼도 버튼의 아이콘으로 인식됩니다.
+
+```tsx
+function AcmeOption(props: OptionListOptionProps) {
+  return <OptionList.Option {...props} className="acme-option" />;
+}
+
+<OptionList.Root aria-label="Size" value={size} onChange={setSize}>
+  <AcmeOption value="s">Small</AcmeOption>
+  <AcmeOption value="m">Medium</AcmeOption>
+</OptionList.Root>
+```
+
+훅이 주는 ref와 함께 자신의 ref도 유지하려면 `composeRefs`로 합치세요.
+
+먼저 토큰으로 스타일을 바꾸세요. 파트에 클래스를 붙이는 것은 레이아웃에는 괜찮지만, 토큰으로 설정한 색상과 간격은 appearance와 density를 따르고 클래스는 그렇지 않습니다.

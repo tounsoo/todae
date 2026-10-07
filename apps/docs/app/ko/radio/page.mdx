@@ -1,0 +1,39 @@
+import { RadioPlan } from '../../../components/demos/RadioDemo';
+
+# Radio
+
+페이지에 계속 보이는 배타적 선택입니다. `RadioGroup.Root`가 값, 공유 `name`, `disabled`, `invalid`를 소유합니다. `RadioGroup.Item`은 `checked`나 `name`을 받을 수 없습니다. 루트 밖의 항목은 오류를 던집니다.
+
+그룹 타입은 `aria-label`이나 `aria-labelledby`를 요구합니다. `role="radiogroup"` div는 레이블을 붙일 수 있는 컨트롤이 아니므로, `Label htmlFor`로 그룹을 가리키지 마세요. `Text`와 `aria-labelledby`로 캡션을 붙이세요.
+
+`value={null}`은 아무것도 선택되지 않은 제어 상태입니다. 비제어로 쓰려면 `value`를 생략하세요.
+
+```tsx
+const captionId = useId()
+
+<Text as="span" id={captionId} size="s" weight="medium">Plan</Text>
+<RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
+	<RadioGroup.Item value="free">Free</RadioGroup.Item>
+	<RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+</RadioGroup.Root>
+```
+
+<Example block>
+  <RadioPlan />
+</Example>
+
+이름이 같은 네이티브 라디오는 화살표 키로 포커스를 옮깁니다. 그룹은 키보드 핸들러를 더하지 않습니다.
+
+옵션이 계속 보여야 하면 Radio를 쓰세요. 옵션이 팝오버나 시트 안에 있으면 [OptionList](/optionlist)를 쓰세요. 둘을 같은 값에 연결하면 QA 실패입니다.
+
+## 언제 쓰나요
+
+**언제:** 페이지에 계속 보이는 배타적 선택. 그룹이 value/name을 소유하고, 캡션은 `aria-label` / `aria-labelledby`로 붙입니다.
+
+**쓰지 않을 때:** 독립적인 토글 → Checkbox. 오버레이 목록 → OptionList. 같은 값을 OptionList에도 연결(이중 연결 = 실패).
+
+## Props
+
+<PropsTable name="RadioGroup.Root" />
+
+<PropsTable name="RadioGroup.Item" />

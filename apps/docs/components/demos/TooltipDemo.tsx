@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Chip, Stack, Tooltip, useTooltip } from '@tounsoo/todae';
+import { LocalizedLink } from '../LocalizedLink';
 
 export function TooltipArchive() {
   return (
@@ -34,7 +35,7 @@ export function TooltipPolicy() {
         Policy
       </Button.Root>
       <Tooltip.Root {...tooltip.getTooltipProps()} aria-label="Policy">
-        Interactive tips allow links. <a href="/tooltip">Read the policy</a>
+        Interactive tips allow links. <LocalizedLink href="/tooltip">Read the policy</LocalizedLink>
       </Tooltip.Root>
     </>
   );

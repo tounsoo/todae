@@ -1,0 +1,61 @@
+import { ButtonGroupAlign, ButtonIcons, ButtonOverflow, ButtonVariants } from '../../../components/demos/ButtonDemo';
+
+# Button
+
+`Button.Root` is the control. `Button.Icon` is a compound part. Icon position is DOM order. The icon is decorative (`aria-hidden`). Icon-only roots need `aria-label` or `aria-labelledby` on `Button.Root`.
+
+Icon-only roots tip that name. A labeled button tips the full string only while the label overflows. `tooltip={false}` opts out. Fitting labeled buttons do not tip. Auto tips are never interactive.
+
+Variants use the existing paint packs. Default `type` is `button`.
+
+<Example>
+  <ButtonVariants />
+</Example>
+
+Leading icon, trailing icon, icon-only.
+
+<Example>
+  <ButtonIcons />
+</Example>
+
+Overflowing label.
+
+<Example>
+  <ButtonOverflow />
+</Example>
+
+## Button.Group
+
+Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overlap by 1px and share the outer radius. No selection state.
+
+<Example>
+  <ButtonGroupAlign />
+</Example>
+
+## When to use
+
+### Button.Root
+
+**When:** One action in a native button. Variants primary / secondary / ghost; default `type="button"`. Icon-only needs `aria-label`, which it auto-tips.
+
+**When not:** Navigation → native link (no Link shipped). On/off state → Switch or Checkbox. Selected segment → Radio (Button.Group has no selection).
+
+### Button.Icon
+
+**When:** Decorative icon inside `Button.Root`. Position = DOM order. Always aria-hidden.
+
+**When not:** Icon in a field → `Field.Icon`. Icon as the only name with no `aria-label` on Root. Outside `Button.Root`.
+
+### Button.Group
+
+**When:** Attached horizontal row of related `Button.Root` actions (`role="group"`). Name it with `aria-label`.
+
+**When not:** Single choice or toggles → Radio / Checkbox (no selection state here). Vertical or wrapping rows → Stack. Unrelated actions → separate buttons in Stack.
+
+## Props
+
+<PropsTable name="Button.Root" />
+
+<PropsTable name="Button.Icon" />
+
+<PropsTable name="Button.Group" />

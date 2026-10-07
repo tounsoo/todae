@@ -4,6 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocsPre } from './DocsPre';
 import { ScrollRegion } from './OverflowRegion';
 
+const path = vi.hoisted(() => ({ current: '/' }));
+vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
+
 const observers: Array<{ cb: ResizeObserverCallback }> = [];
 let wide = true;
 
@@ -39,6 +42,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  path.current = '/';
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   Reflect.deleteProperty(HTMLElement.prototype, 'scrollWidth');
@@ -91,6 +95,28 @@ describe('overflow regions', () => {
       'Table, Tokens 2',
     ]);
     for (const el of pres) expect(el.tabIndex).toBe(0);
+  });
+
+  it('names regions in the page language', () => {
+    path.current = '/ko/button';
+    render(
+      <>
+        <h2>Props</h2>
+        <DocsPre>
+          <code>one</code>
+        </DocsPre>
+        <ScrollRegion>
+          <table>
+            <tbody>
+              <tr>
+                <td>a</td>
+              </tr>
+            </tbody>
+          </table>
+        </ScrollRegion>
+      </>,
+    );
+    expect(screen.getAllByRole('region').map((el) => el.getAttribute('aria-label'))).toEqual(['코드 예시, Props', '표, Props']);
   });
 
   it('keeps the region focusable until blur when it stops overflowing', () => {

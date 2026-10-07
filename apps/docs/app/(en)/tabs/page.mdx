@@ -1,0 +1,48 @@
+import { TabsBasic, TabsManualVertical } from '../../../components/demos/TabsDemo';
+
+# Tabs
+
+Panels that share one place on the page, one shown at a time. `Tabs.Root` owns the selected value. `Tabs.List` is the `role="tablist"`; each `Tabs.Tab` is a native button with `role="tab"`, and each `Tabs.Panel` is a `role="tabpanel"` labelled by its tab. A tab and a panel pair by `value`.
+
+The list holds one tab stop, on the selected tab. Arrow keys, Home and End move between tabs through [useRovingFocus](/utilities/use-roving-focus). Left and Right swap in a right-to-left page. A disabled tab is a native `disabled` button, so arrow keys skip it.
+
+```tsx
+<Tabs.Root defaultValue="account">
+	<Tabs.List aria-label="Settings">
+		<Tabs.Tab value="account">Account</Tabs.Tab>
+		<Tabs.Tab value="billing">Billing</Tabs.Tab>
+	</Tabs.List>
+	<Tabs.Panel value="account">…</Tabs.Panel>
+	<Tabs.Panel value="billing">…</Tabs.Panel>
+</Tabs.Root>
+```
+
+<Example block>
+  <TabsBasic />
+</Example>
+
+`activation="automatic"` (default) selects a tab as soon as focus moves to it from another tab. Focus entering the list from outside selects nothing, even when it lands on a fallback tab because the selected one is disabled. Use `activation="manual"` when a panel is slow to render: arrow keys only move focus, and Enter, Space or a click selects. When focus leaves the list, its tab stop returns to the selected tab. `orientation="vertical"` puts the list beside the panels and moves with Up and Down.
+
+The root takes `value` with `onValueChange`, or `defaultValue`. One tab is always selected, so there is no empty state. Only the selected panel renders its children; pass `keepMounted` to keep a hidden panel's state, such as a half-filled form. A panel is a Tab stop by default, so a screen reader user reaches its text; pass `tabIndex={-1}` when the panel starts with a control of its own.
+
+<Example block>
+  <TabsManualVertical />
+</Example>
+
+There is no native tabs element. An exclusive `<details name>` group looks similar but has no tab semantics or arrow keys, so it is an accordion, not tabs.
+
+## When to use
+
+**When:** Switch between sibling views of the same object in one place, such as settings sections or report views, where one view shows at a time.
+
+**When not:** Moving to another page → links. A list of actions → Menu. Several sections open at once, or long content read top to bottom → headings or `<details>`.
+
+## Props
+
+<PropsTable name="Tabs.Root" />
+
+<PropsTable name="Tabs.List" />
+
+<PropsTable name="Tabs.Tab" />
+
+<PropsTable name="Tabs.Panel" />

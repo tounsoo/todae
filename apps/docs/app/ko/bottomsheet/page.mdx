@@ -1,0 +1,37 @@
+import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos/BottomSheetDemo';
+
+# BottomSheet
+
+모달 커스텀 포털입니다. 네이티브 다이얼로그가 아닙니다. 스크림, 포커스 트랩, Escape, `aria-modal`, 스크롤 잠금을 갖습니다. 중간과 전체 높이로 스냅합니다. 그래버에서, 또는 `scrollTop === 0`일 때 본문에서 드래그합니다. 목록 스크롤은 자유롭게 유지됩니다.
+
+열릴 때는 `translateY(100%)`에서 스냅 높이로 미끄러져 올라옵니다(높이 전환이 아니라 첫 프레임 자세입니다). 두 오버레이 모두 `data-entered`를 쓰고, Dialog는 `@starting-style`도 유지합니다. 닫힐 때는 아래로 미끄러져 나가고 `transitionend`에서 언마운트됩니다(대체 시간 240ms). 드래그 중에는 `transition: none`을 유지합니다.
+
+<Example>
+  <BottomSheetBasic />
+</Example>
+
+포털은 appearance, density, 테마 오버라이드를 다시 적용합니다. 프로바이더 노드에 붙은 추가 클래스는 포털을 따라가지 않습니다.
+
+## 사용 예시 스케치
+
+나중에 나올 터치용 Combobox입니다. 버튼이 이 시트를 엽니다. 검색과 옵션은 시트 안에 있습니다. 열린 동안 입력하는 데스크톱 타입어헤드는 Combobox PRD에서 팝오버로 남습니다.
+
+<Example>
+  <ComboboxTouchSketch />
+</Example>
+
+## 언제 쓰나요
+
+**언제:** 아래에서 올라오는 모달 시트(터치용 Combobox의 닫힌 컨트롤, 모바일 선택기). 스크림, 포커스 트랩, 중간/전체 스냅.
+
+**쓰지 않을 때:** 데스크톱에서 앵커에 고정된 비모달 → Popover. 가운데 정렬 확인/폼 → Dialog. 호버 팁 → Tooltip.
+
+## Props
+
+<PropsTable name="BottomSheet.Root" />
+
+<PropsTable name="BottomSheet.Grabber" />
+
+<PropsTable name="BottomSheet.Title" />
+
+<PropsTable name="BottomSheet.Close" />

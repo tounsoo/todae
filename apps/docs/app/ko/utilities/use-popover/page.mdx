@@ -1,0 +1,37 @@
+import { PopoverMenu } from '../../../../components/demos/PopoverDemo';
+
+# usePopover
+
+`usePopover`는 [Popover](/popover) 뒤에서 열림을 관리하는 상태 기계입니다. 트리거에는 `getTriggerProps`를, 표면 외형만 담당하는 `Popover.Root`에는 `getPopoverProps`를 펼치세요. [Menu](/menu)와 [Combobox 레시피](/recipes/combobox)가 이 훅 위에 만들어져 있습니다.
+
+밖을 누르거나 Escape를 누르면 `outside` 또는 `escape`로 `onOpenChange(false, reason)`을 호출합니다. 트리거는 토글이므로 열 때와 닫을 때 모두 `trigger`를 알립니다. 소유자는 한 가지 이유를 거부하고 나머지는 유지할 수 있습니다. `onOpenChange(open, reason)`에서 `trigger`로 닫힘을 거부하기 전에 `open === false`인지 확인하세요. [Popover](/popover)에 거부 데모가 있습니다. `haspopup`은 트리거의 `aria-haspopup`을 설정합니다. `anchorRef`는 트리거가 `getTriggerProps`가 표시하는 요소가 아닐 때 쓰는 CSS 앵커입니다. 이것을 넘기면서 `getTriggerProps`도 펼치지는 마세요.
+
+```tsx
+const [open, setOpen] = useState(false)
+const [value, setValue] = useState<string | null>(null)
+const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' })
+
+<>
+  <Button.Root tooltip={false} {...getTriggerProps()}>{value ?? 'Choose fruit'}</Button.Root>
+  <Popover.Root {...getPopoverProps()}>
+    {/* Selecting does not close the popover: the owner closes it. */}
+    <OptionList.Root aria-label="Fruit" value={value} onChange={(next) => { setValue(next); setOpen(false) }}>
+      <OptionList.Option value="apple">Apple</OptionList.Option>
+    </OptionList.Root>
+  </Popover.Root>
+</>
+```
+
+<Example>
+  <PopoverMenu />
+</Example>
+
+## 언제 쓰나요
+
+**언제:** 트리거에 고정된 비모달 표면으로, 열기와 닫기는 훅이, 외형은 `Popover.Root`가 맡을 때.
+
+**쓰지 않을 때:** 동작 메뉴 → [Menu](/menu). 모달이고 포커스 트랩이 있는 작업 → Dialog. 모바일 전체 폭 선택기 → BottomSheet, 또는 런타임에 고르려면 [useSheetPresentation](/utilities/use-sheet-presentation). 텍스트만 있는 호버 힌트 → [Tooltip](/tooltip).
+
+## Props
+
+<PropsTable name="usePopover" />

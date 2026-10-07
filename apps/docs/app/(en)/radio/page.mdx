@@ -1,0 +1,39 @@
+import { RadioPlan } from '../../../components/demos/RadioDemo';
+
+# Radio
+
+Exclusive choice that stays on the page. `RadioGroup.Root` owns the value, the shared `name`, `disabled`, and `invalid`. `RadioGroup.Item` cannot take `checked` or `name`. An item outside a root throws.
+
+The group type requires `aria-label` or `aria-labelledby`. A `role="radiogroup"` div is not a labelable control, so do not point `Label htmlFor` at the group. Caption it with `Text` and `aria-labelledby`.
+
+`value={null}` is controlled with nothing selected. Omit `value` for uncontrolled.
+
+```tsx
+const captionId = useId()
+
+<Text as="span" id={captionId} size="s" weight="medium">Plan</Text>
+<RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
+	<RadioGroup.Item value="free">Free</RadioGroup.Item>
+	<RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+</RadioGroup.Root>
+```
+
+<Example block>
+  <RadioPlan />
+</Example>
+
+Same-name native radios move focus with arrow keys. The group does not add a keyboard handler.
+
+Use Radio when the options stay visible. Use [OptionList](/optionlist) when the options live in a popover or sheet. Wiring both to the same value is a QA fail.
+
+## When to use
+
+**When:** Exclusive choice that stays visible on the page. Group owns value/name; caption via `aria-label` / `aria-labelledby`.
+
+**When not:** Independent toggles → Checkbox. Overlay list → OptionList. Same value also wired to OptionList (dual-wire = fail).
+
+## Props
+
+<PropsTable name="RadioGroup.Root" />
+
+<PropsTable name="RadioGroup.Item" />

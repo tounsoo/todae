@@ -1,13 +1,14 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { SITE_GROUPS } from './siteGroups';
+import type { Locale } from '../lib/i18n/config';
+import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';
 
-export function SiteNav() {
+export function SiteNav({ locale }: { locale: Locale }) {
   const path = usePathname();
   return (
-    <nav className="site-nav" aria-label="Site">
-      {SITE_GROUPS.map((group) => (
+    <nav className="site-nav" aria-label={DICTIONARIES[locale].siteNav}>
+      {localizedGroups(locale).map((group) => (
         <div key={group.id} className="site-nav-group">
           <span id={`nav-${group.id}`} className="site-nav-label">
             {group.label}

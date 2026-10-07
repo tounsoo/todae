@@ -1,0 +1,326 @@
+import { ErrorMessageSibling } from '../../../components/demos/ErrorMessageDemo';
+import {
+  ChipInputCommitKeys,
+  ChipInputControlled,
+  ChipInputLabel,
+  ChipInputMaxRows,
+  ChipInputStates,
+  CounterBefore,
+  CounterDefault,
+  CounterInline,
+  CounterNarrow,
+  CounterOver,
+  CounterPlain,
+  CounterTextarea,
+  FieldAdornments,
+  FieldLabelAdornments,
+  FieldLabelStates,
+  FieldSelectSize,
+  FieldStates,
+  RowChipInput,
+  RowComposer,
+  RowComposerDensity,
+  TextareaAutoGrow,
+  TextareaDark,
+  TextareaDensity,
+  TextareaMaxRows,
+  TextareaMessages,
+  TextareaResize,
+  TextareaRows,
+} from '../../../components/demos/FieldDemo';
+
+# Field
+
+Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.Textarea`, or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
+
+<Example block>
+  <FieldStates />
+</Example>
+
+## Label
+
+`Label` is a sibling, not a compound part. It takes the same `id` you pass to `Field.Root`. Wrap the pair in one `.labelled-field`. The gap is `field.label.gap`. See [Label](/label) for the API.
+
+```tsx
+const id = useId()
+
+<div className="labelled-field">
+	<Label htmlFor={id}>Email</Label>
+	<Field.Root id={id}>
+		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+	</Field.Root>
+</div>
+```
+
+<Example block>
+  <FieldLabelStates />
+</Example>
+
+Label works with Icon, Affix, and ChipInput.
+
+<Example block>
+  <FieldLabelAdornments />
+</Example>
+
+`Affix` is text, not a control. Decorative `Icon` is `aria-hidden`. Interactive `Icon` keeps its name. Clear is not a built-in prop.
+
+<Example block>
+  <FieldAdornments />
+</Example>
+
+## Messages
+
+[Description](/description) and [ErrorMessage](/errormessage) sit under the shell as siblings. They are not Field parts. Each owns `margin-block-start`. Put `aria-describedby` on `Field.Root`. Root copies it onto the input. Do not set it on `Field.TextInput`.
+
+```tsx
+const describedBy = invalid ? `${hintId} ${errorId}` : hintId
+
+<div className="labelled-field">
+	<Label htmlFor={id}>Email</Label>
+	<Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
+		<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
+	</Field.Root>
+	<Description id={hintId}>Use your work address.</Description>
+	{invalid ? <ErrorMessage id={errorId}>{error}</ErrorMessage> : null}
+</div>
+```
+
+<Example block>
+  <ErrorMessageSibling />
+</Example>
+
+## Textarea
+
+Multi-line text. Height is CSS only: `rows` sets the height and the drag floor, and `maxRows` sets the cap. `autoGrow` uses `field-sizing: content` where the browser has it, and grows with no cap when `maxRows` is omitted. Browsers without `field-sizing` stay at `rows` and scroll inside. Do not set an inline `height` when `autoGrow` is on; it overrides the growth. Padding sits on the textarea, inside the shell.
+
+<Example block>
+  <TextareaRows />
+</Example>
+
+`autoGrow` with `maxRows={6}`.
+
+<Example block>
+  <TextareaAutoGrow />
+</Example>
+
+`maxRows` without `rows` starts at `min(3, maxRows)`.
+
+<Example block>
+  <TextareaMaxRows />
+</Example>
+
+Drag-resize with `autoGrow` off stops at `rows` and at `maxRows`.
+
+<Example block>
+  <TextareaResize />
+</Example>
+
+Compact, comfortable, and spacious.
+
+<Example block>
+  <TextareaDensity />
+</Example>
+
+Dark appearance, for the native scrollbar.
+
+<Example block>
+  <TextareaDark />
+</Example>
+
+Label, description, error, invalid, and disabled.
+
+<Example block>
+  <TextareaMessages />
+</Example>
+
+## Counter
+
+`Field.Counter` shows a live count for `Field.TextInput` or `Field.Textarea`. It takes its own row. Write it after the input so the server HTML includes the count. One counter per `Field.Root`. The input stays controlled; `defaultValue` is not read.
+
+<Example block>
+  <CounterDefault />
+</Example>
+
+On the same row, set `flex-basis: auto` on the Counter and still write it last. On a textarea that inline count sits on the last line. The bare field under each pair is the height check.
+
+<Example block>
+  <CounterInline />
+</Example>
+
+A narrow field. An inline count wider than the row can wrap under the input.
+
+<Example block>
+  <CounterNarrow />
+</Example>
+
+A Counter written before the input still sits on the bottom row. Prefer writing it after the input so the count is in the server HTML.
+
+<Example block>
+  <CounterBefore />
+</Example>
+
+<Example block>
+  <CounterTextarea />
+</Example>
+
+Past `maxLength` the count uses the error color. The shell stays as it is.
+
+<Example block>
+  <CounterOver />
+</Example>
+
+Without `maxLength` the count is just the number.
+
+<Example block>
+  <CounterPlain />
+</Example>
+
+## Chip input
+
+Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow. Chips inside a ChipInput are one field line tall, the same as the input, at every density. `chipLayout="row"` puts them on a full-width line above the input, inside the ChipInput. Icon and Affix sit on the first line. With no chips it is a one-line field the same height as `Field.TextInput`. In a row, `maxRows` counts chip lines only and clips like the inline flow. Label it with `Label htmlFor` or Root's `aria-label`.
+
+When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. A later chip that does not fit at its full width moves into `+N`. The first chip truncates with an ellipsis when it, `+N`, and the input cannot share the row; its accessible name stays the full label.
+
+Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key roving.
+
+<Example block>
+  <ChipInputControlled />
+</Example>
+
+Optional [useChipField](/utilities/use-chip-field) holds chips and input, then spreads onto `Field.ChipInput`.
+
+`commitKeys={['Enter', ',']}`. Unknown keys are dropped.
+
+<Example block>
+  <ChipInputCommitKeys />
+</Example>
+
+`maxRows={1}` and `{2}` under compact and comfortable.
+
+<Example block>
+  <ChipInputMaxRows />
+</Example>
+
+Disabled and invalid live on `Field.Root`.
+
+<Example block>
+  <ChipInputStates />
+</Example>
+
+<Example block>
+  <ChipInputLabel />
+</Example>
+
+## Row
+
+A `Field.Row` is a full-width line. Write it before the input to sit above, or after to sit below. Put `Field.Counter` inside the Row when the field has a bottom row. Use `autoGrow` for a composer. Don't put bare text in a Row; wrap it in `Field.Affix`. Push trailing items to the end with `style={{ marginInlineStart: 'auto' }}` on the first of them. For chips, set `chipLayout="row"`; ChipInput draws its own chip line. Don't hand-roll chips in a `Field.Row`.
+
+<Example block>
+  <RowComposer />
+</Example>
+
+The same composer at compact, comfortable, and spacious.
+
+<Example block>
+  <RowComposerDensity />
+</Example>
+
+<Example block>
+  <RowChipInput />
+</Example>
+
+## Select
+
+`Field.Select` is a native `<select>`. In browsers with `appearance: base-select` the button and its picker are drawn from field, popover and option tokens; elsewhere the browser's own picker shows, with the same value and keyboard. There is no JavaScript listbox. Children are native `<option>` and `<optgroup>` elements, and a `Label htmlFor` names it like any other field.
+
+```tsx
+<Label htmlFor={id}>Size</Label>
+<Field.Root id={id}>
+	<Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
+		<option value="s">Small</option>
+		<option value="m">Medium</option>
+	</Field.Select>
+</Field.Root>
+```
+
+<Example block>
+  <FieldSelectSize />
+</Example>
+
+## Custom controls
+
+Your own control, such as a rating or a color well, joins a `Field.Root` through [useField](/utilities/use-field).
+
+## When to use
+
+### Field.Root
+
+**When:** Shared field chrome for one text, textarea, or chip input — focus ring, disabled/invalid, density. Value lives on the input part.
+
+**When not:** Selection controls (Checkbox / Radio / Switch). Overlay triggers that are buttons. Nesting another compound root inside.
+
+### Field.TextInput
+
+**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password).
+
+**When not:** Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
+
+### Field.Textarea
+
+**When:** Multi-line free text such as notes, messages or descriptions. `rows` sets the starting height, and `autoGrow` grows it up to `maxRows` with CSS only.
+**When not:** Single-line values, use `Field.TextInput`. Separate tags or tokens, use `Field.ChipInput`. Rich text or formatting, not shipped.
+
+### Field.ChipInput
+
+**When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`, or spreads [useChipField](/utilities/use-chip-field) to hold that state.
+
+**When not:** Free-form single string → TextInput. Options from a list → [Combobox recipe](/recipes/combobox) + OptionList.
+
+### Field.Select
+
+**When:** Pick one value from a short, fixed list inside a form, with the native picker and keyboard.
+
+**When not:** Filtering or searching a long list → Combobox recipe. Several values → Checkbox or `Field.ChipInput`. Commands rather than values → Menu.
+
+### Field.Icon
+
+**When:** Leading/trailing icon or icon control inside Root. Position = DOM order. Decorative → `interactive={false}` (aria-hidden).
+
+**When not:** Text adornments → Affix. Clickable clear/reveal as a dedicated Action (not shipped).
+
+### Field.Row
+
+**When:** Group parts on their own full-width line inside the field, such as chips above a `Field.ChipInput` or attach, `Field.Counter` and send below a `Field.Textarea`.
+
+**When not:** For a single Icon or Affix beside the input, compose it inline without a Row, and don't use a Row to lay out separate fields.
+
+### Field.Affix
+
+**When:** Static text adornment (currency, unit) inside Root. Order = position.
+
+**When not:** Icons → Icon. Interactive controls — Affix is not clickable.
+
+### Field.Counter
+
+**When:** Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise.
+**When not:** For a hard limit with no visible count, set `maxLength` alone, and skip it on short fixed-length values like codes or PINs.
+
+## Props
+
+<PropsTable name="Field.Root" />
+
+<PropsTable name="Field.TextInput" />
+
+<PropsTable name="Field.Textarea" />
+
+<PropsTable name="Field.ChipInput" />
+
+<PropsTable name="Field.Select" />
+
+<PropsTable name="Field.Icon" />
+
+<PropsTable name="Field.Affix" />
+
+<PropsTable name="Field.Row" />
+
+<PropsTable name="Field.Counter" />

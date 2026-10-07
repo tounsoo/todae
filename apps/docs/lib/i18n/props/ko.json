@@ -1,0 +1,1106 @@
+{
+  "BottomSheet.Close": {
+    "aria-label": {
+      "en": "Accessible name.",
+      "ko": "접근 가능한 이름."
+    }
+  },
+  "BottomSheet.Grabber": {
+    "aria-label": {
+      "en": "Name of the resize control.",
+      "ko": "크기 조절 컨트롤의 이름."
+    }
+  },
+  "BottomSheet.Root": {
+    "open": {
+      "en": "Controlled open state.",
+      "ko": "제어 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Dismiss requests. Staying open keeps the sheet open.",
+      "ko": "닫기 요청. 열린 상태를 유지하면 시트가 열린 채로 남습니다."
+    },
+    "snap": {
+      "en": "Controlled snap. Omit for uncontrolled.",
+      "ko": "제어 스냅. 비제어로 쓰려면 생략합니다."
+    },
+    "defaultSnap": {
+      "en": "Initial snap when uncontrolled.",
+      "ko": "비제어일 때의 초기 스냅."
+    },
+    "snapPoints": {
+      "en": "Allowed snaps. [\"full\"] disables mid.",
+      "ko": "허용되는 스냅. [\"full\"]이면 mid를 끕니다."
+    },
+    "dismissOnEscape": {
+      "en": "Escape calls onOpenChange(false, \"escape\").",
+      "ko": "Escape가 onOpenChange(false, \"escape\")를 호출합니다."
+    },
+    "dismissOnScrim": {
+      "en": "Scrim click calls onOpenChange(false, \"scrim\").",
+      "ko": "스크림 클릭이 onOpenChange(false, \"scrim\")을 호출합니다."
+    },
+    "dismissOnDrag": {
+      "en": "Drag past the threshold dismisses.",
+      "ko": "임계값을 넘겨 끌면 닫힙니다."
+    },
+    "aria-label": {
+      "en": "Name when BottomSheet.Title is omitted.",
+      "ko": "BottomSheet.Title을 생략했을 때의 이름."
+    }
+  },
+  "BottomSheet.Title": {
+    "children": {
+      "en": "Title text.",
+      "ko": "제목 텍스트."
+    }
+  },
+  "Button.Group": {
+    "aria-label": {
+      "en": "Accessible name for the group.",
+      "ko": "그룹의 접근 가능한 이름."
+    },
+    "children": {
+      "en": "Button.Root children. Horizontal only.",
+      "ko": "Button.Root 자식. 가로 방향만 지원합니다."
+    }
+  },
+  "Button.Icon": {
+    "children": {
+      "en": "Icon graphic.",
+      "ko": "아이콘 그래픽."
+    }
+  },
+  "Button.Root": {
+    "variant": {
+      "en": "Visual style. Non-primary sets data-button-variant.",
+      "ko": "시각 스타일. primary가 아니면 data-button-variant를 설정합니다."
+    },
+    "type": {
+      "en": "Native button type.",
+      "ko": "네이티브 버튼 type."
+    },
+    "disabled": {
+      "en": "Disables the control.",
+      "ko": "컨트롤을 비활성화합니다."
+    },
+    "aria-label": {
+      "en": "Required accessible name when the only child is Button.Icon. Auto-tip text for icon-only.",
+      "ko": "유일한 자식이 Button.Icon일 때 필수인 접근 가능한 이름. 아이콘 전용 버튼의 자동 팁 텍스트입니다."
+    },
+    "tooltip": {
+      "en": "Icon-only tips the accessible name. Overflowing labels tip the full string. False opts out. Never tips a fitting labeled button.",
+      "ko": "아이콘 전용 버튼은 접근 가능한 이름을 팁으로 보여 줍니다. 넘치는 레이블은 전체 문자열을 팁으로 보여 줍니다. false면 끕니다. 레이블이 다 들어가는 버튼에는 팁을 띄우지 않습니다."
+    },
+    "children": {
+      "en": "Label and optional Button.Icon. Order is leading or trailing.",
+      "ko": "레이블과 선택적 Button.Icon. 순서에 따라 앞쪽 또는 뒤쪽에 놓입니다."
+    }
+  },
+  "Checkbox": {
+    "children": {
+      "en": "Visible label. Clicking the text toggles the input.",
+      "ko": "보이는 레이블. 텍스트를 클릭하면 입력이 토글됩니다."
+    },
+    "checked": {
+      "en": "Controlled checked state. Defined means controlled.",
+      "ko": "제어 체크 상태. 값이 정의되어 있으면 제어 방식입니다."
+    },
+    "defaultChecked": {
+      "en": "Initial checked state when uncontrolled.",
+      "ko": "비제어일 때의 초기 체크 상태."
+    },
+    "onCheckedChange": {
+      "en": "Fires after the checked state changes.",
+      "ko": "체크 상태가 바뀐 뒤 호출됩니다."
+    },
+    "disabled": {
+      "en": "Disables the input.",
+      "ko": "입력을 비활성화합니다."
+    },
+    "invalid": {
+      "en": "Marks the control invalid and sets aria-invalid.",
+      "ko": "컨트롤을 유효하지 않음으로 표시하고 aria-invalid를 설정합니다."
+    },
+    "name": {
+      "en": "Native input name.",
+      "ko": "네이티브 입력 name."
+    },
+    "value": {
+      "en": "Native input value.",
+      "ko": "네이티브 입력 value."
+    },
+    "className": {
+      "en": "Optional class on the wrapping label.",
+      "ko": "감싸는 label에 붙는 선택적 클래스."
+    }
+  },
+  "Chip.Root": {
+    "children": {
+      "en": "Chip label. Text only.",
+      "ko": "칩 레이블. 텍스트만."
+    },
+    "onDismiss": {
+      "en": "Renders a named dismiss button.",
+      "ko": "이름이 붙은 닫기 버튼을 렌더링합니다."
+    },
+    "dismissLabel": {
+      "en": "Dismiss aria-label. Default is Remove {label}.",
+      "ko": "닫기 버튼의 aria-label. 기본값은 Remove {label}입니다."
+    },
+    "disabled": {
+      "en": "Disables dismiss.",
+      "ko": "닫기를 비활성화합니다."
+    }
+  },
+  "Description": {
+    "id": {
+      "en": "Id the author lists in aria-describedby on the control or Field.Root.",
+      "ko": "작성자가 컨트롤이나 Field.Root의 aria-describedby에 넣는 id."
+    },
+    "children": {
+      "en": "Hint text.",
+      "ko": "힌트 텍스트."
+    },
+    "className": {
+      "en": "Optional class on the span.",
+      "ko": "span에 붙는 선택적 클래스."
+    }
+  },
+  "Dialog.Close": {
+    "aria-label": {
+      "en": "Accessible name.",
+      "ko": "접근 가능한 이름."
+    }
+  },
+  "Dialog.Description": {
+    "children": {
+      "en": "Description text.",
+      "ko": "설명 텍스트."
+    }
+  },
+  "Dialog.Root": {
+    "open": {
+      "en": "Controlled open state.",
+      "ko": "제어 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Dismiss requests. Staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element).",
+      "ko": "닫기 요청. 열린 상태를 유지하면 대화상자가 열린 채로 남습니다. 이유: escape, backdrop, close-button, form(<form method=\"dialog\"> 제출. 제출한 요소의 값은 요소의 returnValue에 있습니다), native(다른 무언가가 요소를 닫음)."
+    },
+    "dismissOnEscape": {
+      "en": "Escape calls onOpenChange(false, \"escape\").",
+      "ko": "Escape가 onOpenChange(false, \"escape\")를 호출합니다."
+    },
+    "dismissOnBackdrop": {
+      "en": "Scrim click calls onOpenChange(false, \"backdrop\").",
+      "ko": "스크림 클릭이 onOpenChange(false, \"backdrop\")을 호출합니다."
+    },
+    "aria-label": {
+      "en": "Name when Dialog.Title is omitted.",
+      "ko": "Dialog.Title을 생략했을 때의 이름."
+    }
+  },
+  "Dialog.Title": {
+    "children": {
+      "en": "Title text.",
+      "ko": "제목 텍스트."
+    }
+  },
+  "ErrorMessage": {
+    "id": {
+      "en": "Id the author lists in aria-describedby on the control or Field.Root.",
+      "ko": "작성자가 컨트롤이나 Field.Root의 aria-describedby에 넣는 id."
+    },
+    "children": {
+      "en": "Error text.",
+      "ko": "오류 텍스트."
+    },
+    "className": {
+      "en": "Optional class on the span.",
+      "ko": "span에 붙는 선택적 클래스."
+    }
+  },
+  "Field.Affix": {
+    "children": {
+      "en": "Affix content. Strings render as text.",
+      "ko": "Affix 내용. 문자열은 텍스트로 렌더링됩니다."
+    }
+  },
+  "Field.ChipInput": {
+    "chips": {
+      "en": "Controlled chip labels.",
+      "ko": "제어 칩 레이블."
+    },
+    "inputValue": {
+      "en": "Controlled input text.",
+      "ko": "제어 입력 텍스트."
+    },
+    "onInputValueChange": {
+      "en": "Input text changes.",
+      "ko": "입력 텍스트 변경."
+    },
+    "onCommit": {
+      "en": "Fires on a commit key with a trimmed non-empty value. Does not append chips.",
+      "ko": "확정 키를 누르고 공백을 제거한 값이 비어 있지 않을 때 호출됩니다. 칩을 추가하지는 않습니다."
+    },
+    "onChipRemove": {
+      "en": "Dismiss click or Backspace on an empty input.",
+      "ko": "닫기 클릭 또는 빈 입력에서 Backspace."
+    },
+    "commitKeys": {
+      "en": "Closed allowlist of commit keys.",
+      "ko": "확정 키로 쓸 수 있는 키의 고정 목록."
+    },
+    "maxRows": {
+      "en": "Caps visual rows. inline: chips plus input. row: chip lines only; the input keeps its own line. Newest chips fold into +N. A chip that does not fit at full width moves into +N. Only a chip wider than the row truncates.",
+      "ko": "보이는 줄 수를 제한합니다. inline: 칩과 입력을 함께 셉니다. row: 칩 줄만 세며, 입력은 자기 줄을 유지합니다. 가장 최근 칩부터 +N으로 접힙니다. 전체 너비로 들어가지 않는 칩은 +N으로 옮겨집니다. 줄보다 넓은 칩만 잘립니다."
+    },
+    "chipLayout": {
+      "en": "inline: chips flow beside the input. row: chips sit in a full-width line above the input, inside the ChipInput; Icon and Affix sit on the first line; no chips renders a one-line field the height of TextInput.",
+      "ko": "inline: 칩이 입력 옆으로 흐릅니다. row: 칩이 ChipInput 안에서 입력 위의 전체 너비 줄에 놓이며, Icon과 Affix는 첫 줄에 놓입니다. 칩이 없으면 TextInput 높이의 한 줄 필드로 렌더링됩니다."
+    },
+    "removeOnBackspace": {
+      "en": "Backspace on an empty input removes the last chip.",
+      "ko": "빈 입력에서 Backspace를 누르면 마지막 칩을 제거합니다."
+    },
+    "placeholder": {
+      "en": "Native placeholder.",
+      "ko": "네이티브 placeholder."
+    }
+  },
+  "Field.Counter": {
+    "className": {
+      "en": "Class on the count. Use it for the inline flex-basis override.",
+      "ko": "카운트에 붙는 클래스. 인라인 flex-basis 재정의에 씁니다."
+    },
+    "style": {
+      "en": "Inline style. flex-basis: auto places the count on the input row.",
+      "ko": "인라인 스타일. flex-basis: auto면 카운트가 입력 행에 놓입니다."
+    }
+  },
+  "Field.Icon": {
+    "children": {
+      "en": "Icon or control.",
+      "ko": "아이콘 또는 컨트롤."
+    },
+    "interactive": {
+      "en": "When false, the wrapper is aria-hidden.",
+      "ko": "false면 래퍼가 aria-hidden이 됩니다."
+    }
+  },
+  "Field.Root": {
+    "disabled": {
+      "en": "Disables the input and marks the shell.",
+      "ko": "입력을 비활성화하고 셸도 비활성 상태로 표시합니다."
+    },
+    "invalid": {
+      "en": "Marks the shell invalid and sets aria-invalid on the input.",
+      "ko": "셸을 유효하지 않음으로 표시하고 입력에 aria-invalid를 설정합니다."
+    },
+    "id": {
+      "en": "Input id. Auto-generated when omitted.",
+      "ko": "입력 id. 생략하면 자동 생성됩니다."
+    },
+    "aria-describedby": {
+      "en": "Ids of Description and ErrorMessage. Put this on Root. TextInput overwrites input-level aria.",
+      "ko": "Description과 ErrorMessage의 id. Root에 넣습니다. TextInput은 입력 수준의 aria를 덮어씁니다."
+    },
+    "name": {
+      "en": "Native input name.",
+      "ko": "네이티브 입력 name."
+    },
+    "ref": {
+      "en": "Shell element. Use as a Popover anchorRef.",
+      "ko": "셸 요소. Popover의 anchorRef로 씁니다."
+    },
+    "children": {
+      "en": "TextInput or ChipInput plus optional Icon and Affix. Order is leading/trailing.",
+      "ko": "TextInput 또는 ChipInput과 선택적인 Icon, Affix. 순서에 따라 앞쪽 또는 뒤쪽에 놓입니다."
+    }
+  },
+  "Field.Row": {
+    "children": {
+      "en": "Parts for the line, such as chips, buttons or Field.Counter.",
+      "ko": "줄에 놓을 파트. 칩, 버튼, Field.Counter 등."
+    },
+    "className": {
+      "en": "Extra class on the row.",
+      "ko": "행에 붙는 추가 클래스."
+    }
+  },
+  "Field.Select": {
+    "value": {
+      "en": "Controlled value.",
+      "ko": "제어 값."
+    },
+    "onChange": {
+      "en": "Native change handler. Optional when onValueChange is enough.",
+      "ko": "네이티브 change 핸들러. onValueChange로 충분하면 생략할 수 있습니다."
+    },
+    "onValueChange": {
+      "en": "Optional value callback.",
+      "ko": "선택적 값 콜백."
+    },
+    "children": {
+      "en": "Native <option> and <optgroup> elements.",
+      "ko": "네이티브 <option>과 <optgroup> 요소."
+    },
+    "className": {
+      "en": "Optional class on the select.",
+      "ko": "select에 붙는 선택적 클래스."
+    }
+  },
+  "Field.Textarea": {
+    "value": {
+      "en": "Controlled value.",
+      "ko": "제어 값."
+    },
+    "onChange": {
+      "en": "Native change handler.",
+      "ko": "네이티브 change 핸들러."
+    },
+    "onValueChange": {
+      "en": "Optional value callback.",
+      "ko": "선택적 값 콜백."
+    },
+    "placeholder": {
+      "en": "Native placeholder.",
+      "ko": "네이티브 placeholder."
+    },
+    "rows": {
+      "en": "Starting height in rows. Also the native rows attribute and the drag floor.",
+      "ko": "행 단위 시작 높이. 네이티브 rows 속성이자 드래그 최솟값이기도 합니다."
+    },
+    "maxRows": {
+      "en": "Caps autoGrow and drag-resize. Omitted means no cap.",
+      "ko": "autoGrow와 드래그 크기 조절의 상한. 생략하면 상한이 없습니다."
+    },
+    "autoGrow": {
+      "en": "Grows with content up to maxRows using CSS only. No maxRows means no cap.",
+      "ko": "CSS만으로 내용에 맞춰 maxRows까지 늘어납니다. maxRows가 없으면 상한이 없습니다."
+    }
+  },
+  "Field.TextInput": {
+    "value": {
+      "en": "Controlled value.",
+      "ko": "제어 값."
+    },
+    "onChange": {
+      "en": "Native change handler.",
+      "ko": "네이티브 change 핸들러."
+    },
+    "onValueChange": {
+      "en": "Optional value callback.",
+      "ko": "선택적 값 콜백."
+    },
+    "placeholder": {
+      "en": "Native placeholder.",
+      "ko": "네이티브 placeholder."
+    },
+    "type": {
+      "en": "Text-ish input types only.",
+      "ko": "텍스트 계열 입력 type만 지원합니다."
+    }
+  },
+  "Label": {
+    "htmlFor": {
+      "en": "Id of the labelled control. Must match Field.Root id when captioning a Field.",
+      "ko": "레이블이 붙는 컨트롤의 id. Field에 캡션을 달 때는 Field.Root id와 일치해야 합니다."
+    },
+    "children": {
+      "en": "Label text. A required mark is authored here when needed.",
+      "ko": "레이블 텍스트. 필요하면 필수 표시를 여기에 직접 작성합니다."
+    },
+    "className": {
+      "en": "Optional class on the native label.",
+      "ko": "네이티브 label에 붙는 선택적 클래스."
+    }
+  },
+  "Menu.CheckboxItem": {
+    "checked": {
+      "en": "Controlled checked state.",
+      "ko": "제어 체크 상태."
+    },
+    "defaultChecked": {
+      "en": "Initial checked state when uncontrolled.",
+      "ko": "비제어일 때의 초기 체크 상태."
+    },
+    "onCheckedChange": {
+      "en": "Fires with the next checked state.",
+      "ko": "다음 체크 상태와 함께 호출됩니다."
+    },
+    "closeOnSelect": {
+      "en": "Close the menu after toggling.",
+      "ko": "토글한 뒤 메뉴를 닫습니다."
+    },
+    "disabled": {
+      "en": "aria-disabled. Stays in the arrow-key order, so it is announced, but cannot be chosen.",
+      "ko": "aria-disabled. 화살표 키 순서에 남아 있어 읽히지만 선택할 수는 없습니다."
+    },
+    "textValue": {
+      "en": "Typeahead text when children are not plain text.",
+      "ko": "children이 일반 텍스트가 아닐 때 쓰는 타입어헤드 텍스트."
+    },
+    "children": {
+      "en": "Item label.",
+      "ko": "항목 레이블."
+    },
+    "className": {
+      "en": "Optional class.",
+      "ko": "선택적 클래스."
+    }
+  },
+  "Menu.Content": {
+    "aria-label": {
+      "en": "Names the menu instead of the trigger.",
+      "ko": "트리거 대신 메뉴에 이름을 붙입니다."
+    },
+    "aria-labelledby": {
+      "en": "Id of the element that names the menu. Default is the trigger.",
+      "ko": "메뉴의 이름이 되는 요소의 id. 기본값은 트리거입니다."
+    },
+    "children": {
+      "en": "Items, groups and separators.",
+      "ko": "항목, 그룹, 구분선."
+    },
+    "className": {
+      "en": "Optional class.",
+      "ko": "선택적 클래스."
+    }
+  },
+  "Menu.Group": {
+    "aria-label": {
+      "en": "Group name. Exactly one of aria-label or aria-labelledby.",
+      "ko": "그룹 이름. aria-label과 aria-labelledby 중 정확히 하나만 씁니다."
+    },
+    "aria-labelledby": {
+      "en": "Id of a visible group caption.",
+      "ko": "보이는 그룹 캡션의 id."
+    },
+    "children": {
+      "en": "Items.",
+      "ko": "항목."
+    },
+    "className": {
+      "en": "Optional class.",
+      "ko": "선택적 클래스."
+    }
+  },
+  "Menu.Item": {
+    "onSelect": {
+      "en": "Runs when the item is chosen.",
+      "ko": "항목을 선택하면 실행됩니다."
+    },
+    "closeOnSelect": {
+      "en": "Close the menu after choosing.",
+      "ko": "선택한 뒤 메뉴를 닫습니다."
+    },
+    "disabled": {
+      "en": "aria-disabled. Stays in the arrow-key order, so it is announced, but cannot be chosen.",
+      "ko": "aria-disabled. 화살표 키 순서에 남아 있어 읽히지만 선택할 수는 없습니다."
+    },
+    "textValue": {
+      "en": "Typeahead text when children are not plain text.",
+      "ko": "children이 일반 텍스트가 아닐 때 쓰는 타입어헤드 텍스트."
+    },
+    "children": {
+      "en": "Item label.",
+      "ko": "항목 레이블."
+    },
+    "className": {
+      "en": "Optional class.",
+      "ko": "선택적 클래스."
+    }
+  },
+  "Menu.RadioGroup": {
+    "value": {
+      "en": "Controlled value. null is controlled with nothing checked.",
+      "ko": "제어 값. null이면 아무것도 선택되지 않은 제어 상태입니다."
+    },
+    "defaultValue": {
+      "en": "Initial value when uncontrolled.",
+      "ko": "비제어일 때의 초기 값."
+    },
+    "onValueChange": {
+      "en": "Fires with the next value.",
+      "ko": "다음 값과 함께 호출됩니다."
+    },
+    "aria-label": {
+      "en": "Group name. Exactly one of aria-label or aria-labelledby.",
+      "ko": "그룹 이름. aria-label과 aria-labelledby 중 정확히 하나만 씁니다."
+    },
+    "aria-labelledby": {
+      "en": "Id of a visible group caption.",
+      "ko": "보이는 그룹 캡션의 id."
+    },
+    "children": {
+      "en": "Menu.RadioItem children.",
+      "ko": "Menu.RadioItem 자식."
+    },
+    "className": {
+      "en": "Optional class.",
+      "ko": "선택적 클래스."
+    }
+  },
+  "Menu.RadioItem": {
+    "value": {
+      "en": "Value this item sets on its group.",
+      "ko": "이 항목이 그룹에 설정하는 값."
+    },
+    "closeOnSelect": {
+      "en": "Close the menu after choosing.",
+      "ko": "선택한 뒤 메뉴를 닫습니다."
+    },
+    "disabled": {
+      "en": "aria-disabled. Stays in the arrow-key order, so it is announced, but cannot be chosen.",
+      "ko": "aria-disabled. 화살표 키 순서에 남아 있어 읽히지만 선택할 수는 없습니다."
+    },
+    "textValue": {
+      "en": "Typeahead text when children are not plain text.",
+      "ko": "children이 일반 텍스트가 아닐 때 쓰는 타입어헤드 텍스트."
+    },
+    "children": {
+      "en": "Item label.",
+      "ko": "항목 레이블."
+    },
+    "className": {
+      "en": "Optional class.",
+      "ko": "선택적 클래스."
+    }
+  },
+  "Menu.Root": {
+    "open": {
+      "en": "Controlled open state.",
+      "ko": "제어 열림 상태."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때의 초기 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Fires on open and close. reason is trigger, escape, outside, select or tab. Leaving open unchanged is a veto.",
+      "ko": "열고 닫을 때 호출됩니다. reason은 trigger, escape, outside, select, tab 중 하나입니다. open을 바꾸지 않으면 거부로 처리됩니다."
+    },
+    "children": {
+      "en": "Menu.Trigger and Menu.Content.",
+      "ko": "Menu.Trigger와 Menu.Content."
+    }
+  },
+  "Menu.Separator": {
+    "className": {
+      "en": "Optional class.",
+      "ko": "선택적 클래스."
+    }
+  },
+  "Menu.Trigger": {
+    "variant": {
+      "en": "Button variant.",
+      "ko": "버튼 variant."
+    },
+    "tooltip": {
+      "en": "Button tooltip. Off by default on a menu trigger.",
+      "ko": "버튼 팁. 메뉴 트리거에서는 기본으로 꺼져 있습니다."
+    },
+    "children": {
+      "en": "Trigger label.",
+      "ko": "트리거 레이블."
+    }
+  },
+  "OptionList.Option": {
+    "value": {
+      "en": "Selection value.",
+      "ko": "선택 값."
+    },
+    "children": {
+      "en": "Visible label. Text only.",
+      "ko": "보이는 레이블. 텍스트만 지원합니다."
+    },
+    "disabled": {
+      "en": "Skips pointer and keyboard selection.",
+      "ko": "포인터와 키보드 선택에서 제외합니다."
+    }
+  },
+  "OptionList.Root": {
+    "selectionMode": {
+      "en": "Single fires onChange(string). Multiple fires onChange(string[]).",
+      "ko": "single은 onChange(string)을, multiple은 onChange(string[])을 호출합니다."
+    },
+    "value": {
+      "en": "Selected value, or values when selectionMode is multiple.",
+      "ko": "선택된 값. selectionMode가 multiple이면 값 배열."
+    },
+    "onChange": {
+      "en": "Selection change. Single passes a string. Multiple passes the next array.",
+      "ko": "선택 변경. single은 문자열을, multiple은 다음 배열을 전달합니다."
+    },
+    "id": {
+      "en": "Listbox id. Auto-generated when omitted. Option ids derive from it.",
+      "ko": "Listbox id. 생략하면 자동 생성됩니다. 옵션 id는 여기서 파생됩니다."
+    },
+    "tabIndex": {
+      "en": "Listbox tabIndex. Pass -1 when a combobox input owns focus.",
+      "ko": "Listbox tabIndex. combobox 입력이 포커스를 가질 때는 -1을 전달합니다."
+    },
+    "activeValue": {
+      "en": "Controlled highlighted value. Omit to keep highlight inside the list.",
+      "ko": "제어 하이라이트 값. 하이라이트를 목록 안에서 관리하려면 생략합니다."
+    },
+    "onActiveChange": {
+      "en": "Fires when keyboard or pointer moves the highlight.",
+      "ko": "키보드나 포인터가 하이라이트를 옮길 때 호출됩니다."
+    },
+    "aria-label": {
+      "en": "Name when no visible label is present.",
+      "ko": "보이는 레이블이 없을 때의 이름."
+    }
+  },
+  "Popover.Root": {
+    "children": {
+      "en": "Popover contents.",
+      "ko": "Popover 내용."
+    },
+    "className": {
+      "en": "Class name for the surface.",
+      "ko": "표면에 붙는 클래스 이름."
+    },
+    "style": {
+      "en": "Style for the surface. Anchor position comes from getPopoverProps.",
+      "ko": "표면의 스타일. 앵커 위치는 getPopoverProps에서 옵니다."
+    },
+    "aria-label": {
+      "en": "Accessible name when no visible caption exists. Only with role=\"dialog\"; a role-less popover drops it, so name its contents instead.",
+      "ko": "보이는 캡션이 없을 때의 접근 가능한 이름. role=\"dialog\"일 때만 쓰입니다. role이 없는 팝오버는 이를 버리므로 대신 내용에 이름을 붙이세요."
+    },
+    "aria-labelledby": {
+      "en": "Id of the visible caption. Only with role=\"dialog\"; a role-less popover drops it.",
+      "ko": "보이는 캡션의 id. role=\"dialog\"일 때만 쓰입니다. role이 없는 팝오버는 이를 버립니다."
+    },
+    "role": {
+      "en": "Non-modal dialog role. Requires aria-label or aria-labelledby. Does not set aria-modal.",
+      "ko": "비모달 dialog role. aria-label이나 aria-labelledby가 필요합니다. aria-modal은 설정하지 않습니다."
+    }
+  },
+  "RadioGroup.Item": {
+    "value": {
+      "en": "Option value. The group owns selection.",
+      "ko": "옵션 값. 선택 상태는 그룹이 관리합니다."
+    },
+    "children": {
+      "en": "Visible label.",
+      "ko": "보이는 레이블."
+    },
+    "disabled": {
+      "en": "Disables this option. The group disabled flag also applies.",
+      "ko": "이 옵션을 비활성화합니다. 그룹의 disabled 플래그도 적용됩니다."
+    },
+    "className": {
+      "en": "Optional class on the wrapping label.",
+      "ko": "감싸는 label에 붙는 선택적 클래스."
+    }
+  },
+  "RadioGroup.Root": {
+    "aria-label": {
+      "en": "Accessible name when no visible caption exists. Exactly one of aria-label or aria-labelledby.",
+      "ko": "보이는 캡션이 없을 때의 접근 가능한 이름. aria-label과 aria-labelledby 중 정확히 하나만 지정합니다."
+    },
+    "aria-labelledby": {
+      "en": "Id of the visible caption. Exactly one of aria-label or aria-labelledby.",
+      "ko": "보이는 캡션의 id. aria-label과 aria-labelledby 중 정확히 하나만 지정합니다."
+    },
+    "value": {
+      "en": "Controlled value. null is controlled with nothing selected. Omit for uncontrolled.",
+      "ko": "제어 값. null은 아무것도 선택되지 않은 제어 상태입니다. 비제어로 쓰려면 생략합니다."
+    },
+    "defaultValue": {
+      "en": "Initial value when uncontrolled.",
+      "ko": "비제어일 때의 초기 값."
+    },
+    "onValueChange": {
+      "en": "Fires with the next selected value.",
+      "ko": "다음 선택 값과 함께 호출됩니다."
+    },
+    "name": {
+      "en": "Shared native name. Generated when omitted.",
+      "ko": "공유되는 네이티브 name. 생략하면 생성됩니다."
+    },
+    "disabled": {
+      "en": "Disables every radio.",
+      "ko": "모든 라디오를 비활성화합니다."
+    },
+    "invalid": {
+      "en": "Marks every radio invalid.",
+      "ko": "모든 라디오를 유효하지 않음으로 표시합니다."
+    },
+    "orientation": {
+      "en": "Layout and aria-orientation.",
+      "ko": "레이아웃과 aria-orientation."
+    },
+    "children": {
+      "en": "RadioGroup.Item children.",
+      "ko": "RadioGroup.Item 자식."
+    },
+    "className": {
+      "en": "Optional class on the radiogroup.",
+      "ko": "radiogroup에 붙는 선택적 클래스."
+    }
+  },
+  "Stack": {
+    "direction": {
+      "en": "Flex direction.",
+      "ko": "Flex 방향."
+    },
+    "children": {
+      "en": "Laid-out children.",
+      "ko": "배치될 자식."
+    }
+  },
+  "Switch": {
+    "children": {
+      "en": "Visible label. Clicking the text toggles the switch.",
+      "ko": "보이는 레이블. 텍스트를 클릭하면 스위치가 토글됩니다."
+    },
+    "checked": {
+      "en": "Controlled on state. Defined means controlled.",
+      "ko": "제어 켜짐 상태. 값이 정의되어 있으면 제어 방식입니다."
+    },
+    "defaultChecked": {
+      "en": "Initial on state when uncontrolled.",
+      "ko": "비제어일 때의 초기 켜짐 상태."
+    },
+    "onCheckedChange": {
+      "en": "Fires after the on state changes.",
+      "ko": "켜짐 상태가 바뀐 뒤 호출됩니다."
+    },
+    "disabled": {
+      "en": "Disables the switch.",
+      "ko": "스위치를 비활성화합니다."
+    },
+    "invalid": {
+      "en": "Marks the control invalid and sets aria-invalid.",
+      "ko": "컨트롤을 유효하지 않음으로 표시하고 aria-invalid를 설정합니다."
+    },
+    "name": {
+      "en": "Native input name.",
+      "ko": "네이티브 입력 name."
+    },
+    "className": {
+      "en": "Optional class on the wrapping label.",
+      "ko": "감싸는 label에 붙는 선택적 클래스."
+    }
+  },
+  "Tabs.List": {
+    "aria-label": {
+      "en": "Names the tablist when no visible caption exists.",
+      "ko": "보이는 캡션이 없을 때 tablist의 이름을 붙입니다."
+    },
+    "aria-labelledby": {
+      "en": "Id of a visible caption for the tablist.",
+      "ko": "tablist의 보이는 캡션 id."
+    },
+    "children": {
+      "en": "Tabs.Tab children.",
+      "ko": "Tabs.Tab 자식."
+    },
+    "className": {
+      "en": "Optional class on the tablist.",
+      "ko": "tablist에 붙는 선택적 클래스."
+    }
+  },
+  "Tabs.Panel": {
+    "value": {
+      "en": "Matches a Tabs.Tab value.",
+      "ko": "Tabs.Tab의 value와 일치합니다."
+    },
+    "keepMounted": {
+      "en": "Keep children mounted while hidden, so their state survives a tab switch.",
+      "ko": "숨겨진 동안에도 자식을 마운트해 두어 탭을 바꿔도 상태가 유지됩니다."
+    },
+    "children": {
+      "en": "Panel content.",
+      "ko": "패널 내용."
+    },
+    "className": {
+      "en": "Optional class on the panel.",
+      "ko": "패널에 붙는 선택적 클래스."
+    }
+  },
+  "Tabs.Root": {
+    "value": {
+      "en": "Controlled selected tab. Pass with onValueChange.",
+      "ko": "제어 선택 탭. onValueChange와 함께 전달합니다."
+    },
+    "defaultValue": {
+      "en": "Initial selected tab when uncontrolled.",
+      "ko": "비제어일 때의 초기 선택 탭."
+    },
+    "onValueChange": {
+      "en": "Fires with the next selected tab.",
+      "ko": "다음 선택 탭과 함께 호출됩니다."
+    },
+    "orientation": {
+      "en": "Arrow keys, layout and aria-orientation.",
+      "ko": "화살표 키, 레이아웃, aria-orientation."
+    },
+    "activation": {
+      "en": "automatic selects on focus. manual waits for Enter, Space or a click.",
+      "ko": "automatic은 포커스 시 선택합니다. manual은 Enter, Space 또는 클릭을 기다립니다."
+    },
+    "children": {
+      "en": "Tabs.List and Tabs.Panel.",
+      "ko": "Tabs.List와 Tabs.Panel."
+    },
+    "className": {
+      "en": "Optional class on the root.",
+      "ko": "루트에 붙는 선택적 클래스."
+    }
+  },
+  "Tabs.Tab": {
+    "value": {
+      "en": "Matches a Tabs.Panel value.",
+      "ko": "Tabs.Panel의 value와 일치시킵니다."
+    },
+    "disabled": {
+      "en": "Native disabled. Skipped by arrow keys.",
+      "ko": "네이티브 disabled. 화살표 키 이동에서 건너뜁니다."
+    },
+    "children": {
+      "en": "Tab label.",
+      "ko": "탭 레이블."
+    },
+    "className": {
+      "en": "Optional class on the tab.",
+      "ko": "탭에 붙는 선택적 클래스."
+    }
+  },
+  "Text": {
+    "as": {
+      "en": "Rendered element.",
+      "ko": "렌더링할 요소."
+    },
+    "size": {
+      "en": "Maps to text.size.2, text.size.3, text.size.4.",
+      "ko": "text.size.2, text.size.3, text.size.4에 대응합니다."
+    },
+    "tone": {
+      "en": "Foreground role. accent follows color.accent.default, which is neutral ink in Todae, so it matches default until a theme sets a brand accent.",
+      "ko": "전경색 역할. accent는 color.accent.default를 따르며 Todae에서는 중립 잉크색이므로, 테마가 브랜드 강조색을 설정하기 전까지는 default와 같습니다."
+    },
+    "weight": {
+      "en": "Font weight.",
+      "ko": "글꼴 굵기."
+    },
+    "children": {
+      "en": "Text content.",
+      "ko": "텍스트 내용."
+    }
+  },
+  "Tooltip.Root": {
+    "children": {
+      "en": "Tooltip text, or short prose plus links when interactive.",
+      "ko": "팁 텍스트, 또는 인터랙티브일 때 짧은 글과 링크."
+    },
+    "className": {
+      "en": "Class name for the tip surface.",
+      "ko": "팁 표면의 클래스 이름."
+    },
+    "style": {
+      "en": "Style for the tip surface. Anchor position comes from getTooltipProps.",
+      "ko": "팁 표면의 스타일. 앵커 위치는 getTooltipProps에서 옵니다."
+    },
+    "aria-label": {
+      "en": "Accessible name when no visible caption exists. Exactly one of aria-label or aria-labelledby when interactive.",
+      "ko": "보이는 캡션이 없을 때의 접근 가능한 이름. 인터랙티브일 때는 aria-label과 aria-labelledby 중 정확히 하나만 지정합니다."
+    },
+    "aria-labelledby": {
+      "en": "Id of the visible caption. Exactly one of aria-label or aria-labelledby when interactive.",
+      "ko": "보이는 캡션의 id. 인터랙티브일 때는 aria-label과 aria-labelledby 중 정확히 하나만 지정합니다."
+    }
+  },
+  "useChipField": {
+    "initialChips": {
+      "en": "Starting chips.",
+      "ko": "시작 칩."
+    },
+    "initialInputValue": {
+      "en": "Starting input text.",
+      "ko": "시작 입력 텍스트."
+    },
+    "dedupe": {
+      "en": "Skip commits that already exist.",
+      "ko": "이미 있는 값의 커밋을 건너뜁니다."
+    },
+    "transform": {
+      "en": "Normalize a commit. Null rejects. Default trims and rejects empty.",
+      "ko": "커밋을 정규화합니다. null이면 거부합니다. 기본 동작은 공백을 제거하고 빈 값을 거부합니다."
+    }
+  },
+  "useChipList": {
+    "chips": {
+      "en": "Chip labels, in order. visible is always a prefix.",
+      "ko": "순서대로 나열한 칩 레이블. visible은 항상 앞부분입니다."
+    },
+    "maxRows": {
+      "en": "Fold chips that do not fit into +N. Unset shows every chip.",
+      "ko": "들어가지 않는 칩을 +N으로 접습니다. 설정하지 않으면 모든 칩을 보여 줍니다."
+    },
+    "reserveWidth": {
+      "en": "Element whose computed min-width stays free on the last line. A ref so density changes stay current.",
+      "ko": "계산된 min-width만큼 마지막 줄에서 비워 둘 요소. 밀도가 바뀌어도 최신 값을 유지하도록 ref로 받습니다."
+    }
+  },
+  "useCombobox": {
+    "selectionMode": {
+      "en": "Single uses TextInput. Multiple uses ChipInput.",
+      "ko": "single은 TextInput을, multiple은 ChipInput을 씁니다."
+    },
+    "options": {
+      "en": "Sync options. Ignored when loadOptions is set.",
+      "ko": "동기 옵션. loadOptions가 설정되면 무시됩니다."
+    },
+    "loadOptions": {
+      "en": "Async options. Stale responses are discarded. An inline function is fine; it is read at call time.",
+      "ko": "비동기 옵션. 오래된 응답은 버립니다. 인라인 함수도 괜찮습니다. 호출 시점에 읽습니다."
+    },
+    "loadKey": {
+      "en": "Reloads options when it changes. Use it when loadOptions depends on state outside the query, such as a category.",
+      "ko": "바뀌면 옵션을 다시 불러옵니다. loadOptions가 카테고리처럼 쿼리 밖의 상태에 의존할 때 쓰세요."
+    },
+    "presentation": {
+      "en": "auto uses useSheetPresentation.",
+      "ko": "auto는 useSheetPresentation을 씁니다."
+    },
+    "allowCreate": {
+      "en": "Show a create row when the query has no case-insensitive label match.",
+      "ko": "쿼리와 대소문자 구분 없이 일치하는 레이블이 없을 때 생성 행을 보여 줍니다."
+    },
+    "value": {
+      "en": "Controlled value. Null for empty single. Array for multiple.",
+      "ko": "제어 값. 비어 있는 single은 null, multiple은 배열."
+    },
+    "open": {
+      "en": "Controlled open.",
+      "ko": "제어 열림."
+    },
+    "inputValue": {
+      "en": "Controlled filter text.",
+      "ko": "제어 필터 텍스트."
+    }
+  },
+  "usePopover": {
+    "open": {
+      "en": "Controlled open state.",
+      "ko": "제어 열림 상태."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때의 초기 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Fires on toggle or dismiss. Leaving open unchanged is a veto.",
+      "ko": "토글하거나 닫을 때 호출됩니다. open을 바꾸지 않으면 거부로 처리됩니다."
+    },
+    "anchorRef": {
+      "en": "Sets CSS anchor-name on this element and excludes it from outside press.",
+      "ko": "이 요소에 CSS anchor-name을 설정하고 바깥 누르기 판정에서 제외합니다."
+    },
+    "initialFocusRef": {
+      "en": "Focus this element when the popover opens.",
+      "ko": "팝오버가 열리면 이 요소에 포커스합니다."
+    },
+    "restoreFocusRef": {
+      "en": "Return focus here when the popover closes.",
+      "ko": "팝오버가 닫히면 여기로 포커스를 되돌립니다."
+    },
+    "enabled": {
+      "en": "False skips toggle, dismiss, and focus moves.",
+      "ko": "false이면 토글, 닫기, 포커스 이동을 건너뜁니다."
+    },
+    "haspopup": {
+      "en": "aria-haspopup on the trigger. Use \"listbox\" for an OptionList in a role-less popover.",
+      "ko": "트리거의 aria-haspopup. role이 없는 팝오버 안의 OptionList에는 \"listbox\"를 씁니다."
+    },
+    "id": {
+      "en": "Popover id. Default is a generated id.",
+      "ko": "팝오버 id. 기본값은 생성된 id입니다."
+    }
+  },
+  "useRovingFocus": {
+    "orientation": {
+      "en": "Which arrow keys move focus. Left and Right swap in a right-to-left container.",
+      "ko": "포커스를 옮기는 화살표 키. 오른쪽에서 왼쪽으로 쓰는(RTL) 컨테이너에서는 Left와 Right가 바뀝니다."
+    },
+    "loop": {
+      "en": "Wrap from the last item to the first and back.",
+      "ko": "마지막 항목에서 처음으로, 처음에서 마지막으로 순환합니다."
+    },
+    "typeahead": {
+      "en": "Typing focuses the next item whose text starts with the typed characters.",
+      "ko": "입력하면 입력한 문자로 텍스트가 시작하는 다음 항목에 포커스합니다."
+    },
+    "tabStop": {
+      "en": "Keep one item tabbable. False when focus only enters from code, as in a menu: every item gets tabIndex -1.",
+      "ko": "항목 하나를 탭으로 이동 가능하게 유지합니다. 메뉴처럼 포커스가 코드로만 들어올 때는 false이며, 모든 항목이 tabIndex -1을 받습니다."
+    },
+    "activeValue": {
+      "en": "Controlled tab stop. Falls back to the first enabled item when null, disabled or missing.",
+      "ko": "제어 탭 정지점. null이거나 비활성화되었거나 없으면 첫 번째 활성 항목으로 대체됩니다."
+    },
+    "defaultActiveValue": {
+      "en": "Initial tab stop when uncontrolled.",
+      "ko": "비제어일 때의 초기 탭 정지점."
+    },
+    "onActiveValueChange": {
+      "en": "Fires when an item other than activeValue takes focus, including a fallback tab stop, so a controlled owner can pin it.",
+      "ko": "대체 탭 정지점을 포함해 activeValue가 아닌 항목이 포커스를 받으면 호출되므로, 제어하는 쪽이 이를 고정할 수 있습니다."
+    }
+  },
+  "useSheetPresentation": {
+    "narrowWidth": {
+      "en": "Viewport width that starts the narrow media query. Media is max-width: n - 1.",
+      "ko": "좁은 화면 미디어 쿼리가 시작되는 뷰포트 너비. 미디어는 max-width: n - 1입니다."
+    },
+    "coarseQuery": {
+      "en": "matchMedia query treated as coarse pointer.",
+      "ko": "coarse 포인터로 간주할 matchMedia 쿼리."
+    },
+    "forced": {
+      "en": "Skip media when popover or sheet. auto uses coarse OR narrow.",
+      "ko": "popover나 sheet이면 미디어를 건너뜁니다. auto는 coarse OR narrow를 사용합니다."
+    }
+  },
+  "useTooltip": {
+    "interactive": {
+      "en": "Use the non-modal tip dialog. Links only. Never role=tooltip.",
+      "ko": "비모달 팁 dialog를 씁니다. 링크 전용. role=tooltip은 절대 쓰지 않습니다."
+    },
+    "open": {
+      "en": "Controlled open state.",
+      "ko": "제어 열림 상태."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때의 초기 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Fires after a commit. Leaving open unchanged is a veto.",
+      "ko": "커밋 뒤에 호출됩니다. open을 바꾸지 않으면 거부로 처리됩니다."
+    },
+    "showDelay": {
+      "en": "Hover show delay in milliseconds. Focus shows at once.",
+      "ko": "호버 시 표시 지연(밀리초). 포커스는 즉시 표시합니다."
+    },
+    "hideDelay": {
+      "en": "Hide delay in milliseconds.",
+      "ko": "숨김 지연(밀리초)."
+    },
+    "enabled": {
+      "en": "False resets intent and commits close.",
+      "ko": "false면 의도를 초기화하고 닫힘을 커밋합니다."
+    },
+    "id": {
+      "en": "Tooltip id. Default is a generated id.",
+      "ko": "팁 id. 기본값은 생성된 id입니다."
+    }
+  }
+}

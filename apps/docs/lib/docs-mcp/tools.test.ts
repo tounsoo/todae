@@ -69,7 +69,7 @@ describe('docs mcp tools', () => {
   });
 
   it('returns the OptionList when-to-use section from MDX', () => {
-    const mdx = readFileSync(join(process.cwd(), 'app/optionlist/page.mdx'), 'utf8');
+    const mdx = readFileSync(join(process.cwd(), 'app/(en)/optionlist/page.mdx'), 'utf8');
     const body = mdx.split('## When to use\n')[1]?.split('\n## ')[0]?.trim().replaceAll('](/', '](https://todae-rho.vercel.app/');
     const line = (prefix: string) => body?.split('\n').find((item) => item.startsWith(prefix))?.slice(prefix.length).trim();
     const result = whenToUse('OptionList');
@@ -200,7 +200,7 @@ describe('docs mcp tools', () => {
     expect(listed.ThemeProvider).toMatchObject({ hasWhenToUse: true, docsUrl: 'https://todae-rho.vercel.app/tokens' });
     expect(listed.DensityProvider).toMatchObject({ hasWhenToUse: true });
     expect(listed.ThemeProvider).not.toHaveProperty('scope');
-    const tokensMdx = readFileSync(join(process.cwd(), 'app/tokens/page.mdx'), 'utf8');
+    const tokensMdx = readFileSync(join(process.cwd(), 'app/(en)/tokens/page.mdx'), 'utf8');
     const whenBody = tokensMdx.split('## When to use\n')[1]?.split('\n## ')[0] ?? '';
     expect(whenBody).not.toContain('TokensCatalog');
 
@@ -425,7 +425,7 @@ describe('docs mcp tools', () => {
 
   it('gives each props table one page, so a name has one docs URL', () => {
     const owners = new Map<string, string[]>();
-    for (const page of loadPages(join(process.cwd(), 'app'))) {
+    for (const page of loadPages(join(process.cwd(), 'app', '(en)'))) {
       for (const name of page.props) owners.set(name, [...(owners.get(name) ?? []), page.slug]);
     }
     expect([...owners].filter(([, slugs]) => slugs.length > 1)).toEqual([]);

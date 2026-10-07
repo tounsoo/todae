@@ -1,0 +1,48 @@
+import { TabsBasic, TabsManualVertical } from '../../../components/demos/TabsDemo';
+
+# Tabs
+
+페이지의 한 자리를 나눠 쓰며 한 번에 하나씩 보이는 패널입니다. `Tabs.Root`가 선택된 값을 소유합니다. `Tabs.List`는 `role="tablist"`입니다. 각 `Tabs.Tab`은 `role="tab"`을 가진 네이티브 버튼이고, 각 `Tabs.Panel`은 자신의 탭으로 레이블이 붙는 `role="tabpanel"`입니다. 탭과 패널은 `value`로 짝을 이룹니다.
+
+목록에는 선택된 탭에 탭 정지점이 하나 있습니다. 화살표 키, Home, End는 [useRovingFocus](/utilities/use-roving-focus)를 통해 탭 사이를 이동합니다. 오른쪽에서 왼쪽으로 쓰는 페이지에서는 Left와 Right가 서로 바뀝니다. 비활성 탭은 네이티브 `disabled` 버튼이므로 화살표 키가 건너뜁니다.
+
+```tsx
+<Tabs.Root defaultValue="account">
+	<Tabs.List aria-label="Settings">
+		<Tabs.Tab value="account">Account</Tabs.Tab>
+		<Tabs.Tab value="billing">Billing</Tabs.Tab>
+	</Tabs.List>
+	<Tabs.Panel value="account">…</Tabs.Panel>
+	<Tabs.Panel value="billing">…</Tabs.Panel>
+</Tabs.Root>
+```
+
+<Example block>
+  <TabsBasic />
+</Example>
+
+`activation="automatic"`(기본값)은 다른 탭에서 포커스가 옮겨 오는 즉시 탭을 선택합니다. 밖에서 목록으로 포커스가 들어올 때는 아무것도 선택하지 않습니다. 선택된 탭이 비활성이어서 대체 탭에 포커스가 놓여도 마찬가지입니다. 패널 렌더링이 느리면 `activation="manual"`을 쓰세요. 화살표 키는 포커스만 옮기고, Enter, Space 또는 클릭으로 선택합니다. 포커스가 목록을 떠나면 탭 정지점은 선택된 탭으로 돌아갑니다. `orientation="vertical"`은 목록을 패널 옆에 두고 Up과 Down으로 이동합니다.
+
+루트는 `value`와 `onValueChange`, 또는 `defaultValue`를 받습니다. 탭 하나는 항상 선택되어 있으므로 빈 상태가 없습니다. 선택된 패널만 자식을 렌더링합니다. 반쯤 채운 폼처럼 숨겨진 패널의 상태를 유지하려면 `keepMounted`를 넘기세요. 패널은 기본적으로 Tab 정지점이므로 스크린 리더 사용자가 그 텍스트에 닿을 수 있습니다. 패널이 자체 컨트롤로 시작하면 `tabIndex={-1}`을 넘기세요.
+
+<Example block>
+  <TabsManualVertical />
+</Example>
+
+네이티브 탭 요소는 없습니다. 배타적인 `<details name>` 그룹은 비슷해 보이지만 탭 시맨틱과 화살표 키가 없으므로, 탭이 아니라 아코디언입니다.
+
+## 언제 쓰나요
+
+**언제:** 설정 섹션이나 보고서 보기처럼, 같은 대상의 형제 보기들을 한자리에서 전환하며 한 번에 하나만 보여 줄 때.
+
+**쓰지 않을 때:** 다른 페이지로 이동 → 링크. 동작 목록 → Menu. 여러 섹션을 동시에 열어 두거나 위에서 아래로 읽는 긴 콘텐츠 → 제목 또는 `<details>`.
+
+## Props
+
+<PropsTable name="Tabs.Root" />
+
+<PropsTable name="Tabs.List" />
+
+<PropsTable name="Tabs.Tab" />
+
+<PropsTable name="Tabs.Panel" />
