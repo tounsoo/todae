@@ -221,8 +221,12 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       let later = false;
       for (const record of records) {
         if (record.type === 'attributes') {
+          const styling = record.attributeName === 'class' || record.attributeName === 'style';
+          // A frame already queued covers every class or style change; skip
+          // the subtree query an animation would otherwise run per record.
+          if (styling && (later || frame)) continue;
           if (!touchesItem(record.target)) continue;
-          if (record.attributeName === 'class' || record.attributeName === 'style') later = true;
+          if (styling) later = true;
           else now = true;
         } else if ([...record.addedNodes].some(touchesItem) || [...record.removedNodes].some(touchesItem)) {
           now = true;

@@ -243,6 +243,7 @@ function Content({
     initialFocusRef.current = (openEnd.current === 'last' ? reachable.at(-1) : reachable[0]) ?? null;
     openEnd.current = null;
   }, [initialFocusRef, open, openEnd, reachableItems]);
+  const tabbedOut = useRef(false);
   const container = roving.getContainerProps({
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
       // Tab leaves the menu: close it and focus the trigger, whether or not
@@ -250,7 +251,11 @@ function Content({
       // trigger. Shift+Tab stops on it, since moving back would skip it.
       if (event.key === 'Tab') {
         ctx.setOpen(false, 'tab');
-        ctx.triggerRef.current?.focus();
+        tabbedOut.current = true;
+        const trigger = ctx.triggerRef.current;
+        // A menu with no trigger lets Tab move on from the item as usual.
+        if (!trigger) return;
+        trigger.focus();
         if (event.shiftKey) event.preventDefault();
         return;
       }
@@ -264,6 +269,11 @@ function Content({
   // document never sees as a pointerdown. Focus dropped to the page, as when
   // the focused item goes away, is not a move.
   const focusLeave = useFocusLeave((next) => {
+    // Tab has already closed it, with its own reason.
+    if (tabbedOut.current) {
+      tabbedOut.current = false;
+      return;
+    }
     if (!open || !next || next === document.body || next === ctx.triggerRef.current) return;
     ctx.setOpen(false, 'outside');
   });
@@ -284,7 +294,12 @@ function Content({
       onPointerDown={composeHandlers(onPointerDown, wirePointerDown)}
       onClick={composeHandlers(onClick, wireClick)}
       onFocus={composeHandlers(onFocus, focusLeave.onFocus)}
-      onBlur={composeHandlers(onBlur, focusLeave.onBlur)}
+      // Focus leaving closes the menu whatever the consumer's handler does,
+      // as Tabs.List returns its tab stop.
+      onBlur={(event: FocusEvent<HTMLDivElement>) => {
+        onBlur?.(event);
+        focusLeave.onBlur(event);
+      }}
       onKeyDown={container.onKeyDown}
     >
       {children}

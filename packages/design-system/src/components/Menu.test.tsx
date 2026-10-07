@@ -38,7 +38,8 @@ const trigger = () => screen.getByRole('button', { name: 'Actions' });
 const menu = () => document.querySelector<HTMLElement>('[role="menu"]')!;
 const isOpen = () => menu().hasAttribute('data-popover-open');
 const item = (name: string) => screen.getByText(name).closest<HTMLElement>('[role^="menuitem"]')!;
-const key = (k: string, target: Element = document.activeElement!) => fireEvent.keyDown(target, { key: k });
+const key = (k: string, target: Element = document.activeElement!, shiftKey = false) =>
+  fireEvent.keyDown(target, { key: k, shiftKey });
 const settle = () => act(async () => new Promise((resolve) => setTimeout(resolve)));
 const raf = () => act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
 
@@ -295,6 +296,45 @@ describe('Menu', () => {
     key('Tab');
     expect(onOpenChange).toHaveBeenLastCalledWith(false, 'tab');
     expect(isOpen()).toBe(false);
+  });
+
+  it('a menu with no trigger lets Shift+Tab move on and reports only tab', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <>
+        <button type="button">Before</button>
+        <Menu.Root defaultOpen onOpenChange={onOpenChange}>
+          <Menu.Content aria-label="Actions">
+            <Menu.Item>Rename</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      </>,
+    );
+    await raf();
+    act(() => item('Rename').focus());
+    expect(key('Tab', item('Rename'), true)).toBe(true);
+    // The browser then moves focus on, out of the menu.
+    act(() => screen.getByRole('button', { name: 'Before' }).focus());
+    expect(onOpenChange.mock.calls).toEqual([[false, 'tab']]);
+  });
+
+  it('a consumer onBlur that prevents the event still closes on focus leaving', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <>
+        <Menu.Root onOpenChange={onOpenChange}>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Content onBlur={(event) => event.preventDefault()}>
+            <Menu.Item>Rename</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+        <button type="button">After</button>
+      </>,
+    );
+    fireEvent.click(trigger());
+    await raf();
+    act(() => screen.getByRole('button', { name: 'After' }).focus());
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'outside');
   });
 
   it('closes on an outside press', async () => {
