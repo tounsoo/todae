@@ -1,4 +1,52 @@
 {
+  "Alert.Actions": {
+    "children": {
+      "en": "Buttons or links.",
+      "ko": "버튼이나 링크."
+    }
+  },
+  "Alert.Close": {
+    "aria-label": {
+      "en": "Accessible name.",
+      "ko": "접근 가능한 이름."
+    },
+    "onClick": {
+      "en": "Hide the alert here.",
+      "ko": "여기서 알림을 숨깁니다."
+    }
+  },
+  "Alert.Description": {
+    "children": {
+      "en": "Body content.",
+      "ko": "본문 내용."
+    }
+  },
+  "Alert.Icon": {
+    "children": {
+      "en": "Icon graphic from your own icon set.",
+      "ko": "직접 사용하는 아이콘 세트의 아이콘 그래픽."
+    }
+  },
+  "Alert.Root": {
+    "tone": {
+      "en": "Colors from color.status.<tone> through the alert contract tokens. Also picks the default role.",
+      "ko": "alert 계약 토큰을 거쳐 color.status.<tone>의 색을 씁니다. 기본 role도 정합니다."
+    },
+    "role": {
+      "en": "Live region role. Pass role=\"none\" for a banner that is on the page from the start.",
+      "ko": "라이브 영역 role. 처음부터 페이지에 있는 배너에는 role=\"none\"을 전달합니다."
+    },
+    "children": {
+      "en": "Alert parts, or any content.",
+      "ko": "Alert 파트 또는 아무 콘텐츠."
+    }
+  },
+  "Alert.Title": {
+    "children": {
+      "en": "Title text.",
+      "ko": "제목 텍스트."
+    }
+  },
   "BottomSheet.Close": {
     "aria-label": {
       "en": "Accessible name.",
@@ -17,8 +65,8 @@
       "ko": "제어 열림 상태."
     },
     "onOpenChange": {
-      "en": "Dismiss requests. Staying open keeps the sheet open.",
-      "ko": "닫기 요청. 열린 상태를 유지하면 시트가 열린 채로 남습니다."
+      "en": "Dismiss requests. Staying open keeps the sheet open. reason is \"form\" for a <form method=\"dialog\"> submit (read returnValue) and \"native\" when something else outside Todae closed the <dialog>; it shows again while open stays true.",
+      "ko": "닫기 요청. 열린 상태를 유지하면 시트가 열린 채로 남습니다. <form method=\"dialog\"> 제출이면 reason이 \"form\"(returnValue를 읽습니다)이고, 그 밖에 Todae 바깥에서 <dialog>를 닫았으면 \"native\"입니다. open이 true로 남아 있으면 시트가 다시 나타납니다."
     },
     "snap": {
       "en": "Controlled snap. Omit for uncontrolled.",
@@ -33,12 +81,12 @@
       "ko": "허용되는 스냅. [\"full\"]이면 mid를 끕니다."
     },
     "dismissOnEscape": {
-      "en": "Escape calls onOpenChange(false, \"escape\").",
-      "ko": "Escape가 onOpenChange(false, \"escape\")를 호출합니다."
+      "en": "Escape calls onOpenChange(false, \"escape\"). false sets closedby=\"none\", so the browser ignores the close request.",
+      "ko": "Escape가 onOpenChange(false, \"escape\")를 호출합니다. false이면 closedby=\"none\"을 설정해 브라우저가 닫기 요청을 무시합니다."
     },
     "dismissOnScrim": {
-      "en": "Scrim click calls onOpenChange(false, \"scrim\").",
-      "ko": "스크림 클릭이 onOpenChange(false, \"scrim\")을 호출합니다."
+      "en": "A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, \"scrim\").",
+      "ko": "스크림(dialog의 ::backdrop)을 클릭하면 onOpenChange(false, \"scrim\")을 호출합니다."
     },
     "dismissOnDrag": {
       "en": "Drag past the threshold dismisses.",
@@ -399,8 +447,32 @@
       "ko": "네이티브 placeholder."
     },
     "type": {
-      "en": "Text-ish input types only.",
-      "ko": "텍스트 계열 입력 type만 지원합니다."
+      "en": "Native input type. Number, date and time keep the native spinner and picker, and value stays the input string, such as \"2026-10-07\".",
+      "ko": "네이티브 입력 type. number, date, time은 네이티브 스피너와 선택기를 그대로 쓰며, value는 \"2026-10-07\"처럼 입력 문자열 그대로입니다."
+    }
+  },
+  "Fieldset.Legend": {
+    "children": {
+      "en": "Group name.",
+      "ko": "그룹 이름."
+    }
+  },
+  "Fieldset.Root": {
+    "disabled": {
+      "en": "Native disabled: every form control inside is disabled. Todae controls inside also show their disabled style.",
+      "ko": "네이티브 disabled: 안의 모든 폼 컨트롤이 비활성화됩니다. 안의 Todae 컨트롤도 비활성 스타일을 보여 줍니다."
+    },
+    "invalid": {
+      "en": "Marks the Todae controls inside invalid (aria-invalid and the invalid style); a control with invalid={false} opts out. A fieldset has no aria-invalid of its own, so point aria-describedby at an ErrorMessage.",
+      "ko": "안의 Todae 컨트롤을 invalid로 표시합니다(aria-invalid와 invalid 스타일). invalid={false}를 준 컨트롤은 제외됩니다. fieldset에는 자체 aria-invalid가 없으므로 aria-describedby로 ErrorMessage를 가리킵니다."
+    },
+    "aria-describedby": {
+      "en": "Ids of a Description or ErrorMessage for the whole group.",
+      "ko": "그룹 전체에 대한 Description 또는 ErrorMessage의 id."
+    },
+    "children": {
+      "en": "A Fieldset.Legend first, then the controls.",
+      "ko": "먼저 Fieldset.Legend, 그다음 컨트롤."
     }
   },
   "Label": {
@@ -875,12 +947,12 @@
   },
   "Text": {
     "as": {
-      "en": "Rendered element.",
-      "ko": "렌더링할 요소."
+      "en": "Rendered element. A heading level sets the outline; it also picks a default size, bold weight and tight leading.",
+      "ko": "렌더링할 요소. 제목 수준은 문서 개요를 정하고, 기본 크기, 굵은 두께, 좁은 행간도 정합니다."
     },
     "size": {
-      "en": "Maps to text.size.2, text.size.3, text.size.4.",
-      "ko": "text.size.2, text.size.3, text.size.4에 대응합니다."
+      "en": "Maps to text.size.2 through text.size.6. Set it to make a heading look larger or smaller than its level.",
+      "ko": "text.size.2부터 text.size.6까지에 대응합니다. 제목을 수준보다 크거나 작게 보이게 하려면 지정합니다."
     },
     "tone": {
       "en": "Foreground role. accent follows color.accent.default, which is neutral ink in Todae, so it matches default until a theme sets a brand accent.",

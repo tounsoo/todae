@@ -6,6 +6,7 @@ import type { ComponentType } from 'react';
  * line here when you add a docs page; a test fails until you do.
  */
 export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentType }>> = {
+  'alert': () => import('../../app/(en)/alert/page.mdx'),
   'bottomsheet': () => import('../../app/(en)/bottomsheet/page.mdx'),
   'button': () => import('../../app/(en)/button/page.mdx'),
   'checkbox': () => import('../../app/(en)/checkbox/page.mdx'),
@@ -13,10 +14,13 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'composition': () => import('../../app/(en)/composition/page.mdx'),
   'description': () => import('../../app/(en)/description/page.mdx'),
   'dialog': () => import('../../app/(en)/dialog/page.mdx'),
+  'disclosure': () => import('../../app/(en)/disclosure/page.mdx'),
   'errormessage': () => import('../../app/(en)/errormessage/page.mdx'),
   'field': () => import('../../app/(en)/field/page.mdx'),
+  'fieldset': () => import('../../app/(en)/fieldset/page.mdx'),
   'guides/build-on-todae': () => import('../../app/(en)/guides/build-on-todae/page.mdx'),
   'label': () => import('../../app/(en)/label/page.mdx'),
+  'link': () => import('../../app/(en)/link/page.mdx'),
   'menu': () => import('../../app/(en)/menu/page.mdx'),
   'optionlist': () => import('../../app/(en)/optionlist/page.mdx'),
   'platform': () => import('../../app/(en)/platform/page.mdx'),
@@ -39,4 +43,5 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'utilities/use-roving-focus': () => import('../../app/(en)/utilities/use-roving-focus/page.mdx'),
   'utilities/use-sheet-presentation': () => import('../../app/(en)/utilities/use-sheet-presentation/page.mdx'),
   'utilities/use-tooltip': () => import('../../app/(en)/utilities/use-tooltip/page.mdx'),
+  'visually-hidden': () => import('../../app/(en)/visually-hidden/page.mdx'),
 };

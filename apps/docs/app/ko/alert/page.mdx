@@ -1,0 +1,55 @@
+import { AlertDismissible, AlertTones } from '../../../components/demos/AlertDemo';
+
+# Alert
+
+페이지나 작업에 대한 메시지를 `info`, `success`, `warning`, `critical` 네 가지 톤 중 하나로 보여 줍니다. 각 톤은 `alert.<tone>` contract 토큰을 거쳐 `color.status.<tone>` 토큰에서 색을 가져오며, 토큰을 빌드할 때 각 색 쌍이 APCA 검사를 통과합니다. `info`는 Todae의 다른 부분처럼 중립적인 잉크이며, 회사 테마에서 색조를 줄 수 있습니다.
+
+```tsx
+<Alert.Root tone="warning">
+	<Alert.Icon>
+		<YourWarningIcon />
+	</Alert.Icon>
+	<Alert.Title>Storage almost full</Alert.Title>
+	<Alert.Description>You have used 92% of your plan.</Alert.Description>
+	<Alert.Actions>
+		<Button.Root variant="secondary">Upgrade</Button.Root>
+	</Alert.Actions>
+	<Alert.Close onClick={hide}>×</Alert.Close>
+</Alert.Root>
+```
+
+<Example block>
+  <AlertTones />
+</Example>
+
+Todae는 아이콘을 제공하지 않습니다. `Alert.Icon`은 슬롯입니다. 직접 사용하는 아이콘 세트의 아이콘을 넣으면 텍스트 앞에 놓이고, 보조 기술에서는 숨겨집니다. 열은 렌더링한 파트에 맞춰지므로, 아이콘이나 닫기 버튼이 없는 Alert에는 빈 공간이 남지 않습니다.
+
+## 알림 읽기
+
+`Alert.Root`는 기본적으로 라이브 영역입니다. `info`와 `success`는 `role="status"`로, 읽던 내용이 멈출 때를 기다립니다. `warning`과 `critical`은 `role="alert"`로, 바로 끼어듭니다. 스크린 리더는 라이브 영역의 내용이 바뀔 때 읽어 주므로, 어떤 동작 뒤에 나타나는 메시지라면 영역은 페이지에 그대로 두고 안의 내용만 바꾸세요. 처음부터 페이지에 있어 읽어 줄 필요가 없는 배너에는 위 예시처럼 `role="none"`을 전달합니다.
+
+`Alert.Close`는 이름이 "Dismiss"인 ghost `Button.Root`입니다. Alert에는 열림 상태가 없으므로 `onClick`에서 제거하세요.
+
+<Example block>
+  <AlertDismissible />
+</Example>
+
+## 언제 쓰나요
+
+**언제:** 해결되거나 닫을 때까지 남아 있는, 페이지나 마지막 동작에 대한 메시지. 결제 실패, 점검 시간 안내, 폼 옆의 저장 완료 확인.
+
+**쓰지 않을 때:** 필드 자체의 오류 → ErrorMessage. 작업을 막는 선택 → Dialog. 항목의 개수나 라벨 → Chip. 호버 도움말 → Tooltip.
+
+## Props
+
+<PropsTable name="Alert.Root" />
+
+<PropsTable name="Alert.Icon" />
+
+<PropsTable name="Alert.Title" />
+
+<PropsTable name="Alert.Description" />
+
+<PropsTable name="Alert.Actions" />
+
+<PropsTable name="Alert.Close" />

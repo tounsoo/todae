@@ -4,13 +4,16 @@ Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니�
 
 - **[CSS 앵커 포지셔닝](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: 팝오버와 툴팁을 트리거 옆에 배치하고, `position-try-fallbacks`로 뷰포트 가장자리에서 뒤집습니다. 없으면: 표면이 트리거 옆에 배치되지 않고 뷰포트 왼쪽 위 모서리 근처에 놓입니다.
 - **[Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API)**: `Popover.Root`와 `Tooltip.Root`를 최상위 레이어에 표시합니다. Todae에 필수입니다.
-- **[`<dialog>`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog)와 `showModal()`**: `Dialog.Root`의 최상위 레이어, `::backdrop`, 포커스 가두기, Escape, `<form method="dialog">`에 씁니다. Todae에 필수입니다.
-- **[`inert`](https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert)**: `BottomSheet` 뒤의 페이지에 닿을 수 없게 하고, 칩 측정용 사본을 숨깁니다. Todae에 필수입니다.
+- **[`<dialog>`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog)와 `showModal()`**: `Dialog.Root`와 `BottomSheet.Root`의 최상위 레이어, `::backdrop`, inert가 되는 뒤 페이지, Escape, `<form method="dialog">`에 씁니다. Todae에 필수입니다. 스크림은 `::backdrop`에서 Todae의 사용자 정의 속성을 읽으며, 현재 브라우저에서는 `::backdrop`이 다이얼로그에서 이를 상속합니다. 상속하지 않는 오래된 엔진에서는 스크림 색이 보이지 않습니다.
+- **[`closedby`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog#closedby)**: `dismissOnEscape={false}`인 `BottomSheet`에서 브라우저가 Escape를 무시하게 합니다. 없으면: Escape가 여전히 닫기를 요청하고, Todae가 시트를 열린 채로 둡니다.
+- **[`inert`](https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert)**: 칩 측정용 사본을 숨깁니다. Todae에 필수입니다.
+- **[`<details name>`](https://developer.mozilla.org/docs/Web/HTML/Element/details#name)**: 하나만 열리는 아코디언. 없으면: 한 그룹의 여러 디스클로저가 동시에 열릴 수 있습니다.
+- **[`::details-content`](https://developer.mozilla.org/docs/Web/CSS/::details-content)**: 디스클로저 내용을 서서히 나타냅니다. 없으면: 내용이 바로 나타납니다.
 - **[`field-sizing: content`](https://developer.mozilla.org/docs/Web/CSS/field-sizing)**: `autoGrow`를 쓴 `Field.Textarea`. 없으면: textarea가 rows 높이를 유지하고 스크롤됩니다.
-- **[`:has()`](https://developer.mozilla.org/docs/Web/CSS/:has)**: `Field`와 `Chip`의 포커스 링과 장식 요소 레이아웃. Todae에 필수입니다.
+- **[`:has()`](https://developer.mozilla.org/docs/Web/CSS/:has)**: `Field`와 `Chip`의 포커스 링과 장식 요소 레이아웃, `Alert`의 열 배치. Todae에 필수입니다.
 - **[캐스케이드 레이어](https://developer.mozilla.org/docs/Web/CSS/@layer)**: Todae의 리셋, 토큰, 컴포넌트와 회사 테마의 순서를 정합니다. Todae에 필수입니다.
 - **[상대 색상 문법](https://developer.mozilla.org/docs/Web/CSS/color_value/oklch)**: `color.bg.selected`처럼 토큰에서 만든 반투명 색상. Todae에 필수입니다.
 - **[`@starting-style`](https://developer.mozilla.org/docs/Web/CSS/@starting-style)**: `Dialog` 진입 전환. 없으면: 다이얼로그가 전환 없이 나타납니다.
 - **[`dvh` 단위](https://developer.mozilla.org/docs/Web/CSS/length#dynamic)**: 모바일 브라우저 UI를 따르는 `Dialog`와 `BottomSheet` 높이. Todae에 필수입니다.
 
-가장 중요한 동작은 실제 브라우저(Playwright를 통한 Chromium)에서 테스트합니다. 겹쳐 쌓인 오버레이 사이의 Escape 순서, 포커스 트랩과 복원, 뷰포트 가장자리에서의 뒤집기, 칩 오버플로 측정, 바텀 시트 드래그입니다. 모든 문서 예시도 그곳에서 axe로 검사합니다.
+가장 중요한 동작은 실제 브라우저(Playwright를 통한 Chromium)에서 테스트합니다. 겹쳐 쌓인 오버레이 사이의 Escape 순서, 모달 포커스와 복원, 뷰포트 가장자리에서의 뒤집기, 칩 오버플로 측정, 바텀 시트 드래그입니다. 모든 문서 예시도 그곳에서 axe로 검사합니다.

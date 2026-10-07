@@ -1,4 +1,4 @@
-import { FieldsetCheckboxes, FieldsetDisabled } from '../../components/demos/FieldsetDemo';
+import { FieldsetCheckboxes, FieldsetDisabled } from '../../../components/demos/FieldsetDemo';
 
 # Fieldset
 
@@ -19,7 +19,7 @@ A native `<fieldset>` that groups related controls under one `<legend>`, such as
 
 `invalid` marks every Todae control inside invalid: a Checkbox, Switch, RadioGroup or Field gets `aria-invalid` and its invalid style. A fieldset has no `aria-invalid` of its own, so say why with a [Description](/description) or [ErrorMessage](/errormessage) and point the root's `aria-describedby` at it.
 
-`disabled` is the native attribute: the browser disables every form control inside, and Todae's controls show their disabled style. A fieldset inside a disabled or invalid one is disabled or invalid too.
+`disabled` is the native attribute: the browser disables every form control inside, and Todae's controls show their disabled style. A fieldset inside a disabled one is disabled too. Inside an invalid fieldset, a control or nested fieldset is invalid unless it sets `invalid={false}`, for a field the person got right. Controls inside the first `Fieldset.Legend` stay enabled, as the browser keeps them.
 
 <Example block>
   <FieldsetDisabled />

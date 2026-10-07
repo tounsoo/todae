@@ -1,9 +1,11 @@
 import { Text } from '@tounsoo/todae/text';
+import { LocalizedLink } from '../LocalizedLink';
 
 export function LinkInText() {
   return (
     <Text>
-      Read the <a href="/tokens">token reference</a> or the <a href="/platform">native platform notes</a> before you
+      Read the <LocalizedLink href="/tokens">token reference</LocalizedLink> or the{' '}
+      <LocalizedLink href="/platform">native platform notes</LocalizedLink> before you
       theme Todae.
     </Text>
   );

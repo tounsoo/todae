@@ -13,6 +13,7 @@ import {
   CounterPlain,
   CounterTextarea,
   FieldAdornments,
+  FieldDateTime,
   FieldLabelAdornments,
   FieldLabelStates,
   FieldSelectSize,
@@ -229,6 +230,16 @@ compact, comfortable, spacious에서의 같은 작성기.
   <RowChipInput />
 </Example>
 
+## 숫자, 날짜, 시간
+
+`Field.TextInput`은 `type="number"`, `"date"`, `"time"`, `"datetime-local"`을 받습니다. 브라우저 자체의 스피너, 날짜 선택기, 로캘 형식을 그대로 쓰는 네이티브 입력으로 남으며, 필드 토큰으로 스타일을 입히고 숫자를 세로로 맞춥니다. `value`는 입력의 문자열입니다. `"2"`, `"2026-10-07"`, `"14:30"`이거나, 입력이 덜 끝났을 때는 빈 문자열입니다. 네이티브 `min`, `max`, `step`으로 제한하세요.
+
+<Example block>
+  <FieldDateTime />
+</Example>
+
+스테퍼 버튼과 달력 그리드는 앱에서 조합할 부분입니다. 네이티브 입력으로 부족할 때 이 입력을 중심으로 만드세요.
+
 ## Select
 
 `Field.Select`는 네이티브 `<select>`입니다. `appearance: base-select`를 지원하는 브라우저에서는 버튼과 선택 창을 field, popover, option 토큰으로 그립니다. 그 밖의 브라우저에서는 같은 값과 키보드 동작으로 브라우저 자체 선택 창이 나타납니다. JavaScript listbox는 없습니다. 자식은 네이티브 `<option>`과 `<optgroup>` 요소이며, 다른 필드처럼 `Label htmlFor`로 이름을 붙입니다.
@@ -261,7 +272,7 @@ compact, comfortable, spacious에서의 같은 작성기.
 
 ### Field.TextInput
 
-**언제:** `Field.Root` 안에서 한 줄로 입력하는 값(text / search / email / url / tel / password).
+**언제:** `Field.Root` 안에서 한 줄로 입력하는 값(text / search / email / url / tel / password), 또는 네이티브 숫자, 날짜, 시간.
 
 **쓰지 않을 때:** 여러 값의 토큰 → `Field.ChipInput`. 여러 줄 → `Field.Textarea`. Root 없이 단독으로 쓸 때.
 
