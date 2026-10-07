@@ -8,11 +8,11 @@ export function ProgressStates() {
   const loading = useId();
   return (
     <Stack>
-      <label htmlFor={done}>Uploading report.pdf</label>
+      <Label htmlFor={done}>Uploading report.pdf</Label>
       <progress id={done} value={64} max={100}>
         64%
       </progress>
-      <label htmlFor={loading}>Loading results</label>
+      <Label htmlFor={loading}>Loading results</Label>
       <progress id={loading} />
     </Stack>
   );
@@ -23,11 +23,11 @@ export function MeterLevels() {
   const battery = useId();
   return (
     <Stack>
-      <label htmlFor={storage}>Storage used</label>
+      <Label htmlFor={storage}>Storage used</Label>
       <meter id={storage} min={0} max={100} low={70} high={90} optimum={0} value={92}>
         92%
       </meter>
-      <label htmlFor={battery}>Battery</label>
+      <Label htmlFor={battery}>Battery</Label>
       <meter id={battery} min={0} max={100} low={20} high={60} optimum={100} value={80}>
         80%
       </meter>

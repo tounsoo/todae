@@ -253,9 +253,10 @@
       background: transparent;
     }
 
+    /* Longhands, so the band keeps the position the motion rules gave it. */
     :where(progress:indeterminate) {
-      background: linear-gradient(to right, Highlight, Highlight) no-repeat Canvas;
-      background-size: 40% 100%;
+      background-image: linear-gradient(to right, Highlight, Highlight);
+      background-color: Canvas;
     }
   }
 

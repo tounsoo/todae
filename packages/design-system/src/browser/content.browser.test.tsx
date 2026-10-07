@@ -11,6 +11,19 @@ async function violations(): Promise<string[]> {
   return result.violations.map((v) => `${v.id}: ${v.help}\n  ${v.nodes.map((n) => n.target.join(' ')).join('\n  ')}`);
 }
 
+/** The background of the first top-level rule that styles `pseudo` on its bare element. */
+function pseudoBackground(pseudo: string): string | undefined {
+  const element = pseudo.includes('meter') ? 'meter' : 'progress';
+  const selector = `:where(${element})${pseudo}`;
+  const rules = (list: CSSRuleList): CSSRule[] =>
+    [...list].flatMap((rule) =>
+      rule instanceof CSSStyleRule ? [rule] : rule instanceof CSSLayerBlockRule ? rules(rule.cssRules) : [],
+    );
+  const sheets = [...document.styleSheets].flatMap((sheet) => rules(sheet.cssRules));
+  const match = sheets.find((rule): rule is CSSStyleRule => rule instanceof CSSStyleRule && rule.selectorText === selector);
+  return match?.style.getPropertyValue('background').trim();
+}
+
 function Themed({ children }: { children: ReactNode }) {
   return (
     <main data-appearance="light" data-density="comfortable">
@@ -250,8 +263,7 @@ describe('content parts in a browser', () => {
         </table>
         <progress data-testid="progress" value={40} max={100} />
         <progress data-testid="busy" />
-        <meter data-testid="good" value={0.1} low={0.5} high={0.8} optimum={0.2} />
-                <input data-testid="range" type="range" />
+        <input data-testid="range" type="range" />
       </Themed>,
     );
     const style = (id: string, pseudo?: string) => getComputedStyle(screen.getByTestId(id), pseudo);
@@ -259,17 +271,13 @@ describe('content parts in a browser', () => {
     expect(style('row').fontWeight).toBe(style('col').fontWeight);
     expect(style('col').borderBottomColor).not.toBe(style('cell').borderBottomColor);
     expect(style('cell').borderBottomStyle).toBe('solid');
-    // Chromium does not report the bar's pseudo-elements, so check the tokens they read.
-    const token = (id: string, name: string) => style(id).getPropertyValue(name).trim();
-    expect(token('progress', '--todae-progress-fill')).not.toBe(token('progress', '--todae-progress-track'));
     expect(style('busy').animationName).toBe('todae-progress-sweep');
-    expect(
-      new Set(
-        ['--todae-meter-fill-optimum', '--todae-meter-fill-suboptimum', '--todae-meter-fill-critical'].map((name) =>
-          token('good', name),
-        ),
-      ).size,
-    ).toBe(3);
+    // Chromium does not report the bar's pseudo-elements, so check the rules that draw them.
+    expect(pseudoBackground('::-webkit-progress-value')).toBe('var(--todae-progress-fill)');
+    expect(pseudoBackground('::-webkit-progress-bar')).toBe('var(--todae-progress-track)');
+    expect(pseudoBackground('::-webkit-meter-optimum-value')).toBe('var(--todae-meter-fill-optimum)');
+    expect(pseudoBackground('::-webkit-meter-suboptimum-value')).toBe('var(--todae-meter-fill-suboptimum)');
+    expect(pseudoBackground('::-webkit-meter-even-less-good-value')).toBe('var(--todae-meter-fill-critical)');
     expect(style('range').accentColor).not.toBe('auto');
   });
 });
