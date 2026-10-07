@@ -29,6 +29,28 @@
       "soft": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": 0.12 } },
       "soft-strong": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": 0.28 } }
     },
+    "status": {
+      "info": {
+        "fg": { "$type": "color", "$value": { "$ref": "#/color/blue/200/$value" } },
+        "bg": { "$type": "color", "$value": { "$ref": "#/color/blue/900/$value" } },
+        "border": { "$type": "color", "$value": { "$ref": "#/color/blue/700/$value" } }
+      },
+      "success": {
+        "fg": { "$type": "color", "$value": { "$ref": "#/color/green/200/$value" } },
+        "bg": { "$type": "color", "$value": { "$ref": "#/color/green/900/$value" } },
+        "border": { "$type": "color", "$value": { "$ref": "#/color/green/700/$value" } }
+      },
+      "warning": {
+        "fg": { "$type": "color", "$value": { "$ref": "#/color/amber/200/$value" } },
+        "bg": { "$type": "color", "$value": { "$ref": "#/color/amber/900/$value" } },
+        "border": { "$type": "color", "$value": { "$ref": "#/color/amber/700/$value" } }
+      },
+      "critical": {
+        "fg": { "$type": "color", "$value": { "$ref": "#/color/red/200/$value" } },
+        "bg": { "$type": "color", "$value": { "$ref": "#/color/red/900/$value" } },
+        "border": { "$type": "color", "$value": { "$ref": "#/color/red/700/$value" } }
+      }
+    },
     "on-accent": { "$type": "color", "$value": { "$ref": "#/color/gray/950/$value" } }
   }
 }

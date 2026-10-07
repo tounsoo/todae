@@ -4,6 +4,11 @@
     line-height: var(--todae-text-leading-default);
   }
 
+  .heading {
+    line-height: var(--todae-text-leading-tight);
+    text-wrap: balance;
+  }
+
   .default {
     color: var(--todae-text-fg-default);
   }
@@ -26,6 +31,14 @@
 
   .l {
     font-size: var(--todae-text-size-4);
+  }
+
+  .xl {
+    font-size: var(--todae-text-size-5);
+  }
+
+  .xxl {
+    font-size: var(--todae-text-size-6);
   }
 
   .regular {

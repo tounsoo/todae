@@ -1,0 +1,90 @@
+@layer todae.components {
+  .root {
+    display: grid;
+    grid-template-columns: [content] minmax(0, 1fr);
+    column-gap: var(--todae-alert-gap);
+    row-gap: calc(var(--todae-alert-gap) / 2);
+    align-items: start;
+    box-sizing: border-box;
+    padding: var(--todae-alert-padding-y) var(--todae-alert-padding-x);
+    border: 1px solid var(--todae-alert-tone-border);
+    border-radius: var(--todae-alert-radius);
+    background: var(--todae-alert-tone-bg);
+    color: var(--todae-alert-tone-fg);
+    font-size: var(--todae-alert-font-size);
+    line-height: var(--todae-alert-leading);
+  }
+
+  .root[data-tone='info'] {
+    --todae-alert-tone-fg: var(--todae-alert-info-fg);
+    --todae-alert-tone-bg: var(--todae-alert-info-bg);
+    --todae-alert-tone-border: var(--todae-alert-info-border);
+  }
+
+  .root[data-tone='success'] {
+    --todae-alert-tone-fg: var(--todae-alert-success-fg);
+    --todae-alert-tone-bg: var(--todae-alert-success-bg);
+    --todae-alert-tone-border: var(--todae-alert-success-border);
+  }
+
+  .root[data-tone='warning'] {
+    --todae-alert-tone-fg: var(--todae-alert-warning-fg);
+    --todae-alert-tone-bg: var(--todae-alert-warning-bg);
+    --todae-alert-tone-border: var(--todae-alert-warning-border);
+  }
+
+  .root[data-tone='critical'] {
+    --todae-alert-tone-fg: var(--todae-alert-critical-fg);
+    --todae-alert-tone-bg: var(--todae-alert-critical-bg);
+    --todae-alert-tone-border: var(--todae-alert-critical-border);
+  }
+
+  /* The columns follow the parts that are there, so a missing icon or close
+     button leaves no empty gap. */
+  .root:has(> .icon) {
+    grid-template-columns: [icon] auto [content] minmax(0, 1fr);
+  }
+
+  .root:has(> .close) {
+    grid-template-columns: [content] minmax(0, 1fr) [close] auto;
+  }
+
+  .root:has(> .icon):has(> .close) {
+    grid-template-columns: [icon] auto [content] minmax(0, 1fr) [close] auto;
+  }
+
+  .root > * {
+    grid-column: content;
+  }
+
+  .root > .icon {
+    grid-column: icon;
+    grid-row: 1;
+    display: inline-flex;
+    align-items: center;
+    block-size: 1lh;
+  }
+
+  .root > .close {
+    grid-column: close;
+    grid-row: 1;
+    margin-block: calc(var(--todae-alert-padding-y) * -0.5);
+    margin-inline-end: calc(var(--todae-alert-padding-x) * -0.5);
+  }
+
+  .title {
+    margin: 0;
+    font-weight: var(--todae-alert-title-font-weight);
+  }
+
+  .description {
+    margin: 0;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--todae-alert-gap);
+    margin-block-start: calc(var(--todae-alert-gap) / 2);
+  }
+}

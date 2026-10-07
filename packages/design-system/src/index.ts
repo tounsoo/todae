@@ -1,5 +1,15 @@
 'use client';
 
+export {
+  Alert,
+  type AlertActionsProps,
+  type AlertCloseProps,
+  type AlertDescriptionProps,
+  type AlertIconProps,
+  type AlertRootProps,
+  type AlertTitleProps,
+  type AlertTone,
+} from './components/Alert';
 export { BottomSheet, type BottomSheetRootProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet';
 export {
   Button,
@@ -77,6 +87,7 @@ export {
   type FieldControlWire,
   type UseFieldResult,
 } from './hooks/useField';
+export { Fieldset, type FieldsetLegendProps, type FieldsetRootProps } from './components/Fieldset';
 export { Label, type LabelProps } from './components/Label';
 export {
   RadioGroup,
@@ -95,7 +106,15 @@ export {
   type TabsTabProps,
 } from './components/Tabs';
 export { Stack, type StackProps, type StackDirection } from './components/Stack';
-export { Text, type TextProps, type TextAs, type TextSize, type TextTone, type TextWeight } from './components/Text';
+export {
+  Text,
+  type TextProps,
+  type TextAs,
+  type TextHeading,
+  type TextSize,
+  type TextTone,
+  type TextWeight,
+} from './components/Text';
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
 export {
   useChipList,

@@ -8,6 +8,7 @@ import {
   type Ref,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState';
+import { useFieldset } from './Fieldset.context';
 import { SelectionControl } from './SelectionControl';
 import styles from './selection.module.css';
 
@@ -80,14 +81,17 @@ function RadioGroupRoot({
   }
   const autoName = useId();
   const name = nameProp ?? autoName;
+  const fieldset = useFieldset();
+  const isDisabled = Boolean(disabled) || fieldset.disabled;
+  const isInvalid = Boolean(invalid) || fieldset.invalid;
   const [value, setValue] = useControlledState(valueProp, defaultValue ?? null);
   return (
     <RadioGroupContext.Provider
       value={{
         name,
         value,
-        disabled: Boolean(disabled),
-        invalid: Boolean(invalid),
+        disabled: isDisabled,
+        invalid: isInvalid,
         select: (next) => {
           setValue(next);
           onValueChange?.(next);
@@ -104,8 +108,8 @@ function RadioGroupRoot({
         aria-orientation={orientation}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
-        aria-disabled={disabled || undefined}
-        aria-invalid={invalid || undefined}
+        aria-disabled={isDisabled || undefined}
+        aria-invalid={isInvalid || undefined}
       >
         {children}
       </div>

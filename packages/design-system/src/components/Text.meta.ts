@@ -2,21 +2,21 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Text',
-  description: 'Text styled through the text contract tokens.',
+  description: 'Text and headings styled through the text contract tokens.',
   props: [
     {
       name: 'as',
-      type: '"p" | "span" | "strong"',
+      type: '"p" | "span" | "strong" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6"',
       required: false,
       default: '"p"',
-      description: 'Rendered element.',
+      description: 'Rendered element. A heading level sets the outline; it also picks a default size, bold weight and tight leading.',
     },
     {
       name: 'size',
-      type: '"s" | "m" | "l"',
+      type: '"s" | "m" | "l" | "xl" | "2xl"',
       required: false,
-      default: '"m"',
-      description: 'Maps to text.size.2, text.size.3, text.size.4.',
+      default: '"m"; for headings h1 "2xl", h2 "xl", h3 "l", h4 and h5 "m", h6 "s"',
+      description: 'Maps to text.size.2 through text.size.6. Set it to make a heading look larger or smaller than its level.',
     },
     {
       name: 'tone',
@@ -29,7 +29,7 @@ export const meta = {
       name: 'weight',
       type: '"regular" | "medium" | "bold"',
       required: false,
-      default: '"regular"',
+      default: '"regular"; "bold" for headings',
       description: 'Font weight.',
     },
     {

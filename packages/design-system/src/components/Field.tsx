@@ -29,6 +29,7 @@ import {
   type CountStore,
   type FieldContextValue,
 } from './Field.context';
+import { useFieldset } from './Fieldset.context';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
@@ -147,8 +148,8 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 }
 
 function Root({
-  disabled,
-  invalid,
+  disabled: disabledProp,
+  invalid: invalidProp,
   id,
   name,
   className,
@@ -160,6 +161,10 @@ function Root({
   onClick: onClickProp,
   ...props
 }: FieldRootProps) {
+  // Inside a Fieldset.Root, its disabled and invalid apply here too.
+  const fieldset = useFieldset();
+  const disabled = Boolean(disabledProp) || fieldset.disabled;
+  const invalid = Boolean(invalidProp) || fieldset.invalid;
   const autoId = useId();
   const hintId = useId();
   const inputRef = useRef<HTMLElement>(null);
@@ -241,7 +246,22 @@ function Root({
   );
 }
 
-export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password';
+/**
+ * Input types that take a string value. The number, date and time types keep
+ * their native spinner and picker; `value` is the input's string, such as
+ * `"2026-10-07"` or `"14:30"`.
+ */
+export type FieldTextInputType =
+  | 'text'
+  | 'search'
+  | 'email'
+  | 'url'
+  | 'tel'
+  | 'password'
+  | 'number'
+  | 'date'
+  | 'time'
+  | 'datetime-local';
 
 export type FieldTextInputProps = {
   value: string;

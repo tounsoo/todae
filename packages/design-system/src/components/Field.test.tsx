@@ -176,8 +176,28 @@ describe('Field.TextInput', () => {
   it('rejects file at the type level', () => {
     expectTypeOf<FieldTextInputProps['type']>().extract<'file'>().toBeNever();
     expectTypeOf<NonNullable<FieldTextInputProps['type']>>().toEqualTypeOf<
-      'text' | 'search' | 'email' | 'url' | 'tel' | 'password'
+      'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number' | 'date' | 'time' | 'datetime-local'
     >();
+  });
+
+  it.each([
+    ['number', '42', '7'],
+    ['date', '2026-10-07', '2026-12-25'],
+    ['time', '14:30', '09:15'],
+    ['datetime-local', '2026-10-07T14:30', '2026-12-25T09:15'],
+  ] as const)('renders a native %s input with a string value', (type, value, next) => {
+    const onValueChange = vi.fn();
+    const { container } = render(
+      <Field.Root aria-label="When">
+        <Field.TextInput type={type} value={value} onChange={() => undefined} onValueChange={onValueChange} />
+      </Field.Root>,
+    );
+    const input = container.querySelector('input')!;
+    expect(input.type).toBe(type);
+    expect(input.value).toBe(value);
+    expect(input.getAttribute('aria-label')).toBe('When');
+    fireEvent.change(input, { target: { value: next } });
+    expect(onValueChange).toHaveBeenCalledWith(next);
   });
 });
 

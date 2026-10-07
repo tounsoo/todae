@@ -19,7 +19,8 @@
       "bold": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/bold/$value" } }
     },
     "leading": {
-      "default": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } }
+      "default": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
+      "tight": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } }
     }
   }
 }

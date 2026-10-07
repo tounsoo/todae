@@ -47,6 +47,14 @@
       }
     },
     "red": {
+      "100": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.95, 0.03, 25], "alpha": 1 }
+      },
+      "200": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.88, 0.07, 25], "alpha": 1 }
+      },
       "300": {
         "$type": "color",
         "$value": { "colorSpace": "oklch", "components": [0.8, 0.1, 25], "alpha": 1 }
@@ -62,6 +70,80 @@
       "600": {
         "$type": "color",
         "$value": { "colorSpace": "oklch", "components": [0.45, 0.19, 25], "alpha": 1 }
+      },
+      "700": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.4, 0.15, 25], "alpha": 1 }
+      },
+      "900": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.25, 0.07, 25], "alpha": 1 }
+      }
+    },
+    "green": {
+      "100": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.95, 0.04, 150], "alpha": 1 }
+      },
+      "200": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.88, 0.08, 150], "alpha": 1 }
+      },
+      "300": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.82, 0.11, 150], "alpha": 1 }
+      },
+      "700": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.42, 0.11, 150], "alpha": 1 }
+      },
+      "900": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.25, 0.05, 150], "alpha": 1 }
+      }
+    },
+    "amber": {
+      "100": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.95, 0.05, 70], "alpha": 1 }
+      },
+      "200": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.88, 0.09, 70], "alpha": 1 }
+      },
+      "300": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.82, 0.12, 70], "alpha": 1 }
+      },
+      "700": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.42, 0.1, 70], "alpha": 1 }
+      },
+      "900": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.25, 0.05, 70], "alpha": 1 }
+      }
+    },
+    "blue": {
+      "100": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.95, 0.03, 250], "alpha": 1 }
+      },
+      "200": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.88, 0.07, 250], "alpha": 1 }
+      },
+      "300": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.82, 0.1, 250], "alpha": 1 }
+      },
+      "700": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.42, 0.13, 250], "alpha": 1 }
+      },
+      "900": {
+        "$type": "color",
+        "$value": { "colorSpace": "oklch", "components": [0.25, 0.06, 250], "alpha": 1 }
       }
     }
   },
@@ -99,7 +181,8 @@
       "bold": { "$type": "fontWeight", "$value": 700 }
     },
     "leading": {
-      "default": { "$type": "number", "$value": 1.5 }
+      "default": { "$type": "number", "$value": 1.5 },
+      "tight": { "$type": "number", "$value": 1.25 }
     }
   },
   "motion": {
