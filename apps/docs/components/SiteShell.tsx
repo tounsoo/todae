@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import '@tounsoo/todae/todae.css';
 import { localizePath, type Locale } from '../lib/i18n/config';
+import { LanguageAlternates } from './LanguageAlternates';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Providers } from './Providers';
 import { SiteNav } from './SiteNav';
@@ -20,6 +21,7 @@ export function SiteShell({
   return (
     <html lang={locale}>
       <body>
+        <LanguageAlternates />
         <Providers>
           <header className="site-header">
             <div className="site-header-top">

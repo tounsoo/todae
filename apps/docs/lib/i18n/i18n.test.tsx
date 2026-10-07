@@ -6,6 +6,7 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HomeContent } from '../../components/HomeContent';
 import { Example } from '../../components/Example';
+import { LanguageAlternates } from '../../components/LanguageAlternates';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { LocalizedLink } from '../../components/LocalizedLink';
 import { SiteNav } from '../../components/SiteNav';
@@ -192,6 +193,18 @@ describe('docs locales', () => {
     // <a> or next/link's <Link> with href="/x", href={'/x'} or href={`/x`}.
     const sameSite = /<(a|Link)\s[^>]*href=\{?["'`]\/(?!\/)/;
     expect(files.filter((file) => sameSite.test(readFileSync(file, 'utf8')))).toEqual([]);
+  });
+
+  it('pairs a page with its other languages for search engines', () => {
+    path.current = '/ko/tokens';
+    render(<LanguageAlternates />);
+    // React hoists these into the document head.
+    const links = [...document.head.querySelectorAll('link[rel="alternate"]')];
+    expect(links.map((link) => [link.getAttribute('hreflang'), link.getAttribute('href')])).toEqual([
+      ['en', 'https://todae-rho.vercel.app/tokens'],
+      ['ko', 'https://todae-rho.vercel.app/ko/tokens'],
+      ['x-default', 'https://todae-rho.vercel.app/tokens'],
+    ]);
   });
 
   it('names examples in the page language and marks their English demo copy', () => {
