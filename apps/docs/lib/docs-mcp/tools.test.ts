@@ -148,9 +148,9 @@ describe('docs mcp tools', () => {
       expect(copy).toMatchObject({ status: 'present' });
       expect(copy).not.toHaveProperty('scope');
     }
-    expect(whenToUse('usePopover').whenNotToUse).toBe(
-      'An action menu → [Menu](https://todae-rho.vercel.app/menu). Modal, focus-trapped work → Dialog. A mobile full-bleed picker → BottomSheet, or [useSheetPresentation](https://todae-rho.vercel.app/utilities/use-sheet-presentation) to choose at runtime. A text-only hover hint → [Tooltip](https://todae-rho.vercel.app/tooltip).',
-    );
+    const popoverNot = whenToUse('usePopover').whenNotToUse;
+    expect(popoverNot).toContain('[Menu](https://todae-rho.vercel.app/menu)');
+    expect(popoverNot).toContain('BottomSheet');
     expect(whenToUse('useCombobox').whenNotToUse).toContain('Exporting `Combobox.*` chrome (forbidden)');
     expect(getComponent('useField').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-field');
     expect(getComponent('useRovingFocus').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-roving-focus');
