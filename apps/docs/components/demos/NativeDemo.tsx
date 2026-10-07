@@ -11,6 +11,18 @@ export function LinkInText() {
   );
 }
 
+export function LinkCurrent() {
+  return (
+    <nav aria-label="Settings" style={{ display: 'flex', gap: 'var(--todae-space-4)' }}>
+      <a href="#profile">Profile</a>
+      <a href="#billing" aria-current="page">
+        Billing
+      </a>
+      <a href="#team">Team</a>
+    </nav>
+  );
+}
+
 export function DisclosureSingle() {
   return (
     <details>

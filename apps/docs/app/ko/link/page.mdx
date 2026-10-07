@@ -1,4 +1,4 @@
-import { LinkInText } from '../../../components/demos/NativeDemo';
+import { LinkCurrent, LinkInText } from '../../../components/demos/NativeDemo';
 
 # Link
 
@@ -15,7 +15,15 @@ import { LinkInText } from '../../../components/demos/NativeDemo';
 <NextLink href="/billing">Billing</NextLink>
 ```
 
-모든 링크의 스타일은 `link.fg.*`, `link.decoration.*`, `link.ring.focus` 토큰으로 바꿉니다.
+모든 링크의 스타일은 `link.fg.*`, `link.decoration.*`, `link.ring.focus` 토큰으로 바꿉니다. 현재 링크의 스타일은 `link.fg.current`, `link.decoration.current`, `link.decoration.current-thickness` 토큰이 정합니다.
+
+## 현재 페이지
+
+지금 있는 페이지로 가는 링크에는 `aria-current="page"`를, 또는 `step` 같은 다른 `aria-current` 값을 붙입니다. 밑줄이 두꺼워져서 호버하지 않아도 눈에 띕니다. 속성은 라우터가 붙입니다. Next.js와 React Router 모두 이 속성을 넘길 수 있고, React Router의 `NavLink`는 알아서 붙입니다.
+
+<Example>
+  <LinkCurrent />
+</Example>
 
 ## 언제 쓰나요
 

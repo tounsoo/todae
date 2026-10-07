@@ -1,4 +1,4 @@
-import { LinkInText } from '../../../components/demos/NativeDemo';
+import { LinkCurrent, LinkInText } from '../../../components/demos/NativeDemo';
 
 # Link
 
@@ -15,7 +15,15 @@ The rules sit in `:where()`, so they add no specificity, and in `todae.base`, un
 <NextLink href="/billing">Billing</NextLink>
 ```
 
-Restyle every link through the `link.fg.*`, `link.decoration.*` and `link.ring.focus` tokens.
+Restyle every link through the `link.fg.*`, `link.decoration.*` and `link.ring.focus` tokens. The `link.fg.current`, `link.decoration.current` and `link.decoration.current-thickness` tokens style the current link.
+
+## Current page
+
+Mark the link to the page you are on with `aria-current="page"`, or another `aria-current` value such as `step`. Its underline turns thicker, so it stands out without a hover. Your router sets the attribute: Next.js and React Router both let you pass it, and React Router's `NavLink` adds it for you.
+
+<Example>
+  <LinkCurrent />
+</Example>
 
 ## When to use
 

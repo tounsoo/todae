@@ -3719,6 +3719,24 @@
       "context": null
     },
     {
+      "path": "link.decoration.current",
+      "type": "color",
+      "cssVar": "--todae-link-decoration-current",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "link.decoration.current-thickness",
+      "type": "dimension",
+      "cssVar": "--todae-link-decoration-current-thickness",
+      "cssValue": "2px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "link.decoration.default",
       "type": "color",
       "cssVar": "--todae-link-decoration-default",
@@ -3751,6 +3769,15 @@
       "cssVar": "--todae-link-decoration-thickness",
       "cssValue": "1px",
       "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "link.fg.current",
+      "type": "color",
+      "cssVar": "--todae-link-fg-current",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
       "layer": "contract",
       "context": null
     },
