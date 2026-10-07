@@ -7,7 +7,7 @@ import styles from './Breadcrumbs.module.css';
  * `aria-label` or `aria-labelledby`; that default is English.
  */
 export type BreadcrumbsRootProps = {
-  /** Text drawn between items. Screen readers skip it. */
+  /** Text drawn between items, "/" by default. Screen readers skip it. */
   separator?: string;
 } & ComponentPropsWithRef<'nav'>;
 
@@ -19,8 +19,16 @@ export type BreadcrumbsItemProps = {
   current?: boolean;
 } & ComponentPropsWithRef<'li'>;
 
+/** A CSS string literal for `text`: quotes, backslashes and control characters escaped. */
+function cssString(text: string): string {
+  const escaped = text.replace(/[\\"\u0000-\u001f\u007f]/g, (char) =>
+    char === '\\' || char === '"' ? `\\${char}` : `\\${char.charCodeAt(0).toString(16)} `,
+  );
+  return `"${escaped}"`;
+}
+
 function Root({
-  separator = '/',
+  separator,
   'aria-label': ariaLabel,
   'aria-labelledby': labelledby,
   className,
@@ -31,10 +39,10 @@ function Root({
   return (
     <nav
       {...props}
-      aria-label={ariaLabel ?? (labelledby ? undefined : 'Breadcrumb')}
+      aria-label={ariaLabel || (labelledby ? undefined : 'Breadcrumb')}
       aria-labelledby={labelledby}
       className={cx(styles.root, className)}
-      style={{ '--todae-breadcrumbs-glyph': JSON.stringify(separator), ...style } as CSSProperties}
+      style={separator === undefined ? style : ({ '--todae-breadcrumbs-glyph': cssString(separator), ...style } as CSSProperties)}
     >
       <ol className={styles.list}>{children}</ol>
     </nav>

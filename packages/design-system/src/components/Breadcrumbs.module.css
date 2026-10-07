@@ -23,7 +23,7 @@
   /* The glyph sits before every item but the first. The text after the slash
      is its alternative text: empty, so screen readers skip it. */
   .item + .item::before {
-    content: var(--todae-breadcrumbs-glyph) / '';
+    content: var(--todae-breadcrumbs-glyph, '/') / '';
     color: var(--todae-breadcrumbs-separator-fg);
   }
 

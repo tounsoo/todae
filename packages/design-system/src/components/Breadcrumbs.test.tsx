@@ -49,9 +49,21 @@ describe('Breadcrumbs', () => {
     expect(nav.hasAttribute('aria-label')).toBe(false);
   });
 
-  it('sets the separator as a CSS string', () => {
-    render(<Trail separator="›" />);
-    const nav = screen.getByRole('navigation');
-    expect(nav.style.getPropertyValue('--todae-breadcrumbs-glyph')).toBe('"›"');
+  it('sets a separator as a CSS string, escaping what CSS reads differently', () => {
+    const { unmount } = render(<Trail separator="›" />);
+    expect(screen.getByRole('navigation').style.getPropertyValue('--todae-breadcrumbs-glyph')).toBe('"›"');
+    unmount();
+    render(<Trail separator={'a"\\\n'} />);
+    expect(screen.getByRole('navigation').style.getPropertyValue('--todae-breadcrumbs-glyph')).toBe('"a\\"\\\\\\a "');
+  });
+
+  it('leaves the default glyph to the stylesheet, so a theme can change it', () => {
+    render(<Trail />);
+    expect(screen.getByRole('navigation').style.getPropertyValue('--todae-breadcrumbs-glyph')).toBe('');
+  });
+
+  it('keeps the default name when the label passed is empty', () => {
+    render(<Trail aria-label="" />);
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toBeTruthy();
   });
 });
