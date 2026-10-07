@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { act, cleanup, render, screen } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HomeContent } from '../../components/HomeContent';
 import { Example } from '../../components/Example';
@@ -10,12 +11,13 @@ import { LanguageAlternates } from '../../components/LanguageAlternates';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { LocalizedLink } from '../../components/LocalizedLink';
 import { SiteNav } from '../../components/SiteNav';
+import { SiteShell } from '../../components/SiteShell';
 import { SITE_GROUPS } from '../../components/siteGroups';
 import { UntranslatedPage } from '../../components/UntranslatedPage';
 import { LOCALES } from './config';
 import { DICTIONARIES } from './dictionaries';
 import { ENGLISH_PAGES } from './englishPages';
-import { PAGE_FILES, untranslatedSlugs } from './pages';
+import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
 
 const path = vi.hoisted(() => ({ current: '/ko/button' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
@@ -215,6 +217,14 @@ describe('docs locales', () => {
     path.current = '/ko/recipes/combobox';
     render(<LanguageAlternates untranslated={{ ko: ['tokens'] }} />);
     expect([...document.head.querySelectorAll('link[rel="alternate"]')].map((link) => link.getAttribute('hreflang'))).toEqual(['en', 'ko', 'x-default']);
+  });
+
+  it('gives the shell each locale’s untranslated pages, and no alternates on a 404', () => {
+    expect(untranslatedByLocale()).toEqual({ ko: untranslatedSlugs('ko') });
+    path.current = '/ko/tokens';
+    expect(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>)).toContain('rel="alternate" hrefLang="ko"');
+    path.current = '/_not-found';
+    expect(renderToStaticMarkup(<SiteShell locale="en" notFound>x</SiteShell>)).not.toContain('rel="alternate"');
   });
 
   it('names examples in the page language and marks their English demo copy', () => {

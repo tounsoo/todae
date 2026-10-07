@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Locale } from './config';
+import { DEFAULT_LOCALE, LOCALES, type Locale } from './config';
 import { ENGLISH_PAGES } from './englishPages';
 
 // next.config pageExtensions.
@@ -16,4 +16,12 @@ export function untranslatedSlugs(locale: Locale, appDir = join(process.cwd(), '
   // A wrong working directory would make every page look untranslated, and the fallback would shadow real translations.
   if (!existsSync(join(appDir, locale))) throw new Error(`No ${locale} pages at ${join(appDir, locale)}; build the docs from apps/docs`);
   return Object.keys(ENGLISH_PAGES).filter((slug) => !isTranslated(locale, slug, appDir));
+}
+
+let byLocale: Partial<Record<Locale, string[]>> | undefined;
+
+/** `untranslatedSlugs` for every non-default locale, read once per build. */
+export function untranslatedByLocale(): Partial<Record<Locale, string[]>> {
+  byLocale ??= Object.fromEntries(LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map((locale) => [locale, untranslatedSlugs(locale)]));
+  return byLocale;
 }
