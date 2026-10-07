@@ -5,7 +5,17 @@ export function useFocusRestore(
   {
     restoreTo,
     containerRef,
-  }: { restoreTo?: RefObject<HTMLElement | null>; containerRef?: RefObject<HTMLElement | null> } = {},
+    nativeReturn = false,
+  }: {
+    restoreTo?: RefObject<HTMLElement | null>;
+    containerRef?: RefObject<HTMLElement | null>;
+    /**
+     * The overlay closes a modal <dialog>, which returns focus to the opener by
+     * itself. That return still gives way to restoreTo; focus the person put
+     * on the opener in any other overlay is kept.
+     */
+    nativeReturn?: boolean;
+  } = {},
 ): void {
   const prior = useRef<HTMLElement | null>(null);
   const wasActive = useRef(false);
@@ -24,18 +34,16 @@ export function useFocusRestore(
     const container = containerRef?.current;
     queueMicrotask(() => {
       const moved = document.activeElement;
-      // Focus the browser itself sent back to the opener, as a closing
-      // <dialog> does, still gives way to restoreTo.
       if (
         moved instanceof HTMLElement &&
         moved !== document.body &&
         moved !== fallback &&
-        moved !== prior.current &&
+        !(nativeReturn && moved === prior.current) &&
         (!container || !container.contains(moved))
       ) {
         return;
       }
       fallback?.focus();
     });
-  }, [active, containerRef, restoreTo]);
+  }, [active, containerRef, restoreTo, nativeReturn]);
 }

@@ -13,8 +13,16 @@ function Lock({ active }: { active: boolean }) {
   return null;
 }
 
-function Restore({ active, restore }: { active: boolean; restore?: { current: HTMLElement | null } }) {
-  useFocusRestore(active, { restoreTo: restore });
+function Restore({
+  active,
+  restore,
+  nativeReturn,
+}: {
+  active: boolean;
+  restore?: { current: HTMLElement | null };
+  nativeReturn?: boolean;
+}) {
+  useFocusRestore(active, { restoreTo: restore, nativeReturn });
   return active ? <button type="button">inside</button> : null;
 }
 
@@ -48,6 +56,24 @@ describe('useFocusRestore', () => {
     await Promise.resolve();
     expect(document.activeElement).toBe(trigger);
     trigger.remove();
+  });
+
+  it('keeps focus the person put on the opener, unless a closing dialog put it there', async () => {
+    const opener = document.createElement('button');
+    const restore = { current: document.createElement('button') };
+    document.body.append(opener, restore.current);
+    for (const nativeReturn of [false, true]) {
+      opener.focus();
+      const { rerender, unmount } = render(<Restore active restore={restore} nativeReturn={nativeReturn} />);
+      screen.getByText('inside').focus();
+      opener.focus();
+      rerender(<Restore active={false} restore={restore} nativeReturn={nativeReturn} />);
+      await Promise.resolve();
+      expect(document.activeElement).toBe(nativeReturn ? restore.current : opener);
+      unmount();
+    }
+    opener.remove();
+    restore.current.remove();
   });
 
   it('does not move focus when it mounts closed', async () => {

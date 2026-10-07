@@ -157,7 +157,7 @@ function DialogRoot({
   useScrollLock(present);
   // Records the focus to return to, before showModal moves it. Keyed on
   // present: the page behind stays inert until the exit motion ends.
-  useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: dialogRef });
+  useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: dialogRef, nativeReturn: true });
   const closeOnFormSubmit = useModalDialog({
     dialogRef,
     node: dialogNode,
@@ -175,6 +175,7 @@ function DialogRoot({
     <DialogContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
       <dialog
         {...props}
+        {...{ closedby: dismissOnEscape ? 'closerequest' : 'none' }}
         aria-labelledby={props['aria-labelledby'] ?? labelledBy}
         aria-describedby={props['aria-describedby'] ?? describedBy}
         tabIndex={props.tabIndex ?? -1}

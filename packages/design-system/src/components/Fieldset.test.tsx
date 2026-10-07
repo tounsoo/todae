@@ -152,6 +152,24 @@ describe('Fieldset', () => {
     expect(toggle.closest('label')!.hasAttribute('data-disabled')).toBe(true);
   });
 
+  it('moves the exemption to a legend added before the first one', () => {
+    function Form({ intro }: { intro: boolean }) {
+      return (
+        <Fieldset.Root disabled>
+          {intro ? <Fieldset.Legend>Intro</Fieldset.Legend> : null}
+          <Fieldset.Legend>
+            <Switch>Toggle</Switch>
+          </Fieldset.Legend>
+        </Fieldset.Root>
+      );
+    }
+    const { rerender } = render(<Form intro={false} />);
+    const label = () => screen.getByRole('switch').closest('label')!;
+    expect(label().hasAttribute('data-disabled')).toBe(false);
+    rerender(<Form intro />);
+    expect(label().hasAttribute('data-disabled')).toBe(true);
+  });
+
   it('leaves controls outside a fieldset alone', () => {
     render(<Checkbox>Alone</Checkbox>);
     const box = screen.getByRole('checkbox');

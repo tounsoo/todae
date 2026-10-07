@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { useRef } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { dropModal, pushModal } from './modalStack';
 import { useEscapeKey } from './useEscapeKey';
 
 afterEach(cleanup);
@@ -103,6 +104,33 @@ describe('useEscapeKey', () => {
     (getByRole('dialog', { hidden: true }) as HTMLDialogElement).showModal();
     fireEvent.keyDown(document.body, { key: 'Escape' });
     expect(behind).not.toHaveBeenCalled();
+  });
+
+  it('with focus on the body, gives the key to the modal Todae opened last', () => {
+    function Element({ onEscape }: { onEscape: () => void }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useEscapeKey(true, true, onEscape, ref);
+      return <div ref={ref} />;
+    }
+    const inLower = vi.fn();
+    const { getByLabelText } = render(
+      <>
+        <dialog aria-label="lower">
+          <Element onEscape={inLower} />
+        </dialog>
+        <dialog aria-label="upper" />
+      </>,
+    );
+    const lower = getByLabelText('lower') as HTMLDialogElement;
+    const upper = getByLabelText('upper') as HTMLDialogElement;
+    lower.showModal();
+    pushModal(lower);
+    upper.showModal();
+    pushModal(upper);
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(inLower).not.toHaveBeenCalled();
+    dropModal(upper);
+    dropModal(lower);
   });
 
   it('calls the latest handler without re-subscribing', () => {

@@ -896,6 +896,18 @@ describe('Field.Counter', () => {
     expect(fieldCss).toContain('padding-right: var(--todae-field-gap)');
   });
 
+  it('shows no limit for number and date inputs, which browsers do not cap', () => {
+    const { container } = render(
+      <Field.Root>
+        <Field.TextInput type="number" value="12345" maxLength={4} onChange={() => undefined} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    expect(container.textContent).not.toContain('/ 4');
+    expect(container.textContent).not.toContain('Up to 4 characters');
+    expect(screen.getByRole('spinbutton').hasAttribute('aria-describedby')).toBe(false);
+  });
+
   it('keeps the hint hidden when the counter is not a shell child', () => {
     const { container } = render(
       <Field.Root>

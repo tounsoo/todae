@@ -261,6 +261,9 @@ export type FieldTextInputType =
   | 'time'
   | 'datetime-local';
 
+// Browsers ignore maxLength on these, so no limit is shown or announced.
+const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = new Set(['number', 'date', 'time', 'datetime-local']);
+
 export type FieldTextInputProps = {
   value: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -283,7 +286,7 @@ function TextInput({
 }: FieldTextInputProps) {
   const ctx = useFieldContext();
   const controlRef = useComposedRefs(useControlSetter(ctx.inputRef), ref);
-  const limit = typeof maxLength === 'number' ? maxLength : undefined;
+  const limit = typeof maxLength === 'number' && !NO_LENGTH_LIMIT.has(type) ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
   return (
     <input

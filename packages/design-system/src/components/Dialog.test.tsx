@@ -154,6 +154,40 @@ describe('Dialog', () => {
     shut.mockRestore();
   });
 
+  it('turns the native close request off when dismissOnEscape is false', () => {
+    render(
+      <Dialog.Root open onOpenChange={() => undefined} dismissOnEscape={false}>
+        <Dialog.Title>Save</Dialog.Title>
+      </Dialog.Root>,
+    );
+    expect(document.querySelector('dialog')!.getAttribute('closedby')).toBe('none');
+  });
+
+  it('does not resume focus in a modal written inside it', () => {
+    const showModal = HTMLDialogElement.prototype.showModal;
+    const spy = vi.spyOn(HTMLDialogElement.prototype, 'showModal').mockImplementation(function (this: HTMLDialogElement) {
+      showModal.call(this);
+      this.querySelector('input')?.focus();
+    });
+    render(
+      <Dialog.Root open onOpenChange={() => undefined}>
+        <Dialog.Title>Save</Dialog.Title>
+        <input aria-label="outer" />
+        <dialog open>
+          <input aria-label="inner" />
+        </dialog>
+      </Dialog.Root>,
+    );
+    const outer = document.querySelector('dialog')!;
+    screen.getByLabelText('inner').focus();
+    act(() => {
+      (document.activeElement as HTMLElement).blur();
+      outer.close();
+    });
+    expect(document.activeElement).toBe(screen.getByLabelText('outer'));
+    spy.mockRestore();
+  });
+
   it('shows again where the person was after a native close while open', () => {
     // As in browsers: showModal focuses the first focusable element, and close
     // sends focus back out of the element.

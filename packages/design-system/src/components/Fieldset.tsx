@@ -1,4 +1,4 @@
-import { useCallback, useContext, useMemo, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { useContext, useLayoutEffect, useMemo, useRef, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { FieldsetContext, FieldsetLegendContext, useFieldsetState } from './Fieldset.context';
 import { cx, useComposedRefs } from './props';
 import styles from './Fieldset.module.css';
@@ -47,12 +47,16 @@ function Legend({ className, ref, ...props }: FieldsetLegendProps) {
   const exempt = useContext(FieldsetLegendContext);
   const fieldset = useContext(FieldsetContext);
   const [rendered, setRendered] = useState(true);
-  const measure = useCallback((node: HTMLLegendElement | null) => {
-    if (!node) return;
-    const parent = node.parentElement;
+  const legendRef = useRef<HTMLLegendElement>(null);
+  const refs = useComposedRefs(legendRef, ref);
+  // Every commit: a legend added before this one takes the exemption from it.
+  // The same value bails out, so this settles after one pass.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => {
+    const node = legendRef.current;
+    const parent = node?.parentElement;
     setRendered(parent?.tagName === 'FIELDSET' && parent.querySelector(':scope > legend') === node);
-  }, []);
-  const refs = useComposedRefs(measure, ref);
+  });
   return (
     <FieldsetContext.Provider value={rendered ? exempt : fieldset}>
       <legend {...props} ref={refs} className={cx(styles.legend, className)} />

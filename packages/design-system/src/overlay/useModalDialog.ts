@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
+import { dropModal, pushModal } from './modalStack';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
 export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
@@ -60,6 +61,7 @@ export function useModalDialog({
     if (present && open && !el.open) {
       const resume = lastFocus.current;
       el.showModal();
+      pushModal(el);
       // Rendered in place, a modal inside a hidden container makes the page
       // inert while showing nothing.
       if (process.env.NODE_ENV !== 'production' && el.checkVisibility?.() === false) {
@@ -73,6 +75,18 @@ export function useModalDialog({
     }
     if (!present && el.open) el.close();
   }, [dialogRef, present, open, node, nativeCloses]);
+
+  // Leaves the modal stack on any close and when the element goes away.
+  useLayoutEffect(() => {
+    const el = node;
+    if (!el) return;
+    const drop = () => dropModal(el);
+    el.addEventListener('close', drop);
+    return () => {
+      el.removeEventListener('close', drop);
+      drop();
+    };
+  }, [node]);
 
   const cancelledAt = useRef(-Infinity);
   useLayoutEffect(() => {
@@ -96,7 +110,9 @@ export function useModalDialog({
       latest.current.onOpenChange(false, 'native');
     }
     function onFocusIn(event: FocusEvent) {
-      if (event.target instanceof HTMLElement) lastFocus.current = event.target;
+      // Only this element's own controls, not those of a modal written inside it.
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest('dialog') === el) lastFocus.current = target;
     }
     el.addEventListener('cancel', onCancel);
     el.addEventListener('close', onClose);
