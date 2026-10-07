@@ -222,12 +222,25 @@ describe('BottomSheet', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
-  it('closes on a press and click on the backdrop, not on the sheet itself', () => {
+  it('ignores a backdrop tap before the enter motion starts', async () => {
+    const onOpenChange = vi.fn();
+    render(<BottomSheet.Root open onOpenChange={onOpenChange} aria-label="s" />);
+    const sheet = screen.getByRole('dialog');
+    // Still at translateY(100%): below the viewport.
+    sheet.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 800, width: 800, height: 400 });
+    fireEvent.pointerDown(sheet, { clientX: 10, clientY: 900 });
+    fireEvent.click(sheet, { clientX: 10, clientY: 900 });
+    expect(onOpenChange).not.toHaveBeenCalled();
+    await waitFor(() => expect(sheet.hasAttribute('data-entered')).toBe(true));
+  });
+
+  it('closes on a press and click on the backdrop, not on the sheet itself', async () => {
     const onOpenChange = vi.fn();
     const onClick = vi.fn();
     render(<BottomSheet.Root open onOpenChange={onOpenChange} onClick={onClick} aria-label="s" />);
     const sheet = screen.getByRole('dialog');
     sheet.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 400, width: 800, height: 400 });
+    await waitFor(() => expect(sheet.hasAttribute('data-entered')).toBe(true));
     // On the sheet's own padding: the target is the dialog, but inside its box.
     fireEvent.pointerDown(sheet, { clientX: 10, clientY: 500 });
     fireEvent.click(sheet, { clientX: 10, clientY: 500 });
@@ -242,13 +255,14 @@ describe('BottomSheet', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false, 'scrim');
   });
 
-  it('keeps the backdrop open when dismissOnScrim is false or the consumer prevents the click', () => {
+  it('keeps the backdrop open when dismissOnScrim is false or the consumer prevents the click', async () => {
     const onOpenChange = vi.fn();
     const { rerender } = render(
       <BottomSheet.Root open onOpenChange={onOpenChange} dismissOnScrim={false} aria-label="s" />,
     );
     const sheet = screen.getByRole('dialog');
     sheet.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 400, width: 800, height: 400 });
+    await waitFor(() => expect(sheet.hasAttribute('data-entered')).toBe(true));
     fireEvent.pointerDown(sheet, { clientX: 10, clientY: 100 });
     fireEvent.click(sheet, { clientX: 10, clientY: 100 });
     rerender(

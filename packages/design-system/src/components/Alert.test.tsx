@@ -72,7 +72,21 @@ describe('Alert', () => {
       </Alert.Root>,
     );
     expect(screen.getByRole('button', { name: 'Got it' }).hasAttribute('aria-label')).toBe(false);
-    expect(screen.getByRole('button', { name: 'Dismiss' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Hide notice' }).hasAttribute('aria-label')).toBe(false);
+  });
+
+  it('reads the rendered text, so a component that renders a label names the button', () => {
+    function Translated() {
+      return <>닫기</>;
+    }
+    render(
+      <Alert.Root>
+        <Alert.Close>
+          <Translated />
+        </Alert.Close>
+      </Alert.Root>,
+    );
+    expect(screen.getByRole('button', { name: '닫기' }).hasAttribute('aria-label')).toBe(false);
   });
 
   it('lets the close button take its own label', () => {

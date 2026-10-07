@@ -338,7 +338,9 @@ function BottomSheetRoot({
         onClick={composeHandlers(onClick, (event) => {
           const fromBackdrop = pressOnBackdrop.current && onBackdrop(sheetRef.current, event);
           pressOnBackdrop.current = false;
-          if (fromBackdrop && dismissOnScrim && open) requestClose('scrim');
+          // Not before the enter motion starts: the sheet is still below the
+          // viewport, so its box would put any tap on the backdrop.
+          if (fromBackdrop && dismissOnScrim && open && entered) requestClose('scrim');
         })}
       >
         {grabbers > 0 ? null : <GrabberHandle />}

@@ -143,11 +143,13 @@ for (const harness of [dialogHarness, sheetHarness]) {
       expect(h.getSurface()).not.toBeNull();
     });
 
-    it('dismisses on scrim and ignores panel clicks', () => {
+    it('dismisses on scrim and ignores panel clicks', async () => {
       const onOpenChange = vi.fn();
       const h = harness();
       h.renderSurface(true, { onOpenChange });
       const surface = h.getSurface();
+      // A sheet takes scrim taps once its enter motion has started.
+      await waitFor(() => expect(surface.hasAttribute('data-entered')).toBe(true));
       h.clickBackdrop(surface);
       expect(onOpenChange).toHaveBeenCalledWith(false, h.reasonBackdrop);
       cleanup();

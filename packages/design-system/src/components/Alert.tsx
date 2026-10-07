@@ -1,6 +1,6 @@
-import type { ComponentPropsWithRef, ReactNode } from 'react';
+import { isValidElement, useLayoutEffect, useRef, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { Button, type ButtonRootProps } from './Button';
-import { cx } from './props';
+import { cx, useComposedRefs } from './props';
 import styles from './Alert.module.css';
 
 export type AlertTone = 'info' | 'success' | 'warning' | 'critical';
@@ -51,20 +51,34 @@ function Actions({ className, ...props }: AlertActionsProps) {
   return <div {...props} className={cx(styles.actions, className)} />;
 }
 
+const WORD = /[\p{L}\p{N}]/u;
+
 /** Text with a letter or digit names the button itself; a symbol such as × or an icon does not. */
 function hasWords(children: ReactNode): boolean {
-  if (typeof children === 'string' || typeof children === 'number') return /[\p{L}\p{N}]/u.test(String(children));
-  return Array.isArray(children) && children.some(hasWords);
+  if (typeof children === 'string' || typeof children === 'number') return WORD.test(String(children));
+  if (Array.isArray(children)) return children.some(hasWords);
+  if (isValidElement<{ children?: ReactNode }>(children)) return hasWords(children.props.children);
+  return false;
 }
 
 /**
  * A ghost Button.Root. The alert has no open state: remove it in `onClick`.
  * Named "Dismiss" unless its own text names it, so a visible label stays its name.
  */
-function Close({ 'aria-label': ariaLabel, className, children, ...props }: AlertCloseProps) {
-  const label = ariaLabel ?? (hasWords(children) ? undefined : 'Dismiss');
+function Close({ 'aria-label': ariaLabel, className, children, ref, ...props }: AlertCloseProps) {
+  // The rendered text decides, so a component that renders text (such as a
+  // translation) names the button too. The children are a first guess for SSR.
+  const [worded, setWorded] = useState(() => hasWords(children));
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const refs = useComposedRefs(buttonRef, ref);
+  // Every commit, as the text can change; the same value bails out.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => {
+    setWorded(WORD.test(buttonRef.current?.textContent ?? ''));
+  });
+  const label = ariaLabel ?? (worded ? undefined : 'Dismiss');
   return (
-    <Button.Root variant="ghost" aria-label={label} {...props} className={cx(styles.close, className)}>
+    <Button.Root variant="ghost" aria-label={label} {...props} ref={refs} className={cx(styles.close, className)}>
       {children}
     </Button.Root>
   );
