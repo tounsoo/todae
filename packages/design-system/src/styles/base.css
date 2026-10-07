@@ -78,7 +78,7 @@
   }
 
   /* Table. Native <table> semantics stay as they are; Todae only sets the
-     rules, padding and header shade. A data grid is out of scope. */
+     rules, padding and header weight. A data grid is out of scope. */
   :where(table) {
     inline-size: 100%;
     border-collapse: collapse;
