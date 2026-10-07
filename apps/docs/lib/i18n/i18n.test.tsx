@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -44,10 +45,19 @@ describe('docs locales', () => {
   });
 
   it('falls back only where there is no translation', () => {
-    const fallback = untranslatedSlugs('ko');
-    expect(fallback).toContain('button');
-    expect(fallback).not.toContain('guides/build-on-todae');
-    expect(fallback.length + slugs(join(APP, 'ko')).length).toBe(Object.keys(ENGLISH_PAGES).length);
+    expect(untranslatedSlugs('ko').length + slugs(join(APP, 'ko')).length).toBe(Object.keys(ENGLISH_PAGES).length);
+    // A locale with one translated page falls back for the rest.
+    const app = mkdtempSync(join(tmpdir(), 'todae-i18n-'));
+    try {
+      mkdirSync(join(app, 'ko', 'guides', 'build-on-todae'), { recursive: true });
+      writeFileSync(join(app, 'ko', 'guides', 'build-on-todae', 'page.mdx'), '# Guide\n');
+      const fallback = untranslatedSlugs('ko', app);
+      expect(fallback).toContain('button');
+      expect(fallback).not.toContain('guides/build-on-todae');
+      expect(fallback).toHaveLength(Object.keys(ENGLISH_PAGES).length - 1);
+    } finally {
+      rmSync(app, { recursive: true, force: true });
+    }
   });
 
   it('redirects old URLs in every locale', () => {

@@ -12,6 +12,11 @@ export default defineConfig({
       { find: /^@tounsoo\/todae$/, replacement: src('index.ts') },
     ],
   },
+  // Pre-bundle what demos import, so a cold cache does not re-optimize and reload mid-run,
+  // which can leave two React copies and fail hooks with a null dispatcher.
+  optimizeDeps: {
+    include: ['react', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom', 'react-dom/client', 'next/navigation'],
+  },
   css: { modules: { generateScopedName: 'todae_[local]_[hash:hex:6]' } },
   test: {
     include: ['**/*.browser.test.tsx'],

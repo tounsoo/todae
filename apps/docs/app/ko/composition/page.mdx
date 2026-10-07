@@ -1,0 +1,117 @@
+import { FieldPartsAllowed, SiblingsAllowed } from '../../../components/demos/CompositionDemo';
+
+# 조합
+
+공개된 단계는 컴파운드, 그다음 레시피입니다. 레시피는 이 문서에 있습니다. `Combobox.*` export가 아닙니다.
+
+## 컴파운드
+
+공개된 형제 컴포넌트입니다. `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [Radio](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, `BottomSheet`입니다. 나란히 놓아 조합하세요. 네임스페이스를 중첩하지 마세요. 컴파운드 루트 하나에는 인터랙티브 역할 하나만 둡니다.
+
+`Field.Icon`, `Field.Affix`, `Button.Icon`은 컴파운드 파트입니다. 따로 떠다니는 원자가 아닙니다. 공유되는 Icon, Affix, Shell은 내부에 있습니다. 공개된 단계가 아닙니다.
+
+`Field.Root`는 외형만 담당합니다. [Label](/label)은 형제 컴포넌트입니다. 장식 요소는 DOM 순서를 따릅니다. `side` prop은 없습니다.
+
+<Example block>
+  <FieldPartsAllowed />
+</Example>
+
+Field와 Popover는 나란히 놓입니다. 어느 쪽도 다른 쪽을 감싸지 않습니다.
+
+<Example>
+  <SiblingsAllowed />
+</Example>
+
+Field 셸은 버튼이 아닙니다. 이런 트리는 절대 허용되지 않습니다.
+
+```tsx
+<Field.Root role="button" onClick={onOpen}>
+  <Field.TextInput value={q} onChange={(event) => setQ(event.target.value)} />
+</Field.Root>
+```
+
+## 레시피
+
+컴파운드와 훅을 조합한 작동 예시입니다. Combobox는 패키지 네임스페이스가 아니라 레시피입니다. 아래 블록은 정적입니다. 실행되지 않습니다. 동작은 훅이 맡습니다. 외형은 컴파운드가 맡습니다. 제공되는 Trigger 편의 컴포넌트는 없습니다.
+
+데스크톱(`presentation="popover"`). 닫힌 컨트롤은 실제 Field입니다. `getAnchorProps`를 `Field.Root`에 펼치세요. 목록은 `Popover.Root` 안에 있습니다. 작동하는 레시피는 [Combobox](/recipes/combobox)에 있습니다.
+
+```tsx
+const cb = useCombobox({ presentation: 'popover' })
+
+<div className="labelled-field">
+	<Label htmlFor={cb.ids.input}>Tags</Label>
+	<Field.Root {...cb.getAnchorProps()}>
+		<Field.Icon><Search /></Field.Icon>
+		<Field.ChipInput {...cb.getChipInputProps()} />
+		<Field.Icon><ChevronDown /></Field.Icon>
+	</Field.Root>
+</div>
+<Popover.Root {...cb.getPopoverProps()}>
+	<OptionList.Root {...cb.getListboxProps()}>...</OptionList.Root>
+</Popover.Root>
+```
+
+트리거가 `getTriggerProps`가 표시하는 요소가 아닐 때는 `anchorRef`가 CSS 앵커입니다. Combobox는 `Field.Root`에 `getAnchorProps`를 씁니다. [usePopover](/utilities/use-popover)의 `getTriggerProps`를 함께 펼치지 마세요.
+
+터치(`presentation="sheet"`). 닫힌 컨트롤은 `Button.Root`입니다. 검색 Field는 시트 안에 있습니다.
+
+```tsx
+const cb = useCombobox({ presentation: 'sheet' })
+
+<Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
+<BottomSheet.Root {...cb.getSheetProps()}>
+	<div className="labelled-field">
+		<Label htmlFor={cb.ids.input}>Search</Label>
+		<Field.Root id={cb.ids.input}>
+			<Field.Icon><Search /></Field.Icon>
+			<Field.TextInput {...cb.getInputProps()} />
+		</Field.Root>
+	</div>
+	<OptionList.Root {...cb.getListboxProps()}>...</OptionList.Root>
+</BottomSheet.Root>
+```
+
+터치 트리거는 `Button.Root`입니다.
+
+## 훅
+
+[useCombobox](/utilities/use-combobox)는 헤드리스입니다. 열림 상태, 값, aria, 키보드, listbox id를 맡습니다.
+
+- `useCombobox({ presentation: 'popover' | 'sheet' | 'auto' })`
+- `getAnchorProps()`는 `Field.Root`에 (데스크톱)
+- `getTriggerProps()`는 `Button.Root`에 (시트)
+- `getInputProps()` / `getChipInputProps()`는 필드 입력에
+- `getPopoverProps()`는 `Popover.Root`에
+- `getSheetProps()`는 `BottomSheet.Root`에
+- `getListboxProps()`는 `OptionList.Root`에
+
+Trigger 편의 컴포넌트는 없습니다. `Combobox.*` 외형도 없습니다. [Combobox](/recipes/combobox)를 보세요.
+
+## 금지
+
+```
+Field.Root
+  └─ Field.Button.Root          nested compound namespaces
+
+Field.Root as a button that also hosts TextInput
+  two roles on one root
+
+Combobox.Root, Combobox.Trigger, or Combobox.Icon
+  recipe chrome in the package
+
+Dual-wiring aria or open outside useCombobox while also using the hook
+
+OptionList and Radio or Checkbox bound to the same value
+  overlay listbox and permanent choice on one selection
+
+Combobox behavior baked into Field
+
+Touch closed control = Field pretending to be a button
+
+Product trees importing raw Icon or Affix instead of Field.Icon or Field.Affix
+
+Docs that treat Field.Icon or Button.Icon as free-floating atoms
+```
+
+실제로 동작하는 레시피는 [Combobox](/recipes/combobox)를 보세요.

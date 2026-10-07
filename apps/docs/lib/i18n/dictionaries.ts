@@ -55,7 +55,7 @@ const ko: Dictionary = {
   },
   links: {
     '/recipes/chip-list': '오버플로를 처리하는 Chip list',
-    '/composition': '컴포지션',
+    '/composition': '조합',
     '/tokens': '토큰',
     '/guides/build-on-todae': 'Todae로 디자인 시스템 만들기',
     '/platform': '네이티브 플랫폼',

@@ -1,0 +1,32 @@
+import { CheckboxStates } from '../../../components/demos/CheckboxDemo';
+
+# Checkbox
+
+네이티브 체크박스입니다. children이 보이는 레이블입니다. indeterminate 상태는 없습니다.
+
+`checked`가 정의되어 있으면 제어 컴포넌트입니다. `defaultChecked`를 넘기거나 둘 다 생략하면 비제어 컴포넌트입니다. `useControlledState`는 `onCheckedChange`를 실행하지 않습니다. 컴포넌트가 실행합니다.
+
+```tsx
+<Checkbox defaultChecked>Product updates</Checkbox>
+<Checkbox checked={accepted} onCheckedChange={setAccepted} invalid={invalid} aria-describedby={errorId}>
+	I accept the terms
+</Checkbox>
+```
+
+<Example block>
+  <CheckboxStates />
+</Example>
+
+Checkbox를 `Field.Root` 안에 넣지 마세요. 그 셸은 텍스트와 칩 입력용입니다. 체크박스 아래에 [Description](/description)이나 [ErrorMessage](/errormessage)가 있으면 체크박스에 `aria-describedby`를 연결하세요.
+
+늘 보이는 배타적 선택에는 [Radio](/radio)를 쓰세요. 오버레이 목록에는 [OptionList](/optionlist)를 쓰세요.
+
+## 언제 쓰나요
+
+**언제:** 페이지에 계속 남는 독립적인 켜기/끄기. children = 보이는 레이블.
+
+**쓰지 않을 때:** 여럿 중 하나만 고르는 배타적 선택 → Radio. 즉시 적용되는 설정 토글 모양 → Switch. 오버레이 다중 선택 → OptionList `selectionMode="multiple"`. Field.Root 안.
+
+## Props
+
+<PropsTable name="Checkbox" />
