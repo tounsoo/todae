@@ -2,11 +2,11 @@ import { FieldPartsAllowed, SiblingsAllowed } from '../../../components/demos/Co
 
 # 조합
 
-Todae가 UI를 만들기 위해 제공하는 것은 네 종류로 나뉩니다. 새로 만드는 것은 아래 질문으로 자리를 정하세요. `ThemeProvider`, `composeRefs` 같은 프로바이더, 헬퍼 함수, 상수는 이 구분 밖에 있습니다.
+Todae가 UI를 만들기 위해 제공하는 것은 네 종류로 나뉩니다. 새로 만드는 것은 아래 질문으로 자리를 정하세요. `ThemeProvider`, `useDensity`, `composeRefs` 같은 프로바이더와 그 훅, 헬퍼 함수, 상수는 이 구분 밖에 있습니다.
 
 - **네이티브 + CSS.** HTML이 이미 그 일을 합니다. Todae는 기본 스타일의 CSS만 제공하고 export는 없습니다. [Link](/link)와 [Disclosure](/disclosure)처럼 요소 자체에 입히는 스타일이거나, [VisuallyHidden](/visually-hidden)처럼 골라 쓰는 유틸리티 클래스입니다.
 - **컴포넌트.** 제품에 대해 아무것도 몰라도 Todae가 마크업, props, 동작을 정할 수 있는 UI 개념 하나입니다. [Menu](/menu)와 [Tabs](/tabs)처럼 동작을 맡을 수도 있고, [Stack](/stack)과 [Text](/text)처럼 토큰에서 온 스타일만 맡을 수도 있습니다. 대부분의 컴포넌트는 컴파운드로 제공됩니다. 컴파운드는 `Menu.Root`, `Menu.Item`처럼 `Root`와 필요한 파트를 가진 네임스페이스입니다. `Stack`, `Text`, `Label`, `Checkbox`처럼 요소 하나인 컴포넌트는 export 하나입니다.
-- **훅.** 마크업 없이 컴포넌트나 레시피의 동작만 담은 것으로, 자체 마크업이 필요한 제품을 위한 것입니다. [useRovingFocus](/utilities/use-roving-focus)와 [useField](/utilities/use-field)가 훅입니다.
+- **훅.** 마크업 없이 컴포넌트나 레시피의 동작만 담은 것으로, 레시피와 자체 마크업이 필요한 제품을 위한 것입니다. [useRovingFocus](/utilities/use-roving-focus)와 [useField](/utilities/use-field)가 훅입니다.
 - **레시피.** 둘 이상의 export를 제품에 따라 달라지는 방식으로 묶은 것입니다. 제품의 데이터, 흐름(무엇을 검색할지, 결과를 어떻게 불러올지, 선택하면 무슨 일이 일어날지), 레이아웃이 그 예입니다. 레시피는 이 문서에 있는 복사용 코드입니다. 패키지 export가 아니므로 `Combobox.*`는 없습니다.
 
 ## 컴포넌트인가, 레시피인가
@@ -15,17 +15,17 @@ Todae가 UI를 만들기 위해 제공하는 것은 네 종류로 나뉩니다. 
 
 1. 기본 CSS만으로 일반 HTML이 그 일을 하나요? 모든 `<a>`처럼 그 요소 전부가 이렇게 보여야 하거나, `.todae-visually-hidden`처럼 골라 쓰는 유틸리티 클래스라면 네이티브입니다. 요소에 props, 타입으로 강제하는 계약, 다른 컴포넌트의 상태가 필요하다면 네이티브가 아니므로 2번 질문으로 넘어가세요. 그래서 `Stack`(방향), `Text`(크기), [Label](/label)(필수 `htmlFor`), `Field.Select`(Field의 레이블과 오류 연결)는 네이티브가 아닙니다.
 2. 제품의 데이터, 데이터 요청, 라우팅, 비즈니스 규칙, 레이아웃을 몰라도 Todae가 마크업, 모든 prop, 동작을 정할 수 있나요? 그렇다면 컴포넌트입니다. 제품이 자체 마크업으로 그 동작을 써야 한다면 [useRovingFocus](/utilities/use-roving-focus)처럼 그 동작은 훅도 됩니다.
-3. 그 밖에는 제품의 몫입니다. Todae export를 묶는 것이라면 Todae는 레시피로 문서화합니다. 모든 제품에 필요한 동작은 레시피가 쓰는 훅이 됩니다. [Combobox](/recipes/combobox)에는 [useCombobox](/utilities/use-combobox), [Chip list](/recipes/chip-list)에는 [useChipList](/utilities/use-chip-list)가 있습니다.
+3. 그 밖에는 제품의 몫입니다. Todae export를 묶는 것이라면 Todae는 레시피로 문서화합니다. 모든 제품에 필요한 동작은 레시피가 쓰는 훅이 됩니다. [Combobox](/recipes/combobox)에는 [useCombobox](/utilities/use-combobox)가 있습니다.
 
-Todae가 어떻게 맞물리는지 정할 수 있다면 컴포넌트는 안에서 다른 컴포넌트를 쓸 수 있습니다. `Field.ChipInput`은 `Chip`을 렌더링하고, `Menu.Trigger`는 `Button`입니다. 이런 재사용은 Todae 자체 파트 안에서 일어나며, 여러분의 마크업에 적용되는 아래 규칙을 바꾸지 않습니다. Chip list 자체는 오버플로를 어디에 둘지, 몇 줄을 보여 줄지, 목록이 무슨 의미인지가 제품마다 달라서 레시피입니다. 필드 안에서는 Todae가 이를 모두 정하므로 `Field.ChipInput`은 컴포넌트입니다.
+Todae가 어떻게 맞물리는지 정할 수 있다면 컴포넌트는 안에서 다른 컴포넌트를 쓸 수 있습니다. `Field.ChipInput`은 `Chip`을 렌더링하고, `Menu.Trigger`는 `Button`입니다. 이런 재사용은 Todae 자체 파트 안에서 일어납니다. Chip list 자체는 오버플로를 어디에 둘지, 몇 줄을 보여 줄지, 목록이 무슨 의미인지가 제품마다 달라서 레시피입니다. 필드 안에서는 Todae가 이를 모두 정하므로 `Field.ChipInput`은 컴포넌트입니다.
 
 컴포넌트는 받은 자식이 무엇이든 담아서 컨텍스트나 키보드 처리를 넘겨줄 수도 있습니다. [Fieldset](/fieldset)은 `disabled`와 `invalid` 상태를 컨텍스트로 안의 Todae 컨트롤에 넘깁니다.
 
-동작도, 스타일도, 토큰도 더하지 않고 다른 export를 배치하기만 하는 래퍼는 절대 컴포넌트가 아닙니다. 배치를 보여 줄 가치가 있다면 레시피입니다.
+동작도, 스타일도, 토큰도 더하지 않고 다른 export를 배치하기만 하는 래퍼는 절대 Todae 컴포넌트가 아닙니다. 배치를 보여 줄 가치가 있다면 레시피입니다.
 
 ## 컴포넌트
 
-컴포넌트는 형제로 조합됩니다. 예를 들어 `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, `BottomSheet`입니다. 나란히 놓아 조합하세요. `Field.Button.Root`처럼 네임스페이스 이름 안에 다른 네임스페이스를 중첩하지 마세요. Fieldset 안에 Field를 두는 것처럼 컴포넌트 안에 컴포넌트를 두는 것은 괜찮습니다. 컴파운드 루트 하나에는 인터랙티브 역할 하나만 둡니다.
+컴포넌트는 형제로 조합됩니다. 예를 들어 `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, `BottomSheet`입니다. 나란히 놓아 조합하세요. 네임스페이스를 중첩하지 마세요. 컴파운드 루트 하나에는 인터랙티브 역할 하나만 둡니다.
 
 `Field.Icon`, `Field.Affix`, `Button.Icon`은 컴파운드 파트입니다. 따로 떠다니는 원자가 아닙니다. 공유되는 Icon, Affix, Shell은 내부에 있습니다. 공개 export가 아닙니다.
 
