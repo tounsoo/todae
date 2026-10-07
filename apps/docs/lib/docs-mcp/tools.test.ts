@@ -129,7 +129,7 @@ describe('docs mcp tools', () => {
     expect(hook).toMatchObject({
       status: 'present',
       whenToUse: 'Choose popover or sheet at runtime: coarse pointer or width under 640px → sheet. SSR and first paint are popover. `forced` overrides.',
-      whenNotToUse: 'Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → `usePopover` alone.',
+      whenNotToUse: 'Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → [usePopover](https://todae-rho.vercel.app/utilities/use-popover) alone.',
     });
     expect(hook).not.toHaveProperty('scope');
     expect(combobox).toMatchObject({ status: 'present' });
@@ -146,6 +146,7 @@ describe('docs mcp tools', () => {
       expect(getComponent(name).docsUrl).toBe(`https://todae-rho.vercel.app/utilities/${slug}`);
       expect(whenToUse(name)).toMatchObject({ status: 'present' });
     }
+    expect(whenToUse('usePopover').whenNotToUse).toContain('BottomSheet');
     expect(getComponent('useField').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-field');
     expect(getComponent('useRovingFocus').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-roving-focus');
     expect(whenToUse('useField')).toMatchObject({ status: 'present' });
@@ -435,6 +436,8 @@ describe('docs mcp tools', () => {
     expect(result.whenNotToUse).not.toMatch(/not reachable/);
     expect(result.whenNotToUse).not.toMatch(/non-modal popover/);
     expect(result.whenNotToUse).toBeTruthy();
+    expect(result.whenNotToUse).toContain('Checkbox / Button.Root');
+    expect(result.whenNotToUse).toContain('/utilities/use-combobox');
     expect(getComponent('useChipList').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-chip-list');
   });
 });

@@ -29,9 +29,7 @@ const PART_PAGE: Record<string, string> = {
 
 /** Page-level When copy written for these names in addition to `page.title` and its `.Root`. */
 const PAGE_OWNERS: Record<string, readonly string[]> = {
-  'recipes/combobox': ['useCombobox'],
   radio: ['RadioGroup', 'RadioGroup.Root', 'RadioGroup.Item'],
-  'recipes/chip-list': ['useChipList'],
 };
 
 export function ownsPage(page: PageDoc, name: string): boolean {
