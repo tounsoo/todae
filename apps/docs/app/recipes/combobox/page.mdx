@@ -12,15 +12,15 @@ import {
 
 # Combobox
 
-A recipe, not a package namespace. `useCombobox` owns open, value, input, highlight, and ids. Compounds own chrome. There is no `Combobox.*` export. One interactive role per root.
+A recipe, not a package namespace. [useCombobox](/utilities/use-combobox) owns open, value, input, highlight, and ids. Compounds own chrome. There is no `Combobox.*` export. One interactive role per root.
 
 ## Presentation
 
-`useSheetPresentation` chooses sheet when the pointer is coarse **or** the viewport is narrower than 640px. Otherwise it chooses popover. Server render and the first paint are popover. `isSheet` mirrors `presentation === "sheet"`. It is not `isTouch`.
-
-`useCombobox({ presentation: 'auto' })` uses the same helper. Force `popover` or `sheet` when a docs screenshot must stay still.
+`useCombobox({ presentation: 'auto' })` picks a sheet on a coarse pointer or a narrow viewport and a popover otherwise, always a popover on the server and the first paint, through [useSheetPresentation](/utilities/use-sheet-presentation). Force `popover` or `sheet` when a docs screenshot must stay still.
 
 If presentation flips while the list is open, the hook closes with `blur`.
+
+The badge shows what [useSheetPresentation](/utilities/use-sheet-presentation) picks here; `isSheet` is not `isTouch`.
 
 <Example>
   <PresentationBadge />
@@ -118,25 +118,11 @@ No matches render a status row. `allowCreate` adds one `+ Create "{query}"` opti
 ## Composition rules
 
 - Sibling [Label](/label) + `Field.Root` id. No `Field.Label`.
-- Do not spread `usePopover` `getTriggerProps` next to `getAnchorProps`. Dual-wire is a QA fail.
+- Do not spread [usePopover](/utilities/use-popover) `getTriggerProps` next to `getAnchorProps`. Dual-wire is a QA fail.
 - OptionList is the overlay list. Do not also render Radio or Checkbox for the same value.
 - Do not bake combobox into Field. Do not export `Combobox.*` chrome.
 - Sheet trigger uses `aria-haspopup="dialog"`. Popover Field chrome has no `aria-haspopup`.
 
-## When to use
+## Hooks
 
-**When:** Searchable select — typeahead + list. Hook owns open/value/input; Field + Popover/BottomSheet + OptionList own chrome. Auto sheet on coarse/narrow.
-
-**When not:** Static on-page exclusive → Radio. Non-search menu → Popover + OptionList only. Exporting `Combobox.*` chrome (forbidden).
-
-### useSheetPresentation
-
-**When:** Choose popover or sheet at runtime: coarse pointer or width under 640px → sheet. SSR and first paint are popover. `forced` overrides.
-
-**When not:** Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → `usePopover` alone.
-
-## Props
-
-<PropsTable name="useSheetPresentation" />
-
-<PropsTable name="useCombobox" />
+When to use them, and their props, are on [useCombobox](/utilities/use-combobox) and [useSheetPresentation](/utilities/use-sheet-presentation).

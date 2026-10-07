@@ -1,0 +1,37 @@
+import { PopoverMenu } from '../../../components/demos/PopoverDemo';
+
+# usePopover
+
+`usePopover` is the open machine behind [Popover](/popover). Spread `getTriggerProps` on the trigger and `getPopoverProps` on `Popover.Root`, which is surface chrome only. [Menu](/menu) and the [Combobox recipe](/recipes/combobox) are built on it.
+
+An outside press and Escape call `onOpenChange(false, reason)` with `outside` or `escape`. The trigger toggles, so it reports `trigger` on both open and close. An owner can veto one reason and keep the others; in `onOpenChange(open, reason)`, check `open === false` before vetoing a `trigger` close. [Popover](/popover) has a veto demo. `haspopup` sets the trigger's `aria-haspopup`. `anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks; do not pass it and also spread `getTriggerProps`.
+
+```tsx
+const [open, setOpen] = useState(false)
+const [value, setValue] = useState<string | null>(null)
+const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' })
+
+<>
+  <Button.Root tooltip={false} {...getTriggerProps()}>{value ?? 'Choose fruit'}</Button.Root>
+  <Popover.Root {...getPopoverProps()}>
+    {/* Selecting does not close the popover: the owner closes it. */}
+    <OptionList.Root aria-label="Fruit" value={value} onChange={(next) => { setValue(next); setOpen(false) }}>
+      <OptionList.Option value="apple">Apple</OptionList.Option>
+    </OptionList.Root>
+  </Popover.Root>
+</>
+```
+
+<Example>
+  <PopoverMenu />
+</Example>
+
+## When to use
+
+**When:** A non-modal surface anchored to a trigger, with open and dismiss on the hook and chrome on `Popover.Root`.
+
+**When not:** An action menu → [Menu](/menu). Modal, focus-trapped work → Dialog. A mobile full-bleed picker → BottomSheet, or [useSheetPresentation](/utilities/use-sheet-presentation) to choose at runtime. A text-only hover hint → [Tooltip](/tooltip).
+
+## Props
+
+<PropsTable name="usePopover" />

@@ -2,7 +2,6 @@ import { ErrorMessageSibling } from '../../components/demos/ErrorMessageDemo';
 import {
   ChipInputCommitKeys,
   ChipInputControlled,
-  ChipInputHook,
   ChipInputLabel,
   ChipInputMaxRows,
   ChipInputStates,
@@ -188,11 +187,7 @@ Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key
   <ChipInputControlled />
 </Example>
 
-Optional `useChipField` holds chips and input, then spreads onto `Field.ChipInput`.
-
-<Example block>
-  <ChipInputHook />
-</Example>
+Optional [useChipField](/utilities/use-chip-field) holds chips and input, then spreads onto `Field.ChipInput`.
 
 `commitKeys={['Enter', ',']}`. Unknown keys are dropped.
 
@@ -277,9 +272,9 @@ Your own control, such as a rating or a color well, joins a `Field.Root` through
 
 ### Field.ChipInput
 
-**When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`.
+**When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`, or spreads [useChipField](/utilities/use-chip-field) to hold that state.
 
-**When not:** Free-form single string → TextInput. Options from a list → Combobox recipe + OptionList.
+**When not:** Free-form single string → TextInput. Options from a list → [Combobox recipe](/recipes/combobox) + OptionList.
 
 ### Field.Select
 
@@ -310,12 +305,6 @@ Your own control, such as a rating or a color well, joins a `Field.Root` through
 **When:** Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise.
 **When not:** For a hard limit with no visible count, set `maxLength` alone, and skip it on short fixed-length values like codes or PINs.
 
-### useChipField
-
-**When:** Optional state helper for `Field.ChipInput`: chips, input value, dedupe, and `transform` on commit.
-
-**When not:** You already own chip state → wire `Field.ChipInput` props directly. Picking from a list → Combobox recipe. Single value → `Field.TextInput`.
-
 ## Props
 
 <PropsTable name="Field.Root" />
@@ -335,5 +324,3 @@ Your own control, such as a rating or a color well, joins a `Field.Root` through
 <PropsTable name="Field.Row" />
 
 <PropsTable name="Field.Counter" />
-
-<PropsTable name="useChipField" />

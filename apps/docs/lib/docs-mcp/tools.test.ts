@@ -94,8 +94,10 @@ describe('docs mcp tools', () => {
     expect(listed['BottomSheet.Grabber']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed.useSheetPresentation).toMatchObject({ hasWhenToUse: true });
     expect(listed.useSheetPresentation).not.toHaveProperty('scope');
-    expect(listed.useTooltip).toMatchObject({ hasWhenToUse: false, scope: 'page' });
-    expect(listed.usePopover).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed.useTooltip).toMatchObject({ hasWhenToUse: true });
+    expect(listed.useTooltip).not.toHaveProperty('scope');
+    expect(listed.usePopover).toMatchObject({ hasWhenToUse: true });
+    expect(listed.usePopover).not.toHaveProperty('scope');
     expect(listed['OptionList.Option']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed['Field.Root']).toMatchObject({ hasWhenToUse: true });
     expect(listed['Field.Root']).not.toHaveProperty('scope');
@@ -126,13 +128,26 @@ describe('docs mcp tools', () => {
     const combobox = whenToUse('useCombobox');
     expect(hook).toMatchObject({
       status: 'present',
-      whenToUse: 'Choose popover or sheet at runtime: coarse pointer or width under 640px → sheet. SSR and first paint are popover. `forced` overrides.',
-      whenNotToUse: 'Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → `usePopover` alone.',
+      whenToUse: 'Choose popover or sheet at runtime: coarse pointer or width under 640px (by default) → sheet. SSR and first paint are popover. `forced` overrides.',
+      whenNotToUse: 'Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → [usePopover](https://todae-rho.vercel.app/utilities/use-popover) alone.',
     });
     expect(hook).not.toHaveProperty('scope');
     expect(combobox).toMatchObject({ status: 'present' });
     expect(combobox).not.toHaveProperty('scope');
-    expect(getComponent('useCombobox').docsUrl).toBe('https://todae-rho.vercel.app/recipes/combobox');
+    // Every hook in the schema has its own page under Utilities, slugged from its name.
+    const hooks = listComponents().components.filter((row) => /^use[A-Z]/.test(row.name));
+    expect(hooks.map((row) => row.name)).toEqual(expect.arrayContaining(['useChipField', 'useChipList', 'useCombobox', 'usePopover', 'useSheetPresentation', 'useTooltip']));
+    for (const { name } of hooks) {
+      const slug = name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
+      expect(getComponent(name).docsUrl, name).toBe(`https://todae-rho.vercel.app/utilities/${slug}`);
+      const copy = whenToUse(name);
+      expect(copy, name).toMatchObject({ status: 'present' });
+      expect(copy, name).not.toHaveProperty('scope');
+    }
+    const popoverNot = whenToUse('usePopover').whenNotToUse;
+    expect(popoverNot).toContain('[Menu](https://todae-rho.vercel.app/menu)');
+    expect(popoverNot).toContain('BottomSheet');
+    expect(whenToUse('useCombobox').whenNotToUse).toContain('Exporting `Combobox.*` chrome (forbidden)');
     expect(getComponent('useField').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-field');
     expect(getComponent('useRovingFocus').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-roving-focus');
     expect(whenToUse('useField')).toMatchObject({ status: 'present' });
@@ -408,20 +423,29 @@ describe('docs mcp tools', () => {
     }
   });
 
-  it('gives useChipList its own recipe page and does not list ChipList', () => {
+  it('gives each props table one page, so a name has one docs URL', () => {
+    const owners = new Map<string, string[]>();
+    for (const page of loadPages(join(process.cwd(), 'app'))) {
+      for (const name of page.props) owners.set(name, [...(owners.get(name) ?? []), page.slug]);
+    }
+    expect([...owners].filter(([, slugs]) => slugs.length > 1)).toEqual([]);
+  });
+
+  it('gives useChipList its own utility page and does not list ChipList', () => {
     const names = listComponents().components.map((row) => row.name);
     expect(names).toContain('useChipList');
     expect(names).not.toContain('ChipList');
     const result = whenToUse('useChipList');
     expect(result).toMatchObject({
       status: 'present',
-      docsUrl: 'https://todae-rho.vercel.app/recipes/chip-list',
+      docsUrl: 'https://todae-rho.vercel.app/utilities/use-chip-list',
     });
     expect(result).not.toHaveProperty('scope');
     expect(result.whenToUse).toContain('maxRows');
     expect(result.whenNotToUse).not.toMatch(/not reachable/);
     expect(result.whenNotToUse).not.toMatch(/non-modal popover/);
     expect(result.whenNotToUse).toBeTruthy();
-    expect(getComponent('useChipList').docsUrl).toBe('https://todae-rho.vercel.app/recipes/chip-list');
+    expect(result.whenNotToUse).toContain('Checkbox / Button.Root');
+    expect(result.whenNotToUse).toContain('/recipes/combobox');
   });
 });

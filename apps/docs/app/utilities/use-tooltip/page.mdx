@@ -1,0 +1,32 @@
+import { TooltipOverflow } from '../../../components/demos/TooltipDemo';
+
+# useTooltip
+
+`useTooltip` is the open machine behind [Tooltip](/tooltip). Spread `getTriggerProps` on the trigger and `getTooltipProps` on `Tooltip.Root`, which is tip chrome only. Hover waits `showDelay` (300ms by default), focus opens at once, and a coarse pointer uses focus only. Pass `interactive: true` for a tip with links: it becomes a non-modal tip dialog that Tab can move into, and `Tooltip.Root` then needs exactly one of `aria-label` or `aria-labelledby`.
+
+Overflow chips and other non-button triggers use the hook directly. Mark a non-tabbable wrap with `tabIndex={0}`. `Button.Root` already tips its own label, so set `tooltip={false}` on it when the hook owns the tip.
+
+```tsx
+const tooltip = useTooltip()
+
+<>
+  <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>
+    <Chip.Overflow overflowCount={2} />
+  </span>
+  <Tooltip.Root {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip.Root>
+</>
+```
+
+<Example>
+  <TooltipOverflow />
+</Example>
+
+## When to use
+
+**When:** A short hint on a trigger that is not a `Button.Root`, or a tip with links (`interactive: true`).
+
+**When not:** An icon-only or truncated `Button.Root` → its built-in tooltip. Action menus → [Menu](/menu). Other anchored panels → [usePopover](/utilities/use-popover). Long help → Description.
+
+## Props
+
+<PropsTable name="useTooltip" />

@@ -6,7 +6,6 @@ import { SiteNav } from './SiteNav';
 vi.mock('next/navigation', () => ({ usePathname: () => '/recipes/chip-list' }));
 
 const HREFS = [
-  '/composition',
   '/button',
   '/chip',
   '/field',
@@ -25,10 +24,17 @@ const HREFS = [
   '/bottomsheet',
   '/stack',
   '/text',
+  '/utilities/use-chip-field',
+  '/utilities/use-chip-list',
+  '/utilities/use-combobox',
   '/utilities/use-field',
+  '/utilities/use-popover',
   '/utilities/use-roving-focus',
+  '/utilities/use-sheet-presentation',
+  '/utilities/use-tooltip',
   '/recipes/chip-list',
   '/recipes/combobox',
+  '/composition',
   '/tokens',
   '/guides/build-on-todae',
   '/platform',
@@ -49,5 +55,19 @@ describe('SiteNav', () => {
     expect(current[0]?.textContent).toBe('Chip list with overflow');
     expect([...nav.querySelectorAll('a')].map((link) => link.getAttribute('href'))).toEqual(HREFS);
     expect(nav.textContent).not.toContain('Recipes:');
+    const hrefsIn = (name: string) =>
+      [...screen.getByRole('list', { name }).querySelectorAll('a')].map((link) => link.getAttribute('href'));
+    expect(hrefsIn('Components')).not.toContain('/composition');
+    expect(hrefsIn('Foundations')).toEqual(['/composition', '/tokens', '/guides/build-on-todae', '/platform']);
+    expect(hrefsIn('Utilities')).toEqual([
+      '/utilities/use-chip-field',
+      '/utilities/use-chip-list',
+      '/utilities/use-combobox',
+      '/utilities/use-field',
+      '/utilities/use-popover',
+      '/utilities/use-roving-focus',
+      '/utilities/use-sheet-presentation',
+      '/utilities/use-tooltip',
+    ]);
   });
 });

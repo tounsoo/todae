@@ -1,70 +1,13 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-
-const GROUPS = [
-  {
-    id: 'components',
-    label: 'Components',
-    links: [
-      ['/composition', 'Composition'],
-      ['/button', 'Button'],
-      ['/chip', 'Chip'],
-      ['/field', 'Field'],
-      ['/label', 'Label'],
-      ['/description', 'Description'],
-      ['/errormessage', 'ErrorMessage'],
-      ['/checkbox', 'Checkbox'],
-      ['/radio', 'Radio'],
-      ['/switch', 'Switch'],
-      ['/dialog', 'Dialog'],
-      ['/popover', 'Popover'],
-      ['/menu', 'Menu'],
-      ['/tooltip', 'Tooltip'],
-      ['/tabs', 'Tabs'],
-      ['/optionlist', 'OptionList'],
-      ['/bottomsheet', 'BottomSheet'],
-      ['/stack', 'Stack'],
-      ['/text', 'Text'],
-    ],
-  },
-  {
-    id: 'utilities',
-    label: 'Utilities',
-    links: [
-      ['/utilities/use-field', 'useField'],
-      ['/utilities/use-roving-focus', 'useRovingFocus'],
-    ],
-  },
-  {
-    id: 'recipes',
-    label: 'Recipes',
-    links: [
-      ['/recipes/chip-list', 'Chip list with overflow'],
-      ['/recipes/combobox', 'Combobox'],
-    ],
-  },
-  {
-    id: 'foundations',
-    label: 'Foundations',
-    links: [
-      ['/tokens', 'Tokens'],
-      ['/guides/build-on-todae', 'Build on Todae'],
-      ['/platform', 'Native platform'],
-    ],
-  },
-  {
-    id: 'tools',
-    label: 'Tools',
-    links: [['/playground', 'Playground']],
-  },
-] as const;
+import { SITE_GROUPS } from './siteGroups';
 
 export function SiteNav() {
   const path = usePathname();
   return (
     <nav className="site-nav" aria-label="Site">
-      {GROUPS.map((group) => (
+      {SITE_GROUPS.map((group) => (
         <div key={group.id} className="site-nav-group">
           <span id={`nav-${group.id}`} className="site-nav-label">
             {group.label}

@@ -52,7 +52,7 @@ const cb = useCombobox({ presentation: 'popover' })
 </Popover.Root>
 ```
 
-`anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks. Combobox uses `getAnchorProps` on `Field.Root`. Do not also spread `usePopover` `getTriggerProps`.
+`anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks. Combobox uses `getAnchorProps` on `Field.Root`. Do not also spread [usePopover](/utilities/use-popover) `getTriggerProps`.
 
 Touch (`presentation="sheet"`). The closed control is `Button.Root`. Search Field lives inside the sheet.
 
@@ -76,7 +76,7 @@ The touch trigger is `Button.Root`.
 
 ## Hook
 
-`useCombobox` is headless. It owns open, value, aria, keyboard, and listbox ids.
+[useCombobox](/utilities/use-combobox) is headless. It owns open, value, aria, keyboard, and listbox ids.
 
 - `useCombobox({ presentation: 'popover' | 'sheet' | 'auto' })`
 - `getAnchorProps()` on `Field.Root` (desktop)
