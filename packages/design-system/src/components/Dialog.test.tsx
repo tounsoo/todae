@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { ComboboxCloseReason } from '../hooks/useCombobox.types';
@@ -77,7 +77,7 @@ describe('Dialog', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false, 'native');
   });
 
-  it('reports a close right after an Escape cancel as escape', () => {
+  it('shows again after an Escape close the browser forces through with dismissOnEscape false', () => {
     const onOpenChange = vi.fn();
     render(
       <Dialog.Root open onOpenChange={onOpenChange} dismissOnEscape={false}>
@@ -88,14 +88,53 @@ describe('Dialog', () => {
     const cancel = new Event('cancel', { cancelable: true });
     el.dispatchEvent(cancel);
     expect(cancel.defaultPrevented).toBe(true);
-    expect(onOpenChange).not.toHaveBeenCalled();
     // Chrome without user activation closes anyway, a task later.
-    el.dispatchEvent(new Event('close'));
-    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+    act(() => el.close());
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(el.open).toBe(true);
     // A later close by script is not mistaken for that Escape.
-    onOpenChange.mockClear();
-    el.dispatchEvent(new Event('close'));
+    act(() => el.close());
     expect(onOpenChange).toHaveBeenCalledWith(false, 'native');
+  });
+
+  it('reports one Escape once, even when the browser also forces the close', () => {
+    const onOpenChange = vi.fn();
+    render(
+      <Dialog.Root open onOpenChange={onOpenChange}>
+        <Dialog.Title>Save</Dialog.Title>
+      </Dialog.Root>,
+    );
+    const el = document.querySelector('dialog')!;
+    el.dispatchEvent(new Event('cancel', { cancelable: true }));
+    act(() => el.close());
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+  });
+
+  it('shows again where the person was after a native close while open', () => {
+    // As in browsers: showModal focuses the first focusable element, and close
+    // sends focus back out of the element.
+    const showModal = HTMLDialogElement.prototype.showModal;
+    const spy = vi.spyOn(HTMLDialogElement.prototype, 'showModal').mockImplementation(function (this: HTMLDialogElement) {
+      showModal.call(this);
+      this.querySelector('input')?.focus();
+    });
+    render(
+      <Dialog.Root open onOpenChange={() => undefined}>
+        <Dialog.Title>Save</Dialog.Title>
+        <input aria-label="first" />
+        <input aria-label="second" />
+      </Dialog.Root>,
+    );
+    const el = document.querySelector('dialog')!;
+    screen.getByLabelText('second').focus();
+    act(() => {
+      (document.activeElement as HTMLElement).blur();
+      el.close();
+    });
+    expect(el.open).toBe(true);
+    expect(document.activeElement).toBe(screen.getByLabelText('second'));
+    spy.mockRestore();
   });
 });
 

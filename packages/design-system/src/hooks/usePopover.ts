@@ -115,7 +115,7 @@ export function usePopoverInternal(
 
   useFocusRestore(enabled && open, { restoreTo: restoreFocusRef, containerRef: popoverRef });
   useInitialFocus(popoverRef, enabled && open, initialFocusRef);
-  useEscapeKey(open, enabled, useCallback(() => requestClose('escape'), [requestClose]));
+  useEscapeKey(open, enabled, useCallback(() => requestClose('escape'), [requestClose]), popoverRef);
 
   useLayoutEffect(() => {
     const el = anchorRef?.current;

@@ -8,7 +8,7 @@ import {
   type Ref,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState';
-import { useFieldset } from './Fieldset.context';
+import { useFieldsetState } from './Fieldset.context';
 import { SelectionControl } from './SelectionControl';
 import styles from './selection.module.css';
 
@@ -81,9 +81,7 @@ function RadioGroupRoot({
   }
   const autoName = useId();
   const name = nameProp ?? autoName;
-  const fieldset = useFieldset();
-  const isDisabled = Boolean(disabled) || fieldset.disabled;
-  const isInvalid = Boolean(invalid) || fieldset.invalid;
+  const { disabled: isDisabled, invalid: isInvalid } = useFieldsetState({ disabled, invalid });
   const [value, setValue] = useControlledState(valueProp, defaultValue ?? null);
   return (
     <RadioGroupContext.Provider

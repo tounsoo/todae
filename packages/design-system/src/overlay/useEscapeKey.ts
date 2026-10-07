@@ -1,14 +1,37 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
-type Entry = { handle: () => void; enabled: () => boolean };
+type Entry = { handle: () => void; enabled: () => boolean; element: () => Element | null };
 
 const stack: Entry[] = [];
 let listening = false;
 
+function isModal(dialog: Element): boolean {
+  try {
+    if (dialog.matches(':modal')) return true;
+  } catch {
+    // An engine without :modal, such as jsdom, falls back to aria-modal.
+  }
+  return dialog.getAttribute('aria-modal') === 'true';
+}
+
+/** The open modal <dialog> the key was pressed in, if any. */
+function modalAround(target: EventTarget | null): Element | null {
+  let node = target instanceof Element ? target.closest('dialog[open]') : null;
+  while (node && !isModal(node)) node = node.parentElement?.closest('dialog[open]') ?? null;
+  return node;
+}
+
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;
+  // A layer outside the modal dialog the key was pressed in sits behind it
+  // and is inert. Escape belongs to the dialog's own close request.
+  const modal = modalAround(event.target);
+  const inFront = (entry: Entry) => {
+    const el = entry.element();
+    return !modal || !el || modal.contains(el);
+  };
   // A disabled layer keeps its place but lets Escape fall through to the next enabled one.
-  const top = [...stack].reverse().find((entry) => entry.enabled());
+  const top = [...stack].reverse().find((entry) => entry.enabled() && inFront(entry));
   if (!top) return;
   event.preventDefault();
   top.handle();
@@ -34,9 +57,15 @@ function push(entry: Entry): () => void {
  * Calls `handler` on Escape while `active && enabled`. Overlays stack: only the most recently
  * activated one handles the key, so Escape in a popover inside a sheet closes the popover first.
  * Order is activation order. Layers that activate in the same commit register child-first, so
- * open nested overlays one after another rather than together.
+ * open nested overlays one after another rather than together. Pass `elementRef` so a layer left
+ * behind a modal `<dialog>` opened later skips the key, and the dialog gets it.
  */
-export function useEscapeKey(active: boolean, enabled: boolean, handler: () => void): void {
+export function useEscapeKey(
+  active: boolean,
+  enabled: boolean,
+  handler: () => void,
+  elementRef?: RefObject<Element | null>,
+): void {
   const handlerRef = useRef(handler);
   const enabledRef = useRef(enabled);
   handlerRef.current = handler;
@@ -44,6 +73,10 @@ export function useEscapeKey(active: boolean, enabled: boolean, handler: () => v
   // Keyed on `active` only: toggling `enabled` must not move the layer above overlays opened later.
   useEffect(() => {
     if (!active) return;
-    return push({ handle: () => handlerRef.current(), enabled: () => enabledRef.current });
-  }, [active]);
+    return push({
+      handle: () => handlerRef.current(),
+      enabled: () => enabledRef.current,
+      element: () => elementRef?.current ?? null,
+    });
+  }, [active, elementRef]);
 }

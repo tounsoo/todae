@@ -1,5 +1,5 @@
 import { useContext, useMemo, type ComponentPropsWithRef, type ReactNode } from 'react';
-import { FieldsetContext, FieldsetLegendContext } from './Fieldset.context';
+import { FieldsetContext, FieldsetLegendContext, useFieldsetState } from './Fieldset.context';
 import { cx } from './props';
 import styles from './Fieldset.module.css';
 
@@ -20,8 +20,7 @@ function Root({ disabled, invalid, className, ...props }: FieldsetRootProps) {
   // A fieldset inside a disabled or invalid one is disabled or invalid too, as
   // the native disabled already is.
   const outer = useContext(FieldsetContext);
-  const isDisabled = Boolean(disabled) || outer.disabled;
-  const isInvalid = Boolean(invalid) || outer.invalid;
+  const { disabled: isDisabled, invalid: isInvalid } = useFieldsetState({ disabled, invalid });
   const ctx = useMemo(() => ({ disabled: isDisabled, invalid: isInvalid }), [isDisabled, isInvalid]);
   const legendCtx = useMemo(() => ({ disabled: outer.disabled, invalid: isInvalid }), [outer.disabled, isInvalid]);
   return (

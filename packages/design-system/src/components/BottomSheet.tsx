@@ -5,7 +5,6 @@ import {
   useId,
   useLayoutEffect,
   useMemo,
-  useReducer,
   useRef,
   useState,
   type ComponentPropsWithRef,
@@ -20,6 +19,7 @@ import { useControlledOpen, type OverlayCloseReason } from '../overlay/useContro
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
+import { useModalDialog } from '../overlay/useModalDialog';
 import { getTabbables } from '../overlay/tabbables';
 import { useScrollLock } from '../overlay/useScrollLock';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag';
@@ -197,7 +197,6 @@ function BottomSheetClose({
 
 const DEFAULT_SNAP_POINTS: readonly SheetSnap[] = ['mid', 'full'];
 
-const CANCEL_CLOSE_WINDOW_MS = 500;
 
 /** Whether a pointer event landed on the backdrop: on the dialog itself, outside its box. */
 function onBackdrop(dialog: HTMLElement | null, event: { target: EventTarget | null; clientX: number; clientY: number }) {
@@ -241,12 +240,6 @@ function BottomSheetRoot({
   const { requestClose } = useControlledOpen<SheetCloseReason>({ open, onOpenChange });
   const openRef = useRef(open);
   openRef.current = open;
-  // Read from the listeners below, so they bind once per element.
-  const latest = useRef({ dismissOnEscape, onOpenChange, requestClose });
-  latest.current = { dismissOnEscape, onOpenChange, requestClose };
-  // Bumped when the element closes natively, so the open effect runs again
-  // and shows it while the owner keeps it open.
-  const [nativeCloses, noteNativeClose] = useReducer((n: number) => n + 1, 0);
   const sheetRef = useRef<HTMLDialogElement>(null);
   const [sheetNode, setSheetNode] = useState<HTMLDialogElement | null>(null);
   const bodyRef = useRef<HTMLElement | null>(null);
@@ -269,16 +262,21 @@ function BottomSheetRoot({
 
   useScrollLock(present);
   // Records the focus to return to, so it runs before showModal moves focus.
-  useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: sheetRef });
+  // Keyed on present: the page behind stays inert until the element leaves
+  // at the end of the exit motion, and only then can focus go back.
+  useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: sheetRef });
   // A modal <dialog> puts the sheet in the top layer, makes the rest of the
   // page inert and keeps focus inside, so no portal or focus trap is needed.
-  useLayoutEffect(() => {
-    // The ref, not sheetNode: the node state lands a render later, and the
-    // dialog must be open before useInitialFocus runs in this commit.
-    // Not while exiting: a sheet closed natively on its way out stays closed.
-    const el = sheetRef.current;
-    if (present && open && el && !el.open) el.showModal();
-  }, [present, open, sheetNode, nativeCloses]);
+  // closedby="none" turns Escape off natively when dismissOnEscape is false.
+  const closeOnFormSubmit = useModalDialog({
+    dialogRef: sheetRef,
+    node: sheetNode,
+    present,
+    open,
+    dismissOnEscape,
+    onOpenChange,
+    requestClose,
+  });
   // After showModal, which focuses the first focusable element by itself.
   useInitialFocus(sheetRef, open, initialFocusRef);
   // A placed Grabber replaces the default one a commit after mount. If the
@@ -300,39 +298,6 @@ function BottomSheetRoot({
     enabled: open,
     dismissOnDrag,
   });
-
-  // Escape is a close request. closedby="none" turns it off natively when
-  // dismissOnEscape is false; otherwise the cancel is held so the owner
-  // closes the sheet through onOpenChange and the exit motion runs.
-  // Chrome may close on Escape even though cancel was prevented. Its close
-  // event comes a task later, so a close shortly after a cancel is an Escape.
-  const cancelledAt = useRef(-Infinity);
-  useLayoutEffect(() => {
-    const el = sheetNode;
-    if (!el) return;
-    function onCancel(event: Event) {
-      cancelledAt.current = performance.now();
-      event.preventDefault();
-      if (latest.current.dismissOnEscape) latest.current.requestClose('escape');
-    }
-    function onClose() {
-      // Something closed the element while the owner still has it open.
-      if (!openRef.current) return;
-      const escaped = performance.now() - cancelledAt.current < CANCEL_CLOSE_WINDOW_MS;
-      cancelledAt.current = -Infinity;
-      noteNativeClose();
-      // An Escape the browser forced through, in one that ignores closedby,
-      // is not a dismiss the owner turned off: the sheet just shows again.
-      if (escaped && !latest.current.dismissOnEscape) return;
-      latest.current.onOpenChange(false, escaped ? 'escape' : 'native');
-    }
-    el.addEventListener('cancel', onCancel);
-    el.addEventListener('close', onClose);
-    return () => {
-      el.removeEventListener('cancel', onCancel);
-      el.removeEventListener('close', onClose);
-    };
-  }, [sheetNode]);
 
   const ctx = useMemo<SheetContextValue>(
     () => ({
@@ -371,19 +336,7 @@ function BottomSheetRoot({
         }}
         onSubmit={(event) => {
           onSubmit?.(event);
-          // A form inside that already prevented its submit keeps the sheet open, as natively.
-          if (event.defaultPrevented) return;
-          const native = event.nativeEvent as SubmitEvent;
-          const form = event.target as HTMLFormElement;
-          const submitter = native.submitter as HTMLButtonElement | HTMLInputElement | null;
-          const method = submitter?.getAttribute('formmethod') ?? form.getAttribute('method') ?? '';
-          // Natively the form closes its own nearest <dialog>.
-          if (method.toLowerCase() !== 'dialog' || form.closest('dialog') !== sheetRef.current) return;
-          // Close through onOpenChange, as Dialog does, so the exit motion runs.
-          event.preventDefault();
-          const sheet = sheetRef.current;
-          if (sheet && submitter) sheet.returnValue = submitter.value;
-          requestClose('form');
+          closeOnFormSubmit(event);
         }}
         onClick={composeHandlers(onClick, (event) => {
           const fromBackdrop = pressOnBackdrop.current && onBackdrop(sheetRef.current, event);

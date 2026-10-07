@@ -1,5 +1,5 @@
 import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from 'react';
-import { useFieldset } from './Fieldset.context';
+import { useFieldsetState } from './Fieldset.context';
 import styles from './selection.module.css';
 
 export type SelectionKind = 'checkbox' | 'radio' | 'switch';
@@ -52,9 +52,7 @@ export function SelectionControl({
 }: SelectionControlProps) {
   const dom = SELECTION_DOM[kind];
   // A Fieldset.Root disables the input natively; the label follows it.
-  const fieldset = useFieldset();
-  const disabled = Boolean(disabledProp) || fieldset.disabled;
-  const invalid = Boolean(invalidProp) || fieldset.invalid;
+  const { disabled, invalid } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
   return (
     <label
       className={[styles.root, className].filter(Boolean).join(' ')}

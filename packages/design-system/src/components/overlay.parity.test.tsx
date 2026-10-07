@@ -223,8 +223,8 @@ for (const harness of [dialogHarness, sheetHarness]) {
           </BottomSheet.Root>
         ),
       );
-      await Promise.resolve();
-      expect(document.activeElement).toBe(trigger);
+      // The sheet gives focus back once its exit motion ends and the page behind is no longer inert.
+      await waitFor(() => expect(document.activeElement).toBe(trigger), { timeout: 1000 });
       trigger.remove();
     });
 

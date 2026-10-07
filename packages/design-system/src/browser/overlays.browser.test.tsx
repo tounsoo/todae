@@ -177,4 +177,64 @@ describe('BottomSheet in a browser', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(onClose).toHaveBeenCalledWith('escape'));
   });
+
+  it('gives focus back to its trigger once the exit motion ends', async () => {
+    function Launcher() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Themed>
+          <Button.Root onClick={() => setOpen(true)}>Sort by</Button.Root>
+          <BottomSheet.Root open={open} onOpenChange={setOpen}>
+            <BottomSheet.Title>Sort</BottomSheet.Title>
+            <BottomSheet.Body>
+              <BottomSheet.Close>Done</BottomSheet.Close>
+            </BottomSheet.Body>
+          </BottomSheet.Root>
+        </Themed>
+      );
+    }
+    render(<Launcher />);
+    const trigger = screen.getByRole('button', { name: 'Sort by' });
+    await userEvent.click(trigger);
+    await waitFor(() => expect(sheet()?.matches(':modal')).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.querySelector('dialog')).toBeNull(), { timeout: 2000 });
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+  });
+
+  it('takes Escape over a popover left open behind it', async () => {
+    const onClose = vi.fn();
+    function Stack() {
+      const popover = usePopover();
+      const [open, setOpen] = useState(false);
+      return (
+        <Themed>
+          <Button.Root {...popover.getTriggerProps()}>Filters</Button.Root>
+          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Filters panel" data-testid="panel">
+            <button type="button" onClick={() => setOpen(true)}>
+              More
+            </button>
+          </Popover.Root>
+          <BottomSheet.Root
+            open={open}
+            onOpenChange={(next, reason) => {
+              setOpen(next);
+              if (!next) onClose(reason);
+            }}
+          >
+            <BottomSheet.Title>More filters</BottomSheet.Title>
+          </BottomSheet.Root>
+        </Themed>
+      );
+    }
+    render(<Stack />);
+    const panel = screen.getByTestId('panel');
+    await userEvent.click(screen.getByRole('button', { name: 'Filters' }));
+    await waitFor(() => expect(panel.matches(':popover-open')).toBe(true));
+    await userEvent.click(screen.getByRole('button', { name: 'More' }));
+    await waitFor(() => expect(sheet()?.matches(':modal')).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith('escape'));
+    expect(panel.matches(':popover-open')).toBe(true);
+  });
 });

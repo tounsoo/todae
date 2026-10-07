@@ -61,7 +61,6 @@
   --todae-space-10: 2.5rem;
   --todae-space-11: 2.75rem;
   --todae-space-12: 3rem;
-  --todae-z-overlay: 1000;
 }
 
 :root,
@@ -309,7 +308,6 @@
   --todae-chip-ring-width: 2px;
   --todae-overlay-motion-easing: var(--todae-motion-easing-standard);
   --todae-overlay-scrim-bg: var(--todae-color-bg-scrim);
-  --todae-overlay-z: var(--todae-z-overlay);
   --todae-dialog-bg: var(--todae-color-bg-elevated);
   --todae-dialog-border: var(--todae-color-border-default);
   --todae-dialog-fg: var(--todae-color-fg-default);

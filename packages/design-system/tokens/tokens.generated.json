@@ -551,15 +551,6 @@
       "context": null
     },
     {
-      "path": "z.overlay",
-      "type": "number",
-      "cssVar": "--todae-z-overlay",
-      "cssValue": "1000",
-      "ref": null,
-      "layer": "core",
-      "context": null
-    },
-    {
       "path": "color.accent.active",
       "type": "color",
       "cssVar": "--todae-color-accent-active",
@@ -2581,15 +2572,6 @@
       "cssVar": "--todae-overlay-scrim-bg",
       "cssValue": "var(--todae-color-bg-scrim)",
       "ref": "color.bg.scrim",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "overlay.z",
-      "type": "number",
-      "cssVar": "--todae-overlay-z",
-      "cssValue": "var(--todae-z-overlay)",
-      "ref": "z.overlay",
       "layer": "contract",
       "context": null
     },

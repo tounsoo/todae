@@ -12,7 +12,14 @@ export const FieldsetContext = createContext<FieldsetContextValue>(NONE);
  */
 export const FieldsetLegendContext = createContext<FieldsetContextValue>(NONE);
 
-/** The nearest Fieldset.Root's state, or neither disabled nor invalid outside one. */
-export function useFieldset(): FieldsetContextValue {
-  return useContext(FieldsetContext);
+/**
+ * A control's own disabled and invalid, merged with the nearest
+ * Fieldset.Root's. Outside a fieldset they are the control's own.
+ */
+export function useFieldsetState(own: { disabled?: boolean; invalid?: boolean }): FieldsetContextValue {
+  const fieldset = useContext(FieldsetContext);
+  return {
+    disabled: Boolean(own.disabled) || fieldset.disabled,
+    invalid: Boolean(own.invalid) || fieldset.invalid,
+  };
 }

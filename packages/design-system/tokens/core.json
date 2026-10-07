@@ -174,8 +174,5 @@
     "easing": {
       "standard": { "$type": "cubicBezier", "$value": [0.2, 0.8, 0.2, 1] }
     }
-  },
-  "z": {
-    "overlay": { "$type": "number", "$value": 1000 }
   }
 }

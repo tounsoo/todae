@@ -62,7 +62,6 @@ export const RAW_OVERRIDE_KEYS = [
   'space.10',
   'space.11',
   'space.12',
-  'z.overlay',
 ] as const;
 
 export const SEMANTIC_OVERRIDE_KEYS = [
@@ -240,7 +239,6 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'chip.ring-width',
   'overlay.motion.easing',
   'overlay.scrim.bg',
-  'overlay.z',
   'dialog.bg',
   'dialog.border',
   'dialog.fg',
@@ -448,7 +446,6 @@ export const THEME_OVERRIDE_TYPES = {
   'space.10': 'dimension',
   'space.11': 'dimension',
   'space.12': 'dimension',
-  'z.overlay': 'number',
   'color.accent.active': 'color',
   'color.accent.default': 'color',
   'color.accent.hover': 'color',
@@ -620,7 +617,6 @@ export const THEME_OVERRIDE_TYPES = {
   'chip.ring-width': 'dimension',
   'overlay.motion.easing': 'cubicBezier',
   'overlay.scrim.bg': 'color',
-  'overlay.z': 'number',
   'dialog.bg': 'color',
   'dialog.border': 'color',
   'dialog.fg': 'color',

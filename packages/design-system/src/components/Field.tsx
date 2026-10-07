@@ -29,7 +29,7 @@ import {
   type CountStore,
   type FieldContextValue,
 } from './Field.context';
-import { useFieldset } from './Fieldset.context';
+import { useFieldsetState } from './Fieldset.context';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
@@ -162,9 +162,7 @@ function Root({
   ...props
 }: FieldRootProps) {
   // Inside a Fieldset.Root, its disabled and invalid apply here too.
-  const fieldset = useFieldset();
-  const disabled = Boolean(disabledProp) || fieldset.disabled;
-  const invalid = Boolean(invalidProp) || fieldset.invalid;
+  const { disabled, invalid } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
   const autoId = useId();
   const hintId = useId();
   const inputRef = useRef<HTMLElement>(null);
