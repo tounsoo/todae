@@ -134,10 +134,8 @@ describe('docs mcp tools', () => {
     expect(hook).not.toHaveProperty('scope');
     expect(combobox).toMatchObject({ status: 'present' });
     expect(combobox).not.toHaveProperty('scope');
-    // Every listed hook has its own page under Utilities, slugged from its name.
-    // useAppearance and useDensity read the providers and are documented with them on Tokens.
-    const PROVIDER_HOOKS = ['useAppearance', 'useDensity'];
-    const hooks = listComponents().components.filter((row) => /^use[A-Z]/.test(row.name) && !PROVIDER_HOOKS.includes(row.name));
+    // Every hook in the schema has its own page under Utilities, slugged from its name.
+    const hooks = listComponents().components.filter((row) => /^use[A-Z]/.test(row.name));
     expect(hooks.map((row) => row.name)).toEqual(expect.arrayContaining(['useChipField', 'useChipList', 'useCombobox', 'usePopover', 'useSheetPresentation', 'useTooltip']));
     for (const { name } of hooks) {
       const slug = name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
