@@ -353,6 +353,33 @@ describe('Menu', () => {
     expect(isOpen()).toBe(true);
   });
 
+  it('an outside press on a focusable element reports one close', async () => {
+    const onOpenChange = vi.fn();
+    render(<Actions open onOpenChange={onOpenChange} />);
+    await raf();
+    const after = screen.getByRole('button', { name: 'After' });
+    // The press, then the focus move that same press makes.
+    fireEvent.pointerDown(after);
+    act(() => after.focus());
+    expect(onOpenChange.mock.calls).toEqual([[false, 'outside']]);
+  });
+
+  it('Shift+Tab moves on as usual when the trigger cannot take focus', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <Menu.Root open onOpenChange={onOpenChange}>
+        <Menu.Trigger disabled>Actions</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item>Rename</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await raf();
+    act(() => item('Rename').focus());
+    expect(key('Tab', item('Rename'), true)).toBe(true);
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'tab');
+  });
+
   it('a Tab that leaves focus in place does not mute a later focus leave', async () => {
     const onOpenChange = vi.fn();
     render(

@@ -99,6 +99,7 @@ export type MenuSeparatorProps = {
 type MenuContextValue = {
   open: boolean;
   setOpen: (open: boolean, reason: MenuOpenChangeReason) => void;
+  closeAsked: RefObject<boolean>;
   triggerId: string;
   triggerRef: RefObject<HTMLButtonElement | null>;
   /** A Menu.Trigger is mounted, so its id can name the menu. */
@@ -124,7 +125,22 @@ type RadioContextValue = { value: string | null; select: (value: string) => void
 const RadioContext = createContext<RadioContextValue | null>(null);
 
 function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootProps) {
-  const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
+  const [open, setOpenValue] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
+  // Set while the input that asked for a close is still being handled, so
+  // the focus move that same input makes does not ask a second time.
+  const closeAsked = useRef(false);
+  const setOpen = useCallback(
+    (next: boolean, reason: MenuOpenChangeReason) => {
+      if (!next) {
+        closeAsked.current = true;
+        setTimeout(() => {
+          closeAsked.current = false;
+        });
+      }
+      setOpenValue(next, reason);
+    },
+    [setOpenValue],
+  );
   const triggerId = `${useDomId()}-trigger`;
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [triggers, setTriggers] = useState(0);
@@ -145,7 +161,19 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   // focus moving across them under the pointer does not render the menu.
   const roving = useRovingFocus({ orientation: 'vertical', typeahead: true, activeValue: null, tabStop: false });
   const ctx = useMemo(
-    () => ({ open, setOpen, triggerId, triggerRef, hasTrigger, countTrigger, openEnd, initialFocusRef, popover, roving }),
+    () => ({
+      open,
+      setOpen,
+      closeAsked,
+      triggerId,
+      triggerRef,
+      hasTrigger,
+      countTrigger,
+      openEnd,
+      initialFocusRef,
+      popover,
+      roving,
+    }),
     [open, setOpen, triggerId, hasTrigger, countTrigger, popover, roving],
   );
   return (
@@ -243,7 +271,6 @@ function Content({
     initialFocusRef.current = (openEnd.current === 'last' ? reachable.at(-1) : reachable[0]) ?? null;
     openEnd.current = null;
   }, [initialFocusRef, open, openEnd, reachableItems]);
-  const tabbedOut = useRef(false);
   const container = roving.getContainerProps({
     onKeyDown: composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLElement>) => {
       // Tab leaves the menu: close it and focus the trigger, whether or not
@@ -251,17 +278,11 @@ function Content({
       // trigger. Shift+Tab stops on it, since moving back would skip it.
       if (event.key === 'Tab') {
         ctx.setOpen(false, 'tab');
-        // Only for the focus move this key makes, which happens before any
-        // timer: a Tab that leaves focus in place does not mute a later leave.
-        tabbedOut.current = true;
-        setTimeout(() => {
-          tabbedOut.current = false;
-        });
         const trigger = ctx.triggerRef.current;
-        // A menu with no trigger lets Tab move on from the item as usual.
-        if (!trigger) return;
-        trigger.focus();
-        if (event.shiftKey) event.preventDefault();
+        trigger?.focus();
+        // A trigger that could not take focus, or none, lets Tab move on from
+        // the item as usual.
+        if (event.shiftKey && trigger && document.activeElement === trigger) event.preventDefault();
         return;
       }
       // Focus on the menu itself, from a press on its padding, is handled
@@ -273,15 +294,15 @@ function Content({
   // a screen reader's focus command, or a press into an iframe, which the
   // document never sees as a pointerdown. Focus dropped to the page, as when
   // the focused item goes away, is not a move.
-  const focusLeave = useFocusLeave((next) => {
-    // Tab has already closed it, with its own reason.
-    if (tabbedOut.current) {
-      tabbedOut.current = false;
-      return;
-    }
-    if (!open || !next || next === document.body || next === ctx.triggerRef.current) return;
-    ctx.setOpen(false, 'outside');
-  });
+  const focusLeave = useFocusLeave(
+    (next) => {
+      if (!open || !next || next === document.body || next === ctx.triggerRef.current) return;
+      ctx.setOpen(false, 'outside');
+    },
+    // A press outside or a Tab already asked to close; the blur it causes
+    // is not another request.
+    () => ctx.closeAsked.current,
+  );
   return (
     <div
       {...props}
@@ -298,7 +319,10 @@ function Content({
       style={{ ...wireStyle, ...style }}
       onPointerDown={composeHandlers(onPointerDown, wirePointerDown)}
       onClick={composeHandlers(onClick, wireClick)}
-      onFocus={composeHandlers(onFocus, focusLeave.onFocus)}
+      onFocus={(event: FocusEvent<HTMLDivElement>) => {
+        onFocus?.(event);
+        focusLeave.onFocus();
+      }}
       // Focus leaving closes the menu whatever the consumer's handler does,
       // as Tabs.List returns its tab stop.
       onBlur={(event: FocusEvent<HTMLDivElement>) => {

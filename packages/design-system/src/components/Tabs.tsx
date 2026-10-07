@@ -144,7 +144,10 @@ function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListP
       aria-orientation={ctx.orientation}
       data-orientation={ctx.orientation}
       className={cx(styles.list, className)}
-      onFocus={composeHandlers(onFocus, focusLeave.onFocus)}
+      onFocus={(event: FocusEvent<HTMLDivElement>) => {
+        onFocus?.(event);
+        focusLeave.onFocus();
+      }}
       // The tab stop must return to the selected tab whatever the consumer's
       // handler does, so this runs even if it prevented the event.
       onBlur={(event: FocusEvent<HTMLDivElement>) => {

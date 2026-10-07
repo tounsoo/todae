@@ -376,6 +376,31 @@ describe('useRovingFocus', () => {
     }
   });
 
+  it('a class change while a frame is queued is read in that frame, and later ones queue again', async () => {
+    const original = HTMLElement.prototype.checkVisibility;
+    HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {
+      return !this.classList.contains('gone');
+    };
+    try {
+      render(<Group activeValue="banana" />);
+      const apple = screen.getByRole('button', { name: 'apple' });
+      const banana = screen.getByRole('button', { name: 'banana' });
+      // A style change queues the frame; the hide after it is skipped by the
+      // observer and still read when that frame runs.
+      await act(async () => apple.style.setProperty('color', 'red'));
+      await act(async () => banana.classList.add('gone'));
+      expect(tabStops()).toEqual(['banana']);
+      await frame();
+      expect(tabStops()).toEqual(['apple']);
+      // The frame has run, so the next change queues another.
+      await act(async () => banana.classList.remove('gone'));
+      await frame();
+      expect(tabStops()).toEqual(['banana']);
+    } finally {
+      HTMLElement.prototype.checkVisibility = original;
+    }
+  });
+
   it('re-reads items when the group itself is shown, through its size', () => {
     const callbacks: ((entries: { contentRect: { width: number; height: number } }[]) => void)[] = [];
     const OriginalRO = globalThis.ResizeObserver;
