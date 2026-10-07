@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, Field, Label, Stack, useHighlight } from '@tounsoo/todae';
-import { useId, useMemo, useState } from 'react';
+import { useId, useState } from 'react';
 
 export function HighlightSearch() {
   const inputId = useId();
@@ -12,8 +12,7 @@ export function HighlightSearch() {
   // The matches can shrink under a kept index, so wrap it on read.
   const at = total === 0 ? 0 : index % total;
   const current = found.matches[at];
-  const currentRanges = useMemo(() => (current ? [current] : undefined), [current]);
-  useHighlight({ name: 'docs-search-current', ranges: currentRanges, priority: 1 });
+  useHighlight({ name: 'docs-search-current', ranges: current ? [current] : undefined, priority: 1 });
   const step = (by: number) => setIndex((at + by + total) % total);
   return (
     <Stack>

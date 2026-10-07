@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as api from '../index';
 import { useHighlight, type UseHighlightOptions } from './useHighlight';
 
@@ -166,6 +166,60 @@ describe('useHighlight', () => {
     const highlight = highlights.get('search')!;
     expect(highlight.priority).toBe(2);
     expect(highlight.type).toBe('spelling-error');
+  });
+
+  it('leaves priority and type alone when a hook sharing the name does not pass them', async () => {
+    function Shared({ text }: { text: string }) {
+      const a = useHighlight({ name: 'search', query: 'one', priority: 2, type: 'grammar-error' });
+      const b = useHighlight({ name: 'search', query: 'two' });
+      return (
+        <>
+          <p ref={a.ref}>one</p>
+          <p ref={b.ref}>{text}</p>
+        </>
+      );
+    }
+    const { rerender } = render(<Shared text="two" />);
+    await act(async () => rerender(<Shared text="two two" />));
+    expect(painted('search')).toEqual(['one', 'two', 'two']);
+    expect(highlights.get('search')!.priority).toBe(2);
+    expect(highlights.get('search')!.type).toBe('grammar-error');
+  });
+
+  it('registers again when page code clears the registry', () => {
+    const { rerender } = render(<Search query="apple" />);
+    highlights.clear();
+    rerender(<Search query="pie" />);
+    expect(painted('search')).toEqual(['pie']);
+  });
+
+  it('does not repaint a new array holding the same ranges', () => {
+    const range = document.createRange();
+    function Inline({ tick }: { tick: number }) {
+      useHighlight({ name: 'current', ranges: [range] });
+      return <output>{tick}</output>;
+    }
+    const { rerender } = render(<Inline tick={0} />);
+    const highlight = highlights.get('current')!;
+    const add = vi.spyOn(highlight, 'add');
+    const remove = vi.spyOn(highlight, 'delete');
+    rerender(<Inline tick={1} />);
+    expect(add).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+  });
+
+  it('skips the text inside a textarea', () => {
+    function Form() {
+      const highlight = useHighlight({ name: 'search', query: 'tea' });
+      return (
+        <div ref={highlight.ref}>
+          <p>tea</p>
+          <textarea defaultValue="tea" />
+        </div>
+      );
+    }
+    render(<Form />);
+    expect(painted('search')).toEqual(['tea']);
   });
 
   it('moves its ranges when the name changes', () => {

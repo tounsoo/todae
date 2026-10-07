@@ -4,7 +4,7 @@ import { HighlightSearch } from '../../../../components/demos/HighlightDemo';
 
 검색 결과 같은 텍스트 일치 항목을 브라우저의 CSS Custom Highlight API로 표시합니다. 훅은 일치 항목마다 `Range`를 찾아 `CSS.highlights`의 `Highlight`에 더하고, CSS는 `::highlight(name)`으로 그 범위를 칠합니다. `<mark>` 요소를 추가하지 않으므로 DOM, 선택 영역, 포커스는 그대로입니다.
 
-검색할 요소에 `ref`를 두고 `query`를 넘기세요. `ref` 아래의 DOM이 바뀔 때마다 훅이 텍스트를 다시 검색합니다. `caseSensitive`를 설정하지 않으면 대소문자를 구분하지 않으며, 쿼리는 패턴이 아니라 일반 텍스트입니다. 목록을 넘기면 모든 단어를 찾습니다.
+검색할 요소에 `ref`를 두고 `query`를 넘기세요. `ref` 아래의 텍스트나 요소가 바뀌거나, 그 안의 `hidden`, `class`, `style`, `open` 속성이 바뀌면 훅이 다시 검색합니다. `caseSensitive`를 설정하지 않으면 대소문자를 구분하지 않으며, 쿼리는 패턴이 아니라 일반 텍스트입니다. 목록을 넘기면 모든 단어를 찾습니다.
 
 ```tsx
 const found = useHighlight({ name: 'search', query })
@@ -24,9 +24,9 @@ const found = useHighlight({ name: 'search', query })
   <HighlightSearch />
 </Example>
 
-`matches`에는 일치 항목마다 살아 있는(live) `Range`가 문서 순서대로 들어 있습니다. 브라우저가 보여 주지 않는 텍스트(`display: none`, `visibility: hidden`)는 건너뛰므로, 그 길이가 곧 결과 수입니다. 일치 항목은 텍스트 노드 하나 안에 있어야 하므로, `fo<b>o</b>`처럼 마크업으로 나뉜 단어는 찾지 못합니다.
+`matches`에는 일치 항목마다 살아 있는(live) `Range`가 문서 순서대로 들어 있습니다. 검색할 때 `display: none`이나 `visibility: hidden`으로 숨긴 텍스트는 건너뜁니다. 일치 항목은 텍스트 노드 하나 안에 있어야 하므로, `fo<b>o</b>`처럼 마크업으로 나뉜 단어는 찾지 못합니다.
 
-현재 결과를 표시하려면, 그 범위를 다른 이름의 두 번째 훅에 `ranges`로 넘기고 `priority`를 더 높게 주어 위에 칠해지게 하세요. 위 데모가 이렇게 합니다. 같은 `name`을 쓰는 훅은 하나의 하이라이트에 칠하므로, 두 패널이 모두 `search`를 쓸 수 있습니다. `type`은 맞춤법과 문법 표시를 위해 `spelling-error`나 `grammar-error`를 설정합니다.
+현재 결과를 표시하려면, 그 범위를 다른 이름의 두 번째 훅에 `ranges`로 넘기고 `priority`를 더 높게 주어 위에 칠해지게 하세요. 위 데모가 이렇게 합니다. 같은 `name`을 쓰는 훅은 하나의 하이라이트에 칠하고 그 `priority`와 `type`을 함께 쓰므로, 두 패널이 모두 `search`를 쓸 수 있습니다. `type`은 맞춤법과 문법 표시를 위해 `spelling-error`나 `grammar-error`를 설정합니다.
 
 훅은 아무것도 알리지 않습니다. 스크린 리더 사용자에게 개수가 필요하면 `<output>`이나 다른 라이브 영역에 보여 주세요.
 

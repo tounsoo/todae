@@ -71,7 +71,7 @@ describe('SiteNav', () => {
       '/utilities/use-combobox',
       '/utilities/use-field',
       '/utilities/use-highlight',
-  '/utilities/use-popover',
+      '/utilities/use-popover',
       '/utilities/use-roving-focus',
       '/utilities/use-sheet-presentation',
       '/utilities/use-tooltip',

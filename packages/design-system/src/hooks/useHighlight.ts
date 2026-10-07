@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export type HighlightKind = 'highlight' | 'spelling-error' | 'grammar-error';
 
@@ -11,9 +11,9 @@ export type UseHighlightOptions = {
   caseSensitive?: boolean;
   /** More ranges to paint, such as the current match. They need no ref and are not added to matches. */
   ranges?: readonly AbstractRange[];
-  /** Which highlight paints on top where two overlap. Higher wins. */
+  /** Which highlight paints on top where two overlap. Higher wins. Hooks that share a name share it. */
   priority?: number;
-  /** Highlight type, for spelling and grammar marks. */
+  /** Highlight type, for spelling and grammar marks. Hooks that share a name share it. */
   type?: HighlightKind;
 };
 
@@ -39,8 +39,9 @@ function addRanges(name: string, ranges: readonly AbstractRange[]): Entry {
   if (!entry) {
     entry = { highlight: new Highlight(), counts: new Map() };
     registry.set(name, entry);
-    CSS.highlights.set(name, entry.highlight);
   }
+  // Re-register if page code cleared or replaced the name since.
+  if (CSS.highlights.get(name) !== entry.highlight) CSS.highlights.set(name, entry.highlight);
   for (const range of ranges) {
     const count = entry.counts.get(range) ?? 0;
     if (count === 0) entry.highlight.add(range);
@@ -86,7 +87,8 @@ function findMatches(root: HTMLElement, pattern: RegExp): Range[] {
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     const text = node as Text;
     const parent = text.parentElement;
-    if (!parent) continue;
+    // A textarea paints its live value, not its child text.
+    if (!parent || parent.localName === 'textarea') continue;
     let shown = visible.get(parent);
     if (shown === undefined) {
       shown = isVisible(parent);
@@ -101,6 +103,25 @@ function findMatches(root: HTMLElement, pattern: RegExp): Range[] {
     }
   }
   return found;
+}
+
+const sameItems = (a: readonly AbstractRange[], b: readonly AbstractRange[]) =>
+  a.length === b.length && a.every((range, i) => range === b[i]);
+
+/** Keeps the last array while its items are the same, so `ranges={[current]}` doesn't repaint every render. */
+function useStableRanges(ranges: readonly AbstractRange[] | undefined): readonly AbstractRange[] {
+  const next = ranges ?? NO_MATCHES;
+  const last = useRef(next);
+  if (!sameItems(last.current, next)) last.current = next;
+  return last.current;
+}
+
+function usePaint(name: string, ranges: readonly AbstractRange[]): void {
+  useEffect(() => {
+    if (!supported() || ranges.length === 0) return;
+    const entry = addRanges(name, ranges);
+    return () => removeRanges(name, entry, ranges);
+  }, [name, ranges]);
 }
 
 const sameRanges = (a: readonly Range[], b: readonly Range[]) =>
@@ -143,19 +164,28 @@ export function useHighlight({
     };
     search();
     const observer = new MutationObserver(search);
-    observer.observe(node, { subtree: true, childList: true, characterData: true, attributes: true });
+    observer.observe(node, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      // Only the attributes that commonly show or hide text.
+      attributeFilter: ['hidden', 'class', 'style', 'open'],
+    });
     return () => observer.disconnect();
   }, [node, source, flags]);
 
+  const extra = useStableRanges(ranges);
+  usePaint(name, matches);
+  usePaint(name, extra);
+
+  // Hooks that share a name share one Highlight, so only a value passed in is
+  // set. Runs after painting, which creates the Highlight when it is missing.
   useEffect(() => {
-    if (!supported()) return;
-    const painted = ranges ? [...matches, ...ranges] : matches;
-    if (painted.length === 0) return;
-    const entry = addRanges(name, painted);
-    entry.highlight.priority = priority ?? 0;
-    entry.highlight.type = type ?? 'highlight';
-    return () => removeRanges(name, entry, painted);
-  }, [name, matches, ranges, priority, type]);
+    const highlight = registry.get(name)?.highlight;
+    if (!highlight) return;
+    if (priority !== undefined) highlight.priority = priority;
+    if (type !== undefined) highlight.type = type;
+  }, [name, priority, type, matches, extra]);
 
   return { ref: setNode, matches };
 }
