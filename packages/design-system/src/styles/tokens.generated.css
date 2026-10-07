@@ -435,10 +435,13 @@
   --todae-fieldset-legend-font-size: var(--todae-font-size-2);
   --todae-fieldset-legend-font-weight: var(--todae-font-weight-medium);
   --todae-fieldset-legend-gap: var(--todae-space-field-gap);
+  --todae-link-decoration-current: var(--todae-color-fg-default);
+  --todae-link-decoration-current-thickness: 2px;
   --todae-link-decoration-default: var(--todae-color-fg-muted);
   --todae-link-decoration-hover: var(--todae-color-fg-default);
   --todae-link-decoration-offset: 3px;
   --todae-link-decoration-thickness: 1px;
+  --todae-link-fg-current: var(--todae-color-fg-default);
   --todae-link-fg-default: var(--todae-color-fg-default);
   --todae-link-fg-hover: var(--todae-color-fg-default);
   --todae-link-ring-focus: var(--todae-color-accent-default);

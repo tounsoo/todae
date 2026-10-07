@@ -16,6 +16,14 @@
     text-decoration-color: var(--todae-link-decoration-hover);
   }
 
+  /* The current page or step, as a router marks it with aria-current. The
+     underline stays dark and thickens, so it reads without a hover. */
+  :where(a:any-link[aria-current]:not([aria-current='false'])) {
+    color: var(--todae-link-fg-current);
+    text-decoration-color: var(--todae-link-decoration-current);
+    text-decoration-thickness: var(--todae-link-decoration-current-thickness);
+  }
+
   :where(a:any-link:focus-visible) {
     outline: 2px solid var(--todae-link-ring-focus);
     outline-offset: 2px;

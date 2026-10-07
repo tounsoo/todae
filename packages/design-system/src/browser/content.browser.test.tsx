@@ -156,6 +156,24 @@ describe('content parts in a browser', () => {
     expect(getComputedStyle(screen.getByText('Placeholder')).textDecorationLine).toBe('none');
   });
 
+  it('marks the current link with a thicker underline', () => {
+    render(
+      <Themed>
+        <a href="#a">Other</a>
+        <a href="#b" aria-current="page">
+          Current
+        </a>
+        <a href="#c" aria-current="false">
+          Not current
+        </a>
+      </Themed>,
+    );
+    const thickness = (text: string) => getComputedStyle(screen.getByText(text)).textDecorationThickness;
+    expect(thickness('Other')).toBe('1px');
+    expect(thickness('Current')).toBe('2px');
+    expect(thickness('Not current')).toBe('1px');
+  });
+
   it('hides visually hidden text from the screen but keeps it in the page', async () => {
     render(
       <Themed>
