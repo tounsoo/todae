@@ -251,7 +251,12 @@ function Content({
       // trigger. Shift+Tab stops on it, since moving back would skip it.
       if (event.key === 'Tab') {
         ctx.setOpen(false, 'tab');
+        // Only for the focus move this key makes, which happens before any
+        // timer: a Tab that leaves focus in place does not mute a later leave.
         tabbedOut.current = true;
+        setTimeout(() => {
+          tabbedOut.current = false;
+        });
         const trigger = ctx.triggerRef.current;
         // A menu with no trigger lets Tab move on from the item as usual.
         if (!trigger) return;

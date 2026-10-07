@@ -353,6 +353,30 @@ describe('Menu', () => {
     expect(isOpen()).toBe(true);
   });
 
+  it('a Tab that leaves focus in place does not mute a later focus leave', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <>
+        <Menu.Root open onOpenChange={onOpenChange}>
+          <Menu.Content aria-label="Actions">
+            <Menu.Item>Rename</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+        <button type="button">After</button>
+      </>,
+    );
+    await raf();
+    act(() => item('Rename').focus());
+    // The owner keeps it open and focus stays on the item.
+    key('Tab');
+    await settle();
+    act(() => screen.getByRole('button', { name: 'After' }).focus());
+    expect(onOpenChange.mock.calls).toEqual([
+      [false, 'tab'],
+      [false, 'outside'],
+    ]);
+  });
+
   it('focuses the first item when open on mount', async () => {
     render(<Actions defaultOpen />);
     await raf();
