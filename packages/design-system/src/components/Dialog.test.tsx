@@ -73,8 +73,8 @@ describe('Dialog', () => {
         <Dialog.Title>Save</Dialog.Title>
       </Dialog.Root>,
     );
-    const el = document.querySelector('dialog');
-    el?.dispatchEvent(new Event('close'));
+    const el = document.querySelector('dialog')!;
+    act(() => el.close());
     expect(onOpenChange).toHaveBeenCalledWith(false, 'native');
   });
 
@@ -186,6 +186,19 @@ describe('Dialog', () => {
     });
     expect(document.activeElement).toBe(screen.getByLabelText('outer'));
     spy.mockRestore();
+  });
+
+  it('ignores a close event that arrives after the element opened again', () => {
+    const onOpenChange = vi.fn();
+    render(
+      <Dialog.Root open onOpenChange={onOpenChange}>
+        <Dialog.Title>Save</Dialog.Title>
+      </Dialog.Root>,
+    );
+    const el = document.querySelector('dialog')!;
+    // The browser queues close events, so one can land after showModal ran again.
+    el.dispatchEvent(new Event('close'));
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 
   it('shows again where the person was after a native close while open', () => {

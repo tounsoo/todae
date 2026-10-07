@@ -80,7 +80,9 @@ export function useModalDialog({
   useLayoutEffect(() => {
     const el = node;
     if (!el) return;
-    const drop = () => dropModal(el);
+    const drop = () => {
+      if (!el.open) dropModal(el);
+    };
     el.addEventListener('close', drop);
     return () => {
       el.removeEventListener('close', drop);
@@ -90,8 +92,8 @@ export function useModalDialog({
 
   const cancelledAt = useRef(-Infinity);
   useLayoutEffect(() => {
-    const el = node;
-    if (!el) return;
+    if (!node) return;
+    const el: HTMLDialogElement = node;
     // Escape is a close request. Hold it so the owner closes the element.
     function onCancel(event: Event) {
       cancelledAt.current = performance.now();
@@ -99,8 +101,9 @@ export function useModalDialog({
       if (latest.current.dismissOnEscape) latest.current.requestClose('escape');
     }
     function onClose() {
-      // Something closed the element while the owner still has it open.
-      if (!openRef.current) return;
+      // Something closed the element while the owner still has it open. A
+      // close event that arrives after it opened again is stale.
+      if (!openRef.current || el.open) return;
       const escaped = performance.now() - cancelledAt.current < CANCEL_CLOSE_WINDOW_MS;
       cancelledAt.current = -Infinity;
       noteNativeClose();

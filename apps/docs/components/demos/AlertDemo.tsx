@@ -1,7 +1,7 @@
 'use client';
 
 import { Alert, Button, Stack } from '@tounsoo/todae';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 // Todae ships no icons. These stand in for your own icon set.
 function Mark({ children }: { children: string }) {
@@ -54,9 +54,10 @@ export function AlertTones() {
 
 export function AlertDismissible() {
   const [shown, setShown] = useState(false);
+  const saveRef = useRef<HTMLButtonElement>(null);
   return (
     <Stack>
-      <Button.Root variant="secondary" onClick={() => setShown(true)} disabled={shown}>
+      <Button.Root ref={saveRef} variant="secondary" onClick={() => setShown(true)}>
         Save changes
       </Button.Root>
       {/* The status region stays on the page; only its content changes, so it is announced. */}
@@ -64,7 +65,15 @@ export function AlertDismissible() {
         {shown ? (
           <Alert.Root tone="success" role="none">
             <Alert.Title>Changes saved</Alert.Title>
-            <Alert.Close onClick={() => setShown(false)}>×</Alert.Close>
+            <Alert.Close
+              onClick={() => {
+                // The button is about to go away: give focus somewhere first.
+                saveRef.current?.focus();
+                setShown(false);
+              }}
+            >
+              ×
+            </Alert.Close>
           </Alert.Root>
         ) : null}
       </div>

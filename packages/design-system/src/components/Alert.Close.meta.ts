@@ -9,7 +9,7 @@ export const meta = {
       type: 'string',
       required: false,
       default: '"Dismiss" when the button has no text of its own',
-      description: 'Accessible name. Visible text such as "Got it" names the button by itself.',
+      description: 'Accessible name. Visible text such as "Got it" names the button by itself. The default is English, so pass a name in your app\'s language.',
     },
     {
       name: 'onClick',
