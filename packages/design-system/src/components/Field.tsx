@@ -229,7 +229,11 @@ function Root({
           pendingPicker.current = null;
           composeHandlers(onMouseDownProp, onMouseDown)(event);
         }}
-        onClick={composeHandlers(onClickProp, onClick)}
+        onClick={(event: MouseEvent<HTMLDivElement>) => {
+          composeHandlers(onClickProp, onClick)(event);
+          // The press's click is over, whether the shell handled it or not.
+          pendingPicker.current = null;
+        }}
       >
         {children}
       </div>

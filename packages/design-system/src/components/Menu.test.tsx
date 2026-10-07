@@ -39,6 +39,7 @@ const menu = () => document.querySelector<HTMLElement>('[role="menu"]')!;
 const isOpen = () => menu().hasAttribute('data-popover-open');
 const item = (name: string) => screen.getByText(name).closest<HTMLElement>('[role^="menuitem"]')!;
 const key = (k: string, target: Element = document.activeElement!) => fireEvent.keyDown(target, { key: k });
+const settle = () => act(async () => new Promise((resolve) => setTimeout(resolve)));
 const raf = () => act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
 
 describe('Menu', () => {
@@ -248,11 +249,42 @@ describe('Menu', () => {
     // A focused item removed or a window losing focus: no next target, and
     // focus is not on anything outside.
     fireEvent.blur(item('Rename'), { relatedTarget: null });
-    await raf();
+    await settle();
     act(() => trigger().focus());
-    await raf();
+    await settle();
     expect(onOpenChange).not.toHaveBeenCalled();
     expect(isOpen()).toBe(true);
+  });
+
+  it('closes once focus settles outside after a blur with no target, as into an iframe', async () => {
+    const onOpenChange = vi.fn();
+    render(<Actions onOpenChange={onOpenChange} />);
+    fireEvent.click(trigger());
+    await raf();
+    const after = screen.getByRole('button', { name: 'After' });
+    // An iframe takes focus without telling the menu where it went.
+    const active = vi.spyOn(document, 'activeElement', 'get').mockReturnValue(after);
+    try {
+      fireEvent.blur(item('Rename'), { relatedTarget: null });
+      expect(onOpenChange).not.toHaveBeenCalledWith(false, 'outside');
+      await settle();
+    } finally {
+      active.mockRestore();
+    }
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'outside');
+    expect(isOpen()).toBe(false);
+  });
+
+  it('a blur with no target checks nothing once the menu has gone', async () => {
+    const onOpenChange = vi.fn();
+    const { unmount } = render(<Actions onOpenChange={onOpenChange} />);
+    fireEvent.click(trigger());
+    await raf();
+    onOpenChange.mockClear();
+    fireEvent.blur(item('Rename'), { relatedTarget: null });
+    unmount();
+    await settle();
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 
   it('closes on Tab with reason tab', async () => {

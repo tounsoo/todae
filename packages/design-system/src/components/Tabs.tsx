@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -14,6 +13,7 @@ import {
 } from 'react';
 import { useControlledValue } from '../hooks/useControlledState';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
+import { useFocusLeave } from '../overlay/useFocusLeave';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import { domSafe, useDomId } from './domId';
 import styles from './Tabs.module.css';
@@ -133,12 +133,8 @@ function Root({
 
 function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListProps) {
   const ctx = useTabs('List');
-  // The check a blur with no relatedTarget schedules; dropped when focus
-  // comes back first or the list unmounts.
-  const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(pending.current), []);
   const container = ctx.roving.getContainerProps(props);
-  const { leave } = ctx;
+  const focusLeave = useFocusLeave(ctx.leave);
   const refs = useComposedRefs(container.ref, ref);
   return (
     <div
@@ -148,29 +144,12 @@ function List({ children, className, ref, onBlur, onFocus, ...props }: TabsListP
       aria-orientation={ctx.orientation}
       data-orientation={ctx.orientation}
       className={cx(styles.list, className)}
-      onFocus={composeHandlers(onFocus, () => {
-        clearTimeout(pending.current);
-        pending.current = undefined;
-      })}
+      onFocus={composeHandlers(onFocus, focusLeave.onFocus)}
       // The tab stop must return to the selected tab whatever the consumer's
       // handler does, so this runs even if it prevented the event.
       onBlur={(event: FocusEvent<HTMLDivElement>) => {
         onBlur?.(event);
-        const next = event.relatedTarget;
-        const list = event.currentTarget;
-        if (next instanceof Node && list.contains(next)) return;
-        // With no relatedTarget, focus may have gone to the page, an iframe,
-        // or another window. Look once it has landed: the window losing focus
-        // leaves the tab focused, which is not leaving the list.
-        if (next === null) {
-          clearTimeout(pending.current);
-          pending.current = setTimeout(() => {
-            pending.current = undefined;
-            if (!list.contains(document.activeElement)) leave();
-          });
-          return;
-        }
-        leave();
+        focusLeave.onBlur(event);
       }}
     >
       {children}

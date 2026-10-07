@@ -19,6 +19,7 @@ import { useControlledValue } from '../hooks/useControlledState';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { usePopoverSync } from '../overlay/usePopoverSync';
+import { useFocusLeave } from '../overlay/useFocusLeave';
 import { Button, type ButtonRootProps } from './Button';
 import { useDomId } from './domId';
 import { composeHandlers, cx, useComposedRefs } from './props';
@@ -218,6 +219,7 @@ function Content({
   onKeyDown,
   onPointerDown,
   onClick,
+  onFocus,
   onBlur,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledby,
@@ -259,24 +261,12 @@ function Content({
   const refs = useComposedRefs(localRef, wireRef, container.ref, ref);
   // Focus that leaves for anything but the trigger closes the menu: a script,
   // a screen reader's focus command, or a press into an iframe, which the
-  // document never sees as a pointerdown.
-  const closeIfFocusLeft = (target: Element | null) => {
-    const menu = localRef.current;
-    if (!open || !menu || !target || target === document.body) return;
-    if (menu.contains(target) || target === ctx.triggerRef.current) return;
+  // document never sees as a pointerdown. Focus dropped to the page, as when
+  // the focused item goes away, is not a move.
+  const focusLeave = useFocusLeave((next) => {
+    if (!open || !next || next === document.body || next === ctx.triggerRef.current) return;
     ctx.setOpen(false, 'outside');
-  };
-  const handleBlur = (event: FocusEvent<HTMLDivElement>) => {
-    if (event.relatedTarget instanceof Element) {
-      closeIfFocusLeft(event.relatedTarget);
-      return;
-    }
-    // No next target yet: focus went to an iframe, another window, or
-    // nowhere. Look once it settles; a window that lost focus keeps the menu.
-    requestAnimationFrame(() => {
-      if (document.hasFocus()) closeIfFocusLeft(document.activeElement);
-    });
-  };
+  });
   return (
     <div
       {...props}
@@ -293,7 +283,8 @@ function Content({
       style={{ ...wireStyle, ...style }}
       onPointerDown={composeHandlers(onPointerDown, wirePointerDown)}
       onClick={composeHandlers(onClick, wireClick)}
-      onBlur={composeHandlers(onBlur, handleBlur)}
+      onFocus={composeHandlers(onFocus, focusLeave.onFocus)}
+      onBlur={composeHandlers(onBlur, focusLeave.onBlur)}
       onKeyDown={container.onKeyDown}
     >
       {children}
