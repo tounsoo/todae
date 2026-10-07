@@ -208,8 +208,10 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     // around items, can move the tab stop. Those are read at once. A class or
     // style change only might hide something, and can come every frame from
     // an animation, so those are read at most once per frame.
-    const touchesItem = (node: Node) =>
-      node instanceof Element && (node.hasAttribute('data-todae-roving') || node.querySelector('[data-todae-roving]') !== null);
+    // Only this group's items: another group nested inside, such as a menu
+    // in a tab list, keeps its own.
+    const item = `[data-todae-roving="${scope}"]`;
+    const touchesItem = (node: Node) => node instanceof Element && (node.matches(item) || node.querySelector(item) !== null);
     let frame = 0;
     const syncNow = () => {
       cancelAnimationFrame(frame);
@@ -268,7 +270,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       flush: () => handle(watcher.takeRecords()),
     };
     latestSync.current();
-  }, []);
+  }, [scope]);
 
   // Items the owner itself just changed are read before paint, so a tab
   // added and made active in one render takes the tab stop at once.

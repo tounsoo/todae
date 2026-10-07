@@ -182,6 +182,39 @@ describe('useRovingFocus', () => {
     expect(focused()).toBe('outer-2');
   });
 
+  it("a nested group's item changes do not re-read the outer group", async () => {
+    const original = HTMLElement.prototype.checkVisibility;
+    let outerReads = 0;
+    HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {
+      if (this.textContent?.startsWith('outer')) outerReads += 1;
+      return true;
+    };
+    try {
+      function Outer() {
+        const outer = useRovingFocus();
+        return (
+          <div {...outer.getContainerProps()}>
+            <button type="button" {...outer.getItemProps('outer-1')}>
+              outer-1
+            </button>
+            <Group />
+          </div>
+        );
+      }
+      render(<Outer />);
+      await frame();
+      outerReads = 0;
+      await act(async () => screen.getByText('apple').style.setProperty('color', 'red'));
+      await frame();
+      expect(outerReads).toBe(0);
+      await act(async () => screen.getByText('outer-1').style.setProperty('color', 'red'));
+      await frame();
+      expect(outerReads).toBeGreaterThan(0);
+    } finally {
+      HTMLElement.prototype.checkVisibility = original;
+    }
+  });
+
   it('typeahead cycles by first letter and matches longer prefixes', () => {
     render(<Group typeahead />);
     screen.getByText('apple').focus();
