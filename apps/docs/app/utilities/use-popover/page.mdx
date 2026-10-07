@@ -4,7 +4,7 @@ import { PopoverMenu } from '../../../components/demos/PopoverDemo';
 
 `usePopover` is the open machine behind [Popover](/popover). Spread `getTriggerProps` on the trigger and `getPopoverProps` on `Popover.Root`, which is surface chrome only. [Menu](/menu) and the [Combobox recipe](/recipes/combobox) are built on it.
 
-Outside click and Escape call `onOpenChange(false, reason)`, so an owner can veto one reason and keep the others. `haspopup` sets the trigger's `aria-haspopup`. `anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks; do not pass it and also spread `getTriggerProps`.
+An outside press, Escape and the trigger call `onOpenChange(false, reason)` with `outside`, `escape` or `trigger`, so an owner can veto one reason and keep the others. `haspopup` sets the trigger's `aria-haspopup`. `anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks; do not pass it and also spread `getTriggerProps`.
 
 ```tsx
 const [open, setOpen] = useState(false)

@@ -16,9 +16,7 @@ A recipe, not a package namespace. [useCombobox](/utilities/use-combobox) owns o
 
 ## Presentation
 
-[useSheetPresentation](/utilities/use-sheet-presentation) chooses sheet when the pointer is coarse **or** the viewport is narrower than 640px. Otherwise it chooses popover. Server render and the first paint are popover. `isSheet` mirrors `presentation === "sheet"`. It is not `isTouch`.
-
-`useCombobox({ presentation: 'auto' })` uses the same helper. Force `popover` or `sheet` when a docs screenshot must stay still.
+`useCombobox({ presentation: 'auto' })` picks popover or sheet through [useSheetPresentation](/utilities/use-sheet-presentation), which has the rule. Force `popover` or `sheet` when a docs screenshot must stay still.
 
 If presentation flips while the list is open, the hook closes with `blur`.
 

@@ -9,7 +9,8 @@ import HomePage from './page';
 // Every page folder under app/, as a URL path.
 function pagePaths(dir: string, path = ''): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (!entry.isDirectory()) return [];
+    // Route groups, private folders and dynamic segments are not plain links.
+    if (!entry.isDirectory() || /^[(_[]/.test(entry.name)) return [];
     const child = `${path}/${entry.name}`;
     const own = ['page.mdx', 'page.tsx'].some((file) => existsSync(join(dir, entry.name, file))) ? [child] : [];
     return [...own, ...pagePaths(join(dir, entry.name), child)];
