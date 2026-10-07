@@ -156,37 +156,54 @@ describe('content parts in a browser', () => {
     expect(getComputedStyle(screen.getByText('Placeholder')).textDecorationLine).toBe('none');
   });
 
-  it('marks the current link from its tokens and treats false and empty as not current', () => {
+  it('marks the current link from its tokens and treats false and empty as not current', async () => {
     render(
       <Themed>
         <a href="#a">Other</a>
         <a href="#b" aria-current="page">
           Current
         </a>
-        <a href="#c" aria-current="false">
+        <a href="#c" aria-current="step">
+          Step
+        </a>
+        <a href="#d" aria-current="true">
+          True
+        </a>
+        <a href="#e" aria-current="false">
           False
         </a>
         {/* React types allow only the ARIA tokens, but markup can carry these. */}
-        <a href="#d" {...{ 'aria-current': 'FALSE' as 'false' }}>
+        <a href="#f" {...{ 'aria-current': 'FALSE' as 'false' }}>
           Upper false
         </a>
-        <a href="#e" {...{ 'aria-current': '' as 'false' }}>
+        <a href="#g" {...{ 'aria-current': '' as 'false' }}>
           Empty
         </a>
       </Themed>,
     );
     const style = (text: string) => getComputedStyle(screen.getByText(text));
     expect(style('Current').textDecorationThickness).toBe('2px');
-    // Point each current token at a distinct color to prove the rule reads it.
+    // Point each current token at a distinct value to prove the rule reads it.
     const root = screen.getByText('Current').closest('main') as HTMLElement;
     root.style.setProperty('--todae-link-fg-current', 'rgb(1, 2, 3)');
     root.style.setProperty('--todae-link-decoration-current', 'rgb(4, 5, 6)');
-    expect(style('Current').color).toBe('rgb(1, 2, 3)');
-    expect(style('Current').textDecorationColor).toBe('rgb(4, 5, 6)');
+    root.style.setProperty('--todae-link-decoration-current-thickness', '3px');
+    for (const text of ['Current', 'Step', 'True']) {
+      expect(style(text).color).toBe('rgb(1, 2, 3)');
+      expect(style(text).textDecorationColor).toBe('rgb(4, 5, 6)');
+      expect(style(text).textDecorationThickness).toBe('3px');
+    }
     for (const text of ['Other', 'False', 'Upper false', 'Empty']) {
       expect(style(text).textDecorationThickness).toBe('1px');
       expect(style(text).color).not.toBe('rgb(1, 2, 3)');
+      expect(style(text).textDecorationColor).not.toBe('rgb(4, 5, 6)');
     }
+    // Hover still wins on a current link.
+    root.style.setProperty('--todae-link-fg-hover', 'rgb(7, 8, 9)');
+    root.style.setProperty('--todae-link-decoration-hover', 'rgb(10, 11, 12)');
+    await userEvent.hover(screen.getByText('Current'));
+    expect(style('Current').color).toBe('rgb(7, 8, 9)');
+    expect(style('Current').textDecorationColor).toBe('rgb(10, 11, 12)');
   });
 
   it('hides visually hidden text from the screen but keeps it in the page', async () => {
