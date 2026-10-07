@@ -4,7 +4,7 @@ import { ChipListDemo } from '../../../../components/demos/ChipListDemo';
 
 A recipe, not a package export. [useChipList](/utilities/use-chip-list) measures and decides which chips fit. `Chip.Root` owns the look. The code below owns the markup, list semantics, clamp CSS, and focus.
 
-This recipe is the exception to [Composition](/composition)'s thin-glue rule: it carries hard behavior of its own (focus management, Tab handling, ARIA wiring and panel positioning). It is planned to become a component. Until then, copy it as a stopgap and change its styles, not its behavior.
+This recipe is the exception to [Composition](/composition)'s thin-glue rule: it carries hard behavior of its own (focus management, Tab handling, ARIA wiring and panel positioning). It is planned to become a component. Until then, copy it as a stopgap and restyle it through tokens. Leave its behavior and its clamp CSS alone, since useChipList measures against that CSS.
 
 ## One row / Two rows
 
