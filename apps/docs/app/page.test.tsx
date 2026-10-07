@@ -9,12 +9,12 @@ import HomePage from './page';
 // next.config pageExtensions.
 const PAGE_FILES = ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'].map((ext) => `page.${ext}`);
 
-// Every page folder under app/, as a URL path.
+// Every page under app/, as a URL path. A route group adds no segment;
+// private folders, dynamic segments and parallel slots are not plain links.
 function pagePaths(dir: string, path = ''): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    // Route groups, private folders and dynamic segments are not plain links.
-    if (!entry.isDirectory() || /^[(_[@]/.test(entry.name)) return [];
-    const child = `${path}/${entry.name}`;
+    if (!entry.isDirectory() || /^[_[@]/.test(entry.name)) return [];
+    const child = entry.name.startsWith('(') ? path : `${path}/${entry.name}`;
     const own = PAGE_FILES.some((file) => existsSync(join(dir, entry.name, file))) ? [child] : [];
     return [...own, ...pagePaths(join(dir, entry.name), child)];
   });
@@ -28,9 +28,10 @@ describe('HomePage', () => {
     }
     const hrefs = [...container.querySelectorAll('a')].map((link) => link.getAttribute('href') ?? '');
     expect(hrefs.length).toBeGreaterThan(0);
-    for (const href of hrefs) {
-      const dir = join(__dirname, href.replace(/[?#].*$/, ''));
-      expect(PAGE_FILES.some((file) => existsSync(join(dir, file))), href).toBe(true);
+    const pages = new Set(pagePaths(__dirname));
+    // Internal links only; an external one has no page here.
+    for (const href of hrefs.filter((link) => link.startsWith('/'))) {
+      expect(pages.has(href.replace(/[?#].*$/, '')), href).toBe(true);
     }
   });
 
