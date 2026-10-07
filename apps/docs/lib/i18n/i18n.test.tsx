@@ -21,6 +21,12 @@ import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
 
 const path = vi.hoisted(() => ({ current: '/ko/button' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
+// Lets a test pretend a page is untranslated; every page is translated today.
+const untranslated = vi.hoisted(() => ({ current: undefined as Record<string, string[]> | undefined }));
+vi.mock('./pages', async (importOriginal) => {
+  const pages = await importOriginal<typeof import('./pages')>();
+  return { ...pages, untranslatedByLocale: (appDir?: string) => untranslated.current ?? pages.untranslatedByLocale(appDir) };
+});
 
 const APP = join(process.cwd(), 'app');
 
@@ -223,8 +229,18 @@ describe('docs locales', () => {
     expect(untranslatedByLocale()).toEqual({ ko: untranslatedSlugs('ko') });
     path.current = '/ko/tokens';
     expect(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>)).toContain('rel="alternate" hrefLang="ko"');
+    untranslated.current = { ko: ['tokens'] };
+    try {
+      expect(renderToStaticMarkup(<SiteShell locale="ko">x</SiteShell>)).not.toContain('rel="alternate"');
+    } finally {
+      untranslated.current = undefined;
+    }
     path.current = '/_not-found';
     expect(renderToStaticMarkup(<SiteShell locale="en" notFound>x</SiteShell>)).not.toContain('rel="alternate"');
+  });
+
+  it('lists every locale when the page sources are not on the server', () => {
+    expect(untranslatedByLocale(join(tmpdir(), 'todae-no-app'))).toEqual({});
   });
 
   it('names examples in the page language and marks their English demo copy', () => {
