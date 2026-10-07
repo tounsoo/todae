@@ -47,3 +47,45 @@ export function VisuallyHiddenLabel() {
     </Text>
   );
 }
+
+export function SeparatorBetween() {
+  return (
+    <div>
+      <Text>Account settings apply to every workspace.</Text>
+      <hr />
+      <Text>Workspace settings apply to this workspace only.</Text>
+    </div>
+  );
+}
+
+export function TableOfInvoices() {
+  return (
+    <table>
+      <caption>Invoices this quarter</caption>
+      <thead>
+        <tr>
+          <th scope="col">Invoice</th>
+          <th scope="col">Date</th>
+          <th scope="col">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>INV-1042</td>
+          <td>2026-07-03</td>
+          <td>$1,200.00</td>
+        </tr>
+        <tr>
+          <td>INV-1043</td>
+          <td>2026-08-01</td>
+          <td>$980.00</td>
+        </tr>
+        <tr>
+          <td>INV-1044</td>
+          <td>2026-09-02</td>
+          <td>$1,450.00</td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}

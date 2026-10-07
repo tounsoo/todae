@@ -1,0 +1,42 @@
+import { MeterLevels, ProgressStates } from '../../../components/demos/NativeControlsDemo';
+
+# Progress and Meter
+
+진행 막대와 미터는 네이티브 `<progress>`와 `<meter>` 요소입니다. 컴포넌트는 없습니다. 역할과 값은 브라우저가 이미 보조 기술에 알려 줍니다. Todae는 `progress`와 `meter` contract 토큰으로 `todae.base` 레이어에서 브라우저 기본 막대를 트랙과 채움으로 바꿉니다.
+
+## Progress
+
+`<progress>`는 작업이 얼마나 진행됐는지 보여 줍니다. 끝을 알 수 없으면 `value`를 빼세요. 띠가 트랙을 가로지르며, 사용자가 동작 줄이기를 요청하면 멈춥니다.
+
+<Example>
+  <ProgressStates />
+</Example>
+
+```tsx
+<label htmlFor="upload">Uploading report.pdf</label>
+<progress id="upload" value={64} max={100}>64%</progress>
+
+<label htmlFor="results">Loading results</label>
+<progress id="results" />
+```
+
+## Meter
+
+`<meter>`는 저장 공간이나 배터리처럼 범위가 정해진 측정값을 보여 줍니다. `low`, `high`, `optimum`을 정하면 값이 좋음, 보통, 나쁨 중 어디인지 브라우저가 판단합니다. Todae는 이 세 상태를 `meter.fill.optimum`, `meter.fill.suboptimum`, `meter.fill.critical`로 칠합니다.
+
+<Example>
+  <MeterLevels />
+</Example>
+
+```tsx
+<label htmlFor="storage">Storage used</label>
+<meter id="storage" min={0} max={100} low={70} high={90} optimum={0} value={92}>92%</meter>
+```
+
+각각 `<label>`이나 `aria-label`로 이름을 붙이고, 막대를 그리지 않는 브라우저를 위해 값을 요소 안에 텍스트로 넣으세요. 트랙, 높이, 모서리는 `progress.track`, `progress.height`, `progress.radius`로 바꾸세요.
+
+## 언제 쓰나요
+
+**쓸 때:** Progress → 완료를 향해 가는 작업. Meter → 사용자의 작업과 상관없이 범위 안에 있는 수준.
+
+**쓰지 않을 때:** 백분율 없이 페이지나 섹션을 불러오는 중 → 스켈레톤이나 스피너. 사용자가 정하는 값 → [Slider](/slider).

@@ -1,0 +1,18 @@
+{
+  "progress": {
+    "track": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
+    "fill": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+    "height": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+    "motion": {
+      "duration": { "$type": "duration", "$value": { "value": 1200, "unit": "ms" } }
+    }
+  },
+  "meter": {
+    "fill": {
+      "optimum": { "$type": "color", "$value": { "$ref": "#/color/status/success/fg/$value" } },
+      "suboptimum": { "$type": "color", "$value": { "$ref": "#/color/status/warning/fg/$value" } },
+      "critical": { "$type": "color", "$value": { "$ref": "#/color/status/critical/fg/$value" } }
+    }
+  }
+}

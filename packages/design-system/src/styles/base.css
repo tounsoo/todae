@@ -67,6 +67,163 @@
     }
   }
 
+  /* Separator. A plain <hr> is the thematic break; it keeps its separator
+     role and draws one rule from the separator tokens. */
+  :where(hr) {
+    block-size: 0;
+    margin-block: var(--todae-separator-space);
+    margin-inline: 0;
+    border: 0;
+    border-block-start: var(--todae-separator-thickness) solid var(--todae-separator-color);
+  }
+
+  /* Table. Native <table> semantics stay as they are; Todae only sets the
+     rules, padding and header shade. A data grid is out of scope. */
+  :where(table) {
+    inline-size: 100%;
+    border-collapse: collapse;
+    color: var(--todae-table-fg);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :where(caption) {
+    padding-block-end: var(--todae-table-cell-padding-y);
+    color: var(--todae-table-caption-fg);
+    text-align: start;
+  }
+
+  :where(th, td) {
+    padding-block: var(--todae-table-cell-padding-y);
+    padding-inline: var(--todae-table-cell-padding-x);
+    border-block-end: 1px solid var(--todae-table-border);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  :where(thead th) {
+    background: var(--todae-table-header-bg);
+    color: var(--todae-table-header-fg);
+    font-weight: var(--todae-table-header-font-weight);
+  }
+
+  /* Progress and meter. Native elements keep their roles and values; the
+     browser's own bar is replaced by a track and a fill from tokens. */
+  :where(progress, meter) {
+    appearance: none;
+    display: inline-block;
+    inline-size: 100%;
+    block-size: var(--todae-progress-height);
+    border: 0;
+    border-radius: var(--todae-progress-radius);
+    background: var(--todae-progress-track);
+    overflow: hidden;
+    vertical-align: middle;
+  }
+
+  :where(progress)::-webkit-progress-bar {
+    border-radius: inherit;
+    background: var(--todae-progress-track);
+  }
+
+  :where(progress)::-webkit-progress-value {
+    border-radius: inherit;
+    background: var(--todae-progress-fill);
+  }
+
+  :where(progress)::-moz-progress-bar {
+    border-radius: inherit;
+    background: var(--todae-progress-fill);
+  }
+
+  /* No value means the work has no known end: a band of fill sweeps the track. */
+  :where(progress:indeterminate) {
+    background:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        var(--todae-progress-fill) 40%,
+        var(--todae-progress-fill) 60%,
+        transparent 100%
+      )
+      no-repeat var(--todae-progress-track);
+    background-size: 40% 100%;
+    animation: todae-progress-sweep var(--todae-progress-motion-duration) linear infinite;
+  }
+
+  :where(progress:indeterminate)::-webkit-progress-bar {
+    background: transparent;
+  }
+
+  :where(progress:indeterminate)::-moz-progress-bar {
+    background: transparent;
+  }
+
+  @keyframes todae-progress-sweep {
+    from {
+      background-position: -40% 0;
+    }
+    to {
+      background-position: 140% 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(progress:indeterminate) {
+      animation: none;
+      background: var(--todae-progress-track);
+    }
+  }
+
+  :where(meter)::-webkit-meter-bar {
+    block-size: 100%;
+    border: 0;
+    border-radius: inherit;
+    background: var(--todae-progress-track);
+  }
+
+  :where(meter)::-webkit-meter-optimum-value {
+    border-radius: inherit;
+    background: var(--todae-meter-fill-optimum);
+  }
+
+  :where(meter)::-webkit-meter-suboptimum-value {
+    border-radius: inherit;
+    background: var(--todae-meter-fill-suboptimum);
+  }
+
+  :where(meter)::-webkit-meter-even-less-good-value {
+    border-radius: inherit;
+    background: var(--todae-meter-fill-critical);
+  }
+
+  :where(meter:-moz-meter-optimum)::-moz-meter-bar {
+    background: var(--todae-meter-fill-optimum);
+  }
+
+  :where(meter:-moz-meter-sub-optimum)::-moz-meter-bar {
+    background: var(--todae-meter-fill-suboptimum);
+  }
+
+  :where(meter:-moz-meter-sub-sub-optimum)::-moz-meter-bar {
+    background: var(--todae-meter-fill-critical);
+  }
+
+  /* Slider. A native range input keeps its keyboard steps and value
+     announcements; accent-color tints the thumb and filled track. */
+  :where(input[type='range']) {
+    inline-size: 100%;
+    accent-color: var(--todae-slider-fill);
+  }
+
+  :where(input[type='range']:focus-visible) {
+    outline: 2px solid var(--todae-slider-ring-focus);
+    outline-offset: 2px;
+  }
+
+  :where(input[type='range']:disabled) {
+    cursor: not-allowed;
+  }
+
   /* Hidden on screen, still read by assistive technology. The -focusable
      form shows again while focus is inside, for skip links. !important,
      because a component's own padding or size must not undo it. */

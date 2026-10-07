@@ -1,0 +1,35 @@
+import { TableOfInvoices } from '../../../components/demos/NativeDemo';
+
+# Table
+
+Tables are native `<table>` elements. There is no component: the browser already gives rows, column headers and captions their meaning, and Todae styles them in the `todae.base` layer from the `table` contract tokens. Numbers use tabular figures so columns line up.
+
+<Example>
+  <TableOfInvoices />
+</Example>
+
+```tsx
+<table>
+	<caption>Invoices this quarter</caption>
+	<thead>
+		<tr>
+			<th scope="col">Invoice</th>
+			<th scope="col">Amount</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>INV-1042</td>
+			<td>$1,200.00</td>
+		</tr>
+	</tbody>
+</table>
+```
+
+Give every column header `scope="col"` and every row header `scope="row"`. A `<caption>` names the table for screen readers. Restyle through `table.border`, `table.header.*`, `table.caption.fg` and `table.cell.padding.*`; the padding follows density.
+
+## When to use
+
+**When:** Data people compare across rows and columns.
+
+**When not:** Laying out content that is not tabular → [Stack](/stack) or CSS grid. Sorting, column resizing, virtual scrolling or cell editing → a data grid, which is out of scope for Todae.

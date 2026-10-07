@@ -27,6 +27,10 @@ export const SITE_GROUPS = [
       ['/link', 'Link'],
       ['/disclosure', 'Disclosure'],
       ['/visually-hidden', 'VisuallyHidden'],
+      ['/separator', 'Separator'],
+      ['/table', 'Table'],
+      ['/progress', 'Progress and Meter'],
+      ['/slider', 'Slider'],
     ],
   },
   {

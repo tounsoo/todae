@@ -1,0 +1,35 @@
+import { TableOfInvoices } from '../../../components/demos/NativeDemo';
+
+# Table
+
+표는 네이티브 `<table>` 요소입니다. 컴포넌트는 없습니다. 행, 열 머리글, 캡션의 의미는 브라우저가 이미 제공하고, Todae는 `table` contract 토큰으로 `todae.base` 레이어에서 스타일을 정합니다. 숫자는 고정폭 숫자를 써서 열이 맞춰집니다.
+
+<Example>
+  <TableOfInvoices />
+</Example>
+
+```tsx
+<table>
+	<caption>Invoices this quarter</caption>
+	<thead>
+		<tr>
+			<th scope="col">Invoice</th>
+			<th scope="col">Amount</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>INV-1042</td>
+			<td>$1,200.00</td>
+		</tr>
+	</tbody>
+</table>
+```
+
+모든 열 머리글에는 `scope="col"`을, 모든 행 머리글에는 `scope="row"`를 주세요. `<caption>`은 스크린 리더에 표의 이름을 알려 줍니다. `table.border`, `table.header.*`, `table.caption.fg`, `table.cell.padding.*`로 스타일을 바꾸세요. 패딩은 밀도를 따릅니다.
+
+## 언제 쓰나요
+
+**쓸 때:** 행과 열을 가로질러 비교하는 데이터.
+
+**쓰지 않을 때:** 표 형식이 아닌 콘텐츠의 배치 → [Stack](/stack)이나 CSS grid. 정렬, 열 크기 조절, 가상 스크롤, 셀 편집 → Todae의 범위 밖인 데이터 그리드.

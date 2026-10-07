@@ -1,0 +1,8 @@
+{
+  "slider": {
+    "fill": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
+    }
+  }
+}
