@@ -7,8 +7,8 @@
   },
   "Alert.Close": {
     "aria-label": {
-      "en": "Accessible name.",
-      "ko": "접근 가능한 이름."
+      "en": "Accessible name. Visible text such as \"Got it\" names the button by itself.",
+      "ko": "접근 가능한 이름. \"Got it\"처럼 보이는 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다."
     },
     "onClick": {
       "en": "Hide the alert here.",

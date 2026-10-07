@@ -51,9 +51,23 @@ function Actions({ className, ...props }: AlertActionsProps) {
   return <div {...props} className={cx(styles.actions, className)} />;
 }
 
-/** A ghost Button.Root. The alert has no open state: remove it in `onClick`. */
-function Close({ 'aria-label': ariaLabel = 'Dismiss', className, ...props }: AlertCloseProps) {
-  return <Button.Root variant="ghost" aria-label={ariaLabel} {...props} className={cx(styles.close, className)} />;
+/** Text with a letter or digit names the button itself; a symbol such as × or an icon does not. */
+function hasWords(children: ReactNode): boolean {
+  if (typeof children === 'string' || typeof children === 'number') return /[\p{L}\p{N}]/u.test(String(children));
+  return Array.isArray(children) && children.some(hasWords);
+}
+
+/**
+ * A ghost Button.Root. The alert has no open state: remove it in `onClick`.
+ * Named "Dismiss" unless its own text names it, so a visible label stays its name.
+ */
+function Close({ 'aria-label': ariaLabel, className, children, ...props }: AlertCloseProps) {
+  const label = ariaLabel ?? (hasWords(children) ? undefined : 'Dismiss');
+  return (
+    <Button.Root variant="ghost" aria-label={label} {...props} className={cx(styles.close, className)}>
+      {children}
+    </Button.Root>
+  );
 }
 
 export const Alert = { Root, Icon, Title, Description, Actions, Close } as const;

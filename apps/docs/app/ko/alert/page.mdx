@@ -28,7 +28,7 @@ Todae는 아이콘을 제공하지 않습니다. `Alert.Icon`은 슬롯입니다
 
 `Alert.Root`는 기본적으로 라이브 영역입니다. `info`와 `success`는 `role="status"`로, 읽던 내용이 멈출 때를 기다립니다. `warning`과 `critical`은 `role="alert"`로, 바로 끼어듭니다. 스크린 리더는 라이브 영역의 내용이 바뀔 때 읽어 주므로, 어떤 동작 뒤에 나타나는 메시지라면 영역은 페이지에 그대로 두고 안의 내용만 바꾸세요. 처음부터 페이지에 있어 읽어 줄 필요가 없는 배너에는 위 예시처럼 `role="none"`을 전달합니다.
 
-`Alert.Close`는 이름이 "Dismiss"인 ghost `Button.Root`입니다. Alert에는 열림 상태가 없으므로 `onClick`에서 제거하세요.
+`Alert.Close`는 ghost `Button.Root`입니다. "Got it"처럼 자체 텍스트가 이름이 되지 않으면 이름은 "Dismiss"입니다. Alert에는 열림 상태가 없으므로 `onClick`에서 제거하세요.
 
 <Example block>
   <AlertDismissible />

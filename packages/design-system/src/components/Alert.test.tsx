@@ -62,6 +62,19 @@ describe('Alert', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
+  it('names the close button by its visible text when it has some', () => {
+    render(
+      <Alert.Root>
+        <Alert.Close>Got it</Alert.Close>
+        <Alert.Close>
+          <span>Hide</span> <span>notice</span>
+        </Alert.Close>
+      </Alert.Root>,
+    );
+    expect(screen.getByRole('button', { name: 'Got it' }).hasAttribute('aria-label')).toBe(false);
+    expect(screen.getByRole('button', { name: 'Dismiss' })).toBeTruthy();
+  });
+
   it('lets the close button take its own label', () => {
     render(
       <Alert.Root>
