@@ -29,7 +29,7 @@ describe('HomePage', () => {
     const hrefs = [...container.querySelectorAll('a')].map((link) => link.getAttribute('href') ?? '');
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {
-      const dir = join(__dirname, href);
+      const dir = join(__dirname, href.replace(/[?#].*$/, ''));
       expect(PAGE_FILES.some((file) => existsSync(join(dir, file))), href).toBe(true);
     }
   });

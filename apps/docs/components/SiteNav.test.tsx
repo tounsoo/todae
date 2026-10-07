@@ -2,12 +2,44 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SiteNav } from './SiteNav';
-import { SITE_GROUPS } from './siteGroups';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/recipes/chip-list' }));
 
-// The sidebar renders every section's links, in order.
-const HREFS = SITE_GROUPS.flatMap((group) => group.links.map(([href]) => href));
+const HREFS = [
+  '/button',
+  '/chip',
+  '/field',
+  '/label',
+  '/description',
+  '/errormessage',
+  '/checkbox',
+  '/radio',
+  '/switch',
+  '/dialog',
+  '/popover',
+  '/menu',
+  '/tooltip',
+  '/tabs',
+  '/optionlist',
+  '/bottomsheet',
+  '/stack',
+  '/text',
+  '/utilities/use-chip-field',
+  '/utilities/use-chip-list',
+  '/utilities/use-combobox',
+  '/utilities/use-field',
+  '/utilities/use-popover',
+  '/utilities/use-roving-focus',
+  '/utilities/use-sheet-presentation',
+  '/utilities/use-tooltip',
+  '/recipes/chip-list',
+  '/recipes/combobox',
+  '/composition',
+  '/tokens',
+  '/guides/build-on-todae',
+  '/platform',
+  '/playground',
+];
 
 describe('SiteNav', () => {
   it('groups the same links under Site', () => {
