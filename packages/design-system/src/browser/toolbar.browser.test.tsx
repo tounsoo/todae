@@ -88,4 +88,17 @@ describe('Toolbar in a browser', () => {
     button('A').style.display = 'none';
     await expect.poll(() => button('B').tabIndex).toBe(0);
   });
+
+  it('keeps one tab stop when it mounts hidden and is shown later', async () => {
+    render(
+      <div data-testid="wrap" hidden>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root>B</Button.Root>
+        </Toolbar.Root>
+      </div>,
+    );
+    screen.getByTestId('wrap').hidden = false;
+    expect([button('A').tabIndex, button('B').tabIndex]).toEqual([0, -1]);
+  });
 });

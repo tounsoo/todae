@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Button } from './Button';
 import { ToggleGroup } from './ToggleGroup';
@@ -211,6 +212,27 @@ describe('Toolbar', () => {
     );
     const left = screen.getByRole('button', { name: 'Left', hidden: true });
     const right = screen.getByRole('button', { name: 'Right', hidden: true });
+    await waitFor(() => expect([left.tabIndex, right.tabIndex]).toEqual([0, -1]));
+    left.focus();
+    fireEvent.keyDown(left, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(right);
+  });
+
+  it('gives a toggle group portaled out of the toolbar its own roving focus', async () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        {createPortal(
+          <ToggleGroup.Root aria-label="Align" defaultValue="left">
+            <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+            <ToggleGroup.Item value="right">Right</ToggleGroup.Item>
+          </ToggleGroup.Root>,
+          document.body,
+        )}
+      </Toolbar.Root>,
+    );
+    const left = screen.getByRole('button', { name: 'Left' });
+    const right = screen.getByRole('button', { name: 'Right' });
     await waitFor(() => expect([left.tabIndex, right.tabIndex]).toEqual([0, -1]));
     left.focus();
     fireEvent.keyDown(left, { key: 'ArrowRight' });

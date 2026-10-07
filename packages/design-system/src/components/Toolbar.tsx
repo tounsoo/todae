@@ -53,6 +53,8 @@ function ownsArrows(el: HTMLElement): boolean {
   return !['button', 'checkbox', 'reset', 'submit', 'image', 'color', 'file'].includes((el as HTMLInputElement).type);
 }
 
+// Membership reads attributes only, so it does not change when CSS outside
+// the toolbar shows or hides it.
 function itemsOf(root: HTMLElement): HTMLElement[] {
   return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
     (el) =>
@@ -60,9 +62,13 @@ function itemsOf(root: HTMLElement): HTMLElement[] {
       !ownsArrows(el) &&
       el.parentElement?.closest(BOUNDARY) === root &&
       !el.matches(':disabled') &&
-      !el.closest('[inert]') &&
-      (el.checkVisibility?.({ visibilityProperty: true }) ?? true),
+      !el.closest('[inert]'),
   );
+}
+
+// Arrow keys skip items that are not rendered.
+function reachable(el: HTMLElement): boolean {
+  return el.checkVisibility?.({ visibilityProperty: true }) ?? true;
 }
 
 function Root({
@@ -82,14 +88,21 @@ function Root({
   // before, so one that stops being an item gets its own back.
   const managed = useRef(new Map<HTMLElement, string | null>());
 
-  // One control keeps tabindex 0: `focused` when it is an item, else the last
-  // one focused, else the first.
+  // One item keeps tabindex 0: the last one focused if it is shown, else the
+  // first shown item, else the last focused, else the first. A toolbar that
+  // mounts hidden still keeps a tab stop for when it is shown.
   const sync = useCallback((focused?: HTMLElement) => {
     const root = rootRef.current;
     if (!root) return;
     const items = itemsOf(root);
     if (focused && items.includes(focused)) active.current = focused;
-    if (!active.current || !items.includes(active.current)) active.current = items[0] ?? null;
+    if (active.current && !items.includes(active.current)) active.current = null;
+    const stop =
+      (active.current && reachable(active.current) ? active.current : null) ??
+      items.find(reachable) ??
+      active.current ??
+      items[0] ??
+      null;
     const now = new Set(items);
     for (const [el, original] of managed.current) {
       if (now.has(el)) continue;
@@ -99,7 +112,7 @@ function Root({
     }
     for (const item of items) {
       if (!managed.current.has(item)) managed.current.set(item, item.getAttribute('tabindex'));
-      item.tabIndex = item === active.current ? 0 : -1;
+      item.tabIndex = item === stop ? 0 : -1;
     }
   }, []);
 
@@ -133,7 +146,7 @@ function Root({
     const root = rootRef.current;
     if (event.defaultPrevented || !root || event.altKey || event.ctrlKey || event.metaKey) return;
     const target = event.target as HTMLElement;
-    const items = itemsOf(root);
+    const items = itemsOf(root).filter(reachable);
     const index = items.indexOf(target);
     if (index === -1) return;
     const rtl = () => getComputedStyle(root).direction === 'rtl';

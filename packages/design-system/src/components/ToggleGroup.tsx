@@ -51,13 +51,14 @@ const ToggleGroupContext = createContext<ToggleGroupContextValue | null>(null);
 
 function Root(props: ToggleGroupRootProps) {
   const toolbarContext = useContext(ToolbarContext);
-  // Context crosses a popover or dialog that opens from the toolbar, but the
-  // toolbar leaves the controls in those alone, so check the DOM too.
+  // Context crosses portals and popovers or dialogs that open from the
+  // toolbar, but the toolbar only manages controls inside its own element, so
+  // check the DOM too.
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const [inLayer, setInLayer] = useState(false);
   useLayoutEffect(() => {
     const layer = nodeRef.current?.parentElement?.closest(TOOLBAR_BOUNDARY);
-    setInLayer(layer != null && layer.getAttribute('role') !== 'toolbar');
+    setInLayer(layer?.getAttribute('role') !== 'toolbar');
   }, []);
   const toolbar = inLayer ? null : toolbarContext;
   const {
