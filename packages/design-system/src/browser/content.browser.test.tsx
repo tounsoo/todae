@@ -15,12 +15,12 @@ async function violations(): Promise<string[]> {
 function pseudoBackground(pseudo: string): string | undefined {
   const element = pseudo.includes('meter') ? 'meter' : 'progress';
   const selector = `:where(${element})${pseudo}`;
-  const rules = (list: CSSRuleList): CSSRule[] =>
+  const rules = (list: CSSRuleList): CSSStyleRule[] =>
     [...list].flatMap((rule) =>
       rule instanceof CSSStyleRule ? [rule] : rule instanceof CSSLayerBlockRule ? rules(rule.cssRules) : [],
     );
   const sheets = [...document.styleSheets].flatMap((sheet) => rules(sheet.cssRules));
-  const match = sheets.find((rule): rule is CSSStyleRule => rule instanceof CSSStyleRule && rule.selectorText === selector);
+  const match = sheets.find((rule) => rule.selectorText === selector);
   return match?.style.getPropertyValue('background').trim();
 }
 
@@ -279,5 +279,18 @@ describe('content parts in a browser', () => {
     expect(pseudoBackground('::-webkit-meter-suboptimum-value')).toBe('var(--todae-meter-fill-suboptimum)');
     expect(pseudoBackground('::-webkit-meter-even-less-good-value')).toBe('var(--todae-meter-fill-critical)');
     expect(style('range').accentColor).not.toBe('auto');
+  });
+
+  it('sweeps the busy band the way the fill grows', () => {
+    render(
+      <Themed>
+        <progress data-testid="ltr" />
+        <div dir="rtl">
+          <progress data-testid="rtl" />
+        </div>
+      </Themed>,
+    );
+    expect(getComputedStyle(screen.getByTestId('ltr')).animationDirection).toBe('normal');
+    expect(getComputedStyle(screen.getByTestId('rtl')).animationDirection).toBe('reverse');
   });
 });

@@ -126,17 +126,14 @@
   }
 
   :where(progress)::-webkit-progress-bar {
-    border-radius: inherit;
     background: var(--todae-progress-track);
   }
 
   :where(progress)::-webkit-progress-value {
-    border-radius: inherit;
     background: var(--todae-progress-fill);
   }
 
   :where(progress)::-moz-progress-bar {
-    border-radius: inherit;
     background: var(--todae-progress-fill);
   }
 
@@ -155,6 +152,11 @@
       no-repeat var(--todae-progress-track);
     background-size: 40% 100%;
     animation: todae-progress-sweep var(--todae-progress-motion-duration) linear infinite;
+  }
+
+  /* Right-to-left pages fill from the right, so the band sweeps that way too. */
+  :where(progress:indeterminate:dir(rtl)) {
+    animation-direction: reverse;
   }
 
   :where(progress:indeterminate)::-webkit-progress-bar {
@@ -186,22 +188,18 @@
   :where(meter)::-webkit-meter-bar {
     block-size: 100%;
     border: 0;
-    border-radius: inherit;
     background: var(--todae-progress-track);
   }
 
   :where(meter)::-webkit-meter-optimum-value {
-    border-radius: inherit;
     background: var(--todae-meter-fill-optimum);
   }
 
   :where(meter)::-webkit-meter-suboptimum-value {
-    border-radius: inherit;
     background: var(--todae-meter-fill-suboptimum);
   }
 
   :where(meter)::-webkit-meter-even-less-good-value {
-    border-radius: inherit;
     background: var(--todae-meter-fill-critical);
   }
 
