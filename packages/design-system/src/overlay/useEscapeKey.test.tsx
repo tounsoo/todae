@@ -87,6 +87,24 @@ describe('useEscapeKey', () => {
     expect(behind).not.toHaveBeenCalled();
   });
 
+  it('skips a layer behind an open modal when focus has fallen back to the body', () => {
+    function Element({ onEscape }: { onEscape: () => void }) {
+      const ref = useRef<HTMLDivElement>(null);
+      useEscapeKey(true, true, onEscape, ref);
+      return <div ref={ref} />;
+    }
+    const behind = vi.fn();
+    const { getByRole } = render(
+      <>
+        <Element onEscape={behind} />
+        <dialog aria-label="sheet" />
+      </>,
+    );
+    (getByRole('dialog', { hidden: true }) as HTMLDialogElement).showModal();
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(behind).not.toHaveBeenCalled();
+  });
+
   it('calls the latest handler without re-subscribing', () => {
     const first = vi.fn();
     const second = vi.fn();

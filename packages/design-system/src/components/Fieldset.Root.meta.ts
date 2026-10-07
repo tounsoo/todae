@@ -16,7 +16,7 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'false',
-      description: 'Marks the Todae controls inside invalid (aria-invalid and the invalid style). A fieldset has no aria-invalid of its own, so point aria-describedby at an ErrorMessage.',
+      description: 'Marks the Todae controls inside invalid (aria-invalid and the invalid style); a control with invalid={false} opts out. A fieldset has no aria-invalid of its own, so point aria-describedby at an ErrorMessage.',
     },
     {
       name: 'aria-describedby',

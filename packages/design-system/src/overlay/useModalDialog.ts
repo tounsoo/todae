@@ -60,6 +60,13 @@ export function useModalDialog({
     if (present && open && !el.open) {
       const resume = lastFocus.current;
       el.showModal();
+      // Rendered in place, a modal inside a hidden container makes the page
+      // inert while showing nothing.
+      if (process.env.NODE_ENV !== 'production' && el.checkVisibility?.() === false) {
+        console.error(
+          'Todae: a modal <dialog> opened inside a hidden container, so the page is inert and nothing shows. Render it outside display:none ancestors such as closed popovers, tabs or <details>.',
+        );
+      }
       // showModal() focuses the first focusable element; after a native close,
       // go back to where the person was instead.
       if (resume?.isConnected && el.contains(resume)) resume.focus();

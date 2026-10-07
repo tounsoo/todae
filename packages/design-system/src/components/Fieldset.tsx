@@ -1,6 +1,6 @@
-import { useContext, useMemo, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { useCallback, useContext, useMemo, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { FieldsetContext, FieldsetLegendContext, useFieldsetState } from './Fieldset.context';
-import { cx } from './props';
+import { cx, useComposedRefs } from './props';
 import styles from './Fieldset.module.css';
 
 /**
@@ -17,8 +17,8 @@ export type FieldsetRootProps = {
 export type FieldsetLegendProps = ComponentPropsWithRef<'legend'>;
 
 function Root({ disabled, invalid, className, ...props }: FieldsetRootProps) {
-  // A fieldset inside a disabled or invalid one is disabled or invalid too, as
-  // the native disabled already is.
+  // A fieldset inside a disabled one is disabled too, as natively, and inside
+  // an invalid one is invalid unless it sets invalid={false}.
   const outer = useContext(FieldsetContext);
   const { disabled: isDisabled, invalid: isInvalid } = useFieldsetState({ disabled, invalid });
   const ctx = useMemo(() => ({ disabled: isDisabled, invalid: isInvalid }), [isDisabled, isInvalid]);
@@ -38,12 +38,24 @@ function Root({ disabled, invalid, className, ...props }: FieldsetRootProps) {
   );
 }
 
-/** Controls inside the legend stay enabled when only this fieldset is disabled, as natively. */
-function Legend({ className, ...props }: FieldsetLegendProps) {
-  const ctx = useContext(FieldsetLegendContext);
+/**
+ * Controls inside the legend stay enabled when only this fieldset is
+ * disabled, as natively. The browser exempts only the fieldset's first
+ * <legend> child, so a Legend anywhere else follows the fieldset.
+ */
+function Legend({ className, ref, ...props }: FieldsetLegendProps) {
+  const exempt = useContext(FieldsetLegendContext);
+  const fieldset = useContext(FieldsetContext);
+  const [rendered, setRendered] = useState(true);
+  const measure = useCallback((node: HTMLLegendElement | null) => {
+    if (!node) return;
+    const parent = node.parentElement;
+    setRendered(parent?.tagName === 'FIELDSET' && parent.querySelector(':scope > legend') === node);
+  }, []);
+  const refs = useComposedRefs(measure, ref);
   return (
-    <FieldsetContext.Provider value={ctx}>
-      <legend {...props} className={cx(styles.legend, className)} />
+    <FieldsetContext.Provider value={rendered ? exempt : fieldset}>
+      <legend {...props} ref={refs} className={cx(styles.legend, className)} />
     </FieldsetContext.Provider>
   );
 }

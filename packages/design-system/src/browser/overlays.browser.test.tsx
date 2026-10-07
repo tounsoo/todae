@@ -237,4 +237,15 @@ describe('BottomSheet in a browser', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalledWith('escape'));
     expect(panel.matches(':popover-open')).toBe(true);
   });
+
+  it('warns when it opens inside a hidden container', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <div hidden>
+        <SheetHarness onClose={() => undefined} />
+      </div>,
+    );
+    await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining('hidden container')));
+    error.mockRestore();
+  });
 });

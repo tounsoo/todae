@@ -120,6 +120,38 @@ describe('Fieldset', () => {
     expect(nested.closest('label')!.hasAttribute('data-disabled')).toBe(true);
   });
 
+  it('lets a control inside an invalid fieldset opt out with invalid={false}', () => {
+    render(
+      <Fieldset.Root invalid>
+        <Fieldset.Legend>Address</Fieldset.Legend>
+        <Field.Root aria-label="Street" invalid={false}>
+          <Field.TextInput value="1 Main St" onChange={noop} />
+        </Field.Root>
+        <Field.Root aria-label="Postcode">
+          <Field.TextInput value="?" onChange={noop} />
+        </Field.Root>
+      </Fieldset.Root>,
+    );
+    const [street, postcode] = screen.getAllByRole('textbox');
+    expect(street!.hasAttribute('aria-invalid')).toBe(false);
+    expect(postcode!.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('exempts only the first legend child, as natively', () => {
+    render(
+      <Fieldset.Root disabled>
+        <div>
+          <Fieldset.Legend>
+            <Switch>Wrapped</Switch>
+          </Fieldset.Legend>
+        </div>
+      </Fieldset.Root>,
+    );
+    const toggle = screen.getByRole('switch', { name: 'Wrapped' });
+    expect(toggle.hasAttribute('disabled')).toBe(true);
+    expect(toggle.closest('label')!.hasAttribute('data-disabled')).toBe(true);
+  });
+
   it('leaves controls outside a fieldset alone', () => {
     render(<Checkbox>Alone</Checkbox>);
     const box = screen.getByRole('checkbox');

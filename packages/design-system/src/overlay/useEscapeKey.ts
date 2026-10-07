@@ -14,21 +14,26 @@ function isModal(dialog: Element): boolean {
   return dialog.getAttribute('aria-modal') === 'true';
 }
 
-/** The open modal <dialog> the key was pressed in, if any. */
-function modalAround(target: EventTarget | null): Element | null {
+/**
+ * The modal <dialog> elements that sit in front: the one the key was pressed
+ * in, or, when focus is outside every modal (fallen back to the body), all
+ * open ones.
+ */
+function modalsInFront(target: EventTarget | null): Element[] {
   let node = target instanceof Element ? target.closest('dialog[open]') : null;
   while (node && !isModal(node)) node = node.parentElement?.closest('dialog[open]') ?? null;
-  return node;
+  if (node) return [node];
+  return [...document.querySelectorAll('dialog[open]')].filter(isModal);
 }
 
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;
   // A layer outside the modal dialog the key was pressed in sits behind it
   // and is inert. Escape belongs to the dialog's own close request.
-  const modal = modalAround(event.target);
+  const modals = modalsInFront(event.target);
   const inFront = (entry: Entry) => {
     const el = entry.element();
-    return !modal || !el || modal.contains(el);
+    return modals.length === 0 || !el || modals.some((modal) => modal.contains(el));
   };
   // A disabled layer keeps its place but lets Escape fall through to the next enabled one.
   const top = [...stack].reverse().find((entry) => entry.enabled() && inFront(entry));

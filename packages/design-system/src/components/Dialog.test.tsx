@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { ComboboxCloseReason } from '../hooks/useCombobox.types';
@@ -109,6 +110,48 @@ describe('Dialog', () => {
     act(() => el.close());
     expect(onOpenChange).toHaveBeenCalledTimes(1);
     expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+  });
+
+  it('focuses initialFocusRef after showModal, and restoreFocusRef after the exit', async () => {
+    // As in browsers: showModal focuses the first focusable element, and close
+    // sends focus back to the element focused before showModal.
+    const showModal = HTMLDialogElement.prototype.showModal;
+    const close = HTMLDialogElement.prototype.close;
+    let opener: HTMLElement | null = null;
+    const show = vi.spyOn(HTMLDialogElement.prototype, 'showModal').mockImplementation(function (this: HTMLDialogElement) {
+      opener = document.activeElement as HTMLElement;
+      showModal.call(this);
+      this.querySelector('input')?.focus();
+    });
+    const shut = vi.spyOn(HTMLDialogElement.prototype, 'close').mockImplementation(function (this: HTMLDialogElement) {
+      close.call(this);
+      opener?.focus();
+    });
+    function Harness({ open }: { open: boolean }) {
+      const second = useRef<HTMLInputElement>(null);
+      const restore = useRef<HTMLButtonElement>(null);
+      return (
+        <>
+          <button type="button">Opener</button>
+          <button type="button" ref={restore}>
+            Elsewhere
+          </button>
+          <Dialog.Root open={open} onOpenChange={() => undefined} initialFocusRef={second} restoreFocusRef={restore}>
+            <Dialog.Title>Save</Dialog.Title>
+            <input aria-label="first" />
+            <input aria-label="second" ref={second} />
+          </Dialog.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<Harness open={false} />);
+    screen.getByText('Opener').focus();
+    rerender(<Harness open />);
+    expect(document.activeElement).toBe(screen.getByLabelText('second'));
+    rerender(<Harness open={false} />);
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByText('Elsewhere')), { timeout: 1000 });
+    show.mockRestore();
+    shut.mockRestore();
   });
 
   it('shows again where the person was after a native close while open', () => {

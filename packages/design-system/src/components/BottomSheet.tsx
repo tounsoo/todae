@@ -18,9 +18,8 @@ import { Button, type ButtonRootProps } from './Button';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
-import { useInitialFocus } from '../overlay/useInitialFocus';
+import { initialFocusTarget, useInitialFocus } from '../overlay/useInitialFocus';
 import { useModalDialog } from '../overlay/useModalDialog';
-import { getTabbables } from '../overlay/tabbables';
 import { useScrollLock } from '../overlay/useScrollLock';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag';
 import { composeHandlers, cx, useComposedRefs } from './props';
@@ -238,8 +237,6 @@ function BottomSheetRoot({
     [onSnapChange, snap],
   );
   const { requestClose } = useControlledOpen<SheetCloseReason>({ open, onOpenChange });
-  const openRef = useRef(open);
-  openRef.current = open;
   const sheetRef = useRef<HTMLDialogElement>(null);
   const [sheetNode, setSheetNode] = useState<HTMLDialogElement | null>(null);
   const bodyRef = useRef<HTMLElement | null>(null);
@@ -286,7 +283,7 @@ function BottomSheetRoot({
     if (grabbers === 0 || !el?.open) return;
     const active = el.ownerDocument.activeElement;
     if (active && active !== el.ownerDocument.body) return;
-    (initialFocusRef?.current ?? getTabbables(el)[0] ?? el).focus();
+    initialFocusTarget(el, initialFocusRef).focus();
   }, [grabbers, initialFocusRef]);
   useSnapDrag({
     sheetRef,

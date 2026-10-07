@@ -24,10 +24,13 @@ export function useFocusRestore(
     const container = containerRef?.current;
     queueMicrotask(() => {
       const moved = document.activeElement;
+      // Focus the browser itself sent back to the opener, as a closing
+      // <dialog> does, still gives way to restoreTo.
       if (
         moved instanceof HTMLElement &&
         moved !== document.body &&
         moved !== fallback &&
+        moved !== prior.current &&
         (!container || !container.contains(moved))
       ) {
         return;

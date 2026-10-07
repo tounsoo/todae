@@ -14,12 +14,14 @@ export const FieldsetLegendContext = createContext<FieldsetContextValue>(NONE);
 
 /**
  * A control's own disabled and invalid, merged with the nearest
- * Fieldset.Root's. Outside a fieldset they are the control's own.
+ * Fieldset.Root's. A disabled fieldset disables every control, as natively.
+ * An invalid one marks each control that leaves `invalid` unset; pass
+ * `invalid={false}` on one the person got right.
  */
 export function useFieldsetState(own: { disabled?: boolean; invalid?: boolean }): FieldsetContextValue {
   const fieldset = useContext(FieldsetContext);
   return {
     disabled: Boolean(own.disabled) || fieldset.disabled,
-    invalid: Boolean(own.invalid) || fieldset.invalid,
+    invalid: own.invalid ?? fieldset.invalid,
   };
 }

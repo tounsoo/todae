@@ -155,9 +155,9 @@ function DialogRoot({
   const dialogRefs = useComposedRefs(setDialogRef, ref);
 
   useScrollLock(present);
-  useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: dialogRef });
-  useInitialFocus(dialogRef, open, initialFocusRef);
-
+  // Records the focus to return to, before showModal moves it. Keyed on
+  // present: the page behind stays inert until the exit motion ends.
+  useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: dialogRef });
   const closeOnFormSubmit = useModalDialog({
     dialogRef,
     node: dialogNode,
@@ -167,6 +167,9 @@ function DialogRoot({
     onOpenChange,
     requestClose,
   });
+  // After showModal, which focuses the first focusable element by itself.
+  useInitialFocus(dialogRef, open, initialFocusRef);
+
 
   return (
     <DialogContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
