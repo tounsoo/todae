@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, CSSProperties } from 'react';
-import { cx } from './props';
+import { cx } from './cx';
 import styles from './Breadcrumbs.module.css';
 
 /**

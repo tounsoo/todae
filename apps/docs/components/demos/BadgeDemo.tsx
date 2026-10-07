@@ -1,4 +1,6 @@
-import { Badge, Stack, Text } from '@tounsoo/todae';
+import { Badge } from '@tounsoo/todae/badge';
+import { Stack } from '@tounsoo/todae/stack';
+import { Text } from '@tounsoo/todae/text';
 
 export function BadgeTones() {
   return (

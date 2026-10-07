@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef } from 'react';
-import { cx } from './props';
+import { cx } from './cx';
 import styles from './Card.module.css';
 
 /**
@@ -21,8 +21,8 @@ function Header({ className, ...props }: CardHeaderProps) {
   return <div {...props} className={cx(styles.header, className)} />;
 }
 
-function Body({ className, ...props }: CardBodyProps) {
-  return <div {...props} className={className} />;
+function Body(props: CardBodyProps) {
+  return <div {...props} />;
 }
 
 function Footer({ className, ...props }: CardFooterProps) {

@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef } from 'react';
 import type { AlertTone } from './Alert';
-import { cx } from './props';
+import { cx } from './cx';
 import styles from './Badge.module.css';
 
 export type BadgeTone = 'neutral' | AlertTone;

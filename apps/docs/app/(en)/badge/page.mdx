@@ -12,6 +12,8 @@ A short static label or count, such as a status on a row or the number of unread
   <BadgeTones />
 </Example>
 
+Server Components can import it from `@tounsoo/todae/badge`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
+
 `Badge.Root` is a `span` with no role, so a screen reader reads it as part of the text around it. A bare number has no meaning on its own: add the rest in visually hidden text.
 
 ```tsx

@@ -1,3 +1,5 @@
+'use client';
+
 import { Button, Card, Text } from '@tounsoo/todae';
 
 export function CardPlan() {
