@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-export type HighlightKind = 'highlight' | 'spelling-error' | 'grammar-error';
-
 export type UseHighlightOptions = {
-  /** Name to style with ::highlight(name). Hooks that share a name paint into one highlight. */
+  /** Name to style with ::highlight(name). Give each hook its own name. */
   name: string;
   /** Text to find inside the element on ref. A list finds every term; empty strings are skipped. */
   query?: string | readonly string[];
@@ -11,59 +9,22 @@ export type UseHighlightOptions = {
   caseSensitive?: boolean;
   /** More ranges to paint, such as the current match. They need no ref and are not added to matches. */
   ranges?: readonly AbstractRange[];
-  /** Which highlight paints on top where two overlap. Higher wins. Hooks that share a name share it. */
+  /** Which highlight paints on top where two overlap. Higher wins. */
   priority?: number;
-  /** Highlight type, for spelling and grammar marks. Hooks that share a name share it. */
-  type?: HighlightKind;
+  /** Highlight type, for spelling and grammar marks. */
+  type?: HighlightType;
 };
 
 export type UseHighlightResult = {
   /** Put on the element to search. */
   ref: (node: HTMLElement | null) => void;
-  /** Live ranges of every visible match, in document order. */
+  /** Live ranges of every match, in document order. */
   matches: readonly Range[];
 };
 
 const NO_MATCHES: readonly Range[] = [];
 
-type Entry = { highlight: Highlight; counts: Map<AbstractRange, number> };
-
-// One Highlight per name for the whole page, so hooks that share a name add
-// to it instead of replacing each other's ranges in CSS.highlights.
-const registry = new Map<string, Entry>();
-
 const supported = () => typeof CSS !== 'undefined' && 'highlights' in CSS && typeof Highlight === 'function';
-
-function addRanges(name: string, ranges: readonly AbstractRange[]): Entry {
-  let entry = registry.get(name);
-  if (!entry) {
-    entry = { highlight: new Highlight(), counts: new Map() };
-    registry.set(name, entry);
-  }
-  // Re-register if page code cleared or replaced the name since.
-  if (CSS.highlights.get(name) !== entry.highlight) CSS.highlights.set(name, entry.highlight);
-  for (const range of ranges) {
-    const count = entry.counts.get(range) ?? 0;
-    if (count === 0) entry.highlight.add(range);
-    entry.counts.set(range, count + 1);
-  }
-  return entry;
-}
-
-function removeRanges(name: string, entry: Entry, ranges: readonly AbstractRange[]): void {
-  for (const range of ranges) {
-    const count = entry.counts.get(range) ?? 0;
-    if (count <= 1) {
-      entry.counts.delete(range);
-      entry.highlight.delete(range);
-    } else {
-      entry.counts.set(range, count - 1);
-    }
-  }
-  if (entry.counts.size > 0 || registry.get(name) !== entry) return;
-  registry.delete(name);
-  if (CSS.highlights.get(name) === entry.highlight) CSS.highlights.delete(name);
-}
 
 const escapeRegExp = (term: string) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -107,22 +68,6 @@ function findMatches(root: HTMLElement, pattern: RegExp): Range[] {
 
 const sameItems = (a: readonly AbstractRange[], b: readonly AbstractRange[]) =>
   a.length === b.length && a.every((range, i) => range === b[i]);
-
-/** Keeps the last array while its items are the same, so `ranges={[current]}` doesn't repaint every render. */
-function useStableRanges(ranges: readonly AbstractRange[] | undefined): readonly AbstractRange[] {
-  const next = ranges ?? NO_MATCHES;
-  const last = useRef(next);
-  if (!sameItems(last.current, next)) last.current = next;
-  return last.current;
-}
-
-function usePaint(name: string, ranges: readonly AbstractRange[]): void {
-  useEffect(() => {
-    if (!supported() || ranges.length === 0) return;
-    const entry = addRanges(name, ranges);
-    return () => removeRanges(name, entry, ranges);
-  }, [name, ranges]);
-}
 
 const sameRanges = (a: readonly Range[], b: readonly Range[]) =>
   a.length === b.length &&
@@ -174,18 +119,43 @@ export function useHighlight({
     return () => observer.disconnect();
   }, [node, source, flags]);
 
-  const extra = useStableRanges(ranges);
-  usePaint(name, matches);
-  usePaint(name, extra);
+  // One Highlight for the hook's whole life, so its priority and type survive
+  // every change of ranges.
+  const [highlight] = useState(() => (supported() ? new Highlight() : null));
+  const painted = useRef<{ matches: readonly AbstractRange[]; ranges: readonly AbstractRange[] }>({
+    matches: NO_MATCHES,
+    ranges: NO_MATCHES,
+  });
 
-  // Hooks that share a name share one Highlight, so only a value passed in is
-  // set. Runs after painting, which creates the Highlight when it is missing.
   useEffect(() => {
-    const highlight = registry.get(name)?.highlight;
     if (!highlight) return;
-    if (priority !== undefined) highlight.priority = priority;
-    if (type !== undefined) highlight.type = type;
-  }, [name, priority, type, matches, extra]);
+    CSS.highlights.set(name, highlight);
+    return () => {
+      // A later hook may have taken the name; leave it alone.
+      if (CSS.highlights.get(name) === highlight) CSS.highlights.delete(name);
+    };
+  }, [highlight, name]);
+
+  useEffect(() => {
+    if (!highlight) return;
+    highlight.priority = priority ?? 0;
+    highlight.type = type ?? 'highlight';
+  }, [highlight, priority, type]);
+
+  useEffect(() => {
+    if (!highlight) return;
+    const extra = ranges ?? NO_MATCHES;
+    const last = painted.current;
+    // Re-register if page code removed the name since, but not over a later hook.
+    const missing = !CSS.highlights.has(name);
+    if (missing) CSS.highlights.set(name, highlight);
+    // `ranges={[current]}` is a new array each render; skip the repaint when its items are the same.
+    if (!missing && sameItems(last.matches, matches) && sameItems(last.ranges, extra)) return;
+    highlight.clear();
+    for (const range of matches) highlight.add(range);
+    for (const range of extra) highlight.add(range);
+    painted.current = { matches, ranges: extra };
+  });
 
   return { ref: setNode, matches };
 }

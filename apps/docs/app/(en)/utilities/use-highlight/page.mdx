@@ -24,9 +24,9 @@ const found = useHighlight({ name: 'search', query })
   <HighlightSearch />
 </Example>
 
-`matches` holds a live `Range` per match, in document order. It skips text hidden with `display: none` or `visibility: hidden` when it searches. A match must sit inside one text node, so a word split by markup, such as `fo<b>o</b>`, is not found.
+`matches` holds a live `Range` per match, in document order. Where the browser supports `checkVisibility()`, it skips text hidden with `display: none` or `visibility: hidden` when it searches. A match must sit inside one text node, so a word split by markup, such as `fo<b>o</b>`, is not found.
 
-To mark the current result, pass it to a second hook as `ranges` under another name, with a higher `priority` so it paints on top. The demo above does this. Hooks that share a `name` paint into one highlight and share its `priority` and `type`, so two panels can both use `search`. `type` sets `spelling-error` or `grammar-error` for spelling and grammar marks.
+To mark the current result, pass it to a second hook as `ranges` under another name, with a higher `priority` so it paints on top. The demo above does this. Give each hook its own `name`; to style several the same way, list them: `::highlight(a), ::highlight(b)`. `type` sets `spelling-error` or `grammar-error` for spelling and grammar marks.
 
 The hook does not announce anything. Show the count in an `<output>` or other live region when a screen reader user needs it.
 

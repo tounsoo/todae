@@ -24,9 +24,9 @@ const found = useHighlight({ name: 'search', query })
   <HighlightSearch />
 </Example>
 
-`matches`에는 일치 항목마다 살아 있는(live) `Range`가 문서 순서대로 들어 있습니다. 검색할 때 `display: none`이나 `visibility: hidden`으로 숨긴 텍스트는 건너뜁니다. 일치 항목은 텍스트 노드 하나 안에 있어야 하므로, `fo<b>o</b>`처럼 마크업으로 나뉜 단어는 찾지 못합니다.
+`matches`에는 일치 항목마다 살아 있는(live) `Range`가 문서 순서대로 들어 있습니다. 브라우저가 `checkVisibility()`를 지원하면, 검색할 때 `display: none`이나 `visibility: hidden`으로 숨긴 텍스트는 건너뜁니다. 일치 항목은 텍스트 노드 하나 안에 있어야 하므로, `fo<b>o</b>`처럼 마크업으로 나뉜 단어는 찾지 못합니다.
 
-현재 결과를 표시하려면, 그 범위를 다른 이름의 두 번째 훅에 `ranges`로 넘기고 `priority`를 더 높게 주어 위에 칠해지게 하세요. 위 데모가 이렇게 합니다. 같은 `name`을 쓰는 훅은 하나의 하이라이트에 칠하고 그 `priority`와 `type`을 함께 쓰므로, 두 패널이 모두 `search`를 쓸 수 있습니다. `type`은 맞춤법과 문법 표시를 위해 `spelling-error`나 `grammar-error`를 설정합니다.
+현재 결과를 표시하려면, 그 범위를 다른 이름의 두 번째 훅에 `ranges`로 넘기고 `priority`를 더 높게 주어 위에 칠해지게 하세요. 위 데모가 이렇게 합니다. 훅마다 다른 `name`을 주세요. 여러 이름을 같은 스타일로 칠하려면 `::highlight(a), ::highlight(b)`처럼 나열하세요. `type`은 맞춤법과 문법 표시를 위해 `spelling-error`나 `grammar-error`를 설정합니다.
 
 훅은 아무것도 알리지 않습니다. 스크린 리더 사용자에게 개수가 필요하면 `<output>`이나 다른 라이브 영역에 보여 주세요.
 

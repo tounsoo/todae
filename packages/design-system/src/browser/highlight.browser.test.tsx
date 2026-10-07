@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { useHighlight } from '../index';
 
 function Search({ query }: { query: string }) {
-  const highlight = useHighlight({ name: 'browser-search', query });
+  const highlight = useHighlight({ name: 'browser-search', query, priority: 2 });
   return (
     <main data-appearance="light" data-density="comfortable">
       <div ref={highlight.ref} data-testid="body">
@@ -21,6 +21,7 @@ describe('useHighlight in a real browser', () => {
     const { unmount } = render(<Search query="tea" />);
     const highlight = CSS.highlights.get('browser-search');
     expect(highlight).toBeInstanceOf(Highlight);
+    expect(highlight!.priority).toBe(2);
     expect([...highlight!].map((range) => range.toString())).toEqual(['Tea', 'tea', 'tea']);
     expect(screen.getByRole('status').textContent).toBe('3');
     unmount();

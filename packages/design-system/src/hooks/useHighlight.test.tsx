@@ -1,5 +1,4 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
-import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as api from '../index';
 import { useHighlight, type UseHighlightOptions } from './useHighlight';
@@ -104,7 +103,7 @@ describe('useHighlight', () => {
   it('searches again when the text under ref changes', async () => {
     render(<Search query="pear" text="apple" />);
     expect(count()).toBe('0');
-    expect(highlights.has('search')).toBe(false);
+    expect(painted('search')).toEqual([]);
     await act(async () => {
       screen.getByTestId('body').append(' and pear');
     });
@@ -112,78 +111,76 @@ describe('useHighlight', () => {
     expect(painted('search')).toEqual(['pear']);
   });
 
-  it('clears the highlight when the query is emptied', () => {
-    const { rerender } = render(<Search query="apple" />);
+  it('clears the highlight when the query is emptied and removes the name on unmount', () => {
+    const { rerender, unmount } = render(<Search query="apple" />);
     rerender(<Search query="" />);
     expect(count()).toBe('0');
-    expect(highlights.has('search')).toBe(false);
-  });
-
-  it('lets hooks that share a name paint into one highlight', () => {
-    function Two() {
-      const [showSecond, setShowSecond] = useState(true);
-      const a = useHighlight({ name: 'search', query: 'one' });
-      const b = useHighlight({ name: 'search', query: 'two' });
-      return (
-        <>
-          <p ref={a.ref}>one</p>
-          {showSecond ? <p ref={b.ref}>two</p> : null}
-          <button type="button" onClick={() => setShowSecond(false)}>
-            Hide
-          </button>
-        </>
-      );
-    }
-    const { unmount } = render(<Two />);
-    expect(painted('search')).toEqual(['one', 'two']);
-    act(() => screen.getByRole('button').click());
-    expect(painted('search')).toEqual(['one']);
+    expect(painted('search')).toEqual([]);
     unmount();
     expect(highlights.has('search')).toBe(false);
   });
 
-  it('paints extra ranges without a ref and keeps a range two hooks share until both let go', () => {
-    const range = document.createRange();
-    const text = document.createTextNode('shared');
+  it('paints extra ranges without a ref', () => {
+    const text = document.createTextNode('extra');
     document.body.append(text);
+    const range = document.createRange();
     range.selectNodeContents(text);
-    function Extra({ second }: { second: boolean }) {
-      const a = useHighlight({ name: 'current', ranges: [range] });
-      const b = useHighlight({ name: 'current', ranges: second ? [range] : undefined });
-      return <output>{a.matches.length + b.matches.length}</output>;
+    function Extra() {
+      const highlight = useHighlight({ name: 'current', ranges: [range] });
+      return <output>{highlight.matches.length}</output>;
     }
-    const { rerender, unmount } = render(<Extra second />);
-    expect(painted('current')).toEqual(['shared']);
-    rerender(<Extra second={false} />);
-    expect(painted('current')).toEqual(['shared']);
-    unmount();
-    expect(highlights.has('current')).toBe(false);
+    render(<Extra />);
+    expect(painted('current')).toEqual(['extra']);
     text.remove();
   });
 
-  it('sets priority and type on the highlight', () => {
-    render(<Search query="apple" priority={2} type="spelling-error" />);
+  it('sets priority and type, and resets them to the defaults when they are dropped', () => {
+    const { rerender } = render(<Search query="apple" priority={2} type="spelling-error" />);
     const highlight = highlights.get('search')!;
     expect(highlight.priority).toBe(2);
     expect(highlight.type).toBe('spelling-error');
+    rerender(<Search query="apple" />);
+    expect(highlight.priority).toBe(0);
+    expect(highlight.type).toBe('highlight');
   });
 
-  it('leaves priority and type alone when a hook sharing the name does not pass them', async () => {
-    function Shared({ text }: { text: string }) {
-      const a = useHighlight({ name: 'search', query: 'one', priority: 2, type: 'grammar-error' });
-      const b = useHighlight({ name: 'search', query: 'two' });
+  it('keeps one Highlight, with its priority, while its ranges change', () => {
+    const text = document.createTextNode('one two');
+    document.body.append(text);
+    const first = document.createRange();
+    first.setStart(text, 0);
+    first.setEnd(text, 3);
+    const second = document.createRange();
+    second.setStart(text, 4);
+    second.setEnd(text, 7);
+    function Current({ range }: { range?: Range }) {
+      useHighlight({ name: 'current', ranges: range ? [range] : undefined, priority: 1 });
+      return null;
+    }
+    const { rerender } = render(<Current range={first} />);
+    const highlight = highlights.get('current')!;
+    rerender(<Current />);
+    rerender(<Current range={second} />);
+    expect(highlights.get('current')).toBe(highlight);
+    expect(highlight.priority).toBe(1);
+    expect(painted('current')).toEqual(['two']);
+    text.remove();
+  });
+
+  it('leaves the name to a later hook when an earlier one with that name unmounts', () => {
+    function Two({ first }: { first: boolean }) {
       return (
         <>
-          <p ref={a.ref}>one</p>
-          <p ref={b.ref}>{text}</p>
+          {first ? <Search query="apple" /> : null}
+          <Search query="pie" />
         </>
       );
     }
-    const { rerender } = render(<Shared text="two" />);
-    await act(async () => rerender(<Shared text="two two" />));
-    expect(painted('search')).toEqual(['one', 'two', 'two']);
-    expect(highlights.get('search')!.priority).toBe(2);
-    expect(highlights.get('search')!.type).toBe('grammar-error');
+    const { rerender } = render(<Two first />);
+    const later = highlights.get('search');
+    rerender(<Two first={false} />);
+    expect(highlights.get('search')).toBe(later);
+    expect(painted('search')).toEqual(['pie']);
   });
 
   it('registers again when page code clears the registry', () => {
@@ -202,10 +199,10 @@ describe('useHighlight', () => {
     const { rerender } = render(<Inline tick={0} />);
     const highlight = highlights.get('current')!;
     const add = vi.spyOn(highlight, 'add');
-    const remove = vi.spyOn(highlight, 'delete');
+    const clear = vi.spyOn(highlight, 'clear');
     rerender(<Inline tick={1} />);
     expect(add).not.toHaveBeenCalled();
-    expect(remove).not.toHaveBeenCalled();
+    expect(clear).not.toHaveBeenCalled();
   });
 
   it('skips the text inside a textarea', () => {
@@ -222,10 +219,13 @@ describe('useHighlight', () => {
     expect(painted('search')).toEqual(['tea']);
   });
 
-  it('moves its ranges when the name changes', () => {
-    const { rerender } = render(<Search query="apple" />);
-    rerender(<Search query="apple" name="other" />);
+  it('moves the same Highlight, with its priority, when the name changes', () => {
+    const { rerender } = render(<Search query="apple" priority={3} />);
+    const highlight = highlights.get('search');
+    rerender(<Search query="apple" priority={3} name="other" />);
     expect(highlights.has('search')).toBe(false);
+    expect(highlights.get('other')).toBe(highlight);
+    expect(highlights.get('other')!.priority).toBe(3);
     expect(painted('other')).toEqual(['Apple', 'apple']);
   });
 
