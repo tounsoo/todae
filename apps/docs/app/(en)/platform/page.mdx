@@ -4,13 +4,16 @@ Todae builds on the browser instead of reimplementing it. It uses the features b
 
 - **[CSS anchor positioning](https://developer.mozilla.org/docs/Web/CSS/CSS_anchor_positioning)**: placing popovers and tooltips next to their trigger, and flipping them at the viewport edge with `position-try-fallbacks`. Without it: the surface is not placed next to its trigger and sits near the top-left corner of the viewport.
 - **[Popover API](https://developer.mozilla.org/docs/Web/API/Popover_API)**: showing `Popover.Root` and `Tooltip.Root` in the top layer. Todae needs it.
-- **[`<dialog>`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog) and `showModal()`**: `Dialog.Root`, for the top layer, `::backdrop`, focus containment, Escape, and `<form method="dialog">`. Todae needs it.
-- **[`inert`](https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert)**: making the page behind a `BottomSheet` unreachable, and hiding the chip measuring copy. Todae needs it.
+- **[`<dialog>`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog) and `showModal()`**: `Dialog.Root` and `BottomSheet.Root`, for the top layer, `::backdrop`, an inert page behind, Escape, and `<form method="dialog">`. Todae needs it. The scrim reads Todae's custom properties from `::backdrop`, which inherits them from its dialog in current browsers; an older engine that does not shows no scrim color.
+- **[`closedby`](https://developer.mozilla.org/docs/Web/HTML/Element/dialog#closedby)**: `BottomSheet` with `dismissOnEscape={false}`, so the browser ignores Escape. Without it: Escape still asks to close, and Todae holds the sheet open.
+- **[`inert`](https://developer.mozilla.org/docs/Web/HTML/Global_attributes/inert)**: hiding the chip measuring copy. Todae needs it.
+- **[`<details name>`](https://developer.mozilla.org/docs/Web/HTML/Element/details#name)**: exclusive accordions. Without it: several disclosures in a group can be open at once.
+- **[`::details-content`](https://developer.mozilla.org/docs/Web/CSS/::details-content)**: fading a disclosure's content in. Without it: the content appears at once.
 - **[`field-sizing: content`](https://developer.mozilla.org/docs/Web/CSS/field-sizing)**: `Field.Textarea` with `autoGrow`. Without it: the textarea keeps its rows and scrolls.
-- **[`:has()`](https://developer.mozilla.org/docs/Web/CSS/:has)**: `Field` and `Chip` focus rings and adornment layout. Todae needs it.
+- **[`:has()`](https://developer.mozilla.org/docs/Web/CSS/:has)**: `Field` and `Chip` focus rings and adornment layout, and the `Alert` columns. Todae needs it.
 - **[Cascade layers](https://developer.mozilla.org/docs/Web/CSS/@layer)**: ordering Todae's reset, tokens, components and a company's theme. Todae needs it.
 - **[Relative color syntax](https://developer.mozilla.org/docs/Web/CSS/color_value/oklch)**: translucent colors made from a token, such as `color.bg.selected`. Todae needs it.
 - **[`@starting-style`](https://developer.mozilla.org/docs/Web/CSS/@starting-style)**: `Dialog` entry transitions. Without it: the dialog appears without a transition.
 - **[`dvh` units](https://developer.mozilla.org/docs/Web/CSS/length#dynamic)**: `Dialog` and `BottomSheet` heights that follow mobile browser chrome. Todae needs it.
 
-Behavior that matters most is tested in a real browser (Chromium, through Playwright): Escape order across stacked overlays, focus trap and restore, flip at the viewport edge, chip overflow measurement and bottom-sheet drag. Every docs example is also checked with axe there.
+Behavior that matters most is tested in a real browser (Chromium, through Playwright): Escape order across stacked overlays, modal focus and restore, flip at the viewport edge, chip overflow measurement and bottom-sheet drag. Every docs example is also checked with axe there.

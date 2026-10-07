@@ -1,0 +1,29 @@
+import { VisuallyHiddenLabel } from '../../../components/demos/NativeDemo';
+
+# VisuallyHidden
+
+Two utility classes in the `todae.base` layer hide content on screen and keep it for assistive technology. There is no component: put the class on any element.
+
+- `todae-visually-hidden` always hides it.
+- `todae-visually-hidden-focusable` hides it until focus moves inside, for skip links.
+
+<Example>
+  <VisuallyHiddenLabel />
+</Example>
+
+```tsx
+<a href="#main" className="todae-visually-hidden-focusable">Skip to content</a>
+
+<Button.Root>
+	<Button.Icon><TrashIcon /></Button.Icon>
+	<span className="todae-visually-hidden">Delete draft</span>
+</Button.Root>
+```
+
+The declarations use `!important`, so a component's own padding or size never shows the hidden content. Prefer `aria-label` when the element already takes one, such as an icon-only `Button.Root`.
+
+## When to use
+
+**When:** Text a screen reader needs that sighted users get from context: an icon's meaning, the unit after a number, a skip link.
+
+**When not:** Content no one should reach → `hidden`. A control's name when it takes `aria-label` → `aria-label`. Hiding from assistive technology only → `aria-hidden`.

@@ -98,7 +98,7 @@ export function useSnapDrag({
 
   useEffect(() => {
     if (!sheet || !enabled) return;
-    const root = sheet.parentElement;
+    // The sheet is the <dialog>; its ::backdrop inherits the scrim progress.
     const surface = sheet;
 
     let pointerId: number | null = null;
@@ -110,16 +110,15 @@ export function useSnapDrag({
 
     function setDrag(height: number | null, dragging: boolean) {
       surface.toggleAttribute('data-dragging', dragging);
-      root?.toggleAttribute('data-dragging', dragging);
       if (height == null) {
         surface.style.removeProperty('--todae-sheet-drag-height');
-        root?.style.removeProperty('--todae-sheet-scrim-progress');
+        surface.style.removeProperty('--todae-sheet-scrim-progress');
         return;
       }
       surface.style.setProperty('--todae-sheet-drag-height', `${height}px`);
       const heights = sheetHeights(surface);
       const progress = height >= heights.mid ? 1 : Math.max(0, height / heights.mid);
-      root?.style.setProperty('--todae-sheet-scrim-progress', String(progress));
+      surface.style.setProperty('--todae-sheet-scrim-progress', String(progress));
     }
 
     function onPointerDown(event: PointerEvent) {
@@ -202,6 +201,7 @@ export function useSnapDrag({
         requestAnimationFrame(() => {
           if (!surface.isConnected) return;
           surface.style.removeProperty('--todae-sheet-drag-height');
+          surface.style.removeProperty('--todae-sheet-scrim-progress');
         });
       });
     }

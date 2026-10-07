@@ -2,6 +2,99 @@
   "version": 1,
   "components": [
     {
+      "name": "Alert.Actions",
+      "description": "A wrapping row of buttons or links under the text.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Buttons or links."
+        }
+      ]
+    },
+    {
+      "name": "Alert.Close",
+      "description": "Ghost Button.Root at the end of the first row. The alert has no open state, so remove it in onClick.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name. Visible text such as \"Got it\" names the button by itself. The default is English, so pass a name in your app's language.",
+          "default": "\"Dismiss\" when the button has no text of its own"
+        },
+        {
+          "name": "onClick",
+          "type": "React.MouseEventHandler<HTMLButtonElement>",
+          "required": false,
+          "description": "Hide the alert here."
+        }
+      ]
+    },
+    {
+      "name": "Alert.Description",
+      "description": "Detail under the title. A div element, so it can hold paragraphs or a list.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Body content."
+        }
+      ]
+    },
+    {
+      "name": "Alert.Icon",
+      "description": "Slot for any icon, placed before the text. aria-hidden by default.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon graphic from your own icon set."
+        }
+      ]
+    },
+    {
+      "name": "Alert.Root",
+      "description": "A status message in one of four tones. Takes native div attributes.",
+      "props": [
+        {
+          "name": "tone",
+          "type": "\"info\" | \"success\" | \"warning\" | \"critical\"",
+          "required": false,
+          "description": "Colors from color.status.<tone> through the alert contract tokens. Also picks the default role.",
+          "default": "\"info\""
+        },
+        {
+          "name": "role",
+          "type": "React.AriaRole",
+          "required": false,
+          "description": "Live region role. Pass role=\"none\" for a banner that is on the page from the start.",
+          "default": "\"status\" for info and success, \"alert\" for warning and critical"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Alert parts, or any content."
+        }
+      ]
+    },
+    {
+      "name": "Alert.Title",
+      "description": "Short summary, set in the title weight. A p element.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Title text."
+        }
+      ]
+    },
+    {
       "name": "BottomSheet.Body",
       "description": "Scroll container. Drag starts only at scrollTop 0.",
       "props": []
@@ -56,7 +149,7 @@
     },
     {
       "name": "BottomSheet.Root",
-      "description": "Modal bottom sheet. Custom portal, not a native dialog. Mid and full snap.",
+      "description": "Modal bottom sheet on a native <dialog> opened with showModal(). Mid and full snap.",
       "props": [
         {
           "name": "open",
@@ -68,7 +161,7 @@
           "name": "onOpenChange",
           "type": "(open: boolean, reason: SheetCloseReason) => void",
           "required": true,
-          "description": "Dismiss requests. Staying open keeps the sheet open."
+          "description": "Dismiss requests. Staying open keeps the sheet open. reason is \"form\" for a <form method=\"dialog\"> submit (read returnValue) and \"native\" when something else outside Todae closed the <dialog>; it shows again while open stays true."
         },
         {
           "name": "snap",
@@ -94,14 +187,14 @@
           "name": "dismissOnEscape",
           "type": "boolean",
           "required": false,
-          "description": "Escape calls onOpenChange(false, \"escape\").",
+          "description": "Escape calls onOpenChange(false, \"escape\"). false sets closedby=\"none\", so the browser ignores the close request.",
           "default": "true"
         },
         {
           "name": "dismissOnScrim",
           "type": "boolean",
           "required": false,
-          "description": "Scrim click calls onOpenChange(false, \"scrim\").",
+          "description": "A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, \"scrim\").",
           "default": "true"
         },
         {
@@ -757,10 +850,54 @@
         },
         {
           "name": "type",
-          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\"",
+          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\" | \"number\" | \"date\" | \"time\" | \"datetime-local\"",
           "required": false,
-          "description": "Text-ish input types only.",
+          "description": "Native input type. Number, date and time keep the native spinner and picker, and value stays the input string, such as \"2026-10-07\".",
           "default": "\"text\""
+        }
+      ]
+    },
+    {
+      "name": "Fieldset.Legend",
+      "description": "The native legend that names the group. Render it as the first child of Fieldset.Root.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Group name."
+        }
+      ]
+    },
+    {
+      "name": "Fieldset.Root",
+      "description": "A native fieldset that groups related controls, such as a set of checkboxes, under one Legend. Takes native fieldset attributes.",
+      "props": [
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Native disabled: every form control inside is disabled. Todae controls inside also show their disabled style.",
+          "default": "false"
+        },
+        {
+          "name": "invalid",
+          "type": "boolean",
+          "required": false,
+          "description": "Marks the Todae controls inside invalid (aria-invalid and the invalid style); a control with invalid={false} opts out. A fieldset has no aria-invalid of its own, so point aria-describedby at an ErrorMessage.",
+          "default": "false"
+        },
+        {
+          "name": "aria-describedby",
+          "type": "string",
+          "required": false,
+          "description": "Ids of a Description or ErrorMessage for the whole group."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A Fieldset.Legend first, then the controls."
         }
       ]
     },
@@ -1547,21 +1684,21 @@
     },
     {
       "name": "Text",
-      "description": "Text styled through the text contract tokens.",
+      "description": "Text and headings styled through the text contract tokens.",
       "props": [
         {
           "name": "as",
-          "type": "\"p\" | \"span\" | \"strong\"",
+          "type": "\"p\" | \"span\" | \"strong\" | \"h1\" | \"h2\" | \"h3\" | \"h4\" | \"h5\" | \"h6\"",
           "required": false,
-          "description": "Rendered element.",
+          "description": "Rendered element. A heading level sets the outline; it also picks a default size, bold weight and tight leading.",
           "default": "\"p\""
         },
         {
           "name": "size",
-          "type": "\"s\" | \"m\" | \"l\"",
+          "type": "\"s\" | \"m\" | \"l\" | \"xl\" | \"2xl\"",
           "required": false,
-          "description": "Maps to text.size.2, text.size.3, text.size.4.",
-          "default": "\"m\""
+          "description": "Maps to text.size.2 through text.size.6. Set it to make a heading look larger or smaller than its level.",
+          "default": "\"m\"; for headings h1 \"2xl\", h2 \"xl\", h3 \"l\", h4 and h5 \"m\", h6 \"s\""
         },
         {
           "name": "tone",
@@ -1575,7 +1712,7 @@
           "type": "\"regular\" | \"medium\" | \"bold\"",
           "required": false,
           "description": "Font weight.",
-          "default": "\"regular\""
+          "default": "\"regular\"; \"bold\" for headings"
         },
         {
           "name": "children",

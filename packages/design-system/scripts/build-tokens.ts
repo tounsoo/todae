@@ -27,6 +27,10 @@ export const RESERVED_ROOTS = [
   'menu',
   'tabs',
   'selection',
+  'alert',
+  'fieldset',
+  'link',
+  'disclosure',
 ] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;
 export const INTERACTIVE_GROUPS = ['bg', 'fg', 'border'] as const;

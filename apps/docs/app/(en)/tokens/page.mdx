@@ -12,7 +12,7 @@ To read the providers from code, `useAppearance()` returns the nearest ThemeProv
 
 **When:** Set appearance (system / light / dark) for a subtree via `data-appearance`; nested providers override. `overrides` for allowlisted token paths only.
 
-**When not:** Spacing density → DensityProvider. Raw CSS or unknown token keys (rejected). Styling via classes on the provider (overlays don't inherit them).
+**When not:** Spacing density → DensityProvider. Raw CSS or unknown token keys (rejected).
 
 ### DensityProvider
 
@@ -27,6 +27,10 @@ The token build measures text pairs with APCA, not WCAG 2 ratios. Each pair name
 The pairs live in `$extensions["dev.todae"].contrast` on the appearance modifier in `tokens/resolver.json`. A company token package inherits them, so a rebranded accent is checked too. A company can list a pair with the same `fg` and `bg` to change its minimum, or add pairs for its own tokens.
 
 A brand accent is four tokens per appearance: `color.accent.default`, `color.accent.hover`, `color.accent.active` and `color.on-accent`. Set them together, since Todae's dark `on-accent` is near-black to sit on its near-white ink. Put the brand accent in a company token package so the build checks it. `ThemeProvider` overrides apply at runtime and are not checked.
+
+## Status tones
+
+Four tones carry status: `info`, `success`, `warning` and `critical`. Each is three tokens per appearance: `color.status.<tone>.fg` for text and icons, `.bg` for the fill, and `.border`. The build checks `fg` on `bg` at Lc 75 and `fg` on `color.bg.surface` at Lc 60. [Alert](/alert) reads them through its `alert.<tone>` contract tokens. `info` is neutral ink, matching the accent; a company can give it a hue in its token package.
 
 ## Catalog
 

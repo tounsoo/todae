@@ -2,7 +2,9 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
 
 # BottomSheet
 
-Modal custom portal. Not a native dialog. Scrim, focus trap, Escape, `aria-modal`, scroll lock. Mid and full snap. Drag from the grabber or from the body at `scrollTop === 0`. List scroll stays free.
+A modal sheet on a native `<dialog>` opened with `showModal()`. The browser puts it in the top layer, makes the page behind inert, keeps focus out of that page and sends Escape as a close request. The `::backdrop` is the scrim. Todae adds the scroll lock, the snap points and the drag. Mid and full snap. Drag from the grabber or from the body at `scrollTop === 0`. List scroll stays free.
+
+The sheet renders where you put it, so it takes the theme of its parent. That also means it takes the parent's native behavior: inside a `<form>` its inputs submit with that form, and inside `<fieldset disabled>` its controls are disabled. Render it outside forms, disabled fieldsets and hidden containers such as a closed popover or tab panel. In development, Todae logs an error when a sheet opens somewhere hidden.
 
 Enter slides from `translateY(100%)` into the snap height (first-frame pose, not a height tween). Both overlays use `data-entered`; Dialog also keeps `@starting-style`. Exit slides off and unmounts on `transitionend` (240ms fallback). Drag keeps `transition: none`.
 
@@ -10,7 +12,7 @@ Enter slides from `translateY(100%)` into the snap height (first-frame pose, not
   <BottomSheetBasic />
 </Example>
 
-The portal re-applies appearance, density, and theme overrides. Extra classes on the provider node do not follow the portal.
+The sheet renders where you place it, with no portal, so it inherits appearance, density and theme overrides like any other part. `dismissOnEscape={false}` sets `closedby="none"`, so the browser ignores Escape; otherwise Escape and a scrim click ask `onOpenChange` to close, and the exit motion runs once you set `open` to false. When something outside Todae closes the `<dialog>`, such as a script calling `close()`, `onOpenChange` gets the reason `native`.
 
 ## Consumer sketch
 
@@ -22,7 +24,7 @@ Touch Combobox later. A button opens this sheet. Search plus options live in the
 
 ## When to use
 
-**When:** Modal sheet from the bottom (touch Combobox closed control, mobile pickers). Scrim, focus trap, snap mid/full.
+**When:** Modal sheet from the bottom (touch Combobox closed control, mobile pickers). Scrim, modal focus, snap mid/full.
 
 **When not:** Desktop anchored non-modal → Popover. Centered confirm/form → Dialog. Hover tip → Tooltip.
 

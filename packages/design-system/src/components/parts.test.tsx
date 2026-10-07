@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  Alert,
   BottomSheet,
   Button,
   Checkbox,
@@ -12,6 +13,7 @@ import {
   Dialog,
   ErrorMessage,
   Field,
+  Fieldset,
   Label,
   Menu,
   OptionList,
@@ -286,6 +288,29 @@ const cases: Case[] = [
     ),
   ],
   ['Tooltip.Root', (p) => <TooltipCase p={p} />],
+  ['Fieldset.Root', (p) => <Fieldset.Root {...p} />],
+  [
+    'Fieldset.Legend',
+    (p) => (
+      <Fieldset.Root>
+        <Fieldset.Legend {...p}>Group</Fieldset.Legend>
+      </Fieldset.Root>
+    ),
+  ],
+  ['Alert.Root', (p) => <Alert.Root {...p} />],
+  ...(['Icon', 'Title', 'Description', 'Actions', 'Close'] as const).map(
+    (part): Case => [
+      `Alert.${part}`,
+      (p) => {
+        const Part = Alert[part] as (props: Native) => ReactNode;
+        return (
+          <Alert.Root>
+            <Part {...p} />
+          </Alert.Root>
+        );
+      },
+    ],
+  ),
 ];
 
 describe('every exported part', () => {

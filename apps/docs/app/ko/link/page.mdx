@@ -1,0 +1,24 @@
+import { LinkInText } from '../../../components/demos/NativeDemo';
+
+# Link
+
+링크는 네이티브 `<a href>` 요소입니다. Link 컴포넌트는 없습니다. Todae는 `link` contract 토큰으로 `todae.base` 레이어에서 모든 `a:any-link`의 스타일을 정합니다. 링크는 텍스트 색을 그대로 쓰고 밑줄로 구분되며, 밑줄은 호버하면 진해집니다. 그래서 중립적인 잉크 팔레트에 어울립니다. `href`가 없는 `<a>`는 링크가 아니므로 링크 스타일을 받지 않습니다.
+
+<Example>
+  <LinkInText />
+</Example>
+
+규칙은 `:where()` 안에 있어 명시도를 더하지 않고, 모든 컴포넌트보다 아래인 `todae.base`에 있습니다. 라우터의 링크 컴포넌트를 포함해, 더하는 클래스가 무엇이든 이깁니다.
+
+```tsx
+// Next.js renders an <a href>, so it gets the link style as it is.
+<NextLink href="/billing">Billing</NextLink>
+```
+
+모든 링크의 스타일은 `link.fg.*`, `link.decoration.*`, `link.ring.focus` 토큰으로 바꿉니다.
+
+## 언제 쓰나요
+
+**언제:** 다른 페이지나 위치로 이동할 때. 본문 안, 내비게이션, Alert의 동작.
+
+**쓰지 않을 때:** 저장이나 다이얼로그 열기처럼 이 페이지에서 무언가를 할 때 → Button. 동작 목록 → Menu.

@@ -1,0 +1,84 @@
+/* Native elements and utility classes, styled from contract tokens. Every
+   selector sits in :where(), so any class a company adds wins. */
+@layer todae.base {
+  /* Links. Neutral ink: a link keeps the text color and stands out by its
+     underline, which darkens on hover. */
+  :where(a:any-link) {
+    color: var(--todae-link-fg-default);
+    text-decoration-line: underline;
+    text-decoration-color: var(--todae-link-decoration-default);
+    text-decoration-thickness: var(--todae-link-decoration-thickness);
+    text-underline-offset: var(--todae-link-decoration-offset);
+  }
+
+  :where(a:any-link:hover) {
+    color: var(--todae-link-fg-hover);
+    text-decoration-color: var(--todae-link-decoration-hover);
+  }
+
+  :where(a:any-link:focus-visible) {
+    outline: 2px solid var(--todae-link-ring-focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Disclosure. <details> and <summary> keep their native marker and
+     keyboard behavior; details sharing a name attribute form an exclusive
+     accordion, divided by a rule. */
+  :where(summary) {
+    cursor: pointer;
+    padding-block: var(--todae-disclosure-padding-y);
+    color: var(--todae-disclosure-summary-fg);
+    font-weight: var(--todae-disclosure-summary-font-weight);
+  }
+
+  :where(summary)::marker {
+    color: var(--todae-disclosure-marker-fg);
+  }
+
+  :where(summary:focus-visible) {
+    outline: 2px solid var(--todae-disclosure-ring-focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  :where(details)::details-content {
+    opacity: 0;
+    transition:
+      opacity var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing),
+      content-visibility var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing) allow-discrete;
+  }
+
+  :where(details[open])::details-content {
+    opacity: 1;
+  }
+
+  :where(details[open]) > :where(:not(summary):last-child) {
+    margin-block-end: var(--todae-disclosure-gap);
+  }
+
+  :where(details[name]) {
+    border-block-end: 1px solid var(--todae-disclosure-border);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(details)::details-content {
+      transition: none;
+    }
+  }
+
+  /* Hidden on screen, still read by assistive technology. The -focusable
+     form shows again while focus is inside, for skip links. !important,
+     because a component's own padding or size must not undo it. */
+  :where(.todae-visually-hidden, .todae-visually-hidden-focusable:not(:focus-within)) {
+    position: absolute !important;
+    inline-size: 1px !important;
+    block-size: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+}

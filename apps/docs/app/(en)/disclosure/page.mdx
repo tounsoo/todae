@@ -1,0 +1,43 @@
+import { DisclosureAccordion, DisclosureSingle } from '../../../components/demos/NativeDemo';
+
+# Disclosure
+
+Disclosures and accordions are native `<details>` and `<summary>` elements. There is no component: the browser already handles the keyboard, the expanded state that a screen reader announces, find-in-page into closed content, and the open marker. Todae styles them in the `todae.base` layer from the `disclosure` contract tokens.
+
+```tsx
+<details>
+	<summary>Shipping details</summary>
+	<Text>Orders ship within two business days.</Text>
+</details>
+```
+
+<Example>
+  <DisclosureSingle />
+</Example>
+
+## Accordion
+
+Give `<details>` elements the same `name` and the browser keeps at most one of them open: an exclusive accordion. Named disclosures get a divider from `disclosure.border`. Use the `open` attribute to start one open, and the native `toggle` event to follow changes.
+
+```tsx
+<details name="faq" open>
+	<summary>What is Todae?</summary>
+	…
+</details>
+<details name="faq">
+	<summary>Does it ship icons?</summary>
+	…
+</details>
+```
+
+<Example block>
+  <DisclosureAccordion />
+</Example>
+
+The marker is the browser's own and turns as the disclosure opens. To use an icon from your own set, hide it with `summary { list-style: none }` and put your icon in the summary. Content fades in over `disclosure.motion.duration`, and does not move when the user prefers reduced motion.
+
+## When to use
+
+**When:** Optional detail the reader can open in place: FAQs, advanced settings, long explanations. Several of them with one open at a time → an accordion with a shared `name`.
+
+**When not:** Views of the same object, one shown at a time with arrow keys → Tabs. A choice or a form that blocks the task → Dialog. Content most readers need → show it.

@@ -27,7 +27,11 @@
         { "$ref": "./components/option.json" },
         { "$ref": "./components/menu.json" },
         { "$ref": "./components/tabs.json" },
-        { "$ref": "./components/selection.json" }
+        { "$ref": "./components/selection.json" },
+        { "$ref": "./components/alert.json" },
+        { "$ref": "./components/fieldset.json" },
+        { "$ref": "./components/link.json" },
+        { "$ref": "./components/disclosure.json" }
       ],
       "$extensions": {
         "dev.todae": {
@@ -75,7 +79,15 @@
             { "fg": "color.on-accent", "bg": "color.accent.default", "min": 60 },
             { "fg": "color.on-accent", "bg": "color.accent.hover", "min": 60 },
             { "fg": "color.on-accent", "bg": "color.accent.active", "min": 60 },
-            { "fg": "color.accent.default", "bg": "color.bg.canvas", "min": 45 }
+            { "fg": "color.accent.default", "bg": "color.bg.canvas", "min": 45 },
+            { "fg": "color.status.info.fg", "bg": "color.status.info.bg", "min": 75 },
+            { "fg": "color.status.info.fg", "bg": "color.bg.surface", "min": 60 },
+            { "fg": "color.status.success.fg", "bg": "color.status.success.bg", "min": 75 },
+            { "fg": "color.status.success.fg", "bg": "color.bg.surface", "min": 60 },
+            { "fg": "color.status.warning.fg", "bg": "color.status.warning.bg", "min": 75 },
+            { "fg": "color.status.warning.fg", "bg": "color.bg.surface", "min": 60 },
+            { "fg": "color.status.critical.fg", "bg": "color.status.critical.bg", "min": 75 },
+            { "fg": "color.status.critical.fg", "bg": "color.bg.surface", "min": 60 }
           ]
         }
       }

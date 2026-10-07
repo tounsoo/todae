@@ -2,7 +2,9 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
 
 # BottomSheet
 
-모달 커스텀 포털입니다. 네이티브 다이얼로그가 아닙니다. 스크림, 포커스 트랩, Escape, `aria-modal`, 스크롤 잠금을 갖습니다. 중간과 전체 높이로 스냅합니다. 그래버에서, 또는 `scrollTop === 0`일 때 본문에서 드래그합니다. 목록 스크롤은 자유롭게 유지됩니다.
+`showModal()`로 여는 네이티브 `<dialog>` 위의 모달 시트입니다. 브라우저가 시트를 최상위 레이어에 올리고, 뒤의 페이지를 inert로 만들고, 그 페이지로 포커스가 나가지 않게 하고, Escape를 닫기 요청으로 보냅니다. `::backdrop`이 스크림입니다. Todae는 스크롤 잠금, 스냅 지점, 드래그를 더합니다. 중간과 전체 높이로 스냅합니다. 그래버에서, 또는 `scrollTop === 0`일 때 본문에서 드래그합니다. 목록 스크롤은 자유롭게 유지됩니다.
+
+시트는 놓은 자리에서 렌더링되므로 부모의 테마를 따릅니다. 그 대신 부모의 네이티브 동작도 따릅니다. `<form>` 안에서는 시트의 입력이 그 폼과 함께 제출되고, `<fieldset disabled>` 안에서는 컨트롤이 비활성화됩니다. 폼, 비활성 fieldset, 닫힌 팝오버나 탭 패널 같은 숨겨진 컨테이너 바깥에 렌더링하세요. 개발 환경에서는 시트가 숨겨진 곳에서 열리면 Todae가 오류를 기록합니다.
 
 열릴 때는 `translateY(100%)`에서 스냅 높이로 미끄러져 올라옵니다(높이 전환이 아니라 첫 프레임 자세입니다). 두 오버레이 모두 `data-entered`를 쓰고, Dialog는 `@starting-style`도 유지합니다. 닫힐 때는 아래로 미끄러져 나가고 `transitionend`에서 언마운트됩니다(대체 시간 240ms). 드래그 중에는 `transition: none`을 유지합니다.
 
@@ -10,7 +12,7 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
   <BottomSheetBasic />
 </Example>
 
-포털은 appearance, density, 테마 오버라이드를 다시 적용합니다. 프로바이더 노드에 붙은 추가 클래스는 포털을 따라가지 않습니다.
+시트는 포털 없이 놓은 자리에서 렌더링되므로, 다른 파트처럼 appearance, density, 테마 오버라이드를 상속합니다. `dismissOnEscape={false}`는 `closedby="none"`을 설정해 브라우저가 Escape를 무시하게 합니다. 그렇지 않으면 Escape와 스크림 클릭이 `onOpenChange`에 닫기를 요청하고, `open`을 false로 바꾸면 닫힘 모션이 실행됩니다. 스크립트가 `close()`를 호출하는 것처럼 Todae 바깥에서 `<dialog>`를 닫으면 `onOpenChange`는 `native` 이유를 받습니다.
 
 ## 사용 예시 스케치
 
@@ -22,7 +24,7 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
 
 ## 언제 쓰나요
 
-**언제:** 아래에서 올라오는 모달 시트(터치용 Combobox의 닫힌 컨트롤, 모바일 선택기). 스크림, 포커스 트랩, 중간/전체 스냅.
+**언제:** 아래에서 올라오는 모달 시트(터치용 Combobox의 닫힌 컨트롤, 모바일 선택기). 스크림, 모달 포커스, 중간/전체 스냅.
 
 **쓰지 않을 때:** 데스크톱에서 앵커에 고정된 비모달 → Popover. 가운데 정렬 확인/폼 → Dialog. 호버 팁 → Tooltip.
 

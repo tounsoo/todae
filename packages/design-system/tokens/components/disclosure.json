@@ -1,0 +1,25 @@
+{
+  "disclosure": {
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+    "padding": {
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
+    },
+    "border": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+    "summary": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "font": {
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+      }
+    },
+    "marker": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
+    },
+    "motion": {
+      "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } }
+    }
+  }
+}

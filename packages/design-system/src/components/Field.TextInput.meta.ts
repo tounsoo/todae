@@ -30,10 +30,10 @@ export const meta = {
     },
     {
       name: 'type',
-      type: '"text" | "search" | "email" | "url" | "tel" | "password"',
+      type: '"text" | "search" | "email" | "url" | "tel" | "password" | "number" | "date" | "time" | "datetime-local"',
       required: false,
       default: '"text"',
-      description: 'Text-ish input types only.',
+      description: 'Native input type. Number, date and time keep the native spinner and picker, and value stays the input string, such as "2026-10-07".',
     },
   ],
 } as const satisfies ComponentMeta;

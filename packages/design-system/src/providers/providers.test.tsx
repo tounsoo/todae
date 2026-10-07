@@ -314,7 +314,9 @@ describe('contract-only components', () => {
       expect(css, name).not.toMatch(/\d(?:ms|s)\b|cubic-bezier|z-index:\s*\d{2,}/);
     }
     const sheet = readFileSync(join(import.meta.dirname, '../components/BottomSheet.module.css'), 'utf8');
-    expect(sheet).toContain('z-index: calc(var(--todae-overlay-z));');
+    // A modal <dialog>: the top layer stacks it, so it sets no z-index.
+    expect(sheet).not.toContain('z-index');
+    expect(sheet).toContain('.sheet::backdrop');
   });
 
   it('forbids hard-coded color and appearance branches', () => {

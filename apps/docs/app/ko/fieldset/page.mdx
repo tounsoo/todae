@@ -1,0 +1,40 @@
+import { FieldsetCheckboxes, FieldsetDisabled } from '../../../components/demos/FieldsetDemo';
+
+# Fieldset
+
+체크박스 묶음처럼 관련된 컨트롤을 하나의 `<legend>` 아래로 묶는 네이티브 `<fieldset>`입니다. 포커스가 그룹 안으로 들어가면 스크린 리더가 legend를 그룹 이름으로 읽습니다.
+
+```tsx
+<Fieldset.Root invalid={none} aria-describedby={none ? errorId : undefined}>
+	<Fieldset.Legend>Email topics</Fieldset.Legend>
+	<Checkbox>Product news</Checkbox>
+	<Checkbox>Security notices</Checkbox>
+	{none ? <ErrorMessage id={errorId}>Pick at least one topic.</ErrorMessage> : null}
+</Fieldset.Root>
+```
+
+<Example block>
+  <FieldsetCheckboxes />
+</Example>
+
+`invalid`는 안의 모든 Todae 컨트롤을 invalid로 표시합니다. Checkbox, Switch, RadioGroup, Field가 `aria-invalid`와 invalid 스타일을 받습니다. fieldset에는 자체 `aria-invalid`가 없으므로, 이유는 [Description](/description)이나 [ErrorMessage](/errormessage)로 알리고 Root의 `aria-describedby`로 그것을 가리키세요.
+
+`disabled`는 네이티브 속성입니다. 브라우저가 안의 모든 폼 컨트롤을 비활성화하고, Todae 컨트롤은 비활성 스타일을 보여 줍니다. 비활성 fieldset 안의 fieldset도 비활성입니다. invalid fieldset 안에서는 컨트롤이나 중첩된 fieldset이 `invalid={false}`를 주지 않는 한 invalid입니다. 올바르게 입력한 필드에 쓰세요. 첫 번째 `Fieldset.Legend` 안의 컨트롤은 브라우저가 그러듯이 활성 상태로 남습니다.
+
+<Example block>
+  <FieldsetDisabled />
+</Example>
+
+파트는 `fieldset.gap` 간격으로 쌓입니다. 컨트롤을 나란히 두려면 `Stack direction="row"` 안에 넣으세요.
+
+## 언제 쓰나요
+
+**언제:** 여러 컨트롤이 하나의 질문에 답할 때. 체크박스 그룹, 스위치 묶음, 주소 입력 필드들. 그룹 이름은 Fieldset.Legend로 붙입니다.
+
+**쓰지 않을 때:** 필드 하나 → Field.Root와 Label. 여러 옵션 중 하나 고르기 → 그 자체가 그룹인 RadioGroup. 각자 제목이 있는 긴 폼의 구획 → 제목.
+
+## Props
+
+<PropsTable name="Fieldset.Root" />
+
+<PropsTable name="Fieldset.Legend" />

@@ -29,6 +29,7 @@ import {
   type CountStore,
   type FieldContextValue,
 } from './Field.context';
+import { useFieldsetState } from './Fieldset.context';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
@@ -147,8 +148,8 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 }
 
 function Root({
-  disabled,
-  invalid,
+  disabled: disabledProp,
+  invalid: invalidProp,
   id,
   name,
   className,
@@ -160,6 +161,8 @@ function Root({
   onClick: onClickProp,
   ...props
 }: FieldRootProps) {
+  // Inside a Fieldset.Root, its disabled and invalid apply here too.
+  const { disabled, invalid } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
   const autoId = useId();
   const hintId = useId();
   const inputRef = useRef<HTMLElement>(null);
@@ -241,7 +244,25 @@ function Root({
   );
 }
 
-export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password';
+/**
+ * Input types that take a string value. The number, date and time types keep
+ * their native spinner and picker; `value` is the input's string, such as
+ * `"2026-10-07"` or `"14:30"`.
+ */
+export type FieldTextInputType =
+  | 'text'
+  | 'search'
+  | 'email'
+  | 'url'
+  | 'tel'
+  | 'password'
+  | 'number'
+  | 'date'
+  | 'time'
+  | 'datetime-local';
+
+// Browsers ignore maxLength on these, so no limit is shown or announced.
+const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = new Set(['number', 'date', 'time', 'datetime-local']);
 
 export type FieldTextInputProps = {
   value: string;
@@ -265,7 +286,7 @@ function TextInput({
 }: FieldTextInputProps) {
   const ctx = useFieldContext();
   const controlRef = useComposedRefs(useControlSetter(ctx.inputRef), ref);
-  const limit = typeof maxLength === 'number' ? maxLength : undefined;
+  const limit = typeof maxLength === 'number' && !NO_LENGTH_LIMIT.has(type) ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
   return (
     <input

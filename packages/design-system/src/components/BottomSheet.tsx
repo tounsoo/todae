@@ -10,24 +10,32 @@ import {
   type ComponentPropsWithRef,
   type CSSProperties,
   type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
   type RefObject,
 } from 'react';
 import { Button, type ButtonRootProps } from './Button';
-import { OverlayPortal } from '../overlay/OverlayPortal';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
-import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useFocusRestore } from '../overlay/useFocusRestore';
-import { useFocusTrap } from '../overlay/useFocusTrap';
-import { useInitialFocus } from '../overlay/useInitialFocus';
+import { initialFocusTarget, useInitialFocus } from '../overlay/useInitialFocus';
+import { useModalDialog } from '../overlay/useModalDialog';
 import { useScrollLock } from '../overlay/useScrollLock';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag';
-import { cx, useComposedRefs } from './props';
+import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './BottomSheet.module.css';
 
 export type { SheetSnap };
-export type SheetCloseReason = Extract<OverlayCloseReason, 'escape' | 'scrim' | 'drag' | 'close-button'>;
+/**
+ * Why the sheet asked to close. `form` is a `<form method="dialog">` submit
+ * (read the submitter's value from the element's `returnValue`); `native` is
+ * anything else outside Todae that closed the `<dialog>` element, such as a
+ * script calling `close()`. If the owner keeps `open`, the sheet shows again.
+ */
+export type SheetCloseReason =
+  | Extract<OverlayCloseReason, 'escape' | 'scrim' | 'drag' | 'close-button'>
+  | 'form'
+  | 'native';
 
 export type BottomSheetRootProps = {
   open: boolean;
@@ -45,7 +53,7 @@ export type BottomSheetRootProps = {
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
-} & Omit<ComponentPropsWithRef<'div'>, 'role' | 'children'>;
+} & Omit<ComponentPropsWithRef<'dialog'>, 'open' | 'role' | 'children'>;
 
 type SheetContextValue = {
   requestClose: (reason: SheetCloseReason) => void;
@@ -188,6 +196,14 @@ function BottomSheetClose({
 
 const DEFAULT_SNAP_POINTS: readonly SheetSnap[] = ['mid', 'full'];
 
+
+/** Whether a pointer event landed on the backdrop: on the dialog itself, outside its box. */
+function onBackdrop(dialog: HTMLElement | null, event: { target: EventTarget | null; clientX: number; clientY: number }) {
+  if (!dialog || event.target !== dialog) return false;
+  const rect = dialog.getBoundingClientRect();
+  return event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+}
+
 function BottomSheetRoot({
   open,
   onOpenChange,
@@ -203,6 +219,9 @@ function BottomSheetRoot({
   className,
   children,
   ref,
+  onPointerDown,
+  onClick,
+  onSubmit,
   ...props
 }: BottomSheetRootProps) {
   const points = snapPoints ?? DEFAULT_SNAP_POINTS;
@@ -217,13 +236,11 @@ function BottomSheetRoot({
     },
     [onSnapChange, snap],
   );
-  const { requestClose } = useControlledOpen({
-    open,
-    onOpenChange: onOpenChange as (open: boolean, reason: OverlayCloseReason) => void,
-  });
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const [sheetNode, setSheetNode] = useState<HTMLDivElement | null>(null);
+  const { requestClose } = useControlledOpen<SheetCloseReason>({ open, onOpenChange });
+  const sheetRef = useRef<HTMLDialogElement>(null);
+  const [sheetNode, setSheetNode] = useState<HTMLDialogElement | null>(null);
   const bodyRef = useRef<HTMLElement | null>(null);
+  const pressOnBackdrop = useRef(false);
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
   const [grabbers, setGrabbers] = useState(0);
@@ -232,20 +249,42 @@ function BottomSheetRoot({
     return () => setGrabbers((n) => n - 1);
   }, []);
   const onDismiss = useCallback(() => requestClose('drag'), [requestClose]);
-  const onEscape = useCallback(() => requestClose('escape'), [requestClose]);
   const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'transform');
   const entered = useEntered(present, exiting);
-  const setSheetRef = useCallback((node: HTMLDivElement | null) => {
+  const setSheetRef = useCallback((node: HTMLDialogElement | null) => {
     sheetRef.current = node;
     setSheetNode(node);
   }, []);
   const sheetRefs = useComposedRefs(setSheetRef, ref);
 
   useScrollLock(present);
-  useFocusRestore(open, { restoreTo: restoreFocusRef, containerRef: sheetRef });
+  // Records the focus to return to, so it runs before showModal moves focus.
+  // Keyed on present: the page behind stays inert until the element leaves
+  // at the end of the exit motion, and only then can focus go back.
+  useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: sheetRef, nativeReturn: true });
+  // A modal <dialog> puts the sheet in the top layer, makes the rest of the
+  // page inert and keeps focus inside, so no portal or focus trap is needed.
+  // closedby="none" turns Escape off natively when dismissOnEscape is false.
+  const closeOnFormSubmit = useModalDialog({
+    dialogRef: sheetRef,
+    node: sheetNode,
+    present,
+    open,
+    dismissOnEscape,
+    onOpenChange,
+    requestClose,
+  });
+  // After showModal, which focuses the first focusable element by itself.
   useInitialFocus(sheetRef, open, initialFocusRef);
-  useFocusTrap(sheetNode, present);
-  useEscapeKey(open, dismissOnEscape, onEscape);
+  // A placed Grabber replaces the default one a commit after mount. If the
+  // default one had focus, focus went with it; give it to the sheet again.
+  useLayoutEffect(() => {
+    const el = sheetRef.current;
+    if (grabbers === 0 || !el?.open) return;
+    const active = el.ownerDocument.activeElement;
+    if (active && active !== el.ownerDocument.body) return;
+    initialFocusTarget(el, initialFocusRef).focus();
+  }, [grabbers, initialFocusRef]);
   useSnapDrag({
     sheetRef,
     bodyRef,
@@ -275,36 +314,39 @@ function BottomSheetRoot({
   if (!present) return null;
 
   return (
-    <OverlayPortal inertOutside>
-      <SheetContext.Provider value={ctx}>
-        <div
-          className={styles.root}
-          data-entered={entered ? '' : undefined}
-          data-exiting={exiting ? '' : undefined}
-        >
-          <div
-            className={styles.scrim}
-            onClick={() => {
-              if (dismissOnScrim && open) requestClose('scrim');
-            }}
-          />
-          <div
-            {...props}
-            aria-labelledby={props['aria-labelledby'] ?? labelledBy}
-            aria-describedby={props['aria-describedby'] ?? describedBy}
-            tabIndex={props.tabIndex ?? -1}
-            ref={sheetRefs}
-            className={cx(styles.sheet, className)}
-            role="dialog"
-            aria-modal="true"
-            data-snap={currentSnap}
-          >
-            {grabbers > 0 ? null : <GrabberHandle />}
-            {children}
-          </div>
-        </div>
-      </SheetContext.Provider>
-    </OverlayPortal>
+    <SheetContext.Provider value={ctx}>
+      <dialog
+        {...props}
+        {...{ closedby: dismissOnEscape ? 'closerequest' : 'none' }}
+        aria-labelledby={props['aria-labelledby'] ?? labelledBy}
+        aria-describedby={props['aria-describedby'] ?? describedBy}
+        tabIndex={props.tabIndex ?? -1}
+        ref={sheetRefs}
+        className={cx(styles.sheet, className)}
+        data-snap={currentSnap}
+        data-entered={entered ? '' : undefined}
+        data-exiting={exiting ? '' : undefined}
+        onPointerDown={(event: ReactPointerEvent<HTMLDialogElement>) => {
+          onPointerDown?.(event);
+          // Always tracked, so a click is judged by where its own press began.
+          pressOnBackdrop.current = onBackdrop(sheetRef.current, event);
+        }}
+        onSubmit={(event) => {
+          onSubmit?.(event);
+          closeOnFormSubmit(event);
+        }}
+        onClick={composeHandlers(onClick, (event) => {
+          const fromBackdrop = pressOnBackdrop.current && onBackdrop(sheetRef.current, event);
+          pressOnBackdrop.current = false;
+          // Not before the enter motion starts: the sheet is still below the
+          // viewport, so its box would put any tap on the backdrop.
+          if (fromBackdrop && dismissOnScrim && open && entered) requestClose('scrim');
+        })}
+      >
+        {grabbers > 0 ? null : <GrabberHandle />}
+        {children}
+      </dialog>
+    </SheetContext.Provider>
   );
 }
 

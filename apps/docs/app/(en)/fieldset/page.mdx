@@ -1,0 +1,40 @@
+import { FieldsetCheckboxes, FieldsetDisabled } from '../../../components/demos/FieldsetDemo';
+
+# Fieldset
+
+A native `<fieldset>` that groups related controls under one `<legend>`, such as a set of checkboxes. A screen reader reads the legend as the group's name when focus enters it.
+
+```tsx
+<Fieldset.Root invalid={none} aria-describedby={none ? errorId : undefined}>
+	<Fieldset.Legend>Email topics</Fieldset.Legend>
+	<Checkbox>Product news</Checkbox>
+	<Checkbox>Security notices</Checkbox>
+	{none ? <ErrorMessage id={errorId}>Pick at least one topic.</ErrorMessage> : null}
+</Fieldset.Root>
+```
+
+<Example block>
+  <FieldsetCheckboxes />
+</Example>
+
+`invalid` marks every Todae control inside invalid: a Checkbox, Switch, RadioGroup or Field gets `aria-invalid` and its invalid style. A fieldset has no `aria-invalid` of its own, so say why with a [Description](/description) or [ErrorMessage](/errormessage) and point the root's `aria-describedby` at it.
+
+`disabled` is the native attribute: the browser disables every form control inside, and Todae's controls show their disabled style. A fieldset inside a disabled one is disabled too. Inside an invalid fieldset, a control or nested fieldset is invalid unless it sets `invalid={false}`, for a field the person got right. Controls inside the first `Fieldset.Legend` stay enabled, as the browser keeps them.
+
+<Example block>
+  <FieldsetDisabled />
+</Example>
+
+The parts stack with `fieldset.gap`. For controls side by side, put them in a `Stack direction="row"`.
+
+## When to use
+
+**When:** Several controls answer one question: a checkbox group, a set of switches, or the fields of an address. Name the group with Fieldset.Legend.
+
+**When not:** One field → Label with Field.Root. A single choice among options → RadioGroup, which is its own group. Sections of a long form with their own headings → headings.
+
+## Props
+
+<PropsTable name="Fieldset.Root" />
+
+<PropsTable name="Fieldset.Legend" />

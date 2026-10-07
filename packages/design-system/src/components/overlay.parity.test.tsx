@@ -11,6 +11,7 @@ type Harness = {
   reasonBackdrop: 'backdrop' | 'scrim';
   renderSurface: (open: boolean, props: Record<string, unknown>) => void;
   getSurface: () => HTMLElement;
+  clickBackdrop: (surface: HTMLElement) => void;
 };
 
 function dialogHarness(): Harness {
@@ -37,6 +38,11 @@ function dialogHarness(): Harness {
     getSurface() {
       return document.querySelector('dialog') as HTMLElement;
     },
+    clickBackdrop(surface) {
+      // The dialog element spans the viewport; its panel is a child.
+      fireEvent.pointerDown(surface);
+      fireEvent.click(surface);
+    },
   };
 }
 
@@ -62,7 +68,14 @@ function sheetHarness(): Harness {
       );
     },
     getSurface() {
-      return document.querySelector('[role="dialog"]') as HTMLElement;
+      return document.querySelector('dialog') as HTMLElement;
+    },
+    clickBackdrop(surface) {
+      // The sheet is the dialog element; its ::backdrop hit-tests as the
+      // dialog, outside the sheet's box.
+      surface.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 400, width: 800, height: 400 });
+      fireEvent.pointerDown(surface, { clientX: 10, clientY: 100 });
+      fireEvent.click(surface, { clientX: 10, clientY: 100 });
     },
   };
 }
@@ -76,6 +89,8 @@ for (const harness of [dialogHarness, sheetHarness]) {
     it('exposes a labelled modal dialog', () => {
       harness().renderSurface(true, {});
       const surface = harness().getSurface();
+      expect(surface.tagName).toBe('DIALOG');
+      expect((surface as HTMLDialogElement).open).toBe(true);
       expect(surface.getAttribute('aria-modal')).toBe('true');
       expect(surface.getAttribute('aria-labelledby')).toBe(screen.getByText('Save file').id);
       expect(surface.getAttribute('aria-describedby')).toBe(screen.getByText('This cannot be undone.').id);
@@ -116,40 +131,32 @@ for (const harness of [dialogHarness, sheetHarness]) {
       h.renderSurface(true, { onOpenChange });
       fireEvent.keyDown(h.getSurface(), { key: 'Escape' });
       fireEvent.keyDown(document, { key: 'Escape' });
-      if (h.name === 'Dialog') h.getSurface().dispatchEvent(new Event('cancel', { cancelable: true }));
+      h.getSurface().dispatchEvent(new Event('cancel', { cancelable: true }));
       expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
       cleanup();
       const blocked = vi.fn();
       h.renderSurface(true, { onOpenChange: blocked, dismissOnEscape: false });
       fireEvent.keyDown(h.getSurface(), { key: 'Escape' });
       fireEvent.keyDown(document, { key: 'Escape' });
-      if (h.name === 'Dialog') h.getSurface().dispatchEvent(new Event('cancel', { cancelable: true }));
+      h.getSurface().dispatchEvent(new Event('cancel', { cancelable: true }));
       expect(blocked).not.toHaveBeenCalled();
       expect(h.getSurface()).not.toBeNull();
     });
 
-    it('dismisses on scrim and ignores panel clicks', () => {
+    it('dismisses on scrim and ignores panel clicks', async () => {
       const onOpenChange = vi.fn();
       const h = harness();
       h.renderSurface(true, { onOpenChange });
       const surface = h.getSurface();
-      if (h.name === 'Dialog') {
-        fireEvent.pointerDown(surface);
-        fireEvent.click(surface);
-      } else {
-        fireEvent.click(surface.parentElement!.querySelector('[class*="scrim"]')!);
-      }
+      // A sheet takes scrim taps once its enter motion has started.
+      await waitFor(() => expect(surface.hasAttribute('data-entered')).toBe(true));
+      h.clickBackdrop(surface);
       expect(onOpenChange).toHaveBeenCalledWith(false, h.reasonBackdrop);
       cleanup();
       const blocked = vi.fn();
       h.renderSurface(true, { onOpenChange: blocked, dismissOnBackdrop: false });
       const again = h.getSurface();
-      if (h.name === 'Dialog') {
-        fireEvent.pointerDown(again);
-        fireEvent.click(again);
-      } else {
-        fireEvent.click(again.parentElement!.querySelector('[class*="scrim"]')!);
-      }
+      h.clickBackdrop(again);
       expect(blocked).not.toHaveBeenCalled();
       fireEvent.click(screen.getByText('Save file'));
       expect(blocked).not.toHaveBeenCalled();
@@ -218,8 +225,8 @@ for (const harness of [dialogHarness, sheetHarness]) {
           </BottomSheet.Root>
         ),
       );
-      await Promise.resolve();
-      expect(document.activeElement).toBe(trigger);
+      // The sheet gives focus back once its exit motion ends and the page behind is no longer inert.
+      await waitFor(() => expect(document.activeElement).toBe(trigger), { timeout: 1000 });
       trigger.remove();
     });
 
