@@ -31,9 +31,9 @@
     },
     "status": {
       "info": {
-        "fg": { "$type": "color", "$value": { "$ref": "#/color/blue/200/$value" } },
-        "bg": { "$type": "color", "$value": { "$ref": "#/color/blue/900/$value" } },
-        "border": { "$type": "color", "$value": { "$ref": "#/color/blue/700/$value" } }
+        "fg": { "$type": "color", "$value": { "$ref": "#/color/gray/100/$value" } },
+        "bg": { "$type": "color", "$value": { "$ref": "#/color/gray/800/$value" } },
+        "border": { "$type": "color", "$value": { "$ref": "#/color/gray/600/$value" } }
       },
       "success": {
         "fg": { "$type": "color", "$value": { "$ref": "#/color/green/200/$value" } },

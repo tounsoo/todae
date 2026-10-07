@@ -47,51 +47,6 @@
       "context": null
     },
     {
-      "path": "color.blue.100",
-      "type": "color",
-      "cssVar": "--todae-color-blue-100",
-      "cssValue": "oklch(0.95 0.03 250)",
-      "ref": null,
-      "layer": "core",
-      "context": null
-    },
-    {
-      "path": "color.blue.200",
-      "type": "color",
-      "cssVar": "--todae-color-blue-200",
-      "cssValue": "oklch(0.88 0.07 250)",
-      "ref": null,
-      "layer": "core",
-      "context": null
-    },
-    {
-      "path": "color.blue.300",
-      "type": "color",
-      "cssVar": "--todae-color-blue-300",
-      "cssValue": "oklch(0.82 0.1 250)",
-      "ref": null,
-      "layer": "core",
-      "context": null
-    },
-    {
-      "path": "color.blue.700",
-      "type": "color",
-      "cssVar": "--todae-color-blue-700",
-      "cssValue": "oklch(0.42 0.13 250)",
-      "ref": null,
-      "layer": "core",
-      "context": null
-    },
-    {
-      "path": "color.blue.900",
-      "type": "color",
-      "cssVar": "--todae-color-blue-900",
-      "cssValue": "oklch(0.25 0.06 250)",
-      "ref": null,
-      "layer": "core",
-      "context": null
-    },
-    {
       "path": "color.gray.50",
       "type": "color",
       "cssVar": "--todae-color-gray-50",
@@ -815,8 +770,8 @@
       "path": "color.status.info.bg",
       "type": "color",
       "cssVar": "--todae-color-status-info-bg",
-      "cssValue": "var(--todae-color-blue-100)",
-      "ref": "color.blue.100",
+      "cssValue": "var(--todae-color-gray-100)",
+      "ref": "color.gray.100",
       "layer": "appearance",
       "context": "light"
     },
@@ -824,8 +779,8 @@
       "path": "color.status.info.border",
       "type": "color",
       "cssVar": "--todae-color-status-info-border",
-      "cssValue": "var(--todae-color-blue-300)",
-      "ref": "color.blue.300",
+      "cssValue": "var(--todae-color-gray-300)",
+      "ref": "color.gray.300",
       "layer": "appearance",
       "context": "light"
     },
@@ -833,8 +788,8 @@
       "path": "color.status.info.fg",
       "type": "color",
       "cssVar": "--todae-color-status-info-fg",
-      "cssValue": "var(--todae-color-blue-700)",
-      "ref": "color.blue.700",
+      "cssValue": "var(--todae-color-gray-700)",
+      "ref": "color.gray.700",
       "layer": "appearance",
       "context": "light"
     },
@@ -1103,8 +1058,8 @@
       "path": "color.status.info.bg",
       "type": "color",
       "cssVar": "--todae-color-status-info-bg",
-      "cssValue": "var(--todae-color-blue-900)",
-      "ref": "color.blue.900",
+      "cssValue": "var(--todae-color-gray-800)",
+      "ref": "color.gray.800",
       "layer": "appearance",
       "context": "dark"
     },
@@ -1112,8 +1067,8 @@
       "path": "color.status.info.border",
       "type": "color",
       "cssVar": "--todae-color-status-info-border",
-      "cssValue": "var(--todae-color-blue-700)",
-      "ref": "color.blue.700",
+      "cssValue": "var(--todae-color-gray-600)",
+      "ref": "color.gray.600",
       "layer": "appearance",
       "context": "dark"
     },
@@ -1121,8 +1076,8 @@
       "path": "color.status.info.fg",
       "type": "color",
       "cssVar": "--todae-color-status-info-fg",
-      "cssValue": "var(--todae-color-blue-200)",
-      "ref": "color.blue.200",
+      "cssValue": "var(--todae-color-gray-100)",
+      "ref": "color.gray.100",
       "layer": "appearance",
       "context": "dark"
     },

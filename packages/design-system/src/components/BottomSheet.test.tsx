@@ -47,7 +47,7 @@ describe('BottomSheet', () => {
         <BottomSheet.Body>list</BottomSheet.Body>
       </BottomSheet.Root>,
     );
-    const sheet = document.querySelector('[role="dialog"]') as HTMLElement;
+    const sheet = document.querySelector('dialog') as HTMLElement;
     const handle = document.querySelector('[data-sheet-drag-handle]');
     expect(sheet).not.toBeNull();
     expect(handle).not.toBeNull();
@@ -87,7 +87,7 @@ describe('BottomSheet', () => {
         <BottomSheet.Body>items</BottomSheet.Body>
       </BottomSheet.Root>,
     );
-    const body = document.querySelector('[role="dialog"] .todae_body') ?? document.querySelector('[class*="body"]');
+    const body = document.querySelector('dialog .todae_body') ?? document.querySelector('[class*="body"]');
     expect(body).toBeInstanceOf(HTMLElement);
     Object.defineProperty(body!, 'scrollTop', { configurable: true, value: 20 });
     fireEvent.pointerDown(body!, { button: 0, pointerId: 2, clientY: 80 });
@@ -96,20 +96,98 @@ describe('BottomSheet', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
-  it('releases lock and inert on unmount while open', () => {
-    const sibling = document.createElement('div');
-    document.body.appendChild(sibling);
+  it('opens as a modal dialog and releases the scroll lock on unmount', () => {
     const { unmount } = render(
       <BottomSheet.Root open onOpenChange={() => undefined}>
         <BottomSheet.Title>Gone</BottomSheet.Title>
       </BottomSheet.Root>,
     );
+    const sheet = screen.getByRole('dialog');
+    expect(sheet.tagName).toBe('DIALOG');
+    expect((sheet as HTMLDialogElement).open).toBe(true);
+    expect(sheet.getAttribute('closedby')).toBe('closerequest');
+    expect(document.querySelector('[data-todae-portal]')).toBeNull();
     expect(document.documentElement.style.overflow).toBe('hidden');
-    expect(sibling.inert).toBe(true);
     unmount();
     expect(document.documentElement.style.overflow).not.toBe('hidden');
-    expect(sibling.inert).toBe(false);
-    sibling.remove();
+  });
+
+  it('renders in place, so it inherits the theme from its parent', () => {
+    render(
+      <div data-testid="host">
+        <BottomSheet.Root open onOpenChange={() => undefined} aria-label="s" />
+      </div>,
+    );
+    expect(screen.getByTestId('host').contains(screen.getByRole('dialog'))).toBe(true);
+  });
+
+  it('turns the native close request off when dismissOnEscape is false', () => {
+    const onOpenChange = vi.fn();
+    render(<BottomSheet.Root open onOpenChange={onOpenChange} dismissOnEscape={false} aria-label="s" />);
+    const sheet = screen.getByRole('dialog');
+    expect(sheet.getAttribute('closedby')).toBe('none');
+    const cancel = new Event('cancel', { cancelable: true });
+    sheet.dispatchEvent(cancel);
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('holds the cancel and asks the owner to close on Escape', () => {
+    const onOpenChange = vi.fn();
+    render(<BottomSheet.Root open onOpenChange={onOpenChange} aria-label="s" />);
+    const cancel = new Event('cancel', { cancelable: true });
+    screen.getByRole('dialog').dispatchEvent(cancel);
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+  });
+
+  it('reports a close from outside Todae as native, and one right after a cancel as escape', () => {
+    const onOpenChange = vi.fn();
+    render(<BottomSheet.Root open onOpenChange={onOpenChange} aria-label="s" />);
+    const sheet = screen.getByRole('dialog') as HTMLDialogElement;
+    sheet.close();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'native');
+    sheet.showModal();
+    sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
+    sheet.close();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape');
+  });
+
+  it('closes on a press and click on the backdrop, not on the sheet itself', () => {
+    const onOpenChange = vi.fn();
+    const onClick = vi.fn();
+    render(<BottomSheet.Root open onOpenChange={onOpenChange} onClick={onClick} aria-label="s" />);
+    const sheet = screen.getByRole('dialog');
+    sheet.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 400, width: 800, height: 400 });
+    // On the sheet's own padding: the target is the dialog, but inside its box.
+    fireEvent.pointerDown(sheet, { clientX: 10, clientY: 500 });
+    fireEvent.click(sheet, { clientX: 10, clientY: 500 });
+    expect(onOpenChange).not.toHaveBeenCalled();
+    // A press that starts inside and ends on the backdrop is not a scrim click.
+    fireEvent.pointerDown(sheet, { clientX: 10, clientY: 500 });
+    fireEvent.click(sheet, { clientX: 10, clientY: 100 });
+    expect(onOpenChange).not.toHaveBeenCalled();
+    fireEvent.pointerDown(sheet, { clientX: 10, clientY: 100 });
+    fireEvent.click(sheet, { clientX: 10, clientY: 100 });
+    expect(onClick).toHaveBeenCalledTimes(3);
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'scrim');
+  });
+
+  it('keeps the backdrop open when dismissOnScrim is false or the consumer prevents the click', () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(
+      <BottomSheet.Root open onOpenChange={onOpenChange} dismissOnScrim={false} aria-label="s" />,
+    );
+    const sheet = screen.getByRole('dialog');
+    sheet.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 400, width: 800, height: 400 });
+    fireEvent.pointerDown(sheet, { clientX: 10, clientY: 100 });
+    fireEvent.click(sheet, { clientX: 10, clientY: 100 });
+    rerender(
+      <BottomSheet.Root open onOpenChange={onOpenChange} onClick={(event) => event.preventDefault()} aria-label="s" />,
+    );
+    fireEvent.pointerDown(sheet, { clientX: 10, clientY: 100 });
+    fireEvent.click(sheet, { clientX: 10, clientY: 100 });
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 
   it('stays mounted while exiting then unmounts after the exit timeout', async () => {
@@ -123,15 +201,15 @@ describe('BottomSheet', () => {
         <BottomSheet.Title>Share</BottomSheet.Title>
       </BottomSheet.Root>,
     );
-    const sheet = document.querySelector('[role="dialog"]') as HTMLElement;
+    const sheet = document.querySelector('dialog') as HTMLElement;
     expect(sheet).not.toBeNull();
-    expect(sheet.parentElement?.hasAttribute('data-exiting')).toBe(true);
-    await waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull(), { timeout: 500 });
+    expect(sheet.hasAttribute('data-exiting')).toBe(true);
+    await waitFor(() => expect(document.querySelector('dialog')).toBeNull(), { timeout: 500 });
   });
 
   it('types snapPoints and close reasons', () => {
     expectTypeOf<NonNullable<BottomSheetRootProps['snapPoints']>>().toEqualTypeOf<readonly ('mid' | 'full')[]>();
-    expectTypeOf<SheetCloseReason>().toEqualTypeOf<'escape' | 'scrim' | 'drag' | 'close-button'>();
+    expectTypeOf<SheetCloseReason>().toEqualTypeOf<'escape' | 'scrim' | 'drag' | 'close-button' | 'native'>();
     expectTypeOf(['peek'] as const).not.toMatchTypeOf<NonNullable<BottomSheetRootProps['snapPoints']>>();
   });
 
@@ -157,22 +235,5 @@ describe('BottomSheet', () => {
       </BottomSheet.Root>,
     );
     expect(onRender.mock.calls.length).toBe(before);
-  });
-
-  it('wraps Tab inside the portaled sheet', () => {
-    render(
-      <BottomSheet.Root open onOpenChange={() => undefined}>
-        <BottomSheet.Title>Sort</BottomSheet.Title>
-        <button type="button">First</button>
-        <button type="button">Last</button>
-      </BottomSheet.Root>,
-    );
-    const grabber = screen.getByRole('button', { name: 'Resize sheet' });
-    const last = screen.getByRole('button', { name: 'Last' });
-    last.focus();
-    expect(fireEvent.keyDown(last, { key: 'Tab' })).toBe(false);
-    expect(document.activeElement).toBe(grabber);
-    expect(fireEvent.keyDown(grabber, { key: 'Tab', shiftKey: true })).toBe(false);
-    expect(document.activeElement).toBe(last);
   });
 });

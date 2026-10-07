@@ -10,6 +10,7 @@ export type ComboboxItem =
   | { kind: 'option'; option: ComboboxOption; id: string }
   | { kind: 'create'; label: string; value: string; id: string };
 
-export type ComboboxCloseReason = OverlayCloseReason | 'select' | 'blur' | 'input-clear';
+/** `native` comes from the sheet presentation: something outside Todae closed its `<dialog>`. */
+export type ComboboxCloseReason = OverlayCloseReason | 'select' | 'blur' | 'input-clear' | 'native';
 
 export type { SheetPresentation } from './useSheetPresentation';

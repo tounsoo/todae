@@ -149,7 +149,7 @@
     },
     {
       "name": "BottomSheet.Root",
-      "description": "Modal bottom sheet. Custom portal, not a native dialog. Mid and full snap.",
+      "description": "Modal bottom sheet on a native <dialog> opened with showModal(). Mid and full snap.",
       "props": [
         {
           "name": "open",
@@ -161,7 +161,7 @@
           "name": "onOpenChange",
           "type": "(open: boolean, reason: SheetCloseReason) => void",
           "required": true,
-          "description": "Dismiss requests. Staying open keeps the sheet open."
+          "description": "Dismiss requests. Staying open keeps the sheet open. reason is \"native\" when something outside Todae closed the <dialog>."
         },
         {
           "name": "snap",
@@ -187,14 +187,14 @@
           "name": "dismissOnEscape",
           "type": "boolean",
           "required": false,
-          "description": "Escape calls onOpenChange(false, \"escape\").",
+          "description": "Escape calls onOpenChange(false, \"escape\"). false sets closedby=\"none\", so the browser ignores the close request.",
           "default": "true"
         },
         {
           "name": "dismissOnScrim",
           "type": "boolean",
           "required": false,
-          "description": "Scrim click calls onOpenChange(false, \"scrim\").",
+          "description": "A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, \"scrim\").",
           "default": "true"
         },
         {

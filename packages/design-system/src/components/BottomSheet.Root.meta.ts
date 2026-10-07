@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'BottomSheet.Root',
-  description: 'Modal bottom sheet. Custom portal, not a native dialog. Mid and full snap.',
+  description: 'Modal bottom sheet on a native <dialog> opened with showModal(). Mid and full snap.',
   props: [
     {
       name: 'open',
@@ -14,7 +14,7 @@ export const meta = {
       name: 'onOpenChange',
       type: '(open: boolean, reason: SheetCloseReason) => void',
       required: true,
-      description: 'Dismiss requests. Staying open keeps the sheet open.',
+      description: 'Dismiss requests. Staying open keeps the sheet open. reason is "native" when something outside Todae closed the <dialog>.',
     },
     {
       name: 'snap',
@@ -41,14 +41,14 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'true',
-      description: 'Escape calls onOpenChange(false, "escape").',
+      description: 'Escape calls onOpenChange(false, "escape"). false sets closedby="none", so the browser ignores the close request.',
     },
     {
       name: 'dismissOnScrim',
       type: 'boolean',
       required: false,
       default: 'true',
-      description: 'Scrim click calls onOpenChange(false, "scrim").',
+      description: 'A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, "scrim").',
     },
     {
       name: 'dismissOnDrag',

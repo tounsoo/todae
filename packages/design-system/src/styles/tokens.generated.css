@@ -5,11 +5,6 @@
   --todae-color-amber-300: oklch(0.82 0.12 70);
   --todae-color-amber-700: oklch(0.42 0.1 70);
   --todae-color-amber-900: oklch(0.25 0.05 70);
-  --todae-color-blue-100: oklch(0.95 0.03 250);
-  --todae-color-blue-200: oklch(0.88 0.07 250);
-  --todae-color-blue-300: oklch(0.82 0.1 250);
-  --todae-color-blue-700: oklch(0.42 0.13 250);
-  --todae-color-blue-900: oklch(0.25 0.06 250);
   --todae-color-gray-50: oklch(0.98 0.005 260);
   --todae-color-gray-100: oklch(0.93 0.007 260);
   --todae-color-gray-200: oklch(0.87 0.009 260);
@@ -94,9 +89,9 @@
   --todae-color-status-critical-bg: var(--todae-color-red-100);
   --todae-color-status-critical-border: var(--todae-color-red-300);
   --todae-color-status-critical-fg: var(--todae-color-red-700);
-  --todae-color-status-info-bg: var(--todae-color-blue-100);
-  --todae-color-status-info-border: var(--todae-color-blue-300);
-  --todae-color-status-info-fg: var(--todae-color-blue-700);
+  --todae-color-status-info-bg: var(--todae-color-gray-100);
+  --todae-color-status-info-border: var(--todae-color-gray-300);
+  --todae-color-status-info-fg: var(--todae-color-gray-700);
   --todae-color-status-success-bg: var(--todae-color-green-100);
   --todae-color-status-success-border: var(--todae-color-green-300);
   --todae-color-status-success-fg: var(--todae-color-green-700);
@@ -130,9 +125,9 @@
   --todae-color-status-critical-bg: var(--todae-color-red-900);
   --todae-color-status-critical-border: var(--todae-color-red-700);
   --todae-color-status-critical-fg: var(--todae-color-red-200);
-  --todae-color-status-info-bg: var(--todae-color-blue-900);
-  --todae-color-status-info-border: var(--todae-color-blue-700);
-  --todae-color-status-info-fg: var(--todae-color-blue-200);
+  --todae-color-status-info-bg: var(--todae-color-gray-800);
+  --todae-color-status-info-border: var(--todae-color-gray-600);
+  --todae-color-status-info-fg: var(--todae-color-gray-100);
   --todae-color-status-success-bg: var(--todae-color-green-900);
   --todae-color-status-success-border: var(--todae-color-green-700);
   --todae-color-status-success-fg: var(--todae-color-green-200);

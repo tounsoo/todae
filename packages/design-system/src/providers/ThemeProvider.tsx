@@ -20,7 +20,6 @@ export type ThemeProviderProps<Extra extends string = never> = {
 
 const QUERY = '(prefers-color-scheme: dark)';
 const AppearanceContext = createContext<ResolvedAppearance>('light');
-const ThemeVarsContext = createContext<Record<string, string>>({});
 
 function subscribe(onStoreChange: () => void) {
   const mq = window.matchMedia(QUERY);
@@ -48,21 +47,11 @@ export function ThemeProvider<Extra extends string = never>({
   const vars = themeOverrideStyle(overrides, overrideTypes);
   return (
     <AppearanceContext.Provider value={resolved}>
-      <ThemeVarsContext.Provider value={vars}>
-        <div
-          {...props}
-          style={{ ...style, ...vars } as CSSProperties}
-          data-appearance={resolved}
-        />
-      </ThemeVarsContext.Provider>
+      <div {...props} style={{ ...style, ...vars } as CSSProperties} data-appearance={resolved} />
     </AppearanceContext.Provider>
   );
 }
 
 export function useAppearance(): ResolvedAppearance {
   return useContext(AppearanceContext);
-}
-
-export function useThemeVars(): Record<string, string> {
-  return useContext(ThemeVarsContext);
 }

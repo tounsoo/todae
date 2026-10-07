@@ -82,19 +82,26 @@ function SheetHarness({ onClose }: { onClose: () => void }) {
 }
 
 describe('BottomSheet in a browser', () => {
-  it('keeps Tab inside the sheet and closes on Escape', async () => {
+  it('keeps Tab off the page behind the sheet and closes on Escape', async () => {
     const onClose = vi.fn();
     render(<SheetHarness onClose={onClose} />);
     const sheet = await screen.findByRole('dialog');
+    const outside = screen.getByRole('button', { name: 'Outside', hidden: true });
     await waitFor(() => expect(sheet.contains(document.activeElement)).toBe(true));
-    for (let i = 0; i < 6; i++) {
-      await userEvent.keyboard('{Tab}');
-      expect(sheet.contains(document.activeElement)).toBe(true);
+    // A modal <dialog> makes the page inert. Tab may step out to the browser's
+    // own UI, as with any modal dialog, but never onto the page behind.
+    for (const keys of ['{Tab}', '{Shift>}{Tab}{/Shift}']) {
+      for (let i = 0; i < 6; i++) {
+        await userEvent.keyboard(keys);
+        expect(document.activeElement).not.toBe(outside);
+        const active = document.activeElement;
+        expect(active === document.body || active === null || sheet.contains(active)).toBe(true);
+      }
     }
-    for (let i = 0; i < 6; i++) {
-      await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
-      expect(sheet.contains(document.activeElement)).toBe(true);
-    }
+    // The page behind is inert, so it can't take focus even from a script.
+    outside.focus();
+    expect(document.activeElement).not.toBe(outside);
+    sheet.querySelector('button')!.focus();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });

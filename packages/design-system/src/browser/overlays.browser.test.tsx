@@ -3,6 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { usePopover } from '../hooks/usePopover';
+import { BottomSheet, type SheetCloseReason } from '../components/BottomSheet';
 import { Button } from '../components/Button';
 import { Dialog, type DialogCloseReason } from '../components/Dialog';
 import { Popover } from '../components/Popover';
@@ -113,5 +114,67 @@ describe('Popover in a browser', () => {
     expect(Math.abs(p.left - t.left)).toBeLessThan(1);
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(panel.matches(':popover-open')).toBe(false));
+  });
+});
+
+function SheetHarness({ onClose }: { onClose: (reason: SheetCloseReason) => void }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div data-appearance="dark" data-density="comfortable" data-testid="host">
+      <BottomSheet.Root
+        open={open}
+        onOpenChange={(next, reason) => {
+          setOpen(next);
+          if (!next) onClose(reason);
+        }}
+      >
+        <BottomSheet.Title>Sort</BottomSheet.Title>
+        <BottomSheet.Body>Newest first</BottomSheet.Body>
+      </BottomSheet.Root>
+    </div>
+  );
+}
+
+describe('BottomSheet in a browser', () => {
+  const sheet = () => document.querySelector('dialog') as HTMLDialogElement;
+
+  it('opens as a modal dialog in the top layer with the theme of its parent', async () => {
+    render(<SheetHarness onClose={() => undefined} />);
+    await waitFor(() => expect(sheet().matches(':modal')).toBe(true));
+    expect(screen.getByRole('dialog', { name: 'Sort' })).toBe(sheet());
+    // Rendered in place, so the dark appearance applies without a portal.
+    const host = getComputedStyle(screen.getByTestId('host')).getPropertyValue('--todae-sheet-bg').trim();
+    expect(host).not.toBe('');
+    expect(getComputedStyle(sheet()).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(sheet(), '::backdrop').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    // Pinned to the bottom edge, full width, once its enter motion ends.
+    await waitFor(() => expect(Math.round(sheet().getBoundingClientRect().bottom)).toBe(window.innerHeight), {
+      timeout: 2000,
+    });
+    // Edge to edge, give or take the gutter the scroll lock keeps for the scrollbar.
+    const box = sheet().getBoundingClientRect();
+    expect(Math.round(box.left)).toBe(0);
+    expect(box.width).toBeGreaterThan(window.innerWidth - 24);
+  });
+
+  it('closes on a scrim click but not on a click on the sheet', async () => {
+    const onClose = vi.fn();
+    render(<SheetHarness onClose={onClose} />);
+    await waitFor(() => expect(sheet().matches(':modal')).toBe(true));
+    await userEvent.click(screen.getByText('Newest first'));
+    // The sheet's own padding is the dialog element too, but inside its box.
+    await userEvent.click(sheet(), { position: { x: 4, y: sheet().getBoundingClientRect().height - 4 } });
+    expect(onClose).not.toHaveBeenCalled();
+    // Above the sheet is the ::backdrop, which hit-tests as the dialog.
+    await userEvent.click(sheet(), { position: { x: 4, y: -20 } });
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith('scrim'));
+  });
+
+  it('closes on Escape through the dialog close request', async () => {
+    const onClose = vi.fn();
+    render(<SheetHarness onClose={onClose} />);
+    await waitFor(() => expect(sheet().matches(':modal')).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith('escape'));
   });
 });

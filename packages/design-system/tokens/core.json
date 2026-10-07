@@ -123,28 +123,6 @@
         "$type": "color",
         "$value": { "colorSpace": "oklch", "components": [0.25, 0.05, 70], "alpha": 1 }
       }
-    },
-    "blue": {
-      "100": {
-        "$type": "color",
-        "$value": { "colorSpace": "oklch", "components": [0.95, 0.03, 250], "alpha": 1 }
-      },
-      "200": {
-        "$type": "color",
-        "$value": { "colorSpace": "oklch", "components": [0.88, 0.07, 250], "alpha": 1 }
-      },
-      "300": {
-        "$type": "color",
-        "$value": { "colorSpace": "oklch", "components": [0.82, 0.1, 250], "alpha": 1 }
-      },
-      "700": {
-        "$type": "color",
-        "$value": { "colorSpace": "oklch", "components": [0.42, 0.13, 250], "alpha": 1 }
-      },
-      "900": {
-        "$type": "color",
-        "$value": { "colorSpace": "oklch", "components": [0.25, 0.06, 250], "alpha": 1 }
-      }
     }
   },
   "space": {
