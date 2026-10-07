@@ -18,6 +18,7 @@ import {
 } from '@tounsoo/todae';
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { Locale } from '../lib/i18n/config';
+import { DICTIONARIES } from '../lib/i18n/dictionaries';
 
 const TABS = {
   raw: RAW_OVERRIDE_KEYS,
@@ -29,41 +30,6 @@ type TokenTab = keyof typeof TABS;
 type AppearanceChoice = 'system' | 'light' | 'dark';
 type DensityChoice = 'compact' | 'comfortable' | 'spacious';
 
-// Option values, tab names and variant names are Todae's own names and stay in English.
-const STRINGS = {
-  en: {
-    rail: 'Theme controls',
-    title: 'Playground',
-    tokenLayer: 'Token layer',
-    color: 'color',
-    reset: 'Reset all',
-    export: 'Export',
-    copied: 'Copied theme override JSON.',
-    copyFailed: 'Could not copy. Clipboard permission was denied.',
-    stage: 'Live demos',
-    buttons: 'Buttons',
-    buttonHint: 'Hover, press, and tab to a button to see hover / active / focus.',
-    defaultTone: 'Default tone',
-    mutedTone: 'Muted tone',
-    accentTone: 'Accent tone',
-  },
-  ko: {
-    rail: '테마 컨트롤',
-    title: '플레이그라운드',
-    tokenLayer: '토큰 레이어',
-    color: '색상',
-    reset: '모두 초기화',
-    export: '내보내기',
-    copied: '테마 오버라이드 JSON을 복사했습니다.',
-    copyFailed: '복사하지 못했습니다. 클립보드 권한이 거부되었습니다.',
-    stage: '라이브 데모',
-    buttons: '버튼',
-    buttonHint: '버튼에 마우스를 올리거나, 누르거나, Tab으로 이동해 hover / active / focus 상태를 확인하세요.',
-    defaultTone: '기본 톤',
-    mutedTone: 'Muted 톤',
-    accentTone: 'Accent 톤',
-  },
-} satisfies Record<Locale, Record<string, string>>;
 
 function toHex(value: string): string {
   if (/^#[0-9a-fA-F]{6}$/.test(value)) return value.toLowerCase();
@@ -123,7 +89,8 @@ function TokenField({
 
 /** The theme playground. Each locale's /playground page renders it. */
 export function Playground({ locale }: { locale: Locale }) {
-  const t = STRINGS[locale];
+  // Option values, tab names and variant names are Todae's own names and stay in English.
+  const t = DICTIONARIES[locale].playground;
   const stageRef = useRef<HTMLDivElement>(null);
   const [appearance, setAppearance] = useState<AppearanceChoice>('system');
   const [density, setDensity] = useState<DensityChoice>('comfortable');
@@ -170,7 +137,7 @@ export function Playground({ locale }: { locale: Locale }) {
       <aside className="playground-rail" aria-label={t.rail}>
         <h1>{t.title}</h1>
         <fieldset>
-          <legend>Appearance</legend>
+          <legend>{t.appearance}</legend>
           <div className="playground-options">
             {(['system', 'light', 'dark'] as const).map((value) => (
               <label key={value}>
@@ -187,7 +154,7 @@ export function Playground({ locale }: { locale: Locale }) {
           </div>
         </fieldset>
         <fieldset>
-          <legend>Density</legend>
+          <legend>{t.density}</legend>
           <div className="playground-options">
             {(['compact', 'comfortable', 'spacious'] as const).map((value) => (
               <label key={value}>

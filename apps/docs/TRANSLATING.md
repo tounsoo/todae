@@ -7,7 +7,7 @@ The docs are written in English and translated into Korean (한국어). Translat
 - English is the default. Its pages live in `app/(en)/` and have no URL prefix, so `app/(en)/button/page.mdx` is `/button`.
 - Every other language has a folder named after its locale. Korean pages live in `app/ko/` under `/ko`, so a Korean `app/ko/button/page.mdx` is `/ko/button`.
 - A page with no translation still has a URL in every language. `/ko/button` shows the English page, marked `lang="en"`, under a notice that links here. `app/ko/[...slug]/page.tsx` does this for every page listed in `lib/i18n/englishPages.ts`.
-- The site's own words (sidebar sections, link text, the language switcher, the notice) live in `lib/i18n/dictionaries.ts`. Component and hook names, such as `Button` or `useField`, stay as they are in code.
+- The site's own words (sidebar sections, link text, the language switcher, the notice, the playground's controls) live in `lib/i18n/dictionaries.ts`. Component and hook names, such as `Button` or `useField`, stay as they are in code.
 
 ## Translate a page
 

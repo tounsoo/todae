@@ -18,6 +18,8 @@ export type Dictionary = {
   /** The 404 page, which shows every language. */
   notFound: string;
   home: string;
+  /** The playground's interface. */
+  playground: Record<'appearance' | 'density' | 'rail' | 'title' | 'tokenLayer' | 'color' | 'reset' | 'export' | 'copied' | 'copyFailed' | 'stage' | 'buttons' | 'buttonHint' | 'defaultTone' | 'mutedTone' | 'accentTone', string>;
   /** Section names; a missing one keeps its English name from `siteGroups.ts`. */
   groups: Partial<Record<GroupId, string>>;
   /** Link text by href; a missing one keeps its English text. Component, hook and pattern names (Button, useField, Combobox, Chip list) stay in English. */
@@ -31,6 +33,24 @@ const en: Dictionary = {
   languageNav: 'Language',
   untranslated: 'This page is not translated yet, so it is shown in English.',
   contribute: 'Help translate it',
+  playground: {
+    appearance: 'Appearance',
+    density: 'Density',
+    rail: 'Theme controls',
+    title: 'Playground',
+    tokenLayer: 'Token layer',
+    color: 'color',
+    reset: 'Reset all',
+    export: 'Export',
+    copied: 'Copied theme override JSON.',
+    copyFailed: 'Could not copy. Clipboard permission was denied.',
+    stage: 'Live demos',
+    buttons: 'Buttons',
+    buttonHint: 'Hover, press, and tab to a button to see hover / active / focus.',
+    defaultTone: 'Default tone',
+    mutedTone: 'Muted tone',
+    accentTone: 'Accent tone',
+  },
   notFound: 'Page not found.',
   home: 'Todae home',
   groups: {},
@@ -44,6 +64,24 @@ const ko: Dictionary = {
   languageNav: '언어',
   untranslated: '이 페이지는 아직 한국어로 번역되지 않아 영어 원문으로 보여 드립니다.',
   contribute: '번역에 참여하기',
+  playground: {
+    appearance: '외관 (appearance)',
+    density: '밀도 (density)',
+    rail: '테마 컨트롤',
+    title: '플레이그라운드',
+    tokenLayer: '토큰 레이어',
+    color: '색상',
+    reset: '모두 초기화',
+    export: '내보내기',
+    copied: '테마 오버라이드 JSON을 복사했습니다.',
+    copyFailed: '복사하지 못했습니다. 클립보드 권한이 거부되었습니다.',
+    stage: '라이브 데모',
+    buttons: '버튼',
+    buttonHint: '버튼에 마우스를 올리거나, 누르거나, Tab으로 이동해 hover / active / focus 상태를 확인하세요.',
+    defaultTone: '기본 톤',
+    mutedTone: 'Muted 톤',
+    accentTone: 'Accent 톤',
+  },
   notFound: '페이지를 찾을 수 없습니다.',
   home: 'Todae 홈',
   groups: {
