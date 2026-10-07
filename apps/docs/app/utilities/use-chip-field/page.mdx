@@ -2,7 +2,7 @@ import { ChipInputHook } from '../../../components/demos/FieldDemo';
 
 # useChipField
 
-`useChipField` holds the chips and the input value for a [Field.ChipInput](/field), then spreads onto it. It dedupes chips and runs `transform` on each commit. The field itself never appends chips, so without the hook the parent's `onCommit` decides.
+`useChipField` holds the chips and the input value for a [Field.ChipInput](/field), then spreads onto it. It runs `transform` on each commit and drops a chip already in the list unless `dedupe` is false. The field itself never appends chips, so without the hook the parent's `onCommit` decides.
 
 <Example block>
   <ChipInputHook />

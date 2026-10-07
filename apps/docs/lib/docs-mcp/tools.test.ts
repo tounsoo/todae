@@ -427,6 +427,14 @@ describe('docs mcp tools', () => {
     }
   });
 
+  it('gives each props table one page, so a name has one docs URL', () => {
+    const owners = new Map<string, string[]>();
+    for (const page of loadPages(join(process.cwd(), 'app'))) {
+      for (const name of page.props) owners.set(name, [...(owners.get(name) ?? []), page.slug]);
+    }
+    expect([...owners].filter(([, slugs]) => slugs.length > 1)).toEqual([]);
+  });
+
   it('gives useChipList its own utility page and does not list ChipList', () => {
     const names = listComponents().components.map((row) => row.name);
     expect(names).toContain('useChipList');
