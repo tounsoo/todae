@@ -12,11 +12,11 @@ import {
 
 # Combobox
 
-A recipe, not a package namespace. `useCombobox` owns open, value, input, highlight, and ids. Compounds own chrome. There is no `Combobox.*` export. One interactive role per root.
+A recipe, not a package namespace. [useCombobox](/utilities/use-combobox) owns open, value, input, highlight, and ids. Compounds own chrome. There is no `Combobox.*` export. One interactive role per root.
 
 ## Presentation
 
-`useSheetPresentation` chooses sheet when the pointer is coarse **or** the viewport is narrower than 640px. Otherwise it chooses popover. Server render and the first paint are popover. `isSheet` mirrors `presentation === "sheet"`. It is not `isTouch`.
+[useSheetPresentation](/utilities/use-sheet-presentation) chooses sheet when the pointer is coarse **or** the viewport is narrower than 640px. Otherwise it chooses popover. Server render and the first paint are popover. `isSheet` mirrors `presentation === "sheet"`. It is not `isTouch`.
 
 `useCombobox({ presentation: 'auto' })` uses the same helper. Force `popover` or `sheet` when a docs screenshot must stay still.
 
@@ -129,14 +129,6 @@ No matches render a status row. `allowCreate` adds one `+ Create "{query}"` opti
 
 **When not:** Static on-page exclusive → Radio. Non-search menu → Popover + OptionList only. Exporting `Combobox.*` chrome (forbidden).
 
-### useSheetPresentation
-
-**When:** Choose popover or sheet at runtime: coarse pointer or width under 640px → sheet. SSR and first paint are popover. `forced` overrides.
-
-**When not:** Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → `usePopover` alone.
-
 ## Props
 
-<PropsTable name="useSheetPresentation" />
-
-<PropsTable name="useCombobox" />
+The hooks' props are on [useCombobox](/utilities/use-combobox) and [useSheetPresentation](/utilities/use-sheet-presentation).

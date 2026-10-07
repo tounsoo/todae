@@ -6,7 +6,6 @@ import { SiteNav } from './SiteNav';
 vi.mock('next/navigation', () => ({ usePathname: () => '/recipes/chip-list' }));
 
 const HREFS = [
-  '/composition',
   '/button',
   '/chip',
   '/field',
@@ -25,10 +24,17 @@ const HREFS = [
   '/bottomsheet',
   '/stack',
   '/text',
+  '/utilities/use-chip-field',
+  '/utilities/use-chip-list',
+  '/utilities/use-combobox',
   '/utilities/use-field',
+  '/utilities/use-popover',
   '/utilities/use-roving-focus',
+  '/utilities/use-sheet-presentation',
+  '/utilities/use-tooltip',
   '/recipes/chip-list',
   '/recipes/combobox',
+  '/composition',
   '/tokens',
   '/guides/build-on-todae',
   '/platform',

@@ -7,7 +7,6 @@ const GROUPS = [
     id: 'components',
     label: 'Components',
     links: [
-      ['/composition', 'Composition'],
       ['/button', 'Button'],
       ['/chip', 'Chip'],
       ['/field', 'Field'],
@@ -32,8 +31,14 @@ const GROUPS = [
     id: 'utilities',
     label: 'Utilities',
     links: [
+      ['/utilities/use-chip-field', 'useChipField'],
+      ['/utilities/use-chip-list', 'useChipList'],
+      ['/utilities/use-combobox', 'useCombobox'],
       ['/utilities/use-field', 'useField'],
+      ['/utilities/use-popover', 'usePopover'],
       ['/utilities/use-roving-focus', 'useRovingFocus'],
+      ['/utilities/use-sheet-presentation', 'useSheetPresentation'],
+      ['/utilities/use-tooltip', 'useTooltip'],
     ],
   },
   {
@@ -48,6 +53,7 @@ const GROUPS = [
     id: 'foundations',
     label: 'Foundations',
     links: [
+      ['/composition', 'Composition'],
       ['/tokens', 'Tokens'],
       ['/guides/build-on-todae', 'Build on Todae'],
       ['/platform', 'Native platform'],

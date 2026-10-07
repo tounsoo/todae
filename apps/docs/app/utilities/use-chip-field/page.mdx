@@ -1,0 +1,19 @@
+import { ChipInputHook } from '../../../components/demos/FieldDemo';
+
+# useChipField
+
+`useChipField` holds the chips and the input value for a [Field.ChipInput](/field), then spreads onto it. It dedupes chips and runs `transform` on each commit. The field itself never appends chips, so without the hook the parent's `onCommit` decides.
+
+<Example block>
+  <ChipInputHook />
+</Example>
+
+## When to use
+
+**When:** Optional state helper for `Field.ChipInput`: chips, input value, dedupe, and `transform` on commit.
+
+**When not:** You already own chip state → wire `Field.ChipInput` props directly. Picking from a list → [useCombobox](/utilities/use-combobox). Single value → `Field.TextInput`.
+
+## Props
+
+<PropsTable name="useChipField" />

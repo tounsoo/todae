@@ -5,9 +5,6 @@ export default function HomePage() {
       <p>What you need to do today. Components, recipes, and tokens.</p>
       <ul>
         <li>
-          <a href="/composition">Composition</a>
-        </li>
-        <li>
           <a href="/button">Button</a>
         </li>
         <li>
@@ -62,6 +59,9 @@ export default function HomePage() {
           <a href="/text">Text</a>
         </li>
         <li>
+          <a href="/composition">Composition</a>
+        </li>
+        <li>
           <a href="/tokens">Tokens</a>
         </li>
         <li>
@@ -77,10 +77,28 @@ export default function HomePage() {
       <h2>Utilities</h2>
       <ul>
         <li>
+          <a href="/utilities/use-chip-field">useChipField</a>
+        </li>
+        <li>
+          <a href="/utilities/use-chip-list">useChipList</a>
+        </li>
+        <li>
+          <a href="/utilities/use-combobox">useCombobox</a>
+        </li>
+        <li>
           <a href="/utilities/use-field">useField</a>
         </li>
         <li>
+          <a href="/utilities/use-popover">usePopover</a>
+        </li>
+        <li>
           <a href="/utilities/use-roving-focus">useRovingFocus</a>
+        </li>
+        <li>
+          <a href="/utilities/use-sheet-presentation">useSheetPresentation</a>
+        </li>
+        <li>
+          <a href="/utilities/use-tooltip">useTooltip</a>
         </li>
       </ul>
       <h2>Recipes</h2>

@@ -2,7 +2,7 @@ import { TooltipArchive, TooltipOverflow, TooltipPolicy } from '../../components
 
 # Tooltip
 
-`useTooltip` is the open machine. Spread `getTriggerProps` on the trigger. Spread `getTooltipProps` on `Tooltip.Root`. `Tooltip.Root` is tip chrome only: `children`, `className`, `style`, and a dialog name when interactive. There is no `Tooltip.Trigger` or `Tooltip.Content`. Do not set `interactive` on `Tooltip.Root`.
+[useTooltip](/utilities/use-tooltip) is the open machine. Spread `getTriggerProps` on the trigger. Spread `getTooltipProps` on `Tooltip.Root`. `Tooltip.Root` is tip chrome only: `children`, `className`, `style`, and a dialog name when interactive. There is no `Tooltip.Trigger` or `Tooltip.Content`. Do not set `interactive` on `Tooltip.Root`.
 
 Default is text-only `role="tooltip"`. Hover waits 300ms. Focus opens at once. A coarse pointer uses focus only.
 
@@ -65,10 +65,6 @@ Icon-only `Button.Root` tips its accessible name. Pass `aria-label` or `aria-lab
 
 ## Props
 
-### Behavior
-
-<PropsTable name="useTooltip" />
-
-### Chrome
+The open machine's props are on [useTooltip](/utilities/use-tooltip).
 
 <PropsTable name="Tooltip.Root" />

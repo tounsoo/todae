@@ -94,8 +94,10 @@ describe('docs mcp tools', () => {
     expect(listed['BottomSheet.Grabber']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed.useSheetPresentation).toMatchObject({ hasWhenToUse: true });
     expect(listed.useSheetPresentation).not.toHaveProperty('scope');
-    expect(listed.useTooltip).toMatchObject({ hasWhenToUse: false, scope: 'page' });
-    expect(listed.usePopover).toMatchObject({ hasWhenToUse: false, scope: 'page' });
+    expect(listed.useTooltip).toMatchObject({ hasWhenToUse: true });
+    expect(listed.useTooltip).not.toHaveProperty('scope');
+    expect(listed.usePopover).toMatchObject({ hasWhenToUse: true });
+    expect(listed.usePopover).not.toHaveProperty('scope');
     expect(listed['OptionList.Option']).toMatchObject({ hasWhenToUse: false, scope: 'page' });
     expect(listed['Field.Root']).toMatchObject({ hasWhenToUse: true });
     expect(listed['Field.Root']).not.toHaveProperty('scope');
@@ -132,7 +134,18 @@ describe('docs mcp tools', () => {
     expect(hook).not.toHaveProperty('scope');
     expect(combobox).toMatchObject({ status: 'present' });
     expect(combobox).not.toHaveProperty('scope');
-    expect(getComponent('useCombobox').docsUrl).toBe('https://todae-rho.vercel.app/recipes/combobox');
+    // Every hook has its own page under Utilities.
+    for (const [name, slug] of [
+      ['useChipField', 'use-chip-field'],
+      ['useChipList', 'use-chip-list'],
+      ['useCombobox', 'use-combobox'],
+      ['usePopover', 'use-popover'],
+      ['useSheetPresentation', 'use-sheet-presentation'],
+      ['useTooltip', 'use-tooltip'],
+    ] as const) {
+      expect(getComponent(name).docsUrl).toBe(`https://todae-rho.vercel.app/utilities/${slug}`);
+      expect(whenToUse(name)).toMatchObject({ status: 'present' });
+    }
     expect(getComponent('useField').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-field');
     expect(getComponent('useRovingFocus').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-roving-focus');
     expect(whenToUse('useField')).toMatchObject({ status: 'present' });
@@ -408,20 +421,20 @@ describe('docs mcp tools', () => {
     }
   });
 
-  it('gives useChipList its own recipe page and does not list ChipList', () => {
+  it('gives useChipList its own utility page and does not list ChipList', () => {
     const names = listComponents().components.map((row) => row.name);
     expect(names).toContain('useChipList');
     expect(names).not.toContain('ChipList');
     const result = whenToUse('useChipList');
     expect(result).toMatchObject({
       status: 'present',
-      docsUrl: 'https://todae-rho.vercel.app/recipes/chip-list',
+      docsUrl: 'https://todae-rho.vercel.app/utilities/use-chip-list',
     });
     expect(result).not.toHaveProperty('scope');
     expect(result.whenToUse).toContain('maxRows');
     expect(result.whenNotToUse).not.toMatch(/not reachable/);
     expect(result.whenNotToUse).not.toMatch(/non-modal popover/);
     expect(result.whenNotToUse).toBeTruthy();
-    expect(getComponent('useChipList').docsUrl).toBe('https://todae-rho.vercel.app/recipes/chip-list');
+    expect(getComponent('useChipList').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-chip-list');
   });
 });
