@@ -21,6 +21,8 @@ export type BreadcrumbsItemProps = {
 
 /** A CSS string literal for `text`: quotes, backslashes and control characters escaped. */
 function cssString(text: string): string {
+  // Control characters are the point: CSS reads them differently from JS.
+  // eslint-disable-next-line no-control-regex
   const escaped = text.replace(/[\\"\u0000-\u001f\u007f]/g, (char) =>
     char === '\\' || char === '"' ? `\\${char}` : `\\${char.charCodeAt(0).toString(16)} `,
   );
