@@ -1,0 +1,40 @@
+{
+  "badge": {
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/chip/x/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/chip/y/$value" } }
+    },
+    "font": {
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/1/$value" } },
+      "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+    },
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+    "neutral": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } }
+    },
+    "info": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/status/info/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/status/info/bg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/status/info/border/$value" } }
+    },
+    "success": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/status/success/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/status/success/bg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/status/success/border/$value" } }
+    },
+    "warning": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/status/warning/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/status/warning/bg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/status/warning/border/$value" } }
+    },
+    "critical": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/status/critical/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/status/critical/bg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/status/critical/border/$value" } }
+    }
+  }
+}

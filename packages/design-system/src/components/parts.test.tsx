@@ -5,8 +5,11 @@ import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   Alert,
+  Badge,
   BottomSheet,
+  Breadcrumbs,
   Button,
+  Card,
   Checkbox,
   Chip,
   Description,
@@ -311,6 +314,30 @@ const cases: Case[] = [
       },
     ],
   ),
+  ['Badge.Root', (p) => <Badge.Root {...p}>New</Badge.Root>],
+  ['Card.Root', (p) => <Card.Root {...p} />],
+  ...(['Header', 'Body', 'Footer'] as const).map(
+    (part): Case => [
+      `Card.${part}`,
+      (p) => {
+        const Part = Card[part] as (props: Native) => ReactNode;
+        return (
+          <Card.Root>
+            <Part {...p} />
+          </Card.Root>
+        );
+      },
+    ],
+  ),
+  ['Breadcrumbs.Root', (p) => <Breadcrumbs.Root {...p} />],
+  [
+    'Breadcrumbs.Item',
+    (p) => (
+      <Breadcrumbs.Root>
+        <Breadcrumbs.Item {...p}>Home</Breadcrumbs.Item>
+      </Breadcrumbs.Root>
+    ),
+  ],
 ];
 
 describe('every exported part', () => {

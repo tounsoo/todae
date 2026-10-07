@@ -7,8 +7,11 @@ import type { ComponentType } from 'react';
  */
 export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentType }>> = {
   'alert': () => import('../../app/(en)/alert/page.mdx'),
+  'badge': () => import('../../app/(en)/badge/page.mdx'),
   'bottomsheet': () => import('../../app/(en)/bottomsheet/page.mdx'),
+  'breadcrumbs': () => import('../../app/(en)/breadcrumbs/page.mdx'),
   'button': () => import('../../app/(en)/button/page.mdx'),
+  'card': () => import('../../app/(en)/card/page.mdx'),
   'checkbox': () => import('../../app/(en)/checkbox/page.mdx'),
   'chip': () => import('../../app/(en)/chip/page.mdx'),
   'composition': () => import('../../app/(en)/composition/page.mdx'),

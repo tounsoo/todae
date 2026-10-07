@@ -36,6 +36,9 @@ export const RESERVED_ROOTS = [
   'progress',
   'meter',
   'slider',
+  'badge',
+  'card',
+  'breadcrumbs',
 ] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;
 export const INTERACTIVE_GROUPS = ['bg', 'fg', 'border'] as const;

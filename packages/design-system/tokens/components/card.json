@@ -1,0 +1,11 @@
+{
+  "card": {
+    "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
+    "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+    "border": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/lg/$value" } },
+    "padding": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/gap/$value" } }
+  }
+}

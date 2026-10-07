@@ -10,6 +10,15 @@ export {
   type AlertTitleProps,
   type AlertTone,
 } from './components/Alert';
+export { Badge, type BadgeRootProps, type BadgeTone } from './components/Badge';
+export { Breadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './components/Breadcrumbs';
+export {
+  Card,
+  type CardBodyProps,
+  type CardFooterProps,
+  type CardHeaderProps,
+  type CardRootProps,
+} from './components/Card';
 export { BottomSheet, type BottomSheetRootProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet';
 export {
   Button,

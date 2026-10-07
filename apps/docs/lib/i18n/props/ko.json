@@ -47,6 +47,16 @@
       "ko": "제목 텍스트."
     }
   },
+  "Badge.Root": {
+    "tone": {
+      "en": "Colors from the badge.<tone> contract tokens.",
+      "ko": "badge.<tone> 계약 토큰의 색을 씁니다."
+    },
+    "children": {
+      "en": "Label text or a number.",
+      "ko": "레이블 텍스트나 숫자."
+    }
+  },
   "BottomSheet.Close": {
     "aria-label": {
       "en": "Accessible name.",
@@ -103,6 +113,30 @@
       "ko": "제목 텍스트."
     }
   },
+  "Breadcrumbs.Item": {
+    "current": {
+      "en": "Marks the page you are on with aria-current=\"page\". Give it plain text, not a link.",
+      "ko": "현재 페이지를 aria-current=\"page\"로 표시합니다. 링크가 아닌 일반 텍스트를 넣으세요."
+    },
+    "children": {
+      "en": "A link to the page, such as an a element or your router's link.",
+      "ko": "a 요소나 라우터의 링크 같은 페이지 링크."
+    }
+  },
+  "Breadcrumbs.Root": {
+    "aria-label": {
+      "en": "Landmark name. The default is English, so pass a name in your app's language.",
+      "ko": "랜드마크 이름. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
+    },
+    "separator": {
+      "en": "Text drawn between items. Screen readers skip it.",
+      "ko": "항목 사이에 그려지는 텍스트. 스크린 리더는 건너뜁니다."
+    },
+    "children": {
+      "en": "Breadcrumbs.Item elements, from the top page down to this one.",
+      "ko": "맨 위 페이지부터 현재 페이지까지의 Breadcrumbs.Item 요소."
+    }
+  },
   "Button.Group": {
     "aria-label": {
       "en": "Accessible name for the group.",
@@ -143,6 +177,30 @@
     "children": {
       "en": "Label and optional Button.Icon. Order is leading or trailing.",
       "ko": "레이블과 선택적 Button.Icon. 순서에 따라 앞쪽 또는 뒤쪽에 놓입니다."
+    }
+  },
+  "Card.Body": {
+    "children": {
+      "en": "Body content.",
+      "ko": "본문 내용."
+    }
+  },
+  "Card.Footer": {
+    "children": {
+      "en": "Buttons or links.",
+      "ko": "버튼이나 링크."
+    }
+  },
+  "Card.Header": {
+    "children": {
+      "en": "A heading of the level that fits the page, and optional text.",
+      "ko": "페이지에 맞는 수준의 제목과 선택적인 텍스트."
+    }
+  },
+  "Card.Root": {
+    "children": {
+      "en": "Card parts, or any content.",
+      "ko": "Card 파트 또는 아무 콘텐츠."
     }
   },
   "Checkbox": {

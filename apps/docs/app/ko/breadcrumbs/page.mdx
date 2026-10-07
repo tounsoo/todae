@@ -1,0 +1,39 @@
+import { BreadcrumbsChevron, BreadcrumbsTrail } from '../../../components/demos/BreadcrumbsDemo';
+
+# Breadcrumbs
+
+현재 페이지 위에 있는 페이지들의 경로입니다. `Breadcrumbs.Root`는 순서 있는 목록을 감싼 `nav` 랜드마크이고, 각 `Breadcrumbs.Item`은 목록 항목입니다. 각 항목에는 `a`나 라우터의 링크 같은 링크를 넣고, 마지막 항목에는 일반 텍스트를 넣어 `current`로 표시하세요. 그러면 `aria-current="page"`가 붙습니다.
+
+```tsx
+<Breadcrumbs.Root>
+  <Breadcrumbs.Item>
+    <YourLink to="/">Home</YourLink>
+  </Breadcrumbs.Item>
+  <Breadcrumbs.Item>
+    <YourLink to="/settings">Settings</YourLink>
+  </Breadcrumbs.Item>
+  <Breadcrumbs.Item current>Billing</Breadcrumbs.Item>
+</Breadcrumbs.Root>
+```
+
+<Example>
+  <BreadcrumbsTrail />
+</Example>
+
+랜드마크의 이름은 `aria-label`이나 `aria-labelledby`를 주지 않으면 "Breadcrumb"입니다. 이 기본값은 영어이므로 다른 언어에서는 이름을 전달하세요. 항목 사이에는 구분 기호가 그려지며, `separator`를 주지 않으면 `/`이고, 스크린 리더는 이를 건너뜁니다. 항목이 한 줄에 들어가지 않으면 여러 줄로 넘어갑니다.
+
+<Example>
+  <BreadcrumbsChevron />
+</Example>
+
+## 언제 쓰나
+
+**쓸 때:** 계층 깊은 곳의 페이지에서 사람들이 현재 위치를 보고 위로 이동해야 할 때.
+
+**쓰지 않을 때:** 사용자가 순서대로 거치는 흐름의 단계 → 스테퍼. 한 페이지의 섹션 → Tabs. 사이트의 주 내비게이션 → 직접 만든 `nav`.
+
+## Props
+
+<PropsTable name="Breadcrumbs.Root" />
+
+<PropsTable name="Breadcrumbs.Item" />

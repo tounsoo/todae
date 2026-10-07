@@ -1,0 +1,41 @@
+import { CardPlan } from '../../../components/demos/CardDemo';
+
+# Card
+
+요금제, 설정, 요약처럼 관련된 내용을 묶는 테두리 있는 표면입니다. 배경, 테두리, 모서리, 패딩, 간격은 `card` contract 토큰에서 가져오며, 패딩과 간격은 밀도를 따릅니다. 회사의 카드와 패널을 만드는 기반입니다.
+
+```tsx
+<Card.Root>
+  <Card.Header>
+    <Text as="h3">Pro plan</Text>
+  </Card.Header>
+  <Card.Body>
+    <Text>Billed yearly.</Text>
+  </Card.Body>
+  <Card.Footer>
+    <Button.Root>Change plan</Button.Root>
+  </Card.Footer>
+</Card.Root>
+```
+
+<Example>
+  <CardPlan />
+</Example>
+
+모든 파트는 role이 없는 `div`입니다. 페이지에 맞는 제목 수준을 고르세요. 머리글 안의 제목은 바깥 여백이 없어집니다. 랜드마크가 되어야 하는 카드에는 다른 `div`처럼 `role="region"`과 이름을 주세요. 카드는 버튼이나 링크가 아닙니다. 동작은 `Card.Footer`나 본문 안에 넣으세요.
+
+## 언제 쓰나
+
+**쓸 때:** 하나의 단위로 읽히고 비슷한 것들 옆에 놓이는 내용 묶음: 요금제, 설정 섹션, 요약 타일.
+
+**쓰지 않을 때:** 작업을 멈추게 하는 내용 → Dialog. 페이지에 대한 메시지 → Alert. 표면 없이 간격만 필요할 때 → Stack.
+
+## Props
+
+<PropsTable name="Card.Root" />
+
+<PropsTable name="Card.Header" />
+
+<PropsTable name="Card.Body" />
+
+<PropsTable name="Card.Footer" />
