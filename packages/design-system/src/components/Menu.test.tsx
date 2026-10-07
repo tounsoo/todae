@@ -195,6 +195,25 @@ describe('Menu', () => {
     expect(isOpen()).toBe(true);
   });
 
+  it('a radio group takes defaultValue null for no choice yet', async () => {
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Actions</Menu.Trigger>
+        <Menu.Content>
+          <Menu.RadioGroup aria-label="Sort" defaultValue={null}>
+            <Menu.RadioItem value="name">Name</Menu.RadioItem>
+            <Menu.RadioItem value="date">Date</Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await raf();
+    expect(item('Name').getAttribute('aria-checked')).toBe('false');
+    expect(item('Date').getAttribute('aria-checked')).toBe('false');
+    fireEvent.click(item('Date'));
+    expect(item('Date').getAttribute('aria-checked')).toBe('true');
+  });
+
   it('closes on Escape with focus back on the trigger', async () => {
     const onOpenChange = vi.fn();
     render(<Actions onOpenChange={onOpenChange} />);

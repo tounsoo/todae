@@ -78,7 +78,7 @@ export type MenuGroupProps = {
   children?: ReactNode;
   className?: string;
 } & GroupName &
-  Omit<ComponentPropsWithRef<'div'>, 'role' | 'children' | 'aria-label' | 'aria-labelledby'>;
+  Omit<ComponentPropsWithRef<'div'>, 'role' | 'children' | 'aria-label' | 'aria-labelledby' | 'defaultValue'>;
 
 export type MenuRadioGroupProps = MenuGroupProps & {
   value?: string | null;

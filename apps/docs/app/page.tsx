@@ -41,7 +41,13 @@ export default function HomePage() {
           <a href="/popover">Popover</a>
         </li>
         <li>
+          <a href="/menu">Menu</a>
+        </li>
+        <li>
           <a href="/tooltip">Tooltip</a>
+        </li>
+        <li>
+          <a href="/tabs">Tabs</a>
         </li>
         <li>
           <a href="/optionlist">OptionList</a>
