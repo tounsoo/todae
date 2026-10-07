@@ -58,6 +58,7 @@ export const SITE_GROUPS = [
       ['/composition', 'Composition'],
       ['/tokens', 'Tokens'],
       ['/guides/build-on-todae', 'Build on Todae'],
+      ['/guides/css-layers', 'CSS layers'],
       ['/platform', 'Native platform'],
     ],
   },

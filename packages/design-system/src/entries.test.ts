@@ -56,4 +56,12 @@ describe('package entries', () => {
     }
     expect(readFileSync(join(import.meta.dirname, '../tsconfig.build.json'), 'utf8')).toContain('"include": ["src"]');
   });
+
+  it('declares the todae layer order before any layer is used', () => {
+    // A layer's place is fixed where it is first named, so a component rule
+    // ahead of this statement would put todae.components below todae.base.
+    const css = read('todae.css');
+    expect(css.startsWith('@layer todae.reset,todae.base,todae.components;')).toBe(true);
+    expect(css.match(/@layer todae\.reset/g)).toHaveLength(1);
+  });
 });

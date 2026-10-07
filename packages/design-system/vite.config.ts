@@ -9,12 +9,24 @@ function emitPackageCss(): Plugin {
         return `'use client';\nimport './styles/todae.css';\n${body}`;
       }
     },
-    generateBundle(_opts, bundle) {
-      for (const item of Object.values(bundle)) {
-        if (item.type === 'chunk') {
-          item.code = item.code.replace(/import\s*["']\.\/todae\.css["'];?\n?/, '');
+    generateBundle: {
+      // After Vite's CSS plugin, which adds the stylesheet to the bundle.
+      order: 'post',
+      handler(_opts, bundle) {
+        for (const item of Object.values(bundle)) {
+          if (item.type === 'chunk') {
+            item.code = item.code.replace(/import\s*["']\.\/todae\.css["'];?\n?/, '');
+          } else if (item.fileName === 'todae.css' && typeof item.source === 'string') {
+            // A layer's place is fixed where it is first named. The server
+            // entries' component CSS comes before styles/todae.css in the
+            // bundle, so its order statement moves to the top of the file.
+            const order = /@layer todae\.reset\s*,\s*todae\.base\s*,\s*todae\.components\s*;/;
+            const statement = item.source.match(order)?.[0];
+            if (!statement) this.error('styles/todae.css must declare the todae layer order.');
+            item.source = `${statement}${item.source.replace(order, '')}`;
+          }
         }
-      }
+      },
     },
   };
 }

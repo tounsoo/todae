@@ -19,6 +19,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'field': () => import('../../app/(en)/field/page.mdx'),
   'fieldset': () => import('../../app/(en)/fieldset/page.mdx'),
   'guides/build-on-todae': () => import('../../app/(en)/guides/build-on-todae/page.mdx'),
+  'guides/css-layers': () => import('../../app/(en)/guides/css-layers/page.mdx'),
   'label': () => import('../../app/(en)/label/page.mdx'),
   'link': () => import('../../app/(en)/link/page.mdx'),
   'menu': () => import('../../app/(en)/menu/page.mdx'),
