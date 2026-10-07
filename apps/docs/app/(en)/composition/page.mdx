@@ -7,7 +7,7 @@ What Todae offers for building UI comes in four kinds. Use the questions below t
 - **Native + CSS.** HTML already does the job. Todae ships only CSS in its base styles and no export: styles on the element itself, like [Link](/link) and [Disclosure](/disclosure), or opt-in utility classes, like [VisuallyHidden](/visually-hidden). Their pages sit with the components in the sidebar so they are easy to find.
 - **Component.** One UI concept whose markup, props and behavior Todae can fix without knowing anything about the product. It may own behavior, like [Menu](/menu) and [Tabs](/tabs), or only styles from tokens, like [Stack](/stack) and [Text](/text). Most components ship as a compound: a namespace with a `Root` and any named parts, like `Menu.Root` and `Menu.Item`. Components with no parts, like `Stack`, `Text`, `Label` and `Checkbox`, are one export.
 - **Hook.** Behavior with no markup. Todae exports one when a recipe needs it or products need it under markup of their own. [useRovingFocus](/utilities/use-roving-focus) and [useCombobox](/utilities/use-combobox) are hooks.
-- **Recipe.** A starting point for a company's own design system. It shows how to put Todae exports together where the result depends on the product: its data, its flow (what to search, how results load, what happens on pick) or how its screens are laid out. A recipe must be thin glue. Hard behavior (keyboard handling, focus management, ARIA wiring, measurement and positioning) must live in a component or hook, so a company can copy the recipe and restyle it without breaking accessibility. [Chip list](/recipes/chip-list) is the one current exception and is planned to become a component. It is never a package export, so there is no `Combobox.*`.
+- **Recipe.** A starting point for a company's own design system. It shows how to put Todae exports together where the result depends on the product: its data, its flow (what to search, how results load, what happens on pick) or how its screens are laid out. A recipe must be thin glue. Hard behavior (keyboard handling, focus management, ARIA wiring, measurement and positioning) must live in a component or hook, so a company can copy the recipe and restyle it without breaking accessibility. A recipe is never a package export, so there is no `Combobox.*`. [Chip list](/recipes/chip-list) is the one current exception to the thin-glue rule and is planned to become a component.
 
 ## Placing something new
 
@@ -21,7 +21,7 @@ A component can contain other components, as `Menu.Trigger` is a `Button`, and c
 
 ## Components
 
-Public siblings, for example `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [RadioGroup](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces, as in `Field.Button.Root`. One interactive role per compound root.
+Public siblings, for example `Field`, [Label](/label), [Description](/description), [ErrorMessage](/errormessage), [Checkbox](/checkbox), [Radio](/radio), [Switch](/switch), `Button`, `Popover`, `Tooltip`, `Chip`, `OptionList`, `Dialog`, and `BottomSheet`. Compose them side by side. Never nest namespaces, as in `Field.Button.Root`. One interactive role per compound root.
 
 `Field.Icon`, `Field.Affix`, and `Button.Icon` are compound parts. They are not free-floating atoms. Shared Icon, Affix, and Shell live under the hood. They are not public exports.
 
@@ -117,7 +117,7 @@ Combobox.Root, Combobox.Trigger, or Combobox.Icon
 
 Dual-wiring aria or open outside useCombobox while also using the hook
 
-OptionList and RadioGroup or Checkbox bound to the same value
+OptionList and Radio or Checkbox bound to the same value
   overlay listbox and permanent choice on one selection
 
 Combobox behavior baked into Field
