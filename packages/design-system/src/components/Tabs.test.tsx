@@ -92,10 +92,23 @@ describe('Tabs', () => {
     act(() => tab('Account').focus());
     fireEvent.pointerDown(tab('Billing'));
     act(() => tab('Billing').focus());
-    fireEvent.click(tab('Billing'));
+    fireEvent.click(tab('Billing'), { detail: 1 });
     expect(onValueChange).toHaveBeenCalledExactlyOnceWith('b');
     // A later click on the focused tab asks again, since the owner kept A.
-    fireEvent.click(tab('Billing'));
+    fireEvent.pointerDown(tab('Billing'));
+    fireEvent.click(tab('Billing'), { detail: 1 });
+    expect(onValueChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('asks again on Enter after a press that focused a tab but ended elsewhere', () => {
+    const onValueChange = vi.fn();
+    render(<Example value="a" onValueChange={onValueChange} />);
+    act(() => tab('Account').focus());
+    fireEvent.pointerDown(tab('Billing'));
+    act(() => tab('Billing').focus());
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    // No click: the press was dragged off. Enter clicks the button natively.
+    fireEvent.click(tab('Billing'), { detail: 0 });
     expect(onValueChange).toHaveBeenCalledTimes(2);
   });
 

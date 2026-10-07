@@ -351,6 +351,23 @@ describe('Menu', () => {
     expect(menu().hasAttribute('aria-labelledby')).toBe(false);
   });
 
+  it('stays named while one of two triggers remains', () => {
+    function Two({ both }: { both: boolean }) {
+      return (
+        <Menu.Root defaultOpen>
+          {both && <Menu.Trigger>Overflow</Menu.Trigger>}
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>Rename</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      );
+    }
+    const { rerender } = render(<Two both />);
+    rerender(<Two both={false} />);
+    expect(screen.getByRole('menu', { hidden: true }).getAttribute('aria-labelledby')).toBe(trigger().id);
+  });
+
   it('leaves Enter and Space in a control inside an item to that control', () => {
     const onSelect = vi.fn();
     render(

@@ -102,7 +102,7 @@ type MenuContextValue = {
   triggerRef: RefObject<HTMLButtonElement | null>;
   /** A Menu.Trigger is mounted, so its id can name the menu. */
   hasTrigger: boolean;
-  setHasTrigger: (mounted: boolean) => void;
+  countTrigger: (change: 1 | -1) => void;
   /** The end a trigger key asked the next open to focus. Cleared when the trigger loses focus. */
   openEnd: RefObject<'first' | 'last' | null>;
   initialFocusRef: RefObject<HTMLElement | null>;
@@ -126,20 +126,26 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
   const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
   const triggerId = `${useDomId()}-trigger`;
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const [hasTrigger, setHasTrigger] = useState(false);
+  const [triggers, setTriggers] = useState(0);
+  const hasTrigger = triggers > 0;
+  const countTrigger = useCallback((change: 1 | -1) => setTriggers((n) => n + change), []);
   const openEnd = useRef<'first' | 'last' | null>(null);
   const initialFocusRef = useRef<HTMLElement | null>(null);
   const popover = usePopoverInternal(
     { open, onOpenChange: setOpen, restoreFocusRef: triggerRef, initialFocusRef, haspopup: 'menu' },
     true,
   );
+  // The item chosen for one open never carries over to the next.
+  useLayoutEffect(() => {
+    if (!open) initialFocusRef.current = null;
+  }, [open]);
   // Every open starts at an end of the list and focus enters only from the
   // trigger, so the menu tracks no tab stop: items are never Tab stops, and
   // focus moving across them under the pointer does not render the menu.
   const roving = useRovingFocus({ orientation: 'vertical', typeahead: true, activeValue: null, tabStop: false });
   const ctx = useMemo(
-    () => ({ open, setOpen, triggerId, triggerRef, hasTrigger, setHasTrigger, openEnd, initialFocusRef, popover, roving }),
-    [open, setOpen, triggerId, hasTrigger, popover, roving],
+    () => ({ open, setOpen, triggerId, triggerRef, hasTrigger, countTrigger, openEnd, initialFocusRef, popover, roving }),
+    [open, setOpen, triggerId, hasTrigger, countTrigger, popover, roving],
   );
   return (
     <MenuContext.Provider value={ctx}>
@@ -151,11 +157,11 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
 function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }: MenuTriggerProps) {
   const ctx = useMenu('Trigger');
   const refs = useComposedRefs(ctx.triggerRef, ref);
-  const { openEnd, setHasTrigger } = ctx;
+  const { openEnd, countTrigger } = ctx;
   useLayoutEffect(() => {
-    setHasTrigger(true);
-    return () => setHasTrigger(false);
-  }, [setHasTrigger]);
+    countTrigger(1);
+    return () => countTrigger(-1);
+  }, [countTrigger]);
   const wire = ctx.popover.getTriggerProps({
     ...props,
     ref: refs,

@@ -9,6 +9,7 @@ import {
   useState,
   type ComponentPropsWithRef,
   type FocusEvent,
+  type MouseEvent,
   type ReactNode,
 } from 'react';
 import { useControlledValue } from '../hooks/useControlledState';
@@ -220,14 +221,16 @@ function Tab({ value, children, disabled, className, onClick, onFocus, onBlur, o
       className={cx(styles.tab, className)}
       onPointerDown={composeHandlers(onPointerDown, () => {
         pressing.current = true;
+        selectedOnFocus.current = false;
       })}
       onBlur={composeHandlers(onBlur, () => {
         pressing.current = false;
         selectedOnFocus.current = false;
       })}
       // Enter and Space click a native button, which is how manual activation selects.
-      onClick={composeHandlers(onClick, () => {
-        const skip = selectedOnFocus.current;
+      onClick={composeHandlers(onClick, (event: MouseEvent<HTMLButtonElement>) => {
+        // Only a pointer click ends a press; Enter and Space (detail 0) always ask.
+        const skip = selectedOnFocus.current && event.detail > 0;
         pressing.current = false;
         selectedOnFocus.current = false;
         if (!skip) ctx.select(value);
