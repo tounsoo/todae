@@ -1,4 +1,4 @@
-import { localizePath, type Locale } from '../lib/i18n/config';
+import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';
 
 export function HomeContent({ locale }: { locale: Locale }) {
@@ -12,7 +12,7 @@ export function HomeContent({ locale }: { locale: Locale }) {
           <ul>
             {group.links.map(([href, label]) => (
               <li key={href}>
-                <a href={localizePath(href, locale)}>{label}</a>
+                <a href={href}>{label}</a>
               </li>
             ))}
           </ul>

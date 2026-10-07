@@ -137,7 +137,9 @@ describe('docs locales', () => {
         .map((file) => join(dir, file)),
     );
     expect(files.length).toBeGreaterThan(30);
-    expect(files.filter((file) => /<a\s[^>]*href=["']\/(?!\/)/.test(readFileSync(file, 'utf8')))).toEqual([]);
+    // <a> or next/link's <Link> with href="/x", href={'/x'} or href={`/x`}.
+    const sameSite = /<(a|Link)\s[^>]*href=\{?["'`]\/(?!\/)/;
+    expect(files.filter((file) => sameSite.test(readFileSync(file, 'utf8')))).toEqual([]);
   });
 
   it('marks an untranslated page as English and links the guide', () => {

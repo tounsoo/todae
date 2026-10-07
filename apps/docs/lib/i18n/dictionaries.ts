@@ -1,5 +1,5 @@
 import { SITE_GROUPS } from '../../components/siteGroups';
-import type { Locale } from './config';
+import { localizePath, type Locale } from './config';
 
 type GroupId = (typeof SITE_GROUPS)[number]['id'];
 type Href = (typeof SITE_GROUPS)[number]['links'][number][0];
@@ -66,12 +66,12 @@ const ko: Dictionary = {
 
 export const DICTIONARIES: Record<Locale, Dictionary> = { en, ko };
 
-/** SITE_GROUPS with section names and link text in `locale`. Hrefs stay unprefixed. */
+/** SITE_GROUPS with section names, link text and hrefs in `locale`. */
 export function localizedGroups(locale: Locale) {
   const dict = DICTIONARIES[locale];
   return SITE_GROUPS.map((group) => ({
     id: group.id,
     label: dict.groups[group.id] ?? group.label,
-    links: group.links.map(([href, label]) => [href, dict.links[href] ?? label] as const),
+    links: group.links.map(([href, label]) => [localizePath(href, locale), dict.links[href] ?? label] as const),
   }));
 }

@@ -7,7 +7,11 @@ import { DICTIONARIES } from '../lib/i18n/dictionaries';
 
 function subscribe(onChange: () => void) {
   window.addEventListener('hashchange', onChange);
-  return () => window.removeEventListener('hashchange', onChange);
+  window.addEventListener('popstate', onChange);
+  return () => {
+    window.removeEventListener('hashchange', onChange);
+    window.removeEventListener('popstate', onChange);
+  };
 }
 
 // usePathname has no query or hash. Read them so every way of following the link keeps the reader's place.
