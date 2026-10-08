@@ -1928,7 +1928,7 @@
           "name": "query",
           "type": "string | readonly string[]",
           "required": false,
-          "description": "Text to find inside the element on ref. A list finds every term; empty strings are skipped."
+          "description": "Text to find inside the element on ref. A list matches any of its terms; empty strings are skipped."
         },
         {
           "name": "caseSensitive",

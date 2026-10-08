@@ -1065,8 +1065,8 @@
       "ko": "::highlight(name)으로 스타일을 줄 이름. 훅마다 다른 이름을 주세요."
     },
     "query": {
-      "en": "Text to find inside the element on ref. A list finds every term; empty strings are skipped.",
-      "ko": "ref가 가리키는 요소 안에서 찾을 텍스트. 목록이면 모든 단어를 찾으며, 빈 문자열은 건너뜁니다."
+      "en": "Text to find inside the element on ref. A list matches any of its terms; empty strings are skipped.",
+      "ko": "ref가 가리키는 요소 안에서 찾을 텍스트. 목록이면 그중 어느 단어든 일치시키며, 빈 문자열은 건너뜁니다."
     },
     "caseSensitive": {
       "en": "Match letter case exactly.",

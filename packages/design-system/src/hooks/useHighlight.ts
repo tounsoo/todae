@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 export type UseHighlightOptions = {
   /** Name to style with ::highlight(name). Give each hook its own name. */
   name: string;
-  /** Text to find inside the element on ref. A list finds every term; empty strings are skipped. */
+  /** Text to find inside the element on ref. A list matches any of its terms; empty strings are skipped. */
   query?: string | readonly string[];
   /** Match letter case exactly. */
   caseSensitive?: boolean;

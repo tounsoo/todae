@@ -4,7 +4,7 @@ import { HighlightSearch } from '../../../../components/demos/HighlightDemo';
 
 검색 결과 같은 텍스트 일치 항목을 브라우저의 CSS Custom Highlight API로 표시합니다. 훅은 일치 항목마다 `Range`를 찾아 `CSS.highlights`의 `Highlight`에 더하고, CSS는 `::highlight(name)`으로 그 범위를 칠합니다. `<mark>` 요소를 추가하지 않으므로 DOM, 선택 영역, 포커스는 그대로입니다.
 
-검색할 요소에 `ref`를 두고 `query`를 넘기세요. `ref` 아래의 텍스트나 요소가 바뀌면 훅이 다시 검색합니다. `caseSensitive`를 설정하지 않으면 대소문자를 구분하지 않으며, 쿼리는 패턴이 아니라 일반 텍스트입니다. 목록을 넘기면 모든 단어를 찾습니다.
+검색할 요소에 `ref`를 두고 `query`를 넘기세요. `ref` 아래의 텍스트나 요소가 바뀌면 훅이 다시 검색합니다. `caseSensitive`를 설정하지 않으면 대소문자를 구분하지 않으며, 쿼리는 패턴이 아니라 일반 텍스트입니다. 목록을 넘기면 그중 어느 단어든 일치시킵니다.
 
 ```tsx
 const found = useHighlight({ name: 'search', query })

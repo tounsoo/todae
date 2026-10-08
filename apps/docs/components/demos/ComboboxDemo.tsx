@@ -98,7 +98,8 @@ export function ComboboxHighlight() {
         </Field.Icon>
       </Field.Root>
       <Popover.Root {...cb.getPopoverProps()}>
-        <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
+        {cb.isEmpty ? <Text role="status">No matches</Text> : null}
+        <OptionList.Root ref={found.ref} {...cb.getListboxProps()} hidden={cb.isEmpty}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
