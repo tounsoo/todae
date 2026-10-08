@@ -103,12 +103,11 @@ beforeEach(() => {
 });
 
 describe('useChipList', () => {
-  it('exports the hook and not the private planner or a ChipList component', () => {
+  it('exports the hook and the ChipList built on it, not the private planner', () => {
     expect(typeof api.useChipList).toBe('function');
+    expect(typeof api.ChipList.Root).toBe('function');
     expect(api).not.toHaveProperty('useChipMeasure');
     expect(api).not.toHaveProperty('planChipOverflow');
-    expect(api).not.toHaveProperty('ChipList');
-    expect(api).not.toHaveProperty('ChipListProps');
   });
 
   it('shows every chip when maxRows is unset', () => {

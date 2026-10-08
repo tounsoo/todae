@@ -83,6 +83,7 @@ export {
 } from './hooks/useTooltip';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
 export { Chip, type ChipOverflowProps, type ChipRootProps } from './components/Chip';
+export { ChipList, type ChipListRootProps } from './components/ChipList';
 export { Description, type DescriptionProps } from './components/Description';
 export { ErrorMessage, type ErrorMessageProps } from './components/ErrorMessage';
 export { CHIP_COMMIT_KEYS, type ChipCommitKey } from './components/commitKeys';

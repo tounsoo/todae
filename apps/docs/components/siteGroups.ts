@@ -6,6 +6,7 @@ export const SITE_GROUPS = [
     links: [
       ['/button', 'Button'],
       ['/chip', 'Chip'],
+      ['/chip-list', 'ChipList'],
       ['/field', 'Field'],
       ['/label', 'Label'],
       ['/description', 'Description'],
@@ -57,7 +58,6 @@ export const SITE_GROUPS = [
     id: 'recipes',
     label: 'Recipes',
     links: [
-      ['/recipes/chip-list', 'Chip list with overflow'],
       ['/recipes/combobox', 'Combobox'],
     ],
   },

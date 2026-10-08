@@ -275,6 +275,36 @@
       "ko": "닫기를 비활성화합니다."
     }
   },
+  "ChipList.Root": {
+    "chips": {
+      "en": "Chip labels, in order.",
+      "ko": "칩 레이블, 순서대로."
+    },
+    "maxRows": {
+      "en": "Rows to show before folding the rest into +N. Without it, every chip wraps onto as many rows as it needs.",
+      "ko": "나머지를 +N으로 접기 전에 보여 줄 줄 수. 없으면 모든 칩이 필요한 만큼 줄을 바꿔 놓입니다."
+    },
+    "getKey": {
+      "en": "A stable, unique key for each chip, so focus can follow it when chips change. Without it, chips are matched by value, so focus can land on another chip with the same value.",
+      "ko": "칩마다 고유하고 바뀌지 않는 키. chips가 바뀌어도 포커스가 그 칩을 따라갈 수 있습니다. 없으면 칩을 값으로 맞춰 보므로, 포커스가 같은 값을 가진 다른 칩에 놓일 수 있습니다."
+    },
+    "onRemove": {
+      "en": "Renders a remove button on each chip. Once chips drops the focused chip, focus moves to the chip that now fills its place, else the one before it, else +N, else the list.",
+      "ko": "칩마다 제거 버튼을 렌더링합니다. 포커스가 있던 칩이 chips에서 빠지면, 포커스는 그 자리를 채운 칩으로, 없으면 앞 칩으로, 그것도 없으면 +N으로, 그마저 없으면 목록으로 옮겨 갑니다."
+    },
+    "dismissLabel": {
+      "en": "Remove button name. Default is Remove {value}.",
+      "ko": "제거 버튼의 이름. 기본값은 Remove {value}입니다."
+    },
+    "overflowLabel": {
+      "en": "+N button name. Default is {n} more.",
+      "ko": "+N 버튼의 이름. 기본값은 {n} more입니다."
+    },
+    "panelLabel": {
+      "en": "Name of the popover with the folded chips. Default is {n} more chips, or 1 more chip.",
+      "ko": "접힌 칩이 담긴 팝오버의 이름. 기본값은 {n} more chips(1개일 때 1 more chip)입니다."
+    }
+  },
   "Description": {
     "id": {
       "en": "Id the author lists in aria-describedby on the control or Field.Root.",

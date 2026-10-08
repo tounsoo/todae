@@ -101,7 +101,8 @@ const NO_ITEMS: KnownItems = { read: false, enabled: [], reachable: [] };
 export const isReachable = (node: HTMLElement) =>
   !node.closest('[inert]') && (node.checkVisibility?.({ visibilityProperty: true }) ?? true);
 
-const sameValues = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
+export const sameValues = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((v, i) => v === b[i]);
 
 // `rtl` is a function so direction, which costs a style read, is only
 // checked for Left and Right.

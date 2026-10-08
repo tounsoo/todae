@@ -40,6 +40,7 @@ describe('docs mcp tools', () => {
       ['Popover', 'popover'],
       ['Tooltip', 'tooltip'],
       ['Chip', 'chip'],
+      ['ChipList', 'chip-list'],
       ['RadioGroup', 'radio'],
       ['Menu', 'menu'],
       ['Tabs', 'tabs'],
@@ -431,10 +432,13 @@ describe('docs mcp tools', () => {
     expect([...owners].filter(([, slugs]) => slugs.length > 1)).toEqual([]);
   });
 
-  it('gives useChipList its own utility page and does not list ChipList', () => {
+  it('gives useChipList its own utility page and ChipList its component page', () => {
     const names = listComponents().components.map((row) => row.name);
     expect(names).toContain('useChipList');
-    expect(names).not.toContain('ChipList');
+    expect(whenToUse('ChipList.Root')).toMatchObject({
+      status: 'present',
+      docsUrl: 'https://todae-rho.vercel.app/chip-list',
+    });
     const result = whenToUse('useChipList');
     expect(result).toMatchObject({
       status: 'present',

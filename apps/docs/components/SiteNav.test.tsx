@@ -3,11 +3,12 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SiteNav } from './SiteNav';
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/recipes/chip-list' }));
+vi.mock('next/navigation', () => ({ usePathname: () => '/chip-list' }));
 
 const HREFS = [
   '/button',
   '/chip',
+  '/chip-list',
   '/field',
   '/label',
   '/description',
@@ -47,7 +48,6 @@ const HREFS = [
   '/utilities/use-roving-focus',
   '/utilities/use-sheet-presentation',
   '/utilities/use-tooltip',
-  '/recipes/chip-list',
   '/recipes/combobox',
   '/composition',
   '/tokens',
@@ -67,7 +67,7 @@ describe('SiteNav', () => {
     }
     const current = screen.getAllByRole('link').filter((link) => link.getAttribute('aria-current') === 'page');
     expect(current).toHaveLength(1);
-    expect(current[0]?.textContent).toBe('Chip list with overflow');
+    expect(current[0]?.textContent).toBe('ChipList');
     expect([...nav.querySelectorAll('a')].map((link) => link.getAttribute('href'))).toEqual(HREFS);
     expect(nav.textContent).not.toContain('Recipes:');
     const hrefsIn = (name: string) =>

@@ -23,7 +23,20 @@ export type UseChipListResult = {
   measured: boolean;
 };
 
-export function useChipList({ chips, maxRows, reserveWidth }: UseChipListOptions): UseChipListResult {
+export function useChipList(options: UseChipListOptions): UseChipListResult {
+  const { settled: _, ...result } = useChipListInternal(options);
+  return result;
+}
+
+/**
+ * Not re-exported from the package index. `settled()`, read in a layout
+ * effect after this hook, is false while a measure is about to re-render.
+ */
+export function useChipListInternal({
+  chips,
+  maxRows,
+  reserveWidth,
+}: UseChipListOptions): UseChipListResult & { settled: () => boolean } {
   const listRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const plan = useChipMeasure({ chips, maxRows, flowRef: listRef, measureRef, inputRef: reserveWidth });
@@ -34,5 +47,5 @@ export function useChipList({ chips, maxRows, reserveWidth }: UseChipListOptions
       ? { key: `${index}:${value}`, value, ellipsis: true, maxWidth: plan.lastChipWidth }
       : { key: `${index}:${value}`, value },
   );
-  return { listRef, measureRef, visible, hidden, measured: plan.measured };
+  return { listRef, measureRef, visible, hidden, measured: plan.measured, settled: plan.settled };
 }
