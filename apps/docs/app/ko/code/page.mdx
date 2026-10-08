@@ -6,7 +6,7 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 
 ## Code
 
-인라인 `<code>`는 색을 입힌 상자를 받고, 주변 텍스트보다 한 단계 작습니다. `<pre>`는 줄이 너무 길면 가로로 스크롤하는 블록이고, 그 안의 `<code>`는 자기 상자를 버립니다.
+인라인 `<code>`는 색을 입힌 상자를 받고, 주변 텍스트보다 한 단계 작으며, 주변 텍스트 색을 그대로 씁니다. 그래서 링크 안의 코드도 링크로 읽힙니다. `<pre>`는 줄이 너무 길면 가로로 스크롤하는 블록이고, 그 안의 `<code>`는 자기 상자를 버립니다.
 
 <Example block>
   <CodeInText />
@@ -21,11 +21,11 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 </pre>
 ```
 
-스크롤하는 `<pre>`에는 `tabIndex={0}`을 주어 키보드 사용자가 닿아서 스크롤할 수 있게 하세요. `code.fg`, `code.bg`, `code.radius`, `code.font.family`, `code.font.scale`(주변 텍스트에 대한 크기 비율), `code.padding.x`, `code.padding.y`와 `code.block` 토큰으로 바꾸세요.
+스크롤하는 `<pre>`에는 `tabIndex={0}`을 주어 키보드 사용자가 닿아서 스크롤할 수 있게 하세요. `code.bg`, `code.radius`, `code.font.family`, `code.font.scale`(주변 텍스트에 대한 크기 비율), `code.padding.x`, `code.padding.y`로, 코드 블록은 `code.fg`와 `code.block` 토큰으로 바꾸세요.
 
 ## Kbd
 
-`<kbd>`는 키캡으로 그려집니다. 단축키는 HTML이 정한 대로 바깥 `<kbd>` 안에 키마다 `<kbd>`를 하나씩 넣으세요. 바깥 것은 평범한 텍스트로 남으므로 키를 잇는 `+`에는 상자가 없습니다.
+`<kbd>`는 키캡으로 그려집니다. 단축키는 HTML이 정한 대로 바깥 `<kbd>` 안에 키마다 `<kbd>`를 하나씩 넣으세요. 바깥 것은 주변 색 그대로 평범한 텍스트로 남으므로 키를 잇는 `+`에는 상자가 없습니다.
 
 <Example>
   <KbdShortcut />

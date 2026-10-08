@@ -380,6 +380,7 @@ describe('content parts in a browser', () => {
         <div dir="rtl">
           <progress data-testid="rtl" className="todae-spinner" aria-label="Loading" />
         </div>
+        <progress data-testid="valued" className="todae-spinner" aria-label="Uploading" value={40} max={100} />
         <span data-testid="skeleton" className="todae-skeleton" aria-hidden="true">
           Placeholder <b data-testid="inside">text</b>
         </span>
@@ -392,6 +393,9 @@ describe('content parts in a browser', () => {
     expect(style('spinner').backgroundImage).toContain('conic-gradient');
     // A ring turns the same way on either side; the progress sweep's reversal must not reach it.
     expect(style('rtl').animationDirection).toBe('normal');
+    // With a value it stays a bar, as it is announced.
+    expect(style('valued').animationName).toBe('none');
+    expect(style('valued').backgroundImage).not.toContain('conic-gradient');
     expect(style('skeleton').display).toBe('block');
     expect(style('skeleton').animationName).toBe('todae-skeleton-pulse');
     expect(style('skeleton').color).toBe('rgba(0, 0, 0, 0)');
@@ -401,10 +405,15 @@ describe('content parts in a browser', () => {
   it('draws keys as caps, leaves the outer key of a shortcut plain, and drops the code box inside a block', () => {
     render(
       <Themed>
-        <kbd data-testid="shortcut">
-          <kbd data-testid="key">Ctrl</kbd>+<kbd>K</kbd>
-        </kbd>
+        <p style={{ color: 'rgb(1, 2, 3)' }}>
+          <kbd data-testid="shortcut">
+            <kbd data-testid="key">Ctrl</kbd>+<kbd>K</kbd>
+          </kbd>
+        </p>
         <code data-testid="inline">x</code>
+        <a href="#x" data-testid="link">
+          <code data-testid="linked">x</code>
+        </a>
         <pre data-testid="block">
           <code data-testid="nested">x</code>
         </pre>
@@ -414,6 +423,9 @@ describe('content parts in a browser', () => {
     expect(style('key').borderTopStyle).toBe('solid');
     expect(parseFloat(style('key').borderBottomWidth)).toBeGreaterThan(parseFloat(style('key').borderTopWidth));
     expect(style('shortcut').borderTopStyle).toBe('none');
+    expect(style('shortcut').display).toBe('inline');
+    expect(style('shortcut').color).toBe('rgb(1, 2, 3)');
+    expect(style('linked').color).toBe(style('link').color);
     expect(style('shortcut').fontFamily).toBe(getComputedStyle(screen.getByTestId('shortcut').parentElement!).fontFamily);
     expect(style('inline').fontFamily).toContain('monospace');
     expect(style('inline').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');

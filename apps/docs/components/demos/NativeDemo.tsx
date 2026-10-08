@@ -137,7 +137,7 @@ export function CodeInText() {
       <Text>
         Call <code>getPlan()</code> before you render the billing page.
       </Text>
-      <pre>
+      <pre tabIndex={0}>
         <code>{`const plan = await getPlan();\nrender(<Billing plan={plan} />);`}</code>
       </pre>
     </div>

@@ -90,10 +90,10 @@ describe('todae.base styles', () => {
   it('styles spinners and skeletons, and stops them under reduced motion', () => {
     const list = selectors(base);
     for (const selector of [
-      ':where(progress.todae-spinner)',
-      ':where(progress.todae-spinner)::-webkit-progress-bar',
-      ':where(progress.todae-spinner)::-webkit-progress-value',
-      ':where(progress.todae-spinner)::-moz-progress-bar',
+      ':where(progress.todae-spinner:indeterminate)',
+      ':where(progress.todae-spinner:indeterminate)::-webkit-progress-bar',
+      ':where(progress.todae-spinner:indeterminate)::-webkit-progress-value',
+      ':where(progress.todae-spinner:indeterminate)::-moz-progress-bar',
       ':where(.todae-skeleton)',
       ':where(.todae-skeleton > *)',
     ]) {
@@ -101,10 +101,13 @@ describe('todae.base styles', () => {
     }
     // Same specificity as the progress rules, so the spinner must come after
     // every one of them, the forced-colors block included.
-    expect(list.indexOf(':where(progress.todae-spinner)')).toBeGreaterThan(
-      list.lastIndexOf(':where(progress:indeterminate)'),
+    const lastProgress = list.reduce(
+      (last, selector, i) => (/^:where\((progress|meter)\b/.test(selector) && !selector.includes('todae-spinner') ? i : last),
+      -1,
     );
-    expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(progress\.todae-spinner\) \{\s*animation: none;/);
+    expect(lastProgress).toBeGreaterThan(0);
+    expect(list.indexOf(':where(progress.todae-spinner:indeterminate)')).toBeGreaterThan(lastProgress);
+    expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(progress\.todae-spinner:indeterminate\) \{\s*animation: none;/);
     expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(\.todae-skeleton\) \{\s*animation: none;/);
   });
 

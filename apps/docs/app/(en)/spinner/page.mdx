@@ -6,7 +6,7 @@ Two class utilities in the `todae.base` layer for content that is still loading.
 
 ## Spinner
 
-Put `todae-spinner` on a `<progress>` with no `value`. It keeps the progressbar role, so screen readers report it as busy, and it needs a name like any progress: wrap it in a `<label>` with the text, or give it `aria-label`. The bar becomes a ring with one arc of fill that turns, and it holds still when the user asks for reduced motion.
+Put `todae-spinner` on a `<progress>` with no `value`. It keeps the progressbar role, so screen readers announce it as a progress bar, and it needs a name like any progress: wrap it in a `<label>` with the text, or give it `aria-label`. The bar becomes a ring with one arc of fill that turns, and it holds still when the user asks for reduced motion. Give it a `value` and it stays a bar, so what shows matches what is announced.
 
 <Example>
   <SpinnerLabelled />

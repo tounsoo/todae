@@ -280,9 +280,10 @@
 
   /* Spinner. A <progress> with the todae-spinner class and no value: it
      keeps the progressbar role, so it needs a name like any progress. The
-     bar becomes a ring with one arc of fill that turns. These rules come
+     bar becomes a ring with one arc of fill that turns. With a value it
+     stays a bar, so what shows matches what is announced. These rules come
      after the progress ones so they win at the same specificity. */
-  :where(progress.todae-spinner) {
+  :where(progress.todae-spinner:indeterminate) {
     flex: none;
     inline-size: var(--todae-spinner-size);
     block-size: var(--todae-spinner-size);
@@ -297,15 +298,15 @@
     animation: todae-spinner-turn var(--todae-spinner-motion-duration) linear infinite;
   }
 
-  :where(progress.todae-spinner)::-webkit-progress-bar {
+  :where(progress.todae-spinner:indeterminate)::-webkit-progress-bar {
     background: transparent;
   }
 
-  :where(progress.todae-spinner)::-webkit-progress-value {
+  :where(progress.todae-spinner:indeterminate)::-webkit-progress-value {
     background: transparent;
   }
 
-  :where(progress.todae-spinner)::-moz-progress-bar {
+  :where(progress.todae-spinner:indeterminate)::-moz-progress-bar {
     background: transparent;
   }
 
@@ -317,13 +318,13 @@
 
   /* Under reduced motion the ring holds still; the arc still reads as busy. */
   @media (prefers-reduced-motion: reduce) {
-    :where(progress.todae-spinner) {
+    :where(progress.todae-spinner:indeterminate) {
       animation: none;
     }
   }
 
   @media (forced-colors: active) {
-    :where(progress.todae-spinner) {
+    :where(progress.todae-spinner:indeterminate) {
       forced-color-adjust: none;
       border: 0;
       background: conic-gradient(Highlight 0 25%, GrayText 0);
@@ -384,15 +385,16 @@
   }
 
   /* Code. Inline <code> gets a tinted box in the mono family, a step smaller
-     than the text around it. A <pre> is a block that scrolls sideways, and
-     <code> inside it drops its own box. */
+     than the text around it, and keeps the text color around it, so code in
+     a link still reads as the link. A <pre> is a block that scrolls
+     sideways, and <code> inside it drops its own box. */
   :where(code) {
     padding: var(--todae-code-padding-y) var(--todae-code-padding-x);
     border-radius: var(--todae-code-radius);
     background: var(--todae-code-bg);
-    color: var(--todae-code-fg);
     font-family: var(--todae-code-font-family);
     font-size: calc(1em * var(--todae-code-font-scale));
+    -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
 
@@ -430,11 +432,15 @@
   }
 
   :where(kbd:has(kbd)) {
+    display: inline;
     padding: 0;
     border: 0;
+    border-radius: 0;
     background: none;
+    color: inherit;
     font-family: inherit;
     font-size: inherit;
+    white-space: inherit;
   }
 
   /* Hidden on screen, still read by assistive technology. The -focusable
