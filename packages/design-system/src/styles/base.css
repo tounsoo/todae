@@ -1,8 +1,8 @@
 /* Native elements and utility classes, styled from contract tokens. Every
    selector sits in :where(), so any class a company adds wins. */
 @layer todae.base {
-  /* A modal <dialog> makes the page behind it inert, so the page does not
-     scroll either. The gutter stays, so a page with a scrollbar does not
+  /* A modal <dialog> makes the page behind it inert; this stops it scrolling
+     too. The gutter stays, so a page with a scrollbar does not
      shift when it goes. A page's own overflow on the root wins over this,
      as any page style wins over todae.base. */
   :where(:root:has(dialog:modal)) {
