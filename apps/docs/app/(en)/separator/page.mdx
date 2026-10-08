@@ -1,0 +1,23 @@
+import { SeparatorBetween } from '../../../components/demos/NativeDemo';
+
+# Separator
+
+A separator is a native `<hr>`. There is no component: the element already has the separator role, and Todae styles every `hr` in the `todae.base` layer from the `separator` contract tokens.
+
+<Example>
+  <SeparatorBetween />
+</Example>
+
+```tsx
+<Text>Account settings apply to every workspace.</Text>
+<hr />
+<Text>Workspace settings apply to this workspace only.</Text>
+```
+
+Restyle it through `separator.color`, `separator.thickness` and `separator.space`, the margin above and below the rule.
+
+## When to use
+
+**When:** A break between two groups of content that belong to the same page.
+
+**When not:** Space alone separates the groups → [Stack](/stack). A rule that only decorates → a border in your own CSS, so screen readers do not announce a separator.

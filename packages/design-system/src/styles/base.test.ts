@@ -30,6 +30,8 @@ function selectors(css: string): string[] {
   for (const match of clean.matchAll(/([^{};]+)\{/g)) {
     const prelude = match[1]!.trim();
     if (prelude.startsWith('@')) continue;
+    // Keyframe stops (from, to, 50%) are not selectors.
+    if (/^(?:from|to|\d+(?:\.\d+)?%)(?:\s*,\s*(?:from|to|\d+(?:\.\d+)?%))*$/.test(prelude)) continue;
     out.push(...splitTopLevel(prelude));
   }
   return out;
@@ -56,6 +58,25 @@ describe('todae.base styles', () => {
     expect(list).toContain(':where(summary)');
     expect(list).toContain(':where(details)::details-content');
     expect(list).toContain(':where(.todae-visually-hidden, .todae-visually-hidden-focusable:not(:focus-within))');
+  });
+
+  it('styles separators, tables, progress, meters and sliders', () => {
+    const list = selectors(base).join('\n');
+    for (const selector of [
+      ':where(hr)',
+      ':where(table)',
+      ':where(thead th)',
+      ':where(progress, meter)',
+      ':where(progress)::-webkit-progress-value',
+      ':where(progress)::-moz-progress-bar',
+      ':where(progress:indeterminate)',
+      ':where(meter)::-webkit-meter-optimum-value',
+      ':where(meter:-moz-meter-sub-sub-optimum)::-moz-meter-bar',
+      ":where(input[type='range'])",
+    ]) {
+      expect(list).toContain(selector);
+    }
+    expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(progress:indeterminate\) \{\s*animation: none;/);
   });
 
   it('only reads tokens the build declares', () => {

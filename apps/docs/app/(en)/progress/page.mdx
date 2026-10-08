@@ -1,0 +1,42 @@
+import { MeterLevels, ProgressStates } from '../../../components/demos/NativeControlsDemo';
+
+# Progress and Meter
+
+Progress bars and meters are native `<progress>` and `<meter>` elements. There is no component: the browser already exposes their roles and values to assistive technology. Todae replaces the browser's bar with a track and a fill from the `progress` and `meter` contract tokens, in the `todae.base` layer.
+
+## Progress
+
+`<progress>` shows how far a task has come. Leave out `value` when the end is unknown: a band sweeps the track, and stops when the user asks for reduced motion.
+
+<Example block>
+  <ProgressStates />
+</Example>
+
+```tsx
+<label htmlFor="upload">Uploading report.pdf</label>
+<progress id="upload" value={64} max={100}>64%</progress>
+
+<label htmlFor="results">Loading results</label>
+<progress id="results" />
+```
+
+## Meter
+
+`<meter>` shows a measurement within a known range, such as storage or battery. Set `low`, `high` and `optimum`, and the browser decides whether the value is good, fair or poor. Todae colors those three states from `meter.fill.optimum`, `meter.fill.suboptimum` and `meter.fill.critical`.
+
+<Example block>
+  <MeterLevels />
+</Example>
+
+```tsx
+<label htmlFor="storage">Storage used</label>
+<meter id="storage" min={0} max={100} low={70} high={90} optimum={0} value={92}>92%</meter>
+```
+
+Name each one with a `<label>` or `aria-label`, and put the value as text inside the element for browsers that do not draw it. Restyle the track, height and radius through `progress.track`, `progress.height` and `progress.radius`. Meter reads the same three tokens, so a change to them reaches both.
+
+## When to use
+
+**When:** Progress → a task that moves toward done. Meter → a level within a range that does not change because of the user's task.
+
+**When not:** A value the user sets → [Slider](/slider).

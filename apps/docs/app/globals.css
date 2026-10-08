@@ -238,24 +238,9 @@ main:has(.playground) {
   margin-block-start: var(--todae-field-label-gap);
 }
 
+/* Todae styles tables in todae.base; the docs only add space around them. */
 table {
-  width: 100%;
-  border-collapse: collapse;
   margin: 1rem 0;
-}
-
-th,
-td {
-  text-align: left;
-  vertical-align: top;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--todae-color-border-default);
-}
-
-caption {
-  text-align: left;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
 }
 
 .playground {

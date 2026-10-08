@@ -31,7 +31,11 @@
         { "$ref": "./components/alert.json" },
         { "$ref": "./components/fieldset.json" },
         { "$ref": "./components/link.json" },
-        { "$ref": "./components/disclosure.json" }
+        { "$ref": "./components/disclosure.json" },
+        { "$ref": "./components/separator.json" },
+        { "$ref": "./components/table.json" },
+        { "$ref": "./components/progress.json" },
+        { "$ref": "./components/slider.json" }
       ],
       "$extensions": {
         "dev.todae": {

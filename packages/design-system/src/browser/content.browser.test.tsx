@@ -11,6 +11,19 @@ async function violations(): Promise<string[]> {
   return result.violations.map((v) => `${v.id}: ${v.help}\n  ${v.nodes.map((n) => n.target.join(' ')).join('\n  ')}`);
 }
 
+/** The background of the first top-level rule that styles `pseudo` on its bare element. */
+function pseudoBackground(pseudo: string): string | undefined {
+  const element = pseudo.includes('meter') ? 'meter' : 'progress';
+  const selector = `:where(${element})${pseudo}`;
+  const rules = (list: CSSRuleList): CSSStyleRule[] =>
+    [...list].flatMap((rule) =>
+      rule instanceof CSSStyleRule ? [rule] : rule instanceof CSSLayerBlockRule ? rules(rule.cssRules) : [],
+    );
+  const sheets = [...document.styleSheets].flatMap((sheet) => rules(sheet.cssRules));
+  const match = sheets.find((rule) => rule.selectorText === selector);
+  return match?.style.getPropertyValue('background').trim();
+}
+
 function Themed({ children }: { children: ReactNode }) {
   return (
     <main data-appearance="light" data-density="comfortable">
@@ -57,6 +70,34 @@ function Gallery() {
         <summary>Does it ship icons?</summary>
         <p>No. Pass your own.</p>
       </details>
+      <hr />
+      <table>
+        <caption>Invoices</caption>
+        <thead>
+          <tr>
+            <th scope="col">Month</th>
+            <th scope="col">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">May</th>
+            <td>$120</td>
+          </tr>
+        </tbody>
+      </table>
+      <label>
+        Upload
+        <progress value={40} max={100} />
+      </label>
+      <label>
+        Storage
+        <meter value={0.9} low={0.5} high={0.8} optimum={0.2} />
+      </label>
+      <label>
+        Volume
+        <input type="range" defaultValue={30} />
+      </label>
       <a href="#gallery-end" className="todae-visually-hidden-focusable">
         Skip to content
       </a>
@@ -249,5 +290,58 @@ describe('content parts in a browser', () => {
     expect(screen.getByTestId('two').hasAttribute('open')).toBe(true);
     expect(screen.getByTestId('one').hasAttribute('open')).toBe(false);
     expect(getComputedStyle(screen.getByTestId('one')).borderBottomStyle).toBe('solid');
+  });
+
+  it('styles native tables, progress, meter and range from their tokens', () => {
+    render(
+      <Themed>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" data-testid="col">
+                Month
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" data-testid="row">
+                May
+              </th>
+              <td data-testid="cell">$120</td>
+            </tr>
+          </tbody>
+        </table>
+        <progress data-testid="progress" value={40} max={100} />
+        <progress data-testid="busy" />
+        <input data-testid="range" type="range" />
+      </Themed>,
+    );
+    const style = (id: string, pseudo?: string) => getComputedStyle(screen.getByTestId(id), pseudo);
+    // Row and column headers share one weight; only column headers get the stronger rule.
+    expect(style('row').fontWeight).toBe(style('col').fontWeight);
+    expect(style('col').borderBottomColor).not.toBe(style('cell').borderBottomColor);
+    expect(style('cell').borderBottomStyle).toBe('solid');
+    expect(style('busy').animationName).toBe('todae-progress-sweep');
+    // Chromium does not report the bar's pseudo-elements, so check the rules that draw them.
+    expect(pseudoBackground('::-webkit-progress-value')).toBe('var(--todae-progress-fill)');
+    expect(pseudoBackground('::-webkit-progress-bar')).toBe('var(--todae-progress-track)');
+    expect(pseudoBackground('::-webkit-meter-optimum-value')).toBe('var(--todae-meter-fill-optimum)');
+    expect(pseudoBackground('::-webkit-meter-suboptimum-value')).toBe('var(--todae-meter-fill-suboptimum)');
+    expect(pseudoBackground('::-webkit-meter-even-less-good-value')).toBe('var(--todae-meter-fill-critical)');
+    expect(style('range').accentColor).not.toBe('auto');
+  });
+
+  it('sweeps the busy band the way the fill grows', () => {
+    render(
+      <Themed>
+        <progress data-testid="ltr" />
+        <div dir="rtl">
+          <progress data-testid="rtl" />
+        </div>
+      </Themed>,
+    );
+    expect(getComputedStyle(screen.getByTestId('ltr')).animationDirection).toBe('normal');
+    expect(getComputedStyle(screen.getByTestId('rtl')).animationDirection).toBe('reverse');
   });
 });
