@@ -285,8 +285,8 @@
       "ko": "나머지를 +N으로 접기 전에 보여 줄 줄 수. 없으면 모든 칩이 필요한 만큼 줄을 바꿔 놓입니다."
     },
     "onRemove": {
-      "en": "Renders a remove button on each chip. When chips drops it in the same update, focus moves to the chip that takes its place.",
-      "ko": "칩마다 제거 버튼을 렌더링합니다. 같은 업데이트에서 chips가 그 칩을 빼면, 포커스는 그 자리를 채운 칩으로 옮겨 갑니다."
+      "en": "Renders a remove button on each chip. Once chips drops the chip, focus moves to the chip that takes its place.",
+      "ko": "칩마다 제거 버튼을 렌더링합니다. chips에서 그 칩이 빠지면, 포커스는 그 자리를 채운 칩으로 옮겨 갑니다."
     },
     "dismissLabel": {
       "en": "Remove button name. Default is Remove {value}.",

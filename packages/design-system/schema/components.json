@@ -547,7 +547,7 @@
           "name": "onRemove",
           "type": "(index: number, value: string) => void",
           "required": false,
-          "description": "Renders a remove button on each chip. When chips drops it in the same update, focus moves to the chip that takes its place."
+          "description": "Renders a remove button on each chip. Once chips drops the chip, focus moves to the chip that takes its place."
         },
         {
           "name": "dismissLabel",

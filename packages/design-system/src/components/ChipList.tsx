@@ -6,10 +6,12 @@ import {
   type ComponentPropsWithRef,
   type CSSProperties,
   type ReactNode,
+  type RefObject,
 } from 'react';
 import { useChipList } from '../hooks/useChipList';
 import { usePopover } from '../hooks/usePopover';
 import { isReachable } from '../hooks/useRovingFocus';
+import { getTabbables } from '../overlay/tabbables';
 import { Chip } from './Chip';
 import { Popover } from './Popover';
 import styles from './ChipList.module.css';
@@ -58,28 +60,28 @@ function placePanel(trigger: HTMLElement, panel: HTMLElement) {
   return { top, left, maxWidth };
 }
 
-const TABBABLE =
-  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
-
 type Pending = { where: 'list' | 'popover' | 'popover-empty'; slot?: number };
 
-// The next tabbable control after +N, skipping its own panel.
+// The next tabbable control after +N, skipping its own panel. The costly
+// visibility check runs last, on candidates after +N only.
 function focusAfter(el: HTMLElement | null) {
   if (!el) return;
   const panel = document.getElementById(el.getAttribute('aria-controls') ?? '');
-  const next = [...document.querySelectorAll<HTMLElement>(TABBABLE)].find((node) => {
-    if (node.closest('[hidden],[disabled]') || node.closest('[aria-hidden="true"]')) return false;
-    // Inert, or not rendered, such as inside a closed popover.
-    if (!isReachable(node)) return false;
-    if (panel?.contains(node)) return false;
-    return (el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
-  });
+  const next = getTabbables(document.body).find(
+    (node) =>
+      (el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 &&
+      !panel?.contains(node) &&
+      !node.closest('[aria-hidden="true"]') &&
+      // Not rendered, such as inside a closed popover.
+      isReachable(node),
+  );
   (next ?? el).focus();
 }
 
-// Calls onLost when it unmounts holding focus, such as a chip in the panel
-// that moves back to the row.
-function HoldFocus({ onLost, children }: { onLost: () => void; children: ReactNode }) {
+// Calls onLost when its element unmounts holding focus, before the browser
+// drops focus to the body: a chip removed, or moved between the row and the
+// panel.
+function Held({ onLost, children }: { onLost: () => void; children: (ref: RefObject<HTMLSpanElement | null>) => ReactNode }) {
   const ref = useRef<HTMLSpanElement>(null);
   const lost = useRef(onLost);
   lost.current = onLost;
@@ -91,11 +93,14 @@ function HoldFocus({ onLost, children }: { onLost: () => void; children: ReactNo
       lost.current();
     };
   }, []);
-  return (
-    <span ref={ref} style={{ display: 'contents' }}>
-      {children}
-    </span>
-  );
+  return children(ref);
+}
+
+// A click does not focus a button in every browser (Safari). Focus the
+// pressed remove button, so focus moves on when its chip leaves.
+function holdOn(chip: HTMLElement | null) {
+  if (!chip || chip.contains(document.activeElement)) return;
+  chip.querySelector<HTMLElement>('button')?.focus({ preventScroll: true });
 }
 
 // The remove buttons of the chips in the row, in order.
@@ -132,6 +137,9 @@ function Root({
   // Focus is parked on the list or panel while a removal re-measures, so it
   // never falls to the body.
   const parked = useRef(false);
+  // The chip a remove button asked onRemove to drop. Focus moves on when it
+  // actually leaves, whenever the owner drops it.
+  const removing = useRef<{ index: number; value: string } | null>(null);
   const pending = useRef<Pending | null>(null);
   // The chip that left the panel holding focus: its index and value then.
   const moved = useRef<{ index: number; value: string } | null>(null);
@@ -231,21 +239,6 @@ function Root({
     });
   }, [chips, listRef, popover.popoverRef]);
 
-  // A removal that does not drop the chip in the same update, such as one
-  // that waits on a server, leaves nothing to re-measure: unpark, and put
-  // focus back on the remove button that was pressed.
-  const settle = (job: Pending, from: HTMLElement | null) => {
-    setTimeout(() => {
-      if (pending.current !== job) return;
-      pending.current = null;
-      parked.current = false;
-      popover.popoverRef.current?.removeAttribute('data-parked');
-      // The pressed button, unless its panel closed under it.
-      if (from?.isConnected && isReachable(from)) from.focus();
-      else (moreRef.current ?? listRef.current)?.focus();
-    });
-  };
-
   const hasHidden = hidden > 0;
   useEffect(() => {
     if (!open || !hasHidden) return;
@@ -301,29 +294,40 @@ function Root({
           }}
         >
           {visible.map((chip, index) => (
-            <Chip.Root
+            <Held
               key={chip.key}
-              role="listitem"
-              data-value={chip.value}
-              data-index={index}
-              dismissLabel={dismissLabel?.(chip.value)}
-              style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
-              onDismiss={
-                onRemove
-                  ? () => {
-                      const from = document.activeElement as HTMLElement | null;
-                      const job: Pending = { where: 'list', slot: index };
-                      parked.current = true;
-                      pending.current = job;
-                      listRef.current?.focus();
-                      onRemove(index, chip.value);
-                      settle(job, from);
-                    }
-                  : undefined
-              }
+              onLost={() => {
+                const gone = removing.current;
+                parked.current = true;
+                listRef.current?.focus({ preventScroll: true });
+                if (gone?.index === index && gone.value === chip.value) {
+                  removing.current = null;
+                  pending.current = { where: 'list', slot: index };
+                } else moved.current = { index, value: chip.value };
+              }}
             >
-              {chip.value}
-            </Chip.Root>
+              {(ref) => (
+                <Chip.Root
+                  ref={ref}
+                  role="listitem"
+                  data-value={chip.value}
+                  data-index={index}
+                  dismissLabel={dismissLabel?.(chip.value)}
+                  style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
+                  onDismiss={
+                    onRemove
+                      ? () => {
+                          removing.current = { index, value: chip.value };
+                          holdOn(ref.current);
+                          onRemove(index, chip.value);
+                        }
+                      : undefined
+                  }
+                >
+                  {chip.value}
+                </Chip.Root>
+              )}
+            </Held>
           ))}
           {hidden > 0 ? (
             <span role="listitem">
@@ -360,45 +364,54 @@ function Root({
             left: panelBox?.left,
           }}
         >
-          {tail.map((value, index) => (
-            <HoldFocus
-              key={`${chips.length - hidden + index}:${value}`}
-              onLost={() => {
-                moved.current = { index: chips.length - hidden + index, value };
-                if (hiddenNow.current > 0) parked.current = true;
-                listRef.current?.focus({ preventScroll: true });
-              }}
-            >
-              <Chip.Root
-                className={styles.panelChip}
-                dismissLabel={dismissLabel?.(value)}
-                onDismiss={
-                  onRemove
-                    ? () => {
-                        const from = document.activeElement as HTMLElement | null;
-                        parked.current = true;
-                        const panel = popover.popoverRef.current;
-                        const at = chips.length - hidden + index;
-                        const job: Pending =
-                          hidden > 1 ? { where: 'popover', slot: index } : { where: 'popover-empty' };
-                        pending.current = job;
-                        if (hidden > 1) {
-                          panel?.setAttribute('data-parked', '');
-                          panel?.focus();
-                        } else {
-                          listRef.current?.focus();
-                          setOpen(false);
-                        }
-                        onRemove(at, value);
-                        settle(job, from);
-                      }
-                    : undefined
-                }
+          {tail.map((value, index) => {
+            const at = chips.length - hidden + index;
+            return (
+              <Held
+                key={`${at}:${value}`}
+                onLost={() => {
+                  const gone = removing.current;
+                  if (gone?.index === at && gone.value === value) {
+                    removing.current = null;
+                    parked.current = true;
+                    if (hidden > 1) {
+                      pending.current = { where: 'popover', slot: index };
+                      const panel = popover.popoverRef.current;
+                      panel?.setAttribute('data-parked', '');
+                      panel?.focus({ preventScroll: true });
+                    } else {
+                      pending.current = { where: 'popover-empty' };
+                      listRef.current?.focus({ preventScroll: true });
+                      setOpen(false);
+                    }
+                    return;
+                  }
+                  moved.current = { index: at, value };
+                  if (hiddenNow.current > 0) parked.current = true;
+                  listRef.current?.focus({ preventScroll: true });
+                }}
               >
-                {value}
-              </Chip.Root>
-            </HoldFocus>
-          ))}
+                {(ref) => (
+                  <Chip.Root
+                    ref={ref}
+                    className={styles.panelChip}
+                    dismissLabel={dismissLabel?.(value)}
+                    onDismiss={
+                      onRemove
+                        ? () => {
+                            removing.current = { index: at, value };
+                            holdOn(ref.current);
+                            onRemove(at, value);
+                          }
+                        : undefined
+                    }
+                  >
+                    {value}
+                  </Chip.Root>
+                )}
+              </Held>
+            );
+          })}
         </Popover.Root>
       ) : null}
     </div>

@@ -3,6 +3,7 @@ import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChipList, Field } from '@tounsoo/todae';
 import { ChipListDemo } from './ChipListDemo';
@@ -636,27 +637,29 @@ describe('chip list recipe', () => {
     body.assert();
   });
 
-  it('gives focus back to the remove button when chips does not drop the chip', async () => {
-    vi.useFakeTimers();
-    try {
-      const onRemove = vi.fn();
-      render(<ChipList.Root aria-label="Tags" chips={['aa', 'bb']} maxRows={2} onRemove={onRemove} />);
-      const button = screen.getByRole('button', { name: 'Remove bb' });
-      button.focus();
-      await act(async () => {
-        fireEvent.click(button);
-      });
-      expect(onRemove).toHaveBeenCalledWith(1, 'bb');
-      await act(async () => {
-        vi.runAllTimers();
-      });
-      expect(document.activeElement).toBe(button);
-      const list = screen.getByRole('list', { name: 'Tags' });
-      act(() => list.focus());
-      expect(list.hasAttribute('data-ring')).toBe(true);
-    } finally {
-      vi.useRealTimers();
+  it('keeps focus on the remove button until the owner drops the chip, then moves on', async () => {
+    const body = watchBody();
+    let drop: () => void = () => undefined;
+    let touch: () => void = () => undefined;
+    function Later() {
+      const [tags, setTags] = useState(['aa', 'bb', 'cc']);
+      const [, setTick] = useState(0);
+      drop = () => setTags((current) => current.filter((tag) => tag !== 'bb'));
+      touch = () => setTick((n) => n + 1);
+      // A new array each render, as a derived prop would be.
+      return <ChipList.Root aria-label="Tags" chips={[...tags]} maxRows={2} onRemove={() => undefined} />;
     }
+    render(<Later />);
+    const button = screen.getByRole('button', { name: 'Remove bb' });
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    expect(document.activeElement).toBe(button);
+    await act(async () => touch());
+    expect(document.activeElement).toBe(button);
+    await act(async () => drop());
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove cc' }));
+    body.assert();
   });
 
   it('defines chip geometry tokens and uses them on Chip', () => {
