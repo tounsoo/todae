@@ -410,6 +410,21 @@ describe('content parts in a browser', () => {
     expect(style('inside').visibility).toBe('hidden');
   });
 
+  it('keeps a skeleton at least one line high, and lets what is inside make it taller', () => {
+    render(
+      <Themed>
+        <p data-testid="line">x</p>
+        <div data-testid="short" className="todae-skeleton" style={{ blockSize: '2px' }} />
+        <div data-testid="tall" className="todae-skeleton">
+          <div style={{ blockSize: '200px' }} />
+        </div>
+      </Themed>,
+    );
+    const height = (id: string) => screen.getByTestId(id).getBoundingClientRect().height;
+    expect(height('short')).toBeCloseTo(height('line'), 0);
+    expect(height('tall')).toBe(200);
+  });
+
   it('draws keys as caps, leaves the outer key of a shortcut plain, and drops the code box inside a block', () => {
     render(
       <Themed>
