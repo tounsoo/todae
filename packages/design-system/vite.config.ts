@@ -1,6 +1,7 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vitest/config';
 
-const src = (path: string) => new URL(`./src/${path}`, import.meta.url).pathname;
+const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta.url));
 
 const entries = {
   index: src('index.ts'),
