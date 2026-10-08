@@ -95,7 +95,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .dialog,
+    .dialog[open],
     .panel {
       transition: none;
     }

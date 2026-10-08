@@ -39,7 +39,8 @@
         { "$ref": "./components/badge.json" },
         { "$ref": "./components/card.json" },
         { "$ref": "./components/breadcrumbs.json" },
-        { "$ref": "./components/toolbar.json" }
+        { "$ref": "./components/toolbar.json" },
+        { "$ref": "./components/drawer.json" }
       ],
       "$extensions": {
         "dev.todae": {

@@ -14,6 +14,7 @@ import {
   Chip,
   Description,
   Dialog,
+  Drawer,
   ErrorMessage,
   Field,
   Fieldset,
@@ -180,6 +181,14 @@ const cases: Case[] = [
       },
     ],
   ),
+  [
+    'Drawer.Root',
+    (p) => (
+      <Drawer.Root {...p} open onOpenChange={noop} aria-label="d">
+        x
+      </Drawer.Root>
+    ),
+  ],
   ['BottomSheet.Root', (p) => <BottomSheet.Root {...p} open onOpenChange={noop} aria-label="s" />],
   ...(['Grabber', 'Header', 'Title', 'Description', 'Body', 'Footer', 'Close'] as const).map(
     (part): Case => [

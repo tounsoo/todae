@@ -1,0 +1,93 @@
+@layer todae.components {
+  .drawer {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    /* Not a scroll container, so the panel off-screen while it slides adds no scrolling. */
+    overflow: clip;
+    background-color: transparent;
+    color: var(--todae-drawer-fg);
+  }
+
+  /* data-entered drives the enter motion. Only the scrim's color fades, so the panel slides in view. */
+  .drawer[open] {
+    display: flex;
+    transition: background-color var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing);
+  }
+
+  .drawer[open][data-side='end'] {
+    justify-content: flex-end;
+  }
+
+  .drawer[open][data-entered] {
+    background-color: var(--todae-overlay-scrim-bg);
+  }
+
+  .drawer[open][data-exiting] {
+    background-color: transparent;
+    transition-duration: var(--todae-drawer-motion-exit);
+  }
+
+  .drawer::backdrop {
+    background: transparent;
+  }
+
+  .panel {
+    --_from: -100%;
+
+    box-sizing: border-box;
+    inline-size: min(100%, var(--todae-drawer-size));
+    block-size: 100%;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-dialog-gap);
+    /* Clear of notches and the home indicator on either side, since a narrow screen fills the width. */
+    padding-block: max(var(--todae-drawer-padding-y), env(safe-area-inset-top))
+      max(var(--todae-drawer-padding-y), env(safe-area-inset-bottom));
+    padding-left: max(var(--todae-drawer-padding-x), env(safe-area-inset-left));
+    padding-right: max(var(--todae-drawer-padding-x), env(safe-area-inset-right));
+    background: var(--todae-drawer-bg);
+    border: 0 solid var(--todae-drawer-border);
+    border-inline-end-width: 1px;
+    transform: translateX(var(--_from));
+    transition: transform var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing);
+  }
+
+  .drawer[data-side='end'] .panel {
+    --_from: 100%;
+
+    border-inline-width: 1px 0;
+  }
+
+  /* Start and end swap physical sides in right-to-left text. */
+  .drawer:dir(rtl) .panel {
+    --_from: 100%;
+  }
+
+  .drawer[data-side='end']:dir(rtl) .panel {
+    --_from: -100%;
+  }
+
+  .drawer[open][data-entered] .panel {
+    transform: none;
+  }
+
+  .drawer[open][data-exiting] .panel {
+    transform: translateX(var(--_from));
+    transition-duration: var(--todae-drawer-motion-exit);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .drawer[open],
+    .panel {
+      transition: none;
+    }
+  }
+}

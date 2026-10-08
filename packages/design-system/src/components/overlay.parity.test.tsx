@@ -1,94 +1,93 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createRef } from 'react';
+import { createRef, type ComponentProps, type ComponentType, type ReactNode, type RefObject } from 'react';
 import { BottomSheet } from './BottomSheet';
 import { Dialog } from './Dialog';
+import { Drawer } from './Drawer';
 
 afterEach(cleanup);
+
+type RootProps = {
+  open: boolean;
+  onOpenChange: (open: boolean, reason: string) => void;
+  dismissOnEscape?: boolean;
+  dismissOnBackdrop?: boolean;
+  initialFocusRef?: RefObject<HTMLElement | null>;
+  children: ReactNode;
+};
 
 type Harness = {
   name: string;
   reasonBackdrop: 'backdrop' | 'scrim';
-  renderSurface: (open: boolean, props: Record<string, unknown>) => void;
-  getSurface: () => HTMLElement;
+  Root: ComponentType<RootProps>;
+  Title: ComponentType<{ children: ReactNode }>;
+  Description: ComponentType<{ children: ReactNode }>;
+  Close: ComponentType<{ children: ReactNode }>;
   clickBackdrop: (surface: HTMLElement) => void;
 };
 
-function dialogHarness(): Harness {
-  return {
-    name: 'Dialog',
-    reasonBackdrop: 'backdrop',
-    renderSurface(open, props) {
-      const onOpenChange = (props.onOpenChange as (open: boolean, reason: string) => void) ?? (() => undefined);
-      render(
-        <Dialog.Root
-          open={open}
-          onOpenChange={onOpenChange}
-          dismissOnEscape={props.dismissOnEscape as boolean | undefined}
-          dismissOnBackdrop={props.dismissOnBackdrop as boolean | undefined}
-          initialFocusRef={props.initialFocusRef as never}
-        >
-          <Dialog.Title>Save file</Dialog.Title>
-          <Dialog.Description>This cannot be undone.</Dialog.Description>
-          <button type="button">First</button>
-          <Dialog.Close>X</Dialog.Close>
-        </Dialog.Root>,
-      );
-    },
-    getSurface() {
-      return document.querySelector('dialog') as HTMLElement;
-    },
-    clickBackdrop(surface) {
-      // The dialog element spans the viewport; its panel is a child.
-      fireEvent.pointerDown(surface);
-      fireEvent.click(surface);
-    },
-  };
+// The dialog element spans the viewport; its panel is a child.
+function clickDialogBackdrop(surface: HTMLElement) {
+  fireEvent.pointerDown(surface);
+  fireEvent.click(surface);
 }
 
-function sheetHarness(): Harness {
-  return {
-    name: 'BottomSheet',
-    reasonBackdrop: 'scrim',
-    renderSurface(open, props) {
-      const onOpenChange = (props.onOpenChange as (open: boolean, reason: string) => void) ?? (() => undefined);
-      render(
-        <BottomSheet.Root
-          open={open}
-          onOpenChange={onOpenChange}
-          dismissOnEscape={props.dismissOnEscape as boolean | undefined}
-          dismissOnScrim={props.dismissOnBackdrop as boolean | undefined}
-          initialFocusRef={props.initialFocusRef as never}
-        >
-          <BottomSheet.Title>Save file</BottomSheet.Title>
-          <BottomSheet.Description>This cannot be undone.</BottomSheet.Description>
-          <button type="button">First</button>
-          <BottomSheet.Close>X</BottomSheet.Close>
-        </BottomSheet.Root>,
-      );
-    },
-    getSurface() {
-      return document.querySelector('dialog') as HTMLElement;
-    },
-    clickBackdrop(surface) {
-      // The sheet is the dialog element; its ::backdrop hit-tests as the
-      // dialog, outside the sheet's box.
-      surface.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 400, width: 800, height: 400 });
-      fireEvent.pointerDown(surface, { clientX: 10, clientY: 100 });
-      fireEvent.click(surface, { clientX: 10, clientY: 100 });
-    },
-  };
+const dialogHarness = (): Harness => ({
+  name: 'Dialog',
+  reasonBackdrop: 'backdrop',
+  Root: (props) => <Dialog.Root {...(props as ComponentProps<typeof Dialog.Root>)} />,
+  Title: Dialog.Title,
+  Description: Dialog.Description,
+  Close: Dialog.Close,
+  clickBackdrop: clickDialogBackdrop,
+});
+
+const drawerHarness = (): Harness => ({
+  ...dialogHarness(),
+  name: 'Drawer',
+  Root: (props) => <Drawer.Root {...(props as ComponentProps<typeof Drawer.Root>)} />,
+});
+
+const sheetHarness = (): Harness => ({
+  name: 'BottomSheet',
+  reasonBackdrop: 'scrim',
+  Root: ({ dismissOnBackdrop, ...props }) => (
+    <BottomSheet.Root {...(props as ComponentProps<typeof BottomSheet.Root>)} dismissOnScrim={dismissOnBackdrop} />
+  ),
+  Title: BottomSheet.Title,
+  Description: BottomSheet.Description,
+  Close: BottomSheet.Close,
+  clickBackdrop(surface) {
+    // The sheet is the dialog element; its ::backdrop hit-tests as the
+    // dialog, outside the sheet's box.
+    surface.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 400, width: 800, height: 400 });
+    fireEvent.pointerDown(surface, { clientX: 10, clientY: 100 });
+    fireEvent.click(surface, { clientX: 10, clientY: 100 });
+  },
+});
+
+function renderSurface(h: Harness, open: boolean, props: Partial<RootProps>) {
+  render(
+    <h.Root open={open} onOpenChange={() => undefined} {...props}>
+      <h.Title>Save file</h.Title>
+      <h.Description>This cannot be undone.</h.Description>
+      <button type="button">First</button>
+      <h.Close>X</h.Close>
+    </h.Root>,
+  );
 }
+
+const getSurface = () => document.querySelector('dialog') as HTMLElement;
 
 afterEach(() => {
   document.documentElement.style.overflow = '';
 });
 
-for (const harness of [dialogHarness, sheetHarness]) {
+for (const harness of [dialogHarness, drawerHarness, sheetHarness]) {
   describe(`${harness().name} a11y contract`, () => {
     it('exposes a labelled modal dialog', () => {
-      harness().renderSurface(true, {});
-      const surface = harness().getSurface();
+      renderSurface(harness(), true, {});
+      const surface = getSurface();
       expect(surface.tagName).toBe('DIALOG');
       expect((surface as HTMLDialogElement).open).toBe(true);
       expect(surface.getAttribute('aria-modal')).toBe('true');
@@ -102,22 +101,14 @@ for (const harness of [dialogHarness, sheetHarness]) {
       extra.textContent = 'seed';
       document.body.appendChild(extra);
       extra.focus();
+      const h = harness();
       render(
-        harness().name === 'Dialog' ? (
-          <Dialog.Root open onOpenChange={() => undefined} initialFocusRef={initialFocusRef}>
-            <Dialog.Title>Save file</Dialog.Title>
-            <button type="button" ref={initialFocusRef}>
-              Target
-            </button>
-          </Dialog.Root>
-        ) : (
-          <BottomSheet.Root open onOpenChange={() => undefined} initialFocusRef={initialFocusRef}>
-            <BottomSheet.Title>Save file</BottomSheet.Title>
-            <button type="button" ref={initialFocusRef}>
-              Target
-            </button>
-          </BottomSheet.Root>
-        ),
+        <h.Root open onOpenChange={() => undefined} initialFocusRef={initialFocusRef}>
+          <h.Title>Save file</h.Title>
+          <button type="button" ref={initialFocusRef}>
+            Target
+          </button>
+        </h.Root>,
       );
       await waitFor(() => {
         expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Target' }));
@@ -128,34 +119,34 @@ for (const harness of [dialogHarness, sheetHarness]) {
     it('dismisses on Escape unless disabled', () => {
       const onOpenChange = vi.fn();
       const h = harness();
-      h.renderSurface(true, { onOpenChange });
-      fireEvent.keyDown(h.getSurface(), { key: 'Escape' });
+      renderSurface(h, true, { onOpenChange });
+      fireEvent.keyDown(getSurface(), { key: 'Escape' });
       fireEvent.keyDown(document, { key: 'Escape' });
-      h.getSurface().dispatchEvent(new Event('cancel', { cancelable: true }));
+      getSurface().dispatchEvent(new Event('cancel', { cancelable: true }));
       expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
       cleanup();
       const blocked = vi.fn();
-      h.renderSurface(true, { onOpenChange: blocked, dismissOnEscape: false });
-      fireEvent.keyDown(h.getSurface(), { key: 'Escape' });
+      renderSurface(h, true, { onOpenChange: blocked, dismissOnEscape: false });
+      fireEvent.keyDown(getSurface(), { key: 'Escape' });
       fireEvent.keyDown(document, { key: 'Escape' });
-      h.getSurface().dispatchEvent(new Event('cancel', { cancelable: true }));
+      getSurface().dispatchEvent(new Event('cancel', { cancelable: true }));
       expect(blocked).not.toHaveBeenCalled();
-      expect(h.getSurface()).not.toBeNull();
+      expect(getSurface()).not.toBeNull();
     });
 
     it('dismisses on scrim and ignores panel clicks', async () => {
       const onOpenChange = vi.fn();
       const h = harness();
-      h.renderSurface(true, { onOpenChange });
-      const surface = h.getSurface();
+      renderSurface(h, true, { onOpenChange });
+      const surface = getSurface();
       // A sheet takes scrim taps once its enter motion has started.
       await waitFor(() => expect(surface.hasAttribute('data-entered')).toBe(true));
       h.clickBackdrop(surface);
       expect(onOpenChange).toHaveBeenCalledWith(false, h.reasonBackdrop);
       cleanup();
       const blocked = vi.fn();
-      h.renderSurface(true, { onOpenChange: blocked, dismissOnBackdrop: false });
-      const again = h.getSurface();
+      renderSurface(h, true, { onOpenChange: blocked, dismissOnBackdrop: false });
+      const again = getSurface();
       h.clickBackdrop(again);
       expect(blocked).not.toHaveBeenCalled();
       fireEvent.click(screen.getByText('Save file'));
@@ -165,29 +156,17 @@ for (const harness of [dialogHarness, sheetHarness]) {
     it('locks scroll while open and restores on close', async () => {
       const h = harness();
       const { rerender } = render(
-        h.name === 'Dialog' ? (
-          <Dialog.Root open onOpenChange={() => undefined}>
-            <Dialog.Title>Save file</Dialog.Title>
-          </Dialog.Root>
-        ) : (
-          <BottomSheet.Root open onOpenChange={() => undefined}>
-            <BottomSheet.Title>Save file</BottomSheet.Title>
-          </BottomSheet.Root>
-        ),
+        <h.Root open onOpenChange={() => undefined}>
+          <h.Title>Save file</h.Title>
+        </h.Root>,
       );
       expect(document.documentElement.style.overflow).toBe('hidden');
       rerender(
-        h.name === 'Dialog' ? (
-          <Dialog.Root open={false} onOpenChange={() => undefined}>
-            <Dialog.Title>Save file</Dialog.Title>
-          </Dialog.Root>
-        ) : (
-          <BottomSheet.Root open={false} onOpenChange={() => undefined}>
-            <BottomSheet.Title>Save file</BottomSheet.Title>
-          </BottomSheet.Root>
-        ),
+        <h.Root open={false} onOpenChange={() => undefined}>
+          <h.Title>Save file</h.Title>
+        </h.Root>,
       );
-      expect(h.getSurface()).not.toBeNull();
+      expect(getSurface()).not.toBeNull();
       await waitFor(() => {
         expect(document.documentElement.style.overflow).not.toBe('hidden');
       }, { timeout: 500 });
@@ -200,30 +179,16 @@ for (const harness of [dialogHarness, sheetHarness]) {
       trigger.focus();
       const h = harness();
       const { rerender } = render(
-        h.name === 'Dialog' ? (
-          <Dialog.Root open onOpenChange={() => undefined}>
-            <Dialog.Title>Save file</Dialog.Title>
-            <button type="button">First</button>
-          </Dialog.Root>
-        ) : (
-          <BottomSheet.Root open onOpenChange={() => undefined}>
-            <BottomSheet.Title>Save file</BottomSheet.Title>
-            <button type="button">First</button>
-          </BottomSheet.Root>
-        ),
+        <h.Root open onOpenChange={() => undefined}>
+          <h.Title>Save file</h.Title>
+          <button type="button">First</button>
+        </h.Root>,
       );
       rerender(
-        h.name === 'Dialog' ? (
-          <Dialog.Root open={false} onOpenChange={() => undefined}>
-            <Dialog.Title>Save file</Dialog.Title>
-            <button type="button">First</button>
-          </Dialog.Root>
-        ) : (
-          <BottomSheet.Root open={false} onOpenChange={() => undefined}>
-            <BottomSheet.Title>Save file</BottomSheet.Title>
-            <button type="button">First</button>
-          </BottomSheet.Root>
-        ),
+        <h.Root open={false} onOpenChange={() => undefined}>
+          <h.Title>Save file</h.Title>
+          <button type="button">First</button>
+        </h.Root>,
       );
       // The sheet gives focus back once its exit motion ends and the page behind is no longer inert.
       await waitFor(() => expect(document.activeElement).toBe(trigger), { timeout: 1000 });
@@ -232,14 +197,15 @@ for (const harness of [dialogHarness, sheetHarness]) {
 
     it('stays open when the parent ignores a dismiss request', () => {
       const h = harness();
-      h.renderSurface(true, { onOpenChange: () => undefined });
+      renderSurface(h, true, { onOpenChange: () => undefined });
       fireEvent.keyDown(document, { key: 'Escape' });
-      expect(h.getSurface()).not.toBeNull();
-      if (h.name === 'Dialog') expect(h.getSurface().hasAttribute('open')).toBe(true);
+      expect(getSurface()).not.toBeNull();
+      // The sheet's dialog closes under its exit motion; the others stay open.
+      if (h.name !== 'BottomSheet') expect(getSurface().hasAttribute('open')).toBe(true);
     });
 
     it('names the close button', () => {
-      harness().renderSurface(true, {});
+      renderSurface(harness(), true, {});
       expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();
     });
   });
