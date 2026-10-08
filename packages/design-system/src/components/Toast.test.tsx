@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useRef, useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -152,7 +152,7 @@ describe('Toast', () => {
     expect(region.hasAttribute('data-expanded')).toBe(false);
   });
 
-  it('moves into the front modal of the stack and back', () => {
+  it('moves into the front modal of the stack and back', async () => {
     const toaster = createToaster();
     function Page() {
       const [open, setOpen] = useState(true);
@@ -173,7 +173,9 @@ describe('Toast', () => {
     const host = screen.getByRole('region', { hidden: true }).parentElement!;
     expect(dialog.contains(host)).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Close', hidden: true }));
-    expect(dialog.contains(host)).toBe(false);
+    // Still inside while the exit motion runs and the page is inert.
+    expect(dialog.contains(host)).toBe(true);
+    await waitFor(() => expect(dialog.contains(host)).toBe(false));
     expect(host.hasAttribute('data-popover-open')).toBe(true);
   });
 });
@@ -212,5 +214,10 @@ describe('matchesHotkey', () => {
     expect(matchesHotkey(key({ key: '†', code: 'KeyT', altKey: true }), 'alt+t')).toBe(true);
     expect(matchesHotkey(key({ key: 't', code: 'KeyT', ctrlKey: true }), 'Control+T')).toBe(true);
     expect(matchesHotkey(key({ key: 't', code: 'KeyT' }), 'Alt+T')).toBe(false);
+  });
+
+  it('ignores a keydown with no key, as Chrome sends for an autofill pick', () => {
+    const event = { altKey: false, ctrlKey: false, metaKey: false, shiftKey: false } as unknown as KeyboardEvent;
+    expect(matchesHotkey(event, 'F8')).toBe(false);
   });
 });

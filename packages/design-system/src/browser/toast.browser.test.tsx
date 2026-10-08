@@ -81,6 +81,12 @@ describe('Toast with a modal dialog', () => {
     // Escape from the dialog's own content closes the dialog, not the toast.
     screen.getByRole('button', { name: 'Notify' }).focus();
     await userEvent.keyboard('{Escape}');
+    // Through the exit motion the page is still inert, so the toast stays in
+    // the dialog, usable, and does not fade with it.
+    await waitFor(() => expect(dialog.hasAttribute('data-exiting')).toBe(true));
+    expect(dialog.contains(undo)).toBe(true);
+    expect(receivesPointer(undo)).toBe(true);
+    expect(getComputedStyle(undo.closest('li')!).opacity).toBe('1');
     await waitFor(() => expect(dialog.contains(undo)).toBe(false));
     expect(hostOf(undo).matches(':popover-open')).toBe(true);
     await waitFor(() => expect(dialog.open).toBe(false));
@@ -173,6 +179,33 @@ describe('Toast with a modal dialog', () => {
     expect(receivesPointer(undo)).toBe(true);
   });
 
+  it('keeps the dialog\'s own focus to return to, not a toast\'s', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Page() {
+      // Ignores closes it did not ask for, so a script's close() shows it again.
+      const [open, setOpen] = useState(true);
+      return (
+        <Themed>
+          <Dialog.Root open={open} onOpenChange={(next, reason) => reason !== 'native' && setOpen(next)}>
+            <Dialog.Title>Edit</Dialog.Title>
+            <Button.Root onClick={() => toaster.add({ title: 'Inside' })}>Notify</Button.Root>
+          </Dialog.Root>
+          <Region toaster={toaster} />
+        </Themed>
+      );
+    }
+    render(<Page />);
+    const dialog = screen.getByRole('dialog', { name: 'Edit' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    const notify = screen.getByRole('button', { name: 'Notify' });
+    await userEvent.click(notify);
+    const undo = await screen.findByRole('button', { name: 'Undo Inside' });
+    undo.focus();
+    dialog.close();
+    await waitFor(() => expect(dialog.open).toBe(true));
+    await waitFor(() => expect(document.activeElement).toBe(notify));
+  });
+
   it('stays inert under a modal that is not in the stack', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(
@@ -221,6 +254,59 @@ describe('Toast in the top layer', () => {
     const undo = await screen.findByRole('button', { name: 'Undo Over' });
     await waitFor(() => expect(receivesPointer(undo)).toBe(true));
     expect(panel.matches(':popover-open')).toBe(true);
+  });
+
+  it('shows a toast out of the queue in front of a popover opened while it waited', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Page() {
+      const [open, setOpen] = useState(false);
+      const popover = usePopover({ open, onOpenChange: (next) => setOpen(next) });
+      return (
+        <Themed>
+          <Button.Root {...popover.getTriggerProps()}>More</Button.Root>
+          <Popover.Root
+            {...popover.getPopoverProps()}
+            aria-label="Panel"
+            role="dialog"
+            style={{ position: 'fixed', inset: 'auto 0 0 auto', margin: 0, width: 600, height: 400 }}
+          >
+            Panel
+          </Popover.Root>
+          <Region toaster={toaster} limit={1} />
+        </Themed>
+      );
+    }
+    render(<Page />);
+    act(() => {
+      toaster.add({ id: 'a', title: 'First' });
+      toaster.add({ title: 'Queued' });
+    });
+    await screen.findByRole('button', { name: 'Undo First' });
+    await userEvent.click(screen.getByRole('button', { name: 'More' }));
+    const panel = screen.getByRole('dialog', { name: 'Panel' });
+    await waitFor(() => expect(panel.matches(':popover-open')).toBe(true));
+    act(() => toaster.dismiss('a'));
+    const queued = await screen.findByRole('button', { name: 'Undo Queued' });
+    await waitFor(() => expect(receivesPointer(queued)).toBe(true));
+  });
+
+  it('keeps timing toasts after the focused one is dismissed', async () => {
+    const toaster = createToaster({ duration: 400 });
+    render(
+      <Themed>
+        <Region toaster={toaster} layout="stack" />
+      </Themed>,
+    );
+    act(() => void toaster.add({ title: 'Kept', duration: Infinity }));
+    const close = await screen.findByRole('button', { name: 'Dismiss' });
+    close.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0));
+    const region = screen.getByRole('region', { name: 'Notifications' });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    act(() => void toaster.add({ title: 'Timed' }));
+    await screen.findByRole('button', { name: 'Undo Timed' });
+    await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0), { timeout: 2000 });
   });
 
   it('shows at most limit toasts, and the next one when one leaves', async () => {

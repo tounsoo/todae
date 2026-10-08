@@ -75,9 +75,10 @@ export function useModalDialog({
     if (!present && el.open) el.close();
   }, [dialogRef, present, open, node, nativeCloses]);
 
-  // In the stack from showModal() until the owner closes it, so toasts leave
-  // before the exit motion.
-  useModalLayer(dialogRef, open);
+  // In the stack from showModal() until close() at the end of the exit
+  // motion, while the page is still inert. Toasts moved in stay usable, and
+  // as their own top layer boxes they don't fade with the element.
+  useModalLayer(dialogRef, present);
 
   const cancelledAt = useRef(-Infinity);
   useLayoutEffect(() => {
@@ -102,9 +103,12 @@ export function useModalDialog({
       latest.current.onOpenChange(false, 'native');
     }
     function onFocusIn(event: FocusEvent) {
-      // Only this element's own controls, not those of a modal written inside it.
+      // Only this element's own controls, not those of a modal written inside
+      // it, nor a toast that Toast.Region moved in.
       const target = event.target;
-      if (target instanceof HTMLElement && target.closest('dialog') === el) lastFocus.current = target;
+      if (target instanceof HTMLElement && target.closest('dialog') === el && !target.closest('[data-todae-toast-host]')) {
+        lastFocus.current = target;
+      }
     }
     el.addEventListener('cancel', onCancel);
     el.addEventListener('close', onClose);

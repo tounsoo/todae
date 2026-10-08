@@ -9,13 +9,13 @@ export const meta = {
       name: "ref",
       type: "RefObject<HTMLDialogElement | null>",
       required: true,
-      description: "The <dialog>. It must be in the document when open turns true.",
+      description: "The <dialog>. The same element must be in the document while open is true.",
     },
     {
       name: "open",
       type: "boolean",
       required: true,
-      description: "Whether the dialog is open. Set it to false when the dialog starts closing, before any exit motion.",
+      description: "Whether the dialog may be shown. It counts while this is true and it is shown with showModal(), until close().",
     },
   ],
 } as const satisfies ComponentMeta;

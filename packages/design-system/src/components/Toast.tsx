@@ -14,6 +14,7 @@ import {
 import { createPortal } from 'react-dom';
 import { frontModal, subscribeModals } from '../overlay/modalStack';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
+import { isPopoverOpen } from '../overlay/usePopoverSync';
 import { Button, type ButtonRootProps } from './Button';
 import { useDismissLabel } from './dismissLabel';
 import { composeHandlers, cx, useComposedRefs } from './props';
@@ -58,17 +59,8 @@ type ItemContextValue = { toast: ToastRecord; dismiss: () => void };
 
 const ItemContext = createContext<ItemContextValue | null>(null);
 
-function isShown(el: HTMLElement): boolean {
-  try {
-    return el.matches(':popover-open');
-  } catch {
-    // An engine without :popover-open, such as jsdom.
-    return el.hasAttribute('data-popover-open');
-  }
-}
-
 function show(el: HTMLElement): void {
-  if (el.isConnected && !isShown(el)) el.showPopover();
+  if (el.isConnected && !isPopoverOpen(el)) el.showPopover();
 }
 
 /**
@@ -76,12 +68,18 @@ function show(el: HTMLElement): void {
  * anything shown since. Focus inside comes back to where it was.
  */
 function raise(el: HTMLElement): void {
-  if (!el.isConnected) return;
+  keepingFocus(el, () => {
+    if (isPopoverOpen(el)) el.hidePopover();
+    el.showPopover();
+  });
+}
+
+/** Runs `change`, which may hide `el`, and puts focus back where it was inside. */
+function keepingFocus(el: HTMLElement, change: () => void): void {
   const active = el.ownerDocument.activeElement;
   const focused = active instanceof HTMLElement && el.contains(active) ? active : null;
-  if (isShown(el)) el.hidePopover();
-  el.showPopover();
-  focused?.focus({ preventScroll: true });
+  change();
+  if (focused && el.isConnected) focused.focus({ preventScroll: true });
 }
 
 const MODIFIERS = ['alt', 'ctrl', 'meta', 'shift'] as const;
@@ -91,25 +89,28 @@ export function matchesHotkey(event: KeyboardEvent, hotkey: string): boolean {
   const parts = hotkey.split('+').map((part) => part.trim().toLowerCase());
   const key = parts.pop();
   if (!key) return false;
+  // Chrome sends keydown events with no key, such as for an autofill pick.
+  const eventKey = event.key ?? '';
+  const eventCode = event.code ?? '';
   const wanted = new Set(parts.map((part) => (part === 'control' ? 'ctrl' : part)));
   for (const modifier of MODIFIERS) {
     if (event[`${modifier}Key`] !== wanted.has(modifier)) return false;
   }
   // The code too, as Alt changes the key a letter types on macOS.
-  return event.key.toLowerCase() === key || event.code.toLowerCase() === `key${key}`;
+  return eventKey.toLowerCase() === key || eventCode.toLowerCase() === `key${key}`;
 }
 
 function Item<T extends object>({
   toast,
   toaster,
   paused,
-  onEscape,
+  onFocusLost,
   children,
 }: {
   toast: ToastRecord<T>;
   toaster: Toaster<T>;
   paused: boolean;
-  onEscape: () => void;
+  onFocusLost: () => void;
   children: ReactNode;
 }) {
   const [node, setNode] = useState<HTMLLIElement | null>(null);
@@ -118,8 +119,13 @@ function Item<T extends object>({
   const { id, open, duration, version } = toast;
 
   useEffect(() => {
-    if (!present) toaster.remove(id);
-  }, [present, toaster, id]);
+    if (present) return;
+    // Removing the element that has focus sends no blur, so focus is moved
+    // on before it goes.
+    const hadFocus = Boolean(node?.contains(node.ownerDocument.activeElement));
+    toaster.remove(id);
+    if (hadFocus) onFocusLost();
+  }, [present, toaster, id, node, onFocusLost]);
 
   // Time left, kept across pauses. Full again when add() shows it again.
   const remaining = useRef<number>(duration);
@@ -150,7 +156,6 @@ function Item<T extends object>({
         event.preventDefault();
         event.stopPropagation();
         dismiss();
-        onEscape();
       }}
     >
       <ItemContext.Provider value={{ toast: toast as ToastRecord, dismiss }}>{children}</ItemContext.Provider>
@@ -160,7 +165,8 @@ function Item<T extends object>({
 
 /**
  * Where toasts show. Render one near the app root; it renders where you put
- * it, so it inherits the theme there. The toasts sit in a `popover="manual"`
+ * it, so it takes the theme there, and while a modal is open it sits inside
+ * the modal and takes its theme. The toasts sit in a `popover="manual"`
  * element in the top layer, and move into the modal `<dialog>` in front of
  * Todae's modal stack while one is open, as everything outside a modal is
  * inert. Each new toast shows the popover again, in front of overlays opened
@@ -194,6 +200,12 @@ function Region<T extends object = object>({
   const [focused, setFocused] = useState(false);
   const [pageHidden, setPageHidden] = useState(false);
   const expanded = hovered || focused;
+  // Focus can leave without a blur, such as when the focused element is
+  // removed or moved, so it is read again after those.
+  const syncFocused = useCallback(() => {
+    const section = sectionRef.current;
+    setFocused(Boolean(section?.contains(section.ownerDocument.activeElement)));
+  }, []);
 
   // A host element of Todae's own, so it can move into a dialog and back
   // without React noticing; React only renders inside it.
@@ -203,6 +215,8 @@ function Region<T extends object = object>({
     const el = home.ownerDocument.createElement('div');
     el.setAttribute('popover', 'manual');
     el.className = styles.host ?? '';
+    // Marks it as not the dialog's own content when it moves into one.
+    el.setAttribute('data-todae-toast-host', '');
     home.append(el);
     setHost(el);
     return () => {
@@ -222,15 +236,22 @@ function Region<T extends object = object>({
     if (!host || !home) return;
     const place = () => {
       const target = frontModal() ?? home;
-      if (host.parentNode !== target) target.append(host);
-      show(host);
+      keepingFocus(host, () => {
+        if (host.parentNode !== target) target.append(host);
+        show(host);
+      });
+      syncFocused();
     };
     place();
     return subscribeModals(place);
-  }, [host]);
+  }, [host, syncFocused]);
 
-  // A new toast goes in front of overlays shown since the last one.
-  const latest = toasts.reduce((max, toast) => (toast.open ? Math.max(max, toast.version) : max), 0);
+  const shown = toasts.slice(0, limit);
+  const hasOpen = shown.some((toast) => toast.open);
+
+  // A toast that starts showing, new or out of the queue, goes in front of
+  // overlays shown since the last one.
+  const latest = shown.reduce((max, toast) => (toast.open ? Math.max(max, toast.version) : max), 0);
   const raised = useRef(0);
   useLayoutEffect(() => {
     if (!host || latest <= raised.current) return;
@@ -246,9 +267,6 @@ function Region<T extends object = object>({
     doc.addEventListener('visibilitychange', sync);
     return () => doc.removeEventListener('visibilitychange', sync);
   }, []);
-
-  const shown = toasts.slice(0, limit);
-  const hasOpen = shown.some((toast) => toast.open);
 
   // A toast dismissed while it waited never showed, so it has no exit motion.
   useEffect(() => {
@@ -274,12 +292,19 @@ function Region<T extends object = object>({
   const leave = useCallback(() => {
     const target = returnFocus.current;
     returnFocus.current = null;
+    const section = sectionRef.current;
+    const active = section?.ownerDocument.activeElement;
     if (target?.isConnected) target.focus();
-  }, []);
+    // With nowhere to go back to, out of the region rather than lost with
+    // the element about to be removed.
+    else if (active instanceof HTMLElement && section?.contains(active)) active.blur();
+    syncFocused();
+  }, [syncFocused]);
 
-  // After Escape dismisses a toast: back where the hotkey came from when it
-  // was the last one, otherwise to the region, so the keyboard stays here.
-  const afterEscape = useCallback(() => {
+  // A toast with focus is leaving: focus goes to the region while others
+  // remain, so the keyboard stays here, and otherwise back where the hotkey
+  // came from.
+  const afterFocusLost = useCallback(() => {
     const others = toaster.getSnapshot().slice(0, limit).some((toast) => toast.open);
     if (others) sectionRef.current?.focus();
     else leave();
@@ -345,7 +370,7 @@ function Region<T extends object = object>({
             toast={toast}
             toaster={toaster}
             paused={expanded || pageHidden}
-            onEscape={afterEscape}
+            onFocusLost={afterFocusLost}
           >
             {children(toast)}
           </Item>

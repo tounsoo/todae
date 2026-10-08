@@ -2,7 +2,7 @@ import { ToastDemo } from '../../../components/demos/ToastDemo';
 
 # Toast
 
-A short message about something that just happened, which leaves by itself. Toasts live in a store you make with `createToaster()`, so any code can show one, and appear in one `Toast.Region` near the root of your app.
+A short message about something that just happened, which leaves by itself. Toasts live in a store you make with `createToaster()`, so any code can show one, and appear in one `Toast.Region` near the root of your app, which takes the theme where it is rendered.
 
 ```tsx
 // Once, at module scope.
@@ -39,7 +39,7 @@ Todae ships no icons. `Toast.Icon` is a slot for one from your own set, as in [A
 
 The region is a `popover="manual"` element, so it sits in the top layer above the page. A modal `<dialog>` is in the top layer too, and it makes everything outside it inert: a toast outside an open dialog can't be clicked or focused, and screen readers can't find it, even when it is drawn on top. Showing the popover again doesn't change that.
 
-So while a Dialog or BottomSheet is open, the region moves inside it and shows itself again. Toasts shown before the dialog opened and toasts shown while it is open both sit in front of the dialog and its backdrop, and stay usable. When the dialog starts to close, the region moves back. With nested dialogs, it follows the one in front.
+So while a Dialog or BottomSheet is open, the region moves inside it and shows itself again. Toasts shown before the dialog opened and toasts shown while it is open both sit in front of the dialog and its backdrop, and stay usable. When the dialog has closed, the region moves back. While a modal is open, the toasts sit inside it, so they take its theme. With nested dialogs, it follows the one in front.
 
 The region knows about a modal from Todae's modal stack. Dialog and BottomSheet join it by themselves. For a modal `<dialog>` of your own, call [useModalLayer](/utilities/use-modal-layer). Toasts stay inert under a modal that is not in the stack.
 

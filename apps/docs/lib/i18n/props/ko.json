@@ -1175,12 +1175,12 @@
   },
   "useModalLayer": {
     "ref": {
-      "en": "The <dialog>. It must be in the document when open turns true.",
-      "ko": "<dialog> 요소. open이 true가 될 때 문서 안에 있어야 합니다."
+      "en": "The <dialog>. The same element must be in the document while open is true.",
+      "ko": "<dialog> 요소. open이 true인 동안 같은 요소가 문서 안에 있어야 합니다."
     },
     "open": {
-      "en": "Whether the dialog is open. Set it to false when the dialog starts closing, before any exit motion.",
-      "ko": "대화 상자가 열려 있는지 여부. 대화 상자가 닫히기 시작할 때, 퇴장 모션 전에 false로 설정하세요."
+      "en": "Whether the dialog may be shown. It counts while this is true and it is shown with showModal(), until close().",
+      "ko": "대화 상자가 보일 수 있는지 여부. 이 값이 true이고 showModal()로 열려 있는 동안, close()까지 스택에 있습니다."
     }
   },
   "usePopover": {
