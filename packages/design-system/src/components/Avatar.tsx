@@ -74,44 +74,25 @@ function Image({ src, srcSet, ref, onLoad, onError, className, ...props }: Avata
   const { setStatus } = useAvatar('Image');
   const own = useRef<HTMLImageElement>(null);
   const refs = useComposedRefs(own, ref);
-  // Set by a load or error event, which always wins over the probe below.
-  const settled = useRef(false);
-
   // A new source starts over. An image that finished before React attached
   // its handlers, such as one from the cache before hydration, may get no
   // load event, so it is read from the element: a natural width means it
   // loaded. A width of 0 is either a broken image or an SVG with no intrinsic
-  // size: a second request for the same source, served from the cache, tells
-  // them apart by its own load or error event, unless an event on the image
-  // settles it first. No source at all is a failure, so the fallback stays.
+  // size, so the source is set again: the element loads it once more, from the
+  // cache or the network, and its own load or error event decides. No source at
+  // all is a failure, so the fallback stays.
   useLayoutEffect(() => {
     const img = own.current!;
-    let current = true;
-    let cancel: (() => void) | undefined;
-    settled.current = false;
     if (!src && !srcSet) setStatus('error');
     else if (!img.complete) setStatus('loading');
     else if (img.naturalWidth > 0) setStatus('loaded');
     else {
       setStatus('loading');
-      // Same request settings as the image, so the probe gets the same answer.
-      const probe = new window.Image();
-      probe.crossOrigin = img.crossOrigin;
-      probe.referrerPolicy = img.referrerPolicy;
-      probe.onload = () => current && !settled.current && setStatus('loaded');
-      probe.onerror = () => current && !settled.current && setStatus('error');
-      probe.src = img.currentSrc || img.src;
-      cancel = () => {
-        probe.onload = probe.onerror = null;
-        probe.removeAttribute('src');
-      };
+      if (img.hasAttribute('src')) img.src = img.getAttribute('src')!;
+      else img.srcset = img.getAttribute('srcset')!;
     }
-    return () => {
-      current = false;
-      cancel?.();
-      setStatus('idle');
-    };
-  }, [src, srcSet, props.crossOrigin, props.referrerPolicy, setStatus]);
+    return () => setStatus('idle');
+  }, [src, srcSet, setStatus]);
 
   return (
     <img
@@ -121,12 +102,10 @@ function Image({ src, srcSet, ref, onLoad, onError, className, ...props }: Avata
       srcSet={srcSet || undefined}
       alt=""
       onLoad={(event) => {
-        settled.current = true;
         setStatus('loaded');
         onLoad?.(event);
       }}
       onError={(event) => {
-        settled.current = true;
         setStatus('error');
         onError?.(event);
       }}

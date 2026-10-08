@@ -1,6 +1,7 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Avatar } from './Avatar';
+import { StrictMode } from 'react';
 
 afterEach(cleanup);
 
@@ -110,33 +111,25 @@ describe('Avatar', () => {
   });
 
   describe('an image already complete when its effect runs', () => {
-    // The probe request Avatar.Image makes for an image with no width.
-    let probes: { src: string; onload: (() => void) | null; onerror: (() => void) | null }[] = [];
-    const resolve = () => probes.at(-1)!.onload!();
-    const reject = () => probes.at(-1)!.onerror!();
+    let srcSets: string[] = [];
+    let srcsetSets: string[] = [];
     function stub(naturalWidth: number) {
-      probes = [];
+      srcSets = [];
+      srcsetSets = [];
       vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
       vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(naturalWidth);
-      vi.stubGlobal(
-        'Image',
-        class {
-          src = '';
-          removeAttribute(name: string) {
-            if (name === 'src') this.src = '';
-          }
-          onload: (() => void) | null = null;
-          onerror: (() => void) | null = null;
-          constructor() {
-            probes.push(this);
-          }
-        },
-      );
+      const src = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src')!;
+      vi.spyOn(HTMLImageElement.prototype, 'src', 'set').mockImplementation(function (this: HTMLImageElement, value) {
+        srcSets.push(value);
+        src.set!.call(this, value);
+      });
+      const srcset = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'srcset')!;
+      vi.spyOn(HTMLImageElement.prototype, 'srcset', 'set').mockImplementation(function (this: HTMLImageElement, value) {
+        srcsetSets.push(value);
+        srcset.set!.call(this, value);
+      });
     }
-    afterEach(() => {
-      vi.restoreAllMocks();
-      vi.unstubAllGlobals();
-    });
+    afterEach(() => vi.restoreAllMocks());
     const tree = (src = 'ada.svg') => (
       <Avatar.Root label="Ada" data-testid="a">
         <Avatar.Image src={src} data-testid="img" />
@@ -145,54 +138,41 @@ describe('Avatar', () => {
     );
     const status = () => screen.getByTestId('a').getAttribute('data-status');
 
-    it('is loaded at once with a natural width, without a probe', () => {
+    it('is loaded at once with a natural width, without loading again', () => {
       stub(64);
       render(tree());
       expect(status()).toBe('loaded');
-      expect(probes).toHaveLength(0);
+      // Only React's own set when it creates the element.
+      expect(srcSets).toEqual(['ada.svg']);
     });
 
-    it('probes one with no width: an SVG with no intrinsic size loads', () => {
+    it('sets the source again when it has no width, and lets the image decide: an SVG loads', () => {
       stub(0);
       render(tree());
       expect(status()).toBe('loading');
-      expect(probes.at(-1)!.src).toContain('ada.svg');
-      act(() => resolve());
+      // React's set, then the one that loads it again.
+      expect(srcSets).toEqual(['ada.svg', 'ada.svg']);
+      fireEvent.load(screen.getByTestId('img'));
       expect(status()).toBe('loaded');
     });
 
-    it('makes the probe request the way the image does, and drops it on unmount', () => {
-      stub(0);
-      const { unmount } = render(
-        <Avatar.Root label="Ada">
-          <Avatar.Image src="https://cdn.example/ada.svg" crossOrigin="anonymous" />
-        </Avatar.Root>,
-      );
-      const probe = probes.at(-1) as unknown as { crossOrigin: string; onload: unknown };
-      expect(probe.crossOrigin).toBe('anonymous');
-      unmount();
-      expect(probe.onload).toBeNull();
-    });
-
-    it('probes one with no width: a broken image keeps the fallback', () => {
+    it('keeps the fallback when the image fails again', () => {
       stub(0);
       render(tree());
-      act(() => reject());
+      fireEvent.error(screen.getByTestId('img'));
       expect(status()).toBe('error');
       expect(screen.getByText('AL')).toBeTruthy();
     });
 
-    it('lets a load or error event on the image win over a later probe result', () => {
+    it('sets srcset again when there is no src', () => {
       stub(0);
-      render(tree());
-      fireEvent.load(screen.getByTestId('img'));
-      act(() => reject());
-      expect(status()).toBe('loaded');
-      cleanup();
-      render(tree());
-      fireEvent.error(screen.getByTestId('img'));
-      act(() => resolve());
-      expect(status()).toBe('error');
+      render(
+        <Avatar.Root label="Ada" data-testid="a">
+          <Avatar.Image srcSet="ada.png 1x, ada@2x.png 2x" />
+        </Avatar.Root>,
+      );
+      expect(srcsetSets).toEqual(['ada.png 1x, ada@2x.png 2x', 'ada.png 1x, ada@2x.png 2x']);
+      expect(status()).toBe('loading');
     });
 
     it('decides again from the element when src changes after an event', () => {
@@ -201,13 +181,21 @@ describe('Avatar', () => {
       fireEvent.load(screen.getByTestId('img'));
       rerender(tree('two.svg'));
       expect(status()).toBe('loading');
-      act(() => resolve());
+      fireEvent.error(screen.getByTestId('img'));
+      expect(status()).toBe('error');
+    });
+
+    it('settles under StrictMode', () => {
+      stub(0);
+      render(<StrictMode>{tree()}</StrictMode>);
+      expect(status()).toBe('loading');
+      fireEvent.load(screen.getByTestId('img'));
       expect(status()).toBe('loaded');
     });
   });
 
   it('loads from srcSet alone, and does not throw where images cannot load', () => {
-    // jsdom calls an image with no src complete with no width, and never loads the probe.
+    // jsdom calls an image with no src complete with no width, and never loads it.
     render(
       <Avatar.Root label="Ada" data-testid="a">
         <Avatar.Image srcSet="ada.png 1x, ada@2x.png 2x" data-testid="img" />
