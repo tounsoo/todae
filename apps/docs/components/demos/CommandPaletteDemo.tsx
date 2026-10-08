@@ -11,7 +11,8 @@ const COMMANDS: ComboboxOption[] = [
   { value: 'sign-out', label: 'Sign out' },
 ];
 
-export function CommandPalette() {
+/** `onRun` lets tests count runs; the page renders it without props. */
+export function CommandPalette({ onRun }: { onRun?: (value: string) => void } = {}) {
   const [ran, setRan] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   // Filled only when nothing had focus at open (Safari does not focus a clicked button).
@@ -22,14 +23,19 @@ export function CommandPalette() {
     presentation: 'sheet',
     // Controlled at null, so running a command never leaves a selection behind.
     value: null,
+    // Only while open: the closing palette stays live, so a second Enter or click would run it again.
     onChange: (value: string | null) => {
-      if (value) setRan(COMMANDS.find((command) => command.value === value)?.label ?? value);
+      if (!value || !cb.open) return;
+      setRan(COMMANDS.find((command) => command.value === value)?.label ?? value);
+      onRun?.(value);
     },
     inputValue: query,
     onInputValueChange: setQuery,
     // Each time it opens, start from the full list with the top row active.
     onOpenChange: (open) => {
       if (!open) return;
+      // Reopened while still closing: focus is inside, so keep the query and the focus target.
+      if (cb.inputRef.current?.closest('dialog')?.contains(document.activeElement)) return;
       setQuery('');
       cb.highlight(null);
       returnFocusRef.current = document.activeElement === document.body ? cb.triggerRef.current : null;

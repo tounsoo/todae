@@ -135,3 +135,36 @@ it('hides the empty list when nothing matches', async () => {
   await userEvent.keyboard('zzz');
   await expect.poll(() => screen.queryByRole('listbox')).toBeNull();
 });
+
+it('runs a command once, even when a second Enter or click lands while it closes', async () => {
+  const runs: string[] = [];
+  render(
+    <Providers>
+      <CommandPalette onRun={(value) => runs.push(value)} />
+    </Providers>,
+  );
+  await userEvent.keyboard('{Control>}k{/Control}');
+  await screen.findByRole('combobox', { name: 'Command' });
+  await userEvent.keyboard('{Enter}{Enter}');
+  // Still closing, so the option is still there to click.
+  expect(dialogOpen()).toBe(true);
+  screen.getByRole('option', { name: 'Create invoice' }).click();
+  await expect.poll(dialogOpen).toBe(false);
+  expect(runs).toEqual(['new-invoice']);
+});
+
+it('keeps the query and the focus target when reopened while closing', async () => {
+  renderPalette();
+  const trigger = screen.getByRole('button', { name: 'Search commands' });
+  (document.activeElement as HTMLElement | null)?.blur();
+  trigger.click();
+  const input = (await screen.findByRole('combobox', { name: 'Command' })) as HTMLInputElement;
+  await userEvent.keyboard('b');
+  await userEvent.keyboard('{Escape}');
+  expect(press({ key: 'k', code: 'KeyK', ctrlKey: true })).toBe(false);
+  await new Promise(requestAnimationFrame);
+  expect(input.value).toBe('b');
+  await userEvent.keyboard('{Escape}');
+  await expect.poll(dialogOpen).toBe(false);
+  expect(document.activeElement).toBe(trigger);
+});
