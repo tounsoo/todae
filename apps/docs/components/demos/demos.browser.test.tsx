@@ -112,7 +112,7 @@ describe('docs demos under axe, no matches', () => {
   });
 });
 
-const OVERLAY_DEMOS = new Set(['BottomSheetDemo.tsx', 'DialogDemo.tsx', 'DrawerDemo.tsx', 'PopoverDemo.tsx', 'ComboboxDemo.tsx', 'MenuDemo.tsx']);
+const OVERLAY_DEMOS = new Set(['BottomSheetDemo.tsx', 'DialogDemo.tsx', 'DrawerDemo.tsx', 'PopoverDemo.tsx', 'ComboboxDemo.tsx', 'MenuDemo.tsx', 'CommandPaletteDemo.tsx']);
 
 async function openFirstOverlay(container: HTMLElement) {
   const scope = within(container);

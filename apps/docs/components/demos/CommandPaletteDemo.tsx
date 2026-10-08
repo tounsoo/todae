@@ -13,6 +13,7 @@ const COMMANDS: ComboboxOption[] = [
 
 export function CommandPalette() {
   const [ran, setRan] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
   const cb = useCombobox({
     options: COMMANDS,
     presentation: 'sheet',
@@ -21,12 +22,20 @@ export function CommandPalette() {
     onChange: (value: string | null) => {
       if (value) setRan(COMMANDS.find((command) => command.value === value)?.label ?? value);
     },
+    inputValue: query,
+    onInputValueChange: setQuery,
+    // Each time it opens, start from the full list.
+    onOpenChange: (open) => {
+      if (open) setQuery('');
+    },
   });
   const { setOpen } = cb;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      if (event.defaultPrevented || event.isComposing) return;
+      // event.code names the physical key, so the shortcut works on any keyboard layout.
+      if ((event.metaKey || event.ctrlKey) && event.code === 'KeyK') {
         event.preventDefault();
         setOpen(true);
       }
@@ -40,13 +49,7 @@ export function CommandPalette() {
       <Button.Root {...cb.getTriggerProps()} variant="secondary" aria-keyshortcuts="Control+K Meta+K">
         Search commands
       </Button.Root>
-      <Dialog.Root
-        open={cb.open}
-        onOpenChange={(next, reason) => cb.setOpen(next, reason)}
-        initialFocusRef={cb.inputRef}
-        restoreFocusRef={cb.triggerRef}
-        aria-label="Commands"
-      >
+      <Dialog.Root open={cb.open} onOpenChange={setOpen} initialFocusRef={cb.inputRef} aria-label="Commands">
         <Field.Root id={cb.ids.input} aria-label="Command">
           <Field.TextInput {...cb.getInputProps()} placeholder="Type a command" />
         </Field.Root>
@@ -55,7 +58,9 @@ export function CommandPalette() {
             <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
           ))}
         </OptionList.Root>
-        {cb.isEmpty ? <Text tone="muted">No matching commands.</Text> : null}
+        <Text tone="muted" role="status">
+          {cb.isEmpty ? 'No matching commands.' : ''}
+        </Text>
       </Dialog.Root>
       <Text size="s" tone="muted" role="status">
         {ran ? `Ran: ${ran}` : 'Press Ctrl+K or ⌘K, or use the button.'}

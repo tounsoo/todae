@@ -10,10 +10,13 @@ afterEach(cleanup);
 function renderPalette() {
   render(
     <Providers>
+      <button type="button">Elsewhere</button>
       <CommandPalette />
     </Providers>,
   );
 }
+
+const options = () => screen.getAllByRole('option').map((option) => option.textContent);
 
 it('opens with Ctrl+K, filters, runs the highlighted command, and returns focus', async () => {
   renderPalette();
@@ -23,11 +26,28 @@ it('opens with Ctrl+K, filters, runs the highlighted command, and returns focus'
   const input = await screen.findByRole('combobox', { name: 'Command' });
   expect(document.activeElement).toBe(input);
   await userEvent.keyboard('bill');
-  await expect.poll(() => screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Open billing settings']);
+  await expect.poll(options).toEqual(['Open billing settings']);
   await userEvent.keyboard('{ArrowDown}{Enter}');
   await expect.poll(() => screen.getByRole('status').textContent).toBe('Ran: Open billing settings');
   await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
   expect(document.activeElement).toBe(trigger);
+
+  // Reopening starts from an empty query and the full list.
+  await userEvent.keyboard('{Meta>}k{/Meta}');
+  const again = await screen.findByRole('combobox', { name: 'Command' });
+  expect((again as HTMLInputElement).value).toBe('');
+  await expect.poll(options).toHaveLength(5);
+});
+
+it('returns focus to where it was when opened with the shortcut', async () => {
+  renderPalette();
+  const elsewhere = screen.getByRole('button', { name: 'Elsewhere' });
+  elsewhere.focus();
+  await userEvent.keyboard('{Control>}k{/Control}');
+  await screen.findByRole('combobox', { name: 'Command' });
+  await userEvent.keyboard('{Escape}');
+  await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
+  expect(document.activeElement).toBe(elsewhere);
 });
 
 it('closes on Escape and says when nothing matches', async () => {
@@ -35,7 +55,7 @@ it('closes on Escape and says when nothing matches', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Search commands' }));
   await screen.findByRole('combobox', { name: 'Command' });
   await userEvent.keyboard('zzz');
-  await expect.poll(() => screen.queryByText('No matching commands.')).not.toBeNull();
+  await expect.poll(() => screen.getByText('No matching commands.').getAttribute('role')).toBe('status');
   await userEvent.keyboard('{Escape}');
   await expect.poll(() => screen.queryByRole('dialog')).toBeNull();
 });

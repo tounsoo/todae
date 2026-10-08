@@ -4,7 +4,7 @@ import { CommandPalette } from '../../../../components/demos/CommandPaletteDemo'
 
 패키지 네임스페이스가 아니라 레시피입니다. [Dialog](/dialog)가 팔레트를 담고, [useCombobox](/utilities/use-combobox)가 입력, 필터링, 활성 옵션, id를 맡습니다. `CommandPalette.*` export는 없습니다.
 
-입력과 목록을 한 모달 화면에 함께 두는 `sheet` 표시 방식을 쓰고, 열림 상태를 `BottomSheet.Root` 대신 `Dialog.Root`에 연결하세요. `value`를 `null`로 두고 `onChange`에서 명령을 실행하면, 명령을 골라도 선택된 것이 남지 않습니다.
+입력과 목록을 한 모달 화면에 함께 두는 `sheet` 표시 방식을 쓰고, 열림 상태를 `BottomSheet.Root` 대신 `Dialog.Root`에 연결하세요. `value`를 `null`로 두고 `onChange`에서 명령을 실행하면, 명령을 골라도 선택된 것이 남지 않습니다. 입력 텍스트를 제어하고 팔레트가 열릴 때 비우면, 검색이 매번 전체 목록에서 시작합니다.
 
 ```tsx
 const cb = useCombobox({
@@ -12,18 +12,15 @@ const cb = useCombobox({
   presentation: 'sheet',
   value: null,
   onChange: (value: string | null) => { if (value) run(value) },
+  inputValue: query,
+  onInputValueChange: setQuery,
+  onOpenChange: (open) => { if (open) setQuery('') },
 })
 
 <Button.Root {...cb.getTriggerProps()} aria-keyshortcuts="Control+K Meta+K">
   Search commands
 </Button.Root>
-<Dialog.Root
-  open={cb.open}
-  onOpenChange={(next, reason) => cb.setOpen(next, reason)}
-  initialFocusRef={cb.inputRef}
-  restoreFocusRef={cb.triggerRef}
-  aria-label="Commands"
->
+<Dialog.Root open={cb.open} onOpenChange={cb.setOpen} initialFocusRef={cb.inputRef} aria-label="Commands">
   <Field.Root id={cb.ids.input} aria-label="Command">
     <Field.TextInput {...cb.getInputProps()} placeholder="Type a command" />
   </Field.Root>
@@ -32,6 +29,7 @@ const cb = useCombobox({
       <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
     ))}
   </OptionList.Root>
+  <Text role="status">{cb.isEmpty ? 'No matching commands.' : ''}</Text>
 </Dialog.Root>
 ```
 
@@ -39,7 +37,7 @@ const cb = useCombobox({
   <CommandPalette />
 </Example>
 
-단축키는 `document`의 `keydown` 리스너로, Ctrl+K나 ⌘K에서 `cb.setOpen(true)`를 호출합니다. 트리거의 `aria-keyshortcuts`가 보조 기술에 단축키를 알려 줍니다. Escape나 배경 클릭으로 대화 상자가 닫히고, 포커스는 트리거로 돌아갑니다.
+단축키는 `document`의 `keydown` 리스너로, Ctrl+K나 ⌘K에서 `cb.setOpen(true)`를 호출합니다. 물리적인 키를 나타내는 `event.code`를 확인하므로 어떤 키보드 배열에서도 동작합니다. 트리거의 `aria-keyshortcuts`가 보조 기술에 단축키를 알려 줍니다. Escape나 배경 클릭으로 대화 상자가 닫히고, 포커스는 팔레트가 열릴 때 포커스가 있던 요소로 돌아갑니다. 빈 결과 메시지는 `role="status"` 영역에 있어 스크린 리더가 읽어 줍니다.
 
 ## 언제 쓰나요
 
