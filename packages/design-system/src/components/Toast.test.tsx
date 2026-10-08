@@ -342,7 +342,7 @@ describe('useModalLayer', () => {
     expect(heldModals()).toHaveLength(0);
   });
 
-  it('holds a dialog of your own while open and shown modally', async () => {
+  it('holds a dialog of your own from open and showModal() until close()', async () => {
     function Own({ open }: { open: boolean }) {
       const ref = useRef<HTMLDialogElement>(null);
       useModalLayer(ref, open);
@@ -359,9 +359,12 @@ describe('useModalLayer', () => {
     expect(heldModals()).toHaveLength(0);
     dialog.showModal();
     await act(async () => undefined);
+    // Still shown, so the page is still inert: it stays until close().
     rerender(<Own open={false} />);
-    expect(heldModals()).toHaveLength(0);
+    expect(heldModals()).toEqual([dialog]);
     dialog.close();
+    await act(async () => undefined);
+    expect(heldModals()).toHaveLength(0);
   });
 });
 

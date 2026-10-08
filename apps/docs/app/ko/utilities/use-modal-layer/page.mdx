@@ -18,7 +18,7 @@ function YourDialog({ open, onClose, children }) {
 }
 ```
 
-대화 상자는 `open`이 true이고 `showModal()`로 열려 있는 동안, `close()`까지 스택에 있습니다. 둘의 순서는 상관없습니다. 모달 `<dialog>`는 자기 바깥의 모든 것을 inert로 만들므로, [Toast.Region](/toast)은 맨 앞의 모달 안으로 토스트를 옮겨 계속 쓸 수 있게 합니다. 이 훅이 없으면 토스트는 직접 만든 대화 상자 아래에서 inert로 남습니다.
+대화 상자는 `open`이 true이고 `showModal()`로 열리면 스택에 들어가고, `open`이 false가 된 뒤에도 `close()`까지 남습니다. 둘의 순서는 상관없습니다. 모달 `<dialog>`는 자기 바깥의 모든 것을 inert로 만들므로, [Toast.Region](/toast)은 맨 앞의 모달 안으로 토스트를 옮겨 계속 쓸 수 있게 합니다. 이 훅이 없으면 토스트는 직접 만든 대화 상자 아래에서 inert로 남습니다.
 
 ## 언제 쓰나요
 

@@ -1175,8 +1175,8 @@
       "ko": "<dialog> 요소."
     },
     "open": {
-      "en": "Whether the dialog may be shown. It counts while this is true and it is shown with showModal(), until close().",
-      "ko": "대화 상자가 보일 수 있는지 여부. 이 값이 true이고 showModal()로 열려 있는 동안, close()까지 스택에 있습니다."
+      "en": "Whether the dialog may be shown. It joins once this is true and it is shown with showModal(), and stays until close().",
+      "ko": "대화 상자가 보일 수 있는지 여부. 이 값이 true이고 showModal()로 열리면 스택에 들어가고, close()까지 남습니다."
     }
   },
   "usePopover": {

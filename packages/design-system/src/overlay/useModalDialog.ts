@@ -83,11 +83,15 @@ export function useModalDialog({
   // goes back to the toast once the page is no longer inert. An owner that
   // unmounts the element as it leaves, as BottomSheet does, has it removed
   // first; Toast.Region puts focus back then.
+  const presentRef = useRef(present);
+  presentRef.current = present;
   useLayoutEffect(() => {
     const el = dialogRef.current;
     if (!present || !el) return;
     return () => {
-      if (!el.open) return;
+      // Only at the end of the exit: not when the element is replaced, nor at
+      // StrictMode's pretend unmount.
+      if (presentRef.current || !el.open) return;
       const active = el.ownerDocument.activeElement;
       const toast = active instanceof HTMLElement && inToastHostWithin(active, el) ? active : null;
       el.close();
@@ -95,7 +99,7 @@ export function useModalDialog({
       dropModal(el);
       toast.focus({ preventScroll: true });
     };
-  }, [dialogRef, present]);
+  }, [dialogRef, present, node]);
 
   // In the stack from showModal() until close() at the end of the exit
   // motion, while the page is still inert. Toasts moved in stay usable, and

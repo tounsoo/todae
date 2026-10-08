@@ -149,6 +149,8 @@
     inset-block-end: 100%;
   }
 
+  /* None past the toast farthest from the edge, where it would cover the page. */
+  .item:last-child::after,
   .region[data-layout='stack']:not([data-expanded]) .item::after {
     content: none;
   }

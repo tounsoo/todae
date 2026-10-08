@@ -354,6 +354,43 @@ describe('Toast with a modal dialog', () => {
     expect(receivesPointer(undo)).toBe(true);
   });
 
+  it('keeps toasts inside a dialog of your own until it closes after open turns false', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    // As on the useModalLayer page: close() runs in an effect after open turns false.
+    function Own({ open }: { open: boolean }) {
+      const ref = useRef<HTMLDialogElement>(null);
+      useModalLayer(ref, open);
+      useEffect(() => {
+        if (open) ref.current?.showModal();
+        else ref.current?.close();
+      }, [open]);
+      return (
+        <dialog ref={ref} aria-label="Own">
+          <p>Own</p>
+        </dialog>
+      );
+    }
+    function Page() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Themed>
+          <Button.Root onClick={() => setOpen(true)}>Open own</Button.Root>
+          <Own open={open} />
+          <ClosingRegion toaster={toaster} onClose={() => setOpen(false)} />
+        </Themed>
+      );
+    }
+    render(<Page />);
+    const opener = screen.getByRole('button', { name: 'Open own' });
+    await userEvent.click(opener);
+    const dialog = screen.getByRole('dialog', { name: 'Own' }) as HTMLDialogElement;
+    const action = await closeFromToast(toaster, dialog);
+    await waitFor(() => expect(dialog.open).toBe(false));
+    await waitFor(() => expect(dialog.contains(action)).toBe(false));
+    // close() returns focus to the opener, as natively, not to the page.
+    await waitFor(() => expect(document.activeElement).toBe(opener));
+  });
+
   it('stays in front of a dialog of your own that is shown again', async () => {
     const toaster = createToaster({ duration: Infinity });
     function Own() {
@@ -556,6 +593,9 @@ describe('Toast in the top layer', () => {
     expect(newer!.top - older!.bottom).toBeGreaterThan(0);
     const hit = document.elementFromPoint(newer!.left + newer!.width / 2, y);
     expect(screen.getByRole('region').contains(hit)).toBe(true);
+    // Nothing past the farthest toast covers the page.
+    const above = document.elementFromPoint(older!.left + older!.width / 2, older!.top - 2);
+    expect(screen.getByRole('region').contains(above)).toBe(false);
   });
 
   it('keeps timing the others after a mouse click dismisses one', async () => {
