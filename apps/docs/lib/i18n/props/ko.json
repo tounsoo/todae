@@ -989,8 +989,8 @@
       "ko": "한 번에 보여 줄 토스트 수. 그 뒤에 추가된 토스트는 차례를 기다립니다."
     },
     "hotkey": {
-      "en": "Key that moves focus to the toasts, such as \"F8\" or \"Alt+T\". null turns it off.",
-      "ko": "토스트로 포커스를 옮기는 키. 예: \"F8\", \"Alt+T\". null이면 끕니다."
+      "en": "Key that moves focus to the toasts, such as \"F8\" or \"Alt+T\". Modifiers are Alt (or Option), Ctrl, Meta (or Cmd) and Shift. null turns it off.",
+      "ko": "토스트로 포커스를 옮기는 키. 예: \"F8\", \"Alt+T\". 조합 키는 Alt(Option), Ctrl, Meta(Cmd), Shift입니다. null이면 끕니다."
     },
     "aria-label": {
       "en": "Name of the region landmark. The default is English, so pass a name in your app's language.",

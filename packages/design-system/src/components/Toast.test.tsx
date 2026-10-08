@@ -509,6 +509,8 @@ describe('matchesHotkey', () => {
     expect(matchesHotkey(key({ key: '†', code: 'KeyT', altKey: true }), 'Option+T')).toBe(true);
     expect(matchesHotkey(key({ key: 'k', code: 'KeyK' }), 'Hyper+K')).toBe(false);
     expect(matchesHotkey(key({ key: 'k', code: 'KeyK', metaKey: true }), 'Hyper+K')).toBe(false);
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK' }), 'Constructor+K')).toBe(false);
+    expect(matchesHotkey(key({ key: '†', code: 'KeyT', altKey: true }), 'Opt+T')).toBe(true);
   });
 
   it('ignores a keydown with no key, as Chrome sends for an autofill pick', () => {

@@ -43,7 +43,7 @@ export const meta = {
       type: "string | null",
       required: false,
       default: "\"F8\"",
-      description: "Key that moves focus to the toasts, such as \"F8\" or \"Alt+T\". null turns it off.",
+      description: "Key that moves focus to the toasts, such as \"F8\" or \"Alt+T\". Modifiers are Alt (or Option), Ctrl, Meta (or Cmd) and Shift. null turns it off.",
     },
     {
       name: "aria-label",

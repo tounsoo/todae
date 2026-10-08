@@ -45,7 +45,10 @@ export type ToastRegionProps<T extends object = object> = {
   layout?: ToastLayout;
   /** How many toasts show at once. Later ones wait their turn. */
   limit?: number;
-  /** Key that moves focus to the toasts, such as `"F8"` or `"Alt+T"`. `null` turns it off. */
+  /**
+   * Key that moves focus to the toasts, such as `"F8"` or `"Alt+T"`. Modifiers
+   * are Alt (or Option), Ctrl, Meta (or Cmd) and Shift. `null` turns it off.
+   */
   hotkey?: string | null;
   'aria-label'?: string;
 } & Omit<ComponentPropsWithRef<'section'>, 'children'>;
@@ -142,17 +145,17 @@ const MODIFIERS = ['alt', 'ctrl', 'meta', 'shift'] as const;
 type Modifier = (typeof MODIFIERS)[number];
 
 // The names people write for each modifier, such as macOS's Cmd and Option.
-const MODIFIER_NAMES: Record<string, Modifier> = {
-  alt: 'alt',
-  option: 'alt',
-  opt: 'alt',
-  ctrl: 'ctrl',
-  control: 'ctrl',
-  meta: 'meta',
-  cmd: 'meta',
-  command: 'meta',
-  shift: 'shift',
-};
+const MODIFIER_NAMES = new Map<string, Modifier>([
+  ['alt', 'alt'],
+  ['option', 'alt'],
+  ['opt', 'alt'],
+  ['ctrl', 'ctrl'],
+  ['control', 'ctrl'],
+  ['meta', 'meta'],
+  ['cmd', 'meta'],
+  ['command', 'meta'],
+  ['shift', 'shift'],
+]);
 
 /**
  * The key and modifiers of a hotkey such as "Alt+T", or null when it names a
@@ -164,7 +167,7 @@ function parseHotkey(hotkey: string): { key: string; modifiers: ReadonlySet<Modi
   if (!key) return null;
   const modifiers = new Set<Modifier>();
   for (const part of parts) {
-    const modifier = MODIFIER_NAMES[part];
+    const modifier = MODIFIER_NAMES.get(part);
     if (!modifier) return null;
     modifiers.add(modifier);
   }
@@ -490,6 +493,9 @@ function Region<T extends object = object>({
     if (!hotkey || !hasOpen) return;
     const doc = homeRef.current?.ownerDocument;
     if (!doc) return;
+    if (process.env.NODE_ENV !== 'production' && !parseHotkey(hotkey)) {
+      console.error(`Todae: Toast.Region hotkey "${hotkey}" names a key or modifier it doesn't know, so it is off.`);
+    }
     const onKey = (event: KeyboardEvent) => {
       const section = sectionRef.current;
       // Not a key something else handled, an IME composing, or a held key.
