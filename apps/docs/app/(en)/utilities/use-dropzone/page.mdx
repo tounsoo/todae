@@ -18,7 +18,7 @@ const zone = useDropzone({
 </label>
 ```
 
-Files from a drop or a pick go through the same checks: `accept` (a `.ext` rule matches the file name, other rules match the file's MIME type), `maxSize`, `minSize`, and the file count. The picker filters by `accept` but a drop does not, so the hook checks dropped files itself. Dropped folders are skipped. `onFiles` gets the files that passed and a `{ file, reasons }` entry for each one that did not. Without `multiple`, only the first passing file is taken. After the checks, the input holds only the accepted files. `onFiles` also runs with two empty lists when the picker returns no files.
+The browser's picker applies `accept`; the hook checks dropped files against it (a `.ext` rule matches the file name, other rules match the file's MIME type). Files from a drop or a pick are checked against `maxSize`, `minSize` and the file count. Dropped folders are skipped. `onFiles` gets the files that passed and a `{ file, reasons }` entry for each one that did not. Without `multiple`, only the first passing file is taken. After the checks, the input holds only the accepted files.
 
 `dragging` is true while files are dragged over the target, and the target carries `data-dragging` for CSS. Drags that carry no files, such as selected text, are left to the browser.
 

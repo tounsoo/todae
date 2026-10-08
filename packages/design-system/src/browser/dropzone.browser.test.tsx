@@ -39,17 +39,17 @@ describe('useDropzone in a browser', () => {
   });
 
   it('puts only accepted picked files back in the input', () => {
-    render(<Upload accept="image/*" multiple />);
+    render(<Upload multiple maxSize={3} />);
     const input = screen.getByTestId('input') as HTMLInputElement;
     const picked = new DataTransfer();
     picked.items.add(new File(['png'], 'a.png', { type: 'image/png' }));
-    picked.items.add(new File(['txt'], 'b.txt', { type: 'text/plain' }));
+    picked.items.add(new File(['too big'], 'b.txt', { type: 'text/plain' }));
     input.files = picked.files;
     input.dispatchEvent(new Event('change', { bubbles: true }));
     expect([...input.files].map((f) => f.name)).toEqual(['a.png']);
   });
 
-  it('skips dropped folders', async () => {
+  it('skips dropped folders', () => {
     const onFiles = vi.fn();
     render(<Upload onFiles={onFiles} />);
     const png = new File(['png'], 'a.png', { type: 'image/png' });

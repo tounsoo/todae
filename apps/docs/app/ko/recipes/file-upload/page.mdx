@@ -14,6 +14,7 @@ const zone = useDropzone({
   multiple: true,
   maxFiles: 3,
   maxSize: 2_000_000,
+  minSize: 1,
   onFiles: (accepted, rejected) => {
     setFiles(accepted)
     setRejected(rejected)

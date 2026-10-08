@@ -9,7 +9,7 @@ export type FileRejection = {
 };
 
 export type UseDropzoneOptions = {
-  /** File types to take, in the input's accept syntax: '.pdf', 'image/*', 'application/json', comma separated. Checked on drop too. */
+  /** File types to take, in the input's accept syntax: '.pdf', 'image/*', 'application/json', comma separated. The picker applies it; the hook checks dropped files against it. */
   accept?: string;
   /** Take more than one file. */
   multiple?: boolean;
@@ -87,14 +87,15 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
   const [dragging, setDragging] = useState(false);
   const active = dragging && !disabled;
 
-  const take = (files: readonly File[]) => {
+  /** Picked files skip the accept check: the picker already applied it, with OS type rules the hook can't see. */
+  const take = (files: readonly File[], checkType: boolean) => {
     const { maxSize, minSize, maxFiles, onFiles } = options;
     const limit = multiple ? (maxFiles ?? Infinity) : 1;
     const accepted: File[] = [];
     const rejected: FileRejection[] = [];
     for (const file of files) {
       const reasons: FileRejectionReason[] = [];
-      if (!acceptsFile(file, accept)) reasons.push('type');
+      if (checkType && !acceptsFile(file, accept)) reasons.push('type');
       if (maxSize !== undefined && file.size > maxSize) reasons.push('too-large');
       if (minSize !== undefined && file.size < minSize) reasons.push('too-small');
       if (reasons.length === 0 && accepted.length >= limit) reasons.push('too-many');
@@ -131,6 +132,11 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
       // Enabled, the browser picks the effect from the source's effectAllowed.
       event.preventDefault();
       if (disabled) event.dataTransfer.dropEffect = 'none';
+      // Picks up a drag that was already over the zone when it was enabled.
+      else if (depth.current === 0) {
+        depth.current = 1;
+        setDragging(true);
+      }
     },
     onDragLeave: (event) => {
       // Not gated on disabled, so a drag that started enabled still ends.
@@ -144,7 +150,7 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
       endDrag();
       if (disabled) return;
       const files = droppedFiles(event.dataTransfer);
-      if (files.length > 0) take(files);
+      if (files.length > 0) take(files, true);
     },
     ...(active ? { 'data-dragging': '' as const } : {}),
   });
@@ -155,7 +161,7 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
     accept,
     multiple,
     disabled,
-    onChange: (event) => take(Array.from(event.currentTarget.files ?? [])),
+    onChange: (event) => take(Array.from(event.currentTarget.files ?? []), false),
   });
 
   return { dragging: active, getRootProps, getInputProps };

@@ -1463,8 +1463,8 @@
   },
   "useDropzone": {
     "accept": {
-      "en": "File types to take, in the input's accept syntax: '.pdf', 'image/*', 'application/json', comma separated. Checked on drop too.",
-      "ko": "받을 파일 형식. 입력의 accept 문법으로 쉼표로 나눠 적습니다: '.pdf', 'image/*', 'application/json'. 드롭할 때도 확인합니다."
+      "en": "File types to take, in the input's accept syntax: '.pdf', 'image/*', 'application/json', comma separated. The picker applies it; the hook checks dropped files against it.",
+      "ko": "받을 파일 형식. 입력의 accept 문법으로 쉼표로 나눠 적습니다: '.pdf', 'image/*', 'application/json'. 선택기가 적용하고, 드롭한 파일은 훅이 확인합니다."
     },
     "disabled": {
       "en": "Turn off the input and drops.",

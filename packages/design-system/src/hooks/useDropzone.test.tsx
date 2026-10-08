@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as api from '../index';
 import { acceptsFile, useDropzone, type UseDropzoneOptions } from './useDropzone';
@@ -72,12 +72,23 @@ describe('useDropzone', () => {
     expect(onFiles).toHaveBeenCalledWith([a], [{ file: b, reasons: ['too-many'] }]);
   });
 
-  it('checks files picked through the input', () => {
+  it('leaves the type of picked files to the picker, but checks their size', () => {
     const onFiles = vi.fn();
-    render(<Zone accept="image/*" onFiles={onFiles} />);
-    const wrong = file('a.txt', 'text/plain');
-    fireEvent.change(screen.getByTestId('input'), { target: { files: [wrong] } });
-    expect(onFiles).toHaveBeenCalledWith([], [{ file: wrong, reasons: ['type'] }]);
+    render(<Zone accept="text/csv" multiple maxSize={100} onFiles={onFiles} />);
+    const csv = file('report.csv', 'application/vnd.ms-excel');
+    const big = file('big.csv', 'text/csv', 200);
+    fireEvent.change(screen.getByTestId('input'), { target: { files: [csv, big] } });
+    expect(onFiles).toHaveBeenCalledWith([csv], [{ file: big, reasons: ['too-large'] }]);
+  });
+
+  it('shows dragging for a drag already over the zone when it is enabled', () => {
+    const { rerender } = render(<Zone disabled />);
+    const zone = screen.getByTestId('zone');
+    fireEvent.dragEnter(zone, drag([]));
+    rerender(<Zone />);
+    expect(zone.hasAttribute('data-dragging')).toBe(false);
+    fireEvent.dragOver(zone, drag([]));
+    expect(zone.hasAttribute('data-dragging')).toBe(true);
   });
 
   it('shows dragging across child elements and clears it on leave or drop', () => {
@@ -97,7 +108,7 @@ describe('useDropzone', () => {
     expect(dragging()).toBe('false');
   });
 
-  it('reports an empty pick, so app state follows a cleared input', () => {
+  it('reports a pick that leaves the input empty', () => {
     const onFiles = vi.fn();
     render(<Zone onFiles={onFiles} />);
     fireEvent.change(screen.getByTestId('input'), { target: { files: [] } });
@@ -141,9 +152,7 @@ describe('useDropzone', () => {
     expect(fireEvent.dragOver(zone, over)).toBe(false);
     expect(over.dataTransfer.dropEffect).toBe('none');
     expect(screen.getByTestId('dragging').textContent).toBe('false');
-    act(() => {
-      fireEvent.drop(zone, drag([file('a.txt', 'text/plain')]));
-    });
+    fireEvent.drop(zone, drag([file('a.txt', 'text/plain')]));
     expect(onFiles).not.toHaveBeenCalled();
   });
 });
