@@ -32,10 +32,10 @@
     --todae-avatar-size: var(--todae-avatar-size-lg);
   }
 
-  /* The image covers the fallback once it loads; until then it draws nothing
-     over it. A failed image is hidden, keeping its box so nothing shifts.
-     Only the failure is hidden, so a server-rendered image shows as soon as
-     it loads, before hydration. */
+  /* The image covers the fallback once it loads. While a source loads, such
+     as a new src replacing an old one, and when it fails, the image is
+     hidden, keeping its box so nothing shifts. Before hydration the status is
+     idle, so a server-rendered image shows as soon as it loads. */
   .image {
     position: absolute;
     inset: 0;
@@ -44,7 +44,7 @@
     object-fit: cover;
   }
 
-  .root[data-status='error'] > .image {
+  .root:is([data-status='loading'], [data-status='error']) > .image {
     visibility: hidden;
   }
 

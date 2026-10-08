@@ -59,6 +59,28 @@ describe('Avatar in a browser', () => {
     expect(await violations()).toEqual([]);
   });
 
+  it('hides the old image while a new src loads, so the fallback shows', async () => {
+    const other =
+      'data:image/svg+xml,' +
+      encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="blue"/></svg>');
+    const tree = (src: string) => (
+      <Themed>
+        <Avatar.Root data-testid="root">
+          <Avatar.Image src={src} data-testid="img" />
+          <Avatar.Fallback>AL</Avatar.Fallback>
+        </Avatar.Root>
+      </Themed>
+    );
+    const { rerender } = render(tree(PIXEL));
+    await waitFor(() => expect(screen.getByTestId('root').getAttribute('data-status')).toBe('loaded'));
+    rerender(tree(other));
+    expect(screen.getByTestId('root').getAttribute('data-status')).toBe('loading');
+    expect(getComputedStyle(screen.getByTestId('img')).visibility).toBe('hidden');
+    expect(screen.getByText('AL')).toBeTruthy();
+    await waitFor(() => expect(screen.getByTestId('root').getAttribute('data-status')).toBe('loaded'));
+    expect(getComputedStyle(screen.getByTestId('img')).visibility).toBe('visible');
+  });
+
   it('reads an image that loaded before hydration, an SVG with no intrinsic size included', async () => {
     // Only a viewBox: some engines report a natural width of 0 for it.
     const viewBoxOnly =
