@@ -126,7 +126,6 @@ const ko: Dictionary = {
     tools: '도구',
   },
   links: {
-    '/recipes/chip-list': '오버플로를 처리하는 Chip list',
     '/composition': '조합',
     '/tokens': '토큰',
     '/guides/build-on-todae': 'Todae로 디자인 시스템 만들기',

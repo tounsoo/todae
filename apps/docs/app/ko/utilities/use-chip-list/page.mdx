@@ -2,7 +2,7 @@ import { ChipListDemo } from '../../../../components/demos/ChipListDemo';
 
 # useChipList
 
-`useChipList`는 칩 한 줄을 측정해 어떤 칩이 `maxRows` 안에 들어가고 어떤 칩이 `+N` 개수로 접히는지 정합니다. 마크업은 갖지 않습니다. [Chip list with overflow](/recipes/chip-list) 레시피에 복사할 목록, 줄 제한 CSS, 포커스 처리가 있습니다. `Field.ChipInput`도 같은 훅으로 만들어졌으며, `reserveWidth`로 입력 자리를 확보합니다.
+`useChipList`는 칩 한 줄을 측정해 어떤 칩이 `maxRows` 안에 들어가고 어떤 칩이 `+N` 개수로 접히는지 정합니다. 마크업은 갖지 않습니다. [ChipList](/chip-list)와 `Field.ChipInput`이 이 훅으로 만들어졌고, `Field.ChipInput`은 `reserveWidth`로 입력 자리를 확보합니다.
 
 감싸는 목록에 `listRef`를 두고, 측정용 행은 `measureRef`에 렌더링하세요. 서버는 항상 측정 전 상태로 렌더링하므로, `measured`가 될 때까지 목록을 숨기세요.
 
@@ -12,9 +12,9 @@ import { ChipListDemo } from '../../../../components/demos/ChipListDemo';
 
 ## 언제 쓰나요
 
-**언제:** 적용된 필터, 읽기 전용 태그, 수신자처럼 텍스트 필드 밖의 칩을 `maxRows`로 제한하고 +N 개수를 보일 때. 보이는/숨긴 칩 구분은 `useChipList`로 하고, 목록은 [레시피](/recipes/chip-list)를 따라 만드세요.
+**언제:** [ChipList](/chip-list)가 맞지 않아, `maxRows`로 제한하고 +N 개수를 보이는 칩의 마크업을 직접 만들 때. 보이는/숨긴 칩 구분은 `useChipList`가 하고, 목록과 줄 제한 CSS, 포커스 처리는 직접 만듭니다.
 
-**쓰지 않을 때:** 새 칩 입력 → `Field.ChipInput`(이미 이 훅으로 만들어져 있습니다). 옵션에서 고르기 → [Combobox 레시피](/recipes/combobox). 선택하거나 토글하는 칩 → Checkbox / Button.Root. 칩 하나 → `Chip.Root`. 칩 추가/제거 상태 → [useChipField](/utilities/use-chip-field).
+**쓰지 않을 때:** 적용된 필터, 읽기 전용 태그, 수신자 → [ChipList](/chip-list). 새 칩 입력 → `Field.ChipInput`(이미 이 훅으로 만들어져 있습니다). 옵션에서 고르기 → [Combobox 레시피](/recipes/combobox). 선택하거나 토글하는 칩 → Checkbox / Button.Root. 칩 하나 → `Chip.Root`. 칩 추가/제거 상태 → [useChipField](/utilities/use-chip-field).
 
 ## Props
 

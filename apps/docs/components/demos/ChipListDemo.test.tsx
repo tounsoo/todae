@@ -14,6 +14,15 @@ const ROW =
 const GAP = 'var(--todae-space-inline-gap)';
 const PAD = 'calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset))';
 
+// The built stylesheet's rules that name one of el's classes.
+function rulesFor(el: HTMLElement) {
+  const css = readFileSync(require.resolve('@tounsoo/todae/todae.css'), 'utf8');
+  return css
+    .split('}')
+    .filter((part) => [...el.classList].some((cls) => new RegExp(`\\.${cls}(?![\\w-])`).test(part)))
+    .join('}');
+}
+
 function rect(width: number, height = 24) {
   return { width, height, top: 0, left: 0, bottom: height, right: width, x: 0, y: 0, toJSON() {} };
 }
@@ -165,20 +174,37 @@ describe('chip list recipe', () => {
       const view = render(<ChipListDemo maxRows={maxRows} />);
       const list = view.getByRole('list', { name: 'Tags' });
       const wrapper = list.parentElement as HTMLElement;
-      expect(wrapper.style.overflow).toBe('hidden');
-      expect(wrapper.style.padding).toBe(PAD);
-      expect(wrapper.style.margin).toBe(`calc(${PAD} * -1)`);
-      expect(wrapper.style.minHeight).toBe(`calc(${ROW} + 2 * ${PAD})`);
-      expect(wrapper.style.maxHeight).toBe(`calc(${ROW} * ${maxRows} + ${GAP} * ${maxRows - 1} + 2 * ${PAD})`);
+      expect(wrapper.hasAttribute('data-rows')).toBe(true);
+      expect(wrapper.style.getPropertyValue('--_rows')).toBe(String(maxRows));
       expect(list.style.overflow).toBe('');
       expect(list.style.maxHeight).toBe('');
-      expect(list.style.minHeight).toBe(ROW);
       expect(removes(list)).toHaveLength(visibleCount);
       expect(live(view.container, '[data-overflow]')[0]?.textContent).toContain(more);
       const truncated = [...list.children].filter((el) => (el as HTMLElement).style.maxWidth !== '');
       expect(truncated).toEqual([]);
       view.unmount();
     }
+  });
+
+  it('clips to maxRows in the wrapper, leaving room for focus rings', () => {
+    render(<ChipListDemo maxRows={2} initialChips={EIGHT} />);
+    const list = screen.getByRole('list', { name: 'Tags' });
+    // The built stylesheet is minified: no space after a colon.
+    const clip = rulesFor(list.parentElement as HTMLElement);
+    expect(clip).toContain('overflow:hidden');
+    expect(clip).toContain('padding:var(--_pad)');
+    expect(clip).toContain('margin:calc(var(--_pad) * -1)');
+    expect(clip).toContain('min-block-size:calc(var(--_row) + 2 * var(--_pad))');
+    expect(clip).toContain(
+      'max-block-size:calc(var(--_row) * var(--_rows) + var(--_gap) * (var(--_rows) - 1) + 2 * var(--_pad))',
+    );
+    // Custom properties keep their own whitespace, so compare without any.
+    const bare = (text: string) => text.replace(/\s+/g, '');
+    const root = bare(rulesFor(list.parentElement!.parentElement as HTMLElement));
+    expect(root).toContain(bare(`--_row:${ROW}`));
+    expect(root).toContain(bare(`--_gap:${GAP}`));
+    expect(root).toContain(bare(`--_pad:${PAD}`));
+    expect(rulesFor(list)).toContain('min-block-size:var(--_row)');
   });
 
   it('makes every list child a listitem, including +N', () => {
@@ -361,7 +387,6 @@ describe('chip list recipe', () => {
       fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
     });
     const dialog = screen.getByRole('dialog', { name: '5 more tags' });
-    expect(dialog.classList.contains('chip-list-panel')).toBe(true);
     expect(dialog.tabIndex).toBe(-1);
     expect(dialog.querySelector('button')).toBeNull();
     expect(document.activeElement).toBe(dialog);
@@ -619,9 +644,7 @@ describe('chip list recipe', () => {
     expect(document.activeElement).toBe(list);
     expect(document.activeElement).not.toBe(document.body);
     expect(list.tabIndex).toBe(-1);
-    expect(list.style.minHeight).toBe(ROW);
-    expect(list.style.outline).toContain('--todae-chip-ring-focus');
-    expect(list.style.outlineOffset).toBe('var(--todae-chip-ring-offset)');
+    expect(list.hasAttribute('data-ring')).toBe(true);
     expect(list.childElementCount).toBe(0);
     expect(list.textContent).toBe('');
     expect(document.querySelector('[inert][aria-hidden]')).not.toBeNull();
@@ -633,14 +656,13 @@ describe('chip list recipe', () => {
     const list = screen.getByRole('list', { name: 'Tags' });
     expect(list.isConnected).toBe(true);
     expect(list.tabIndex).toBe(-1);
-    expect(list.style.minHeight).toBe(ROW);
     expect(list.textContent).toBe('');
     act(() => {
       list.focus();
     });
     expect(document.activeElement).toBe(list);
-    expect(list.style.outline).toContain('--todae-chip-ring-focus');
-    expect(list.style.outlineOffset).toBe('var(--todae-chip-ring-offset)');
+    expect(list.hasAttribute('data-ring')).toBe(true);
+    expect(rulesFor(list)).toContain('outline:var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus)');
   });
 
   function mockSoakWidths() {
@@ -672,17 +694,17 @@ describe('chip list recipe', () => {
     render(<ChipListDemo maxRows={1} initialChips={['Alpha', 'Beta', 'Gamma']} readOnly />);
     const readOnlyList = screen.getByRole('list', { name: 'Tags' });
     const labels = [...readOnlyList.querySelectorAll<HTMLElement>('[role="listitem"]')]
-      .filter((item) => !item.querySelector('button.chip-list-more'))
+      .filter((item) => !item.querySelector('button[aria-haspopup]'))
       .map((item) => item.textContent);
     expect(labels).toEqual(['Alpha']);
   });
 
   it('server-renders the list hidden until measured', () => {
     const html = renderToString(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
-    expect(html).toContain('visibility:hidden');
+    expect(html).toContain('data-measuring=""');
     expect(html).toContain('tabindex="-1"');
     expect(html).toContain('aria-hidden="true"');
     expect(html).toContain('inert');
-    expect(html).not.toContain('chip-list-more');
+    expect(html).not.toContain('aria-haspopup');
   });
 });

@@ -1,0 +1,44 @@
+import { ChipListDemo } from '../../../components/demos/ChipListDemo';
+
+# ChipList
+
+칩을 `maxRows` 줄까지 보여 주고 나머지는 +N 버튼으로 접는 목록입니다. +N을 누르면 접힌 칩이 담긴 팝오버가 열립니다. 목록 이름은 `aria-label`이나 `aria-labelledby`로 붙이세요.
+
+`onRemove`를 주면 칩마다 제거 버튼이 생깁니다. 칩을 제거하면 포커스는 그 자리를 채운 칩으로, 없으면 앞 칩으로, 그것도 없으면 목록으로 옮겨 갑니다.
+
+## 한 줄 / 두 줄
+
+<Example>
+  <ChipListDemo maxRows={1} />
+</Example>
+
+<Example>
+  <ChipListDemo maxRows={2} />
+</Example>
+
+## 읽기 전용
+
+<Example>
+  <ChipListDemo maxRows={1} readOnly />
+</Example>
+
+```tsx
+<ChipList.Root
+  aria-label="Tags"
+  chips={tags}
+  maxRows={1}
+  onRemove={(index) => setTags((current) => current.filter((_, i) => i !== index))}
+/>
+```
+
+팝오버에서 마지막 칩에서 Tab을 누르면 +N 다음 컨트롤로 가고, 첫 칩에서 Shift+Tab을 누르면 +N으로 돌아가며, Escape를 누르면 팝오버가 닫히고 +N으로 돌아갑니다.
+
+## 언제 쓰나요
+
+**언제:** 적용된 필터, 읽기 전용 태그, 수신자처럼 텍스트 필드 밖의 칩을 `maxRows`로 제한하고 +N 개수를 보일 때.
+
+**쓰지 않을 때:** 새 칩 입력 → `Field.ChipInput`. 옵션에서 고르기 → [Combobox 레시피](/recipes/combobox). 선택하거나 토글하는 칩 → Checkbox / Button.Root. 칩 하나 → `Chip.Root`. 접기 둘레의 마크업을 직접 만들 때 → [useChipList](/utilities/use-chip-list).
+
+## Props
+
+<PropsTable name="ChipList.Root" />

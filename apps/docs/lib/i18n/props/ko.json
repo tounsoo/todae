@@ -275,6 +275,32 @@
       "ko": "닫기를 비활성화합니다."
     }
   },
+  "ChipList.Root": {
+    "chips": {
+      "en": "Chip labels, in order.",
+      "ko": "칩 레이블, 순서대로."
+    },
+    "maxRows": {
+      "en": "Rows to show before folding the rest into +N. Without it, every chip wraps onto as many rows as it needs.",
+      "ko": "나머지를 +N으로 접기 전에 보여 줄 줄 수. 없으면 모든 칩이 필요한 만큼 줄을 바꿔 놓입니다."
+    },
+    "onRemove": {
+      "en": "Renders a remove button on each chip. Focus moves to the chip that takes its place.",
+      "ko": "칩마다 제거 버튼을 렌더링합니다. 포커스는 그 자리를 채운 칩으로 옮겨 갑니다."
+    },
+    "dismissLabel": {
+      "en": "Remove button name. Default is Remove {value}.",
+      "ko": "제거 버튼의 이름. 기본값은 Remove {value}입니다."
+    },
+    "overflowLabel": {
+      "en": "+N button name. Default is {n} more.",
+      "ko": "+N 버튼의 이름. 기본값은 {n} more입니다."
+    },
+    "panelLabel": {
+      "en": "Name of the popover with the folded chips. Default is {n} more.",
+      "ko": "접힌 칩이 담긴 팝오버의 이름. 기본값은 {n} more입니다."
+    }
+  },
   "Description": {
     "id": {
       "en": "Id the author lists in aria-describedby on the control or Field.Root.",

@@ -1,0 +1,125 @@
+@layer todae.components {
+  .root {
+    --_row: calc(
+      var(--todae-chip-font-size) * var(--todae-chip-leading) + 2 * var(--todae-chip-padding-y) + 2 *
+        var(--todae-chip-border-width)
+    );
+    --_gap: var(--todae-space-inline-gap);
+    --_pad: calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
+
+    position: relative;
+    min-inline-size: 0;
+  }
+
+  /* Clips the rows past maxRows. Its padding leaves room for focus rings, so they are never cut. */
+  .clip {
+    overflow: hidden;
+    padding: var(--_pad);
+    margin: calc(var(--_pad) * -1);
+    min-block-size: calc(var(--_row) + 2 * var(--_pad));
+  }
+
+  .clip[data-rows] {
+    max-block-size: calc(var(--_row) * var(--_rows) + var(--_gap) * (var(--_rows) - 1) + 2 * var(--_pad));
+  }
+
+  .list {
+    position: relative;
+    inline-size: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: var(--_gap);
+    min-block-size: var(--_row);
+  }
+
+  .list > * {
+    flex: none;
+  }
+
+  /* Hidden until the first measure, so chips never flash past the row limit. */
+  .list[data-measuring] {
+    visibility: hidden;
+  }
+
+  .list:focus {
+    outline: none;
+  }
+
+  .list[data-ring] {
+    outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
+    outline-offset: var(--todae-chip-ring-offset);
+  }
+
+  /* useChipList reads this row: every chip at its full width, on one line. */
+  .measure {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    inline-size: 100%;
+    display: flex;
+    visibility: hidden;
+    pointer-events: none;
+    block-size: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* Doubled class: wins over Chip's own max-width wherever the stylesheets land. */
+  .measure.measure > * {
+    flex: none;
+    max-width: none;
+  }
+
+  .more {
+    display: inline-flex;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .more:focus-visible {
+    outline: none;
+  }
+
+  /* +N takes the chip hover colors while hovered or open. */
+  .more:hover [data-overflow],
+  .more[aria-expanded='true'] [data-overflow] {
+    background: var(--todae-chip-bg-hover);
+    color: var(--todae-chip-fg-hover);
+    border-color: var(--todae-chip-border-hover);
+  }
+
+  .more:focus-visible [data-overflow] {
+    outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
+    outline-offset: var(--todae-chip-ring-offset);
+  }
+
+  .panel {
+    flex-wrap: wrap;
+    gap: var(--_gap, var(--todae-space-inline-gap));
+    width: max-content;
+    max-width: min(18rem, calc(100vw - 32px));
+  }
+
+  .panel:popover-open {
+    display: flex;
+  }
+
+  .panel:focus {
+    outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
+    outline-offset: var(--todae-chip-ring-offset);
+  }
+
+  .panel[data-parked]:focus {
+    outline: none;
+  }
+
+  .panelChip {
+    min-width: 0;
+  }
+}

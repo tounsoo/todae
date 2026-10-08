@@ -1,52 +1,43 @@
-import { ChipListDemo } from '../../../../components/demos/ChipListDemo';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ComponentPropsWithRef,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
+import { useChipList } from '../hooks/useChipList';
+import { usePopover } from '../hooks/usePopover';
+import { Chip } from './Chip';
+import { Popover } from './Popover';
+import styles from './ChipList.module.css';
 
-# Chip list with overflow
+/**
+ * A read-only or removable list of chips that folds the ones past `maxRows`
+ * into a +N button. +N opens a popover with the rest. Name the list with
+ * `aria-label` or `aria-labelledby`.
+ */
+export type ChipListRootProps = {
+  chips: readonly string[];
+  /** Rows to show before folding the rest into +N. Without it, every chip wraps onto as many rows as it needs. */
+  maxRows?: number;
+  /** Renders a remove button on each chip. */
+  onRemove?: (index: number, value: string) => void;
+  /** Remove button name. Default is Remove {value}. */
+  dismissLabel?: (value: string) => string;
+  /** +N button name. Default is {n} more. */
+  overflowLabel?: (n: number) => string;
+  /** Name of the popover with the folded chips. Default is {n} more. */
+  panelLabel?: (n: number) => string;
+} & Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-A recipe, not a package export. [useChipList](/utilities/use-chip-list) measures and decides which chips fit. `Chip.Root` owns the look. The code below owns the markup, list semantics, clamp CSS, and focus.
-
-This recipe is the exception to [Composition](/composition)'s thin-glue rule: it carries hard behavior of its own (focus management, Tab handling, ARIA wiring and panel positioning). It is planned to become a component. Until then, copy it as a stopgap and restyle it through tokens. Leave its behavior alone, along with the measure row's styles that useChipList reads and the clamp height that has to agree with `maxRows`.
-
-## One row / Two rows
-
-<Example>
-  <ChipListDemo maxRows={1} />
-</Example>
-
-<Example>
-  <ChipListDemo maxRows={2} />
-</Example>
-
-## Read-only
-
-<Example>
-  <ChipListDemo maxRows={1} readOnly />
-</Example>
-
-## Code
-
-```tsx
-const ROW =
-  'calc(var(--todae-chip-font-size) * var(--todae-chip-leading) + 2 * var(--todae-chip-padding-y) + 2 * var(--todae-chip-border-width))';
-const GAP = 'var(--todae-space-inline-gap)';
-const PAD = 'calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset))';
-const MEASURE: CSSProperties = {
-  position: 'absolute',
-  insetInline: 0,
-  top: 0,
-  width: '100%',
-  display: 'flex',
-  visibility: 'hidden',
-  pointerEvents: 'none',
-  height: 0,
-  overflow: 'hidden',
-  whiteSpace: 'nowrap',
-};
-const CHIP: CSSProperties = { flex: 'none' };
-const MEASURE_CHIP: CSSProperties = { flex: 'none', maxWidth: 'none' };
 const PANEL_GAP = 4;
 const PANEL_INSET = 16;
 
-function placeChipPanel(trigger: HTMLElement, panel: HTMLElement) {
+// Keeps the panel 16px inside the viewport and flips it above +N when
+// there is no room below.
+function placePanel(trigger: HTMLElement, panel: HTMLElement) {
   const vw = document.documentElement.clientWidth;
   const vh = document.documentElement.clientHeight;
   if (vw <= 0 || vh <= 0) return null;
@@ -65,11 +56,13 @@ function placeChipPanel(trigger: HTMLElement, panel: HTMLElement) {
   if (top + rect.height > vh) top = Math.max(0, vh - rect.height);
   return { top, left, maxWidth };
 }
+
 const TABBABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])';
 
 type Pending = { where: 'list' | 'popover' | 'popover-empty'; slot?: number };
 
+// The next tabbable control after +N, skipping its own panel.
 function focusAfter(el: HTMLElement | null) {
   if (!el) return;
   const panel = document.getElementById(el.getAttribute('aria-controls') ?? '');
@@ -81,6 +74,8 @@ function focusAfter(el: HTMLElement | null) {
   (next ?? el).focus();
 }
 
+// Calls onLost when it unmounts holding focus, such as a chip in the panel
+// that moves back to the row.
 function HoldFocus({ onLost, children }: { onLost: () => void; children: ReactNode }) {
   const ref = useRef<HTMLSpanElement>(null);
   const lost = useRef(onLost);
@@ -100,41 +95,47 @@ function HoldFocus({ onLost, children }: { onLost: () => void; children: ReactNo
   );
 }
 
+// The remove buttons of the chips in the row, in order.
 function chipButtons(list: HTMLElement): HTMLElement[] {
   return [...list.children].flatMap((item) => {
-    const button = item.querySelector<HTMLElement>('button[aria-label^="Remove"]');
+    const button = item.hasAttribute('data-value') ? item.querySelector<HTMLElement>('button') : null;
     return button ? [button] : [];
   });
 }
 
-function ChipList({
-  label,
+function Root({
   chips,
   maxRows,
   onRemove,
-}: {
-  label: string;
-  chips: readonly string[];
-  maxRows: number;
-  onRemove?: (index: number) => void;
-}) {
+  dismissLabel,
+  overflowLabel,
+  panelLabel = (n) => `${n} more`,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledby,
+  className,
+  style,
+  ...props
+}: ChipListRootProps) {
   const { listRef, measureRef, measured, visible, hidden } = useChipList({ chips, maxRows });
   const [open, setOpen] = useState(false);
   const [panelBox, setPanelBox] = useState<{ top: number; left: number; maxWidth: number } | null>(null);
   const [ring, setRing] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
+  // Focus is parked on the list or panel while a removal re-measures, so it
+  // never falls to the body.
   const parked = useRef(false);
   const pending = useRef<Pending | null>(null);
   const moved = useRef<string | null>(null);
   const hiddenNow = useRef(0);
   hiddenNow.current = hidden;
 
+  // A focused chip moved from the panel back to the row: focus follows it.
   useLayoutEffect(() => {
     const value = moved.current;
     const list = listRef.current;
     const button =
-      value && list
-        ? [...list.querySelectorAll('button')].find((el) => el.getAttribute('aria-label') === `Remove ${value}`)
+      value !== null && list
+        ? [...list.children].find((item) => item.getAttribute('data-value') === value)?.querySelector('button')
         : undefined;
     if (hidden === 0 && open) {
       moved.current = null;
@@ -143,7 +144,7 @@ function ChipList({
       setOpen(false);
       return;
     }
-    if (!value) return;
+    if (value === null) return;
     moved.current = null;
     parked.current = false;
     (button ?? moreRef.current)?.focus({ preventScroll: true });
@@ -164,7 +165,7 @@ function ChipList({
     const panel = popover.popoverRef.current;
     if (!trigger || !panel) return;
     const apply = () => {
-      const next = placeChipPanel(trigger, panel);
+      const next = placePanel(trigger, panel);
       if (!next) return;
       setPanelBox((prev) =>
         prev && prev.top === next.top && prev.left === next.left && prev.maxWidth === next.maxWidth ? prev : next,
@@ -179,6 +180,8 @@ function ChipList({
     };
   }, [shown, popover.popoverRef, tail.length]);
 
+  // After a removal re-measures: the chip that now fills the slot, else the
+  // previous one, else the list.
   useLayoutEffect(() => {
     if (!pending.current) return;
     queueMicrotask(() => {
@@ -186,7 +189,7 @@ function ChipList({
       pending.current = null;
       parked.current = false;
       const panel = popover.popoverRef.current;
-      if (panel) panel.style.outline = '';
+      panel?.removeAttribute('data-parked');
       if (!job) return;
       const list = listRef.current;
       if (job.where === 'list' && list) {
@@ -215,13 +218,16 @@ function ChipList({
     });
   }, [chips, listRef, popover.popoverRef]);
 
+  const hasHidden = hidden > 0;
   useEffect(() => {
-    if (!open || hidden === 0) return;
+    if (!open || !hasHidden) return;
     const panel = popover.popoverRef.current;
     const button = panel?.querySelector('button');
     (button ?? panel)?.focus({ preventScroll: true });
-  }, [open, popover.popoverRef]);
+  }, [open, hasHidden, popover.popoverRef]);
 
+  // Tab past either end of the panel closes it: forward continues after +N,
+  // backward returns to +N.
   useEffect(() => {
     if (!open || hidden === 0) return;
     function onKey(event: globalThis.KeyboardEvent) {
@@ -241,21 +247,21 @@ function ChipList({
   }, [hidden, open, popover.popoverRef]);
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div {...props} className={[styles.root, className].filter(Boolean).join(' ')} style={style}>
       <div
-        style={{
-          overflow: 'hidden',
-          padding: PAD,
-          margin: `calc(${PAD} * -1)`,
-          minHeight: `calc(${ROW} + 2 * ${PAD})`,
-          maxHeight: `calc(${ROW} * ${maxRows} + ${GAP} * ${maxRows - 1} + 2 * ${PAD})`,
-        }}
+        className={styles.clip}
+        data-rows={maxRows != null ? '' : undefined}
+        style={maxRows != null ? ({ '--_rows': maxRows } as CSSProperties) : undefined}
       >
         <div
           ref={listRef}
           role="list"
-          aria-label={label}
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabelledby}
           tabIndex={-1}
+          className={styles.list}
+          data-measuring={measured ? undefined : ''}
+          data-ring={ring ? '' : undefined}
           onFocus={(event) => {
             if (event.target !== event.currentTarget || parked.current) return;
             setRing(true);
@@ -263,31 +269,21 @@ function ChipList({
           onBlur={(event) => {
             if (event.target === event.currentTarget) setRing(false);
           }}
-          style={{
-            width: '100%',
-            position: 'relative',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignContent: 'flex-start',
-            gap: GAP,
-            minHeight: ROW,
-            visibility: measured ? undefined : 'hidden',
-            outline: ring ? 'var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus)' : undefined,
-            outlineOffset: ring ? 'var(--todae-chip-ring-offset)' : undefined,
-          }}
         >
           {visible.map((chip, index) => (
             <Chip.Root
               key={chip.key}
               role="listitem"
-              style={{ ...CHIP, ...(chip.ellipsis ? { maxWidth: chip.maxWidth } : {}) }}
+              data-value={chip.value}
+              dismissLabel={dismissLabel?.(chip.value)}
+              style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
               onDismiss={
                 onRemove
                   ? () => {
                       parked.current = true;
                       pending.current = { where: 'list', slot: index };
                       listRef.current?.focus();
-                      onRemove(index);
+                      onRemove(index, chip.value);
                     }
                   : undefined
               }
@@ -297,33 +293,31 @@ function ChipList({
           ))}
           {hidden > 0 ? (
             <span role="listitem">
-              <button type="button" className="chip-list-more" {...popover.getTriggerProps({ ref: moreRef })}>
-                <Chip.Overflow overflowCount={hidden} overflowLabel={(n) => `+${n} more`} />
+              <button type="button" className={styles.more} {...popover.getTriggerProps({ ref: moreRef })}>
+                <Chip.Overflow overflowCount={hidden} overflowLabel={overflowLabel} />
               </button>
             </span>
           ) : null}
         </div>
       </div>
-      <div ref={measureRef} aria-hidden inert style={MEASURE}>
+      <div ref={measureRef} aria-hidden inert className={styles.measure}>
         {chips.map((value, index) => (
-          <Chip.Root key={index} style={MEASURE_CHIP} onDismiss={onRemove ? () => undefined : undefined}>
+          <Chip.Root key={index} onDismiss={onRemove ? () => undefined : undefined}>
             {value}
           </Chip.Root>
         ))}
-        <Chip.Root style={MEASURE_CHIP} onDismiss={onRemove ? () => undefined : undefined}>
-          …
-        </Chip.Root>
-        <Chip.Overflow style={MEASURE_CHIP} overflowCount={chips.length || 1} />
+        <Chip.Root onDismiss={onRemove ? () => undefined : undefined}>…</Chip.Root>
+        <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
       </div>
       {open || hidden > 0 ? (
         <Popover.Root
           {...wire}
           role="dialog"
-          aria-label={`${hidden} more ${hidden === 1 ? 'tag' : 'tags'}`}
-          className="chip-list-panel"
+          aria-label={panelLabel(hidden)}
+          className={styles.panel}
           style={{
             ...wire.style,
-            maxWidth: panelBox?.maxWidth ?? 'min(18rem, calc(100vw - 32px))',
+            maxWidth: panelBox?.maxWidth,
             positionTryFallbacks: panelBox ? 'none' : undefined,
             top: panelBox?.top,
             left: panelBox?.left,
@@ -338,29 +332,31 @@ function ChipList({
                 listRef.current?.focus({ preventScroll: true });
               }}
             >
-            <Chip.Root
-              style={{ maxWidth: '100%', minWidth: 0 }}
-              onDismiss={
-                onRemove
-                  ? () => {
-                      parked.current = true;
-                      const panel = popover.popoverRef.current;
-                      if (hidden > 1) {
-                        pending.current = { where: 'popover', slot: index };
-                        if (panel) panel.style.outline = 'none';
-                        panel?.focus();
-                      } else {
-                        pending.current = { where: 'popover-empty' };
-                        listRef.current?.focus();
-                        setOpen(false);
+              <Chip.Root
+                className={styles.panelChip}
+                dismissLabel={dismissLabel?.(value)}
+                onDismiss={
+                  onRemove
+                    ? () => {
+                        parked.current = true;
+                        const panel = popover.popoverRef.current;
+                        const at = chips.length - hidden + index;
+                        if (hidden > 1) {
+                          pending.current = { where: 'popover', slot: index };
+                          panel?.setAttribute('data-parked', '');
+                          panel?.focus();
+                        } else {
+                          pending.current = { where: 'popover-empty' };
+                          listRef.current?.focus();
+                          setOpen(false);
+                        }
+                        onRemove(at, value);
                       }
-                      onRemove(chips.length - hidden + index);
-                    }
-                  : undefined
-              }
-            >
-              {value}
-            </Chip.Root>
+                    : undefined
+                }
+              >
+                {value}
+              </Chip.Root>
             </HoldFocus>
           ))}
         </Popover.Root>
@@ -368,57 +364,5 @@ function ChipList({
     </div>
   );
 }
-```
 
-```css
-.chip-list-more {
-  display: inline-flex;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-.chip-list-more:focus-visible { outline: none; }
-.chip-list-more:hover [data-overflow],
-.chip-list-more[aria-expanded='true'] [data-overflow] {
-  background-image: linear-gradient(var(--todae-color-bg-highlight), var(--todae-color-bg-highlight));
-}
-.chip-list-more:focus-visible [data-overflow] {
-  outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
-  outline-offset: var(--todae-chip-ring-offset);
-}
-.chip-list-panel {
-  flex-wrap: wrap;
-  gap: var(--todae-space-inline-gap);
-  width: max-content;
-  max-width: min(18rem, calc(100vw - 32px));
-}
-.chip-list-panel:popover-open {
-  display: flex;
-}
-.chip-list-panel:focus {
-  outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
-  outline-offset: var(--todae-chip-ring-offset);
-}
-[role='list']:focus-visible {
-  outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
-  outline-offset: var(--todae-chip-ring-offset);
-}
-```
-
-## How it works
-
-- **Measure row contract** (both hosts): every chip, then a "…" probe chip, then `Chip.Overflow` with `overflowCount={chips.length || 1}`, rendered into `measureRef`, `inert` and `aria-hidden`. Measure chips are `max-width: none`, so a chip wider than the row reports its real width. Chips in the row must match live chips (same dismiss button). The probe stays so the measurer can skip the last two children; its width is not a floor. A row always keeps the first chip, truncated to the space left by `+N`.
-- `listRef` goes on the wrapping list; its width and `gap` drive the fold. Give that list a definite width (`width: 100%` inside a sized parent). A shrink-to-fit flex item collapses as chips leave. The measure row is a sibling, so every child of the list is a `listitem`.
-- First paint: hide the list until `measured`; the server always renders unmeasured.
-- Row height is the chip font size × `--todae-chip-leading`, plus padding and border width. The list sits in a wrapper padded by the ring width plus the ring offset, with `overflow: hidden` and a negative margin. The wrapper does the clipping, so chip and list rings are never cut, and its `max-height` caps the rows.
-- Focus after dismiss: the chip that now fills the slot, after the re-measure, else the previous, else the list (never the body).
-- +N is a button that opens a non-modal popover with the hidden chips; Tab from the last one continues after +N, and Esc returns to +N.
-- `Field.ChipInput` is built on the same hook (`reserveWidth` holds room for its input).
-
-## Hook
-
-When to use it, and its props, are on [useChipList](/utilities/use-chip-list).
+export const ChipList = { Root } as const;

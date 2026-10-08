@@ -2,7 +2,7 @@ import { ChipListDemo } from '../../../../components/demos/ChipListDemo';
 
 # useChipList
 
-`useChipList` measures a row of chips and decides which fit within `maxRows` and which fold into a `+N` count. It owns no markup: the [Chip list with overflow](/recipes/chip-list) recipe has the list, the clamp CSS and the focus handling to copy. `Field.ChipInput` is built on the same hook, with `reserveWidth` holding room for its input.
+`useChipList` measures a row of chips and decides which fit within `maxRows` and which fold into a `+N` count. It owns no markup. [ChipList](/chip-list) and `Field.ChipInput` are built on it; `Field.ChipInput` uses `reserveWidth` to hold room for its input.
 
 Put `listRef` on the wrapping list and render the measure row into `measureRef`. Hide the list until `measured`, since the server always renders unmeasured.
 
@@ -12,9 +12,9 @@ Put `listRef` on the wrapping list and render the measure row into `measureRef`.
 
 ## When to use
 
-**When:** Chips outside a text field, such as applied filters, read-only tags or recipients, capped at `maxRows` with a +N count. Call `useChipList` for the visible/hidden split and build the list from the [recipe](/recipes/chip-list).
+**When:** Your own markup for chips capped at `maxRows` with a +N count, where [ChipList](/chip-list) does not fit. `useChipList` gives the visible/hidden split; the list, its clamp CSS and its focus handling are yours.
 
-**When not:** Typing new chips → `Field.ChipInput` (already built on the hook). Picking from options → [Combobox recipe](/recipes/combobox). Selectable or toggle chips → Checkbox / Button.Root. One chip → `Chip.Root`. Chip add/remove state → [useChipField](/utilities/use-chip-field).
+**When not:** Applied filters, read-only tags or recipients → [ChipList](/chip-list). Typing new chips → `Field.ChipInput` (already built on the hook). Picking from options → [Combobox recipe](/recipes/combobox). Selectable or toggle chips → Checkbox / Button.Root. One chip → `Chip.Root`. Chip add/remove state → [useChipField](/utilities/use-chip-field).
 
 ## Props
 
