@@ -40,9 +40,12 @@ const HREFS = [
   '/table',
   '/progress',
   '/slider',
+  '/utilities/use-announcer',
   '/utilities/use-chip-field',
   '/utilities/use-chip-list',
   '/utilities/use-combobox',
+  '/utilities/use-controlled-state',
+  '/utilities/use-controlled-value',
   '/utilities/use-field',
   '/utilities/use-popover',
   '/utilities/use-roving-focus',
@@ -75,9 +78,12 @@ describe('SiteNav', () => {
     expect(hrefsIn('Components')).not.toContain('/composition');
     expect(hrefsIn('Foundations')).toEqual(['/composition', '/tokens', '/guides/build-on-todae', '/platform']);
     expect(hrefsIn('Utilities')).toEqual([
+      '/utilities/use-announcer',
       '/utilities/use-chip-field',
       '/utilities/use-chip-list',
       '/utilities/use-combobox',
+      '/utilities/use-controlled-state',
+      '/utilities/use-controlled-value',
       '/utilities/use-field',
       '/utilities/use-popover',
       '/utilities/use-roving-focus',

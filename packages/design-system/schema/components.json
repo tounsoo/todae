@@ -2156,6 +2156,25 @@
       ]
     },
     {
+      "name": "useAnnouncer",
+      "description": "Takes no arguments and returns announce(message, options?), which reads message to screen readers through one visually hidden live region shared by the whole document. The props below are announce arguments.",
+      "props": [
+        {
+          "name": "message",
+          "type": "string",
+          "required": true,
+          "description": "Text to read. The same message twice is read twice. An empty string clears the region."
+        },
+        {
+          "name": "politeness",
+          "type": "\"polite\" | \"assertive\"",
+          "required": false,
+          "description": "Options field. polite waits for the screen reader to finish; assertive interrupts it.",
+          "default": "\"polite\""
+        }
+      ]
+    },
+    {
       "name": "useChipField",
       "description": "Optional state helper. Field.ChipInput stays fully controlled without it.",
       "props": [
@@ -2272,6 +2291,48 @@
           "type": "string",
           "required": false,
           "description": "Controlled filter text."
+        }
+      ]
+    },
+    {
+      "name": "useControlledState",
+      "description": "useControlledState(controlled, defaultValue) returns [value, setValue]. While controlled is not undefined it is the value and setValue does nothing; otherwise setValue stores the next value. It never calls a change callback.",
+      "props": [
+        {
+          "name": "controlled",
+          "type": "T | undefined",
+          "required": true,
+          "description": "The value prop. undefined means uncontrolled, so use null for an empty controlled value."
+        },
+        {
+          "name": "defaultValue",
+          "type": "T",
+          "required": true,
+          "description": "Starting value when uncontrolled. Read on the first render only."
+        }
+      ]
+    },
+    {
+      "name": "useControlledValue",
+      "description": "useControlledValue(controlled, defaultValue, onChange) returns [value, change]. change(next, ...args) skips a value equal to the current one (Object.is), stores it when uncontrolled, then calls onChange(next, ...args).",
+      "props": [
+        {
+          "name": "controlled",
+          "type": "T | undefined",
+          "required": true,
+          "description": "The value prop. undefined means uncontrolled, so use null for an empty controlled value."
+        },
+        {
+          "name": "defaultValue",
+          "type": "T",
+          "required": true,
+          "description": "Starting value when uncontrolled. Read on the first render only."
+        },
+        {
+          "name": "onChange",
+          "type": "(next: T, ...args: A) => void",
+          "required": false,
+          "description": "Called with each new value and any extra arguments, such as a reason, controlled or not."
         }
       ]
     },

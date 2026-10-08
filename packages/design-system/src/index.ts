@@ -135,7 +135,14 @@ export {
   type TextTone,
   type TextWeight,
 } from './components/Text';
+export {
+  useAnnouncer,
+  type Announce,
+  type AnnounceOptions,
+  type AnnouncePoliteness,
+} from './hooks/useAnnouncer';
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
+export { useControlledState, useControlledValue } from './hooks/useControlledState';
 export {
   useChipList,
   type UseChipListItem,

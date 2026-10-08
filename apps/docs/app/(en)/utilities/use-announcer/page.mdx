@@ -1,0 +1,30 @@
+import { AnnounceSave } from '../../../../components/demos/AnnouncerDemo';
+
+# useAnnouncer
+
+`useAnnouncer()` returns `announce(message, options?)`, which reads `message` to screen readers without showing it. Use it for the result of something async that has no visible message of its own, such as "Draft saved" or "12 results".
+
+```tsx
+const announce = useAnnouncer()
+
+async function save() {
+	await saveDraft()
+	announce('Draft saved')
+}
+```
+
+<Example>
+  <AnnounceSave />
+</Example>
+
+Every caller in the document shares one visually hidden element appended to `body`, with a polite and an assertive live region. It is added when the first component using the hook mounts, so it is in place before the first message, and it uses the `todae-visually-hidden` class from Todae's CSS. `announce` empties the region, then writes the message a moment later, so the same message twice is read twice. A newer message sent before the last one is written replaces it, and a message sent just before the calling component unmounts is still written. `politeness: 'assertive'` interrupts the screen reader; keep it for messages that cannot wait. On the server `announce` does nothing, and `announce` is the same function on every render.
+
+## When to use
+
+**When:** Async results with no visible message of their own: saves, copies, result counts, background loads finishing.
+
+**When not:** A message sighted users should see too → show it on the page, for example in an [Alert](/alert), which is a live region itself. Validation text → [ErrorMessage](/errormessage).
+
+## Props
+
+<PropsTable name="useAnnouncer" />

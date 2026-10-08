@@ -1,5 +1,10 @@
 import { useCallback, useState } from 'react';
 
+/**
+ * State a prop can own. When `controlled` is not `undefined` it is the value
+ * and the setter does nothing; otherwise the hook keeps its own state,
+ * starting at `defaultValue`. The setter never calls a change callback.
+ */
 export function useControlledState<T>(
   controlled: T | undefined,
   defaultValue: T,

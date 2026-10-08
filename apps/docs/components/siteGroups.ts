@@ -44,9 +44,12 @@ export const SITE_GROUPS = [
     id: 'utilities',
     label: 'Utilities',
     links: [
+      ['/utilities/use-announcer', 'useAnnouncer'],
       ['/utilities/use-chip-field', 'useChipField'],
       ['/utilities/use-chip-list', 'useChipList'],
       ['/utilities/use-combobox', 'useCombobox'],
+      ['/utilities/use-controlled-state', 'useControlledState'],
+      ['/utilities/use-controlled-value', 'useControlledValue'],
       ['/utilities/use-field', 'useField'],
       ['/utilities/use-popover', 'usePopover'],
       ['/utilities/use-roving-focus', 'useRovingFocus'],

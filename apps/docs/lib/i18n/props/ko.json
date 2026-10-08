@@ -1195,6 +1195,16 @@
       "ko": "보이는 캡션의 id. 인터랙티브일 때는 aria-label과 aria-labelledby 중 정확히 하나만 지정합니다."
     }
   },
+  "useAnnouncer": {
+    "message": {
+      "en": "Text to read. The same message twice is read twice. An empty string clears the region.",
+      "ko": "읽을 텍스트. 같은 메시지를 두 번 보내면 두 번 읽습니다. 빈 문자열은 리전을 비웁니다."
+    },
+    "politeness": {
+      "en": "Options field. polite waits for the screen reader to finish; assertive interrupts it.",
+      "ko": "옵션 필드. polite는 스크린 리더가 읽기를 마칠 때까지 기다리고, assertive는 끊고 읽습니다."
+    }
+  },
   "useChipField": {
     "initialChips": {
       "en": "Starting chips.",
@@ -1263,6 +1273,30 @@
     "inputValue": {
       "en": "Controlled filter text.",
       "ko": "제어 필터 텍스트."
+    }
+  },
+  "useControlledState": {
+    "controlled": {
+      "en": "The value prop. undefined means uncontrolled, so use null for an empty controlled value.",
+      "ko": "값 prop. undefined는 비제어를 뜻하므로, 제어 상태의 빈 값에는 null을 쓰세요."
+    },
+    "defaultValue": {
+      "en": "Starting value when uncontrolled. Read on the first render only.",
+      "ko": "비제어일 때의 시작 값. 첫 렌더링에서만 읽습니다."
+    }
+  },
+  "useControlledValue": {
+    "controlled": {
+      "en": "The value prop. undefined means uncontrolled, so use null for an empty controlled value.",
+      "ko": "값 prop. undefined는 비제어를 뜻하므로, 제어 상태의 빈 값에는 null을 쓰세요."
+    },
+    "defaultValue": {
+      "en": "Starting value when uncontrolled. Read on the first render only.",
+      "ko": "비제어일 때의 시작 값. 첫 렌더링에서만 읽습니다."
+    },
+    "onChange": {
+      "en": "Called with each new value and any extra arguments, such as a reason, controlled or not.",
+      "ko": "제어 여부와 관계없이 새 값과 이유(reason) 같은 추가 인자로 호출됩니다."
     }
   },
   "usePopover": {

@@ -1,0 +1,26 @@
+# useControlledState
+
+`useControlledState(controlled, defaultValue)` returns `[value, setValue]` for a component that takes a value prop and a default. While `controlled` is not `undefined`, it is the value and `setValue` does nothing, so the parent decides. Otherwise the hook keeps its own state, starting at `defaultValue`, and `setValue` stores the next value. Button, Checkbox, Switch, RadioGroup and ToggleGroup use it.
+
+```tsx
+function Mute({ pressed, defaultPressed = false, onPressedChange }: MuteProps) {
+	const [on, setOn] = useControlledState(pressed, defaultPressed)
+	return (
+		<button aria-pressed={on} onClick={() => { setOn(!on); onPressedChange?.(!on) }}>
+			Mute
+		</button>
+	)
+}
+```
+
+`undefined` means uncontrolled, so a controlled empty value is `null`. `setValue` takes a value, not an updater function, and never calls a change callback: call yours, as above, or use [useControlledValue](/utilities/use-controlled-value). Keep one mode for a component's life: going from controlled to uncontrolled shows the hook's own state, not the last controlled value.
+
+## When to use
+
+**When:** A component of your own with a value prop and a default, where you call the change callback yourself.
+
+**When not:** One setter that skips unchanged values and calls the change callback → [useControlledValue](/utilities/use-controlled-value). State no parent can set → `useState`.
+
+## Props
+
+<PropsTable name="useControlledState" />
