@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Grid } from '../index';
+import { Avatar, Grid, Pagination, paginationRange } from '../index';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -144,5 +144,50 @@ describe('Grid in a browser', () => {
     expect(box('w1').top).toBe(box('w2').top);
     expect(box('w3').top).toBeGreaterThan(box('w1').top);
     expect(box('n1').width).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('Pagination in a browser', () => {
+  it('draws pages as equal boxes, the current one filled, with no link underline, and passes axe', async () => {
+    render(
+      <Themed>
+        <Pagination.Root>
+          <Pagination.Item>
+            <a data-testid="prev">Previous</a>
+          </Pagination.Item>
+          {paginationRange({ page: 10, count: 20 }).map((item) =>
+            typeof item === 'number' ? (
+              <Pagination.Item key={item} current={item === 10}>
+                {item === 10 ? (
+                  <span data-testid="current-text">10</span>
+                ) : (
+                  <a href={`#page-${item}`} data-testid={`page-${item}`}>
+                    {item}
+                  </a>
+                )}
+              </Pagination.Item>
+            ) : (
+              <Pagination.Ellipsis key={item} data-testid={item} />
+            ),
+          )}
+          <Pagination.Item>
+            <button type="button" data-testid="next">
+              Next
+            </button>
+          </Pagination.Item>
+        </Pagination.Root>
+      </Themed>,
+    );
+    const style = (el: Element) => getComputedStyle(el);
+    const link = screen.getByTestId('page-9');
+    const current = screen.getByTestId('current-text').parentElement!;
+    expect(current.getAttribute('aria-current')).toBe('page');
+    expect(style(link).textDecorationLine).toBe('none');
+    expect(style(current).backgroundColor).not.toBe(style(link).backgroundColor);
+    expect(link.getBoundingClientRect().height).toBe(current.getBoundingClientRect().height);
+    expect(link.getBoundingClientRect().top).toBe(screen.getByTestId('next').getBoundingClientRect().top);
+    // A step with nowhere to go (no href) is muted.
+    expect(style(screen.getByTestId('prev')).color).not.toBe(style(link).color);
+    expect(await violations()).toEqual([]);
   });
 });

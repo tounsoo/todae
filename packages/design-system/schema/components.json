@@ -1639,6 +1639,82 @@
       ]
     },
     {
+      "name": "Pagination.Ellipsis",
+      "description": "Stands for the pages a gap leaves out. Hidden from assistive technology. Takes native li attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "What the gap shows.",
+          "default": "\"…\""
+        }
+      ]
+    },
+    {
+      "name": "Pagination.Item",
+      "description": "One page or the previous or next step, as a list item around your link or button. Takes native li attributes.",
+      "props": [
+        {
+          "name": "current",
+          "type": "boolean",
+          "required": false,
+          "description": "The page you are on: its children are drawn as the current page and marked aria-current=\"page\". Pass text, not a link.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A link or button, or the page number for the current page."
+        }
+      ]
+    },
+    {
+      "name": "Pagination.Root",
+      "description": "A nav landmark around an ordered list of pages. Named \"Pagination\" unless aria-label or aria-labelledby is passed. Takes native nav attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Pagination.Item and Pagination.Ellipsis parts, often from paginationRange."
+        }
+      ]
+    },
+    {
+      "name": "paginationRange",
+      "description": "Returns the pages to show as numbers, with \"start-ellipsis\" and \"end-ellipsis\" for the gaps. While there are more pages than slots the list keeps one length, and a gap always stands for two or more pages.",
+      "props": [
+        {
+          "name": "page",
+          "type": "number",
+          "required": true,
+          "description": "The current page, from 1. Clamped to 1..count."
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "required": true,
+          "description": "How many pages there are. Below 1 gives an empty list."
+        },
+        {
+          "name": "siblings",
+          "type": "number",
+          "required": false,
+          "description": "Pages shown on each side of the current one.",
+          "default": "1"
+        },
+        {
+          "name": "boundaries",
+          "type": "number",
+          "required": false,
+          "description": "Pages always shown at each end.",
+          "default": "1"
+        }
+      ]
+    },
+    {
       "name": "Popover.Root",
       "description": "Surface chrome. Spread getPopoverProps for wire.",
       "props": [

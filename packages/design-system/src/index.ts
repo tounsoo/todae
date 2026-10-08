@@ -19,6 +19,15 @@ export {
   type AvatarSize,
 } from './components/Avatar';
 export { Badge, type BadgeRootProps, type BadgeTone } from './components/Badge';
+export {
+  Pagination,
+  paginationRange,
+  type PaginationEllipsisProps,
+  type PaginationItemProps,
+  type PaginationRangeItem,
+  type PaginationRangeOptions,
+  type PaginationRootProps,
+} from './components/Pagination';
 export { Breadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './components/Breadcrumbs';
 export {
   Card,
