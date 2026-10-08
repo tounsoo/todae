@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Button } from './Button';
+import { Menu } from './Menu';
 import { ToggleGroup } from './ToggleGroup';
 import { Toolbar } from './Toolbar';
 
@@ -237,5 +238,65 @@ describe('Toolbar', () => {
     left.focus();
     fireEvent.keyDown(left, { key: 'ArrowRight' });
     expect(document.activeElement).toBe(right);
+  });
+
+  it('moves past a menu trigger with Up and Down in a vertical toolbar', () => {
+    render(
+      <Toolbar.Root aria-label="t" orientation="vertical">
+        <Button.Root>Undo</Button.Root>
+        <Menu.Root>
+          <Menu.Trigger>Insert</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>Image</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+        <Button.Root>Redo</Button.Root>
+      </Toolbar.Root>,
+    );
+    const insert = button('Insert');
+    insert.focus();
+    fireEvent.keyDown(insert, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(button('Redo'));
+    expect(insert.getAttribute('aria-expanded')).not.toBe('true');
+    fireEvent.keyDown(button('Redo'), { key: 'ArrowUp' });
+    expect(document.activeElement).toBe(insert);
+  });
+
+  it('takes in a control that becomes focusable later', async () => {
+    function Late() {
+      const [focusable, setFocusable] = useState(false);
+      return (
+        <Toolbar.Root aria-label="t">
+          <Button.Root onClick={() => setFocusable(true)}>A</Button.Root>
+          <span data-testid="late" tabIndex={focusable ? 0 : undefined}>
+            Late
+          </span>
+        </Toolbar.Root>
+      );
+    }
+    render(<Late />);
+    fireEvent.click(button('A'));
+    await waitFor(() => expect(screen.getByTestId('late').tabIndex).toBe(-1));
+    expect(tabbable()).toEqual([button('A')]);
+  });
+
+  it('leaves Shift with an arrow key to the control', () => {
+    render(<Editor />);
+    button('Bold').focus();
+    fireEvent.keyDown(button('Bold'), { key: 'ArrowRight', shiftKey: true });
+    expect(document.activeElement).toBe(button('Bold'));
+  });
+
+  it('marks a group and a nested separator with the toolbar orientation', () => {
+    render(
+      <Toolbar.Root aria-label="t" orientation="vertical">
+        <Toolbar.Group aria-label="g" data-testid="group">
+          <Button.Root>A</Button.Root>
+          <Toolbar.Separator data-testid="sep" />
+        </Toolbar.Group>
+      </Toolbar.Root>,
+    );
+    expect(screen.getByTestId('group').getAttribute('data-orientation')).toBe('vertical');
+    expect(screen.getByTestId('sep').getAttribute('aria-orientation')).toBe('horizontal');
   });
 });

@@ -25,6 +25,7 @@ import { useDomId } from './domId';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import popoverStyles from './Popover.module.css';
 import styles from './Menu.module.css';
+import { ToolbarContext } from './toolbarContext';
 
 /** Why the menu opened or closed. `select` is an item choice; `tab` is focus leaving with Tab. */
 export type MenuOpenChangeReason = PopoverCloseReason | 'select' | 'tab';
@@ -185,6 +186,7 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
 
 function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }: MenuTriggerProps) {
   const ctx = useMenu('Trigger');
+  const toolbar = useContext(ToolbarContext);
   const refs = useComposedRefs(ctx.triggerRef, ref);
   const { openEnd, countTrigger } = ctx;
   useLayoutEffect(() => {
@@ -213,6 +215,9 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
       id={ctx.triggerId}
       tooltip={tooltip}
       onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLButtonElement>) => {
+        // In a vertical toolbar, Up and Down move between its controls.
+        const arrow = event.key === 'ArrowDown' || event.key === 'ArrowUp';
+        if (arrow && toolbar?.orientation === 'vertical') return;
         // A held key opens once; repeats, Enter's included, would toggle it.
         if (event.repeat && ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) {
           event.preventDefault();
@@ -331,7 +336,7 @@ function Content({
       }}
       onKeyDown={container.onKeyDown}
     >
-      {children}
+      <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
     </div>
   );
 }

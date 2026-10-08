@@ -1,5 +1,4 @@
 import {
-  createContext,
   useCallback,
   useContext,
   useLayoutEffect,
@@ -8,11 +7,13 @@ import {
   type FocusEvent,
   type KeyboardEvent,
 } from 'react';
+import { isReachable, nextKey } from '../hooks/useRovingFocus';
 import { cx } from './cx';
 import { useComposedRefs } from './props';
 import styles from './Toolbar.module.css';
+import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from './toolbarContext';
 
-export type ToolbarOrientation = 'horizontal' | 'vertical';
+export { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation };
 
 /**
  * A row (or column) of controls with one tab stop. Arrow keys move focus
@@ -31,16 +32,8 @@ export type ToolbarRootProps = {
 export type ToolbarGroupProps = ComponentPropsWithRef<'div'>;
 export type ToolbarSeparatorProps = Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-type ToolbarContextValue = { orientation: ToolbarOrientation };
-
-/** Set inside a toolbar, so a composite inside, such as ToggleGroup, leaves arrow keys to it. */
-export const ToolbarContext = createContext<ToolbarContextValue | null>(null);
-
 // Selects, textareas and editable text own their arrow keys, so they are never items.
 const FOCUSABLE = 'button, a[href], input, [tabindex]';
-// A layer that opens from the toolbar keeps its own keyboard model.
-export const TOOLBAR_BOUNDARY = '[role="toolbar"], [popover], dialog';
-const BOUNDARY = TOOLBAR_BOUNDARY;
 
 // Controls whose own arrow keys move a caret or a value, and composites with
 // their own roving focus. They keep their own tab stop and keys, outside the
@@ -58,18 +51,14 @@ function ownsArrows(el: HTMLElement): boolean {
 function itemsOf(root: HTMLElement): HTMLElement[] {
   return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
     (el) =>
-      !el.matches(BOUNDARY) &&
+      !el.matches(TOOLBAR_BOUNDARY) &&
       !ownsArrows(el) &&
-      el.parentElement?.closest(BOUNDARY) === root &&
+      el.parentElement?.closest(TOOLBAR_BOUNDARY) === root &&
       !el.matches(':disabled') &&
       !el.closest('[inert]'),
   );
 }
 
-// Arrow keys skip items that are not rendered.
-function reachable(el: HTMLElement): boolean {
-  return el.checkVisibility?.({ visibilityProperty: true }) ?? true;
-}
 
 function Root({
   orientation = 'horizontal',
@@ -98,8 +87,8 @@ function Root({
     if (focused && items.includes(focused)) active.current = focused;
     if (active.current && !items.includes(active.current)) active.current = null;
     const stop =
-      (active.current && reachable(active.current) ? active.current : null) ??
-      items.find(reachable) ??
+      (active.current && isReachable(active.current) ? active.current : null) ??
+      items.find(isReachable) ??
       active.current ??
       items[0] ??
       null;
@@ -112,28 +101,60 @@ function Root({
     }
     for (const item of items) {
       if (!managed.current.has(item)) managed.current.set(item, item.getAttribute('tabindex'));
-      item.tabIndex = item === stop ? 0 : -1;
+      const tabIndex = item === stop ? '0' : '-1';
+      // Only a change is written, so the observer, which watches tabindex,
+      // settles after one pass.
+      if (item.getAttribute('tabindex') !== tabIndex) item.setAttribute('tabindex', tabIndex);
     }
   }, []);
 
   // On mount, then whenever controls come, go, or change what can take focus.
-  // Class and style count, as they can hide a control.
+  // Class and style count, as they can hide a control. Changes are batched
+  // into one sync per frame.
   useLayoutEffect(() => {
     sync();
     const root = rootRef.current;
     if (!root || typeof MutationObserver === 'undefined') return;
-    // Changes inside a layer that opens from the toolbar, such as an open
-    // menu, cannot change the toolbar's items.
+    let frame = 0;
     const observer = new MutationObserver((records) => {
-      if (records.some((record) => record.target === root || record.target.parentElement?.closest(BOUNDARY) === root)) sync();
+      for (const record of records) {
+        const el = record.target as HTMLElement;
+        // Changes inside a layer that opens from the toolbar, such as an open
+        // menu, cannot change the toolbar's items.
+        if (el !== root && el.parentElement?.closest(TOOLBAR_BOUNDARY) !== root) continue;
+        // A tabindex someone else wrote, such as a new tabIndex prop, is the
+        // one to give back when the control stops being an item.
+        if (record.attributeName === 'tabindex' && managed.current.has(el)) {
+          const now = el.getAttribute('tabindex');
+          if (now !== '0' && now !== '-1') managed.current.set(el, now);
+        }
+        frame ||= requestAnimationFrame(() => {
+          frame = 0;
+          sync();
+        });
+      }
     });
     observer.observe(root, {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['disabled', 'hidden', 'inert', 'class', 'style', 'type', 'contenteditable', 'data-todae-roving'],
+      attributeFilter: [
+        'disabled',
+        'hidden',
+        'inert',
+        'class',
+        'style',
+        'type',
+        'href',
+        'tabindex',
+        'contenteditable',
+        'data-todae-roving',
+      ],
     });
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, [sync]);
 
   const handleFocus = (event: FocusEvent<HTMLDivElement>) => {
@@ -144,24 +165,22 @@ function Root({
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
     const root = rootRef.current;
-    if (event.defaultPrevented || !root || event.altKey || event.ctrlKey || event.metaKey) return;
+    // Shift combinations are left to the control, as in useRovingFocus.
+    if (event.defaultPrevented || !root || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
     const target = event.target as HTMLElement;
-    const items = itemsOf(root).filter(reachable);
+    const items = itemsOf(root).filter(isReachable);
     const index = items.indexOf(target);
     if (index === -1) return;
-    const rtl = () => getComputedStyle(root).direction === 'rtl';
-    let next: number | null = null;
     const step = (delta: number) => {
       const to = index + delta;
       if (to >= 0 && to < items.length) return to;
       return loop ? (to + items.length) % items.length : index;
     };
+    const move = nextKey(event.key, orientation, () => getComputedStyle(root).direction === 'rtl');
+    let next: number | null = null;
     if (event.key === 'Home') next = 0;
     else if (event.key === 'End') next = items.length - 1;
-    else if (orientation === 'horizontal' && event.key === 'ArrowRight') next = step(rtl() ? -1 : 1);
-    else if (orientation === 'horizontal' && event.key === 'ArrowLeft') next = step(rtl() ? 1 : -1);
-    else if (orientation === 'vertical' && event.key === 'ArrowDown') next = step(1);
-    else if (orientation === 'vertical' && event.key === 'ArrowUp') next = step(-1);
+    else if (move) next = step(move === 'next' ? 1 : -1);
     if (next === null) return;
     event.preventDefault();
     items[next]?.focus();
@@ -187,7 +206,10 @@ function Root({
 
 /** Controls that belong together, such as text styles. Name it to have it read as a group. */
 function Group({ className, ...props }: ToolbarGroupProps) {
-  return <div role="group" {...props} className={cx(styles.group, className)} />;
+  const toolbar = useContext(ToolbarContext);
+  return (
+    <div role="group" data-orientation={toolbar?.orientation} {...props} className={cx(styles.group, className)} />
+  );
 }
 
 /** A rule between groups, across the toolbar's direction. */

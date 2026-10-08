@@ -24,6 +24,7 @@ import { useScrollLock } from '../overlay/useScrollLock';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './BottomSheet.module.css';
+import { ToolbarContext } from './toolbarContext';
 
 export type { SheetSnap };
 /**
@@ -344,7 +345,7 @@ function BottomSheetRoot({
         })}
       >
         {grabbers > 0 ? null : <GrabberHandle />}
-        {children}
+        <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
       </dialog>
     </SheetContext.Provider>
   );

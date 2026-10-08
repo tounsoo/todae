@@ -19,7 +19,7 @@
     gap: var(--todae-toolbar-gap);
   }
 
-  .root[data-orientation='vertical'] > .group {
+  .group[data-orientation='vertical'] {
     flex-direction: column;
     align-items: stretch;
   }
@@ -31,7 +31,7 @@
     background: var(--todae-toolbar-separator-color);
   }
 
-  .root[data-orientation='vertical'] > .separator {
+  .separator[aria-orientation='horizontal'] {
     inline-size: auto;
     block-size: var(--todae-toolbar-separator-thickness);
   }

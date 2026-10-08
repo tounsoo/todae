@@ -101,4 +101,21 @@ describe('Toolbar in a browser', () => {
     screen.getByTestId('wrap').hidden = false;
     expect([button('A').tabIndex, button('B').tabIndex]).toEqual([0, -1]);
   });
+
+  it('draws a separator nested in a group of a vertical toolbar across it', () => {
+    render(
+      <main data-appearance="light" data-density="comfortable">
+        <Toolbar.Root aria-label="t" orientation="vertical">
+          <Toolbar.Group aria-label="g">
+            <Button.Root>A</Button.Root>
+            <Toolbar.Separator data-testid="nested" />
+            <Button.Root>B</Button.Root>
+          </Toolbar.Group>
+        </Toolbar.Root>
+      </main>,
+    );
+    const rect = screen.getByTestId('nested').getBoundingClientRect();
+    expect(rect.height).toBeGreaterThan(0);
+    expect(rect.width).toBeGreaterThan(rect.height);
+  });
 });

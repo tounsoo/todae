@@ -2,6 +2,7 @@ import { useRef, type ComponentPropsWithoutRef, type CSSProperties, type ReactNo
 import { usePopoverSync } from '../overlay/usePopoverSync';
 import type { PopoverWire } from './Popover.wire';
 import styles from './Popover.module.css';
+import { ToolbarContext } from './toolbarContext';
 
 type PopoverBase = {
   children?: ReactNode;
@@ -76,7 +77,7 @@ function PopoverRoot({
       aria-label={role ? ariaLabel : undefined}
       aria-labelledby={role ? ariaLabelledby : undefined}
     >
-      {children}
+      <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
     </div>
   );
 }

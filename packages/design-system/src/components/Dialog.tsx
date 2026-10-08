@@ -20,6 +20,7 @@ import { useModalDialog } from '../overlay/useModalDialog';
 import { useScrollLock } from '../overlay/useScrollLock';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Dialog.module.css';
+import { ToolbarContext } from './toolbarContext';
 
 /**
  * Why the dialog asked to close. `form` is a `<form method="dialog">` submit
@@ -204,7 +205,7 @@ function DialogRoot({
         })}
       >
         <div className={styles.panel} role="document">
-          {children}
+          <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
         </div>
       </dialog>
     </DialogContext.Provider>

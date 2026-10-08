@@ -98,14 +98,14 @@ type KnownItems = { read: boolean; enabled: string[]; reachable: string[] };
 const NO_ITEMS: KnownItems = { read: false, enabled: [], reachable: [] };
 
 // `visibility: hidden` blocks focus too, so it counts as hidden.
-const isReachable = (node: HTMLElement) =>
+export const isReachable = (node: HTMLElement) =>
   !node.closest('[inert]') && (node.checkVisibility?.({ visibilityProperty: true }) ?? true);
 
 const sameValues = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
 
 // `rtl` is a function so direction, which costs a style read, is only
 // checked for Left and Right.
-function nextKey(key: string, orientation: RovingOrientation, rtl: () => boolean): 'next' | 'prev' | null {
+export function nextKey(key: string, orientation: RovingOrientation, rtl: () => boolean): 'next' | 'prev' | null {
   const vertical = orientation !== 'horizontal';
   const horizontal = orientation !== 'vertical';
   if (vertical && key === 'ArrowDown') return 'next';
