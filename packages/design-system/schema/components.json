@@ -95,6 +95,55 @@
       ]
     },
     {
+      "name": "Avatar.Fallback",
+      "description": "Shows until the image loads, and stays when it fails or there is none. Takes native span attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Initials or an icon."
+        }
+      ]
+    },
+    {
+      "name": "Avatar.Image",
+      "description": "An img that shows once it has loaded and covers the fallback. Its alt is always empty, because Avatar.Root carries the name. Takes native img attributes except alt.",
+      "props": [
+        {
+          "name": "src",
+          "type": "string",
+          "required": false,
+          "description": "The image. Without one, or when it fails to load, the fallback stays."
+        }
+      ]
+    },
+    {
+      "name": "Avatar.Root",
+      "description": "A span that shows an image, or a fallback while it loads, when it fails or when there is none. Named by label as one image (role=\"img\"); without label it is hidden from assistive technology. Takes native span attributes.",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "required": false,
+          "description": "Names the avatar, whichever of the image and the fallback shows. Leave it out when the name is written next to the avatar."
+        },
+        {
+          "name": "size",
+          "type": "\"sm\" | \"md\" | \"lg\"",
+          "required": false,
+          "description": "Size from the avatar.size contract tokens.",
+          "default": "\"md\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Avatar.Image and Avatar.Fallback."
+        }
+      ]
+    },
+    {
       "name": "Badge.Root",
       "description": "A short static label or count in one of five tones. A span with no role; takes native span attributes.",
       "props": [
@@ -1140,6 +1189,30 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "A Fieldset.Legend first, then the controls."
+        }
+      ]
+    },
+    {
+      "name": "Grid",
+      "description": "CSS grid layout, the two-axis partner to Stack. Gap comes from the grid.gap contract token. Pass exactly one of columns or minItemSize.",
+      "props": [
+        {
+          "name": "columns",
+          "type": "number",
+          "required": false,
+          "description": "A fixed number of equal columns."
+        },
+        {
+          "name": "minItemSize",
+          "type": "string",
+          "required": false,
+          "description": "The narrowest a column may get, as a CSS length such as \"12rem\". As many columns fit as the width allows."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Laid-out children."
         }
       ]
     },

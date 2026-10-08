@@ -10,6 +10,14 @@ export {
   type AlertTitleProps,
   type AlertTone,
 } from './components/Alert';
+export {
+  Avatar,
+  type AvatarFallbackProps,
+  type AvatarImageProps,
+  type AvatarImageStatus,
+  type AvatarRootProps,
+  type AvatarSize,
+} from './components/Avatar';
 export { Badge, type BadgeRootProps, type BadgeTone } from './components/Badge';
 export { Breadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './components/Breadcrumbs';
 export {
@@ -146,6 +154,7 @@ export {
   type TabsTabProps,
 } from './components/Tabs';
 export { Stack, type StackProps, type StackDirection } from './components/Stack';
+export { Grid, type GridProps } from './components/Grid';
 export {
   Text,
   type TextProps,

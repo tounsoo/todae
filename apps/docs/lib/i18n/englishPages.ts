@@ -7,6 +7,7 @@ import type { ComponentType } from 'react';
  */
 export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentType }>> = {
   'alert': () => import('../../app/(en)/alert/page.mdx'),
+  'avatar': () => import('../../app/(en)/avatar/page.mdx'),
   'badge': () => import('../../app/(en)/badge/page.mdx'),
   'bottomsheet': () => import('../../app/(en)/bottomsheet/page.mdx'),
   'breadcrumbs': () => import('../../app/(en)/breadcrumbs/page.mdx'),
@@ -24,6 +25,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'errormessage': () => import('../../app/(en)/errormessage/page.mdx'),
   'field': () => import('../../app/(en)/field/page.mdx'),
   'fieldset': () => import('../../app/(en)/fieldset/page.mdx'),
+  'grid': () => import('../../app/(en)/grid/page.mdx'),
   'guides/build-on-todae': () => import('../../app/(en)/guides/build-on-todae/page.mdx'),
   'guides/css-layers': () => import('../../app/(en)/guides/css-layers/page.mdx'),
   'label': () => import('../../app/(en)/label/page.mdx'),

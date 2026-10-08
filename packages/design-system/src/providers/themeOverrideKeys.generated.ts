@@ -506,6 +506,15 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'kbd.padding.x',
   'kbd.padding.y',
   'kbd.radius',
+  'avatar.bg',
+  'avatar.fg',
+  'avatar.font.scale',
+  'avatar.font.weight',
+  'avatar.radius',
+  'avatar.size.lg',
+  'avatar.size.md',
+  'avatar.size.sm',
+  'grid.gap',
 ] as const;
 
 export const THEME_OVERRIDE_TYPES = {
@@ -1008,4 +1017,13 @@ export const THEME_OVERRIDE_TYPES = {
   'kbd.padding.x': 'dimension',
   'kbd.padding.y': 'dimension',
   'kbd.radius': 'dimension',
+  'avatar.bg': 'color',
+  'avatar.fg': 'color',
+  'avatar.font.scale': 'number',
+  'avatar.font.weight': 'fontWeight',
+  'avatar.radius': 'dimension',
+  'avatar.size.lg': 'dimension',
+  'avatar.size.md': 'dimension',
+  'avatar.size.sm': 'dimension',
+  'grid.gap': 'dimension',
 } as const;

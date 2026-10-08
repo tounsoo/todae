@@ -14,6 +14,7 @@ const entries = {
   badge: src('server/badge.ts'),
   card: src('server/card.ts'),
   breadcrumbs: src('server/breadcrumbs.ts'),
+  grid: src('server/grid.ts'),
 };
 
 function emitPackageCss(): Plugin {

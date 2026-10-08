@@ -1,0 +1,58 @@
+import { AvatarBesideName, AvatarSizes, AvatarStates } from '../../../components/demos/AvatarDemo';
+
+# Avatar
+
+A picture of a person or a team, with a fallback such as initials. `Avatar.Fallback` shows while `Avatar.Image` loads, and stays when the image fails or there is none. The image covers the fallback once it has loaded.
+
+```tsx
+<Avatar.Root label="Ada Lovelace">
+  <Avatar.Image src={user.photoUrl} />
+  <Avatar.Fallback>AL</Avatar.Fallback>
+</Avatar.Root>
+```
+
+<Example>
+  <AvatarStates />
+</Example>
+
+## Naming
+
+With `label`, the avatar is one image named by `label`, whichever of the image and the fallback shows, so a screen reader reads "Ada Lovelace" rather than "AL". `Avatar.Image` takes no `alt` for that reason.
+
+When the name is written next to the avatar, leave out `label`. The avatar is then decorative and hidden from assistive technology, so the name is not read twice.
+
+<Example>
+  <AvatarBesideName />
+</Example>
+
+```tsx
+<Avatar.Root>
+  <Avatar.Image src={user.photoUrl} />
+  <Avatar.Fallback>AL</Avatar.Fallback>
+</Avatar.Root>
+<Text>Ada Lovelace</Text>
+```
+
+## Sizes
+
+`size` is `sm`, `md` (the default) or `lg`, from the `avatar.size` tokens. The fallback text scales with the size through `avatar.font.scale`.
+
+<Example>
+  <AvatarSizes />
+</Example>
+
+Initials are yours to choose: how to shorten a name depends on the language and the person. Restyle the shape and colors through `avatar.radius`, `avatar.bg` and `avatar.fg`.
+
+## When to use
+
+**When:** A person, team or workspace shown in a list, a header or next to a message.
+
+**When not:** A picture with content of its own → `<img>` with real `alt` text. A status or count → [Badge](/badge). A control that opens a profile menu → put the avatar inside a [Menu](/menu) trigger, which carries the name.
+
+## Props
+
+<PropsTable name="Avatar.Root" />
+
+<PropsTable name="Avatar.Image" />
+
+<PropsTable name="Avatar.Fallback" />

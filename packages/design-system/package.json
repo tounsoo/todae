@@ -35,6 +35,10 @@
       "types": "./dist/server/breadcrumbs.d.ts",
       "import": "./dist/breadcrumbs.js"
     },
+    "./grid": {
+      "types": "./dist/server/grid.d.ts",
+      "import": "./dist/grid.js"
+    },
     "./todae.css": "./dist/todae.css",
     "./dist/todae.css": "./dist/todae.css",
     "./schema/components.json": "./schema/components.json",

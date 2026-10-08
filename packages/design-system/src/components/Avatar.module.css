@@ -1,0 +1,52 @@
+@layer todae.components {
+  .root {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: var(--todae-avatar-size);
+    block-size: var(--todae-avatar-size);
+    overflow: hidden;
+    border-radius: var(--todae-avatar-radius);
+    background: var(--todae-avatar-bg);
+    color: var(--todae-avatar-fg);
+    font-size: calc(var(--todae-avatar-size) * var(--todae-avatar-font-scale));
+    font-weight: var(--todae-avatar-font-weight);
+    line-height: 1;
+    vertical-align: middle;
+    user-select: none;
+  }
+
+  .root[data-size='sm'] {
+    --todae-avatar-size: var(--todae-avatar-size-sm);
+  }
+
+  .root[data-size='md'] {
+    --todae-avatar-size: var(--todae-avatar-size-md);
+  }
+
+  .root[data-size='lg'] {
+    --todae-avatar-size: var(--todae-avatar-size-lg);
+  }
+
+  /* The image covers the fallback once it loads. Until then it keeps its box,
+     hidden, so loading="lazy" still sees it come into view. */
+  .image {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .root:not([data-status='loaded']) > .image {
+    visibility: hidden;
+  }
+
+  .fallback {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}

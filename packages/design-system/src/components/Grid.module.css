@@ -1,0 +1,17 @@
+@layer todae.components {
+  .root {
+    display: grid;
+    gap: var(--todae-grid-gap);
+  }
+
+  /* minmax(0, 1fr) lets a column shrink below its content, so long words
+     wrap instead of widening the grid. */
+  .root[data-layout='columns'] {
+    grid-template-columns: repeat(var(--todae-grid-column-count), minmax(0, 1fr));
+  }
+
+  /* min() caps the floor at the grid's width, so one column never overflows. */
+  .root[data-layout='fill'] {
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--todae-grid-min-item-size), 100%), 1fr));
+  }
+}

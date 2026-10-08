@@ -44,7 +44,9 @@
         { "$ref": "./components/drawer.json" },
         { "$ref": "./components/spinner.json" },
         { "$ref": "./components/skeleton.json" },
-        { "$ref": "./components/code.json" }
+        { "$ref": "./components/code.json" },
+        { "$ref": "./components/avatar.json" },
+        { "$ref": "./components/grid.json" }
       ],
       "$extensions": {
         "dev.todae": {
