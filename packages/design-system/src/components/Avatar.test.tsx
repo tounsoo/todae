@@ -110,24 +110,29 @@ describe('Avatar', () => {
   });
 
   describe('an image already complete when its effect runs', () => {
-    let resolve: () => void;
-    let reject: () => void;
-    const decode = vi.fn(
-      () =>
-        new Promise<void>((res, rej) => {
-          resolve = res;
-          reject = () => rej(new Error('EncodingError'));
-        }),
-    );
+    // The probe request Avatar.Image makes for an image with no width.
+    let probes: { src: string; onload: (() => void) | null; onerror: (() => void) | null }[] = [];
+    const resolve = () => probes.at(-1)!.onload!();
+    const reject = () => probes.at(-1)!.onerror!();
     function stub(naturalWidth: number) {
+      probes = [];
       vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
       vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(naturalWidth);
-      HTMLImageElement.prototype.decode = decode;
+      vi.stubGlobal(
+        'Image',
+        class {
+          src = '';
+          onload: (() => void) | null = null;
+          onerror: (() => void) | null = null;
+          constructor() {
+            probes.push(this);
+          }
+        },
+      );
     }
     afterEach(() => {
       vi.restoreAllMocks();
-      decode.mockClear();
-      delete (HTMLImageElement.prototype as Partial<HTMLImageElement>).decode;
+      vi.unstubAllGlobals();
     });
     const tree = (src = 'ada.svg') => (
       <Avatar.Root label="Ada" data-testid="a">
@@ -137,68 +142,64 @@ describe('Avatar', () => {
     );
     const status = () => screen.getByTestId('a').getAttribute('data-status');
 
-    it('is loaded at once with a natural width, without decoding', () => {
+    it('is loaded at once with a natural width, without a probe', () => {
       stub(64);
       render(tree());
       expect(status()).toBe('loaded');
-      expect(decode).not.toHaveBeenCalled();
+      expect(probes).toHaveLength(0);
     });
 
-    it('decodes one with no width: an SVG with no intrinsic size loads', async () => {
+    it('probes one with no width: an SVG with no intrinsic size loads', () => {
       stub(0);
       render(tree());
       expect(status()).toBe('loading');
-      await act(async () => resolve());
+      expect(probes.at(-1)!.src).toContain('ada.svg');
+      act(() => resolve());
       expect(status()).toBe('loaded');
     });
 
-    it('decodes one with no width: a broken image keeps the fallback', async () => {
+    it('probes one with no width: a broken image keeps the fallback', () => {
       stub(0);
       render(tree());
-      await act(async () => reject());
+      act(() => reject());
       expect(status()).toBe('error');
       expect(screen.getByText('AL')).toBeTruthy();
     });
 
-    it('lets a load or error event win over a later decode result', async () => {
+    it('lets a load or error event on the image win over a later probe result', () => {
       stub(0);
       render(tree());
       fireEvent.load(screen.getByTestId('img'));
-      await act(async () => reject());
+      act(() => reject());
       expect(status()).toBe('loaded');
       cleanup();
       render(tree());
       fireEvent.error(screen.getByTestId('img'));
-      await act(async () => resolve());
+      act(() => resolve());
       expect(status()).toBe('error');
     });
 
-    it('decides again from the element when src changes after an event', async () => {
+    it('decides again from the element when src changes after an event', () => {
       stub(0);
       const { rerender } = render(tree('one.svg'));
       fireEvent.load(screen.getByTestId('img'));
       rerender(tree('two.svg'));
       expect(status()).toBe('loading');
-      await act(async () => resolve());
+      act(() => resolve());
       expect(status()).toBe('loaded');
     });
   });
 
-  it('loads from srcSet alone', () => {
-    // jsdom calls an image with no src complete; a browser waits for the srcset pick.
-    HTMLImageElement.prototype.decode = () => new Promise(() => undefined);
-    try {
-      render(
-        <Avatar.Root label="Ada" data-testid="a">
-          <Avatar.Image srcSet="ada.png 1x, ada@2x.png 2x" data-testid="img" />
-        </Avatar.Root>,
-      );
-      expect(screen.getByTestId('a').getAttribute('data-status')).toBe('loading');
-      fireEvent.load(screen.getByTestId('img'));
-      expect(screen.getByTestId('a').getAttribute('data-status')).toBe('loaded');
-    } finally {
-      delete (HTMLImageElement.prototype as Partial<HTMLImageElement>).decode;
-    }
+  it('loads from srcSet alone, and does not throw where images cannot load', () => {
+    // jsdom calls an image with no src complete with no width, and never loads the probe.
+    render(
+      <Avatar.Root label="Ada" data-testid="a">
+        <Avatar.Image srcSet="ada.png 1x, ada@2x.png 2x" data-testid="img" />
+      </Avatar.Root>,
+    );
+    expect(screen.getByTestId('a').getAttribute('data-status')).toBe('loading');
+    fireEvent.load(screen.getByTestId('img'));
+    expect(screen.getByTestId('a').getAttribute('data-status')).toBe('loaded');
   });
 
   it('throws outside Avatar.Root', () => {

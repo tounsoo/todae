@@ -78,6 +78,8 @@ describe('Avatar in a browser', () => {
     const img = container.querySelector('img')!;
     // The load event fires before React attaches its handlers, as on a server-rendered page.
     if (!img.complete) await new Promise((resolve) => img.addEventListener('load', resolve, { once: true }));
+    // Before hydration the loaded image already shows over the fallback.
+    expect(getComputedStyle(img).visibility).toBe('visible');
     const root = hydrateRoot(container, tree);
     try {
       await waitFor(() => expect(container.querySelector('[data-testid="root"]')!.getAttribute('data-status')).toBe('loaded'));

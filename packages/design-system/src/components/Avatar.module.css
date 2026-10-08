@@ -32,8 +32,10 @@
     --todae-avatar-size: var(--todae-avatar-size-lg);
   }
 
-  /* The image covers the fallback once it loads. Until then it keeps its box,
-     hidden, so loading="lazy" still sees it come into view. */
+  /* The image covers the fallback once it loads; until then it draws nothing
+     over it. A failed image is hidden, keeping its box so nothing shifts.
+     Only the failure is hidden, so a server-rendered image shows as soon as
+     it loads, before hydration. */
   .image {
     position: absolute;
     inset: 0;
@@ -42,7 +44,7 @@
     object-fit: cover;
   }
 
-  .root:not([data-status='loaded']) > .image {
+  .root[data-status='error'] > .image {
     visibility: hidden;
   }
 

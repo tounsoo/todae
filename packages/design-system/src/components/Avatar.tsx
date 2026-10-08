@@ -74,15 +74,16 @@ function Image({ src, srcSet, ref, onLoad, onError, className, ...props }: Avata
   const { setStatus } = useAvatar('Image');
   const own = useRef<HTMLImageElement>(null);
   const refs = useComposedRefs(own, ref);
-  // Set by a load or error event, which always wins over decode() below.
+  // Set by a load or error event, which always wins over the probe below.
   const settled = useRef(false);
 
   // A new source starts over. An image that finished before React attached
   // its handlers, such as one from the cache before hydration, may get no
   // load event, so it is read from the element: a natural width means it
   // loaded. A width of 0 is either a broken image or an SVG with no intrinsic
-  // size, and decode() tells them apart, unless an event settles it first.
-  // No source at all is a failure, so the fallback stays.
+  // size: a second request for the same source, served from the cache, tells
+  // them apart by its own load or error event, unless an event on the image
+  // settles it first. No source at all is a failure, so the fallback stays.
   useLayoutEffect(() => {
     const img = own.current!;
     let current = true;
@@ -92,10 +93,10 @@ function Image({ src, srcSet, ref, onLoad, onError, className, ...props }: Avata
     else if (img.naturalWidth > 0) setStatus('loaded');
     else {
       setStatus('loading');
-      img.decode().then(
-        () => current && !settled.current && setStatus('loaded'),
-        () => current && !settled.current && setStatus('error'),
-      );
+      const probe = new window.Image();
+      probe.onload = () => current && !settled.current && setStatus('loaded');
+      probe.onerror = () => current && !settled.current && setStatus('error');
+      probe.src = img.currentSrc || img.src;
     }
     return () => {
       current = false;
