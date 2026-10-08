@@ -2,16 +2,10 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { getTabbables } from './tabbables';
 import { useFocusRestore } from './useFocusRestore';
-import { useScrollLock } from './useScrollLock';
 import { isExitTransition, transitionMs } from './useOverlayPresence';
 import { dragHeight, dragOrigin, resolveRelease } from './useSnapDrag';
 
 afterEach(cleanup);
-
-function Lock({ active }: { active: boolean }) {
-  useScrollLock(active);
-  return null;
-}
 
 function Restore({
   active,
@@ -26,23 +20,6 @@ function Restore({
   return active ? <button type="button">inside</button> : null;
 }
 
-
-describe('useScrollLock', () => {
-  it('locks html overflow and restores prior inline values', () => {
-    document.documentElement.style.overflow = 'scroll';
-    const { rerender, unmount } = render(<Lock active />);
-    expect(document.documentElement.style.overflow).toBe('hidden');
-    rerender(<Lock active={false} />);
-    expect(document.documentElement.style.overflow).toBe('scroll');
-    rerender(<Lock active />);
-    const extra = render(<Lock active />);
-    extra.unmount();
-    expect(document.documentElement.style.overflow).toBe('hidden');
-    unmount();
-    expect(document.documentElement.style.overflow).toBe('scroll');
-    document.documentElement.style.overflow = '';
-  });
-});
 
 describe('useFocusRestore', () => {
   it('returns focus to the trigger after close', async () => {

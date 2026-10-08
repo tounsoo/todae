@@ -178,7 +178,6 @@ describe('Popover', () => {
     expect(source).not.toContain('useInitialFocus');
     expect(source).not.toContain('useFocusTrap');
     expect(source).not.toContain('useInertOutside');
-    expect(source).not.toContain('useScrollLock');
     expect(source).not.toContain('Popover.Trigger');
     expect(source).not.toContain('Popover.Content');
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);

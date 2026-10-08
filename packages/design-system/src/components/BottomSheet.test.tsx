@@ -97,7 +97,7 @@ describe('BottomSheet', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
-  it('opens as a modal dialog and releases the scroll lock on unmount', () => {
+  it('opens as a modal dialog and leaves the modal stack on unmount', () => {
     const { unmount } = render(
       <BottomSheet.Root open onOpenChange={() => undefined}>
         <BottomSheet.Title>Gone</BottomSheet.Title>
@@ -108,9 +108,8 @@ describe('BottomSheet', () => {
     expect((sheet as HTMLDialogElement).open).toBe(true);
     expect(sheet.getAttribute('closedby')).toBe('closerequest');
     expect(document.querySelector('[data-todae-portal]')).toBeNull();
-    expect(document.documentElement.style.overflow).toBe('hidden');
     unmount();
-    expect(document.documentElement.style.overflow).not.toBe('hidden');
+    expect(heldModals()).not.toContain(sheet);
   });
 
   it('renders in place, so it inherits the theme from its parent', () => {

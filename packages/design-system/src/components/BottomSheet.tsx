@@ -20,7 +20,6 @@ import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOve
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { initialFocusTarget, useInitialFocus } from '../overlay/useInitialFocus';
 import { useModalDialog } from '../overlay/useModalDialog';
-import { useScrollLock } from '../overlay/useScrollLock';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './BottomSheet.module.css';
@@ -258,7 +257,6 @@ function BottomSheetRoot({
   }, []);
   const sheetRefs = useComposedRefs(setSheetRef, ref);
 
-  useScrollLock(present);
   // Records the focus to return to, so it runs before showModal moves focus.
   // Keyed on present: the page behind stays inert until the element leaves
   // at the end of the exit motion, and only then can focus go back.

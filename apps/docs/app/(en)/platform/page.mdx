@@ -10,7 +10,8 @@ Todae builds on the browser instead of reimplementing it. It uses the features b
 - **[`<details name>`](https://developer.mozilla.org/docs/Web/HTML/Element/details#name)**: exclusive accordions. Without it: several disclosures in a group can be open at once.
 - **[`::details-content`](https://developer.mozilla.org/docs/Web/CSS/::details-content)**: fading a disclosure's content in. Without it: the content appears at once.
 - **[`field-sizing: content`](https://developer.mozilla.org/docs/Web/CSS/field-sizing)**: `Field.Textarea` with `autoGrow`. Without it: the textarea keeps its rows and scrolls.
-- **[`:has()`](https://developer.mozilla.org/docs/Web/CSS/:has)**: `Field` and `Chip` focus rings and adornment layout, and the `Alert` columns. Todae needs it.
+- **[`:has()`](https://developer.mozilla.org/docs/Web/CSS/:has)**: `Field` and `Chip` focus rings and adornment layout, the `Alert` columns, and stopping page scroll while a modal `<dialog>` is open (with `:modal`). Todae needs it.
+- **[`scrollbar-gutter`](https://developer.mozilla.org/docs/Web/CSS/scrollbar-gutter)**: keeping the page's scrollbar space while a modal `<dialog>` stops page scroll. Without it: the page shifts by the scrollbar's width when a modal opens.
 - **[Cascade layers](https://developer.mozilla.org/docs/Web/CSS/@layer)**: ordering Todae's reset, tokens, components and a company's theme. Todae needs it.
 - **[Relative color syntax](https://developer.mozilla.org/docs/Web/CSS/color_value/oklch)**: translucent colors made from a token, such as `color.bg.selected`. Todae needs it.
 - **[`@starting-style`](https://developer.mozilla.org/docs/Web/CSS/@starting-style)**: `Dialog` entry transitions. Without it: the dialog appears without a transition.

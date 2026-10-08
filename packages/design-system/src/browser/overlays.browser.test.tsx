@@ -6,6 +6,7 @@ import { usePopover } from '../hooks/usePopover';
 import { BottomSheet, type SheetCloseReason } from '../components/BottomSheet';
 import { Button } from '../components/Button';
 import { Dialog, type DialogCloseReason } from '../components/Dialog';
+import { Drawer } from '../components/Drawer';
 import { Popover } from '../components/Popover';
 
 function Themed({ children }: { children: ReactNode }) {
@@ -151,7 +152,7 @@ describe('BottomSheet in a browser', () => {
     await waitFor(() => expect(Math.round(sheet().getBoundingClientRect().bottom)).toBe(window.innerHeight), {
       timeout: 2000,
     });
-    // Edge to edge, give or take the gutter the scroll lock keeps for the scrollbar.
+    // Edge to edge, give or take the gutter the page keeps for its scrollbar while a modal is open.
     const box = sheet().getBoundingClientRect();
     expect(Math.round(box.left)).toBe(0);
     expect(box.width).toBeGreaterThan(window.innerWidth - 24);
@@ -247,5 +248,86 @@ describe('BottomSheet in a browser', () => {
     );
     await waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining('hidden container')));
     error.mockRestore();
+  });
+});
+
+describe('page scroll behind a modal', () => {
+  const overflow = () => getComputedStyle(document.documentElement).overflow;
+
+  const roots = [
+    ['Dialog', Dialog.Root],
+    ['Drawer', Drawer.Root],
+    ['BottomSheet', BottomSheet.Root],
+  ] as const;
+
+  it.each(roots)('stops while a %s is open, through its exit, and comes back once it closes', async (_, Root) => {
+    function Harness({ open }: { open: boolean }) {
+      return (
+        <Root open={open} onOpenChange={() => undefined} aria-label="Panel">
+          <p>Body</p>
+        </Root>
+      );
+    }
+    expect(overflow()).not.toBe('hidden');
+    const { rerender } = render(<Harness open />);
+    expect(overflow()).toBe('hidden');
+    expect(getComputedStyle(document.documentElement).scrollbarGutter).toBe('stable');
+    const dialog = document.querySelector('dialog')!;
+    rerender(<Harness open={false} />);
+    // The exit motion runs with the dialog still open and the page inert.
+    expect(dialog.open).toBe(true);
+    expect(overflow()).toBe('hidden');
+    await waitFor(() => expect(dialog.open).toBe(false), { timeout: 2000 });
+    expect(overflow()).not.toBe('hidden');
+  });
+
+  it("lets the page's own root overflow and gutter win", () => {
+    const style = document.createElement('style');
+    style.textContent = 'html { overflow-y: scroll; scrollbar-gutter: stable both-edges }';
+    document.head.append(style);
+    try {
+      render(
+        <Dialog.Root open onOpenChange={() => undefined} aria-label="Rename">
+          <p>Body</p>
+        </Dialog.Root>,
+      );
+      expect(getComputedStyle(document.documentElement).overflowY).toBe('scroll');
+      expect(getComputedStyle(document.documentElement).scrollbarGutter).toBe('stable both-edges');
+    } finally {
+      style.remove();
+    }
+  });
+
+  it('keeps stopping while any modal is still open', () => {
+    const first = document.createElement('dialog');
+    const second = document.createElement('dialog');
+    document.body.append(first, second);
+    try {
+      first.showModal();
+      second.showModal();
+      second.close();
+      expect(overflow()).toBe('hidden');
+      first.close();
+      expect(overflow()).not.toBe('hidden');
+    } finally {
+      first.remove();
+      second.remove();
+    }
+  });
+
+  it('stops for a modal dialog of your own, but not for a non-modal one', () => {
+    const dialog = document.createElement('dialog');
+    document.body.append(dialog);
+    try {
+      dialog.show();
+      expect(overflow()).not.toBe('hidden');
+      dialog.close();
+      dialog.showModal();
+      expect(overflow()).toBe('hidden');
+      dialog.close();
+      expect(overflow()).not.toBe('hidden');
+    } finally {
+      dialog.remove();
+    }
   });
 });

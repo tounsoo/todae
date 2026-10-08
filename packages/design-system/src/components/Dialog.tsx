@@ -17,7 +17,6 @@ import { DIALOG_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOv
 import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useModalDialog } from '../overlay/useModalDialog';
-import { useScrollLock } from '../overlay/useScrollLock';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Dialog.module.css';
 import { ToolbarContext } from './toolbarContext';
@@ -178,7 +177,6 @@ export function DialogShellRoot({
   }, []);
   const dialogRefs = useComposedRefs(setDialogRef, ref);
 
-  useScrollLock(present);
   // Records the focus to return to, before showModal moves it. Keyed on
   // present: the page behind stays inert until the exit motion ends.
   useFocusRestore(present, { restoreTo: restoreFocusRef, containerRef: dialogRef, nativeReturn: true });

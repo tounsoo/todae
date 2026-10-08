@@ -52,6 +52,14 @@ describe('todae.base styles', () => {
     }
   });
 
+  it('stops page scroll, without !important, while a modal dialog is open', () => {
+    expect(selectors(base)).toContain(':where(:root:has(dialog:modal))');
+    const rule = base.slice(base.indexOf(':where(:root:has(dialog:modal))'));
+    const body = rule.slice(rule.indexOf('{') + 1, rule.indexOf('}'));
+    expect(body).toContain('overflow: hidden;');
+    expect(body).not.toContain('!important');
+  });
+
   it('styles links, disclosures and the visually hidden utilities', () => {
     const list = selectors(base).join('\n');
     expect(list).toContain(':where(a:any-link)');
