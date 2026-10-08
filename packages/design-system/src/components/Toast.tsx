@@ -128,8 +128,12 @@ function alongside<E>(theirs: ((event: E) => void) | undefined, ours: (event: E)
 
 /** Whether a key pressed in `target` types there, so a typing hotkey leaves it alone. */
 function typesIn(target: EventTarget | null, hotkey: string): boolean {
-  // A function key types nothing anywhere.
-  if (/(^|\+)\s*f\d{1,2}\s*$/i.test(hotkey)) return false;
+  const parts = hotkey.split('+').map((part) => part.trim().toLowerCase());
+  const key = parts.pop() ?? '';
+  const has = (...names: string[]) => parts.some((part) => names.includes(part));
+  // A function key types nothing anywhere, nor does a chord with Meta or
+  // Ctrl. Ctrl with Alt is AltGr on Windows, which types.
+  if (/^f\d{1,2}$/.test(key) || has('meta') || (has('ctrl', 'control') && !has('alt'))) return false;
   if (!(target instanceof HTMLElement)) return false;
   return target.isContentEditable || target.matches('input, textarea, select');
 }
@@ -381,15 +385,16 @@ function Region<T extends object = object>({
       // it renders, such as when it sets the dialog's text, and code may take
       // the dialog out of the document with the host inside. Watching the
       // dialog and its ancestors, not their subtrees, sees both. They are
-      // read again on each change, as code may also move the dialog.
+      // read again when code moves the dialog.
       if (target !== home) {
         const watch = (watcher: MutationObserver) => {
           watcher.disconnect();
           for (let node: Node | null = target; node; node = node.parentNode) watcher.observe(node, { childList: true });
         };
-        observer = new MutationObserver((_, self) => {
+        observer = new MutationObserver((records, self) => {
           if (host.parentNode !== target || !host.isConnected) place();
-          else watch(self);
+          // Moved: a node it sits in was taken out and put back elsewhere.
+          else if (records.some((record) => [...record.removedNodes].some((node) => node.contains(target)))) watch(self);
         });
         watch(observer);
       }

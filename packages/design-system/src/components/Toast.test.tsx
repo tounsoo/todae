@@ -159,7 +159,7 @@ describe('Toast', () => {
     expect(region.hasAttribute('data-expanded')).toBe(false);
   });
 
-  it('leaves a typing hotkey to a text field, but not a function key', () => {
+  it('leaves a typing hotkey to a text field, but not a function key or a Ctrl or Meta chord', () => {
     const toaster = createToaster({ duration: Infinity });
     function Page({ hotkey }: { hotkey: string }) {
       return (
@@ -175,9 +175,22 @@ describe('Toast', () => {
     input.focus();
     fireEvent.keyDown(input, { key: 't', code: 'KeyT', altKey: true });
     expect(document.activeElement).toBe(input);
+    // Ctrl with Alt is AltGr on Windows, which types.
+    rerender(<Page hotkey="Ctrl+Alt+E" />);
+    fireEvent.keyDown(input, { key: '€', code: 'KeyE', ctrlKey: true, altKey: true });
+    expect(document.activeElement).toBe(input);
     rerender(<Page hotkey="F8" />);
     fireEvent.keyDown(input, { key: 'F8', code: 'F8' });
     expect(document.activeElement).toBe(screen.getByRole('region'));
+    for (const [hotkey, init] of [
+      ['Ctrl+K', { key: 'k', code: 'KeyK', ctrlKey: true }],
+      ['Meta+K', { key: 'k', code: 'KeyK', metaKey: true }],
+    ] as const) {
+      input.focus();
+      rerender(<Page hotkey={hotkey} />);
+      fireEvent.keyDown(input, init);
+      expect(document.activeElement, hotkey).toBe(screen.getByRole('region'));
+    }
   });
 
   it('pauses the timer while the pointer is over the region', () => {

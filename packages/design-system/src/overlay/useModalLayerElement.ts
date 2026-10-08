@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
-import { dropModal, isModal, noteShown, pushModal } from './modalStack';
+import { dropModal, flushOpens, heldModals, isModal, pushModal, watchOpen } from './modalStack';
 import { inToastHostWithin } from './tabbables';
 import { initialFocusTarget } from './useInitialFocus';
 
@@ -10,7 +10,7 @@ import { initialFocusTarget } from './useInitialFocus';
  */
 export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean, shownModal = false): void {
   const latest = useRef({ open, shownModal });
-  const syncRef = useRef<(shown?: boolean) => void>(() => undefined);
+  const syncRef = useRef<() => void>(() => undefined);
   // First, so the effects below read this commit's values.
   useLayoutEffect(() => {
     latest.current = { open, shownModal };
@@ -19,22 +19,17 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
     if (!el) return;
     // Joins while `open` is true and it is shown modally. Once in, it stays
     // until close(), also after `open` turns false: until then the page is
-    // still inert, so the toasts must stay inside.
-    // Only a show moves it in front: one that joins late, or whose `open`
-    // turns true again, keeps the place it was shown in.
+    // still inert, so the toasts must stay inside. Only a show moves it in
+    // front: one that joins late, or whose `open` turns true again, keeps
+    // the place it was shown in.
     const sync = (shown = false) => {
       if (!el.open || !(latest.current.shownModal || isModal(el))) dropModal(el);
-      else if (latest.current.open) pushModal(el, shown);
+      else if (latest.current.open || (shown && heldModals().includes(el))) pushModal(el, shown);
     };
-    syncRef.current = sync;
-    sync();
     // showModal() and close() set and remove the open attribute, so this sees
     // the element open and close however it happens.
-    const observer = new MutationObserver((records) => {
-      const shown = el.open && records.some((record) => record.oldValue === null);
+    const unwatch = watchOpen(el, (shown) => {
       if (shown) {
-        // Also before `open` turns true, so it joins in the order shown.
-        noteShown(el);
         // showModal() focuses the first focusable element inside, which is a
         // toast when the toasts were still inside and the element has
         // nothing focusable of its own before them.
@@ -43,9 +38,15 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
       }
       sync(shown);
     });
-    observer.observe(el, { attributes: true, attributeFilter: ['open'], attributeOldValue: true });
+    // A show this commit made is counted where it happened, once, before
+    // the element joins.
+    syncRef.current = () => {
+      flushOpens();
+      sync();
+    };
+    syncRef.current();
     return () => {
-      observer.disconnect();
+      unwatch();
       syncRef.current = () => undefined;
       dropModal(el);
     };

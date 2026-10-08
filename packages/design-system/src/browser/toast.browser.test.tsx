@@ -609,6 +609,42 @@ describe('Toast with a modal dialog', () => {
     elsewhere.remove();
   });
 
+  it('leaves what it watches alone when the page around the dialog changes', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Own() {
+      const ref = useRef<HTMLDialogElement>(null);
+      useModalLayer(ref, true);
+      useEffect(() => ref.current?.showModal(), []);
+      return (
+        <dialog ref={ref} aria-label="Own">
+          <p>Own</p>
+        </dialog>
+      );
+    }
+    render(
+      <Themed>
+        <Own />
+        <Region toaster={toaster} />
+      </Themed>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Own' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    act(() => void toaster.add({ title: 'Kept' }));
+    const undo = await screen.findByRole('button', { name: 'Undo Kept' });
+    await waitFor(() => expect(dialog.contains(undo)).toBe(true));
+    const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+    try {
+      const other = document.createElement('div');
+      document.body.append(other);
+      other.remove();
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(observe).not.toHaveBeenCalled();
+    } finally {
+      observe.mockRestore();
+    }
+    act(() => dialog.close());
+  });
+
   it('keeps the dialog\'s own focus to return to, not a toast\'s', async () => {
     const toaster = createToaster({ duration: Infinity });
     function Page() {
