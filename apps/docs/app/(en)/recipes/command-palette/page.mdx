@@ -14,17 +14,29 @@ const cb = useCombobox({
   onChange: (value: string | null) => { if (value) run(value) },
   inputValue: query,
   onInputValueChange: setQuery,
-  onOpenChange: (open) => { if (open) setQuery('') },
+  onOpenChange: (open) => {
+    if (!open) return
+    setQuery('')
+    cb.highlight(null)
+    // Safari does not focus a clicked button, so fall back to the trigger.
+    returnFocusRef.current = document.activeElement === document.body ? cb.triggerRef.current : null
+  },
 })
 
 <Button.Root {...cb.getTriggerProps()} aria-keyshortcuts="Control+K Meta+K">
   Search commands
 </Button.Root>
-<Dialog.Root open={cb.open} onOpenChange={cb.setOpen} initialFocusRef={cb.inputRef} aria-label="Commands">
+<Dialog.Root
+  open={cb.open}
+  onOpenChange={cb.setOpen}
+  initialFocusRef={cb.inputRef}
+  restoreFocusRef={returnFocusRef}
+  aria-label="Commands"
+>
   <Field.Root id={cb.ids.input} aria-label="Command">
     <Field.TextInput {...cb.getInputProps()} placeholder="Type a command" />
   </Field.Root>
-  <OptionList.Root {...cb.getListboxProps()}>
+  <OptionList.Root {...cb.getListboxProps()} hidden={cb.isEmpty}>
     {cb.items.map((item) => (
       <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
     ))}
@@ -37,7 +49,7 @@ const cb = useCombobox({
   <CommandPalette />
 </Example>
 
-The shortcut is a `keydown` listener on `document` that calls `cb.setOpen(true)` for Ctrl+K or ⌘K. It checks `event.code`, the physical key, so it works on any keyboard layout. `aria-keyshortcuts` on the trigger tells assistive technology about it. Escape and a click on the backdrop close the dialog, and focus goes back to the element that had it when the palette opened. The empty message sits in a `role="status"` region, so screen readers announce it.
+The shortcut is a `keydown` listener on `document` that opens the palette on Ctrl+K or ⌘K. `aria-keyshortcuts` on the trigger tells assistive technology about it. Escape and a click on the backdrop close the dialog, and focus goes back to the element that had it when the palette opened, or to the trigger when nothing had focus. The empty message sits in a `role="status"` region, so screen readers announce it.
 
 ## When to use
 

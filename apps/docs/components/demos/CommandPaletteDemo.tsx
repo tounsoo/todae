@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, Dialog, Field, OptionList, Stack, Text, useCombobox, type ComboboxOption } from '@tounsoo/todae';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const COMMANDS: ComboboxOption[] = [
   { value: 'new-invoice', label: 'Create invoice' },
@@ -14,6 +14,9 @@ const COMMANDS: ComboboxOption[] = [
 export function CommandPalette() {
   const [ran, setRan] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  // Filled only when nothing had focus at open (Safari does not focus a clicked button).
+  // Left null, Dialog returns focus to whatever had it when the palette opened.
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const cb = useCombobox({
     options: COMMANDS,
     presentation: 'sheet',
@@ -24,36 +27,47 @@ export function CommandPalette() {
     },
     inputValue: query,
     onInputValueChange: setQuery,
-    // Each time it opens, start from the full list.
+    // Each time it opens, start from the full list with the top row active.
     onOpenChange: (open) => {
-      if (open) setQuery('');
+      if (!open) return;
+      setQuery('');
+      cb.highlight(null);
+      returnFocusRef.current = document.activeElement === document.body ? cb.triggerRef.current : null;
     },
   });
-  const { setOpen } = cb;
+  const { open, setOpen } = cb;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing) return;
-      // event.code names the physical key, so the shortcut works on any keyboard layout.
-      if ((event.metaKey || event.ctrlKey) && event.code === 'KeyK') {
-        event.preventDefault();
-        setOpen(true);
-      }
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return;
+      // Match the letter K; fall back to the key's position when the layout has no Latin letters.
+      const key = event.key.toLowerCase();
+      const isK = /^[a-z]$/.test(key) ? key === 'k' : event.code === 'KeyK';
+      if (!isK) return;
+      event.preventDefault();
+      if (!open) setOpen(true);
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [setOpen]);
+  }, [open, setOpen]);
 
   return (
     <Stack>
       <Button.Root {...cb.getTriggerProps()} variant="secondary" aria-keyshortcuts="Control+K Meta+K">
         Search commands
       </Button.Root>
-      <Dialog.Root open={cb.open} onOpenChange={setOpen} initialFocusRef={cb.inputRef} aria-label="Commands">
+      <Dialog.Root
+        open={cb.open}
+        onOpenChange={setOpen}
+        initialFocusRef={cb.inputRef}
+        restoreFocusRef={returnFocusRef}
+        aria-label="Commands"
+      >
         <Field.Root id={cb.ids.input} aria-label="Command">
           <Field.TextInput {...cb.getInputProps()} placeholder="Type a command" />
         </Field.Root>
-        <OptionList.Root {...cb.getListboxProps()}>
+        <OptionList.Root {...cb.getListboxProps()} hidden={cb.isEmpty}>
           {cb.items.map((item) => (
             <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
           ))}

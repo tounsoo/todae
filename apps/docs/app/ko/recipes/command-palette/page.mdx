@@ -14,17 +14,29 @@ const cb = useCombobox({
   onChange: (value: string | null) => { if (value) run(value) },
   inputValue: query,
   onInputValueChange: setQuery,
-  onOpenChange: (open) => { if (open) setQuery('') },
+  onOpenChange: (open) => {
+    if (!open) return
+    setQuery('')
+    cb.highlight(null)
+    // Safari does not focus a clicked button, so fall back to the trigger.
+    returnFocusRef.current = document.activeElement === document.body ? cb.triggerRef.current : null
+  },
 })
 
 <Button.Root {...cb.getTriggerProps()} aria-keyshortcuts="Control+K Meta+K">
   Search commands
 </Button.Root>
-<Dialog.Root open={cb.open} onOpenChange={cb.setOpen} initialFocusRef={cb.inputRef} aria-label="Commands">
+<Dialog.Root
+  open={cb.open}
+  onOpenChange={cb.setOpen}
+  initialFocusRef={cb.inputRef}
+  restoreFocusRef={returnFocusRef}
+  aria-label="Commands"
+>
   <Field.Root id={cb.ids.input} aria-label="Command">
     <Field.TextInput {...cb.getInputProps()} placeholder="Type a command" />
   </Field.Root>
-  <OptionList.Root {...cb.getListboxProps()}>
+  <OptionList.Root {...cb.getListboxProps()} hidden={cb.isEmpty}>
     {cb.items.map((item) => (
       <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
     ))}
@@ -37,7 +49,7 @@ const cb = useCombobox({
   <CommandPalette />
 </Example>
 
-단축키는 `document`의 `keydown` 리스너로, Ctrl+K나 ⌘K에서 `cb.setOpen(true)`를 호출합니다. 물리적인 키를 나타내는 `event.code`를 확인하므로 어떤 키보드 배열에서도 동작합니다. 트리거의 `aria-keyshortcuts`가 보조 기술에 단축키를 알려 줍니다. Escape나 배경 클릭으로 대화 상자가 닫히고, 포커스는 팔레트가 열릴 때 포커스가 있던 요소로 돌아갑니다. 빈 결과 메시지는 `role="status"` 영역에 있어 스크린 리더가 읽어 줍니다.
+단축키는 `document`의 `keydown` 리스너로, Ctrl+K나 ⌘K에서 팔레트를 엽니다. 트리거의 `aria-keyshortcuts`가 보조 기술에 단축키를 알려 줍니다. Escape나 배경 클릭으로 대화 상자가 닫히고, 포커스는 팔레트가 열릴 때 포커스가 있던 요소로, 포커스가 없었다면 트리거로 돌아갑니다. 빈 결과 메시지는 `role="status"` 영역에 있어 스크린 리더가 읽어 줍니다.
 
 ## 언제 쓰나요
 
