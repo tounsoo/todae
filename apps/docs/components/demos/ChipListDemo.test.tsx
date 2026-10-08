@@ -938,6 +938,57 @@ describe('chip list recipe', () => {
     body.assert();
   });
 
+  it('leaves focus on another chip when an old press is dropped later', async () => {
+    const body = watchBody();
+    const tags = owner(['aa', 'bb', 'cc']);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Remove aa' }));
+    });
+    const button = screen.getByRole('button', { name: 'Remove cc' });
+    act(() => button.focus());
+    await act(async () => tags.set((current) => current.slice(1)));
+    expect(document.activeElement).toBe(button);
+    body.assert();
+  });
+
+  it('follows a keyed chip when only the keys change', async () => {
+    const body = watchBody();
+    const labels = ['xx', 'xx'];
+    let swap = () => undefined as void;
+    function Owner() {
+      const [ids, setIds] = useState(['1', '2']);
+      swap = () => setIds((current) => [...current].reverse());
+      return <ChipList.Root aria-label="Tags" chips={labels} getKey={(_, index) => ids[index]!} onRemove={() => undefined} />;
+    }
+    render(<Owner />);
+    const [first] = screen.getAllByRole('button', { name: 'Remove xx' }) as [HTMLElement];
+    act(() => first.focus());
+    await act(async () => swap());
+    expect(document.activeElement).toBe(first);
+    expect(first.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('1');
+    body.assert();
+  });
+
+  it('leaves focus outside alone when the open panel empties on a resize', async () => {
+    const width = { current: 400 };
+    const ros = stubListWidth(width);
+    render(
+      <>
+        <ChipListDemo maxRows={1} initialChips={EIGHT} />
+        <input aria-label="Elsewhere" />
+      </>,
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    const input = screen.getByRole('textbox', { name: 'Elsewhere' });
+    act(() => input.focus());
+    width.current = 4000;
+    await resizeTo(ros);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(input);
+  });
+
   it('names a panel with one chip in the singular by default', async () => {
     render(<ChipList.Root aria-label="Tags" chips={['aa', 'bb', 'cc', 'dd']} maxRows={1} />);
     await act(async () => {

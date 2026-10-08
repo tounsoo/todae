@@ -217,6 +217,23 @@ function Root({
     restoreFocusRef: moreRef,
   });
 
+  // Any other change to chips ends the press.
+  const content = JSON.stringify(chips);
+  useLayoutEffect(() => {
+    const press = pressed.current;
+    if (press && !sameChips(press.chips, chips)) pressed.current = null;
+  }, [content]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const layoutKey = `${content}\u0000${keys.join('\u0000')}\u0000${visible.length}\u0000${open || hidden > 0}`;
+  const layout = useMemo<Layout>(
+    () => ({
+      chips,
+      row: keys.slice(0, visible.length),
+      panel: open || hidden > 0 ? keys.slice(visible.length) : [],
+    }),
+    [layoutKey], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   // A focused chip moved from the panel back to the row: focus follows it.
   useLayoutEffect(() => {
     const chip = moved.current;
@@ -226,27 +243,33 @@ function Root({
     const inPanel = chip === null || hidden === 0 || !open ? undefined : byKey(panel, chip);
     const match = chip === null ? undefined : (byKey(list, chip) ?? inPanel);
     const button = match?.querySelector('button');
-    panel?.removeAttribute('data-parked');
     // Nothing to follow: focus stays on the list, with its ring.
     const onList = () => {
       list?.focus({ preventScroll: true });
       setRing(true);
     };
     if (hidden === 0 && open) {
+      // The panel closes: focus follows only if it was in the component.
+      const active = document.activeElement;
+      const ours = !active || active === document.body || list?.contains(active) || panel?.contains(active);
       moved.current = null;
       parked.current = false;
-      if (button) button.focus({ preventScroll: true });
-      else onList();
+      panel?.removeAttribute('data-parked');
+      if (ours) {
+        if (button) button.focus({ preventScroll: true });
+        else onList();
+      }
       setOpen(false);
       return;
     }
     if (chip === null) return;
     moved.current = null;
     parked.current = false;
+    panel?.removeAttribute('data-parked');
     const next = button ?? moreRef.current;
     if (next) next.focus({ preventScroll: true });
     else onList();
-  }, [chips, hidden, listRef, open, popover.popoverRef]);
+  }, [layout, hidden, listRef, open, popover.popoverRef]);
   const wire = popover.getPopoverProps();
   const tail = chips.slice(chips.length - hidden);
   const tailKey = tail.join('\n');
@@ -309,24 +332,7 @@ function Root({
         setRing(true);
       }
     });
-  }, [chips, listRef, popover.popoverRef]);
-
-  // Any other change to chips ends the press.
-  const content = JSON.stringify(chips);
-  useLayoutEffect(() => {
-    const press = pressed.current;
-    if (press && !sameChips(press.chips, chips)) pressed.current = null;
-  }, [content]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const layoutKey = `${content}\u0000${keys.join('\u0000')}\u0000${visible.length}\u0000${open || hidden > 0}`;
-  const layout = useMemo<Layout>(
-    () => ({
-      chips,
-      row: keys.slice(0, visible.length),
-      panel: open || hidden > 0 ? keys.slice(visible.length) : [],
-    }),
-    [layoutKey], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  }, [layout, listRef, popover.popoverRef]);
 
   const capture = (prev: Layout, next: Layout): Snap | null => {
     const list = listRef.current;
@@ -339,7 +345,14 @@ function Root({
     const press = pressed.current;
     let inRow = prev.row.includes(key);
     let slot: number | null = null;
-    if (!getKey && press && sameChips(press.chips, prev.chips) && spliced(prev.chips, next.chips, press.index)) {
+    // Only for the pressed chip, or a twin React kept in its place.
+    if (
+      !getKey &&
+      press &&
+      item.getAttribute('data-value') === press.chips[press.index] &&
+      sameChips(press.chips, prev.chips) &&
+      spliced(prev.chips, next.chips, press.index)
+    ) {
       inRow = press.index < prev.row.length;
       slot = inRow ? press.index : press.index - prev.row.length;
     } else if (!next.row.includes(key) && !next.panel.includes(key)) {
@@ -506,6 +519,7 @@ function Root({
               <Chip.Root
                 key={keys[at]}
                 data-key={keys[at]}
+                data-value={value}
                 className={styles.panelChip}
                 dismissLabel={dismissLabel?.(value)}
                 onDismiss={
