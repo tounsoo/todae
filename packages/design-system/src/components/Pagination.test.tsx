@@ -42,13 +42,31 @@ describe('Pagination', () => {
     );
     const gap = screen.getByTestId('gap');
     expect(gap.getAttribute('aria-hidden')).toBe('true');
+    cleanup();
+    render(
+      <Pagination.Root>
+        <Pagination.Ellipsis aria-hidden={false} data-testid="gap" />
+      </Pagination.Root>,
+    );
+    expect(screen.getByTestId('gap').getAttribute('aria-hidden')).toBe('true');
+    cleanup();
+    render(
+      <Pagination.Root>
+        <Pagination.Ellipsis data-testid="gap" />
+      </Pagination.Root>,
+    );
     expect(gap.textContent).toBe('…');
   });
 
   it('keeps the focus ring on the current page and greys out a disabled step in forced colors', () => {
     const css = readFileSync(join(import.meta.dirname, 'Pagination.module.css'), 'utf8');
     const forced = css.slice(css.indexOf('@media (forced-colors: active)'));
-    expect(forced).toContain(":not([aria-current='false' i], [aria-current='']):not(:focus-visible) {");
-    expect(forced).toMatch(/\[aria-disabled='true'\] \{\s*color: GrayText;/);
+    expect(forced).toContain(':not(:focus-visible)');
+    // Every muted state outside forced colors is greyed inside them too.
+    const muted = (block: string) => block.slice(0, block.indexOf('{')).replace(/\s+/g, ' ').trim();
+    const normal = css.slice(css.indexOf(".item > :is([aria-disabled='true']"));
+    const grey = forced.slice(forced.indexOf(".item > :is([aria-disabled='true']"));
+    expect(muted(grey)).toBe(muted(normal));
+    expect(grey.slice(0, grey.indexOf('}'))).toContain('color: GrayText;');
   });
 });

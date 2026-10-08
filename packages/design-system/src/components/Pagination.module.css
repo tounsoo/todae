@@ -47,7 +47,7 @@
 
   /* A step with nowhere to go: aria-disabled, which keeps it focusable, or a
      link without href or a disabled button. */
-  .item > :is([aria-disabled='true'], a:not(:any-link, [role='link']), button:disabled),
+  .item > :is([aria-disabled='true'], a:not(:any-link), button:disabled),
   .ellipsis {
     color: var(--todae-pagination-fg-disabled);
     cursor: default;
@@ -72,7 +72,8 @@
     }
 
     /* System colors replace the muted token, so mark the state with GrayText. */
-    .item > [aria-disabled='true'] {
+    .item > :is([aria-disabled='true'], a:not(:any-link), button:disabled),
+    .ellipsis {
       color: GrayText;
     }
   }

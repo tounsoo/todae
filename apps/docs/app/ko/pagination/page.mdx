@@ -38,7 +38,7 @@ import { PaginationButtons } from '../../../components/demos/PaginationDemo';
 
 지금 있는 페이지의 컨트롤에 `aria-current="page"`를 주면 현재 페이지로 그려집니다. 갈 곳이 없는 이전이나 다음 단계에 `aria-disabled="true"`를 주면 흐리게 그려집니다. 버튼이라면 `disabled` 대신 `aria-disabled`를 쓰세요. 위 예제처럼 끝에 닿아도 버튼이 포커스를 유지합니다. 갈 곳이 없는 링크는 `href` 없는 `<a role="link" aria-disabled="true">`입니다.
 
-`Pagination.Root`는 `aria-label`이나 `aria-labelledby`를 주지 않으면 "Pagination"이라는 이름을 씁니다. 이 기본값은 영어이므로 다른 언어에서는 직접 이름을 주세요. 한 페이지에 여러 개가 있으면 무엇을 넘기는지에 따라 이름을 붙이세요. 스타일은 `pagination` 토큰으로 바꾸세요.
+`Pagination.Root`는 비어 있지 않은 `aria-label`이나 `aria-labelledby`를 주지 않으면 "Pagination"이라는 이름을 씁니다. 이 기본값은 영어이므로 다른 언어에서는 직접 이름을 주세요. 한 페이지에 여러 개가 있으면 무엇을 넘기는지에 따라 이름을 붙이세요. 스타일은 `pagination` 토큰으로 바꾸세요.
 
 Server Component에서는 `@tounsoo/todae/pagination`에서 가져올 수 있습니다.
 

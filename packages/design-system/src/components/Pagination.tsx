@@ -6,7 +6,7 @@ export { paginationRange, type PaginationRangeItem, type PaginationRangeOptions 
 
 /**
  * A `nav` landmark holding an ordered list of pages. Named "Pagination" unless
- * you pass `aria-label` or `aria-labelledby`; that default is English.
+ * you pass a non-empty `aria-label` or `aria-labelledby`; that default is English.
  */
 export type PaginationRootProps = ComponentPropsWithRef<'nav'>;
 
@@ -42,7 +42,7 @@ function Item({ className, ...props }: PaginationItemProps) {
 
 function Ellipsis({ className, children = '…', ...props }: PaginationEllipsisProps) {
   return (
-    <li aria-hidden="true" {...props} className={cx(styles.item, className)}>
+    <li {...props} aria-hidden="true" className={cx(styles.item, className)}>
       <span className={styles.ellipsis}>{children}</span>
     </li>
   );
