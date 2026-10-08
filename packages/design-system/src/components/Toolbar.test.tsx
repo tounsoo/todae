@@ -551,4 +551,19 @@ describe('Toolbar', () => {
     button('A').focus();
     expect(document.activeElement).toBe(button('C'));
   });
+
+  it('leaves a toggle group inside a plain role=toolbar its own roving focus', async () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <div role="toolbar" aria-label="inner">
+          <ToggleGroup.Root aria-label="Align" defaultValue="left">
+            <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+            <ToggleGroup.Item value="right">Right</ToggleGroup.Item>
+          </ToggleGroup.Root>
+        </div>
+      </Toolbar.Root>,
+    );
+    await waitFor(() => expect([button('Left').tabIndex, button('Right').tabIndex]).toEqual([0, -1]));
+  });
 });

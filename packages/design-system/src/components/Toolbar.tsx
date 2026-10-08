@@ -1,6 +1,7 @@
 import {
   useContext,
   useEffect,
+  useId,
   useMemo,
   useRef,
   type ComponentPropsWithRef,
@@ -123,7 +124,8 @@ function Root({
   // to the one left most recently.
   const left = useRef(new WeakMap<HTMLElement, number>());
   const leaves = useRef(0);
-  const context = useMemo(() => ({ orientation }), [orientation]);
+  const id = useId();
+  const context = useMemo(() => ({ orientation, id }), [orientation, id]);
 
   // The Tab key press now under way, seen first at the window so stopped
   // propagation cannot hide it. Dropped once the browser has moved focus.
@@ -158,7 +160,8 @@ function Root({
   const handleFocus = (event: FocusEvent<HTMLDivElement>) => {
     onFocus?.(event);
     const root = rootRef.current;
-    if (!root) return;
+    // Focus inside a portaled layer still bubbles here through React.
+    if (!root || !root.contains(event.target as Node)) return;
     // A move inside the toolbar that Tab did not make, such as an arrow key.
     if (!tabbing() && root.contains(event.relatedTarget as Node | null)) return;
     const target = event.target as HTMLElement;
@@ -219,6 +222,7 @@ function Root({
         {...props}
         ref={refs}
         role="toolbar"
+        data-todae-toolbar={id}
         aria-orientation={orientation === 'vertical' ? 'vertical' : undefined}
         data-orientation={orientation}
         className={cx(styles.root, className)}
@@ -227,6 +231,7 @@ function Root({
           onPointerDown?.(event);
           // A press in a run forgets that run's remembered control.
           const pressed = event.target as Node;
+          if (!event.currentTarget.contains(pressed)) return;
           const run = runsOf(event.currentTarget).find((items) => items.some((item) => item.contains(pressed)));
           for (const item of run ?? []) left.current.delete(item);
         }}

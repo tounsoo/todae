@@ -2,7 +2,9 @@ import { createContext, useContext, useLayoutEffect, useState, type RefObject } 
 
 export type ToolbarOrientation = 'horizontal' | 'vertical';
 
-type ToolbarContextValue = { orientation: ToolbarOrientation };
+// `id` is on the toolbar element as data-todae-toolbar, so a control can
+// tell its own Toolbar.Root from any other role="toolbar".
+type ToolbarContextValue = { orientation: ToolbarOrientation; id: string };
 
 /**
  * Set inside a toolbar, so a control inside, such as ToggleGroup or
@@ -26,7 +28,7 @@ export function useToolbar(nodeRef: RefObject<HTMLElement | null>): ToolbarConte
   useLayoutEffect(() => {
     if (!context) return;
     const layer = nodeRef.current?.parentElement?.closest(TOOLBAR_BOUNDARY);
-    setOutside(layer?.getAttribute('role') !== 'toolbar');
+    setOutside(layer?.getAttribute('data-todae-toolbar') !== context.id);
   }, [context, nodeRef]);
   return outside ? null : context;
 }
