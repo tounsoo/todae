@@ -1461,6 +1461,36 @@
       "ko": "하이라이트 유형. 맞춤법과 문법 표시에 씁니다."
     }
   },
+  "useDropzone": {
+    "accept": {
+      "en": "File types to take, in the input's accept syntax: '.pdf', 'image/*', 'application/json', comma separated. Checked on drop too.",
+      "ko": "받을 파일 형식. 입력의 accept 문법으로 쉼표로 나눠 적습니다: '.pdf', 'image/*', 'application/json'. 드롭할 때도 확인합니다."
+    },
+    "disabled": {
+      "en": "Turn off the input and drops.",
+      "ko": "입력과 드롭을 끕니다."
+    },
+    "maxFiles": {
+      "en": "Most files to take when multiple is set. Files past it are rejected as 'too-many'.",
+      "ko": "multiple일 때 받을 최대 파일 수. 넘는 파일은 'too-many'로 거부됩니다."
+    },
+    "maxSize": {
+      "en": "Largest file size in bytes.",
+      "ko": "바이트 단위의 최대 파일 크기."
+    },
+    "minSize": {
+      "en": "Smallest file size in bytes.",
+      "ko": "바이트 단위의 최소 파일 크기."
+    },
+    "multiple": {
+      "en": "Take more than one file.",
+      "ko": "파일을 둘 이상 받습니다."
+    },
+    "onFiles": {
+      "en": "Called with the files that passed and the files that did not, after a drop or a pick.",
+      "ko": "드롭하거나 고른 뒤, 통과한 파일과 통과하지 못한 파일로 호출됩니다."
+    }
+  },
   "useModalLayer": {
     "ref": {
       "en": "The <dialog>. Render it in the component that calls the hook, which reads the ref each time that component renders.",
