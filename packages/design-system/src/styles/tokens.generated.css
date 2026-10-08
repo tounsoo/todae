@@ -513,7 +513,6 @@
   --todae-drawer-bg: var(--todae-color-bg-elevated);
   --todae-drawer-border: var(--todae-color-border-default);
   --todae-drawer-fg: var(--todae-color-fg-default);
-  --todae-drawer-gap: var(--todae-space-overlay-gap);
   --todae-drawer-motion-enter: var(--todae-motion-duration-slow);
   --todae-drawer-motion-exit: var(--todae-motion-duration-moderate);
   --todae-drawer-padding-x: var(--todae-space-overlay-padding);

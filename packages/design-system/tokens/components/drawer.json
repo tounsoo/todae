@@ -7,7 +7,6 @@
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } }
     },
-    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/gap/$value" } },
     "size": { "$type": "dimension", "$value": { "value": 24, "unit": "rem" } },
     "motion": {
       "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/slow/$value" } },

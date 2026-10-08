@@ -1,4 +1,4 @@
-import { SHEET_EXIT_MS } from '../overlay/useOverlayPresence';
+import { DRAWER_EXIT_MS } from '../overlay/useOverlayPresence';
 import { DialogShellRoot, type DialogRootProps } from './Dialog';
 import styles from './Drawer.module.css';
 
@@ -20,7 +20,7 @@ function Root({ side = 'end', ...props }: DrawerRootProps) {
       shell={{
         className: styles.drawer,
         panelClassName: styles.panel,
-        exitMs: SHEET_EXIT_MS,
+        exitMs: DRAWER_EXIT_MS,
         attributes: { 'data-side': side },
       }}
     />

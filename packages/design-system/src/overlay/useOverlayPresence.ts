@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 // The real lengths come from the dialog and sheet motion tokens.
 export const DIALOG_EXIT_MS = 160;
 export const SHEET_EXIT_MS = 240;
+export const DRAWER_EXIT_MS = 240;
 
 function cssTimeMs(value: string): number | null {
   const match = value.trim().match(/^(-?\d*\.?\d+)(ms|s)$/);

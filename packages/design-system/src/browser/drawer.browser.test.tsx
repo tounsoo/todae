@@ -49,4 +49,34 @@ describe('Drawer in a browser', () => {
     render(<Open dir="rtl" />);
     expect((await edges()).left).toBe(0);
   });
+
+  it('turns off every transition under reduced motion, the open state included', async () => {
+    // Applies the reduced-motion rules as if the media query matched, in the
+    // same layer and after the rules they override.
+    const reduced = [...document.styleSheets]
+      .flatMap((sheet) => [...sheet.cssRules])
+      .flatMap((rule) => (rule instanceof CSSLayerBlockRule ? [...rule.cssRules] : [rule]))
+      .filter((rule): rule is CSSMediaRule => rule instanceof CSSMediaRule && rule.conditionText.includes('prefers-reduced-motion'))
+      .flatMap((rule) => [...rule.cssRules].map((inner) => inner.cssText));
+    const style = document.createElement('style');
+    style.textContent = `@layer todae.components { ${reduced.join('\n')} }`;
+    document.head.append(style);
+    try {
+      render(<Open />);
+      const drawer = screen.getByRole('dialog', { name: 'Filters' });
+      render(
+        <div data-appearance="light" data-density="comfortable">
+          <Dialog.Root open onOpenChange={() => undefined} aria-label="Plain">
+            <p>x</p>
+          </Dialog.Root>
+        </div>,
+      );
+      const dialog = screen.getByRole('dialog', { name: 'Plain' });
+      for (const el of [drawer, drawer.firstElementChild!, dialog, dialog.firstElementChild!]) {
+        expect(getComputedStyle(el).transitionProperty).toBe('none');
+      }
+    } finally {
+      style.remove();
+    }
+  });
 });

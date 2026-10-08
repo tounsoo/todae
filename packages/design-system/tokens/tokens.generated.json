@@ -4421,15 +4421,6 @@
       "context": null
     },
     {
-      "path": "drawer.gap",
-      "type": "dimension",
-      "cssVar": "--todae-drawer-gap",
-      "cssValue": "var(--todae-space-overlay-gap)",
-      "ref": "space.overlay.gap",
-      "layer": "contract",
-      "context": null
-    },
-    {
       "path": "drawer.motion.enter",
       "type": "duration",
       "cssVar": "--todae-drawer-motion-enter",
