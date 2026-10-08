@@ -36,7 +36,12 @@
         { "$ref": "./components/separator.json" },
         { "$ref": "./components/table.json" },
         { "$ref": "./components/progress.json" },
-        { "$ref": "./components/slider.json" }
+        { "$ref": "./components/slider.json" },
+        { "$ref": "./components/badge.json" },
+        { "$ref": "./components/card.json" },
+        { "$ref": "./components/breadcrumbs.json" },
+        { "$ref": "./components/toolbar.json" },
+        { "$ref": "./components/drawer.json" }
       ],
       "$extensions": {
         "dev.todae": {

@@ -95,6 +95,25 @@
       ]
     },
     {
+      "name": "Badge.Root",
+      "description": "A short static label or count in one of five tones. A span with no role; takes native span attributes.",
+      "props": [
+        {
+          "name": "tone",
+          "type": "\"neutral\" | \"info\" | \"success\" | \"warning\" | \"critical\"",
+          "required": false,
+          "description": "Colors from the badge.<tone> contract tokens.",
+          "default": "\"neutral\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Label text or a number."
+        }
+      ]
+    },
+    {
       "name": "BottomSheet.Body",
       "description": "Scroll container. Drag starts only at scrollTop 0.",
       "props": []
@@ -225,6 +244,57 @@
       ]
     },
     {
+      "name": "Breadcrumbs.Item",
+      "description": "One step in the trail. An li; takes native li attributes.",
+      "props": [
+        {
+          "name": "current",
+          "type": "boolean",
+          "required": false,
+          "description": "Wraps the text in a span with aria-current=\"page\", marking the page you are on. Give it plain text, not a link.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A link to the page, such as an a element or your router's link."
+        }
+      ]
+    },
+    {
+      "name": "Breadcrumbs.Root",
+      "description": "A nav landmark with an ordered list of the pages above this one. Takes native nav attributes.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Landmark name. The default is English, so pass a name in your app's language.",
+          "default": "\"Breadcrumb\""
+        },
+        {
+          "name": "aria-labelledby",
+          "type": "string",
+          "required": false,
+          "description": "Id of an element that names the landmark. When set, the default name is dropped."
+        },
+        {
+          "name": "separator",
+          "type": "string",
+          "required": false,
+          "description": "Text drawn between items. Screen readers skip it.",
+          "default": "\"/\""
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Breadcrumbs.Item elements, from the top page down to this one."
+        }
+      ]
+    },
+    {
       "name": "Button.Group",
       "description": "Chrome-only attached row of Button.Root. role=group. No selection state.",
       "props": [
@@ -293,10 +363,76 @@
           "default": "true"
         },
         {
+          "name": "pressed",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled pressed state. Makes the button a toggle with aria-pressed."
+        },
+        {
+          "name": "defaultPressed",
+          "type": "boolean",
+          "required": false,
+          "description": "Starting pressed state for an uncontrolled toggle. Makes the button a toggle with aria-pressed."
+        },
+        {
+          "name": "onPressedChange",
+          "type": "(pressed: boolean) => void",
+          "required": false,
+          "description": "Called with the new state when a toggle is clicked. onClick runs first; preventDefault() there skips the change."
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
           "description": "Label and optional Button.Icon. Order is leading or trailing."
+        }
+      ]
+    },
+    {
+      "name": "Card.Body",
+      "description": "Main content of the card. A div.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Body content."
+        }
+      ]
+    },
+    {
+      "name": "Card.Footer",
+      "description": "Actions at the end of the card, in a wrapping row aligned to the end. A div.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Buttons or links."
+        }
+      ]
+    },
+    {
+      "name": "Card.Header",
+      "description": "Top of the card, for a heading and a short description. A div; headings inside lose their outer margin.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A heading of the level that fits the page, and optional text."
+        }
+      ]
+    },
+    {
+      "name": "Card.Root",
+      "description": "A bordered surface from the card tokens. A div with no role; takes native div attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Card parts, or any content."
         }
       ]
     },
@@ -388,6 +524,54 @@
           "required": false,
           "description": "Disables dismiss.",
           "default": "false"
+        }
+      ]
+    },
+    {
+      "name": "ChipList.Root",
+      "description": "A list of chips that folds the ones past maxRows into a +N button, which opens a popover with the rest. Name it with aria-label or aria-labelledby.",
+      "props": [
+        {
+          "name": "chips",
+          "type": "readonly string[]",
+          "required": true,
+          "description": "Chip labels, in order."
+        },
+        {
+          "name": "maxRows",
+          "type": "number",
+          "required": false,
+          "description": "Rows to show before folding the rest into +N. Without it, every chip wraps onto as many rows as it needs."
+        },
+        {
+          "name": "getKey",
+          "type": "(value: string, index: number) => string",
+          "required": false,
+          "description": "A stable, unique key for each chip, so focus can follow it when chips change. Without it, chips are matched by value, so focus can land on another chip with the same value."
+        },
+        {
+          "name": "onRemove",
+          "type": "(index: number, value: string) => void",
+          "required": false,
+          "description": "Renders a remove button on each chip. Once chips drops the focused chip, focus moves to the chip that now fills its place, else the one before it, else +N, else the list."
+        },
+        {
+          "name": "dismissLabel",
+          "type": "(value: string) => string",
+          "required": false,
+          "description": "Remove button name. Default is Remove {value}."
+        },
+        {
+          "name": "overflowLabel",
+          "type": "(n: number) => string",
+          "required": false,
+          "description": "+N button name. Default is {n} more."
+        },
+        {
+          "name": "panelLabel",
+          "type": "(n: number) => string",
+          "required": false,
+          "description": "Name of the popover with the folded chips. Default is {n} more chips, or 1 more chip."
         }
       ]
     },
@@ -534,6 +718,51 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Title text."
+        }
+      ]
+    },
+    {
+      "name": "Drawer.Root",
+      "description": "Controlled native modal dialog pinned to the start or end edge, full height. Uses Dialog parts inside.",
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": true,
+          "description": "Controlled open state."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: DialogCloseReason) => void",
+          "required": true,
+          "description": "Dismiss requests, with the same reasons as Dialog.Root."
+        },
+        {
+          "name": "side",
+          "type": "'start' | 'end'",
+          "required": false,
+          "description": "Inline edge it is pinned to. Follows text direction.",
+          "default": "'end'"
+        },
+        {
+          "name": "dismissOnEscape",
+          "type": "boolean",
+          "required": false,
+          "description": "Escape calls onOpenChange(false, \"escape\").",
+          "default": "true"
+        },
+        {
+          "name": "dismissOnBackdrop",
+          "type": "boolean",
+          "required": false,
+          "description": "Scrim click calls onOpenChange(false, \"backdrop\").",
+          "default": "true"
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name when Dialog.Title is omitted."
         }
       ]
     },
@@ -1913,6 +2142,143 @@
       ]
     },
     {
+      "name": "ToggleGroup.Item",
+      "description": "A secondary Button.Root with aria-pressed from the group. Takes Button.Root props except the pressed ones.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Identifies the item in the group value."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables this item.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Label, or a Button.Icon with aria-label."
+        }
+      ]
+    },
+    {
+      "name": "ToggleGroup.Root",
+      "description": "role=\"group\" of toggle buttons with one tab stop and arrow-key focus. Inside a Toolbar, the toolbar owns the arrow keys. Takes native div attributes.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the group, such as \"Alignment\"."
+        },
+        {
+          "name": "selectionMode",
+          "type": "\"single\" | \"multiple\"",
+          "required": false,
+          "description": "Single presses one item at most; pressing it again clears it. Multiple presses any number.",
+          "default": "\"single\""
+        },
+        {
+          "name": "value",
+          "type": "string | null | readonly string[]",
+          "required": false,
+          "description": "Controlled pressed value: a value or null for single, an array for multiple."
+        },
+        {
+          "name": "defaultValue",
+          "type": "string | null | readonly string[]",
+          "required": false,
+          "description": "Starting pressed value when uncontrolled."
+        },
+        {
+          "name": "onChange",
+          "type": "((value: string | null) => void) | ((value: string[]) => void)",
+          "required": false,
+          "description": "Called with the new pressed value when an item is pressed."
+        },
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false,
+          "description": "Layout, and the arrow keys that move focus outside a toolbar. Horizontal items join like Button.Group.",
+          "default": "\"horizontal\", or the toolbar's"
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Disables every item.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "ToggleGroup.Item elements."
+        }
+      ]
+    },
+    {
+      "name": "Toolbar.Group",
+      "description": "role=\"group\" around controls that belong together. Takes native div attributes.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the group, such as \"Text style\"."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Controls in the group."
+        }
+      ]
+    },
+    {
+      "name": "Toolbar.Root",
+      "description": "role=\"toolbar\" whose controls share one tab stop, apart from text inputs and others that keep their own. Arrow keys, Home and End move focus between the focusable controls inside, wrappers included. Takes native div attributes.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the toolbar. Pass this or aria-labelledby."
+        },
+        {
+          "name": "orientation",
+          "type": "\"horizontal\" | \"vertical\"",
+          "required": false,
+          "description": "Left and Right move focus in a horizontal toolbar, Up and Down in a vertical one. Left and Right follow the text direction.",
+          "default": "\"horizontal\""
+        },
+        {
+          "name": "loop",
+          "type": "boolean",
+          "required": false,
+          "description": "Wrap from the last control to the first and back.",
+          "default": "true"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Buttons, toggles, menu triggers and other controls, with Toolbar.Group and Toolbar.Separator between them."
+        }
+      ]
+    },
+    {
+      "name": "Toolbar.Separator",
+      "description": "role=\"separator\" drawn across the toolbar: a vertical rule in a horizontal toolbar, a horizontal one in a vertical toolbar. Not focusable.",
+      "props": []
+    },
+    {
       "name": "Tooltip.Root",
       "description": "Tip chrome. Spread getTooltipProps for wire.",
       "props": [
@@ -1945,6 +2311,25 @@
           "type": "string",
           "required": false,
           "description": "Id of the visible caption. Exactly one of aria-label or aria-labelledby when interactive."
+        }
+      ]
+    },
+    {
+      "name": "useAnnouncer",
+      "description": "Takes no arguments and returns announce(message, options?), which reads message to screen readers through visually hidden live regions shared by the whole document; while a modal in the Todae modal stack is open, the one inside the modal in front. The props below are announce arguments.",
+      "props": [
+        {
+          "name": "message",
+          "type": "string",
+          "required": true,
+          "description": "Text to read. The same message twice is read twice. An empty string clears the region."
+        },
+        {
+          "name": "politeness",
+          "type": "\"polite\" | \"assertive\"",
+          "required": false,
+          "description": "Options field. polite waits for the screen reader to finish; assertive interrupts it.",
+          "default": "\"polite\""
         }
       ]
     },
@@ -2065,6 +2450,48 @@
           "type": "string",
           "required": false,
           "description": "Controlled filter text."
+        }
+      ]
+    },
+    {
+      "name": "useControlledState",
+      "description": "useControlledState(controlled, defaultValue) returns [value, setValue]. While controlled is not undefined it is the value and setValue does nothing; otherwise setValue stores the next value. It never calls a change callback.",
+      "props": [
+        {
+          "name": "controlled",
+          "type": "T | undefined",
+          "required": true,
+          "description": "The value prop. undefined means uncontrolled, so use null for an empty controlled value."
+        },
+        {
+          "name": "defaultValue",
+          "type": "T",
+          "required": true,
+          "description": "Starting value when uncontrolled. Read on the first render only."
+        }
+      ]
+    },
+    {
+      "name": "useControlledValue",
+      "description": "useControlledValue(controlled, defaultValue, onChange) returns [value, change]. change(next, ...args) skips a value equal to the one from the last render (Object.is), stores it when uncontrolled, then calls onChange(next, ...args).",
+      "props": [
+        {
+          "name": "controlled",
+          "type": "T | undefined",
+          "required": true,
+          "description": "The value prop. undefined means uncontrolled, so use null for an empty controlled value."
+        },
+        {
+          "name": "defaultValue",
+          "type": "T",
+          "required": true,
+          "description": "Starting value when uncontrolled. Read on the first render only."
+        },
+        {
+          "name": "onChange",
+          "type": "(next: T, ...args: A) => void",
+          "required": false,
+          "description": "Called with each new value and any extra arguments, such as a reason, controlled or not."
         }
       ]
     },

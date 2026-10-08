@@ -23,6 +23,18 @@
       "types": "./dist/server/label.d.ts",
       "import": "./dist/label.js"
     },
+    "./badge": {
+      "types": "./dist/server/badge.d.ts",
+      "import": "./dist/badge.js"
+    },
+    "./card": {
+      "types": "./dist/server/card.d.ts",
+      "import": "./dist/card.js"
+    },
+    "./breadcrumbs": {
+      "types": "./dist/server/breadcrumbs.d.ts",
+      "import": "./dist/breadcrumbs.js"
+    },
     "./todae.css": "./dist/todae.css",
     "./dist/todae.css": "./dist/todae.css",
     "./schema/components.json": "./schema/components.json",

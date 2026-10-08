@@ -1,0 +1,43 @@
+import { ToolbarEditor } from '../../../components/demos/ToolbarDemo';
+
+# Toolbar
+
+A row of controls, such as an editor's formatting bar, whose controls share one stop in the Tab order, apart from those that keep their own (see below). `Toolbar.Root` has `role="toolbar"`. Inside it, Left and Right arrow keys move focus between controls, Home and End jump to the first and last, and Tab leaves the run of controls. Up and Down are left to the controls, so a menu trigger still opens its menu.
+
+```tsx
+<Toolbar.Root aria-label="Formatting">
+  <ToggleGroup.Root aria-label="Text style" selectionMode="multiple">
+    <ToggleGroup.Item value="bold">Bold</ToggleGroup.Item>
+    <ToggleGroup.Item value="italic">Italic</ToggleGroup.Item>
+  </ToggleGroup.Root>
+  <Toolbar.Separator />
+  <Toolbar.Group aria-label="History">
+    <Button.Root variant="ghost">Undo</Button.Root>
+    <Button.Root variant="ghost">Redo</Button.Root>
+  </Toolbar.Group>
+</Toolbar.Root>
+```
+
+<Example>
+  <ToolbarEditor />
+</Example>
+
+Buttons, links, checkboxes and menu triggers inside count, in document order, even inside your own wrappers. Disabled controls are skipped. The toolbar does not change any `tabIndex`. A text input, a composite with its own arrow keys such as RadioGroup, or anything else Tab can reach that is not such a control keeps its own Tab stop, and the toolbar's arrow keys skip it. It splits the controls around it into runs, and each run is one Tab stop. Tab moves past a run, and Tab or Shift+Tab coming back into it from elsewhere on the page returns to the control Tab last left it from, or the first time, to its first control. Controls inside a popover or dialog that opens from the toolbar keep their own keyboard model.
+
+Name the toolbar with `aria-label` or `aria-labelledby`. Set `orientation="vertical"` for a column, which moves focus with Up and Down instead. A menu trigger in a vertical toolbar leaves Up and Down to the toolbar; Enter or Space opens its menu. Arrow keys wrap from the last control to the first unless you pass `loop={false}`.
+
+`Toolbar.Group` puts `role="group"` around controls that belong together. `Toolbar.Separator` draws a rule across the toolbar and is not focusable. A [ToggleGroup](/toggle-group) inside a toolbar leaves the arrow keys and Tab to the toolbar.
+
+## When to use
+
+**When:** A set of actions on one object or selection, used often enough that one tab stop and arrow keys save time: text formatting, a canvas's tools, a table's bulk actions.
+
+**When not:** Two or three buttons → a Stack of buttons. Attached buttons with no keyboard model → Button.Group. A list of commands that opens from a button → Menu. Navigation between pages → links in a `nav`.
+
+## Props
+
+<PropsTable name="Toolbar.Root" />
+
+<PropsTable name="Toolbar.Group" />
+
+<PropsTable name="Toolbar.Separator" />

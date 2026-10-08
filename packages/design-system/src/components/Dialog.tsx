@@ -11,7 +11,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { Button, type ButtonRootProps } from './Button';
+import { Button, type ButtonActionProps } from './Button';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { DIALOG_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
@@ -20,6 +20,7 @@ import { useModalDialog } from '../overlay/useModalDialog';
 import { useScrollLock } from '../overlay/useScrollLock';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Dialog.module.css';
+import { ToolbarContext } from './toolbarContext';
 
 /**
  * Why the dialog asked to close. `form` is a `<form method="dialog">` submit
@@ -107,7 +108,7 @@ function DialogClose({
   'aria-label': ariaLabel = 'Close',
   onClick,
   ...props
-}: ButtonRootProps) {
+}: ButtonActionProps) {
   const { requestClose } = useDialog();
   return (
     <Button.Root
@@ -122,7 +123,30 @@ function DialogClose({
   );
 }
 
-function DialogRoot({
+// What a modal built on Dialog's machinery changes: Drawer passes its own
+// layout classes, exit fallback and side.
+export type DialogShell = {
+  className?: string;
+  panelClassName?: string;
+  exitMs: number;
+  /** The `<dialog>` element's transition that ends the exit. */
+  exitProperty: string;
+  attributes?: Record<`data-${string}`, string>;
+};
+
+const DIALOG_SHELL: DialogShell = {
+  className: styles.dialog,
+  panelClassName: styles.panel,
+  exitMs: DIALOG_EXIT_MS,
+  exitProperty: 'opacity',
+};
+
+function DialogRoot(props: DialogRootProps) {
+  return <DialogShellRoot {...props} shell={DIALOG_SHELL} />;
+}
+
+export function DialogShellRoot({
+  shell,
   open,
   onOpenChange,
   dismissOnEscape = true,
@@ -136,7 +160,7 @@ function DialogRoot({
   onClick,
   onSubmit,
   ...props
-}: DialogRootProps) {
+}: DialogRootProps & { shell: DialogShell }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [dialogNode, setDialogNode] = useState<HTMLDialogElement | null>(null);
   const pointerOnDialog = useRef(false);
@@ -146,7 +170,7 @@ function DialogRoot({
   });
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
-  const { present, exiting } = useOverlayPresence(open, DIALOG_EXIT_MS, dialogNode, 'opacity');
+  const { present, exiting } = useOverlayPresence(open, shell.exitMs, dialogNode, shell.exitProperty);
   const entered = useEntered(present, exiting);
   const setDialogRef = useCallback((node: HTMLDialogElement | null) => {
     dialogRef.current = node;
@@ -170,7 +194,6 @@ function DialogRoot({
   // After showModal, which focuses the first focusable element by itself.
   useInitialFocus(dialogRef, open, initialFocusRef);
 
-
   return (
     <DialogContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
       <dialog
@@ -179,8 +202,9 @@ function DialogRoot({
         aria-labelledby={props['aria-labelledby'] ?? labelledBy}
         aria-describedby={props['aria-describedby'] ?? describedBy}
         tabIndex={props.tabIndex ?? -1}
+        {...shell.attributes}
         ref={dialogRefs}
-        className={cx(styles.dialog, className)}
+        className={cx(shell.className, className)}
         data-entered={entered ? '' : undefined}
         data-exiting={exiting ? '' : undefined}
         onPointerDown={(event) => {
@@ -203,8 +227,8 @@ function DialogRoot({
           }
         })}
       >
-        <div className={styles.panel} role="document">
-          {children}
+        <div className={shell.panelClassName} role="document">
+          <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
         </div>
       </dialog>
     </DialogContext.Provider>

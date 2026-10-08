@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useId, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-import { Alert, Checkbox, ErrorMessage, Field, Fieldset, Label, Text } from '../index';
+import { Alert, Badge, Breadcrumbs, Card, Checkbox, ErrorMessage, Field, Fieldset, Label, Text } from '../index';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -98,6 +98,20 @@ function Gallery() {
         Volume
         <input type="range" defaultValue={30} />
       </label>
+      <Breadcrumbs.Root>
+        <Breadcrumbs.Item>
+          <a href="#home">Home</a>
+        </Breadcrumbs.Item>
+        <Breadcrumbs.Item current>Settings</Breadcrumbs.Item>
+      </Breadcrumbs.Root>
+      <Card.Root>
+        <Card.Header>
+          <Text as="h3">Plan</Text>
+        </Card.Header>
+        <Card.Body>
+          Pro <Badge.Root tone="success">Paid</Badge.Root>
+        </Card.Body>
+      </Card.Root>
       <a href="#gallery-end" className="todae-visually-hidden-focusable">
         Skip to content
       </a>
@@ -343,5 +357,32 @@ describe('content parts in a browser', () => {
     );
     expect(getComputedStyle(screen.getByTestId('ltr')).animationDirection).toBe('normal');
     expect(getComputedStyle(screen.getByTestId('rtl')).animationDirection).toBe('reverse');
+  });
+
+  it('draws the breadcrumb glyph between items only, and colors badges and cards from tokens', () => {
+    render(
+      <Themed>
+        <Breadcrumbs.Root separator="›">
+          <Breadcrumbs.Item data-testid="first">
+            <a href="#home">Home</a>
+          </Breadcrumbs.Item>
+          <Breadcrumbs.Item data-testid="last" current>
+            Billing
+          </Breadcrumbs.Item>
+        </Breadcrumbs.Root>
+        <Badge.Root data-testid="neutral">Draft</Badge.Root>
+        <Badge.Root data-testid="critical" tone="critical">
+          Overdue
+        </Badge.Root>
+        <Card.Root data-testid="card">Plan</Card.Root>
+      </Themed>,
+    );
+    const before = (id: string) => getComputedStyle(screen.getByTestId(id), '::before').content;
+    expect(before('first')).toBe('none');
+    expect(before('last')).toContain('›');
+    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+    expect(style('neutral').backgroundColor).not.toBe(style('critical').backgroundColor);
+    expect(style('card').borderTopStyle).toBe('solid');
+    expect(style('card').paddingTop).not.toBe('0px');
   });
 });

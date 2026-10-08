@@ -1,0 +1,37 @@
+import { BadgeCount, BadgeTones } from '../../../components/demos/BadgeDemo';
+
+# Badge
+
+행의 상태나 읽지 않은 메시지 수처럼 짧은 정적 레이블이나 개수입니다. 다섯 가지 톤이 있습니다. 기본값인 `neutral`과 네 가지 상태 톤 `info`, `success`, `warning`, `critical`이며, 상태 톤은 `badge.<tone>` contract 토큰을 거쳐 `color.status.<tone>`에서 색을 가져옵니다.
+
+```tsx
+<Badge.Root tone="success">Paid</Badge.Root>
+```
+
+<Example>
+  <BadgeTones />
+</Example>
+
+Server Components는 `@tounsoo/todae/badge`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 엔트리는 클라이언트 모듈입니다.
+
+`Badge.Root`는 role이 없는 `span`이므로, 스크린 리더는 주변 텍스트의 일부로 읽습니다. 숫자만으로는 뜻이 전해지지 않으니, 나머지는 시각적으로 숨긴 텍스트로 더하세요.
+
+```tsx
+<Badge.Root>
+  3<span className="todae-visually-hidden"> unread</span>
+</Badge.Root>
+```
+
+<Example>
+  <BadgeCount />
+</Example>
+
+## 언제 쓰나
+
+**쓸 때:** 옆에 있는 것을 설명하는 상태나 개수: 결제된 청구서, 베타 기능, 읽지 않은 메시지.
+
+**쓰지 않을 때:** 사용자가 지울 수 있는 레이블 → Chip. 페이지나 작업에 대한 메시지 → Alert. 사용자가 누르는 것 → Button.Root. 읽어 줘야 하는 변화 → 라이브 영역. Badge는 라이브 영역이 아닙니다.
+
+## Props
+
+<PropsTable name="Badge.Root" />

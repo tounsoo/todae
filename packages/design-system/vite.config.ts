@@ -11,6 +11,9 @@ const entries = {
   stack: src('server/stack.ts'),
   text: src('server/text.ts'),
   label: src('server/label.ts'),
+  badge: src('server/badge.ts'),
+  card: src('server/card.ts'),
+  breadcrumbs: src('server/breadcrumbs.ts'),
 };
 
 function emitPackageCss(): Plugin {

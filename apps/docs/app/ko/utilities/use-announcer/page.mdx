@@ -1,0 +1,30 @@
+import { AnnounceSave } from '../../../../components/demos/AnnouncerDemo';
+
+# useAnnouncer
+
+`useAnnouncer()`는 `announce(message, options?)`를 반환합니다. 이 함수는 `message`를 화면에 보여 주지 않고 스크린 리더로 읽어 줍니다. "Draft saved"나 "12 results"처럼 자체적으로 보이는 메시지가 없는 비동기 작업의 결과에 쓰세요.
+
+```tsx
+const announce = useAnnouncer()
+
+async function save() {
+	await saveDraft()
+	announce('Draft saved')
+}
+```
+
+<Example>
+  <AnnounceSave />
+</Example>
+
+메시지는 문서의 모든 호출자가 공유하는, 시각적으로 숨긴 polite 또는 assertive 라이브 리전으로 갑니다. 이 리전은 훅을 쓰는 첫 컴포넌트가 마운트될 때 추가됩니다. 모달 대화상자가 열리면 나머지 페이지가 inert가 되므로, Todae 모달 스택의 모달이 열려 있는 동안에는 맨 앞 모달 안의 리전에서 메시지를 읽습니다. Dialog, Drawer, BottomSheet는 스스로 스택에 들어가고, 직접 만든 모달 `<dialog>`는 [useModalLayer](/utilities/use-modal-layer)에 넘기세요. `announce`는 리전을 비운 뒤 잠시 후에 메시지를 쓰므로, 같은 메시지를 두 번 보내면 두 번 읽힙니다. 앞선 메시지가 쓰이기 전에 보낸 같은 politeness의 새 메시지는 앞선 메시지를 대체하고, 호출한 컴포넌트가 언마운트되기 직전에 보낸 메시지도 그대로 쓰입니다. `politeness: 'assertive'`는 스크린 리더를 끊고 읽으므로, 기다릴 수 없는 메시지에만 쓰세요. 서버에서 `announce`는 아무것도 하지 않으며, `announce`는 렌더링마다 같은 함수입니다.
+
+## 언제 쓰나요
+
+**언제:** 자체적으로 보이는 메시지가 없는 비동기 결과. 저장, 복사, 결과 개수, 백그라운드 로딩 완료.
+
+**쓰지 않을 때:** 시각 사용자도 봐야 하는 메시지 → 페이지에 보여 주세요. 예를 들어 그 자체로 라이브 리전인 [Alert](/alert)에 넣습니다. 유효성 검사 텍스트 → [ErrorMessage](/errormessage).
+
+## Props
+
+<PropsTable name="useAnnouncer" />

@@ -25,7 +25,7 @@ A translation does not change when its English page does. When you change an Eng
 ### Korean style
 
 - Write in the polite declarative form (합니다체), as the translated pages do.
-- Keep component and pattern names in English, in titles too: a Korean recipe is still `Combobox`, and `Chip list with overflow` becomes `오버플로를 처리하는 Chip list`.
+- Keep component and pattern names in English, in titles too: a Korean recipe is still `Combobox`, and the `ChipList` page keeps its title.
 - Keep other terms readers search for in English, such as `props`, `ref` and DTCG, or give the English term in parentheses the first time.
 - Keep sentences short and direct, as the English pages are.
 

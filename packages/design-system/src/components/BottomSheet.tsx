@@ -14,7 +14,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { Button, type ButtonRootProps } from './Button';
+import { Button, type ButtonActionProps } from './Button';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
@@ -24,6 +24,7 @@ import { useScrollLock } from '../overlay/useScrollLock';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './BottomSheet.module.css';
+import { ToolbarContext } from './toolbarContext';
 
 export type { SheetSnap };
 /**
@@ -179,7 +180,7 @@ function BottomSheetClose({
   'aria-label': ariaLabel = 'Close',
   onClick,
   ...props
-}: ButtonRootProps) {
+}: ButtonActionProps) {
   const { requestClose } = useSheet();
   return (
     <Button.Root
@@ -344,7 +345,7 @@ function BottomSheetRoot({
         })}
       >
         {grabbers > 0 ? null : <GrabberHandle />}
-        {children}
+        <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
       </dialog>
     </SheetContext.Provider>
   );

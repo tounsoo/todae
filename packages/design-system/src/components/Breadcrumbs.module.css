@@ -1,0 +1,34 @@
+@layer todae.components {
+  .root {
+    font-size: var(--todae-breadcrumbs-font-size);
+  }
+
+  .list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--todae-breadcrumbs-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--todae-breadcrumbs-gap);
+    min-inline-size: 0;
+  }
+
+  /* The glyph sits before every item but the first. The text after the slash
+     is its alternative text: empty, so screen readers skip it. */
+  .item + .item::before {
+    content: var(--todae-breadcrumbs-glyph, '/') / '';
+    color: var(--todae-breadcrumbs-separator-fg);
+  }
+
+  .current {
+    color: var(--todae-breadcrumbs-current-fg);
+    font-weight: var(--todae-breadcrumbs-current-font-weight);
+  }
+}

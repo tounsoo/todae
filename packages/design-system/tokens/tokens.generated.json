@@ -4320,6 +4320,411 @@
       "ref": "color.accent.default",
       "layer": "contract",
       "context": null
+    },
+    {
+      "path": "badge.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-badge-border-width",
+      "cssValue": "1px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.critical.bg",
+      "type": "color",
+      "cssVar": "--todae-badge-critical-bg",
+      "cssValue": "var(--todae-color-status-critical-bg)",
+      "ref": "color.status.critical.bg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.critical.border",
+      "type": "color",
+      "cssVar": "--todae-badge-critical-border",
+      "cssValue": "var(--todae-color-status-critical-border)",
+      "ref": "color.status.critical.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.critical.fg",
+      "type": "color",
+      "cssVar": "--todae-badge-critical-fg",
+      "cssValue": "var(--todae-color-status-critical-fg)",
+      "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-badge-font-size",
+      "cssValue": "var(--todae-font-size-1)",
+      "ref": "font.size.1",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-badge-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.info.bg",
+      "type": "color",
+      "cssVar": "--todae-badge-info-bg",
+      "cssValue": "var(--todae-color-status-info-bg)",
+      "ref": "color.status.info.bg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.info.border",
+      "type": "color",
+      "cssVar": "--todae-badge-info-border",
+      "cssValue": "var(--todae-color-status-info-border)",
+      "ref": "color.status.info.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.info.fg",
+      "type": "color",
+      "cssVar": "--todae-badge-info-fg",
+      "cssValue": "var(--todae-color-status-info-fg)",
+      "ref": "color.status.info.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.leading",
+      "type": "number",
+      "cssVar": "--todae-badge-leading",
+      "cssValue": "var(--todae-font-leading-tight)",
+      "ref": "font.leading.tight",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.neutral.bg",
+      "type": "color",
+      "cssVar": "--todae-badge-neutral-bg",
+      "cssValue": "var(--todae-color-bg-subtle)",
+      "ref": "color.bg.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.neutral.border",
+      "type": "color",
+      "cssVar": "--todae-badge-neutral-border",
+      "cssValue": "var(--todae-color-border-subtle)",
+      "ref": "color.border.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.neutral.fg",
+      "type": "color",
+      "cssVar": "--todae-badge-neutral-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-badge-padding-x",
+      "cssValue": "var(--todae-space-chip-x)",
+      "ref": "space.chip.x",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-badge-padding-y",
+      "cssValue": "var(--todae-space-chip-y)",
+      "ref": "space.chip.y",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.radius",
+      "type": "dimension",
+      "cssVar": "--todae-badge-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.success.bg",
+      "type": "color",
+      "cssVar": "--todae-badge-success-bg",
+      "cssValue": "var(--todae-color-status-success-bg)",
+      "ref": "color.status.success.bg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.success.border",
+      "type": "color",
+      "cssVar": "--todae-badge-success-border",
+      "cssValue": "var(--todae-color-status-success-border)",
+      "ref": "color.status.success.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.success.fg",
+      "type": "color",
+      "cssVar": "--todae-badge-success-fg",
+      "cssValue": "var(--todae-color-status-success-fg)",
+      "ref": "color.status.success.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.warning.bg",
+      "type": "color",
+      "cssVar": "--todae-badge-warning-bg",
+      "cssValue": "var(--todae-color-status-warning-bg)",
+      "ref": "color.status.warning.bg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.warning.border",
+      "type": "color",
+      "cssVar": "--todae-badge-warning-border",
+      "cssValue": "var(--todae-color-status-warning-border)",
+      "ref": "color.status.warning.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "badge.warning.fg",
+      "type": "color",
+      "cssVar": "--todae-badge-warning-fg",
+      "cssValue": "var(--todae-color-status-warning-fg)",
+      "ref": "color.status.warning.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "card.bg",
+      "type": "color",
+      "cssVar": "--todae-card-bg",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "card.border",
+      "type": "color",
+      "cssVar": "--todae-card-border",
+      "cssValue": "var(--todae-color-border-subtle)",
+      "ref": "color.border.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "card.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-card-border-width",
+      "cssValue": "1px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "card.fg",
+      "type": "color",
+      "cssVar": "--todae-card-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "card.gap",
+      "type": "dimension",
+      "cssVar": "--todae-card-gap",
+      "cssValue": "var(--todae-space-overlay-gap)",
+      "ref": "space.overlay.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "card.padding",
+      "type": "dimension",
+      "cssVar": "--todae-card-padding",
+      "cssValue": "var(--todae-space-overlay-padding)",
+      "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "card.radius",
+      "type": "dimension",
+      "cssVar": "--todae-card-radius",
+      "cssValue": "var(--todae-radius-lg)",
+      "ref": "radius.lg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "breadcrumbs.current.fg",
+      "type": "color",
+      "cssVar": "--todae-breadcrumbs-current-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "breadcrumbs.current.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-breadcrumbs-current-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "breadcrumbs.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-breadcrumbs-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "breadcrumbs.gap",
+      "type": "dimension",
+      "cssVar": "--todae-breadcrumbs-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "breadcrumbs.separator.fg",
+      "type": "color",
+      "cssVar": "--todae-breadcrumbs-separator-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toolbar.gap",
+      "type": "dimension",
+      "cssVar": "--todae-toolbar-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toolbar.separator.color",
+      "type": "color",
+      "cssVar": "--todae-toolbar-separator-color",
+      "cssValue": "var(--todae-color-border-subtle)",
+      "ref": "color.border.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toolbar.separator.thickness",
+      "type": "dimension",
+      "cssVar": "--todae-toolbar-separator-thickness",
+      "cssValue": "1px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.bg",
+      "type": "color",
+      "cssVar": "--todae-drawer-bg",
+      "cssValue": "var(--todae-color-bg-elevated)",
+      "ref": "color.bg.elevated",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.border",
+      "type": "color",
+      "cssVar": "--todae-drawer-border",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.fg",
+      "type": "color",
+      "cssVar": "--todae-drawer-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.motion.enter",
+      "type": "duration",
+      "cssVar": "--todae-drawer-motion-enter",
+      "cssValue": "var(--todae-motion-duration-slow)",
+      "ref": "motion.duration.slow",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.motion.exit",
+      "type": "duration",
+      "cssVar": "--todae-drawer-motion-exit",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-drawer-padding-x",
+      "cssValue": "var(--todae-space-overlay-padding)",
+      "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-drawer-padding-y",
+      "cssValue": "var(--todae-space-overlay-padding)",
+      "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.size",
+      "type": "dimension",
+      "cssVar": "--todae-drawer-size",
+      "cssValue": "24rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
     }
   ]
 }

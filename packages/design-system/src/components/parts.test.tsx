@@ -5,12 +5,17 @@ import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   Alert,
+  Badge,
   BottomSheet,
+  Breadcrumbs,
   Button,
+  Card,
   Checkbox,
   Chip,
+  ChipList,
   Description,
   Dialog,
+  Drawer,
   ErrorMessage,
   Field,
   Fieldset,
@@ -23,6 +28,8 @@ import {
   Switch,
   Tabs,
   Text,
+  ToggleGroup,
+  Toolbar,
   Toast,
   Tooltip,
   composeRefs,
@@ -68,6 +75,7 @@ const cases: Case[] = [
   ['ErrorMessage', (p) => <ErrorMessage {...p} id="e" />],
   ['Chip.Root', (p) => <Chip.Root {...p}>a</Chip.Root>],
   ['Chip.Overflow', (p) => <Chip.Overflow {...p} overflowCount={2} />],
+  ['ChipList.Root', (p) => <ChipList.Root {...p} aria-label="Tags" chips={['a', 'b']} />],
   ['Checkbox', (p) => <Checkbox {...p}>c</Checkbox>],
   ['Switch', (p) => <Switch {...p}>s</Switch>],
   ['RadioGroup.Root', (p) => <RadioGroup.Root {...p} aria-label="g" />],
@@ -177,6 +185,14 @@ const cases: Case[] = [
       },
     ],
   ),
+  [
+    'Drawer.Root',
+    (p) => (
+      <Drawer.Root {...p} open onOpenChange={noop} aria-label="d">
+        x
+      </Drawer.Root>
+    ),
+  ],
   ['BottomSheet.Root', (p) => <BottomSheet.Root {...p} open onOpenChange={noop} aria-label="s" />],
   ...(['Grabber', 'Header', 'Title', 'Description', 'Body', 'Footer', 'Close'] as const).map(
     (part): Case => [
@@ -313,6 +329,44 @@ const cases: Case[] = [
       },
     ],
   ),
+  ['Badge.Root', (p) => <Badge.Root {...p}>New</Badge.Root>],
+  ['Card.Root', (p) => <Card.Root {...p} />],
+  ...(['Header', 'Body', 'Footer'] as const).map(
+    (part): Case => [
+      `Card.${part}`,
+      (p) => {
+        const Part = Card[part] as (props: Native) => ReactNode;
+        return (
+          <Card.Root>
+            <Part {...p} />
+          </Card.Root>
+        );
+      },
+    ],
+  ),
+  ['Breadcrumbs.Root', (p) => <Breadcrumbs.Root {...p} />],
+  [
+    'Breadcrumbs.Item',
+    (p) => (
+      <Breadcrumbs.Root>
+        <Breadcrumbs.Item {...p}>Home</Breadcrumbs.Item>
+      </Breadcrumbs.Root>
+    ),
+  ],
+  ['Toolbar.Root', (p) => <Toolbar.Root {...p} aria-label="t" />],
+  ['Toolbar.Group', (p) => <Toolbar.Root aria-label="t"><Toolbar.Group {...p} /></Toolbar.Root>],
+  ['Toolbar.Separator', (p) => <Toolbar.Root aria-label="t"><Toolbar.Separator {...p} /></Toolbar.Root>],
+  ['ToggleGroup.Root', (p) => <ToggleGroup.Root {...p} aria-label="g" />],
+  [
+    'ToggleGroup.Item',
+    (p) => (
+      <ToggleGroup.Root aria-label="g">
+        <ToggleGroup.Item {...p} value="a">
+          a
+        </ToggleGroup.Item>
+      </ToggleGroup.Root>
+    ),
+  ],
   ['Toast.Region', (p) => <Toast.Region toaster={createToaster()} {...p}>{() => null}</Toast.Region>],
   ...(['Root', 'Icon', 'Title', 'Description', 'Action', 'Close'] as const).map(
     (part): Case => [

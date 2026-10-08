@@ -1,0 +1,41 @@
+import { BreadcrumbsChevron, BreadcrumbsTrail } from '../../../components/demos/BreadcrumbsDemo';
+
+# Breadcrumbs
+
+The trail of pages above the current one. `Breadcrumbs.Root` is a `nav` landmark around an ordered list, and each `Breadcrumbs.Item` is a list item. Put a link in each item, such as an `a` or your router's link, and plain text in the last one, marked `current`, which wraps that text in a `span` with `aria-current="page"`.
+
+```tsx
+<Breadcrumbs.Root>
+  <Breadcrumbs.Item>
+    <YourLink to="/">Home</YourLink>
+  </Breadcrumbs.Item>
+  <Breadcrumbs.Item>
+    <YourLink to="/settings">Settings</YourLink>
+  </Breadcrumbs.Item>
+  <Breadcrumbs.Item current>Billing</Breadcrumbs.Item>
+</Breadcrumbs.Root>
+```
+
+<Example>
+  <BreadcrumbsTrail />
+</Example>
+
+Server Components can import it from `@tounsoo/todae/breadcrumbs`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
+
+The landmark is named "Breadcrumb" unless you pass `aria-label` or `aria-labelledby`. That default is English: in another language, pass a name. A separator glyph is drawn between items, `/` unless you pass `separator`, and screen readers skip it. The items wrap onto more lines when they do not fit.
+
+<Example>
+  <BreadcrumbsChevron />
+</Example>
+
+## When to use
+
+**When:** A page deep in a hierarchy, where people need to see where they are and move up.
+
+**When not:** Steps in a flow the user moves through in order → a stepper. Sections of one page → Tabs. The site's main navigation → your own `nav`.
+
+## Props
+
+<PropsTable name="Breadcrumbs.Root" />
+
+<PropsTable name="Breadcrumbs.Item" />

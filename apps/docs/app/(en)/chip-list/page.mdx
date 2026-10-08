@@ -1,0 +1,44 @@
+import { ChipListDemo } from '../../../components/demos/ChipListDemo';
+
+# ChipList
+
+A list of chips that shows up to `maxRows` rows and folds the rest into a +N button. +N opens a popover with the folded chips. Name the list with `aria-label` or `aria-labelledby`.
+
+With `onRemove`, each chip gets a remove button. Once `chips` drops the focused chip, focus moves to the chip that now fills its place, else the one before it, else +N, else the list.
+
+```tsx
+<ChipList.Root
+  aria-label="Tags"
+  chips={tags}
+  maxRows={1}
+  onRemove={(index) => setTags((current) => current.filter((_, i) => i !== index))}
+/>
+```
+
+In the popover, Tab past the last chip goes on to the control after +N, Shift+Tab from the first chip returns to +N, and Escape closes it and returns to +N.
+
+## One row / Two rows
+
+<Example>
+  <ChipListDemo maxRows={1} />
+</Example>
+
+<Example>
+  <ChipListDemo maxRows={2} />
+</Example>
+
+## Read-only
+
+<Example>
+  <ChipListDemo maxRows={1} readOnly />
+</Example>
+
+## When to use
+
+**When:** Chips outside a text field, such as applied filters, read-only tags or recipients, capped at `maxRows` with a +N count.
+
+**When not:** Typing new chips → `Field.ChipInput`. Picking from options → [Combobox recipe](/recipes/combobox). Selectable or toggle chips → Checkbox / Button.Root. One chip → `Chip.Root`. Your own markup around the fold → [useChipList](/utilities/use-chip-list).
+
+## Props
+
+<PropsTable name="ChipList.Root" />

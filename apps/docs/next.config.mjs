@@ -3,7 +3,10 @@ import createMDX from '@next/mdx';
 // The non-default locales in lib/i18n/config.ts, as URL prefixes.
 const LOCALE_PREFIXES = ['/ko'];
 
-const REDIRECTS = [['/combobox', '/recipes/combobox']];
+const REDIRECTS = [
+  ['/combobox', '/recipes/combobox'],
+  ['/recipes/chip-list', '/chip-list'],
+];
 
 const nextConfig = {
   // Each locale has its own root layout (app/(en), app/ko), so a 404 needs a page with its own <html>.

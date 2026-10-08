@@ -40,6 +40,7 @@ describe('docs mcp tools', () => {
       ['Popover', 'popover'],
       ['Tooltip', 'tooltip'],
       ['Chip', 'chip'],
+      ['ChipList', 'chip-list'],
       ['RadioGroup', 'radio'],
       ['Menu', 'menu'],
       ['Tabs', 'tabs'],
@@ -136,7 +137,7 @@ describe('docs mcp tools', () => {
     expect(combobox).not.toHaveProperty('scope');
     // Every hook in the schema has its own page under Utilities, slugged from its name.
     const hooks = listComponents().components.filter((row) => /^use[A-Z]/.test(row.name));
-    expect(hooks.map((row) => row.name)).toEqual(expect.arrayContaining(['useChipField', 'useChipList', 'useCombobox', 'usePopover', 'useSheetPresentation', 'useTooltip']));
+    expect(hooks.map((row) => row.name)).toEqual(expect.arrayContaining(['useAnnouncer', 'useChipField', 'useChipList', 'useCombobox', 'useControlledState', 'useControlledValue', 'usePopover', 'useSheetPresentation', 'useTooltip']));
     for (const { name } of hooks) {
       const slug = name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
       expect(getComponent(name).docsUrl, name).toBe(`https://todae-rho.vercel.app/utilities/${slug}`);
@@ -238,7 +239,7 @@ describe('docs mcp tools', () => {
       whenToUse:
         'Centered modal task or confirm (native `<dialog>`, controlled `open`). Name via `Dialog.Title` or `aria-label`. Escape + scrim dismiss by default.',
       whenNotToUse:
-        'Mobile picker from the bottom → BottomSheet. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).',
+        'Mobile picker from the bottom → BottomSheet. Full-height side panel → Drawer. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).',
     });
     expect(whenToUse('Dialog')).not.toHaveProperty('scope');
     expect(whenToUse('Field.Textarea')).toMatchObject({
@@ -431,10 +432,13 @@ describe('docs mcp tools', () => {
     expect([...owners].filter(([, slugs]) => slugs.length > 1)).toEqual([]);
   });
 
-  it('gives useChipList its own utility page and does not list ChipList', () => {
+  it('gives useChipList its own utility page and ChipList its component page', () => {
     const names = listComponents().components.map((row) => row.name);
     expect(names).toContain('useChipList');
-    expect(names).not.toContain('ChipList');
+    expect(whenToUse('ChipList.Root')).toMatchObject({
+      status: 'present',
+      docsUrl: 'https://todae-rho.vercel.app/chip-list',
+    });
     const result = whenToUse('useChipList');
     expect(result).toMatchObject({
       status: 'present',

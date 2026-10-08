@@ -1,0 +1,39 @@
+import { ToggleGroupAlign, ToggleGroupStyles } from '../../../components/demos/ToggleGroupDemo';
+
+# ToggleGroup
+
+텍스트 정렬, 보기 전환, 텍스트 스타일처럼 하나의 컨트롤로 읽히는 토글 버튼 묶음입니다. `ToggleGroup.Root`는 `role="group"`이고, 각 `ToggleGroup.Item`은 `aria-pressed`가 있는 secondary [Button.Root](/button)입니다. 묶음은 Tab 순서에서 한 자리를 차지하며, 그 자리는 single 모드에서는 눌린 항목, multiple 모드에서는 첫 항목입니다. 화살표 키는 항목을 누르지 않고 포커스만 옮깁니다.
+
+기본값인 single 모드에서는 많아야 한 항목이 눌리며, 눌린 항목을 다시 누르면 값이 `null`이 됩니다.
+
+```tsx
+<ToggleGroup.Root aria-label="Alignment" value={align} onChange={setAlign}>
+  <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+  <ToggleGroup.Item value="center">Center</ToggleGroup.Item>
+  <ToggleGroup.Item value="right">Right</ToggleGroup.Item>
+</ToggleGroup.Root>
+```
+
+<Example>
+  <ToggleGroupAlign />
+</Example>
+
+`selectionMode="multiple"`이면 몇 개든 누를 수 있고, 값은 배열입니다.
+
+<Example>
+  <ToggleGroupStyles />
+</Example>
+
+묶음에는 `aria-label`이나 `aria-labelledby`로 이름을 붙이세요. 가로 항목은 [Button.Group](/button)처럼 붙습니다. [Toolbar](/toolbar) 안에서는 툴바가 화살표 키와 탭 위치를 맡습니다.
+
+## 언제 쓰나
+
+**쓸 때:** 무언가를 보여 주는 방식을 바꾸는 옵션으로, 눌린 상태가 한눈에 보이고 바로 적용될 때.
+
+**쓰지 않을 때:** 제출하는 폼의 선택 → Radio나 Checkbox. 설정 하나를 켜고 끔 → Switch나 토글 [Button.Root](/button) 하나. 콘텐츠 패널 사이 전환 → Tabs.
+
+## Props
+
+<PropsTable name="ToggleGroup.Root" />
+
+<PropsTable name="ToggleGroup.Item" />

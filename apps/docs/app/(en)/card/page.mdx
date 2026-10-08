@@ -1,0 +1,43 @@
+import { CardPlan } from '../../../components/demos/CardDemo';
+
+# Card
+
+A bordered surface that groups related content: a plan, a setting, a summary. Its background, border, radius, padding and gap come from the `card` contract tokens, and the padding and gap follow density. It is the base for a company's own cards and panels.
+
+```tsx
+<Card.Root>
+  <Card.Header>
+    <Text as="h3">Pro plan</Text>
+  </Card.Header>
+  <Card.Body>
+    <Text>Billed yearly.</Text>
+  </Card.Body>
+  <Card.Footer>
+    <Button.Root>Change plan</Button.Root>
+  </Card.Footer>
+</Card.Root>
+```
+
+<Example>
+  <CardPlan />
+</Example>
+
+Server Components can import it from `@tounsoo/todae/card`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
+
+Every part is a `div` with no role. Pick the heading level that fits the page; a heading or paragraph directly inside the header has no outer margin. A card that should be a landmark takes `role="region"` and a name, like any `div`. A card is not a button or a link: put the actions inside it, in `Card.Footer` or in the body.
+
+## When to use
+
+**When:** A group of content that reads as one unit and sits beside others like it: plans, settings sections, summary tiles.
+
+**When not:** Content that interrupts the task → Dialog. A message about the page → Alert. Layout spacing with no surface → Stack.
+
+## Props
+
+<PropsTable name="Card.Root" />
+
+<PropsTable name="Card.Header" />
+
+<PropsTable name="Card.Body" />
+
+<PropsTable name="Card.Footer" />

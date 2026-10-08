@@ -30,7 +30,7 @@ export type Dictionary = {
   propsTable: Record<'caption' | 'name' | 'type' | 'required' | 'default' | 'description' | 'yes' | 'no', string>;
   /** Section names; a missing one keeps its English name from `siteGroups.ts`. */
   groups: Partial<Record<GroupId, string>>;
-  /** Link text by href; a missing one keeps its English text. Component, hook and pattern names (Button, useField, Combobox, Chip list) stay in English. */
+  /** Link text by href; a missing one keeps its English text. Component, hook and pattern names (Button, useField, Combobox, ChipList) stay in English. */
   links: Partial<Record<Href, string>>;
 };
 
@@ -126,7 +126,6 @@ const ko: Dictionary = {
     tools: '도구',
   },
   links: {
-    '/recipes/chip-list': '오버플로를 처리하는 Chip list',
     '/composition': '조합',
     '/tokens': '토큰',
     '/guides/build-on-todae': 'Todae로 디자인 시스템 만들기',

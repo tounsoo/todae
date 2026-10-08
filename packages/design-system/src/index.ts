@@ -10,6 +10,15 @@ export {
   type AlertTitleProps,
   type AlertTone,
 } from './components/Alert';
+export { Badge, type BadgeRootProps, type BadgeTone } from './components/Badge';
+export { Breadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './components/Breadcrumbs';
+export {
+  Card,
+  type CardBodyProps,
+  type CardFooterProps,
+  type CardHeaderProps,
+  type CardRootProps,
+} from './components/Card';
 export { BottomSheet, type BottomSheetRootProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet';
 export {
   Button,
@@ -19,7 +28,17 @@ export {
   type ButtonVariant,
   type ButtonVariants,
 } from './components/Button';
+export { Toolbar, type ToolbarGroupProps, type ToolbarOrientation, type ToolbarRootProps, type ToolbarSeparatorProps } from './components/Toolbar';
+export {
+  ToggleGroup,
+  type ToggleGroupItemProps,
+  type ToggleGroupMultipleProps,
+  type ToggleGroupOrientation,
+  type ToggleGroupRootProps,
+  type ToggleGroupSingleProps,
+} from './components/ToggleGroup';
 export { Dialog, type DialogCloseReason, type DialogRootProps } from './components/Dialog';
+export { Drawer, type DrawerRootProps, type DrawerSide } from './components/Drawer';
 export { composeRefs } from './components/props';
 export {
   OptionList,
@@ -84,6 +103,7 @@ export {
 } from './hooks/useTooltip';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
 export { Chip, type ChipOverflowProps, type ChipRootProps } from './components/Chip';
+export { ChipList, type ChipListRootProps } from './components/ChipList';
 export { Description, type DescriptionProps } from './components/Description';
 export { ErrorMessage, type ErrorMessageProps } from './components/ErrorMessage';
 export { CHIP_COMMIT_KEYS, type ChipCommitKey } from './components/commitKeys';
@@ -135,6 +155,12 @@ export {
   type TextTone,
   type TextWeight,
 } from './components/Text';
+export {
+  useAnnouncer,
+  type Announce,
+  type AnnounceOptions,
+  type AnnouncePoliteness,
+} from './hooks/useAnnouncer';
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
 export {
   useChipList,
@@ -177,6 +203,7 @@ export {
   type UseComboboxResult,
   type UseComboboxSingleOptions,
 } from './hooks/useCombobox';
+export { useControlledState, useControlledValue } from './hooks/useControlledState';
 export {
   ThemeProvider,
   useAppearance,

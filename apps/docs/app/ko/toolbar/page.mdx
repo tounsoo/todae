@@ -1,0 +1,43 @@
+import { ToolbarEditor } from '../../../components/demos/ToolbarDemo';
+
+# Toolbar
+
+에디터의 서식 막대처럼 컨트롤들이 Tab 순서에서 한 자리를 함께 쓰는 행입니다. 자기 자리를 유지하는 컨트롤은 예외입니다(아래 참고). `Toolbar.Root`는 `role="toolbar"`입니다. 그 안에서 왼쪽, 오른쪽 화살표 키는 컨트롤 사이로 포커스를 옮기고, Home과 End는 처음과 끝으로 가며, Tab은 컨트롤 묶음을 벗어납니다. 위, 아래 키는 컨트롤에 맡기므로 메뉴 트리거는 여전히 메뉴를 엽니다.
+
+```tsx
+<Toolbar.Root aria-label="Formatting">
+  <ToggleGroup.Root aria-label="Text style" selectionMode="multiple">
+    <ToggleGroup.Item value="bold">Bold</ToggleGroup.Item>
+    <ToggleGroup.Item value="italic">Italic</ToggleGroup.Item>
+  </ToggleGroup.Root>
+  <Toolbar.Separator />
+  <Toolbar.Group aria-label="History">
+    <Button.Root variant="ghost">Undo</Button.Root>
+    <Button.Root variant="ghost">Redo</Button.Root>
+  </Toolbar.Group>
+</Toolbar.Root>
+```
+
+<Example>
+  <ToolbarEditor />
+</Example>
+
+버튼, 링크, 체크박스, 메뉴 트리거는 직접 만든 래퍼 안에 있어도 문서 순서대로 포함됩니다. 비활성 컨트롤은 건너뜁니다. 툴바는 어떤 `tabIndex`도 바꾸지 않습니다. 텍스트 입력, RadioGroup처럼 자기 화살표 키가 있는 컴포지트, 그 밖에 이런 컨트롤이 아니면서 Tab이 닿는 요소는 자기 탭 위치를 유지하며, 툴바의 화살표 키는 이를 건너뜁니다. 이런 요소는 주변 컨트롤을 여러 묶음으로 나누고, 각 묶음이 탭 위치 하나입니다. Tab은 묶음을 건너뛰고, 페이지의 다른 곳에서 Tab이나 Shift+Tab으로 묶음에 돌아오면 마지막으로 Tab으로 떠났던 컨트롤로, 처음에는 첫 컨트롤로 갑니다. 툴바에서 열리는 팝오버나 다이얼로그 안의 컨트롤은 자기 키보드 모델을 유지합니다.
+
+툴바에는 `aria-label`이나 `aria-labelledby`로 이름을 붙이세요. 세로로 놓으려면 `orientation="vertical"`을 주세요. 그러면 위, 아래 키로 포커스가 움직입니다. 세로 툴바 안의 메뉴 트리거는 위, 아래 키를 툴바에 넘기고, Enter나 Space로 메뉴를 엽니다. `loop={false}`를 주지 않으면 화살표 키는 마지막 컨트롤에서 처음으로 돌아갑니다.
+
+`Toolbar.Group`은 함께 쓰는 컨트롤을 `role="group"`으로 감쌉니다. `Toolbar.Separator`는 툴바를 가로지르는 선을 그리며 포커스를 받지 않습니다. 툴바 안의 [ToggleGroup](/toggle-group)은 화살표 키와 Tab을 툴바에 맡깁니다.
+
+## 언제 쓰나
+
+**쓸 때:** 한 대상이나 선택에 자주 쓰는 동작 묶음이라 탭 위치 하나와 화살표 키가 시간을 줄여 줄 때: 텍스트 서식, 캔버스 도구, 표의 일괄 작업.
+
+**쓰지 않을 때:** 버튼 두세 개 → 버튼을 담은 Stack. 키보드 모델 없이 붙인 버튼 → Button.Group. 버튼에서 열리는 명령 목록 → Menu. 페이지 사이 이동 → `nav` 안의 링크.
+
+## Props
+
+<PropsTable name="Toolbar.Root" />
+
+<PropsTable name="Toolbar.Group" />
+
+<PropsTable name="Toolbar.Separator" />

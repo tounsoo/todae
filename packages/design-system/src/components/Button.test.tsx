@@ -251,10 +251,11 @@ describe('Button auto-tip', () => {
     expect(source).toContain("from './Tooltip'");
     expect(source).not.toContain('Tooltip.Trigger');
     expect(source).not.toContain('createIntent');
-    expect(source).not.toContain('useControlledState');
+    // useControlledState holds the toggle's pressed state only; tip state lives in useTooltip.
+    expect(source.match(/useControlledState\(/g)).toHaveLength(1);
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../hooks/useTooltip', './Button.module.css', './props', './Tooltip']),
+      new Set(['react', '../hooks/useControlledState', '../hooks/useTooltip', './Button.module.css', './props', './Tooltip']),
     );
   });
 

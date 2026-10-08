@@ -1,0 +1,9 @@
+@layer todae.components {
+  /* Horizontal groups join like Button.Group; a vertical one stacks with a gap. */
+  .vertical {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--todae-toolbar-gap);
+  }
+}
