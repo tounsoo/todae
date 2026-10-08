@@ -34,7 +34,9 @@
     white-space: nowrap;
   }
 
+  /* Transparent here, the border shows the control's edge in forced colors. */
   .item > :is(a, button) {
+    border: 1px solid transparent;
     background: transparent;
     text-decoration: none;
     cursor: pointer;
@@ -46,8 +48,8 @@
   }
 
   /* A step with nowhere to go: aria-disabled, which keeps it focusable, or a
-     link without href or a disabled button. */
-  .item > :is([aria-disabled='true'], a:not(:any-link), button:disabled),
+     link without href that is not the current page, or a disabled button. */
+  .item > :is([aria-disabled='true'], a:not(:any-link):not(:where([aria-current]:not([aria-current='false' i], [aria-current='']))), button:disabled),
   .ellipsis {
     color: var(--todae-pagination-fg-disabled);
     cursor: default;
@@ -72,7 +74,7 @@
     }
 
     /* System colors replace the muted token, so mark the state with GrayText. */
-    .item > :is([aria-disabled='true'], a:not(:any-link), button:disabled),
+    .item > :is([aria-disabled='true'], a:not(:any-link):not(:where([aria-current]:not([aria-current='false' i], [aria-current='']))), button:disabled),
     .ellipsis {
       color: GrayText;
     }
