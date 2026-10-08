@@ -50,10 +50,7 @@ function rangesIn(text: Text, pattern: RegExp): Range[] {
 
 const inDocumentOrder = (a: Node, b: Node) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
 
-/**
- * Keeps matches per text node, so a change only rescans the text it touched
- * instead of the whole element: text streaming into a long page stays cheap.
- */
+/** Keeps matches per text node, so a change only rescans the text it touched, not the whole element. */
 function createSearch(root: HTMLElement, pattern: RegExp) {
   const byText = new Map<Text, Range[]>();
   let changed = false;
@@ -66,30 +63,26 @@ function createSearch(root: HTMLElement, pattern: RegExp) {
       changed = true;
     }
   };
-  const scan = (node: Node) => {
-    if (node.nodeType === Node.TEXT_NODE) return scanText(node as Text);
+  const eachText = (node: Node, visit: (text: Text) => void) => {
+    if (node.nodeType === Node.TEXT_NODE) return visit(node as Text);
     const walker = root.ownerDocument.createTreeWalker(node, NodeFilter.SHOW_TEXT);
-    for (let text = walker.nextNode(); text; text = walker.nextNode()) scanText(text as Text);
+    for (let text = walker.nextNode(); text; text = walker.nextNode()) visit(text as Text);
   };
+  const forget = (text: Text) => {
+    if (!root.contains(text) && byText.delete(text)) changed = true;
+  };
+  const scan = (node: Node) => eachText(node, scanText);
   /** Applies a mutation batch; returns whether any match changed. */
   const update = (records: readonly MutationRecord[]): boolean => {
     changed = false;
-    let removed = false;
     for (const record of records) {
       if (record.type === 'characterData') {
         if (root.contains(record.target)) scan(record.target);
-        else removed = true;
+        else eachText(record.target, forget);
         continue;
       }
-      if (record.removedNodes.length > 0) removed = true;
+      for (const removed of record.removedNodes) eachText(removed, forget);
       for (const added of record.addedNodes) if (root.contains(added)) scan(added);
-    }
-    if (removed) {
-      for (const text of byText.keys()) {
-        if (root.contains(text)) continue;
-        byText.delete(text);
-        changed = true;
-      }
     }
     return changed;
   };
@@ -98,25 +91,27 @@ function createSearch(root: HTMLElement, pattern: RegExp) {
   return { update, matches };
 }
 
-// Hooks holding each name, oldest first. The newest is registered; when it
-// unmounts, the one before it takes the name back.
-const holders = new Map<string, Highlight[]>();
+type Holder = { highlight: Highlight; order: number };
 
-function claim(name: string, highlight: Highlight): void {
-  const list = holders.get(name) ?? [];
-  list.push(highlight);
+// Hooks holding each name, in the order they first mounted. The latest-mounted
+// one is registered; when it unmounts, the one before it takes the name back.
+const holders = new Map<string, Holder[]>();
+let mountCount = 0;
+
+function claim(name: string, holder: Holder): void {
+  const list = [...(holders.get(name) ?? []), holder].sort((a, b) => a.order - b.order);
   holders.set(name, list);
-  CSS.highlights.set(name, highlight);
+  if (list.at(-1) === holder) CSS.highlights.set(name, holder.highlight);
 }
 
-function release(name: string, highlight: Highlight): void {
-  const list = (holders.get(name) ?? []).filter((held) => held !== highlight);
+function release(name: string, holder: Holder): void {
+  const list = (holders.get(name) ?? []).filter((held) => held !== holder);
   if (list.length > 0) holders.set(name, list);
   else holders.delete(name);
   // Page code removed or replaced the name since; leave its choice alone.
-  if (CSS.highlights.get(name) !== highlight) return;
+  if (CSS.highlights.get(name) !== holder.highlight) return;
   const previous = list.at(-1);
-  if (previous) CSS.highlights.set(name, previous);
+  if (previous) CSS.highlights.set(name, previous.highlight);
   else CSS.highlights.delete(name);
 }
 
@@ -172,17 +167,20 @@ export function useHighlight({
 
   // One Highlight for the hook's whole life, so its priority and type survive
   // every change of ranges.
-  const [highlight] = useState(() => (supported() ? new Highlight() : null));
+  const [holder] = useState<Holder | null>(() =>
+    supported() ? { highlight: new Highlight(), order: ++mountCount } : null,
+  );
+  const highlight = holder?.highlight ?? null;
   const painted = useRef<{ matches: readonly AbstractRange[]; ranges: readonly AbstractRange[] }>({
     matches: NO_MATCHES,
     ranges: NO_MATCHES,
   });
 
   useEffect(() => {
-    if (!highlight) return;
-    claim(name, highlight);
-    return () => release(name, highlight);
-  }, [highlight, name]);
+    if (!holder) return;
+    claim(name, holder);
+    return () => release(name, holder);
+  }, [holder, name]);
 
   useEffect(() => {
     if (!highlight) return;

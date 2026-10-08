@@ -118,7 +118,7 @@ const cb = useCombobox({ options, presentation: 'sheet' })
 
 ## 일치 항목 강조
 
-[useHighlight](/utilities/use-highlight)는 옵션의 마크업을 바꾸지 않고 각 옵션에서 입력한 텍스트를 표시합니다. `inputValue`를 query로 넘기고 그 `ref`를 목록에 두세요.
+[useHighlight](/utilities/use-highlight)는 옵션의 마크업을 바꾸지 않고 각 옵션에서 입력한 텍스트를 표시합니다. `inputValue`를 query로 넘기고, 그 `ref`를 목록에 두고, `::highlight(search)`로 그 이름에 스타일을 주세요.
 
 ```tsx
 const found = useHighlight({ name: 'search', query: cb.inputValue.trim() })

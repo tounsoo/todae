@@ -211,6 +211,21 @@ describe('useHighlight', () => {
     expect(painted('search')).toEqual(['Apple', 'apple']);
   });
 
+  it('keeps the name with the later-mounted hook when an earlier one renames and comes back', () => {
+    function Pair({ firstName }: { firstName: string }) {
+      return (
+        <>
+          <Search query="apple" name={firstName} />
+          <Search query="pie" />
+        </>
+      );
+    }
+    const { rerender } = render(<Pair firstName="search" />);
+    rerender(<Pair firstName="other" />);
+    rerender(<Pair firstName="search" />);
+    expect(painted('search')).toEqual(['pie']);
+  });
+
   it('rescans only the text a change touched', async () => {
     function Paragraphs() {
       const highlight = useHighlight({ name: 'search', query: 'tea' });

@@ -7,7 +7,7 @@ export function HighlightSearch() {
   const inputId = useId();
   const [query, setQuery] = useState('token');
   const [index, setIndex] = useState(0);
-  const found = useHighlight({ name: 'docs-search', query });
+  const found = useHighlight({ name: 'docs-search', query: query.trim() });
   const total = found.matches.length;
   // The matches can shrink under a kept index, so wrap it on read.
   const at = total === 0 ? 0 : index % total;
