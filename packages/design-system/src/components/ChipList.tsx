@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { useChipList } from '../hooks/useChipList';
 import { usePopover } from '../hooks/usePopover';
+import { isReachable } from '../hooks/useRovingFocus';
 import { Chip } from './Chip';
 import { Popover } from './Popover';
 import styles from './ChipList.module.css';
@@ -28,7 +29,7 @@ export type ChipListRootProps = {
   dismissLabel?: (value: string) => string;
   /** +N button name. Default is {n} more. */
   overflowLabel?: (n: number) => string;
-  /** Name of the popover with the folded chips. Default is {n} more. */
+  /** Name of the popover with the folded chips. Default is {n} more chips. */
   panelLabel?: (n: number) => string;
 } & Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
@@ -67,7 +68,9 @@ function focusAfter(el: HTMLElement | null) {
   if (!el) return;
   const panel = document.getElementById(el.getAttribute('aria-controls') ?? '');
   const next = [...document.querySelectorAll<HTMLElement>(TABBABLE)].find((node) => {
-    if (node.closest('[inert],[hidden],[disabled]') || node.closest('[aria-hidden="true"]')) return false;
+    if (node.closest('[hidden],[disabled]') || node.closest('[aria-hidden="true"]')) return false;
+    // Inert, or not rendered, such as inside a closed popover.
+    if (!isReachable(node)) return false;
     if (panel?.contains(node)) return false;
     return (el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   });
@@ -109,14 +112,19 @@ function Root({
   onRemove,
   dismissLabel,
   overflowLabel,
-  panelLabel = (n) => `${n} more`,
+  panelLabel = (n) => `${n} more chips`,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledby,
+  'aria-describedby': ariaDescribedby,
+  'aria-details': ariaDetails,
   className,
   style,
   ...props
 }: ChipListRootProps) {
-  const { listRef, measureRef, measured, visible, hidden } = useChipList({ chips, maxRows });
+  // Whole rows only, and at least one, as useChipList counts them; anything
+  // else is no limit, so the clamp never hides chips that +N does not count.
+  const rows = maxRows != null && maxRows >= 1 ? Math.floor(maxRows) : undefined;
+  const { listRef, measureRef, measured, visible, hidden } = useChipList({ chips, maxRows: rows });
   const [open, setOpen] = useState(false);
   const [panelBox, setPanelBox] = useState<{ top: number; left: number; maxWidth: number } | null>(null);
   const [ring, setRing] = useState(false);
@@ -125,18 +133,23 @@ function Root({
   // never falls to the body.
   const parked = useRef(false);
   const pending = useRef<Pending | null>(null);
-  const moved = useRef<string | null>(null);
+  // The chip that left the panel holding focus: its index and value then.
+  const moved = useRef<{ index: number; value: string } | null>(null);
   const hiddenNow = useRef(0);
   hiddenNow.current = hidden;
 
   // A focused chip moved from the panel back to the row: focus follows it.
   useLayoutEffect(() => {
-    const value = moved.current;
+    const chip = moved.current;
     const list = listRef.current;
-    const button =
-      value !== null && list
-        ? [...list.children].find((item) => item.getAttribute('data-value') === value)?.querySelector('button')
-        : undefined;
+    // The same index if it still holds that value, else the first chip with it.
+    const items = list ? [...list.children].filter((item) => item.hasAttribute('data-value')) : [];
+    const match =
+      chip === null
+        ? undefined
+        : items.find((item) => item.getAttribute('data-index') === String(chip.index) && item.getAttribute('data-value') === chip.value) ??
+          items.find((item) => item.getAttribute('data-value') === chip.value);
+    const button = match?.querySelector('button');
     if (hidden === 0 && open) {
       moved.current = null;
       parked.current = false;
@@ -144,7 +157,7 @@ function Root({
       setOpen(false);
       return;
     }
-    if (value === null) return;
+    if (chip === null) return;
     moved.current = null;
     parked.current = false;
     (button ?? moreRef.current)?.focus({ preventScroll: true });
@@ -218,6 +231,21 @@ function Root({
     });
   }, [chips, listRef, popover.popoverRef]);
 
+  // A removal that does not drop the chip in the same update, such as one
+  // that waits on a server, leaves nothing to re-measure: unpark, and put
+  // focus back on the remove button that was pressed.
+  const settle = (job: Pending, from: HTMLElement | null) => {
+    setTimeout(() => {
+      if (pending.current !== job) return;
+      pending.current = null;
+      parked.current = false;
+      popover.popoverRef.current?.removeAttribute('data-parked');
+      // The pressed button, unless its panel closed under it.
+      if (from?.isConnected && isReachable(from)) from.focus();
+      else (moreRef.current ?? listRef.current)?.focus();
+    });
+  };
+
   const hasHidden = hidden > 0;
   useEffect(() => {
     if (!open || !hasHidden) return;
@@ -250,14 +278,16 @@ function Root({
     <div {...props} className={[styles.root, className].filter(Boolean).join(' ')} style={style}>
       <div
         className={styles.clip}
-        data-rows={maxRows != null ? '' : undefined}
-        style={maxRows != null ? ({ '--_rows': maxRows } as CSSProperties) : undefined}
+        data-rows={rows != null ? '' : undefined}
+        style={rows != null ? ({ '--_rows': rows } as CSSProperties) : undefined}
       >
         <div
           ref={listRef}
           role="list"
           aria-label={ariaLabel}
           aria-labelledby={ariaLabelledby}
+          aria-describedby={ariaDescribedby}
+          aria-details={ariaDetails}
           tabIndex={-1}
           className={styles.list}
           data-measuring={measured ? undefined : ''}
@@ -275,15 +305,19 @@ function Root({
               key={chip.key}
               role="listitem"
               data-value={chip.value}
+              data-index={index}
               dismissLabel={dismissLabel?.(chip.value)}
               style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
               onDismiss={
                 onRemove
                   ? () => {
+                      const from = document.activeElement as HTMLElement | null;
+                      const job: Pending = { where: 'list', slot: index };
                       parked.current = true;
-                      pending.current = { where: 'list', slot: index };
+                      pending.current = job;
                       listRef.current?.focus();
                       onRemove(index, chip.value);
+                      settle(job, from);
                     }
                   : undefined
               }
@@ -300,15 +334,18 @@ function Root({
           ) : null}
         </div>
       </div>
-      <div ref={measureRef} aria-hidden inert className={styles.measure}>
-        {chips.map((value, index) => (
-          <Chip.Root key={index} onDismiss={onRemove ? () => undefined : undefined}>
-            {value}
-          </Chip.Root>
-        ))}
-        <Chip.Root onDismiss={onRemove ? () => undefined : undefined}>…</Chip.Root>
-        <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
-      </div>
+      {rows != null ? (
+        // Read by useChipList only when there is a row limit.
+        <div ref={measureRef} aria-hidden inert className={styles.measure}>
+          {chips.map((value, index) => (
+            <Chip.Root key={index} onDismiss={onRemove ? () => undefined : undefined}>
+              {value}
+            </Chip.Root>
+          ))}
+          <Chip.Root onDismiss={onRemove ? () => undefined : undefined}>…</Chip.Root>
+          <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
+        </div>
+      ) : null}
       {open || hidden > 0 ? (
         <Popover.Root
           {...wire}
@@ -327,7 +364,7 @@ function Root({
             <HoldFocus
               key={`${chips.length - hidden + index}:${value}`}
               onLost={() => {
-                moved.current = value;
+                moved.current = { index: chips.length - hidden + index, value };
                 if (hiddenNow.current > 0) parked.current = true;
                 listRef.current?.focus({ preventScroll: true });
               }}
@@ -338,19 +375,22 @@ function Root({
                 onDismiss={
                   onRemove
                     ? () => {
+                        const from = document.activeElement as HTMLElement | null;
                         parked.current = true;
                         const panel = popover.popoverRef.current;
                         const at = chips.length - hidden + index;
+                        const job: Pending =
+                          hidden > 1 ? { where: 'popover', slot: index } : { where: 'popover-empty' };
+                        pending.current = job;
                         if (hidden > 1) {
-                          pending.current = { where: 'popover', slot: index };
                           panel?.setAttribute('data-parked', '');
                           panel?.focus();
                         } else {
-                          pending.current = { where: 'popover-empty' };
                           listRef.current?.focus();
                           setOpen(false);
                         }
                         onRemove(at, value);
+                        settle(job, from);
                       }
                     : undefined
                 }

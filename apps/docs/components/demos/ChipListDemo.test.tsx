@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Field } from '@tounsoo/todae';
+import { ChipList, Field } from '@tounsoo/todae';
 import { ChipListDemo } from './ChipListDemo';
 
 const require = createRequire(import.meta.url);
@@ -375,6 +375,38 @@ describe('chip list recipe', () => {
     body.assert();
   });
 
+  it('skips a control in a closed popover when tabbing out', async () => {
+    // jsdom has no checkVisibility: report anything under data-closed as not rendered.
+    const proto = HTMLElement.prototype as HTMLElement & { checkVisibility?: () => boolean };
+    const had = proto.checkVisibility;
+    proto.checkVisibility = function (this: HTMLElement) {
+      return !this.closest('[data-closed]');
+    };
+    try {
+      render(
+        <>
+          <ChipListDemo maxRows={1} initialChips={EIGHT} />
+          <div data-closed>
+            <button>Hidden</button>
+          </div>
+          <button>After</button>
+        </>,
+      );
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+      });
+      const last = screen.getByRole('button', { name: 'Remove hh' });
+      last.focus();
+      await act(async () => {
+        fireEvent.keyDown(last, { key: 'Tab' });
+      });
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'After' }));
+    } finally {
+      if (had) proto.checkVisibility = had;
+      else Reflect.deleteProperty(proto, 'checkVisibility');
+    }
+  });
+
   it('tabs out of a read-only panel to the control after +N', async () => {
     const body = watchBody();
     render(
@@ -584,6 +616,47 @@ describe('chip list recipe', () => {
     expect(active.closest('[role="list"]')).toBeTruthy();
     expect(screen.getByRole('dialog', { name: '4 more tags' })).toBeTruthy();
     body.assert();
+  });
+
+  it('follows the moved chip, not an earlier chip with the same value', async () => {
+    const body = watchBody();
+    const width = { current: 400 };
+    const ros = stubListWidth(width);
+    render(<ChipListDemo maxRows={1} initialChips={['aa', 'bb', 'cc', 'aa', 'ee', 'ff', 'gg', 'hh']} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    expect((document.activeElement as HTMLElement).closest('[role="dialog"]')).toBeTruthy();
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Remove aa');
+    width.current = 500;
+    await resizeTo(ros);
+    const item = (document.activeElement as HTMLElement).closest('[role="listitem"]');
+    expect(item?.closest('[role="list"]')).toBeTruthy();
+    expect(item?.getAttribute('data-index')).toBe('3');
+    body.assert();
+  });
+
+  it('gives focus back to the remove button when chips does not drop the chip', async () => {
+    vi.useFakeTimers();
+    try {
+      const onRemove = vi.fn();
+      render(<ChipList.Root aria-label="Tags" chips={['aa', 'bb']} maxRows={2} onRemove={onRemove} />);
+      const button = screen.getByRole('button', { name: 'Remove bb' });
+      button.focus();
+      await act(async () => {
+        fireEvent.click(button);
+      });
+      expect(onRemove).toHaveBeenCalledWith(1, 'bb');
+      await act(async () => {
+        vi.runAllTimers();
+      });
+      expect(document.activeElement).toBe(button);
+      const list = screen.getByRole('list', { name: 'Tags' });
+      act(() => list.focus());
+      expect(list.hasAttribute('data-ring')).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('defines chip geometry tokens and uses them on Chip', () => {

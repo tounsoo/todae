@@ -21,7 +21,7 @@ export const meta = {
       name: 'onRemove',
       type: '(index: number, value: string) => void',
       required: false,
-      description: 'Renders a remove button on each chip. Focus moves to the chip that takes its place.',
+      description: 'Renders a remove button on each chip. When chips drops it in the same update, focus moves to the chip that takes its place.',
     },
     {
       name: 'dismissLabel',
@@ -39,7 +39,7 @@ export const meta = {
       name: 'panelLabel',
       type: '(n: number) => string',
       required: false,
-      description: 'Name of the popover with the folded chips. Default is {n} more.',
+      description: 'Name of the popover with the folded chips. Default is {n} more chips.',
     },
   ],
 } as const satisfies ComponentMeta;
