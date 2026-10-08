@@ -17,7 +17,7 @@ async function save() {
   <AnnounceSave />
 </Example>
 
-Every caller in the document shares one visually hidden announcer, with a polite and an assertive live region. It is added when the first component using the hook mounts. A modal dialog makes the rest of the page inert, so while one is open, messages are read from inside the dialog in front. `announce` empties the region, then writes the message a moment later, so the same message twice is read twice. A newer message sent before the last one is written replaces it, and a message sent just before the calling component unmounts is still written. `politeness: 'assertive'` interrupts the screen reader; keep it for messages that cannot wait. On the server `announce` does nothing, and `announce` is the same function on every render.
+Messages go to a visually hidden polite or assertive live region that every caller in the document shares. It is added when the first component using the hook mounts. A modal dialog makes the rest of the page inert, so while one is open, messages are read from a region inside the dialog in front. `announce` empties the region, then writes the message a moment later, so the same message twice is read twice. A newer message sent before the last one is written replaces it, and a message sent just before the calling component unmounts is still written. `politeness: 'assertive'` interrupts the screen reader; keep it for messages that cannot wait. On the server `announce` does nothing, and `announce` is the same function on every render.
 
 ## When to use
 

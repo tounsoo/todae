@@ -2157,7 +2157,7 @@
     },
     {
       "name": "useAnnouncer",
-      "description": "Takes no arguments and returns announce(message, options?), which reads message to screen readers through one visually hidden live region shared by the whole document. The props below are announce arguments.",
+      "description": "Takes no arguments and returns announce(message, options?), which reads message to screen readers through visually hidden live regions shared by the whole document; while a modal dialog is open, the one inside the dialog in front. The props below are announce arguments.",
       "props": [
         {
           "name": "message",

@@ -39,8 +39,8 @@ const PENDING: Record<AnnouncePoliteness, string> = {
 
 /**
  * The region that is a direct child of host, created on request. Body has
- * one, and so does each modal dialog a message was read in; regions are
- * never moved, so none is a fresh live region at the moment it is written.
+ * one, and so does each modal dialog a message was read in. Regions are
+ * never moved.
  */
 function regionIn(host: HTMLElement, create: boolean): HTMLElement | null {
   const existing = host.querySelector<HTMLElement>(`:scope > [${ATTR}]`);
@@ -76,21 +76,33 @@ function announce(message: string, options?: AnnounceOptions): void {
   const schedule = () => {
     html.dataset[key] = String(setTimeout(attempt, WRITE_DELAY));
   };
-  // The host is chosen when the message is written: a modal makes the rest
-  // of the page inert, so the region read is the one in the modal in front,
-  // or in body when none is open.
+  // A modal makes the rest of the page inert, so the region read is the one
+  // in the modal in front, or in body when none is open. A modal in its exit
+  // motion keeps the page inert until it closes, so it picks none yet.
+  // (Todae marks that motion with data-exiting; other dialogs are taken as
+  // they are, and with focus on body, a modal Todae did not open is judged
+  // by document order, since the DOM does not expose top-layer order.)
+  const pick = (create: boolean): HTMLElement | null => {
+    const modal = frontModalElement();
+    if (modal?.hasAttribute('data-exiting')) return null;
+    return regionIn(modal ?? document.body, create);
+  };
+  // Write only into the region the last check also picked: one that was
+  // just created, or whose dialog just opened, closed or reopened, first
+  // sits reachable and empty for a moment so it is read. Past the deadline,
+  // one more moment at most, then the write goes to whatever is in front.
+  let chosen = pick(false);
+  let grace = true;
   function attempt() {
     const late = Date.now() >= deadline;
-    const modal = frontModalElement();
-    // A modal in its exit motion keeps the page inert until it closes.
-    if (modal?.hasAttribute('data-exiting') && !late) return schedule();
-    const host = modal ?? document.body;
-    const existing = regionIn(host, false);
-    const root = existing ?? regionIn(host, true)!;
-    // A new region sits empty for a moment first, so it is read.
-    if (!existing && !late) return schedule();
+    const root = pick(true) ?? (late ? regionIn(frontModalElement() ?? document.body, true) : null);
+    if (!root || (root !== chosen && (!late || grace))) {
+      if (late) grace = false;
+      chosen = root;
+      return schedule();
+    }
     delete html.dataset[key];
-    const live = root.querySelector<HTMLElement>(`[aria-live="${politeness}"]`);
+    const live = root?.querySelector<HTMLElement>(`[aria-live="${politeness}"]`);
     if (live) live.textContent = message;
   }
   schedule();
@@ -98,7 +110,8 @@ function announce(message: string, options?: AnnounceOptions): void {
 
 /**
  * Returns `announce(message, options?)`, which reads `message` to screen
- * readers through one visually hidden live region shared by the document.
+ * readers through visually hidden polite and assertive live regions shared
+ * by the document.
  * The region is added when the first component using the hook mounts. While
  * a modal dialog is open, messages are read from inside the one in front.
  */

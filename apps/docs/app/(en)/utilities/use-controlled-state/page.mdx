@@ -1,6 +1,6 @@
 # useControlledState
 
-`useControlledState(controlled, defaultValue)` returns `[value, setValue]` for a component that takes a value prop and a default. While `controlled` is not `undefined`, it is the value and `setValue` does nothing, so the parent decides. Otherwise the hook keeps its own state, starting at `defaultValue`, and `setValue` stores the next value. Button, Checkbox, Switch, RadioGroup and ToggleGroup use it.
+`useControlledState(controlled, defaultValue)` returns `[value, setValue]` for a component that takes a value prop and a default. While `controlled` is not `undefined`, it is the value and `setValue` does nothing, so the parent decides. Otherwise the hook keeps its own state, starting at `defaultValue`, and `setValue` stores the next value.
 
 ```tsx
 function Mute({ pressed, defaultPressed = false, onPressedChange }: MuteProps) {

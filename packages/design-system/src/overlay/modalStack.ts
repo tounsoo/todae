@@ -26,15 +26,13 @@ export function heldModals(): readonly HTMLDialogElement[] {
   return open;
 }
 
-function isModal(dialog: Element): boolean {
-  // aria-modal first: it is cheap, and an engine without :modal, such as
-  // jsdom, relies on it.
-  if (dialog.getAttribute('aria-modal') === 'true') return true;
-  try {
-    return dialog.matches(':modal');
-  } catch {
-    return false;
-  }
+// Whether the engine knows :modal, asked once. An engine without it, such
+// as jsdom, falls back to aria-modal.
+let knowsModal: boolean | undefined;
+
+export function isModal(dialog: Element): boolean {
+  knowsModal ??= typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('selector(:modal)');
+  return knowsModal ? dialog.matches(':modal') : dialog.getAttribute('aria-modal') === 'true';
 }
 
 /**

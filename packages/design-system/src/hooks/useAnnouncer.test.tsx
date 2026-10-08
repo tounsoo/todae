@@ -162,6 +162,9 @@ describe('useAnnouncer', () => {
     act(() => vi.advanceTimersByTime(300));
     expect(bodyLive().textContent).toBe('');
     dialog.remove();
+    // Body was inert a moment ago: it sits reachable and empty first.
+    act(() => vi.advanceTimersByTime(100));
+    expect(bodyLive().textContent).toBe('');
     act(() => vi.advanceTimersByTime(100));
     expect(bodyLive().textContent).toBe('Deleted');
   });
@@ -169,8 +172,25 @@ describe('useAnnouncer', () => {
   it('writes anyway once a modal has looked like it was closing for too long', () => {
     const dialog = modal({ 'data-exiting': '' });
     render(<Speaker message="Deleted" />);
-    act(() => vi.advanceTimersByTime(1200));
+    act(() => vi.advanceTimersByTime(1050));
+    // Its new region still sits empty for one moment.
+    expect(liveIn(dialog)?.textContent).toBe('');
+    act(() => vi.advanceTimersByTime(100));
     expect(liveIn(dialog)?.textContent).toBe('Deleted');
+  });
+
+  it('waits a moment before writing in a dialog that closed and opened again', () => {
+    const dialog = modal();
+    const { rerender } = render(<Speaker message="Saved" />);
+    act(() => vi.advanceTimersByTime(200));
+    expect(liveIn(dialog)?.textContent).toBe('Saved');
+    dialog.removeAttribute('open');
+    rerender(<Speaker message="Closed" />);
+    dialog.setAttribute('open', '');
+    act(() => vi.advanceTimersByTime(100));
+    expect(liveIn(dialog)?.textContent).toBe('');
+    act(() => vi.advanceTimersByTime(100));
+    expect(liveIn(dialog)?.textContent).toBe('Closed');
   });
 
   it('writes in the modal that holds focus when several are open', () => {
