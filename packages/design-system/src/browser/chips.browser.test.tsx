@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet';
 import { ChipList } from '../components/ChipList';
 import { Field } from '../components/Field';
@@ -149,4 +149,126 @@ describe('ChipList focus in a browser', () => {
     await userEvent.click(screen.getAllByRole('button', { name: 'Remove bb' })[0]!);
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove aa' })));
   });
+});
+
+// Chromium fires focusout with no relatedTarget when it drops focus to the body.
+describe('ChipList focus never falls to the body in a browser', () => {
+  const WIDE = ['design', 'tokens', 'accessibility', 'react', 'density', 'dark mode', 'docs', 'motion'];
+  let dropped: string[] = [];
+  function onOut(event: FocusEvent) {
+    if (event.relatedTarget == null) dropped.push((event.target as HTMLElement).getAttribute('aria-label') ?? '');
+  }
+  beforeEach(() => {
+    dropped = [];
+    document.addEventListener('focusout', onOut, true);
+  });
+  afterEach(() => document.removeEventListener('focusout', onOut, true));
+
+  const api = { set: (_: (tags: string[]) => string[]) => undefined as void, width: (_: number) => undefined as void };
+  function Owner({ initial, keyed = false }: { initial: string[]; keyed?: boolean }) {
+    const [tags, setTags] = useState(initial);
+    const [width, setWidth] = useState(320);
+    api.set = setTags;
+    api.width = setWidth;
+    return (
+      <div data-appearance="light" data-density="comfortable" style={{ width }}>
+        <ChipList.Root
+          aria-label="Tags"
+          // Keyed tags read 'id:label'.
+          chips={keyed ? tags.map((tag) => tag.slice(2)) : tags}
+          getKey={keyed ? (_, index) => tags[index]! : undefined}
+          maxRows={1}
+          overflowLabel={(n) => `+${n} more`}
+          onRemove={() => undefined}
+        />
+      </div>
+    );
+  }
+  const more = () => screen.getByRole('button', { name: /more$/ });
+
+  it('moves focus from +N to the first chip it held once nothing is folded', async () => {
+    render(<Owner initial={WIDE} />);
+    await waitFor(() => expect(more()).toBeTruthy());
+    const shown = screen.getAllByRole('listitem').length - 1;
+    act(() => more().focus());
+    await act(async () => api.width(4000));
+    await waitFor(() => expect(screen.queryByRole('button', { name: /more$/ })).toBeNull());
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: `Remove ${WIDE[shown]}` }));
+    expect(dropped).toEqual([]);
+  });
+
+  it('follows a panel chip into the row when the field widens', async () => {
+    render(<Owner initial={WIDE} />);
+    await waitFor(() => expect(more()).toBeTruthy());
+    await userEvent.click(more());
+    const dialog = await screen.findByRole('dialog');
+    const first = dialog.querySelector('button')!;
+    const label = first.getAttribute('aria-label');
+    await waitFor(() => expect(document.activeElement).toBe(first));
+    await act(async () => api.width(4000));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(document.activeElement?.getAttribute('aria-label')).toBe(label);
+    expect(document.activeElement?.closest('[role="list"]')).toBeTruthy();
+    expect(dropped).toEqual([]);
+  });
+
+  it('returns focus to +N when Escape closes the panel', async () => {
+    render(<Owner initial={WIDE} />);
+    await waitFor(() => expect(more()).toBeTruthy());
+    await userEvent.click(more());
+    await screen.findByRole('dialog');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(more()));
+    expect(dropped).toEqual([]);
+  });
+
+  it('leaves focus on a twin the person moved to when the pressed twin is dropped later', async () => {
+    render(<Owner initial={['aa', 'x', 'aa', 'y']} />);
+    const [first, second] = screen.getAllByRole('button', { name: 'Remove aa' }) as [HTMLElement, HTMLElement];
+    await userEvent.click(first);
+    act(() => second.focus());
+    await act(async () => api.set((current) => current.filter((_, index) => index !== 0)));
+    expect(document.activeElement).toBe(second);
+    expect(dropped).toEqual([]);
+  });
+
+  it('keeps focus on a keyed chip whose node a reorder moves', async () => {
+    render(<Owner initial={['1:aa', '2:bb', '3:cc']} keyed />);
+    const button = screen.getByRole('button', { name: 'Remove aa' });
+    act(() => button.focus());
+    await act(async () => api.set((current) => [...current].reverse()));
+    expect(document.activeElement).toBe(button);
+    expect(dropped).toEqual([]);
+  });
+
+  it('moves focus to the chip that fills the place of a removed one', async () => {
+    render(<Owner initial={['aa', 'bb', 'cc']} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove bb' }));
+    await act(async () => api.set((current) => current.filter((tag) => tag !== 'bb')));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove cc' }));
+    expect(dropped).toEqual([]);
+  });
+
+  for (const edge of ['left', 'right'] as const) {
+    it(`anchors the panel under +N and keeps it on screen at the ${edge} edge`, async () => {
+      render(
+        <div
+          data-appearance="light"
+          data-density="comfortable"
+          style={{ width: 320, marginLeft: edge === 'right' ? 'calc(100vw - 340px)' : 0 }}
+        >
+          <ChipList.Root aria-label="Tags" chips={WIDE} maxRows={1} overflowLabel={(n) => `+${n} more`} />
+        </div>,
+      );
+      await waitFor(() => expect(more()).toBeTruthy());
+      await userEvent.click(more());
+      const dialog = await screen.findByRole('dialog');
+      await waitFor(() => expect(dialog.getBoundingClientRect().width).toBeGreaterThan(0));
+      const trigger = more().getBoundingClientRect();
+      const panel = dialog.getBoundingClientRect();
+      expect(panel.top).toBeGreaterThanOrEqual(trigger.bottom);
+      expect(panel.left).toBeGreaterThanOrEqual(0);
+      expect(panel.right).toBeLessThanOrEqual(document.documentElement.clientWidth);
+    });
+  }
 });

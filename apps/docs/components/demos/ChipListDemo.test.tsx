@@ -1110,6 +1110,212 @@ describe('chip list recipe', () => {
     expect(labels).toEqual(['Alpha']);
   });
 
+  it('moves focus from +N to the first chip it held once nothing is folded', async () => {
+    const body = watchBody();
+    const width = { current: 400 };
+    const ros = stubListWidth(width);
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
+    act(() => screen.getByRole('button', { name: '+5 more' }).focus());
+    width.current = 4000;
+    await resizeTo(ros);
+    expect(screen.queryByRole('button', { name: /more/ })).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove dd' }));
+    body.assert();
+  });
+
+  it('moves focus from +N to the list once a read-only list has nothing folded', async () => {
+    const body = watchBody();
+    const width = { current: 400 };
+    const ros = stubListWidth(width);
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} readOnly />);
+    act(() => screen.getByRole('button', { name: '+5 more' }).focus());
+    width.current = 4000;
+    await resizeTo(ros);
+    const list = screen.getByRole('list', { name: 'Tags' });
+    expect(document.activeElement).toBe(list);
+    expect(list.hasAttribute('data-ring')).toBe(true);
+    body.assert();
+  });
+
+  it('leaves focus on a twin the person moved to when the pressed twin is dropped later', async () => {
+    const body = watchBody();
+    const tags = owner(['aa', 'x', 'aa', 'y']);
+    const [first, second] = screen.getAllByRole('button', { name: 'Remove aa' }) as [HTMLElement, HTMLElement];
+    await act(async () => {
+      fireEvent.click(first);
+    });
+    act(() => second.focus());
+    await act(async () => tags.set((current) => current.filter((_, index) => index !== 0)));
+    expect(document.activeElement).toBe(second);
+    expect(second.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('1');
+    body.assert();
+  });
+
+  it('leaves focus on a chip when the owner drops an earlier twin', async () => {
+    const body = watchBody();
+    const tags = owner(['aa', 'x', 'aa', 'y']);
+    const second = screen.getAllByRole('button', { name: 'Remove aa' })[1] as HTMLElement;
+    act(() => second.focus());
+    await act(async () => tags.set((current) => current.slice(1)));
+    expect(document.activeElement).toBe(second);
+    body.assert();
+  });
+
+  it('leaves focus on a chip when a twin is added before it', async () => {
+    const body = watchBody();
+    const tags = owner(['x', 'aa']);
+    const button = screen.getByRole('button', { name: 'Remove aa' });
+    act(() => button.focus());
+    await act(async () => tags.set((current) => ['aa', ...current]));
+    expect(document.activeElement).toBe(button);
+    expect(button.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('2');
+    body.assert();
+  });
+
+  it('returns focus to +N when Escape closes the panel', async () => {
+    const body = watchBody();
+    render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    await act(async () => {
+      fireEvent.keyDown(screen.getByRole('button', { name: 'Remove ee' }), { key: 'Escape' });
+    });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: '+5 more' }));
+    body.assert();
+  });
+
+  it('moves focus to the list when the owner takes the remove buttons away', async () => {
+    const body = watchBody();
+    let lock = () => undefined as void;
+    function Owner() {
+      const [locked, setLocked] = useState(false);
+      lock = () => setLocked(true);
+      return <ChipList.Root aria-label="Tags" chips={['aa', 'bb']} onRemove={locked ? undefined : () => undefined} />;
+    }
+    render(<Owner />);
+    act(() => screen.getByRole('button', { name: 'Remove bb' }).focus());
+    await act(async () => lock());
+    expect(document.activeElement).toBe(screen.getByRole('list', { name: 'Tags' }));
+    body.assert();
+  });
+
+  // Random owner changes, resizes and key presses. Wherever focus starts in
+  // the component, it stays there, and a keyed chip that can still take
+  // focus keeps it.
+  it('keeps focus in the component through random changes', { timeout: 30000 }, async () => {
+    const width = { current: 400 };
+    const ros = stubListWidth(width);
+    let seed = 7;
+    const rand = (n: number) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % n;
+    };
+    type Item = { id: string; label: string };
+    for (let run = 0; run < 60; run++) {
+      const keyed = run % 2 === 0;
+      let next = 0;
+      const make = (): Item => ({ id: `id${next++}`, label: ['aa', 'bb', 'cc'][rand(3)]! });
+      const api = { set: (_: (items: Item[]) => Item[]) => undefined as void, pending: [] as number[] };
+      let sync = false;
+      function Owner() {
+        const [items, setItems] = useState<Item[]>(() => Array.from({ length: 6 }, make));
+        api.set = setItems;
+        return (
+          <ChipList.Root
+            aria-label="Tags"
+            chips={items.map((item) => item.label)}
+            getKey={keyed ? (_, index) => items[index]!.id : undefined}
+            maxRows={1}
+            overflowLabel={(n) => `+${n} more`}
+            onRemove={(index) => {
+              if (sync) setItems((current) => current.filter((_, i) => i !== index));
+              else api.pending.push(index);
+            }}
+          />
+        );
+      }
+      width.current = 400;
+      const view = render(
+        run % 4 < 2 ? (
+          <Owner />
+        ) : (
+          <StrictMode>
+            <Owner />
+          </StrictMode>
+        ),
+      );
+      const list = screen.getByRole('list', { name: 'Tags' });
+      const panelOf = () => view.container.querySelector<HTMLElement>('[role="dialog"]');
+      const focusables = () => {
+        const panel = panelOf();
+        const open = panel?.hasAttribute('data-popover-open') ? [...panel.querySelectorAll<HTMLElement>('button')] : [];
+        return [...list.querySelectorAll<HTMLElement>('button'), ...open];
+      };
+      act(() => focusables()[0]?.focus());
+      for (let step = 0; step < 40; step++) {
+        const before = document.activeElement as HTMLElement | null;
+        const inside = before != null && (list.contains(before) || !!panelOf()?.contains(before));
+        const beforeKey = before?.closest('[data-key]')?.getAttribute('data-key') ?? null;
+        const op = rand(9);
+        sync = rand(2) === 0;
+        const where = `run ${run} step ${step} op ${op}`;
+        await act(async () => {
+          if (op === 0) {
+            const removable = focusables().filter((b) => b.getAttribute('aria-label')?.startsWith('Remove'));
+            const button = removable[rand(Math.max(removable.length, 1))];
+            if (button) fireEvent.click(button);
+          } else if (op === 1) {
+            const index = api.pending.shift();
+            api.pending.length = 0;
+            if (index != null) api.set((current) => current.filter((_, i) => i !== index));
+          } else if (op === 2) {
+            api.set((current) => (current.length ? current.filter((_, i) => i !== rand(current.length)) : current));
+          } else if (op === 3) {
+            api.set((current) => {
+              const copy = [...current];
+              copy.splice(rand(copy.length + 1), 0, make());
+              return copy;
+            });
+            api.pending.length = 0;
+          } else if (op === 4) {
+            api.set((current) => [...current].reverse());
+            api.pending.length = 0;
+          } else if (op === 5) {
+            width.current = [150, 300, 400, 600, 4000][rand(5)]!;
+            for (const cb of ros) cb([] as unknown as ResizeObserverEntry[], {} as ResizeObserver);
+          } else if (op === 6) {
+            const more = list.querySelector<HTMLElement>('button[aria-haspopup]');
+            if (more) fireEvent.click(more);
+          } else if (op === 7) {
+            if (document.activeElement) fireEvent.keyDown(document.activeElement, { key: 'Escape' });
+          } else {
+            const all = focusables();
+            all[rand(Math.max(all.length, 1))]?.focus();
+          }
+        });
+        const active = document.activeElement as HTMLElement;
+        const panel = panelOf();
+        // A click on +N or a focus on purpose may move focus anywhere.
+        const moves = op === 6 || op === 8;
+        if (inside && !moves) {
+          expect(active, where).not.toBe(document.body);
+          expect(list.contains(active) || !!panel?.contains(active), where).toBe(true);
+        }
+        if (panel?.contains(active)) expect(panel.hasAttribute('data-popover-open'), where).toBe(true);
+        if (active === list && before !== list) expect(list.querySelectorAll('button'), where).toHaveLength(0);
+        if (keyed && inside && !moves && op !== 0 && beforeKey != null) {
+          const own = [list, panel].flatMap((box) =>
+            box ? [...box.children].filter((el) => el.getAttribute('data-key') === beforeKey) : [],
+          );
+          const button = own.map((el) => el.querySelector('button')).find((b) => b != null && focusables().includes(b));
+          if (button) expect(active, where).toBe(button);
+        }
+      }
+      view.unmount();
+    }
+  });
+
   it('server-renders the list hidden until measured', () => {
     const html = renderToString(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
     expect(html).toContain('data-measuring=""');

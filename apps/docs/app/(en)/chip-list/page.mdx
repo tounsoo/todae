@@ -4,7 +4,7 @@ import { ChipListDemo } from '../../../components/demos/ChipListDemo';
 
 A list of chips that shows up to `maxRows` rows and folds the rest into a +N button. +N opens a popover with the folded chips. Name the list with `aria-label` or `aria-labelledby`.
 
-With `onRemove`, each chip gets a remove button. Once `chips` drops the chip, focus moves to the chip that now fills its place, else the one before it, else the list.
+With `onRemove`, each chip gets a remove button. Once `chips` drops the focused chip, focus moves to the chip that now fills its place, else the one before it, else +N, else the list.
 
 ```tsx
 <ChipList.Root

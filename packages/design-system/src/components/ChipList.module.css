@@ -115,10 +115,6 @@
     outline-offset: var(--todae-chip-ring-offset);
   }
 
-  .panel[data-parked]:focus {
-    outline: none;
-  }
-
   .panelChip {
     min-width: 0;
   }

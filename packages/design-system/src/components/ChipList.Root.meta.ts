@@ -22,13 +22,14 @@ export const meta = {
       type: '(value: string, index: number) => string',
       required: false,
       description:
-        'A stable, unique key for each chip, so focus can follow it when chips change. Default is the value, numbered among chips with the same value.',
+        'A stable, unique key for each chip, so focus can follow it when chips change. Without it, chips are matched by value, so focus can land on another chip with the same value.',
     },
     {
       name: 'onRemove',
       type: '(index: number, value: string) => void',
       required: false,
-      description: 'Renders a remove button on each chip. Once chips drops the chip, focus moves to the chip that takes its place.',
+      description:
+        'Renders a remove button on each chip. Once chips drops the focused chip, focus moves to the chip that now fills its place, else the one before it, else +N, else the list.',
     },
     {
       name: 'dismissLabel',
