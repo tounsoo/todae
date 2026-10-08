@@ -47,8 +47,7 @@ export type ToastRegionProps<T extends object = object> = {
   limit?: number;
   /**
    * Key that moves focus to the toasts, such as `"F8"` or `"Alt+T"`. Modifiers
-   * are Alt (or Option), Ctrl, Meta (or Cmd) and Shift; write Space and Plus
-   * by name. `null` turns it off.
+   * are Alt (or Option), Ctrl, Meta (or Cmd) and Shift. `null` turns it off.
    */
   hotkey?: string | null;
   'aria-label'?: string;
@@ -131,12 +130,17 @@ function alongside<E>(theirs: ((event: E) => void) | undefined, ours: (event: E)
 }
 
 /** Whether a key pressed in `target` types there, so a typing hotkey leaves it alone. */
+// Inputs a key types nothing into.
+const UNTYPED_INPUTS = ['button', 'checkbox', 'color', 'file', 'image', 'radio', 'range', 'reset', 'submit']
+  .map((type) => `[type=${type}]`)
+  .join(', ');
+
 function typesIn(target: EventTarget | null, { key, modifiers }: Hotkey): boolean {
   // A function key types nothing anywhere, nor does a chord with Meta or
   // Ctrl. Ctrl with Alt is AltGr on Windows, which types.
   if (/^f\d{1,2}$/.test(key) || modifiers.has('meta') || (modifiers.has('ctrl') && !modifiers.has('alt'))) return false;
   if (!(target instanceof HTMLElement)) return false;
-  return target.isContentEditable || target.matches('input, textarea, select');
+  return target.isContentEditable || target.matches(`textarea, select, input:not(${UNTYPED_INPUTS})`);
 }
 
 const MODIFIERS = ['alt', 'ctrl', 'meta', 'shift'] as const;
@@ -156,10 +160,7 @@ const MODIFIER_NAMES = new Map<string, Modifier>([
 ]);
 
 // Keys whose name is not what they type.
-const KEY_NAMES = new Map([
-  ['space', ' '],
-  ['plus', '+'],
-]);
+const KEY_NAMES = new Map([['space', ' ']]);
 
 type Hotkey = { key: string; modifiers: ReadonlySet<Modifier> };
 
@@ -500,7 +501,7 @@ function Region<T extends object = object>({
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production' && hotkey && !parseHotkey(hotkey)) {
-      console.error(`Todae: Toast.Region hotkey "${hotkey}" names a modifier it doesn't know, so it is off.`);
+      console.error(`Todae: Toast.Region hotkey "${hotkey}" isn't one it can read, so it is off.`);
     }
   }, [hotkey]);
 

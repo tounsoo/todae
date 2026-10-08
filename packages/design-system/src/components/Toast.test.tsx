@@ -165,6 +165,7 @@ describe('Toast', () => {
       return (
         <>
           <input aria-label="Name" />
+          <input type="checkbox" aria-label="Agree" />
           <Region toaster={toaster} hotkey={hotkey} />
         </>
       );
@@ -175,6 +176,12 @@ describe('Toast', () => {
     input.focus();
     fireEvent.keyDown(input, { key: 't', code: 'KeyT', altKey: true });
     expect(document.activeElement).toBe(input);
+    // A checkbox types nothing.
+    const checkbox = screen.getByRole('checkbox', { name: 'Agree' });
+    checkbox.focus();
+    fireEvent.keyDown(checkbox, { key: 't', code: 'KeyT', altKey: true });
+    expect(document.activeElement).toBe(screen.getByRole('region'));
+    input.focus();
     // Ctrl with Alt is AltGr on Windows, which types.
     rerender(<Page hotkey="Ctrl+Alt+E" />);
     fireEvent.keyDown(input, { key: '€', code: 'KeyE', ctrlKey: true, altKey: true });
@@ -529,10 +536,8 @@ describe('matchesHotkey', () => {
     expect(matchesHotkey(key({ key: '†', code: 'KeyT', altKey: true }), 'Opt+T')).toBe(true);
   });
 
-  it('reads Space and Plus by name', () => {
+  it('reads Space by name', () => {
     expect(matchesHotkey(key({ key: ' ', code: 'Space', ctrlKey: true }), 'Ctrl+Space')).toBe(true);
-    expect(matchesHotkey(key({ key: '+', code: 'Equal', ctrlKey: true, shiftKey: true }), 'Ctrl+Shift+Plus')).toBe(true);
-    expect(matchesHotkey(key({ key: 'p', code: 'KeyP', ctrlKey: true }), 'Ctrl+Plus')).toBe(false);
   });
 
   it('ignores a keydown with no key, as Chrome sends for an autofill pick', () => {
