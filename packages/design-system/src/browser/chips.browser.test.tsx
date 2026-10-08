@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet';
+import { ChipList } from '../components/ChipList';
 import { Field } from '../components/Field';
 
 const TAGS = ['design', 'tokens', 'accessibility', 'react', 'density', 'dark mode', 'docs', 'motion', 'layout', 'forms'];
@@ -104,5 +105,48 @@ describe('BottomSheet in a browser', () => {
     sheet.querySelector('button')!.focus();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('ChipList focus in a browser', () => {
+  it('keeps focus on a keyed chip when the owner reverses the chips', async () => {
+    let reverse = () => undefined as void;
+    function Owner() {
+      const [items, setItems] = useState(['1:aa', '2:bb', '3:cc']);
+      reverse = () => setItems((current) => [...current].reverse());
+      return (
+        <div data-appearance="light" data-density="comfortable">
+          <ChipList.Root
+            aria-label="Tags"
+            chips={items.map((item) => item.slice(2))}
+            getKey={(_, index) => items[index]!}
+            onRemove={() => undefined}
+          />
+        </div>
+      );
+    }
+    render(<Owner />);
+    const button = screen.getByRole('button', { name: 'Remove aa' });
+    button.focus();
+    await act(async () => reverse());
+    expect(document.activeElement).toBe(button);
+  });
+
+  it('focuses the slot when a pressed chip has a later twin', async () => {
+    function Owner() {
+      const [tags, setTags] = useState(['bb', 'aa', 'bb']);
+      return (
+        <div data-appearance="light" data-density="comfortable">
+          <ChipList.Root
+            aria-label="Tags"
+            chips={tags}
+            onRemove={(index) => setTags((current) => current.filter((_, i) => i !== index))}
+          />
+        </div>
+      );
+    }
+    render(<Owner />);
+    await userEvent.click(screen.getAllByRole('button', { name: 'Remove bb' })[0]!);
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove aa' })));
   });
 });

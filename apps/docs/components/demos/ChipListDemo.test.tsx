@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
-import { useState } from 'react';
+import { StrictMode, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChipList, Field } from '@tounsoo/todae';
 import { ChipListDemo } from './ChipListDemo';
@@ -768,7 +768,7 @@ describe('chip list recipe', () => {
   });
 
   // Chips with ids, keyed by getKey.
-  function keyed(initial: { id: string; label: string }[]) {
+  function keyed(initial: { id: string; label: string }[], maxRows = 2) {
     const api = { set: (_next: (items: { id: string; label: string }[]) => { id: string; label: string }[]) => undefined as void };
     function Owner() {
       const [items, setItems] = useState(initial);
@@ -778,8 +778,9 @@ describe('chip list recipe', () => {
           aria-label="Tags"
           chips={items.map((item) => item.label)}
           getKey={(_, index) => items[index]!.id}
-          maxRows={2}
+          maxRows={maxRows}
           onRemove={() => undefined}
+          overflowLabel={(n) => `+${n} more`}
         />
       );
     }
@@ -816,6 +817,124 @@ describe('chip list recipe', () => {
     await act(async () => items.set((current) => current.slice(1)));
     expect(document.activeElement).toBe(button);
     expect(button.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('1');
+    body.assert();
+  });
+
+  it('focuses the slot when a pressed chip has a later twin, without getKey', async () => {
+    const body = watchBody();
+    const tags = owner(['bb', 'aa', 'bb']);
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Remove bb' })[0]!);
+    });
+    await act(async () => tags.set((current) => current.filter((_, index) => index !== 0)));
+    const active = document.activeElement as HTMLElement;
+    expect(active).toBe(screen.getByRole('button', { name: 'Remove aa' }));
+    expect(active.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('0');
+    body.assert();
+  });
+
+  it('focuses the panel slot when a pressed panel chip has a later twin', async () => {
+    const body = watchBody();
+    const tags = owner(['aa', 'bb', 'cc', 'dd', 'xx', 'ee', 'xx', 'ff'], 1);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Remove xx' })[0]!);
+    });
+    await act(async () => tags.set((current) => current.filter((_, index) => index !== 4)));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove ee' }));
+    expect((document.activeElement as HTMLElement).closest('[role="dialog"]')).toBeTruthy();
+    body.assert();
+  });
+
+  it('keeps focus on a keyed chip when the owner reverses the row', async () => {
+    const body = watchBody();
+    const items = keyed([
+      { id: '1', label: 'aa' },
+      { id: '2', label: 'bb' },
+      { id: '3', label: 'cc' },
+    ]);
+    const button = screen.getByRole('button', { name: 'Remove aa' });
+    act(() => button.focus());
+    await act(async () => items.set((current) => [...current].reverse()));
+    expect(document.activeElement).toBe(button);
+    expect(button.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('2');
+    body.assert();
+  });
+
+  it('keeps focus on a keyed chip when the owner reorders the open panel', async () => {
+    const body = watchBody();
+    const items = keyed(
+      EIGHT.map((label, index) => ({ id: String(index), label })),
+      1,
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    const button = screen.getByRole('button', { name: 'Remove ff' });
+    act(() => button.focus());
+    await act(async () => items.set((current) => [...current.slice(0, 3), ...current.slice(3).reverse()]));
+    expect(document.activeElement).toBe(button);
+    expect(button.closest('[role="dialog"]')).toBeTruthy();
+    body.assert();
+  });
+
+  it('moves focus to +N when a reorder sends the focused chip into the closed panel', async () => {
+    const body = watchBody();
+    const items = keyed(
+      EIGHT.map((label, index) => ({ id: String(index), label })),
+      1,
+    );
+    act(() => screen.getByRole('button', { name: 'Remove aa' }).focus());
+    await act(async () => items.set((current) => [...current.slice(1), current[0]!]));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: '+5 more' }));
+    body.assert();
+  });
+
+  it('leaves focus alone when a chip is added after the focused one', async () => {
+    const tags = owner(['aa', 'bb', 'cc']);
+    const button = screen.getByRole('button', { name: 'Remove bb' });
+    act(() => button.focus());
+    const events: string[] = [];
+    const log = (event: Event) => events.push(event.type);
+    document.addEventListener('focusin', log);
+    document.addEventListener('focusout', log);
+    await act(async () => tags.set((current) => [...current, 'dd']));
+    document.removeEventListener('focusin', log);
+    document.removeEventListener('focusout', log);
+    expect(events).toEqual([]);
+    expect(document.activeElement).toBe(button);
+  });
+
+  it('gives every default key its own slot, even for a value that looks numbered', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(<ChipList.Root aria-label="Tags" chips={['a', 'a', '1:a', 'a#1']} />);
+    expect(screen.getAllByRole('listitem')).toHaveLength(4);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('moves focus to the slot under StrictMode', async () => {
+    const body = watchBody();
+    function Strict() {
+      const [tags, setTags] = useState(['aa', 'bb', 'cc']);
+      return (
+        <StrictMode>
+          <ChipList.Root
+            aria-label="Tags"
+            chips={tags}
+            maxRows={2}
+            onRemove={(index) => setTags((current) => current.filter((_, i) => i !== index))}
+          />
+        </StrictMode>
+      );
+    }
+    render(<Strict />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Remove bb' }));
+    });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove cc' }));
     body.assert();
   });
 
