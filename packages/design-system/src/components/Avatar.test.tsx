@@ -185,6 +185,18 @@ describe('Avatar', () => {
       expect(status()).toBe('error');
     });
 
+    it('waits for an event after a src change, even while the element still reports the old image', () => {
+      // Some engines keep complete and naturalWidth from the old image until the new request starts.
+      stub(64);
+      const { rerender } = render(tree('one.png'));
+      expect(status()).toBe('loaded');
+      rerender(tree('two.png'));
+      expect(status()).toBe('loading');
+      expect(screen.getByText('AL')).toBeTruthy();
+      fireEvent.load(screen.getByTestId('img'));
+      expect(status()).toBe('loaded');
+    });
+
     it('settles under StrictMode', () => {
       stub(0);
       render(<StrictMode>{tree()}</StrictMode>);

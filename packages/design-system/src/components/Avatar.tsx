@@ -74,17 +74,26 @@ function Image({ src, srcSet, ref, onLoad, onError, className, ...props }: Avata
   const { setStatus } = useAvatar('Image');
   const own = useRef<HTMLImageElement>(null);
   const refs = useComposedRefs(own, ref);
-  // A new source starts over. An image that finished before React attached
-  // its handlers, such as one from the cache before hydration, may get no
-  // load event, so it is read from the element: a natural width means it
-  // loaded. A width of 0 is either a broken image or an SVG with no intrinsic
-  // size, so the source is set again: the element loads it once more, from the
-  // cache or the network, and its own load or error event decides. No source at
-  // all is a failure, so the fallback stays.
+  // The source the status was last decided for, so a change can be told
+  // apart from a first run or a StrictMode re-run.
+  const decided = useRef<string | null>(null);
+
+  // A changed source is loading until the image's own load or error event
+  // says otherwise: right after React sets it, some engines still report the
+  // old image as complete. On the first run the image is read from the
+  // element, as one that finished before React attached its handlers, such as
+  // one from the cache before hydration, gets no load event: a natural width
+  // means it loaded. A width of 0 is either a broken image or an SVG with no
+  // intrinsic size, so the source is set again: the element loads it once more
+  // and its own event decides. No source at all is a failure, so the fallback
+  // stays.
   useLayoutEffect(() => {
     const img = own.current!;
+    const source = `${src ?? ''} ${srcSet ?? ''}`;
+    const changed = decided.current !== null && decided.current !== source;
+    decided.current = source;
     if (!src && !srcSet) setStatus('error');
-    else if (!img.complete) setStatus('loading');
+    else if (changed || !img.complete) setStatus('loading');
     else if (img.naturalWidth > 0) setStatus('loaded');
     else {
       setStatus('loading');
