@@ -1,6 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
 import type { ReactNode } from 'react';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { Avatar, Grid } from '../index';
 
@@ -57,22 +59,32 @@ describe('Avatar in a browser', () => {
     expect(await violations()).toEqual([]);
   });
 
-  it('reads an image that finished loading before its handlers were attached', async () => {
-    // Load it once so the second element finds it complete from the cache.
-    await new Promise((resolve) => {
-      const warm = new Image();
-      warm.onload = resolve;
-      warm.src = PIXEL;
-    });
-    render(
+  it('reads an image that loaded before hydration, an SVG with no intrinsic size included', async () => {
+    // Only a viewBox: some engines report a natural width of 0 for it.
+    const viewBoxOnly =
+      'data:image/svg+xml,' +
+      encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><rect width="8" height="8"/></svg>');
+    const tree = (
       <Themed>
         <Avatar.Root data-testid="root">
-          <Avatar.Image src={PIXEL} />
+          <Avatar.Image src={viewBoxOnly} />
           <Avatar.Fallback>AL</Avatar.Fallback>
         </Avatar.Root>
-      </Themed>,
+      </Themed>
     );
-    await waitFor(() => expect(screen.getByTestId('root').getAttribute('data-status')).toBe('loaded'));
+    const container = document.createElement('div');
+    container.innerHTML = renderToString(tree);
+    document.body.append(container);
+    const img = container.querySelector('img')!;
+    // The load event fires before React attaches its handlers, as on a server-rendered page.
+    if (!img.complete) await new Promise((resolve) => img.addEventListener('load', resolve, { once: true }));
+    const root = hydrateRoot(container, tree);
+    try {
+      await waitFor(() => expect(container.querySelector('[data-testid="root"]')!.getAttribute('data-status')).toBe('loaded'));
+    } finally {
+      root.unmount();
+      container.remove();
+    }
   });
 
   it('sizes from the size tokens', () => {

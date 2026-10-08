@@ -27,7 +27,7 @@ export type AvatarRootProps = {
   /** Names the avatar for assistive technology, such as "Ada Lovelace". */
   label?: string;
   size?: AvatarSize;
-} & Omit<ComponentPropsWithRef<'span'>, 'role'>;
+} & Omit<ComponentPropsWithRef<'span'>, 'role' | 'aria-label' | 'aria-labelledby'>;
 
 /**
  * An `img` that shows once it has loaded. It takes no `alt`: the avatar's
@@ -70,27 +70,39 @@ function Root({ label, size = 'md', className, 'aria-hidden': ariaHidden, ...pro
   );
 }
 
-function Image({ src, ref, onLoad, onError, className, ...props }: AvatarImageProps) {
+function Image({ src, srcSet, ref, onLoad, onError, className, ...props }: AvatarImageProps) {
   const { setStatus } = useAvatar('Image');
   const own = useRef<HTMLImageElement>(null);
   const refs = useComposedRefs(own, ref);
 
-  // A new src starts over. An image that finished before React attached its
-  // handlers, such as one from the cache before hydration, is read from the
-  // element. No src at all is a failure, so the fallback stays.
+  // A new source starts over. An image that finished before React attached
+  // its handlers, such as one from the cache before hydration, gets no load
+  // event, so decode() says whether it is usable; it also accepts an SVG with
+  // no intrinsic size, which reports a natural width of 0. No source at all is
+  // a failure, so the fallback stays.
   useLayoutEffect(() => {
     const img = own.current;
-    if (!src || !img) setStatus('error');
-    else if (img.complete) setStatus(img.naturalWidth > 0 ? 'loaded' : 'error');
-    else setStatus('loading');
-    return () => setStatus('idle');
-  }, [src, setStatus]);
+    let current = true;
+    if ((!src && !srcSet) || !img) setStatus('error');
+    else if (img.complete) {
+      setStatus('loading');
+      img.decode().then(
+        () => current && setStatus('loaded'),
+        () => current && setStatus('error'),
+      );
+    } else setStatus('loading');
+    return () => {
+      current = false;
+      setStatus('idle');
+    };
+  }, [src, srcSet, setStatus]);
 
   return (
     <img
       {...props}
       ref={refs}
       src={src || undefined}
+      srcSet={srcSet || undefined}
       alt=""
       onLoad={(event) => {
         setStatus('loaded');

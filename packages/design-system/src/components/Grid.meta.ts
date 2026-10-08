@@ -3,13 +3,13 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Grid',
   description:
-    'CSS grid layout, the two-axis partner to Stack. Gap comes from the grid.gap contract token. Pass exactly one of columns or minItemSize.',
+    'CSS grid layout, the two-axis partner to Stack. Gap comes from the grid.gap contract token. Pass at most one of columns or minItemSize; with neither, set gridTemplateColumns yourself.',
   props: [
     {
       name: 'columns',
       type: 'number',
       required: false,
-      description: 'A fixed number of equal columns.',
+      description: 'A fixed number of equal columns, a whole number from 1.',
     },
     {
       name: 'minItemSize',

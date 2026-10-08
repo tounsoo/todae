@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Avatar } from './Avatar';
 
 afterEach(cleanup);
@@ -107,6 +107,52 @@ describe('Avatar', () => {
     fireEvent.load(screen.getByTestId('img'));
     expect(loaded).toBe(1);
     expect(screen.getByTestId('a').getAttribute('data-size')).toBe('lg');
+  });
+
+  it('reads an image that finished before its handlers were attached, without a load event', async () => {
+    // A cached image during hydration: complete already, and no load event follows.
+    const complete = vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
+    const decode = vi.fn(() => Promise.resolve());
+    HTMLImageElement.prototype.decode = decode;
+    try {
+      render(
+        <Avatar.Root label="Ada" data-testid="a">
+          <Avatar.Image src="ada.svg" />
+          <Avatar.Fallback>AL</Avatar.Fallback>
+        </Avatar.Root>,
+      );
+      await waitFor(() => expect(screen.getByTestId('a').getAttribute('data-status')).toBe('loaded'));
+      expect(decode).toHaveBeenCalled();
+      cleanup();
+      decode.mockImplementation(() => Promise.reject(new Error('broken')));
+      render(
+        <Avatar.Root label="Ada" data-testid="a">
+          <Avatar.Image src="broken.png" />
+          <Avatar.Fallback>AL</Avatar.Fallback>
+        </Avatar.Root>,
+      );
+      await waitFor(() => expect(screen.getByTestId('a').getAttribute('data-status')).toBe('error'));
+    } finally {
+      complete.mockRestore();
+      delete (HTMLImageElement.prototype as Partial<HTMLImageElement>).decode;
+    }
+  });
+
+  it('loads from srcSet alone', () => {
+    // jsdom calls an image with no src complete; a browser waits for the srcset pick.
+    HTMLImageElement.prototype.decode = () => new Promise(() => undefined);
+    try {
+      render(
+        <Avatar.Root label="Ada" data-testid="a">
+          <Avatar.Image srcSet="ada.png 1x, ada@2x.png 2x" data-testid="img" />
+        </Avatar.Root>,
+      );
+      expect(screen.getByTestId('a').getAttribute('data-status')).toBe('loading');
+      fireEvent.load(screen.getByTestId('img'));
+      expect(screen.getByTestId('a').getAttribute('data-status')).toBe('loaded');
+    } finally {
+      delete (HTMLImageElement.prototype as Partial<HTMLImageElement>).decode;
+    }
   });
 
   it('throws outside Avatar.Root', () => {

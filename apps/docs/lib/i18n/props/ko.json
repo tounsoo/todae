@@ -633,8 +633,8 @@
   },
   "Grid": {
     "columns": {
-      "en": "A fixed number of equal columns.",
-      "ko": "같은 너비의 열 개수."
+      "en": "A fixed number of equal columns, a whole number from 1.",
+      "ko": "같은 너비의 열 개수로, 1 이상의 정수입니다."
     },
     "minItemSize": {
       "en": "The narrowest a column may get, as a CSS length such as \"12rem\". As many columns fit as the width allows.",

@@ -2,13 +2,13 @@ import { GridColumns, GridFill } from '../../../components/demos/GridDemo';
 
 # Grid
 
-두 축으로 배치하는 CSS grid로, [Stack](/stack)의 짝입니다. 간격은 `grid.gap`(밀도에 따라 바뀜)이고 `gap` prop은 없습니다. `columns`와 `minItemSize` 중 하나만 주세요.
+두 축으로 배치하는 CSS grid로, [Stack](/stack)의 짝입니다. 간격은 `grid.gap`(밀도에 따라 바뀜)이고 `gap` prop은 없습니다. `columns`와 `minItemSize` 중 하나를 주거나, 둘 다 빼고 트랙을 직접 정하세요.
 
 Server Component에서는 `@tounsoo/todae/grid`에서 가져올 수 있습니다. 이 entry에는 `'use client'`도 훅도 없습니다.
 
 ## Columns
 
-`columns`는 같은 너비의 열 개수를 정합니다. 열은 내용보다 좁아질 수 있으므로 긴 단어는 grid를 넓히지 않고 줄을 바꿉니다.
+`columns`는 같은 너비의 열 개수를 정합니다. 항목의 내용이 제 몫보다 넓어도 열 너비는 같게 유지됩니다.
 
 <Example block>
   <GridColumns />
@@ -34,7 +34,7 @@ Server Component에서는 `@tounsoo/todae/grid`에서 가져올 수 있습니다
 </Grid>
 ```
 
-사이드바와 본문 열처럼 다른 트랙 목록은 `style`이나 클래스에서 `gridTemplateColumns`로 정하세요.
+사이드바와 본문 열처럼 다른 트랙 목록은 둘 다 빼고 `style`이나 클래스에서 `gridTemplateColumns`로 정하세요.
 
 ## 언제 쓰나요
 

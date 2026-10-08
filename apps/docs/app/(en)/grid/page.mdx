@@ -2,13 +2,13 @@ import { GridColumns, GridFill } from '../../../components/demos/GridDemo';
 
 # Grid
 
-A CSS grid, the two-axis partner to [Stack](/stack). Gap is `grid.gap` (density-aware), and there is no `gap` prop. Pass exactly one of `columns` or `minItemSize`.
+A CSS grid, the two-axis partner to [Stack](/stack). Gap is `grid.gap` (density-aware), and there is no `gap` prop. Pass one of `columns` or `minItemSize`, or neither and set the tracks yourself.
 
 Server Components can import it from `@tounsoo/todae/grid`. That entry has no `'use client'` and no hooks.
 
 ## Columns
 
-`columns` sets a fixed number of equal columns. Columns may shrink below their content, so a long word wraps instead of widening the grid.
+`columns` sets a fixed number of equal columns. They stay equal even when an item's content is wider than its share.
 
 <Example block>
   <GridColumns />
@@ -34,7 +34,7 @@ Server Components can import it from `@tounsoo/todae/grid`. That entry has no `'
 </Grid>
 ```
 
-For any other track list, such as a sidebar and a main column, set `gridTemplateColumns` in `style` or a class.
+For any other track list, such as a sidebar and a main column, leave both out and set `gridTemplateColumns` in `style` or a class.
 
 ## When to use
 

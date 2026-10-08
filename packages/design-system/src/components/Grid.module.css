@@ -4,8 +4,8 @@
     gap: var(--todae-grid-gap);
   }
 
-  /* minmax(0, 1fr) lets a column shrink below its content, so long words
-     wrap instead of widening the grid. */
+  /* minmax(0, 1fr) keeps the columns equal even when an item's content is
+     wider than its share. */
   .root[data-layout='columns'] {
     grid-template-columns: repeat(var(--todae-grid-column-count), minmax(0, 1fr));
   }

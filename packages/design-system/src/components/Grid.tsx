@@ -3,13 +3,13 @@ import { cx } from './cx';
 import styles from './Grid.module.css';
 
 /**
- * A CSS grid with the density's gap, the two-axis partner to Stack. Pass
- * exactly one of `columns` or `minItemSize`. For any other track list, set
- * `gridTemplateColumns` in `style` or a class.
+ * A CSS grid with the density's gap, the two-axis partner to Stack. Pass at
+ * most one of `columns` or `minItemSize`. With neither, set the tracks
+ * yourself with `gridTemplateColumns` in `style` or a class.
  */
 export type GridProps = (
   | {
-      /** A fixed number of equal columns. */
+      /** A fixed number of equal columns, a whole number from 1. */
       columns: number;
       minItemSize?: never;
     }
@@ -21,20 +21,24 @@ export type GridProps = (
       minItemSize: string;
       columns?: never;
     }
+  | { columns?: never; minItemSize?: never }
 ) &
   ComponentPropsWithRef<'div'>;
 
 export function Grid({ columns, minItemSize, className, style, ...props }: GridProps) {
+  const layout = minItemSize !== undefined ? 'fill' : columns !== undefined ? 'columns' : undefined;
   const tracks =
-    minItemSize !== undefined
+    layout === 'fill'
       ? { '--todae-grid-min-item-size': minItemSize }
-      : { '--todae-grid-column-count': String(columns) };
+      : layout === 'columns'
+        ? { '--todae-grid-column-count': String(Math.max(1, Math.floor(columns!) || 1)) }
+        : undefined;
   return (
     <div
       {...props}
-      data-layout={minItemSize !== undefined ? 'fill' : 'columns'}
+      data-layout={layout}
       className={cx(styles.root, className)}
-      style={{ ...tracks, ...style } as CSSProperties}
+      style={tracks ? ({ ...tracks, ...style } as CSSProperties) : style}
     />
   );
 }
