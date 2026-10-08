@@ -29,18 +29,60 @@ function Editor({ orientation }: { orientation?: 'horizontal' | 'vertical' }) {
 }
 
 const button = (name: string) => screen.getByRole('button', { name });
-const tabbable = () => [...document.querySelectorAll<HTMLElement>('[tabindex="0"]')];
 
 describe('Toolbar', () => {
-  it('has the toolbar role and one tab stop on the first control', () => {
+  it('has the toolbar role and writes no tabindex', () => {
     render(<Editor />);
     expect(screen.getByRole('toolbar', { name: 'Format' }).hasAttribute('aria-orientation')).toBe(false);
-    expect(tabbable()).toEqual([button('Bold')]);
-    expect(button('Italic').tabIndex).toBe(-1);
-    // A text input keeps its own tab stop.
-    expect(screen.getByRole('textbox').hasAttribute('tabindex')).toBe(false);
+    expect(document.querySelectorAll('[role="toolbar"] [tabindex]')).toHaveLength(0);
   });
 
+  it('moves focus to the end of the run on Tab and the start on Shift+Tab, so the browser leaves from there', () => {
+    render(<Editor />);
+    button('Bold').focus();
+    fireEvent.keyDown(button('Bold'), { key: 'Tab' });
+    // The text input ends the first run and keeps its own Tab stop.
+    expect(document.activeElement).toBe(button('Italic'));
+    button('Italic').focus();
+    fireEvent.keyDown(button('Italic'), { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(button('Bold'));
+  });
+
+  it('returns focus coming back from outside to the item Tab left from', () => {
+    render(
+      <>
+        <button type="button">Before</button>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root>B</Button.Root>
+          <Button.Root>C</Button.Root>
+        </Toolbar.Root>
+      </>,
+    );
+    button('B').focus();
+    fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
+    button('Before').focus();
+    button('A').focus();
+    expect(document.activeElement).toBe(button('B'));
+  });
+
+  it('lets a press land where it was aimed after Tab left', () => {
+    render(
+      <>
+        <button type="button">Before</button>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root>B</Button.Root>
+        </Toolbar.Root>
+      </>,
+    );
+    button('B').focus();
+    fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
+    button('Before').focus();
+    fireEvent.pointerDown(button('A'));
+    button('A').focus();
+    expect(document.activeElement).toBe(button('A'));
+  });
   it('moves focus with arrow keys, skipping disabled controls and text inputs, and following wrappers', () => {
     render(<Editor />);
     button('Bold').focus();
@@ -48,7 +90,6 @@ describe('Toolbar', () => {
     expect(document.activeElement).toBe(button('Italic'));
     fireEvent.keyDown(button('Italic'), { key: 'ArrowRight' });
     expect(document.activeElement).toBe(button('Link'));
-    expect(tabbable()).toEqual([button('Link')]);
   });
 
   it('skips controls disabled by a fieldset, and composites with their own arrow keys', () => {
@@ -121,23 +162,6 @@ describe('Toolbar', () => {
     expect(sep.getAttribute('aria-orientation')).toBe('vertical');
   });
 
-  it('keeps the tab stop on a control that was clicked, and moves it off one that goes away', async () => {
-    function Removable() {
-      const [shown, setShown] = useState(true);
-      return (
-        <Toolbar.Root aria-label="t">
-          <Button.Root>A</Button.Root>
-          {shown ? <Button.Root onClick={() => setShown(false)}>B</Button.Root> : null}
-        </Toolbar.Root>
-      );
-    }
-    render(<Removable />);
-    button('B').focus();
-    expect(tabbable()).toEqual([button('B')]);
-    fireEvent.click(button('B'));
-    await waitFor(() => expect(tabbable()).toEqual([button('A')]));
-  });
-
   it('skips controls inside a popover that opens from it', () => {
     render(
       <Toolbar.Root aria-label="t">
@@ -164,7 +188,7 @@ describe('Toolbar', () => {
         <Button.Root>More</Button.Root>
       </Toolbar.Root>,
     );
-    expect(tabbable()).toEqual([button('Left')]);
+    expect(button('Left').hasAttribute('tabindex')).toBe(false);
     button('Left').focus();
     fireEvent.keyDown(button('Left'), { key: 'ArrowRight' });
     fireEvent.keyDown(button('Right'), { key: 'ArrowRight' });
@@ -184,19 +208,6 @@ describe('Toolbar', () => {
     button('A').focus();
     fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
     expect(document.activeElement).toBe(button('B'));
-  });
-
-  it('gives a control back its own tabindex when it stops being an item', async () => {
-    render(
-      <Toolbar.Root aria-label="t">
-        <Button.Root>A</Button.Root>
-        <input type="button" value="Mode" />
-      </Toolbar.Root>,
-    );
-    const mode = screen.getByRole('button', { name: 'Mode' }) as HTMLInputElement;
-    expect(mode.tabIndex).toBe(-1);
-    mode.type = 'text';
-    await waitFor(() => expect(mode.hasAttribute('tabindex')).toBe(false));
   });
 
   it('leaves a toggle group inside a popover from the toolbar its own roving focus', async () => {
@@ -262,7 +273,7 @@ describe('Toolbar', () => {
     expect(document.activeElement).toBe(insert);
   });
 
-  it('takes in a control that becomes focusable later', async () => {
+  it('takes in a control that becomes focusable later', () => {
     function Late() {
       const [focusable, setFocusable] = useState(false);
       return (
@@ -276,10 +287,10 @@ describe('Toolbar', () => {
     }
     render(<Late />);
     fireEvent.click(button('A'));
-    await waitFor(() => expect(screen.getByTestId('late').tabIndex).toBe(-1));
-    expect(tabbable()).toEqual([button('A')]);
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(screen.getByTestId('late'));
   });
-
   it('leaves Shift with an arrow key to the control', () => {
     render(<Editor />);
     button('Bold').focus();

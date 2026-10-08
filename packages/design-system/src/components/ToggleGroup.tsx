@@ -1,6 +1,17 @@
-import { createContext, useContext, useLayoutEffect, useMemo, useRef, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentPropsWithRef,
+  type FocusEvent,
+  type ReactNode,
+} from 'react';
 import { useControlledState } from '../hooks/useControlledState';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
+import { useFocusLeave } from '../overlay/useFocusLeave';
 import { Button, type ButtonRootProps } from './Button';
 import buttonStyles from './Button.module.css';
 import { cx } from './cx';
@@ -70,6 +81,8 @@ function Root(props: ToggleGroupRootProps) {
     className,
     ref,
     onKeyDown,
+    onFocus,
+    onBlur,
     children,
     ...rest
   } = props;
@@ -97,12 +110,17 @@ function Root(props: ToggleGroupRootProps) {
   };
 
   // Inside a toolbar the toolbar owns the arrow keys and the tab stop.
-  // Single mode puts the tab stop on the pressed item; multiple on the first item.
+  // Focus enters on the pressed item in single mode and the first item in
+  // multiple mode. While focus moves inside, the tab stop follows it, so Tab
+  // and Shift+Tab leave the group; leaving puts it back.
+  const [navigating, setNavigating] = useState<string | null>(null);
   const roving = useRovingFocus({
     orientation,
     tabStop: toolbar === null,
-    activeValue: multiple ? null : (list[0] ?? null),
+    activeValue: navigating ?? (multiple ? null : (list[0] ?? null)),
+    onActiveValueChange: setNavigating,
   });
+  const focusLeave = useFocusLeave(() => setNavigating(null));
   const container = toolbar ? { ref: undefined, onKeyDown } : roving.getContainerProps({ onKeyDown });
   const refs = useComposedRefs(container.ref, nodeRef, ref);
 
@@ -112,6 +130,14 @@ function Root(props: ToggleGroupRootProps) {
         {...rest}
         {...container}
         ref={refs}
+        onFocus={(event: FocusEvent<HTMLDivElement>) => {
+          onFocus?.(event);
+          focusLeave.onFocus();
+        }}
+        onBlur={(event: FocusEvent<HTMLDivElement>) => {
+          onBlur?.(event);
+          focusLeave.onBlur(event);
+        }}
         role="group"
         data-orientation={orientation}
         className={cx(orientation === 'horizontal' ? buttonStyles.group : styles.vertical, className)}
