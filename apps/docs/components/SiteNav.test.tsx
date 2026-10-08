@@ -21,6 +21,8 @@ const HREFS = [
   '/menu',
   '/tooltip',
   '/tabs',
+  '/toolbar',
+  '/toggle-group',
   '/optionlist',
   '/bottomsheet',
   '/alert',

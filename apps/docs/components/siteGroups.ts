@@ -19,6 +19,8 @@ export const SITE_GROUPS = [
       ['/menu', 'Menu'],
       ['/tooltip', 'Tooltip'],
       ['/tabs', 'Tabs'],
+      ['/toolbar', 'Toolbar'],
+      ['/toggle-group', 'ToggleGroup'],
       ['/optionlist', 'OptionList'],
       ['/bottomsheet', 'BottomSheet'],
       ['/alert', 'Alert'],

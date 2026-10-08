@@ -40,6 +40,24 @@ export const meta = {
         'Icon-only tips the accessible name. Overflowing labels tip the full string. False opts out. Never tips a fitting labeled button.',
     },
     {
+      name: 'pressed',
+      type: 'boolean',
+      required: false,
+      description: 'Controlled pressed state. Makes the button a toggle with aria-pressed.',
+    },
+    {
+      name: 'defaultPressed',
+      type: 'boolean',
+      required: false,
+      description: 'Starting pressed state for an uncontrolled toggle. Makes the button a toggle with aria-pressed.',
+    },
+    {
+      name: 'onPressedChange',
+      type: '(pressed: boolean) => void',
+      required: false,
+      description: 'Called with the new state when a toggle is clicked. onClick runs first; preventDefault() there skips the change.',
+    },
+    {
       name: 'children',
       type: 'React.ReactNode',
       required: false,

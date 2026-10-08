@@ -1,4 +1,5 @@
 import { ButtonGroupAlign, ButtonIcons, ButtonOverflow, ButtonVariants } from '../../../components/demos/ButtonDemo';
+import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 
 # Button
 
@@ -24,6 +25,20 @@ Overflowing label.
   <ButtonOverflow />
 </Example>
 
+## Toggle
+
+Pass `pressed` or `defaultPressed` and the button becomes a toggle: it sets `aria-pressed` and flips on click. `onPressedChange` gets the new state. A pressed button keeps the active colors with an inset ring. For a set of toggles, use [ToggleGroup](/toggle-group).
+
+```tsx
+<Button.Root variant="secondary" pressed={muted} onPressedChange={setMuted}>
+  Mute
+</Button.Root>
+```
+
+<Example>
+  <ButtonToggle />
+</Example>
+
 ## Button.Group
 
 Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overlap by 1px and share the outer radius. No selection state.
@@ -38,7 +53,7 @@ Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overl
 
 **When:** One action in a native button. Variants primary / secondary / ghost; default `type="button"`. Icon-only needs `aria-label`, which it auto-tips.
 
-**When not:** Navigation → native link (no Link shipped). On/off state → Switch or Checkbox. Selected segment → Radio (Button.Group has no selection).
+**When not:** Navigation → native link (no Link shipped). A setting that takes effect at once → Switch. A form choice → Checkbox. Selected segment → ToggleGroup (Button.Group has no selection).
 
 ### Button.Icon
 
@@ -50,7 +65,7 @@ Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overl
 
 **When:** Attached horizontal row of related `Button.Root` actions (`role="group"`). Name it with `aria-label`.
 
-**When not:** Single choice or toggles → Radio / Checkbox (no selection state here). Vertical or wrapping rows → Stack. Unrelated actions → separate buttons in Stack.
+**When not:** Toggles → ToggleGroup (no selection state here). Vertical or wrapping rows → Stack. Unrelated actions → separate buttons in Stack.
 
 ## Props
 

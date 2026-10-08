@@ -1,0 +1,9 @@
+{
+  "toolbar": {
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+    "separator": {
+      "color": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+      "thickness": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } }
+    }
+  }
+}

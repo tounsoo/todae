@@ -11,7 +11,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { Button, type ButtonRootProps } from './Button';
+import { Button, type ButtonActionProps } from './Button';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { DIALOG_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
@@ -20,6 +20,7 @@ import { useModalDialog } from '../overlay/useModalDialog';
 import { useScrollLock } from '../overlay/useScrollLock';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Dialog.module.css';
+import { ToolbarContext } from './toolbarContext';
 
 /**
  * Why the dialog asked to close. `form` is a `<form method="dialog">` submit
@@ -107,7 +108,7 @@ function DialogClose({
   'aria-label': ariaLabel = 'Close',
   onClick,
   ...props
-}: ButtonRootProps) {
+}: ButtonActionProps) {
   const { requestClose } = useDialog();
   return (
     <Button.Root
@@ -204,7 +205,7 @@ function DialogRoot({
         })}
       >
         <div className={styles.panel} role="document">
-          {children}
+          <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
         </div>
       </dialog>
     </DialogContext.Provider>
