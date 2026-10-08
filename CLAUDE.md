@@ -11,7 +11,8 @@ Each round's review runs in an `Agent` at that round's row of this table. Only t
 | 1     | `opus`  | `high`   |
 | 2     | `opus`  | `xhigh`  |
 | 3     | `opus`  | `max`    |
-| 4     | `fable` | `medium` |
+| 4     | `fable` | `low`    |
+| 5     | `fable` | `medium` |
 
 1. Start an `Agent` with this round's `model` and `effort` from the table, and have it run the `code-review` skill on the PR (`/code-review <pr-number> high`) and return the findings. The reviewer only reviews: it does not edit files, commit, or push. If the reviewer cannot run, tell the person in your next reply rather than reviewing at a different row.
 2. Sort the findings. Only blocking findings start another round: a bug, a test or CI failure, or a statement in docs that is wrong about what the code does. Wording, style, missing edge-case caveats and other nits are not blocking: fix the ones that are plainly right in the same push, but they never start a round of their own.
@@ -26,6 +27,6 @@ Each round's review runs in an `Agent` at that round's row of this table. Only t
 7. Push, then go back to step 1.
 8. Stop when a review returns no blocking findings and CI is green on the latest commit.
 
-Never run more than 4 rounds. If round 4 still has blocking findings, stop, leave the PR as a draft, and report back with the open findings and why they keep coming back, so the person can decide.
+Never run more than 5 rounds. If round 5 still has blocking findings, stop, leave the PR as a draft, and report back with the open findings and why they keep coming back, so the person can decide.
 
 Once the loop stops clean, mark a draft PR ready for review and report back. A review that surfaced blocking findings does not count as the final one: always run one more after the fixes land.
