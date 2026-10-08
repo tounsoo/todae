@@ -155,6 +155,12 @@ export {
   type TextTone,
   type TextWeight,
 } from './components/Text';
+export {
+  useAnnouncer,
+  type Announce,
+  type AnnounceOptions,
+  type AnnouncePoliteness,
+} from './hooks/useAnnouncer';
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
 export {
   useChipList,
@@ -197,6 +203,7 @@ export {
   type UseComboboxResult,
   type UseComboboxSingleOptions,
 } from './hooks/useCombobox';
+export { useControlledState, useControlledValue } from './hooks/useControlledState';
 export {
   ThemeProvider,
   useAppearance,

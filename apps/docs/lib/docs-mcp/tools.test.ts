@@ -137,7 +137,7 @@ describe('docs mcp tools', () => {
     expect(combobox).not.toHaveProperty('scope');
     // Every hook in the schema has its own page under Utilities, slugged from its name.
     const hooks = listComponents().components.filter((row) => /^use[A-Z]/.test(row.name));
-    expect(hooks.map((row) => row.name)).toEqual(expect.arrayContaining(['useChipField', 'useChipList', 'useCombobox', 'usePopover', 'useSheetPresentation', 'useTooltip']));
+    expect(hooks.map((row) => row.name)).toEqual(expect.arrayContaining(['useAnnouncer', 'useChipField', 'useChipList', 'useCombobox', 'useControlledState', 'useControlledValue', 'usePopover', 'useSheetPresentation', 'useTooltip']));
     for (const { name } of hooks) {
       const slug = name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
       expect(getComponent(name).docsUrl, name).toBe(`https://todae-rho.vercel.app/utilities/${slug}`);

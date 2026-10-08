@@ -1,0 +1,30 @@
+import { AnnounceSave } from '../../../../components/demos/AnnouncerDemo';
+
+# useAnnouncer
+
+`useAnnouncer()` returns `announce(message, options?)`, which reads `message` to screen readers without showing it. Use it for the result of something async that has no visible message of its own, such as "Draft saved" or "12 results".
+
+```tsx
+const announce = useAnnouncer()
+
+async function save() {
+	await saveDraft()
+	announce('Draft saved')
+}
+```
+
+<Example>
+  <AnnounceSave />
+</Example>
+
+Messages go to a visually hidden polite or assertive live region that every caller in the document shares. It is added when the first component using the hook mounts. A modal dialog makes the rest of the page inert, so while a modal in Todae's modal stack is open, messages are read from a region inside the one in front. Dialog, Drawer and BottomSheet join the stack by themselves; pass a modal `<dialog>` of your own to [useModalLayer](/utilities/use-modal-layer). `announce` empties the region, then writes the message a moment later, so the same message twice is read twice. A newer message of the same politeness sent before the last one is written replaces it, and a message sent just before the calling component unmounts is still written. `politeness: 'assertive'` interrupts the screen reader; keep it for messages that cannot wait. On the server `announce` does nothing, and `announce` is the same function on every render.
+
+## When to use
+
+**When:** Async results with no visible message of their own: saves, copies, result counts, background loads finishing.
+
+**When not:** A message sighted users should see too → show it on the page, for example in an [Alert](/alert), which is a live region itself. Validation text → [ErrorMessage](/errormessage).
+
+## Props
+
+<PropsTable name="useAnnouncer" />
