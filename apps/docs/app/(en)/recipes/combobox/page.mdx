@@ -4,6 +4,7 @@ import {
   ComboboxCreate,
   ComboboxCreateMulti,
   ComboboxEmpty,
+  ComboboxHighlight,
   ComboboxMulti,
   ComboboxSheet,
   ComboboxSingle,
@@ -113,6 +114,20 @@ No matches render a status row. `allowCreate` adds one `+ Create "{query}"` opti
 
 <Example block>
   <ComboboxCreateMulti />
+</Example>
+
+## Highlight matches
+
+[useHighlight](/utilities/use-highlight) marks the query in each option without changing the options' markup. Pass the hook's `query` (empty while the input shows the selected label), put the `ref` on the list, and style the name with `::highlight(search)`.
+
+```tsx
+const found = useHighlight({ name: 'search', query: cb.query })
+
+<OptionList.Root ref={found.ref} {...cb.getListboxProps()}>…</OptionList.Root>
+```
+
+<Example block>
+  <ComboboxHighlight />
 </Example>
 
 ## Composition rules

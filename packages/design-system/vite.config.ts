@@ -1,13 +1,36 @@
+import { fileURLToPath } from 'node:url';
+import { normalizePath } from 'vite';
 import { defineConfig, type Plugin } from 'vitest/config';
 
+// Forward slashes on every platform, as in Vite's module ids.
+const src = (path: string) => normalizePath(fileURLToPath(new URL(`./src/${path}`, import.meta.url)));
+
+const entries = {
+  index: src('index.ts'),
+  // Server-safe parts: no hooks, no context, no 'use client'.
+  stack: src('server/stack.ts'),
+  text: src('server/text.ts'),
+  label: src('server/label.ts'),
+  badge: src('server/badge.ts'),
+  card: src('server/card.ts'),
+  breadcrumbs: src('server/breadcrumbs.ts'),
+};
+
 function emitPackageCss(): Plugin {
+  const entryFiles = new Set(Object.values(entries));
   return {
     name: 'emit-package-css',
     transform(code, id) {
-      if (id.endsWith('/src/index.ts')) {
+      if (!entryFiles.has(id)) return;
+      // A layer's place is fixed where it is first named, and the bundled CSS
+      // starts with whichever entry comes first, so every entry imports the
+      // layer order before any component CSS.
+      const layers = `import ${JSON.stringify(src('styles/layers.css'))};\n`;
+      if (id === entries.index) {
         const body = code.replace(/^['"]use client['"];\s*/, '');
-        return `'use client';\nimport './styles/todae.css';\n${body}`;
+        return `'use client';\n${layers}import './styles/todae.css';\n${body}`;
       }
+      return `${layers}${code}`;
     },
     generateBundle(_opts, bundle) {
       for (const item of Object.values(bundle)) {
@@ -29,16 +52,7 @@ export default defineConfig({
   plugins: [emitPackageCss()],
   build: {
     lib: {
-      entry: {
-        index: new URL('./src/index.ts', import.meta.url).pathname,
-        // Server-safe parts: no hooks, no context, no 'use client'.
-        stack: new URL('./src/server/stack.ts', import.meta.url).pathname,
-        text: new URL('./src/server/text.ts', import.meta.url).pathname,
-        label: new URL('./src/server/label.ts', import.meta.url).pathname,
-        badge: new URL('./src/server/badge.ts', import.meta.url).pathname,
-        card: new URL('./src/server/card.ts', import.meta.url).pathname,
-        breadcrumbs: new URL('./src/server/breadcrumbs.ts', import.meta.url).pathname,
-      },
+      entry: entries,
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
       cssFileName: 'todae',

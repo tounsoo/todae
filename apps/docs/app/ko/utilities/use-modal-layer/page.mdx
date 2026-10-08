@@ -1,0 +1,31 @@
+# useModalLayer
+
+`useModalLayer(ref, open)`은 직접 만든 모달 `<dialog>`를 Todae가 열려 있다고 아는 모달 목록인 모달 스택에 넣습니다. Dialog와 BottomSheet는 스스로 스택에 들어갑니다.
+
+```tsx
+function YourDialog({ open, onClose, children }) {
+	const ref = useRef<HTMLDialogElement>(null);
+	useModalLayer(ref, open);
+	useEffect(() => {
+		if (open) ref.current?.showModal();
+		else ref.current?.close();
+	}, [open]);
+	return (
+		<dialog ref={ref} onClose={onClose}>
+			{children}
+		</dialog>
+	);
+}
+```
+
+대화 상자는 `open`이 true이고 `showModal()`로 열리면 스택에 들어가고, `open`이 false가 된 뒤에도 `close()`까지 남습니다. 둘의 순서는 상관없습니다. 훅은 자신을 호출하는 컴포넌트가 렌더링될 때마다 `ref`를 읽으므로, `<dialog>`는 그 컴포넌트에서 렌더링하세요. 모달 `<dialog>`는 자기 바깥의 모든 것을 inert로 만들므로, [Toast.Region](/toast)은 맨 앞의 모달 안으로 토스트를 옮겨 계속 쓸 수 있게 합니다. 이 훅이 없으면 토스트는 직접 만든 대화 상자 아래에서 inert로 남습니다.
+
+## 언제 쓰나요
+
+**언제:** 토스트를 보여 주는 페이지에서 직접 `showModal()`로 여는 모달 `<dialog>`.
+
+**쓰지 않을 때:** Dialog나 BottomSheet → 스스로 스택에 들어갑니다. `show()`로 연 대화 상자 → 모달이 아니며, 토스트가 이미 그 위에 놓입니다.
+
+## Props
+
+<PropsTable name="useModalLayer" />

@@ -31,6 +31,7 @@ const HREFS = [
   '/badge',
   '/card',
   '/breadcrumbs',
+  '/toast',
   '/stack',
   '/text',
   '/link',
@@ -44,6 +45,8 @@ const HREFS = [
   '/utilities/use-chip-list',
   '/utilities/use-combobox',
   '/utilities/use-field',
+  '/utilities/use-highlight',
+  '/utilities/use-modal-layer',
   '/utilities/use-popover',
   '/utilities/use-roving-focus',
   '/utilities/use-sheet-presentation',
@@ -52,6 +55,7 @@ const HREFS = [
   '/composition',
   '/tokens',
   '/guides/build-on-todae',
+  '/guides/css-layers',
   '/platform',
   '/playground',
 ];
@@ -73,12 +77,14 @@ describe('SiteNav', () => {
     const hrefsIn = (name: string) =>
       [...screen.getByRole('list', { name }).querySelectorAll('a')].map((link) => link.getAttribute('href'));
     expect(hrefsIn('Components')).not.toContain('/composition');
-    expect(hrefsIn('Foundations')).toEqual(['/composition', '/tokens', '/guides/build-on-todae', '/platform']);
+    expect(hrefsIn('Foundations')).toEqual(['/composition', '/tokens', '/guides/build-on-todae', '/guides/css-layers', '/platform']);
     expect(hrefsIn('Utilities')).toEqual([
       '/utilities/use-chip-field',
       '/utilities/use-chip-list',
       '/utilities/use-combobox',
       '/utilities/use-field',
+      '/utilities/use-highlight',
+      '/utilities/use-modal-layer',
       '/utilities/use-popover',
       '/utilities/use-roving-focus',
       '/utilities/use-sheet-presentation',

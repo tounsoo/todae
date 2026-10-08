@@ -1,7 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { BottomSheet, Button, Field, Label, OptionList, Popover, Text, useCombobox, useSheetPresentation, type ComboboxOption } from '@tounsoo/todae';
+import {
+  BottomSheet,
+  Button,
+  Field,
+  Label,
+  OptionList,
+  Popover,
+  Text,
+  useCombobox,
+  useHighlight,
+  useSheetPresentation,
+  type ComboboxOption,
+} from '@tounsoo/todae';
 
 const FRAMEWORKS: ComboboxOption[] = [
   { value: 'react', label: 'React' },
@@ -66,6 +78,28 @@ export function ComboboxSingle() {
       </Field.Root>
       <Popover.Root {...cb.getPopoverProps()}>
         <OptionList.Root {...cb.getListboxProps()}>
+          {optionNodes(cb.items, cb.getOptionProps)}
+        </OptionList.Root>
+      </Popover.Root>
+    </div>
+  );
+}
+
+export function ComboboxHighlight() {
+  const cb = useCombobox({ options: CITIES, presentation: 'popover' });
+  const found = useHighlight({ name: 'docs-combobox-match', query: cb.query });
+  return (
+    <div className="labelled-field">
+      <Label htmlFor={cb.ids.input}>City</Label>
+      <Field.Root {...cb.getAnchorProps()}>
+        <Field.TextInput {...cb.getInputProps()} placeholder="Try “san”" />
+        <Field.Icon>
+          <Chevron />
+        </Field.Icon>
+      </Field.Root>
+      <Popover.Root {...cb.getPopoverProps()}>
+        {cb.isEmpty ? <Text role="status">No matches</Text> : null}
+        <OptionList.Root ref={found.ref} {...cb.getListboxProps()} hidden={cb.isEmpty}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>

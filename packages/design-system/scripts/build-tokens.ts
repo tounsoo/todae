@@ -28,6 +28,7 @@ export const RESERVED_ROOTS = [
   'tabs',
   'selection',
   'alert',
+  'toast',
   'fieldset',
   'link',
   'disclosure',

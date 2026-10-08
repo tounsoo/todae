@@ -4,6 +4,7 @@ import {
   ComboboxCreate,
   ComboboxCreateMulti,
   ComboboxEmpty,
+  ComboboxHighlight,
   ComboboxMulti,
   ComboboxSheet,
   ComboboxSingle,
@@ -113,6 +114,20 @@ const cb = useCombobox({ options, presentation: 'sheet' })
 
 <Example block>
   <ComboboxCreateMulti />
+</Example>
+
+## 일치 항목 강조
+
+[useHighlight](/utilities/use-highlight)는 옵션의 마크업을 바꾸지 않고 각 옵션에서 query를 표시합니다. 훅의 `query`(입력에 선택한 레이블이 보이는 동안은 비어 있음)를 넘기고, `ref`를 목록에 두고, `::highlight(search)`로 그 이름에 스타일을 주세요.
+
+```tsx
+const found = useHighlight({ name: 'search', query: cb.query })
+
+<OptionList.Root ref={found.ref} {...cb.getListboxProps()}>…</OptionList.Root>
+```
+
+<Example block>
+  <ComboboxHighlight />
 </Example>
 
 ## 조합 규칙
