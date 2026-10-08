@@ -24,6 +24,7 @@
       "import": "./dist/label.js"
     },
     "./todae.css": "./dist/todae.css",
+    "./dist/todae.css": "./dist/todae.css",
     "./schema/components.json": "./schema/components.json",
     "./tokens.json": "./tokens/tokens.generated.json",
     "./tokens-builder": {
