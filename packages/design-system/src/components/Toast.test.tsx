@@ -152,6 +152,36 @@ describe('Toast', () => {
     expect(region.hasAttribute('data-expanded')).toBe(false);
   });
 
+  it('stays expanded when the window loses focus with focus still inside', () => {
+    const toaster = createToaster();
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'A' }));
+    const region = screen.getByRole('region');
+    const undo = screen.getByRole('button', { name: 'Undo' });
+    act(() => undo.focus());
+    // A window blur: no relatedTarget, and the active element stays.
+    fireEvent.blur(undo, { relatedTarget: null });
+    expect(document.activeElement).toBe(undo);
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+  });
+
+  it('raises the region for a toast out of the queue after a replaced one', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} limit={1} />);
+    act(() => {
+      toaster.add({ id: 'a', title: 'A' });
+      toaster.add({ title: 'B' });
+      toaster.add({ id: 'a', title: 'A again' });
+    });
+    const host = screen.getByRole('region').parentElement!;
+    const show = vi.spyOn(host, 'showPopover');
+    act(() => toaster.dismiss('a'));
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(screen.getByText('B')).toBeTruthy();
+    expect(show).toHaveBeenCalled();
+  });
+
   it('moves into the front modal of the stack and back', async () => {
     const toaster = createToaster();
     function Page() {
@@ -181,6 +211,31 @@ describe('Toast', () => {
 });
 
 describe('useModalLayer', () => {
+  it('holds a dialog that attaches after open turns true', async () => {
+    function Late() {
+      const ref = useRef<HTMLDialogElement>(null);
+      const [mounted, setMounted] = useState(false);
+      useModalLayer(ref, true);
+      return (
+        <>
+          <button type="button" onClick={() => setMounted(true)}>
+            Mount
+          </button>
+          {mounted ? <dialog ref={ref} aria-label="late" /> : null}
+        </>
+      );
+    }
+    render(<Late />);
+    fireEvent.click(screen.getByRole('button', { name: 'Mount' }));
+    const dialog = screen.getByRole('dialog', { hidden: true }) as HTMLDialogElement;
+    dialog.showModal();
+    await act(async () => undefined);
+    expect(heldModals()).toEqual([dialog]);
+    dialog.close();
+    await act(async () => undefined);
+    expect(heldModals()).toHaveLength(0);
+  });
+
   it('holds a dialog of your own while open and shown modally', async () => {
     function Own({ open }: { open: boolean }) {
       const ref = useRef<HTMLDialogElement>(null);
@@ -214,6 +269,8 @@ describe('matchesHotkey', () => {
     expect(matchesHotkey(key({ key: '†', code: 'KeyT', altKey: true }), 'alt+t')).toBe(true);
     expect(matchesHotkey(key({ key: 't', code: 'KeyT', ctrlKey: true }), 'Control+T')).toBe(true);
     expect(matchesHotkey(key({ key: 't', code: 'KeyT' }), 'Alt+T')).toBe(false);
+    // Option+1 types ¡ on macOS.
+    expect(matchesHotkey(key({ key: '¡', code: 'Digit1', altKey: true }), 'Alt+1')).toBe(true);
   });
 
   it('ignores a keydown with no key, as Chrome sends for an autofill pick', () => {

@@ -96,8 +96,9 @@ export function matchesHotkey(event: KeyboardEvent, hotkey: string): boolean {
   for (const modifier of MODIFIERS) {
     if (event[`${modifier}Key`] !== wanted.has(modifier)) return false;
   }
-  // The code too, as Alt changes the key a letter types on macOS.
-  return eventKey.toLowerCase() === key || eventCode.toLowerCase() === `key${key}`;
+  // The code too, as Option changes the character a letter or digit types on macOS.
+  const code = eventCode.toLowerCase();
+  return eventKey.toLowerCase() === key || code === `key${key}` || code === `digit${key}`;
 }
 
 function Item<T extends object>({
@@ -249,15 +250,18 @@ function Region<T extends object = object>({
   const shown = toasts.slice(0, limit);
   const hasOpen = shown.some((toast) => toast.open);
 
-  // A toast that starts showing, new or out of the queue, goes in front of
-  // overlays shown since the last one.
-  const latest = shown.reduce((max, toast) => (toast.open ? Math.max(max, toast.version) : max), 0);
-  const raised = useRef(0);
+  // A toast that starts showing, new, shown again by add() or out of the
+  // queue, goes in front of overlays shown since the last one.
+  const openKeys = shown.filter((toast) => toast.open).map((toast) => `${toast.id}:${toast.version}`);
+  const openKey = openKeys.join('\n');
+  const raisedKeys = useRef<ReadonlySet<string>>(new Set());
   useLayoutEffect(() => {
-    if (!host || latest <= raised.current) return;
-    raised.current = latest;
-    raise(host);
-  }, [host, latest]);
+    if (!host) return;
+    const keys = openKey ? openKey.split('\n') : [];
+    const fresh = keys.some((key) => !raisedKeys.current.has(key));
+    raisedKeys.current = new Set(keys);
+    if (fresh) raise(host);
+  }, [host, openKey]);
 
   useEffect(() => {
     const doc = homeRef.current?.ownerDocument;
@@ -310,6 +314,8 @@ function Region<T extends object = object>({
     else leave();
   }, [toaster, limit, leave]);
 
+  // The observer sees size changes; the list itself changes with these ids.
+  const shownKey = shown.map((toast) => toast.id).join('\n');
   // Stack offsets from each toast's own height, as CSS variables, so the
   // stack layout needs no measuring of its own. Read from the toast inside
   // each item, which the collapsed layout clips but never resizes.
@@ -336,7 +342,7 @@ function Region<T extends object = object>({
       if (item.firstElementChild) observer.observe(item.firstElementChild);
     }
     return () => observer.disconnect();
-  });
+  }, [host, shownKey]);
 
   const region = (
     <section
@@ -353,7 +359,10 @@ function Region<T extends object = object>({
       onFocus={composeHandlers(onFocus, () => setFocused(true))}
       onBlur={composeHandlers(onBlur, (event) => {
         const next = event.relatedTarget;
-        if (!(next instanceof Node) || !event.currentTarget.contains(next)) setFocused(false);
+        // With no relatedTarget, a window that lost focus keeps its active
+        // element, so focus has not left.
+        const landed = next instanceof Node ? next : event.currentTarget.ownerDocument.activeElement;
+        if (!event.currentTarget.contains(landed)) setFocused(false);
       })}
       onKeyDown={composeHandlers(onKeyDown, (event: ReactKeyboardEvent<HTMLElement>) => {
         if (event.key !== 'Escape' || event.target !== event.currentTarget) return;

@@ -94,8 +94,10 @@ export function createToaster<T extends object = object>(options: CreateToasterO
       const index = toasts.findIndex((item) => item.id === id);
       if (index === -1) return;
       const current = toasts[index]!;
+      // A key set to undefined keeps the current value, as if left out.
+      const defined = Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined));
       const next = [...toasts];
-      next[index] = { ...make(id, patch, current), open: current.open };
+      next[index] = { ...make(id, defined as Partial<ToastOptions & T>, current), open: current.open };
       set(next);
     },
     dismiss(id) {

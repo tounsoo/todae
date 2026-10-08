@@ -42,6 +42,8 @@ describe('createToaster', () => {
     toaster.update(id, { title: 'Late' });
     expect(toaster.getSnapshot()[0]).toMatchObject({ title: 'Late', open: false });
     toaster.update('missing', { title: 'No' });
+    toaster.update(id, { tone: undefined, duration: undefined });
+    expect(toaster.getSnapshot()[0]).toMatchObject({ tone: 'success', duration: DEFAULT_TOAST_DURATION });
     expect(toaster.getSnapshot()).toHaveLength(1);
   });
 

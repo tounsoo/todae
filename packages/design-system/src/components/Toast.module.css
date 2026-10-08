@@ -130,20 +130,25 @@
     );
   }
 
-  /* Fills the gap to the next toast, so moving the pointer across it keeps the stack open. */
-  .region[data-layout='stack'][data-expanded] .item::after {
+  /* Fills the gap to the next toast, so moving the pointer across it keeps
+     the region hovered: the timers stay paused and the stack stays open. */
+  .item::after {
     content: '';
     position: absolute;
     inset-inline: 0;
     block-size: var(--todae-toast-stack-gap);
   }
 
-  .region[data-layout='stack'][data-placement^='top'] .item::after {
+  .region[data-placement^='top'] .item::after {
     inset-block-start: 100%;
   }
 
-  .region[data-layout='stack'][data-placement^='bottom'] .item::after {
+  .region[data-placement^='bottom'] .item::after {
     inset-block-end: 100%;
+  }
+
+  .region[data-layout='stack']:not([data-expanded]) .item::after {
+    content: none;
   }
 
   .region[data-layout='stack'] .item[data-exiting] {
