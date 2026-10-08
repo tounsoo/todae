@@ -37,7 +37,7 @@ Todae ships no icons. `Toast.Icon` is a slot for one from your own set, as in [A
 
 ## Toasts and modal dialogs
 
-The region is a `popover="manual"` element, so it sits in the top layer above the page. A modal `<dialog>` is in the top layer too, and it makes everything outside it inert: a toast outside an open dialog can't be clicked or focused, and screen readers can't find it, even when it is drawn on top. Showing the popover again doesn't change that.
+The toasts sit in a `popover="manual"` element that the region creates, so they are in the top layer above the page. A modal `<dialog>` is in the top layer too, and it makes everything outside it inert: a toast outside an open dialog can't be clicked or focused, and screen readers can't find it, even when it is drawn on top. Showing the popover again doesn't change that.
 
 So while a Dialog or BottomSheet is open, the region moves inside it and shows itself again. Toasts shown before the dialog opened and toasts shown while it is open both sit in front of the dialog and its backdrop, and stay usable. When the dialog has closed, the region moves back. While a modal is open, the toasts sit inside it, so they take its theme. With nested dialogs, it follows the one in front.
 

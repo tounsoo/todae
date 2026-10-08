@@ -487,6 +487,10 @@ describe('Toast with a modal dialog', () => {
     await screen.findByRole('button', { name: 'Undo Later' });
     // Painted on top as the newest popover, yet outside the modal, so inert.
     expect(canFocus(undo)).toBe(false);
+    // The hotkey can't reach it either, so the key stays the page's.
+    const key = new KeyboardEvent('keydown', { key: 'F8', code: 'F8', bubbles: true, cancelable: true });
+    screen.getByTestId('raw').dispatchEvent(key);
+    expect(key.defaultPrevented).toBe(false);
     (screen.getByTestId('raw') as HTMLDialogElement).close();
   });
 });

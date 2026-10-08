@@ -445,9 +445,9 @@ function Region<T extends object = object>({
       const section = sectionRef.current;
       // Not a key something else handled, an IME composing, or a held key.
       if (event.defaultPrevented || event.isComposing || event.repeat || typesIn(event.target, hotkey)) return;
-      if (!section || !matchesHotkey(event, hotkey)) return;
-      event.preventDefault();
-      section.focus();
+      // The key stays the page's when the region can't take focus, such as
+      // under a modal outside Todae's stack.
+      if (section && matchesHotkey(event, hotkey) && tryFocus(section)) event.preventDefault();
     };
     doc.addEventListener('keydown', onKey);
     return () => doc.removeEventListener('keydown', onKey);
