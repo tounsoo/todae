@@ -31,7 +31,7 @@ toaster.add({ tone: 'success', title: 'Changes saved' });
   <ToastDemo />
 </Example>
 
-`toaster.add()` returns the toast's id. Pass that id to `update()` to change the toast while it shows, such as from "Uploading" to "Uploaded" (give a toast that waits on work `duration: Infinity`), or to `dismiss()` to close it. Adding a toast with an id that is still showing replaces it in place. Give `createToaster<YourFields>()` a type to put fields of your own on each toast and read them in the render function.
+`toaster.add()` returns the toast's id. Pass that id to `update()` to change the toast while it shows, such as from "Uploading" to "Uploaded" (give a toast that waits on work `duration: Infinity`), or to `dismiss()` to close it. Adding a toast with an id the toaster already has replaces that toast in place. Give `createToaster<YourFields>()` a type to put fields of your own on each toast and read them in the render function.
 
 Todae ships no icons. `Toast.Icon` is a slot for one from your own set, as in [Alert](/alert).
 

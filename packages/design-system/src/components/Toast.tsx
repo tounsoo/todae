@@ -47,7 +47,8 @@ export type ToastRegionProps<T extends object = object> = {
   limit?: number;
   /**
    * Key that moves focus to the toasts, such as `"F8"` or `"Alt+T"`. Modifiers
-   * are Alt (or Option), Ctrl, Meta (or Cmd) and Shift. `null` turns it off.
+   * are Alt (or Option), Ctrl, Meta (or Cmd) and Shift; write Space and Plus
+   * by name. `null` turns it off.
    */
   hotkey?: string | null;
   'aria-label'?: string;
@@ -130,10 +131,7 @@ function alongside<E>(theirs: ((event: E) => void) | undefined, ours: (event: E)
 }
 
 /** Whether a key pressed in `target` types there, so a typing hotkey leaves it alone. */
-function typesIn(target: EventTarget | null, hotkey: string): boolean {
-  const parsed = parseHotkey(hotkey);
-  if (!parsed) return false;
-  const { key, modifiers } = parsed;
+function typesIn(target: EventTarget | null, { key, modifiers }: Hotkey): boolean {
   // A function key types nothing anywhere, nor does a chord with Meta or
   // Ctrl. Ctrl with Alt is AltGr on Windows, which types.
   if (/^f\d{1,2}$/.test(key) || modifiers.has('meta') || (modifiers.has('ctrl') && !modifiers.has('alt'))) return false;
@@ -157,14 +155,23 @@ const MODIFIER_NAMES = new Map<string, Modifier>([
   ['shift', 'shift'],
 ]);
 
+// Keys whose name is not what they type.
+const KEY_NAMES = new Map([
+  ['space', ' '],
+  ['plus', '+'],
+]);
+
+type Hotkey = { key: string; modifiers: ReadonlySet<Modifier> };
+
 /**
  * The key and modifiers of a hotkey such as "Alt+T", or null when it names a
  * modifier this doesn't know, so a typo never turns into the bare key.
  */
-function parseHotkey(hotkey: string): { key: string; modifiers: ReadonlySet<Modifier> } | null {
+function parseHotkey(hotkey: string): Hotkey | null {
   const parts = hotkey.split('+').map((part) => part.trim().toLowerCase());
-  const key = parts.pop();
-  if (!key) return null;
+  const name = parts.pop();
+  if (!name) return null;
+  const key = KEY_NAMES.get(name) ?? name;
   const modifiers = new Set<Modifier>();
   for (const part of parts) {
     const modifier = MODIFIER_NAMES.get(part);
@@ -177,8 +184,10 @@ function parseHotkey(hotkey: string): { key: string; modifiers: ReadonlySet<Modi
 /** Whether `event` is `hotkey`, such as "F8" or "Alt+T", with exactly those modifiers. */
 export function matchesHotkey(event: KeyboardEvent, hotkey: string): boolean {
   const parsed = parseHotkey(hotkey);
-  if (!parsed) return false;
-  const { key, modifiers: wanted } = parsed;
+  return parsed !== null && matchesParsed(event, parsed);
+}
+
+function matchesParsed(event: KeyboardEvent, { key, modifiers: wanted }: Hotkey): boolean {
   // Chrome sends keydown events with no key, such as for an autofill pick.
   const eventKey = event.key ?? '';
   const eventCode = event.code ?? '';
@@ -490,19 +499,23 @@ function Region<T extends object = object>({
   }, [toasts, max, toaster]);
 
   useEffect(() => {
-    if (!hotkey || !hasOpen) return;
+    if (process.env.NODE_ENV !== 'production' && hotkey && !parseHotkey(hotkey)) {
+      console.error(`Todae: Toast.Region hotkey "${hotkey}" names a modifier it doesn't know, so it is off.`);
+    }
+  }, [hotkey]);
+
+  useEffect(() => {
+    const parsed = hotkey ? parseHotkey(hotkey) : null;
+    if (!parsed || !hasOpen) return;
     const doc = homeRef.current?.ownerDocument;
     if (!doc) return;
-    if (process.env.NODE_ENV !== 'production' && !parseHotkey(hotkey)) {
-      console.error(`Todae: Toast.Region hotkey "${hotkey}" names a key or modifier it doesn't know, so it is off.`);
-    }
     const onKey = (event: KeyboardEvent) => {
       const section = sectionRef.current;
       // Not a key something else handled, an IME composing, or a held key.
-      if (event.defaultPrevented || event.isComposing || event.repeat || typesIn(event.target, hotkey)) return;
+      if (event.defaultPrevented || event.isComposing || event.repeat || typesIn(event.target, parsed)) return;
       // The key stays the page's when the region can't take focus, such as
       // under a modal outside Todae's stack.
-      if (section && matchesHotkey(event, hotkey) && tryFocus(section)) event.preventDefault();
+      if (section && matchesParsed(event, parsed) && tryFocus(section)) event.preventDefault();
     };
     doc.addEventListener('keydown', onKey);
     return () => doc.removeEventListener('keydown', onKey);
@@ -544,7 +557,8 @@ function Region<T extends object = object>({
       lastInside.current = null;
       setFocused(false);
     },
-    () => !host?.isConnected,
+    // Nor while Todae moves or shows the host again, which puts focus back.
+    () => moving.current || !host?.isConnected,
   );
 
   // The observer sees size changes; the list itself changes with these ids.

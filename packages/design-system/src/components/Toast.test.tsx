@@ -185,11 +185,27 @@ describe('Toast', () => {
     for (const [hotkey, init] of [
       ['Ctrl+K', { key: 'k', code: 'KeyK', ctrlKey: true }],
       ['Meta+K', { key: 'k', code: 'KeyK', metaKey: true }],
+      ['Cmd+K', { key: 'k', code: 'KeyK', metaKey: true }],
     ] as const) {
       input.focus();
       rerender(<Page hotkey={hotkey} />);
       fireEvent.keyDown(input, init);
       expect(document.activeElement, hotkey).toBe(screen.getByRole('region'));
+    }
+  });
+
+  it('warns once about a hotkey with an unknown modifier, not with each new toast', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const toaster = createToaster({ duration: Infinity });
+      render(<Region toaster={toaster} hotkey="Hyper+T" />);
+      act(() => void toaster.add({ id: 'a', title: 'One' }));
+      act(() => void toaster.remove('a'));
+      act(() => void toaster.add({ title: 'Two' }));
+      const warnings = error.mock.calls.filter(([message]) => String(message).includes('Hyper+T'));
+      expect(warnings).toHaveLength(1);
+    } finally {
+      error.mockRestore();
     }
   });
 
@@ -511,6 +527,12 @@ describe('matchesHotkey', () => {
     expect(matchesHotkey(key({ key: 'k', code: 'KeyK', metaKey: true }), 'Hyper+K')).toBe(false);
     expect(matchesHotkey(key({ key: 'k', code: 'KeyK' }), 'Constructor+K')).toBe(false);
     expect(matchesHotkey(key({ key: '†', code: 'KeyT', altKey: true }), 'Opt+T')).toBe(true);
+  });
+
+  it('reads Space and Plus by name', () => {
+    expect(matchesHotkey(key({ key: ' ', code: 'Space', ctrlKey: true }), 'Ctrl+Space')).toBe(true);
+    expect(matchesHotkey(key({ key: '+', code: 'Equal', ctrlKey: true, shiftKey: true }), 'Ctrl+Shift+Plus')).toBe(true);
+    expect(matchesHotkey(key({ key: 'p', code: 'KeyP', ctrlKey: true }), 'Ctrl+Plus')).toBe(false);
   });
 
   it('ignores a keydown with no key, as Chrome sends for an autofill pick', () => {
