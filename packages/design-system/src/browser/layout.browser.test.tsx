@@ -220,6 +220,30 @@ describe('Pagination in a browser', () => {
     expect(await violations()).toEqual([]);
   });
 
+  it('draws a current page without href as current, not muted', () => {
+    render(
+      <Themed>
+        <Pagination.Root>
+          <Pagination.Item>
+            <a href="#page-1" aria-current="page" data-testid="linked">
+              1
+            </a>
+          </Pagination.Item>
+          <Pagination.Item>
+            <a aria-current="page" data-testid="plain">
+              2
+            </a>
+          </Pagination.Item>
+        </Pagination.Root>
+      </Themed>,
+    );
+    const linked = getComputedStyle(screen.getByTestId('linked'));
+    const plain = getComputedStyle(screen.getByTestId('plain'));
+    expect(plain.color).toBe(linked.color);
+    expect(plain.backgroundColor).toBe(linked.backgroundColor);
+    expect(plain.cursor).not.toBe('default');
+  });
+
   it('keeps focus on the control the user pressed, at the ends too', async () => {
     render(<Pages initial={2} />);
     await userEvent.click(screen.getByTestId('page-3'));

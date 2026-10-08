@@ -55,7 +55,7 @@ describe('Pagination', () => {
         <Pagination.Ellipsis data-testid="gap" />
       </Pagination.Root>,
     );
-    expect(gap.textContent).toBe('…');
+    expect(screen.getByTestId('gap').textContent).toBe('…');
   });
 
   it('keeps the focus ring on the current page and greys out a disabled step in forced colors', () => {
@@ -68,5 +68,8 @@ describe('Pagination', () => {
     const grey = forced.slice(forced.indexOf(".item > :is([aria-disabled='true']"));
     expect(muted(grey)).toBe(muted(normal));
     expect(grey.slice(0, grey.indexOf('}'))).toContain('color: GrayText;');
+    // A transparent border, which forced colors paints, outlines each control there.
+    const controls = css.slice(css.indexOf('.item > :is(a, button) {'));
+    expect(controls.slice(0, controls.indexOf('}'))).toContain('border: 1px solid transparent;');
   });
 });
