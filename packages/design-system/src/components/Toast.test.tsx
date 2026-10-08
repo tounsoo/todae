@@ -142,6 +142,42 @@ describe('Toast', () => {
     expect(toaster.getSnapshot()[0]!.open).toBe(false);
   });
 
+  it('counts the time already shown when update() changes the duration', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(<Region toaster={toaster} />);
+    let id = '';
+    act(() => void (id = toaster.add({ title: 'Upload' })));
+    act(() => void vi.advanceTimersByTime(600));
+    act(() => toaster.update(id, { duration: 800 }));
+    act(() => void vi.advanceTimersByTime(150));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    act(() => void vi.advanceTimersByTime(100));
+    expect(toaster.getSnapshot()[0]!.open).toBe(false);
+  });
+
+  it('keeps a toast shown again under the same id as its exit ends', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ id: 'x', title: 'First' }));
+    const item = screen.getByText('First').closest('li')!;
+    let readded = false;
+    // Shows the id again right after the commit that ends the exit, before
+    // the leaving toast's own effects run.
+    const observer = new MutationObserver(() => {
+      if (readded || item.hasAttribute('data-exiting')) return;
+      readded = true;
+      toaster.add({ id: 'x', title: 'Again' });
+    });
+    act(() => toaster.dismiss('x'));
+    expect(item.hasAttribute('data-exiting')).toBe(true);
+    observer.observe(item, { attributes: true, attributeFilter: ['data-exiting'] });
+    await waitFor(() => expect(readded).toBe(true));
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+    observer.disconnect();
+    expect(toaster.getSnapshot().map((t) => [t.title, t.open])).toEqual([['Again', true]]);
+  });
+
   it('marks the region expanded while focus is inside', async () => {
     const toaster = createToaster();
     render(<Region toaster={toaster} layout="stack" />);

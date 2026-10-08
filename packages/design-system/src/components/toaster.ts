@@ -78,7 +78,11 @@ export function createToaster<T extends object = object>(options: CreateToasterO
 
   return {
     add(toast) {
-      const id = toast.id ?? `toast-${++nextId}`;
+      let id = toast.id;
+      // A generated id never takes over a toast that is showing under an id of your own.
+      while (id === undefined || (toast.id === undefined && toasts.some((item) => item.id === id))) {
+        id = `todae-toast-${++nextId}`;
+      }
       const index = toasts.findIndex((item) => item.id === id);
       if (index === -1) {
         set([...toasts, make(id, toast)]);

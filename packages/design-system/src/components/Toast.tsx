@@ -151,9 +151,12 @@ function Item<T extends object>({
   const entered = useEntered(present, exiting);
   const { id, open, duration, version } = toast;
 
+  // Only the toast that left: add() may have shown this id again since.
   useEffect(() => {
-    if (!present) toaster.remove(id);
-  }, [present, toaster, id]);
+    if (present) return;
+    const current = toaster.getSnapshot().find((item) => item.id === id);
+    if (current && !current.open && current.version === version) toaster.remove(id);
+  }, [present, toaster, id, version]);
 
   // Removing the element that has focus sends no blur, so focus moves on
   // first. A layout cleanup runs before the element leaves, however it goes:
@@ -168,18 +171,19 @@ function Item<T extends object>({
     };
   }, [node]);
 
-  // Time left, kept across pauses. Full again when add() shows it again.
-  const remaining = useRef<number>(duration);
+  // Time shown so far, kept across pauses, so a new duration counts it too.
+  // Back to zero when add() shows it again.
+  const elapsed = useRef(0);
   useEffect(() => {
-    remaining.current = duration;
-  }, [duration, version]);
+    elapsed.current = 0;
+  }, [version]);
   useEffect(() => {
-    if (!open || paused || !Number.isFinite(remaining.current)) return;
+    if (!open || paused || !Number.isFinite(duration)) return;
     const start = performance.now();
-    const timer = window.setTimeout(() => toaster.dismiss(id), Math.max(0, remaining.current));
+    const timer = window.setTimeout(() => toaster.dismiss(id), Math.max(0, duration - elapsed.current));
     return () => {
       window.clearTimeout(timer);
-      remaining.current -= performance.now() - start;
+      elapsed.current += performance.now() - start;
     };
   }, [open, paused, duration, version, toaster, id]);
 
@@ -194,7 +198,8 @@ function Item<T extends object>({
       onKeyDown={(event) => {
         if (event.key !== 'Escape') return;
         // Escape belongs to the toast, not to a dialog or popover behind it,
-        // also while it leaves.
+        // also while it leaves. Toasts hold text and buttons only, so no layer
+        // opened from one needs it.
         event.preventDefault();
         event.stopPropagation();
         if (open) dismiss();
@@ -259,6 +264,21 @@ function Region<T extends object = object>({
     const section = sectionRef.current;
     const active = section?.ownerDocument.activeElement;
     setFocused(Boolean(active && section.contains(active) && isKeyboardFocus(active)));
+  }, []);
+  // Likewise the pointer: a toast removed from under a resting pointer sends
+  // no pointerleave, so hover is read again a frame after the toasts change,
+  // once the browser has updated it.
+  const syncHovered = useCallback(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const frame = requestAnimationFrame(() => {
+      try {
+        if (!section.matches(':hover')) setHovered(false);
+      } catch {
+        // An engine without :hover keeps what the pointer events said.
+      }
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
   const whileMoving = useCallback((change: () => void) => {
     moving.current = true;
@@ -409,14 +429,18 @@ function Region<T extends object = object>({
       list.style.setProperty('--toast-count', String(items.length));
     };
     measure();
-    if (typeof ResizeObserver === 'undefined') return;
+    const stopHover = syncHovered();
+    if (typeof ResizeObserver === 'undefined') return stopHover;
     const observer = new ResizeObserver(measure);
     for (const item of list.children) {
       observer.observe(item);
       if (item.firstElementChild) observer.observe(item.firstElementChild);
     }
-    return () => observer.disconnect();
-  }, [host, shownKey]);
+    return () => {
+      observer.disconnect();
+      stopHover?.();
+    };
+  }, [host, shownKey, syncHovered]);
 
   const region = (
     <section

@@ -1,5 +1,6 @@
 import { useCallback, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
 import { useModalLayerElement } from '../hooks/useModalLayer';
+import { dropModal } from './modalStack';
 import { inToastHostWithin } from './tabbables';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
@@ -75,6 +76,25 @@ export function useModalDialog({
     }
     if (!present && el.open) el.close();
   }, [dialogRef, present, open, node, nativeCloses]);
+
+  // Closes the element at the end of the exit motion, declared before
+  // useModalLayerElement so it runs before the element leaves the stack.
+  // close() sends focus back to the opener, also from a toast that
+  // Toast.Region moved in; leaving the stack moves the toasts out, and focus
+  // goes back to the toast once the page is no longer inert.
+  useLayoutEffect(() => {
+    if (!present || !node) return;
+    const el = node;
+    return () => {
+      if (!el.open) return;
+      const active = el.ownerDocument.activeElement;
+      const toast = active instanceof HTMLElement && inToastHostWithin(active, el) ? active : null;
+      el.close();
+      if (!toast) return;
+      dropModal(el);
+      toast.focus({ preventScroll: true });
+    };
+  }, [node, present]);
 
   // In the stack from showModal() until close() at the end of the exit
   // motion, while the page is still inert. Toasts moved in stay usable, and

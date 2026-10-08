@@ -47,6 +47,14 @@ describe('createToaster', () => {
     expect(toaster.getSnapshot()).toHaveLength(1);
   });
 
+  it('never generates an id that a showing toast already has', () => {
+    const toaster = createToaster();
+    toaster.add({ id: 'todae-toast-1', title: 'Mine' });
+    const generated = toaster.add({ title: 'Generated' });
+    expect(generated).not.toBe('todae-toast-1');
+    expect(toaster.getSnapshot().map((t) => t.title)).toEqual(['Mine', 'Generated']);
+  });
+
   it('dismisses one or all, then removes', () => {
     const toaster = createToaster();
     const a = toaster.add({ title: 'A' });

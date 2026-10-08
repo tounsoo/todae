@@ -141,6 +141,49 @@ describe('Toast with a modal dialog', () => {
     expect(dialog.open).toBe(true);
   });
 
+  it('keeps keyboard focus on a toast whose action closes the dialog', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Page() {
+      const [open, setOpen] = useState(true);
+      return (
+        <Themed>
+          <Button.Root>Before</Button.Root>
+          <Dialog.Root open={open} onOpenChange={setOpen}>
+            <Dialog.Title>Edit</Dialog.Title>
+          </Dialog.Root>
+          <Toast.Region toaster={toaster}>
+            {(toast) => (
+              <Toast.Root>
+                <Toast.Title>{toast.title}</Toast.Title>
+                <Toast.Action
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setOpen(false);
+                  }}
+                >
+                  Close it
+                </Toast.Action>
+              </Toast.Root>
+            )}
+          </Toast.Region>
+        </Themed>
+      );
+    }
+    render(<Page />);
+    const dialog = screen.getByRole('dialog', { name: 'Edit' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    act(() => void toaster.add({ title: 'Saved' }));
+    const action = await screen.findByRole('button', { name: 'Close it' });
+    await waitFor(() => expect(dialog.contains(action)).toBe(true));
+    await userEvent.keyboard('{F8}');
+    await userEvent.tab();
+    expect(document.activeElement).toBe(action);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(dialog.open).toBe(false));
+    await waitFor(() => expect(dialog.contains(action)).toBe(false));
+    expect(document.activeElement).toBe(action);
+  });
+
   it('follows a modal <dialog> of your own through useModalLayer', async () => {
     const toaster = createToaster({ duration: Infinity });
     function Own() {
@@ -383,6 +426,27 @@ describe('Toast in the top layer', () => {
     act(() => void toaster.add({ title: 'Read me', duration: 1500 }));
     await userEvent.click(await screen.findByText('Read me', { selector: 'p' }));
     await userEvent.hover(screen.getByRole('button', { name: 'Away' }));
+    await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0), { timeout: 3000 });
+  });
+
+  it('keeps timing after the toast under a resting pointer is removed', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <Region toaster={toaster} />
+      </Themed>,
+    );
+    let goes = '';
+    act(() => {
+      goes = toaster.add({ title: 'Goes' });
+      toaster.add({ title: 'Stays', duration: 400 });
+    });
+    // The older toast sits furthest from the corner, so nothing slides under
+    // the pointer once it is gone.
+    await userEvent.hover(await screen.findByText('Goes', { selector: 'p' }));
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(toaster.getSnapshot()).toHaveLength(2);
+    act(() => toaster.remove(goes));
     await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0), { timeout: 3000 });
   });
 
