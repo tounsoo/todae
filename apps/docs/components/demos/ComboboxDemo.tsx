@@ -1,7 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { BottomSheet, Button, Field, Label, OptionList, Popover, Text, useCombobox, useSheetPresentation, type ComboboxOption } from '@tounsoo/todae';
+import {
+  BottomSheet,
+  Button,
+  Field,
+  Label,
+  OptionList,
+  Popover,
+  Text,
+  useCombobox,
+  useHighlight,
+  useSheetPresentation,
+  type ComboboxOption,
+} from '@tounsoo/todae';
 
 const FRAMEWORKS: ComboboxOption[] = [
   { value: 'react', label: 'React' },
@@ -66,6 +78,27 @@ export function ComboboxSingle() {
       </Field.Root>
       <Popover.Root {...cb.getPopoverProps()}>
         <OptionList.Root {...cb.getListboxProps()}>
+          {optionNodes(cb.items, cb.getOptionProps)}
+        </OptionList.Root>
+      </Popover.Root>
+    </div>
+  );
+}
+
+export function ComboboxHighlight() {
+  const cb = useCombobox({ options: CITIES, presentation: 'popover' });
+  const found = useHighlight({ name: 'docs-search', query: cb.inputValue.trim() });
+  return (
+    <div className="labelled-field">
+      <Label htmlFor={cb.ids.input}>City</Label>
+      <Field.Root {...cb.getAnchorProps()}>
+        <Field.TextInput {...cb.getInputProps()} placeholder="Try “san”" />
+        <Field.Icon>
+          <Chevron />
+        </Field.Icon>
+      </Field.Root>
+      <Popover.Root {...cb.getPopoverProps()}>
+        <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
