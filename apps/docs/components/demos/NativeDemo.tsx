@@ -118,7 +118,7 @@ export function SpinnerLabelled() {
 
 export function SkeletonProfile() {
   return (
-    <div aria-busy="true">
+    <div>
       <span className="todae-visually-hidden">Loading profile</span>
       <Stack direction="row" aria-hidden="true">
         <div className="todae-skeleton" style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />

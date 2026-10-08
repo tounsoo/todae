@@ -2,7 +2,7 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 
 # Code and Kbd
 
-Code and keys are native `<code>`, `<pre>` and `<kbd>` elements. There is no component: Todae styles every one of them in the `todae.base` layer from the `code` and `kbd` contract tokens, in the `font.family.mono` stack.
+Code and keys are native `<code>`, `<pre>` and `<kbd>` elements. There is no component: Todae styles every one of them in the `todae.base` layer from the `code` and `kbd` contract tokens.
 
 ## Code
 
@@ -21,7 +21,7 @@ Inline `<code>` keeps the text color around it and tints its box from that color
 </pre>
 ```
 
-A `<pre>` that scrolls needs `tabIndex={0}` so keyboard users can reach and scroll it, and `role="region"` with an `aria-label` so that stop has a name. Restyle inline code through `code.tint` (how much of the text color its box takes), `code.radius`, `code.font.family`, `code.font.scale` (the size as a share of the text around it), `code.padding.x` and `code.padding.y`, and code blocks through the `code.block` tokens.
+A `<pre>` that scrolls needs `tabIndex={0}` so keyboard users can reach and scroll it, and `role="region"` with an `aria-label` so that stop has a name. `code.font.family` and `code.font.scale` (the size as a share of the text around it) set the font of inline code and code blocks alike. Restyle the inline box through `code.tint` (how much of the text color it takes), `code.radius`, `code.padding.x` and `code.padding.y`, and the block through the `code.block` tokens.
 
 ## Kbd
 
