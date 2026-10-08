@@ -1,7 +1,6 @@
 {
   "code": {
-    "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
-    "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
+    "tint": { "$type": "number", "$value": 0.1 },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "font": {
       "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/mono/$value" } },
@@ -12,6 +11,8 @@
       "y": { "$type": "dimension", "$value": { "value": 0.0625, "unit": "rem" } }
     },
     "block": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
       "padding": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
       "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
       "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } }

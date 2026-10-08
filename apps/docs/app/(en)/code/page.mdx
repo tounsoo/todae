@@ -6,7 +6,7 @@ Code and keys are native `<code>`, `<pre>` and `<kbd>` elements. There is no com
 
 ## Code
 
-Inline `<code>` gets a tinted box, a step smaller than the text around it, and keeps the text color around it, so code inside a link still reads as the link. A `<pre>` is a block that scrolls sideways when a line is too long, and a `<code>` inside it drops its own box.
+Inline `<code>` keeps the text color around it and tints its box from that color, so it reads the same in a link or a primary button. It is a step smaller than the text around it. A `<pre>` is a block that scrolls sideways when a line is too long, and a `<code>` inside it drops its own box.
 
 <Example block>
   <CodeInText />
@@ -16,12 +16,12 @@ Inline `<code>` gets a tinted box, a step smaller than the text around it, and k
 <Text>
   Call <code>getPlan()</code> before you render the billing page.
 </Text>
-<pre tabIndex={0}>
+<pre tabIndex={0} role="region" aria-label="Example code">
   <code>{source}</code>
 </pre>
 ```
 
-A `<pre>` that scrolls needs `tabIndex={0}`, so keyboard users can reach and scroll it. Restyle code through `code.bg`, `code.radius`, `code.font.family`, `code.font.scale` (the size as a share of the text around it), `code.padding.x`, `code.padding.y`, and code blocks through `code.fg` and the `code.block` tokens.
+A `<pre>` that scrolls needs `tabIndex={0}` so keyboard users can reach and scroll it, and `role="region"` with an `aria-label` so that stop has a name. Restyle inline code through `code.tint` (how much of the text color its box takes), `code.radius`, `code.font.family`, `code.font.scale` (the size as a share of the text around it), `code.padding.x` and `code.padding.y`, and code blocks through the `code.block` tokens.
 
 ## Kbd
 

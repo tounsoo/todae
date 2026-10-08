@@ -6,7 +6,7 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 
 ## Code
 
-인라인 `<code>`는 색을 입힌 상자를 받고, 주변 텍스트보다 한 단계 작으며, 주변 텍스트 색을 그대로 씁니다. 그래서 링크 안의 코드도 링크로 읽힙니다. `<pre>`는 줄이 너무 길면 가로로 스크롤하는 블록이고, 그 안의 `<code>`는 자기 상자를 버립니다.
+인라인 `<code>`는 주변 텍스트 색을 그대로 쓰고 그 색으로 상자를 옅게 칠합니다. 그래서 링크나 기본 버튼 안에서도 똑같이 읽힙니다. 주변 텍스트보다 한 단계 작습니다. `<pre>`는 줄이 너무 길면 가로로 스크롤하는 블록이고, 그 안의 `<code>`는 자기 상자를 버립니다.
 
 <Example block>
   <CodeInText />
@@ -16,12 +16,12 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 <Text>
   Call <code>getPlan()</code> before you render the billing page.
 </Text>
-<pre tabIndex={0}>
+<pre tabIndex={0} role="region" aria-label="Example code">
   <code>{source}</code>
 </pre>
 ```
 
-스크롤하는 `<pre>`에는 `tabIndex={0}`을 주어 키보드 사용자가 닿아서 스크롤할 수 있게 하세요. `code.bg`, `code.radius`, `code.font.family`, `code.font.scale`(주변 텍스트에 대한 크기 비율), `code.padding.x`, `code.padding.y`로, 코드 블록은 `code.fg`와 `code.block` 토큰으로 바꾸세요.
+스크롤하는 `<pre>`에는 `tabIndex={0}`을 주어 키보드 사용자가 닿아서 스크롤할 수 있게 하고, 그 탭 위치에 이름이 있도록 `role="region"`과 `aria-label`을 주세요. 인라인 코드는 `code.tint`(상자가 텍스트 색을 얼마나 쓰는지), `code.radius`, `code.font.family`, `code.font.scale`(주변 텍스트에 대한 크기 비율), `code.padding.x`, `code.padding.y`로, 코드 블록은 `code.block` 토큰으로 바꾸세요.
 
 ## Kbd
 

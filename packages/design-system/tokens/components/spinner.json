@@ -2,8 +2,7 @@
   "spinner": {
     "size": { "$type": "dimension", "$value": { "value": 1.25, "unit": "rem" } },
     "thickness": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
-    "track": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
-    "fill": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+    "track-strength": { "$type": "number", "$value": 0.2 },
     "motion": {
       "duration": { "$type": "duration", "$value": { "value": 800, "unit": "ms" } }
     }

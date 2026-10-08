@@ -280,7 +280,8 @@
 
   /* Spinner. A <progress> with the todae-spinner class and no value: it
      keeps the progressbar role, so it needs a name like any progress. The
-     bar becomes a ring with one arc of fill that turns. With a value it
+     bar becomes a ring with one arc that turns, drawn in the text color so
+     it shows on any surface, a primary button included. With a value it
      stays a bar, so what shows matches what is announced. These rules come
      after the progress ones so they win at the same specificity. */
   :where(progress.todae-spinner:indeterminate) {
@@ -289,7 +290,10 @@
     block-size: var(--todae-spinner-size);
     border: 0;
     border-radius: 50%;
-    background: conic-gradient(var(--todae-spinner-fill) 0 25%, var(--todae-spinner-track) 0);
+    background: conic-gradient(
+      currentColor 0 25%,
+      color-mix(in oklch, currentColor calc(var(--todae-spinner-track-strength) * 100%), transparent) 0
+    );
     mask: radial-gradient(
       farthest-side,
       transparent calc(100% - var(--todae-spinner-thickness)),
@@ -384,14 +388,16 @@
     cursor: not-allowed;
   }
 
-  /* Code. Inline <code> gets a tinted box in the mono family, a step smaller
-     than the text around it, and keeps the text color around it, so code in
-     a link still reads as the link. A <pre> is a block that scrolls
-     sideways, and <code> inside it drops its own box. */
+  /* Code. Inline <code> sits in any context, a link or a primary button, so
+     it sets neither color of its own: it keeps the text color around it and
+     tints its box from that color. With a light tint the pair stays close to
+     the surrounding text and surface. It is a step smaller than the text
+     around it, in the mono family. A <pre> is a block with its own colors
+     that scrolls sideways, and <code> inside it drops its own box. */
   :where(code) {
     padding: var(--todae-code-padding-y) var(--todae-code-padding-x);
     border-radius: var(--todae-code-radius);
-    background: var(--todae-code-bg);
+    background: color-mix(in oklch, currentColor calc(var(--todae-code-tint) * 100%), transparent);
     font-family: var(--todae-code-font-family);
     font-size: calc(1em * var(--todae-code-font-scale));
     -webkit-box-decoration-break: clone;
@@ -401,8 +407,8 @@
   :where(pre) {
     padding: var(--todae-code-block-padding);
     border-radius: var(--todae-code-block-radius);
-    background: var(--todae-code-bg);
-    color: var(--todae-code-fg);
+    background: var(--todae-code-block-bg);
+    color: var(--todae-code-block-fg);
     font-family: var(--todae-code-font-family);
     font-size: calc(1em * var(--todae-code-font-scale));
     line-height: var(--todae-code-block-leading);
@@ -416,8 +422,9 @@
     font-size: inherit;
   }
 
-  /* Keys. A <kbd> is drawn as a key cap. For a shortcut, put one <kbd> per
-     key inside an outer <kbd>: the outer one stays plain text. */
+  /* Keys. A <kbd> is drawn as a key cap, with its own colors. For a
+     shortcut, put one <kbd> per key inside an outer <kbd>: the outer one
+     stays plain text, as does a <kbd> around <samp> (echoed input). */
   :where(kbd) {
     display: inline-block;
     padding: var(--todae-kbd-padding-y) var(--todae-kbd-padding-x);
@@ -431,7 +438,7 @@
     white-space: nowrap;
   }
 
-  :where(kbd:has(kbd)) {
+  :where(kbd:has(kbd, samp)) {
     display: inline;
     padding: 0;
     border: 0;

@@ -109,16 +109,34 @@ describe('todae.base styles', () => {
     expect(list.indexOf(':where(progress.todae-spinner:indeterminate)')).toBeGreaterThan(lastProgress);
     expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(progress\.todae-spinner:indeterminate\) \{\s*animation: none;/);
     expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(\.todae-skeleton\) \{\s*animation: none;/);
+    expect(base).toMatch(/forced-colors: active\) \{\s*:where\(progress\.todae-spinner:indeterminate\) \{\s*forced-color-adjust: none;/);
+    expect(base).toMatch(/forced-colors: active\) \{\s*:where\(\.todae-skeleton\) \{\s*forced-color-adjust: none;\s*background: GrayText;/);
+    // The ring draws in the text color, so it shows inside a primary button.
+    const spinner = base.slice(base.indexOf(':where(progress.todae-spinner:indeterminate) {'));
+    expect(spinner.slice(0, spinner.indexOf('}'))).toContain('currentColor 0 25%');
+  });
+
+  it('tints inline code from the text color, lightly, and gives blocks their own colors', () => {
+    const code = base.slice(base.indexOf(':where(code) {'));
+    const rule = code.slice(0, code.indexOf('}'));
+    expect(rule).not.toMatch(/\bcolor:/);
+    expect(rule).toContain('color-mix(in oklch, currentColor calc(var(--todae-code-tint) * 100%), transparent)');
+    // A light tint keeps the pair close to the text and surface around it,
+    // which the resolver's contrast list cannot check for a color-mix.
+    const tokens = JSON.parse(readFileSync(join(import.meta.dirname, '../../tokens/components/code.json'), 'utf8'));
+    expect(tokens.code.tint.$value).toBeLessThanOrEqual(0.15);
+    const pre = base.slice(base.indexOf(':where(pre) {'));
+    expect(pre.slice(0, pre.indexOf('}'))).toContain('color: var(--todae-code-block-fg);');
   });
 
   it('styles code, code blocks and keys', () => {
     const list = selectors(base);
-    for (const selector of [':where(code)', ':where(pre)', ':where(pre code)', ':where(kbd)', ':where(kbd:has(kbd))']) {
+    for (const selector of [':where(code)', ':where(pre)', ':where(pre code)', ':where(kbd)', ':where(kbd:has(kbd, samp))']) {
       expect(list).toContain(selector);
     }
     // The outer <kbd> of a shortcut and the <code> in a <pre> undo the box,
     // so they must follow the rules they undo.
-    expect(list.indexOf(':where(kbd:has(kbd))')).toBeGreaterThan(list.indexOf(':where(kbd)'));
+    expect(list.indexOf(':where(kbd:has(kbd, samp))')).toBeGreaterThan(list.indexOf(':where(kbd)'));
     expect(list.indexOf(':where(pre code)')).toBeGreaterThan(list.indexOf(':where(code)'));
   });
 

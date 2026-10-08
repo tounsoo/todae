@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useId, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-import { Alert, Badge, Breadcrumbs, Card, Checkbox, ErrorMessage, Field, Fieldset, Label, Text } from '../index';
+import { Alert, Badge, Breadcrumbs, Button, Card, Checkbox, ErrorMessage, Field, Fieldset, Label, Text } from '../index';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -377,6 +377,9 @@ describe('content parts in a browser', () => {
     render(
       <Themed>
         <progress data-testid="spinner" className="todae-spinner" aria-label="Loading" />
+        <Button.Root variant="primary" data-testid="button">
+          <progress data-testid="in-button" className="todae-spinner" aria-label="Saving" /> Save <code data-testid="button-code">x</code>
+        </Button.Root>
         <div dir="rtl">
           <progress data-testid="rtl" className="todae-spinner" aria-label="Loading" />
         </div>
@@ -393,6 +396,11 @@ describe('content parts in a browser', () => {
     expect(style('spinner').backgroundImage).toContain('conic-gradient');
     // A ring turns the same way on either side; the progress sweep's reversal must not reach it.
     expect(style('rtl').animationDirection).toBe('normal');
+    // Inside a primary button the arc and inline code take the button's text color.
+    expect(style('in-button').color).toBe(style('button').color);
+    expect(style('in-button').backgroundImage).toContain(style('button').color);
+    expect(style('button-code').color).toBe(style('button').color);
+    expect(style('button-code').backgroundColor).not.toBe(style('button').backgroundColor);
     // With a value it stays a bar, as it is announced.
     expect(style('valued').animationName).toBe('none');
     expect(style('valued').backgroundImage).not.toContain('conic-gradient');
@@ -429,7 +437,7 @@ describe('content parts in a browser', () => {
     expect(style('shortcut').fontFamily).toBe(getComputedStyle(screen.getByTestId('shortcut').parentElement!).fontFamily);
     expect(style('inline').fontFamily).toContain('monospace');
     expect(style('inline').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
-    expect(style('block').backgroundColor).toBe(style('inline').backgroundColor);
+    expect(style('block').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
     expect(style('block').overflowX).toBe('auto');
     expect(style('nested').backgroundColor).toBe('rgba(0, 0, 0, 0)');
     expect(style('nested').paddingLeft).toBe('0px');
