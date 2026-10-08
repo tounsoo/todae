@@ -15,6 +15,7 @@ import { createPortal } from 'react-dom';
 import { frontModal, subscribeModals } from '../overlay/modalStack';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { isPopoverOpen } from '../overlay/usePopoverSync';
+import { TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables';
 import { Button, type ButtonRootProps } from './Button';
 import { useDismissLabel } from './dismissLabel';
 import { composeHandlers, cx, useComposedRefs } from './props';
@@ -96,9 +97,14 @@ export function matchesHotkey(event: KeyboardEvent, hotkey: string): boolean {
   for (const modifier of MODIFIERS) {
     if (event[`${modifier}Key`] !== wanted.has(modifier)) return false;
   }
-  // The code too, as Option changes the character a letter or digit types on macOS.
+  const typed = eventKey.toLowerCase();
+  if (typed === key) return true;
+  // The code only when the key is no plain letter or digit, as Option changes
+  // what a letter or digit types on macOS. A plain one decides by itself, so
+  // a layout such as AZERTY matches by what the key types.
+  if (/^[a-z0-9]$/.test(typed)) return false;
   const code = eventCode.toLowerCase();
-  return eventKey.toLowerCase() === key || code === `key${key}` || code === `digit${key}`;
+  return code === `key${key}` || code === `digit${key}`;
 }
 
 function Item<T extends object>({
@@ -217,7 +223,7 @@ function Region<T extends object = object>({
     el.setAttribute('popover', 'manual');
     el.className = styles.host ?? '';
     // Marks it as not the dialog's own content when it moves into one.
-    el.setAttribute('data-todae-toast-host', '');
+    el.setAttribute(TOAST_HOST_ATTRIBUTE, '');
     home.append(el);
     setHost(el);
     return () => {
@@ -395,19 +401,17 @@ function Region<T extends object = object>({
   );
 }
 
-const ASSERTIVE: ReadonlySet<ToastTone> = new Set(['critical']);
-
 /**
- * One toast. `role` is `alert` for critical toasts, which interrupts;
- * others are read politely through the region's live list.
+ * One toast. Every tone is read once, politely, through the region's live
+ * list: a role="alert" inside it could be read twice, and again each time
+ * the region moves into or out of a dialog.
  */
-function Root({ tone, role, className, ...props }: ToastRootProps) {
+function Root({ tone, className, ...props }: ToastRootProps) {
   const item = useContext(ItemContext);
   const resolved = tone ?? item?.toast.tone ?? 'info';
   return (
     <div
       {...props}
-      role={role ?? (ASSERTIVE.has(resolved) ? 'alert' : undefined)}
       data-tone={resolved}
       className={cx(styles.root, className)}
     />

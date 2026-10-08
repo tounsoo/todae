@@ -1,5 +1,6 @@
 import { useCallback, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
 import { useModalLayer } from '../hooks/useModalLayer';
+import { inToastHostWithin } from './tabbables';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
 export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
@@ -106,7 +107,7 @@ export function useModalDialog({
       // Only this element's own controls, not those of a modal written inside
       // it, nor a toast that Toast.Region moved in.
       const target = event.target;
-      if (target instanceof HTMLElement && target.closest('dialog') === el && !target.closest('[data-todae-toast-host]')) {
+      if (target instanceof HTMLElement && target.closest('dialog') === el && !inToastHostWithin(target, el)) {
         lastFocus.current = target;
       }
     }

@@ -1889,15 +1889,8 @@
           "name": "tone",
           "type": "\"info\" | \"success\" | \"warning\" | \"critical\"",
           "required": false,
-          "description": "Colors from color.status.<tone> through the toast contract tokens. critical also sets role=\"alert\".",
+          "description": "Colors from color.status.<tone> through the toast contract tokens.",
           "default": "the toast's own tone"
-        },
-        {
-          "name": "role",
-          "type": "React.AriaRole",
-          "required": false,
-          "description": "The region's live list announces other toasts politely.",
-          "default": "\"alert\" for critical, none otherwise"
         },
         {
           "name": "children",

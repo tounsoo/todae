@@ -40,7 +40,7 @@ describe('Toast', () => {
     expect(region.closest('[popover]')?.getAttribute('popover')).toBe('manual');
   });
 
-  it('takes the tone from the toast, and role alert only for critical', () => {
+  it('takes the tone from the toast and reads every tone through the one live list', () => {
     const toaster = createToaster();
     render(<Region toaster={toaster} />);
     act(() => {
@@ -48,9 +48,11 @@ describe('Toast', () => {
       toaster.add({ title: 'Failed', tone: 'critical' });
     });
     const saved = screen.getByText('Saved').parentElement!;
+    const failed = screen.getByText('Failed').parentElement!;
     expect(saved.dataset.tone).toBe('success');
-    expect(saved.getAttribute('role')).toBeNull();
-    expect(screen.getByRole('alert').dataset.tone).toBe('critical');
+    expect(failed.dataset.tone).toBe('critical');
+    expect(failed.getAttribute('role')).toBeNull();
+    expect(screen.getByRole('region').querySelectorAll('[aria-live], [role="alert"], [role="status"]')).toHaveLength(1);
   });
 
   it('lists the newest first', () => {
@@ -271,6 +273,9 @@ describe('matchesHotkey', () => {
     expect(matchesHotkey(key({ key: 't', code: 'KeyT' }), 'Alt+T')).toBe(false);
     // Option+1 types ¡ on macOS.
     expect(matchesHotkey(key({ key: '¡', code: 'Digit1', altKey: true }), 'Alt+1')).toBe(true);
+    // On AZERTY the key at QWERTY's Q types a: the typed letter decides.
+    expect(matchesHotkey(key({ key: 'a', code: 'KeyQ', altKey: true }), 'Alt+Q')).toBe(false);
+    expect(matchesHotkey(key({ key: 'a', code: 'KeyQ', altKey: true }), 'Alt+A')).toBe(true);
   });
 
   it('ignores a keydown with no key, as Chrome sends for an autofill pick', () => {

@@ -206,6 +206,30 @@ describe('Toast with a modal dialog', () => {
     await waitFor(() => expect(document.activeElement).toBe(notify));
   });
 
+  it('gives a dialog with nothing tabbable its own focus, not a toast\'s', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Page() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Themed>
+          <Button.Root onClick={() => setOpen(true)}>Open</Button.Root>
+          <Dialog.Root open={open} onOpenChange={setOpen} aria-label="Working">
+            Saving your changes.
+          </Dialog.Root>
+          <Region toaster={toaster} />
+        </Themed>
+      );
+    }
+    render(<Page />);
+    act(() => void toaster.add({ title: 'Earlier' }));
+    const undo = await screen.findByRole('button', { name: 'Undo Earlier' });
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+    const dialog = screen.getByRole('dialog', { name: 'Working' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.contains(undo)).toBe(true));
+    expect(document.activeElement).not.toBe(undo);
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
   it('stays inert under a modal that is not in the stack', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(
@@ -307,6 +331,26 @@ describe('Toast in the top layer', () => {
     act(() => void toaster.add({ title: 'Timed' }));
     await screen.findByRole('button', { name: 'Undo Timed' });
     await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0), { timeout: 2000 });
+  });
+
+  it('keeps the gap between listed toasts inside the region', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <Region toaster={toaster} />
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ title: 'Upper' });
+      toaster.add({ title: 'Lower' });
+    });
+    await screen.findByRole('button', { name: 'Undo Upper' });
+    const [newer, older] = [...document.querySelectorAll('ol > li')].map((item) => item.getBoundingClientRect());
+    // Bottom placement: the older toast sits above the newer one.
+    const y = (older!.bottom + newer!.top) / 2;
+    expect(newer!.top - older!.bottom).toBeGreaterThan(0);
+    const hit = document.elementFromPoint(newer!.left + newer!.width / 2, y);
+    expect(screen.getByRole('region').contains(hit)).toBe(true);
   });
 
   it('shows at most limit toasts, and the next one when one leaves', async () => {
