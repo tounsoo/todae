@@ -123,6 +123,11 @@ export {
   type UseChipListResult,
 } from './hooks/useChipList';
 export {
+  useHighlight,
+  type UseHighlightOptions,
+  type UseHighlightResult,
+} from './hooks/useHighlight';
+export {
   useRovingFocus,
   type RovingContainerUserProps,
   type RovingContainerWire,

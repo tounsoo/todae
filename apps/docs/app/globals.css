@@ -435,6 +435,23 @@ caption {
   gap: var(--todae-space-1);
 }
 
+.demo-highlight-text p {
+  margin: 0;
+  max-width: 60ch;
+}
+
+/* Ranges the useHighlight demo paints. */
+::highlight(docs-search),
+::highlight(docs-combobox-match) {
+  background-color: var(--todae-color-status-warning-bg);
+  color: var(--todae-color-fg-default);
+}
+
+::highlight(docs-search-current) {
+  background-color: var(--todae-color-status-warning-border);
+  color: var(--todae-color-fg-default);
+}
+
 .demo-stars {
   letter-spacing: 0.1em;
   outline: none;
