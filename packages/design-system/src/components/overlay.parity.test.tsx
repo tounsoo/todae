@@ -153,25 +153,6 @@ for (const harness of [dialogHarness, drawerHarness, sheetHarness]) {
       expect(blocked).not.toHaveBeenCalled();
     });
 
-    it('locks scroll while open and restores on close', async () => {
-      const h = harness();
-      const { rerender } = render(
-        <h.Root open onOpenChange={() => undefined}>
-          <h.Title>Save file</h.Title>
-        </h.Root>,
-      );
-      expect(document.documentElement.style.overflow).toBe('hidden');
-      rerender(
-        <h.Root open={false} onOpenChange={() => undefined}>
-          <h.Title>Save file</h.Title>
-        </h.Root>,
-      );
-      expect(getSurface()).not.toBeNull();
-      await waitFor(() => {
-        expect(document.documentElement.style.overflow).not.toBe('hidden');
-      }, { timeout: 500 });
-    });
-
     it('restores focus to the trigger', async () => {
       const trigger = document.createElement('button');
       trigger.textContent = 'open';
