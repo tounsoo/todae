@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'useAnnouncer',
   description:
-    'Takes no arguments and returns announce(message, options?), which reads message to screen readers through visually hidden live regions shared by the whole document; while a modal dialog is open, the one inside the dialog in front. The props below are announce arguments.',
+    'Takes no arguments and returns announce(message, options?), which reads message to screen readers through visually hidden live regions shared by the whole document; while a modal in the Todae modal stack is open, the one inside the modal in front. The props below are announce arguments.',
   props: [
     {
       name: 'message',

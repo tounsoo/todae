@@ -53,14 +53,18 @@ describe('useAnnouncer in a browser', () => {
     expect(politeIn(dialog)?.textContent ?? '').toBe('');
   });
 
-  it('reads from the inner dialog when dialogs are nested', async () => {
-    render(
-      <Dialog.Root open onOpenChange={() => undefined} aria-label="Outer">
-        <Dialog.Root open onOpenChange={() => undefined} aria-label="Inner">
-          <Saver />
+  it('reads from the dialog opened last when dialogs are nested', async () => {
+    function Nested({ inner }: { inner: boolean }) {
+      return (
+        <Dialog.Root open onOpenChange={() => undefined} aria-label="Outer">
+          <Dialog.Root open={inner} onOpenChange={() => undefined} aria-label="Inner">
+            <Saver />
+          </Dialog.Root>
         </Dialog.Root>
-      </Dialog.Root>,
-    );
+      );
+    }
+    const { rerender } = render(<Nested inner={false} />);
+    rerender(<Nested inner />);
     const inner = screen.getByRole('dialog', { name: 'Inner' });
     const outer = screen.getByRole('dialog', { name: 'Outer', hidden: true });
     act(() => screen.getByRole('button', { name: 'Save' }).click());

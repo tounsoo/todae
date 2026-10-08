@@ -11,6 +11,16 @@
     text-underline-offset: var(--todae-link-decoration-offset);
   }
 
+  /* The current page or step, as a router marks it with aria-current. Any
+     value other than empty or false (in any case) marks the link current, and
+     its underline thickens so it reads without a hover. Hover comes after, so
+     the hover tokens still apply to a current link. */
+  :where(a:any-link[aria-current]:not([aria-current='false' i], [aria-current=''])) {
+    color: var(--todae-link-fg-current);
+    text-decoration-color: var(--todae-link-decoration-current);
+    text-decoration-thickness: var(--todae-link-decoration-current-thickness);
+  }
+
   :where(a:any-link:hover) {
     color: var(--todae-link-fg-hover);
     text-decoration-color: var(--todae-link-decoration-hover);

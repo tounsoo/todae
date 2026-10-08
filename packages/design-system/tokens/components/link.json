@@ -2,12 +2,15 @@
   "link": {
     "fg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
-      "hover": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+      "hover": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "current": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
     },
     "decoration": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
       "hover": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "current": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
       "thickness": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+      "current-thickness": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
       "offset": { "$type": "dimension", "$value": { "value": 3, "unit": "px" } }
     },
     "ring": {

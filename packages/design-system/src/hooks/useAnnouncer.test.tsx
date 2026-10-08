@@ -2,6 +2,7 @@ import { act, cleanup, render } from '@testing-library/react';
 import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as api from '../index';
+import { dropModal, heldModals, pushModal } from '../overlay/modalStack';
 import { useAnnouncer, type AnnounceOptions } from './useAnnouncer';
 
 const regions = () => document.querySelectorAll('[data-todae-announcer]');
@@ -130,18 +131,20 @@ describe('useAnnouncer', () => {
     expect(document.documentElement.dataset.todaeAnnouncePolite).toBeUndefined();
   });
 
-  // A modal dialog the way an engine without :modal reports one.
+  // An open modal in Todae's modal stack, shown after the ones before it.
   function modal(attrs: Record<string, string> = {}) {
     const dialog = document.createElement('dialog');
     dialog.setAttribute('open', '');
     dialog.setAttribute('aria-modal', 'true');
     for (const [name, value] of Object.entries(attrs)) dialog.setAttribute(name, value);
     document.body.append(dialog);
+    pushModal(dialog);
     return dialog;
   }
   const bodyLive = () => document.body.querySelector<HTMLElement>(':scope > [data-todae-announcer] [aria-live="polite"]')!;
   const liveIn = (host: Element) => host.querySelector<HTMLElement>(':scope > [data-todae-announcer] [aria-live="polite"]');
   afterEach(() => {
+    for (const dialog of [...heldModals()]) dropModal(dialog);
     for (const dialog of document.querySelectorAll('dialog')) dialog.remove();
   });
 
@@ -169,14 +172,12 @@ describe('useAnnouncer', () => {
     expect(bodyLive().textContent).toBe('Deleted');
   });
 
-  it('writes anyway once a modal has looked like it was closing for too long', () => {
+  it('writes in body once a modal has looked like it was closing for too long', () => {
     const dialog = modal({ 'data-exiting': '' });
     render(<Speaker message="Deleted" />);
-    act(() => vi.advanceTimersByTime(1050));
-    // Its new region still sits empty for one moment.
-    expect(liveIn(dialog)?.textContent).toBe('');
-    act(() => vi.advanceTimersByTime(100));
-    expect(liveIn(dialog)?.textContent).toBe('Deleted');
+    act(() => vi.advanceTimersByTime(1300));
+    expect(bodyLive().textContent).toBe('Deleted');
+    expect(liveIn(dialog)).toBeNull();
   });
 
   it('waits a moment before writing in a dialog that closed and opened again', () => {
@@ -193,16 +194,32 @@ describe('useAnnouncer', () => {
     expect(liveIn(dialog)?.textContent).toBe('Closed');
   });
 
-  it('writes in the modal that holds focus when several are open', () => {
-    const inner = modal();
-    const outer = modal();
-    const button = document.createElement('button');
-    inner.append(button);
-    button.focus();
+  it('writes in the modal shown last when several are open', () => {
+    const behind = modal();
+    const front = modal();
     render(<Speaker message="Saved" />);
     act(() => vi.advanceTimersByTime(200));
-    expect(liveIn(inner)?.textContent).toBe('Saved');
-    expect(liveIn(outer)).toBeNull();
+    expect(liveIn(front)?.textContent).toBe('Saved');
+    expect(liveIn(behind)).toBeNull();
+  });
+
+  it('ignores an open modal outside the stack', () => {
+    const dialog = document.createElement('dialog');
+    dialog.setAttribute('open', '');
+    dialog.setAttribute('aria-modal', 'true');
+    document.body.append(dialog);
+    render(<Speaker message="Saved" />);
+    act(() => vi.advanceTimersByTime(100));
+    expect(bodyLive().textContent).toBe('Saved');
+    expect(liveIn(dialog)).toBeNull();
+  });
+
+  it('writes in a modal behind one that has looked like it was closing for too long', () => {
+    const behind = modal();
+    modal({ 'data-exiting': '' });
+    render(<Speaker message="Deleted" />);
+    act(() => vi.advanceTimersByTime(1300));
+    expect(liveIn(behind)?.textContent).toBe('Deleted');
   });
 
   it('lets a newer message win after the region was removed', () => {

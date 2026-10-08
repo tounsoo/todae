@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { frontModalElement } from '../overlay/modalStack';
+import { frontModal } from '../overlay/modalStack';
 
 export type AnnouncePoliteness = 'polite' | 'assertive';
 
@@ -77,25 +77,26 @@ function announce(message: string, options?: AnnounceOptions): void {
     html.dataset[key] = String(setTimeout(attempt, WRITE_DELAY));
   };
   // A modal makes the rest of the page inert, so the region read is the one
-  // in the modal in front, or in body when none is open. A modal in its exit
-  // motion keeps the page inert until it closes, so it picks none yet.
-  // (Todae marks that motion with data-exiting; other dialogs are taken as
-  // they are, and with focus on body, a modal Todae did not open is judged
-  // by document order, since the DOM does not expose top-layer order.)
+  // in the modal in front of Todae's modal stack, or in body when none is
+  // open. A modal stays in the stack until close(), so one in its exit
+  // motion (data-exiting) picks none yet: a message written there would be
+  // hidden with it a moment later.
+  const exiting = (el: HTMLElement) => el.hasAttribute('data-exiting');
   const pick = (create: boolean): HTMLElement | null => {
-    const modal = frontModalElement();
-    if (modal?.hasAttribute('data-exiting')) return null;
+    const modal = frontModal();
+    if (modal && exiting(modal)) return null;
     return regionIn(modal ?? document.body, create);
   };
   // Write only into the region the last check also picked: one that was
   // just created, or whose dialog just opened, closed or reopened, first
   // sits reachable and empty for a moment so it is read. Past the deadline,
-  // one more moment at most, then the write goes to whatever is in front.
+  // one more moment at most, then the write goes to the front modal that is
+  // not exiting, or body.
   let chosen = pick(false);
   let grace = true;
   function attempt() {
     const late = Date.now() >= deadline;
-    const root = pick(true) ?? (late ? regionIn(frontModalElement() ?? document.body, true) : null);
+    const root = pick(true) ?? (late ? regionIn(frontModal(exiting) ?? document.body, true) : null);
     if (!root || (root !== chosen && (!late || grace))) {
       if (late) grace = false;
       chosen = root;
@@ -113,7 +114,8 @@ function announce(message: string, options?: AnnounceOptions): void {
  * readers through visually hidden polite and assertive live regions shared
  * by the document.
  * The region is added when the first component using the hook mounts. While
- * a modal dialog is open, messages are read from inside the one in front.
+ * a modal in Todae's modal stack is open, messages are read from inside the
+ * one in front.
  */
 export function useAnnouncer(): Announce {
   useEffect(() => {

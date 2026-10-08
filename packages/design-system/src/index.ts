@@ -73,6 +73,26 @@ export {
 } from './hooks/usePopover';
 export { Tooltip, type TooltipContentName, type TooltipRootProps } from './components/Tooltip';
 export {
+  Toast,
+  type ToastActionProps,
+  type ToastCloseProps,
+  type ToastDescriptionProps,
+  type ToastIconProps,
+  type ToastLayout,
+  type ToastPlacement,
+  type ToastRegionProps,
+  type ToastRootProps,
+  type ToastTitleProps,
+} from './components/Toast';
+export {
+  createToaster,
+  type CreateToasterOptions,
+  type Toaster,
+  type ToastOptions,
+  type ToastRecord,
+  type ToastTone,
+} from './components/toaster';
+export {
   useTooltip,
   type TooltipOpenReason,
   type TooltipTriggerUserProps,
@@ -148,6 +168,12 @@ export {
   type UseChipListOptions,
   type UseChipListResult,
 } from './hooks/useChipList';
+export {
+  useHighlight,
+  type UseHighlightOptions,
+  type UseHighlightResult,
+} from './hooks/useHighlight';
+export { useModalLayer } from './hooks/useModalLayer';
 export {
   useRovingFocus,
   type RovingContainerUserProps,

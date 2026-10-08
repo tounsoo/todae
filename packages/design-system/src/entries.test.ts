@@ -56,4 +56,20 @@ describe('package entries', () => {
     }
     expect(readFileSync(join(import.meta.dirname, '../tsconfig.build.json'), 'utf8')).toContain('"include": ["src"]');
   });
+
+  it('declares the todae layer order before any layer is used', () => {
+    // A layer's place is fixed where it is first named, so a component rule
+    // ahead of this statement would put todae.components below todae.base.
+    const css = read('todae.css');
+    const order = '@layer todae.reset,todae.base,todae.components;';
+    expect(css.startsWith(order)).toBe(true);
+    for (const statement of css.match(/@layer [^;{]*;/g)!) expect(statement).toBe(order);
+  });
+
+  it('exports the stylesheet by name and by its dist path', () => {
+    // postcss-import ignores exports and reads dist/todae.css by path, so
+    // that path is exported too for resolvers that enforce exports.
+    expect(pkg.exports['./todae.css']).toBe('./dist/todae.css');
+    expect(pkg.exports['./dist/todae.css']).toBe('./dist/todae.css');
+  });
 });

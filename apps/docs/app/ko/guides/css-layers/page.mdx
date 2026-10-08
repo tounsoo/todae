@@ -1,0 +1,73 @@
+# CSS 레이어
+
+Todae의 CSS는 모두 `todae`라는 캐스케이드 레이어 하나에 있습니다. 그래서 회사 디자인 시스템이나 앱은 이름 하나로 Todae의 자리를 정합니다. 그 안의 순서는 다음과 같습니다.
+
+- `todae.reset`: 리셋용으로 비워 둔 레이어입니다.
+- `todae.base`: 토큰, 링크와 디스클로저 같은 네이티브 요소의 스타일, 그리고 시각적으로 숨기는 클래스.
+- `todae.components`: 모든 파트의 스타일.
+- `todae.theme`: `todae-tokens build`가 쓰는 회사 토큰. [Todae로 디자인 시스템 만들기](/guides/build-on-todae)를 보세요.
+
+선택자와 관계없이 뒤의 레이어가 앞의 레이어를 이기고, 어떤 레이어에도 속하지 않은 CSS는 모든 레이어를 이깁니다.
+
+## 레이어 밖 CSS는 설정이 필요 없습니다
+
+일반 스타일시트, CSS Modules, vanilla-extract의 기본 출력은 레이어 밖에 있으므로 설정 없이 Todae를 이깁니다. 파트에 붙인 클래스는 그 파트의 Todae 스타일을 이깁니다. 아래에서 설명하는 몇 가지 `!important` 규칙만 예외입니다.
+
+## 순서는 한 번, 가장 먼저 선언합니다
+
+스택에 자체 레이어가 있다면 모든 레이어의 이름을 담은 `@layer` 문 하나를 CSS 진입 파일 맨 위, 무엇이든 로드되기 전에 씁니다. 레이어의 자리는 처음 이름이 나온 곳에서 정해지고, 뒤에 오는 문으로는 바꿀 수 없습니다.
+
+`todae`는 리셋 다음, 회사 컴포넌트와 유틸리티 앞에 둡니다.
+
+```css
+@layer reset, todae, acme, app;
+```
+
+Todae 위의 회사 디자인 시스템은 자체 컴포넌트 CSS를 자기 레이어(여기서는 `acme`)에 넣습니다. 그래야 뒤 레이어나 레이어 밖에 있는 제품 코드가 여전히 이깁니다.
+
+Todae의 CSS는 같은 CSS 파일에서 그 문 다음에 import합니다. 그 파일이 로드되기 전에 JavaScript에서 import하면 `todae`가 먼저 이름 붙고, 다른 모든 레이어가 Todae를 이기게 됩니다.
+
+## Tailwind CSS 4
+
+Tailwind 4는 `theme`, `base`, `components`, `utilities` 레이어를 쓰고, 리셋(preflight)은 `base`에 있습니다. `todae`를 `base` 다음에 둡니다.
+
+```css
+@layer theme, base, todae, components, utilities;
+
+@import 'tailwindcss';
+@import '@tounsoo/todae/todae.css';
+@import './todae-theme.css';
+```
+
+그러면 preflight는 Todae 스타일에 지고, 파트에 붙인 `bg-red-500`이나 `px-8` 같은 유틸리티는 Todae 스타일을 이깁니다. Todae가 `base` 앞에 있으면 preflight가 버튼 배경과 링크 밑줄을 지우고, `utilities` 뒤에 있으면 파트에 붙인 유틸리티는 Todae가 같은 속성을 정하는 곳마다 집니다.
+
+유틸리티에서 Todae 토큰을 쓰려면 `@theme inline`으로 연결합니다.
+
+```css
+@theme inline {
+  --color-accent: var(--todae-color-accent-default);
+  --color-muted: var(--todae-color-fg-muted);
+}
+```
+
+`inline`이 없으면 Tailwind는 변수를 `:root`에 두므로, 모든 유틸리티가 그곳에서 계산된 값을 씁니다. 루트 아래의 `data-appearance`, `ThemeProvider`, 버튼 변형을 따라가지 않습니다.
+
+## Tailwind CSS 3
+
+Tailwind 3는 캐스케이드 레이어를 쓰지 않습니다. 그 `@layer`는 Tailwind 자체 지시어이고 출력은 레이어 밖에 있으므로, preflight가 모든 Todae 레이어를 이깁니다. PostCSS 설정에서 `tailwindcss`보다 앞에 둔 `postcss-import` 15 이상으로 preflight를 레이어에 넣습니다. postcss-import는 패키지의 `exports`를 읽지 않으므로 Todae의 CSS는 파일 경로로 import합니다.
+
+```css
+@layer tw-base, todae;
+
+@import 'tailwindcss/base' layer(tw-base);
+@import '@tounsoo/todae/dist/todae.css';
+@import './todae-theme.css';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+```
+
+또는 `corePlugins: { preflight: false }`로 preflight를 끄고 `@tailwind utilities`만 씁니다.
+
+## `!important`
+
+`!important`는 레이어 순서를 뒤집습니다. 앞 레이어의 important 선언이 뒤 레이어의 important 선언을 이기고, important 선언은 어떤 일반 선언도 이깁니다. Todae는 `todae-visually-hidden`과 숨긴 탭 패널처럼 반드시 지켜야 하는 규칙에만 표시하므로, `!important` 유틸리티로 이를 되돌릴 수 없습니다. Tailwind의 `!` 유틸리티는 Todae의 일반 스타일을 이깁니다.

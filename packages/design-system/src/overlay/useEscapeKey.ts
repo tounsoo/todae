@@ -1,10 +1,24 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import { modalsInFront } from './modalStack';
+import { frontModal, isModal } from './modalStack';
 
 type Entry = { handle: () => void; enabled: () => boolean; element: () => Element | null };
 
 const stack: Entry[] = [];
 let listening = false;
+
+/**
+ * The modal <dialog> in front: the one the key was pressed in, or, when focus
+ * has fallen back to the body, the one Todae opened last. Failing that, any
+ * open modal counts.
+ */
+function modalsInFront(target: EventTarget | null): Element[] {
+  let node = target instanceof Element ? target.closest('dialog[open]') : null;
+  while (node && !isModal(node)) node = node.parentElement?.closest('dialog[open]') ?? null;
+  if (node) return [node];
+  const front = frontModal();
+  if (front) return [front];
+  return [...document.querySelectorAll('dialog[open]')].filter(isModal);
+}
 
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return;

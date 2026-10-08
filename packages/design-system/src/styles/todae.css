@@ -1,4 +1,4 @@
-@layer todae.reset, todae.base, todae.components;
+@import './layers.css';
 
 @import './tokens.generated.css';
 @import './base.css';

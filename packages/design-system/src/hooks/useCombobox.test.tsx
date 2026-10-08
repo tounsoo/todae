@@ -73,6 +73,23 @@ function pointerSelect(option: HTMLElement) {
 }
 
 describe('useCombobox', () => {
+  it('reports the trimmed filter query, empty while the input shows the committed label', () => {
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: [
+          { value: 'sf', label: 'San Francisco' },
+          { value: 'sj', label: 'San Jose' },
+        ],
+        presentation: 'popover',
+        defaultValue: 'sj',
+      }),
+    );
+    expect(result.current.inputValue).toBe('San Jose');
+    expect(result.current.query).toBe('');
+    act(() => result.current.setInputValue(' san '));
+    expect(result.current.query).toBe('san');
+  });
+
   it('exports hooks and does not export Combobox chrome', () => {
     expect(api).toHaveProperty('useCombobox');
     expect(api).toHaveProperty('useSheetPresentation');
