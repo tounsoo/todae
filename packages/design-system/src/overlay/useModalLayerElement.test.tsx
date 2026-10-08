@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
-import { heldModals } from './modalStack';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { dropModal, heldModals, pushModal, subscribeModals } from './modalStack';
 import { useModalLayerElement } from './useModalLayerElement';
 
 afterEach(() => {
@@ -30,6 +30,19 @@ describe('useModalLayerElement', () => {
     el.removeAttribute('open');
     await waitFor(() => expect(heldModals()).toHaveLength(0));
     unmount();
+  });
+
+  it('notifies for the element in front only when it is shown again', () => {
+    const el = document.createElement('dialog');
+    const listener = vi.fn();
+    const unsubscribe = subscribeModals(listener);
+    pushModal(el);
+    pushModal(el);
+    expect(listener).toHaveBeenCalledTimes(1);
+    pushModal(el, true);
+    expect(listener).toHaveBeenCalledTimes(2);
+    dropModal(el);
+    unsubscribe();
   });
 
   it('leaves out an open element that is not shown modally', () => {

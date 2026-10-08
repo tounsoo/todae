@@ -8,9 +8,8 @@ import { useModalLayerElement } from '../overlay/useModalLayerElement';
  *
  * The element joins once `open` is true and it is shown with `showModal()`,
  * in either order, and stays until `close()`, also after `open` turns false.
- * Toast.Region moves its toasts into the modal in front, because everything outside a modal
- * dialog is inert. The element can attach later or be replaced while `open`
- * stays true.
+ * Toast.Region moves its toasts into the modal in front, because everything
+ * outside a modal dialog is inert.
  */
 export function useModalLayer(ref: RefObject<HTMLDialogElement | null>, open: boolean): void {
   const [node, setNode] = useState<HTMLDialogElement | null>(null);

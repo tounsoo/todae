@@ -7,11 +7,13 @@ function notify(): void {
 }
 
 /**
- * Puts `el` in front, or moves it there if it is already held. Notifies even
- * when it already was: showModal() again puts it last in the top layer.
+ * Puts `el` in front, or moves it there if it is already held. `reshown`
+ * notifies even when it already was in front: showModal() again puts it last
+ * in the top layer.
  */
-export function pushModal(el: HTMLDialogElement): void {
+export function pushModal(el: HTMLDialogElement, reshown = false): void {
   const index = open.indexOf(el);
+  if (index === open.length - 1 && index !== -1 && !reshown) return;
   if (index !== -1) open.splice(index, 1);
   open.push(el);
   notify();

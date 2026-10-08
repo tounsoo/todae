@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
+import type { AlertTone } from './Alert';
 
-export type ToastTone = 'info' | 'success' | 'warning' | 'critical';
+/** The same tones as Alert. */
+export type ToastTone = AlertTone;
 
 /** What `toaster.add()` takes. Add fields of your own through `createToaster<YourFields>()`. */
 export type ToastOptions = {

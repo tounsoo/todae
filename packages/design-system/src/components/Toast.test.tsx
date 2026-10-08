@@ -198,6 +198,26 @@ describe('Toast', () => {
     expect(document.activeElement).toBe(region);
   });
 
+  it('waits out a duration longer than setTimeout takes', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster();
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ title: 'Long', duration: 2 ** 32 }));
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    act(() => void vi.advanceTimersByTime(2 ** 31));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    act(() => void vi.advanceTimersByTime(2 ** 31));
+    expect(toaster.getSnapshot()[0]!.open).toBe(false);
+  });
+
+  it('shows at least one toast whatever the limit', () => {
+    const toaster = createToaster();
+    render(<Region toaster={toaster} limit={0} />);
+    act(() => void toaster.add({ title: 'Shown anyway' }));
+    expect(screen.getByText('Shown anyway')).toBeTruthy();
+  });
+
   it('marks the region expanded while focus is inside', async () => {
     const toaster = createToaster();
     render(<Region toaster={toaster} layout="stack" />);

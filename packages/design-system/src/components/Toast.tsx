@@ -25,6 +25,9 @@ import { composeHandlers, cx, useComposedRefs } from './props';
 import type { Toaster, ToastRecord, ToastTone } from './toaster';
 import styles from './Toast.module.css';
 
+// The longest delay setTimeout takes; a longer one fires at once.
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
+
 // Fallback for when the exit transition can't be read from computed style.
 // The real length comes from the toast.motion.exit token.
 export const TOAST_EXIT_MS = 160;
@@ -180,18 +183,24 @@ function Item<T extends object>({
   // Time shown so far, kept across pauses, so a new duration counts it too.
   // Back to zero when add() shows it again.
   const elapsed = useRef(0);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     elapsed.current = 0;
   }, [version]);
   useEffect(() => {
     if (!open || paused || !Number.isFinite(duration)) return;
     const start = performance.now();
-    const timer = window.setTimeout(() => toaster.dismiss(id), Math.max(0, duration - elapsed.current));
+    const left = Math.max(0, duration - elapsed.current);
+    // Longer than setTimeout takes: wait the most it takes, then go on counting.
+    const timer =
+      left > MAX_TIMEOUT_MS
+        ? window.setTimeout(() => setTick((n) => n + 1), MAX_TIMEOUT_MS)
+        : window.setTimeout(() => toaster.dismiss(id), left);
     return () => {
       window.clearTimeout(timer);
       elapsed.current += performance.now() - start;
     };
-  }, [open, paused, duration, version, toaster, id]);
+  }, [open, paused, duration, version, toaster, id, tick]);
 
   const dismiss = useCallback(() => toaster.dismiss(id), [toaster, id]);
   const item = useMemo(() => ({ toast: toast as ToastRecord, dismiss }), [toast, dismiss]);
@@ -363,7 +372,9 @@ function Region<T extends object = object>({
     };
   }, [host, syncFocused, whileMoving]);
 
-  const shown = toasts.slice(0, limit);
+  // At least one, so toasts never only wait.
+  const max = Math.max(1, Math.floor(limit) || 1);
+  const shown = toasts.slice(0, max);
   const hasOpen = shown.some((toast) => toast.open);
 
   // A toast that starts showing, new, shown again by add() or out of the
@@ -390,8 +401,8 @@ function Region<T extends object = object>({
 
   // A toast dismissed while it waited never showed, so it has no exit motion.
   useEffect(() => {
-    for (const toast of toasts.slice(limit)) if (!toast.open) toaster.remove(toast.id);
-  }, [toasts, limit, toaster]);
+    for (const toast of toasts.slice(max)) if (!toast.open) toaster.remove(toast.id);
+  }, [toasts, max, toaster]);
 
   useEffect(() => {
     if (!hotkey || !hasOpen) return;
@@ -430,11 +441,11 @@ function Region<T extends object = object>({
   const afterFocusLost = useCallback(
     (keyboard: boolean) => {
       if (!alive.current) return;
-      const others = toaster.getSnapshot().slice(0, limit).some((toast) => toast.open);
+      const others = toaster.getSnapshot().slice(0, max).some((toast) => toast.open);
       if (keyboard && others) sectionRef.current?.focus();
       else leave();
     },
-    [toaster, limit, leave],
+    [toaster, max, leave],
   );
 
   // Not when the host left the document with focus inside: place() puts it

@@ -8,21 +8,25 @@ import { dropModal, isModal, pushModal } from './modalStack';
  */
 export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean, shownModal = false): void {
   const latest = useRef({ open, shownModal });
-  const syncRef = useRef<() => void>(() => undefined);
+  const syncRef = useRef<(reshown?: boolean) => void>(() => undefined);
+  // First, so the effects below read this commit's values.
+  useLayoutEffect(() => {
+    latest.current = { open, shownModal };
+  });
   useLayoutEffect(() => {
     if (!el) return;
     // Joins while `open` is true and it is shown modally. Once in, it stays
     // until close(), also after `open` turns false: until then the page is
     // still inert, so the toasts must stay inside.
-    const sync = () => {
+    const sync = (reshown = false) => {
       if (!el.open || !(latest.current.shownModal || isModal(el))) dropModal(el);
-      else if (latest.current.open) pushModal(el);
+      else if (latest.current.open) pushModal(el, reshown);
     };
     syncRef.current = sync;
     sync();
     // showModal() and close() set and remove the open attribute, so this sees
     // the element open and close however it happens.
-    const observer = new MutationObserver(sync);
+    const observer = new MutationObserver(() => sync(true));
     observer.observe(el, { attributes: true, attributeFilter: ['open'] });
     return () => {
       observer.disconnect();
@@ -31,7 +35,6 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
     };
   }, [el]);
   useLayoutEffect(() => {
-    latest.current = { open, shownModal };
     syncRef.current();
   }, [open, shownModal]);
 }
