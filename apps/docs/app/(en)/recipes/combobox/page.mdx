@@ -118,10 +118,10 @@ No matches render a status row. `allowCreate` adds one `+ Create "{query}"` opti
 
 ## Highlight matches
 
-[useHighlight](/utilities/use-highlight) marks the typed text in each option without changing the option's markup. Pass `inputValue` as the query, put its `ref` on the list, and style the name with `::highlight(search)`.
+[useHighlight](/utilities/use-highlight) marks the text the list is filtered by without changing the options' markup. Pass the hook's `query` (empty while the input shows the selected label), put the `ref` on the list, and style the name with `::highlight(search)`.
 
 ```tsx
-const found = useHighlight({ name: 'search', query: cb.inputValue.trim() })
+const found = useHighlight({ name: 'search', query: cb.query })
 
 <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>…</OptionList.Root>
 ```

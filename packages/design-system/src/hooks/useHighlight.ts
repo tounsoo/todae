@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 export type UseHighlightOptions = {
   /** Name to style with ::highlight(name). Give each hook its own name. */
@@ -146,7 +146,7 @@ export function useHighlight({
   const source = patternSource(query);
   const flags = caseSensitive ? 'gu' : 'giu';
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!node || source === '') {
       setMatches(NO_MATCHES);
       return;
@@ -167,28 +167,28 @@ export function useHighlight({
 
   // One Highlight for the hook's whole life, so its priority and type survive
   // every change of ranges.
-  const [holder] = useState<Holder | null>(() =>
-    supported() ? { highlight: new Highlight(), order: ++mountCount } : null,
-  );
+  // order is set on the first mount, not at render, so a discarded render doesn't count.
+  const [holder] = useState<Holder | null>(() => (supported() ? { highlight: new Highlight(), order: 0 } : null));
   const highlight = holder?.highlight ?? null;
   const painted = useRef<{ matches: readonly AbstractRange[]; ranges: readonly AbstractRange[] }>({
     matches: NO_MATCHES,
     ranges: NO_MATCHES,
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!holder) return;
+    if (holder.order === 0) holder.order = ++mountCount;
     claim(name, holder);
     return () => release(name, holder);
   }, [holder, name]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!highlight) return;
     highlight.priority = priority ?? 0;
     highlight.type = type ?? 'highlight';
   }, [highlight, priority, type]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!highlight) return;
     const extra = ranges ?? NO_MATCHES;
     const last = painted.current;

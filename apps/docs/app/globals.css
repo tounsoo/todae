@@ -443,7 +443,8 @@ caption {
 }
 
 /* Ranges the useHighlight demo paints. */
-::highlight(docs-search) {
+::highlight(docs-search),
+::highlight(docs-combobox-match) {
   background-color: var(--todae-color-status-warning-bg);
   color: var(--todae-color-fg-default);
 }

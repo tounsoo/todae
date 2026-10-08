@@ -87,7 +87,7 @@ export function ComboboxSingle() {
 
 export function ComboboxHighlight() {
   const cb = useCombobox({ options: CITIES, presentation: 'popover' });
-  const found = useHighlight({ name: 'docs-search', query: cb.inputValue.trim() });
+  const found = useHighlight({ name: 'docs-combobox-match', query: cb.query });
   return (
     <div className="labelled-field">
       <Label htmlFor={cb.ids.input}>City</Label>
