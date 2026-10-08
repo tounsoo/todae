@@ -566,4 +566,24 @@ describe('Toolbar', () => {
     );
     await waitFor(() => expect([button('Left').tabIndex, button('Right').tabIndex]).toEqual([0, -1]));
   });
+
+  it('moves on with the arrow keys from a control that became disabled while focused', () => {
+    function Page({ off }: { off: boolean }) {
+      return (
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root disabled={off}>Undo</Button.Root>
+          <Button.Root>Redo</Button.Root>
+        </Toolbar.Root>
+      );
+    }
+    const { rerender } = render(<Page off={false} />);
+    button('Undo').focus();
+    rerender(<Page off />);
+    fireEvent.keyDown(button('Undo'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(button('Redo'));
+    button('Undo').focus();
+    fireEvent.keyDown(button('Undo'), { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(button('A'));
+  });
 });

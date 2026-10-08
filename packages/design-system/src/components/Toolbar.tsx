@@ -202,16 +202,29 @@ function Root({
     const move = nextKey(event.key, orientation, () => getComputedStyle(root).direction === 'rtl');
     if (!move && event.key !== 'Home' && event.key !== 'End') return;
     const items = runsOf(root).flat();
-    const index = items.indexOf(target);
-    if (index === -1) return;
-    let next = index;
+    let index = items.indexOf(target);
+    // A control that became disabled while focused is no longer an item, so
+    // the arrow keys go on from its place between its neighbours.
+    let between = false;
+    if (index === -1) {
+      if (target.parentElement?.closest(TOOLBAR_BOUNDARY) !== root || !target.matches(FOCUSABLE)) return;
+      if (ownsArrows(target, root)) return;
+      const after = items.findIndex((item) => target.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING);
+      index = after === -1 ? items.length : after;
+      between = true;
+    }
+    if (items.length === 0) return;
+    let next: number | null = index;
     if (event.key === 'Home') next = 0;
     else if (event.key === 'End') next = items.length - 1;
     else {
-      const to = index + (move === 'next' ? 1 : -1);
+      // From a place between items, the next one is at `index` itself.
+      const to = move === 'next' ? (between ? index : index + 1) : index - 1;
       if (to >= 0 && to < items.length) next = to;
       else if (loop) next = (to + items.length) % items.length;
+      else if (between) next = null;
     }
+    if (next === null) return;
     event.preventDefault();
     items[next]?.focus();
   };
