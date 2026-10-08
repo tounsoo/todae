@@ -15,6 +15,7 @@ export const SITE_GROUPS = [
       ['/radio', 'Radio'],
       ['/switch', 'Switch'],
       ['/dialog', 'Dialog'],
+      ['/drawer', 'Drawer'],
       ['/popover', 'Popover'],
       ['/menu', 'Menu'],
       ['/tooltip', 'Tooltip'],

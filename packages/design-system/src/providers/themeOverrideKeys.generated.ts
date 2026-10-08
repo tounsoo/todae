@@ -441,6 +441,14 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'toolbar.gap',
   'toolbar.separator.color',
   'toolbar.separator.thickness',
+  'drawer.bg',
+  'drawer.border',
+  'drawer.fg',
+  'drawer.motion.enter',
+  'drawer.motion.exit',
+  'drawer.padding.x',
+  'drawer.padding.y',
+  'drawer.size',
 ] as const;
 
 export const THEME_OVERRIDE_TYPES = {
@@ -878,4 +886,12 @@ export const THEME_OVERRIDE_TYPES = {
   'toolbar.gap': 'dimension',
   'toolbar.separator.color': 'color',
   'toolbar.separator.thickness': 'dimension',
+  'drawer.bg': 'color',
+  'drawer.border': 'color',
+  'drawer.fg': 'color',
+  'drawer.motion.enter': 'duration',
+  'drawer.motion.exit': 'duration',
+  'drawer.padding.x': 'dimension',
+  'drawer.padding.y': 'dimension',
+  'drawer.size': 'dimension',
 } as const;

@@ -238,7 +238,7 @@ describe('docs mcp tools', () => {
       whenToUse:
         'Centered modal task or confirm (native `<dialog>`, controlled `open`). Name via `Dialog.Title` or `aria-label`. Escape + scrim dismiss by default.',
       whenNotToUse:
-        'Mobile picker from the bottom → BottomSheet. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).',
+        'Mobile picker from the bottom → BottomSheet. Full-height side panel → Drawer. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).',
     });
     expect(whenToUse('Dialog')).not.toHaveProperty('scope');
     expect(whenToUse('Field.Textarea')).toMatchObject({

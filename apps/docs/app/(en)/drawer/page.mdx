@@ -1,0 +1,32 @@
+import { DrawerBasic } from '../../../components/demos/DrawerDemo';
+
+# Drawer
+
+A modal native `<dialog>` pinned to the start or end edge, full height. `Drawer.Root` takes the same props as `Dialog.Root` plus `side`, and the inside is built from Dialog's parts: `Dialog.Header`, `Dialog.Title`, `Dialog.Description`, `Dialog.Body`, `Dialog.Footer` and `Dialog.Close`.
+
+`side` is `end` by default. Start and end follow text direction, so in right-to-left text `end` is the left edge.
+
+<Example>
+  <DrawerBasic />
+  <DrawerBasic side="start" />
+</Example>
+
+```tsx
+<Drawer.Root open={open} onOpenChange={setOpen}>
+  <Dialog.Header>
+    <Dialog.Title>Filters</Dialog.Title>
+    <Dialog.Close>Close</Dialog.Close>
+  </Dialog.Header>
+  <Dialog.Body>…</Dialog.Body>
+</Drawer.Root>
+```
+
+## When to use
+
+**When:** A modal side panel for a task that needs room, such as filters, settings or details beside a list. Name it with `Dialog.Title` or `aria-label`.
+
+**When not:** A short centered task or confirm → Dialog. A mobile picker from the bottom → BottomSheet. A panel that leaves the page usable → product layout, not a modal.
+
+## Props
+
+<PropsTable name="Drawer.Root" />

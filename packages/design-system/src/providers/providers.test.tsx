@@ -309,7 +309,7 @@ describe('motion, font family and shadow overrides', () => {
 
 describe('contract-only components', () => {
   it('takes motion and stacking from tokens', () => {
-    for (const name of ['Dialog.module.css', 'BottomSheet.module.css']) {
+    for (const name of ['Dialog.module.css', 'BottomSheet.module.css', 'Drawer.module.css']) {
       const css = readFileSync(join(import.meta.dirname, '../components', name), 'utf8');
       expect(css, name).not.toMatch(/\d(?:ms|s)\b|cubic-bezier|z-index:\s*\d{2,}/);
     }

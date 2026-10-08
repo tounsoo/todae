@@ -4392,6 +4392,78 @@
       "ref": null,
       "layer": "contract",
       "context": null
+    },
+    {
+      "path": "drawer.bg",
+      "type": "color",
+      "cssVar": "--todae-drawer-bg",
+      "cssValue": "var(--todae-color-bg-elevated)",
+      "ref": "color.bg.elevated",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.border",
+      "type": "color",
+      "cssVar": "--todae-drawer-border",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.fg",
+      "type": "color",
+      "cssVar": "--todae-drawer-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.motion.enter",
+      "type": "duration",
+      "cssVar": "--todae-drawer-motion-enter",
+      "cssValue": "var(--todae-motion-duration-slow)",
+      "ref": "motion.duration.slow",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.motion.exit",
+      "type": "duration",
+      "cssVar": "--todae-drawer-motion-exit",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-drawer-padding-x",
+      "cssValue": "var(--todae-space-overlay-padding)",
+      "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-drawer-padding-y",
+      "cssValue": "var(--todae-space-overlay-padding)",
+      "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.size",
+      "type": "dimension",
+      "cssVar": "--todae-drawer-size",
+      "cssValue": "24rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
     }
   ]
 }

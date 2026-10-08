@@ -17,6 +17,7 @@ const HREFS = [
   '/radio',
   '/switch',
   '/dialog',
+  '/drawer',
   '/popover',
   '/menu',
   '/tooltip',
