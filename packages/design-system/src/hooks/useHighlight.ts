@@ -12,7 +12,7 @@ export type UseHighlightOptions = {
   /** Which highlight paints on top where two overlap. Higher wins. */
   priority?: number;
   /** Highlight type, for spelling and grammar marks. */
-  type?: HighlightType;
+  type?: 'highlight' | 'spelling-error' | 'grammar-error';
 };
 
 export type UseHighlightResult = {

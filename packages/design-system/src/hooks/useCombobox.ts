@@ -83,7 +83,7 @@ export type UseComboboxResult = {
   isSheet: boolean;
   open: boolean;
   inputValue: string;
-  /** The trimmed query the options are filtered with. Empty while the input shows the committed label. */
+  /** The trimmed input text. Empty while the input shows the committed label, when the list is unfiltered. */
   query: string;
   value: string | null | string[];
   items: ComboboxItem[];
