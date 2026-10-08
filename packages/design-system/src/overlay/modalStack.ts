@@ -25,3 +25,34 @@ export function frontModal(): HTMLDialogElement | null {
 export function heldModals(): readonly HTMLDialogElement[] {
   return open;
 }
+
+function isModal(dialog: Element): boolean {
+  // aria-modal first: it is cheap, and an engine without :modal, such as
+  // jsdom, relies on it.
+  if (dialog.getAttribute('aria-modal') === 'true') return true;
+  try {
+    return dialog.matches(':modal');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The modal <dialog> in front: the one target is in, or, when focus has
+ * fallen back to the body, the one Todae opened last. Failing that, any open
+ * modal counts, last in document order last.
+ */
+export function modalsInFront(target: EventTarget | null): Element[] {
+  let node = target instanceof Element ? target.closest('dialog[open]') : null;
+  while (node && !isModal(node)) node = node.parentElement?.closest('dialog[open]') ?? null;
+  if (node) return [node];
+  const front = frontModal();
+  if (front) return [front];
+  return [...document.querySelectorAll('dialog[open]')].filter(isModal);
+}
+
+/** The one modal <dialog> in front, judged from where focus is, else null. */
+export function frontModalElement(): HTMLElement | null {
+  const modals = modalsInFront(document.activeElement);
+  return (modals[modals.length - 1] as HTMLElement | undefined) ?? null;
+}

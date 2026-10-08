@@ -123,11 +123,81 @@ describe('useAnnouncer', () => {
     expect(live('polite').textContent).toBe('Saved');
   });
 
-  it('keeps the pending write on the live element, where every copy of the package sees it', () => {
+  it('keeps the pending write on <html>, where every copy of the package sees it', () => {
     render(<Speaker message="Saved" />);
-    expect(live('polite').dataset.todaePending).toBeTruthy();
+    expect(document.documentElement.dataset.todaeAnnouncePolite).toBeTruthy();
     act(() => vi.advanceTimersByTime(100));
-    expect(live('polite').dataset.todaePending).toBeUndefined();
+    expect(document.documentElement.dataset.todaeAnnouncePolite).toBeUndefined();
+  });
+
+  // A modal dialog the way an engine without :modal reports one.
+  function modal(attrs: Record<string, string> = {}) {
+    const dialog = document.createElement('dialog');
+    dialog.setAttribute('open', '');
+    dialog.setAttribute('aria-modal', 'true');
+    for (const [name, value] of Object.entries(attrs)) dialog.setAttribute(name, value);
+    document.body.append(dialog);
+    return dialog;
+  }
+  const bodyLive = () => document.body.querySelector<HTMLElement>(':scope > [data-todae-announcer] [aria-live="polite"]')!;
+  const liveIn = (host: Element) => host.querySelector<HTMLElement>(':scope > [data-todae-announcer] [aria-live="polite"]');
+  afterEach(() => {
+    for (const dialog of document.querySelectorAll('dialog')) dialog.remove();
+  });
+
+  it('writes inside a modal that opened after the message was sent', () => {
+    render(<Speaker message="Opening editor" />);
+    const dialog = modal();
+    act(() => vi.advanceTimersByTime(100));
+    // A new region in the dialog sits empty for a moment first.
+    expect(liveIn(dialog)?.textContent).toBe('');
+    act(() => vi.advanceTimersByTime(100));
+    expect(liveIn(dialog)?.textContent).toBe('Opening editor');
+    expect(bodyLive().textContent).toBe('');
+  });
+
+  it('waits for a modal in its exit motion to close, then writes in body', () => {
+    const dialog = modal({ 'data-exiting': '' });
+    render(<Speaker message="Deleted" />);
+    act(() => vi.advanceTimersByTime(300));
+    expect(bodyLive().textContent).toBe('');
+    dialog.remove();
+    act(() => vi.advanceTimersByTime(100));
+    expect(bodyLive().textContent).toBe('Deleted');
+  });
+
+  it('writes anyway once a modal has looked like it was closing for too long', () => {
+    const dialog = modal({ 'data-exiting': '' });
+    render(<Speaker message="Deleted" />);
+    act(() => vi.advanceTimersByTime(1200));
+    expect(liveIn(dialog)?.textContent).toBe('Deleted');
+  });
+
+  it('writes in the modal that holds focus when several are open', () => {
+    const inner = modal();
+    const outer = modal();
+    const button = document.createElement('button');
+    inner.append(button);
+    button.focus();
+    render(<Speaker message="Saved" />);
+    act(() => vi.advanceTimersByTime(200));
+    expect(liveIn(inner)?.textContent).toBe('Saved');
+    expect(liveIn(outer)).toBeNull();
+  });
+
+  it('lets a newer message win after the region was removed', () => {
+    const { rerender } = render(<Speaker message="Loading" />);
+    for (const node of regions()) node.remove();
+    rerender(<Speaker message="Loaded" />);
+    act(() => vi.advanceTimersByTime(500));
+    expect(bodyLive().textContent).toBe('Loaded');
+  });
+
+  it('hides the region with inline styles too', () => {
+    render(<Speaker />);
+    const region = document.querySelector<HTMLElement>('[data-todae-announcer]')!;
+    expect(region.style.position).toBe('absolute');
+    expect(region.style.overflow).toBe('hidden');
   });
 
   it('recreates the region when the page removed it', () => {

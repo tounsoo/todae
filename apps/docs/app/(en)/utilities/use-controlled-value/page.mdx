@@ -1,6 +1,6 @@
 # useControlledValue
 
-`useControlledValue(controlled, defaultValue, onChange)` is [useControlledState](/utilities/use-controlled-state) with the change callback built in. It returns `[value, change]`. `change(next, ...args)` does nothing when `next` equals the value from the last render (`Object.is`), so two calls in one event both go through. Otherwise it stores `next` when uncontrolled, then calls `onChange(next, ...args)`, controlled or not. Tabs and Menu use it.
+`useControlledValue(controlled, defaultValue, onChange)` is [useControlledState](/utilities/use-controlled-state) with the change callback built in. It returns `[value, change]`. `change(next, ...args)` does nothing when `next` equals the value from the last render (`Object.is`), so two calls with the same new value in one event both call `onChange`. Otherwise it stores `next` when uncontrolled, then calls `onChange(next, ...args)`, controlled or not. Tabs and Menu use it.
 
 ```tsx
 function Filter({ value, defaultValue = 'all', onValueChange }: FilterProps) {
