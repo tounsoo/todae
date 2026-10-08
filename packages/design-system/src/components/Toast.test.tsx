@@ -502,6 +502,15 @@ describe('matchesHotkey', () => {
     expect(matchesHotkey(key({ key: 'a', code: 'KeyQ', altKey: true }), 'Alt+A')).toBe(true);
   });
 
+  it('takes Cmd and Option as Meta and Alt, and never the bare key for an unknown name', () => {
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK', metaKey: true }), 'Cmd+K')).toBe(true);
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK', metaKey: true }), 'Command+K')).toBe(true);
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK' }), 'Cmd+K')).toBe(false);
+    expect(matchesHotkey(key({ key: '†', code: 'KeyT', altKey: true }), 'Option+T')).toBe(true);
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK' }), 'Hyper+K')).toBe(false);
+    expect(matchesHotkey(key({ key: 'k', code: 'KeyK', metaKey: true }), 'Hyper+K')).toBe(false);
+  });
+
   it('ignores a keydown with no key, as Chrome sends for an autofill pick', () => {
     const event = { altKey: false, ctrlKey: false, metaKey: false, shiftKey: false } as unknown as KeyboardEvent;
     expect(matchesHotkey(event, 'F8')).toBe(false);

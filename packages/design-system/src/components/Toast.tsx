@@ -128,27 +128,57 @@ function alongside<E>(theirs: ((event: E) => void) | undefined, ours: (event: E)
 
 /** Whether a key pressed in `target` types there, so a typing hotkey leaves it alone. */
 function typesIn(target: EventTarget | null, hotkey: string): boolean {
-  const parts = hotkey.split('+').map((part) => part.trim().toLowerCase());
-  const key = parts.pop() ?? '';
-  const has = (...names: string[]) => parts.some((part) => names.includes(part));
+  const parsed = parseHotkey(hotkey);
+  if (!parsed) return false;
+  const { key, modifiers } = parsed;
   // A function key types nothing anywhere, nor does a chord with Meta or
   // Ctrl. Ctrl with Alt is AltGr on Windows, which types.
-  if (/^f\d{1,2}$/.test(key) || has('meta') || (has('ctrl', 'control') && !has('alt'))) return false;
+  if (/^f\d{1,2}$/.test(key) || modifiers.has('meta') || (modifiers.has('ctrl') && !modifiers.has('alt'))) return false;
   if (!(target instanceof HTMLElement)) return false;
   return target.isContentEditable || target.matches('input, textarea, select');
 }
 
 const MODIFIERS = ['alt', 'ctrl', 'meta', 'shift'] as const;
+type Modifier = (typeof MODIFIERS)[number];
+
+// The names people write for each modifier, such as macOS's Cmd and Option.
+const MODIFIER_NAMES: Record<string, Modifier> = {
+  alt: 'alt',
+  option: 'alt',
+  opt: 'alt',
+  ctrl: 'ctrl',
+  control: 'ctrl',
+  meta: 'meta',
+  cmd: 'meta',
+  command: 'meta',
+  shift: 'shift',
+};
+
+/**
+ * The key and modifiers of a hotkey such as "Alt+T", or null when it names a
+ * modifier this doesn't know, so a typo never turns into the bare key.
+ */
+function parseHotkey(hotkey: string): { key: string; modifiers: ReadonlySet<Modifier> } | null {
+  const parts = hotkey.split('+').map((part) => part.trim().toLowerCase());
+  const key = parts.pop();
+  if (!key) return null;
+  const modifiers = new Set<Modifier>();
+  for (const part of parts) {
+    const modifier = MODIFIER_NAMES[part];
+    if (!modifier) return null;
+    modifiers.add(modifier);
+  }
+  return { key, modifiers };
+}
 
 /** Whether `event` is `hotkey`, such as "F8" or "Alt+T", with exactly those modifiers. */
 export function matchesHotkey(event: KeyboardEvent, hotkey: string): boolean {
-  const parts = hotkey.split('+').map((part) => part.trim().toLowerCase());
-  const key = parts.pop();
-  if (!key) return false;
+  const parsed = parseHotkey(hotkey);
+  if (!parsed) return false;
+  const { key, modifiers: wanted } = parsed;
   // Chrome sends keydown events with no key, such as for an autofill pick.
   const eventKey = event.key ?? '';
   const eventCode = event.code ?? '';
-  const wanted = new Set(parts.map((part) => (part === 'control' ? 'ctrl' : part)));
   for (const modifier of MODIFIERS) {
     if (event[`${modifier}Key`] !== wanted.has(modifier)) return false;
   }
