@@ -353,6 +353,39 @@ describe('Toast in the top layer', () => {
     expect(screen.getByRole('region').contains(hit)).toBe(true);
   });
 
+  it('keeps timing the others after a mouse click dismisses one', async () => {
+    const toaster = createToaster({ duration: 400 });
+    render(
+      <Themed>
+        <button type="button">Away</button>
+        <Region toaster={toaster} />
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ title: 'Stays', duration: 600 });
+      toaster.add({ title: 'Goes', duration: Infinity });
+    });
+    await screen.findByRole('button', { name: 'Undo Goes' });
+    const goes = screen.getByText('Goes', { selector: 'p' }).closest('li')!;
+    await userEvent.click(goes.querySelector('button[aria-label="Dismiss"]')!);
+    await userEvent.hover(screen.getByRole('button', { name: 'Away' }));
+    await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0), { timeout: 3000 });
+  });
+
+  it('keeps timing after a click on a toast\'s text once the pointer leaves', async () => {
+    const toaster = createToaster({ duration: 400 });
+    render(
+      <Themed>
+        <button type="button">Away</button>
+        <Region toaster={toaster} />
+      </Themed>,
+    );
+    act(() => void toaster.add({ title: 'Read me', duration: 1500 }));
+    await userEvent.click(await screen.findByText('Read me', { selector: 'p' }));
+    await userEvent.hover(screen.getByRole('button', { name: 'Away' }));
+    await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0), { timeout: 3000 });
+  });
+
   it('shows at most limit toasts, and the next one when one leaves', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(

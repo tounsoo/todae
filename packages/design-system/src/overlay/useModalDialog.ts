@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
-import { useModalLayer } from '../hooks/useModalLayer';
+import { useModalLayerElement } from '../hooks/useModalLayer';
 import { inToastHostWithin } from './tabbables';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
@@ -79,7 +79,7 @@ export function useModalDialog({
   // In the stack from showModal() until close() at the end of the exit
   // motion, while the page is still inert. Toasts moved in stay usable, and
   // as their own top layer boxes they don't fade with the element.
-  useModalLayer(dialogRef, present);
+  useModalLayerElement(node, present);
 
   const cancelledAt = useRef(-Infinity);
   useLayoutEffect(() => {

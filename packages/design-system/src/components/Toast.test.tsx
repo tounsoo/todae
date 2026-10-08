@@ -142,7 +142,7 @@ describe('Toast', () => {
     expect(toaster.getSnapshot()[0]!.open).toBe(false);
   });
 
-  it('marks the region expanded while focus is inside', () => {
+  it('marks the region expanded while focus is inside', async () => {
     const toaster = createToaster();
     render(<Region toaster={toaster} layout="stack" />);
     act(() => void toaster.add({ title: 'A' }));
@@ -151,7 +151,55 @@ describe('Toast', () => {
     act(() => screen.getByRole('button', { name: 'Undo' }).focus());
     expect(region.hasAttribute('data-expanded')).toBe(true);
     act(() => screen.getByRole('button', { name: 'Undo' }).blur());
-    expect(region.hasAttribute('data-expanded')).toBe(false);
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+  });
+
+  it('keeps keyboard focus in the region when a focused toast leaves and others remain', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} />);
+    act(() => {
+      toaster.add({ id: 'a', title: 'A' });
+      toaster.add({ id: 'b', title: 'B' });
+    });
+    act(() => screen.getAllByRole('button', { name: 'Dismiss' })[0]!.focus());
+    act(() => toaster.remove('b'));
+    expect(document.activeElement).toBe(screen.getByRole('region'));
+  });
+
+  it('sends focus back where it came in from when the last toast leaves', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <>
+        <button type="button">Before</button>
+        <Region toaster={toaster} />
+      </>,
+    );
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    const before = screen.getByRole('button', { name: 'Before' });
+    act(() => before.focus());
+    act(() => screen.getByRole('button', { name: 'Undo' }).focus());
+    act(() => toaster.remove('a'));
+    expect(document.activeElement).toBe(before);
+  });
+
+  it('keeps focus in the dialog the toasts sit in when the last one leaves', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <>
+        <Dialog.Root open onOpenChange={() => undefined} aria-label="d">
+          <button type="button">Own</button>
+        </Dialog.Root>
+        <Region toaster={toaster} />
+      </>,
+    );
+    act(() => void toaster.add({ id: 'a', title: 'A' }));
+    const dialog = screen.getByRole('dialog');
+    const undo = screen.getByRole('button', { name: 'Undo' });
+    expect(dialog.contains(undo)).toBe(true);
+    // Reached with no known origin, as by a click with nothing focused before.
+    act(() => undo.focus());
+    act(() => toaster.remove('a'));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Own' }));
   });
 
   it('stays expanded when the window loses focus with focus still inside', () => {

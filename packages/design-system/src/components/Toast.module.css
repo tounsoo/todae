@@ -153,6 +153,7 @@
 
   .region[data-layout='stack'] .item[data-exiting] {
     opacity: 0;
+    transition-duration: var(--todae-toast-motion-exit);
   }
 
   @media (prefers-reduced-motion: reduce) {

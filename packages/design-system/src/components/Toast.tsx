@@ -12,10 +12,11 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { frontModal, subscribeModals } from '../overlay/modalStack';
+import { frontModal, isModal, subscribeModals } from '../overlay/modalStack';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { isPopoverOpen } from '../overlay/usePopoverSync';
-import { TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables';
+import { getTabbables, TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables';
+import { useFocusLeave } from '../overlay/useFocusLeave';
 import { Button, type ButtonRootProps } from './Button';
 import { useDismissLabel } from './dismissLabel';
 import { composeHandlers, cx, useComposedRefs } from './props';
@@ -69,10 +70,35 @@ function show(el: HTMLElement): void {
  * anything shown since. Focus inside comes back to where it was.
  */
 function raise(el: HTMLElement): void {
+  // Hiding it would hide a modal opened from a toast inside it.
+  if (!el.isConnected || hasOpenModal(el)) return;
   keepingFocus(el, () => {
     if (isPopoverOpen(el)) el.hidePopover();
     el.showPopover();
   });
+}
+
+/**
+ * Keyboard focus, as opposed to focus a pointer press left behind. Only
+ * keyboard focus pauses the toasts; the pointer pauses them by hovering.
+ */
+function isKeyboardFocus(el: Element): boolean {
+  try {
+    return el.matches(':focus-visible');
+  } catch {
+    return true;
+  }
+}
+
+/** Focuses `el` and says whether it took focus: an inert or hidden one does not. */
+function tryFocus(el: HTMLElement | null | undefined): boolean {
+  if (!el?.isConnected) return false;
+  el.focus({ preventScroll: true });
+  return el.ownerDocument.activeElement === el;
+}
+
+function hasOpenModal(el: HTMLElement): boolean {
+  return [...el.querySelectorAll('dialog[open]')].some(isModal);
 }
 
 /** Runs `change`, which may hide `el`, and puts focus back where it was inside. */
@@ -117,7 +143,7 @@ function Item<T extends object>({
   toast: ToastRecord<T>;
   toaster: Toaster<T>;
   paused: boolean;
-  onFocusLost: () => void;
+  onFocusLost: (keyboard: boolean) => void;
   children: ReactNode;
 }) {
   const [node, setNode] = useState<HTMLLIElement | null>(null);
@@ -126,13 +152,21 @@ function Item<T extends object>({
   const { id, open, duration, version } = toast;
 
   useEffect(() => {
-    if (present) return;
-    // Removing the element that has focus sends no blur, so focus is moved
-    // on before it goes.
-    const hadFocus = Boolean(node?.contains(node.ownerDocument.activeElement));
-    toaster.remove(id);
-    if (hadFocus) onFocusLost();
-  }, [present, toaster, id, node, onFocusLost]);
+    if (!present) toaster.remove(id);
+  }, [present, toaster, id]);
+
+  // Removing the element that has focus sends no blur, so focus moves on
+  // first. A layout cleanup runs before the element leaves, however it goes:
+  // after its exit motion, remove(), or a lower limit.
+  const focusLost = useRef(onFocusLost);
+  focusLost.current = onFocusLost;
+  useLayoutEffect(() => {
+    if (!node) return;
+    return () => {
+      const active = node.ownerDocument.activeElement;
+      if (active && node.contains(active)) focusLost.current(isKeyboardFocus(active));
+    };
+  }, [node]);
 
   // Time left, kept across pauses. Full again when add() shows it again.
   const remaining = useRef<number>(duration);
@@ -158,11 +192,12 @@ function Item<T extends object>({
       data-entered={entered ? '' : undefined}
       data-exiting={exiting ? '' : undefined}
       onKeyDown={(event) => {
-        if (event.key !== 'Escape' || !open) return;
-        // Escape belongs to the toast, not to a dialog or popover behind it.
+        if (event.key !== 'Escape') return;
+        // Escape belongs to the toast, not to a dialog or popover behind it,
+        // also while it leaves.
         event.preventDefault();
         event.stopPropagation();
-        dismiss();
+        if (open) dismiss();
       }}
     >
       <ItemContext.Provider value={{ toast: toast as ToastRecord, dismiss }}>{children}</ItemContext.Provider>
@@ -201,7 +236,18 @@ function Region<T extends object = object>({
   const sectionRef = useRef<HTMLElement>(null);
   const sectionRefs = useComposedRefs(sectionRef, ref);
   const listRef = useRef<HTMLOListElement>(null);
-  const returnFocus = useRef<HTMLElement | null>(null);
+  // Where focus came from into the region, to go back to. Never inside it.
+  const origin = useRef<HTMLElement | null>(null);
+  // Set while Todae moves or shows the host again, so the focus events that
+  // causes don't count as focus coming in.
+  const moving = useRef(false);
+  const alive = useRef(true);
+  useLayoutEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -211,7 +257,16 @@ function Region<T extends object = object>({
   // removed or moved, so it is read again after those.
   const syncFocused = useCallback(() => {
     const section = sectionRef.current;
-    setFocused(Boolean(section?.contains(section.ownerDocument.activeElement)));
+    const active = section?.ownerDocument.activeElement;
+    setFocused(Boolean(active && section.contains(active) && isKeyboardFocus(active)));
+  }, []);
+  const whileMoving = useCallback((change: () => void) => {
+    moving.current = true;
+    try {
+      change();
+    } finally {
+      moving.current = false;
+    }
   }, []);
 
   // A host element of Todae's own, so it can move into a dialog and back
@@ -242,16 +297,19 @@ function Region<T extends object = object>({
     const home = homeRef.current;
     if (!host || !home) return;
     const place = () => {
-      const target = frontModal() ?? home;
-      keepingFocus(host, () => {
-        if (host.parentNode !== target) target.append(host);
-        show(host);
-      });
+      // Not a modal opened from a toast, which sits inside the host itself.
+      const target = frontModal((modal) => host.contains(modal)) ?? home;
+      whileMoving(() =>
+        keepingFocus(host, () => {
+          if (host.parentNode !== target) target.append(host);
+          show(host);
+        }),
+      );
       syncFocused();
     };
     place();
     return subscribeModals(place);
-  }, [host, syncFocused]);
+  }, [host, syncFocused, whileMoving]);
 
   const shown = toasts.slice(0, limit);
   const hasOpen = shown.some((toast) => toast.open);
@@ -266,8 +324,8 @@ function Region<T extends object = object>({
     const keys = openKey ? openKey.split('\n') : [];
     const fresh = keys.some((key) => !raisedKeys.current.has(key));
     raisedKeys.current = new Set(keys);
-    if (fresh) raise(host);
-  }, [host, openKey]);
+    if (fresh) whileMoving(() => raise(host));
+  }, [host, openKey, whileMoving]);
 
   useEffect(() => {
     const doc = homeRef.current?.ownerDocument;
@@ -291,34 +349,44 @@ function Region<T extends object = object>({
       const section = sectionRef.current;
       if (!section || !matchesHotkey(event, hotkey)) return;
       event.preventDefault();
-      const active = doc.activeElement;
-      if (active instanceof HTMLElement && !section.contains(active)) returnFocus.current = active;
       section.focus();
     };
     doc.addEventListener('keydown', onKey);
     return () => doc.removeEventListener('keydown', onKey);
   }, [hotkey, hasOpen]);
 
+  // Focus leaves the region: back where it came from, else to the modal the
+  // region sits in, as the page outside it is inert, else out of the region
+  // rather than lost with an element about to be removed.
   const leave = useCallback(() => {
-    const target = returnFocus.current;
-    returnFocus.current = null;
     const section = sectionRef.current;
-    const active = section?.ownerDocument.activeElement;
-    if (target?.isConnected) target.focus();
-    // With nowhere to go back to, out of the region rather than lost with
-    // the element about to be removed.
-    else if (active instanceof HTMLElement && section?.contains(active)) active.blur();
+    if (!section) return;
+    const from = origin.current;
+    origin.current = null;
+    const active = section.ownerDocument.activeElement;
+    const modal = host?.parentElement instanceof HTMLDialogElement ? host.parentElement : null;
+    if (!tryFocus(from) && !(modal && tryFocus(getTabbables(modal)[0] ?? null))) {
+      if (active instanceof HTMLElement && section.contains(active)) active.blur();
+    }
     syncFocused();
-  }, [syncFocused]);
+  }, [host, syncFocused]);
 
-  // A toast with focus is leaving: focus goes to the region while others
-  // remain, so the keyboard stays here, and otherwise back where the hotkey
-  // came from.
-  const afterFocusLost = useCallback(() => {
-    const others = toaster.getSnapshot().slice(0, limit).some((toast) => toast.open);
-    if (others) sectionRef.current?.focus();
-    else leave();
-  }, [toaster, limit, leave]);
+  // A focused toast is leaving. A keyboard user stays in the region while
+  // other toasts remain, so the next Tab reaches them; otherwise focus leaves.
+  const afterFocusLost = useCallback(
+    (keyboard: boolean) => {
+      if (!alive.current) return;
+      const others = toaster.getSnapshot().slice(0, limit).some((toast) => toast.open);
+      if (keyboard && others) sectionRef.current?.focus();
+      else leave();
+    },
+    [toaster, limit, leave],
+  );
+
+  const focusLeave = useFocusLeave(() => {
+    origin.current = null;
+    setFocused(false);
+  });
 
   // The observer sees size changes; the list itself changes with these ids.
   const shownKey = shown.map((toast) => toast.id).join('\n');
@@ -362,14 +430,16 @@ function Region<T extends object = object>({
       data-expanded={expanded ? '' : undefined}
       onPointerEnter={composeHandlers(onPointerEnter, () => setHovered(true))}
       onPointerLeave={composeHandlers(onPointerLeave, () => setHovered(false))}
-      onFocus={composeHandlers(onFocus, () => setFocused(true))}
-      onBlur={composeHandlers(onBlur, (event) => {
-        const next = event.relatedTarget;
-        // With no relatedTarget, a window that lost focus keeps its active
-        // element, so focus has not left.
-        const landed = next instanceof Node ? next : event.currentTarget.ownerDocument.activeElement;
-        if (!event.currentTarget.contains(landed)) setFocused(false);
+      onFocus={composeHandlers(onFocus, (event) => {
+        focusLeave.onFocus();
+        if (moving.current) return;
+        const from = event.relatedTarget;
+        // Only from outside: focus moving within the region keeps the origin,
+        // and an unknown origin keeps the last one.
+        if (from instanceof HTMLElement && !event.currentTarget.contains(from)) origin.current = from;
+        setFocused(isKeyboardFocus(event.target));
       })}
+      onBlur={composeHandlers(onBlur, focusLeave.onBlur)}
       onKeyDown={composeHandlers(onKeyDown, (event: ReactKeyboardEvent<HTMLElement>) => {
         if (event.key !== 'Escape' || event.target !== event.currentTarget) return;
         event.preventDefault();

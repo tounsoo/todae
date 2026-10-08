@@ -21,9 +21,12 @@ export function useModalLayer(ref: RefObject<HTMLDialogElement | null>, open: bo
     const current = ref.current;
     setNode((prev) => (prev === current ? prev : current));
   });
+  useModalLayerElement(node, open);
+}
 
+/** useModalLayer for a caller that already holds the element. */
+export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean): void {
   useLayoutEffect(() => {
-    const el = node;
     if (!open || !el) return;
     const sync = () => {
       if (el.open && isModal(el)) pushModal(el);
@@ -38,5 +41,5 @@ export function useModalLayer(ref: RefObject<HTMLDialogElement | null>, open: bo
       observer.disconnect();
       dropModal(el);
     };
-  }, [open, node]);
+  }, [open, el]);
 }

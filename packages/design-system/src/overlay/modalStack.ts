@@ -40,11 +40,14 @@ export function isModal(dialog: Element): boolean {
   return dialog.getAttribute('aria-modal') === 'true';
 }
 
-/** The modal in the stack that is in front and still open and in the document. */
-export function frontModal(): HTMLDialogElement | null {
+/**
+ * The modal in the stack that is in front and still open and in the document,
+ * skipping any that `skip` returns true for.
+ */
+export function frontModal(skip?: (el: HTMLDialogElement) => boolean): HTMLDialogElement | null {
   for (let i = open.length - 1; i >= 0; i--) {
     const el = open[i]!;
-    if (el.isConnected && el.open) return el;
+    if (el.isConnected && el.open && !skip?.(el)) return el;
   }
   return null;
 }
