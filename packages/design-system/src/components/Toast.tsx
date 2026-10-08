@@ -41,7 +41,7 @@ export type ToastRegionProps<T extends object = object> = {
   /** Renders one toast, usually a `Toast.Root`. */
   children: (toast: ToastRecord<T>) => ReactNode;
   placement?: ToastPlacement;
-  /** `list` shows every toast in full; `stack` collapses them behind the newest until hovered or focused. */
+  /** `list` shows every toast in full; `stack` collapses them behind the newest, and spreads them while the pointer is over them or keyboard focus is inside. */
   layout?: ToastLayout;
   /** How many toasts show at once. Later ones wait their turn. */
   limit?: number;
@@ -187,7 +187,11 @@ function Item<T extends object>({
   // first. A layout cleanup runs before the element leaves, however it goes:
   // after its exit motion, remove(), or a lower limit.
   const focusLost = useRef(onFocusLost);
-  focusLost.current = onFocusLost;
+  // In an effect, not during render, so a render React throws away can't
+  // leave the cleanup below a callback that never took effect.
+  useLayoutEffect(() => {
+    focusLost.current = onFocusLost;
+  });
   useLayoutEffect(() => {
     if (!node) return;
     return () => {
@@ -196,8 +200,9 @@ function Item<T extends object>({
     };
   }, [node]);
 
-  // Time shown so far, kept across pauses, so a new duration counts it too.
-  // Back to zero when add() shows it again.
+  // Time the timer has run so far, kept across pauses, so a new duration
+  // counts it too. No timer runs while the duration is Infinity, so that
+  // time is not counted. Back to zero when add() shows it again.
   const elapsed = useRef(0);
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -375,12 +380,18 @@ function Region<T extends object = object>({
       // Without the stack changing, React may take the host out of a dialog
       // it renders, such as when it sets the dialog's text, and code may take
       // the dialog out of the document with the host inside. Watching the
-      // dialog and its ancestors, not their subtrees, sees both.
+      // dialog and its ancestors, not their subtrees, sees both. They are
+      // read again on each change, as code may also move the dialog.
       if (target !== home) {
-        observer = new MutationObserver(() => {
+        const watch = (watcher: MutationObserver) => {
+          watcher.disconnect();
+          for (let node: Node | null = target; node; node = node.parentNode) watcher.observe(node, { childList: true });
+        };
+        observer = new MutationObserver((_, self) => {
           if (host.parentNode !== target || !host.isConnected) place();
+          else watch(self);
         });
-        for (let node: Node | null = target; node; node = node.parentNode) observer.observe(node, { childList: true });
+        watch(observer);
       }
       syncFocused();
       // Moved out from under a resting pointer, which sends no pointerleave.

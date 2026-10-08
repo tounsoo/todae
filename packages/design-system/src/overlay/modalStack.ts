@@ -1,25 +1,47 @@
-/** Modal <dialog> elements in Todae's stack, oldest first, so the last one is in front. */
+/** Modal <dialog> elements in Todae's stack, in the order they were shown, so the last one is in front. */
 const open: HTMLDialogElement[] = [];
 const listeners = new Set<(reshown: boolean) => void>();
+// When each element was last shown, as a running count.
+const shownAt = new WeakMap<HTMLDialogElement, number>();
+let shows = 0;
 
 function notify(reshown = false): void {
   for (const listener of [...listeners]) listener(reshown);
 }
 
+function stamp(el: HTMLDialogElement): void {
+  shownAt.set(el, ++shows);
+}
+
 /**
- * Puts `el` in front, or moves it there if it is already held. `reshown`
- * notifies even when it already was in front: showModal() again puts it last
- * in the top layer.
+ * Notes that `el` was shown just now, for when it joins later. A held
+ * element moves only through pushModal().
+ */
+export function noteShown(el: HTMLDialogElement): void {
+  if (!open.includes(el)) stamp(el);
+}
+
+/**
+ * Holds `el` in the order the elements were shown. `reshown` says it was
+ * shown just now, which puts it in front, and notifies even when it already
+ * was there: showModal() again puts it last in the top layer. Otherwise a
+ * held element keeps its place, and one that joins late goes behind those
+ * shown after it. A show not noted counts as now.
  */
 export function pushModal(el: HTMLDialogElement, reshown = false): void {
   const index = open.indexOf(el);
-  if (index === open.length - 1 && index !== -1 && !reshown) return;
+  if (index !== -1 && !reshown) return;
   if (index !== -1) open.splice(index, 1);
-  open.push(el);
+  if (reshown || !shownAt.has(el)) stamp(el);
+  const at = shownAt.get(el)!;
+  let to = open.length;
+  while (to > 0 && shownAt.get(open[to - 1]!)! > at) to--;
+  open.splice(to, 0, el);
   notify(reshown);
 }
 
 export function dropModal(el: HTMLDialogElement): void {
+  shownAt.delete(el);
   const index = open.indexOf(el);
   if (index === -1) return;
   open.splice(index, 1);

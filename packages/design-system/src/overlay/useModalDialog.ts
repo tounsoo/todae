@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
+import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
 import { dropModal } from './modalStack';
 import { inToastHostWithin } from './tabbables';
 import { useModalLayerElement } from './useModalLayerElement';
@@ -84,7 +84,12 @@ export function useModalDialog({
   // unmounts the element as it leaves, as BottomSheet does, has it removed
   // first; Toast.Region puts focus back then.
   const presentRef = useRef(present);
-  presentRef.current = present;
+  // Updated at commit, not during render, so a render React throws away
+  // can't make the cleanup below close the element. An insertion effect runs
+  // before the layout cleanups of the same commit, so that cleanup reads it.
+  useInsertionEffect(() => {
+    presentRef.current = present;
+  });
   useLayoutEffect(() => {
     const el = dialogRef.current;
     if (!present || !el) return;

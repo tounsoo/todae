@@ -29,7 +29,7 @@ export const meta = {
       type: "\"list\" | \"stack\"",
       required: false,
       default: "\"list\"",
-      description: "list shows every toast in full. stack collapses them behind the newest and spreads them while hovered or focused.",
+      description: "list shows every toast in full. stack collapses them behind the newest and spreads them while the pointer is over them or keyboard focus is inside.",
     },
     {
       name: "limit",

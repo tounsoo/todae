@@ -1,10 +1,12 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dropModal, heldModals, pushModal, subscribeModals } from './modalStack';
 import { TOAST_HOST_ATTRIBUTE } from './tabbables';
 import { useModalLayerElement } from './useModalLayerElement';
 
 afterEach(() => {
+  // Unmounts first, so a test that failed early leaves nothing in the stack.
+  cleanup();
   document.body.innerHTML = '';
 });
 
@@ -68,6 +70,35 @@ describe('useModalLayerElement', () => {
     el.setAttribute('open', '');
     await waitFor(() => expect(document.activeElement).toBe(el));
     unmount();
+  });
+
+  it('keeps modals in the order they were shown, when one joins late or its open turns true again', async () => {
+    const a = document.createElement('dialog');
+    const b = document.createElement('dialog');
+    a.id = 'a';
+    b.id = 'b';
+    document.body.append(a, b);
+    // By id: toEqual compares elements as nodes, and two empty dialogs match.
+    const held = () => heldModals().map((el) => el.id);
+    const first = renderHook(({ open }) => useModalLayerElement(a, open), { initialProps: { open: false } });
+    const second = renderHook(() => useModalLayerElement(b, true));
+    a.showModal();
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(held()).toEqual([]);
+    b.showModal();
+    await waitFor(() => expect(held()).toEqual(['b']));
+    // Shown before b, so it joins behind b.
+    first.rerender({ open: true });
+    expect(held()).toEqual(['a', 'b']);
+    first.rerender({ open: false });
+    first.rerender({ open: true });
+    expect(held()).toEqual(['a', 'b']);
+    // Shown again, it goes in front.
+    a.close();
+    a.showModal();
+    await waitFor(() => expect(held()).toEqual(['b', 'a']));
+    first.unmount();
+    second.unmount();
   });
 
   it('leaves out an open element that is not shown modally', () => {
