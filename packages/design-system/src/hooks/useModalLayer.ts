@@ -10,6 +10,9 @@ import { useModalLayerElement } from '../overlay/useModalLayerElement';
  * in either order, and stays until `close()`, also after `open` turns false.
  * Toast.Region moves its toasts into the modal in front, because everything
  * outside a modal dialog is inert.
+ *
+ * The hook reads `ref` each time the component that calls it renders, so
+ * render the `<dialog>` in that component.
  */
 export function useModalLayer(ref: RefObject<HTMLDialogElement | null>, open: boolean): void {
   const [node, setNode] = useState<HTMLDialogElement | null>(null);

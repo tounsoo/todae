@@ -1,9 +1,9 @@
 /** Modal <dialog> elements in Todae's stack, oldest first, so the last one is in front. */
 const open: HTMLDialogElement[] = [];
-const listeners = new Set<() => void>();
+const listeners = new Set<(reshown: boolean) => void>();
 
-function notify(): void {
-  for (const listener of [...listeners]) listener();
+function notify(reshown = false): void {
+  for (const listener of [...listeners]) listener(reshown);
 }
 
 /**
@@ -16,7 +16,7 @@ export function pushModal(el: HTMLDialogElement, reshown = false): void {
   if (index === open.length - 1 && index !== -1 && !reshown) return;
   if (index !== -1) open.splice(index, 1);
   open.push(el);
-  notify();
+  notify(reshown);
 }
 
 export function dropModal(el: HTMLDialogElement): void {
@@ -26,8 +26,11 @@ export function dropModal(el: HTMLDialogElement): void {
   notify();
 }
 
-/** Calls `listener` whenever an element joins or leaves the stack. */
-export function subscribeModals(listener: () => void): () => void {
+/**
+ * Calls `listener` whenever the stack changes or an element in it is shown
+ * again, with `reshown` true for the latter.
+ */
+export function subscribeModals(listener: (reshown: boolean) => void): () => void {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);

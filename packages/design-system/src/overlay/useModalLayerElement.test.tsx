@@ -1,6 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dropModal, heldModals, pushModal, subscribeModals } from './modalStack';
+import { TOAST_HOST_ATTRIBUTE } from './tabbables';
 import { useModalLayerElement } from './useModalLayerElement';
 
 afterEach(() => {
@@ -42,7 +43,31 @@ describe('useModalLayerElement', () => {
     pushModal(el, true);
     expect(listener).toHaveBeenCalledTimes(2);
     dropModal(el);
+    // Says which calls are for an element shown again.
+    expect(listener.mock.calls).toEqual([[false], [true], [false]]);
     unsubscribe();
+  });
+
+  it('moves focus off a toast inside when the element is shown, not otherwise', async () => {
+    const el = document.createElement('dialog');
+    el.tabIndex = -1;
+    el.setAttribute('open', '');
+    const host = document.createElement('div');
+    host.setAttribute(TOAST_HOST_ATTRIBUTE, '');
+    const toast = document.createElement('button');
+    host.append(toast);
+    el.append(host);
+    document.body.append(el);
+    const { unmount } = renderHook(() => useModalLayerElement(el, true, true));
+    toast.focus();
+    el.setAttribute('open', '');
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(document.activeElement).toBe(toast);
+    // Shown again, as close() and showModal() in one task do.
+    el.removeAttribute('open');
+    el.setAttribute('open', '');
+    await waitFor(() => expect(document.activeElement).toBe(el));
+    unmount();
   });
 
   it('leaves out an open element that is not shown modally', () => {

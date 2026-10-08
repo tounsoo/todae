@@ -354,7 +354,7 @@ function Region<T extends object = object>({
     if (!host || !home) return;
     let observer: MutationObserver | null = null;
     let stopHover: (() => void) | undefined;
-    const place = () => {
+    const place = (reshown = false) => {
       // Not a modal opened from a toast, which sits inside the host itself.
       const target = frontModal((modal) => host.contains(modal)) ?? home;
       // Removed with focus inside, which then fell to the body.
@@ -363,21 +363,24 @@ function Region<T extends object = object>({
       whileMoving(() => {
         keepingFocus(host, () => {
           if (host.parentNode !== target) target.append(host);
-          // In front of the modal, which may have been shown again.
-          if (target !== home && !hasOpenModal(host) && isPopoverOpen(host)) host.hidePopover();
+          // Where it is, it shows again only to go back in front of a modal
+          // that was shown again.
+          else if (reshown && target !== home && !hasOpenModal(host) && isPopoverOpen(host)) host.hidePopover();
           show(host);
         });
         // Only while focus is nowhere else, as it was left by the removal.
         const active = host.ownerDocument.activeElement;
         if (lost && host.contains(lost) && (!active || active === host.ownerDocument.body)) tryFocus(lost);
       });
-      // React may take the host out of a dialog it renders, such as when it
-      // sets the dialog's text, without the stack changing.
+      // Without the stack changing, React may take the host out of a dialog
+      // it renders, such as when it sets the dialog's text, and code may take
+      // the dialog out of the document with the host inside. Watching the
+      // dialog and its ancestors, not their subtrees, sees both.
       if (target !== home) {
         observer = new MutationObserver(() => {
-          if (host.parentNode !== target) place();
+          if (host.parentNode !== target || !host.isConnected) place();
         });
-        observer.observe(target, { childList: true });
+        for (let node: Node | null = target; node; node = node.parentNode) observer.observe(node, { childList: true });
       }
       syncFocused();
       // Moved out from under a resting pointer, which sends no pointerleave.

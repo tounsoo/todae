@@ -9,7 +9,7 @@ export const meta = {
       name: "ref",
       type: "RefObject<HTMLDialogElement | null>",
       required: true,
-      description: "The <dialog>.",
+      description: "The <dialog>. Render it in the component that calls the hook, which reads the ref each time that component renders.",
     },
     {
       name: "open",

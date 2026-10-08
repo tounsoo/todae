@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { dropModal, isModal, pushModal } from './modalStack';
+import { inToastHostWithin } from './tabbables';
+import { initialFocusTarget } from './useInitialFocus';
 
 /**
  * useModalLayer for a caller that already holds the element. `shownModal`
@@ -26,8 +28,17 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
     sync();
     // showModal() and close() set and remove the open attribute, so this sees
     // the element open and close however it happens.
-    const observer = new MutationObserver(() => sync(true));
-    observer.observe(el, { attributes: true, attributeFilter: ['open'] });
+    const observer = new MutationObserver((records) => {
+      // Shown in this task. showModal() focuses the first focusable element
+      // inside, which is a toast when the toasts were still inside and the
+      // element has nothing focusable of its own before them.
+      if (el.open && records.some((record) => record.oldValue === null)) {
+        const active = el.ownerDocument.activeElement;
+        if (active instanceof HTMLElement && inToastHostWithin(active, el)) initialFocusTarget(el).focus();
+      }
+      sync(true);
+    });
+    observer.observe(el, { attributes: true, attributeFilter: ['open'], attributeOldValue: true });
     return () => {
       observer.disconnect();
       syncRef.current = () => undefined;

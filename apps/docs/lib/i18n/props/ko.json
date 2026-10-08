@@ -1171,8 +1171,8 @@
   },
   "useModalLayer": {
     "ref": {
-      "en": "The <dialog>.",
-      "ko": "<dialog> 요소."
+      "en": "The <dialog>. Render it in the component that calls the hook, which reads the ref each time that component renders.",
+      "ko": "<dialog> 요소. 훅을 호출하는 컴포넌트에서 렌더링하세요. 훅은 그 컴포넌트가 렌더링될 때마다 ref를 읽습니다."
     },
     "open": {
       "en": "Whether the dialog may be shown. It joins once this is true and it is shown with showModal(), and stays until close().",

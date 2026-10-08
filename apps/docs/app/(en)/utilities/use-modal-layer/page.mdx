@@ -18,7 +18,7 @@ function YourDialog({ open, onClose, children }) {
 }
 ```
 
-The dialog joins once `open` is true and it is shown with `showModal()`, in either order, and stays until `close()`, also after `open` turns false. A modal `<dialog>` makes everything outside it inert, so [Toast.Region](/toast) moves its toasts into the modal in front, where they stay usable. Without this hook, toasts stay inert under your dialog.
+The dialog joins once `open` is true and it is shown with `showModal()`, in either order, and stays until `close()`, also after `open` turns false. The hook reads `ref` each time the component that calls it renders, so render the `<dialog>` in that component. A modal `<dialog>` makes everything outside it inert, so [Toast.Region](/toast) moves its toasts into the modal in front, where they stay usable. Without this hook, toasts stay inert under your dialog.
 
 ## When to use
 

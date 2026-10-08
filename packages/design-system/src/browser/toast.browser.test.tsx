@@ -10,6 +10,7 @@ import { Toast, type ToastLayout } from '../components/Toast';
 import { createToaster, type Toaster } from '../components/toaster';
 import { useModalLayer } from '../hooks/useModalLayer';
 import { usePopover } from '../hooks/usePopover';
+import { heldModals } from '../overlay/modalStack';
 
 function Themed({ children }: { children: ReactNode }) {
   return (
@@ -420,6 +421,109 @@ describe('Toast with a modal dialog', () => {
     await waitFor(() => expect(receivesPointer(undo)).toBe(true));
     act(() => dialog.close());
   });
+
+  it('shows the toasts in front only once when a modal behind them closes', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Own({ name }: { name: string }) {
+      const ref = useRef<HTMLDialogElement>(null);
+      useModalLayer(ref, true);
+      useEffect(() => ref.current?.showModal(), []);
+      return (
+        <dialog ref={ref} aria-label={name}>
+          <p>{name}</p>
+        </dialog>
+      );
+    }
+    render(
+      <Themed>
+        <Own name="Back" />
+        <Own name="Front" />
+        <Region toaster={toaster} />
+      </Themed>,
+    );
+    const back = screen.getByRole('dialog', { name: 'Back', hidden: true }) as HTMLDialogElement;
+    const front = screen.getByRole('dialog', { name: 'Front' }) as HTMLDialogElement;
+    await waitFor(() => expect(front.matches(':modal')).toBe(true));
+    act(() => void toaster.add({ title: 'Kept' }));
+    const undo = await screen.findByRole('button', { name: 'Undo Kept' });
+    await waitFor(() => expect(front.contains(undo)).toBe(true));
+    const toggles = vi.fn();
+    hostOf(undo).addEventListener('beforetoggle', toggles);
+    back.close();
+    await waitFor(() => expect(heldModals()).toEqual([front]));
+    // Nothing went in front of the toasts, so they are not hidden and shown again.
+    expect(toggles).not.toHaveBeenCalled();
+    expect(receivesPointer(undo)).toBe(true);
+    act(() => front.close());
+  });
+
+  it('gives a dialog of your own shown again its own focus, not a toast\'s', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Own() {
+      const ref = useRef<HTMLDialogElement>(null);
+      useModalLayer(ref, true);
+      useEffect(() => ref.current?.showModal(), []);
+      return (
+        <dialog ref={ref} aria-label="Own">
+          <p>Nothing to focus</p>
+        </dialog>
+      );
+    }
+    render(
+      <Themed>
+        <Own />
+        <Region toaster={toaster} />
+      </Themed>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Own' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    act(() => void toaster.add({ title: 'Kept' }));
+    const undo = await screen.findByRole('button', { name: 'Undo Kept' });
+    await waitFor(() => expect(dialog.contains(undo)).toBe(true));
+    // In one task, so the toasts are still inside when showModal() looks for
+    // something to focus.
+    dialog.close();
+    dialog.showModal();
+    await waitFor(() => expect(document.activeElement).toBe(dialog));
+    act(() => dialog.close());
+  });
+
+  it.each(['dialog', 'element around it'])(
+    'brings the toasts back when code takes the %s of your own out of the document',
+    async (which) => {
+      const toaster = createToaster({ duration: Infinity });
+      function Own() {
+        const ref = useRef<HTMLDialogElement>(null);
+        useModalLayer(ref, true);
+        useEffect(() => ref.current?.showModal(), []);
+        return (
+          <div data-testid="around">
+            <dialog ref={ref} aria-label="Own">
+              <p>Own</p>
+            </dialog>
+          </div>
+        );
+      }
+      render(
+        <Themed>
+          <Own />
+          <Region toaster={toaster} />
+        </Themed>,
+      );
+      const dialog = screen.getByRole('dialog', { name: 'Own' }) as HTMLDialogElement;
+      await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+      act(() => void toaster.add({ title: 'Back' }));
+      const undo = await screen.findByRole('button', { name: 'Undo Back' });
+      await waitFor(() => expect(dialog.contains(undo)).toBe(true));
+      undo.focus();
+      // Without close(), so the stack still holds it.
+      (which === 'dialog' ? dialog : screen.getByTestId('around')).remove();
+      await waitFor(() => expect(undo.isConnected).toBe(true));
+      expect(isPopoverShown(hostOf(undo))).toBe(true);
+      expect(document.activeElement).toBe(undo);
+      await waitFor(() => expect(receivesPointer(undo)).toBe(true));
+    },
+  );
 
   it('keeps the dialog\'s own focus to return to, not a toast\'s', async () => {
     const toaster = createToaster({ duration: Infinity });
