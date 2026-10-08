@@ -55,8 +55,8 @@
   },
   "Avatar.Image": {
     "src": {
-      "en": "The image. Without one, or when it fails to load, the fallback stays.",
-      "ko": "이미지입니다. 없거나 불러오지 못하면 대체 표시가 남습니다."
+      "en": "The image, or srcSet in its place. Without either, or when it fails to load, the fallback stays.",
+      "ko": "이미지이며, 대신 srcSet을 써도 됩니다. 둘 다 없거나 불러오지 못하면 대체 표시가 남습니다."
     }
   },
   "Avatar.Root": {

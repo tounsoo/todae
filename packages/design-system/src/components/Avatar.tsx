@@ -30,7 +30,7 @@ export type AvatarRootProps = {
 } & Omit<ComponentPropsWithRef<'span'>, 'role' | 'aria-label' | 'aria-labelledby'>;
 
 /**
- * An `img` that shows once it has loaded. It takes no `alt`: the avatar's
+ * An `img` drawn over the fallback, which goes once it loads. It takes no `alt`: the avatar's
  * `label` names it, so the image and the fallback share one name.
  */
 export type AvatarImageProps = Omit<ComponentPropsWithRef<'img'>, 'alt'>;
@@ -87,22 +87,31 @@ function Image({ src, srcSet, ref, onLoad, onError, className, ...props }: Avata
   useLayoutEffect(() => {
     const img = own.current!;
     let current = true;
+    let cancel: (() => void) | undefined;
     settled.current = false;
     if (!src && !srcSet) setStatus('error');
     else if (!img.complete) setStatus('loading');
     else if (img.naturalWidth > 0) setStatus('loaded');
     else {
       setStatus('loading');
+      // Same request settings as the image, so the probe gets the same answer.
       const probe = new window.Image();
+      probe.crossOrigin = img.crossOrigin;
+      probe.referrerPolicy = img.referrerPolicy;
       probe.onload = () => current && !settled.current && setStatus('loaded');
       probe.onerror = () => current && !settled.current && setStatus('error');
       probe.src = img.currentSrc || img.src;
+      cancel = () => {
+        probe.onload = probe.onerror = null;
+        probe.removeAttribute('src');
+      };
     }
     return () => {
       current = false;
+      cancel?.();
       setStatus('idle');
     };
-  }, [src, srcSet, setStatus]);
+  }, [src, srcSet, props.crossOrigin, props.referrerPolicy, setStatus]);
 
   return (
     <img

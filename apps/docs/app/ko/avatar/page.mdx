@@ -2,7 +2,7 @@ import { AvatarBesideName, AvatarSizes, AvatarStates } from '../../../components
 
 # Avatar
 
-이니셜 같은 대체 표시를 갖춘 사람이나 팀의 사진입니다. `Avatar.Image`를 불러오는 동안 `Avatar.Fallback`이 보이고, 이미지가 실패하거나 없으면 그대로 남습니다. 이미지가 다 불러와지면 대체 표시를 덮습니다.
+이니셜 같은 대체 표시를 갖춘 사람이나 팀의 사진입니다. `Avatar.Image`를 불러오는 동안 `Avatar.Fallback`이 보이고, 이미지가 실패하거나 없으면 그대로 남습니다. 이미지는 대체 표시 위에 그려지고, 이미지를 다 불러오면 대체 표시는 사라집니다.
 
 ```tsx
 <Avatar.Root label="Ada Lovelace">

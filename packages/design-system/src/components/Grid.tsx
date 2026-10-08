@@ -31,7 +31,7 @@ export function Grid({ columns, minItemSize, className, style, ...props }: GridP
     layout === 'fill'
       ? { '--todae-grid-min-item-size': minItemSize }
       : layout === 'columns'
-        ? { '--todae-grid-column-count': String(Number.isFinite(columns) ? Math.max(1, Math.floor(columns!)) : 1) }
+        ? { '--todae-grid-column-count': String(Number.isFinite(Number(columns)) ? Math.max(1, Math.floor(Number(columns))) : 1) }
         : undefined;
   return (
     <div

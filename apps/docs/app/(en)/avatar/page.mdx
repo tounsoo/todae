@@ -2,7 +2,7 @@ import { AvatarBesideName, AvatarSizes, AvatarStates } from '../../../components
 
 # Avatar
 
-A picture of a person or a team, with a fallback such as initials. `Avatar.Fallback` shows while `Avatar.Image` loads, and stays when the image fails or there is none. The image covers the fallback once it has loaded.
+A picture of a person or a team, with a fallback such as initials. `Avatar.Fallback` shows while `Avatar.Image` loads, and stays when the image fails or there is none. The image draws over the fallback, which is removed once the image has loaded.
 
 ```tsx
 <Avatar.Root label="Ada Lovelace">

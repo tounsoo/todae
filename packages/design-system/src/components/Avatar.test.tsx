@@ -122,6 +122,9 @@ describe('Avatar', () => {
         'Image',
         class {
           src = '';
+          removeAttribute(name: string) {
+            if (name === 'src') this.src = '';
+          }
           onload: (() => void) | null = null;
           onerror: (() => void) | null = null;
           constructor() {
@@ -156,6 +159,19 @@ describe('Avatar', () => {
       expect(probes.at(-1)!.src).toContain('ada.svg');
       act(() => resolve());
       expect(status()).toBe('loaded');
+    });
+
+    it('makes the probe request the way the image does, and drops it on unmount', () => {
+      stub(0);
+      const { unmount } = render(
+        <Avatar.Root label="Ada">
+          <Avatar.Image src="https://cdn.example/ada.svg" crossOrigin="anonymous" />
+        </Avatar.Root>,
+      );
+      const probe = probes.at(-1) as unknown as { crossOrigin: string; onload: unknown };
+      expect(probe.crossOrigin).toBe('anonymous');
+      unmount();
+      expect(probe.onload).toBeNull();
     });
 
     it('probes one with no width: a broken image keeps the fallback', () => {
