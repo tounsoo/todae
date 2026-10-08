@@ -36,7 +36,7 @@ A `nav` landmark around an ordered list of pages. `paginationRange` decides whic
 
 ## Current page and steps
 
-Give the control for the page you are on `aria-current="page"`, and it is drawn as the current page. Give a previous or next step with nowhere to go `aria-disabled="true"`, and it is drawn muted. Keep both focusable, as a link or a button, so focus stays on the control the user pressed when the page changes; a disabled button or an element that is swapped out would drop it. For a link, that is `role="link"` with `aria-disabled` and no `href`.
+Give the control for the page you are on `aria-current="page"`, and it is drawn as the current page. Give a previous or next step with nowhere to go `aria-disabled="true"`, and it is drawn muted. With buttons, use `aria-disabled`, not `disabled`, so the button keeps focus when it reaches an end, as in the example above. A link with nowhere to go is `<a role="link" aria-disabled="true">` without `href`.
 
 `Pagination.Root` is named "Pagination" unless you pass `aria-label` or `aria-labelledby`; that default is English, so pass your own in other languages. Name it after what it pages through when a page has more than one. Restyle it through the `pagination` tokens.
 

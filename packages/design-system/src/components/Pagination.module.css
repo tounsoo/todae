@@ -66,8 +66,14 @@
   }
 
   @media (forced-colors: active) {
-    .item > [aria-current]:not([aria-current='false' i], [aria-current='']) {
+    /* Not while focused, so the focus ring still shows on the current page. */
+    .item > [aria-current]:not([aria-current='false' i], [aria-current='']):not(:focus-visible) {
       outline: 1px solid CanvasText;
+    }
+
+    /* System colors replace the muted token, so mark the state with GrayText. */
+    .item > [aria-disabled='true'] {
+      color: GrayText;
     }
   }
 }

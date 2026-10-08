@@ -4,7 +4,7 @@ export type PaginationRangeItem = number | 'start-ellipsis' | 'end-ellipsis';
 export type PaginationRangeOptions = {
   /** The current page, from 1. Clamped to 1..count. */
   page: number;
-  /** How many pages there are. Below 1 gives an empty range. */
+  /** How many pages there are. Below 1, or not a finite number, gives an empty range. */
   count: number;
   /** Pages shown on each side of the current one. Default 1. */
   siblings?: number;
@@ -16,18 +16,20 @@ function range(from: number, to: number): number[] {
   return Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => from + i);
 }
 
+/** A whole number from `min`. NaN gives `min`; Infinity stays, so `siblings: Infinity` shows every page. */
 function whole(value: number, min: number): number {
-  return Number.isFinite(value) ? Math.max(min, Math.floor(value)) : min;
+  return Number.isNaN(value) ? min : Math.max(min, Math.floor(value));
 }
 
 /**
  * The pages to show for `page` out of `count`: both ends, the current page with
  * its siblings, and an ellipsis for each gap. While there are more pages than
- * slots, the list always has the same length, so the controls do not shift as
- * the current page moves; an ellipsis never stands for a single page, which is
- * shown instead.
+ * slots, the list always has the same length, so the number of controls does
+ * not change as the current page moves; an ellipsis never stands for a single
+ * page, which is shown instead.
  */
 export function paginationRange({ page, count, siblings = 1, boundaries = 1 }: PaginationRangeOptions): PaginationRangeItem[] {
+  if (!Number.isFinite(count)) return [];
   const total = whole(count, 0);
   if (total === 0) return [];
   const current = Math.min(whole(page, 1), total);

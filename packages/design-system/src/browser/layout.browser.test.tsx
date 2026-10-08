@@ -230,8 +230,9 @@ describe('Pagination in a browser', () => {
     expect(document.activeElement).toBe(screen.getByTestId('prev'));
     expect(screen.getByTestId('prev').getAttribute('aria-disabled')).toBe('true');
     // The current page keeps its fill under the pointer.
+    const fill = getComputedStyle(screen.getByTestId('page-1')).backgroundColor;
     await userEvent.hover(screen.getByTestId('page-1'));
-    expect(getComputedStyle(screen.getByTestId('page-1')).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(screen.getByTestId('page-1')).backgroundColor).toBe(fill);
     expect(await violations()).toEqual([]);
   });
 });

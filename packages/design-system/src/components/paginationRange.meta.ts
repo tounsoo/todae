@@ -15,7 +15,7 @@ export const meta = {
       name: 'count',
       type: 'number',
       required: true,
-      description: 'How many pages there are. Below 1 gives an empty list.',
+      description: 'How many pages there are. Below 1, or not a finite number, gives an empty list.',
     },
     {
       name: 'siblings',

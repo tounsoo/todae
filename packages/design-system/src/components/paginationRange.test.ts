@@ -24,6 +24,10 @@ describe('paginationRange', () => {
     expect(paginationRange({ page: 1, count: 0 })).toEqual([]);
     expect(paginationRange({ page: 1, count: Number.NaN })).toEqual([]);
     expect(paginationRange({ page: Number.NaN, count: 20 })).toEqual([1, 2, 3, 4, 5, 'end-ellipsis', 20]);
+    expect(paginationRange({ page: 1, count: Infinity })).toEqual([]);
+    expect(paginationRange({ page: 3, count: 10, siblings: Infinity })).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(paginationRange({ page: 3, count: 10, boundaries: Infinity })).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(paginationRange({ page: Infinity, count: 3 })).toEqual([1, 2, 3]);
   });
 
   it('holds its rules for every page, count, siblings and boundaries', () => {

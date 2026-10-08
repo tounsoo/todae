@@ -1,4 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Pagination } from './Pagination';
 
@@ -41,5 +43,12 @@ describe('Pagination', () => {
     const gap = screen.getByTestId('gap');
     expect(gap.getAttribute('aria-hidden')).toBe('true');
     expect(gap.textContent).toBe('…');
+  });
+
+  it('keeps the focus ring on the current page and greys out a disabled step in forced colors', () => {
+    const css = readFileSync(join(import.meta.dirname, 'Pagination.module.css'), 'utf8');
+    const forced = css.slice(css.indexOf('@media (forced-colors: active)'));
+    expect(forced).toContain(":not([aria-current='false' i], [aria-current='']):not(:focus-visible) {");
+    expect(forced).toMatch(/\[aria-disabled='true'\] \{\s*color: GrayText;/);
   });
 });

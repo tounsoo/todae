@@ -13,8 +13,7 @@ export type PaginationRootProps = ComponentPropsWithRef<'nav'>;
 /**
  * One page, or the previous or next step: put your link or button inside.
  * Mark the current page's control `aria-current="page"` and a step with
- * nowhere to go `aria-disabled="true"`, and keep both focusable, so focus
- * stays put when the page changes.
+ * nowhere to go `aria-disabled="true"`.
  */
 export type PaginationItemProps = ComponentPropsWithRef<'li'>;
 
