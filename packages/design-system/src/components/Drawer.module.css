@@ -9,15 +9,14 @@
     margin: 0;
     padding: 0;
     border: 0;
-    background: var(--todae-overlay-scrim-bg);
+    background-color: transparent;
     color: var(--todae-drawer-fg);
   }
 
-  /* data-entered drives the enter motion. */
+  /* data-entered drives the enter motion. Only the scrim's color fades, so the panel slides in view. */
   .drawer[open] {
     display: flex;
-    opacity: 0;
-    transition: opacity var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing);
+    transition: background-color var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing);
   }
 
   .drawer[open][data-side='end'] {
@@ -25,11 +24,11 @@
   }
 
   .drawer[open][data-entered] {
-    opacity: 1;
+    background-color: var(--todae-overlay-scrim-bg);
   }
 
   .drawer[open][data-exiting] {
-    opacity: 0;
+    background-color: transparent;
     transition-duration: var(--todae-drawer-motion-exit);
   }
 

@@ -87,14 +87,10 @@
     margin: 0;
   }
 
-  /* The body takes the spare height and scrolls, so the header and footer stay in view. */
-  .body {
-    flex: 1 1 auto;
-    min-block-size: 0;
-    overflow: auto;
-  }
 
+  /* In a panel taller than its content, such as Drawer's, the footer sits at the bottom. */
   .footer {
+    margin-block-start: auto;
     display: flex;
     flex-wrap: wrap;
     gap: var(--todae-dialog-gap);

@@ -5,12 +5,13 @@ import { Drawer, type DrawerSide } from '../components/Drawer';
 
 afterEach(cleanup);
 
-function Open({ side, dir }: { side?: DrawerSide; dir?: 'rtl' }) {
+function Open({ side, dir, open = true }: { side?: DrawerSide; dir?: 'rtl'; open?: boolean }) {
   return (
     <div data-appearance="light" data-density="comfortable" dir={dir}>
-      <Drawer.Root open onOpenChange={() => undefined} side={side}>
+      <Drawer.Root open={open} onOpenChange={() => undefined} side={side}>
         <Dialog.Title>Filters</Dialog.Title>
         <Dialog.Body data-testid="body">Body</Dialog.Body>
+        <Dialog.Footer data-testid="footer">Footer</Dialog.Footer>
       </Drawer.Root>
     </div>
   );
@@ -26,6 +27,25 @@ async function settledPanel() {
 }
 
 describe('Drawer in a browser', () => {
+  it('puts the footer at the bottom of a short panel', async () => {
+    render(<Open />);
+    const { panel } = await settledPanel();
+    const footer = screen.getByTestId('footer').getBoundingClientRect();
+    const padding = parseFloat(getComputedStyle(screen.getByTestId('footer').parentElement!).paddingBottom);
+    expect(Math.round(footer.bottom)).toBe(Math.round(panel.bottom - padding));
+  });
+
+  it('keeps the panel opaque while it slides out', async () => {
+    const { rerender } = render(<Open />);
+    await settledPanel();
+    rerender(<Open open={false} />);
+    const drawer = screen.getByRole('dialog', { name: 'Filters' });
+    expect(drawer.hasAttribute('data-exiting')).toBe(true);
+    expect(getComputedStyle(drawer).opacity).toBe('1');
+    expect(getComputedStyle(drawer).transitionProperty).toBe('background-color');
+    await waitFor(() => expect(drawer.hasAttribute('open')).toBe(false));
+  });
+
   it('fills the height at the end edge, narrower than the viewport', async () => {
     render(<Open />);
     const { panel, scrim } = await settledPanel();

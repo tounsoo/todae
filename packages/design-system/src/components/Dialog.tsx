@@ -129,10 +129,17 @@ export type DialogShell = {
   className?: string;
   panelClassName?: string;
   exitMs: number;
+  /** The `<dialog>` element's transition that ends the exit. */
+  exitProperty: string;
   attributes?: Record<`data-${string}`, string>;
 };
 
-const DIALOG_SHELL: DialogShell = { className: styles.dialog, panelClassName: styles.panel, exitMs: DIALOG_EXIT_MS };
+const DIALOG_SHELL: DialogShell = {
+  className: styles.dialog,
+  panelClassName: styles.panel,
+  exitMs: DIALOG_EXIT_MS,
+  exitProperty: 'opacity',
+};
 
 function DialogRoot(props: DialogRootProps) {
   return <DialogShellRoot {...props} shell={DIALOG_SHELL} />;
@@ -163,7 +170,7 @@ export function DialogShellRoot({
   });
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
-  const { present, exiting } = useOverlayPresence(open, shell.exitMs, dialogNode, 'opacity');
+  const { present, exiting } = useOverlayPresence(open, shell.exitMs, dialogNode, shell.exitProperty);
   const entered = useEntered(present, exiting);
   const setDialogRef = useCallback((node: HTMLDialogElement | null) => {
     dialogRef.current = node;
