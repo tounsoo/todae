@@ -29,7 +29,9 @@ function Region({ toaster, ...props }: { toaster: Toaster } & Partial<ToastRegio
 
 describe('Toast', () => {
   it('renders nothing but its home on the server', () => {
-    const html = renderToString(<Region toaster={createToaster()} />);
+    const toaster = createToaster();
+    toaster.add({ title: 'From another request' });
+    const html = renderToString(<Region toaster={toaster} />);
     expect(html).not.toContain('<section');
   });
 

@@ -15,7 +15,8 @@ import { createPortal } from 'react-dom';
 import { frontModal, isModal, subscribeModals } from '../overlay/modalStack';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { isPopoverOpen } from '../overlay/usePopoverSync';
-import { getTabbables, TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables';
+import { TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables';
+import { initialFocusTarget } from '../overlay/useInitialFocus';
 import { useFocusLeave } from '../overlay/useFocusLeave';
 import { Button, type ButtonRootProps } from './Button';
 import { useDismissLabel } from './dismissLabel';
@@ -60,6 +61,10 @@ export type ToastCloseProps = ButtonRootProps;
 type ItemContextValue = { toast: ToastRecord; dismiss: () => void };
 
 const ItemContext = createContext<ItemContextValue | null>(null);
+
+// One reference, so the server snapshot never changes.
+const NO_TOASTS: readonly never[] = [];
+const noToasts = () => NO_TOASTS;
 
 function show(el: HTMLElement): void {
   if (el.isConnected && !isPopoverOpen(el)) el.showPopover();
@@ -236,13 +241,17 @@ function Region<T extends object = object>({
   onKeyDown,
   ...props
 }: ToastRegionProps<T>) {
-  const toasts = useSyncExternalStore(toaster.subscribe, toaster.getSnapshot, toaster.getSnapshot);
+  // None on the server: a store at module scope is shared by every request.
+  const toasts = useSyncExternalStore(toaster.subscribe, toaster.getSnapshot, noToasts);
   const homeRef = useRef<HTMLSpanElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const sectionRefs = useComposedRefs(sectionRef, ref);
   const listRef = useRef<HTMLOListElement>(null);
   // Where focus came from into the region, to go back to. Never inside it.
   const origin = useRef<HTMLElement | null>(null);
+  // The element focused inside the region, to focus again if the host is
+  // taken out of the document with it, such as with a dialog React removes.
+  const lastInside = useRef<HTMLElement | null>(null);
   // Set while Todae moves or shows the host again, so the focus events that
   // causes don't count as focus coming in.
   const moving = useRef(false);
@@ -316,19 +325,36 @@ function Region<T extends object = object>({
   useLayoutEffect(() => {
     const home = homeRef.current;
     if (!host || !home) return;
+    let observer: MutationObserver | null = null;
     const place = () => {
       // Not a modal opened from a toast, which sits inside the host itself.
       const target = frontModal((modal) => host.contains(modal)) ?? home;
-      whileMoving(() =>
+      // Removed with focus inside, which then fell to the body.
+      const lost = host.isConnected ? null : lastInside.current;
+      observer?.disconnect();
+      whileMoving(() => {
         keepingFocus(host, () => {
           if (host.parentNode !== target) target.append(host);
           show(host);
-        }),
-      );
+        });
+        if (lost && host.contains(lost)) tryFocus(lost);
+      });
+      // React may take the host out of a dialog it renders, such as when it
+      // sets the dialog's text, without the stack changing.
+      if (target !== home) {
+        observer = new MutationObserver(() => {
+          if (host.parentNode !== target) place();
+        });
+        observer.observe(target, { childList: true });
+      }
       syncFocused();
     };
     place();
-    return subscribeModals(place);
+    const unsubscribe = subscribeModals(place);
+    return () => {
+      unsubscribe();
+      observer?.disconnect();
+    };
   }, [host, syncFocused, whileMoving]);
 
   const shown = toasts.slice(0, limit);
@@ -385,7 +411,7 @@ function Region<T extends object = object>({
     origin.current = null;
     const active = section.ownerDocument.activeElement;
     const modal = host?.parentElement instanceof HTMLDialogElement ? host.parentElement : null;
-    if (!tryFocus(from) && !(modal && tryFocus(getTabbables(modal)[0] ?? null))) {
+    if (!tryFocus(from) && !(modal && tryFocus(initialFocusTarget(modal)))) {
       if (active instanceof HTMLElement && section.contains(active)) active.blur();
     }
     syncFocused();
@@ -403,10 +429,16 @@ function Region<T extends object = object>({
     [toaster, limit, leave],
   );
 
-  const focusLeave = useFocusLeave(() => {
-    origin.current = null;
-    setFocused(false);
-  });
+  // Not when the host left the document with focus inside: place() puts it
+  // back and focuses that element again.
+  const focusLeave = useFocusLeave(
+    () => {
+      origin.current = null;
+      lastInside.current = null;
+      setFocused(false);
+    },
+    () => !host?.isConnected,
+  );
 
   // The observer sees size changes; the list itself changes with these ids.
   const shownKey = shown.map((toast) => toast.id).join('\n');
@@ -456,6 +488,7 @@ function Region<T extends object = object>({
       onPointerLeave={composeHandlers(onPointerLeave, () => setHovered(false))}
       onFocus={composeHandlers(onFocus, (event) => {
         focusLeave.onFocus();
+        if (event.target instanceof HTMLElement) lastInside.current = event.target;
         if (moving.current) return;
         const from = event.relatedTarget;
         // Only from outside: focus moving within the region keeps the origin,

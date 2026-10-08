@@ -1,7 +1,8 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { BottomSheet } from '../components/BottomSheet';
 import { Button } from '../components/Button';
 import { Dialog } from '../components/Dialog';
 import { Popover } from '../components/Popover';
@@ -44,8 +45,46 @@ function canFocus(el: HTMLElement): boolean {
   return document.activeElement === el;
 }
 
+function isPopoverShown(el: Element): boolean {
+  return el.matches(':popover-open');
+}
+
 function hostOf(el: Element): HTMLElement {
   return el.closest('[popover]') as HTMLElement;
+}
+
+/** A region whose toasts have one action, "Close it", that calls `onClose` and stays. */
+function ClosingRegion({ toaster, onClose }: { toaster: Toaster; onClose: () => void }) {
+  return (
+    <Toast.Region toaster={toaster}>
+      {(toast) => (
+        <Toast.Root>
+          <Toast.Title>{toast.title}</Toast.Title>
+          <Toast.Action
+            onClick={(event) => {
+              event.preventDefault();
+              onClose();
+            }}
+          >
+            Close it
+          </Toast.Action>
+        </Toast.Root>
+      )}
+    </Toast.Region>
+  );
+}
+
+/** Adds a toast inside the open `dialog`, focuses its action by keyboard and presses it. */
+async function closeFromToast(toaster: Toaster, dialog: HTMLDialogElement): Promise<HTMLElement> {
+  await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+  act(() => void toaster.add({ title: 'Saved' }));
+  const action = await screen.findByRole('button', { name: 'Close it' });
+  await waitFor(() => expect(dialog.contains(action)).toBe(true));
+  await userEvent.keyboard('{F8}');
+  await userEvent.tab();
+  expect(document.activeElement).toBe(action);
+  await userEvent.keyboard('{Enter}');
+  return action;
 }
 
 function DialogPage({ toaster }: { toaster: Toaster }) {
@@ -147,41 +186,134 @@ describe('Toast with a modal dialog', () => {
       const [open, setOpen] = useState(true);
       return (
         <Themed>
-          <Button.Root>Before</Button.Root>
           <Dialog.Root open={open} onOpenChange={setOpen}>
             <Dialog.Title>Edit</Dialog.Title>
           </Dialog.Root>
-          <Toast.Region toaster={toaster}>
-            {(toast) => (
-              <Toast.Root>
-                <Toast.Title>{toast.title}</Toast.Title>
-                <Toast.Action
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setOpen(false);
-                  }}
-                >
-                  Close it
-                </Toast.Action>
-              </Toast.Root>
-            )}
-          </Toast.Region>
+          <ClosingRegion toaster={toaster} onClose={() => setOpen(false)} />
         </Themed>
       );
     }
     render(<Page />);
     const dialog = screen.getByRole('dialog', { name: 'Edit' }) as HTMLDialogElement;
-    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
-    act(() => void toaster.add({ title: 'Saved' }));
-    const action = await screen.findByRole('button', { name: 'Close it' });
-    await waitFor(() => expect(dialog.contains(action)).toBe(true));
-    await userEvent.keyboard('{F8}');
-    await userEvent.tab();
-    expect(document.activeElement).toBe(action);
-    await userEvent.keyboard('{Enter}');
+    const action = await closeFromToast(toaster, dialog);
     await waitFor(() => expect(dialog.open).toBe(false));
     await waitFor(() => expect(dialog.contains(action)).toBe(false));
     expect(document.activeElement).toBe(action);
+  });
+
+  it('keeps keyboard focus on a toast whose action closes a bottom sheet', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Page() {
+      const [open, setOpen] = useState(true);
+      return (
+        <Themed>
+          <BottomSheet.Root open={open} onOpenChange={setOpen}>
+            <BottomSheet.Title>Sheet</BottomSheet.Title>
+          </BottomSheet.Root>
+          <ClosingRegion toaster={toaster} onClose={() => setOpen(false)} />
+        </Themed>
+      );
+    }
+    render(<Page />);
+    const sheet = screen.getByRole('dialog', { name: 'Sheet' }) as HTMLDialogElement;
+    const action = await closeFromToast(toaster, sheet);
+    await waitFor(() => expect(sheet.isConnected).toBe(false));
+    await waitFor(() => expect(document.activeElement).toBe(action));
+    expect(isPopoverShown(hostOf(action))).toBe(true);
+  });
+
+  it('keeps keyboard focus on a toast whose action unmounts a dialog of your own', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Own({ onClose }: { onClose: () => void }) {
+      const ref = useRef<HTMLDialogElement>(null);
+      useModalLayer(ref, true);
+      useEffect(() => ref.current?.showModal(), []);
+      return (
+        <dialog ref={ref} aria-label="Own" onCancel={onClose}>
+          Own
+        </dialog>
+      );
+    }
+    function Page() {
+      const [open, setOpen] = useState(true);
+      return (
+        <Themed>
+          {open && <Own onClose={() => setOpen(false)} />}
+          <ClosingRegion toaster={toaster} onClose={() => setOpen(false)} />
+        </Themed>
+      );
+    }
+    render(<Page />);
+    const dialog = screen.getByRole('dialog', { name: 'Own' }) as HTMLDialogElement;
+    const action = await closeFromToast(toaster, dialog);
+    await waitFor(() => expect(dialog.isConnected).toBe(false));
+    await waitFor(() => expect(document.activeElement).toBe(action));
+    expect(isPopoverShown(hostOf(action))).toBe(true);
+  });
+
+  it('stays in a dialog of your own when React sets its text', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    let setText: (text: string) => void = () => undefined;
+    function Own() {
+      const ref = useRef<HTMLDialogElement>(null);
+      const [text, set] = useState('One');
+      setText = set;
+      useModalLayer(ref, true);
+      useEffect(() => ref.current?.showModal(), []);
+      return (
+        <dialog ref={ref} aria-label="Own">
+          {text}
+        </dialog>
+      );
+    }
+    render(
+      <Themed>
+        <Own />
+        <Region toaster={toaster} />
+      </Themed>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Own' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    act(() => void toaster.add({ title: 'Kept' }));
+    const undo = await screen.findByRole('button', { name: 'Undo Kept' });
+    await waitFor(() => expect(dialog.contains(undo)).toBe(true));
+    act(() => setText('Two'));
+    expect(dialog.textContent).toContain('Two');
+    await waitFor(() => expect(dialog.contains(undo)).toBe(true));
+    expect(isPopoverShown(hostOf(undo))).toBe(true);
+    await waitFor(() => expect(receivesPointer(undo)).toBe(true));
+    act(() => dialog.close());
+  });
+
+  it('sends focus to a dialog with nothing tabbable left on Escape from the region', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    let setShown: (shown: boolean) => void = () => undefined;
+    function Page() {
+      // The control focus came from leaves while focus is in the toasts.
+      const [shown, set] = useState(true);
+      setShown = set;
+      return (
+        <Themed>
+          <Dialog.Root open onOpenChange={() => undefined}>
+            <Dialog.Title>Read only</Dialog.Title>
+            {shown && <Button.Root>Once</Button.Root>}
+          </Dialog.Root>
+          <Region toaster={toaster} />
+        </Themed>
+      );
+    }
+    render(<Page />);
+    const dialog = screen.getByRole('dialog', { name: 'Read only' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    act(() => void toaster.add({ title: 'Note' }));
+    const undo = await screen.findByRole('button', { name: 'Undo Note' });
+    await waitFor(() => expect(dialog.contains(undo)).toBe(true));
+    screen.getByRole('button', { name: 'Once' }).focus();
+    await userEvent.keyboard('{F8}');
+    expect(document.activeElement).toBe(screen.getByRole('region'));
+    act(() => setShown(false));
+    await userEvent.keyboard('{Escape}');
+    expect(document.activeElement).toBe(dialog);
   });
 
   it('follows a modal <dialog> of your own through useModalLayer', async () => {

@@ -74,7 +74,6 @@ export function useModalDialog({
       // go back to where the person was instead.
       if (resume?.isConnected && el.contains(resume)) resume.focus();
     }
-    if (!present && el.open) el.close();
   }, [dialogRef, present, open, node, nativeCloses]);
 
   // Closes the element at the end of the exit motion, declared before
@@ -83,8 +82,8 @@ export function useModalDialog({
   // Toast.Region moved in; leaving the stack moves the toasts out, and focus
   // goes back to the toast once the page is no longer inert.
   useLayoutEffect(() => {
-    if (!present || !node) return;
-    const el = node;
+    const el = dialogRef.current;
+    if (!present || !el) return;
     return () => {
       if (!el.open) return;
       const active = el.ownerDocument.activeElement;
@@ -94,7 +93,7 @@ export function useModalDialog({
       dropModal(el);
       toast.focus({ preventScroll: true });
     };
-  }, [node, present]);
+  }, [dialogRef, present]);
 
   // In the stack from showModal() until close() at the end of the exit
   // motion, while the page is still inert. Toasts moved in stay usable, and
