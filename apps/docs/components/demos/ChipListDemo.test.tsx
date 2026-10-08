@@ -662,6 +662,87 @@ describe('chip list recipe', () => {
     body.assert();
   });
 
+  // An owner that updates chips only when the test says so.
+  function owner(initial: string[], maxRows = 2) {
+    const api = { set: (_next: (tags: string[]) => string[]) => undefined as void };
+    function Owner() {
+      const [tags, setTags] = useState(initial);
+      api.set = (next) => setTags(next);
+      return (
+        <ChipList.Root
+          aria-label="Tags"
+          chips={tags}
+          maxRows={maxRows}
+          onRemove={() => undefined}
+          dismissLabel={(value) => `Remove ${value}`}
+          overflowLabel={(n) => `+${n} more`}
+        />
+      );
+    }
+    render(<Owner />);
+    return api;
+  }
+
+  it('treats an insert before a chip awaiting removal as a move, not the removal', async () => {
+    const body = watchBody();
+    const tags = owner(['aa', 'bb', 'cc']);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Remove bb' }));
+    });
+    await act(async () => tags.set((current) => ['zz', ...current]));
+    const active = document.activeElement as HTMLElement;
+    expect(active.getAttribute('aria-label')).toBe('Remove bb');
+    expect(active.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('2');
+    await act(async () => tags.set((current) => current.filter((tag) => tag !== 'bb')));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove cc' }));
+    body.assert();
+  });
+
+  it('treats a chip the owner never dropped as moved when it later leaves the row', async () => {
+    const body = watchBody();
+    const width = { current: 500 };
+    const ros = stubListWidth(width);
+    owner(EIGHT, 1);
+    await resizeTo(ros);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Remove dd' }));
+    });
+    width.current = 400;
+    await resizeTo(ros);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: '+5 more' }));
+    body.assert();
+  });
+
+  it('keeps focus on the slot when the removed chip had a twin right after it', async () => {
+    const body = watchBody();
+    const tags = owner(['aa', 'bb', 'bb', 'cc']);
+    const [pressed] = screen.getAllByRole('button', { name: 'Remove bb' }) as [HTMLElement];
+    await act(async () => {
+      fireEvent.click(pressed);
+    });
+    await act(async () => tags.set((current) => current.filter((_, index) => index !== 1)));
+    const active = document.activeElement as HTMLElement;
+    expect(active.getAttribute('aria-label')).toBe('Remove bb');
+    expect(active.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('1');
+    body.assert();
+  });
+
+  it('closes the panel when the owner later drops its last chip', async () => {
+    const body = watchBody();
+    const tags = owner(['aa', 'bb', 'cc', 'dd'], 1);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+1 more' }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Remove dd' }));
+    });
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Remove dd');
+    await act(async () => tags.set((current) => current.filter((tag) => tag !== 'dd')));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove cc' }));
+    body.assert();
+  });
+
   it('defines chip geometry tokens and uses them on Chip', () => {
     render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
     const css = readFileSync(require.resolve('@tounsoo/todae/todae.css'), 'utf8');

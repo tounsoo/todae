@@ -78,6 +78,10 @@ function focusAfter(el: HTMLElement | null) {
   (next ?? el).focus();
 }
 
+function countOf(chips: readonly string[], value: string): number {
+  return chips.reduce((n, chip) => (chip === value ? n + 1 : n), 0);
+}
+
 // Calls onLost when its element unmounts holding focus, before the browser
 // drops focus to the body: a chip removed, or moved between the row and the
 // panel.
@@ -137,9 +141,17 @@ function Root({
   // Focus is parked on the list or panel while a removal re-measures, so it
   // never falls to the body.
   const parked = useRef(false);
-  // The chip a remove button asked onRemove to drop. Focus moves on when it
-  // actually leaves, whenever the owner drops it.
-  const removing = useRef<{ index: number; value: string } | null>(null);
+  // The value a remove button asked onRemove to drop, and how many chips held
+  // it then. A focused chip that unmounts once fewer chips hold that value was
+  // removed; any other unmount (an insert before it, a move to the panel) is a
+  // move, whenever and however the owner updates chips.
+  const removing = useRef<{ value: string; count: number } | null>(null);
+  const chipsNow = useRef(chips);
+  chipsNow.current = chips;
+  const wasRemoved = (value: string) => {
+    const gone = removing.current;
+    return gone !== null && gone.value === value && countOf(chipsNow.current, value) < gone.count;
+  };
   const pending = useRef<Pending | null>(null);
   // The chip that left the panel holding focus: its index and value then.
   const moved = useRef<{ index: number; value: string } | null>(null);
@@ -200,6 +212,12 @@ function Root({
       window.removeEventListener('scroll', apply, true);
     };
   }, [shown, popover.popoverRef, tail.length]);
+
+  // The removal landed, whether or not a focused chip left with it.
+  useLayoutEffect(() => {
+    const gone = removing.current;
+    if (gone && countOf(chips, gone.value) < gone.count) removing.current = null;
+  }, [chips]);
 
   // After a removal re-measures: the chip that now fills the slot, else the
   // previous one, else the list.
@@ -297,10 +315,9 @@ function Root({
             <Held
               key={chip.key}
               onLost={() => {
-                const gone = removing.current;
                 parked.current = true;
                 listRef.current?.focus({ preventScroll: true });
-                if (gone?.index === index && gone.value === chip.value) {
+                if (wasRemoved(chip.value)) {
                   removing.current = null;
                   pending.current = { where: 'list', slot: index };
                 } else moved.current = { index, value: chip.value };
@@ -317,7 +334,7 @@ function Root({
                   onDismiss={
                     onRemove
                       ? () => {
-                          removing.current = { index, value: chip.value };
+                          removing.current = { value: chip.value, count: countOf(chips, chip.value) };
                           holdOn(ref.current);
                           onRemove(index, chip.value);
                         }
@@ -370,8 +387,7 @@ function Root({
               <Held
                 key={`${at}:${value}`}
                 onLost={() => {
-                  const gone = removing.current;
-                  if (gone?.index === at && gone.value === value) {
+                  if (wasRemoved(value)) {
                     removing.current = null;
                     parked.current = true;
                     if (hidden > 1) {
@@ -399,7 +415,7 @@ function Root({
                     onDismiss={
                       onRemove
                         ? () => {
-                            removing.current = { index: at, value };
+                            removing.current = { value, count: countOf(chips, value) };
                             holdOn(ref.current);
                             onRemove(at, value);
                           }
