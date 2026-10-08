@@ -6,6 +6,7 @@ import { usePopover } from '../hooks/usePopover';
 import { BottomSheet, type SheetCloseReason } from '../components/BottomSheet';
 import { Button } from '../components/Button';
 import { Dialog, type DialogCloseReason } from '../components/Dialog';
+import { Drawer } from '../components/Drawer';
 import { Popover } from '../components/Popover';
 
 function Themed({ children }: { children: ReactNode }) {
@@ -253,12 +254,18 @@ describe('BottomSheet in a browser', () => {
 describe('page scroll behind a modal', () => {
   const overflow = () => getComputedStyle(document.documentElement).overflow;
 
-  it('stops while a Dialog is open, through its exit, and comes back once it closes', async () => {
+  const roots = [
+    ['Dialog', Dialog.Root],
+    ['Drawer', Drawer.Root],
+    ['BottomSheet', BottomSheet.Root],
+  ] as const;
+
+  it.each(roots)('stops while a %s is open, through its exit, and comes back once it closes', async (_, Root) => {
     function Harness({ open }: { open: boolean }) {
       return (
-        <Dialog.Root open={open} onOpenChange={() => undefined} aria-label="Rename">
+        <Root open={open} onOpenChange={() => undefined} aria-label="Panel">
           <p>Body</p>
-        </Dialog.Root>
+        </Root>
       );
     }
     expect(overflow()).not.toBe('hidden');
@@ -274,15 +281,20 @@ describe('page scroll behind a modal', () => {
     expect(overflow()).not.toBe('hidden');
   });
 
-  it('stops for a BottomSheet and comes back when it unmounts', () => {
-    const { unmount } = render(
-      <BottomSheet.Root open onOpenChange={() => undefined} aria-label="Sort">
-        <p>Body</p>
-      </BottomSheet.Root>,
-    );
-    expect(overflow()).toBe('hidden');
-    unmount();
-    expect(overflow()).not.toBe('hidden');
+  it('stops even when the page sets its own overflow', () => {
+    const style = document.createElement('style');
+    style.textContent = 'html { overflow-y: scroll }';
+    document.head.append(style);
+    try {
+      render(
+        <Dialog.Root open onOpenChange={() => undefined} aria-label="Rename">
+          <p>Body</p>
+        </Dialog.Root>,
+      );
+      expect(getComputedStyle(document.documentElement).overflowY).toBe('hidden');
+    } finally {
+      style.remove();
+    }
   });
 
   it('stops for a modal dialog of your own, but not for a non-modal one', () => {

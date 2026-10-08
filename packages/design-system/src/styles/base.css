@@ -2,12 +2,13 @@
    selector sits in :where(), so any class a company adds wins. */
 @layer todae.base {
   /* A modal <dialog> makes the page behind it inert, so the page does not
-     scroll either. The gutter stays, so the page does not shift when its
-     scrollbar goes. */
+     scroll either. The gutter stays, so a page with a scrollbar does not
+     shift when it goes. Important, so a page's own overflow rule, such as
+     html { overflow-y: scroll }, does not keep the page scrolling. */
   :where(:root:has(dialog:modal)) {
-    overflow: hidden;
-    overscroll-behavior: none;
-    scrollbar-gutter: stable;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    scrollbar-gutter: stable !important;
   }
 
   /* Links. Neutral ink: a link keeps the text color and stands out by its
