@@ -904,13 +904,9 @@
     }
   },
   "Pagination.Item": {
-    "current": {
-      "en": "The page you are on: its children are drawn as the current page and marked aria-current=\"page\". Pass text, not a link.",
-      "ko": "지금 있는 페이지입니다. 자식이 현재 페이지로 그려지고 aria-current=\"page\"가 붙습니다. 링크가 아니라 텍스트를 넘기세요."
-    },
     "children": {
-      "en": "A link or button, or the page number for the current page.",
-      "ko": "링크나 버튼, 또는 현재 페이지의 번호."
+      "en": "A link or button.",
+      "ko": "링크나 버튼."
     }
   },
   "Pagination.Root": {

@@ -15,6 +15,7 @@ describe('Pagination', () => {
     );
     const nav = screen.getByRole('navigation', { name: 'Pagination' });
     expect(nav.querySelector('ol')?.getAttribute('role')).toBe('list');
+    expect(screen.getByRole('link', { name: '1' }).closest('li')).toBeTruthy();
   });
 
   it('takes its own name', () => {
@@ -31,14 +32,12 @@ describe('Pagination', () => {
     expect(nav.hasAttribute('aria-label')).toBe(false);
   });
 
-  it('marks the current page, and hides the gap from assistive technology', () => {
+  it('hides the gap from assistive technology', () => {
     render(
       <Pagination.Root>
-        <Pagination.Item current>3</Pagination.Item>
         <Pagination.Ellipsis data-testid="gap" />
       </Pagination.Root>,
     );
-    expect(screen.getByText('3').getAttribute('aria-current')).toBe('page');
     const gap = screen.getByTestId('gap');
     expect(gap.getAttribute('aria-hidden')).toBe('true');
     expect(gap.textContent).toBe('…');

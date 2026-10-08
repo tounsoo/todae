@@ -6,33 +6,33 @@ import { useState } from 'react';
 export function PaginationButtons() {
   const [page, setPage] = useState(10);
   const count = 20;
+  // aria-disabled, not disabled, so a step keeps focus when it reaches an end.
+  const step = (to: number, label: string) => (
+    <Pagination.Item>
+      <button
+        type="button"
+        aria-disabled={to < 1 || to > count ? true : undefined}
+        onClick={() => to >= 1 && to <= count && setPage(to)}
+      >
+        {label}
+      </button>
+    </Pagination.Item>
+  );
   return (
     <Pagination.Root aria-label="Invoice pages">
-      <Pagination.Item>
-        <button type="button" disabled={page === 1} onClick={() => setPage(page - 1)}>
-          Previous
-        </button>
-      </Pagination.Item>
+      {step(page - 1, 'Previous')}
       {paginationRange({ page, count }).map((item) =>
         typeof item === 'number' ? (
-          <Pagination.Item key={item} current={item === page}>
-            {item === page ? (
-              item
-            ) : (
-              <button type="button" onClick={() => setPage(item)}>
-                {item}
-              </button>
-            )}
+          <Pagination.Item key={item}>
+            <button type="button" aria-current={item === page ? 'page' : undefined} onClick={() => setPage(item)}>
+              {item}
+            </button>
           </Pagination.Item>
         ) : (
           <Pagination.Ellipsis key={item} />
         ),
       )}
-      <Pagination.Item>
-        <button type="button" disabled={page === count} onClick={() => setPage(page + 1)}>
-          Next
-        </button>
-      </Pagination.Item>
+      {step(page + 1, 'Next')}
     </Pagination.Root>
   );
 }

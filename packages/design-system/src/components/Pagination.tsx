@@ -11,13 +11,12 @@ export { paginationRange, type PaginationRangeItem, type PaginationRangeOptions 
 export type PaginationRootProps = ComponentPropsWithRef<'nav'>;
 
 /**
- * One page, or the previous or next step: put your link or button inside. For
- * the page you are on, mark the item `current` and pass the page number as
- * text: it is drawn as the current page and marked `aria-current="page"`.
+ * One page, or the previous or next step: put your link or button inside.
+ * Mark the current page's control `aria-current="page"` and a step with
+ * nowhere to go `aria-disabled="true"`, and keep both focusable, so focus
+ * stays put when the page changes.
  */
-export type PaginationItemProps = {
-  current?: boolean;
-} & ComponentPropsWithRef<'li'>;
+export type PaginationItemProps = ComponentPropsWithRef<'li'>;
 
 /** Stands for the pages a gap leaves out. Drawn as "…" by default; screen readers skip it. */
 export type PaginationEllipsisProps = ComponentPropsWithRef<'li'>;
@@ -38,18 +37,8 @@ function Root({ 'aria-label': ariaLabel, 'aria-labelledby': labelledby, classNam
   );
 }
 
-function Item({ current = false, className, children, ...props }: PaginationItemProps) {
-  return (
-    <li {...props} className={cx(styles.item, className)}>
-      {current ? (
-        <span aria-current="page" className={styles.current}>
-          {children}
-        </span>
-      ) : (
-        children
-      )}
-    </li>
-  );
+function Item({ className, ...props }: PaginationItemProps) {
+  return <li {...props} className={cx(styles.item, className)} />;
 }
 
 function Ellipsis({ className, children = '…', ...props }: PaginationEllipsisProps) {
