@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
 import { useRef, useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -12,6 +12,16 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
 });
+
+/** Renders, then lets the region's live list settle, as toasts show a task after it. */
+function render(ui: Parameters<typeof rtlRender>[0]): ReturnType<typeof rtlRender> {
+  const fake = vi.isFakeTimers();
+  if (!fake) vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  const result = rtlRender(ui);
+  act(() => void vi.advanceTimersByTime(0));
+  if (!fake) vi.useRealTimers();
+  return result;
+}
 
 function Region({ toaster, ...props }: { toaster: Toaster } & Partial<ToastRegionProps>) {
   return (
@@ -124,6 +134,50 @@ describe('Toast', () => {
       toaster.dismiss(toaster.add({ title: 'Waiting' }));
     });
     expect(toaster.getSnapshot().map((t) => t.title)).toEqual(['Shown']);
+  });
+
+  it('shows toasts already in the store a task after the live list', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster();
+    toaster.add({ title: 'Early' });
+    rtlRender(<Region toaster={toaster} />);
+    const list = screen.getByRole('list', { hidden: true });
+    expect(list.children).toHaveLength(0);
+    act(() => void vi.advanceTimersByTime(0));
+    expect(list.textContent).toContain('Early');
+  });
+
+  it('keeps its own pointer bookkeeping when a handler of yours prevents the event', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(<Region toaster={toaster} onPointerLeave={(event) => event.preventDefault()} />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    fireEvent.pointerEnter(region);
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    fireEvent.pointerLeave(region);
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+  });
+
+  it('leaves a typing hotkey to a text field, but not a function key', () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Page({ hotkey }: { hotkey: string }) {
+      return (
+        <>
+          <input aria-label="Name" />
+          <Region toaster={toaster} hotkey={hotkey} />
+        </>
+      );
+    }
+    const { rerender } = render(<Page hotkey="Alt+T" />);
+    act(() => void toaster.add({ title: 'Keys' }));
+    const input = screen.getByRole('textbox', { name: 'Name' });
+    input.focus();
+    fireEvent.keyDown(input, { key: 't', code: 'KeyT', altKey: true });
+    expect(document.activeElement).toBe(input);
+    rerender(<Page hotkey="F8" />);
+    fireEvent.keyDown(input, { key: 'F8', code: 'F8' });
+    expect(document.activeElement).toBe(screen.getByRole('region'));
   });
 
   it('pauses the timer while the pointer is over the region', () => {
@@ -333,6 +387,36 @@ describe('Toast', () => {
     expect(dialog.contains(host)).toBe(true);
     await waitFor(() => expect(dialog.contains(host)).toBe(false));
     expect(host.hasAttribute('data-popover-open')).toBe(true);
+  });
+
+  it('reads hover again after it moves, as a moved element sends no pointerleave', async () => {
+    const toaster = createToaster();
+    function Page() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open
+          </button>
+          <Dialog.Root open={open} onOpenChange={setOpen} aria-label="d">
+            d
+          </Dialog.Root>
+          <Region toaster={toaster} />
+        </>
+      );
+    }
+    render(<Page />);
+    act(() => void toaster.add({ title: 'Hovered' }));
+    const frame = () => act(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+    // Past the read after the toast showed.
+    await frame();
+    const region = screen.getByRole('region');
+    fireEvent.pointerEnter(region);
+    await frame();
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    // jsdom matches no :hover, as for a pointer the move left behind.
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
   });
 });
 

@@ -118,6 +118,22 @@ function keepingFocus(el: HTMLElement, change: () => void): void {
   if (focused && el.isConnected) focused.focus({ preventScroll: true });
 }
 
+/** Runs the consumer's handler, then the region's bookkeeping, which has no default to prevent. */
+function alongside<E>(theirs: ((event: E) => void) | undefined, ours: (event: E) => void): (event: E) => void {
+  return (event) => {
+    theirs?.(event);
+    ours(event);
+  };
+}
+
+/** Whether a key pressed in `target` types there, so a typing hotkey leaves it alone. */
+function typesIn(target: EventTarget | null, hotkey: string): boolean {
+  // A function key types nothing anywhere.
+  if (/(^|\+)\s*f\d{1,2}\s*$/i.test(hotkey)) return false;
+  if (!(target instanceof HTMLElement)) return false;
+  return target.isContentEditable || target.matches('input, textarea, select');
+}
+
 const MODIFIERS = ['alt', 'ctrl', 'meta', 'shift'] as const;
 
 /** Whether `event` is `hotkey`, such as "F8" or "Alt+T", with exactly those modifiers. */
@@ -337,6 +353,7 @@ function Region<T extends object = object>({
     const home = homeRef.current;
     if (!host || !home) return;
     let observer: MutationObserver | null = null;
+    let stopHover: (() => void) | undefined;
     const place = () => {
       // Not a modal opened from a toast, which sits inside the host itself.
       const target = frontModal((modal) => host.contains(modal)) ?? home;
@@ -363,18 +380,34 @@ function Region<T extends object = object>({
         observer.observe(target, { childList: true });
       }
       syncFocused();
+      // Moved out from under a resting pointer, which sends no pointerleave.
+      stopHover?.();
+      stopHover = syncHovered();
     };
     place();
     const unsubscribe = subscribeModals(place);
     return () => {
       unsubscribe();
       observer?.disconnect();
+      stopHover?.();
     };
-  }, [host, syncFocused, whileMoving]);
+  }, [host, syncFocused, syncHovered, whileMoving]);
+
+  // Toasts already in the store when the region mounts show a task after
+  // the live list, so screen readers read them as added.
+  const [live, setLive] = useState(false);
+  useEffect(() => {
+    if (!host) return;
+    const timer = window.setTimeout(() => setLive(true));
+    return () => {
+      window.clearTimeout(timer);
+      setLive(false);
+    };
+  }, [host]);
 
   // At least one, so toasts never only wait.
   const max = Math.max(1, Math.floor(limit) || 1);
-  const shown = toasts.slice(0, max);
+  const shown = live ? toasts.slice(0, max) : NO_TOASTS;
   const hasOpen = shown.some((toast) => toast.open);
 
   // A toast that starts showing, new, shown again by add() or out of the
@@ -411,7 +444,7 @@ function Region<T extends object = object>({
     const onKey = (event: KeyboardEvent) => {
       const section = sectionRef.current;
       // Not a key something else handled, an IME composing, or a held key.
-      if (event.defaultPrevented || event.isComposing || event.repeat) return;
+      if (event.defaultPrevented || event.isComposing || event.repeat || typesIn(event.target, hotkey)) return;
       if (!section || !matchesHotkey(event, hotkey)) return;
       event.preventDefault();
       section.focus();
@@ -503,9 +536,9 @@ function Region<T extends object = object>({
       data-layout={layout}
       data-placement={placement}
       data-expanded={expanded ? '' : undefined}
-      onPointerEnter={composeHandlers(onPointerEnter, () => setHovered(true))}
-      onPointerLeave={composeHandlers(onPointerLeave, () => setHovered(false))}
-      onFocus={composeHandlers(onFocus, (event) => {
+      onPointerEnter={alongside(onPointerEnter, () => setHovered(true))}
+      onPointerLeave={alongside(onPointerLeave, () => setHovered(false))}
+      onFocus={alongside(onFocus, (event) => {
         focusLeave.onFocus();
         if (event.target instanceof HTMLElement) lastInside.current = event.target;
         if (moving.current) return;
@@ -515,7 +548,7 @@ function Region<T extends object = object>({
         if (from instanceof HTMLElement && !event.currentTarget.contains(from)) origin.current = from;
         setFocused(isKeyboardFocus(event.target));
       })}
-      onBlur={composeHandlers(onBlur, focusLeave.onBlur)}
+      onBlur={alongside(onBlur, focusLeave.onBlur)}
       onKeyDown={composeHandlers(onKeyDown, (event: ReactKeyboardEvent<HTMLElement>) => {
         if (event.key !== 'Escape' || event.target !== event.currentTarget) return;
         event.preventDefault();
