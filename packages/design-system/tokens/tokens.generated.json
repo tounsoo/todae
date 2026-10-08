@@ -3674,6 +3674,240 @@
       "context": null
     },
     {
+      "path": "toast.critical.bg",
+      "type": "color",
+      "cssVar": "--todae-toast-critical-bg",
+      "cssValue": "var(--todae-color-status-critical-bg)",
+      "ref": "color.status.critical.bg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.critical.border",
+      "type": "color",
+      "cssVar": "--todae-toast-critical-border",
+      "cssValue": "var(--todae-color-status-critical-border)",
+      "ref": "color.status.critical.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.critical.fg",
+      "type": "color",
+      "cssVar": "--todae-toast-critical-fg",
+      "cssValue": "var(--todae-color-status-critical-fg)",
+      "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-toast-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.gap",
+      "type": "dimension",
+      "cssVar": "--todae-toast-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.info.bg",
+      "type": "color",
+      "cssVar": "--todae-toast-info-bg",
+      "cssValue": "var(--todae-color-status-info-bg)",
+      "ref": "color.status.info.bg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.info.border",
+      "type": "color",
+      "cssVar": "--todae-toast-info-border",
+      "cssValue": "var(--todae-color-status-info-border)",
+      "ref": "color.status.info.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.info.fg",
+      "type": "color",
+      "cssVar": "--todae-toast-info-fg",
+      "cssValue": "var(--todae-color-status-info-fg)",
+      "ref": "color.status.info.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.inset",
+      "type": "dimension",
+      "cssVar": "--todae-toast-inset",
+      "cssValue": "var(--todae-space-overlay-padding)",
+      "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.leading",
+      "type": "number",
+      "cssVar": "--todae-toast-leading",
+      "cssValue": "var(--todae-font-leading-default)",
+      "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.motion.enter",
+      "type": "duration",
+      "cssVar": "--todae-toast-motion-enter",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.motion.exit",
+      "type": "duration",
+      "cssVar": "--todae-toast-motion-exit",
+      "cssValue": "var(--todae-motion-duration-fast)",
+      "ref": "motion.duration.fast",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-toast-padding-x",
+      "cssValue": "var(--todae-space-control-x)",
+      "ref": "space.control.x",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-toast-padding-y",
+      "cssValue": "var(--todae-space-control-x)",
+      "ref": "space.control.x",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.peek",
+      "type": "dimension",
+      "cssVar": "--todae-toast-peek",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.radius",
+      "type": "dimension",
+      "cssVar": "--todae-toast-radius",
+      "cssValue": "var(--todae-radius-md)",
+      "ref": "radius.md",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-toast-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.stack-gap",
+      "type": "dimension",
+      "cssVar": "--todae-toast-stack-gap",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.success.bg",
+      "type": "color",
+      "cssVar": "--todae-toast-success-bg",
+      "cssValue": "var(--todae-color-status-success-bg)",
+      "ref": "color.status.success.bg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.success.border",
+      "type": "color",
+      "cssVar": "--todae-toast-success-border",
+      "cssValue": "var(--todae-color-status-success-border)",
+      "ref": "color.status.success.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.success.fg",
+      "type": "color",
+      "cssVar": "--todae-toast-success-fg",
+      "cssValue": "var(--todae-color-status-success-fg)",
+      "ref": "color.status.success.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.title.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-toast-title-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.warning.bg",
+      "type": "color",
+      "cssVar": "--todae-toast-warning-bg",
+      "cssValue": "var(--todae-color-status-warning-bg)",
+      "ref": "color.status.warning.bg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.warning.border",
+      "type": "color",
+      "cssVar": "--todae-toast-warning-border",
+      "cssValue": "var(--todae-color-status-warning-border)",
+      "ref": "color.status.warning.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.warning.fg",
+      "type": "color",
+      "cssVar": "--todae-toast-warning-fg",
+      "cssValue": "var(--todae-color-status-warning-fg)",
+      "ref": "color.status.warning.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.width",
+      "type": "dimension",
+      "cssVar": "--todae-toast-width",
+      "cssValue": "22rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "fieldset.gap",
       "type": "dimension",
       "cssVar": "--todae-fieldset-gap",

@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
-import { dropModal, pushModal } from './modalStack';
+import { useModalLayer } from '../hooks/useModalLayer';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
 export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
@@ -61,7 +61,6 @@ export function useModalDialog({
     if (present && open && !el.open) {
       const resume = lastFocus.current;
       el.showModal();
-      pushModal(el);
       // Rendered in place, a modal inside a hidden container makes the page
       // inert while showing nothing.
       if (process.env.NODE_ENV !== 'production' && el.checkVisibility?.() === false) {
@@ -76,20 +75,9 @@ export function useModalDialog({
     if (!present && el.open) el.close();
   }, [dialogRef, present, open, node, nativeCloses]);
 
-  // Leaves the modal stack on any close and when the element goes away.
-  useLayoutEffect(() => {
-    const el = node;
-    if (!el) return;
-    const drop = () => {
-      if (!el.open) dropModal(el);
-    };
-    el.addEventListener('close', drop);
-    return () => {
-      el.removeEventListener('close', drop);
-      // Gone from the page, open or not: a removed <dialog> keeps open set.
-      dropModal(el);
-    };
-  }, [node]);
+  // In the stack from showModal() until the owner closes it, so toasts leave
+  // before the exit motion.
+  useModalLayer(dialogRef, open);
 
   const cancelledAt = useRef(-Infinity);
   useLayoutEffect(() => {

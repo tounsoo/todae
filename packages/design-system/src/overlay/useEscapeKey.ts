@@ -1,19 +1,10 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import { frontModal } from './modalStack';
+import { frontModal, isModal } from './modalStack';
 
 type Entry = { handle: () => void; enabled: () => boolean; element: () => Element | null };
 
 const stack: Entry[] = [];
 let listening = false;
-
-function isModal(dialog: Element): boolean {
-  try {
-    if (dialog.matches(':modal')) return true;
-  } catch {
-    // An engine without :modal, such as jsdom, falls back to aria-modal.
-  }
-  return dialog.getAttribute('aria-modal') === 'true';
-}
 
 /**
  * The modal <dialog> in front: the one the key was pressed in, or, when focus

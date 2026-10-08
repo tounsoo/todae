@@ -1,18 +1,46 @@
-/** Modal <dialog> elements Todae opened, oldest first, so the last one is in front. */
+/** Modal <dialog> elements in Todae's stack, oldest first, so the last one is in front. */
 const open: HTMLDialogElement[] = [];
+const listeners = new Set<() => void>();
 
+function notify(): void {
+  for (const listener of [...listeners]) listener();
+}
+
+/** Puts `el` in front, or moves it there if it is already held. */
 export function pushModal(el: HTMLDialogElement): void {
   const index = open.indexOf(el);
+  if (index === open.length - 1 && index !== -1) return;
   if (index !== -1) open.splice(index, 1);
   open.push(el);
+  notify();
 }
 
 export function dropModal(el: HTMLDialogElement): void {
   const index = open.indexOf(el);
-  if (index !== -1) open.splice(index, 1);
+  if (index === -1) return;
+  open.splice(index, 1);
+  notify();
 }
 
-/** The modal Todae opened last that is still open and in the document. */
+/** Calls `listener` whenever an element joins or leaves the stack. */
+export function subscribeModals(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/** Whether `dialog` is shown as a modal: with showModal(), not show(). */
+export function isModal(dialog: Element): boolean {
+  try {
+    if (dialog.matches(':modal')) return true;
+  } catch {
+    // An engine without :modal, such as jsdom, falls back to aria-modal.
+  }
+  return dialog.getAttribute('aria-modal') === 'true';
+}
+
+/** The modal in the stack that is in front and still open and in the document. */
 export function frontModal(): HTMLDialogElement | null {
   for (let i = open.length - 1; i >= 0; i--) {
     const el = open[i]!;

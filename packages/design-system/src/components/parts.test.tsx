@@ -23,8 +23,10 @@ import {
   Switch,
   Tabs,
   Text,
+  Toast,
   Tooltip,
   composeRefs,
+  createToaster,
   usePopover,
   useTooltip,
 } from '../index';
@@ -307,6 +309,20 @@ const cases: Case[] = [
           <Alert.Root>
             <Part {...p} />
           </Alert.Root>
+        );
+      },
+    ],
+  ),
+  ['Toast.Region', (p) => <Toast.Region toaster={createToaster()} {...p}>{() => null}</Toast.Region>],
+  ...(['Root', 'Icon', 'Title', 'Description', 'Action', 'Close'] as const).map(
+    (part): Case => [
+      `Toast.${part}`,
+      (p) => {
+        const Part = Toast[part] as (props: Native) => ReactNode;
+        return part === 'Root' ? <Part {...p} /> : (
+          <Toast.Root>
+            <Part {...p} />
+          </Toast.Root>
         );
       },
     ],

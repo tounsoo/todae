@@ -1,0 +1,91 @@
+import { ToastDemo } from '../../../components/demos/ToastDemo';
+
+# Toast
+
+A short message about something that just happened, which leaves by itself. Toasts live in a store you make with `createToaster()`, so any code can show one, and appear in one `Toast.Region` near the root of your app.
+
+```tsx
+// Once, at module scope.
+export const toaster = createToaster();
+
+// Once, near the app root.
+<Toast.Region toaster={toaster}>
+	{(toast) => (
+		<Toast.Root>
+			<Toast.Icon>
+				<YourIcon />
+			</Toast.Icon>
+			<Toast.Title>{toast.title}</Toast.Title>
+			<Toast.Description>{toast.description}</Toast.Description>
+			<Toast.Action onClick={undo}>Undo</Toast.Action>
+			<Toast.Close>×</Toast.Close>
+		</Toast.Root>
+	)}
+</Toast.Region>
+
+// Anywhere, even outside React.
+toaster.add({ tone: 'success', title: 'Changes saved' });
+```
+
+<Example block>
+  <ToastDemo />
+</Example>
+
+`toaster.add()` returns the toast's id. Pass that id to `update()` to change the toast, such as from "Uploading" to "Uploaded", or to `dismiss()` to close it. Adding a toast with an id that is still showing replaces it in place. Give `createToaster<YourFields>()` a type to put fields of your own on each toast and read them in the render function.
+
+Todae ships no icons. `Toast.Icon` is a slot for one from your own set, as in [Alert](/alert).
+
+## Toasts and modal dialogs
+
+The region is a `popover="manual"` element, so it sits in the top layer above the page. A modal `<dialog>` is in the top layer too, and it makes everything outside it inert: a toast outside an open dialog can't be clicked or focused, and screen readers can't find it, even when it is drawn on top. Showing the popover again doesn't change that.
+
+So while a Dialog or BottomSheet is open, the region moves inside it and shows itself again. Toasts shown before the dialog opened and toasts shown while it is open both sit in front of the dialog and its backdrop, and stay usable. When the dialog starts to close, the region moves back. With nested dialogs, it follows the one in front.
+
+The region knows about a modal from Todae's modal stack. Dialog and BottomSheet join it by themselves. For a modal `<dialog>` of your own, call [useModalLayer](/utilities/use-modal-layer). Toasts stay inert under a modal that is not in the stack.
+
+Each new toast shows the region again, so it lands in front of a Popover or Menu opened since the last one. Clicking a toast closes an open popover that closes on outside clicks, as any click outside it does.
+
+## Layouts
+
+`layout="list"` shows each toast in full. `layout="stack"` puts the toasts behind the newest one, peeking out by `toast.peek`, and spreads them out while the pointer is over them or focus is inside. The newest toast sits nearest the edge `placement` names.
+
+`limit` caps how many toasts show at once. Toasts added past it wait their turn and show as others leave.
+
+The region sets these variables on each `li` for your own stack styles: `--toast-index` (0 for the newest), `--toast-offset` (the height of the toasts in front of it), and on the list `--toast-front-height` and `--toast-count`.
+
+## Timing
+
+A toast dismisses itself after `duration`: 5000 milliseconds unless `createToaster()` or `add()` says otherwise. `Infinity` keeps it until it is dismissed. Every timer pauses while the pointer is over the region, while focus is inside it, and while the page is hidden.
+
+A toast can leave before someone reaches it, so it should not be the only way to do something. Offer Undo somewhere else too, or give a toast with an action `duration: Infinity`. `Toast.Action` dismisses its toast after `onClick`; call `event.preventDefault()` to keep it.
+
+## Keyboard and screen readers
+
+- **F8** moves focus to the region, and Tab goes on into the toasts. Change it with `hotkey`, such as `hotkey="Alt+T"`, or turn it off with `hotkey={null}`.
+- **Escape** on a toast dismisses it, not the dialog behind it. Focus goes back where F8 came from once no toast is left.
+- The toasts are a list inside a live region that exists before the first toast, so screen readers read each new one politely. `critical` toasts are `role="alert"`, which interrupts.
+- The region is named "Notifications" and `Toast.Close` is named "Dismiss" unless its text names it. Both are English: pass `aria-label` in your app's language.
+
+## When to use
+
+**When:** Confirming an action that already happened, such as saved, sent or copied, or a background event that needs no answer.
+
+**When not:** A message that stays until it is fixed → Alert. An error on a field → ErrorMessage. A choice that blocks the task → Dialog.
+
+## Props
+
+<PropsTable name="Toast.Region" />
+
+<PropsTable name="Toast.Root" />
+
+<PropsTable name="Toast.Icon" />
+
+<PropsTable name="Toast.Title" />
+
+<PropsTable name="Toast.Description" />
+
+<PropsTable name="Toast.Action" />
+
+<PropsTable name="Toast.Close" />
+
+<PropsTable name="createToaster" />
