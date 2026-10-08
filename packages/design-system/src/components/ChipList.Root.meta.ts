@@ -39,7 +39,7 @@ export const meta = {
       name: 'panelLabel',
       type: '(n: number) => string',
       required: false,
-      description: 'Name of the popover with the folded chips. Default is {n} more chips.',
+      description: 'Name of the popover with the folded chips. Default is {n} more chips, or 1 more chip.',
     },
   ],
 } as const satisfies ComponentMeta;

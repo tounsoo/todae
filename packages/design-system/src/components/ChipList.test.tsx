@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ChipList } from './ChipList';
 
@@ -59,6 +60,11 @@ describe('ChipList', () => {
   it('describes the list itself', () => {
     render(<ChipList.Root aria-label="Tags" aria-describedby="hint" chips={['a']} />);
     expect(screen.getByRole('list', { name: 'Tags' }).getAttribute('aria-describedby')).toBe('hint');
+  });
+
+  it('server-renders chips visible without a row limit, hidden until measured with one', () => {
+    expect(renderToString(<ChipList.Root aria-label="Tags" chips={['a']} />)).not.toContain('data-measuring');
+    expect(renderToString(<ChipList.Root aria-label="Tags" chips={['a']} maxRows={1} />)).toContain('data-measuring');
   });
 
   it('renders the measure row only with a row limit', () => {

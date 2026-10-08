@@ -595,6 +595,7 @@ describe('chip list recipe', () => {
     await resizeTo(ros);
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(screen.getByRole('list', { name: 'Tags' }));
+    expect(screen.getByRole('list', { name: 'Tags' }).hasAttribute('data-ring')).toBe(true);
     body.assert();
   });
 
@@ -741,6 +742,25 @@ describe('chip list recipe', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove cc' }));
     body.assert();
+  });
+
+  it('rings the list when the focused chip changes value and nothing takes its place', async () => {
+    const body = watchBody();
+    const tags = owner(['aa', 'bb']);
+    act(() => screen.getByRole('button', { name: 'Remove bb' }).focus());
+    await act(async () => tags.set(() => ['aa', 'BB']));
+    const list = screen.getByRole('list', { name: 'Tags' });
+    expect(document.activeElement).toBe(list);
+    expect(list.hasAttribute('data-ring')).toBe(true);
+    body.assert();
+  });
+
+  it('names a panel with one chip in the singular by default', async () => {
+    render(<ChipList.Root aria-label="Tags" chips={['aa', 'bb', 'cc', 'dd']} maxRows={1} />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /1/ }));
+    });
+    expect(screen.getByRole('dialog', { name: '1 more chip' })).toBeTruthy();
   });
 
   it('defines chip geometry tokens and uses them on Chip', () => {

@@ -31,7 +31,7 @@ export type ChipListRootProps = {
   dismissLabel?: (value: string) => string;
   /** +N button name. Default is {n} more. */
   overflowLabel?: (n: number) => string;
-  /** Name of the popover with the folded chips. Default is {n} more chips. */
+  /** Name of the popover with the folded chips. Default is {n} more chips, or 1 more chip. */
   panelLabel?: (n: number) => string;
 } & Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
@@ -121,7 +121,7 @@ function Root({
   onRemove,
   dismissLabel,
   overflowLabel,
-  panelLabel = (n) => `${n} more chips`,
+  panelLabel = (n) => `${n} more ${n === 1 ? 'chip' : 'chips'}`,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledby,
   'aria-describedby': ariaDescribedby,
@@ -155,8 +155,6 @@ function Root({
   const pending = useRef<Pending | null>(null);
   // The chip that left the panel holding focus: its index and value then.
   const moved = useRef<{ index: number; value: string } | null>(null);
-  const hiddenNow = useRef(0);
-  hiddenNow.current = hidden;
 
   // A focused chip moved from the panel back to the row: focus follows it.
   useLayoutEffect(() => {
@@ -170,17 +168,25 @@ function Root({
         : items.find((item) => item.getAttribute('data-index') === String(chip.index) && item.getAttribute('data-value') === chip.value) ??
           items.find((item) => item.getAttribute('data-value') === chip.value);
     const button = match?.querySelector('button');
+    // Nothing to follow: focus stays on the list, with its ring.
+    const onList = () => {
+      list?.focus({ preventScroll: true });
+      setRing(true);
+    };
     if (hidden === 0 && open) {
       moved.current = null;
       parked.current = false;
-      (button ?? list)?.focus({ preventScroll: true });
+      if (button) button.focus({ preventScroll: true });
+      else onList();
       setOpen(false);
       return;
     }
     if (chip === null) return;
     moved.current = null;
     parked.current = false;
-    (button ?? moreRef.current)?.focus({ preventScroll: true });
+    const next = button ?? moreRef.current;
+    if (next) next.focus({ preventScroll: true });
+    else onList();
   }, [chips, hidden, listRef, open]);
 
   const popover = usePopover({
@@ -190,6 +196,7 @@ function Root({
   });
   const wire = popover.getPopoverProps();
   const tail = chips.slice(chips.length - hidden);
+  const tailKey = tail.join('\n');
   const shown = open && hidden > 0;
 
   useLayoutEffect(() => {
@@ -211,7 +218,7 @@ function Root({
       window.removeEventListener('resize', apply);
       window.removeEventListener('scroll', apply, true);
     };
-  }, [shown, popover.popoverRef, tail.length]);
+  }, [shown, popover.popoverRef, tailKey]);
 
   // The removal landed, whether or not a focused chip left with it.
   useLayoutEffect(() => {
@@ -301,7 +308,7 @@ function Root({
           aria-details={ariaDetails}
           tabIndex={-1}
           className={styles.list}
-          data-measuring={measured ? undefined : ''}
+          data-measuring={rows != null && !measured ? '' : undefined}
           data-ring={ring ? '' : undefined}
           onFocus={(event) => {
             if (event.target !== event.currentTarget || parked.current) return;
@@ -403,7 +410,7 @@ function Root({
                     return;
                   }
                   moved.current = { index: at, value };
-                  if (hiddenNow.current > 0) parked.current = true;
+                  parked.current = true;
                   listRef.current?.focus({ preventScroll: true });
                 }}
               >
