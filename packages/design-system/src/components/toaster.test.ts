@@ -13,6 +13,12 @@ describe('createToaster', () => {
     ]);
   });
 
+  it('takes the default duration for NaN', () => {
+    const toaster = createToaster({ duration: 1000 });
+    toaster.add({ title: 'A', duration: Number(undefined) });
+    expect(toaster.getSnapshot()[0]!.duration).toBe(1000);
+  });
+
   it('takes a default duration and fields of your own', () => {
     const toaster = createToaster<{ href?: string }>({ duration: Infinity });
     toaster.add({ title: 'A', href: '/a' });

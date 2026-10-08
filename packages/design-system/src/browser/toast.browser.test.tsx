@@ -713,6 +713,12 @@ describe('Toast in the top layer', () => {
     await screen.findByRole('button', { name: 'Undo Two' });
     expect(visits).not.toHaveBeenCalled();
     expect(document.activeElement).toBe(undo);
+    // Still knows where focus came from: Escape dismisses One, focus stays
+    // in the region for Two, and Escape there goes back.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('region')));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(before));
   });
 
   it('moves focus to the region on F8 and back after Escape', async () => {

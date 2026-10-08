@@ -72,7 +72,8 @@ export function createToaster<T extends object = object>(options: CreateToasterO
       ...record,
       id,
       tone: (record.tone as ToastTone | undefined) ?? 'info',
-      duration: (record.duration as number | undefined) ?? defaultDuration,
+      // NaN, such as from a missing config value, takes the default too.
+      duration: Number.isNaN(record.duration) ? defaultDuration : ((record.duration as number | undefined) ?? defaultDuration),
       open: true,
       version: base?.version ?? ++nextVersion,
     } as ToastRecord<T>;
