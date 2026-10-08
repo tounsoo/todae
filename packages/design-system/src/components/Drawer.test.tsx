@@ -30,12 +30,15 @@ describe('Drawer', () => {
   });
 
   it('falls back to the end edge for an unknown side from untyped code', () => {
-    render(
-      <Drawer.Root open onOpenChange={() => undefined} side={'right' as never} aria-label="Nav">
-        <p>Links</p>
-      </Drawer.Root>,
-    );
-    expect(screen.getByRole('dialog', { name: 'Nav' }).getAttribute('data-side')).toBe('end');
+    for (const side of ['right', 'toString', 'constructor']) {
+      render(
+        <Drawer.Root open onOpenChange={() => undefined} side={side as never} aria-label="Nav">
+          <p>Links</p>
+        </Drawer.Root>,
+      );
+      expect(screen.getByRole('dialog', { name: 'Nav' }).getAttribute('data-side'), side).toBe('end');
+      cleanup();
+    }
   });
 
   it('asks to close from Dialog.Close and Escape', () => {

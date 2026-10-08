@@ -27,14 +27,6 @@ async function settledPanel() {
 }
 
 describe('Drawer in a browser', () => {
-  it('puts the footer at the bottom of a short panel', async () => {
-    render(<Open />);
-    const { panel } = await settledPanel();
-    const footer = screen.getByTestId('footer').getBoundingClientRect();
-    const padding = parseFloat(getComputedStyle(screen.getByTestId('footer').parentElement!).paddingBottom);
-    expect(Math.round(footer.bottom)).toBe(Math.round(panel.bottom - padding));
-  });
-
   it('keeps the panel opaque while it slides out', async () => {
     const { rerender } = render(<Open />);
     await settledPanel();
@@ -42,7 +34,10 @@ describe('Drawer in a browser', () => {
     const drawer = screen.getByRole('dialog', { name: 'Filters' });
     expect(drawer.hasAttribute('data-exiting')).toBe(true);
     expect(getComputedStyle(drawer).opacity).toBe('1');
+    expect(getComputedStyle(screen.getByTestId('body').parentElement!).opacity).toBe('1');
     expect(getComputedStyle(drawer).transitionProperty).toBe('background-color');
+    // Not a scroll container, so the panel sliding off-screen adds no scrolling.
+    expect(getComputedStyle(drawer).overflowX).toBe('clip');
     await waitFor(() => expect(drawer.hasAttribute('open')).toBe(false));
   });
 

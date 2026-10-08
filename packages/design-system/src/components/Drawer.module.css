@@ -9,6 +9,8 @@
     margin: 0;
     padding: 0;
     border: 0;
+    /* Not a scroll container, so the panel off-screen while it slides adds no scrolling. */
+    overflow: clip;
     background-color: transparent;
     color: var(--todae-drawer-fg);
   }
@@ -46,7 +48,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--todae-dialog-gap);
-    padding: var(--todae-drawer-padding-y) var(--todae-drawer-padding-x);
+    /* Clear of notches and the home indicator on either side, since a narrow screen fills the width. */
+    padding-block: max(var(--todae-drawer-padding-y), env(safe-area-inset-top))
+      max(var(--todae-drawer-padding-y), env(safe-area-inset-bottom));
+    padding-left: max(var(--todae-drawer-padding-x), env(safe-area-inset-left));
+    padding-right: max(var(--todae-drawer-padding-x), env(safe-area-inset-right));
     background: var(--todae-drawer-bg);
     border: 0 solid var(--todae-drawer-border);
     border-inline-end-width: 1px;

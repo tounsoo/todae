@@ -87,9 +87,7 @@
     margin: 0;
   }
 
-  /* A footer placed directly in a panel taller than its content, such as Drawer's, sits at the bottom. */
   .footer {
-    margin-block-start: auto;
     display: flex;
     flex-wrap: wrap;
     gap: var(--todae-dialog-gap);

@@ -25,7 +25,7 @@ const shellFor = (side: DrawerSide): DialogShell => ({
 const SHELLS = { start: shellFor('start'), end: shellFor('end') } as const;
 
 function Root({ side = 'end', ...props }: DrawerRootProps) {
-  return <DialogShellRoot {...props} shell={SHELLS[side] ?? SHELLS.end} />;
+  return <DialogShellRoot {...props} shell={side === 'start' ? SHELLS.start : SHELLS.end} />;
 }
 
 export const Drawer = { Root } as const;
