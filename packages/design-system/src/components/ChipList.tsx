@@ -25,6 +25,11 @@ export type ChipListRootProps = {
   chips: readonly string[];
   /** Rows to show before folding the rest into +N. Without it, every chip wraps onto as many rows as it needs. */
   maxRows?: number;
+  /**
+   * A stable, unique key for each chip, so focus can follow it when chips
+   * change. Default is the value, numbered among chips with the same value.
+   */
+  getKey?: (value: string, index: number) => string;
   /** Renders a remove button on each chip. */
   onRemove?: (index: number, value: string) => void;
   /** Remove button name. Default is Remove {value}. */
@@ -78,8 +83,14 @@ function focusAfter(el: HTMLElement | null) {
   (next ?? el).focus();
 }
 
-function countOf(chips: readonly string[], value: string): number {
-  return chips.reduce((n, chip) => (chip === value ? n + 1 : n), 0);
+// The value, numbered among chips with the same value: 'a', 'a#1', 'a#2'.
+function keyByValue(chips: readonly string[]): string[] {
+  const seen = new Map<string, number>();
+  return chips.map((value) => {
+    const n = seen.get(value) ?? 0;
+    seen.set(value, n + 1);
+    return n === 0 ? value : `${value}#${n}`;
+  });
 }
 
 // Calls onLost when its element unmounts holding focus, before the browser
@@ -118,6 +129,7 @@ function chipButtons(list: HTMLElement): HTMLElement[] {
 function Root({
   chips,
   maxRows,
+  getKey,
   onRemove,
   dismissLabel,
   overflowLabel,
@@ -141,32 +153,20 @@ function Root({
   // Focus is parked on the list or panel while a removal re-measures, so it
   // never falls to the body.
   const parked = useRef(false);
-  // The value a remove button asked onRemove to drop, and how many chips held
-  // it then. A focused chip that unmounts once fewer chips hold that value was
-  // removed; any other unmount (an insert before it, a move to the panel) is a
-  // move, whenever and however the owner updates chips.
-  const removing = useRef<{ value: string; count: number } | null>(null);
-  const chipsNow = useRef(chips);
-  chipsNow.current = chips;
-  const wasRemoved = (value: string) => {
-    const gone = removing.current;
-    return gone !== null && gone.value === value && countOf(chipsNow.current, value) < gone.count;
-  };
+  const keys = getKey ? chips.map((value, index) => getKey(value, index)) : keyByValue(chips);
+  // A focused chip that unmounts was removed once its key is gone from chips,
+  // whenever the owner drops it. Otherwise it moved between the row and the
+  // panel, and focus follows its key.
+  const keysNow = useRef(new Set(keys));
+  keysNow.current = new Set(keys);
   const pending = useRef<Pending | null>(null);
-  // The chip that left the panel holding focus: its index and value then.
-  const moved = useRef<{ index: number; value: string } | null>(null);
+  const moved = useRef<string | null>(null);
 
   // A focused chip moved from the panel back to the row: focus follows it.
   useLayoutEffect(() => {
     const chip = moved.current;
     const list = listRef.current;
-    // The same index if it still holds that value, else the first chip with it.
-    const items = list ? [...list.children].filter((item) => item.hasAttribute('data-value')) : [];
-    const match =
-      chip === null
-        ? undefined
-        : items.find((item) => item.getAttribute('data-index') === String(chip.index) && item.getAttribute('data-value') === chip.value) ??
-          items.find((item) => item.getAttribute('data-value') === chip.value);
+    const match = chip === null || !list ? undefined : [...list.children].find((item) => item.getAttribute('data-key') === chip);
     const button = match?.querySelector('button');
     // Nothing to follow: focus stays on the list, with its ring.
     const onList = () => {
@@ -219,12 +219,6 @@ function Root({
       window.removeEventListener('scroll', apply, true);
     };
   }, [shown, popover.popoverRef, tailKey]);
-
-  // The removal landed, whether or not a focused chip left with it.
-  useLayoutEffect(() => {
-    const gone = removing.current;
-    if (gone && countOf(chips, gone.value) < gone.count) removing.current = null;
-  }, [chips]);
 
   // After a removal re-measures: the chip that now fills the slot, else the
   // previous one, else the list.
@@ -320,20 +314,19 @@ function Root({
         >
           {visible.map((chip, index) => (
             <Held
-              key={chip.key}
+              key={keys[index]}
               onLost={() => {
                 parked.current = true;
                 listRef.current?.focus({ preventScroll: true });
-                if (wasRemoved(chip.value)) {
-                  removing.current = null;
-                  pending.current = { where: 'list', slot: index };
-                } else moved.current = { index, value: chip.value };
+                if (keysNow.current.has(keys[index]!)) moved.current = keys[index]!;
+                else pending.current = { where: 'list', slot: index };
               }}
             >
               {(ref) => (
                 <Chip.Root
                   ref={ref}
                   role="listitem"
+                  data-key={keys[index]}
                   data-value={chip.value}
                   data-index={index}
                   dismissLabel={dismissLabel?.(chip.value)}
@@ -341,7 +334,6 @@ function Root({
                   onDismiss={
                     onRemove
                       ? () => {
-                          removing.current = { value: chip.value, count: countOf(chips, chip.value) };
                           holdOn(ref.current);
                           onRemove(index, chip.value);
                         }
@@ -392,10 +384,9 @@ function Root({
             const at = chips.length - hidden + index;
             return (
               <Held
-                key={`${at}:${value}`}
+                key={keys[at]}
                 onLost={() => {
-                  if (wasRemoved(value)) {
-                    removing.current = null;
+                  if (!keysNow.current.has(keys[at]!)) {
                     parked.current = true;
                     if (hidden > 1) {
                       pending.current = { where: 'popover', slot: index };
@@ -409,7 +400,7 @@ function Root({
                     }
                     return;
                   }
-                  moved.current = { index: at, value };
+                  moved.current = keys[at]!;
                   parked.current = true;
                   listRef.current?.focus({ preventScroll: true });
                 }}
@@ -422,7 +413,6 @@ function Root({
                     onDismiss={
                       onRemove
                         ? () => {
-                            removing.current = { value, count: countOf(chips, value) };
                             holdOn(ref.current);
                             onRemove(at, value);
                           }

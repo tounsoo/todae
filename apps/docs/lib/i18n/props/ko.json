@@ -284,6 +284,10 @@
       "en": "Rows to show before folding the rest into +N. Without it, every chip wraps onto as many rows as it needs.",
       "ko": "나머지를 +N으로 접기 전에 보여 줄 줄 수. 없으면 모든 칩이 필요한 만큼 줄을 바꿔 놓입니다."
     },
+    "getKey": {
+      "en": "A stable, unique key for each chip, so focus can follow it when chips change. Default is the value, numbered among chips with the same value.",
+      "ko": "칩마다 고유하고 바뀌지 않는 키. chips가 바뀌어도 포커스가 그 칩을 따라갈 수 있습니다. 기본값은 값이며, 같은 값의 칩끼리는 번호를 붙입니다."
+    },
     "onRemove": {
       "en": "Renders a remove button on each chip. Once chips drops the chip, focus moves to the chip that takes its place.",
       "ko": "칩마다 제거 버튼을 렌더링합니다. chips에서 그 칩이 빠지면, 포커스는 그 자리를 채운 칩으로 옮겨 갑니다."

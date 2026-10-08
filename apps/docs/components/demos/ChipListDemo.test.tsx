@@ -744,14 +744,78 @@ describe('chip list recipe', () => {
     body.assert();
   });
 
-  it('rings the list when the focused chip changes value and nothing takes its place', async () => {
+  it('treats a focused chip the owner replaces as removed, focusing its slot', async () => {
     const body = watchBody();
     const tags = owner(['aa', 'bb']);
     act(() => screen.getByRole('button', { name: 'Remove bb' }).focus());
     await act(async () => tags.set(() => ['aa', 'BB']));
-    const list = screen.getByRole('list', { name: 'Tags' });
-    expect(document.activeElement).toBe(list);
-    expect(list.hasAttribute('data-ring')).toBe(true);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove BB' }));
+    body.assert();
+  });
+
+  it('keeps focus in the open panel when the row above it changes', async () => {
+    const body = watchBody();
+    const tags = owner(EIGHT, 1);
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
+    });
+    const button = screen.getByRole('button', { name: 'Remove ff' });
+    act(() => button.focus());
+    await act(async () => tags.set((current) => ['zz', ...current]));
+    expect(document.activeElement).toBe(button);
+    expect(button.closest('[role="dialog"]')).toBeTruthy();
+    body.assert();
+  });
+
+  // Chips with ids, keyed by getKey.
+  function keyed(initial: { id: string; label: string }[]) {
+    const api = { set: (_next: (items: { id: string; label: string }[]) => { id: string; label: string }[]) => undefined as void };
+    function Owner() {
+      const [items, setItems] = useState(initial);
+      api.set = (next) => setItems(next);
+      return (
+        <ChipList.Root
+          aria-label="Tags"
+          chips={items.map((item) => item.label)}
+          getKey={(_, index) => items[index]!.id}
+          maxRows={2}
+          onRemove={() => undefined}
+        />
+      );
+    }
+    render(<Owner />);
+    return api;
+  }
+
+  it('follows a chip by its key past a twin with the same value', async () => {
+    const body = watchBody();
+    const items = keyed([
+      { id: '1', label: 'aa' },
+      { id: '2', label: 'aa' },
+    ]);
+    const button = screen.getAllByRole('button', { name: 'Remove aa' })[1] as HTMLElement;
+    act(() => button.focus());
+    await act(async () => items.set((current) => [{ id: '0', label: 'zz' }, ...current]));
+    expect(document.activeElement).toBe(button);
+    expect(button.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('2');
+    body.assert();
+  });
+
+  it('follows a chip whose removal the owner refused when a twin is dropped later', async () => {
+    const body = watchBody();
+    const items = keyed([
+      { id: '1', label: 'dd' },
+      { id: '2', label: 'x' },
+      { id: '3', label: 'dd' },
+      { id: '4', label: 'y' },
+    ]);
+    const button = screen.getAllByRole('button', { name: 'Remove dd' })[1] as HTMLElement;
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    await act(async () => items.set((current) => current.slice(1)));
+    expect(document.activeElement).toBe(button);
+    expect(button.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('1');
     body.assert();
   });
 
