@@ -1,6 +1,7 @@
 import {
   useContext,
   useEffect,
+  useId,
   useMemo,
   useRef,
   type ComponentPropsWithRef,
@@ -119,32 +120,39 @@ function Root({
 }: ToolbarRootProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const refs = useComposedRefs(rootRef, ref);
-  // For each run, the item Tab last left it from, so Tab coming back
-  // returns to it.
-  const left = useRef(new WeakSet<HTMLElement>());
-  const context = useMemo(() => ({ orientation }), [orientation]);
+  // When Tab last left from each item, so Tab coming back into a run returns
+  // to the one left most recently.
+  const left = useRef(new WeakMap<HTMLElement, number>());
+  const leaves = useRef(0);
+  const id = useId();
+  const context = useMemo(() => ({ orientation, id }), [orientation, id]);
 
-  // Whether the focus now arriving is the browser's own Tab move. Set once
-  // the key has reached the document unhandled, so focus that a handler moves
-  // during the key, such as a menu returning focus to its trigger, does not
-  // count. Cleared after the browser has moved focus.
-  const tabbing = useRef(false);
+  // The Tab key press now under way, seen first at the window so stopped
+  // propagation cannot hide it. Dropped once the browser has moved focus.
+  const tabKey = useRef<globalThis.KeyboardEvent | null>(null);
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== 'Tab' || event.defaultPrevented) return;
-      tabbing.current = true;
+      if (event.key !== 'Tab') return;
+      tabKey.current = event;
       clearTimeout(timer);
       timer = setTimeout(() => {
-        tabbing.current = false;
+        tabKey.current = null;
       });
     };
-    document.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
     return () => {
-      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKey, true);
       clearTimeout(timer);
     };
   }, []);
+  // Whether the focus now arriving is the browser's own Tab move: the key
+  // has finished dispatch unprevented. Focus a handler moves during the key,
+  // such as a menu returning focus to its trigger, does not count.
+  const tabbing = () => {
+    const key = tabKey.current;
+    return key !== null && key.eventPhase === Event.NONE && !key.defaultPrevented;
+  };
 
   // Tab coming back into a run goes to the item Tab last left it from, when
   // that item can still take focus. Focus from a click, a script or a screen
@@ -152,15 +160,19 @@ function Root({
   const handleFocus = (event: FocusEvent<HTMLDivElement>) => {
     onFocus?.(event);
     const root = rootRef.current;
-    if (!root) return;
+    // Focus inside a portaled layer still bubbles here through React.
+    if (!root || !root.contains(event.target as Node)) return;
     // A move inside the toolbar that Tab did not make, such as an arrow key.
-    if (!tabbing.current && root.contains(event.relatedTarget as Node | null)) return;
+    if (!tabbing() && root.contains(event.relatedTarget as Node | null)) return;
     const target = event.target as HTMLElement;
     const run = runsOf(root).find((items) => items.includes(target));
     if (!run || run.includes(event.relatedTarget as HTMLElement)) return;
-    const back = run.find((item) => left.current.has(item));
-    if (back) left.current.delete(back);
-    if (!tabbing.current) return;
+    let back: HTMLElement | undefined;
+    for (const item of run) {
+      if ((left.current.get(item) ?? -1) > (back ? left.current.get(back)! : -1)) back = item;
+    }
+    for (const item of run) left.current.delete(item);
+    if (!tabbing()) return;
     // With nothing remembered, entry is on the first control, from either side.
     const to = back ?? run[0]!;
     if (to !== target) to.focus();
@@ -179,8 +191,8 @@ function Root({
       if (!run) return;
       // Focus moves to the end of the run first, so the browser's own Tab
       // then leaves the run from there.
-      for (const item of run) left.current.delete(item);
-      left.current.add(from);
+      leaves.current += 1;
+      left.current.set(from, leaves.current);
       const edge = event.shiftKey ? run[0]! : run[run.length - 1]!;
       if (edge !== from) edge.focus({ preventScroll: true });
       return;
@@ -190,16 +202,29 @@ function Root({
     const move = nextKey(event.key, orientation, () => getComputedStyle(root).direction === 'rtl');
     if (!move && event.key !== 'Home' && event.key !== 'End') return;
     const items = runsOf(root).flat();
-    const index = items.indexOf(target);
-    if (index === -1) return;
-    let next = index;
+    let index = items.indexOf(target);
+    // A control that became disabled while focused is no longer an item, so
+    // the arrow keys go on from its place between its neighbours.
+    let between = false;
+    if (index === -1) {
+      if (!target.matches(':disabled') || target.parentElement?.closest(TOOLBAR_BOUNDARY) !== root) return;
+      if (ownsArrows(target, root)) return;
+      const after = items.findIndex((item) => target.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING);
+      index = after === -1 ? items.length : after;
+      between = true;
+    }
+    if (items.length === 0) return;
+    let next: number | null = index;
     if (event.key === 'Home') next = 0;
     else if (event.key === 'End') next = items.length - 1;
     else {
-      const to = index + (move === 'next' ? 1 : -1);
+      // From a place between items, the next one is at `index` itself.
+      const to = move === 'next' ? (between ? index : index + 1) : index - 1;
       if (to >= 0 && to < items.length) next = to;
       else if (loop) next = (to + items.length) % items.length;
+      else if (between) next = null;
     }
+    if (next === null) return;
     event.preventDefault();
     items[next]?.focus();
   };
@@ -210,6 +235,7 @@ function Root({
         {...props}
         ref={refs}
         role="toolbar"
+        data-todae-toolbar={id}
         aria-orientation={orientation === 'vertical' ? 'vertical' : undefined}
         data-orientation={orientation}
         className={cx(styles.root, className)}
@@ -218,6 +244,7 @@ function Root({
           onPointerDown?.(event);
           // A press in a run forgets that run's remembered control.
           const pressed = event.target as Node;
+          if (!event.currentTarget.contains(pressed)) return;
           const run = runsOf(event.currentTarget).find((items) => items.some((item) => item.contains(pressed)));
           for (const item of run ?? []) left.current.delete(item);
         }}

@@ -1,7 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
+import type { AlertCloseProps } from './Alert';
+import type { MenuTriggerProps } from './Menu';
 import { Button } from './Button';
 import { Menu } from './Menu';
 import { ToggleGroup } from './ToggleGroup';
@@ -487,5 +489,122 @@ describe('Toolbar', () => {
     insert.focus();
     fireEvent.keyDown(insert, { key: 'ArrowDown' });
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Image', hidden: true })));
+  });
+
+  it('counts a Tab whose propagation was stopped, but not one that was prevented', () => {
+    function Page() {
+      return (
+        <>
+          <button type="button" onKeyDown={(event) => event.stopPropagation()}>
+            Stops
+          </button>
+          <button type="button" onKeyDown={(event) => event.preventDefault()}>
+            Prevents
+          </button>
+          <Toolbar.Root aria-label="t">
+            <Button.Root>A</Button.Root>
+            <Button.Root>B</Button.Root>
+          </Toolbar.Root>
+        </>
+      );
+    }
+    render(<Page />);
+    button('B').focus();
+    fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
+    button('Stops').focus();
+    fireEvent.keyDown(button('Stops'), { key: 'Tab' });
+    button('A').focus();
+    expect(document.activeElement).toBe(button('B'));
+    fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
+    button('Prevents').focus();
+    fireEvent.keyDown(button('Prevents'), { key: 'Tab' });
+    // A script moves focus after preventing Tab: it lands where it was aimed.
+    button('A').focus();
+    expect(document.activeElement).toBe(button('A'));
+  });
+
+  it('returns to the control Tab left from most recently, past an older one that comes back', async () => {
+    function Page({ off }: { off: boolean }) {
+      return (
+        <>
+          <button type="button">Before</button>
+          <Toolbar.Root aria-label="t">
+            <Button.Root>A</Button.Root>
+            <Button.Root disabled={off}>B</Button.Root>
+            <Button.Root>C</Button.Root>
+          </Toolbar.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<Page off={false} />);
+    const tick = () => new Promise((resolve) => setTimeout(resolve));
+    button('B').focus();
+    fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
+    button('Before').focus();
+    await tick();
+    rerender(<Page off />);
+    button('C').focus();
+    await tick();
+    fireEvent.keyDown(button('C'), { key: 'Tab', shiftKey: true });
+    button('Before').focus();
+    await tick();
+    rerender(<Page off={false} />);
+    fireEvent.keyDown(button('Before'), { key: 'Tab' });
+    button('A').focus();
+    expect(document.activeElement).toBe(button('C'));
+  });
+
+  it('leaves a toggle group inside a plain role=toolbar its own roving focus', async () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <div role="toolbar" aria-label="inner">
+          <ToggleGroup.Root aria-label="Align" defaultValue="left">
+            <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+            <ToggleGroup.Item value="right">Right</ToggleGroup.Item>
+          </ToggleGroup.Root>
+        </div>
+      </Toolbar.Root>,
+    );
+    await waitFor(() => expect([button('Left').tabIndex, button('Right').tabIndex]).toEqual([0, -1]));
+  });
+
+  it('moves on with the arrow keys from a control that became disabled while focused', () => {
+    function Page({ off }: { off: boolean }) {
+      return (
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root disabled={off}>Undo</Button.Root>
+          <Button.Root>Redo</Button.Root>
+        </Toolbar.Root>
+      );
+    }
+    const { rerender } = render(<Page off={false} />);
+    button('Undo').focus();
+    rerender(<Page off />);
+    fireEvent.keyDown(button('Undo'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(button('Redo'));
+    button('Undo').focus();
+    fireEvent.keyDown(button('Undo'), { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(button('A'));
+  });
+
+  it('leaves the arrow keys to a media element', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <video controls tabIndex={0} data-testid="video" />
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    const video = screen.getByTestId('video');
+    video.focus();
+    expect(fireEvent.keyDown(video, { key: 'ArrowRight' })).toBe(true);
+    expect(document.activeElement).toBe(video);
+  });
+
+  it('keeps toggle props off buttons that are never toggles', () => {
+    expectTypeOf<MenuTriggerProps>().not.toHaveProperty('pressed');
+    expectTypeOf<AlertCloseProps>().not.toHaveProperty('onPressedChange');
   });
 });
