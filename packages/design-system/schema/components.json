@@ -1953,7 +1953,7 @@
           "name": "orientation",
           "type": "\"horizontal\" | \"vertical\"",
           "required": false,
-          "description": "Arrow keys that move focus. Horizontal items join like Button.Group.",
+          "description": "Layout, and the arrow keys that move focus outside a toolbar. Horizontal items join like Button.Group.",
           "default": "\"horizontal\", or the toolbar's"
         },
         {

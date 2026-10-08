@@ -86,6 +86,7 @@ function isItem(el: HTMLElement, root: HTMLElement): boolean {
     !el.matches(TOOLBAR_BOUNDARY) &&
     el.parentElement?.closest(TOOLBAR_BOUNDARY) === root &&
     !el.matches(NOT_ITEM) &&
+    !el.matches('[tabindex="-1"]') &&
     !ownsArrows(el, root)
   );
 }

@@ -1077,8 +1077,8 @@
       "ko": "항목을 누르면 새 눌림 값으로 호출됩니다."
     },
     "orientation": {
-      "en": "Arrow keys that move focus. Horizontal items join like Button.Group.",
-      "ko": "포커스를 옮기는 화살표 키. 가로 항목은 Button.Group처럼 붙습니다."
+      "en": "Layout, and the arrow keys that move focus outside a toolbar. Horizontal items join like Button.Group.",
+      "ko": "배치, 그리고 툴바 밖에서 포커스를 옮기는 화살표 키. 가로 항목은 Button.Group처럼 붙습니다."
     },
     "disabled": {
       "en": "Disables every item.",

@@ -457,4 +457,35 @@ describe('Toolbar', () => {
     fireEvent.keyDown(button('A'), { key: 'Tab' });
     expect(document.activeElement).toBe(button('C'));
   });
+
+  it('keeps a button with tabindex -1 out of the arrow keys', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <Button.Root tabIndex={-1}>Clear</Button.Root>
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(button('B'));
+  });
+
+  it('lets a vertical toolbar menu trigger move into its menu once open', async () => {
+    render(
+      <Toolbar.Root aria-label="t" orientation="vertical">
+        <Menu.Root open onOpenChange={() => undefined}>
+          <Menu.Trigger>Insert</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>Image</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+        <Button.Root>Redo</Button.Root>
+      </Toolbar.Root>,
+    );
+    const insert = screen.getByRole('button', { name: 'Insert' });
+    insert.focus();
+    fireEvent.keyDown(insert, { key: 'ArrowDown' });
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Image', hidden: true })));
+  });
 });

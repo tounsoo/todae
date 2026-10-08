@@ -215,9 +215,10 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
       id={ctx.triggerId}
       tooltip={tooltip}
       onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLButtonElement>) => {
-        // In a vertical toolbar, Up and Down move between its controls.
+        // In a vertical toolbar, Up and Down move between its controls while
+        // the menu is closed.
         const arrow = event.key === 'ArrowDown' || event.key === 'ArrowUp';
-        if (arrow && toolbar?.orientation === 'vertical') return;
+        if (arrow && !ctx.open && toolbar?.orientation === 'vertical') return;
         // A held key opens once; repeats, Enter's included, would toggle it.
         if (event.repeat && ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) {
           event.preventDefault();

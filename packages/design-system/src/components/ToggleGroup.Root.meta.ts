@@ -41,7 +41,7 @@ export const meta = {
       type: '"horizontal" | "vertical"',
       required: false,
       default: '"horizontal", or the toolbar\'s',
-      description: 'Arrow keys that move focus. Horizontal items join like Button.Group.',
+      description: 'Layout, and the arrow keys that move focus outside a toolbar. Horizontal items join like Button.Group.',
     },
     {
       name: 'disabled',
