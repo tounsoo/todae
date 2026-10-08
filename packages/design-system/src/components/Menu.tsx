@@ -25,7 +25,7 @@ import { useDomId } from './domId';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import popoverStyles from './Popover.module.css';
 import styles from './Menu.module.css';
-import { ToolbarContext } from './toolbarContext';
+import { ToolbarContext, useToolbar } from './toolbarContext';
 
 /** Why the menu opened or closed. `select` is an item choice; `tab` is focus leaving with Tab. */
 export type MenuOpenChangeReason = PopoverCloseReason | 'select' | 'tab';
@@ -186,7 +186,7 @@ function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootP
 
 function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }: MenuTriggerProps) {
   const ctx = useMenu('Trigger');
-  const toolbar = useContext(ToolbarContext);
+  const toolbar = useToolbar(ctx.triggerRef);
   const refs = useComposedRefs(ctx.triggerRef, ref);
   const { openEnd, countTrigger } = ctx;
   useLayoutEffect(() => {

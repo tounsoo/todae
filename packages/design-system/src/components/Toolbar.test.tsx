@@ -62,11 +62,13 @@ describe('Toolbar', () => {
     button('B').focus();
     fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
     button('Before').focus();
+    // The browser moves focus while the Tab key is dispatched.
+    fireEvent.keyDown(button('Before'), { key: 'Tab' });
     button('A').focus();
     expect(document.activeElement).toBe(button('B'));
   });
 
-  it('lets a press land where it was aimed after Tab left', () => {
+  it('lets focus from a click or a script land where it was aimed after Tab left', async () => {
     render(
       <>
         <button type="button">Before</button>
@@ -79,9 +81,43 @@ describe('Toolbar', () => {
     button('B').focus();
     fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
     button('Before').focus();
-    fireEvent.pointerDown(button('A'));
+    // A later focus, after that key press is over.
+    await new Promise((resolve) => setTimeout(resolve));
     button('A').focus();
     expect(document.activeElement).toBe(button('A'));
+  });
+
+  it('gives selects, textareas, editable text and arrow-key widgets their own Tab stop', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <select aria-label="Font">
+          <option>Serif</option>
+        </select>
+        <Button.Root>B</Button.Root>
+        <textarea aria-label="Note" />
+        <Button.Root>C</Button.Root>
+        <div role="listbox" tabIndex={0} aria-label="List" />
+        <Button.Root>D</Button.Root>
+        <div contentEditable suppressContentEditableWarning aria-label="Edit">
+          x
+        </div>
+        <Button.Root>E</Button.Root>
+      </Toolbar.Root>,
+    );
+    for (const [from, to] of [
+      ['A', 'B'],
+      ['B', 'C'],
+      ['C', 'D'],
+      ['D', 'E'],
+    ]) {
+      button(from!).focus();
+      // Each control ends a run, so Tab stays on the button and the browser moves on to it.
+      fireEvent.keyDown(button(from!), { key: 'Tab' });
+      expect(document.activeElement).toBe(button(from!));
+      fireEvent.keyDown(button(from!), { key: 'ArrowRight' });
+      expect(document.activeElement).toBe(button(to!));
+    }
   });
   it('moves focus with arrow keys, skipping disabled controls and text inputs, and following wrappers', () => {
     render(<Editor />);
@@ -309,5 +345,29 @@ describe('Toolbar', () => {
     );
     expect(screen.getByTestId('group').getAttribute('data-orientation')).toBe('vertical');
     expect(screen.getByTestId('sep').getAttribute('aria-orientation')).toBe('horizontal');
+  });
+
+  it('leaves Up and Down to a menu trigger portaled out of a vertical toolbar', async () => {
+    render(
+      <Toolbar.Root aria-label="t" orientation="vertical">
+        <Button.Root>A</Button.Root>
+        {createPortal(
+          <Menu.Root>
+            <Menu.Trigger>More</Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>One</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>,
+          document.body,
+        )}
+      </Toolbar.Root>,
+    );
+    const more = button('More');
+    more.focus();
+    // The trigger notices it is outside the toolbar after mounting.
+    await waitFor(() => {
+      fireEvent.keyDown(more, { key: 'ArrowDown' });
+      expect(more.getAttribute('aria-expanded')).toBe('true');
+    });
   });
 });

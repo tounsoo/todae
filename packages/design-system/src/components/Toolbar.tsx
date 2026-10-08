@@ -1,5 +1,6 @@
 import {
   useContext,
+  useEffect,
   useMemo,
   useRef,
   type ComponentPropsWithRef,
@@ -12,7 +13,7 @@ import { useComposedRefs } from './props';
 import styles from './Toolbar.module.css';
 import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from './toolbarContext';
 
-export { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation };
+export type { ToolbarOrientation };
 
 /**
  * A row (or column) of controls with one tab stop. Arrow keys move focus
@@ -32,15 +33,30 @@ export type ToolbarRootProps = {
 export type ToolbarGroupProps = ComponentPropsWithRef<'div'>;
 export type ToolbarSeparatorProps = Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-// Selects, textareas and editable text own their arrow keys, so they are never items.
-const FOCUSABLE = 'button, a[href], input, [tabindex]';
+const FOCUSABLE = 'button, a[href], input, select, textarea, [contenteditable]:not([contenteditable="false"]), [tabindex]';
+
+// Roles whose widgets handle arrow keys themselves.
+const ARROW_ROLES = new Set([
+  'combobox',
+  'grid',
+  'listbox',
+  'menu',
+  'menubar',
+  'radiogroup',
+  'slider',
+  'spinbutton',
+  'tablist',
+  'tree',
+  'treegrid',
+]);
 
 // Controls whose own arrow keys move a caret or a value, and composites with
 // their own roving focus. They keep their own tab stop and keys, outside the
 // toolbar's, so focus is never stuck in them.
 function ownsArrows(el: HTMLElement): boolean {
-  if (el.hasAttribute('data-todae-roving')) return true;
-  if (el.isContentEditable || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true;
+  if (el.hasAttribute('data-todae-roving') || el.hasAttribute('aria-activedescendant')) return true;
+  if (ARROW_ROLES.has(el.getAttribute('role') ?? '')) return true;
+  if (el.isContentEditable || el.matches('textarea, select, [contenteditable]:not([contenteditable="false"])')) return true;
   if (el.tagName !== 'INPUT') return false;
   // A radio's arrow keys select the next radio in its group.
   return !['button', 'checkbox', 'reset', 'submit', 'image', 'color', 'file'].includes((el as HTMLInputElement).type);
@@ -86,14 +102,35 @@ function Root({
   const left = useRef<HTMLElement | null>(null);
   const context = useMemo(() => ({ orientation }), [orientation]);
 
-  // Focus coming back from outside goes to the item Tab left from, when it
-  // is in the same run and can still take focus. A press inside forgets it,
-  // so a click lands where it was aimed.
+  // Whether the focus now arriving comes from a Tab press. Set during the
+  // key's own dispatch, before the browser moves focus, and cleared after.
+  const tabbing = useRef(false);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+      tabbing.current = true;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        tabbing.current = false;
+      });
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // Tab coming back from outside goes to the item Tab left from, when it is
+  // in the same run and can still take focus. Focus from a click, a script
+  // or a screen reader lands where it was aimed.
   const handleFocus = (event: FocusEvent<HTMLDivElement>) => {
     onFocus?.(event);
     const root = rootRef.current;
     const back = left.current;
     if (!root || !back || root.contains(event.relatedTarget as Node | null)) return;
+    if (!tabbing.current) return;
     left.current = null;
     const target = event.target as HTMLElement;
     if (back === target) return;

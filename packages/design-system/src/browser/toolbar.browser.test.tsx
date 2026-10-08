@@ -167,4 +167,19 @@ describe('Toolbar in a browser', () => {
     await userEvent.tab();
     expect(document.activeElement).toBe(button('Center'));
   });
+
+  it('keeps the colors of a pressed toggle while it has keyboard focus', async () => {
+    render(
+      <main data-appearance="light" data-density="comfortable">
+        <button type="button">Before</button>
+        <Bar />
+      </main>,
+    );
+    const resting = getComputedStyle(button('Bold')).backgroundColor;
+    button('Before').focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(button('Bold'));
+    expect(button('Bold').matches(':focus-visible')).toBe(true);
+    expect(getComputedStyle(button('Bold')).backgroundColor).toBe(resting);
+  });
 });

@@ -1,7 +1,6 @@
 import {
   createContext,
   useContext,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -16,7 +15,7 @@ import { Button, type ButtonRootProps } from './Button';
 import buttonStyles from './Button.module.css';
 import { cx } from './cx';
 import { useComposedRefs } from './props';
-import { TOOLBAR_BOUNDARY, ToolbarContext } from './toolbarContext';
+import { useToolbar } from './toolbarContext';
 import styles from './ToggleGroup.module.css';
 
 export type ToggleGroupOrientation = 'horizontal' | 'vertical';
@@ -61,16 +60,8 @@ type ToggleGroupContextValue = {
 const ToggleGroupContext = createContext<ToggleGroupContextValue | null>(null);
 
 function Root(props: ToggleGroupRootProps) {
-  const toolbarContext = useContext(ToolbarContext);
-  // Layers reset the context, but it still crosses a plain portal, and the
-  // toolbar only manages controls inside its own element, so check the DOM too.
   const nodeRef = useRef<HTMLDivElement | null>(null);
-  const [inLayer, setInLayer] = useState(false);
-  useLayoutEffect(() => {
-    const layer = nodeRef.current?.parentElement?.closest(TOOLBAR_BOUNDARY);
-    setInLayer(layer?.getAttribute('role') !== 'toolbar');
-  }, []);
-  const toolbar = inLayer ? null : toolbarContext;
+  const toolbar = useToolbar(nodeRef);
   const {
     selectionMode = 'single',
     value: valueProp,
