@@ -21,7 +21,7 @@ export type { ToolbarOrientation };
  * Any focusable control counts, inside wrappers too, except those in a popover
  * or dialog that opens from the toolbar. Text inputs and composites with their
  * own arrow keys keep their own tab stop. The toolbar writes no `tabindex`:
- * it moves focus to the end of the run of controls when Tab is pressed. Name it with
+ * it moves focus to the edge of the run of controls in Tab's direction. Name it with
  * `aria-label` or `aria-labelledby`.
  */
 export type ToolbarRootProps = {
@@ -33,7 +33,7 @@ export type ToolbarRootProps = {
 export type ToolbarGroupProps = ComponentPropsWithRef<'div'>;
 export type ToolbarSeparatorProps = Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-// Everything Tab can reach. A focus target with tabindex -1 only is never an item.
+// Everything Tab can reach. A negative tabindex is never an item.
 const FOCUSABLE = [
   'button',
   'a[href]',
@@ -45,7 +45,7 @@ const FOCUSABLE = [
   'audio[controls]',
   'video[controls]',
   '[contenteditable]:not([contenteditable="false"])',
-  '[tabindex]:not([tabindex="-1"])',
+  '[tabindex]:not([tabindex^="-"])',
 ].join(', ');
 // Reachable by Tab, but not an arrow-key item.
 const NOT_ITEM = 'summary, iframe, audio, video';
@@ -86,7 +86,7 @@ function isItem(el: HTMLElement, root: HTMLElement): boolean {
     !el.matches(TOOLBAR_BOUNDARY) &&
     el.parentElement?.closest(TOOLBAR_BOUNDARY) === root &&
     !el.matches(NOT_ITEM) &&
-    !el.matches('[tabindex="-1"]') &&
+    !el.matches('[tabindex^="-"]') &&
     !ownsArrows(el, root)
   );
 }
@@ -101,7 +101,7 @@ function runsOf(root: HTMLElement): HTMLElement[][] {
     if (el.matches(':disabled') || !isReachable(el)) continue;
     if (isItem(el, root)) runs[runs.length - 1]!.push(el);
     // Only something Tab stops on splits a run.
-    else if (!el.matches('[tabindex="-1"]')) runs.push([]);
+    else if (!el.matches('[tabindex^="-"]')) runs.push([]);
   }
   return runs.filter((run) => run.length > 0);
 }

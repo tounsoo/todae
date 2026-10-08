@@ -32,7 +32,7 @@ export const meta = {
     },
     {
       name: 'onChange',
-      type: '(value: string | null) => void | (value: string[]) => void',
+      type: '((value: string | null) => void) | ((value: string[]) => void)',
       required: false,
       description: 'Called with the new pressed value when an item is pressed.',
     },
