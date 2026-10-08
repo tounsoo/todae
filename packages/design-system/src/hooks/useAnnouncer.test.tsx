@@ -20,9 +20,18 @@ function Speaker({ message, options }: { message?: string; options?: AnnounceOpt
 beforeEach(() => {
   vi.useFakeTimers();
 });
+const pending = () =>
+  (globalThis as unknown as Record<symbol, Record<string, ReturnType<typeof setTimeout>> | undefined>)[
+    Symbol.for('todae.announcer.pending')
+  ];
+
 afterEach(() => {
   cleanup();
-  vi.runOnlyPendingTimers();
+  // Drop writes still pending, so none lands in a later test.
+  for (const [key, id] of Object.entries(pending() ?? {})) {
+    clearTimeout(id);
+    delete pending()![key];
+  }
   vi.useRealTimers();
   for (const node of regions()) node.remove();
 });
@@ -124,11 +133,12 @@ describe('useAnnouncer', () => {
     expect(live('polite').textContent).toBe('Saved');
   });
 
-  it('keeps the pending write on <html>, where every copy of the package sees it', () => {
+  it('keeps the pending write on globalThis, where every copy of the package sees it', () => {
     render(<Speaker message="Saved" />);
-    expect(document.documentElement.dataset.todaeAnnouncePolite).toBeTruthy();
+    expect(pending()?.polite).toBeDefined();
     act(() => vi.advanceTimersByTime(100));
-    expect(document.documentElement.dataset.todaeAnnouncePolite).toBeUndefined();
+    expect(pending()?.polite).toBeUndefined();
+    expect(document.documentElement.attributes).toHaveLength(0);
   });
 
   // An open modal in Todae's modal stack, shown after the ones before it.
@@ -162,8 +172,10 @@ describe('useAnnouncer', () => {
   it('waits for a modal in its exit motion to close, then writes in body', () => {
     const dialog = modal({ 'data-exiting': '' });
     render(<Speaker message="Deleted" />);
-    act(() => vi.advanceTimersByTime(300));
+    // Longer than a region gets to settle: the exit is waited out.
+    act(() => vi.advanceTimersByTime(3000));
     expect(bodyLive().textContent).toBe('');
+    expect(liveIn(dialog)).toBeNull();
     dialog.remove();
     // Body was inert a moment ago: it sits reachable and empty first.
     act(() => vi.advanceTimersByTime(100));
@@ -172,12 +184,17 @@ describe('useAnnouncer', () => {
     expect(bodyLive().textContent).toBe('Deleted');
   });
 
-  it('writes in body once a modal has looked like it was closing for too long', () => {
+  it('writes in a modal that has looked like it was closing for too long, as it is still open', () => {
     const dialog = modal({ 'data-exiting': '' });
     render(<Speaker message="Deleted" />);
-    act(() => vi.advanceTimersByTime(1300));
-    expect(bodyLive().textContent).toBe('Deleted');
+    act(() => vi.advanceTimersByTime(9900));
     expect(liveIn(dialog)).toBeNull();
+    // Its new region still sits empty for one moment.
+    act(() => vi.advanceTimersByTime(100));
+    expect(liveIn(dialog)?.textContent).toBe('');
+    act(() => vi.advanceTimersByTime(100));
+    expect(liveIn(dialog)?.textContent).toBe('Deleted');
+    expect(bodyLive().textContent).toBe('');
   });
 
   it('waits a moment before writing in a dialog that closed and opened again', () => {
@@ -212,14 +229,6 @@ describe('useAnnouncer', () => {
     act(() => vi.advanceTimersByTime(100));
     expect(bodyLive().textContent).toBe('Saved');
     expect(liveIn(dialog)).toBeNull();
-  });
-
-  it('writes in a modal behind one that has looked like it was closing for too long', () => {
-    const behind = modal();
-    modal({ 'data-exiting': '' });
-    render(<Speaker message="Deleted" />);
-    act(() => vi.advanceTimersByTime(1300));
-    expect(liveIn(behind)?.textContent).toBe('Deleted');
   });
 
   it('lets a newer message win after the region was removed', () => {

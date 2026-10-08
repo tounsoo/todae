@@ -13,8 +13,10 @@ export type Announce = (message: string, options?: AnnounceOptions) => void;
 const ATTR = 'data-todae-announcer';
 /** Long enough for a screen reader to see the region empty before the message lands. */
 const WRITE_DELAY = 100;
-/** How long a write waits for a closing modal, or for a new region to settle. */
+/** How long a region must settle before a write lands anyway. */
 const DEADLINE = 1000;
+/** How long a write waits for a modal in its exit motion to close. */
+const EXIT_LIMIT = 10_000;
 // The visually hidden styles, set from script so a strict CSP allows them and
 // the region stays hidden even without Todae's CSS.
 const HIDDEN: Partial<CSSStyleDeclaration> = {
@@ -29,13 +31,15 @@ const HIDDEN: Partial<CSSStyleDeclaration> = {
   whiteSpace: 'nowrap',
 };
 
-// The pending write's timer id per politeness, on <html>, so every copy of
-// the package shares "a newer message replaces a pending one", and a region
-// removed from the page cannot hold on to a stale write.
-const PENDING: Record<AnnouncePoliteness, string> = {
-  polite: 'todaeAnnouncePolite',
-  assertive: 'todaeAnnounceAssertive',
-};
+// The pending write's timer per politeness, kept on globalThis so every copy
+// of the package shares "a newer message replaces a pending one".
+type Pending = Partial<Record<AnnouncePoliteness, ReturnType<typeof setTimeout>>>;
+const PENDING = Symbol.for('todae.announcer.pending');
+
+function pendingWrites(): Pending {
+  const scope = globalThis as unknown as Record<symbol, Pending | undefined>;
+  return (scope[PENDING] ??= {});
+}
 
 /**
  * The region that is a direct child of host, created on request. Body has
@@ -62,48 +66,50 @@ function regionIn(host: HTMLElement, create: boolean): HTMLElement | null {
 function announce(message: string, options?: AnnounceOptions): void {
   if (typeof document === 'undefined' || !document.body) return;
   const politeness = options?.politeness ?? 'polite';
-  const html = document.documentElement;
-  const key = PENDING[politeness];
-  clearTimeout(Number(html.dataset[key]));
-  delete html.dataset[key];
+  const pending = pendingWrites();
+  clearTimeout(pending[politeness]);
+  delete pending[politeness];
   // Empty first, then write, so the same message twice is read twice. This
   // also empties regions left in dialogs that have since closed.
   for (const live of document.querySelectorAll<HTMLElement>(`[${ATTR}] > [aria-live="${politeness}"]`)) {
     live.textContent = '';
   }
   if (!message) return;
-  const deadline = Date.now() + DEADLINE;
+  const start = Date.now();
   const schedule = () => {
-    html.dataset[key] = String(setTimeout(attempt, WRITE_DELAY));
+    pending[politeness] = setTimeout(attempt, WRITE_DELAY);
   };
   // A modal makes the rest of the page inert, so the region read is the one
   // in the modal in front of Todae's modal stack, or in body when none is
   // open. A modal stays in the stack until close(), so one in its exit
   // motion (data-exiting) picks none yet: a message written there would be
-  // hidden with it a moment later.
-  const exiting = (el: HTMLElement) => el.hasAttribute('data-exiting');
-  const pick = (create: boolean): HTMLElement | null => {
+  // hidden with it a moment later, and the rest of the page is still inert.
+  // One that exits for too long is taken as it is: still open, and the only
+  // part of the page that is not inert.
+  const target = (now: number): HTMLElement | null => {
     const modal = frontModal();
-    if (modal && exiting(modal)) return null;
-    return regionIn(modal ?? document.body, create);
+    if (modal?.hasAttribute('data-exiting') && now < start + EXIT_LIMIT) return null;
+    return modal ?? document.body;
   };
   // Write only into the region the last check also picked: one that was
   // just created, or whose dialog just opened, closed or reopened, first
   // sits reachable and empty for a moment so it is read. Past the deadline,
-  // one more moment at most, then the write goes to the front modal that is
-  // not exiting, or body.
-  let chosen = pick(false);
+  // one more moment at most.
+  const host = target(start);
+  let chosen = host && regionIn(host, false);
   let grace = true;
   function attempt() {
-    const late = Date.now() >= deadline;
-    const root = pick(true) ?? (late ? regionIn(frontModal(exiting) ?? document.body, true) : null);
+    const now = Date.now();
+    const late = now >= start + DEADLINE;
+    const host = target(now);
+    const root = host && regionIn(host, true);
     if (!root || (root !== chosen && (!late || grace))) {
-      if (late) grace = false;
+      if (late && root) grace = false;
       chosen = root;
       return schedule();
     }
-    delete html.dataset[key];
-    const live = root?.querySelector<HTMLElement>(`[aria-live="${politeness}"]`);
+    delete pending[politeness];
+    const live = root.querySelector<HTMLElement>(`[aria-live="${politeness}"]`);
     if (live) live.textContent = message;
   }
   schedule();

@@ -4,6 +4,14 @@ import { useAnnouncer } from '../hooks/useAnnouncer';
 import { Dialog } from '../components/Dialog';
 
 afterEach(() => {
+  // Drop writes still pending, so none lands in a later test.
+  const pending = (globalThis as unknown as Record<symbol, Record<string, ReturnType<typeof setTimeout>> | undefined>)[
+    Symbol.for('todae.announcer.pending')
+  ];
+  for (const [key, id] of Object.entries(pending ?? {})) {
+    clearTimeout(id);
+    delete pending![key];
+  }
   for (const node of document.querySelectorAll('[data-todae-announcer]')) node.remove();
 });
 
