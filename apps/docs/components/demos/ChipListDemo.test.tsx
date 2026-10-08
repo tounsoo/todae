@@ -989,6 +989,18 @@ describe('chip list recipe', () => {
     expect(document.activeElement).toBe(input);
   });
 
+  it('forgets a press once focus leaves the pressed chip', async () => {
+    const tags = owner(['aa', 'aa']);
+    const [first, second] = screen.getAllByRole('button', { name: 'Remove aa' }) as [HTMLElement, HTMLElement];
+    await act(async () => {
+      fireEvent.click(second);
+    });
+    act(() => first.focus());
+    await act(async () => tags.set((current) => current.slice(1)));
+    const items = screen.getAllByRole('listitem').filter((item) => item.hasAttribute('data-key'));
+    expect(items.map((item) => item.getAttribute('data-key'))).toEqual(['1:aa']);
+  });
+
   it('names a panel with one chip in the singular by default', async () => {
     render(<ChipList.Root aria-label="Tags" chips={['aa', 'bb', 'cc', 'dd']} maxRows={1} />);
     await act(async () => {

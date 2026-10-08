@@ -88,5 +88,11 @@ export function useChipKeys(chips: readonly string[], getKey?: (value: string, i
     (index: number) => setKnown((prev) => (prev.pressed === index ? prev : { ...prev, pressed: index })),
     [],
   );
-  return { keys: getKey ? chips.map((value, index) => getKey(value, index)) : current.keys, press };
+  // Focus left the pressed chip before the owner dropped it: the press no
+  // longer says which twin went.
+  const release = useCallback(
+    (index: number) => setKnown((prev) => (prev.pressed === index ? { ...prev, pressed: null } : prev)),
+    [],
+  );
+  return { keys: getKey ? chips.map((value, index) => getKey(value, index)) : current.keys, press, release };
 }

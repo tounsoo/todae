@@ -222,6 +222,36 @@ describe('ChipList focus never falls to the body in a browser', () => {
     expect(dropped).toEqual([]);
   });
 
+  it('returns focus to +N when Escape closes the panel while the panel itself has focus', async () => {
+    render(<Owner initial={WIDE} />);
+    await waitFor(() => expect(more()).toBeTruthy());
+    await userEvent.click(more());
+    const dialog = await screen.findByRole('dialog');
+    act(() => dialog.focus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(more()));
+    expect(dropped).toEqual([]);
+  });
+
+  it('tabs from the panel itself to its first chip', async () => {
+    render(<Owner initial={WIDE} />);
+    await waitFor(() => expect(more()).toBeTruthy());
+    await userEvent.click(more());
+    const dialog = await screen.findByRole('dialog');
+    act(() => dialog.focus());
+    await userEvent.keyboard('{Tab}');
+    expect(document.activeElement).toBe(dialog.querySelector('button'));
+    expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+
+  it('draws no ring when a click lands on the list between chips', async () => {
+    render(<Owner initial={['aa', 'bb']} />);
+    const list = screen.getByRole('list', { name: 'Tags' });
+    await userEvent.click(list, { position: { x: list.clientWidth - 2, y: 2 } });
+    expect(document.activeElement).toBe(list);
+    expect(list.hasAttribute('data-ring')).toBe(false);
+  });
+
   it('leaves focus on a twin the person moved to when the pressed twin is dropped later', async () => {
     render(<Owner initial={['aa', 'x', 'aa', 'y']} />);
     const [first, second] = screen.getAllByRole('button', { name: 'Remove aa' }) as [HTMLElement, HTMLElement];

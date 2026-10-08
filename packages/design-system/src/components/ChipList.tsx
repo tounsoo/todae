@@ -114,6 +114,14 @@ function buttons(box: Element | null | undefined): HTMLElement[] {
   return box ? [...box.querySelectorAll<HTMLElement>(':scope > [data-key] > button')] : [];
 }
 
+function focusVisible(el: Element): boolean {
+  try {
+    return el.matches(':focus-visible');
+  } catch {
+    return true;
+  }
+}
+
 function buttonFor(box: Element | null | undefined, key: string): HTMLElement | null {
   const item = box ? [...box.children].find((el) => el.getAttribute('data-key') === key) : undefined;
   return item?.querySelector('button') ?? null;
@@ -139,7 +147,7 @@ function Root({
   // else is no limit, so the clamp never hides chips that +N does not count.
   const rows = maxRows != null && maxRows >= 1 ? Math.floor(maxRows) : undefined;
   const { listRef, measureRef, measured, visible, hidden, settled } = useChipListInternal({ chips, maxRows: rows });
-  const { keys, press } = useChipKeys(chips, getKey);
+  const { keys, press, release } = useChipKeys(chips, getKey);
   const [open, setOpen] = useState(false);
   // Nothing left to fold: the panel closes, and stays closed if chips fold again.
   if (open && hidden === 0) setOpen(false);
@@ -200,7 +208,8 @@ function Root({
     if (active !== list && !list.contains(active) && !panel?.contains(active)) return;
     let target: HTMLElement | null;
     if (spot.kind === 'more') target = more;
-    else if (spot.kind === 'panel') target = panel;
+    // The panel itself closed: back to +N, as Escape would.
+    else if (spot.kind === 'panel') target = panel ?? more;
     else {
       target = buttonFor(list, spot.key) ?? buttonFor(panel, spot.key);
       // Folded into the closed panel: +N is the way to it.
@@ -227,7 +236,8 @@ function Root({
       if (!(event.target instanceof Node) || !panel?.contains(event.target)) return;
       const all = [...panel.querySelectorAll<HTMLElement>('button:not([disabled])')];
       const edge = event.shiftKey ? all[0] : all[all.length - 1];
-      if (event.target !== panel && all.length > 0 && event.target !== edge) return;
+      // From the panel itself, Tab goes on to its first button as usual.
+      if (event.target === panel ? all.length > 0 && !event.shiftKey : event.target !== edge) return;
       event.preventDefault();
       if (event.shiftKey) moreRef.current?.focus();
       else focusAfter(moreRef.current);
@@ -241,8 +251,8 @@ function Root({
     press(index);
     // A click does not focus a button in every browser (Safari). Focus the
     // pressed button, so focus moves on when its chip leaves.
-    const item = box ? [...box.children].find((el) => el.getAttribute('data-key') === keys[index]) : undefined;
-    if (item && !item.contains(document.activeElement)) item.querySelector('button')?.focus({ preventScroll: true });
+    const button = buttonFor(box, keys[index]!);
+    if (button && button !== document.activeElement) button.focus({ preventScroll: true });
     onRemove?.(index, value);
   };
 
@@ -267,7 +277,8 @@ function Root({
           data-measuring={rows != null && !measured ? '' : undefined}
           data-ring={ring ? '' : undefined}
           onFocus={(event) => {
-            if (event.target === event.currentTarget) setRing(true);
+            // A ring for keyboard and script focus, not for a click on the gaps.
+            if (event.target === event.currentTarget && focusVisible(event.currentTarget)) setRing(true);
           }}
           onBlur={(event) => {
             if (event.target === event.currentTarget) setRing(false);
@@ -283,6 +294,7 @@ function Root({
               dismissLabel={dismissLabel?.(chip.value)}
               style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
               onDismiss={onRemove ? () => removeAt(index, chip.value, listRef.current) : undefined}
+              onBlur={onRemove ? () => release(index) : undefined}
             >
               {chip.value}
             </Chip.Root>
@@ -321,6 +333,7 @@ function Root({
                 className={styles.panelChip}
                 dismissLabel={dismissLabel?.(value)}
                 onDismiss={onRemove ? () => removeAt(at, value, popover.popoverRef.current) : undefined}
+                onBlur={onRemove ? () => release(at) : undefined}
               >
                 {value}
               </Chip.Root>
