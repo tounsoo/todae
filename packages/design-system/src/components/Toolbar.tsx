@@ -21,7 +21,7 @@ export type { ToolbarOrientation };
  * Any focusable control counts, inside wrappers too, except those in a popover
  * or dialog that opens from the toolbar. Text inputs and composites with their
  * own arrow keys keep their own tab stop. The toolbar writes no `tabindex`:
- * it moves focus to the end of the controls when Tab is pressed. Name it with
+ * it moves focus to the end of the run of controls when Tab is pressed. Name it with
  * `aria-label` or `aria-labelledby`.
  */
 export type ToolbarRootProps = {
@@ -33,7 +33,22 @@ export type ToolbarRootProps = {
 export type ToolbarGroupProps = ComponentPropsWithRef<'div'>;
 export type ToolbarSeparatorProps = Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-const FOCUSABLE = 'button, a[href], input, select, textarea, [contenteditable]:not([contenteditable="false"]), [tabindex]';
+// Everything Tab can reach. A focus target with tabindex -1 only is never an item.
+const FOCUSABLE = [
+  'button',
+  'a[href]',
+  'input',
+  'select',
+  'textarea',
+  'summary',
+  'iframe',
+  'audio[controls]',
+  'video[controls]',
+  '[contenteditable]:not([contenteditable="false"])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+// Reachable by Tab, but not an arrow-key item.
+const NOT_ITEM = 'summary, iframe, audio, video';
 
 // Roles whose widgets handle arrow keys themselves.
 const ARROW_ROLES = new Set([
@@ -66,25 +81,25 @@ function ownsArrows(el: HTMLElement, root: HTMLElement): boolean {
   return !['button', 'checkbox', 'reset', 'submit', 'image', 'color', 'file'].includes((el as HTMLInputElement).type);
 }
 
-// Controls inside the toolbar's own element, outside any layer that opens
-// from it, in document order. Read at each key press, so nothing goes stale.
-function controlsOf(root: HTMLElement): HTMLElement[] {
-  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
-    (el) =>
-      !el.matches(TOOLBAR_BOUNDARY) &&
-      el.parentElement?.closest(TOOLBAR_BOUNDARY) === root &&
-      !el.matches(':disabled') &&
-      isReachable(el),
+function isItem(el: HTMLElement, root: HTMLElement): boolean {
+  return (
+    !el.matches(TOOLBAR_BOUNDARY) &&
+    el.parentElement?.closest(TOOLBAR_BOUNDARY) === root &&
+    !el.matches(NOT_ITEM) &&
+    !ownsArrows(el, root)
   );
 }
 
-// The toolbar's items, split into runs at each control that owns its arrow
-// keys. Tab leaves a run, so such a control keeps its own Tab stop.
+// The toolbar's items in document order, split into runs at anything else
+// Tab can reach: a control with its own arrow keys, an open layer, a nested
+// toolbar. Tab leaves a run, so those keep their own Tab stops. Read at each
+// key press, so nothing goes stale.
 function runsOf(root: HTMLElement): HTMLElement[][] {
   const runs: HTMLElement[][] = [[]];
-  for (const el of controlsOf(root)) {
-    if (ownsArrows(el, root)) runs.push([]);
-    else runs[runs.length - 1]!.push(el);
+  for (const el of root.querySelectorAll<HTMLElement>(FOCUSABLE)) {
+    if (el.matches(':disabled') || !isReachable(el)) continue;
+    if (isItem(el, root)) runs[runs.length - 1]!.push(el);
+    else runs.push([]);
   }
   return runs.filter((run) => run.length > 0);
 }
@@ -126,20 +141,19 @@ function Root({
     };
   }, []);
 
-  // Tab coming back from outside goes to the item Tab left from, when it is
-  // in the same run and can still take focus. Focus from a click, a script
-  // or a screen reader lands where it was aimed.
+  // Tab coming back into a run goes to the item Tab last left it from, when
+  // that item can still take focus. Focus from a click, a script or a screen
+  // reader lands where it was aimed, and the remembered item is dropped.
   const handleFocus = (event: FocusEvent<HTMLDivElement>) => {
     onFocus?.(event);
     const root = rootRef.current;
-    const back = left.current;
-    if (!root || !back || root.contains(event.relatedTarget as Node | null)) return;
-    left.current = null;
-    if (!tabbing.current) return;
+    if (!root) return;
     const target = event.target as HTMLElement;
-    if (back === target) return;
     const run = runsOf(root).find((items) => items.includes(target));
-    if (run?.includes(back)) back.focus();
+    if (!run || run.includes(event.relatedTarget as HTMLElement)) return;
+    const back = left.current;
+    left.current = null;
+    if (tabbing.current && back && back !== target && run.includes(back)) back.focus();
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -157,7 +171,7 @@ function Root({
       // then leaves the run from there.
       left.current = from;
       const edge = event.shiftKey ? run[0]! : run[run.length - 1]!;
-      if (edge !== from) edge.focus();
+      if (edge !== from) edge.focus({ preventScroll: true });
       return;
     }
     // Shift combinations are left to the control, as in useRovingFocus.

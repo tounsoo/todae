@@ -205,4 +205,37 @@ describe('Toolbar in a browser', () => {
     await userEvent.tab();
     expect(document.activeElement).toBe(button('After'));
   });
+
+  it('returns Shift+Tab from a text input to the control Tab left the run from', async () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <Button.Root>B</Button.Root>
+        <Button.Root>C</Button.Root>
+        <input aria-label="Size" />
+      </Toolbar.Root>,
+    );
+    button('B').focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('textbox'));
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(button('B'));
+  });
+
+  it('lets Tab reach a disclosure between its controls', async () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <details>
+          <summary>More</summary>
+        </details>
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByText('More'));
+    await userEvent.tab();
+    expect(document.activeElement).toBe(button('B'));
+  });
 });

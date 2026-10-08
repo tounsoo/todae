@@ -413,4 +413,34 @@ describe('Toolbar', () => {
     button('A').focus();
     expect(document.activeElement).toBe(button('A'));
   });
+
+  it('keeps a focus target with tabindex -1 out of the arrow keys', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <div tabIndex={-1} data-testid="scroller">
+          <Button.Root>B</Button.Root>
+        </div>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(button('B'));
+  });
+
+  it('ends a run at an open layer inside it, so Tab reaches the layer', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <div popover="manual" data-testid="layer">
+          <button type="button">Save</button>
+        </div>
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'Tab' });
+    // jsdom renders the layer, so it counts as open.
+    expect(document.activeElement).toBe(button('A'));
+  });
 });
