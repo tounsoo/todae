@@ -53,7 +53,7 @@ export function FileUploadImages() {
       <Description id={hintId}>Up to 3 images, 2 MB each.</Description>
       {rejected.length > 0 ? (
         <ErrorMessage id={errorId}>
-          {rejected.map(({ file, reasons }) => `${file.name} ${REASONS[reasons[0]!]}.`).join(' ')}
+          {rejected.map(({ file, reasons }) => `${file.name} ${reasons.map((reason) => REASONS[reason]).join(' and ')}.`).join(' ')}
         </ErrorMessage>
       ) : null}
       {files.length > 0 ? (

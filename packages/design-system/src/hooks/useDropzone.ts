@@ -51,7 +51,7 @@ export type UseDropzoneResult = {
   getInputProps: () => UseDropzoneInputProps;
 };
 
-/** Whether a file matches an accept string, the way the file picker reads it. */
+/** Whether a file matches an accept string: a `.ext` rule matches the file name, other rules match its MIME type. */
 export function acceptsFile(file: Pick<File, 'name' | 'type'>, accept: string | undefined): boolean {
   const rules = (accept ?? '')
     .split(',')
@@ -128,8 +128,9 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
     onDragOver: (event) => {
       if (!hasFiles(event)) return;
       // Cancelling dragover is what allows a drop; 'none' refuses it while disabled.
+      // Enabled, the browser picks the effect from the source's effectAllowed.
       event.preventDefault();
-      event.dataTransfer.dropEffect = disabled ? 'none' : 'copy';
+      if (disabled) event.dataTransfer.dropEffect = 'none';
     },
     onDragLeave: (event) => {
       // Not gated on disabled, so a drag that started enabled still ends.

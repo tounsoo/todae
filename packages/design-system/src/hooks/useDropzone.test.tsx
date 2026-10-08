@@ -19,7 +19,7 @@ const file = (name: string, type: string, size = 10) => new File(['x'.repeat(siz
 const drag = (files: File[], types = ['Files']) => ({ dataTransfer: { files, types, dropEffect: 'none' } });
 
 describe('acceptsFile', () => {
-  it('reads extensions, wildcards and exact types like the file picker', () => {
+  it('matches extensions by name, and wildcards and exact types by MIME type', () => {
     const pdf = { name: 'Report.PDF', type: 'application/pdf' };
     const png = { name: 'a.png', type: 'image/png' };
     expect(acceptsFile(pdf, undefined)).toBe(true);
@@ -123,6 +123,13 @@ describe('useDropzone', () => {
     expect(screen.getByTestId('dragging').textContent).toBe('false');
     fireEvent.drop(zone, drag([], ['text/plain']));
     expect(onFiles).not.toHaveBeenCalled();
+  });
+
+  it('leaves the drop effect to the browser while enabled', () => {
+    render(<Zone />);
+    const over = { dataTransfer: { files: [], types: ['Files'], effectAllowed: 'move', dropEffect: 'move' } };
+    expect(fireEvent.dragOver(screen.getByTestId('zone'), over)).toBe(false);
+    expect(over.dataTransfer.dropEffect).toBe('move');
   });
 
   it('refuses drops while disabled', () => {

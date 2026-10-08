@@ -60,6 +60,14 @@ describe('useDropzone in a browser', () => {
     Object.defineProperty(event, 'dataTransfer', { value: data });
     screen.getByTestId('zone').dispatchEvent(event);
     expect(onFiles).toHaveBeenCalledWith([png], []);
+    // A drop of only folders changes nothing: no callback, and the earlier file stays.
+    onFiles.mockClear();
+    const onlyFolder = new DragEvent('drop', { bubbles: true, cancelable: true });
+    Object.defineProperty(onlyFolder, 'dataTransfer', { value: { ...data, items: [folder] } });
+    screen.getByTestId('zone').dispatchEvent(onlyFolder);
+    expect(onFiles).not.toHaveBeenCalled();
+    const input = screen.getByTestId('input') as HTMLInputElement;
+    expect([...input.files!].map((f) => f.name)).toEqual(['a.png']);
   });
 
   it('keeps the native input focusable, so the keyboard reaches the picker', () => {
