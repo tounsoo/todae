@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button } from './Button';
 import { ToggleGroup } from './ToggleGroup';
@@ -95,6 +95,24 @@ describe('ToggleGroup', () => {
     fireEvent.keyDown(button('Center'), { key: 'ArrowRight' });
     expect(document.activeElement).toBe(button('Right'));
     expect(pressed('Right')).toBe('false');
+  });
+
+  it('moves the tab stop with focus inside, and back to the pressed item when focus leaves', async () => {
+    render(
+      <>
+        <ToggleGroup.Root aria-label="Align" defaultValue="center">
+          <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
+          <ToggleGroup.Item value="center">Center</ToggleGroup.Item>
+          <ToggleGroup.Item value="right">Right</ToggleGroup.Item>
+        </ToggleGroup.Root>
+        <button type="button">Out</button>
+      </>,
+    );
+    button('Center').focus();
+    fireEvent.keyDown(button('Center'), { key: 'ArrowRight' });
+    expect([button('Center').tabIndex, button('Right').tabIndex]).toEqual([-1, 0]);
+    button('Out').focus();
+    await waitFor(() => expect([button('Center').tabIndex, button('Right').tabIndex]).toEqual([0, -1]));
   });
 
   it('puts the tab stop on the first item in multiple mode', () => {

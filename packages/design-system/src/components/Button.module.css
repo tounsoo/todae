@@ -54,6 +54,13 @@
     outline-offset: 2px;
   }
 
+  /* Focus adds its ring but keeps a pressed toggle's colors. */
+  .root[aria-pressed='true']:focus-visible:not(:disabled) {
+    background: var(--todae-button-bg-active);
+    color: var(--todae-button-fg-active);
+    border-color: var(--todae-button-border-active);
+  }
+
   .root:disabled {
     cursor: not-allowed;
     background: var(--todae-button-bg-disabled);

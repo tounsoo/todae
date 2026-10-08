@@ -1,7 +1,7 @@
 import {
-  useCallback,
   useContext,
-  useLayoutEffect,
+  useEffect,
+  useMemo,
   useRef,
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -13,15 +13,16 @@ import { useComposedRefs } from './props';
 import styles from './Toolbar.module.css';
 import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from './toolbarContext';
 
-export { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation };
+export type { ToolbarOrientation };
 
 /**
  * A row (or column) of controls with one tab stop. Arrow keys move focus
  * between the controls inside, Home and End jump to the ends, and Tab leaves.
  * Any focusable control counts, inside wrappers too, except those in a popover
  * or dialog that opens from the toolbar. Text inputs and composites with their
- * own arrow keys keep their own tab stop. Name it with `aria-label` or
- * `aria-labelledby`.
+ * own arrow keys keep their own tab stop. The toolbar writes no `tabindex`:
+ * it moves focus to the end of the run of controls when Tab is pressed. Name it with
+ * `aria-label` or `aria-labelledby`.
  */
 export type ToolbarRootProps = {
   orientation?: ToolbarOrientation;
@@ -32,33 +33,76 @@ export type ToolbarRootProps = {
 export type ToolbarGroupProps = ComponentPropsWithRef<'div'>;
 export type ToolbarSeparatorProps = Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-// Selects, textareas and editable text own their arrow keys, so they are never items.
-const FOCUSABLE = 'button, a[href], input, [tabindex]';
+// Everything Tab can reach. A focus target with tabindex -1 only is never an item.
+const FOCUSABLE = [
+  'button',
+  'a[href]',
+  'input',
+  'select',
+  'textarea',
+  'summary',
+  'iframe',
+  'audio[controls]',
+  'video[controls]',
+  '[contenteditable]:not([contenteditable="false"])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+// Reachable by Tab, but not an arrow-key item.
+const NOT_ITEM = 'summary, iframe, audio, video';
+
+// Roles whose widgets handle arrow keys themselves.
+const ARROW_ROLES = new Set([
+  'combobox',
+  'grid',
+  'listbox',
+  'menu',
+  'menubar',
+  'radiogroup',
+  'slider',
+  'spinbutton',
+  'tablist',
+  'tree',
+  'treegrid',
+]);
+const ARROW_COMPOSITES = [...ARROW_ROLES].map((role) => `[role="${role}"]`).join(', ');
 
 // Controls whose own arrow keys move a caret or a value, and composites with
 // their own roving focus. They keep their own tab stop and keys, outside the
 // toolbar's, so focus is never stuck in them.
-function ownsArrows(el: HTMLElement): boolean {
-  if (el.hasAttribute('data-todae-roving')) return true;
-  if (el.isContentEditable || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true;
+function ownsArrows(el: HTMLElement, root: HTMLElement): boolean {
+  if (el.hasAttribute('data-todae-roving') || el.hasAttribute('aria-activedescendant')) return true;
+  if (ARROW_ROLES.has(el.getAttribute('role') ?? '')) return true;
+  // An item of such a widget, such as a tab in a tablist.
+  const composite = el.parentElement?.closest(ARROW_COMPOSITES);
+  if (composite && root.contains(composite)) return true;
+  if (el.isContentEditable || el.matches('textarea, select, [contenteditable]:not([contenteditable="false"])')) return true;
   if (el.tagName !== 'INPUT') return false;
   // A radio's arrow keys select the next radio in its group.
   return !['button', 'checkbox', 'reset', 'submit', 'image', 'color', 'file'].includes((el as HTMLInputElement).type);
 }
 
-// Membership reads attributes only, so it does not change when CSS outside
-// the toolbar shows or hides it.
-function itemsOf(root: HTMLElement): HTMLElement[] {
-  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
-    (el) =>
-      !el.matches(TOOLBAR_BOUNDARY) &&
-      !ownsArrows(el) &&
-      el.parentElement?.closest(TOOLBAR_BOUNDARY) === root &&
-      !el.matches(':disabled') &&
-      !el.closest('[inert]'),
+function isItem(el: HTMLElement, root: HTMLElement): boolean {
+  return (
+    !el.matches(TOOLBAR_BOUNDARY) &&
+    el.parentElement?.closest(TOOLBAR_BOUNDARY) === root &&
+    !el.matches(NOT_ITEM) &&
+    !ownsArrows(el, root)
   );
 }
 
+// The toolbar's items in document order, split into runs at anything else
+// Tab can reach: a control with its own arrow keys, an open layer, a nested
+// toolbar. Tab leaves a run, so those keep their own Tab stops. Read at each
+// key press, so nothing goes stale.
+function runsOf(root: HTMLElement): HTMLElement[][] {
+  const runs: HTMLElement[][] = [[]];
+  for (const el of root.querySelectorAll<HTMLElement>(FOCUSABLE)) {
+    if (el.matches(':disabled') || !isReachable(el)) continue;
+    if (isItem(el, root)) runs[runs.length - 1]!.push(el);
+    else runs.push([]);
+  }
+  return runs.filter((run) => run.length > 0);
+}
 
 function Root({
   orientation = 'horizontal',
@@ -67,127 +111,90 @@ function Root({
   ref,
   onKeyDown,
   onFocus,
+  onPointerDown,
   children,
   ...props
 }: ToolbarRootProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const refs = useComposedRefs(rootRef, ref);
-  const active = useRef<HTMLElement | null>(null);
-  // Each element the toolbar set a tabindex on, with the attribute it had
-  // before, so one that stops being an item gets its own back.
-  const managed = useRef(new Map<HTMLElement, string | null>());
+  // The item Tab last left from, so Tab coming back returns to it.
+  const left = useRef<HTMLElement | null>(null);
+  const context = useMemo(() => ({ orientation }), [orientation]);
 
-  // One item keeps tabindex 0: the last one focused if it is shown, else the
-  // first shown item, else the last focused, else the first. A toolbar that
-  // mounts hidden still keeps a tab stop for when it is shown.
-  const sync = useCallback((focused?: HTMLElement) => {
-    const root = rootRef.current;
-    if (!root) return;
-    const items = itemsOf(root);
-    if (focused && items.includes(focused)) active.current = focused;
-    if (active.current && !items.includes(active.current)) active.current = null;
-    const stop =
-      (active.current && isReachable(active.current) ? active.current : null) ??
-      items.find(isReachable) ??
-      active.current ??
-      items[0] ??
-      null;
-    const now = new Set(items);
-    for (const [el, original] of managed.current) {
-      if (now.has(el)) continue;
-      if (original === null) el.removeAttribute('tabindex');
-      else el.setAttribute('tabindex', original);
-      managed.current.delete(el);
-    }
-    for (const item of items) {
-      if (!managed.current.has(item)) managed.current.set(item, item.getAttribute('tabindex'));
-      const tabIndex = item === stop ? '0' : '-1';
-      // Only a change is written, so the observer, which watches tabindex,
-      // settles after one pass.
-      if (item.getAttribute('tabindex') !== tabIndex) item.setAttribute('tabindex', tabIndex);
-    }
+  // Whether the focus now arriving comes from a Tab press. Set during the
+  // key's own dispatch, before the browser moves focus, and cleared after.
+  const tabbing = useRef(false);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+      tabbing.current = true;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        tabbing.current = false;
+      });
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => {
+      document.removeEventListener('keydown', onKey, true);
+      clearTimeout(timer);
+    };
   }, []);
 
-  // On mount, then whenever controls come, go, or change what can take focus.
-  // Class and style count, as they can hide a control. Changes are batched
-  // into one sync per frame.
-  useLayoutEffect(() => {
-    sync();
-    const root = rootRef.current;
-    if (!root || typeof MutationObserver === 'undefined') return;
-    let frame = 0;
-    const observer = new MutationObserver((records) => {
-      for (const record of records) {
-        const el = record.target as HTMLElement;
-        // Changes inside a layer that opens from the toolbar, such as an open
-        // menu, cannot change the toolbar's items.
-        if (el !== root && el.parentElement?.closest(TOOLBAR_BOUNDARY) !== root) continue;
-        // A tabindex someone else wrote, such as a new tabIndex prop, is the
-        // one to give back when the control stops being an item.
-        if (record.attributeName === 'tabindex' && managed.current.has(el)) {
-          const now = el.getAttribute('tabindex');
-          if (now !== '0' && now !== '-1') managed.current.set(el, now);
-        }
-        frame ||= requestAnimationFrame(() => {
-          frame = 0;
-          sync();
-        });
-      }
-    });
-    observer.observe(root, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: [
-        'disabled',
-        'hidden',
-        'inert',
-        'class',
-        'style',
-        'type',
-        'href',
-        'tabindex',
-        'contenteditable',
-        'data-todae-roving',
-      ],
-    });
-    return () => {
-      observer.disconnect();
-      cancelAnimationFrame(frame);
-    };
-  }, [sync]);
-
+  // Tab coming back into a run goes to the item Tab last left it from, when
+  // that item can still take focus. Focus from a click, a script or a screen
+  // reader lands where it was aimed, and the remembered item is dropped.
   const handleFocus = (event: FocusEvent<HTMLDivElement>) => {
     onFocus?.(event);
-    if (event.target !== active.current) sync(event.target as HTMLElement);
+    const root = rootRef.current;
+    if (!root) return;
+    const target = event.target as HTMLElement;
+    const run = runsOf(root).find((items) => items.includes(target));
+    if (!run || run.includes(event.relatedTarget as HTMLElement)) return;
+    const back = left.current;
+    left.current = null;
+    if (tabbing.current && back && back !== target && run.includes(back)) back.focus();
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
     const root = rootRef.current;
-    // Shift combinations are left to the control, as in useRovingFocus.
-    if (event.defaultPrevented || !root || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (event.defaultPrevented || !root || event.altKey || event.ctrlKey || event.metaKey) return;
     const target = event.target as HTMLElement;
-    const items = itemsOf(root).filter(isReachable);
+    if (event.key === 'Tab') {
+      // Where focus is now: a layer inside, such as a menu, may already have
+      // returned it to its trigger before letting Tab run.
+      const from = document.activeElement instanceof HTMLElement ? document.activeElement : target;
+      const run = runsOf(root).find((items) => items.includes(from));
+      if (!run) return;
+      // Focus moves to the end of the run first, so the browser's own Tab
+      // then leaves the run from there.
+      left.current = from;
+      const edge = event.shiftKey ? run[0]! : run[run.length - 1]!;
+      if (edge !== from) edge.focus({ preventScroll: true });
+      return;
+    }
+    // Shift combinations are left to the control, as in useRovingFocus.
+    if (event.shiftKey) return;
+    const move = nextKey(event.key, orientation, () => getComputedStyle(root).direction === 'rtl');
+    if (!move && event.key !== 'Home' && event.key !== 'End') return;
+    const items = runsOf(root).flat();
     const index = items.indexOf(target);
     if (index === -1) return;
-    const step = (delta: number) => {
-      const to = index + delta;
-      if (to >= 0 && to < items.length) return to;
-      return loop ? (to + items.length) % items.length : index;
-    };
-    const move = nextKey(event.key, orientation, () => getComputedStyle(root).direction === 'rtl');
-    let next: number | null = null;
+    let next = index;
     if (event.key === 'Home') next = 0;
     else if (event.key === 'End') next = items.length - 1;
-    else if (move) next = step(move === 'next' ? 1 : -1);
-    if (next === null) return;
+    else {
+      const to = index + (move === 'next' ? 1 : -1);
+      if (to >= 0 && to < items.length) next = to;
+      else if (loop) next = (to + items.length) % items.length;
+    }
     event.preventDefault();
     items[next]?.focus();
   };
 
   return (
-    <ToolbarContext.Provider value={{ orientation }}>
+    <ToolbarContext.Provider value={context}>
       <div
         {...props}
         ref={refs}
@@ -196,6 +203,10 @@ function Root({
         data-orientation={orientation}
         className={cx(styles.root, className)}
         onFocus={handleFocus}
+        onPointerDown={(event) => {
+          onPointerDown?.(event);
+          left.current = null;
+        }}
         onKeyDown={handleKeyDown}
       >
         {children}

@@ -29,18 +29,96 @@ function Editor({ orientation }: { orientation?: 'horizontal' | 'vertical' }) {
 }
 
 const button = (name: string) => screen.getByRole('button', { name });
-const tabbable = () => [...document.querySelectorAll<HTMLElement>('[tabindex="0"]')];
 
 describe('Toolbar', () => {
-  it('has the toolbar role and one tab stop on the first control', () => {
+  it('has the toolbar role and writes no tabindex', () => {
     render(<Editor />);
     expect(screen.getByRole('toolbar', { name: 'Format' }).hasAttribute('aria-orientation')).toBe(false);
-    expect(tabbable()).toEqual([button('Bold')]);
-    expect(button('Italic').tabIndex).toBe(-1);
-    // A text input keeps its own tab stop.
-    expect(screen.getByRole('textbox').hasAttribute('tabindex')).toBe(false);
+    expect(document.querySelectorAll('[role="toolbar"] [tabindex]')).toHaveLength(0);
   });
 
+  it('moves focus to the end of the run on Tab and the start on Shift+Tab, so the browser leaves from there', () => {
+    render(<Editor />);
+    button('Bold').focus();
+    fireEvent.keyDown(button('Bold'), { key: 'Tab' });
+    // The text input ends the first run and keeps its own Tab stop.
+    expect(document.activeElement).toBe(button('Italic'));
+    button('Italic').focus();
+    fireEvent.keyDown(button('Italic'), { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(button('Bold'));
+  });
+
+  it('returns focus coming back from outside to the item Tab left from', () => {
+    render(
+      <>
+        <button type="button">Before</button>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root>B</Button.Root>
+          <Button.Root>C</Button.Root>
+        </Toolbar.Root>
+      </>,
+    );
+    button('B').focus();
+    fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
+    button('Before').focus();
+    // The browser moves focus while the Tab key is dispatched.
+    fireEvent.keyDown(button('Before'), { key: 'Tab' });
+    button('A').focus();
+    expect(document.activeElement).toBe(button('B'));
+  });
+
+  it('lets focus from a click or a script land where it was aimed after Tab left', async () => {
+    render(
+      <>
+        <button type="button">Before</button>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root>B</Button.Root>
+        </Toolbar.Root>
+      </>,
+    );
+    button('B').focus();
+    fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
+    button('Before').focus();
+    // A later focus, after that key press is over.
+    await new Promise((resolve) => setTimeout(resolve));
+    button('A').focus();
+    expect(document.activeElement).toBe(button('A'));
+  });
+
+  it('gives selects, textareas, editable text and arrow-key widgets their own Tab stop', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <select aria-label="Font">
+          <option>Serif</option>
+        </select>
+        <Button.Root>B</Button.Root>
+        <textarea aria-label="Note" />
+        <Button.Root>C</Button.Root>
+        <div role="listbox" tabIndex={0} aria-label="List" />
+        <Button.Root>D</Button.Root>
+        <div contentEditable suppressContentEditableWarning aria-label="Edit">
+          x
+        </div>
+        <Button.Root>E</Button.Root>
+      </Toolbar.Root>,
+    );
+    for (const [from, to] of [
+      ['A', 'B'],
+      ['B', 'C'],
+      ['C', 'D'],
+      ['D', 'E'],
+    ]) {
+      button(from!).focus();
+      // Each control ends a run, so Tab stays on the button and the browser moves on to it.
+      fireEvent.keyDown(button(from!), { key: 'Tab' });
+      expect(document.activeElement).toBe(button(from!));
+      fireEvent.keyDown(button(from!), { key: 'ArrowRight' });
+      expect(document.activeElement).toBe(button(to!));
+    }
+  });
   it('moves focus with arrow keys, skipping disabled controls and text inputs, and following wrappers', () => {
     render(<Editor />);
     button('Bold').focus();
@@ -48,7 +126,6 @@ describe('Toolbar', () => {
     expect(document.activeElement).toBe(button('Italic'));
     fireEvent.keyDown(button('Italic'), { key: 'ArrowRight' });
     expect(document.activeElement).toBe(button('Link'));
-    expect(tabbable()).toEqual([button('Link')]);
   });
 
   it('skips controls disabled by a fieldset, and composites with their own arrow keys', () => {
@@ -121,23 +198,6 @@ describe('Toolbar', () => {
     expect(sep.getAttribute('aria-orientation')).toBe('vertical');
   });
 
-  it('keeps the tab stop on a control that was clicked, and moves it off one that goes away', async () => {
-    function Removable() {
-      const [shown, setShown] = useState(true);
-      return (
-        <Toolbar.Root aria-label="t">
-          <Button.Root>A</Button.Root>
-          {shown ? <Button.Root onClick={() => setShown(false)}>B</Button.Root> : null}
-        </Toolbar.Root>
-      );
-    }
-    render(<Removable />);
-    button('B').focus();
-    expect(tabbable()).toEqual([button('B')]);
-    fireEvent.click(button('B'));
-    await waitFor(() => expect(tabbable()).toEqual([button('A')]));
-  });
-
   it('skips controls inside a popover that opens from it', () => {
     render(
       <Toolbar.Root aria-label="t">
@@ -164,7 +224,7 @@ describe('Toolbar', () => {
         <Button.Root>More</Button.Root>
       </Toolbar.Root>,
     );
-    expect(tabbable()).toEqual([button('Left')]);
+    expect(button('Left').hasAttribute('tabindex')).toBe(false);
     button('Left').focus();
     fireEvent.keyDown(button('Left'), { key: 'ArrowRight' });
     fireEvent.keyDown(button('Right'), { key: 'ArrowRight' });
@@ -184,19 +244,6 @@ describe('Toolbar', () => {
     button('A').focus();
     fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
     expect(document.activeElement).toBe(button('B'));
-  });
-
-  it('gives a control back its own tabindex when it stops being an item', async () => {
-    render(
-      <Toolbar.Root aria-label="t">
-        <Button.Root>A</Button.Root>
-        <input type="button" value="Mode" />
-      </Toolbar.Root>,
-    );
-    const mode = screen.getByRole('button', { name: 'Mode' }) as HTMLInputElement;
-    expect(mode.tabIndex).toBe(-1);
-    mode.type = 'text';
-    await waitFor(() => expect(mode.hasAttribute('tabindex')).toBe(false));
   });
 
   it('leaves a toggle group inside a popover from the toolbar its own roving focus', async () => {
@@ -262,7 +309,7 @@ describe('Toolbar', () => {
     expect(document.activeElement).toBe(insert);
   });
 
-  it('takes in a control that becomes focusable later', async () => {
+  it('takes in a control that becomes focusable later', () => {
     function Late() {
       const [focusable, setFocusable] = useState(false);
       return (
@@ -276,10 +323,10 @@ describe('Toolbar', () => {
     }
     render(<Late />);
     fireEvent.click(button('A'));
-    await waitFor(() => expect(screen.getByTestId('late').tabIndex).toBe(-1));
-    expect(tabbable()).toEqual([button('A')]);
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(screen.getByTestId('late'));
   });
-
   it('leaves Shift with an arrow key to the control', () => {
     render(<Editor />);
     button('Bold').focus();
@@ -298,5 +345,102 @@ describe('Toolbar', () => {
     );
     expect(screen.getByTestId('group').getAttribute('data-orientation')).toBe('vertical');
     expect(screen.getByTestId('sep').getAttribute('aria-orientation')).toBe('horizontal');
+  });
+
+  it('leaves Up and Down to a menu trigger portaled out of a vertical toolbar', async () => {
+    render(
+      <Toolbar.Root aria-label="t" orientation="vertical">
+        <Button.Root>A</Button.Root>
+        {createPortal(
+          <Menu.Root>
+            <Menu.Trigger>More</Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>One</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>,
+          document.body,
+        )}
+      </Toolbar.Root>,
+    );
+    const more = button('More');
+    more.focus();
+    // The trigger notices it is outside the toolbar after mounting.
+    await waitFor(() => {
+      fireEvent.keyDown(more, { key: 'ArrowDown' });
+      expect(more.getAttribute('aria-expanded')).toBe('true');
+    });
+  });
+
+  it('treats the items of an outside tablist or radiogroup as their own stop', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <div role="tablist" aria-label="Views">
+          <button type="button" role="tab" aria-selected="true">
+            One
+          </button>
+          <button type="button" role="tab" aria-selected="false" tabIndex={-1}>
+            Two
+          </button>
+        </div>
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(button('B'));
+  });
+
+  it('forgets the control Tab left from once focus comes back another way', async () => {
+    render(
+      <>
+        <button type="button">Before</button>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root>B</Button.Root>
+          <Button.Root>C</Button.Root>
+        </Toolbar.Root>
+      </>,
+    );
+    button('C').focus();
+    fireEvent.keyDown(button('C'), { key: 'Tab', shiftKey: true });
+    button('Before').focus();
+    await new Promise((resolve) => setTimeout(resolve));
+    // A script or screen reader moves focus in, then focus leaves again.
+    button('B').focus();
+    button('Before').focus();
+    fireEvent.keyDown(button('Before'), { key: 'Tab' });
+    button('A').focus();
+    expect(document.activeElement).toBe(button('A'));
+  });
+
+  it('keeps a focus target with tabindex -1 out of the arrow keys', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <div tabIndex={-1} data-testid="scroller">
+          <Button.Root>B</Button.Root>
+        </div>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(button('B'));
+  });
+
+  it('ends a run at an open layer inside it, so Tab reaches the layer', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <div popover="manual" data-testid="layer">
+          <button type="button">Save</button>
+        </div>
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'Tab' });
+    // jsdom renders the layer, so it counts as open.
+    expect(document.activeElement).toBe(button('A'));
   });
 });
