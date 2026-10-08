@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Avatar } from './Avatar';
 
@@ -109,33 +109,79 @@ describe('Avatar', () => {
     expect(screen.getByTestId('a').getAttribute('data-size')).toBe('lg');
   });
 
-  it('reads an image that finished before its handlers were attached, without a load event', async () => {
-    // A cached image during hydration: complete already, and no load event follows.
-    const complete = vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
-    const decode = vi.fn(() => Promise.resolve());
-    HTMLImageElement.prototype.decode = decode;
-    try {
-      render(
-        <Avatar.Root label="Ada" data-testid="a">
-          <Avatar.Image src="ada.svg" />
-          <Avatar.Fallback>AL</Avatar.Fallback>
-        </Avatar.Root>,
-      );
-      await waitFor(() => expect(screen.getByTestId('a').getAttribute('data-status')).toBe('loaded'));
-      expect(decode).toHaveBeenCalled();
-      cleanup();
-      decode.mockImplementation(() => Promise.reject(new Error('broken')));
-      render(
-        <Avatar.Root label="Ada" data-testid="a">
-          <Avatar.Image src="broken.png" />
-          <Avatar.Fallback>AL</Avatar.Fallback>
-        </Avatar.Root>,
-      );
-      await waitFor(() => expect(screen.getByTestId('a').getAttribute('data-status')).toBe('error'));
-    } finally {
-      complete.mockRestore();
-      delete (HTMLImageElement.prototype as Partial<HTMLImageElement>).decode;
+  describe('an image already complete when its effect runs', () => {
+    let resolve: () => void;
+    let reject: () => void;
+    const decode = vi.fn(
+      () =>
+        new Promise<void>((res, rej) => {
+          resolve = res;
+          reject = () => rej(new Error('EncodingError'));
+        }),
+    );
+    function stub(naturalWidth: number) {
+      vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
+      vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(naturalWidth);
+      HTMLImageElement.prototype.decode = decode;
     }
+    afterEach(() => {
+      vi.restoreAllMocks();
+      decode.mockClear();
+      delete (HTMLImageElement.prototype as Partial<HTMLImageElement>).decode;
+    });
+    const tree = (src = 'ada.svg') => (
+      <Avatar.Root label="Ada" data-testid="a">
+        <Avatar.Image src={src} data-testid="img" />
+        <Avatar.Fallback>AL</Avatar.Fallback>
+      </Avatar.Root>
+    );
+    const status = () => screen.getByTestId('a').getAttribute('data-status');
+
+    it('is loaded at once with a natural width, without decoding', () => {
+      stub(64);
+      render(tree());
+      expect(status()).toBe('loaded');
+      expect(decode).not.toHaveBeenCalled();
+    });
+
+    it('decodes one with no width: an SVG with no intrinsic size loads', async () => {
+      stub(0);
+      render(tree());
+      expect(status()).toBe('loading');
+      await act(async () => resolve());
+      expect(status()).toBe('loaded');
+    });
+
+    it('decodes one with no width: a broken image keeps the fallback', async () => {
+      stub(0);
+      render(tree());
+      await act(async () => reject());
+      expect(status()).toBe('error');
+      expect(screen.getByText('AL')).toBeTruthy();
+    });
+
+    it('lets a load or error event win over a later decode result', async () => {
+      stub(0);
+      render(tree());
+      fireEvent.load(screen.getByTestId('img'));
+      await act(async () => reject());
+      expect(status()).toBe('loaded');
+      cleanup();
+      render(tree());
+      fireEvent.error(screen.getByTestId('img'));
+      await act(async () => resolve());
+      expect(status()).toBe('error');
+    });
+
+    it('decides again from the element when src changes after an event', async () => {
+      stub(0);
+      const { rerender } = render(tree('one.svg'));
+      fireEvent.load(screen.getByTestId('img'));
+      rerender(tree('two.svg'));
+      expect(status()).toBe('loading');
+      await act(async () => resolve());
+      expect(status()).toBe('loaded');
+    });
   });
 
   it('loads from srcSet alone', () => {

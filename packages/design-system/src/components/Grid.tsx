@@ -26,12 +26,12 @@ export type GridProps = (
   ComponentPropsWithRef<'div'>;
 
 export function Grid({ columns, minItemSize, className, style, ...props }: GridProps) {
-  const layout = minItemSize !== undefined ? 'fill' : columns !== undefined ? 'columns' : undefined;
+  const layout = minItemSize ? 'fill' : columns !== undefined ? 'columns' : undefined;
   const tracks =
     layout === 'fill'
       ? { '--todae-grid-min-item-size': minItemSize }
       : layout === 'columns'
-        ? { '--todae-grid-column-count': String(Math.max(1, Math.floor(columns!) || 1)) }
+        ? { '--todae-grid-column-count': String(Number.isFinite(columns) ? Math.max(1, Math.floor(columns!)) : 1) }
         : undefined;
   return (
     <div

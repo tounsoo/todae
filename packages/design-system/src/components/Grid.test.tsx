@@ -27,6 +27,12 @@ describe('Grid', () => {
     cleanup();
     render(<Grid columns={0} data-testid="g" />);
     expect(screen.getByTestId('g').style.getPropertyValue('--todae-grid-column-count')).toBe('1');
+    cleanup();
+    render(<Grid columns={Infinity} data-testid="g" />);
+    expect(screen.getByTestId('g').style.getPropertyValue('--todae-grid-column-count')).toBe('1');
+    cleanup();
+    render(<Grid minItemSize="" data-testid="g" />);
+    expect(screen.getByTestId('g').hasAttribute('data-layout')).toBe(false);
   });
 
   it('keeps the caller style', () => {

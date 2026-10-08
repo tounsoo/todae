@@ -74,23 +74,29 @@ function Image({ src, srcSet, ref, onLoad, onError, className, ...props }: Avata
   const { setStatus } = useAvatar('Image');
   const own = useRef<HTMLImageElement>(null);
   const refs = useComposedRefs(own, ref);
+  // Set by a load or error event, which always wins over decode() below.
+  const settled = useRef(false);
 
   // A new source starts over. An image that finished before React attached
-  // its handlers, such as one from the cache before hydration, gets no load
-  // event, so decode() says whether it is usable; it also accepts an SVG with
-  // no intrinsic size, which reports a natural width of 0. No source at all is
-  // a failure, so the fallback stays.
+  // its handlers, such as one from the cache before hydration, may get no
+  // load event, so it is read from the element: a natural width means it
+  // loaded. A width of 0 is either a broken image or an SVG with no intrinsic
+  // size, and decode() tells them apart, unless an event settles it first.
+  // No source at all is a failure, so the fallback stays.
   useLayoutEffect(() => {
-    const img = own.current;
+    const img = own.current!;
     let current = true;
-    if ((!src && !srcSet) || !img) setStatus('error');
-    else if (img.complete) {
+    settled.current = false;
+    if (!src && !srcSet) setStatus('error');
+    else if (!img.complete) setStatus('loading');
+    else if (img.naturalWidth > 0) setStatus('loaded');
+    else {
       setStatus('loading');
       img.decode().then(
-        () => current && setStatus('loaded'),
-        () => current && setStatus('error'),
+        () => current && !settled.current && setStatus('loaded'),
+        () => current && !settled.current && setStatus('error'),
       );
-    } else setStatus('loading');
+    }
     return () => {
       current = false;
       setStatus('idle');
@@ -105,10 +111,12 @@ function Image({ src, srcSet, ref, onLoad, onError, className, ...props }: Avata
       srcSet={srcSet || undefined}
       alt=""
       onLoad={(event) => {
+        settled.current = true;
         setStatus('loaded');
         onLoad?.(event);
       }}
       onError={(event) => {
+        settled.current = true;
         setStatus('error');
         onError?.(event);
       }}

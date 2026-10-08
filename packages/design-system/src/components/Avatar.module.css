@@ -6,6 +6,7 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    --todae-avatar-size: var(--todae-avatar-size-md);
     inline-size: var(--todae-avatar-size);
     block-size: var(--todae-avatar-size);
     overflow: hidden;
