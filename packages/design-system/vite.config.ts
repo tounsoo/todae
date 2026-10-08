@@ -1,7 +1,9 @@
 import { fileURLToPath } from 'node:url';
+import { normalizePath } from 'vite';
 import { defineConfig, type Plugin } from 'vitest/config';
 
-const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta.url));
+// Forward slashes on every platform, as in Vite's module ids.
+const src = (path: string) => normalizePath(fileURLToPath(new URL(`./src/${path}`, import.meta.url)));
 
 const entries = {
   index: src('index.ts'),
