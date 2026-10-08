@@ -29,6 +29,15 @@ describe('Drawer', () => {
     expect(screen.getByRole('dialog', { name: 'Nav' }).getAttribute('data-side')).toBe('start');
   });
 
+  it('falls back to the end edge for an unknown side from untyped code', () => {
+    render(
+      <Drawer.Root open onOpenChange={() => undefined} side={'right' as never} aria-label="Nav">
+        <p>Links</p>
+      </Drawer.Root>,
+    );
+    expect(screen.getByRole('dialog', { name: 'Nav' }).getAttribute('data-side')).toBe('end');
+  });
+
   it('asks to close from Dialog.Close and Escape', () => {
     const onOpenChange = vi.fn();
     render(

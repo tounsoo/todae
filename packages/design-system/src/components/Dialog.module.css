@@ -87,8 +87,7 @@
     margin: 0;
   }
 
-
-  /* In a panel taller than its content, such as Drawer's, the footer sits at the bottom. */
+  /* A footer placed directly in a panel taller than its content, such as Drawer's, sits at the bottom. */
   .footer {
     margin-block-start: auto;
     display: flex;
