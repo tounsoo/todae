@@ -272,4 +272,33 @@ describe('Toolbar in a browser', () => {
     await userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(button('A'));
   });
+
+  it('stops Shift+Tab from an open menu on its trigger, and remembers the trigger after Tab', async () => {
+    render(
+      <>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>Undo</Button.Root>
+          <Menu.Root>
+            <Menu.Trigger>Insert</Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>Image</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+          <Button.Root>Redo</Button.Root>
+        </Toolbar.Root>
+        <button type="button">After</button>
+      </>,
+    );
+    button('Insert').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await screen.findByRole('menuitem', { name: 'Image' });
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(button('Insert'));
+    await userEvent.keyboard('{ArrowDown}');
+    await screen.findByRole('menuitem', { name: 'Image' });
+    await userEvent.tab();
+    expect(document.activeElement).toBe(button('After'));
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(button('Insert'));
+  });
 });

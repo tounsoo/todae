@@ -37,7 +37,7 @@ export type ToolbarSeparatorProps = Omit<ComponentPropsWithRef<'div'>, 'children
 const FOCUSABLE = [
   'button',
   'a[href]',
-  'input',
+  'input:not([type="hidden"])',
   'select',
   'textarea',
   'summary',
@@ -123,22 +123,24 @@ function Root({
   const left = useRef(new WeakSet<HTMLElement>());
   const context = useMemo(() => ({ orientation }), [orientation]);
 
-  // Whether the focus now arriving comes from a Tab press. Set during the
-  // key's own dispatch, before the browser moves focus, and cleared after.
+  // Whether the focus now arriving is the browser's own Tab move. Set once
+  // the key has reached the document unhandled, so focus that a handler moves
+  // during the key, such as a menu returning focus to its trigger, does not
+  // count. Cleared after the browser has moved focus.
   const tabbing = useRef(false);
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const onKey = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== 'Tab') return;
+      if (event.key !== 'Tab' || event.defaultPrevented) return;
       tabbing.current = true;
       clearTimeout(timer);
       timer = setTimeout(() => {
         tabbing.current = false;
       });
     };
-    document.addEventListener('keydown', onKey, true);
+    document.addEventListener('keydown', onKey);
     return () => {
-      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('keydown', onKey);
       clearTimeout(timer);
     };
   }, []);
@@ -150,6 +152,8 @@ function Root({
     onFocus?.(event);
     const root = rootRef.current;
     if (!root) return;
+    // A move inside the toolbar that Tab did not make, such as an arrow key.
+    if (!tabbing.current && root.contains(event.relatedTarget as Node | null)) return;
     const target = event.target as HTMLElement;
     const run = runsOf(root).find((items) => items.includes(target));
     if (!run || run.includes(event.relatedTarget as HTMLElement)) return;
@@ -211,7 +215,10 @@ function Root({
         onFocus={handleFocus}
         onPointerDown={(event) => {
           onPointerDown?.(event);
-          left.current = new WeakSet();
+          // A press in a run forgets that run's remembered control.
+          const pressed = event.target as Node;
+          const run = runsOf(event.currentTarget).find((items) => items.some((item) => item.contains(pressed)));
+          for (const item of run ?? []) left.current.delete(item);
         }}
         onKeyDown={handleKeyDown}
       >
