@@ -2,7 +2,7 @@ import { ToolbarEditor } from '../../../components/demos/ToolbarDemo';
 
 # Toolbar
 
-A row of controls, such as an editor's formatting bar, that takes one stop in the Tab order. `Toolbar.Root` has `role="toolbar"`. Inside it, Left and Right arrow keys move focus between controls, Home and End jump to the first and last, and Tab leaves the toolbar. Up and Down are left to the controls, so a menu trigger still opens its menu.
+A row of controls, such as an editor's formatting bar, whose controls share one stop in the Tab order, apart from those that keep their own (see below). `Toolbar.Root` has `role="toolbar"`. Inside it, Left and Right arrow keys move focus between controls, Home and End jump to the first and last, and Tab leaves the run of controls. Up and Down are left to the controls, so a menu trigger still opens its menu.
 
 ```tsx
 <Toolbar.Root aria-label="Formatting">

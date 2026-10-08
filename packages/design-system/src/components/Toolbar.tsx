@@ -99,7 +99,8 @@ function runsOf(root: HTMLElement): HTMLElement[][] {
   for (const el of root.querySelectorAll<HTMLElement>(FOCUSABLE)) {
     if (el.matches(':disabled') || !isReachable(el)) continue;
     if (isItem(el, root)) runs[runs.length - 1]!.push(el);
-    else runs.push([]);
+    // Only something Tab stops on splits a run.
+    else if (!el.matches('[tabindex="-1"]')) runs.push([]);
   }
   return runs.filter((run) => run.length > 0);
 }
@@ -117,8 +118,9 @@ function Root({
 }: ToolbarRootProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const refs = useComposedRefs(rootRef, ref);
-  // The item Tab last left from, so Tab coming back returns to it.
-  const left = useRef<HTMLElement | null>(null);
+  // For each run, the item Tab last left it from, so Tab coming back
+  // returns to it.
+  const left = useRef(new Set<HTMLElement>());
   const context = useMemo(() => ({ orientation }), [orientation]);
 
   // Whether the focus now arriving comes from a Tab press. Set during the
@@ -151,9 +153,9 @@ function Root({
     const target = event.target as HTMLElement;
     const run = runsOf(root).find((items) => items.includes(target));
     if (!run || run.includes(event.relatedTarget as HTMLElement)) return;
-    const back = left.current;
-    left.current = null;
-    if (tabbing.current && back && back !== target && run.includes(back)) back.focus();
+    const back = run.find((item) => left.current.has(item));
+    if (back) left.current.delete(back);
+    if (tabbing.current && back && back !== target) back.focus();
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -169,7 +171,8 @@ function Root({
       if (!run) return;
       // Focus moves to the end of the run first, so the browser's own Tab
       // then leaves the run from there.
-      left.current = from;
+      for (const item of run) left.current.delete(item);
+      left.current.add(from);
       const edge = event.shiftKey ? run[0]! : run[run.length - 1]!;
       if (edge !== from) edge.focus({ preventScroll: true });
       return;
@@ -205,7 +208,7 @@ function Root({
         onFocus={handleFocus}
         onPointerDown={(event) => {
           onPointerDown?.(event);
-          left.current = null;
+          left.current.clear();
         }}
         onKeyDown={handleKeyDown}
       >

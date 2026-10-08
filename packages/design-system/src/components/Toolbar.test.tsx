@@ -443,4 +443,18 @@ describe('Toolbar', () => {
     // jsdom renders the layer, so it counts as open.
     expect(document.activeElement).toBe(button('A'));
   });
+
+  it('does not split a run at a control Tab skips', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <Button.Root>B</Button.Root>
+        <input aria-label="Size" tabIndex={-1} readOnly />
+        <Button.Root>C</Button.Root>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'Tab' });
+    expect(document.activeElement).toBe(button('C'));
+  });
 });
