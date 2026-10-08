@@ -1,5 +1,5 @@
 import { isValidElement, useLayoutEffect, useRef, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
-import { Button, type ButtonRootProps } from './Button';
+import { Button, type ButtonActionProps } from './Button';
 import { cx, useComposedRefs } from './props';
 import styles from './Alert.module.css';
 
@@ -19,7 +19,7 @@ export type AlertIconProps = ComponentPropsWithRef<'span'>;
 export type AlertTitleProps = ComponentPropsWithRef<'p'>;
 export type AlertDescriptionProps = ComponentPropsWithRef<'div'>;
 export type AlertActionsProps = ComponentPropsWithRef<'div'>;
-export type AlertCloseProps = ButtonRootProps;
+export type AlertCloseProps = ButtonActionProps;
 
 const ASSERTIVE: ReadonlySet<AlertTone> = new Set(['warning', 'critical']);
 

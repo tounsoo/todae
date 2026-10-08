@@ -11,7 +11,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { Button, type ButtonRootProps } from './Button';
+import { Button, type ButtonActionProps } from './Button';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { DIALOG_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
@@ -108,7 +108,7 @@ function DialogClose({
   'aria-label': ariaLabel = 'Close',
   onClick,
   ...props
-}: ButtonRootProps) {
+}: ButtonActionProps) {
   const { requestClose } = useDialog();
   return (
     <Button.Root

@@ -207,7 +207,7 @@ function Root({
     // the arrow keys go on from its place between its neighbours.
     let between = false;
     if (index === -1) {
-      if (target.parentElement?.closest(TOOLBAR_BOUNDARY) !== root || !target.matches(FOCUSABLE)) return;
+      if (!target.matches(':disabled') || target.parentElement?.closest(TOOLBAR_BOUNDARY) !== root) return;
       if (ownsArrows(target, root)) return;
       const after = items.findIndex((item) => target.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING);
       index = after === -1 ? items.length : after;

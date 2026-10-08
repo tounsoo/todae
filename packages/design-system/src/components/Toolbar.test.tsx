@@ -1,7 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
+import type { AlertCloseProps } from './Alert';
+import type { MenuTriggerProps } from './Menu';
 import { Button } from './Button';
 import { Menu } from './Menu';
 import { ToggleGroup } from './ToggleGroup';
@@ -585,5 +587,24 @@ describe('Toolbar', () => {
     button('Undo').focus();
     fireEvent.keyDown(button('Undo'), { key: 'ArrowLeft' });
     expect(document.activeElement).toBe(button('A'));
+  });
+
+  it('leaves the arrow keys to a media element', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <video controls tabIndex={0} data-testid="video" />
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    const video = screen.getByTestId('video');
+    video.focus();
+    expect(fireEvent.keyDown(video, { key: 'ArrowRight' })).toBe(true);
+    expect(document.activeElement).toBe(video);
+  });
+
+  it('keeps toggle props off buttons that are never toggles', () => {
+    expectTypeOf<MenuTriggerProps>().not.toHaveProperty('pressed');
+    expectTypeOf<AlertCloseProps>().not.toHaveProperty('onPressedChange');
   });
 });

@@ -43,6 +43,9 @@ export type ButtonRootProps = {
   ref?: Ref<HTMLButtonElement | null>;
 } & ButtonHTMLAttributes<HTMLButtonElement>;
 
+/** Button.Root props for a button that is never a toggle, such as a close or menu trigger. */
+export type ButtonActionProps = Omit<ButtonRootProps, 'pressed' | 'defaultPressed' | 'onPressedChange'>;
+
 export type ButtonIconProps = {
   children?: ReactNode;
   className?: string;

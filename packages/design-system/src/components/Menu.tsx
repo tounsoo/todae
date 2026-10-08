@@ -20,7 +20,7 @@ import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } fr
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { usePopoverSync } from '../overlay/usePopoverSync';
 import { useFocusLeave } from '../overlay/useFocusLeave';
-import { Button, type ButtonRootProps } from './Button';
+import { Button, type ButtonActionProps } from './Button';
 import { useDomId } from './domId';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import popoverStyles from './Popover.module.css';
@@ -38,7 +38,7 @@ export type MenuRootProps = {
 };
 
 /** The id is the menu's: the content is named by it. */
-export type MenuTriggerProps = Omit<ButtonRootProps, 'id'>;
+export type MenuTriggerProps = Omit<ButtonActionProps, 'id'>;
 
 type MenuName =
   | { 'aria-label'?: undefined; 'aria-labelledby'?: string }

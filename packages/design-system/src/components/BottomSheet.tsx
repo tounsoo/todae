@@ -14,7 +14,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { Button, type ButtonRootProps } from './Button';
+import { Button, type ButtonActionProps } from './Button';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
@@ -180,7 +180,7 @@ function BottomSheetClose({
   'aria-label': ariaLabel = 'Close',
   onClick,
   ...props
-}: ButtonRootProps) {
+}: ButtonActionProps) {
   const { requestClose } = useSheet();
   return (
     <Button.Root
