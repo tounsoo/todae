@@ -281,9 +281,9 @@ describe('page scroll behind a modal', () => {
     expect(overflow()).not.toBe('hidden');
   });
 
-  it('stops even when the page sets its own overflow', () => {
+  it("lets the page's own root overflow and gutter win", () => {
     const style = document.createElement('style');
-    style.textContent = 'html { overflow-y: scroll }';
+    style.textContent = 'html { overflow-y: scroll; scrollbar-gutter: stable both-edges }';
     document.head.append(style);
     try {
       render(
@@ -291,9 +291,27 @@ describe('page scroll behind a modal', () => {
           <p>Body</p>
         </Dialog.Root>,
       );
-      expect(getComputedStyle(document.documentElement).overflowY).toBe('hidden');
+      expect(getComputedStyle(document.documentElement).overflowY).toBe('scroll');
+      expect(getComputedStyle(document.documentElement).scrollbarGutter).toBe('stable both-edges');
     } finally {
       style.remove();
+    }
+  });
+
+  it('keeps stopping while any modal is still open', () => {
+    const first = document.createElement('dialog');
+    const second = document.createElement('dialog');
+    document.body.append(first, second);
+    try {
+      first.showModal();
+      second.showModal();
+      second.close();
+      expect(overflow()).toBe('hidden');
+      first.close();
+      expect(overflow()).not.toBe('hidden');
+    } finally {
+      first.remove();
+      second.remove();
     }
   });
 

@@ -3,12 +3,12 @@
 @layer todae.base {
   /* A modal <dialog> makes the page behind it inert, so the page does not
      scroll either. The gutter stays, so a page with a scrollbar does not
-     shift when it goes. Important, so a page's own overflow rule, such as
-     html { overflow-y: scroll }, does not keep the page scrolling. */
+     shift when it goes. A page's own overflow on the root wins over this,
+     as any page style wins over todae.base. */
   :where(:root:has(dialog:modal)) {
-    overflow: hidden !important;
-    overscroll-behavior: none !important;
-    scrollbar-gutter: stable !important;
+    overflow: hidden;
+    overscroll-behavior: none;
+    scrollbar-gutter: stable;
   }
 
   /* Links. Neutral ink: a link keeps the text color and stands out by its

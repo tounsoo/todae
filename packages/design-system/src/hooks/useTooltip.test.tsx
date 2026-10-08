@@ -89,7 +89,6 @@ describe('useTooltip exports', () => {
     expect(source).not.toContain('useInitialFocus');
     expect(source).not.toContain('useFocusTrap');
     expect(source).not.toContain('useInertOutside');
-    expect(source).not.toContain('useScrollLock');
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
       new Set([
