@@ -100,7 +100,7 @@ export function useModalDialog({
   // In the stack from showModal() until close() at the end of the exit
   // motion, while the page is still inert. Toasts moved in stay usable, and
   // as their own top layer boxes they don't fade with the element.
-  useModalLayerElement(node, present);
+  useModalLayerElement(node, present, true);
 
   const cancelledAt = useRef(-Infinity);
   useLayoutEffect(() => {

@@ -646,6 +646,31 @@ describe('Toast in the top layer', () => {
     await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0), { timeout: 2000 });
   });
 
+  it('keeps focus in the toasts while a new one shows, without visiting the page', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <button type="button">Before</button>
+        <Region toaster={toaster} />
+      </Themed>,
+    );
+    const before = screen.getByRole('button', { name: 'Before' });
+    before.focus();
+    // Shown while Before has focus, which hiding the popover would go back to.
+    act(() => void toaster.add({ title: 'One' }));
+    await screen.findByRole('button', { name: 'Undo One' });
+    await userEvent.keyboard('{F8}');
+    await userEvent.tab();
+    const undo = screen.getByRole('button', { name: 'Undo One' });
+    expect(document.activeElement).toBe(undo);
+    const visits = vi.fn();
+    before.addEventListener('focus', visits);
+    act(() => void toaster.add({ title: 'Two' }));
+    await screen.findByRole('button', { name: 'Undo Two' });
+    expect(visits).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(undo);
+  });
+
   it('moves focus to the region on F8 and back after Escape', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(

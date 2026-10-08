@@ -1,12 +1,16 @@
 import { useLayoutEffect } from 'react';
 import { dropModal, isModal, pushModal } from './modalStack';
 
-/** useModalLayer for a caller that already holds the element. */
-export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean): void {
+/**
+ * useModalLayer for a caller that already holds the element. `shownModal`
+ * says the caller opens it with showModal() itself, so it counts whenever it
+ * is open, also in an engine without :modal.
+ */
+export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean, shownModal = false): void {
   useLayoutEffect(() => {
     if (!open || !el) return;
     const sync = () => {
-      if (el.open && isModal(el)) pushModal(el);
+      if (el.open && (shownModal || isModal(el))) pushModal(el);
       else dropModal(el);
     };
     sync();
@@ -18,5 +22,5 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
       observer.disconnect();
       dropModal(el);
     };
-  }, [open, el]);
+  }, [open, el, shownModal]);
 }

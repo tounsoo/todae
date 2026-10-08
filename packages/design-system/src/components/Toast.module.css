@@ -120,8 +120,10 @@
     overflow: hidden;
   }
 
+  /* Out of sight, so also out of reach of the pointer and Tab. */
   .region[data-layout='stack']:not([data-expanded]) .item:nth-child(n + 4) {
     opacity: 0;
+    visibility: hidden;
   }
 
   .region[data-layout='stack'][data-expanded] .item {
