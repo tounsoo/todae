@@ -71,6 +71,7 @@ export const SITE_GROUPS = [
     label: 'Recipes',
     links: [
       ['/recipes/combobox', 'Combobox'],
+      ['/recipes/command-palette', 'Command palette'],
       ['/recipes/file-upload', 'File upload'],
     ],
   },

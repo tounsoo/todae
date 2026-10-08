@@ -61,6 +61,7 @@ const HREFS = [
   '/utilities/use-sheet-presentation',
   '/utilities/use-tooltip',
   '/recipes/combobox',
+  '/recipes/command-palette',
   '/recipes/file-upload',
   '/composition',
   '/tokens',
