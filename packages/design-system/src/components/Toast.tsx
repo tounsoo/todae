@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -193,6 +194,7 @@ function Item<T extends object>({
   }, [open, paused, duration, version, toaster, id]);
 
   const dismiss = useCallback(() => toaster.dismiss(id), [toaster, id]);
+  const item = useMemo(() => ({ toast: toast as ToastRecord, dismiss }), [toast, dismiss]);
 
   return (
     <li
@@ -210,7 +212,7 @@ function Item<T extends object>({
         if (open) dismiss();
       }}
     >
-      <ItemContext.Provider value={{ toast: toast as ToastRecord, dismiss }}>{children}</ItemContext.Provider>
+      <ItemContext.Provider value={item}>{children}</ItemContext.Provider>
     </li>
   );
 }
@@ -335,9 +337,13 @@ function Region<T extends object = object>({
       whileMoving(() => {
         keepingFocus(host, () => {
           if (host.parentNode !== target) target.append(host);
+          // In front of the modal, which may have been shown again.
+          if (target !== home && !hasOpenModal(host) && isPopoverOpen(host)) host.hidePopover();
           show(host);
         });
-        if (lost && host.contains(lost)) tryFocus(lost);
+        // Only while focus is nowhere else, as it was left by the removal.
+        const active = host.ownerDocument.activeElement;
+        if (lost && host.contains(lost) && (!active || active === host.ownerDocument.body)) tryFocus(lost);
       });
       // React may take the host out of a dialog it renders, such as when it
       // sets the dialog's text, without the stack changing.
@@ -393,6 +399,8 @@ function Region<T extends object = object>({
     if (!doc) return;
     const onKey = (event: KeyboardEvent) => {
       const section = sectionRef.current;
+      // Not a key something else handled, an IME composing, or a held key.
+      if (event.defaultPrevented || event.isComposing || event.repeat) return;
       if (!section || !matchesHotkey(event, hotkey)) return;
       event.preventDefault();
       section.focus();

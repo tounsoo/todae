@@ -20,8 +20,6 @@ function YourDialog({ open, onClose, children }) {
 
 The dialog counts while `open` is true and it is shown with `showModal()`, in either order, until `close()`. A modal `<dialog>` makes everything outside it inert, so [Toast.Region](/toast) moves its toasts into the modal in front, where they stay usable. Without this hook, toasts stay inert under your dialog.
 
-The same `<dialog>` element must be in the document while `open` is true.
-
 ## When to use
 
 **When:** A modal `<dialog>` you open with `showModal()` yourself, on a page that shows toasts.

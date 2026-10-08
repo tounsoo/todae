@@ -6,10 +6,12 @@ function notify(): void {
   for (const listener of [...listeners]) listener();
 }
 
-/** Puts `el` in front, or moves it there if it is already held. */
+/**
+ * Puts `el` in front, or moves it there if it is already held. Notifies even
+ * when it already was: showModal() again puts it last in the top layer.
+ */
 export function pushModal(el: HTMLDialogElement): void {
   const index = open.indexOf(el);
-  if (index === open.length - 1 && index !== -1) return;
   if (index !== -1) open.splice(index, 1);
   open.push(el);
   notify();

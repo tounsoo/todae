@@ -354,6 +354,36 @@ describe('Toast with a modal dialog', () => {
     expect(receivesPointer(undo)).toBe(true);
   });
 
+  it('stays in front of a dialog of your own that is shown again', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Own() {
+      const ref = useRef<HTMLDialogElement>(null);
+      useModalLayer(ref, true);
+      useEffect(() => ref.current?.showModal(), []);
+      return (
+        <dialog ref={ref} aria-label="Own">
+          <p>Own</p>
+        </dialog>
+      );
+    }
+    render(
+      <Themed>
+        <Own />
+        <Region toaster={toaster} />
+      </Themed>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Own' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    act(() => void toaster.add({ title: 'Front' }));
+    const undo = await screen.findByRole('button', { name: 'Undo Front' });
+    await waitFor(() => expect(receivesPointer(undo)).toBe(true));
+    // Shown again in one task: the stack sees one change, the top layer two.
+    dialog.close();
+    dialog.showModal();
+    await waitFor(() => expect(receivesPointer(undo)).toBe(true));
+    act(() => dialog.close());
+  });
+
   it('keeps the dialog\'s own focus to return to, not a toast\'s', async () => {
     const toaster = createToaster({ duration: Infinity });
     function Page() {

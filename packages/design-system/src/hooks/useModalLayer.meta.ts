@@ -9,7 +9,7 @@ export const meta = {
       name: "ref",
       type: "RefObject<HTMLDialogElement | null>",
       required: true,
-      description: "The <dialog>. The same element must be in the document while open is true.",
+      description: "The <dialog>.",
     },
     {
       name: "open",

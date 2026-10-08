@@ -180,6 +180,24 @@ describe('Toast', () => {
     expect(toaster.getSnapshot().map((t) => [t.title, t.open])).toEqual([['Again', true]]);
   });
 
+  it('leaves a hotkey that was handled, composed or held to the page', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ title: 'Keys' }));
+    const region = screen.getByRole('region');
+    const press = (init: KeyboardEventInit, handled = false) => {
+      const event = new KeyboardEvent('keydown', { key: 'F8', code: 'F8', bubbles: true, cancelable: true, ...init });
+      if (handled) event.preventDefault();
+      document.body.dispatchEvent(event);
+    };
+    press({}, true);
+    press({ isComposing: true });
+    press({ repeat: true });
+    expect(document.activeElement).not.toBe(region);
+    press({});
+    expect(document.activeElement).toBe(region);
+  });
+
   it('marks the region expanded while focus is inside', async () => {
     const toaster = createToaster();
     render(<Region toaster={toaster} layout="stack" />);
