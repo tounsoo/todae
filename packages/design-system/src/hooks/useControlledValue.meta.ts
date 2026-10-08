@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'useControlledValue',
   description:
-    'useControlledValue(controlled, defaultValue, onChange) returns [value, change]. change(next, ...args) skips a value equal to the current one (Object.is), stores it when uncontrolled, then calls onChange(next, ...args).',
+    'useControlledValue(controlled, defaultValue, onChange) returns [value, change]. change(next, ...args) skips a value equal to the one from the last render (Object.is), stores it when uncontrolled, then calls onChange(next, ...args).',
   props: [
     {
       name: 'controlled',

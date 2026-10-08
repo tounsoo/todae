@@ -75,6 +75,16 @@ describe('useControlledValue', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
+  it('compares with the value from the last render, so two calls in one event both go through', () => {
+    const onChange = vi.fn();
+    const { result } = renderHook(() => useControlledValue<string>(undefined, 'all', onChange));
+    act(() => {
+      result.current[1]('open');
+      result.current[1]('open');
+    });
+    expect(onChange).toHaveBeenCalledTimes(2);
+  });
+
   it('works without onChange', () => {
     const { result } = renderHook(() => useControlledValue<boolean | undefined>(undefined, false));
     act(() => result.current[1](true));

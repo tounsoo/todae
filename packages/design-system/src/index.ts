@@ -142,7 +142,6 @@ export {
   type AnnouncePoliteness,
 } from './hooks/useAnnouncer';
 export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
-export { useControlledState, useControlledValue } from './hooks/useControlledState';
 export {
   useChipList,
   type UseChipListItem,
@@ -178,6 +177,7 @@ export {
   type UseComboboxResult,
   type UseComboboxSingleOptions,
 } from './hooks/useCombobox';
+export { useControlledState, useControlledValue } from './hooks/useControlledState';
 export {
   ThemeProvider,
   useAppearance,

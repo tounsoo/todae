@@ -113,6 +113,23 @@ describe('useAnnouncer', () => {
     expect(live('polite').textContent).toBe('Deleted');
   });
 
+  it('starts over in a new, empty region when the region is removed before the write', () => {
+    render(<Speaker message="Saved" />);
+    for (const node of regions()) node.remove();
+    act(() => vi.advanceTimersByTime(100));
+    expect(regions()).toHaveLength(1);
+    expect(live('polite').textContent).toBe('');
+    act(() => vi.advanceTimersByTime(100));
+    expect(live('polite').textContent).toBe('Saved');
+  });
+
+  it('keeps the pending write on the live element, where every copy of the package sees it', () => {
+    render(<Speaker message="Saved" />);
+    expect(live('polite').dataset.todaePending).toBeTruthy();
+    act(() => vi.advanceTimersByTime(100));
+    expect(live('polite').dataset.todaePending).toBeUndefined();
+  });
+
   it('recreates the region when the page removed it', () => {
     let announce!: ReturnType<typeof useAnnouncer>;
     function Grab() {

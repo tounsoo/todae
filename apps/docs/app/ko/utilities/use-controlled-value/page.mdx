@@ -1,6 +1,6 @@
 # useControlledValue
 
-`useControlledValue(controlled, defaultValue, onChange)`는 변경 콜백이 들어간 [useControlledState](/utilities/use-controlled-state)입니다. `[value, change]`를 반환합니다. `change(next, ...args)`는 `next`가 현재 값과 같으면(`Object.is`) 아무것도 하지 않습니다. 그렇지 않으면 비제어일 때 `next`를 저장한 다음, 제어 여부와 관계없이 `onChange(next, ...args)`를 호출합니다. Tabs와 Menu가 이 훅을 씁니다.
+`useControlledValue(controlled, defaultValue, onChange)`는 변경 콜백이 들어간 [useControlledState](/utilities/use-controlled-state)입니다. `[value, change]`를 반환합니다. `change(next, ...args)`는 `next`가 마지막 렌더링의 값과 같으면(`Object.is`) 아무것도 하지 않으므로, 한 이벤트 안의 두 호출은 둘 다 처리됩니다. 그렇지 않으면 비제어일 때 `next`를 저장한 다음, 제어 여부와 관계없이 `onChange(next, ...args)`를 호출합니다. Tabs와 Menu가 이 훅을 씁니다.
 
 ```tsx
 function Filter({ value, defaultValue = 'all', onValueChange }: FilterProps) {
