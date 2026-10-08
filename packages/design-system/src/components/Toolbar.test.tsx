@@ -488,4 +488,67 @@ describe('Toolbar', () => {
     fireEvent.keyDown(insert, { key: 'ArrowDown' });
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Image', hidden: true })));
   });
+
+  it('counts a Tab whose propagation was stopped, but not one that was prevented', () => {
+    function Page() {
+      return (
+        <>
+          <button type="button" onKeyDown={(event) => event.stopPropagation()}>
+            Stops
+          </button>
+          <button type="button" onKeyDown={(event) => event.preventDefault()}>
+            Prevents
+          </button>
+          <Toolbar.Root aria-label="t">
+            <Button.Root>A</Button.Root>
+            <Button.Root>B</Button.Root>
+          </Toolbar.Root>
+        </>
+      );
+    }
+    render(<Page />);
+    button('B').focus();
+    fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
+    button('Stops').focus();
+    fireEvent.keyDown(button('Stops'), { key: 'Tab' });
+    button('A').focus();
+    expect(document.activeElement).toBe(button('B'));
+    fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
+    button('Prevents').focus();
+    fireEvent.keyDown(button('Prevents'), { key: 'Tab' });
+    // A script moves focus after preventing Tab: it lands where it was aimed.
+    button('A').focus();
+    expect(document.activeElement).toBe(button('A'));
+  });
+
+  it('returns to the control Tab left from most recently, past an older one that comes back', async () => {
+    function Page({ off }: { off: boolean }) {
+      return (
+        <>
+          <button type="button">Before</button>
+          <Toolbar.Root aria-label="t">
+            <Button.Root>A</Button.Root>
+            <Button.Root disabled={off}>B</Button.Root>
+            <Button.Root>C</Button.Root>
+          </Toolbar.Root>
+        </>
+      );
+    }
+    const { rerender } = render(<Page off={false} />);
+    const tick = () => new Promise((resolve) => setTimeout(resolve));
+    button('B').focus();
+    fireEvent.keyDown(button('B'), { key: 'Tab', shiftKey: true });
+    button('Before').focus();
+    await tick();
+    rerender(<Page off />);
+    button('C').focus();
+    await tick();
+    fireEvent.keyDown(button('C'), { key: 'Tab', shiftKey: true });
+    button('Before').focus();
+    await tick();
+    rerender(<Page off={false} />);
+    fireEvent.keyDown(button('Before'), { key: 'Tab' });
+    button('A').focus();
+    expect(document.activeElement).toBe(button('C'));
+  });
 });
