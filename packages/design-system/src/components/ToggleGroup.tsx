@@ -100,8 +100,8 @@ function Root(props: ToggleGroupRootProps) {
     }
   };
 
-  // Inside a toolbar the toolbar owns the arrow keys and the tab stop.
-  // Focus enters on the pressed item in single mode and the first item in
+  // Inside a toolbar the toolbar owns the arrow keys and Tab. On its own,
+  // focus enters on the pressed item in single mode and the first item in
   // multiple mode. While focus moves inside, the tab stop follows it, so Tab
   // and Shift+Tab leave the group; leaving puts it back.
   const [navigating, setNavigating] = useState<string | null>(null);

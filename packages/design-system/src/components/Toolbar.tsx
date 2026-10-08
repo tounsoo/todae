@@ -49,13 +49,17 @@ const ARROW_ROLES = new Set([
   'tree',
   'treegrid',
 ]);
+const ARROW_COMPOSITES = [...ARROW_ROLES].map((role) => `[role="${role}"]`).join(', ');
 
 // Controls whose own arrow keys move a caret or a value, and composites with
 // their own roving focus. They keep their own tab stop and keys, outside the
 // toolbar's, so focus is never stuck in them.
-function ownsArrows(el: HTMLElement): boolean {
+function ownsArrows(el: HTMLElement, root: HTMLElement): boolean {
   if (el.hasAttribute('data-todae-roving') || el.hasAttribute('aria-activedescendant')) return true;
   if (ARROW_ROLES.has(el.getAttribute('role') ?? '')) return true;
+  // An item of such a widget, such as a tab in a tablist.
+  const composite = el.parentElement?.closest(ARROW_COMPOSITES);
+  if (composite && root.contains(composite)) return true;
   if (el.isContentEditable || el.matches('textarea, select, [contenteditable]:not([contenteditable="false"])')) return true;
   if (el.tagName !== 'INPUT') return false;
   // A radio's arrow keys select the next radio in its group.
@@ -79,7 +83,7 @@ function controlsOf(root: HTMLElement): HTMLElement[] {
 function runsOf(root: HTMLElement): HTMLElement[][] {
   const runs: HTMLElement[][] = [[]];
   for (const el of controlsOf(root)) {
-    if (ownsArrows(el)) runs.push([]);
+    if (ownsArrows(el, root)) runs.push([]);
     else runs[runs.length - 1]!.push(el);
   }
   return runs.filter((run) => run.length > 0);
@@ -130,8 +134,8 @@ function Root({
     const root = rootRef.current;
     const back = left.current;
     if (!root || !back || root.contains(event.relatedTarget as Node | null)) return;
-    if (!tabbing.current) return;
     left.current = null;
+    if (!tabbing.current) return;
     const target = event.target as HTMLElement;
     if (back === target) return;
     const run = runsOf(root).find((items) => items.includes(target));
@@ -144,13 +148,16 @@ function Root({
     if (event.defaultPrevented || !root || event.altKey || event.ctrlKey || event.metaKey) return;
     const target = event.target as HTMLElement;
     if (event.key === 'Tab') {
-      const run = runsOf(root).find((items) => items.includes(target));
+      // Where focus is now: a layer inside, such as a menu, may already have
+      // returned it to its trigger before letting Tab run.
+      const from = document.activeElement instanceof HTMLElement ? document.activeElement : target;
+      const run = runsOf(root).find((items) => items.includes(from));
       if (!run) return;
       // Focus moves to the end of the run first, so the browser's own Tab
       // then leaves the run from there.
-      left.current = target;
+      left.current = from;
       const edge = event.shiftKey ? run[0]! : run[run.length - 1]!;
-      if (edge !== target) edge.focus();
+      if (edge !== from) edge.focus();
       return;
     }
     // Shift combinations are left to the control, as in useRovingFocus.

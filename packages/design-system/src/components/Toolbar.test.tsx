@@ -370,4 +370,47 @@ describe('Toolbar', () => {
       expect(more.getAttribute('aria-expanded')).toBe('true');
     });
   });
+
+  it('treats the items of an outside tablist or radiogroup as their own stop', () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <div role="tablist" aria-label="Views">
+          <button type="button" role="tab" aria-selected="true">
+            One
+          </button>
+          <button type="button" role="tab" aria-selected="false" tabIndex={-1}>
+            Two
+          </button>
+        </div>
+        <Button.Root>B</Button.Root>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    fireEvent.keyDown(button('A'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(button('B'));
+  });
+
+  it('forgets the control Tab left from once focus comes back another way', async () => {
+    render(
+      <>
+        <button type="button">Before</button>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root>B</Button.Root>
+          <Button.Root>C</Button.Root>
+        </Toolbar.Root>
+      </>,
+    );
+    button('C').focus();
+    fireEvent.keyDown(button('C'), { key: 'Tab', shiftKey: true });
+    button('Before').focus();
+    await new Promise((resolve) => setTimeout(resolve));
+    // A script or screen reader moves focus in, then focus leaves again.
+    button('B').focus();
+    button('Before').focus();
+    fireEvent.keyDown(button('Before'), { key: 'Tab' });
+    button('A').focus();
+    expect(document.activeElement).toBe(button('A'));
+  });
 });

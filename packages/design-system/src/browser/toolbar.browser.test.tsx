@@ -182,4 +182,27 @@ describe('Toolbar in a browser', () => {
     expect(button('Bold').matches(':focus-visible')).toBe(true);
     expect(getComputedStyle(button('Bold')).backgroundColor).toBe(resting);
   });
+
+  it('leaves the toolbar on Tab from an open menu inside it', async () => {
+    render(
+      <>
+        <Toolbar.Root aria-label="t">
+          <Menu.Root>
+            <Menu.Trigger>Insert</Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>Image</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+          <Button.Root>Undo</Button.Root>
+          <Button.Root>Redo</Button.Root>
+        </Toolbar.Root>
+        <button type="button">After</button>
+      </>,
+    );
+    button('Insert').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(await screen.findByRole('menuitem', { name: 'Image' }));
+    await userEvent.tab();
+    expect(document.activeElement).toBe(button('After'));
+  });
 });
