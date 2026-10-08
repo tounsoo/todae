@@ -292,7 +292,7 @@
     border-radius: 50%;
     background: conic-gradient(
       currentColor 0 25%,
-      color-mix(in oklch, currentColor calc(var(--todae-spinner-track-strength) * 100%), transparent) 0
+      color-mix(in oklch, currentColor calc(var(--todae-spinner-track-tint) * 100%), transparent) 0
     );
     mask: radial-gradient(
       farthest-side,
@@ -336,8 +336,8 @@
   }
 
   /* Skeleton. A placeholder block with the todae-skeleton class, shown where
-     content is still loading. Text inside only gives it a size and is not
-     drawn. It pulses unless the user asks for reduced motion. */
+     content is still loading. Elements inside only give it a size and are
+     hidden; bare text is made transparent. It pulses unless the user asks for reduced motion. */
   :where(.todae-skeleton) {
     display: block;
     min-block-size: 1lh;

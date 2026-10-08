@@ -551,7 +551,7 @@
   --todae-spinner-motion-duration: 800ms;
   --todae-spinner-size: 1.25rem;
   --todae-spinner-thickness: 2px;
-  --todae-spinner-track-strength: 0.2;
+  --todae-spinner-track-tint: 0.2;
   --todae-skeleton-bg: var(--todae-color-bg-subtle);
   --todae-skeleton-motion-duration: 1600ms;
   --todae-skeleton-radius: var(--todae-radius-sm);

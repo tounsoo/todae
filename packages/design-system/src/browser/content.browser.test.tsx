@@ -123,7 +123,7 @@ function Gallery() {
         </kbd>{' '}
         to run <code>open()</code>.
       </p>
-      <pre tabIndex={0}>
+      <pre tabIndex={0} role="region" aria-label="Example code">
         <code>{'const plan = await getPlan();'}</code>
       </pre>
       <a href="#gallery-end" className="todae-visually-hidden-focusable">

@@ -20,11 +20,11 @@ Put `todae-spinner` on a `<progress>` with no `value`. It keeps the progressbar 
 <progress className="todae-spinner" aria-label="Saving" />
 ```
 
-It draws in the text color, so it shows on any surface, a primary button included: set `color` to change it. Restyle it through `spinner.size`, `spinner.thickness`, `spinner.track-strength` (how much of the text color the track takes) and `spinner.motion.duration`.
+It draws in the text color, so it shows on any surface, a primary button included: set `color` to change it. Restyle it through `spinner.size`, `spinner.thickness`, `spinner.track-tint` (how much of the text color the track takes) and `spinner.motion.duration`.
 
 ## Skeleton
 
-Put `todae-skeleton` on a block that stands in for content before it arrives. It is one line high unless you size it, and text inside only gives it a size: it is not drawn. It pulses, and holds still under reduced motion.
+Put `todae-skeleton` on a block that stands in for content before it arrives. It is one line high unless you size it, and elements inside it only give it a size: they are hidden. It pulses, and holds still under reduced motion.
 
 <Example block>
   <SkeletonProfile />

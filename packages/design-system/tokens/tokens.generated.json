@@ -4763,9 +4763,9 @@
       "context": null
     },
     {
-      "path": "spinner.track-strength",
+      "path": "spinner.track-tint",
       "type": "number",
-      "cssVar": "--todae-spinner-track-strength",
+      "cssVar": "--todae-spinner-track-tint",
       "cssValue": "0.2",
       "ref": null,
       "layer": "contract",
