@@ -4,7 +4,7 @@
 
 After every push to a pull request, review it before calling it done. The goal is to finish in as few rounds as possible, so each round should fix the cause, not just the symptom the reviewer pointed at.
 
-Each round's review runs one step higher on this model and effort ladder than the round before. Fable is the stronger model, so Fable at medium sits above Opus at max.
+Each round's review runs in an `Agent` at that round's row of this table. The last row, `fable` at `medium`, is the ceiling: no reviewer or advisor runs above it.
 
 | Round | `model` | `effort` |
 | ----- | ------- | -------- |
@@ -13,16 +13,14 @@ Each round's review runs one step higher on this model and effort ladder than th
 | 3     | `opus`  | `max`    |
 | 4     | `fable` | `medium` |
 
-Fable at medium effort is the ceiling: never go above it.
-
-1. Start an `Agent` with this round's `model` and `effort` from the table, and have it run the `code-review` skill on the PR (`/code-review <pr-number> high`) and return the findings. The reviewer only reviews: it does not edit files, commit, or push.
+1. Start an `Agent` with this round's `model` and `effort` from the table, and have it run the `code-review` skill on the PR (`/code-review <pr-number> high`) and return the findings. The reviewer only reviews: it does not edit files, commit, or push. If the reviewer cannot run at its row or cannot run the skill, run the review in the session instead and say so in your summary.
 2. Sort the findings. Only blocking findings start another round: a bug, a test or CI failure, or a statement in docs that is wrong about what the code does. Wording, style, missing edge-case caveats and other nits are not blocking: fix the ones that are plainly right in the same push, but they never start a round of their own.
 3. Before fixing anything, work through each blocking finding:
    - Does your diagnosis name the root cause, or only the symptom?
    - Does the same bug or pattern exist elsewhere in the PR? Fix it there too.
    - Could your fix introduce a new problem the next review would flag? Prefer the smallest fix. In docs, remove or narrow a wrong claim rather than adding new claims or examples, since every new claim is something the next review can find wrong.
    - Are your tests enough to catch a regression?
-4. Ask an advisor for advice when the loop is stuck: a finding comes back after you fixed it, a new finding lands on code you changed in the last round, or you are about to start a third round. Start an `Agent` with the `model` and `effort` of the next row of the table, or of the last row when there is no next row, and give it the PR number, the findings, what earlier rounds changed, and your diagnosis and fix plan. Ask it to go through the step 3 questions and say why the earlier fixes did not hold. The advisor only advises: it does not edit files, commit, or push. The session keeps the model it started with and does the fixing itself. If you go against the advisor's advice, say why in your summary. If the advisor cannot run, tell the person in your next reply rather than carrying on silently.
+4. Ask an advisor for advice when the loop is stuck: a finding comes back after you fixed it, a new finding lands on code you changed in the last round, or you are about to start a third round. Start an `Agent` at the row of the round about to start and give it the PR number, the findings, what earlier rounds changed, and your diagnosis and fix plan. Ask it to go through the step 3 questions and say why the earlier fixes did not hold. The advisor only advises: it does not edit files, commit, or push. The session keeps the model it started with and does the fixing itself. If you go against the advisor's advice, say why in your summary. If the advisor cannot run, tell the person in your next reply rather than carrying on silently.
 5. Fix every blocking finding, all in one push. Add or update tests for each fix.
 6. Run `pnpm typecheck`, `pnpm test`, and `pnpm schema` (it must leave no diff) before pushing.
 7. Push, then go back to step 1.
