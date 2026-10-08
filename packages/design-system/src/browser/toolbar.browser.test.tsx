@@ -104,8 +104,8 @@ describe('Toolbar in a browser', () => {
       await userEvent.tab({ shift: true });
       back.push(document.activeElement as HTMLElement);
     }
-    // Shift+Tab back in returns to B, the item Tab last left from.
-    expect(back).toEqual([button('B'), size, button('A2'), button('Before')]);
+    // Shift+Tab back into each run returns to the item Tab last left it from.
+    expect(back).toEqual([button('B'), size, button('A'), button('Before')]);
   });
 
   it('is one Tab stop when it mounts hidden and is shown later, or a class hides a control', async () => {
@@ -237,5 +237,68 @@ describe('Toolbar in a browser', () => {
     expect(document.activeElement).toBe(screen.getByText('More'));
     await userEvent.tab();
     expect(document.activeElement).toBe(button('B'));
+  });
+
+  it('remembers a control for each run', async () => {
+    render(
+      <Toolbar.Root aria-label="t">
+        <Button.Root>A</Button.Root>
+        <Button.Root>B</Button.Root>
+        <input aria-label="Size" />
+        <Button.Root>C</Button.Root>
+        <Button.Root>D</Button.Root>
+      </Toolbar.Root>,
+    );
+    button('A').focus();
+    await userEvent.tab();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(button('C'));
+    await userEvent.tab({ shift: true });
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(button('A'));
+  });
+
+  it('enters on the first control the first time, from either side', async () => {
+    render(
+      <>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root>B</Button.Root>
+        </Toolbar.Root>
+        <button type="button">After</button>
+      </>,
+    );
+    button('After').focus();
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(button('A'));
+  });
+
+  it('stops Shift+Tab from an open menu on its trigger, and remembers the trigger after Tab', async () => {
+    render(
+      <>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>Undo</Button.Root>
+          <Menu.Root>
+            <Menu.Trigger>Insert</Menu.Trigger>
+            <Menu.Content>
+              <Menu.Item>Image</Menu.Item>
+            </Menu.Content>
+          </Menu.Root>
+          <Button.Root>Redo</Button.Root>
+        </Toolbar.Root>
+        <button type="button">After</button>
+      </>,
+    );
+    button('Insert').focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await screen.findByRole('menuitem', { name: 'Image' });
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(button('Insert'));
+    await userEvent.keyboard('{ArrowDown}');
+    await screen.findByRole('menuitem', { name: 'Image' });
+    await userEvent.tab();
+    expect(document.activeElement).toBe(button('After'));
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(button('Insert'));
   });
 });

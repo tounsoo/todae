@@ -1990,7 +1990,7 @@
         },
         {
           "name": "onChange",
-          "type": "(value: string | null) => void | (value: string[]) => void",
+          "type": "((value: string | null) => void) | ((value: string[]) => void)",
           "required": false,
           "description": "Called with the new pressed value when an item is pressed."
         },
@@ -1998,7 +1998,7 @@
           "name": "orientation",
           "type": "\"horizontal\" | \"vertical\"",
           "required": false,
-          "description": "Arrow keys that move focus. Horizontal items join like Button.Group.",
+          "description": "Layout, and the arrow keys that move focus outside a toolbar. Horizontal items join like Button.Group.",
           "default": "\"horizontal\", or the toolbar's"
         },
         {
@@ -2036,7 +2036,7 @@
     },
     {
       "name": "Toolbar.Root",
-      "description": "role=\"toolbar\" with one tab stop. Arrow keys, Home and End move focus between the focusable controls inside, wrappers included. Takes native div attributes.",
+      "description": "role=\"toolbar\" whose controls share one tab stop, apart from text inputs and others that keep their own. Arrow keys, Home and End move focus between the focusable controls inside, wrappers included. Takes native div attributes.",
       "props": [
         {
           "name": "aria-label",

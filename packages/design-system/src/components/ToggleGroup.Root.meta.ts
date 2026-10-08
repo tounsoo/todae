@@ -32,7 +32,7 @@ export const meta = {
     },
     {
       name: 'onChange',
-      type: '(value: string | null) => void | (value: string[]) => void',
+      type: '((value: string | null) => void) | ((value: string[]) => void)',
       required: false,
       description: 'Called with the new pressed value when an item is pressed.',
     },
@@ -41,7 +41,7 @@ export const meta = {
       type: '"horizontal" | "vertical"',
       required: false,
       default: '"horizontal", or the toolbar\'s',
-      description: 'Arrow keys that move focus. Horizontal items join like Button.Group.',
+      description: 'Layout, and the arrow keys that move focus outside a toolbar. Horizontal items join like Button.Group.',
     },
     {
       name: 'disabled',

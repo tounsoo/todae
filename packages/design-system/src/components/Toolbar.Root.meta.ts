@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Toolbar.Root',
   description:
-    'role="toolbar" with one tab stop. Arrow keys, Home and End move focus between the focusable controls inside, wrappers included. Takes native div attributes.',
+    'role="toolbar" whose controls share one tab stop, apart from text inputs and others that keep their own. Arrow keys, Home and End move focus between the focusable controls inside, wrappers included. Takes native div attributes.',
   props: [
     {
       name: 'aria-label',
