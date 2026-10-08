@@ -75,7 +75,7 @@ function announce(message: string, options?: AnnounceOptions): void {
     live.textContent = '';
   }
   if (!message) return;
-  const start = Date.now();
+  const start = performance.now();
   const schedule = () => {
     pending[politeness] = setTimeout(attempt, WRITE_DELAY);
   };
@@ -99,7 +99,7 @@ function announce(message: string, options?: AnnounceOptions): void {
   let chosen = host && regionIn(host, false);
   let grace = true;
   function attempt() {
-    const now = Date.now();
+    const now = performance.now();
     const late = now >= start + DEADLINE;
     const host = target(now);
     const root = host && regionIn(host, true);
