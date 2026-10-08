@@ -1,0 +1,255 @@
+@layer todae.components {
+  .home {
+    display: contents;
+  }
+
+  /* The popover in the top layer. It takes no clicks itself, only its toasts do. */
+  .host {
+    position: fixed;
+    inset: auto;
+    box-sizing: border-box;
+    inline-size: min(var(--todae-toast-width), calc(100vw - 2 * var(--todae-toast-inset)));
+    block-size: auto;
+    max-block-size: none;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+    color: inherit;
+    pointer-events: none;
+  }
+
+  .host[data-placement^='top'] {
+    inset-block-start: var(--todae-toast-inset);
+  }
+
+  .host[data-placement^='bottom'] {
+    inset-block-end: var(--todae-toast-inset);
+  }
+
+  .host[data-placement$='start'] {
+    inset-inline-start: var(--todae-toast-inset);
+  }
+
+  .host[data-placement$='end'] {
+    inset-inline-end: var(--todae-toast-inset);
+  }
+
+  .host[data-placement$='center'] {
+    inset-inline: 0;
+    margin-inline: auto;
+  }
+
+  .region {
+    --toast-dir: 1;
+    outline: none;
+  }
+
+  .region[data-placement^='bottom'] {
+    --toast-dir: -1;
+  }
+
+  .region:focus-visible {
+    outline: 2px solid var(--todae-toast-ring-focus);
+    outline-offset: 2px;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-toast-stack-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Newest nearest the edge: first in the list, so at the bottom when placed there. */
+  .region[data-placement^='bottom'] .list {
+    flex-direction: column-reverse;
+  }
+
+  .item {
+    position: relative;
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(calc(var(--toast-dir) * -0.5rem));
+    transition:
+      opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing),
+      transform var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+  }
+
+  .item[data-entered] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .item[data-exiting] {
+    opacity: 0;
+    transition-duration: var(--todae-toast-motion-exit);
+  }
+
+  /* Stack: every toast in one grid cell, the newest in front and the rest
+     peeking out behind it at its height, until hovered or focused. */
+  .region[data-layout='stack'] .list {
+    display: grid;
+  }
+
+  .region[data-layout='stack'] .item {
+    grid-area: 1 / 1;
+    z-index: calc(var(--toast-count, 1) - var(--toast-index, 0));
+    transform: translateY(calc(var(--toast-dir) * var(--toast-index, 0) * var(--todae-toast-peek)))
+      scale(calc(1 - var(--toast-index, 0) * 0.05));
+    transition:
+      opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing),
+      transform var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+  }
+
+  .region[data-layout='stack'][data-placement^='top'] .item {
+    align-self: start;
+    transform-origin: top center;
+  }
+
+  .region[data-layout='stack'][data-placement^='bottom'] .item {
+    align-self: end;
+    transform-origin: bottom center;
+  }
+
+  .region[data-layout='stack']:not([data-expanded]) .item:not(:first-child) {
+    block-size: var(--toast-front-height, auto);
+    overflow: hidden;
+  }
+
+  /* Out of sight, so also out of reach of the pointer and Tab. */
+  .region[data-layout='stack']:not([data-expanded]) .item:nth-child(n + 4) {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .region[data-layout='stack'][data-expanded] .item {
+    transform: translateY(
+      calc(var(--toast-dir) * (var(--toast-offset, 0px) + var(--toast-index, 0) * var(--todae-toast-stack-gap)))
+    );
+  }
+
+  /* Fills the gap to the next toast, so moving the pointer across it keeps
+     the region hovered: the timers stay paused and the stack stays open. */
+  .item::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    block-size: var(--todae-toast-stack-gap);
+  }
+
+  .region[data-placement^='top'] .item::after {
+    inset-block-start: 100%;
+  }
+
+  .region[data-placement^='bottom'] .item::after {
+    inset-block-end: 100%;
+  }
+
+  /* None past the toast farthest from the edge, where it would cover the page. */
+  .item:last-child::after,
+  .region[data-layout='stack']:not([data-expanded]) .item::after {
+    content: none;
+  }
+
+  .region[data-layout='stack'] .item[data-exiting] {
+    opacity: 0;
+    transition-duration: var(--todae-toast-motion-exit);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .item,
+    .region[data-layout='stack'] .item {
+      transition: none;
+    }
+  }
+
+  .root {
+    display: grid;
+    grid-template-columns: [content] minmax(0, 1fr);
+    column-gap: var(--todae-toast-gap);
+    row-gap: calc(var(--todae-toast-gap) / 2);
+    align-items: start;
+    box-sizing: border-box;
+    padding: var(--todae-toast-padding-y) var(--todae-toast-padding-x);
+    border: 1px solid var(--todae-toast-tone-border);
+    border-radius: var(--todae-toast-radius);
+    background: var(--todae-toast-tone-bg);
+    color: var(--todae-toast-tone-fg);
+    font-size: var(--todae-toast-font-size);
+    line-height: var(--todae-toast-leading);
+  }
+
+  .root[data-tone='info'] {
+    --todae-toast-tone-fg: var(--todae-toast-info-fg);
+    --todae-toast-tone-bg: var(--todae-toast-info-bg);
+    --todae-toast-tone-border: var(--todae-toast-info-border);
+  }
+
+  .root[data-tone='success'] {
+    --todae-toast-tone-fg: var(--todae-toast-success-fg);
+    --todae-toast-tone-bg: var(--todae-toast-success-bg);
+    --todae-toast-tone-border: var(--todae-toast-success-border);
+  }
+
+  .root[data-tone='warning'] {
+    --todae-toast-tone-fg: var(--todae-toast-warning-fg);
+    --todae-toast-tone-bg: var(--todae-toast-warning-bg);
+    --todae-toast-tone-border: var(--todae-toast-warning-border);
+  }
+
+  .root[data-tone='critical'] {
+    --todae-toast-tone-fg: var(--todae-toast-critical-fg);
+    --todae-toast-tone-bg: var(--todae-toast-critical-bg);
+    --todae-toast-tone-border: var(--todae-toast-critical-border);
+  }
+
+  /* The columns follow the parts that are there, as in Alert. */
+  .root:has(> .icon) {
+    grid-template-columns: [icon] auto [content] minmax(0, 1fr);
+  }
+
+  .root:has(> .close) {
+    grid-template-columns: [content] minmax(0, 1fr) [close] auto;
+  }
+
+  .root:has(> .icon):has(> .close) {
+    grid-template-columns: [icon] auto [content] minmax(0, 1fr) [close] auto;
+  }
+
+  .root > * {
+    grid-column: content;
+  }
+
+  .root > .icon {
+    grid-column: icon;
+    grid-row: 1;
+    display: inline-flex;
+    align-items: center;
+    block-size: 1lh;
+  }
+
+  .root > .close {
+    grid-column: close;
+    grid-row: 1;
+    margin-block: calc(var(--todae-toast-padding-y) * -0.5);
+    margin-inline-end: calc(var(--todae-toast-padding-x) * -0.5);
+  }
+
+  .title {
+    margin: 0;
+    font-weight: var(--todae-toast-title-font-weight);
+  }
+
+  .description {
+    margin: 0;
+  }
+
+  .action {
+    justify-self: start;
+    margin-block-start: calc(var(--todae-toast-gap) / 2);
+  }
+}

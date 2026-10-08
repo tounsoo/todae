@@ -1,0 +1,31 @@
+# useModalLayer
+
+`useModalLayer(ref, open)` puts a modal `<dialog>` of your own in Todae's modal stack, the list of modals Todae knows are open. Dialog and BottomSheet join it by themselves.
+
+```tsx
+function YourDialog({ open, onClose, children }) {
+	const ref = useRef<HTMLDialogElement>(null);
+	useModalLayer(ref, open);
+	useEffect(() => {
+		if (open) ref.current?.showModal();
+		else ref.current?.close();
+	}, [open]);
+	return (
+		<dialog ref={ref} onClose={onClose}>
+			{children}
+		</dialog>
+	);
+}
+```
+
+The dialog joins once `open` is true and it is shown with `showModal()`, in either order, and stays until `close()`, also after `open` turns false. The hook reads `ref` each time the component that calls it renders, so render the `<dialog>` in that component. A modal `<dialog>` makes everything outside it inert, so [Toast.Region](/toast) moves its toasts into the modal in front, where they stay usable. Without this hook, toasts stay inert under your dialog.
+
+## When to use
+
+**When:** A modal `<dialog>` you open with `showModal()` yourself, on a page that shows toasts.
+
+**When not:** Dialog or BottomSheet → they join by themselves. A dialog opened with `show()` → it is not modal, and toasts already sit above it.
+
+## Props
+
+<PropsTable name="useModalLayer" />

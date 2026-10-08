@@ -1,5 +1,7 @@
-import { useCallback, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
-import { dropModal, pushModal } from './modalStack';
+import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
+import { dropModal } from './modalStack';
+import { inToastHostWithin } from './tabbables';
+import { useModalLayerElement } from './useModalLayerElement';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
 export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
@@ -61,7 +63,6 @@ export function useModalDialog({
     if (present && open && !el.open) {
       const resume = lastFocus.current;
       el.showModal();
-      pushModal(el);
       // Rendered in place, a modal inside a hidden container makes the page
       // inert while showing nothing.
       if (process.env.NODE_ENV !== 'production' && el.checkVisibility?.() === false) {
@@ -73,23 +74,42 @@ export function useModalDialog({
       // go back to where the person was instead.
       if (resume?.isConnected && el.contains(resume)) resume.focus();
     }
-    if (!present && el.open) el.close();
   }, [dialogRef, present, open, node, nativeCloses]);
 
-  // Leaves the modal stack on any close and when the element goes away.
+  // Closes the element at the end of the exit motion, declared before
+  // useModalLayerElement so it runs before the element leaves the stack.
+  // close() sends focus back to the opener, also from a toast that
+  // Toast.Region moved in; leaving the stack moves the toasts out, and focus
+  // goes back to the toast once the page is no longer inert. An owner that
+  // unmounts the element as it leaves, as BottomSheet does, has it removed
+  // first; Toast.Region puts focus back then.
+  const presentRef = useRef(present);
+  // Updated at commit, not during render, so a render React throws away
+  // can't make the cleanup below close the element. An insertion effect runs
+  // before the layout cleanups of the same commit, so that cleanup reads it.
+  useInsertionEffect(() => {
+    presentRef.current = present;
+  });
   useLayoutEffect(() => {
-    const el = node;
-    if (!el) return;
-    const drop = () => {
-      if (!el.open) dropModal(el);
-    };
-    el.addEventListener('close', drop);
+    const el = dialogRef.current;
+    if (!present || !el) return;
     return () => {
-      el.removeEventListener('close', drop);
-      // Gone from the page, open or not: a removed <dialog> keeps open set.
+      // Only at the end of the exit: not when the element is replaced, nor at
+      // StrictMode's pretend unmount.
+      if (presentRef.current || !el.open) return;
+      const active = el.ownerDocument.activeElement;
+      const toast = active instanceof HTMLElement && inToastHostWithin(active, el) ? active : null;
+      el.close();
+      if (!toast) return;
       dropModal(el);
+      toast.focus({ preventScroll: true });
     };
-  }, [node]);
+  }, [dialogRef, present, node]);
+
+  // In the stack from showModal() until close() at the end of the exit
+  // motion, while the page is still inert. Toasts moved in stay usable, and
+  // as their own top layer boxes they don't fade with the element.
+  useModalLayerElement(node, present, true);
 
   const cancelledAt = useRef(-Infinity);
   useLayoutEffect(() => {
@@ -114,9 +134,12 @@ export function useModalDialog({
       latest.current.onOpenChange(false, 'native');
     }
     function onFocusIn(event: FocusEvent) {
-      // Only this element's own controls, not those of a modal written inside it.
+      // Only this element's own controls, not those of a modal written inside
+      // it, nor a toast that Toast.Region moved in.
       const target = event.target;
-      if (target instanceof HTMLElement && target.closest('dialog') === el) lastFocus.current = target;
+      if (target instanceof HTMLElement && target.closest('dialog') === el && !inToastHostWithin(target, el)) {
+        lastFocus.current = target;
+      }
     }
     el.addEventListener('cancel', onCancel);
     el.addEventListener('close', onClose);

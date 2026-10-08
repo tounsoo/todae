@@ -392,6 +392,19 @@
       ]
     },
     {
+      "name": "createToaster",
+      "description": "Returns a toast store { add, update, dismiss, remove, subscribe, getSnapshot } that works outside React. Make one per app at module scope and pass it to Toast.Region. add() takes id, tone, title, description, duration and any fields of your own, and returns the id; an id that is still showing is replaced in place.",
+      "props": [
+        {
+          "name": "duration",
+          "type": "number",
+          "required": false,
+          "description": "Default milliseconds before a toast dismisses itself. Infinity keeps toasts until dismissed.",
+          "default": "5000"
+        }
+      ]
+    },
+    {
       "name": "DensityProvider",
       "description": "Sets data-density for spacing-only compact, comfortable, or spacious.",
       "props": [
@@ -1754,6 +1767,152 @@
       ]
     },
     {
+      "name": "Toast.Action",
+      "description": "Button.Root for the toast's one action, such as Undo. Dismisses the toast after onClick.",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"primary\" | \"secondary\" | \"ghost\"",
+          "required": false,
+          "description": "Button variant.",
+          "default": "\"secondary\""
+        },
+        {
+          "name": "onClick",
+          "type": "React.MouseEventHandler<HTMLButtonElement>",
+          "required": false,
+          "description": "Runs the action. Call event.preventDefault() to keep the toast open."
+        }
+      ]
+    },
+    {
+      "name": "Toast.Close",
+      "description": "Ghost Button.Root at the end of the first row that dismisses the toast.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name. Visible text names the button by itself. The default is English, so pass a name in your app's language.",
+          "default": "\"Dismiss\" when the button has no text of its own"
+        },
+        {
+          "name": "onClick",
+          "type": "React.MouseEventHandler<HTMLButtonElement>",
+          "required": false,
+          "description": "Runs before the toast is dismissed. Call event.preventDefault() to keep it open."
+        }
+      ]
+    },
+    {
+      "name": "Toast.Description",
+      "description": "Longer text under the title.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Description content."
+        }
+      ]
+    },
+    {
+      "name": "Toast.Icon",
+      "description": "Slot for any icon, placed before the text. aria-hidden by default.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Icon graphic from your own icon set."
+        }
+      ]
+    },
+    {
+      "name": "Toast.Region",
+      "description": "Where toasts show, in a popover=\"manual\" element in the top layer. Render one near the app root. While a modal dialog in Todae's modal stack is open, the toasts move inside it so they stay usable. Takes native section attributes.",
+      "props": [
+        {
+          "name": "toaster",
+          "type": "Toaster<T>",
+          "required": true,
+          "description": "The store from createToaster()."
+        },
+        {
+          "name": "children",
+          "type": "(toast: ToastRecord<T>) => React.ReactNode",
+          "required": true,
+          "description": "Renders one toast, usually a Toast.Root."
+        },
+        {
+          "name": "placement",
+          "type": "\"top-start\" | \"top-center\" | \"top-end\" | \"bottom-start\" | \"bottom-center\" | \"bottom-end\"",
+          "required": false,
+          "description": "Corner or edge of the viewport. The newest toast sits nearest the edge.",
+          "default": "\"bottom-end\""
+        },
+        {
+          "name": "layout",
+          "type": "\"list\" | \"stack\"",
+          "required": false,
+          "description": "list shows every toast in full. stack collapses them behind the newest and spreads them while the pointer is over them or keyboard focus is inside.",
+          "default": "\"list\""
+        },
+        {
+          "name": "limit",
+          "type": "number",
+          "required": false,
+          "description": "How many toasts show at once. Later ones wait their turn.",
+          "default": "3"
+        },
+        {
+          "name": "hotkey",
+          "type": "string | null",
+          "required": false,
+          "description": "Key that moves focus to the toasts, such as \"F8\" or \"Alt+T\". Modifiers are Alt (or Option), Ctrl, Meta (or Cmd) and Shift. null turns it off.",
+          "default": "\"F8\""
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Name of the region landmark. The default is English, so pass a name in your app's language.",
+          "default": "\"Notifications\""
+        }
+      ]
+    },
+    {
+      "name": "Toast.Root",
+      "description": "One toast, in one of four tones. Takes native div attributes.",
+      "props": [
+        {
+          "name": "tone",
+          "type": "\"info\" | \"success\" | \"warning\" | \"critical\"",
+          "required": false,
+          "description": "Colors from color.status.<tone> through the toast contract tokens.",
+          "default": "the toast's own tone"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Toast parts, or any content."
+        }
+      ]
+    },
+    {
+      "name": "Toast.Title",
+      "description": "Short summary, set in the title weight. A p element.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Title text."
+        }
+      ]
+    },
+    {
       "name": "Tooltip.Root",
       "description": "Tip chrome. Spread getTooltipProps for wire.",
       "props": [
@@ -1956,6 +2115,24 @@
           "required": false,
           "description": "Highlight type, for spelling and grammar marks.",
           "default": "'highlight'"
+        }
+      ]
+    },
+    {
+      "name": "useModalLayer",
+      "description": "useModalLayer(ref, open). Puts a modal <dialog> of your own in Todae's modal stack once open is true and it is shown with showModal(), until close(). Toast.Region moves its toasts into the modal in front. Dialog and BottomSheet join the stack by themselves.",
+      "props": [
+        {
+          "name": "ref",
+          "type": "RefObject<HTMLDialogElement | null>",
+          "required": true,
+          "description": "The <dialog>. Render it in the component that calls the hook, which reads the ref each time that component renders."
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the dialog may be shown. It joins once this is true and it is shown with showModal(), and stays until close()."
         }
       ]
     },

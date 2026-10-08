@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useRef } from 'react';
+import { StrictMode, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { ComboboxCloseReason } from '../hooks/useCombobox.types';
@@ -225,6 +225,26 @@ describe('Dialog', () => {
     expect(el.open).toBe(true);
     expect(document.activeElement).toBe(screen.getByLabelText('second'));
     spy.mockRestore();
+  });
+});
+
+describe('Dialog in StrictMode', () => {
+  it('stays open through the pretend unmount', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <StrictMode>
+        <Dialog.Root open onOpenChange={onOpenChange}>
+          <Dialog.Title>Strict</Dialog.Title>
+        </Dialog.Root>
+      </StrictMode>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Strict' }) as HTMLDialogElement;
+    const closes = vi.fn();
+    dialog.addEventListener('close', closes);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(dialog.open).toBe(true);
+    expect(closes).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 });
 

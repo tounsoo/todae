@@ -967,6 +967,84 @@
       "ko": "텍스트 내용."
     }
   },
+  "Toast.Region": {
+    "toaster": {
+      "en": "The store from createToaster().",
+      "ko": "createToaster()로 만든 스토어."
+    },
+    "children": {
+      "en": "Renders one toast, usually a Toast.Root.",
+      "ko": "토스트 하나를 렌더링합니다. 보통 Toast.Root입니다."
+    },
+    "placement": {
+      "en": "Corner or edge of the viewport. The newest toast sits nearest the edge.",
+      "ko": "뷰포트의 모서리나 가장자리. 가장 새 토스트가 가장자리에 가장 가깝게 놓입니다."
+    },
+    "layout": {
+      "en": "list shows every toast in full. stack collapses them behind the newest and spreads them while the pointer is over them or keyboard focus is inside.",
+      "ko": "list는 모든 토스트를 그대로 보여 줍니다. stack은 가장 새 토스트 뒤로 접어 두었다가, 포인터가 위에 있거나 키보드 포커스가 안에 있는 동안 펼칩니다."
+    },
+    "limit": {
+      "en": "How many toasts show at once. Later ones wait their turn.",
+      "ko": "한 번에 보여 줄 토스트 수. 그 뒤에 추가된 토스트는 차례를 기다립니다."
+    },
+    "hotkey": {
+      "en": "Key that moves focus to the toasts, such as \"F8\" or \"Alt+T\". Modifiers are Alt (or Option), Ctrl, Meta (or Cmd) and Shift. null turns it off.",
+      "ko": "토스트로 포커스를 옮기는 키. 예: \"F8\", \"Alt+T\". 조합 키는 Alt(Option), Ctrl, Meta(Cmd), Shift입니다. null이면 끕니다."
+    },
+    "aria-label": {
+      "en": "Name of the region landmark. The default is English, so pass a name in your app's language.",
+      "ko": "영역 랜드마크의 이름. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
+    }
+  },
+  "Toast.Root": {
+    "tone": {
+      "en": "Colors from color.status.<tone> through the toast contract tokens.",
+      "ko": "toast contract 토큰을 거쳐 color.status.<tone>에서 색을 가져옵니다."
+    },
+    "children": {
+      "en": "Toast parts, or any content.",
+      "ko": "Toast 파트 또는 아무 콘텐츠."
+    }
+  },
+  "Toast.Icon": {
+    "children": {
+      "en": "Icon graphic from your own icon set.",
+      "ko": "직접 사용하는 아이콘 세트의 아이콘 그래픽."
+    }
+  },
+  "Toast.Title": {
+    "children": {
+      "en": "Title text.",
+      "ko": "제목 텍스트."
+    }
+  },
+  "Toast.Description": {
+    "children": {
+      "en": "Description content.",
+      "ko": "설명 콘텐츠."
+    }
+  },
+  "Toast.Action": {
+    "variant": {
+      "en": "Button variant.",
+      "ko": "Button 변형."
+    },
+    "onClick": {
+      "en": "Runs the action. Call event.preventDefault() to keep the toast open.",
+      "ko": "동작을 실행합니다. 토스트를 열어 두려면 event.preventDefault()를 호출하세요."
+    }
+  },
+  "Toast.Close": {
+    "aria-label": {
+      "en": "Accessible name. Visible text names the button by itself. The default is English, so pass a name in your app's language.",
+      "ko": "접근 가능한 이름. 보이는 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
+    },
+    "onClick": {
+      "en": "Runs before the toast is dismissed. Call event.preventDefault() to keep it open.",
+      "ko": "토스트를 닫기 전에 실행됩니다. 열어 두려면 event.preventDefault()를 호출하세요."
+    }
+  },
   "Tooltip.Root": {
     "children": {
       "en": "Tooltip text, or short prose plus links when interactive.",
@@ -987,6 +1065,12 @@
     "aria-labelledby": {
       "en": "Id of the visible caption. Exactly one of aria-label or aria-labelledby when interactive.",
       "ko": "보이는 캡션의 id. 인터랙티브일 때는 aria-label과 aria-labelledby 중 정확히 하나만 지정합니다."
+    }
+  },
+  "createToaster": {
+    "duration": {
+      "en": "Default milliseconds before a toast dismisses itself. Infinity keeps toasts until dismissed.",
+      "ko": "토스트가 스스로 닫히기까지의 기본 밀리초. Infinity면 닫을 때까지 남아 있습니다."
     }
   },
   "useChipField": {
@@ -1083,6 +1167,16 @@
     "type": {
       "en": "Highlight type, for spelling and grammar marks.",
       "ko": "하이라이트 유형. 맞춤법과 문법 표시에 씁니다."
+    }
+  },
+  "useModalLayer": {
+    "ref": {
+      "en": "The <dialog>. Render it in the component that calls the hook, which reads the ref each time that component renders.",
+      "ko": "<dialog> 요소. 훅을 호출하는 컴포넌트에서 렌더링하세요. 훅은 그 컴포넌트가 렌더링될 때마다 ref를 읽습니다."
+    },
+    "open": {
+      "en": "Whether the dialog may be shown. It joins once this is true and it is shown with showModal(), and stays until close().",
+      "ko": "대화 상자가 보일 수 있는지 여부. 이 값이 true이고 showModal()로 열리면 스택에 들어가고, close()까지 남습니다."
     }
   },
   "usePopover": {
