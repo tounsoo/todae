@@ -123,7 +123,23 @@ function DialogClose({
   );
 }
 
-function DialogRoot({
+// What a modal built on Dialog's machinery changes: Drawer passes its own
+// layout classes, exit fallback and side.
+export type DialogShell = {
+  className?: string;
+  panelClassName?: string;
+  exitMs: number;
+  attributes?: Record<`data-${string}`, string>;
+};
+
+const DIALOG_SHELL: DialogShell = { className: styles.dialog, panelClassName: styles.panel, exitMs: DIALOG_EXIT_MS };
+
+function DialogRoot(props: DialogRootProps) {
+  return <DialogShellRoot {...props} shell={DIALOG_SHELL} />;
+}
+
+export function DialogShellRoot({
+  shell,
   open,
   onOpenChange,
   dismissOnEscape = true,
@@ -137,7 +153,7 @@ function DialogRoot({
   onClick,
   onSubmit,
   ...props
-}: DialogRootProps) {
+}: DialogRootProps & { shell: DialogShell }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [dialogNode, setDialogNode] = useState<HTMLDialogElement | null>(null);
   const pointerOnDialog = useRef(false);
@@ -147,7 +163,7 @@ function DialogRoot({
   });
   const [labelledBy, setLabelledBy] = useState<string | undefined>();
   const [describedBy, setDescribedBy] = useState<string | undefined>();
-  const { present, exiting } = useOverlayPresence(open, DIALOG_EXIT_MS, dialogNode, 'opacity');
+  const { present, exiting } = useOverlayPresence(open, shell.exitMs, dialogNode, 'opacity');
   const entered = useEntered(present, exiting);
   const setDialogRef = useCallback((node: HTMLDialogElement | null) => {
     dialogRef.current = node;
@@ -171,7 +187,6 @@ function DialogRoot({
   // After showModal, which focuses the first focusable element by itself.
   useInitialFocus(dialogRef, open, initialFocusRef);
 
-
   return (
     <DialogContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
       <dialog
@@ -180,8 +195,9 @@ function DialogRoot({
         aria-labelledby={props['aria-labelledby'] ?? labelledBy}
         aria-describedby={props['aria-describedby'] ?? describedBy}
         tabIndex={props.tabIndex ?? -1}
+        {...shell.attributes}
         ref={dialogRefs}
-        className={cx(styles.dialog, className)}
+        className={cx(shell.className, className)}
         data-entered={entered ? '' : undefined}
         data-exiting={exiting ? '' : undefined}
         onPointerDown={(event) => {
@@ -204,7 +220,7 @@ function DialogRoot({
           }
         })}
       >
-        <div className={styles.panel} role="document">
+        <div className={shell.panelClassName} role="document">
           <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
         </div>
       </dialog>

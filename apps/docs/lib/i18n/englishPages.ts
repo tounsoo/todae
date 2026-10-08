@@ -18,6 +18,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'description': () => import('../../app/(en)/description/page.mdx'),
   'dialog': () => import('../../app/(en)/dialog/page.mdx'),
   'disclosure': () => import('../../app/(en)/disclosure/page.mdx'),
+  'drawer': () => import('../../app/(en)/drawer/page.mdx'),
   'errormessage': () => import('../../app/(en)/errormessage/page.mdx'),
   'field': () => import('../../app/(en)/field/page.mdx'),
   'fieldset': () => import('../../app/(en)/fieldset/page.mdx'),

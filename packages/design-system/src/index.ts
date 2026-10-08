@@ -38,6 +38,7 @@ export {
   type ToggleGroupSingleProps,
 } from './components/ToggleGroup';
 export { Dialog, type DialogCloseReason, type DialogRootProps } from './components/Dialog';
+export { Drawer, type DrawerRootProps, type DrawerSide } from './components/Drawer';
 export { composeRefs } from './components/props';
 export {
   OptionList,

@@ -1,0 +1,96 @@
+@layer todae.components {
+  .drawer {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--todae-overlay-scrim-bg);
+    color: var(--todae-drawer-fg);
+  }
+
+  .drawer[open] {
+    display: flex;
+    opacity: 0;
+    transition: opacity var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing);
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  .drawer[open][data-side='end'] {
+    justify-content: flex-end;
+  }
+
+  .drawer[open][data-entered] {
+    opacity: 1;
+  }
+
+  .drawer[open][data-exiting] {
+    opacity: 0;
+    transition-duration: var(--todae-drawer-motion-exit);
+  }
+
+  .drawer::backdrop {
+    background: transparent;
+  }
+
+  .panel {
+    --todae-drawer-from: -100%;
+
+    box-sizing: border-box;
+    inline-size: min(100%, var(--todae-drawer-size));
+    block-size: 100%;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-drawer-gap);
+    padding: var(--todae-drawer-padding-y) var(--todae-drawer-padding-x);
+    background: var(--todae-drawer-bg);
+    color: var(--todae-drawer-fg);
+    border: 0 solid var(--todae-drawer-border);
+    border-inline-end-width: 1px;
+    transform: translateX(var(--todae-drawer-from));
+    transition: transform var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing);
+
+    @starting-style {
+      transform: translateX(var(--todae-drawer-from));
+    }
+  }
+
+  .drawer[data-side='end'] .panel {
+    --todae-drawer-from: 100%;
+
+    border-inline-width: 1px 0;
+  }
+
+  /* Start and end swap physical sides in right-to-left text. */
+  .drawer:dir(rtl) .panel {
+    --todae-drawer-from: 100%;
+  }
+
+  .drawer[data-side='end']:dir(rtl) .panel {
+    --todae-drawer-from: -100%;
+  }
+
+  .drawer[open][data-entered] .panel {
+    transform: none;
+  }
+
+  .drawer[open][data-exiting] .panel {
+    transform: translateX(var(--todae-drawer-from));
+    transition-duration: var(--todae-drawer-motion-exit);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .drawer,
+    .panel {
+      transition: none;
+    }
+  }
+}
