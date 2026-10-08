@@ -87,6 +87,38 @@ describe('todae.base styles', () => {
     expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(progress:indeterminate\) \{\s*animation: none;/);
   });
 
+  it('styles spinners and skeletons, and stops them under reduced motion', () => {
+    const list = selectors(base);
+    for (const selector of [
+      ':where(progress.todae-spinner)',
+      ':where(progress.todae-spinner)::-webkit-progress-bar',
+      ':where(progress.todae-spinner)::-webkit-progress-value',
+      ':where(progress.todae-spinner)::-moz-progress-bar',
+      ':where(.todae-skeleton)',
+      ':where(.todae-skeleton > *)',
+    ]) {
+      expect(list).toContain(selector);
+    }
+    // Same specificity as the progress rules, so the spinner must come after
+    // every one of them, the forced-colors block included.
+    expect(list.indexOf(':where(progress.todae-spinner)')).toBeGreaterThan(
+      list.lastIndexOf(':where(progress:indeterminate)'),
+    );
+    expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(progress\.todae-spinner\) \{\s*animation: none;/);
+    expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(\.todae-skeleton\) \{\s*animation: none;/);
+  });
+
+  it('styles code, code blocks and keys', () => {
+    const list = selectors(base);
+    for (const selector of [':where(code)', ':where(pre)', ':where(pre code)', ':where(kbd)', ':where(kbd:has(kbd))']) {
+      expect(list).toContain(selector);
+    }
+    // The outer <kbd> of a shortcut and the <code> in a <pre> undo the box,
+    // so they must follow the rules they undo.
+    expect(list.indexOf(':where(kbd:has(kbd))')).toBeGreaterThan(list.indexOf(':where(kbd)'));
+    expect(list.indexOf(':where(pre code)')).toBeGreaterThan(list.indexOf(':where(code)'));
+  });
+
   it('only reads tokens the build declares', () => {
     const tokens = readFileSync(join(import.meta.dirname, 'tokens.generated.css'), 'utf8');
     for (const [, name] of base.matchAll(/var\((--todae-[a-z0-9-]+)\)/g)) {

@@ -278,6 +278,95 @@
     }
   }
 
+  /* Spinner. A <progress> with the todae-spinner class and no value: it
+     keeps the progressbar role, so it needs a name like any progress. The
+     bar becomes a ring with one arc of fill that turns. These rules come
+     after the progress ones so they win at the same specificity. */
+  :where(progress.todae-spinner) {
+    flex: none;
+    inline-size: var(--todae-spinner-size);
+    block-size: var(--todae-spinner-size);
+    border: 0;
+    border-radius: 50%;
+    background: conic-gradient(var(--todae-spinner-fill) 0 25%, var(--todae-spinner-track) 0);
+    mask: radial-gradient(
+      farthest-side,
+      transparent calc(100% - var(--todae-spinner-thickness)),
+      #000 calc(100% - var(--todae-spinner-thickness))
+    );
+    animation: todae-spinner-turn var(--todae-spinner-motion-duration) linear infinite;
+  }
+
+  :where(progress.todae-spinner)::-webkit-progress-bar {
+    background: transparent;
+  }
+
+  :where(progress.todae-spinner)::-webkit-progress-value {
+    background: transparent;
+  }
+
+  :where(progress.todae-spinner)::-moz-progress-bar {
+    background: transparent;
+  }
+
+  @keyframes todae-spinner-turn {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  /* Under reduced motion the ring holds still; the arc still reads as busy. */
+  @media (prefers-reduced-motion: reduce) {
+    :where(progress.todae-spinner) {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    :where(progress.todae-spinner) {
+      forced-color-adjust: none;
+      border: 0;
+      background: conic-gradient(Highlight 0 25%, GrayText 0);
+    }
+  }
+
+  /* Skeleton. A placeholder block with the todae-skeleton class, shown where
+     content is still loading. Text inside only gives it a size and is not
+     drawn. It pulses unless the user asks for reduced motion. */
+  :where(.todae-skeleton) {
+    display: block;
+    min-block-size: 1lh;
+    border-radius: var(--todae-skeleton-radius);
+    background: var(--todae-skeleton-bg);
+    color: transparent;
+    user-select: none;
+    animation: todae-skeleton-pulse var(--todae-skeleton-motion-duration) ease-in-out infinite;
+  }
+
+  :where(.todae-skeleton > *) {
+    visibility: hidden;
+  }
+
+  @keyframes todae-skeleton-pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(.todae-skeleton) {
+      animation: none;
+    }
+  }
+
+  /* Forced colors would paint the block in the page color, so it would vanish. */
+  @media (forced-colors: active) {
+    :where(.todae-skeleton) {
+      forced-color-adjust: none;
+      background: GrayText;
+    }
+  }
+
   /* Slider. A native range input keeps its keyboard steps and value
      announcements; accent-color tints the thumb and filled track. */
   :where(input[type='range']) {
@@ -292,6 +381,60 @@
 
   :where(input[type='range']:disabled) {
     cursor: not-allowed;
+  }
+
+  /* Code. Inline <code> gets a tinted box in the mono family, a step smaller
+     than the text around it. A <pre> is a block that scrolls sideways, and
+     <code> inside it drops its own box. */
+  :where(code) {
+    padding: var(--todae-code-padding-y) var(--todae-code-padding-x);
+    border-radius: var(--todae-code-radius);
+    background: var(--todae-code-bg);
+    color: var(--todae-code-fg);
+    font-family: var(--todae-code-font-family);
+    font-size: calc(1em * var(--todae-code-font-scale));
+    box-decoration-break: clone;
+  }
+
+  :where(pre) {
+    padding: var(--todae-code-block-padding);
+    border-radius: var(--todae-code-block-radius);
+    background: var(--todae-code-bg);
+    color: var(--todae-code-fg);
+    font-family: var(--todae-code-font-family);
+    font-size: calc(1em * var(--todae-code-font-scale));
+    line-height: var(--todae-code-block-leading);
+    overflow-x: auto;
+  }
+
+  :where(pre code) {
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    font-size: inherit;
+  }
+
+  /* Keys. A <kbd> is drawn as a key cap. For a shortcut, put one <kbd> per
+     key inside an outer <kbd>: the outer one stays plain text. */
+  :where(kbd) {
+    display: inline-block;
+    padding: var(--todae-kbd-padding-y) var(--todae-kbd-padding-x);
+    border: var(--todae-kbd-border-width) solid var(--todae-kbd-border);
+    border-block-end-width: calc(var(--todae-kbd-border-width) * 2);
+    border-radius: var(--todae-kbd-radius);
+    background: var(--todae-kbd-bg);
+    color: var(--todae-kbd-fg);
+    font-family: var(--todae-kbd-font-family);
+    font-size: calc(1em * var(--todae-kbd-font-scale));
+    white-space: nowrap;
+  }
+
+  :where(kbd:has(kbd)) {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    font-size: inherit;
   }
 
   /* Hidden on screen, still read by assistive technology. The -focusable

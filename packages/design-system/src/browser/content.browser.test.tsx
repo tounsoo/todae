@@ -112,6 +112,20 @@ function Gallery() {
           Pro <Badge.Root tone="success">Paid</Badge.Root>
         </Card.Body>
       </Card.Root>
+      <progress className="todae-spinner" aria-label="Loading invoices" />
+      <div aria-busy="true">
+        <div className="todae-skeleton" aria-hidden="true" />
+      </div>
+      <p>
+        Press{' '}
+        <kbd>
+          <kbd>Ctrl</kbd> + <kbd>K</kbd>
+        </kbd>{' '}
+        to run <code>open()</code>.
+      </p>
+      <pre tabIndex={0}>
+        <code>{'const plan = await getPlan();'}</code>
+      </pre>
       <a href="#gallery-end" className="todae-visually-hidden-focusable">
         Skip to content
       </a>
@@ -357,6 +371,56 @@ describe('content parts in a browser', () => {
     );
     expect(getComputedStyle(screen.getByTestId('ltr')).animationDirection).toBe('normal');
     expect(getComputedStyle(screen.getByTestId('rtl')).animationDirection).toBe('reverse');
+  });
+
+  it('turns a spinner ring and pulses a skeleton', () => {
+    render(
+      <Themed>
+        <progress data-testid="spinner" className="todae-spinner" aria-label="Loading" />
+        <div dir="rtl">
+          <progress data-testid="rtl" className="todae-spinner" aria-label="Loading" />
+        </div>
+        <span data-testid="skeleton" className="todae-skeleton" aria-hidden="true">
+          Placeholder <b data-testid="inside">text</b>
+        </span>
+      </Themed>,
+    );
+    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+    expect(style('spinner').animationName).toBe('todae-spinner-turn');
+    expect(style('spinner').width).toBe(style('spinner').height);
+    expect(style('spinner').borderTopLeftRadius).toBe('50%');
+    expect(style('spinner').backgroundImage).toContain('conic-gradient');
+    // A ring turns the same way on either side; the progress sweep's reversal must not reach it.
+    expect(style('rtl').animationDirection).toBe('normal');
+    expect(style('skeleton').display).toBe('block');
+    expect(style('skeleton').animationName).toBe('todae-skeleton-pulse');
+    expect(style('skeleton').color).toBe('rgba(0, 0, 0, 0)');
+    expect(style('inside').visibility).toBe('hidden');
+  });
+
+  it('draws keys as caps, leaves the outer key of a shortcut plain, and drops the code box inside a block', () => {
+    render(
+      <Themed>
+        <kbd data-testid="shortcut">
+          <kbd data-testid="key">Ctrl</kbd>+<kbd>K</kbd>
+        </kbd>
+        <code data-testid="inline">x</code>
+        <pre data-testid="block">
+          <code data-testid="nested">x</code>
+        </pre>
+      </Themed>,
+    );
+    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+    expect(style('key').borderTopStyle).toBe('solid');
+    expect(parseFloat(style('key').borderBottomWidth)).toBeGreaterThan(parseFloat(style('key').borderTopWidth));
+    expect(style('shortcut').borderTopStyle).toBe('none');
+    expect(style('shortcut').fontFamily).toBe(getComputedStyle(screen.getByTestId('shortcut').parentElement!).fontFamily);
+    expect(style('inline').fontFamily).toContain('monospace');
+    expect(style('inline').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(style('block').backgroundColor).toBe(style('inline').backgroundColor);
+    expect(style('block').overflowX).toBe('auto');
+    expect(style('nested').backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(style('nested').paddingLeft).toBe('0px');
   });
 
   it('draws the breadcrumb glyph between items only, and colors badges and cards from tokens', () => {

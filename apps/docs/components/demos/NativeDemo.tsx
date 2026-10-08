@@ -1,3 +1,4 @@
+import { Stack } from '@tounsoo/todae/stack';
 import { Text } from '@tounsoo/todae/text';
 import { LocalizedLink } from '../LocalizedLink';
 
@@ -101,5 +102,56 @@ export function TableOfInvoices() {
         </tr>
       </tbody>
     </table>
+  );
+}
+
+export function SpinnerLabelled() {
+  return (
+    <Stack direction="row">
+      <label>
+        <progress className="todae-spinner" /> Loading invoices
+      </label>
+      <progress className="todae-spinner" aria-label="Saving" />
+    </Stack>
+  );
+}
+
+export function SkeletonProfile() {
+  return (
+    <div aria-busy="true">
+      <span className="todae-visually-hidden">Loading profile</span>
+      <Stack direction="row" aria-hidden="true">
+        <div className="todae-skeleton" style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />
+        <Stack style={{ flex: 1 }}>
+          <div className="todae-skeleton" style={{ inlineSize: '40%' }} />
+          <div className="todae-skeleton" style={{ inlineSize: '70%' }} />
+        </Stack>
+      </Stack>
+    </div>
+  );
+}
+
+export function CodeInText() {
+  return (
+    <div>
+      <Text>
+        Call <code>getPlan()</code> before you render the billing page.
+      </Text>
+      <pre>
+        <code>{`const plan = await getPlan();\nrender(<Billing plan={plan} />);`}</code>
+      </pre>
+    </div>
+  );
+}
+
+export function KbdShortcut() {
+  return (
+    <Text>
+      Press{' '}
+      <kbd>
+        <kbd>Ctrl</kbd>+<kbd>K</kbd>
+      </kbd>{' '}
+      to search, or <kbd>Esc</kbd> to close.
+    </Text>
   );
 }

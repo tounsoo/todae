@@ -1,0 +1,9 @@
+{
+  "skeleton": {
+    "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+    "motion": {
+      "duration": { "$type": "duration", "$value": { "value": 1600, "unit": "ms" } }
+    }
+  }
+}
