@@ -42,10 +42,11 @@ export function FileUploadImages() {
           background: zone.dragging ? 'var(--todae-color-bg-subtle)' : undefined,
         }}
       >
-        <Text>Drop images here, or choose them</Text>
+        <Text as="span">Drop images here, or choose them</Text>
         <input
           {...zone.getInputProps()}
           name="images"
+          aria-invalid={rejected.length > 0 || undefined}
           aria-describedby={rejected.length > 0 ? `${hintId} ${errorId}` : hintId}
         />
       </label>

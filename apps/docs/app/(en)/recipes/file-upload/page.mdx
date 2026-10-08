@@ -6,7 +6,7 @@ A recipe, not a package namespace. A native `<input type="file">` is the control
 
 ## Images
 
-The label is the drop target, so a click anywhere on it opens the picker and its text names the input. Rejected files are listed in an `ErrorMessage` that the input's `aria-describedby` points to. Accepted files are listed below it.
+The label is the drop target, so a click anywhere on it opens the picker and its text names the input. Rejected files are listed in an `ErrorMessage` that the input's `aria-describedby` points to, and the input gets `aria-invalid`. Accepted files are listed below it.
 
 ```tsx
 const zone = useDropzone({
@@ -21,10 +21,11 @@ const zone = useDropzone({
 })
 
 <label {...zone.getRootProps()}>
-  <Text>Drop images here, or choose them</Text>
+  <Text as="span">Drop images here, or choose them</Text>
   <input
     {...zone.getInputProps()}
     name="images"
+    aria-invalid={rejected.length > 0 || undefined}
     aria-describedby={rejected.length > 0 ? `${hintId} ${errorId}` : hintId}
   />
 </label>

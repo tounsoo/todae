@@ -38,6 +38,30 @@ describe('useDropzone in a browser', () => {
     expect(form.getAll('files').map((f) => (f as File).name)).toEqual(['a.png']);
   });
 
+  it('puts only accepted picked files back in the input', () => {
+    render(<Upload accept="image/*" multiple />);
+    const input = screen.getByTestId('input') as HTMLInputElement;
+    const picked = new DataTransfer();
+    picked.items.add(new File(['png'], 'a.png', { type: 'image/png' }));
+    picked.items.add(new File(['txt'], 'b.txt', { type: 'text/plain' }));
+    input.files = picked.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    expect([...input.files].map((f) => f.name)).toEqual(['a.png']);
+  });
+
+  it('skips dropped folders', async () => {
+    const onFiles = vi.fn();
+    render(<Upload onFiles={onFiles} />);
+    const png = new File(['png'], 'a.png', { type: 'image/png' });
+    const folder = { kind: 'file', getAsFile: () => new File([], 'photos'), webkitGetAsEntry: () => ({ isDirectory: true }) };
+    const file = { kind: 'file', getAsFile: () => png, webkitGetAsEntry: () => ({ isDirectory: false }) };
+    const data = { types: ['Files'], items: [folder, file], files: [], dropEffect: 'none' };
+    const event = new DragEvent('drop', { bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'dataTransfer', { value: data });
+    screen.getByTestId('zone').dispatchEvent(event);
+    expect(onFiles).toHaveBeenCalledWith([png], []);
+  });
+
   it('keeps the native input focusable, so the keyboard reaches the picker', () => {
     render(<Upload />);
     const input = screen.getByTestId('input') as HTMLInputElement;

@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'useDropzone',
   description:
-    'Returns { dragging, getRootProps, getInputProps }. Spread getInputProps on a native <input type="file"> and getRootProps on the drop target, usually the label around it, so a click and the keyboard open the file picker natively. Files from a drop or a pick are checked against accept, maxSize, minSize and the file count, then passed to onFiles. The input keeps only the accepted files, so a native form submits them. dragging, and data-dragging on the root, are set while files are dragged over the root.',
+    'Returns { dragging, getRootProps, getInputProps }. Spread getInputProps on a native <input type="file"> and getRootProps on the drop target, usually the label around it, so a click and the keyboard open the file picker natively. Dropped folders are skipped. Files from a drop or a pick are checked against accept, maxSize, minSize and the file count, then passed to onFiles. The input keeps only the accepted files, so a native form submits them. onFiles also runs when the picker returns no files. dragging, and data-dragging on the root, are set while files are dragged over the root.',
   props: [
     {
       name: 'accept',

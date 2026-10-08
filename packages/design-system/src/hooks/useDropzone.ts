@@ -67,6 +67,17 @@ export function acceptsFile(file: Pick<File, 'name' | 'type'>, accept: string | 
   });
 }
 
+/** Dropped files without folders, which browsers list as typeless files. */
+function droppedFiles(data: DataTransfer): File[] {
+  const items = Array.from(data.items ?? []);
+  if (items.length === 0) return Array.from(data.files);
+  return items.flatMap((item) => {
+    if (item.kind !== 'file' || item.webkitGetAsEntry?.()?.isDirectory) return [];
+    const file = item.getAsFile();
+    return file ? [file] : [];
+  });
+}
+
 const hasFiles = (event: DragEvent) => Array.from(event.dataTransfer?.types ?? []).includes('Files');
 
 export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult {
@@ -77,7 +88,6 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
   const active = dragging && !disabled;
 
   const take = (files: readonly File[]) => {
-    if (files.length === 0) return;
     const { maxSize, minSize, maxFiles, onFiles } = options;
     const limit = multiple ? (maxFiles ?? Infinity) : 1;
     const accepted: File[] = [];
@@ -93,6 +103,7 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
     }
     // Keep only the accepted files in the input, so a native form submits what passed.
     const input = inputRef.current;
+    // jsdom has no DataTransfer constructor; every supported browser does.
     if (input && typeof DataTransfer === 'function') {
       const kept = new DataTransfer();
       for (const file of accepted) kept.items.add(file);
@@ -121,7 +132,8 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
       event.dataTransfer.dropEffect = disabled ? 'none' : 'copy';
     },
     onDragLeave: (event) => {
-      if (!hasFiles(event) || disabled) return;
+      // Not gated on disabled, so a drag that started enabled still ends.
+      if (!hasFiles(event)) return;
       depth.current = Math.max(0, depth.current - 1);
       if (depth.current === 0) setDragging(false);
     },
@@ -130,7 +142,8 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
       event.preventDefault();
       endDrag();
       if (disabled) return;
-      take(Array.from(event.dataTransfer.files));
+      const files = droppedFiles(event.dataTransfer);
+      if (files.length > 0) take(files);
     },
     ...(active ? { 'data-dragging': '' as const } : {}),
   });

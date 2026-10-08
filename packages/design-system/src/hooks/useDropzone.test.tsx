@@ -97,6 +97,23 @@ describe('useDropzone', () => {
     expect(dragging()).toBe('false');
   });
 
+  it('reports an empty pick, so app state follows a cleared input', () => {
+    const onFiles = vi.fn();
+    render(<Zone onFiles={onFiles} />);
+    fireEvent.change(screen.getByTestId('input'), { target: { files: [] } });
+    expect(onFiles).toHaveBeenCalledWith([], []);
+  });
+
+  it('ends a drag that was entered while enabled after the zone is disabled', () => {
+    const { rerender } = render(<Zone />);
+    fireEvent.dragEnter(screen.getByTestId('zone'), drag([]));
+    rerender(<Zone disabled />);
+    fireEvent.dragLeave(screen.getByTestId('zone'), drag([]));
+    rerender(<Zone />);
+    expect(screen.getByTestId('dragging').textContent).toBe('false');
+    expect(screen.getByTestId('zone').hasAttribute('data-dragging')).toBe(false);
+  });
+
   it('ignores drags that carry no files', () => {
     const onFiles = vi.fn();
     render(<Zone onFiles={onFiles} />);
