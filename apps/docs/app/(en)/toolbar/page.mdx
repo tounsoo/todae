@@ -22,11 +22,11 @@ A row of controls, such as an editor's formatting bar, whose controls share one 
   <ToolbarEditor />
 </Example>
 
-Buttons, links, checkboxes and menu triggers inside count, in document order, even inside your own wrappers. Disabled controls are skipped. The toolbar does not change any `tabIndex`. A text input, a composite with its own arrow keys such as RadioGroup, or anything else Tab can reach that is not such a control keeps its own Tab stop, and the toolbar's arrow keys skip it. It splits the controls around it into runs, and each run is one Tab stop. Tab moves past a run, and Tab or Shift+Tab coming back into it returns to the control Tab last left it from. Controls inside a popover or dialog that opens from the toolbar keep their own keyboard model.
+Buttons, links, checkboxes and menu triggers inside count, in document order, even inside your own wrappers. Disabled controls are skipped. The toolbar does not change any `tabIndex`. A text input, a composite with its own arrow keys such as RadioGroup, or anything else Tab can reach that is not such a control keeps its own Tab stop, and the toolbar's arrow keys skip it. It splits the controls around it into runs, and each run is one Tab stop. Tab moves past a run, and Tab or Shift+Tab coming back into it returns to the control Tab last left it from, or the first time, to its first control. Controls inside a popover or dialog that opens from the toolbar keep their own keyboard model.
 
 Name the toolbar with `aria-label` or `aria-labelledby`. Set `orientation="vertical"` for a column, which moves focus with Up and Down instead. A menu trigger in a vertical toolbar leaves Up and Down to the toolbar; Enter or Space opens its menu. Arrow keys wrap from the last control to the first unless you pass `loop={false}`.
 
-`Toolbar.Group` puts `role="group"` around controls that belong together. `Toolbar.Separator` draws a rule across the toolbar and is not focusable. A [ToggleGroup](/toggle-group) inside a toolbar leaves the arrow keys to the toolbar, so the whole bar is one tab stop.
+`Toolbar.Group` puts `role="group"` around controls that belong together. `Toolbar.Separator` draws a rule across the toolbar and is not focusable. A [ToggleGroup](/toggle-group) inside a toolbar leaves the arrow keys and Tab to the toolbar.
 
 ## When to use
 

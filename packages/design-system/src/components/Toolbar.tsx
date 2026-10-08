@@ -120,7 +120,7 @@ function Root({
   const refs = useComposedRefs(rootRef, ref);
   // For each run, the item Tab last left it from, so Tab coming back
   // returns to it.
-  const left = useRef(new Set<HTMLElement>());
+  const left = useRef(new WeakSet<HTMLElement>());
   const context = useMemo(() => ({ orientation }), [orientation]);
 
   // Whether the focus now arriving comes from a Tab press. Set during the
@@ -155,7 +155,10 @@ function Root({
     if (!run || run.includes(event.relatedTarget as HTMLElement)) return;
     const back = run.find((item) => left.current.has(item));
     if (back) left.current.delete(back);
-    if (tabbing.current && back && back !== target) back.focus();
+    if (!tabbing.current) return;
+    // With nothing remembered, entry is on the first control, from either side.
+    const to = back ?? run[0]!;
+    if (to !== target) to.focus();
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -208,7 +211,7 @@ function Root({
         onFocus={handleFocus}
         onPointerDown={(event) => {
           onPointerDown?.(event);
-          left.current.clear();
+          left.current = new WeakSet();
         }}
         onKeyDown={handleKeyDown}
       >

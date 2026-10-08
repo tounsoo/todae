@@ -257,4 +257,19 @@ describe('Toolbar in a browser', () => {
     await userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(button('A'));
   });
+
+  it('enters on the first control the first time, from either side', async () => {
+    render(
+      <>
+        <Toolbar.Root aria-label="t">
+          <Button.Root>A</Button.Root>
+          <Button.Root>B</Button.Root>
+        </Toolbar.Root>
+        <button type="button">After</button>
+      </>,
+    );
+    button('After').focus();
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(button('A'));
+  });
 });
