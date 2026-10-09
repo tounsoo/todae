@@ -5,7 +5,7 @@
       "md": { "$type": "dimension", "$value": { "value": 2, "unit": "rem" } },
       "lg": { "$type": "dimension", "$value": { "value": 2.5, "unit": "rem" } }
     },
-    "radius": { "$type": "dimension", "$value": { "value": 9999, "unit": "px" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/full/$value" } },
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "font": {

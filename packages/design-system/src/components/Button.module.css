@@ -52,8 +52,8 @@
     background: var(--todae-button-bg-focus);
     color: var(--todae-button-fg-focus);
     border-color: var(--todae-button-border-focus);
-    outline: 2px solid var(--todae-button-ring-focus);
-    outline-offset: 2px;
+    outline: var(--todae-focus-ring-width) solid var(--todae-button-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
   }
 
   /* Focus adds its ring but keeps a pressed toggle's colors. */

@@ -1221,13 +1221,13 @@ describe('Field alignment', () => {
     expect(textareaShell).toContain('padding: 0');
     expect(textareaShell).not.toContain('align-items');
     const input = cssBlock(fieldCss, '.input {');
-    expect(input.indexOf('line-height: var(--todae-font-leading-default)')).toBeGreaterThan(input.indexOf('font: inherit'));
+    expect(input.indexOf('line-height: var(--todae-field-leading)')).toBeGreaterThan(input.indexOf('font: inherit'));
     const adornment = cssBlock(fieldCss, '.adornment {');
     expect(adornment).toContain('font-size: var(--todae-field-font-size)');
-    expect(adornment).toContain('line-height: var(--todae-font-leading-default)');
+    expect(adornment).toContain('line-height: var(--todae-field-leading)');
     expect(adornment).toContain('height: 1lh');
     expect(cssBlock(fieldCss, '.flow {')).toContain(
-      '--todae-field-chip-row-h: calc(var(--todae-field-font-size) * var(--todae-font-leading-default))',
+      '--todae-field-chip-row-h: calc(var(--todae-field-font-size) * var(--todae-field-leading))',
     );
     expect(fieldCss).not.toContain('--todae-chip-font-size) * 1.25');
     const span = cssBlock(fieldCss, '.flow > span {');

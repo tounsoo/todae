@@ -1,6 +1,7 @@
 {
   "option": {
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },
     "padding": {
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
@@ -17,11 +18,16 @@
     },
     "fg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
-      "selected": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+      "selected": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "disabled": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
     },
     "check": {
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
-      "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
+      "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+      "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } }
     }
   }
 }

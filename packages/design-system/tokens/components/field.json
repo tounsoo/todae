@@ -1,6 +1,7 @@
 {
   "field": {
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "padding": {
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
@@ -61,6 +62,17 @@
       "emphasis": {
         "weight": { "$type": "fontWeight", "$value": 600 }
       }
+    },
+    "picker": {
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+      "padding": {
+        "x": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
+        "y": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } }
+      },
+      "max-height": { "$type": "dimension", "$value": { "value": 20, "unit": "rem" } }
     },
     "row": {
       "control": {
