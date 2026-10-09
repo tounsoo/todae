@@ -25,6 +25,14 @@ import { LinkCurrent, LinkInText } from '../../../components/demos/NativeDemo';
   <LinkCurrent />
 </Example>
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 스타일만 맡으며, 대상은 네이티브 `<a href>`입니다. 색은 텍스트 색 그대로 두고 링크임을 보여 주는 밑줄, `link.ring.focus`로 그리는 `:focus-visible` 포커스 링, 그리고 비어 있거나 `false`가 아닌 `aria-current`에 쓰는 더 굵은 밑줄입니다. 링크의 role, Enter 키, 탭 순서의 자리는 브라우저가 줍니다.
+
+**직접 제공할 것:** 요소가 링크가 되게 하는 `href`. 어디로 가는지 말해 주는 링크 텍스트. 라우터가 현재 링크에 다는 `aria-current`. 회사의 링크 컴포넌트는 `<a>`를 직접 렌더링하고 나머지 props를 거기에 펼쳐서, `aria-current`, `aria-label`, `ref`가 닿게 해야 합니다.
+
+**주의할 점:** `text-decoration: none`이나 `outline: none`을 설정하는 클래스. 어떤 클래스든 이 규칙을 이기며, 밑줄이 없으면 링크는 색이 같아서 주변 텍스트와 똑같아 보입니다. `href` 없이 `onClick`만 있는 `<a>`나 스타일만 입힌 `span`. 링크 role도 키보드 동작도 없습니다. 다른 곳으로 가지 않고 이 페이지에서 무언가를 하는 링크.
+
 ## 언제 쓰나요
 
 **언제:** 다른 페이지나 위치로 이동할 때. 본문 안, 내비게이션, Alert의 동작.

@@ -39,6 +39,26 @@ A `<kbd>` is drawn as a key cap. For a shortcut, put one `<kbd>` per key inside 
 
 Restyle keys through `kbd.fg`, `kbd.bg`, `kbd.border`, `kbd.border-width`, `kbd.radius`, `kbd.font.family`, `kbd.font.scale`, `kbd.padding.x` and `kbd.padding.y`.
 
+## Accessible composition
+
+**Todae handles:** Only the look. `<code>`, `<pre>` and `<kbd>` stay native elements, and the base styles add no role, `tabindex` or name. Inline `<code>` keeps the text color around it. A `<pre>` scrolls sideways when a line is too long, but Todae does not make it focusable.
+
+**You supply:** For a `<pre>` that scrolls, the `tabIndex={0}`, `role="region"` and `aria-label` described above. A code block component should require the name in its props instead of filling in one default. If it adds a copy button, give the button a name and report the result, for example with [useAnnouncer](/utilities/use-announcer).
+
+```tsx
+type CodeBlockProps = { label: string; children: string };
+
+export function CodeBlock({ label, children }: CodeBlockProps) {
+  return (
+    <pre tabIndex={0} role="region" aria-label={label}>
+      <code>{children}</code>
+    </pre>
+  );
+}
+```
+
+**Watch for:** A default name such as "Code" on every block, which gives a page many regions with the same name; name each block after what it shows. `tabIndex={0}` without `role` and `aria-label`, which adds a Tab stop that has no name.
+
 ## When to use
 
 **When:** Code → a name, value or snippet the reader types or reads in code. Kbd → a key or shortcut the reader presses.

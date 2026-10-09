@@ -24,6 +24,14 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
 
 To announce a submit-time error, pass `role="alert"` on this component. The package does not choose announcement policy.
 
+## Accessible composition
+
+**Todae handles:** `ErrorMessage` renders a `<span>` with the required `id`, `data-todae-error` and the error text color. It has no `role` and no `aria-live`, and writes nothing onto the control. `aria-invalid` comes from `invalid` on the control, `Field.Root`, `RadioGroup.Root` or a surrounding [Fieldset](/fieldset), not from this component.
+
+**You supply:** Mount it only while the error applies, and only then add its id to the control's `aria-describedby` (on `Field.Root` inside a Field) and set `invalid`. Say what is wrong and how to fix it. For an error that appears on submit, pass `role="alert"` so it is announced. For a group, point `aria-describedby` on `Fieldset.Root` at it.
+
+**Watch for:** `invalid` only changes colors, so the message text is what tells people what went wrong. A `role="alert"` on a message that changes while the person types announces every change. A message hidden with CSS while its id stays in `aria-describedby` is still read.
+
 ## When to use
 
 **When:** Validation text below a control, after Description. Mount it and add its `id` to `aria-describedby` only while invalid; `invalid` lives on the control or `Field.Root`.

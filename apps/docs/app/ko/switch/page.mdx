@@ -17,6 +17,14 @@ import { SwitchStates } from '../../../components/demos/SwitchDemo';
 
 밀도는 `space.selection.size`로 트랙 크기를 조정합니다. Switch를 `Field.Root` 안에 넣지 마세요.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 입력은 `role="switch"`를 가진 네이티브 `<input type="checkbox">`이며, children과 함께 `<label>` 안에 있습니다. 그래서 children이 이름이 되고, 켜짐이나 꺼짐으로 알려집니다. Space로 토글합니다. `disabled`는 네이티브이고 `invalid`는 `aria-invalid`를 설정합니다. 둘 다 바깥 [Fieldset](/fieldset)에서도 옵니다. 트랙은 `aria-hidden`이고, 입력이 focus-visible인 동안 포커스 링을 보여 줍니다. `aria-*`와 `ref`를 포함한 다른 props는 입력으로 가고, `className`은 label로 갑니다.
+
+**직접 제공할 것:** "Play a sound on mention"처럼 설정을 이름 짓는 children. 타입이 요구합니다. 설명이 필요한 설정이라면 `aria-describedby`에 [Description](/description)의 id를 넣으세요. 스위치는 바로 적용된다고 읽히므로, 토글될 때 변경을 적용하세요.
+
+**주의할 점:** "On"처럼 상태를 이름으로 쓰거나 토글할 때 바뀌는 레이블. 스위치가 이미 상태를 알립니다. 다른 `<label>`로 감싸거나 [Label](/label)이 가리키게 하는 것. 제출할 때만 적용되는 폼 안의 스위치. 그럴 때는 [Checkbox](/checkbox)를 쓰세요.
+
 ## 언제 쓰나요
 
 **언제:** 즉시 적용되는 켜기/끄기 설정(트랙 + 썸, 체크 글리프 없음). children = 레이블.

@@ -16,6 +16,14 @@ import { SeparatorBetween } from '../../../components/demos/NativeDemo';
 
 `separator.color`, `separator.thickness`, 그리고 선 위아래 여백인 `separator.space`로 스타일을 바꾸세요.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 스타일만 맡습니다. 네이티브 `<hr>`은 `separator` role을 유지하고, Todae는 `separator` 토큰으로 그립니다. `Menu.Separator`와 `Toolbar.Separator`는 각자의 파트로, 둘 다 `role="separator"`인 `div`입니다. `Toolbar.Separator`는 툴바 방향을 가로지르는 `aria-orientation`도 설정합니다.
+
+**직접 제공할 것:** 요소를 고르는 일뿐입니다. 콘텐츠 묶음 사이에는 `<hr>`을, [Menu](/menu)나 [Toolbar](/toolbar) 안이라면 그 컴포넌트의 구분선 파트를 쓰세요.
+
+**주의할 점:** 목록, 메뉴, 툴바의 항목 사이에 넣은 `<hr>`. 그 컴포넌트가 제공하는 파트나 테두리를 쓰세요. `tabIndex`가 있는 것처럼 포커스를 받는 구분선. 보조 기술은 이를 크기를 조절하는 컨트롤로 보고 값을 기대합니다. 꾸미기만 하는 구분선. 대신 CSS 테두리를 그리세요.
+
 ## 언제 쓰나요
 
 **쓸 때:** 같은 페이지에 속한 두 콘텐츠 묶음 사이를 끊을 때.

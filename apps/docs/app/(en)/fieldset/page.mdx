@@ -27,6 +27,14 @@ A native `<fieldset>` that groups related controls under one `<legend>`, such as
 
 The parts stack with `fieldset.gap`. For controls side by side, put them in a `Stack direction="row"`.
 
+## Accessible composition
+
+**Todae handles:** `Fieldset.Root` is a native `<fieldset>`, so it has the `group` role and its first `Fieldset.Legend` is the group's name. `disabled` is the native attribute: every form control inside is disabled and leaves the tab order, except those in that first legend. `invalid` sets `aria-invalid` on each Todae control inside: Checkbox, Switch, `RadioGroup.Root` and its radios, and the control of a `Field.Root`. Nested fieldsets inherit both.
+
+**You supply:** A `Fieldset.Legend` as the first child, with text that names the question. The fieldset has no `aria-invalid` of its own, so point `aria-describedby` on the root at an [ErrorMessage](/errormessage) or [Description](/description) that says why. `invalid={false}` on a control the person got right.
+
+**Watch for:** A Legend wrapped in another element, or after another legend, does not name the group, and the controls in it follow the fieldset's `disabled`. `disabled` is not read-only: disabled controls cannot be focused, so keyboard users cannot reach their values. A styled `div` in place of the fieldset drops the group and its name.
+
 ## When to use
 
 **When:** Several controls answer one question: a checkbox group, a set of switches, or the fields of an address. Name the group with Fieldset.Legend.

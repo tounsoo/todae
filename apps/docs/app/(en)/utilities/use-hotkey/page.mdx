@@ -14,6 +14,23 @@ The latest `handler` runs, so an inline function is fine. Pass `{ enabled: false
 
 Tell assistive technology about a shortcut with `aria-keyshortcuts` on the control it stands for.
 
+## Accessible composition
+
+**Todae handles:** Listening on the document, matching modifiers exactly, preventing the browser's default on a match, and leaving typing keys to text fields and input methods, as described above. It sets no attribute and announces nothing.
+
+**You supply:** `aria-keyshortcuts` on the control the shortcut stands for, with each hotkey separated by a space. The names `Alt`, `Control`, `Meta` and `Shift` are valid there too, so one list can feed both; the aliases `Ctrl`, `Cmd` and `Option` are not. Show the shortcut in visible text as well, such as in the control's tooltip or a help page.
+
+```tsx
+const keys = ['Control+K', 'Meta+K']
+useHotkey(keys, () => setOpen(true))
+
+<Button.Root aria-keyshortcuts={keys.join(' ')} onClick={() => setOpen(true)}>
+  Search
+</Button.Root>
+```
+
+**Watch for:** A hotkey that is a single letter, digit or symbol, with or without Shift. Outside a text field it runs on one key press, which speech input can set off by accident; give people a way to turn it off with `{ enabled: false }`. A match prevents the browser's default, so a hotkey such as `Control+F` replaces the browser's own find.
+
 ## When to use
 
 **When:** A page-wide shortcut, such as one that opens a search or command palette.

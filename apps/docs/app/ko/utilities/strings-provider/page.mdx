@@ -53,6 +53,14 @@ const korean: Partial<Strings> = {
 
 서버 엔트리 `@tounsoo/todae/breadcrumbs`와 `@tounsoo/todae/pagination`의 `Breadcrumbs`와 `Pagination`은 컨텍스트 없이 서버에서 렌더링되므로 항상 영어를 씁니다. `aria-label`을 전달하거나, provider를 쓰려면 `@tounsoo/todae`에서 가져오세요.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** Todae가 스스로 쓰는 텍스트를 맡습니다. 닫기 버튼, 랜드마크, 칩 삭제 버튼, `+N` 칩의 기본 이름, `useCombobox`가 주는 시트 이름, `Field.Counter`의 설명과 라이브 메시지입니다. 위에 나열한 대로 부분 자체의 prop이 우선합니다.
+
+**직접 제공할 것:** 앱에서 보이는 모든 키를 읽는 사람의 언어로 제공하세요. 함수인 키는 레이블이나 숫자를 받으므로, 언어에 맞는 자리에 넣고 복수형도 거기서 고르세요. `StringsProvider`는 요소를 렌더링하지 않고 `lang`도 설정하지 않습니다. 스크린 리더가 단어를 바르게 발음하도록 `<html>`에, 또는 다른 언어로 된 부분을 감싸는 요소에 `lang`을 설정하세요. 서버 엔트리의 `Breadcrumbs`와 `Pagination`에는 위에서 설명한 대로 `aria-label`을 직접 넘기세요.
+
+**주의할 점:** 빈 문자열을 조심하세요. `undefined`와 달리 위의 문자열을 대신하므로, 자체 텍스트가 없는 닫기 버튼은 Todae가 붙였을 이름을 잃습니다. 텍스트가 보이는 닫기 버튼은 `close`나 `dismiss`로 이름이 붙지 않습니다. 버튼은 자기 텍스트로 이름이 붙고, 키는 쓰이지 않습니다.
+
 ## 언제 쓰나요
 
 **언제:** 앱이 영어가 아니거나, 앱 전체나 일부에서 Todae 자체 텍스트의 표현을 바꾸고 싶을 때.

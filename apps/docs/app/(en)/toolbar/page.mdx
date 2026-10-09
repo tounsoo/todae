@@ -28,6 +28,14 @@ Name the toolbar with `aria-label` or `aria-labelledby`. Set `orientation="verti
 
 `Toolbar.Group` puts `role="group"` around controls that belong together. `Toolbar.Separator` draws a rule across the toolbar and is not focusable. A [ToggleGroup](/toggle-group) inside a toolbar leaves the arrow keys and Tab to the toolbar.
 
+## Accessible composition
+
+**Todae handles:** `Toolbar.Root` sets `role="toolbar"`, and `aria-orientation="vertical"` in a column. It moves focus with the arrow keys, Home and End and steers Tab as described above, without writing any `tabIndex`. `Toolbar.Group` is a `role="group"`, and `Toolbar.Separator` is a `role="separator"` with `aria-orientation` across the toolbar. A ToggleGroup inside leaves its arrow keys and Tab stop to the toolbar.
+
+**You supply:** A name for the toolbar with `aria-label` or `aria-labelledby`; the type does not require one. A name for every control: an icon-only `Button.Root` needs `aria-label`, which it also shows as its tooltip. A name for each `Toolbar.Group` that should read as a group. Real buttons, links or checkboxes as the controls, so the toolbar finds them.
+
+**Watch for:** A wrapper that gives its button `tabIndex={-1}`: a control with a negative `tabIndex` is not one of the toolbar's controls, so the arrow keys skip it. A clickable `div` without a `tabIndex`, which the toolbar does not find at all. Disabled controls are skipped too; for one that people should still reach and hear as unavailable, set `aria-disabled` and ignore its clicks yourself.
+
 ## When to use
 
 **When:** A set of actions on one object or selection, used often enough that one tab stop and arrow keys save time: text formatting, a canvas's tools, a table's bulk actions.

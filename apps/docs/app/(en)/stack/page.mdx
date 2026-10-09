@@ -10,6 +10,14 @@ Server Components can import it from `@tounsoo/todae/stack`. That entry has no `
   <StackButtons />
 </Example>
 
+## Accessible composition
+
+**Todae handles:** Layout only. `Stack` renders a `div` with no role, and there is no `as` prop. `direction` is `row` or `column`, never reversed, so items show in DOM order and reading and Tab order follow what is drawn. Every other prop, `ref`, `role` and `aria-*` included, reaches the `div`.
+
+**You supply:** The semantics. Buttons that act on one thing and need a shared name take `role="group"` and `aria-label`; [Button.Group](/button) sets `role="group"` itself. A row of tools that should be one Tab stop moved through with arrow keys is a [Toolbar](/toolbar), not a `Stack`. Items that form a list take `role="list"` and `role="listitem"`.
+
+**Watch for:** `row-reverse`, `column-reverse` or `order` set through `className` or `style`: items move on screen but not in reading or Tab order. To show a primary button last, put it last in the DOM.
+
 ## When to use
 
 **When:** Flex row or column spaced by density-aware `stack.gap`. Spacing between fields or buttons.

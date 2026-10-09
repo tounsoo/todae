@@ -45,6 +45,14 @@ Put `todae-skeleton` on a block that stands in for content before it arrives. It
 
 A skeleton means nothing to a screen reader, so hide it with `aria-hidden` and say what is loading in text. Restyle it through `skeleton.bg`, `skeleton.radius` and `skeleton.motion.duration`.
 
+## Accessible composition
+
+**Todae handles:** Style only. A `todae-spinner` stays a native `<progress>` with the `progressbar` role, and turns only while it has no `value`. It holds still under reduced motion. A `todae-skeleton` hides the elements inside it with `visibility: hidden`, which also hides them from assistive technology, but bare text directly inside it is only made transparent and is still read.
+
+**You supply:** A name for each spinner, from a `<label>` or `aria-label`, that says what is loading. `aria-hidden` on each skeleton, with the loading text next to it, such as in `todae-visually-hidden` text, as above. When the content arrives, it replaces both.
+
+**Watch for:** `todae-spinner` on a `div` or an `svg`: the rules match only `progress`, so it neither turns nor has a role. A spinner with `aria-hidden` and no other text, so nothing says the area is busy. A spinner in every row of a list, each read as a progress bar; one spinner for the whole area reads better.
+
 ## When to use
 
 **When:** Spinner → a short wait for one action or a small area, such as a save or a search. Skeleton → the layout of a page or section is known before its content arrives.

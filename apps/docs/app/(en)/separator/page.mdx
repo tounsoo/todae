@@ -16,6 +16,14 @@ A separator is a native `<hr>`. There is no component: the element already has t
 
 Restyle it through `separator.color`, `separator.thickness` and `separator.space`, the margin above and below the rule.
 
+## Accessible composition
+
+**Todae handles:** Style only. A native `<hr>` keeps its `separator` role, and Todae draws it from the `separator` tokens. `Menu.Separator` and `Toolbar.Separator` are their own parts, each a `div` with `role="separator"`; `Toolbar.Separator` also sets `aria-orientation` across the toolbar.
+
+**You supply:** Only the choice of element: an `<hr>` between groups of content, or the separator part of the [Menu](/menu) or [Toolbar](/toolbar) it sits in.
+
+**Watch for:** An `<hr>` between the items of a list, menu or toolbar; use the part those components ship, or a border. A focusable separator, such as one with `tabIndex`, which assistive technology treats as a control that resizes and expects a value. A separator used only for looks; draw a border in CSS instead.
+
 ## When to use
 
 **When:** A break between two groups of content that belong to the same page.

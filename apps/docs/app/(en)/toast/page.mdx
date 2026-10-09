@@ -66,6 +66,14 @@ A toast can leave before someone reaches it, so it should not be the only way to
 - The toasts are a list inside a live region that exists before the first toast, so screen readers read each new one politely, once. That includes `critical` toasts: a message that must interrupt belongs in an [Alert](/alert).
 - The region is named "Notifications" and `Toast.Close` is named "Dismiss" unless its text names it. Both come from the `notifications` and `dismiss` strings of [StringsProvider](/utilities/strings-provider), English unless you set them; a non-empty `aria-label` still wins.
 
+## Accessible composition
+
+**Todae handles:** The keyboard and screen reader model above. The region is a `section` named by the `notifications` string, and each toast is an `li` in an `ol` with `aria-live="polite"`. `Toast.Icon` is `aria-hidden`, `Toast.Close` falls back to the `dismiss` string, and `Toast.Action` dismisses its toast after `onClick`. Timers pause while keyboard focus is inside the region. While a modal in Todae's modal stack is open, the region moves into it so the toasts stay reachable.
+
+**You supply:** Text that stands on its own when read once: say what happened in `Toast.Title`, and put the tone in words when it matters, such as "Upload failed", since `tone` only sets `data-tone` for color and the icon is hidden. Action labels that say what they do, such as "Undo delete". A `restoreFocusRef` for a Dialog that an action opens.
+
+**Watch for:** Do not add `role="alert"` or `aria-live` to `Toast.Root`: the region already reads each toast, and a second live region can read it twice. Do not carry the tone by color or icon alone. A modal `<dialog>` of your own needs [useModalLayer](/utilities/use-modal-layer), or the toasts are inert under it.
+
 ## When to use
 
 **When:** Confirming an action that already happened, such as saved, sent or copied, or a background event that needs no answer.

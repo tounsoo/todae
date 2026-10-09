@@ -15,6 +15,14 @@ function Stars(props) {
   <FieldUseField />
 </Example>
 
+## Accessible composition
+
+**Todae handles:** `getControlProps()` gives your control the Root's `id`, its `aria-describedby` merged with yours, `aria-invalid` while the Root is invalid, the Root's `aria-label` or `aria-labelledby` unless the control names itself, and `disabled`, or `aria-disabled` with `{ native: false }`. Its ref lets a press on the shell focus the control, and the shell draws its focus ring while the control or anything inside it is focus-visible. The Root's `disabled` and `invalid` include a surrounding [Fieldset](/fieldset)'s.
+
+**You supply:** What the control is and does: a `role`, since the hook sets none, a `tabIndex`, keyboard handling, and the role's state, such as `aria-valuenow`, `aria-valuemin` and `aria-valuemax` for a `slider`. A name through `aria-labelledby` or `aria-label` on `Field.Root`. While `field.disabled` is true, skip the tab stop and ignore keys.
+
+**Watch for:** An `aria-describedby` or `ref` spread after `getControlProps()` replaces the wired one; pass yours in as `getControlProps(props)` so they merge. `{ native: false }` only sets `aria-disabled`; it does not stop focus or keys. Every control that calls `getControlProps()` gets the same `id`, so use one per `Field.Root`.
+
 ## When to use
 
 **When:** Your own control, such as a rating or a color well, sits inside `Field.Root` and needs its id, name, description and invalid state.

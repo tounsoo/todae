@@ -35,6 +35,14 @@ Progress bars and meters are native `<progress>` and `<meter>` elements. There i
 
 Name each one with a `<label>` or `aria-label`, and put the value as text inside the element for browsers that do not draw it. Restyle the track, height and radius through `progress.track`, `progress.height` and `progress.radius`. Meter reads the same three tokens, so a change to them reaches both.
 
+## Accessible composition
+
+**Todae handles:** Style only. The browser gives `<progress>` the `progressbar` role, gives `<meter>` its own role, and exposes their values; Todae keeps all of that. The indeterminate band holds still under reduced motion, and the track and fill keep distinct system colors in forced colors mode.
+
+**You supply:** A name for each one: a `<label>`, `aria-label` or `aria-labelledby`. The value as text inside the element. Todae announces nothing when a value changes, so when the task ends or fails, say so in text, and announce it with [useAnnouncer](/utilities/use-announcer) if the user may not be looking.
+
+**Watch for:** A wrapper that draws its own bar from `div`s, which loses the role and the value. A wrapper that takes a `label` prop but never connects it to the element. A meter whose level is told only by the fill color; say "Almost full" in text when it matters. A progress bar removed the moment it finishes, with nothing left to say the task is done.
+
 ## When to use
 
 **When:** Progress → a task that moves toward done. Meter → a level within a range that does not change because of the user's task.

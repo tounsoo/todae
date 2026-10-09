@@ -43,6 +43,14 @@ When the name is written next to the avatar, leave out `label`. The avatar is th
 
 Initials are yours to choose: how to shorten a name depends on the language and the person. Restyle the shape and colors through `avatar.radius`, `avatar.bg` and `avatar.fg`.
 
+## Accessible composition
+
+**Todae handles:** With `label`, `Avatar.Root` is `role="img"` named by `aria-label`, and `Avatar.Image` renders `alt=""`, so the image and the initials share one name. Without `label`, the root is `aria-hidden`. The types leave out `role`, `aria-label` and `aria-labelledby` on the root and `alt` on the image, so a wrapper cannot add a second name by mistake.
+
+**You supply:** The choice between the two. A wrapper that shows a person should pass `label` when the avatar stands alone, such as in a row of participants, and leave it out when the name is written next to it. The name comes from your data; Todae does not read it from the fallback.
+
+**Watch for:** An avatar with no `label` as the only content of a button, a link or a [Menu](/menu) trigger: the avatar is hidden, so the control has no name. Give the control `aria-label`, or the avatar `label`. A presence dot or ring the wrapper adds shows status by color alone; put the status in text as well.
+
 ## When to use
 
 **When:** A person, team or workspace shown in a list, a header or next to a message.

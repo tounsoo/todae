@@ -14,6 +14,23 @@ useHotkey(['Control+K', 'Meta+K'], () => setOpen(true))
 
 단축키는 그것이 대신하는 컨트롤의 `aria-keyshortcuts`로 보조 기술에 알리세요.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 위에서 설명한 대로 문서에서 키를 듣고, 수정 키를 정확히 맞추고, 일치하면 브라우저의 기본 동작을 막고, 입력 키는 텍스트 필드와 입력기에 맡깁니다. 속성은 설정하지 않으며 아무것도 알리지 않습니다.
+
+**직접 제공할 것:** 단축키가 대신하는 컨트롤에 `aria-keyshortcuts`를 주고, 단축키마다 공백으로 구분하세요. `Alt`, `Control`, `Meta`, `Shift`라는 이름은 거기서도 유효하므로 목록 하나로 둘 다 채울 수 있습니다. 별칭인 `Ctrl`, `Cmd`, `Option`은 유효하지 않습니다. 컨트롤의 툴팁이나 도움말 페이지처럼 보이는 텍스트로도 단축키를 보여 주세요.
+
+```tsx
+const keys = ['Control+K', 'Meta+K']
+useHotkey(keys, () => setOpen(true))
+
+<Button.Root aria-keyshortcuts={keys.join(' ')} onClick={() => setOpen(true)}>
+  Search
+</Button.Root>
+```
+
+**주의할 점:** Shift가 있든 없든 글자, 숫자, 기호 하나로 된 단축키를 조심하세요. 텍스트 필드 밖에서는 키 한 번에 실행되므로 음성 입력이 실수로 실행할 수 있습니다. `{ enabled: false }`로 끌 방법을 주세요. 일치하면 브라우저의 기본 동작을 막으므로, `Control+F` 같은 단축키는 브라우저 자체의 찾기를 대체합니다.
+
 ## 언제 쓰나요
 
 **언제:** 검색이나 명령 팔레트를 여는 단축키처럼 페이지 전체에서 쓰는 단축키.

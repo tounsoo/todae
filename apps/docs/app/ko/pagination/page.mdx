@@ -42,6 +42,14 @@ import { PaginationButtons } from '../../../components/demos/PaginationDemo';
 
 Server Component에서는 `@tounsoo/todae/pagination`에서 가져올 수 있습니다.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 랜드마크와 목록을 맡습니다. 이름이 붙은 `nav`가 `ol role="list"`를 감싸고, 각 `Pagination.Item`은 목록 항목입니다. `Pagination.Ellipsis`는 `aria-hidden`이므로 스크린 리더가 빈 구간을 건너뜁니다. 스타일은 컨트롤의 ARIA 상태를 따릅니다. `aria-current="page"`는 현재 페이지로, `aria-disabled="true"`는 흐리게 그려집니다.
+
+**직접 제공할 것:** 링크나 버튼과 그 상태를 주세요. 현재 페이지의 컨트롤에는 `aria-current="page"`를, 갈 곳이 없는 이전·다음 단계에는 `aria-disabled="true"`를 주세요. Todae는 둘 다 설정하지 않습니다. 화살표만 보이는 이전·다음 컨트롤에는 텍스트나 `aria-label`을 주세요. 버튼이 결과를 제자리에서 바꿀 때 Todae는 아무것도 알리지 않습니다. 포커스를 결과로 옮기거나 [useAnnouncer](/utilities/use-announcer)로 변경을 알리세요.
+
+**주의할 점:** `Pagination.Item`과 컨트롤 사이에 요소를 끼우지 마세요. 현재 상태와 흐린 상태의 스타일은 항목의 직계 자식에 맞춰지므로 더 이상 적용되지 않습니다. 클래스만으로 현재 페이지를 표시하면 알려지지도 않고 현재 페이지로 그려지지도 않습니다. `aria-disabled`인 버튼도 클릭은 발생하므로, 핸들러가 아무것도 하지 않아야 합니다.
+
 ## 언제 쓰나요
 
 **쓸 때:** 사람들이 오가며 건너뛰는, 번호 붙은 페이지로 나눈 긴 목록이나 표.

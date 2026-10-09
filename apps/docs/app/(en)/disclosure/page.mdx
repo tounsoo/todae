@@ -36,6 +36,14 @@ Give `<details>` elements the same `name` and the browser keeps at most one of t
 
 The marker is the browser's own and turns as the disclosure opens. To use an icon from your own set, hide it with `summary { list-style: none }` and put your icon in the summary. Content fades in over `disclosure.motion.duration`, and does not move when the user prefers reduced motion.
 
+## Accessible composition
+
+**Todae handles:** Styles only: a focus ring on `summary`, the marker's color, a divider between named disclosures, and no fade when the user prefers reduced motion. The rest is the browser's: the toggle on `summary`, its expanded state, Enter and Space, closing the others in a named group, and find-in-page.
+
+**You supply:** A `summary` as the first child of each `details`, with text that names what opens. If you hide the marker and put your own icon in the summary, give the icon `aria-hidden="true"`; the open state is already announced.
+
+**Watch for:** A `role`, an `aria-expanded` or a click handler that toggles `open` on `summary`: the browser already does each, and doing it again fights it. Buttons or links inside `summary`, which is itself the control.
+
 ## When to use
 
 **When:** Optional detail the reader can open in place: FAQs, advanced settings, long explanations. Several of them with one open at a time → an accordion with a shared `name`.

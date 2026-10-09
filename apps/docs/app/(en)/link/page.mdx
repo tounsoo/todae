@@ -25,6 +25,14 @@ Mark the link to the page you are on with `aria-current="page"`, or another `ari
   <LinkCurrent />
 </Example>
 
+## Accessible composition
+
+**Todae handles:** Style only, on a native `<a href>`: an underline that marks the link while its color stays the text color, a focus ring on `:focus-visible` from `link.ring.focus`, and a thicker underline for any `aria-current` other than empty or `false`. The browser gives the link its role, its Enter key and its place in the tab order.
+
+**You supply:** An `href`, so the element is a link at all. Link text that says where it goes. `aria-current` on the current link, from your router. A company link component should render the `<a>` itself and spread its rest props onto it, so `aria-current`, `aria-label` and `ref` reach it.
+
+**Watch for:** A class that sets `text-decoration: none` or `outline: none`: any class wins over these rules, and without the underline a link looks like the text around it, as it has the same color. An `<a>` with `onClick` and no `href`, or a styled `span`, which has no link role and no keyboard. A link that does something on this page instead of going somewhere.
+
 ## When to use
 
 **When:** Moving to another page or place: inline in text, in navigation, or as an action in an Alert.

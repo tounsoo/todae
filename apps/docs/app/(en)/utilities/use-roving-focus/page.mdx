@@ -25,6 +25,29 @@ The tab stop follows `activeValue`, falling back to the first enabled item when 
 
 The hook does not set roles. Give the container the role your widget needs, such as `toolbar`, `tablist`, `menu` or `radiogroup`.
 
+## Accessible composition
+
+**Todae handles:** The tab stop and the keys. `getItemProps` gives one item `tabIndex={0}` and the rest `-1` (all `-1` with `tabStop: false`), and the container's key handler moves focus as described above. It keeps up as items are added, removed, hidden or disabled. That is all: it sets no role, name or state.
+
+**You supply:** The container's `role` and its name (`aria-label` or `aria-labelledby`), and `aria-orientation` when it differs from the role's default. Each item's role and state, such as `aria-selected`, `aria-checked` or `aria-pressed`. The item's own `disabled` or `aria-disabled`: `{ disabled: true }` only takes it out of the arrow-key order. Spread the props on the focusable element itself, and pass your own `onKeyDown`, `onFocus` or `ref` through the props argument, so they run with the hook's.
+
+```tsx
+type ToolProps = Omit<ButtonRootProps, 'value'> & { value: string; roving: UseRovingFocusResult }
+
+function Tool({ value, roving, disabled, onFocus, ...props }: ToolProps) {
+  return (
+    <Button.Root
+      variant="ghost"
+      {...props}
+      {...roving.getItemProps(value, { disabled }, { onFocus })}
+      disabled={disabled}
+    />
+  )
+}
+```
+
+**Watch for:** A handler written after the spread, such as `onFocus`, replaces the hook's. Item props spread on a wrapper `div` put the tab stop on something that is not the control. For an item that people should still reach and hear as unavailable, as Menu does, keep it enabled in the hook and set `aria-disabled`.
+
 ## When to use
 
 **When:** A composite widget where one Tab stop and arrow keys are expected: toolbars, segmented controls, tab lists, menus, card grids.

@@ -20,6 +20,30 @@ Overlays inherit tokens from `ThemeProvider` / `DensityProvider`. They do not in
 
 iOS may still rubber-band the page behind an open overlay. Chrome may ignore `cancel.preventDefault()` without user activation. State still resyncs from the native `close` event.
 
+## Accessible composition
+
+**Todae handles:** `Dialog.Root` opens a native `<dialog>` with `showModal()`, so the browser gives it the dialog role, puts it in the top layer and makes the page behind it inert. `Dialog.Title` sets the dialog's `aria-labelledby` and `Dialog.Description` its `aria-describedby`; an `aria-labelledby` or `aria-describedby` you pass to the root wins. On open, focus goes to `initialFocusRef`, else the first tabbable element, else the dialog itself. After the exit, focus goes to `restoreFocusRef`, else back to what had focus before it opened. `Dialog.Close` is named by its own text, or by the `close` string ("Close") when it has none, such as ×.
+
+**You supply:** A name: render `Dialog.Title`, or pass `aria-label` or `aria-labelledby` to `Dialog.Root`. A button that closes it, such as `Dialog.Close`, above all when `dismissOnEscape` is false. A `restoreFocusRef` when the opener is gone by the time it closes, such as a menu item or a `Toast.Action`. An `initialFocusRef` when the task does not start at the first control, such as the safe button of a destructive confirm.
+
+```tsx
+type ConfirmDialogProps = Omit<DialogRootProps, 'children'> & {
+  title: string;
+  children: ReactNode;
+};
+
+function ConfirmDialog({ title, children, ...rest }: ConfirmDialogProps) {
+  return (
+    <Dialog.Root {...rest}>
+      <Dialog.Title>{title}</Dialog.Title>
+      <Dialog.Body>{children}</Dialog.Body>
+    </Dialog.Root>
+  );
+}
+```
+
+**Watch for:** A wrapper that renders its own heading instead of `Dialog.Title` leaves the dialog unnamed unless it passes `aria-labelledby`. A wrapper that drops the rest props loses `aria-*`, `ref` and the focus refs. `Dialog.Title` always renders an `h2`, so start headings inside the dialog at `h3`. Do not render the dialog inside a hidden container such as a closed popover or tab panel: the page goes inert and nothing shows.
+
 ## When to use
 
 **When:** Centered modal task or confirm (native `<dialog>`, controlled `open` or uncontrolled `defaultOpen`). Name via `Dialog.Title` or `aria-label`. Escape + backdrop dismiss by default.

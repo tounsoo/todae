@@ -21,6 +21,14 @@ Do not put Checkbox inside `Field.Root`. The shell is for text and chip inputs. 
 
 For a permanent exclusive choice, use [Radio](/radio). For an overlay list, use [OptionList](/optionlist).
 
+## Accessible composition
+
+**Todae handles:** Checkbox is a native `<input type="checkbox">` inside a `<label>` with your children, so the children are its name and a click on the text toggles it. Space toggles it, as natively. `disabled` is native and `invalid` sets `aria-invalid`; both also come from a surrounding [Fieldset](/fieldset). The drawn box is `aria-hidden` and shows the focus ring while the input is focus-visible. Other props, `aria-*`, `id` and `ref` included, go to the input; `className` goes to the label.
+
+**You supply:** Visible text as `children`, which the type requires. The ids of any [Description](/description) or [ErrorMessage](/errormessage) in `aria-describedby`. A [Fieldset](/fieldset) with a legend when several checkboxes answer one question.
+
+**Watch for:** Wrapping it in another `<label>` or pointing a [Label](/label) at it: it is already labelled. An `aria-label` that differs from the children replaces the visible name. `invalid` only recolors the box border, so show an ErrorMessage with it.
+
 ## When to use
 
 **When:** Independent on/off that stays on the page. Children = visible label.

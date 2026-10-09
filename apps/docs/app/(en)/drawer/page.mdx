@@ -21,6 +21,14 @@ A modal native `<dialog>` pinned to the start or end edge, full height. `Drawer.
 </Drawer.Root>
 ```
 
+## Accessible composition
+
+**Todae handles:** `Drawer.Root` is `Dialog.Root` with a `side`, so everything on [Dialog](/dialog) holds: a native modal `<dialog>` that makes the page behind it inert, `aria-labelledby` and `aria-describedby` from `Dialog.Title` and `Dialog.Description`, focus on open, Escape and backdrop dismiss, and focus back to `restoreFocusRef` or the opener after the exit. `side` only places the panel; it adds nothing a screen reader reads.
+
+**You supply:** A name, with `Dialog.Title` or `aria-label`, and a `Dialog.Close` or other button that closes it. A drawer holds a longer task, so give its sections headings below the title's `h2`. Pass `restoreFocusRef` when the opener is gone by the time it closes.
+
+**Watch for:** Drawer has no parts of its own. A wrapper that makes a drawer title from a plain heading leaves the drawer unnamed: wrap `Dialog.Title` instead, or pass `aria-labelledby`. While the drawer is open the page behind it is inert, so a list that filters update live beside it can't be read until it closes; announce a result count with [useAnnouncer](/utilities/use-announcer) if it matters.
+
 ## When to use
 
 **When:** A modal side panel for a task that needs room, such as filters, settings or details beside a list. Name it with `Dialog.Title` or `aria-label`.

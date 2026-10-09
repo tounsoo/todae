@@ -33,6 +33,14 @@ In the popover, Tab past the last chip goes on to the control after +N, Shift+Ta
   <ChipListDemo maxRows={1} readOnly />
 </Example>
 
+## Accessible composition
+
+**Todae handles:** The chips sit in a `role="list"` element that gets your `aria-label`, `aria-labelledby`, `aria-describedby` and `aria-details`. Each chip in the row, and +N, is a `role="listitem"`. +N is a native button with `aria-expanded`, `aria-controls` and `aria-haspopup="dialog"`, named by `overflowLabel` or the `moreChips` string. The popover is a `role="dialog"` named by `panelLabel` or the `moreChipsPanel` string. Remove buttons are named by `removeLabel` or "Remove {value}". Focus after a removal, and Tab, Shift+Tab and Escape in the popover, work as described above. The measure row is `aria-hidden` and `inert`.
+
+**You supply:** `aria-label` or `aria-labelledby` that says what the chips are, such as "Applied filters". Without one the list has no name. A `removeLabel` when "Remove {value}" is not enough on its own. A stable `getKey` when two chips can share a value, so focus follows the right one. Any announcement of a change made elsewhere, such as filters cleared by another button: the list announces nothing.
+
+**Watch for:** Naming a wrapper instead of the list: `aria-label` on `ChipList.Root` reaches the list, but on your own `<div>` around it, it names nothing. Removing by value when values repeat: `onRemove` passes the index of the chip that was pressed. A wrapper that always passes `onRemove`, which gives read-only chips a remove button.
+
 ## When to use
 
 **When:** Chips outside a text field, such as applied filters, read-only tags or recipients, capped at `maxRows` with a +N count.

@@ -44,6 +44,14 @@ One `.labelled-field` per stack. The order is Label, control, then [Description]
 
 Disabled and invalid live on `Field.Root`. Label does not repaint. A required mark is authored in the label text.
 
+## Accessible composition
+
+**Todae handles:** `Label` renders a native `<label>` and requires `htmlFor` in its type. The browser does the rest: the text becomes the control's accessible name, and a click on it focuses or toggles the control. Label adds no ARIA, no required mark and no disabled or invalid style.
+
+**You supply:** The control's id in `htmlFor`. For a Field that is the `Field.Root` id, which Root passes to its input. Write a required mark in the text, and set `required` on the input itself: on a Field, that is the input part, such as `Field.TextInput`, not `Field.Root`. To hide the label visually, pass the `todae-visually-hidden` class through `className`, so it still names the control.
+
+**Watch for:** `htmlFor` names only labelable elements, such as an input, select or textarea. A `role="radiogroup"` div or a [useField](/utilities/use-field) control with its own role gets no name from it; use `aria-labelledby` there. Checkbox, Radio and Switch already wrap their children in a label, so don't add a Label for them. Placeholder text is not a label.
+
 ## When to use
 
 **When:** Visible name for a control, placed as a sibling. `htmlFor` = control id (the `Field.Root` id for a Field). Required mark goes in the text.
