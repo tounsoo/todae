@@ -9,6 +9,7 @@ import { GitHubIcon } from './icons';
 import { LanguageAlternates } from './LanguageAlternates';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { MobileNav } from './MobileNav';
+import { APPEARANCE_SCRIPT } from './appearanceScript';
 import { Providers } from './Providers';
 import { SiteNav } from './SiteNav';
 import { ThemeSwitcher } from './ThemeSwitcher';
@@ -42,6 +43,7 @@ export function SiteShell({
         {/* A 404 is prerendered once, so its path is Next's internal one: no page to pair. */}
         {!notFound && <LanguageAlternates untranslated={untranslatedByLocale()} />}
         <Providers>
+          <script dangerouslySetInnerHTML={{ __html: APPEARANCE_SCRIPT }} />
           <a className="skip-link todae-visually-hidden-focusable" href="#content">
             {dict.skipToContent}
           </a>

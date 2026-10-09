@@ -2,8 +2,7 @@
 
 import { DensityProvider, ThemeProvider, type Appearance } from '@tounsoo/todae';
 import { createContext, useContext, useSyncExternalStore, type ReactNode } from 'react';
-
-const KEY = 'todae-docs-appearance';
+import { APPEARANCE_KEY as KEY } from './appearanceScript';
 const CHANGE = 'todae-docs-appearance-change';
 
 function isAppearance(value: unknown): value is Appearance {
@@ -59,7 +58,8 @@ export function Providers({ children }: { children: ReactNode }) {
   const appearance = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   return (
     <AppearanceChoice.Provider value={{ appearance, setAppearance }}>
-      <ThemeProvider appearance={appearance} className="shell">
+      {/* SiteShell's inline script may set data-appearance before hydration. */}
+      <ThemeProvider appearance={appearance} className="shell" suppressHydrationWarning>
         <DensityProvider density="comfortable">{children}</DensityProvider>
       </ThemeProvider>
     </AppearanceChoice.Provider>

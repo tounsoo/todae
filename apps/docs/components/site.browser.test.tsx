@@ -4,6 +4,7 @@ import axe from 'axe-core';
 import { afterEach, describe, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
 import '../app/globals.css';
+import { APPEARANCE_KEY, APPEARANCE_SCRIPT } from './appearanceScript';
 import { HomeContent } from './HomeContent';
 import { MobileNav } from './MobileNav';
 import { Playground } from './Playground';
@@ -99,5 +100,38 @@ describe('playground stage', () => {
     await userEvent.fill(screen.getByLabelText('space.control.x'), '3rem');
     await frame();
     expect(invite()).toBe('48px');
+  });
+});
+
+describe('appearance before hydration', () => {
+  // What the server sends: the shell with "system", then the inline script.
+  function serverShell(): HTMLElement {
+    const shell = document.createElement('div');
+    shell.setAttribute('data-appearance', 'system');
+    // The script sits in the shell's DensityProvider, not directly in the shell.
+    const density = document.createElement('div');
+    density.setAttribute('data-density', 'comfortable');
+    shell.append(density);
+    document.body.append(shell);
+    const script = document.createElement('script');
+    script.textContent = APPEARANCE_SCRIPT;
+    density.append(script);
+    return shell;
+  }
+
+  afterEach(() => {
+    window.localStorage.removeItem(APPEARANCE_KEY);
+    document.body.replaceChildren();
+  });
+
+  it('applies a stored pick before React runs', () => {
+    window.localStorage.setItem(APPEARANCE_KEY, 'dark');
+    expect(serverShell().getAttribute('data-appearance')).toBe('dark');
+  });
+
+  it('leaves "system" for no pick or an unknown one', () => {
+    expect(serverShell().getAttribute('data-appearance')).toBe('system');
+    window.localStorage.setItem(APPEARANCE_KEY, 'sepia');
+    expect(serverShell().getAttribute('data-appearance')).toBe('system');
   });
 });
