@@ -142,7 +142,11 @@
   "radius": {
     "sm": { "$type": "dimension", "$value": { "value": 0.25, "unit": "rem" } },
     "md": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } },
-    "lg": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } }
+    "lg": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } },
+    "full": { "$type": "dimension", "$value": { "value": 9999, "unit": "px" } }
+  },
+  "border": {
+    "width": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } }
   },
   "font": {
     "size": {

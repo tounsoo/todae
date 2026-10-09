@@ -10,7 +10,7 @@
       "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
     },
     "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },
-    "border-width": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "neutral": {
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },

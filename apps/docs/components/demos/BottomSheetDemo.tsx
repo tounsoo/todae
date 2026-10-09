@@ -18,9 +18,13 @@ export function BottomSheetBasic() {
         </BottomSheet.Header>
         <BottomSheet.Description>Drag the grabber. Mid and full snap.</BottomSheet.Description>
         <BottomSheet.Body>
-          <ul>
+          <ul aria-label="Share to">
             {OPTIONS.map((item) => (
-              <li key={item}>{item}</li>
+              <li key={item}>
+                <button type="button" onClick={() => setOpen(false)}>
+                  {item}
+                </button>
+              </li>
             ))}
           </ul>
         </BottomSheet.Body>

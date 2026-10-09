@@ -12,13 +12,13 @@
   .list {
     display: flex;
     gap: var(--todae-tabs-gap);
-    border-bottom: 1px solid var(--todae-tabs-border);
+    border-bottom: var(--todae-tabs-border-width) solid var(--todae-tabs-border);
   }
 
   .list[data-orientation='vertical'] {
     flex-direction: column;
     border-bottom: 0;
-    border-inline-end: 1px solid var(--todae-tabs-border);
+    border-inline-end: var(--todae-tabs-border-width) solid var(--todae-tabs-border);
   }
 
   .tab {
@@ -36,7 +36,7 @@
     font: inherit;
     font-size: var(--todae-tabs-font-size);
     font-weight: var(--todae-tabs-font-weight);
-    line-height: 1.25;
+    line-height: var(--todae-tabs-leading);
     white-space: nowrap;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -66,13 +66,13 @@
     content: '';
     position: absolute;
     inset-inline: 0;
-    bottom: -1px;
+    bottom: calc(-1 * var(--todae-tabs-border-width));
     height: var(--todae-tabs-indicator-size);
     background: var(--todae-tabs-indicator-color);
   }
 
   .tab[data-selected][data-orientation='vertical']::after {
-    inset-inline: auto -1px;
+    inset-inline: auto calc(-1 * var(--todae-tabs-border-width));
     inset-block: 0;
     bottom: 0;
     width: var(--todae-tabs-indicator-size);
@@ -80,8 +80,8 @@
   }
 
   .tab:focus-visible {
-    outline: 2px solid var(--todae-tabs-ring-focus);
-    outline-offset: -2px;
+    outline: var(--todae-focus-ring-width) solid var(--todae-tabs-ring-focus);
+    outline-offset: calc(-1 * var(--todae-focus-ring-width));
   }
 
   .tab:disabled {
@@ -94,8 +94,8 @@
   }
 
   .panel:focus-visible {
-    outline: 2px solid var(--todae-tabs-ring-focus);
-    outline-offset: 2px;
+    outline: var(--todae-focus-ring-width) solid var(--todae-tabs-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
   }
 
   /* `display` on a consumer class must not reveal a hidden panel. A layered

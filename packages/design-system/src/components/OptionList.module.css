@@ -23,8 +23,8 @@
   }
 
   .list:focus-visible {
-    outline: 2px solid var(--todae-option-check-border);
-    outline-offset: 2px;
+    outline: var(--todae-focus-ring-width) solid var(--todae-option-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
   }
 
   .option {
@@ -41,7 +41,7 @@
     color: var(--todae-option-fg-default);
     font-size: var(--todae-option-font-size);
     font-weight: var(--todae-option-font-weight);
-    line-height: 1.25;
+    line-height: var(--todae-option-leading);
     text-align: start;
     cursor: default;
     pointer-events: auto;
@@ -73,8 +73,8 @@
   }
 
   .option[aria-disabled='true'] {
+    color: var(--todae-option-fg-disabled);
     cursor: not-allowed;
-    opacity: 0.5;
   }
 
   .list[data-selection-mode='multiple'] .option {
@@ -88,7 +88,7 @@
     width: 0.85em;
     height: 0.85em;
     box-sizing: border-box;
-    border: 1px solid var(--todae-option-check-border);
+    border: var(--todae-option-check-border-width) solid var(--todae-option-check-border);
     border-radius: 0.125em;
     background: transparent;
   }

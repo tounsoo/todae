@@ -20,6 +20,7 @@ export type ThemeProviderProps<Extra extends string = never> = {
 
 const QUERY = '(prefers-color-scheme: dark)';
 const AppearanceContext = createContext<ResolvedAppearance>('light');
+const ThemeVarsContext = createContext<Record<string, string>>({});
 
 function subscribe(onStoreChange: () => void) {
   const mq = window.matchMedia(QUERY);
@@ -45,13 +46,27 @@ export function ThemeProvider<Extra extends string = never>({
   const system = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const resolved: ResolvedAppearance = appearance === 'system' ? system : appearance;
   const vars = themeOverrideStyle(overrides, overrideTypes);
+  // Each override also sets its private --_todae-* input. Component tokens,
+  // re-declared on every provider, read it first, so their overrides survive
+  // nested providers; tokens that vary by appearance or density never read it.
+  const inputs = Object.fromEntries(Object.entries(vars).map(([name, value]) => [`--_${name.slice(2)}`, value]));
   return (
     <AppearanceContext.Provider value={resolved}>
-      <div {...props} style={{ ...style, ...vars } as CSSProperties} data-appearance={resolved} />
+      <ThemeVarsContext.Provider value={vars}>
+        <div
+          {...props}
+          style={{ ...style, ...vars, ...inputs } as CSSProperties}
+          data-appearance={resolved}
+        />
+      </ThemeVarsContext.Provider>
     </AppearanceContext.Provider>
   );
 }
 
 export function useAppearance(): ResolvedAppearance {
   return useContext(AppearanceContext);
+}
+
+export function useThemeVars(): Record<string, string> {
+  return useContext(ThemeVarsContext);
 }

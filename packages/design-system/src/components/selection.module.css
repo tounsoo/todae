@@ -22,13 +22,13 @@
     flex: 0 0 auto;
     width: var(--todae-selection-size);
     height: var(--todae-selection-size);
-    border: 1px solid var(--todae-selection-border-default);
+    border: var(--todae-selection-border-width) solid var(--todae-selection-border-default);
     border-radius: var(--todae-selection-radius);
     background: var(--todae-selection-bg-default);
   }
 
   .root[data-control='radio'] .indicator {
-    border-radius: 999px;
+    border-radius: 50%;
   }
 
   .root[data-control='switch'] .indicator {
@@ -43,8 +43,8 @@
   }
 
   .input:focus-visible + .indicator {
-    outline: 2px solid var(--todae-selection-ring-focus);
-    outline-offset: 2px;
+    outline: var(--todae-focus-ring-width) solid var(--todae-selection-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
   }
 
   .root[data-invalid] .indicator {
@@ -57,6 +57,11 @@
 
   .root[data-disabled] {
     color: var(--todae-selection-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .root[data-disabled] .input {
+    cursor: inherit;
   }
 
   .root[data-disabled] .indicator {
@@ -81,17 +86,17 @@
     width: 40%;
     height: 40%;
     margin: 30% auto 0;
-    border-radius: 999px;
+    border-radius: 50%;
     background: var(--todae-selection-indicator-fg);
   }
 
   .root[data-control='switch'] .indicator::after {
     content: '';
     display: block;
-    width: calc(var(--todae-selection-size) - 4px);
-    height: calc(var(--todae-selection-size) - 4px);
+    width: calc(var(--todae-selection-size) - 2 * var(--todae-selection-border-width) - 2px);
+    height: calc(var(--todae-selection-size) - 2 * var(--todae-selection-border-width) - 2px);
     margin: 1px;
-    border-radius: 999px;
+    border-radius: 50%;
     background: var(--todae-selection-thumb-bg);
     transform: translateX(0);
   }

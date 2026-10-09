@@ -242,7 +242,7 @@ Stepper buttons and a calendar grid are app compositions; build them around thes
 
 ## Select
 
-`Field.Select` is a native `<select>`. In browsers with `appearance: base-select` the button and its picker are drawn from field, popover and option tokens; elsewhere the browser's own picker shows, with the same value and keyboard. There is no JavaScript listbox. Children are native `<option>` and `<optgroup>` elements, and a `Label htmlFor` names it like any other field.
+`Field.Select` is a native `<select>`. In browsers with `appearance: base-select` the button and its picker are drawn from field and option tokens; elsewhere the browser's own picker shows, with the same value and keyboard. There is no JavaScript listbox. Children are native `<option>` and `<optgroup>` elements, and a `Label htmlFor` names it like any other field.
 
 ```tsx
 <Label htmlFor={id}>Size</Label>

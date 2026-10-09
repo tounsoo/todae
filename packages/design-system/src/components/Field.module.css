@@ -4,7 +4,7 @@
     align-items: flex-start;
     gap: var(--todae-field-gap);
     padding: var(--todae-field-padding-y) var(--todae-field-padding-x);
-    border: 1px solid var(--todae-field-border-default);
+    border: var(--todae-field-border-width) solid var(--todae-field-border-default);
     border-radius: var(--todae-field-radius);
     background: var(--todae-field-bg-default);
     color: var(--todae-field-fg-default);
@@ -23,8 +23,8 @@
 
   .shell:has(:is(input, textarea, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     border-color: var(--todae-field-border-focus);
-    outline: 2px solid var(--todae-field-ring-focus);
-    outline-offset: 2px;
+    outline: var(--todae-focus-ring-width) solid var(--todae-field-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
   }
 
   .shell[data-invalid] {
@@ -39,6 +39,11 @@
     background: var(--todae-field-bg-disabled);
     color: var(--todae-field-fg-disabled);
     border-color: var(--todae-field-border-disabled);
+    cursor: not-allowed;
+  }
+
+  .shell[data-disabled] :disabled {
+    cursor: inherit;
   }
 
   .input {
@@ -52,7 +57,7 @@
     color: var(--todae-field-fg-default);
     font: inherit;
     font-size: var(--todae-field-font-size);
-    line-height: var(--todae-font-leading-default);
+    line-height: var(--todae-field-leading);
     outline: none;
   }
 
@@ -83,6 +88,10 @@
     cursor: pointer;
   }
 
+  .input:disabled::-webkit-calendar-picker-indicator {
+    cursor: not-allowed;
+  }
+
   .textarea {
     --_pad-block: calc(2 * var(--todae-field-padding-y));
     box-sizing: border-box;
@@ -100,7 +109,7 @@
     outline: none;
     overflow-y: auto;
     resize: vertical;
-    border-end-end-radius: calc(var(--todae-field-radius) - 1px);
+    border-end-end-radius: calc(var(--todae-field-radius) - var(--todae-field-border-width));
     height: calc(var(--todae-field-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
     height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block));
     min-height: calc(var(--todae-field-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
@@ -137,7 +146,7 @@
     align-items: center;
     flex: 0 0 auto;
     font-size: var(--todae-field-font-size);
-    line-height: var(--todae-font-leading-default);
+    line-height: var(--todae-field-leading);
     height: 1lh;
     color: var(--todae-field-fg-adornment);
   }
@@ -242,7 +251,7 @@
     min-width: 0;
     gap: var(--todae-field-gap);
     width: 100%;
-    --todae-field-chip-row-h: calc(var(--todae-field-font-size) * var(--todae-font-leading-default));
+    --todae-field-chip-row-h: calc(var(--todae-field-font-size) * var(--todae-field-leading));
   }
 
   .flow > span {
@@ -375,7 +384,7 @@
     color: var(--todae-field-fg-default);
     font: inherit;
     font-size: var(--todae-field-font-size);
-    line-height: var(--todae-font-leading-default);
+    line-height: var(--todae-field-leading);
     outline: none;
     cursor: pointer;
   }
@@ -393,12 +402,12 @@
     appearance: base-select;
     box-sizing: border-box;
     margin-block: var(--todae-space-1);
-    padding: var(--todae-popover-padding-y) var(--todae-popover-padding-x);
-    border: 1px solid var(--todae-popover-border);
-    border-radius: var(--todae-popover-radius);
-    background: var(--todae-popover-bg);
-    color: var(--todae-popover-fg);
-    max-height: var(--todae-popover-max-height);
+    padding: var(--todae-field-picker-padding-y) var(--todae-field-picker-padding-x);
+    border: var(--todae-field-border-width) solid var(--todae-field-picker-border);
+    border-radius: var(--todae-field-picker-radius);
+    background: var(--todae-field-picker-bg);
+    color: var(--todae-field-picker-fg);
+    max-height: var(--todae-field-picker-max-height);
   }
 
   .select option {
@@ -409,7 +418,7 @@
     font-size: var(--todae-option-font-size);
   }
 
-  .select option:is(:hover, :focus-visible) {
+  .select option:is(:hover, :focus-visible):not(:disabled) {
     background: var(--todae-option-bg-hover);
     outline: none;
   }
@@ -424,7 +433,8 @@
   }
 
   .select option:disabled {
-    opacity: 0.5;
+    color: var(--todae-option-fg-disabled);
+    cursor: not-allowed;
   }
 
   @media (forced-colors: active) {

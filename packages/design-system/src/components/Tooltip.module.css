@@ -9,7 +9,7 @@
     padding: var(--todae-tooltip-padding-y) var(--todae-tooltip-padding-x);
     background: var(--todae-tooltip-bg);
     color: var(--todae-tooltip-fg);
-    border: 1px solid var(--todae-tooltip-border);
+    border: var(--todae-tooltip-border-width) solid var(--todae-tooltip-border);
     border-radius: var(--todae-tooltip-radius);
   }
 

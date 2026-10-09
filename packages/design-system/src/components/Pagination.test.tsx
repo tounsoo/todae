@@ -70,6 +70,6 @@ describe('Pagination', () => {
     expect(grey.slice(0, grey.indexOf('}'))).toContain('color: GrayText;');
     // A transparent border, which forced colors paints, outlines each control there.
     const controls = css.slice(css.indexOf('.item > :is(a, button) {'));
-    expect(controls.slice(0, controls.indexOf('}'))).toContain('border: 1px solid transparent;');
+    expect(controls.slice(0, controls.indexOf('}'))).toContain('border: var(--todae-pagination-border-width) solid transparent;');
   });
 });

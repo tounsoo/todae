@@ -3,10 +3,12 @@
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "padding": {
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } }
     },
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/dialog/gap/$value" } },
     "size": { "$type": "dimension", "$value": { "value": 24, "unit": "rem" } },
     "motion": {
       "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/slow/$value" } },

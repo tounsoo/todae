@@ -94,7 +94,7 @@ There are two ways to change a token for part of a page.
 }
 ```
 
-Set it on an element that carries `data-appearance` or `data-density`. Contract tokens are computed there, so an override on a descendant does not reach them.
+Set it on an element that carries `data-appearance` or `data-density`. Contract tokens are computed there, so an override on a descendant does not reach them. Each of those elements computes the contract tokens again, so a contract-token override set in CSS must match every one of them, not only the outermost.
 
 **`ThemeProvider` `overrides`** is for values that arrive at runtime, such as a customer's brand color. It takes token paths and DTCG values, sets them as custom properties on its own element, and rejects unknown paths. The values are not contrast checked.
 
@@ -139,7 +139,7 @@ A density is a `density` context that sets spacing tokens only:
 ```json
 "density": {
   "contexts": { "roomy": [{ "$ref": "./density/roomy.json" }] },
-  "$extensions": { "dev.todae": { "layer": "density", "rules": ["density-space"], "attribute": "data-density" } }
+  "$extensions": { "dev.todae": { "layer": "density", "rules": ["density-space"], "attribute": "data-density", "root": true } }
 }
 ```
 

@@ -5,6 +5,7 @@
     "stack-gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
     "peek": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "padding": {
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } }
