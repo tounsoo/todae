@@ -276,13 +276,15 @@ function OptionListRoot(props: OptionListRootProps) {
     const list = listRef.current;
     // A list in a closed popover has no layout; it is revealed when it opens.
     if (!changed || !target || !list || list.checkVisibility?.() === false) return;
-    // The requested option may have arrived in this commit, before the list
-    // re-resolves; a disabled one is skipped for the option it falls back to.
+    // Read the options from the DOM: they may have changed in this commit,
+    // before the list re-resolves. A missing or disabled request falls back to
+    // the first enabled option, as aria-activedescendant will.
     const requested = findOption(list, optionDomId(listId, target));
     const option =
-      requested && requested.getAttribute('aria-disabled') !== 'true' ? requested : shown && findOption(list, optionDomId(listId, shown));
+      requested && requested.getAttribute('aria-disabled') !== 'true'
+        ? requested
+        : list.querySelector<HTMLElement>('[role="option"]:not([aria-disabled="true"])');
     if (option) revealInScrollBox(option);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reveal only when the request changes, not the fallback.
   }, [listId, target]);
   // Opening a popover or dialog lays the list out: reveal the active option then.
   const activeId = activeValue ? optionDomId(listId, activeValue) : null;

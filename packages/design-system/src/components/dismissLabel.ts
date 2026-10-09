@@ -13,6 +13,8 @@ function hasWords(children: ReactNode): boolean {
   if (typeof children === 'string' || typeof children === 'number') return isWorded(String(children));
   if (Array.isArray(children)) return children.some(hasWords);
   if (isValidElement<{ children?: ReactNode; 'aria-hidden'?: unknown }>(children)) {
+    // Like spokenText: SVG text, such as a <title>, does not count.
+    if (children.type === 'svg') return false;
     const hidden = children.props['aria-hidden'];
     return hidden !== true && hidden !== 'true' && hasWords(children.props.children);
   }

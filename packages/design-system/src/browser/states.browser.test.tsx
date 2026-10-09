@@ -476,9 +476,44 @@ describe('OptionList scrolling', () => {
     const { rerender } = render(<Disabled active="Fruit 2" />);
     await screen.findByRole('listbox');
     await frame();
+    rerender(<Disabled active="Fruit 30" />);
+    await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 30' }))).toBe(true));
+    await screen.findByRole('listbox');
+    await frame();
     rerender(<Disabled active="Fruit 25" />);
     await frame();
     const first = screen.getByRole('option', { name: 'Fruit 1' });
+    expect(screen.getByRole('listbox').getAttribute('aria-activedescendant')).toBe(first.id);
+    expect(inView(first)).toBe(true);
+  });
+
+  it('falls back to the first enabled new option when a disabled one is requested with new options', async () => {
+    const VEG = Array.from({ length: 30 }, (_, i) => `Veg ${i + 1}`);
+    function Swap({ items, active }: { items: string[]; active: string }) {
+      const popover = usePopover({ defaultOpen: true });
+      return (
+        <Themed>
+          <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
+          <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
+            <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Food">
+              {items.map((item) => (
+                <OptionList.Option key={item} value={item} disabled={item === 'Veg 30'}>
+                  {item}
+                </OptionList.Option>
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </Themed>
+      );
+    }
+    const { rerender } = render(<Swap items={FRUITS} active="Fruit 1" />);
+    await screen.findByRole('listbox');
+    await frame();
+    rerender(<Swap items={FRUITS} active="Fruit 30" />);
+    await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 30' }))).toBe(true));
+    rerender(<Swap items={VEG} active="Veg 30" />);
+    await frame();
+    const first = screen.getByRole('option', { name: 'Veg 1' });
     expect(screen.getByRole('listbox').getAttribute('aria-activedescendant')).toBe(first.id);
     expect(inView(first)).toBe(true);
   });
