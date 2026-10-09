@@ -47,6 +47,32 @@
       "ko": "제목 텍스트."
     }
   },
+  "Avatar.Fallback": {
+    "children": {
+      "en": "Initials or an icon.",
+      "ko": "이니셜이나 아이콘."
+    }
+  },
+  "Avatar.Image": {
+    "src": {
+      "en": "The image, or srcSet in its place. Without either, or when it fails to load, the fallback stays.",
+      "ko": "이미지이며, 대신 srcSet을 써도 됩니다. 둘 다 없거나 불러오지 못하면 대체 표시가 남습니다."
+    }
+  },
+  "Avatar.Root": {
+    "label": {
+      "en": "Names the avatar, whichever of the image and the fallback shows. Leave it out when the name is written next to the avatar.",
+      "ko": "이미지와 대체 표시 중 무엇이 보이든 Avatar의 이름입니다. 이름이 Avatar 옆에 적혀 있으면 빼세요."
+    },
+    "size": {
+      "en": "Size from the avatar.size contract tokens.",
+      "ko": "avatar.size contract 토큰의 크기입니다."
+    },
+    "children": {
+      "en": "Avatar.Image and Avatar.Fallback.",
+      "ko": "Avatar.Image와 Avatar.Fallback."
+    }
+  },
   "Badge.Root": {
     "tone": {
       "en": "Colors from the badge.<tone> contract tokens.",
@@ -603,6 +629,20 @@
     "children": {
       "en": "A Fieldset.Legend first, then the controls.",
       "ko": "먼저 Fieldset.Legend, 그다음 컨트롤."
+    }
+  },
+  "Grid": {
+    "columns": {
+      "en": "A fixed number of equal columns, a whole number from 1.",
+      "ko": "같은 너비의 열 개수로, 1 이상의 정수입니다."
+    },
+    "minItemSize": {
+      "en": "The narrowest a column may get, as a CSS length such as \"12rem\". As many columns fit as the width allows.",
+      "ko": "열이 좁아질 수 있는 최소 너비로, \"12rem\" 같은 CSS 길이입니다. 너비가 허락하는 만큼 열이 들어갑니다."
+    },
+    "children": {
+      "en": "Laid-out children.",
+      "ko": "배치할 자식 요소."
     }
   },
   "Label": {

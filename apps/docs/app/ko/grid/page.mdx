@@ -1,0 +1,47 @@
+import { GridColumns, GridFill } from '../../../components/demos/GridDemo';
+
+# Grid
+
+두 축으로 배치하는 CSS grid로, [Stack](/stack)의 짝입니다. 간격은 `grid.gap`(밀도에 따라 바뀜)이고 `gap` prop은 없습니다. `columns`와 `minItemSize` 중 하나를 주거나, 둘 다 빼고 트랙을 직접 정하세요.
+
+Server Component에서는 `@tounsoo/todae/grid`에서 가져올 수 있습니다. 이 entry에는 `'use client'`도 훅도 없습니다.
+
+## Columns
+
+`columns`는 같은 너비의 열 개수를 정합니다. 항목의 내용이 제 몫보다 넓어도 열 너비는 같게 유지됩니다.
+
+<Example block>
+  <GridColumns />
+</Example>
+
+```tsx
+<Grid columns={2}>
+  {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
+</Grid>
+```
+
+## Fill
+
+`minItemSize`는 열이 좁아질 수 있는 최소 너비입니다. 너비가 허락하는 만큼 열이 들어가므로 미디어 쿼리 없이 다시 배치되고, `minItemSize`보다 좁은 컨테이너에서도 열 하나가 넘치지 않습니다.
+
+<Example block>
+  <GridFill />
+</Example>
+
+```tsx
+<Grid minItemSize="10rem">
+  {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
+</Grid>
+```
+
+사이드바와 본문 열처럼 다른 트랙 목록은 둘 다 빼고 `style`이나 클래스에서 `gridTemplateColumns`로 정하세요.
+
+## 언제 쓰나요
+
+**쓸 때:** 카드, 타일, 두 열짜리 폼처럼 행과 열로 동시에 놓는 항목.
+
+**쓰지 않을 때:** 한 행이나 한 열 → [Stack](/stack). 표 형식의 데이터 → 네이티브 [table](/table).
+
+## Props
+
+<PropsTable name="Grid" />

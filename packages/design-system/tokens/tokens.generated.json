@@ -4977,6 +4977,87 @@
       "ref": "radius.sm",
       "layer": "contract",
       "context": null
+    },
+    {
+      "path": "avatar.bg",
+      "type": "color",
+      "cssVar": "--todae-avatar-bg",
+      "cssValue": "var(--todae-color-bg-subtle)",
+      "ref": "color.bg.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "avatar.fg",
+      "type": "color",
+      "cssVar": "--todae-avatar-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "avatar.font.scale",
+      "type": "number",
+      "cssVar": "--todae-avatar-font-scale",
+      "cssValue": "0.4",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "avatar.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-avatar-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "avatar.radius",
+      "type": "dimension",
+      "cssVar": "--todae-avatar-radius",
+      "cssValue": "9999px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "avatar.size.lg",
+      "type": "dimension",
+      "cssVar": "--todae-avatar-size-lg",
+      "cssValue": "2.5rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "avatar.size.md",
+      "type": "dimension",
+      "cssVar": "--todae-avatar-size-md",
+      "cssValue": "2rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "avatar.size.sm",
+      "type": "dimension",
+      "cssVar": "--todae-avatar-size-sm",
+      "cssValue": "1.5rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "grid.gap",
+      "type": "dimension",
+      "cssVar": "--todae-grid-gap",
+      "cssValue": "var(--todae-space-stack-gap)",
+      "ref": "space.stack.gap",
+      "layer": "contract",
+      "context": null
     }
   ]
 }

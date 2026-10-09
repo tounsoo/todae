@@ -1,0 +1,47 @@
+import { GridColumns, GridFill } from '../../../components/demos/GridDemo';
+
+# Grid
+
+A CSS grid, the two-axis partner to [Stack](/stack). Gap is `grid.gap` (density-aware), and there is no `gap` prop. Pass one of `columns` or `minItemSize`, or neither and set the tracks yourself.
+
+Server Components can import it from `@tounsoo/todae/grid`. That entry has no `'use client'` and no hooks.
+
+## Columns
+
+`columns` sets a fixed number of equal columns. They stay equal even when an item's content is wider than its share.
+
+<Example block>
+  <GridColumns />
+</Example>
+
+```tsx
+<Grid columns={2}>
+  {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
+</Grid>
+```
+
+## Fill
+
+`minItemSize` is the narrowest a column may get. As many columns fit as the width allows, so the grid reflows without a media query, and a single column never overflows a container narrower than `minItemSize`.
+
+<Example block>
+  <GridFill />
+</Example>
+
+```tsx
+<Grid minItemSize="10rem">
+  {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
+</Grid>
+```
+
+For any other track list, such as a sidebar and a main column, leave both out and set `gridTemplateColumns` in `style` or a class.
+
+## When to use
+
+**When:** Items laid out in rows and columns at once: cards, tiles, a form in two columns.
+
+**When not:** One row or one column → [Stack](/stack). Tabular data → a native [table](/table).
+
+## Props
+
+<PropsTable name="Grid" />

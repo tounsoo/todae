@@ -5,6 +5,7 @@ import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   Alert,
+  Avatar,
   Badge,
   BottomSheet,
   Breadcrumbs,
@@ -18,6 +19,7 @@ import {
   Drawer,
   ErrorMessage,
   Field,
+  Grid,
   Fieldset,
   Label,
   Menu,
@@ -69,6 +71,24 @@ function TooltipCase({ p }: { p: Native }) {
 
 const cases: Case[] = [
   ['Stack', (p) => <Stack {...p} />],
+  ['Grid', (p) => <Grid columns={2} {...p} />],
+  ['Avatar.Root', (p) => <Avatar.Root {...p} />],
+  [
+    'Avatar.Image',
+    (p) => (
+      <Avatar.Root>
+        <Avatar.Image src="a.png" {...p} />
+      </Avatar.Root>
+    ),
+  ],
+  [
+    'Avatar.Fallback',
+    (p) => (
+      <Avatar.Root>
+        <Avatar.Fallback {...p}>AL</Avatar.Fallback>
+      </Avatar.Root>
+    ),
+  ],
   ['Text', (p) => <Text {...p}>Hi</Text>],
   ['Label', (p) => <Label {...p} htmlFor="x" />],
   ['Description', (p) => <Description {...p} id="d" />],

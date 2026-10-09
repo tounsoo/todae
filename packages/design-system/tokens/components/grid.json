@@ -1,0 +1,5 @@
+{
+  "grid": {
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } }
+  }
+}
