@@ -1,4 +1,4 @@
-import { isValidElement, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from 'react';
+import { isValidElement, useCallback, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from 'react';
 import { useComposedRefs } from './props';
 
 /**
@@ -13,6 +13,8 @@ function hasWords(children: ReactNode): boolean {
   if (typeof children === 'string' || typeof children === 'number') return isWorded(String(children));
   if (Array.isArray(children)) return children.some(hasWords);
   if (isValidElement<{ children?: ReactNode; 'aria-hidden'?: unknown }>(children)) {
+    // Like spokenText: SVG text, such as a <title>, does not count.
+    if (children.type === 'svg') return false;
     const hidden = children.props['aria-hidden'];
     return hidden !== true && hidden !== 'true' && hasWords(children.props.children);
   }
@@ -30,24 +32,40 @@ function spokenText(node: Node): string {
 
 /**
  * The accessible name for a dismiss button: `ariaLabel` when given, none when
- * the button's own rendered text names it, and "Dismiss" otherwise. Put the
- * returned ref on the button.
+ * the button's own rendered text names it, and `fallback` ("Dismiss" by
+ * default) otherwise. Put the returned ref on the button.
  */
 export function useDismissLabel(
   children: ReactNode,
   ariaLabel: string | undefined,
   ref: Ref<HTMLButtonElement> | undefined,
+  fallback = 'Dismiss',
 ): [string | undefined, Ref<HTMLButtonElement>] {
   // The rendered text decides, so a component that renders text (such as a
   // translation) names the button too. The children are a first guess for SSR.
   const [worded, setWorded] = useState(() => hasWords(children));
   const buttonRef = useRef<HTMLButtonElement>(null);
   const refs = useComposedRefs(buttonRef, ref);
-  // Every commit, as the text can change; the same value bails out.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
+  const read = useCallback(() => {
     const button = buttonRef.current;
     setWorded(button ? isWorded(spokenText(button)) : false);
-  });
-  return [ariaLabel ?? (worded ? undefined : 'Dismiss'), refs];
+  }, []);
+  // Every commit, as the text can change; the same value bails out.
+  useLayoutEffect(read);
+  // A child can render its text from its own state, such as a translation
+  // that loads later, without this component rendering again.
+  useLayoutEffect(() => {
+    const button = buttonRef.current;
+    if (!button || typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(read);
+    observer.observe(button, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['aria-hidden'],
+    });
+    return () => observer.disconnect();
+  }, [read]);
+  return [ariaLabel ?? (worded ? undefined : fallback), refs];
 }

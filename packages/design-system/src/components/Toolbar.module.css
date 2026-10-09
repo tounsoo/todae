@@ -35,4 +35,10 @@
     inline-size: auto;
     block-size: var(--todae-toolbar-separator-thickness);
   }
+
+  @media (forced-colors: active) {
+    .separator {
+      background: CanvasText;
+    }
+  }
 }
