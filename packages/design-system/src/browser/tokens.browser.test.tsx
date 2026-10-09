@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import { useEffect, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { BottomSheet, Button, Checkbox, Pagination, Tabs } from '../index';
 
@@ -114,59 +114,25 @@ describe('BottomSheet padding in a browser', () => {
     expect(sheet.paddingBottom).toBe(sheet.paddingTop);
   });
 
-  it('gives the body a tab stop only while its content overflows', async () => {
-    const { rerender } = render(
-      <Themed>
-        <BottomSheet.Root open onOpenChange={() => undefined}>
-          <BottomSheet.Title>Sort</BottomSheet.Title>
-          <BottomSheet.Body data-testid="body">Newest first</BottomSheet.Body>
-        </BottomSheet.Root>
-      </Themed>,
-    );
-    const body = await screen.findByTestId('body');
-    await waitFor(() => expect(body.hasAttribute('tabindex')).toBe(false));
-    rerender(
-      <Themed>
-        <BottomSheet.Root open onOpenChange={() => undefined}>
-          <BottomSheet.Title>Sort</BottomSheet.Title>
-          <BottomSheet.Body data-testid="body">
-            {Array.from({ length: 80 }, (_, i) => (
-              <p key={i}>Line {i + 1}</p>
-            ))}
-          </BottomSheet.Body>
-        </BottomSheet.Root>
-      </Themed>,
-    );
-    await waitFor(() => expect(body.getAttribute('tabindex')).toBe('0'));
-  });
-
-  it('gives the body a tab stop when a child adds rows from its own state', async () => {
-    function Rows() {
-      const [count, setCount] = useState(1);
-      useEffect(() => {
-        const timer = setTimeout(() => setCount(80), 50);
-        return () => clearTimeout(timer);
-      }, []);
-      return (
-        <>
-          {Array.from({ length: count }, (_, i) => (
-            <p key={i}>Line {i + 1}</p>
-          ))}
-        </>
-      );
-    }
+  it('draws the grabber ring from focus.ring', async () => {
     render(
       <Themed>
         <BottomSheet.Root open onOpenChange={() => undefined}>
+          <BottomSheet.Grabber />
           <BottomSheet.Title>Sort</BottomSheet.Title>
-          <BottomSheet.Body data-testid="body">
-            <Rows />
-          </BottomSheet.Body>
+          <BottomSheet.Body>Newest first</BottomSheet.Body>
         </BottomSheet.Root>
       </Themed>,
     );
-    const body = await screen.findByTestId('body');
-    expect(body.hasAttribute('tabindex')).toBe(false);
-    await waitFor(() => expect(body.getAttribute('tabindex')).toBe('0'));
+    await screen.findByRole('dialog');
+    const grabber = screen.getByRole('button');
+    grabber.focus();
+    await userEvent.tab();
+    await userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(grabber);
+    const style = getComputedStyle(grabber);
+    expect(style.outlineStyle).toBe('solid');
+    expect(style.outlineWidth).toBe('2px');
+    expect(style.outlineOffset).toBe('2px');
   });
 });

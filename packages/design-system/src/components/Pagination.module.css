@@ -59,6 +59,10 @@
     cursor: not-allowed;
   }
 
+  .ellipsis {
+    cursor: default;
+  }
+
   /* Kept at low specificity so the current page's fill wins over it. */
   .item > :where(a:any-link, button:enabled):where(:not([aria-disabled='true'])):hover {
     background: var(--todae-pagination-bg-hover);

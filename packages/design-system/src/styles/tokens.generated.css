@@ -354,6 +354,7 @@
   --todae-sheet-padding-x: var(--_todae-sheet-padding-x, var(--todae-space-overlay-padding));
   --todae-sheet-padding-y: var(--_todae-sheet-padding-y, var(--todae-space-overlay-padding));
   --todae-sheet-radius: var(--_todae-sheet-radius, var(--todae-radius-lg));
+  --todae-sheet-ring-focus: var(--_todae-sheet-ring-focus, var(--todae-color-accent-default));
   --todae-sheet-snap-full-inset: var(--_todae-sheet-snap-full-inset, var(--todae-space-6));
   --todae-sheet-snap-mid: var(--_todae-sheet-snap-mid, 0.5);
   --todae-sheet-title-font-size: var(--_todae-sheet-title-font-size, var(--todae-dialog-title-font-size));

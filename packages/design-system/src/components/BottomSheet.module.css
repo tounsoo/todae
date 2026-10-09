@@ -91,6 +91,11 @@
     cursor: grab;
   }
 
+  .handle button:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-sheet-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
   .title {
     margin: 0;
     font-size: var(--todae-sheet-title-font-size);

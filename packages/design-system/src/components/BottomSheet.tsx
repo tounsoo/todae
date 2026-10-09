@@ -159,42 +159,13 @@ function BottomSheetDescription({
   );
 }
 
-function BottomSheetBody({ className, ref, tabIndex, ...props }: ComponentPropsWithRef<'div'>) {
+function BottomSheetBody({ className, ref, ...props }: ComponentPropsWithRef<'div'>) {
   const { bodyRef } = useSheet();
   const refs = useComposedRefs(bodyRef as RefObject<HTMLDivElement | null>, ref);
-  // A body that scrolls takes a tab stop, so the keyboard can scroll text
-  // that has no focusable element in it. It keeps the stop while focused, so
-  // shrinking content never drops focus out of the sheet.
-  const [scrolls, setScrolls] = useState(false);
-  useLayoutEffect(() => {
-    const body = bodyRef.current;
-    if (!body || typeof ResizeObserver === 'undefined') return;
-    const measure = () =>
-      setScrolls(body.scrollHeight > body.clientHeight || body.ownerDocument.activeElement === body);
-    const resize = new ResizeObserver(measure);
-    const watch = () => {
-      resize.disconnect();
-      resize.observe(body);
-      for (const child of body.children) resize.observe(child);
-      measure();
-    };
-    // Rows a child adds from its own state change the content without
-    // changing the body's box or the children observed so far.
-    const mutations = new MutationObserver(watch);
-    mutations.observe(body, { childList: true, subtree: true, characterData: true });
-    watch();
-    body.addEventListener('focusout', measure);
-    return () => {
-      resize.disconnect();
-      mutations.disconnect();
-      body.removeEventListener('focusout', measure);
-    };
-  }, [bodyRef]);
   return (
     <div
       {...props}
       ref={refs}
-      tabIndex={tabIndex ?? (scrolls ? 0 : undefined)}
       className={[styles.body, className].filter(Boolean).join(' ')}
     />
   );
