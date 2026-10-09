@@ -103,7 +103,7 @@ describe('docs locales', () => {
         const changed = staleSections(readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8'), sources[slug]);
         return changed.length ? [`${locale}/${slug}: ${changed.join(', ')}`] : [];
       });
-      // A page that was removed or renamed: running i18n:stamp on its old slug drops the entry.
+      // A record with no translated page: dropped by i18n:stamp once the English page is gone too.
       const orphaned = Object.keys(sources)
         .filter((slug) => !translated.includes(slug))
         .map((slug) =>
