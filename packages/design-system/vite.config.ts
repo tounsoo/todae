@@ -15,6 +15,7 @@ const entries = {
   card: src('server/card.ts'),
   breadcrumbs: src('server/breadcrumbs.ts'),
   grid: src('server/grid.ts'),
+  pagination: src('server/pagination.ts'),
 };
 
 function emitPackageCss(): Plugin {

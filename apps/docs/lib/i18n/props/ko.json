@@ -897,6 +897,24 @@
       "ko": "보이는 레이블이 없을 때의 이름."
     }
   },
+  "Pagination.Ellipsis": {
+    "children": {
+      "en": "What the gap shows.",
+      "ko": "생략 구간에 보일 내용."
+    }
+  },
+  "Pagination.Item": {
+    "children": {
+      "en": "A link or button.",
+      "ko": "링크나 버튼."
+    }
+  },
+  "Pagination.Root": {
+    "children": {
+      "en": "Pagination.Item and Pagination.Ellipsis parts, often from paginationRange.",
+      "ko": "Pagination.Item과 Pagination.Ellipsis 파트로, 흔히 paginationRange로 만듭니다."
+    }
+  },
   "Popover.Root": {
     "children": {
       "en": "Popover contents.",
@@ -1317,6 +1335,24 @@
     "duration": {
       "en": "Default milliseconds before a toast dismisses itself. Infinity keeps toasts until dismissed.",
       "ko": "토스트가 스스로 닫히기까지의 기본 밀리초. Infinity면 닫을 때까지 남아 있습니다."
+    }
+  },
+  "paginationRange": {
+    "page": {
+      "en": "The current page, from 1. Clamped to 1..count.",
+      "ko": "현재 페이지로, 1부터 셉니다. 1..count 범위로 맞춥니다."
+    },
+    "count": {
+      "en": "How many pages there are. Below 1, or not a finite number, gives an empty list.",
+      "ko": "페이지 수입니다. 1보다 작거나 유한한 수가 아니면 빈 목록을 돌려줍니다."
+    },
+    "siblings": {
+      "en": "Pages shown on each side of the current one.",
+      "ko": "현재 페이지 양옆에 보일 페이지 수."
+    },
+    "boundaries": {
+      "en": "Pages always shown at each end.",
+      "ko": "양 끝에 항상 보일 페이지 수."
     }
   },
   "useAnnouncer": {

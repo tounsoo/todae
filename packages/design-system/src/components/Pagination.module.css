@@ -1,0 +1,82 @@
+@layer todae.components {
+  .root {
+    font-size: var(--todae-pagination-font-size);
+  }
+
+  .list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--todae-pagination-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .item {
+    display: flex;
+  }
+
+  /* The control in each item and the gap share one box from the tokens. */
+  .item > * {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-inline-size: var(--todae-pagination-size);
+    block-size: var(--todae-pagination-size);
+    padding-inline: var(--todae-pagination-padding-x);
+    border: 0;
+    border-radius: var(--todae-pagination-radius);
+    color: var(--todae-pagination-fg-default);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Transparent here, the border shows the control's edge in forced colors. */
+  .item > :is(a, button) {
+    border: 1px solid transparent;
+    background: transparent;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .item > :is(a, button):focus-visible {
+    outline: 2px solid var(--todae-pagination-ring-focus);
+    outline-offset: 2px;
+  }
+
+  /* A step with nowhere to go: aria-disabled, which keeps it focusable, or a
+     link without href that is not the current page, or a disabled button. */
+  .item > :is([aria-disabled='true'], a:not(:any-link):not(:where([aria-current]:not([aria-current='false' i], [aria-current='']))), button:disabled),
+  .ellipsis {
+    color: var(--todae-pagination-fg-disabled);
+    cursor: default;
+  }
+
+  /* Kept at low specificity so the current page's fill wins over it. */
+  .item > :where(a:any-link, button:enabled):where(:not([aria-disabled='true'])):hover {
+    background: var(--todae-pagination-bg-hover);
+  }
+
+  /* The page you are on, as aria-current marks it: any value but empty or false. */
+  .item > [aria-current]:not([aria-current='false' i], [aria-current='']) {
+    background: var(--todae-pagination-current-bg);
+    color: var(--todae-pagination-current-fg);
+    font-weight: var(--todae-pagination-current-font-weight);
+  }
+
+  @media (forced-colors: active) {
+    /* Not while focused, so the focus ring still shows on the current page. */
+    .item > [aria-current]:not([aria-current='false' i], [aria-current='']):not(:focus-visible) {
+      outline: 1px solid CanvasText;
+    }
+
+    /* System colors replace the muted token, so mark the state with GrayText. */
+    .item > :is([aria-disabled='true'], a:not(:any-link):not(:where([aria-current]:not([aria-current='false' i], [aria-current='']))), button:disabled),
+    .ellipsis {
+      color: GrayText;
+    }
+  }
+}

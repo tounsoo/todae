@@ -48,6 +48,7 @@ export const RESERVED_ROOTS = [
   'kbd',
   'avatar',
   'grid',
+  'pagination',
 ] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;
 export const INTERACTIVE_GROUPS = ['bg', 'fg', 'border'] as const;

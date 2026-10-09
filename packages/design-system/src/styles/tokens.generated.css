@@ -584,6 +584,18 @@
   --todae-avatar-size-md: 2rem;
   --todae-avatar-size-sm: 1.5rem;
   --todae-grid-gap: var(--todae-space-stack-gap);
+  --todae-pagination-bg-hover: var(--todae-color-bg-subtle);
+  --todae-pagination-current-bg: var(--todae-color-accent-default);
+  --todae-pagination-current-fg: var(--todae-color-on-accent);
+  --todae-pagination-current-font-weight: var(--todae-font-weight-medium);
+  --todae-pagination-fg-default: var(--todae-color-fg-default);
+  --todae-pagination-fg-disabled: var(--todae-color-fg-muted);
+  --todae-pagination-font-size: var(--todae-font-size-2);
+  --todae-pagination-gap: 0.25rem;
+  --todae-pagination-padding-x: var(--todae-space-chip-x);
+  --todae-pagination-radius: var(--todae-radius-md);
+  --todae-pagination-ring-focus: var(--todae-color-accent-default);
+  --todae-pagination-size: 2rem;
   --todae-button-font-size: var(--todae-button-base-font-size);
   --todae-button-font-weight: var(--todae-button-base-font-weight);
   --todae-button-gap: var(--todae-button-base-gap);

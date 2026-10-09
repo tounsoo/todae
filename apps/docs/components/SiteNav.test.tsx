@@ -31,6 +31,7 @@ const HREFS = [
   '/badge',
   '/card',
   '/breadcrumbs',
+  '/pagination',
   '/toast',
   '/avatar',
   '/stack',

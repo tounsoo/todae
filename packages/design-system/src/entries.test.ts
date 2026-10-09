@@ -44,7 +44,7 @@ describe('package entries', () => {
     expect(read('index.js').startsWith('"use client";')).toBe(true);
   });
 
-  it.each(['stack', 'text', 'label', 'badge', 'card', 'breadcrumbs', 'grid'])('ships %s as a server-safe entry', (name) => {
+  it.each(['stack', 'text', 'label', 'badge', 'card', 'breadcrumbs', 'grid', 'pagination'])('ships %s as a server-safe entry', (name) => {
     const entry = pkg.exports[`./${name}`];
     expect(entry).toEqual({ types: `./dist/server/${name}.d.ts`, import: `./dist/${name}.js` });
     for (const file of closure(`${name}.js`)) {

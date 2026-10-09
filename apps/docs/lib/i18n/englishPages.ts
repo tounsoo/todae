@@ -32,6 +32,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'link': () => import('../../app/(en)/link/page.mdx'),
   'menu': () => import('../../app/(en)/menu/page.mdx'),
   'optionlist': () => import('../../app/(en)/optionlist/page.mdx'),
+  'pagination': () => import('../../app/(en)/pagination/page.mdx'),
   'platform': () => import('../../app/(en)/platform/page.mdx'),
   'playground': () => import('../../app/(en)/playground/page'),
   'popover': () => import('../../app/(en)/popover/page.mdx'),

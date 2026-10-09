@@ -39,6 +39,10 @@
       "types": "./dist/server/grid.d.ts",
       "import": "./dist/grid.js"
     },
+    "./pagination": {
+      "types": "./dist/server/pagination.d.ts",
+      "import": "./dist/pagination.js"
+    },
     "./todae.css": "./dist/todae.css",
     "./dist/todae.css": "./dist/todae.css",
     "./schema/components.json": "./schema/components.json",

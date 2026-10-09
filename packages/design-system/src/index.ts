@@ -56,6 +56,15 @@ export {
   type OptionListSingleProps,
 } from './components/OptionList';
 export {
+  Pagination,
+  paginationRange,
+  type PaginationEllipsisProps,
+  type PaginationItemProps,
+  type PaginationRangeItem,
+  type PaginationRangeOptions,
+  type PaginationRootProps,
+} from './components/Pagination';
+export {
   Menu,
   type MenuCheckboxItemProps,
   type MenuContentProps,

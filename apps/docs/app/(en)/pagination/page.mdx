@@ -1,0 +1,59 @@
+import { PaginationButtons } from '../../../components/demos/PaginationDemo';
+
+# Pagination
+
+A `nav` landmark around an ordered list of pages. `paginationRange` decides which pages to show, and your own links or buttons go inside the items, so a router's link works as it is.
+
+<Example>
+  <PaginationButtons />
+</Example>
+
+```tsx
+<Pagination.Root>
+  <Pagination.Item>
+    {page > 1 ? <Link href={`?page=${page - 1}`}>Previous</Link> : <a role="link" aria-disabled="true">Previous</a>}
+  </Pagination.Item>
+  {paginationRange({ page, count }).map((item) =>
+    typeof item === 'number' ? (
+      <Pagination.Item key={item}>
+        <Link href={`?page=${item}`} aria-current={item === page ? 'page' : undefined}>
+          {item}
+        </Link>
+      </Pagination.Item>
+    ) : (
+      <Pagination.Ellipsis key={item} />
+    ),
+  )}
+  <Pagination.Item>
+    {page < count ? <Link href={`?page=${page + 1}`}>Next</Link> : <a role="link" aria-disabled="true">Next</a>}
+  </Pagination.Item>
+</Pagination.Root>
+```
+
+## The page range
+
+`paginationRange({ page, count })` returns page numbers, with `"start-ellipsis"` and `"end-ellipsis"` for the gaps. It shows the current page, `siblings` pages on each side of it and `boundaries` pages at each end; both default to 1. While there are more pages than that, the list keeps one length, so the number of controls does not change as the page does, and a gap always stands for two or more pages.
+
+## Current page and steps
+
+Give the control for the page you are on `aria-current="page"`, and it is drawn as the current page. Give a previous or next step with nowhere to go `aria-disabled="true"`, and it is drawn muted. With buttons, use `aria-disabled`, not `disabled`, so the button keeps focus when it reaches an end, as in the example above. A link with nowhere to go is `<a role="link" aria-disabled="true">` without `href`.
+
+`Pagination.Root` is named "Pagination" unless you pass a non-empty `aria-label` or `aria-labelledby`; that default is English, so pass your own in other languages. Name it after what it pages through when a page has more than one. Restyle it through the `pagination` tokens.
+
+Server Components can import it from `@tounsoo/todae/pagination`.
+
+## When to use
+
+**When:** A long list or table split into numbered pages that people jump between.
+
+**When not:** A feed people read in order → a "Load more" button. Steps of one task → a stepper, with its own state.
+
+## Props
+
+<PropsTable name="Pagination.Root" />
+
+<PropsTable name="Pagination.Item" />
+
+<PropsTable name="Pagination.Ellipsis" />
+
+<PropsTable name="paginationRange" />

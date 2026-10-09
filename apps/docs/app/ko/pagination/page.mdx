@@ -1,0 +1,59 @@
+import { PaginationButtons } from '../../../components/demos/PaginationDemo';
+
+# Pagination
+
+페이지들의 순서 있는 목록을 감싼 `nav` 랜드마크입니다. 보여 줄 페이지는 `paginationRange`가 정하고, 항목 안에는 직접 만든 링크나 버튼을 넣으므로 라우터의 링크를 그대로 쓸 수 있습니다.
+
+<Example>
+  <PaginationButtons />
+</Example>
+
+```tsx
+<Pagination.Root>
+  <Pagination.Item>
+    {page > 1 ? <Link href={`?page=${page - 1}`}>Previous</Link> : <a role="link" aria-disabled="true">Previous</a>}
+  </Pagination.Item>
+  {paginationRange({ page, count }).map((item) =>
+    typeof item === 'number' ? (
+      <Pagination.Item key={item}>
+        <Link href={`?page=${item}`} aria-current={item === page ? 'page' : undefined}>
+          {item}
+        </Link>
+      </Pagination.Item>
+    ) : (
+      <Pagination.Ellipsis key={item} />
+    ),
+  )}
+  <Pagination.Item>
+    {page < count ? <Link href={`?page=${page + 1}`}>Next</Link> : <a role="link" aria-disabled="true">Next</a>}
+  </Pagination.Item>
+</Pagination.Root>
+```
+
+## 페이지 범위
+
+`paginationRange({ page, count })`는 페이지 번호를 돌려주고, 생략된 구간은 `"start-ellipsis"`와 `"end-ellipsis"`로 나타냅니다. 현재 페이지와 그 양옆의 `siblings`개 페이지, 양 끝의 `boundaries`개 페이지를 보여 줍니다. 둘 다 기본값은 1입니다. 페이지가 그보다 많은 동안에는 목록 길이가 같게 유지되므로 페이지가 바뀌어도 컨트롤 개수는 그대로이고, 생략 구간은 언제나 두 페이지 이상을 나타냅니다.
+
+## 현재 페이지와 이동
+
+지금 있는 페이지의 컨트롤에 `aria-current="page"`를 주면 현재 페이지로 그려집니다. 갈 곳이 없는 이전이나 다음 단계에 `aria-disabled="true"`를 주면 흐리게 그려집니다. 버튼이라면 `disabled` 대신 `aria-disabled`를 쓰세요. 위 예제처럼 끝에 닿아도 버튼이 포커스를 유지합니다. 갈 곳이 없는 링크는 `href` 없는 `<a role="link" aria-disabled="true">`입니다.
+
+`Pagination.Root`는 비어 있지 않은 `aria-label`이나 `aria-labelledby`를 주지 않으면 "Pagination"이라는 이름을 씁니다. 이 기본값은 영어이므로 다른 언어에서는 직접 이름을 주세요. 한 페이지에 여러 개가 있으면 무엇을 넘기는지에 따라 이름을 붙이세요. 스타일은 `pagination` 토큰으로 바꾸세요.
+
+Server Component에서는 `@tounsoo/todae/pagination`에서 가져올 수 있습니다.
+
+## 언제 쓰나요
+
+**쓸 때:** 사람들이 오가며 건너뛰는, 번호 붙은 페이지로 나눈 긴 목록이나 표.
+
+**쓰지 않을 때:** 차례대로 읽는 피드 → "더 보기" 버튼. 한 작업의 단계 → 자체 상태를 가진 stepper.
+
+## Props
+
+<PropsTable name="Pagination.Root" />
+
+<PropsTable name="Pagination.Item" />
+
+<PropsTable name="Pagination.Ellipsis" />
+
+<PropsTable name="paginationRange" />

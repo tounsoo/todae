@@ -24,6 +24,7 @@ import {
   Label,
   Menu,
   OptionList,
+  Pagination,
   Popover,
   RadioGroup,
   Stack,
@@ -365,6 +366,20 @@ const cases: Case[] = [
     ],
   ),
   ['Breadcrumbs.Root', (p) => <Breadcrumbs.Root {...p} />],
+  ['Pagination.Root', (p) => <Pagination.Root {...p} />],
+  ...(['Item', 'Ellipsis'] as const).map(
+    (part): Case => [
+      `Pagination.${part}`,
+      (p) => {
+        const Part = Pagination[part] as (props: Native) => ReactNode;
+        return (
+          <Pagination.Root>
+            <Part {...p} />
+          </Pagination.Root>
+        );
+      },
+    ],
+  ),
   [
     'Breadcrumbs.Item',
     (p) => (

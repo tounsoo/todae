@@ -29,6 +29,7 @@ export const SITE_GROUPS = [
       ['/badge', 'Badge'],
       ['/card', 'Card'],
       ['/breadcrumbs', 'Breadcrumbs'],
+      ['/pagination', 'Pagination'],
       ['/toast', 'Toast'],
       ['/avatar', 'Avatar'],
       ['/stack', 'Stack'],
