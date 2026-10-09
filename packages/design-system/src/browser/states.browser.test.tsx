@@ -626,7 +626,6 @@ describe('OptionList scrolling', () => {
     await frame();
     rerender(<Disabled active="Fruit 30" />);
     await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 30' }))).toBe(true));
-    await screen.findByRole('listbox');
     await frame();
     rerender(<Disabled active="Fruit 25" />);
     await frame();
