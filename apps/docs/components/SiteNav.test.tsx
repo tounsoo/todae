@@ -21,35 +21,35 @@ const HREFS = [
   '/checkbox',
   '/chip',
   '/chip-list',
-  '/code',
   '/description',
   '/dialog',
-  '/disclosure',
   '/drawer',
   '/errormessage',
   '/field',
   '/fieldset',
   '/grid',
   '/label',
-  '/link',
   '/menu',
   '/optionlist',
   '/pagination',
   '/popover',
-  '/progress',
   '/radio',
-  '/separator',
-  '/slider',
-  '/spinner',
   '/stack',
   '/switch',
-  '/table',
   '/tabs',
   '/text',
   '/toast',
   '/toggle-group',
   '/toolbar',
   '/tooltip',
+  '/code',
+  '/disclosure',
+  '/link',
+  '/progress',
+  '/separator',
+  '/slider',
+  '/spinner',
+  '/table',
   '/visually-hidden',
   '/utilities/strings-provider',
   '/utilities/use-announcer',
@@ -77,8 +77,8 @@ describe('SiteNav', () => {
   it('groups the same links under Site', () => {
     render(<SiteNav locale="en" />);
     const nav = screen.getByRole('navigation', { name: 'Site' });
-    expect(screen.getAllByRole('list')).toHaveLength(5);
-    for (const name of ['Foundations', 'Components', 'Utilities', 'Recipes', 'Tools']) {
+    expect(screen.getAllByRole('list')).toHaveLength(6);
+    for (const name of ['Foundations', 'Components', 'Native elements', 'Utilities', 'Recipes', 'Tools']) {
       expect(screen.getByRole('list', { name })).toBeTruthy();
       expect(screen.getByText(name).tagName).toBe('SPAN');
     }
@@ -91,6 +91,7 @@ describe('SiteNav', () => {
     const hrefsIn = (name: string) =>
       [...screen.getByRole('list', { name }).querySelectorAll('a')].map((link) => link.getAttribute('href'));
     expect(hrefsIn('Components')).not.toContain('/composition');
+    expect(hrefsIn('Native elements')).toEqual(['/code', '/disclosure', '/link', '/progress', '/separator', '/slider', '/spinner', '/table', '/visually-hidden']);
     expect(hrefsIn('Foundations')).toEqual(['/guides/build-on-todae', '/composition', '/tokens', '/guides/css-layers', '/platform']);
     expect(hrefsIn('Utilities')).toEqual([
       '/utilities/strings-provider',
@@ -120,7 +121,7 @@ describe('SiteNav', () => {
       </>,
     );
     const ids = [...container.querySelectorAll('.site-nav-label')].map((label) => label.id);
-    expect(ids).toHaveLength(10);
+    expect(ids).toHaveLength(12);
     expect(new Set(ids).size).toBe(ids.length);
     for (const list of container.querySelectorAll('ul[aria-labelledby]')) {
       expect(container.querySelector(`#${list.getAttribute('aria-labelledby')}`)).not.toBeNull();

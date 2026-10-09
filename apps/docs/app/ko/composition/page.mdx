@@ -4,7 +4,7 @@ import { FieldPartsAllowed, SiblingsAllowed } from '../../../components/demos/Co
 
 Todae가 UI를 만들기 위해 제공하는 것은 네 종류로 나뉩니다. 새로 만드는 것은 아래 질문으로 자리를 정하세요. `ThemeProvider`, `useDensity`, `composeRefs` 같은 프로바이더와 그 훅, 헬퍼 함수, 상수는 이 구분 밖에 있습니다.
 
-- **네이티브 + CSS.** HTML이 이미 그 일을 합니다. Todae는 그 요소의 토큰을 읽을 수 있는 기본 스타일의 CSS만 제공하고 export는 없습니다. [Link](/link)와 [Disclosure](/disclosure)처럼 요소 자체에 입히는 스타일이거나, [VisuallyHidden](/visually-hidden)처럼 골라 쓰는 유틸리티 클래스입니다. 찾기 쉽도록 이 페이지들은 사이드바에서 컴포넌트와 함께 있습니다.
+- **네이티브 + CSS.** HTML이 이미 그 일을 합니다. Todae는 그 요소의 토큰을 읽을 수 있는 기본 스타일의 CSS만 제공하고 export는 없습니다. [Link](/link)와 [Disclosure](/disclosure)처럼 요소 자체에 입히는 스타일이거나, [VisuallyHidden](/visually-hidden)처럼 골라 쓰는 유틸리티 클래스입니다. 사이드바에서는 네이티브 요소 아래에 있습니다.
 - **컴포넌트.** 제품에 대해 아무것도 몰라도 Todae가 마크업, props, 동작을 정할 수 있는 UI 개념 하나입니다. [Menu](/menu)와 [Tabs](/tabs)처럼 동작을 맡을 수도 있고, [Stack](/stack)과 [Text](/text)처럼 토큰에서 온 스타일만 맡을 수도 있습니다. 대부분의 컴포넌트는 컴파운드로 제공됩니다. 컴파운드는 `Menu.Root`, `Menu.Item`처럼 `Root`와 필요한 파트를 가진 네임스페이스입니다. `Stack`, `Text`, `Label`, `Checkbox`처럼 파트가 없는 컴포넌트는 export 하나입니다.
 - **훅.** 마크업 없는 동작입니다. 레시피가 필요로 하거나 제품이 자체 마크업으로 써야 할 때 Todae가 export합니다. [useRovingFocus](/utilities/use-roving-focus)와 [useCombobox](/utilities/use-combobox)가 훅입니다. 사이드바에서는 유틸리티 아래에 있습니다.
 - **레시피.** 회사 자체 디자인 시스템의 출발점입니다. 결과가 제품에 따라 달라지는 곳에서 Todae export를 어떻게 묶는지 보여 줍니다. 제품의 데이터, 흐름(무엇을 검색할지, 결과를 어떻게 불러올지, 선택하면 무슨 일이 일어날지), 화면 배치가 그 예입니다. 레시피는 얇은 연결 코드여야 합니다. 어려운 동작(키보드 처리, 포커스 관리, ARIA 연결, 측정과 위치 지정)은 컴포넌트나 훅에 있어야 하며, 그래야 회사가 접근성을 깨뜨리지 않고 레시피를 복사해 스타일을 바꿀 수 있습니다. 레시피는 패키지 export가 아니므로 `Combobox.*`는 없습니다.
