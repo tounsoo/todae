@@ -66,7 +66,7 @@ export type Dictionary = {
   /** Token catalog headings. */
   tokensTable: Record<'path' | 'context' | 'cssVar' | 'value' | 'ref', string>;
   /** Props table headings. `{name}` in the caption is the component name. */
-  propsTable: Record<'caption' | 'name' | 'type' | 'required' | 'default' | 'description' | 'yes' | 'no', string>;
+  propsTable: Record<'caption' | 'name' | 'type' | 'required' | 'default' | 'description', string>;
   /** Section names; a missing one keeps its English name from `siteGroups.ts`. */
   groups: Partial<Record<GroupId, string>>;
   /** Link text by href; a missing one keeps its English text. Component, hook and pattern names (Button, useField, Combobox, ChipList) stay in English. */
@@ -133,8 +133,6 @@ const en: Dictionary = {
     required: 'Required',
     default: 'Default',
     description: 'Description',
-    yes: 'yes',
-    no: 'no',
   },
   notFound: 'Page not found.',
   home: 'Todae home',
@@ -202,8 +200,6 @@ const ko: Dictionary = {
     required: '필수',
     default: '기본값',
     description: '설명',
-    yes: '예',
-    no: '아니요',
   },
   notFound: '페이지를 찾을 수 없습니다.',
   home: 'Todae 홈',

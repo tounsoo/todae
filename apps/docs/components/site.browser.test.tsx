@@ -9,6 +9,7 @@ import { HomeContent } from './HomeContent';
 import { MobileNav } from './MobileNav';
 import { Playground } from './Playground';
 import { Providers } from './Providers';
+import { PropsTableView, type PropsTableRow } from './PropsTableView';
 import { ThemeSwitcher } from './ThemeSwitcher';
 
 afterEach(cleanup);
@@ -91,6 +92,56 @@ describe('narrow screens', () => {
     await frame();
     const drawer = screen.getByRole('dialog', { name: 'Todae' });
     expect(within(drawer).getByRole('group', { name: 'Theme' }).checkVisibility()).toBe(true);
+  });
+});
+
+describe('props table', () => {
+  const describe_ = (text: string) => ({ en: { text, lang: 'en' as const }, ko: { text, lang: 'en' as const } });
+  const rows: PropsTableRow[] = [
+    { name: 'onActiveValueChange', type: '(value: string | null) => void', required: true, descriptions: describe_('Called when the active option changes.') },
+    {
+      name: 'type',
+      type: '"text" | "search" | "email" | "url" | "tel" | "password" | "number" | "date" | "time" | "datetime-local"',
+      required: false,
+      default: '"text"',
+      descriptions: describe_('Native input type. Number, date and time keep the native spinner and picker, and value stays the input string.'),
+    },
+  ];
+
+  function renderTable(width: string) {
+    render(
+      <Providers>
+        <main style={{ inlineSize: width }}>
+          <PropsTableView name="Field.TextInput" rows={rows} />
+        </main>
+      </Providers>,
+    );
+    return screen.getByRole('table', { name: 'Field.TextInput props' });
+  }
+
+  it('gives the description a readable column on a wide page, without scrolling', async () => {
+    const table = renderTable('48rem');
+    await frame();
+    const scroller = table.parentElement!;
+    expect(scroller.scrollWidth).toBeLessThanOrEqual(scroller.clientWidth);
+    const description = within(table).getAllByRole('row')[2]!.querySelectorAll('td')[1]!;
+    expect(description.getBoundingClientRect().width).toBeGreaterThanOrEqual(16 * 16);
+    expect(await violations()).toEqual([]);
+  });
+
+  it('stacks each prop on a phone, keeping table semantics and no horizontal scroll', async () => {
+    const table = renderTable('22rem');
+    await frame();
+    const scroller = table.parentElement!;
+    expect(scroller.scrollWidth).toBeLessThanOrEqual(scroller.clientWidth);
+    expect(scroller.hasAttribute('tabindex')).toBe(false);
+    const [, first] = within(table).getAllByRole('row');
+    const [name, type, description] = [within(first!).getByRole('rowheader'), ...within(first!).getAllByRole('cell')];
+    // One block per prop: name, then type, then description, each under the last.
+    expect(type!.getBoundingClientRect().top).toBeGreaterThan(name.getBoundingClientRect().top);
+    expect(description!.getBoundingClientRect().top).toBeGreaterThan(type!.getBoundingClientRect().top);
+    expect(within(table).getAllByRole('columnheader')).toHaveLength(3);
+    expect(await violations()).toEqual([]);
   });
 });
 
