@@ -16,11 +16,13 @@ import { SiteNav } from '../../components/SiteNav';
 import { SiteShell } from '../../components/SiteShell';
 import { SITE_GROUPS } from '../../components/siteGroups';
 import { UntranslatedPage } from '../../components/UntranslatedPage';
-import { LOCALES } from './config';
+import { COMPLETE_LOCALES, LOCALES } from './config';
 import { DICTIONARIES } from './dictionaries';
 import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
 import { PROP_TRANSLATIONS, propDescription } from './propDescriptions';
+import { blocks, sections, sourceRecord, staleSections } from './sections';
+import koSources from './sources/ko.json';
 import schema from '@tounsoo/todae/schema/components.json';
 
 const path = vi.hoisted(() => ({ current: '/ko/button' }));
@@ -40,6 +42,9 @@ vi.mock('./pages', async (importOriginal) => {
 });
 
 const APP = join(process.cwd(), 'app');
+
+// The English each locale's pages were translated from, section by section. Written by `pnpm --filter docs i18n:stamp`.
+const SOURCES: Partial<Record<(typeof LOCALES)[number], Record<string, Record<string, string>>>> = { ko: koSources };
 
 // Static page slugs under `dir`; dynamic segments are not pages of their own.
 function slugs(dir: string, prefix = ''): string[] {
@@ -71,6 +76,9 @@ describe('docs locales', () => {
         tags: (prose.match(/<\/?[A-Z][\w.]*/g) ?? []).sort(),
         props: prose.match(/<PropsTable\s+name="[^"]+"/g) ?? [],
         links: (prose.match(/\]\([^)\s]+\)|href=["'][^"']+["']/g) ?? []).sort(),
+        // Each heading's level and the number of paragraphs, lists and blocks under it, so a section
+        // or paragraph added in English has to be added to the translation too.
+        sections: sections(text).map((part) => `h${part.level}: ${blocks(part.text)} blocks`),
       };
     };
     for (const locale of LOCALES.filter((item) => item !== 'en')) {
@@ -81,6 +89,43 @@ describe('docs locales', () => {
         expect(shape(readFileSync(file, 'utf8')), `${locale}/${slug}`).toEqual(shape(english));
       }
     }
+  });
+
+  it('records which English each translated page was made from', () => {
+    // The structure check above cannot see prose edits, so each translated page records a fingerprint
+    // of every English section it was translated from. Editing English prose fails here until the
+    // translation catches up and the page is stamped again.
+    for (const locale of LOCALES.filter((item) => item !== 'en')) {
+      const sources = SOURCES[locale] ?? {};
+      const translated = slugs(join(APP, locale)).filter((slug) => existsSync(join(APP, locale, slug, 'page.mdx')));
+      const stale = translated.flatMap((slug) => {
+        const sections = staleSections(readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8'), sources[slug]);
+        return sections.length ? [`${locale}/${slug}: ${sections.join(', ')}`] : [];
+      });
+      const orphaned = Object.keys(sources).filter((slug) => !translated.includes(slug)).map((slug) => `${locale}/${slug}: no translated page`);
+      expect(
+        [...stale, ...orphaned],
+        `Update app/${locale}/<slug>/page.mdx to match the English sections listed, then run pnpm --filter docs i18n:stamp ${locale} <slug>`,
+      ).toEqual([]);
+    }
+  });
+
+  it('notices a changed, new or removed English section', () => {
+    const english = '# Badge\n\nA label.\n\n## When to use\n\nOften.\n';
+    const recorded = sourceRecord(english);
+    expect(staleSections(english, recorded)).toEqual([]);
+    // Trailing spaces and blank lines are not a change.
+    expect(staleSections(english.replace('A label.', 'A label.  \n'), recorded)).toEqual([]);
+    expect(staleSections(english.replace('Often.', 'Rarely.'), recorded)).toEqual(['## When to use (changed)']);
+    expect(staleSections(`${english}\n## Accessible composition\n\nNames.\n`, recorded)).toEqual(['## Accessible composition (new)']);
+    expect(staleSections('# Badge\n\nA label.\n', recorded)).toEqual(['## When to use (removed)']);
+    expect(staleSections(english, undefined)).toEqual(['# Badge (new)', '## When to use (new)']);
+    // A heading inside a code fence is code, not a section.
+    expect(sections('# A\n\n```md\n## Not a heading\n```\n').map((part) => part.heading)).toEqual(['# A']);
+  });
+
+  it('translates every page in a complete locale', () => {
+    for (const locale of COMPLETE_LOCALES) expect(untranslatedSlugs(locale), `pages with no app/${locale} translation`).toEqual([]);
   });
 
   it('translates only pages that exist in English', () => {
