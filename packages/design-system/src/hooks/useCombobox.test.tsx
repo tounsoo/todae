@@ -434,6 +434,25 @@ describe('useCombobox', () => {
     expect(hidden.result.current.showCreate).toBe(false);
   });
 
+  it('keeps the rows across renders with an inline createLabel, and follows its text', () => {
+    let prefix = 'Add';
+    const { result, rerender } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        allowCreate: true,
+        defaultInputValue: 'Todae',
+        createLabel: (query) => `${prefix} ${query}`,
+        presentation: 'popover',
+      }),
+    );
+    const before = result.current.items;
+    rerender();
+    expect(result.current.items).toBe(before);
+    prefix = 'New';
+    rerender();
+    expect(result.current.items.at(-1)).toMatchObject({ kind: 'create', label: 'New Todae' });
+  });
+
   it('gives the create row the id activeId names when it is highlighted', () => {
     const { result } = renderHook(() =>
       useCombobox({
@@ -717,9 +736,28 @@ describe('useCombobox dialog presentation', () => {
     act(() => result.current.getChipInputProps().onCommit('bi'));
     expect(onCreate).not.toHaveBeenCalled();
     expect(onValueChange).not.toHaveBeenCalled();
+    // No create row either, as the old list cannot say whether 'bi' matches.
+    expect(result.current.showCreate).toBe(false);
+    expect(result.current.items.some((item) => item.kind === 'create')).toBe(false);
     await settle('bi');
+    expect(result.current.showCreate).toBe(true);
     act(() => result.current.getInputProps().onKeyDown?.(enter as unknown as KeyboardEvent<HTMLInputElement>));
     expect(onCreate).toHaveBeenCalledWith('bi');
+  });
+
+  it('treats a list loaded for a NaN loadKey as current', async () => {
+    let finish: (list: readonly ComboboxOption[]) => void = () => undefined;
+    const loadOptions = () => new Promise<readonly ComboboxOption[]>((resolve) => (finish = resolve));
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, loadKey: Number.NaN, presentation: 'dialog', value: null }),
+    );
+    act(() => result.current.setOpen(true));
+    await act(async () => {
+      finish([{ value: 'a', label: 'Alpha' }]);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(result.current.activeValue).toBe('a');
   });
 
   it('waits for the list of a new loadKey before picking a row', async () => {

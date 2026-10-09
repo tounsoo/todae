@@ -229,27 +229,36 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [filter, filterQuery, source],
   );
   const trimmed = inputValue.trim();
+  // False while the loaded list is still another query's or another loadKey's.
+  const listIsCurrent =
+    !hasLoader ||
+    (loadedFor !== null && loadedFor.query === inputValue && Object.is(loadedFor.key, options.loadKey));
+  // Whether the query matches a row is known only once its own list is in.
   const showCreate = Boolean(
-    options.allowCreate &&
+    listIsCurrent &&
+      options.allowCreate &&
       trimmed &&
       !filtered.some((option) => option.label.toLowerCase() === trimmed.toLowerCase()),
   );
+  // The label text, not the function, keys the rows, so an inline createLabel
+  // does not rebuild them on every render.
+  const createRowLabel = showCreate ? createLabel(trimmed) : null;
   const items = useMemo<ComboboxItem[]>(() => {
     const rows: ComboboxItem[] = filtered.map((option) => ({
       kind: 'option',
       option,
       id: optionDomId(ids.listbox, option.value),
     }));
-    if (showCreate) {
+    if (createRowLabel !== null) {
       rows.push({
         kind: 'create',
-        label: createLabel(trimmed),
+        label: createRowLabel,
         value: trimmed,
         id: optionDomId(ids.listbox, CREATE_VALUE),
       });
     }
     return rows;
-  }, [createLabel, filtered, ids.listbox, showCreate, trimmed]);
+  }, [createRowLabel, filtered, ids.listbox, trimmed]);
 
   const enabledValues = useMemo(
     () =>
@@ -258,9 +267,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         .map((item) => (item.kind === 'create' ? CREATE_VALUE : item.option.value)),
     [items],
   );
-  // False while the loaded list is still another query's.
-  const listIsCurrent =
-    !hasLoader || (loadedFor !== null && loadedFor.query === inputValue && loadedFor.key === options.loadKey);
   const resolvedActive =
     activeValue && enabledValues.includes(activeValue)
       ? activeValue
@@ -507,8 +513,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       }
       if (event.key === 'Enter') {
         event.preventDefault();
-        // While the list is another query's, Enter with no active row runs nothing.
-        if (resolvedActive === CREATE_VALUE || (showCreate && !resolvedActive && listIsCurrent)) create();
+        // While the list is another query's, Enter with no active row runs nothing:
+        // showCreate is false until that list is in.
+        if (resolvedActive === CREATE_VALUE || (showCreate && !resolvedActive)) create();
         else if (resolvedActive) select(resolvedActive);
         return;
       }
@@ -528,7 +535,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [
       create,
       isModal,
-      listIsCurrent,
       move,
       open,
       resolvedActive,
@@ -636,7 +642,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         onCommit: () => {
           if (resolvedActive === CREATE_VALUE) create();
           else if (resolvedActive) select(resolvedActive);
-          else if (showCreate && listIsCurrent) create();
+          else if (showCreate) create();
         },
         onChipRemove: (index) => {
           const item = selected[index];
@@ -653,7 +659,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       comboboxAria,
       create,
       inputValue,
-      listIsCurrent,
       multiValue,
       onInputBlur,
       onInputFocus,
