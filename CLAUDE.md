@@ -6,16 +6,16 @@ After every push to a pull request, review it before calling it done. The goal i
 
 Each round's review runs in an `Agent` at that round's row of this table. The table is for the reviewer only: the advisor runs as step 4 says, and the fixes always run on the session's default model and effort.
 
-| Round | `model` | `effort` | Command                          | What it reviews                          |
-| ----- | ------- | -------- | -------------------------------- | ---------------------------------------- |
-| 1     | `opus`  | `xhigh`  | `/code-review <pr-number> xhigh` | the whole PR                             |
-| 2–5   | `opus`  | `high`   | `/code-review high`              | the commits pushed since the last review |
+| Round | `model` | `effort` | Command                                                      |
+| ----- | ------- | -------- | ------------------------------------------------------------ |
+| 1     | `opus`  | `xhigh`  | `/code-review xhigh <pr-number>`                             |
+| 2–5   | `opus`  | `high`   | `/code-review high <last-reviewed-commit>..<pr-head-commit>` |
 
-1. Start an `Agent` with this round's `model` and `effort` from the table and `isolation: "worktree"`, have it run this round's command, and return the findings. The reviewer only reviews: it does not edit files, commit, or push. If the reviewer cannot run, tell the person in your next reply rather than reviewing at a different row.
+1. Start an `Agent` with this round's `model` and `effort` from the table, have it run this round's command, and return the findings. The reviewer only reviews: it does not edit files, commit, or push. If the reviewer cannot run, tell the person in your next reply rather than reviewing at a different row.
 
-   From round 2, give the reviewer the last reviewed commit and the previous round's blocking findings. It checks out the PR head and runs `git reset --soft <last reviewed commit>`, so that `/code-review high`, which reviews the current diff when given no PR number, sees only the new commits. It reports the findings in those commits, plus any earlier blocking finding they left unfixed. Later rounds do not re-check code the new commits did not touch. If the branch was rebased or the base branch was merged in since the last review, it runs `/code-review <pr-number> high` on the whole PR instead.
+   From round 2, the command reviews only the commits pushed since the last review. Also give the reviewer the previous round's blocking findings, and have it say which are still open. If you rebased the branch or merged the base branch in since the last review, run `/code-review high <pr-number>` instead.
 
-   Trial: in round 1 of the next four PRs, also start a second reviewer `Agent` at `fable` / `medium` in parallel, running `/code-review <pr-number> medium`. Fix the blocking findings from both. Then add a row for the PR to the Fable trial table in `/mnt/project-files/reviews/review-loop-analysis.md`: blocking findings from each reviewer, and how many each found that the other missed. If the Fable reviewer cannot run, carry on with the Opus findings and say so in the table. The session that adds the fourth row opens a separate PR that removes this paragraph.
+   Trial: while the Fable trial table in `/mnt/project-files/reviews/review-loop-analysis.md` has fewer than four rows, round 1 also starts a second reviewer `Agent` at `fable` / `medium`, running `/code-review medium <pr-number>` in parallel. Fix the blocking findings from both. Then add a row for the PR: blocking findings from each reviewer, and how many each found that the other missed. If the Fable reviewer cannot run, write "did not run" in its column. Once the table has four rows, remove this paragraph in its own PR.
 2. Sort the findings. Only blocking findings start another round: a bug, a test or CI failure, or a statement in docs that is wrong about what the code does. Wording, style, missing edge-case caveats and other nits are not blocking: fix the ones that are plainly right in the same push, but they never start a round of their own.
 3. Before fixing anything, work through each blocking finding:
    - Does your diagnosis name the root cause, or only the symptom?
