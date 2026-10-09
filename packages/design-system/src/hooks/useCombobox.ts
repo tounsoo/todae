@@ -201,8 +201,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const [error, setError] = useState<unknown | null>(null);
   const gate = useRef(createAsyncGate());
   const lastQuery = useRef(inputValue);
-  // The query whose load the dialog's open reset waits for, before it picks the top row.
-  const topAwaited = useRef<string | null>(null);
+  // The query the loaded list belongs to; null before any load lands.
+  const [loadedQuery, setLoadedQuery] = useState<string | null>(null);
   const lastPresentation = useRef(presentation);
 
   // Callbacks read the latest options through this ref so their identity stays stable and
@@ -260,8 +260,12 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         .map((item) => (item.kind === 'create' ? CREATE_VALUE : item.option.value)),
     [items],
   );
+  // False while the loaded list is still another query's.
+  const listIsCurrent = !hasLoader || loadedQuery === inputValue;
   const resolvedActive =
-    activeValue && enabledValues.includes(activeValue) ? activeValue : (enabledValues[0] ?? null);
+    activeValue && enabledValues.includes(activeValue)
+      ? activeValue
+      : listIsCurrent ? (enabledValues[0] ?? null) : null;
   const activeId = resolvedActive ? optionDomId(ids.listbox, resolvedActive) : null;
   const isEmpty = items.length === 0 && !loading;
 
@@ -278,8 +282,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       // Each time the dialog opens, start from the full list with the top row active.
       // Reopened while still closing, focus is still inside: keep the query and the focus target.
       if (next && isDialog && !open && !inputRef.current?.closest('dialog')?.contains(document.activeElement)) {
-        // The loaded list is still the old query's: wait for the full list's load to pick its top row.
-        topAwaited.current = hasLoader && inputValue !== '' ? '' : null;
         setInputValue('');
         setActiveValue(null);
         returnFocusRef.current = document.activeElement === document.body ? triggerRef.current : null;
@@ -287,7 +289,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       setOpenState(next);
       latest.current.onOpenChange?.(next, reason);
     },
-    [hasLoader, inputValue, isDialog, open, setInputValue, setOpenState],
+    [isDialog, open, setInputValue, setOpenState],
   );
 
   const highlight = useCallback((next: string | null) => {
@@ -407,6 +409,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     }
     setActiveValue(null);
     setAsyncOptions([]);
+    setLoadedQuery(null);
     setError(null);
     setLoading(false);
   }, [setInputState, setMultiState, setOpenState, setSingleState]);
@@ -415,7 +418,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     (query: string) => {
       const load = latest.current.loadOptions;
       if (!load) return;
-      if (topAwaited.current !== query) topAwaited.current = null;
       lastQuery.current = query;
       setLoading(true);
       setError(null);
@@ -423,15 +425,12 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         if (!gate.current.isCurrent(result.gen)) return;
         if ('aborted' in result && result.aborted) return;
         setLoading(false);
-        if (topAwaited.current === query) {
-          topAwaited.current = null;
-          setActiveValue(null);
-        }
         if ('error' in result) {
           setError(result.error);
           return;
         }
         setAsyncOptions(result.result);
+        setLoadedQuery(query);
       });
     },
     [],
@@ -458,15 +457,18 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   }, [open, presentation, setOpen]);
 
   useEffect(() => {
-    if (!open || topAwaited.current !== null) return;
+    if (!open) return;
     if (selectionMode === 'single' && singleValue && enabledValues.includes(singleValue)) {
       setActiveValue(singleValue);
       return;
     }
-    setActiveValue((current) =>
-      current && enabledValues.includes(current) ? current : (enabledValues[0] ?? null),
-    );
-  }, [enabledValues, open, selectionMode, singleValue]);
+    setActiveValue((current) => {
+      if (current && enabledValues.includes(current)) return current;
+      // With no active row (as after the dialog's open reset), wait for this input's list.
+      if (current === null && !listIsCurrent) return null;
+      return enabledValues[0] ?? null;
+    });
+  }, [enabledValues, listIsCurrent, open, selectionMode, singleValue]);
 
   const move = useCallback(
     (delta: number | 'home' | 'end') => {

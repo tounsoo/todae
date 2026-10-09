@@ -656,7 +656,8 @@ describe('useCombobox dialog presentation', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
   });
 
-  it('highlights the top row of the full list once it loads, not the last query\'s', async () => {
+  // A palette whose loads resolve only when a test settles their query.
+  function asyncPalette() {
     const LISTS: Record<string, ComboboxOption[]> = {
       '': [
         { value: 'invoice', label: 'Create invoice' },
@@ -675,7 +676,13 @@ describe('useCombobox dialog presentation', () => {
         await Promise.resolve();
       });
     };
-    const { result } = renderHook(() => useCombobox({ loadOptions, presentation: 'dialog', value: null }));
+    const hook = renderHook(() => useCombobox({ loadOptions, presentation: 'dialog', value: null }));
+    const values = () => hook.result.current.items.map((item) => item.kind === 'option' && item.option.value);
+    return { ...hook, settle, values };
+  }
+
+  it('highlights the top row of the full list once it loads, not the last query\'s', async () => {
+    const { result, settle, values } = asyncPalette();
     await settle('');
     act(() => result.current.setOpen(true));
     act(() => result.current.setInputValue('bill'));
@@ -684,13 +691,49 @@ describe('useCombobox dialog presentation', () => {
     act(() => result.current.setOpen(false));
     act(() => result.current.setOpen(true));
     expect(result.current.inputValue).toBe('');
+    // The old query's list is still on screen: no row is active, so Enter runs nothing.
+    expect(result.current.activeValue).toBeNull();
+    expect(result.current.getInputProps()['aria-activedescendant']).toBeUndefined();
     await settle('');
-    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual([
-      'invoice',
-      'team',
-      'billing',
-    ]);
+    expect(values()).toEqual(['invoice', 'team', 'billing']);
     expect(result.current.activeValue).toBe('invoice');
+  });
+
+  it('waits for the full list after a reopen even when the query was cleared before closing', async () => {
+    const { result, settle, values } = asyncPalette();
+    await settle('');
+    act(() => result.current.setOpen(true));
+    act(() => result.current.setInputValue('bill'));
+    await settle('bill');
+    // Cleared, then closed and reopened before the full list's load lands.
+    act(() => result.current.setInputValue(''));
+    act(() => result.current.setOpen(false));
+    act(() => result.current.setOpen(true));
+    expect(result.current.activeValue).toBeNull();
+    await settle('');
+    expect(values()).toEqual(['invoice', 'team', 'billing']);
+    expect(result.current.activeValue).toBe('invoice');
+  });
+
+  it('keeps a row picked while the full list loads', async () => {
+    const { result, settle } = asyncPalette();
+    await settle('');
+    act(() => result.current.setOpen(true));
+    act(() => result.current.setInputValue('bill'));
+    await settle('bill');
+    act(() => result.current.setOpen(false));
+    act(() => result.current.setOpen(true));
+    act(() => result.current.highlight('billing'));
+    await settle('');
+    expect(result.current.activeValue).toBe('billing');
+  });
+
+  it('keeps setOpen the same function as the query changes', async () => {
+    const { result, settle } = asyncPalette();
+    await settle('');
+    const setOpen = result.current.setOpen;
+    act(() => result.current.setInputValue('bill'));
+    expect(result.current.setOpen).toBe(setOpen);
   });
 
   it('runs a selection only while open, so a closing dialog cannot run it twice', () => {
