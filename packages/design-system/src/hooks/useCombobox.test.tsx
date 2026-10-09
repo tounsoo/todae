@@ -6,6 +6,7 @@ import { Popover } from '../components/Popover';
 import { optionDomId } from '../components/OptionList.ids';
 import { resetMatchMedia, setMatchMedia } from '../test/setup';
 import * as api from '../index';
+import type { BottomSheetRootProps } from '../components/BottomSheet';
 import { useCombobox, type ComboboxOption, type UseComboboxSingleOptions } from './useCombobox';
 
 afterEach(() => {
@@ -570,6 +571,6 @@ describe('useCombobox sheet props', () => {
   it('always types open and onOpenChange as set', () => {
     type Sheet = ReturnType<ReturnType<typeof useCombobox>['getSheetProps']>;
     expectTypeOf<Sheet['open']>().toEqualTypeOf<boolean>();
-    expectTypeOf<Sheet['onOpenChange']>().not.toBeUndefined();
+    expectTypeOf<Sheet['onOpenChange']>().toEqualTypeOf<NonNullable<BottomSheetRootProps['onOpenChange']>>();
   });
 });

@@ -333,6 +333,24 @@ describe('BottomSheet', () => {
 });
 
 describe('BottomSheet uncontrolled and close vetoes', () => {
+  it('closes an uncontrolled sheet on Escape right away, and waits for open when controlled', () => {
+    const onOpenChange = vi.fn();
+    const { unmount } = render(<BottomSheet.Root defaultOpen onOpenChange={onOpenChange} aria-label="s" />);
+    let sheet = screen.getByRole('dialog');
+    act(() => {
+      sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+    expect(sheet.hasAttribute('data-exiting')).toBe(true);
+    unmount();
+    render(<BottomSheet.Root open onOpenChange={() => undefined} aria-label="s" />);
+    sheet = screen.getByRole('dialog');
+    act(() => {
+      sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
+    });
+    expect(sheet.hasAttribute('data-exiting')).toBe(false);
+  });
+
   it('opens from defaultOpen and closes itself from BottomSheet.Close', async () => {
     render(
       <BottomSheet.Root defaultOpen aria-label="Filters">

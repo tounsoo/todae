@@ -139,8 +139,11 @@ describe('ToggleGroup', () => {
 describe('ToggleGroup.Root types', () => {
   it('rejects the old onChange name', () => {
     expect(() => (
-      // @ts-expect-error onChange was renamed to onValueChange.
-      <ToggleGroup.Root aria-label="Align" onChange={() => undefined}>
+      <ToggleGroup.Root
+        aria-label="Align"
+        // @ts-expect-error onChange was renamed to onValueChange.
+        onChange={() => undefined}
+      >
         <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
       </ToggleGroup.Root>
     )).not.toThrow();

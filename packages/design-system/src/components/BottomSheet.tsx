@@ -31,7 +31,7 @@ export type { SheetSnap };
  * Why the sheet asked to close. `form` is a `<form method="dialog">` submit
  * (read the submitter's value from the element's `returnValue`); `native` is
  * anything else outside Todae that closed the `<dialog>` element, such as a
- * script calling `close()`. If the owner keeps `open`, the sheet shows again.
+ * script calling `close()`. While a controlled `open` stays true, the sheet shows again.
  */
 export type SheetCloseReason =
   | Extract<OverlayCloseReason, 'escape' | 'backdrop' | 'drag' | 'close-button'>

@@ -234,8 +234,13 @@ describe('OptionList', () => {
 describe('OptionList.Root types', () => {
   it('rejects the old onChange name', () => {
     expect(() => (
-      // @ts-expect-error onChange was renamed to onValueChange.
-      <OptionList.Root value={null} onValueChange={() => undefined} onChange={() => undefined} aria-label="Fruit">
+      <OptionList.Root
+        value={null}
+        onValueChange={() => undefined}
+        // @ts-expect-error onChange was renamed to onValueChange.
+        onChange={() => undefined}
+        aria-label="Fruit"
+      >
         <OptionList.Option value="apple">Apple</OptionList.Option>
       </OptionList.Root>
     )).not.toThrow();

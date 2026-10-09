@@ -237,7 +237,7 @@ describe('docs mcp tools', () => {
     expect(whenToUse('Dialog')).toMatchObject({
       status: 'present',
       whenToUse:
-        'Centered modal task or confirm (native `<dialog>`, controlled `open` or uncontrolled `defaultOpen`). Name via `Dialog.Title` or `aria-label`. Escape + scrim dismiss by default.',
+        'Centered modal task or confirm (native `<dialog>`, controlled `open` or uncontrolled `defaultOpen`). Name via `Dialog.Title` or `aria-label`. Escape + backdrop dismiss by default.',
       whenNotToUse:
         'Mobile picker from the bottom → BottomSheet. Full-height side panel → Drawer. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).',
     });
