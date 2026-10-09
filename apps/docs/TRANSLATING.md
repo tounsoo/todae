@@ -27,7 +27,7 @@ The docs are written in English and translated into Korean (한국어). Translat
 Korean is kept complete, so a change to an English `page.mdx` needs its Korean page changed in the same pull request. The tests fail until the Korean page matches the English shape and is stamped again:
 
 - A new heading, paragraph, list, code block, demo, props table or link changes the page's shape, which the Korean page must match.
-- Any other change to the English text changes that section's fingerprint. The test names each section that changed (or was added, moved or removed) since the Korean was last stamped. Update those sections in `app/ko/<slug>/page.mdx`, then run `pnpm --filter docs i18n:stamp ko <slug>`.
+- Any other change to the English text changes that section's fingerprint. The test names each section that changed (or was added or removed), or that sections moved, since the Korean was last stamped. Update those sections in `app/ko/<slug>/page.mdx`, then run `pnpm --filter docs i18n:stamp ko <slug>`.
 
 Stamp only after the translation says what the English now says: the fingerprint records that the two match, and nothing else checks the wording.
 
@@ -70,4 +70,4 @@ A test fails when a prop a page shows has no translation, or when its English ha
 
 List its slug in `lib/i18n/englishPages.ts` as well as in `components/siteGroups.ts`. A test fails until both list it, so every language can show the page before anyone translates it.
 
-Korean is in `COMPLETE_LOCALES`, so the same pull request also adds `app/ko/<slug>/page.mdx` and stamps it. A locale that is still being translated falls back to the English page instead.
+Korean is in `COMPLETE_LOCALES`, so the same pull request also adds the Korean page, and stamps it when it is a `page.mdx`. A locale that is still being translated falls back to the English page instead.

@@ -6,6 +6,9 @@ export type Section = { heading: string; level: number; text: string };
 /** The key of the part before a page's first heading, usually its imports. */
 export const TOP = '(top)';
 
+/** The key of the fingerprint of a page's headings in order, so moving a section is a change. */
+export const ORDER = '(section order)';
+
 /** `mdx` split at its headings. A `#` line inside a code fence is not a heading. */
 export function sections(mdx: string): Section[] {
   const parts: Section[] = [{ heading: TOP, level: 0, text: '' }];
@@ -35,35 +38,38 @@ function fingerprint(text: string): string {
   return createHash('sha256').update(normalized).digest('hex').slice(0, 12);
 }
 
-/** Each section of an English page by heading, with a fingerprint of its text. A repeated heading gets a ` (2)` suffix. */
+/**
+ * Each section of an English page by heading, with a fingerprint of its text, plus the
+ * fingerprint of the headings' order under `ORDER`. A repeated heading gets a ` (2)` suffix.
+ */
 export function sourceRecord(english: string): Record<string, string> {
   const record: Record<string, string> = {};
   for (const { heading, text } of sections(english)) {
     let key = heading;
-    for (let n = 2; key in record; n++) key = `${heading} (${n})`;
+    for (let n = 2; Object.hasOwn(record, key); n++) key = `${heading} (${n})`;
     record[key] = fingerprint(text);
   }
+  record[ORDER] = fingerprint(Object.keys(record).join('\n'));
   return record;
 }
 
 /**
- * The sections whose English differs from what a translation was made from: changed, new,
- * moved or gone since. Empty when the English is what was last stamped.
+ * The sections whose English differs from what a translation was made from: changed, new or
+ * gone since, or `sections moved` when only their order changed. Empty when the English is
+ * what was last stamped.
  */
 export function staleSections(english: string, recorded: Record<string, string> | undefined): string[] {
   const current = sourceRecord(english);
   const before = recorded ?? {};
-  // Sections both have, in the order each has them; a section that moved is out of step.
-  const kept = Object.keys(current).filter((heading) => heading in before);
-  const keptBefore = Object.keys(before).filter((heading) => heading in current);
-  const moved = kept.filter((heading, index) => keptBefore[index] !== heading).map((heading) => `${heading} (moved)`);
-  return [
-    ...moved,
-    ...Object.entries(current)
-      .filter(([heading, hash]) => before[heading] !== hash)
-      .map(([heading]) => (heading in before ? `${heading} (changed)` : `${heading} (new)`)),
-    ...Object.keys(before)
-      .filter((heading) => !(heading in current))
-      .map((heading) => `${heading} (removed)`),
-  ];
+  const has = (record: Record<string, string>, heading: string) => Object.hasOwn(record, heading);
+  const headings = Object.keys(current).filter((heading) => heading !== ORDER);
+  const changed = headings
+    .filter((heading) => before[heading] !== current[heading])
+    .map((heading) => (has(before, heading) ? `${heading} (changed)` : `${heading} (new)`));
+  const removed = Object.keys(before)
+    .filter((heading) => heading !== ORDER && !has(current, heading))
+    .map((heading) => `${heading} (removed)`);
+  // Adding or removing a section changes the order too; say so only when that is all that changed.
+  const moved = changed.length === 0 && removed.length === 0 && before[ORDER] !== current[ORDER] ? ['sections moved'] : [];
+  return [...changed, ...removed, ...moved];
 }
