@@ -170,10 +170,14 @@ describe('docs locales', () => {
       expect(log).toEqual(['ko/badge: # Badge (new)', 'ko/gone: dropped']);
       // A record whose English page is still there is kept until the page is translated again.
       expect(() => stamp(app, 'ko', { card: { '# Card': 'x' } }, ['card'])).toThrow(/translate it first/);
-      // A slug is written as in the URL, so each page has one key.
-      for (const slug of ['/badge/', 'recipes//combobox', './badge', '../ko/badge']) expect(() => stamp(app, 'ko', {}, [slug]), slug).toThrow(/as in the URL/);
+      // A slug must name a translated page's folder exactly.
+      for (const slug of ['/badge/', 'recipes//combobox', './badge', '../ko/badge', 'Badge']) expect(() => stamp(app, 'ko', {}, [slug]), slug).toThrow(/as in the URL/);
       // An inherited name is not a recorded page.
-      expect(() => stamp(app, 'ko', {}, ['constructor'])).toThrow(/No English page.mdx/);
+      expect(() => stamp(app, 'ko', {}, ['constructor'])).toThrow(/translate it first/);
+      // A translated page whose English page is gone is not stamped or dropped.
+      mkdirSync(join(app, 'ko', 'only'), { recursive: true });
+      writeFileSync(join(app, 'ko', 'only', 'page.mdx'), '# Only\n');
+      expect(() => stamp(app, 'ko', { only: { '# Only': 'x' } }, ['only'])).toThrow(/No English page.mdx/);
     } finally {
       rmSync(app, { recursive: true, force: true });
     }

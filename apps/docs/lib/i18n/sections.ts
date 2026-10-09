@@ -71,7 +71,7 @@ function fingerprint(text: string): string {
 
 /**
  * Each section of an English page by heading, with a fingerprint of its text, plus the
- * fingerprint of the headings' order under `ORDER`. A repeated heading gets a ` (2)` suffix.
+ * fingerprint of the headings' order under `ORDER`. Repeated headings get ` (2)`, ` (3)` and so on.
  */
 export function sourceRecord(english: string): Record<string, string> {
   const record: Record<string, string> = {};
