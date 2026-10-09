@@ -17,10 +17,19 @@ The docs are written in English and translated into Korean (한국어). Translat
    - Component, prop, hook and token names.
    - JSX such as `<Example>` and `<PropsTable name="…" />`. Translate only the text you pass to them.
    - Links to other docs pages, such as `[Tokens](/tokens)`. Write the English path; on a Korean page it goes to `/ko/tokens` by itself.
-3. Run `pnpm dev:docs` and open the page under `/ko`. The "not translated yet" notice should be gone.
-4. Run `pnpm --filter docs test` and open a pull request. One page per pull request is easiest to review.
+3. Keep the page's shape: the same top-level headings at the same levels, and the same number of top-level paragraphs, lists, demos and other blocks under each one. A test compares the shapes.
+4. Record which English you translated from: `pnpm --filter docs i18n:stamp ko button`. This writes a fingerprint of each English section to `lib/i18n/sources/ko.json`.
+5. Run `pnpm dev:docs` and open the page under `/ko`. The "not translated yet" notice should be gone.
+6. Run `pnpm --filter docs test` and open a pull request. One page per pull request is easiest to review.
 
-A translation does not change when its English page does. When you change an English page that has translations, say so in the pull request so a translator can catch up.
+## Change an English page
+
+Korean is kept complete, so a change to an English `page.mdx` needs its Korean page brought up to date in the same pull request. The tests fail until the Korean page matches the English shape and is stamped again:
+
+- A new top-level heading or block, or a new code block, demo, props table, link target anywhere on the page, or a new `href` on a JSX element written directly in the page (not inside a `{…}` expression), changes the page's shape, which the Korean page must match.
+- Other changes to the English text change the fingerprint of the section they are in. The test names each section that changed, was added or was removed since the Korean was last stamped, and whether the order of sections changed, which adding or removing one also does. Update those sections in `app/ko/<slug>/page.mdx`, then run `pnpm --filter docs i18n:stamp ko <slug>`.
+
+Stamp only after the translation says what the English now says: a stamp records only the English, and nothing checks the Korean wording.
 
 ### Korean style
 
@@ -55,7 +64,10 @@ A test fails when a prop a page shows has no translation, or when its English ha
 3. Copy `app/ko/layout.tsx`, `app/ko/page.tsx` and `app/ko/[...slug]/page.tsx` into `app/<locale>/`, and change `ko` to the new locale in each.
 4. Add `/<locale>` to `LOCALE_PREFIXES` in `next.config.mjs`, so old URLs redirect in the new language too.
 5. Run `pnpm --filter docs test` and `pnpm build`.
+6. Once every page is translated, add the locale to `COMPLETE_LOCALES` in `lib/i18n/config.ts`. Until then its missing pages fall back to English.
 
 ## Add an English page
 
 List its slug in `lib/i18n/englishPages.ts` as well as in `components/siteGroups.ts`. A test fails until both list it, so every language can show the page before anyone translates it.
+
+Korean is in `COMPLETE_LOCALES`, so the same pull request also adds the Korean page, and stamps it when it is a `page.mdx`. A locale that is still being translated falls back to the English page instead.

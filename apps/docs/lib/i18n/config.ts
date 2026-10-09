@@ -5,6 +5,12 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = 'en';
 
+/**
+ * Locales that keep every page translated. A test fails when one of them lacks a page; a new
+ * locale can fall back to English page by page and joins this list once it has them all.
+ */
+export const COMPLETE_LOCALES: readonly Locale[] = ['ko'];
+
 /** Each language's name in that language, for the switcher. */
 export const LOCALE_NAMES: Record<Locale, string> = {
   en: 'English',

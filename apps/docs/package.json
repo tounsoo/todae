@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:browser": "vitest run --config vitest.browser.config.ts",
+    "i18n:stamp": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/stamp-translations.ts",
     "clean": "rm -rf .next"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.3",
+    "@types/mdast": "4.0.4",
     "@types/mdx": "^2.0.13",
     "@types/node": "^22.13.10",
     "@types/react": "^19.0.12",
@@ -33,6 +35,9 @@
     "@vitest/browser": "3.2.7",
     "axe-core": "^4.13.0",
     "jsdom": "^26.1.0",
+    "mdast-util-from-markdown": "2.0.3",
+    "mdast-util-mdx": "3.0.0",
+    "micromark-extension-mdxjs": "3.0.0",
     "playwright": "1.56.1",
     "typescript": "^5.8.2",
     "vitest": "^3.0.9"

@@ -16,11 +16,13 @@ import { SiteNav } from '../../components/SiteNav';
 import { SiteShell } from '../../components/SiteShell';
 import { SITE_GROUPS } from '../../components/siteGroups';
 import { UntranslatedPage } from '../../components/UntranslatedPage';
-import { LOCALES, stripLocale } from './config';
+import { COMPLETE_LOCALES, LOCALES, stripLocale } from './config';
 import { DICTIONARIES } from './dictionaries';
 import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
 import { PROP_TRANSLATIONS, propDescription } from './propDescriptions';
+import { codeBlocks, links, sections, sourceRecord, staleSections } from './sections';
+import { stamp, type Sources } from './stamp';
 import schema from '@tounsoo/todae/schema/components.json';
 
 const path = vi.hoisted(() => ({ current: '/ko/button' }));
@@ -40,6 +42,22 @@ vi.mock('./pages', async (importOriginal) => {
 });
 
 const APP = join(process.cwd(), 'app');
+
+// The English a locale's pages were translated from, section by section, or nothing before any is stamped.
+// Written by `pnpm --filter docs i18n:stamp`.
+function sourcesOf(locale: string): Sources {
+  const file = join(process.cwd(), 'lib', 'i18n', 'sources', `${locale}.json`);
+  return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
+}
+
+// A page's parse error names the page.
+function withPage<T>(page: string, check: () => T): T {
+  try {
+    return check();
+  } catch (error) {
+    throw new Error(`${page}: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
+  }
+}
 
 // Static page slugs under `dir`; dynamic segments are not pages of their own.
 function slugs(dir: string, prefix = ''): string[] {
@@ -61,16 +79,17 @@ describe('docs locales', () => {
   it('keeps each translation in step with its English page', () => {
     // A translation changes prose only. When an English page changes its imports, demos, props tables,
     // code or links, its translations must change with it.
-    const fences = (text: string) => text.match(/^```[^\n]*\n[\s\S]*?^```$/gm) ?? [];
-    const outsideCode = (text: string) => fences(text).reduce((rest, block) => rest.replace(block, ''), text);
     const shape = (text: string) => {
-      const prose = outsideCode(text);
+      const { code, rest: prose } = codeBlocks(text);
       return {
         imports: prose.match(/^import .*$/gm) ?? [],
-        code: fences(text),
+        code,
         tags: (prose.match(/<\/?[A-Z][\w.]*/g) ?? []).sort(),
         props: prose.match(/<PropsTable\s+name="[^"]+"/g) ?? [],
-        links: (prose.match(/\]\([^)\s]+\)|href=["'][^"']+["']/g) ?? []).sort(),
+        links: links(text),
+        // Each top-level heading's level and the number of top-level blocks under it, so a section or
+        // top-level paragraph added in English has to be added to the translation too.
+        sections: sections(text).map((part) => `h${part.level}: ${part.blocks} blocks`),
       };
     };
     for (const locale of LOCALES.filter((item) => item !== 'en')) {
@@ -78,9 +97,97 @@ describe('docs locales', () => {
         const file = join(APP, locale, slug, 'page.mdx');
         if (!existsSync(file)) continue;
         const english = readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8');
-        expect(shape(readFileSync(file, 'utf8')), `${locale}/${slug}`).toEqual(shape(english));
+        const translation = withPage(`${locale}/${slug}`, () => shape(readFileSync(file, 'utf8')));
+        expect(translation, `${locale}/${slug}`).toEqual(withPage(`en/${slug}`, () => shape(english)));
       }
     }
+  });
+
+  it('records which English each translated page was made from', () => {
+    // The structure check above cannot see prose edits, so each translated page records a fingerprint
+    // of every English section it was translated from. Editing English prose fails here until the
+    // page is stamped again.
+    for (const locale of LOCALES.filter((item) => item !== 'en')) {
+      const sources = sourcesOf(locale);
+      const translated = slugs(join(APP, locale)).filter((slug) => existsSync(join(APP, locale, slug, 'page.mdx')));
+      const stale = translated.flatMap((slug) => {
+        const changed = withPage(`en/${slug}`, () => staleSections(readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8'), sources[slug]));
+        return changed.length ? [`${locale}/${slug}: ${changed.join(', ')}`] : [];
+      });
+      // A record with no translated page: dropped by i18n:stamp once the English page is gone too.
+      const orphaned = Object.keys(sources)
+        .filter((slug) => !translated.includes(slug))
+        .map((slug) =>
+          existsSync(join(APP, '(en)', slug, 'page.mdx'))
+            ? `${locale}/${slug}: no translated page.mdx; translate it again`
+            : `${locale}/${slug}: page removed, so run i18n:stamp ${locale} ${slug} to drop it`,
+        );
+      expect(
+        [...stale, ...orphaned],
+        `Update app/${locale}/<slug>/page.mdx to match the English sections listed, then run pnpm --filter docs i18n:stamp ${locale} <slug>`,
+      ).toEqual([]);
+    }
+  });
+
+  it('notices a changed, new, removed or moved English section', () => {
+    const english = '# Badge\n\nA label.\n\n## When to use\n\nOften.\n';
+    const recorded = sourceRecord(english);
+    expect(staleSections(english, recorded)).toEqual([]);
+    // Trailing spaces, and blank lines at the end, are not a change.
+    expect(staleSections(english.replace('A label.', 'A label.  \n'), recorded)).toEqual([]);
+    expect(staleSections(english.replace('Often.', 'Rarely.'), recorded)).toEqual(['## When to use (changed)']);
+    expect(staleSections(`${english}\n## Accessible composition\n\nNames.\n`, recorded)).toEqual(['## Accessible composition (new)', 'section order (changed)']);
+    expect(staleSections('# Badge\n\nA label.\n', recorded)).toEqual(['## When to use (removed)', 'section order (changed)']);
+    expect(staleSections(english, undefined)).toEqual(['# Badge (new)', '## When to use (new)']);
+    // Moving a section changes no section's text, but the order is a change.
+    const page = (...names: string[]) => `# A\n\n${names.map((name) => `## ${name}\n\n${name} text.\n`).join('\n')}`;
+    const before = sourceRecord(page('B', 'C', 'D', 'E'));
+    expect(staleSections(page('E', 'B', 'C', 'D'), before)).toEqual(['section order (changed)']);
+    // A move is still reported when a section also changed or was added.
+    expect(staleSections(page('E', 'B', 'C', 'D').replace('B text.', 'B edited.'), before)).toEqual(['## B (changed)', 'section order (changed)']);
+    expect(staleSections(page('E', 'B', 'C', 'D', 'F'), before)).toEqual(['## F (new)', 'section order (changed)']);
+    // The order is recorded on its own, so a tool that sorts the JSON keys does not read as a move.
+    const sorted = Object.fromEntries(Object.entries(sourceRecord(page('B', 'C'))).sort());
+    expect(staleSections(page('B', 'C'), sorted)).toEqual([]);
+    // A heading inside a code block of any fence style is code, not a section.
+    for (const fence of ['```md\n## Code\n```', '~~~md\n## Code\n~~~', '````md\n```\n## Code\n```\n````', '- Item\n\n  ```md\n  ## Code\n  ```']) {
+      expect(sections(`# A\n\n${fence}\n\n## B\n`).map((part) => part.heading), fence).toEqual(['# A', '## B']);
+    }
+    // Code blocks are left out of a section's block count and out of the prose the shape test reads.
+    expect(sections('# A\n\nText.\n\n```ts\nx\n```\n\n<Demo />\n')[0]!.blocks).toBe(2);
+    // Link targets and hrefs are compared; link text and titles are translated.
+    expect(links('[Tokens](/tokens "Design tokens")\n\n[ref]: /ref\n\n<a href={`/x/${y}#props`}>x</a> <Link href="/y">y</Link>\n')).toEqual(['/ref', '/tokens', '/y', '{`/x/${y}#props`}']);
+    expect(links('[토큰](/tokens "디자인 토큰")\n')).toEqual(links('[Tokens](/tokens "Design tokens")\n'));
+    expect(codeBlocks('Text.\n\n~~~ts\nimport x from "y";\n~~~\n')).toEqual({ code: ['~~~ts\nimport x from "y";\n~~~'], rest: 'Text.\n\n\n' });
+  });
+
+  it('stamps a translated page, drops a removed one and refuses an untranslated one', () => {
+    const app = mkdtempSync(join(tmpdir(), 'todae-stamp-'));
+    try {
+      for (const [dir, text] of [['(en)/badge', '# Badge\n'], ['ko/badge', '# Badge\n'], ['(en)/card', '# Card\n']] as const) {
+        mkdirSync(join(app, dir), { recursive: true });
+        writeFileSync(join(app, dir, 'page.mdx'), text);
+      }
+      const { sources, log } = stamp(app, 'ko', { gone: { '# Gone': 'x' } }, ['badge', 'gone']);
+      expect(sources).toEqual({ badge: sourceRecord('# Badge\n') });
+      expect(log).toEqual(['ko/badge: # Badge (new)', 'ko/gone: dropped']);
+      // A record whose English page is still there is kept until the page is translated again.
+      expect(() => stamp(app, 'ko', { card: { '# Card': 'x' } }, ['card'])).toThrow(/translate it first/);
+      // A slug must name a translated page's folder exactly.
+      for (const slug of ['/badge/', 'recipes//combobox', './badge', '../ko/badge', 'Badge']) expect(() => stamp(app, 'ko', {}, [slug]), slug).toThrow(/as in the URL/);
+      // An inherited name is not a recorded page.
+      expect(() => stamp(app, 'ko', {}, ['constructor'])).toThrow(/translate it first/);
+      // A translated page whose English page is gone is not stamped or dropped.
+      mkdirSync(join(app, 'ko', 'only'), { recursive: true });
+      writeFileSync(join(app, 'ko', 'only', 'page.mdx'), '# Only\n');
+      expect(() => stamp(app, 'ko', { only: { '# Only': 'x' } }, ['only'])).toThrow(/No English page.mdx/);
+    } finally {
+      rmSync(app, { recursive: true, force: true });
+    }
+  });
+
+  it('translates every page in a complete locale', () => {
+    for (const locale of COMPLETE_LOCALES) expect(untranslatedSlugs(locale), `pages with no app/${locale} translation`).toEqual([]);
   });
 
   it('translates only pages that exist in English', () => {
