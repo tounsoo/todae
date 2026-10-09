@@ -1,12 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { usePopover } from '../hooks/usePopover';
 import {
   BottomSheet,
   Button,
   Dialog,
+  Field,
   Menu,
   OptionList,
   Popover,
@@ -211,6 +212,29 @@ describe('state in forced colors', () => {
     await waitFor(() => expect(pear.hasAttribute('data-highlighted')).toBe(true));
     expect(getComputedStyle(pear).outlineStyle).toBe('solid');
   });
+
+  it('outlines the focused option of an open select', async () => {
+    render(
+      <Themed>
+        <Field.Root>
+          <Field.Select aria-label="Fruit" value="apple" onValueChange={() => undefined}>
+            <option value="apple">Apple</option>
+            <option value="pear">Pear</option>
+          </Field.Select>
+        </Field.Root>
+      </Themed>,
+    );
+    const select = screen.getByRole('combobox', { name: 'Fruit' }) as HTMLSelectElement;
+    await userEvent.tab();
+    expect(document.activeElement).toBe(select);
+    await userEvent.keyboard(' ');
+    await waitFor(() => expect(select.matches(':open')).toBe(true));
+    await userEvent.keyboard('{ArrowDown}');
+    const pear = select.options[1]!;
+    await waitFor(() => expect(pear.matches(':focus-visible')).toBe(true));
+    expect(getComputedStyle(pear).outlineStyle).toBe('solid');
+    await userEvent.keyboard('{Escape}');
+  });
 });
 
 describe('switch in rtl', () => {
@@ -257,6 +281,29 @@ describe('close buttons', () => {
     );
     expect(await screen.findByRole('button', { name: 'Cancel' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '닫기' })).toBeTruthy();
+  });
+
+  it('take a name a child renders later from its own state', async () => {
+    function Later() {
+      const [text, setText] = useState('');
+      useEffect(() => {
+        const timer = setTimeout(() => setText('Cancel'), 20);
+        return () => clearTimeout(timer);
+      }, []);
+      return <>{text}</>;
+    }
+    render(
+      <Themed>
+        <Dialog.Root open onOpenChange={() => undefined} aria-label="Edit">
+          <Dialog.Close>
+            <Later />
+          </Dialog.Close>
+        </Dialog.Root>
+      </Themed>,
+    );
+    expect(await screen.findByRole('button', { name: 'Close' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Cancel' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
   });
 });
 
@@ -453,6 +500,29 @@ describe('OptionList scrolling', () => {
     await frame();
     rerender(<Swap items={VEG} active="Veg 30" />);
     await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Veg 30' }))).toBe(true));
+  });
+
+  it('reveals a requested option that renders after the request', async () => {
+    function Late({ items, active }: { items: string[]; active: string }) {
+      const popover = usePopover({ defaultOpen: true });
+      return (
+        <Themed>
+          <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
+          <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
+            <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit">
+              <Wrapped items={items} />
+            </OptionList.Root>
+          </Popover.Root>
+        </Themed>
+      );
+    }
+    const { rerender } = render(<Late items={FRUITS.slice(0, 20)} active="Fruit 1" />);
+    await screen.findByRole('listbox');
+    await frame();
+    rerender(<Late items={FRUITS.slice(0, 20)} active="Fruit 30" />);
+    await frame();
+    rerender(<Late items={FRUITS} active="Fruit 30" />);
+    await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 30' }))).toBe(true));
   });
 
   it('reveals the option it falls back to, not a disabled requested one', async () => {

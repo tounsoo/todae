@@ -267,25 +267,33 @@ function OptionListRoot(props: OptionListRootProps) {
   // aria-activedescendant moves no focus, so nothing scrolls the option into
   // view: scroll its nearest scroll box, never the page. Reveal when the
   // activeValue prop changes or, uncontrolled, when the keyboard moves the
-  // highlight; never on mount.
+  // highlight; never on mount. A request waits while the list is hidden or
+  // while its option has not rendered yet, such as an async result.
   const target = activeValueProp !== undefined ? activeValueProp : highlighted;
   const lastTarget = useRef(target);
+  const pending = useRef<string | null>(null);
+  // Every commit, as the requested option can render later than the request.
   useLayoutEffect(() => {
     const changed = lastTarget.current !== target;
-    lastTarget.current = target;
+    if (changed) {
+      lastTarget.current = target;
+      pending.current = target;
+    }
+    const want = pending.current;
     const list = listRef.current;
-    // A list in a closed popover has no layout; it is revealed when it opens.
-    if (!changed || !target || !list || list.checkVisibility?.() === false) return;
+    // A list in a closed popover has no layout; it is revealed when it shows.
+    if (!want || !list || list.checkVisibility?.() === false) return;
     // Read the options from the DOM: they may have changed in this commit,
     // before the list re-resolves. A missing or disabled request falls back to
     // the first enabled option, as aria-activedescendant will.
-    const requested = findOption(list, optionDomId(listId, target));
-    const option =
-      requested && requested.getAttribute('aria-disabled') !== 'true'
-        ? requested
-        : list.querySelector<HTMLElement>('[role="option"]:not([aria-disabled="true"])');
+    const requested = findOption(list, optionDomId(listId, want));
+    const usable = requested && requested.getAttribute('aria-disabled') !== 'true';
+    const option = usable ? requested : list.querySelector<HTMLElement>('[role="option"]:not([aria-disabled="true"])');
+    // A missing option is still awaited, after one reveal of the fallback.
+    if (requested) pending.current = null;
+    else if (!changed) return;
     if (option) revealInScrollBox(option);
-  }, [listId, target]);
+  });
   // Opening a popover or dialog lays the list out: reveal the active option then.
   const activeId = activeValue ? optionDomId(listId, activeValue) : null;
   useLayoutEffect(() => {

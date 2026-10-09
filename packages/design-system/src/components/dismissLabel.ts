@@ -1,4 +1,4 @@
-import { isValidElement, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from 'react';
+import { isValidElement, useCallback, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from 'react';
 import { useComposedRefs } from './props';
 
 /**
@@ -46,11 +46,26 @@ export function useDismissLabel(
   const [worded, setWorded] = useState(() => hasWords(children));
   const buttonRef = useRef<HTMLButtonElement>(null);
   const refs = useComposedRefs(buttonRef, ref);
-  // Every commit, as the text can change; the same value bails out.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
+  const read = useCallback(() => {
     const button = buttonRef.current;
     setWorded(button ? isWorded(spokenText(button)) : false);
-  });
+  }, []);
+  // Every commit, as the text can change; the same value bails out.
+  useLayoutEffect(read);
+  // A child can render its text from its own state, such as a translation
+  // that loads later, without this component rendering again.
+  useLayoutEffect(() => {
+    const button = buttonRef.current;
+    if (!button || typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(read);
+    observer.observe(button, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['aria-hidden'],
+    });
+    return () => observer.disconnect();
+  }, [read]);
   return [ariaLabel ?? (worded ? undefined : fallback), refs];
 }
