@@ -12,6 +12,7 @@ import { MobileNav } from './MobileNav';
 import { APPEARANCE_SCRIPT } from './appearanceScript';
 import { Providers } from './Providers';
 import { SiteNav } from './SiteNav';
+import { SITE_GROUPS } from './siteGroups';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import '../app/globals.css';
 
@@ -19,6 +20,8 @@ const sans = Geist({ subsets: ['latin'], variable: '--docs-font-sans' });
 const mono = Geist_Mono({ subsets: ['latin'], variable: '--docs-font-mono' });
 
 const REPO = 'https://github.com/tounsoo/todae';
+// The top bar's Components link opens the first page the sidebar lists under Components.
+const FIRST_COMPONENT = SITE_GROUPS.find((group) => group.id === 'components')?.links[0]?.[0] ?? '/';
 
 /** The document for one locale. Each locale's root layout renders it, so `<html lang>` is right from the server. */
 export function SiteShell({
@@ -34,7 +37,7 @@ export function SiteShell({
   const dict = DICTIONARIES[locale];
   const top = [
     ['/guides/build-on-todae', dict.topLinks.start],
-    ['/button', dict.topLinks.components],
+    [FIRST_COMPONENT, dict.topLinks.components],
     ['/playground', dict.topLinks.playground],
   ] as const;
   return (
