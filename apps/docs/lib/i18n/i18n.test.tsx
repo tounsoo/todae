@@ -22,8 +22,7 @@ import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
 import { PROP_TRANSLATIONS, propDescription } from './propDescriptions';
 import { codeBlocks, sections, sourceRecord, staleSections } from './sections';
-import { stamp } from './stamp';
-import koSources from './sources/ko.json';
+import { stamp, type Sources } from './stamp';
 import schema from '@tounsoo/todae/schema/components.json';
 
 const path = vi.hoisted(() => ({ current: '/ko/button' }));
@@ -44,8 +43,21 @@ vi.mock('./pages', async (importOriginal) => {
 
 const APP = join(process.cwd(), 'app');
 
-// The English each locale's pages were translated from, section by section. Written by `pnpm --filter docs i18n:stamp`.
-const SOURCES: Partial<Record<(typeof LOCALES)[number], Record<string, Record<string, string>>>> = { ko: koSources };
+// The English a locale's pages were translated from, section by section, or nothing before any is stamped.
+// Written by `pnpm --filter docs i18n:stamp`.
+function sourcesOf(locale: string): Sources {
+  const file = join(process.cwd(), 'lib', 'i18n', 'sources', `${locale}.json`);
+  return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
+}
+
+// A page's parse error names the page.
+function withPage<T>(page: string, check: () => T): T {
+  try {
+    return check();
+  } catch (error) {
+    throw new Error(`${page}: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
+  }
+}
 
 // Static page slugs under `dir`; dynamic segments are not pages of their own.
 function slugs(dir: string, prefix = ''): string[] {
@@ -75,8 +87,8 @@ describe('docs locales', () => {
         tags: (prose.match(/<\/?[A-Z][\w.]*/g) ?? []).sort(),
         props: prose.match(/<PropsTable\s+name="[^"]+"/g) ?? [],
         links: (prose.match(/\]\([^)\s]+\)|href=["'][^"']+["']/g) ?? []).sort(),
-        // Each heading's level and the number of paragraphs, lists and blocks under it, so a section
-        // or paragraph added in English has to be added to the translation too.
+        // Each top-level heading's level and the number of top-level blocks under it, so a section or
+        // top-level paragraph added in English has to be added to the translation too.
         sections: sections(text).map((part) => `h${part.level}: ${part.blocks} blocks`),
       };
     };
@@ -85,7 +97,8 @@ describe('docs locales', () => {
         const file = join(APP, locale, slug, 'page.mdx');
         if (!existsSync(file)) continue;
         const english = readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8');
-        expect(shape(readFileSync(file, 'utf8')), `${locale}/${slug}`).toEqual(shape(english));
+        const [translation, original] = withPage(`${locale}/${slug}`, () => [shape(readFileSync(file, 'utf8')), shape(english)]);
+        expect(translation, `${locale}/${slug}`).toEqual(original);
       }
     }
   });
@@ -95,10 +108,10 @@ describe('docs locales', () => {
     // of every English section it was translated from. Editing English prose fails here until the
     // page is stamped again.
     for (const locale of LOCALES.filter((item) => item !== 'en')) {
-      const sources = SOURCES[locale] ?? {};
+      const sources = sourcesOf(locale);
       const translated = slugs(join(APP, locale)).filter((slug) => existsSync(join(APP, locale, slug, 'page.mdx')));
       const stale = translated.flatMap((slug) => {
-        const changed = staleSections(readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8'), sources[slug]);
+        const changed = withPage(`en/${slug}`, () => staleSections(readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8'), sources[slug]));
         return changed.length ? [`${locale}/${slug}: ${changed.join(', ')}`] : [];
       });
       // A record with no translated page: dropped by i18n:stamp once the English page is gone too.
@@ -157,6 +170,8 @@ describe('docs locales', () => {
       expect(log).toEqual(['ko/badge: # Badge (new)', 'ko/gone: dropped']);
       // A record whose English page is still there is kept until the page is translated again.
       expect(() => stamp(app, 'ko', { card: { '# Card': 'x' } }, ['card'])).toThrow(/translate it first/);
+      // A slug typed with slashes is the same page.
+      expect(Object.keys(stamp(app, 'ko', {}, ['/badge/']).sources)).toEqual(['badge']);
       // An inherited name is not a recorded page.
       expect(() => stamp(app, 'ko', {}, ['constructor'])).toThrow(/No English page.mdx/);
     } finally {

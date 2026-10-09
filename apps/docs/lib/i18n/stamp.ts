@@ -12,7 +12,7 @@ export type Sources = Record<string, Record<string, string>>;
 export function stamp(appDir: string, locale: string, sources: Sources, slugs: readonly string[]): { sources: Sources; log: string[] } {
   const next: Sources = { ...sources };
   const log: string[] = [];
-  for (const slug of slugs) {
+  for (const slug of slugs.map((item) => item.replace(/^\/+|\/+$/g, ''))) {
     const english = join(appDir, '(en)', slug, 'page.mdx');
     const translation = join(appDir, locale, slug, 'page.mdx');
     if (!existsSync(english) && !existsSync(translation) && Object.hasOwn(next, slug)) {
