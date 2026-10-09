@@ -506,7 +506,7 @@ function Region<T extends object = object>({
   // stack layout needs no measuring of its own. Read from the toast inside
   // each item, which the collapsed layout clips to the front toast's height
   // but never squeezes; the observer reads it again as the stack narrows and
-  // widens it. Unrounded, so a peek stays exact at any zoom.
+  // widens it.
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list) return;
@@ -514,7 +514,7 @@ function Region<T extends object = object>({
       const items = [...list.children] as HTMLElement[];
       let offset = 0;
       items.forEach((item, index) => {
-        const height = (item.firstElementChild ?? item).getBoundingClientRect().height;
+        const height = (item.firstElementChild as HTMLElement | null)?.offsetHeight ?? item.offsetHeight;
         item.style.setProperty('--toast-index', String(index));
         item.style.setProperty('--toast-offset', `${offset}px`);
         if (index === 0) list.style.setProperty('--toast-front-height', `${height}px`);

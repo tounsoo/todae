@@ -138,16 +138,19 @@
     flex-shrink: 0;
   }
 
-  /* Only the card peeks out from behind the one in front: what is on it
-     fades out of sight, so no sliver of its text or buttons shows in the
-     strip, whatever the density. It stays focusable, and focus inside
-     spreads the stack, which brings it back. */
-  .region[data-layout='stack'] .item > * > * {
-    transition: opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+  /* Only the card peeks out from behind a toast that stays: the parts of
+     its Toast.Root are hidden and let the pointer through until the stack
+     spreads. They stay focusable, and keyboard focus inside spreads it. */
+  .region[data-layout='stack']:not([data-expanded]) .item:not([data-exiting]) ~ .item .root > * {
+    opacity: 0;
+    pointer-events: none;
   }
 
-  .region[data-layout='stack']:not([data-expanded]) .item:not(:first-child) > * > * {
-    opacity: 0;
+  /* Hiding fades with the new toast in front fading in; showing is at once. */
+  @media (prefers-reduced-motion: no-preference) {
+    .region[data-layout='stack']:not([data-expanded]) .item:not([data-exiting]) ~ .item .root > * {
+      transition: opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+    }
   }
 
   /* A tooltip held open on a back toast sits in the top layer, above the
@@ -199,8 +202,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .item,
-    .region[data-layout='stack'] .item,
-    .region[data-layout='stack'] .item > * > * {
+    .region[data-layout='stack'] .item {
       transition: none;
     }
   }
