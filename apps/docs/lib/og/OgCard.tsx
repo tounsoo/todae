@@ -1,6 +1,5 @@
 import { DOCS_ORIGIN } from '../origin';
-import { localizePath } from '../i18n/config';
-import { SITE_NAME } from '../i18n/metadata';
+import { OG_IMAGE_SIZE, pagePath, SITE_NAME } from '../i18n/metadata';
 import { coreColor } from './colors';
 import type { OgPage } from './pages';
 
@@ -15,17 +14,46 @@ const muted = coreColor('gray.600');
 const RAMP = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'] as const;
 const ACCENTS = ['green.300', 'amber.300', 'red.300'] as const;
 
-/** Long titles step down so they stay on two or three lines. */
-function titleSize(title: string): number {
-  if (title.length <= 14) return 104;
-  if (title.length <= 24) return 88;
-  return 72;
+/** The card's size and the left column the text sits in, beside the swatch panel. */
+const PADDING = 64;
+const GAP = 56;
+const PANEL = 260;
+export const TEXT_WIDTH = OG_IMAGE_SIZE.width - 2 * PADDING - GAP - PANEL;
+
+/**
+ * Roughly how wide `text` sets, in ems. The renderer cannot measure, so this
+ * errs wide: Geist Bold averages about 0.55em a character and Hangul is square.
+ */
+export function estimateEms(text: string, mono = false): number {
+  let ems = 0;
+  for (const char of text) {
+    if (mono) ems += 0.62;
+    else if (/[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]/.test(char)) ems += 1;
+    else if (/[A-Z]/.test(char)) ems += 0.7;
+    else ems += 0.6;
+  }
+  return ems;
+}
+
+/**
+ * The largest title size, up to 104px, at which the longest word fits the
+ * column on one line (a word cannot break) and the whole title fits in three.
+ */
+export function titleSize(title: string): number {
+  const longest = Math.max(...title.split(/\s+/).map((word) => estimateEms(word)));
+  const fits = Math.min(TEXT_WIDTH / longest, (3 * TEXT_WIDTH) / (estimateEms(title) * 1.15));
+  return Math.floor(Math.min(104, fits));
+}
+
+/** The address size, up to 24px, at which it stays on one line. */
+export function urlSize(url: string): number {
+  return Math.floor(Math.min(24, TEXT_WIDTH / estimateEms(url, true)));
 }
 
 /** The address a reader would see, without the scheme. */
 export function displayUrl(page: Pick<OgPage, 'locale' | 'slug'>): string {
   const host = new URL(DOCS_ORIGIN).host;
-  const path = localizePath(page.slug ? `/${page.slug}` : '/', page.locale);
+  const path = pagePath(page.locale, page.slug);
   return path === '/' ? host : host + path;
 }
 
@@ -43,8 +71,8 @@ export function OgCard({ page }: { page: OgPage }) {
         display: 'flex',
         width: '100%',
         height: '100%',
-        padding: 64,
-        gap: 56,
+        padding: PADDING,
+        gap: GAP,
         background: canvas,
         color: ink,
         fontFamily: 'Geist, "Noto Sans KR"',
@@ -102,7 +130,9 @@ export function OgCard({ page }: { page: OgPage }) {
             {page.title}
           </div>
         </div>
-        <div style={{ display: 'flex', fontFamily: '"Geist Mono"', fontSize: 24, color: muted }}>{displayUrl(page)}</div>
+        <div style={{ display: 'flex', fontFamily: '"Geist Mono"', fontSize: urlSize(displayUrl(page)), color: muted, whiteSpace: 'nowrap' }}>
+          {displayUrl(page)}
+        </div>
       </div>
       {/* The token motif: the gray ramp as swatches on the dotted panel the home page shows its components on. */}
       <div
@@ -111,7 +141,7 @@ export function OgCard({ page }: { page: OgPage }) {
           flexDirection: 'column',
           justifyContent: 'center',
           gap: 10,
-          width: 260,
+          width: PANEL,
           padding: 28,
           borderRadius: 28,
           border: `1.5px solid ${line}`,

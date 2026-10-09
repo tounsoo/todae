@@ -12,7 +12,7 @@ import { ENGLISH_PAGES } from './i18n/englishPages';
 import { localeMetadata, ogImagePath, pageMetadata } from './i18n/metadata';
 import { isTranslated } from './i18n/pages';
 import { coreColor, oklchToHex } from './og/colors';
-import { displayUrl } from './og/OgCard';
+import { displayUrl, estimateEms, TEXT_WIDTH, titleSize, urlSize } from './og/OgCard';
 import { ogPages } from './og/pages';
 import remarkPageMetadata, { DESCRIPTION_LIMIT, pageOf, pageSummary, summarize } from './remarkPageMetadata.mjs';
 
@@ -132,6 +132,18 @@ describe('social images', () => {
   it('labels every page but the home page with its sidebar section, in its language', () => {
     for (const page of pages) expect(page.eyebrow, `${page.locale} ${page.slug}`).not.toBe('');
     expect(pages.find((page) => page.locale === 'ko' && page.slug === 'utilities/use-modal-layer')?.eyebrow).toBe('유틸리티');
+  });
+
+  it('sizes every title and address to fit the text column', () => {
+    for (const page of pages) {
+      const size = titleSize(page.title);
+      const longest = Math.max(...page.title.split(/\s+/).map((word) => estimateEms(word)));
+      expect(longest * size, `${page.locale} ${page.slug}`).toBeLessThanOrEqual(TEXT_WIDTH);
+      expect(size, `${page.locale} ${page.slug}`).toBeGreaterThanOrEqual(48);
+      expect(estimateEms(displayUrl(page), true) * urlSize(displayUrl(page))).toBeLessThanOrEqual(TEXT_WIDTH);
+    }
+    expect(titleSize('Button')).toBe(104);
+    expect(titleSize('useSheetPresentation')).toBeLessThan(titleSize('useModalLayer'));
   });
 
   it('shows the address a reader would type', () => {

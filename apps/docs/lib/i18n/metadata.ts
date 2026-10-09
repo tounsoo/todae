@@ -19,7 +19,7 @@ export function ogImagePath(locale: Locale, slug: string): string {
 type Social = { locale: Locale; slug: string; title: string; description: string };
 
 /** A page's path in its own language, the canonical URL relative to `metadataBase`. */
-function pathOf(locale: Locale, slug: string): string {
+export function pagePath(locale: Locale, slug: string): string {
   return localizePath(slug ? `/${slug}` : '/', locale);
 }
 
@@ -65,7 +65,7 @@ export function pageMetadata({ locale, slug, title, description }: Social): Meta
   return {
     title: { absolute: fullTitle },
     description,
-    alternates: { canonical: pathOf(locale, slug) },
-    ...social({ locale, slug, title: fullTitle, description }, pathOf(locale, slug)),
+    alternates: { canonical: pagePath(locale, slug) },
+    ...social({ locale, slug, title: fullTitle, description }, pagePath(locale, slug)),
   };
 }

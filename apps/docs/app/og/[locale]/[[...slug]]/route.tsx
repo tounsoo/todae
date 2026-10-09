@@ -24,5 +24,10 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
   const page = PAGES.find((item) => item.locale === locale && item.slug === slug.join('/'));
   if (!page) return new Response('Not found', { status: 404 });
   fonts ??= ogFonts(PAGES.map(ogText).join(''));
-  return new ImageResponse(<OgCard page={page} />, { ...OG_IMAGE_SIZE, fonts: await fonts });
+  return new ImageResponse(<OgCard page={page} />, {
+    ...OG_IMAGE_SIZE,
+    fonts: await fonts,
+    // The image URL has no version, so a redeploy that redraws it must not be hidden behind ImageResponse's year-long immutable default.
+    headers: { 'cache-control': 'public, max-age=0, must-revalidate' },
+  });
 }
