@@ -24,7 +24,7 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 위에서 설명한 모달 `<dialog>` 동작입니다. `BottomSheet.Title`과 `BottomSheet.Description`은 `aria-labelledby`와 `aria-describedby`를 설정하고, `BottomSheet.Close`는 자기 텍스트로 이름이 붙지 않으면 `close` 문자열로 이름이 붙습니다. 닫힘 동작이 끝나면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. 그래버는 `resizeSheet` 문자열("Resize sheet")로 이름이 붙은 `<button>`입니다. `snapPoints`에 `full`과 `mid`가 있으면 ArrowUp은 `full`로 스냅하고 ArrowDown은 `mid`로 내립니다. `dismissOnDrag`가 켜져 있으면 `mid`에서 ArrowDown이 시트를 닫습니다. 그래서 드래그에는 키보드로 하는 방법이 있습니다.
+**Todae가 맡는 것:** 위에서 설명한 모달 `<dialog>` 동작입니다. `BottomSheet.Title`과 `BottomSheet.Description`은 `aria-labelledby`와 `aria-describedby`를 설정하고, `BottomSheet.Close`는 자기 텍스트로 이름이 붙지 않으면 `close` 문자열로 이름이 붙습니다. 닫힘 동작이 끝나면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. 그래버는 `resizeSheet` 문자열("Resize sheet")로 이름이 붙은 `<button>`입니다. ArrowUp은 `snapPoints`에 `full`이 있으면 `full`로 스냅하고, ArrowDown은 `mid`가 있으면 `mid`로 내립니다. `dismissOnDrag`가 켜져 있으면 `mid`에서 ArrowDown이 시트를 닫습니다.
 
 **직접 제공할 것:** 이름입니다. `BottomSheet.Title`을 쓰거나 `BottomSheet.Root`에 `aria-label`을 넘기세요. 검색 필드처럼 작업이 시작되는 컨트롤에 `initialFocusRef`를 넘기세요. 넘기지 않으면 포커스는 첫 번째 탭 가능한 요소, 곧 기본 그래버에서 시작합니다. 드래그와 배경 탭에는 포인터가 필요하므로, 눈에 보이는 `BottomSheet.Close`나 푸터 버튼을 두세요.
 

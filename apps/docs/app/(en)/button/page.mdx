@@ -51,7 +51,7 @@ Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overl
 
 **Todae handles:** A native `<button>` with `type="button"`, so it keeps the browser's keyboard behaviour, and a focus ring on `:focus-visible`. `pressed` sets `aria-pressed`. `Button.Icon` is `aria-hidden`. An icon-only root shows its `aria-label` or `aria-labelledby` text as a tooltip, linked by `aria-describedby` while it shows, and logs an error in development when it has no name. `Button.Group` is always `role="group"`.
 
-**You supply:** A name for every icon-only button, and an `aria-label` for each `Button.Group`. A wrapper whose buttons can be icon-only should require the name in its props type, and spread the rest so `ref`, `disabled` and the name reach the button.
+**You supply:** A name for every icon-only button, and an `aria-label` for each `Button.Group`. A wrapper whose buttons can be icon-only should require the name in its props type, and pass it as `aria-label`, and spread the rest so `ref` and `disabled` reach the button.
 
 ```tsx
 import type { ReactNode } from 'react';
