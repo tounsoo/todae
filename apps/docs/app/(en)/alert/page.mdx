@@ -28,7 +28,7 @@ Todae ships no icons. `Alert.Icon` is a slot: put any icon from your own set in 
 
 `Alert.Root` is a live region by default: `role="status"` for `info` and `success`, which waits for a pause, and `role="alert"` for `warning` and `critical`, which interrupts. A screen reader announces a live region when its content changes, so for a message that appears after an action, keep the region on the page and change what is inside it. Pass `role="none"` for a banner that is part of the page from the start and needs no announcement, as the examples above do.
 
-`Alert.Close` is a ghost `Button.Root`. It is named "Dismiss" unless its own text, such as "Got it", names it. That default is the `dismiss` string of [StringsProvider](/utilities/strings-provider), English unless you set it; `aria-label` still wins. The alert has no open state; remove it in `onClick`.
+`Alert.Close` is a ghost `Button.Root`. It is named "Dismiss" unless its own text, such as "Got it", names it. That default is the `dismiss` string of [StringsProvider](/utilities/strings-provider), English unless you set it; a non-empty `aria-label` still wins. The alert has no open state; remove it in `onClick`.
 
 <Example block>
   <AlertDismissible />

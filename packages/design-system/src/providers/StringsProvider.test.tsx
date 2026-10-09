@@ -187,6 +187,38 @@ describe('StringsProvider', () => {
     expect(screen.getByText('+3 hidden')).toBeTruthy();
   });
 
+  it('names a part whose aria-label is empty from the provider', () => {
+    const toaster = createToaster();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    render(
+      <StringsProvider strings={FRENCH}>
+        <Breadcrumbs.Root aria-label="" />
+        <Pagination.Root aria-label="" />
+        <Alert.Root>
+          <Alert.Close aria-label="">×</Alert.Close>
+        </Alert.Root>
+        <Chip.Root onRemove={() => undefined} removeLabel="">
+          Alpha
+        </Chip.Root>
+        <Toast.Region toaster={toaster} aria-label="">
+          {() => null}
+        </Toast.Region>
+        <BottomSheet.Root open onOpenChange={() => undefined} aria-label="s">
+          <BottomSheet.Grabber aria-label="" />
+          <BottomSheet.Close aria-label="" />
+        </BottomSheet.Root>
+      </StringsProvider>,
+    );
+    expect(screen.getByRole('navigation', { name: "Fil d'Ariane" })).toBeTruthy();
+    expect(screen.getByRole('navigation', { name: 'Pages' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Ignorer' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Retirer Alpha' })).toBeTruthy();
+    expect(document.querySelector('section[aria-label="Notifications FR"]')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Redimensionner', hidden: true })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Fermer', hidden: true })).toBeTruthy();
+    act(() => void vi.advanceTimersByTime(0));
+  });
+
   it('leaves the server entries of Breadcrumbs and Pagination in English', () => {
     render(
       <StringsProvider strings={FRENCH}>

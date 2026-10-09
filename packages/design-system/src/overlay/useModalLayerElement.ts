@@ -7,7 +7,8 @@ import { reshowHeldInside } from './usePopoverSync';
 /**
  * useModalLayer for a caller that already holds the element. `shownModal`
  * says the caller opens it with showModal() itself, so it counts whenever it
- * is open, also in an engine without :modal.
+ * is open, also in an engine without :modal, and puts the popovers held
+ * inside back in front after each show.
  */
 export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean, shownModal = false): void {
   const latest = useRef({ open, shownModal });
@@ -37,11 +38,15 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
         const active = el.ownerDocument.activeElement;
         if (active instanceof HTMLElement && inToastHostWithin(active, el)) initialFocusTarget(el).focus();
         // Shown again, it is in front of the popovers open inside it, such
-        // as a tooltip, which go back in front of it.
-        reshowHeldInside(el);
+        // as a tooltip, which go back in front of it. A caller that shows it
+        // itself does this right after its showModal().
+        if (!latest.current.shownModal) reshowHeldInside(el);
       }
       sync(shown);
     });
+    // A show before the element got here, such as one in the commit that
+    // mounted it, was not watched: put the popovers held inside in front.
+    if (el.open && !latest.current.shownModal) reshowHeldInside(el);
     // A show this commit made is counted where it happened, once, before
     // the element joins.
     syncRef.current = () => {

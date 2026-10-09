@@ -95,6 +95,20 @@ describe('disabled and hover styles in a browser', () => {
     expect(next.color).toBe(placeholder);
     expect(next.cursor).toBe('not-allowed');
   });
+
+  it('greys the Pagination ellipsis like a disabled step, but with the default cursor', () => {
+    render(
+      <Themed>
+        <span data-testid="placeholder" style={{ color: 'var(--todae-color-fg-placeholder)' }} />
+        <Pagination.Root aria-label="Pages">
+          <Pagination.Ellipsis data-testid="gap" />
+        </Pagination.Root>
+      </Themed>,
+    );
+    const gap = getComputedStyle(screen.getByTestId('gap').firstElementChild!);
+    expect(gap.color).toBe(getComputedStyle(screen.getByTestId('placeholder')).color);
+    expect(gap.cursor).toBe('default');
+  });
 });
 
 describe('BottomSheet padding in a browser', () => {
@@ -116,15 +130,16 @@ describe('BottomSheet padding in a browser', () => {
 
   it('draws the grabber ring from focus.ring in the sheet ring color', async () => {
     render(
-      <Themed>
-        <div style={{ ['--todae-sheet-ring-focus' as string]: 'rgb(200, 0, 0)' }}>
+      // The private inputs a theme sets, above the element that resolves the tokens.
+      <div style={{ ['--_todae-sheet-ring-focus' as string]: 'rgb(200, 0, 0)', ['--_todae-focus-ring-width' as string]: '3px' }}>
+        <Themed>
           <BottomSheet.Root open onOpenChange={() => undefined}>
             <BottomSheet.Grabber />
             <BottomSheet.Title>Sort</BottomSheet.Title>
             <BottomSheet.Body>Newest first</BottomSheet.Body>
           </BottomSheet.Root>
-        </div>
-      </Themed>,
+        </Themed>
+      </div>,
     );
     await screen.findByRole('dialog');
     const grabber = screen.getByRole('button');
@@ -134,7 +149,7 @@ describe('BottomSheet padding in a browser', () => {
     expect(document.activeElement).toBe(grabber);
     const style = getComputedStyle(grabber);
     expect(style.outlineStyle).toBe('solid');
-    expect(style.outlineWidth).toBe('2px');
+    expect(style.outlineWidth).toBe('3px');
     expect(style.outlineOffset).toBe('2px');
     expect(style.outlineColor).toBe('rgb(200, 0, 0)');
   });

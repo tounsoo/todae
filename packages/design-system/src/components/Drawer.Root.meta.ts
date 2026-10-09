@@ -15,7 +15,7 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'false',
-      description: 'Initial open state when uncontrolled.',
+      description: 'Shows the drawer on mount when uncontrolled. There is no trigger part, so once closed it opens again only on remount.',
     },
     {
       name: 'onOpenChange',
