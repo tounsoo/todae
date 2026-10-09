@@ -10,9 +10,11 @@ export const RESERVED_ROOTS = [
   'color',
   'space',
   'radius',
+  'border',
   'font',
   'motion',
   'z',
+  'focus',
   'button',
   'stack',
   'text',
@@ -578,6 +580,15 @@ function decls(tokens: FlatToken[]): string {
   return tokens.map((t) => `  ${t.cssVar}: ${t.cssValue};`).join('\n');
 }
 
+/**
+ * Re-declared tokens read a private `--_todae-*` input first. ThemeProvider
+ * sets it next to each override, and it inherits through every re-declaring
+ * element, so an override survives nested providers.
+ */
+function overridableDecls(tokens: FlatToken[]): string {
+  return tokens.map((t) => `  ${t.cssVar}: var(--_${t.cssVar.slice(2)}, ${t.cssValue});`).join('\n');
+}
+
 function aliasDecls(tokens: FlatToken[], aliases: readonly AliasGroup[]): string {
   return tokens
     .map((token) => {
@@ -598,9 +609,10 @@ function block(selector: string, lines: string[]): string[] {
  * Emits one CSS layer from the resolved entries, in resolutionOrder:
  * - sets before the first scoped modifier are declared on `:root`;
  * - a scoped modifier emits one `[attribute="context"]` block per context;
- * - later sets and every context of the alias modifier are re-declared on each
- *   scoped modifier's attribute, so their var() chains re-resolve wherever a
- *   context changes, along with the default context's consume aliases;
+ * - later sets and every context of the alias modifier are re-declared on the
+ *   root element and on each scoped modifier's attribute, so their var() chains
+ *   re-resolve wherever a context changes, along with the default context's
+ *   consume aliases; each reads its `--_todae-*` override input first;
  * - the alias modifier emits one block per context that only swaps aliases.
  */
 export type EmitCssOptions = {
@@ -656,7 +668,9 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
       }
       const rootDefault = entry.extension.root && context === entry.defaultContext;
       if (tokens.length === 0) continue;
-      const rootSelector = layered ? `:root:not([${attribute}])` : ':root';
+      // Only a root without the attribute: a bare :root would tie with an
+      // earlier context's selector on the root element and win by source order.
+      const rootSelector = `:root:not([${attribute}])`;
       scopedBlocks.push(
         ...block(rootDefault ? `${rootSelector},\n${selector}` : selector, [
           decls(tokens),
@@ -666,10 +680,12 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
     }
     if (!alias) attributes.push(`[${attribute}]`);
   }
+  // The root element gets the re-declared sets too, so components work with no provider above them.
+  const rescopedRoot = layered ? `:root${attributes.map((attribute) => `:not(${attribute})`).join('')}` : ':root';
   const blocks = [
     ...block(':root', [decls(root), aliasDecls(rootAliases, aliases)]),
     ...scopedBlocks,
-    ...block(attributes.length > 0 ? attributes.join(',\n') : ':root', [decls(rescoped), aliasDecls(defaults, aliases)]),
+    ...block([rescopedRoot, ...attributes].join(',\n'), [overridableDecls(rescoped), aliasDecls(defaults, aliases)]),
     ...aliasBlocks,
   ];
   return `${options.preamble ?? ''}@layer ${options.layer ?? 'todae.base'} {\n${blocks.join('\n\n')}\n}\n`;

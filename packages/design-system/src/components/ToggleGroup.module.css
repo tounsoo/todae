@@ -1,5 +1,7 @@
 @layer todae.components {
-  /* Horizontal groups join like Button.Group; a vertical one stacks with a gap. */
+  /* Horizontal groups join like Button.Group; a vertical one stacks with a gap.
+     A toggle group is a toolbar segment, so it spaces its items like Toolbar
+     and changes with toolbar.gap. */
   .vertical {
     display: inline-flex;
     flex-direction: column;

@@ -3,6 +3,7 @@
     "size": { "$type": "dimension", "$value": { "$ref": "#/space/selection/size/$value" } },
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/selection/gap/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
       "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }

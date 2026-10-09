@@ -16,10 +16,10 @@
     max-height: 100vh;
     max-height: 100dvh;
     padding: var(--todae-sheet-padding-y) var(--todae-sheet-padding-x);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: max(var(--todae-sheet-padding-y), env(safe-area-inset-bottom));
     background: var(--todae-sheet-bg);
     color: var(--todae-sheet-fg);
-    border: 1px solid var(--todae-sheet-border);
+    border: var(--todae-sheet-border-width) solid var(--todae-sheet-border);
     border-bottom: 0;
     border-radius: var(--todae-sheet-radius) var(--todae-sheet-radius) 0 0;
     transform: translateY(100%);
@@ -86,15 +86,20 @@
     height: var(--todae-sheet-grabber-height);
     padding: 0;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--todae-sheet-grabber-radius);
     background: var(--todae-sheet-grabber-bg);
     cursor: grab;
   }
 
+  .handle button:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-sheet-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
   .title {
     margin: 0;
-    font-size: var(--todae-dialog-title-font-size);
-    font-weight: var(--todae-dialog-title-font-weight);
+    font-size: var(--todae-sheet-title-font-size);
+    font-weight: var(--todae-sheet-title-font-weight);
   }
 
   .description,

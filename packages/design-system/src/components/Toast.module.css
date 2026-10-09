@@ -51,8 +51,8 @@
   }
 
   .region:focus-visible {
-    outline: 2px solid var(--todae-toast-ring-focus);
-    outline-offset: 2px;
+    outline: var(--todae-focus-ring-width) solid var(--todae-toast-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
   }
 
   .list {
@@ -175,7 +175,7 @@
     align-items: start;
     box-sizing: border-box;
     padding: var(--todae-toast-padding-y) var(--todae-toast-padding-x);
-    border: 1px solid var(--todae-toast-tone-border);
+    border: var(--todae-toast-border-width) solid var(--todae-toast-tone-border);
     border-radius: var(--todae-toast-radius);
     background: var(--todae-toast-tone-bg);
     color: var(--todae-toast-tone-fg);

@@ -2,6 +2,15 @@
   "version": 1,
   "tokens": [
     {
+      "path": "border.width",
+      "type": "dimension",
+      "cssVar": "--todae-border-width",
+      "cssValue": "1px",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "color.amber.100",
       "type": "color",
       "cssVar": "--todae-color-amber-100",
@@ -425,6 +434,15 @@
       "context": null
     },
     {
+      "path": "radius.full",
+      "type": "dimension",
+      "cssVar": "--todae-radius-full",
+      "cssValue": "9999px",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "radius.lg",
       "type": "dimension",
       "cssVar": "--todae-radius-lg",
@@ -627,6 +645,15 @@
       "type": "color",
       "cssVar": "--todae-color-bg-highlight",
       "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.08)",
+      "ref": "color.fg.default",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
+      "path": "color.bg.pressed",
+      "type": "color",
+      "cssVar": "--todae-color-bg-pressed",
+      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.14)",
       "ref": "color.fg.default",
       "layer": "appearance",
       "context": "light"
@@ -915,6 +942,15 @@
       "type": "color",
       "cssVar": "--todae-color-bg-highlight",
       "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.1)",
+      "ref": "color.fg.default",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.bg.pressed",
+      "type": "color",
+      "cssVar": "--todae-color-bg-pressed",
+      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.16)",
       "ref": "color.fg.default",
       "layer": "appearance",
       "context": "dark"
@@ -1598,8 +1634,8 @@
       "path": "button.primary.fg.disabled",
       "type": "color",
       "cssVar": "--todae-button-primary-fg-disabled",
-      "cssValue": "var(--todae-color-fg-muted)",
-      "ref": "color.fg.muted",
+      "cssValue": "var(--todae-color-fg-placeholder)",
+      "ref": "color.fg.placeholder",
       "layer": "contract",
       "context": "primary"
     },
@@ -1634,8 +1670,8 @@
       "path": "button.secondary.bg.active",
       "type": "color",
       "cssVar": "--todae-button-secondary-bg-active",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-pressed)",
+      "ref": "color.bg.pressed",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1643,8 +1679,8 @@
       "path": "button.secondary.bg.default",
       "type": "color",
       "cssVar": "--todae-button-secondary-bg-default",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1652,8 +1688,8 @@
       "path": "button.secondary.bg.disabled",
       "type": "color",
       "cssVar": "--todae-button-secondary-bg-disabled",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1661,8 +1697,8 @@
       "path": "button.secondary.bg.focus",
       "type": "color",
       "cssVar": "--todae-button-secondary-bg-focus",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1670,8 +1706,8 @@
       "path": "button.secondary.bg.hover",
       "type": "color",
       "cssVar": "--todae-button-secondary-bg-hover",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-highlight)",
+      "ref": "color.bg.highlight",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1742,8 +1778,8 @@
       "path": "button.secondary.fg.disabled",
       "type": "color",
       "cssVar": "--todae-button-secondary-fg-disabled",
-      "cssValue": "var(--todae-color-fg-muted)",
-      "ref": "color.fg.muted",
+      "cssValue": "var(--todae-color-fg-placeholder)",
+      "ref": "color.fg.placeholder",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1778,8 +1814,8 @@
       "path": "button.ghost.bg.active",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-active",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-pressed)",
+      "ref": "color.bg.pressed",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1787,8 +1823,8 @@
       "path": "button.ghost.bg.default",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-default",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1796,8 +1832,8 @@
       "path": "button.ghost.bg.disabled",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-disabled",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1805,8 +1841,8 @@
       "path": "button.ghost.bg.focus",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-focus",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1814,8 +1850,8 @@
       "path": "button.ghost.bg.hover",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-hover",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-highlight)",
+      "ref": "color.bg.highlight",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1823,8 +1859,8 @@
       "path": "button.ghost.border.active",
       "type": "color",
       "cssVar": "--todae-button-ghost-border-active",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1832,8 +1868,8 @@
       "path": "button.ghost.border.default",
       "type": "color",
       "cssVar": "--todae-button-ghost-border-default",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1841,8 +1877,8 @@
       "path": "button.ghost.border.disabled",
       "type": "color",
       "cssVar": "--todae-button-ghost-border-disabled",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1859,8 +1895,8 @@
       "path": "button.ghost.border.hover",
       "type": "color",
       "cssVar": "--todae-button-ghost-border-hover",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1886,8 +1922,8 @@
       "path": "button.ghost.fg.disabled",
       "type": "color",
       "cssVar": "--todae-button-ghost-fg-disabled",
-      "cssValue": "var(--todae-color-fg-muted)",
-      "ref": "color.fg.muted",
+      "cssValue": "var(--todae-color-fg-placeholder)",
+      "ref": "color.fg.placeholder",
       "layer": "contract",
       "context": "ghost"
     },
@@ -2054,6 +2090,24 @@
       "context": null
     },
     {
+      "path": "focus.ring.offset",
+      "type": "dimension",
+      "cssVar": "--todae-focus-ring-offset",
+      "cssValue": "2px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "focus.ring.width",
+      "type": "dimension",
+      "cssVar": "--todae-focus-ring-width",
+      "cssValue": "2px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.bg.default",
       "type": "color",
       "cssVar": "--todae-field-bg-default",
@@ -2113,6 +2167,15 @@
       "cssVar": "--todae-field-border-invalid",
       "cssValue": "var(--todae-color-danger-default)",
       "ref": "color.danger.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-field-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -2315,6 +2378,69 @@
       "context": null
     },
     {
+      "path": "field.picker.bg",
+      "type": "color",
+      "cssVar": "--todae-field-picker-bg",
+      "cssValue": "var(--todae-popover-bg)",
+      "ref": "popover.bg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.picker.border",
+      "type": "color",
+      "cssVar": "--todae-field-picker-border",
+      "cssValue": "var(--todae-popover-border)",
+      "ref": "popover.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.picker.fg",
+      "type": "color",
+      "cssVar": "--todae-field-picker-fg",
+      "cssValue": "var(--todae-popover-fg)",
+      "ref": "popover.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.picker.max-height",
+      "type": "dimension",
+      "cssVar": "--todae-field-picker-max-height",
+      "cssValue": "var(--todae-popover-max-height)",
+      "ref": "popover.max-height",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.picker.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-field-picker-padding-x",
+      "cssValue": "var(--todae-popover-padding-x)",
+      "ref": "popover.padding.x",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.picker.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-field-picker-padding-y",
+      "cssValue": "var(--todae-popover-padding-y)",
+      "ref": "popover.padding.y",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.picker.radius",
+      "type": "dimension",
+      "cssVar": "--todae-field-picker-radius",
+      "cssValue": "var(--todae-popover-radius)",
+      "ref": "popover.radius",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.radius",
       "type": "dimension",
       "cssVar": "--todae-field-radius",
@@ -2426,8 +2552,8 @@
       "path": "chip.border-width",
       "type": "dimension",
       "cssVar": "--todae-chip-border-width",
-      "cssValue": "1px",
-      "ref": null,
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -2507,8 +2633,8 @@
       "path": "chip.leading",
       "type": "number",
       "cssVar": "--todae-chip-leading",
-      "cssValue": "1.25",
-      "ref": null,
+      "cssValue": "var(--todae-font-leading-tight)",
+      "ref": "font.leading.tight",
       "layer": "contract",
       "context": null
     },
@@ -2552,8 +2678,8 @@
       "path": "chip.ring-offset",
       "type": "dimension",
       "cssVar": "--todae-chip-ring-offset",
-      "cssValue": "2px",
-      "ref": null,
+      "cssValue": "var(--todae-focus-ring-offset)",
+      "ref": "focus.ring.offset",
       "layer": "contract",
       "context": null
     },
@@ -2561,8 +2687,8 @@
       "path": "chip.ring-width",
       "type": "dimension",
       "cssVar": "--todae-chip-ring-width",
-      "cssValue": "2px",
-      "ref": null,
+      "cssValue": "var(--todae-focus-ring-width)",
+      "ref": "focus.ring.width",
       "layer": "contract",
       "context": null
     },
@@ -2599,6 +2725,15 @@
       "cssVar": "--todae-dialog-border",
       "cssValue": "var(--todae-color-border-default)",
       "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "dialog.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-dialog-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -2711,6 +2846,15 @@
       "context": null
     },
     {
+      "path": "sheet.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-sheet-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "sheet.fg",
       "type": "color",
       "cssVar": "--todae-sheet-fg",
@@ -2743,6 +2887,15 @@
       "cssVar": "--todae-sheet-grabber-height",
       "cssValue": "var(--todae-space-1)",
       "ref": "space.1",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "sheet.grabber.radius",
+      "type": "dimension",
+      "cssVar": "--todae-sheet-grabber-radius",
+      "cssValue": "var(--todae-radius-full)",
+      "ref": "radius.full",
       "layer": "contract",
       "context": null
     },
@@ -2819,6 +2972,15 @@
       "context": null
     },
     {
+      "path": "sheet.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-sheet-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "sheet.snap.full-inset",
       "type": "dimension",
       "cssVar": "--todae-sheet-snap-full-inset",
@@ -2837,6 +2999,24 @@
       "context": null
     },
     {
+      "path": "sheet.title.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-sheet-title-font-size",
+      "cssValue": "var(--todae-dialog-title-font-size)",
+      "ref": "dialog.title.font.size",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "sheet.title.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-sheet-title-font-weight",
+      "cssValue": "var(--todae-dialog-title-font-weight)",
+      "ref": "dialog.title.font.weight",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "popover.bg",
       "type": "color",
       "cssVar": "--todae-popover-bg",
@@ -2851,6 +3031,15 @@
       "cssVar": "--todae-popover-border",
       "cssValue": "var(--todae-color-border-default)",
       "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-popover-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -2923,6 +3112,15 @@
       "cssVar": "--todae-tooltip-border",
       "cssValue": "var(--todae-color-border-default)",
       "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-tooltip-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -3017,6 +3215,15 @@
       "context": null
     },
     {
+      "path": "option.check.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-option-check-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "option.check.fg",
       "type": "color",
       "cssVar": "--todae-option-check-fg",
@@ -3031,6 +3238,15 @@
       "cssVar": "--todae-option-fg-default",
       "cssValue": "var(--todae-color-fg-default)",
       "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.fg.disabled",
+      "type": "color",
+      "cssVar": "--todae-option-fg-disabled",
+      "cssValue": "var(--todae-color-fg-placeholder)",
+      "ref": "color.fg.placeholder",
       "layer": "contract",
       "context": null
     },
@@ -3062,6 +3278,15 @@
       "context": null
     },
     {
+      "path": "option.leading",
+      "type": "number",
+      "cssVar": "--todae-option-leading",
+      "cssValue": "var(--todae-font-leading-tight)",
+      "ref": "font.leading.tight",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "option.padding.x",
       "type": "dimension",
       "cssVar": "--todae-option-padding-x",
@@ -3085,6 +3310,15 @@
       "cssVar": "--todae-option-radius",
       "cssValue": "var(--todae-radius-sm)",
       "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-option-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
       "layer": "contract",
       "context": null
     },
@@ -3161,6 +3395,15 @@
       "context": null
     },
     {
+      "path": "menu.item.leading",
+      "type": "number",
+      "cssVar": "--todae-menu-item-leading",
+      "cssValue": "var(--todae-font-leading-tight)",
+      "ref": "font.leading.tight",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "menu.item.padding.x",
       "type": "dimension",
       "cssVar": "--todae-menu-item-padding-x",
@@ -3184,6 +3427,15 @@
       "cssVar": "--todae-menu-item-radius",
       "cssValue": "var(--todae-radius-sm)",
       "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "menu.item.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-menu-item-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
       "layer": "contract",
       "context": null
     },
@@ -3220,6 +3472,15 @@
       "cssVar": "--todae-tabs-border",
       "cssValue": "var(--todae-color-border-subtle)",
       "ref": "color.border.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tabs.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-tabs-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -3301,6 +3562,15 @@
       "cssVar": "--todae-tabs-indicator-size",
       "cssValue": "2px",
       "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tabs.leading",
+      "type": "number",
+      "cssVar": "--todae-tabs-leading",
+      "cssValue": "var(--todae-font-leading-tight)",
+      "ref": "font.leading.tight",
       "layer": "contract",
       "context": null
     },
@@ -3400,6 +3670,15 @@
       "cssVar": "--todae-selection-border-invalid",
       "cssValue": "var(--todae-color-danger-default)",
       "ref": "color.danger.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "selection.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-selection-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -3508,6 +3787,15 @@
       "cssVar": "--todae-selection-track-bg",
       "cssValue": "var(--todae-color-bg-subtle)",
       "ref": "color.bg.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "alert.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-alert-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -3679,6 +3967,15 @@
       "cssVar": "--todae-alert-warning-fg",
       "cssValue": "var(--todae-color-status-warning-fg)",
       "ref": "color.status.warning.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-toast-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -4061,6 +4358,15 @@
       "context": null
     },
     {
+      "path": "disclosure.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-disclosure-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "disclosure.gap",
       "type": "dimension",
       "cssVar": "--todae-disclosure-gap",
@@ -4334,8 +4640,8 @@
       "path": "badge.border-width",
       "type": "dimension",
       "cssVar": "--todae-badge-border-width",
-      "cssValue": "1px",
-      "ref": null,
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -4550,8 +4856,8 @@
       "path": "card.border-width",
       "type": "dimension",
       "cssVar": "--todae-card-border-width",
-      "cssValue": "1px",
-      "ref": null,
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -4682,11 +4988,29 @@
       "context": null
     },
     {
+      "path": "drawer.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-drawer-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "drawer.fg",
       "type": "color",
       "cssVar": "--todae-drawer-fg",
       "cssValue": "var(--todae-color-fg-default)",
       "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.gap",
+      "type": "dimension",
+      "cssVar": "--todae-drawer-gap",
+      "cssValue": "var(--todae-dialog-gap)",
+      "ref": "dialog.gap",
       "layer": "contract",
       "context": null
     },
@@ -4919,8 +5243,8 @@
       "path": "kbd.border-width",
       "type": "dimension",
       "cssVar": "--todae-kbd-border-width",
-      "cssValue": "1px",
-      "ref": null,
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -5018,8 +5342,8 @@
       "path": "avatar.radius",
       "type": "dimension",
       "cssVar": "--todae-avatar-radius",
-      "cssValue": "9999px",
-      "ref": null,
+      "cssValue": "var(--todae-radius-full)",
+      "ref": "radius.full",
       "layer": "contract",
       "context": null
     },
@@ -5063,8 +5387,17 @@
       "path": "pagination.bg.hover",
       "type": "color",
       "cssVar": "--todae-pagination-bg-hover",
-      "cssValue": "var(--todae-color-bg-subtle)",
-      "ref": "color.bg.subtle",
+      "cssValue": "var(--todae-color-bg-highlight)",
+      "ref": "color.bg.highlight",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "pagination.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-pagination-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
       "layer": "contract",
       "context": null
     },
@@ -5108,8 +5441,8 @@
       "path": "pagination.fg.disabled",
       "type": "color",
       "cssVar": "--todae-pagination-fg-disabled",
-      "cssValue": "var(--todae-color-fg-muted)",
-      "ref": "color.fg.muted",
+      "cssValue": "var(--todae-color-fg-placeholder)",
+      "ref": "color.fg.placeholder",
       "layer": "contract",
       "context": null
     },

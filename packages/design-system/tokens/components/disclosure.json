@@ -5,6 +5,7 @@
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
     },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "summary": {
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
       "font": {

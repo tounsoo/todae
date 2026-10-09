@@ -30,10 +30,10 @@
     "ring": {
       "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
     },
-    "leading": { "$type": "number", "$value": 1.25 },
-    "border-width": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
-    "ring-width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
-    "ring-offset": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+    "ring-width": { "$type": "dimension", "$value": { "$ref": "#/focus/ring/width/$value" } },
+    "ring-offset": { "$type": "dimension", "$value": { "$ref": "#/focus/ring/offset/$value" } },
     "dismiss": {
       "fg": {
         "default": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } },

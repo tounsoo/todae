@@ -25,8 +25,9 @@
   }
 
   /* A pressed toggle keeps the active colors and an inset ring, so the state
-     does not rest on color alone. Hover and press still respond, and the ring
-     stays when the toggle is disabled. */
+     does not rest on color alone. Hover keeps them too, since a hover fill can
+     be lighter than the pressed one, and the ring stays when the toggle is
+     disabled. */
   .root[aria-pressed='true'] {
     background: var(--todae-button-bg-active);
     color: var(--todae-button-fg-active);
@@ -40,6 +41,7 @@
     border-color: var(--todae-button-border-hover);
   }
 
+  .root[aria-pressed='true']:hover:not(:disabled),
   .root:active:not(:disabled) {
     background: var(--todae-button-bg-active);
     color: var(--todae-button-fg-active);
@@ -50,11 +52,11 @@
     background: var(--todae-button-bg-focus);
     color: var(--todae-button-fg-focus);
     border-color: var(--todae-button-border-focus);
-    outline: 2px solid var(--todae-button-ring-focus);
-    outline-offset: 2px;
+    outline: var(--todae-focus-ring-width) solid var(--todae-button-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
   }
 
-  /* Focus adds its ring but keeps a pressed toggle's colors; hover and press still win. */
+  /* Focus adds its ring but keeps a pressed toggle's colors. */
   .root[aria-pressed='true']:where(:focus-visible:not(:disabled)) {
     background: var(--todae-button-bg-active);
     color: var(--todae-button-fg-active);

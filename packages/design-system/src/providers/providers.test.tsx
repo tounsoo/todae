@@ -246,6 +246,15 @@ describe('company override types', () => {
     expect(el.style.getPropertyValue('--todae-brand-ink')).toBe('oklch(0.4 0.1 25)');
     expect(el.style.getPropertyValue('--todae-radius-md')).toBe('1rem');
   });
+
+  it("writes each override's private input next to it", () => {
+    render(
+      <ThemeProvider data-testid="theme" overrides={{ 'card.bg': { colorSpace: 'oklch', components: [0.6, 0.15, 30] } }} />,
+    );
+    const el = screen.getByTestId('theme');
+    expect(el.style.getPropertyValue('--todae-card-bg')).toBe('oklch(0.6 0.15 30)');
+    expect(el.style.getPropertyValue('--_todae-card-bg')).toBe('oklch(0.6 0.15 30)');
+  });
 });
 
 describe('motion, font family and shadow overrides', () => {

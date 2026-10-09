@@ -25,7 +25,7 @@
     color: var(--todae-menu-item-fg-default);
     font-size: var(--todae-menu-item-font-size);
     font-weight: var(--todae-menu-item-font-weight);
-    line-height: 1.25;
+    line-height: var(--todae-menu-item-leading);
     text-align: start;
     cursor: default;
     outline: none;
@@ -39,8 +39,8 @@
   }
 
   .item:focus-visible {
-    outline: 2px solid var(--todae-menu-item-fg-default);
-    outline-offset: -2px;
+    outline: var(--todae-focus-ring-width) solid var(--todae-menu-item-ring-focus);
+    outline-offset: calc(-1 * var(--todae-focus-ring-width));
   }
 
   /* Disabled items still take keyboard focus, and show it, so they are found. */

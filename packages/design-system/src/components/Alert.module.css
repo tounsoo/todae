@@ -7,7 +7,7 @@
     align-items: start;
     box-sizing: border-box;
     padding: var(--todae-alert-padding-y) var(--todae-alert-padding-x);
-    border: 1px solid var(--todae-alert-tone-border);
+    border: var(--todae-alert-border-width) solid var(--todae-alert-tone-border);
     border-radius: var(--todae-alert-radius);
     background: var(--todae-alert-tone-bg);
     color: var(--todae-alert-tone-fg);

@@ -17,6 +17,7 @@
       "sources": [
         { "$ref": "./components/stack.json" },
         { "$ref": "./components/text.json" },
+        { "$ref": "./components/focus.json" },
         { "$ref": "./components/field.json" },
         { "$ref": "./components/chip.json" },
         { "$ref": "./components/overlay.json" },
@@ -117,7 +118,7 @@
         "spacious": [{ "$ref": "./density/spacious.json" }]
       },
       "$extensions": {
-        "dev.todae": { "layer": "density", "rules": ["reserved-roots", "density-space"], "attribute": "data-density" }
+        "dev.todae": { "layer": "density", "rules": ["reserved-roots", "density-space"], "attribute": "data-density", "root": true }
       }
     },
     "buttonVariant": {

@@ -888,7 +888,7 @@ describe('Field.Counter', () => {
     expect(fieldCss).not.toContain('flex-basis: auto');
     expect(fieldCss).toContain('row-gap: var(--todae-field-messages-gap)');
     expect(fieldCss).toContain('row-gap: 0');
-    expect(fieldCss).toContain('border-end-end-radius: calc(var(--todae-field-radius) - 1px)');
+    expect(fieldCss).toContain('border-end-end-radius: calc(var(--todae-field-radius) - var(--todae-field-border-width))');
     expect(fieldCss).not.toMatch(/scrollbar|::?-webkit-resizer|grip/);
     expect(fieldCss).toContain('.shell:has(> .textarea) > .adornment');
     expect(fieldCss).toContain('height: 1lh');
@@ -1221,13 +1221,13 @@ describe('Field alignment', () => {
     expect(textareaShell).toContain('padding: 0');
     expect(textareaShell).not.toContain('align-items');
     const input = cssBlock(fieldCss, '.input {');
-    expect(input.indexOf('line-height: var(--todae-font-leading-default)')).toBeGreaterThan(input.indexOf('font: inherit'));
+    expect(input.indexOf('line-height: var(--todae-field-leading)')).toBeGreaterThan(input.indexOf('font: inherit'));
     const adornment = cssBlock(fieldCss, '.adornment {');
     expect(adornment).toContain('font-size: var(--todae-field-font-size)');
-    expect(adornment).toContain('line-height: var(--todae-font-leading-default)');
+    expect(adornment).toContain('line-height: var(--todae-field-leading)');
     expect(adornment).toContain('height: 1lh');
     expect(cssBlock(fieldCss, '.flow {')).toContain(
-      '--todae-field-chip-row-h: calc(var(--todae-field-font-size) * var(--todae-font-leading-default))',
+      '--todae-field-chip-row-h: calc(var(--todae-field-font-size) * var(--todae-field-leading))',
     );
     expect(fieldCss).not.toContain('--todae-chip-font-size) * 1.25');
     const span = cssBlock(fieldCss, '.flow > span {');
@@ -1251,7 +1251,7 @@ describe('Field alignment', () => {
       expect(block).not.toContain('--todae-field-font-size');
       expect(block).not.toContain('--todae-font-leading-default');
     }
-    expect(tokensCss).toContain('--todae-field-leading: var(--todae-font-leading-default)');
+    expect(tokensCss).toContain('--todae-field-leading: var(--_todae-field-leading, var(--todae-font-leading-default))');
   });
 });
 
@@ -1340,7 +1340,7 @@ describe('Field.Row', () => {
     );
     expect(fieldCss).toContain('.shell:has(> .row:not(:empty))');
     expect(cssBlock(fieldCss, '.shell:has(> .row:not(:empty)) > :is(.input, .textarea, .flow) {')).toContain('flex: 1 1 0');
-    const size = tokensCss.match(/--todae-field-row-control-size:\s*([0-9.]+)rem/)?.[1];
+    const size = tokensCss.match(/--todae-field-row-control-size:\s*var\(--_todae-field-row-control-size,\s*([0-9.]+)rem/)?.[1];
     expect(Number(size)).toBeGreaterThanOrEqual(1.5);
     for (const density of ['compact', 'comfortable', 'spacious']) {
       expect(cssBlock(tokensCss, `[data-density="${density}"]`)).not.toContain('--todae-field-row-control-size');

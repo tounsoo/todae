@@ -1012,10 +1012,10 @@ describe('chip list recipe', () => {
   it('defines chip geometry tokens and uses them on Chip', () => {
     render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
     const css = readFileSync(require.resolve('@tounsoo/todae/todae.css'), 'utf8');
-    expect(css).toMatch(/--todae-chip-leading:\s*1\.25/);
-    expect(css).toMatch(/--todae-chip-border-width:\s*1px/);
-    expect(css).toMatch(/--todae-chip-ring-width:\s*2px/);
-    expect(css).toMatch(/--todae-chip-ring-offset:\s*2px/);
+    expect(css).toMatch(/--todae-chip-leading:\s*var\(--_todae-chip-leading,\s*var\(--todae-font-leading-tight\)\)/);
+    expect(css).toMatch(/--todae-chip-border-width:\s*var\(--_todae-chip-border-width,\s*var\(--todae-border-width\)\)/);
+    expect(css).toMatch(/--todae-chip-ring-width:\s*var\(--_todae-chip-ring-width,\s*var\(--todae-focus-ring-width\)\)/);
+    expect(css).toMatch(/--todae-chip-ring-offset:\s*var\(--_todae-chip-ring-offset,\s*var\(--todae-focus-ring-offset\)\)/);
     const root = screen.getByRole('button', { name: 'Remove aa' }).parentElement as HTMLElement;
     const cls = [...root.classList][0];
     const joined = css
