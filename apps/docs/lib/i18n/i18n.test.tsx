@@ -95,7 +95,7 @@ describe('docs locales', () => {
   it('records which English each translated page was made from', () => {
     // The structure check above cannot see prose edits, so each translated page records a fingerprint
     // of every English section it was translated from. Editing English prose fails here until the
-    // translation catches up and the page is stamped again.
+    // page is stamped again.
     for (const locale of LOCALES.filter((item) => item !== 'en')) {
       const sources = SOURCES[locale] ?? {};
       const translated = slugs(join(APP, locale)).filter((slug) => existsSync(join(APP, locale, slug, 'page.mdx')));
@@ -104,7 +104,13 @@ describe('docs locales', () => {
         return changed.length ? [`${locale}/${slug}: ${changed.join(', ')}`] : [];
       });
       // A page that was removed or renamed: running i18n:stamp on its old slug drops the entry.
-      const orphaned = Object.keys(sources).filter((slug) => !translated.includes(slug)).map((slug) => `${locale}/${slug}: no translated page, so run i18n:stamp ${locale} ${slug} to drop it`);
+      const orphaned = Object.keys(sources)
+        .filter((slug) => !translated.includes(slug))
+        .map((slug) =>
+          existsSync(join(APP, '(en)', slug, 'page.mdx'))
+            ? `${locale}/${slug}: no translated page.mdx; translate it again`
+            : `${locale}/${slug}: page removed, so run i18n:stamp ${locale} ${slug} to drop it`,
+        );
       expect(
         [...stale, ...orphaned],
         `Update app/${locale}/<slug>/page.mdx to match the English sections listed, then run pnpm --filter docs i18n:stamp ${locale} <slug>`,
@@ -119,12 +125,16 @@ describe('docs locales', () => {
     // Trailing spaces, and blank lines at the end, are not a change.
     expect(staleSections(english.replace('A label.', 'A label.  \n'), recorded)).toEqual([]);
     expect(staleSections(english.replace('Often.', 'Rarely.'), recorded)).toEqual(['## When to use (changed)']);
-    expect(staleSections(`${english}\n## Accessible composition\n\nNames.\n`, recorded)).toEqual(['## Accessible composition (new)']);
-    expect(staleSections('# Badge\n\nA label.\n', recorded)).toEqual(['## When to use (removed)']);
+    expect(staleSections(`${english}\n## Accessible composition\n\nNames.\n`, recorded)).toEqual(['## Accessible composition (new)', 'section order (changed)']);
+    expect(staleSections('# Badge\n\nA label.\n', recorded)).toEqual(['## When to use (removed)', 'section order (changed)']);
     expect(staleSections(english, undefined)).toEqual(['# Badge (new)', '## When to use (new)']);
     // Moving a section changes no section's text, but the order is a change.
     const page = (...names: string[]) => `# A\n\n${names.map((name) => `## ${name}\n\n${name} text.\n`).join('\n')}`;
-    expect(staleSections(page('E', 'B', 'C', 'D'), sourceRecord(page('B', 'C', 'D', 'E')))).toEqual(['sections moved']);
+    const before = sourceRecord(page('B', 'C', 'D', 'E'));
+    expect(staleSections(page('E', 'B', 'C', 'D'), before)).toEqual(['section order (changed)']);
+    // A move is still reported when a section also changed or was added.
+    expect(staleSections(page('E', 'B', 'C', 'D').replace('B text.', 'B edited.'), before)).toEqual(['## B (changed)', 'section order (changed)']);
+    expect(staleSections(page('E', 'B', 'C', 'D', 'F'), before)).toEqual(['## F (new)', 'section order (changed)']);
     // The order is recorded on its own, so a tool that sorts the JSON keys does not read as a move.
     const sorted = Object.fromEntries(Object.entries(sourceRecord(page('B', 'C'))).sort());
     expect(staleSections(page('B', 'C'), sorted)).toEqual([]);
@@ -139,11 +149,11 @@ describe('docs locales', () => {
         mkdirSync(join(app, dir), { recursive: true });
         writeFileSync(join(app, dir, 'page.mdx'), text);
       }
-      const old = { gone: { '# Gone': 'x' }, card: { '# Card': 'x' } };
-      const { sources, log } = stamp(app, 'ko', old, ['badge', 'gone', 'card']);
+      const { sources, log } = stamp(app, 'ko', { gone: { '# Gone': 'x' } }, ['badge', 'gone']);
       expect(sources).toEqual({ badge: sourceRecord('# Badge\n') });
-      expect(log).toEqual(['ko/badge: # Badge (new)', 'ko/gone: dropped', 'ko/card: dropped']);
-      expect(() => stamp(app, 'ko', {}, ['card'])).toThrow(/translate it first/);
+      expect(log).toEqual(['ko/badge: # Badge (new)', 'ko/gone: dropped']);
+      // A record whose English page is still there is kept until the page is translated again.
+      expect(() => stamp(app, 'ko', { card: { '# Card': 'x' } }, ['card'])).toThrow(/translate it first/);
       // An inherited name is not a recorded page.
       expect(() => stamp(app, 'ko', {}, ['constructor'])).toThrow(/No English page.mdx/);
     } finally {

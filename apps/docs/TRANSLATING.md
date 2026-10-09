@@ -24,10 +24,10 @@ The docs are written in English and translated into Korean (한국어). Translat
 
 ## Change an English page
 
-Korean is kept complete, so a change to an English `page.mdx` needs its Korean page changed in the same pull request. The tests fail until the Korean page matches the English shape and is stamped again:
+Korean is kept complete, so a change to an English `page.mdx` needs its Korean page brought up to date in the same pull request. The tests fail until the Korean page matches the English shape and is stamped again:
 
 - A new heading, paragraph, list, code block, demo, props table or link changes the page's shape, which the Korean page must match.
-- Any other change to the English text changes that section's fingerprint. The test names each section that changed (or was added or removed), or that sections moved, since the Korean was last stamped. Update those sections in `app/ko/<slug>/page.mdx`, then run `pnpm --filter docs i18n:stamp ko <slug>`.
+- Other changes to the English text change the fingerprint of the section they are in. The test names each section that changed, was added or was removed since the Korean was last stamped, and whether the order of sections changed, which adding or removing one also does. Update those sections in `app/ko/<slug>/page.mdx`, then run `pnpm --filter docs i18n:stamp ko <slug>`.
 
 Stamp only after the translation says what the English now says: the fingerprint records that the two match, and nothing else checks the wording.
 

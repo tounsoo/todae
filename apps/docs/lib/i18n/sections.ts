@@ -9,7 +9,7 @@ export const TOP = '(top)';
 /** The key of the fingerprint of a page's headings in order, so moving a section is a change. */
 export const ORDER = '(section order)';
 
-/** `mdx` split at its headings. A `#` line inside a code fence is not a heading. */
+/** `mdx` split at its headings. A `#` line inside a backtick code fence is not a heading. */
 export function sections(mdx: string): Section[] {
   const parts: Section[] = [{ heading: TOP, level: 0, text: '' }];
   let fenced = false;
@@ -55,21 +55,19 @@ export function sourceRecord(english: string): Record<string, string> {
 
 /**
  * The sections whose English differs from what a translation was made from: changed, new or
- * gone since, or `sections moved` when only their order changed. Empty when the English is
- * what was last stamped.
+ * gone since, and `section order (changed)` when the order of headings differs from the record.
+ * Empty when the English is what was last stamped.
  */
-export function staleSections(english: string, recorded: Record<string, string> | undefined): string[] {
-  const current = sourceRecord(english);
+export function staleSections(english: string, recorded: Record<string, string> | undefined, current = sourceRecord(english)): string[] {
   const before = recorded ?? {};
-  const has = (record: Record<string, string>, heading: string) => Object.hasOwn(record, heading);
   const headings = Object.keys(current).filter((heading) => heading !== ORDER);
   const changed = headings
     .filter((heading) => before[heading] !== current[heading])
-    .map((heading) => (has(before, heading) ? `${heading} (changed)` : `${heading} (new)`));
+    .map((heading) => (Object.hasOwn(before, heading) ? `${heading} (changed)` : `${heading} (new)`));
   const removed = Object.keys(before)
-    .filter((heading) => heading !== ORDER && !has(current, heading))
+    .filter((heading) => heading !== ORDER && !Object.hasOwn(current, heading))
     .map((heading) => `${heading} (removed)`);
-  // Adding or removing a section changes the order too; say so only when that is all that changed.
-  const moved = changed.length === 0 && removed.length === 0 && before[ORDER] !== current[ORDER] ? ['sections moved'] : [];
-  return [...changed, ...removed, ...moved];
+  // Adding or removing a section changes the order too, so this line can repeat one above it.
+  const order = recorded && before[ORDER] !== current[ORDER] ? ['section order (changed)'] : [];
+  return [...changed, ...removed, ...order];
 }
