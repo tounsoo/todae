@@ -4,7 +4,7 @@ import { DialogBasic, DialogThemed } from '../../../components/demos/DialogDemo'
 
 `showModal()`로 여는 가운데 정렬 네이티브 `<dialog>`입니다. `open`으로 제어하거나, `defaultOpen`으로 비제어 방식으로 둘 수 있습니다. Escape와 배경 클릭으로 닫기는 기본으로 켜져 있고 끌 수 있습니다. 시트로 변하지 않습니다.
 
-열릴 때는 200ms 동안 opacity와 scale(0.96→1)이 변합니다. 지원되는 곳에서는 `@starting-style`을 쓰고, `data-entered`가 대체 수단이라 지원하지 않는 엔진에서도 전환이 일어납니다. 닫힐 때는 `transitionend`까지 마운트된 채로 있습니다(대체 시간 160ms).
+열릴 때는 200ms 동안 opacity가 변합니다. 지원되는 곳에서는 `@starting-style`을 쓰고, `data-entered`가 대체 수단이라 지원하지 않는 엔진에서도 전환이 일어납니다. 닫힐 때는 `transitionend`까지 마운트된 채로 있습니다(대체 시간 160ms).
 
 <Example>
   <DialogBasic />

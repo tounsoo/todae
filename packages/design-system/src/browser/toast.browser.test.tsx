@@ -6,10 +6,12 @@ import { BottomSheet } from '../components/BottomSheet';
 import { Button } from '../components/Button';
 import { Dialog } from '../components/Dialog';
 import { Popover } from '../components/Popover';
-import { Toast, type ToastLayout } from '../components/Toast';
+import { Toast, type ToastLayout, type ToastPlacement } from '../components/Toast';
 import { createToaster, type Toaster } from '../components/toaster';
+import { Tooltip } from '../components/Tooltip';
 import { useModalLayer } from '../hooks/useModalLayer';
 import { usePopover } from '../hooks/usePopover';
+import { useTooltip } from '../hooks/useTooltip';
 import { heldModals } from '../overlay/modalStack';
 
 function Themed({ children }: { children: ReactNode }) {
@@ -48,6 +50,51 @@ function canFocus(el: HTMLElement): boolean {
 
 function isPopoverShown(el: Element): boolean {
   return el.matches(':popover-open');
+}
+
+/**
+ * The tip is shown and placed by its trigger. Behind a layer shown after it,
+ * its anchor is unusable and it sits at the viewport's corner.
+ */
+async function expectTipByTrigger(trigger: HTMLElement): Promise<void> {
+  await waitFor(() => {
+    const tip = document.getElementById(trigger.getAttribute('aria-describedby') ?? '');
+    if (!tip) throw new Error('No tip describes the trigger');
+    expect(tip.getAttribute('role')).toBe('tooltip');
+    expect(isPopoverShown(tip)).toBe(true);
+    const t = tip.getBoundingClientRect();
+    const a = trigger.getBoundingClientRect();
+    expect(t.right).toBeGreaterThan(a.left);
+    expect(t.left).toBeLessThan(a.right);
+    expect(Math.min(Math.abs(t.bottom - a.top), Math.abs(t.top - a.bottom))).toBeLessThan(16);
+  });
+}
+
+/** A button with a tip held open, as a controlled `useTooltip({ open: true })`. */
+function HeldTip({ label, open = true }: { label: string; open?: boolean }) {
+  const tooltip = useTooltip({ open });
+  return (
+    <>
+      <Button.Root tooltip={false} {...tooltip.getTriggerProps()}>
+        {label}
+      </Button.Root>
+      <Tooltip.Root {...tooltip.getTooltipProps()}>Tip for {label}</Tooltip.Root>
+    </>
+  );
+}
+
+/** A region whose toasts hold a button with a tip held open. */
+function TipRegion({ toaster }: { toaster: Toaster }) {
+  return (
+    <Toast.Region toaster={toaster}>
+      {(toast) => (
+        <Toast.Root>
+          <Toast.Title>{toast.title}</Toast.Title>
+          <HeldTip label={`Tipped ${String(toast.title)}`} />
+        </Toast.Root>
+      )}
+    </Toast.Region>
+  );
 }
 
 function hostOf(el: Element): HTMLElement {
@@ -945,6 +992,33 @@ describe('Toast in the top layer', () => {
     await waitFor(() => expect(document.activeElement).toBe(before));
   });
 
+  it('keeps an open tooltip inside a toast in front, by its trigger, when a new toast shows', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <Toast.Region toaster={toaster}>
+          {(toast) => (
+            <Toast.Root>
+              <Toast.Title>{toast.title}</Toast.Title>
+              <Button.Root aria-label={`Archive ${String(toast.title)}`}>
+                <Button.Icon>+</Button.Icon>
+              </Button.Root>
+            </Toast.Root>
+          )}
+        </Toast.Region>
+      </Themed>,
+    );
+    act(() => void toaster.add({ title: 'One' }));
+    const archive = await screen.findByRole('button', { name: 'Archive One' });
+    await userEvent.keyboard('{F8}');
+    await userEvent.tab();
+    expect(document.activeElement).toBe(archive);
+    await expectTipByTrigger(archive);
+    act(() => void toaster.add({ title: 'Two' }));
+    await screen.findByRole('button', { name: 'Archive Two' });
+    await expectTipByTrigger(archive);
+  });
+
   it('moves focus to the region on F8 and back after Escape', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(
@@ -994,5 +1068,231 @@ describe('Toast in the top layer', () => {
       // Spread: each older toast sits fully above the newer one.
       for (let i = 1; i < rects.length; i++) expect(rects[i]!.bottom).toBeLessThanOrEqual(rects[i - 1]!.top + 1);
     });
+  });
+});
+
+describe('Tooltip in a layer shown again', () => {
+  it('keeps a held tip in a toast in front, by its trigger, when a new toast arrives', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <TipRegion toaster={toaster} />
+      </Themed>,
+    );
+    act(() => void toaster.add({ title: 'One' }));
+    const trigger = await screen.findByRole('button', { name: 'Tipped One' });
+    await expectTipByTrigger(trigger);
+    act(() => void toaster.add({ title: 'Two' }));
+    await screen.findByRole('button', { name: 'Tipped Two' });
+    await expectTipByTrigger(trigger);
+  });
+
+  it('keeps a held tip in a toast by its trigger while a Dialog opens and closes', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Page() {
+      const [open, setOpen] = useState(false);
+      return (
+        <Themed>
+          <Button.Root onClick={() => setOpen(true)}>Open</Button.Root>
+          <Dialog.Root open={open} onOpenChange={setOpen}>
+            <Dialog.Title>Edit</Dialog.Title>
+            <Button.Root onClick={() => setOpen(false)}>Done</Button.Root>
+          </Dialog.Root>
+          <TipRegion toaster={toaster} />
+        </Themed>
+      );
+    }
+    render(<Page />);
+    act(() => void toaster.add({ title: 'Kept' }));
+    const trigger = await screen.findByRole('button', { name: 'Tipped Kept' });
+    await expectTipByTrigger(trigger);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+    const dialog = screen.getByRole('dialog', { name: 'Edit' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.contains(trigger)).toBe(true));
+    await expectTipByTrigger(trigger);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Done' }));
+    await waitFor(() => expect(dialog.open).toBe(false));
+    await waitFor(() => expect(dialog.contains(trigger)).toBe(false));
+    await expectTipByTrigger(trigger);
+  });
+
+  it('keeps held tips in a toast and in a dialog of your own by their triggers when it is shown again', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    function Own() {
+      const ref = useRef<HTMLDialogElement>(null);
+      const [tip, setTip] = useState(false);
+      useModalLayer(ref, true);
+      useEffect(() => {
+        ref.current?.showModal();
+        // Opens once the dialog shows, as a tip does on hover or focus.
+        setTip(true);
+      }, []);
+      return (
+        <dialog ref={ref} aria-label="Own">
+          <HeldTip label="In dialog" open={tip} />
+        </dialog>
+      );
+    }
+    render(
+      <Themed>
+        <Own />
+        <TipRegion toaster={toaster} />
+      </Themed>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Own' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    act(() => void toaster.add({ title: 'Front' }));
+    const inToast = await screen.findByRole('button', { name: 'Tipped Front' });
+    await waitFor(() => expect(dialog.contains(inToast)).toBe(true));
+    const inDialog = screen.getByRole('button', { name: 'In dialog' });
+    await expectTipByTrigger(inToast);
+    await expectTipByTrigger(inDialog);
+    // Shown again in one task: the stack sees one change, the top layer two.
+    dialog.close();
+    dialog.showModal();
+    await waitFor(() => expect(receivesPointer(inToast)).toBe(true));
+    await expectTipByTrigger(inToast);
+    await expectTipByTrigger(inDialog);
+    act(() => dialog.close());
+  });
+
+  it('puts a tip already open when its Dialog first opens in front of the Dialog, by its trigger', async () => {
+    render(
+      <Themed>
+        <Dialog.Root open onOpenChange={() => undefined}>
+          <Dialog.Title>First</Dialog.Title>
+          <HeldTip label="Open from the start" />
+        </Dialog.Root>
+      </Themed>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'First' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    const trigger = screen.getByRole('button', { name: 'Open from the start' });
+    await expectTipByTrigger(trigger);
+    // A tip takes no pointer; let it, to see what is in front at its middle.
+    const tip = document.getElementById(trigger.getAttribute('aria-describedby')!)!;
+    tip.style.pointerEvents = 'auto';
+    expect(receivesPointer(tip)).toBe(true);
+  });
+
+  it('keeps a held tip in a Dialog by its trigger when the Dialog shows itself again after a native close', async () => {
+    function Page() {
+      const [tip, setTip] = useState(false);
+      // Opens once the dialog shows, as a tip does on hover or focus.
+      useEffect(() => setTip(true), []);
+      return (
+        <Themed>
+          {/* Kept open: a native close shows it again. */}
+          <Dialog.Root open onOpenChange={() => undefined}>
+            <Dialog.Title>Kept</Dialog.Title>
+            <HeldTip label="Inside" open={tip} />
+          </Dialog.Root>
+        </Themed>
+      );
+    }
+    render(<Page />);
+    const dialog = screen.getByRole('dialog', { name: 'Kept' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    const trigger = screen.getByRole('button', { name: 'Inside' });
+    await expectTipByTrigger(trigger);
+    act(() => dialog.close());
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    await expectTipByTrigger(trigger);
+  });
+});
+
+/**
+ * The tip that describes `trigger` is shown just above it, centered over it,
+ * once the toasts have stopped moving, so a check mid-motion can't pass.
+ */
+async function expectTipAbove(trigger: HTMLElement): Promise<void> {
+  await waitFor(() => expect(document.getAnimations()).toHaveLength(0));
+  await waitFor(() => {
+    const tip = document.getElementById(trigger.getAttribute('aria-describedby') ?? '');
+    if (!tip) throw new Error('No tip describes the trigger');
+    expect(isPopoverShown(tip)).toBe(true);
+    const t = tip.getBoundingClientRect();
+    const a = trigger.getBoundingClientRect();
+    expect(a.top - t.bottom).toBeGreaterThanOrEqual(0);
+    expect(a.top - t.bottom).toBeLessThan(8);
+    expect(Math.abs((t.left + t.right) / 2 - (a.left + a.right) / 2)).toBeLessThan(2);
+  });
+}
+
+/** A stacked region whose toasts each hold a close button and, on the toast titled `tipped`, a button with a tip held open. */
+function StackRegion({ toaster, placement, tipped }: { toaster: Toaster; placement: ToastPlacement; tipped?: string }) {
+  return (
+    <Toast.Region toaster={toaster} layout="stack" placement={placement}>
+      {(toast) => (
+        <Toast.Root>
+          <Toast.Title>{toast.title}</Toast.Title>
+          <HeldTip label={`Tipped ${String(toast.title)}`} open={toast.title === tipped} />
+          <Toast.Close>
+            <Button.Icon>×</Button.Icon>
+          </Toast.Close>
+        </Toast.Root>
+      )}
+    </Toast.Region>
+  );
+}
+
+describe.each(['bottom-end', 'top-end'] as const)('Tooltip on a stacked toast placed %s', (placement) => {
+  const items = () => [...document.querySelectorAll('ol > li')] as HTMLElement[];
+
+  it('hides a held tip on a toast behind the newest while collapsed, and draws it by its trigger once spread', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <StackRegion toaster={toaster} placement={placement} tipped="Back" />
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ title: 'Back' });
+      toaster.add({ title: 'Middle' });
+      toaster.add({ title: 'Front' });
+    });
+    const trigger = await screen.findByRole('button', { name: 'Tipped Back' });
+    await waitFor(() => expect(items()).toHaveLength(3));
+    const region = screen.getByRole('region', { name: 'Notifications' });
+    // Two behind the newest, peeking out from it, where the stack moves it most.
+    expect(items()[2]!.contains(trigger)).toBe(true);
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    // Its tip would paint over the newest toast, which covers its trigger.
+    const tip = document.getElementById(trigger.getAttribute('aria-describedby') ?? '')!;
+    expect(isPopoverShown(tip)).toBe(true);
+    expect(getComputedStyle(tip).visibility).toBe('hidden');
+
+    await userEvent.hover(screen.getByRole('button', { name: 'Tipped Front' }));
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(true));
+    await waitFor(() => {
+      const [front, , back] = items().map((item) => item.getBoundingClientRect());
+      // Spread: apart, not overlapping.
+      expect(back!.bottom <= front!.top + 1 || back!.top >= front!.bottom - 1).toBe(true);
+    });
+    expect(getComputedStyle(tip).visibility).toBe('visible');
+    await expectTipAbove(trigger);
+  });
+
+  it("draws Toast.Close's tip on a toast behind the newest by its trigger when focused", async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <StackRegion toaster={toaster} placement={placement} />
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ title: 'Back' });
+      toaster.add({ title: 'Middle' });
+      toaster.add({ title: 'Front' });
+    });
+    await screen.findByRole('button', { name: 'Tipped Back' });
+    await waitFor(() => expect(items()).toHaveLength(3));
+    const close = items()[2]!.querySelector<HTMLElement>('button[aria-label="Dismiss"]')!;
+    await userEvent.keyboard('{F8}');
+    for (let i = 0; i < 12 && document.activeElement !== close; i++) await userEvent.tab();
+    expect(document.activeElement).toBe(close);
+    await expectTipAbove(close);
   });
 });

@@ -260,7 +260,7 @@ function BottomSheetRoot({
     return () => setGrabbers((n) => n - 1);
   }, []);
   const onDismiss = useCallback(() => requestClose('drag'), [requestClose]);
-  const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'transform');
+  const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'bottom');
   const entered = useEntered(present, exiting);
   const setSheetRef = useCallback((node: HTMLDialogElement | null) => {
     sheetRef.current = node;
