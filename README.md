@@ -127,3 +127,7 @@ pnpm graft:check
 - `apps/docs` is the Next.js 15 docs app with MDX examples.
 
 The component set is still growing and is not a finished design system.
+
+## License
+
+[MIT](LICENSE)
