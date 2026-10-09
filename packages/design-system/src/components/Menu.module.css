@@ -94,8 +94,8 @@
      radio dot and separator with system colors. */
   @media (forced-colors: active) {
     .item:focus {
-      outline: 2px solid Highlight;
-      outline-offset: -2px;
+      outline: var(--todae-focus-ring-width) solid Highlight;
+      outline-offset: calc(-1 * var(--todae-focus-ring-width));
     }
 
     [role='menuitemradio'][aria-checked='true'] > .indicator::before,

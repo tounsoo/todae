@@ -129,14 +129,14 @@
      keeps its check mark, which is drawn with borders. */
   @media (forced-colors: active) {
     .option[data-highlighted] {
-      outline: 2px solid Highlight;
-      outline-offset: -2px;
+      outline: var(--todae-focus-ring-width) solid Highlight;
+      outline-offset: calc(-1 * var(--todae-focus-ring-width));
     }
 
     @media (hover: hover) {
       .option:hover:not([aria-disabled='true']) {
-        outline: 2px solid Highlight;
-        outline-offset: -2px;
+        outline: var(--todae-focus-ring-width) solid Highlight;
+        outline-offset: calc(-1 * var(--todae-focus-ring-width));
       }
     }
   }
