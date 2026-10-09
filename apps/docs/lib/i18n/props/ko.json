@@ -1614,6 +1614,10 @@
       "en": "Keep one item tabbable. False when focus only enters from code, as in a menu: every item gets tabIndex -1.",
       "ko": "항목 하나를 탭으로 이동 가능하게 유지합니다. 메뉴처럼 포커스가 코드로만 들어올 때는 false이며, 모든 항목이 tabIndex -1을 받습니다."
     },
+    "findItems": {
+      "en": "Finds the items, enabled or not, instead of getItemProps. Such items have no value, so no tab stop is kept: the hook only moves focus.",
+      "ko": "getItemProps 대신 활성 여부와 관계없이 항목을 찾습니다. 이런 항목에는 값이 없으므로 탭 정지를 두지 않고, 훅은 포커스만 옮깁니다."
+    },
     "activeValue": {
       "en": "Controlled tab stop. Falls back to the first enabled item when null, disabled or missing.",
       "ko": "제어 탭 정지점. null이거나 비활성화되었거나 없으면 첫 번째 활성 항목으로 대체됩니다."

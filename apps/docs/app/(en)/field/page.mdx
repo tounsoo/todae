@@ -188,7 +188,7 @@ Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key
   <ChipInputControlled />
 </Example>
 
-Optional [useChipField](/utilities/use-chip-field) holds chips and input, then spreads onto `Field.ChipInput`.
+Optional [useChipField](/utilities/use-chip-field) holds chips and input; spread its `getChipInputProps()` onto `Field.ChipInput`.
 
 `commitKeys={['Enter', ',']}`. Unknown keys are dropped.
 
@@ -283,7 +283,7 @@ Your own control, such as a rating or a color well, joins a `Field.Root` through
 
 ### Field.ChipInput
 
-**When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`, or spreads [useChipField](/utilities/use-chip-field) to hold that state.
+**When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`, or spreads `getChipInputProps()` from [useChipField](/utilities/use-chip-field) to hold that state.
 
 **When not:** Free-form single string → TextInput. Options from a list → [Combobox recipe](/recipes/combobox) + OptionList.
 

@@ -179,7 +179,7 @@ export {
   type AnnounceOptions,
   type AnnouncePoliteness,
 } from './hooks/useAnnouncer';
-export { useChipField, type UseChipFieldOptions } from './hooks/useChipField';
+export { useChipField, type UseChipFieldOptions, type UseChipFieldResult } from './hooks/useChipField';
 export {
   useChipList,
   type UseChipListItem,

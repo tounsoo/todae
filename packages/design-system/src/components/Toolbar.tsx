@@ -8,7 +8,7 @@ import {
   type FocusEvent,
   type KeyboardEvent,
 } from 'react';
-import { isReachable, nextKey } from '../hooks/useRovingFocus';
+import { isReachable, useRovingFocus } from '../hooks/useRovingFocus';
 import { cx } from './cx';
 import { useComposedRefs } from './props';
 import styles from './Toolbar.module.css';
@@ -107,6 +107,12 @@ function runsOf(root: HTMLElement): HTMLElement[][] {
   return runs.filter((run) => run.length > 0);
 }
 
+// The arrow keys' items, disabled ones too: useRovingFocus skips those, and
+// moves on from one that became disabled while focused.
+function itemsOf(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => isItem(el, root));
+}
+
 function Root({
   orientation = 'horizontal',
   loop = true,
@@ -126,6 +132,8 @@ function Root({
   const leaves = useRef(0);
   const id = useId();
   const context = useMemo(() => ({ orientation, id }), [orientation, id]);
+  // Only the arrow keys, Home and End: Tab is steered below, and no tabindex is written.
+  const roving = useRovingFocus({ orientation, loop, findItems: itemsOf });
 
   // The Tab key press now under way, seen first at the window so stopped
   // propagation cannot hide it. Dropped once the browser has moved focus.
@@ -181,59 +189,25 @@ function Root({
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
     const root = rootRef.current;
-    if (event.defaultPrevented || !root || event.altKey || event.ctrlKey || event.metaKey) return;
-    const target = event.target as HTMLElement;
-    if (event.key === 'Tab') {
-      // Where focus is now: a layer inside, such as a menu, may already have
-      // returned it to its trigger before letting Tab run.
-      const from = document.activeElement instanceof HTMLElement ? document.activeElement : target;
-      const run = runsOf(root).find((items) => items.includes(from));
-      if (!run) return;
-      // Focus moves to the end of the run first, so the browser's own Tab
-      // then leaves the run from there.
-      leaves.current += 1;
-      left.current.set(from, leaves.current);
-      const edge = event.shiftKey ? run[0]! : run[run.length - 1]!;
-      if (edge !== from) edge.focus({ preventScroll: true });
-      return;
-    }
-    // Shift combinations are left to the control, as in useRovingFocus.
-    if (event.shiftKey) return;
-    const move = nextKey(event.key, orientation, () => getComputedStyle(root).direction === 'rtl');
-    if (!move && event.key !== 'Home' && event.key !== 'End') return;
-    const items = runsOf(root).flat();
-    let index = items.indexOf(target);
-    // A control that became disabled while focused is no longer an item, so
-    // the arrow keys go on from its place between its neighbours.
-    let between = false;
-    if (index === -1) {
-      if (!target.matches(':disabled') || target.parentElement?.closest(TOOLBAR_BOUNDARY) !== root) return;
-      if (ownsArrows(target, root)) return;
-      const after = items.findIndex((item) => target.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING);
-      index = after === -1 ? items.length : after;
-      between = true;
-    }
-    if (items.length === 0) return;
-    let next: number | null = index;
-    if (event.key === 'Home') next = 0;
-    else if (event.key === 'End') next = items.length - 1;
-    else {
-      // From a place between items, the next one is at `index` itself.
-      const to = move === 'next' ? (between ? index : index + 1) : index - 1;
-      if (to >= 0 && to < items.length) next = to;
-      else if (loop) next = (to + items.length) % items.length;
-      else if (between) next = null;
-    }
-    if (next === null) return;
-    event.preventDefault();
-    items[next]?.focus();
+    if (event.key !== 'Tab' || event.defaultPrevented || !root || event.altKey || event.ctrlKey || event.metaKey) return;
+    // Where focus is now: a layer inside, such as a menu, may already have
+    // returned it to its trigger before letting Tab run.
+    const from = document.activeElement instanceof HTMLElement ? document.activeElement : (event.target as HTMLElement);
+    const run = runsOf(root).find((items) => items.includes(from));
+    if (!run) return;
+    // Focus moves to the end of the run first, so the browser's own Tab
+    // then leaves the run from there.
+    leaves.current += 1;
+    left.current.set(from, leaves.current);
+    const edge = event.shiftKey ? run[0]! : run[run.length - 1]!;
+    if (edge !== from) edge.focus({ preventScroll: true });
   };
 
   return (
     <ToolbarContext.Provider value={context}>
       <div
         {...props}
-        ref={refs}
+        {...roving.getContainerProps({ ref: refs, onKeyDown: handleKeyDown })}
         role="toolbar"
         data-todae-toolbar={id}
         aria-orientation={orientation === 'vertical' ? 'vertical' : undefined}
@@ -248,7 +222,6 @@ function Root({
           const run = runsOf(event.currentTarget).find((items) => items.some((item) => item.contains(pressed)));
           for (const item of run ?? []) left.current.delete(item);
         }}
-        onKeyDown={handleKeyDown}
       >
         {children}
       </div>

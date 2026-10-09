@@ -434,6 +434,30 @@ describe('Field.ChipInput', () => {
     expect(screen.getByRole('textbox')).toHaveProperty('value', '  foo ');
   });
 
+  it('disables the chips and Backspace when the input itself is disabled', () => {
+    const onChipRemove = vi.fn();
+    render(
+      <Field.Root>
+        <Field.ChipInput
+          // The type leaves disabled to the Root, but a spread such as
+          // useCombobox's getChipInputProps() still carries one.
+          {...({ disabled: true } as object)}
+          chips={['Alpha', 'Beta']}
+          inputValue=""
+          onInputValueChange={() => undefined}
+          onCommit={() => undefined}
+          onChipRemove={onChipRemove}
+        />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('textbox')).toHaveProperty('disabled', true);
+    for (const button of screen.getAllByRole('button', { name: /Remove / })) {
+      expect(button).toHaveProperty('disabled', true);
+    }
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Backspace' });
+    expect(onChipRemove).not.toHaveBeenCalled();
+  });
+
   it('composes a caller ref onto the input', () => {
     const ref = { current: null as HTMLInputElement | null };
     renderField({ ref });
@@ -856,9 +880,9 @@ describe('Field.ChipInput maxRows SSR', () => {
 
 describe('Field.Counter', () => {
   const bareInput =
-    '<div class="_shell_61a677"><input id="_R_0_" type="text" class="_input_61a677" value=""/></div>';
+    '<div class="_shell_61a677"><input id="_R_0_" data-todae-field-control="" type="text" class="_input_61a677" value=""/></div>';
   const bareArea =
-    '<div class="_shell_61a677"><textarea id="_R_0_" rows="3" class="_textarea_61a677" style="--todae-field-rows:3"></textarea></div>';
+    '<div class="_shell_61a677"><textarea id="_R_0_" data-todae-field-control="" rows="3" class="_textarea_61a677" style="--todae-field-rows:3"></textarea></div>';
 
   it('keeps bare server markup and scopes new layout rules under :has', () => {
     expect(
@@ -1530,7 +1554,7 @@ describe('Field.ChipInput row', () => {
       const field = useChipField({ initialChips: ['Alpha', 'Beta', 'Gamma'] });
       return (
         <Field.Root id="tags" aria-describedby="hint err" invalid>
-          <Field.ChipInput {...field} chipLayout="row" />
+          <Field.ChipInput {...field.getChipInputProps()} chipLayout="row" />
         </Field.Root>
       );
     }

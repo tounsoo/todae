@@ -221,7 +221,7 @@ export function ChipInputHook() {
   const field = useChipField({ initialChips: ['react'] });
   return (
     <Field.Root aria-label="Tags">
-      <Field.ChipInput {...field} placeholder="useChipField" />
+      <Field.ChipInput {...field.getChipInputProps()} placeholder="useChipField" />
     </Field.Root>
   );
 }
@@ -230,7 +230,7 @@ export function ChipInputCommitKeys() {
   const field = useChipField({ initialChips: ['one'] });
   return (
     <Field.Root aria-label="Tags">
-      <Field.ChipInput {...field} commitKeys={['Enter', ',']} placeholder="Enter or comma" />
+      <Field.ChipInput {...field.getChipInputProps()} commitKeys={['Enter', ',']} placeholder="Enter or comma" />
     </Field.Root>
   );
 }
@@ -240,7 +240,7 @@ function MaxRowsDemo({ density, maxRows }: { density: 'compact' | 'comfortable';
   return (
     <DensityProvider density={density}>
       <Field.Root aria-label="Tags" style={{ maxWidth: '18rem' }}>
-        <Field.ChipInput {...field} maxRows={maxRows} placeholder={`${density} maxRows=${maxRows}`} />
+        <Field.ChipInput {...field.getChipInputProps()} maxRows={maxRows} placeholder={`${density} maxRows=${maxRows}`} />
       </Field.Root>
     </DensityProvider>
   );
@@ -266,7 +266,7 @@ export function ChipInputLabel() {
       <div className="labelled-field">
         <Label htmlFor={tagsId}>Tags</Label>
         <Field.Root id={tagsId}>
-          <Field.ChipInput {...field} placeholder="Type and press Enter" />
+          <Field.ChipInput {...field.getChipInputProps()} placeholder="Type and press Enter" />
         </Field.Root>
       </div>
       <div className="labelled-field">
@@ -443,7 +443,7 @@ function ChipRow({ density, chips }: { density: 'compact' | 'comfortable' | 'spa
           <Field.Icon>
             <span>⌕</span>
           </Field.Icon>
-          <Field.ChipInput {...field} chipLayout="row" maxRows={2} placeholder="Tags" />
+          <Field.ChipInput {...field.getChipInputProps()} chipLayout="row" maxRows={2} placeholder="Tags" />
           <Field.Affix>tag</Field.Affix>
         </Field.Root>
       </div>
@@ -467,7 +467,7 @@ export function RowChipInput() {
           <Field.Icon>
             <span>⌕</span>
           </Field.Icon>
-          <Field.ChipInput {...empty} chipLayout="row" placeholder="No chips" />
+          <Field.ChipInput {...empty.getChipInputProps()} chipLayout="row" placeholder="No chips" />
           <Field.Affix>tag</Field.Affix>
         </Field.Root>
       </div>

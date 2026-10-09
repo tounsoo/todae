@@ -27,6 +27,13 @@ export type UseRovingFocusOptions = {
    * the hook skips tracking the tab stop.
    */
   tabStop?: boolean;
+  /**
+   * Finds the items in the container instead of `getItemProps`, enabled or
+   * not, for a group whose items are whatever controls it holds, such as a
+   * toolbar. Such items have no value, so the hook keeps no tab stop and only
+   * moves focus between them.
+   */
+  findItems?: (container: HTMLElement) => HTMLElement[];
   /** Controlled tab stop. `null` is controlled with no preference: the first enabled item. */
   activeValue?: string | null;
   defaultActiveValue?: string | null;
@@ -106,7 +113,7 @@ export const sameValues = (a: readonly string[], b: readonly string[]) =>
 
 // `rtl` is a function so direction, which costs a style read, is only
 // checked for Left and Right.
-export function nextKey(key: string, orientation: RovingOrientation, rtl: () => boolean): 'next' | 'prev' | null {
+function nextKey(key: string, orientation: RovingOrientation, rtl: () => boolean): 'next' | 'prev' | null {
   const vertical = orientation !== 'horizontal';
   const horizontal = orientation !== 'vertical';
   if (vertical && key === 'ArrowDown') return 'next';
@@ -127,11 +134,13 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     orientation = 'vertical',
     loop = true,
     typeahead = false,
-    tabStop: keepTabStop = true,
+    tabStop: tabStopOption = true,
+    findItems,
     activeValue: activeProp,
     defaultActiveValue,
     onActiveValueChange,
   } = options;
+  const keepTabStop = tabStopOption && !findItems;
   const scope = useId();
   const [active, setActive] = useControlledState(activeProp, defaultActiveValue ?? null);
   // The items last read from the DOM: enabled ones, and of those the ones
@@ -146,13 +155,14 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
   const enabledItems = useCallback((): HTMLElement[] => {
     const container = containerRef.current;
     if (!container) return [];
+    if (findItems) return findItems(container).filter((node) => !node.matches(':disabled, [hidden]'));
     // The scope comes from useId, which never contains a quote or backslash.
     return [
       ...container.querySelectorAll<HTMLElement>(
         `[data-todae-roving="${scope}"]:not([data-todae-roving-disabled]):not([hidden]):not(:disabled)`,
       ),
     ];
-  }, [scope]);
+  }, [findItems, scope]);
 
   // Of those, the ones focus can move to now: not inert and not hidden by
   // style. Read only when moving, since checking visibility costs a style pass.
@@ -345,13 +355,18 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       // The container itself counts too, when it takes focus, as a menu does
       // on a press between items. Its index is -1: the next item is the first.
       const onContainer = target === containerRef.current;
-      if (!onContainer && target.getAttribute('data-todae-roving') !== scope) return;
+      if (!onContainer && !findItems && target.getAttribute('data-todae-roving') !== scope) return;
       // Only these keys move focus; leave the rest without reading the DOM.
       // A typed character is one code point, so an emoji counts too.
       const isMove = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key);
       // Shift with a move key is left to the owner, say to extend a selection.
       if (isMove && event.shiftKey) return;
       if (!isMove && !(typeahead && [...event.key].length === 1)) return;
+      // A found item counts while focused even once it is disabled, as one
+      // with the attribute does.
+      const container = containerRef.current;
+      if (!container) return;
+      if (!onContainer && findItems && !findItems(container).includes(target)) return;
       const nodes = items();
       if (nodes.length === 0) return;
       // Where focus sits among the enabled items. A focused item that turned
@@ -406,7 +421,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       event.preventDefault();
       next?.focus();
     },
-    [isTypingAhead, items, loop, orientation, scope, typeahead],
+    [findItems, isTypingAhead, items, loop, orientation, scope, typeahead],
   );
 
   const composedRef = useStableComposedRef(setContainer);
