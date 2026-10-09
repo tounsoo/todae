@@ -343,9 +343,9 @@ describe('docs locales', () => {
     // React hoists these into the document head.
     const links = [...document.head.querySelectorAll('link[rel="alternate"]')];
     expect(links.map((link) => [link.getAttribute('hreflang'), link.getAttribute('href')])).toEqual([
-      ['en', 'https://todae-rho.vercel.app/tokens'],
-      ['ko', 'https://todae-rho.vercel.app/ko/tokens'],
-      ['x-default', 'https://todae-rho.vercel.app/tokens'],
+      ['en', 'https://todae.omsoo.design/tokens'],
+      ['ko', 'https://todae.omsoo.design/ko/tokens'],
+      ['x-default', 'https://todae.omsoo.design/tokens'],
     ]);
   });
 

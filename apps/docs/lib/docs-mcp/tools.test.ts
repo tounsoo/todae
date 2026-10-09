@@ -28,7 +28,7 @@ describe('docs mcp tools', () => {
     const dialog = schema.components.find((row) => row.name === 'Dialog.Root');
     const result = getComponent('dialog.root');
     expect(result.props).toEqual(dialog?.props);
-    expect(result.docsUrl).toBe('https://todae-rho.vercel.app/dialog');
+    expect(result.docsUrl).toBe('https://todae.omsoo.design/dialog');
     expect(result.source).toBe('todae-docs');
   });
 
@@ -46,7 +46,7 @@ describe('docs mcp tools', () => {
       ['Tabs', 'tabs'],
     ] as const) {
       const result = getComponent(name);
-      expect(result).toMatchObject({ name, namespace: true, docsUrl: `https://todae-rho.vercel.app/${slug}` });
+      expect(result).toMatchObject({ name, namespace: true, docsUrl: `https://todae.omsoo.design/${slug}` });
       expect(result.parts.map((part) => part.name)).toContain(`${name}.Root`);
       expect(whenToUse(`${name}.Root`)).toMatchObject({ status: 'present' });
       expect(whenToUse(`${name}.Root`)).not.toHaveProperty('scope');
@@ -64,21 +64,21 @@ describe('docs mcp tools', () => {
       namespace: true,
       description: null,
       props: [],
-      docsUrl: 'https://todae-rho.vercel.app/field',
+      docsUrl: 'https://todae.omsoo.design/field',
     });
     expect(result.parts.map((part) => part.name)).toEqual(jsonNames.filter((name) => name.startsWith('Field.')));
   });
 
   it('returns the OptionList when-to-use section from MDX', () => {
     const mdx = readFileSync(join(process.cwd(), 'app/(en)/optionlist/page.mdx'), 'utf8');
-    const body = mdx.split('## When to use\n')[1]?.split('\n## ')[0]?.trim().replaceAll('](/', '](https://todae-rho.vercel.app/');
+    const body = mdx.split('## When to use\n')[1]?.split('\n## ')[0]?.trim().replaceAll('](/', '](https://todae.omsoo.design/');
     const line = (prefix: string) => body?.split('\n').find((item) => item.startsWith(prefix))?.slice(prefix.length).trim();
     const result = whenToUse('OptionList');
     expect(result).toEqual({
       status: 'present',
       whenToUse: line('**When:**'),
       whenNotToUse: line('**When not:**'),
-      docsUrl: 'https://todae-rho.vercel.app/optionlist',
+      docsUrl: 'https://todae.omsoo.design/optionlist',
       section: 'When to use',
       source: 'todae-docs',
     });
@@ -116,21 +116,21 @@ describe('docs mcp tools', () => {
       status: 'present',
       scope: 'page',
       whenToUse: sheet.whenToUse,
-      docsUrl: 'https://todae-rho.vercel.app/bottomsheet',
+      docsUrl: 'https://todae.omsoo.design/bottomsheet',
     });
     const dialog = whenToUse('Dialog');
     expect(whenToUse('Dialog.Body')).toMatchObject({
       status: 'present',
       scope: 'page',
       whenToUse: dialog.whenToUse,
-      docsUrl: 'https://todae-rho.vercel.app/dialog',
+      docsUrl: 'https://todae.omsoo.design/dialog',
     });
     const hook = whenToUse('useSheetPresentation');
     const combobox = whenToUse('useCombobox');
     expect(hook).toMatchObject({
       status: 'present',
       whenToUse: 'Choose popover or sheet at runtime: coarse pointer or width under 640px (by default) → sheet. SSR and first paint are popover. `forced` overrides.',
-      whenNotToUse: 'Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → [usePopover](https://todae-rho.vercel.app/utilities/use-popover) alone.',
+      whenNotToUse: 'Always a centered modal → Dialog. Always a sheet → BottomSheet alone. Desktop-only anchored overlay → [usePopover](https://todae.omsoo.design/utilities/use-popover) alone.',
     });
     expect(hook).not.toHaveProperty('scope');
     expect(combobox).toMatchObject({ status: 'present' });
@@ -140,17 +140,17 @@ describe('docs mcp tools', () => {
     expect(hooks.map((row) => row.name)).toEqual(expect.arrayContaining(['useAnnouncer', 'useChipField', 'useChipList', 'useCombobox', 'useControlledState', 'useControlledValue', 'usePopover', 'useSheetPresentation', 'useTooltip']));
     for (const { name } of hooks) {
       const slug = name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
-      expect(getComponent(name).docsUrl, name).toBe(`https://todae-rho.vercel.app/utilities/${slug}`);
+      expect(getComponent(name).docsUrl, name).toBe(`https://todae.omsoo.design/utilities/${slug}`);
       const copy = whenToUse(name);
       expect(copy, name).toMatchObject({ status: 'present' });
       expect(copy, name).not.toHaveProperty('scope');
     }
     const popoverNot = whenToUse('usePopover').whenNotToUse;
-    expect(popoverNot).toContain('[Menu](https://todae-rho.vercel.app/menu)');
+    expect(popoverNot).toContain('[Menu](https://todae.omsoo.design/menu)');
     expect(popoverNot).toContain('BottomSheet');
     expect(whenToUse('useCombobox').whenNotToUse).toContain('Exporting `Combobox.*` chrome (forbidden)');
-    expect(getComponent('useField').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-field');
-    expect(getComponent('useRovingFocus').docsUrl).toBe('https://todae-rho.vercel.app/utilities/use-roving-focus');
+    expect(getComponent('useField').docsUrl).toBe('https://todae.omsoo.design/utilities/use-field');
+    expect(getComponent('useRovingFocus').docsUrl).toBe('https://todae.omsoo.design/utilities/use-roving-focus');
     expect(whenToUse('useField')).toMatchObject({ status: 'present' });
     expect(whenToUse('RadioGroup')).toMatchObject({ status: 'present' });
     expect(whenToUse('RadioGroup')).not.toHaveProperty('scope');
@@ -187,7 +187,7 @@ describe('docs mcp tools', () => {
         'Set appearance (system / light / dark) for a subtree via `data-appearance`; nested providers override. `overrides` for allowlisted token paths only.',
       whenNotToUse:
         'Spacing density → DensityProvider. Raw CSS or unknown token keys (rejected).',
-      docsUrl: 'https://todae-rho.vercel.app/tokens',
+      docsUrl: 'https://todae.omsoo.design/tokens',
       section: 'When to use',
       source: 'todae-docs',
     });
@@ -195,10 +195,10 @@ describe('docs mcp tools', () => {
       status: 'present',
       whenToUse: 'Set spacing density (compact / comfortable / spacious) for a subtree via `data-density`. Spacing only.',
       whenNotToUse: 'Color or light / dark → ThemeProvider. Type size → Text `size`.',
-      docsUrl: 'https://todae-rho.vercel.app/tokens',
+      docsUrl: 'https://todae.omsoo.design/tokens',
     });
     const listed = Object.fromEntries(listComponents().components.map((row) => [row.name, row]));
-    expect(listed.ThemeProvider).toMatchObject({ hasWhenToUse: true, docsUrl: 'https://todae-rho.vercel.app/tokens' });
+    expect(listed.ThemeProvider).toMatchObject({ hasWhenToUse: true, docsUrl: 'https://todae.omsoo.design/tokens' });
     expect(listed.DensityProvider).toMatchObject({ hasWhenToUse: true });
     expect(listed.ThemeProvider).not.toHaveProperty('scope');
     const tokensMdx = readFileSync(join(process.cwd(), 'app/(en)/tokens/page.mdx'), 'utf8');
@@ -244,7 +244,7 @@ describe('docs mcp tools', () => {
     expect(whenToUse('Dialog')).not.toHaveProperty('scope');
     expect(whenToUse('Field.Textarea')).toMatchObject({
       status: 'present',
-      docsUrl: 'https://todae-rho.vercel.app/field',
+      docsUrl: 'https://todae.omsoo.design/field',
       section: 'When to use',
       whenToUse:
         'Multi-line free text such as notes, messages or descriptions. `rows` sets the starting height, and `autoGrow` grows it up to `maxRows` with CSS only.',
@@ -262,7 +262,7 @@ describe('docs mcp tools', () => {
     expect(JSON.stringify(whenToUse('Field.Counter'))).not.toContain('Footer');
     expect(whenToUse('Field')).toMatchObject({
       status: 'missing',
-      docsUrl: 'https://todae-rho.vercel.app/field',
+      docsUrl: 'https://todae.omsoo.design/field',
       note: "'When to use' on /field has no page-level copy; see its parts",
     });
     expect(missingWhenNote('# Dialog\n\n## Props\n', 'dialog')).toBe("No 'When to use' section on /dialog. Not inferred.");
@@ -437,12 +437,12 @@ describe('docs mcp tools', () => {
     expect(names).toContain('useChipList');
     expect(whenToUse('ChipList.Root')).toMatchObject({
       status: 'present',
-      docsUrl: 'https://todae-rho.vercel.app/chip-list',
+      docsUrl: 'https://todae.omsoo.design/chip-list',
     });
     const result = whenToUse('useChipList');
     expect(result).toMatchObject({
       status: 'present',
-      docsUrl: 'https://todae-rho.vercel.app/utilities/use-chip-list',
+      docsUrl: 'https://todae.omsoo.design/utilities/use-chip-list',
     });
     expect(result).not.toHaveProperty('scope');
     expect(result.whenToUse).toContain('maxRows');
