@@ -87,6 +87,10 @@
     "aria-label": {
       "en": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
       "ko": "접근 가능한 이름. \"Cancel\"처럼 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 그렇지 않으면 StringsProvider의 close 문자열이 이름이 되며, 영어로는 Close입니다."
+    },
+    "onClick": {
+      "en": "Runs before the close request. Call event.preventDefault() to keep the sheet open.",
+      "ko": "닫기 요청 전에 실행됩니다. 시트를 열어 두려면 event.preventDefault()를 호출하세요."
     }
   },
   "BottomSheet.Grabber": {
@@ -101,8 +105,8 @@
       "ko": "제어 열림 상태. 비제어 시트에서는 생략하세요."
     },
     "defaultOpen": {
-      "en": "Initial open state when uncontrolled.",
-      "ko": "비제어일 때의 초기 열림 상태."
+      "en": "Shows the sheet on mount when uncontrolled. There is no trigger part, so once closed it opens again only on remount.",
+      "ko": "비제어일 때 마운트 시 시트를 엽니다. 트리거 파트가 없어서 한 번 닫히면 다시 마운트해야 다시 열립니다."
     },
     "onOpenChange": {
       "en": "Dismiss requests. When controlled, staying open keeps the sheet open. reason is \"form\" for a <form method=\"dialog\"> submit (read returnValue) and \"native\" when something else outside Todae closed the <dialog>; when controlled, it shows again while open stays true.",
@@ -125,8 +129,8 @@
       "ko": "Escape가 onOpenChange(false, \"escape\")를 호출합니다. false이면 closedby=\"none\"을 설정해 브라우저가 닫기 요청을 무시합니다."
     },
     "dismissOnBackdrop": {
-      "en": "A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, \"backdrop\").",
-      "ko": "스크림(dialog의 ::backdrop)을 클릭하면 onOpenChange(false, \"backdrop\")을 호출합니다."
+      "en": "Scrim click calls onOpenChange(false, \"backdrop\").",
+      "ko": "스크림 클릭이 onOpenChange(false, \"backdrop\")을 호출합니다."
     },
     "dismissOnDrag": {
       "en": "Drag past the threshold dismisses.",
@@ -361,6 +365,10 @@
     "aria-label": {
       "en": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
       "ko": "접근 가능한 이름. \"Cancel\"처럼 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 그렇지 않으면 StringsProvider의 close 문자열이 이름이 되며, 영어로는 Close입니다."
+    },
+    "onClick": {
+      "en": "Runs before the close request. Call event.preventDefault() to keep the dialog open.",
+      "ko": "닫기 요청 전에 실행됩니다. 대화상자를 열어 두려면 event.preventDefault()를 호출하세요."
     }
   },
   "Dialog.Description": {
@@ -375,8 +383,8 @@
       "ko": "제어 열림 상태. 비제어 대화상자에서는 생략하세요."
     },
     "defaultOpen": {
-      "en": "Initial open state when uncontrolled.",
-      "ko": "비제어일 때의 초기 열림 상태."
+      "en": "Shows the dialog on mount when uncontrolled. There is no trigger part, so once closed it opens again only on remount.",
+      "ko": "비제어일 때 마운트 시 대화상자를 엽니다. 트리거 파트가 없어서 한 번 닫히면 다시 마운트해야 다시 열립니다."
     },
     "onOpenChange": {
       "en": "Dismiss requests. When controlled, staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element).",
@@ -407,8 +415,8 @@
       "ko": "제어 열림 상태. 비제어 드로어에서는 생략하세요."
     },
     "defaultOpen": {
-      "en": "Initial open state when uncontrolled.",
-      "ko": "비제어일 때의 초기 열림 상태."
+      "en": "Shows the drawer on mount when uncontrolled. There is no trigger part, so once closed it opens again only on remount.",
+      "ko": "비제어일 때 마운트 시 드로어를 엽니다. 트리거 파트가 없어서 한 번 닫히면 다시 마운트해야 다시 열립니다."
     },
     "onOpenChange": {
       "en": "Dismiss requests, with the same reasons as Dialog.Root.",

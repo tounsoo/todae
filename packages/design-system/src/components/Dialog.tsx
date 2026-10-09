@@ -110,7 +110,7 @@ function DialogFooter({ className, ...props }: ComponentPropsWithRef<'div'>) {
 
 function DialogClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: ButtonActionProps) {
   const { requestClose } = useDialog();
-  // Visible text such as "Cancel" names the button; the close string only names one without words.
+  // Text a screen reader reads, such as "Cancel", names the button; the close string names one without, such as ×.
   const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().close);
   return (
     <Button.Root

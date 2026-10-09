@@ -258,7 +258,8 @@ function Region<T extends object = object>({
   // None on the server: a store at module scope is shared by every request.
   const toasts = useSyncExternalStore(toaster.subscribe, toaster.getSnapshot, noToasts);
   const { notifications } = useStrings();
-  const ariaLabel = ariaLabelProp ?? notifications;
+  // An empty aria-label falls back too, as on Breadcrumbs and Pagination.
+  const ariaLabel = ariaLabelProp || notifications;
   const homeRef = useRef<HTMLSpanElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const sectionRefs = useComposedRefs(sectionRef, ref);

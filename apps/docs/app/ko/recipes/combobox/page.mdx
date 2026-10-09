@@ -102,7 +102,7 @@ const cb = useCombobox({ options, presentation: 'sheet' })
 
 ## 빈 결과와 생성
 
-일치하는 항목이 없으면 상태 행을 렌더링합니다. `allowCreate`는 쿼리와 대소문자 구분 없이 일치하는 레이블이 없을 때 같은 `OptionList`에 `+ Create "{query}"` 옵션 하나를 더합니다. 클릭하거나 Enter를 누르면 확정됩니다. 단일 선택은 선택하고 닫습니다. 다중 선택은 칩을 더하고 열린 채로 둡니다. `onCreate`는 정규화된 값을 반환할 수 있으며, 목록이 선택된 상태로 보여 줄 수 있도록 새 옵션을 `options`에 추가해야 합니다.
+일치하는 항목이 없으면 상태 행을 렌더링합니다. `allowCreate`는 쿼리와 대소문자 구분 없이 일치하는 레이블이 없을 때 같은 `OptionList`에 `Create "{query}"` 옵션 하나를 더합니다. 클릭하거나 Enter를 누르면 확정됩니다. 단일 선택은 선택하고 닫습니다. 다중 선택은 칩을 더하고 열린 채로 둡니다. `onCreate`는 정규화된 값을 반환할 수 있으며, 목록이 선택된 상태로 보여 줄 수 있도록 새 옵션을 `options`에 추가해야 합니다.
 
 <Example block>
   <ComboboxEmpty />

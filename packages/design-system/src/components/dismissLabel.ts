@@ -31,7 +31,7 @@ function spokenText(node: Node): string {
 }
 
 /**
- * The accessible name for a dismiss button: `ariaLabel` when given, none when
+ * The accessible name for a dismiss button: `ariaLabel` when not empty, none when
  * the button's own rendered text names it, and `fallback`, a string from
  * StringsProvider, otherwise. Put the returned ref on the button.
  */
@@ -67,5 +67,5 @@ export function useDismissLabel(
     });
     return () => observer.disconnect();
   }, [read]);
-  return [ariaLabel ?? (worded ? undefined : fallback), refs];
+  return [ariaLabel || (worded ? undefined : fallback), refs];
 }
