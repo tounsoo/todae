@@ -560,7 +560,7 @@
   --todae-toast-motion-exit: var(--_todae-toast-motion-exit, var(--todae-motion-duration-fast));
   --todae-toast-padding-x: var(--_todae-toast-padding-x, var(--todae-space-control-x));
   --todae-toast-padding-y: var(--_todae-toast-padding-y, var(--todae-space-control-x));
-  --todae-toast-peek: var(--_todae-toast-peek, var(--todae-space-2));
+  --todae-toast-peek: var(--_todae-toast-peek, var(--todae-space-3));
   --todae-toast-radius: var(--_todae-toast-radius, var(--todae-radius-md));
   --todae-toast-ring-focus: var(--_todae-toast-ring-focus, var(--todae-color-accent-default));
   --todae-toast-stack-gap: var(--_todae-toast-stack-gap, var(--todae-space-2));

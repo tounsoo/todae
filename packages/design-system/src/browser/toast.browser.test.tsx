@@ -1057,6 +1057,45 @@ describe('Toast in the top layer', () => {
   });
 });
 
+describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (placement) => {
+  it('show each toast behind the newest by toast.peek a step, whatever their heights', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <div data-testid="peek" style={{ blockSize: 'var(--todae-toast-peek)' }} />
+        <Toast.Region toaster={toaster} layout="stack" placement={placement}>
+          {(toast) => (
+            <Toast.Root>
+              <Toast.Title>{toast.title}</Toast.Title>
+              <Toast.Description>{toast.description}</Toast.Description>
+            </Toast.Root>
+          )}
+        </Toast.Region>
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ title: 'Back', description: 'A longer description that wraps onto a second line and a third line in the toast.' });
+      toaster.add({ title: 'Middle', description: 'Short' });
+      toaster.add({ title: 'Front', description: 'A description that wraps onto a second line in the toast.' });
+    });
+    const region = await screen.findByRole('region', { name: 'Notifications' });
+    const items = () => [...region.querySelectorAll('ol > li')] as HTMLElement[];
+    await waitFor(() => expect(items()).toHaveLength(3));
+    const probe = screen.getByTestId('peek');
+    const peek = probe.offsetHeight;
+    expect(peek).toBeGreaterThan(0);
+    // Off the toasts, so the stack stays collapsed.
+    await userEvent.hover(probe);
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    // The edge that peeks out: the top one at the bottom, the bottom one at the top.
+    const edge = (rect: DOMRect) => (placement.startsWith('bottom') ? -rect.top : rect.bottom);
+    await waitFor(() => {
+      const [front, ...rest] = items().map((item) => item.getBoundingClientRect());
+      rest.forEach((rect, i) => expect(edge(rect) - edge(front!)).toBeCloseTo((i + 1) * peek, 0));
+    });
+  });
+});
+
 describe('Tooltip in a layer shown again', () => {
   it('keeps a held tip in a toast in front, by its trigger, when a new toast arrives', async () => {
     const toaster = createToaster({ duration: Infinity });
