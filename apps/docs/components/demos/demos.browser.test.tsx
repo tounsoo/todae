@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import type { ComponentType } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import '@tounsoo/todae/todae.css';
+import '@omsoo/todae/todae.css';
 import '../../app/globals.css';
 import { Example } from '../Example';
 import { Providers } from '../Providers';

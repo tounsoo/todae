@@ -15,7 +15,7 @@ import {
   Tabs,
   Text,
   ToggleGroup,
-} from '@tounsoo/todae';
+} from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 /** A product-like screen built from Todae parts. The playground's theme paints it. Copy is English, like every demo. */

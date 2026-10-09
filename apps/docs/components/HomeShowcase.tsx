@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge, Button, Card, Field, Label, Switch, Tabs, Text } from '@tounsoo/todae';
+import { Badge, Button, Card, Field, Label, Switch, Tabs, Text } from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 /** A small settings panel built only from Todae parts, so the home page shows the real thing. */

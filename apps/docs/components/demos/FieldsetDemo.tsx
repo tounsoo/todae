@@ -1,6 +1,6 @@
 'use client';
 
-import { Checkbox, Description, ErrorMessage, Fieldset, Stack, Switch } from '@tounsoo/todae';
+import { Checkbox, Description, ErrorMessage, Fieldset, Stack, Switch } from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 export function FieldsetCheckboxes() {

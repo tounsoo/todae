@@ -1,6 +1,6 @@
 'use client';
 
-import { Chip } from '@tounsoo/todae';
+import { Chip } from '@omsoo/todae';
 
 // Stands in for an icon from your own set.
 function CloseIcon() {

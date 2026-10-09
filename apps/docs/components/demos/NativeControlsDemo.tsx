@@ -1,6 +1,6 @@
 'use client';
 
-import { Label, Stack, Text } from '@tounsoo/todae';
+import { Label, Stack, Text } from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 export function ProgressStates() {

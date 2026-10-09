@@ -8,8 +8,8 @@ export default defineConfig({
   esbuild: { jsx: 'automatic' },
   resolve: {
     alias: [
-      { find: /^@tounsoo\/todae\/todae\.css$/, replacement: src('styles/todae.css') },
-      { find: /^@tounsoo\/todae$/, replacement: src('index.ts') },
+      { find: /^@omsoo\/todae\/todae\.css$/, replacement: src('styles/todae.css') },
+      { find: /^@omsoo\/todae$/, replacement: src('index.ts') },
     ],
   },
   // Pre-bundle what demos import, so a cold cache does not re-optimize and reload mid-run,

@@ -1,4 +1,4 @@
-import { Breadcrumbs } from '@tounsoo/todae/breadcrumbs';
+import { Breadcrumbs } from '@omsoo/todae/breadcrumbs';
 
 export function BreadcrumbsTrail() {
   return (

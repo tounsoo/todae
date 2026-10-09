@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Dialog, Drawer } from '@tounsoo/todae';
+import { Button, Dialog, Drawer } from '@omsoo/todae';
 import { useState } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';

@@ -1,8 +1,13 @@
 {
-  "name": "@tounsoo/todae",
+  "name": "@omsoo/todae",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tounsoo/todae.git",
+    "directory": "packages/design-system"
+  },
   "type": "module",
   "bin": {
     "todae-tokens": "./dist/scripts/build-tokens.js"
@@ -58,6 +63,9 @@
     "schema",
     "tokens"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "tokens": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts self",
     "tokens:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts self --check",

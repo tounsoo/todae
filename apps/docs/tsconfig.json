@@ -18,18 +18,18 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@tounsoo/todae": ["../../packages/design-system/src/index.ts"],
-      "@tounsoo/todae/stack": ["../../packages/design-system/src/server/stack.ts"],
-      "@tounsoo/todae/text": ["../../packages/design-system/src/server/text.ts"],
-      "@tounsoo/todae/label": ["../../packages/design-system/src/server/label.ts"],
-      "@tounsoo/todae/badge": ["../../packages/design-system/src/server/badge.ts"],
-      "@tounsoo/todae/card": ["../../packages/design-system/src/server/card.ts"],
-      "@tounsoo/todae/breadcrumbs": ["../../packages/design-system/src/server/breadcrumbs.ts"],
-      "@tounsoo/todae/grid": ["../../packages/design-system/src/server/grid.ts"],
-      "@tounsoo/todae/pagination": ["../../packages/design-system/src/server/pagination.ts"],
-      "@tounsoo/todae/todae.css": ["../../packages/design-system/src/styles/todae.css"],
-      "@tounsoo/todae/schema/components.json": ["../../packages/design-system/schema/components.json"],
-      "@tounsoo/todae/tokens.json": ["../../packages/design-system/tokens/tokens.generated.json"]
+      "@omsoo/todae": ["../../packages/design-system/src/index.ts"],
+      "@omsoo/todae/stack": ["../../packages/design-system/src/server/stack.ts"],
+      "@omsoo/todae/text": ["../../packages/design-system/src/server/text.ts"],
+      "@omsoo/todae/label": ["../../packages/design-system/src/server/label.ts"],
+      "@omsoo/todae/badge": ["../../packages/design-system/src/server/badge.ts"],
+      "@omsoo/todae/card": ["../../packages/design-system/src/server/card.ts"],
+      "@omsoo/todae/breadcrumbs": ["../../packages/design-system/src/server/breadcrumbs.ts"],
+      "@omsoo/todae/grid": ["../../packages/design-system/src/server/grid.ts"],
+      "@omsoo/todae/pagination": ["../../packages/design-system/src/server/pagination.ts"],
+      "@omsoo/todae/todae.css": ["../../packages/design-system/src/styles/todae.css"],
+      "@omsoo/todae/schema/components.json": ["../../packages/design-system/schema/components.json"],
+      "@omsoo/todae/tokens.json": ["../../packages/design-system/tokens/tokens.generated.json"]
     }
   },
   "include": [

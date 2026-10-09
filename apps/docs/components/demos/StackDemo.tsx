@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Stack, Text } from '@tounsoo/todae';
+import { Button, Stack, Text } from '@omsoo/todae';
 
 export function StackButtons() {
   return (
