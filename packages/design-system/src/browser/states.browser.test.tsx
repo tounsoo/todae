@@ -546,7 +546,7 @@ describe('OptionList scrolling', () => {
       <Themed>
         <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
         <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
-          <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit" title={note}>
+          <OptionList.Root value={null} onValueChange={() => undefined} activeValue={active} aria-label="Fruit" title={note}>
             {items.map((item) => (
               <OptionList.Option key={item} value={item} disabled={item === disabled}>
                 {item}
