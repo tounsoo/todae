@@ -33,7 +33,7 @@ There is no native tabs element. An exclusive `<details name>` group looks simil
 
 ## Accessible composition
 
-**Todae handles:** `Tabs.List` is the `role="tablist"` with `aria-orientation`. Each `Tabs.Tab` is a button with `role="tab"`, `aria-selected` and `aria-controls`, and each `Tabs.Panel` is a `role="tabpanel"` whose `aria-labelledby` points at its tab. Todae makes the ids that pair them, so neither part takes an `id`. It keeps one tab stop in the list, makes each panel a Tab stop by default, and hides unselected panels with `hidden`, even against a `display` in your own class.
+**Todae handles:** `Tabs.List` is the `role="tablist"` with `aria-orientation`. Each `Tabs.Tab` is a button with `role="tab"`, `aria-selected` and `aria-controls`, and each `Tabs.Panel` is a `role="tabpanel"` whose `aria-labelledby` points at its tab. Todae makes the ids that pair them, so neither part takes an `id`. It keeps at most one tab stop in the list, makes each panel a Tab stop by default, and hides unselected panels with `hidden`, even against a `display` in your own class.
 
 **You supply:** A name for the list: `aria-label`, or `aria-labelledby` pointing at a visible heading. The type does not require one. Tab text that names its panel, since the panel takes its name from the tab; an icon-only tab needs `aria-label`. One `Tabs.Panel` for each `Tabs.Tab`, with the same `value`.
 

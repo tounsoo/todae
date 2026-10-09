@@ -26,7 +26,7 @@ function YourDialog({ open, onClose, children }) {
 
 **직접 제공할 것:** [Dialog](/dialog)라면 대신 해 주는, 접근 가능한 모달의 나머지입니다. `showModal()`, `aria-labelledby`나 `aria-label`로 붙이는 이름, 알맞은 첫 포커스, 닫는 버튼이 필요합니다. 모달 `<dialog>`는 Escape로 스스로 닫히므로, 예제처럼 `open` 상태를 `close` 이벤트에 맞춰 두세요.
 
-**주의할 점:** `show()`나 `open` 속성으로 연 대화 상자는 모달이 아니며 스택에 들어가지 않습니다. 대화 상자가 쓰는 것과 같은 `open`을 넘기세요. 그 값이 false인 동안에는 `showModal()` 뒤에도 스택에 들어가지 않습니다.
+**주의할 점:** `show()`나 `open` 속성으로 연 대화 상자는 `aria-modal="true"`가 있을 때만 스택에 들어갑니다. 대화 상자가 쓰는 것과 같은 `open`을 넘기세요. 그 값이 false인 동안에는 `showModal()` 뒤에도 스택에 들어가지 않습니다.
 
 ## 언제 쓰나요
 

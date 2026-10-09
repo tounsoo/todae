@@ -61,7 +61,7 @@ Icon-only `Button.Root` tips its accessible name. Pass `aria-label` or `aria-lab
 
 **Todae handles:** The behaviour above. A text tip is `role="tooltip"`, mounted only while open, and while it is open `getTriggerProps` points the trigger's `aria-describedby` at it. It opens on focus as well as hover, and Escape closes it. An interactive tip is `role="dialog"` with no focus trap, and Escape from inside it sends focus back to the trigger. In development, Todae logs an error when a text tip holds anything tabbable, or an interactive one holds anything but links.
 
-**You supply:** The trigger's accessible name. The tip describes the trigger and never names it, so an icon-only trigger needs its own `aria-label`. A trigger that takes focus: give a wrap that is not tabbable `tabIndex={0}`. With `interactive: true`, exactly one of `aria-label` or `aria-labelledby` on `Tooltip.Root`.
+**You supply:** The trigger's accessible name. The tip describes the trigger and never names it, so an icon-only trigger needs its own `aria-label` or `aria-labelledby`. A trigger that takes focus: give a wrap that is not tabbable `tabIndex={0}`. With `interactive: true`, exactly one of `aria-label` or `aria-labelledby` on `Tooltip.Root`.
 
 **Watch for:** While the tip is open, it replaces the trigger's own `aria-describedby` instead of adding to it, so a hint or error the trigger points at is not read then. Keep what a person needs out of the tip: on a coarse pointer it opens on focus only. Pass your own focus and pointer handlers through `getTriggerProps(props)`; put after the spread, they replace the tip's. Buttons and menus belong in a [Popover](/popover) or [Menu](/menu), not a tip.
 

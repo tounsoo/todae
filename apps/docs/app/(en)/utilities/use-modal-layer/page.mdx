@@ -26,7 +26,7 @@ The dialog joins once `open` is true and it is shown with `showModal()`, in eith
 
 **You supply:** The rest of an accessible modal, which [Dialog](/dialog) would handle for you: `showModal()`, a name through `aria-labelledby` or `aria-label`, a first focus that makes sense, and a button that closes it. Escape closes a modal `<dialog>` by itself, so keep your `open` state in step with its `close` event, as the example does.
 
-**Watch for:** `show()` or the `open` attribute gives a dialog that is not modal, and it does not join. Pass the same `open` your dialog uses: while it is false, the dialog does not join, even after `showModal()`.
+**Watch for:** A dialog opened with `show()` or the `open` attribute joins only when it carries `aria-modal="true"`. Pass the same `open` your dialog uses: while it is false, the dialog does not join, even after `showModal()`.
 
 ## When to use
 
