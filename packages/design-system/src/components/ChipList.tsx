@@ -34,7 +34,7 @@ export type ChipListRootProps = {
   /** Renders a remove button on each chip. */
   onRemove?: (index: number, value: string) => void;
   /** Remove button name. Default is Remove {value}. */
-  dismissLabel?: (value: string) => string;
+  removeLabel?: (value: string) => string;
   /** +N button name. Default is {n} more. */
   overflowLabel?: (n: number) => string;
   /** Name of the popover with the folded chips. Default is {n} more chips, or 1 more chip. */
@@ -132,7 +132,7 @@ function Root({
   maxRows,
   getKey,
   onRemove,
-  dismissLabel,
+  removeLabel,
   overflowLabel,
   panelLabel = (n) => `${n} more ${n === 1 ? 'chip' : 'chips'}`,
   'aria-label': ariaLabel,
@@ -291,9 +291,9 @@ function Root({
               data-key={keys[index]}
               data-value={chip.value}
               data-index={index}
-              dismissLabel={dismissLabel?.(chip.value)}
+              removeLabel={removeLabel?.(chip.value)}
               style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
-              onDismiss={onRemove ? () => removeAt(index, chip.value, listRef.current) : undefined}
+              onRemove={onRemove ? () => removeAt(index, chip.value, listRef.current) : undefined}
               onBlur={onRemove ? () => release(index) : undefined}
             >
               {chip.value}
@@ -312,11 +312,11 @@ function Root({
         // Read by useChipList only when there is a row limit.
         <div ref={measureRef} aria-hidden inert className={styles.measure}>
           {chips.map((value, index) => (
-            <Chip.Root key={index} onDismiss={onRemove ? () => undefined : undefined}>
+            <Chip.Root key={index} onRemove={onRemove ? () => undefined : undefined}>
               {value}
             </Chip.Root>
           ))}
-          <Chip.Root onDismiss={onRemove ? () => undefined : undefined}>…</Chip.Root>
+          <Chip.Root onRemove={onRemove ? () => undefined : undefined}>…</Chip.Root>
           <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
         </div>
       ) : null}
@@ -331,8 +331,8 @@ function Root({
                 data-value={value}
                 data-index={at}
                 className={styles.panelChip}
-                dismissLabel={dismissLabel?.(value)}
-                onDismiss={onRemove ? () => removeAt(at, value, popover.popoverRef.current) : undefined}
+                removeLabel={removeLabel?.(value)}
+                onRemove={onRemove ? () => removeAt(at, value, popover.popoverRef.current) : undefined}
                 onBlur={onRemove ? () => release(at) : undefined}
               >
                 {value}

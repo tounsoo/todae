@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 export type OverlayCloseReason =
   | 'escape'
   | 'backdrop'
-  | 'scrim'
   | 'drag'
   | 'close-button'
   | 'outside'

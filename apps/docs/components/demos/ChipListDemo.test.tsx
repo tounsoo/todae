@@ -675,7 +675,7 @@ describe('chip list recipe', () => {
           chips={tags}
           maxRows={maxRows}
           onRemove={() => undefined}
-          dismissLabel={(value) => `Remove ${value}`}
+          removeLabel={(value) => `Remove ${value}`}
           overflowLabel={(n) => `+${n} more`}
         />
       );

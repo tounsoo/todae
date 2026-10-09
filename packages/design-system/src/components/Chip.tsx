@@ -3,8 +3,8 @@ import styles from './Chip.module.css';
 
 export type ChipRootProps = {
   children: string;
-  onDismiss?: () => void;
-  dismissLabel?: string;
+  onRemove?: () => void;
+  removeLabel?: string;
   disabled?: boolean;
 } & Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
@@ -19,8 +19,8 @@ function chipClass(className?: string): string {
 
 function ChipRoot({
   children,
-  onDismiss,
-  dismissLabel,
+  onRemove,
+  removeLabel,
   disabled,
   className,
   ...props
@@ -32,13 +32,13 @@ function ChipRoot({
   return (
     <span {...props} className={chipClass(className)} data-disabled={disabled ? '' : undefined}>
       <span className={styles.label}>{label}</span>
-      {onDismiss ? (
+      {onRemove ? (
         <button
           type="button"
           className={styles.dismiss}
-          aria-label={dismissLabel ?? `Remove ${label}`}
+          aria-label={removeLabel ?? `Remove ${label}`}
           disabled={disabled}
-          onClick={disabled ? undefined : onDismiss}
+          onClick={disabled ? undefined : onRemove}
         >
           ×
         </button>

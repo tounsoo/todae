@@ -2,7 +2,7 @@ import { DialogBasic, DialogThemed } from '../../../components/demos/DialogDemo'
 
 # Dialog
 
-Centered native `<dialog>` via `showModal()`. Controlled `open`. Escape and backdrop dismiss are opt-out. No sheet morph.
+Centered native `<dialog>` via `showModal()`. `open` is controlled, or `defaultOpen` leaves it uncontrolled. Escape and backdrop dismiss are opt-out. No sheet morph.
 
 Enter is opacity + scale(0.96→1) over 200ms. `@starting-style` where supported; `data-entered` is the fallback so unsupported engines still tween. Exit stays mounted until `transitionend` (160ms fallback).
 
@@ -22,7 +22,7 @@ iOS may still rubber-band the page behind an open overlay. Chrome may ignore `ca
 
 ## When to use
 
-**When:** Centered modal task or confirm (native `<dialog>`, controlled `open`). Name via `Dialog.Title` or `aria-label`. Escape + scrim dismiss by default.
+**When:** Centered modal task or confirm (native `<dialog>`, controlled `open` or uncontrolled `defaultOpen`). Name via `Dialog.Title` or `aria-label`. Escape + backdrop dismiss by default.
 
 **When not:** Mobile picker from the bottom → BottomSheet. Full-height side panel → Drawer. Non-modal anchored panel → Popover. Short hint → Tooltip. Needs to become a sheet on mobile (Dialog never morphs).
 

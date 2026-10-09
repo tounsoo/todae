@@ -6,7 +6,7 @@ import { useState } from 'react';
 export function OptionListSingle() {
   const [value, setValue] = useState<string | null>('pear');
   return (
-    <OptionList.Root value={value} onChange={setValue} aria-label="Fruit">
+    <OptionList.Root value={value} onValueChange={setValue} aria-label="Fruit">
       <OptionList.Option value="apple">Apple</OptionList.Option>
       <OptionList.Option value="pear">Pear</OptionList.Option>
       <OptionList.Option value="plum">Plum</OptionList.Option>
@@ -17,7 +17,7 @@ export function OptionListSingle() {
 export function OptionListMultiple() {
   const [value, setValue] = useState<string[]>(['apple']);
   return (
-    <OptionList.Root selectionMode="multiple" value={value} onChange={setValue} aria-label="Fruit">
+    <OptionList.Root selectionMode="multiple" value={value} onValueChange={setValue} aria-label="Fruit">
       <OptionList.Option value="apple">Apple</OptionList.Option>
       <OptionList.Option value="pear">Pear</OptionList.Option>
       <OptionList.Option value="plum">Plum</OptionList.Option>

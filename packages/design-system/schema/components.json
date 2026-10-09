@@ -222,14 +222,21 @@
         {
           "name": "open",
           "type": "boolean",
-          "required": true,
-          "description": "Controlled open state."
+          "required": false,
+          "description": "Controlled open state. Leave it out for an uncontrolled sheet."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled.",
+          "default": "false"
         },
         {
           "name": "onOpenChange",
           "type": "(open: boolean, reason: SheetCloseReason) => void",
-          "required": true,
-          "description": "Dismiss requests. Staying open keeps the sheet open. reason is \"form\" for a <form method=\"dialog\"> submit (read returnValue) and \"native\" when something else outside Todae closed the <dialog>; it shows again while open stays true."
+          "required": false,
+          "description": "Dismiss requests. When controlled, staying open keeps the sheet open. reason is \"form\" for a <form method=\"dialog\"> submit (read returnValue) and \"native\" when something else outside Todae closed the <dialog>; when controlled, it shows again while open stays true."
         },
         {
           "name": "snap",
@@ -259,10 +266,10 @@
           "default": "true"
         },
         {
-          "name": "dismissOnScrim",
+          "name": "dismissOnBackdrop",
           "type": "boolean",
           "required": false,
-          "description": "A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, \"scrim\").",
+          "description": "A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, \"backdrop\").",
           "default": "true"
         },
         {
@@ -547,7 +554,7 @@
     },
     {
       "name": "Chip.Root",
-      "description": "Text-only label with optional named dismiss. Overflow +N is Chip.Overflow.",
+      "description": "Text-only label with optional named remove button. Overflow +N is Chip.Overflow.",
       "props": [
         {
           "name": "children",
@@ -556,22 +563,22 @@
           "description": "Chip label. Text only."
         },
         {
-          "name": "onDismiss",
+          "name": "onRemove",
           "type": "() => void",
           "required": false,
-          "description": "Renders a named dismiss button."
+          "description": "Renders a named remove button."
         },
         {
-          "name": "dismissLabel",
+          "name": "removeLabel",
           "type": "string",
           "required": false,
-          "description": "Dismiss aria-label. Default is Remove {label}."
+          "description": "Remove button aria-label. Default is Remove {label}."
         },
         {
           "name": "disabled",
           "type": "boolean",
           "required": false,
-          "description": "Disables dismiss.",
+          "description": "Disables the remove button.",
           "default": "false"
         }
       ]
@@ -605,7 +612,7 @@
           "description": "Renders a remove button on each chip. Once chips drops the focused chip, focus moves to the chip that now fills its place, else the one before it, else +N, else the list."
         },
         {
-          "name": "dismissLabel",
+          "name": "removeLabel",
           "type": "(value: string) => string",
           "required": false,
           "description": "Remove button name. Default is Remove {value}."
@@ -722,19 +729,26 @@
     },
     {
       "name": "Dialog.Root",
-      "description": "Controlled native modal dialog. Stays centered. No sheet morph.",
+      "description": "Native modal dialog. Stays centered. No sheet morph.",
       "props": [
         {
           "name": "open",
           "type": "boolean",
-          "required": true,
-          "description": "Controlled open state."
+          "required": false,
+          "description": "Controlled open state. Leave it out for an uncontrolled dialog."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled.",
+          "default": "false"
         },
         {
           "name": "onOpenChange",
           "type": "(open: boolean, reason: DialogCloseReason) => void",
-          "required": true,
-          "description": "Dismiss requests. Staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element)."
+          "required": false,
+          "description": "Dismiss requests. When controlled, staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element)."
         },
         {
           "name": "dismissOnEscape",
@@ -772,18 +786,25 @@
     },
     {
       "name": "Drawer.Root",
-      "description": "Controlled native modal dialog pinned to the start or end edge, full height. Uses Dialog parts inside.",
+      "description": "Native modal dialog pinned to the start or end edge, full height. Uses Dialog parts inside.",
       "props": [
         {
           "name": "open",
           "type": "boolean",
-          "required": true,
-          "description": "Controlled open state."
+          "required": false,
+          "description": "Controlled open state. Leave it out for an uncontrolled drawer."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled.",
+          "default": "false"
         },
         {
           "name": "onOpenChange",
           "type": "(open: boolean, reason: DialogCloseReason) => void",
-          "required": true,
+          "required": false,
           "description": "Dismiss requests, with the same reasons as Dialog.Root."
         },
         {
@@ -883,7 +904,19 @@
           "name": "onChipRemove",
           "type": "(index: number, value: string) => void",
           "required": true,
-          "description": "Dismiss click or Backspace on an empty input."
+          "description": "Remove button click or Backspace on an empty input."
+        },
+        {
+          "name": "chipRemoveLabel",
+          "type": "(value: string) => string",
+          "required": false,
+          "description": "Remove button name. Default is Remove {value}."
+        },
+        {
+          "name": "overflowLabel",
+          "type": "(n: number) => string",
+          "required": false,
+          "description": "+N name. Default is {n} more."
         },
         {
           "name": "commitKeys",
@@ -1590,7 +1623,7 @@
           "name": "selectionMode",
           "type": "\"single\" | \"multiple\"",
           "required": false,
-          "description": "Single fires onChange(string). Multiple fires onChange(string[]).",
+          "description": "Single fires onValueChange(string). Multiple fires onValueChange(string[]).",
           "default": "\"single\""
         },
         {
@@ -1600,7 +1633,7 @@
           "description": "Selected value, or values when selectionMode is multiple."
         },
         {
-          "name": "onChange",
+          "name": "onValueChange",
           "type": "(value: string | string[]) => void",
           "required": true,
           "description": "Selection change. Single passes a string. Multiple passes the next array."
@@ -1625,7 +1658,7 @@
           "description": "Controlled highlighted value. Omit to keep highlight inside the list."
         },
         {
-          "name": "onActiveChange",
+          "name": "onActiveValueChange",
           "type": "(value: string | null) => void",
           "required": false,
           "description": "Fires when keyboard or pointer moves the highlight."
@@ -2338,7 +2371,7 @@
           "description": "Starting pressed value when uncontrolled."
         },
         {
-          "name": "onChange",
+          "name": "onValueChange",
           "type": "((value: string | null) => void) | ((value: string[]) => void)",
           "required": false,
           "description": "Called with the new pressed value when an item is pressed."

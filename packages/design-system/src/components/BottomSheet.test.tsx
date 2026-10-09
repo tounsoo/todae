@@ -252,13 +252,13 @@ describe('BottomSheet', () => {
     fireEvent.pointerDown(sheet, { clientX: 10, clientY: 100 });
     fireEvent.click(sheet, { clientX: 10, clientY: 100 });
     expect(onClick).toHaveBeenCalledTimes(3);
-    expect(onOpenChange).toHaveBeenCalledWith(false, 'scrim');
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'backdrop');
   });
 
-  it('keeps the backdrop open when dismissOnScrim is false or the consumer prevents the click', async () => {
+  it('keeps the backdrop open when dismissOnBackdrop is false or the consumer prevents the click', async () => {
     const onOpenChange = vi.fn();
     const { rerender } = render(
-      <BottomSheet.Root open onOpenChange={onOpenChange} dismissOnScrim={false} aria-label="s" />,
+      <BottomSheet.Root open onOpenChange={onOpenChange} dismissOnBackdrop={false} aria-label="s" />,
     );
     const sheet = screen.getByRole('dialog');
     sheet.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 400, width: 800, height: 400 });
@@ -303,7 +303,7 @@ describe('BottomSheet', () => {
 
   it('types snapPoints and close reasons', () => {
     expectTypeOf<NonNullable<BottomSheetRootProps['snapPoints']>>().toEqualTypeOf<readonly ('mid' | 'full')[]>();
-    expectTypeOf<SheetCloseReason>().toEqualTypeOf<'escape' | 'scrim' | 'drag' | 'close-button' | 'form' | 'native'>();
+    expectTypeOf<SheetCloseReason>().toEqualTypeOf<'escape' | 'backdrop' | 'drag' | 'close-button' | 'form' | 'native'>();
     expectTypeOf(['peek'] as const).not.toMatchTypeOf<NonNullable<BottomSheetRootProps['snapPoints']>>();
   });
 
@@ -331,3 +331,47 @@ describe('BottomSheet', () => {
     expect(onRender.mock.calls.length).toBe(before);
   });
 });
+
+describe('BottomSheet uncontrolled and close vetoes', () => {
+  it('closes an uncontrolled sheet on Escape right away, and waits for open when controlled', () => {
+    const onOpenChange = vi.fn();
+    const { unmount } = render(<BottomSheet.Root defaultOpen onOpenChange={onOpenChange} aria-label="s" />);
+    let sheet = screen.getByRole('dialog');
+    act(() => {
+      sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
+    });
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+    expect(sheet.hasAttribute('data-exiting')).toBe(true);
+    unmount();
+    render(<BottomSheet.Root open onOpenChange={() => undefined} aria-label="s" />);
+    sheet = screen.getByRole('dialog');
+    act(() => {
+      sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
+    });
+    expect(sheet.hasAttribute('data-exiting')).toBe(false);
+  });
+
+  it('opens from defaultOpen and closes itself from BottomSheet.Close', async () => {
+    render(
+      <BottomSheet.Root defaultOpen aria-label="Filters">
+        <BottomSheet.Close>Done</BottomSheet.Close>
+      </BottomSheet.Root>,
+    );
+    const sheet = screen.getByRole('dialog', { hidden: true }) as HTMLDialogElement;
+    expect(sheet.open).toBe(true);
+    fireEvent.click(screen.getByText('Done'));
+    await waitFor(() => expect(sheet.open).toBe(false));
+  });
+
+  it('keeps the sheet open when BottomSheet.Close onClick calls preventDefault', () => {
+    const onOpenChange = vi.fn();
+    render(
+      <BottomSheet.Root open onOpenChange={onOpenChange} aria-label="Filters">
+        <BottomSheet.Close onClick={(event) => event.preventDefault()}>Done</BottomSheet.Close>
+      </BottomSheet.Root>,
+    );
+    fireEvent.click(screen.getByText('Done'));
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+});
+

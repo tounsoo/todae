@@ -7,7 +7,7 @@ A set of toggle buttons that read as one control: text alignment, a view switche
 In the default single mode, one item is pressed at most, and pressing it again clears the value to `null`.
 
 ```tsx
-<ToggleGroup.Root aria-label="Alignment" value={align} onChange={setAlign}>
+<ToggleGroup.Root aria-label="Alignment" value={align} onValueChange={setAlign}>
   <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
   <ToggleGroup.Item value="center">Center</ToggleGroup.Item>
   <ToggleGroup.Item value="right">Right</ToggleGroup.Item>

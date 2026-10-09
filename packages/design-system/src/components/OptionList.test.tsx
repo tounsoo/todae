@@ -14,7 +14,7 @@ describe('OptionList', () => {
   it('skips disabled options wrapped in fragments during keyboard navigation', () => {
     const onChange = vi.fn();
     render(
-      <OptionList.Root value={null} onChange={onChange} aria-label="Fruit">
+      <OptionList.Root value={null} onValueChange={onChange} aria-label="Fruit">
         <OptionList.Option value="a">A</OptionList.Option>
         <>
           <OptionList.Option value="b" disabled>
@@ -50,7 +50,7 @@ describe('OptionList', () => {
   it('renders a listbox with string options and activedescendant', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
-      <OptionList.Root value="pear" onChange={() => undefined} aria-label="Fruit">
+      <OptionList.Root value="pear" onValueChange={() => undefined} aria-label="Fruit">
         <OptionList.Option value="apple">Apple</OptionList.Option>
         <OptionList.Option value="pear">Pear</OptionList.Option>
         <OptionList.Option value="bad">{['nope'] as unknown as string}</OptionList.Option>
@@ -70,7 +70,7 @@ describe('OptionList', () => {
   it('fires onChange(string) for single selection', () => {
     const onChange = vi.fn();
     render(
-      <OptionList.Root value={null} onChange={onChange} aria-label="Fruit">
+      <OptionList.Root value={null} onValueChange={onChange} aria-label="Fruit">
         <OptionList.Option value="apple">Apple</OptionList.Option>
         <OptionList.Option value="pear">Pear</OptionList.Option>
       </OptionList.Root>,
@@ -83,7 +83,7 @@ describe('OptionList', () => {
   it('toggles values for multiple selection', () => {
     const onChange = vi.fn();
     const { rerender } = render(
-      <OptionList.Root selectionMode="multiple" value={['apple']} onChange={onChange} aria-label="Fruit">
+      <OptionList.Root selectionMode="multiple" value={['apple']} onValueChange={onChange} aria-label="Fruit">
         <OptionList.Option value="apple">Apple</OptionList.Option>
         <OptionList.Option value="pear">Pear</OptionList.Option>
       </OptionList.Root>,
@@ -93,7 +93,7 @@ describe('OptionList', () => {
     fireEvent.click(screen.getByRole('option', { name: 'Pear' }));
     expect(onChange).toHaveBeenCalledWith(['apple', 'pear']);
     rerender(
-      <OptionList.Root selectionMode="multiple" value={['apple', 'pear']} onChange={onChange} aria-label="Fruit">
+      <OptionList.Root selectionMode="multiple" value={['apple', 'pear']} onValueChange={onChange} aria-label="Fruit">
         <OptionList.Option value="apple">Apple</OptionList.Option>
         <OptionList.Option value="pear">Pear</OptionList.Option>
       </OptionList.Root>,
@@ -105,7 +105,7 @@ describe('OptionList', () => {
   it('moves with arrows home end and selects with enter or space', () => {
     const onChange = vi.fn();
     render(
-      <OptionList.Root value={null} onChange={onChange} aria-label="Fruit">
+      <OptionList.Root value={null} onValueChange={onChange} aria-label="Fruit">
         <OptionList.Option value="apple">Apple</OptionList.Option>
         <OptionList.Option value="skip" disabled>
           Skip
@@ -133,7 +133,7 @@ describe('OptionList', () => {
   it('highlights only the keyboard row and clears after pointer select', () => {
     const onChange = vi.fn();
     render(
-      <OptionList.Root value={null} onChange={onChange} aria-label="Fruit">
+      <OptionList.Root value={null} onValueChange={onChange} aria-label="Fruit">
         <OptionList.Option value="apple">Apple</OptionList.Option>
         <OptionList.Option value="pear">Pear</OptionList.Option>
       </OptionList.Root>,
@@ -155,7 +155,7 @@ describe('OptionList', () => {
         tabIndex={-1}
         activeValue="pear"
         value={null}
-        onChange={() => undefined}
+        onValueChange={() => undefined}
         aria-label="Fruit"
       >
         <OptionList.Option value="apple">Apple</OptionList.Option>
@@ -172,7 +172,7 @@ describe('OptionList', () => {
         tabIndex={-1}
         activeValue="apple"
         value={null}
-        onChange={() => undefined}
+        onValueChange={() => undefined}
         aria-label="Fruit"
       >
         <OptionList.Option value="apple">Apple</OptionList.Option>
@@ -183,15 +183,15 @@ describe('OptionList', () => {
     expect(screen.getByRole('option', { name: 'Apple' }).hasAttribute('data-highlighted')).toBe(true);
   });
 
-  it('fires onActiveChange on arrow keys', () => {
-    const onActiveChange = vi.fn();
+  it('fires onActiveValueChange on arrow keys', () => {
+    const onActiveValueChange = vi.fn();
     render(
       <OptionList.Root
         id="fruit"
         activeValue="apple"
-        onActiveChange={onActiveChange}
+        onActiveValueChange={onActiveValueChange}
         value={null}
-        onChange={() => undefined}
+        onValueChange={() => undefined}
         aria-label="Fruit"
       >
         <OptionList.Option value="apple">Apple</OptionList.Option>
@@ -199,7 +199,7 @@ describe('OptionList', () => {
       </OptionList.Root>,
     );
     fireEvent.keyDown(screen.getByRole('listbox'), { key: 'ArrowDown' });
-    expect(onActiveChange).toHaveBeenCalledWith('pear');
+    expect(onActiveValueChange).toHaveBeenCalledWith('pear');
   });
 
   it('lets Escape bubble', () => {
@@ -207,7 +207,7 @@ describe('OptionList', () => {
     const onEscape = vi.fn();
     render(
       <div onKeyDown={(event) => event.key === 'Escape' && onEscape()}>
-        <OptionList.Root value={null} onChange={onChange} aria-label="Fruit">
+        <OptionList.Root value={null} onValueChange={onChange} aria-label="Fruit">
           <OptionList.Option value="apple">Apple</OptionList.Option>
         </OptionList.Root>
       </div>,
@@ -228,5 +228,21 @@ describe('OptionList', () => {
     expect(css).toMatch(/@media\s*\(hover:\s*hover\)/);
     expect(css).toMatch(/\.option\[data-selected\][^{]*\{[^}]*--todae-option-bg-selected/);
     expect(css).not.toMatch(/\.list:hover[^{]*\{[^}]*--todae-option-bg-hover/);
+  });
+});
+
+describe('OptionList.Root types', () => {
+  it('rejects the old onChange name', () => {
+    expect(() => (
+      <OptionList.Root
+        value={null}
+        onValueChange={() => undefined}
+        // @ts-expect-error onChange was renamed to onValueChange.
+        onChange={() => undefined}
+        aria-label="Fruit"
+      >
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+      </OptionList.Root>
+    )).not.toThrow();
   });
 });

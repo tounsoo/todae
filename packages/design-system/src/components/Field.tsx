@@ -384,7 +384,7 @@ export type FieldChipInputProps = {
   maxRows?: number;
   chipLayout?: 'inline' | 'row';
   removeOnBackspace?: boolean;
-  chipDismissLabel?: (value: string) => string;
+  chipRemoveLabel?: (value: string) => string;
   overflowLabel?: (n: number) => string;
   ref?: Ref<HTMLInputElement>;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'disabled' | 'type' | 'children'>;
@@ -399,7 +399,7 @@ function ChipInput({
   maxRows,
   chipLayout = 'inline',
   removeOnBackspace = true,
-  chipDismissLabel,
+  chipRemoveLabel,
   overflowLabel,
   className,
   onKeyDown: onKeyDownProp,
@@ -444,10 +444,10 @@ function ChipInput({
     <Chip.Root
       key={chip.key}
       disabled={field.disabled}
-      dismissLabel={chipDismissLabel?.(chip.value)}
+      removeLabel={chipRemoveLabel?.(chip.value)}
       data-ellipsis={chip.ellipsis ? '' : undefined}
       style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
-      onDismiss={() => {
+      onRemove={() => {
         onChipRemove(index, chip.value);
         ownInput.current?.focus();
       }}
@@ -477,11 +477,11 @@ function ChipInput({
     maxRows != null ? (
       <div ref={list.measureRef} className={styles.measure} aria-hidden inert>
         {chips.map((value, index) => (
-          <Chip.Root key={`m:${index}:${value}`} onDismiss={() => undefined} disabled={field.disabled}>
+          <Chip.Root key={`m:${index}:${value}`} onRemove={() => undefined} disabled={field.disabled}>
             {value}
           </Chip.Root>
         ))}
-        <Chip.Root onDismiss={() => undefined} disabled={field.disabled}>
+        <Chip.Root onRemove={() => undefined} disabled={field.disabled}>
           …
         </Chip.Root>
         <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />

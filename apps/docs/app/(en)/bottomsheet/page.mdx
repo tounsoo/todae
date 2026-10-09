@@ -12,7 +12,7 @@ Enter slides from `translateY(100%)` into the snap height (first-frame pose, not
   <BottomSheetBasic />
 </Example>
 
-The sheet renders where you place it, with no portal, so it inherits appearance, density and theme overrides like any other part. `dismissOnEscape={false}` sets `closedby="none"`, so the browser ignores Escape; otherwise Escape and a scrim click ask `onOpenChange` to close, and the exit motion runs once you set `open` to false. When something outside Todae closes the `<dialog>`, such as a script calling `close()`, `onOpenChange` gets the reason `native`.
+The sheet renders where you place it, with no portal, so it inherits appearance, density and theme overrides like any other part. `dismissOnEscape={false}` sets `closedby="none"`, so the browser ignores Escape; otherwise Escape and a backdrop click call `onOpenChange(false, reason)`. A controlled sheet closes once you set `open` to false; an uncontrolled one closes right away. When something outside Todae closes the `<dialog>`, such as a script calling `close()`, `onOpenChange` gets the reason `native`.
 
 ## Consumer sketch
 

@@ -7,14 +7,13 @@ import {
   useState,
   type ButtonHTMLAttributes,
   type ComponentPropsWithRef,
-  type MouseEvent,
   type ReactNode,
   type Ref,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState';
 import { useTooltip } from '../hooks/useTooltip';
 import styles from './Button.module.css';
-import { useComposedRefs } from './props';
+import { composeHandlers, useComposedRefs } from './props';
 import { Tooltip } from './Tooltip';
 
 /**
@@ -129,12 +128,11 @@ function Root({
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const toggle = pressedProp !== undefined || defaultPressed !== undefined;
   const [pressed, setPressed] = useControlledState(pressedProp, defaultPressed ?? false);
-  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    onClick?.(event);
-    if (!toggle || event.defaultPrevented) return;
+  const handleClick = composeHandlers(onClick, () => {
+    if (!toggle) return;
     setPressed(!pressed);
     onPressedChange?.(!pressed);
-  };
+  });
   const [read, setRead] = useState<Content | null>(null);
   const direct = hint(children);
   const iconOnly = read ? isIconOnly(read) : direct.iconOnly;

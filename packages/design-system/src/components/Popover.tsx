@@ -1,5 +1,6 @@
 import { useRef, type ComponentPropsWithoutRef, type CSSProperties, type ReactNode } from 'react';
 import { usePopoverSync } from '../overlay/usePopoverSync';
+import { useComposedRefs } from './props';
 import type { PopoverWire } from './Popover.wire';
 import styles from './Popover.module.css';
 import { ToolbarContext } from './toolbarContext';
@@ -58,16 +59,15 @@ function PopoverRoot({
   ...props
 }: PopoverRootProps) {
   const localRef = useRef<HTMLDivElement | null>(null);
+  // A stable ref, so React does not detach and reattach the wire's ref every render.
+  const refs = useComposedRefs(localRef, setRef);
   usePopoverSync(localRef, open);
   return (
     <div
       {...props}
       tabIndex={props.tabIndex ?? -1}
       id={id}
-      ref={(node) => {
-        localRef.current = node;
-        setRef(node);
-      }}
+      ref={refs}
       popover="manual"
       role={role}
       className={[styles.content, className].filter(Boolean).join(' ')}

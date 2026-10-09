@@ -32,7 +32,7 @@ export const meta = {
         'Renders a remove button on each chip. Once chips drops the focused chip, focus moves to the chip that now fills its place, else the one before it, else +N, else the list.',
     },
     {
-      name: 'dismissLabel',
+      name: 'removeLabel',
       type: '(value: string) => string',
       required: false,
       description: 'Remove button name. Default is Remove {value}.',

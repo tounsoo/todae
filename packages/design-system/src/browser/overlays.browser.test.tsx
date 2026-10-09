@@ -168,7 +168,7 @@ describe('BottomSheet in a browser', () => {
     expect(onClose).not.toHaveBeenCalled();
     // Above the sheet is the ::backdrop, which hit-tests as the dialog.
     await userEvent.click(sheet(), { position: { x: 4, y: -20 } });
-    await waitFor(() => expect(onClose).toHaveBeenCalledWith('scrim'));
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith('backdrop'));
   });
 
   it('closes on Escape through the dialog close request', async () => {

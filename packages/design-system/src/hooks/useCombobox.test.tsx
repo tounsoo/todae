@@ -1,11 +1,12 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Field } from '../components/Field';
 import { OptionList } from '../components/OptionList';
 import { Popover } from '../components/Popover';
 import { optionDomId } from '../components/OptionList.ids';
 import { resetMatchMedia, setMatchMedia } from '../test/setup';
 import * as api from '../index';
+import type { BottomSheetRootProps } from '../components/BottomSheet';
 import { useCombobox, type ComboboxOption, type UseComboboxSingleOptions } from './useCombobox';
 
 afterEach(() => {
@@ -44,7 +45,7 @@ function MultiCreateBox({ onChange }: { onChange?: (value: string[]) => void } =
     options: OPTIONS,
     allowCreate: true,
     presentation: 'popover',
-    onChange,
+    onValueChange: onChange,
   });
   return (
     <div>
@@ -159,7 +160,7 @@ describe('useCombobox', () => {
   it('opens and moves with arrows, clamps, skips disabled, and selects with Enter', () => {
     const onChange = vi.fn();
     const onOpenChange = vi.fn();
-    render(<SingleBox onChange={onChange} onOpenChange={onOpenChange} />);
+    render(<SingleBox onValueChange={onChange} onOpenChange={onOpenChange} />);
     const input = screen.getByRole('combobox');
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(onOpenChange).toHaveBeenCalledWith(true, 'trigger');
@@ -217,7 +218,7 @@ describe('useCombobox', () => {
 
   it('clears single value when the input is emptied', () => {
     const onChange = vi.fn();
-    render(<SingleBox defaultValue="react" onChange={onChange} />);
+    render(<SingleBox defaultValue="react" onValueChange={onChange} />);
     fireEvent.change(screen.getByRole('combobox'), { target: { value: '' } });
     expect(onChange).toHaveBeenCalledWith(null);
   });
@@ -225,7 +226,7 @@ describe('useCombobox', () => {
   it('keeps controlled open and value on the caller', () => {
     const onChange = vi.fn();
     const onOpenChange = vi.fn();
-    render(<SingleBox open={false} value="react" onChange={onChange} onOpenChange={onOpenChange} />);
+    render(<SingleBox open={false} value="react" onValueChange={onChange} onOpenChange={onOpenChange} />);
     fireEvent.keyDown(screen.getByRole('combobox'), { key: 'ArrowDown' });
     expect(onOpenChange).toHaveBeenCalledWith(true, 'trigger');
     expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('false');
@@ -403,7 +404,7 @@ describe('useCombobox', () => {
         defaultInputValue: 'Todae',
         defaultOpen: true,
         onCreate,
-        onChange,
+        onValueChange: onChange,
         presentation: 'popover',
       }),
     );
@@ -447,7 +448,7 @@ describe('useCombobox', () => {
 
   it('commits a create row from click in the same turn and closes single mode', () => {
     const onChange = vi.fn();
-    render(<SingleBox allowCreate onChange={onChange} />);
+    render(<SingleBox allowCreate onValueChange={onChange} />);
     const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'todae-x' } });
@@ -520,7 +521,7 @@ describe('useCombobox', () => {
         selectionMode: 'multiple',
         options: OPTIONS,
         defaultOpen: true,
-        onChange,
+        onValueChange: onChange,
         presentation: 'popover',
       }),
     );
@@ -563,5 +564,13 @@ describe('useCombobox', () => {
     rerender();
     expect(result.current.getInputProps).toBe(input);
     expect(result.current.items).toBe(items);
+  });
+});
+
+describe('useCombobox sheet props', () => {
+  it('always types open and onOpenChange as set', () => {
+    type Sheet = ReturnType<ReturnType<typeof useCombobox>['getSheetProps']>;
+    expectTypeOf<Sheet['open']>().toEqualTypeOf<boolean>();
+    expectTypeOf<Sheet['onOpenChange']>().toEqualTypeOf<NonNullable<BottomSheetRootProps['onOpenChange']>>();
   });
 });

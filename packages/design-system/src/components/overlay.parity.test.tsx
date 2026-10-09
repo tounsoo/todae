@@ -18,7 +18,7 @@ type RootProps = {
 
 type Harness = {
   name: string;
-  reasonBackdrop: 'backdrop' | 'scrim';
+  reasonBackdrop: 'backdrop';
   Root: ComponentType<RootProps>;
   Title: ComponentType<{ children: ReactNode }>;
   Description: ComponentType<{ children: ReactNode }>;
@@ -50,9 +50,9 @@ const drawerHarness = (): Harness => ({
 
 const sheetHarness = (): Harness => ({
   name: 'BottomSheet',
-  reasonBackdrop: 'scrim',
+  reasonBackdrop: 'backdrop',
   Root: ({ dismissOnBackdrop, ...props }) => (
-    <BottomSheet.Root {...(props as ComponentProps<typeof BottomSheet.Root>)} dismissOnScrim={dismissOnBackdrop} />
+    <BottomSheet.Root {...(props as ComponentProps<typeof BottomSheet.Root>)} dismissOnBackdrop={dismissOnBackdrop} />
   ),
   Title: BottomSheet.Title,
   Description: BottomSheet.Description,

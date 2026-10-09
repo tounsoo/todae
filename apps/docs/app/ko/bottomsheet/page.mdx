@@ -12,7 +12,7 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
   <BottomSheetBasic />
 </Example>
 
-시트는 포털 없이 놓은 자리에서 렌더링되므로, 다른 파트처럼 appearance, density, 테마 오버라이드를 상속합니다. `dismissOnEscape={false}`는 `closedby="none"`을 설정해 브라우저가 Escape를 무시하게 합니다. 그렇지 않으면 Escape와 스크림 클릭이 `onOpenChange`에 닫기를 요청하고, `open`을 false로 바꾸면 닫힘 모션이 실행됩니다. 스크립트가 `close()`를 호출하는 것처럼 Todae 바깥에서 `<dialog>`를 닫으면 `onOpenChange`는 `native` 이유를 받습니다.
+시트는 포털 없이 놓은 자리에서 렌더링되므로, 다른 파트처럼 appearance, density, 테마 오버라이드를 상속합니다. `dismissOnEscape={false}`는 `closedby="none"`을 설정해 브라우저가 Escape를 무시하게 합니다. 그렇지 않으면 Escape와 배경 클릭이 `onOpenChange(false, reason)`을 호출합니다. 제어 방식의 시트는 `open`을 false로 바꾸면 닫히고, 비제어 방식의 시트는 바로 닫힙니다. 스크립트가 `close()`를 호출하는 것처럼 Todae 바깥에서 `<dialog>`를 닫으면 `onOpenChange`는 `native` 이유를 받습니다.
 
 ## 사용 예시 스케치
 

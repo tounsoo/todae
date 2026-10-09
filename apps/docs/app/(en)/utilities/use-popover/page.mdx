@@ -15,7 +15,7 @@ const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: se
   <Button.Root tooltip={false} {...getTriggerProps()}>{value ?? 'Choose fruit'}</Button.Root>
   <Popover.Root {...getPopoverProps()}>
     {/* Selecting does not close the popover: the owner closes it. */}
-    <OptionList.Root aria-label="Fruit" value={value} onChange={(next) => { setValue(next); setOpen(false) }}>
+    <OptionList.Root aria-label="Fruit" value={value} onValueChange={(next) => { setValue(next); setOpen(false) }}>
       <OptionList.Option value="apple">Apple</OptionList.Option>
     </OptionList.Root>
   </Popover.Root>

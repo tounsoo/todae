@@ -195,7 +195,7 @@ describe('state in forced colors', () => {
     function List() {
       const [value, setValue] = useState<string | null>(null);
       return (
-        <OptionList.Root value={value} onChange={setValue} aria-label="Fruit">
+        <OptionList.Root value={value} onValueChange={setValue} aria-label="Fruit">
           <OptionList.Option value="apple">Apple</OptionList.Option>
           <OptionList.Option value="pear">Pear</OptionList.Option>
         </OptionList.Root>
@@ -320,7 +320,7 @@ describe('OptionList scrolling', () => {
       <Themed>
         <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
         <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
-          <OptionList.Root value={value} onChange={setValue} aria-label="Fruit">
+          <OptionList.Root value={value} onValueChange={setValue} aria-label="Fruit">
             {FRUITS.map((fruit) => (
               <OptionList.Option key={fruit} value={fruit}>
                 {fruit}
@@ -370,7 +370,7 @@ describe('OptionList scrolling', () => {
             Last
           </Button.Root>
           <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
-            <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit">
+            <OptionList.Root value={null} onValueChange={() => undefined} activeValue={active} aria-label="Fruit">
               {FRUITS.map((fruit) => (
                 <OptionList.Option key={fruit} value={fruit}>
                   {fruit}
@@ -393,7 +393,7 @@ describe('OptionList scrolling', () => {
         <Themed>
           <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
           <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
-            <OptionList.Root value="Fruit 25" onChange={() => undefined} aria-label="Fruit">
+            <OptionList.Root value="Fruit 25" onValueChange={() => undefined} aria-label="Fruit">
               {FRUITS.map((fruit) => (
                 <OptionList.Option key={fruit} value={fruit}>
                   {fruit}
@@ -415,7 +415,7 @@ describe('OptionList scrolling', () => {
         <Themed>
           <div data-testid="shell" style={{ height: 200, overflow: 'auto' }}>
             <div style={{ height: 1000 }} />
-            <OptionList.Root value={null} onChange={() => undefined} activeValue={null} aria-label="Fruit">
+            <OptionList.Root value={null} onValueChange={() => undefined} activeValue={null} aria-label="Fruit">
               {FRUITS.slice(0, count).map((fruit) => (
                 <OptionList.Option key={fruit} value={fruit}>
                   {fruit}
@@ -451,7 +451,7 @@ describe('OptionList scrolling', () => {
       <Themed>
         <div data-testid="shell" style={{ height: 200, overflow: 'auto' }}>
           <div style={{ height: 1000 }} />
-          <OptionList.Root value={null} onChange={() => undefined} activeValue="Fruit 25" aria-label="Fruit">
+          <OptionList.Root value={null} onValueChange={() => undefined} activeValue="Fruit 25" aria-label="Fruit">
             <Wrapped items={FRUITS} />
           </OptionList.Root>
         </div>
@@ -467,7 +467,7 @@ describe('OptionList scrolling', () => {
         <Themed>
           <div data-testid="shell" style={{ height: 200, overflow: 'auto' }}>
             <div style={{ height: 1000 }} />
-            <OptionList.Root value={null} onChange={() => undefined} activeValue="Fruit 25" aria-label="Fruit">
+            <OptionList.Root value={null} onValueChange={() => undefined} activeValue="Fruit 25" aria-label="Fruit">
               <Wrapped items={FRUITS.slice(0, count)} />
             </OptionList.Root>
           </div>
@@ -491,7 +491,7 @@ describe('OptionList scrolling', () => {
         <Themed>
           <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
           <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
-            <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit">
+            <OptionList.Root value={null} onValueChange={() => undefined} activeValue={active} aria-label="Fruit">
               <Wrapped items={items} />
             </OptionList.Root>
           </Popover.Root>
@@ -512,7 +512,7 @@ describe('OptionList scrolling', () => {
         <Themed>
           <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
           <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
-            <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit">
+            <OptionList.Root value={null} onValueChange={() => undefined} activeValue={active} aria-label="Fruit">
               <Wrapped items={items} />
             </OptionList.Root>
           </Popover.Root>
@@ -546,7 +546,7 @@ describe('OptionList scrolling', () => {
       <Themed>
         <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
         <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
-          <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit" title={note}>
+          <OptionList.Root value={null} onValueChange={() => undefined} activeValue={active} aria-label="Fruit" title={note}>
             {items.map((item) => (
               <OptionList.Option key={item} value={item} disabled={item === disabled}>
                 {item}
@@ -610,7 +610,7 @@ describe('OptionList scrolling', () => {
         <Themed>
           <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
           <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
-            <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit">
+            <OptionList.Root value={null} onValueChange={() => undefined} activeValue={active} aria-label="Fruit">
               {FRUITS.map((fruit) => (
                 <OptionList.Option key={fruit} value={fruit} disabled={fruit === 'Fruit 25'}>
                   {fruit}
@@ -643,7 +643,7 @@ describe('OptionList scrolling', () => {
         <Themed>
           <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
           <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
-            <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Food">
+            <OptionList.Root value={null} onValueChange={() => undefined} activeValue={active} aria-label="Food">
               {items.map((item) => (
                 <OptionList.Option key={item} value={item} disabled={item === 'Veg 30'}>
                   {item}
@@ -674,7 +674,7 @@ describe('OptionList scrolling', () => {
         <Themed>
           <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
           <Popover.Root {...popover.getPopoverProps()} data-testid="surface" style={{ scrollPaddingBlock: '25%' }}>
-            <OptionList.Root value={value} onChange={setValue} aria-label="Fruit">
+            <OptionList.Root value={value} onValueChange={setValue} aria-label="Fruit">
               <Wrapped items={FRUITS} />
             </OptionList.Root>
           </Popover.Root>
@@ -697,7 +697,7 @@ describe('OptionList scrolling', () => {
       const [value, setValue] = useState<string | null>(null);
       return (
         <Themed>
-          <OptionList.Root value={value} onChange={setValue} aria-label="Fruit">
+          <OptionList.Root value={value} onValueChange={setValue} aria-label="Fruit">
             {FRUITS.map((fruit) => (
               <OptionList.Option key={fruit} value={fruit}>
                 {fruit}

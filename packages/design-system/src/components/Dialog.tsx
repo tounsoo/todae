@@ -12,6 +12,7 @@ import {
   type RefObject,
 } from 'react';
 import { Button, type ButtonActionProps } from './Button';
+import { useControlledValue } from '../hooks/useControlledState';
 import { useDismissLabel } from './dismissLabel';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { DIALOG_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
@@ -31,8 +32,10 @@ import { ToolbarContext } from './toolbarContext';
 export type DialogCloseReason = Extract<OverlayCloseReason, 'escape' | 'backdrop' | 'close-button'> | 'form' | 'native';
 
 export type DialogRootProps = {
-  open: boolean;
-  onOpenChange: (open: boolean, reason: DialogCloseReason) => void;
+  /** Controlled open state. Leave it out, with `defaultOpen`, for a dialog that manages its own. */
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean, reason: DialogCloseReason) => void;
   dismissOnEscape?: boolean;
   dismissOnBackdrop?: boolean;
   initialFocusRef?: RefObject<HTMLElement | null>;
@@ -114,10 +117,7 @@ function DialogClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props
       aria-label={label}
       {...props}
       ref={refs}
-      onClick={(event) => {
-        onClick?.(event);
-        requestClose('close-button');
-      }}
+      onClick={composeHandlers(onClick, () => requestClose('close-button'))}
     >
       {children}
     </Button.Root>
@@ -148,8 +148,9 @@ function DialogRoot(props: DialogRootProps) {
 
 export function DialogShellRoot({
   shell,
-  open,
-  onOpenChange,
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange: onOpenChangeProp,
   dismissOnEscape = true,
   dismissOnBackdrop = true,
   initialFocusRef,
@@ -165,6 +166,11 @@ export function DialogShellRoot({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [dialogNode, setDialogNode] = useState<HTMLDialogElement | null>(null);
   const pointerOnDialog = useRef(false);
+  const [open, onOpenChange] = useControlledValue<boolean, [reason: DialogCloseReason]>(
+    openProp,
+    defaultOpen,
+    onOpenChangeProp,
+  );
   const { requestClose } = useControlledOpen({
     open,
     onOpenChange,

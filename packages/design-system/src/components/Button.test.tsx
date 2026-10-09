@@ -62,6 +62,32 @@ describe('Button.Root', () => {
   });
 });
 
+describe('Button.Root toggle', () => {
+  it('stays unchanged when its own onClick calls preventDefault', () => {
+    const onPressedChange = vi.fn();
+    render(
+      <Button.Root defaultPressed={false} onPressedChange={onPressedChange} onClick={(event) => event.preventDefault()}>
+        Bold
+      </Button.Root>,
+    );
+    const button = screen.getByRole('button', { name: 'Bold' });
+    fireEvent.click(button);
+    expect(onPressedChange).not.toHaveBeenCalled();
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('toggles when only a child prevented the click', () => {
+    const onPressedChange = vi.fn();
+    render(
+      <Button.Root defaultPressed={false} onPressedChange={onPressedChange}>
+        <span onClick={(event) => event.preventDefault()}>Bold</span>
+      </Button.Root>,
+    );
+    fireEvent.click(screen.getByText('Bold'));
+    expect(onPressedChange).toHaveBeenCalledWith(true);
+  });
+});
+
 describe('Button.Icon', () => {
   it('is decorative and follows source order', () => {
     render(

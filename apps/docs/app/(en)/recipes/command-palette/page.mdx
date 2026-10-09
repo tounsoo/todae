@@ -4,14 +4,14 @@ import { CommandPalette } from '../../../../components/demos/CommandPaletteDemo'
 
 A recipe, not a package namespace. [Dialog](/dialog) holds the palette, and [useCombobox](/utilities/use-combobox) owns the input, filtering, the active option and ids. There is no `CommandPalette.*` export.
 
-Use the `sheet` presentation, which keeps the input and the list together in one modal surface, and wire its open state to `Dialog.Root` instead of `BottomSheet.Root`. Keep `value` at `null` and run the command in `onChange`, so choosing one leaves nothing selected. Control the input text and clear it when the palette opens, so each search starts from the full list.
+Use the `sheet` presentation, which keeps the input and the list together in one modal surface, and wire its open state to `Dialog.Root` instead of `BottomSheet.Root`. Keep `value` at `null` and run the command in `onValueChange`, so choosing one leaves nothing selected. Control the input text and clear it when the palette opens, so each search starts from the full list.
 
 ```tsx
 const cb = useCombobox({
   options: commands,
   presentation: 'sheet',
   value: null,
-  onChange: (value: string | null) => { if (value && cb.open) run(value) },
+  onValueChange: (value: string | null) => { if (value && cb.open) run(value) },
   inputValue: query,
   onInputValueChange: setQuery,
   onOpenChange: (open) => {

@@ -6,8 +6,8 @@ export function ChipExamples() {
   return (
     <>
       <Chip.Root>Default</Chip.Root>
-      <Chip.Root onDismiss={() => undefined}>Dismissible</Chip.Root>
-      <Chip.Root disabled onDismiss={() => undefined}>
+      <Chip.Root onRemove={() => undefined}>Removable</Chip.Root>
+      <Chip.Root disabled onRemove={() => undefined}>
         Disabled
       </Chip.Root>
       <Chip.Overflow overflowCount={4} />

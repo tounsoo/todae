@@ -15,6 +15,7 @@ import {
   type RefObject,
 } from 'react';
 import { Button, type ButtonActionProps } from './Button';
+import { useControlledValue } from '../hooks/useControlledState';
 import { useDismissLabel } from './dismissLabel';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
@@ -31,22 +32,24 @@ export type { SheetSnap };
  * Why the sheet asked to close. `form` is a `<form method="dialog">` submit
  * (read the submitter's value from the element's `returnValue`); `native` is
  * anything else outside Todae that closed the `<dialog>` element, such as a
- * script calling `close()`. If the owner keeps `open`, the sheet shows again.
+ * script calling `close()`. While a controlled `open` stays true, the sheet shows again.
  */
 export type SheetCloseReason =
-  | Extract<OverlayCloseReason, 'escape' | 'scrim' | 'drag' | 'close-button'>
+  | Extract<OverlayCloseReason, 'escape' | 'backdrop' | 'drag' | 'close-button'>
   | 'form'
   | 'native';
 
 export type BottomSheetRootProps = {
-  open: boolean;
-  onOpenChange: (open: boolean, reason: SheetCloseReason) => void;
+  /** Controlled open state. Leave it out, with `defaultOpen`, for a sheet that manages its own. */
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean, reason: SheetCloseReason) => void;
   snap?: SheetSnap;
   defaultSnap?: SheetSnap;
   onSnapChange?: (snap: SheetSnap) => void;
   snapPoints?: readonly SheetSnap[];
   dismissOnEscape?: boolean;
-  dismissOnScrim?: boolean;
+  dismissOnBackdrop?: boolean;
   dismissOnDrag?: boolean;
   initialFocusRef?: RefObject<HTMLElement | null>;
   restoreFocusRef?: RefObject<HTMLElement | null>;
@@ -186,10 +189,7 @@ function BottomSheetClose({ 'aria-label': ariaLabel, onClick, children, ref, ...
       aria-label={label}
       {...props}
       ref={refs}
-      onClick={(event) => {
-        onClick?.(event);
-        requestClose('close-button');
-      }}
+      onClick={composeHandlers(onClick, () => requestClose('close-button'))}
     >
       {children}
     </Button.Root>
@@ -207,14 +207,15 @@ function onBackdrop(dialog: HTMLElement | null, event: { target: EventTarget | n
 }
 
 function BottomSheetRoot({
-  open,
-  onOpenChange,
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange: onOpenChangeProp,
   snap,
   defaultSnap = 'mid',
   onSnapChange,
   snapPoints,
   dismissOnEscape = true,
-  dismissOnScrim = true,
+  dismissOnBackdrop = true,
   dismissOnDrag = true,
   initialFocusRef,
   restoreFocusRef,
@@ -237,6 +238,11 @@ function BottomSheetRoot({
       onSnapChange?.(next);
     },
     [onSnapChange, snap],
+  );
+  const [open, onOpenChange] = useControlledValue<boolean, [reason: SheetCloseReason]>(
+    openProp,
+    defaultOpen,
+    onOpenChangeProp,
   );
   const { requestClose } = useControlledOpen<SheetCloseReason>({ open, onOpenChange });
   const sheetRef = useRef<HTMLDialogElement>(null);
@@ -341,7 +347,7 @@ function BottomSheetRoot({
           pressOnBackdrop.current = false;
           // Not before the enter motion starts: the sheet is still below the
           // viewport, so its box would put any tap on the backdrop.
-          if (fromBackdrop && dismissOnScrim && open && entered) requestClose('scrim');
+          if (fromBackdrop && dismissOnBackdrop && open && entered) requestClose('backdrop');
         })}
       >
         {grabbers > 0 ? null : <GrabberHandle />}

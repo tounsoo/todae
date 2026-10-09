@@ -2,20 +2,27 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Dialog.Root',
-  description: 'Controlled native modal dialog. Stays centered. No sheet morph.',
+  description: 'Native modal dialog. Stays centered. No sheet morph.',
   props: [
     {
       name: 'open',
       type: 'boolean',
-      required: true,
-      description: 'Controlled open state.',
+      required: false,
+      description: 'Controlled open state. Leave it out for an uncontrolled dialog.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      required: false,
+      default: 'false',
+      description: 'Initial open state when uncontrolled.',
     },
     {
       name: 'onOpenChange',
       type: '(open: boolean, reason: DialogCloseReason) => void',
-      required: true,
+      required: false,
       description:
-        'Dismiss requests. Staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method="dialog"> submit; the submitter value is on the element returnValue), native (something else closed the element).',
+        'Dismiss requests. When controlled, staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method="dialog"> submit; the submitter value is on the element returnValue), native (something else closed the element).',
     },
     {
       name: 'dismissOnEscape',

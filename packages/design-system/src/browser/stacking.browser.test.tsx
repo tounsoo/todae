@@ -162,7 +162,7 @@ describe('OptionList in a browser', () => {
   it('hides when given the hidden attribute', () => {
     render(
       <Themed>
-        <OptionList.Root aria-label="Fruit" value={null} onChange={() => undefined} hidden>
+        <OptionList.Root aria-label="Fruit" value={null} onValueChange={() => undefined} hidden>
           <OptionList.Option value="apple">Apple</OptionList.Option>
         </OptionList.Root>
       </Themed>,
