@@ -9,7 +9,7 @@ export const TOP = '(top)';
 /** The key of the fingerprint of a page's headings in order, so moving a section is a change. */
 export const ORDER = '(section order)';
 
-/** `mdx` split at its headings, skipping `#` lines in code fences. */
+/** `mdx` split at its headings. */
 export function sections(mdx: string): Section[] {
   const parts: Section[] = [{ heading: TOP, level: 0, text: '' }];
   let fenced = false;
