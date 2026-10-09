@@ -359,6 +359,16 @@ describe('docs locales', () => {
     expect([...document.head.querySelectorAll('link[rel="alternate"]')].map((link) => link.getAttribute('hreflang'))).toEqual(['en', 'ko', 'x-default']);
   });
 
+  it('opens the first component in the sidebar from the top bar, in each language', () => {
+    const first = SITE_GROUPS.find((group) => group.id === 'components')?.links[0]?.[0];
+    for (const locale of LOCALES) {
+      const markup = renderToStaticMarkup(<SiteShell locale={locale}>x</SiteShell>);
+      const top = /<nav class="top-links"[^>]*>(.*?)<\/nav>/.exec(markup)?.[1] ?? '';
+      const label = DICTIONARIES[locale].topLinks.components;
+      expect(top, locale).toContain(`href="${locale === 'en' ? '' : `/${locale}`}${first}">${label}<`);
+    }
+  });
+
   it('gives the shell each locale’s untranslated pages, and no alternates on a 404', () => {
     const alternates = (markup: string) => [...markup.matchAll(/<link[^>]*rel="alternate"[^>]*>/g)].length;
     path.current = '/ko/tokens';
