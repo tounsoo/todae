@@ -186,8 +186,10 @@ body {
   }
 }
 
+/* The top bar drops its theme switch on the narrowest screens; the drawer
+   (which sits inside the top bar's markup) keeps one. */
 @media (max-width: 30rem) {
-  .theme-switcher {
+  .topbar-tools .theme-switcher {
     display: none;
   }
 }

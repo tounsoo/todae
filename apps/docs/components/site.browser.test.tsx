@@ -1,5 +1,5 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { page, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it } from 'vitest';
 import '@tounsoo/todae/todae.css';
@@ -65,6 +65,32 @@ describe('docs site chrome under axe', () => {
     await userEvent.click(screen.getByRole('button', { name: 'dark' }));
     await frame();
     expect(await violations()).toEqual([]);
+  });
+});
+
+describe('narrow screens', () => {
+  afterEach(async () => {
+    await page.viewport(1280, 800);
+  });
+
+  it('keeps a theme switch in the drawer when the top bar drops its own', async () => {
+    await page.viewport(360, 700);
+    render(
+      <Providers>
+        <header className="topbar">
+          <MobileNav locale="en" />
+          <div className="topbar-tools">
+            <ThemeSwitcher locale="en" />
+          </div>
+        </header>
+      </Providers>,
+    );
+    await frame();
+    expect(document.querySelector('.topbar-tools .theme-switcher')?.checkVisibility()).toBe(false);
+    await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
+    await frame();
+    const drawer = screen.getByRole('dialog', { name: 'Todae' });
+    expect(within(drawer).getByRole('group', { name: 'Theme' }).checkVisibility()).toBe(true);
   });
 });
 

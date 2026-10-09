@@ -33,7 +33,7 @@ export function MobileNav({ locale }: { locale: Locale }) {
         <Dialog.Body>
           <SiteNav locale={locale} idPrefix="drawer-nav" />
         </Dialog.Body>
-        {/* The top bar hides its theme switch on the narrowest screens; the drawer always has one. */}
+        {/* The top bar hides its theme switch on the narrowest screens; the drawer keeps one. */}
         <Dialog.Footer>
           <ThemeSwitcher locale={locale} />
         </Dialog.Footer>
