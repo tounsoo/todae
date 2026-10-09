@@ -746,6 +746,136 @@ describe('useCombobox dialog presentation', () => {
     expect(onCreate).toHaveBeenCalledWith('NewTag');
   });
 
+  // A loader whose calls settle when the test says, newest last.
+  function manualLoader() {
+    const calls: { query: string; resolve: (list: readonly ComboboxOption[]) => void; reject: (error: Error) => void }[] =
+      [];
+    const loadOptions = vi.fn(
+      (query: string) =>
+        new Promise<readonly ComboboxOption[]>((resolve, reject) => calls.push({ query, resolve, reject })),
+    );
+    const last = () => calls[calls.length - 1]!;
+    const settle = async (run: () => void) => {
+      await act(async () => {
+        run();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    };
+    return { calls, loadOptions, last, settle };
+  }
+
+  const enterKey = { key: 'Enter', nativeEvent: { isComposing: false }, preventDefault: () => undefined };
+  function pressKey(result: { current: ReturnType<typeof useCombobox> }, key: string) {
+    const event = { ...enterKey, key };
+    act(() => result.current.getInputProps().onKeyDown?.(event as unknown as KeyboardEvent<HTMLInputElement>));
+  }
+  const pressEnter = (result: { current: ReturnType<typeof useCombobox> }) => pressKey(result, 'Enter');
+
+  it('runs no create while a retry is in flight, and selects what the retry finds', async () => {
+    const onCreate = vi.fn();
+    const onValueChange = vi.fn();
+    const { loadOptions, last, settle } = manualLoader();
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, onCreate, onValueChange, presentation: 'dialog', value: null }),
+    );
+    act(() => result.current.setOpen(true));
+    await settle(() => last().resolve([]));
+    act(() => result.current.setInputValue('NewTag'));
+    await settle(() => last().reject(new Error('down')));
+    expect(result.current.showCreate).toBe(true);
+    act(() => result.current.retry());
+    expect(result.current.showCreate).toBe(false);
+    expect(result.current.isEmpty).toBe(false);
+    pressEnter(result);
+    act(() => result.current.getChipInputProps().onCommit('NewTag'));
+    expect(onCreate).not.toHaveBeenCalled();
+    await settle(() => last().resolve([{ value: 'newtag', label: 'NewTag' }]));
+    expect(result.current.showCreate).toBe(false);
+    pressEnter(result);
+    expect(onValueChange).toHaveBeenCalledWith('newtag');
+    expect(onCreate).not.toHaveBeenCalled();
+  });
+
+  it('offers create again when a retry fails too', async () => {
+    const { loadOptions, last, settle } = manualLoader();
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, presentation: 'dialog', value: null }),
+    );
+    act(() => result.current.setOpen(true));
+    await settle(() => last().resolve([]));
+    act(() => result.current.setInputValue('NewTag'));
+    await settle(() => last().reject(new Error('down')));
+    act(() => result.current.retry());
+    await settle(() => last().reject(new Error('still down')));
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.showCreate).toBe(true);
+  });
+
+  it('waits for a reload of the same query, not only a retry', async () => {
+    const { loadOptions, calls, settle } = manualLoader();
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, presentation: 'dialog', value: null }),
+    );
+    act(() => result.current.setOpen(true));
+    await settle(() => calls[0]!.resolve([]));
+    act(() => result.current.setInputValue('ab'));
+    await settle(() => calls[1]!.resolve([]));
+    expect(result.current.showCreate).toBe(true);
+    act(() => result.current.setInputValue('abc'));
+    act(() => result.current.setInputValue('ab'));
+    expect(result.current.showCreate).toBe(false);
+    await settle(() => calls[calls.length - 1]!.resolve([]));
+    expect(result.current.showCreate).toBe(true);
+  });
+
+  it('moves the highlight off a create row to no row until the new list is in', async () => {
+    const onCreate = vi.fn();
+    const onValueChange = vi.fn();
+    const { loadOptions, last, settle } = manualLoader();
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, onCreate, onValueChange, presentation: 'dialog', value: null }),
+    );
+    act(() => result.current.setOpen(true));
+    await settle(() => last().resolve([]));
+    act(() => result.current.setInputValue('Alp'));
+    await settle(() => last().resolve([{ value: 'alpha', label: 'Alpha' }]));
+    pressKey(result, 'End');
+    expect(result.current.showCreate).toBe(true);
+    // The create row, the last row, is active.
+    expect(result.current.activeValue).not.toBe('alpha');
+    expect(result.current.activeValue).not.toBeNull();
+    act(() => result.current.setInputValue('Alph'));
+    expect(result.current.activeValue).toBeNull();
+    pressEnter(result);
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(onCreate).not.toHaveBeenCalled();
+    await settle(() => last().resolve([{ value: 'alpha', label: 'Alpha' }]));
+    expect(result.current.activeValue).toBe('alpha');
+  });
+
+  it('loads again on reset when the query stays the same', async () => {
+    const { loadOptions, last, settle } = manualLoader();
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, inputValue: 'Ab', allowCreate: true, presentation: 'popover', value: null }),
+    );
+    await settle(() => last().resolve([]));
+    expect(result.current.showCreate).toBe(true);
+    act(() => result.current.reset());
+    expect(loadOptions).toHaveBeenCalledTimes(2);
+    expect(result.current.showCreate).toBe(false);
+    await settle(() => last().resolve([]));
+    expect(result.current.showCreate).toBe(true);
+  });
+
+  it('is not empty while a load has failed', async () => {
+    const { loadOptions, last, settle } = manualLoader();
+    const { result } = renderHook(() => useCombobox({ loadOptions, presentation: 'popover', value: null }));
+    await settle(() => last().reject(new Error('down')));
+    expect(result.current.items).toEqual([]);
+    expect(result.current.isEmpty).toBe(false);
+  });
+
   it('runs no create while the list is still another query\'s', async () => {
     const onCreate = vi.fn();
     const onValueChange = vi.fn();

@@ -197,6 +197,9 @@ describe('StringsProvider', () => {
         <Alert.Root>
           <Alert.Close aria-label="">×</Alert.Close>
         </Alert.Root>
+        <Chip.Root onRemove={() => undefined} removeLabel="">
+          Alpha
+        </Chip.Root>
         <Toast.Region toaster={toaster} aria-label="">
           {() => null}
         </Toast.Region>
@@ -209,6 +212,7 @@ describe('StringsProvider', () => {
     expect(screen.getByRole('navigation', { name: "Fil d'Ariane" })).toBeTruthy();
     expect(screen.getByRole('navigation', { name: 'Pages' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Ignorer' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Retirer Alpha' })).toBeTruthy();
     expect(document.querySelector('section[aria-label="Notifications FR"]')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Redimensionner', hidden: true })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Fermer', hidden: true })).toBeTruthy();

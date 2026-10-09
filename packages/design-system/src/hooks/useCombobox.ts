@@ -199,8 +199,10 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const [error, setError] = useState<unknown | null>(null);
   const gate = useRef(createAsyncGate());
   const lastQuery = useRef(inputValue);
-  // The query and loadKey the loaded list belongs to; null before any load lands.
+  // The query and loadKey of the last load, once it settles; null while a load is in flight.
   const [loadedFor, setLoadedFor] = useState<{ query: string; key: string | number | undefined } | null>(null);
+  // Bumped by reset() to load again when the query and loadKey stay the same.
+  const [reloads, setReloads] = useState(0);
   const lastPresentation = useRef(presentation);
 
   // Callbacks read the latest options through this ref so their identity stays stable and
@@ -272,7 +274,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       ? activeValue
       : listIsCurrent ? (enabledValues[0] ?? null) : null;
   const activeId = resolvedActive ? optionDomId(ids.listbox, resolvedActive) : null;
-  const isEmpty = items.length === 0 && !loading;
+  const isEmpty = items.length === 0 && !loading && error == null;
 
   const setInputValue = useCallback(
     (next: string) => {
@@ -416,7 +418,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     setAsyncOptions([]);
     setLoadedFor(null);
     setError(null);
-    setLoading(false);
+    setReloads((count) => count + 1);
   }, [setInputState, setMultiState, setOpenState, setSingleState]);
 
   const runLoad = useCallback(
@@ -425,6 +427,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       if (!load) return;
       const key = latest.current.loadKey;
       lastQuery.current = query;
+      setLoadedFor(null);
       setLoading(true);
       setError(null);
       void gate.current.next(query, load).then((result) => {
@@ -448,7 +451,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   useEffect(() => {
     if (!hasLoader) return;
     runLoad(inputValue);
-  }, [hasLoader, inputValue, options.loadKey, runLoad]);
+  }, [hasLoader, inputValue, options.loadKey, reloads, runLoad]);
 
   useEffect(() => {
     const current = gate.current;
@@ -469,8 +472,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     }
     setActiveValue((current) => {
       if (current && enabledValues.includes(current)) return current;
-      // With no active row (as after the dialog's open reset), wait for this input's list.
-      if (current === null && !listIsCurrent) return null;
+      // Pick a row only from this input's own list, once it is in.
+      if (!listIsCurrent) return null;
       return enabledValues[0] ?? null;
     });
   }, [enabledValues, listIsCurrent, open, selectionMode, singleValue]);
