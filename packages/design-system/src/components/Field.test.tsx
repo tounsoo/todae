@@ -434,6 +434,30 @@ describe('Field.ChipInput', () => {
     expect(screen.getByRole('textbox')).toHaveProperty('value', '  foo ');
   });
 
+  it('disables the chips and Backspace when the input itself is disabled', () => {
+    const onChipRemove = vi.fn();
+    render(
+      <Field.Root>
+        <Field.ChipInput
+          // The type leaves disabled to the Root, but a spread such as
+          // useCombobox's getChipInputProps() still carries one.
+          {...({ disabled: true } as object)}
+          chips={['Alpha', 'Beta']}
+          inputValue=""
+          onInputValueChange={() => undefined}
+          onCommit={() => undefined}
+          onChipRemove={onChipRemove}
+        />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('textbox')).toHaveProperty('disabled', true);
+    for (const button of screen.getAllByRole('button', { name: /Remove / })) {
+      expect(button).toHaveProperty('disabled', true);
+    }
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Backspace' });
+    expect(onChipRemove).not.toHaveBeenCalled();
+  });
+
   it('composes a caller ref onto the input', () => {
     const ref = { current: null as HTMLInputElement | null };
     renderField({ ref });

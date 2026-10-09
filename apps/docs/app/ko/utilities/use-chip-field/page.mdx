@@ -2,7 +2,7 @@ import { ChipInputHook } from '../../../../components/demos/FieldDemo';
 
 # useChipField
 
-`useChipField`는 [Field.ChipInput](/field)의 칩과 입력 값을 가지고 있다가 그 위에 펼쳐집니다. 커밋은 매번 `transform`을 거치고, 기본으로는 앞뒤 공백을 잘라 빈 값을 버립니다. 목록에 이미 있는 칩은 `dedupe`가 false가 아니면 버립니다. 필드 자체는 칩을 덧붙이지 않으므로, 훅이 없으면 부모의 `onCommit`이 결정합니다.
+`useChipField`는 [Field.ChipInput](/field)의 칩과 입력 값을 가지고 있고, `getChipInputProps()`가 그 위에 펼쳐 넘깁니다. 커밋은 매번 `transform`을 거치고, 기본으로는 앞뒤 공백을 잘라 빈 값을 버립니다. 목록에 이미 있는 칩은 `dedupe`가 false가 아니면 버립니다. 필드 자체는 칩을 덧붙이지 않으므로, 훅이 없으면 부모의 `onCommit`이 결정합니다.
 
 ```tsx
 const field = useChipField({ initialChips: ['react'] })

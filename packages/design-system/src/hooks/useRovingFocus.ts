@@ -364,7 +364,9 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       if (!isMove && !(typeahead && [...event.key].length === 1)) return;
       // A found item counts while focused even once it is disabled, as one
       // with the attribute does.
-      if (!onContainer && findItems && !findItems(containerRef.current!).includes(target)) return;
+      const container = containerRef.current;
+      if (!container) return;
+      if (!onContainer && findItems && !findItems(container).includes(target)) return;
       const nodes = items();
       if (nodes.length === 0) return;
       // Where focus sits among the enabled items. A focused item that turned

@@ -547,6 +547,34 @@ describe('useRovingFocus', () => {
     expect(focused()).toBe('a');
   });
 
+  it('with findItems, ignores keys while the container ref is not attached', () => {
+    function Detached() {
+      const roving = useRovingFocus({ findItems: (container) => [...container.querySelectorAll('button')] });
+      const { ref: _ref, ...props } = roving.getContainerProps();
+      return (
+        <div {...props}>
+          <button type="button">a</button>
+        </div>
+      );
+    }
+    render(<Detached />);
+    act(() => screen.getByText('a').focus());
+    // An error thrown in a handler reaches window, not the dispatcher.
+    const errors: unknown[] = [];
+    const onError = (event: ErrorEvent) => {
+      errors.push(event.error);
+      event.preventDefault();
+    };
+    window.addEventListener('error', onError);
+    try {
+      key('ArrowDown');
+    } finally {
+      window.removeEventListener('error', onError);
+    }
+    expect(errors).toEqual([]);
+    expect(focused()).toBe('a');
+  });
+
   it('re-reads items when a wrapper around them is hidden by a class', async () => {
     const original = HTMLElement.prototype.checkVisibility;
     HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {

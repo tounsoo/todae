@@ -399,11 +399,14 @@ function ChipInput({
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const inRow = chipLayout === 'row';
   const list = useChipList({ chips, maxRows, reserveWidth: inRow ? undefined : ownInput });
+  const control = field.getControlProps({ ...props, ref: controlRef });
+  // The Root's disabled or the input's own: the chips follow the input.
+  const disabled = Boolean(control.disabled);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     onKeyDownProp?.(event);
     if (event.defaultPrevented) return;
-    if (field.disabled) return;
+    if (disabled) return;
     if (event.nativeEvent.isComposing || event.key === 'Process') return;
     if (event.key === 'Backspace' && inputValue === '' && chips.length > 0 && removeOnBackspace) {
       const index = chips.length - 1;
@@ -423,7 +426,7 @@ function ChipInput({
   const chipNodes = list.visible.map((chip, index) => (
     <Chip.Root
       key={chip.key}
-      disabled={field.disabled}
+      disabled={disabled}
       removeLabel={chipRemoveLabel?.(chip.value)}
       data-ellipsis={chip.ellipsis ? '' : undefined}
       style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
@@ -438,7 +441,7 @@ function ChipInput({
   const overflow = list.hidden > 0 ? <Chip.Overflow overflowCount={list.hidden} overflowLabel={overflowLabel} /> : null;
   const input = (
     <input
-      {...field.getControlProps({ ...props, ref: controlRef })}
+      {...control}
       value={inputValue}
       type="text"
       className={[styles.input, className].filter(Boolean).join(' ')}
@@ -450,11 +453,11 @@ function ChipInput({
     maxRows != null ? (
       <div ref={list.measureRef} className={styles.measure} aria-hidden inert>
         {chips.map((value, index) => (
-          <Chip.Root key={`m:${index}:${value}`} onRemove={() => undefined} disabled={field.disabled}>
+          <Chip.Root key={`m:${index}:${value}`} onRemove={() => undefined} disabled={disabled}>
             {value}
           </Chip.Root>
         ))}
-        <Chip.Root onRemove={() => undefined} disabled={field.disabled}>
+        <Chip.Root onRemove={() => undefined} disabled={disabled}>
           …
         </Chip.Root>
         <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
