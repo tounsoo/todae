@@ -64,15 +64,15 @@
       }
     },
     "picker": {
-      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
-      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
-      "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
-      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/popover/bg/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/popover/fg/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/popover/border/$value" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/popover/radius/$value" } },
       "padding": {
-        "x": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
-        "y": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } }
+        "x": { "$type": "dimension", "$value": { "$ref": "#/popover/padding/x/$value" } },
+        "y": { "$type": "dimension", "$value": { "$ref": "#/popover/padding/y/$value" } }
       },
-      "max-height": { "$type": "dimension", "$value": { "value": 20, "unit": "rem" } }
+      "max-height": { "$type": "dimension", "$value": { "$ref": "#/popover/max-height/$value" } }
     },
     "row": {
       "control": {

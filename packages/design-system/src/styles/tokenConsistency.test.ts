@@ -97,10 +97,11 @@ describe('token consistency across component styles', () => {
     }
   });
 
-  it('marks disabled states with color and the not-allowed cursor, never opacity', () => {
+  it('never fades a disabled state, and gives it no cursor but not-allowed', () => {
     for (const [name, css] of Object.entries(sheets)) {
       for (const [, rawSelector = '', body = ''] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-        if (!/disabled/.test(rawSelector)) continue;
+        // `:not(:disabled)` and the like select enabled states.
+        if (!/disabled/.test(rawSelector.replace(/:not\((?:[^()]|\([^()]*\))*\)/g, ''))) continue;
         const selector = rawSelector.trim();
         expect({ name, selector, opacity: /\bopacity\s*:/.test(body) }).toEqual({ name, selector, opacity: false });
         const cursor = /\bcursor:\s*([^;]+);/.exec(body)?.[1];
@@ -116,7 +117,27 @@ describe('token consistency across component styles', () => {
       expect({ name, leading: /line-height:\s*1\.25\b/.test(plain) }).toEqual({ name, leading: false });
       // Button's border stays 1px: button.base is a fixed contract (radius, padding, font, gap).
       if (name === 'Button') continue;
-      expect({ name, border: /\b1px solid\b/.test(plain) }).toEqual({ name, border: false });
+      const hairline = /\bborder[-a-z]*:[^;]*\b1px\b|calc\([^;]*\b1px\b/.test(plain);
+      expect({ name, hairline }).toEqual({ name, hairline: false });
+    }
+  });
+
+  it('keeps overrides of the tokens a component used to read reaching it', () => {
+    const tokensCss = readFileSync(join(import.meta.dirname, 'tokens.generated.css'), 'utf8');
+    const pairs = [
+      ['field-picker-bg', 'popover-bg'],
+      ['field-picker-fg', 'popover-fg'],
+      ['field-picker-border', 'popover-border'],
+      ['field-picker-radius', 'popover-radius'],
+      ['field-picker-padding-x', 'popover-padding-x'],
+      ['field-picker-padding-y', 'popover-padding-y'],
+      ['field-picker-max-height', 'popover-max-height'],
+      ['drawer-gap', 'dialog-gap'],
+      ['sheet-title-font-size', 'dialog-title-font-size'],
+      ['sheet-title-font-weight', 'dialog-title-font-weight'],
+    ];
+    for (const [token, previous] of pairs) {
+      expect(tokensCss).toContain(`--todae-${token}: var(--_todae-${token}, var(--todae-${previous}));`);
     }
   });
 });

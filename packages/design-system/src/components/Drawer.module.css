@@ -63,7 +63,7 @@
   .drawer[data-side='end'] .panel {
     --_from: 100%;
 
-    border-inline-width: 1px 0;
+    border-inline-width: var(--todae-drawer-border-width) 0;
   }
 
   /* Start and end swap physical sides in right-to-left text. */

@@ -88,6 +88,10 @@
     cursor: pointer;
   }
 
+  .input:disabled::-webkit-calendar-picker-indicator {
+    cursor: not-allowed;
+  }
+
   .textarea {
     --_pad-block: calc(2 * var(--todae-field-padding-y));
     box-sizing: border-box;
@@ -105,7 +109,7 @@
     outline: none;
     overflow-y: auto;
     resize: vertical;
-    border-end-end-radius: calc(var(--todae-field-radius) - 1px);
+    border-end-end-radius: calc(var(--todae-field-radius) - var(--todae-field-border-width));
     height: calc(var(--todae-field-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
     height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block));
     min-height: calc(var(--todae-field-rows) * var(--todae-field-leading) * 1em + var(--_pad-block));
@@ -414,7 +418,7 @@
     font-size: var(--todae-option-font-size);
   }
 
-  .select option:is(:hover, :focus-visible) {
+  .select option:is(:hover, :focus-visible):not(:disabled) {
     background: var(--todae-option-bg-hover);
     outline: none;
   }
@@ -429,6 +433,7 @@
   }
 
   .select option:disabled {
-    color: var(--todae-field-fg-disabled);
+    color: var(--todae-option-fg-disabled);
+    cursor: not-allowed;
   }
 }

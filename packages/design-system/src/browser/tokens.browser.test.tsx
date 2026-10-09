@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { BottomSheet, Button, Checkbox, Pagination, Tabs } from '../index';
 
@@ -40,7 +40,7 @@ describe('shared focus ring tokens in a browser', () => {
     expect(tab.outlineOffset).toBe('-2px');
   });
 
-  it('follows a wider focus.ring.width on every ring', async () => {
+  it('moves an inset tab ring with a wider focus.ring.width', async () => {
     render(
       <div data-appearance="light" data-density="comfortable" style={{ ['--todae-focus-ring-width' as string]: '3px' }}>
         <Tabs.Root defaultValue="a">
@@ -137,6 +137,36 @@ describe('BottomSheet padding in a browser', () => {
         </BottomSheet.Root>
       </Themed>,
     );
+    await waitFor(() => expect(body.getAttribute('tabindex')).toBe('0'));
+  });
+
+  it('gives the body a tab stop when a child adds rows from its own state', async () => {
+    function Rows() {
+      const [count, setCount] = useState(1);
+      useEffect(() => {
+        const timer = setTimeout(() => setCount(80), 50);
+        return () => clearTimeout(timer);
+      }, []);
+      return (
+        <>
+          {Array.from({ length: count }, (_, i) => (
+            <p key={i}>Line {i + 1}</p>
+          ))}
+        </>
+      );
+    }
+    render(
+      <Themed>
+        <BottomSheet.Root open onOpenChange={() => undefined}>
+          <BottomSheet.Title>Sort</BottomSheet.Title>
+          <BottomSheet.Body data-testid="body">
+            <Rows />
+          </BottomSheet.Body>
+        </BottomSheet.Root>
+      </Themed>,
+    );
+    const body = await screen.findByTestId('body');
+    expect(body.hasAttribute('tabindex')).toBe(false);
     await waitFor(() => expect(body.getAttribute('tabindex')).toBe('0'));
   });
 });

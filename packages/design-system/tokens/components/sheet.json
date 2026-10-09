@@ -12,8 +12,8 @@
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/gap/$value" } },
     "title": {
       "font": {
-        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/4/$value" } },
-        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+        "size": { "$type": "dimension", "$value": { "$ref": "#/dialog/title/font/size/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/dialog/title/font/weight/$value" } }
       }
     },
     "grabber": {

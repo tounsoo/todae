@@ -888,7 +888,7 @@ describe('Field.Counter', () => {
     expect(fieldCss).not.toContain('flex-basis: auto');
     expect(fieldCss).toContain('row-gap: var(--todae-field-messages-gap)');
     expect(fieldCss).toContain('row-gap: 0');
-    expect(fieldCss).toContain('border-end-end-radius: calc(var(--todae-field-radius) - 1px)');
+    expect(fieldCss).toContain('border-end-end-radius: calc(var(--todae-field-radius) - var(--todae-field-border-width))');
     expect(fieldCss).not.toMatch(/scrollbar|::?-webkit-resizer|grip/);
     expect(fieldCss).toContain('.shell:has(> .textarea) > .adornment');
     expect(fieldCss).toContain('height: 1lh');
