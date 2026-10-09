@@ -4,13 +4,14 @@ import { describe, expect, it } from 'vitest';
 
 const componentsDir = join(import.meta.dirname, '..', 'components');
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '');
-const sheets = Object.fromEntries(
-  [
-    ...readdirSync(componentsDir)
-      .filter((file) => file.endsWith('.module.css'))
-      .map((file) => [file.replace('.module.css', ''), join(componentsDir, file)]),
-    ['base', join(import.meta.dirname, 'base.css')],
-  ].map(([name, path]) => [name, stripComments(readFileSync(path, 'utf8'))]),
+const sheetPaths: [string, string][] = [
+  ...readdirSync(componentsDir)
+    .filter((file) => file.endsWith('.module.css'))
+    .map((file): [string, string] => [file.replace('.module.css', ''), join(componentsDir, file)]),
+  ['base', join(import.meta.dirname, 'base.css')],
+];
+const sheets: Record<string, string> = Object.fromEntries(
+  sheetPaths.map(([name, path]) => [name, stripComments(readFileSync(path, 'utf8'))]),
 );
 
 /** The sheet with every `@media (forced-colors: active)` block removed. */
@@ -71,10 +72,8 @@ describe('token consistency across component styles', () => {
   it('reads only its own component tokens and the shared groups', () => {
     for (const [name, css] of Object.entries(sheets)) {
       const own = [...(OWN_ROOTS[name] ?? [name.toLowerCase()]), ...(CORE_READS[name] ?? [])];
-      const roots = new Set([...css.matchAll(/var\(--todae-([a-z0-9]+)-/g)].map((match) => match[1]));
-      const foreign = [...roots].filter(
-        (root) => !own.includes(root) && !SHARED_ROOTS.includes(root),
-      );
+      const roots = new Set([...css.matchAll(/var\(--todae-([a-z0-9]+)-/g)].map((match) => match[1] ?? ''));
+      const foreign = [...roots].filter((root) => !own.includes(root) && !SHARED_ROOTS.includes(root));
       expect({ name, foreign }).toEqual({ name, foreign: [] });
     }
   });
@@ -100,15 +99,12 @@ describe('token consistency across component styles', () => {
 
   it('marks disabled states with color and the not-allowed cursor, never opacity', () => {
     for (const [name, css] of Object.entries(sheets)) {
-      for (const [, selector, body] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-        if (!/disabled/.test(selector)) continue;
-        expect({ name, selector: selector.trim(), opacity: /\bopacity\s*:/.test(body) }).toEqual({
-          name,
-          selector: selector.trim(),
-          opacity: false,
-        });
+      for (const [, rawSelector = '', body = ''] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        if (!/disabled/.test(rawSelector)) continue;
+        const selector = rawSelector.trim();
+        expect({ name, selector, opacity: /\bopacity\s*:/.test(body) }).toEqual({ name, selector, opacity: false });
         const cursor = /\bcursor:\s*([^;]+);/.exec(body)?.[1];
-        if (cursor && cursor !== 'inherit') expect({ name, selector: selector.trim(), cursor }).toEqual({ name, selector: selector.trim(), cursor: 'not-allowed' });
+        if (cursor && cursor !== 'inherit') expect({ name, selector, cursor }).toEqual({ name, selector, cursor: 'not-allowed' });
       }
     }
   });
