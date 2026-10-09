@@ -24,7 +24,7 @@ Touch Combobox later. A button opens this sheet. Search plus options live in the
 
 ## Accessible composition
 
-**Todae handles:** The modal `<dialog>` behaviour above. `BottomSheet.Title` and `BottomSheet.Description` set `aria-labelledby` and `aria-describedby`, and `BottomSheet.Close` is named by the `close` string when its own text does not name it. After the exit, focus goes to `restoreFocusRef`, else back to what had focus before it opened. The grabber is a `<button>` named by the `resizeSheet` string ("Resize sheet"): ArrowUp snaps to `full` and ArrowDown steps down to `mid` when `snapPoints` include them, and from `mid` ArrowDown closes the sheet when `dismissOnDrag` is on.
+**Todae handles:** The modal `<dialog>` behaviour above. `BottomSheet.Title` and `BottomSheet.Description` set `aria-labelledby` and `aria-describedby`, and `BottomSheet.Close` is named by the `close` string when its own text does not name it. After the exit, focus goes to `restoreFocusRef`, else back to what had focus before it opened. The grabber is a `<button>` named by the `resizeSheet` string ("Resize sheet"): ArrowUp snaps to `full` when `snapPoints` include it, ArrowDown steps down to `mid` when they include `mid`, and from `mid` ArrowDown closes the sheet when `dismissOnDrag` is on.
 
 **You supply:** A name: `BottomSheet.Title`, or `aria-label` on `BottomSheet.Root`. An `initialFocusRef` on the control the task starts with, such as a search field: otherwise focus starts on the first tabbable element, which is the default grabber. A visible `BottomSheet.Close` or footer button, since a drag or a backdrop tap needs a pointer.
 

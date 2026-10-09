@@ -28,7 +28,7 @@ Every part is a `div` with no role. Pick the heading level that fits the page; a
 
 ## Accessible composition
 
-**Todae handles:** Layout and paint only. Every part is a `div` with no role, and passes any role or ARIA you give it to that `div`. Nothing in a card is focusable and nothing is announced.
+**Todae handles:** Layout and paint only. Every part is a `div` with no role, and passes any role or ARIA you give it to that `div`.
 
 **You supply:** A heading in `Card.Header`, at the level that fits where the card sits. For a card that is a landmark, `role="region"` and a name, best taken from that heading with `aria-labelledby`. A reusable card should take the heading level as a prop rather than fix it.
 

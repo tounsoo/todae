@@ -32,7 +32,7 @@ The hook does not announce anything. Show the count in an `<output>` or other li
 
 ## Accessible composition
 
-**Todae handles:** The hook changes no DOM: no `<mark>`, no role, no attribute. The searched content keeps its roles, names, focus and selection. Matches are painted by CSS alone, so screen readers do not get them; `matches` gives them to your code as `Range`s in document order.
+**Todae handles:** The hook changes no DOM: no `<mark>`, no role, no attribute. The searched content keeps its roles, names, focus and selection. Matches are painted by CSS alone; `matches` gives them to your code as `Range`s in document order.
 
 **You supply:** The same information in text: the match count in a live region, as described above, and the position of the current match, such as "3 of 12". A `::highlight()` style with enough contrast against both the text and its background, in light and dark themes. A current-match style that differs from the others by more than hue. Scrolling and focus: the hook moves neither, so bring the current match into view yourself.
 
