@@ -25,14 +25,14 @@ type ToggleGroupBase = {
   /** Disables every item. */
   disabled?: boolean;
   children?: ReactNode;
-} & Omit<ComponentPropsWithRef<'div'>, 'role' | 'defaultValue' | 'onChange' | 'children'>;
+} & Omit<ComponentPropsWithRef<'div'>, 'role' | 'defaultValue' | 'children'>;
 
 /** One item pressed at most. Pressing the pressed item again clears it. */
 export type ToggleGroupSingleProps = ToggleGroupBase & {
   selectionMode?: 'single';
   value?: string | null;
   defaultValue?: string | null;
-  onChange?: (value: string | null) => void;
+  onValueChange?: (value: string | null) => void;
 };
 
 /** Any number of items pressed. */
@@ -40,7 +40,7 @@ export type ToggleGroupMultipleProps = ToggleGroupBase & {
   selectionMode: 'multiple';
   value?: readonly string[];
   defaultValue?: readonly string[];
-  onChange?: (value: string[]) => void;
+  onValueChange?: (value: string[]) => void;
 };
 
 export type ToggleGroupRootProps = ToggleGroupSingleProps | ToggleGroupMultipleProps;
@@ -66,7 +66,7 @@ function Root(props: ToggleGroupRootProps) {
     selectionMode = 'single',
     value: valueProp,
     defaultValue,
-    onChange,
+    onValueChange,
     orientation = toolbar?.orientation ?? 'horizontal',
     disabled = false,
     className,
@@ -92,11 +92,11 @@ function Root(props: ToggleGroupRootProps) {
     if (multiple) {
       const next = pressed.has(item) ? list.filter((v) => v !== item) : [...list, item];
       setValue(next);
-      (onChange as ToggleGroupMultipleProps['onChange'])?.(next);
+      (onValueChange as ToggleGroupMultipleProps['onValueChange'])?.(next);
     } else {
       const next = pressed.has(item) ? null : item;
       setValue(next);
-      (onChange as ToggleGroupSingleProps['onChange'])?.(next);
+      (onValueChange as ToggleGroupSingleProps['onValueChange'])?.(next);
     }
   };
 

@@ -10,7 +10,7 @@ export const meta = {
       type: '"single" | "multiple"',
       required: false,
       default: '"single"',
-      description: 'Single fires onChange(string). Multiple fires onChange(string[]).',
+      description: 'Single fires onValueChange(string). Multiple fires onValueChange(string[]).',
     },
     {
       name: 'value',
@@ -19,7 +19,7 @@ export const meta = {
       description: 'Selected value, or values when selectionMode is multiple.',
     },
     {
-      name: 'onChange',
+      name: 'onValueChange',
       type: '(value: string | string[]) => void',
       required: true,
       description: 'Selection change. Single passes a string. Multiple passes the next array.',
@@ -44,7 +44,7 @@ export const meta = {
       description: 'Controlled highlighted value. Omit to keep highlight inside the list.',
     },
     {
-      name: 'onActiveChange',
+      name: 'onActiveValueChange',
       type: '(value: string | null) => void',
       required: false,
       description: 'Fires when keyboard or pointer moves the highlight.',

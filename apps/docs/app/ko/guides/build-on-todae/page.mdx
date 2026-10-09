@@ -177,7 +177,7 @@ function AcmeOption(props: OptionListOptionProps) {
   return <OptionList.Option {...props} className="acme-option" />;
 }
 
-<OptionList.Root aria-label="Size" value={size} onChange={setSize}>
+<OptionList.Root aria-label="Size" value={size} onValueChange={setSize}>
   <AcmeOption value="s">Small</AcmeOption>
   <AcmeOption value="m">Medium</AcmeOption>
 </OptionList.Root>

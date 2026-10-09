@@ -26,7 +26,7 @@ describe('ChipList', () => {
         aria-label="Tags"
         chips={['a', 'b']}
         onRemove={onRemove}
-        dismissLabel={(value) => `Delete ${value}`}
+        removeLabel={(value) => `Delete ${value}`}
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Delete b' }));

@@ -231,7 +231,7 @@ const cases: Case[] = [
   [
     'OptionList.Root',
     (p) => (
-      <OptionList.Root {...p} aria-label="l" value={null} onChange={noop}>
+      <OptionList.Root {...p} aria-label="l" value={null} onValueChange={noop}>
         <OptionList.Option value="a">a</OptionList.Option>
       </OptionList.Root>
     ),
@@ -239,7 +239,7 @@ const cases: Case[] = [
   [
     'OptionList.Option',
     (p) => (
-      <OptionList.Root aria-label="l" value={null} onChange={noop}>
+      <OptionList.Root aria-label="l" value={null} onValueChange={noop}>
         <OptionList.Option {...p} value="a">
           a
         </OptionList.Option>
@@ -435,7 +435,7 @@ describe('composed handlers', () => {
         <OptionList.Root
           aria-label="l"
           value={null}
-          onChange={onChange}
+          onValueChange={onChange}
           onKeyDown={(event) => {
             if (block) event.preventDefault();
           }}
@@ -554,7 +554,7 @@ describe('wrapped parts', () => {
   it('keeps keyboard order and disabled state for options inside a company wrapper', () => {
     const onChange = vi.fn();
     render(
-      <OptionList.Root aria-label="Fruit" value={null} onChange={onChange}>
+      <OptionList.Root aria-label="Fruit" value={null} onValueChange={onChange}>
         <AcmeOption value="a" label="A" />
         <div>
           <AcmeOption value="b" label="B" disabled />
@@ -572,7 +572,7 @@ describe('wrapped parts', () => {
     const onChange = vi.fn();
     function List({ order }: { order: string[] }) {
       return (
-        <OptionList.Root aria-label="Fruit" value={null} onChange={onChange}>
+        <OptionList.Root aria-label="Fruit" value={null} onValueChange={onChange}>
           {order.map((v) => (
             <AcmeOption key={v} value={v} label={v.toUpperCase()} />
           ))}
@@ -656,7 +656,7 @@ describe('wrapped parts that change on their own', () => {
       ));
     }
     render(
-      <OptionList.Root aria-label="Fruit" value={null} onChange={onChange}>
+      <OptionList.Root aria-label="Fruit" value={null} onValueChange={onChange}>
         <AcmeOptions />
       </OptionList.Root>,
     );
@@ -710,7 +710,7 @@ it('sorts a large option list a bounded number of times while mounting', () => {
   const values = Array.from({ length: 300 }, (_, i) => `v${i}`);
   const compare = vi.spyOn(Node.prototype, 'compareDocumentPosition');
   render(
-    <OptionList.Root aria-label="Many" value={null} onChange={noop}>
+    <OptionList.Root aria-label="Many" value={null} onValueChange={noop}>
       {values.map((v) => (
         <OptionList.Option key={v} value={v}>
           {v}
@@ -741,7 +741,7 @@ it('tips only the overflowing label text, not nested badges', () => {
 
 it('marks the active option in server HTML', () => {
   const html = renderToString(
-    <OptionList.Root aria-label="Fruit" value="b" onChange={noop}>
+    <OptionList.Root aria-label="Fruit" value="b" onValueChange={noop}>
       <OptionList.Option value="a">A</OptionList.Option>
       <OptionList.Option value="b">B</OptionList.Option>
     </OptionList.Root>,

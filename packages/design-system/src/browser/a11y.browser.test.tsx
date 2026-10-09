@@ -112,10 +112,10 @@ function Gallery() {
           </RadioGroup.Item>
         </RadioGroup.Root>
         <Stack direction="row">
-          <Chip.Root onDismiss={() => undefined}>Design</Chip.Root>
+          <Chip.Root onRemove={() => undefined}>Design</Chip.Root>
           <Chip.Overflow overflowCount={3} />
         </Stack>
-        <OptionList.Root value={fruit} onChange={setFruit} aria-label="Fruit">
+        <OptionList.Root value={fruit} onValueChange={setFruit} aria-label="Fruit">
           <OptionList.Option value="apple">Apple</OptionList.Option>
           <OptionList.Option value="pear">Pear</OptionList.Option>
         </OptionList.Root>

@@ -97,8 +97,12 @@
   },
   "BottomSheet.Root": {
     "open": {
-      "en": "Controlled open state.",
-      "ko": "제어 열림 상태."
+      "en": "Controlled open state. Leave it out for an uncontrolled sheet.",
+      "ko": "제어 열림 상태. 비제어 시트에서는 생략하세요."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때의 초기 열림 상태."
     },
     "onOpenChange": {
       "en": "Dismiss requests. Staying open keeps the sheet open. reason is \"form\" for a <form method=\"dialog\"> submit (read returnValue) and \"native\" when something else outside Todae closed the <dialog>; it shows again while open stays true.",
@@ -120,9 +124,9 @@
       "en": "Escape calls onOpenChange(false, \"escape\"). false sets closedby=\"none\", so the browser ignores the close request.",
       "ko": "Escape가 onOpenChange(false, \"escape\")를 호출합니다. false이면 closedby=\"none\"을 설정해 브라우저가 닫기 요청을 무시합니다."
     },
-    "dismissOnScrim": {
-      "en": "A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, \"scrim\").",
-      "ko": "스크림(dialog의 ::backdrop)을 클릭하면 onOpenChange(false, \"scrim\")을 호출합니다."
+    "dismissOnBackdrop": {
+      "en": "A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, \"backdrop\").",
+      "ko": "스크림(dialog의 ::backdrop)을 클릭하면 onOpenChange(false, \"backdrop\")을 호출합니다."
     },
     "dismissOnDrag": {
       "en": "Drag past the threshold dismisses.",
@@ -288,11 +292,11 @@
       "en": "Chip label. Text only.",
       "ko": "칩 레이블. 텍스트만."
     },
-    "onDismiss": {
+    "onRemove": {
       "en": "Renders a named dismiss button.",
       "ko": "이름이 붙은 닫기 버튼을 렌더링합니다."
     },
-    "dismissLabel": {
+    "removeLabel": {
       "en": "Dismiss aria-label. Default is Remove {label}.",
       "ko": "닫기 버튼의 aria-label. 기본값은 Remove {label}입니다."
     },
@@ -318,7 +322,7 @@
       "en": "Renders a remove button on each chip. Once chips drops the focused chip, focus moves to the chip that now fills its place, else the one before it, else +N, else the list.",
       "ko": "칩마다 제거 버튼을 렌더링합니다. 포커스가 있던 칩이 chips에서 빠지면, 포커스는 그 자리를 채운 칩으로, 없으면 앞 칩으로, 그것도 없으면 +N으로, 그마저 없으면 목록으로 옮겨 갑니다."
     },
-    "dismissLabel": {
+    "removeLabel": {
       "en": "Remove button name. Default is Remove {value}.",
       "ko": "제거 버튼의 이름. 기본값은 Remove {value}입니다."
     },
@@ -359,8 +363,12 @@
   },
   "Dialog.Root": {
     "open": {
-      "en": "Controlled open state.",
-      "ko": "제어 열림 상태."
+      "en": "Controlled open state. Leave it out for an uncontrolled dialog.",
+      "ko": "제어 열림 상태. 비제어 대화상자에서는 생략하세요."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때의 초기 열림 상태."
     },
     "onOpenChange": {
       "en": "Dismiss requests. Staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element).",
@@ -387,8 +395,12 @@
   },
   "Drawer.Root": {
     "open": {
-      "en": "Controlled open state.",
-      "ko": "제어 열림 상태."
+      "en": "Controlled open state. Leave it out for an uncontrolled drawer.",
+      "ko": "제어 열림 상태. 비제어 드로어에서는 생략하세요."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때의 초기 열림 상태."
     },
     "onOpenChange": {
       "en": "Dismiss requests, with the same reasons as Dialog.Root.",
@@ -865,14 +877,14 @@
   },
   "OptionList.Root": {
     "selectionMode": {
-      "en": "Single fires onChange(string). Multiple fires onChange(string[]).",
-      "ko": "single은 onChange(string)을, multiple은 onChange(string[])을 호출합니다."
+      "en": "Single fires onValueChange(string). Multiple fires onValueChange(string[]).",
+      "ko": "single은 onValueChange(string)을, multiple은 onValueChange(string[])을 호출합니다."
     },
     "value": {
       "en": "Selected value, or values when selectionMode is multiple.",
       "ko": "선택된 값. selectionMode가 multiple이면 값 배열."
     },
-    "onChange": {
+    "onValueChange": {
       "en": "Selection change. Single passes a string. Multiple passes the next array.",
       "ko": "선택 변경. single은 문자열을, multiple은 다음 배열을 전달합니다."
     },
@@ -888,7 +900,7 @@
       "en": "Controlled highlighted value. Omit to keep highlight inside the list.",
       "ko": "제어 하이라이트 값. 하이라이트를 목록 안에서 관리하려면 생략합니다."
     },
-    "onActiveChange": {
+    "onActiveValueChange": {
       "en": "Fires when keyboard or pointer moves the highlight.",
       "ko": "키보드나 포인터가 하이라이트를 옮길 때 호출됩니다."
     },
@@ -1264,7 +1276,7 @@
       "en": "Starting pressed value when uncontrolled.",
       "ko": "제어되지 않을 때의 처음 눌림 값."
     },
-    "onChange": {
+    "onValueChange": {
       "en": "Called with the new pressed value when an item is pressed.",
       "ko": "항목을 누르면 새 눌림 값으로 호출됩니다."
     },

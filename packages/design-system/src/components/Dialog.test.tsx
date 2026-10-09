@@ -363,3 +363,31 @@ describe('Dialog form close', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 });
+
+describe('Dialog uncontrolled and close vetoes', () => {
+  it('opens from defaultOpen and closes itself from Dialog.Close', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <Dialog.Root defaultOpen onOpenChange={onOpenChange} aria-label="Welcome">
+        <Dialog.Close>Got it</Dialog.Close>
+      </Dialog.Root>,
+    );
+    const dialog = screen.getByRole('dialog', { hidden: true }) as HTMLDialogElement;
+    expect(dialog.open).toBe(true);
+    fireEvent.click(screen.getByText('Got it'));
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'close-button');
+    await waitFor(() => expect(dialog.open).toBe(false));
+  });
+
+  it('keeps the dialog open when Dialog.Close onClick calls preventDefault', () => {
+    const onOpenChange = vi.fn();
+    render(
+      <Dialog.Root open onOpenChange={onOpenChange} aria-label="Edit">
+        <Dialog.Close onClick={(event) => event.preventDefault()}>Cancel</Dialog.Close>
+      </Dialog.Root>,
+    );
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+});
+

@@ -44,7 +44,7 @@ function MultiCreateBox({ onChange }: { onChange?: (value: string[]) => void } =
     options: OPTIONS,
     allowCreate: true,
     presentation: 'popover',
-    onChange,
+    onValueChange: onChange,
   });
   return (
     <div>
@@ -159,7 +159,7 @@ describe('useCombobox', () => {
   it('opens and moves with arrows, clamps, skips disabled, and selects with Enter', () => {
     const onChange = vi.fn();
     const onOpenChange = vi.fn();
-    render(<SingleBox onChange={onChange} onOpenChange={onOpenChange} />);
+    render(<SingleBox onValueChange={onChange} onOpenChange={onOpenChange} />);
     const input = screen.getByRole('combobox');
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(onOpenChange).toHaveBeenCalledWith(true, 'trigger');
@@ -217,7 +217,7 @@ describe('useCombobox', () => {
 
   it('clears single value when the input is emptied', () => {
     const onChange = vi.fn();
-    render(<SingleBox defaultValue="react" onChange={onChange} />);
+    render(<SingleBox defaultValue="react" onValueChange={onChange} />);
     fireEvent.change(screen.getByRole('combobox'), { target: { value: '' } });
     expect(onChange).toHaveBeenCalledWith(null);
   });
@@ -225,7 +225,7 @@ describe('useCombobox', () => {
   it('keeps controlled open and value on the caller', () => {
     const onChange = vi.fn();
     const onOpenChange = vi.fn();
-    render(<SingleBox open={false} value="react" onChange={onChange} onOpenChange={onOpenChange} />);
+    render(<SingleBox open={false} value="react" onValueChange={onChange} onOpenChange={onOpenChange} />);
     fireEvent.keyDown(screen.getByRole('combobox'), { key: 'ArrowDown' });
     expect(onOpenChange).toHaveBeenCalledWith(true, 'trigger');
     expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('false');
@@ -403,7 +403,7 @@ describe('useCombobox', () => {
         defaultInputValue: 'Todae',
         defaultOpen: true,
         onCreate,
-        onChange,
+        onValueChange: onChange,
         presentation: 'popover',
       }),
     );
@@ -447,7 +447,7 @@ describe('useCombobox', () => {
 
   it('commits a create row from click in the same turn and closes single mode', () => {
     const onChange = vi.fn();
-    render(<SingleBox allowCreate onChange={onChange} />);
+    render(<SingleBox allowCreate onValueChange={onChange} />);
     const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'todae-x' } });
@@ -520,7 +520,7 @@ describe('useCombobox', () => {
         selectionMode: 'multiple',
         options: OPTIONS,
         defaultOpen: true,
-        onChange,
+        onValueChange: onChange,
         presentation: 'popover',
       }),
     );

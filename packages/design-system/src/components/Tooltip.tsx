@@ -16,6 +16,7 @@ import {
 } from './Tooltip.surface';
 import type { TooltipWire } from './Tooltip.wire';
 import styles from './Tooltip.module.css';
+import { useComposedRefs } from './props';
 
 export type TooltipContentName =
   | { 'aria-label': string; 'aria-labelledby'?: never }
@@ -74,15 +75,14 @@ function TooltipTip({
   ...props
 }: TooltipChrome & TooltipNativeProps & { surface: TipSurface; open: boolean; ref: TooltipWire['ref'] }) {
   const localRef = useRef<HTMLDivElement | null>(null);
+  // A stable ref, so React does not detach and reattach the wire's ref every render.
+  const refs = useComposedRefs(localRef, setRef);
   useContentPolicy(surface, localRef);
   return (
     <div
       {...props}
       {...surface.attrs}
-      ref={(node) => {
-        localRef.current = node;
-        setRef(node);
-      }}
+      ref={refs}
       data-open={open ? '' : undefined}
       className={[styles.content, className].filter(Boolean).join(' ')}
       style={style}
@@ -114,6 +114,8 @@ function TooltipPanel({
     onPointerLeave: TooltipWire<true>['onPointerLeave'];
   }) {
   const localRef = useRef<HTMLDivElement | null>(null);
+  // A stable ref, so React does not detach and reattach the wire's ref every render.
+  const refs = useComposedRefs(localRef, setRef);
   usePopoverSync(localRef, open);
   useContentPolicy(surface, localRef);
   return (
@@ -121,10 +123,7 @@ function TooltipPanel({
       {...props}
       {...surface.attrs}
       {...contentNameOf({ 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby })}
-      ref={(node) => {
-        localRef.current = node;
-        setRef(node);
-      }}
+      ref={refs}
       data-open={open ? '' : undefined}
       className={[styles.content, className].filter(Boolean).join(' ')}
       style={style}

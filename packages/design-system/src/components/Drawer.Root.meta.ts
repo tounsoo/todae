@@ -7,13 +7,20 @@ export const meta = {
     {
       name: 'open',
       type: 'boolean',
-      required: true,
-      description: 'Controlled open state.',
+      required: false,
+      description: 'Controlled open state. Leave it out for an uncontrolled drawer.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      required: false,
+      default: 'false',
+      description: 'Initial open state when uncontrolled.',
     },
     {
       name: 'onOpenChange',
       type: '(open: boolean, reason: DialogCloseReason) => void',
-      required: true,
+      required: false,
       description: 'Dismiss requests, with the same reasons as Dialog.Root.',
     },
     {

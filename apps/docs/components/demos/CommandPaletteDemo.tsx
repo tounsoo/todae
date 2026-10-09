@@ -24,7 +24,7 @@ export function CommandPalette({ onRun }: { onRun?: (value: string) => void } = 
     // Controlled at null, so running a command never leaves a selection behind.
     value: null,
     // Only while open: the closing palette stays live, so a second Enter or click would run it again.
-    onChange: (value: string | null) => {
+    onValueChange: (value: string | null) => {
       if (!value || !cb.open) return;
       setRan(COMMANDS.find((command) => command.value === value)?.label ?? value);
       onRun?.(value);

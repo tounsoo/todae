@@ -65,14 +65,14 @@ export type UseComboboxSingleOptions = BaseOptions & {
   selectionMode?: 'single';
   value?: string | null;
   defaultValue?: string | null;
-  onChange?: (value: string | null) => void;
+  onValueChange?: (value: string | null) => void;
 };
 
 export type UseComboboxMultipleOptions = BaseOptions & {
   selectionMode: 'multiple';
   value?: readonly string[];
   defaultValue?: readonly string[];
-  onChange?: (value: string[]) => void;
+  onValueChange?: (value: string[]) => void;
 };
 
 export type UseComboboxOptions = UseComboboxSingleOptions | UseComboboxMultipleOptions;
@@ -194,7 +194,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const lastPresentation = useRef(presentation);
 
   // Callbacks read the latest options through this ref so their identity stays stable and
-  // inline `loadOptions` / `onChange` / `filter` functions never retrigger effects.
+  // inline `loadOptions` / `onValueChange` / `filter` functions never retrigger effects.
   const latest = useRef(options);
   latest.current = options;
   const hasLoader = Boolean(options.loadOptions);
@@ -277,7 +277,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     (next: string | null) => {
       setSingleState(next);
       const current = latest.current;
-      if (!isMultiple(current)) current.onChange?.(next);
+      if (!isMultiple(current)) current.onValueChange?.(next);
     },
     [setSingleState],
   );
@@ -286,7 +286,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     (next: string[]) => {
       setMultiState(next);
       const current = latest.current;
-      if (isMultiple(current)) current.onChange?.(next);
+      if (isMultiple(current)) current.onValueChange?.(next);
     },
     [setMultiState],
   );
@@ -666,14 +666,14 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         id: ids.listbox,
         selectionMode: 'multiple',
         value: [...multiValue],
-        onChange: (next: string[]) => {
+        onValueChange: (next: string[]) => {
           const added = next.find((item) => !multiValue.includes(item));
           const removed = multiValue.find((item) => !next.includes(item));
           const raw = added ?? removed;
           if (raw) select(raw);
         },
         activeValue: resolvedActive,
-        onActiveChange: highlight,
+        onActiveValueChange: highlight,
         tabIndex: -1,
         'aria-labelledby': ids.input,
       };
@@ -682,9 +682,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       id: ids.listbox,
       selectionMode: 'single',
       value: singleValue,
-      onChange: (next: string) => select(next),
+      onValueChange: (next: string) => select(next),
       activeValue: resolvedActive,
-      onActiveChange: highlight,
+      onActiveValueChange: highlight,
       tabIndex: -1,
       'aria-labelledby': ids.input,
     };

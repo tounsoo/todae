@@ -22,23 +22,23 @@ describe('Chip', () => {
   });
 
   it('names dismiss and ignores clicks when disabled', () => {
-    const onDismiss = vi.fn();
+    const onRemove = vi.fn();
     const { rerender } = render(
-      <Chip.Root onDismiss={onDismiss}>Alpha</Chip.Root>,
+      <Chip.Root onRemove={onRemove}>Alpha</Chip.Root>,
     );
     const button = screen.getByRole('button', { name: 'Remove Alpha' });
     fireEvent.click(button);
-    expect(onDismiss).toHaveBeenCalledTimes(1);
+    expect(onRemove).toHaveBeenCalledTimes(1);
 
     rerender(
-      <Chip.Root onDismiss={onDismiss} disabled>
+      <Chip.Root onRemove={onRemove} disabled>
         Alpha
       </Chip.Root>,
     );
     const disabled = screen.getByRole('button', { name: 'Remove Alpha' });
     expect(disabled).toHaveProperty('disabled', true);
     fireEvent.click(disabled);
-    expect(onDismiss).toHaveBeenCalledTimes(1);
+    expect(onRemove).toHaveBeenCalledTimes(1);
   });
 
   it('renders display-only overflow', () => {

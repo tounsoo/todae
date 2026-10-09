@@ -11,13 +11,13 @@ export const meta = {
       description: 'Chip label. Text only.',
     },
     {
-      name: 'onDismiss',
+      name: 'onRemove',
       type: '() => void',
       required: false,
       description: 'Renders a named dismiss button.',
     },
     {
-      name: 'dismissLabel',
+      name: 'removeLabel',
       type: 'string',
       required: false,
       description: 'Dismiss aria-label. Default is Remove {label}.',

@@ -147,7 +147,7 @@ describe('useField', () => {
           onInputValueChange={() => {}}
           onCommit={() => {}}
           onChipRemove={() => {}}
-          chipDismissLabel={(v) => `Remove ${v}`}
+          chipRemoveLabel={(v) => `Remove ${v}`}
         />
         <Custom />
       </Field.Root>,

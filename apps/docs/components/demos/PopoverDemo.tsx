@@ -17,7 +17,7 @@ export function PopoverMenu() {
         <OptionList.Root
           aria-label="Fruit"
           value={value}
-          onChange={(next) => {
+          onValueChange={(next) => {
             setValue(next);
             setOpen(false);
           }}

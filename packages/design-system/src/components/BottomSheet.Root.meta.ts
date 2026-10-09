@@ -7,13 +7,20 @@ export const meta = {
     {
       name: 'open',
       type: 'boolean',
-      required: true,
-      description: 'Controlled open state.',
+      required: false,
+      description: 'Controlled open state. Leave it out for an uncontrolled sheet.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      required: false,
+      default: 'false',
+      description: 'Initial open state when uncontrolled.',
     },
     {
       name: 'onOpenChange',
       type: '(open: boolean, reason: SheetCloseReason) => void',
-      required: true,
+      required: false,
       description: 'Dismiss requests. Staying open keeps the sheet open. reason is "form" for a <form method="dialog"> submit (read returnValue) and "native" when something else outside Todae closed the <dialog>; it shows again while open stays true.',
     },
     {
@@ -44,11 +51,11 @@ export const meta = {
       description: 'Escape calls onOpenChange(false, "escape"). false sets closedby="none", so the browser ignores the close request.',
     },
     {
-      name: 'dismissOnScrim',
+      name: 'dismissOnBackdrop',
       type: 'boolean',
       required: false,
       default: 'true',
-      description: 'A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, "scrim").',
+      description: 'A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, "backdrop").',
     },
     {
       name: 'dismissOnDrag',

@@ -19,7 +19,7 @@ import { isPopoverOpen } from '../overlay/usePopoverSync';
 import { TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables';
 import { initialFocusTarget } from '../overlay/useInitialFocus';
 import { useFocusLeave } from '../overlay/useFocusLeave';
-import { Button, type ButtonRootProps } from './Button';
+import { Button, type ButtonActionProps } from './Button';
 import { useDismissLabel } from './dismissLabel';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import type { Toaster, ToastRecord, ToastTone } from './toaster';
@@ -62,8 +62,8 @@ export type ToastRootProps = {
 export type ToastIconProps = ComponentPropsWithRef<'span'>;
 export type ToastTitleProps = ComponentPropsWithRef<'p'>;
 export type ToastDescriptionProps = ComponentPropsWithRef<'div'>;
-export type ToastActionProps = ButtonRootProps;
-export type ToastCloseProps = ButtonRootProps;
+export type ToastActionProps = ButtonActionProps;
+export type ToastCloseProps = ButtonActionProps;
 
 type ItemContextValue = { toast: ToastRecord; dismiss: () => void };
 

@@ -33,21 +33,21 @@ type OptionListBase = {
   id?: string;
   tabIndex?: number;
   activeValue?: string | null;
-  onActiveChange?: (value: string | null) => void;
+  onActiveValueChange?: (value: string | null) => void;
   'aria-label'?: string;
   'aria-labelledby'?: string;
-} & Omit<ComponentPropsWithRef<'div'>, 'children' | 'role' | 'onChange' | 'defaultValue'>;
+} & Omit<ComponentPropsWithRef<'div'>, 'children' | 'role' | 'defaultValue'>;
 
 export type OptionListSingleProps = OptionListBase & {
   selectionMode?: 'single';
   value: string | null;
-  onChange: (value: string) => void;
+  onValueChange: (value: string) => void;
 };
 
 export type OptionListMultipleProps = OptionListBase & {
   selectionMode: 'multiple';
   value: readonly string[];
-  onChange: (value: string[]) => void;
+  onValueChange: (value: string[]) => void;
 };
 
 export type OptionListRootProps = OptionListSingleProps | OptionListMultipleProps;
@@ -149,10 +149,10 @@ function OptionListRoot(props: OptionListRootProps) {
     id,
     tabIndex,
     activeValue: activeValueProp,
-    onActiveChange,
+    onActiveValueChange,
     selectionMode: _selectionMode,
     value: _value,
-    onChange: _onChange,
+    onValueChange: _onValueChange,
     onKeyDown: onKeyDownProp,
     onPointerUp,
     onPointerCancel,
@@ -213,24 +213,24 @@ function OptionListRoot(props: OptionListRootProps) {
   const select = useCallback(
     (value: string, fromPointer = false) => {
       if (isMultiple(props)) {
-        props.onChange(
+        props.onValueChange(
           props.value.includes(value) ? props.value.filter((item) => item !== value) : [...props.value, value],
         );
       } else {
-        props.onChange(value);
+        props.onValueChange(value);
       }
       setActive(value);
       setHighlighted(fromPointer ? null : value);
-      onActiveChange?.(value);
+      onActiveValueChange?.(value);
     },
-    [onActiveChange, props],
+    [onActiveValueChange, props],
   );
 
   function move(next: string | undefined) {
     if (!next) return;
     setActive(next);
     setHighlighted(next);
-    onActiveChange?.(next);
+    onActiveValueChange?.(next);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {

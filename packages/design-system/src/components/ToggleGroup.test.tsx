@@ -51,7 +51,7 @@ describe('ToggleGroup', () => {
   it('presses one item at most in single mode, and clears it when pressed again', () => {
     const onChange = vi.fn();
     render(
-      <ToggleGroup.Root aria-label="Align" defaultValue="left" onChange={onChange}>
+      <ToggleGroup.Root aria-label="Align" defaultValue="left" onValueChange={onChange}>
         <ToggleGroup.Item value="left">Left</ToggleGroup.Item>
         <ToggleGroup.Item value="center">Center</ToggleGroup.Item>
       </ToggleGroup.Root>,
@@ -69,7 +69,7 @@ describe('ToggleGroup', () => {
   it('presses any number in multiple mode', () => {
     const onChange = vi.fn();
     render(
-      <ToggleGroup.Root aria-label="Style" selectionMode="multiple" onChange={onChange}>
+      <ToggleGroup.Root aria-label="Style" selectionMode="multiple" onValueChange={onChange}>
         <ToggleGroup.Item value="bold">Bold</ToggleGroup.Item>
         <ToggleGroup.Item value="italic">Italic</ToggleGroup.Item>
       </ToggleGroup.Root>,

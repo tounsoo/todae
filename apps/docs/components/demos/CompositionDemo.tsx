@@ -37,7 +37,7 @@ export function SiblingsAllowed() {
         <OptionList.Root
           aria-label="Sort"
           value={sort}
-          onChange={(next) => {
+          onValueChange={(next) => {
             setSort(next);
             setOpen(false);
           }}
