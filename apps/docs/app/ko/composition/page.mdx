@@ -93,12 +93,13 @@ const cb = useCombobox({ presentation: 'sheet' })
 
 [useCombobox](/utilities/use-combobox)는 헤드리스입니다. 열림 상태, 값, aria, 키보드, listbox id를 맡습니다.
 
-- `useCombobox({ presentation: 'popover' | 'sheet' | 'auto' })`
+- `useCombobox({ presentation: 'popover' | 'sheet' | 'dialog' | 'auto' })`
 - `getAnchorProps()`는 `Field.Root`에 (데스크톱)
 - `getTriggerProps()`는 `Button.Root`에 (시트)
 - `getInputProps()` / `getChipInputProps()`는 필드 입력에
 - `getPopoverProps()`는 `Popover.Root`에
 - `getSheetProps()`는 `BottomSheet.Root`에
+- `getDialogProps()`는 `Dialog.Root`에
 - `getListboxProps()`는 `OptionList.Root`에
 
 Trigger 편의 컴포넌트는 없습니다. `Combobox.*` 외형도 없습니다. [Combobox](/recipes/combobox)를 보세요.

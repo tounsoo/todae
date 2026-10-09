@@ -25,6 +25,8 @@ it('opens with Ctrl+K, filters, runs the highlighted command, and returns focus'
   await userEvent.keyboard('{Control>}k{/Control}');
   const input = await screen.findByRole('combobox', { name: 'Command' });
   expect(document.activeElement).toBe(input);
+  // The recipe's own name wins over getDialogProps' default.
+  expect(screen.getByRole('dialog', { name: 'Commands' })).toBeTruthy();
   await userEvent.keyboard('bill');
   await expect.poll(options).toEqual(['Open billing settings']);
   await userEvent.keyboard('{ArrowDown}{Enter}');

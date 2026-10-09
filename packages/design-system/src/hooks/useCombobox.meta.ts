@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'useCombobox',
   description:
-    'Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, and OptionList. No Combobox chrome.',
+    'Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, Dialog, and OptionList. No Combobox chrome.',
   props: [
     {
       name: 'selectionMode',
@@ -34,10 +34,10 @@ export const meta = {
     },
     {
       name: 'presentation',
-      type: '"popover" | "sheet" | "auto"',
+      type: '"popover" | "sheet" | "dialog" | "auto"',
       required: false,
       default: '"auto"',
-      description: 'auto uses useSheetPresentation.',
+      description: 'auto uses useSheetPresentation. dialog is for Dialog.Root, through getDialogProps.',
     },
     {
       name: 'allowCreate',

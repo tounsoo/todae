@@ -200,6 +200,7 @@ export {
   type UseHighlightOptions,
   type UseHighlightResult,
 } from './hooks/useHighlight';
+export { useHotkey, type UseHotkeyOptions } from './hooks/useHotkey';
 export { useModalLayer } from './hooks/useModalLayer';
 export {
   useRovingFocus,

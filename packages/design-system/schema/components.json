@@ -2567,7 +2567,7 @@
     },
     {
       "name": "useCombobox",
-      "description": "Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, and OptionList. No Combobox chrome.",
+      "description": "Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, Dialog, and OptionList. No Combobox chrome.",
       "props": [
         {
           "name": "selectionMode",
@@ -2596,9 +2596,9 @@
         },
         {
           "name": "presentation",
-          "type": "\"popover\" | \"sheet\" | \"auto\"",
+          "type": "\"popover\" | \"sheet\" | \"dialog\" | \"auto\"",
           "required": false,
-          "description": "auto uses useSheetPresentation.",
+          "description": "auto uses useSheetPresentation. dialog is for Dialog.Root, through getDialogProps.",
           "default": "\"auto\""
         },
         {
@@ -2767,6 +2767,31 @@
           "required": false,
           "description": "Highlight type, for spelling and grammar marks.",
           "default": "'highlight'"
+        }
+      ]
+    },
+    {
+      "name": "useHotkey",
+      "description": "useHotkey(hotkey, handler, options). Listens for keydown on the document and runs handler when a key matches hotkey, after preventing its default. It skips keys something else already prevented, keys pressed while an IME composes, held keys, and, in a text field, every key except a function key or a chord with Meta, or with Control but not Alt.",
+      "props": [
+        {
+          "name": "hotkey",
+          "type": "string | readonly string[]",
+          "required": true,
+          "description": "A key with its modifiers, such as \"Control+K\", \"Alt+T\" or \"F8\". Modifiers must match exactly. A list matches any of them. One with a modifier name it does not know is off."
+        },
+        {
+          "name": "handler",
+          "type": "(event: KeyboardEvent) => void",
+          "required": true,
+          "description": "Runs on a match. An inline function is fine; the latest one is read at key time."
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Listen only while true. Pass it in the options object.",
+          "default": "true"
         }
       ]
     },

@@ -1,0 +1,25 @@
+# useHotkey
+
+`useHotkey(hotkey, handler, options)`는 페이지 어디에서든 누른 키가 `hotkey`와 일치하면 `handler`를 실행합니다. 문서에서 `keydown`을 듣고, 일치한 키의 기본 동작을 막아 브라우저 자체 단축키가 함께 실행되지 않게 합니다.
+
+```tsx
+useHotkey(['Control+K', 'Meta+K'], () => setOpen(true))
+```
+
+단축키는 `Alt+T`나 `F8`처럼 수정 키와 키를 `+`로 이어 씁니다. 수정 키는 `Alt`, `Control`, `Meta`, `Shift`이고 `Option`, `Ctrl`, `Cmd`로도 쓸 수 있으며, 정확히 일치해야 합니다. 그래서 `Control+K`는 Ctrl+Shift+K에서 실행되지 않습니다. 글자나 숫자는 그 키가 입력하는 문자로 일치시킵니다. 한글 자판처럼 키가 라틴 글자나 숫자를 입력하지 않으면, 그 글자 자리에 있는 키로 일치시킵니다. 훅이 모르는 수정 키 이름이 든 단축키는 꺼지고, 개발 중에는 경고가 나옵니다.
+
+훅은 다른 곳에서 이미 기본 동작을 막은 키, 입력기가 글자를 조합하는 중에 누른 키, 누르고 있어 반복되는 키를 건너뜁니다. 텍스트 필드 안에서는 기능 키나 Meta, 또는 Alt 없는 Control 조합만 실행합니다. `Shift+A`, `Escape`, 화살표 키 같은 나머지 단축키는 필드에 맡깁니다.
+
+최신 `handler`가 실행되므로 인라인 함수도 괜찮습니다. 듣기를 멈추려면 `{ enabled: false }`를 넘기세요. [Command palette](/recipes/command-palette)가 이 훅으로 열립니다.
+
+단축키는 그것이 대신하는 컨트롤의 `aria-keyshortcuts`로 보조 기술에 알리세요.
+
+## 언제 쓰나요
+
+**언제:** 검색이나 명령 팔레트를 여는 단축키처럼 페이지 전체에서 쓰는 단축키.
+
+**쓰지 않을 때:** 목록의 화살표 키처럼 위젯 안의 키 → 위젯 자체의 `onKeyDown`. 토스트로 포커스 옮기기 → `Toast.Region`의 `hotkey`.
+
+## Props
+
+<PropsTable name="useHotkey" />

@@ -93,12 +93,13 @@ The touch trigger is `Button.Root`.
 
 [useCombobox](/utilities/use-combobox) is headless. It owns open, value, aria, keyboard, and listbox ids.
 
-- `useCombobox({ presentation: 'popover' | 'sheet' | 'auto' })`
+- `useCombobox({ presentation: 'popover' | 'sheet' | 'dialog' | 'auto' })`
 - `getAnchorProps()` on `Field.Root` (desktop)
 - `getTriggerProps()` on `Button.Root` (sheet)
 - `getInputProps()` / `getChipInputProps()` on the field input
 - `getPopoverProps()` on `Popover.Root`
 - `getSheetProps()` on `BottomSheet.Root`
+- `getDialogProps()` on `Dialog.Root`
 - `getListboxProps()` on `OptionList.Root`
 
 No Trigger sugar component. No `Combobox.*` chrome. See [Combobox](/recipes/combobox).
