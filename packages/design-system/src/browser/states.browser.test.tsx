@@ -36,8 +36,12 @@ function paint(element: Element, pseudo?: string): string {
 }
 
 function canvas(): string {
+  return system('Canvas');
+}
+
+function system(keyword: string): string {
   const probe = document.createElement('div');
-  probe.style.cssText = 'forced-color-adjust: none; background: Canvas';
+  probe.style.cssText = `forced-color-adjust: none; background: ${keyword}`;
   document.body.append(probe);
   const color = paint(probe);
   probe.remove();
@@ -109,6 +113,59 @@ describe('state in forced colors', () => {
     expect(visible(indicator('off'), '::after')).toBe(true);
     expect(paint(indicator('on'))).not.toBe(paint(indicator('off')));
     expect(visible(indicator('radio'), '::after')).toBe(true);
+  });
+
+  it('keeps a pressed toggle marked while hovered', async () => {
+    render(
+      <Themed>
+        <Button.Root variant="secondary" defaultPressed>
+          Bold
+        </Button.Root>
+        <Button.Root variant="secondary" defaultPressed={false}>
+          Italic
+        </Button.Root>
+      </Themed>,
+    );
+    const bold = screen.getByRole('button', { name: 'Bold' });
+    await userEvent.hover(bold);
+    expect(paint(bold)).toBe(system('Highlight'));
+    expect(paint(screen.getByRole('button', { name: 'Italic' }))).not.toBe(system('Highlight'));
+  });
+
+  it('forces the focus ring of a pressed toggle and a checked switch', () => {
+    render(
+      <Themed>
+        <Button.Root variant="secondary" defaultPressed>
+          Bold
+        </Button.Root>
+        <Button.Root variant="secondary">Plain</Button.Root>
+        <Switch defaultChecked data-testid="on">
+          On
+        </Switch>
+        <Switch data-testid="off">Off</Switch>
+      </Themed>,
+    );
+    const ring = (element: Element) => getComputedStyle(element).outlineColor;
+    const focused = (element: HTMLElement) => {
+      element.focus({ focusVisible: true } as FocusOptions);
+      return element;
+    };
+    const plain = ring(focused(screen.getByRole('button', { name: 'Plain' })));
+    expect(ring(focused(screen.getByRole('button', { name: 'Bold' })))).toBe(plain);
+    const off = ring(focused(screen.getByTestId('off')).nextElementSibling!);
+    expect(ring(focused(screen.getByTestId('on')).nextElementSibling!)).toBe(off);
+  });
+
+  it('tells a disabled checked switch thumb from its track', () => {
+    render(
+      <Themed>
+        <Switch defaultChecked disabled data-testid="on">
+          On
+        </Switch>
+      </Themed>,
+    );
+    const track = screen.getByTestId('on').nextElementSibling!;
+    expect(paint(track, '::after')).not.toBe(paint(track));
   });
 
   it('paints toolbar and menu separators', async () => {
@@ -225,22 +282,104 @@ describe('OptionList scrolling', () => {
     );
   }
 
+  /** In view inside the surface's scrollport: within its border and padding. */
+  function inView(option: Element) {
+    const surface = screen.getByTestId('surface');
+    const style = getComputedStyle(surface);
+    const top = surface.getBoundingClientRect().top + surface.clientTop + parseFloat(style.paddingTop);
+    const bottom = surface.getBoundingClientRect().top + surface.clientTop + surface.clientHeight - parseFloat(style.paddingBottom);
+    const rect = option.getBoundingClientRect();
+    return rect.top >= top - 0.5 && rect.bottom <= bottom + 0.5;
+  }
+
   it('keeps the active option in view as the keyboard moves it', async () => {
     render(<PopoverList />);
     const list = await screen.findByRole('listbox');
     list.focus();
     const scrollY = window.scrollY;
     await userEvent.keyboard('{End}');
-    const last = screen.getByRole('option', { name: 'Fruit 30' });
-    const inView = (option: Element) => {
-      const surface = screen.getByTestId('surface').getBoundingClientRect();
-      const rect = option.getBoundingClientRect();
-      return rect.top >= surface.top - 0.5 && rect.bottom <= surface.bottom + 0.5;
-    };
-    await waitFor(() => expect(inView(last)).toBe(true));
+    await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 30' }))).toBe(true));
     await userEvent.keyboard('{Home}');
-    await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 1' }))).toBe(true));
+    await waitFor(() => expect(screen.getByTestId('surface').scrollTop).toBe(0));
     expect(window.scrollY).toBe(scrollY);
+  });
+
+  it('reveals the active option when opening and moving happen together', async () => {
+    function Opener() {
+      const [open, setOpen] = useState(false);
+      const [active, setActive] = useState<string | null>(null);
+      const popover = usePopover({ open, onOpenChange: setOpen });
+      return (
+        <Themed>
+          <Button.Root
+            onClick={() => {
+              setOpen(true);
+              setActive('Fruit 30');
+            }}
+          >
+            Last
+          </Button.Root>
+          <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
+            <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit">
+              {FRUITS.map((fruit) => (
+                <OptionList.Option key={fruit} value={fruit}>
+                  {fruit}
+                </OptionList.Option>
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </Themed>
+      );
+    }
+    render(<Opener />);
+    await userEvent.click(screen.getByRole('button', { name: 'Last' }));
+    await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 30' }))).toBe(true));
+  });
+
+  it('reveals the selected option when the popover opens', async () => {
+    function Selected() {
+      const popover = usePopover();
+      return (
+        <Themed>
+          <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
+          <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
+            <OptionList.Root value="Fruit 25" onChange={() => undefined} aria-label="Fruit">
+              {FRUITS.map((fruit) => (
+                <OptionList.Option key={fruit} value={fruit}>
+                  {fruit}
+                </OptionList.Option>
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </Themed>
+      );
+    }
+    render(<Selected />);
+    await userEvent.click(screen.getByRole('button', { name: 'Pick' }));
+    await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 25' }))).toBe(true));
+  });
+
+  it('does not scroll a container on mount or when options change', async () => {
+    function Shell({ count }: { count: number }) {
+      return (
+        <Themed>
+          <div data-testid="shell" style={{ height: 200, overflow: 'auto' }}>
+            <div style={{ height: 1000 }} />
+            <OptionList.Root value={null} onChange={() => undefined} activeValue={null} aria-label="Fruit">
+              {FRUITS.slice(0, count).map((fruit) => (
+                <OptionList.Option key={fruit} value={fruit}>
+                  {fruit}
+                </OptionList.Option>
+              ))}
+            </OptionList.Root>
+          </div>
+        </Themed>
+      );
+    }
+    const { rerender } = render(<Shell count={0} />);
+    rerender(<Shell count={30} />);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(screen.getByTestId('shell').scrollTop).toBe(0);
   });
 
   it('never scrolls the page for a list on the page', async () => {

@@ -102,10 +102,11 @@
   }
 
   /* Forced colors drop the fill and the inset ring, so a pressed toggle takes
-     the system's selected colors. */
+     the system's selected colors, which forced colors keep. They also win over
+     hover, press and focus, whose token colors would be forced to Canvas. */
   @media (forced-colors: active) {
-    .root[aria-pressed='true'] {
-      forced-color-adjust: none;
+    .root[aria-pressed='true'],
+    .root[aria-pressed='true']:is(:hover, :active, :focus-visible):not(:disabled) {
       background: Highlight;
       color: HighlightText;
       border-color: Highlight;

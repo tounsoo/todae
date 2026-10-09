@@ -100,7 +100,6 @@
 
     [role='menuitemradio'][aria-checked='true'] > .indicator::before,
     .separator {
-      forced-color-adjust: none;
       background: CanvasText;
     }
   }

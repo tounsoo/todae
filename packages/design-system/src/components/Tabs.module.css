@@ -107,7 +107,6 @@
   /* Forced colors drop backgrounds, so paint the indicator with a system color. */
   @media (forced-colors: active) {
     .tab[data-selected]::after {
-      forced-color-adjust: none;
       background: Highlight;
     }
   }

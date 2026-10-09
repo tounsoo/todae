@@ -120,16 +120,16 @@
     flex-wrap: wrap;
   }
 
-  /* Forced colors drop backgrounds, so paint the dot, thumb and on-track with system colors. */
+  /* Forced colors drop author backgrounds but keep system colors, so paint the
+     dot, thumb and on-track with system colors. Forcing stays on, so focus
+     rings and other states are still forced. */
   @media (forced-colors: active) {
     .root[data-control='radio'] .input:checked + .indicator::after,
     .root[data-control='switch'] .indicator::after {
-      forced-color-adjust: none;
       background: CanvasText;
     }
 
     .root[data-control='switch'] .input:checked + .indicator {
-      forced-color-adjust: none;
       background: Highlight;
       border-color: Highlight;
     }
@@ -139,7 +139,8 @@
     }
 
     .root[data-disabled][data-control='radio'] .input:checked + .indicator::after,
-    .root[data-disabled][data-control='switch'] .indicator::after {
+    .root[data-disabled][data-control='switch'] .indicator::after,
+    .root[data-disabled][data-control='switch'] .input:checked + .indicator::after {
       background: GrayText;
     }
 

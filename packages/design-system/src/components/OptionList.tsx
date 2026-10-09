@@ -265,13 +265,30 @@ function OptionListRoot(props: OptionListRootProps) {
 
   const shown = activeValueProp !== undefined ? activeValue : highlighted;
   // aria-activedescendant moves no focus, so nothing scrolls the option into
-  // view: scroll its nearest scroll box, never the page.
+  // view: scroll its nearest scroll box, never the page. Only a move does, not
+  // a mount or the first-option fallback, so a list on the page stays put.
+  const moved =
+    activeValueProp !== undefined ? (activeValueProp && enabled.includes(activeValueProp) ? activeValueProp : null) : highlighted;
+  const lastMoved = useRef(moved);
   useLayoutEffect(() => {
+    const changed = lastMoved.current !== moved;
+    lastMoved.current = moved;
     const list = listRef.current;
-    if (!shown || !list) return;
-    const option = list.ownerDocument.getElementById(optionDomId(listId, shown));
-    if (option) revealInScrollBox(option);
-  }, [listId, shown]);
+    // A list in a closed popover has no layout; it is revealed when it opens.
+    if (!changed || !moved || !list || list.checkVisibility?.() === false) return;
+    reveal(list, optionDomId(listId, moved));
+  }, [listId, moved]);
+  // Opening a popover or dialog lays the list out: reveal the active option then.
+  const activeId = activeValue ? optionDomId(listId, activeValue) : null;
+  useLayoutEffect(() => {
+    const surface = listRef.current?.closest('[popover], dialog');
+    if (!surface || !activeId) return;
+    const onToggle = (event: Event) => {
+      if ((event as ToggleEvent).newState === 'open' && listRef.current) reveal(listRef.current, activeId);
+    };
+    surface.addEventListener('toggle', onToggle);
+    return () => surface.removeEventListener('toggle', onToggle);
+  }, [activeId]);
 
   const ctx = useMemo<OptionListContextValue>(
     () => ({
@@ -308,14 +325,25 @@ function OptionListRoot(props: OptionListRootProps) {
 }
 
 function scrollsY(element: Element): boolean {
-  const overflow = getComputedStyle(element).overflowY;
+  const overflow = element.ownerDocument.defaultView?.getComputedStyle(element).overflowY;
   return (overflow === 'auto' || overflow === 'scroll') && element.scrollHeight > element.clientHeight;
 }
 
+function reveal(list: HTMLElement, id: string) {
+  // The root node finds the option inside a shadow root too.
+  const root = list.getRootNode() as Document | ShadowRoot;
+  const option = 'getElementById' in root ? root.getElementById(id) : null;
+  if (option) revealInScrollBox(option);
+}
+
+function px(value: string): number {
+  return parseFloat(value) || 0;
+}
+
 /**
- * Scrolls `option`'s nearest scroll box by the least amount. The search stops
- * at a popover or dialog and never reaches the page, so a list on the page
- * doesn't scroll it.
+ * Scrolls `option`'s nearest scroll box by the least amount, inside the box's
+ * border, padding and scroll-padding. The search stops at a popover or dialog
+ * and never reaches the page, so a list on the page doesn't scroll it.
  */
 function revealInScrollBox(option: HTMLElement) {
   const doc = option.ownerDocument;
@@ -324,10 +352,13 @@ function revealInScrollBox(option: HTMLElement) {
     box = box.matches('[popover], dialog') ? null : box.parentElement;
   }
   if (!box || box === doc.body || box === doc.documentElement) return;
-  const boxRect = box.getBoundingClientRect();
+  const style = doc.defaultView!.getComputedStyle(box);
+  const boxTop = box.getBoundingClientRect().top + box.clientTop;
+  const top = boxTop + px(style.paddingTop) + px(style.scrollPaddingTop);
+  const bottom = boxTop + box.clientHeight - px(style.paddingBottom) - px(style.scrollPaddingBottom);
   const rect = option.getBoundingClientRect();
-  if (rect.top < boxRect.top) box.scrollTop -= boxRect.top - rect.top;
-  else if (rect.bottom > boxRect.bottom) box.scrollTop += rect.bottom - boxRect.bottom;
+  if (rect.top < top) box.scrollTop -= top - rect.top;
+  else if (rect.bottom > bottom) box.scrollTop += rect.bottom - bottom;
 }
 
 export const OptionList = { Root: OptionListRoot, Option: OptionListOption } as const;
