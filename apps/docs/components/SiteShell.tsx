@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 import '@tounsoo/todae/todae.css';
+import { VisuallyHidden } from '@tounsoo/todae/visually-hidden';
 import { localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 // Reads the file system, so SiteShell renders on the server only.
@@ -47,9 +48,11 @@ export function SiteShell({
         {!notFound && <LanguageAlternates untranslated={untranslatedByLocale()} />}
         <Providers>
           <script dangerouslySetInnerHTML={{ __html: APPEARANCE_SCRIPT }} />
-          <a className="skip-link todae-visually-hidden-focusable" href="#content">
-            {dict.skipToContent}
-          </a>
+          <VisuallyHidden.Root focusable>
+            <a className="skip-link" href="#content">
+              {dict.skipToContent}
+            </a>
+          </VisuallyHidden.Root>
           <header className="topbar">
             <div className="topbar-inner">
               <MobileNav locale={locale} />

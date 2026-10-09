@@ -1,6 +1,6 @@
 'use client';
 
-import { Label, Stack, Text } from '@tounsoo/todae';
+import { Label, Meter, Progress, Slider, Stack, Text } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 export function ProgressStates() {
@@ -9,11 +9,11 @@ export function ProgressStates() {
   return (
     <Stack>
       <Label htmlFor={done}>Uploading report.pdf</Label>
-      <progress id={done} value={64} max={100}>
+      <Progress.Root id={done} value={64} max={100}>
         64%
-      </progress>
+      </Progress.Root>
       <Label htmlFor={loading}>Loading results</Label>
-      <progress id={loading} />
+      <Progress.Root id={loading} />
     </Stack>
   );
 }
@@ -24,13 +24,13 @@ export function MeterLevels() {
   return (
     <Stack>
       <Label htmlFor={storage}>Storage used</Label>
-      <meter id={storage} min={0} max={100} low={70} high={90} optimum={0} value={92}>
+      <Meter.Root id={storage} min={0} max={100} low={70} high={90} optimum={0} value={92}>
         92%
-      </meter>
+      </Meter.Root>
       <Label htmlFor={battery}>Battery</Label>
-      <meter id={battery} min={0} max={100} low={20} high={60} optimum={100} value={80}>
+      <Meter.Root id={battery} min={0} max={100} low={20} high={60} optimum={100} value={80}>
         80%
-      </meter>
+      </Meter.Root>
     </Stack>
   );
 }
@@ -41,9 +41,8 @@ export function SliderVolume() {
   return (
     <Stack>
       <Label htmlFor={id}>Volume</Label>
-      <input
+      <Slider.Root
         id={id}
-        type="range"
         min={0}
         max={100}
         step={5}

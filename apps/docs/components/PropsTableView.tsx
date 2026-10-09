@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge } from '@tounsoo/todae';
+import { Badge, Code, Table } from '@tounsoo/todae';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { useLocale } from '../lib/i18n/useLocale';
@@ -55,16 +55,16 @@ export function unionMembers(type: string): string[] {
 
 function TypeCode({ type }: { type: string }) {
   const members = type.length > UNION_LINE_LENGTH ? unionMembers(type) : [type];
-  if (members.length < 2) return <code className="props-type">{type}</code>;
+  if (members.length < 2) return <Code.Root className="props-type">{type}</Code.Root>;
   // One member per line, each after the first led by its `|`.
   return (
-    <code className="props-type">
+    <Code.Root className="props-type">
       {members.map((member, index) => (
         <span key={index} className="props-type-member">
           {index === 0 ? member : `| ${member}`}
         </span>
       ))}
-    </code>
+    </Code.Root>
   );
 }
 
@@ -82,7 +82,7 @@ export function PropsTableView({
   return (
     <div className="props-table">
       <ScrollRegion>
-        <table lang={locale} role="table">
+        <Table.Root lang={locale} role="table">
           <caption>{words.caption.replace('{name}', name)}</caption>
           <thead role="rowgroup">
             <tr role="row">
@@ -103,7 +103,7 @@ export function PropsTableView({
               return (
                 <tr key={prop.name} role="row">
                   <th scope="row" role="rowheader" className="props-name">
-                    <code>{prop.name}</code>
+                    <Code.Root>{prop.name}</Code.Root>
                     {prop.required ? (
                       <>
                         {' '}
@@ -128,7 +128,7 @@ export function PropsTableView({
               );
             })}
           </tbody>
-        </table>
+        </Table.Root>
       </ScrollRegion>
     </div>
   );

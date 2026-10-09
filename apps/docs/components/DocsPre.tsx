@@ -1,5 +1,6 @@
 'use client';
 
+import { Code } from '@tounsoo/todae/code';
 import type { ComponentProps } from 'react';
 import { useOverflowRegion } from './OverflowRegion';
 
@@ -7,7 +8,7 @@ export function DocsPre({ className, children, ...props }: ComponentProps<'pre'>
   const region = useOverflowRegion<HTMLPreElement>('code');
   return (
     <div className="docs-pre">
-      <pre
+      <Code.Block
         {...props}
         ref={region.ref}
         className={className}
@@ -19,7 +20,7 @@ export function DocsPre({ className, children, ...props }: ComponentProps<'pre'>
         onBlur={region.onBlur}
       >
         {children}
-      </pre>
+      </Code.Block>
     </div>
   );
 }

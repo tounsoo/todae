@@ -1,6 +1,7 @@
 import { Badge } from '@tounsoo/todae/badge';
 import { Stack } from '@tounsoo/todae/stack';
 import { Text } from '@tounsoo/todae/text';
+import { VisuallyHidden } from '@tounsoo/todae/visually-hidden';
 
 export function BadgeTones() {
   return (
@@ -19,7 +20,7 @@ export function BadgeCount() {
     <Text>
       Inbox{' '}
       <Badge.Root>
-        3<span className="todae-visually-hidden"> unread</span>
+        3<VisuallyHidden.Root> unread</VisuallyHidden.Root>
       </Badge.Root>
     </Text>
   );

@@ -22,7 +22,7 @@ function pagePaths(dir: string, path = ''): string[] {
 describe('HomePage', () => {
   it('lists each section, and every link has a page', () => {
     const { container } = render(<HomePage />);
-    for (const name of ['Components', 'Native elements', 'Utilities', 'Recipes', 'Foundations', 'Tools']) {
+    for (const name of ['Components', 'Utilities', 'Recipes', 'Foundations', 'Tools']) {
       expect(screen.getByRole('heading', { level: 2, name })).toBeTruthy();
     }
     const hrefs = [...container.querySelectorAll('a')].map((link) => link.getAttribute('href') ?? '');
@@ -39,11 +39,11 @@ describe('HomePage', () => {
     expect(pagePaths(__dirname).filter((path) => !listed.has(path))).toEqual([]);
   });
 
-  it('lists a page under Components only when it documents an export', () => {
-    // A page with a props table documents an export; a native element page has none.
-    const hasProps = (href: string) => readFileSync(join(__dirname, href, 'page.mdx'), 'utf8').includes('<PropsTable');
-    const section = (id: string) => SITE_GROUPS.find((group) => group.id === id)?.links.map(([href]) => href) ?? [];
-    expect(section('components').filter((href) => !hasProps(href))).toEqual([]);
-    expect(section('native').filter(hasProps)).toEqual([]);
+  it('lists a page under Components only when it documents an exported component', () => {
+    // A page with a props table documents an export; anything else is a guide or a recipe.
+    const components = SITE_GROUPS.find((group) => group.id === 'components')?.links ?? [];
+    expect(components.length).toBeGreaterThan(0);
+    const hasProps = (href: string) => /^<PropsTable name="/m.test(readFileSync(join(__dirname, href, 'page.mdx'), 'utf8'));
+    expect(components.map(([href]) => href).filter((href) => !hasProps(href))).toEqual([]);
   });
 });

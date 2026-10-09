@@ -2,44 +2,44 @@ import { MeterLevels, ProgressStates } from '../../../components/demos/NativeCon
 
 # Progress and Meter
 
-Progress bars and meters are native `<progress>` and `<meter>` elements. There is no component: the browser already exposes their roles and values to assistive technology. Todae replaces the browser's bar with a track and a fill from the `progress` and `meter` contract tokens, in the `todae.base` layer.
+`Progress.Root` is a native `<progress>` and `Meter.Root` a native `<meter>`. The browser exposes their roles and values to assistive technology. Todae replaces the browser's bar with a track and a fill from the `progress` and `meter` contract tokens. Server Components can import them from `@tounsoo/todae/progress` and `@tounsoo/todae/meter`.
 
 ## Progress
 
-`<progress>` shows how far a task has come. Leave out `value` when the end is unknown: a band sweeps the track, and stops when the user asks for reduced motion.
+`Progress.Root` shows how far a task has come. Leave out `value` when the end is unknown: a band sweeps the track, and stops when the user asks for reduced motion.
 
 <Example block>
   <ProgressStates />
 </Example>
 
 ```tsx
-<label htmlFor="upload">Uploading report.pdf</label>
-<progress id="upload" value={64} max={100}>64%</progress>
+<Label htmlFor="upload">Uploading report.pdf</Label>
+<Progress.Root id="upload" value={64} max={100}>64%</Progress.Root>
 
-<label htmlFor="results">Loading results</label>
-<progress id="results" />
+<Label htmlFor="results">Loading results</Label>
+<Progress.Root id="results" />
 ```
 
 ## Meter
 
-`<meter>` shows a measurement within a known range, such as storage or battery. Set `low`, `high` and `optimum`, and the browser decides whether the value is good, fair or poor. Todae colors those three states from `meter.fill.optimum`, `meter.fill.suboptimum` and `meter.fill.critical`.
+`Meter.Root` shows a measurement within a known range, such as storage or battery. Set `low`, `high` and `optimum`, and the browser decides whether the value is good, fair or poor. Todae colors those three states from `meter.fill.optimum`, `meter.fill.suboptimum` and `meter.fill.critical`.
 
 <Example block>
   <MeterLevels />
 </Example>
 
 ```tsx
-<label htmlFor="storage">Storage used</label>
-<meter id="storage" min={0} max={100} low={70} high={90} optimum={0} value={92}>92%</meter>
+<Label htmlFor="storage">Storage used</Label>
+<Meter.Root id="storage" min={0} max={100} low={70} high={90} optimum={0} value={92}>92%</Meter.Root>
 ```
 
-Name each one with a `<label>` or `aria-label`, and put the value as text inside the element for browsers that do not draw it. Restyle the track, height and radius through `progress.track`, `progress.height` and `progress.radius`. Meter reads the same three tokens, so a change to them reaches both.
+Name each one with a [Label](/label) or `aria-label`, and put the value as text inside the element for browsers that do not draw it. Restyle the track, height and radius through `progress.track`, `progress.height` and `progress.radius`. Meter reads the same three tokens, so a change to them reaches both.
 
 ## Accessible composition
 
 **Todae handles:** Style only. The browser gives `<progress>` the `progressbar` role, gives `<meter>` its own role, and exposes their values; Todae keeps all of that. The indeterminate band holds still under reduced motion, and the track and fill keep distinct system colors in forced colors mode.
 
-**You supply:** A name for each one: a `<label>`, `aria-label` or `aria-labelledby`. The value as text inside the element. Todae announces nothing when a value changes, so when the task ends or fails, say so in text, and announce it with [useAnnouncer](/utilities/use-announcer) if the user may not be looking.
+**You supply:** A name for each one: a [Label](/label), `aria-label` or `aria-labelledby`. The value as text inside the element. Todae announces nothing when a value changes, so when the task ends or fails, say so in text, and announce it with [useAnnouncer](/utilities/use-announcer) if the user may not be looking.
 
 **Watch for:** A wrapper that draws its own bar from `div`s, which loses the role and the value. A wrapper that takes a `label` prop but never connects it to the element. A meter whose level is told only by the fill color; say "Almost full" in text when it matters. A progress bar removed the moment it finishes, with nothing left to say the task is done.
 
@@ -48,3 +48,9 @@ Name each one with a `<label>` or `aria-label`, and put the value as text inside
 **When:** Progress → a task that moves toward done. Meter → a level within a range that does not change because of the user's task.
 
 **When not:** A value the user sets → [Slider](/slider). A short wait, or content whose layout you know → [Spinner and Skeleton](/spinner).
+
+## Props
+
+<PropsTable name="Progress.Root" />
+
+<PropsTable name="Meter.Root" />

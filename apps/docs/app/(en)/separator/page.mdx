@@ -2,7 +2,7 @@ import { SeparatorBetween } from '../../../components/demos/NativeDemo';
 
 # Separator
 
-A separator is a native `<hr>`. There is no component: the element already has the separator role, and Todae styles every `hr` in the `todae.base` layer from the `separator` contract tokens.
+`Separator.Root` is a native `<hr>` drawn from the `separator` contract tokens. The element keeps its separator role.
 
 <Example>
   <SeparatorBetween />
@@ -10,22 +10,26 @@ A separator is a native `<hr>`. There is no component: the element already has t
 
 ```tsx
 <Text>Account settings apply to every workspace.</Text>
-<hr />
+<Separator.Root />
 <Text>Workspace settings apply to this workspace only.</Text>
 ```
 
-Restyle it through `separator.color`, `separator.thickness` and `separator.space`, the margin above and below the rule.
+Server Components can import it from `@tounsoo/todae/separator`. Restyle it through `separator.color`, `separator.thickness` and `separator.space`, the margin above and below the rule.
 
 ## Accessible composition
 
-**Todae handles:** Style only. A native `<hr>` keeps its `separator` role, and Todae draws it from the `separator` tokens. `Menu.Separator` and `Toolbar.Separator` are their own parts, each a `div` with `role="separator"`; `Toolbar.Separator` also sets `aria-orientation` across the toolbar.
+**Todae handles:** Style only. The native `<hr>` keeps its `separator` role, and Todae draws it from the `separator` tokens. `Menu.Separator` and `Toolbar.Separator` are their own parts, each a `div` with `role="separator"`; `Toolbar.Separator` also sets `aria-orientation` across the toolbar.
 
-**You supply:** Only the choice of element: an `<hr>` between groups of content, or the separator part of the [Menu](/menu) or [Toolbar](/toolbar) it sits in.
+**You supply:** Only the choice of part: `Separator.Root` between groups of content, or the separator part of the [Menu](/menu) or [Toolbar](/toolbar) it sits in.
 
-**Watch for:** An `<hr>` between the items of a list, menu or toolbar; use the part those components ship, or a border. A focusable separator, such as one with `tabIndex`, which assistive technology treats as a control that resizes and expects a value. A separator used only for looks; draw a border in CSS instead.
+**Watch for:** A `Separator.Root` between the items of a list, menu or toolbar; use the part those components ship, or a border. A focusable separator, such as one with `tabIndex`, which assistive technology treats as a control that resizes and expects a value. A separator used only for looks; draw a border in CSS instead.
 
 ## When to use
 
 **When:** A break between two groups of content that belong to the same page.
 
 **When not:** Space alone separates the groups → [Stack](/stack). A rule that only decorates → a border in your own CSS, so screen readers do not announce a separator.
+
+## Props
+
+<PropsTable name="Separator.Root" />

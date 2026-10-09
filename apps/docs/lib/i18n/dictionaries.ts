@@ -94,7 +94,6 @@ const en: Dictionary = {
   groupBlurbs: {
     foundations: 'How Todae is put together, its tokens, and how to build on it.',
     components: 'Accessible parts with one root each, styled from tokens.',
-    native: 'Plain HTML elements and utility classes that Todae only styles, with no export.',
     utilities: 'The behavior under the components, for your own markup.',
     recipes: 'Copyable glue for flows that depend on your product data.',
     tools: 'Try a theme on live components before you write one.',
@@ -162,7 +161,6 @@ const ko: Dictionary = {
   groupBlurbs: {
     foundations: 'Todae의 구조와 토큰, 그리고 그 위에 시스템을 만드는 방법.',
     components: '토큰으로 스타일을 입힌, 루트가 하나인 접근성 있는 부품.',
-    native: 'Todae가 스타일만 입히는, export 없는 HTML 요소와 유틸리티 클래스.',
     utilities: '컴포넌트 아래의 동작을 직접 만든 마크업에 쓰는 훅.',
     recipes: '제품 데이터에 따라 달라지는 흐름을 위한 복사용 코드.',
     tools: '코드를 쓰기 전에 실제 컴포넌트에 테마를 입혀 보세요.',
@@ -207,7 +205,6 @@ const ko: Dictionary = {
   home: 'Todae 홈',
   groups: {
     components: '컴포넌트',
-    native: '네이티브 요소',
     utilities: '유틸리티',
     recipes: '레시피',
     foundations: '기초',

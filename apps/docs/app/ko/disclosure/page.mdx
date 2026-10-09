@@ -2,50 +2,58 @@ import { DisclosureAccordion, DisclosureSingle } from '../../../components/demos
 
 # Disclosure
 
-디스클로저와 아코디언은 네이티브 `<details>`와 `<summary>` 요소입니다. 컴포넌트는 없습니다. 키보드 조작, 스크린 리더가 읽는 펼침 상태, 닫힌 내용 안의 페이지 내 찾기, 열림 표시를 브라우저가 이미 처리합니다. Todae는 `disclosure` contract 토큰으로 `todae.base` 레이어에서 이 요소들의 스타일을 정합니다.
+`Disclosure.Root`는 네이티브 `<details>`, `Disclosure.Summary`는 네이티브 `<summary>`이며, `disclosure` contract 토큰으로 스타일을 정합니다. 키보드 조작, 스크린 리더가 읽는 펼침 상태, 닫힌 내용 안의 페이지 내 찾기, 열림 표시는 브라우저가 처리합니다.
 
 ```tsx
-<details>
-	<summary>Shipping details</summary>
+<Disclosure.Root>
+	<Disclosure.Summary>Shipping details</Disclosure.Summary>
 	<Text>Orders ship within two business days.</Text>
-</details>
+</Disclosure.Root>
 ```
 
 <Example>
   <DisclosureSingle />
 </Example>
 
+Server Components는 `@tounsoo/todae/disclosure`에서 가져올 수 있습니다.
+
 ## 아코디언
 
-`<details>` 요소들에 같은 `name`을 주면 브라우저가 그중 최대 하나만 열어 둡니다. 하나만 열리는 아코디언입니다. 이름이 있는 디스클로저에는 `disclosure.border`로 구분선이 생깁니다. 처음부터 하나를 열어 두려면 `open` 속성을, 변화를 따라가려면 네이티브 `toggle` 이벤트를 쓰세요.
+디스클로저들에 같은 `name`을 주면 브라우저가 그중 최대 하나만 열어 둡니다. 하나만 열리는 아코디언입니다. 이름이 있는 디스클로저에는 `disclosure.border`로 구분선이 생깁니다. 처음부터 하나를 열어 두려면 `open`을, 변화를 따라가려면 `onToggle`을 쓰세요.
 
 ```tsx
-<details name="faq" open>
-	<summary>What is Todae?</summary>
+<Disclosure.Root name="faq" open>
+	<Disclosure.Summary>What is Todae?</Disclosure.Summary>
 	…
-</details>
-<details name="faq">
-	<summary>Does it ship icons?</summary>
+</Disclosure.Root>
+<Disclosure.Root name="faq">
+	<Disclosure.Summary>Does it ship icons?</Disclosure.Summary>
 	…
-</details>
+</Disclosure.Root>
 ```
 
 <Example block>
   <DisclosureAccordion />
 </Example>
 
-표시는 브라우저 자체의 것이며 디스클로저가 열리면 돌아갑니다. 직접 사용하는 아이콘 세트의 아이콘을 쓰려면 `summary { list-style: none }`으로 표시를 숨기고 summary 안에 아이콘을 넣으세요. 내용은 `disclosure.motion.duration` 동안 서서히 나타나며, 사용자가 동작 줄이기를 선호하면 움직이지 않습니다.
+표시는 브라우저 자체의 것이며 디스클로저가 열리면 돌아갑니다. 직접 사용하는 아이콘 세트의 아이콘을 쓰려면 summary에 `list-style: none`을 주어 표시를 숨기고 그 안에 아이콘을 넣으세요. 내용은 `disclosure.motion.duration` 동안 서서히 나타나며, 사용자가 동작 줄이기를 선호하면 움직이지 않습니다.
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 스타일만 맡습니다. `summary`의 포커스 링, 표시 기호의 색, 이름 붙은 디스클로저 사이의 구분선, 그리고 사용자가 동작 줄이기를 선호할 때 페이드를 끄는 것입니다. 나머지는 브라우저가 맡습니다. `summary`의 토글, 펼침 상태, Enter와 Space, 같은 이름 그룹에서 나머지를 닫는 것, 페이지 내 찾기입니다.
+**Todae가 맡는 것:** 스타일만 맡습니다. summary의 포커스 링, 표시 기호의 색, 이름 붙은 디스클로저 사이의 구분선, 그리고 사용자가 동작 줄이기를 선호할 때 페이드를 끄는 것입니다. 나머지는 브라우저가 맡습니다. summary의 토글, 펼침 상태, Enter와 Space, 같은 이름 그룹에서 나머지를 닫는 것, 페이지 내 찾기입니다.
 
-**직접 제공할 것:** 각 `details`의 첫 자식으로 `summary`를 두고, 무엇이 열리는지 알려 주는 텍스트를 넣으세요. 표시 기호를 숨기고 직접 만든 아이콘을 summary에 넣는다면, 아이콘에 `aria-hidden="true"`를 주세요. 열린 상태는 이미 알려집니다.
+**직접 제공할 것:** 각 `Disclosure.Root`의 첫 자식으로 `Disclosure.Summary`를 두고, 무엇이 열리는지 알려 주는 텍스트를 넣으세요. 표시 기호를 숨기고 직접 만든 아이콘을 summary에 넣는다면, 아이콘에 `aria-hidden="true"`를 주세요. 열린 상태는 이미 알려집니다.
 
-**주의할 점:** `summary`에 `role`, `aria-expanded`, `open`을 토글하는 클릭 핸들러를 더하지 마세요. 브라우저가 이미 각각을 처리하므로, 한 번 더 하면 서로 충돌합니다. `summary`는 그 자체가 컨트롤이므로 안에 버튼이나 링크를 넣지 마세요.
+**주의할 점:** summary에 `role`, `aria-expanded`, `open`을 토글하는 클릭 핸들러를 더하지 마세요. 브라우저가 이미 각각을 처리하므로, 한 번 더 하면 서로 충돌합니다. summary는 그 자체가 컨트롤이므로 안에 버튼이나 링크를 넣지 마세요.
 
 ## 언제 쓰나요
 
 **언제:** 독자가 그 자리에서 열어 볼 수 있는 선택적인 세부 내용. 자주 묻는 질문, 고급 설정, 긴 설명. 한 번에 하나만 열리는 여러 개 → 같은 `name`을 공유하는 아코디언.
 
 **쓰지 않을 때:** 같은 대상의 여러 보기를 화살표 키로 하나씩 보여 줄 때 → Tabs. 작업을 막는 선택이나 폼 → Dialog. 대부분의 독자에게 필요한 내용 → 그냥 보여 주세요.
+
+## Props
+
+<PropsTable name="Disclosure.Root" />
+
+<PropsTable name="Disclosure.Summary" />

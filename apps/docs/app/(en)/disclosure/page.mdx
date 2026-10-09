@@ -2,50 +2,58 @@ import { DisclosureAccordion, DisclosureSingle } from '../../../components/demos
 
 # Disclosure
 
-Disclosures and accordions are native `<details>` and `<summary>` elements. There is no component: the browser already handles the keyboard, the expanded state that a screen reader announces, find-in-page into closed content, and the open marker. Todae styles them in the `todae.base` layer from the `disclosure` contract tokens.
+`Disclosure.Root` is a native `<details>` and `Disclosure.Summary` a native `<summary>`, styled from the `disclosure` contract tokens. The browser handles the keyboard, the expanded state that a screen reader announces, find-in-page into closed content, and the open marker.
 
 ```tsx
-<details>
-	<summary>Shipping details</summary>
+<Disclosure.Root>
+	<Disclosure.Summary>Shipping details</Disclosure.Summary>
 	<Text>Orders ship within two business days.</Text>
-</details>
+</Disclosure.Root>
 ```
 
 <Example>
   <DisclosureSingle />
 </Example>
 
+Server Components can import it from `@tounsoo/todae/disclosure`.
+
 ## Accordion
 
-Give `<details>` elements the same `name` and the browser keeps at most one of them open: an exclusive accordion. Named disclosures get a divider from `disclosure.border`. Use the `open` attribute to start one open, and the native `toggle` event to follow changes.
+Give disclosures the same `name` and the browser keeps at most one of them open: an exclusive accordion. Named disclosures get a divider from `disclosure.border`. Use `open` to start one open, and `onToggle` to follow changes.
 
 ```tsx
-<details name="faq" open>
-	<summary>What is Todae?</summary>
+<Disclosure.Root name="faq" open>
+	<Disclosure.Summary>What is Todae?</Disclosure.Summary>
 	…
-</details>
-<details name="faq">
-	<summary>Does it ship icons?</summary>
+</Disclosure.Root>
+<Disclosure.Root name="faq">
+	<Disclosure.Summary>Does it ship icons?</Disclosure.Summary>
 	…
-</details>
+</Disclosure.Root>
 ```
 
 <Example block>
   <DisclosureAccordion />
 </Example>
 
-The marker is the browser's own and turns as the disclosure opens. To use an icon from your own set, hide it with `summary { list-style: none }` and put your icon in the summary. Content fades in over `disclosure.motion.duration`, and does not move when the user prefers reduced motion.
+The marker is the browser's own and turns as the disclosure opens. To use an icon from your own set, hide it with `list-style: none` on the summary and put your icon in it. Content fades in over `disclosure.motion.duration`, and does not move when the user prefers reduced motion.
 
 ## Accessible composition
 
-**Todae handles:** Styles only: a focus ring on `summary`, the marker's color, a divider between named disclosures, and no fade when the user prefers reduced motion. The rest is the browser's: the toggle on `summary`, its expanded state, Enter and Space, closing the others in a named group, and find-in-page.
+**Todae handles:** Styles only: a focus ring on the summary, the marker's color, a divider between named disclosures, and no fade when the user prefers reduced motion. The rest is the browser's: the toggle on the summary, its expanded state, Enter and Space, closing the others in a named group, and find-in-page.
 
-**You supply:** A `summary` as the first child of each `details`, with text that names what opens. If you hide the marker and put your own icon in the summary, give the icon `aria-hidden="true"`; the open state is already announced.
+**You supply:** A `Disclosure.Summary` as the first child of each `Disclosure.Root`, with text that names what opens. If you hide the marker and put your own icon in the summary, give the icon `aria-hidden="true"`; the open state is already announced.
 
-**Watch for:** A `role`, an `aria-expanded` or a click handler that toggles `open` on `summary`: the browser already does each, and doing it again fights it. Buttons or links inside `summary`, which is itself the control.
+**Watch for:** A `role`, an `aria-expanded` or a click handler that toggles `open` on the summary: the browser already does each, and doing it again fights it. Buttons or links inside the summary, which is itself the control.
 
 ## When to use
 
 **When:** Optional detail the reader can open in place: FAQs, advanced settings, long explanations. Several of them with one open at a time → an accordion with a shared `name`.
 
 **When not:** Views of the same object, one shown at a time with arrow keys → Tabs. A choice or a form that blocks the task → Dialog. Content most readers need → show it.
+
+## Props
+
+<PropsTable name="Disclosure.Root" />
+
+<PropsTable name="Disclosure.Summary" />

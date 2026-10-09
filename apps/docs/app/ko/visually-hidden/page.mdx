@@ -2,36 +2,39 @@ import { VisuallyHiddenLabel } from '../../../components/demos/NativeDemo';
 
 # VisuallyHidden
 
-`todae.base` 레이어의 유틸리티 클래스 두 개가 화면에서는 내용을 숨기고 보조 기술에는 남겨 둡니다. 컴포넌트는 없습니다. 아무 요소에나 클래스를 붙이세요.
-
-- `todae-visually-hidden`은 항상 숨깁니다.
-- `todae-visually-hidden-focusable`은 포커스가 안으로 들어올 때까지 숨깁니다. 건너뛰기 링크에 씁니다.
+`VisuallyHidden.Root`는 화면에서는 내용을 숨기고 보조 기술에는 남겨 둡니다. `span`이므로 버튼이나 텍스트 줄 안에 들어갑니다. `focusable`을 주면 포커스가 안에 있는 동안 내용을 다시 보여 줍니다. 건너뛰기 링크에 씁니다.
 
 <Example>
   <VisuallyHiddenLabel />
 </Example>
 
 ```tsx
-<a href="#main" className="todae-visually-hidden-focusable">Skip to content</a>
+<VisuallyHidden.Root focusable>
+	<a href="#main">Skip to content</a>
+</VisuallyHidden.Root>
 
 <Button.Root>
 	<Button.Icon><TrashIcon /></Button.Icon>
-	<span className="todae-visually-hidden">Delete draft</span>
+	<VisuallyHidden.Root>Delete draft</VisuallyHidden.Root>
 </Button.Root>
 ```
 
-선언에 `!important`를 쓰므로 컴포넌트 자체의 패딩이나 크기 때문에 숨긴 내용이 보이는 일은 없습니다. 아이콘만 있는 `Button.Root`처럼 요소가 이미 `aria-label`을 받는다면 `aria-label`을 쓰세요.
+Server Components는 `@tounsoo/todae/visually-hidden`에서 가져올 수 있습니다. 선언에 `!important`를 쓰므로 더한 클래스나 스타일 때문에 숨긴 내용이 보이는 일은 없습니다. 아이콘만 있는 `Button.Root`처럼 요소가 이미 `aria-label`을 받는다면 `aria-label`을 쓰세요.
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 두 클래스를 맡습니다. `todae-visually-hidden`은 요소를 1px로 잘라 레이아웃에서 빼지만 접근성 트리에는 남겨 두므로, 그 텍스트는 버튼의 이름 같은 곳에 계속 쓰입니다. `todae-visually-hidden-focusable`은 같은 일을 하다가, 포커스가 요소나 그 안에 있으면(`:focus-within`) 보여 줍니다. 둘 다 role, ARIA 속성, `tabindex`를 설정하지 않습니다.
+**Todae가 맡는 것:** 숨기기를 맡습니다. `VisuallyHidden.Root`는 자신을 1px로 잘라 레이아웃에서 빠지지만 접근성 트리에는 남으므로, 그 텍스트는 버튼의 이름 같은 곳에 계속 쓰입니다. `focusable`을 주면 같은 일을 하다가, 포커스가 그 요소나 그 안에 있으면(`:focus-within`) 보여 줍니다. role, ARIA 속성, `tabindex`는 설정하지 않습니다.
 
 **직접 제공할 것:** 숨길 텍스트를 페이지의 언어로 제공하세요. 건너뛰기 링크에는 대상이 필요합니다. `href="#main"`이면 `id="main"`인 요소가 있어야 합니다.
 
-**주의할 점:** 링크, 버튼 등 포커스를 받는 요소에 `todae-visually-hidden`을 쓰면 화면에는 아무것도 없는데 Tab 순서에는 남아서, 포커스가 사라진 것처럼 보입니다. 그런 곳에는 `-focusable` 클래스를 쓰세요. 숨긴 텍스트가 같은 이름 안의 보이는 텍스트를 반복하면 두 번 읽힙니다. `aria-label`이 있는 요소 안의 숨긴 텍스트는 이름에 들어가지 않습니다. `aria-label`이 우선합니다.
+**주의할 점:** `focusable` 없는 `VisuallyHidden.Root` 안에 넣은 링크, 버튼 등 포커스를 받는 요소. 화면에는 아무것도 없는데 Tab 순서에는 남아서, 포커스가 사라진 것처럼 보입니다. 숨긴 텍스트가 같은 이름 안의 보이는 텍스트를 반복하면 두 번 읽힙니다. `aria-label`이 있는 요소 안의 숨긴 텍스트는 이름에 들어가지 않습니다. `aria-label`이 우선합니다.
 
 ## 언제 쓰나요
 
 **언제:** 보는 사용자는 맥락으로 알지만 스크린 리더에는 필요한 텍스트. 아이콘의 의미, 숫자 뒤의 단위, 건너뛰기 링크.
 
 **쓰지 않을 때:** 아무도 닿지 않아야 할 내용 → `hidden`. `aria-label`을 받는 컨트롤의 이름 → `aria-label`. 보조 기술에서만 숨기기 → `aria-hidden`.
+
+## Props
+
+<PropsTable name="VisuallyHidden.Root" />

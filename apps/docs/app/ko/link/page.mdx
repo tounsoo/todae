@@ -2,20 +2,27 @@ import { LinkCurrent, LinkInText } from '../../../components/demos/NativeDemo';
 
 # Link
 
-링크는 네이티브 `<a href>` 요소입니다. Link 컴포넌트는 없습니다. Todae는 `link` contract 토큰으로 `todae.base` 레이어에서 모든 `a:any-link`의 스타일을 정합니다. 링크는 텍스트 색을 그대로 쓰고 밑줄로 구분되며, 밑줄은 호버하면 진해집니다. 그래서 중립적인 잉크 팔레트에 어울립니다. `href`가 없는 `<a>`는 링크가 아니므로 링크 스타일을 받지 않습니다.
+`Link.Root`는 `link` contract 토큰으로 스타일을 정한 네이티브 `<a>`입니다. 링크는 텍스트 색을 그대로 쓰고 밑줄로 구분되며, 밑줄은 호버하면 진해집니다. 그래서 중립적인 잉크 팔레트에 어울립니다. `href`가 없는 `<a>`는 링크가 아니므로 링크 스타일을 받지 않습니다.
+
+```tsx
+<Link.Root href="/billing">Billing</Link.Root>
+```
 
 <Example>
   <LinkInText />
 </Example>
 
-규칙은 `:where()` 안에 있어 명시도를 더하지 않고, 모든 컴포넌트보다 아래인 `todae.base`에 있습니다. 라우터의 링크 컴포넌트를 포함해, 더하는 클래스가 무엇이든 이깁니다.
+Server Components는 `@tounsoo/todae/link`에서 가져올 수 있습니다. 모든 링크의 스타일은 `link.fg.*`, `link.decoration.*`, `link.ring.focus` 토큰으로 바꿉니다. 현재 링크의 스타일은 `link.fg.current`, `link.decoration.current`, `link.decoration.current-thickness` 토큰이 정합니다.
+
+## 라우터 링크
+
+라우터의 링크 컴포넌트는 자기 `<a>`를 렌더링합니다. 그 컴포넌트를 `render`로 넘기세요. `Link.Root`는 `<a>`에 붙였을 모든 prop을 클래스까지 포함해 넘기며 그 함수를 부르고, 라우터 링크는 그 prop을 그대로 전달합니다.
 
 ```tsx
-// Next.js renders an <a href>, so it gets the link style as it is.
-<NextLink href="/billing">Billing</NextLink>
+<Link.Root href="/billing" render={(props) => <NextLink {...props} />}>
+  Billing
+</Link.Root>
 ```
-
-모든 링크의 스타일은 `link.fg.*`, `link.decoration.*`, `link.ring.focus` 토큰으로 바꿉니다. 현재 링크의 스타일은 `link.fg.current`, `link.decoration.current`, `link.decoration.current-thickness` 토큰이 정합니다.
 
 ## 현재 페이지
 
@@ -27,14 +34,18 @@ import { LinkCurrent, LinkInText } from '../../../components/demos/NativeDemo';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 스타일만 맡으며, 대상은 네이티브 `<a href>`입니다. 색은 텍스트 색 그대로 두고 링크임을 보여 주는 밑줄, `link.ring.focus`로 그리는 `:focus-visible` 포커스 링, 그리고 비어 있거나 `false`가 아닌 `aria-current`에 쓰는 더 굵은 밑줄입니다. 링크의 role, Enter 키, 탭 순서의 자리는 브라우저가 줍니다.
+**Todae가 맡는 것:** 스타일만 맡으며, 대상은 `href`가 있는 네이티브 `<a>`입니다. 색은 텍스트 색 그대로 두고 링크임을 보여 주는 밑줄, `link.ring.focus`로 그리는 `:focus-visible` 포커스 링, 그리고 비어 있거나 `false`가 아닌 `aria-current`에 쓰는 더 굵은 밑줄입니다. 링크의 role, Enter 키, 탭 순서의 자리는 브라우저가 줍니다.
 
-**직접 제공할 것:** 요소가 링크가 되게 하는 `href`. 어디로 가는지 말해 주는 링크 텍스트. 라우터가 현재 링크에 다는 `aria-current`. 회사의 링크 컴포넌트는 `<a>`를 직접 렌더링하고 나머지 props를 거기에 펼쳐서, `aria-current`, `aria-label`, `ref`가 닿게 해야 합니다.
+**직접 제공할 것:** 요소가 링크가 되게 하는 `href`. 어디로 가는지 말해 주는 링크 텍스트. 라우터가 현재 링크에 다는 `aria-current`. 받은 prop을 모두 `<a>`에 넘기는 `render` 함수. 그래야 `aria-current`, `aria-label`, `ref`, 클래스가 `<a>`에 닿습니다.
 
-**주의할 점:** `text-decoration: none`이나 `outline: none`을 설정하는 클래스. 어떤 클래스든 이 규칙을 이기며, 밑줄이 없으면 링크는 색이 같아서 주변 텍스트와 똑같아 보입니다. `href` 없이 `onClick`만 있는 `<a>`나 스타일만 입힌 `span`. 링크 role도 키보드 동작도 없습니다. 다른 곳으로 가지 않고 이 페이지에서 무언가를 하는 링크.
+**주의할 점:** `text-decoration: none`이나 `outline: none`을 설정하는 클래스. 밑줄이 없으면 링크는 색이 같아서 주변 텍스트와 똑같아 보입니다. `href` 없이 `onClick`만 있는 `Link.Root`. 링크 role도 키보드 동작도 없습니다. 다른 곳으로 가지 않고 이 페이지에서 무언가를 하는 링크.
 
 ## 언제 쓰나요
 
 **언제:** 다른 페이지나 위치로 이동할 때. 본문 안, 내비게이션, Alert의 동작.
 
 **쓰지 않을 때:** 저장이나 다이얼로그 열기처럼 이 페이지에서 무언가를 할 때 → Button. 동작 목록 → Menu.
+
+## Props
+
+<PropsTable name="Link.Root" />

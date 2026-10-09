@@ -1,5 +1,14 @@
+import { Code } from '@tounsoo/todae/code';
+import { Disclosure } from '@tounsoo/todae/disclosure';
+import { Kbd } from '@tounsoo/todae/kbd';
+import { Link } from '@tounsoo/todae/link';
+import { Separator } from '@tounsoo/todae/separator';
+import { Skeleton } from '@tounsoo/todae/skeleton';
+import { Spinner } from '@tounsoo/todae/spinner';
 import { Stack } from '@tounsoo/todae/stack';
+import { Table } from '@tounsoo/todae/table';
 import { Text } from '@tounsoo/todae/text';
+import { VisuallyHidden } from '@tounsoo/todae/visually-hidden';
 import { LocalizedLink } from '../LocalizedLink';
 
 export function LinkInText() {
@@ -15,39 +24,39 @@ export function LinkInText() {
 export function LinkCurrent() {
   return (
     <nav aria-label="Settings" style={{ display: 'flex', gap: 'var(--todae-space-4)' }}>
-      <a href="#profile">Profile</a>
-      <a href="#billing" aria-current="page">
+      <Link.Root href="#profile">Profile</Link.Root>
+      <Link.Root href="#billing" aria-current="page">
         Billing
-      </a>
-      <a href="#team">Team</a>
+      </Link.Root>
+      <Link.Root href="#team">Team</Link.Root>
     </nav>
   );
 }
 
 export function DisclosureSingle() {
   return (
-    <details>
-      <summary>Shipping details</summary>
+    <Disclosure.Root>
+      <Disclosure.Summary>Shipping details</Disclosure.Summary>
       <Text>Orders ship within two business days.</Text>
-    </details>
+    </Disclosure.Root>
   );
 }
 
 export function DisclosureAccordion() {
   return (
     <div>
-      <details name="faq" open>
-        <summary>What is Todae?</summary>
+      <Disclosure.Root name="faq" open>
+        <Disclosure.Summary>What is Todae?</Disclosure.Summary>
         <Text>A low-level base for a company design system.</Text>
-      </details>
-      <details name="faq">
-        <summary>Does it ship icons?</summary>
+      </Disclosure.Root>
+      <Disclosure.Root name="faq">
+        <Disclosure.Summary>Does it ship icons?</Disclosure.Summary>
         <Text>No. Pass your own icons as children, so your icon set stays yours.</Text>
-      </details>
-      <details name="faq">
-        <summary>Which browsers?</summary>
+      </Disclosure.Root>
+      <Disclosure.Root name="faq">
+        <Disclosure.Summary>Which browsers?</Disclosure.Summary>
         <Text>Any browser with the native features on the platform page.</Text>
-      </details>
+      </Disclosure.Root>
     </div>
   );
 }
@@ -55,7 +64,7 @@ export function DisclosureAccordion() {
 export function VisuallyHiddenLabel() {
   return (
     <Text>
-      3 <span className="todae-visually-hidden">unread messages</span>
+      3 <VisuallyHidden.Root>unread messages</VisuallyHidden.Root>
       <span aria-hidden="true"> ✉</span>
     </Text>
   );
@@ -65,7 +74,7 @@ export function SeparatorBetween() {
   return (
     <div>
       <Text>Account settings apply to every workspace.</Text>
-      <hr />
+      <Separator.Root />
       <Text>Workspace settings apply to this workspace only.</Text>
     </div>
   );
@@ -73,7 +82,7 @@ export function SeparatorBetween() {
 
 export function TableOfInvoices() {
   return (
-    <table>
+    <Table.Root>
       <caption>Invoices this quarter</caption>
       <thead>
         <tr>
@@ -101,7 +110,7 @@ export function TableOfInvoices() {
           <td style={{ textAlign: 'end' }}>$1,450.00</td>
         </tr>
       </tbody>
-    </table>
+    </Table.Root>
   );
 }
 
@@ -109,9 +118,9 @@ export function SpinnerLabelled() {
   return (
     <Stack direction="row">
       <label>
-        <progress className="todae-spinner" /> Loading invoices
+        <Spinner.Root /> Loading invoices
       </label>
-      <progress className="todae-spinner" aria-label="Saving" />
+      <Spinner.Root aria-label="Saving" />
     </Stack>
   );
 }
@@ -119,12 +128,12 @@ export function SpinnerLabelled() {
 export function SkeletonProfile() {
   return (
     <div>
-      <span className="todae-visually-hidden">Loading profile</span>
+      <VisuallyHidden.Root>Loading profile</VisuallyHidden.Root>
       <Stack direction="row" aria-hidden="true">
-        <div className="todae-skeleton" style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />
+        <Skeleton.Root style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />
         <Stack style={{ flex: 1 }}>
-          <div className="todae-skeleton" style={{ inlineSize: '40%' }} />
-          <div className="todae-skeleton" style={{ inlineSize: '70%' }} />
+          <Skeleton.Root style={{ inlineSize: '40%' }} />
+          <Skeleton.Root style={{ inlineSize: '70%' }} />
         </Stack>
       </Stack>
     </div>
@@ -135,11 +144,11 @@ export function CodeInText() {
   return (
     <div>
       <Text>
-        Call <code>getPlan()</code> before you render the billing page.
+        Call <Code.Root>getPlan()</Code.Root> before you render the billing page.
       </Text>
-      <pre tabIndex={0} role="region" aria-label="Example code">
+      <Code.Block tabIndex={0} role="region" aria-label="Example code">
         <code>{`const plan = await getPlan();\nrender(<Billing plan={plan} />);`}</code>
-      </pre>
+      </Code.Block>
     </div>
   );
 }
@@ -148,10 +157,10 @@ export function KbdShortcut() {
   return (
     <Text>
       Press{' '}
-      <kbd>
-        <kbd>Ctrl</kbd>+<kbd>K</kbd>
-      </kbd>{' '}
-      to search, or <kbd>Esc</kbd> to close.
+      <Kbd.Root>
+        <Kbd.Root>Ctrl</Kbd.Root>+<Kbd.Root>K</Kbd.Root>
+      </Kbd.Root>{' '}
+      to search, or <Kbd.Root>Esc</Kbd.Root> to close.
     </Text>
   );
 }

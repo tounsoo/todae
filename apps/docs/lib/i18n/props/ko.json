@@ -347,6 +347,22 @@
       "ko": "접힌 칩이 담긴 팝오버의 이름. 기본값은 StringsProvider의 moreChipsPanel 문자열이며, 영어로는 {n} more chips(1개일 때 1 more chip)입니다."
     }
   },
+  "Code.Block": {
+    "tabIndex": {
+      "en": "Set 0 when the block can scroll, so keyboard users can reach and scroll it.",
+      "ko": "블록이 스크롤될 수 있으면 0으로 정해, 키보드 사용자가 닿아서 스크롤할 수 있게 합니다."
+    },
+    "children": {
+      "en": "The code, usually in a code element, which drops its own box here.",
+      "ko": "코드. 보통 code 요소에 넣으며, 여기서는 그 요소가 자기 상자를 버립니다."
+    }
+  },
+  "Code.Root": {
+    "children": {
+      "en": "The code.",
+      "ko": "코드."
+    }
+  },
   "Description": {
     "id": {
       "en": "Id the author lists in aria-describedby on the control or Field.Root.",
@@ -407,6 +423,30 @@
     "children": {
       "en": "Title text.",
       "ko": "제목 텍스트."
+    }
+  },
+  "Disclosure.Root": {
+    "name": {
+      "en": "Disclosures with the same name form an exclusive accordion: the browser keeps at most one open, and a rule divides them.",
+      "ko": "같은 name을 가진 디스클로저는 하나만 열리는 아코디언이 됩니다. 브라우저가 최대 하나만 열어 두고, 선이 그 사이를 나눕니다."
+    },
+    "open": {
+      "en": "Starts the disclosure open. The browser then owns the state; follow it with onToggle.",
+      "ko": "디스클로저를 열린 채로 시작합니다. 그 뒤로는 브라우저가 상태를 맡으니, onToggle로 따라가세요."
+    },
+    "onToggle": {
+      "en": "Called after the disclosure opens or closes.",
+      "ko": "디스클로저가 열리거나 닫힌 뒤에 호출됩니다."
+    },
+    "children": {
+      "en": "A Disclosure.Summary first, then the content it shows and hides.",
+      "ko": "먼저 Disclosure.Summary, 그다음 그것이 보이고 숨기는 내용."
+    }
+  },
+  "Disclosure.Summary": {
+    "children": {
+      "en": "The toggle text. It names the disclosure for screen readers.",
+      "ko": "토글 텍스트. 스크린 리더에 디스클로저의 이름을 알려 줍니다."
     }
   },
   "Drawer.Root": {
@@ -685,6 +725,12 @@
       "ko": "배치할 자식 요소."
     }
   },
+  "Kbd.Root": {
+    "children": {
+      "en": "A key name, or for a shortcut one Kbd.Root per key.",
+      "ko": "키 이름. 단축키라면 키마다 Kbd.Root 하나씩."
+    }
+  },
   "Label": {
     "htmlFor": {
       "en": "Id of the labelled control. Must match Field.Root id when captioning a Field.",
@@ -697,6 +743,24 @@
     "className": {
       "en": "Optional class on the native label.",
       "ko": "네이티브 label에 붙는 선택적 클래스."
+    }
+  },
+  "Link.Root": {
+    "href": {
+      "en": "Where the link goes. Without it the element is not a link and gets no link style.",
+      "ko": "링크가 가는 곳. 없으면 요소는 링크가 아니며 링크 스타일을 받지 않습니다."
+    },
+    "render": {
+      "en": "Renders something other than a plain a, such as a router link. It receives every prop, the class name included, and must pass them to an a.",
+      "ko": "라우터 링크처럼 평범한 a가 아닌 것을 렌더링합니다. 클래스 이름을 포함한 모든 prop을 받으며, 그것을 a에 넘겨야 합니다."
+    },
+    "aria-current": {
+      "en": "Marks the link to the current page or step; its underline thickens.",
+      "ko": "현재 페이지나 단계로 가는 링크를 표시합니다. 밑줄이 두꺼워집니다."
+    },
+    "children": {
+      "en": "The link text.",
+      "ko": "링크 텍스트."
     }
   },
   "Menu.CheckboxItem": {
@@ -889,6 +953,40 @@
       "ko": "트리거 레이블."
     }
   },
+  "Meter.Root": {
+    "value": {
+      "en": "The measurement, between min and max.",
+      "ko": "min과 max 사이의 측정값."
+    },
+    "min": {
+      "en": "The low end of the range.",
+      "ko": "범위의 낮은 끝."
+    },
+    "max": {
+      "en": "The high end of the range.",
+      "ko": "범위의 높은 끝."
+    },
+    "low": {
+      "en": "Where the low part of the range ends.",
+      "ko": "범위의 낮은 구간이 끝나는 곳."
+    },
+    "high": {
+      "en": "Where the high part of the range starts.",
+      "ko": "범위의 높은 구간이 시작하는 곳."
+    },
+    "optimum": {
+      "en": "The best value. With low and high it decides whether the fill is meter.fill.optimum, meter.fill.suboptimum or meter.fill.critical.",
+      "ko": "가장 좋은 값. low, high와 함께 채움이 meter.fill.optimum, meter.fill.suboptimum, meter.fill.critical 중 무엇인지 정합니다."
+    },
+    "aria-label": {
+      "en": "Names the meter when no label element points at it.",
+      "ko": "미터를 가리키는 label 요소가 없을 때 이름을 붙입니다."
+    },
+    "children": {
+      "en": "The value as text, for browsers that do not draw the meter.",
+      "ko": "미터를 그리지 않는 브라우저를 위한, 텍스트로 쓴 값."
+    }
+  },
   "OptionList.Option": {
     "value": {
       "en": "Selection value.",
@@ -981,6 +1079,24 @@
       "ko": "비모달 dialog role. aria-label이나 aria-labelledby가 필요합니다. aria-modal은 설정하지 않습니다."
     }
   },
+  "Progress.Root": {
+    "value": {
+      "en": "How far the task has come, from 0 to max. Leave it out when the end is unknown: a band sweeps the track.",
+      "ko": "작업이 얼마나 진행됐는지, 0부터 max까지. 끝을 알 수 없으면 빼세요. 띠가 트랙을 가로지릅니다."
+    },
+    "max": {
+      "en": "The value at which the task is done.",
+      "ko": "작업이 끝나는 값."
+    },
+    "aria-label": {
+      "en": "Names the bar when no label element points at it. Every progress bar needs a name.",
+      "ko": "막대를 가리키는 label 요소가 없을 때 이름을 붙입니다. 모든 진행 막대에는 이름이 필요합니다."
+    },
+    "children": {
+      "en": "The value as text, for browsers that do not draw the bar.",
+      "ko": "막대를 그리지 않는 브라우저를 위한, 텍스트로 쓴 값."
+    }
+  },
   "RadioGroup.Item": {
     "value": {
       "en": "Option value. The group owns selection.",
@@ -1045,6 +1161,40 @@
       "ko": "radiogroup에 붙는 선택적 클래스."
     }
   },
+  "Skeleton.Root": {
+    "children": {
+      "en": "Elements that only give it a size; they are hidden.",
+      "ko": "크기만 정하는 요소. 숨겨집니다."
+    }
+  },
+  "Slider.Root": {
+    "min": {
+      "en": "The lowest value.",
+      "ko": "가장 낮은 값."
+    },
+    "max": {
+      "en": "The highest value.",
+      "ko": "가장 높은 값."
+    },
+    "step": {
+      "en": "How far one arrow key moves the value.",
+      "ko": "화살표 키 한 번에 값이 움직이는 양."
+    },
+    "value": {
+      "en": "The value, with onChange. Use defaultValue to leave it to the input.",
+      "ko": "onChange와 함께 쓰는 값. 입력 요소에 맡기려면 defaultValue를 쓰세요."
+    },
+    "aria-valuetext": {
+      "en": "What a screen reader says instead of the number, such as \"40%\" or \"Medium\".",
+      "ko": "\"40%\"나 \"Medium\"처럼 스크린 리더가 숫자 대신 읽는 말."
+    }
+  },
+  "Spinner.Root": {
+    "aria-label": {
+      "en": "Names the spinner when it is not inside a label with text. It keeps the progressbar role, so it needs a name.",
+      "ko": "텍스트가 있는 label 안에 있지 않을 때 Spinner에 이름을 붙입니다. progressbar role을 유지하므로 이름이 필요합니다."
+    }
+  },
   "Stack": {
     "direction": {
       "en": "Flex direction.",
@@ -1097,6 +1247,12 @@
     "className": {
       "en": "Optional class on the wrapping label.",
       "ko": "감싸는 label에 붙는 선택적 클래스."
+    }
+  },
+  "Table.Root": {
+    "children": {
+      "en": "A caption, then thead, tbody and tfoot with their rows and cells.",
+      "ko": "caption, 그다음 행과 셀을 담은 thead, tbody, tfoot."
     }
   },
   "Tabs.List": {
@@ -1379,6 +1535,16 @@
     "aria-labelledby": {
       "en": "Id of the visible caption. Exactly one of aria-label or aria-labelledby when interactive.",
       "ko": "보이는 캡션의 id. 인터랙티브일 때는 aria-label과 aria-labelledby 중 정확히 하나만 지정합니다."
+    }
+  },
+  "VisuallyHidden.Root": {
+    "focusable": {
+      "en": "Shows the content again while focus is on it or inside it, for a skip link.",
+      "ko": "포커스가 그 요소나 그 안에 있는 동안 내용을 다시 보여 줍니다. 건너뛰기 링크에 씁니다."
+    },
+    "children": {
+      "en": "Text for assistive technology, or a focusable element such as a skip link.",
+      "ko": "보조 기술을 위한 텍스트, 또는 건너뛰기 링크 같은 포커스를 받는 요소."
     }
   },
   "createToaster": {
