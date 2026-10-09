@@ -38,6 +38,7 @@
   }
 
   .panel {
+    position: relative;
     box-sizing: border-box;
     width: min(100%, var(--todae-dialog-max-width));
     max-height: calc(100vh - (2 * var(--todae-dialog-padding-y)));
@@ -52,25 +53,19 @@
     border: var(--todae-dialog-border-width) solid var(--todae-dialog-border);
     border-radius: var(--todae-dialog-radius);
     opacity: 0;
-    transform: scale(0.96);
-    transition:
-      opacity var(--todae-dialog-motion-enter) var(--todae-overlay-motion-easing),
-      transform var(--todae-dialog-motion-enter) var(--todae-overlay-motion-easing);
+    transition: opacity var(--todae-dialog-motion-enter) var(--todae-overlay-motion-easing);
 
     @starting-style {
       opacity: 0;
-      transform: scale(0.96);
     }
   }
 
   .dialog[open][data-entered] .panel {
     opacity: 1;
-    transform: scale(1);
   }
 
   .dialog[open][data-exiting] .panel {
     opacity: 0;
-    transform: scale(0.96);
     transition-duration: var(--todae-dialog-motion-exit);
   }
 

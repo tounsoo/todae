@@ -15,15 +15,19 @@ import {
 import { createPortal } from 'react-dom';
 import { frontModal, isModal, subscribeModals } from '../overlay/modalStack';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
-import { isPopoverOpen } from '../overlay/usePopoverSync';
+import { isPopoverOpen, reshowHeldInside } from '../overlay/usePopoverSync';
 import { TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables';
 import { initialFocusTarget } from '../overlay/useInitialFocus';
 import { useFocusLeave } from '../overlay/useFocusLeave';
+import { matchesParsed, parseHotkey, typesIn } from '../hooks/hotkey';
 import { Button, type ButtonActionProps } from './Button';
+import { useStrings } from '../providers/StringsProvider';
 import { useDismissLabel } from './dismissLabel';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import type { Toaster, ToastRecord, ToastTone } from './toaster';
 import styles from './Toast.module.css';
+
+export { matchesHotkey } from '../hooks/hotkey';
 
 // The longest delay setTimeout takes; a longer one fires at once.
 const MAX_TIMEOUT_MS = 2 ** 31 - 1;
@@ -73,8 +77,15 @@ const ItemContext = createContext<ItemContextValue | null>(null);
 const NO_TOASTS: readonly never[] = [];
 const noToasts = () => NO_TOASTS;
 
+/**
+ * Shows the popover, then the popovers held open inside it again, such as a
+ * button's tooltip: showing it puts it in front of them, and moving it hid
+ * them.
+ */
 function show(el: HTMLElement): void {
-  if (el.isConnected && !isPopoverOpen(el)) el.showPopover();
+  if (!el.isConnected || isPopoverOpen(el)) return;
+  el.showPopover();
+  reshowHeldInside(el);
 }
 
 /**
@@ -86,7 +97,7 @@ function raise(el: HTMLElement): void {
   if (!el.isConnected || hasOpenModal(el)) return;
   keepingFocus(el, () => {
     if (isPopoverOpen(el)) el.hidePopover();
-    el.showPopover();
+    show(el);
   });
 }
 
@@ -127,82 +138,6 @@ function alongside<E>(theirs: ((event: E) => void) | undefined, ours: (event: E)
     theirs?.(event);
     ours(event);
   };
-}
-
-/** Whether a key pressed in `target` types there, so a typing hotkey leaves it alone. */
-// Inputs a key types nothing into.
-const UNTYPED_INPUTS = ['button', 'checkbox', 'color', 'file', 'image', 'radio', 'range', 'reset', 'submit']
-  .map((type) => `[type=${type}]`)
-  .join(', ');
-
-function typesIn(target: EventTarget | null, { key, modifiers }: Hotkey): boolean {
-  // A function key types nothing anywhere, nor does a chord with Meta or
-  // Ctrl. Ctrl with Alt is AltGr on Windows, which types.
-  if (/^f\d{1,2}$/.test(key) || modifiers.has('meta') || (modifiers.has('ctrl') && !modifiers.has('alt'))) return false;
-  if (!(target instanceof HTMLElement)) return false;
-  return target.isContentEditable || target.matches(`textarea, select, input:not(${UNTYPED_INPUTS})`);
-}
-
-const MODIFIERS = ['alt', 'ctrl', 'meta', 'shift'] as const;
-type Modifier = (typeof MODIFIERS)[number];
-
-// The names people write for each modifier, such as macOS's Cmd and Option.
-const MODIFIER_NAMES = new Map<string, Modifier>([
-  ['alt', 'alt'],
-  ['option', 'alt'],
-  ['opt', 'alt'],
-  ['ctrl', 'ctrl'],
-  ['control', 'ctrl'],
-  ['meta', 'meta'],
-  ['cmd', 'meta'],
-  ['command', 'meta'],
-  ['shift', 'shift'],
-]);
-
-// Keys whose name is not what they type.
-const KEY_NAMES = new Map([['space', ' ']]);
-
-type Hotkey = { key: string; modifiers: ReadonlySet<Modifier> };
-
-/**
- * The key and modifiers of a hotkey such as "Alt+T", or null when it names a
- * modifier this doesn't know, so a typo never turns into the bare key.
- */
-function parseHotkey(hotkey: string): Hotkey | null {
-  const parts = hotkey.split('+').map((part) => part.trim().toLowerCase());
-  const name = parts.pop();
-  if (!name) return null;
-  const key = KEY_NAMES.get(name) ?? name;
-  const modifiers = new Set<Modifier>();
-  for (const part of parts) {
-    const modifier = MODIFIER_NAMES.get(part);
-    if (!modifier) return null;
-    modifiers.add(modifier);
-  }
-  return { key, modifiers };
-}
-
-/** Whether `event` is `hotkey`, such as "F8" or "Alt+T", with exactly those modifiers. */
-export function matchesHotkey(event: KeyboardEvent, hotkey: string): boolean {
-  const parsed = parseHotkey(hotkey);
-  return parsed !== null && matchesParsed(event, parsed);
-}
-
-function matchesParsed(event: KeyboardEvent, { key, modifiers: wanted }: Hotkey): boolean {
-  // Chrome sends keydown events with no key, such as for an autofill pick.
-  const eventKey = event.key ?? '';
-  const eventCode = event.code ?? '';
-  for (const modifier of MODIFIERS) {
-    if (event[`${modifier}Key`] !== wanted.has(modifier)) return false;
-  }
-  const typed = eventKey.toLowerCase();
-  if (typed === key) return true;
-  // The code only when the key is no plain letter or digit, as Option changes
-  // what a letter or digit types on macOS. A plain one decides by itself, so
-  // a layout such as AZERTY matches by what the key types.
-  if (/^[a-z0-9]$/.test(typed)) return false;
-  const code = eventCode.toLowerCase();
-  return code === `key${key}` || code === `digit${key}`;
 }
 
 function Item<T extends object>({
@@ -282,8 +217,8 @@ function Item<T extends object>({
       onKeyDown={(event) => {
         if (event.key !== 'Escape') return;
         // Escape belongs to the toast, not to a dialog or popover behind it,
-        // also while it leaves. Toasts hold text and buttons only, so no layer
-        // opened from one needs it.
+        // also while it leaves. Toasts hold text and buttons, whose tooltips
+        // go with the toast, so no layer opened from one needs it.
         event.preventDefault();
         event.stopPropagation();
         if (open) dismiss();
@@ -310,7 +245,7 @@ function Region<T extends object = object>({
   layout = 'list',
   limit = 3,
   hotkey = 'F8',
-  'aria-label': ariaLabel = 'Notifications',
+  'aria-label': ariaLabelProp,
   className,
   ref,
   onPointerEnter,
@@ -322,6 +257,8 @@ function Region<T extends object = object>({
 }: ToastRegionProps<T>) {
   // None on the server: a store at module scope is shared by every request.
   const toasts = useSyncExternalStore(toaster.subscribe, toaster.getSnapshot, noToasts);
+  const { notifications } = useStrings();
+  const ariaLabel = ariaLabelProp ?? notifications;
   const homeRef = useRef<HTMLSpanElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const sectionRefs = useComposedRefs(sectionRef, ref);
@@ -566,7 +503,8 @@ function Region<T extends object = object>({
   const shownKey = shown.map((toast) => toast.id).join('\n');
   // Stack offsets from each toast's own height, as CSS variables, so the
   // stack layout needs no measuring of its own. Read from the toast inside
-  // each item, which the collapsed layout clips but never resizes.
+  // each item, which the collapsed layout clips to a shorter item but never
+  // squeezes; the observer reads it again as the stack narrows and widens it.
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list) return;
@@ -693,10 +631,10 @@ function Action({ variant = 'secondary', onClick, className, ...props }: ToastAc
   );
 }
 
-/** A ghost Button.Root that dismisses the toast. Named "Dismiss" unless its own text names it. */
+/** A ghost Button.Root that dismisses the toast. Named by the `dismiss` string unless its own text names it. */
 function Close({ 'aria-label': ariaLabel, onClick, className, children, ref, ...props }: ToastCloseProps) {
   const item = useContext(ItemContext);
-  const [label, refs] = useDismissLabel(children, ariaLabel, ref);
+  const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().dismiss);
   return (
     <Button.Root
       variant="ghost"

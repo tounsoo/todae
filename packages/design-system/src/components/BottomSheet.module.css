@@ -6,6 +6,7 @@
     --todae-sheet-rest-height: calc(var(--todae-sheet-snap-mid) * 100dvh);
     position: fixed;
     inset: auto 0 0;
+    bottom: calc(-1 * min(var(--todae-sheet-drag-height, var(--todae-sheet-rest-height)), 100dvh));
     box-sizing: border-box;
     width: auto;
     max-width: none;
@@ -22,10 +23,9 @@
     border: var(--todae-sheet-border-width) solid var(--todae-sheet-border);
     border-bottom: 0;
     border-radius: var(--todae-sheet-radius) var(--todae-sheet-radius) 0 0;
-    transform: translateY(100%);
     transition:
       height var(--todae-sheet-motion-resize) var(--todae-overlay-motion-easing),
-      transform var(--todae-sheet-motion-enter) var(--todae-overlay-motion-easing);
+      bottom var(--todae-sheet-motion-enter) var(--todae-overlay-motion-easing);
   }
 
   .sheet[open] {
@@ -40,7 +40,7 @@
   }
 
   .sheet[data-entered] {
-    transform: translateY(0);
+    bottom: 0;
   }
 
   .sheet[data-entered]::backdrop {
@@ -53,8 +53,8 @@
   }
 
   .sheet[data-exiting] {
-    transform: translateY(100%);
-    transition: transform var(--todae-sheet-motion-exit) var(--todae-overlay-motion-easing);
+    bottom: calc(-1 * min(var(--todae-sheet-drag-height, var(--todae-sheet-rest-height)), 100dvh));
+    transition: bottom var(--todae-sheet-motion-exit) var(--todae-overlay-motion-easing);
   }
 
   .sheet[data-exiting]::backdrop {

@@ -41,6 +41,23 @@ describe('Chip', () => {
     expect(onRemove).toHaveBeenCalledTimes(1);
   });
 
+  it('renders removeIcon as the remove button content, and bundles none by default', () => {
+    const { rerender } = render(<Chip.Root onRemove={() => undefined}>Alpha</Chip.Root>);
+    // Empty, so the stylesheet draws the cross; no glyph or icon ships.
+    expect(screen.getByRole('button', { name: 'Remove Alpha' }).childNodes).toHaveLength(0);
+    rerender(
+      <Chip.Root onRemove={() => undefined} removeIcon={<svg data-testid="icon" aria-hidden="true" />}>
+        Alpha
+      </Chip.Root>,
+    );
+    const button = screen.getByRole('button', { name: 'Remove Alpha' });
+    expect(button.contains(screen.getByTestId('icon'))).toBe(true);
+    expect(button.textContent).toBe('');
+    rerender(<Chip.Root removeIcon={<svg data-testid="icon" />}>Alpha</Chip.Root>);
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.queryByTestId('icon')).toBeNull();
+  });
+
   it('renders display-only overflow', () => {
     const { container } = render(<Chip.Overflow overflowCount={4} />);
     expect(container.querySelector('button')).toBeNull();

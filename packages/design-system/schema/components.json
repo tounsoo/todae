@@ -21,7 +21,7 @@
           "name": "aria-label",
           "type": "string",
           "required": false,
-          "description": "Accessible name. Text of two or more letters or digits, such as \"Got it\", names the button by itself. The default is English, so pass a name in your app's language.",
+          "description": "Accessible name. Text of two or more letters or digits, such as \"Got it\", names the button by itself. Otherwise the dismiss string from StringsProvider names it, Dismiss in English.",
           "default": "\"Dismiss\" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits"
         },
         {
@@ -175,7 +175,7 @@
           "name": "aria-label",
           "type": "string",
           "required": false,
-          "description": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. The default is English, so pass a name in your app's language.",
+          "description": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
           "default": "\"Close\" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits"
         }
       ]
@@ -205,7 +205,7 @@
           "name": "aria-label",
           "type": "string",
           "required": false,
-          "description": "Name of the resize control.",
+          "description": "Name of the resize control. Default is the resizeSheet string from StringsProvider.",
           "default": "\"Resize sheet\""
         }
       ]
@@ -326,7 +326,7 @@
           "name": "aria-label",
           "type": "string",
           "required": false,
-          "description": "Landmark name. The default is English, so pass a name in your app's language.",
+          "description": "Landmark name. Default is the breadcrumbs string from StringsProvider; the server entry always uses English.",
           "default": "\"Breadcrumb\""
         },
         {
@@ -572,7 +572,13 @@
           "name": "removeLabel",
           "type": "string",
           "required": false,
-          "description": "Remove button aria-label. Default is Remove {label}."
+          "description": "Remove button aria-label. Default is the removeChip string from StringsProvider, Remove {label} in English."
+        },
+        {
+          "name": "removeIcon",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Remove button content, such as an icon from your own set. Without it, the CSS draws a cross."
         },
         {
           "name": "disabled",
@@ -615,19 +621,25 @@
           "name": "removeLabel",
           "type": "(value: string) => string",
           "required": false,
-          "description": "Remove button name. Default is Remove {value}."
+          "description": "Remove button name. Default is the removeChip string from StringsProvider, Remove {value} in English."
+        },
+        {
+          "name": "removeIcon",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Remove button content, such as an icon from your own set. Without it, the CSS draws a cross."
         },
         {
           "name": "overflowLabel",
           "type": "(n: number) => string",
           "required": false,
-          "description": "+N button name. Default is {n} more."
+          "description": "+N button name. Default is the moreChips string from StringsProvider, {n} more in English."
         },
         {
           "name": "panelLabel",
           "type": "(n: number) => string",
           "required": false,
-          "description": "Name of the popover with the folded chips. Default is {n} more chips, or 1 more chip."
+          "description": "Name of the popover with the folded chips. Default is the moreChipsPanel string from StringsProvider, {n} more chips or 1 more chip in English."
         }
       ]
     },
@@ -700,7 +712,7 @@
           "name": "aria-label",
           "type": "string",
           "required": false,
-          "description": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. The default is English, so pass a name in your app's language.",
+          "description": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
           "default": "\"Close\" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits"
         }
       ]
@@ -910,13 +922,19 @@
           "name": "chipRemoveLabel",
           "type": "(value: string) => string",
           "required": false,
-          "description": "Remove button name. Default is Remove {value}."
+          "description": "Remove button name. Default is the removeChip string from StringsProvider, Remove {value} in English."
+        },
+        {
+          "name": "chipRemoveIcon",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Chip remove button content, such as an icon from your own set. Without it, the CSS draws a cross."
         },
         {
           "name": "overflowLabel",
           "type": "(n: number) => string",
           "required": false,
-          "description": "+N name. Default is {n} more."
+          "description": "+N name. Default is the moreChips string from StringsProvider, {n} more in English."
         },
         {
           "name": "commitKeys",
@@ -955,7 +973,7 @@
     },
     {
       "name": "Field.Counter",
-      "description": "Live character count for Field.TextInput or Field.Textarea.",
+      "description": "Live character count for Field.TextInput or Field.Textarea. Its screen reader text comes from the characterLimit, charactersLeft and characterLimitReached strings of StringsProvider.",
       "props": [
         {
           "name": "className",
@@ -1698,7 +1716,7 @@
     },
     {
       "name": "Pagination.Root",
-      "description": "A nav landmark around an ordered list of pages. Named \"Pagination\" unless a non-empty aria-label or aria-labelledby is passed. Takes native nav attributes.",
+      "description": "A nav landmark around an ordered list of pages. Named by the pagination string from StringsProvider (\"Pagination\" in English; always English in the server entry) unless a non-empty aria-label or aria-labelledby is passed. Takes native nav attributes.",
       "props": [
         {
           "name": "children",
@@ -1901,6 +1919,24 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Laid-out children."
+        }
+      ]
+    },
+    {
+      "name": "StringsProvider",
+      "description": "Sets the text Todae writes by itself, such as default accessible names and Field.Counter messages, for its subtree. Renders no element; useStrings() reads the strings in effect.",
+      "props": [
+        {
+          "name": "strings",
+          "type": "Partial<Strings>",
+          "required": true,
+          "description": "The strings to change. Each key left out comes from the nearest StringsProvider above, else English. A component prop such as aria-label still wins."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Subtree that uses these strings."
         }
       ]
     },
@@ -2147,7 +2183,7 @@
           "name": "appearance",
           "type": "\"system\" | \"light\" | \"dark\"",
           "required": false,
-          "description": "Resolved to light or dark before writing data-appearance. Never writes system.",
+          "description": "Written to data-appearance as is. system follows prefers-color-scheme in CSS.",
           "default": "\"system\""
         },
         {
@@ -2197,7 +2233,7 @@
           "name": "aria-label",
           "type": "string",
           "required": false,
-          "description": "Accessible name. Text of two or more letters or digits names the button by itself. The default is English, so pass a name in your app's language.",
+          "description": "Accessible name. Text of two or more letters or digits names the button by itself. Otherwise the dismiss string from StringsProvider names it, Dismiss in English.",
           "default": "\"Dismiss\" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits"
         },
         {
@@ -2280,7 +2316,7 @@
           "name": "aria-label",
           "type": "string",
           "required": false,
-          "description": "Name of the region landmark. The default is English, so pass a name in your app's language.",
+          "description": "Name of the region landmark. Default is the notifications string from StringsProvider.",
           "default": "\"Notifications\""
         }
       ]
@@ -2567,7 +2603,7 @@
     },
     {
       "name": "useCombobox",
-      "description": "Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, and OptionList. No Combobox chrome.",
+      "description": "Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, Dialog, and OptionList. No Combobox chrome.",
       "props": [
         {
           "name": "selectionMode",
@@ -2596,9 +2632,9 @@
         },
         {
           "name": "presentation",
-          "type": "\"popover\" | \"sheet\" | \"auto\"",
+          "type": "\"popover\" | \"sheet\" | \"dialog\" | \"auto\"",
           "required": false,
-          "description": "auto uses useSheetPresentation.",
+          "description": "auto uses useSheetPresentation. dialog is for Dialog.Root, through getDialogProps.",
           "default": "\"auto\""
         },
         {
@@ -2771,6 +2807,31 @@
       ]
     },
     {
+      "name": "useHotkey",
+      "description": "useHotkey(hotkey, handler, options). Listens for keydown on the document and runs handler when a key matches hotkey, after preventing its default. It skips keys something else already prevented, keys pressed while an IME composes, held keys, and, in a text field, every key except a function key or a chord with Meta, or with Control but not Alt.",
+      "props": [
+        {
+          "name": "hotkey",
+          "type": "string | readonly string[]",
+          "required": true,
+          "description": "A key with its modifiers, such as \"Control+K\", \"Alt+T\" or \"F8\". Modifiers must match exactly. A list matches any of them. One with a modifier name it does not know is off."
+        },
+        {
+          "name": "handler",
+          "type": "(event: KeyboardEvent) => void",
+          "required": true,
+          "description": "Runs on a match. An inline function is fine; the latest one is read at key time."
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Listen only while true. Pass it in the options object.",
+          "default": "true"
+        }
+      ]
+    },
+    {
       "name": "useModalLayer",
       "description": "useModalLayer(ref, open). Puts a modal <dialog> of your own in Todae's modal stack once open is true and it is shown with showModal(), until close(). Toast.Region moves its toasts into the modal in front. Dialog and BottomSheet join the stack by themselves.",
       "props": [
@@ -2881,6 +2942,12 @@
           "required": false,
           "description": "Keep one item tabbable. False when focus only enters from code, as in a menu: every item gets tabIndex -1.",
           "default": "true"
+        },
+        {
+          "name": "findItems",
+          "type": "(container: HTMLElement) => HTMLElement[]",
+          "required": false,
+          "description": "Finds the items, enabled or not, instead of getItemProps. Such items have no value, so no tab stop is kept: the hook only moves focus."
         },
         {
           "name": "activeValue",

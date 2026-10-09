@@ -16,6 +16,7 @@ import {
 } from 'react';
 import { Button, type ButtonActionProps } from './Button';
 import { useControlledValue } from '../hooks/useControlledState';
+import { useStrings } from '../providers/StringsProvider';
 import { useDismissLabel } from './dismissLabel';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
@@ -80,10 +81,12 @@ function useSheet(): SheetContextValue {
 }
 
 function GrabberHandle({
-  'aria-label': ariaLabel = 'Resize sheet',
+  'aria-label': ariaLabelProp,
   className,
   ...props
 }: ComponentPropsWithRef<'div'>) {
+  const { resizeSheet } = useStrings();
+  const ariaLabel = ariaLabelProp ?? resizeSheet;
   const { snap, snapPoints, setSnap, dismissOnDrag, requestClose } = useSheet();
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
@@ -181,8 +184,8 @@ function BottomSheetFooter({ className, ...props }: ComponentPropsWithRef<'div'>
 
 function BottomSheetClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: ButtonActionProps) {
   const { requestClose } = useSheet();
-  // Visible text such as "Cancel" names the button; "Close" only names one without words.
-  const [label, refs] = useDismissLabel(children, ariaLabel, ref, 'Close');
+  // Visible text such as "Cancel" names the button; the close string only names one without words.
+  const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().close);
   return (
     <Button.Root
       variant="ghost"
@@ -257,7 +260,7 @@ function BottomSheetRoot({
     return () => setGrabbers((n) => n - 1);
   }, []);
   const onDismiss = useCallback(() => requestClose('drag'), [requestClose]);
-  const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'transform');
+  const { present, exiting } = useOverlayPresence(open, SHEET_EXIT_MS, sheetNode, 'bottom');
   const entered = useEntered(present, exiting);
   const setSheetRef = useCallback((node: HTMLDialogElement | null) => {
     sheetRef.current = node;

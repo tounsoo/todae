@@ -36,15 +36,15 @@ function mockMatchMedia(dark: boolean) {
 }
 
 describe('ThemeProvider', () => {
-  it('resolves system to dark from matchMedia', () => {
+  it('leaves system to CSS and resolves it for useAppearance from matchMedia', () => {
     mockMatchMedia(true);
     render(
       <ThemeProvider appearance="system">
         <AppearanceLabel />
       </ThemeProvider>,
     );
-    expect(document.querySelector('[data-appearance="dark"]')).not.toBeNull();
-    expect(document.querySelector('[data-appearance="system"]')).toBeNull();
+    expect(document.querySelector('[data-appearance="system"]')).not.toBeNull();
+    expect(document.querySelector('[data-appearance="dark"]')).toBeNull();
     expect(screen.getByText('dark')).toBeTruthy();
   });
 
@@ -82,15 +82,15 @@ describe('ThemeProvider', () => {
     );
   });
 
-  it('SSR snapshot for system is light', () => {
+  it('server-renders system as system, so CSS picks the scheme before hydration', () => {
     const html = renderToString(
       <ThemeProvider appearance="system">
         <AppearanceLabel />
       </ThemeProvider>,
     );
-    expect(html).toContain('data-appearance="light"');
-    expect(html).not.toContain('data-appearance="system"');
-    expect(html).toContain('light');
+    expect(html).toContain('data-appearance="system"');
+    // useAppearance has no media query on the server.
+    expect(html).toContain('>light<');
   });
 });
 

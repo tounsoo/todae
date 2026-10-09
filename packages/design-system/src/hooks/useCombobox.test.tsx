@@ -7,7 +7,14 @@ import { optionDomId } from '../components/OptionList.ids';
 import { resetMatchMedia, setMatchMedia } from '../test/setup';
 import * as api from '../index';
 import type { BottomSheetRootProps } from '../components/BottomSheet';
-import { useCombobox, type ComboboxOption, type UseComboboxSingleOptions } from './useCombobox';
+import type { DialogRootProps } from '../components/Dialog';
+import { useState, type KeyboardEvent } from 'react';
+import {
+  useCombobox,
+  type ComboboxOption,
+  type UseComboboxResult,
+  type UseComboboxSingleOptions,
+} from './useCombobox';
 
 afterEach(() => {
   cleanup();
@@ -572,5 +579,300 @@ describe('useCombobox sheet props', () => {
     type Sheet = ReturnType<ReturnType<typeof useCombobox>['getSheetProps']>;
     expectTypeOf<Sheet['open']>().toEqualTypeOf<boolean>();
     expectTypeOf<Sheet['onOpenChange']>().toEqualTypeOf<NonNullable<BottomSheetRootProps['onOpenChange']>>();
+  });
+});
+
+describe('useCombobox dialog presentation', () => {
+  /** A palette whose input sits in a `<dialog>` that stays open while it closes, as Dialog does. */
+  function DialogBox({
+    onValueChange,
+    onReady,
+  }: {
+    onValueChange?: (value: string | null) => void;
+    onReady: (cb: UseComboboxResult) => void;
+  }) {
+    const [query, setQuery] = useState('');
+    const cb = useCombobox({
+      options: OPTIONS,
+      presentation: 'dialog',
+      value: null,
+      onValueChange,
+      inputValue: query,
+      onInputValueChange: setQuery,
+    });
+    onReady(cb);
+    return (
+      <div>
+        <button type="button" {...cb.getTriggerProps()}>
+          Open
+        </button>
+        <button type="button">Elsewhere</button>
+        <dialog open>
+          <input {...cb.getInputProps()} />
+        </dialog>
+      </div>
+    );
+  }
+
+  function renderDialogBox(onValueChange?: (value: string | null) => void) {
+    let cb!: UseComboboxResult;
+    render(<DialogBox onValueChange={onValueChange} onReady={(next) => (cb = next)} />);
+    return () => cb;
+  }
+
+  function blur() {
+    (document.activeElement as HTMLElement | null)?.blur();
+  }
+
+  it('turns off the popover and gives Dialog.Root its props', () => {
+    const { result } = renderHook(() => useCombobox({ options: OPTIONS, presentation: 'dialog' }));
+    expect(result.current.presentation).toBe('dialog');
+    expect(result.current.isSheet).toBe(false);
+    expect(result.current.getTriggerProps()['aria-haspopup']).toBe('dialog');
+    const dialog = result.current.getDialogProps();
+    expect(dialog.open).toBe(false);
+    expect(dialog.initialFocusRef).toBe(result.current.inputRef);
+    expect(dialog['aria-label']).toBe('Options');
+    act(() => result.current.setOpen(true));
+    expect(result.current.getDialogProps().open).toBe(true);
+    act(() => result.current.getDialogProps().onOpenChange(false, 'backdrop'));
+    expect(result.current.open).toBe(false);
+  });
+
+  it('does not open on input focus, and closes once on Escape from the input', () => {
+    const onOpenChange = vi.fn();
+    function Box() {
+      const cb = useCombobox({ options: OPTIONS, presentation: 'dialog', onOpenChange });
+      return <input {...cb.getInputProps()} />;
+    }
+    render(<Box />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    expect(onOpenChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    onOpenChange.mockClear();
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
+  });
+
+  // A palette whose loads resolve only when a test settles their query.
+  function asyncPalette(extra: Partial<UseComboboxSingleOptions> = {}) {
+    const LISTS: Record<string, ComboboxOption[]> = {
+      '': [
+        { value: 'invoice', label: 'Create invoice' },
+        { value: 'team', label: 'Invite team' },
+        { value: 'billing', label: 'Open billing' },
+      ],
+      bill: [{ value: 'billing', label: 'Open billing' }],
+    };
+    // What the loader returns for '' once the loadKey is 'b'.
+    const KEY_B: ComboboxOption[] = [
+      { value: 'team', label: 'Invite team' },
+      { value: 'invoice', label: 'Create invoice' },
+    ];
+    let loadKey: string = 'a';
+    const pending = new Map<string, () => void>();
+    const loadOptions = (query: string) => {
+      const list = loadKey === 'b' && query === '' ? KEY_B : (LISTS[query] ?? []);
+      return new Promise<readonly ComboboxOption[]>((resolve) => pending.set(query, () => resolve(list)));
+    };
+    const settle = async (query: string) => {
+      await act(async () => {
+        pending.get(query)?.();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    };
+    const hook = renderHook(() => useCombobox({ loadOptions, loadKey, presentation: 'dialog', value: null, ...extra }));
+    const values = () => hook.result.current.items.map((item) => item.kind === 'option' && item.option.value);
+    const setLoadKey = (next: string) => {
+      loadKey = next;
+      hook.rerender();
+    };
+    return { ...hook, settle, values, setLoadKey };
+  }
+
+  // Search 'bill', let it load, then close and reopen: the 'bill' list is still loaded.
+  async function reopenAfterBill(palette: ReturnType<typeof asyncPalette>) {
+    const { result, settle } = palette;
+    await settle('');
+    act(() => result.current.setOpen(true));
+    act(() => result.current.setInputValue('bill'));
+    await settle('bill');
+    act(() => result.current.setOpen(false));
+    act(() => result.current.setOpen(true));
+  }
+
+  it('runs no create while the list is still another query\'s', async () => {
+    const onCreate = vi.fn();
+    const onValueChange = vi.fn();
+    const palette = asyncPalette({ allowCreate: true, onCreate, onValueChange });
+    const { result, settle } = palette;
+    await reopenAfterBill(palette);
+    act(() => result.current.setInputValue('bi'));
+    // The old 'bill' list, filtered, still shows 'Open billing'.
+    const enter = { key: 'Enter', nativeEvent: { isComposing: false }, preventDefault: () => undefined };
+    act(() => result.current.getInputProps().onKeyDown?.(enter as unknown as KeyboardEvent<HTMLInputElement>));
+    act(() => result.current.getChipInputProps().onCommit('bi'));
+    expect(onCreate).not.toHaveBeenCalled();
+    expect(onValueChange).not.toHaveBeenCalled();
+    await settle('bi');
+    act(() => result.current.getInputProps().onKeyDown?.(enter as unknown as KeyboardEvent<HTMLInputElement>));
+    expect(onCreate).toHaveBeenCalledWith('bi');
+  });
+
+  it('waits for the list of a new loadKey before picking a row', async () => {
+    const palette = asyncPalette();
+    const { result, settle, setLoadKey } = palette;
+    await settle('');
+    act(() => result.current.setOpen(true));
+    act(() => result.current.setOpen(false));
+    setLoadKey('b');
+    act(() => result.current.setOpen(true));
+    expect(result.current.activeValue).toBeNull();
+    expect(result.current.getInputProps()['aria-activedescendant']).toBeUndefined();
+    await settle('');
+    expect(palette.values()).toEqual(['team', 'invoice']);
+    expect(result.current.activeValue).toBe('team');
+  });
+
+  it('highlights the top row of the full list once it loads, not the last query\'s', async () => {
+    const { result, settle, values } = asyncPalette();
+    await settle('');
+    act(() => result.current.setOpen(true));
+    act(() => result.current.setInputValue('bill'));
+    await settle('bill');
+    expect(result.current.activeValue).toBe('billing');
+    act(() => result.current.setOpen(false));
+    act(() => result.current.setOpen(true));
+    expect(result.current.inputValue).toBe('');
+    // The old query's list is still on screen: no row is active, so Enter runs nothing.
+    expect(result.current.activeValue).toBeNull();
+    expect(result.current.getInputProps()['aria-activedescendant']).toBeUndefined();
+    await settle('');
+    expect(values()).toEqual(['invoice', 'team', 'billing']);
+    expect(result.current.activeValue).toBe('invoice');
+  });
+
+  it('waits for the full list after a reopen even when the query was cleared before closing', async () => {
+    const { result, settle, values } = asyncPalette();
+    await settle('');
+    act(() => result.current.setOpen(true));
+    act(() => result.current.setInputValue('bill'));
+    await settle('bill');
+    // Cleared, then closed and reopened before the full list's load lands.
+    act(() => result.current.setInputValue(''));
+    act(() => result.current.setOpen(false));
+    act(() => result.current.setOpen(true));
+    expect(result.current.activeValue).toBeNull();
+    await settle('');
+    expect(values()).toEqual(['invoice', 'team', 'billing']);
+    expect(result.current.activeValue).toBe('invoice');
+  });
+
+  it('keeps a row picked while the full list loads', async () => {
+    const { result, settle } = asyncPalette();
+    await settle('');
+    act(() => result.current.setOpen(true));
+    act(() => result.current.setInputValue('bill'));
+    await settle('bill');
+    act(() => result.current.setOpen(false));
+    act(() => result.current.setOpen(true));
+    act(() => result.current.highlight('billing'));
+    await settle('');
+    expect(result.current.activeValue).toBe('billing');
+  });
+
+  it('keeps setOpen the same function as the query changes', async () => {
+    const { result, settle } = asyncPalette();
+    await settle('');
+    const setOpen = result.current.setOpen;
+    act(() => result.current.setInputValue('bill'));
+    expect(result.current.setOpen).toBe(setOpen);
+  });
+
+  it('runs a selection only while open, so a closing dialog cannot run it twice', () => {
+    const onValueChange = vi.fn();
+    const onCreate = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({ options: OPTIONS, presentation: 'dialog', value: null, onValueChange, allowCreate: true, onCreate }),
+    );
+    act(() => result.current.setOpen(true));
+    act(() => result.current.select('redux'));
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(result.current.open).toBe(false);
+    act(() => result.current.select('redux'));
+    act(() => result.current.select('vue'));
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+
+    act(() => result.current.setInputValue('Angular'));
+    act(() => result.current.create());
+    expect(onCreate).not.toHaveBeenCalled();
+  });
+
+  it('ignores Enter in the input while it closes', () => {
+    const onValueChange = vi.fn();
+    const cb = renderDialogBox(onValueChange);
+    act(() => cb().setOpen(true));
+    const input = screen.getByRole('combobox');
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith('react');
+  });
+
+  it('clears a controlled query and highlights the top row each time it opens', () => {
+    const cb = renderDialogBox();
+    act(() => cb().setOpen(true));
+    act(() => cb().setInputValue('v'));
+    act(() => cb().setOpen(false));
+    expect(cb().inputValue).toBe('v');
+    act(() => cb().setInputValue('r'));
+    act(() => cb().highlight('redux'));
+    expect(cb().activeValue).toBe('redux');
+    blur();
+    act(() => cb().setOpen(true));
+    expect(cb().inputValue).toBe('');
+    expect(cb().activeValue).toBe('react');
+    expect(screen.getByRole<HTMLInputElement>('combobox').value).toBe('');
+  });
+
+  it('keeps the query when reopened while still closing with focus inside', () => {
+    const cb = renderDialogBox();
+    act(() => cb().setOpen(true));
+    act(() => cb().setInputValue('vu'));
+    screen.getByRole('combobox').focus();
+    act(() => cb().setOpen(false));
+    act(() => cb().setOpen(true));
+    expect(cb().inputValue).toBe('vu');
+  });
+
+  it('keeps the query when asked to open while already open', () => {
+    const cb = renderDialogBox();
+    act(() => cb().setOpen(true));
+    act(() => cb().setInputValue('vu'));
+    blur();
+    act(() => cb().setOpen(true));
+    expect(cb().inputValue).toBe('vu');
+  });
+
+  it('returns focus to the trigger only when nothing had focus at open', () => {
+    const cb = renderDialogBox();
+    blur();
+    act(() => cb().setOpen(true));
+    expect(cb().getDialogProps().restoreFocusRef?.current).toBe(screen.getByRole('button', { name: 'Open' }));
+    act(() => cb().setOpen(false));
+
+    screen.getByRole('button', { name: 'Elsewhere' }).focus();
+    act(() => cb().setOpen(true));
+    expect(cb().getDialogProps().restoreFocusRef?.current).toBeNull();
+  });
+
+  it('always types open and onOpenChange as set', () => {
+    type DialogProps = ReturnType<UseComboboxResult['getDialogProps']>;
+    expectTypeOf<DialogProps['open']>().toEqualTypeOf<boolean>();
+    expectTypeOf<DialogProps['onOpenChange']>().toEqualTypeOf<NonNullable<DialogRootProps['onOpenChange']>>();
+    expectTypeOf<UseComboboxResult['presentation']>().toEqualTypeOf<'popover' | 'sheet' | 'dialog'>();
   });
 });

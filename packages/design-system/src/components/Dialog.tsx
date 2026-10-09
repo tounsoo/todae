@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { Button, type ButtonActionProps } from './Button';
 import { useControlledValue } from '../hooks/useControlledState';
+import { useStrings } from '../providers/StringsProvider';
 import { useDismissLabel } from './dismissLabel';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { DIALOG_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
@@ -109,8 +110,8 @@ function DialogFooter({ className, ...props }: ComponentPropsWithRef<'div'>) {
 
 function DialogClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: ButtonActionProps) {
   const { requestClose } = useDialog();
-  // Visible text such as "Cancel" names the button; "Close" only names one without words.
-  const [label, refs] = useDismissLabel(children, ariaLabel, ref, 'Close');
+  // Visible text such as "Cancel" names the button; the close string only names one without words.
+  const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().close);
   return (
     <Button.Root
       variant="ghost"

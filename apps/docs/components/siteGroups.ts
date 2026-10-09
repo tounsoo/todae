@@ -70,11 +70,13 @@ export const SITE_GROUPS = [
       ['/utilities/use-dropzone', 'useDropzone'],
       ['/utilities/use-field', 'useField'],
       ['/utilities/use-highlight', 'useHighlight'],
+      ['/utilities/use-hotkey', 'useHotkey'],
       ['/utilities/use-modal-layer', 'useModalLayer'],
       ['/utilities/use-popover', 'usePopover'],
       ['/utilities/use-roving-focus', 'useRovingFocus'],
       ['/utilities/use-sheet-presentation', 'useSheetPresentation'],
       ['/utilities/use-tooltip', 'useTooltip'],
+      ['/utilities/strings-provider', 'StringsProvider'],
     ],
   },
   {

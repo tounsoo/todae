@@ -35,19 +35,25 @@ export const meta = {
       name: 'removeLabel',
       type: '(value: string) => string',
       required: false,
-      description: 'Remove button name. Default is Remove {value}.',
+      description: 'Remove button name. Default is the removeChip string from StringsProvider, Remove {value} in English.',
+    },
+    {
+      name: 'removeIcon',
+      type: 'React.ReactNode',
+      required: false,
+      description: 'Remove button content, such as an icon from your own set. Without it, the CSS draws a cross.',
     },
     {
       name: 'overflowLabel',
       type: '(n: number) => string',
       required: false,
-      description: '+N button name. Default is {n} more.',
+      description: '+N button name. Default is the moreChips string from StringsProvider, {n} more in English.',
     },
     {
       name: 'panelLabel',
       type: '(n: number) => string',
       required: false,
-      description: 'Name of the popover with the folded chips. Default is {n} more chips, or 1 more chip.',
+      description: 'Name of the popover with the folded chips. Default is the moreChipsPanel string from StringsProvider, {n} more chips or 1 more chip in English.',
     },
   ],
 } as const satisfies ComponentMeta;

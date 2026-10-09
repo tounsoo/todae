@@ -6,6 +6,15 @@ import { ChipList } from './ChipList';
 afterEach(cleanup);
 
 describe('ChipList', () => {
+  it('puts removeIcon in every remove button', () => {
+    render(
+      <ChipList.Root aria-label="Tags" chips={['a', 'b']} onRemove={() => undefined} removeIcon={<svg data-testid="x" aria-hidden="true" />} />,
+    );
+    for (const name of ['Remove a', 'Remove b']) {
+      expect(screen.getByRole('button', { name }).querySelector('[data-testid="x"]')).toBeTruthy();
+    }
+  });
+
   it('names the list and wraps every chip without maxRows', () => {
     render(<ChipList.Root aria-label="Tags" chips={['a', 'b', 'c']} />);
     const list = screen.getByRole('list', { name: 'Tags' });

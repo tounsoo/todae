@@ -4,37 +4,21 @@ import { CommandPalette } from '../../../../components/demos/CommandPaletteDemo'
 
 A recipe, not a package namespace. [Dialog](/dialog) holds the palette, and [useCombobox](/utilities/use-combobox) owns the input, filtering, the active option and ids. There is no `CommandPalette.*` export.
 
-Use the `sheet` presentation, which keeps the input and the list together in one modal surface, and wire its open state to `Dialog.Root` instead of `BottomSheet.Root`. Keep `value` at `null` and run the command in `onValueChange`, so choosing one leaves nothing selected. Control the input text and clear it when the palette opens, so each search starts from the full list.
+Use the `dialog` presentation and spread `getDialogProps()` on `Dialog.Root`. When the palette opens, the hook clears the input and makes the top row active, and a command chosen while the palette closes does not run again. Keep `value` at `null` and run the command in `onValueChange`, so choosing one leaves nothing selected.
 
 ```tsx
 const cb = useCombobox({
   options: commands,
-  presentation: 'sheet',
+  presentation: 'dialog',
   value: null,
-  onValueChange: (value: string | null) => { if (value && cb.open) run(value) },
-  inputValue: query,
-  onInputValueChange: setQuery,
-  onOpenChange: (open) => {
-    if (!open) return
-    // Reopened while still closing: keep the query and the focus target.
-    if (cb.inputRef.current?.closest('dialog')?.contains(document.activeElement)) return
-    setQuery('')
-    cb.highlight(null)
-    // Safari does not focus a clicked button, so fall back to the trigger.
-    returnFocusRef.current = document.activeElement === document.body ? cb.triggerRef.current : null
-  },
+  onValueChange: (value: string | null) => { if (value) run(value) },
 })
+useHotkey(['Control+K', 'Meta+K'], () => !cb.open && cb.setOpen(true))
 
 <Button.Root {...cb.getTriggerProps()} aria-keyshortcuts="Control+K Meta+K">
   Search commands
 </Button.Root>
-<Dialog.Root
-  open={cb.open}
-  onOpenChange={cb.setOpen}
-  initialFocusRef={cb.inputRef}
-  restoreFocusRef={returnFocusRef}
-  aria-label="Commands"
->
+<Dialog.Root {...cb.getDialogProps()} aria-label="Commands">
   <Field.Root id={cb.ids.input} aria-label="Command">
     <Field.TextInput {...cb.getInputProps()} placeholder="Type a command" />
   </Field.Root>
@@ -51,7 +35,7 @@ const cb = useCombobox({
   <CommandPalette />
 </Example>
 
-The shortcut is a `keydown` listener on `document` that opens the palette on Ctrl+K or ⌘K. `aria-keyshortcuts` on the trigger tells assistive technology about it. Escape and a click on the backdrop close the dialog, and focus goes back to the element that had it when the palette opened, or to the trigger when nothing had focus. The empty message sits in a `role="status"` region, so screen readers announce it.
+The shortcut is [useHotkey](/utilities/use-hotkey), which opens the palette on Ctrl+K or ⌘K. `aria-keyshortcuts` on the trigger tells assistive technology about it. Escape and a click on the backdrop close the dialog, and focus goes back to the element that had it when the palette opened, or to the trigger when nothing had focus. The empty message sits in a `role="status"` region, so screen readers announce it.
 
 ## When to use
 

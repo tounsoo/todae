@@ -1,7 +1,14 @@
 import { render, screen } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { cdp, userEvent } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
 import { Button, Card, Checkbox, DensityProvider, ThemeProvider } from '../index';
+
+/** vitest types the session without its methods; Playwright's session has `send`. */
+function emulateMedia(features: { name: string; value: string }[]) {
+  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', {
+    features,
+  });
+}
 
 function cssVar(element: Element, name: string): string {
   return getComputedStyle(element).getPropertyValue(name).trim();
@@ -207,4 +214,28 @@ describe('Button paints in a browser', () => {
       });
     }
   }
+});
+
+describe('system appearance in a browser', () => {
+  it('follows prefers-color-scheme in CSS, with no script', async () => {
+    render(
+      <>
+        <ThemeProvider appearance="system" data-testid="system" />
+        <ThemeProvider appearance="light" data-testid="light" />
+        <ThemeProvider appearance="dark" data-testid="dark" />
+      </>,
+    );
+    const system = screen.getByTestId('system');
+    const canvas = (id: string) => cssVar(screen.getByTestId(id), '--todae-color-bg-canvas');
+    try {
+      await emulateMedia([{ name: 'prefers-color-scheme', value: 'dark' }]);
+      expect(canvas('system')).toBe(canvas('dark'));
+      expect(getComputedStyle(system).colorScheme).toBe('dark');
+      await emulateMedia([{ name: 'prefers-color-scheme', value: 'light' }]);
+      expect(canvas('system')).toBe(canvas('light'));
+      expect(getComputedStyle(system).colorScheme).toBe('light');
+    } finally {
+      await emulateMedia([]);
+    }
+  });
 });

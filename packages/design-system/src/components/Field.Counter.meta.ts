@@ -2,7 +2,8 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Field.Counter',
-  description: 'Live character count for Field.TextInput or Field.Textarea.',
+  description:
+    'Live character count for Field.TextInput or Field.Textarea. Its screen reader text comes from the characterLimit, charactersLeft and characterLimitReached strings of StringsProvider.',
   props: [
     {
       name: 'className',

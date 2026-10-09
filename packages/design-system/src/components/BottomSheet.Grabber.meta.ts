@@ -9,7 +9,7 @@ export const meta = {
       type: 'string',
       required: false,
       default: '"Resize sheet"',
-      description: 'Name of the resize control.',
+      description: 'Name of the resize control. Default is the resizeSheet string from StringsProvider.',
     },
   ],
 } as const satisfies ComponentMeta;

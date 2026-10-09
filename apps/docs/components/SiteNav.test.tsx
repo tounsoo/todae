@@ -60,11 +60,13 @@ const HREFS = [
   '/utilities/use-dropzone',
   '/utilities/use-field',
   '/utilities/use-highlight',
+  '/utilities/use-hotkey',
   '/utilities/use-modal-layer',
   '/utilities/use-popover',
   '/utilities/use-roving-focus',
   '/utilities/use-sheet-presentation',
   '/utilities/use-tooltip',
+  '/utilities/strings-provider',
   '/recipes/combobox',
   '/recipes/command-palette',
   '/recipes/file-upload',
@@ -100,11 +102,13 @@ describe('SiteNav', () => {
       '/utilities/use-dropzone',
       '/utilities/use-field',
       '/utilities/use-highlight',
+      '/utilities/use-hotkey',
       '/utilities/use-modal-layer',
       '/utilities/use-popover',
       '/utilities/use-roving-focus',
       '/utilities/use-sheet-presentation',
       '/utilities/use-tooltip',
+      '/utilities/strings-provider',
     ]);
   });
 

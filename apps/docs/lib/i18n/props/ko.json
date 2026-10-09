@@ -7,8 +7,8 @@
   },
   "Alert.Close": {
     "aria-label": {
-      "en": "Accessible name. Text of two or more letters or digits, such as \"Got it\", names the button by itself. The default is English, so pass a name in your app's language.",
-      "ko": "접근 가능한 이름. \"Got it\"처럼 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
+      "en": "Accessible name. Text of two or more letters or digits, such as \"Got it\", names the button by itself. Otherwise the dismiss string from StringsProvider names it, Dismiss in English.",
+      "ko": "접근 가능한 이름. \"Got it\"처럼 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 그렇지 않으면 StringsProvider의 dismiss 문자열이 이름이 되며, 영어로는 Dismiss입니다."
     },
     "onClick": {
       "en": "Hide the alert here.",
@@ -85,14 +85,14 @@
   },
   "BottomSheet.Close": {
     "aria-label": {
-      "en": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. The default is English, so pass a name in your app's language.",
-      "ko": "접근 가능한 이름. \"Cancel\"처럼 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
+      "en": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
+      "ko": "접근 가능한 이름. \"Cancel\"처럼 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 그렇지 않으면 StringsProvider의 close 문자열이 이름이 되며, 영어로는 Close입니다."
     }
   },
   "BottomSheet.Grabber": {
     "aria-label": {
-      "en": "Name of the resize control.",
-      "ko": "크기 조절 컨트롤의 이름."
+      "en": "Name of the resize control. Default is the resizeSheet string from StringsProvider.",
+      "ko": "크기 조절 컨트롤의 이름. 기본값은 StringsProvider의 resizeSheet 문자열입니다."
     }
   },
   "BottomSheet.Root": {
@@ -155,8 +155,8 @@
   },
   "Breadcrumbs.Root": {
     "aria-label": {
-      "en": "Landmark name. The default is English, so pass a name in your app's language.",
-      "ko": "랜드마크 이름. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
+      "en": "Landmark name. Default is the breadcrumbs string from StringsProvider; the server entry always uses English.",
+      "ko": "랜드마크 이름. 기본값은 StringsProvider의 breadcrumbs 문자열입니다. 서버 엔트리는 항상 영어를 씁니다."
     },
     "aria-labelledby": {
       "en": "Id of an element that names the landmark. When set, the default name is dropped.",
@@ -297,8 +297,12 @@
       "ko": "이름이 붙은 제거 버튼을 렌더링합니다."
     },
     "removeLabel": {
-      "en": "Remove button aria-label. Default is Remove {label}.",
-      "ko": "제거 버튼의 aria-label. 기본값은 Remove {label}입니다."
+      "en": "Remove button aria-label. Default is the removeChip string from StringsProvider, Remove {label} in English.",
+      "ko": "제거 버튼의 aria-label. 기본값은 StringsProvider의 removeChip 문자열이며, 영어로는 Remove {label}입니다."
+    },
+    "removeIcon": {
+      "en": "Remove button content, such as an icon from your own set. Without it, the CSS draws a cross.",
+      "ko": "제거 버튼의 내용. 예: 직접 사용하는 아이콘 세트의 아이콘. 없으면 CSS가 X 모양을 그립니다."
     },
     "disabled": {
       "en": "Disables the remove button.",
@@ -323,16 +327,20 @@
       "ko": "칩마다 제거 버튼을 렌더링합니다. 포커스가 있던 칩이 chips에서 빠지면, 포커스는 그 자리를 채운 칩으로, 없으면 앞 칩으로, 그것도 없으면 +N으로, 그마저 없으면 목록으로 옮겨 갑니다."
     },
     "removeLabel": {
-      "en": "Remove button name. Default is Remove {value}.",
-      "ko": "제거 버튼의 이름. 기본값은 Remove {value}입니다."
+      "en": "Remove button name. Default is the removeChip string from StringsProvider, Remove {value} in English.",
+      "ko": "제거 버튼의 이름. 기본값은 StringsProvider의 removeChip 문자열이며, 영어로는 Remove {value}입니다."
+    },
+    "removeIcon": {
+      "en": "Remove button content, such as an icon from your own set. Without it, the CSS draws a cross.",
+      "ko": "제거 버튼의 내용. 예: 직접 사용하는 아이콘 세트의 아이콘. 없으면 CSS가 X 모양을 그립니다."
     },
     "overflowLabel": {
-      "en": "+N button name. Default is {n} more.",
-      "ko": "+N 버튼의 이름. 기본값은 {n} more입니다."
+      "en": "+N button name. Default is the moreChips string from StringsProvider, {n} more in English.",
+      "ko": "+N 버튼의 이름. 기본값은 StringsProvider의 moreChips 문자열이며, 영어로는 {n} more입니다."
     },
     "panelLabel": {
-      "en": "Name of the popover with the folded chips. Default is {n} more chips, or 1 more chip.",
-      "ko": "접힌 칩이 담긴 팝오버의 이름. 기본값은 {n} more chips(1개일 때 1 more chip)입니다."
+      "en": "Name of the popover with the folded chips. Default is the moreChipsPanel string from StringsProvider, {n} more chips or 1 more chip in English.",
+      "ko": "접힌 칩이 담긴 팝오버의 이름. 기본값은 StringsProvider의 moreChipsPanel 문자열이며, 영어로는 {n} more chips(1개일 때 1 more chip)입니다."
     }
   },
   "Description": {
@@ -351,8 +359,8 @@
   },
   "Dialog.Close": {
     "aria-label": {
-      "en": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. The default is English, so pass a name in your app's language.",
-      "ko": "접근 가능한 이름. \"Cancel\"처럼 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
+      "en": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
+      "ko": "접근 가능한 이름. \"Cancel\"처럼 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 그렇지 않으면 StringsProvider의 close 문자열이 이름이 되며, 영어로는 Close입니다."
     }
   },
   "Dialog.Description": {
@@ -465,12 +473,16 @@
       "ko": "제거 버튼 클릭 또는 빈 입력에서 Backspace."
     },
     "chipRemoveLabel": {
-      "en": "Remove button name. Default is Remove {value}.",
-      "ko": "제거 버튼의 이름. 기본값은 Remove {value}입니다."
+      "en": "Remove button name. Default is the removeChip string from StringsProvider, Remove {value} in English.",
+      "ko": "제거 버튼의 이름. 기본값은 StringsProvider의 removeChip 문자열이며, 영어로는 Remove {value}입니다."
+    },
+    "chipRemoveIcon": {
+      "en": "Chip remove button content, such as an icon from your own set. Without it, the CSS draws a cross.",
+      "ko": "칩 제거 버튼의 내용. 예: 직접 사용하는 아이콘 세트의 아이콘. 없으면 CSS가 X 모양을 그립니다."
     },
     "overflowLabel": {
-      "en": "+N name. Default is {n} more.",
-      "ko": "+N의 이름. 기본값은 {n} more입니다."
+      "en": "+N name. Default is the moreChips string from StringsProvider, {n} more in English.",
+      "ko": "+N의 이름. 기본값은 StringsProvider의 moreChips 문자열이며, 영어로는 {n} more입니다."
     },
     "commitKeys": {
       "en": "Closed allowlist of commit keys.",
@@ -1035,6 +1047,16 @@
       "ko": "배치될 자식."
     }
   },
+  "StringsProvider": {
+    "strings": {
+      "en": "The strings to change. Each key left out comes from the nearest StringsProvider above, else English. A component prop such as aria-label still wins.",
+      "ko": "바꿀 문자열. 생략한 키는 가장 가까운 상위 StringsProvider에서, 없으면 영어 기본값에서 가져옵니다. aria-label 같은 컴포넌트 prop이 있으면 그 prop이 우선합니다."
+    },
+    "children": {
+      "en": "Subtree that uses these strings.",
+      "ko": "이 문자열을 쓰는 하위 트리."
+    }
+  },
   "Switch": {
     "children": {
       "en": "Visible label. Clicking the text toggles the switch.",
@@ -1201,8 +1223,8 @@
       "ko": "토스트로 포커스를 옮기는 키. 예: \"F8\", \"Alt+T\". 조합 키는 Alt(Option), Ctrl, Meta(Cmd), Shift입니다. null이면 끕니다."
     },
     "aria-label": {
-      "en": "Name of the region landmark. The default is English, so pass a name in your app's language.",
-      "ko": "영역 랜드마크의 이름. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
+      "en": "Name of the region landmark. Default is the notifications string from StringsProvider.",
+      "ko": "영역 랜드마크의 이름. 기본값은 StringsProvider의 notifications 문자열입니다."
     }
   },
   "Toast.Root": {
@@ -1245,8 +1267,8 @@
   },
   "Toast.Close": {
     "aria-label": {
-      "en": "Accessible name. Text of two or more letters or digits names the button by itself. The default is English, so pass a name in your app's language.",
-      "ko": "접근 가능한 이름. 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
+      "en": "Accessible name. Text of two or more letters or digits names the button by itself. Otherwise the dismiss string from StringsProvider names it, Dismiss in English.",
+      "ko": "접근 가능한 이름. 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 그렇지 않으면 StringsProvider의 dismiss 문자열이 이름이 되며, 영어로는 Dismiss입니다."
     },
     "onClick": {
       "en": "Runs before the toast is dismissed. Call event.preventDefault() to keep it open.",
@@ -1435,8 +1457,8 @@
       "ko": "바뀌면 옵션을 다시 불러옵니다. loadOptions가 카테고리처럼 쿼리 밖의 상태에 의존할 때 쓰세요."
     },
     "presentation": {
-      "en": "auto uses useSheetPresentation.",
-      "ko": "auto는 useSheetPresentation을 씁니다."
+      "en": "auto uses useSheetPresentation. dialog is for Dialog.Root, through getDialogProps.",
+      "ko": "auto는 useSheetPresentation을 씁니다. dialog는 getDialogProps로 Dialog.Root에 씁니다."
     },
     "allowCreate": {
       "en": "Show a create row when the query has no case-insensitive label match.",
@@ -1479,6 +1501,20 @@
     "type": {
       "en": "Highlight type, for spelling and grammar marks.",
       "ko": "하이라이트 유형. 맞춤법과 문법 표시에 씁니다."
+    }
+  },
+  "useHotkey": {
+    "hotkey": {
+      "en": "A key with its modifiers, such as \"Control+K\", \"Alt+T\" or \"F8\". Modifiers must match exactly. A list matches any of them. One with a modifier name it does not know is off.",
+      "ko": "\"Control+K\", \"Alt+T\", \"F8\"처럼 수정 키를 붙인 키. 수정 키는 정확히 일치해야 합니다. 목록이면 그중 하나와 일치하면 됩니다. 모르는 수정 키 이름이 든 항목은 꺼집니다."
+    },
+    "handler": {
+      "en": "Runs on a match. An inline function is fine; the latest one is read at key time.",
+      "ko": "일치할 때 실행됩니다. 인라인 함수도 괜찮습니다. 키를 누를 때 최신 함수를 읽습니다."
+    },
+    "enabled": {
+      "en": "Listen only while true. Pass it in the options object.",
+      "ko": "true인 동안만 듣습니다. options 객체로 넘기세요."
     }
   },
   "useDropzone": {
@@ -1599,6 +1635,10 @@
     "tabStop": {
       "en": "Keep one item tabbable. False when focus only enters from code, as in a menu: every item gets tabIndex -1.",
       "ko": "항목 하나를 탭으로 이동 가능하게 유지합니다. 메뉴처럼 포커스가 코드로만 들어올 때는 false이며, 모든 항목이 tabIndex -1을 받습니다."
+    },
+    "findItems": {
+      "en": "Finds the items, enabled or not, instead of getItemProps. Such items have no value, so no tab stop is kept: the hook only moves focus.",
+      "ko": "getItemProps 대신 활성 여부와 관계없이 항목을 찾습니다. 이런 항목에는 값이 없으므로 탭 정지를 두지 않고, 훅은 포커스만 옮깁니다."
     },
     "activeValue": {
       "en": "Controlled tab stop. Falls back to the first enabled item when null, disabled or missing.",

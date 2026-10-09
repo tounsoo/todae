@@ -10,11 +10,19 @@ import { ChipExamples } from '../../../components/demos/ChipDemo';
 
 `+N`은 버튼이 아니며 탭 순서에 들어가지 않습니다.
 
+제거 버튼에는 자체 글리프나 아이콘이 없습니다. 내용이 없으면 스타일시트가 X 모양을 그립니다. 직접 사용하는 아이콘 세트의 아이콘을 보여 주려면 `removeIcon`을 전달하세요. 버튼의 이름은 계속 `removeLabel`이나 그 기본값에서 오므로 아이콘에는 `aria-hidden`을 지정하세요. 그 기본값 `Remove {label}`과 `+N`에 읽히는 `{n} more`는 [StringsProvider](/utilities/strings-provider)에서 옵니다.
+
+```tsx
+<Chip.Root onRemove={remove} removeIcon={<CloseIcon aria-hidden />}>
+  Design
+</Chip.Root>
+```
+
 ## 언제 쓰나요
 
 **언제:** 값을 나타내는 텍스트 전용 토큰. `onRemove`로 선택적인 제거 버튼(이름이 있는 버튼). +N 오버플로는 표시 전용입니다.
 
-**쓰지 않을 때:** 입력 안에서 입력한 토큰 → `Field.ChipInput`. 클릭하거나 선택할 수 있는 칩 → Button.Root / Checkbox(Chip에는 선택 기능이 없음). 아이콘이나 풍부한 콘텐츠(텍스트만 가능).
+**쓰지 않을 때:** 입력 안에서 입력한 토큰 → `Field.ChipInput`. 클릭하거나 선택할 수 있는 칩 → Button.Root / Checkbox(Chip에는 선택 기능이 없음). 레이블 안의 아이콘이나 풍부한 콘텐츠(텍스트만 가능).
 
 ## Props
 

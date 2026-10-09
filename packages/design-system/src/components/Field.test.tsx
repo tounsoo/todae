@@ -18,6 +18,7 @@ import {
 } from './Field';
 import { useChipField } from '../hooks/useChipField';
 import * as api from '../index';
+import { StringsProvider } from '../providers/StringsProvider';
 
 afterEach(cleanup);
 
@@ -413,6 +414,13 @@ function renderField(
 }
 
 describe('Field.ChipInput', () => {
+  it('puts chipRemoveIcon in every chip remove button', () => {
+    renderField({ chips: ['Alpha', 'Beta'], chipRemoveIcon: <svg data-testid="x" aria-hidden="true" /> });
+    for (const name of ['Remove Alpha', 'Remove Beta']) {
+      expect(screen.getByRole('button', { name }).querySelector('[data-testid="x"]')).toBeTruthy();
+    }
+  });
+
   it('renders one chip per value plus a controlled input', () => {
     renderField({ chips: ['Alpha', 'Beta'], inputValue: 'x' });
     expect(screen.getByRole('button', { name: 'Remove Alpha' })).toBeTruthy();
@@ -432,6 +440,30 @@ describe('Field.ChipInput', () => {
     expect(onCommit).toHaveBeenCalledWith('foo');
     expect(screen.getAllByRole('button', { name: /Remove / })).toHaveLength(1);
     expect(screen.getByRole('textbox')).toHaveProperty('value', '  foo ');
+  });
+
+  it('disables the chips and Backspace when the input itself is disabled', () => {
+    const onChipRemove = vi.fn();
+    render(
+      <Field.Root>
+        <Field.ChipInput
+          // The type leaves disabled to the Root, but a spread such as
+          // useCombobox's getChipInputProps() still carries one.
+          {...({ disabled: true } as object)}
+          chips={['Alpha', 'Beta']}
+          inputValue=""
+          onInputValueChange={() => undefined}
+          onCommit={() => undefined}
+          onChipRemove={onChipRemove}
+        />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('textbox')).toHaveProperty('disabled', true);
+    for (const button of screen.getAllByRole('button', { name: /Remove / })) {
+      expect(button).toHaveProperty('disabled', true);
+    }
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Backspace' });
+    expect(onChipRemove).not.toHaveBeenCalled();
   });
 
   it('composes a caller ref onto the input', () => {
@@ -856,9 +888,9 @@ describe('Field.ChipInput maxRows SSR', () => {
 
 describe('Field.Counter', () => {
   const bareInput =
-    '<div class="_shell_61a677"><input id="_R_0_" type="text" class="_input_61a677" value=""/></div>';
+    '<div class="_shell_61a677"><input id="_R_0_" data-todae-field-control="" type="text" class="_input_61a677" value=""/></div>';
   const bareArea =
-    '<div class="_shell_61a677"><textarea id="_R_0_" rows="3" class="_textarea_61a677" style="--todae-field-rows:3"></textarea></div>';
+    '<div class="_shell_61a677"><textarea id="_R_0_" data-todae-field-control="" rows="3" class="_textarea_61a677" style="--todae-field-rows:3"></textarea></div>';
 
   it('keeps bare server markup and scopes new layout rules under :has', () => {
     expect(
@@ -1092,6 +1124,32 @@ describe('Field.Counter', () => {
     );
     expect(room.container.querySelector('[aria-live="polite"]')?.textContent).toBe('');
     expect(room.container.textContent).toContain('Up to 40 characters');
+  });
+
+  it('takes its screen reader text from StringsProvider', () => {
+    const strings = {
+      characterLimit: (max: number) => `${max} caractères maximum`,
+      charactersLeft: (remaining: number) => `${remaining} restants`,
+      characterLimitReached: 'Limite atteinte',
+    };
+    function Counted({ value }: { value: string }) {
+      return (
+        <StringsProvider strings={strings}>
+          <Field.Root>
+            <Field.TextInput value={value} maxLength={10} onChange={() => undefined} />
+            <Field.Counter />
+          </Field.Root>
+        </StringsProvider>
+      );
+    }
+    const view = render(<Counted value="12345678" />);
+    const live = () => view.container.querySelector('[aria-live="polite"]')?.textContent;
+    expect(live()).toBe('2 restants');
+    const hint = view.container.querySelector(`[id="${screen.getByRole('textbox').getAttribute('aria-describedby')}"]`);
+    expect(hint?.textContent).toBe('10 caractères maximum');
+    view.rerender(<Counted value="1234567890" />);
+    expect(live()).toBe('Limite atteinte');
+    expect(view.container.textContent).not.toMatch(/Up to|characters|Character limit/);
   });
 
   it('shows a plain count without a hint when maxLength is omitted', () => {
@@ -1530,7 +1588,7 @@ describe('Field.ChipInput row', () => {
       const field = useChipField({ initialChips: ['Alpha', 'Beta', 'Gamma'] });
       return (
         <Field.Root id="tags" aria-describedby="hint err" invalid>
-          <Field.ChipInput {...field} chipLayout="row" />
+          <Field.ChipInput {...field.getChipInputProps()} chipLayout="row" />
         </Field.Root>
       );
     }

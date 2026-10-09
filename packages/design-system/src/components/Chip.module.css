@@ -46,6 +46,8 @@
   }
 
   .dismiss {
+    /* Keeps its size while a truncated label shrinks. */
+    flex: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -57,6 +59,29 @@
     font: inherit;
     line-height: 1;
     cursor: pointer;
+  }
+
+  /* No content given: draw a cross from two strokes, so no glyph or icon ships. */
+  .dismiss:empty {
+    position: relative;
+    inline-size: 1em;
+    block-size: 1em;
+  }
+
+  .dismiss:empty::before,
+  .dismiss:empty::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 15%;
+    inline-size: 70%;
+    border-block-start: max(var(--todae-chip-border-width), 0.1em) solid currentColor;
+    translate: 0 -50%;
+    rotate: 45deg;
+  }
+
+  .dismiss:empty::after {
+    rotate: -45deg;
   }
 
   .dismiss:hover:not(:disabled) {

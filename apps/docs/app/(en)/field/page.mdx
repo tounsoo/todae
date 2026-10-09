@@ -176,11 +176,15 @@ Without `maxLength` the count is just the number.
   <CounterPlain />
 </Example>
 
+With `maxLength`, the Counter also tells screen readers the limit and, from 20 characters left, how many remain. That text comes from the `characterLimit`, `charactersLeft` and `characterLimitReached` strings of [StringsProvider](/utilities/strings-provider), English unless you set them.
+
 ## Chip input
 
 Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow. Chips inside a ChipInput are one field line tall, the same as the input, at every density. `chipLayout="row"` puts them on a full-width line above the input, inside the ChipInput. Icon and Affix sit on the first line. With no chips it is a one-line field the same height as `Field.TextInput`. In a row, `maxRows` counts chip lines only and clips like the inline flow. Label it with `Label htmlFor` or Root's `aria-label`.
 
 When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. A later chip that does not fit at its full width moves into `+N`. The first chip truncates with an ellipsis when it, `+N`, and the input cannot share the row; its accessible name stays the full label.
+
+Chip remove buttons draw a cross unless you pass `chipRemoveIcon`, as on [Chip](/chip).
 
 Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key roving.
 
@@ -188,7 +192,7 @@ Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key
   <ChipInputControlled />
 </Example>
 
-Optional [useChipField](/utilities/use-chip-field) holds chips and input, then spreads onto `Field.ChipInput`.
+Optional [useChipField](/utilities/use-chip-field) holds chips and input; spread its `getChipInputProps()` onto `Field.ChipInput`.
 
 `commitKeys={['Enter', ',']}`. Unknown keys are dropped.
 
@@ -283,7 +287,7 @@ Your own control, such as a rating or a color well, joins a `Field.Root` through
 
 ### Field.ChipInput
 
-**When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`, or spreads [useChipField](/utilities/use-chip-field) to hold that state.
+**When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`, or spreads `getChipInputProps()` from [useChipField](/utilities/use-chip-field) to hold that state.
 
 **When not:** Free-form single string → TextInput. Options from a list → [Combobox recipe](/recipes/combobox) + OptionList.
 

@@ -1,10 +1,12 @@
 import type { ComponentPropsWithRef, CSSProperties } from 'react';
+import { DEFAULT_STRINGS } from '../providers/strings';
 import { cx } from './cx';
 import styles from './Breadcrumbs.module.css';
 
 /**
- * A `nav` landmark holding an ordered list. Named "Breadcrumb" unless you pass
- * `aria-label` or `aria-labelledby`; that default is English.
+ * A `nav` landmark holding an ordered list. Named by the `breadcrumbs` string
+ * ("Breadcrumb" in English) unless you pass `aria-label` or `aria-labelledby`.
+ * The server entry has no StringsProvider, so it always uses English.
  */
 export type BreadcrumbsRootProps = {
   /** Text drawn between items, "/" by default. Screen readers skip it. */
@@ -41,7 +43,7 @@ function Root({
   return (
     <nav
       {...props}
-      aria-label={ariaLabel || (labelledby ? undefined : 'Breadcrumb')}
+      aria-label={ariaLabel || (labelledby ? undefined : DEFAULT_STRINGS.breadcrumbs)}
       aria-labelledby={labelledby}
       className={cx(styles.root, className)}
       style={separator === undefined ? style : ({ '--todae-breadcrumbs-glyph': cssString(separator), ...style } as CSSProperties)}

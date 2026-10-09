@@ -226,7 +226,7 @@ describe('BottomSheet', () => {
     const onOpenChange = vi.fn();
     render(<BottomSheet.Root open onOpenChange={onOpenChange} aria-label="s" />);
     const sheet = screen.getByRole('dialog');
-    // Still at translateY(100%): below the viewport.
+    // Still below the viewport, before the enter motion.
     sheet.getBoundingClientRect = () => DOMRect.fromRect({ x: 0, y: 800, width: 800, height: 400 });
     fireEvent.pointerDown(sheet, { clientX: 10, clientY: 900 });
     fireEvent.click(sheet, { clientX: 10, clientY: 900 });

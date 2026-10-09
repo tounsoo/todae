@@ -22,9 +22,7 @@ import {
   FIELD_CONTROL_SELECTOR,
   FOCUSABLE_FIELD_CONTROL_SELECTOR,
   FieldContext,
-  inputLabel,
   mergeDescribedBy,
-  useControlSetter,
   useFieldContext,
   type CountStore,
   type FieldContextValue,
@@ -36,6 +34,7 @@ import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
 import { useField } from '../hooks/useField';
+import { useStrings, type Strings } from '../providers/StringsProvider';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -279,26 +278,19 @@ function TextInput({
   onValueChange,
   type = 'text',
   className,
-  ref,
   maxLength,
   'aria-describedby': describedBy,
   ...props
 }: FieldTextInputProps) {
+  const field = useField();
   const ctx = useFieldContext();
-  const controlRef = useComposedRefs(useControlSetter(ctx.inputRef), ref);
   const limit = typeof maxLength === 'number' && !NO_LENGTH_LIMIT.has(type) ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
+  const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
   return (
     <input
-      {...props}
-      ref={controlRef}
-      id={ctx.inputId}
-      name={ctx.name}
-      disabled={ctx.disabled}
+      {...field.getControlProps({ ...props, 'aria-describedby': mergeDescribedBy(describedBy, hint) })}
       maxLength={maxLength}
-      aria-invalid={ctx.invalid ? true : props['aria-invalid']}
-      aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
-      {...inputLabel(props, ctx)}
       value={value}
       type={type}
       className={[styles.input, className].filter(Boolean).join(' ')}
@@ -330,30 +322,23 @@ function Textarea({
   autoGrow = false,
   className,
   style,
-  ref,
   maxLength,
   'aria-describedby': describedBy,
   ...props
 }: FieldTextareaProps) {
+  const field = useField();
   const ctx = useFieldContext();
-  const controlRef = useComposedRefs(useControlSetter(ctx.inputRef), ref);
   const resolved = useMemo(
     () => resolveTextareaRows({ rows: rowsProp, maxRows: maxRowsProp }),
     [rowsProp, maxRowsProp],
   );
   const limit = typeof maxLength === 'number' ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
+  const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
   return (
     <textarea
-      {...props}
-      ref={controlRef}
-      id={ctx.inputId}
-      name={ctx.name}
-      disabled={ctx.disabled}
+      {...field.getControlProps({ ...props, 'aria-describedby': mergeDescribedBy(describedBy, hint) })}
       maxLength={maxLength}
-      aria-invalid={ctx.invalid ? true : props['aria-invalid']}
-      aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
-      {...inputLabel(props, ctx)}
       value={value}
       rows={resolved.rows}
       data-auto-grow={autoGrow ? '' : undefined}
@@ -385,6 +370,8 @@ export type FieldChipInputProps = {
   chipLayout?: 'inline' | 'row';
   removeOnBackspace?: boolean;
   chipRemoveLabel?: (value: string) => string;
+  /** Chip remove button content, such as an icon from your own set. Without it, the CSS draws a cross. */
+  chipRemoveIcon?: ReactNode;
   overflowLabel?: (n: number) => string;
   ref?: Ref<HTMLInputElement>;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'disabled' | 'type' | 'children'>;
@@ -400,30 +387,30 @@ function ChipInput({
   chipLayout = 'inline',
   removeOnBackspace = true,
   chipRemoveLabel,
+  chipRemoveIcon,
   overflowLabel,
   className,
   onKeyDown: onKeyDownProp,
-  'aria-describedby': describedBy,
   ref,
-  setChips: _setChips,
-  setInputValue: _setInputValue,
-  reset: _reset,
   ...props
-}: FieldChipInputProps & { setChips?: unknown; setInputValue?: unknown; reset?: unknown }) {
-  const field = useFieldContext();
+}: FieldChipInputProps) {
+  const field = useField();
   // Its own input, for chip measuring and refocus; the Root's inputRef may
   // point at another control.
   const ownInput = useRef<HTMLInputElement | null>(null);
-  const controlRef = useComposedRefs(useControlSetter(field.inputRef), ownInput, ref);
+  const controlRef = useComposedRefs(ownInput, ref);
   const keys = useMemo(() => resolveCommitKeys(commitKeys), [commitKeys]);
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const inRow = chipLayout === 'row';
   const list = useChipList({ chips, maxRows, reserveWidth: inRow ? undefined : ownInput });
+  const control = field.getControlProps({ ...props, ref: controlRef });
+  // The Root's disabled or the input's own: the chips follow the input.
+  const disabled = Boolean(control.disabled);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     onKeyDownProp?.(event);
     if (event.defaultPrevented) return;
-    if (field.disabled) return;
+    if (disabled) return;
     if (event.nativeEvent.isComposing || event.key === 'Process') return;
     if (event.key === 'Backspace' && inputValue === '' && chips.length > 0 && removeOnBackspace) {
       const index = chips.length - 1;
@@ -443,8 +430,9 @@ function ChipInput({
   const chipNodes = list.visible.map((chip, index) => (
     <Chip.Root
       key={chip.key}
-      disabled={field.disabled}
+      disabled={disabled}
       removeLabel={chipRemoveLabel?.(chip.value)}
+      removeIcon={chipRemoveIcon}
       data-ellipsis={chip.ellipsis ? '' : undefined}
       style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
       onRemove={() => {
@@ -458,14 +446,7 @@ function ChipInput({
   const overflow = list.hidden > 0 ? <Chip.Overflow overflowCount={list.hidden} overflowLabel={overflowLabel} /> : null;
   const input = (
     <input
-      {...props}
-      ref={controlRef}
-      id={field.inputId}
-      name={field.name}
-      disabled={field.disabled}
-      aria-invalid={field.invalid ? true : props['aria-invalid']}
-      aria-describedby={mergeDescribedBy(field.describedBy, describedBy)}
-      {...inputLabel(props, field)}
+      {...control}
       value={inputValue}
       type="text"
       className={[styles.input, className].filter(Boolean).join(' ')}
@@ -477,11 +458,11 @@ function ChipInput({
     maxRows != null ? (
       <div ref={list.measureRef} className={styles.measure} aria-hidden inert>
         {chips.map((value, index) => (
-          <Chip.Root key={`m:${index}:${value}`} onRemove={() => undefined} disabled={field.disabled}>
+          <Chip.Root key={`m:${index}:${value}`} onRemove={() => undefined} removeIcon={chipRemoveIcon} disabled={disabled}>
             {value}
           </Chip.Root>
         ))}
-        <Chip.Root onRemove={() => undefined} disabled={field.disabled}>
+        <Chip.Root onRemove={() => undefined} removeIcon={chipRemoveIcon} disabled={disabled}>
           …
         </Chip.Root>
         <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
@@ -571,10 +552,8 @@ export type FieldCounterProps = {
 let warnedOutsideRoot = false;
 let warnedNoInput = false;
 
-function liveCopy(remaining: number) {
-  if (remaining <= 0) return 'Character limit reached';
-  if (remaining === 1) return '1 character left';
-  return `${remaining} characters left`;
+function liveCopy(remaining: number, strings: Strings) {
+  return remaining <= 0 ? strings.characterLimitReached : strings.charactersLeft(remaining);
 }
 
 function CounterMissing() {
@@ -587,6 +566,7 @@ function CounterMissing() {
 }
 
 function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: FieldContextValue }) {
+  const strings = useStrings();
   const entry = useSyncExternalStore(
     (listener) => subscribeCount(ctx.store, listener),
     () => ctx.store.entry,
@@ -625,10 +605,10 @@ function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: F
       {max === undefined ? null : (
         <>
           <span id={ctx.hintId} className={styles.srOnly}>
-            {`Up to ${max} characters`}
+            {strings.characterLimit(max)}
           </span>
           <span className={styles.srOnly} aria-live="polite">
-            {remaining !== undefined && remaining <= 20 ? liveCopy(remaining) : ''}
+            {remaining !== undefined && remaining <= 20 ? liveCopy(remaining, strings) : ''}
           </span>
         </>
       )}
