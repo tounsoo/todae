@@ -2,9 +2,9 @@ import { ComboboxSingle } from '../../../../components/demos/ComboboxDemo';
 
 # useCombobox
 
-`useCombobox` owns a combobox's open state, value, input, highlight and ids. Components own the chrome: `Field` for the input, `Popover` or `BottomSheet` for the surface, `OptionList` for the list. There is no `Combobox.*` export. The [Combobox recipe](/recipes/combobox) shows single, multi, sheet, async and create.
+`useCombobox` owns a combobox's open state, value, input, highlight and ids. Components own the chrome: `Field` for the input, `Popover`, `BottomSheet` or `Dialog` for the surface, `OptionList` for the list. There is no `Combobox.*` export. The [Combobox recipe](/recipes/combobox) shows single, multi, sheet, async and create.
 
-`presentation` defaults to `'auto'`, which picks a sheet on a coarse pointer or a narrow viewport through [useSheetPresentation](/utilities/use-sheet-presentation). Force `popover` or `sheet` to keep it fixed, as the demo below forces `popover`. [Composition](/composition) lists which getter goes on which part.
+`presentation` defaults to `'auto'`, which picks a sheet on a coarse pointer or a narrow viewport through [useSheetPresentation](/utilities/use-sheet-presentation). Force `popover` or `sheet` to keep it fixed, as the demo below forces `popover`. `dialog` puts the input and list in a `Dialog`, as the [Command palette](/recipes/command-palette) does. [Composition](/composition) lists which getter goes on which part.
 
 <Example>
   <ComboboxSingle />

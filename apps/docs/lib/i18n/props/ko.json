@@ -1457,8 +1457,8 @@
       "ko": "바뀌면 옵션을 다시 불러옵니다. loadOptions가 카테고리처럼 쿼리 밖의 상태에 의존할 때 쓰세요."
     },
     "presentation": {
-      "en": "auto uses useSheetPresentation.",
-      "ko": "auto는 useSheetPresentation을 씁니다."
+      "en": "auto uses useSheetPresentation. dialog is for Dialog.Root, through getDialogProps.",
+      "ko": "auto는 useSheetPresentation을 씁니다. dialog는 getDialogProps로 Dialog.Root에 씁니다."
     },
     "allowCreate": {
       "en": "Show a create row when the query has no case-insensitive label match.",
@@ -1501,6 +1501,20 @@
     "type": {
       "en": "Highlight type, for spelling and grammar marks.",
       "ko": "하이라이트 유형. 맞춤법과 문법 표시에 씁니다."
+    }
+  },
+  "useHotkey": {
+    "hotkey": {
+      "en": "A key with its modifiers, such as \"Control+K\", \"Alt+T\" or \"F8\". Modifiers must match exactly. A list matches any of them. One with a modifier name it does not know is off.",
+      "ko": "\"Control+K\", \"Alt+T\", \"F8\"처럼 수정 키를 붙인 키. 수정 키는 정확히 일치해야 합니다. 목록이면 그중 하나와 일치하면 됩니다. 모르는 수정 키 이름이 든 항목은 꺼집니다."
+    },
+    "handler": {
+      "en": "Runs on a match. An inline function is fine; the latest one is read at key time.",
+      "ko": "일치할 때 실행됩니다. 인라인 함수도 괜찮습니다. 키를 누를 때 최신 함수를 읽습니다."
+    },
+    "enabled": {
+      "en": "Listen only while true. Pass it in the options object.",
+      "ko": "true인 동안만 듣습니다. options 객체로 넘기세요."
     }
   },
   "useDropzone": {
@@ -1621,6 +1635,10 @@
     "tabStop": {
       "en": "Keep one item tabbable. False when focus only enters from code, as in a menu: every item gets tabIndex -1.",
       "ko": "항목 하나를 탭으로 이동 가능하게 유지합니다. 메뉴처럼 포커스가 코드로만 들어올 때는 false이며, 모든 항목이 tabIndex -1을 받습니다."
+    },
+    "findItems": {
+      "en": "Finds the items, enabled or not, instead of getItemProps. Such items have no value, so no tab stop is kept: the hook only moves focus.",
+      "ko": "getItemProps 대신 활성 여부와 관계없이 항목을 찾습니다. 이런 항목에는 값이 없으므로 탭 정지를 두지 않고, 훅은 포커스만 옮깁니다."
     },
     "activeValue": {
       "en": "Controlled tab stop. Falls back to the first enabled item when null, disabled or missing.",

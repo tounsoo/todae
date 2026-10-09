@@ -12,6 +12,7 @@ import { useDomId } from '../components/domId';
 import { optionDomId } from '../components/OptionList.ids';
 import type { BottomSheetRootProps } from '../components/BottomSheet';
 import type { ButtonRootProps } from '../components/Button';
+import type { DialogRootProps } from '../components/Dialog';
 import type { FieldChipInputProps, FieldRootProps, FieldTextInputProps } from '../components/Field';
 import type {
   OptionListMultipleProps,
@@ -48,7 +49,7 @@ type BaseOptions = {
   /** Reload when this changes. `loadOptions` is read at call time, so changes to it alone do not reload. */
   loadKey?: string | number;
   filter?: (option: ComboboxOption, query: string) => boolean;
-  presentation?: 'popover' | 'sheet' | 'auto';
+  presentation?: 'popover' | 'sheet' | 'dialog' | 'auto';
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean, reason: ComboboxCloseReason) => void;
@@ -80,7 +81,7 @@ export type UseComboboxOptions = UseComboboxSingleOptions | UseComboboxMultipleO
 
 export type UseComboboxResult = {
   selectionMode: 'single' | 'multiple';
-  presentation: SheetPresentation;
+  presentation: SheetPresentation | 'dialog';
   isSheet: boolean;
   open: boolean;
   inputValue: string;
@@ -115,6 +116,7 @@ export type UseComboboxResult = {
   getChipInputProps: () => FieldChipInputProps & { ref: RefObject<HTMLInputElement | null> };
   getPopoverProps: () => PopoverWire;
   getSheetProps: () => ComboboxSheetProps;
+  getDialogProps: () => ComboboxDialogProps;
   getListboxProps: () => Omit<OptionListSingleProps, 'children'> | Omit<OptionListMultipleProps, 'children'>;
   getOptionProps: (item: ComboboxItem) => OptionListOptionProps;
 };
@@ -122,6 +124,9 @@ export type UseComboboxResult = {
 /** The hook always sets open and onOpenChange, so they are required here. */
 type ComboboxSheetProps = Pick<BottomSheetRootProps, 'initialFocusRef' | 'restoreFocusRef' | 'aria-label'> &
   Required<Pick<BottomSheetRootProps, 'open' | 'onOpenChange'>>;
+
+type ComboboxDialogProps = Pick<DialogRootProps, 'initialFocusRef' | 'restoreFocusRef' | 'aria-label'> &
+  Required<Pick<DialogRootProps, 'open' | 'onOpenChange'>>;
 
 function isMultiple(options: UseComboboxOptions): options is UseComboboxMultipleOptions {
   return options.selectionMode === 'multiple';
@@ -150,13 +155,14 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     trigger: `todae-cb-trigger-${uid}`,
   };
 
-  const sheet = useSheetPresentation({
-    forced: options.presentation && options.presentation !== 'auto' ? options.presentation : 'auto',
-  });
-  const presentation = options.presentation === 'popover' || options.presentation === 'sheet'
-    ? options.presentation
-    : sheet.presentation;
+  const forced = options.presentation ?? 'auto';
+  // A dialog never turns into a sheet.
+  const sheet = useSheetPresentation({ forced: forced === 'dialog' ? 'popover' : forced });
+  const presentation = forced === 'auto' ? sheet.presentation : forced;
   const isSheet = presentation === 'sheet';
+  const isDialog = presentation === 'dialog';
+  // The sheet and the dialog are modal: the input lives inside them, and it closes them on Escape.
+  const isModal = isSheet || isDialog;
 
   const [open, setOpenState] = useControlledState(options.open, options.defaultOpen ?? false);
   const initialSingle = isMultiple(options)
@@ -184,12 +190,17 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const inputRef = useRef<HTMLInputElement | null>(null);
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  // Filled only when nothing had focus at open (Safari does not focus a clicked button).
+  // Left null, Dialog returns focus to whatever had it when the dialog opened.
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const [activeValue, setActiveValue] = useState<string | null>(null);
   const [asyncOptions, setAsyncOptions] = useState<readonly ComboboxOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown | null>(null);
   const gate = useRef(createAsyncGate());
   const lastQuery = useRef(inputValue);
+  // The query and loadKey the loaded list belongs to; null before any load lands.
+  const [loadedFor, setLoadedFor] = useState<{ query: string; key: string | number | undefined } | null>(null);
   const lastPresentation = useRef(presentation);
 
   // Callbacks read the latest options through this ref so their identity stays stable and
@@ -247,18 +258,15 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         .map((item) => (item.kind === 'create' ? CREATE_VALUE : item.option.value)),
     [items],
   );
+  // False while the loaded list is still another query's.
+  const listIsCurrent =
+    !hasLoader || (loadedFor !== null && loadedFor.query === inputValue && loadedFor.key === options.loadKey);
   const resolvedActive =
-    activeValue && enabledValues.includes(activeValue) ? activeValue : (enabledValues[0] ?? null);
+    activeValue && enabledValues.includes(activeValue)
+      ? activeValue
+      : listIsCurrent ? (enabledValues[0] ?? null) : null;
   const activeId = resolvedActive ? optionDomId(ids.listbox, resolvedActive) : null;
   const isEmpty = items.length === 0 && !loading;
-
-  const setOpen = useCallback(
-    (next: boolean, reason: ComboboxCloseReason = 'trigger') => {
-      setOpenState(next);
-      latest.current.onOpenChange?.(next, reason);
-    },
-    [setOpenState],
-  );
 
   const setInputValue = useCallback(
     (next: string) => {
@@ -266,6 +274,21 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       latest.current.onInputValueChange?.(next);
     },
     [setInputState],
+  );
+
+  const setOpen = useCallback(
+    (next: boolean, reason: ComboboxCloseReason = 'trigger') => {
+      // Each time the dialog opens, start from the full list with the top row active.
+      // Reopened while still closing, focus is still inside: keep the query and the focus target.
+      if (next && isDialog && !open && !inputRef.current?.closest('dialog')?.contains(document.activeElement)) {
+        setInputValue('');
+        setActiveValue(null);
+        returnFocusRef.current = document.activeElement === document.body ? triggerRef.current : null;
+      }
+      setOpenState(next);
+      latest.current.onOpenChange?.(next, reason);
+    },
+    [isDialog, open, setInputValue, setOpenState],
   );
 
   const highlight = useCallback((next: string | null) => {
@@ -291,7 +314,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   );
 
   const create = useCallback(() => {
-    if (!showCreate) return;
+    // A closing dialog stays live, so a second Enter or click would run it again.
+    if (!showCreate || (isDialog && !open)) return;
     const label = trimmed;
     const commit = (canonical: string | void) => {
       const next = canonical ?? label;
@@ -314,7 +338,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   }, [
     applyMulti,
     applySingle,
+    isDialog,
     multiValue,
+    open,
     selectionMode,
     setInputValue,
     setOpen,
@@ -328,6 +354,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         create();
         return;
       }
+      if (isDialog && !open) return;
       if (selectionMode === 'multiple') {
         const current = [...multiValue];
         const next = current.includes(raw) ? current.filter((item) => item !== raw) : [...current, raw];
@@ -339,7 +366,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       setInputValue(labelFor(raw));
       setOpen(false, 'select');
     },
-    [applyMulti, applySingle, create, labelFor, multiValue, selectionMode, setInputValue, setOpen],
+    [applyMulti, applySingle, create, isDialog, labelFor, multiValue, open, selectionMode, setInputValue, setOpen],
   );
 
   const remove = useCallback(
@@ -381,6 +408,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     }
     setActiveValue(null);
     setAsyncOptions([]);
+    setLoadedFor(null);
     setError(null);
     setLoading(false);
   }, [setInputState, setMultiState, setOpenState, setSingleState]);
@@ -389,6 +417,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     (query: string) => {
       const load = latest.current.loadOptions;
       if (!load) return;
+      const key = latest.current.loadKey;
       lastQuery.current = query;
       setLoading(true);
       setError(null);
@@ -401,6 +430,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
           return;
         }
         setAsyncOptions(result.result);
+        setLoadedFor({ query, key });
       });
     },
     [],
@@ -432,10 +462,13 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       setActiveValue(singleValue);
       return;
     }
-    setActiveValue((current) =>
-      current && enabledValues.includes(current) ? current : (enabledValues[0] ?? null),
-    );
-  }, [enabledValues, open, selectionMode, singleValue]);
+    setActiveValue((current) => {
+      if (current && enabledValues.includes(current)) return current;
+      // With no active row (as after the dialog's open reset), wait for this input's list.
+      if (current === null && !listIsCurrent) return null;
+      return enabledValues[0] ?? null;
+    });
+  }, [enabledValues, listIsCurrent, open, selectionMode, singleValue]);
 
   const move = useCallback(
     (delta: number | 'home' | 'end') => {
@@ -474,14 +507,15 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       }
       if (event.key === 'Enter') {
         event.preventDefault();
-        if (resolvedActive === CREATE_VALUE || (showCreate && !resolvedActive)) create();
+        // While the list is another query's, Enter with no active row runs nothing.
+        if (resolvedActive === CREATE_VALUE || (showCreate && !resolvedActive && listIsCurrent)) create();
         else if (resolvedActive) select(resolvedActive);
         return;
       }
       if (event.key === 'Escape') {
         event.preventDefault();
         if (open) {
-          if (isSheet) setOpen(false, 'escape');
+          if (isModal) setOpen(false, 'escape');
           return;
         }
         if (selectionMode === 'single' && !singleValue) setInputValue('');
@@ -493,7 +527,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     },
     [
       create,
-      isSheet,
+      isModal,
+      listIsCurrent,
       move,
       open,
       resolvedActive,
@@ -516,20 +551,20 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   );
 
   const onInputFocus = useCallback(() => {
-    if (isSheet || options.disabled) return;
+    if (isModal || options.disabled) return;
     if (!open) setOpen(true, 'trigger');
-  }, [isSheet, open, options.disabled, setOpen]);
+  }, [isModal, open, options.disabled, setOpen]);
 
   const onInputBlur = useCallback(
     (event: { relatedTarget: EventTarget | null }) => {
-      if (isSheet || options.disabled) return;
+      if (isModal || options.disabled) return;
       const next = event.relatedTarget;
       if (!(next instanceof Node)) return;
       if (anchorRef.current?.contains(next)) return;
       if (document.getElementById(ids.listbox)?.contains(next)) return;
       if (open) setOpen(false, 'blur');
     },
-    [ids.listbox, isSheet, open, options.disabled, setOpen],
+    [ids.listbox, isModal, open, options.disabled, setOpen],
   );
 
   const comboboxAria = useMemo(
@@ -549,9 +584,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const getTriggerProps = useCallback((): ButtonRootProps & {
     ref: RefObject<HTMLButtonElement | null>;
   } => {
-    if (process.env.NODE_ENV !== 'production' && !isSheet) {
+    if (process.env.NODE_ENV !== 'production' && !isModal) {
       console.warn(
-        'useCombobox: getTriggerProps is for sheet Button.Root. Popover mode uses getAnchorProps on Field.Root. Do not spread usePopover getTriggerProps.',
+        'useCombobox: getTriggerProps is for sheet or dialog Button.Root. Popover mode uses getAnchorProps on Field.Root. Do not spread usePopover getTriggerProps.',
       );
     }
     return {
@@ -563,7 +598,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       'aria-controls': ids.listbox,
       onClick: () => setOpen(!open, 'trigger'),
     };
-  }, [ids.listbox, ids.trigger, isSheet, open, options.disabled, setOpen]);
+  }, [ids.listbox, ids.trigger, isModal, open, options.disabled, setOpen]);
 
   const getAnchorProps = useCallback(
     (): Pick<FieldRootProps, 'id' | 'style' | 'disabled'> & {
@@ -601,7 +636,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         onCommit: () => {
           if (resolvedActive === CREATE_VALUE) create();
           else if (resolvedActive) select(resolvedActive);
-          else if (showCreate) create();
+          else if (showCreate && listIsCurrent) create();
         },
         onChipRemove: (index) => {
           const item = selected[index];
@@ -618,6 +653,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       comboboxAria,
       create,
       inputValue,
+      listIsCurrent,
       multiValue,
       onInputBlur,
       onInputFocus,
@@ -638,7 +674,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       anchorRef,
       initialFocusRef: inputRef,
       restoreFocusRef: inputRef,
-      enabled: !isSheet,
+      enabled: !isModal,
     },
     false,
   );
@@ -653,6 +689,17 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       'aria-label': optionsName,
     }),
     [open, setOpen, optionsName],
+  );
+
+  const getDialogProps = useCallback(
+    (): ComboboxDialogProps => ({
+      open,
+      onOpenChange: (next, reason) => setOpen(next, reason),
+      initialFocusRef: inputRef,
+      restoreFocusRef: returnFocusRef,
+      'aria-label': 'Options',
+    }),
+    [open, setOpen],
   );
 
   const getListboxProps = useCallback(():
@@ -732,6 +779,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     getChipInputProps,
     getPopoverProps: popover.getPopoverProps,
     getSheetProps,
+    getDialogProps,
     getListboxProps,
     getOptionProps,
   };

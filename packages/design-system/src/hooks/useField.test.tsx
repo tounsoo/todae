@@ -169,6 +169,45 @@ describe('useField', () => {
     expect(screen.getByRole('textbox').getAttribute('name')).toBe('rating');
   });
 
+  it("wires Field's own text controls the way it wires a custom one", () => {
+    function Custom(props: { name?: string; 'aria-describedby'?: string; 'aria-invalid'?: 'spelling' }) {
+      const field = useField();
+      return <input {...field.getControlProps(props)} />;
+    }
+    const noop = () => undefined;
+    const controls = {
+      custom: (own: Parameters<typeof Custom>[0]) => <Custom {...own} />,
+      text: (own: Parameters<typeof Custom>[0]) => <Field.TextInput {...own} value="" onChange={noop} />,
+      area: (own: Parameters<typeof Custom>[0]) => <Field.Textarea {...own} value="" onChange={noop} />,
+      chips: (own: Parameters<typeof Custom>[0]) => (
+        <Field.ChipInput {...own} chips={[]} inputValue="" onInputValueChange={noop} onCommit={noop} onChipRemove={noop} />
+      ),
+    };
+    const wiring = (node: Element) =>
+      Object.fromEntries(
+        ['id', 'name', 'disabled', 'aria-invalid', 'aria-describedby', 'aria-label', 'data-todae-field-control'].map(
+          (name) => [name, node.getAttribute(name)],
+        ),
+      );
+    const cases = [
+      { root: { name: 'root', 'aria-describedby': 'hint', disabled: true, invalid: true }, own: {} },
+      { root: { name: 'root', 'aria-label': 'Root' }, own: { name: 'own', 'aria-describedby': 'mine', 'aria-invalid': 'spelling' as const } },
+    ];
+    for (const { root, own } of cases) {
+      const seen = Object.entries(controls).map(([kind, control]) => {
+        const { container, unmount } = render(
+          <Field.Root id="f" {...root}>
+            {control(own)}
+          </Field.Root>,
+        );
+        const result = wiring(container.querySelector('input, textarea')!);
+        unmount();
+        return [kind, result] as const;
+      });
+      for (const [, result] of seen) expect(result).toEqual(seen[0]![1]);
+    }
+  });
+
   it("keeps a control's own aria-disabled unless the Field disables it", () => {
     function Control({ native }: { native: boolean }) {
       const field = useField();

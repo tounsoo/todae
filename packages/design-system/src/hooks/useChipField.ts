@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import type { FieldChipInputProps } from '../components/Field';
 
 export type UseChipFieldOptions = {
   initialChips?: readonly string[];
@@ -7,14 +8,26 @@ export type UseChipFieldOptions = {
   transform?: (raw: string) => string | null;
 };
 
-export function useChipField(options: UseChipFieldOptions = {}) {
+export type UseChipFieldResult = {
+  chips: readonly string[];
+  inputValue: string;
+  setChips: Dispatch<SetStateAction<readonly string[]>>;
+  setInputValue: Dispatch<SetStateAction<string>>;
+  /** Restores the latest initial chips and input value. */
+  reset: () => void;
+  /** Props to spread on `Field.ChipInput`. */
+  getChipInputProps: () => Pick<
+    FieldChipInputProps,
+    'chips' | 'inputValue' | 'onInputValueChange' | 'onCommit' | 'onChipRemove'
+  >;
+};
+
+export function useChipField(options: UseChipFieldOptions = {}): UseChipFieldResult {
   const { initialChips = [], initialInputValue = '', dedupe = true, transform } = options;
   const [chips, setChips] = useState<readonly string[]>(initialChips);
   const initial = useRef({ chips: initialChips, inputValue: initialInputValue });
   initial.current = { chips: initialChips, inputValue: initialInputValue };
   const [inputValue, setInputValue] = useState(initialInputValue);
-
-  const onInputValueChange = setInputValue;
 
   const onCommit = useCallback(
     (value: string) => {
@@ -35,14 +48,17 @@ export function useChipField(options: UseChipFieldOptions = {}) {
     setInputValue(initial.current.inputValue);
   }, []);
 
+  const getChipInputProps = useCallback(
+    () => ({ chips, inputValue, onInputValueChange: setInputValue, onCommit, onChipRemove }),
+    [chips, inputValue, onCommit, onChipRemove],
+  );
+
   return {
     chips,
     inputValue,
-    onInputValueChange,
-    onCommit,
-    onChipRemove,
     setChips,
     setInputValue,
     reset,
+    getChipInputProps,
   };
 }

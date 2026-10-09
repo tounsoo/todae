@@ -2183,7 +2183,7 @@
           "name": "appearance",
           "type": "\"system\" | \"light\" | \"dark\"",
           "required": false,
-          "description": "Resolved to light or dark before writing data-appearance. Never writes system.",
+          "description": "Written to data-appearance as is. system follows prefers-color-scheme in CSS.",
           "default": "\"system\""
         },
         {
@@ -2603,7 +2603,7 @@
     },
     {
       "name": "useCombobox",
-      "description": "Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, and OptionList. No Combobox chrome.",
+      "description": "Headless combobox state. Spread getters onto Field, Button, Popover, BottomSheet, Dialog, and OptionList. No Combobox chrome.",
       "props": [
         {
           "name": "selectionMode",
@@ -2632,9 +2632,9 @@
         },
         {
           "name": "presentation",
-          "type": "\"popover\" | \"sheet\" | \"auto\"",
+          "type": "\"popover\" | \"sheet\" | \"dialog\" | \"auto\"",
           "required": false,
-          "description": "auto uses useSheetPresentation.",
+          "description": "auto uses useSheetPresentation. dialog is for Dialog.Root, through getDialogProps.",
           "default": "\"auto\""
         },
         {
@@ -2807,6 +2807,31 @@
       ]
     },
     {
+      "name": "useHotkey",
+      "description": "useHotkey(hotkey, handler, options). Listens for keydown on the document and runs handler when a key matches hotkey, after preventing its default. It skips keys something else already prevented, keys pressed while an IME composes, held keys, and, in a text field, every key except a function key or a chord with Meta, or with Control but not Alt.",
+      "props": [
+        {
+          "name": "hotkey",
+          "type": "string | readonly string[]",
+          "required": true,
+          "description": "A key with its modifiers, such as \"Control+K\", \"Alt+T\" or \"F8\". Modifiers must match exactly. A list matches any of them. One with a modifier name it does not know is off."
+        },
+        {
+          "name": "handler",
+          "type": "(event: KeyboardEvent) => void",
+          "required": true,
+          "description": "Runs on a match. An inline function is fine; the latest one is read at key time."
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Listen only while true. Pass it in the options object.",
+          "default": "true"
+        }
+      ]
+    },
+    {
       "name": "useModalLayer",
       "description": "useModalLayer(ref, open). Puts a modal <dialog> of your own in Todae's modal stack once open is true and it is shown with showModal(), until close(). Toast.Region moves its toasts into the modal in front. Dialog and BottomSheet join the stack by themselves.",
       "props": [
@@ -2917,6 +2942,12 @@
           "required": false,
           "description": "Keep one item tabbable. False when focus only enters from code, as in a menu: every item gets tabIndex -1.",
           "default": "true"
+        },
+        {
+          "name": "findItems",
+          "type": "(container: HTMLElement) => HTMLElement[]",
+          "required": false,
+          "description": "Finds the items, enabled or not, instead of getItemProps. Such items have no value, so no tab stop is kept: the hook only moves focus."
         },
         {
           "name": "activeValue",
