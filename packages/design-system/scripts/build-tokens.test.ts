@@ -270,8 +270,10 @@ describe('committed token graph', () => {
   it('builds and snapshots CSS selectors', async () => {
     const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
     expect(graph.css).toContain('@layer todae.base');
-    expect(graph.css).toContain(':root,\n[data-appearance="light"]');
-    expect(graph.css).toContain('[data-appearance],\n[data-density]');
+    expect(graph.css).toContain(':root:not([data-appearance]),\n[data-appearance="light"]');
+    expect(graph.css).toContain(':root,\n[data-appearance],\n[data-density]');
+    // Density has a root default too, so spacing exists with no DensityProvider above.
+    expect(graph.css).toContain(':root:not([data-density]),\n[data-density="comfortable"]');
     expect(graph.css).toContain('[data-button-variant="primary"]');
     expect(graph.css).toContain('[data-button-variant="ghost"]');
     expect(graph.tokens.some((t) => t.layer === 'contract' && t.cssValue.startsWith('var('))).toBe(true);
@@ -284,7 +286,7 @@ describe('committed token graph', () => {
       'var(--todae-font-leading-default)',
     );
     const light = graph.css.slice(
-      graph.css.indexOf(':root,\n[data-appearance="light"]'),
+      graph.css.indexOf(':root:not([data-appearance]),\n[data-appearance="light"]'),
       graph.css.indexOf('[data-appearance="dark"]'),
     );
     const dark = graph.css.slice(
@@ -526,7 +528,7 @@ describe('resolver-driven build', () => {
       ];
     });
     const graph = await buildTokensGraph(root);
-    const rootBlock = graph.css.slice(graph.css.indexOf(':root {'), graph.css.indexOf(':root,\n'));
+    const rootBlock = graph.css.slice(graph.css.indexOf(':root {'), graph.css.indexOf(':root:not('));
     expect(rootBlock).toContain('--todae-button-radius: var(--todae-button-base-radius);');
   });
 
@@ -819,7 +821,7 @@ describe('company token build', () => {
       ':root:not([data-appearance]), [data-appearance="light"]',
       '[data-appearance="dark"]',
       '[data-density="roomy"]',
-      '[data-appearance], [data-density]',
+      ':root:not([data-appearance]):not([data-density]), [data-appearance], [data-density]',
       '[data-button-variant="outline"]',
     ]);
     const light = blockOf(result.css, ':root:not([data-appearance]),\n[data-appearance="light"]');

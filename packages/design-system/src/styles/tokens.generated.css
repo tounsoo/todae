@@ -64,7 +64,7 @@
   --todae-space-12: 3rem;
 }
 
-:root,
+:root:not([data-appearance]),
 [data-appearance="light"] {
   --todae-color-accent-active: var(--todae-color-gray-950);
   --todae-color-accent-default: var(--todae-color-gray-900);
@@ -74,6 +74,7 @@
   --todae-color-bg-canvas: var(--todae-color-gray-50);
   --todae-color-bg-elevated: var(--todae-color-gray-50);
   --todae-color-bg-highlight: oklch(from var(--todae-color-fg-default) l c h / 0.08);
+  --todae-color-bg-pressed: oklch(from var(--todae-color-fg-default) l c h / 0.14);
   --todae-color-bg-scrim: oklch(from var(--todae-color-gray-950) l c h / 0.45);
   --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / 0.2);
   --todae-color-bg-subtle: var(--todae-color-gray-100);
@@ -110,6 +111,7 @@
   --todae-color-bg-canvas: var(--todae-color-gray-900);
   --todae-color-bg-elevated: var(--todae-color-gray-800);
   --todae-color-bg-highlight: oklch(from var(--todae-color-fg-default) l c h / 0.1);
+  --todae-color-bg-pressed: oklch(from var(--todae-color-fg-default) l c h / 0.16);
   --todae-color-bg-scrim: oklch(from var(--todae-color-gray-950) l c h / 0.7);
   --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / 0.2);
   --todae-color-bg-subtle: var(--todae-color-gray-800);
@@ -151,6 +153,7 @@
   --todae-space-stack-gap: var(--todae-space-2);
 }
 
+:root:not([data-density]),
 [data-density="comfortable"] {
   --todae-space-chip-x: var(--todae-space-2);
   --todae-space-chip-y: var(--todae-space-1);
@@ -179,6 +182,7 @@
   --todae-space-stack-gap: var(--todae-space-5);
 }
 
+:root,
 [data-appearance],
 [data-density] {
   --todae-button-base-font-size: var(--todae-font-size-3);
@@ -203,11 +207,11 @@
   --todae-button-primary-fg-focus: var(--todae-color-on-accent);
   --todae-button-primary-fg-hover: var(--todae-color-on-accent);
   --todae-button-primary-ring-focus: var(--todae-color-accent-default);
-  --todae-button-secondary-bg-active: var(--todae-color-bg-canvas);
-  --todae-button-secondary-bg-default: var(--todae-color-bg-surface);
-  --todae-button-secondary-bg-disabled: var(--todae-color-bg-surface);
-  --todae-button-secondary-bg-focus: var(--todae-color-bg-surface);
-  --todae-button-secondary-bg-hover: var(--todae-color-bg-surface);
+  --todae-button-secondary-bg-active: var(--todae-color-bg-pressed);
+  --todae-button-secondary-bg-default: var(--todae-color-bg-transparent);
+  --todae-button-secondary-bg-disabled: var(--todae-color-bg-transparent);
+  --todae-button-secondary-bg-focus: var(--todae-color-bg-transparent);
+  --todae-button-secondary-bg-hover: var(--todae-color-bg-highlight);
   --todae-button-secondary-border-active: var(--todae-color-border-default);
   --todae-button-secondary-border-default: var(--todae-color-border-default);
   --todae-button-secondary-border-disabled: var(--todae-color-border-default);
@@ -219,16 +223,16 @@
   --todae-button-secondary-fg-focus: var(--todae-color-fg-default);
   --todae-button-secondary-fg-hover: var(--todae-color-fg-default);
   --todae-button-secondary-ring-focus: var(--todae-color-accent-default);
-  --todae-button-ghost-bg-active: var(--todae-color-bg-surface);
-  --todae-button-ghost-bg-default: var(--todae-color-bg-canvas);
-  --todae-button-ghost-bg-disabled: var(--todae-color-bg-canvas);
-  --todae-button-ghost-bg-focus: var(--todae-color-bg-canvas);
-  --todae-button-ghost-bg-hover: var(--todae-color-bg-surface);
-  --todae-button-ghost-border-active: var(--todae-color-bg-canvas);
-  --todae-button-ghost-border-default: var(--todae-color-bg-canvas);
-  --todae-button-ghost-border-disabled: var(--todae-color-bg-canvas);
+  --todae-button-ghost-bg-active: var(--todae-color-bg-pressed);
+  --todae-button-ghost-bg-default: var(--todae-color-bg-transparent);
+  --todae-button-ghost-bg-disabled: var(--todae-color-bg-transparent);
+  --todae-button-ghost-bg-focus: var(--todae-color-bg-transparent);
+  --todae-button-ghost-bg-hover: var(--todae-color-bg-highlight);
+  --todae-button-ghost-border-active: var(--todae-color-bg-transparent);
+  --todae-button-ghost-border-default: var(--todae-color-bg-transparent);
+  --todae-button-ghost-border-disabled: var(--todae-color-bg-transparent);
   --todae-button-ghost-border-focus: var(--todae-color-accent-default);
-  --todae-button-ghost-border-hover: var(--todae-color-bg-canvas);
+  --todae-button-ghost-border-hover: var(--todae-color-bg-transparent);
   --todae-button-ghost-fg-active: var(--todae-color-fg-default);
   --todae-button-ghost-fg-default: var(--todae-color-fg-default);
   --todae-button-ghost-fg-disabled: var(--todae-color-fg-muted);

@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, type ComponentProps } from 'react';
+import { createContext, useContext, type ComponentProps, type CSSProperties } from 'react';
+import { ThemeOverrideVarsContext } from './ThemeProvider';
 
 /**
  * Densities, one per `density` context in the token resolver. A company that
@@ -21,10 +22,11 @@ export type DensityProviderProps = {
 
 const DensityContext = createContext<Density>('comfortable');
 
-export function DensityProvider({ density = 'comfortable', ...props }: DensityProviderProps) {
+export function DensityProvider({ density = 'comfortable', style, ...props }: DensityProviderProps) {
+  const overrides = useContext(ThemeOverrideVarsContext);
   return (
     <DensityContext.Provider value={density}>
-      <div {...props} data-density={density} />
+      <div {...props} style={{ ...overrides, ...style } as CSSProperties} data-density={density} />
     </DensityContext.Provider>
   );
 }

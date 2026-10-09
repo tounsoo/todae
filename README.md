@@ -44,11 +44,11 @@ pnpm tokens:check
 
 Commit both generated files. `tokens:check` fails if they drift.
 
-Layers: core (`:root` literals) → appearance (`[data-appearance]`, light also on `:root`) → density (`[data-density]`) → contract (`[data-appearance], [data-density]`) → button variants (`[data-button-variant]`). Flatten `a.b.c` → `--todae-a-b-c`. Import the catalog as `@tounsoo/todae/tokens.json`.
+Layers: core (`:root` literals) → appearance (`[data-appearance]`, light also on `:root`) → density (`[data-density]`, comfortable also on `:root`) → contract (`:root, [data-appearance], [data-density]`) → button variants (`[data-button-variant]`). Flatten `a.b.c` → `--todae-a-b-c`. Import the catalog as `@tounsoo/todae/tokens.json`.
 
 ## Providers
 
-Wrap the tree in `ThemeProvider` and `DensityProvider`. `appearance="system"` (default) follows `prefers-color-scheme` via `useSyncExternalStore` and writes only `data-appearance="light"` or `"dark"`. The SSR snapshot is `light`. `DensityProvider` writes `data-density` (`compact` | `comfortable` | `spacious`, default `comfortable`). Nested providers override. Components read contract vars only.
+Wrap the tree in `ThemeProvider` and `DensityProvider`. `appearance="system"` (default) follows `prefers-color-scheme` via `useSyncExternalStore` and writes only `data-appearance="light"` or `"dark"`. The SSR snapshot is `light`. `DensityProvider` writes `data-density` (`compact` | `comfortable` | `spacious`, default `comfortable`). Nested providers override. Both are optional: with neither, the page gets light and comfortable. A DensityProvider sets its ThemeProvider's `overrides` again, so overrides reach the components inside it. Components read contract vars only.
 
 ```tsx
 import { DensityProvider, ThemeProvider, Button } from '@tounsoo/todae';

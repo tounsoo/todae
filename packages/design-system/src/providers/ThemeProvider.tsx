@@ -20,6 +20,13 @@ export type ThemeProviderProps<Extra extends string = never> = {
 
 const QUERY = '(prefers-color-scheme: dark)';
 const AppearanceContext = createContext<ResolvedAppearance>('light');
+const EMPTY_VARS: Readonly<Record<string, string>> = {};
+/**
+ * The custom properties the nearest ThemeProvider set from `overrides`. A
+ * DensityProvider re-declares contract tokens, which would reset overrides of
+ * them set on an ancestor, so it sets these again on its own element.
+ */
+export const ThemeOverrideVarsContext = createContext<Readonly<Record<string, string>>>(EMPTY_VARS);
 
 function subscribe(onStoreChange: () => void) {
   const mq = window.matchMedia(QUERY);
@@ -47,7 +54,9 @@ export function ThemeProvider<Extra extends string = never>({
   const vars = themeOverrideStyle(overrides, overrideTypes);
   return (
     <AppearanceContext.Provider value={resolved}>
-      <div {...props} style={{ ...style, ...vars } as CSSProperties} data-appearance={resolved} />
+      <ThemeOverrideVarsContext.Provider value={vars}>
+        <div {...props} style={{ ...style, ...vars } as CSSProperties} data-appearance={resolved} />
+      </ThemeOverrideVarsContext.Provider>
     </AppearanceContext.Provider>
   );
 }
