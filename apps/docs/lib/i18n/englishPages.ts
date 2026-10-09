@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import type { ComponentType } from 'react';
 
 /**
@@ -5,7 +6,7 @@ import type { ComponentType } from 'react';
  * these, under an "untranslated" notice, until it has its own page. Add a
  * line here when you add a docs page; a test fails until you do.
  */
-export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentType }>> = {
+export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentType; metadata?: Metadata }>> = {
   'alert': () => import('../../app/(en)/alert/page.mdx'),
   'avatar': () => import('../../app/(en)/avatar/page.mdx'),
   'badge': () => import('../../app/(en)/badge/page.mdx'),
