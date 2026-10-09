@@ -86,7 +86,7 @@ describe('docs locales', () => {
         code,
         tags: (prose.match(/<\/?[A-Z][\w.]*/g) ?? []).sort(),
         props: prose.match(/<PropsTable\s+name="[^"]+"/g) ?? [],
-        links: (prose.match(/\]\([^)\s]+\)|href=["'][^"']+["']/g) ?? []).sort(),
+        links: (prose.match(/\]\([^)]+\)|href=(?:"[^"]*"|'[^']*'|\{[^}]*\})/g) ?? []).sort(),
         // Each top-level heading's level and the number of top-level blocks under it, so a section or
         // top-level paragraph added in English has to be added to the translation too.
         sections: sections(text).map((part) => `h${part.level}: ${part.blocks} blocks`),

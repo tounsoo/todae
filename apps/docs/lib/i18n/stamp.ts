@@ -17,7 +17,10 @@ export function stamp(appDir: string, locale: string, sources: Sources, slugs: r
   const translated = new Set(
     readdirSync(join(appDir, locale), { recursive: true, encoding: 'utf8' })
       .filter((file) => basename(file) === 'page.mdx')
-      .map((file) => dirname(file).split(sep).join('/')),
+      .map((file) => dirname(file).split(sep))
+      // Route groups, private folders and dynamic segments are not pages of their own.
+      .filter((parts) => !parts.some((part) => /^[_[@(]/.test(part)))
+      .map((parts) => parts.join('/')),
   );
   for (const slug of slugs) {
     const english = join(appDir, '(en)', slug, 'page.mdx');
