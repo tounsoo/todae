@@ -19,6 +19,7 @@ import {
   Label,
   Link,
   Meter,
+  Pagination,
   Progress,
   Separator,
   Skeleton,
@@ -247,6 +248,38 @@ describe('content parts in a browser', () => {
     expect(getComputedStyle(screen.getByText('Styled')).textDecorationLine).toBe('none');
     // An <a> without href is not a link and keeps the text style.
     expect(getComputedStyle(screen.getByText('Placeholder')).textDecorationLine).toBe('none');
+  });
+
+  it('lets a container component style a Link.Root inside it, as Pagination does', async () => {
+    render(
+      <Themed>
+        <Pagination.Root>
+          <Pagination.Item>
+            <Link.Root href="#1">1</Link.Root>
+          </Pagination.Item>
+          <Pagination.Item>
+            <Link.Root href="#2" aria-current="page">
+              2
+            </Link.Root>
+          </Pagination.Item>
+        </Pagination.Root>
+      </Themed>,
+    );
+    const root = screen.getByText('1').closest('main') as HTMLElement;
+    root.style.setProperty('--todae-pagination-fg-default', 'rgb(1, 2, 3)');
+    root.style.setProperty('--todae-pagination-current-fg', 'rgb(4, 5, 6)');
+    root.style.setProperty('--todae-pagination-ring-focus', 'rgb(7, 8, 9)');
+    root.style.setProperty('--todae-pagination-radius', '5px');
+    const page = screen.getByText('1');
+    const current = screen.getByText('2');
+    expect(getComputedStyle(page).textDecorationLine).toBe('none');
+    expect(getComputedStyle(page).color).toBe('rgb(1, 2, 3)');
+    expect(getComputedStyle(current).textDecorationLine).toBe('none');
+    expect(getComputedStyle(current).color).toBe('rgb(4, 5, 6)');
+    await userEvent.tab();
+    expect(document.activeElement).toBe(page);
+    expect(getComputedStyle(page).outlineColor).toBe('rgb(7, 8, 9)');
+    expect(getComputedStyle(page).borderTopLeftRadius).toBe('5px');
   });
 
   it('marks the current link from its tokens and treats false and empty as not current', async () => {

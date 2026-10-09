@@ -1,4 +1,4 @@
-@layer todae.components {
+@layer todae.components.native {
   /* Neutral ink: a link keeps the text color and stands out by its underline,
      which darkens on hover. An `a` without href is not a link and gets none of it. */
   .root:any-link {

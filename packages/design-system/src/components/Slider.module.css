@@ -1,4 +1,4 @@
-@layer todae.components {
+@layer todae.components.native {
   /* accent-color tints the thumb and filled track; how far it reaches differs by browser. */
   .root {
     inline-size: 100%;

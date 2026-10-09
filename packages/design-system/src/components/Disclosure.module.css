@@ -1,4 +1,4 @@
-@layer todae.components {
+@layer todae.components.native {
   /* The native marker and keyboard behavior stay; disclosures sharing a name
      form an exclusive accordion, divided by a rule. */
   .summary {

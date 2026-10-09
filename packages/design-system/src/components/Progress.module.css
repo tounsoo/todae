@@ -1,4 +1,4 @@
-@layer todae.components {
+@layer todae.components.native {
   /* The browser's own bar is replaced by a track and a fill from tokens; the
      elements keep their roles and values. */
   .root {
@@ -91,15 +91,15 @@
     background: var(--todae-meter-fill-critical);
   }
 
-  .meter:-moz-meter-optimum::-moz-meter-bar {
+  .meter:where(:-moz-meter-optimum)::-moz-meter-bar {
     background: var(--todae-meter-fill-optimum);
   }
 
-  .meter:-moz-meter-sub-optimum::-moz-meter-bar {
+  .meter:where(:-moz-meter-sub-optimum)::-moz-meter-bar {
     background: var(--todae-meter-fill-suboptimum);
   }
 
-  .meter:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+  .meter:where(:-moz-meter-sub-sub-optimum)::-moz-meter-bar {
     background: var(--todae-meter-fill-critical);
   }
 

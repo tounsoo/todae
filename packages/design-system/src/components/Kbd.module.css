@@ -1,4 +1,4 @@
-@layer todae.components {
+@layer todae.components.native {
   .root {
     display: inline-block;
     padding: var(--todae-kbd-padding-y) var(--todae-kbd-padding-x);

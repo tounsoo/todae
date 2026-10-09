@@ -1,4 +1,4 @@
-@layer todae.components {
+@layer todae.components.native {
   /* Inline code sits in any context, a link or a primary button, so it sets
      neither color of its own: it keeps the text color around it and tints its
      box from that color. It is a step smaller than the text around it, in the

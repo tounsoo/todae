@@ -1,4 +1,4 @@
-@layer todae.components {
+@layer todae.components.native {
   /* Native table semantics stay as they are; Todae only sets the rules,
      padding and header weight. Cells of a table nested inside take its own root's styles. */
   .root {

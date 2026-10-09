@@ -1,4 +1,4 @@
-@layer todae.components {
+@layer todae.components.native {
   /* A ring with one arc that turns, drawn in the text color so it shows on any
      surface, a primary button included. */
   progress.root {

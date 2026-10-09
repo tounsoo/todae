@@ -13,10 +13,23 @@ function rule(css: string, selector: string): string {
 }
 
 describe('native element component styles', () => {
-  it('sit in the todae.components layer', () => {
+  // A sublayer of todae.components: every other component's own rules beat
+  // it whatever their specificity or load order, so a container such as
+  // Pagination still styles a Link.Root placed inside it.
+  it('sit in the todae.components.native sublayer, and nothing else', () => {
     for (const name of ['Link', 'Disclosure', 'Separator', 'Table', 'Progress', 'Spinner', 'Skeleton', 'Slider', 'Code', 'Kbd', 'VisuallyHidden']) {
-      expect(sheet(name), name).toMatch(/^\s*@layer todae\.components \{/);
+      const css = sheet(name);
+      expect(css, name).toMatch(/^\s*@layer todae\.components\.native \{/);
+      expect(css.match(/@layer/g), name).toHaveLength(1);
     }
+  });
+
+  it('let the forced colors meter bar win over the Firefox state fills', () => {
+    const progress = sheet('Progress');
+    // State fills at the bar's own specificity, so the later forced rule wins.
+    expect(progress.match(/\.meter:-moz-meter/g)).toBeNull();
+    expect(progress).toContain('.meter:where(:-moz-meter-optimum)::-moz-meter-bar {');
+    expect(progress.lastIndexOf('.meter::-moz-meter-bar')).toBeGreaterThan(progress.indexOf('.meter:where(:-moz-meter-sub-sub-optimum)'));
   });
 
   it('style only real links, and mark the current one by any aria-current but empty or false', () => {
