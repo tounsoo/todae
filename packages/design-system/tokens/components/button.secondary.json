@@ -2,11 +2,11 @@
   "button": {
     "secondary": {
       "bg": {
-        "default": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
-        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
-        "active": { "$type": "color", "$value": { "$ref": "#/color/bg/canvas/$value" } },
-        "focus": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
-        "disabled": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } }
+        "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/bg/pressed/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } }
       },
       "fg": {
         "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },

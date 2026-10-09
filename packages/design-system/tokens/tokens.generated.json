@@ -632,6 +632,15 @@
       "context": "light"
     },
     {
+      "path": "color.bg.pressed",
+      "type": "color",
+      "cssVar": "--todae-color-bg-pressed",
+      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.14)",
+      "ref": "color.fg.default",
+      "layer": "appearance",
+      "context": "light"
+    },
+    {
       "path": "color.bg.scrim",
       "type": "color",
       "cssVar": "--todae-color-bg-scrim",
@@ -915,6 +924,15 @@
       "type": "color",
       "cssVar": "--todae-color-bg-highlight",
       "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.1)",
+      "ref": "color.fg.default",
+      "layer": "appearance",
+      "context": "dark"
+    },
+    {
+      "path": "color.bg.pressed",
+      "type": "color",
+      "cssVar": "--todae-color-bg-pressed",
+      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.16)",
       "ref": "color.fg.default",
       "layer": "appearance",
       "context": "dark"
@@ -1634,8 +1652,8 @@
       "path": "button.secondary.bg.active",
       "type": "color",
       "cssVar": "--todae-button-secondary-bg-active",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-pressed)",
+      "ref": "color.bg.pressed",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1643,8 +1661,8 @@
       "path": "button.secondary.bg.default",
       "type": "color",
       "cssVar": "--todae-button-secondary-bg-default",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1652,8 +1670,8 @@
       "path": "button.secondary.bg.disabled",
       "type": "color",
       "cssVar": "--todae-button-secondary-bg-disabled",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1661,8 +1679,8 @@
       "path": "button.secondary.bg.focus",
       "type": "color",
       "cssVar": "--todae-button-secondary-bg-focus",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1670,8 +1688,8 @@
       "path": "button.secondary.bg.hover",
       "type": "color",
       "cssVar": "--todae-button-secondary-bg-hover",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-highlight)",
+      "ref": "color.bg.highlight",
       "layer": "contract",
       "context": "secondary"
     },
@@ -1778,8 +1796,8 @@
       "path": "button.ghost.bg.active",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-active",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-pressed)",
+      "ref": "color.bg.pressed",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1787,8 +1805,8 @@
       "path": "button.ghost.bg.default",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-default",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1796,8 +1814,8 @@
       "path": "button.ghost.bg.disabled",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-disabled",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1805,8 +1823,8 @@
       "path": "button.ghost.bg.focus",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-focus",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1814,8 +1832,8 @@
       "path": "button.ghost.bg.hover",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-hover",
-      "cssValue": "var(--todae-color-bg-surface)",
-      "ref": "color.bg.surface",
+      "cssValue": "var(--todae-color-bg-highlight)",
+      "ref": "color.bg.highlight",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1823,8 +1841,8 @@
       "path": "button.ghost.border.active",
       "type": "color",
       "cssVar": "--todae-button-ghost-border-active",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1832,8 +1850,8 @@
       "path": "button.ghost.border.default",
       "type": "color",
       "cssVar": "--todae-button-ghost-border-default",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1841,8 +1859,8 @@
       "path": "button.ghost.border.disabled",
       "type": "color",
       "cssVar": "--todae-button-ghost-border-disabled",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },
@@ -1859,8 +1877,8 @@
       "path": "button.ghost.border.hover",
       "type": "color",
       "cssVar": "--todae-button-ghost-border-hover",
-      "cssValue": "var(--todae-color-bg-canvas)",
-      "ref": "color.bg.canvas",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
       "layer": "contract",
       "context": "ghost"
     },

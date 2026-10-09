@@ -2,11 +2,11 @@
   "button": {
     "ghost": {
       "bg": {
-        "default": { "$type": "color", "$value": { "$ref": "#/color/bg/canvas/$value" } },
-        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
-        "active": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
-        "focus": { "$type": "color", "$value": { "$ref": "#/color/bg/canvas/$value" } },
-        "disabled": { "$type": "color", "$value": { "$ref": "#/color/bg/canvas/$value" } }
+        "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/bg/pressed/$value" } },
+        "focus": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } }
       },
       "fg": {
         "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
@@ -16,11 +16,11 @@
         "disabled": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
       },
       "border": {
-        "default": { "$type": "color", "$value": { "$ref": "#/color/bg/canvas/$value" } },
-        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/canvas/$value" } },
-        "active": { "$type": "color", "$value": { "$ref": "#/color/bg/canvas/$value" } },
+        "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "active": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
         "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
-        "disabled": { "$type": "color", "$value": { "$ref": "#/color/bg/canvas/$value" } }
+        "disabled": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } }
       },
       "ring": {
         "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
