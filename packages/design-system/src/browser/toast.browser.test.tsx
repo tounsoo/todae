@@ -1082,17 +1082,51 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
     const items = () => [...region.querySelectorAll('ol > li')] as HTMLElement[];
     await waitFor(() => expect(items()).toHaveLength(3));
     const probe = screen.getByTestId('peek');
-    const peek = probe.offsetHeight;
+    const peek = probe.getBoundingClientRect().height;
     expect(peek).toBeGreaterThan(0);
     // Off the toasts, so the stack stays collapsed.
     await userEvent.hover(probe);
     await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
-    // The edge that peeks out: the top one at the bottom, the bottom one at the top.
-    const edge = (rect: DOMRect) => (placement.startsWith('bottom') ? -rect.top : rect.bottom);
+    // The toast's own edge that peeks out, where its item clips it: the top
+    // one at the bottom, the bottom one at the top.
+    const edge = (item: HTMLElement) => {
+      const clip = item.getBoundingClientRect();
+      const card = item.firstElementChild!.getBoundingClientRect();
+      return placement.startsWith('bottom') ? -Math.max(clip.top, card.top) : Math.min(clip.bottom, card.bottom);
+    };
     await waitFor(() => {
-      const [front, ...rest] = items().map((item) => item.getBoundingClientRect());
-      rest.forEach((rect, i) => expect(edge(rect) - edge(front!)).toBeCloseTo((i + 1) * peek, 0));
+      const [front, ...rest] = items().map(edge);
+      rest.forEach((value, i) => expect(value - front!).toBeCloseTo((i + 1) * peek, 0));
     });
+  });
+
+  it('shows only the card of each toast behind the newest until the stack spreads', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <StackRegion toaster={toaster} placement={placement} />
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ title: 'Back' });
+      toaster.add({ title: 'Front' });
+    });
+    const region = await screen.findByRole('region', { name: 'Notifications' });
+    const items = () => [...region.querySelectorAll('ol > li')] as HTMLElement[];
+    await waitFor(() => expect(items()).toHaveLength(2));
+    const parts = (item: HTMLElement) => [...item.firstElementChild!.children].filter((el) => !el.hasAttribute('popover'));
+    const opacities = (item: HTMLElement) => parts(item).map((el) => getComputedStyle(el).opacity);
+    await userEvent.unhover(region);
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    const [front, back] = items();
+    expect(parts(back!).length).toBeGreaterThan(1);
+    // Its title and Close would otherwise show a sliver in the strip that peeks out.
+    await waitFor(() => expect(new Set(opacities(back!))).toEqual(new Set(['0'])));
+    expect(new Set(opacities(front!))).toEqual(new Set(['1']));
+
+    await userEvent.hover(screen.getByRole('button', { name: 'Tipped Front' }));
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(true));
+    await waitFor(() => expect(new Set(opacities(back!))).toEqual(new Set(['1'])));
   });
 });
 

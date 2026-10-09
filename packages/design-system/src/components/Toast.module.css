@@ -138,6 +138,18 @@
     flex-shrink: 0;
   }
 
+  /* Only the card peeks out from behind the one in front: what is on it
+     fades out of sight, so no sliver of its text or buttons shows in the
+     strip, whatever the density. It stays focusable, and focus inside
+     spreads the stack, which brings it back. */
+  .region[data-layout='stack'] .item > * > * {
+    transition: opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+  }
+
+  .region[data-layout='stack']:not([data-expanded]) .item:not(:first-child) > * > * {
+    opacity: 0;
+  }
+
   /* A tooltip held open on a back toast sits in the top layer, above the
      front toast, so it waits out of sight until the stack expands. */
   .region[data-layout='stack']:not([data-expanded]) .item:not(:first-child) [popover] {
@@ -187,7 +199,8 @@
 
   @media (prefers-reduced-motion: reduce) {
     .item,
-    .region[data-layout='stack'] .item {
+    .region[data-layout='stack'] .item,
+    .region[data-layout='stack'] .item > * > * {
       transition: none;
     }
   }
