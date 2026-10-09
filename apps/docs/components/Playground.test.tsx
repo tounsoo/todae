@@ -102,7 +102,7 @@ describe('Playground', () => {
     render(<Playground locale="en" />);
     fireEvent.click(screen.getByLabelText('Forest'));
     expect(stage().getAttribute('data-density')).toBe('comfortable');
-    expect(stage().getAttribute('data-appearance')).toBe('light');
+    expect(stage().getAttribute('data-appearance')).toBe('system');
     expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.47 0.1 160)');
   });
 

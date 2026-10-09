@@ -32,7 +32,7 @@ function renderSite() {
 describe('ThemeSwitcher', () => {
   it('follows the system until the reader picks, then keeps the pick', () => {
     const appearance = renderSite();
-    expect(appearance()).toBe('light');
+    expect(appearance()).toBe('system');
     expect(screen.getByRole('button', { name: 'System' }).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: 'Dark' }));
     expect(appearance()).toBe('dark');
@@ -65,20 +65,20 @@ describe('ThemeSwitcher', () => {
       };
       const getItem = readBlocked ? vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked) : null;
       const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
-      const appearance = renderSite();
       try {
-        expect(appearance()).toBe('light');
+        const appearance = renderSite();
+        expect(appearance()).toBe('system');
         fireEvent.click(screen.getByRole('button', { name: 'Dark' }));
         expect(appearance()).toBe('dark');
         expect(screen.getByRole('button', { name: 'Dark' }).getAttribute('aria-pressed')).toBe('true');
       } finally {
         getItem?.mockRestore();
         setItem.mockRestore();
+        // Once storage takes a pick again, it wins over the page-load fallback.
+        fireEvent.click(screen.getByRole('button', { name: 'Light' }));
       }
-      // Once storage takes a pick again, it wins over the page-load fallback.
-      fireEvent.click(screen.getByRole('button', { name: 'Light' }));
-      expect(appearance()).toBe('light');
       expect(window.localStorage.getItem('todae-docs-appearance')).toBe('light');
+      expect(document.querySelector('.shell')?.getAttribute('data-appearance')).toBe('light');
     });
   }
 });

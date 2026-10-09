@@ -43,11 +43,6 @@ body {
   min-height: 100vh;
   color: var(--todae-color-fg-default);
   background: var(--todae-color-bg-canvas);
-  color-scheme: light;
-}
-
-.shell[data-appearance='dark'] {
-  color-scheme: dark;
 }
 
 /* Skip link: hidden until focused, then pinned over the top bar. */

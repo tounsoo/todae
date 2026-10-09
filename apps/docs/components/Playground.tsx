@@ -3,7 +3,6 @@
 import {
   Button,
   COMPONENT_OVERRIDE_KEYS,
-  DensityProvider,
   Field,
   RAW_OVERRIDE_KEYS,
   SEMANTIC_OVERRIDE_KEYS,
@@ -357,9 +356,8 @@ export function Playground({ locale }: { locale: Locale }) {
         <p className="pg-hint">{status?.json === exportJson ? status.text : t.exportHint}</p>
       </aside>
       {/* Overrides only beat density tokens on the element that carries
-          data-density, so the stage carries both. The outer DensityProvider
-          gives the Preview its useDensity() context. */}
-      <DensityProvider className="pg-stage-theme" density={density}>
+          data-density, so the stage carries both. */}
+      <div className="pg-stage-theme">
         <ThemeProvider
           ref={stageRef}
           className="pg-stage"
@@ -371,7 +369,7 @@ export function Playground({ locale }: { locale: Locale }) {
         >
           <Preview />
         </ThemeProvider>
-      </DensityProvider>
+      </div>
     </div>
   );
 }

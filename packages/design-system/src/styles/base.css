@@ -11,7 +11,7 @@
     scrollbar-gutter: stable;
   }
 
-    /* Links. Neutral ink: a link keeps the text color and stands out by its
+  /* Links. Neutral ink: a link keeps the text color and stands out by its
      underline, which darkens on hover. */
   :where(a:any-link) {
     color: var(--todae-link-fg-default);
