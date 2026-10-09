@@ -17,7 +17,7 @@ The docs are written in English and translated into Korean (한국어). Translat
    - Component, prop, hook and token names.
    - JSX such as `<Example>` and `<PropsTable name="…" />`. Translate only the text you pass to them.
    - Links to other docs pages, such as `[Tokens](/tokens)`. Write the English path; on a Korean page it goes to `/ko/tokens` by itself.
-3. Keep the page's shape: the same headings at the same levels, and the same number of blank-line separated blocks (paragraphs, lists, demos) under each one. A test compares the shapes.
+3. Keep the page's shape: the same headings at the same levels, and the same number of paragraphs, lists, demos and other blocks under each one. A test compares the shapes.
 4. Record which English you translated from: `pnpm --filter docs i18n:stamp ko button`. This writes a fingerprint of each English section to `lib/i18n/sources/ko.json`.
 5. Run `pnpm dev:docs` and open the page under `/ko`. The "not translated yet" notice should be gone.
 6. Run `pnpm --filter docs test` and open a pull request. One page per pull request is easiest to review.

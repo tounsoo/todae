@@ -1,7 +1,17 @@
 import { createHash } from 'node:crypto';
+import type { Node, Root } from 'mdast';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { mdxFromMarkdown } from 'mdast-util-mdx';
+import { mdxjs } from 'micromark-extension-mdxjs';
 
 /** One part of an MDX page: a heading and what follows it, up to the next heading. */
-export type Section = { heading: string; level: number; text: string };
+export type Section = {
+  heading: string;
+  level: number;
+  text: string;
+  /** Paragraphs, lists, demos and other top-level blocks after the heading, not counting code blocks. */
+  blocks: number;
+};
 
 /** The key of the part before a page's first heading, usually its imports. */
 export const TOP = '(top)';
@@ -9,24 +19,45 @@ export const TOP = '(top)';
 /** The key of the fingerprint of a page's headings in order, so moving a section is a change. */
 export const ORDER = '(section order)';
 
-/** `mdx` split at its headings. */
+function parse(mdx: string): Root {
+  return fromMarkdown(mdx, { extensions: [mdxjs()], mdastExtensions: [mdxFromMarkdown()] });
+}
+
+const start = (node: Node) => node.position!.start.offset!;
+const end = (node: Node) => node.position!.end.offset!;
+
+/** `mdx` split at its top-level headings, as the MDX compiler parses them. */
 export function sections(mdx: string): Section[] {
-  const parts: Section[] = [{ heading: TOP, level: 0, text: '' }];
-  let fenced = false;
-  for (const line of mdx.split('\n')) {
-    if (line.startsWith('```')) fenced = !fenced;
-    const heading = fenced ? null : /^(#{1,6}) /.exec(line);
-    if (heading) parts.push({ heading: line.trim(), level: heading[1]!.length, text: '' });
-    const part = parts.at(-1)!;
-    part.text += `${line}\n`;
+  const parts: Section[] = [{ heading: TOP, level: 0, text: '', blocks: 0 }];
+  const starts = [0];
+  for (const node of parse(mdx).children) {
+    if (node.type === 'heading') {
+      parts.push({ heading: mdx.slice(start(node), end(node)).trim(), level: node.depth, text: '', blocks: 0 });
+      starts.push(start(node));
+    } else if (node.type !== 'code') {
+      parts.at(-1)!.blocks++;
+    }
   }
+  parts.forEach((part, index) => (part.text = mdx.slice(starts[index], starts[index + 1] ?? mdx.length)));
   return parts.filter((part) => part.level > 0 || part.text.trim() !== '');
 }
 
-/** The blank-line separated blocks of a section outside its code fences, which a translation keeps one for one. */
-export function blocks(text: string): number {
-  const prose = text.replace(/^```[^\n]*\n[\s\S]*?^```$/gm, '');
-  return prose.split(/\n\s*\n/).filter((block) => block.trim() !== '').length;
+/** The source of every code block in `mdx`, at any depth, and `mdx` with them removed. */
+export function codeBlocks(mdx: string): { code: string[]; rest: string } {
+  const code: string[] = [];
+  let rest = '';
+  let from = 0;
+  const visit = (node: Node) => {
+    if (node.type === 'code') {
+      code.push(mdx.slice(start(node), end(node)));
+      rest += mdx.slice(from, start(node));
+      from = end(node);
+    } else if ('children' in node) {
+      for (const child of node.children as Node[]) visit(child);
+    }
+  };
+  visit(parse(mdx));
+  return { code, rest: rest + mdx.slice(from) };
 }
 
 function fingerprint(text: string): string {

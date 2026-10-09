@@ -21,7 +21,7 @@ import { DICTIONARIES } from './dictionaries';
 import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
 import { PROP_TRANSLATIONS, propDescription } from './propDescriptions';
-import { blocks, sections, sourceRecord, staleSections } from './sections';
+import { codeBlocks, sections, sourceRecord, staleSections } from './sections';
 import { stamp } from './stamp';
 import koSources from './sources/ko.json';
 import schema from '@tounsoo/todae/schema/components.json';
@@ -67,19 +67,17 @@ describe('docs locales', () => {
   it('keeps each translation in step with its English page', () => {
     // A translation changes prose only. When an English page changes its imports, demos, props tables,
     // code or links, its translations must change with it.
-    const fences = (text: string) => text.match(/^```[^\n]*\n[\s\S]*?^```$/gm) ?? [];
-    const outsideCode = (text: string) => fences(text).reduce((rest, block) => rest.replace(block, ''), text);
     const shape = (text: string) => {
-      const prose = outsideCode(text);
+      const { code, rest: prose } = codeBlocks(text);
       return {
         imports: prose.match(/^import .*$/gm) ?? [],
-        code: fences(text),
+        code,
         tags: (prose.match(/<\/?[A-Z][\w.]*/g) ?? []).sort(),
         props: prose.match(/<PropsTable\s+name="[^"]+"/g) ?? [],
         links: (prose.match(/\]\([^)\s]+\)|href=["'][^"']+["']/g) ?? []).sort(),
         // Each heading's level and the number of paragraphs, lists and blocks under it, so a section
         // or paragraph added in English has to be added to the translation too.
-        sections: sections(text).map((part) => `h${part.level}: ${blocks(part.text)} blocks`),
+        sections: sections(text).map((part) => `h${part.level}: ${part.blocks} blocks`),
       };
     };
     for (const locale of LOCALES.filter((item) => item !== 'en')) {
@@ -138,8 +136,13 @@ describe('docs locales', () => {
     // The order is recorded on its own, so a tool that sorts the JSON keys does not read as a move.
     const sorted = Object.fromEntries(Object.entries(sourceRecord(page('B', 'C'))).sort());
     expect(staleSections(page('B', 'C'), sorted)).toEqual([]);
-    // A heading inside a code fence is code, not a section.
-    expect(sections('# A\n\n```md\n## Not a heading\n```\n').map((part) => part.heading)).toEqual(['# A']);
+    // A heading inside a code block of any fence style is code, not a section.
+    for (const fence of ['```md\n## Code\n```', '~~~md\n## Code\n~~~', '````md\n```\n## Code\n```\n````', '- Item\n\n  ```md\n  ## Code\n  ```']) {
+      expect(sections(`# A\n\n${fence}\n\n## B\n`).map((part) => part.heading), fence).toEqual(['# A', '## B']);
+    }
+    // Code blocks are left out of a section's block count and out of the prose the shape test reads.
+    expect(sections('# A\n\nText.\n\n```ts\nx\n```\n\n<Demo />\n')[0]!.blocks).toBe(2);
+    expect(codeBlocks('Text.\n\n~~~ts\nimport x from "y";\n~~~\n')).toEqual({ code: ['~~~ts\nimport x from "y";\n~~~'], rest: 'Text.\n\n\n' });
   });
 
   it('stamps a translated page, drops a removed one and refuses an untranslated one', () => {
