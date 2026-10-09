@@ -37,6 +37,14 @@ useHotkey(['Control+K', 'Meta+K'], () => !cb.open && cb.setOpen(true))
 
 The shortcut is [useHotkey](/utilities/use-hotkey), which opens the palette on Ctrl+K or ⌘K. `aria-keyshortcuts` on the trigger tells assistive technology about it. Escape and a click on the backdrop close the dialog, and focus goes back to the element that had it when the palette opened, or to the trigger when nothing had focus. The empty message sits in a `role="status"` region, so screen readers announce it.
 
+## Accessible composition
+
+**Todae handles:** `Dialog` is a native modal `<dialog>`, so the page behind it is inert while it is open, and it closes and returns focus as described above. [useCombobox](/utilities/use-combobox) makes the input a `role="combobox"` with `aria-activedescendant` on the active command, moves it with the arrow keys, Home and End, and chooses it with Enter. `getTriggerProps()` gives the trigger `aria-haspopup="dialog"`, `aria-expanded` and `aria-controls`.
+
+**You supply:** A name for the dialog: `getDialogProps()` sets `aria-label="Options"`, so pass your own after the spread, as `aria-label="Commands"` does above. A name for the input, here `aria-label` on `Field.Root`. Visible trigger text, and `aria-keyshortcuts` for the shortcut. The empty message in a `role="status"` element that stays mounted. A result people can perceive after a command runs, such as a status message, when the command has no visible effect.
+
+**Watch for:** Your `aria-label` placed before `{...cb.getDialogProps()}`: the spread's "Options" then wins. Unmounting the list when nothing matches; hide it with `hidden`, so `aria-controls` still points at it. A palette reachable only by the shortcut.
+
 ## When to use
 
 **When:** One place to search and run actions across an app.

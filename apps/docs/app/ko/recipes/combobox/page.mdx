@@ -138,6 +138,14 @@ const found = useHighlight({ name: 'search', query: cb.query })
 - combobox를 Field에 내장하지 마세요. `Combobox.*` 외형을 export하지 마세요.
 - 시트 트리거는 `aria-haspopup="dialog"`를 씁니다. 팝오버의 Field 외형에는 `aria-haspopup`이 없습니다.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** [useCombobox](/utilities/use-combobox)는 입력을 `role="combobox"`로 만들어 `aria-controls`로 listbox를, `aria-activedescendant`로 활성 옵션을 가리키게 하고, 화살표 키, Home, End, Enter, Escape, Tab을 처리합니다. `OptionList`는 `role="listbox"`와 `aria-selected`, `aria-disabled`가 있는 `role="option"` 행을 렌더링하며, 다중 모드에서는 `aria-multiselectable`을 줍니다. `Popover`와 `BottomSheet`는 Escape로 닫히고 포커스를 돌려줍니다. 다중 모드에서 `Field.ChipInput`은 각 칩의 제거 버튼에 이름을 붙입니다.
+
+**직접 제공할 것:** 레이블을 주세요. `htmlFor={cb.ids.input}`인 [Label](/label)을 쓰거나, 시트 안의 `Field.Root`에 `aria-label`을 주세요. 시트 모드에서는 트리거의 이름이 필드와 현재 값을 말해야 합니다. 로딩, 오류, 빈 결과 텍스트는 `role="status"` 요소에 두세요. 방금 나타난 영역의 텍스트는 늘 읽히지는 않으므로, 그 요소는 마운트된 채로 두고 텍스트만 바꾸세요. Retry는 비동기 데모처럼 실제 버튼이어야 합니다.
+
+**주의할 점:** 비어 있거나 로딩 중일 때 `OptionList.Root`를 마운트 해제하지 마세요. `aria-controls`가 계속 가리키도록 `hidden`을 지정하세요. getter 스프레드 뒤에 직접 `onKeyDown`, `onFocus`, `onBlur`를 주면 훅의 핸들러를 대체합니다. 일치 항목 강조만으로 알리지 마세요. 강조는 시각적일 뿐입니다.
+
 ## 훅
 
 언제 쓰는지와 props는 [useCombobox](/utilities/use-combobox)와 [useSheetPresentation](/utilities/use-sheet-presentation)에 있습니다.

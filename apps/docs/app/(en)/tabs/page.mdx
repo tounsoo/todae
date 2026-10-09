@@ -31,6 +31,14 @@ The root takes `value` with `onValueChange`, or `defaultValue`. One tab is alway
 
 There is no native tabs element. An exclusive `<details name>` group looks similar but has no tab semantics or arrow keys, so it is an accordion, not tabs.
 
+## Accessible composition
+
+**Todae handles:** `Tabs.List` is the `role="tablist"` with `aria-orientation`. Each `Tabs.Tab` is a button with `role="tab"`, `aria-selected` and `aria-controls`, and each `Tabs.Panel` is a `role="tabpanel"` whose `aria-labelledby` points at its tab. Todae makes the ids that pair them, so neither part takes an `id`. It keeps at most one tab stop in the list, makes each panel a Tab stop by default, and hides unselected panels with `hidden`, even against a `display` in your own class.
+
+**You supply:** A name for the list: `aria-label`, or `aria-labelledby` pointing at a visible heading. The type does not require one. Tab text that names its panel, since the panel takes its name from the tab; an icon-only tab needs `aria-label`. One `Tabs.Panel` for each `Tabs.Tab`, with the same `value`.
+
+**Watch for:** A panel whose `value` matches no tab: its `aria-labelledby` points at an id that does not exist. A disabled tab is skipped by the arrow keys, so a reason it is unavailable needs to show somewhere else. A selected tab marked by color alone after restyling.
+
 ## When to use
 
 **When:** Switch between sibling views of the same object in one place, such as settings sections or report views, where one view shows at a time.

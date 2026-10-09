@@ -4,7 +4,7 @@ import { DescriptionSibling } from '../../../components/demos/DescriptionDemo';
 
 Supporting text below a control. A sibling, not a Field part. `id` is required so you can name it in `aria-describedby`. The component writes nothing onto the control.
 
-Put `aria-describedby` on `Field.Root`, not on `Field.TextInput`. Root copies the string onto the input. TextInput then overwrites input-level aria.
+Put `aria-describedby` on `Field.Root`. Root copies the string onto the input, ahead of any ids the input part was given.
 
 ## With Field
 
@@ -43,6 +43,14 @@ const hintId = useId()
 </Example>
 
 This is not `Dialog.Description`. Dialog Description wires `aria-describedby` for you. Form Description does not.
+
+## Accessible composition
+
+**Todae handles:** `Description` renders a `<span>` with the `id` you pass, which its type requires, and `data-todae-description`. It writes nothing onto the control and has no live region. `Field.Root` passes its `aria-describedby` to the input, merged with the input's own.
+
+**You supply:** The link to the control: put the id in `aria-describedby` on `Field.Root`, on a Checkbox or Switch, on `RadioGroup.Root`, or on `Fieldset.Root` for a group. Keep the text short. It is read as plain text, so a link inside it is not announced as a link when the control is described.
+
+**Watch for:** A Description that no `aria-describedby` points at is only visual. Changing its text announces nothing; for news use an [ErrorMessage](/errormessage) with `role="alert"` or a live region of your own.
 
 ## When to use
 

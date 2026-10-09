@@ -26,6 +26,14 @@ Server Components can import it from `@tounsoo/todae/badge`. That entry has no `
   <BadgeCount />
 </Example>
 
+## Accessible composition
+
+**Todae handles:** Color only. `Badge.Root` is a `span` with no role and no ARIA, and `tone` sets `data-tone`, which nothing announces. A screen reader reads the badge in line with the text around it.
+
+**You supply:** Text that makes sense when read in that line. For a count, add the noun in `todae-visually-hidden` text, as above. When the tone carries meaning, such as overdue against paid, put that meaning in the words too.
+
+**Watch for:** A badge made clickable with `onClick`: a `span` takes no focus and has no role, so use a [Button](/button) or a link. A count that changes while the user waits, such as new messages: the badge does not announce it, so use [useAnnouncer](/utilities/use-announcer) or another live region. A badge inside a button or link becomes part of its name, so the whole name has to read well.
+
 ## When to use
 
 **When:** A status or count that labels something next to it: a paid invoice, a beta feature, unread messages.

@@ -20,6 +20,14 @@ function YourDialog({ open, onClose, children }) {
 
 대화 상자는 `open`이 true이고 `showModal()`로 열리면 스택에 들어가고, `open`이 false가 된 뒤에도 `close()`까지 남습니다. 둘의 순서는 상관없습니다. 훅은 자신을 호출하는 컴포넌트가 렌더링될 때마다 `ref`를 읽으므로, `<dialog>`는 그 컴포넌트에서 렌더링하세요. 모달 `<dialog>`는 자기 바깥의 모든 것을 inert로 만들므로, [Toast.Region](/toast)은 맨 앞의 모달 안으로 토스트를 옮겨 계속 쓸 수 있게 합니다. 이 훅이 없으면 토스트는 직접 만든 대화 상자 아래에서 inert로 남습니다.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 모달 스택에 들어가는 것뿐입니다. 대화 상자가 스택에 있는 동안 [Toast.Region](/toast)은 토스트를 그 안으로 옮기고, [useAnnouncer](/utilities/use-announcer)는 그 안의 라이브 영역에 메시지를 씁니다. 그래서 뒤의 페이지가 inert인 동안에도 둘 다 닿을 수 있습니다. 훅은 `<dialog>`에 속성을 더하지 않습니다.
+
+**직접 제공할 것:** [Dialog](/dialog)라면 대신 해 주는, 접근 가능한 모달의 나머지입니다. `showModal()`, `aria-labelledby`나 `aria-label`로 붙이는 이름, 알맞은 첫 포커스, 닫는 버튼이 필요합니다. 모달 `<dialog>`는 Escape로 스스로 닫히므로, 예제처럼 `open` 상태를 `close` 이벤트에 맞춰 두세요.
+
+**주의할 점:** `show()`나 `open` 속성으로 연 대화 상자는 `aria-modal="true"`가 있을 때만 스택에 들어갑니다. 대화 상자가 쓰는 것과 같은 `open`을 넘기세요. 그 값이 false인 동안에는 `showModal()` 뒤에도 스택에 들어가지 않습니다.
+
 ## 언제 쓰나요
 
 **언제:** 토스트를 보여 주는 페이지에서 직접 `showModal()`로 여는 모달 `<dialog>`.

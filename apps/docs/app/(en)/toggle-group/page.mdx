@@ -26,6 +26,14 @@ With `selectionMode="multiple"`, any number can be pressed, and the value is an 
 
 Name the group with `aria-label` or `aria-labelledby`. Horizontal items join like [Button.Group](/button). Inside a [Toolbar](/toolbar), the toolbar owns the arrow keys and the tab stop.
 
+## Accessible composition
+
+**Todae handles:** `ToggleGroup.Root` is a `role="group"`. Each `ToggleGroup.Item` is a `Button.Root` whose `aria-pressed` comes from the group's value, with a native `disabled` when the item or the group is disabled. On its own, the group keeps one tab stop and moves focus with the arrow keys; inside a Toolbar, it leaves both to the toolbar. A pressed item keeps an inset ring as well as its colors.
+
+**You supply:** A name for the group with `aria-label` or `aria-labelledby`; the type does not require one. A name for each item: text children, or `aria-label` on an icon-only item, which `Button.Root` also shows as its tooltip. Labels that stay the same when pressed: `aria-pressed` carries the state, so "Bold" stays "Bold".
+
+**Watch for:** `role="radio"` on items in single mode: they are toggle buttons with `aria-pressed`, and the group's `role` is fixed. Restyling the pressed state as a fill change only, which leaves it on color alone. Wrapping each item in an element that drops the props it is given, such as `aria-label`.
+
 ## When to use
 
 **When:** Options that change how something shows, where the pressed state is visible at a glance and changes take effect at once.

@@ -22,6 +22,14 @@ Two utility classes in the `todae.base` layer hide content on screen and keep it
 
 The declarations use `!important`, so a component's own padding or size never shows the hidden content. Prefer `aria-label` when the element already takes one, such as an icon-only `Button.Root`.
 
+## Accessible composition
+
+**Todae handles:** The two classes. `todae-visually-hidden` clips the element to 1px and takes it out of the layout, but leaves it in the accessibility tree, so its text still counts, for example toward a button's name. `todae-visually-hidden-focusable` does the same until focus is on the element or inside it (`:focus-within`), then shows it. Neither sets a role, ARIA attribute or `tabindex`.
+
+**You supply:** The hidden text itself, in the page's language. For a skip link, the target: `href="#main"` needs an element with `id="main"`.
+
+**Watch for:** `todae-visually-hidden` on a link, button or other focusable element: it stays in the Tab order with nothing on screen, so focus seems to vanish. Use the `-focusable` class there. Hidden text that repeats visible text in the same name, which is then read twice. Hidden text inside an element that also has `aria-label`: `aria-label` wins, and the hidden text is not part of the name.
+
 ## When to use
 
 **When:** Text a screen reader needs that sighted users get from context: an icon's meaning, the unit after a number, a skip link.

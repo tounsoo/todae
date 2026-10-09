@@ -22,6 +22,14 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
   <ComboboxTouchSketch />
 </Example>
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 위에서 설명한 모달 `<dialog>` 동작입니다. `BottomSheet.Title`과 `BottomSheet.Description`은 `aria-labelledby`와 `aria-describedby`를 설정하고, `BottomSheet.Close`는 자기 텍스트도 `aria-label`도 이름을 주지 않으면 `close` 문자열로 이름이 붙습니다. 닫힘 동작이 끝나면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. 그래버는 `resizeSheet` 문자열("Resize sheet")로 이름이 붙은 `<button>`입니다. ArrowUp은 `snapPoints`에 `full`이 있으면 `full`로 스냅하고, ArrowDown은 `mid`가 있으면 `mid`로 내립니다. `dismissOnDrag`가 켜져 있으면 `mid`에서 ArrowDown이 시트를 닫습니다.
+
+**직접 제공할 것:** 이름입니다. `BottomSheet.Title`을 쓰거나 `BottomSheet.Root`에 `aria-label`을 넘기세요. 검색 필드처럼 작업이 시작되는 컨트롤에 `initialFocusRef`를 넘기세요. 넘기지 않으면 포커스는 첫 번째 탭 가능한 요소, 곧 기본 그래버에서 시작합니다. 드래그와 배경 탭에는 포인터가 필요하므로, 눈에 보이는 `BottomSheet.Close`나 푸터 버튼을 두세요.
+
+**주의할 점:** 직접 배치한 `BottomSheet.Grabber`는 자기 `aria-label`을 버튼에 넘깁니다. 이를 버리는 래퍼는 `resizeSheet` 문자열을 남기는데, [StringsProvider](/utilities/strings-provider)로 설정하지 않으면 영어입니다. `dismissOnEscape`, `dismissOnBackdrop`, `dismissOnDrag`가 모두 false라면 시트 안의 버튼이 유일하게 나가는 길입니다. `BottomSheet.Title` 대신 자체 제목을 렌더링하는 래퍼는 `aria-labelledby`를 넘겨야 합니다.
+
 ## 언제 쓰나요
 
 **언제:** 아래에서 올라오는 모달 시트(터치용 Combobox의 닫힌 컨트롤, 모바일 선택기). 스크림, 모달 포커스, 중간/전체 스냅.

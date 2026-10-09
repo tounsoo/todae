@@ -547,8 +547,8 @@
       "ko": "입력 id. 생략하면 자동 생성됩니다."
     },
     "aria-describedby": {
-      "en": "Ids of Description and ErrorMessage. Put this on Root. TextInput overwrites input-level aria.",
-      "ko": "Description과 ErrorMessage의 id. Root에 넣습니다. TextInput은 입력 수준의 aria를 덮어씁니다."
+      "en": "Ids of Description and ErrorMessage. Put this on Root. Input parts add their own ids after these.",
+      "ko": "Description과 ErrorMessage의 id. Root에 넣습니다. 입력 파트는 자기 id를 이 뒤에 더합니다."
     },
     "name": {
       "en": "Native input name.",

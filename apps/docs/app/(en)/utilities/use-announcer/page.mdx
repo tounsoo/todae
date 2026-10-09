@@ -19,6 +19,14 @@ async function save() {
 
 Messages go to a visually hidden polite or assertive live region that every caller in the document shares. It is added when the first component using the hook mounts. A modal dialog makes the rest of the page inert, so while a modal in Todae's modal stack is open, messages are read from a region inside the one in front. Dialog, Drawer and BottomSheet join the stack by themselves; pass a modal `<dialog>` of your own to [useModalLayer](/utilities/use-modal-layer). `announce` empties the region, then writes the message a moment later, so the same message twice is read twice. A newer message of the same politeness sent before the last one is written replaces it, and a message sent just before the calling component unmounts is still written. `politeness: 'assertive'` interrupts the screen reader; keep it for messages that cannot wait. On the server `announce` does nothing, and `announce` is the same function on every render.
 
+## Accessible composition
+
+**Todae handles:** A visually hidden region with an `aria-live="polite"` child and an `aria-live="assertive"` child, both `aria-atomic="true"`, added on mount so it is there before the first message. `announce` empties the region before it writes, so a repeat is read again. While a modal in Todae's modal stack is open, it writes to a region inside the one in front.
+
+**You supply:** The whole message, in the reader's language: `announce` reads your string as it is, so pass "12 results", not "12". A visible result where sighted users need one, since the message never shows. [useModalLayer](/utilities/use-modal-layer) on a modal `<dialog>` of your own: otherwise messages sent while it is open are written outside it, where the inert page keeps them from being read.
+
+**Watch for:** Text that is already in a live region, such as an [Alert](/alert) or a toast, is read twice if you announce it too. Don't announce on every keystroke; send one message once the result settles. Don't use it to repeat what the focused control's own name, role or state already says.
+
 ## When to use
 
 **When:** Async results with no visible message of their own: saves, copies, result counts, background loads finishing.

@@ -33,6 +33,14 @@ import { ChipListDemo } from '../../../components/demos/ChipListDemo';
   <ChipListDemo maxRows={1} readOnly />
 </Example>
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 칩은 `role="list"` 요소 안에 있고, 이 요소가 `aria-label`, `aria-labelledby`, `aria-describedby`, `aria-details`를 받습니다. 줄에 보이는 각 칩과 +N은 `role="listitem"`입니다. +N은 `aria-expanded`, `aria-controls`, `aria-haspopup="dialog"`가 있는 네이티브 버튼이고, 이름은 `overflowLabel`이나 `moreChips` 문자열입니다. 팝오버는 `role="dialog"`이고, 이름은 `panelLabel`이나 `moreChipsPanel` 문자열입니다. 제거 버튼의 이름은 `removeLabel`이나 `Remove {value}`입니다. 제거 뒤의 포커스와 팝오버 안의 Tab, Shift+Tab, Escape는 위에서 설명한 대로 동작합니다. 측정용 줄은 `aria-hidden`이고 `inert`입니다.
+
+**직접 제공할 것:** "Applied filters"처럼 칩이 무엇인지 말하는 `aria-label`이나 `aria-labelledby`를 주세요. 없으면 목록에 이름이 없습니다. `Remove {value}`만으로 부족하면 `removeLabel`을 주세요. 두 칩이 같은 값을 가질 수 있다면 포커스가 맞는 칩을 따라가도록 안정적인 `getKey`를 주세요. 다른 버튼으로 필터를 모두 지우는 것처럼 바깥에서 바뀐 내용은 직접 알리세요. 목록은 아무것도 읽어 주지 않습니다.
+
+**주의할 점:** 목록 대신 래퍼에 이름을 붙이지 마세요. `ChipList.Root`의 `aria-label`은 목록에 닿지만, 그 바깥의 직접 만든 `<div>`에 붙이면 아무것도 이름 짓지 않습니다. 값이 겹칠 때 값으로 지우지 마세요. `onRemove`는 누른 칩의 인덱스를 넘겨줍니다. 래퍼가 `onRemove`를 늘 넘기면 읽기 전용 칩에도 제거 버튼이 생깁니다.
+
 ## 언제 쓰나요
 
 **언제:** 적용된 필터, 읽기 전용 태그, 수신자처럼 텍스트 필드 밖의 칩을 `maxRows`로 제한하고 +N 개수를 보일 때.

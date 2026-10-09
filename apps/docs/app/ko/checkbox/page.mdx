@@ -21,6 +21,14 @@ Checkbox를 `Field.Root` 안에 넣지 마세요. 그 셸은 텍스트와 칩 �
 
 늘 보이는 배타적 선택에는 [Radio](/radio)를 쓰세요. 오버레이 목록에는 [OptionList](/optionlist)를 쓰세요.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** Checkbox는 children과 함께 `<label>` 안에 든 네이티브 `<input type="checkbox">`입니다. 그래서 children이 이름이 되고, 텍스트를 클릭해도 토글됩니다. Space는 네이티브처럼 토글합니다. `disabled`는 네이티브이고 `invalid`는 `aria-invalid`를 설정합니다. 둘 다 바깥 [Fieldset](/fieldset)에서도 옵니다. 그려진 상자는 `aria-hidden`이고, 입력이 focus-visible인 동안 포커스 링을 보여 줍니다. `aria-*`, `id`, `ref`를 포함한 다른 props는 입력으로 가고, `className`은 label로 갑니다.
+
+**직접 제공할 것:** 타입이 요구하는 보이는 텍스트를 `children`으로 주세요. [Description](/description)이나 [ErrorMessage](/errormessage)의 id는 `aria-describedby`에 넣으세요. 체크박스 여러 개가 한 질문에 답한다면 legend가 있는 [Fieldset](/fieldset)으로 묶으세요.
+
+**주의할 점:** 다른 `<label>`로 감싸거나 [Label](/label)이 가리키게 하지 마세요. 이미 레이블이 있습니다. children과 다른 `aria-label`은 보이는 이름을 대체합니다. `invalid`는 체크박스를 유효하지 않다고 표시하지만 이유는 말하지 않으므로 ErrorMessage를 함께 보여 주세요.
+
 ## 언제 쓰나요
 
 **언제:** 페이지에 계속 남는 독립적인 켜기/끄기. children = 보이는 레이블.

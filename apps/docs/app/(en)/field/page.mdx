@@ -71,7 +71,7 @@ Label works with Icon, Affix, and ChipInput.
 
 ## Messages
 
-[Description](/description) and [ErrorMessage](/errormessage) sit under the shell as siblings. They are not Field parts. Each owns `margin-block-start`. Put `aria-describedby` on `Field.Root`. Root copies it onto the input. Do not set it on `Field.TextInput`.
+[Description](/description) and [ErrorMessage](/errormessage) sit under the shell as siblings. They are not Field parts. Each owns `margin-block-start`. Put `aria-describedby` on `Field.Root`. Root copies it onto the input.
 
 ```tsx
 const describedBy = invalid ? `${hintId} ${errorId}` : hintId
@@ -265,6 +265,14 @@ Stepper buttons and a calendar grid are app compositions; build them around thes
 ## Custom controls
 
 Your own control, such as a rating or a color well, joins a `Field.Root` through [useField](/utilities/use-field).
+
+## Accessible composition
+
+**Todae handles:** `Field.Root` hands its `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` to the input. Other ARIA props stay on the shell `div`. The input gets native `disabled` and `aria-invalid` from the Root, or from a surrounding [Fieldset](/fieldset). A press on the shell focuses the input, and the shell draws the focus ring while the input is focus-visible. A decorative `Field.Icon` is `aria-hidden`. With `maxLength`, `Field.Counter` adds the limit to the input's description and, from 20 characters left, announces what remains. In `Field.ChipInput`, each remove button is named after its chip, and focus returns to the input after a remove.
+
+**You supply:** A name: a [Label](/label) whose `htmlFor` is the Root `id`, or `aria-label` / `aria-labelledby` on the Root. The ids of any [Description](/description) or [ErrorMessage](/errormessage) in the Root's `aria-describedby`, and `invalid` while the error shows. A name for every button inside an interactive `Field.Icon`. Chip and counter strings in the product's language, through [StringsProvider](/utilities/strings-provider).
+
+**Watch for:** An `id` on `Field.TextInput` is replaced by the Root's; put it on the Root. A `role` or `onClick` on `Field.Root` lands on the shell, which is not a control; open overlays from a real button. `invalid` marks the input invalid but does not say why, so show an ErrorMessage with it. Adding `'Tab'` to `commitKeys` makes Tab commit typed text instead of moving focus.
 
 ## When to use
 

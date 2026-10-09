@@ -53,6 +53,14 @@ A string that depends on a number or a label is a function.
 
 `Breadcrumbs` and `Pagination` from the server entries, `@tounsoo/todae/breadcrumbs` and `@tounsoo/todae/pagination`, render on the server without context, so they always use English. Pass `aria-label`, or import them from `@tounsoo/todae` to use the provider.
 
+## Accessible composition
+
+**Todae handles:** The text Todae writes by itself: default names of close buttons, landmarks, chip remove buttons and the `+N` chip, the sheet name from `useCombobox`, and `Field.Counter`'s description and live messages. A part's own prop wins, as listed above.
+
+**You supply:** Every key your app shows, in the reader's language. The function keys get the label or the number, so place it where your language needs it and pick the plural form there. `StringsProvider` renders no element and sets no `lang`, so set `lang` on `<html>`, or on an element around a part in another language, so screen readers pronounce the words right. For `Breadcrumbs` and `Pagination` from the server entries, pass `aria-label` yourself, as above.
+
+**Watch for:** An empty string. Unlike `undefined`, it replaces the string above it, so a close button with no words of its own loses the name Todae would have given it. Expecting `close` or `dismiss` to name a close button that shows words: the button is named by its own words, and the key is not used.
+
 ## When to use
 
 **When:** Your app is not in English, or you want other wording for Todae's own text, across a whole app or one part of it.

@@ -17,6 +17,14 @@ The input is `type="checkbox"` with `role="switch"`. Controlled and uncontrolled
 
 Density scales the track through `space.selection.size`. Do not put Switch inside `Field.Root`.
 
+## Accessible composition
+
+**Todae handles:** The input is a native `<input type="checkbox">` with `role="switch"`, inside a `<label>` with your children, so the children are its name and it is reported as on or off. Space toggles it. `disabled` is native and `invalid` sets `aria-invalid`; both also come from a surrounding [Fieldset](/fieldset). The track is `aria-hidden` and shows the focus ring while the input is focus-visible. Other props, `aria-*` and `ref` included, go to the input; `className` goes to the label.
+
+**You supply:** Children that name the setting, such as "Play a sound on mention"; the type requires them. A [Description](/description) id in `aria-describedby` when the setting needs explaining. The change itself, applied when it toggles, since a switch reads as taking effect at once.
+
+**Watch for:** A label that names the state, such as "On", or that changes when toggled: the switch already reports its state. Wrapping it in another `<label>` or pointing a [Label](/label) at it. A switch in a form that applies only on submit; use a [Checkbox](/checkbox) there.
+
 ## When to use
 
 **When:** Immediate on/off setting (track + thumb, no check glyph). Children = label.

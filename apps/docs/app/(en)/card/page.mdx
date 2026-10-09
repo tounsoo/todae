@@ -26,6 +26,33 @@ Server Components can import it from `@tounsoo/todae/card`. That entry has no `'
 
 Every part is a `div` with no role. Pick the heading level that fits the page; a heading or paragraph directly inside the header has no outer margin. A card that should be a landmark takes `role="region"` and a name, like any `div`. A card is not a button or a link: put the actions inside it, in `Card.Footer` or in the body.
 
+## Accessible composition
+
+**Todae handles:** Layout and paint only. Every part is a `div` with no role, and passes any role or ARIA you give it to that `div`.
+
+**You supply:** A heading in `Card.Header`, at the level that fits where the card sits. For a card that is a landmark, `role="region"` and a name, best taken from that heading with `aria-labelledby`. A reusable card should take the heading level as a prop rather than fix it.
+
+```tsx
+import { useId, type ReactNode } from 'react';
+import { Card, Text, type TextHeading } from '@tounsoo/todae';
+
+type PanelProps = { title: string; level: TextHeading; children: ReactNode };
+
+export function Panel({ title, level, children }: PanelProps) {
+  const id = useId();
+  return (
+    <Card.Root role="region" aria-labelledby={id}>
+      <Card.Header>
+        <Text as={level} id={id}>{title}</Text>
+      </Card.Header>
+      <Card.Body>{children}</Card.Body>
+    </Card.Root>
+  );
+}
+```
+
+**Watch for:** `onClick` on `Card.Root` to make the whole card clickable: a `div` takes no focus and has no role, so put a real button or link inside it. A link around the whole card makes all of its content the link's name, and a button inside that link nests interactive content. `role="region"` on every card in a long list, which adds a landmark for each.
+
 ## When to use
 
 **When:** A group of content that reads as one unit and sits beside others like it: plans, settings sections, summary tiles.

@@ -21,6 +21,14 @@ const tooltip = useTooltip()
   <TooltipOverflow />
 </Example>
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `getTriggerProps`는 포인터와 포커스 핸들러를 더하고, 팁이 열린 동안에는 팁을 가리키는 `aria-describedby`를 더합니다. 포커스를 받으면 팁이 바로 열리므로 키보드 사용자도 팁을 받습니다. `Tooltip.Root`는 `role="tooltip"`을 더하고, `interactive: true`라면 `role="dialog"`를 더합니다. Escape는 팁을 닫고, 인터랙티브 팁 안에서 누르면 포커스를 트리거로 돌려보냅니다.
+
+**직접 제공할 것:** 포커스를 받는 트리거입니다. 게터는 `tabIndex`나 역할을 더하지 않으므로, 위처럼 탭할 수 없는 래퍼에는 `tabIndex={0}`을 주세요. 트리거 자체의 이름도 필요합니다. `aria-describedby`는 팁을 이름이 아니라 설명으로 만들므로, 아이콘 전용 트리거에는 `aria-label`이 필요합니다. `interactive: true`라면 `Tooltip.Root`에 `aria-label`과 `aria-labelledby` 중 정확히 하나를 주고, 안에는 링크만 두세요.
+
+**주의할 점:** 열린 동안 게터의 `aria-describedby`는 직접 넘긴 것에 더해지지 않고 그것을 대체합니다. 그래서 팁이 보이는 동안 그 설명은 읽히지 않습니다. 직접 쓰는 `onFocus`, `onBlur`, `onPointerEnter`, `onPointerLeave`는 `getTriggerProps(props)`로 넘기세요. 스프레드 뒤에 두면 팁의 것을 덮어씁니다. 훅이 `Button.Root`의 팁을 맡는다면 그 버튼에 `tooltip={false}`를 설정하세요.
+
 ## 언제 쓰나요
 
 **언제:** `Button.Root`가 아닌 트리거의 짧은 힌트, 또는 링크가 있는 팁(`interactive: true`).

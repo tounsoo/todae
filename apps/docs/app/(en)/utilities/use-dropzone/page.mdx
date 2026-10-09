@@ -24,6 +24,14 @@ The browser's picker applies `accept`; the hook checks dropped files against it 
 
 See the [File upload recipe](/recipes/file-upload) for a full example with errors and a file list.
 
+## Accessible composition
+
+**Todae handles:** The native `<input type="file">` stays the control, so its role, the keyboard and the file picker come from the browser. `getInputProps()` sets `type`, `accept`, `multiple` and `disabled`; with `disabled`, drops are refused as well. `getRootProps()` adds only drag handlers and `data-dragging`. The hook sets no ARIA and announces nothing.
+
+**You supply:** The input's name, such as the text of a `<label>` around it. A hint about the rules, joined with `aria-describedby`. When files are rejected: the reasons in words, since `reasons` are codes; `aria-invalid` and `aria-describedby` pointing at the message; and an announcement through [useAnnouncer](/utilities/use-announcer) if it must be heard. A labelled list of the accepted files.
+
+**Watch for:** Hiding the input with `display: none` or `hidden`: dragging is pointer-only, so keyboard and screen reader users lose the only way in. If you restyle it, keep it focusable and show its focus. Adding `role="button"` or a click handler to the drop target, which adds a second control for the same picker. The drag state or an error shown by color alone.
+
 ## When to use
 
 **When:** Letting people drop files onto a form as well as pick them.

@@ -4,7 +4,7 @@ import { DescriptionSibling } from '../../../components/demos/DescriptionDemo';
 
 컨트롤 아래의 보조 텍스트입니다. Field의 파트가 아니라 형제 요소입니다. `aria-describedby`에서 가리킬 수 있도록 `id`가 필수입니다. 이 컴포넌트는 컨트롤에 아무것도 쓰지 않습니다.
 
-`aria-describedby`는 `Field.TextInput`이 아니라 `Field.Root`에 두세요. Root가 그 문자열을 입력에 복사합니다. TextInput은 입력 수준의 aria를 덮어씁니다.
+`aria-describedby`는 `Field.Root`에 두세요. Root가 그 문자열을 입력에 복사하며, 입력 파트가 받은 id보다 앞에 둡니다.
 
 ## Field와 함께
 
@@ -43,6 +43,14 @@ const hintId = useId()
 </Example>
 
 이것은 `Dialog.Description`이 아닙니다. Dialog의 Description은 `aria-describedby`를 대신 연결해 줍니다. 폼의 Description은 그렇지 않습니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `Description`은 넘긴 `id`(타입에서 필수)와 `data-todae-description`을 가진 `<span>`을 렌더링합니다. 컨트롤에는 아무것도 쓰지 않고 라이브 영역도 없습니다. `Field.Root`는 자신의 `aria-describedby`를 입력 자체의 값과 합쳐 입력에 넘깁니다.
+
+**직접 제공할 것:** 컨트롤과의 연결. id를 `Field.Root`, Checkbox나 Switch, `RadioGroup.Root`, 또는 그룹이라면 `Fieldset.Root`의 `aria-describedby`에 넣으세요. 텍스트는 짧게 쓰세요. 일반 텍스트로 읽히므로, 안에 있는 링크는 컨트롤 설명을 읽을 때 링크로 알려지지 않습니다.
+
+**주의할 점:** 어떤 `aria-describedby`도 가리키지 않는 Description은 눈에만 보입니다. 텍스트를 바꿔도 아무것도 알리지 않습니다. 알릴 내용은 `role="alert"`를 준 [ErrorMessage](/errormessage)나 직접 만든 라이브 영역으로 전하세요.
 
 ## 언제 쓰나요
 

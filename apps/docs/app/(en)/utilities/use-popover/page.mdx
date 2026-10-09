@@ -26,6 +26,14 @@ const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: se
   <PopoverMenu />
 </Example>
 
+## Accessible composition
+
+**Todae handles:** `getTriggerProps` adds `aria-expanded`, `aria-controls` with the surface's id, `aria-haspopup` (`dialog` unless you set `haspopup`) and an `onClick` that toggles. On open, focus moves into the surface: `initialFocusRef`, else its first tabbable element, else the surface. Escape and an outside press ask to close. On close, focus goes to `restoreFocusRef`, else back to what had focus before it opened, unless the person already moved it elsewhere.
+
+**You supply:** The trigger element. `getTriggerProps` sets no role, `tabIndex` or key handling, so spread it on a `<button>` or `Button.Root`. The surface's role and name: for `haspopup: 'dialog'`, `Popover.Root` with `role="dialog"` and `aria-label` or `aria-labelledby`; for `listbox`, a role-less surface with a named `OptionList.Root` inside, as above. Your own `onClick`, `ref` and `style` go through `getTriggerProps(props)`, which merges them.
+
+**Watch for:** Props put after the `getTriggerProps()` spread replace what it set: a later `onClick` drops the toggle. A trigger keeps `aria-expanded` and `aria-haspopup` while `enabled` is false, so disable the trigger too. A role-less popover left on the default `haspopup` announces a dialog that is not there.
+
 ## When to use
 
 **When:** A non-modal surface anchored to a trigger, with open and dismiss on the hook and chrome on `Popover.Root`.

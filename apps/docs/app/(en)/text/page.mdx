@@ -35,6 +35,14 @@ Choose the level for the page outline and `size` for the look. A heading that si
   <TextHeadingSize />
 </Example>
 
+## Accessible composition
+
+**Todae handles:** The element. `as` picks `p` (the default), `span`, `strong` or `h1` to `h6`, and the element keeps its native meaning. `size` and `weight` change only the look: a large `p` is still a paragraph, and an `h2` with `size="s"` is still an h2. `ref`, `id` and other attributes reach the element.
+
+**You supply:** The outline. Pick each heading's level from where it sits on the page, not from the size you want. A wrapper such as a section title should take the level as a prop, or render one level only where that level is always right. Give a heading an `id` when a region names itself with `aria-labelledby`.
+
+**Watch for:** A heading tag on text that does not start a section, such as a bold line inside a card: it adds an entry to the page's list of headings. Use `weight="bold"` instead. `as="strong"` marks importance; for the bold look alone, use `weight`. A `tone` as the only sign that text means something, such as an error or a selected state.
+
 ## When to use
 
 **When:** Body text and headings on the token scale: size s through 2xl, tone default / muted / accent, weight; `as` p / span / strong / h1–h6.

@@ -59,6 +59,14 @@ CSS 앵커가 없는 브라우저는 표면을 트리거 옆에 놓지 않습니
   </tbody>
 </table>
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `getTriggerProps`는 `aria-expanded`, `aria-controls`, `aria-haspopup`을 설정합니다. 표면은 항상 마운트되어 있으므로 `aria-controls`는 언제나 표면을 가리킵니다. 열리면 포커스는 `initialFocusRef`로, 없으면 안쪽의 첫 번째 탭 가능한 요소로, 그것도 없으면 표면 자체로 갑니다. Escape와 바깥 누르기는 닫기를 요청합니다. 닫히면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. 단, 사용자가 이미 다른 곳으로 옮겼다면 그대로 둡니다. `role="dialog"`일 때는 타입이 이름을 요구하고, Todae는 `aria-modal`을 설정하지 않습니다.
+
+**직접 제공할 것:** `Button.Root`처럼 진짜 버튼인 트리거입니다. `getTriggerProps`는 `onClick`과 ARIA를 더할 뿐, 역할, 탭 정지, 키 처리는 더하지 않습니다. 열리는 것과 맞는 `haspopup`도 필요합니다. `Popover.Root`에 `role="dialog"`와 이름을 줄 때는 `dialog`, 역할 없는 팝오버 안에 이름 붙은 `OptionList.Root`를 둘 때는 `listbox`입니다. 액션 메뉴에는 [Menu](/menu)를 쓰세요.
+
+**주의할 점:** 역할 없는 팝오버에 기본 `haspopup`을 그대로 두면, 스크린 리더는 없는 대화 상자가 열렸다고 알립니다. 직접 쓰는 `onClick`과 `ref`는 `getTriggerProps(props)`로 넘기세요. 스프레드 뒤에 두면 훅의 것을 덮어씁니다. 포커스 트랩이 없고, 팝오버가 열린 채로 Tab으로 밖에 나갈 수 있습니다. 포커스를 붙잡아야 하는 작업에는 쓰지 마세요. 그런 작업은 Dialog입니다.
+
 ## 언제 쓰나요
 
 **언제:** 앵커에 붙는 비모달 표면(listbox 선택기, Combobox 데스크톱 목록, 가벼운 패널). [usePopover](/utilities/use-popover) + 표면만 담당하는 `Popover`를 씁니다. 열기/닫기는 훅에, 외형은 표면에 둡니다. 바깥 클릭 + Escape로 닫습니다. 포커스 트랩은 없습니다.

@@ -21,6 +21,14 @@ import { DrawerBasic } from '../../../components/demos/DrawerDemo';
 </Drawer.Root>
 ```
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `Drawer.Root`는 `side`가 더해진 `Dialog.Root`이므로 [Dialog](/dialog)의 내용이 모두 그대로 적용됩니다. 뒤의 페이지를 inert로 만드는 네이티브 모달 `<dialog>`, `Dialog.Title`과 `Dialog.Description`에서 오는 `aria-labelledby`와 `aria-describedby`, 열릴 때의 포커스, Escape와 배경 클릭으로 닫기, 닫힘 동작이 끝난 뒤 `restoreFocusRef`나 여는 요소로 돌아가는 포커스입니다. `side`는 패널의 위치만 정하고, 스크린 리더가 읽는 것은 더하지 않습니다.
+
+**직접 제공할 것:** `Dialog.Title`이나 `aria-label`로 붙이는 이름, 그리고 닫는 `Dialog.Close`나 다른 버튼입니다. 드로어는 더 긴 작업을 담으므로, 각 구역에 제목의 `h2`보다 아래 단계의 제목을 붙이세요. 닫힐 때 여는 요소가 사라지고 없다면 `restoreFocusRef`를 넘기세요.
+
+**주의할 점:** Drawer에는 자체 파트가 없습니다. 평범한 제목으로 드로어 제목을 만드는 래퍼는 드로어에 이름을 남기지 않습니다. `Dialog.Title`을 감싸거나 `aria-labelledby`를 넘기세요. 드로어가 열린 동안 뒤의 페이지는 inert이므로, 옆에서 필터가 바로 갱신하는 목록은 드로어가 닫힐 때까지 읽을 수 없습니다. 중요하다면 결과 개수를 [useAnnouncer](/utilities/use-announcer)로 알리세요.
+
 ## 언제 쓰나요
 
 **언제:** 공간이 필요한 작업을 위한 모달 사이드 패널. 필터, 설정, 목록 옆의 상세 정보 같은 것. 이름은 `Dialog.Title`이나 `aria-label`로 붙이세요.

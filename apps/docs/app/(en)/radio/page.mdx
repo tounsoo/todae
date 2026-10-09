@@ -26,6 +26,28 @@ Same-name native radios move focus with arrow keys. The group does not add a key
 
 Use Radio when the options stay visible. Use [OptionList](/optionlist) when the options live in a popover or sheet. Wiring both to the same value is a QA fail.
 
+## Accessible composition
+
+**Todae handles:** `RadioGroup.Root` renders a `div` with `role="radiogroup"`, `aria-orientation`, and `aria-disabled` and `aria-invalid` when they apply. Its type requires `aria-label` or `aria-labelledby`. Each `RadioGroup.Item` is a native radio inside a `<label>` with your children. The items share a `name`, generated when you pass none, so the browser gives the group one tab stop and the arrow keys described above. Items get native `disabled` and `aria-invalid` from the group, which also takes them from a surrounding [Fieldset](/fieldset).
+
+**You supply:** The group's name: a visible caption with an id in `aria-labelledby`, or `aria-label`. Children on every item. For an error, `invalid` and the [ErrorMessage](/errormessage) id in the root's `aria-describedby`. When you wrap the root, keep its props type whole so the name stays required:
+
+```tsx
+type PlanPickerProps = RadioGroupRootProps & { plans: readonly string[] }
+
+function PlanPicker({ plans, ...group }: PlanPickerProps) {
+	return (
+		<RadioGroup.Root {...group}>
+			{plans.map((plan) => (
+				<RadioGroup.Item key={plan} value={plan}>{plan}</RadioGroup.Item>
+			))}
+		</RadioGroup.Root>
+	)
+}
+```
+
+**Watch for:** `Omit<RadioGroupRootProps, …>` turns the naming union into two optional props, so a wrapper built on it compiles without a name. `Label htmlFor` does not name a `radiogroup` div. Two groups with the same `name` in one form are one set to the browser's arrow keys.
+
 ## When to use
 
 **When:** Exclusive choice that stays visible on the page. Group owns value/name; caption via `aria-label` / `aria-labelledby`.

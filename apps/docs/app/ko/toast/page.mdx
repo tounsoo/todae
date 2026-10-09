@@ -66,6 +66,14 @@ Todae는 아이콘을 제공하지 않습니다. `Toast.Icon`은 [Alert](/alert)
 - 토스트는 첫 토스트보다 먼저 있던 라이브 영역 안의 목록이므로, 스크린 리더가 새 토스트를 차분하게(polite) 한 번 읽어 줍니다. `critical` 토스트도 마찬가지입니다. 바로 끼어들어야 하는 메시지는 [Alert](/alert)에 넣으세요.
 - 영역의 이름은 "Notifications"이고, `Toast.Close`는 텍스트가 이름이 되지 않으면 "Dismiss"라는 이름을 가집니다. 둘 다 [StringsProvider](/utilities/strings-provider)의 `notifications`, `dismiss` 문자열에서 오며, 설정하지 않으면 영어입니다. 비어 있지 않은 `aria-label`이 여전히 우선합니다.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 위에서 설명한 키보드와 스크린 리더 동작입니다. 영역은 `notifications` 문자열로 이름이 붙은 `section`이고, 각 토스트는 `aria-live="polite"`가 붙은 `ol` 안의 `li`입니다. `Toast.Icon`은 `aria-hidden`이고, `Toast.Close`는 자기 텍스트나 `aria-label`이 없으면 `dismiss` 문자열로 이름이 붙으며, `Toast.Action`은 `onClick` 뒤에 자기 토스트를 닫습니다. 키보드 포커스가 영역 안에 있는 동안 타이머가 멈춥니다. Todae의 모달 스택에 있는 모달이 열린 동안에는 영역이 그 안으로 옮겨 가서 토스트에 계속 닿을 수 있습니다.
+
+**직접 제공할 것:** 한 번 읽어도 뜻이 통하는 텍스트입니다. `Toast.Title`에 무슨 일이 있었는지 쓰고, 톤이 중요하다면 "Upload failed"처럼 말로 쓰세요. `tone`은 색을 위한 `data-tone`만 설정하고, 아이콘은 숨겨져 있습니다. "Undo delete"처럼 무엇을 하는지 말하는 액션 레이블도 필요합니다. 액션이 Dialog를 연다면 `restoreFocusRef`를 넘기세요.
+
+**주의할 점:** `Toast.Root`에 `role="alert"`나 `aria-live`를 더하지 마세요. 영역이 이미 각 토스트를 읽으므로, 두 번째 라이브 영역은 같은 토스트를 두 번 읽을 수 있습니다. 톤을 색이나 아이콘만으로 전하지 마세요. 직접 만든 모달 `<dialog>`에는 [useModalLayer](/utilities/use-modal-layer)가 필요합니다. 없으면 토스트가 그 아래에서 inert가 됩니다.
+
 ## 언제 쓰나요
 
 **언제:** 저장, 전송, 복사처럼 이미 끝난 동작을 확인하거나, 답이 필요 없는 백그라운드 이벤트를 알릴 때.

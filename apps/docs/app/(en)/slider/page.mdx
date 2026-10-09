@@ -15,6 +15,14 @@ A slider is a native `<input type="range">`. There is no component: the browser 
 
 Name it with [Label](/label) and show the current value as text nearby when the exact number matters. Restyle through `slider.fill` and `slider.ring.focus`. A slider with two thumbs for a range is not native and is not part of Todae yet.
 
+## Accessible composition
+
+**Todae handles:** Only styles. The native `<input type="range">` already has the `slider` role, exposes its value, minimum and maximum, and takes the keys above. Todae tints it with `accent-color` and draws a focus outline from `slider.ring.focus` while it is focus-visible.
+
+**You supply:** A name, from a [Label](/label) with `htmlFor` or from `aria-label`. `aria-valuetext` when the number alone does not mean much, such as `"40%"` or `"Medium"`. The current value as visible text when the exact number matters, and `aria-describedby` for any hint.
+
+**Watch for:** A `div` slider built by hand needs its role, value attributes and keys added one by one; inside a Field, see [useField](/utilities/use-field). Todae's rules sit in the `todae.base` layer, so an `outline: none` of yours removes the focus ring.
+
 ## When to use
 
 **When:** Picking a value in a range where the rough position matters more than the exact number, such as volume or zoom.

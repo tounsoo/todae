@@ -22,6 +22,14 @@ Touch Combobox later. A button opens this sheet. Search plus options live in the
   <ComboboxTouchSketch />
 </Example>
 
+## Accessible composition
+
+**Todae handles:** The modal `<dialog>` behaviour above. `BottomSheet.Title` and `BottomSheet.Description` set `aria-labelledby` and `aria-describedby`, and `BottomSheet.Close` falls back to the `close` string when neither its own text nor an `aria-label` names it. After the exit, focus goes to `restoreFocusRef`, else back to what had focus before it opened. The grabber is a `<button>` named by the `resizeSheet` string ("Resize sheet"): ArrowUp snaps to `full` when `snapPoints` include it, ArrowDown steps down to `mid` when they include `mid`, and from `mid` ArrowDown closes the sheet when `dismissOnDrag` is on.
+
+**You supply:** A name: `BottomSheet.Title`, or `aria-label` on `BottomSheet.Root`. An `initialFocusRef` on the control the task starts with, such as a search field: otherwise focus starts on the first tabbable element, which is the default grabber. A visible `BottomSheet.Close` or footer button, since a drag or a backdrop tap needs a pointer.
+
+**Watch for:** A placed `BottomSheet.Grabber` passes its `aria-label` to the button; a wrapper that drops it leaves the `resizeSheet` string, English unless [StringsProvider](/utilities/strings-provider) sets it. With `dismissOnEscape`, `dismissOnBackdrop` and `dismissOnDrag` all false, a button inside the sheet is the only way out. A wrapper that renders its own heading instead of `BottomSheet.Title` must pass `aria-labelledby`.
+
 ## When to use
 
 **When:** Modal sheet from the bottom (touch Combobox closed control, mobile pickers). Scrim, modal focus, snap mid/full.

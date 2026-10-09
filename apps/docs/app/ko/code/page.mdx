@@ -39,6 +39,26 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 
 `kbd.fg`, `kbd.bg`, `kbd.border`, `kbd.border-width`, `kbd.radius`, `kbd.font.family`, `kbd.font.scale`, `kbd.padding.x`, `kbd.padding.y`로 바꾸세요.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 모양만 맡습니다. `<code>`, `<pre>`, `<kbd>`는 네이티브 요소 그대로이고, 기본 스타일은 role도 `tabindex`도 이름도 더하지 않습니다. 인라인 `<code>`는 주변 텍스트 색을 그대로 씁니다. `<pre>`는 줄이 너무 길면 옆으로 스크롤되지만, Todae가 포커스를 받게 만들지는 않습니다.
+
+**직접 제공할 것:** 스크롤되는 `<pre>`에는 위에서 설명한 `tabIndex={0}`, `role="region"`, `aria-label`을 붙이세요. 코드 블록 컴포넌트는 기본 이름 하나를 채워 넣지 말고 props로 이름을 꼭 받으세요. 복사 버튼을 더한다면 버튼에 이름을 주고, 결과를 알리세요. 예를 들어 [useAnnouncer](/utilities/use-announcer)를 쓸 수 있습니다.
+
+```tsx
+type CodeBlockProps = { label: string; children: string };
+
+export function CodeBlock({ label, children }: CodeBlockProps) {
+  return (
+    <pre tabIndex={0} role="region" aria-label={label}>
+      <code>{children}</code>
+    </pre>
+  );
+}
+```
+
+**주의할 점:** 모든 블록에 "Code" 같은 기본 이름을 주면 한 페이지에 같은 이름의 영역이 여러 개 생깁니다. 각 블록은 보여 주는 내용으로 이름을 지으세요. `role`과 `aria-label` 없이 `tabIndex={0}`만 붙이면 이름 없는 Tab 정지점이 생깁니다.
+
 ## 언제 쓰나요
 
 **쓸 때:** Code → 읽는 사람이 코드에서 입력하거나 읽는 이름, 값, 코드 조각. Kbd → 읽는 사람이 누르는 키나 단축키.

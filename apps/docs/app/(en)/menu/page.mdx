@@ -33,6 +33,27 @@ An item's children are presentational to assistive technology, as ARIA defines f
 
 `onOpenChange(open, reason)` reports `trigger`, `escape`, `outside` (a press or focus outside), `select` or `tab`. A controlled `open` that is not updated vetoes the change; a vetoed `tab` still lets focus move on, the way a vetoed `outside` still lets the press land. Submenus are not shipped.
 
+## Accessible composition
+
+**Todae handles:** `Menu.Trigger` sets `aria-haspopup="menu"`, `aria-expanded` and `aria-controls`, and its id names the `role="menu"` content through `aria-labelledby`. Items get `role="menuitem"`, `menuitemcheckbox` or `menuitemradio`, with `aria-checked` and `aria-disabled` kept in step. `Menu.Group` and `Menu.RadioGroup` are `role="group"`, and `Menu.Separator` is `role="separator"`. Focus moves into the menu when it opens and follows the keyboard model above.
+
+**You supply:** A name for the trigger, which also names the menu. Text children are enough. An icon-only trigger needs `aria-label` or `aria-labelledby`; without one, `Button.Root` logs an error in development. A menu opened from code with no `Menu.Trigger` needs its own `aria-label` or `aria-labelledby`, and every `Menu.Group` and `Menu.RadioGroup` needs one, as its type requires. Pass `textValue` when an item's children are not plain text, so typeahead can match it.
+
+```tsx
+function RowActions({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <Menu.Root>
+      <Menu.Trigger variant="ghost" aria-label={label}>
+        <Button.Icon>⋯</Button.Icon>
+      </Menu.Trigger>
+      <Menu.Content>{children}</Menu.Content>
+    </Menu.Root>
+  )
+}
+```
+
+**Watch for:** A wrapper that takes a `label` prop but drops it before `Menu.Trigger`, leaving both the trigger and the menu unnamed. Links, inputs or buttons inside an item: its content is presentational, so they are not announced as controls. Hiding the check or radio indicator and showing the state with color alone.
+
 ## When to use
 
 **When:** A short list of commands or view settings behind one button, such as row actions or a toolbar overflow.

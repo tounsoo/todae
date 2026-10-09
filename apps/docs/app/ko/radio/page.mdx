@@ -26,6 +26,28 @@ const captionId = useId()
 
 옵션이 계속 보여야 하면 Radio를 쓰세요. 옵션이 팝오버나 시트 안에 있으면 [OptionList](/optionlist)를 쓰세요. 둘을 같은 값에 연결하면 QA 실패입니다.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `RadioGroup.Root`는 `role="radiogroup"`, `aria-orientation`, 그리고 해당될 때 `aria-disabled`와 `aria-invalid`를 가진 `div`를 렌더링합니다. 타입은 `aria-label`이나 `aria-labelledby`를 요구합니다. 각 `RadioGroup.Item`은 children과 함께 `<label>` 안에 든 네이티브 라디오입니다. 항목들은 `name`을 공유하며, 넘기지 않으면 생성됩니다. 그래서 브라우저가 그룹에 탭 정지 하나와 위에서 설명한 화살표 키를 줍니다. 항목은 그룹에서 네이티브 `disabled`와 `aria-invalid`를 받고, 그룹은 바깥 [Fieldset](/fieldset)에서도 이 값을 받습니다.
+
+**직접 제공할 것:** 그룹의 이름. id를 가진 보이는 캡션을 `aria-labelledby`로 연결하거나 `aria-label`을 주세요. 모든 항목에 children을 주세요. 오류가 있으면 `invalid`를 켜고 [ErrorMessage](/errormessage)의 id를 루트의 `aria-describedby`에 넣으세요. 루트를 감쌀 때는 props 타입을 그대로 두어 이름이 계속 필수가 되게 하세요.
+
+```tsx
+type PlanPickerProps = RadioGroupRootProps & { plans: readonly string[] }
+
+function PlanPicker({ plans, ...group }: PlanPickerProps) {
+	return (
+		<RadioGroup.Root {...group}>
+			{plans.map((plan) => (
+				<RadioGroup.Item key={plan} value={plan}>{plan}</RadioGroup.Item>
+			))}
+		</RadioGroup.Root>
+	)
+}
+```
+
+**주의할 점:** `Omit<RadioGroupRootProps, …>`는 이름 유니언을 선택적 prop 두 개로 바꾸므로, 그 위에 만든 래퍼는 이름 없이도 컴파일됩니다. `Label htmlFor`는 `radiogroup` div의 이름을 짓지 않습니다. 한 폼 안에서 `name`이 같은 두 그룹은 브라우저의 화살표 키에 하나의 묶음입니다.
+
 ## 언제 쓰나요
 
 **언제:** 페이지에 계속 보이는 배타적 선택. 그룹이 value/name을 소유하고, 캡션은 `aria-label` / `aria-labelledby`로 붙입니다.

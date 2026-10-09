@@ -45,6 +45,14 @@ import { SkeletonProfile, SpinnerLabelled } from '../../../components/demos/Nati
 
 Skeleton은 스크린 리더에게 아무 뜻이 없으니 `aria-hidden`으로 숨기고, 무엇을 불러오는지 텍스트로 알리세요. `skeleton.bg`, `skeleton.radius`, `skeleton.motion.duration`으로 바꾸세요.
 
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 스타일만 맡습니다. `todae-spinner`는 `progressbar` role을 가진 네이티브 `<progress>` 그대로이며, `value`가 없을 때만 돕니다. 동작 줄이기 설정에서는 멈춥니다. `todae-skeleton`은 안의 요소를 `visibility: hidden`으로 숨기므로 보조 기술에서도 숨겨지지만, 바로 안에 있는 맨 텍스트는 투명해질 뿐이라 여전히 읽힙니다.
+
+**직접 제공할 것:** 무엇을 불러오는지 말해 주는 각 Spinner의 이름. `<label>`이나 `aria-label`로 붙이세요. 각 Skeleton의 `aria-hidden`, 그리고 위처럼 `todae-visually-hidden` 텍스트 등으로 그 옆에 적은 로딩 문구. 내용이 도착하면 둘 다 그 내용으로 바꾸세요.
+
+**주의할 점:** `div`나 `svg`에 붙인 `todae-spinner`. 규칙은 `progress`에만 맞으므로 돌지도 않고 role도 없습니다. 다른 텍스트 없이 `aria-hidden`만 있는 Spinner. 그 영역이 바쁘다고 알려 주는 것이 없습니다. 목록의 모든 행에 넣은 Spinner. 각각 진행 막대로 읽힙니다. 영역 전체에 Spinner 하나가 더 잘 읽힙니다.
+
 ## 언제 쓰나요
 
 **쓸 때:** Spinner → 저장이나 검색처럼 동작 하나나 작은 영역을 잠깐 기다릴 때. Skeleton → 내용이 오기 전에 페이지나 구역의 배치를 이미 알 때.

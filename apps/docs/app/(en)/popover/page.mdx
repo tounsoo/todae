@@ -59,6 +59,14 @@ Selecting in `OptionList` does not close the popover. The fruit demo closes on s
   </tbody>
 </table>
 
+## Accessible composition
+
+**Todae handles:** `getTriggerProps` sets `aria-expanded`, `aria-controls` and `aria-haspopup`; the surface is always mounted, so `aria-controls` always points at it. On open, focus moves to `initialFocusRef`, else the first tabbable element inside, else the surface itself. Escape and an outside press ask to close. On close, focus goes to `restoreFocusRef`, else back to what had focus before it opened, unless the person already moved it elsewhere. With `role="dialog"` the type requires a name, and Todae never sets `aria-modal`.
+
+**You supply:** A trigger that is a real button, such as `Button.Root`: `getTriggerProps` adds `onClick` and ARIA, not a role, a tab stop or key handling. A `haspopup` that matches what opens: `dialog` with `role="dialog"` and a name on `Popover.Root`, or `listbox` with a named `OptionList.Root` in a role-less popover. For an action menu, use [Menu](/menu).
+
+**Watch for:** A role-less popover left on the default `haspopup` tells screen readers a dialog opened when none did. Pass your own `onClick` and `ref` through `getTriggerProps(props)`: put after the spread, they replace the hook's. There is no focus trap, and Tab can move out while the popover stays open, so don't use it for work that must keep focus; that is a Dialog.
+
 ## When to use
 
 **When:** Non-modal anchored surface (listbox pickers, Combobox desktop list, light panels). Use [usePopover](/utilities/use-popover) + surface-only `Popover` — open/dismiss on the hook, chrome on the surface. Outside click + Escape dismiss. No focus trap.

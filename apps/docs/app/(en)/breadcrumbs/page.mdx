@@ -28,6 +28,14 @@ The landmark is named "Breadcrumb" unless you pass a non-empty `aria-label` or `
   <BreadcrumbsChevron />
 </Example>
 
+## Accessible composition
+
+**Todae handles:** A named `nav` landmark around an `ol role="list"`, with each `Breadcrumbs.Item` as a list item. `current` wraps the item's text in a `span` with `aria-current="page"`. The separator is CSS content with empty alternative text, so screen readers skip it and it adds no list items.
+
+**You supply:** A link in every item but the last, with text that names the page it goes to. Plain text in the last item, marked `current`. On a page in another language, the translated name through [StringsProvider](/utilities/strings-provider), or `aria-label` when you import from the `@tounsoo/todae/breadcrumbs` server entry.
+
+**Watch for:** Separators of your own, such as an icon or a `/` between items: they are read aloud, and outside an item they break the list. Pass `separator` instead. An element that wraps `Breadcrumbs.Item`, which puts something other than a list item inside the list. A current page marked by style alone, without `current`.
+
 ## When to use
 
 **When:** A page deep in a hierarchy, where people need to see where they are and move up.

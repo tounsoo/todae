@@ -18,6 +18,14 @@ The remove button holds no glyph or icon of its own: without content, its styles
 </Chip.Root>
 ```
 
+## Accessible composition
+
+**Todae handles:** `Chip.Root` renders its label as plain text in a `<span>` with no role. With `onRemove`, it adds a native `<button type="button">` named by `aria-label`: `removeLabel`, or the `removeChip` string, `Remove {label}` in English. `disabled` disables that button and sets `data-disabled` on the chip. `Chip.Overflow` hides the visible `+N` with `aria-hidden` and gives its name, the `moreChips` string by default, as visually hidden text.
+
+**You supply:** List semantics when you show several chips: a `<ul>` with `<li>` items, or `role="list"` on the container and `role="listitem"` on each `Chip.Root`, which passes native props to its `<span>`. A name for that list. A `removeLabel` that says what is removed when the label alone is not enough, such as "Remove filter Design". Somewhere for focus to go after a removal: the remove button leaves the DOM with its chip, so move focus to a neighbouring chip or to the control that added it. [ChipList](/chip-list) does this for you.
+
+**Watch for:** A chip inside a `<button>` or link: its remove button is then nested interactive content. `Chip.Overflow` used as a control: it is a `<span>` that takes no focus. To make `+N` open the rest, put it inside a `<button>`, as ChipList does, so the button takes the hidden name. Applied state shown only by chip color.
+
 ## When to use
 
 **When:** Text-only token for a value. Optional remove button via `onRemove` (named button). +N overflow is display-only.
