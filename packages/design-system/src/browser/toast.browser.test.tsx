@@ -945,6 +945,40 @@ describe('Toast in the top layer', () => {
     await waitFor(() => expect(document.activeElement).toBe(before));
   });
 
+  it('keeps an open tooltip inside a toast in front, by its trigger, when a new toast shows', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <Toast.Region toaster={toaster}>
+          {(toast) => (
+            <Toast.Root>
+              <Toast.Title>{toast.title}</Toast.Title>
+              <Button.Root aria-label={`Archive ${String(toast.title)}`}>
+                <Button.Icon>+</Button.Icon>
+              </Button.Root>
+            </Toast.Root>
+          )}
+        </Toast.Region>
+      </Themed>,
+    );
+    act(() => void toaster.add({ title: 'One' }));
+    const archive = await screen.findByRole('button', { name: 'Archive One' });
+    await userEvent.keyboard('{F8}');
+    await userEvent.tab();
+    expect(document.activeElement).toBe(archive);
+    const tip = await screen.findByRole('tooltip');
+    await waitFor(() => expect(isPopoverShown(tip)).toBe(true));
+    act(() => void toaster.add({ title: 'Two' }));
+    await screen.findByRole('button', { name: 'Archive Two' });
+    await waitFor(() => expect(isPopoverShown(tip)).toBe(true));
+    // Behind the host, its anchor would be unusable and it would sit at the viewport's corner.
+    const t = tip.getBoundingClientRect();
+    const a = archive.getBoundingClientRect();
+    expect(t.right).toBeGreaterThan(a.left);
+    expect(t.left).toBeLessThan(a.right);
+    expect(Math.min(Math.abs(t.bottom - a.top), Math.abs(t.top - a.bottom))).toBeLessThan(16);
+  });
+
   it('moves focus to the region on F8 and back after Escape', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(

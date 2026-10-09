@@ -609,8 +609,8 @@ function block(selector: string, lines: string[]): string[] {
  * Emits one CSS layer from the resolved entries, in resolutionOrder:
  * - sets before the first scoped modifier are declared on `:root`;
  * - a scoped modifier emits one `[attribute="context"]` block per context;
- * - a colorScheme modifier also gets a `system` context: light by default and
- *   dark under `@media (prefers-color-scheme: dark)`;
+ * - a colorScheme modifier also gets a `system` context: each context's tokens
+ *   again under its own `prefers-color-scheme` media query;
  * - later sets and every context of the alias modifier are re-declared on the
  *   root element and on each scoped modifier's attribute, so their var() chains
  *   re-resolve wherever a context changes, along with the default context's
@@ -673,16 +673,16 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
       // Only a root without the attribute: a bare :root would tie with an
       // earlier context's selector on the root element and win by source order.
       const rootSelector = `:root:not([${attribute}])`;
+      const lines = [decls(tokens), colorScheme ? `  color-scheme: ${context};` : ''];
+      scopedBlocks.push(...block(rootDefault ? `${rootSelector},\n${selector}` : selector, lines));
       // A color-scheme modifier also takes "system", which follows the
       // user's prefers-color-scheme in CSS, so no script picks it first.
-      const system = `[${attribute}="system"]`;
-      const selectors = [...(rootDefault ? [rootSelector] : []), selector, ...(colorScheme && context === 'light' ? [system] : [])];
-      const lines = [decls(tokens), colorScheme ? `  color-scheme: ${context};` : ''];
-      scopedBlocks.push(...block(selectors.join(',\n'), lines));
-      if (colorScheme && context === 'dark') {
-        scopedBlocks.push(
-          ...block('@media (prefers-color-scheme: dark)', block(system, lines).map((rule) => rule.replace(/^/gm, '  '))),
-        );
+      // Each context's system rule has its own media condition, so it never
+      // competes with the other context's, whatever their order or layer.
+      if (colorScheme) {
+        const media = context === 'dark' ? '(prefers-color-scheme: dark)' : 'not (prefers-color-scheme: dark)';
+        const system = block(`[${attribute}="system"]`, lines).map((rule) => rule.replace(/^/gm, '  '));
+        scopedBlocks.push(...block(`@media ${media}`, system));
       }
     }
     if (!alias) attributes.push(`[${attribute}]`);

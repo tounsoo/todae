@@ -4,7 +4,8 @@ exports[`committed token graph > builds and snapshots CSS selectors 1`] = `
 [
   "@layer todae.base",
   ":root",
-  ":root:not([data-appearance]), [data-appearance="light"], [data-appearance="system"]",
+  ":root:not([data-appearance]), [data-appearance="light"]",
+  "@media not (prefers-color-scheme: dark)",
   "[data-appearance="dark"]",
   "@media (prefers-color-scheme: dark)",
   "[data-density="compact"]",

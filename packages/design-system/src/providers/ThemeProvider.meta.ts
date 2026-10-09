@@ -9,7 +9,7 @@ export const meta = {
       type: '"system" | "light" | "dark"',
       required: false,
       default: '"system"',
-      description: 'Resolved to light or dark before writing data-appearance. Never writes system.',
+      description: 'Written to data-appearance as is. system follows prefers-color-scheme in CSS.',
     },
     {
       name: 'overrides',

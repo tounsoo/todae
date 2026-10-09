@@ -99,7 +99,7 @@ import './todae-theme.css';
 }
 ```
 
-`ThemeProvider appearance="system"`은 `data-appearance="system"`을 렌더링하고, 이 값은 CSS에서 사용자의 색 구성표를 따릅니다. 그래서 다크 오버라이드에는 `system` 규칙도 필요합니다. 회사 토큰 빌드는 두 규칙을 모두 만들어 줍니다.
+`ThemeProvider appearance="system"`은 `data-appearance="system"`을 렌더링하고, 이 값은 CSS에서 사용자의 색 구성표를 따릅니다. 그래서 직접 쓴 `light`나 `dark` 오버라이드에는 맞는 `prefers-color-scheme` 쿼리 안의 `system` 규칙도 필요합니다. 회사 토큰 빌드는 이 규칙을 만들어 줍니다.
 
 `data-appearance`나 `data-density`가 있는 요소에 설정하세요. contract 토큰은 그 요소에서 계산되므로, 하위 요소에 둔 오버라이드는 contract 토큰에 닿지 않습니다. 이런 요소마다 contract 토큰을 다시 계산하므로, CSS로 contract 토큰을 오버라이드할 때는 가장 바깥 요소만이 아니라 그 요소 모두에 맞게 설정하세요.
 

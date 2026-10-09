@@ -287,7 +287,7 @@ describe('committed token graph', () => {
     );
     const light = graph.css.slice(
       graph.css.indexOf(':root:not([data-appearance]),\n[data-appearance="light"]'),
-      graph.css.indexOf('[data-appearance="dark"]'),
+      graph.css.indexOf('@media not (prefers-color-scheme: dark)'),
     );
     const dark = graph.css.slice(
       graph.css.indexOf('[data-appearance="dark"]'),
@@ -807,6 +807,31 @@ describe('company token build', () => {
     return css.slice(start, css.indexOf('\n}', start));
   }
 
+  /** The system rule inside `@media <media>`, which holds that context's tokens again. */
+  function systemOf(css: string, media: string): string {
+    const start = css.indexOf(`@media ${media} {\n  [data-appearance="system"] {`);
+    expect(start, media).toBeGreaterThan(-1);
+    return css.slice(start, css.indexOf('\n  }', start));
+  }
+
+  it('gives system each context under its own media query, in any context order', async () => {
+    for (const order of [['light', 'dark'], ['dark', 'light']]) {
+      const resolver = await company((def) => {
+        const { contexts } = def.modifiers.appearance;
+        def.modifiers.appearance.contexts = Object.fromEntries(order.map((context) => [context, contexts[context]]));
+      });
+      const result = await buildCompanyTokens({ resolver, base: tokensDir });
+      const light = systemOf(result.css, 'not (prefers-color-scheme: dark)');
+      const dark = systemOf(result.css, '(prefers-color-scheme: dark)');
+      expect(light).toContain('--todae-color-accent-default: oklch(0.45 0.16 25);');
+      expect(light).toContain('color-scheme: light;');
+      expect(dark).toContain('--todae-color-accent-default: oklch(0.78 0.13 25);');
+      expect(dark).toContain('color-scheme: dark;');
+      // No unconditional rule names system, so a light-only override never reaches a dark system.
+      expect(catalogSelectors(result.css).filter((selector) => selector.includes('system'))).toEqual([]);
+    }
+  });
+
   it('finds Todae tokens from the builder module', () => {
     expect(todaeTokensRoot()).toBe(tokensDir);
   });
@@ -845,14 +870,15 @@ describe('company token build', () => {
     );
     expect(catalogSelectors(result.css.slice(result.css.indexOf('@layer todae.theme {')))).toEqual([
       '@layer todae.theme',
-      ':root:not([data-appearance]), [data-appearance="light"], [data-appearance="system"]',
+      ':root:not([data-appearance]), [data-appearance="light"]',
+      '@media not (prefers-color-scheme: dark)',
       '[data-appearance="dark"]',
       '@media (prefers-color-scheme: dark)',
       '[data-density="roomy"]',
       ':root:not([data-appearance]):not([data-density]), [data-appearance], [data-density]',
       '[data-button-variant="outline"]',
     ]);
-    const light = blockOf(result.css, ':root:not([data-appearance]),\n[data-appearance="light"],\n[data-appearance="system"]');
+    const light = blockOf(result.css, ':root:not([data-appearance]),\n[data-appearance="light"]');
     expect(light).toContain('--todae-color-accent-default: oklch(0.45 0.16 25);');
     expect(light).toContain('--todae-brand-ink: var(--todae-color-gray-900);');
     expect(light).not.toContain('--todae-color-bg-canvas');

@@ -4,6 +4,7 @@
     position: fixed;
     inset: unset;
     margin: 0;
+    overflow: visible;
     width: max-content;
     max-width: var(--todae-tooltip-max-width);
     padding: var(--todae-tooltip-padding-y) var(--todae-tooltip-padding-x);
