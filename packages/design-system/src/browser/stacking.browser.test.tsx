@@ -106,7 +106,8 @@ function ClippedTooltip() {
   const tooltip = useTooltip();
   return (
     <Themed>
-      <div data-testid="clip" style={{ marginTop: 120, height: 32, overflow: 'hidden', transform: 'translateZ(0)' }}>
+      {/* Clips its content, also fixed-position content, without moving it. */}
+      <div data-testid="clip" style={{ marginTop: 120, width: 96, height: 40, overflow: 'hidden', contain: 'paint' }}>
         <Button.Root tooltip={false} {...tooltip.getTriggerProps()}>
           Clipped
         </Button.Root>
@@ -129,7 +130,7 @@ describe('anchored placement in a browser', () => {
     expect(p.bottom).toBeLessThanOrEqual(window.innerHeight);
   });
 
-  it('draws a plain tooltip in the top layer, outside a clipping, transformed ancestor', async () => {
+  it('draws a plain tooltip in the top layer, outside an ancestor that clips it', async () => {
     render(<ClippedTooltip />);
     await userEvent.hover(screen.getByRole('button', { name: 'Clipped' }));
     const tip = await screen.findByRole('tooltip');
@@ -137,6 +138,19 @@ describe('anchored placement in a browser', () => {
     const clip = screen.getByTestId('clip').getBoundingClientRect();
     const r = tip.getBoundingClientRect();
     expect(r.bottom).toBeLessThanOrEqual(clip.top + 0.5);
+    // getBoundingClientRect ignores clipping, so check what is drawn there: a
+    // tip the box clipped would not be hit outside it. The tip takes no
+    // pointer, which elementFromPoint skips, so it takes it for the check.
+    const x = r.left + r.width / 2;
+    const y = r.top + r.height / 2;
+    expect(y).toBeLessThan(clip.top);
+    tip.style.pointerEvents = 'auto';
+    try {
+      const hit = document.elementFromPoint(x, y);
+      expect(hit && tip.contains(hit)).toBe(true);
+    } finally {
+      tip.style.pointerEvents = '';
+    }
   });
 
   it('flips a tooltip below its trigger near the top edge', async () => {

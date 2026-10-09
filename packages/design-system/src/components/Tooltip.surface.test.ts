@@ -6,8 +6,6 @@ describe('Tooltip.surface', () => {
     const surface = resolveSurface(false, 'tip-1');
     expect(surface).toEqual({
       kind: 'tip',
-      bridges: false,
-      topLayer: true,
       attrs: {
         id: 'tip-1',
         role: 'tooltip',
@@ -21,8 +19,6 @@ describe('Tooltip.surface', () => {
     const surface = resolveSurface(true, 'panel-1');
     expect(surface).toEqual({
       kind: 'panel',
-      bridges: true,
-      topLayer: true,
       attrs: {
         id: 'panel-1',
         role: 'dialog',

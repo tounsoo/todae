@@ -16,15 +16,11 @@ export type PanelAttrs = {
 
 export type TipSurface = {
   readonly kind: 'tip';
-  readonly bridges: false;
-  readonly topLayer: true;
   readonly attrs: TipAttrs;
 };
 
 export type PanelSurface = {
   readonly kind: 'panel';
-  readonly bridges: true;
-  readonly topLayer: true;
   readonly attrs: PanelAttrs;
 };
 
@@ -34,8 +30,6 @@ export function resolveSurface(interactive: boolean, id: string): TooltipSurface
   if (interactive) {
     return {
       kind: 'panel',
-      bridges: true,
-      topLayer: true,
       attrs: {
         id,
         role: 'dialog',
@@ -46,9 +40,6 @@ export function resolveSurface(interactive: boolean, id: string): TooltipSurface
   }
   return {
     kind: 'tip',
-    bridges: false,
-    // In the top layer, so no transformed or overflow: hidden ancestor clips it.
-    topLayer: true,
     attrs: {
       id,
       role: 'tooltip',

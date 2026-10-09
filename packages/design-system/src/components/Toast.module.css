@@ -69,19 +69,22 @@
     flex-direction: column-reverse;
   }
 
+  /* Toasts move by layout, never by a transform: a tooltip in the top layer
+     is placed against its trigger's untransformed box, so a transform on a
+     toast would put a tip on its button somewhere else. */
   .item {
     position: relative;
+    inset-block-start: calc(var(--toast-dir) * -0.5rem);
     pointer-events: auto;
     opacity: 0;
-    transform: translateY(calc(var(--toast-dir) * -0.5rem));
     transition:
       opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing),
-      transform var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+      inset-block-start var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
   }
 
   .item[data-entered] {
     opacity: 1;
-    transform: none;
+    inset-block-start: 0;
   }
 
   .item[data-exiting] {
@@ -90,7 +93,8 @@
   }
 
   /* Stack: every toast in one grid cell, the newest in front and the rest
-     peeking out behind it at its height, until hovered or focused. */
+     peeking out behind it, each a little narrower and shorter than the one in
+     front, until hovered or focused. */
   .region[data-layout='stack'] .list {
     display: grid;
   }
@@ -98,26 +102,40 @@
   .region[data-layout='stack'] .item {
     grid-area: 1 / 1;
     z-index: calc(var(--toast-count, 1) - var(--toast-index, 0));
-    transform: translateY(calc(var(--toast-dir) * var(--toast-index, 0) * var(--todae-toast-peek)))
-      scale(calc(1 - var(--toast-index, 0) * 0.05));
+    inset-block-start: calc(var(--toast-dir) * var(--toast-index, 0) * var(--todae-toast-peek));
+    margin-inline: calc(var(--toast-index, 0) * 2.5%);
     transition:
       opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing),
-      transform var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+      inset-block-start var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing),
+      margin-inline var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
   }
 
   .region[data-layout='stack'][data-placement^='top'] .item {
     align-self: start;
-    transform-origin: top center;
   }
 
   .region[data-layout='stack'][data-placement^='bottom'] .item {
     align-self: end;
-    transform-origin: bottom center;
   }
 
+  /* Clipped to the front toast's height, less 5% a step, showing the edge
+     that peeks out: the bottom one when placed at the top, and the top one at
+     the bottom. */
   .region[data-layout='stack']:not([data-expanded]) .item:not(:first-child) {
-    block-size: var(--toast-front-height, auto);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    block-size: calc(var(--toast-front-height, auto) * (1 - var(--toast-index, 0) * 0.05));
     overflow: hidden;
+  }
+
+  .region[data-layout='stack'][data-placement^='top']:not([data-expanded]) .item:not(:first-child) {
+    justify-content: flex-end;
+  }
+
+  /* Clipped, never squeezed, so its height stays the toast's own. */
+  .region[data-layout='stack']:not([data-expanded]) .item:not(:first-child) > * {
+    flex-shrink: 0;
   }
 
   /* Out of sight, so also out of reach of the pointer and Tab. */
@@ -127,9 +145,10 @@
   }
 
   .region[data-layout='stack'][data-expanded] .item {
-    transform: translateY(
-      calc(var(--toast-dir) * (var(--toast-offset, 0px) + var(--toast-index, 0) * var(--todae-toast-stack-gap)))
+    inset-block-start: calc(
+      var(--toast-dir) * (var(--toast-offset, 0px) + var(--toast-index, 0) * var(--todae-toast-stack-gap))
     );
+    margin-inline: 0;
   }
 
   /* Fills the gap to the next toast, so moving the pointer across it keeps
