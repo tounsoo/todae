@@ -8,7 +8,7 @@ import { ChipInputHook } from '../../../../components/demos/FieldDemo';
 const field = useChipField({ initialChips: ['react'] })
 
 <Field.Root aria-label="Tags">
-  <Field.ChipInput {...field} placeholder="useChipField" />
+  <Field.ChipInput {...field.getChipInputProps()} placeholder="useChipField" />
 </Field.Root>
 ```
 

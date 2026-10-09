@@ -507,6 +507,46 @@ describe('useRovingFocus', () => {
     expect(tabStops()).toEqual([]);
   });
 
+  it('with findItems, moves focus between the items found and writes no tabindex', () => {
+    const findItems = (container: HTMLElement) => [...container.querySelectorAll<HTMLElement>('button:not(.skip)')];
+    function Found({ off }: { off: boolean }) {
+      const roving = useRovingFocus({ findItems });
+      return (
+        <div {...roving.getContainerProps()}>
+          <button type="button">a</button>
+          <button type="button" className="skip">
+            skip
+          </button>
+          <button type="button" disabled={off}>
+            b
+          </button>
+          <button type="button">c</button>
+        </div>
+      );
+    }
+    const { rerender } = render(<Found off={false} />);
+    expect(screen.getAllByRole('button').some((b) => b.hasAttribute('tabindex'))).toBe(false);
+    act(() => screen.getByText('a').focus());
+    key('ArrowDown');
+    expect(focused()).toBe('b');
+    key('End');
+    expect(focused()).toBe('c');
+    key('ArrowDown');
+    expect(focused()).toBe('a');
+    // An element findItems leaves out keeps its keys.
+    act(() => screen.getByText('skip').focus());
+    expect(key('ArrowDown')).toBe(true);
+    expect(focused()).toBe('skip');
+    // A found item that turned disabled while focused moves on to its neighbours.
+    act(() => screen.getByText('b').focus());
+    rerender(<Found off />);
+    key('ArrowDown');
+    expect(focused()).toBe('c');
+    act(() => screen.getByText('b').focus());
+    key('ArrowUp');
+    expect(focused()).toBe('a');
+  });
+
   it('re-reads items when a wrapper around them is hidden by a class', async () => {
     const original = HTMLElement.prototype.checkVisibility;
     HTMLElement.prototype.checkVisibility = function (this: HTMLElement) {

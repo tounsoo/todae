@@ -22,9 +22,7 @@ import {
   FIELD_CONTROL_SELECTOR,
   FOCUSABLE_FIELD_CONTROL_SELECTOR,
   FieldContext,
-  inputLabel,
   mergeDescribedBy,
-  useControlSetter,
   useFieldContext,
   type CountStore,
   type FieldContextValue,
@@ -279,26 +277,19 @@ function TextInput({
   onValueChange,
   type = 'text',
   className,
-  ref,
   maxLength,
   'aria-describedby': describedBy,
   ...props
 }: FieldTextInputProps) {
+  const field = useField();
   const ctx = useFieldContext();
-  const controlRef = useComposedRefs(useControlSetter(ctx.inputRef), ref);
   const limit = typeof maxLength === 'number' && !NO_LENGTH_LIMIT.has(type) ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
+  const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
   return (
     <input
-      {...props}
-      ref={controlRef}
-      id={ctx.inputId}
-      name={ctx.name}
-      disabled={ctx.disabled}
+      {...field.getControlProps({ ...props, 'aria-describedby': mergeDescribedBy(describedBy, hint) })}
       maxLength={maxLength}
-      aria-invalid={ctx.invalid ? true : props['aria-invalid']}
-      aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
-      {...inputLabel(props, ctx)}
       value={value}
       type={type}
       className={[styles.input, className].filter(Boolean).join(' ')}
@@ -330,30 +321,23 @@ function Textarea({
   autoGrow = false,
   className,
   style,
-  ref,
   maxLength,
   'aria-describedby': describedBy,
   ...props
 }: FieldTextareaProps) {
+  const field = useField();
   const ctx = useFieldContext();
-  const controlRef = useComposedRefs(useControlSetter(ctx.inputRef), ref);
   const resolved = useMemo(
     () => resolveTextareaRows({ rows: rowsProp, maxRows: maxRowsProp }),
     [rowsProp, maxRowsProp],
   );
   const limit = typeof maxLength === 'number' ? maxLength : undefined;
   const counterMounted = useTextEntry(ctx.store, value, limit);
+  const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
   return (
     <textarea
-      {...props}
-      ref={controlRef}
-      id={ctx.inputId}
-      name={ctx.name}
-      disabled={ctx.disabled}
+      {...field.getControlProps({ ...props, 'aria-describedby': mergeDescribedBy(describedBy, hint) })}
       maxLength={maxLength}
-      aria-invalid={ctx.invalid ? true : props['aria-invalid']}
-      aria-describedby={mergeDescribedBy(ctx.describedBy, describedBy, counterMounted && limit !== undefined ? ctx.hintId : undefined)}
-      {...inputLabel(props, ctx)}
       value={value}
       rows={resolved.rows}
       data-auto-grow={autoGrow ? '' : undefined}
@@ -403,18 +387,14 @@ function ChipInput({
   overflowLabel,
   className,
   onKeyDown: onKeyDownProp,
-  'aria-describedby': describedBy,
   ref,
-  setChips: _setChips,
-  setInputValue: _setInputValue,
-  reset: _reset,
   ...props
-}: FieldChipInputProps & { setChips?: unknown; setInputValue?: unknown; reset?: unknown }) {
-  const field = useFieldContext();
+}: FieldChipInputProps) {
+  const field = useField();
   // Its own input, for chip measuring and refocus; the Root's inputRef may
   // point at another control.
   const ownInput = useRef<HTMLInputElement | null>(null);
-  const controlRef = useComposedRefs(useControlSetter(field.inputRef), ownInput, ref);
+  const controlRef = useComposedRefs(ownInput, ref);
   const keys = useMemo(() => resolveCommitKeys(commitKeys), [commitKeys]);
   const keySet = useMemo(() => new Set<string>(keys), [keys]);
   const inRow = chipLayout === 'row';
@@ -458,14 +438,7 @@ function ChipInput({
   const overflow = list.hidden > 0 ? <Chip.Overflow overflowCount={list.hidden} overflowLabel={overflowLabel} /> : null;
   const input = (
     <input
-      {...props}
-      ref={controlRef}
-      id={field.inputId}
-      name={field.name}
-      disabled={field.disabled}
-      aria-invalid={field.invalid ? true : props['aria-invalid']}
-      aria-describedby={mergeDescribedBy(field.describedBy, describedBy)}
-      {...inputLabel(props, field)}
+      {...field.getControlProps({ ...props, ref: controlRef })}
       value={inputValue}
       type="text"
       className={[styles.input, className].filter(Boolean).join(' ')}

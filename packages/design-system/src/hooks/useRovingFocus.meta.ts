@@ -34,6 +34,12 @@ export const meta = {
       description: 'Keep one item tabbable. False when focus only enters from code, as in a menu: every item gets tabIndex -1.',
     },
     {
+      name: 'findItems',
+      type: '(container: HTMLElement) => HTMLElement[]',
+      required: false,
+      description: 'Finds the items, enabled or not, instead of getItemProps. Such items have no value, so no tab stop is kept: the hook only moves focus.',
+    },
+    {
       name: 'activeValue',
       type: 'string | null',
       required: false,

@@ -11,20 +11,20 @@ describe('useChipField', () => {
     const reset = result.current.reset;
     rerender({ chips: ['b'] });
     expect(result.current.reset).toBe(reset);
-    act(() => result.current.onCommit('x'));
+    act(() => result.current.getChipInputProps().onCommit('x'));
     act(() => result.current.reset());
     expect(result.current.chips).toEqual(['b']);
   });
 
   it('appends trimmed unique commits and clears the input', () => {
     const { result } = renderHook(() => useChipField());
-    act(() => result.current.onInputValueChange('  Alpha  '));
-    act(() => result.current.onCommit('  Alpha  '));
+    act(() => result.current.getChipInputProps().onInputValueChange('  Alpha  '));
+    act(() => result.current.getChipInputProps().onCommit('  Alpha  '));
     expect(result.current.chips).toEqual(['Alpha']);
     expect(result.current.inputValue).toBe('');
-    act(() => result.current.onCommit('   '));
+    act(() => result.current.getChipInputProps().onCommit('   '));
     expect(result.current.chips).toEqual(['Alpha']);
-    act(() => result.current.onCommit('Alpha'));
+    act(() => result.current.getChipInputProps().onCommit('Alpha'));
     expect(result.current.chips).toEqual(['Alpha']);
   });
 
@@ -35,9 +35,9 @@ describe('useChipField', () => {
         transform: (raw) => (raw.includes('x') ? null : raw.trim()),
       }),
     );
-    act(() => result.current.onCommit('xray'));
+    act(() => result.current.getChipInputProps().onCommit('xray'));
     expect(result.current.chips).toEqual(['Alpha', 'Beta']);
-    act(() => result.current.onChipRemove(0));
+    act(() => result.current.getChipInputProps().onChipRemove(0, 'Alpha'));
     expect(result.current.chips).toEqual(['Beta']);
   });
 
@@ -45,18 +45,30 @@ describe('useChipField', () => {
     const { result } = renderHook(() =>
       useChipField({ initialChips: ['A'], initialInputValue: 'q' }),
     );
-    act(() => result.current.onCommit('B'));
-    act(() => result.current.onInputValueChange('z'));
+    act(() => result.current.getChipInputProps().onCommit('B'));
+    act(() => result.current.getChipInputProps().onInputValueChange('z'));
     act(() => result.current.reset());
     expect(result.current.chips).toEqual(['A']);
     expect(result.current.inputValue).toBe('q');
   });
 
-  it('returns spread-compatible Field.ChipInput props', () => {
+  it('returns spread-compatible Field.ChipInput props, and nothing else to spread', () => {
     function accept(_props: FieldChipInputProps) {}
-    const { result } = renderHook(() => useChipField());
-    accept(result.current);
-    expectTypeOf(result.current.chips).toEqualTypeOf<FieldChipInputProps['chips']>();
-    expectTypeOf(result.current.onCommit).toEqualTypeOf<FieldChipInputProps['onCommit']>();
+    const { result } = renderHook(() => useChipField({ initialChips: ['A'], initialInputValue: 'q' }));
+    const props = result.current.getChipInputProps();
+    accept(props);
+    expectTypeOf(props.chips).toEqualTypeOf<FieldChipInputProps['chips']>();
+    expectTypeOf(props.onCommit).toEqualTypeOf<FieldChipInputProps['onCommit']>();
+    expect(Object.keys(props).sort()).toEqual(['chips', 'inputValue', 'onChipRemove', 'onCommit', 'onInputValueChange']);
+    expect(props.chips).toEqual(['A']);
+    expect(props.inputValue).toBe('q');
+  });
+
+  it('sets chips and input text directly', () => {
+    const { result } = renderHook(() => useChipField({ initialChips: ['A'] }));
+    act(() => result.current.setChips(['B', 'C']));
+    act(() => result.current.setInputValue('d'));
+    expect(result.current.getChipInputProps().chips).toEqual(['B', 'C']);
+    expect(result.current.getChipInputProps().inputValue).toBe('d');
   });
 });
