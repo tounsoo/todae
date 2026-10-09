@@ -450,7 +450,7 @@ main:focus {
   outline: none;
 }
 
-/* Todae styles tables in todae.base; the docs frame them and tighten the type. */
+/* Table.Root styles the table; the docs frame it and tighten the type. */
 .scroll-x-body > table {
   inline-size: 100%;
   margin: 0;

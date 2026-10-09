@@ -25,7 +25,7 @@ export const meta = {
     {
       name: 'children',
       type: 'React.ReactNode',
-      required: true,
+      required: false,
       description: 'A Disclosure.Summary first, then the content it shows and hides.',
     },
   ],

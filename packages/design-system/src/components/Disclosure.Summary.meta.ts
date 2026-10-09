@@ -7,7 +7,7 @@ export const meta = {
     {
       name: 'children',
       type: 'React.ReactNode',
-      required: true,
+      required: false,
       description: 'The toggle text. It names the disclosure for screen readers.',
     },
   ],

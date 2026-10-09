@@ -7,7 +7,7 @@ export const meta = {
     {
       name: 'value',
       type: 'number',
-      required: true,
+      required: false,
       description: 'The measurement, between min and max.',
     },
     {

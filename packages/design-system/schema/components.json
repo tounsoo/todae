@@ -863,7 +863,7 @@
         {
           "name": "children",
           "type": "React.ReactNode",
-          "required": true,
+          "required": false,
           "description": "A Disclosure.Summary first, then the content it shows and hides."
         }
       ]
@@ -875,7 +875,7 @@
         {
           "name": "children",
           "type": "React.ReactNode",
-          "required": true,
+          "required": false,
           "description": "The toggle text. It names the disclosure for screen readers."
         }
       ]
@@ -1741,7 +1741,7 @@
         {
           "name": "value",
           "type": "number",
-          "required": true,
+          "required": false,
           "description": "The measurement, between min and max."
         },
         {
@@ -2282,7 +2282,7 @@
         {
           "name": "children",
           "type": "React.ReactNode",
-          "required": true,
+          "required": false,
           "description": "A caption, then thead, tbody and tfoot with their rows and cells."
         }
       ]

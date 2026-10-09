@@ -7,7 +7,7 @@ export const meta = {
     {
       name: 'children',
       type: 'React.ReactNode',
-      required: true,
+      required: false,
       description: 'A caption, then thead, tbody and tfoot with their rows and cells.',
     },
   ],
