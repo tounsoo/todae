@@ -14,8 +14,6 @@ Each round's review runs in an `Agent` at that round's row of this table. The ta
 1. Start an `Agent` with this round's `model` and `effort` from the table, have it run this round's command, and return the findings. The reviewer only reviews: it does not edit files, commit, or push. If the reviewer cannot run, tell the person in your next reply rather than reviewing at a different row.
 
    From round 2, the command reviews only the commits pushed since the last review. Also give the reviewer the previous round's blocking findings, and have it say which are still open. If the branch was rebased or the base branch was merged in since the last review, have the reviewer run `/code-review high <pr-number>` instead.
-
-   Trial: while the Fable trial table in `/mnt/project-files/reviews/review-loop-analysis.md` has fewer than four PR rows, round 1 also starts a second reviewer `Agent` at `fable` / `medium`, running `/code-review medium <pr-number>` in parallel. Fix the blocking findings from both. Then add a row for the PR: blocking findings from each reviewer, and how many each found that the other missed. If the Fable reviewer cannot run, write "did not run" in its columns. Once the table has four PR rows, remove this paragraph in its own PR.
 2. Sort the findings. Only blocking findings start another round: a bug, a test or CI failure, or a statement in docs that is wrong about what the code does. Wording, style, missing edge-case caveats and other nits are not blocking: fix the ones that are plainly right in the same push, but they never start a round of their own.
 3. Before fixing anything, work through each blocking finding:
    - Does your diagnosis name the root cause, or only the symptom?
