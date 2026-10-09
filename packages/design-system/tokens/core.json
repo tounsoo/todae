@@ -167,6 +167,10 @@
       "tight": { "$type": "number", "$value": 1.25 }
     },
     "family": {
+      "sans": {
+        "$type": "fontFamily",
+        "$value": ["ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "sans-serif"]
+      },
       "mono": {
         "$type": "fontFamily",
         "$value": ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"]

@@ -31,6 +31,7 @@
   --todae-color-red-700: oklch(0.4 0.15 25);
   --todae-color-red-900: oklch(0.25 0.07 25);
   --todae-font-family-mono: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
+  --todae-font-family-sans: ui-sans-serif, system-ui, "Segoe UI", "Roboto", sans-serif;
   --todae-font-leading-default: 1.5;
   --todae-font-leading-tight: 1.25;
   --todae-font-size-1: 0.75rem;
@@ -323,6 +324,7 @@
   --todae-text-fg-accent: var(--_todae-text-fg-accent, var(--todae-color-accent-default));
   --todae-text-fg-default: var(--_todae-text-fg-default, var(--todae-color-fg-default));
   --todae-text-fg-muted: var(--_todae-text-fg-muted, var(--todae-color-fg-muted));
+  --todae-text-font-family: var(--_todae-text-font-family, var(--todae-font-family-sans));
   --todae-text-leading-default: var(--_todae-text-leading-default, var(--todae-font-leading-default));
   --todae-text-leading-tight: var(--_todae-text-leading-tight, var(--todae-font-leading-tight));
   --todae-text-size-1: var(--_todae-text-size-1, var(--todae-font-size-1));

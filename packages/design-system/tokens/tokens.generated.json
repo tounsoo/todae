@@ -281,6 +281,15 @@
       "context": null
     },
     {
+      "path": "font.family.sans",
+      "type": "fontFamily",
+      "cssVar": "--todae-font-family-sans",
+      "cssValue": "ui-sans-serif, system-ui, \"Segoe UI\", \"Roboto\", sans-serif",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "font.leading.default",
       "type": "number",
       "cssVar": "--todae-font-leading-default",
@@ -1987,6 +1996,15 @@
       "cssVar": "--todae-text-fg-muted",
       "cssValue": "var(--todae-color-fg-muted)",
       "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "text.font.family",
+      "type": "fontFamily",
+      "cssVar": "--todae-text-font-family",
+      "cssValue": "var(--todae-font-family-sans)",
+      "ref": "font.family.sans",
       "layer": "contract",
       "context": null
     },

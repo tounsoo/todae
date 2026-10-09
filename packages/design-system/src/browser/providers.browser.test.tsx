@@ -105,6 +105,21 @@ describe('ThemeProvider overrides in a browser', () => {
     );
   });
 
+  it('leave the app’s font alone and expose the typeface as a token', () => {
+    render(
+      <div style={{ fontFamily: 'Courier New' }}>
+        <ThemeProvider overrides={{ 'font.family.sans': ['Georgia'] }}>
+          <DensityProvider>
+            <span data-testid="text">Text</span>
+          </DensityProvider>
+        </ThemeProvider>
+      </div>,
+    );
+    const text = screen.getByTestId('text');
+    expect(getComputedStyle(text).fontFamily).toBe('"Courier New"');
+    expect(cssVar(text, '--todae-text-font-family')).toContain('Georgia');
+  });
+
   it('let a nested DensityProvider change an overridden spacing token', () => {
     render(
       <ThemeProvider overrides={{ 'space.control.x': { value: 2.5, unit: 'rem' } }}>

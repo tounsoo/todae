@@ -1,7 +1,25 @@
+/* The docs site's own styles. Everything reads Todae's tokens, so the site
+   follows the reader's light or dark choice like any product built on Todae. */
+
 :root {
-  color: var(--todae-color-fg-default);
-  background: var(--todae-color-bg-canvas);
-  font: 16px / var(--todae-text-leading-default, 1.5) system-ui, sans-serif;
+  /* The docs pick their own typefaces through Todae's tokens, as a company would.
+     Korean falls back to the system's Korean face. */
+  --todae-font-family-sans: var(--docs-font-sans, system-ui), system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --todae-font-family-mono: var(--docs-font-mono, ui-monospace), ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 16px;
+  line-height: 1.6;
+  --docs-topbar: 3.5rem;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Todae ships the typeface token but doesn't apply it; the docs opt in, as a
+   company would. Every themed subtree re-reads it, so a preset's
+   font.family.sans override changes the type inside its ThemeProvider. */
+:root,
+[data-appearance] {
+  font-family: var(--todae-text-font-family);
 }
 
 * {
@@ -12,110 +30,371 @@ body {
   margin: 0;
 }
 
+/* Korean breaks between words, not inside them. */
+:root:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
 .shell {
+  /* Hairlines lighter than Todae's subtle border, for the site's own chrome. */
+  --docs-line: color-mix(in oklch, var(--todae-color-border-subtle) 50%, var(--todae-color-bg-canvas));
+  --docs-raised: color-mix(in oklch, var(--todae-color-bg-subtle) 45%, var(--todae-color-bg-canvas));
   min-height: 100vh;
   color: var(--todae-color-fg-default);
   background: var(--todae-color-bg-canvas);
 }
 
-.site-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--todae-color-border-default);
-  background: var(--todae-color-bg-surface);
+/* Skip link: hidden until focused, then pinned over the top bar. */
+.skip-link {
+  position: fixed;
+  inset-block-start: 0.5rem;
+  inset-inline-start: 0.5rem;
+  z-index: 50;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--todae-radius-md);
+  background: var(--todae-color-accent-default);
+  color: var(--todae-color-on-accent);
+  font-weight: 600;
 }
 
-.site-header a {
+/* ---------- Top bar ---------- */
+
+.topbar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 20;
+  border-block-end: 1px solid var(--docs-line);
+  background: color-mix(in oklch, var(--todae-color-bg-canvas) 82%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+}
+
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-inline-size: 90rem;
+  block-size: var(--docs-topbar);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-inline-end: 0.75rem;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  text-decoration: none;
   color: inherit;
 }
 
-.site-header-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
+/* 토대 is a foundation: a block resting on a wider base. */
+.brand-mark {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  border-radius: 0.3125rem;
+  background:
+    linear-gradient(var(--todae-color-fg-default), var(--todae-color-fg-default)) center 0.1875rem / 0.625rem 0.5rem no-repeat,
+    linear-gradient(var(--todae-color-fg-default), var(--todae-color-fg-default)) center bottom 0.1875rem / 0.875rem 0.25rem no-repeat,
+    var(--todae-color-bg-subtle);
+  box-shadow: inset 0 0 0 1px var(--docs-line);
 }
 
+.top-links ul,
 .language-switcher ul {
   display: flex;
-  gap: 2px 14px;
-  list-style: none;
+  gap: 0.125rem;
   margin: 0;
   padding: 0;
+  list-style: none;
+}
+
+.top-links a,
+.language-switcher a {
+  display: block;
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--todae-radius-md);
+  color: var(--todae-color-fg-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 120ms, background-color 120ms;
+}
+
+.top-links a:hover,
+.language-switcher a:hover {
+  color: var(--todae-color-fg-default);
+  background: var(--todae-color-bg-highlight);
 }
 
 .language-switcher a[aria-current='true'] {
-  font-weight: 700;
+  color: var(--todae-color-fg-default);
+  background: var(--todae-color-bg-subtle);
+  text-decoration: none;
 }
 
-.untranslated-notice {
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--todae-color-border-default);
-  border-radius: 0.5rem;
+.topbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
+.topbar-icon-link {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: var(--todae-radius-md);
+  color: var(--todae-color-fg-muted);
+}
+
+.topbar-icon-link:hover {
+  color: var(--todae-color-fg-default);
+  background: var(--todae-color-bg-highlight);
+}
+
+.theme-switcher {
+  padding: 0.125rem;
+  border: 1px solid var(--docs-line);
+  border-radius: var(--todae-radius-md);
+}
+
+.mobile-nav-drawer .site-nav {
+  padding-block: 0.25rem 1rem;
+}
+
+/* Wide screens show the sidebar, so the menu button goes. Only the button:
+   the drawer inside must keep rendering if it is open when the window widens.
+   The playground has no sidebar, so it keeps the button. */
+@media (min-width: 64rem) {
+  .shell:not(:has(.playground)) .mobile-nav-trigger {
+    display: none;
+  }
+}
+
+@media (max-width: 48rem) {
+  .top-links {
+    display: none;
+  }
+
+  .topbar-inner {
+    gap: 0.25rem;
+  }
+}
+
+/* The top bar drops its theme switch on the narrowest screens; the drawer
+   (which sits inside the top bar's markup) keeps one. */
+@media (max-width: 30rem) {
+  .topbar-tools .theme-switcher {
+    display: none;
+  }
+}
+
+/* ---------- Layout and sidebar ---------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-inline-size: 90rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+.sidebar {
+  display: none;
+}
+
+@media (min-width: 64rem) {
+  .layout {
+    grid-template-columns: 15rem minmax(0, 1fr);
+    column-gap: 3.5rem;
+    padding-inline: 1.5rem;
+  }
+
+  .sidebar {
+    display: block;
+    position: sticky;
+    inset-block-start: var(--docs-topbar);
+    block-size: calc(100dvh - var(--docs-topbar));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block: 1.75rem 3rem;
+  }
+}
+
+/* The home page and the playground use the full width. */
+.layout:has(.home, .playground) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.layout:has(.home, .playground) .sidebar {
+  display: none;
+}
+
+.layout:has(.playground) {
+  max-inline-size: none;
+  padding-inline: 0;
 }
 
 .site-nav {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.site-nav-group {
   display: grid;
-  grid-template-columns: 7.5rem minmax(0, 1fr);
-  align-items: baseline;
+  gap: 1.5rem;
 }
 
 .site-nav-label {
-  font-size: 0.6875rem;
+  display: block;
+  margin-block-end: 0.375rem;
+  padding-inline: 0.625rem;
+  color: var(--todae-color-fg-default);
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  /* Labels move back to --todae-color-fg-muted once that token is fixed (tracked separately). */
-  color: var(--todae-color-gray-600);
 }
 
 .site-nav ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 14px;
-  list-style: none;
+  display: grid;
+  gap: 1px;
   margin: 0;
   padding: 0;
-  min-width: 0;
+  list-style: none;
 }
 
 .site-nav a {
+  display: block;
+  padding: 0.3125rem 0.625rem;
+  border-radius: var(--todae-radius-md);
+  color: var(--todae-color-fg-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-decoration: none;
   overflow-wrap: anywhere;
+  transition: color 120ms, background-color 120ms;
 }
 
 .site-nav a:hover {
-  text-decoration-thickness: 2px;
+  color: var(--todae-color-fg-default);
+  background: var(--todae-color-bg-highlight);
 }
 
 .site-nav a[aria-current='page'] {
-  font-weight: 700;
+  color: var(--todae-color-fg-default);
+  background: var(--todae-color-bg-subtle);
+  font-weight: 600;
+  text-decoration: none;
 }
 
-@media (max-width: 40rem) {
-  .site-nav {
-    gap: var(--todae-space-3);
-  }
-
-  .site-nav-group {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: var(--todae-space-1);
-  }
-}
+/* ---------- Page content ---------- */
 
 main {
-  max-width: 48rem;
-  padding: 1.5rem;
+  min-inline-size: 0;
+  padding-block: 2.5rem 6rem;
+}
+
+main:focus {
+  outline: none;
+}
+
+.layout:not(:has(.home, .playground)) main {
+  max-inline-size: 46rem;
+}
+
+/* Prose: only the page's own top-level elements, so demos and Todae's
+   components keep their own type. */
+:where(main, main > div[lang]) > h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(2rem, 1.6rem + 1.5vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+:where(main, main > div[lang]) > h1 + p {
+  color: var(--todae-color-fg-muted);
+  font-size: 1.125rem;
+}
+
+:where(main, main > div[lang]) > h2 {
+  margin: 3rem 0 0.75rem;
+  padding-block-start: 2rem;
+  border-block-start: 1px solid var(--docs-line);
+  font-size: 1.5rem;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+:where(main, main > div[lang]) > h3 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+:where(main, main > div[lang]) > h4 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+:where(main, main > div[lang]) > :is(h1, h2, h3, h4) {
+  scroll-margin-block-start: calc(var(--docs-topbar) + 1.5rem);
+}
+
+:where(main, main > div[lang]) > :is(p, ul, ol) {
+  margin-block: 0.875rem;
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+:where(main, main > div[lang]) > :is(ul, ol) {
+  padding-inline-start: 1.25rem;
+}
+
+:where(main, main > div[lang]) > :is(ul, ol) > li + li {
+  margin-block-start: 0.375rem;
+}
+
+:where(main, main > div[lang]) > blockquote {
+  margin: 1.25rem 0;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-inline-start: 3px solid var(--todae-color-border-default);
+  color: var(--todae-color-fg-muted);
+}
+
+.untranslated-notice {
+  margin: 0 0 2rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--docs-line);
+  border-radius: var(--todae-radius-md);
+  background: var(--docs-raised);
+  color: var(--todae-color-fg-muted);
+  font-size: 0.875rem;
+}
+
+/* ---------- Examples, code, tables ---------- */
+
+.example {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--todae-stack-gap, 0.75rem);
+  align-items: center;
+  margin: 1.5rem 0;
+  padding: 2rem 1.5rem;
+  border: 1px solid var(--docs-line);
+  border-radius: var(--todae-radius-lg);
+  background:
+    radial-gradient(circle at 1px 1px, var(--docs-line) 1px, transparent 0) 0 0 / 1rem 1rem,
+    var(--todae-color-bg-surface);
+}
+
+.example-block {
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .docs-pre {
@@ -123,17 +402,24 @@ main {
   padding: calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
   margin-block: 1rem;
   margin-inline: calc((var(--todae-chip-ring-width) + var(--todae-chip-ring-offset)) * -1);
+  border-radius: calc(var(--todae-radius-lg) + var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
 }
 
 .docs-pre:has(pre:focus-visible) {
   outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
-  outline-offset: var(--todae-chip-ring-offset);
+  outline-offset: calc(var(--todae-chip-ring-offset) * -1);
 }
 
 .docs-pre pre {
   margin: 0;
   max-width: 100%;
   overflow-x: auto;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--docs-line);
+  border-radius: var(--todae-radius-lg);
+  background: var(--docs-raised);
+  font-size: 0.8125rem;
+  line-height: 1.7;
 }
 
 .docs-pre pre:focus-visible {
@@ -143,42 +429,42 @@ main {
 .scroll-x {
   max-width: 100%;
   padding: calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
+  margin-block: 1.25rem;
   margin-inline: calc((var(--todae-chip-ring-width) + var(--todae-chip-ring-offset)) * -1);
 }
 
 .scroll-x:has(.scroll-x-body:focus-visible) {
   outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
-  outline-offset: var(--todae-chip-ring-offset);
+  outline-offset: calc(var(--todae-chip-ring-offset) * -1);
+  border-radius: var(--todae-radius-lg);
 }
 
 .scroll-x-body {
   max-width: 100%;
   overflow-x: auto;
+  border: 1px solid var(--docs-line);
+  border-radius: var(--todae-radius-lg);
 }
 
 .scroll-x-body:focus-visible {
   outline: none;
 }
 
-main:has(.playground) {
-  max-width: none;
-  padding: 0;
+/* Todae styles tables in todae.base; the docs frame them and tighten the type. */
+.scroll-x-body > table {
+  inline-size: 100%;
+  margin: 0;
+  font-size: 0.875rem;
 }
 
-.example {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--todae-stack-gap, 0.75rem);
-  align-items: center;
+.scroll-x-body > table > caption {
+  padding: 0.75rem 1rem 0;
+  text-align: start;
+  font-weight: 600;
+}
+
+table {
   margin: 1rem 0;
-  padding: 1rem;
-  border: 1px solid var(--todae-color-border-default);
-  background: var(--todae-color-bg-surface);
-}
-
-.example-block {
-  flex-direction: column;
-  align-items: stretch;
 }
 
 .labelled-field {
@@ -192,182 +478,632 @@ main:has(.playground) {
   margin-block-start: var(--todae-field-label-gap);
 }
 
-/* Todae styles tables in todae.base; the docs only add space around them. */
-table {
-  margin: 1rem 0;
+/* ---------- Home ---------- */
+
+.home {
+  max-inline-size: 76rem;
+  margin-inline: auto;
+  padding-block-start: 1rem;
 }
 
-.playground {
+.hero {
+  display: grid;
+  /* minmax(0, …) so the showcase's min-content width can't widen a phone page. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3rem;
+  align-items: center;
+  padding-block: 2rem 4.5rem;
+}
+
+@media (min-width: 64rem) {
+  .hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 4rem;
+    padding-block: 3.5rem 5rem;
+  }
+}
+
+.hero-eyebrow {
+  display: inline-block;
+  margin: 0;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--docs-line);
+  border-radius: 999px;
+  background: var(--docs-raised);
+  color: var(--todae-color-fg-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.hero h1 {
+  margin: 1.25rem 0 1rem;
+  font-size: clamp(2.25rem, 1.4rem + 3.2vw, 3.75rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.hero-lead {
+  max-inline-size: 36rem;
+  margin: 0;
+  color: var(--todae-color-fg-muted);
+  font-size: 1.125rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.hero-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: stretch;
-  min-height: calc(100vh - 4rem);
+  gap: 0.75rem;
+  margin-block-start: 2rem;
 }
 
-.playground-rail {
-  width: 18rem;
-  flex: 0 0 18rem;
+/* A link drawn as a button. Todae's Button is a <button>, so the docs paint
+   links from the button tokens. */
+.docs-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6875rem 1.125rem;
+  border: 1px solid var(--todae-color-border-default);
+  border-radius: var(--todae-button-base-radius);
+  background: var(--todae-color-bg-surface);
+  color: var(--todae-color-fg-default);
+  font-size: 0.9375rem;
+  font-weight: 550;
+  text-decoration: none;
+  transition: background-color 120ms, border-color 120ms;
+}
+
+.docs-cta:hover {
+  background: var(--todae-color-bg-highlight);
+}
+
+.docs-cta-primary {
+  border-color: var(--todae-button-primary-bg-default);
+  background: var(--todae-button-primary-bg-default);
+  color: var(--todae-button-primary-fg-default);
+}
+
+.docs-cta-primary:hover {
+  border-color: var(--todae-button-primary-bg-hover);
+  background: var(--todae-button-primary-bg-hover);
+}
+
+.hero-showcase {
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid var(--docs-line);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at 1px 1px, var(--docs-line) 1px, transparent 0) 0 0 / 1.25rem 1.25rem,
+    var(--docs-raised);
+}
+
+.showcase-card {
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.06),
+    0 16px 40px -16px oklch(0 0 0 / 0.22);
+}
+
+.showcase-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.showcase-panel {
+  display: grid;
+  gap: 0.875rem;
+  padding-block-start: 1rem;
+}
+
+.home-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: 1rem;
+}
+
+.home-group {
+  padding: 1.5rem;
+  border: 1px solid var(--docs-line);
+  border-radius: var(--todae-radius-lg);
+  background: var(--todae-color-bg-surface);
+}
+
+@media (min-width: 48rem) {
+  /* The long lists, components and utilities, get the room. */
+  .home-group:has(li:nth-child(10)) {
+    grid-column: span 2;
+  }
+}
+
+.home-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.home-group h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.home-group-count {
+  color: var(--todae-color-fg-muted);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.home-group p {
+  margin: 0.375rem 0 1rem;
+  color: var(--todae-color-fg-muted);
+  font-size: 0.9375rem;
+}
+
+.home-group ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-group a {
+  display: block;
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid var(--docs-line);
+  border-radius: var(--todae-radius-md);
+  color: var(--todae-color-fg-default);
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.home-group a:hover {
+  border-color: var(--todae-color-border-default);
+  background: var(--todae-color-bg-highlight);
+}
+
+/* ---------- Playground ---------- */
+
+.playground {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-block: -2.5rem -6rem;
+  min-block-size: calc(100dvh - var(--docs-topbar));
+}
+
+@media (min-width: 64rem) {
+  .playground {
+    grid-template-columns: 23rem minmax(0, 1fr);
+  }
+}
+
+.pg-rail {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.75rem 0.85rem 1rem;
-  border-right: 1px solid var(--todae-color-border-default);
+  gap: 1.5rem;
+  padding: 1.5rem 1.25rem 0;
+  border-block-end: 1px solid var(--docs-line);
   background: var(--todae-color-bg-surface);
-  max-height: calc(100vh - 4rem);
-  min-height: 0;
 }
 
-.playground-rail h1 {
+@media (min-width: 64rem) {
+  .pg-rail {
+    position: sticky;
+    inset-block-start: var(--docs-topbar);
+    block-size: calc(100dvh - var(--docs-topbar));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-block-end: 0;
+    border-inline-end: 1px solid var(--docs-line);
+  }
+}
+
+.pg-intro h1 {
   margin: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-.playground-rail fieldset {
+.pg-intro p {
+  margin: 0.375rem 0 0;
+  color: var(--todae-color-fg-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.pg-section {
+  min-inline-size: 0;
   margin: 0;
   padding: 0;
   border: 0;
-  display: grid;
-  gap: 0.35rem;
 }
 
-.playground-tabs {
-  display: flex;
-  gap: 0.15rem;
-}
-
-.playground-tabs button {
-  flex: 1 1 auto;
-  margin: 0;
-  padding: 0.25rem 0.35rem;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 0.6875rem;
+.pg-heading {
+  display: block;
+  margin: 0 0 0.625rem;
+  padding: 0;
+  color: var(--todae-color-fg-muted);
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.preset {
+  display: grid;
+  gap: 0.375rem;
+  padding: 0.375rem 0.375rem 0.5rem;
+  border: 1px solid var(--docs-line);
+  border-radius: var(--todae-radius-md);
+  background: var(--todae-color-bg-canvas);
   cursor: pointer;
+  transition: border-color 120ms;
 }
 
-.playground-tabs button[aria-selected='true'] {
-  border-bottom-color: var(--todae-color-accent-default);
+.preset:hover {
+  border-color: var(--todae-color-border-default);
 }
 
-.playground-tabs button:focus-visible {
+.preset[data-selected] {
+  border-color: var(--todae-color-fg-default);
+  box-shadow: 0 0 0 1px var(--todae-color-fg-default);
+}
+
+.preset:has(input:focus-visible) {
   outline: 2px solid var(--todae-color-accent-default);
   outline-offset: 2px;
 }
 
-.playground-tokens {
-  margin: 0;
-  padding: 0;
-  border: 0;
+/* The swatch is a ThemeProvider of its own, so these read the preset's tokens. */
+.preset-swatch {
+  display: block;
+  padding: 0.375rem;
+  border-radius: calc(var(--todae-radius-md) - 0.125rem);
+  background: var(--todae-color-bg-subtle);
+}
+
+.preset-swatch-surface {
   display: grid;
-  gap: 0.35rem;
-  overflow: auto;
-  flex: 1 1 auto;
-  min-height: 0;
+  align-content: start;
+  gap: 0.25rem;
+  block-size: 3.5rem;
+  padding: 0.375rem;
+  border: var(--todae-border-width) solid var(--todae-color-border-subtle);
+  border-radius: var(--todae-radius-md);
+  background: var(--todae-color-bg-surface);
 }
 
-.playground-rail legend,
-.playground-rail h2,
-.playground-rail summary {
-  padding: 0;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--todae-color-fg-muted);
-}
-
-.playground-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.15rem 0.65rem;
-}
-
-.playground-options label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.8125rem;
-}
-
-.playground-density {
-  flex: 1 1 20rem;
-  min-width: 0;
-  display: flex;
-}
-
-.playground-stage {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 1.75rem 2rem;
+.preset-swatch-type {
   color: var(--todae-color-fg-default);
-  background: var(--todae-color-bg-canvas);
+  font-size: 0.875rem;
+  font-weight: var(--todae-font-weight-bold);
+  line-height: 1;
+}
+
+.preset-swatch-accent {
+  inline-size: 55%;
+  block-size: 0.625rem;
+  margin-block-end: 0.125rem;
+  border-radius: var(--todae-button-base-radius);
+  background: var(--todae-color-accent-default);
+}
+
+.preset-swatch-line {
+  block-size: 0.25rem;
+  border-radius: 0.125rem;
+  background: var(--todae-color-fg-muted);
+  opacity: 0.45;
+}
+
+.preset-swatch-line-short {
+  inline-size: 60%;
+}
+
+.preset-name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.pg-modes {
+  display: grid;
+  gap: 1rem;
+}
+
+.pg-tokens-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pg-changed {
+  color: var(--todae-color-fg-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.pg-token-panel {
+  display: grid;
+  gap: 0.75rem;
+  padding-block-start: 0.75rem;
+}
+
+.pg-token-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pg-empty {
+  margin: 0;
+  color: var(--todae-color-fg-muted);
+  font-size: 0.875rem;
 }
 
 .token-row {
   display: grid;
-  gap: 0.15rem;
+  gap: 0.25rem;
 }
 
-.token-row label {
-  font-size: 0.6875rem;
+.token-row label code {
+  padding: 0;
+  background: none;
+  color: var(--todae-color-fg-muted);
+  font-size: 0.75rem;
 }
 
-.token-row code {
-  font-size: 0.6875rem;
+.token-row[data-edited] label code {
+  color: var(--todae-color-fg-default);
+  font-weight: 600;
+}
+
+.token-row[data-edited] label code::before {
+  content: '';
+  display: inline-block;
+  inline-size: 0.375rem;
+  block-size: 0.375rem;
+  margin-inline-end: 0.375rem;
+  border-radius: 50%;
+  background: var(--todae-color-accent-default);
+  vertical-align: middle;
 }
 
 .token-row-inputs {
   display: flex;
-  gap: 0.35rem;
   align-items: center;
+  gap: 0.375rem;
 }
 
-.token-row input[type='color'] {
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 1px solid var(--todae-color-border-default);
-  background: transparent;
-}
-
-.token-row input[type='text'] {
+.token-row-inputs > :last-child {
   flex: 1 1 auto;
-  min-width: 0;
-  padding: 0.2rem 0.35rem;
-  border: 1px solid var(--todae-color-border-default);
-  background: var(--todae-color-bg-canvas);
-  color: inherit;
-  font: inherit;
+  min-inline-size: 0;
+}
+
+.token-row-inputs input:not([type='color']) {
+  font-family: var(--todae-font-family-mono);
   font-size: 0.75rem;
 }
 
-.token-row input:focus-visible,
-.playground-options input:focus-visible {
+.token-swatch {
+  flex: none;
+  inline-size: 2rem;
+  block-size: 2rem;
+  padding: 0.1875rem;
+  border: 1px solid var(--todae-color-border-default);
+  border-radius: var(--todae-field-radius);
+  background: var(--todae-color-bg-surface);
+  cursor: pointer;
+}
+
+.token-swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.token-swatch::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--todae-field-radius) - 0.1875rem);
+}
+
+.token-swatch::-moz-color-swatch {
+  border: 0;
+  border-radius: calc(var(--todae-field-radius) - 0.1875rem);
+}
+
+.token-swatch:focus-visible {
   outline: 2px solid var(--todae-color-accent-default);
   outline-offset: 2px;
 }
 
-.playground-actions {
+.pg-actions {
+  position: sticky;
+  inset-block-end: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.5rem;
+  margin-block-start: auto;
+  margin-inline: -1.25rem;
+  padding: 0.875rem 1.25rem;
+  border-block-start: 1px solid var(--docs-line);
+  background: var(--todae-color-bg-surface);
 }
 
-.playground-status {
-  margin: 0;
-  min-height: 1.2em;
-  font-size: 0.75rem;
-  color: var(--todae-color-fg-muted);
+.pg-actions > * {
+  flex: 1 1 0;
 }
+
+.pg-hint {
+  margin: -1rem 0 1rem;
+  color: var(--todae-color-fg-muted);
+  font-size: 0.75rem;
+}
+
+.pg-stage-theme {
+  display: flex;
+  min-inline-size: 0;
+}
+
+.pg-stage {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  background: var(--todae-color-bg-subtle);
+  color: var(--todae-color-fg-default);
+  container-type: inline-size;
+}
+
+/* The preview inside the stage reads the stage's tokens only. */
+.preview {
+  display: grid;
+  gap: 1.5rem;
+  max-inline-size: 70rem;
+  margin-inline: auto;
+}
+
+.preview-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.preview-user {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.preview-span-2 {
+  grid-column: span 2;
+}
+
+.preview-span-3 {
+  grid-column: 1 / -1;
+}
+
+.preview-tall {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+
+@container (max-width: 60rem) {
+  .preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .preview-span-2 {
+    grid-column: 1 / -1;
+  }
+
+  .preview-tall {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+@container (max-width: 38rem) {
+  .preview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .preview-stats {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .preview-alerts {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+.preview-card-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.preview-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.preview-stats > div {
+  display: grid;
+  justify-items: start;
+  gap: 0.375rem;
+}
+
+.preview-stats progress {
+  inline-size: 100%;
+}
+
+.preview-form,
+.preview-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.preview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.preview-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.preview-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.625rem;
+  border-block-end: 1px solid var(--todae-color-border-subtle);
+}
+
+.preview-list li:last-child {
+  border-block-end: 0;
+}
+
+.preview-alerts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+/* ---------- Demo helpers ---------- */
 
 .demo-toolbar {
   display: flex;
