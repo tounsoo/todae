@@ -39,6 +39,7 @@ const FRENCH: Strings = {
   characterLimit: (max) => `${max} caractères maximum`,
   charactersLeft: (remaining) => `${remaining} restants`,
   characterLimitReached: 'Limite atteinte',
+  createOption: (query) => `Créer « ${query} »`,
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {
@@ -65,6 +66,23 @@ describe('StringsProvider', () => {
     expect(english.charactersLeft(1)).toBe('1 character left');
     expect(english.charactersLeft(2)).toBe('2 characters left');
     expect(english.characterLimitReached).toBe('Character limit reached');
+    expect(english.createOption('Vue')).toBe('Create "Vue"');
+    // Shared by every consumer, so no one can change the defaults for everyone.
+    expect(Object.isFrozen(english)).toBe(true);
+  });
+
+  it('labels useCombobox\'s create row from the provider unless createLabel is set', () => {
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <StringsProvider strings={FRENCH}>{children}</StringsProvider>
+    );
+    const label = (createLabel?: (query: string) => string) => {
+      const { result } = renderHook(() => useCombobox({ options: [], allowCreate: true, createLabel }), { wrapper });
+      act(() => result.current.setInputValue('Vue'));
+      const row = result.current.items.find((item) => item.kind === 'create');
+      return row && 'label' in row ? row.label : undefined;
+    };
+    expect(label()).toBe('Créer « Vue »');
+    expect(label((query) => `Add ${query}`)).toBe('Add Vue');
   });
 
   it('merges each provider over the nearest one above, key by key', () => {

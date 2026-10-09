@@ -64,7 +64,7 @@ A toast can leave before someone reaches it, so it should not be the only way to
 - **F8** moves focus to the region while a toast shows, and Tab goes on into the toasts. Change it with `hotkey`, such as `hotkey="Alt+T"`, or turn it off with `hotkey={null}`.
 - **Escape** on a toast dismisses it, not the dialog behind it. Focus stays in the region while other toasts remain, and goes back where it came from once none is left.
 - The toasts are a list inside a live region that exists before the first toast, so screen readers read each new one politely, once. That includes `critical` toasts: a message that must interrupt belongs in an [Alert](/alert).
-- The region is named "Notifications" and `Toast.Close` is named "Dismiss" unless its text names it. Both are English: pass `aria-label` in your app's language.
+- The region is named "Notifications" and `Toast.Close` is named "Dismiss" unless its text names it. Both come from the `notifications` and `dismiss` strings of [StringsProvider](/utilities/strings-provider), English unless you set them; `aria-label` still wins.
 
 ## When to use
 

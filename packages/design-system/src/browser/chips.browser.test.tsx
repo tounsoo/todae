@@ -331,6 +331,21 @@ describe('Chip remove content in a browser', () => {
     expect(getComputedStyle(slotted, '::before').content).toBe('none');
   });
 
+  it('keeps the drawn remove button full size while a narrow chip truncates its label', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Chip.Root onRemove={() => undefined}>Wide</Chip.Root>
+        <Chip.Root onRemove={() => undefined} style={{ maxWidth: 48 }}>
+          A label much too long for its chip
+        </Chip.Root>
+      </div>,
+    );
+    const wide = screen.getByRole('button', { name: 'Remove Wide' }).getBoundingClientRect();
+    const narrow = screen.getByRole('button', { name: /Remove A label/ }).getBoundingClientRect();
+    expect(narrow.width).toBeCloseTo(wide.width, 1);
+    expect(narrow.height).toBeCloseTo(wide.height, 1);
+  });
+
   it('names the ChipList panel from StringsProvider', async () => {
     render(
       <div data-appearance="light" data-density="comfortable" style={{ width: 320 }}>

@@ -46,6 +46,8 @@
   }
 
   .dismiss {
+    /* Keeps its size while a truncated label shrinks. */
+    flex: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;

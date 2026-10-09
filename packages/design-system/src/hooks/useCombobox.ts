@@ -137,14 +137,11 @@ function labelOf(
   return options.find((option) => option.value === value)?.label ?? cache?.get(value) ?? value;
 }
 
-function defaultCreateLabel(query: string): string {
-  return `Create "${query}"`;
-}
-
 export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult {
   const selectionMode = isMultiple(options) ? 'multiple' : 'single';
   const filter = options.filter ?? defaultFilter;
-  const createLabel = options.createLabel ?? defaultCreateLabel;
+  const strings = useStrings();
+  const createLabel = options.createLabel ?? strings.createOption;
   const autoId = useDomId();
   const uid = options.id?.replaceAll(':', '') ?? autoId;
   const ids = {
@@ -646,7 +643,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     false,
   );
 
-  const { options: optionsName } = useStrings();
+  const optionsName = strings.options;
   const getSheetProps = useCallback(
     (): ComboboxSheetProps => ({
       open,

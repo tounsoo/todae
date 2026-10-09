@@ -34,10 +34,12 @@ export interface Strings {
   charactersLeft: (remaining: number) => string;
   /** Field.Counter's live message at or past the limit. */
   characterLimitReached: string;
+  /** Label of useCombobox's create row when its `createLabel` is not set. */
+  createOption: (query: string) => string;
 }
 
 /** The English Todae ships with. */
-export const DEFAULT_STRINGS: Strings = {
+export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   close: 'Close',
   dismiss: 'Dismiss',
   notifications: 'Notifications',
@@ -51,4 +53,5 @@ export const DEFAULT_STRINGS: Strings = {
   characterLimit: (max) => `Up to ${max} characters`,
   charactersLeft: (remaining) => `${remaining} ${remaining === 1 ? 'character' : 'characters'} left`,
   characterLimitReached: 'Character limit reached',
-};
+  createOption: (query) => `Create "${query}"`,
+});
