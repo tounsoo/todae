@@ -265,19 +265,19 @@ function OptionListRoot(props: OptionListRootProps) {
 
   const shown = activeValueProp !== undefined ? activeValue : highlighted;
   // aria-activedescendant moves no focus, so nothing scrolls the option into
-  // view: scroll its nearest scroll box, never the page. Only a move does, not
-  // a mount or the first-option fallback, so a list on the page stays put.
-  const moved =
-    activeValueProp !== undefined ? (activeValueProp && enabled.includes(activeValueProp) ? activeValueProp : null) : highlighted;
-  const lastMoved = useRef(moved);
+  // view: scroll its nearest scroll box, never the page. Reveal when the
+  // activeValue prop changes or, uncontrolled, when the keyboard moves the
+  // highlight; never on mount.
+  const target = activeValueProp !== undefined ? activeValueProp : highlighted;
+  const lastTarget = useRef(target);
   useLayoutEffect(() => {
-    const changed = lastMoved.current !== moved;
-    lastMoved.current = moved;
+    const changed = lastTarget.current !== target;
+    lastTarget.current = target;
     const list = listRef.current;
     // A list in a closed popover has no layout; it is revealed when it opens.
-    if (!changed || !moved || !list || list.checkVisibility?.() === false) return;
-    reveal(list, optionDomId(listId, moved));
-  }, [listId, moved]);
+    if (!changed || !target || !list || list.checkVisibility?.() === false) return;
+    reveal(list, optionDomId(listId, target));
+  }, [listId, target]);
   // Opening a popover or dialog lays the list out: reveal the active option then.
   const activeId = activeValue ? optionDomId(listId, activeValue) : null;
   useLayoutEffect(() => {
@@ -330,7 +330,7 @@ function scrollsY(element: Element): boolean {
 }
 
 function reveal(list: HTMLElement, id: string) {
-  // The root node finds the option inside a shadow root too.
+  // The root node finds the option by id inside a shadow root too.
   const root = list.getRootNode() as Document | ShadowRoot;
   const option = 'getElementById' in root ? root.getElementById(id) : null;
   if (option) revealInScrollBox(option);
@@ -338,6 +338,11 @@ function reveal(list: HTMLElement, id: string) {
 
 function px(value: string): number {
   return parseFloat(value) || 0;
+}
+
+/** scroll-padding can be a percentage of the scrollport. */
+function scrollPadding(value: string, box: Element): number {
+  return value.endsWith('%') ? (parseFloat(value) / 100) * box.clientHeight : px(value);
 }
 
 /**
@@ -354,8 +359,8 @@ function revealInScrollBox(option: HTMLElement) {
   if (!box || box === doc.body || box === doc.documentElement) return;
   const style = doc.defaultView!.getComputedStyle(box);
   const boxTop = box.getBoundingClientRect().top + box.clientTop;
-  const top = boxTop + px(style.paddingTop) + px(style.scrollPaddingTop);
-  const bottom = boxTop + box.clientHeight - px(style.paddingBottom) - px(style.scrollPaddingBottom);
+  const top = boxTop + px(style.paddingTop) + scrollPadding(style.scrollPaddingTop, box);
+  const bottom = boxTop + box.clientHeight - px(style.paddingBottom) - scrollPadding(style.scrollPaddingBottom, box);
   const rect = option.getBoundingClientRect();
   if (rect.top < top) box.scrollTop -= top - rect.top;
   else if (rect.bottom > bottom) box.scrollTop += rect.bottom - bottom;

@@ -382,6 +382,105 @@ describe('OptionList scrolling', () => {
     expect(screen.getByTestId('shell').scrollTop).toBe(0);
   });
 
+  const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+  function Wrapped({ items }: { items: string[] }) {
+    return (
+      <>
+        {items.map((item) => (
+          <OptionList.Option key={item} value={item}>
+            {item}
+          </OptionList.Option>
+        ))}
+      </>
+    );
+  }
+
+  it('does not scroll a container on mount when options register late', async () => {
+    render(
+      <Themed>
+        <div data-testid="shell" style={{ height: 200, overflow: 'auto' }}>
+          <div style={{ height: 1000 }} />
+          <OptionList.Root value={null} onChange={() => undefined} activeValue="Fruit 25" aria-label="Fruit">
+            <Wrapped items={FRUITS} />
+          </OptionList.Root>
+        </div>
+      </Themed>,
+    );
+    await frame();
+    expect(screen.getByTestId('shell').scrollTop).toBe(0);
+  });
+
+  it('does not scroll a container when the active option is filtered out and back', async () => {
+    function Shell({ count }: { count: number }) {
+      return (
+        <Themed>
+          <div data-testid="shell" style={{ height: 200, overflow: 'auto' }}>
+            <div style={{ height: 1000 }} />
+            <OptionList.Root value={null} onChange={() => undefined} activeValue="Fruit 25" aria-label="Fruit">
+              <Wrapped items={FRUITS.slice(0, count)} />
+            </OptionList.Root>
+          </div>
+        </Themed>
+      );
+    }
+    const { rerender } = render(<Shell count={30} />);
+    await frame();
+    rerender(<Shell count={10} />);
+    await frame();
+    rerender(<Shell count={30} />);
+    await frame();
+    expect(screen.getByTestId('shell').scrollTop).toBe(0);
+  });
+
+  it('reveals a new active option that arrives with new options', async () => {
+    const VEG = Array.from({ length: 30 }, (_, i) => `Veg ${i + 1}`);
+    function Swap({ items, active }: { items: string[]; active: string }) {
+      const popover = usePopover({ defaultOpen: true });
+      return (
+        <Themed>
+          <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
+          <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
+            <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit">
+              <Wrapped items={items} />
+            </OptionList.Root>
+          </Popover.Root>
+        </Themed>
+      );
+    }
+    const { rerender } = render(<Swap items={FRUITS} active="Fruit 1" />);
+    await screen.findByRole('listbox');
+    await frame();
+    rerender(<Swap items={VEG} active="Veg 30" />);
+    await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Veg 30' }))).toBe(true));
+  });
+
+  it('keeps a percentage scroll-padding below the active option', async () => {
+    function Padded() {
+      const [value, setValue] = useState<string | null>(null);
+      const popover = usePopover({ defaultOpen: true });
+      return (
+        <Themed>
+          <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
+          <Popover.Root {...popover.getPopoverProps()} data-testid="surface" style={{ scrollPaddingBlock: '25%' }}>
+            <OptionList.Root value={value} onChange={setValue} aria-label="Fruit">
+              <Wrapped items={FRUITS} />
+            </OptionList.Root>
+          </Popover.Root>
+        </Themed>
+      );
+    }
+    render(<Padded />);
+    const list = await screen.findByRole('listbox');
+    list.focus();
+    for (let i = 0; i < 12; i++) await userEvent.keyboard('{ArrowDown}');
+    await frame();
+    const surface = screen.getByTestId('surface');
+    const option = surface.querySelector('[data-highlighted]')!;
+    const bottom = surface.getBoundingClientRect().top + surface.clientTop + surface.clientHeight - parseFloat(getComputedStyle(surface).paddingBottom);
+    expect(bottom - option.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(surface.clientHeight * 0.25 - 1);
+  });
+
   it('never scrolls the page for a list on the page', async () => {
     function PageList() {
       const [value, setValue] = useState<string | null>(null);
