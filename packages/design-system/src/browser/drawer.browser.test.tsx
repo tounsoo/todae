@@ -22,7 +22,7 @@ async function settledPanel() {
   const drawer = screen.getByRole('dialog', { name: 'Filters' });
   await waitFor(() => expect(drawer.hasAttribute('data-entered')).toBe(true));
   const panel = screen.getByTestId('body').parentElement!;
-  await waitFor(() => expect(getComputedStyle(panel).transform).toBe('none'));
+  await waitFor(() => expect(getComputedStyle(panel).insetInlineStart).toBe('0px'));
   return { panel: panel.getBoundingClientRect(), scrim: drawer.getBoundingClientRect() };
 }
 

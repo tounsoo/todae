@@ -39,7 +39,9 @@
   }
 
   .panel {
-    --_from: -100%;
+    --_from: calc(-1 * min(100%, var(--todae-drawer-size)));
+
+    position: relative;
 
     box-sizing: border-box;
     inline-size: min(100%, var(--todae-drawer-size));
@@ -56,31 +58,22 @@
     background: var(--todae-drawer-bg);
     border: 0 solid var(--todae-drawer-border);
     border-inline-end-width: var(--todae-drawer-border-width);
-    transform: translateX(var(--_from));
-    transition: transform var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing);
+    inset-inline-start: var(--_from);
+    transition: inset-inline-start var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing);
   }
 
   .drawer[data-side='end'] .panel {
-    --_from: 100%;
+    --_from: min(100%, var(--todae-drawer-size));
 
     border-inline-width: var(--todae-drawer-border-width) 0;
   }
 
-  /* Start and end swap physical sides in right-to-left text. */
-  .drawer:dir(rtl) .panel {
-    --_from: 100%;
-  }
-
-  .drawer[data-side='end']:dir(rtl) .panel {
-    --_from: -100%;
-  }
-
   .drawer[open][data-entered] .panel {
-    transform: none;
+    inset-inline-start: 0;
   }
 
   .drawer[open][data-exiting] .panel {
-    transform: translateX(var(--_from));
+    inset-inline-start: var(--_from);
     transition-duration: var(--todae-drawer-motion-exit);
   }
 

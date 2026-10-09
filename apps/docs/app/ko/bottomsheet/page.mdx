@@ -6,7 +6,7 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
 
 시트는 놓은 자리에서 렌더링되므로 부모의 테마를 따릅니다. 그 대신 부모의 네이티브 동작도 따릅니다. `<form>` 안에서는 시트의 입력이 그 폼과 함께 제출되고, `<fieldset disabled>` 안에서는 컨트롤이 비활성화됩니다. 폼, 비활성 fieldset, 닫힌 팝오버나 탭 패널 같은 숨겨진 컨테이너 바깥에 렌더링하세요. 개발 환경에서는 시트가 숨겨진 곳에서 열리면 Todae가 오류를 기록합니다.
 
-열릴 때는 `translateY(100%)`에서 스냅 높이로 미끄러져 올라옵니다(높이 전환이 아니라 첫 프레임 자세입니다). 두 오버레이 모두 `data-entered`를 쓰고, Dialog는 `@starting-style`도 유지합니다. 닫힐 때는 아래로 미끄러져 나가고 `transitionend`에서 언마운트됩니다(대체 시간 240ms). 드래그 중에는 `transition: none`을 유지합니다.
+열릴 때는 아래에서 스냅 높이로 미끄러져 올라옵니다(높이 전환이 아니라 첫 프레임 자세입니다). 두 오버레이 모두 `data-entered`를 쓰고, Dialog는 `@starting-style`도 유지합니다. 닫힐 때는 아래로 미끄러져 나가고 `transitionend`에서 언마운트됩니다(대체 시간 240ms). 드래그 중에는 `transition: none`을 유지합니다.
 
 <Example>
   <BottomSheetBasic />

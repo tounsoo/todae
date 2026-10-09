@@ -2,6 +2,7 @@ import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, t
 import { dropModal } from './modalStack';
 import { inToastHostWithin } from './tabbables';
 import { useModalLayerElement } from './useModalLayerElement';
+import { reshowHeldInside } from './usePopoverSync';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
 export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
@@ -63,6 +64,9 @@ export function useModalDialog({
     if (present && open && !el.open) {
       const resume = lastFocus.current;
       el.showModal();
+      // In front of the popovers already open inside it, such as a tooltip
+      // held open, which go back in front of it.
+      reshowHeldInside(el);
       // Rendered in place, a modal inside a hidden container makes the page
       // inert while showing nothing.
       if (process.env.NODE_ENV !== 'production' && el.checkVisibility?.() === false) {

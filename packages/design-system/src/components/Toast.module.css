@@ -138,6 +138,12 @@
     flex-shrink: 0;
   }
 
+  /* A tooltip held open on a back toast sits in the top layer, above the
+     front toast, so it waits out of sight until the stack expands. */
+  .region[data-layout='stack']:not([data-expanded]) .item:not(:first-child) [popover] {
+    visibility: hidden;
+  }
+
   /* Out of sight, so also out of reach of the pointer and Tab. */
   .region[data-layout='stack']:not([data-expanded]) .item:nth-child(n + 4) {
     opacity: 0;

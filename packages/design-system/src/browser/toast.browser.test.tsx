@@ -1158,6 +1158,25 @@ describe('Tooltip in a layer shown again', () => {
     act(() => dialog.close());
   });
 
+  it('puts a tip already open when its Dialog first opens in front of the Dialog, by its trigger', async () => {
+    render(
+      <Themed>
+        <Dialog.Root open onOpenChange={() => undefined}>
+          <Dialog.Title>First</Dialog.Title>
+          <HeldTip label="Open from the start" />
+        </Dialog.Root>
+      </Themed>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'First' }) as HTMLDialogElement;
+    await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
+    const trigger = screen.getByRole('button', { name: 'Open from the start' });
+    await expectTipByTrigger(trigger);
+    // A tip takes no pointer; let it, to see what is in front at its middle.
+    const tip = document.getElementById(trigger.getAttribute('aria-describedby')!)!;
+    tip.style.pointerEvents = 'auto';
+    expect(receivesPointer(tip)).toBe(true);
+  });
+
   it('keeps a held tip in a Dialog by its trigger when the Dialog shows itself again after a native close', async () => {
     function Page() {
       const [tip, setTip] = useState(false);
@@ -1222,7 +1241,7 @@ function StackRegion({ toaster, placement, tipped }: { toaster: Toaster; placeme
 describe.each(['bottom-end', 'top-end'] as const)('Tooltip on a stacked toast placed %s', (placement) => {
   const items = () => [...document.querySelectorAll('ol > li')] as HTMLElement[];
 
-  it('draws a held tip on a toast behind the newest by its trigger, collapsed and spread', async () => {
+  it('hides a held tip on a toast behind the newest while collapsed, and draws it by its trigger once spread', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(
       <Themed>
@@ -1240,7 +1259,10 @@ describe.each(['bottom-end', 'top-end'] as const)('Tooltip on a stacked toast pl
     // Two behind the newest, peeking out from it, where the stack moves it most.
     expect(items()[2]!.contains(trigger)).toBe(true);
     expect(region.hasAttribute('data-expanded')).toBe(false);
-    await expectTipAbove(trigger);
+    // Its tip would paint over the newest toast, which covers its trigger.
+    const tip = document.getElementById(trigger.getAttribute('aria-describedby') ?? '')!;
+    expect(isPopoverShown(tip)).toBe(true);
+    expect(getComputedStyle(tip).visibility).toBe('hidden');
 
     await userEvent.hover(screen.getByRole('button', { name: 'Tipped Front' }));
     await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(true));
@@ -1249,6 +1271,7 @@ describe.each(['bottom-end', 'top-end'] as const)('Tooltip on a stacked toast pl
       // Spread: apart, not overlapping.
       expect(back!.bottom <= front!.top + 1 || back!.top >= front!.bottom - 1).toBe(true);
     });
+    expect(getComputedStyle(tip).visibility).toBe('visible');
     await expectTipAbove(trigger);
   });
 
