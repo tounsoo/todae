@@ -189,7 +189,8 @@ export function Playground({ locale }: { locale: Locale }) {
   const [presetId, setPresetId] = useState(PRESETS[0]?.id ?? 'todae');
   // Edits belong to the appearance they were made in, like a preset's own two sets.
   const [edits, setEdits] = useState<Record<'light' | 'dark', ThemeOverride>>(NO_EDITS);
-  const [status, setStatus] = useState('');
+  // The copy result, and the JSON it was for, so it clears once the theme changes.
+  const [status, setStatus] = useState<{ text: string; json: string } | null>(null);
   const [computed, setComputed] = useState<Partial<Record<ThemeOverrideKey, string>>>({});
   const resolved = useResolvedAppearance(appearance);
   const preset = PRESETS.find((candidate) => candidate.id === presetId) ?? PRESETS[0];
@@ -213,17 +214,23 @@ export function Playground({ locale }: { locale: Locale }) {
     return computed[path] ?? '';
   }
 
+  const exportLight = { ...preset?.light, ...edits.light };
+  const exportDark = { ...preset?.dark, ...edits.dark };
+  // One flat set when light and dark are the same, such as plain Todae with no edits.
+  const exportJson = `${JSON.stringify(
+    JSON.stringify(exportLight) === JSON.stringify(exportDark) ? exportLight : { light: exportLight, dark: exportDark },
+    null,
+    2,
+  )}\n`;
+
   async function exportOverrides() {
-    const light = { ...preset?.light, ...edits.light };
-    const dark = { ...preset?.dark, ...edits.dark };
-    // One flat set when light and dark are the same, such as plain Todae with no edits.
-    const json = JSON.stringify(light) === JSON.stringify(dark) ? light : { light, dark };
+    const json = exportJson;
     try {
-      await navigator.clipboard.writeText(`${JSON.stringify(json, null, 2)}\n`);
-      setStatus(t.copied);
+      await navigator.clipboard.writeText(json);
+      setStatus({ text: t.copied, json });
       announce(t.copied);
     } catch {
-      setStatus(t.copyFailed);
+      setStatus({ text: t.copyFailed, json });
       announce(t.copyFailed, { politeness: 'assertive' });
     }
   }
@@ -347,14 +354,24 @@ export function Playground({ locale }: { locale: Locale }) {
           </Button.Root>
           <Button.Root onClick={() => void exportOverrides()}>{t.export}</Button.Root>
         </div>
-        <p className="pg-hint">{status || t.exportHint}</p>
+        <p className="pg-hint">{status?.json === exportJson ? status.text : t.exportHint}</p>
       </aside>
-      {/* Density sits inside the theme, so density tokens resolve against the stage's raw overrides. */}
-      <ThemeProvider className="pg-stage-theme" appearance={appearance} overrides={overrides}>
-        <DensityProvider ref={stageRef} density={density} className="pg-stage" role="region" aria-label={t.stage}>
+      {/* Overrides only beat density tokens on the element that carries
+          data-density, so the stage carries both. The outer DensityProvider
+          gives the Preview its useDensity() context. */}
+      <DensityProvider className="pg-stage-theme" density={density}>
+        <ThemeProvider
+          ref={stageRef}
+          className="pg-stage"
+          role="region"
+          aria-label={t.stage}
+          appearance={appearance}
+          overrides={overrides}
+          data-density={density}
+        >
           <Preview />
-        </DensityProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </DensityProvider>
     </div>
   );
 }

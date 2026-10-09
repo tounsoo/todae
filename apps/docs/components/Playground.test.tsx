@@ -25,7 +25,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 // The preview region sits inside the stage's ThemeProvider, which carries the overrides.
-const stage = () => screen.getByRole('region', { name: 'Preview' }).parentElement as HTMLElement;
+const stage = () => screen.getByRole('region', { name: 'Preview' });
 
 describe('Playground', () => {
   it('paints the stage with a preset and its light or dark overrides', () => {
@@ -70,6 +70,8 @@ describe('Playground', () => {
     expect(JSON.parse(writeText.mock.calls[0]?.[0] ?? '')).toEqual({});
     expect(screen.getByText('Copied theme override JSON.')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Forest'));
+    // The status was for the old theme, so it gives way to the hint again.
+    expect(screen.queryByText('Copied theme override JSON.')).toBeNull();
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
     const copied = JSON.parse(writeText.mock.calls[1]?.[0] ?? '');
     expect(Object.keys(copied)).toEqual(['light', 'dark']);
@@ -96,12 +98,12 @@ describe('Playground', () => {
     expect(screen.getByText('Could not copy. Clipboard permission was denied.')).toBeTruthy();
   });
 
-  it('resolves density tokens against the stage’s raw overrides', () => {
+  it('puts the overrides on the element that carries the density', () => {
     render(<Playground locale="en" />);
-    const region = screen.getByRole('region', { name: 'Preview' });
-    expect(region.getAttribute('data-density')).toBe('comfortable');
-    // The density element is inside the themed one, so raw overrides inherit into it.
-    expect(region.closest('[data-appearance]')).toBe(stage());
+    fireEvent.click(screen.getByLabelText('Forest'));
+    expect(stage().getAttribute('data-density')).toBe('comfortable');
+    expect(stage().getAttribute('data-appearance')).toBe('light');
+    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.47 0.1 160)');
   });
 
   it('starts a new preset without the last preset’s edits', () => {

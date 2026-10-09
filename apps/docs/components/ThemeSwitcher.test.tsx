@@ -55,21 +55,30 @@ describe('ThemeSwitcher', () => {
     expect(screen.getByRole('button', { name: 'System' }).getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('still switches when storage is blocked', () => {
-    const blocked = () => {
-      throw new DOMException('Blocked', 'SecurityError');
-    };
-    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
-    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
-    try {
+  for (const [label, readBlocked] of [
+    ['reads and writes are', true],
+    ['only writes are', false],
+  ] as const) {
+    it(`still switches when ${label} blocked`, () => {
+      const blocked = () => {
+        throw new DOMException('Blocked', 'QuotaExceededError');
+      };
+      const getItem = readBlocked ? vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked) : null;
+      const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
       const appearance = renderSite();
+      try {
+        expect(appearance()).toBe('light');
+        fireEvent.click(screen.getByRole('button', { name: 'Dark' }));
+        expect(appearance()).toBe('dark');
+        expect(screen.getByRole('button', { name: 'Dark' }).getAttribute('aria-pressed')).toBe('true');
+      } finally {
+        getItem?.mockRestore();
+        setItem.mockRestore();
+      }
+      // Once storage takes a pick again, it wins over the page-load fallback.
+      fireEvent.click(screen.getByRole('button', { name: 'Light' }));
       expect(appearance()).toBe('light');
-      fireEvent.click(screen.getByRole('button', { name: 'Dark' }));
-      expect(appearance()).toBe('dark');
-      expect(screen.getByRole('button', { name: 'Dark' }).getAttribute('aria-pressed')).toBe('true');
-    } finally {
-      getItem.mockRestore();
-      setItem.mockRestore();
-    }
-  });
+      expect(window.localStorage.getItem('todae-docs-appearance')).toBe('light');
+    });
+  }
 });

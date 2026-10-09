@@ -66,9 +66,6 @@ function preset(id: string, name: string, shared: ThemeOverride, light: ThemeOve
   return { id, name, light: { ...shared, ...light }, dark: { ...shared, ...dark } };
 }
 
-// Each preset changes the same tokens: the gray ramp, the accent, the
-// typeface, weights, radii and border width. Nothing else is needed for
-// them to look like different products.
 export const PRESETS: readonly ThemePreset[] = [
   preset('todae', 'Todae', {}, {}, {}),
   preset(

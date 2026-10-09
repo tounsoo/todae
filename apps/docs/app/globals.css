@@ -14,6 +14,14 @@
   text-rendering: optimizeLegibility;
 }
 
+/* Todae ships the typeface token but doesn't apply it; the docs opt in, as a
+   company would. Every themed subtree re-reads it, so a preset's
+   font.family.sans override changes the type inside its ThemeProvider. */
+:root,
+[data-appearance] {
+  font-family: var(--todae-text-font-family);
+}
+
 * {
   box-sizing: border-box;
 }
