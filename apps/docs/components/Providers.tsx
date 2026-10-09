@@ -1,12 +1,62 @@
 'use client';
 
-import { DensityProvider, ThemeProvider } from '@tounsoo/todae';
-import type { ReactNode } from 'react';
+import { DensityProvider, ThemeProvider, type Appearance } from '@tounsoo/todae';
+import { createContext, useContext, useSyncExternalStore, type ReactNode } from 'react';
+
+const KEY = 'todae-docs-appearance';
+const CHANGE = 'todae-docs-appearance-change';
+
+function isAppearance(value: unknown): value is Appearance {
+  return value === 'system' || value === 'light' || value === 'dark';
+}
+
+function subscribe(onChange: () => void) {
+  window.addEventListener('storage', onChange);
+  window.addEventListener(CHANGE, onChange);
+  return () => {
+    window.removeEventListener('storage', onChange);
+    window.removeEventListener(CHANGE, onChange);
+  };
+}
+
+function getSnapshot(): Appearance {
+  try {
+    const stored = window.localStorage.getItem(KEY);
+    return isAppearance(stored) ? stored : 'system';
+  } catch {
+    // Storage can be blocked; the site then follows the system.
+    return 'system';
+  }
+}
+
+const getServerSnapshot = (): Appearance => 'system';
+
+function setAppearance(next: Appearance) {
+  try {
+    window.localStorage.setItem(KEY, next);
+  } catch {
+    // Blocked storage only loses the choice on the next visit.
+  }
+  window.dispatchEvent(new Event(CHANGE));
+}
+
+const AppearanceChoice = createContext<{ appearance: Appearance; setAppearance: (next: Appearance) => void }>({
+  appearance: 'system',
+  setAppearance,
+});
+
+/** The reader's light or dark choice, kept in local storage. */
+export function useAppearanceChoice() {
+  return useContext(AppearanceChoice);
+}
 
 export function Providers({ children }: { children: ReactNode }) {
+  const appearance = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   return (
-    <ThemeProvider appearance="system" className="shell">
-      <DensityProvider density="comfortable">{children}</DensityProvider>
-    </ThemeProvider>
+    <AppearanceChoice.Provider value={{ appearance, setAppearance }}>
+      <ThemeProvider appearance={appearance} className="shell">
+        <DensityProvider density="comfortable">{children}</DensityProvider>
+      </ThemeProvider>
+    </AppearanceChoice.Provider>
   );
 }

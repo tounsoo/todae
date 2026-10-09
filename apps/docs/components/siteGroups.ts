@@ -1,6 +1,17 @@
 /** The docs sections, in order. The sidebar and the home page both list these. */
 export const SITE_GROUPS = [
   {
+    id: 'foundations',
+    label: 'Foundations',
+    links: [
+      ['/guides/build-on-todae', 'Build on Todae'],
+      ['/composition', 'Composition'],
+      ['/tokens', 'Tokens'],
+      ['/guides/css-layers', 'CSS layers'],
+      ['/platform', 'Native platform'],
+    ],
+  },
+  {
     id: 'components',
     label: 'Components',
     links: [
@@ -73,17 +84,6 @@ export const SITE_GROUPS = [
       ['/recipes/combobox', 'Combobox'],
       ['/recipes/command-palette', 'Command palette'],
       ['/recipes/file-upload', 'File upload'],
-    ],
-  },
-  {
-    id: 'foundations',
-    label: 'Foundations',
-    links: [
-      ['/composition', 'Composition'],
-      ['/tokens', 'Tokens'],
-      ['/guides/build-on-todae', 'Build on Todae'],
-      ['/guides/css-layers', 'CSS layers'],
-      ['/platform', 'Native platform'],
     ],
   },
   {

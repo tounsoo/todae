@@ -4,111 +4,184 @@ import {
   Button,
   COMPONENT_OVERRIDE_KEYS,
   DensityProvider,
+  Field,
   RAW_OVERRIDE_KEYS,
   SEMANTIC_OVERRIDE_KEYS,
-  Stack,
-  Text,
+  Tabs,
   ThemeProvider,
+  ToggleGroup,
   cssVarName,
   parseThemeValue,
   themeOverrideType,
   themeValueCss,
+  useAnnouncer,
+  type Appearance,
+  type Density,
   type ThemeOverride,
   type ThemeOverrideKey,
 } from '@tounsoo/todae';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
+import { PRESETS, type ThemePreset } from './playground/presets';
+import { Preview } from './playground/Preview';
 
-const TABS = {
+const LAYERS = {
   raw: RAW_OVERRIDE_KEYS,
   semantic: SEMANTIC_OVERRIDE_KEYS,
   component: COMPONENT_OVERRIDE_KEYS,
 } as const;
 
-type TokenTab = keyof typeof TABS;
-type AppearanceChoice = 'system' | 'light' | 'dark';
-type DensityChoice = 'compact' | 'comfortable' | 'spacious';
+type Layer = keyof typeof LAYERS;
+const LAYER_NAMES = Object.keys(LAYERS) as Layer[];
+const APPEARANCES = ['system', 'light', 'dark'] as const;
+const DENSITIES = ['compact', 'comfortable', 'spacious'] as const;
 
+const DARK = '(prefers-color-scheme: dark)';
+function subscribeScheme(onChange: () => void) {
+  const query = window.matchMedia(DARK);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
+
+/** The appearance the stage resolves to, so the preset's matching override set applies. */
+function useResolvedAppearance(appearance: Appearance): 'light' | 'dark' {
+  const systemDark = useSyncExternalStore(
+    subscribeScheme,
+    () => window.matchMedia(DARK).matches,
+    () => false,
+  );
+  if (appearance === 'system') return systemDark ? 'dark' : 'light';
+  return appearance;
+}
+
+/**
+ * Any CSS color as #rrggbb, for the native color input. Painting one pixel
+ * resolves every syntax the browser knows (oklch, relative colors) to sRGB.
+ */
 function toHex(value: string): string {
-  if (/^#[0-9a-fA-F]{6}$/.test(value)) return value.toLowerCase();
+  if (/^#[0-9a-f]{6}$/i.test(value)) return value.toLowerCase();
   if (typeof document === 'undefined') return '#000000';
-  const ctx = document.createElement('canvas').getContext('2d');
+  const ctx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
   if (!ctx) return '#000000';
   ctx.fillStyle = '#000000';
   ctx.fillStyle = value;
-  const fill = String(ctx.fillStyle);
-  if (/^#[0-9a-fA-F]{6}$/.test(fill)) return fill;
-  const rgb = fill.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  if (!rgb) return '#000000';
-  return `#${[rgb[1], rgb[2], rgb[3]]
-    .map((n) => Number(n).toString(16).padStart(2, '0'))
-    .join('')}`;
+  ctx.fillRect(0, 0, 1, 1);
+  const [r = 0, g = 0, b = 0] = ctx.getImageData(0, 0, 1, 1).data;
+  return `#${[r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')}`;
 }
 
 function TokenField({
   path,
   value,
+  edited,
   colorLabel,
-  onChange,
+  onCommit,
 }: {
   path: ThemeOverrideKey;
   value: string;
+  edited: boolean;
   colorLabel: string;
-  onChange: (next: string) => void;
+  onCommit: (next: ThemeOverride[ThemeOverrideKey]) => void;
 }) {
-  const id = path.replaceAll('.', '-');
+  const id = `token-${path.replaceAll('.', '-')}`;
   const color = themeOverrideType(path) === 'color';
+  // What the reader is typing. It commits as soon as it parses, and shows as invalid until then.
+  const [draft, setDraft] = useState<string | null>(null);
+  const invalid = draft !== null && parseThemeValue(path, draft) === null;
   return (
-    <div className="token-row">
-      <label htmlFor={`${id}-text`}>
+    <div className="token-row" data-edited={edited || undefined}>
+      <label htmlFor={id}>
         <code>{path}</code>
       </label>
       <div className="token-row-inputs">
         {color ? (
           <input
-            id={`${id}-color`}
             type="color"
+            className="token-swatch"
             aria-label={`${path} ${colorLabel}`}
             value={toHex(value || '#000000')}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={(event) => {
+              const parsed = parseThemeValue(path, event.target.value);
+              if (parsed !== null) onCommit(parsed);
+            }}
           />
         ) : null}
-        <input
-          id={`${id}-text`}
-          type="text"
-          spellCheck={false}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-        />
+        <Field.Root id={id} invalid={invalid}>
+          <Field.TextInput
+            spellCheck={false}
+            value={draft ?? value}
+            onChange={(event) => {
+              const next = event.target.value;
+              setDraft(next);
+              const parsed = parseThemeValue(path, next);
+              if (parsed !== null) onCommit(parsed);
+            }}
+            onBlur={() => setDraft(null)}
+          />
+        </Field.Root>
       </div>
     </div>
   );
 }
 
+function PresetCard({
+  preset,
+  appearance,
+  selected,
+  onSelect,
+}: {
+  preset: ThemePreset;
+  appearance: 'light' | 'dark';
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <label className="preset" data-selected={selected || undefined}>
+      <input type="radio" name="preset" className="todae-visually-hidden" checked={selected} onChange={onSelect} />
+      {/* A tiny stage of its own: the preset paints its own swatch with Todae's tokens. */}
+      <ThemeProvider appearance={appearance} overrides={preset[appearance]} className="preset-swatch" aria-hidden="true">
+        <span className="preset-swatch-surface">
+          <span className="preset-swatch-accent" />
+          <span className="preset-swatch-line" />
+          <span className="preset-swatch-line preset-swatch-line-short" />
+        </span>
+      </ThemeProvider>
+      <span className="preset-name" lang="en">
+        {preset.name}
+      </span>
+    </label>
+  );
+}
+
 /** The theme playground. Each locale's /playground page renders it. */
 export function Playground({ locale }: { locale: Locale }) {
-  // Option values, tab names and variant names are Todae's own names and stay in English.
+  // Option values, layer names and preset names are Todae's own names and stay in English.
   const t = DICTIONARIES[locale].playground;
+  const announce = useAnnouncer();
   const stageRef = useRef<HTMLDivElement>(null);
-  const [appearance, setAppearance] = useState<AppearanceChoice>('system');
-  const [density, setDensity] = useState<DensityChoice>('comfortable');
-  const [tab, setTab] = useState<TokenTab>('semantic');
-  const [overrides, setOverrides] = useState<ThemeOverride>({});
+  const [appearance, setAppearance] = useState<Appearance>('system');
+  const [density, setDensity] = useState<Density>('comfortable');
+  const [layer, setLayer] = useState<Layer>('semantic');
+  const [filter, setFilter] = useState('');
+  const [presetId, setPresetId] = useState(PRESETS[0]?.id ?? 'todae');
+  const [edits, setEdits] = useState<ThemeOverride>({});
   const [computed, setComputed] = useState<Partial<Record<ThemeOverrideKey, string>>>({});
-  const [copyStatus, setCopyStatus] = useState('');
-  const paths = TABS[tab];
+  const resolved = useResolvedAppearance(appearance);
+  const preset = PRESETS.find((candidate) => candidate.id === presetId) ?? PRESETS[0];
+  const overrides: ThemeOverride = { ...preset?.[resolved], ...edits };
+  const paths = LAYERS[layer].filter((path) => path.includes(filter.trim().toLowerCase()));
+  const changed = Object.keys(edits).length;
 
+  // Read what the stage resolves each shown token to, after every change that could move it.
   useLayoutEffect(() => {
     const el = stageRef.current;
     if (!el) return;
-    const cs = getComputedStyle(el);
+    const style = getComputedStyle(el);
     const next: Partial<Record<ThemeOverrideKey, string>> = {};
-    for (const path of paths) {
-      next[path] = cs.getPropertyValue(cssVarName(path)).trim();
-    }
-    setComputed((prev) => ({ ...prev, ...next }));
-  }, [appearance, density, overrides, paths]);
+    for (const path of LAYERS[layer]) next[path] = style.getPropertyValue(cssVarName(path)).trim();
+    setComputed(next);
+  }, [layer, resolved, density, presetId, edits]);
 
   function valueFor(path: ThemeOverrideKey): string {
     const typed = overrides[path];
@@ -116,137 +189,146 @@ export function Playground({ locale }: { locale: Locale }) {
     return computed[path] ?? '';
   }
 
-  function setToken(path: ThemeOverrideKey, raw: string) {
-    const parsed = parseThemeValue(path, raw);
-    if (parsed === null) return;
-    setOverrides((prev) => ({ ...prev, [path]: parsed }));
-  }
-
   async function exportOverrides() {
+    const json =
+      !preset || preset.id === 'todae'
+        ? edits
+        : { light: { ...preset.light, ...edits }, dark: { ...preset.dark, ...edits } };
     try {
-      await navigator.clipboard.writeText(`${JSON.stringify(overrides, null, 2)}\n`);
-      setCopyStatus(t.copied);
+      await navigator.clipboard.writeText(`${JSON.stringify(json, null, 2)}\n`);
+      announce(t.copied);
     } catch {
-      setCopyStatus(t.copyFailed);
+      announce(t.copyFailed, { politeness: 'assertive' });
     }
   }
 
   return (
     <div className="playground">
-      <aside className="playground-rail" aria-label={t.rail}>
-        <h1>{t.title}</h1>
-        <fieldset>
-          <legend>{t.appearance}</legend>
-          <div className="playground-options">
-            {(['system', 'light', 'dark'] as const).map((value) => (
-              <label key={value}>
-                <input
-                  type="radio"
-                  name="appearance"
-                  value={value}
-                  checked={appearance === value}
-                  onChange={() => setAppearance(value)}
-                />
-                <span lang="en">{value}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend>{t.density}</legend>
-          <div className="playground-options">
-            {(['compact', 'comfortable', 'spacious'] as const).map((value) => (
-              <label key={value}>
-                <input
-                  type="radio"
-                  name="density"
-                  value={value}
-                  checked={density === value}
-                  onChange={() => setDensity(value)}
-                />
-                <span lang="en">{value}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <div
-          className="playground-tabs"
-          role="tablist"
-          aria-label={t.tokenLayer}
-          onKeyDown={(event) => {
-            if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
-            const names = Object.keys(TABS) as TokenTab[];
-            const index = names.indexOf(tab);
-            const next = names[(index + (event.key === 'ArrowRight' ? 1 : names.length - 1)) % names.length];
-            if (next) setTab(next);
-          }}
-        >
-          {(Object.keys(TABS) as TokenTab[]).map((name) => (
-            <button
-              key={name}
-              type="button"
-              role="tab"
-              id={`token-tab-${name}`}
-              aria-selected={tab === name}
-              aria-controls={`token-panel-${name}`}
-              tabIndex={tab === name ? 0 : -1}
-              onClick={() => setTab(name)}
-            >
-              <span lang="en">{name}</span>
-            </button>
-          ))}
+      <aside className="pg-rail" aria-label={t.rail}>
+        <div className="pg-intro">
+          <h1>{t.title}</h1>
+          <p>{t.lead}</p>
         </div>
-        <section
-          className="playground-tokens"
-          role="tabpanel"
-          id={`token-panel-${tab}`}
-          aria-labelledby={`token-tab-${tab}`}
-        >
-          {paths.map((path) => (
-            <TokenField key={path} path={path} value={valueFor(path)} colorLabel={t.color} onChange={(value) => setToken(path, value)} />
-          ))}
+
+        <fieldset className="pg-section">
+          <legend className="pg-heading">{t.presets}</legend>
+          <div className="preset-grid">
+            {PRESETS.map((candidate) => (
+              <PresetCard
+                key={candidate.id}
+                preset={candidate}
+                appearance={resolved}
+                selected={candidate.id === preset?.id}
+                // A new preset starts clean, so its tokens show instead of earlier edits.
+                onSelect={() => {
+                  setPresetId(candidate.id);
+                  setEdits({});
+                }}
+              />
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="pg-section pg-modes">
+          <div>
+            <span className="pg-heading" id="pg-appearance">
+              {t.appearance}
+            </span>
+            <ToggleGroup.Root
+              aria-labelledby="pg-appearance"
+              value={appearance}
+              onValueChange={(next) => next && setAppearance(next as Appearance)}
+            >
+              {APPEARANCES.map((value) => (
+                <ToggleGroup.Item key={value} value={value} lang="en">
+                  {value}
+                </ToggleGroup.Item>
+              ))}
+            </ToggleGroup.Root>
+          </div>
+          <div>
+            <span className="pg-heading" id="pg-density">
+              {t.density}
+            </span>
+            <ToggleGroup.Root
+              aria-labelledby="pg-density"
+              value={density}
+              onValueChange={(next) => next && setDensity(next as Density)}
+            >
+              {DENSITIES.map((value) => (
+                <ToggleGroup.Item key={value} value={value} lang="en">
+                  {value}
+                </ToggleGroup.Item>
+              ))}
+            </ToggleGroup.Root>
+          </div>
+        </div>
+
+        <section className="pg-section pg-tokens" aria-labelledby="pg-tokens">
+          <div className="pg-tokens-head">
+            <h2 className="pg-heading" id="pg-tokens">
+              {t.tokens}
+            </h2>
+            {changed > 0 ? <span className="pg-changed">{t.changed.replace('{count}', String(changed))}</span> : null}
+          </div>
+          <Tabs.Root value={layer} onValueChange={(next) => setLayer(next as Layer)}>
+            <Tabs.List aria-label={t.tokenLayer}>
+              {LAYER_NAMES.map((name) => (
+                <Tabs.Tab key={name} value={name} lang="en">
+                  {name}
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
+            {LAYER_NAMES.map((name) => (
+              <Tabs.Panel key={name} value={name} className="pg-token-panel">
+                {name === layer ? (
+                  <>
+                    <Field.Root aria-label={t.filter} className="pg-filter">
+                      <Field.TextInput
+                        type="search"
+                        placeholder={t.filter}
+                        value={filter}
+                        onChange={(event) => setFilter(event.target.value)}
+                      />
+                    </Field.Root>
+                    <div className="pg-token-list">
+                      {paths.length === 0 ? <p className="pg-empty">{t.noMatch}</p> : null}
+                      {paths.map((path) => (
+                        <TokenField
+                          key={`${presetId}:${resolved}:${path}`}
+                          path={path}
+                          value={valueFor(path)}
+                          edited={edits[path] !== undefined}
+                          colorLabel={t.color}
+                          onCommit={(next) => setEdits((prev) => ({ ...prev, [path]: next }))}
+                        />
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+              </Tabs.Panel>
+            ))}
+          </Tabs.Root>
         </section>
-        <div className="playground-actions">
-          <Button.Root type="button" variant="secondary" onClick={() => setOverrides({})}>
+
+        <div className="pg-actions">
+          <Button.Root variant="secondary" onClick={() => setEdits({})} disabled={changed === 0}>
             {t.reset}
           </Button.Root>
-          <Button.Root type="button" onClick={() => void exportOverrides()}>
-            {t.export}
-          </Button.Root>
+          <Button.Root onClick={() => void exportOverrides()}>{t.export}</Button.Root>
         </div>
-        <p className="playground-status" aria-live="polite">
-          {copyStatus}
-        </p>
+        {preset && preset.id !== 'todae' ? <p className="pg-hint">{t.exportHint}</p> : null}
       </aside>
-      <DensityProvider density={density} className="playground-density">
+      <DensityProvider density={density} className="pg-stage-density">
         <ThemeProvider
           ref={stageRef}
-          className="playground-stage"
+          className="pg-stage"
           appearance={appearance}
           overrides={overrides}
+          role="region"
           aria-label={t.stage}
         >
-          <Stack>
-            <Text as="strong" weight="medium">
-              {t.buttons}
-            </Text>
-            {/* Variant names and the Text component name are Todae's own names, in English. */}
-            <Stack direction="row" lang="en">
-              <Button.Root>Primary</Button.Root>
-              <Button.Root variant="secondary">Secondary</Button.Root>
-              <Button.Root variant="ghost">Ghost</Button.Root>
-              <Button.Root disabled>Disabled</Button.Root>
-            </Stack>
-            <Text tone="muted" size="s">
-              {t.buttonHint}
-            </Text>
-            <Text as="strong" weight="medium" lang="en">
-              Text
-            </Text>
-            <Text>{t.defaultTone}</Text>
-            <Text tone="muted">{t.mutedTone}</Text>
-            <Text tone="accent">{t.accentTone}</Text>
-          </Stack>
+          <Preview />
         </ThemeProvider>
       </DensityProvider>
     </div>
