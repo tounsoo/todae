@@ -1,0 +1,35 @@
+# useDropzone
+
+네이티브 파일 입력에 드래그 앤 드롭을 더합니다. 컨트롤은 그대로 입력입니다. 클릭이나 키보드로 브라우저의 파일 선택기가 열리고, 폼은 입력에 담긴 파일을 제출합니다. 훅은 드롭 대상을 더하고 모든 파일을 규칙에 맞춰 확인합니다.
+
+`<input>`에 `getInputProps()`를, 드롭 대상에 `getRootProps()`를 펼치세요. 입력을 감싼 `<label>`이 잘 맞습니다. 라벨 어디를 클릭해도 선택기가 열리기 때문입니다.
+
+```tsx
+const zone = useDropzone({
+  accept: 'image/*',
+  multiple: true,
+  maxSize: 2_000_000,
+  onFiles: (accepted, rejected) => { … },
+})
+
+<label {...zone.getRootProps()}>
+  Drop images here, or choose them
+  <input {...zone.getInputProps()} name="images" />
+</label>
+```
+
+브라우저의 선택기가 `accept`를 적용하고, 드롭한 파일은 훅이 `accept`에 맞춰 확인합니다(`.ext` 규칙은 파일 이름과, 다른 규칙은 파일의 MIME 형식과 맞춥니다). 드롭한 파일과 고른 파일 모두 `maxSize`, `minSize`, 파일 개수를 확인합니다. 드롭한 폴더는 건너뜁니다. `onFiles`는 통과한 파일과, 통과하지 못한 파일마다 `{ file, reasons }` 항목을 받습니다. `multiple`이 없으면 통과한 첫 파일만 받습니다. 확인이 끝나면 입력에는 받은 파일만 남습니다.
+
+파일을 대상 위로 끄는 동안 `dragging`은 true이고, 대상에는 CSS용 `data-dragging`이 붙습니다. 선택한 텍스트처럼 파일이 없는 드래그는 브라우저에 맡깁니다.
+
+오류와 파일 목록까지 갖춘 전체 예시는 [File upload 레시피](/recipes/file-upload)를 보세요.
+
+## 언제 쓰나요
+
+**언제:** 파일을 고르는 것뿐 아니라 폼 위로 끌어다 놓게 할 때.
+
+**쓰지 않을 때:** 단순한 파일 선택기 → `<input type="file">` 하나로 충분합니다. 업로드, 진행률, 재시도 → `onFiles` 이후 직접 작성하는 코드.
+
+## Props
+
+<PropsTable name="useDropzone" />

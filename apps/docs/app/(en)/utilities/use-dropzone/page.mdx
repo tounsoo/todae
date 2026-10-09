@@ -1,0 +1,35 @@
+# useDropzone
+
+Adds drag and drop to a native file input. The input stays the control: a click or the keyboard opens the browser's file picker, and a form submits the files in it. The hook adds the drop target and checks every file against your rules.
+
+Spread `getInputProps()` on an `<input>` and `getRootProps()` on the drop target. A `<label>` around the input works well, since a click anywhere on it opens the picker.
+
+```tsx
+const zone = useDropzone({
+  accept: 'image/*',
+  multiple: true,
+  maxSize: 2_000_000,
+  onFiles: (accepted, rejected) => { … },
+})
+
+<label {...zone.getRootProps()}>
+  Drop images here, or choose them
+  <input {...zone.getInputProps()} name="images" />
+</label>
+```
+
+The browser's picker applies `accept`; the hook checks dropped files against it (a `.ext` rule matches the file name, other rules match the file's MIME type). Files from a drop or a pick are checked against `maxSize`, `minSize` and the file count. Dropped folders are skipped. `onFiles` gets the files that passed and a `{ file, reasons }` entry for each one that did not. Without `multiple`, only the first passing file is taken. After the checks, the input holds only the accepted files.
+
+`dragging` is true while files are dragged over the target, and the target carries `data-dragging` for CSS. Drags that carry no files, such as selected text, are left to the browser.
+
+See the [File upload recipe](/recipes/file-upload) for a full example with errors and a file list.
+
+## When to use
+
+**When:** Letting people drop files onto a form as well as pick them.
+
+**When not:** A plain file picker → `<input type="file">` alone. Uploading, progress and retries → your own code, after `onFiles`.
+
+## Props
+
+<PropsTable name="useDropzone" />

@@ -56,6 +56,7 @@ export const SITE_GROUPS = [
       ['/utilities/use-combobox', 'useCombobox'],
       ['/utilities/use-controlled-state', 'useControlledState'],
       ['/utilities/use-controlled-value', 'useControlledValue'],
+      ['/utilities/use-dropzone', 'useDropzone'],
       ['/utilities/use-field', 'useField'],
       ['/utilities/use-highlight', 'useHighlight'],
       ['/utilities/use-modal-layer', 'useModalLayer'],
@@ -70,6 +71,7 @@ export const SITE_GROUPS = [
     label: 'Recipes',
     links: [
       ['/recipes/combobox', 'Combobox'],
+      ['/recipes/file-upload', 'File upload'],
     ],
   },
   {

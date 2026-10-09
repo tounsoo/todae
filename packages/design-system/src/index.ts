@@ -187,6 +187,15 @@ export {
   type UseChipListResult,
 } from './hooks/useChipList';
 export {
+  useDropzone,
+  type FileRejection,
+  type FileRejectionReason,
+  type UseDropzoneInputProps,
+  type UseDropzoneOptions,
+  type UseDropzoneResult,
+  type UseDropzoneRootProps,
+} from './hooks/useDropzone';
+export {
   useHighlight,
   type UseHighlightOptions,
   type UseHighlightResult,

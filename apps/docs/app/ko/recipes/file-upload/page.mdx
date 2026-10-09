@@ -1,0 +1,45 @@
+import { FileUploadImages } from '../../../../components/demos/FileUploadDemo';
+
+# File upload
+
+패키지 네임스페이스가 아니라 레시피입니다. 컨트롤은 네이티브 `<input type="file">`이고, [useDropzone](/utilities/use-dropzone)이 드래그 앤 드롭과 파일 확인을 더하며, 업로드는 직접 작성하는 코드가 맡습니다. `FileUpload.*` export는 없습니다.
+
+## 이미지
+
+라벨이 드롭 대상입니다. 그래서 라벨 어디를 클릭해도 선택기가 열리고, 라벨의 텍스트가 입력의 이름이 됩니다. 거부된 파일은 입력의 `aria-describedby`가 가리키는 `ErrorMessage`에 나열하고, 입력에는 `aria-invalid`를 줍니다. 받은 파일은 그 아래에 나열합니다.
+
+```tsx
+const zone = useDropzone({
+  accept: 'image/*',
+  multiple: true,
+  maxFiles: 3,
+  maxSize: 2_000_000,
+  minSize: 1,
+  onFiles: (accepted, rejected) => {
+    setFiles(accepted)
+    setRejected(rejected)
+  },
+})
+
+<label {...zone.getRootProps()}>
+  <Text as="span">Drop images here, or choose them</Text>
+  <input
+    {...zone.getInputProps()}
+    name="images"
+    aria-invalid={rejected.length > 0 || undefined}
+    aria-describedby={rejected.length > 0 ? `${hintId} ${errorId}` : hintId}
+  />
+</label>
+<Description id={hintId}>Up to 3 images, 2 MB each.</Description>
+{rejected.length > 0 ? <ErrorMessage id={errorId}>…</ErrorMessage> : null}
+```
+
+<Example block>
+  <FileUploadImages />
+</Example>
+
+드롭 상태는 `[data-dragging]`이나 `dragging` 값으로 스타일을 주세요. 오류는 나타날 때 읽어 주지 않습니다. 읽어 주어야 한다면 [useAnnouncer](/utilities/use-announcer)를 쓰세요.
+
+## 업로드
+
+`onFiles`에서 파일을 보내거나, 입력에 남겨 두고 폼이 제출하게 하세요. 입력에는 받은 파일만 남아 있습니다. 진행률은 [Progress 페이지](/progress)처럼 네이티브 `<progress>`로 보여 주세요.
