@@ -153,13 +153,14 @@ describe('Tooltip exports', () => {
 });
 
 describe('Tooltip', () => {
-  it('defaults to role=tooltip in a manual popover, with no name of its own', () => {
+  it('defaults to role=tooltip and no popover', () => {
     render(<DefaultTip defaultOpen />);
     const tip = screen.getByRole('tooltip');
     expect(tip.getAttribute('data-surface')).toBe('tip');
-    expect(tip.getAttribute('popover')).toBe('manual');
+    expect(tip.hasAttribute('popover')).toBe(false);
     expect(tip.hasAttribute('aria-label')).toBe(false);
     expect(tip.hasAttribute('aria-labelledby')).toBe(false);
+    expect(document.querySelector('[popover]')).toBeNull();
   });
 
   it('uses popover=manual and role=dialog with a name when interactive', () => {

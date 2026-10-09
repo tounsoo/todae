@@ -2,19 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { contentPolicyError, isMounted, resolveSurface } from './Tooltip.surface';
 
 describe('Tooltip.surface', () => {
-  it('resolves tip attrs as a manual popover in the top layer', () => {
+  it('resolves tip attrs without popover', () => {
     const surface = resolveSurface(false, 'tip-1');
     expect(surface).toEqual({
       kind: 'tip',
       bridges: false,
-      topLayer: true,
+      topLayer: false,
       attrs: {
         id: 'tip-1',
         role: 'tooltip',
-        popover: 'manual',
         'data-surface': 'tip',
       },
     });
+    expect('popover' in surface.attrs).toBe(false);
   });
 
   it('resolves panel attrs as a named dialog, never tooltip', () => {

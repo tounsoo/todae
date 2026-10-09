@@ -87,12 +87,6 @@ function raise(el: HTMLElement): void {
   keepingFocus(el, () => {
     if (isPopoverOpen(el)) el.hidePopover();
     el.showPopover();
-    // A popover open inside, such as a button's tooltip, goes back in front of it.
-    for (const inner of el.querySelectorAll<HTMLElement>('[popover]')) {
-      if (!isPopoverOpen(inner)) continue;
-      inner.hidePopover();
-      inner.showPopover();
-    }
   });
 }
 

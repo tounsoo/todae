@@ -102,20 +102,6 @@ function EdgeTooltip() {
   );
 }
 
-function ClippedTooltip() {
-  const tooltip = useTooltip();
-  return (
-    <Themed>
-      <div data-testid="clip" style={{ marginTop: 120, height: 32, overflow: 'hidden', transform: 'translateZ(0)' }}>
-        <Button.Root tooltip={false} {...tooltip.getTriggerProps()}>
-          Clipped
-        </Button.Root>
-        <Tooltip.Root {...tooltip.getTooltipProps()}>Drawn outside the clipping box</Tooltip.Root>
-      </div>
-    </Themed>
-  );
-}
-
 describe('anchored placement in a browser', () => {
   it('flips a popover above its trigger near the bottom edge', async () => {
     render(<EdgePopover />);
@@ -127,16 +113,6 @@ describe('anchored placement in a browser', () => {
     const p = panel.getBoundingClientRect();
     expect(p.bottom).toBeLessThanOrEqual(t.top);
     expect(p.bottom).toBeLessThanOrEqual(window.innerHeight);
-  });
-
-  it('draws a plain tooltip in the top layer, outside a clipping, transformed ancestor', async () => {
-    render(<ClippedTooltip />);
-    await userEvent.hover(screen.getByRole('button', { name: 'Clipped' }));
-    const tip = await screen.findByRole('tooltip');
-    await waitFor(() => expect(tip.matches(':popover-open')).toBe(true));
-    const clip = screen.getByTestId('clip').getBoundingClientRect();
-    const r = tip.getBoundingClientRect();
-    expect(r.bottom).toBeLessThanOrEqual(clip.top + 0.5);
   });
 
   it('flips a tooltip below its trigger near the top edge', async () => {
