@@ -8,7 +8,7 @@ export const meta = {
       name: 'aria-label',
       type: 'string',
       required: false,
-      default: '"Dismiss" when its spoken text has fewer than two letters or digits',
+      default: '"Dismiss" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits',
       description: 'Accessible name. Visible text of two or more letters or digits, such as "Got it", names the button by itself. The default is English, so pass a name in your app\'s language.',
     },
     {

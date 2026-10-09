@@ -455,6 +455,34 @@ describe('OptionList scrolling', () => {
     await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Veg 30' }))).toBe(true));
   });
 
+  it('reveals the option it falls back to, not a disabled requested one', async () => {
+    function Disabled({ active }: { active: string }) {
+      const popover = usePopover({ defaultOpen: true });
+      return (
+        <Themed>
+          <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
+          <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
+            <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit">
+              {FRUITS.map((fruit) => (
+                <OptionList.Option key={fruit} value={fruit} disabled={fruit === 'Fruit 25'}>
+                  {fruit}
+                </OptionList.Option>
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </Themed>
+      );
+    }
+    const { rerender } = render(<Disabled active="Fruit 2" />);
+    await screen.findByRole('listbox');
+    await frame();
+    rerender(<Disabled active="Fruit 25" />);
+    await frame();
+    const first = screen.getByRole('option', { name: 'Fruit 1' });
+    expect(screen.getByRole('listbox').getAttribute('aria-activedescendant')).toBe(first.id);
+    expect(inView(first)).toBe(true);
+  });
+
   it('keeps a percentage scroll-padding below the active option', async () => {
     function Padded() {
       const [value, setValue] = useState<string | null>(null);

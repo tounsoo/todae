@@ -276,7 +276,13 @@ function OptionListRoot(props: OptionListRootProps) {
     const list = listRef.current;
     // A list in a closed popover has no layout; it is revealed when it opens.
     if (!changed || !target || !list || list.checkVisibility?.() === false) return;
-    reveal(list, optionDomId(listId, target));
+    // The requested option may have arrived in this commit, before the list
+    // re-resolves; a disabled one is skipped for the option it falls back to.
+    const requested = findOption(list, optionDomId(listId, target));
+    const option =
+      requested && requested.getAttribute('aria-disabled') !== 'true' ? requested : shown && findOption(list, optionDomId(listId, shown));
+    if (option) revealInScrollBox(option);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reveal only when the request changes, not the fallback.
   }, [listId, target]);
   // Opening a popover or dialog lays the list out: reveal the active option then.
   const activeId = activeValue ? optionDomId(listId, activeValue) : null;
@@ -311,7 +317,7 @@ function OptionListRoot(props: OptionListRootProps) {
         id={listId}
         tabIndex={tabIndex ?? 0}
         aria-multiselectable={multiple || undefined}
-        aria-activedescendant={activeValue ? optionDomId(listId, activeValue) : undefined}
+        aria-activedescendant={activeId ?? undefined}
         data-selection-mode={multiple ? 'multiple' : 'single'}
         className={cx(styles.list, className)}
         onKeyDown={composeHandlers(onKeyDownProp, onKeyDown)}
@@ -329,10 +335,14 @@ function scrollsY(element: Element): boolean {
   return (overflow === 'auto' || overflow === 'scroll') && element.scrollHeight > element.clientHeight;
 }
 
-function reveal(list: HTMLElement, id: string) {
+function findOption(list: HTMLElement, id: string): HTMLElement | null {
   // The root node finds the option by id inside a shadow root too.
   const root = list.getRootNode() as Document | ShadowRoot;
-  const option = 'getElementById' in root ? root.getElementById(id) : null;
+  return 'getElementById' in root ? root.getElementById(id) : null;
+}
+
+function reveal(list: HTMLElement, id: string) {
+  const option = findOption(list, id);
   if (option) revealInScrollBox(option);
 }
 
