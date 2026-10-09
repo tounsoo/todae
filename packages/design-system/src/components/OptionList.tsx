@@ -267,8 +267,8 @@ function OptionListRoot(props: OptionListRootProps) {
   // aria-activedescendant moves no focus, so nothing scrolls the option into
   // view: scroll its nearest scroll box, never the page. Reveal when the
   // activeValue prop changes or, uncontrolled, when the keyboard moves the
-  // highlight; never on mount. A request waits while the list is hidden or
-  // while its option has not rendered yet, such as an async result.
+  // highlight; never on mount. A requested option that has not rendered yet,
+  // such as an async result, is revealed when it renders enabled.
   const target = activeValueProp !== undefined ? activeValueProp : highlighted;
   const lastTarget = useRef(target);
   const pending = useRef<string | null>(null);
@@ -281,17 +281,21 @@ function OptionListRoot(props: OptionListRootProps) {
     }
     const want = pending.current;
     const list = listRef.current;
-    // A list in a closed popover has no layout; it is revealed when it shows.
-    if (!want || !list || list.checkVisibility?.() === false) return;
+    if (!want || !list) return;
     // Read the options from the DOM: they may have changed in this commit,
     // before the list re-resolves. A missing or disabled request falls back to
     // the first enabled option, as aria-activedescendant will.
     const requested = findOption(list, optionDomId(listId, want));
-    const usable = requested && requested.getAttribute('aria-disabled') !== 'true';
-    const option = usable ? requested : list.querySelector<HTMLElement>('[role="option"]:not([aria-disabled="true"])');
-    // A missing option is still awaited, after one reveal of the fallback.
+    // Settled once its option renders, hidden or not; a missing one is awaited.
     if (requested) pending.current = null;
     else if (!changed) return;
+    const usable = requested !== null && requested.getAttribute('aria-disabled') !== 'true';
+    // A late option that arrives disabled does not move the active option.
+    if (!changed && !usable) return;
+    // A hidden list has no layout; a popover or dialog reveals its active
+    // option when it opens (below).
+    if (list.checkVisibility?.() === false) return;
+    const option = usable ? requested : list.querySelector<HTMLElement>('[role="option"]:not([aria-disabled="true"])');
     if (option) revealInScrollBox(option);
   });
   // Opening a popover or dialog lays the list out: reveal the active option then.

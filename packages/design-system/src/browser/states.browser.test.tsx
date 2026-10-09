@@ -228,12 +228,15 @@ describe('state in forced colors', () => {
     await userEvent.tab();
     expect(document.activeElement).toBe(select);
     await userEvent.keyboard(' ');
-    await waitFor(() => expect(select.matches(':open')).toBe(true));
-    await userEvent.keyboard('{ArrowDown}');
-    const pear = select.options[1]!;
-    await waitFor(() => expect(pear.matches(':focus-visible')).toBe(true));
-    expect(getComputedStyle(pear).outlineStyle).toBe('solid');
-    await userEvent.keyboard('{Escape}');
+    try {
+      await waitFor(() => expect(select.matches(':open')).toBe(true));
+      await userEvent.keyboard('{ArrowDown}');
+      const pear = select.options[1]!;
+      await waitFor(() => expect(pear.matches(':focus-visible')).toBe(true));
+      expect(getComputedStyle(pear).outlineStyle).toBe('solid');
+    } finally {
+      if (select.matches(':open')) await userEvent.keyboard('{Escape}');
+    }
   });
 });
 
@@ -522,6 +525,81 @@ describe('OptionList scrolling', () => {
     rerender(<Late items={FRUITS.slice(0, 20)} active="Fruit 30" />);
     await frame();
     rerender(<Late items={FRUITS} active="Fruit 30" />);
+    await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 30' }))).toBe(true));
+  });
+
+  function Driven({
+    open,
+    items,
+    active,
+    disabled,
+    note,
+  }: {
+    open: boolean;
+    items: string[];
+    active: string;
+    disabled?: string;
+    note?: string;
+  }) {
+    const popover = usePopover({ open, onOpenChange: () => undefined });
+    return (
+      <Themed>
+        <Button.Root {...popover.getTriggerProps()}>Pick</Button.Root>
+        <Popover.Root {...popover.getPopoverProps()} data-testid="surface">
+          <OptionList.Root value={null} onChange={() => undefined} activeValue={active} aria-label="Fruit" title={note}>
+            {items.map((item) => (
+              <OptionList.Option key={item} value={item} disabled={item === disabled}>
+                {item}
+              </OptionList.Option>
+            ))}
+          </OptionList.Root>
+        </Popover.Root>
+      </Themed>
+    );
+  }
+
+  it('does not scroll back on a later commit after a request made while closed', async () => {
+    const { rerender } = render(<Driven open={false} items={FRUITS} active="Fruit 1" />);
+    await frame();
+    rerender(<Driven open={false} items={FRUITS} active="Fruit 30" />);
+    await frame();
+    rerender(<Driven open items={FRUITS} active="Fruit 30" />);
+    await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 30' }))).toBe(true));
+    const surface = screen.getByTestId('surface');
+    surface.scrollTop = 0;
+    await frame();
+    rerender(<Driven open items={FRUITS} active="Fruit 30" note="refreshed" />);
+    await frame();
+    expect(surface.scrollTop).toBe(0);
+  });
+
+  it('does not scroll when an awaited option arrives disabled', async () => {
+    const { rerender } = render(<Driven open items={FRUITS.slice(0, 20)} active="Fruit 1" />);
+    await screen.findByRole('listbox');
+    await frame();
+    rerender(<Driven open items={FRUITS.slice(0, 20)} active="Fruit 30" />);
+    await frame();
+    const surface = screen.getByTestId('surface');
+    surface.scrollTop = surface.scrollHeight;
+    await frame();
+    const scrolled = surface.scrollTop;
+    expect(scrolled).toBeGreaterThan(0);
+    rerender(<Driven open items={FRUITS} active="Fruit 30" disabled="Fruit 30" />);
+    await frame();
+    const first = screen.getByRole('option', { name: 'Fruit 1' });
+    expect(screen.getByRole('listbox').getAttribute('aria-activedescendant')).toBe(first.id);
+    expect(surface.scrollTop).toBe(scrolled);
+  });
+
+  it('reveals an option requested while closed that renders after opening', async () => {
+    const { rerender } = render(<Driven open={false} items={FRUITS.slice(0, 20)} active="Fruit 1" />);
+    await frame();
+    rerender(<Driven open={false} items={FRUITS.slice(0, 20)} active="Fruit 30" />);
+    await frame();
+    rerender(<Driven open items={FRUITS.slice(0, 20)} active="Fruit 30" />);
+    await screen.findByRole('listbox');
+    await frame();
+    rerender(<Driven open items={FRUITS} active="Fruit 30" />);
     await waitFor(() => expect(inView(screen.getByRole('option', { name: 'Fruit 30' }))).toBe(true));
   });
 
