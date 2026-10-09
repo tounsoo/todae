@@ -5,8 +5,7 @@ import { BottomSheet } from '../components/BottomSheet';
 import { Button } from '../components/Button';
 import { Dialog } from '../components/Dialog';
 import { Drawer, type DrawerSide } from '../components/Drawer';
-import { Tooltip } from '../components/Tooltip';
-import { useTooltip } from '../hooks/useTooltip';
+import { HeldTip } from '../test/heldTip';
 
 afterEach(cleanup);
 
@@ -74,19 +73,6 @@ function expectTipFollowed(frames: Frame[], { minFrames = 4, minTravel = 0 } = {
     expect(Math.abs(f.dx), `frame ${i} across`).toBeLessThanOrEqual(1);
     expect(Math.abs(f.gap - frames[0]!.gap), `frame ${i} gap`).toBeLessThanOrEqual(1);
   }
-}
-
-/** A button with a tip held open, as a controlled `useTooltip({ open })`. */
-function HeldTip({ label, open }: { label: string; open: boolean }) {
-  const tooltip = useTooltip({ open });
-  return (
-    <>
-      <Button.Root tooltip={false} {...tooltip.getTriggerProps()}>
-        {label}
-      </Button.Root>
-      <Tooltip.Root {...tooltip.getTooltipProps()}>Tip for {label}</Tooltip.Root>
-    </>
-  );
 }
 
 /** Opens the tip one frame after mount, as hover or focus does once the overlay shows. */
