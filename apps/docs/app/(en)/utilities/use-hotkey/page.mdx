@@ -1,0 +1,25 @@
+# useHotkey
+
+`useHotkey(hotkey, handler, options)` runs `handler` when a key pressed anywhere on the page matches `hotkey`. It listens for `keydown` on the document and prevents the default of a key it matches, so the browser's own shortcut does not also run.
+
+```tsx
+useHotkey(['Control+K', 'Meta+K'], () => setOpen(true))
+```
+
+Write a hotkey as modifiers and a key joined by `+`, such as `Alt+T` or `F8`. Modifiers are `Alt`, `Control`, `Meta` and `Shift`, which can also be written as `Option`, `Ctrl` or `Cmd`, and they must match exactly, so `Control+K` does not run on Ctrl+Shift+K. A letter or digit matches what the key types. When the key types no Latin letter or digit, as on a Korean layout, it matches the key in that letter's place. A hotkey with a modifier name the hook does not know is off, with a warning in development.
+
+The hook skips a key something else already prevented, a key pressed while an input method composes text, and a held key that repeats. A hotkey that could type, such as `Shift+A`, is skipped in a text field. A function key, or a chord with Meta or with Control but not Alt, types nothing, so it runs there too.
+
+The latest `handler` runs, so an inline function is fine. Pass `{ enabled: false }` to stop listening. [Command palette](/recipes/command-palette) opens with this hook.
+
+Tell assistive technology about a shortcut with `aria-keyshortcuts` on the control it stands for.
+
+## When to use
+
+**When:** A page-wide shortcut, such as one that opens a search or command palette.
+
+**When not:** Keys inside a widget, such as arrows in a list → the widget's own `onKeyDown`. Moving focus to toasts → `Toast.Region`'s `hotkey`.
+
+## Props
+
+<PropsTable name="useHotkey" />
