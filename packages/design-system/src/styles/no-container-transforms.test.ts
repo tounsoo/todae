@@ -34,13 +34,49 @@ type Block = { prelude: string };
 
 const isKeyframes = (prelude: string) => /^@(?:-[a-z]+-)?keyframes\b/.test(prelude);
 
+/** The pseudo-elements that hold none of the element's own children. */
+const LEAF_PSEUDO =
+  /::(?:-[a-z]+-)?(?:before|after|backdrop|marker|placeholder|selection|file-selector-button|first-letter|first-line)$/;
+
+/** The last compound of a selector: what it styles. */
+function subject(selector: string): string {
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < selector.length; i++) {
+    const ch = selector[i]!;
+    if (ch === '(' || ch === '[') depth++;
+    else if (ch === ')' || ch === ']') depth--;
+    else if (depth === 0 && /[\s>+~]/.test(ch)) start = i + 1;
+  }
+  return selector.slice(start);
+}
+
+/** The list inside a compound that is only :where(…) or :is(…), else null. */
+function wrappedIn(compound: string): string | null {
+  const open = /^:(?:where|is)\(/.exec(compound);
+  if (!open) return null;
+  let depth = 1;
+  for (let i = open[0].length; i < compound.length; i++) {
+    if (compound[i] === '(') depth++;
+    else if (compound[i] === ')' && --depth === 0) {
+      return i === compound.length - 1 ? compound.slice(open[0].length, i) : null;
+    }
+  }
+  return null;
+}
+
 /**
  * A selector whose subject has no element inside it that could be a trigger:
- * a pseudo-element, such as ::before or ::backdrop, or a <progress>, which
- * renders none of its children.
+ * a pseudo-element such as ::before or ::backdrop, or a <progress>, which
+ * renders none of its children. :where() and :is() are looked through; any
+ * other functional pseudo-class, such as :has(progress), is not the subject.
  */
 function isLeaf(part: string): boolean {
-  return /::[a-z-]+$/.test(part) || /(?:^|[\s>+~(])progress(?:[.:#[][^\s>+~]*)?\)*$/.test(part);
+  const compound = subject(part.trim());
+  if (LEAF_PSEUDO.test(compound)) return true;
+  const inner = wrappedIn(compound);
+  if (inner !== null) return splitTopLevel(inner).every(isLeaf);
+  return /^progress(?![\w-])/.test(compound);
 }
 
 /** Walks the sheet, calling `visit` with each declaration and the blocks it is in, outermost first. */
@@ -80,7 +116,7 @@ function movingKeyframes(css: string): Set<string> {
   return moving;
 }
 
-/** Keyframes are global, so a sheet can run ones another sheet defines. */
+/** A sheet can run keyframes another sheet defines, so collect them from every sheet. */
 const MOVING_KEYFRAMES = new Set(sheets.flatMap(({ css }) => [...movingKeyframes(css)]));
 
 /**
@@ -149,6 +185,26 @@ describe('design-system styles', () => {
       '.a { -webkit-transform: none }',
       '.c { animation: spin 1s linear infinite }',
       '.d { animation-name: fade, spin }',
+    ]);
+  });
+
+  it('counts only the subject as a leaf: not progress inside :not() or :has(), nor ::details-content', () => {
+    expect(
+      containerMoves(`
+        .a:not(progress) { translate: 0 4px; }
+        .b:has(progress) { translate: 0 4px; }
+        .c:has(> progress) { translate: 0 4px; }
+        :is(.d, progress) { translate: 0 4px; }
+        details::details-content { translate: 0 -4px; }
+        .e progress, :is(progress.f, .g::marker) { translate: 0 4px; }
+        :where(.h) :where(progress) { translate: 0 4px; }
+      `),
+    ).toEqual([
+      '.a:not(progress) { translate: 0 4px }',
+      '.b:has(progress) { translate: 0 4px }',
+      '.c:has(> progress) { translate: 0 4px }',
+      ':is(.d, progress) { translate: 0 4px }',
+      'details::details-content { translate: 0 -4px }',
     ]);
   });
 });

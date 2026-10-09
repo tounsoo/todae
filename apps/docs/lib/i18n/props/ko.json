@@ -1469,8 +1469,8 @@
       "ko": "auto는 useSheetPresentation을 씁니다. dialog는 getDialogProps로 Dialog.Root에 씁니다."
     },
     "allowCreate": {
-      "en": "Show a create row when the query has no case-insensitive label match.",
-      "ko": "쿼리와 대소문자 구분 없이 일치하는 레이블이 없을 때 생성 행을 보여 줍니다."
+      "en": "Show a create row when the query has no case-insensitive label match. With loadOptions, the row waits until the load for that query settles.",
+      "ko": "쿼리와 대소문자 구분 없이 일치하는 레이블이 없을 때 생성 행을 보여 줍니다. loadOptions가 있으면 그 쿼리의 로드가 끝날 때까지 행이 기다립니다."
     },
     "value": {
       "en": "Controlled value. Null for empty single. Array for multiple.",

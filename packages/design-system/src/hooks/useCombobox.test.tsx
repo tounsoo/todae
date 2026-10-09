@@ -723,6 +723,29 @@ describe('useCombobox dialog presentation', () => {
     act(() => result.current.setOpen(true));
   }
 
+  it('offers create, and no other query\'s rows, after a failed load', async () => {
+    const onCreate = vi.fn();
+    const loadOptions = (query: string) =>
+      query === 'NewTag' ? Promise.reject(new Error('down')) : Promise.resolve([{ value: 'a', label: 'Alpha' }]);
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, onCreate, presentation: 'dialog', value: null }),
+    );
+    const flush = () =>
+      act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    act(() => result.current.setOpen(true));
+    await flush();
+    act(() => result.current.setInputValue('NewTag'));
+    await flush();
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.items.map((item) => item.kind)).toEqual(['create']);
+    const enter = { key: 'Enter', nativeEvent: { isComposing: false }, preventDefault: () => undefined };
+    act(() => result.current.getInputProps().onKeyDown?.(enter as unknown as KeyboardEvent<HTMLInputElement>));
+    expect(onCreate).toHaveBeenCalledWith('NewTag');
+  });
+
   it('runs no create while the list is still another query\'s', async () => {
     const onCreate = vi.fn();
     const onValueChange = vi.fn();

@@ -43,7 +43,7 @@ function ChipRoot({
         <button
           type="button"
           className={styles.dismiss}
-          aria-label={removeLabel ?? removeChip(label)}
+          aria-label={removeLabel || removeChip(label)}
           disabled={disabled}
           onClick={disabled ? undefined : onRemove}
         >

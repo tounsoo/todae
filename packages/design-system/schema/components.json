@@ -2653,7 +2653,7 @@
           "name": "allowCreate",
           "type": "boolean",
           "required": false,
-          "description": "Show a create row when the query has no case-insensitive label match.",
+          "description": "Show a create row when the query has no case-insensitive label match. With loadOptions, the row waits until the load for that query settles.",
           "default": "false"
         },
         {

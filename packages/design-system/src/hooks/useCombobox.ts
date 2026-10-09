@@ -431,11 +431,10 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         if (!gate.current.isCurrent(result.gen)) return;
         if ('aborted' in result && result.aborted) return;
         setLoading(false);
-        if ('error' in result) {
-          setError(result.error);
-          return;
-        }
-        setAsyncOptions(result.result);
+        // A failed load still settles this query: no rows, so the create row
+        // can show and no other query's rows stay active.
+        if ('error' in result) setError(result.error);
+        setAsyncOptions('error' in result ? [] : result.result);
         setLoadedFor({ query, key });
       });
     },

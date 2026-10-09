@@ -44,7 +44,7 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'false',
-      description: 'Show a create row when the query has no case-insensitive label match.',
+      description: 'Show a create row when the query has no case-insensitive label match. With loadOptions, the row waits until the load for that query settles.',
     },
     {
       name: 'value',
