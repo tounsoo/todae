@@ -6,7 +6,6 @@ type Href = (typeof SITE_GROUPS)[number]['links'][number][0];
 
 /** The site's own words: everything around the page content. Page text lives in each page's MDX. */
 export type Dictionary = {
-  siteDescription: string;
   /** Accessible name of the sidebar. */
   siteNav: string;
   /** Accessible name of the top bar's links. */
@@ -74,7 +73,6 @@ export type Dictionary = {
 };
 
 const en: Dictionary = {
-  siteDescription: 'Todae component docs',
   siteNav: 'Site',
   mainNav: 'Main',
   topLinks: { start: 'Get started', components: 'Components', playground: 'Playground' },
@@ -141,7 +139,6 @@ const en: Dictionary = {
 };
 
 const ko: Dictionary = {
-  siteDescription: 'Todae 컴포넌트 문서',
   siteNav: '사이트',
   mainNav: '주요 메뉴',
   topLinks: { start: '시작하기', components: '컴포넌트', playground: '플레이그라운드' },

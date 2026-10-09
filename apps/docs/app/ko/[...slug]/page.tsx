@@ -11,10 +11,12 @@ export function generateStaticParams() {
   return untranslatedSlugs('ko').map((slug) => ({ slug: slug.split('/') }));
 }
 
-// The English page is the original; search engines should index that one.
+// The page shows the English, so it previews as the English page and canonicalizes to it: search engines should index that one.
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
   const { slug } = await params;
-  return { alternates: { canonical: `/${slug.join('/')}` } };
+  const path = slug.join('/');
+  const english = (await ENGLISH_PAGES[path]?.())?.metadata;
+  return { ...english, alternates: { canonical: `/${path}` } };
 }
 
 export default async function KoreanFallbackPage({ params }: { params: Promise<{ slug: string[] }> }) {
