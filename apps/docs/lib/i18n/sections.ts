@@ -60,6 +60,27 @@ export function codeBlocks(mdx: string): { code: string[]; rest: string } {
   return { code, rest: rest + mdx.slice(from) };
 }
 
+/**
+ * The target of every Markdown link and link definition in `mdx`, and every JSX `href` attribute
+ * (an expression as `{…}`), sorted. Link text and titles are left out, since a translation changes them.
+ */
+export function links(mdx: string): string[] {
+  const found: string[] = [];
+  const visit = (node: Node) => {
+    if (node.type === 'link' || node.type === 'definition') found.push((node as Node & { url: string }).url);
+    if (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') {
+      for (const attribute of (node as Node & { attributes: { type: string; name?: string; value?: unknown }[] }).attributes) {
+        if (attribute.type !== 'mdxJsxAttribute' || attribute.name !== 'href') continue;
+        const { value } = attribute;
+        found.push(typeof value === 'string' ? value : `{${(value as { value?: string } | null)?.value ?? ''}}`);
+      }
+    }
+    if ('children' in node) for (const child of node.children as Node[]) visit(child);
+  };
+  visit(parse(mdx));
+  return found.sort();
+}
+
 function fingerprint(text: string): string {
   const normalized = text
     .split('\n')

@@ -13,14 +13,11 @@ export type Sources = Record<string, Record<string, string>>;
 export function stamp(appDir: string, locale: string, sources: Sources, slugs: readonly string[]): { sources: Sources; log: string[] } {
   const next: Sources = { ...sources };
   const log: string[] = [];
-  // The translated pages by folder, as the tests list them, so a slug names a page in one spelling only.
+  // The translated pages by folder, so a slug names a page in one spelling only.
   const translated = new Set(
     readdirSync(join(appDir, locale), { recursive: true, encoding: 'utf8' })
       .filter((file) => basename(file) === 'page.mdx')
-      .map((file) => dirname(file).split(sep))
-      // Route groups, private folders and dynamic segments are not pages of their own.
-      .filter((parts) => !parts.some((part) => /^[_[@(]/.test(part)))
-      .map((parts) => parts.join('/')),
+      .map((file) => dirname(file).split(sep).join('/')),
   );
   for (const slug of slugs) {
     const english = join(appDir, '(en)', slug, 'page.mdx');

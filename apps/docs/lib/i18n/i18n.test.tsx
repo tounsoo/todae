@@ -21,7 +21,7 @@ import { DICTIONARIES } from './dictionaries';
 import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
 import { PROP_TRANSLATIONS, propDescription } from './propDescriptions';
-import { codeBlocks, sections, sourceRecord, staleSections } from './sections';
+import { codeBlocks, links, sections, sourceRecord, staleSections } from './sections';
 import { stamp, type Sources } from './stamp';
 import schema from '@tounsoo/todae/schema/components.json';
 
@@ -86,7 +86,7 @@ describe('docs locales', () => {
         code,
         tags: (prose.match(/<\/?[A-Z][\w.]*/g) ?? []).sort(),
         props: prose.match(/<PropsTable\s+name="[^"]+"/g) ?? [],
-        links: (prose.match(/\]\([^)]+\)|href=(?:"[^"]*"|'[^']*'|\{[^}]*\})/g) ?? []).sort(),
+        links: links(text),
         // Each top-level heading's level and the number of top-level blocks under it, so a section or
         // top-level paragraph added in English has to be added to the translation too.
         sections: sections(text).map((part) => `h${part.level}: ${part.blocks} blocks`),
@@ -155,6 +155,9 @@ describe('docs locales', () => {
     }
     // Code blocks are left out of a section's block count and out of the prose the shape test reads.
     expect(sections('# A\n\nText.\n\n```ts\nx\n```\n\n<Demo />\n')[0]!.blocks).toBe(2);
+    // Link targets and hrefs are compared; link text and titles are translated.
+    expect(links('[Tokens](/tokens "Design tokens")\n\n[ref]: /ref\n\n<a href={`/x/${y}#props`}>x</a> <Link href="/y">y</Link>\n')).toEqual(['/ref', '/tokens', '/y', '{`/x/${y}#props`}']);
+    expect(links('[토큰](/tokens "디자인 토큰")\n')).toEqual(links('[Tokens](/tokens "Design tokens")\n'));
     expect(codeBlocks('Text.\n\n~~~ts\nimport x from "y";\n~~~\n')).toEqual({ code: ['~~~ts\nimport x from "y";\n~~~'], rest: 'Text.\n\n\n' });
   });
 
