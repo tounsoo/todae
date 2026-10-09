@@ -8,7 +8,7 @@ import { resetMatchMedia, setMatchMedia } from '../test/setup';
 import * as api from '../index';
 import type { BottomSheetRootProps } from '../components/BottomSheet';
 import type { DialogRootProps } from '../components/Dialog';
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import {
   useCombobox,
   type ComboboxOption,
@@ -657,7 +657,7 @@ describe('useCombobox dialog presentation', () => {
   });
 
   // A palette whose loads resolve only when a test settles their query.
-  function asyncPalette() {
+  function asyncPalette(extra: Partial<UseComboboxSingleOptions> = {}) {
     const LISTS: Record<string, ComboboxOption[]> = {
       '': [
         { value: 'invoice', label: 'Create invoice' },
@@ -666,9 +666,17 @@ describe('useCombobox dialog presentation', () => {
       ],
       bill: [{ value: 'billing', label: 'Open billing' }],
     };
+    // What the loader returns for '' once the loadKey is 'b'.
+    const KEY_B: ComboboxOption[] = [
+      { value: 'team', label: 'Invite team' },
+      { value: 'invoice', label: 'Create invoice' },
+    ];
+    let loadKey: string = 'a';
     const pending = new Map<string, () => void>();
-    const loadOptions = (query: string) =>
-      new Promise<readonly ComboboxOption[]>((resolve) => pending.set(query, () => resolve(LISTS[query] ?? [])));
+    const loadOptions = (query: string) => {
+      const list = loadKey === 'b' && query === '' ? KEY_B : (LISTS[query] ?? []);
+      return new Promise<readonly ComboboxOption[]>((resolve) => pending.set(query, () => resolve(list)));
+    };
     const settle = async (query: string) => {
       await act(async () => {
         pending.get(query)?.();
@@ -676,10 +684,58 @@ describe('useCombobox dialog presentation', () => {
         await Promise.resolve();
       });
     };
-    const hook = renderHook(() => useCombobox({ loadOptions, presentation: 'dialog', value: null }));
+    const hook = renderHook(() => useCombobox({ loadOptions, loadKey, presentation: 'dialog', value: null, ...extra }));
     const values = () => hook.result.current.items.map((item) => item.kind === 'option' && item.option.value);
-    return { ...hook, settle, values };
+    const setLoadKey = (next: string) => {
+      loadKey = next;
+      hook.rerender();
+    };
+    return { ...hook, settle, values, setLoadKey };
   }
+
+  // Search 'bill', let it load, then close and reopen: the 'bill' list is still loaded.
+  async function reopenAfterBill(palette: ReturnType<typeof asyncPalette>) {
+    const { result, settle } = palette;
+    await settle('');
+    act(() => result.current.setOpen(true));
+    act(() => result.current.setInputValue('bill'));
+    await settle('bill');
+    act(() => result.current.setOpen(false));
+    act(() => result.current.setOpen(true));
+  }
+
+  it('runs no create while the list is still another query\'s', async () => {
+    const onCreate = vi.fn();
+    const onValueChange = vi.fn();
+    const palette = asyncPalette({ allowCreate: true, onCreate, onValueChange });
+    const { result, settle } = palette;
+    await reopenAfterBill(palette);
+    act(() => result.current.setInputValue('bi'));
+    // The old 'bill' list, filtered, still shows 'Open billing'.
+    const enter = { key: 'Enter', nativeEvent: { isComposing: false }, preventDefault: () => undefined };
+    act(() => result.current.getInputProps().onKeyDown?.(enter as unknown as KeyboardEvent<HTMLInputElement>));
+    act(() => result.current.getChipInputProps().onCommit('bi'));
+    expect(onCreate).not.toHaveBeenCalled();
+    expect(onValueChange).not.toHaveBeenCalled();
+    await settle('bi');
+    act(() => result.current.getInputProps().onKeyDown?.(enter as unknown as KeyboardEvent<HTMLInputElement>));
+    expect(onCreate).toHaveBeenCalledWith('bi');
+  });
+
+  it('waits for the list of a new loadKey before picking a row', async () => {
+    const palette = asyncPalette();
+    const { result, settle, setLoadKey } = palette;
+    await settle('');
+    act(() => result.current.setOpen(true));
+    act(() => result.current.setOpen(false));
+    setLoadKey('b');
+    act(() => result.current.setOpen(true));
+    expect(result.current.activeValue).toBeNull();
+    expect(result.current.getInputProps()['aria-activedescendant']).toBeUndefined();
+    await settle('');
+    expect(palette.values()).toEqual(['team', 'invoice']);
+    expect(result.current.activeValue).toBe('team');
+  });
 
   it('highlights the top row of the full list once it loads, not the last query\'s', async () => {
     const { result, settle, values } = asyncPalette();

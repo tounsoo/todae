@@ -201,8 +201,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const [error, setError] = useState<unknown | null>(null);
   const gate = useRef(createAsyncGate());
   const lastQuery = useRef(inputValue);
-  // The query the loaded list belongs to; null before any load lands.
-  const [loadedQuery, setLoadedQuery] = useState<string | null>(null);
+  // The query and loadKey the loaded list belongs to; null before any load lands.
+  const [loadedFor, setLoadedFor] = useState<{ query: string; key: string | number | undefined } | null>(null);
   const lastPresentation = useRef(presentation);
 
   // Callbacks read the latest options through this ref so their identity stays stable and
@@ -261,7 +261,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [items],
   );
   // False while the loaded list is still another query's.
-  const listIsCurrent = !hasLoader || loadedQuery === inputValue;
+  const listIsCurrent =
+    !hasLoader || (loadedFor !== null && loadedFor.query === inputValue && loadedFor.key === options.loadKey);
   const resolvedActive =
     activeValue && enabledValues.includes(activeValue)
       ? activeValue
@@ -409,7 +410,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     }
     setActiveValue(null);
     setAsyncOptions([]);
-    setLoadedQuery(null);
+    setLoadedFor(null);
     setError(null);
     setLoading(false);
   }, [setInputState, setMultiState, setOpenState, setSingleState]);
@@ -418,6 +419,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     (query: string) => {
       const load = latest.current.loadOptions;
       if (!load) return;
+      const key = latest.current.loadKey;
       lastQuery.current = query;
       setLoading(true);
       setError(null);
@@ -430,7 +432,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
           return;
         }
         setAsyncOptions(result.result);
-        setLoadedQuery(query);
+        setLoadedFor({ query, key });
       });
     },
     [],
@@ -507,7 +509,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       }
       if (event.key === 'Enter') {
         event.preventDefault();
-        if (resolvedActive === CREATE_VALUE || (showCreate && !resolvedActive)) create();
+        // While the list is another query's, Enter with no active row runs nothing.
+        if (resolvedActive === CREATE_VALUE || (showCreate && !resolvedActive && listIsCurrent)) create();
         else if (resolvedActive) select(resolvedActive);
         return;
       }
@@ -527,6 +530,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [
       create,
       isModal,
+      listIsCurrent,
       move,
       open,
       resolvedActive,
@@ -634,7 +638,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         onCommit: () => {
           if (resolvedActive === CREATE_VALUE) create();
           else if (resolvedActive) select(resolvedActive);
-          else if (showCreate) create();
+          else if (showCreate && listIsCurrent) create();
         },
         onChipRemove: (index) => {
           const item = selected[index];
@@ -651,6 +655,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       comboboxAria,
       create,
       inputValue,
+      listIsCurrent,
       multiValue,
       onInputBlur,
       onInputFocus,
