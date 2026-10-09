@@ -99,10 +99,11 @@ describe('docs locales', () => {
       const sources = SOURCES[locale] ?? {};
       const translated = slugs(join(APP, locale)).filter((slug) => existsSync(join(APP, locale, slug, 'page.mdx')));
       const stale = translated.flatMap((slug) => {
-        const sections = staleSections(readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8'), sources[slug]);
-        return sections.length ? [`${locale}/${slug}: ${sections.join(', ')}`] : [];
+        const changed = staleSections(readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8'), sources[slug]);
+        return changed.length ? [`${locale}/${slug}: ${changed.join(', ')}`] : [];
       });
-      const orphaned = Object.keys(sources).filter((slug) => !translated.includes(slug)).map((slug) => `${locale}/${slug}: no translated page`);
+      // A page that was removed or renamed: running i18n:stamp on its old slug drops the entry.
+      const orphaned = Object.keys(sources).filter((slug) => !translated.includes(slug)).map((slug) => `${locale}/${slug}: no translated page, so run i18n:stamp ${locale} ${slug} to drop it`);
       expect(
         [...stale, ...orphaned],
         `Update app/${locale}/<slug>/page.mdx to match the English sections listed, then run pnpm --filter docs i18n:stamp ${locale} <slug>`,
@@ -114,12 +115,15 @@ describe('docs locales', () => {
     const english = '# Badge\n\nA label.\n\n## When to use\n\nOften.\n';
     const recorded = sourceRecord(english);
     expect(staleSections(english, recorded)).toEqual([]);
-    // Trailing spaces and blank lines are not a change.
+    // Trailing spaces, and blank lines at the end, are not a change.
     expect(staleSections(english.replace('A label.', 'A label.  \n'), recorded)).toEqual([]);
     expect(staleSections(english.replace('Often.', 'Rarely.'), recorded)).toEqual(['## When to use (changed)']);
     expect(staleSections(`${english}\n## Accessible composition\n\nNames.\n`, recorded)).toEqual(['## Accessible composition (new)']);
     expect(staleSections('# Badge\n\nA label.\n', recorded)).toEqual(['## When to use (removed)']);
     expect(staleSections(english, undefined)).toEqual(['# Badge (new)', '## When to use (new)']);
+    // Swapping two sections changes no section's text, but the order is a change.
+    const two = '# A\n\n## One\n\nFirst.\n\n## Two\n\nSecond.\n';
+    expect(staleSections('# A\n\n## Two\n\nSecond.\n\n## One\n\nFirst.\n', sourceRecord(two))).toEqual(['## Two (moved)', '## One (moved)']);
     // A heading inside a code fence is code, not a section.
     expect(sections('# A\n\n```md\n## Not a heading\n```\n').map((part) => part.heading)).toEqual(['# A']);
   });

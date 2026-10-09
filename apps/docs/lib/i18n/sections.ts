@@ -47,13 +47,18 @@ export function sourceRecord(english: string): Record<string, string> {
 }
 
 /**
- * The sections whose English differs from what a translation was made from: changed or new
- * in English since, or gone from it. Empty when the translation is up to date.
+ * The sections whose English differs from what a translation was made from: changed, new,
+ * moved or gone since. Empty when the English is what was last stamped.
  */
 export function staleSections(english: string, recorded: Record<string, string> | undefined): string[] {
   const current = sourceRecord(english);
   const before = recorded ?? {};
+  // Sections both have, in the order each has them; a section that moved is out of step.
+  const kept = Object.keys(current).filter((heading) => heading in before);
+  const keptBefore = Object.keys(before).filter((heading) => heading in current);
+  const moved = kept.filter((heading, index) => keptBefore[index] !== heading).map((heading) => `${heading} (moved)`);
   return [
+    ...moved,
     ...Object.entries(current)
       .filter(([heading, hash]) => before[heading] !== hash)
       .map(([heading]) => (heading in before ? `${heading} (changed)` : `${heading} (new)`)),

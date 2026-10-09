@@ -22,13 +22,20 @@ const sources: Record<string, Record<string, string>> = existsSync(file) ? JSON.
 
 for (const slug of slugs) {
   const english = join(app, '(en)', slug, 'page.mdx');
-  if (!existsSync(english)) fail(`No English page at ${english}`);
-  if (!existsSync(join(app, locale, slug, 'page.mdx'))) fail(`No ${locale} page at ${join(app, locale, slug, 'page.mdx')}; translate it first`);
+  const translated = existsSync(join(app, locale, slug, 'page.mdx'));
+  if (!existsSync(english) && !translated && slug in sources) {
+    // The page was removed or renamed.
+    delete sources[slug];
+    console.log(`${locale}/${slug}: dropped`);
+    continue;
+  }
+  if (!existsSync(english)) fail(`No English page.mdx at ${english}`);
+  if (!translated) fail(`No ${locale} page at ${join(app, locale, slug, 'page.mdx')}; translate it first`);
   const text = readFileSync(english, 'utf8');
   const stale = staleSections(text, sources[slug]);
   sources[slug] = sourceRecord(text);
   console.log(stale.length ? `${locale}/${slug}: ${stale.join(', ')}` : `${locale}/${slug}: already up to date`);
 }
 
-const sorted = Object.fromEntries(Object.entries(sources).sort(([a], [b]) => a.localeCompare(b)));
+const sorted = Object.fromEntries(Object.entries(sources).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
 writeFileSync(file, `${JSON.stringify(sorted, null, 2)}\n`);
