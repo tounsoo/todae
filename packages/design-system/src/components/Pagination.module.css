@@ -54,11 +54,11 @@
     color: var(--todae-pagination-fg-disabled);
   }
 
-  /* The ellipsis shares the disabled color but is text, not a disabled control. */
   .item > :is([aria-disabled='true'], a:not(:any-link):not(:where([aria-current]:not([aria-current='false' i], [aria-current='']))), button:disabled) {
     cursor: not-allowed;
   }
 
+  /* The ellipsis shares the disabled color but is text, not a disabled control. */
   .ellipsis {
     cursor: default;
   }

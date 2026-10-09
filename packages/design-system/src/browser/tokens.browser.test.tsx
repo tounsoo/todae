@@ -114,14 +114,16 @@ describe('BottomSheet padding in a browser', () => {
     expect(sheet.paddingBottom).toBe(sheet.paddingTop);
   });
 
-  it('draws the grabber ring from focus.ring', async () => {
+  it('draws the grabber ring from focus.ring in the sheet ring color', async () => {
     render(
       <Themed>
-        <BottomSheet.Root open onOpenChange={() => undefined}>
-          <BottomSheet.Grabber />
-          <BottomSheet.Title>Sort</BottomSheet.Title>
-          <BottomSheet.Body>Newest first</BottomSheet.Body>
-        </BottomSheet.Root>
+        <div style={{ ['--todae-sheet-ring-focus' as string]: 'rgb(200, 0, 0)' }}>
+          <BottomSheet.Root open onOpenChange={() => undefined}>
+            <BottomSheet.Grabber />
+            <BottomSheet.Title>Sort</BottomSheet.Title>
+            <BottomSheet.Body>Newest first</BottomSheet.Body>
+          </BottomSheet.Root>
+        </div>
       </Themed>,
     );
     await screen.findByRole('dialog');
@@ -134,5 +136,6 @@ describe('BottomSheet padding in a browser', () => {
     expect(style.outlineStyle).toBe('solid');
     expect(style.outlineWidth).toBe('2px');
     expect(style.outlineOffset).toBe('2px');
+    expect(style.outlineColor).toBe('rgb(200, 0, 0)');
   });
 });
