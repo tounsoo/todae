@@ -811,6 +811,33 @@ describe('company token build', () => {
     expect(todaeTokensRoot()).toBe(tokensDir);
   });
 
+  /**
+   * Only the re-declared block reads override inputs, and every token in it
+   * does; the only other lines are consume aliases of tokens in the block.
+   */
+  function expectOverrideInputs(css: string, rescopedSelector: string) {
+    const rescoped = blockOf(css, rescopedSelector);
+    const lines = rescoped.split('\n').filter((line) => /^ {2}--todae-[a-z0-9-]+: /.test(line));
+    const wrapped = lines.filter((line) => /^ {2}(--todae-[a-z0-9-]+): var\(--_todae-[a-z0-9-]+, /.test(line));
+    const names = new Set(wrapped.map((line) => line.trim().split(':')[0]));
+    expect(wrapped.length).toBeGreaterThan(0);
+    for (const line of lines) {
+      const name = line.trim().split(':')[0]!;
+      if (names.has(name)) expect(line).toContain(`${name}: var(--_${name.slice(2)}, `);
+      else expect(names.has(line.match(/^ {2}--todae-[a-z0-9-]+: var\((--todae-[a-z0-9-]+)\);$/)?.[1]), line).toBe(true);
+    }
+    expect(css.replace(rescoped, '')).not.toContain('--_todae-');
+  }
+
+  it('lets only re-declared tokens read override inputs', async () => {
+    const todae = await readFile(join(import.meta.dirname, '../src/styles/tokens.generated.css'), 'utf8');
+    expectOverrideInputs(todae, ':root,\n[data-appearance],\n[data-density]');
+    const { css } = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
+    expectOverrideInputs(css, ':root:not([data-appearance]):not([data-density]),\n[data-appearance],\n[data-density]');
+    expect(css).toContain('--todae-brand-logo-fg: var(--_todae-brand-logo-fg, ');
+    expect(css).not.toContain('--_todae-brand-ink');
+  });
+
   it('emits only the company layer, after Todae\'s', async () => {
     const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
     expect(result.css.startsWith('@layer todae.reset, todae.base, todae.components, todae.theme;\n\n@layer todae.theme {')).toBe(
@@ -829,8 +856,8 @@ describe('company token build', () => {
     expect(light).toContain('--todae-brand-ink: var(--todae-color-gray-900);');
     expect(light).not.toContain('--todae-color-bg-canvas');
     const rescoped = blockOf(result.css, '[data-appearance],\n[data-density]');
-    expect(rescoped).toContain('--todae-button-outline-bg-default: var(--todae-color-bg-transparent);');
-    expect(rescoped).toContain('--todae-brand-logo-fg: var(--todae-brand-ink);');
+    expect(rescoped).toContain('--todae-button-outline-bg-default: var(--_todae-button-outline-bg-default, var(--todae-color-bg-transparent));');
+    expect(rescoped).toContain('--todae-brand-logo-fg: var(--_todae-brand-logo-fg, var(--todae-brand-ink));');
     expect(rescoped).not.toContain('--todae-button-primary-');
     expect(blockOf(result.css, '[data-button-variant="outline"]')).toContain(
       '--todae-button-bg-default: var(--todae-button-outline-bg-default);',
@@ -851,8 +878,8 @@ describe('company token build', () => {
     });
     const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
     const rescoped = blockOf(css, '[data-appearance],\n[data-density]');
-    expect(rescoped).toContain('--todae-button-primary-bg-default: var(--todae-color-red-500);');
-    expect(rescoped).toContain('--todae-button-base-radius: 1rem;');
+    expect(rescoped).toContain('--todae-button-primary-bg-default: var(--_todae-button-primary-bg-default, var(--todae-color-red-500));');
+    expect(rescoped).toContain('--todae-button-base-radius: var(--_todae-button-base-radius, 1rem);');
     expect(rescoped).not.toMatch(/--todae-button-(bg-default|radius): /);
     expect(css.match(/--todae-button-(bg-default|radius): /g)).toHaveLength(1);
     expect(css).not.toContain('[data-button-variant="primary"]');
@@ -1018,9 +1045,9 @@ describe('company token build', () => {
     expect(result.overrideTypes).toContain("  'brand.font.body': 'fontFamily',");
     expect(result.overrideTypes).toContain("  'brand.shadow.card': 'shadow',");
     expect(result.overrideTypes).not.toContain("'color.gray.50'");
-    expect(result.css).toContain('--todae-brand-font-body: "Acme Sans", system-ui, sans-serif;');
-    expect(result.css).toContain('--todae-brand-shadow-card: 0px 6px 16px -4px oklch(0.2 0.02 25 / 0.18);');
-    expect(result.css).toContain('--todae-brand-motion-settle: var(--todae-motion-duration-slow);');
+    expect(result.css).toContain('--todae-brand-font-body: var(--_todae-brand-font-body, "Acme Sans", system-ui, sans-serif);');
+    expect(result.css).toContain('--todae-brand-shadow-card: var(--_todae-brand-shadow-card, 0px 6px 16px -4px oklch(0.2 0.02 25 / 0.18));');
+    expect(result.css).toContain('--todae-brand-motion-settle: var(--_todae-brand-motion-settle, var(--todae-motion-duration-slow));');
   });
 
   it('requires new contexts and additions to keep context parity with Todae', async () => {

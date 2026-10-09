@@ -48,7 +48,7 @@ Layers: core (`:root` literals) → appearance (`[data-appearance]`; light on a 
 
 ## Providers
 
-Wrap the tree in `ThemeProvider` and `DensityProvider`. `appearance="system"` (default) follows `prefers-color-scheme` via `useSyncExternalStore` and writes only `data-appearance="light"` or `"dark"`. The SSR snapshot is `light`. `DensityProvider` writes `data-density` (`compact` | `comfortable` | `spacious`, default `comfortable`). Nested providers override. Both are optional: with neither, the page gets light and comfortable. A DensityProvider sets its ThemeProviders' component-token `overrides` again, so they reach the components inside it. Components read contract vars only.
+Wrap the tree in `ThemeProvider` and `DensityProvider`. `appearance="system"` (default) follows `prefers-color-scheme` via `useSyncExternalStore` and writes only `data-appearance="light"` or `"dark"`. The SSR snapshot is `light`. `DensityProvider` writes `data-density` (`compact` | `comfortable` | `spacious`, default `comfortable`). Nested providers override. Both are optional: with neither, the page gets light and comfortable. Components read contract vars only.
 
 ```tsx
 import { DensityProvider, ThemeProvider, Button } from '@tounsoo/todae';

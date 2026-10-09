@@ -1251,7 +1251,7 @@ describe('Field alignment', () => {
       expect(block).not.toContain('--todae-field-font-size');
       expect(block).not.toContain('--todae-font-leading-default');
     }
-    expect(tokensCss).toContain('--todae-field-leading: var(--todae-font-leading-default)');
+    expect(tokensCss).toContain('--todae-field-leading: var(--_todae-field-leading, var(--todae-font-leading-default))');
   });
 });
 
@@ -1340,7 +1340,7 @@ describe('Field.Row', () => {
     );
     expect(fieldCss).toContain('.shell:has(> .row:not(:empty))');
     expect(cssBlock(fieldCss, '.shell:has(> .row:not(:empty)) > :is(.input, .textarea, .flow) {')).toContain('flex: 1 1 0');
-    const size = tokensCss.match(/--todae-field-row-control-size:\s*([0-9.]+)rem/)?.[1];
+    const size = tokensCss.match(/--todae-field-row-control-size:\s*var\(--_todae-field-row-control-size,\s*([0-9.]+)rem/)?.[1];
     expect(Number(size)).toBeGreaterThanOrEqual(1.5);
     for (const density of ['compact', 'comfortable', 'spacious']) {
       expect(cssBlock(tokensCss, `[data-density="${density}"]`)).not.toContain('--todae-field-row-control-size');

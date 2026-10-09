@@ -113,7 +113,37 @@ describe('ThemeProvider overrides in a browser', () => {
     expect(inner).toBeLessThan(outer);
   });
 
-  it('keeps a DensityProvider style prop over the repeated overrides', () => {
+  it('keep a component override inside a plain element with a density', () => {
+    render(
+      <ThemeProvider appearance="light" overrides={{ 'card.bg': { colorSpace: 'oklch', components: [0.6, 0.15, 30] } }}>
+        <Card.Root data-testid="outer">Outer</Card.Root>
+        <div data-density="compact">
+          <Card.Root data-testid="inner">Inner</Card.Root>
+        </div>
+      </ThemeProvider>,
+    );
+    expect(getComputedStyle(screen.getByTestId('inner')).backgroundColor).toBe(
+      getComputedStyle(screen.getByTestId('outer')).backgroundColor,
+    );
+  });
+
+  it('let a nested appearance replace an appearance token override', () => {
+    render(
+      <>
+        <ThemeProvider appearance="light" overrides={{ 'color.fg.default': { colorSpace: 'oklch', components: [0.3, 0.1, 30] } }}>
+          <ThemeProvider appearance="dark">
+            <Card.Root data-testid="nested">Nested</Card.Root>
+          </ThemeProvider>
+        </ThemeProvider>
+        <ThemeProvider appearance="dark">
+          <Card.Root data-testid="plain">Plain</Card.Root>
+        </ThemeProvider>
+      </>,
+    );
+    expect(getComputedStyle(screen.getByTestId('nested')).color).toBe(getComputedStyle(screen.getByTestId('plain')).color);
+  });
+
+  it('keeps a DensityProvider style prop', () => {
     render(
       <ThemeProvider overrides={{ 'card.bg': { colorSpace: 'oklch', components: [0.6, 0.15, 30] } }}>
         <DensityProvider data-testid="density" style={{ ['--todae-card-bg' as string]: 'red' }}>

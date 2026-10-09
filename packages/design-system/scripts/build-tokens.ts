@@ -578,6 +578,15 @@ function decls(tokens: FlatToken[]): string {
   return tokens.map((t) => `  ${t.cssVar}: ${t.cssValue};`).join('\n');
 }
 
+/**
+ * Re-declared tokens read a private `--_todae-*` input first. ThemeProvider
+ * sets it next to each override, and it inherits through every re-declaring
+ * element, so an override survives nested providers.
+ */
+function overridableDecls(tokens: FlatToken[]): string {
+  return tokens.map((t) => `  ${t.cssVar}: var(--_${t.cssVar.slice(2)}, ${t.cssValue});`).join('\n');
+}
+
 function aliasDecls(tokens: FlatToken[], aliases: readonly AliasGroup[]): string {
   return tokens
     .map((token) => {
@@ -601,7 +610,7 @@ function block(selector: string, lines: string[]): string[] {
  * - later sets and every context of the alias modifier are re-declared on the
  *   root element and on each scoped modifier's attribute, so their var() chains
  *   re-resolve wherever a context changes, along with the default context's
- *   consume aliases;
+ *   consume aliases; each reads its `--_todae-*` override input first;
  * - the alias modifier emits one block per context that only swaps aliases.
  */
 export type EmitCssOptions = {
@@ -674,7 +683,7 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
   const blocks = [
     ...block(':root', [decls(root), aliasDecls(rootAliases, aliases)]),
     ...scopedBlocks,
-    ...block([rescopedRoot, ...attributes].join(',\n'), [decls(rescoped), aliasDecls(defaults, aliases)]),
+    ...block([rescopedRoot, ...attributes].join(',\n'), [overridableDecls(rescoped), aliasDecls(defaults, aliases)]),
     ...aliasBlocks,
   ];
   return `${options.preamble ?? ''}@layer ${options.layer ?? 'todae.base'} {\n${blocks.join('\n\n')}\n}\n`;
