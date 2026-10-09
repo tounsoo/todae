@@ -16,7 +16,7 @@ import { SiteNav } from '../../components/SiteNav';
 import { SiteShell } from '../../components/SiteShell';
 import { SITE_GROUPS } from '../../components/siteGroups';
 import { UntranslatedPage } from '../../components/UntranslatedPage';
-import { COMPLETE_LOCALES, LOCALES } from './config';
+import { COMPLETE_LOCALES, LOCALES, stripLocale } from './config';
 import { DICTIONARIES } from './dictionaries';
 import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
@@ -247,6 +247,21 @@ describe('docs locales', () => {
     expect(screen.getByRole('list', { name: '컴포넌트' })).toBeTruthy();
     const current = [...nav.querySelectorAll('[aria-current="page"]')];
     expect(current.map((link) => link.textContent)).toEqual(['Todae로 디자인 시스템 만들기']);
+  });
+
+  it('lists every section but Foundations alphabetically, in the same order in each language', () => {
+    const byName = (a: string, b: string) => a.localeCompare(b, 'en', { sensitivity: 'base' });
+    for (const group of SITE_GROUPS.filter(({ id }) => id !== 'foundations')) {
+      const names = group.links.map(([, label]) => label);
+      expect(names, group.id).toEqual([...names].sort(byName));
+    }
+    const english = SITE_GROUPS.flatMap((group) => group.links.map(([href]) => href));
+    for (const locale of LOCALES) {
+      cleanup();
+      render(<SiteNav locale={locale} />);
+      const hrefs = [...screen.getByRole('navigation').querySelectorAll('a')].map((link) => link.getAttribute('href'));
+      expect(hrefs.map((href) => stripLocale(href ?? '')), locale).toEqual(english);
+    }
   });
 
   it('switches to the same page in each language', () => {
