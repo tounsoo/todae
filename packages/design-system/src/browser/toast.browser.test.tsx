@@ -1057,6 +1057,212 @@ describe('Toast in the top layer', () => {
   });
 });
 
+/** The parts of the Toast.Root in a stack item, past any held tip. */
+function parts(item: HTMLElement): Element[] {
+  return [...item.querySelector('[data-tone]')!.children].filter((el) => !el.hasAttribute('popover'));
+}
+
+/** The distinct opacities of the parts of the Toast.Root in a stack item. */
+function opacities(item: HTMLElement): string[] {
+  return [...new Set(parts(item).map((el) => getComputedStyle(el).opacity))];
+}
+
+describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (placement) => {
+  it('show each toast behind the newest by toast.peek a step, whatever their heights', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <div data-testid="peek" style={{ blockSize: 'var(--todae-toast-peek)' }} />
+        <Toast.Region toaster={toaster} layout="stack" placement={placement}>
+          {(toast) => (
+            <Toast.Root>
+              <Toast.Title>{toast.title}</Toast.Title>
+              <Toast.Description>{toast.description}</Toast.Description>
+            </Toast.Root>
+          )}
+        </Toast.Region>
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ title: 'Back', description: 'A longer description that wraps onto a second line and a third line in the toast.' });
+      toaster.add({ title: 'Middle', description: 'Short' });
+      toaster.add({ title: 'Front', description: 'A description that wraps onto a second line in the toast.' });
+    });
+    const region = await screen.findByRole('region', { name: 'Notifications' });
+    const items = () => [...region.querySelectorAll('ol > li')] as HTMLElement[];
+    await waitFor(() => expect(items()).toHaveLength(3));
+    const probe = screen.getByTestId('peek');
+    const peek = probe.getBoundingClientRect().height;
+    expect(peek).toBeGreaterThan(0);
+    // Off the toasts, so the stack stays collapsed.
+    await userEvent.hover(probe);
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    // The toast's own edge that peeks out, where its item clips it: the top
+    // one at the bottom, the bottom one at the top.
+    const edge = (item: HTMLElement) => {
+      const clip = item.getBoundingClientRect();
+      const card = item.firstElementChild!.getBoundingClientRect();
+      return placement.startsWith('bottom') ? -Math.max(clip.top, card.top) : Math.min(clip.bottom, card.bottom);
+    };
+    await waitFor(() => {
+      const [front, ...rest] = items().map(edge);
+      rest.forEach((value, i) => expect(value - front!).toBeCloseTo((i + 1) * peek, 0));
+    });
+  });
+
+  it('shows only the card of each toast behind the newest until the stack spreads', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <StackRegion toaster={toaster} placement={placement} />
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ title: 'Back' });
+      toaster.add({ title: 'Front' });
+    });
+    const region = await screen.findByRole('region', { name: 'Notifications' });
+    const items = () => [...region.querySelectorAll('ol > li')] as HTMLElement[];
+    await waitFor(() => expect(items()).toHaveLength(2));
+    await userEvent.unhover(region);
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    const [front, back] = items();
+    expect(parts(back!).length).toBeGreaterThan(1);
+    await waitFor(() => expect(opacities(back!)).toEqual(['0']));
+    expect(opacities(front!)).toEqual(['1']);
+    // Hidden, still in reach of the keyboard.
+    const backClose = screen.getAllByRole('button', { name: 'Dismiss' })[1]!;
+    expect(back!.contains(backClose)).toBe(true);
+    expect(canFocus(backClose)).toBe(true);
+
+    await userEvent.hover(screen.getByRole('button', { name: 'Tipped Front' }));
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(true));
+    expect(opacities(back!)).toEqual(['1']);
+    await waitFor(() => expect(receivesPointer(backClose)).toBe(true));
+  });
+
+  it('lets the pointer through the parts of a toast behind the newest where it peeks out', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <div data-appearance="light" data-density="compact">
+        <Toast.Region toaster={toaster} layout="stack" placement={placement}>
+          {(toast) => (
+            <Toast.Root>
+              <Toast.Title>{toast.title}</Toast.Title>
+              <Toast.Close />
+            </Toast.Root>
+          )}
+        </Toast.Region>
+      </div>,
+    );
+    act(() => {
+      toaster.add({ title: 'Back' });
+      toaster.add({ title: 'Front' });
+    });
+    const region = await screen.findByRole('region', { name: 'Notifications' });
+    const items = () => [...region.querySelectorAll('ol > li')] as HTMLElement[];
+    await waitFor(() => expect(items()).toHaveLength(2));
+    await userEvent.unhover(region);
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    const [front, back] = items();
+    // A part of the back toast inside the strip that peeks out from behind
+    // the front one, and a point on it there: its Close at the bottom, where
+    // the strip is its top edge, and its title at the top.
+    const { part, x, y } = await waitFor(() => {
+      const f = front!.getBoundingClientRect();
+      const b = back!.getBoundingClientRect();
+      for (const part of parts(back!)) {
+        const c = part.getBoundingClientRect();
+        const [top, bottom] = placement.startsWith('bottom')
+          ? [Math.max(b.top, c.top), Math.min(f.top, c.bottom)]
+          : [Math.max(f.bottom, c.top), Math.min(b.bottom, c.bottom)];
+        if (bottom - top > 1) return { part, x: c.left + Math.min(c.width / 2, 8), y: (top + bottom) / 2 };
+      }
+      throw new Error('No part of the back toast is inside the strip');
+    });
+    const hit = document.elementFromPoint(x, y);
+    expect(hit && back!.contains(hit)).toBe(true);
+    expect(part.contains(hit)).toBe(false);
+  });
+
+  it('shows the parts of the toast behind the newest while the newest leaves', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <StackRegion toaster={toaster} placement={placement} />
+      </Themed>,
+    );
+    let front = '';
+    act(() => {
+      toaster.add({ title: 'Back' });
+      toaster.add({ title: 'Middle' });
+      front = toaster.add({ title: 'Front' });
+    });
+    const region = await screen.findByRole('region', { name: 'Notifications' });
+    const items = () => [...region.querySelectorAll('ol > li')] as HTMLElement[];
+    await waitFor(() => expect(items()).toHaveLength(3));
+    await userEvent.unhover(region);
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    act(() => toaster.dismiss(front));
+    const [leaving, middle, back] = items();
+    expect(leaving!.hasAttribute('data-exiting')).toBe(true);
+    expect(opacities(middle!)).toEqual(['1']);
+    expect(opacities(back!)).toEqual(['0']);
+  });
+
+  it('hides the parts of a toast behind the newest, not the toast, when the render wraps it', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <Toast.Region toaster={toaster} layout="stack" placement={placement}>
+          {(toast) => (
+            <div>
+              <Toast.Root>
+                <Toast.Title>{toast.title}</Toast.Title>
+                <Toast.Close />
+              </Toast.Root>
+            </div>
+          )}
+        </Toast.Region>
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ title: 'Back' });
+      toaster.add({ title: 'Front' });
+    });
+    const region = await screen.findByRole('region', { name: 'Notifications' });
+    const items = () => [...region.querySelectorAll('ol > li')] as HTMLElement[];
+    await waitFor(() => expect(items()).toHaveLength(2));
+    await userEvent.unhover(region);
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    const back = items()[1]!;
+    const root = back.querySelector('[data-tone]')!;
+    expect(getComputedStyle(root).opacity).toBe('1');
+    await waitFor(() => expect(new Set([...root.children].map((el) => getComputedStyle(el).opacity))).toEqual(new Set(['0'])));
+  });
+
+  it('measures the front toast by its layout box, not a transform on it', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <Toast.Region toaster={toaster} layout="stack" placement={placement}>
+          {(toast) => (
+            <Toast.Root style={{ transform: 'scale(0.5)' }}>
+              <Toast.Title>{toast.title}</Toast.Title>
+            </Toast.Root>
+          )}
+        </Toast.Region>
+      </Themed>,
+    );
+    act(() => void toaster.add({ title: 'Front' }));
+    const region = await screen.findByRole('region', { name: 'Notifications' });
+    const list = region.querySelector('ol')!;
+    await waitFor(() => expect(list.querySelector('li')).not.toBeNull());
+    const root = list.querySelector('li')!.firstElementChild as HTMLElement;
+    await waitFor(() => expect(list.style.getPropertyValue('--toast-front-height')).toBe(`${root.offsetHeight}px`));
+  });
+});
+
 describe('Tooltip in a layer shown again', () => {
   it('keeps a held tip in a toast in front, by its trigger, when a new toast arrives', async () => {
     const toaster = createToaster({ duration: Infinity });

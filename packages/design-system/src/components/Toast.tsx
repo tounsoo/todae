@@ -504,8 +504,9 @@ function Region<T extends object = object>({
   const shownKey = shown.map((toast) => toast.id).join('\n');
   // Stack offsets from each toast's own height, as CSS variables, so the
   // stack layout needs no measuring of its own. Read from the toast inside
-  // each item, which the collapsed layout clips to a shorter item but never
-  // squeezes; the observer reads it again as the stack narrows and widens it.
+  // each item, which the collapsed layout clips to the front toast's height
+  // but never squeezes; the observer reads it again as the stack narrows and
+  // widens it.
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list) return;

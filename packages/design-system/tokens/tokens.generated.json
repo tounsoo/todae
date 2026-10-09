@@ -4127,8 +4127,8 @@
       "path": "toast.peek",
       "type": "dimension",
       "cssVar": "--todae-toast-peek",
-      "cssValue": "var(--todae-space-2)",
-      "ref": "space.2",
+      "cssValue": "var(--todae-space-3)",
+      "ref": "space.3",
       "layer": "contract",
       "context": null
     },

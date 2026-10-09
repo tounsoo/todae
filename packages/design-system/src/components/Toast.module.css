@@ -93,8 +93,8 @@
   }
 
   /* Stack: every toast in one grid cell, the newest in front and the rest
-     peeking out behind it, each a little narrower and shorter than the one in
-     front, until hovered or focused. */
+     peeking out behind it by toast.peek a step, each a little narrower than
+     the one in front, until hovered or focused. */
   .region[data-layout='stack'] .list {
     display: grid;
   }
@@ -118,14 +118,14 @@
     align-self: end;
   }
 
-  /* Clipped to the front toast's height, less 5% a step, showing the edge
-     that peeks out: the bottom one when placed at the top, and the top one at
-     the bottom. */
+  /* Clipped to the front toast's height, so each one peeks out by the same
+     toast.peek whatever its own height, showing the edge that peeks out: the
+     bottom one when placed at the top, and the top one at the bottom. */
   .region[data-layout='stack']:not([data-expanded]) .item:not(:first-child) {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    block-size: calc(var(--toast-front-height, auto) * (1 - var(--toast-index, 0) * 0.05));
+    block-size: var(--toast-front-height, auto);
     overflow: hidden;
   }
 
@@ -136,6 +136,21 @@
   /* Clipped, never squeezed, so its height stays the toast's own. */
   .region[data-layout='stack']:not([data-expanded]) .item:not(:first-child) > * {
     flex-shrink: 0;
+  }
+
+  /* Only the card peeks out from behind a toast that stays: the parts of
+     its Toast.Root are hidden and let the pointer through until the stack
+     spreads. They stay focusable, and keyboard focus inside spreads it. */
+  .region[data-layout='stack']:not([data-expanded]) .item:not([data-exiting]) ~ .item .root > * {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Hiding fades with the new toast in front fading in; showing is at once. */
+  @media (prefers-reduced-motion: no-preference) {
+    .region[data-layout='stack']:not([data-expanded]) .item:not([data-exiting]) ~ .item .root > * {
+      transition: opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+    }
   }
 
   /* A tooltip held open on a back toast sits in the top layer, above the
