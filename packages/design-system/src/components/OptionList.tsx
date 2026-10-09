@@ -263,16 +263,26 @@ function OptionListRoot(props: OptionListRootProps) {
     }
   }
 
+  const shown = activeValueProp !== undefined ? activeValue : highlighted;
+  // aria-activedescendant moves no focus, so nothing scrolls the option into
+  // view: scroll its nearest scroll box, never the page.
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!shown || !list) return;
+    const option = list.ownerDocument.getElementById(optionDomId(listId, shown));
+    if (option) revealInScrollBox(option);
+  }, [listId, shown]);
+
   const ctx = useMemo<OptionListContextValue>(
     () => ({
       listId,
       selectionMode: multiple ? 'multiple' : 'single',
       selected,
-      highlighted: activeValueProp !== undefined ? activeValue : highlighted,
+      highlighted: shown,
       select,
       register,
     }),
-    [activeValue, activeValueProp, highlighted, listId, multiple, register, select, selected],
+    [shown, listId, multiple, register, select, selected],
   );
 
   return (
@@ -295,6 +305,29 @@ function OptionListRoot(props: OptionListRootProps) {
       </div>
     </OptionListContext.Provider>
   );
+}
+
+function scrollsY(element: Element): boolean {
+  const overflow = getComputedStyle(element).overflowY;
+  return (overflow === 'auto' || overflow === 'scroll') && element.scrollHeight > element.clientHeight;
+}
+
+/**
+ * Scrolls `option`'s nearest scroll box by the least amount. The search stops
+ * at a popover or dialog and never reaches the page, so a list on the page
+ * doesn't scroll it.
+ */
+function revealInScrollBox(option: HTMLElement) {
+  const doc = option.ownerDocument;
+  let box: Element | null = option.parentElement;
+  while (box && box !== doc.body && box !== doc.documentElement && !scrollsY(box)) {
+    box = box.matches('[popover], dialog') ? null : box.parentElement;
+  }
+  if (!box || box === doc.body || box === doc.documentElement) return;
+  const boxRect = box.getBoundingClientRect();
+  const rect = option.getBoundingClientRect();
+  if (rect.top < boxRect.top) box.scrollTop -= boxRect.top - rect.top;
+  else if (rect.bottom > boxRect.bottom) box.scrollTop += rect.bottom - boxRect.bottom;
 }
 
 export const OptionList = { Root: OptionListRoot, Option: OptionListOption } as const;

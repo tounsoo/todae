@@ -85,8 +85,8 @@
   },
   "BottomSheet.Close": {
     "aria-label": {
-      "en": "Accessible name.",
-      "ko": "접근 가능한 이름."
+      "en": "Accessible name. Visible text such as \"Cancel\" names the button by itself. The default is English, so pass a name in your app's language.",
+      "ko": "접근 가능한 이름. \"Cancel\"처럼 보이는 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
     }
   },
   "BottomSheet.Grabber": {
@@ -347,8 +347,8 @@
   },
   "Dialog.Close": {
     "aria-label": {
-      "en": "Accessible name.",
-      "ko": "접근 가능한 이름."
+      "en": "Accessible name. Visible text such as \"Cancel\" names the button by itself. The default is English, so pass a name in your app's language.",
+      "ko": "접근 가능한 이름. \"Cancel\"처럼 보이는 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 기본값은 영어이므로 앱의 언어로 된 이름을 전달하세요."
     }
   },
   "Dialog.Description": {

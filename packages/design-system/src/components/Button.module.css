@@ -100,4 +100,22 @@
   .group > .root:focus-visible {
     z-index: 1;
   }
+
+  /* Forced colors drop the fill and the inset ring, so a pressed toggle takes
+     the system's selected colors. */
+  @media (forced-colors: active) {
+    .root[aria-pressed='true'] {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+      border-color: Highlight;
+      box-shadow: none;
+    }
+
+    .root[aria-pressed='true']:disabled {
+      background: GrayText;
+      color: Canvas;
+      border-color: GrayText;
+    }
+  }
 }

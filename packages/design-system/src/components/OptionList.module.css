@@ -103,7 +103,8 @@
     inset-inline-start: calc(var(--todae-option-padding-x) + 0.22em);
     width: 0.28em;
     height: 0.5em;
-    border-inline-end: 2px solid var(--todae-option-check-fg);
+    /* Physical sides: the rotation is physical too, so the check keeps its shape in rtl. */
+    border-right: 2px solid var(--todae-option-check-fg);
     border-bottom: 2px solid var(--todae-option-check-fg);
     transform: rotate(45deg);
   }
@@ -118,8 +119,25 @@
     inset-inline-start: calc(var(--todae-option-padding-x) + 0.22em);
     width: 0.28em;
     height: 0.5em;
-    border-inline-end: 2px solid var(--todae-option-check-fg);
+    /* Physical sides: the rotation is physical too, so the check keeps its shape in rtl. */
+    border-right: 2px solid var(--todae-option-check-fg);
     border-bottom: 2px solid var(--todae-option-check-fg);
     transform: rotate(45deg);
+  }
+
+  /* Forced colors drop backgrounds: outline the highlighted option. Selection
+     keeps its check mark, which is drawn with borders. */
+  @media (forced-colors: active) {
+    .option[data-highlighted] {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+
+    @media (hover: hover) {
+      .option:hover:not([aria-disabled='true']) {
+        outline: 2px solid Highlight;
+        outline-offset: -2px;
+      }
+    }
   }
 }
