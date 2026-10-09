@@ -6,11 +6,13 @@ import {
   useState,
   type ComponentPropsWithRef,
   type CSSProperties,
+  type ReactNode,
 } from 'react';
 import { useChipListInternal } from '../hooks/useChipList';
 import { usePopover } from '../hooks/usePopover';
 import { isReachable } from '../hooks/useRovingFocus';
 import { getTabbables } from '../overlay/tabbables';
+import { useStrings } from '../providers/StringsProvider';
 import { Chip } from './Chip';
 import { useChipKeys } from './chipKeys';
 import { Popover } from './Popover';
@@ -33,11 +35,13 @@ export type ChipListRootProps = {
   getKey?: (value: string, index: number) => string;
   /** Renders a remove button on each chip. */
   onRemove?: (index: number, value: string) => void;
-  /** Remove button name. Default is Remove {value}. */
+  /** Remove button name. Default is the `removeChip` string, "Remove {value}" in English. */
   removeLabel?: (value: string) => string;
-  /** +N button name. Default is {n} more. */
+  /** Remove button content, such as an icon from your own set. Without it, the CSS draws a cross. */
+  removeIcon?: ReactNode;
+  /** +N button name. Default is the `moreChips` string, "{n} more" in English. */
   overflowLabel?: (n: number) => string;
-  /** Name of the popover with the folded chips. Default is {n} more chips, or 1 more chip. */
+  /** Name of the popover with the folded chips. Default is the `moreChipsPanel` string, "{n} more chips" in English. */
   panelLabel?: (n: number) => string;
 } & Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
@@ -133,8 +137,9 @@ function Root({
   getKey,
   onRemove,
   removeLabel,
+  removeIcon,
   overflowLabel,
-  panelLabel = (n) => `${n} more ${n === 1 ? 'chip' : 'chips'}`,
+  panelLabel,
   'aria-label': ariaLabel,
   'aria-labelledby': ariaLabelledby,
   'aria-describedby': ariaDescribedby,
@@ -143,6 +148,7 @@ function Root({
   style,
   ...props
 }: ChipListRootProps) {
+  const { moreChipsPanel } = useStrings();
   // Whole rows only, and at least one, as useChipList counts them; anything
   // else is no limit, so the clamp never hides chips that +N does not count.
   const rows = maxRows != null && maxRows >= 1 ? Math.floor(maxRows) : undefined;
@@ -292,6 +298,7 @@ function Root({
               data-value={chip.value}
               data-index={index}
               removeLabel={removeLabel?.(chip.value)}
+              removeIcon={removeIcon}
               style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
               onRemove={onRemove ? () => removeAt(index, chip.value, listRef.current) : undefined}
               onBlur={onRemove ? () => release(index) : undefined}
@@ -312,16 +319,18 @@ function Root({
         // Read by useChipList only when there is a row limit.
         <div ref={measureRef} aria-hidden inert className={styles.measure}>
           {chips.map((value, index) => (
-            <Chip.Root key={index} onRemove={onRemove ? () => undefined : undefined}>
+            <Chip.Root key={index} onRemove={onRemove ? () => undefined : undefined} removeIcon={removeIcon}>
               {value}
             </Chip.Root>
           ))}
-          <Chip.Root onRemove={onRemove ? () => undefined : undefined}>…</Chip.Root>
+          <Chip.Root onRemove={onRemove ? () => undefined : undefined} removeIcon={removeIcon}>
+            …
+          </Chip.Root>
           <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
         </div>
       ) : null}
       {hidden > 0 ? (
-        <Popover.Root {...wire} role="dialog" aria-label={panelLabel(hidden)} className={styles.panel}>
+        <Popover.Root {...wire} role="dialog" aria-label={panelLabel ? panelLabel(hidden) : moreChipsPanel(hidden)} className={styles.panel}>
           {chips.slice(visible.length).map((value, i) => {
             const at = visible.length + i;
             return (
@@ -332,6 +341,7 @@ function Root({
                 data-index={at}
                 className={styles.panelChip}
                 removeLabel={removeLabel?.(value)}
+                removeIcon={removeIcon}
                 onRemove={onRemove ? () => removeAt(at, value, popover.popoverRef.current) : undefined}
                 onBlur={onRemove ? () => release(at) : undefined}
               >

@@ -3,8 +3,10 @@ import { userEvent } from '@vitest/browser/context';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet';
+import { Chip } from '../components/Chip';
 import { ChipList } from '../components/ChipList';
 import { Field } from '../components/Field';
+import { StringsProvider } from '../providers/StringsProvider';
 
 const TAGS = ['design', 'tokens', 'accessibility', 'react', 'density', 'dark mode', 'docs', 'motion', 'layout', 'forms'];
 
@@ -301,4 +303,67 @@ describe('ChipList focus never falls to the body in a browser', () => {
       expect(panel.right).toBeLessThanOrEqual(document.documentElement.clientWidth);
     });
   }
+});
+
+describe('Chip remove content in a browser', () => {
+  it('draws a cross in CSS when given no content, and shows removeIcon instead when given one', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Chip.Root onRemove={() => undefined}>Drawn</Chip.Root>
+        <Chip.Root onRemove={() => undefined} removeIcon={<svg data-testid="icon" aria-hidden="true" width="12" height="12" />}>
+          Slotted
+        </Chip.Root>
+      </div>,
+    );
+    const drawn = screen.getByRole('button', { name: 'Remove Drawn' });
+    expect(drawn.textContent).toBe('');
+    const box = drawn.getBoundingClientRect();
+    expect(box.width).toBeGreaterThan(0);
+    expect(box.height).toBeGreaterThan(0);
+    for (const pseudo of ['::before', '::after']) {
+      const stroke = getComputedStyle(drawn, pseudo);
+      expect(stroke.content).not.toBe('none');
+      expect(parseFloat(stroke.width)).toBeGreaterThan(0);
+      expect(parseFloat(stroke.borderTopWidth)).toBeGreaterThan(0);
+    }
+    const slotted = screen.getByRole('button', { name: 'Remove Slotted' });
+    expect(slotted.contains(screen.getByTestId('icon'))).toBe(true);
+    expect(getComputedStyle(slotted, '::before').content).toBe('none');
+  });
+
+  it('keeps the drawn remove button full size while a narrow chip truncates its label', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Chip.Root onRemove={() => undefined}>Wide</Chip.Root>
+        <Chip.Root onRemove={() => undefined} style={{ maxWidth: 48 }}>
+          A label much too long for its chip
+        </Chip.Root>
+      </div>,
+    );
+    const wide = screen.getByRole('button', { name: 'Remove Wide' }).getBoundingClientRect();
+    const narrow = screen.getByRole('button', { name: /Remove A label/ }).getBoundingClientRect();
+    expect(narrow.width).toBeCloseTo(wide.width, 1);
+    expect(narrow.height).toBeCloseTo(wide.height, 1);
+  });
+
+  it('names the ChipList panel from StringsProvider', async () => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ width: 320 }}>
+        <StringsProvider strings={{ moreChips: (n) => `${n} de plus`, moreChipsPanel: (n) => `${n} puces de plus` }}>
+          <ChipList.Root
+            aria-label="Tags"
+            chips={['design', 'tokens', 'accessibility', 'react', 'density', 'dark mode', 'docs', 'motion']}
+            maxRows={1}
+          />
+        </StringsProvider>
+      </div>,
+    );
+    const more = await screen.findByRole('button', { name: /de plus$/ });
+    // The visible part reads "+N".
+    const count = Number(more.querySelector('[aria-hidden]')?.textContent?.slice(1));
+    expect(more.textContent).toContain(`${count} de plus`);
+    expect(count).toBeGreaterThan(0);
+    await userEvent.click(more);
+    expect(await screen.findByRole('dialog', { name: `${count} puces de plus` })).toBeTruthy();
+  });
 });

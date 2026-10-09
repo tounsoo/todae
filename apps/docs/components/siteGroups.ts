@@ -65,6 +65,7 @@ export const SITE_GROUPS = [
       ['/utilities/use-roving-focus', 'useRovingFocus'],
       ['/utilities/use-sheet-presentation', 'useSheetPresentation'],
       ['/utilities/use-tooltip', 'useTooltip'],
+      ['/utilities/strings-provider', 'StringsProvider'],
     ],
   },
   {

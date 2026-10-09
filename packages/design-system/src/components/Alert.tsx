@@ -1,5 +1,6 @@
 import { type ComponentPropsWithRef, type ReactNode } from 'react';
 import { Button, type ButtonActionProps } from './Button';
+import { useStrings } from '../providers/StringsProvider';
 import { useDismissLabel } from './dismissLabel';
 import { cx } from './props';
 import styles from './Alert.module.css';
@@ -54,10 +55,10 @@ function Actions({ className, ...props }: AlertActionsProps) {
 
 /**
  * A ghost Button.Root. The alert has no open state: remove it in `onClick`.
- * Named "Dismiss" unless its own text names it, so a visible label stays its name.
+ * Named by the `dismiss` string unless its own text names it, so a visible label stays its name.
  */
 function Close({ 'aria-label': ariaLabel, className, children, ref, ...props }: AlertCloseProps) {
-  const [label, refs] = useDismissLabel(children, ariaLabel, ref);
+  const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().dismiss);
   return (
     <Button.Root variant="ghost" aria-label={label} {...props} ref={refs} className={cx(styles.close, className)}>
       {children}

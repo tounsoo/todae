@@ -20,7 +20,13 @@ export const meta = {
       name: 'removeLabel',
       type: 'string',
       required: false,
-      description: 'Remove button aria-label. Default is Remove {label}.',
+      description: 'Remove button aria-label. Default is the removeChip string from StringsProvider, Remove {label} in English.',
+    },
+    {
+      name: 'removeIcon',
+      type: 'React.ReactNode',
+      required: false,
+      description: 'Remove button content, such as an icon from your own set. Without it, the CSS draws a cross.',
     },
     {
       name: 'disabled',

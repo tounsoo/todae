@@ -20,6 +20,7 @@ import type {
   OptionListOptionProps,
 } from '../components/OptionList';
 import type { PopoverWire } from '../components/Popover.wire';
+import { useStrings } from '../providers/StringsProvider';
 import { createAsyncGate } from './useCombobox.async';
 import { usePopoverInternal } from './usePopover';
 import { defaultFilter, filterOptions } from './useCombobox.filter';
@@ -141,14 +142,11 @@ function labelOf(
   return options.find((option) => option.value === value)?.label ?? cache?.get(value) ?? value;
 }
 
-function defaultCreateLabel(query: string): string {
-  return `Create "${query}"`;
-}
-
 export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult {
   const selectionMode = isMultiple(options) ? 'multiple' : 'single';
   const filter = options.filter ?? defaultFilter;
-  const createLabel = options.createLabel ?? defaultCreateLabel;
+  const strings = useStrings();
+  const createLabel = options.createLabel ?? strings.createOption;
   const autoId = useDomId();
   const uid = options.id?.replaceAll(':', '') ?? autoId;
   const ids = {
@@ -681,15 +679,16 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     false,
   );
 
+  const optionsName = strings.options;
   const getSheetProps = useCallback(
     (): ComboboxSheetProps => ({
       open,
       onOpenChange: (next, reason) => setOpen(next, reason),
       initialFocusRef: inputRef,
       restoreFocusRef: triggerRef,
-      'aria-label': 'Options',
+      'aria-label': optionsName,
     }),
-    [open, setOpen],
+    [open, setOpen, optionsName],
   );
 
   const getDialogProps = useCallback(

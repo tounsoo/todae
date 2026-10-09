@@ -32,14 +32,14 @@ function spokenText(node: Node): string {
 
 /**
  * The accessible name for a dismiss button: `ariaLabel` when given, none when
- * the button's own rendered text names it, and `fallback` ("Dismiss" by
- * default) otherwise. Put the returned ref on the button.
+ * the button's own rendered text names it, and `fallback`, a string from
+ * StringsProvider, otherwise. Put the returned ref on the button.
  */
 export function useDismissLabel(
   children: ReactNode,
   ariaLabel: string | undefined,
   ref: Ref<HTMLButtonElement> | undefined,
-  fallback = 'Dismiss',
+  fallback: string,
 ): [string | undefined, Ref<HTMLButtonElement>] {
   // The rendered text decides, so a component that renders text (such as a
   // translation) names the button too. The children are a first guess for SSR.
