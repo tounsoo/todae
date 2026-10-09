@@ -5,6 +5,8 @@ import { TextHeadingSize, TextHeadings } from '../../../components/demos/TextDem
 
 Sizes `s` / `m` / `l` / `xl` / `2xl` map to `text.size.2` through `text.size.6`.
 
+The typeface comes from `text.font.family`, which reads `font.family.sans`. `todae.base` sets it on the page root and on every `ThemeProvider`, so overriding `font.family.sans` changes the type of everything inside.
+
 Server Components can import it from `@tounsoo/todae/text`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
 
 <Example>

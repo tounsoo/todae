@@ -19,13 +19,15 @@ function subscribe(onChange: () => void) {
   };
 }
 
+// The pick for this page load when storage is blocked, so the switch still works.
+let unstored: Appearance | null = null;
+
 function getSnapshot(): Appearance {
   try {
     const stored = window.localStorage.getItem(KEY);
     return isAppearance(stored) ? stored : 'system';
   } catch {
-    // Storage can be blocked; the site then follows the system.
-    return 'system';
+    return unstored ?? 'system';
   }
 }
 
@@ -35,7 +37,8 @@ function setAppearance(next: Appearance) {
   try {
     window.localStorage.setItem(KEY, next);
   } catch {
-    // Blocked storage only loses the choice on the next visit.
+    // Blocked storage keeps the pick for this page load only.
+    unstored = next;
   }
   window.dispatchEvent(new Event(CHANGE));
 }

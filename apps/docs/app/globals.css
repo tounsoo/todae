@@ -2,10 +2,12 @@
    follows the reader's light or dark choice like any product built on Todae. */
 
 :root {
-  /* Todae has no sans family token, so the page sets the font itself. */
-  font: 16px / 1.6 var(--docs-font-sans, system-ui), system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  /* The docs pick their own mono family, as a company would. */
+  /* The docs pick their own typefaces through Todae's tokens, as a company would.
+     Korean falls back to the system's Korean face. */
+  --todae-font-family-sans: var(--docs-font-sans, system-ui), system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   --todae-font-family-mono: var(--docs-font-mono, ui-monospace), ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 16px;
+  line-height: 1.6;
   --docs-topbar: 3.5rem;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -162,8 +164,11 @@ body {
   padding-block: 0.25rem 1rem;
 }
 
+/* Wide screens show the sidebar, so the menu button goes. Only the button:
+   the drawer inside must keep rendering if it is open when the window widens.
+   The playground has no sidebar, so it keeps the button. */
 @media (min-width: 64rem) {
-  .mobile-nav {
+  .shell:not(:has(.playground)) .mobile-nav-trigger {
     display: none;
   }
 }
@@ -478,6 +483,8 @@ table {
 
 .hero {
   display: grid;
+  /* minmax(0, …) so the showcase's min-content width can't widen a phone page. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 3rem;
   align-items: center;
   padding-block: 2rem 4.5rem;
@@ -769,11 +776,18 @@ table {
   display: grid;
   align-content: start;
   gap: 0.25rem;
-  block-size: 2.75rem;
+  block-size: 3.5rem;
   padding: 0.375rem;
-  border: 1px solid var(--todae-color-border-subtle);
+  border: var(--todae-border-width) solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-md);
   background: var(--todae-color-bg-surface);
+}
+
+.preset-swatch-type {
+  color: var(--todae-color-fg-default);
+  font-size: 0.875rem;
+  font-weight: var(--todae-font-weight-bold);
+  line-height: 1;
 }
 
 .preset-swatch-accent {
@@ -932,7 +946,7 @@ table {
   font-size: 0.75rem;
 }
 
-.pg-stage-density {
+.pg-stage-theme {
   display: flex;
   min-inline-size: 0;
 }

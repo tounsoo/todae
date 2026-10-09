@@ -5,6 +5,8 @@ import { TextHeadingSize, TextHeadings } from '../../../components/demos/TextDem
 
 크기 `s` / `m` / `l` / `xl` / `2xl`은 `text.size.2`부터 `text.size.6`까지에 대응합니다.
 
+글꼴은 `font.family.sans`를 읽는 `text.font.family`에서 옵니다. `todae.base`가 페이지 루트와 모든 `ThemeProvider`에 이를 지정하므로, `font.family.sans`를 오버라이드하면 그 안의 모든 글꼴이 바뀝니다.
+
 Server Components는 `@tounsoo/todae/text`에서 가져올 수 있습니다. 이 진입점에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 진입점은 클라이언트 모듈입니다.
 
 <Example>

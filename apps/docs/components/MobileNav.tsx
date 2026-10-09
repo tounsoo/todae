@@ -14,7 +14,13 @@ export function MobileNav({ locale }: { locale: Locale }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="mobile-nav">
-      <Button.Root variant="ghost" aria-label={dict.openMenu} aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <Button.Root
+        className="mobile-nav-trigger"
+        variant="ghost"
+        aria-label={dict.openMenu}
+        aria-haspopup="dialog"
+        onClick={() => setOpen(true)}
+      >
         <Button.Icon>
           <MenuIcon />
         </Button.Icon>

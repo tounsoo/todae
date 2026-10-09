@@ -24,7 +24,8 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
-const stage = () => screen.getByRole('region', { name: 'Preview' });
+// The preview region sits inside the stage's ThemeProvider, which carries the overrides.
+const stage = () => screen.getByRole('region', { name: 'Preview' }).parentElement as HTMLElement;
 
 describe('Playground', () => {
   it('paints the stage with a preset and its light or dark overrides', () => {
@@ -49,6 +50,8 @@ describe('Playground', () => {
     expect(screen.getByText('1 changed')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('');
+    // Reset stays enabled, so pressing it never drops keyboard focus.
+    expect(screen.getByRole('button', { name: 'Reset' }).hasAttribute('disabled')).toBe(false);
   });
 
   it('filters the token list', () => {
@@ -61,16 +64,44 @@ describe('Playground', () => {
     expect(screen.getByText('No token matches.')).toBeTruthy();
   });
 
-  it('copies plain edits for Todae, and light and dark sets for a preset', async () => {
+  it('copies one flat set when light and dark agree, and both sets when they differ', async () => {
     render(<Playground locale="en" />);
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
     expect(JSON.parse(writeText.mock.calls[0]?.[0] ?? '')).toEqual({});
-    fireEvent.click(screen.getByLabelText('Ember'));
+    expect(screen.getByText('Copied theme override JSON.')).toBeTruthy();
+    fireEvent.click(screen.getByLabelText('Forest'));
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
     const copied = JSON.parse(writeText.mock.calls[1]?.[0] ?? '');
     expect(Object.keys(copied)).toEqual(['light', 'dark']);
-    expect(copied.light['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.55, 0.16, 38] });
-    expect(copied.dark['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.76, 0.14, 45] });
+    expect(copied.light['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.47, 0.1, 160] });
+    expect(copied.dark['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.8, 0.12, 160] });
+  });
+
+  it('keeps an edit to the appearance it was made in', async () => {
+    render(<Playground locale="en" />);
+    fireEvent.click(screen.getByLabelText('Forest'));
+    fireEvent.change(screen.getByLabelText('color.accent.default'), { target: { value: 'oklch(0.3 0.1 160)' } });
+    fireEvent.click(screen.getByRole('button', { name: 'dark' }));
+    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.8 0.12 160)');
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
+    const copied = JSON.parse(writeText.mock.calls[0]?.[0] ?? '');
+    expect(copied.light['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.3, 0.1, 160] });
+    expect(copied.dark['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.8, 0.12, 160] });
+  });
+
+  it('shows when the copy fails', async () => {
+    writeText.mockRejectedValue(new Error('denied'));
+    render(<Playground locale="en" />);
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
+    expect(screen.getByText('Could not copy. Clipboard permission was denied.')).toBeTruthy();
+  });
+
+  it('resolves density tokens against the stage’s raw overrides', () => {
+    render(<Playground locale="en" />);
+    const region = screen.getByRole('region', { name: 'Preview' });
+    expect(region.getAttribute('data-density')).toBe('comfortable');
+    // The density element is inside the themed one, so raw overrides inherit into it.
+    expect(region.closest('[data-appearance]')).toBe(stage());
   });
 
   it('starts a new preset without the last preset’s edits', () => {
@@ -78,6 +109,6 @@ describe('Playground', () => {
     fireEvent.change(screen.getByLabelText('color.accent.default'), { target: { value: 'oklch(0.5 0.1 30)' } });
     fireEvent.click(screen.getByLabelText('Grape'));
     expect(screen.queryByText('1 changed')).toBeNull();
-    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.18 300)');
+    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.2 300)');
   });
 });

@@ -54,4 +54,22 @@ describe('ThemeSwitcher', () => {
     renderSite();
     expect(screen.getByRole('button', { name: 'System' }).getAttribute('aria-pressed')).toBe('true');
   });
+
+  it('still switches when storage is blocked', () => {
+    const blocked = () => {
+      throw new DOMException('Blocked', 'SecurityError');
+    };
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked);
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked);
+    try {
+      const appearance = renderSite();
+      expect(appearance()).toBe('light');
+      fireEvent.click(screen.getByRole('button', { name: 'Dark' }));
+      expect(appearance()).toBe('dark');
+      expect(screen.getByRole('button', { name: 'Dark' }).getAttribute('aria-pressed')).toBe('true');
+    } finally {
+      getItem.mockRestore();
+      setItem.mockRestore();
+    }
+  });
 });
