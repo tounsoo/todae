@@ -15,7 +15,7 @@ import {
 import { createPortal } from 'react-dom';
 import { frontModal, isModal, subscribeModals } from '../overlay/modalStack';
 import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
-import { isPopoverOpen } from '../overlay/usePopoverSync';
+import { isPopoverOpen, reshowHeldInside } from '../overlay/usePopoverSync';
 import { TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables';
 import { initialFocusTarget } from '../overlay/useInitialFocus';
 import { useFocusLeave } from '../overlay/useFocusLeave';
@@ -73,8 +73,15 @@ const ItemContext = createContext<ItemContextValue | null>(null);
 const NO_TOASTS: readonly never[] = [];
 const noToasts = () => NO_TOASTS;
 
+/**
+ * Shows the popover, then the popovers held open inside it again, such as a
+ * button's tooltip: showing it puts it in front of them, and moving it hid
+ * them.
+ */
 function show(el: HTMLElement): void {
-  if (el.isConnected && !isPopoverOpen(el)) el.showPopover();
+  if (!el.isConnected || isPopoverOpen(el)) return;
+  el.showPopover();
+  reshowHeldInside(el);
 }
 
 /**
@@ -86,7 +93,7 @@ function raise(el: HTMLElement): void {
   if (!el.isConnected || hasOpenModal(el)) return;
   keepingFocus(el, () => {
     if (isPopoverOpen(el)) el.hidePopover();
-    el.showPopover();
+    show(el);
   });
 }
 
@@ -282,8 +289,8 @@ function Item<T extends object>({
       onKeyDown={(event) => {
         if (event.key !== 'Escape') return;
         // Escape belongs to the toast, not to a dialog or popover behind it,
-        // also while it leaves. Toasts hold text and buttons only, so no layer
-        // opened from one needs it.
+        // also while it leaves. Toasts hold text and buttons, whose tooltips
+        // go with the toast, so no layer opened from one needs it.
         event.preventDefault();
         event.stopPropagation();
         if (open) dismiss();

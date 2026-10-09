@@ -4,6 +4,8 @@
     position: fixed;
     inset: unset;
     margin: 0;
+    /* The popover UA style scrolls overflow; a tip shows all its text. */
+    overflow: visible;
     width: max-content;
     max-width: var(--todae-tooltip-max-width);
     padding: var(--todae-tooltip-padding-y) var(--todae-tooltip-padding-x);

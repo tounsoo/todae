@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { dropModal, flushOpens, heldModals, isModal, pushModal, watchOpen } from './modalStack';
 import { inToastHostWithin } from './tabbables';
 import { initialFocusTarget } from './useInitialFocus';
+import { reshowHeldInside } from './usePopoverSync';
 
 /**
  * useModalLayer for a caller that already holds the element. `shownModal`
@@ -35,6 +36,9 @@ export function useModalLayerElement(el: HTMLDialogElement | null, open: boolean
         // nothing focusable of its own before them.
         const active = el.ownerDocument.activeElement;
         if (active instanceof HTMLElement && inToastHostWithin(active, el)) initialFocusTarget(el).focus();
+        // Shown again, it is in front of the popovers open inside it, such
+        // as a tooltip, which go back in front of it.
+        reshowHeldInside(el);
       }
       sync(shown);
     });

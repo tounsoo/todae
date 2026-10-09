@@ -77,6 +77,7 @@ function TooltipTip({
   const localRef = useRef<HTMLDivElement | null>(null);
   // A stable ref, so React does not detach and reattach the wire's ref every render.
   const refs = useComposedRefs(localRef, setRef);
+  usePopoverSync(localRef, open);
   useContentPolicy(surface, localRef);
   return (
     <div
