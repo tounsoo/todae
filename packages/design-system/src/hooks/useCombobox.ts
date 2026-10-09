@@ -199,8 +199,10 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const [error, setError] = useState<unknown | null>(null);
   const gate = useRef(createAsyncGate());
   const lastQuery = useRef(inputValue);
-  // The query and loadKey the loaded list belongs to; null before any load lands.
+  // The query and loadKey of the last load, once it settles; null while a load is in flight.
   const [loadedFor, setLoadedFor] = useState<{ query: string; key: string | number | undefined } | null>(null);
+  // Bumped by reset() to load again when the query and loadKey stay the same.
+  const [reloads, setReloads] = useState(0);
   const lastPresentation = useRef(presentation);
 
   // Callbacks read the latest options through this ref so their identity stays stable and
@@ -229,27 +231,36 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [filter, filterQuery, source],
   );
   const trimmed = inputValue.trim();
+  // False while the loaded list is still another query's or another loadKey's.
+  const listIsCurrent =
+    !hasLoader ||
+    (loadedFor !== null && loadedFor.query === inputValue && Object.is(loadedFor.key, options.loadKey));
+  // Whether the query matches a row is known only once its own list is in.
   const showCreate = Boolean(
-    options.allowCreate &&
+    listIsCurrent &&
+      options.allowCreate &&
       trimmed &&
       !filtered.some((option) => option.label.toLowerCase() === trimmed.toLowerCase()),
   );
+  // The label text, not the function, keys the rows, so an inline createLabel
+  // does not rebuild them on every render.
+  const createRowLabel = showCreate ? createLabel(trimmed) : null;
   const items = useMemo<ComboboxItem[]>(() => {
     const rows: ComboboxItem[] = filtered.map((option) => ({
       kind: 'option',
       option,
       id: optionDomId(ids.listbox, option.value),
     }));
-    if (showCreate) {
+    if (createRowLabel !== null) {
       rows.push({
         kind: 'create',
-        label: createLabel(trimmed),
+        label: createRowLabel,
         value: trimmed,
         id: optionDomId(ids.listbox, CREATE_VALUE),
       });
     }
     return rows;
-  }, [createLabel, filtered, ids.listbox, showCreate, trimmed]);
+  }, [createRowLabel, filtered, ids.listbox, trimmed]);
 
   const enabledValues = useMemo(
     () =>
@@ -258,15 +269,12 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         .map((item) => (item.kind === 'create' ? CREATE_VALUE : item.option.value)),
     [items],
   );
-  // False while the loaded list is still another query's.
-  const listIsCurrent =
-    !hasLoader || (loadedFor !== null && loadedFor.query === inputValue && loadedFor.key === options.loadKey);
   const resolvedActive =
     activeValue && enabledValues.includes(activeValue)
       ? activeValue
       : listIsCurrent ? (enabledValues[0] ?? null) : null;
   const activeId = resolvedActive ? optionDomId(ids.listbox, resolvedActive) : null;
-  const isEmpty = items.length === 0 && !loading;
+  const isEmpty = items.length === 0 && !loading && error == null;
 
   const setInputValue = useCallback(
     (next: string) => {
@@ -410,7 +418,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     setAsyncOptions([]);
     setLoadedFor(null);
     setError(null);
-    setLoading(false);
+    setReloads((count) => count + 1);
   }, [setInputState, setMultiState, setOpenState, setSingleState]);
 
   const runLoad = useCallback(
@@ -419,17 +427,17 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       if (!load) return;
       const key = latest.current.loadKey;
       lastQuery.current = query;
+      setLoadedFor(null);
       setLoading(true);
       setError(null);
       void gate.current.next(query, load).then((result) => {
         if (!gate.current.isCurrent(result.gen)) return;
         if ('aborted' in result && result.aborted) return;
         setLoading(false);
-        if ('error' in result) {
-          setError(result.error);
-          return;
-        }
-        setAsyncOptions(result.result);
+        // A failed load still settles this query: no rows, so the create row
+        // can show and no other query's rows stay active.
+        if ('error' in result) setError(result.error);
+        setAsyncOptions('error' in result ? [] : result.result);
         setLoadedFor({ query, key });
       });
     },
@@ -443,7 +451,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   useEffect(() => {
     if (!hasLoader) return;
     runLoad(inputValue);
-  }, [hasLoader, inputValue, options.loadKey, runLoad]);
+  }, [hasLoader, inputValue, options.loadKey, reloads, runLoad]);
 
   useEffect(() => {
     const current = gate.current;
@@ -464,8 +472,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     }
     setActiveValue((current) => {
       if (current && enabledValues.includes(current)) return current;
-      // With no active row (as after the dialog's open reset), wait for this input's list.
-      if (current === null && !listIsCurrent) return null;
+      // Pick a row only from this input's own list, once it is in.
+      if (!listIsCurrent) return null;
       return enabledValues[0] ?? null;
     });
   }, [enabledValues, listIsCurrent, open, selectionMode, singleValue]);
@@ -507,8 +515,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       }
       if (event.key === 'Enter') {
         event.preventDefault();
-        // While the list is another query's, Enter with no active row runs nothing.
-        if (resolvedActive === CREATE_VALUE || (showCreate && !resolvedActive && listIsCurrent)) create();
+        // While the list is another query's, Enter with no active row runs nothing:
+        // showCreate is false until that list is in.
+        if (resolvedActive === CREATE_VALUE || (showCreate && !resolvedActive)) create();
         else if (resolvedActive) select(resolvedActive);
         return;
       }
@@ -528,7 +537,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [
       create,
       isModal,
-      listIsCurrent,
       move,
       open,
       resolvedActive,
@@ -636,7 +644,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         onCommit: () => {
           if (resolvedActive === CREATE_VALUE) create();
           else if (resolvedActive) select(resolvedActive);
-          else if (showCreate && listIsCurrent) create();
+          else if (showCreate) create();
         },
         onChipRemove: (index) => {
           const item = selected[index];
@@ -653,7 +661,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       comboboxAria,
       create,
       inputValue,
-      listIsCurrent,
       multiValue,
       onInputBlur,
       onInputFocus,

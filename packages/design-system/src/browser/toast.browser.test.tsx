@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet';
 import { Button } from '../components/Button';
@@ -8,11 +8,10 @@ import { Dialog } from '../components/Dialog';
 import { Popover } from '../components/Popover';
 import { Toast, type ToastLayout, type ToastPlacement } from '../components/Toast';
 import { createToaster, type Toaster } from '../components/toaster';
-import { Tooltip } from '../components/Tooltip';
 import { useModalLayer } from '../hooks/useModalLayer';
 import { usePopover } from '../hooks/usePopover';
-import { useTooltip } from '../hooks/useTooltip';
 import { heldModals } from '../overlay/modalStack';
+import { HeldTip } from '../test/heldTip';
 
 function Themed({ children }: { children: ReactNode }) {
   return (
@@ -68,19 +67,6 @@ async function expectTipByTrigger(trigger: HTMLElement): Promise<void> {
     expect(t.left).toBeLessThan(a.right);
     expect(Math.min(Math.abs(t.bottom - a.top), Math.abs(t.top - a.bottom))).toBeLessThan(16);
   });
-}
-
-/** A button with a tip held open, as a controlled `useTooltip({ open: true })`. */
-function HeldTip({ label, open = true }: { label: string; open?: boolean }) {
-  const tooltip = useTooltip({ open });
-  return (
-    <>
-      <Button.Root tooltip={false} {...tooltip.getTriggerProps()}>
-        {label}
-      </Button.Root>
-      <Tooltip.Root {...tooltip.getTooltipProps()}>Tip for {label}</Tooltip.Root>
-    </>
-  );
 }
 
 /** A region whose toasts hold a button with a tip held open. */
@@ -1158,6 +1144,33 @@ describe('Tooltip in a layer shown again', () => {
     act(() => dialog.close());
   });
 
+  it('puts a tip already open when a dialog of your own first opens in front of it', async () => {
+    function Own() {
+      const ref = useRef<HTMLDialogElement>(null);
+      useModalLayer(ref, true);
+      // Before useModalLayer has the element, as on the first commit.
+      useLayoutEffect(() => ref.current?.showModal(), []);
+      return (
+        <dialog ref={ref} aria-label="Own first">
+          <HeldTip label="Open before the dialog" />
+        </dialog>
+      );
+    }
+    render(
+      <Themed>
+        <Own />
+      </Themed>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Own first' }) as HTMLDialogElement;
+    await waitFor(() => expect(heldModals()).toContain(dialog));
+    const trigger = screen.getByRole('button', { name: 'Open before the dialog' });
+    await expectTipByTrigger(trigger);
+    const tip = document.getElementById(trigger.getAttribute('aria-describedby')!)!;
+    tip.style.pointerEvents = 'auto';
+    await waitFor(() => expect(receivesPointer(tip)).toBe(true));
+    act(() => dialog.close());
+  });
+
   it('puts a tip already open when its Dialog first opens in front of the Dialog, by its trigger', async () => {
     render(
       <Themed>
@@ -1197,9 +1210,13 @@ describe('Tooltip in a layer shown again', () => {
     await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
     const trigger = screen.getByRole('button', { name: 'Inside' });
     await expectTipByTrigger(trigger);
+    const tip = document.getElementById(trigger.getAttribute('aria-describedby')!)!;
+    const shows = vi.spyOn(tip, 'showPopover');
     act(() => dialog.close());
     await waitFor(() => expect(dialog.matches(':modal')).toBe(true));
     await expectTipByTrigger(trigger);
+    // Shown in front of the dialog once, not again for the same show.
+    expect(shows).toHaveBeenCalledTimes(1);
   });
 });
 

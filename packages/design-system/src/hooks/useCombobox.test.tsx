@@ -434,6 +434,25 @@ describe('useCombobox', () => {
     expect(hidden.result.current.showCreate).toBe(false);
   });
 
+  it('keeps the rows across renders with an inline createLabel, and follows its text', () => {
+    let prefix = 'Add';
+    const { result, rerender } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        allowCreate: true,
+        defaultInputValue: 'Todae',
+        createLabel: (query) => `${prefix} ${query}`,
+        presentation: 'popover',
+      }),
+    );
+    const before = result.current.items;
+    rerender();
+    expect(result.current.items).toBe(before);
+    prefix = 'New';
+    rerender();
+    expect(result.current.items.at(-1)).toMatchObject({ kind: 'create', label: 'New Todae' });
+  });
+
   it('gives the create row the id activeId names when it is highlighted', () => {
     const { result } = renderHook(() =>
       useCombobox({
@@ -704,6 +723,159 @@ describe('useCombobox dialog presentation', () => {
     act(() => result.current.setOpen(true));
   }
 
+  it('offers create, and no other query\'s rows, after a failed load', async () => {
+    const onCreate = vi.fn();
+    const loadOptions = (query: string) =>
+      query === 'NewTag' ? Promise.reject(new Error('down')) : Promise.resolve([{ value: 'a', label: 'Alpha' }]);
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, onCreate, presentation: 'dialog', value: null }),
+    );
+    const flush = () =>
+      act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    act(() => result.current.setOpen(true));
+    await flush();
+    act(() => result.current.setInputValue('NewTag'));
+    await flush();
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.items.map((item) => item.kind)).toEqual(['create']);
+    const enter = { key: 'Enter', nativeEvent: { isComposing: false }, preventDefault: () => undefined };
+    act(() => result.current.getInputProps().onKeyDown?.(enter as unknown as KeyboardEvent<HTMLInputElement>));
+    expect(onCreate).toHaveBeenCalledWith('NewTag');
+  });
+
+  // A loader whose calls settle when the test says, newest last.
+  function manualLoader() {
+    const calls: { query: string; resolve: (list: readonly ComboboxOption[]) => void; reject: (error: Error) => void }[] =
+      [];
+    const loadOptions = vi.fn(
+      (query: string) =>
+        new Promise<readonly ComboboxOption[]>((resolve, reject) => calls.push({ query, resolve, reject })),
+    );
+    const last = () => calls[calls.length - 1]!;
+    const settle = async (run: () => void) => {
+      await act(async () => {
+        run();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    };
+    return { calls, loadOptions, last, settle };
+  }
+
+  const enterKey = { key: 'Enter', nativeEvent: { isComposing: false }, preventDefault: () => undefined };
+  function pressKey(result: { current: ReturnType<typeof useCombobox> }, key: string) {
+    const event = { ...enterKey, key };
+    act(() => result.current.getInputProps().onKeyDown?.(event as unknown as KeyboardEvent<HTMLInputElement>));
+  }
+  const pressEnter = (result: { current: ReturnType<typeof useCombobox> }) => pressKey(result, 'Enter');
+
+  it('runs no create while a retry is in flight, and selects what the retry finds', async () => {
+    const onCreate = vi.fn();
+    const onValueChange = vi.fn();
+    const { loadOptions, last, settle } = manualLoader();
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, onCreate, onValueChange, presentation: 'dialog', value: null }),
+    );
+    act(() => result.current.setOpen(true));
+    await settle(() => last().resolve([]));
+    act(() => result.current.setInputValue('NewTag'));
+    await settle(() => last().reject(new Error('down')));
+    expect(result.current.showCreate).toBe(true);
+    act(() => result.current.retry());
+    expect(result.current.showCreate).toBe(false);
+    expect(result.current.isEmpty).toBe(false);
+    pressEnter(result);
+    act(() => result.current.getChipInputProps().onCommit('NewTag'));
+    expect(onCreate).not.toHaveBeenCalled();
+    await settle(() => last().resolve([{ value: 'newtag', label: 'NewTag' }]));
+    expect(result.current.showCreate).toBe(false);
+    pressEnter(result);
+    expect(onValueChange).toHaveBeenCalledWith('newtag');
+    expect(onCreate).not.toHaveBeenCalled();
+  });
+
+  it('offers create again when a retry fails too', async () => {
+    const { loadOptions, last, settle } = manualLoader();
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, presentation: 'dialog', value: null }),
+    );
+    act(() => result.current.setOpen(true));
+    await settle(() => last().resolve([]));
+    act(() => result.current.setInputValue('NewTag'));
+    await settle(() => last().reject(new Error('down')));
+    act(() => result.current.retry());
+    await settle(() => last().reject(new Error('still down')));
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.showCreate).toBe(true);
+  });
+
+  it('waits for a reload of the same query, not only a retry', async () => {
+    const { loadOptions, calls, settle } = manualLoader();
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, presentation: 'dialog', value: null }),
+    );
+    act(() => result.current.setOpen(true));
+    await settle(() => calls[0]!.resolve([]));
+    act(() => result.current.setInputValue('ab'));
+    await settle(() => calls[1]!.resolve([]));
+    expect(result.current.showCreate).toBe(true);
+    act(() => result.current.setInputValue('abc'));
+    act(() => result.current.setInputValue('ab'));
+    expect(result.current.showCreate).toBe(false);
+    await settle(() => calls[calls.length - 1]!.resolve([]));
+    expect(result.current.showCreate).toBe(true);
+  });
+
+  it('moves the highlight off a create row to no row until the new list is in', async () => {
+    const onCreate = vi.fn();
+    const onValueChange = vi.fn();
+    const { loadOptions, last, settle } = manualLoader();
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, allowCreate: true, onCreate, onValueChange, presentation: 'dialog', value: null }),
+    );
+    act(() => result.current.setOpen(true));
+    await settle(() => last().resolve([]));
+    act(() => result.current.setInputValue('Alp'));
+    await settle(() => last().resolve([{ value: 'alpha', label: 'Alpha' }]));
+    pressKey(result, 'End');
+    expect(result.current.showCreate).toBe(true);
+    // The create row, the last row, is active.
+    expect(result.current.activeValue).not.toBe('alpha');
+    expect(result.current.activeValue).not.toBeNull();
+    act(() => result.current.setInputValue('Alph'));
+    expect(result.current.activeValue).toBeNull();
+    pressEnter(result);
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(onCreate).not.toHaveBeenCalled();
+    await settle(() => last().resolve([{ value: 'alpha', label: 'Alpha' }]));
+    expect(result.current.activeValue).toBe('alpha');
+  });
+
+  it('loads again on reset when the query stays the same', async () => {
+    const { loadOptions, last, settle } = manualLoader();
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, inputValue: 'Ab', allowCreate: true, presentation: 'popover', value: null }),
+    );
+    await settle(() => last().resolve([]));
+    expect(result.current.showCreate).toBe(true);
+    act(() => result.current.reset());
+    expect(loadOptions).toHaveBeenCalledTimes(2);
+    expect(result.current.showCreate).toBe(false);
+    await settle(() => last().resolve([]));
+    expect(result.current.showCreate).toBe(true);
+  });
+
+  it('is not empty while a load has failed', async () => {
+    const { loadOptions, last, settle } = manualLoader();
+    const { result } = renderHook(() => useCombobox({ loadOptions, presentation: 'popover', value: null }));
+    await settle(() => last().reject(new Error('down')));
+    expect(result.current.items).toEqual([]);
+    expect(result.current.isEmpty).toBe(false);
+  });
+
   it('runs no create while the list is still another query\'s', async () => {
     const onCreate = vi.fn();
     const onValueChange = vi.fn();
@@ -717,9 +889,28 @@ describe('useCombobox dialog presentation', () => {
     act(() => result.current.getChipInputProps().onCommit('bi'));
     expect(onCreate).not.toHaveBeenCalled();
     expect(onValueChange).not.toHaveBeenCalled();
+    // No create row either, as the old list cannot say whether 'bi' matches.
+    expect(result.current.showCreate).toBe(false);
+    expect(result.current.items.some((item) => item.kind === 'create')).toBe(false);
     await settle('bi');
+    expect(result.current.showCreate).toBe(true);
     act(() => result.current.getInputProps().onKeyDown?.(enter as unknown as KeyboardEvent<HTMLInputElement>));
     expect(onCreate).toHaveBeenCalledWith('bi');
+  });
+
+  it('treats a list loaded for a NaN loadKey as current', async () => {
+    let finish: (list: readonly ComboboxOption[]) => void = () => undefined;
+    const loadOptions = () => new Promise<readonly ComboboxOption[]>((resolve) => (finish = resolve));
+    const { result } = renderHook(() =>
+      useCombobox({ loadOptions, loadKey: Number.NaN, presentation: 'dialog', value: null }),
+    );
+    act(() => result.current.setOpen(true));
+    await act(async () => {
+      finish([{ value: 'a', label: 'Alpha' }]);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(result.current.activeValue).toBe('a');
   });
 
   it('waits for the list of a new loadKey before picking a row', async () => {

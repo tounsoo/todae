@@ -177,6 +177,12 @@
           "required": false,
           "description": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
           "default": "\"Close\" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits"
+        },
+        {
+          "name": "onClick",
+          "type": "React.MouseEventHandler<HTMLButtonElement>",
+          "required": false,
+          "description": "Runs before the close request. Call event.preventDefault() to keep the sheet open."
         }
       ]
     },
@@ -229,7 +235,7 @@
           "name": "defaultOpen",
           "type": "boolean",
           "required": false,
-          "description": "Initial open state when uncontrolled.",
+          "description": "Shows the sheet on mount when uncontrolled. There is no trigger part, so once closed it opens again only on remount.",
           "default": "false"
         },
         {
@@ -269,7 +275,7 @@
           "name": "dismissOnBackdrop",
           "type": "boolean",
           "required": false,
-          "description": "A click on the scrim (the dialog ::backdrop) calls onOpenChange(false, \"backdrop\").",
+          "description": "Scrim click calls onOpenChange(false, \"backdrop\").",
           "default": "true"
         },
         {
@@ -714,6 +720,12 @@
           "required": false,
           "description": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
           "default": "\"Close\" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits"
+        },
+        {
+          "name": "onClick",
+          "type": "React.MouseEventHandler<HTMLButtonElement>",
+          "required": false,
+          "description": "Runs before the close request. Call event.preventDefault() to keep the dialog open."
         }
       ]
     },
@@ -753,7 +765,7 @@
           "name": "defaultOpen",
           "type": "boolean",
           "required": false,
-          "description": "Initial open state when uncontrolled.",
+          "description": "Shows the dialog on mount when uncontrolled. There is no trigger part, so once closed it opens again only on remount.",
           "default": "false"
         },
         {
@@ -810,7 +822,7 @@
           "name": "defaultOpen",
           "type": "boolean",
           "required": false,
-          "description": "Initial open state when uncontrolled.",
+          "description": "Shows the drawer on mount when uncontrolled. There is no trigger part, so once closed it opens again only on remount.",
           "default": "false"
         },
         {
@@ -2641,7 +2653,7 @@
           "name": "allowCreate",
           "type": "boolean",
           "required": false,
-          "description": "Show a create row when the query has no case-insensitive label match.",
+          "description": "Show a create row when the query has no case-insensitive label match. With loadOptions, the row waits until the load for that query settles.",
           "default": "false"
         },
         {
