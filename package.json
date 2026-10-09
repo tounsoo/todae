@@ -1,6 +1,7 @@
 {
   "name": "todae",
   "private": true,
+  "license": "MIT",
   "packageManager": "pnpm@10.33.3",
   "scripts": {
     "build": "pnpm -r --if-present build",
