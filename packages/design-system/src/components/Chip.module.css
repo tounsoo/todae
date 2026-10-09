@@ -32,6 +32,7 @@
     background: var(--todae-chip-bg-disabled);
     color: var(--todae-chip-fg-disabled);
     border-color: var(--todae-chip-border-disabled);
+    cursor: not-allowed;
   }
 
   .root[data-overflow] {

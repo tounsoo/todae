@@ -47,7 +47,7 @@
     overflow: auto;
     display: flex;
     flex-direction: column;
-    gap: var(--todae-dialog-gap);
+    gap: var(--todae-drawer-gap);
     /* Clear of notches and the home indicator on either side, since a narrow screen fills the width. */
     padding-block: max(var(--todae-drawer-padding-y), env(safe-area-inset-top))
       max(var(--todae-drawer-padding-y), env(safe-area-inset-bottom));
@@ -55,7 +55,7 @@
     padding-right: max(var(--todae-drawer-padding-x), env(safe-area-inset-right));
     background: var(--todae-drawer-bg);
     border: 0 solid var(--todae-drawer-border);
-    border-inline-end-width: 1px;
+    border-inline-end-width: var(--todae-drawer-border-width);
     transform: translateX(var(--_from));
     transition: transform var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing);
   }
@@ -63,7 +63,7 @@
   .drawer[data-side='end'] .panel {
     --_from: 100%;
 
-    border-inline-width: 1px 0;
+    border-inline-width: var(--todae-drawer-border-width) 0;
   }
 
   /* Start and end swap physical sides in right-to-left text. */

@@ -22,7 +22,7 @@
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
-    "border-width": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "font": {
       "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/mono/$value" } },

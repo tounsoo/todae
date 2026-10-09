@@ -17,6 +17,7 @@
       "sources": [
         { "$ref": "./components/stack.json" },
         { "$ref": "./components/text.json" },
+        { "$ref": "./components/focus.json" },
         { "$ref": "./components/field.json" },
         { "$ref": "./components/chip.json" },
         { "$ref": "./components/overlay.json" },

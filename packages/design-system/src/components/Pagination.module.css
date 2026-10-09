@@ -36,15 +36,15 @@
 
   /* Transparent here, the border shows the control's edge in forced colors. */
   .item > :is(a, button) {
-    border: 1px solid transparent;
+    border: var(--todae-pagination-border-width) solid transparent;
     background: transparent;
     text-decoration: none;
     cursor: pointer;
   }
 
   .item > :is(a, button):focus-visible {
-    outline: 2px solid var(--todae-pagination-ring-focus);
-    outline-offset: 2px;
+    outline: var(--todae-focus-ring-width) solid var(--todae-pagination-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
   }
 
   /* A step with nowhere to go: aria-disabled, which keeps it focusable, or a
@@ -52,6 +52,14 @@
   .item > :is([aria-disabled='true'], a:not(:any-link):not(:where([aria-current]:not([aria-current='false' i], [aria-current='']))), button:disabled),
   .ellipsis {
     color: var(--todae-pagination-fg-disabled);
+  }
+
+  .item > :is([aria-disabled='true'], a:not(:any-link):not(:where([aria-current]:not([aria-current='false' i], [aria-current='']))), button:disabled) {
+    cursor: not-allowed;
+  }
+
+  /* The ellipsis shares the disabled color but is text, not a disabled control. */
+  .ellipsis {
     cursor: default;
   }
 
