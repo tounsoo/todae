@@ -29,7 +29,7 @@ import { FieldsetCheckboxes, FieldsetDisabled } from '../../../components/demos/
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Fieldset.Root`는 네이티브 `<fieldset>`이므로 `group` role을 가지며, 첫 `Fieldset.Legend`가 그룹의 이름입니다. `disabled`는 네이티브 속성입니다. 안의 모든 폼 컨트롤이 비활성화되고 탭 순서에서 빠지지만, 첫 legend 안의 컨트롤은 예외입니다. `invalid`는 안에 있는 Todae 컨트롤마다 `aria-invalid`를 설정합니다. Checkbox, Switch, `RadioGroup.Root`와 그 라디오, `Field.Root`의 컨트롤입니다. 중첩된 fieldset은 둘 다 물려받습니다.
+**Todae가 맡는 것:** `Fieldset.Root`는 네이티브 `<fieldset>`이므로 `group` role을 가지며, 첫 `Fieldset.Legend`가 그룹의 이름입니다. `disabled`는 네이티브 속성입니다. 안의 모든 폼 컨트롤이 비활성화되고 탭 순서에서 빠지지만, 첫 legend 안의 컨트롤은 예외입니다. `invalid`는 안에 있는 Todae 컨트롤마다 `aria-invalid`를 설정합니다. Checkbox, Switch, `RadioGroup.Root`와 그 라디오, `Field.Root`의 컨트롤입니다. 첫 legend 안의 컨트롤은 `invalid`에서도 빠집니다. 중첩된 fieldset은 둘 다 물려받습니다.
 
 **직접 제공할 것:** 첫 자식으로 둔 `Fieldset.Legend`와, 질문을 이름 짓는 텍스트. fieldset에는 자체 `aria-invalid`가 없으므로, 루트의 `aria-describedby`가 이유를 말하는 [ErrorMessage](/errormessage)나 [Description](/description)을 가리키게 하세요. 사용자가 맞게 입력한 컨트롤에는 `invalid={false}`를 주세요.
 

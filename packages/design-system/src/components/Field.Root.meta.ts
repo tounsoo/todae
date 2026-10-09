@@ -29,7 +29,7 @@ export const meta = {
       type: 'string',
       required: false,
       description:
-        'Ids of Description and ErrorMessage. Put this on Root. TextInput overwrites input-level aria.',
+        'Ids of Description and ErrorMessage. Put this on Root. Input parts add their own ids after these.',
     },
     {
       name: 'name',

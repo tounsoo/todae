@@ -29,7 +29,7 @@ The parts stack with `fieldset.gap`. For controls side by side, put them in a `S
 
 ## Accessible composition
 
-**Todae handles:** `Fieldset.Root` is a native `<fieldset>`, so it has the `group` role and its first `Fieldset.Legend` is the group's name. `disabled` is the native attribute: every form control inside is disabled and leaves the tab order, except those in that first legend. `invalid` sets `aria-invalid` on each Todae control inside: Checkbox, Switch, `RadioGroup.Root` and its radios, and the control of a `Field.Root`. Nested fieldsets inherit both.
+**Todae handles:** `Fieldset.Root` is a native `<fieldset>`, so it has the `group` role and its first `Fieldset.Legend` is the group's name. `disabled` is the native attribute: every form control inside is disabled and leaves the tab order, except those in that first legend. `invalid` sets `aria-invalid` on each Todae control inside: Checkbox, Switch, `RadioGroup.Root` and its radios, and the control of a `Field.Root`. Controls in that first legend are left out of `invalid` too. Nested fieldsets inherit both.
 
 **You supply:** A `Fieldset.Legend` as the first child, with text that names the question. The fieldset has no `aria-invalid` of its own, so point `aria-describedby` on the root at an [ErrorMessage](/errormessage) or [Description](/description) that says why. `invalid={false}` on a control the person got right.
 

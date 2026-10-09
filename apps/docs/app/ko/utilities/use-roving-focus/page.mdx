@@ -29,7 +29,7 @@ const roving = useRovingFocus({ orientation: 'horizontal', defaultActiveValue: '
 
 **Todae가 맡는 것:** 탭 정지와 키를 맡습니다. `getItemProps`는 항목 하나에 `tabIndex={0}`을, 나머지에 `-1`을 주고(`tabStop: false`이면 모두 `-1`), 컨테이너의 키 핸들러는 위에서 설명한 대로 포커스를 옮깁니다. 항목이 추가, 제거, 숨김, 비활성화되어도 따라갑니다. 그게 전부입니다. 역할, 이름, 상태는 설정하지 않습니다.
 
-**직접 제공할 것:** 컨테이너의 `role`과 이름(`aria-label` 또는 `aria-labelledby`), 그리고 역할의 기본값과 다를 때 `aria-orientation`을 주세요. 각 항목의 역할과 `aria-selected`, `aria-checked`, `aria-pressed` 같은 상태도 주세요. 항목 자체의 `disabled`나 `aria-disabled`도 직접 주세요. `{ disabled: true }`는 방향 키 순서에서 빼기만 합니다. props는 포커스를 받는 요소 자체에 펼치고, 직접 만든 `onKeyDown`, `onFocus`, `ref`는 props 인자로 넘겨 훅의 것과 함께 실행되게 하세요.
+**직접 제공할 것:** 컨테이너의 `role`과 이름(`aria-label` 또는 `aria-labelledby`), 그리고 역할의 기본값과 다를 때 `aria-orientation`을 주세요. 각 항목의 역할과 `aria-selected`, `aria-checked`, `aria-pressed` 같은 상태도 주세요. 항목 자체의 `disabled`나 `aria-disabled`도 직접 주세요. `{ disabled: true }`는 방향 키 순서에서 빼기만 합니다. props는 포커스를 받는 요소 자체에 펼치고, 직접 만든 `onFocus`는 props 인자로 넘겨 훅의 것과 함께 실행되게 하세요.
 
 ```tsx
 type ToolProps = Omit<ButtonRootProps, 'value'> & { value: string; roving: UseRovingFocusResult }

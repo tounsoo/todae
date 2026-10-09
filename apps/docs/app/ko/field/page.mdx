@@ -268,11 +268,11 @@ compact, comfortable, spacious에서의 같은 작성기.
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Field.Root`는 자신의 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 입력에 넘깁니다. 그래서 셸 `div`에는 ARIA가 없습니다. 입력은 Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 셸을 누르면 입력에 포커스가 가고, 입력이 focus-visible인 동안 셸이 포커스 링을 그립니다. 장식용 `Field.Icon`은 `aria-hidden`입니다. `maxLength`가 있으면 `Field.Counter`가 한도를 입력의 설명에 더하고, 20자 남았을 때부터 남은 글자 수를 알립니다. `Field.ChipInput`에서는 각 삭제 버튼이 칩 이름을 따서 이름을 갖고, 칩을 지우면 포커스가 입력으로 돌아갑니다.
+**Todae가 맡는 것:** `Field.Root`는 자신의 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 입력에 넘깁니다. ARIA를 포함한 다른 props는 셸 `div`에 남습니다. 입력은 Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 셸을 누르면 입력에 포커스가 가고, 입력이 focus-visible인 동안 셸이 포커스 링을 그립니다. 장식용 `Field.Icon`은 `aria-hidden`입니다. `maxLength`가 있으면 `Field.Counter`가 한도를 입력의 설명에 더하고, 20자 남았을 때부터 남은 글자 수를 알립니다. `Field.ChipInput`에서는 각 삭제 버튼이 칩 이름을 따서 이름을 갖고, 칩을 지우면 포커스가 입력으로 돌아갑니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. [Description](/description)이나 [ErrorMessage](/errormessage)의 id는 Root의 `aria-describedby`에 넣고, 오류가 보이는 동안 `invalid`를 켜세요. 상호작용하는 `Field.Icon` 안의 버튼마다 이름을 주세요. 칩과 글자 수 문구는 [StringsProvider](/utilities/strings-provider)로 제품의 언어에 맞추세요.
 
-**주의할 점:** `Field.TextInput`에 준 `id`는 Root의 id로 바뀝니다. id는 Root에 두세요. `Field.Root`에 준 `role`이나 `onClick`은 셸에 붙는데, 셸은 컨트롤이 아닙니다. 오버레이는 실제 버튼으로 여세요. `invalid`는 테두리 색만 바꾸므로 ErrorMessage를 함께 보여 주세요. `commitKeys`에 `'Tab'`을 넣으면 Tab이 포커스를 옮기지 않고 입력한 텍스트를 확정합니다.
+**주의할 점:** `Field.TextInput`에 준 `id`는 Root의 id로 바뀝니다. id는 Root에 두세요. `Field.Root`에 준 `role`이나 `onClick`은 셸에 붙는데, 셸은 컨트롤이 아닙니다. 오버레이는 실제 버튼으로 여세요. `invalid`는 입력을 유효하지 않다고 표시하지만 이유는 말하지 않으므로 ErrorMessage를 함께 보여 주세요. `commitKeys`에 `'Tab'`을 넣으면 Tab이 포커스를 옮기지 않고 입력한 텍스트를 확정합니다.
 
 ## 언제 쓰나요
 
