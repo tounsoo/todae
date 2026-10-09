@@ -26,7 +26,7 @@ The docs are written in English and translated into Korean (한국어). Translat
 
 Korean is kept complete, so a change to an English `page.mdx` needs its Korean page brought up to date in the same pull request. The tests fail until the Korean page matches the English shape and is stamped again:
 
-- A new top-level heading or block, or a new code block, demo, props table, link target or JSX `href` attribute anywhere on the page, changes the page's shape, which the Korean page must match.
+- A new top-level heading or block, or a new code block, demo, props table, link target anywhere on the page, or a new `href` on a JSX element written directly in the page (not inside a `{…}` expression), changes the page's shape, which the Korean page must match.
 - Other changes to the English text change the fingerprint of the section they are in. The test names each section that changed, was added or was removed since the Korean was last stamped, and whether the order of sections changed, which adding or removing one also does. Update those sections in `app/ko/<slug>/page.mdx`, then run `pnpm --filter docs i18n:stamp ko <slug>`.
 
 Stamp only after the translation says what the English now says: a stamp records only the English, and nothing checks the Korean wording.
