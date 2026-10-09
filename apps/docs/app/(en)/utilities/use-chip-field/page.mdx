@@ -18,7 +18,7 @@ const field = useChipField({ initialChips: ['react'] })
 
 ## Accessible composition
 
-**Todae handles:** The hook renders nothing and sets no ARIA. It holds `chips` and `inputValue` and hands them to `Field.ChipInput`, which does the rest: its input takes its id, `aria-describedby`, `aria-invalid` and label from `Field.Root`, Enter commits by default (`commitKeys`), Backspace in an empty input removes the last chip, and each chip's remove button is named by `chipRemoveLabel` or "Remove {value}" and sends focus back to the input.
+**Todae handles:** The hook renders nothing and sets no ARIA. It holds `chips` and `inputValue` and hands them to `Field.ChipInput`, which does the rest: its input takes its id, `aria-describedby`, `aria-invalid` and label from `Field.Root`, Enter commits by default (`commitKeys`), Backspace in an empty input removes the last chip, and each chip's remove button is named by `chipRemoveLabel` or `Remove {value}` and sends focus back to the input.
 
 **You supply:** A name for the input: a [Label](/label) for the field, or `aria-label` on `Field.Root` as in the example above. Feedback when a commit is dropped. With `dedupe`, a chip already in the list is dropped and the input still clears; when `transform` returns `null`, nothing happens. Neither is announced, and neither are added or removed chips, so use [useAnnouncer](/utilities/use-announcer) when people need to hear it.
 

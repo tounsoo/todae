@@ -20,7 +20,7 @@ import { ChipExamples } from '../../../components/demos/ChipDemo';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Chip.Root`는 레이블을 role이 없는 `<span>` 안에 일반 텍스트로 렌더링합니다. `onRemove`를 주면 네이티브 `<button type="button">`을 추가하고, `aria-label`로 이름을 붙입니다. 이름은 `removeLabel`이고, 없으면 `removeChip` 문자열(영어로 "Remove {label}")입니다. `disabled`는 그 버튼을 비활성화하고 칩에 `data-disabled`를 설정합니다. `Chip.Overflow`는 보이는 `+N`을 `aria-hidden`으로 숨기고, 기본으로 `moreChips` 문자열인 이름을 시각적으로 숨긴 텍스트로 제공합니다.
+**Todae가 맡는 것:** `Chip.Root`는 레이블을 role이 없는 `<span>` 안에 일반 텍스트로 렌더링합니다. `onRemove`를 주면 네이티브 `<button type="button">`을 추가하고, `aria-label`로 이름을 붙입니다. 이름은 `removeLabel`이고, 없으면 `removeChip` 문자열(영어로 `Remove {label}`)입니다. `disabled`는 그 버튼을 비활성화하고 칩에 `data-disabled`를 설정합니다. `Chip.Overflow`는 보이는 `+N`을 `aria-hidden`으로 숨기고, 기본으로 `moreChips` 문자열인 이름을 시각적으로 숨긴 텍스트로 제공합니다.
 
 **직접 제공할 것:** 칩을 여러 개 보여 줄 때는 목록 의미를 제공하세요. `<li>` 항목이 있는 `<ul>`을 쓰거나, 컨테이너에 `role="list"`를, 각 `Chip.Root`에 `role="listitem"`을 주세요. `Chip.Root`는 네이티브 props를 `<span>`에 전달합니다. 그 목록에 이름을 붙이세요. 레이블만으로 무엇을 지우는지 알 수 없다면 "Remove filter Design"처럼 말해 주는 `removeLabel`을 주세요. 제거한 뒤 포커스가 갈 곳도 정하세요. 제거 버튼은 칩과 함께 DOM에서 사라지므로, 포커스를 이웃 칩이나 칩을 추가한 컨트롤로 옮기세요. [ChipList](/chip-list)는 이 일을 대신 합니다.
 
