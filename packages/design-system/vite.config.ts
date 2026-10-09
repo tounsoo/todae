@@ -16,6 +16,18 @@ const entries = {
   breadcrumbs: src('server/breadcrumbs.ts'),
   grid: src('server/grid.ts'),
   pagination: src('server/pagination.ts'),
+  link: src('server/link.ts'),
+  disclosure: src('server/disclosure.ts'),
+  separator: src('server/separator.ts'),
+  table: src('server/table.ts'),
+  progress: src('server/progress.ts'),
+  meter: src('server/meter.ts'),
+  spinner: src('server/spinner.ts'),
+  skeleton: src('server/skeleton.ts'),
+  slider: src('server/slider.ts'),
+  code: src('server/code.ts'),
+  kbd: src('server/kbd.ts'),
+  'visually-hidden': src('server/visually-hidden.ts'),
 };
 
 function emitPackageCss(): Plugin {

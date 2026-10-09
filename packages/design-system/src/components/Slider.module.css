@@ -1,0 +1,16 @@
+@layer todae.components {
+  /* accent-color tints the thumb and filled track; how far it reaches differs by browser. */
+  .root {
+    inline-size: 100%;
+    accent-color: var(--todae-slider-fill);
+  }
+
+  .root:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-slider-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .root:disabled {
+    cursor: not-allowed;
+  }
+}

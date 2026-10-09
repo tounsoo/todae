@@ -18,6 +18,18 @@ export {
   type AvatarRootProps,
   type AvatarSize,
 } from './components/Avatar';
+export { Link, type LinkRootProps, type LinkRenderProps } from './components/Link';
+export { Disclosure, type DisclosureRootProps, type DisclosureSummaryProps } from './components/Disclosure';
+export { Separator, type SeparatorRootProps } from './components/Separator';
+export { Table, type TableRootProps } from './components/Table';
+export { Progress, type ProgressRootProps } from './components/Progress';
+export { Meter, type MeterRootProps } from './components/Meter';
+export { Spinner, type SpinnerRootProps } from './components/Spinner';
+export { Skeleton, type SkeletonRootProps } from './components/Skeleton';
+export { Slider, type SliderRootProps } from './components/Slider';
+export { Code, type CodeBlockProps, type CodeRootProps } from './components/Code';
+export { Kbd, type KbdRootProps } from './components/Kbd';
+export { VisuallyHidden, type VisuallyHiddenRootProps } from './components/VisuallyHidden';
 export { Badge, type BadgeRootProps, type BadgeTone } from './components/Badge';
 export { Breadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './components/Breadcrumbs.client';
 export {

@@ -44,6 +44,54 @@
       "types": "./dist/server/pagination.d.ts",
       "import": "./dist/pagination.js"
     },
+    "./link": {
+      "types": "./dist/server/link.d.ts",
+      "import": "./dist/link.js"
+    },
+    "./disclosure": {
+      "types": "./dist/server/disclosure.d.ts",
+      "import": "./dist/disclosure.js"
+    },
+    "./separator": {
+      "types": "./dist/server/separator.d.ts",
+      "import": "./dist/separator.js"
+    },
+    "./table": {
+      "types": "./dist/server/table.d.ts",
+      "import": "./dist/table.js"
+    },
+    "./progress": {
+      "types": "./dist/server/progress.d.ts",
+      "import": "./dist/progress.js"
+    },
+    "./meter": {
+      "types": "./dist/server/meter.d.ts",
+      "import": "./dist/meter.js"
+    },
+    "./spinner": {
+      "types": "./dist/server/spinner.d.ts",
+      "import": "./dist/spinner.js"
+    },
+    "./skeleton": {
+      "types": "./dist/server/skeleton.d.ts",
+      "import": "./dist/skeleton.js"
+    },
+    "./slider": {
+      "types": "./dist/server/slider.d.ts",
+      "import": "./dist/slider.js"
+    },
+    "./code": {
+      "types": "./dist/server/code.d.ts",
+      "import": "./dist/code.js"
+    },
+    "./kbd": {
+      "types": "./dist/server/kbd.d.ts",
+      "import": "./dist/kbd.js"
+    },
+    "./visually-hidden": {
+      "types": "./dist/server/visually-hidden.d.ts",
+      "import": "./dist/visually-hidden.js"
+    },
     "./todae.css": "./dist/todae.css",
     "./dist/todae.css": "./dist/todae.css",
     "./schema/components.json": "./schema/components.json",

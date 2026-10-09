@@ -1,0 +1,35 @@
+@layer todae.components {
+  /* Native table semantics stay as they are; Todae only sets the rules,
+     padding and header weight. Cells of a table nested inside take its own root's styles. */
+  .root {
+    inline-size: 100%;
+    border-collapse: collapse;
+    color: var(--todae-table-fg);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .root > caption {
+    padding-block-end: var(--todae-table-cell-padding-y);
+    color: var(--todae-table-caption-fg);
+    text-align: start;
+  }
+
+  .root > * > tr > :is(th, td) {
+    padding-block: var(--todae-table-cell-padding-y);
+    padding-inline: var(--todae-table-cell-padding-x);
+    border-block-end: var(--todae-table-rule-thickness) solid var(--todae-table-border);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  /* Column and row headers share one weight and color; column headers sit
+     above a stronger rule instead of a shade, so they read on any surface. */
+  .root > * > tr > th {
+    color: var(--todae-table-header-fg);
+    font-weight: var(--todae-table-header-font-weight);
+  }
+
+  .root > thead > tr > th {
+    border-block-end-color: var(--todae-table-header-border);
+  }
+}

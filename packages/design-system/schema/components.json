@@ -650,6 +650,36 @@
       ]
     },
     {
+      "name": "Code.Block",
+      "description": "A native pre styled from the code.block tokens. It scrolls sideways when a line is too long; takes native pre attributes.",
+      "props": [
+        {
+          "name": "tabIndex",
+          "type": "number",
+          "required": false,
+          "description": "Set 0 when the block can scroll, so keyboard users can reach and scroll it."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The code, usually in a code element, which drops its own box here."
+        }
+      ]
+    },
+    {
+      "name": "Code.Root",
+      "description": "A native code styled from the code tokens: inline, in the text color around it, on a box tinted from that color. Takes native code attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The code."
+        }
+      ]
+    },
+    {
       "name": "createToaster",
       "description": "Returns a toast store { add, update, dismiss, remove, subscribe, getSnapshot } that works outside React. Make one per app at module scope and pass it to Toast.Region. add() takes id, tone, title, description, duration and any fields of your own, and returns the id; an id that is still showing is replaced in place.",
       "props": [
@@ -805,6 +835,48 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Title text."
+        }
+      ]
+    },
+    {
+      "name": "Disclosure.Root",
+      "description": "A native details styled from the disclosure tokens. Takes native details attributes.",
+      "props": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": false,
+          "description": "Disclosures with the same name form an exclusive accordion: the browser keeps at most one open, and a rule divides them."
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Starts the disclosure open. The browser then owns the state; follow it with onToggle."
+        },
+        {
+          "name": "onToggle",
+          "type": "(event: React.ToggleEvent<HTMLDetailsElement>) => void",
+          "required": false,
+          "description": "Called after the disclosure opens or closes."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "A Disclosure.Summary first, then the content it shows and hides."
+        }
+      ]
+    },
+    {
+      "name": "Disclosure.Summary",
+      "description": "A native summary: the toggle that stays visible. Takes native summary attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "The toggle text. It names the disclosure for screen readers."
         }
       ]
     },
@@ -1280,6 +1352,18 @@
       ]
     },
     {
+      "name": "Kbd.Root",
+      "description": "A native kbd drawn as a key cap from the kbd tokens. One with keys or samp inside stays plain text. Takes native kbd attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A key name, or for a shortcut one Kbd.Root per key."
+        }
+      ]
+    },
+    {
       "name": "Label",
       "description": "Visible name for a control. Sibling, not a Field part. Pass htmlFor the control id.",
       "props": [
@@ -1300,6 +1384,36 @@
           "type": "string",
           "required": false,
           "description": "Optional class on the native label."
+        }
+      ]
+    },
+    {
+      "name": "Link.Root",
+      "description": "A link styled from the link tokens. Renders an a, or a router link through render; takes native a attributes.",
+      "props": [
+        {
+          "name": "href",
+          "type": "string",
+          "required": false,
+          "description": "Where the link goes. Without it the element is not a link and gets no link style."
+        },
+        {
+          "name": "render",
+          "type": "(props: React.ComponentPropsWithRef<\"a\">) => React.ReactElement",
+          "required": false,
+          "description": "Renders something other than a plain a, such as a router link. It receives every prop, the class name included, and must pass them to an a."
+        },
+        {
+          "name": "aria-current",
+          "type": "\"page\" | \"step\" | \"location\" | \"date\" | \"time\" | \"true\" | \"false\"",
+          "required": false,
+          "description": "Marks the link to the current page or step; its underline thickens."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The link text."
         }
       ]
     },
@@ -1621,6 +1735,62 @@
       ]
     },
     {
+      "name": "Meter.Root",
+      "description": "A native meter drawn as a track and a fill from the progress and meter tokens. Takes native meter attributes.",
+      "props": [
+        {
+          "name": "value",
+          "type": "number",
+          "required": true,
+          "description": "The measurement, between min and max."
+        },
+        {
+          "name": "min",
+          "type": "number",
+          "required": false,
+          "description": "The low end of the range.",
+          "default": "0"
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "required": false,
+          "description": "The high end of the range.",
+          "default": "1"
+        },
+        {
+          "name": "low",
+          "type": "number",
+          "required": false,
+          "description": "Where the low part of the range ends."
+        },
+        {
+          "name": "high",
+          "type": "number",
+          "required": false,
+          "description": "Where the high part of the range starts."
+        },
+        {
+          "name": "optimum",
+          "type": "number",
+          "required": false,
+          "description": "The best value. With low and high it decides whether the fill is meter.fill.optimum, meter.fill.suboptimum or meter.fill.critical."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the meter when no label element points at it."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The value as text, for browsers that do not draw the meter."
+        }
+      ]
+    },
+    {
       "name": "OptionList.Option",
       "description": "String-only option inside OptionList.Root.",
       "props": [
@@ -1813,6 +1983,37 @@
       ]
     },
     {
+      "name": "Progress.Root",
+      "description": "A native progress drawn as a track and a fill from the progress tokens. Takes native progress attributes.",
+      "props": [
+        {
+          "name": "value",
+          "type": "number",
+          "required": false,
+          "description": "How far the task has come, from 0 to max. Leave it out when the end is unknown: a band sweeps the track."
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "required": false,
+          "description": "The value at which the task is done.",
+          "default": "1"
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the bar when no label element points at it. Every progress bar needs a name."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The value as text, for browsers that do not draw the bar."
+        }
+      ]
+    },
+    {
       "name": "RadioGroup.Item",
       "description": "One option in a RadioGroup. No checked, name, or invalid. Children are the visible label.",
       "props": [
@@ -1916,6 +2117,74 @@
       ]
     },
     {
+      "name": "Separator.Root",
+      "description": "A native hr drawn from the separator tokens. It keeps the separator role; takes native hr attributes.",
+      "props": []
+    },
+    {
+      "name": "Skeleton.Root",
+      "description": "A placeholder block from the skeleton tokens, shown while content loads. A div with no role; takes native div attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Elements that only give it a size; they are hidden."
+        }
+      ]
+    },
+    {
+      "name": "Slider.Root",
+      "description": "A native range input tinted from the slider tokens. Takes native input attributes except type.",
+      "props": [
+        {
+          "name": "min",
+          "type": "number",
+          "required": false,
+          "description": "The lowest value.",
+          "default": "0"
+        },
+        {
+          "name": "max",
+          "type": "number",
+          "required": false,
+          "description": "The highest value.",
+          "default": "100"
+        },
+        {
+          "name": "step",
+          "type": "number",
+          "required": false,
+          "description": "How far one arrow key moves the value.",
+          "default": "1"
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "required": false,
+          "description": "The value, with onChange. Use defaultValue to leave it to the input."
+        },
+        {
+          "name": "aria-valuetext",
+          "type": "string",
+          "required": false,
+          "description": "What a screen reader says instead of the number, such as \"40%\" or \"Medium\"."
+        }
+      ]
+    },
+    {
+      "name": "Spinner.Root",
+      "description": "A native progress with no value, drawn as a turning ring from the spinner tokens. Takes native progress attributes except value and max.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the spinner when it is not inside a label with text. It keeps the progressbar role, so it needs a name."
+        }
+      ]
+    },
+    {
       "name": "Stack",
       "description": "Flex layout. Gap comes from the stack.gap contract token.",
       "props": [
@@ -2003,6 +2272,18 @@
           "type": "string",
           "required": false,
           "description": "Optional class on the wrapping label."
+        }
+      ]
+    },
+    {
+      "name": "Table.Root",
+      "description": "A native table styled from the table tokens. Takes native table attributes; write the caption, rows and cells as plain elements inside.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "A caption, then thead, tbody and tfoot with their rows and cells."
         }
       ]
     },
@@ -3063,6 +3344,25 @@
           "type": "string",
           "required": false,
           "description": "Tooltip id. Default is a generated id."
+        }
+      ]
+    },
+    {
+      "name": "VisuallyHidden.Root",
+      "description": "Hides content on screen and keeps it for assistive technology. A span with no role; takes native span attributes.",
+      "props": [
+        {
+          "name": "focusable",
+          "type": "boolean",
+          "required": false,
+          "description": "Shows the content again while focus is on it or inside it, for a skip link.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Text for assistive technology, or a focusable element such as a skip link."
         }
       ]
     }

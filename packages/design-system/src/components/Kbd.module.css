@@ -1,0 +1,27 @@
+@layer todae.components {
+  .root {
+    display: inline-block;
+    padding: var(--todae-kbd-padding-y) var(--todae-kbd-padding-x);
+    border: var(--todae-kbd-border-width) solid var(--todae-kbd-border);
+    border-block-end-width: calc(var(--todae-kbd-border-width) * 2);
+    border-radius: var(--todae-kbd-radius);
+    background: var(--todae-kbd-bg);
+    color: var(--todae-kbd-fg);
+    font-family: var(--todae-kbd-font-family);
+    font-size: calc(1em * var(--todae-kbd-font-scale));
+    white-space: nowrap;
+  }
+
+  /* A shortcut (keys inside a kbd) or echoed input (samp inside a kbd) stays plain text. */
+  .root:has(kbd, samp) {
+    display: inline;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    white-space: inherit;
+  }
+}

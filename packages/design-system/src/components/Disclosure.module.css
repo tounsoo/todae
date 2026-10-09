@@ -1,0 +1,45 @@
+@layer todae.components {
+  /* The native marker and keyboard behavior stay; disclosures sharing a name
+     form an exclusive accordion, divided by a rule. */
+  .summary {
+    cursor: pointer;
+    padding-block: var(--todae-disclosure-padding-y);
+    color: var(--todae-disclosure-summary-fg);
+    font-weight: var(--todae-disclosure-summary-font-weight);
+  }
+
+  .summary::marker {
+    color: var(--todae-disclosure-marker-fg);
+  }
+
+  .summary:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-disclosure-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+    border-radius: 2px;
+  }
+
+  .root::details-content {
+    opacity: 0;
+    transition:
+      opacity var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing),
+      content-visibility var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing) allow-discrete;
+  }
+
+  .root[open]::details-content {
+    opacity: 1;
+  }
+
+  .root[open] > :not(summary):last-child {
+    margin-block-end: var(--todae-disclosure-gap);
+  }
+
+  .root[name] {
+    border-block-end: var(--todae-disclosure-border-width) solid var(--todae-disclosure-border);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .root::details-content {
+      transition: none;
+    }
+  }
+}

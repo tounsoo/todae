@@ -1,0 +1,18 @@
+import type { ComponentPropsWithRef } from 'react';
+import { cx } from './cx';
+import styles from './VisuallyHidden.module.css';
+
+/**
+ * Hides its content on screen and keeps it for assistive technology. A `span`,
+ * so it fits inside a button or a line of text.
+ */
+export type VisuallyHiddenRootProps = {
+  /** Shows the content again while focus is on it or inside it, for skip links. */
+  focusable?: boolean;
+} & ComponentPropsWithRef<'span'>;
+
+function Root({ focusable = false, className, ...props }: VisuallyHiddenRootProps) {
+  return <span {...props} className={cx(focusable ? styles.focusable : styles.root, className)} />;
+}
+
+export const VisuallyHidden = { Root } as const;

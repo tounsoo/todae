@@ -1,0 +1,56 @@
+@layer todae.components {
+  /* A ring with one arc that turns, drawn in the text color so it shows on any
+     surface, a primary button included. */
+  progress.root {
+    appearance: none;
+    flex: none;
+    display: inline-block;
+    inline-size: var(--todae-spinner-size);
+    block-size: var(--todae-spinner-size);
+    border: 0;
+    border-radius: 50%;
+    vertical-align: middle;
+    background: conic-gradient(
+      currentColor 0 25%,
+      color-mix(in oklch, currentColor calc(var(--todae-spinner-track-tint) * 100%), transparent) 0
+    );
+    mask: radial-gradient(
+      farthest-side,
+      transparent calc(100% - var(--todae-spinner-thickness)),
+      black calc(100% - var(--todae-spinner-thickness))
+    );
+    animation: todae-spinner-turn var(--todae-spinner-motion-duration) linear infinite;
+  }
+
+  progress.root::-webkit-progress-bar {
+    background: transparent;
+  }
+
+  progress.root::-webkit-progress-value {
+    background: transparent;
+  }
+
+  progress.root::-moz-progress-bar {
+    background: transparent;
+  }
+
+  @keyframes todae-spinner-turn {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  /* Under reduced motion the ring holds still; the arc still reads as busy. */
+  @media (prefers-reduced-motion: reduce) {
+    progress.root {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    progress.root {
+      forced-color-adjust: none;
+      background: conic-gradient(Highlight 0 25%, GrayText 0);
+    }
+  }
+}
