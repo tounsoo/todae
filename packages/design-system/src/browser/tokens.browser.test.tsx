@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -112,5 +112,31 @@ describe('BottomSheet padding in a browser', () => {
     const sheet = getComputedStyle(await screen.findByRole('dialog'));
     expect(parseFloat(sheet.paddingBottom)).toBeGreaterThan(0);
     expect(sheet.paddingBottom).toBe(sheet.paddingTop);
+  });
+
+  it('gives the body a tab stop only while its content overflows', async () => {
+    const { rerender } = render(
+      <Themed>
+        <BottomSheet.Root open onOpenChange={() => undefined}>
+          <BottomSheet.Title>Sort</BottomSheet.Title>
+          <BottomSheet.Body data-testid="body">Newest first</BottomSheet.Body>
+        </BottomSheet.Root>
+      </Themed>,
+    );
+    const body = await screen.findByTestId('body');
+    await waitFor(() => expect(body.hasAttribute('tabindex')).toBe(false));
+    rerender(
+      <Themed>
+        <BottomSheet.Root open onOpenChange={() => undefined}>
+          <BottomSheet.Title>Sort</BottomSheet.Title>
+          <BottomSheet.Body data-testid="body">
+            {Array.from({ length: 80 }, (_, i) => (
+              <p key={i}>Line {i + 1}</p>
+            ))}
+          </BottomSheet.Body>
+        </BottomSheet.Root>
+      </Themed>,
+    );
+    await waitFor(() => expect(body.getAttribute('tabindex')).toBe('0'));
   });
 });

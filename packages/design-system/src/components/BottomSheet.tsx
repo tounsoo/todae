@@ -159,13 +159,27 @@ function BottomSheetDescription({
   );
 }
 
-function BottomSheetBody({ className, ref, ...props }: ComponentPropsWithRef<'div'>) {
+function BottomSheetBody({ className, ref, tabIndex, ...props }: ComponentPropsWithRef<'div'>) {
   const { bodyRef } = useSheet();
   const refs = useComposedRefs(bodyRef as RefObject<HTMLDivElement | null>, ref);
+  // A body that scrolls takes a tab stop, so the keyboard can scroll text
+  // that has no focusable element in it.
+  const [scrolls, setScrolls] = useState(false);
+  useLayoutEffect(() => {
+    const body = bodyRef.current;
+    if (!body || typeof ResizeObserver === 'undefined') return;
+    const measure = () => setScrolls(body.scrollHeight > body.clientHeight);
+    const observer = new ResizeObserver(measure);
+    observer.observe(body);
+    for (const child of body.children) observer.observe(child);
+    measure();
+    return () => observer.disconnect();
+  }, [bodyRef, props.children]);
   return (
     <div
       {...props}
       ref={refs}
+      tabIndex={tabIndex ?? (scrolls ? 0 : undefined)}
       className={[styles.body, className].filter(Boolean).join(' ')}
     />
   );
