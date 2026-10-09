@@ -285,7 +285,8 @@ describe('chip list recipe', () => {
   it('names +N more, and hides the measure row', () => {
     render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
     const list = screen.getByRole('list', { name: 'Tags' });
-    expect(screen.getByRole('button', { name: 'Remove aa' }).textContent).toBe('×');
+    // No glyph ships: the stylesheet draws the cross.
+    expect(screen.getByRole('button', { name: 'Remove aa' }).textContent).toBe('');
     expect(screen.getByRole('button', { name: '+5 more' })).toBeTruthy();
     expect(list.querySelector('[aria-label="Remove hh"]')).toBeNull();
     const measure = document.querySelector('[inert][aria-hidden]');

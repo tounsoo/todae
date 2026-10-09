@@ -9,7 +9,7 @@ export const meta = {
       type: 'string',
       required: false,
       default: '"Breadcrumb"',
-      description: 'Landmark name. The default is English, so pass a name in your app\'s language.',
+      description: 'Landmark name. Default is the breadcrumbs string from StringsProvider; the server entry always uses English.',
     },
     {
       name: 'aria-labelledby',

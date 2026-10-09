@@ -1,12 +1,14 @@
 import type { ComponentPropsWithRef } from 'react';
+import { DEFAULT_STRINGS } from '../providers/strings';
 import { cx } from './cx';
 import styles from './Pagination.module.css';
 
 export { paginationRange, type PaginationRangeItem, type PaginationRangeOptions } from './paginationRange';
 
 /**
- * A `nav` landmark holding an ordered list of pages. Named "Pagination" unless
- * you pass a non-empty `aria-label` or `aria-labelledby`; that default is English.
+ * A `nav` landmark holding an ordered list of pages. Named by the `pagination`
+ * string ("Pagination" in English) unless you pass a non-empty `aria-label` or
+ * `aria-labelledby`. The server entry has no StringsProvider, so it always uses English.
  */
 export type PaginationRootProps = ComponentPropsWithRef<'nav'>;
 
@@ -24,7 +26,7 @@ function Root({ 'aria-label': ariaLabel, 'aria-labelledby': labelledby, classNam
   return (
     <nav
       {...props}
-      aria-label={ariaLabel || (labelledby ? undefined : 'Pagination')}
+      aria-label={ariaLabel || (labelledby ? undefined : DEFAULT_STRINGS.pagination)}
       aria-labelledby={labelledby}
       className={cx(styles.root, className)}
     >

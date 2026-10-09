@@ -1,0 +1,63 @@
+# StringsProvider
+
+`StringsProvider` sets the text Todae writes by itself for everything inside it: the default names of parts with no words of their own, such as an icon-only `Dialog.Close`, and screen reader messages, such as those of `Field.Counter`. Todae ships English only. Pass the keys you want to change; each key you leave out comes from the nearest `StringsProvider` above, else English. It renders no element.
+
+```tsx
+const korean: Partial<Strings> = {
+	close: '닫기',
+	dismiss: '닫기',
+	removeChip: (label) => `${label} 삭제`,
+	moreChips: (count) => `${count}개 더 있음`,
+	characterLimit: (max) => `최대 ${max}자`,
+	charactersLeft: (remaining) => `${remaining}자 남음`,
+	characterLimitReached: '글자 수 한도에 도달했습니다',
+}
+
+<StringsProvider strings={korean}>
+	<App />
+</StringsProvider>
+```
+
+A nested provider changes only the keys it passes:
+
+```tsx
+<StringsProvider strings={korean}>
+	<StringsProvider strings={{ close: '취소' }}>
+		{/* close is 취소 here; every other key is still Korean. */}
+	</StringsProvider>
+</StringsProvider>
+```
+
+A part's own prop still wins over the provider: `aria-label` on a close button or landmark, `removeLabel` on `Chip.Root`, and `removeLabel`, `overflowLabel` or `panelLabel` on `ChipList.Root`. `useStrings()` returns the strings in effect, for your own components.
+
+## Strings
+
+A string that depends on a number or a label is a function.
+
+| Key | Used by | English |
+| --- | --- | --- |
+| `close` | `Dialog.Close`, `BottomSheet.Close` without words | `Close` |
+| `dismiss` | `Alert.Close`, `Toast.Close` without words | `Dismiss` |
+| `notifications` | `Toast.Region` landmark | `Notifications` |
+| `breadcrumbs` | `Breadcrumbs.Root` landmark | `Breadcrumb` |
+| `pagination` | `Pagination.Root` landmark | `Pagination` |
+| `resizeSheet` | `BottomSheet.Grabber` | `Resize sheet` |
+| `options` | `getSheetProps()` of `useCombobox` | `Options` |
+| `removeChip(label)` | Chip remove buttons | `Remove {label}` |
+| `moreChips(count)` | `+N` chips | `{count} more` |
+| `moreChipsPanel(count)` | `ChipList` popover of folded chips | `{count} more chips`, or `1 more chip` |
+| `characterLimit(max)` | `Field.Counter`, the input's description | `Up to {max} characters` |
+| `charactersLeft(remaining)` | `Field.Counter`, from 20 left | `{remaining} characters left`, or `1 character left` |
+| `characterLimitReached` | `Field.Counter`, at or past the limit | `Character limit reached` |
+
+`Breadcrumbs` and `Pagination` from the server entries, `@tounsoo/todae/breadcrumbs` and `@tounsoo/todae/pagination`, render on the server without context, so they always use English. Pass `aria-label`, or import them from `@tounsoo/todae` to use the provider.
+
+## When to use
+
+**When:** Your app is not in English, or you want other wording for Todae's own text, across a whole app or one part of it.
+
+**When not:** A name for one part → pass its prop, such as `aria-label`. Text you write yourself, such as a dialog title → it is yours to translate.
+
+## Props
+
+<PropsTable name="StringsProvider" />

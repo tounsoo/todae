@@ -19,6 +19,7 @@ import type {
   OptionListOptionProps,
 } from '../components/OptionList';
 import type { PopoverWire } from '../components/Popover.wire';
+import { useStrings } from '../providers/StringsProvider';
 import { createAsyncGate } from './useCombobox.async';
 import { usePopoverInternal } from './usePopover';
 import { defaultFilter, filterOptions } from './useCombobox.filter';
@@ -645,15 +646,16 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     false,
   );
 
+  const { options: optionsName } = useStrings();
   const getSheetProps = useCallback(
     (): ComboboxSheetProps => ({
       open,
       onOpenChange: (next, reason) => setOpen(next, reason),
       initialFocusRef: inputRef,
       restoreFocusRef: triggerRef,
-      'aria-label': 'Options',
+      'aria-label': optionsName,
     }),
-    [open, setOpen],
+    [open, setOpen, optionsName],
   );
 
   const getListboxProps = useCallback(():

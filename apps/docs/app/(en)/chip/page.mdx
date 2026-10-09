@@ -10,11 +10,19 @@ Text-only label. Optional remove is a named button. `Chip.Overflow` is display-o
 
 `+N` is not a button and is not in the tab order.
 
+The remove button holds no glyph or icon of its own: without content, its stylesheet draws a cross. Pass `removeIcon` to show an icon from your own set instead. The button's name still comes from `removeLabel` or its default, so mark the icon `aria-hidden`. That default, `Remove {label}`, and the `{n} more` read for `+N` come from [StringsProvider](/utilities/strings-provider).
+
+```tsx
+<Chip.Root onRemove={remove} removeIcon={<CloseIcon aria-hidden />}>
+  Design
+</Chip.Root>
+```
+
 ## When to use
 
 **When:** Text-only token for a value. Optional remove button via `onRemove` (named button). +N overflow is display-only.
 
-**When not:** Typed tokens in an input → `Field.ChipInput`. Clickable or selectable chip → Button.Root / Checkbox (Chip has no select). Icons or rich content (text only).
+**When not:** Typed tokens in an input → `Field.ChipInput`. Clickable or selectable chip → Button.Root / Checkbox (Chip has no select). Icons or rich content in the label (text only).
 
 ## Props
 

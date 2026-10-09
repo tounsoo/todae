@@ -38,13 +38,19 @@ export const meta = {
       name: 'chipRemoveLabel',
       type: '(value: string) => string',
       required: false,
-      description: 'Remove button name. Default is Remove {value}.',
+      description: 'Remove button name. Default is the removeChip string from StringsProvider, Remove {value} in English.',
+    },
+    {
+      name: 'chipRemoveIcon',
+      type: 'React.ReactNode',
+      required: false,
+      description: 'Chip remove button content, such as an icon from your own set. Without it, the CSS draws a cross.',
     },
     {
       name: 'overflowLabel',
       type: '(n: number) => string',
       required: false,
-      description: '+N name. Default is {n} more.',
+      description: '+N name. Default is the moreChips string from StringsProvider, {n} more in English.',
     },
     {
       name: 'commitKeys',

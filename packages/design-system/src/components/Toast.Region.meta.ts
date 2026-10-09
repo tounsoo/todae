@@ -50,7 +50,7 @@ export const meta = {
       type: "string",
       required: false,
       default: "\"Notifications\"",
-      description: "Name of the region landmark. The default is English, so pass a name in your app's language.",
+      description: "Name of the region landmark. Default is the notifications string from StringsProvider.",
     },
   ],
 } as const satisfies ComponentMeta;

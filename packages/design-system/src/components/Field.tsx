@@ -36,6 +36,7 @@ import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
 import { useField } from '../hooks/useField';
+import { useStrings, type Strings } from '../providers/StringsProvider';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -385,6 +386,8 @@ export type FieldChipInputProps = {
   chipLayout?: 'inline' | 'row';
   removeOnBackspace?: boolean;
   chipRemoveLabel?: (value: string) => string;
+  /** Chip remove button content, such as an icon from your own set. Without it, the CSS draws a cross. */
+  chipRemoveIcon?: ReactNode;
   overflowLabel?: (n: number) => string;
   ref?: Ref<HTMLInputElement>;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'disabled' | 'type' | 'children'>;
@@ -400,6 +403,7 @@ function ChipInput({
   chipLayout = 'inline',
   removeOnBackspace = true,
   chipRemoveLabel,
+  chipRemoveIcon,
   overflowLabel,
   className,
   onKeyDown: onKeyDownProp,
@@ -445,6 +449,7 @@ function ChipInput({
       key={chip.key}
       disabled={field.disabled}
       removeLabel={chipRemoveLabel?.(chip.value)}
+      removeIcon={chipRemoveIcon}
       data-ellipsis={chip.ellipsis ? '' : undefined}
       style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
       onRemove={() => {
@@ -477,11 +482,11 @@ function ChipInput({
     maxRows != null ? (
       <div ref={list.measureRef} className={styles.measure} aria-hidden inert>
         {chips.map((value, index) => (
-          <Chip.Root key={`m:${index}:${value}`} onRemove={() => undefined} disabled={field.disabled}>
+          <Chip.Root key={`m:${index}:${value}`} onRemove={() => undefined} removeIcon={chipRemoveIcon} disabled={field.disabled}>
             {value}
           </Chip.Root>
         ))}
-        <Chip.Root onRemove={() => undefined} disabled={field.disabled}>
+        <Chip.Root onRemove={() => undefined} removeIcon={chipRemoveIcon} disabled={field.disabled}>
           …
         </Chip.Root>
         <Chip.Overflow overflowCount={chips.length || 1} overflowLabel={overflowLabel} />
@@ -571,10 +576,8 @@ export type FieldCounterProps = {
 let warnedOutsideRoot = false;
 let warnedNoInput = false;
 
-function liveCopy(remaining: number) {
-  if (remaining <= 0) return 'Character limit reached';
-  if (remaining === 1) return '1 character left';
-  return `${remaining} characters left`;
+function liveCopy(remaining: number, strings: Strings) {
+  return remaining <= 0 ? strings.characterLimitReached : strings.charactersLeft(remaining);
 }
 
 function CounterMissing() {
@@ -587,6 +590,7 @@ function CounterMissing() {
 }
 
 function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: FieldContextValue }) {
+  const strings = useStrings();
   const entry = useSyncExternalStore(
     (listener) => subscribeCount(ctx.store, listener),
     () => ctx.store.entry,
@@ -625,10 +629,10 @@ function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: F
       {max === undefined ? null : (
         <>
           <span id={ctx.hintId} className={styles.srOnly}>
-            {`Up to ${max} characters`}
+            {strings.characterLimit(max)}
           </span>
           <span className={styles.srOnly} aria-live="polite">
-            {remaining !== undefined && remaining <= 20 ? liveCopy(remaining) : ''}
+            {remaining !== undefined && remaining <= 20 ? liveCopy(remaining, strings) : ''}
           </span>
         </>
       )}

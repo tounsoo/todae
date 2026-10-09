@@ -18,6 +18,7 @@ import {
 } from './Field';
 import { useChipField } from '../hooks/useChipField';
 import * as api from '../index';
+import { StringsProvider } from '../providers/StringsProvider';
 
 afterEach(cleanup);
 
@@ -413,6 +414,13 @@ function renderField(
 }
 
 describe('Field.ChipInput', () => {
+  it('puts chipRemoveIcon in every chip remove button', () => {
+    renderField({ chips: ['Alpha', 'Beta'], chipRemoveIcon: <svg data-testid="x" aria-hidden="true" /> });
+    for (const name of ['Remove Alpha', 'Remove Beta']) {
+      expect(screen.getByRole('button', { name }).querySelector('[data-testid="x"]')).toBeTruthy();
+    }
+  });
+
   it('renders one chip per value plus a controlled input', () => {
     renderField({ chips: ['Alpha', 'Beta'], inputValue: 'x' });
     expect(screen.getByRole('button', { name: 'Remove Alpha' })).toBeTruthy();
@@ -1092,6 +1100,32 @@ describe('Field.Counter', () => {
     );
     expect(room.container.querySelector('[aria-live="polite"]')?.textContent).toBe('');
     expect(room.container.textContent).toContain('Up to 40 characters');
+  });
+
+  it('takes its screen reader text from StringsProvider', () => {
+    const strings = {
+      characterLimit: (max: number) => `${max} caractères maximum`,
+      charactersLeft: (remaining: number) => `${remaining} restants`,
+      characterLimitReached: 'Limite atteinte',
+    };
+    function Counted({ value }: { value: string }) {
+      return (
+        <StringsProvider strings={strings}>
+          <Field.Root>
+            <Field.TextInput value={value} maxLength={10} onChange={() => undefined} />
+            <Field.Counter />
+          </Field.Root>
+        </StringsProvider>
+      );
+    }
+    const view = render(<Counted value="12345678" />);
+    const live = () => view.container.querySelector('[aria-live="polite"]')?.textContent;
+    expect(live()).toBe('2 restants');
+    const hint = view.container.querySelector(`[id="${screen.getByRole('textbox').getAttribute('aria-describedby')}"]`);
+    expect(hint?.textContent).toBe('10 caractères maximum');
+    view.rerender(<Counted value="1234567890" />);
+    expect(live()).toBe('Limite atteinte');
+    expect(view.container.textContent).not.toMatch(/Up to|characters|Character limit/);
   });
 
   it('shows a plain count without a hint when maxLength is omitted', () => {

@@ -19,7 +19,7 @@ export {
   type AvatarSize,
 } from './components/Avatar';
 export { Badge, type BadgeRootProps, type BadgeTone } from './components/Badge';
-export { Breadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './components/Breadcrumbs';
+export { Breadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './components/Breadcrumbs.client';
 export {
   Card,
   type CardBodyProps,
@@ -63,7 +63,7 @@ export {
   type PaginationRangeItem,
   type PaginationRangeOptions,
   type PaginationRootProps,
-} from './components/Pagination';
+} from './components/Pagination.client';
 export {
   Menu,
   type MenuCheckboxItemProps,
@@ -271,3 +271,4 @@ export {
   type Densities,
   type DensityProviderProps,
 } from './providers/DensityProvider';
+export { StringsProvider, useStrings, type Strings, type StringsProviderProps } from './providers/StringsProvider';

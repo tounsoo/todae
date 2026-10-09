@@ -60,6 +60,7 @@ const HREFS = [
   '/utilities/use-roving-focus',
   '/utilities/use-sheet-presentation',
   '/utilities/use-tooltip',
+  '/utilities/strings-provider',
   '/recipes/combobox',
   '/recipes/command-palette',
   '/recipes/file-upload',
@@ -104,6 +105,7 @@ describe('SiteNav', () => {
       '/utilities/use-roving-focus',
       '/utilities/use-sheet-presentation',
       '/utilities/use-tooltip',
+      '/utilities/strings-provider',
     ]);
   });
 });

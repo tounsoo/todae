@@ -20,6 +20,7 @@ import { TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables';
 import { initialFocusTarget } from '../overlay/useInitialFocus';
 import { useFocusLeave } from '../overlay/useFocusLeave';
 import { Button, type ButtonActionProps } from './Button';
+import { useStrings } from '../providers/StringsProvider';
 import { useDismissLabel } from './dismissLabel';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import type { Toaster, ToastRecord, ToastTone } from './toaster';
@@ -310,7 +311,7 @@ function Region<T extends object = object>({
   layout = 'list',
   limit = 3,
   hotkey = 'F8',
-  'aria-label': ariaLabel = 'Notifications',
+  'aria-label': ariaLabelProp,
   className,
   ref,
   onPointerEnter,
@@ -322,6 +323,8 @@ function Region<T extends object = object>({
 }: ToastRegionProps<T>) {
   // None on the server: a store at module scope is shared by every request.
   const toasts = useSyncExternalStore(toaster.subscribe, toaster.getSnapshot, noToasts);
+  const { notifications } = useStrings();
+  const ariaLabel = ariaLabelProp ?? notifications;
   const homeRef = useRef<HTMLSpanElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const sectionRefs = useComposedRefs(sectionRef, ref);
@@ -693,10 +696,10 @@ function Action({ variant = 'secondary', onClick, className, ...props }: ToastAc
   );
 }
 
-/** A ghost Button.Root that dismisses the toast. Named "Dismiss" unless its own text names it. */
+/** A ghost Button.Root that dismisses the toast. Named by the `dismiss` string unless its own text names it. */
 function Close({ 'aria-label': ariaLabel, onClick, className, children, ref, ...props }: ToastCloseProps) {
   const item = useContext(ItemContext);
-  const [label, refs] = useDismissLabel(children, ariaLabel, ref);
+  const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().dismiss);
   return (
     <Button.Root
       variant="ghost"

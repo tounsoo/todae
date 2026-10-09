@@ -176,11 +176,15 @@ compact, comfortable, spacious.
   <CounterPlain />
 </Example>
 
+`maxLength`가 있으면 Counter는 스크린 리더에 한도를 알리고, 남은 글자가 20자 이하가 되면 몇 자 남았는지도 알립니다. 이 텍스트는 [StringsProvider](/utilities/strings-provider)의 `characterLimit`, `charactersLeft`, `characterLimitReached` 문자열에서 오며, 설정하지 않으면 영어입니다.
+
 ## Chip input
 
 제어되는 칩과 입력입니다. 필드는 칩을 직접 추가하지 않습니다. 부모의 `onCommit`이 결정합니다. 장식 요소는 칩 흐름 밖, `Field.Root`에 남습니다. ChipInput 안의 칩은 모든 밀도에서 입력과 같은 필드 한 줄 높이입니다. `chipLayout="row"`는 ChipInput 안에서 칩을 입력 위의 전체 너비 줄에 놓습니다. Icon과 Affix는 첫 줄에 놓입니다. 칩이 없으면 `Field.TextInput`과 같은 높이의 한 줄 필드입니다. row에서 `maxRows`는 칩 줄만 세고, 인라인 흐름처럼 잘라 냅니다. `Label htmlFor`나 Root의 `aria-label`로 레이블을 붙이세요.
 
 `maxRows`가 설정되면 흐름은 첫 페인트부터 토큰에서 계산한 줄 수로 제한되고, 첫 레이아웃 측정 전까지 칩을 숨깁니다. 그래서 SSR이 `+N`으로 접히기 전에 펼쳐지지 않습니다. 보이는 영역은 앞쪽 칩들입니다. 가장 새 칩은 `+N`으로 접히고 실제 흐름에서 언마운트됩니다. 이후 칩이 전체 너비로 들어가지 않으면 `+N`으로 옮겨집니다. 첫 칩과 `+N`, 입력이 한 줄을 함께 쓸 수 없으면 첫 칩은 말줄임표로 잘립니다. 접근 가능한 이름은 전체 레이블을 유지합니다.
+
+칩 제거 버튼은 `chipRemoveIcon`을 전달하지 않으면 X 모양을 그립니다. [Chip](/chip)과 같습니다.
 
 이번 단계에서 미룬 것: 내장 지우기, 붙여넣기 분할, 클릭 가능한 `+N`, 칩 화살표 키 로빙.
 
