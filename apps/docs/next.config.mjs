@@ -9,7 +9,12 @@ const REDIRECTS = [
   ['/recipes/chip-list', '/chip-list'],
 ];
 
+// Vercel names the project's production domain in every deployment, previews included.
+// `env` inlines it at build, so client components read the same origin as the server.
+const PRODUCTION_HOST = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
 const nextConfig = {
+  env: { DOCS_ORIGIN: PRODUCTION_HOST ? `https://${PRODUCTION_HOST}` : '' },
   // Each locale has its own root layout (app/(en), app/ko), so a 404 needs a page with its own <html>.
   experimental: { globalNotFound: true },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],

@@ -5,6 +5,7 @@ import { mdxFromMarkdown } from 'mdast-util-mdx';
 import { mdxjs } from 'micromark-extension-mdxjs';
 import { describe, expect, it } from 'vitest';
 import { loadPages } from './docs-mcp/mdx';
+import { DOCS_ORIGIN } from './origin';
 import { LOCALES } from './i18n/config';
 import { DICTIONARIES } from './i18n/dictionaries';
 import { ENGLISH_PAGES } from './i18n/englishPages';
@@ -109,7 +110,7 @@ describe('page metadata', () => {
     expect(metadata.alternates).toBeUndefined();
     expect(metadata.openGraph).not.toHaveProperty('url');
     expect(metadata.description).toBe(DICTIONARIES.ko.hero.lead);
-    expect(metadata.metadataBase?.href).toBe('https://todae.omsoo.design/');
+    expect(metadata.metadataBase?.href).toBe(`${DOCS_ORIGIN}/`);
   });
 });
 
@@ -134,8 +135,9 @@ describe('social images', () => {
   });
 
   it('shows the address a reader would type', () => {
-    expect(displayUrl({ locale: 'en', slug: '' })).toBe('todae.omsoo.design');
-    expect(displayUrl({ locale: 'ko', slug: 'button' })).toBe('todae.omsoo.design/ko/button');
+    const host = new URL(DOCS_ORIGIN).host;
+    expect(displayUrl({ locale: 'en', slug: '' })).toBe(host);
+    expect(displayUrl({ locale: 'ko', slug: 'button' })).toBe(`${host}/ko/button`);
   });
 
   it("converts Todae's OKLCH tokens to the hex the renderer reads", () => {

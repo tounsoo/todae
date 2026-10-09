@@ -18,6 +18,7 @@ import { SITE_GROUPS } from '../../components/siteGroups';
 import { UntranslatedPage } from '../../components/UntranslatedPage';
 import { COMPLETE_LOCALES, LOCALES, stripLocale } from './config';
 import { DICTIONARIES } from './dictionaries';
+import { DOCS_ORIGIN } from '../origin';
 import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
 import { PROP_TRANSLATIONS, propDescription } from './propDescriptions';
@@ -343,9 +344,9 @@ describe('docs locales', () => {
     // React hoists these into the document head.
     const links = [...document.head.querySelectorAll('link[rel="alternate"]')];
     expect(links.map((link) => [link.getAttribute('hreflang'), link.getAttribute('href')])).toEqual([
-      ['en', 'https://todae.omsoo.design/tokens'],
-      ['ko', 'https://todae.omsoo.design/ko/tokens'],
-      ['x-default', 'https://todae.omsoo.design/tokens'],
+      ['en', `${DOCS_ORIGIN}/tokens`],
+      ['ko', `${DOCS_ORIGIN}/ko/tokens`],
+      ['x-default', `${DOCS_ORIGIN}/tokens`],
     ]);
   });
 
