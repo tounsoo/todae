@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Field } from '../components/Field';
 import { OptionList } from '../components/OptionList';
 import { Popover } from '../components/Popover';
@@ -563,5 +563,13 @@ describe('useCombobox', () => {
     rerender();
     expect(result.current.getInputProps).toBe(input);
     expect(result.current.items).toBe(items);
+  });
+});
+
+describe('useCombobox sheet props', () => {
+  it('always types open and onOpenChange as set', () => {
+    type Sheet = ReturnType<ReturnType<typeof useCombobox>['getSheetProps']>;
+    expectTypeOf<Sheet['open']>().toEqualTypeOf<boolean>();
+    expectTypeOf<Sheet['onOpenChange']>().not.toBeUndefined();
   });
 });

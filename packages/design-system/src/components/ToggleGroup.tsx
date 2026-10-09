@@ -25,7 +25,7 @@ type ToggleGroupBase = {
   /** Disables every item. */
   disabled?: boolean;
   children?: ReactNode;
-} & Omit<ComponentPropsWithRef<'div'>, 'role' | 'defaultValue' | 'children'>;
+} & Omit<ComponentPropsWithRef<'div'>, 'role' | 'defaultValue' | 'children' | 'onChange'>;
 
 /** One item pressed at most. Pressing the pressed item again clears it. */
 export type ToggleGroupSingleProps = ToggleGroupBase & {

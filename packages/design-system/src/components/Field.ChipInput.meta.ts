@@ -32,7 +32,19 @@ export const meta = {
       name: 'onChipRemove',
       type: '(index: number, value: string) => void',
       required: true,
-      description: 'Dismiss click or Backspace on an empty input.',
+      description: 'Remove button click or Backspace on an empty input.',
+    },
+    {
+      name: 'chipRemoveLabel',
+      type: '(value: string) => string',
+      required: false,
+      description: 'Remove button name. Default is Remove {value}.',
+    },
+    {
+      name: 'overflowLabel',
+      type: '(n: number) => string',
+      required: false,
+      description: '+N name. Default is {n} more.',
     },
     {
       name: 'commitKeys',

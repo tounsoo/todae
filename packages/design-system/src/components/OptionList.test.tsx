@@ -230,3 +230,14 @@ describe('OptionList', () => {
     expect(css).not.toMatch(/\.list:hover[^{]*\{[^}]*--todae-option-bg-hover/);
   });
 });
+
+describe('OptionList.Root types', () => {
+  it('rejects the old onChange name', () => {
+    expect(() => (
+      // @ts-expect-error onChange was renamed to onValueChange.
+      <OptionList.Root value={null} onValueChange={() => undefined} onChange={() => undefined} aria-label="Fruit">
+        <OptionList.Option value="apple">Apple</OptionList.Option>
+      </OptionList.Root>
+    )).not.toThrow();
+  });
+});

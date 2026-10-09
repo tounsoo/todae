@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Drawer.Root',
-  description: 'Controlled native modal dialog pinned to the start or end edge, full height. Uses Dialog parts inside.',
+  description: 'Native modal dialog pinned to the start or end edge, full height. Uses Dialog parts inside.',
   props: [
     {
       name: 'open',

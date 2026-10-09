@@ -236,7 +236,7 @@
           "name": "onOpenChange",
           "type": "(open: boolean, reason: SheetCloseReason) => void",
           "required": false,
-          "description": "Dismiss requests. Staying open keeps the sheet open. reason is \"form\" for a <form method=\"dialog\"> submit (read returnValue) and \"native\" when something else outside Todae closed the <dialog>; it shows again while open stays true."
+          "description": "Dismiss requests. When controlled, staying open keeps the sheet open. reason is \"form\" for a <form method=\"dialog\"> submit (read returnValue) and \"native\" when something else outside Todae closed the <dialog>; when controlled, it shows again while open stays true."
         },
         {
           "name": "snap",
@@ -554,7 +554,7 @@
     },
     {
       "name": "Chip.Root",
-      "description": "Text-only label with optional named dismiss. Overflow +N is Chip.Overflow.",
+      "description": "Text-only label with optional named remove button. Overflow +N is Chip.Overflow.",
       "props": [
         {
           "name": "children",
@@ -566,19 +566,19 @@
           "name": "onRemove",
           "type": "() => void",
           "required": false,
-          "description": "Renders a named dismiss button."
+          "description": "Renders a named remove button."
         },
         {
           "name": "removeLabel",
           "type": "string",
           "required": false,
-          "description": "Dismiss aria-label. Default is Remove {label}."
+          "description": "Remove button aria-label. Default is Remove {label}."
         },
         {
           "name": "disabled",
           "type": "boolean",
           "required": false,
-          "description": "Disables dismiss.",
+          "description": "Disables the remove button.",
           "default": "false"
         }
       ]
@@ -729,7 +729,7 @@
     },
     {
       "name": "Dialog.Root",
-      "description": "Controlled native modal dialog. Stays centered. No sheet morph.",
+      "description": "Native modal dialog. Stays centered. No sheet morph.",
       "props": [
         {
           "name": "open",
@@ -748,7 +748,7 @@
           "name": "onOpenChange",
           "type": "(open: boolean, reason: DialogCloseReason) => void",
           "required": false,
-          "description": "Dismiss requests. Staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element)."
+          "description": "Dismiss requests. When controlled, staying open keeps the dialog open. Reasons: escape, backdrop, close-button, form (a <form method=\"dialog\"> submit; the submitter value is on the element returnValue), native (something else closed the element)."
         },
         {
           "name": "dismissOnEscape",
@@ -786,7 +786,7 @@
     },
     {
       "name": "Drawer.Root",
-      "description": "Controlled native modal dialog pinned to the start or end edge, full height. Uses Dialog parts inside.",
+      "description": "Native modal dialog pinned to the start or end edge, full height. Uses Dialog parts inside.",
       "props": [
         {
           "name": "open",
@@ -904,7 +904,19 @@
           "name": "onChipRemove",
           "type": "(index: number, value: string) => void",
           "required": true,
-          "description": "Dismiss click or Backspace on an empty input."
+          "description": "Remove button click or Backspace on an empty input."
+        },
+        {
+          "name": "chipRemoveLabel",
+          "type": "(value: string) => string",
+          "required": false,
+          "description": "Remove button name. Default is Remove {value}."
+        },
+        {
+          "name": "overflowLabel",
+          "type": "(n: number) => string",
+          "required": false,
+          "description": "+N name. Default is {n} more."
         },
         {
           "name": "commitKeys",

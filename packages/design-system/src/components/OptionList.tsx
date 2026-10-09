@@ -36,7 +36,7 @@ type OptionListBase = {
   onActiveValueChange?: (value: string | null) => void;
   'aria-label'?: string;
   'aria-labelledby'?: string;
-} & Omit<ComponentPropsWithRef<'div'>, 'children' | 'role' | 'defaultValue'>;
+} & Omit<ComponentPropsWithRef<'div'>, 'children' | 'role' | 'defaultValue' | 'onChange'>;
 
 export type OptionListSingleProps = OptionListBase & {
   selectionMode?: 'single';

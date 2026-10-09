@@ -113,13 +113,14 @@ export type UseComboboxResult = {
   getInputProps: () => FieldTextInputProps & { ref: RefObject<HTMLInputElement | null> };
   getChipInputProps: () => FieldChipInputProps & { ref: RefObject<HTMLInputElement | null> };
   getPopoverProps: () => PopoverWire;
-  getSheetProps: () => Pick<
-    BottomSheetRootProps,
-    'open' | 'onOpenChange' | 'initialFocusRef' | 'restoreFocusRef' | 'aria-label'
-  >;
+  getSheetProps: () => ComboboxSheetProps;
   getListboxProps: () => Omit<OptionListSingleProps, 'children'> | Omit<OptionListMultipleProps, 'children'>;
   getOptionProps: (item: ComboboxItem) => OptionListOptionProps;
 };
+
+/** The hook always sets open and onOpenChange, so they are required here. */
+type ComboboxSheetProps = Pick<BottomSheetRootProps, 'initialFocusRef' | 'restoreFocusRef' | 'aria-label'> &
+  Required<Pick<BottomSheetRootProps, 'open' | 'onOpenChange'>>;
 
 function isMultiple(options: UseComboboxOptions): options is UseComboboxMultipleOptions {
   return options.selectionMode === 'multiple';
@@ -645,10 +646,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   );
 
   const getSheetProps = useCallback(
-    (): Pick<
-      BottomSheetRootProps,
-      'open' | 'onOpenChange' | 'initialFocusRef' | 'restoreFocusRef' | 'aria-label'
-    > => ({
+    (): ComboboxSheetProps => ({
       open,
       onOpenChange: (next, reason) => setOpen(next, reason),
       initialFocusRef: inputRef,

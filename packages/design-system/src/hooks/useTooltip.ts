@@ -247,14 +247,13 @@ export function useTooltip<I extends boolean = false>(
     [anchorName, contentId, dispatch, enabled, open, pairContains, triggerComposed],
   );
 
+  const setTooltip = useComposedRefs(tooltipRef);
   const getTooltipProps = useCallback((): TooltipWire<I> => {
     const wire = {
       id: contentId,
       open,
       interactive,
-      ref: (node: HTMLElement | null) => {
-        tooltipRef.current = node;
-      },
+      ref: setTooltip,
       style: tooltipStyle(anchorName),
     };
     if (!interactive) return wire as TooltipWire<I>;
@@ -269,7 +268,7 @@ export function useTooltip<I extends boolean = false>(
         }
       },
     } as TooltipWire<I>;
-  }, [anchorName, contentId, dispatch, enabled, interactive, open, pairContains]);
+  }, [anchorName, contentId, dispatch, enabled, interactive, open, pairContains, setTooltip]);
 
   return {
     open,

@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Chip.Root',
-  description: 'Text-only label with optional named dismiss. Overflow +N is Chip.Overflow.',
+  description: 'Text-only label with optional named remove button. Overflow +N is Chip.Overflow.',
   props: [
     {
       name: 'children',
@@ -14,20 +14,20 @@ export const meta = {
       name: 'onRemove',
       type: '() => void',
       required: false,
-      description: 'Renders a named dismiss button.',
+      description: 'Renders a named remove button.',
     },
     {
       name: 'removeLabel',
       type: 'string',
       required: false,
-      description: 'Dismiss aria-label. Default is Remove {label}.',
+      description: 'Remove button aria-label. Default is Remove {label}.',
     },
     {
       name: 'disabled',
       type: 'boolean',
       required: false,
       default: 'false',
-      description: 'Disables dismiss.',
+      description: 'Disables the remove button.',
     },
   ],
 } as const satisfies ComponentMeta;

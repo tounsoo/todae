@@ -227,3 +227,12 @@ describe('useTooltip', () => {
     expect(panel.getAttribute('data-open')).toBeNull();
   });
 });
+
+describe('useTooltip tooltip ref', () => {
+  it('keeps one ref across renders, so React does not detach it', () => {
+    const { result, rerender } = renderHook(() => useTooltip());
+    const first = result.current.getTooltipProps().ref;
+    rerender();
+    expect(result.current.getTooltipProps().ref).toBe(first);
+  });
+});

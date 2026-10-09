@@ -21,7 +21,7 @@ export const meta = {
       name: 'onOpenChange',
       type: '(open: boolean, reason: SheetCloseReason) => void',
       required: false,
-      description: 'Dismiss requests. Staying open keeps the sheet open. reason is "form" for a <form method="dialog"> submit (read returnValue) and "native" when something else outside Todae closed the <dialog>; it shows again while open stays true.',
+      description: 'Dismiss requests. When controlled, staying open keeps the sheet open. reason is "form" for a <form method="dialog"> submit (read returnValue) and "native" when something else outside Todae closed the <dialog>; when controlled, it shows again while open stays true.',
     },
     {
       name: 'snap',
