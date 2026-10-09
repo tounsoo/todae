@@ -41,6 +41,8 @@ const HREFS = [
   '/table',
   '/progress',
   '/slider',
+  '/spinner',
+  '/code',
   '/utilities/use-announcer',
   '/utilities/use-chip-field',
   '/utilities/use-chip-list',

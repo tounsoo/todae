@@ -1,0 +1,10 @@
+{
+  "spinner": {
+    "size": { "$type": "dimension", "$value": { "value": 1.25, "unit": "rem" } },
+    "thickness": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
+    "track-tint": { "$type": "number", "$value": 0.2 },
+    "motion": {
+      "duration": { "$type": "duration", "$value": { "value": 800, "unit": "ms" } }
+    }
+  }
+}

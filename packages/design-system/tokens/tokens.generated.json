@@ -263,6 +263,15 @@
       "context": null
     },
     {
+      "path": "font.family.mono",
+      "type": "fontFamily",
+      "cssVar": "--todae-font-family-mono",
+      "cssValue": "ui-monospace, \"SFMono-Regular\", \"Menlo\", \"Consolas\", monospace",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "font.leading.default",
       "type": "number",
       "cssVar": "--todae-font-leading-default",
@@ -4723,6 +4732,249 @@
       "cssVar": "--todae-drawer-size",
       "cssValue": "24rem",
       "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "spinner.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-spinner-motion-duration",
+      "cssValue": "800ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "spinner.size",
+      "type": "dimension",
+      "cssVar": "--todae-spinner-size",
+      "cssValue": "1.25rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "spinner.thickness",
+      "type": "dimension",
+      "cssVar": "--todae-spinner-thickness",
+      "cssValue": "2px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "spinner.track-tint",
+      "type": "number",
+      "cssVar": "--todae-spinner-track-tint",
+      "cssValue": "0.2",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "skeleton.bg",
+      "type": "color",
+      "cssVar": "--todae-skeleton-bg",
+      "cssValue": "var(--todae-color-bg-subtle)",
+      "ref": "color.bg.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "skeleton.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-skeleton-motion-duration",
+      "cssValue": "1600ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "skeleton.radius",
+      "type": "dimension",
+      "cssVar": "--todae-skeleton-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.block.bg",
+      "type": "color",
+      "cssVar": "--todae-code-block-bg",
+      "cssValue": "var(--todae-color-bg-subtle)",
+      "ref": "color.bg.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.block.fg",
+      "type": "color",
+      "cssVar": "--todae-code-block-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.block.leading",
+      "type": "number",
+      "cssVar": "--todae-code-block-leading",
+      "cssValue": "var(--todae-font-leading-default)",
+      "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.block.padding",
+      "type": "dimension",
+      "cssVar": "--todae-code-block-padding",
+      "cssValue": "var(--todae-space-overlay-padding)",
+      "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.block.radius",
+      "type": "dimension",
+      "cssVar": "--todae-code-block-radius",
+      "cssValue": "var(--todae-radius-md)",
+      "ref": "radius.md",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.font.family",
+      "type": "fontFamily",
+      "cssVar": "--todae-code-font-family",
+      "cssValue": "var(--todae-font-family-mono)",
+      "ref": "font.family.mono",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.font.scale",
+      "type": "number",
+      "cssVar": "--todae-code-font-scale",
+      "cssValue": "0.875",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-code-padding-x",
+      "cssValue": "0.25rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-code-padding-y",
+      "cssValue": "0.0625rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.radius",
+      "type": "dimension",
+      "cssVar": "--todae-code-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "code.tint",
+      "type": "number",
+      "cssVar": "--todae-code-tint",
+      "cssValue": "0.1",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "kbd.bg",
+      "type": "color",
+      "cssVar": "--todae-kbd-bg",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "kbd.border",
+      "type": "color",
+      "cssVar": "--todae-kbd-border",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "kbd.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-kbd-border-width",
+      "cssValue": "1px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "kbd.fg",
+      "type": "color",
+      "cssVar": "--todae-kbd-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "kbd.font.family",
+      "type": "fontFamily",
+      "cssVar": "--todae-kbd-font-family",
+      "cssValue": "var(--todae-font-family-mono)",
+      "ref": "font.family.mono",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "kbd.font.scale",
+      "type": "number",
+      "cssVar": "--todae-kbd-font-scale",
+      "cssValue": "0.8125",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "kbd.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-kbd-padding-x",
+      "cssValue": "0.375rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "kbd.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-kbd-padding-y",
+      "cssValue": "0.0625rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "kbd.radius",
+      "type": "dimension",
+      "cssVar": "--todae-kbd-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
       "layer": "contract",
       "context": null
     }

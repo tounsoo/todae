@@ -161,6 +161,12 @@
     "leading": {
       "default": { "$type": "number", "$value": 1.5 },
       "tight": { "$type": "number", "$value": 1.25 }
+    },
+    "family": {
+      "mono": {
+        "$type": "fontFamily",
+        "$value": ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"]
+      }
     }
   },
   "motion": {

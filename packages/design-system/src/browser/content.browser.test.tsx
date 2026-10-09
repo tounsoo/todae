@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useId, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-import { Alert, Badge, Breadcrumbs, Card, Checkbox, ErrorMessage, Field, Fieldset, Label, Text } from '../index';
+import { Alert, Badge, Breadcrumbs, Button, Card, Checkbox, ErrorMessage, Field, Fieldset, Label, Text } from '../index';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -112,6 +112,20 @@ function Gallery() {
           Pro <Badge.Root tone="success">Paid</Badge.Root>
         </Card.Body>
       </Card.Root>
+      <progress className="todae-spinner" aria-label="Loading invoices" />
+      <div aria-busy="true">
+        <div className="todae-skeleton" aria-hidden="true" />
+      </div>
+      <p>
+        Press{' '}
+        <kbd>
+          <kbd>Ctrl</kbd> + <kbd>K</kbd>
+        </kbd>{' '}
+        to run <code>open()</code>.
+      </p>
+      <pre tabIndex={0} role="region" aria-label="Example code">
+        <code>{'const plan = await getPlan();'}</code>
+      </pre>
       <a href="#gallery-end" className="todae-visually-hidden-focusable">
         Skip to content
       </a>
@@ -357,6 +371,91 @@ describe('content parts in a browser', () => {
     );
     expect(getComputedStyle(screen.getByTestId('ltr')).animationDirection).toBe('normal');
     expect(getComputedStyle(screen.getByTestId('rtl')).animationDirection).toBe('reverse');
+  });
+
+  it('turns a spinner ring and pulses a skeleton', () => {
+    render(
+      <Themed>
+        <progress data-testid="spinner" className="todae-spinner" aria-label="Loading" />
+        <Button.Root variant="primary" data-testid="button">
+          <progress data-testid="in-button" className="todae-spinner" aria-label="Saving" /> Save <code data-testid="button-code">x</code>
+        </Button.Root>
+        <div dir="rtl">
+          <progress data-testid="rtl" className="todae-spinner" aria-label="Loading" />
+        </div>
+        <progress data-testid="valued" className="todae-spinner" aria-label="Uploading" value={40} max={100} />
+        <span data-testid="skeleton" className="todae-skeleton" aria-hidden="true">
+          Placeholder <b data-testid="inside">text</b>
+        </span>
+      </Themed>,
+    );
+    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+    expect(style('spinner').animationName).toBe('todae-spinner-turn');
+    expect(style('spinner').width).toBe(style('spinner').height);
+    expect(style('spinner').borderTopLeftRadius).toBe('50%');
+    expect(style('spinner').backgroundImage).toContain('conic-gradient');
+    // A ring turns the same way on either side; the progress sweep's reversal must not reach it.
+    expect(style('rtl').animationDirection).toBe('normal');
+    // Inside a primary button the arc and inline code take the button's text color.
+    expect(style('in-button').color).toBe(style('button').color);
+    expect(style('in-button').backgroundImage).toContain(style('button').color);
+    expect(style('button-code').color).toBe(style('button').color);
+    expect(style('button-code').backgroundColor).not.toBe(style('button').backgroundColor);
+    // With a value it stays a bar, as it is announced.
+    expect(style('valued').animationName).toBe('none');
+    expect(style('valued').backgroundImage).not.toContain('conic-gradient');
+    expect(style('skeleton').display).toBe('block');
+    expect(style('skeleton').animationName).toBe('todae-skeleton-pulse');
+    expect(style('skeleton').color).toBe('rgba(0, 0, 0, 0)');
+    expect(style('inside').visibility).toBe('hidden');
+  });
+
+  it('keeps a skeleton at least one line high, and lets what is inside make it taller', () => {
+    render(
+      <Themed>
+        <p data-testid="line">x</p>
+        <div data-testid="short" className="todae-skeleton" style={{ blockSize: '2px' }} />
+        <div data-testid="tall" className="todae-skeleton">
+          <div style={{ blockSize: '200px' }} />
+        </div>
+      </Themed>,
+    );
+    const height = (id: string) => screen.getByTestId(id).getBoundingClientRect().height;
+    expect(height('short')).toBeCloseTo(height('line'), 0);
+    expect(height('tall')).toBe(200);
+  });
+
+  it('draws keys as caps, leaves the outer key of a shortcut plain, and drops the code box inside a block', () => {
+    render(
+      <Themed>
+        <p style={{ color: 'rgb(1, 2, 3)' }}>
+          <kbd data-testid="shortcut">
+            <kbd data-testid="key">Ctrl</kbd>+<kbd>K</kbd>
+          </kbd>
+        </p>
+        <code data-testid="inline">x</code>
+        <a href="#x" data-testid="link">
+          <code data-testid="linked">x</code>
+        </a>
+        <pre data-testid="block">
+          <code data-testid="nested">x</code>
+        </pre>
+      </Themed>,
+    );
+    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+    expect(style('key').borderTopStyle).toBe('solid');
+    expect(parseFloat(style('key').borderBottomWidth)).toBeGreaterThan(parseFloat(style('key').borderTopWidth));
+    expect(style('shortcut').borderTopStyle).toBe('none');
+    expect(style('shortcut').display).toBe('inline');
+    expect(style('shortcut').color).toBe('rgb(1, 2, 3)');
+    expect(style('linked').color).toBe(style('link').color);
+    expect(style('shortcut').fontFamily).toBe(getComputedStyle(screen.getByTestId('shortcut').parentElement!).fontFamily);
+    expect(style('inline').fontFamily).toContain('monospace');
+    expect(style('inline').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(style('block').backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+    expect(style('block').overflowX).toBe('auto');
+    expect(style('nested').backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(style('nested').paddingLeft).toBe('0px');
   });
 
   it('draws the breadcrumb glyph between items only, and colors badges and cards from tokens', () => {

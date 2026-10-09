@@ -1,0 +1,52 @@
+import { SkeletonProfile, SpinnerLabelled } from '../../../components/demos/NativeDemo';
+
+# Spinner and Skeleton
+
+Two class utilities in the `todae.base` layer for content that is still loading. There is no component: a spinner is a native `<progress>`, and a skeleton is any element with a class.
+
+## Spinner
+
+Put `todae-spinner` on a `<progress>` with no `value`. It keeps the progressbar role, so screen readers announce it as a progress bar, and it needs a name like any progress: wrap it in a `<label>` with the text, or give it `aria-label`. The bar becomes a ring with one arc of fill that turns, and it holds still when the user asks for reduced motion. Give it a `value` and it stays a bar, so what shows matches what is announced.
+
+<Example>
+  <SpinnerLabelled />
+</Example>
+
+```tsx
+<label>
+  <progress className="todae-spinner" /> Loading invoices
+</label>
+
+<progress className="todae-spinner" aria-label="Saving" />
+```
+
+It draws in the text color, so it shows on any surface, a primary button included: set `color` to change it. Restyle it through `spinner.size`, `spinner.thickness`, `spinner.track-tint` (how much of the text color the track takes) and `spinner.motion.duration`.
+
+## Skeleton
+
+Put `todae-skeleton` on a block that stands in for content before it arrives. It is at least one line high, and elements inside it only give it a size: they are hidden. It pulses, and holds still under reduced motion.
+
+<Example block>
+  <SkeletonProfile />
+</Example>
+
+```tsx
+<div>
+  <span className="todae-visually-hidden">Loading profile</span>
+  <Stack direction="row" aria-hidden="true">
+    <div className="todae-skeleton" style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />
+    <Stack style={{ flex: 1 }}>
+      <div className="todae-skeleton" style={{ inlineSize: '40%' }} />
+      <div className="todae-skeleton" style={{ inlineSize: '70%' }} />
+    </Stack>
+  </Stack>
+</div>
+```
+
+A skeleton means nothing to a screen reader, so hide it with `aria-hidden` and say what is loading in text. Restyle it through `skeleton.bg`, `skeleton.radius` and `skeleton.motion.duration`.
+
+## When to use
+
+**When:** Spinner → a short wait for one action or a small area, such as a save or a search. Skeleton → the layout of a page or section is known before its content arrives.
+
+**When not:** The wait has a known end → [Progress](/progress) with a `value`. The wait is long or can fail → say so in text, with a way to cancel or retry.

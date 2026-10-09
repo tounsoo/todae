@@ -1,0 +1,46 @@
+import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
+
+# Code and Kbd
+
+Code and keys are native `<code>`, `<pre>` and `<kbd>` elements. There is no component: Todae styles every one of them in the `todae.base` layer from the `code` and `kbd` contract tokens.
+
+## Code
+
+Inline `<code>` keeps the text color around it and tints its box from that color, so it reads the same in a link or a primary button. It is a step smaller than the text around it. A `<pre>` is a block that scrolls sideways when a line is too long, and a `<code>` inside it drops its own box.
+
+<Example block>
+  <CodeInText />
+</Example>
+
+```tsx
+<Text>
+  Call <code>getPlan()</code> before you render the billing page.
+</Text>
+<pre tabIndex={0} role="region" aria-label="Example code">
+  <code>{source}</code>
+</pre>
+```
+
+A `<pre>` that scrolls needs `tabIndex={0}` so keyboard users can reach and scroll it, and `role="region"` with an `aria-label` so that stop has a name. `code.font.family` and `code.font.scale` (the size as a share of the text around it) set the font of inline code and code blocks alike. Restyle the inline box through `code.tint` (how much of the text color it takes), `code.radius`, `code.padding.x` and `code.padding.y`, and the block through the `code.block` tokens.
+
+## Kbd
+
+A `<kbd>` is drawn as a key cap. For a shortcut, put one `<kbd>` per key inside an outer `<kbd>`, as HTML defines it: the outer one stays plain text in the color around it, so the joining `+` is not boxed.
+
+<Example>
+  <KbdShortcut />
+</Example>
+
+```tsx
+<kbd>
+  <kbd>Ctrl</kbd>+<kbd>K</kbd>
+</kbd>
+```
+
+Restyle keys through `kbd.fg`, `kbd.bg`, `kbd.border`, `kbd.border-width`, `kbd.radius`, `kbd.font.family`, `kbd.font.scale`, `kbd.padding.x` and `kbd.padding.y`.
+
+## When to use
+
+**When:** Code → a name, value or snippet the reader types or reads in code. Kbd → a key or shortcut the reader presses.
+
+**When not:** A label for a state or count → [Badge](/badge). Text that only needs a mono font → your own class, so screen readers and search do not treat it as code.

@@ -1,0 +1,52 @@
+import { SkeletonProfile, SpinnerLabelled } from '../../../components/demos/NativeDemo';
+
+# Spinner and Skeleton
+
+아직 불러오는 중인 내용을 위한 `todae.base` 레이어의 클래스 유틸리티 두 개입니다. 컴포넌트는 없습니다. Spinner는 네이티브 `<progress>`이고, Skeleton은 클래스를 붙인 아무 요소입니다.
+
+## Spinner
+
+`value`가 없는 `<progress>`에 `todae-spinner`를 붙이세요. progressbar 역할이 그대로 남으므로 스크린 리더는 진행 막대로 알려 주고, 다른 progress처럼 이름이 필요합니다. 텍스트와 함께 `<label>`로 감싸거나 `aria-label`을 주세요. 막대는 채움 호 하나가 도는 고리가 되고, 사용자가 동작 줄이기를 요청하면 멈춥니다. `value`를 주면 막대로 남으므로, 보이는 것과 알려 주는 것이 같습니다.
+
+<Example>
+  <SpinnerLabelled />
+</Example>
+
+```tsx
+<label>
+  <progress className="todae-spinner" /> Loading invoices
+</label>
+
+<progress className="todae-spinner" aria-label="Saving" />
+```
+
+텍스트 색으로 그리므로 기본 버튼을 포함해 어떤 표면에서도 보입니다. 색을 바꾸려면 `color`를 정하세요. `spinner.size`, `spinner.thickness`, `spinner.track-tint`(트랙이 텍스트 색을 얼마나 쓰는지), `spinner.motion.duration`으로 바꾸세요.
+
+## Skeleton
+
+내용이 오기 전에 그 자리를 대신하는 블록에 `todae-skeleton`을 붙이세요. 높이는 최소 한 줄이고, 안에 든 요소는 크기만 정할 뿐 숨겨집니다. 깜빡이며, 동작 줄이기에서는 멈춥니다.
+
+<Example block>
+  <SkeletonProfile />
+</Example>
+
+```tsx
+<div>
+  <span className="todae-visually-hidden">Loading profile</span>
+  <Stack direction="row" aria-hidden="true">
+    <div className="todae-skeleton" style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />
+    <Stack style={{ flex: 1 }}>
+      <div className="todae-skeleton" style={{ inlineSize: '40%' }} />
+      <div className="todae-skeleton" style={{ inlineSize: '70%' }} />
+    </Stack>
+  </Stack>
+</div>
+```
+
+Skeleton은 스크린 리더에게 아무 뜻이 없으니 `aria-hidden`으로 숨기고, 무엇을 불러오는지 텍스트로 알리세요. `skeleton.bg`, `skeleton.radius`, `skeleton.motion.duration`으로 바꾸세요.
+
+## 언제 쓰나요
+
+**쓸 때:** Spinner → 저장이나 검색처럼 동작 하나나 작은 영역을 잠깐 기다릴 때. Skeleton → 내용이 오기 전에 페이지나 구역의 배치를 이미 알 때.
+
+**쓰지 않을 때:** 끝을 아는 기다림 → `value`가 있는 [Progress](/progress). 길거나 실패할 수 있는 기다림 → 텍스트로 알리고 취소나 다시 시도할 방법을 주세요.

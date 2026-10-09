@@ -39,6 +39,8 @@ export const SITE_GROUPS = [
       ['/table', 'Table'],
       ['/progress', 'Progress and Meter'],
       ['/slider', 'Slider'],
+      ['/spinner', 'Spinner and Skeleton'],
+      ['/code', 'Code and Kbd'],
     ],
   },
   {

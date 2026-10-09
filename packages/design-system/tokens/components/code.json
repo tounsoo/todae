@@ -1,0 +1,36 @@
+{
+  "code": {
+    "tint": { "$type": "number", "$value": 0.1 },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+    "font": {
+      "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/mono/$value" } },
+      "scale": { "$type": "number", "$value": 0.875 }
+    },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "value": 0.25, "unit": "rem" } },
+      "y": { "$type": "dimension", "$value": { "value": 0.0625, "unit": "rem" } }
+    },
+    "block": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
+      "padding": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } }
+    }
+  },
+  "kbd": {
+    "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+    "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
+    "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+    "border-width": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+    "font": {
+      "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/mono/$value" } },
+      "scale": { "$type": "number", "$value": 0.8125 }
+    },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "value": 0.375, "unit": "rem" } },
+      "y": { "$type": "dimension", "$value": { "value": 0.0625, "unit": "rem" } }
+    }
+  }
+}
