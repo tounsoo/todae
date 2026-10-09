@@ -158,7 +158,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   };
 
   const forced = options.presentation ?? 'auto';
-  // A dialog never turns into a sheet, so it skips the media queries.
+  // A dialog never turns into a sheet.
   const sheet = useSheetPresentation({ forced: forced === 'dialog' ? 'popover' : forced });
   const presentation = forced === 'auto' ? sheet.presentation : forced;
   const isSheet = presentation === 'sheet';
@@ -201,6 +201,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const [error, setError] = useState<unknown | null>(null);
   const gate = useRef(createAsyncGate());
   const lastQuery = useRef(inputValue);
+  // The query whose load the dialog's open reset waits for, before it picks the top row.
+  const topAwaited = useRef<string | null>(null);
   const lastPresentation = useRef(presentation);
 
   // Callbacks read the latest options through this ref so their identity stays stable and
@@ -276,6 +278,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       // Each time the dialog opens, start from the full list with the top row active.
       // Reopened while still closing, focus is still inside: keep the query and the focus target.
       if (next && isDialog && !open && !inputRef.current?.closest('dialog')?.contains(document.activeElement)) {
+        // The loaded list is still the old query's: wait for the full list's load to pick its top row.
+        topAwaited.current = hasLoader && inputValue !== '' ? '' : null;
         setInputValue('');
         setActiveValue(null);
         returnFocusRef.current = document.activeElement === document.body ? triggerRef.current : null;
@@ -283,7 +287,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       setOpenState(next);
       latest.current.onOpenChange?.(next, reason);
     },
-    [isDialog, open, setInputValue, setOpenState],
+    [hasLoader, inputValue, isDialog, open, setInputValue, setOpenState],
   );
 
   const highlight = useCallback((next: string | null) => {
@@ -411,6 +415,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     (query: string) => {
       const load = latest.current.loadOptions;
       if (!load) return;
+      if (topAwaited.current !== query) topAwaited.current = null;
       lastQuery.current = query;
       setLoading(true);
       setError(null);
@@ -418,6 +423,10 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         if (!gate.current.isCurrent(result.gen)) return;
         if ('aborted' in result && result.aborted) return;
         setLoading(false);
+        if (topAwaited.current === query) {
+          topAwaited.current = null;
+          setActiveValue(null);
+        }
         if ('error' in result) {
           setError(result.error);
           return;
@@ -449,7 +458,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   }, [open, presentation, setOpen]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || topAwaited.current !== null) return;
     if (selectionMode === 'single' && singleValue && enabledValues.includes(singleValue)) {
       setActiveValue(singleValue);
       return;

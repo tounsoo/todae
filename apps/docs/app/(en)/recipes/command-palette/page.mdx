@@ -13,7 +13,7 @@ const cb = useCombobox({
   value: null,
   onValueChange: (value: string | null) => { if (value) run(value) },
 })
-useHotkey(['Control+K', 'Meta+K'], () => cb.setOpen(true))
+useHotkey(['Control+K', 'Meta+K'], () => !cb.open && cb.setOpen(true))
 
 <Button.Root {...cb.getTriggerProps()} aria-keyshortcuts="Control+K Meta+K">
   Search commands

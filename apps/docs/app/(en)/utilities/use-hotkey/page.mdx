@@ -8,7 +8,7 @@ useHotkey(['Control+K', 'Meta+K'], () => setOpen(true))
 
 Write a hotkey as modifiers and a key joined by `+`, such as `Alt+T` or `F8`. Modifiers are `Alt`, `Control`, `Meta` and `Shift`, which can also be written as `Option`, `Ctrl` or `Cmd`, and they must match exactly, so `Control+K` does not run on Ctrl+Shift+K. A letter or digit matches what the key types. When the key types no Latin letter or digit, as on a Korean layout, it matches the key in that letter's place. A hotkey with a modifier name the hook does not know is off, with a warning in development.
 
-The hook skips a key something else already prevented, a key pressed while an input method composes text, and a held key that repeats. A hotkey that could type, such as `Shift+A`, is skipped in a text field. A function key, or a chord with Meta or with Control but not Alt, types nothing, so it runs there too.
+The hook skips a key something else already prevented, a key pressed while an input method composes text, and a held key that repeats. In a text field it runs only a function key, or a chord with Meta or with Control but not Alt; every other hotkey, such as `Shift+A`, `Escape` or an arrow key, is left to the field.
 
 The latest `handler` runs, so an inline function is fine. Pass `{ enabled: false }` to stop listening. [Command palette](/recipes/command-palette) opens with this hook.
 

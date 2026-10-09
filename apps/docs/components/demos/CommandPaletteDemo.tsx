@@ -25,7 +25,9 @@ export function CommandPalette({ onRun }: { onRun?: (value: string) => void } = 
       onRun?.(value);
     },
   });
-  useHotkey(['Control+K', 'Meta+K'], () => cb.setOpen(true));
+  useHotkey(['Control+K', 'Meta+K'], () => {
+    if (!cb.open) cb.setOpen(true);
+  });
 
   return (
     <Stack>

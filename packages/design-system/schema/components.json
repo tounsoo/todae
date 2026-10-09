@@ -2772,7 +2772,7 @@
     },
     {
       "name": "useHotkey",
-      "description": "useHotkey(hotkey, handler, options). Listens for keydown on the document and runs handler when a key matches hotkey, after preventing its default. It skips keys something else already prevented, keys pressed while an IME composes, held keys, and keys that would type into the focused field.",
+      "description": "useHotkey(hotkey, handler, options). Listens for keydown on the document and runs handler when a key matches hotkey, after preventing its default. It skips keys something else already prevented, keys pressed while an IME composes, held keys, and, in a text field, every key except a function key or a chord with Meta, or with Control but not Alt.",
       "props": [
         {
           "name": "hotkey",

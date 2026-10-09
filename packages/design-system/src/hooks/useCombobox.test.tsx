@@ -656,6 +656,43 @@ describe('useCombobox dialog presentation', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
   });
 
+  it('highlights the top row of the full list once it loads, not the last query\'s', async () => {
+    const LISTS: Record<string, ComboboxOption[]> = {
+      '': [
+        { value: 'invoice', label: 'Create invoice' },
+        { value: 'team', label: 'Invite team' },
+        { value: 'billing', label: 'Open billing' },
+      ],
+      bill: [{ value: 'billing', label: 'Open billing' }],
+    };
+    const pending = new Map<string, () => void>();
+    const loadOptions = (query: string) =>
+      new Promise<readonly ComboboxOption[]>((resolve) => pending.set(query, () => resolve(LISTS[query] ?? [])));
+    const settle = async (query: string) => {
+      await act(async () => {
+        pending.get(query)?.();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+    };
+    const { result } = renderHook(() => useCombobox({ loadOptions, presentation: 'dialog', value: null }));
+    await settle('');
+    act(() => result.current.setOpen(true));
+    act(() => result.current.setInputValue('bill'));
+    await settle('bill');
+    expect(result.current.activeValue).toBe('billing');
+    act(() => result.current.setOpen(false));
+    act(() => result.current.setOpen(true));
+    expect(result.current.inputValue).toBe('');
+    await settle('');
+    expect(result.current.items.map((item) => item.kind === 'option' && item.option.value)).toEqual([
+      'invoice',
+      'team',
+      'billing',
+    ]);
+    expect(result.current.activeValue).toBe('invoice');
+  });
+
   it('runs a selection only while open, so a closing dialog cannot run it twice', () => {
     const onValueChange = vi.fn();
     const onCreate = vi.fn();
