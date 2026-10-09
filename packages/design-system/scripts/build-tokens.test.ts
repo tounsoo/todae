@@ -845,13 +845,14 @@ describe('company token build', () => {
     );
     expect(catalogSelectors(result.css.slice(result.css.indexOf('@layer todae.theme {')))).toEqual([
       '@layer todae.theme',
-      ':root:not([data-appearance]), [data-appearance="light"]',
+      ':root:not([data-appearance]), [data-appearance="light"], [data-appearance="system"]',
       '[data-appearance="dark"]',
+      '@media (prefers-color-scheme: dark)',
       '[data-density="roomy"]',
       ':root:not([data-appearance]):not([data-density]), [data-appearance], [data-density]',
       '[data-button-variant="outline"]',
     ]);
-    const light = blockOf(result.css, ':root:not([data-appearance]),\n[data-appearance="light"]');
+    const light = blockOf(result.css, ':root:not([data-appearance]),\n[data-appearance="light"],\n[data-appearance="system"]');
     expect(light).toContain('--todae-color-accent-default: oklch(0.45 0.16 25);');
     expect(light).toContain('--todae-brand-ink: var(--todae-color-gray-900);');
     expect(light).not.toContain('--todae-color-bg-canvas');

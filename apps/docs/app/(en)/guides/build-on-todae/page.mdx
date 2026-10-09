@@ -91,8 +91,15 @@ There are two ways to change a token for part of a page.
   [data-appearance='dark'] {
     --todae-color-accent-default: oklch(0.78 0.13 25);
   }
+  @media (prefers-color-scheme: dark) {
+    [data-appearance='system'] {
+      --todae-color-accent-default: oklch(0.78 0.13 25);
+    }
+  }
 }
 ```
+
+`ThemeProvider appearance="system"` renders `data-appearance="system"`, which follows the user's color scheme in CSS, so a dark override also needs the `system` rule. A company token build emits both for you.
 
 Set it on an element that carries `data-appearance` or `data-density`. Contract tokens are computed there, so an override on a descendant does not reach them. Each of those elements computes the contract tokens again, so a contract-token override set in CSS must match every one of them, not only the outermost.
 

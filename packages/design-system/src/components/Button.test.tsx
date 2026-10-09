@@ -313,6 +313,6 @@ describe('Button auto-tip', () => {
     advance(300);
     const tip = screen.getByRole('tooltip');
     expect(tip.getAttribute('role')).toBe('tooltip');
-    expect(tip.hasAttribute('popover')).toBe(false);
+    expect(tip.getAttribute('data-surface')).toBe('tip');
   });
 });

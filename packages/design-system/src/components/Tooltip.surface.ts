@@ -3,8 +3,8 @@ import { getTabbables } from '../overlay/tabbables';
 export type TipAttrs = {
   readonly id: string;
   readonly role: 'tooltip';
+  readonly popover: 'manual';
   readonly 'data-surface': 'tip';
-  readonly popover?: never;
 };
 
 export type PanelAttrs = {
@@ -17,7 +17,7 @@ export type PanelAttrs = {
 export type TipSurface = {
   readonly kind: 'tip';
   readonly bridges: false;
-  readonly topLayer: false;
+  readonly topLayer: true;
   readonly attrs: TipAttrs;
 };
 
@@ -47,17 +47,20 @@ export function resolveSurface(interactive: boolean, id: string): TooltipSurface
   return {
     kind: 'tip',
     bridges: false,
-    topLayer: false,
+    // In the top layer, so no transformed or overflow: hidden ancestor clips it.
+    topLayer: true,
     attrs: {
       id,
       role: 'tooltip',
+      popover: 'manual',
       'data-surface': 'tip',
     },
   };
 }
 
+/** A panel stays mounted so the pointer can bridge into it; a tip mounts only while open. */
 export function isMounted(surface: TooltipSurface, open: boolean): boolean {
-  return surface.topLayer || open;
+  return surface.kind === 'panel' || open;
 }
 
 export function contentPolicyError(surface: TooltipSurface, el: HTMLElement): string | null {

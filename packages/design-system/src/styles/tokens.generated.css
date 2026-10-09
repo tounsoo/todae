@@ -67,7 +67,8 @@
 }
 
 :root:not([data-appearance]),
-[data-appearance="light"] {
+[data-appearance="light"],
+[data-appearance="system"] {
   --todae-color-accent-active: var(--todae-color-gray-950);
   --todae-color-accent-default: var(--todae-color-gray-900);
   --todae-color-accent-hover: var(--todae-color-gray-800);
@@ -139,6 +140,45 @@
   --todae-color-status-warning-border: var(--todae-color-amber-700);
   --todae-color-status-warning-fg: var(--todae-color-amber-200);
   color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-appearance="system"] {
+    --todae-color-accent-active: var(--todae-color-gray-200);
+    --todae-color-accent-default: var(--todae-color-gray-50);
+    --todae-color-accent-hover: var(--todae-color-gray-100);
+    --todae-color-accent-soft: oklch(from var(--todae-color-accent-default) l c h / 0.12);
+    --todae-color-accent-soft-strong: oklch(from var(--todae-color-accent-default) l c h / 0.28);
+    --todae-color-bg-canvas: var(--todae-color-gray-900);
+    --todae-color-bg-elevated: var(--todae-color-gray-800);
+    --todae-color-bg-highlight: oklch(from var(--todae-color-fg-default) l c h / 0.1);
+    --todae-color-bg-pressed: oklch(from var(--todae-color-fg-default) l c h / 0.16);
+    --todae-color-bg-scrim: oklch(from var(--todae-color-gray-950) l c h / 0.7);
+    --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / 0.2);
+    --todae-color-bg-subtle: var(--todae-color-gray-800);
+    --todae-color-bg-surface: var(--todae-color-gray-900);
+    --todae-color-bg-transparent: oklch(from var(--todae-color-gray-900) l c h / 0);
+    --todae-color-border-default: var(--todae-color-gray-50);
+    --todae-color-border-subtle: var(--todae-color-gray-700);
+    --todae-color-danger-default: var(--todae-color-red-300);
+    --todae-color-fg-default: var(--todae-color-gray-50);
+    --todae-color-fg-muted: var(--todae-color-gray-200);
+    --todae-color-fg-placeholder: var(--todae-color-gray-300);
+    --todae-color-on-accent: var(--todae-color-gray-950);
+    --todae-color-status-critical-bg: var(--todae-color-red-900);
+    --todae-color-status-critical-border: var(--todae-color-red-700);
+    --todae-color-status-critical-fg: var(--todae-color-red-200);
+    --todae-color-status-info-bg: var(--todae-color-gray-800);
+    --todae-color-status-info-border: var(--todae-color-gray-600);
+    --todae-color-status-info-fg: var(--todae-color-gray-100);
+    --todae-color-status-success-bg: var(--todae-color-green-900);
+    --todae-color-status-success-border: var(--todae-color-green-700);
+    --todae-color-status-success-fg: var(--todae-color-green-200);
+    --todae-color-status-warning-bg: var(--todae-color-amber-900);
+    --todae-color-status-warning-border: var(--todae-color-amber-700);
+    --todae-color-status-warning-fg: var(--todae-color-amber-200);
+    color-scheme: dark;
+  }
 }
 
 [data-density="compact"] {

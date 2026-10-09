@@ -56,7 +56,9 @@ export function ThemeProvider<Extra extends string = never>({
         <div
           {...props}
           style={{ ...style, ...vars, ...inputs } as CSSProperties}
-          data-appearance={resolved}
+          // "system" resolves in CSS through prefers-color-scheme, so a
+          // server-rendered page is dark from the first paint.
+          data-appearance={appearance}
         />
       </ThemeVarsContext.Provider>
     </AppearanceContext.Provider>
