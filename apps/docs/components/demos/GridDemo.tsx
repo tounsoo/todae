@@ -1,5 +1,5 @@
-import { Card } from '@tounsoo/todae/card';
-import { Grid } from '@tounsoo/todae/grid';
+import { Card } from '@omsoo/todae/card';
+import { Grid } from '@omsoo/todae/grid';
 
 const PLANS = ['Free', 'Team', 'Business', 'Enterprise'];
 

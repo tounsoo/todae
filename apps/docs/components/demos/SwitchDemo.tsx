@@ -1,6 +1,6 @@
 'use client';
 
-import { Description, Switch } from '@tounsoo/todae';
+import { Description, Switch } from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 export function SwitchStates() {

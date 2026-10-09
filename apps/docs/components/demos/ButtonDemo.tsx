@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@tounsoo/todae';
+import { Button } from '@omsoo/todae';
 
 export function ButtonVariants() {
   return (

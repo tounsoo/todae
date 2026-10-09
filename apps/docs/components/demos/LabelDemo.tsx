@@ -1,6 +1,6 @@
 'use client';
 
-import { Field, Label } from '@tounsoo/todae';
+import { Field, Label } from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 export function LabelSibling() {

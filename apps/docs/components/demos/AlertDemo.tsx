@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, Button, Stack } from '@tounsoo/todae';
+import { Alert, Button, Stack } from '@omsoo/todae';
 import { useRef, useState } from 'react';
 
 // Todae ships no icons. These stand in for your own icon set.

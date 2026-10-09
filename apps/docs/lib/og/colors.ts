@@ -1,4 +1,4 @@
-import tokens from '@tounsoo/todae/tokens.json';
+import tokens from '@omsoo/todae/tokens.json';
 
 /** `oklch(L C h)` as `#rrggbb`. The image renderer reads only sRGB colors, and Todae's tokens are OKLCH. */
 export function oklchToHex(value: string): string {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, useChipField, useField } from '@tounsoo/todae';
+import { Button, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, useChipField, useField } from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 const MANY = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta'];

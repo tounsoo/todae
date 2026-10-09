@@ -1,5 +1,5 @@
-import { Stack } from '@tounsoo/todae/stack';
-import { Text } from '@tounsoo/todae/text';
+import { Stack } from '@omsoo/todae/stack';
+import { Text } from '@omsoo/todae/text';
 import { LocalizedLink } from '../LocalizedLink';
 
 export function LinkInText() {

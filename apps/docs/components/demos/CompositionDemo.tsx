@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Field, OptionList, Popover, usePopover } from '@tounsoo/todae';
+import { Button, Field, OptionList, Popover, usePopover } from '@omsoo/todae';
 import { useState } from 'react';
 
 export function FieldPartsAllowed() {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, useRovingFocus } from '@tounsoo/todae';
+import { Button, useRovingFocus } from '@omsoo/todae';
 
 const TOOLS = ['Bold', 'Italic', 'Underline', 'Strike'];
 

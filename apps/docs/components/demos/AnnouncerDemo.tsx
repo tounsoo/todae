@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Stack, Text, useAnnouncer } from '@tounsoo/todae';
+import { Button, Stack, Text, useAnnouncer } from '@omsoo/todae';
 import { useState } from 'react';
 
 export function AnnounceSave() {

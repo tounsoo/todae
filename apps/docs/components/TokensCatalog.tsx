@@ -1,4 +1,4 @@
-import catalog from '@tounsoo/todae/tokens.json';
+import catalog from '@omsoo/todae/tokens.json';
 import { ScrollRegion } from './OverflowRegion';
 import { TokensTableHead } from './TokensTableHead';
 

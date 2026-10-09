@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import { page, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it } from 'vitest';
-import '@tounsoo/todae/todae.css';
+import '@omsoo/todae/todae.css';
 import '../app/globals.css';
 import { APPEARANCE_KEY, APPEARANCE_SCRIPT } from './appearanceScript';
 import { HomeContent } from './HomeContent';
@@ -11,7 +11,7 @@ import { Playground } from './Playground';
 import { Providers } from './Providers';
 import { PropsTable } from './PropsTable';
 import { PropsTableView, type PropsTableRow } from './PropsTableView';
-import schema from '@tounsoo/todae/schema/components.json';
+import schema from '@omsoo/todae/schema/components.json';
 import { ThemeSwitcher } from './ThemeSwitcher';
 
 afterEach(cleanup);
