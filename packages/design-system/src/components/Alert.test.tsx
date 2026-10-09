@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Alert, type AlertTone } from './Alert';
+import { renderToString } from 'react-dom/server';
 
 afterEach(cleanup);
 
@@ -137,5 +138,18 @@ describe('Alert', () => {
       expect(el.classList.contains(cls!)).toBe(true);
       expect(el.classList.length).toBeGreaterThan(1);
     }
+  });
+});
+
+describe('Alert.Close server markup', () => {
+  it('does not count SVG title text as a name', () => {
+    const html = renderToString(
+      <Alert.Close>
+        <svg>
+          <title>Close icon</title>
+        </svg>
+      </Alert.Close>,
+    );
+    expect(html).toContain('aria-label="Dismiss"');
   });
 });

@@ -219,6 +219,24 @@ describe('Button auto-tip', () => {
     expect(screen.getByRole('tooltip').textContent).toBe('Add item');
   });
 
+  it('reads every id in an aria-labelledby list, in order', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <>
+        <span id="verb">Add</span>
+        <span id="noun">item</span>
+        <Button.Root aria-labelledby="verb  noun">
+          <Button.Icon>+</Button.Icon>
+        </Button.Root>
+      </>,
+    );
+    expect(error).not.toHaveBeenCalled();
+    fireEvent.pointerEnter(screen.getByRole('button'));
+    advance(300);
+    expect(screen.getByRole('tooltip').textContent).toBe('Add item');
+    error.mockRestore();
+  });
+
   it('errors and does not tip an unnamed icon-only root', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(

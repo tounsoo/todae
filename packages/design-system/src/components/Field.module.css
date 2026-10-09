@@ -436,4 +436,12 @@
     color: var(--todae-option-fg-disabled);
     cursor: not-allowed;
   }
+
+  @media (forced-colors: active) {
+    /* As specific as the outline: none above, which it must beat. */
+    .select option:is(:hover, :focus-visible):not(:disabled) {
+      outline: var(--todae-focus-ring-width) solid Highlight;
+      outline-offset: calc(-1 * var(--todae-focus-ring-width));
+    }
+  }
 }

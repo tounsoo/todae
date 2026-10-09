@@ -105,6 +105,11 @@
     transform: translateX(calc(var(--todae-selection-size) * 0.8));
   }
 
+  /* The thumb starts at the inline start, so it travels the other way in rtl. */
+  .root[data-control='switch']:dir(rtl) .input:checked + .indicator::after {
+    transform: translateX(calc(var(--todae-selection-size) * -0.8));
+  }
+
   .label {
     min-width: 0;
   }
@@ -118,5 +123,35 @@
   .group[data-orientation='horizontal'] {
     flex-direction: row;
     flex-wrap: wrap;
+  }
+
+  /* Forced colors drop author backgrounds but keep system colors, so paint the
+     dot, thumb and on-track with system colors. Forcing stays on, so focus
+     rings and other states are still forced. */
+  @media (forced-colors: active) {
+    .root[data-control='radio'] .input:checked + .indicator::after,
+    .root[data-control='switch'] .indicator::after {
+      background: CanvasText;
+    }
+
+    .root[data-control='switch'] .input:checked + .indicator {
+      background: Highlight;
+      border-color: Highlight;
+    }
+
+    .root[data-control='switch'] .input:checked + .indicator::after {
+      background: HighlightText;
+    }
+
+    .root[data-disabled][data-control='radio'] .input:checked + .indicator::after,
+    .root[data-disabled][data-control='switch'] .indicator::after,
+    .root[data-disabled][data-control='switch'] .input:checked + .indicator::after {
+      background: GrayText;
+    }
+
+    .root[data-disabled][data-control='switch'] .input:checked + .indicator {
+      background: Canvas;
+      border-color: GrayText;
+    }
   }
 }

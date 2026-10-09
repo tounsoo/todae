@@ -146,7 +146,14 @@ function Root({
       setLabelledbyText(undefined);
       return;
     }
-    const text = document.getElementById(labelledby)?.textContent?.trim() ?? '';
+    // An id list, joined in order as the accessible name joins it.
+    const doc = buttonRef.current?.ownerDocument ?? document;
+    const text = labelledby
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((id) => doc.getElementById(id)?.textContent?.trim() ?? '')
+      .filter(Boolean)
+      .join(' ');
     setLabelledbyText(text || null);
   }, [labelledby]);
 

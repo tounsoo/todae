@@ -16,6 +16,7 @@ import {
 } from 'react';
 import { Button, type ButtonActionProps } from './Button';
 import { useControlledValue } from '../hooks/useControlledState';
+import { useDismissLabel } from './dismissLabel';
 import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
 import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
 import { useFocusRestore } from '../overlay/useFocusRestore';
@@ -178,19 +179,20 @@ function BottomSheetFooter({ className, ...props }: ComponentPropsWithRef<'div'>
   return <div {...props} className={[styles.footer, className].filter(Boolean).join(' ')} />;
 }
 
-function BottomSheetClose({
-  'aria-label': ariaLabel = 'Close',
-  onClick,
-  ...props
-}: ButtonActionProps) {
+function BottomSheetClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: ButtonActionProps) {
   const { requestClose } = useSheet();
+  // Visible text such as "Cancel" names the button; "Close" only names one without words.
+  const [label, refs] = useDismissLabel(children, ariaLabel, ref, 'Close');
   return (
     <Button.Root
       variant="ghost"
-      aria-label={ariaLabel}
+      aria-label={label}
       {...props}
+      ref={refs}
       onClick={composeHandlers(onClick, () => requestClose('close-button'))}
-    />
+    >
+      {children}
+    </Button.Root>
   );
 }
 

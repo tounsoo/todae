@@ -8,8 +8,8 @@ export const meta = {
       name: 'aria-label',
       type: 'string',
       required: false,
-      default: '"Dismiss" when the button has no text of its own',
-      description: 'Accessible name. Visible text such as "Got it" names the button by itself. The default is English, so pass a name in your app\'s language.',
+      default: '"Dismiss" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits',
+      description: 'Accessible name. Text of two or more letters or digits, such as "Got it", names the button by itself. The default is English, so pass a name in your app\'s language.',
     },
     {
       name: 'onClick',

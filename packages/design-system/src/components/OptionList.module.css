@@ -124,4 +124,20 @@
     border-bottom: 2px solid var(--todae-option-check-fg);
     transform: rotate(45deg);
   }
+
+  /* Forced colors drop backgrounds: outline the highlighted option. Selection
+     keeps its check mark, which is drawn with borders. */
+  @media (forced-colors: active) {
+    .option[data-highlighted] {
+      outline: var(--todae-focus-ring-width) solid Highlight;
+      outline-offset: calc(-1 * var(--todae-focus-ring-width));
+    }
+
+    @media (hover: hover) {
+      .option:hover:not([aria-disabled='true']) {
+        outline: var(--todae-focus-ring-width) solid Highlight;
+        outline-offset: calc(-1 * var(--todae-focus-ring-width));
+      }
+    }
+  }
 }

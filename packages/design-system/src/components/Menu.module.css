@@ -89,4 +89,18 @@
     margin-block: var(--todae-menu-gap);
     background: var(--todae-menu-separator);
   }
+
+  /* Forced colors drop backgrounds: outline the focused item and paint the
+     radio dot and separator with system colors. */
+  @media (forced-colors: active) {
+    .item:focus {
+      outline: var(--todae-focus-ring-width) solid Highlight;
+      outline-offset: calc(-1 * var(--todae-focus-ring-width));
+    }
+
+    [role='menuitemradio'][aria-checked='true'] > .indicator::before,
+    .separator {
+      background: CanvasText;
+    }
+  }
 }
