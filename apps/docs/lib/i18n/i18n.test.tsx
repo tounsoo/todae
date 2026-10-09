@@ -97,8 +97,8 @@ describe('docs locales', () => {
         const file = join(APP, locale, slug, 'page.mdx');
         if (!existsSync(file)) continue;
         const english = readFileSync(join(APP, '(en)', slug, 'page.mdx'), 'utf8');
-        const [translation, original] = withPage(`${locale}/${slug}`, () => [shape(readFileSync(file, 'utf8')), shape(english)]);
-        expect(translation, `${locale}/${slug}`).toEqual(original);
+        const translation = withPage(`${locale}/${slug}`, () => shape(readFileSync(file, 'utf8')));
+        expect(translation, `${locale}/${slug}`).toEqual(withPage(`en/${slug}`, () => shape(english)));
       }
     }
   });
@@ -170,8 +170,8 @@ describe('docs locales', () => {
       expect(log).toEqual(['ko/badge: # Badge (new)', 'ko/gone: dropped']);
       // A record whose English page is still there is kept until the page is translated again.
       expect(() => stamp(app, 'ko', { card: { '# Card': 'x' } }, ['card'])).toThrow(/translate it first/);
-      // A slug typed with slashes is the same page.
-      expect(Object.keys(stamp(app, 'ko', {}, ['/badge/']).sources)).toEqual(['badge']);
+      // A slug is written as in the URL, so each page has one key.
+      for (const slug of ['/badge/', 'recipes//combobox', './badge', '../ko/badge']) expect(() => stamp(app, 'ko', {}, [slug]), slug).toThrow(/as in the URL/);
       // An inherited name is not a recorded page.
       expect(() => stamp(app, 'ko', {}, ['constructor'])).toThrow(/No English page.mdx/);
     } finally {
