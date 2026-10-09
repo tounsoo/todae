@@ -11,41 +11,52 @@ export type PropDescription = { text: string; lang: Locale };
 
 export type PropsTableRow = Omit<PropRow, 'description'> & { descriptions: Record<Locale, PropDescription> };
 
-// A union shorter than this stays on one line; a longer one puts each member on its own.
+// A union this long or shorter stays on one line; a longer one puts each member on its own.
 const UNION_LINE_LENGTH = 40;
 
 const OPENERS: Record<string, string> = { '(': ')', '<': '>', '[': ']', '{': '}' };
 
-/** Splits a type at its top-level ` | `, leaving unions inside brackets, generics and strings whole. */
+/**
+ * Splits a type at its top-level ` | `, leaving unions inside brackets, generics and strings whole.
+ * A top-level function or conditional type is one member: its unions belong to its return or branches.
+ */
 export function unionMembers(type: string): string[] {
+  // A leading `|`, as in a union written one member per line, is not a separator.
+  const source = type.replace(/^\s*\|\s+/, '');
   const members: string[] = [];
   const closers: string[] = [];
   let quote: string | null = null;
   let start = 0;
-  for (let i = 0; i < type.length; i += 1) {
-    const char = type[i] ?? '';
+  for (let i = 0; i < source.length; i += 1) {
+    const char = source[i] ?? '';
+    const arrow = char === '=' && source[i + 1] === '>';
     if (quote) {
       if (char === '\\') i += 1;
       else if (char === quote) quote = null;
     } else if (char === '"' || char === "'" || char === '`') {
       quote = char;
+    } else if (closers.length === 0 && (arrow || char === '?')) {
+      return [source];
+    } else if (arrow) {
+      // Skip the `>` so it does not close a generic.
+      i += 1;
     } else if (OPENERS[char]) {
       closers.push(OPENERS[char]);
-    } else if (char === closers[closers.length - 1] && !(char === '>' && type[i - 1] === '=')) {
+    } else if (char === closers[closers.length - 1]) {
       closers.pop();
-    } else if (char === '|' && closers.length === 0 && type[i - 1] === ' ' && type[i + 1] === ' ') {
-      members.push(type.slice(start, i - 1));
+    } else if (char === '|' && closers.length === 0 && source[i - 1] === ' ' && source[i + 1] === ' ') {
+      members.push(source.slice(start, i - 1));
       start = i + 2;
     }
   }
-  members.push(type.slice(start));
+  members.push(source.slice(start));
   return members;
 }
 
 function TypeCode({ type }: { type: string }) {
-  const members = unionMembers(type);
-  if (members.length < 2 || type.length <= UNION_LINE_LENGTH) return <code className="props-type">{type}</code>;
-  // One member per line, each after the first led by its `|`, as Prettier lays out a long union.
+  const members = type.length > UNION_LINE_LENGTH ? unionMembers(type) : [type];
+  if (members.length < 2) return <code className="props-type">{type}</code>;
+  // One member per line, each after the first led by its `|`.
   return (
     <code className="props-type">
       {members.map((member, index) => (
@@ -107,7 +118,9 @@ export function PropsTableView({
                     <p lang={description.lang === locale ? undefined : description.lang}>{description.text}</p>
                     {prop.default === undefined ? null : (
                       <p className="props-default">
-                        <span className="props-default-label">{words.default}:</span> {prop.default}
+                        <span className="props-default-label">{words.default}:</span>{' '}
+                        {/* Defaults come from the English JSDoc and are not translated. */}
+                        <span lang={locale === 'en' ? undefined : 'en'}>{prop.default}</span>
                       </p>
                     )}
                   </td>

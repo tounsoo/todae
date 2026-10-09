@@ -467,11 +467,17 @@ table {
   margin: 1rem 0;
 }
 
-/* Props tables. Name and type keep to what they need; the description takes
-   the rest and never drops below a readable measure. A container narrower
-   than three readable columns stacks each prop into one block instead. */
+/* Props tables. The name keeps to one line and the description never drops
+   below a readable measure. A container narrower than the three columns need
+   stacks each prop into one block instead. The table's margin sits on the
+   container, so it still collapses with the content around it. */
 .props-table {
   container: props-table / inline-size;
+  margin-block: 1.25rem;
+}
+
+.props-table > .scroll-x {
+  margin-block: 0;
 }
 
 .props-table th,
@@ -493,7 +499,7 @@ table {
   margin: 0;
 }
 
-@container props-table (width >= 36rem) {
+@container props-table (width >= 40rem) {
   .props-table .props-name {
     inline-size: 1%;
     white-space: nowrap;
@@ -530,7 +536,7 @@ table {
   font-weight: 600;
 }
 
-@container props-table (width < 36rem) {
+@container props-table (width < 40rem) {
   .props-table thead {
     position: absolute;
     inline-size: 1px;
@@ -554,7 +560,6 @@ table {
   .props-table .props-required {
     display: inline-block;
     margin-block-start: 0;
-    margin-inline-start: 0.5rem;
   }
 
   .props-table tbody :is(th, td) {

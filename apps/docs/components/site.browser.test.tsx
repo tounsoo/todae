@@ -9,7 +9,9 @@ import { HomeContent } from './HomeContent';
 import { MobileNav } from './MobileNav';
 import { Playground } from './Playground';
 import { Providers } from './Providers';
+import { PropsTable } from './PropsTable';
 import { PropsTableView, type PropsTableRow } from './PropsTableView';
+import schema from '@tounsoo/todae/schema/components.json';
 import { ThemeSwitcher } from './ThemeSwitcher';
 
 afterEach(cleanup);
@@ -120,13 +122,39 @@ describe('props table', () => {
   }
 
   it('gives the description a readable column on a wide page, without scrolling', async () => {
-    const table = renderTable('48rem');
+    const table = renderTable('46rem');
     await frame();
     const scroller = table.parentElement!;
     expect(scroller.scrollWidth).toBeLessThanOrEqual(scroller.clientWidth);
     const description = within(table).getAllByRole('row')[2]!.querySelectorAll('td')[1]!;
     expect(description.getBoundingClientRect().width).toBeGreaterThanOrEqual(16 * 16);
     expect(await violations()).toEqual([]);
+  });
+
+  it('fits every component in the schema at every main column width, without scrolling', async () => {
+    render(
+      <Providers>
+        <main>
+          {schema.components.map((component) => (
+            <PropsTable key={component.name} name={component.name} />
+          ))}
+        </main>
+      </Providers>,
+    );
+    const main = document.querySelector('main')!;
+    const overflowing: string[] = [];
+    // From a small phone up to main's widest (48rem less its padding).
+    for (let rem = 18; rem <= 46; rem += 0.5) {
+      // Reading scrollWidth lays the page out, container queries included.
+      main.style.inlineSize = `${rem}rem`;
+      for (const table of main.querySelectorAll('table')) {
+        const scroller = table.parentElement!;
+        if (scroller.scrollWidth > scroller.clientWidth) {
+          overflowing.push(`${rem}rem ${table.caption?.textContent}: ${scroller.scrollWidth} > ${scroller.clientWidth}`);
+        }
+      }
+    }
+    expect(overflowing).toEqual([]);
   });
 
   it('stacks each prop on a phone, keeping table semantics and no horizontal scroll', async () => {

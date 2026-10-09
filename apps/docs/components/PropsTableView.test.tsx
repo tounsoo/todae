@@ -50,6 +50,18 @@ describe('unionMembers', () => {
     ]);
   });
 
+  it('keeps a top-level function or conditional type whole', () => {
+    expect(unionMembers('(value: string, reason: ChangeReason) => string | null | undefined')).toEqual([
+      '(value: string, reason: ChangeReason) => string | null | undefined',
+    ]);
+    expect(unionMembers('A extends B ? "x" | "y" : "z" | "w"')).toEqual(['A extends B ? "x" | "y" : "z" | "w"']);
+    expect(unionMembers('((value: string) => void) | null')).toEqual(['((value: string) => void)', 'null']);
+  });
+
+  it('does not take a leading pipe for a separator', () => {
+    expect(unionMembers('| "a" | "b"')).toEqual(['"a"', '"b"']);
+  });
+
   it('leaves a type with no top-level union as one member', () => {
     expect(unionMembers('(event: ChangeEvent<HTMLInputElement>) => void')).toEqual([
       '(event: ChangeEvent<HTMLInputElement>) => void',
@@ -87,6 +99,7 @@ describe('PropsTableView', () => {
       '| "password"',
     ]);
     expect(descriptionCell!.textContent).toBe('English text.Default: "text"');
+    expect(within(descriptionCell!).getByText('"text"').hasAttribute('lang')).toBe(false);
   });
 
   it('keeps a short union on one line', () => {
@@ -107,6 +120,8 @@ describe('PropsTableView', () => {
       />,
     );
     const [, tone, children] = screen.getAllByRole('row');
+    // The default is untranslated JSDoc text, so it is marked English on a Korean page.
+    expect(within(tone!).getByText('"neutral"').getAttribute('lang')).toBe('en');
     expect(within(tone!).getByRole('rowheader').textContent).toBe('tone 필수');
     expect(within(tone!).getAllByRole('cell')[1]!.textContent).toBe('한국어 설명.기본값: "neutral"');
     expect(within(children!).getByText('Label.').getAttribute('lang')).toBe('en');

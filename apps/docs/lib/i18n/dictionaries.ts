@@ -65,7 +65,7 @@ export type Dictionary = {
   regions: Record<'code' | 'table', string>;
   /** Token catalog headings. */
   tokensTable: Record<'path' | 'context' | 'cssVar' | 'value' | 'ref', string>;
-  /** Props table headings. `{name}` in the caption is the component name. */
+  /** Props table caption and column headings; `required` labels a badge on the name and `default` labels a line under the description. `{name}` in the caption is the component name. */
   propsTable: Record<'caption' | 'name' | 'type' | 'required' | 'default' | 'description', string>;
   /** Section names; a missing one keeps its English name from `siteGroups.ts`. */
   groups: Partial<Record<GroupId, string>>;
