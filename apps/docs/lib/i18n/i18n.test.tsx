@@ -392,12 +392,18 @@ describe('docs locales', () => {
     for (const locale of LOCALES) {
       const { license, licenseName } = DICTIONARIES[locale];
       expect(license.split('{license}'), locale).toHaveLength(2);
+      // The name shown is the LICENSE file's, in the page language.
+      expect(licenseName, locale).toContain(LICENSE.id);
       const markup = renderToStaticMarkup(<SiteShell locale={locale}>x</SiteShell>);
-      const footer = /<footer class="site-footer">(.*?)<\/footer>/.exec(markup)?.[1] ?? '';
-      const [before, after] = license.split('{license}');
-      expect(footer, locale).toMatch(new RegExp(`>${before}<a [^>]*href="${LICENSE.href}"[^>]*>${licenseName}</a>${after}<`));
-      expect(footer, locale).toContain(`Copyright © ${LICENSE.year} ${LICENSE.holder}`);
+      const footer = new DOMParser().parseFromString(markup, 'text/html').querySelector('footer');
+      const [licenseLine, copyright] = [...(footer?.querySelectorAll('p') ?? [])];
+      expect(licenseLine?.textContent, locale).toBe(license.replace('{license}', licenseName));
+      const link = licenseLine?.querySelector('a');
+      expect(link?.textContent, locale).toBe(licenseName);
+      expect(link?.getAttribute('href'), locale).toBe(LICENSE.href);
+      expect(copyright?.textContent, locale).toBe(`Copyright © ${LICENSE.year} ${LICENSE.holder}`);
     }
+    expect(DICTIONARIES.en.licenseName).toBe(`${LICENSE.id} License`);
   });
 
   it('gives the shell each locale’s untranslated pages, and no alternates on a 404', () => {

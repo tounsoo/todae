@@ -133,6 +133,10 @@ describe('narrow screens', () => {
         <main>
           <Playground locale={locale} />
         </main>
+        {/* SiteShell's footer comes after the playground on every page. */}
+        <footer className="site-footer">
+          <a href="#license">MIT License</a>
+        </footer>
       </Providers>,
     );
     return {
@@ -153,8 +157,8 @@ describe('narrow screens', () => {
     expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(lead.getBoundingClientRect().bottom);
     expect(stage.getBoundingClientRect().top).toBeLessThan(innerHeight / 3);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
-    // The playground keeps the bar's height free under the stage.
-    expect(getComputedStyle(document.querySelector('.playground')!).paddingBlockEnd).toBe(
+    // The page keeps the bar's height free at its end, under the stage and the footer.
+    expect(getComputedStyle(document.querySelector('.shell')!).paddingBlockEnd).toBe(
       `${Math.ceil(bar.getBoundingClientRect().height)}px`,
     );
     // The border box is measured, so padding such as the safe area counts too.
@@ -239,10 +243,15 @@ describe('narrow screens', () => {
     target.focus();
     await frame();
     expect(target.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop());
-    // The end of the stage scrolls clear of the bar.
+    // The end of the page, the stage and the footer after it, scrolls clear of the bar.
     scrollTo(0, document.documentElement.scrollHeight);
     await frame();
     expect(stage.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop() + 1);
+    const footer = document.querySelector<HTMLElement>('.site-footer')!;
+    expect(footer.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop() + 1);
+    footer.querySelector('a')!.focus();
+    await frame();
+    expect(footer.querySelector('a')!.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop());
   });
 
   it('leaves the playground bar, the open sheet and their space out of print', async () => {
@@ -251,18 +260,20 @@ describe('narrow screens', () => {
     // playground's own media query, and this checks the stylesheet alone.
     document.documentElement.style.setProperty('--docs-pg-bar', '80px');
     render(
-      <div className="playground">
-        <div className="pg-sheet-bar" />
-        <dialog className="pg-sheet" open />
+      <div className="shell">
+        <div className="playground">
+          <div className="pg-sheet-bar" />
+          <dialog className="pg-sheet" open />
+        </div>
       </div>,
     );
-    const playground = document.querySelector<HTMLElement>('.playground')!;
-    expect(getComputedStyle(playground).paddingBlockEnd).toBe('80px');
+    const shell = document.querySelector<HTMLElement>('.shell')!;
+    expect(getComputedStyle(shell).paddingBlockEnd).toBe('80px');
     await cdp().send('Emulation.setEmulatedMedia', { media: 'print' });
     try {
       expect(getComputedStyle(document.querySelector('.pg-sheet-bar')!).display).toBe('none');
       expect(getComputedStyle(document.querySelector('.pg-sheet')!).display).toBe('none');
-      expect(getComputedStyle(playground).paddingBlockEnd).toBe('0px');
+      expect(getComputedStyle(shell).paddingBlockEnd).toBe('0px');
     } finally {
       await cdp().send('Emulation.setEmulatedMedia', { media: '' });
       document.documentElement.style.removeProperty('--docs-pg-bar');

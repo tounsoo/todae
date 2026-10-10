@@ -214,7 +214,6 @@ body {
     column-gap: 3.5rem;
     padding-inline: 1.5rem;
   }
-
   .sidebar {
     display: flex;
     flex-direction: column;
@@ -290,7 +289,7 @@ body {
   text-decoration: none;
 }
 
-/* ---------- Page content ---------- */
+/* ---------- Footer ---------- */
 
 .site-footer {
   border-block-start: 1px solid var(--docs-line);
@@ -306,9 +305,14 @@ body {
   padding: 1.5rem 1.25rem;
 }
 
-.site-footer-inner > p {
-  margin: 0;
+/* The same inline padding as .layout, so the footer lines up with the page. */
+@media (min-width: 64rem) {
+  .site-footer-inner {
+    padding-inline: 1.5rem;
+  }
 }
+
+/* ---------- Page content ---------- */
 
 main {
   min-inline-size: 0;
@@ -1115,13 +1119,19 @@ table {
 /* Narrow screens: the token editor moves into a sheet, so the stage sits
    right under the theme controls. Same breakpoint as NARROW in Playground. */
 @media screen and (width < 64rem) {
-  /* A column, so the stage takes the height the rail leaves. Playground
-     measures the fixed bar into --docs-pg-bar, so the end of the stage clears
-     it. Screen only: a printed page is narrower than this too, and a print from
-     a wide screen keeps the rail's editor. */
+  /* A column, so the stage takes the height the rail leaves. Screen only: a
+     printed page is narrower than this too, and a print from a wide screen
+     keeps the rail's editor. */
   .playground {
     display: flex;
     flex-direction: column;
+  }
+
+  /* Playground measures the fixed bar into --docs-pg-bar. The space goes at
+     the end of the whole page, so the stage and the footer after it both
+     scroll clear of the bar. Other pages leave the variable unset, so the
+     padding keeps its initial value. */
+  .shell {
     padding-block-end: var(--docs-pg-bar);
   }
 
