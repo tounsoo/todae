@@ -277,6 +277,10 @@
     grid-row: 1;
     margin-block: calc(var(--todae-toast-padding-y) * -0.5);
     margin-inline-end: calc(var(--todae-toast-padding-x) * -0.5);
+    /* Button.Root's max-width: 100% is the close column, which the negative
+       margin does not widen, so it would cap the button smaller than its
+       content and clip the label. */
+    max-width: calc(100% + var(--todae-toast-padding-x) * 0.5);
   }
 
   .title {

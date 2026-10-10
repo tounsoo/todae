@@ -202,6 +202,9 @@ describe('content parts in a browser', () => {
     expect(description.top).toBeGreaterThanOrEqual(title.bottom);
     expect(Math.round(description.left)).toBe(Math.round(title.left));
     expect(close.left).toBeGreaterThanOrEqual(title.right);
+    // The negative margin into the padding must not cap the button below its content.
+    const label = screen.getByText('×');
+    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth);
   });
 
   it('puts the fieldset legend above its controls', () => {
