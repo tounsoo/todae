@@ -117,37 +117,71 @@ describe('narrow screens', () => {
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
   });
 
-  it('puts the playground stage under the theme controls and edits tokens in a sheet', async () => {
-    await page.viewport(390, 800);
+  function renderNarrowPlayground(locale: 'en' | 'ko' = 'en') {
     render(
       <Providers>
         <main>
-          <Playground locale="en" />
+          <Playground locale={locale} />
         </main>
       </Providers>,
     );
+    return {
+      stage: screen.getByRole('region', { name: locale === 'en' ? 'Preview' : '미리보기' }),
+      bar: document.querySelector<HTMLElement>('.pg-sheet-bar')!,
+    };
+  }
+
+  it('puts the playground stage under the theme controls and edits tokens in a sheet', async () => {
+    await page.viewport(390, 800);
+    const { stage, bar } = renderNarrowPlayground();
     await frame();
-    const stage = screen.getByRole('region', { name: 'Preview' });
     // The token editor is only in the sheet, and the stage follows the theme controls.
     expect(screen.queryByRole('tab', { name: 'raw' })).toBeNull();
     const controls = screen.getByRole('complementary', { name: 'Theme controls' });
     expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(controls.getBoundingClientRect().bottom);
     // The presets scroll in their own row, so the page does not scroll sideways.
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
-    const bar = document.querySelector('.pg-sheet-bar')!;
     expect(bar.getBoundingClientRect().bottom).toBeLessThanOrEqual(innerHeight);
-    await userEvent.click(within(bar as HTMLElement).getByRole('button', { name: 'Edit tokens' }));
+    expect(await violations()).toEqual([]);
+    // A DOM click: after the runner's own click, the test frame ends up scrolled past where the page put the stage.
+    within(bar).getByRole('button', { name: 'Edit tokens' }).click();
     const sheet = await screen.findByRole('dialog', { name: 'Tokens' });
     await frame();
     expect(await violations()).toEqual([]);
+    // The export hint the rail shows on wide screens describes the sheet here.
+    expect(sheet.getAttribute('aria-describedby')).toBeTruthy();
+    expect(document.getElementById(sheet.getAttribute('aria-describedby')!)?.textContent).toContain('light and dark differ');
     await userEvent.fill(within(sheet).getByLabelText('color.accent.default'), 'oklch(0.5 0.1 30)');
     expect(stage.style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.1 30)');
     // The count shows on the button that opens the sheet, and names the change for a screen reader.
-    expect(within(bar as HTMLElement).getByRole('button', { name: 'Edit tokens (1 changed)' })).toBeTruthy();
-    // The stage stays visible above the sheet while tokens change.
-    expect(stage.getBoundingClientRect().top).toBeLessThan(sheet.getBoundingClientRect().top);
-    await userEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
+    expect(within(bar).getByRole('button', { name: 'Edit tokens (1 changed)' })).toBeTruthy();
+    // The stage fills the room above the sheet while tokens change.
+    const box = stage.getBoundingClientRect();
+    expect(box.top).toBeGreaterThanOrEqual(0);
+    expect(box.top).toBeLessThan(innerHeight / 4);
+    expect(box.bottom).toBeGreaterThan(sheet.getBoundingClientRect().top);
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Close tokens' }));
     await expect.poll(() => screen.queryByRole('dialog', { name: 'Tokens' })).toBeNull();
+  });
+
+  it('names the playground sheet controls in Korean on the Korean page', async () => {
+    await page.viewport(390, 800);
+    const { bar } = renderNarrowPlayground('ko');
+    await userEvent.click(within(bar).getByRole('button', { name: '토큰 편집' }));
+    const sheet = await screen.findByRole('dialog', { name: '토큰' });
+    expect(within(sheet).getByRole('button', { name: '토큰 시트 크기 조절' })).toBeTruthy();
+    expect(within(sheet).getByRole('button', { name: '토큰 닫기' })).toBeTruthy();
+  });
+
+  it('scrolls a focused playground control clear of the sticky bar', async () => {
+    await page.viewport(390, 800);
+    const { stage, bar } = renderNarrowPlayground();
+    await frame();
+    const target = within(stage).getByRole('button', { name: 'Upgrade to Pro' });
+    expect(target.getBoundingClientRect().top).toBeGreaterThan(innerHeight);
+    target.focus();
+    await frame();
+    expect(target.getBoundingClientRect().bottom).toBeLessThanOrEqual(bar.getBoundingClientRect().top);
   });
 });
 

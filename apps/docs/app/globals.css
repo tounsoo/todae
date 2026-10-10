@@ -1134,6 +1134,11 @@ table {
     background: var(--todae-color-bg-surface);
   }
 
+  /* Keyboard focus scrolls clear of the sticky bar instead of under it. */
+  html:has(.pg-sheet-bar) {
+    scroll-padding-block-end: 6rem;
+  }
+
   .pg-sheet-bar .pg-hint {
     grid-column: 1 / -1;
     margin: 0;
@@ -1157,6 +1162,10 @@ table {
 
 .pg-sheet-body .pg-token-panel {
   padding-block-end: 0.5rem;
+}
+
+.pg-sheet-body .pg-hint {
+  margin: 0.5rem 0 0;
 }
 
 .pg-sheet-foot {

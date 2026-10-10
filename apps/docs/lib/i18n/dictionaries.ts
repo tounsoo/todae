@@ -49,6 +49,8 @@ export type Dictionary = {
     | 'presets'
     | 'tokens'
     | 'editTokens'
+    | 'closeTokens'
+    | 'resizeSheet'
     | 'tokenLayer'
     | 'filter'
     | 'noMatch'
@@ -114,6 +116,8 @@ const en: Dictionary = {
     presets: 'Presets',
     tokens: 'Tokens',
     editTokens: 'Edit tokens',
+    closeTokens: 'Close tokens',
+    resizeSheet: 'Resize tokens sheet',
     tokenLayer: 'Token layer',
     filter: 'Filter tokens',
     noMatch: 'No token matches.',
@@ -182,6 +186,8 @@ const ko: Dictionary = {
     presets: '프리셋',
     tokens: '토큰',
     editTokens: '토큰 편집',
+    closeTokens: '토큰 닫기',
+    resizeSheet: '토큰 시트 크기 조절',
     tokenLayer: '토큰 레이어',
     filter: '토큰 필터',
     noMatch: '일치하는 토큰이 없습니다.',

@@ -260,6 +260,7 @@ export function Playground({ locale }: { locale: Locale }) {
   }
 
   const copyStatus = status?.json === exportJson ? status.text : null;
+  const copyStatusLine = copyStatus ? <p className="pg-hint">{copyStatus}</p> : null;
   // A sheet left open when the window widens does not come back on its own.
   if (!narrow && sheetOpen) setSheetOpen(false);
 
@@ -438,8 +439,10 @@ export function Playground({ locale }: { locale: Locale }) {
               variant="secondary"
               aria-haspopup="dialog"
               onClick={() => {
-                // The sheet covers the lower half, so the stage moves up to fill the rest.
-                stageRef.current?.scrollIntoView({ block: 'start' });
+                // The sheet covers the lower half, so a stage still below the fold moves up to fill
+                // the rest. One already scrolled into stays where it is.
+                const stage = stageRef.current;
+                if (stage && stage.getBoundingClientRect().top > 0) stage.scrollIntoView({ block: 'start' });
                 setSheetOpen(true);
               }}
             >
@@ -452,18 +455,24 @@ export function Playground({ locale }: { locale: Locale }) {
               ) : null}
             </Button.Root>
             <Button.Root onClick={() => void exportOverrides()}>{t.export}</Button.Root>
-            {copyStatus ? <p className="pg-hint">{copyStatus}</p> : null}
+            {copyStatusLine}
           </div>
           <BottomSheet.Root className="pg-sheet" open={sheetOpen} onOpenChange={setSheetOpen}>
+            {/* The site sets no StringsProvider, so the sheet's own controls get this locale's names here. */}
+            <BottomSheet.Grabber aria-label={t.resizeSheet} />
             <BottomSheet.Header className="pg-sheet-head">
               <BottomSheet.Title>{t.tokens}</BottomSheet.Title>
               {changedLabel}
-              <BottomSheet.Close aria-label={DICTIONARIES[locale].closeMenu} />
+              <BottomSheet.Close aria-label={t.closeTokens} />
             </BottomSheet.Header>
-            <BottomSheet.Body className="pg-sheet-body">{tokenEditor}</BottomSheet.Body>
+            <BottomSheet.Body className="pg-sheet-body">
+              {tokenEditor}
+              {/* At the end of the list, so it leaves the short sheet's room to the tokens. */}
+              <BottomSheet.Description className="pg-hint">{t.exportHint}</BottomSheet.Description>
+            </BottomSheet.Body>
             <BottomSheet.Footer className="pg-sheet-foot">
               {actions}
-              {copyStatus ? <p className="pg-hint">{copyStatus}</p> : null}
+              {copyStatusLine}
             </BottomSheet.Footer>
           </BottomSheet.Root>
         </>
