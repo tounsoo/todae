@@ -349,8 +349,8 @@ function Textarea({
       style={
         {
           ...style,
-          '--todae-field-rows': resolved.rows,
-          '--todae-field-max-rows': resolved.maxRows,
+          '--_text-rows': resolved.rows,
+          '--_max-rows': resolved.maxRows,
         } as CSSProperties
       }
       onChange={(event) => {
@@ -479,7 +479,7 @@ function ChipInput({
             className={styles.row}
             data-max-rows={maxRows ?? undefined}
             data-measured={maxRows != null && list.measured ? '' : undefined}
-            style={maxRows != null ? ({ '--todae-field-chip-rows': maxRows } as CSSProperties) : undefined}
+            style={maxRows != null ? ({ '--_chip-rows': maxRows } as CSSProperties) : undefined}
           >
             {chipNodes}
             {overflow}
@@ -497,7 +497,7 @@ function ChipInput({
       ref={list.listRef}
       data-max-rows={maxRows ?? undefined}
       data-measured={maxRows != null && list.measured ? '' : undefined}
-      style={maxRows != null ? ({ '--todae-field-chip-rows': maxRows } as CSSProperties) : undefined}
+      style={maxRows != null ? ({ '--_chip-rows': maxRows } as CSSProperties) : undefined}
     >
       {chipNodes}
       {overflow}

@@ -138,6 +138,8 @@ describe('token consistency across component styles', () => {
       ['Badge', [...status, ...CATEGORY_TONES], ['fg', 'bg', 'border']],
       ['Chip', [...status, ...CATEGORY_TONES], ['fg', 'bg', 'border']],
       ['Avatar', CATEGORY_TONES, ['fg', 'bg']],
+      ['Alert', status, ['fg', 'bg', 'border']],
+      ['Toast', status, ['fg', 'bg', 'border']],
     ];
     for (const [sheet, tones, parts] of toned) {
       const root = sheet.toLowerCase();

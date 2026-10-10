@@ -7,36 +7,36 @@
     align-items: start;
     box-sizing: border-box;
     padding: var(--todae-alert-padding-y) var(--todae-alert-padding-x);
-    border: var(--todae-alert-border-width) solid var(--todae-alert-tone-border);
+    border: var(--todae-alert-border-width) solid var(--_tone-border);
     border-radius: var(--todae-alert-radius);
-    background: var(--todae-alert-tone-bg);
-    color: var(--todae-alert-tone-fg);
+    background: var(--_tone-bg);
+    color: var(--_tone-fg);
     font-size: var(--todae-alert-font-size);
     line-height: var(--todae-alert-leading);
   }
 
   .root[data-tone='info'] {
-    --todae-alert-tone-fg: var(--todae-alert-info-fg);
-    --todae-alert-tone-bg: var(--todae-alert-info-bg);
-    --todae-alert-tone-border: var(--todae-alert-info-border);
+    --_tone-fg: var(--todae-alert-info-fg);
+    --_tone-bg: var(--todae-alert-info-bg);
+    --_tone-border: var(--todae-alert-info-border);
   }
 
   .root[data-tone='success'] {
-    --todae-alert-tone-fg: var(--todae-alert-success-fg);
-    --todae-alert-tone-bg: var(--todae-alert-success-bg);
-    --todae-alert-tone-border: var(--todae-alert-success-border);
+    --_tone-fg: var(--todae-alert-success-fg);
+    --_tone-bg: var(--todae-alert-success-bg);
+    --_tone-border: var(--todae-alert-success-border);
   }
 
   .root[data-tone='warning'] {
-    --todae-alert-tone-fg: var(--todae-alert-warning-fg);
-    --todae-alert-tone-bg: var(--todae-alert-warning-bg);
-    --todae-alert-tone-border: var(--todae-alert-warning-border);
+    --_tone-fg: var(--todae-alert-warning-fg);
+    --_tone-bg: var(--todae-alert-warning-bg);
+    --_tone-border: var(--todae-alert-warning-border);
   }
 
   .root[data-tone='critical'] {
-    --todae-alert-tone-fg: var(--todae-alert-critical-fg);
-    --todae-alert-tone-bg: var(--todae-alert-critical-bg);
-    --todae-alert-tone-border: var(--todae-alert-critical-border);
+    --_tone-fg: var(--todae-alert-critical-fg);
+    --_tone-bg: var(--todae-alert-critical-bg);
+    --_tone-border: var(--todae-alert-critical-border);
   }
 
   /* The columns follow the parts that are there, so a missing icon or close

@@ -55,8 +55,8 @@ describe('BottomSheet', () => {
     handle!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 7, clientY: 400 }));
     window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 7, clientY: 200 }));
     expect(sheet.hasAttribute('data-dragging')).toBe(true);
-    expect(sheet.style.getPropertyValue('--todae-sheet-drag-height')).toBe('600px');
-    expect(sheet.style.getPropertyValue('--todae-sheet-drag-y')).toBe('');
+    expect(sheet.style.getPropertyValue('--_drag-height')).toBe('600px');
+    expect(sheet.style.getPropertyValue('--_drag-y')).toBe('');
     expect(sheet.style.transform).toBe('');
     expect(onSnapChange).not.toHaveBeenCalled();
     window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 7, clientY: 200 }));

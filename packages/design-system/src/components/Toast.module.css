@@ -215,36 +215,36 @@
     align-items: start;
     box-sizing: border-box;
     padding: var(--todae-toast-padding-y) var(--todae-toast-padding-x);
-    border: var(--todae-toast-border-width) solid var(--todae-toast-tone-border);
+    border: var(--todae-toast-border-width) solid var(--_tone-border);
     border-radius: var(--todae-toast-radius);
-    background: var(--todae-toast-tone-bg);
-    color: var(--todae-toast-tone-fg);
+    background: var(--_tone-bg);
+    color: var(--_tone-fg);
     font-size: var(--todae-toast-font-size);
     line-height: var(--todae-toast-leading);
   }
 
   .root[data-tone='info'] {
-    --todae-toast-tone-fg: var(--todae-toast-info-fg);
-    --todae-toast-tone-bg: var(--todae-toast-info-bg);
-    --todae-toast-tone-border: var(--todae-toast-info-border);
+    --_tone-fg: var(--todae-toast-info-fg);
+    --_tone-bg: var(--todae-toast-info-bg);
+    --_tone-border: var(--todae-toast-info-border);
   }
 
   .root[data-tone='success'] {
-    --todae-toast-tone-fg: var(--todae-toast-success-fg);
-    --todae-toast-tone-bg: var(--todae-toast-success-bg);
-    --todae-toast-tone-border: var(--todae-toast-success-border);
+    --_tone-fg: var(--todae-toast-success-fg);
+    --_tone-bg: var(--todae-toast-success-bg);
+    --_tone-border: var(--todae-toast-success-border);
   }
 
   .root[data-tone='warning'] {
-    --todae-toast-tone-fg: var(--todae-toast-warning-fg);
-    --todae-toast-tone-bg: var(--todae-toast-warning-bg);
-    --todae-toast-tone-border: var(--todae-toast-warning-border);
+    --_tone-fg: var(--todae-toast-warning-fg);
+    --_tone-bg: var(--todae-toast-warning-bg);
+    --_tone-border: var(--todae-toast-warning-border);
   }
 
   .root[data-tone='critical'] {
-    --todae-toast-tone-fg: var(--todae-toast-critical-fg);
-    --todae-toast-tone-bg: var(--todae-toast-critical-bg);
-    --todae-toast-tone-border: var(--todae-toast-critical-border);
+    --_tone-fg: var(--todae-toast-critical-fg);
+    --_tone-bg: var(--todae-toast-critical-bg);
+    --_tone-border: var(--todae-toast-critical-border);
   }
 
   /* The columns follow the parts that are there, as in Alert. */
