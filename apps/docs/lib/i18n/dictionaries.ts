@@ -48,6 +48,9 @@ export type Dictionary = {
     | 'lead'
     | 'presets'
     | 'tokens'
+    | 'editTheme'
+    | 'closeSheet'
+    | 'resizeSheet'
     | 'tokenLayer'
     | 'filter'
     | 'noMatch'
@@ -112,6 +115,9 @@ const en: Dictionary = {
     lead: 'Start from a preset, change any token, and copy the result as ThemeProvider overrides.',
     presets: 'Presets',
     tokens: 'Tokens',
+    editTheme: 'Edit theme',
+    closeSheet: 'Close theme controls',
+    resizeSheet: 'Resize theme controls',
     tokenLayer: 'Token layer',
     filter: 'Filter tokens',
     noMatch: 'No token matches.',
@@ -179,6 +185,9 @@ const ko: Dictionary = {
     lead: '프리셋에서 시작해 원하는 토큰을 바꾸고, 결과를 ThemeProvider 오버라이드로 복사하세요.',
     presets: '프리셋',
     tokens: '토큰',
+    editTheme: '테마 편집',
+    closeSheet: '테마 컨트롤 닫기',
+    resizeSheet: '테마 컨트롤 크기 조절',
     tokenLayer: '토큰 레이어',
     filter: '토큰 필터',
     noMatch: '일치하는 토큰이 없습니다.',

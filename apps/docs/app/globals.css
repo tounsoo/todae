@@ -216,13 +216,17 @@ body {
   }
 
   .sidebar {
-    display: block;
+    display: flex;
+    flex-direction: column;
     position: sticky;
     inset-block-start: var(--docs-topbar);
     block-size: calc(100dvh - var(--docs-topbar));
-    overflow-y: auto;
-    overscroll-behavior: contain;
+  }
+
+  .sidebar-scroll {
+    flex: 1 1 auto;
     padding-block: 1.75rem 3rem;
+    overscroll-behavior: contain;
   }
 }
 
@@ -816,10 +820,19 @@ table {
 .pg-rail {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem 1.25rem 0;
   border-block-end: 1px solid var(--docs-line);
   background: var(--todae-color-bg-surface);
+}
+
+.pg-rail-scroll {
+  flex: 1 1 auto;
+  padding: 1.5rem 1.25rem 0;
+}
+
+.pg-rail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 @media (min-width: 64rem) {
@@ -827,10 +840,12 @@ table {
     position: sticky;
     inset-block-start: var(--docs-topbar);
     block-size: calc(100dvh - var(--docs-topbar));
-    overflow-y: auto;
-    overscroll-behavior: contain;
     border-block-end: 0;
     border-inline-end: 1px solid var(--docs-line);
+  }
+
+  .pg-rail-scroll {
+    overscroll-behavior: contain;
   }
 }
 
@@ -1079,6 +1094,130 @@ table {
   font-size: 0.75rem;
 }
 
+/* Narrow screens: the token editor moves into a sheet, so the stage sits
+   right under the theme controls. Same breakpoint as NARROW in Playground. */
+@media screen and (width < 64rem) {
+  /* A column, so the stage takes the height the rail leaves. Playground
+     measures the fixed bar into --docs-pg-bar, so the end of the stage clears
+     it. Screen only: a printed page is narrower than this too, and a print from
+     a wide screen keeps the rail's editor. */
+  .playground {
+    display: flex;
+    flex-direction: column;
+    padding-block-end: var(--docs-pg-bar);
+  }
+
+  .pg-stage-theme {
+    flex: 1 1 auto;
+  }
+
+  .pg-rail-scroll {
+    padding-block-end: 1.25rem;
+  }
+
+  /* The server sends the wide layout; everything but the intro stays hidden
+     until the sheet takes it over. */
+  .pg-rail-body > :not(.pg-intro) {
+    display: none;
+  }
+
+  /* Fixed, not sticky: focusing a sticky bar's buttons would scroll the page
+     to clear them of the padding below, which is there for everything else. */
+  .pg-sheet-bar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem max(0.75rem, env(safe-area-inset-bottom));
+    border-block-start: 1px solid var(--docs-line);
+    background: var(--todae-color-bg-surface);
+  }
+
+  /* Keyboard focus scrolls clear of the bar instead of under it. Other pages
+     leave the variable unset, so the padding keeps its initial value. */
+  html {
+    scroll-padding-block-end: var(--docs-pg-bar);
+  }
+
+  .pg-sheet-bar .pg-hint {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+}
+
+/* The bar and the sheet are fixed controls that do nothing on paper. */
+@media print {
+  .pg-sheet-bar,
+  .pg-sheet {
+    display: none;
+  }
+}
+
+/* The stage stays visible above the sheet, so no scrim tints the colors being tuned. */
+.pg-sheet::backdrop {
+  background: transparent;
+}
+
+.pg-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pg-sheet-head > h2 {
+  margin-inline-end: auto;
+}
+
+.pg-sheet-body {
+  display: grid;
+  align-content: start;
+  gap: 1.5rem;
+}
+
+/* Presets scroll sideways in one row instead of taking two. */
+.pg-sheet .preset-grid {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 6.5rem;
+}
+
+.pg-sheet .preset-scroll {
+  scroll-snap-type: x proximity;
+}
+
+/* Positioned, so each card's visually hidden radio scrolls with it instead of widening the sheet. */
+.pg-sheet .preset {
+  position: relative;
+  scroll-snap-align: start;
+}
+
+.pg-sheet-body .pg-token-panel {
+  padding-block-end: 0.5rem;
+}
+
+.pg-sheet-body .pg-hint {
+  margin: 0.5rem 0 0;
+}
+
+.pg-sheet-foot {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.pg-sheet-foot .pg-actions {
+  position: static;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.pg-sheet-foot .pg-hint {
+  margin: 0;
+}
+
 .pg-stage-theme {
   display: flex;
   min-inline-size: 0;
@@ -1086,6 +1225,7 @@ table {
 
 .pg-stage {
   flex: 1 1 auto;
+  scroll-margin-block-start: var(--docs-topbar);
   min-inline-size: 0;
   padding: clamp(1rem, 3vw, 2.5rem);
   background: var(--todae-color-bg-subtle);

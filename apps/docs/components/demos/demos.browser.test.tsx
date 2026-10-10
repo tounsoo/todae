@@ -7,6 +7,7 @@ import '@omsoo/todae/todae.css';
 import '../../app/globals.css';
 import { Example } from '../Example';
 import { Providers } from '../Providers';
+import { clippedRings } from '../../test/clippedRings';
 
 afterEach(cleanup);
 
@@ -55,6 +56,8 @@ describe('docs demos under axe', () => {
       );
       await settle();
       expect(await violations()).toEqual([]);
+      // No scroll or clip container cuts a focus ring.
+      expect(clippedRings()).toEqual([]);
     });
   }
 });
@@ -84,6 +87,7 @@ describe('docs demos under axe, overlay open', () => {
       await openFirstOverlay(container);
       expect(openOverlay(), 'no overlay opened').toBe(true);
       expect(await violations()).toEqual([]);
+      expect(clippedRings(document.querySelector('dialog[open], :popover-open') ?? document)).toEqual([]);
     });
   }
 });

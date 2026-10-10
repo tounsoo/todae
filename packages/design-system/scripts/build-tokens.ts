@@ -51,6 +51,7 @@ export const RESERVED_ROOTS = [
   'avatar',
   'grid',
   'pagination',
+  'scroll',
   'opacity',
 ] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;

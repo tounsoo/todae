@@ -1,7 +1,8 @@
+/// <reference types="@vitest/browser/providers/playwright" />
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { page, userEvent } from '@vitest/browser/context';
+import { cdp, page, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@omsoo/todae/todae.css';
 import '../app/globals.css';
 import { APPEARANCE_KEY, APPEARANCE_SCRIPT } from './appearanceScript';
@@ -13,8 +14,17 @@ import { PropsTable } from './PropsTable';
 import { PropsTableView, type PropsTableRow } from './PropsTableView';
 import schema from '@omsoo/todae/schema/components.json';
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { Sidebar } from './Sidebar';
+import { clippedRings } from '../test/clippedRings';
 
 afterEach(cleanup);
+
+// The playground copies its JSON here; a test can make it fail.
+const writeText = vi.fn<(text: string) => Promise<void>>();
+beforeEach(() => {
+  writeText.mockReset().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+});
 
 const path = vi.hoisted(() => ({ current: '/' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
@@ -58,6 +68,7 @@ describe('docs site chrome under axe', () => {
   });
 
   it('playground, with a preset in dark', async () => {
+    await page.viewport(1280, 800);
     render(
       <Providers>
         <main>
@@ -115,6 +126,172 @@ describe('narrow screens', () => {
     }
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
   });
+
+  function renderNarrowPlayground(locale: 'en' | 'ko' = 'en') {
+    render(
+      <Providers>
+        <main>
+          <Playground locale={locale} />
+        </main>
+      </Providers>,
+    );
+    return {
+      stage: screen.getByRole('region', { name: locale === 'en' ? 'Preview' : '미리보기' }),
+      bar: document.querySelector<HTMLElement>('.pg-sheet-bar')!,
+    };
+  }
+
+  it('puts the playground stage right under its title and every control in a sheet', async () => {
+    await page.viewport(390, 800);
+    const { stage, bar } = renderNarrowPlayground();
+    await frame();
+    // Every control is in the sheet, and the stage follows the title and lead.
+    expect(screen.queryByRole('tab', { name: 'raw' })).toBeNull();
+    expect(screen.queryByRole('radio', { name: 'Forest' })).toBeNull();
+    expect(screen.queryByRole('complementary')).toBeNull();
+    const lead = screen.getByText(/Start from a preset/);
+    expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(lead.getBoundingClientRect().bottom);
+    expect(stage.getBoundingClientRect().top).toBeLessThan(innerHeight / 3);
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
+    // The playground keeps the bar's height free under the stage.
+    expect(getComputedStyle(document.querySelector('.playground')!).paddingBlockEnd).toBe(
+      `${Math.ceil(bar.getBoundingClientRect().height)}px`,
+    );
+    // The border box is measured, so padding such as the safe area counts too.
+    const reserved = () => document.documentElement.style.getPropertyValue('--docs-pg-bar');
+    const idle = reserved();
+    bar.style.paddingBlockEnd = '3rem';
+    await expect.poll(reserved).toBe(`${Math.ceil(bar.getBoundingClientRect().height)}px`);
+    bar.style.paddingBlockEnd = '';
+    await expect.poll(reserved).toBe(idle);
+    expect(await violations()).toEqual([]);
+    await userEvent.click(within(bar).getByRole('button', { name: 'Edit theme' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Theme controls' });
+    await frame();
+    expect(await violations()).toEqual([]);
+    // Nothing in the sheet, including the sideways preset row, cuts a focus ring.
+    expect(clippedRings(sheet)).toEqual([]);
+    // The export hint the rail shows on wide screens describes the sheet here.
+    expect(sheet.getAttribute('aria-describedby')).toBeTruthy();
+    expect(document.getElementById(sheet.getAttribute('aria-describedby')!)?.textContent).toContain('light and dark differ');
+    await userEvent.fill(within(sheet).getByLabelText('color.accent.default'), 'oklch(0.5 0.1 30)');
+    expect(stage.style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.1 30)');
+    // Presets and modes are in the sheet too, and change the stage behind it.
+    await userEvent.click(within(sheet).getByRole('button', { name: 'dark' }));
+    expect(stage.getAttribute('data-appearance')).toBe('dark');
+    // The presets scroll in their own row, so the sheet does not scroll sideways.
+    const body = sheet.querySelector<HTMLElement>('.pg-sheet-body')!;
+    expect(body.scrollWidth).toBeLessThanOrEqual(body.clientWidth);
+    const row = sheet.querySelector<HTMLElement>('.preset-scroll')!;
+    expect(row.scrollWidth).toBeGreaterThan(row.clientWidth);
+    await userEvent.click(within(sheet).getByRole('button', { name: 'light' }));
+    // The count shows on the button that opens the sheet, and names the change for a screen reader.
+    expect(within(bar).getByRole('button', { name: 'Edit theme (1 changed)' })).toBeTruthy();
+    // The stage fills the room above the sheet while tokens change.
+    const box = stage.getBoundingClientRect();
+    expect(box.top).toBeGreaterThanOrEqual(0);
+    expect(box.top).toBeLessThan(innerHeight / 4);
+    expect(box.bottom).toBeGreaterThan(sheet.getBoundingClientRect().top);
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Close theme controls' }));
+    await expect.poll(() => screen.queryByRole('dialog', { name: 'Theme controls' })).toBeNull();
+  });
+
+  it('keeps the page still when focus moves onto the playground bar or back to it', async () => {
+    await page.viewport(390, 800);
+    const { stage, bar } = renderNarrowPlayground();
+    await frame();
+    stage.scrollIntoView({ block: 'start' });
+    await frame();
+    const still = scrollY;
+    const edit = within(bar).getByRole('button', { name: 'Edit theme' });
+    edit.focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(within(bar).getByRole('button', { name: 'Copy JSON' }));
+    await frame();
+    expect(scrollY).toBe(still);
+    await userEvent.click(edit);
+    await screen.findByRole('dialog', { name: 'Theme controls' });
+    await frame();
+    expect(scrollY).toBe(still);
+    await userEvent.keyboard('{Escape}');
+    await expect.poll(() => screen.queryByRole('dialog', { name: 'Theme controls' })).toBeNull();
+    // Focus goes back to the button that opened the sheet, without moving the page.
+    await expect.poll(() => document.activeElement).toBe(edit);
+    await frame();
+    expect(scrollY).toBe(still);
+  });
+
+  it('keeps focus and the end of the stage clear of the playground bar at its tallest', async () => {
+    await page.viewport(320, 700);
+    // The failure text is the longer status, so the bar wraps to its tallest.
+    writeText.mockRejectedValue(new Error('denied'));
+    const { stage, bar } = renderNarrowPlayground();
+    await userEvent.click(within(bar).getByRole('button', { name: 'Copy JSON' }));
+    await expect.poll(() => bar.textContent).toContain('Could not copy');
+    await frame();
+    const barTop = () => bar.getBoundingClientRect().top;
+    // A control on screen, entirely behind the bar.
+    const target = within(stage).getByRole('button', { name: 'Upgrade to Pro' });
+    scrollBy(0, target.getBoundingClientRect().top - barTop() - 4);
+    await frame();
+    expect(target.getBoundingClientRect().top).toBeGreaterThan(barTop());
+    expect(target.getBoundingClientRect().bottom).toBeLessThanOrEqual(innerHeight);
+    target.focus();
+    await frame();
+    expect(target.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop());
+    // The end of the stage scrolls clear of the bar.
+    scrollTo(0, document.documentElement.scrollHeight);
+    await frame();
+    expect(stage.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop() + 1);
+  });
+
+  it('leaves the playground bar, the open sheet and their space out of print', async () => {
+    await page.viewport(390, 800);
+    // Static markup with the playground's classes: printing can also flip the
+    // playground's own media query, and this checks the stylesheet alone.
+    document.documentElement.style.setProperty('--docs-pg-bar', '80px');
+    render(
+      <div className="playground">
+        <div className="pg-sheet-bar" />
+        <dialog className="pg-sheet" open />
+      </div>,
+    );
+    const playground = document.querySelector<HTMLElement>('.playground')!;
+    expect(getComputedStyle(playground).paddingBlockEnd).toBe('80px');
+    await cdp().send('Emulation.setEmulatedMedia', { media: 'print' });
+    try {
+      expect(getComputedStyle(document.querySelector('.pg-sheet-bar')!).display).toBe('none');
+      expect(getComputedStyle(document.querySelector('.pg-sheet')!).display).toBe('none');
+      expect(getComputedStyle(playground).paddingBlockEnd).toBe('0px');
+    } finally {
+      await cdp().send('Emulation.setEmulatedMedia', { media: '' });
+      document.documentElement.style.removeProperty('--docs-pg-bar');
+    }
+  });
+
+  it('keeps the playground sheet open after printing', async () => {
+    await page.viewport(390, 800);
+    const { bar } = renderNarrowPlayground();
+    await userEvent.click(within(bar).getByRole('button', { name: 'Edit theme' }));
+    await screen.findByRole('dialog', { name: 'Theme controls' });
+    await cdp().send('Emulation.setEmulatedMedia', { media: 'print' });
+    try {
+      await frame();
+    } finally {
+      await cdp().send('Emulation.setEmulatedMedia', { media: '' });
+    }
+    await frame();
+    expect(screen.getByRole('dialog', { name: 'Theme controls' })).toBeTruthy();
+  });
+
+  it('names the playground sheet controls in Korean on the Korean page', async () => {
+    await page.viewport(390, 800);
+    const { bar } = renderNarrowPlayground('ko');
+    await userEvent.click(within(bar).getByRole('button', { name: '테마 편집' }));
+    const sheet = await screen.findByRole('dialog', { name: '테마 컨트롤' });
+    expect(within(sheet).getAllByRole('button', { name: '테마 컨트롤 크기 조절' })).toHaveLength(1);
+    expect(within(sheet).getByRole('button', { name: '테마 컨트롤 닫기' })).toBeTruthy();
+  });
 });
 
 describe('mobile drawer', () => {
@@ -171,13 +348,20 @@ describe('mobile drawer', () => {
 describe('props table', () => {
   const describe_ = (text: string) => ({ en: { text, lang: 'en' as const }, ko: { text, lang: 'en' as const } });
   const rows: PropsTableRow[] = [
-    { name: 'onActiveValueChange', type: '(value: string | null) => void', required: true, descriptions: describe_('Called when the active option changes.') },
+    {
+      name: 'onActiveValueChange',
+      type: '(value: string | null) => void',
+      required: true,
+      descriptions: describe_('Called when the active option changes.'),
+    },
     {
       name: 'type',
       type: '"text" | "search" | "email" | "url" | "tel" | "password" | "number" | "date" | "time" | "datetime-local"',
       required: false,
       default: '"text"',
-      descriptions: describe_('Native input type. Number, date and time keep the native spinner and picker, and value stays the input string.'),
+      descriptions: describe_(
+        'Native input type. Number, date and time keep the native spinner and picker, and value stays the input string.',
+      ),
     },
   ];
 
@@ -244,7 +428,44 @@ describe('props table', () => {
   });
 });
 
+describe('focus rings in the site scroll containers', () => {
+  it('keeps every sidebar link ring whole', async () => {
+    await page.viewport(1280, 600);
+    render(
+      <Providers>
+        <div className="layout">
+          <Sidebar locale="en" />
+          <main />
+        </div>
+      </Providers>,
+    );
+    await frame();
+    // The sidebar scrolls, so the last links start out of view and are scrolled in on focus.
+    const sidebar = document.querySelector<HTMLElement>('.sidebar-scroll')!;
+    expect(sidebar.scrollHeight).toBeGreaterThan(sidebar.clientHeight);
+    expect(clippedRings(sidebar)).toEqual([]);
+  });
+
+  it('keeps every ring in the playground rail whole', async () => {
+    await page.viewport(1280, 800);
+    render(
+      <Providers>
+        <main>
+          <Playground locale="en" />
+        </main>
+      </Providers>,
+    );
+    await frame();
+    expect(clippedRings(screen.getByRole('complementary', { name: 'Theme controls' }))).toEqual([]);
+  });
+});
+
 describe('playground stage', () => {
+  // The token editor sits in the rail on wide screens.
+  beforeEach(async () => {
+    await page.viewport(1280, 800);
+  });
+
   function renderPlayground() {
     render(
       <Providers>

@@ -926,6 +926,7 @@
   --todae-pagination-radius: var(--_todae-pagination-radius, var(--todae-radius-md));
   --todae-pagination-ring-focus: var(--_todae-pagination-ring-focus, var(--todae-color-accent-default));
   --todae-pagination-size: var(--_todae-pagination-size, 2rem);
+  --todae-scroll-ring-focus: var(--_todae-scroll-ring-focus, var(--todae-color-accent-default));
   --todae-button-font-size: var(--todae-button-base-font-size);
   --todae-button-font-weight: var(--todae-button-base-font-weight);
   --todae-button-gap: var(--todae-button-base-gap);

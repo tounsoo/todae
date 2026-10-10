@@ -338,6 +338,15 @@
     "## Accessible composition": "1f9334def949",
     "(section order)": "2ce6dd09df8f"
   },
+  "scroll-area": {
+    "(top)": "a2750334232a",
+    "# ScrollArea": "e402aa323406",
+    "## A Tab stop for content with no controls": "0dd8837361a3",
+    "## Accessible composition": "f4d66c232ace",
+    "## When to use": "b34ea3e391b2",
+    "## Props": "fc86f0416810",
+    "(section order)": "5078874aa1c2"
+  },
   "separator": {
     "(top)": "7514440d9427",
     "# Separator": "4ddb6c1e4fce",
