@@ -126,6 +126,8 @@ pnpm graft:check
 - `packages/design-system` is `@omsoo/todae`, a private Vite library.
 - `apps/docs` is the Next.js 15 docs app with MDX examples.
 
+Before adding a component, hook, recipe or token, read [`ARCHITECTURE.md`](ARCHITECTURE.md) for the decisions they follow.
+
 The component set is still growing and is not a finished design system.
 
 ## License

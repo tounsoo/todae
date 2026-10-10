@@ -1,5 +1,9 @@
 # Claude instructions
 
+## Architecture and decisions
+
+Read [`ARCHITECTURE.md`](ARCHITECTURE.md) before adding or changing a component, hook, recipe, token or docs page. It records the concepts and decisions new work must follow. When a decision changes, update it in the same pull request.
+
 ## Docs translations
 
 The docs site is in English and Korean. A change to an English `page.mdx` in `apps/docs/app/(en)` also changes its Korean twin in `apps/docs/app/ko`, in the same pull request, then runs `pnpm --filter docs i18n:stamp ko <slug>`. `apps/docs/TRANSLATING.md` has the details.
