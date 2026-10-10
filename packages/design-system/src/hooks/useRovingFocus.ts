@@ -124,12 +124,6 @@ function nextKey(key: string, orientation: RovingOrientation, rtl: () => boolean
 }
 
 /**
- * One tab stop for a composite widget: tabs, menu items, toolbar buttons.
- * Arrow keys, Home and End move focus between items; Tab leaves the group.
- * Items are found in the DOM by an attribute this hook owns, so an item inside
- * a company's own wrapper still takes part, and order is document order.
- */
-/**
  * An item's text as a screen reader reads it: without aria-hidden parts, such
  * as a menu item's check glyph, which may be text or an icon-font ligature.
  */
@@ -141,6 +135,12 @@ function spokenText(node: Node): string {
   return text;
 }
 
+/**
+ * One tab stop for a composite widget: tabs, menu items, toolbar buttons.
+ * Arrow keys, Home and End move focus between items; Tab leaves the group.
+ * Items are found in the DOM by an attribute this hook owns, so an item inside
+ * a company's own wrapper still takes part, and order is document order.
+ */
 export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFocusResult {
   const {
     orientation = 'vertical',

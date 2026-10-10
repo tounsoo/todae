@@ -453,7 +453,7 @@ function CheckboxItem({
   );
   return (
     <div {...item}>
-      <span className={styles.indicator} aria-hidden="true">
+      <span className={styles.indicator} data-todae-glyph="" aria-hidden="true">
         {glyphOr(check, <CheckGlyph />)}
       </span>
       {children}

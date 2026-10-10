@@ -153,4 +153,24 @@ describe('Glyphs in a browser', () => {
     expect(getComputedStyle(second!).scale).toBe('-1 1');
     expect(getComputedStyle(second!.closest('li')!, '::before').content).toBe('none');
   });
+
+  it('flips a text separator once in right-to-left, as it does an svg', () => {
+    render(
+      <Themed>
+        <GlyphsProvider glyphs={{ separator: '›' }}>
+          <div dir="rtl">
+            <Breadcrumbs.Root>
+              <Breadcrumbs.Item>
+                <a href="#a">One</a>
+              </Breadcrumbs.Item>
+              <Breadcrumbs.Item current>Two</Breadcrumbs.Item>
+            </Breadcrumbs.Root>
+          </div>
+        </GlyphsProvider>
+      </Themed>,
+    );
+    const separator = document.querySelectorAll('nav li')[1]!.querySelector('[data-todae-glyph]')!;
+    expect(getComputedStyle(separator).direction).toBe('ltr');
+    expect(getComputedStyle(separator).scale).toBe('-1 1');
+  });
 });

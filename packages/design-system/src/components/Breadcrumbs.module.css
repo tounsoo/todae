@@ -46,6 +46,9 @@
     block-size: 1em;
     color: var(--todae-breadcrumbs-separator-fg);
     line-height: 1;
+    /* Laid out left to right, so the RTL mirror below flips a text glyph such
+       as '›' once, as it does an svg, rather than undoing the bidi mirror. */
+    direction: ltr;
   }
 
   .separator > :is(svg, img) {
