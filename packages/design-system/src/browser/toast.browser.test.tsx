@@ -1078,6 +1078,43 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
     await waitFor(() => expect(receivesPointer(backClose)).toBe(true));
   });
 
+  it('spreads on a tap so the toast behind the newest can be used, until a press outside', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <StackRegion toaster={toaster} placement={placement} />
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ id: 'back', title: 'Back' });
+      toaster.add({ title: 'Front' });
+    });
+    const region = await screen.findByRole('region', { name: 'Notifications' });
+    const items = () => [...region.querySelectorAll('ol > li')] as HTMLElement[];
+    await waitFor(() => expect(items()).toHaveLength(2));
+    await userEvent.unhover(region);
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    const back = items()[1]!;
+    const backClose = screen.getAllByRole('button', { name: 'Dismiss' })[1]!;
+    // A touch: in on press, out on release, as a browser sends it.
+    const touch = (target: Element, type: string) =>
+      act(() => void target.dispatchEvent(new PointerEvent(type, { pointerType: 'touch', bubbles: true, composed: true })));
+    touch(back, 'pointerover');
+    touch(back, 'pointerdown');
+    touch(back, 'pointerup');
+    touch(back, 'pointerout');
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(true));
+    await waitFor(() => expect(receivesPointer(backClose)).toBe(true));
+    // The click a tap there sends, without a mouse that would hover.
+    touch(backClose, 'pointerdown');
+    touch(backClose, 'pointerup');
+    act(() => backClose.click());
+    await waitFor(() => expect(toaster.getSnapshot().find((toast) => toast.id === 'back')?.open).toBe(false));
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    touch(document.body, 'pointerdown');
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+  });
+
   it('lets the pointer through the parts of a toast behind the newest where it peeks out', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(

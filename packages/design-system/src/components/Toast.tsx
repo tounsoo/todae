@@ -46,7 +46,7 @@ export type ToastRegionProps<T extends object = object> = {
   /** Renders one toast, usually a `Toast.Root`. */
   children: (toast: ToastRecord<T>) => ReactNode;
   placement?: ToastPlacement;
-  /** `list` shows every toast in full; `stack` collapses them behind the newest, and spreads them while the pointer is over them or keyboard focus is inside. */
+  /** `list` shows every toast in full; `stack` collapses them behind the newest, and spreads them while the pointer is over them or keyboard focus is inside, and from a tap until a press outside. */
   layout?: ToastLayout;
   /** How many toasts show at once. Later ones wait their turn. */
   limit?: number;
@@ -254,6 +254,7 @@ function Region<T extends object = object>({
   onFocus,
   onBlur,
   onKeyDown,
+  onPointerUp,
   ...props
 }: ToastRegionProps<T>) {
   // None on the server: a store at module scope is shared by every request.
@@ -283,8 +284,11 @@ function Region<T extends object = object>({
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  // A touch has no hover, so a tap spreads the stack and it stays spread
+  // until a press outside the region, letting the toasts behind be used.
+  const [tapped, setTapped] = useState(false);
   const [pageHidden, setPageHidden] = useState(false);
-  const expanded = hovered || focused;
+  const expanded = hovered || focused || tapped;
   // Focus can leave without a blur, such as when the focused element is
   // removed or moved, so it is read again after those.
   const syncFocused = useCallback(() => {
@@ -433,6 +437,20 @@ function Region<T extends object = object>({
     return () => doc.removeEventListener('visibilitychange', sync);
   }, []);
 
+  // Nothing left to use, so the next toast starts collapsed and timed.
+  if (tapped && !hasOpen) setTapped(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!tapped || !section) return;
+    const doc = section.ownerDocument;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!event.composedPath().includes(section)) setTapped(false);
+    };
+    doc.addEventListener('pointerdown', onPointerDown, true);
+    return () => doc.removeEventListener('pointerdown', onPointerDown, true);
+  }, [tapped, host]);
+
   // A toast dismissed while it waited never showed, so it has no exit motion.
   useEffect(() => {
     for (const toast of toasts.slice(max)) if (!toast.open) toaster.remove(toast.id);
@@ -547,8 +565,18 @@ function Region<T extends object = object>({
       data-layout={layout}
       data-placement={placement}
       data-expanded={expanded ? '' : undefined}
-      onPointerEnter={alongside(onPointerEnter, () => setHovered(true))}
-      onPointerLeave={alongside(onPointerLeave, () => setHovered(false))}
+      // A touch enters on press and leaves on release, which is no hover.
+      onPointerEnter={alongside(onPointerEnter, (event) => {
+        if (event.pointerType !== 'touch') setHovered(true);
+      })}
+      onPointerLeave={alongside(onPointerLeave, (event) => {
+        if (event.pointerType !== 'touch') setHovered(false);
+      })}
+      // On release, not press: a touch that turns into a scroll ends in
+      // pointercancel instead.
+      onPointerUp={alongside(onPointerUp, (event) => {
+        if (event.pointerType === 'touch') setTapped(true);
+      })}
       onFocus={alongside(onFocus, (event) => {
         focusLeave.onFocus();
         if (event.target instanceof HTMLElement) lastInside.current = event.target;

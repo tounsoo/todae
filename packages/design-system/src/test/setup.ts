@@ -44,9 +44,11 @@ function polyfillPointerEvent(): void {
   if (typeof globalThis.PointerEvent === 'function' || typeof MouseEvent === 'undefined') return;
   class PointerEventPolyfill extends MouseEvent {
     pointerId: number;
-    constructor(type: string, init: MouseEventInit & { pointerId?: number } = {}) {
+    pointerType: string;
+    constructor(type: string, init: MouseEventInit & { pointerId?: number; pointerType?: string } = {}) {
       super(type, init);
       this.pointerId = init.pointerId ?? 0;
+      this.pointerType = init.pointerType ?? '';
     }
   }
   globalThis.PointerEvent = PointerEventPolyfill as typeof PointerEvent;

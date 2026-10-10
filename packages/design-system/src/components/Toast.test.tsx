@@ -159,6 +159,61 @@ describe('Toast', () => {
     expect(region.hasAttribute('data-expanded')).toBe(false);
   });
 
+  it('spreads on a tap and stays spread, with the timers paused, until a press outside', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(
+      <>
+        <button type="button">Outside</button>
+        <Region toaster={toaster} layout="stack" />
+      </>,
+    );
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    // A touch enters on press and leaves on release.
+    fireEvent.pointerEnter(region, { pointerType: 'touch' });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    fireEvent.pointerUp(region, { pointerType: 'touch' });
+    fireEvent.pointerLeave(region, { pointerType: 'touch' });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    act(() => void vi.advanceTimersByTime(2000));
+    expect(toaster.getSnapshot()[0]!.open).toBe(true);
+    // A press inside keeps it spread.
+    fireEvent.pointerDown(screen.getByText('Hold'), { pointerType: 'touch' });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Outside' }), { pointerType: 'touch' });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(toaster.getSnapshot()[0]!.open).toBe(false);
+  });
+
+  it('collapses after a tap once no toast is left, so the next one is timed', () => {
+    vi.useFakeTimers();
+    const toaster = createToaster({ duration: 1000 });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ id: 'a', title: 'First' }));
+    const region = screen.getByRole('region');
+    fireEvent.pointerUp(region, { pointerType: 'touch' });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
+    act(() => toaster.dismiss('a'));
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    act(() => void vi.advanceTimersByTime(1000));
+    act(() => void toaster.add({ title: 'Next' }));
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(toaster.getSnapshot().every((toast) => !toast.open)).toBe(true);
+  });
+
+  it('spreads only while a mouse is over it, not from a click', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    fireEvent.pointerEnter(region, { pointerType: 'mouse' });
+    fireEvent.pointerUp(region, { pointerType: 'mouse' });
+    fireEvent.pointerLeave(region, { pointerType: 'mouse' });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+  });
+
   it('leaves a typing hotkey to a text field, but not a function key or a Ctrl or Meta chord', () => {
     const toaster = createToaster({ duration: Infinity });
     function Page({ hotkey }: { hotkey: string }) {
