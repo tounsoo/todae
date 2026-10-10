@@ -197,9 +197,11 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     ];
     if (!tree) return nodes;
     // In a tree, items inside a closed item are not shown.
-    const closed = [...container.querySelectorAll<HTMLElement>(`[data-todae-roving="${scope}"][aria-expanded="false"]`)];
-    if (closed.length === 0) return nodes;
-    return nodes.filter((node) => !closed.some((branch) => branch !== node && branch.contains(node)));
+    const closed = `[data-todae-roving="${scope}"][aria-expanded="false"]`;
+    return nodes.filter((node) => {
+      const branch = node.parentElement?.closest(closed);
+      return !branch || !container.contains(branch);
+    });
   }, [findItems, scope, tree]);
 
   // Of those, the ones focus can move to now: not inert and not hidden by
@@ -450,7 +452,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
           onExpandedChange?.(value, false);
         } else {
           const parent = target.parentElement?.closest<HTMLElement>(`[data-todae-roving="${scope}"]`);
-          if (parent && container.contains(parent) && nodes.includes(parent)) next = parent;
+          if (parent && nodes.includes(parent)) next = parent;
         }
         // The key is the tree's even where it does nothing, so the page does not scroll.
         event.preventDefault();

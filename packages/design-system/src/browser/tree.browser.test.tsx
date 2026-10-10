@@ -74,4 +74,16 @@ describe('Tree in a browser', () => {
     render(<Files dir="rtl" />);
     expect(getComputedStyle(chevron('lib')).rotate).toBe('90deg');
   });
+
+  it('keeps the selected row’s background while it is hovered', async () => {
+    render(<Files />);
+    const label = item('index.ts').querySelector<HTMLElement>(':scope > div')!;
+    const before = getComputedStyle(label).backgroundColor;
+    await userEvent.hover(label);
+    expect(getComputedStyle(label).backgroundColor).toBe(before);
+    const other = item('README.md').querySelector<HTMLElement>(':scope > div')!;
+    const plain = getComputedStyle(other).backgroundColor;
+    await userEvent.hover(other);
+    expect(getComputedStyle(other).backgroundColor).not.toBe(plain);
+  });
 });

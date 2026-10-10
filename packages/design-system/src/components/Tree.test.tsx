@@ -155,7 +155,7 @@ describe('Tree', () => {
     expect(item('src').getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('selects with a click, Enter or Space, and a click or Enter also opens or closes a branch', () => {
+  it('selects with a click, Enter or Space, which also open or close a branch', () => {
     const onValueChange = vi.fn();
     render(<Files onValueChange={onValueChange} />);
     fireEvent.click(screen.getByText('src'));
@@ -172,6 +172,8 @@ describe('Tree', () => {
     act(() => item('src').focus());
     key('Enter');
     expect(item('src').getAttribute('aria-expanded')).toBe('false');
+    key(' ');
+    expect(item('src').getAttribute('aria-expanded')).toBe('true');
   });
 
   it('a click on a nested item selects only that item', () => {

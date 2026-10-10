@@ -43,7 +43,7 @@
   }
 
   @media (hover: hover) {
-    .item:not([data-disabled]) > .label:hover {
+    .item:not([data-disabled]):not([data-selected]) > .label:hover {
       background: var(--todae-tree-item-bg-hover);
     }
   }
@@ -126,6 +126,11 @@
 
     .item[data-selected] > .label > :is(.chevron, .icon) {
       color: HighlightText;
+    }
+
+    /* The selected row opts out of forced colors, so its ring must too. */
+    .item[data-selected]:focus-visible > .label {
+      outline-color: HighlightText;
     }
   }
 }
