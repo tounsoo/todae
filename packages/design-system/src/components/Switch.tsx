@@ -2,7 +2,7 @@ import type { InputHTMLAttributes, ReactNode, Ref } from 'react';
 import { useControlledState } from '../hooks/useControlledState';
 import { SelectionControl } from './SelectionControl';
 
-export type SwitchProps = {
+export type SwitchRootProps = {
   children: ReactNode;
   checked?: boolean;
   defaultChecked?: boolean;
@@ -18,15 +18,15 @@ export type SwitchProps = {
   'type' | 'role' | 'checked' | 'defaultChecked' | 'children' | 'disabled' | 'name' | 'value'
 >;
 
-export function Switch({
+function Root({
   checked: checkedProp,
   defaultChecked,
   onCheckedChange,
   children,
   ...props
-}: SwitchProps) {
+}: SwitchRootProps) {
   if (process.env.NODE_ENV !== 'production' && checkedProp !== undefined && defaultChecked !== undefined) {
-    console.error('Switch cannot take both checked and defaultChecked');
+    console.error('Switch.Root cannot take both checked and defaultChecked');
   }
   const [checked, setChecked] = useControlledState(checkedProp, defaultChecked ?? false);
   return (
@@ -43,3 +43,5 @@ export function Switch({
     </SelectionControl>
   );
 }
+
+export const Switch = { Root } as const;

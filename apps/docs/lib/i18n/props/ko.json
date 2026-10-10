@@ -257,7 +257,7 @@
       "ko": "Card 파트 또는 아무 콘텐츠."
     }
   },
-  "Checkbox": {
+  "Checkbox.Root": {
     "children": {
       "en": "Visible label. Clicking the text toggles the input.",
       "ko": "보이는 레이블. 텍스트를 클릭하면 입력이 토글됩니다."
@@ -375,7 +375,7 @@
       "ko": "코드."
     }
   },
-  "Description": {
+  "Description.Root": {
     "id": {
       "en": "Id the author lists in aria-describedby on the control or Field.Root.",
       "ko": "작성자가 컨트롤이나 Field.Root의 aria-describedby에 넣는 id."
@@ -491,7 +491,7 @@
       "ko": "Dialog.Title을 생략했을 때의 이름."
     }
   },
-  "ErrorMessage": {
+  "ErrorMessage.Root": {
     "id": {
       "en": "Id the author lists in aria-describedby on the control or Field.Root.",
       "ko": "작성자가 컨트롤이나 Field.Root의 aria-describedby에 넣는 id."
@@ -723,7 +723,7 @@
       "ko": "먼저 Fieldset.Legend, 그다음 컨트롤."
     }
   },
-  "Grid": {
+  "Grid.Root": {
     "columns": {
       "en": "A fixed number of equal columns, a whole number from 1.",
       "ko": "같은 너비의 열 개수로, 1 이상의 정수입니다."
@@ -743,7 +743,7 @@
       "ko": "키 이름. 단축키라면 키마다 Kbd.Root 하나씩."
     }
   },
-  "Label": {
+  "Label.Root": {
     "htmlFor": {
       "en": "Id of the labelled control. Must match Field.Root id when captioning a Field.",
       "ko": "레이블이 붙는 컨트롤의 id. Field에 캡션을 달 때는 Field.Root id와 일치해야 합니다."
@@ -1207,7 +1207,7 @@
       "ko": "텍스트가 있는 label 안에 있지 않을 때 Spinner에 이름을 붙입니다. progressbar role을 유지하므로 이름이 필요합니다."
     }
   },
-  "Stack": {
+  "Stack.Root": {
     "direction": {
       "en": "Flex direction.",
       "ko": "Flex 방향."
@@ -1237,7 +1237,7 @@
       "ko": "이 문자열을 쓰는 하위 트리."
     }
   },
-  "Switch": {
+  "Switch.Root": {
     "children": {
       "en": "Visible label. Clicking the text toggles the switch.",
       "ko": "보이는 레이블. 텍스트를 클릭하면 스위치가 토글됩니다."
@@ -1407,7 +1407,7 @@
       "ko": "탭에 붙는 선택적 클래스."
     }
   },
-  "Text": {
+  "Text.Root": {
     "as": {
       "en": "Rendered element. A heading level sets the outline; it also picks a default size, bold weight and tight leading.",
       "ko": "렌더링할 요소. 제목 수준은 문서 개요를 정하고, 기본 크기, 굵은 두께, 좁은 행간도 정합니다."

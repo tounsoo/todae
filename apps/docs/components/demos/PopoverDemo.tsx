@@ -9,7 +9,7 @@ export function PopoverMenu() {
   const [under, setUnder] = useState(0);
   const popover = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' });
   return (
-    <Stack>
+    <Stack.Root>
       <Button.Root tooltip={false} {...popover.getTriggerProps()}>
         {value ?? 'Choose fruit'}
       </Button.Root>
@@ -30,7 +30,7 @@ export function PopoverMenu() {
       <Button.Root variant="secondary" onClick={() => setUnder((count) => count + 1)}>
         Page under {under}
       </Button.Root>
-    </Stack>
+    </Stack.Root>
   );
 }
 
@@ -49,12 +49,12 @@ export function PopoverVeto() {
         Outside is vetoed
       </Button.Root>
       <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Pinned">
-        <Stack>
+        <Stack.Root>
           Outside click calls onOpenChange but this stays open. Escape still closes.
           <Button.Root variant="secondary" onClick={() => setOpen(false)}>
             Close
           </Button.Root>
-        </Stack>
+        </Stack.Root>
       </Popover.Root>
     </>
   );

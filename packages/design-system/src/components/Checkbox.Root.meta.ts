@@ -1,38 +1,38 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Switch',
-  description: 'On or off. Track and thumb. Children are the visible label. No check glyph.',
+  name: 'Checkbox.Root',
+  description: 'Native checkbox. Children are the visible label. Never indeterminate.',
   props: [
     {
       name: 'children',
       type: 'React.ReactNode',
       required: true,
-      description: 'Visible label. Clicking the text toggles the switch.',
+      description: 'Visible label. Clicking the text toggles the input.',
     },
     {
       name: 'checked',
       type: 'boolean',
       required: false,
-      description: 'Controlled on state. Defined means controlled.',
+      description: 'Controlled checked state. Defined means controlled.',
     },
     {
       name: 'defaultChecked',
       type: 'boolean',
       required: false,
-      description: 'Initial on state when uncontrolled.',
+      description: 'Initial checked state when uncontrolled.',
     },
     {
       name: 'onCheckedChange',
       type: '(checked: boolean) => void',
       required: false,
-      description: 'Fires after the on state changes.',
+      description: 'Fires after the checked state changes.',
     },
     {
       name: 'disabled',
       type: 'boolean',
       required: false,
-      description: 'Disables the switch.',
+      description: 'Disables the input.',
     },
     {
       name: 'invalid',
@@ -45,6 +45,12 @@ export const meta = {
       type: 'string',
       required: false,
       description: 'Native input name.',
+    },
+    {
+      name: 'value',
+      type: 'string',
+      required: false,
+      description: 'Native input value.',
     },
     {
       name: 'className',

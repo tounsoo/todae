@@ -6,7 +6,7 @@ A recipe, not a package namespace. A native `<input type="file">` is the control
 
 ## Images
 
-The label is the drop target, so a click anywhere on it opens the picker and its text names the input. Rejected files are listed in an `ErrorMessage` that the input's `aria-describedby` points to, and the input gets `aria-invalid`. Accepted files are listed below it.
+The label is the drop target, so a click anywhere on it opens the picker and its text names the input. Rejected files are listed in an `ErrorMessage.Root` that the input's `aria-describedby` points to, and the input gets `aria-invalid`. Accepted files are listed below it.
 
 ```tsx
 const zone = useDropzone({
@@ -22,7 +22,7 @@ const zone = useDropzone({
 })
 
 <label {...zone.getRootProps()}>
-  <Text as="span">Drop images here, or choose them</Text>
+  <Text.Root as="span">Drop images here, or choose them</Text.Root>
   <input
     {...zone.getInputProps()}
     name="images"
@@ -30,8 +30,8 @@ const zone = useDropzone({
     aria-describedby={rejected.length > 0 ? `${hintId} ${errorId}` : hintId}
   />
 </label>
-<Description id={hintId}>Up to 3 images, 2 MB each.</Description>
-{rejected.length > 0 ? <ErrorMessage id={errorId}>…</ErrorMessage> : null}
+<Description.Root id={hintId}>Up to 3 images, 2 MB each.</Description.Root>
+{rejected.length > 0 ? <ErrorMessage.Root id={errorId}>…</ErrorMessage.Root> : null}
 ```
 
 <Example block>
@@ -48,6 +48,6 @@ Send the files from `onFiles`, or leave them in the input and let the form submi
 
 **Todae handles:** [useDropzone](/utilities/use-dropzone) keeps the native `<input type="file">` as the control, so its role, the keyboard and the picker come from the browser. `getInputProps()` sets `type`, `accept`, `multiple` and `disabled`, and `getRootProps()` adds only drag handlers and `data-dragging`. After the checks, the input holds only the accepted files. The hook sets no ARIA and announces nothing.
 
-**You supply:** What the recipe's markup does: the `<label>` text that names the input, a hint joined with `aria-describedby`, rejection reasons written out in words, `aria-invalid` and the `ErrorMessage` id added to `aria-describedby` when files are rejected, and a labelled list of the accepted files. An announcement of rejections, if they must be heard. Upload progress and results in text, such as a `<progress>` with a label.
+**You supply:** What the recipe's markup does: the `<label>` text that names the input, a hint joined with `aria-describedby`, rejection reasons written out in words, `aria-invalid` and the `ErrorMessage.Root` id added to `aria-describedby` when files are rejected, and a labelled list of the accepted files. An announcement of rejections, if they must be heard. Upload progress and results in text, such as a `<progress>` with a label.
 
-**Watch for:** Hiding the input with `display: none` or `hidden` to style the drop target: dragging is pointer-only, so keyboard and screen reader users lose the only way in. Keep it focusable and show its focus. An `aria-describedby` that still points at an `ErrorMessage` you no longer render. Errors shown by a red border alone.
+**Watch for:** Hiding the input with `display: none` or `hidden` to style the drop target: dragging is pointer-only, so keyboard and screen reader users lose the only way in. Keep it focusable and show its focus. An `aria-describedby` that still points at an `ErrorMessage.Root` you no longer render. Errors shown by a red border alone.

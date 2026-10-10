@@ -15,9 +15,9 @@ export function HighlightSearch() {
   useHighlight({ name: 'docs-search-current', ranges: current ? [current] : undefined, priority: 1 });
   const step = (by: number) => setIndex((at + by + total) % total);
   return (
-    <Stack>
+    <Stack.Root>
       <div className="labelled-field">
-        <Label htmlFor={inputId}>Find</Label>
+        <Label.Root htmlFor={inputId}>Find</Label.Root>
         <Field.Root id={inputId}>
           <Field.TextInput
             type="search"
@@ -29,7 +29,7 @@ export function HighlightSearch() {
           />
         </Field.Root>
       </div>
-      <Stack direction="row">
+      <Stack.Root direction="row">
         <Button.Root variant="ghost" disabled={total === 0} onClick={() => step(-1)}>
           Previous
         </Button.Root>
@@ -37,13 +37,13 @@ export function HighlightSearch() {
           Next
         </Button.Root>
         <output>{total === 0 ? 'No matches' : `${at + 1} of ${total}`}</output>
-      </Stack>
+      </Stack.Root>
       <div ref={found.ref} className="demo-highlight-text">
         <p>
           Todae ships design tokens in the DTCG format. A company adds its own tokens on top, and every
           component reads them, so a token change reaches buttons, fields and dialogs at once.
         </p>
       </div>
-    </Stack>
+    </Stack.Root>
   );
 }

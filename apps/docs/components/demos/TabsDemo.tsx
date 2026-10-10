@@ -15,16 +15,16 @@ export function TabsBasic() {
         <Tabs.Tab value="team">Team</Tabs.Tab>
       </Tabs.List>
       <Tabs.Panel value="account">
-        <Text>Name, email and password.</Text>
+        <Text.Root>Name, email and password.</Text.Root>
       </Tabs.Panel>
       <Tabs.Panel value="billing">
-        <Text>Plan, invoices and payment method.</Text>
+        <Text.Root>Plan, invoices and payment method.</Text.Root>
       </Tabs.Panel>
       <Tabs.Panel value="audit">
-        <Text>Sign-ins and changes, for admins.</Text>
+        <Text.Root>Sign-ins and changes, for admins.</Text.Root>
       </Tabs.Panel>
       <Tabs.Panel value="team">
-        <Text>Members and roles.</Text>
+        <Text.Root>Members and roles.</Text.Root>
       </Tabs.Panel>
     </Tabs.Root>
   );
@@ -33,7 +33,7 @@ export function TabsBasic() {
 export function TabsManualVertical() {
   const [value, setValue] = useState('overview');
   return (
-    <Stack>
+    <Stack.Root>
       <Tabs.Root value={value} onValueChange={setValue} orientation="vertical" activation="manual">
         <Tabs.List aria-label="Report">
           <Tabs.Tab value="overview">Overview</Tabs.Tab>
@@ -41,18 +41,18 @@ export function TabsManualVertical() {
           <Tabs.Tab value="errors">Errors</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="overview">
-          <Text>Arrow keys move focus. Enter or Space shows the panel.</Text>
+          <Text.Root>Arrow keys move focus. Enter or Space shows the panel.</Text.Root>
         </Tabs.Panel>
         <Tabs.Panel value="traffic">
-          <Text>Requests per minute.</Text>
+          <Text.Root>Requests per minute.</Text.Root>
         </Tabs.Panel>
         <Tabs.Panel value="errors">
-          <Text>Failed requests.</Text>
+          <Text.Root>Failed requests.</Text.Root>
         </Tabs.Panel>
       </Tabs.Root>
-      <Text size="s" tone="muted">
+      <Text.Root size="s" tone="muted">
         Selected: {value}
-      </Text>
-    </Stack>
+      </Text.Root>
+    </Stack.Root>
   );
 }

@@ -13,10 +13,10 @@ import { MeterLevels, ProgressStates } from '../../../components/demos/NativeCon
 </Example>
 
 ```tsx
-<Label htmlFor="upload">Uploading report.pdf</Label>
+<Label.Root htmlFor="upload">Uploading report.pdf</Label.Root>
 <Progress.Root id="upload" value={64} max={100}>64%</Progress.Root>
 
-<Label htmlFor="results">Loading results</Label>
+<Label.Root htmlFor="results">Loading results</Label.Root>
 <Progress.Root id="results" />
 ```
 
@@ -29,7 +29,7 @@ import { MeterLevels, ProgressStates } from '../../../components/demos/NativeCon
 </Example>
 
 ```tsx
-<Label htmlFor="storage">Storage used</Label>
+<Label.Root htmlFor="storage">Storage used</Label.Root>
 <Meter.Root id="storage" min={0} max={100} low={70} high={90} optimum={0} value={92}>92%</Meter.Root>
 ```
 

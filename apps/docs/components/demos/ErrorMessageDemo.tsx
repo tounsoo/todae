@@ -12,12 +12,12 @@ export function ErrorMessageSibling() {
   const describedBy = invalid ? `${hintId} ${errorId}` : hintId;
   return (
     <div className="labelled-field">
-      <Label htmlFor={id}>Work email</Label>
+      <Label.Root htmlFor={id}>Work email</Label.Root>
       <Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
         <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
       </Field.Root>
-      <Description id={hintId}>We only use this for billing receipts.</Description>
-      {invalid ? <ErrorMessage id={errorId}>Enter an address that contains an @.</ErrorMessage> : null}
+      <Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
+      {invalid ? <ErrorMessage.Root id={errorId}>Enter an address that contains an @.</ErrorMessage.Root> : null}
     </div>
   );
 }

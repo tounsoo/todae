@@ -24,22 +24,22 @@ export function ToastDemo() {
   const [layout, setLayout] = useState<ToastLayout>('list');
   const [open, setOpen] = useState(false);
   return (
-    <Stack>
-      <Stack direction="row">
+    <Stack.Root>
+      <Stack.Root direction="row">
         {(Object.keys(MESSAGES) as ToastTone[]).map((tone) => (
           <Button.Root key={tone} variant="secondary" onClick={() => notify(tone)}>
             {tone}
           </Button.Root>
         ))}
-      </Stack>
-      <Stack direction="row">
+      </Stack.Root>
+      <Stack.Root direction="row">
         <Button.Root variant="ghost" aria-pressed={layout === 'stack'} onClick={() => setLayout(layout === 'list' ? 'stack' : 'list')}>
           Stack layout
         </Button.Root>
         <Button.Root variant="ghost" onClick={() => setOpen(true)}>
           Open a dialog
         </Button.Root>
-      </Stack>
+      </Stack.Root>
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Title>Toasts over a dialog</Dialog.Title>
         <Dialog.Description>Toasts already showing moved in front of this dialog. New ones land there too.</Dialog.Description>
@@ -60,6 +60,6 @@ export function ToastDemo() {
           </Toast.Root>
         )}
       </Toast.Region>
-    </Stack>
+    </Stack.Root>
   );
 }

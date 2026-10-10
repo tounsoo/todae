@@ -10,13 +10,13 @@ The typeface lives in `text.font.family`, which reads `font.family.sans`. Todae 
 Server Components can import it from `@omsoo/todae/text`. That entry has no `'use client'` and no hooks; the main `@omsoo/todae` entry is a client module.
 
 <Example>
-  <Text size="s" tone="muted">
+  <Text.Root size="s" tone="muted">
     Small muted
-  </Text>
-  <Text>Medium default</Text>
-  <Text size="l" tone="accent" weight="bold" as="strong">
+  </Text.Root>
+  <Text.Root>Medium default</Text.Root>
+  <Text.Root size="l" tone="accent" weight="bold" as="strong">
     Large accent
-  </Text>
+  </Text.Root>
 </Example>
 
 `tone="accent"` follows `color.accent.default`. Todae's accent is neutral ink, so accent text looks like default text until a theme or company token package sets a brand accent.
@@ -51,4 +51,4 @@ Choose the level for the page outline and `size` for the look. A heading that si
 
 ## Props
 
-<PropsTable name="Text" />
+<PropsTable name="Text.Root" />

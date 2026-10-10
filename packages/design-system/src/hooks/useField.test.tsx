@@ -29,7 +29,7 @@ function Harness({ disabled, invalid }: { disabled?: boolean; invalid?: boolean 
   const [value, setValue] = useState(2);
   return (
     <>
-      <Label htmlFor="rating">Rating</Label>
+      <Label.Root htmlFor="rating">Rating</Label.Root>
       <Field.Root id="rating" name="rating" aria-describedby="root-hint" disabled={disabled} invalid={invalid} data-testid="shell">
         <Rating value={value} onChange={setValue} />
       </Field.Root>
@@ -542,7 +542,7 @@ describe('Field.Select', () => {
     const [value, setValue] = useState('m');
     return (
       <>
-        <Label htmlFor="size">Size</Label>
+        <Label.Root htmlFor="size">Size</Label.Root>
         <Field.Root id="size" name="size">
           <Field.Select value={value} onChange={(event) => setValue(event.target.value)} onValueChange={onValueChange}>
             <option value="s">Small</option>

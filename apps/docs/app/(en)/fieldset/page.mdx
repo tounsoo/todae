@@ -7,9 +7,9 @@ A native `<fieldset>` that groups related controls under one `<legend>`, such as
 ```tsx
 <Fieldset.Root invalid={none} aria-describedby={none ? errorId : undefined}>
 	<Fieldset.Legend>Email topics</Fieldset.Legend>
-	<Checkbox>Product news</Checkbox>
-	<Checkbox>Security notices</Checkbox>
-	{none ? <ErrorMessage id={errorId}>Pick at least one topic.</ErrorMessage> : null}
+	<Checkbox.Root>Product news</Checkbox.Root>
+	<Checkbox.Root>Security notices</Checkbox.Root>
+	{none ? <ErrorMessage.Root id={errorId}>Pick at least one topic.</ErrorMessage.Root> : null}
 </Fieldset.Root>
 ```
 
@@ -25,7 +25,7 @@ A native `<fieldset>` that groups related controls under one `<legend>`, such as
   <FieldsetDisabled />
 </Example>
 
-The parts stack with `fieldset.gap`. For controls side by side, put them in a `Stack direction="row"`.
+The parts stack with `fieldset.gap`. For controls side by side, put them in a `Stack.Root direction="row"`.
 
 ## Accessible composition
 

@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Grid',
+  name: 'Grid.Root',
   description:
     'CSS grid layout, the two-axis partner to Stack. Gap comes from the grid.gap contract token. Pass at most one of columns or minItemSize; with neither, set gridTemplateColumns yourself.',
   props: [

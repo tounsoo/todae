@@ -29,13 +29,13 @@ import {
 
 ## Popover · 단일
 
-형제 `Label` + `Field.Root` id. 입력이 combobox입니다. 목록은 `Popover.Root` 안에 있습니다.
+형제 `Label.Root` + `Field.Root` id. 입력이 combobox입니다. 목록은 `Popover.Root` 안에 있습니다.
 
 ```tsx
 const cb = useCombobox({ options, presentation: 'popover' })
 
 <div className="labelled-field">
-  <Label htmlFor={cb.ids.input}>Framework</Label>
+  <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
   <Field.Root {...cb.getAnchorProps()}>
     <Field.TextInput {...cb.getInputProps()} />
     <Field.Icon><Chevron /></Field.Icon>

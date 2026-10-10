@@ -29,13 +29,13 @@ The badge shows what [useSheetPresentation](/utilities/use-sheet-presentation) p
 
 ## Popover · single
 
-Sibling `Label` + `Field.Root` id. The input is the combobox. The list lives in `Popover.Root`.
+Sibling `Label.Root` + `Field.Root` id. The input is the combobox. The list lives in `Popover.Root`.
 
 ```tsx
 const cb = useCombobox({ options, presentation: 'popover' })
 
 <div className="labelled-field">
-  <Label htmlFor={cb.ids.input}>Framework</Label>
+  <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
   <Field.Root {...cb.getAnchorProps()}>
     <Field.TextInput {...cb.getInputProps()} />
     <Field.Icon><Chevron /></Field.Icon>

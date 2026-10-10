@@ -1,19 +1,22 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
+import { cx } from './cx';
 import styles from './ErrorMessage.module.css';
 
-export type ErrorMessageProps = {
+export type ErrorMessageRootProps = {
   id: string;
   children?: ReactNode;
   className?: string;
 } & Omit<ComponentPropsWithRef<'span'>, 'id' | 'children'>;
 
-export function ErrorMessage({ id, className, ...props }: ErrorMessageProps) {
+function Root({ id, className, ...props }: ErrorMessageRootProps) {
   return (
     <span
       {...props}
       id={id}
       data-todae-error=""
-      className={[styles.error, className].filter(Boolean).join(' ')}
+      className={cx(styles.error, className)}
     />
   );
 }
+
+export const ErrorMessage = { Root } as const;

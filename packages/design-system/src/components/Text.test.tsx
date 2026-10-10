@@ -11,7 +11,7 @@ function classesOf(el: Element) {
 
 describe('Text', () => {
   it('renders a paragraph at the medium size and regular weight by default', () => {
-    render(<Text data-testid="t">Hi</Text>);
+    render(<Text.Root data-testid="t">Hi</Text.Root>);
     const el = screen.getByTestId('t');
     expect(el.tagName).toBe('P');
     expect(classesOf(el)).toEqual(expect.arrayContaining([styles.root, styles.m, styles.default, styles.regular]));
@@ -26,7 +26,7 @@ describe('Text', () => {
     ['h5', 'm'],
     ['h6', 's'],
   ])('renders %s as a heading at its default size', (tag, size) => {
-    render(<Text as={tag}>Title</Text>);
+    render(<Text.Root as={tag}>Title</Text.Root>);
     const el = screen.getByRole('heading', { level: Number(tag.slice(1)) });
     expect(el.tagName).toBe(tag.toUpperCase());
     expect(classesOf(el)).toEqual(expect.arrayContaining([styles.heading, styles[size], styles.bold]));
@@ -34,9 +34,9 @@ describe('Text', () => {
 
   it('lets a heading take another size and weight', () => {
     render(
-      <Text as="h2" size="s" weight="medium">
+      <Text.Root as="h2" size="s" weight="medium">
         Small
-      </Text>,
+      </Text.Root>,
     );
     const el = screen.getByRole('heading', { level: 2 });
     expect(el.classList.contains(styles.s!)).toBe(true);
@@ -47,9 +47,9 @@ describe('Text', () => {
 
   it('maps 2xl to a class that CSS can select', () => {
     render(
-      <Text size="2xl" data-testid="t">
+      <Text.Root size="2xl" data-testid="t">
         Big
-      </Text>,
+      </Text.Root>,
     );
     expect(screen.getByTestId('t').classList.contains(styles.xxl!)).toBe(true);
   });

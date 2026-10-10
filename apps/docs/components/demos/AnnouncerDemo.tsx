@@ -7,7 +7,7 @@ export function AnnounceSave() {
   const announce = useAnnouncer();
   const [count, setCount] = useState(0);
   return (
-    <Stack>
+    <Stack.Root>
       <Button.Root
         onClick={() => {
           setCount((n) => n + 1);
@@ -16,7 +16,7 @@ export function AnnounceSave() {
       >
         Save draft
       </Button.Root>
-      <Text>Announced “Draft saved” {count} {count === 1 ? 'time' : 'times'}.</Text>
-    </Stack>
+      <Text.Root>Announced “Draft saved” {count} {count === 1 ? 'time' : 'times'}.</Text.Root>
+    </Stack.Root>
   );
 }

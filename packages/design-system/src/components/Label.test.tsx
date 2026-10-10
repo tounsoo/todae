@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { Label, type LabelProps } from './Label';
+import { Label, type LabelRootProps } from './Label';
 import * as api from '../index';
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Label.module.css'), 'utf8');
@@ -13,8 +13,8 @@ afterEach(cleanup);
 describe('Label exports', () => {
   it('is a top-level primitive', () => {
     expect(api.Label).toBe(Label);
-    expectTypeOf<LabelProps>().toHaveProperty('htmlFor');
-    expectTypeOf<LabelProps['htmlFor']>().toEqualTypeOf<string>();
+    expectTypeOf<LabelRootProps>().toHaveProperty('htmlFor');
+    expectTypeOf<LabelRootProps['htmlFor']>().toEqualTypeOf<string>();
   });
 });
 
@@ -22,7 +22,7 @@ describe('Label', () => {
   it('associates a native input through htmlFor', () => {
     const { container } = render(
       <>
-        <Label htmlFor="mail">Email</Label>
+        <Label.Root htmlFor="mail">Email</Label.Root>
         <input id="mail" />
       </>,
     );
@@ -37,9 +37,9 @@ describe('Label', () => {
 
   it('merges className and forwards extra attributes', () => {
     const { container } = render(
-      <Label htmlFor="mail" className="extra" data-test="caption">
+      <Label.Root htmlFor="mail" className="extra" data-test="caption">
         Email
-      </Label>,
+      </Label.Root>,
     );
     const label = container.querySelector('label');
     expect(label?.className).toContain('label');

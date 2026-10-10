@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { ErrorMessage, type ErrorMessageProps } from './ErrorMessage';
+import { ErrorMessage, type ErrorMessageRootProps } from './ErrorMessage';
 import * as api from '../index';
 
 const css = readFileSync(
@@ -16,14 +16,14 @@ afterEach(cleanup);
 describe('ErrorMessage exports', () => {
   it('is a top-level primitive', () => {
     expect(api.ErrorMessage).toBe(ErrorMessage);
-    expectTypeOf<ErrorMessageProps>().toHaveProperty('id');
-    expectTypeOf<ErrorMessageProps['id']>().toEqualTypeOf<string>();
+    expectTypeOf<ErrorMessageRootProps>().toHaveProperty('id');
+    expectTypeOf<ErrorMessageRootProps['id']>().toEqualTypeOf<string>();
   });
 });
 
 describe('ErrorMessage', () => {
   it('renders a span with the required id and no alert role', () => {
-    const { container } = render(<ErrorMessage id="email-error">Enter an email.</ErrorMessage>);
+    const { container } = render(<ErrorMessage.Root id="email-error">Enter an email.</ErrorMessage.Root>);
     const message = container.querySelector('#email-error');
     expect(message?.tagName).toBe('SPAN');
     expect(message?.getAttribute('role')).toBeNull();
@@ -32,7 +32,7 @@ describe('ErrorMessage', () => {
   });
 
   it('does not set aria-invalid on itself', () => {
-    const { container } = render(<ErrorMessage id="email-error">Enter an email.</ErrorMessage>);
+    const { container } = render(<ErrorMessage.Root id="email-error">Enter an email.</ErrorMessage.Root>);
     expect(container.querySelector('#email-error')?.getAttribute('aria-invalid')).toBeNull();
   });
 
@@ -46,7 +46,7 @@ describe('ErrorMessage', () => {
   });
 
   it('marks itself for the sibling rule', () => {
-    const { container } = render(<ErrorMessage id="email-error">Enter an email.</ErrorMessage>);
+    const { container } = render(<ErrorMessage.Root id="email-error">Enter an email.</ErrorMessage.Root>);
     expect(container.querySelector('#email-error')?.getAttribute('data-todae-error')).toBe('');
   });
 });

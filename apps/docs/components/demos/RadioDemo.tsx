@@ -9,9 +9,9 @@ export function RadioPlan() {
   const [plan, setPlan] = useState('free');
   return (
     <div className="labelled-field">
-      <Text as="span" id={captionId} size="s" weight="medium">
+      <Text.Root as="span" id={captionId} size="s" weight="medium">
         Plan
-      </Text>
+      </Text.Root>
       <RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
         <RadioGroup.Item value="free">Free</RadioGroup.Item>
         <RadioGroup.Item value="pro" aria-describedby={proHintId}>
@@ -21,7 +21,7 @@ export function RadioPlan() {
           Enterprise
         </RadioGroup.Item>
       </RadioGroup.Root>
-      <Description id={proHintId}>Pro adds seats and audit logs.</Description>
+      <Description.Root id={proHintId}>Pro adds seats and audit logs.</Description.Root>
     </div>
   );
 }

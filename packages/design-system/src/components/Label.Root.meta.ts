@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Label',
+  name: 'Label.Root',
   description: 'Visible name for a control. Sibling, not a Field part. Pass htmlFor the control id.',
   props: [
     {
