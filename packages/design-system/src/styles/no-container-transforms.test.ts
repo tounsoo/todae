@@ -67,8 +67,9 @@ function wrappedIn(compound: string): string | null {
 
 /**
  * A selector whose subject has no element inside it that could be a trigger:
- * a pseudo-element such as ::before or ::backdrop, or a <progress>, which
- * renders none of its children. :where() and :is() are looked through; any
+ * a pseudo-element such as ::before or ::backdrop, a <progress>, which
+ * renders none of its children, or a [data-todae-glyph] wrapper, which holds
+ * only an aria-hidden glyph. :where() and :is() are looked through; any
  * other functional pseudo-class, such as :has(progress), is not the subject.
  */
 function isLeaf(part: string): boolean {
@@ -76,7 +77,7 @@ function isLeaf(part: string): boolean {
   if (LEAF_PSEUDO.test(compound)) return true;
   const inner = wrappedIn(compound);
   if (inner !== null) return splitTopLevel(inner).every(isLeaf);
-  return /^progress(?![\w-])/.test(compound);
+  return /^(?:progress(?![\w-])|\[data-todae-glyph\])/.test(compound);
 }
 
 /** Walks the sheet, calling `visit` with each declaration and the blocks it is in, outermost first. */

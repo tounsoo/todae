@@ -21,7 +21,7 @@ export {
 } from './components/Avatar';
 export { categoryTone, CATEGORY_TONES, type CategoryTone } from './components/tone';
 export { Link, type LinkRootProps, type LinkRenderProps } from './components/Link';
-export { Disclosure, type DisclosureRootProps, type DisclosureSummaryProps } from './components/Disclosure';
+export { Disclosure, type DisclosureRootProps, type DisclosureSummaryProps } from './components/Disclosure.client';
 export { Separator, type SeparatorRootProps } from './components/Separator';
 export { Table, type TableBodyProps, type TableCaptionProps, type TableCellProps, type TableFootProps, type TableHeadProps, type TableHeaderCellProps, type TableRootProps, type TableRowProps } from './components/Table';
 export { Progress, type ProgressRootProps } from './components/Progress';
@@ -287,3 +287,4 @@ export {
   type DensityProviderProps,
 } from './providers/DensityProvider';
 export { StringsProvider, useStrings, type Strings, type StringsProviderProps } from './providers/StringsProvider';
+export { GlyphsProvider, useGlyphs, type Glyphs, type GlyphsProviderProps } from './providers/GlyphsProvider';

@@ -1,5 +1,7 @@
 import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from 'react';
+import { useGlyphs } from '../providers/GlyphsProvider';
 import { useFieldsetState } from './Fieldset.context';
+import { CheckGlyph, glyphOr } from './glyphs';
 import styles from './selection.module.css';
 
 export type SelectionKind = 'checkbox' | 'radio' | 'switch';
@@ -53,6 +55,7 @@ export function SelectionControl({
   const dom = SELECTION_DOM[kind];
   // A Fieldset.Root disables the input natively; the label follows it.
   const { disabled, invalid } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
+  const { check } = useGlyphs();
   return (
     <label
       className={[styles.root, className].filter(Boolean).join(' ')}
@@ -81,7 +84,13 @@ export function SelectionControl({
           onChecked(event.target.checked);
         }}
       />
-      <span className={styles.indicator} aria-hidden="true" />
+      <span className={styles.indicator} aria-hidden="true">
+        {kind === 'checkbox' ? (
+          <span className={styles.glyph} data-todae-glyph="">
+            {glyphOr(check, <CheckGlyph />)}
+          </span>
+        ) : null}
+      </span>
       <span className={styles.label}>{children}</span>
     </label>
   );

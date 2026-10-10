@@ -19,9 +19,11 @@ import { useControlledValue } from '../hooks/useControlledState';
 import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
 import { usePopoverSync } from '../overlay/usePopoverSync';
+import { useGlyphs } from '../providers/GlyphsProvider';
 import { useFocusLeave } from '../overlay/useFocusLeave';
 import { Button, type ButtonActionProps } from './Button';
 import { useDomId } from './domId';
+import { CheckGlyph, glyphOr } from './glyphs';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import popoverStyles from './Popover.module.css';
 import styles from './Menu.module.css';
@@ -437,6 +439,7 @@ function CheckboxItem({
   ...props
 }: MenuCheckboxItemProps) {
   const ctx = useMenu('CheckboxItem');
+  const { check } = useGlyphs();
   const [checked, setChecked] = useControlledValue(checkedProp, defaultChecked ?? false, onCheckedChange);
   const item = useItem(
     ctx,
@@ -450,7 +453,9 @@ function CheckboxItem({
   );
   return (
     <div {...item}>
-      <span className={styles.indicator} aria-hidden="true" />
+      <span className={styles.indicator} data-todae-glyph="" aria-hidden="true">
+        {glyphOr(check, <CheckGlyph />)}
+      </span>
       {children}
     </div>
   );

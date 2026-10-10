@@ -20,9 +20,23 @@ Overlays inherit tokens from `ThemeProvider` / `DensityProvider`. They do not in
 
 iOS may still rubber-band the page behind an open overlay. Chrome may ignore `cancel.preventDefault()` without user activation. State still resyncs from the native `close` event.
 
+## Icons
+
+`Dialog.Close` with no content shows the `close` glyph, a cross unless a [GlyphsProvider](/utilities/glyphs-provider) sets one, and is named by the `close` string. To use a different icon for one close, put it in a `Button.Icon`.
+
+```tsx
+import { X } from 'lucide-react';
+
+<Dialog.Close>
+	<Button.Icon>
+		<X />
+	</Button.Icon>
+</Dialog.Close>
+```
+
 ## Accessible composition
 
-**Todae handles:** `Dialog.Root` opens a native `<dialog>` with `showModal()`, so the browser gives it the dialog role, puts it in the top layer and makes the page behind it inert. `Dialog.Title` sets the dialog's `aria-labelledby` and `Dialog.Description` its `aria-describedby`; an `aria-labelledby` or `aria-describedby` you pass to the root wins. On open, focus goes to `initialFocusRef`, else the first tabbable element, else the dialog itself. After the exit, focus goes to `restoreFocusRef`, else back to what had focus before it opened. `Dialog.Close` falls back to the `close` string ("Close") when neither its own text nor an `aria-label` names it, such as ×.
+**Todae handles:** `Dialog.Root` opens a native `<dialog>` with `showModal()`, so the browser gives it the dialog role, puts it in the top layer and makes the page behind it inert. `Dialog.Title` sets the dialog's `aria-labelledby` and `Dialog.Description` its `aria-describedby`; an `aria-labelledby` or `aria-describedby` you pass to the root wins. On open, focus goes to `initialFocusRef`, else the first tabbable element, else the dialog itself. After the exit, focus goes to `restoreFocusRef`, else back to what had focus before it opened. `Dialog.Close` falls back to the `close` string ("Close") when neither its own text nor an `aria-label` names it, such as an icon.
 
 **You supply:** A name: render `Dialog.Title`, or pass `aria-label` or `aria-labelledby` to `Dialog.Root`. A button that closes it, such as `Dialog.Close`, above all when `dismissOnEscape` is false. A `restoreFocusRef` when the opener is gone by the time it closes, such as a menu item or a `Toast.Action`. An `initialFocusRef` when the task does not start at the first control, such as the safe button of a destructive confirm.
 

@@ -1,6 +1,7 @@
-import type { ComponentPropsWithRef, CSSProperties } from 'react';
+import type { ComponentPropsWithRef, CSSProperties, ReactNode } from 'react';
 import { DEFAULT_STRINGS } from '../providers/strings';
 import { cx } from './cx';
+import { hasGlyph } from './glyphs';
 import styles from './Breadcrumbs.module.css';
 
 /**
@@ -56,9 +57,21 @@ function Root({
   );
 }
 
-function Item({ current = false, className, children, ...props }: BreadcrumbsItemProps) {
+/** Item, with a separator glyph drawn before it in place of the separator text. The main entry passes it. */
+export function ItemWithGlyph({
+  separatorGlyph,
+  current = false,
+  className,
+  children,
+  ...props
+}: BreadcrumbsItemProps & { separatorGlyph?: ReactNode }) {
   return (
     <li {...props} className={cx(styles.item, className)}>
+      {hasGlyph(separatorGlyph) ? (
+        <span className={styles.separator} data-todae-glyph="" aria-hidden="true">
+          {separatorGlyph}
+        </span>
+      ) : null}
       {current ? (
         <span aria-current="page" className={styles.current}>
           {children}
@@ -68,6 +81,10 @@ function Item({ current = false, className, children, ...props }: BreadcrumbsIte
       )}
     </li>
   );
+}
+
+function Item(props: BreadcrumbsItemProps) {
+  return <ItemWithGlyph {...props} />;
 }
 
 export const Breadcrumbs = { Root, Item } as const;

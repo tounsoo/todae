@@ -1,4 +1,4 @@
-import { ButtonGroupAlign, ButtonIcons, ButtonOverflow, ButtonVariants } from '../../../components/demos/ButtonDemo';
+import { ButtonGroupAlign, ButtonIconLibraries, ButtonIcons, ButtonOverflow, ButtonVariants } from '../../../components/demos/ButtonDemo';
 import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 
 # Button
@@ -45,6 +45,30 @@ import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 
 <Example>
   <ButtonGroupAlign />
+</Example>
+
+## 아이콘
+
+`Button.Icon`에는 Lucide, Phosphor, Tabler 같은 어떤 라이브러리의 아이콘도 넣을 수 있습니다. 그 안에 바로 들어간 `svg`나 `img`는 아이콘 자체의 `size`나 `width`와 상관없이 `button.icon.size` 토큰의 크기를 따릅니다. 아이콘만 있는 버튼은 레이블이 있는 버튼과 높이가 같은 정사각형입니다.
+
+```tsx
+import { Plus, Settings } from 'lucide-react';
+
+<Button.Root>
+	<Button.Icon>
+		<Plus />
+	</Button.Icon>
+	New project
+</Button.Root>
+<Button.Root variant="ghost" aria-label="Settings">
+	<Button.Icon>
+		<Settings />
+	</Button.Icon>
+</Button.Root>
+```
+
+<Example>
+  <ButtonIconLibraries />
 </Example>
 
 ## 접근성을 지키는 조합

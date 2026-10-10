@@ -50,10 +50,13 @@ describe('Chip', () => {
     expect(onRemove).toHaveBeenCalledTimes(1);
   });
 
-  it('renders removeIcon as the remove button content, and bundles none by default', () => {
+  it('renders removeIcon as the remove button content, else Todae\'s cross glyph', () => {
     const { rerender } = render(<Chip.Root onRemove={() => undefined}>Alpha</Chip.Root>);
-    // Empty, so the stylesheet draws the cross; no glyph or icon ships.
-    expect(screen.getByRole('button', { name: 'Remove Alpha' }).childNodes).toHaveLength(0);
+    const cross = screen.getByRole('button', { name: 'Remove Alpha' });
+    expect(cross.children).toHaveLength(1);
+    expect(cross.firstElementChild?.tagName.toLowerCase()).toBe('svg');
+    expect(cross.firstElementChild?.getAttribute('aria-hidden')).toBe('true');
+    expect(cross.textContent).toBe('');
     rerender(
       <Chip.Root onRemove={() => undefined} removeIcon={<svg data-testid="icon" aria-hidden="true" />}>
         Alpha

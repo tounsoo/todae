@@ -33,7 +33,7 @@ export const meta = {
       name: 'removeIcon',
       type: 'React.ReactNode',
       required: false,
-      description: 'Remove button content, such as an icon from your own set. Without it, the CSS draws a cross.',
+      description: "Remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross.",
     },
     {
       name: 'disabled',

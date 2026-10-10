@@ -21,6 +21,18 @@ Do not put Checkbox inside `Field.Root`. The shell is for text and chip inputs. 
 
 For a permanent exclusive choice, use [Radio](/radio). For an overlay list, use [OptionList](/optionlist).
 
+## Icons
+
+The check is the `check` glyph: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. It fills the box and shows while the checkbox is checked.
+
+```tsx
+import { Check } from 'lucide-react';
+
+<GlyphsProvider glyphs={{ check: <Check strokeWidth={3} /> }}>
+	<Checkbox defaultChecked>Product updates</Checkbox>
+</GlyphsProvider>
+```
+
 ## Accessible composition
 
 **Todae handles:** Checkbox is a native `<input type="checkbox">` inside a `<label>` with your children, so the children are its name and a click on the text toggles it. Space toggles it, as natively. `disabled` is native and `invalid` sets `aria-invalid`; both also come from a surrounding [Fieldset](/fieldset). The drawn box is `aria-hidden` and shows the focus ring while the input is focus-visible. Other props, `aria-*`, `id` and `ref` included, go to the input; `className` goes to the label.

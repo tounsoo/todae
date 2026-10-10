@@ -11,6 +11,9 @@
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } }
     },
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+    "icon": {
+      "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } }
+    },
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }
     },

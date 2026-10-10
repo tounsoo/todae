@@ -23,6 +23,7 @@ import { matchesParsed, parseHotkey, typesIn } from '../hooks/hotkey';
 import { Button, type ButtonActionProps } from './Button';
 import { useStrings } from '../providers/StringsProvider';
 import { useDismissLabel } from './dismissLabel';
+import { useCloseGlyph } from './closeGlyph';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import type { Toaster, ToastRecord, ToastTone } from './toaster';
 import styles from './Toast.module.css';
@@ -637,16 +638,20 @@ function Action({ variant = 'secondary', onClick, className, ...props }: ToastAc
 function Close({ 'aria-label': ariaLabel, onClick, className, children, ref, ...props }: ToastCloseProps) {
   const item = useContext(ItemContext);
   const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().dismiss);
+  const glyph = useCloseGlyph();
   return (
     <Button.Root
       variant="ghost"
+      // Todae's own close shows no tip, as a text × never did: a dialog's first
+      // focus often lands on it.
+      tooltip={children == null ? false : undefined}
       aria-label={label}
       {...props}
       ref={refs}
       className={cx(styles.close, className)}
       onClick={composeHandlers(onClick, () => item?.dismiss())}
     >
-      {children}
+      {children ?? glyph}
     </Button.Root>
   );
 }

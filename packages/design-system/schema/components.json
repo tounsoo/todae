@@ -598,7 +598,7 @@
           "name": "removeIcon",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Remove button content, such as an icon from your own set. Without it, the CSS draws a cross."
+          "description": "Remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross."
         },
         {
           "name": "disabled",
@@ -653,7 +653,7 @@
           "name": "removeIcon",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Remove button content, such as an icon from your own set. Without it, the CSS draws a cross."
+          "description": "Remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross."
         },
         {
           "name": "overflowLabel",
@@ -1032,7 +1032,7 @@
           "name": "chipRemoveIcon",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Chip remove button content, such as an icon from your own set. Without it, the CSS draws a cross."
+          "description": "Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross."
         },
         {
           "name": "overflowLabel",
@@ -1344,6 +1344,24 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "A Fieldset.Legend first, then the controls."
+        }
+      ]
+    },
+    {
+      "name": "GlyphsProvider",
+      "description": "Sets the glyphs Todae draws by itself, such as close crosses, check marks and chevrons, for its subtree, so they can come from your icon library. Renders no element; useGlyphs() reads the glyphs in effect.",
+      "props": [
+        {
+          "name": "glyphs",
+          "type": "Glyphs",
+          "required": true,
+          "description": "The glyphs to change: close, check, chevron, separator and ellipsis. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Subtree that uses these glyphs."
         }
       ]
     },

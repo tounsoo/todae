@@ -2,6 +2,7 @@ import { type ComponentPropsWithRef, type ReactNode } from 'react';
 import { Button, type ButtonActionProps } from './Button';
 import { useStrings } from '../providers/StringsProvider';
 import { useDismissLabel } from './dismissLabel';
+import { useCloseGlyph } from './closeGlyph';
 import { cx } from './props';
 import styles from './Alert.module.css';
 
@@ -59,9 +60,19 @@ function Actions({ className, ...props }: AlertActionsProps) {
  */
 function Close({ 'aria-label': ariaLabel, className, children, ref, ...props }: AlertCloseProps) {
   const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().dismiss);
+  const glyph = useCloseGlyph();
   return (
-    <Button.Root variant="ghost" aria-label={label} {...props} ref={refs} className={cx(styles.close, className)}>
-      {children}
+    <Button.Root
+      variant="ghost"
+      // Todae's own close shows no tip, as a text × never did: a dialog's first
+      // focus often lands on it.
+      tooltip={children == null ? false : undefined}
+      aria-label={label}
+      {...props}
+      ref={refs}
+      className={cx(styles.close, className)}
+    >
+      {children ?? glyph}
     </Button.Root>
   );
 }

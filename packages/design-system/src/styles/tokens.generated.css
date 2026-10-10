@@ -399,6 +399,7 @@
   --todae-button-base-font-size: var(--_todae-button-base-font-size, var(--todae-font-size-3));
   --todae-button-base-font-weight: var(--_todae-button-base-font-weight, var(--todae-font-weight-medium));
   --todae-button-base-gap: var(--_todae-button-base-gap, var(--todae-space-inline-gap));
+  --todae-button-base-icon-size: var(--_todae-button-base-icon-size, 1rem);
   --todae-button-base-padding-x: var(--_todae-button-base-padding-x, var(--todae-space-control-x));
   --todae-button-base-padding-y: var(--_todae-button-base-padding-y, var(--todae-space-control-y));
   --todae-button-base-radius: var(--_todae-button-base-radius, var(--todae-radius-md));
@@ -489,6 +490,7 @@
   --todae-field-fg-placeholder: var(--_todae-field-fg-placeholder, var(--todae-color-fg-placeholder));
   --todae-field-font-size: var(--_todae-field-font-size, var(--todae-font-size-3));
   --todae-field-gap: var(--_todae-field-gap, var(--todae-space-field-gap));
+  --todae-field-icon-size: var(--_todae-field-icon-size, 1rem);
   --todae-field-label-fg: var(--_todae-field-label-fg, var(--todae-color-fg-default));
   --todae-field-label-font-size: var(--_todae-field-label-font-size, var(--todae-font-size-2));
   --todae-field-label-font-weight: var(--_todae-field-label-font-weight, var(--todae-font-weight-medium));
@@ -553,6 +555,7 @@
   --todae-chip-fg-hover: var(--_todae-chip-fg-hover, var(--todae-color-fg-default));
   --todae-chip-font-size: var(--_todae-chip-font-size, var(--todae-font-size-2));
   --todae-chip-gap: var(--_todae-chip-gap, var(--todae-space-inline-gap));
+  --todae-chip-icon-size: var(--_todae-chip-icon-size, 0.75rem);
   --todae-chip-info-bg: var(--_todae-chip-info-bg, var(--todae-color-status-info-bg));
   --todae-chip-info-border: var(--_todae-chip-info-border, var(--todae-color-status-info-border));
   --todae-chip-info-fg: var(--_todae-chip-info-fg, var(--todae-color-status-info-fg));
@@ -699,6 +702,7 @@
   --todae-alert-critical-fg: var(--_todae-alert-critical-fg, var(--todae-color-status-critical-fg));
   --todae-alert-font-size: var(--_todae-alert-font-size, var(--todae-font-size-2));
   --todae-alert-gap: var(--_todae-alert-gap, var(--todae-space-inline-gap));
+  --todae-alert-icon-size: var(--_todae-alert-icon-size, 1rem);
   --todae-alert-info-bg: var(--_todae-alert-info-bg, var(--todae-color-status-info-bg));
   --todae-alert-info-border: var(--_todae-alert-info-border, var(--todae-color-status-info-border));
   --todae-alert-info-fg: var(--_todae-alert-info-fg, var(--todae-color-status-info-fg));
@@ -719,6 +723,7 @@
   --todae-toast-critical-fg: var(--_todae-toast-critical-fg, var(--todae-color-status-critical-fg));
   --todae-toast-font-size: var(--_todae-toast-font-size, var(--todae-font-size-2));
   --todae-toast-gap: var(--_todae-toast-gap, var(--todae-space-inline-gap));
+  --todae-toast-icon-size: var(--_todae-toast-icon-size, 1rem);
   --todae-toast-info-bg: var(--_todae-toast-info-bg, var(--todae-color-status-info-bg));
   --todae-toast-info-border: var(--_todae-toast-info-border, var(--todae-color-status-info-border));
   --todae-toast-info-fg: var(--_todae-toast-info-fg, var(--todae-color-status-info-fg));
@@ -926,6 +931,7 @@
   --todae-button-font-size: var(--todae-button-base-font-size);
   --todae-button-font-weight: var(--todae-button-base-font-weight);
   --todae-button-gap: var(--todae-button-base-gap);
+  --todae-button-icon-size: var(--todae-button-base-icon-size);
   --todae-button-padding-x: var(--todae-button-base-padding-x);
   --todae-button-padding-y: var(--todae-button-base-padding-y);
   --todae-button-radius: var(--todae-button-base-radius);

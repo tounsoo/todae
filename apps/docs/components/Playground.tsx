@@ -25,6 +25,7 @@ import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { PRESET_FONTS_HREF, PRESETS, type ThemePreset } from './playground/presets';
+import { ICON_LIBRARIES } from './iconLibraries';
 import { Preview } from './playground/Preview';
 
 const LAYERS = {
@@ -180,6 +181,8 @@ export function Playground({ locale }: { locale: Locale }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [appearance, setAppearance] = useState<Appearance>('system');
   const [density, setDensity] = useState<Density>('comfortable');
+  // Todae's own glyphs, or one of three icon libraries for the preview's icons and glyphs.
+  const [iconsId, setIconsId] = useState('todae');
   const [layer, setLayer] = useState<Layer>('semantic');
   const [filter, setFilter] = useState('');
   const [presetId, setPresetId] = useState(PRESETS[0]?.id ?? 'todae');
@@ -293,6 +296,21 @@ export function Playground({ locale }: { locale: Locale }) {
               ))}
             </ToggleGroup.Root>
           </div>
+          <div>
+            <span className="pg-heading" id="pg-icons">
+              {t.icons}
+            </span>
+            <ToggleGroup.Root aria-labelledby="pg-icons" value={iconsId} onValueChange={(next) => next && setIconsId(next)}>
+              <ToggleGroup.Item value="todae" lang="en">
+                Todae
+              </ToggleGroup.Item>
+              {ICON_LIBRARIES.map((library) => (
+                <ToggleGroup.Item key={library.id} value={library.id} lang="en">
+                  {library.name}
+                </ToggleGroup.Item>
+              ))}
+            </ToggleGroup.Root>
+          </div>
         </div>
 
         <section className="pg-section pg-tokens" aria-labelledby="pg-tokens">
@@ -364,7 +382,7 @@ export function Playground({ locale }: { locale: Locale }) {
           overrides={overrides}
           data-density={density}
         >
-          <Preview />
+          <Preview library={ICON_LIBRARIES.find((library) => library.id === iconsId)} />
         </ThemeProvider>
       </div>
     </div>

@@ -27,6 +27,39 @@
     color: var(--todae-breadcrumbs-separator-fg);
   }
 
+  /* A separator glyph from GlyphsProvider takes the text's place. It points
+     toward the next item, so it is mirrored in right-to-left. */
+  .item + .item:has(> .separator)::before {
+    content: none;
+  }
+
+  .item:first-child > .separator {
+    display: none;
+  }
+
+  .separator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    inline-size: 1em;
+    block-size: 1em;
+    color: var(--todae-breadcrumbs-separator-fg);
+    line-height: 1;
+    /* Laid out left to right, so the RTL mirror below flips a text glyph such
+       as '›' once, as it does an svg, rather than undoing the bidi mirror. */
+    direction: ltr;
+  }
+
+  .separator > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .item > [data-todae-glyph]:dir(rtl) {
+    scale: -1 1;
+  }
+
   .current {
     color: var(--todae-breadcrumbs-current-fg);
     font-weight: var(--todae-breadcrumbs-current-font-weight);

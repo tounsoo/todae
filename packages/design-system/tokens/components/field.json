@@ -7,6 +7,9 @@
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
     },
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/field/gap/$value" } },
+    "icon": {
+      "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } }
+    },
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
     },

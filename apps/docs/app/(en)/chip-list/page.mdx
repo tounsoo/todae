@@ -35,6 +35,10 @@ In the popover, Tab past the last chip goes on to the control after +N, Shift+Ta
   <ChipListDemo maxRows={1} readOnly />
 </Example>
 
+## Icons
+
+Remove buttons show the `close` glyph, a cross unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. Pass `removeIcon` to use a different icon for this list, as on [Chip](/chip).
+
 ## Accessible composition
 
 **Todae handles:** The chips sit in a `role="list"` element that gets your `aria-label`, `aria-labelledby`, `aria-describedby` and `aria-details`. Each chip in the row, and +N, is a `role="listitem"`. +N is a native button with `aria-expanded`, `aria-controls` and `aria-haspopup="dialog"`, named by `overflowLabel` or the `moreChips` string. The popover is a `role="dialog"` named by `panelLabel` or the `moreChipsPanel` string. Remove buttons are named by `removeLabel` or `Remove {value}`. Focus after a removal, and Tab, Shift+Tab and Escape in the popover, work as described above. The measure row is `aria-hidden` and `inert`.

@@ -89,8 +89,10 @@ describe('Checkbox', () => {
     expect(input).toHaveProperty('value', 'yes');
   });
 
-  it('paints a check on the checkbox indicator', () => {
-    expect(css).toMatch(/data-control='checkbox'[\s\S]*::after/);
+  it('shows the check glyph in the indicator only while checked', () => {
+    // On the wrapper, so a text glyph hides too, not just an svg.
+    expect(css).toMatch(/\.glyph \{[^}]*visibility: hidden/);
+    expect(css).toMatch(/\.input:checked \+ \.indicator > \.glyph \{[^}]*visibility: visible/);
     expect(css).toMatch(/data-control='switch'[\s\S]*translateX/);
   });
 });

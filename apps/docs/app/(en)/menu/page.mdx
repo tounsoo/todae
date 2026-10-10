@@ -33,6 +33,29 @@ An item's children are presentational to assistive technology, as ARIA defines f
 
 `onOpenChange(open, reason)` reports `trigger`, `escape`, `outside` (a press or focus outside), `select` or `tab`. A controlled `open` that is not updated vetoes the change; a vetoed `tab` still lets focus move on, the way a vetoed `outside` still lets the press land. Submenus are not shipped.
 
+## Icons
+
+`Menu.CheckboxItem` shows the `check` glyph while checked: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. An icon-only trigger takes an icon from any library in `Button.Icon`, and needs a name.
+
+```tsx
+import { Check, Ellipsis } from 'lucide-react';
+
+<GlyphsProvider glyphs={{ check: <Check /> }}>
+	<Menu.Root>
+		<Menu.Trigger variant="ghost" aria-label="View options">
+			<Button.Icon>
+				<Ellipsis />
+			</Button.Icon>
+		</Menu.Trigger>
+		<Menu.Content>
+			<Menu.CheckboxItem checked={grid} onCheckedChange={setGrid}>
+				Show grid
+			</Menu.CheckboxItem>
+		</Menu.Content>
+	</Menu.Root>
+</GlyphsProvider>
+```
+
 ## Accessible composition
 
 **Todae handles:** `Menu.Trigger` sets `aria-haspopup="menu"`, `aria-expanded` and `aria-controls`, and its id names the `role="menu"` content through `aria-labelledby`. Items get `role="menuitem"`, `menuitemcheckbox` or `menuitemradio`, with `aria-checked` and `aria-disabled` kept in step. `Menu.Group` and `Menu.RadioGroup` are `role="group"`, and `Menu.Separator` is `role="separator"`. Focus moves into the menu when it opens and follows the keyboard model above.
@@ -44,7 +67,9 @@ function RowActions({ label, children }: { label: string; children: ReactNode })
   return (
     <Menu.Root>
       <Menu.Trigger variant="ghost" aria-label={label}>
-        <Button.Icon>⋯</Button.Icon>
+        <Button.Icon>
+          <Ellipsis />
+        </Button.Icon>
       </Menu.Trigger>
       <Menu.Content>{children}</Menu.Content>
     </Menu.Root>

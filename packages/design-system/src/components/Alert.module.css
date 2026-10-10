@@ -65,6 +65,13 @@
     block-size: 1lh;
   }
 
+  /* An icon from a library renders an svg: it takes the alert's icon size. */
+  .icon > :is(svg, img) {
+    flex: none;
+    inline-size: var(--todae-alert-icon-size);
+    block-size: var(--todae-alert-icon-size);
+  }
+
   .root > .close {
     grid-column: close;
     grid-row: 1;
