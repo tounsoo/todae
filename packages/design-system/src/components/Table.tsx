@@ -10,7 +10,7 @@ import styles from './Table.module.css';
 export type TableRootProps = ComponentPropsWithRef<'table'>;
 /** A native `caption`, the table's name. Put it first in the root. */
 export type TableCaptionProps = ComponentPropsWithRef<'caption'>;
-/** A native `thead`. Its header cells sit above a stronger rule. */
+/** A native `thead`. The `Table.HeaderCell` parts in its rows sit above a stronger rule. */
 export type TableHeadProps = ComponentPropsWithRef<'thead'>;
 /** A native `tbody`. */
 export type TableBodyProps = ComponentPropsWithRef<'tbody'>;

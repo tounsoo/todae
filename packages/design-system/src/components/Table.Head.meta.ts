@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Table.Head',
-  description: 'A native thead styled from the table tokens: its header cells sit above a stronger rule. Takes native thead attributes.',
+  description: 'A native thead. The Table.HeaderCell parts in its rows sit above a stronger rule. Takes native thead attributes.',
   props: [
     {
       name: 'children',

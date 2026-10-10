@@ -408,6 +408,7 @@ describe('content parts in a browser', () => {
     // Row and column headers share one weight; only column headers get the stronger rule.
     expect(style('row').fontWeight).toBe(style('col').fontWeight);
     expect(style('col').borderBottomColor).not.toBe(style('cell').borderBottomColor);
+    expect(style('row').borderBottomColor).toBe(style('cell').borderBottomColor);
     expect(style('cell').borderBottomStyle).toBe('solid');
     expect(style('busy').animationName).toContain('todae-progress-sweep');
     // Chromium does not report the bar's pseudo-elements, so check the rules that draw them.
@@ -542,7 +543,7 @@ describe('content parts in a browser', () => {
     const style = (id: string) => getComputedStyle(screen.getByTestId(id));
     expect(style('styled-cell').borderBottomStyle).toBe('solid');
     expect(style('plain-cell').borderBottomStyle).toBe('none');
-    // Only the parts carry the cell styles, even inside Table.Root.
+    // A plain td inside Table.Root gets no cell rule.
     expect(style('plain-part-cell').borderBottomStyle).toBe('none');
     expect(style('rule').borderTopColor).not.toBe(style('plain-rule').borderTopColor);
   });
