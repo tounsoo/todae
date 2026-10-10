@@ -34,7 +34,7 @@ Rules:
 - **Compound namespaces.** A component with parts is a namespace object with a `Root`: `Menu.Root`, `Menu.Item`, `Table.HeaderCell`. A new component without parts also ships as a namespace with only a `Root` (`Separator.Root`). Some older ones, such as `Stack`, are one export. *Why:* one shape across the package.
 - **Don't nest namespaces** (no `Field.Button.Root`), and give each root one interactive role. Components sit side by side: a Field and a Popover are siblings, neither wraps the other.
 - **A part that renders an element forwards native attributes and its ref.** Type its props with `ComponentPropsWithRef<'element'>`, spread the rest onto the element, and merge `className` with `cx`. *Why:* a company wrapper only has to spread props to keep everything working.
-- **Don't make behavior depend on a child's component type.** Parts register through context, or a parent looks for a data attribute the child renders. *Why:* a company's wrapped `OptionList.Option` or `Button.Icon` must still work.
+- **Don't make behavior depend on a child's component type.** Parts register through context, or a parent looks for a data attribute the child renders. A type check may only guess the first server render, as long as registration corrects it after hydration. *Why:* a company's wrapped `OptionList.Option` or `Button.Icon` must still work.
 - **Routers plug in through a `render` prop** (`Link.Root`), not an `as` prop or a router dependency.
 - **Text Todae writes by itself**, such as a close button's default name, comes from `StringsProvider` (`useStrings()`), not a hard-coded English string. A server entry, which can't read context, uses `DEFAULT_STRINGS`.
 - **Glyphs** are read from `GlyphsProvider`. Put glyph state (hidden, rotated, mirrored) on the `[data-todae-glyph]` wrapper span, not on the `svg`, so a swapped-in icon follows it.
@@ -50,7 +50,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 - **Run the consumer's handler first** with `composeHandlers(theirs, ours)`, which skips Todae's behavior when the consumer calls `preventDefault()`.
 - **A part rendered outside its Root should throw.** Misuse that can still render (an icon-only button with no name, both `checked` and `defaultChecked`) logs a development-only `console.error` or `console.warn` behind `process.env.NODE_ENV !== 'production'`.
 - **State reaches CSS through `data-*` attributes.** Boolean state is an empty attribute, left off when false (`data-selected`, `data-disabled`); enum state is its value (`data-tone`, `data-size`, `data-orientation`). Name an attribute that other Todae code looks up `data-todae-*` (`data-todae-glyph`, `data-todae-roving`).
-- **Items inside an ARIA widget** (options, menu items) take `aria-disabled` and stay focusable, as the ARIA patterns expect; standalone native controls take `disabled`.
+- **Disabled items.** Menu items and listbox options take `aria-disabled` and stay in the arrow-key order, so a screen reader announces them as unavailable. Items that are buttons, such as tabs and toggle-group items, take native `disabled`, and arrow keys skip them. Standalone native controls take `disabled`.
 
 ## Hooks
 

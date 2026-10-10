@@ -883,8 +883,9 @@ describe('Field.Counter', () => {
     expect(fieldCss).not.toMatch(/scrollbar|::?-webkit-resizer|grip/);
     expect(fieldCss).toContain('.shell:has(> .textarea) > .adornment');
     expect(fieldCss).toContain('height: 1lh');
-    expect(fieldCss).toContain('padding-left: var(--todae-field-gap)');
-    expect(fieldCss).toContain('padding-right: var(--todae-field-gap)');
+    expect(fieldCss).toContain('padding-inline-start: var(--todae-field-gap)');
+    expect(fieldCss).toContain('padding-inline-end: var(--todae-field-gap)');
+    expect(fieldCss).not.toMatch(/padding-(left|right)/);
   });
 
   it('shows no limit for number and date inputs, which browsers do not cap', () => {

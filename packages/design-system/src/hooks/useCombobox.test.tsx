@@ -8,7 +8,8 @@ import { resetMatchMedia, setMatchMedia } from '../test/setup';
 import * as api from '../index';
 import type { BottomSheetRootProps } from '../components/BottomSheet';
 import type { DialogRootProps } from '../components/Dialog';
-import { useState, type KeyboardEvent } from 'react';
+import { useState, type KeyboardEvent, type ReactNode } from 'react';
+import { StringsProvider } from '../providers/StringsProvider';
 import {
   useCombobox,
   type ComboboxOption,
@@ -1065,5 +1066,16 @@ describe('useCombobox dialog presentation', () => {
     expectTypeOf<DialogProps['open']>().toEqualTypeOf<boolean>();
     expectTypeOf<DialogProps['onOpenChange']>().toEqualTypeOf<NonNullable<DialogRootProps['onOpenChange']>>();
     expectTypeOf<UseComboboxResult['presentation']>().toEqualTypeOf<'popover' | 'sheet' | 'dialog'>();
+  });
+});
+
+describe('useCombobox overlay names', () => {
+  it('names the sheet and the dialog from the strings', () => {
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <StringsProvider strings={{ options: 'Choix' }}>{children}</StringsProvider>
+    );
+    const { result } = renderHook(() => useCombobox({ options: OPTIONS, presentation: 'dialog' }), { wrapper });
+    expect(result.current.getDialogProps()['aria-label']).toBe('Choix');
+    expect(result.current.getSheetProps()['aria-label']).toBe('Choix');
   });
 });
