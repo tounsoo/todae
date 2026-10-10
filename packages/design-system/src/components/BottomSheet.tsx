@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -14,6 +13,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
+import { useDomId } from './domId';
 import { Button, type ButtonActionProps } from './Button';
 import { useControlledValue } from '../hooks/useControlledState';
 import { useStrings } from '../providers/StringsProvider';
@@ -105,7 +105,7 @@ function GrabberHandle({
   return (
     <div
       {...props}
-      className={[styles.handle, className].filter(Boolean).join(' ')}
+      className={cx(styles.handle, className)}
       data-sheet-drag-handle=""
     >
       <button type="button" aria-label={ariaLabel} onKeyDown={onKeyDown} />
@@ -126,7 +126,7 @@ function BottomSheetHeader({ className, ...props }: ComponentPropsWithRef<'div'>
   return (
     <div
       {...props}
-      className={[styles.header, className].filter(Boolean).join(' ')}
+      className={cx(styles.header, className)}
       data-sheet-drag-handle=""
     />
   );
@@ -134,14 +134,14 @@ function BottomSheetHeader({ className, ...props }: ComponentPropsWithRef<'div'>
 
 function BottomSheetTitle({ className, id: idProp, children, ...props }: ComponentPropsWithRef<'h2'>) {
   const { setLabelledBy } = useSheet();
-  const uid = useId();
+  const uid = useDomId();
   const id = idProp ?? uid;
   useLayoutEffect(() => {
     setLabelledBy(id);
     return () => setLabelledBy(undefined);
   }, [id, setLabelledBy]);
   return (
-    <h2 {...props} id={id} className={[styles.title, className].filter(Boolean).join(' ')}>
+    <h2 {...props} id={id} className={cx(styles.title, className)}>
       {children}
     </h2>
   );
@@ -154,14 +154,14 @@ function BottomSheetDescription({
   ...props
 }: ComponentPropsWithRef<'p'>) {
   const { setDescribedBy } = useSheet();
-  const uid = useId();
+  const uid = useDomId();
   const id = idProp ?? uid;
   useLayoutEffect(() => {
     setDescribedBy(id);
     return () => setDescribedBy(undefined);
   }, [id, setDescribedBy]);
   return (
-    <p {...props} id={id} className={[styles.description, className].filter(Boolean).join(' ')}>
+    <p {...props} id={id} className={cx(styles.description, className)}>
       {children}
     </p>
   );
@@ -174,13 +174,13 @@ function BottomSheetBody({ className, ref, ...props }: ComponentPropsWithRef<'di
     <div
       {...props}
       ref={refs}
-      className={[styles.body, className].filter(Boolean).join(' ')}
+      className={cx(styles.body, className)}
     />
   );
 }
 
 function BottomSheetFooter({ className, ...props }: ComponentPropsWithRef<'div'>) {
-  return <div {...props} className={[styles.footer, className].filter(Boolean).join(' ')} />;
+  return <div {...props} className={cx(styles.footer, className)} />;
 }
 
 function BottomSheetClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: ButtonActionProps) {

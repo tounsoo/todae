@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -364,7 +363,7 @@ function useItem(
   activate: () => void,
   checked?: boolean,
 ) {
-  const value = useId();
+  const value = useDomId();
   const spacePressed = useRef(false);
   // Disabled items stay in the arrow-key order, as menus conventionally do,
   // so a screen reader announces them as unavailable; they just can't be chosen.

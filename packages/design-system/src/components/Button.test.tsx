@@ -299,7 +299,7 @@ describe('Button auto-tip', () => {
     expect(source.match(/useControlledState\(/g)).toHaveLength(1);
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../hooks/useControlledState', '../hooks/useTooltip', './Button.module.css', './props', './Tooltip']),
+      new Set(['react', '../hooks/useControlledState', '../hooks/useTooltip', './Button.module.css', './props', './cx', './Tooltip']),
     );
   });
 

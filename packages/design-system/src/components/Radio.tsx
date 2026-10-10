@@ -1,15 +1,16 @@
 import {
   createContext,
   useContext,
-  useId,
   type HTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
   type Ref,
 } from 'react';
+import { useDomId } from './domId';
 import { useControlledState } from '../hooks/useControlledState';
 import { useFieldsetState } from './Fieldset.context';
 import { SelectionControl } from './SelectionControl';
+import { cx } from './cx';
 import styles from './selection.module.css';
 
 type RadioGroupName =
@@ -79,7 +80,7 @@ function RadioGroupRoot({
   if (process.env.NODE_ENV !== 'production' && valueProp !== undefined && defaultValue !== undefined) {
     console.error('RadioGroup.Root cannot take both value and defaultValue');
   }
-  const autoName = useId();
+  const autoName = useDomId();
   const name = nameProp ?? autoName;
   const { disabled: isDisabled, invalid: isInvalid } = useFieldsetState({ disabled, invalid });
   const [value, setValue] = useControlledState(valueProp, defaultValue ?? null);
@@ -101,7 +102,7 @@ function RadioGroupRoot({
         ref={ref}
         id={id}
         role="radiogroup"
-        className={[styles.group, className].filter(Boolean).join(' ')}
+        className={cx(styles.group, className)}
         data-orientation={orientation}
         aria-orientation={orientation}
         aria-label={ariaLabel}

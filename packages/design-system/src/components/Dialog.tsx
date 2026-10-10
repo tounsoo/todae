@@ -4,13 +4,13 @@ import {
   useContext,
   useLayoutEffect,
   useRef,
-  useId,
   useState,
   type ComponentPropsWithRef,
   type CSSProperties,
   type ReactNode,
   type RefObject,
 } from 'react';
+import { useDomId } from './domId';
 import { Button, type ButtonActionProps } from './Button';
 import { useControlledValue } from '../hooks/useControlledState';
 import { useStrings } from '../providers/StringsProvider';
@@ -64,14 +64,14 @@ function useDialog(): DialogContextValue {
 
 function DialogTitle({ className, children, id: idProp, ...props }: ComponentPropsWithRef<'h2'>) {
   const { setLabelledBy } = useDialog();
-  const uid = useId();
+  const uid = useDomId();
   const id = idProp ?? uid;
   useLayoutEffect(() => {
     setLabelledBy(id);
     return () => setLabelledBy(undefined);
   }, [id, setLabelledBy]);
   return (
-    <h2 {...props} id={id} className={[styles.title, className].filter(Boolean).join(' ')}>
+    <h2 {...props} id={id} className={cx(styles.title, className)}>
       {children}
     </h2>
   );
@@ -84,29 +84,29 @@ function DialogDescription({
   ...props
 }: ComponentPropsWithRef<'p'>) {
   const { setDescribedBy } = useDialog();
-  const uid = useId();
+  const uid = useDomId();
   const id = idProp ?? uid;
   useLayoutEffect(() => {
     setDescribedBy(id);
     return () => setDescribedBy(undefined);
   }, [id, setDescribedBy]);
   return (
-    <p {...props} id={id} className={[styles.description, className].filter(Boolean).join(' ')}>
+    <p {...props} id={id} className={cx(styles.description, className)}>
       {children}
     </p>
   );
 }
 
 function DialogHeader({ className, ...props }: ComponentPropsWithRef<'div'>) {
-  return <div {...props} className={[styles.header, className].filter(Boolean).join(' ')} />;
+  return <div {...props} className={cx(styles.header, className)} />;
 }
 
 function DialogBody({ className, ...props }: ComponentPropsWithRef<'div'>) {
-  return <div {...props} className={[styles.body, className].filter(Boolean).join(' ')} />;
+  return <div {...props} className={cx(styles.body, className)} />;
 }
 
 function DialogFooter({ className, ...props }: ComponentPropsWithRef<'div'>) {
-  return <div {...props} className={[styles.footer, className].filter(Boolean).join(' ')} />;
+  return <div {...props} className={cx(styles.footer, className)} />;
 }
 
 function DialogClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: ButtonActionProps) {

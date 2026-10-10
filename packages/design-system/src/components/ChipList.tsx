@@ -16,6 +16,7 @@ import { useStrings } from '../providers/StringsProvider';
 import { Chip, type ChipTone } from './Chip';
 import { useChipKeys } from './chipKeys';
 import { Popover } from './Popover';
+import { cx } from './cx';
 import styles from './ChipList.module.css';
 
 /**
@@ -267,7 +268,7 @@ function Root({
 
   const wire = popover.getPopoverProps();
   return (
-    <div {...props} className={[styles.root, className].filter(Boolean).join(' ')} style={style}>
+    <div {...props} className={cx(styles.root, className)} style={style}>
       <FocusGuard layout={layout} park={park} />
       <div
         className={styles.clip}

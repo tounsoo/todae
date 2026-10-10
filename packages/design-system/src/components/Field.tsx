@@ -1,7 +1,6 @@
 import {
   useContext,
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -17,6 +16,7 @@ import {
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
+import { useDomId } from './domId';
 import { Chip } from './Chip';
 import {
   FIELD_CONTROL_SELECTOR,
@@ -164,8 +164,8 @@ function Root({
 }: FieldRootProps) {
   // Inside a Fieldset.Root, its disabled and invalid apply here too.
   const { disabled, invalid } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
-  const autoId = useId();
-  const hintId = useId();
+  const autoId = useDomId();
+  const hintId = useDomId();
   const inputRef = useRef<HTMLElement>(null);
   const pendingPicker = useRef<HTMLSelectElement | null>(null);
   const [store] = useState(createCountStore);
@@ -295,7 +295,7 @@ function TextInput({
       maxLength={maxLength}
       value={value}
       type={type}
-      className={[styles.input, className].filter(Boolean).join(' ')}
+      className={cx(styles.input, className)}
       onChange={(event) => {
         onChange(event);
         onValueChange?.(event.target.value);
@@ -345,7 +345,7 @@ function Textarea({
       rows={resolved.rows}
       data-auto-grow={autoGrow ? '' : undefined}
       data-max-rows={resolved.maxRows}
-      className={[styles.textarea, className].filter(Boolean).join(' ')}
+      className={cx(styles.textarea, className)}
       style={
         {
           ...style,
@@ -451,7 +451,7 @@ function ChipInput({
       {...control}
       value={inputValue}
       type="text"
-      className={[styles.input, className].filter(Boolean).join(' ')}
+      className={cx(styles.input, className)}
       onChange={(event) => onInputValueChange(event.target.value)}
       onKeyDown={onKeyDown}
     />
