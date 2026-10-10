@@ -12,10 +12,12 @@ import { ChipExamples } from '../../../components/demos/ChipDemo';
 
 `tone`은 Badge와 같은 톤을 받습니다. 기본값인 `neutral`, 상태 톤 `info`, `success`, `warning`, `critical`, 그리고 카테고리 톤 `category-1`부터 `category-8`입니다. `neutral`은 `chip.bg`, `chip.fg`, `chip.border` 상태 토큰을 읽고, 다른 톤은 `chip.<tone>` contract 토큰을 읽으며 hover에서도 색을 유지합니다. 비활성 칩은 톤과 상관없이 비활성 색을 씁니다.
 
-제거 버튼에는 자체 글리프나 아이콘이 없습니다. 내용이 없으면 스타일시트가 X 모양을 그립니다. 직접 사용하는 아이콘 세트의 아이콘을 보여 주려면 `removeIcon`을 전달하세요. 버튼의 이름은 계속 `removeLabel`이나 그 기본값에서 오므로 아이콘에는 `aria-hidden`을 지정하세요. 그 기본값 `Remove {label}`과 `+N`에 읽히는 `{n} more`는 [StringsProvider](/utilities/strings-provider)에서 옵니다.
+내용이 없으면 제거 버튼은 `close` 글리프를 보여 줍니다. [GlyphsProvider](/utilities/glyphs-provider)가 정하지 않으면 X 모양입니다. 칩 하나에만 다른 아이콘을 보여 주려면 `removeIcon`을 전달하세요. `svg`나 `img`는 `chip.icon.size` 토큰의 크기를 따릅니다. 버튼의 이름은 계속 `removeLabel`이나 그 기본값에서 옵니다. 그 기본값 `Remove {label}`과 `+N`에 읽히는 `{n} more`는 [StringsProvider](/utilities/strings-provider)에서 옵니다.
 
 ```tsx
-<Chip.Root onRemove={remove} removeIcon={<CloseIcon aria-hidden />}>
+import { X } from 'lucide-react';
+
+<Chip.Root onRemove={remove} removeIcon={<X />}>
   Design
 </Chip.Root>
 ```

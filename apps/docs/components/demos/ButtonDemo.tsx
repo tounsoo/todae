@@ -1,6 +1,8 @@
 'use client';
 
-import { Button } from '@omsoo/todae';
+import { Button, Stack } from '@omsoo/todae';
+import { AlignCenter, AlignLeft, AlignRight, ArrowRight, Plus } from 'lucide-react';
+import { ICON_LIBRARIES } from '../iconLibraries';
 
 export function ButtonVariants() {
   return (
@@ -26,19 +28,19 @@ export function ButtonIcons() {
     <>
       <Button.Root>
         <Button.Icon>
-          <span>+</span>
+          <Plus />
         </Button.Icon>
         Save
       </Button.Root>
       <Button.Root variant="secondary">
         Next
         <Button.Icon>
-          <span>→</span>
+          <ArrowRight />
         </Button.Icon>
       </Button.Root>
       <Button.Root aria-label="Add">
         <Button.Icon>
-          <span>+</span>
+          <Plus />
         </Button.Icon>
       </Button.Root>
     </>
@@ -50,19 +52,42 @@ export function ButtonGroupAlign() {
     <Button.Group aria-label="Align">
       <Button.Root variant="secondary" aria-label="Left">
         <Button.Icon>
-          <span>L</span>
+          <AlignLeft />
         </Button.Icon>
       </Button.Root>
       <Button.Root variant="secondary" aria-label="Center">
         <Button.Icon>
-          <span>C</span>
+          <AlignCenter />
         </Button.Icon>
       </Button.Root>
       <Button.Root variant="secondary" aria-label="Right">
         <Button.Icon>
-          <span>R</span>
+          <AlignRight />
         </Button.Icon>
       </Button.Root>
     </Button.Group>
+  );
+}
+
+/** The same buttons with icons from three libraries. Each icon takes button.icon.size. */
+export function ButtonIconLibraries() {
+  return (
+    <Stack>
+      {ICON_LIBRARIES.map((library) => (
+        <Stack key={library.id} direction="row">
+          <Button.Root>
+            <Button.Icon>{library.icons.plus}</Button.Icon>
+            {library.name}
+          </Button.Root>
+          <Button.Root variant="secondary">
+            Next
+            <Button.Icon>{library.icons.arrowRight}</Button.Icon>
+          </Button.Root>
+          <Button.Root variant="secondary" aria-label={`${library.name} settings`}>
+            <Button.Icon>{library.icons.settings}</Button.Icon>
+          </Button.Root>
+        </Stack>
+      ))}
+    </Stack>
   );
 }

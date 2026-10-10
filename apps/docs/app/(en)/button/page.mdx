@@ -1,4 +1,4 @@
-import { ButtonGroupAlign, ButtonIcons, ButtonOverflow, ButtonVariants } from '../../../components/demos/ButtonDemo';
+import { ButtonGroupAlign, ButtonIconLibraries, ButtonIcons, ButtonOverflow, ButtonVariants } from '../../../components/demos/ButtonDemo';
 import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 
 # Button
@@ -45,6 +45,30 @@ Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overl
 
 <Example>
   <ButtonGroupAlign />
+</Example>
+
+## Icons
+
+`Button.Icon` takes an icon from any library, such as Lucide, Phosphor or Tabler. An `svg` or `img` directly inside it takes the `button.icon.size` token, whatever the icon's own `size` or `width`, and the text color. An icon-only button is a square as tall as a labeled one.
+
+```tsx
+import { Plus, Settings } from 'lucide-react';
+
+<Button.Root>
+	<Button.Icon>
+		<Plus />
+	</Button.Icon>
+	New project
+</Button.Root>
+<Button.Root variant="ghost" aria-label="Settings">
+	<Button.Icon>
+		<Settings />
+	</Button.Icon>
+</Button.Root>
+```
+
+<Example>
+  <ButtonIconLibraries />
 </Example>
 
 ## Accessible composition

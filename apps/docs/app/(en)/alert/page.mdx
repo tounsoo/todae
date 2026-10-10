@@ -14,7 +14,7 @@ A message about the page or a task, in one of four tones: `info`, `success`, `wa
 	<Alert.Actions>
 		<Button.Root variant="secondary">Upgrade</Button.Root>
 	</Alert.Actions>
-	<Alert.Close onClick={hide}>×</Alert.Close>
+	<Alert.Close onClick={hide} />
 </Alert.Root>
 ```
 
@@ -33,6 +33,26 @@ Todae ships no icons. `Alert.Icon` is a slot: put any icon from your own set in 
 <Example block>
   <AlertDismissible />
 </Example>
+
+## Icons
+
+An `svg` or `img` directly inside `Alert.Icon` takes the `alert.icon.size` token. `Alert.Close` with no content shows the `close` glyph: a cross, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. To use a different icon for one close, put it in a `Button.Icon`.
+
+```tsx
+import { TriangleAlert, X } from 'lucide-react';
+
+<Alert.Root tone="warning">
+	<Alert.Icon>
+		<TriangleAlert />
+	</Alert.Icon>
+	<Alert.Title>Storage almost full</Alert.Title>
+	<Alert.Close onClick={hide}>
+		<Button.Icon>
+			<X />
+		</Button.Icon>
+	</Alert.Close>
+</Alert.Root>
+```
 
 ## Accessible composition
 

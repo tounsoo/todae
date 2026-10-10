@@ -10,7 +10,7 @@ import { OptionListMultiple, OptionListSingle } from '../../../components/demos/
   <OptionListSingle />
 </Example>
 
-다중 선택은 모든 행에 체크 영역을 둡니다. 선택되면 상자를 채우고 CSS로 체크를 그립니다.
+다중 선택은 모든 행에 체크 영역을 둡니다. 선택되면 상자를 채우고 체크 글리프를 그립니다.
 
 <Example>
   <OptionListMultiple />
@@ -19,6 +19,21 @@ import { OptionListMultiple, OptionListSingle } from '../../../components/demos/
 옵션은 `OptionList.Root` 안의 `OptionList.Option` 파트입니다.
 
 Combobox는 `id`, `activeValue`, `onActiveValueChange`, `tabIndex={-1}`를 넘겨 입력이 포커스와 `aria-activedescendant`를 갖게 할 수 있습니다. 비제어 목록은 `tabIndex={0}`을 유지합니다.
+
+## 아이콘
+
+선택된 옵션은 `check` 글리프를 보여 줍니다. [GlyphsProvider](/utilities/glyphs-provider)가 정하지 않으면 Todae의 체크 표시입니다. 다중 선택 목록에서는 상자 안에 들어갑니다.
+
+```tsx
+import { Check } from 'lucide-react';
+
+<GlyphsProvider glyphs={{ check: <Check /> }}>
+	<OptionList.Root aria-label="Fruit" value={value} onValueChange={setValue}>
+		<OptionList.Option value="apple">Apple</OptionList.Option>
+		<OptionList.Option value="pear">Pear</OptionList.Option>
+	</OptionList.Root>
+</GlyphsProvider>
+```
 
 ## 접근성을 지키는 조합
 

@@ -56,7 +56,7 @@ export function ToastDemo() {
             <Toast.Title>{toast.title}</Toast.Title>
             <Toast.Description>{toast.description}</Toast.Description>
             <Toast.Action onClick={() => undefined}>Undo</Toast.Action>
-            <Toast.Close>×</Toast.Close>
+            <Toast.Close />
           </Toast.Root>
         )}
       </Toast.Region>

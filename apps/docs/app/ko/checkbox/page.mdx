@@ -21,6 +21,18 @@ Checkbox를 `Field.Root` 안에 넣지 마세요. 그 셸은 텍스트와 칩 �
 
 늘 보이는 배타적 선택에는 [Radio](/radio)를 쓰세요. 오버레이 목록에는 [OptionList](/optionlist)를 쓰세요.
 
+## 아이콘
+
+체크 표시는 `check` 글리프입니다. [GlyphsProvider](/utilities/glyphs-provider)가 정하지 않으면 Todae의 체크 표시입니다. 상자를 채우며, 체크박스가 선택된 동안에만 보입니다.
+
+```tsx
+import { Check } from 'lucide-react';
+
+<GlyphsProvider glyphs={{ check: <Check strokeWidth={3} /> }}>
+	<Checkbox defaultChecked>Product updates</Checkbox>
+</GlyphsProvider>
+```
+
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** Checkbox는 children과 함께 `<label>` 안에 든 네이티브 `<input type="checkbox">`입니다. 그래서 children이 이름이 되고, 텍스트를 클릭해도 토글됩니다. Space는 네이티브처럼 토글합니다. `disabled`는 네이티브이고 `invalid`는 `aria-invalid`를 설정합니다. 둘 다 바깥 [Fieldset](/fieldset)에서도 옵니다. 그려진 상자는 `aria-hidden`이고, 입력이 focus-visible인 동안 포커스 링을 보여 줍니다. `aria-*`, `id`, `ref`를 포함한 다른 props는 입력으로 가고, `className`은 label로 갑니다.

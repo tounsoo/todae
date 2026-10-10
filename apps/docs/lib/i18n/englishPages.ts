@@ -55,6 +55,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'tokens': () => import('../../app/(en)/tokens/page.mdx'),
   'toolbar': () => import('../../app/(en)/toolbar/page.mdx'),
   'tooltip': () => import('../../app/(en)/tooltip/page.mdx'),
+  'utilities/glyphs-provider': () => import('../../app/(en)/utilities/glyphs-provider/page.mdx'),
   'utilities/strings-provider': () => import('../../app/(en)/utilities/strings-provider/page.mdx'),
   'utilities/use-announcer': () => import('../../app/(en)/utilities/use-announcer/page.mdx'),
   'utilities/use-chip-field': () => import('../../app/(en)/utilities/use-chip-field/page.mdx'),

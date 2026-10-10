@@ -10,7 +10,7 @@ Single `value` is `string | null`. Multiple `value` is `string[]`. Selected opti
   <OptionListSingle />
 </Example>
 
-Multiple keeps a check gutter on every row. Selected fills the box and draws a CSS check.
+Multiple keeps a check gutter on every row. Selected fills the box and draws the check glyph.
 
 <Example>
   <OptionListMultiple />
@@ -19,6 +19,21 @@ Multiple keeps a check gutter on every row. Selected fills the box and draws a C
 Options are `OptionList.Option` parts inside `OptionList.Root`.
 
 A combobox can pass `id`, `activeValue`, `onActiveValueChange`, and `tabIndex={-1}` so the input owns focus and `aria-activedescendant`. Uncontrolled lists keep `tabIndex={0}`.
+
+## Icons
+
+A selected option shows the `check` glyph: Todae's check mark, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. In a multiple list it sits inside the box.
+
+```tsx
+import { Check } from 'lucide-react';
+
+<GlyphsProvider glyphs={{ check: <Check /> }}>
+	<OptionList.Root aria-label="Fruit" value={value} onValueChange={setValue}>
+		<OptionList.Option value="apple">Apple</OptionList.Option>
+		<OptionList.Option value="pear">Pear</OptionList.Option>
+	</OptionList.Root>
+</GlyphsProvider>
+```
 
 ## Accessible composition
 

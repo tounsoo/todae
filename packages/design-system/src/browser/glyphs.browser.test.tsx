@@ -89,7 +89,7 @@ describe('Glyphs in a browser', () => {
       <Themed>
         <GlyphsProvider glyphs={{ chevron: <LibraryIcon /> }}>
           <Field.Root data-testid="field">
-            <Field.Select aria-label="Plan" defaultValue="a">
+            <Field.Select aria-label="Plan" value="a" onValueChange={() => undefined}>
               <option value="a">Starter</option>
             </Field.Select>
           </Field.Root>

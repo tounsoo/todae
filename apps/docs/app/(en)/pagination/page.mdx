@@ -42,6 +42,25 @@ Give the control for the page you are on `aria-current="page"`, and it is drawn 
 
 Server Components can import it from `@omsoo/todae/pagination`.
 
+## Icons
+
+`Pagination.Ellipsis` with no content shows the `ellipsis` glyph from a [GlyphsProvider](/utilities/glyphs-provider), else `…`; the `@omsoo/todae/pagination` server entry always shows `…`. Previous and next are your own links or buttons, so an icon in them is yours too: hide it and name the control.
+
+```tsx
+import { ChevronLeft, Ellipsis } from 'lucide-react';
+
+<GlyphsProvider glyphs={{ ellipsis: <Ellipsis /> }}>
+	<Pagination.Root>
+		<Pagination.Item>
+			<Link href={`?page=${page - 1}`} aria-label="Previous page">
+				<ChevronLeft aria-hidden />
+			</Link>
+		</Pagination.Item>
+		…
+	</Pagination.Root>
+</GlyphsProvider>
+```
+
 ## Accessible composition
 
 **Todae handles:** The landmark and the list: a named `nav` around an `ol role="list"`, with each `Pagination.Item` as a list item. `Pagination.Ellipsis` is `aria-hidden`, so screen readers skip the gap. Styles follow the ARIA state on your controls: `aria-current="page"` is drawn as the current page, and `aria-disabled="true"` is drawn muted.

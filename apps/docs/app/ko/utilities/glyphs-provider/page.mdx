@@ -1,0 +1,99 @@
+import { Table } from '@omsoo/todae/table';
+import { ScrollRegion } from '../../../../components/OverflowRegion';
+import { GlyphsLibraries } from '../../../../components/demos/GlyphsDemo';
+
+# GlyphsProvider
+
+Todae는 아이콘 세트를 제공하지 않습니다. 그래도 닫기 버튼의 X 모양이나 체크박스의 체크 표시처럼, 몇몇 파트는 온전해 보이려면 글리프가 필요해서 Todae가 직접 그립니다. `GlyphsProvider`는 그 안의 모든 요소에 대해 이 글리프를 정하므로, 대신 사용하는 아이콘 라이브러리의 아이콘을 쓸 수 있습니다. 바꿀 키만 전달하세요. 생략한 키는 가장 가까운 상위 `GlyphsProvider`에서 가져오고, `null`은 Todae 자체 글리프로 되돌립니다. 요소는 렌더링하지 않습니다.
+
+```tsx
+import { GlyphsProvider } from '@omsoo/todae';
+import { Check, ChevronDown, ChevronRight, Ellipsis, X } from 'lucide-react';
+
+<GlyphsProvider
+	glyphs={{
+		close: <X />,
+		check: <Check />,
+		chevron: <ChevronDown />,
+		separator: <ChevronRight />,
+		ellipsis: <Ellipsis />,
+	}}
+>
+	<App />
+</GlyphsProvider>
+```
+
+같은 파트를 Todae 자체 글리프와 Lucide, Phosphor, Tabler로 보여 줍니다.
+
+<Example block>
+  <GlyphsLibraries />
+</Example>
+
+파트 자체의 내용이 있으면 그것이 우선합니다. 닫기 파트의 children, `Chip.Root`와 `ChipList.Root`의 `removeIcon`, `Field.ChipInput`의 `chipRemoveIcon`, `Pagination.Ellipsis`의 children, `Breadcrumbs.Root`의 `separator`가 그렇습니다. `useGlyphs()`는 현재 적용되는 글리프를 반환하므로 직접 만든 컴포넌트에서 쓸 수 있습니다.
+
+## 글리프
+
+<ScrollRegion>
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">키</Table.HeaderCell>
+      <Table.HeaderCell scope="col">쓰는 곳</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Todae 자체 글리프</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`close`</Table.HeaderCell>
+      <Table.Cell>내용이 없는 `Alert.Close`, `Toast.Close`, `Dialog.Close`, `BottomSheet.Close`, 칩 제거 버튼</Table.Cell>
+      <Table.Cell>X 모양</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`check`</Table.HeaderCell>
+      <Table.Cell>`Checkbox`, `Menu.CheckboxItem`, 선택된 `OptionList.Option`</Table.Cell>
+      <Table.Cell>체크 표시</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`chevron`</Table.HeaderCell>
+      <Table.Cell>`Field.Select`, `Disclosure.Summary`</Table.Cell>
+      <Table.Cell>브라우저 자체의 표시</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`separator`</Table.HeaderCell>
+      <Table.Cell>`Breadcrumbs` 항목 사이</Table.Cell>
+      <Table.Cell>구분 기호 텍스트 `/`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`ellipsis`</Table.HeaderCell>
+      <Table.Cell>내용이 없는 `Pagination.Ellipsis`</Table.Cell>
+      <Table.Cell>`…`</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+</ScrollRegion>
+
+`chevron`은 아래쪽을 가리키게 그리세요. 닫힌 디스클로저는 이를 텍스트 쪽으로 돌립니다. `separator`는 왼쪽에서 오른쪽으로 읽는 페이지에서 다음 항목을 가리키게 그리세요. 오른쪽에서 왼쪽으로 읽는 페이지에서는 좌우가 뒤집힙니다. `Field.Select`에서 chevron은 select가 필드의 마지막 파트일 때 브라우저의 선택기 아이콘 위에 놓입니다. 뒤에 `Icon`이나 `Affix`가 있으면 브라우저의 아이콘이 그대로 남습니다. 선택된 `<option>` 옆의 체크 표시는 브라우저 자체의 것입니다.
+
+아이콘 라이브러리가 렌더링하는 것처럼 `svg`나 `img`인 글리프는 아이콘 자체의 `size`나 `width`와 상관없이 파트가 주는 상자의 크기를 따릅니다. 닫기 파트에서는 `button.icon.size`, 칩에서는 `chip.icon.size`, select에서는 `field.icon.size`, 체크박스에서는 상자 전체, 그 밖에서는 텍스트와 비슷한 크기의 상자입니다. 색은 텍스트 색을 따르므로, 색이 아니라 아이콘을 고르세요.
+
+라디오의 점, 스위치의 손잡이, 스피너, 선택된 탭의 막대는 글리프가 아니라 토큰으로 그리는 모양이므로 여기에 없습니다.
+
+`@omsoo/todae/breadcrumbs` 같은 서버 진입점의 `Breadcrumbs`, `Pagination`, `Disclosure`는 컨텍스트 없이 서버에서 렌더링하므로 항상 Todae 자체 글리프를 그립니다. provider를 쓰려면 `@omsoo/todae`에서 가져오세요.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 모든 글리프를 접근 가능한 이름에서 뺍니다. 글리프는 `aria-hidden` 요소 안에 있거나, 칩의 제거 버튼처럼 `aria-label`로 이름이 붙은 버튼 안에 있습니다. 내용이 없는 닫기 파트는 [StringsProvider](/utilities/strings-provider)의 `close`나 `dismiss` 문자열로 이름이 붙고, 아이콘만 있는 버튼이므로 그 이름을 툴팁으로 보여 줍니다.
+
+**직접 제공할 것:** 정하는 모든 키에, 뜻하는 바가 그대로 읽히는 아이콘을 주세요. close에는 X 모양, check에는 체크 표시입니다. 이름은 Todae가 정하므로, 다른 뜻의 아이콘을 쓰면 그림과 이름이 어긋납니다.
+
+**주의할 점:** `'×'` 같은 텍스트를 글리프로 쓰지 마세요. 파트의 글꼴로 그려지고 상자 크기를 따르지 않습니다. `svg` 아이콘을 쓰세요.
+
+## 언제 쓰나요
+
+**언제:** 디자인 시스템이 아이콘 라이브러리를 쓰고, Todae의 X 모양, 체크, chevron, 구분 기호, 줄임표를 앱 전체나 일부에서 그 라이브러리에 맞추고 싶을 때.
+
+**쓰지 않을 때:** `Button.Icon`, `Field.Icon`, `Alert.Icon` 같은 슬롯의 아이콘 → 거기에 바로 넣으세요. 닫기 버튼이나 칩 하나에만 다른 아이콘 → 그 파트의 내용이나 `removeIcon`으로 전달하세요.
+
+## Props
+
+<PropsTable name="GlyphsProvider" />

@@ -184,7 +184,7 @@ Controlled chips plus input. The field never appends chips. Parent `onCommit` de
 
 When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. A later chip that does not fit at its full width moves into `+N`. The first chip truncates with an ellipsis when it, `+N`, and the input cannot share the row; its accessible name stays the full label.
 
-Chip remove buttons draw a cross unless you pass `chipRemoveIcon`, as on [Chip](/chip).
+Chip remove buttons show the `close` glyph unless you pass `chipRemoveIcon`, as on [Chip](/chip).
 
 Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key roving.
 
@@ -265,6 +265,29 @@ Stepper buttons and a calendar grid are app compositions; build them around thes
 ## Custom controls
 
 Your own control, such as a rating or a color well, joins a `Field.Root` through [useField](/utilities/use-field).
+
+## Icons
+
+`Field.Icon` takes an icon from any library; an `svg` or `img` directly inside it takes the `field.icon.size` token. `Field.Select` draws the `chevron` glyph from a [GlyphsProvider](/utilities/glyphs-provider) over the browser's picker icon when the select is the field's last part; otherwise, and without a provider, the browser's icon shows. The check mark beside a selected `<option>` is the browser's own. Chip remove buttons in `Field.ChipInput` show the `close` glyph unless you pass `chipRemoveIcon`.
+
+```tsx
+import { ChevronDown, Search } from 'lucide-react';
+
+<Field.Root aria-label="Search">
+	<Field.Icon>
+		<Search />
+	</Field.Icon>
+	<Field.TextInput />
+</Field.Root>
+
+<GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
+	<Field.Root aria-label="Plan">
+		<Field.Select value={plan} onValueChange={setPlan}>
+			…
+		</Field.Select>
+	</Field.Root>
+</GlyphsProvider>
+```
 
 ## Accessible composition
 

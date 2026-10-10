@@ -143,7 +143,7 @@ describe('GlyphsProvider', () => {
   it('draws the chevron glyph after Field.Select and in Disclosure.Summary, else keeps the native marker', () => {
     const select = (
       <Field.Root>
-        <Field.Select aria-label="Plan" defaultValue="a">
+        <Field.Select aria-label="Plan" value="a" onValueChange={() => undefined}>
           <option value="a">A</option>
         </Field.Select>
       </Field.Root>
