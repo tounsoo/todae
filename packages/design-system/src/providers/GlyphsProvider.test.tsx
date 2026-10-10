@@ -1,8 +1,8 @@
-import { cleanup, render, renderHook, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ReactNode } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   Alert,
   BottomSheet,
@@ -95,6 +95,44 @@ describe('GlyphsProvider', () => {
     expect(screen.queryByTestId('close')).toBeNull();
   });
 
+  it("shows no tooltip on a close with Todae's own content, as a text × never did", () => {
+    vi.useFakeTimers();
+    try {
+      render(
+        <Alert.Root>
+          <Alert.Close />
+        </Alert.Root>,
+      );
+      fireEvent.pointerEnter(screen.getByRole('button', { name: 'Dismiss' }));
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(screen.queryByRole('tooltip')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('treats false and an empty string like an unset glyph', () => {
+    render(
+      withIcons(
+        <>
+          <Checkbox>Terms</Checkbox>
+          <Alert.Root>
+            <Alert.Close />
+          </Alert.Root>
+          <Disclosure.Root>
+            <Disclosure.Summary>More</Disclosure.Summary>
+          </Disclosure.Root>
+        </>,
+        { check: false, close: '', chevron: false },
+      ),
+    );
+    expect(screen.getByRole('checkbox').parentElement!.querySelector('[data-todae-glyph] > svg')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Dismiss' }).querySelector('svg')).not.toBeNull();
+    expect(screen.getByText('More').hasAttribute('data-glyph')).toBe(false);
+  });
+
   it('uses the close glyph for chip remove buttons unless removeIcon is set', () => {
     const { rerender } = render(withIcons(<Chip.Root onRemove={() => undefined}>Alpha</Chip.Root>));
     expect(screen.getByRole('button', { name: 'Remove Alpha' }).contains(screen.getByTestId('close'))).toBe(true);
@@ -137,7 +175,7 @@ describe('GlyphsProvider', () => {
 
   it("draws Todae's check where no provider sets one", () => {
     render(<Checkbox>Terms</Checkbox>);
-    expect(screen.getByRole('checkbox').parentElement!.querySelector('[aria-hidden="true"] > svg')).not.toBeNull();
+    expect(screen.getByRole('checkbox').parentElement!.querySelector('[aria-hidden="true"] > [data-todae-glyph] > svg')).not.toBeNull();
   });
 
   it('draws the chevron glyph after Field.Select and in Disclosure.Summary, else keeps the native marker', () => {
@@ -237,9 +275,11 @@ describe('GlyphsProvider', () => {
     expect(sheet('Alert.module.css')).toMatch(/\.icon > :is\(svg, img\) \{[^}]*inline-size: var\(--todae-alert-icon-size\);/);
     expect(sheet('Toast.module.css')).toMatch(/\.icon > :is\(svg, img\) \{[^}]*inline-size: var\(--todae-toast-icon-size\);/);
     expect(sheet('Chip.module.css')).toMatch(/\.dismiss > :is\(svg, img\) \{[^}]*inline-size: var\(--todae-chip-icon-size\);/);
-    expect(sheet('Disclosure.module.css')).toMatch(/\.root:not\(\[open\]\) > \.summary > \.marker > :is\(svg, img\) \{\s*rotate: -90deg;/);
-    expect(sheet('Disclosure.module.css')).toMatch(/:dir\(rtl\) > \.marker > :is\(svg, img\) \{\s*rotate: 90deg;/);
-    expect(sheet('Breadcrumbs.module.css')).toMatch(/\.separator:dir\(rtl\) > :is\(svg, img\) \{\s*scale: -1 1;/);
-    expect(sheet('Field.module.css')).toMatch(/\.select:has\(\+ \.selectGlyph:last-child\)::picker-icon \{\s*visibility: hidden;/);
+    // State goes on the wrapper, so a glyph that is text or a wrapped icon turns too.
+    expect(sheet('Disclosure.module.css')).toMatch(/\.root:not\(\[open\]\) > \.summary > \[data-todae-glyph\] \{\s*rotate: -90deg;/);
+    expect(sheet('Disclosure.module.css')).toMatch(/:dir\(rtl\) > \[data-todae-glyph\] \{\s*rotate: 90deg;/);
+    expect(sheet('Breadcrumbs.module.css')).toMatch(/\.item > \[data-todae-glyph\]:dir\(rtl\) \{\s*scale: -1 1;/);
+    // Only where the picker icon can be hidden, so two arrows never show.
+    expect(sheet('Field.module.css')).toMatch(/@supports selector\(::picker-icon\) \{[\s\S]*\.select:has\(\+ \.selectGlyph:last-child\)::picker-icon \{\s*visibility: hidden;/);
   });
 });

@@ -642,6 +642,9 @@ function Close({ 'aria-label': ariaLabel, onClick, className, children, ref, ...
   return (
     <Button.Root
       variant="ghost"
+      // Todae's own close shows no tip, as a text × never did: a dialog's first
+      // focus often lands on it.
+      tooltip={children == null ? false : undefined}
       aria-label={label}
       {...props}
       ref={refs}

@@ -409,27 +409,37 @@
     display: none;
   }
 
+  /* The select reaches the shell's edge, as when it is the last part. */
   .shell:has(> .select + .selectGlyph:last-child) {
-    position: relative;
     padding-inline-end: 0;
   }
 
-  .select:has(+ .selectGlyph:last-child)::picker-icon {
-    visibility: hidden;
-  }
+  /* Only where the browser lets the picker icon be hidden: elsewhere the
+     select keeps its own arrow and the glyph stays hidden. */
+  @supports selector(::picker-icon) {
+    .shell:has(> .select + .selectGlyph:last-child) {
+      position: relative;
+    }
 
-  .select + .selectGlyph:last-child {
-    position: absolute;
-    inset-block: 0;
-    inset-inline-end: var(--todae-field-padding-x);
-    display: flex;
-    align-items: center;
-    color: var(--todae-field-fg-placeholder);
-    pointer-events: none;
-  }
+    .select:has(+ .selectGlyph:last-child)::picker-icon {
+      visibility: hidden;
+    }
 
-  .select:disabled + .selectGlyph {
-    color: var(--todae-field-fg-disabled);
+    .select + .selectGlyph:last-child {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-end: var(--todae-field-padding-x);
+      display: flex;
+      align-items: center;
+      color: var(--todae-field-fg-placeholder);
+      font-size: var(--todae-field-icon-size);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .select:disabled + .selectGlyph {
+      color: var(--todae-field-fg-disabled);
+    }
   }
 
   .select::picker-icon {

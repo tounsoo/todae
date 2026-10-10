@@ -4,14 +4,16 @@ import { ItemWithGlyph, Breadcrumbs as ServerBreadcrumbs, type BreadcrumbsItemPr
 
 export type { BreadcrumbsItemProps, BreadcrumbsRootProps } from './Breadcrumbs';
 
-// A separator prop is set for this trail, so it beats the provider's glyph.
+// A separator prop set on the trail beats the provider's glyph. The provider
+// is always there, so setting the prop never remounts the trail.
 const TEXT_SEPARATOR = { separator: null };
+const NO_CHANGE = {};
 
 // The main entry's Root: the server one, named by StringsProvider.
 function Root(props: BreadcrumbsRootProps) {
   const { breadcrumbs } = useStrings();
   const root = <ServerBreadcrumbs.Root {...props} aria-label={props['aria-label'] || (props['aria-labelledby'] ? undefined : breadcrumbs)} />;
-  return props.separator === undefined ? root : <GlyphsProvider glyphs={TEXT_SEPARATOR}>{root}</GlyphsProvider>;
+  return <GlyphsProvider glyphs={props.separator === undefined ? NO_CHANGE : TEXT_SEPARATOR}>{root}</GlyphsProvider>;
 }
 
 // The main entry's Item: draws the separator glyph from GlyphsProvider, when

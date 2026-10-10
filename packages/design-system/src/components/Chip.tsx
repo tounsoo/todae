@@ -1,7 +1,7 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { useStrings } from '../providers/StringsProvider';
 import { useGlyphs } from '../providers/GlyphsProvider';
-import { CrossGlyph } from './glyphs';
+import { CrossGlyph, glyphOr } from './glyphs';
 import type { BadgeTone } from './Badge';
 import styles from './Chip.module.css';
 
@@ -61,7 +61,7 @@ function ChipRoot({
           disabled={disabled}
           onClick={disabled ? undefined : onRemove}
         >
-          {removeIcon ?? close ?? <CrossGlyph />}
+          {removeIcon ?? glyphOr(close, <CrossGlyph />)}
         </button>
       ) : null}
     </span>

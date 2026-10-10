@@ -268,7 +268,7 @@ Your own control, such as a rating or a color well, joins a `Field.Root` through
 
 ## Icons
 
-`Field.Icon` takes an icon from any library; an `svg` or `img` directly inside it takes the `field.icon.size` token. `Field.Select` draws the `chevron` glyph from a [GlyphsProvider](/utilities/glyphs-provider) over the browser's picker icon when the select is the field's last part; otherwise, and without a provider, the browser's icon shows. The check mark beside a selected `<option>` is the browser's own. Chip remove buttons in `Field.ChipInput` show the `close` glyph unless you pass `chipRemoveIcon`.
+`Field.Icon` takes an icon from any library; an `svg` or `img` directly inside it takes the `field.icon.size` token. `Field.Select` draws the `chevron` glyph from a [GlyphsProvider](/utilities/glyphs-provider) over the browser's picker icon when the browser supports `::picker-icon` and the select is the field's last part; otherwise, and without a provider, the browser's icon shows. The check mark beside a selected `<option>` is the browser's own. Chip remove buttons in `Field.ChipInput` show the `close` glyph unless you pass `chipRemoveIcon`.
 
 ```tsx
 import { ChevronDown, Search } from 'lucide-react';

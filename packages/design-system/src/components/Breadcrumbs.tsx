@@ -1,6 +1,7 @@
 import type { ComponentPropsWithRef, CSSProperties, ReactNode } from 'react';
 import { DEFAULT_STRINGS } from '../providers/strings';
 import { cx } from './cx';
+import { hasGlyph } from './glyphs';
 import styles from './Breadcrumbs.module.css';
 
 /**
@@ -66,11 +67,11 @@ export function ItemWithGlyph({
 }: BreadcrumbsItemProps & { separatorGlyph?: ReactNode }) {
   return (
     <li {...props} className={cx(styles.item, className)}>
-      {separatorGlyph == null ? null : (
-        <span className={styles.separator} aria-hidden="true">
+      {hasGlyph(separatorGlyph) ? (
+        <span className={styles.separator} data-todae-glyph="" aria-hidden="true">
           {separatorGlyph}
         </span>
-      )}
+      ) : null}
       {current ? (
         <span aria-current="page" className={styles.current}>
           {children}

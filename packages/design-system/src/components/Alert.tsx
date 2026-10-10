@@ -62,7 +62,16 @@ function Close({ 'aria-label': ariaLabel, className, children, ref, ...props }: 
   const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().dismiss);
   const glyph = useCloseGlyph();
   return (
-    <Button.Root variant="ghost" aria-label={label} {...props} ref={refs} className={cx(styles.close, className)}>
+    <Button.Root
+      variant="ghost"
+      // Todae's own close shows no tip, as a text × never did: a dialog's first
+      // focus often lands on it.
+      tooltip={children == null ? false : undefined}
+      aria-label={label}
+      {...props}
+      ref={refs}
+      className={cx(styles.close, className)}
+    >
       {children ?? glyph}
     </Button.Root>
   );

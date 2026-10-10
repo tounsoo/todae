@@ -1,3 +1,15 @@
+import type { ReactNode } from 'react';
+
+/** Whether a provider set this glyph: anything but null, undefined, a boolean or an empty string. */
+export function hasGlyph(glyph: ReactNode): boolean {
+  return glyph != null && typeof glyph !== 'boolean' && glyph !== '';
+}
+
+/** The glyph a provider set, else Todae's own. */
+export function glyphOr(glyph: ReactNode, own: ReactNode): ReactNode {
+  return hasGlyph(glyph) ? glyph : own;
+}
+
 // Todae's own glyphs, drawn where no GlyphsProvider sets one. Not exported:
 // Todae ships no icon set. They take the text color and fill the box their
 // part gives them, 1em when it gives none.

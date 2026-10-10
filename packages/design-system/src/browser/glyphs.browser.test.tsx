@@ -80,8 +80,20 @@ describe('Glyphs in a browser', () => {
     expect(getComputedStyle(check).visibility).toBe('hidden');
     input.click();
     await waitFor(() => expect(getComputedStyle(check).visibility).toBe('visible'));
-    const indicator = check.parentElement!.getBoundingClientRect();
+    const indicator = check.closest('[aria-hidden="true"]')!.getBoundingClientRect();
     expect(check.getBoundingClientRect().width).toBeGreaterThan(indicator.width / 2);
+  });
+
+  it('hides a text check glyph while unchecked, as it does an svg', () => {
+    render(
+      <Themed>
+        <GlyphsProvider glyphs={{ check: '✓' }}>
+          <Checkbox>Terms</Checkbox>
+        </GlyphsProvider>
+      </Themed>,
+    );
+    const glyph = screen.getByText('✓');
+    expect(getComputedStyle(glyph).visibility).toBe('hidden');
   });
 
   it('draws the chevron over the select picker icon, inside the field, and turns it in a closed disclosure', () => {
@@ -114,8 +126,8 @@ describe('Glyphs in a browser', () => {
     expect(chevron.top).toBeGreaterThan(field.top);
     expect(chevron.bottom).toBeLessThan(field.bottom);
     expect(getComputedStyle(select, '::picker-icon').visibility).toBe('hidden');
-    const closed = screen.getByTestId('closed').querySelector('svg')!;
-    const open = screen.getByTestId('open').querySelector('svg')!;
+    const closed = screen.getByTestId('closed').querySelector('[data-todae-glyph]')!;
+    const open = screen.getByTestId('open').querySelector('[data-todae-glyph]')!;
     expect(getComputedStyle(closed).rotate).toBe('-90deg');
     expect(getComputedStyle(open).rotate).toBe('none');
     expect(getComputedStyle(screen.getByText('More')).listStyleType).toBe('none');
@@ -136,7 +148,7 @@ describe('Glyphs in a browser', () => {
         </GlyphsProvider>
       </Themed>,
     );
-    const [first, second] = [...document.querySelectorAll('nav li')].map((li) => li.querySelector('svg')!);
+    const [first, second] = [...document.querySelectorAll('nav li')].map((li) => li.querySelector('[data-todae-glyph]')!);
     expect(first!.getBoundingClientRect().width).toBe(0);
     expect(getComputedStyle(second!).scale).toBe('-1 1');
     expect(getComputedStyle(second!.closest('li')!, '::before').content).toBe('none');

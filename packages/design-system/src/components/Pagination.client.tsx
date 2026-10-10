@@ -1,5 +1,6 @@
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { useStrings } from '../providers/StringsProvider';
+import { glyphOr } from './glyphs';
 import { Pagination as ServerPagination, type PaginationEllipsisProps, type PaginationRootProps } from './Pagination';
 
 export {
@@ -20,7 +21,7 @@ function Root(props: PaginationRootProps) {
 // The main entry's Ellipsis: with no content, the ellipsis glyph from GlyphsProvider, else "…".
 function Ellipsis({ children, ...props }: PaginationEllipsisProps) {
   const { ellipsis } = useGlyphs();
-  return <ServerPagination.Ellipsis {...props}>{children ?? ellipsis ?? '…'}</ServerPagination.Ellipsis>;
+  return <ServerPagination.Ellipsis {...props}>{children ?? glyphOr(ellipsis, '…')}</ServerPagination.Ellipsis>;
 }
 
 export const Pagination = { ...ServerPagination, Root, Ellipsis } as const;

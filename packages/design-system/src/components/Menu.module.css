@@ -56,15 +56,22 @@
     height: 1em;
   }
 
-  /* The check glyph fills the indicator and shows while the item is checked. */
-  .indicator > :is(svg, img) {
-    display: block;
-    inline-size: 100%;
-    block-size: 100%;
+  /* A checkbox item's indicator holds the check glyph, which fills it and
+     shows while the item is checked. */
+  [role='menuitemcheckbox'] > .indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--todae-menu-item-check-fg);
+    line-height: 1;
   }
 
-  [role='menuitemcheckbox']:not([aria-checked='true']) > .indicator > :is(svg, img) {
+  .indicator > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  [role='menuitemcheckbox']:not([aria-checked='true']) > .indicator {
     visibility: hidden;
   }
 

@@ -52,7 +52,7 @@
     "# Button": "3ba2f86a4510",
     "## Toggle": "b7fa7b0a3692",
     "## Button.Group": "bef2a314957a",
-    "## Icons": "22e935f15737",
+    "## Icons": "2c07dd0a3045",
     "## Accessible composition": "30400fa4e86e",
     "## When to use": "d57fe8233a0b",
     "### Button.Root": "dc5668e9f4d2",
@@ -140,7 +140,7 @@
     "# Disclosure": "2b4e1c93378c",
     "## Accordion": "dedb3bcd061b",
     "## Icons": "45da985b6b16",
-    "## Accessible composition": "231b7a747d10",
+    "## Accessible composition": "05aa8f7934a1",
     "## When to use": "e742af5b01d9",
     "## Props": "1ff9b4973419",
     "(section order)": "a6ce995bf6d0"
@@ -173,7 +173,7 @@
     "## Number, date and time": "7abe8ec941e5",
     "## Select": "40bc6360c076",
     "## Custom controls": "2cde30976b50",
-    "## Icons": "c58749f60742",
+    "## Icons": "f52060c8de88",
     "## Accessible composition": "47e541b991bc",
     "## When to use": "d57fe8233a0b",
     "### Field.Root": "b7b667157199",
@@ -461,8 +461,8 @@
   "utilities/glyphs-provider": {
     "(top)": "795842950415",
     "# GlyphsProvider": "833b71e767fb",
-    "## Glyphs": "afd06157ca0b",
-    "## Accessible composition": "842e2cd78d05",
+    "## Glyphs": "a02f8ee6aa2e",
+    "## Accessible composition": "bfd9dfea92cf",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",
     "(section order)": "a2c772dae730"

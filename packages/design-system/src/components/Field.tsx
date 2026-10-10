@@ -35,6 +35,7 @@ import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
 import { useField } from '../hooks/useField';
 import { useGlyphs } from '../providers/GlyphsProvider';
+import { hasGlyph } from './glyphs';
 import { useStrings, type Strings } from '../providers/StringsProvider';
 
 /**
@@ -545,8 +546,8 @@ function Select({ value, onChange, onValueChange, className, children, ...props 
         {children}
       </select>
       {/* Drawn over the browser's picker icon, which keeps its place. */}
-      {chevron != null ? (
-        <span className={styles.selectGlyph} aria-hidden="true">
+      {hasGlyph(chevron) ? (
+        <span className={styles.selectGlyph} data-todae-glyph="" aria-hidden="true">
           {chevron}
         </span>
       ) : null}

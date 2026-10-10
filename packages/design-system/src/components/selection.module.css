@@ -69,16 +69,26 @@
     border-color: var(--todae-selection-border-disabled);
   }
 
-  /* The check glyph fills the box and shows while the input is checked. */
-  .indicator > :is(svg, img) {
-    display: block;
+  /* The check glyph fills the box and shows while the input is checked. A
+     text or icon-font glyph takes the box's size as its font size. */
+  .glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     inline-size: 100%;
     block-size: 100%;
     color: var(--todae-selection-indicator-fg);
+    font-size: calc(var(--todae-selection-size) * 0.75);
+    line-height: 1;
     visibility: hidden;
   }
 
-  .input:checked + .indicator > :is(svg, img) {
+  .glyph > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .input:checked + .indicator > .glyph {
     visibility: visible;
   }
 
@@ -157,7 +167,7 @@
       border-color: GrayText;
     }
 
-    .root[data-disabled] .indicator > svg {
+    .root[data-disabled] .glyph {
       color: GrayText;
     }
   }

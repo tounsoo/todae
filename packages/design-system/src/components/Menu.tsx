@@ -23,7 +23,7 @@ import { useGlyphs } from '../providers/GlyphsProvider';
 import { useFocusLeave } from '../overlay/useFocusLeave';
 import { Button, type ButtonActionProps } from './Button';
 import { useDomId } from './domId';
-import { CheckGlyph } from './glyphs';
+import { CheckGlyph, glyphOr } from './glyphs';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import popoverStyles from './Popover.module.css';
 import styles from './Menu.module.css';
@@ -454,7 +454,7 @@ function CheckboxItem({
   return (
     <div {...item}>
       <span className={styles.indicator} aria-hidden="true">
-        {check ?? <CheckGlyph />}
+        {glyphOr(check, <CheckGlyph />)}
       </span>
       {children}
     </div>

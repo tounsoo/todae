@@ -90,8 +90,9 @@ describe('Checkbox', () => {
   });
 
   it('shows the check glyph in the indicator only while checked', () => {
-    expect(css).toMatch(/\.indicator > :is\(svg, img\) \{[^}]*visibility: hidden;/);
-    expect(css).toMatch(/\.input:checked \+ \.indicator > :is\(svg, img\) \{\s*visibility: visible;/);
+    // On the wrapper, so a text glyph hides too, not just an svg.
+    expect(css).toMatch(/\.glyph \{[^}]*visibility: hidden/);
+    expect(css).toMatch(/\.input:checked \+ \.indicator > \.glyph \{[^}]*visibility: visible/);
     expect(css).toMatch(/data-control='switch'[\s\S]*translateX/);
   });
 });

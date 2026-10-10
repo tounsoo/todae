@@ -17,7 +17,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider';
-import { CheckGlyph } from './glyphs';
+import { CheckGlyph, glyphOr } from './glyphs';
 import { optionDomId } from './OptionList.ids';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './OptionList.module.css';
@@ -141,8 +141,8 @@ function OptionListOption({
       })}
     >
       {selected ? (
-        <span className={styles.check} aria-hidden="true">
-          {check ?? <CheckGlyph />}
+        <span className={styles.check} data-todae-glyph="" aria-hidden="true">
+          {glyphOr(check, <CheckGlyph />)}
         </span>
       ) : null}
       {label}

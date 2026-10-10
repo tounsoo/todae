@@ -106,9 +106,12 @@
     position: absolute;
     inset-inline-start: var(--todae-option-padding-x);
     display: flex;
+    align-items: center;
+    justify-content: center;
     inline-size: 0.85em;
     block-size: 0.85em;
     color: var(--todae-option-check-fg);
+    line-height: 1;
   }
 
   .check > :is(svg, img) {

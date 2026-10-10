@@ -1,7 +1,7 @@
 import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { useFieldsetState } from './Fieldset.context';
-import { CheckGlyph } from './glyphs';
+import { CheckGlyph, glyphOr } from './glyphs';
 import styles from './selection.module.css';
 
 export type SelectionKind = 'checkbox' | 'radio' | 'switch';
@@ -85,7 +85,11 @@ export function SelectionControl({
         }}
       />
       <span className={styles.indicator} aria-hidden="true">
-        {kind === 'checkbox' ? (check ?? <CheckGlyph />) : null}
+        {kind === 'checkbox' ? (
+          <span className={styles.glyph} data-todae-glyph="">
+            {glyphOr(check, <CheckGlyph />)}
+          </span>
+        ) : null}
       </span>
       <span className={styles.label}>{children}</span>
     </label>
