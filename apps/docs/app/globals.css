@@ -1082,10 +1082,13 @@ table {
 /* Narrow screens: the token editor moves into a sheet, so the stage sits
    right under the theme controls. Same breakpoint as NARROW in Playground. */
 @media (width < 64rem) {
-  /* A column of flex items, not grid rows, so the bar can stick past its own row. */
+  /* A column, so the stage takes the height the rail leaves. Playground
+     measures the fixed bar into --docs-pg-bar, so the end of the stage clears
+     it; other pages leave it unset. */
   .playground {
     display: flex;
     flex-direction: column;
+    padding-block-end: var(--docs-pg-bar);
   }
 
   .pg-stage-theme {
@@ -1136,13 +1139,7 @@ table {
     background: var(--todae-color-bg-surface);
   }
 
-  /* Playground measures the bar into --docs-pg-bar, so the end of the stage
-     clears it and keyboard focus scrolls clear of it instead of under it.
-     Other pages leave it unset, and both properties keep their initial values. */
-  .playground {
-    padding-block-end: var(--docs-pg-bar);
-  }
-
+  /* Keyboard focus scrolls clear of the bar instead of under it. */
   html {
     scroll-padding-block-end: var(--docs-pg-bar);
   }
@@ -1150,6 +1147,17 @@ table {
   .pg-sheet-bar .pg-hint {
     grid-column: 1 / -1;
     margin: 0;
+  }
+}
+
+/* A fixed bar would repeat on every printed page, and its buttons do nothing on paper. */
+@media print {
+  .pg-sheet-bar {
+    display: none;
+  }
+
+  .playground {
+    padding-block-end: 0;
   }
 }
 

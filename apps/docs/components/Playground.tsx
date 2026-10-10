@@ -204,10 +204,12 @@ function useNarrow(): boolean {
 function reserveBar(bar: HTMLElement | null) {
   if (!bar) return;
   const root = document.documentElement;
-  const observer = new ResizeObserver(() => {
-    root.style.setProperty('--docs-pg-bar', `${Math.ceil(bar.getBoundingClientRect().height)}px`);
+  const observer = new ResizeObserver(([entry]) => {
+    const height = entry?.borderBoxSize[0]?.blockSize ?? bar.getBoundingClientRect().height;
+    root.style.setProperty('--docs-pg-bar', `${Math.ceil(height)}px`);
   });
-  observer.observe(bar);
+  // The border box, since the safe area changes the bar's padding and not its content.
+  observer.observe(bar, { box: 'border-box' });
   return () => {
     observer.disconnect();
     root.style.removeProperty('--docs-pg-bar');
@@ -457,8 +459,8 @@ export function Playground({ locale }: { locale: Locale }) {
               variant="secondary"
               aria-haspopup="dialog"
               onClick={() => {
-                // The sheet covers the lower half, so a stage whose top is below the viewport's top
-                // moves up to fill the rest. One already scrolled into stays put.
+                // The sheet covers the lower half, so a stage whose top is still below the viewport's
+                // top is scrolled to sit under the top bar. One already scrolled past that stays put.
                 const stage = stageRef.current;
                 if (stage && stage.getBoundingClientRect().top > 0) stage.scrollIntoView({ block: 'start' });
                 setSheetOpen(true);

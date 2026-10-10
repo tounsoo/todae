@@ -148,13 +148,23 @@ describe('narrow screens', () => {
     expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(controls.getBoundingClientRect().bottom);
     // The presets scroll in their own row, so the page does not scroll sideways.
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
-    expect(bar.getBoundingClientRect().bottom).toBeLessThanOrEqual(innerHeight);
+    // The playground keeps the bar's height free under the stage.
+    expect(getComputedStyle(document.querySelector('.playground')!).paddingBlockEnd).toBe(
+      `${Math.ceil(bar.getBoundingClientRect().height)}px`,
+    );
+    // The border box is measured, so padding such as the safe area counts too.
+    bar.style.paddingBlockEnd = '3rem';
+    await expect.poll(() => document.documentElement.style.getPropertyValue('--docs-pg-bar')).toBe(
+      `${Math.ceil(bar.getBoundingClientRect().height)}px`,
+    );
+    bar.style.paddingBlockEnd = '';
     expect(await violations()).toEqual([]);
     await userEvent.click(within(bar).getByRole('button', { name: 'Edit tokens' }));
     const sheet = await screen.findByRole('dialog', { name: 'Tokens' });
     await frame();
     expect(await violations()).toEqual([]);
     // The export hint the rail shows on wide screens describes the sheet here.
+    expect(sheet.getAttribute('aria-describedby')).toBeTruthy();
     expect(document.getElementById(sheet.getAttribute('aria-describedby')!)?.textContent).toContain('light and dark differ');
     await userEvent.fill(within(sheet).getByLabelText('color.accent.default'), 'oklch(0.5 0.1 30)');
     expect(stage.style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.1 30)');
