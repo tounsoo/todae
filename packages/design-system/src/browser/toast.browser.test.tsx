@@ -836,6 +836,28 @@ describe('Toast in the top layer', () => {
     await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0), { timeout: 2000 });
   });
 
+  it('shows a close button\'s text whole, beside the title', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <Toast.Region toaster={toaster}>
+          {(toast) => (
+            <Toast.Root>
+              <Toast.Title>{toast.title}</Toast.Title>
+              <Toast.Close>×</Toast.Close>
+            </Toast.Root>
+          )}
+        </Toast.Region>
+      </Themed>,
+    );
+    act(() => void toaster.add({ title: 'Saved' }));
+    const close = await screen.findByRole('button', { name: 'Dismiss' });
+    // The negative margin into the padding must not cap the button below its content.
+    const label = screen.getByText('×');
+    expect(label.scrollWidth).toBeLessThanOrEqual(label.clientWidth);
+    expect(close.getBoundingClientRect().left).toBeGreaterThanOrEqual(screen.getByText('Saved').getBoundingClientRect().right);
+  });
+
   it('keeps the gap between listed toasts inside the region', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(
