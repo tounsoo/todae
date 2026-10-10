@@ -1,0 +1,36 @@
+#!/bin/sh
+# Blocks a push from Claude Code that would send a commit no review round has
+# passed (CLAUDE.md, review loop step 6). People pushing from their own shell
+# are not gated. A SessionStart hook in .claude/settings.json points
+# core.hooksPath here.
+[ -n "$CLAUDECODE" ] || exit 0
+
+zero=0000000000000000000000000000000000000000
+marker_file=$(git rev-parse --git-path todae-review-clean)
+clean=$(cat "$marker_file" 2>/dev/null)
+status=0
+
+# Git passes one line per ref: <local ref> <local sha> <remote ref> <remote sha>.
+while read -r local_ref local_sha remote_ref _remote_sha; do
+  # Deleting a remote ref sends no commits.
+  [ "$local_sha" = "$zero" ] && continue
+  # Only commits no remote has yet need a review.
+  [ -z "$(git rev-list -n 1 "$local_sha" --not --remotes)" ] && continue
+  # A clean round reviewed the marker commit and everything before it.
+  if [ -n "$clean" ] && git merge-base --is-ancestor "$local_sha" "$clean" 2>/dev/null; then
+    continue
+  fi
+  echo "Push blocked: $local_ref ($(git rev-parse --short "$local_sha")) for $remote_ref has commits no review round has passed." >&2
+  status=1
+done
+
+if [ "$status" -ne 0 ]; then
+  cat >&2 <<MSG
+Keep these commits local and continue the review loop in CLAUDE.md, or report
+back if the loop has stopped. After a round with no blocking findings, record
+the commit it reviewed with
+  git rev-parse HEAD > "\$(git rev-parse --git-path todae-review-clean)"
+and push again. Never record a commit no round has passed.
+MSG
+fi
+exit "$status"

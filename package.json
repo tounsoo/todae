@@ -12,7 +12,7 @@
     "schema": "pnpm --filter @omsoo/todae schema",
     "tokens": "pnpm --filter @omsoo/todae tokens",
     "tokens:check": "pnpm --filter @omsoo/todae tokens:check",
-    "test": "pnpm -r --if-present test && node --test '.claude/hooks/*.test.mjs'",
+    "test": "pnpm -r --if-present test && node --test '.githooks/*.test.mjs'",
     "test:browser": "pnpm -r --if-present test:browser",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
