@@ -51,6 +51,7 @@ export const RESERVED_ROOTS = [
   'avatar',
   'grid',
   'pagination',
+  'opacity',
 ] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;
 export const INTERACTIVE_GROUPS = ['bg', 'fg', 'border'] as const;
@@ -87,11 +88,21 @@ export type TokenNode = {
 
 export type TokenTree = { [key: string]: TokenNode | TokenTree };
 
+/**
+ * A token another token's value reads: the whole value (`value`), the OKLCH
+ * channels of a color (`component`), or a color's alpha (`alpha`). `type` is
+ * the $type the target must have.
+ */
+export type TokenRef = { path: string; type: string; role: 'value' | 'component' | 'alpha' };
+
 export type FlatToken = {
   path: string;
   type: string;
   value: unknown;
+  /** The aliased token, or the color whose channels this color reads; shown in the catalog. */
   ref: string | null;
+  /** Every token the value reads, `ref` included. */
+  refs: TokenRef[];
   cssVar: string;
   cssValue: string;
   layer: Layer;
@@ -364,13 +375,30 @@ export function parseComponentPointer(pointer: string, loc: string): { path: str
   return { path: pointerToPath(match[1]!, loc), channel: OKLCH_CHANNELS[Number(match[2])]! };
 }
 
-function serializeColor(value: unknown, path: string): { ref: string | null; cssValue: string } {
+type Serialized = { ref: string | null; refs: TokenRef[]; cssValue: string };
+
+/**
+ * A color's alpha: a number in [0, 1], or a JSON Pointer to a number token
+ * (`#/opacity/12/$value`), emitted as that token's var so it stays live.
+ */
+function serializeAlpha(alpha: unknown, path: string): { refs: TokenRef[]; css: string | null } {
+  if (alpha === undefined) return { refs: [], css: null };
+  if (isRef(alpha)) {
+    const ref = pointerToPath(alpha.$ref, `Token "${path}" alpha`);
+    return { refs: [{ path: ref, type: 'number', role: 'alpha' }], css: `var(${cssVarName(ref)})` };
+  }
+  if (!isFiniteNumber(alpha) || alpha < 0 || alpha > 1) {
+    fail(`Token "${path}" alpha must be a number in [0, 1] or a $ref to a number token`);
+  }
+  return { refs: [], css: alpha === 1 ? null : String(alpha) };
+}
+
+function serializeColor(value: unknown, path: string): Serialized {
   if (!isRecord(value) || value.colorSpace !== 'oklch' || !Array.isArray(value.components)) {
     fail(`Token "${path}" color must be OKLCH`);
   }
   if (value.components.length !== 3) fail(`Token "${path}" OKLCH must have three components`);
-  const alpha = value.alpha;
-  if (alpha !== undefined && typeof alpha !== 'number') fail(`Token "${path}" alpha must be a number`);
+  const alpha = serializeAlpha(value.alpha, path);
   let origin: string | null = null;
   const channels = value.components.map((component, i) => {
     if (typeof component === 'number') return String(component);
@@ -389,31 +417,37 @@ function serializeColor(value: unknown, path: string): { ref: string | null; css
     // alpha means opaque while relative syntax would inherit the origin's.
     return {
       ref: origin,
-      cssValue: `oklch(from var(${cssVarName(origin)}) ${l} ${c} ${h} / ${alpha ?? 1})`,
+      refs: [{ path: origin, type: 'color', role: 'component' }, ...alpha.refs],
+      cssValue: `oklch(from var(${cssVarName(origin)}) ${l} ${c} ${h} / ${alpha.css ?? 1})`,
     };
   }
-  const base = `oklch(${l} ${c} ${h})`;
-  return { ref: null, cssValue: alpha === undefined || alpha === 1 ? base : `oklch(${l} ${c} ${h} / ${alpha})` };
+  const cssValue = alpha.css === null ? `oklch(${l} ${c} ${h})` : `oklch(${l} ${c} ${h} / ${alpha.css})`;
+  return { ref: null, refs: alpha.refs, cssValue };
 }
 
-export function serializeValue(token: TokenNode, path: string): { ref: string | null; cssValue: string } {
+export function serializeValue(token: TokenNode, path: string): Serialized {
+  if (typeof token.$value === 'string' && /^\{[^{}]+\}$/.test(token.$value)) {
+    const target = token.$value.slice(1, -1);
+    const hint = PATH_RE.test(target) ? `{ "$ref": "${pathToPointer(target)}" }` : '{ "$ref": "#/<token>/$value" }';
+    fail(`Token "${path}" uses a curly-brace alias; write ${hint}`);
+  }
   if (isRef(token.$value)) {
     const ref = pointerToPath(token.$value.$ref, `Token "${path}"`);
-    return { ref, cssValue: `var(${cssVarName(ref)})` };
+    return { ref, refs: [{ path: ref, type: token.$type ?? '', role: 'value' }], cssValue: `var(${cssVarName(ref)})` };
   }
   if (token.$type === 'color') return serializeColor(token.$value, path);
-  if (token.$type === 'dimension') return { ref: null, cssValue: serializeDimension(token.$value, path) };
+  if (token.$type === 'dimension') return { ref: null, refs: [], cssValue: serializeDimension(token.$value, path) };
   if (token.$type === 'fontWeight' || token.$type === 'number') {
     if (!isFiniteNumber(token.$value)) fail(`Token "${path}" ${token.$type} must be a number`);
     if (path.startsWith('z.') && !Number.isInteger(token.$value)) fail(`Token "${path}" z-index must be an integer`);
-    return { ref: null, cssValue: String(token.$value) };
+    return { ref: null, refs: [], cssValue: String(token.$value) };
   }
   if (token.$type === 'duration') {
     const value = token.$value;
     if (!isRecord(value) || !isFiniteNumber(value.value) || value.value < 0 || (value.unit !== 'ms' && value.unit !== 's')) {
       fail(`Token "${path}" duration must be { value, unit: "ms" | "s" } with a non-negative value`);
     }
-    return { ref: null, cssValue: `${value.value}${value.unit}` };
+    return { ref: null, refs: [], cssValue: `${value.value}${value.unit}` };
   }
   if (token.$type === 'cubicBezier') {
     const value = token.$value;
@@ -421,13 +455,13 @@ export function serializeValue(token: TokenNode, path: string): { ref: string | 
       fail(`Token "${path}" cubicBezier must be four numbers`);
     }
     if ([value[0]!, value[2]!].some((x) => x < 0 || x > 1)) fail(`Token "${path}" cubicBezier x values must be in [0, 1]`);
-    return { ref: null, cssValue: `cubic-bezier(${value.join(', ')})` };
+    return { ref: null, refs: [], cssValue: `cubic-bezier(${value.join(', ')})` };
   }
-  if (token.$type === 'fontFamily') return { ref: null, cssValue: serializeFontFamily(token.$value, path) };
+  if (token.$type === 'fontFamily') return { ref: null, refs: [], cssValue: serializeFontFamily(token.$value, path) };
   if (token.$type === 'shadow') {
     const layers = Array.isArray(token.$value) ? token.$value : [token.$value];
     if (layers.length === 0) fail(`Token "${path}" shadow must have at least one layer`);
-    return { ref: null, cssValue: layers.map((layer) => serializeShadowLayer(layer, path)).join(', ') };
+    return { ref: null, refs: [], cssValue: layers.map((layer) => serializeShadowLayer(layer, path)).join(', ') };
   }
   fail(`Token "${path}" has unsupported $type "${token.$type ?? ''}"`);
 }
@@ -484,7 +518,7 @@ function serializeShadowLayer(layer: unknown, path: string): string {
   if (layer.inset !== undefined && typeof layer.inset !== 'boolean') fail(`Token "${path}" shadow inset must be a boolean`);
   if (isRef(layer.color)) fail(`Token "${path}" shadow color must be a literal OKLCH color`);
   const color = serializeColor(layer.color, path);
-  if (color.ref) fail(`Token "${path}" shadow color must be a literal OKLCH color`);
+  if (color.refs.length > 0) fail(`Token "${path}" shadow color must be a literal OKLCH color`);
   const lengths = (['offsetX', 'offsetY', 'blur', 'spread'] as const).map((key) => {
     const length = layer[key];
     if (isRef(length)) fail(`Token "${path}" shadow ${key} must be a literal dimension`);
@@ -522,14 +556,13 @@ export function validateRefs(
     const candidates = tokens.filter((t) => t.path === path && t.layer === targetLayer);
     const inContext = candidates.filter((t) => t.context === context);
     for (const target of inContext.length > 0 ? inContext : candidates) {
-      if (target.ref) resolveLayer(target.ref, targetLayer, path, target.context ?? context, [...stack, path]);
+      for (const ref of target.refs) resolveLayer(ref.path, targetLayer, path, target.context ?? context, [...stack, path]);
     }
     return targetLayer;
   }
 
   for (const token of tokens) {
-    if (!token.ref) continue;
-    resolveLayer(token.ref, token.layer, token.path, token.context, [token.path]);
+    for (const ref of token.refs) resolveLayer(ref.path, token.layer, token.path, token.context, [token.path]);
   }
 }
 
@@ -561,12 +594,13 @@ export function layerTokens(
   if (checks.slots) validateSlots(whole, checks.slots, loc);
   const tokens: FlatToken[] = [];
   for (const [path, node] of flat) {
-    const { ref, cssValue } = serializeValue(node, path);
+    const { ref, refs, cssValue } = serializeValue(node, path);
     tokens.push({
       path,
       type: node.$type ?? '',
       value: node.$value,
       ref,
+      refs,
       cssVar: cssVarName(path),
       cssValue,
       layer,
@@ -1264,18 +1298,38 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
     types.set(token.path, token.type);
   }
   for (const token of all) {
-    if (token.ref && types.has(token.ref) && types.get(token.ref) !== token.type) {
-      fail(`token "${token.path}" is a ${token.type} but references the ${types.get(token.ref)} "${token.ref}"`);
+    for (const ref of token.refs) {
+      const target = types.get(ref.path);
+      if (target === undefined || target === ref.type) continue;
+      if (ref.role === 'value') {
+        fail(`token "${token.path}" is a ${token.type} but references the ${target} "${ref.path}"`);
+      }
+      fail(`token "${token.path}" ${ref.role} must reference a ${ref.type}, not the ${target} "${ref.path}"`);
     }
   }
   validateRefs(all, known, (from, to) => position.get(from) === position.get(to));
+  const byPath = new Map<string, FlatToken[]>();
+  for (const token of all) byPath.set(token.path, [...(byPath.get(token.path) ?? []), token]);
+  // An alpha must land in [0, 1] in every context its number token takes.
+  function literals(path: string, seen = new Set<string>()): number[] {
+    if (seen.has(path)) return [];
+    seen.add(path);
+    return (byPath.get(path) ?? []).flatMap((token) =>
+      token.refs.length > 0 ? token.refs.flatMap((ref) => literals(ref.path, seen)) : [token.value as number],
+    );
+  }
+  for (const token of all) {
+    for (const ref of token.refs) {
+      if (ref.role !== 'alpha') continue;
+      const out = literals(ref.path).find((value) => value < 0 || value > 1);
+      if (out !== undefined) fail(`token "${token.path}" alpha "${ref.path}" must stay in [0, 1], not ${out}`);
+    }
+  }
   // CSS places each entry by its resolutionOrder position, so an alias to a
   // later entry would resolve before that entry's context is applied. Scoped
   // modifier blocks are not re-declared when another modifier's context
   // changes, so they may not alias each other either.
   const scoped = (entry: ResolvedEntry | undefined) => entry?.kind === 'modifier' && !entry.extension.alias;
-  const byPath = new Map<string, FlatToken[]>();
-  for (const token of all) byPath.set(token.path, [...(byPath.get(token.path) ?? []), token]);
   // First token path reached through `ref` (at any depth) that a scoped modifier declares.
   function scopedDependency(ref: string, from: number): string | null {
     const queue = [ref];
@@ -1285,24 +1339,23 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
       seen.add(path);
       const at = position.get(path) ?? -1;
       if (at !== from && scoped(entries[at])) return path;
-      for (const token of byPath.get(path) ?? []) if (token.ref) queue.push(token.ref);
+      for (const token of byPath.get(path) ?? []) queue.push(...token.refs.map((ref) => ref.path));
     }
     return null;
   }
   for (const [index, entry] of entries.entries()) {
     for (const token of entryTokens(entry)) {
-      if (!token.ref) continue;
-      const target = position.get(token.ref) ?? -1;
-      if (target > index) {
-        fail(
-          `token "${token.path}" references "${token.ref}" from ${owner.get(token.ref)}, which must come earlier in resolutionOrder`,
-        );
-      }
-      const dependency = scoped(entry) ? scopedDependency(token.ref, index) : null;
-      if (dependency) {
-        fail(
-          `token "${token.path}" in ${entry.kind} "${entry.name}" depends on "${dependency}" from ${owner.get(dependency)}; scoped modifiers may not alias each other`,
-        );
+      for (const { path: ref } of token.refs) {
+        const target = position.get(ref) ?? -1;
+        if (target > index) {
+          fail(`token "${token.path}" references "${ref}" from ${owner.get(ref)}, which must come earlier in resolutionOrder`);
+        }
+        const dependency = scoped(entry) ? scopedDependency(ref, index) : null;
+        if (dependency) {
+          fail(
+            `token "${token.path}" in ${entry.kind} "${entry.name}" depends on "${dependency}" from ${owner.get(dependency)}; scoped modifiers may not alias each other`,
+          );
+        }
       }
     }
   }
@@ -1373,14 +1426,27 @@ function resolveOklch(path: string, view: Map<string, FlatToken>, stack: string[
   if (token.type !== 'color') fail(`contrast: token "${path}" is a ${token.type}, not a color`);
   const value = token.value;
   if (isRef(value)) return resolveOklch(pointerToPath(value.$ref, `Token "${path}"`), view, [...stack, path]);
-  const record = value as { components: unknown[]; alpha?: number };
+  const record = value as { components: unknown[]; alpha?: unknown };
   const channels = record.components.map((component) => {
     if (typeof component === 'number') return component;
     const ref = parseComponentPointer((component as { $ref: string }).$ref, `Token "${path}"`);
     const origin = resolveOklch(ref.path, view, [...stack, path]);
     return [origin.l, origin.c, origin.h][CHANNEL_INDEX[ref.channel]]!;
   });
-  return { l: channels[0]!, c: channels[1]!, h: channels[2]!, alpha: record.alpha ?? 1 };
+  const alpha = isRef(record.alpha)
+    ? resolveNumber(pointerToPath(record.alpha.$ref, `Token "${path}" alpha`), view, [...stack, path])
+    : ((record.alpha as number | undefined) ?? 1);
+  return { l: channels[0]!, c: channels[1]!, h: channels[2]!, alpha };
+}
+
+/** The literal a number token resolves to in one view of the graph. */
+function resolveNumber(path: string, view: Map<string, FlatToken>, stack: string[]): number {
+  if (stack.includes(path)) fail(`contrast: number "${path}" refers to itself through ${stack.join(' → ')}`);
+  const token = view.get(path);
+  if (!token) fail(`contrast: token "${path}" does not exist`);
+  if (token.type !== 'number') fail(`contrast: token "${path}" is a ${token.type}, not a number`);
+  if (isRef(token.value)) return resolveNumber(pointerToPath(token.value.$ref, `Token "${path}"`), view, [...stack, path]);
+  return token.value as number;
 }
 
 /** APCA Lc of `fg` painted on `bg`. `bg` must be opaque; a translucent `fg` is composited over it. */

@@ -443,6 +443,96 @@
       "context": null
     },
     {
+      "path": "opacity.0",
+      "type": "number",
+      "cssVar": "--todae-opacity-0",
+      "cssValue": "0",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "opacity.8",
+      "type": "number",
+      "cssVar": "--todae-opacity-8",
+      "cssValue": "0.08",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "opacity.10",
+      "type": "number",
+      "cssVar": "--todae-opacity-10",
+      "cssValue": "0.1",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "opacity.12",
+      "type": "number",
+      "cssVar": "--todae-opacity-12",
+      "cssValue": "0.12",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "opacity.14",
+      "type": "number",
+      "cssVar": "--todae-opacity-14",
+      "cssValue": "0.14",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "opacity.16",
+      "type": "number",
+      "cssVar": "--todae-opacity-16",
+      "cssValue": "0.16",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "opacity.20",
+      "type": "number",
+      "cssVar": "--todae-opacity-20",
+      "cssValue": "0.2",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "opacity.28",
+      "type": "number",
+      "cssVar": "--todae-opacity-28",
+      "cssValue": "0.28",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "opacity.45",
+      "type": "number",
+      "cssVar": "--todae-opacity-45",
+      "cssValue": "0.45",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "opacity.70",
+      "type": "number",
+      "cssVar": "--todae-opacity-70",
+      "cssValue": "0.7",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "radius.full",
       "type": "dimension",
       "cssVar": "--todae-radius-full",
@@ -617,7 +707,7 @@
       "path": "color.accent.soft",
       "type": "color",
       "cssVar": "--todae-color-accent-soft",
-      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.12)",
+      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-12))",
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "light"
@@ -626,7 +716,7 @@
       "path": "color.accent.soft-strong",
       "type": "color",
       "cssVar": "--todae-color-accent-soft-strong",
-      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.28)",
+      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-28))",
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "light"
@@ -653,7 +743,7 @@
       "path": "color.bg.highlight",
       "type": "color",
       "cssVar": "--todae-color-bg-highlight",
-      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.08)",
+      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-8))",
       "ref": "color.fg.default",
       "layer": "appearance",
       "context": "light"
@@ -662,7 +752,7 @@
       "path": "color.bg.pressed",
       "type": "color",
       "cssVar": "--todae-color-bg-pressed",
-      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.14)",
+      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-14))",
       "ref": "color.fg.default",
       "layer": "appearance",
       "context": "light"
@@ -671,7 +761,7 @@
       "path": "color.bg.scrim",
       "type": "color",
       "cssVar": "--todae-color-bg-scrim",
-      "cssValue": "oklch(from var(--todae-color-gray-950) l c h / 0.45)",
+      "cssValue": "oklch(from var(--todae-color-gray-950) l c h / var(--todae-opacity-45))",
       "ref": "color.gray.950",
       "layer": "appearance",
       "context": "light"
@@ -680,7 +770,7 @@
       "path": "color.bg.selected",
       "type": "color",
       "cssVar": "--todae-color-bg-selected",
-      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.2)",
+      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20))",
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "light"
@@ -707,7 +797,7 @@
       "path": "color.bg.transparent",
       "type": "color",
       "cssVar": "--todae-color-bg-transparent",
-      "cssValue": "oklch(from var(--todae-color-gray-50) l c h / 0)",
+      "cssValue": "oklch(from var(--todae-color-gray-50) l c h / var(--todae-opacity-0))",
       "ref": "color.gray.50",
       "layer": "appearance",
       "context": "light"
@@ -914,7 +1004,7 @@
       "path": "color.accent.soft",
       "type": "color",
       "cssVar": "--todae-color-accent-soft",
-      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.12)",
+      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-12))",
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "dark"
@@ -923,7 +1013,7 @@
       "path": "color.accent.soft-strong",
       "type": "color",
       "cssVar": "--todae-color-accent-soft-strong",
-      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.28)",
+      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-28))",
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "dark"
@@ -950,7 +1040,7 @@
       "path": "color.bg.highlight",
       "type": "color",
       "cssVar": "--todae-color-bg-highlight",
-      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.1)",
+      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-10))",
       "ref": "color.fg.default",
       "layer": "appearance",
       "context": "dark"
@@ -959,7 +1049,7 @@
       "path": "color.bg.pressed",
       "type": "color",
       "cssVar": "--todae-color-bg-pressed",
-      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / 0.16)",
+      "cssValue": "oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-16))",
       "ref": "color.fg.default",
       "layer": "appearance",
       "context": "dark"
@@ -968,7 +1058,7 @@
       "path": "color.bg.scrim",
       "type": "color",
       "cssVar": "--todae-color-bg-scrim",
-      "cssValue": "oklch(from var(--todae-color-gray-950) l c h / 0.7)",
+      "cssValue": "oklch(from var(--todae-color-gray-950) l c h / var(--todae-opacity-70))",
       "ref": "color.gray.950",
       "layer": "appearance",
       "context": "dark"
@@ -977,7 +1067,7 @@
       "path": "color.bg.selected",
       "type": "color",
       "cssVar": "--todae-color-bg-selected",
-      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / 0.2)",
+      "cssValue": "oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20))",
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "dark"
@@ -1004,7 +1094,7 @@
       "path": "color.bg.transparent",
       "type": "color",
       "cssVar": "--todae-color-bg-transparent",
-      "cssValue": "oklch(from var(--todae-color-gray-900) l c h / 0)",
+      "cssValue": "oklch(from var(--todae-color-gray-900) l c h / var(--todae-opacity-0))",
       "ref": "color.gray.900",
       "layer": "appearance",
       "context": "dark"
@@ -5108,8 +5198,8 @@
       "path": "spinner.track-tint",
       "type": "number",
       "cssVar": "--todae-spinner-track-tint",
-      "cssValue": "0.2",
-      "ref": null,
+      "cssValue": "var(--todae-opacity-20)",
+      "ref": "opacity.20",
       "layer": "contract",
       "context": null
     },
@@ -5234,8 +5324,8 @@
       "path": "code.tint",
       "type": "number",
       "cssVar": "--todae-code-tint",
-      "cssValue": "0.1",
-      "ref": null,
+      "cssValue": "var(--todae-opacity-10)",
+      "ref": "opacity.10",
       "layer": "contract",
       "context": null
     },
