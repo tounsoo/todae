@@ -158,6 +158,36 @@ describe('BottomSheet in a browser', () => {
     expect(box.width).toBeGreaterThan(window.innerWidth - 24);
   });
 
+  it('leaves room in its scrolling body for the focus ring of a control at its edge', async () => {
+    render(
+      <Themed>
+        <BottomSheet.Root open onOpenChange={() => undefined}>
+          <BottomSheet.Title>Filter</BottomSheet.Title>
+          <BottomSheet.Body data-testid="body">
+            <input aria-label="Filter" style={{ display: 'block', boxSizing: 'border-box', width: '100%' }} />
+          </BottomSheet.Body>
+        </BottomSheet.Root>
+      </Themed>,
+    );
+    await waitFor(() => expect(sheet().matches(':modal')).toBe(true));
+    const body = screen.getByTestId('body');
+    const style = getComputedStyle(body);
+    const room =
+      parseFloat(style.getPropertyValue('--todae-focus-ring-width')) +
+      parseFloat(style.getPropertyValue('--todae-focus-ring-offset'));
+    expect(room).toBeGreaterThan(0);
+    // The body clips at its padding box, so the ring needs that much room on every side.
+    const clip = body.getBoundingClientRect();
+    const input = screen.getByRole('textbox', { name: 'Filter' }).getBoundingClientRect();
+    expect(input.left - room).toBeGreaterThanOrEqual(clip.left);
+    expect(input.right + room).toBeLessThanOrEqual(clip.right);
+    expect(input.top - room).toBeGreaterThanOrEqual(clip.top);
+    // The negative margin gives the room back, so the content keeps the sheet's own padding line.
+    const edge = getComputedStyle(sheet());
+    const contentLeft = sheet().getBoundingClientRect().left + parseFloat(edge.borderLeftWidth) + parseFloat(edge.paddingLeft);
+    expect(input.left).toBeCloseTo(contentLeft, 0);
+  });
+
   it('closes on a scrim click but not on a click on the sheet', async () => {
     const onClose = vi.fn();
     render(<SheetHarness onClose={onClose} />);
