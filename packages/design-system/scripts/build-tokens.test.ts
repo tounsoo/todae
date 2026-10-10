@@ -761,6 +761,16 @@ describe('resolver-driven build', () => {
       'var(--todae-button-base-radius)',
     );
 
+    // Earlier is not enough across layers: a later core set may not read a contract token.
+    const lowerLater = await fixture((resolver) => {
+      resolver.sets.late = {
+        sources: [{ late: { radius: { $type: 'dimension', $value: { $ref: '#/button/base/radius/$value' } } } }],
+        $extensions: { 'dev.todae': { layer: 'core' } },
+      };
+      resolver.resolutionOrder.push({ $ref: '#/sets/late' });
+    });
+    await expect(buildTokensGraph(lowerLater)).rejects.toThrow(/must point at a lower layer than core/);
+
     const retyped = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({
         field: { tint: { a: { $type: 'dimension', $value: { $ref: '#/color/gray/50/$value' } } } },

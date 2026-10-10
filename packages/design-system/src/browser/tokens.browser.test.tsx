@@ -44,7 +44,7 @@ describe('shared focus ring tokens in a browser', () => {
     render(
       <div data-appearance="light" data-density="comfortable" style={{ ['--_todae-focus-ring-color' as string]: 'rgb(200, 0, 0)' }}>
         <Button.Root variant="secondary">Save</Button.Root>
-        <Checkbox.Root aria-label="Agree" />
+        <Checkbox.Root>Agree</Checkbox.Root>
       </div>,
     );
     await userEvent.tab();

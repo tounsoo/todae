@@ -4,7 +4,7 @@ Todae 위에 만드는 회사 디자인 시스템은 세 가지로 이루어집�
 
 ## 토큰 레이어
 
-Todae의 토큰은 `tokens/resolver.json`이 구동하는 DTCG 2025.10 파일입니다. 각 세트와 모디파이어는 `$extensions["dev.todae"].layer`에 자신의 레이어를 적고, 토큰은 더 낮은 레이어의 토큰만 참조할 수 있습니다. 같은 레이어라면 같은 세트나 모디파이어, 또는 `resolutionOrder`에서 더 앞에 있는 세트나 모디파이어의 토큰만 참조할 수 있습니다.
+Todae의 토큰은 `tokens/resolver.json`이 구동하는 DTCG 2025.10 파일입니다. 각 세트와 모디파이어는 `$extensions["dev.todae"].layer`에 자신의 레이어를 적고, 토큰은 더 낮은 레이어의 토큰이나, 같은 레이어에서는 같은 세트나 모디파이어 또는 `resolutionOrder`에서 더 앞에 있는 세트나 모디파이어의 토큰만 참조할 수 있습니다.
 
 - `core`: `color.gray.900`, `space.4` 같은 원시 스케일.
 - `appearance`: `color.fg.muted`, `color.accent.default` 같은 라이트와 다크용 시맨틱 색상.
