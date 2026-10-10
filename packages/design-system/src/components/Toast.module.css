@@ -87,7 +87,7 @@
     inset-block-start: 0;
   }
 
-  .item[data-exiting] {
+  .item[data-todae-exiting] {
     opacity: 0;
     transition-duration: var(--todae-toast-motion-exit);
   }
@@ -141,14 +141,14 @@
   /* Only the card peeks out from behind a toast that stays: the parts of
      its Toast.Root are hidden and let the pointer through until the stack
      spreads. They stay focusable, and keyboard focus inside spreads it. */
-  .region[data-layout='stack']:not([data-expanded]) .item:not([data-exiting]) ~ .item .root > * {
+  .region[data-layout='stack']:not([data-expanded]) .item:not([data-todae-exiting]) ~ .item .root > * {
     opacity: 0;
     pointer-events: none;
   }
 
   /* Hiding fades with the new toast in front fading in; showing is at once. */
   @media (prefers-reduced-motion: no-preference) {
-    .region[data-layout='stack']:not([data-expanded]) .item:not([data-exiting]) ~ .item .root > * {
+    .region[data-layout='stack']:not([data-expanded]) .item:not([data-todae-exiting]) ~ .item .root > * {
       transition: opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
     }
   }
@@ -195,7 +195,7 @@
     content: none;
   }
 
-  .region[data-layout='stack'] .item[data-exiting] {
+  .region[data-layout='stack'] .item[data-todae-exiting] {
     opacity: 0;
     transition-duration: var(--todae-toast-motion-exit);
   }

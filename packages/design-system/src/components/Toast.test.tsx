@@ -491,13 +491,13 @@ describe('Toast', () => {
     // Shows the id again right after the commit that ends the exit, before
     // the leaving toast's own effects run.
     const observer = new MutationObserver(() => {
-      if (readded || item.hasAttribute('data-exiting')) return;
+      if (readded || item.hasAttribute('data-todae-exiting')) return;
       readded = true;
       toaster.add({ id: 'x', title: 'Again' });
     });
     act(() => toaster.dismiss('x'));
-    expect(item.hasAttribute('data-exiting')).toBe(true);
-    observer.observe(item, { attributes: true, attributeFilter: ['data-exiting'] });
+    expect(item.hasAttribute('data-todae-exiting')).toBe(true);
+    observer.observe(item, { attributes: true, attributeFilter: ['data-todae-exiting'] });
     await waitFor(() => expect(readded).toBe(true));
     await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
     observer.disconnect();

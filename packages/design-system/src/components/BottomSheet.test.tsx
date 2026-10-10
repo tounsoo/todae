@@ -49,7 +49,7 @@ describe('BottomSheet', () => {
       </BottomSheet.Root>,
     );
     const sheet = document.querySelector('dialog') as HTMLElement;
-    const handle = document.querySelector('[data-sheet-drag-handle]');
+    const handle = document.querySelector('[data-todae-sheet-drag-handle]');
     expect(sheet).not.toBeNull();
     expect(handle).not.toBeNull();
     handle!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 7, clientY: 400 }));
@@ -72,7 +72,7 @@ describe('BottomSheet', () => {
         <BottomSheet.Body>list</BottomSheet.Body>
       </BottomSheet.Root>,
     );
-    const handle = document.querySelector('[data-sheet-drag-handle]');
+    const handle = document.querySelector('[data-todae-sheet-drag-handle]');
     expect(handle).not.toBeNull();
     handle!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientY: 100 }));
     window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientY: 500 }));
@@ -297,7 +297,7 @@ describe('BottomSheet', () => {
     );
     const sheet = document.querySelector('dialog') as HTMLElement;
     expect(sheet).not.toBeNull();
-    expect(sheet.hasAttribute('data-exiting')).toBe(true);
+    expect(sheet.hasAttribute('data-todae-exiting')).toBe(true);
     await waitFor(() => expect(document.querySelector('dialog')).toBeNull(), { timeout: 500 });
   });
 
@@ -341,14 +341,14 @@ describe('BottomSheet uncontrolled and close vetoes', () => {
       sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
     });
     expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
-    expect(sheet.hasAttribute('data-exiting')).toBe(true);
+    expect(sheet.hasAttribute('data-todae-exiting')).toBe(true);
     unmount();
     render(<BottomSheet.Root open onOpenChange={() => undefined} aria-label="s" />);
     sheet = screen.getByRole('dialog');
     act(() => {
       sheet.dispatchEvent(new Event('cancel', { cancelable: true }));
     });
-    expect(sheet.hasAttribute('data-exiting')).toBe(false);
+    expect(sheet.hasAttribute('data-todae-exiting')).toBe(false);
   });
 
   it('opens from defaultOpen and closes itself from BottomSheet.Close', async () => {

@@ -81,13 +81,13 @@ function announce(message: string, options?: AnnounceOptions): void {
   // A modal makes the rest of the page inert, so the region read is the one
   // in the modal in front of Todae's modal stack, or in body when none is
   // open. A modal stays in the stack until close(), so one in its exit
-  // motion (data-exiting) picks none yet: a message written there would be
+  // motion (data-todae-exiting) picks none yet: a message written there would be
   // hidden with it a moment later, and the rest of the page is still inert.
   // One that exits for too long is taken as it is: still open, and the only
   // part of the page that is not inert.
   const target = (now: number): HTMLElement | null => {
     const modal = frontModal();
-    if (modal?.hasAttribute('data-exiting') && now < start + EXIT_LIMIT) return null;
+    if (modal?.hasAttribute('data-todae-exiting') && now < start + EXIT_LIMIT) return null;
     return modal ?? document.body;
   };
   // Write only into the region the last check also picked: one that was

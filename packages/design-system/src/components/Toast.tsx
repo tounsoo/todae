@@ -236,7 +236,7 @@ function Item<T extends object>({
       ref={setNode}
       className={styles.item}
       data-entered={entered ? '' : undefined}
-      data-exiting={exiting ? '' : undefined}
+      data-todae-exiting={exiting ? '' : undefined}
       onKeyDown={(event) => {
         if (event.key !== 'Escape') return;
         // Escape belongs to the toast, not to a dialog or popover behind it,

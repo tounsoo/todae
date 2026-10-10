@@ -125,7 +125,7 @@ export function useSnapDrag({
       if (event.button !== 0 || pointerId != null) return;
       const target = event.target;
       if (!(target instanceof Element)) return;
-      const fromHandle = Boolean(target.closest('[data-sheet-drag-handle]'));
+      const fromHandle = Boolean(target.closest('[data-todae-sheet-drag-handle]'));
       const interactive = target.closest('button, a, input, select, textarea');
       if (interactive && !fromHandle) return;
       const body = bodyRef.current;

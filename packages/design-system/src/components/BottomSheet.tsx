@@ -106,7 +106,7 @@ function GrabberHandle({
     <div
       {...props}
       className={cx(styles.handle, className)}
-      data-sheet-drag-handle=""
+      data-todae-sheet-drag-handle=""
     >
       <button type="button" aria-label={ariaLabel} onKeyDown={onKeyDown} />
     </div>
@@ -127,7 +127,7 @@ function BottomSheetHeader({ className, ...props }: ComponentPropsWithRef<'div'>
     <div
       {...props}
       className={cx(styles.header, className)}
-      data-sheet-drag-handle=""
+      data-todae-sheet-drag-handle=""
     />
   );
 }
@@ -340,7 +340,7 @@ function BottomSheetRoot({
         className={cx(styles.sheet, className)}
         data-snap={currentSnap}
         data-entered={entered ? '' : undefined}
-        data-exiting={exiting ? '' : undefined}
+        data-todae-exiting={exiting ? '' : undefined}
         onPointerDown={(event: ReactPointerEvent<HTMLDialogElement>) => {
           onPointerDown?.(event);
           // Always tracked, so a click is judged by where its own press began.

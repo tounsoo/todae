@@ -52,12 +52,12 @@
     transition: none;
   }
 
-  .sheet[data-exiting] {
+  .sheet[data-todae-exiting] {
     bottom: calc(-1 * min(var(--_drag-height, var(--_rest-height)), 100dvh));
     transition: bottom var(--todae-sheet-motion-exit) var(--todae-overlay-motion-easing);
   }
 
-  .sheet[data-exiting]::backdrop {
+  .sheet[data-todae-exiting]::backdrop {
     opacity: 0;
     transition: opacity var(--todae-sheet-motion-exit) var(--todae-overlay-motion-easing);
   }

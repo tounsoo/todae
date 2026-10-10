@@ -218,7 +218,7 @@ export function DialogShellRoot({
         ref={dialogRefs}
         className={cx(shell.className, className)}
         data-entered={entered ? '' : undefined}
-        data-exiting={exiting ? '' : undefined}
+        data-todae-exiting={exiting ? '' : undefined}
         onPointerDown={(event) => {
           onPointerDown?.(event);
           // Always tracked, even when the consumer prevents it, so a later click

@@ -183,7 +183,7 @@ describe('A tip held open during an overlay exit motion', () => {
     await waitFor(() => expect(tipOf(held()!)).not.toBeNull());
     await waitFor(() => expect(document.getAnimations()).toHaveLength(0));
     rerender(<Overlay kind={kind} open={false} />);
-    expect(overlay.hasAttribute('data-exiting')).toBe(true);
+    expect(overlay.hasAttribute('data-todae-exiting')).toBe(true);
     expectTipFollowed(await sampleMotion(held), { minFrames: 2, minTravel: kind === 'Dialog' ? 0 : 40 });
   });
 });
