@@ -17,6 +17,8 @@ The input is `type="checkbox"` with `role="switch"`. Controlled and uncontrolled
 
 Density scales the track through `space.selection.size`. Do not put Switch inside `Field.Root`.
 
+The thumb slides and the track's color fades over `selection.motion.duration`. Both change at once when the user prefers reduced motion.
+
 ## Accessible composition
 
 **Todae handles:** The input is a native `<input type="checkbox">` with `role="switch"`, inside a `<label>` with your children, so the children are its name and it is reported as on or off. Space toggles it. `disabled` is native and `invalid` sets `aria-invalid`; both also come from a surrounding [Fieldset](/fieldset). The track is `aria-hidden` and shows the focus ring while the input is focus-visible. Other props, `aria-*` and `ref` included, go to the input; `className` goes to the label.

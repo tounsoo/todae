@@ -4,6 +4,10 @@
     "separator": {
       "color": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
       "thickness": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } }
+    },
+    "motion": {
+      "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/moderate/$value" } },
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/move/$value" } }
     }
   }
 }

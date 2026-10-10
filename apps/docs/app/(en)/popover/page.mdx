@@ -10,6 +10,8 @@ import { Table } from '@omsoo/todae/table';
 
 Non-modal `popover="manual"`. Outside click and Escape call `onOpenChange(false, reason)`. `hidePopover()` runs only after `open` is false, so a veto keeps it shown.
 
+The surface fades in over `popover.motion.enter` and fades out over `popover.motion.exit`, staying drawn until the fade ends. A [Menu](/menu) fades the same way. Neither fades when the user prefers reduced motion.
+
 No focus trap, no `aria-modal`, no scroll lock, no inert. No portal — the surface stays in the React tree so `ThemeProvider` vars inherit.
 
 Positioning is CSS anchors only. `getTriggerProps` sets `anchor-name`. `anchorRef` does the same when the trigger is not the anchor (Combobox Field). Content uses `position-anchor` and `top: calc(anchor(bottom) + var(--todae-popover-offset))` with `--todae-popover-offset: var(--todae-space-1)` (`4px`). Flip is `@position-try --todae-popover-flip-block` plus `position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline`. There is no JS pin, no `getBoundingClientRect` follow, and no rAF scroll glue.

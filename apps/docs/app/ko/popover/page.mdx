@@ -10,6 +10,8 @@ import { Table } from '@omsoo/todae/table';
 
 비모달 `popover="manual"`입니다. 바깥 클릭과 Escape는 `onOpenChange(false, reason)`을 호출합니다. `hidePopover()`는 `open`이 false가 된 뒤에만 실행되므로, 거부하면 계속 표시됩니다.
 
+표면은 `popover.motion.enter` 동안 서서히 나타나고 `popover.motion.exit` 동안 서서히 사라지며, 사라지는 동안에도 그려진 채로 남습니다. [Menu](/menu)도 같은 방식으로 나타나고 사라집니다. 사용자가 동작 줄이기를 선호하면 둘 다 페이드 없이 바뀝니다.
+
 포커스 트랩, `aria-modal`, 스크롤 잠금, inert가 없습니다. 포털도 없습니다. 표면이 React 트리 안에 머물러 `ThemeProvider` 변수를 상속합니다.
 
 위치는 CSS 앵커로만 정합니다. `getTriggerProps`가 `anchor-name`을 설정합니다. 트리거가 앵커가 아닐 때(Combobox의 Field)는 `anchorRef`가 같은 일을 합니다. 콘텐츠는 `position-anchor`와 `top: calc(anchor(bottom) + var(--todae-popover-offset))`을 쓰며, `--todae-popover-offset: var(--todae-space-1)`(`4px`)입니다. 뒤집기는 `@position-try --todae-popover-flip-block`과 `position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline`입니다. JS 고정, `getBoundingClientRect` 추적, rAF 스크롤 연결은 없습니다.

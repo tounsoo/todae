@@ -36,7 +36,7 @@ Give disclosures the same `name` and the browser keeps at most one of them open:
   <DisclosureAccordion />
 </Example>
 
-The marker is the browser's own and turns as the disclosure opens; to draw an icon instead, see Icons below. Content fades in over `disclosure.motion.duration`, and does not move when the user prefers reduced motion.
+The marker is the browser's own and turns as the disclosure opens; to draw an icon instead, see Icons below. Content fades in over `disclosure.motion.duration`, and in browsers with `interpolate-size` it also grows to its height. Neither happens when the user prefers reduced motion.
 
 ## Icons
 
@@ -55,7 +55,7 @@ import { ChevronDown } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** A focus ring on the summary, the marker's color, a chevron glyph hidden from screen readers, a divider between named disclosures, and no fade when the user prefers reduced motion. The rest is the browser's: the toggle on the summary, its expanded state, Enter and Space, closing the others in a named group, and find-in-page.
+**Todae handles:** A focus ring on the summary, the marker's color, a chevron glyph hidden from screen readers, a divider between named disclosures, and no motion when the user prefers reduced motion. The rest is the browser's: the toggle on the summary, its expanded state, Enter and Space, closing the others in a named group, and find-in-page.
 
 **You supply:** A `Disclosure.Summary` as the first child of each `Disclosure.Root`, with text that names what opens. If you put an icon of your own in the summary instead of a chevron glyph, give it `aria-hidden="true"`; the open state is already announced.
 

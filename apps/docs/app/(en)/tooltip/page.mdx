@@ -12,6 +12,8 @@ Pass `interactive: true` to [useTooltip](/utilities/use-tooltip). The surface is
 
 Placement is CSS anchors. The tip sits above the trigger and flips below when it cannot fit. There is no arrow and no placement prop. The tip is drawn in the top layer and placed against its trigger's untransformed box, so a trigger inside an element moved with a CSS transform gets its tip where the trigger would be without the transform.
 
+A tip fades in over `tooltip.motion.enter` and closes at once. An interactive panel also fades out, over `tooltip.motion.exit`. Neither fades when the user prefers reduced motion.
+
 ## Examples
 
 Overflow chips and other non-button triggers use [useTooltip](/utilities/use-tooltip), which has this demo's code. Mark a non-tabbable wrap with `tabIndex={0}`.

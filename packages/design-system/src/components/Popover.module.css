@@ -16,6 +16,31 @@
     pointer-events: auto;
   }
 
+  /* It fades in when shown and out when hidden, staying in the top layer and
+     displayed until the fade ends, unless the user prefers reduced motion. A
+     menu shares this class. */
+  @media (prefers-reduced-motion: no-preference) {
+    .content {
+      transition:
+        opacity var(--todae-popover-motion-exit) var(--todae-popover-motion-easing),
+        overlay var(--todae-popover-motion-exit) allow-discrete,
+        display var(--todae-popover-motion-exit) allow-discrete;
+    }
+
+    .content:not(:popover-open) {
+      opacity: 0;
+    }
+
+    .content:popover-open {
+      opacity: 1;
+      transition-duration: var(--todae-popover-motion-enter);
+
+      @starting-style {
+        opacity: 0;
+      }
+    }
+  }
+
   @supports (top: anchor(bottom)) {
     .content {
       top: calc(anchor(bottom) + var(--todae-popover-offset));

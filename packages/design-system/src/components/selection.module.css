@@ -122,6 +122,22 @@
     transform: translateX(calc(var(--todae-selection-size) * -0.8));
   }
 
+  /* The thumb slides and the track's color fades, unless the user prefers
+     reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .root[data-control='switch'] .indicator {
+      transition-property: background-color, border-color;
+      transition-duration: var(--todae-selection-motion-duration);
+      transition-timing-function: var(--todae-selection-motion-easing);
+    }
+
+    .root[data-control='switch'] .indicator::after {
+      transition-property: transform, background-color;
+      transition-duration: var(--todae-selection-motion-duration);
+      transition-timing-function: var(--todae-selection-motion-easing);
+    }
+  }
+
   .label {
     min-width: 0;
   }

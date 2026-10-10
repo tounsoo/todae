@@ -5,7 +5,9 @@
     "height": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "motion": {
-      "duration": { "$type": "duration", "$value": { "value": 1200, "unit": "ms" } }
+      "duration": { "$type": "duration", "$value": { "value": 1200, "unit": "ms" } },
+      "fill": { "$type": "duration", "$value": { "$ref": "#/motion/duration/moderate/$value" } },
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/move/$value" } }
     }
   },
   "meter": {

@@ -15,6 +15,7 @@ export const RESERVED_ROOTS = [
   'motion',
   'z',
   'focus',
+  'interaction',
   'button',
   'stack',
   'text',

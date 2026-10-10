@@ -289,6 +289,7 @@
   },
   "motion": {
     "duration": {
+      "faster": { "$type": "duration", "$value": { "value": 120, "unit": "ms" } },
       "fast": { "$type": "duration", "$value": { "value": 160, "unit": "ms" } },
       "normal": { "$type": "duration", "$value": { "value": 200, "unit": "ms" } },
       "moderate": { "$type": "duration", "$value": { "value": 240, "unit": "ms" } },
@@ -296,7 +297,8 @@
       "slower": { "$type": "duration", "$value": { "value": 300, "unit": "ms" } }
     },
     "easing": {
-      "standard": { "$type": "cubicBezier", "$value": [0.2, 0.8, 0.2, 1] }
+      "standard": { "$type": "cubicBezier", "$value": [0.2, 0.8, 0.2, 1] },
+      "move": { "$type": "cubicBezier", "$value": [0.4, 0, 0.2, 1] }
     }
   },
   "opacity": {

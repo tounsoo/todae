@@ -131,7 +131,11 @@ function Root(props: ToggleGroupRootProps) {
         }}
         role="group"
         data-orientation={orientation}
-        className={cx(orientation === 'horizontal' ? buttonStyles.group : styles.vertical, className)}
+        className={cx(
+          orientation === 'horizontal' ? buttonStyles.group : styles.vertical,
+          multiple ? undefined : styles.single,
+          className,
+        )}
       >
         {children}
       </div>
@@ -148,6 +152,7 @@ function Item({ value, disabled, onFocus, ...props }: ToggleGroupItemProps) {
     <Button.Root
       variant="secondary"
       {...props}
+      className={cx(styles.item, props.className)}
       {...roving}
       disabled={off}
       pressed={ctx.pressed.has(value)}

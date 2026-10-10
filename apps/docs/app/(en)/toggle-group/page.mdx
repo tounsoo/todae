@@ -4,7 +4,7 @@ import { ToggleGroupAlign, ToggleGroupStyles } from '../../../components/demos/T
 
 A set of toggle buttons that read as one control: text alignment, a view switcher, text styles. `ToggleGroup.Root` has `role="group"`, and each `ToggleGroup.Item` is a secondary [Button.Root](/button) with `aria-pressed`. The group takes one stop in the Tab order, on the pressed item in single mode and on the first item in multiple mode, and the arrow keys move focus between items without pressing them.
 
-In the default single mode, one item is pressed at most, and pressing it again clears the value to `null`.
+In the default single mode, one item is pressed at most, and pressing it again clears the value to `null`. The pressed item's ring is one line on the group, which slides to the next pressed item over `toolbar.motion.duration` while the fills fade. An item with another `variant` keeps a ring of its own. The ring moves without sliding when the user prefers reduced motion.
 
 ```tsx
 <ToggleGroup.Root aria-label="Alignment" value={align} onValueChange={setAlign}>

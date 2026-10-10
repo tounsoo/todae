@@ -6,7 +6,7 @@ import { MeterLevels, ProgressStates } from '../../../components/demos/NativeCon
 
 ## Progress
 
-`Progress.Root`는 작업이 얼마나 진행됐는지 보여 줍니다. 끝을 알 수 없으면 `value`를 빼세요. 띠가 트랙을 가로지르며, 사용자가 동작 줄이기를 요청하면 멈춥니다.
+`Progress.Root`는 작업이 얼마나 진행됐는지 보여 줍니다. 끝을 알 수 없으면 `value`를 빼세요. 띠가 트랙을 가로지르며, 사용자가 동작 줄이기를 요청하면 멈춥니다. `attr()`가 숫자를 읽는 브라우저에서는 새 `value`가 주어지면 채움이 `progress.motion.fill` 동안 그 값까지 부드럽게 늘어나거나 줄어듭니다. 그 밖의 브라우저와 동작 줄이기 상태에서는 채움이 바로 바뀝니다.
 
 <Example block>
   <ProgressStates />

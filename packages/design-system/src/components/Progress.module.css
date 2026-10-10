@@ -25,6 +25,38 @@
     background: var(--todae-progress-fill);
   }
 
+  /* Browsers do not animate their own fill, so where attr() reads numbers the
+     bar paints the fill itself, sized from its value and max, and a new value
+     eases the fill to it unless the user prefers reduced motion. Elsewhere the
+     browser's fill stays. */
+  @supports (x: attr(x type(*))) {
+    .progress:not(:indeterminate) {
+      background: linear-gradient(var(--todae-progress-fill), var(--todae-progress-fill)) no-repeat
+        var(--todae-progress-track);
+      background-size: clamp(
+          0%,
+          attr(value type(<number>), 0) / attr(max type(<number>), 1) * 100%,
+          100%
+        )
+        100%;
+    }
+
+    .progress:not(:indeterminate):dir(rtl) {
+      background-position: right;
+    }
+
+    .progress:not(:indeterminate)::-webkit-progress-bar,
+    .progress:not(:indeterminate)::-webkit-progress-value {
+      background: transparent;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .progress:not(:indeterminate) {
+        transition: background-size var(--todae-progress-motion-fill) var(--todae-progress-motion-easing);
+      }
+    }
+  }
+
   /* No value means the work has no known end: a band of fill sweeps the track.
      A percentage background-position moves the band across track minus band
      width, so the stops start and end with the band fully off the track. */
@@ -137,6 +169,13 @@
 
     .progress:indeterminate::-moz-progress-bar {
       background: transparent;
+    }
+
+    @supports (x: attr(x type(*))) {
+      .progress:not(:indeterminate) {
+        background-image: linear-gradient(Highlight, Highlight);
+        background-color: Canvas;
+      }
     }
 
     /* Longhands, so the band keeps the position the motion rules gave it. */

@@ -8,4 +8,74 @@
     align-items: stretch;
     gap: var(--todae-toolbar-gap);
   }
+
+  /* In single mode a secondary item's pressed ring is one line on the group,
+     anchored to the pressed item, so it slides to the next one while the fills
+     fade. The anchor is a pseudo-element, so an inline anchor-name from an
+     item's tooltip does not replace it. Other variants keep their own ring. */
+  .single {
+    position: relative;
+  }
+
+  .single > .item[data-button-variant='secondary'][aria-pressed='true'] {
+    position: relative;
+    box-shadow: none;
+  }
+
+  .single > .item[data-button-variant='secondary'][aria-pressed='true']::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    anchor-name: --todae-toggle-pressed;
+    pointer-events: none;
+  }
+
+  .single:has(> .item[data-button-variant='secondary'][aria-pressed='true'])::after {
+    content: '';
+    position: absolute;
+    position-anchor: --todae-toggle-pressed;
+    top: anchor(top);
+    right: anchor(right);
+    bottom: anchor(bottom);
+    left: anchor(left);
+    border-radius: 0;
+    box-shadow: inset 0 0 0 1px var(--todae-button-secondary-fg-active);
+    pointer-events: none;
+  }
+
+  .single:has(> .item[data-button-variant='secondary'][aria-pressed='true']:disabled)::after {
+    box-shadow: inset 0 0 0 1px var(--todae-button-secondary-fg-disabled);
+  }
+
+  /* The line takes the pressed item's corners: joined items round only the
+     group's outer ends, stacked ones round every corner. */
+  .single:has(> .item[data-button-variant='secondary'][aria-pressed='true']:first-of-type)::after {
+    border-start-start-radius: calc(var(--todae-button-base-radius) - 1px);
+    border-end-start-radius: calc(var(--todae-button-base-radius) - 1px);
+  }
+
+  .single:has(> .item[data-button-variant='secondary'][aria-pressed='true']:last-of-type)::after {
+    border-start-end-radius: calc(var(--todae-button-base-radius) - 1px);
+    border-end-end-radius: calc(var(--todae-button-base-radius) - 1px);
+  }
+
+  .vertical.single:has(> .item[data-button-variant='secondary'][aria-pressed='true'])::after {
+    border-radius: calc(var(--todae-button-base-radius) - 1px);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .single::after {
+      transition-property: top, right, bottom, left, border-radius;
+      transition-duration: var(--todae-toolbar-motion-duration);
+      transition-timing-function: var(--todae-toolbar-motion-easing);
+    }
+  }
+
+  /* Forced colors give the pressed item the system's selected colors instead
+     of a ring. */
+  @media (forced-colors: active) {
+    .single::after {
+      display: none;
+    }
+  }
 }

@@ -6,7 +6,7 @@ import { MeterLevels, ProgressStates } from '../../../components/demos/NativeCon
 
 ## Progress
 
-`Progress.Root` shows how far a task has come. Leave out `value` when the end is unknown: a band sweeps the track, and stops when the user asks for reduced motion.
+`Progress.Root` shows how far a task has come. Leave out `value` when the end is unknown: a band sweeps the track, and stops when the user asks for reduced motion. In browsers where `attr()` reads numbers, a new `value` eases the fill to it over `progress.motion.fill`. Elsewhere, and under reduced motion, the fill changes at once.
 
 <Example block>
   <ProgressStates />

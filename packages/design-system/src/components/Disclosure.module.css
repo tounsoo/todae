@@ -54,14 +54,26 @@
     border-radius: 2px;
   }
 
+  /* Content fades in and grows from no height to its own. interpolate-size
+     lets the height animate to auto. The clip margin keeps focus rings at the
+     content's edges from being cut off. */
+  .root {
+    interpolate-size: allow-keywords;
+  }
+
   .root::details-content {
+    block-size: 0;
+    overflow: clip;
+    overflow-clip-margin: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
     opacity: 0;
     transition:
+      block-size var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing),
       opacity var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing),
       content-visibility var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing) allow-discrete;
   }
 
   .root[open]::details-content {
+    block-size: auto;
     opacity: 1;
   }
 

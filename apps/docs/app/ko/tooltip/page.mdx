@@ -12,6 +12,8 @@ import { Table } from '@omsoo/todae/table';
 
 배치는 CSS 앵커로 합니다. 팁은 트리거 위에 놓이고, 공간이 부족하면 아래로 뒤집힙니다. 화살표와 배치 prop은 없습니다. 팁은 최상위 레이어에 그려지고 트리거의 transform 적용 전 상자를 기준으로 놓이므로, CSS transform으로 옮긴 요소 안의 트리거에서는 transform이 없을 때 트리거가 있을 자리에 팁이 나타납니다.
 
+팁은 `tooltip.motion.enter` 동안 서서히 나타나고, 닫힐 때는 바로 사라집니다. 인터랙티브 패널은 `tooltip.motion.exit` 동안 서서히 사라지기도 합니다. 사용자가 동작 줄이기를 선호하면 둘 다 페이드 없이 바뀝니다.
+
 ## 예시
 
 오버플로 칩과 버튼이 아닌 다른 트리거는 [useTooltip](/utilities/use-tooltip)을 씁니다. 이 데모의 코드도 그곳에 있습니다. 탭으로 이동할 수 없는 래퍼에는 `tabIndex={0}`을 지정하세요.

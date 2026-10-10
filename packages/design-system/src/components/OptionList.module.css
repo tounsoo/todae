@@ -134,4 +134,14 @@
       }
     }
   }
+
+  /* Hover, press and highlight colors fade, unless the user prefers reduced
+     motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .option {
+      transition-property: background-color, border-color, color;
+      transition-duration: var(--todae-interaction-motion-duration);
+      transition-timing-function: var(--todae-interaction-motion-easing);
+    }
+  }
 }

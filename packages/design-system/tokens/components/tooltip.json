@@ -9,6 +9,11 @@
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
     },
-    "max-width": { "$type": "dimension", "$value": { "value": 16, "unit": "rem" } }
+    "max-width": { "$type": "dimension", "$value": { "value": 16, "unit": "rem" } },
+    "motion": {
+      "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/fast/$value" } },
+      "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/faster/$value" } },
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } }
+    }
   }
 }

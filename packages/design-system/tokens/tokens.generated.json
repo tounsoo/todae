@@ -623,6 +623,15 @@
       "context": null
     },
     {
+      "path": "motion.duration.faster",
+      "type": "duration",
+      "cssVar": "--todae-motion-duration-faster",
+      "cssValue": "120ms",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "motion.duration.moderate",
       "type": "duration",
       "cssVar": "--todae-motion-duration-moderate",
@@ -654,6 +663,15 @@
       "type": "duration",
       "cssVar": "--todae-motion-duration-slower",
       "cssValue": "300ms",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "motion.easing.move",
+      "type": "cubicBezier",
+      "cssVar": "--todae-motion-easing-move",
+      "cssValue": "cubic-bezier(0.4, 0, 0.2, 1)",
       "ref": null,
       "layer": "core",
       "context": null
@@ -2873,6 +2891,24 @@
       "context": null
     },
     {
+      "path": "interaction.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-interaction-motion-duration",
+      "cssValue": "var(--todae-motion-duration-faster)",
+      "ref": "motion.duration.faster",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "interaction.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-interaction-motion-easing",
+      "cssValue": "var(--todae-motion-easing-standard)",
+      "ref": "motion.easing.standard",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.bg.default",
       "type": "color",
       "cssVar": "--todae-field-bg-default",
@@ -4178,6 +4214,33 @@
       "context": null
     },
     {
+      "path": "popover.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-popover-motion-easing",
+      "cssValue": "var(--todae-motion-easing-standard)",
+      "ref": "motion.easing.standard",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.motion.enter",
+      "type": "duration",
+      "cssVar": "--todae-popover-motion-enter",
+      "cssValue": "var(--todae-motion-duration-fast)",
+      "ref": "motion.duration.fast",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "popover.motion.exit",
+      "type": "duration",
+      "cssVar": "--todae-popover-motion-exit",
+      "cssValue": "var(--todae-motion-duration-faster)",
+      "ref": "motion.duration.faster",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "popover.padding.x",
       "type": "dimension",
       "cssVar": "--todae-popover-padding-x",
@@ -4246,6 +4309,33 @@
       "cssVar": "--todae-tooltip-max-width",
       "cssValue": "16rem",
       "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-tooltip-motion-easing",
+      "cssValue": "var(--todae-motion-easing-standard)",
+      "ref": "motion.easing.standard",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.motion.enter",
+      "type": "duration",
+      "cssVar": "--todae-tooltip-motion-enter",
+      "cssValue": "var(--todae-motion-duration-fast)",
+      "ref": "motion.duration.fast",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.motion.exit",
+      "type": "duration",
+      "cssVar": "--todae-tooltip-motion-exit",
+      "cssValue": "var(--todae-motion-duration-faster)",
+      "ref": "motion.duration.faster",
       "layer": "contract",
       "context": null
     },
@@ -4685,8 +4775,8 @@
       "path": "tabs.motion.duration",
       "type": "duration",
       "cssVar": "--todae-tabs-motion-duration",
-      "cssValue": "var(--todae-motion-duration-normal)",
-      "ref": "motion.duration.normal",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
       "layer": "contract",
       "context": null
     },
@@ -4694,8 +4784,8 @@
       "path": "tabs.motion.easing",
       "type": "cubicBezier",
       "cssVar": "--todae-tabs-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssValue": "var(--todae-motion-easing-move)",
+      "ref": "motion.easing.move",
       "layer": "contract",
       "context": null
     },
@@ -4858,6 +4948,24 @@
       "cssVar": "--todae-selection-indicator-fg",
       "cssValue": "var(--todae-color-on-accent)",
       "ref": "color.on-accent",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "selection.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-selection-motion-duration",
+      "cssValue": "var(--todae-motion-duration-fast)",
+      "ref": "motion.duration.fast",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "selection.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-selection-motion-easing",
+      "cssValue": "var(--todae-motion-easing-move)",
+      "ref": "motion.easing.move",
       "layer": "contract",
       "context": null
     },
@@ -5744,6 +5852,24 @@
       "context": null
     },
     {
+      "path": "progress.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-progress-motion-easing",
+      "cssValue": "var(--todae-motion-easing-move)",
+      "ref": "motion.easing.move",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "progress.motion.fill",
+      "type": "duration",
+      "cssVar": "--todae-progress-motion-fill",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "progress.radius",
       "type": "dimension",
       "cssVar": "--todae-progress-radius",
@@ -6307,6 +6433,24 @@
       "cssVar": "--todae-toolbar-gap",
       "cssValue": "var(--todae-space-inline-gap)",
       "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toolbar.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-toolbar-motion-duration",
+      "cssValue": "var(--todae-motion-duration-moderate)",
+      "ref": "motion.duration.moderate",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toolbar.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-toolbar-motion-easing",
+      "cssValue": "var(--todae-motion-easing-move)",
+      "ref": "motion.easing.move",
       "layer": "contract",
       "context": null
     },

@@ -17,6 +17,30 @@
     display: none;
   }
 
+  /* It fades in when it opens, unless the user prefers reduced motion. A tip
+     unmounts when it closes, so only an interactive panel fades out. */
+  @media (prefers-reduced-motion: no-preference) {
+    .content {
+      transition:
+        opacity var(--todae-tooltip-motion-exit) var(--todae-tooltip-motion-easing),
+        overlay var(--todae-tooltip-motion-exit) allow-discrete,
+        display var(--todae-tooltip-motion-exit) allow-discrete;
+    }
+
+    .content:not([data-open]) {
+      opacity: 0;
+    }
+
+    .content[data-open] {
+      opacity: 1;
+      transition-duration: var(--todae-tooltip-motion-enter);
+
+      @starting-style {
+        opacity: 0;
+      }
+    }
+  }
+
   .content[data-surface='tip'] {
     /* The popover UA style scrolls overflow; a tip shows all its text. */
     overflow: visible;

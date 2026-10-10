@@ -17,6 +17,8 @@ import { SwitchStates } from '../../../components/demos/SwitchDemo';
 
 밀도는 `space.selection.size`로 트랙 크기를 조정합니다. Switch를 `Field.Root` 안에 넣지 마세요.
 
+썸은 `selection.motion.duration` 동안 미끄러지고 트랙의 색은 서서히 바뀝니다. 사용자가 동작 줄이기를 선호하면 둘 다 바로 바뀝니다.
+
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** 입력은 `role="switch"`를 가진 네이티브 `<input type="checkbox">`이며, children과 함께 `<label>` 안에 있습니다. 그래서 children이 이름이 되고, 켜짐이나 꺼짐으로 알려집니다. Space로 토글합니다. `disabled`는 네이티브이고 `invalid`는 `aria-invalid`를 설정합니다. 둘 다 바깥 [Fieldset](/fieldset)에서도 옵니다. 트랙은 `aria-hidden`이고, 입력이 focus-visible인 동안 포커스 링을 보여 줍니다. `aria-*`와 `ref`를 포함한 다른 props는 입력으로 가고, `className`은 label로 갑니다.

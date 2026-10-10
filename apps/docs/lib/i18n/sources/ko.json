@@ -138,9 +138,9 @@
   "disclosure": {
     "(top)": "2e46991fea65",
     "# Disclosure": "2b4e1c93378c",
-    "## Accordion": "dedb3bcd061b",
+    "## Accordion": "41465f0e0ecc",
     "## Icons": "45da985b6b16",
-    "## Accessible composition": "05aa8f7934a1",
+    "## Accessible composition": "88fb499c72a2",
     "## When to use": "e742af5b01d9",
     "## Props": "1ff9b4973419",
     "(section order)": "a6ce995bf6d0"
@@ -281,7 +281,7 @@
   },
   "popover": {
     "(top)": "92cfbd518576",
-    "# Popover": "cb975c77244b",
+    "# Popover": "abaafa86ab3a",
     "## Examples": "b71b9ec78d34",
     "## What goes where": "29b404e398a5",
     "## Accessible composition": "3195d8b658e7",
@@ -292,7 +292,7 @@
   "progress": {
     "(top)": "63cb86569d79",
     "# Progress and Meter": "34527c314abd",
-    "## Progress": "b3172d1f21c4",
+    "## Progress": "c109d21adbcb",
     "## Meter": "1bca2e60ddeb",
     "## Accessible composition": "c35050e7f172",
     "## When to use": "02f1c1910865",
@@ -374,7 +374,7 @@
   },
   "switch": {
     "(top)": "5b6bda868294",
-    "# Switch": "6931b4a6990c",
+    "# Switch": "939da9ed9a9d",
     "## Accessible composition": "861816c2022e",
     "## When to use": "f1b8decec311",
     "## Props": "94ba42ce1646",
@@ -420,7 +420,7 @@
   },
   "toggle-group": {
     "(top)": "00e70da2439c",
-    "# ToggleGroup": "fa4897ef75b2",
+    "# ToggleGroup": "d3bb58cea7fc",
     "## Accessible composition": "dc7693b6a613",
     "## When to use": "7f754185d7b0",
     "## Props": "862a7b077e89",
@@ -449,7 +449,7 @@
   },
   "tooltip": {
     "(top)": "a39289793847",
-    "# Tooltip": "b926b9d66879",
+    "# Tooltip": "73a451f0de95",
     "## Examples": "15cee637b896",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "46b44ad23966",

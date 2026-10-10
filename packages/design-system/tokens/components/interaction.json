@@ -1,0 +1,8 @@
+{
+  "interaction": {
+    "motion": {
+      "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/faster/$value" } },
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } }
+    }
+  }
+}

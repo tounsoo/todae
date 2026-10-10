@@ -40,7 +40,7 @@ const CORE_READS: Record<string, string[]> = {
   Field: ['space'],
 };
 // Contract groups every component shares.
-const SHARED_ROOTS = ['overlay', 'focus'];
+const SHARED_ROOTS = ['overlay', 'focus', 'interaction'];
 // Which component's tokens each sheet reads, when its name is not the root.
 const OWN_ROOTS: Record<string, string[]> = {
   BottomSheet: ['sheet'],
@@ -51,8 +51,9 @@ const OWN_ROOTS: Record<string, string[]> = {
   ChipList: ['chip'],
   // Native <select> options take the OptionList look.
   Field: ['field', 'option'],
-  // A toggle group is a toolbar segment and spaces its items like one.
-  ToggleGroup: ['toolbar'],
+  // A toggle group is a toolbar segment and spaces its items like one. Its
+  // items are buttons, and its sliding ring copies a pressed button's.
+  ToggleGroup: ['toolbar', 'button'],
   // Progress and meter share one sheet.
   Progress: ['progress', 'meter'],
 };
@@ -105,7 +106,8 @@ describe('token consistency across component styles', () => {
       expect({ name, pill: /\b9{3,}px/.test(plain) }).toEqual({ name, pill: false });
       expect({ name, leading: /line-height:\s*1\.25\b/.test(plain) }).toEqual({ name, leading: false });
       // Button's border stays 1px: button.base is a fixed contract (radius, padding, font, gap).
-      if (name === 'Button') continue;
+      // ToggleGroup's sliding ring sits inside that border, so it subtracts it.
+      if (name === 'Button' || name === 'ToggleGroup') continue;
       const hairline = /\bborder[-a-z]*:[^;]*\b1px\b|calc\([^;]*\b1px\b/.test(plain);
       expect({ name, hairline }).toEqual({ name, hairline: false });
     }

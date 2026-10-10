@@ -35,6 +35,10 @@
     },
     "thumb": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } }
+    },
+    "motion": {
+      "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/fast/$value" } },
+      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/move/$value" } }
     }
   }
 }
