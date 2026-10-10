@@ -39,26 +39,26 @@ CSS 앵커가 없는 브라우저는 표면을 트리거 옆에 놓지 않습니
 ## 무엇을 어디에 두나요
 
 <Table.Root>
-  <thead>
-    <tr>
-      <th scope="col">관심사</th>
-      <th scope="col">API</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">동작</th>
-      <td>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">관심사</Table.HeaderCell>
+      <Table.HeaderCell scope="col">API</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">동작</Table.HeaderCell>
+      <Table.Cell>
         <LocalizedLink href="/utilities/use-popover"><Code.Root>usePopover</Code.Root></LocalizedLink> — <Code.Root>open</Code.Root> / <Code.Root>defaultOpen</Code.Root> / <Code.Root>onOpenChange</Code.Root>, <Code.Root>haspopup</Code.Root>, <Code.Root>anchorRef</Code.Root>, 포커스 ref, <Code.Root>enabled</Code.Root>, <Code.Root>id</Code.Root>
-      </td>
-    </tr>
-    <tr>
-      <th scope="row">외형</th>
-      <td>
+      </Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">외형</Table.HeaderCell>
+      <Table.Cell>
         <Code.Root>Popover</Code.Root> — <Code.Root>children</Code.Root>, <Code.Root>className</Code.Root>, <Code.Root>style</Code.Root>, 접근 가능한 이름
-      </td>
-    </tr>
-  </tbody>
+      </Table.Cell>
+    </Table.Row>
+  </Table.Body>
 </Table.Root>
 
 ## 접근성을 지키는 조합

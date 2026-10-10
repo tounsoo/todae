@@ -2,7 +2,7 @@ import { TableOfInvoices } from '../../../components/demos/NativeDemo';
 
 # Table
 
-`Table.Root` is a native `<table>` styled from the `table` contract tokens. Write its caption, rows and cells as plain `<caption>`, `<thead>`, `<tbody>`, `<tr>`, `<th>` and `<td>` inside: they keep the meaning the browser gives them, and the root styles them. Numbers use tabular figures, so digits have equal width; give a numeric column `text-align: end` so its values line up on the right.
+`Table.Root` is a native `<table>` styled from the `table` contract tokens. Build it from its parts: `Table.Caption`, `Table.Head`, `Table.Body`, `Table.Foot`, `Table.Row`, `Table.HeaderCell` and `Table.Cell` render `<caption>`, `<thead>`, `<tbody>`, `<tfoot>`, `<tr>`, `<th>` and `<td>`, so the table keeps the meaning the browser gives it. The caption and cell parts carry the styles, so a plain `<th>` or `<td>` inside the root gets none. Numbers use tabular figures, so digits have equal width; give a numeric column `text-align: end` so its values line up on the right.
 
 <Example>
   <TableOfInvoices />
@@ -10,31 +10,31 @@ import { TableOfInvoices } from '../../../components/demos/NativeDemo';
 
 ```tsx
 <Table.Root>
-	<caption>Invoices this quarter</caption>
-	<thead>
-		<tr>
-			<th scope="col">Invoice</th>
-			<th scope="col">Amount</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td>INV-1042</td>
-			<td>$1,200.00</td>
-		</tr>
-	</tbody>
+	<Table.Caption>Invoices this quarter</Table.Caption>
+	<Table.Head>
+		<Table.Row>
+			<Table.HeaderCell scope="col">Invoice</Table.HeaderCell>
+			<Table.HeaderCell scope="col">Amount</Table.HeaderCell>
+		</Table.Row>
+	</Table.Head>
+	<Table.Body>
+		<Table.Row>
+			<Table.Cell>INV-1042</Table.Cell>
+			<Table.Cell>$1,200.00</Table.Cell>
+		</Table.Row>
+	</Table.Body>
 </Table.Root>
 ```
 
-Server Components can import it from `@omsoo/todae/table`. Give every column header `scope="col"` and every row header `scope="row"`. A `<caption>` names the table for screen readers. Restyle through `table.border`, `table.rule.thickness`, `table.header.*`, `table.caption.fg` and `table.cell.padding.*`; the padding follows density.
+Server Components can import it from `@omsoo/todae/table`. Give every column header `scope="col"` and every row header `scope="row"`. A `Table.Caption` names the table for screen readers. Restyle through `table.border`, `table.rule.thickness`, `table.header.*`, `table.caption.fg` and `table.cell.padding.*`; the padding follows density.
 
 ## Accessible composition
 
-**Todae handles:** Style only. The native `<table>`, `<caption>`, `<th>` and `<td>` keep their meaning, and Todae adds no role, ARIA or keyboard behaviour. Header cells get their own weight and color, so they stand out without a shade.
+**Todae handles:** Style only. The native `<table>`, `<caption>`, `<th>` and `<td>` the parts render keep their meaning, and Todae adds no role, ARIA or keyboard behaviour. Header cells get their own weight and color, so they stand out without a shade.
 
-**You supply:** A name for the table: a `<caption>`, or `aria-labelledby` pointing at a heading. A `<th>` with `scope` for every header, as above. For a table wider than its container, a scrolling wrapper with `tabIndex={0}`, `role="region"` and a name, so keyboard users can scroll it.
+**You supply:** A name for the table: a `Table.Caption`, or `aria-labelledby` pointing at a heading. A `Table.HeaderCell` with `scope` for every header, as above. For a table wider than its container, a scrolling wrapper with `tabIndex={0}`, `role="region"` and a name, so keyboard users can scroll it.
 
-**Watch for:** A table drawn from `div`s, which has no rows or headers for assistive technology. Bold `<td>` cells used as headers. A row made clickable with `onClick` on `<tr>`: it takes no focus, so put a link or button in a cell. A sortable column without a `<button>` in its `<th>` and `aria-sort` on the `<th>`; Todae adds neither.
+**Watch for:** A table drawn from `div`s, which has no rows or headers for assistive technology. Bold `Table.Cell` cells used as headers. A row made clickable with `onClick` on `Table.Row`: it takes no focus, so put a link or button in a cell. A sortable column without a `<button>` in its `Table.HeaderCell` and `aria-sort` on the `Table.HeaderCell`; Todae adds neither.
 
 ## When to use
 
@@ -45,3 +45,17 @@ Server Components can import it from `@omsoo/todae/table`. Give every column hea
 ## Props
 
 <PropsTable name="Table.Root" />
+
+<PropsTable name="Table.Caption" />
+
+<PropsTable name="Table.Head" />
+
+<PropsTable name="Table.Body" />
+
+<PropsTable name="Table.Foot" />
+
+<PropsTable name="Table.Row" />
+
+<PropsTable name="Table.HeaderCell" />
+
+<PropsTable name="Table.Cell" />

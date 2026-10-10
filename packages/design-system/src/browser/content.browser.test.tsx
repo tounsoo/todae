@@ -97,19 +97,19 @@ function Gallery() {
       </Disclosure.Root>
       <Separator.Root />
       <Table.Root>
-        <caption>Invoices</caption>
-        <thead>
-          <tr>
-            <th scope="col">Month</th>
-            <th scope="col">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">May</th>
-            <td>$120</td>
-          </tr>
-        </tbody>
+        <Table.Caption>Invoices</Table.Caption>
+        <Table.Head>
+          <Table.Row>
+            <Table.HeaderCell scope="col">Month</Table.HeaderCell>
+            <Table.HeaderCell scope="col">Total</Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        <Table.Body>
+          <Table.Row>
+            <Table.HeaderCell scope="row">May</Table.HeaderCell>
+            <Table.Cell>$120</Table.Cell>
+          </Table.Row>
+        </Table.Body>
       </Table.Root>
       <label>
         Upload
@@ -383,21 +383,21 @@ describe('content parts in a browser', () => {
     render(
       <Themed>
         <Table.Root>
-          <thead>
-            <tr>
-              <th scope="col" data-testid="col">
+          <Table.Head>
+            <Table.Row>
+              <Table.HeaderCell scope="col" data-testid="col">
                 Month
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row" data-testid="row">
+              </Table.HeaderCell>
+            </Table.Row>
+          </Table.Head>
+          <Table.Body>
+            <Table.Row>
+              <Table.HeaderCell scope="row" data-testid="row">
                 May
-              </th>
-              <td data-testid="cell">$120</td>
-            </tr>
-          </tbody>
+              </Table.HeaderCell>
+              <Table.Cell data-testid="cell">$120</Table.Cell>
+            </Table.Row>
+          </Table.Body>
         </Table.Root>
         <Progress.Root data-testid="progress" value={40} max={100} />
         <Progress.Root data-testid="busy" />
@@ -521,11 +521,12 @@ describe('content parts in a browser', () => {
     render(
       <Themed>
         <Table.Root data-testid="styled">
-          <tbody>
-            <tr>
-              <td data-testid="styled-cell">a</td>
-            </tr>
-          </tbody>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell data-testid="styled-cell">a</Table.Cell>
+              <td data-testid="plain-part-cell">a</td>
+            </Table.Row>
+          </Table.Body>
         </Table.Root>
         <table>
           <tbody>
@@ -541,6 +542,8 @@ describe('content parts in a browser', () => {
     const style = (id: string) => getComputedStyle(screen.getByTestId(id));
     expect(style('styled-cell').borderBottomStyle).toBe('solid');
     expect(style('plain-cell').borderBottomStyle).toBe('none');
+    // Only the parts carry the cell styles, even inside Table.Root.
+    expect(style('plain-part-cell').borderBottomStyle).toBe('none');
     expect(style('rule').borderTopColor).not.toBe(style('plain-rule').borderTopColor);
   });
 

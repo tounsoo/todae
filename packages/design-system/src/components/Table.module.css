@@ -1,6 +1,7 @@
 @layer todae.components.native {
   /* Native table semantics stay as they are; Todae only sets the rules,
-     padding and header weight. Cells of a table nested inside take its own root's styles. */
+     padding and header weight. Each part carries its own class, so plain
+     elements and the cells of a nested plain table take no Todae style. */
   .root {
     inline-size: 100%;
     border-collapse: collapse;
@@ -8,13 +9,14 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .root > caption {
+  .caption {
     padding-block-end: var(--todae-table-cell-padding-y);
     color: var(--todae-table-caption-fg);
     text-align: start;
   }
 
-  .root > * > tr > :is(th, td) {
+  .headerCell,
+  .cell {
     padding-block: var(--todae-table-cell-padding-y);
     padding-inline: var(--todae-table-cell-padding-x);
     border-block-end: var(--todae-table-rule-thickness) solid var(--todae-table-border);
@@ -24,12 +26,12 @@
 
   /* Column and row headers share one weight and color; column headers sit
      above a stronger rule instead of a shade, so they read on any surface. */
-  .root > * > tr > th {
+  .headerCell {
     color: var(--todae-table-header-fg);
     font-weight: var(--todae-table-header-font-weight);
   }
 
-  .root > thead > tr > th {
+  .head > * > .headerCell {
     border-block-end-color: var(--todae-table-header-border);
   }
 }

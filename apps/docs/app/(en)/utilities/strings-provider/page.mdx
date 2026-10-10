@@ -1,3 +1,6 @@
+import { Table } from '@omsoo/todae/table';
+import { ScrollRegion } from '../../../../components/OverflowRegion';
+
 # StringsProvider
 
 `StringsProvider` sets the text Todae writes by itself for everything inside it: the default names of parts with no words of their own, such as an icon-only `Dialog.Close`, and screen reader messages, such as those of `Field.Counter`. Todae ships English only. Pass the keys you want to change; each key you leave out comes from the nearest `StringsProvider` above, else English. It renders no element.
@@ -34,22 +37,89 @@ A part's own prop still wins over the provider: a non-empty `aria-label` on a cl
 
 A string that depends on a number or a label is a function.
 
-| Key | Used by | English |
-| --- | --- | --- |
-| `close` | `Dialog.Close`, `BottomSheet.Close` without words | `Close` |
-| `dismiss` | `Alert.Close`, `Toast.Close` without words | `Dismiss` |
-| `notifications` | `Toast.Region` landmark | `Notifications` |
-| `breadcrumbs` | `Breadcrumbs.Root` landmark | `Breadcrumb` |
-| `pagination` | `Pagination.Root` landmark | `Pagination` |
-| `resizeSheet` | `BottomSheet.Grabber` | `Resize sheet` |
-| `options` | `getSheetProps()` of `useCombobox` | `Options` |
-| `removeChip(label)` | Chip remove buttons | `Remove {label}` |
-| `moreChips(count)` | `+N` chips | `{count} more` |
-| `moreChipsPanel(count)` | `ChipList` popover of folded chips | `{count} more chips`, or `1 more chip` |
-| `characterLimit(max)` | `Field.Counter`, the input's description | `Up to {max} characters` |
-| `charactersLeft(remaining)` | `Field.Counter`, from 20 left | `{remaining} characters left`, or `1 character left` |
-| `characterLimitReached` | `Field.Counter`, at or past the limit | `Character limit reached` |
-| `createOption(query)` | `useCombobox`'s create row, without `createLabel` | `Create "{query}"` |
+<ScrollRegion>
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">Key</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Used by</Table.HeaderCell>
+      <Table.HeaderCell scope="col">English</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`close`</Table.HeaderCell>
+      <Table.Cell>`Dialog.Close`, `BottomSheet.Close` without words</Table.Cell>
+      <Table.Cell>`Close`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`dismiss`</Table.HeaderCell>
+      <Table.Cell>`Alert.Close`, `Toast.Close` without words</Table.Cell>
+      <Table.Cell>`Dismiss`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`notifications`</Table.HeaderCell>
+      <Table.Cell>`Toast.Region` landmark</Table.Cell>
+      <Table.Cell>`Notifications`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`breadcrumbs`</Table.HeaderCell>
+      <Table.Cell>`Breadcrumbs.Root` landmark</Table.Cell>
+      <Table.Cell>`Breadcrumb`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`pagination`</Table.HeaderCell>
+      <Table.Cell>`Pagination.Root` landmark</Table.Cell>
+      <Table.Cell>`Pagination`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`resizeSheet`</Table.HeaderCell>
+      <Table.Cell>`BottomSheet.Grabber`</Table.Cell>
+      <Table.Cell>`Resize sheet`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`options`</Table.HeaderCell>
+      <Table.Cell>`getSheetProps()` of `useCombobox`</Table.Cell>
+      <Table.Cell>`Options`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`removeChip(label)`</Table.HeaderCell>
+      <Table.Cell>Chip remove buttons</Table.Cell>
+      <Table.Cell>`Remove {label}`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`moreChips(count)`</Table.HeaderCell>
+      <Table.Cell>`+N` chips</Table.Cell>
+      <Table.Cell>`{count} more`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`moreChipsPanel(count)`</Table.HeaderCell>
+      <Table.Cell>`ChipList` popover of folded chips</Table.Cell>
+      <Table.Cell>`{count} more chips`, or `1 more chip`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`characterLimit(max)`</Table.HeaderCell>
+      <Table.Cell>`Field.Counter`, the input's description</Table.Cell>
+      <Table.Cell>`Up to {max} characters`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`charactersLeft(remaining)`</Table.HeaderCell>
+      <Table.Cell>`Field.Counter`, from 20 left</Table.Cell>
+      <Table.Cell>`{remaining} characters left`, or `1 character left`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`characterLimitReached`</Table.HeaderCell>
+      <Table.Cell>`Field.Counter`, at or past the limit</Table.Cell>
+      <Table.Cell>`Character limit reached`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`createOption(query)`</Table.HeaderCell>
+      <Table.Cell>`useCombobox`'s create row, without `createLabel`</Table.Cell>
+      <Table.Cell>`Create "{query}"`</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+</ScrollRegion>
 
 `Breadcrumbs` and `Pagination` from the server entries, `@omsoo/todae/breadcrumbs` and `@omsoo/todae/pagination`, render on the server without context, so they always use English. Pass `aria-label`, or import them from `@omsoo/todae` to use the provider.
 

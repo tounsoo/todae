@@ -2276,14 +2276,104 @@
       ]
     },
     {
-      "name": "Table.Root",
-      "description": "A native table styled from the table tokens. Takes native table attributes; write the caption, rows and cells as plain elements inside.",
+      "name": "Table.Body",
+      "description": "A native tbody. Takes native tbody attributes.",
       "props": [
         {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "A caption, then thead, tbody and tfoot with their rows and cells."
+          "description": "Table.Row parts with the data."
+        }
+      ]
+    },
+    {
+      "name": "Table.Caption",
+      "description": "A native caption: the table's name for screen readers. Put it first in Table.Root; takes native caption attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "What the table holds."
+        }
+      ]
+    },
+    {
+      "name": "Table.Cell",
+      "description": "A native td styled from the table tokens. Takes native td attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The cell content."
+        }
+      ]
+    },
+    {
+      "name": "Table.Foot",
+      "description": "A native tfoot, for totals or notes under the data. Takes native tfoot attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Table.Row parts with the totals."
+        }
+      ]
+    },
+    {
+      "name": "Table.Head",
+      "description": "A native thead styled from the table tokens: its header cells sit above a stronger rule. Takes native thead attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Table.Row parts with the column headers."
+        }
+      ]
+    },
+    {
+      "name": "Table.HeaderCell",
+      "description": "A native th styled from the table.header tokens: a column or row header. Takes native th attributes.",
+      "props": [
+        {
+          "name": "scope",
+          "type": "'col' | 'row' | 'colgroup' | 'rowgroup'",
+          "required": false,
+          "description": "Which cells it heads: col in Table.Head, row for the first cell of a body row."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The header text."
+        }
+      ]
+    },
+    {
+      "name": "Table.Root",
+      "description": "A native table styled from the table tokens. Takes native table attributes; build its caption, rows and cells from the Table parts.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A Table.Caption, then Table.Head, Table.Body and Table.Foot with their rows and cells."
+        }
+      ]
+    },
+    {
+      "name": "Table.Row",
+      "description": "A native tr. Takes native tr attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Table.HeaderCell and Table.Cell parts."
         }
       ]
     },

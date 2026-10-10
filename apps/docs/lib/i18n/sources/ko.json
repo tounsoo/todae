@@ -270,7 +270,7 @@
     "(top)": "92cfbd518576",
     "# Popover": "cb975c77244b",
     "## Examples": "b71b9ec78d34",
-    "## What goes where": "c9c18685f0c8",
+    "## What goes where": "29b404e398a5",
     "## Accessible composition": "3195d8b658e7",
     "## When to use": "3e7e1aacc083",
     "## Props": "006d4b103b83",
@@ -369,10 +369,10 @@
   },
   "table": {
     "(top)": "831eacdf5e42",
-    "# Table": "0a71ce23ab8f",
-    "## Accessible composition": "dc7376bf1280",
+    "# Table": "9d6ec7939c9c",
+    "## Accessible composition": "04ad077acb14",
     "## When to use": "246cc8d19142",
-    "## Props": "3e8d1900d6f6",
+    "## Props": "5c602fcf9b31",
     "(section order)": "47a493b24d96"
   },
   "tabs": {
@@ -435,7 +435,7 @@
     "(top)": "a39289793847",
     "# Tooltip": "b926b9d66879",
     "## Examples": "15cee637b896",
-    "## What goes where": "eba27189111a",
+    "## What goes where": "91a9e7b39130",
     "## Button sugar": "46b44ad23966",
     "## Accessible composition": "5bc1f940b882",
     "## When to use": "77a279496991",
@@ -443,12 +443,13 @@
     "(section order)": "28600b829282"
   },
   "utilities/strings-provider": {
+    "(top)": "1224055afc40",
     "# StringsProvider": "0a9ce6b4f646",
-    "## Strings": "5f00045726e4",
+    "## Strings": "a017854d474c",
     "## Accessible composition": "8cc16824f136",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",
-    "(section order)": "b8efd0d6d9d0"
+    "(section order)": "e23de084b1da"
   },
   "utilities/use-announcer": {
     "(top)": "02cb952a3840",
