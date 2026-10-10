@@ -39,7 +39,7 @@ export type ChipListRootProps = {
   onRemove?: (index: number, value: string) => void;
   /** Remove button name. Default is the `removeChip` string, "Remove {value}" in English. */
   removeLabel?: (value: string) => string;
-  /** Remove button content, such as an icon from your own set. Without it, the CSS draws a cross. */
+  /** Remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross. */
   removeIcon?: ReactNode;
   /** +N button name. Default is the `moreChips` string, "{n} more" in English. */
   overflowLabel?: (n: number) => string;

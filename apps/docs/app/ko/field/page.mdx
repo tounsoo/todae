@@ -184,7 +184,7 @@ compact, comfortable, spacious.
 
 `maxRows`가 설정되면 흐름은 첫 페인트부터 토큰에서 계산한 줄 수로 제한되고, 첫 레이아웃 측정 전까지 칩을 숨깁니다. 그래서 SSR이 `+N`으로 접히기 전에 펼쳐지지 않습니다. 보이는 영역은 앞쪽 칩들입니다. 가장 새 칩은 `+N`으로 접히고 실제 흐름에서 언마운트됩니다. 이후 칩이 전체 너비로 들어가지 않으면 `+N`으로 옮겨집니다. 첫 칩과 `+N`, 입력이 한 줄을 함께 쓸 수 없으면 첫 칩은 말줄임표로 잘립니다. 접근 가능한 이름은 전체 레이블을 유지합니다.
 
-칩 제거 버튼은 `chipRemoveIcon`을 전달하지 않으면 X 모양을 그립니다. [Chip](/chip)과 같습니다.
+칩 제거 버튼은 `chipRemoveIcon`을 전달하지 않으면 `close` 글리프를 보여 줍니다. [Chip](/chip)과 같습니다.
 
 이번 단계에서 미룬 것: 내장 지우기, 붙여넣기 분할, 클릭 가능한 `+N`, 칩 화살표 키 로빙.
 
@@ -265,6 +265,29 @@ compact, comfortable, spacious에서의 같은 작성기.
 ## 커스텀 컨트롤
 
 별점이나 색상 선택처럼 직접 만든 컨트롤은 [useField](/utilities/use-field)로 `Field.Root`에 연결됩니다.
+
+## 아이콘
+
+`Field.Icon`에는 어떤 라이브러리의 아이콘도 넣을 수 있고, 그 안에 바로 들어간 `svg`나 `img`는 `field.icon.size` 토큰의 크기를 따릅니다. `Field.Select`는 브라우저가 `::picker-icon`을 지원하고 select가 필드의 마지막 파트일 때 [GlyphsProvider](/utilities/glyphs-provider)의 `chevron` 글리프를 브라우저의 선택기 아이콘 위에 그립니다. 그렇지 않거나 provider가 없으면 브라우저의 아이콘이 보입니다. 선택된 `<option>` 옆의 체크 표시는 브라우저 자체의 것입니다. `Field.ChipInput`의 칩 제거 버튼은 `chipRemoveIcon`을 전달하지 않으면 `close` 글리프를 보여 줍니다.
+
+```tsx
+import { ChevronDown, Search } from 'lucide-react';
+
+<Field.Root aria-label="Search">
+	<Field.Icon>
+		<Search />
+	</Field.Icon>
+	<Field.TextInput />
+</Field.Root>
+
+<GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
+	<Field.Root aria-label="Plan">
+		<Field.Select value={plan} onValueChange={setPlan}>
+			…
+		</Field.Select>
+	</Field.Root>
+</GlyphsProvider>
+```
 
 ## 접근성을 지키는 조합
 

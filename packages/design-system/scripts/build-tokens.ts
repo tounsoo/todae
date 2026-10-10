@@ -63,6 +63,7 @@ export const BUTTON_BASE_PATHS = [
   'button.base.font.size',
   'button.base.font.weight',
   'button.base.gap',
+  'button.base.icon.size',
 ] as const;
 
 const LAYER_RANK = { core: 0, appearance: 1, density: 2, contract: 3 } as const;
@@ -210,7 +211,7 @@ export function validateButtonBase(tokens: Map<string, TokenNode>, loc: string):
   const keys = [...tokens.keys()].filter((path) => path.startsWith('button.base.')).sort();
   const expected = [...BUTTON_BASE_PATHS].sort();
   if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
-    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight, gap`);
+    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight, gap, icon.size`);
   }
 }
 
@@ -293,7 +294,7 @@ export function validateInteractive(
       fail(`${loc} "${group}" must live under button.${paints.join('|')}`);
     }
     if (!paints.includes(pack)) continue;
-    if (['radius', 'padding', 'font', 'gap'].includes(parts[2] ?? '')) {
+    if (['radius', 'padding', 'font', 'gap', 'icon'].includes(parts[2] ?? '')) {
       fail(`${loc} "${group}" geometry belongs on button.base`);
     }
     const slot = parts[2];

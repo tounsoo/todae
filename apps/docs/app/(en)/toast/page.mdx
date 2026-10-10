@@ -18,7 +18,7 @@ export const toaster = createToaster();
 			<Toast.Title>{toast.title}</Toast.Title>
 			<Toast.Description>{toast.description}</Toast.Description>
 			<Toast.Action onClick={undo}>Undo</Toast.Action>
-			<Toast.Close>×</Toast.Close>
+			<Toast.Close />
 		</Toast.Root>
 	)}
 </Toast.Region>
@@ -65,6 +65,26 @@ A toast can leave before someone reaches it, so it should not be the only way to
 - **Escape** on a toast dismisses it, not the dialog behind it. Focus stays in the region while other toasts remain, and goes back where it came from once none is left.
 - The toasts are a list inside a live region that exists before the first toast, so screen readers read each new one politely, once. That includes `critical` toasts: a message that must interrupt belongs in an [Alert](/alert).
 - The region is named "Notifications" and `Toast.Close` is named "Dismiss" unless its text names it. Both come from the `notifications` and `dismiss` strings of [StringsProvider](/utilities/strings-provider), English unless you set them; a non-empty `aria-label` still wins.
+
+## Icons
+
+An `svg` or `img` directly inside `Toast.Icon` takes the `toast.icon.size` token. `Toast.Close` with no content shows the `close` glyph: a cross, unless a [GlyphsProvider](/utilities/glyphs-provider) sets one. To use a different icon for one close, put it in a `Button.Icon`.
+
+```tsx
+import { CircleCheck, X } from 'lucide-react';
+
+<Toast.Root>
+	<Toast.Icon>
+		<CircleCheck />
+	</Toast.Icon>
+	<Toast.Title>{toast.title}</Toast.Title>
+	<Toast.Close>
+		<Button.Icon>
+			<X />
+		</Button.Icon>
+	</Toast.Close>
+</Toast.Root>
+```
 
 ## Accessible composition
 

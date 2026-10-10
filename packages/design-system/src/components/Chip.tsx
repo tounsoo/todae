@@ -1,5 +1,7 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { useStrings } from '../providers/StringsProvider';
+import { useGlyphs } from '../providers/GlyphsProvider';
+import { CrossGlyph, glyphOr } from './glyphs';
 import type { BadgeTone } from './Badge';
 import styles from './Chip.module.css';
 
@@ -17,7 +19,7 @@ export type ChipRootProps = {
   onRemove?: () => void;
   /** Remove button name. Default is the `removeChip` string, "Remove {label}" in English. */
   removeLabel?: string;
-  /** Remove button content, such as an icon from your own set. Without it, the CSS draws a cross. */
+  /** Remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross. */
   removeIcon?: ReactNode;
   disabled?: boolean;
 } & Omit<ComponentPropsWithRef<'span'>, 'children'>;
@@ -43,6 +45,7 @@ function ChipRoot({
   ...props
 }: ChipRootProps) {
   const { removeChip } = useStrings();
+  const { close } = useGlyphs();
   if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
     console.error('Chip.Root children must be a string');
   }
@@ -58,7 +61,7 @@ function ChipRoot({
           disabled={disabled}
           onClick={disabled ? undefined : onRemove}
         >
-          {removeIcon}
+          {removeIcon ?? glyphOr(close, <CrossGlyph />)}
         </button>
       ) : null}
     </span>

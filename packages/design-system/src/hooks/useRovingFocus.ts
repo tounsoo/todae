@@ -124,6 +124,18 @@ function nextKey(key: string, orientation: RovingOrientation, rtl: () => boolean
 }
 
 /**
+ * An item's text as a screen reader reads it: without aria-hidden parts, such
+ * as a menu item's check glyph, which may be text or an icon-font ligature.
+ */
+function spokenText(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+  if (node instanceof Element && node.getAttribute('aria-hidden') === 'true') return '';
+  let text = '';
+  for (const child of node.childNodes) text += spokenText(child);
+  return text;
+}
+
+/**
  * One tab stop for a composite widget: tabs, menu items, toolbar buttons.
  * Arrow keys, Home and End move focus between items; Tab leaves the group.
  * Items are found in the DOM by an attribute this hook owns, so an item inside
@@ -399,7 +411,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         state.at = now;
         const query = state.text.toLowerCase();
         const text = (node: HTMLElement) =>
-          (node.getAttribute('data-todae-roving-text') ?? node.textContent ?? '').trim().toLowerCase();
+          (node.getAttribute('data-todae-roving-text') ?? spokenText(node)).trim().toLowerCase();
         // One letter, or the same letter repeated, cycles through the items
         // that start with it; a longer prefix keeps matching the current item.
         const chars = [...query];

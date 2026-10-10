@@ -64,6 +64,7 @@ export const SITE_GROUPS = [
     id: 'utilities',
     label: 'Utilities',
     links: [
+      ['/utilities/glyphs-provider', 'GlyphsProvider'],
       ['/utilities/strings-provider', 'StringsProvider'],
       ['/utilities/use-announcer', 'useAnnouncer'],
       ['/utilities/use-chip-field', 'useChipField'],

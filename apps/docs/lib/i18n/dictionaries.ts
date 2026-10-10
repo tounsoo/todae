@@ -42,6 +42,7 @@ export type Dictionary = {
   playground: Record<
     | 'appearance'
     | 'density'
+    | 'icons'
     | 'rail'
     | 'title'
     | 'lead'
@@ -105,6 +106,7 @@ const en: Dictionary = {
   playground: {
     appearance: 'Appearance',
     density: 'Density',
+    icons: 'Icons',
     rail: 'Theme controls',
     title: 'Playground',
     lead: 'Start from a preset, change any token, and copy the result as ThemeProvider overrides.',
@@ -171,6 +173,7 @@ const ko: Dictionary = {
   playground: {
     appearance: '외관 (appearance)',
     density: '밀도 (density)',
+    icons: '아이콘',
     rail: '테마 컨트롤',
     title: '플레이그라운드',
     lead: '프리셋에서 시작해 원하는 토큰을 바꾸고, 결과를 ThemeProvider 오버라이드로 복사하세요.',

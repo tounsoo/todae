@@ -36,13 +36,28 @@ Give disclosures the same `name` and the browser keeps at most one of them open:
   <DisclosureAccordion />
 </Example>
 
-The marker is the browser's own and turns as the disclosure opens. To use an icon from your own set, hide it with `list-style: none` on the summary and put your icon in it. Content fades in over `disclosure.motion.duration`, and does not move when the user prefers reduced motion.
+The marker is the browser's own and turns as the disclosure opens; to draw an icon instead, see Icons below. Content fades in over `disclosure.motion.duration`, and does not move when the user prefers reduced motion.
+
+## Icons
+
+With a `chevron` glyph from a [GlyphsProvider](/utilities/glyphs-provider), the summary draws that icon in place of the browser's marker. Draw it pointing down: a closed disclosure turns it toward the text. `Disclosure` from the `@omsoo/todae/disclosure` server entry reads no provider and keeps the browser's marker.
+
+```tsx
+import { ChevronDown } from 'lucide-react';
+
+<GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
+	<Disclosure.Root>
+		<Disclosure.Summary>Shipping</Disclosure.Summary>
+		…
+	</Disclosure.Root>
+</GlyphsProvider>
+```
 
 ## Accessible composition
 
-**Todae handles:** Styles only: a focus ring on the summary, the marker's color, a divider between named disclosures, and no fade when the user prefers reduced motion. The rest is the browser's: the toggle on the summary, its expanded state, Enter and Space, closing the others in a named group, and find-in-page.
+**Todae handles:** A focus ring on the summary, the marker's color, a chevron glyph hidden from screen readers, a divider between named disclosures, and no fade when the user prefers reduced motion. The rest is the browser's: the toggle on the summary, its expanded state, Enter and Space, closing the others in a named group, and find-in-page.
 
-**You supply:** A `Disclosure.Summary` as the first child of each `Disclosure.Root`, with text that names what opens. If you hide the marker and put your own icon in the summary, give the icon `aria-hidden="true"`; the open state is already announced.
+**You supply:** A `Disclosure.Summary` as the first child of each `Disclosure.Root`, with text that names what opens. If you put an icon of your own in the summary instead of a chevron glyph, give it `aria-hidden="true"`; the open state is already announced.
 
 **Watch for:** A `role`, an `aria-expanded` or a click handler that toggles `open` on the summary: the browser already does each, and doing it again fights it. Buttons or links inside the summary, which is itself the control.
 

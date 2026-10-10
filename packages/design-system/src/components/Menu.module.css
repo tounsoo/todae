@@ -56,17 +56,23 @@
     height: 1em;
   }
 
-  [role='menuitemcheckbox'][aria-checked='true'] > .indicator::before {
-    content: '';
-    position: absolute;
-    inset-inline-start: 0.36em;
-    top: 0.12em;
-    width: 0.28em;
-    height: 0.55em;
-    /* Physical sides: the rotation is physical too, so the check keeps its shape in rtl. */
-    border-right: 2px solid var(--todae-menu-item-check-fg);
-    border-bottom: 2px solid var(--todae-menu-item-check-fg);
-    transform: rotate(45deg);
+  /* A checkbox item's indicator holds the check glyph, which fills it and
+     shows while the item is checked. */
+  [role='menuitemcheckbox'] > .indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--todae-menu-item-check-fg);
+    line-height: 1;
+  }
+
+  .indicator > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  [role='menuitemcheckbox']:not([aria-checked='true']) > .indicator {
+    visibility: hidden;
   }
 
   [role='menuitemradio'][aria-checked='true'] > .indicator::before {

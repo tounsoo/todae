@@ -73,7 +73,26 @@
   .icon {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     flex: 0 0 auto;
+  }
+
+  /* An icon from a library renders an svg: it takes the button's icon size. */
+  .icon > :is(svg, img) {
+    flex: none;
+    inline-size: var(--todae-button-icon-size);
+    block-size: var(--todae-button-icon-size);
+  }
+
+  /* Icon-only: a square as tall as a labeled button, its icon centered in a
+     box one line high. */
+  .root[data-icon-only] {
+    padding-inline: var(--todae-button-padding-y);
+  }
+
+  .root[data-icon-only] > .icon {
+    min-inline-size: 1lh;
+    min-block-size: 1lh;
   }
 
   .group {

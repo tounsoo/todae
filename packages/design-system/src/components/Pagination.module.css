@@ -63,6 +63,13 @@
     cursor: default;
   }
 
+  /* An ellipsis glyph from GlyphsProvider or your own content sits on the text line. */
+  .ellipsis > :is(svg, img) {
+    inline-size: 1em;
+    block-size: 1em;
+    vertical-align: middle;
+  }
+
   /* Kept at low specificity so the current page's fill wins over it. */
   .item > :where(a:any-link, button:enabled):where(:not([aria-disabled='true'])):hover {
     background: var(--todae-pagination-bg-hover);

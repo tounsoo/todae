@@ -22,6 +22,20 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
   <ComboboxTouchSketch />
 </Example>
 
+## 아이콘
+
+내용이 없는 `BottomSheet.Close`는 `close` 글리프를 보여 주며, [GlyphsProvider](/utilities/glyphs-provider)가 정하지 않으면 X 모양입니다. 이름은 `close` 문자열에서 옵니다. 닫기 버튼 하나에만 다른 아이콘을 쓰려면 `Button.Icon`에 넣으세요.
+
+```tsx
+import { X } from 'lucide-react';
+
+<BottomSheet.Close>
+	<Button.Icon>
+		<X />
+	</Button.Icon>
+</BottomSheet.Close>
+```
+
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** 위에서 설명한 모달 `<dialog>` 동작입니다. `BottomSheet.Title`과 `BottomSheet.Description`은 `aria-labelledby`와 `aria-describedby`를 설정하고, `BottomSheet.Close`는 자기 텍스트도 `aria-label`도 이름을 주지 않으면 `close` 문자열로 이름이 붙습니다. 닫힘 동작이 끝나면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. 그래버는 `resizeSheet` 문자열("Resize sheet")로 이름이 붙은 `<button>`입니다. ArrowUp은 `snapPoints`에 `full`이 있으면 `full`로 스냅하고, ArrowDown은 `mid`가 있으면 `mid`로 내립니다. `dismissOnDrag`가 켜져 있으면 `mid`에서 ArrowDown이 시트를 닫습니다.

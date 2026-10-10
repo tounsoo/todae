@@ -35,6 +35,10 @@ import { ChipListDemo } from '../../../components/demos/ChipListDemo';
   <ChipListDemo maxRows={1} readOnly />
 </Example>
 
+## 아이콘
+
+제거 버튼은 `close` 글리프를 보여 주며, [GlyphsProvider](/utilities/glyphs-provider)가 정하지 않으면 X 모양입니다. 이 목록에만 다른 아이콘을 쓰려면 [Chip](/chip)처럼 `removeIcon`을 전달하세요.
+
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** 칩은 `role="list"` 요소 안에 있고, 이 요소가 `aria-label`, `aria-labelledby`, `aria-describedby`, `aria-details`를 받습니다. 줄에 보이는 각 칩과 +N은 `role="listitem"`입니다. +N은 `aria-expanded`, `aria-controls`, `aria-haspopup="dialog"`가 있는 네이티브 버튼이고, 이름은 `overflowLabel`이나 `moreChips` 문자열입니다. 팝오버는 `role="dialog"`이고, 이름은 `panelLabel`이나 `moreChipsPanel` 문자열입니다. 제거 버튼의 이름은 `removeLabel`이나 `Remove {value}`입니다. 제거 뒤의 포커스와 팝오버 안의 Tab, Shift+Tab, Escape는 위에서 설명한 대로 동작합니다. 측정용 줄은 `aria-hidden`이고 `inert`입니다.

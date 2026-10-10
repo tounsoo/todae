@@ -313,8 +313,8 @@
       "ko": "제거 버튼의 aria-label. 기본값은 StringsProvider의 removeChip 문자열이며, 영어로는 Remove {label}입니다."
     },
     "removeIcon": {
-      "en": "Remove button content, such as an icon from your own set. Without it, the CSS draws a cross.",
-      "ko": "제거 버튼의 내용. 예: 직접 사용하는 아이콘 세트의 아이콘. 없으면 CSS가 X 모양을 그립니다."
+      "en": "Remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross.",
+      "ko": "제거 버튼의 내용. 직접 사용하는 아이콘 세트의 아이콘 등. 없으면 GlyphsProvider의 close 글리프를, 그것도 없으면 Todae의 X 모양을 씁니다."
     },
     "disabled": {
       "en": "Disables the remove button.",
@@ -347,8 +347,8 @@
       "ko": "제거 버튼의 이름. 기본값은 StringsProvider의 removeChip 문자열이며, 영어로는 Remove {value}입니다."
     },
     "removeIcon": {
-      "en": "Remove button content, such as an icon from your own set. Without it, the CSS draws a cross.",
-      "ko": "제거 버튼의 내용. 예: 직접 사용하는 아이콘 세트의 아이콘. 없으면 CSS가 X 모양을 그립니다."
+      "en": "Remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross.",
+      "ko": "제거 버튼의 내용. 직접 사용하는 아이콘 세트의 아이콘 등. 없으면 GlyphsProvider의 close 글리프를, 그것도 없으면 Todae의 X 모양을 씁니다."
     },
     "overflowLabel": {
       "en": "+N button name. Default is the moreChips string from StringsProvider, {n} more in English.",
@@ -537,8 +537,8 @@
       "ko": "제거 버튼의 이름. 기본값은 StringsProvider의 removeChip 문자열이며, 영어로는 Remove {value}입니다."
     },
     "chipRemoveIcon": {
-      "en": "Chip remove button content, such as an icon from your own set. Without it, the CSS draws a cross.",
-      "ko": "칩 제거 버튼의 내용. 예: 직접 사용하는 아이콘 세트의 아이콘. 없으면 CSS가 X 모양을 그립니다."
+      "en": "Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross.",
+      "ko": "칩 제거 버튼의 내용. 직접 사용하는 아이콘 세트의 아이콘 등. 없으면 GlyphsProvider의 close 글리프를, 그것도 없으면 Todae의 X 모양을 씁니다."
     },
     "overflowLabel": {
       "en": "+N name. Default is the moreChips string from StringsProvider, {n} more in English.",
@@ -1215,6 +1215,16 @@
     "children": {
       "en": "Laid-out children.",
       "ko": "배치될 자식."
+    }
+  },
+  "GlyphsProvider": {
+    "glyphs": {
+      "en": "The glyphs to change: close, check, chevron, separator and ellipsis. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins.",
+      "ko": "바꿀 글리프: close, check, chevron, separator, ellipsis. 생략한 키는 가장 가까운 상위 GlyphsProvider에서 가져오고, null은 Todae 자체 글리프로 되돌립니다. 파트 자체의 내용이 있으면 그것이 우선합니다."
+    },
+    "children": {
+      "en": "Subtree that uses these glyphs.",
+      "ko": "이 글리프를 쓰는 하위 트리."
     }
   },
   "StringsProvider": {

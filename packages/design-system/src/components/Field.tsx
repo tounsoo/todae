@@ -34,6 +34,8 @@ import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
 import { useField } from '../hooks/useField';
+import { useGlyphs } from '../providers/GlyphsProvider';
+import { hasGlyph } from './glyphs';
 import { useStrings, type Strings } from '../providers/StringsProvider';
 
 /**
@@ -110,7 +112,7 @@ function Icon({ interactive, className, ...props }: FieldIconProps) {
     <span
       {...props}
       aria-hidden={props['aria-hidden'] ?? (interactive ? undefined : true)}
-      className={cx(styles.adornment, className)}
+      className={cx(styles.adornment, styles.icon, className)}
     />
   );
 }
@@ -370,7 +372,7 @@ export type FieldChipInputProps = {
   chipLayout?: 'inline' | 'row';
   removeOnBackspace?: boolean;
   chipRemoveLabel?: (value: string) => string;
-  /** Chip remove button content, such as an icon from your own set. Without it, the CSS draws a cross. */
+  /** Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross. */
   chipRemoveIcon?: ReactNode;
   overflowLabel?: (n: number) => string;
   ref?: Ref<HTMLInputElement>;
@@ -524,23 +526,32 @@ export type FieldSelectProps = {
 
 function Select({ value, onChange, onValueChange, className, children, ...props }: FieldSelectProps) {
   const field = useField();
+  const { chevron } = useGlyphs();
   return (
-    <select
-      {...field.getControlProps(props)}
-      value={value}
-      className={cx(styles.select, className)}
-      // Without either handler the select is read-only, and React says so.
-      onChange={
-        onChange || onValueChange
-          ? (event) => {
-              onChange?.(event);
-              onValueChange?.(event.target.value);
-            }
-          : undefined
-      }
-    >
-      {children}
-    </select>
+    <>
+      <select
+        {...field.getControlProps(props)}
+        value={value}
+        className={cx(styles.select, className)}
+        // Without either handler the select is read-only, and React says so.
+        onChange={
+          onChange || onValueChange
+            ? (event) => {
+                onChange?.(event);
+                onValueChange?.(event.target.value);
+              }
+            : undefined
+        }
+      >
+        {children}
+      </select>
+      {/* Drawn over the browser's picker icon, which keeps its place. */}
+      {hasGlyph(chevron) ? (
+        <span className={styles.selectGlyph} data-todae-glyph="" aria-hidden="true">
+          {chevron}
+        </span>
+      ) : null}
+    </>
   );
 }
 

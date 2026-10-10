@@ -2243,6 +2243,15 @@
       "context": null
     },
     {
+      "path": "button.base.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-button-base-icon-size",
+      "cssValue": "1rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "button.base.padding.x",
       "type": "dimension",
       "cssVar": "--todae-button-base-padding-x",
@@ -3053,6 +3062,15 @@
       "context": null
     },
     {
+      "path": "field.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-field-icon-size",
+      "cssValue": "1rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.label.fg",
       "type": "color",
       "cssVar": "--todae-field-label-fg",
@@ -3625,6 +3643,15 @@
       "cssVar": "--todae-chip-gap",
       "cssValue": "var(--todae-space-inline-gap)",
       "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "chip.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-chip-icon-size",
+      "cssValue": "0.75rem",
+      "ref": null,
       "layer": "contract",
       "context": null
     },
@@ -4925,6 +4952,15 @@
       "context": null
     },
     {
+      "path": "alert.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-alert-icon-size",
+      "cssValue": "1rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "alert.info.bg",
       "type": "color",
       "cssVar": "--todae-alert-info-bg",
@@ -5101,6 +5137,15 @@
       "cssVar": "--todae-toast-gap",
       "cssValue": "var(--todae-space-inline-gap)",
       "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-toast-icon-size",
+      "cssValue": "1rem",
+      "ref": null,
       "layer": "contract",
       "context": null
     },

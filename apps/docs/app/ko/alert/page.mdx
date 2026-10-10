@@ -14,7 +14,7 @@ import { AlertDismissible, AlertTones } from '../../../components/demos/AlertDem
 	<Alert.Actions>
 		<Button.Root variant="secondary">Upgrade</Button.Root>
 	</Alert.Actions>
-	<Alert.Close onClick={hide}>×</Alert.Close>
+	<Alert.Close onClick={hide} />
 </Alert.Root>
 ```
 
@@ -33,6 +33,26 @@ Todae는 아이콘을 제공하지 않습니다. `Alert.Icon`은 슬롯입니다
 <Example block>
   <AlertDismissible />
 </Example>
+
+## 아이콘
+
+`Alert.Icon` 안에 바로 들어간 `svg`나 `img`는 `alert.icon.size` 토큰의 크기를 따릅니다. 내용이 없는 `Alert.Close`는 `close` 글리프를 보여 줍니다. [GlyphsProvider](/utilities/glyphs-provider)가 정하지 않으면 X 모양입니다. 닫기 버튼 하나에만 다른 아이콘을 쓰려면 `Button.Icon`에 넣으세요.
+
+```tsx
+import { TriangleAlert, X } from 'lucide-react';
+
+<Alert.Root tone="warning">
+	<Alert.Icon>
+		<TriangleAlert />
+	</Alert.Icon>
+	<Alert.Title>Storage almost full</Alert.Title>
+	<Alert.Close onClick={hide}>
+		<Button.Icon>
+			<X />
+		</Button.Icon>
+	</Alert.Close>
+</Alert.Root>
+```
 
 ## 접근성을 지키는 조합
 

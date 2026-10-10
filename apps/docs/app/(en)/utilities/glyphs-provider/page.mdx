@@ -1,0 +1,99 @@
+import { Table } from '@omsoo/todae/table';
+import { ScrollRegion } from '../../../../components/OverflowRegion';
+import { GlyphsLibraries } from '../../../../components/demos/GlyphsDemo';
+
+# GlyphsProvider
+
+Todae ships no icon set. A few parts still need a glyph to look whole, such as the cross on a close button or the check in a checkbox, so Todae draws those itself. `GlyphsProvider` sets them for everything inside it, so they can come from your icon library instead. Pass the keys you want to change; each key you leave out comes from the nearest `GlyphsProvider` above, and `null` brings back Todae's own. It renders no element.
+
+```tsx
+import { GlyphsProvider } from '@omsoo/todae';
+import { Check, ChevronDown, ChevronRight, Ellipsis, X } from 'lucide-react';
+
+<GlyphsProvider
+	glyphs={{
+		close: <X />,
+		check: <Check />,
+		chevron: <ChevronDown />,
+		separator: <ChevronRight />,
+		ellipsis: <Ellipsis />,
+	}}
+>
+	<App />
+</GlyphsProvider>
+```
+
+The same parts with Todae's own glyphs and with Lucide, Phosphor and Tabler:
+
+<Example block>
+  <GlyphsLibraries />
+</Example>
+
+A part's own content still wins: children of a close part, `removeIcon` on `Chip.Root` and `ChipList.Root`, `chipRemoveIcon` on `Field.ChipInput`, children of `Pagination.Ellipsis`, and `separator` on `Breadcrumbs.Root`. `useGlyphs()` returns the glyphs in effect, for your own components.
+
+## Glyphs
+
+<ScrollRegion>
+<Table.Root>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">Key</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Used by</Table.HeaderCell>
+      <Table.HeaderCell scope="col">Todae's own</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`close`</Table.HeaderCell>
+      <Table.Cell>`Alert.Close`, `Toast.Close`, `Dialog.Close` and `BottomSheet.Close` with no content; chip remove buttons</Table.Cell>
+      <Table.Cell>A cross</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`check`</Table.HeaderCell>
+      <Table.Cell>`Checkbox`, `Menu.CheckboxItem`, a selected `OptionList.Option`</Table.Cell>
+      <Table.Cell>A check mark</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`chevron`</Table.HeaderCell>
+      <Table.Cell>`Field.Select`, `Disclosure.Summary`</Table.Cell>
+      <Table.Cell>The browser's own marker</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`separator`</Table.HeaderCell>
+      <Table.Cell>Between `Breadcrumbs` items</Table.Cell>
+      <Table.Cell>The separator text, `/`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`ellipsis`</Table.HeaderCell>
+      <Table.Cell>`Pagination.Ellipsis` with no content</Table.Cell>
+      <Table.Cell>`…`</Table.Cell>
+    </Table.Row>
+  </Table.Body>
+</Table.Root>
+</ScrollRegion>
+
+Draw `chevron` pointing down: a closed disclosure turns it toward its text. Draw `separator` pointing toward the next item in a left-to-right page: it is mirrored in right-to-left. In `Field.Select`, the chevron sits over the browser's picker icon when the browser supports `::picker-icon` and the select is the field's last part; otherwise the browser's icon stays. The check mark beside a selected `<option>` is the browser's own.
+
+Each glyph that is an `svg` or `img`, as icon libraries render, takes the size of the box its part gives it, whatever its own `size` or `width`: `button.icon.size` in a close part, `chip.icon.size` in a chip, `field.icon.size` in a select, the whole box in a checkbox, and a box about the size of the text elsewhere. An icon drawn in `currentColor` takes the part's text color.
+
+The radio dot, the switch thumb, the spinner and the selected tab's bar are shapes drawn from tokens, not glyphs, so they are not here.
+
+`Breadcrumbs`, `Pagination` and `Disclosure` from the server entries, such as `@omsoo/todae/breadcrumbs`, render on the server without context, so they always draw Todae's own. Import them from `@omsoo/todae` to use the provider.
+
+## Accessible composition
+
+**Todae handles:** Keeping every glyph out of the accessible name: it is inside an `aria-hidden` element, or in a button named by `aria-label`, such as a chip's remove button. A close part with no content is named by the `close` or `dismiss` string of [StringsProvider](/utilities/strings-provider), and shows no tooltip unless you pass `tooltip`.
+
+**You supply:** Icons that read as what they stand for, in every key you set: a cross for close, a check mark for check. The names stay Todae's, so an icon that means something else leaves the picture and the name apart.
+
+**Watch for:** Text as a glyph, such as `'×'`: it renders in the part's font, so it may not match your icons. Use an `svg` icon.
+
+## When to use
+
+**When:** Your design system uses an icon library, and Todae's crosses, checks, chevrons, separators or ellipses should match it, across a whole app or one part of it.
+
+**When not:** An icon in a slot such as `Button.Icon`, `Field.Icon` or `Alert.Icon` → put it there directly. A different icon for one close button or chip → pass it as that part's content or `removeIcon`.
+
+## Props
+
+<PropsTable name="GlyphsProvider" />

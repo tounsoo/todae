@@ -36,13 +36,28 @@ Server Components는 `@omsoo/todae/disclosure`에서 가져올 수 있습니다.
   <DisclosureAccordion />
 </Example>
 
-표시는 브라우저 자체의 것이며 디스클로저가 열리면 돌아갑니다. 직접 사용하는 아이콘 세트의 아이콘을 쓰려면 summary에 `list-style: none`을 주어 표시를 숨기고 그 안에 아이콘을 넣으세요. 내용은 `disclosure.motion.duration` 동안 서서히 나타나며, 사용자가 동작 줄이기를 선호하면 움직이지 않습니다.
+표시는 브라우저 자체의 것이며 디스클로저가 열리면 돌아갑니다. 대신 아이콘을 그리려면 아래 아이콘 절을 보세요. 내용은 `disclosure.motion.duration` 동안 서서히 나타나며, 사용자가 동작 줄이기를 선호하면 움직이지 않습니다.
+
+## 아이콘
+
+[GlyphsProvider](/utilities/glyphs-provider)에 `chevron` 글리프가 있으면 summary는 브라우저의 표시 대신 그 아이콘을 그립니다. 아래쪽을 가리키게 그리세요. 닫힌 디스클로저는 아이콘을 텍스트 쪽으로 돌립니다. `@omsoo/todae/disclosure` 서버 진입점의 `Disclosure`는 provider를 읽지 않으며 브라우저의 표시를 그대로 씁니다.
+
+```tsx
+import { ChevronDown } from 'lucide-react';
+
+<GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
+	<Disclosure.Root>
+		<Disclosure.Summary>Shipping</Disclosure.Summary>
+		…
+	</Disclosure.Root>
+</GlyphsProvider>
+```
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 스타일만 맡습니다. summary의 포커스 링, 표시 기호의 색, 이름 붙은 디스클로저 사이의 구분선, 그리고 사용자가 동작 줄이기를 선호할 때 페이드를 끄는 것입니다. 나머지는 브라우저가 맡습니다. summary의 토글, 펼침 상태, Enter와 Space, 같은 이름 그룹에서 나머지를 닫는 것, 페이지 내 찾기입니다.
+**Todae가 맡는 것:** summary의 포커스 링, 표시 기호의 색, 스크린 리더에서 숨긴 chevron 글리프, 이름 붙은 디스클로저 사이의 구분선, 그리고 사용자가 동작 줄이기를 선호할 때 페이드를 끄는 것입니다. 나머지는 브라우저가 맡습니다. summary의 토글, 펼침 상태, Enter와 Space, 같은 이름 그룹에서 나머지를 닫는 것, 페이지 내 찾기입니다.
 
-**직접 제공할 것:** 각 `Disclosure.Root`의 첫 자식으로 `Disclosure.Summary`를 두고, 무엇이 열리는지 알려 주는 텍스트를 넣으세요. 표시 기호를 숨기고 직접 만든 아이콘을 summary에 넣는다면, 아이콘에 `aria-hidden="true"`를 주세요. 열린 상태는 이미 알려집니다.
+**직접 제공할 것:** 각 `Disclosure.Root`의 첫 자식으로 `Disclosure.Summary`를 두고, 무엇이 열리는지 알려 주는 텍스트를 넣으세요. chevron 글리프 대신 직접 만든 아이콘을 summary에 넣는다면, 아이콘에 `aria-hidden="true"`를 주세요. 열린 상태는 이미 알려집니다.
 
 **주의할 점:** summary에 `role`, `aria-expanded`, `open`을 토글하는 클릭 핸들러를 더하지 마세요. 브라우저가 이미 각각을 처리하므로, 한 번 더 하면 서로 충돌합니다. summary는 그 자체가 컨트롤이므로 안에 버튼이나 링크를 넣지 마세요.
 

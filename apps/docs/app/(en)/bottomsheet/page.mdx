@@ -22,6 +22,20 @@ Touch Combobox later. A button opens this sheet. Search plus options live in the
   <ComboboxTouchSketch />
 </Example>
 
+## Icons
+
+`BottomSheet.Close` with no content shows the `close` glyph, a cross unless a [GlyphsProvider](/utilities/glyphs-provider) sets one, and is named by the `close` string. To use a different icon for one close, put it in a `Button.Icon`.
+
+```tsx
+import { X } from 'lucide-react';
+
+<BottomSheet.Close>
+	<Button.Icon>
+		<X />
+	</Button.Icon>
+</BottomSheet.Close>
+```
+
 ## Accessible composition
 
 **Todae handles:** The modal `<dialog>` behaviour above. `BottomSheet.Title` and `BottomSheet.Description` set `aria-labelledby` and `aria-describedby`, and `BottomSheet.Close` falls back to the `close` string when neither its own text nor an `aria-label` names it. After the exit, focus goes to `restoreFocusRef`, else back to what had focus before it opened. The grabber is a `<button>` named by the `resizeSheet` string ("Resize sheet"): ArrowUp snaps to `full` when `snapPoints` include it, ArrowDown steps down to `mid` when they include `mid`, and from `mid` ArrowDown closes the sheet when `dismissOnDrag` is on.

@@ -311,6 +311,26 @@ describe('useRovingFocus', () => {
     expect(tabStops()).toEqual(['b']);
   });
 
+  it('typeahead skips text inside aria-hidden, such as a text glyph before the label', () => {
+    function Glyphed() {
+      const roving = useRovingFocus({ typeahead: true });
+      return (
+        <div role="menu" {...roving.getContainerProps()}>
+          {['apple', 'banana'].map((value) => (
+            <button key={value} type="button" {...roving.getItemProps(value)}>
+              <span aria-hidden="true">x</span>
+              {value}
+            </button>
+          ))}
+        </div>
+      );
+    }
+    render(<Glyphed />);
+    screen.getByText('apple').focus();
+    fireEvent.keyDown(document.activeElement!, { key: 'b', timeStamp: 1000 });
+    expect(focused()).toBe('xbanana');
+  });
+
   it('typeahead matches a character outside the basic plane', () => {
     render(<Group typeahead items={[{ value: 'sad', label: '😢 Sad' }, { value: 'happy', label: '😀 Happy' }]} />);
     screen.getByText('😢 Sad').focus();
