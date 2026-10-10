@@ -1,7 +1,13 @@
 'use client';
 
-import { Badge, Button, Card, Field, Label, Switch, Tabs, Text } from '@omsoo/todae';
+import { Avatar, Badge, Button, Card, categoryTone, Field, Label, Switch, Tabs, Text, type CategoryTone } from '@omsoo/todae';
 import { useId, useState } from 'react';
+
+const MEMBERS: { id: string; name: string; initials: string; team: string; teamTone: CategoryTone }[] = [
+  { id: 'ada', name: 'Ada Lovelace', initials: 'AL', team: 'Design', teamTone: 'category-7' },
+  { id: 'grace', name: 'Grace Hopper', initials: 'GH', team: 'Platform', teamTone: 'category-6' },
+  { id: 'alan', name: 'Alan Turing', initials: 'AT', team: 'Research', teamTone: 'category-2' },
+];
 
 /** A small settings panel built only from Todae parts, so the home page shows the real thing. */
 export function HomeShowcase() {
@@ -35,6 +41,15 @@ export function HomeShowcase() {
             <Switch>Mention alerts</Switch>
           </Tabs.Panel>
           <Tabs.Panel value="members" className="showcase-panel">
+            {MEMBERS.map((member) => (
+              <div key={member.id} className="showcase-member">
+                <Avatar.Root size="sm" tone={categoryTone(member.id)}>
+                  <Avatar.Fallback>{member.initials}</Avatar.Fallback>
+                </Avatar.Root>
+                <Text as="span">{member.name}</Text>
+                <Badge.Root tone={member.teamTone}>{member.team}</Badge.Root>
+              </div>
+            ))}
             <Text tone="muted">12 members, 3 pending invites.</Text>
           </Tabs.Panel>
           <Tabs.Panel value="billing" className="showcase-panel">
