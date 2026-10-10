@@ -98,6 +98,23 @@ describe('narrow screens', () => {
     const drawer = screen.getByRole('dialog', { name: 'Todae' });
     expect(within(drawer).getByRole('group', { name: 'Theme' }).checkVisibility()).toBe(true);
   });
+
+  it('keeps the home showcase header inside its card on a phone', async () => {
+    await page.viewport(320, 700);
+    render(
+      <Providers>
+        <HomeContent locale="en" />
+      </Providers>,
+    );
+    await frame();
+    const card = document.querySelector('.showcase-card')!.getBoundingClientRect();
+    for (const el of document.querySelectorAll('.showcase-title > *, .showcase-meta > *')) {
+      const box = el.getBoundingClientRect();
+      expect(box.left).toBeGreaterThanOrEqual(card.left);
+      expect(box.right).toBeLessThanOrEqual(card.right);
+    }
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
+  });
 });
 
 describe('mobile drawer', () => {

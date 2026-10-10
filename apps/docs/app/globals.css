@@ -694,9 +694,11 @@ table {
 
 .showcase-title {
   display: flex;
+  /* On a phone the avatars and badge drop below the title. */
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem 1rem;
 }
 
 .showcase-panel {
