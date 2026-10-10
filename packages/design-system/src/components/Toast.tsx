@@ -151,17 +151,16 @@ function hovers(event: ReactPointerEvent): boolean {
 }
 
 /**
- * Whether a click ends a tap. Most engines say which pointer made it; a
- * click from the keyboard, assistive technology or click() names none.
- * Elsewhere, a click a pointer made has a detail, and the last press on the
- * region says whether it was a tap.
+ * Whether a click ends a tap. A click from the keyboard, assistive
+ * technology or click() has no detail and names no pointer. One that names
+ * a finger or a pen is a tap unless that pen hovers. Otherwise the last
+ * press on the region decides: Safari names a finger's click a mouse's.
  */
-function isTap(event: ReactMouseEvent, from: number | null, hoverIds: ReadonlySet<number>): boolean {
-  const native = event.nativeEvent as Partial<PointerEvent>;
-  if (typeof native.pointerType === 'string' && typeof native.pointerId === 'number') {
-    return native.pointerType !== '' && native.pointerType !== 'mouse' && !hoverIds.has(native.pointerId);
-  }
-  return from !== null && event.detail > 0;
+function isTap(event: ReactMouseEvent, tapPressed: boolean, hoverIds: ReadonlySet<number>): boolean {
+  const { pointerType, pointerId } = event.nativeEvent as Partial<PointerEvent>;
+  if (event.detail === 0 || pointerType === '') return false;
+  if ((pointerType === 'touch' || pointerType === 'pen') && typeof pointerId === 'number') return !hoverIds.has(pointerId);
+  return tapPressed;
 }
 
 function Item<T extends object>({
@@ -320,9 +319,9 @@ function Region<T extends object = object>({
   // finger taps it.
   const hoverIds = useRef(new Set<number>());
   const pressIds = useRef(new Set<number>());
-  // The pointer of the last press on the region, when it was a tap's, for
-  // an engine whose click doesn't say which pointer made it.
-  const tapFrom = useRef<number | null>(null);
+  // Whether the last press on the region was a tap's, for a click that
+  // doesn't say which pointer made it.
+  const tapFrom = useRef(false);
   const [pageHidden, setPageHidden] = useState(false);
   const expanded = hovered || focused || tapped;
   // Focus can leave without a blur, such as when the focused element is
@@ -478,16 +477,19 @@ function Region<T extends object = object>({
   // Nothing left to use, so the next toast starts collapsed and timed.
   if (tapped && !hasOpen) setTapped(false);
 
+  // A press outside ends a tap's spread, and is the last press now.
   useEffect(() => {
     const section = sectionRef.current;
-    if (!tapped || !section) return;
+    if (!hasOpen || !section) return;
     const doc = section.ownerDocument;
     const onPointerDown = (event: PointerEvent) => {
-      if (!eventInside(section, event)) setTapped(false);
+      if (eventInside(section, event)) return;
+      tapFrom.current = false;
+      setTapped(false);
     };
     doc.addEventListener('pointerdown', onPointerDown, true);
     return () => doc.removeEventListener('pointerdown', onPointerDown, true);
-  }, [tapped, host]);
+  }, [hasOpen, host]);
 
   // On the document, as the region misses the release when the toast under
   // the finger is removed. Before the release can come.
@@ -496,6 +498,8 @@ function Region<T extends object = object>({
     if (!pressed || !doc) return;
     const onEnd = (event: PointerEvent) => {
       pressIds.current.delete(event.pointerId);
+      // A press that turns into a scroll sends no click.
+      if (event.type === 'pointercancel') tapFrom.current = false;
       if (pressIds.current.size === 0) setPressed(false);
     };
     doc.addEventListener('pointerup', onEnd, true);
@@ -639,15 +643,15 @@ function Region<T extends object = object>({
       })}
       onPointerDown={alongside(onPointerDown, (event) => {
         const tap = event.pointerType !== 'mouse' && !hoverIds.current.has(event.pointerId);
-        tapFrom.current = tap ? event.pointerId : null;
+        tapFrom.current = tap;
         if (!tap) return;
         pressIds.current.add(event.pointerId);
         setPressed(true);
       })}
       onClickCapture={alongside(onClickCapture, (event) => {
-        const from = tapFrom.current;
-        tapFrom.current = null;
-        if (isTap(event, from, hoverIds.current)) setTapped(true);
+        const tapPressed = tapFrom.current;
+        tapFrom.current = false;
+        if (isTap(event, tapPressed, hoverIds.current)) setTapped(true);
       })}
       onFocus={alongside(onFocus, (event) => {
         focusLeave.onFocus();
@@ -661,6 +665,7 @@ function Region<T extends object = object>({
       })}
       onBlur={alongside(onBlur, focusLeave.onBlur)}
       onKeyDown={composeHandlers(onKeyDown, (event: ReactKeyboardEvent<HTMLElement>) => {
+        tapFrom.current = false;
         if (event.key !== 'Escape' || event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
