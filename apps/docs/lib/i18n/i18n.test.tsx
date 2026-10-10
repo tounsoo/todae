@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { act, cleanup, render, screen } from '@testing-library/react';
+import { useInsertionEffect } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HomeContent } from '../../components/HomeContent';
@@ -277,17 +278,39 @@ describe('docs locales', () => {
     expect(links.map((link) => link.getAttribute('aria-current'))).toEqual([null, 'true']);
   });
 
-  it('keeps the query and hash when switching', () => {
-    path.current = '/tokens';
-    window.history.replaceState(null, '', '/tokens?x=1#contrast');
-    render(<LanguageSwitcher locale="en" />);
-    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/tokens?x=1#contrast');
-    act(() => {
-      window.history.replaceState(null, '', '/tokens#props');
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    });
-    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/tokens#props');
-    window.history.replaceState(null, '', '/');
+  it('keeps the query and hash when switching, through every URL change', async () => {
+    // jsdom has no Navigation API, so stand in for the currententrychange it fires on each URL change.
+    const navigation = new EventTarget();
+    window.navigation = navigation;
+    const setUrl = (url: string) => {
+      window.history.replaceState(null, '', url);
+      navigation.dispatchEvent(new Event('currententrychange'));
+    };
+    // Like Next, which changes the URL in an insertion effect as the new path commits.
+    function Router({ url }: { url: string }) {
+      useInsertionEffect(() => setUrl(url), [url]);
+      return <LanguageSwitcher locale="en" />;
+    }
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      path.current = '/tokens';
+      const { rerender } = render(<Router url="/tokens?x=1#contrast" />);
+      const korean = () => screen.getByRole('link', { name: '한국어' }).getAttribute('href');
+      expect(korean()).toBe('/ko/tokens?x=1#contrast');
+      await act(async () => setUrl('/tokens#props'));
+      expect(korean()).toBe('/ko/tokens#props');
+      // A client-side navigation to the same path drops the hash with no hashchange or popstate.
+      await act(async () => rerender(<Router url="/tokens" />));
+      expect(korean()).toBe('/ko/tokens');
+      path.current = '/link';
+      await act(async () => rerender(<Router url="/link#billing" />));
+      expect(korean()).toBe('/ko/link#billing');
+      expect(error).not.toHaveBeenCalled();
+    } finally {
+      error.mockRestore();
+      delete window.navigation;
+      window.history.replaceState(null, '', '/');
+    }
   });
 
   it('sends a 404 to each home page, since the path is missing in every language', () => {

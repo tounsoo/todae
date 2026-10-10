@@ -8,6 +8,7 @@ export const metadata = localeMetadata('en');
 
 // Each locale has its own root layout, so a URL that matches none of them renders this.
 // It is static and cannot tell which language the reader wanted, so it speaks all of them.
+// Its home links lead out of this root layout, which Next loads in full, so they skip next/link.
 export default function GlobalNotFound() {
   return (
     <SiteShell locale="en" notFound>

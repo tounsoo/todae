@@ -6,6 +6,8 @@ const src = (path: string) => fileURLToPath(new URL(`../../packages/design-syste
 // Runs every docs demo in headless Chromium against the package source.
 export default defineConfig({
   esbuild: { jsx: 'automatic' },
+  // next/link reads Next's build-time env, which only Next defines.
+  define: { 'process.env': '{}' },
   resolve: {
     alias: [
       { find: /^@omsoo\/todae\/todae\.css$/, replacement: src('styles/todae.css') },
@@ -15,7 +17,7 @@ export default defineConfig({
   // Pre-bundle what demos import, so a cold cache does not re-optimize and reload mid-run,
   // which can leave two React copies and fail hooks with a null dispatcher.
   optimizeDeps: {
-    include: ['react', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom', 'react-dom/client', 'next/navigation'],
+    include: ['react', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom', 'react-dom/client', 'next/navigation', 'next/link'],
   },
   css: { modules: { generateScopedName: 'todae_[local]_[hash:hex:6]' } },
   test: {

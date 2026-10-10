@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Dialog, Drawer } from '@omsoo/todae';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
@@ -12,6 +13,14 @@ import { ThemeSwitcher } from './ThemeSwitcher';
 export function MobileNav({ locale }: { locale: Locale }) {
   const dict = DICTIONARIES[locale];
   const [open, setOpen] = useState(false);
+  // A client-side navigation keeps the drawer mounted, so it closes when the path changes, such as on Back.
+  // Null outside the app router, such as in a component test.
+  const path = usePathname() ?? '/';
+  const [openPath, setOpenPath] = useState(path);
+  if (path !== openPath) {
+    setOpenPath(path);
+    setOpen(false);
+  }
   return (
     <div className="mobile-nav">
       <Button.Root
@@ -30,7 +39,14 @@ export function MobileNav({ locale }: { locale: Locale }) {
           <Dialog.Title>Todae</Dialog.Title>
           <Dialog.Close>{dict.closeMenu}</Dialog.Close>
         </Dialog.Header>
-        <Dialog.Body>
+        {/* Following one of its links closes it too, even a link to this page, which leaves the path as it is. */}
+        <Dialog.Body
+          onClick={(event) => {
+            // A modified click opens the link elsewhere and leaves this page, and the drawer, as they are.
+            const elsewhere = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+            if (!elsewhere && (event.target as Element).closest('a[href]')) setOpen(false);
+          }}
+        >
           <SiteNav locale={locale} idPrefix="drawer-nav" />
         </Dialog.Body>
         {/* The top bar hides its theme switch on the narrowest screens; the drawer keeps one. */}
