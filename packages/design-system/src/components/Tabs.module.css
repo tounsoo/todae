@@ -10,9 +10,12 @@
   }
 
   .list {
+    position: relative;
     display: flex;
     gap: var(--todae-tabs-gap);
     border-bottom: var(--todae-tabs-border-width) solid var(--todae-tabs-border);
+    /* Each list's indicator follows its own selected tab, not another list's. */
+    anchor-scope: --todae-tabs-selected;
   }
 
   .list[data-orientation='vertical'] {
@@ -61,22 +64,41 @@
     color: var(--todae-tabs-fg-selected);
   }
 
-  /* The indicator sits on the list's border, under the selected tab. */
-  .tab[data-selected]::after {
+  .tab[data-selected] {
+    anchor-name: --todae-tabs-selected;
+  }
+
+  /* One indicator per list sits on its border and is anchored to the
+     selected tab, so a new selection slides it across instead of redrawing
+     it under the next tab. */
+  .list:has(.tab[data-selected])::after {
     content: '';
     position: absolute;
-    inset-inline: 0;
+    position-anchor: --todae-tabs-selected;
+    left: anchor(left);
+    right: anchor(right);
     bottom: calc(-1 * var(--todae-tabs-border-width));
     height: var(--todae-tabs-indicator-size);
     background: var(--todae-tabs-indicator-color);
+    pointer-events: none;
   }
 
-  .tab[data-selected][data-orientation='vertical']::after {
-    inset-inline: auto calc(-1 * var(--todae-tabs-border-width));
-    inset-block: 0;
-    bottom: 0;
+  .list[data-orientation='vertical']:has(.tab[data-selected])::after {
+    top: anchor(top);
+    bottom: anchor(bottom);
+    left: auto;
+    right: auto;
+    inset-inline-end: calc(-1 * var(--todae-tabs-border-width));
     width: var(--todae-tabs-indicator-size);
     height: auto;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .list::after {
+      transition-property: left, right, top, bottom;
+      transition-duration: var(--todae-tabs-motion-duration);
+      transition-timing-function: var(--todae-tabs-motion-easing);
+    }
   }
 
   .tab:focus-visible {
@@ -106,7 +128,7 @@
 
   /* Forced colors drop backgrounds, so paint the indicator with a system color. */
   @media (forced-colors: active) {
-    .tab[data-selected]::after {
+    .list:has(.tab[data-selected])::after {
       background: Highlight;
     }
   }

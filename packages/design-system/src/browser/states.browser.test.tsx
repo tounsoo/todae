@@ -78,7 +78,7 @@ describe('state in forced colors', () => {
         </Tabs.Root>
       </Themed>,
     );
-    expect(visible(screen.getByRole('tab', { name: 'Alpha' }), '::after')).toBe(true);
+    expect(visible(screen.getByRole('tablist'), '::after')).toBe(true);
   });
 
   it('tells a pressed toggle from an unpressed one', () => {

@@ -4655,6 +4655,24 @@
       "context": null
     },
     {
+      "path": "tabs.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-tabs-motion-duration",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tabs.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-tabs-motion-easing",
+      "cssValue": "var(--todae-motion-easing-standard)",
+      "ref": "motion.easing.standard",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "tabs.padding.x",
       "type": "dimension",
       "cssVar": "--todae-tabs-padding-x",

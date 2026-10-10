@@ -667,6 +667,8 @@
   --todae-tabs-indicator-color: var(--_todae-tabs-indicator-color, var(--todae-color-accent-default));
   --todae-tabs-indicator-size: var(--_todae-tabs-indicator-size, 2px);
   --todae-tabs-leading: var(--_todae-tabs-leading, var(--todae-font-leading-tight));
+  --todae-tabs-motion-duration: var(--_todae-tabs-motion-duration, var(--todae-motion-duration-normal));
+  --todae-tabs-motion-easing: var(--_todae-tabs-motion-easing, var(--todae-motion-easing-standard));
   --todae-tabs-padding-x: var(--_todae-tabs-padding-x, var(--todae-space-control-x));
   --todae-tabs-padding-y: var(--_todae-tabs-padding-y, var(--todae-space-control-y));
   --todae-tabs-radius: var(--_todae-tabs-radius, var(--todae-radius-sm));

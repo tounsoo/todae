@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { cdp, userEvent } from '@vitest/browser/context';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { Button } from '../components/Button';
@@ -16,6 +16,13 @@ function Themed({ children, dir }: { children: ReactNode; dir?: 'rtl' }) {
       {children}
     </div>
   );
+}
+
+/** vitest types the session without its methods; Playwright's session has `send`. */
+function emulateMedia(features: { name: string; value: string }[]) {
+  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', {
+    features,
+  });
 }
 
 function Toolbar() {
@@ -103,6 +110,109 @@ describe('Tabs in a browser', () => {
     } finally {
       style.remove();
     }
+  });
+});
+
+type Box = { left: number; right: number; top: number; bottom: number };
+
+/** The list's indicator, in viewport pixels. */
+function indicatorOf(list: HTMLElement): Box | null {
+  const style = getComputedStyle(list, '::after');
+  if (style.content === 'none' || style.display === 'none') return null;
+  const box = list.getBoundingClientRect();
+  const own = getComputedStyle(list);
+  const left = box.left + parseFloat(own.borderLeftWidth) + parseFloat(style.left);
+  const top = box.top + parseFloat(own.borderTopWidth) + parseFloat(style.top);
+  return { left, right: left + parseFloat(style.width), top, bottom: top + parseFloat(style.height) };
+}
+
+/** The indicator's box on every frame until no animation is left running. */
+async function sampleIndicator(list: HTMLElement): Promise<Box[]> {
+  const frames: Box[] = [];
+  const start = performance.now();
+  let quiet = 0;
+  while (performance.now() - start < 2000) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    const box = indicatorOf(list);
+    if (box) frames.push(box);
+    quiet = document.getAnimations().length === 0 ? quiet + 1 : 0;
+    if (quiet > 2) break;
+  }
+  return frames;
+}
+
+function TwoTabLists({ orientation }: { orientation?: 'vertical' }) {
+  return (
+    <Themed>
+      {[
+        ['First', 'a'],
+        ['Second', 'c'],
+      ].map(([name, value]) => (
+        <Tabs.Root key={name} defaultValue={value!} orientation={orientation}>
+          <Tabs.List aria-label={name}>
+            <Tabs.Tab value="a">Alpha</Tabs.Tab>
+            <Tabs.Tab value="b">Beta, a longer tab</Tabs.Tab>
+            <Tabs.Tab value="c">Gamma</Tabs.Tab>
+          </Tabs.List>
+        </Tabs.Root>
+      ))}
+    </Themed>
+  );
+}
+
+describe('The Tabs indicator', () => {
+  it.each([['horizontal'], ['vertical']] as const)('slides to the newly selected tab, %s', async (orientation) => {
+    render(<TwoTabLists orientation={orientation === 'vertical' ? 'vertical' : undefined} />);
+    const [first, second] = screen.getAllByRole('tablist') as [HTMLElement, HTMLElement];
+    const tab = (list: HTMLElement, name: string) => [...list.querySelectorAll<HTMLElement>('[role="tab"]')].find((t) => t.textContent === name)!;
+    const along = (box: Box | DOMRect) => (orientation === 'vertical' ? [box.top, box.bottom] : [box.left, box.right]);
+    const expectUnder = (list: HTMLElement, name: string) => {
+      const [start, end] = along(indicatorOf(list)!);
+      const [tabStart, tabEnd] = along(tab(list, name).getBoundingClientRect());
+      expect(Math.abs(start! - tabStart!)).toBeLessThanOrEqual(1);
+      expect(Math.abs(end! - tabEnd!)).toBeLessThanOrEqual(1);
+    };
+    expectUnder(first, 'Alpha');
+    expectUnder(second, 'Gamma');
+
+    await userEvent.click(tab(first, 'Beta, a longer tab'));
+    const frames = await sampleIndicator(first);
+    const from = along(tab(first, 'Alpha').getBoundingClientRect())[0]!;
+    const to = along(tab(first, 'Beta, a longer tab').getBoundingClientRect())[0]!;
+    // Some frame caught the indicator part way between the two tabs.
+    expect(frames.some((f) => along(f)[0]! > from + 4 && along(f)[0]! < to - 4)).toBe(true);
+    expectUnder(first, 'Beta, a longer tab');
+    // The other list keeps its own selection's indicator.
+    expectUnder(second, 'Gamma');
+  });
+
+  it('jumps without sliding when the user prefers reduced motion', async () => {
+    await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    try {
+      expect(matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(true);
+      render(<TwoTabLists />);
+      const [first] = screen.getAllByRole('tablist') as [HTMLElement];
+      const gamma = screen.getAllByRole('tab', { name: 'Gamma' })[0]!;
+      await userEvent.click(gamma);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      expect(document.getAnimations()).toHaveLength(0);
+      expect(Math.abs(indicatorOf(first)!.left - gamma.getBoundingClientRect().left)).toBeLessThanOrEqual(1);
+    } finally {
+      await emulateMedia([]);
+    }
+  });
+
+  it('is hidden while no tab is selected', () => {
+    render(
+      <Themed>
+        <Tabs.Root defaultValue="">
+          <Tabs.List aria-label="Sections">
+            <Tabs.Tab value="a">Alpha</Tabs.Tab>
+          </Tabs.List>
+        </Tabs.Root>
+      </Themed>,
+    );
+    expect(indicatorOf(screen.getByRole('tablist'))).toBeNull();
   });
 });
 
