@@ -156,7 +156,7 @@ describe('Toast with a modal dialog', () => {
     await userEvent.keyboard('{Escape}');
     // Through the exit motion the page is still inert, so the toast stays in
     // the dialog, usable, and does not fade with it.
-    await waitFor(() => expect(dialog.hasAttribute('data-exiting')).toBe(true));
+    await waitFor(() => expect(dialog.hasAttribute('data-todae-exiting')).toBe(true));
     expect(dialog.contains(undo)).toBe(true);
     expect(receivesPointer(undo)).toBe(true);
     expect(getComputedStyle(undo.closest('li')!).opacity).toBe('1');
@@ -1197,7 +1197,7 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
     await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
     act(() => toaster.dismiss(front));
     const [leaving, middle, back] = items();
-    expect(leaving!.hasAttribute('data-exiting')).toBe(true);
+    expect(leaving!.hasAttribute('data-todae-exiting')).toBe(true);
     expect(opacities(middle!)).toEqual(['1']);
     expect(opacities(back!)).toEqual(['0']);
   });

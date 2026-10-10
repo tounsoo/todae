@@ -2,7 +2,7 @@
   .menu {
     flex-direction: column;
     gap: var(--todae-menu-gap);
-    min-width: 10rem;
+    min-width: var(--todae-menu-min-width);
     outline: none;
   }
 
@@ -52,8 +52,8 @@
   .indicator {
     flex: none;
     position: relative;
-    width: 1em;
-    height: 1em;
+    width: calc(var(--todae-menu-item-indicator-scale) * 1em);
+    height: calc(var(--todae-menu-item-indicator-scale) * 1em);
   }
 
   /* A checkbox item's indicator holds the check glyph, which fills it and

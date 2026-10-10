@@ -12,6 +12,7 @@ import {
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState';
 import { useTooltip } from '../hooks/useTooltip';
+import { cx } from './cx';
 import styles from './Button.module.css';
 import { composeHandlers, useComposedRefs } from './props';
 import { Tooltip } from './Tooltip';
@@ -247,7 +248,7 @@ function Root({
       type={type}
       aria-pressed={toggle ? pressed : props['aria-pressed']}
       onClick={handleClick}
-      className={[styles.root, className].filter(Boolean).join(' ')}
+      className={cx(styles.root, className)}
       data-button-variant={variant === 'primary' ? undefined : variant}
       data-icon-only={iconOnly ? '' : undefined}
     >
@@ -271,14 +272,14 @@ function Icon({ className, ...props }: ButtonIconProps) {
       {...props}
       {...{ [ICON_ATTR]: '' }}
       aria-hidden={props['aria-hidden'] ?? true}
-      className={[styles.icon, className].filter(Boolean).join(' ')}
+      className={cx(styles.icon, className)}
     />
   );
 }
 
 function Group({ className, children, ...props }: ButtonGroupProps) {
   return (
-    <div {...props} role="group" className={[styles.group, className].filter(Boolean).join(' ')}>
+    <div {...props} role="group" className={cx(styles.group, className)}>
       {children}
     </div>
   );

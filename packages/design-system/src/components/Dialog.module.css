@@ -28,7 +28,7 @@
     opacity: 1;
   }
 
-  .dialog[open][data-exiting] {
+  .dialog[open][data-todae-exiting] {
     opacity: 0;
     transition-duration: var(--todae-dialog-motion-exit);
   }
@@ -64,7 +64,7 @@
     opacity: 1;
   }
 
-  .dialog[open][data-exiting] .panel {
+  .dialog[open][data-todae-exiting] .panel {
     opacity: 0;
     transition-duration: var(--todae-dialog-motion-exit);
   }

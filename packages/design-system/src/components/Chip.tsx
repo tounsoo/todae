@@ -3,6 +3,7 @@ import { useStrings } from '../providers/StringsProvider';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { CrossGlyph, glyphOr } from './glyphs';
 import type { BadgeTone } from './Badge';
+import { cx } from './cx';
 import styles from './Chip.module.css';
 
 /** The same tones as Badge. */
@@ -31,7 +32,7 @@ export type ChipOverflowProps = {
 } & Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
 function chipClass(className?: string): string {
-  return [styles.root, className].filter(Boolean).join(' ');
+  return cx(styles.root, className);
 }
 
 function ChipRoot({

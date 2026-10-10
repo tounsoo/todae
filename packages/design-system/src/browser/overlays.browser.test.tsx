@@ -85,17 +85,19 @@ describe('Dialog in a browser', () => {
   });
 });
 
-function PopoverHarness() {
+function PopoverHarness({ dir }: { dir?: 'rtl' }) {
   const [open, setOpen] = useState(false);
   const popover = usePopover({ open, onOpenChange: (next) => setOpen(next) });
   return (
     <Themed>
-      <div style={{ padding: 40 }}>
-        <Button.Root {...popover.getTriggerProps()}>Filters</Button.Root>
+      <div dir={dir}>
+        <div style={{ padding: 40 }}>
+          <Button.Root {...popover.getTriggerProps()}>Filters</Button.Root>
+        </div>
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Filters panel">
+          <button type="button">Apply</button>
+        </Popover.Root>
       </div>
-      <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Filters panel">
-        <button type="button">Apply</button>
-      </Popover.Root>
     </Themed>
   );
 }
@@ -109,12 +111,24 @@ describe('Popover in a browser', () => {
     await waitFor(() => expect(panel.matches(':popover-open')).toBe(true));
     const t = trigger.getBoundingClientRect();
     const p = panel.getBoundingClientRect();
-    // Anchor positioning places it under the trigger, aligned to its left edge.
+    // Anchor positioning places it under the trigger, aligned to its inline start.
     expect(p.top).toBeGreaterThanOrEqual(t.bottom);
     expect(p.top - t.bottom).toBeLessThan(24);
     expect(Math.abs(p.left - t.left)).toBeLessThan(1);
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(panel.matches(':popover-open')).toBe(false));
+  });
+
+  it('aligns to the inline start of its trigger in a right-to-left subtree', async () => {
+    render(<PopoverHarness dir="rtl" />);
+    const trigger = screen.getByRole('button', { name: 'Filters' });
+    await userEvent.click(trigger);
+    const panel = screen.getByRole('dialog', { name: 'Filters panel' });
+    await waitFor(() => expect(panel.matches(':popover-open')).toBe(true));
+    const t = trigger.getBoundingClientRect();
+    const p = panel.getBoundingClientRect();
+    expect(p.top).toBeGreaterThanOrEqual(t.bottom);
+    expect(Math.abs(p.right - t.right)).toBeLessThan(1);
   });
 });
 

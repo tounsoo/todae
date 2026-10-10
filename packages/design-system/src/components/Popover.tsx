@@ -2,6 +2,7 @@ import { useRef, type ComponentPropsWithoutRef, type CSSProperties, type ReactNo
 import { usePopoverSync } from '../overlay/usePopoverSync';
 import { useComposedRefs } from './props';
 import type { PopoverWire } from './Popover.wire';
+import { cx } from './cx';
 import styles from './Popover.module.css';
 import { ToolbarContext } from './toolbarContext';
 
@@ -70,7 +71,7 @@ function PopoverRoot({
       ref={refs}
       popover="manual"
       role={role}
-      className={[styles.content, className].filter(Boolean).join(' ')}
+      className={cx(styles.content, className)}
       style={style}
       onPointerDown={onPointerDown}
       onClick={onClick}

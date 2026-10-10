@@ -1,7 +1,6 @@
 import {
   useContext,
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -17,6 +16,7 @@ import {
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
+import { useDomId } from './domId';
 import { Chip } from './Chip';
 import {
   FIELD_CONTROL_SELECTOR,
@@ -164,8 +164,8 @@ function Root({
 }: FieldRootProps) {
   // Inside a Fieldset.Root, its disabled and invalid apply here too.
   const { disabled, invalid } = useFieldsetState({ disabled: disabledProp, invalid: invalidProp });
-  const autoId = useId();
-  const hintId = useId();
+  const autoId = useDomId();
+  const hintId = useDomId();
   const inputRef = useRef<HTMLElement>(null);
   const pendingPicker = useRef<HTMLSelectElement | null>(null);
   const [store] = useState(createCountStore);
@@ -295,7 +295,7 @@ function TextInput({
       maxLength={maxLength}
       value={value}
       type={type}
-      className={[styles.input, className].filter(Boolean).join(' ')}
+      className={cx(styles.input, className)}
       onChange={(event) => {
         onChange(event);
         onValueChange?.(event.target.value);
@@ -345,12 +345,12 @@ function Textarea({
       rows={resolved.rows}
       data-auto-grow={autoGrow ? '' : undefined}
       data-max-rows={resolved.maxRows}
-      className={[styles.textarea, className].filter(Boolean).join(' ')}
+      className={cx(styles.textarea, className)}
       style={
         {
           ...style,
-          '--todae-field-rows': resolved.rows,
-          '--todae-field-max-rows': resolved.maxRows,
+          '--_text-rows': resolved.rows,
+          '--_max-rows': resolved.maxRows,
         } as CSSProperties
       }
       onChange={(event) => {
@@ -451,7 +451,7 @@ function ChipInput({
       {...control}
       value={inputValue}
       type="text"
-      className={[styles.input, className].filter(Boolean).join(' ')}
+      className={cx(styles.input, className)}
       onChange={(event) => onInputValueChange(event.target.value)}
       onKeyDown={onKeyDown}
     />
@@ -479,7 +479,7 @@ function ChipInput({
             className={styles.row}
             data-max-rows={maxRows ?? undefined}
             data-measured={maxRows != null && list.measured ? '' : undefined}
-            style={maxRows != null ? ({ '--todae-field-chip-rows': maxRows } as CSSProperties) : undefined}
+            style={maxRows != null ? ({ '--_chip-rows': maxRows } as CSSProperties) : undefined}
           >
             {chipNodes}
             {overflow}
@@ -497,7 +497,7 @@ function ChipInput({
       ref={list.listRef}
       data-max-rows={maxRows ?? undefined}
       data-measured={maxRows != null && list.measured ? '' : undefined}
-      style={maxRows != null ? ({ '--todae-field-chip-rows': maxRows } as CSSProperties) : undefined}
+      style={maxRows != null ? ({ '--_chip-rows': maxRows } as CSSProperties) : undefined}
     >
       {chipNodes}
       {overflow}
@@ -560,20 +560,10 @@ export type FieldCounterProps = {
   style?: CSSProperties;
 } & Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
-let warnedOutsideRoot = false;
 let warnedNoInput = false;
 
 function liveCopy(remaining: number, strings: Strings) {
   return remaining <= 0 ? strings.characterLimitReached : strings.charactersLeft(remaining);
-}
-
-function CounterMissing() {
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'production' || warnedOutsideRoot) return;
-    warnedOutsideRoot = true;
-    console.warn('Field.Counter must render inside Field.Root');
-  }, []);
-  return null;
 }
 
 function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: FieldContextValue }) {
@@ -629,7 +619,7 @@ function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: F
 
 function Counter(props: FieldCounterProps) {
   const ctx = useContext(FieldContext);
-  if (!ctx) return <CounterMissing />;
+  if (!ctx) throw new Error('Field.Counter must render inside Field.Root');
   return <CounterInner {...props} ctx={ctx} />;
 }
 

@@ -12,7 +12,7 @@ Non-modal `popover="manual"`. Outside click and Escape call `onOpenChange(false,
 
 No focus trap, no `aria-modal`, no scroll lock, no inert. No portal — the surface stays in the React tree so `ThemeProvider` vars inherit.
 
-Positioning is CSS anchors only. `getTriggerProps` sets `anchor-name`. `anchorRef` does the same when the trigger is not the anchor (Combobox Field). Content uses `position-anchor` and `top: calc(anchor(bottom) + var(--todae-popover-offset))` with `--todae-popover-offset: var(--todae-space-1)` (`4px`). Flip is `@position-try --todae-popover-flip-block` plus `position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline`. There is no JS pin, no `getBoundingClientRect` follow, and no rAF scroll glue.
+Positioning is CSS anchors only. `getTriggerProps` sets `anchor-name`. `anchorRef` does the same when the trigger is not the anchor (Combobox Field). Content uses `position-anchor` and `top: calc(anchor(bottom) + var(--todae-popover-offset))`. The gap is the `popover.offset` token (`--todae-popover-offset`), which points at `space.1` (`0.25rem`). Flip is `@position-try --todae-popover-flip-block` plus `position-try-fallbacks: --todae-popover-flip-block, flip-block, flip-inline, flip-block flip-inline`. There is no JS pin, no `getBoundingClientRect` follow, and no rAF scroll glue.
 
 A browser without CSS anchors does not place the surface next to its trigger. The surface resets the UA popover centering, so it sits near the top-left corner of the viewport, and it does not follow scroll or flip. Todae does not polyfill that. Safari 26+ has anchors. Safari 26 documents `position-try` with `position-area` names. `flip-block` is Chrome’s tactic. iOS before 26 has `popover` and no CSS anchors.
 

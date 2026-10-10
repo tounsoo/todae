@@ -948,8 +948,8 @@ describe('chip list recipe', () => {
     });
     act(() => first.focus());
     await act(async () => tags.set((current) => current.slice(1)));
-    const items = screen.getAllByRole('listitem').filter((item) => item.hasAttribute('data-key'));
-    expect(items.map((item) => item.getAttribute('data-key'))).toEqual(['1:aa']);
+    const items = screen.getAllByRole('listitem').filter((item) => item.hasAttribute('data-todae-key'));
+    expect(items.map((item) => item.getAttribute('data-todae-key'))).toEqual(['1:aa']);
   });
 
   it('focuses a chip revealed by the remeasure, not the list', async () => {
@@ -1149,7 +1149,7 @@ describe('chip list recipe', () => {
       for (let step = 0; step < 40; step++) {
         const before = document.activeElement as HTMLElement | null;
         const inside = before != null && (list.contains(before) || !!panelOf()?.contains(before));
-        const beforeKey = before?.closest('[data-key]')?.getAttribute('data-key') ?? null;
+        const beforeKey = before?.closest('[data-todae-key]')?.getAttribute('data-todae-key') ?? null;
         const op = rand(9);
         sync = rand(2) === 0;
         const where = `run ${run} step ${step} op ${op}`;
@@ -1199,7 +1199,7 @@ describe('chip list recipe', () => {
         if (active === list && before !== list) expect(list.querySelectorAll('button'), where).toHaveLength(0);
         if (keyed && inside && !moves && op !== 0 && beforeKey != null) {
           const own = [list, panel].flatMap((box) =>
-            box ? [...box.children].filter((el) => el.getAttribute('data-key') === beforeKey) : [],
+            box ? [...box.children].filter((el) => el.getAttribute('data-todae-key') === beforeKey) : [],
           );
           const button = own.map((el) => el.querySelector('button')).find((b) => b != null && focusables().includes(b));
           if (button) expect(active, where).toBe(button);

@@ -16,6 +16,7 @@ import { useStrings } from '../providers/StringsProvider';
 import { Chip, type ChipTone } from './Chip';
 import { useChipKeys } from './chipKeys';
 import { Popover } from './Popover';
+import { cx } from './cx';
 import styles from './ChipList.module.css';
 
 /**
@@ -117,7 +118,7 @@ class FocusGuard extends Component<{ layout: Layout; park: (prev: Layout, next: 
 
 // The remove buttons of the chips directly in box, in order.
 function buttons(box: Element | null | undefined): HTMLElement[] {
-  return box ? [...box.querySelectorAll<HTMLElement>(':scope > [data-key] > button')] : [];
+  return box ? [...box.querySelectorAll<HTMLElement>(':scope > [data-todae-key] > button')] : [];
 }
 
 function focusVisible(el: Element): boolean {
@@ -129,7 +130,7 @@ function focusVisible(el: Element): boolean {
 }
 
 function buttonFor(box: Element | null | undefined, key: string): HTMLElement | null {
-  const item = box ? [...box.children].find((el) => el.getAttribute('data-key') === key) : undefined;
+  const item = box ? [...box.children].find((el) => el.getAttribute('data-todae-key') === key) : undefined;
   return item?.querySelector('button') ?? null;
 }
 
@@ -185,8 +186,8 @@ function Root({
     if (active === moreRef.current) spot = { kind: 'more', slot: prev.row.length };
     else if (panel && active === panel) spot = { kind: 'panel' };
     else {
-      const item = active.closest('[data-key]');
-      const key = item?.getAttribute('data-key');
+      const item = active.closest('[data-todae-key]');
+      const key = item?.getAttribute('data-todae-key');
       if (item && key != null && item.parentElement === list) {
         spot = { kind: 'chip', key, in: 'row', slot: prev.row.indexOf(key) };
       } else if (item && key != null && panel && item.parentElement === panel) {
@@ -267,7 +268,7 @@ function Root({
 
   const wire = popover.getPopoverProps();
   return (
-    <div {...props} className={[styles.root, className].filter(Boolean).join(' ')} style={style}>
+    <div {...props} className={cx(styles.root, className)} style={style}>
       <FocusGuard layout={layout} park={park} />
       <div
         className={styles.clip}
@@ -297,7 +298,7 @@ function Root({
             <Chip.Root
               key={keys[index]}
               role="listitem"
-              data-key={keys[index]}
+              data-todae-key={keys[index]}
               data-value={chip.value}
               data-index={index}
               tone={getTone?.(chip.value, index)}
@@ -340,7 +341,7 @@ function Root({
             return (
               <Chip.Root
                 key={keys[at]}
-                data-key={keys[at]}
+                data-todae-key={keys[at]}
                 data-value={value}
                 data-index={at}
                 tone={getTone?.(value, at)}

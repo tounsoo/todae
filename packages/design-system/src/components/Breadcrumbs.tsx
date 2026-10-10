@@ -47,7 +47,7 @@ function Root({
       aria-label={ariaLabel || (labelledby ? undefined : DEFAULT_STRINGS.breadcrumbs)}
       aria-labelledby={labelledby}
       className={cx(styles.root, className)}
-      style={separator === undefined ? style : ({ '--todae-breadcrumbs-glyph': cssString(separator), ...style } as CSSProperties)}
+      style={separator === undefined ? style : ({ '--_glyph': cssString(separator), ...style } as CSSProperties)}
     >
       {/* Safari drops the list role from a list without markers; role="list" keeps it. */}
       <ol role="list" className={styles.list}>

@@ -1,9 +1,9 @@
 @layer todae.components {
   /* Neutral is the base, so a tone the CSS does not know still draws a badge. */
   .root {
-    --todae-badge-tone-fg: var(--todae-badge-neutral-fg);
-    --todae-badge-tone-bg: var(--todae-badge-neutral-bg);
-    --todae-badge-tone-border: var(--todae-badge-neutral-border);
+    --_tone-fg: var(--todae-badge-neutral-fg);
+    --_tone-bg: var(--todae-badge-neutral-bg);
+    --_tone-border: var(--todae-badge-neutral-border);
 
     /* Inline-block, not flex, so a long label can end in an ellipsis. */
     display: inline-block;
@@ -17,10 +17,10 @@
     text-overflow: ellipsis;
     text-align: center;
     padding: var(--todae-badge-padding-y) var(--todae-badge-padding-x);
-    border: var(--todae-badge-border-width) solid var(--todae-badge-tone-border);
+    border: var(--todae-badge-border-width) solid var(--_tone-border);
     border-radius: var(--todae-badge-radius);
-    background: var(--todae-badge-tone-bg);
-    color: var(--todae-badge-tone-fg);
+    background: var(--_tone-bg);
+    color: var(--_tone-fg);
     font-size: var(--todae-badge-font-size);
     font-weight: var(--todae-badge-font-weight);
     line-height: var(--todae-badge-leading);
@@ -30,74 +30,74 @@
   }
 
   .root[data-tone='info'] {
-    --todae-badge-tone-fg: var(--todae-badge-info-fg);
-    --todae-badge-tone-bg: var(--todae-badge-info-bg);
-    --todae-badge-tone-border: var(--todae-badge-info-border);
+    --_tone-fg: var(--todae-badge-info-fg);
+    --_tone-bg: var(--todae-badge-info-bg);
+    --_tone-border: var(--todae-badge-info-border);
   }
 
   .root[data-tone='success'] {
-    --todae-badge-tone-fg: var(--todae-badge-success-fg);
-    --todae-badge-tone-bg: var(--todae-badge-success-bg);
-    --todae-badge-tone-border: var(--todae-badge-success-border);
+    --_tone-fg: var(--todae-badge-success-fg);
+    --_tone-bg: var(--todae-badge-success-bg);
+    --_tone-border: var(--todae-badge-success-border);
   }
 
   .root[data-tone='warning'] {
-    --todae-badge-tone-fg: var(--todae-badge-warning-fg);
-    --todae-badge-tone-bg: var(--todae-badge-warning-bg);
-    --todae-badge-tone-border: var(--todae-badge-warning-border);
+    --_tone-fg: var(--todae-badge-warning-fg);
+    --_tone-bg: var(--todae-badge-warning-bg);
+    --_tone-border: var(--todae-badge-warning-border);
   }
 
   .root[data-tone='critical'] {
-    --todae-badge-tone-fg: var(--todae-badge-critical-fg);
-    --todae-badge-tone-bg: var(--todae-badge-critical-bg);
-    --todae-badge-tone-border: var(--todae-badge-critical-border);
+    --_tone-fg: var(--todae-badge-critical-fg);
+    --_tone-bg: var(--todae-badge-critical-bg);
+    --_tone-border: var(--todae-badge-critical-border);
   }
 
   .root[data-tone='category-1'] {
-    --todae-badge-tone-fg: var(--todae-badge-category-1-fg);
-    --todae-badge-tone-bg: var(--todae-badge-category-1-bg);
-    --todae-badge-tone-border: var(--todae-badge-category-1-border);
+    --_tone-fg: var(--todae-badge-category-1-fg);
+    --_tone-bg: var(--todae-badge-category-1-bg);
+    --_tone-border: var(--todae-badge-category-1-border);
   }
 
   .root[data-tone='category-2'] {
-    --todae-badge-tone-fg: var(--todae-badge-category-2-fg);
-    --todae-badge-tone-bg: var(--todae-badge-category-2-bg);
-    --todae-badge-tone-border: var(--todae-badge-category-2-border);
+    --_tone-fg: var(--todae-badge-category-2-fg);
+    --_tone-bg: var(--todae-badge-category-2-bg);
+    --_tone-border: var(--todae-badge-category-2-border);
   }
 
   .root[data-tone='category-3'] {
-    --todae-badge-tone-fg: var(--todae-badge-category-3-fg);
-    --todae-badge-tone-bg: var(--todae-badge-category-3-bg);
-    --todae-badge-tone-border: var(--todae-badge-category-3-border);
+    --_tone-fg: var(--todae-badge-category-3-fg);
+    --_tone-bg: var(--todae-badge-category-3-bg);
+    --_tone-border: var(--todae-badge-category-3-border);
   }
 
   .root[data-tone='category-4'] {
-    --todae-badge-tone-fg: var(--todae-badge-category-4-fg);
-    --todae-badge-tone-bg: var(--todae-badge-category-4-bg);
-    --todae-badge-tone-border: var(--todae-badge-category-4-border);
+    --_tone-fg: var(--todae-badge-category-4-fg);
+    --_tone-bg: var(--todae-badge-category-4-bg);
+    --_tone-border: var(--todae-badge-category-4-border);
   }
 
   .root[data-tone='category-5'] {
-    --todae-badge-tone-fg: var(--todae-badge-category-5-fg);
-    --todae-badge-tone-bg: var(--todae-badge-category-5-bg);
-    --todae-badge-tone-border: var(--todae-badge-category-5-border);
+    --_tone-fg: var(--todae-badge-category-5-fg);
+    --_tone-bg: var(--todae-badge-category-5-bg);
+    --_tone-border: var(--todae-badge-category-5-border);
   }
 
   .root[data-tone='category-6'] {
-    --todae-badge-tone-fg: var(--todae-badge-category-6-fg);
-    --todae-badge-tone-bg: var(--todae-badge-category-6-bg);
-    --todae-badge-tone-border: var(--todae-badge-category-6-border);
+    --_tone-fg: var(--todae-badge-category-6-fg);
+    --_tone-bg: var(--todae-badge-category-6-bg);
+    --_tone-border: var(--todae-badge-category-6-border);
   }
 
   .root[data-tone='category-7'] {
-    --todae-badge-tone-fg: var(--todae-badge-category-7-fg);
-    --todae-badge-tone-bg: var(--todae-badge-category-7-bg);
-    --todae-badge-tone-border: var(--todae-badge-category-7-border);
+    --_tone-fg: var(--todae-badge-category-7-fg);
+    --_tone-bg: var(--todae-badge-category-7-bg);
+    --_tone-border: var(--todae-badge-category-7-border);
   }
 
   .root[data-tone='category-8'] {
-    --todae-badge-tone-fg: var(--todae-badge-category-8-fg);
-    --todae-badge-tone-bg: var(--todae-badge-category-8-bg);
-    --todae-badge-tone-border: var(--todae-badge-category-8-border);
+    --_tone-fg: var(--todae-badge-category-8-fg);
+    --_tone-bg: var(--todae-badge-category-8-bg);
+    --_tone-border: var(--todae-badge-category-8-border);
   }
 }

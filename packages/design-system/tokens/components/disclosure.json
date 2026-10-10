@@ -13,10 +13,12 @@
       }
     },
     "marker": {
-      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+      "scale": { "$type": "number", "$value": 1 }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+      "radius": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
     },
     "motion": {
       "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },

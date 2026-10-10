@@ -15,6 +15,7 @@ import {
   type TipSurface,
 } from './Tooltip.surface';
 import type { TooltipWire } from './Tooltip.wire';
+import { cx } from './cx';
 import styles from './Tooltip.module.css';
 import { useComposedRefs } from './props';
 
@@ -85,7 +86,7 @@ function TooltipTip({
       {...surface.attrs}
       ref={refs}
       data-open={open ? '' : undefined}
-      className={[styles.content, className].filter(Boolean).join(' ')}
+      className={cx(styles.content, className)}
       style={style}
     >
       {children}
@@ -126,7 +127,7 @@ function TooltipPanel({
       {...contentNameOf({ 'aria-label': ariaLabel, 'aria-labelledby': ariaLabelledby })}
       ref={refs}
       data-open={open ? '' : undefined}
-      className={[styles.content, className].filter(Boolean).join(' ')}
+      className={cx(styles.content, className)}
       style={style}
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}

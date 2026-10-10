@@ -52,15 +52,15 @@ describe('Breadcrumbs', () => {
 
   it('sets a separator as a CSS string, escaping what CSS reads differently', () => {
     const { unmount } = render(<Trail separator="›" />);
-    expect(screen.getByRole('navigation').style.getPropertyValue('--todae-breadcrumbs-glyph')).toBe('"›"');
+    expect(screen.getByRole('navigation').style.getPropertyValue('--_glyph')).toBe('"›"');
     unmount();
     render(<Trail separator={'a"\\\n'} />);
-    expect(screen.getByRole('navigation').style.getPropertyValue('--todae-breadcrumbs-glyph')).toBe('"a\\"\\\\\\a "');
+    expect(screen.getByRole('navigation').style.getPropertyValue('--_glyph')).toBe('"a\\"\\\\\\a "');
   });
 
   it('leaves the default glyph to the stylesheet, so a CSS rule can change it', () => {
     render(<Trail />);
-    expect(screen.getByRole('navigation').style.getPropertyValue('--todae-breadcrumbs-glyph')).toBe('');
+    expect(screen.getByRole('navigation').style.getPropertyValue('--_glyph')).toBe('');
   });
 
   it('keeps the default name when the label passed is empty', () => {

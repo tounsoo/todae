@@ -97,10 +97,12 @@ describe('Popover', () => {
     expect(document.querySelector('[popover="manual"]')).not.toBeNull();
   });
 
-  it('anchors in CSS with a 4px gap', () => {
-    expect(css).toMatch(/--todae-popover-offset:\s*var\(--todae-space-1\)/);
+  it('anchors in CSS with the popover.offset gap, at the inline start', () => {
+    expect(css).not.toMatch(/--todae-popover-offset:/);
     expect(css).toMatch(/top:\s*calc\(anchor\(bottom\) \+ var\(--todae-popover-offset\)\)/);
     expect(css).toMatch(/@position-try --todae-popover-flip-block/);
+    expect(css).not.toMatch(/\b(left|right):/);
+    expect(css.match(/inset-inline-start:\s*anchor\(self-start\)/g)).toHaveLength(2);
   });
 
   it('owns the pointer on the popover box', () => {
@@ -158,7 +160,7 @@ describe('Popover', () => {
     expect(source).not.toContain('Popover.Content');
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../overlay/usePopoverSync', './Popover.wire', './Popover.module.css', './props', './toolbarContext']),
+      new Set(['react', '../overlay/usePopoverSync', './Popover.wire', './Popover.module.css', './props', './cx', './toolbarContext']),
     );
     expect(css).not.toContain('.trigger');
     expect(css).toContain('anchor(');

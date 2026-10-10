@@ -32,7 +32,7 @@ describe('Drawer in a browser', () => {
     await settledPanel();
     rerender(<Open open={false} />);
     const drawer = screen.getByRole('dialog', { name: 'Filters' });
-    expect(drawer.hasAttribute('data-exiting')).toBe(true);
+    expect(drawer.hasAttribute('data-todae-exiting')).toBe(true);
     expect(getComputedStyle(drawer).opacity).toBe('1');
     expect(getComputedStyle(screen.getByTestId('body').parentElement!).opacity).toBe('1');
     expect(getComputedStyle(drawer).transitionProperty).toBe('background-color');

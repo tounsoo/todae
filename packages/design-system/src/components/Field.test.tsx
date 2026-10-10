@@ -197,8 +197,8 @@ describe('Field.Textarea', () => {
     );
     const textarea = container.querySelector('textarea');
     expect(textarea).toHaveProperty('rows', 4);
-    expect(textarea?.style.getPropertyValue('--todae-field-rows')).toBe('4');
-    expect(textarea?.style.getPropertyValue('--todae-field-max-rows')).toBe('6');
+    expect(textarea?.style.getPropertyValue('--_text-rows')).toBe('4');
+    expect(textarea?.style.getPropertyValue('--_max-rows')).toBe('6');
     expect(textarea?.hasAttribute('data-auto-grow')).toBe(true);
     expect(textarea?.getAttribute('data-max-rows')).toBe('6');
     expect(textarea?.hasAttribute('maxRows')).toBe(false);
@@ -215,8 +215,8 @@ describe('Field.Textarea', () => {
     );
     const textarea = container.querySelector('textarea');
     expect(textarea).toHaveProperty('rows', 3);
-    expect(textarea?.style.getPropertyValue('--todae-field-rows')).toBe('3');
-    expect(textarea?.style.getPropertyValue('--todae-field-max-rows')).toBe('');
+    expect(textarea?.style.getPropertyValue('--_text-rows')).toBe('3');
+    expect(textarea?.style.getPropertyValue('--_max-rows')).toBe('');
     expect(textarea?.hasAttribute('data-auto-grow')).toBe(false);
     expect(textarea?.hasAttribute('data-max-rows')).toBe(false);
   });
@@ -230,7 +230,7 @@ describe('Field.Textarea', () => {
     );
     const textarea = container.querySelector('textarea');
     expect(textarea).toHaveProperty('rows', 3);
-    expect(textarea?.getAttribute('style')).toBe('--todae-field-rows: 3;');
+    expect(textarea?.getAttribute('style')).toBe('--_text-rows: 3;');
     expect(textarea?.getAttribute('style')).not.toContain('color');
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
@@ -315,7 +315,7 @@ describe('Field.Textarea', () => {
     expect(fieldCss).toMatch(/\.textarea\[data-auto-grow\]\s*\{[^}]*resize:\s*none/);
     expect(fieldCss).toContain('.shell:has(:is(input, textarea, [data-todae-field-control], [data-todae-field-control] *):focus-visible)');
     expect(fieldCss).toMatch(/\.textarea\s*\{[^}]*outline:\s*none/);
-    expect(fieldCss).toContain('min-height: calc(var(--todae-field-rows) * 1lh + var(--_pad-block))');
+    expect(fieldCss).toContain('min-height: calc(var(--_text-rows) * 1lh + var(--_pad-block))');
     expect(fieldCss).not.toContain('min-height: calc(1lh');
     expect(fieldCss).not.toContain('min-height: calc(var(--todae-field-leading) * 1em');
   });
@@ -829,7 +829,7 @@ describe('Field.ChipInput maxRows SSR', () => {
     );
     expect(html).toContain('data-max-rows');
     expect(html).not.toContain('data-measured');
-    expect(html).toContain('--todae-field-chip-rows');
+    expect(html).toContain('--_chip-rows');
     expect(html).not.toContain('6ch');
   });
 
@@ -841,7 +841,7 @@ describe('Field.ChipInput maxRows SSR', () => {
     );
     expect(html).not.toContain('data-max-rows');
     expect(html).not.toContain('data-measured');
-    expect(html).not.toContain('--todae-field-chip-rows');
+    expect(html).not.toContain('--_chip-rows');
   });
 });
 
@@ -849,7 +849,7 @@ describe('Field.Counter', () => {
   const bareInput =
     '<div class="_shell_61a677"><input id="_R_0_" data-todae-field-control="" type="text" class="_input_61a677" value=""/></div>';
   const bareArea =
-    '<div class="_shell_61a677"><textarea id="_R_0_" data-todae-field-control="" rows="3" class="_textarea_61a677" style="--todae-field-rows:3"></textarea></div>';
+    '<div class="_shell_61a677"><textarea id="_R_0_" data-todae-field-control="" rows="3" class="_textarea_61a677" style="--_text-rows:3"></textarea></div>';
 
   it('keeps bare server markup and scopes new layout rules under :has', () => {
     expect(
@@ -1143,17 +1143,16 @@ describe('Field.Counter', () => {
     expect(ids.filter((id) => container.querySelector(`input, textarea`) && id).length).toBeGreaterThan(1);
   });
 
-  it('warns once outside Root and once with no input', async () => {
+  it('throws outside Root, naming the part and its Root', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(() => render(<Field.Counter />)).toThrow('Field.Counter must render inside Field.Root');
+    error.mockRestore();
+  });
+
+  it('warns once with no input', async () => {
     vi.resetModules();
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const mod = await import('./Field');
     const { render: renderFresh } = await import('@testing-library/react');
-    renderFresh(<mod.Field.Counter />);
-    renderFresh(<mod.Field.Counter />);
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    cleanup();
-    vi.resetModules();
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const again = await import('./Field');
     renderFresh(
       <again.Field.Root>
@@ -1245,14 +1244,14 @@ describe('Field alignment', () => {
     expect(adornment).toContain('line-height: var(--todae-field-leading)');
     expect(adornment).toContain('height: 1lh');
     expect(cssBlock(fieldCss, '.flow {')).toContain(
-      '--todae-field-chip-row-h: calc(var(--todae-field-font-size) * var(--todae-field-leading))',
+      '--_chip-row-h: calc(var(--todae-field-font-size) * var(--todae-field-leading))',
     );
     expect(fieldCss).not.toContain('--todae-chip-font-size) * 1.25');
     const span = cssBlock(fieldCss, '.flow > span {');
     const rowSpan = cssBlock(fieldCss, '.flow > .row > span {');
     for (const block of [span, rowSpan]) {
       expect(block).toContain('box-sizing: border-box');
-      expect(block).toContain('height: var(--todae-field-chip-row-h)');
+      expect(block).toContain('height: var(--_chip-row-h)');
       expect(block).toContain('padding-block: 0');
     }
     const body = (block: string) => block.slice(block.indexOf('{')).replace(/\s+/g, '');
@@ -1537,7 +1536,7 @@ describe('Field.ChipInput row', () => {
     const row = flow.querySelector(':scope > [class*="row"]') as HTMLElement;
     expect(flow.hasAttribute('data-max-rows')).toBe(false);
     expect(row.getAttribute('data-max-rows')).toBe('1');
-    expect(row.style.getPropertyValue('--todae-field-chip-rows')).toBe('1');
+    expect(row.style.getPropertyValue('--_chip-rows')).toBe('1');
     expect(flow.querySelector('input')?.parentElement).toBe(flow);
     expect(row.contains(flow.querySelector('input'))).toBe(false);
   });

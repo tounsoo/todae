@@ -29,7 +29,7 @@
     background-color: var(--todae-overlay-scrim-bg);
   }
 
-  .drawer[open][data-exiting] {
+  .drawer[open][data-todae-exiting] {
     background-color: transparent;
     transition-duration: var(--todae-drawer-motion-exit);
   }
@@ -72,7 +72,7 @@
     inset-inline-start: 0;
   }
 
-  .drawer[open][data-exiting] .panel {
+  .drawer[open][data-todae-exiting] .panel {
     inset-inline-start: var(--_from);
     transition-duration: var(--todae-drawer-motion-exit);
   }
