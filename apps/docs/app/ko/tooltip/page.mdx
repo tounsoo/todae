@@ -29,26 +29,26 @@ import { Table } from '@omsoo/todae/table';
 ## 무엇을 어디에 두나요
 
 <Table.Root>
-  <thead>
-    <tr>
-      <th scope="col">관심사</th>
-      <th scope="col">API</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">동작</th>
-      <td>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">관심사</Table.HeaderCell>
+      <Table.HeaderCell scope="col">API</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">동작</Table.HeaderCell>
+      <Table.Cell>
         <Code.Root>useTooltip</Code.Root> — <Code.Root>interactive</Code.Root>, 지연, <Code.Root>open</Code.Root> / <Code.Root>onOpenChange</Code.Root>, <Code.Root>enabled</Code.Root>, <Code.Root>id</Code.Root>
-      </td>
-    </tr>
-    <tr>
-      <th scope="row">외형</th>
-      <td>
+      </Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">외형</Table.HeaderCell>
+      <Table.Cell>
         <Code.Root>Tooltip.Root</Code.Root> — <Code.Root>children</Code.Root>, <Code.Root>className</Code.Root>, <Code.Root>style</Code.Root>, 다이얼로그 이름
-      </td>
-    </tr>
-  </tbody>
+      </Table.Cell>
+    </Table.Row>
+  </Table.Body>
 </Table.Root>
 
 ## Button 편의 기능

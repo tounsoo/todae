@@ -21,7 +21,7 @@ export {
 export { Link, type LinkRootProps, type LinkRenderProps } from './components/Link';
 export { Disclosure, type DisclosureRootProps, type DisclosureSummaryProps } from './components/Disclosure';
 export { Separator, type SeparatorRootProps } from './components/Separator';
-export { Table, type TableRootProps } from './components/Table';
+export { Table, type TableBodyProps, type TableCaptionProps, type TableCellProps, type TableFootProps, type TableHeadProps, type TableHeaderCellProps, type TableRootProps, type TableRowProps } from './components/Table';
 export { Progress, type ProgressRootProps } from './components/Progress';
 export { Meter, type MeterRootProps } from './components/Meter';
 export { Spinner, type SpinnerRootProps } from './components/Spinner';

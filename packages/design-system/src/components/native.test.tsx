@@ -12,6 +12,10 @@ describe('native element components', () => {
     ['Disclosure.Root', () => <Disclosure.Root data-testid="x" className="mine" />, 'DETAILS'],
     ['Separator.Root', () => <Separator.Root data-testid="x" className="mine" />, 'HR'],
     ['Table.Root', () => <Table.Root data-testid="x" className="mine" />, 'TABLE'],
+    ['Table.Caption', () => <table><Table.Caption data-testid="x" className="mine" /></table>, 'CAPTION'],
+    ['Table.Head', () => <table><Table.Head data-testid="x" className="mine" /></table>, 'THEAD'],
+    ['Table.HeaderCell', () => <table><tbody><tr><Table.HeaderCell data-testid="x" className="mine" /></tr></tbody></table>, 'TH'],
+    ['Table.Cell', () => <table><tbody><tr><Table.Cell data-testid="x" className="mine" /></tr></tbody></table>, 'TD'],
     ['Progress.Root', () => <Progress.Root data-testid="x" className="mine" />, 'PROGRESS'],
     ['Meter.Root', () => <Meter.Root value={1} data-testid="x" className="mine" />, 'METER'],
     ['Spinner.Root', () => <Spinner.Root data-testid="x" className="mine" />, 'PROGRESS'],
@@ -56,6 +60,37 @@ describe('native element components', () => {
     expect(details.getAttribute('name')).toBe('faq');
     expect(details.hasAttribute('open')).toBe(true);
     expect(screen.getByText('What is Todae?').tagName).toBe('SUMMARY');
+  });
+
+  it('builds a native table from its parts', () => {
+    render(
+      <Table.Root>
+        <Table.Caption>Invoices</Table.Caption>
+        <Table.Head>
+          <Table.Row>
+            <Table.HeaderCell scope="col">Month</Table.HeaderCell>
+            <Table.HeaderCell scope="col">Total</Table.HeaderCell>
+          </Table.Row>
+        </Table.Head>
+        <Table.Body>
+          <Table.Row>
+            <Table.HeaderCell scope="row">May</Table.HeaderCell>
+            <Table.Cell>$120</Table.Cell>
+          </Table.Row>
+        </Table.Body>
+        <Table.Foot>
+          <Table.Row>
+            <Table.HeaderCell scope="row">Sum</Table.HeaderCell>
+            <Table.Cell>$120</Table.Cell>
+          </Table.Row>
+        </Table.Foot>
+      </Table.Root>,
+    );
+    const table = screen.getByRole('table', { name: 'Invoices' });
+    expect([...table.children].map((el) => el.tagName)).toEqual(['CAPTION', 'THEAD', 'TBODY', 'TFOOT']);
+    expect(screen.getAllByRole('columnheader').map((el) => el.textContent)).toEqual(['Month', 'Total']);
+    expect(screen.getAllByRole('rowheader').map((el) => el.textContent)).toEqual(['May', 'Sum']);
+    expect(screen.getAllByRole('cell')).toHaveLength(2);
   });
 
   it('keeps a spinner indeterminate even if a value slips through', () => {
