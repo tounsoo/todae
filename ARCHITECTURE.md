@@ -31,7 +31,7 @@ Rules:
 
 ## Component API
 
-- **Compound namespaces.** A component with parts is a namespace object with a `Root`: `Menu.Root`, `Menu.Item`, `Table.HeaderCell`. Components without parts exist in both shapes today: a `{ Root }` namespace (`Separator.Root`) or one export (`Stack`).
+- **Compound namespaces.** A component with parts is a namespace object with a `Root`: `Menu.Root`, `Menu.Item`, `Table.HeaderCell`. A new component without parts also ships as a namespace with only a `Root` (`Separator.Root`). Some older ones, such as `Stack`, are one export. *Why:* one shape across the package.
 - **Don't nest namespaces** (no `Field.Button.Root`), and give each root one interactive role. Components sit side by side: a Field and a Popover are siblings, neither wraps the other.
 - **A part that renders an element forwards native attributes and its ref.** Type its props with `ComponentPropsWithRef<'element'>`, spread the rest onto the element, and merge `className` with `cx`. *Why:* a company wrapper only has to spread props to keep everything working.
 - **Don't make behavior depend on a child's component type.** Parts register through context, or a parent looks for a data attribute the child renders. *Why:* a company's wrapped `OptionList.Option` or `Button.Icon` must still work.
