@@ -16,10 +16,10 @@ Server Components can import it from `@omsoo/todae/link`. Restyle every link thr
 
 ## Router links
 
-A router's link component renders its own `<a>`. Pass it through `render`: `Link.Root` calls it with every prop it would have put on the `<a>`, its class included, and the router link passes them on.
+A router's link component renders its own `<a>`. Pass it through `render`: `Link.Root` calls it with every prop it would have put on the `<a>`, its class included. Hand them to the router link, with the destination in the prop it takes. With Next.js:
 
 ```tsx
-<Link.Root href="/billing" render={(props) => <NextLink {...props} />}>
+<Link.Root href="/billing" render={({ href = '', ...props }) => <NextLink href={href} {...props} />}>
   Billing
 </Link.Root>
 ```
