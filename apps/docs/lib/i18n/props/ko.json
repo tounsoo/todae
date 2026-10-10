@@ -1443,8 +1443,8 @@
       "ko": "뷰포트의 모서리나 가장자리. 가장 새 토스트가 가장자리에 가장 가깝게 놓입니다."
     },
     "layout": {
-      "en": "list shows every toast in full. stack collapses them behind the newest and spreads them while the pointer is over them or keyboard focus is inside, and from a touch until a press outside or no toast is left.",
-      "ko": "list는 모든 토스트를 그대로 보여 줍니다. stack은 가장 새 토스트 뒤로 접어 두었다가, 포인터가 위에 있거나 키보드 포커스가 안에 있는 동안, 그리고 터치한 뒤 밖을 누르거나 토스트가 모두 사라질 때까지 펼칩니다."
+      "en": "list shows every toast in full. stack collapses them behind the newest and spreads them while the pointer is over them or keyboard focus is inside, and from a tap with a finger or a pen that isn't hovering until a press outside or no toast is left.",
+      "ko": "list는 모든 토스트를 그대로 보여 줍니다. stack은 가장 새 토스트 뒤로 접어 두었다가, 포인터가 위에 있거나 키보드 포커스가 안에 있는 동안, 그리고 손가락이나 호버 중이 아닌 펜으로 탭한 뒤 밖을 누르거나 토스트가 모두 사라질 때까지 펼칩니다."
     },
     "limit": {
       "en": "How many toasts show at once. Later ones wait their turn.",

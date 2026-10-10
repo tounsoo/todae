@@ -10,6 +10,7 @@ import {
   useSyncExternalStore,
   type ComponentPropsWithRef,
   type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
@@ -47,7 +48,7 @@ export type ToastRegionProps<T extends object = object> = {
   /** Renders one toast, usually a `Toast.Root`. */
   children: (toast: ToastRecord<T>) => ReactNode;
   placement?: ToastPlacement;
-  /** `list` shows every toast in full; `stack` collapses them behind the newest, and spreads them while the pointer is over them or keyboard focus is inside, and from a touch until a press outside or no toast is left. */
+  /** `list` shows every toast in full; `stack` collapses them behind the newest, and spreads them while the pointer is over them or keyboard focus is inside, and from a tap with a finger or a pen that isn't hovering until a press outside or no toast is left. */
   layout?: ToastLayout;
   /** How many toasts show at once. Later ones wait their turn. */
   limit?: number;
@@ -105,7 +106,8 @@ function raise(el: HTMLElement): void {
 
 /**
  * Keyboard focus, as opposed to focus a pointer press left behind. Only
- * keyboard focus pauses the toasts; the pointer pauses them by hovering.
+ * keyboard focus pauses the toasts; the pointer pauses them by hovering, a
+ * finger by pressing or tapping.
  */
 function isKeyboardFocus(el: Element): boolean {
   try {
@@ -140,6 +142,11 @@ function alongside<E>(theirs: ((event: E) => void) | undefined, ours: (event: E)
     theirs?.(event);
     ours(event);
   };
+}
+
+/** Whether `event` comes from a pointer that hovers: a mouse, or a pen above the screen. */
+function hovers(event: ReactPointerEvent): boolean {
+  return event.pointerType === 'mouse' || (event.pointerType !== 'touch' && event.buttons === 0);
 }
 
 function Item<T extends object>({
@@ -255,9 +262,8 @@ function Region<T extends object = object>({
   onFocus,
   onBlur,
   onKeyDown,
+  onPointerMove,
   onPointerDown,
-  onPointerUp,
-  onPointerCancel,
   onClickCapture,
   ...props
 }: ToastRegionProps<T>) {
@@ -288,18 +294,19 @@ function Region<T extends object = object>({
   const [host, setHost] = useState<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
-  // A press from a pointer that can't hover, such as a finger, spreads the
+  // A tap from a pointer that can't hover, such as a finger, spreads the
   // stack and it stays spread until a press outside the region, so the
-  // toasts behind can be used.
+  // toasts behind can be used. It spreads on the tap's click, which the
+  // browser has already aimed at what was under the finger.
   const [tapped, setTapped] = useState(false);
-  // Hover as the events said, ahead of the render that shows it, which a
-  // press right after the pointer comes in can beat.
-  const hovering = useRef(false);
-  // The press that spread it, undone if it turns into a scroll.
-  const tapPointer = useRef<number | null>(null);
-  // Where a press on the collapsed stack began. The click it ends in only
-  // reaches what was under it then, not a toast that spread under it since.
-  const pressedOn = useRef<Node | null>(null);
+  // While such a pointer is down on the region, the timers wait.
+  const [pressed, setPressed] = useState(false);
+  // Each pointer counts on its own: a mouse can rest on the stack while a
+  // finger taps it.
+  const hoverIds = useRef(new Set<number>());
+  const pressIds = useRef(new Set<number>());
+  // The pointer of the last press on the region, when it was a tap's.
+  const tapFrom = useRef<number | null>(null);
   const [pageHidden, setPageHidden] = useState(false);
   const expanded = hovered || focused || tapped;
   // Focus can leave without a blur, such as when the focused element is
@@ -318,7 +325,7 @@ function Region<T extends object = object>({
     const frame = requestAnimationFrame(() => {
       try {
         if (section.matches(':hover')) return;
-        hovering.current = false;
+        hoverIds.current.clear();
         setHovered(false);
       } catch {
         // An engine without :hover keeps what the pointer events said.
@@ -453,10 +460,7 @@ function Region<T extends object = object>({
   }, []);
 
   // Nothing left to use, so the next toast starts collapsed and timed.
-  if (tapped && !hasOpen) {
-    tapPointer.current = null;
-    setTapped(false);
-  }
+  if (tapped && !hasOpen) setTapped(false);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -468,6 +472,25 @@ function Region<T extends object = object>({
     doc.addEventListener('pointerdown', onPointerDown, true);
     return () => doc.removeEventListener('pointerdown', onPointerDown, true);
   }, [tapped, host]);
+
+  // On the document, as the region misses the release when the toast under
+  // the finger is removed. Before the release can come.
+  useLayoutEffect(() => {
+    const doc = homeRef.current?.ownerDocument;
+    if (!pressed || !doc) return;
+    const onEnd = (event: PointerEvent) => {
+      pressIds.current.delete(event.pointerId);
+      // A press that turns into a scroll sends no click.
+      if (event.type === 'pointercancel' && tapFrom.current === event.pointerId) tapFrom.current = null;
+      if (pressIds.current.size === 0) setPressed(false);
+    };
+    doc.addEventListener('pointerup', onEnd, true);
+    doc.addEventListener('pointercancel', onEnd, true);
+    return () => {
+      doc.removeEventListener('pointerup', onEnd, true);
+      doc.removeEventListener('pointercancel', onEnd, true);
+    };
+  }, [pressed]);
 
   // A toast dismissed while it waited never showed, so it has no exit motion.
   useEffect(() => {
@@ -586,36 +609,31 @@ function Region<T extends object = object>({
       // A pointer that can't hover, such as a finger, enters on press and
       // leaves on release, which is no hover.
       onPointerEnter={alongside(onPointerEnter, (event) => {
-        if (event.buttons !== 0) return;
-        hovering.current = true;
+        if (!hovers(event)) return;
+        hoverIds.current.add(event.pointerId);
         setHovered(true);
       })}
-      onPointerLeave={alongside(onPointerLeave, () => {
-        hovering.current = false;
-        setHovered(false);
+      // A pen lifted off the screen over the region hovers from then on.
+      onPointerMove={alongside(onPointerMove, (event) => {
+        if (!hovers(event) || hoverIds.current.has(event.pointerId)) return;
+        hoverIds.current.add(event.pointerId);
+        setHovered(true);
+      })}
+      onPointerLeave={alongside(onPointerLeave, (event) => {
+        hoverIds.current.delete(event.pointerId);
+        setHovered(hoverIds.current.size > 0);
       })}
       onPointerDown={alongside(onPointerDown, (event) => {
-        pressedOn.current = null;
-        if (hovering.current) return;
-        if (!expanded && event.target instanceof Node) pressedOn.current = event.target;
-        if (!tapped) tapPointer.current = event.pointerId;
+        const tap = event.pointerType !== 'mouse' && !hoverIds.current.has(event.pointerId);
+        tapFrom.current = tap ? event.pointerId : null;
+        if (!tap) return;
+        pressIds.current.add(event.pointerId);
+        setPressed(true);
+      })}
+      onClickCapture={alongside(onClickCapture, () => {
+        if (tapFrom.current === null) return;
+        tapFrom.current = null;
         setTapped(true);
-      })}
-      onPointerUp={alongside(onPointerUp, (event) => {
-        if (event.pointerId === tapPointer.current) tapPointer.current = null;
-      })}
-      onPointerCancel={alongside(onPointerCancel, (event) => {
-        if (event.pointerId !== tapPointer.current) return;
-        tapPointer.current = null;
-        setTapped(false);
-      })}
-      onClickCapture={alongside(onClickCapture, (event) => {
-        const from = pressedOn.current;
-        pressedOn.current = null;
-        if (from && event.target instanceof Node && !event.target.contains(from)) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
       })}
       onFocus={alongside(onFocus, (event) => {
         focusLeave.onFocus();
@@ -629,8 +647,8 @@ function Region<T extends object = object>({
       })}
       onBlur={alongside(onBlur, focusLeave.onBlur)}
       onKeyDown={composeHandlers(onKeyDown, (event: ReactKeyboardEvent<HTMLElement>) => {
-        // A click from the keyboard is none a press began.
-        pressedOn.current = null;
+        // A click from the keyboard is no tap.
+        tapFrom.current = null;
         if (event.key !== 'Escape' || event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
@@ -644,7 +662,7 @@ function Region<T extends object = object>({
             key={toast.id}
             toast={toast}
             toaster={toaster}
-            paused={expanded || pageHidden}
+            paused={expanded || pressed || pageHidden}
             onFocusLost={afterFocusLost}
           >
             {children(toast)}
