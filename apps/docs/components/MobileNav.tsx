@@ -12,11 +12,15 @@ import { ThemeSwitcher } from './ThemeSwitcher';
 /** The sidebar in a drawer, for screens too narrow to show it. */
 export function MobileNav({ locale }: { locale: Locale }) {
   const dict = DICTIONARIES[locale];
-  // The drawer belongs to the page it opened on, so following one of its links closes it.
+  const [open, setOpen] = useState(false);
+  // A client-side navigation keeps the drawer mounted, so it closes when the path changes, such as on Back.
   // Null outside the app router, such as in a component test.
   const path = usePathname() ?? '/';
-  const [openOn, setOpenOn] = useState<string | null>(null);
-  const open = openOn === path;
+  const [openPath, setOpenPath] = useState(path);
+  if (path !== openPath) {
+    setOpenPath(path);
+    setOpen(false);
+  }
   return (
     <div className="mobile-nav">
       <Button.Root
@@ -24,18 +28,19 @@ export function MobileNav({ locale }: { locale: Locale }) {
         variant="ghost"
         aria-label={dict.openMenu}
         aria-haspopup="dialog"
-        onClick={() => setOpenOn(path)}
+        onClick={() => setOpen(true)}
       >
         <Button.Icon>
           <MenuIcon />
         </Button.Icon>
       </Button.Root>
-      <Drawer.Root open={open} onOpenChange={(next) => setOpenOn(next ? path : null)} side="start" className="mobile-nav-drawer">
+      <Drawer.Root open={open} onOpenChange={setOpen} side="start" className="mobile-nav-drawer">
         <Dialog.Header>
           <Dialog.Title>Todae</Dialog.Title>
           <Dialog.Close>{dict.closeMenu}</Dialog.Close>
         </Dialog.Header>
-        <Dialog.Body>
+        {/* Following one of its links closes it too, even a link to this page, which leaves the path as it is. */}
+        <Dialog.Body onClick={(event) => (event.target as Element).closest('a[href]') && setOpen(false)}>
           <SiteNav locale={locale} idPrefix="drawer-nav" />
         </Dialog.Body>
         {/* The top bar hides its theme switch on the narrowest screens; the drawer keeps one. */}

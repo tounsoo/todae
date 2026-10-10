@@ -4,7 +4,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { useInsertionEffect } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HomeContent } from '../../components/HomeContent';
 import { Example } from '../../components/Example';
@@ -278,31 +277,26 @@ describe('docs locales', () => {
     expect(links.map((link) => link.getAttribute('aria-current'))).toEqual([null, 'true']);
   });
 
-  it('keeps the query and hash when switching', () => {
+  it('keeps the query and hash when switching, through every URL change', () => {
+    // jsdom has no Navigation API, so stand in for the event it fires on each URL change.
+    const navigation = new EventTarget();
+    window.navigation = navigation;
+    const go = (url: string) =>
+      act(() => {
+        window.history.replaceState(null, '', url);
+        navigation.dispatchEvent(new Event('currententrychange'));
+      });
     path.current = '/tokens';
     window.history.replaceState(null, '', '/tokens?x=1#contrast');
     render(<LanguageSwitcher locale="en" />);
-    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/tokens?x=1#contrast');
-    act(() => {
-      window.history.replaceState(null, '', '/tokens#props');
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    });
-    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/tokens#props');
-    window.history.replaceState(null, '', '/');
-  });
-
-  it('drops the old hash after a client-side navigation', () => {
-    // Like Next: the new path renders first, and the URL changes as that render commits, with no event.
-    function Router({ url }: { url: string }) {
-      useInsertionEffect(() => window.history.replaceState(null, '', url), [url]);
-      return <LanguageSwitcher locale="en" />;
-    }
-    path.current = '/tokens';
-    const { rerender } = render(<Router url="/tokens#contrast" />);
-    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/tokens#contrast');
-    path.current = '/link';
-    rerender(<Router url="/link" />);
-    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/link');
+    const korean = () => screen.getByRole('link', { name: '한국어' }).getAttribute('href');
+    expect(korean()).toBe('/ko/tokens?x=1#contrast');
+    go('/tokens#props');
+    expect(korean()).toBe('/ko/tokens#props');
+    // A client-side navigation to the same path drops the hash with no hashchange or popstate.
+    go('/tokens');
+    expect(korean()).toBe('/ko/tokens');
+    delete window.navigation;
     window.history.replaceState(null, '', '/');
   });
 

@@ -2,7 +2,7 @@ import { Link, type LinkRenderProps, type LinkRootProps } from '@omsoo/todae/lin
 import NextLink from 'next/link';
 
 /** Link.Root that moves within the site through next/link, so a same-site link keeps the page loaded and prefetches. */
-export function SiteLink(props: LinkRootProps) {
+export function SiteLink(props: Omit<LinkRootProps, 'render'>) {
   return <Link.Root {...props} render={renderSiteLink} />;
 }
 

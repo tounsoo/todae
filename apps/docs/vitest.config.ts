@@ -7,6 +7,7 @@ export default defineConfig({
     alias: [{ find: /^next\/font\/google$/, replacement: fileURLToPath(new URL('./test/nextFont.ts', import.meta.url)) }],
   },
   test: {
+    setupFiles: ['./test/setup.ts'],
     // Browser tests run under vitest.browser.config.ts.
     exclude: [...configDefaults.exclude, '**/*.browser.test.tsx'],
   },
