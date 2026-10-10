@@ -254,6 +254,21 @@ describe('narrow screens', () => {
     }
   });
 
+  it('keeps the playground sheet open after printing', async () => {
+    await page.viewport(390, 800);
+    const { bar } = renderNarrowPlayground();
+    await userEvent.click(within(bar).getByRole('button', { name: 'Edit tokens' }));
+    await screen.findByRole('dialog', { name: 'Tokens' });
+    await cdp().send('Emulation.setEmulatedMedia', { media: 'print' });
+    try {
+      await frame();
+    } finally {
+      await cdp().send('Emulation.setEmulatedMedia', { media: '' });
+    }
+    await frame();
+    expect(screen.getByRole('dialog', { name: 'Tokens' })).toBeTruthy();
+  });
+
   it('names the playground sheet controls in Korean on the Korean page', async () => {
     await page.viewport(390, 800);
     const { bar } = renderNarrowPlayground('ko');

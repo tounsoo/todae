@@ -189,11 +189,17 @@ function PresetCard({
  * screens until this takes over.
  */
 function useNarrow(): boolean {
-  return useSyncExternalStore(
-    subscribeNarrow,
-    () => window.matchMedia(NARROW).matches,
-    () => false,
-  );
+  return useSyncExternalStore(subscribeNarrow, narrowSnapshot, () => false);
+}
+
+let lastNarrow = false;
+/**
+ * Printing flips NARROW off, which would close an open sheet for good. The
+ * layout keeps what the screen had while printing, and globals.css handles print.
+ */
+function narrowSnapshot(): boolean {
+  if (!window.matchMedia('print').matches) lastNarrow = window.matchMedia(NARROW).matches;
+  return lastNarrow;
 }
 
 /**
