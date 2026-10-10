@@ -11,7 +11,7 @@ export interface Glyphs {
   close?: ReactNode;
   /** Checkbox, Menu.CheckboxItem and a selected OptionList.Option. Todae draws a check mark. */
   check?: ReactNode;
-  /** Field.Select and Disclosure.Summary. Point it down: a closed disclosure turns it. The browser's own marker by default. */
+  /** Field.Select, Disclosure.Summary and Tree.Label. Point it down: a closed disclosure or tree item turns it. The browser's own marker by default; Todae draws one for Tree.Label. */
   chevron?: ReactNode;
   /** Between Breadcrumbs items. Point it toward the next item in a left-to-right page: it is mirrored in right-to-left. The separator text by default. */
   separator?: ReactNode;

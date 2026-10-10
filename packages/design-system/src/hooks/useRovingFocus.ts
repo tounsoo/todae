@@ -39,6 +39,16 @@ export type UseRovingFocusOptions = {
   defaultActiveValue?: string | null;
   /** Fires when an item other than the active one takes focus, from a key, a click or a script. */
   onActiveValueChange?: (value: string) => void;
+  /**
+   * Move the way a tree view does. Up and Down move between the items shown,
+   * skipping items inside an item with `aria-expanded="false"`, and do not
+   * wrap. Right opens a closed item or moves into an open one; Left closes an
+   * open item or moves to the item that holds this one. Left and Right swap
+   * in a right-to-left container. `orientation` and `loop` are ignored.
+   */
+  tree?: boolean;
+  /** In tree mode, Right on a closed item and Left on an open one ask to open or close it. */
+  onExpandedChange?: (value: string, expanded: boolean) => void;
 };
 
 export type RovingItemOptions = {
@@ -108,6 +118,8 @@ const NO_ITEMS: KnownItems = { read: false, enabled: [], reachable: [] };
 export const isReachable = (node: HTMLElement) =>
   !node.closest('[inert]') && (node.checkVisibility?.({ visibilityProperty: true }) ?? true);
 
+const valueOf = (node: HTMLElement) => node.getAttribute('data-todae-roving-value') ?? '';
+
 export const sameValues = (a: readonly string[], b: readonly string[]) =>
   a.length === b.length && a.every((v, i) => v === b[i]);
 
@@ -125,13 +137,18 @@ function nextKey(key: string, orientation: RovingOrientation, rtl: () => boolean
 
 /**
  * An item's text as a screen reader reads it: without aria-hidden parts, such
- * as a menu item's check glyph, which may be text or an icon-font ligature.
+ * as a menu item's check glyph, which may be text or an icon-font ligature,
+ * and without items nested inside it, such as a tree item's children.
  */
-function spokenText(node: Node): string {
+function spokenText(node: Node, item: Node = node): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
-  if (node instanceof Element && node.getAttribute('aria-hidden') === 'true') return '';
+  if (node instanceof Element) {
+    if (node.getAttribute('aria-hidden') === 'true') return '';
+    const scope = item instanceof Element ? item.getAttribute('data-todae-roving') : null;
+    if (node !== item && scope !== null && node.getAttribute('data-todae-roving') === scope) return '';
+  }
   let text = '';
-  for (const child of node.childNodes) text += spokenText(child);
+  for (const child of node.childNodes) text += spokenText(child, item);
   return text;
 }
 
@@ -143,15 +160,19 @@ function spokenText(node: Node): string {
  */
 export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFocusResult {
   const {
-    orientation = 'vertical',
-    loop = true,
+    orientation: orientationOption = 'vertical',
+    loop: loopOption = true,
     typeahead = false,
     tabStop: tabStopOption = true,
     findItems,
     activeValue: activeProp,
     defaultActiveValue,
     onActiveValueChange,
+    tree = false,
+    onExpandedChange,
   } = options;
+  const orientation = tree ? 'vertical' : orientationOption;
+  const loop = tree ? false : loopOption;
   const keepTabStop = tabStopOption && !findItems;
   const scope = useDomId();
   const [active, setActive] = useControlledState(activeProp, defaultActiveValue ?? null);
@@ -169,18 +190,21 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     if (!container) return [];
     if (findItems) return findItems(container).filter((node) => !node.matches(':disabled, [hidden]'));
     // The scope comes from useDomId, which never contains a quote or backslash.
-    return [
+    const nodes = [
       ...container.querySelectorAll<HTMLElement>(
         `[data-todae-roving="${scope}"]:not([data-todae-roving-disabled]):not([hidden]):not(:disabled)`,
       ),
     ];
-  }, [findItems, scope]);
+    if (!tree) return nodes;
+    // In a tree, items inside a closed item are not shown.
+    const closed = [...container.querySelectorAll<HTMLElement>(`[data-todae-roving="${scope}"][aria-expanded="false"]`)];
+    if (closed.length === 0) return nodes;
+    return nodes.filter((node) => !closed.some((branch) => branch !== node && branch.contains(node)));
+  }, [findItems, scope, tree]);
 
   // Of those, the ones focus can move to now: not inert and not hidden by
   // style. Read only when moving, since checking visibility costs a style pass.
   const items = useCallback((): HTMLElement[] => enabledItems().filter(isReachable), [enabledItems]);
-
-  const valueOf = (node: HTMLElement) => node.getAttribute('data-todae-roving-value') ?? '';
 
   const values = useCallback(() => enabledItems().map(valueOf), [enabledItems]);
 
@@ -266,7 +290,17 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       subtree: true,
       attributes: true,
       // class and style too: either can hide an item.
-      attributeFilter: ['data-todae-roving-disabled', 'data-todae-roving-value', 'hidden', 'inert', 'disabled', 'class', 'style'],
+      attributeFilter: [
+        'data-todae-roving-disabled',
+        'data-todae-roving-value',
+        'hidden',
+        'inert',
+        'disabled',
+        // A tree item opening or closing shows or hides the items inside it.
+        'aria-expanded',
+        'class',
+        'style',
+      ],
     });
     // A size change catches the group itself being shown or hidden, say by
     // an ancestor opening, which no mutation inside it reports.
@@ -395,8 +429,34 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
         return container ? getComputedStyle(container).direction === 'rtl' : false;
       };
       let next: HTMLElement | undefined;
-      const step = nextKey(event.key, orientation, rtl);
-      if (step === 'next') {
+      const treeStep =
+        tree && !onContainer && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')
+          ? (event.key === 'ArrowRight') !== rtl()
+            ? 'in'
+            : 'out'
+          : null;
+      const step = treeStep ? null : nextKey(event.key, orientation, rtl);
+      if (treeStep) {
+        const expanded = target.getAttribute('aria-expanded');
+        const value = valueOf(target);
+        if (treeStep === 'in') {
+          // A closed item opens; an open one moves to its first item shown.
+          if (expanded === 'false') onExpandedChange?.(value, true);
+          else if (expanded === 'true') {
+            const first = nodes[after];
+            if (first && target.contains(first)) next = first;
+          }
+        } else if (expanded === 'true') {
+          onExpandedChange?.(value, false);
+        } else {
+          const parent = target.parentElement?.closest<HTMLElement>(`[data-todae-roving="${scope}"]`);
+          if (parent && container.contains(parent) && nodes.includes(parent)) next = parent;
+        }
+        // The key is the tree's even where it does nothing, so the page does not scroll.
+        event.preventDefault();
+        next?.focus();
+        return;
+      } else if (step === 'next') {
         next = after < nodes.length ? nodes[after] : loop ? nodes[0] : undefined;
       } else if (step === 'prev') {
         next = before >= 0 ? nodes[before] : loop || onContainer ? nodes.at(-1) : undefined;
@@ -433,7 +493,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
       event.preventDefault();
       next?.focus();
     },
-    [findItems, isTypingAhead, items, loop, orientation, scope, typeahead],
+    [findItems, isTypingAhead, items, loop, onExpandedChange, orientation, scope, tree, typeahead],
   );
 
   const composedRef = useStableComposedRef(setContainer);

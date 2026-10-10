@@ -45,6 +45,7 @@ import {
   Text,
   ToggleGroup,
   Toolbar,
+  Tree,
   Toast,
   Tooltip,
   VisuallyHidden,
@@ -359,6 +360,50 @@ const cases: Case[] = [
       <Tabs.Root defaultValue="a">
         <Tabs.Panel {...p} value="a" />
       </Tabs.Root>
+    ),
+  ],
+  ['Tree.Root', (p) => <Tree.Root {...p} aria-label="t" />],
+  [
+    'Tree.Item',
+    (p) => (
+      <Tree.Root aria-label="t">
+        <Tree.Item {...p} value="a">
+          <Tree.Label>A</Tree.Label>
+        </Tree.Item>
+      </Tree.Root>
+    ),
+  ],
+  [
+    'Tree.Label',
+    (p) => (
+      <Tree.Root aria-label="t">
+        <Tree.Item value="a">
+          <Tree.Label {...p}>A</Tree.Label>
+        </Tree.Item>
+      </Tree.Root>
+    ),
+  ],
+  [
+    'Tree.Group',
+    (p) => (
+      <Tree.Root aria-label="t" defaultExpanded={['a']}>
+        <Tree.Item value="a">
+          <Tree.Label>A</Tree.Label>
+          <Tree.Group {...p} />
+        </Tree.Item>
+      </Tree.Root>
+    ),
+  ],
+  [
+    'Tree.Icon',
+    (p) => (
+      <Tree.Root aria-label="t">
+        <Tree.Item value="a">
+          <Tree.Label>
+            <Tree.Icon {...p} />A
+          </Tree.Label>
+        </Tree.Item>
+      </Tree.Root>
     ),
   ],
   ['Tooltip.Root', (p) => <TooltipCase p={p} />],

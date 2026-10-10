@@ -41,3 +41,12 @@ export function CheckGlyph() {
     </svg>
   );
 }
+
+/** Points down, as a chevron from GlyphsProvider should. */
+export function ChevronGlyph() {
+  return (
+    <svg {...svgProps}>
+      <path d="M4 6l4 4 4-4" />
+    </svg>
+  );
+}

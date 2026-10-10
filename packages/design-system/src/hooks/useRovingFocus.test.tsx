@@ -871,4 +871,44 @@ describe('useRovingFocus', () => {
     key('ArrowDown');
     expect(focused()).toBe('a');
   });
+
+  it('in tree mode, asks to open and close items, and moves in and out of them', () => {
+    const onExpandedChange = vi.fn();
+    function Tree({ open }: { open: boolean }) {
+      const roving = useRovingFocus({ tree: true, onExpandedChange });
+      return (
+        <ul role="tree" aria-label="Files" {...roving.getContainerProps()}>
+          <li role="treeitem" aria-expanded={open} {...roving.getItemProps('src')}>
+            <span>src</span>
+            <ul role="group" hidden={!open}>
+              <li role="treeitem" {...roving.getItemProps('index')}>
+                index
+              </li>
+            </ul>
+          </li>
+          <li role="treeitem" {...roving.getItemProps('readme')}>
+            readme
+          </li>
+        </ul>
+      );
+    }
+    const { rerender } = render(<Tree open={false} />);
+    const src = screen.getAllByRole('treeitem')[0]!;
+    act(() => src.focus());
+    key('ArrowDown');
+    expect(focused()).toBe('readme');
+    key('ArrowDown');
+    expect(focused()).toBe('readme');
+    key('ArrowUp');
+    act(() => src.focus());
+    key('ArrowRight');
+    expect(onExpandedChange).toHaveBeenLastCalledWith('src', true);
+    rerender(<Tree open />);
+    key('ArrowRight');
+    expect(focused()).toBe('index');
+    key('ArrowLeft');
+    expect(document.activeElement).toBe(src);
+    key('ArrowLeft');
+    expect(onExpandedChange).toHaveBeenLastCalledWith('src', false);
+  });
 });

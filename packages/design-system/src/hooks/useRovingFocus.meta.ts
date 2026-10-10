@@ -57,5 +57,19 @@ export const meta = {
       required: false,
       description: 'Fires when an item other than activeValue takes focus, including a fallback tab stop, so a controlled owner can pin it.',
     },
+    {
+      name: 'tree',
+      type: 'boolean',
+      required: false,
+      default: 'false',
+      description:
+        'Tree view keys. Up and Down skip items inside an item with aria-expanded="false" and do not wrap. Right opens a closed item or moves into an open one; Left closes an open item or moves to its parent. orientation and loop are ignored.',
+    },
+    {
+      name: 'onExpandedChange',
+      type: '(value: string, expanded: boolean) => void',
+      required: false,
+      description: 'In tree mode, fires when Right asks to open a closed item or Left asks to close an open one.',
+    },
   ],
 } as const satisfies ComponentMeta;
