@@ -38,24 +38,24 @@ Rules:
 - **Routers plug in through a `render` prop** (`Link.Root`), not an `as` prop or a router dependency.
 - **Text Todae writes by itself**, such as a close button's default name, comes from `StringsProvider` (`useStrings()`), not a hard-coded English string. A server entry, which can't read context, uses `DEFAULT_STRINGS`.
 - **Glyphs** are read from `GlyphsProvider`. Put glyph state (hidden, rotated, mirrored) on the `[data-todae-glyph]` wrapper span, not on the `svg`, so a swapped-in icon follows it.
-- **Server entries.** A component that a Server Component should render directly gets a server-safe entry: `src/server/<slug>.ts`, an entry in `vite.config.ts`, and an `exports` entry in `package.json` as `@omsoo/todae/<slug>`. Where the component reads a client provider, the client version is a `*.client.tsx` wrapper exported from the root entry.
+- **Server entries.** A component that a Server Component should render directly gets a server-safe entry: `src/server/<slug>.ts`, an entry in `vite.config.ts`, an `exports` entry in `package.json` as `@omsoo/todae/<slug>`, and its slug in the server-entry list in `src/entries.test.ts`. Where the component reads a client provider, the client version is a `*.client.tsx` wrapper exported from the root entry.
 - **Keep `'use client'` out of component and hook files.** It sits in `src/index.ts` and the provider files. `src/entries.test.ts` checks that a server entry's import closure has no `'use client'`, hooks, `createContext` or CSS import, so helpers a server entry needs stay hook-free in their own files (`cx.ts`, `tone.ts`).
 
 The rules below were read from the code rather than decided in a thread. Follow them unless there is a reason not to.
 
 - **Controlled state comes in triples:** `value`/`defaultValue`/`onValueChange`, and the same for `open`, `checked` and `pressed`, built on `useControlledState` or `useControlledValue`. The callback gets the new value, not an event, and `undefined` means uncontrolled.
 - **`onOpenChange(open, reason)`** passes a typed reason, such as `'escape'`, `'backdrop'` or `'close-button'`, so a product can tell why an overlay closed.
-- **Names.** Props types are `<Component><Part>Props` (`BadgeRootProps`). Union prop types are exported as `<Component><Prop>` (`AlertTone`, `ButtonVariant`). Form state is `disabled` and `invalid`, not `isDisabled` or `error`. Overlays take `dismissOnEscape`, `dismissOnBackdrop`, `initialFocusRef` and `restoreFocusRef`.
+- **Names.** Props types are `<Component><Part>Props` (`BadgeRootProps`). Union prop types are exported as `<Component><Prop>` (`AlertTone`, `ButtonVariant`). Form state is `disabled` and `invalid`, not `isDisabled` or `error`. Modal overlays take `dismissOnEscape`, `dismissOnBackdrop`, `initialFocusRef` and `restoreFocusRef`.
 - **Read Fieldset state** through `useFieldsetState`: `disabled` is OR-ed with the nearest Fieldset, and a control's own `invalid` wins over the Fieldset's.
 - **Run the consumer's handler first** with `composeHandlers(theirs, ours)`, which skips Todae's behavior when the consumer calls `preventDefault()`.
-- **A part rendered outside its Root throws.** Misuse that can still render (an icon-only button with no name, both `checked` and `defaultChecked`) logs a development-only `console.error` or `console.warn` behind `process.env.NODE_ENV !== 'production'`.
+- **A part rendered outside its Root should throw.** Misuse that can still render (an icon-only button with no name, both `checked` and `defaultChecked`) logs a development-only `console.error` or `console.warn` behind `process.env.NODE_ENV !== 'production'`.
 - **State reaches CSS through `data-*` attributes.** Boolean state is an empty attribute, left off when false (`data-selected`, `data-disabled`); enum state is its value (`data-tone`, `data-size`, `data-orientation`). Name an attribute that other Todae code looks up `data-todae-*` (`data-todae-glyph`, `data-todae-roving`).
 - **Items inside an ARIA widget** (options, menu items) take `aria-disabled` and stay focusable, as the ARIA patterns expect; standalone native controls take `disabled`.
 
 ## Hooks
 
 - **Prefer one options object in and one result object out,** typed `Use<Name>Options` and `Use<Name>Result`, for hooks that drive markup.
-- **Prop getters** are named `get<Element>Props` (`getTriggerProps`, `getListboxProps`). A getter that takes the caller's props merges them and composes the caller's ref.
+- **Prop getters** are named `get<Element>Props` (`getTriggerProps`, `getListboxProps`). A getter that takes the caller's props merges them and keeps the caller's ref.
 - **A hook that creates ids** accepts an optional `id` and returns them as `ids`, so a recipe can wire labels by hand. Ids that end up in a CSS selector or ident go through `useDomId()`.
 
 ## Tokens
@@ -78,7 +78,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 - **Take colors, spacing, radii and sizes from tokens** through their `--todae-*` custom properties rather than literals. Restyling goes through tokens first; a class works for layout.
 - **Classes are camelCase**, and a part's main class is usually `.root`. Name a custom property a sheet sets for its own arithmetic `--_<name>` (`--_ring-room`), so it doesn't look like a token.
 - **Use logical properties** (`inline`, `block`) for layout, and `:dir(rtl)` for anything that must flip.
-- **Some rules are tested.** `src/styles/tokenConsistency.test.ts` requires outlines to use the focus ring tokens, keeps `opacity` off disabled styles, checks tone rules for the components it lists, and limits which tokens each sheet reads. Other tests ban scrollbar styling and a `transform` on an element that may contain a tooltip trigger.
+- **Some CSS rules are tested.** Read `src/styles/tokenConsistency.test.ts` before writing a new sheet: it covers focus rings, disabled styles, tones and which tokens a sheet may read.
 - **Forced colors.** Where a state shows only through fill (pressed, selected, checked, current), add an `@media (forced-colors: active)` rule that maps it to system colors.
 - **Use `!important` only for rules that must hold**, such as `VisuallyHidden.Root` and hidden tab panels.
 - **Wrap hand-written selectors in `todae.base` in `:where()`,** so any class a company adds wins.
@@ -88,7 +88,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 - **Use the best native HTML and CSS features, with no JavaScript fallbacks and no support matrix.** The feature list is on the [Native platform](apps/docs/app/(en)/platform/page.mdx) page; add a feature there when a component starts to depend on it. *Why:* Todae stays small and gets better as browsers do.
 - **Overlays.** `Dialog` and `BottomSheet` render in place on a modal `<dialog>` (no portal), so they inherit the theme. `Popover`, `Menu` and `Tooltip` use `popover="manual"` with CSS anchor positioning. Page scroll stops through `:root:has(dialog:modal)` in CSS, not a scroll-lock hook.
 - **Toast** holds text and buttons, no nested menus or dialogs. Its region follows Todae's modal stack into the front modal; a product's own modal `<dialog>` joins that stack through `useModalLayer`.
-- **Motion** reads the motion tokens (`motion.duration.*`, `motion.easing.*`), respects `prefers-reduced-motion`, and only has to work in Chrome. Don't add workarounds for Safari motion gaps.
+- **Motion** takes its durations and easings from the component's contract tokens, respects `prefers-reduced-motion`, and only has to work in Chrome. Don't add workarounds for Safari motion gaps.
 
 ## Accessibility
 
@@ -98,7 +98,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 
 ## Tests
 
-- Unit tests sit next to the code as `*.test.ts(x)` and run in jsdom.
+- Unit tests sit next to the code as `*.test.ts(x)` and run in jsdom unless a file sets another environment.
 - Behavior that needs real layout, focus or the top layer goes in `src/browser/*.browser.test.tsx`, which runs in Chromium through Playwright (`pnpm test:browser`).
 - Add each new part to `src/components/parts.test.tsx`, which checks that parts forward native attributes and their ref.
 - `src/components/overlay.parity.test.tsx` holds Dialog, Drawer and BottomSheet to one contract (labelled, initial focus, Escape, backdrop reason, focus restore, named close button). A new modal overlay should join it.
