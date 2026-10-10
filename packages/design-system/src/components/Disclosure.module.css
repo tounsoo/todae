@@ -55,8 +55,9 @@
   }
 
   /* Content fades in and grows from no height to its own. interpolate-size
-     lets the height animate to auto. The clip margin keeps focus rings at the
-     content's edges from being cut off. */
+     lets the height animate to auto. The content clips only while closed or
+     growing, so once open nothing in it is cut off; the clip margin keeps
+     focus rings at its edges whole meanwhile. */
   .root {
     interpolate-size: allow-keywords;
   }
@@ -74,7 +75,20 @@
 
   .root[open]::details-content {
     block-size: auto;
+    overflow: visible;
     opacity: 1;
+  }
+
+  /* step-end holds the clip until the growth ends. This outranks the reduced
+     motion rule below, so it lives behind the media query. */
+  @media (prefers-reduced-motion: no-preference) {
+    .root[open]::details-content {
+      transition:
+        block-size var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing),
+        opacity var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing),
+        content-visibility var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing) allow-discrete,
+        overflow var(--todae-disclosure-motion-duration) step-end allow-discrete;
+    }
   }
 
   .root[open] > :not(summary):last-child {

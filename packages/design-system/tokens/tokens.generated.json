@@ -4214,15 +4214,6 @@
       "context": null
     },
     {
-      "path": "popover.motion.easing",
-      "type": "cubicBezier",
-      "cssVar": "--todae-popover-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
-      "layer": "contract",
-      "context": null
-    },
-    {
       "path": "popover.motion.enter",
       "type": "duration",
       "cssVar": "--todae-popover-motion-enter",
@@ -4309,15 +4300,6 @@
       "cssVar": "--todae-tooltip-max-width",
       "cssValue": "16rem",
       "ref": null,
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "tooltip.motion.easing",
-      "type": "cubicBezier",
-      "cssVar": "--todae-tooltip-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
       "layer": "contract",
       "context": null
     },

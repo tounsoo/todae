@@ -18,11 +18,12 @@
 
   /* It fades in when shown and out when hidden, staying in the top layer and
      displayed until the fade ends, unless the user prefers reduced motion. A
-     menu shares this class. */
+     menu shares this class. While display animates to none the browser makes
+     it inert, so a fading surface takes no clicks, hover or focus. */
   @media (prefers-reduced-motion: no-preference) {
     .content {
       transition:
-        opacity var(--todae-popover-motion-exit) var(--todae-popover-motion-easing),
+        opacity var(--todae-popover-motion-exit) var(--todae-overlay-motion-easing),
         overlay var(--todae-popover-motion-exit) allow-discrete,
         display var(--todae-popover-motion-exit) allow-discrete;
     }

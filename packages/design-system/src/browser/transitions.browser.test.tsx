@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
-import { useState, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { usePopover } from '../hooks/usePopover';
 import { useTooltip } from '../hooks/useTooltip';
@@ -89,16 +89,18 @@ function PanelTip({ open }: { open: boolean }) {
 }
 
 function Toggles({ variant }: { variant?: 'primary' }) {
+  // An explicit undefined variant would replace the items' secondary default.
+  const look = variant ? { variant } : {};
   return (
     <Themed>
       <ToggleGroup.Root aria-label="Align" defaultValue="left">
-        <ToggleGroup.Item value="left" variant={variant}>
+        <ToggleGroup.Item value="left" {...look}>
           Left
         </ToggleGroup.Item>
-        <ToggleGroup.Item value="center" variant={variant}>
+        <ToggleGroup.Item value="center" {...look}>
           Center
         </ToggleGroup.Item>
-        <ToggleGroup.Item value="right" variant={variant}>
+        <ToggleGroup.Item value="right" {...look}>
           Right
         </ToggleGroup.Item>
       </ToggleGroup.Root>
@@ -142,6 +144,48 @@ describe('Motion', () => {
     expect(fading.some((v) => v > 0 && v < 1)).toBe(true);
     await sample(() => (getComputedStyle(panel).display === 'none' ? 0 : 1));
     expect(getComputedStyle(panel).display).toBe('none');
+  });
+
+  it('takes no pointer or focus on a Popover while it fades out', async () => {
+    render(<PopoverHarness />);
+    await userEvent.click(screen.getByRole('button', { name: 'Filters' }));
+    const panel = screen.getByRole('dialog', { name: 'Filters panel' });
+    await sample(() => opacity(panel));
+    const box = panel.getBoundingClientRect();
+    await userEvent.keyboard('{Escape}');
+    await frame();
+    // Mid-fade: still drawn, partly transparent.
+    expect(getComputedStyle(panel).display).not.toBe('none');
+    expect(opacity(panel)).toBeLessThan(1);
+    expect(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)).not.toBe(panel);
+    panel.focus();
+    expect(document.activeElement).not.toBe(panel);
+  });
+
+  it('selects a Menu item once when it is clicked again while the menu fades out', async () => {
+    let selected = 0;
+    render(
+      // A long exit, so the second click lands mid-fade however slow the run.
+      <div data-appearance="light" data-density="comfortable" style={{ '--_todae-popover-motion-exit': '2s' } as CSSProperties}>
+        <Menu.Root>
+          <Menu.Trigger>Actions</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item onSelect={() => (selected += 1)}>Rename</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      </div>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Actions' }));
+    const menu = screen.getByRole('menu');
+    await sample(() => opacity(menu));
+    const item = screen.getByRole('menuitem', { name: 'Rename' });
+    await userEvent.click(item);
+    expect(selected).toBe(1);
+    // A real click at the item's spot while the menu is still drawn.
+    await userEvent.click(item, { force: true });
+    expect(getComputedStyle(menu).display).not.toBe('none');
+    expect(opacity(menu)).toBeLessThan(1);
+    expect(selected).toBe(1);
   });
 
   it('fades a Menu in', async () => {
@@ -213,6 +257,40 @@ describe('Motion', () => {
     expect(ringOf(group)).toBeNull();
   });
 
+  it('paints the ToggleGroup ring above a focused pressed item, and under a layer above the group', async () => {
+    // Hit-testing finds the ring only if it takes the pointer.
+    const style = document.createElement('style');
+    style.textContent = '[aria-label="Align"]::after { pointer-events: auto; }';
+    document.head.append(style);
+    try {
+      render(
+        <>
+          <button type="button">Before</button>
+          <Toggles />
+        </>,
+      );
+      const group = screen.getByRole('group', { name: 'Align' });
+      const left = screen.getByRole('button', { name: 'Left' });
+      screen.getByRole('button', { name: 'Before' }).focus();
+      await userEvent.tab();
+      expect(left.matches(':focus-visible')).toBe(true);
+      const box = left.getBoundingClientRect();
+      const center = [box.left + box.width / 2, box.top + box.height / 2] as const;
+      expect(document.elementFromPoint(...center)).toBe(group);
+      const cover = document.createElement('div');
+      cover.style.cssText = `position: fixed; z-index: 1; inset: ${box.top - 4}px auto auto ${box.left - 4}px; inline-size: ${box.width + 8}px; block-size: ${box.height + 8}px;`;
+      // Earlier in the page, so only isolation keeps the ring under it.
+      document.body.prepend(cover);
+      try {
+        expect(document.elementFromPoint(...center)).toBe(cover);
+      } finally {
+        cover.remove();
+      }
+    } finally {
+      style.remove();
+    }
+  });
+
   it('keeps a ring on the item itself for other variants', () => {
     render(<Toggles variant="primary" />);
     const group = screen.getByRole('group', { name: 'Align' });
@@ -235,6 +313,37 @@ describe('Motion', () => {
     const values = await sample(() => details.getBoundingClientRect().height);
     expectBetween(values, closed, values[values.length - 1]!);
     expect(values[values.length - 1]! - closed).toBeGreaterThanOrEqual(120);
+  });
+
+  it('clips Disclosure content only while it grows', async () => {
+    render(
+      <Themed>
+        <div style={{ inlineSize: 200 }}>
+          <Disclosure.Root>
+            <Disclosure.Summary>Details</Disclosure.Summary>
+            <div style={{ position: 'relative', blockSize: 40 }}>
+              <div data-testid="wide" style={{ inlineSize: 400, blockSize: 20 }} />
+              <div data-testid="below" style={{ position: 'absolute', insetBlockStart: 60, inlineSize: 20, blockSize: 20 }} />
+            </div>
+          </Disclosure.Root>
+        </div>
+      </Themed>,
+    );
+    const details = screen.getByRole('group') as HTMLDetailsElement;
+    const content = () => getComputedStyle(details, '::details-content').overflow;
+    expect(content()).toBe('clip');
+    details.open = true;
+    await frame();
+    expect(content()).toBe('clip');
+    await sample(() => details.getBoundingClientRect().height);
+    await sample(() => (content() === 'visible' ? 1 : 0));
+    expect(content()).toBe('visible');
+    // Past the inline edge and past the block edge, the content is still drawn.
+    const wide = screen.getByTestId('wide').getBoundingClientRect();
+    expect(document.elementFromPoint(wide.left + 300, wide.top + 10)).toBe(screen.getByTestId('wide'));
+    const below = screen.getByTestId('below').getBoundingClientRect();
+    expect(below.top).toBeGreaterThan(details.getBoundingClientRect().bottom);
+    expect(document.elementFromPoint(below.left + 10, below.top + 10)).toBe(screen.getByTestId('below'));
   });
 
   it('eases a Progress fill to a new value', async () => {
@@ -283,7 +392,7 @@ describe('Motion', () => {
           <Switch>Wi-Fi</Switch>
           <Button.Root>Save</Button.Root>
           <Toggles />
-          <Disclosure.Root>
+          <Disclosure.Root open>
             <Disclosure.Summary>Details</Disclosure.Summary>
             Content
           </Disclosure.Root>
@@ -297,6 +406,7 @@ describe('Motion', () => {
         getComputedStyle(screen.getByRole('button', { name: 'Save' })).transitionDuration,
         getComputedStyle(screen.getByRole('group', { name: 'Align' }), '::after').transitionDuration,
         getComputedStyle(screen.getByRole('progressbar')).transitionDuration,
+        getComputedStyle(screen.getByRole('group', { name: '' }), '::details-content').transitionDuration,
       ];
       for (const duration of durations) expect(duration.split(',').every((d) => parseFloat(d) === 0)).toBe(true);
     } finally {

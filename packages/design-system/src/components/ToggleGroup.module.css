@@ -13,8 +13,11 @@
      anchored to the pressed item, so it slides to the next one while the fills
      fade. The anchor is a pseudo-element, so an inline anchor-name from an
      item's tooltip does not replace it. Other variants keep their own ring. */
+  /* The ring paints above a focused item, which Button.Group raises with
+     z-index; isolation keeps that contest inside the group. */
   .single {
     position: relative;
+    isolation: isolate;
   }
 
   .single > .item[data-button-variant='secondary'][aria-pressed='true'] {
@@ -39,6 +42,7 @@
     bottom: anchor(bottom);
     left: anchor(left);
     border-radius: 0;
+    z-index: 1;
     box-shadow: inset 0 0 0 1px var(--todae-button-secondary-fg-active);
     pointer-events: none;
   }

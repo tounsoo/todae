@@ -618,7 +618,6 @@
   --todae-popover-fg: var(--_todae-popover-fg, var(--todae-color-fg-default));
   --todae-popover-gap: var(--_todae-popover-gap, var(--todae-space-overlay-gap));
   --todae-popover-max-height: var(--_todae-popover-max-height, 20rem);
-  --todae-popover-motion-easing: var(--_todae-popover-motion-easing, var(--todae-motion-easing-standard));
   --todae-popover-motion-enter: var(--_todae-popover-motion-enter, var(--todae-motion-duration-fast));
   --todae-popover-motion-exit: var(--_todae-popover-motion-exit, var(--todae-motion-duration-faster));
   --todae-popover-padding-x: var(--_todae-popover-padding-x, var(--todae-space-overlay-padding));
@@ -629,7 +628,6 @@
   --todae-tooltip-border-width: var(--_todae-tooltip-border-width, var(--todae-border-width));
   --todae-tooltip-fg: var(--_todae-tooltip-fg, var(--todae-color-fg-default));
   --todae-tooltip-max-width: var(--_todae-tooltip-max-width, 16rem);
-  --todae-tooltip-motion-easing: var(--_todae-tooltip-motion-easing, var(--todae-motion-easing-standard));
   --todae-tooltip-motion-enter: var(--_todae-tooltip-motion-enter, var(--todae-motion-duration-fast));
   --todae-tooltip-motion-exit: var(--_todae-tooltip-motion-exit, var(--todae-motion-duration-faster));
   --todae-tooltip-padding-x: var(--_todae-tooltip-padding-x, var(--todae-space-2));

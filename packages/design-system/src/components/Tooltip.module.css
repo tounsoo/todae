@@ -18,11 +18,12 @@
   }
 
   /* It fades in when it opens, unless the user prefers reduced motion. A tip
-     unmounts when it closes, so only an interactive panel fades out. */
+     unmounts when it closes, so only an interactive panel fades out; while
+     display animates to none the browser makes it inert. */
   @media (prefers-reduced-motion: no-preference) {
     .content {
       transition:
-        opacity var(--todae-tooltip-motion-exit) var(--todae-tooltip-motion-easing),
+        opacity var(--todae-tooltip-motion-exit) var(--todae-overlay-motion-easing),
         overlay var(--todae-tooltip-motion-exit) allow-discrete,
         display var(--todae-tooltip-motion-exit) allow-discrete;
     }

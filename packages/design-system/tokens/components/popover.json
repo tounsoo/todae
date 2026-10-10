@@ -13,8 +13,7 @@
     "max-height": { "$type": "dimension", "$value": { "value": 20, "unit": "rem" } },
     "motion": {
       "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/fast/$value" } },
-      "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/faster/$value" } },
-      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } }
+      "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/faster/$value" } }
     }
   }
 }
