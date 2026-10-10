@@ -174,6 +174,9 @@ export const SEMANTIC_OVERRIDE_KEYS = [
 ] as const;
 
 export const COMPONENT_OVERRIDE_KEYS = [
+  'focus.ring.color',
+  'focus.ring.offset',
+  'focus.ring.width',
   'button.base.font.size',
   'button.base.font.weight',
   'button.base.gap',
@@ -245,8 +248,6 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'text.weight.bold',
   'text.weight.medium',
   'text.weight.regular',
-  'focus.ring.offset',
-  'focus.ring.width',
   'field.bg.default',
   'field.bg.disabled',
   'field.border.default',
@@ -906,6 +907,9 @@ export const THEME_OVERRIDE_TYPES = {
   'space.selection.gap': 'dimension',
   'space.selection.size': 'dimension',
   'space.stack.gap': 'dimension',
+  'focus.ring.color': 'color',
+  'focus.ring.offset': 'dimension',
+  'focus.ring.width': 'dimension',
   'button.base.font.size': 'dimension',
   'button.base.font.weight': 'fontWeight',
   'button.base.gap': 'dimension',
@@ -977,8 +981,6 @@ export const THEME_OVERRIDE_TYPES = {
   'text.weight.bold': 'fontWeight',
   'text.weight.medium': 'fontWeight',
   'text.weight.regular': 'fontWeight',
-  'focus.ring.offset': 'dimension',
-  'focus.ring.width': 'dimension',
   'field.bg.default': 'color',
   'field.bg.disabled': 'color',
   'field.border.default': 'color',

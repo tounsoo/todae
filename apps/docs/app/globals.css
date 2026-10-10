@@ -403,15 +403,15 @@ main:focus {
 
 .docs-pre {
   max-width: 100%;
-  padding: calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
+  padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
   margin-block: 1rem;
-  margin-inline: calc((var(--todae-chip-ring-width) + var(--todae-chip-ring-offset)) * -1);
-  border-radius: calc(var(--todae-radius-lg) + var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
+  margin-inline: calc((var(--todae-focus-ring-width) + var(--todae-focus-ring-offset)) * -1);
+  border-radius: calc(var(--todae-radius-lg) + var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
 }
 
 .docs-pre:has(pre:focus-visible) {
-  outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
-  outline-offset: calc(var(--todae-chip-ring-offset) * -1);
+  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
+  outline-offset: calc(var(--todae-focus-ring-offset) * -1);
 }
 
 .docs-pre pre {
@@ -432,14 +432,14 @@ main:focus {
 
 .scroll-x {
   max-width: 100%;
-  padding: calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset));
+  padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
   margin-block: 1.25rem;
-  margin-inline: calc((var(--todae-chip-ring-width) + var(--todae-chip-ring-offset)) * -1);
+  margin-inline: calc((var(--todae-focus-ring-width) + var(--todae-focus-ring-offset)) * -1);
 }
 
 .scroll-x:has(.scroll-x-body:focus-visible) {
-  outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
-  outline-offset: calc(var(--todae-chip-ring-offset) * -1);
+  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
+  outline-offset: calc(var(--todae-focus-ring-offset) * -1);
   border-radius: var(--todae-radius-lg);
 }
 
@@ -908,8 +908,8 @@ table {
 }
 
 .preset:has(input:focus-visible) {
-  outline: 2px solid var(--todae-color-accent-default);
-  outline-offset: 2px;
+  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
+  outline-offset: var(--todae-focus-ring-offset);
 }
 
 /* The swatch is a ThemeProvider of its own, so these read the preset's tokens. */
@@ -1068,8 +1068,8 @@ table {
 }
 
 .token-swatch:focus-visible {
-  outline: 2px solid var(--todae-color-accent-default);
-  outline-offset: 2px;
+  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
+  outline-offset: var(--todae-focus-ring-offset);
 }
 
 .pg-actions {

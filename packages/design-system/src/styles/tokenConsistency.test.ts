@@ -92,6 +92,13 @@ describe('token consistency across component styles', () => {
     }
   });
 
+  it('colors every focus ring token from focus.ring.color', () => {
+    const tokensCss = readFileSync(join(import.meta.dirname, 'tokens.generated.css'), 'utf8');
+    const rings = [...tokensCss.matchAll(/--todae-([a-z0-9-]+-ring-focus): var\(--_todae-\1, ([^;]+)\);/g)];
+    expect(rings.length).toBeGreaterThan(10);
+    for (const [, token, value] of rings) expect({ token, value }).toEqual({ token, value: 'var(--todae-focus-ring-color)' });
+  });
+
   it('never fades a disabled state, and gives it no cursor but not-allowed', () => {
     for (const [name, css] of Object.entries(sheets)) {
       for (const [, rawSelector = '', body = ''] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {

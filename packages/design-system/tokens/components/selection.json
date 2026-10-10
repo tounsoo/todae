@@ -24,7 +24,7 @@
       "disabled": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } },
       "invalid": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } }
     },
     "indicator": {

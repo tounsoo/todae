@@ -42,6 +42,17 @@ DTCG 파이프라인에서 생성한 카탈로그입니다. 컴포넌트는 cont
 
 여덟 가지 톤이 태그나 사람 같은 카테고리를 구분합니다. `color.category.1`부터 `color.category.8`까지이며, 각각 appearance마다 `fg`, `bg`, `border`가 있습니다. 색조 이름이 아니라 번호를 붙였기 때문에 회사는 이름을 바꾸지 않고도 토큰 패키지에서 색조를 바꿀 수 있습니다. 빌드는 `bg` 위의 `fg`를 Lc 75로 검사합니다. [Badge](/badge), [Chip](/chip), [Avatar](/avatar)는 이 톤을 `category-1`부터 `category-8`로 받고, `categoryTone(key)`는 문자열에서 톤 하나를 고릅니다.
 
+## 포커스 링
+
+`focus.ring.color`, `focus.ring.width`, `focus.ring.offset`은 Todae의 포커스 링을 정합니다. `button.primary.ring.focus`나 `field.ring.focus` 같은 각 컴포넌트의 `ring.focus` 색상 토큰은 `focus.ring.color`를 가리키므로, 이 토큰을 바꾸면 그 링들의 색이 바뀝니다. 컴포넌트 자신의 토큰은 여전히 그 컴포넌트에서 이 값을 덮어씁니다. 직접 만든 포커스 가능한 요소에 같은 링을 그리려면 세 토큰을 읽으세요.
+
+```css
+.my-card:focus-visible {
+  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
+  outline-offset: var(--todae-focus-ring-offset);
+}
+```
+
 ## 카탈로그
 
 <TokensCatalog />

@@ -1,7 +1,7 @@
 {
   "scroll": {
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
     }
   }
 }

@@ -44,7 +44,7 @@
       "border": { "$type": "color", "$value": { "$ref": "#/color/status/critical/border/$value" } }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
     },
     "motion": {
       "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },

@@ -25,7 +25,7 @@
         "disabled": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } }
       },
       "ring": {
-        "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
       }
     },
     "chevron": {

@@ -537,12 +537,13 @@ function serializeShadowLayer(layer: unknown, path: string): string {
 
 /**
  * Refs must exist, form no cycle, and point at a lower layer, or at a token
- * declared alongside in the same set or modifier context (`sameEntry`).
+ * `inScope` allows: one declared alongside in the same set or modifier
+ * context, or in an earlier entry of the same layer.
  */
 export function validateRefs(
   tokens: FlatToken[],
   known: Map<string, Layer>,
-  sameEntry: (from: string, to: string) => boolean = () => false,
+  inScope: (from: string, to: string) => boolean = () => false,
 ): void {
   const layerPaths = new Map<string, Layer>();
   for (const [path, layer] of known) layerPaths.set(path, layer);
@@ -553,7 +554,7 @@ export function validateRefs(
     if (stack.includes(path)) fail(`$ref cycle: ${[...stack, path].join(' -> ')}`);
     const targetLayer = layerPaths.get(path);
     if (!targetLayer) fail(`$ref "${path}" does not exist`);
-    if (LAYER_RANK[targetLayer] >= LAYER_RANK[from] && !sameEntry(fromPath, path)) {
+    if (LAYER_RANK[targetLayer] >= LAYER_RANK[from] && !inScope(fromPath, path)) {
       fail(`$ref "${path}" must point at a lower layer than ${from}`);
     }
     const candidates = tokens.filter((t) => t.path === path && t.layer === targetLayer);
@@ -1310,7 +1311,11 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
       fail(`token "${token.path}" ${ref.role} must reference a ${ref.type}, not the ${target} "${ref.path}"`);
     }
   }
-  validateRefs(all, known, (from, to) => position.get(from) === position.get(to));
+  // A later entry may read an earlier one of its layer, e.g. a button variant reads focus.ring.color.
+  validateRefs(all, known, (from, to) => {
+    const [at, target] = [position.get(from)!, position.get(to)!];
+    return at === target || (target < at && known.get(from) === known.get(to));
+  });
   const byPath = new Map<string, FlatToken[]>();
   for (const token of all) byPath.set(token.path, [...(byPath.get(token.path) ?? []), token]);
   // An alpha must land in [0, 1] in every context its number token takes.

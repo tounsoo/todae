@@ -1,6 +1,7 @@
 {
   "focus": {
     "ring": {
+      "color": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
       "width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
       "offset": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
     }

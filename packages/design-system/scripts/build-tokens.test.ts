@@ -603,6 +603,7 @@ describe('resolver-driven build', () => {
         { $ref: '#/sets/button' },
         { $ref: '#/modifiers/appearance' },
         { $ref: '#/modifiers/density' },
+        { $ref: '#/sets/focus' },
         { $ref: '#/modifiers/buttonVariant' },
         { $ref: '#/sets/contract' },
       ];
@@ -617,8 +618,9 @@ describe('resolver-driven build', () => {
       resolver.resolutionOrder = [
         { $ref: '#/sets/core' },
         { $ref: '#/sets/button' },
-        { $ref: '#/sets/contract' },
         { $ref: '#/modifiers/appearance' },
+        { $ref: '#/sets/focus' },
+        { $ref: '#/sets/contract' },
         { $ref: '#/modifiers/density' },
         { $ref: '#/modifiers/buttonVariant' },
       ];
@@ -749,6 +751,16 @@ describe('resolver-driven build', () => {
     });
     await expect(buildTokensGraph(across)).rejects.toThrow(/must point at a lower layer than contract/);
 
+    // The other way round is allowed: the button set comes earlier in resolutionOrder, in the same layer.
+    const earlier = await fixture((resolver) => {
+      (resolver.sets.contract!.sources as unknown[]).push({
+        field: { tint: { a: { $type: 'dimension', $value: { $ref: '#/button/base/radius/$value' } } } },
+      });
+    });
+    expect((await buildTokensGraph(earlier)).tokens.find((t) => t.path === 'field.tint.a')?.cssValue).toBe(
+      'var(--todae-button-base-radius)',
+    );
+
     const retyped = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({
         field: { tint: { a: { $type: 'dimension', $value: { $ref: '#/color/gray/50/$value' } } } },
@@ -831,7 +843,7 @@ describe('resolver-driven build', () => {
 
   it('rejects malformed resolver entries', async () => {
     const cases: [(resolver: Resolver) => void, RegExp][] = [
-      [(r) => r.resolutionOrder.push({ type: 'set', name: 'inline', sources: [] }), /resolutionOrder\[6\] must be/],
+      [(r) => r.resolutionOrder.push({ type: 'set', name: 'inline', sources: [] }), /resolutionOrder\[7\] must be/],
       [(r) => r.resolutionOrder.push({ $ref: '#/sets/missing' }), /#\/sets\/missing does not exist/],
       [(r) => r.resolutionOrder.push({ $ref: '#/sets/core' }), /lists #\/sets\/core twice/],
       [(r) => void (r.modifiers.density!.default = 'huge'), /default must name one of its contexts/],
