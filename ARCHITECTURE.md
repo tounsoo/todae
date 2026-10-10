@@ -22,7 +22,7 @@ What Todae ships is a component, a hook or a recipe. Providers, their hooks, and
 
 Rules:
 
-- **Anything that carries Todae tokens or styles is an exported component**, even when the browser does all the behavior. Link, Disclosure, Separator, Table, Progress, Meter, Spinner, Skeleton, Slider, Code, Kbd and VisuallyHidden became `*.Root` components for this reason. Don't style bare elements in `todae.base`. *Why:* every Todae look should come from an export a company can find, wrap and restyle.
+- **Anything that carries Todae tokens or styles is an exported component**, even when the browser does all the behavior. Link, Table, Separator and VisuallyHidden, for example, are `*.Root` components for this reason. Don't style bare elements in `todae.base`. *Why:* every Todae look should come from an export a company can find, wrap and restyle.
 - **A recipe is thin glue.** Keyboard handling, focus management, ARIA wiring, measurement and positioning go in a component or hook, so a company can copy a recipe and restyle it without breaking accessibility. If copied recipe code would still carry hard behavior, move that behavior into Todae.
 - **A container that gives context or keyboard handling to whatever children it holds is a component** (Fieldset shares `disabled` and `invalid`; Toolbar gives roving focus). **A composition that wires specific exports to each other is a recipe** (Combobox connects a Field to an OptionList).
 - **Don't ship a wrapper with no behavior, styles or tokens of its own.** If the arrangement is worth showing, write a recipe.
@@ -31,7 +31,7 @@ Rules:
 
 ## Component API
 
-- **Compound namespaces.** A component with parts is a namespace object with a `Root`: `Menu.Root`, `Menu.Item`, `Table.HeaderCell`. Components without parts exist in both shapes today (`Separator.Root`, `Stack`); a new one takes the `*.Root` shape, as the project decided.
+- **Compound namespaces.** A component with parts is a namespace object with a `Root`: `Menu.Root`, `Menu.Item`, `Table.HeaderCell`. Components without parts exist in both shapes today: a `{ Root }` namespace (`Separator.Root`) or one export (`Stack`).
 - **Don't nest namespaces** (no `Field.Button.Root`), and give each root one interactive role. Components sit side by side: a Field and a Popover are siblings, neither wraps the other.
 - **A part that renders an element forwards native attributes and its ref.** Type its props with `ComponentPropsWithRef<'element'>`, spread the rest onto the element, and merge `className` with `cx`. *Why:* a company wrapper only has to spread props to keep everything working.
 - **Don't make behavior depend on a child's component type.** Parts register through context, or a parent looks for a data attribute the child renders. *Why:* a company's wrapped `OptionList.Option` or `Button.Icon` must still work.
@@ -87,7 +87,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 
 - **Use the best native HTML and CSS features, with no JavaScript fallbacks and no support matrix.** The feature list is on the [Native platform](apps/docs/app/(en)/platform/page.mdx) page; add a feature there when a component starts to depend on it. *Why:* Todae stays small and gets better as browsers do.
 - **Overlays.** `Dialog` and `BottomSheet` render in place on a modal `<dialog>` (no portal), so they inherit the theme. `Popover`, `Menu` and `Tooltip` use `popover="manual"` with CSS anchor positioning. Page scroll stops through `:root:has(dialog:modal)` in CSS, not a scroll-lock hook.
-- **Toast** holds text and buttons, no nested menus or dialogs. Its region moves into the front modal through `useModalLayer`.
+- **Toast** holds text and buttons, no nested menus or dialogs. Its region follows Todae's modal stack into the front modal; a product's own modal `<dialog>` joins that stack through `useModalLayer`.
 - **Motion** reads the motion tokens (`motion.duration.*`, `motion.easing.*`), respects `prefers-reduced-motion`, and only has to work in Chrome. Don't add workarounds for Safari motion gaps.
 
 ## Accessibility
