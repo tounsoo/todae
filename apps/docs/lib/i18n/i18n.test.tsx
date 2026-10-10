@@ -19,6 +19,7 @@ import { SITE_GROUPS } from '../../components/siteGroups';
 import { UntranslatedPage } from '../../components/UntranslatedPage';
 import { COMPLETE_LOCALES, LOCALES, stripLocale } from './config';
 import { DICTIONARIES } from './dictionaries';
+import { LICENSE } from '../license';
 import { DOCS_ORIGIN } from '../origin';
 import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
@@ -384,6 +385,18 @@ describe('docs locales', () => {
       const top = /<nav class="top-links"[^>]*>(.*?)<\/nav>/.exec(markup)?.[1] ?? '';
       const label = DICTIONARIES[locale].topLinks.components;
       expect(top, locale).toContain(`href="${locale === 'en' ? '' : `/${locale}`}${first}">${label}<`);
+    }
+  });
+
+  it('names the license in the footer, in each language', () => {
+    for (const locale of LOCALES) {
+      const { license, licenseName } = DICTIONARIES[locale];
+      expect(license.split('{license}'), locale).toHaveLength(2);
+      const markup = renderToStaticMarkup(<SiteShell locale={locale}>x</SiteShell>);
+      const footer = /<footer class="site-footer">(.*?)<\/footer>/.exec(markup)?.[1] ?? '';
+      const [before, after] = license.split('{license}');
+      expect(footer, locale).toMatch(new RegExp(`>${before}<a [^>]*href="${LICENSE.href}"[^>]*>${licenseName}</a>${after}<`));
+      expect(footer, locale).toContain(`Copyright © ${LICENSE.year} ${LICENSE.holder}`);
     }
   });
 

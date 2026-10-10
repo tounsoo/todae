@@ -21,6 +21,9 @@ export type Dictionary = {
   theme: Record<'label' | 'system' | 'light' | 'dark', string>;
   /** Accessible name of the GitHub link. */
   github: string;
+  /** The footer's license line; `{license}` is where the link to the license goes, and `licenseName` is its text. */
+  license: string;
+  licenseName: string;
   /** The home page's opening section. */
   hero: Record<'eyebrow' | 'title' | 'lead' | 'start' | 'playground' | 'showcase', string>;
   /** One line under each section on the home page. */
@@ -85,6 +88,8 @@ const en: Dictionary = {
   closeMenu: 'Close',
   theme: { label: 'Theme', system: 'System', light: 'Light', dark: 'Dark' },
   github: 'Todae on GitHub',
+  license: 'Todae is released under the {license}.',
+  licenseName: 'MIT License',
   hero: {
     eyebrow: 'Todae (토대) means foundation',
     title: 'The foundation your design system builds on.',
@@ -155,6 +160,8 @@ const ko: Dictionary = {
   closeMenu: '닫기',
   theme: { label: '테마', system: '시스템', light: '라이트', dark: '다크' },
   github: 'GitHub의 Todae',
+  license: 'Todae는 {license}로 배포됩니다.',
+  licenseName: 'MIT 라이선스',
   hero: {
     eyebrow: '디자인 시스템의 토대',
     title: '회사의 디자인 시스템을 그 위에 세우세요.',
