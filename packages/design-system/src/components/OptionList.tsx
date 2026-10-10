@@ -16,6 +16,8 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
+import { useGlyphs } from '../providers/GlyphsProvider';
+import { CheckGlyph } from './glyphs';
 import { optionDomId } from './OptionList.ids';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './OptionList.module.css';
@@ -117,6 +119,7 @@ function OptionListOption({
   }
   const label = typeof children === 'string' ? children : String(children);
   const selected = ctx.selected.has(value);
+  const { check } = useGlyphs();
   return (
     <div
       {...props}
@@ -137,6 +140,11 @@ function OptionListOption({
         ctx.select(value, true);
       })}
     >
+      {selected ? (
+        <span className={styles.check} aria-hidden="true">
+          {check ?? <CheckGlyph />}
+        </span>
+      ) : null}
       {label}
     </div>
   );

@@ -334,29 +334,28 @@ describe('Chip tones in a browser', () => {
 });
 
 describe('Chip remove content in a browser', () => {
-  it('draws a cross in CSS when given no content, and shows removeIcon instead when given one', () => {
+  it('draws Todae\'s cross when given no content, and sizes removeIcon to chip.icon.size', () => {
     render(
       <div data-appearance="light" data-density="comfortable">
         <Chip.Root onRemove={() => undefined}>Drawn</Chip.Root>
-        <Chip.Root onRemove={() => undefined} removeIcon={<svg data-testid="icon" aria-hidden="true" width="12" height="12" />}>
+        <Chip.Root onRemove={() => undefined} removeIcon={<svg data-testid="icon" aria-hidden="true" width="40" height="40" />}>
           Slotted
         </Chip.Root>
       </div>,
     );
     const drawn = screen.getByRole('button', { name: 'Remove Drawn' });
     expect(drawn.textContent).toBe('');
-    const box = drawn.getBoundingClientRect();
-    expect(box.width).toBeGreaterThan(0);
-    expect(box.height).toBeGreaterThan(0);
-    for (const pseudo of ['::before', '::after']) {
-      const stroke = getComputedStyle(drawn, pseudo);
-      expect(stroke.content).not.toBe('none');
-      expect(parseFloat(stroke.width)).toBeGreaterThan(0);
-      expect(parseFloat(stroke.borderTopWidth)).toBeGreaterThan(0);
-    }
+    const cross = drawn.querySelector('svg')!;
+    const box = cross.getBoundingClientRect();
+    const size = parseFloat(getComputedStyle(drawn).getPropertyValue('--todae-chip-icon-size')) * 16;
+    expect(box.width).toBeCloseTo(size, 0);
+    expect(box.height).toBeCloseTo(size, 0);
     const slotted = screen.getByRole('button', { name: 'Remove Slotted' });
-    expect(slotted.contains(screen.getByTestId('icon'))).toBe(true);
-    expect(getComputedStyle(slotted, '::before').content).toBe('none');
+    const icon = screen.getByTestId('icon');
+    expect(slotted.contains(icon)).toBe(true);
+    // The icon's own width attribute gives way to the token.
+    expect(icon.getBoundingClientRect().width).toBeCloseTo(size, 0);
+    expect(slotted.querySelectorAll('svg')).toHaveLength(1);
   });
 
   it('keeps the drawn remove button full size while a narrow chip truncates its label', () => {

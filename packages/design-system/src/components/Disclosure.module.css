@@ -12,6 +12,37 @@
     color: var(--todae-disclosure-marker-fg);
   }
 
+  /* A chevron glyph from GlyphsProvider replaces the marker. It points down,
+     so a closed disclosure turns it toward the text. */
+  .summary[data-glyph] {
+    list-style: none;
+  }
+
+  .summary[data-glyph]::-webkit-details-marker {
+    display: none;
+  }
+
+  .marker {
+    display: inline-flex;
+    vertical-align: middle;
+    margin-inline-end: 0.375em;
+    color: var(--todae-disclosure-marker-fg);
+  }
+
+  .marker > :is(svg, img) {
+    inline-size: 1em;
+    block-size: 1em;
+    transition: rotate var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing);
+  }
+
+  .root:not([open]) > .summary > .marker > :is(svg, img) {
+    rotate: -90deg;
+  }
+
+  .root:not([open]) > .summary:dir(rtl) > .marker > :is(svg, img) {
+    rotate: 90deg;
+  }
+
   .summary:focus-visible {
     outline: var(--todae-focus-ring-width) solid var(--todae-disclosure-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
@@ -39,6 +70,10 @@
 
   @media (prefers-reduced-motion: reduce) {
     .root::details-content {
+      transition: none;
+    }
+
+    .marker > :is(svg, img) {
       transition: none;
     }
   }

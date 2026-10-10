@@ -141,6 +141,14 @@
     color: var(--todae-field-fg-disabled);
   }
 
+  /* An icon from a library renders an svg: it takes the field's icon size. */
+  .icon > :is(svg, img),
+  .selectGlyph > :is(svg, img) {
+    flex: none;
+    inline-size: var(--todae-field-icon-size);
+    block-size: var(--todae-field-icon-size);
+  }
+
   .adornment {
     display: inline-flex;
     align-items: center;
@@ -392,6 +400,36 @@
   .select:disabled {
     color: var(--todae-field-fg-disabled);
     cursor: not-allowed;
+  }
+
+  /* The chevron glyph from GlyphsProvider sits over the browser's picker icon,
+     which keeps its place. Only when the select ends the field: an Icon or
+     Affix after it would sit where the chevron goes. */
+  .selectGlyph {
+    display: none;
+  }
+
+  .shell:has(> .select + .selectGlyph:last-child) {
+    position: relative;
+    padding-inline-end: 0;
+  }
+
+  .select:has(+ .selectGlyph:last-child)::picker-icon {
+    visibility: hidden;
+  }
+
+  .select + .selectGlyph:last-child {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: var(--todae-field-padding-x);
+    display: flex;
+    align-items: center;
+    color: var(--todae-field-fg-placeholder);
+    pointer-events: none;
+  }
+
+  .select:disabled + .selectGlyph {
+    color: var(--todae-field-fg-disabled);
   }
 
   .select::picker-icon {

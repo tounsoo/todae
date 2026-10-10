@@ -44,7 +44,7 @@ export const meta = {
       name: 'chipRemoveIcon',
       type: 'React.ReactNode',
       required: false,
-      description: 'Chip remove button content, such as an icon from your own set. Without it, the CSS draws a cross.',
+      description: "Chip remove button content, such as an icon from your own set. Without it, the close glyph from GlyphsProvider, else Todae's cross.",
     },
     {
       name: 'overflowLabel',

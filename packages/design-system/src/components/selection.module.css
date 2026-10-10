@@ -69,15 +69,17 @@
     border-color: var(--todae-selection-border-disabled);
   }
 
-  .root[data-control='checkbox'] .input:checked + .indicator::after {
-    content: '';
+  /* The check glyph fills the box and shows while the input is checked. */
+  .indicator > :is(svg, img) {
     display: block;
-    width: 30%;
-    height: 55%;
-    margin: 12% auto 0;
-    border-right: 2px solid var(--todae-selection-indicator-fg);
-    border-bottom: 2px solid var(--todae-selection-indicator-fg);
-    transform: rotate(45deg);
+    inline-size: 100%;
+    block-size: 100%;
+    color: var(--todae-selection-indicator-fg);
+    visibility: hidden;
+  }
+
+  .input:checked + .indicator > :is(svg, img) {
+    visibility: visible;
   }
 
   .root[data-control='radio'] .input:checked + .indicator::after {
@@ -126,7 +128,8 @@
   }
 
   /* Forced colors drop author backgrounds but keep system colors, so paint the
-     dot, thumb and on-track with system colors. Forcing stays on, so focus
+     dot, thumb and on-track with system colors. The check is a glyph in the
+     text color, which forcing keeps. Forcing stays on, so focus
      rings and other states are still forced. */
   @media (forced-colors: active) {
     .root[data-control='radio'] .input:checked + .indicator::after,
@@ -152,6 +155,10 @@
     .root[data-disabled][data-control='switch'] .input:checked + .indicator {
       background: Canvas;
       border-color: GrayText;
+    }
+
+    .root[data-disabled] .indicator > svg {
+      color: GrayText;
     }
   }
 }

@@ -97,36 +97,27 @@
     background: var(--todae-option-bg-selected);
   }
 
-  .list[data-selection-mode='multiple'] .option[data-selected]::after {
-    content: '';
-    position: absolute;
-    inset-inline-start: calc(var(--todae-option-padding-x) + 0.22em);
-    width: 0.28em;
-    height: 0.5em;
-    /* Physical sides: the rotation is physical too, so the check keeps its shape in rtl. */
-    border-right: 2px solid var(--todae-option-check-fg);
-    border-bottom: 2px solid var(--todae-option-check-fg);
-    transform: rotate(45deg);
-  }
-
   .list[data-selection-mode='single'] .option[data-selected] {
     padding-inline-start: calc(var(--todae-option-padding-x) + 1.25em);
   }
 
-  .list[data-selection-mode='single'] .option[data-selected]::before {
-    content: '';
+  /* A selected option's check glyph, inside the box in a multiple list. */
+  .check {
     position: absolute;
-    inset-inline-start: calc(var(--todae-option-padding-x) + 0.22em);
-    width: 0.28em;
-    height: 0.5em;
-    /* Physical sides: the rotation is physical too, so the check keeps its shape in rtl. */
-    border-right: 2px solid var(--todae-option-check-fg);
-    border-bottom: 2px solid var(--todae-option-check-fg);
-    transform: rotate(45deg);
+    inset-inline-start: var(--todae-option-padding-x);
+    display: flex;
+    inline-size: 0.85em;
+    block-size: 0.85em;
+    color: var(--todae-option-check-fg);
+  }
+
+  .check > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
   }
 
   /* Forced colors drop backgrounds: outline the highlighted option. Selection
-     keeps its check mark, which is drawn with borders. */
+     keeps its check mark, a glyph in the text color. */
   @media (forced-colors: active) {
     .option[data-highlighted] {
       outline: var(--todae-focus-ring-width) solid Highlight;

@@ -2,6 +2,7 @@ import { type ComponentPropsWithRef, type ReactNode } from 'react';
 import { Button, type ButtonActionProps } from './Button';
 import { useStrings } from '../providers/StringsProvider';
 import { useDismissLabel } from './dismissLabel';
+import { useCloseGlyph } from './closeGlyph';
 import { cx } from './props';
 import styles from './Alert.module.css';
 
@@ -59,9 +60,10 @@ function Actions({ className, ...props }: AlertActionsProps) {
  */
 function Close({ 'aria-label': ariaLabel, className, children, ref, ...props }: AlertCloseProps) {
   const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().dismiss);
+  const glyph = useCloseGlyph();
   return (
     <Button.Root variant="ghost" aria-label={label} {...props} ref={refs} className={cx(styles.close, className)}>
-      {children}
+      {children ?? glyph}
     </Button.Root>
   );
 }

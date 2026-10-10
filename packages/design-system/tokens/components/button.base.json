@@ -10,7 +10,10 @@
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } },
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
       },
-      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } }
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+      "icon": {
+        "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } }
+      }
     }
   }
 }

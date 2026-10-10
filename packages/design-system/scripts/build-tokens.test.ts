@@ -593,6 +593,7 @@ describe('resolver-driven build', () => {
               padding: { x: px(12), y: px(6) },
               font: { size: px(14), weight: { $type: 'fontWeight', $value: 500 } },
               gap: px(8),
+              icon: { size: px(16) },
             },
           },
         },

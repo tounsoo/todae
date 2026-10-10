@@ -27,6 +27,31 @@
     color: var(--todae-breadcrumbs-separator-fg);
   }
 
+  /* A separator glyph from GlyphsProvider takes the text's place. It points
+     toward the next item, so it is mirrored in right-to-left. */
+  .item + .item:has(> .separator)::before {
+    content: none;
+  }
+
+  .item:first-child > .separator {
+    display: none;
+  }
+
+  .separator {
+    display: inline-flex;
+    align-self: center;
+    color: var(--todae-breadcrumbs-separator-fg);
+  }
+
+  .separator > :is(svg, img) {
+    inline-size: 1em;
+    block-size: 1em;
+  }
+
+  .separator:dir(rtl) > :is(svg, img) {
+    scale: -1 1;
+  }
+
   .current {
     color: var(--todae-breadcrumbs-current-fg);
     font-weight: var(--todae-breadcrumbs-current-font-weight);
