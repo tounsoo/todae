@@ -339,7 +339,7 @@ describe('mobile drawer', () => {
     // A modified click opens the link elsewhere, so the drawer stays, past the time it takes to slide out.
     link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
     await new Promise((resolve) => setTimeout(resolve, 400));
-    expect(drawer()?.hasAttribute('data-exiting')).toBe(false);
+    expect(drawer()?.hasAttribute('data-todae-exiting')).toBe(false);
     await userEvent.click(link);
     await expect.poll(drawer).toBeNull();
   });

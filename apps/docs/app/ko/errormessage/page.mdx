@@ -14,8 +14,8 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
 <Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
 	<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
 </Field.Root>
-<Description id={hintId}>We only use this for billing receipts.</Description>
-{invalid ? <ErrorMessage id={errorId}>Enter an address that contains an @.</ErrorMessage> : null}
+<Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
+{invalid ? <ErrorMessage.Root id={errorId}>Enter an address that contains an @.</ErrorMessage.Root> : null}
 ```
 
 <Example block>
@@ -26,7 +26,7 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `ErrorMessage`는 필수 `id`, `data-todae-error`, 오류 텍스트 색상을 가진 `<span>`을 렌더링합니다. `role`과 `aria-live`가 없고, 컨트롤에는 아무것도 쓰지 않습니다. `aria-invalid`는 이 컴포넌트가 아니라 컨트롤, `Field.Root`, `RadioGroup.Root`, 바깥 [Fieldset](/fieldset)의 `invalid`에서 옵니다.
+**Todae가 맡는 것:** `ErrorMessage.Root`는 필수 `id`, `data-todae-error`, 오류 텍스트 색상을 가진 `<span>`을 렌더링합니다. `role`과 `aria-live`가 없고, 컨트롤에는 아무것도 쓰지 않습니다. `aria-invalid`는 이 컴포넌트가 아니라 컨트롤, `Field.Root`, `RadioGroup.Root`, 바깥 [Fieldset](/fieldset)의 `invalid`에서 옵니다.
 
 **직접 제공할 것:** 오류가 해당될 때만 마운트하고, 그때만 컨트롤의 `aria-describedby`(Field 안에서는 `Field.Root`)에 id를 넣고 `invalid`를 켜세요. 무엇이 잘못됐고 어떻게 고치는지 쓰세요. 제출할 때 나타나는 오류에는 `role="alert"`를 넘겨 알려지게 하세요. 그룹이라면 `Fieldset.Root`의 `aria-describedby`가 이 메시지를 가리키게 하세요.
 
@@ -40,4 +40,4 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
 
 ## Props
 
-<PropsTable name="ErrorMessage" />
+<PropsTable name="ErrorMessage.Root" />

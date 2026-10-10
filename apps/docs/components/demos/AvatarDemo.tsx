@@ -11,7 +11,7 @@ const PORTRAIT =
 
 export function AvatarStates() {
   return (
-    <Stack direction="row">
+    <Stack.Root direction="row">
       <Avatar.Root label="Ada Lovelace">
         <Avatar.Image src={PORTRAIT} />
         <Avatar.Fallback>AL</Avatar.Fallback>
@@ -23,13 +23,13 @@ export function AvatarStates() {
         <Avatar.Image src="data:image/png;base64,missing" />
         <Avatar.Fallback>AT</Avatar.Fallback>
       </Avatar.Root>
-    </Stack>
+    </Stack.Root>
   );
 }
 
 export function AvatarSizes() {
   return (
-    <Stack direction="row">
+    <Stack.Root direction="row">
       <Avatar.Root size="sm" label="Ada Lovelace">
         <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>
@@ -39,19 +39,19 @@ export function AvatarSizes() {
       <Avatar.Root size="lg" label="Ada Lovelace">
         <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>
-    </Stack>
+    </Stack.Root>
   );
 }
 
 export function AvatarBesideName() {
   return (
-    <Stack direction="row" style={{ alignItems: 'center' }}>
+    <Stack.Root direction="row" style={{ alignItems: 'center' }}>
       <Avatar.Root>
         <Avatar.Image src={PORTRAIT} />
         <Avatar.Fallback>AL</Avatar.Fallback>
       </Avatar.Root>
-      <Text>Ada Lovelace</Text>
-    </Stack>
+      <Text.Root>Ada Lovelace</Text.Root>
+    </Stack.Root>
   );
 }
 
@@ -65,12 +65,12 @@ const PEOPLE = [
 
 export function AvatarTones() {
   return (
-    <Stack direction="row" style={{ flexWrap: 'wrap' }}>
+    <Stack.Root direction="row" style={{ flexWrap: 'wrap' }}>
       {PEOPLE.map((person) => (
         <Avatar.Root key={person.id} label={person.name} tone={categoryTone(person.id)}>
           <Avatar.Fallback>{person.initials}</Avatar.Fallback>
         </Avatar.Root>
       ))}
-    </Stack>
+    </Stack.Root>
   );
 }

@@ -704,9 +704,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       onOpenChange: (next, reason) => setOpen(next, reason),
       initialFocusRef: inputRef,
       restoreFocusRef: returnFocusRef,
-      'aria-label': 'Options',
+      'aria-label': optionsName,
     }),
-    [open, setOpen],
+    [open, setOpen, optionsName],
   );
 
   const getListboxProps = useCallback(():

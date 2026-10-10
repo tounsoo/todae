@@ -30,11 +30,11 @@ const id = useId()
 const hintId = useId()
 
 <div className="labelled-field">
-	<Label htmlFor={id}>Work email</Label>
+	<Label.Root htmlFor={id}>Work email</Label.Root>
 	<Field.Root id={id} aria-describedby={hintId}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
-	<Description id={hintId}>We only use this for billing receipts.</Description>
+	<Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
 </div>
 ```
 
@@ -46,7 +46,7 @@ This is not `Dialog.Description`. Dialog Description wires `aria-describedby` fo
 
 ## Accessible composition
 
-**Todae handles:** `Description` renders a `<span>` with the `id` you pass, which its type requires, and `data-todae-description`. It writes nothing onto the control and has no live region. `Field.Root` passes its `aria-describedby` to the input, merged with the input's own.
+**Todae handles:** `Description.Root` renders a `<span>` with the `id` you pass, which its type requires, and `data-todae-description`. It writes nothing onto the control and has no live region. `Field.Root` passes its `aria-describedby` to the input, merged with the input's own.
 
 **You supply:** The link to the control: put the id in `aria-describedby` on `Field.Root`, on a Checkbox or Switch, on `RadioGroup.Root`, or on `Fieldset.Root` for a group. Keep the text short. It is read as plain text, so a link inside it is not announced as a link when the control is described.
 
@@ -60,4 +60,4 @@ This is not `Dialog.Description`. Dialog Description wires `aria-describedby` fo
 
 ## Props
 
-<PropsTable name="Description" />
+<PropsTable name="Description.Root" />

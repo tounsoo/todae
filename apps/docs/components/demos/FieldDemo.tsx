@@ -30,7 +30,7 @@ export function FieldLabelStates() {
   return (
     <>
       <div className="labelled-field">
-        <Label htmlFor={idleId}>Email</Label>
+        <Label.Root htmlFor={idleId}>Email</Label.Root>
         <Field.Root id={idleId}>
           <Field.TextInput
             value={email}
@@ -40,13 +40,13 @@ export function FieldLabelStates() {
         </Field.Root>
       </div>
       <div className="labelled-field">
-        <Label htmlFor={disabledId}>Email</Label>
+        <Label.Root htmlFor={disabledId}>Email</Label.Root>
         <Field.Root id={disabledId} disabled>
           <Field.TextInput value="Disabled" onChange={() => undefined} />
         </Field.Root>
       </div>
       <div className="labelled-field">
-        <Label htmlFor={invalidId}>Email</Label>
+        <Label.Root htmlFor={invalidId}>Email</Label.Root>
         <Field.Root id={invalidId} invalid>
           <Field.TextInput value="Invalid" onChange={() => undefined} />
         </Field.Root>
@@ -63,7 +63,7 @@ export function FieldLabelAdornments() {
   return (
     <>
       <div className="labelled-field">
-        <Label htmlFor={searchId}>Search</Label>
+        <Label.Root htmlFor={searchId}>Search</Label.Root>
         <Field.Root id={searchId}>
           <Field.Icon>
             <span>⌕</span>
@@ -72,7 +72,7 @@ export function FieldLabelAdornments() {
         </Field.Root>
       </div>
       <div className="labelled-field">
-        <Label htmlFor={amountId}>Amount</Label>
+        <Label.Root htmlFor={amountId}>Amount</Label.Root>
         <Field.Root id={amountId}>
           <Field.Affix>$</Field.Affix>
           <Field.TextInput value={amount} onChange={(event) => setAmount(event.target.value)} />
@@ -180,15 +180,15 @@ export function TextareaMessages() {
   return (
     <>
       <div className="labelled-field">
-        <Label htmlFor={id}>Note</Label>
+        <Label.Root htmlFor={id}>Note</Label.Root>
         <Field.Root id={id} invalid={invalid} aria-describedby={invalid ? `${hintId} ${errorId}` : hintId}>
           <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
         </Field.Root>
-        <Description id={hintId}>A short description of the work.</Description>
-        {invalid ? <ErrorMessage id={errorId}>Use at least 8 characters.</ErrorMessage> : null}
+        <Description.Root id={hintId}>A short description of the work.</Description.Root>
+        {invalid ? <ErrorMessage.Root id={errorId}>Use at least 8 characters.</ErrorMessage.Root> : null}
       </div>
       <div className="labelled-field">
-        <Label htmlFor={disabledId}>Note</Label>
+        <Label.Root htmlFor={disabledId}>Note</Label.Root>
         <Field.Root id={disabledId} disabled>
           <Field.Textarea value="Disabled" onChange={() => undefined} />
         </Field.Root>
@@ -264,13 +264,13 @@ export function ChipInputLabel() {
   return (
     <>
       <div className="labelled-field">
-        <Label htmlFor={tagsId}>Tags</Label>
+        <Label.Root htmlFor={tagsId}>Tags</Label.Root>
         <Field.Root id={tagsId}>
           <Field.ChipInput {...field.getChipInputProps()} placeholder="Type and press Enter" />
         </Field.Root>
       </div>
       <div className="labelled-field">
-        <Label htmlFor={invalidId}>Tags</Label>
+        <Label.Root htmlFor={invalidId}>Tags</Label.Root>
         <Field.Root id={invalidId} invalid>
           <Field.ChipInput
             chips={['bad']}
@@ -438,7 +438,7 @@ function ChipRow({ density, chips }: { density: 'compact' | 'comfortable' | 'spa
   return (
     <DensityProvider density={density}>
       <div className="labelled-field">
-        <Label htmlFor={id}>Tags</Label>
+        <Label.Root htmlFor={id}>Tags</Label.Root>
         <Field.Root id={id} style={{ maxWidth: '18rem' }}>
           <Field.Icon>
             <span>⌕</span>
@@ -462,7 +462,7 @@ export function RowChipInput() {
         <ChipRow key={density} density={density} chips={MANY} />
       ))}
       <div className="labelled-field">
-        <Label htmlFor={emptyId}>Tags</Label>
+        <Label.Root htmlFor={emptyId}>Tags</Label.Root>
         <Field.Root id={emptyId}>
           <Field.Icon>
             <span>⌕</span>
@@ -472,7 +472,7 @@ export function RowChipInput() {
         </Field.Root>
       </div>
       <div className="labelled-field">
-        <Label htmlFor={textId}>Tags</Label>
+        <Label.Root htmlFor={textId}>Tags</Label.Root>
         <Field.Root id={textId}>
           <Field.Icon>
             <span>⌕</span>
@@ -519,7 +519,7 @@ export function FieldSelectSize() {
   const [size, setSize] = useState('m');
   return (
     <div className="labelled-field">
-      <Label htmlFor={id}>Size</Label>
+      <Label.Root htmlFor={id}>Size</Label.Root>
       <Field.Root id={id}>
         <Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
           <option value="s">Small</option>
@@ -544,19 +544,19 @@ export function FieldDateTime() {
   return (
     <>
       <div className="labelled-field">
-        <Label htmlFor={quantityId}>Seats</Label>
+        <Label.Root htmlFor={quantityId}>Seats</Label.Root>
         <Field.Root id={quantityId}>
           <Field.TextInput type="number" min={1} max={20} value={quantity} onValueChange={setQuantity} onChange={() => undefined} />
         </Field.Root>
       </div>
       <div className="labelled-field">
-        <Label htmlFor={dateId}>Start date</Label>
+        <Label.Root htmlFor={dateId}>Start date</Label.Root>
         <Field.Root id={dateId}>
           <Field.TextInput type="date" value={date} onValueChange={setDate} onChange={() => undefined} />
         </Field.Root>
       </div>
       <div className="labelled-field">
-        <Label htmlFor={timeId}>Start time</Label>
+        <Label.Root htmlFor={timeId}>Start time</Label.Root>
         <Field.Root id={timeId}>
           <Field.TextInput type="time" step={900} value={time} onValueChange={setTime} onChange={() => undefined} />
         </Field.Root>
@@ -601,13 +601,13 @@ export function FieldUseField() {
   const [stars, setStars] = useState(3);
   return (
     <div className="labelled-field">
-      <Text as="span" id={captionId} size="s" weight="medium">
+      <Text.Root as="span" id={captionId} size="s" weight="medium">
         Rating
-      </Text>
+      </Text.Root>
       <Field.Root aria-labelledby={captionId} aria-describedby={hintId}>
         <Stars value={stars} onChange={setStars} />
       </Field.Root>
-      <Description id={hintId}>Arrow keys change the rating.</Description>
+      <Description.Root id={hintId}>Arrow keys change the rating.</Description.Root>
     </div>
   );
 }

@@ -1,13 +1,13 @@
 import {
   useContext,
   useEffect,
-  useId,
   useMemo,
   useRef,
   type ComponentPropsWithRef,
   type FocusEvent,
   type KeyboardEvent,
 } from 'react';
+import { useDomId } from './domId';
 import { isReachable, useRovingFocus } from '../hooks/useRovingFocus';
 import { cx } from './cx';
 import { useComposedRefs } from './props';
@@ -130,7 +130,7 @@ function Root({
   // to the one left most recently.
   const left = useRef(new WeakMap<HTMLElement, number>());
   const leaves = useRef(0);
-  const id = useId();
+  const id = useDomId();
   const context = useMemo(() => ({ orientation, id }), [orientation, id]);
   // Only the arrow keys, Home and End: Tab is steered below, and no tabindex is written.
   const roving = useRovingFocus({ orientation, loop, findItems: itemsOf });

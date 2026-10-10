@@ -1,17 +1,19 @@
 import type { ComponentPropsWithRef } from 'react';
+import { cx } from './cx';
 import styles from './Stack.module.css';
 
 export type StackDirection = 'row' | 'column';
 
-export type StackProps = {
+export type StackRootProps = {
   direction?: StackDirection;
 } & ComponentPropsWithRef<'div'>;
 
-export function Stack({
+function Root({
   direction = 'column',
   className,
   ...props
-}: StackProps) {
-  const classes = [styles.root, styles[direction], className].filter(Boolean).join(' ');
-  return <div {...props} className={classes} />;
+}: StackRootProps) {
+  return <div {...props} className={cx(styles.root, styles[direction], className)} />;
 }
+
+export const Stack = { Root } as const;

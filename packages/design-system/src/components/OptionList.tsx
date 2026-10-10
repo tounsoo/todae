@@ -5,7 +5,6 @@ import {
   isValidElement,
   useCallback,
   useContext,
-  useId,
   useLayoutEffect,
   useMemo,
   useReducer,
@@ -16,6 +15,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
+import { useDomId } from './domId';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { CheckGlyph, glyphOr } from './glyphs';
 import { optionDomId } from './OptionList.ids';
@@ -169,7 +169,7 @@ function OptionListRoot(props: OptionListRootProps) {
   } = props;
   const listRef = useRef<HTMLDivElement | null>(null);
   const listRefs = useComposedRefs(listRef, ref);
-  const autoId = useId();
+  const autoId = useDomId();
   const listId = id ?? autoId;
   const multiple = isMultiple(props);
   // Registration only records the option; ordering happens once per render

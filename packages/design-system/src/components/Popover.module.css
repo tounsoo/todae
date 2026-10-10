@@ -1,6 +1,5 @@
 @layer todae.components {
   .content {
-    --todae-popover-offset: var(--todae-space-1);
     box-sizing: border-box;
     position: fixed;
     inset: unset;
@@ -19,7 +18,7 @@
   @supports (top: anchor(bottom)) {
     .content {
       top: calc(anchor(bottom) + var(--todae-popover-offset));
-      left: anchor(left);
+      inset-inline-start: anchor(self-start);
       position-anchor: var(--todae-popover-anchor);
     }
   }
@@ -27,7 +26,7 @@
   @position-try --todae-popover-flip-block {
     top: unset;
     bottom: calc(anchor(top) + var(--todae-popover-offset));
-    left: anchor(left);
+    inset-inline-start: anchor(self-start);
   }
 
   @supports (position-try-fallbacks: flip-block) {

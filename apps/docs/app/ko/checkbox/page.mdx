@@ -7,10 +7,10 @@ import { CheckboxStates } from '../../../components/demos/CheckboxDemo';
 `checked`가 정의되어 있으면 제어 컴포넌트입니다. `defaultChecked`를 넘기거나 둘 다 생략하면 비제어 컴포넌트입니다. `useControlledState`는 `onCheckedChange`를 실행하지 않습니다. 컴포넌트가 실행합니다.
 
 ```tsx
-<Checkbox defaultChecked>Product updates</Checkbox>
-<Checkbox checked={accepted} onCheckedChange={setAccepted} invalid={invalid} aria-describedby={errorId}>
+<Checkbox.Root defaultChecked>Product updates</Checkbox.Root>
+<Checkbox.Root checked={accepted} onCheckedChange={setAccepted} invalid={invalid} aria-describedby={errorId}>
 	I accept the terms
-</Checkbox>
+</Checkbox.Root>
 ```
 
 <Example block>
@@ -29,7 +29,7 @@ Checkbox를 `Field.Root` 안에 넣지 마세요. 그 셸은 텍스트와 칩 �
 import { Check } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ check: <Check strokeWidth={3} /> }}>
-	<Checkbox defaultChecked>Product updates</Checkbox>
+	<Checkbox.Root defaultChecked>Product updates</Checkbox.Root>
 </GlyphsProvider>
 ```
 
@@ -49,4 +49,4 @@ import { Check } from 'lucide-react';
 
 ## Props
 
-<PropsTable name="Checkbox" />
+<PropsTable name="Checkbox.Root" />

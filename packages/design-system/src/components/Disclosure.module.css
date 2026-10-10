@@ -26,8 +26,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    inline-size: 1em;
-    block-size: 1em;
+    inline-size: calc(var(--todae-disclosure-marker-scale) * 1em);
+    block-size: calc(var(--todae-disclosure-marker-scale) * 1em);
     vertical-align: middle;
     margin-inline-end: 0.375em;
     color: var(--todae-disclosure-marker-fg);
@@ -51,7 +51,7 @@
   .summary:focus-visible {
     outline: var(--todae-focus-ring-width) solid var(--todae-disclosure-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
-    border-radius: 2px;
+    border-radius: var(--todae-disclosure-ring-radius);
   }
 
   .root::details-content {

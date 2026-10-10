@@ -7,10 +7,10 @@ import { CardPlan } from '../../../components/demos/CardDemo';
 ```tsx
 <Card.Root>
   <Card.Header>
-    <Text as="h3">Pro plan</Text>
+    <Text.Root as="h3">Pro plan</Text.Root>
   </Card.Header>
   <Card.Body>
-    <Text>Billed yearly.</Text>
+    <Text.Root>Billed yearly.</Text.Root>
   </Card.Body>
   <Card.Footer>
     <Button.Root>Change plan</Button.Root>
@@ -43,7 +43,7 @@ export function Panel({ title, level, children }: PanelProps) {
   return (
     <Card.Root role="region" aria-labelledby={id}>
       <Card.Header>
-        <Text as={level} id={id}>{title}</Text>
+        <Text.Root as={level} id={id}>{title}</Text.Root>
       </Card.Header>
       <Card.Body>{children}</Card.Body>
     </Card.Root>

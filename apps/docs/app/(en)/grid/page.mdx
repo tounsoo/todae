@@ -15,9 +15,9 @@ Server Components can import it from `@omsoo/todae/grid`. That entry has no `'us
 </Example>
 
 ```tsx
-<Grid columns={2}>
+<Grid.Root columns={2}>
   {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
-</Grid>
+</Grid.Root>
 ```
 
 ## Fill
@@ -29,20 +29,20 @@ Server Components can import it from `@omsoo/todae/grid`. That entry has no `'us
 </Example>
 
 ```tsx
-<Grid minItemSize="10rem">
+<Grid.Root minItemSize="10rem">
   {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
-</Grid>
+</Grid.Root>
 ```
 
 For any other track list, such as a sidebar and a main column, leave both out and set `gridTemplateColumns` in `style` or a class.
 
 ## Accessible composition
 
-**Todae handles:** Layout only. `Grid` renders a `div` with no role, and there is no `as` prop. Items are placed in DOM order: `columns` and `minItemSize` change how many fit in a row, never which comes first, so reading and Tab order follow what is drawn. Every other prop, `ref`, `role` and `aria-*` included, reaches the `div`.
+**Todae handles:** Layout only. `Grid.Root` renders a `div` with no role, and there is no `as` prop. Items are placed in DOM order: `columns` and `minItemSize` change how many fit in a row, never which comes first, so reading and Tab order follow what is drawn. Every other prop, `ref`, `role` and `aria-*` included, reaches the `div`.
 
-**You supply:** The semantics. Items that form a list for the reader, such as plan cards, take `role="list"` on the `Grid` and `role="listitem"` on each child; a `Card.Root` passes the role on. Give the group a heading before it when the reader needs to know what the items are.
+**You supply:** The semantics. Items that form a list for the reader, such as plan cards, take `role="list"` on the `Grid.Root` and `role="listitem"` on each child; a `Card.Root` passes the role on. Give the group a heading before it when the reader needs to know what the items are.
 
-**Watch for:** Moving items on screen with CSS: `order`, `grid-auto-flow: dense` or explicit `grid-row` and `grid-column` placement change where an item shows, not where it is read or reached by Tab. Put items in the DOM in the order they should be read. `role="grid"` on a layout grid: that role promises an interactive data grid with arrow-key navigation, which `Grid` does not provide. Tabular data goes in a [table](/table).
+**Watch for:** Moving items on screen with CSS: `order`, `grid-auto-flow: dense` or explicit `grid-row` and `grid-column` placement change where an item shows, not where it is read or reached by Tab. Put items in the DOM in the order they should be read. `role="grid"` on a layout grid: that role promises an interactive data grid with arrow-key navigation, which `Grid.Root` does not provide. Tabular data goes in a [table](/table).
 
 ## When to use
 
@@ -52,4 +52,4 @@ For any other track list, such as a sidebar and a main column, leave both out an
 
 ## Props
 
-<PropsTable name="Grid" />
+<PropsTable name="Grid.Root" />

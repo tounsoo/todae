@@ -223,7 +223,7 @@ describe('OptionList', () => {
   it('keeps selected weight at the regular token and paints selected fill', () => {
     expect(css).toMatch(/font-weight:\s*var\(--todae-option-font-weight\)/);
     expect(css).not.toMatch(/data-selected[^{]*\{[^}]*font-weight/);
-    expect(css).toMatch(/--todae-option-list-gap:\s*2px/);
+    expect(css).toMatch(/gap:\s*var\(--todae-option-list-gap\)/);
     expect(css).toMatch(/-webkit-tap-highlight-color:\s*transparent/);
     expect(css).toMatch(/@media\s*\(hover:\s*hover\)/);
     expect(css).toMatch(/\.option\[data-selected\][^{]*\{[^}]*--todae-option-bg-selected/);

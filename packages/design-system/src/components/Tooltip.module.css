@@ -30,7 +30,7 @@
   @supports (bottom: anchor(top)) {
     .content {
       position-anchor: var(--todae-tooltip-anchor);
-      bottom: calc(anchor(top) + var(--todae-space-1));
+      bottom: calc(anchor(top) + var(--todae-tooltip-offset));
       justify-self: anchor-center;
       position-try-fallbacks: flip-block;
     }
@@ -38,7 +38,7 @@
 
   @position-try --todae-tooltip-flip-block {
     bottom: unset;
-    top: calc(anchor(bottom) + var(--todae-space-1));
+    top: calc(anchor(bottom) + var(--todae-tooltip-offset));
     justify-self: anchor-center;
   }
 

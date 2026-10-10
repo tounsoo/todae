@@ -19,7 +19,7 @@ describe('token defaults in a browser', () => {
     render(
       <>
         <Button.Root data-testid="button">Save</Button.Root>
-        <Checkbox data-testid="checkbox">Remember me</Checkbox>
+        <Checkbox.Root data-testid="checkbox">Remember me</Checkbox.Root>
       </>,
     );
     const button = screen.getByTestId('button');

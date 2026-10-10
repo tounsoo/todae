@@ -1,6 +1,5 @@
 @layer todae.components {
   .list {
-    --todae-option-list-gap: 2px;
     display: flex;
     flex-direction: column;
     gap: var(--todae-option-list-gap);
@@ -85,8 +84,8 @@
     content: '';
     position: absolute;
     inset-inline-start: var(--todae-option-padding-x);
-    width: 0.85em;
-    height: 0.85em;
+    width: calc(var(--todae-option-check-scale) * 1em);
+    height: calc(var(--todae-option-check-scale) * 1em);
     box-sizing: border-box;
     border: var(--todae-option-check-border-width) solid var(--todae-option-check-border);
     border-radius: 0.125em;
@@ -108,8 +107,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    inline-size: 0.85em;
-    block-size: 0.85em;
+    inline-size: calc(var(--todae-option-check-scale) * 1em);
+    block-size: calc(var(--todae-option-check-scale) * 1em);
     color: var(--todae-option-check-fg);
     line-height: 1;
   }

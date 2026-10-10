@@ -13,11 +13,11 @@ import { LocalizedLink } from '../LocalizedLink';
 
 export function LinkInText() {
   return (
-    <Text>
+    <Text.Root>
       Read the <LocalizedLink href="/tokens">token reference</LocalizedLink> or the{' '}
       <LocalizedLink href="/platform">native platform notes</LocalizedLink> before you
       theme Todae.
-    </Text>
+    </Text.Root>
   );
 }
 
@@ -37,7 +37,7 @@ export function DisclosureSingle() {
   return (
     <Disclosure.Root>
       <Disclosure.Summary>Shipping details</Disclosure.Summary>
-      <Text>Orders ship within two business days.</Text>
+      <Text.Root>Orders ship within two business days.</Text.Root>
     </Disclosure.Root>
   );
 }
@@ -47,15 +47,15 @@ export function DisclosureAccordion() {
     <div>
       <Disclosure.Root name="faq" open>
         <Disclosure.Summary>What is Todae?</Disclosure.Summary>
-        <Text>A low-level base for a company design system.</Text>
+        <Text.Root>A low-level base for a company design system.</Text.Root>
       </Disclosure.Root>
       <Disclosure.Root name="faq">
         <Disclosure.Summary>Does it ship icons?</Disclosure.Summary>
-        <Text>No. Pass your own icons as children, so your icon set stays yours.</Text>
+        <Text.Root>No. Pass your own icons as children, so your icon set stays yours.</Text.Root>
       </Disclosure.Root>
       <Disclosure.Root name="faq">
         <Disclosure.Summary>Which browsers?</Disclosure.Summary>
-        <Text>Any browser with the native features on the platform page.</Text>
+        <Text.Root>Any browser with the native features on the platform page.</Text.Root>
       </Disclosure.Root>
     </div>
   );
@@ -63,19 +63,19 @@ export function DisclosureAccordion() {
 
 export function VisuallyHiddenLabel() {
   return (
-    <Text>
+    <Text.Root>
       3 <VisuallyHidden.Root>unread messages</VisuallyHidden.Root>
       <span aria-hidden="true"> ✉</span>
-    </Text>
+    </Text.Root>
   );
 }
 
 export function SeparatorBetween() {
   return (
     <div>
-      <Text>Account settings apply to every workspace.</Text>
+      <Text.Root>Account settings apply to every workspace.</Text.Root>
       <Separator.Root />
-      <Text>Workspace settings apply to this workspace only.</Text>
+      <Text.Root>Workspace settings apply to this workspace only.</Text.Root>
     </div>
   );
 }
@@ -116,12 +116,12 @@ export function TableOfInvoices() {
 
 export function SpinnerLabelled() {
   return (
-    <Stack direction="row">
+    <Stack.Root direction="row">
       <label>
         <Spinner.Root /> Loading invoices
       </label>
       <Spinner.Root aria-label="Saving" />
-    </Stack>
+    </Stack.Root>
   );
 }
 
@@ -129,13 +129,13 @@ export function SkeletonProfile() {
   return (
     <div>
       <VisuallyHidden.Root>Loading profile</VisuallyHidden.Root>
-      <Stack direction="row" aria-hidden="true">
+      <Stack.Root direction="row" aria-hidden="true">
         <Skeleton.Root style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />
-        <Stack style={{ flex: 1 }}>
+        <Stack.Root style={{ flex: 1 }}>
           <Skeleton.Root style={{ inlineSize: '40%' }} />
           <Skeleton.Root style={{ inlineSize: '70%' }} />
-        </Stack>
-      </Stack>
+        </Stack.Root>
+      </Stack.Root>
     </div>
   );
 }
@@ -143,9 +143,9 @@ export function SkeletonProfile() {
 export function CodeInText() {
   return (
     <div>
-      <Text>
+      <Text.Root>
         Call <Code.Root>getPlan()</Code.Root> before you render the billing page.
-      </Text>
+      </Text.Root>
       <Code.Block tabIndex={0} role="region" aria-label="Example code">
         <code>{`const plan = await getPlan();\nrender(<Billing plan={plan} />);`}</code>
       </Code.Block>
@@ -155,12 +155,12 @@ export function CodeInText() {
 
 export function KbdShortcut() {
   return (
-    <Text>
+    <Text.Root>
       Press{' '}
       <Kbd.Root>
         <Kbd.Root>Ctrl</Kbd.Root>+<Kbd.Root>K</Kbd.Root>
       </Kbd.Root>{' '}
       to search, or <Kbd.Root>Esc</Kbd.Root> to close.
-    </Text>
+    </Text.Root>
   );
 }

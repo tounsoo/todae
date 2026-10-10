@@ -1,9 +1,9 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'ErrorMessage',
+  name: 'Description.Root',
   description:
-    'Validation text below a control. Required id. No alert role. invalid lives on the control.',
+    'Supporting text below a control. Required id. Sibling, not a Field part. Author wires aria-describedby.',
   props: [
     {
       name: 'id',
@@ -15,7 +15,7 @@ export const meta = {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description: 'Error text.',
+      description: 'Hint text.',
     },
     {
       name: 'className',

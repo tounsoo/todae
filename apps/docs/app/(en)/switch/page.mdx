@@ -7,8 +7,8 @@ On or off. The indicator is a track and a thumb. There is no check glyph. Childr
 The input is `type="checkbox"` with `role="switch"`. Controlled and uncontrolled follow the same rule as [Checkbox](/checkbox).
 
 ```tsx
-<Switch defaultChecked>Play a sound on mention</Switch>
-<Switch checked={digest} onCheckedChange={setDigest}>Send a weekly digest</Switch>
+<Switch.Root defaultChecked>Play a sound on mention</Switch.Root>
+<Switch.Root checked={digest} onCheckedChange={setDigest}>Send a weekly digest</Switch.Root>
 ```
 
 <Example block>
@@ -33,4 +33,4 @@ Density scales the track through `space.selection.size`. Do not put Switch insid
 
 ## Props
 
-<PropsTable name="Switch" />
+<PropsTable name="Switch.Root" />

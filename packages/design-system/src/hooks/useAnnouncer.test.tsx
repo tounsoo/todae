@@ -165,7 +165,7 @@ describe('useAnnouncer', () => {
   });
 
   it('waits for a modal in its exit motion to close, then writes in body', () => {
-    const dialog = modal({ 'data-exiting': '' });
+    const dialog = modal({ 'data-todae-exiting': '' });
     render(<Speaker message="Deleted" />);
     // Longer than a region gets to settle: the exit is waited out.
     act(() => vi.advanceTimersByTime(3000));
@@ -180,7 +180,7 @@ describe('useAnnouncer', () => {
   });
 
   it('writes in a modal that has looked like it was closing for too long, as it is still open', () => {
-    const dialog = modal({ 'data-exiting': '' });
+    const dialog = modal({ 'data-todae-exiting': '' });
     render(<Speaker message="Deleted" />);
     act(() => vi.advanceTimersByTime(9900));
     expect(liveIn(dialog)).toBeNull();

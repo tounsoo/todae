@@ -350,6 +350,7 @@ describe('Tooltip', () => {
         './Tooltip.wire',
         './Tooltip.module.css',
         './props',
+        './cx',
       ]),
     );
     expect(css).not.toContain('.trigger');

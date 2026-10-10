@@ -506,7 +506,7 @@
       ]
     },
     {
-      "name": "Checkbox",
+      "name": "Checkbox.Root",
       "description": "Native checkbox. Children are the visible label. Never indeterminate.",
       "props": [
         {
@@ -732,7 +732,7 @@
       ]
     },
     {
-      "name": "Description",
+      "name": "Description.Root",
       "description": "Supporting text below a control. Required id. Sibling, not a Field part. Author wires aria-describedby.",
       "props": [
         {
@@ -953,7 +953,7 @@
       ]
     },
     {
-      "name": "ErrorMessage",
+      "name": "ErrorMessage.Root",
       "description": "Validation text below a control. Required id. No alert role. invalid lives on the control.",
       "props": [
         {
@@ -1366,7 +1366,7 @@
       ]
     },
     {
-      "name": "Grid",
+      "name": "Grid.Root",
       "description": "CSS grid layout, the two-axis partner to Stack. Gap comes from the grid.gap contract token. Pass at most one of columns or minItemSize; with neither, set gridTemplateColumns yourself.",
       "props": [
         {
@@ -1402,7 +1402,7 @@
       ]
     },
     {
-      "name": "Label",
+      "name": "Label.Root",
       "description": "Visible name for a control. Sibling, not a Field part. Pass htmlFor the control id.",
       "props": [
         {
@@ -2242,7 +2242,7 @@
       ]
     },
     {
-      "name": "Stack",
+      "name": "Stack.Root",
       "description": "Flex layout. Gap comes from the stack.gap contract token.",
       "props": [
         {
@@ -2279,7 +2279,7 @@
       ]
     },
     {
-      "name": "Switch",
+      "name": "Switch.Root",
       "description": "On or off. Track and thumb. Children are the visible label. No check glyph.",
       "props": [
         {
@@ -2576,7 +2576,7 @@
       ]
     },
     {
-      "name": "Text",
+      "name": "Text.Root",
       "description": "Text and headings styled through the text contract tokens.",
       "props": [
         {

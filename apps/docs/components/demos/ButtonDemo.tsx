@@ -72,9 +72,9 @@ export function ButtonGroupAlign() {
 /** The same buttons with icons from three libraries. Each icon takes button.icon.size. */
 export function ButtonIconLibraries() {
   return (
-    <Stack>
+    <Stack.Root>
       {ICON_LIBRARIES.map((library) => (
-        <Stack key={library.id} direction="row">
+        <Stack.Root key={library.id} direction="row">
           <Button.Root>
             <Button.Icon>{library.icons.plus}</Button.Icon>
             {library.name}
@@ -86,8 +86,8 @@ export function ButtonIconLibraries() {
           <Button.Root variant="secondary" aria-label={`${library.name} settings`}>
             <Button.Icon>{library.icons.settings}</Button.Icon>
           </Button.Root>
-        </Stack>
+        </Stack.Root>
       ))}
-    </Stack>
+    </Stack.Root>
   );
 }

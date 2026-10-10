@@ -5,20 +5,20 @@ const PLANS = ['Free', 'Team', 'Business', 'Enterprise'];
 
 export function GridColumns() {
   return (
-    <Grid columns={2}>
+    <Grid.Root columns={2}>
       {PLANS.map((plan) => (
         <Card.Root key={plan}>{plan}</Card.Root>
       ))}
-    </Grid>
+    </Grid.Root>
   );
 }
 
 export function GridFill() {
   return (
-    <Grid minItemSize="10rem">
+    <Grid.Root minItemSize="10rem">
       {PLANS.map((plan) => (
         <Card.Root key={plan}>{plan}</Card.Root>
       ))}
-    </Grid>
+    </Grid.Root>
   );
 }

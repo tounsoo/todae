@@ -71,7 +71,7 @@ describe('Drawer', () => {
         <p>x</p>
       </Drawer.Root>,
     );
-    expect(drawer.hasAttribute('data-exiting')).toBe(true);
+    expect(drawer.hasAttribute('data-todae-exiting')).toBe(true);
     expect(close).not.toHaveBeenCalled();
     await waitFor(() => expect(close).toHaveBeenCalled(), { timeout: 600 });
     close.mockRestore();

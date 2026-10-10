@@ -14,7 +14,7 @@ import { ComboboxSingle } from '../../../../components/demos/ComboboxDemo';
 
 **Todae가 맡는 것:** `getInputProps()`와 `getChipInputProps()`는 입력을 `role="combobox"`로 만들고 `aria-expanded`, `aria-controls`(listbox id), `aria-autocomplete="list"`, `autoComplete="off"`를 주며, 열려 있는 동안 `aria-activedescendant`로 활성 옵션을 가리켜 포커스가 입력에 머물게 합니다. ArrowDown, ArrowUp, Home, End는 목록을 열고 비활성 옵션을 건너뛰며 활성 옵션을 옮깁니다. Enter는 선택하거나 생성하고, Escape와 Tab은 닫습니다. `getListboxProps()`는 `OptionList.Root`에 listbox id와 `tabIndex={-1}`를 줍니다. `getTriggerProps()`는 `aria-haspopup="dialog"`, `aria-expanded`, `aria-controls`를 설정합니다. 팝오버에서 Escape를 누르면 포커스가 입력으로 돌아가고, 시트는 닫힐 때 포커스를 트리거로 돌려줍니다.
 
-**직접 제공할 것:** 입력의 이름을 주세요. `htmlFor`가 `ids.input`인 [Label](/label)을 쓰거나, 시트나 대화 상자 안에서는 `Field.Root`에 `aria-label`을 주세요. 트리거 텍스트는 필드와 그 값을 말해야 합니다. 필요하면 시트나 대화 상자에 더 구체적인 이름을 주세요. `getSheetProps()`는 `options` 문자열을, `getDialogProps()`는 "Options"를 쓰며, 스프레드 뒤의 `aria-label`이 이를 바꿉니다. 상태 텍스트도 제공하세요. 훅은 `loading`, `error`, `isEmpty`를 알려 주지만 아무것도 렌더링하거나 읽어 주지 않습니다.
+**직접 제공할 것:** 입력의 이름을 주세요. `htmlFor`가 `ids.input`인 [Label](/label)을 쓰거나, 시트나 대화 상자 안에서는 `Field.Root`에 `aria-label`을 주세요. 트리거 텍스트는 필드와 그 값을 말해야 합니다. 필요하면 시트나 대화 상자에 더 구체적인 이름을 주세요. `getSheetProps()`와 `getDialogProps()`는 `options` 문자열(기본값 "Options")을 쓰며, 스프레드 뒤의 `aria-label`이 이를 바꿉니다. 상태 텍스트도 제공하세요. 훅은 `loading`, `error`, `isEmpty`를 알려 주지만 아무것도 렌더링하거나 읽어 주지 않습니다.
 
 **주의할 점:** 비어 있거나 로딩 중일 때 `OptionList.Root`를 마운트 해제하면 `aria-controls`가 아무것도 가리키지 않습니다. 대신 `hidden`을 지정하세요. 스프레드 뒤에 직접 `onKeyDown`, `onFocus`, `onBlur`를 주면 훅의 핸들러를 대체합니다. 옵션 안에 버튼이나 링크를 넣지 마세요.
 

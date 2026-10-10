@@ -29,7 +29,7 @@ export function FileUploadImages() {
     },
   });
   return (
-    <Stack>
+    <Stack.Root>
       <label
         {...zone.getRootProps()}
         style={{
@@ -42,7 +42,7 @@ export function FileUploadImages() {
           background: zone.dragging ? 'var(--todae-color-bg-subtle)' : undefined,
         }}
       >
-        <Text as="span">Drop images here, or choose them</Text>
+        <Text.Root as="span">Drop images here, or choose them</Text.Root>
         <input
           {...zone.getInputProps()}
           name="images"
@@ -50,11 +50,11 @@ export function FileUploadImages() {
           aria-describedby={rejected.length > 0 ? `${hintId} ${errorId}` : hintId}
         />
       </label>
-      <Description id={hintId}>Up to 3 images, 2 MB each.</Description>
+      <Description.Root id={hintId}>Up to 3 images, 2 MB each.</Description.Root>
       {rejected.length > 0 ? (
-        <ErrorMessage id={errorId}>
+        <ErrorMessage.Root id={errorId}>
           {rejected.map(({ file, reasons }) => `${file.name} ${reasons.map((reason) => REASONS[reason]).join(' and ')}.`).join(' ')}
-        </ErrorMessage>
+        </ErrorMessage.Root>
       ) : null}
       {files.length > 0 ? (
         <ul aria-label="Chosen images">
@@ -63,6 +63,6 @@ export function FileUploadImages() {
           ))}
         </ul>
       ) : null}
-    </Stack>
+    </Stack.Root>
   );
 }

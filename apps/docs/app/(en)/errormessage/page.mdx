@@ -14,8 +14,8 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
 <Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
 	<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
 </Field.Root>
-<Description id={hintId}>We only use this for billing receipts.</Description>
-{invalid ? <ErrorMessage id={errorId}>Enter an address that contains an @.</ErrorMessage> : null}
+<Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
+{invalid ? <ErrorMessage.Root id={errorId}>Enter an address that contains an @.</ErrorMessage.Root> : null}
 ```
 
 <Example block>
@@ -26,7 +26,7 @@ To announce a submit-time error, pass `role="alert"` on this component. The pack
 
 ## Accessible composition
 
-**Todae handles:** `ErrorMessage` renders a `<span>` with the required `id`, `data-todae-error` and the error text color. It has no `role` and no `aria-live`, and writes nothing onto the control. `aria-invalid` comes from `invalid` on the control, `Field.Root`, `RadioGroup.Root` or a surrounding [Fieldset](/fieldset), not from this component.
+**Todae handles:** `ErrorMessage.Root` renders a `<span>` with the required `id`, `data-todae-error` and the error text color. It has no `role` and no `aria-live`, and writes nothing onto the control. `aria-invalid` comes from `invalid` on the control, `Field.Root`, `RadioGroup.Root` or a surrounding [Fieldset](/fieldset), not from this component.
 
 **You supply:** Mount it only while the error applies, and only then add its id to the control's `aria-describedby` (on `Field.Root` inside a Field) and set `invalid`. Say what is wrong and how to fix it. For an error that appears on submit, pass `role="alert"` so it is announced. For a group, point `aria-describedby` on `Fieldset.Root` at it.
 
@@ -40,4 +40,4 @@ To announce a submit-time error, pass `role="alert"` on this component. The pack
 
 ## Props
 
-<PropsTable name="ErrorMessage" />
+<PropsTable name="ErrorMessage.Root" />

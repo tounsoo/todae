@@ -1,5 +1,8 @@
 {
   "option": {
+    "list": {
+      "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+    },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },
     "padding": {
@@ -27,7 +30,8 @@
     "check": {
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
       "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
-      "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } }
+      "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+      "scale": { "$type": "number", "$value": 0.85 }
     }
   }
 }

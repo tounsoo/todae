@@ -33,7 +33,7 @@ describe('Dialog', () => {
     );
     const el = document.querySelector('dialog');
     expect(el?.hasAttribute('open')).toBe(true);
-    expect(el?.hasAttribute('data-exiting')).toBe(true);
+    expect(el?.hasAttribute('data-todae-exiting')).toBe(true);
     expect(close).not.toHaveBeenCalled();
     await waitFor(() => expect(close).toHaveBeenCalled(), { timeout: 400 });
     expect(el?.hasAttribute('open')).toBe(false);

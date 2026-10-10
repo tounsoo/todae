@@ -17,9 +17,9 @@ export function HomeShowcase() {
     <Card.Root className="showcase-card">
       <Card.Header>
         <div className="showcase-title">
-          <Text as="span" size="l" weight="bold">
+          <Text.Root as="span" size="l" weight="bold">
             Workspace
-          </Text>
+          </Text.Root>
           <div className="showcase-meta">
             <div className="showcase-avatars" role="group" aria-label="Members">
               {MEMBERS.map((member) => (
@@ -41,13 +41,13 @@ export function HomeShowcase() {
           </Tabs.List>
           <Tabs.Panel value="general" className="showcase-panel">
             <div className="labelled-field">
-              <Label htmlFor={nameId}>Name</Label>
+              <Label.Root htmlFor={nameId}>Name</Label.Root>
               <Field.Root id={nameId}>
                 <Field.TextInput value={name} onChange={(event) => setName(event.target.value)} />
               </Field.Root>
             </div>
-            <Switch defaultChecked>Weekly digest</Switch>
-            <Switch>Mention alerts</Switch>
+            <Switch.Root defaultChecked>Weekly digest</Switch.Root>
+            <Switch.Root>Mention alerts</Switch.Root>
           </Tabs.Panel>
           <Tabs.Panel value="members" className="showcase-panel">
             {MEMBERS.map((member) => (
@@ -55,14 +55,14 @@ export function HomeShowcase() {
                 <Avatar.Root size="sm" tone={member.tone}>
                   <Avatar.Fallback>{member.initials}</Avatar.Fallback>
                 </Avatar.Root>
-                <Text as="span">{member.name}</Text>
+                <Text.Root as="span">{member.name}</Text.Root>
                 <Badge.Root tone={member.teamTone}>{member.team}</Badge.Root>
               </div>
             ))}
-            <Text tone="muted">12 members, 3 pending invites.</Text>
+            <Text.Root tone="muted">12 members, 3 pending invites.</Text.Root>
           </Tabs.Panel>
           <Tabs.Panel value="billing" className="showcase-panel">
-            <Text tone="muted">Pro plan, renews 2027-01-04.</Text>
+            <Text.Root tone="muted">Pro plan, renews 2027-01-04.</Text.Root>
           </Tabs.Panel>
         </Tabs.Root>
       </Card.Body>

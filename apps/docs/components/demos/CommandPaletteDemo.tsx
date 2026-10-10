@@ -30,7 +30,7 @@ export function CommandPalette({ onRun }: { onRun?: (value: string) => void } = 
   });
 
   return (
-    <Stack>
+    <Stack.Root>
       <Button.Root {...cb.getTriggerProps()} variant="secondary" aria-keyshortcuts="Control+K Meta+K">
         Search commands
       </Button.Root>
@@ -43,13 +43,13 @@ export function CommandPalette({ onRun }: { onRun?: (value: string) => void } = 
             <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
           ))}
         </OptionList.Root>
-        <Text tone="muted" role="status">
+        <Text.Root tone="muted" role="status">
           {cb.isEmpty ? 'No matching commands.' : ''}
-        </Text>
+        </Text.Root>
       </Dialog.Root>
-      <Text size="s" tone="muted" role="status">
+      <Text.Root size="s" tone="muted" role="status">
         {ran ? `Ran: ${ran}` : 'Press Ctrl+K or ⌘K, or use the button.'}
-      </Text>
-    </Stack>
+      </Text.Root>
+    </Stack.Root>
   );
 }

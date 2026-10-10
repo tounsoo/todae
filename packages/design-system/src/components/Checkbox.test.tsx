@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Checkbox, type CheckboxProps } from './Checkbox';
+import { Checkbox, type CheckboxRootProps } from './Checkbox';
 import * as api from '../index';
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'selection.module.css'), 'utf8');
@@ -14,14 +14,14 @@ afterEach(cleanup);
 describe('Checkbox exports', () => {
   it('is a top-level primitive', () => {
     expect(api.Checkbox).toBe(Checkbox);
-    expectTypeOf<CheckboxProps>().toHaveProperty('children');
-    expectTypeOf<CheckboxProps>().toHaveProperty('checked');
+    expectTypeOf<CheckboxRootProps>().toHaveProperty('children');
+    expectTypeOf<CheckboxRootProps>().toHaveProperty('checked');
   });
 });
 
 describe('Checkbox', () => {
   it('toggles when the visible label is clicked', () => {
-    render(<Checkbox name="terms">I accept the terms</Checkbox>);
+    render(<Checkbox.Root name="terms">I accept the terms</Checkbox.Root>);
     const input = screen.getByRole('checkbox', { name: 'I accept the terms' });
     expect(input).toHaveProperty('checked', false);
     fireEvent.click(screen.getByText('I accept the terms'));
@@ -29,7 +29,7 @@ describe('Checkbox', () => {
   });
 
   it('is uncontrolled from defaultChecked', () => {
-    render(<Checkbox defaultChecked>Remember this device</Checkbox>);
+    render(<Checkbox.Root defaultChecked>Remember this device</Checkbox.Root>);
     expect(screen.getByRole('checkbox')).toHaveProperty('checked', true);
     fireEvent.click(screen.getByRole('checkbox'));
     expect(screen.getByRole('checkbox')).toHaveProperty('checked', false);
@@ -39,9 +39,9 @@ describe('Checkbox', () => {
     function Harness() {
       const [checked, setChecked] = useState(false);
       return (
-        <Checkbox checked={checked} onCheckedChange={setChecked}>
+        <Checkbox.Root checked={checked} onCheckedChange={setChecked}>
           Weekly digest
-        </Checkbox>
+        </Checkbox.Root>
       );
     }
     render(<Harness />);
@@ -54,9 +54,9 @@ describe('Checkbox', () => {
   it('does not mutate checked without the caller', () => {
     const onCheckedChange = vi.fn();
     render(
-      <Checkbox checked={false} onCheckedChange={onCheckedChange}>
+      <Checkbox.Root checked={false} onCheckedChange={onCheckedChange}>
         Locked
-      </Checkbox>,
+      </Checkbox.Root>,
     );
     fireEvent.click(screen.getByRole('checkbox'));
     expect(screen.getByRole('checkbox')).toHaveProperty('checked', false);
@@ -64,13 +64,13 @@ describe('Checkbox', () => {
   });
 
   it('sets aria-invalid when invalid', () => {
-    render(<Checkbox invalid>Accept</Checkbox>);
+    render(<Checkbox.Root invalid>Accept</Checkbox.Root>);
     expect(screen.getByRole('checkbox').getAttribute('aria-invalid')).toBe('true');
   });
 
   it('forwards aria-describedby onto the input', () => {
     render(
-      <Checkbox aria-describedby="terms-error">I accept the terms</Checkbox>,
+      <Checkbox.Root aria-describedby="terms-error">I accept the terms</Checkbox.Root>,
     );
     expect(screen.getByRole('checkbox').getAttribute('aria-describedby')).toBe('terms-error');
   });
@@ -78,9 +78,9 @@ describe('Checkbox', () => {
   it('is a native checkbox a form can collect', () => {
     render(
       <form>
-        <Checkbox name="terms" value="yes" defaultChecked>
+        <Checkbox.Root name="terms" value="yes" defaultChecked>
           I accept the terms
-        </Checkbox>
+        </Checkbox.Root>
       </form>,
     );
     const input = screen.getByRole('checkbox');

@@ -63,8 +63,8 @@ function Gallery() {
   const dateId = useId();
   return (
     <Themed>
-      <Text as="h1">Settings</Text>
-      <Text as="h2">Notifications</Text>
+      <Text.Root as="h1">Settings</Text.Root>
+      <Text.Root as="h2">Notifications</Text.Root>
       <Alert.Root tone="success">
         <Alert.Icon>✓</Alert.Icon>
         <Alert.Title>Saved</Alert.Title>
@@ -80,11 +80,11 @@ function Gallery() {
       </Alert.Root>
       <Fieldset.Root invalid aria-describedby={errorId}>
         <Fieldset.Legend>Topics</Fieldset.Legend>
-        <Checkbox>Product news</Checkbox>
-        <Checkbox>Security notices</Checkbox>
-        <ErrorMessage id={errorId}>Pick at least one.</ErrorMessage>
+        <Checkbox.Root>Product news</Checkbox.Root>
+        <Checkbox.Root>Security notices</Checkbox.Root>
+        <ErrorMessage.Root id={errorId}>Pick at least one.</ErrorMessage.Root>
       </Fieldset.Root>
-      <Label htmlFor={dateId}>Start date</Label>
+      <Label.Root htmlFor={dateId}>Start date</Label.Root>
       <Field.Root id={dateId}>
         <Field.TextInput type="date" value="2026-10-07" onChange={() => undefined} />
       </Field.Root>
@@ -132,7 +132,7 @@ function Gallery() {
       </Breadcrumbs.Root>
       <Card.Root>
         <Card.Header>
-          <Text as="h3">Plan</Text>
+          <Text.Root as="h3">Plan</Text.Root>
         </Card.Header>
         <Card.Body>
           Pro <Badge.Root tone="success">Paid</Badge.Root>
@@ -213,7 +213,7 @@ describe('content parts in a browser', () => {
       <Themed>
         <Fieldset.Root>
           <Fieldset.Legend>Topics</Fieldset.Legend>
-          <Checkbox>News</Checkbox>
+          <Checkbox.Root>News</Checkbox.Root>
         </Fieldset.Root>
       </Themed>,
     );
@@ -226,9 +226,9 @@ describe('content parts in a browser', () => {
     render(
       <Themed>
         {(['h1', 'h2', 'h3', 'h6'] as const).map((tag) => (
-          <Text key={tag} as={tag}>
+          <Text.Root key={tag} as={tag}>
             {tag}
-          </Text>
+          </Text.Root>
         ))}
       </Themed>,
     );

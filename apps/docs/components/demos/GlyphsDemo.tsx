@@ -50,12 +50,12 @@ export function GlyphsLibraries() {
   const [id, setId] = useState('lucide');
   const library = libraryById(id);
   return (
-    <Stack>
+    <Stack.Root>
       <LibraryPicker label="Icon library" value={id} onChange={setId} />
       <GlyphsProvider glyphs={library?.glyphs ?? NO_GLYPHS}>
         <GlyphParts icon={library?.icons.info} />
       </GlyphsProvider>
-    </Stack>
+    </Stack.Root>
   );
 }
 
@@ -68,10 +68,10 @@ function GlyphParts({ icon }: { icon?: ReactNode }) {
         <Alert.Title>Invoice sent</Alert.Title>
         <Alert.Close />
       </Alert.Root>
-      <Stack direction="row">
-        <Checkbox defaultChecked>Email me a copy</Checkbox>
+      <Stack.Root direction="row">
+        <Checkbox.Root defaultChecked>Email me a copy</Checkbox.Root>
         <Chip.Root onRemove={() => undefined}>design</Chip.Root>
-      </Stack>
+      </Stack.Root>
       <Field.Root aria-label="Plan">
         <Field.Select value={plan} onValueChange={setPlan}>
           <option value="starter">Starter</option>

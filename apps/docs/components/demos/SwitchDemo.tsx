@@ -8,14 +8,14 @@ export function SwitchStates() {
   const [digest, setDigest] = useState(true);
   return (
     <>
-      <Switch defaultChecked>Play a sound on mention</Switch>
+      <Switch.Root defaultChecked>Play a sound on mention</Switch.Root>
       <div className="labelled-field">
-        <Switch checked={digest} onCheckedChange={setDigest} aria-describedby={hintId}>
+        <Switch.Root checked={digest} onCheckedChange={setDigest} aria-describedby={hintId}>
           Send a weekly digest
-        </Switch>
-        <Description id={hintId}>One email on Monday. No ads.</Description>
+        </Switch.Root>
+        <Description.Root id={hintId}>One email on Monday. No ads.</Description.Root>
       </div>
-      <Switch disabled>Beta channel</Switch>
+      <Switch.Root disabled>Beta channel</Switch.Root>
     </>
   );
 }

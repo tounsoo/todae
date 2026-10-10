@@ -27,7 +27,7 @@ Label carries no margin. The gap between a label and its shell is `field.label.g
 const id = useId()
 
 <div className="labelled-field">
-	<Label htmlFor={id}>Email</Label>
+	<Label.Root htmlFor={id}>Email</Label.Root>
 	<Field.Root id={id}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
@@ -38,7 +38,7 @@ const id = useId()
   <LabelSibling />
 </Example>
 
-One `.labelled-field` per stack. The order is Label, control, then [Description](/description) and [ErrorMessage](/errormessage) as siblings. The control-to-message gap is the component `margin-block-start` of 0.4rem. When ErrorMessage follows Description, that start margin is 0.2rem. Do not wrap several stacks in one wrapper. Do not wrap the stack in `Stack`. `stack.gap` is the density gap between fields, not between a label and its shell. Put `.labelled-field` stacks inside `Stack`.
+One `.labelled-field` per stack. The order is Label, control, then [Description](/description) and [ErrorMessage](/errormessage) as siblings. The control-to-message gap is the component `margin-block-start` of 0.4rem. When ErrorMessage follows Description, that start margin is 0.2rem. Do not wrap several stacks in one wrapper. Do not wrap the stack in `Stack.Root`. `stack.gap` is the density gap between fields, not between a label and its shell. Put `.labelled-field` stacks inside `Stack.Root`.
 
 ## States
 
@@ -46,7 +46,7 @@ Disabled and invalid live on `Field.Root`. Label does not repaint. A required ma
 
 ## Accessible composition
 
-**Todae handles:** `Label` renders a native `<label>` and requires `htmlFor` in its type. The browser does the rest: the text becomes the control's accessible name, and a click on it focuses or toggles the control. Label adds no ARIA, no required mark and no disabled or invalid style.
+**Todae handles:** `Label.Root` renders a native `<label>` and requires `htmlFor` in its type. The browser does the rest: the text becomes the control's accessible name, and a click on it focuses or toggles the control. Label adds no ARIA, no required mark and no disabled or invalid style.
 
 **You supply:** The control's id in `htmlFor`. For a Field that is the `Field.Root` id, which Root passes to its input. Write a required mark in the text, and set `required` on the input itself: on a Field, that is the input part, such as `Field.TextInput`, not `Field.Root`. To hide the label visually, put its text in a [VisuallyHidden](/visually-hidden) inside it, so it still names the control.
 
@@ -60,4 +60,4 @@ Disabled and invalid live on `Field.Root`. Label does not repaint. A required ma
 
 ## Props
 
-<PropsTable name="Label" />
+<PropsTable name="Label.Root" />

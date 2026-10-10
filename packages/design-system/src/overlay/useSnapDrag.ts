@@ -111,21 +111,21 @@ export function useSnapDrag({
     function setDrag(height: number | null, dragging: boolean) {
       surface.toggleAttribute('data-dragging', dragging);
       if (height == null) {
-        surface.style.removeProperty('--todae-sheet-drag-height');
-        surface.style.removeProperty('--todae-sheet-scrim-progress');
+        surface.style.removeProperty('--_drag-height');
+        surface.style.removeProperty('--_scrim-progress');
         return;
       }
-      surface.style.setProperty('--todae-sheet-drag-height', `${height}px`);
+      surface.style.setProperty('--_drag-height', `${height}px`);
       const heights = sheetHeights(surface);
       const progress = height >= heights.mid ? 1 : Math.max(0, height / heights.mid);
-      surface.style.setProperty('--todae-sheet-scrim-progress', String(progress));
+      surface.style.setProperty('--_scrim-progress', String(progress));
     }
 
     function onPointerDown(event: PointerEvent) {
       if (event.button !== 0 || pointerId != null) return;
       const target = event.target;
       if (!(target instanceof Element)) return;
-      const fromHandle = Boolean(target.closest('[data-sheet-drag-handle]'));
+      const fromHandle = Boolean(target.closest('[data-todae-sheet-drag-handle]'));
       const interactive = target.closest('button, a, input, select, textarea');
       if (interactive && !fromHandle) return;
       const body = bodyRef.current;
@@ -179,7 +179,7 @@ export function useSnapDrag({
       }
       const heights = sheetHeights(surface);
       const height =
-        Number.parseFloat(surface.style.getPropertyValue('--todae-sheet-drag-height')) || startHeight;
+        Number.parseFloat(surface.style.getPropertyValue('--_drag-height')) || startHeight;
       const first = samples[0];
       const last = samples[samples.length - 1];
       const dt = first && last ? Math.max(1, last.t - first.t) : 1;
@@ -200,8 +200,8 @@ export function useSnapDrag({
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (!surface.isConnected) return;
-          surface.style.removeProperty('--todae-sheet-drag-height');
-          surface.style.removeProperty('--todae-sheet-scrim-progress');
+          surface.style.removeProperty('--_drag-height');
+          surface.style.removeProperty('--_scrim-progress');
         });
       });
     }

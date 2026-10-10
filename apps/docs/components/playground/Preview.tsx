@@ -47,12 +47,12 @@ export function Preview({ library }: { library?: IconLibrary }) {
               <Avatar.Fallback>AL</Avatar.Fallback>
             </Avatar.Root>
             <div>
-              <Text as="h2" size="l">
+              <Text.Root as="h2" size="l">
                 Good morning, Ada
-              </Text>
-              <Text tone="muted" size="s">
+              </Text.Root>
+              <Text.Root tone="muted" size="s">
                 3 reviews wait on you today.
-              </Text>
+              </Text.Root>
             </div>
           </div>
           <div className="preview-actions">
@@ -76,7 +76,7 @@ export function Preview({ library }: { library?: IconLibrary }) {
           <Card.Root className="preview-span-2">
             <Card.Header>
               <div className="preview-card-title">
-                <Text as="h3">Revenue</Text>
+                <Text.Root as="h3">Revenue</Text.Root>
                 <ToggleGroup.Root aria-label="Range" value={range} onValueChange={setRange}>
                   <ToggleGroup.Item value="day">Day</ToggleGroup.Item>
                   <ToggleGroup.Item value="week">Week</ToggleGroup.Item>
@@ -87,30 +87,30 @@ export function Preview({ library }: { library?: IconLibrary }) {
             <Card.Body>
               <div className="preview-stats">
                 <div>
-                  <Text tone="muted" size="s">
+                  <Text.Root tone="muted" size="s">
                     Booked
-                  </Text>
-                  <Text size="2xl" weight="bold">
+                  </Text.Root>
+                  <Text.Root size="2xl" weight="bold">
                     $48,210
-                  </Text>
+                  </Text.Root>
                   <Badge.Root tone="success">+12.4%</Badge.Root>
                 </div>
                 <div>
-                  <Text tone="muted" size="s">
+                  <Text.Root tone="muted" size="s">
                     Churned
-                  </Text>
-                  <Text size="2xl" weight="bold">
+                  </Text.Root>
+                  <Text.Root size="2xl" weight="bold">
                     $2,380
-                  </Text>
+                  </Text.Root>
                   <Badge.Root tone="critical">+3.1%</Badge.Root>
                 </div>
                 <div>
-                  <Text tone="muted" size="s">
+                  <Text.Root tone="muted" size="s">
                     Quota
-                  </Text>
-                  <Text size="2xl" weight="bold">
+                  </Text.Root>
+                  <Text.Root size="2xl" weight="bold">
                     72%
-                  </Text>
+                  </Text.Root>
                   <Progress.Root value={72} max={100} aria-label="Quota used" />
                 </div>
               </div>
@@ -119,19 +119,19 @@ export function Preview({ library }: { library?: IconLibrary }) {
 
           <Card.Root className="preview-tall">
             <Card.Header>
-              <Text as="h3">Upgrade</Text>
+              <Text.Root as="h3">Upgrade</Text.Root>
             </Card.Header>
             <Card.Body>
               <form className="preview-form" onSubmit={(event) => event.preventDefault()}>
                 <div className="labelled-field">
-                  <Label htmlFor={emailId}>Work email</Label>
+                  <Label.Root htmlFor={emailId}>Work email</Label.Root>
                   <Field.Root id={emailId}>
                     {icons ? <Field.Icon>{icons.mail}</Field.Icon> : null}
                     <Field.TextInput type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
                   </Field.Root>
                 </div>
                 <div className="labelled-field">
-                  <Label htmlFor={planId}>Plan</Label>
+                  <Label.Root htmlFor={planId}>Plan</Label.Root>
                   <Field.Root id={planId}>
                     <Field.Select value={plan} onValueChange={setPlan}>
                       <option value="starter">Starter</option>
@@ -141,15 +141,15 @@ export function Preview({ library }: { library?: IconLibrary }) {
                   </Field.Root>
                 </div>
                 <div className="labelled-field">
-                  <Text as="span" id={billingId} size="s" weight="medium">
+                  <Text.Root as="span" id={billingId} size="s" weight="medium">
                     Billing
-                  </Text>
+                  </Text.Root>
                   <RadioGroup.Root aria-labelledby={billingId} defaultValue="yearly">
                     <RadioGroup.Item value="monthly">Monthly</RadioGroup.Item>
                     <RadioGroup.Item value="yearly">Yearly, save 20%</RadioGroup.Item>
                   </RadioGroup.Root>
                 </div>
-                <Checkbox defaultChecked>Email me the invoice</Checkbox>
+                <Checkbox.Root defaultChecked>Email me the invoice</Checkbox.Root>
                 <Button.Root type="submit">Upgrade to Pro</Button.Root>
               </form>
             </Card.Body>
@@ -157,13 +157,13 @@ export function Preview({ library }: { library?: IconLibrary }) {
 
           <Card.Root>
             <Card.Header>
-              <Text as="h3">Notifications</Text>
+              <Text.Root as="h3">Notifications</Text.Root>
             </Card.Header>
             <Card.Body>
               <div className="preview-stack">
-                <Switch defaultChecked>Mentions</Switch>
-                <Switch defaultChecked>Weekly digest</Switch>
-                <Switch>Product news</Switch>
+                <Switch.Root defaultChecked>Mentions</Switch.Root>
+                <Switch.Root defaultChecked>Weekly digest</Switch.Root>
+                <Switch.Root>Product news</Switch.Root>
                 <div className="preview-chips">
                   {/* A mock, like the buttons: removing does nothing here. */}
                   <Chip.Root tone={categoryTone('design')} onRemove={() => undefined}>
@@ -180,7 +180,7 @@ export function Preview({ library }: { library?: IconLibrary }) {
 
           <Card.Root>
             <Card.Header>
-              <Text as="h3">Activity</Text>
+              <Text.Root as="h3">Activity</Text.Root>
             </Card.Header>
             <Card.Body>
               <Tabs.Root defaultValue="all">
@@ -205,7 +205,7 @@ export function Preview({ library }: { library?: IconLibrary }) {
                   </ul>
                 </Tabs.Panel>
                 <Tabs.Panel value="mine">
-                  <Text tone="muted">Nothing assigned to you.</Text>
+                  <Text.Root tone="muted">Nothing assigned to you.</Text.Root>
                 </Tabs.Panel>
               </Tabs.Root>
             </Card.Body>

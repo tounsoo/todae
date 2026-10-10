@@ -2,18 +2,18 @@
   /* The sheet is a modal <dialog>: the top layer stacks it, and its
      ::backdrop is the scrim. */
   .sheet {
-    --todae-sheet-rest-height: calc(var(--todae-sheet-snap-mid) * 100vh);
-    --todae-sheet-rest-height: calc(var(--todae-sheet-snap-mid) * 100dvh);
+    --_rest-height: calc(var(--todae-sheet-snap-mid) * 100vh);
+    --_rest-height: calc(var(--todae-sheet-snap-mid) * 100dvh);
     position: fixed;
     inset: auto 0 0;
-    bottom: calc(-1 * min(var(--todae-sheet-drag-height, var(--todae-sheet-rest-height)), 100dvh));
+    bottom: calc(-1 * min(var(--_drag-height, var(--_rest-height)), 100dvh));
     box-sizing: border-box;
     width: auto;
     max-width: none;
     margin: 0;
     overflow: visible;
     gap: var(--todae-sheet-gap);
-    height: var(--todae-sheet-drag-height, var(--todae-sheet-rest-height));
+    height: var(--_drag-height, var(--_rest-height));
     max-height: 100vh;
     max-height: 100dvh;
     padding: var(--todae-sheet-padding-y) var(--todae-sheet-padding-x);
@@ -44,7 +44,7 @@
   }
 
   .sheet[data-entered]::backdrop {
-    opacity: var(--todae-sheet-scrim-progress, 1);
+    opacity: var(--_scrim-progress, 1);
   }
 
   .sheet[data-dragging],
@@ -52,19 +52,19 @@
     transition: none;
   }
 
-  .sheet[data-exiting] {
-    bottom: calc(-1 * min(var(--todae-sheet-drag-height, var(--todae-sheet-rest-height)), 100dvh));
+  .sheet[data-todae-exiting] {
+    bottom: calc(-1 * min(var(--_drag-height, var(--_rest-height)), 100dvh));
     transition: bottom var(--todae-sheet-motion-exit) var(--todae-overlay-motion-easing);
   }
 
-  .sheet[data-exiting]::backdrop {
+  .sheet[data-todae-exiting]::backdrop {
     opacity: 0;
     transition: opacity var(--todae-sheet-motion-exit) var(--todae-overlay-motion-easing);
   }
 
   .sheet[data-snap='full'] {
-    --todae-sheet-rest-height: calc(100vh - var(--todae-sheet-snap-full-inset));
-    --todae-sheet-rest-height: calc(100dvh - var(--todae-sheet-snap-full-inset));
+    --_rest-height: calc(100vh - var(--todae-sheet-snap-full-inset));
+    --_rest-height: calc(100dvh - var(--todae-sheet-snap-full-inset));
   }
 
   .sheet[data-dragging] .body {

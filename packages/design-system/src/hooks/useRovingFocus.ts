@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -9,6 +8,7 @@ import {
   type KeyboardEvent,
   type Ref,
 } from 'react';
+import { useDomId } from '../components/domId';
 import { useStableComposedRef } from '../components/props';
 import { useControlledState } from './useControlledState';
 
@@ -153,7 +153,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     onActiveValueChange,
   } = options;
   const keepTabStop = tabStopOption && !findItems;
-  const scope = useId();
+  const scope = useDomId();
   const [active, setActive] = useControlledState(activeProp, defaultActiveValue ?? null);
   // The items last read from the DOM: enabled ones, and of those the ones
   // focus can reach now. The tab stop is derived from these and `active`
@@ -168,7 +168,7 @@ export function useRovingFocus(options: UseRovingFocusOptions = {}): UseRovingFo
     const container = containerRef.current;
     if (!container) return [];
     if (findItems) return findItems(container).filter((node) => !node.matches(':disabled, [hidden]'));
-    // The scope comes from useId, which never contains a quote or backslash.
+    // The scope comes from useDomId, which never contains a quote or backslash.
     return [
       ...container.querySelectorAll<HTMLElement>(
         `[data-todae-roving="${scope}"]:not([data-todae-roving-disabled]):not([hidden]):not(:disabled)`,
