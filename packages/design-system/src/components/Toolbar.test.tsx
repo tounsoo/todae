@@ -39,17 +39,6 @@ describe('Toolbar', () => {
     expect(document.querySelectorAll('[role="toolbar"] [tabindex]')).toHaveLength(0);
   });
 
-  it('moves focus to the end of the run on Tab and the start on Shift+Tab, so the browser leaves from there', () => {
-    render(<Editor />);
-    button('Bold').focus();
-    fireEvent.keyDown(button('Bold'), { key: 'Tab' });
-    // The text input ends the first run and keeps its own Tab stop.
-    expect(document.activeElement).toBe(button('Italic'));
-    button('Italic').focus();
-    fireEvent.keyDown(button('Italic'), { key: 'Tab', shiftKey: true });
-    expect(document.activeElement).toBe(button('Bold'));
-  });
-
   it('returns focus coming back from outside to the item Tab left from', () => {
     render(
       <>

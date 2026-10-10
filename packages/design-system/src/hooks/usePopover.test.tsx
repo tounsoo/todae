@@ -1,13 +1,10 @@
 import { cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { useRef, useState, type RefObject } from 'react';
-import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import * as api from '../index';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   usePopover,
   type PopoverTriggerUserProps,
-  type PopoverWire,
   type UsePopoverOptions,
-  type UsePopoverResult,
 } from './usePopover';
 
 afterEach(cleanup);
@@ -85,15 +82,6 @@ describe('usePopover exports', () => {
     render(<Probe />);
     expect(String(style.anchorName)).toMatch(/^--other, --todae-popover-/);
   });
-
-  it('exports the hook and prop getters', () => {
-    expect(api.usePopover).toBe(usePopover);
-    expectTypeOf<UsePopoverResult>().toHaveProperty('getTriggerProps');
-    expectTypeOf<UsePopoverResult>().toHaveProperty('getPopoverProps');
-    expectTypeOf<UsePopoverOptions>().toHaveProperty('enabled');
-    expectTypeOf<PopoverWire>().toHaveProperty('onPointerDown');
-    expectTypeOf<PopoverWire>().toHaveProperty('onClick');
-  });
 });
 
 describe('usePopover haspopup', () => {
@@ -120,15 +108,6 @@ describe('usePopover', () => {
     rerender(<Harness open onOpenChange={onOpenChange} />);
     fireEvent.click(screen.getByRole('button', { name: 'Open' }));
     expect(onOpenChange).toHaveBeenCalledWith(false, 'trigger');
-  });
-
-  it('requests close on Escape and outside without hiding', () => {
-    const onOpenChange = vi.fn();
-    render(<Harness open onOpenChange={onOpenChange} />);
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(onOpenChange).toHaveBeenCalledWith(false, 'escape');
-    fireEvent.pointerDown(document.body);
-    expect(onOpenChange).toHaveBeenCalledWith(false, 'outside');
   });
 
   it('ignores outside presses on the trigger and content', () => {

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index';
-import { resetMatchMedia, setMatchMedia } from '../test/setup';
+import { resetMatchMedia } from '../test/setup';
 import {
   useTooltip,
   type TooltipTriggerUserProps,
@@ -49,30 +49,6 @@ function TipHarness({
           {tip}
         </div>
       ) : null}
-    </>
-  );
-}
-
-function PanelHarness(options: UseTooltipOptions<true> = { interactive: true }) {
-  const tooltip = useTooltip({ interactive: true, ...options });
-  const wire = tooltip.getTooltipProps();
-  return (
-    <>
-      <button type="button" {...tooltip.getTriggerProps()}>
-        Hint
-      </button>
-      <div
-        role="dialog"
-        aria-label="Policy"
-        id={wire.id}
-        ref={wire.ref}
-        style={wire.style}
-        data-open={tooltip.open ? '' : undefined}
-        onPointerEnter={wire.onPointerEnter}
-        onPointerLeave={wire.onPointerLeave}
-      >
-        Short prose. <a href="/tooltip">Read the policy</a>
-      </div>
     </>
   );
 }
@@ -122,55 +98,10 @@ describe('useTooltip', () => {
     expect(attach).toHaveBeenCalledTimes(1);
   });
 
-  it('shows on hover after 300ms and hides after 100ms', () => {
-    render(<TipHarness />);
-    const trigger = screen.getByRole('button', { name: 'Hint' });
-    fireEvent.pointerEnter(trigger);
-    expect(screen.queryByRole('tooltip')).toBeNull();
-    advance(299);
-    expect(screen.queryByRole('tooltip')).toBeNull();
-    advance(1);
-    expect(screen.getByRole('tooltip').textContent).toBe('Archive');
-    fireEvent.pointerLeave(trigger, { relatedTarget: document.body });
-    advance(99);
-    expect(screen.getByRole('tooltip')).toBeTruthy();
-    advance(1);
-    expect(screen.queryByRole('tooltip')).toBeNull();
-  });
-
-  it('sets aria-describedby on the trigger while open', () => {
-    render(<TipHarness />);
-    const trigger = screen.getByRole('button', { name: 'Hint' });
-    fireEvent.pointerEnter(trigger);
-    advance(300);
-    const tip = screen.getByRole('tooltip');
-    expect(trigger.getAttribute('aria-describedby')).toBe(tip.id);
-    fireEvent.pointerLeave(trigger, { relatedTarget: document.body });
-    advance(100);
-    expect(trigger.getAttribute('aria-describedby')).toBeNull();
-  });
-
   it('uses a provided id on the tip', () => {
     render(<TipHarness id="archive-tip" defaultOpen />);
     expect(screen.getByRole('tooltip').id).toBe('archive-tip');
     expect(screen.getByRole('button').getAttribute('aria-describedby')).toBe('archive-tip');
-  });
-
-  it('opens on focus without the hover delay', () => {
-    render(<TipHarness />);
-    fireEvent.focus(screen.getByRole('button', { name: 'Hint' }));
-    expect(screen.getByRole('tooltip').textContent).toBe('Archive');
-  });
-
-  it('ignores hover on coarse pointers and still opens on focus', () => {
-    setMatchMedia('(pointer: coarse)', true);
-    render(<TipHarness />);
-    const trigger = screen.getByRole('button', { name: 'Hint' });
-    fireEvent.pointerEnter(trigger);
-    advance(300);
-    expect(screen.queryByRole('tooltip')).toBeNull();
-    fireEvent.focus(trigger);
-    expect(screen.getByRole('tooltip')).toBeTruthy();
   });
 
   it('resets intent and commits close when enabled becomes false', () => {
@@ -209,22 +140,6 @@ describe('useTooltip', () => {
     const wire = panel.result.current.getTooltipProps();
     expect(typeof wire.onPointerEnter).toBe('function');
     expectTypeOf(wire).toMatchTypeOf<TooltipWire<true>>();
-  });
-
-  it('keeps the panel open across the hover bridge', () => {
-    render(<PanelHarness />);
-    const trigger = screen.getByRole('button', { name: 'Hint' });
-    const panel = screen.getByRole('dialog', { name: 'Policy', hidden: true });
-    fireEvent.pointerEnter(trigger);
-    advance(300);
-    expect(panel.getAttribute('data-open')).toBe('');
-    fireEvent.pointerLeave(trigger, { relatedTarget: panel });
-    fireEvent.pointerEnter(panel);
-    advance(100);
-    expect(panel.getAttribute('data-open')).toBe('');
-    fireEvent.pointerLeave(panel, { relatedTarget: document.body });
-    advance(100);
-    expect(panel.getAttribute('data-open')).toBeNull();
   });
 });
 

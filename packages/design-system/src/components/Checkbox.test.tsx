@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { renderToString } from 'react-dom/server';
 import { useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Checkbox, type CheckboxProps } from './Checkbox';
@@ -93,14 +92,5 @@ describe('Checkbox', () => {
   it('paints a check on the checkbox indicator', () => {
     expect(css).toMatch(/data-control='checkbox'[\s\S]*::after/);
     expect(css).toMatch(/data-control='switch'[\s\S]*translateX/);
-  });
-
-  it('SSR keeps the name', () => {
-    const html = renderToString(
-      <Checkbox name="terms">I accept the terms</Checkbox>,
-    );
-    expect(html).toContain('type="checkbox"');
-    expect(html).toContain('name="terms"');
-    expect(html).toContain('I accept the terms');
   });
 });

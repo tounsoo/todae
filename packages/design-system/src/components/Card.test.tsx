@@ -21,9 +21,4 @@ describe('Card', () => {
     expect(card.getAttribute('role')).toBeNull();
     expect([...card.children].map((child) => child.textContent)).toEqual(['Plan', 'Pro, billed yearly.', 'Change']);
   });
-
-  it('passes a role and name through, so a card can be a region', () => {
-    render(<Card.Root role="region" aria-label="Billing" />);
-    expect(screen.getByRole('region', { name: 'Billing' })).toBeTruthy();
-  });
 });

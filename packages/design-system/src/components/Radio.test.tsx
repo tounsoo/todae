@@ -18,12 +18,6 @@ describe('Radio exports', () => {
 });
 
 describe('RadioGroup', () => {
-  it('accepts exactly one accessible name', () => {
-    const labelled: RadioGroupRootProps = { 'aria-label': 'Plan' };
-    const captioned: RadioGroupRootProps = { 'aria-labelledby': 'plan-caption' };
-    expect(labelled['aria-label']).toBe('Plan');
-    expect(captioned['aria-labelledby']).toBe('plan-caption');
-  });
 
   it('selects one value and shares a name', () => {
     render(

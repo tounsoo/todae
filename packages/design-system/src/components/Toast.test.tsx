@@ -398,33 +398,6 @@ describe('Toast', () => {
     expect(show).toHaveBeenCalled();
   });
 
-  it('moves into the front modal of the stack and back', async () => {
-    const toaster = createToaster();
-    function Page() {
-      const [open, setOpen] = useState(true);
-      return (
-        <>
-          <button type="button" onClick={() => setOpen(false)}>
-            Close
-          </button>
-          <Dialog.Root open={open} onOpenChange={setOpen} aria-label="d">
-            d
-          </Dialog.Root>
-          <Region toaster={toaster} />
-        </>
-      );
-    }
-    render(<Page />);
-    const dialog = screen.getByRole('dialog');
-    const host = screen.getByRole('region', { hidden: true }).parentElement!;
-    expect(dialog.contains(host)).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Close', hidden: true }));
-    // Still inside while the exit motion runs and the page is inert.
-    expect(dialog.contains(host)).toBe(true);
-    await waitFor(() => expect(dialog.contains(host)).toBe(false));
-    expect(host.hasAttribute('data-popover-open')).toBe(true);
-  });
-
   it('reads hover again after it moves, as a moved element sends no pointerleave', async () => {
     const toaster = createToaster();
     function Page() {

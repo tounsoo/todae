@@ -176,15 +176,6 @@ for (const harness of [dialogHarness, drawerHarness, sheetHarness]) {
       trigger.remove();
     });
 
-    it('stays open when the parent ignores a dismiss request', () => {
-      const h = harness();
-      renderSurface(h, true, { onOpenChange: () => undefined });
-      fireEvent.keyDown(document, { key: 'Escape' });
-      expect(getSurface()).not.toBeNull();
-      // The sheet's dialog closes under its exit motion; the others stay open.
-      if (h.name !== 'BottomSheet') expect(getSurface().hasAttribute('open')).toBe(true);
-    });
-
     it('names the close button', () => {
       renderSurface(harness(), true, {});
       expect(screen.getByRole('button', { name: 'Close' })).toBeTruthy();

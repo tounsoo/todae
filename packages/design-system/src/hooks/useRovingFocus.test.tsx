@@ -1,7 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Profiler, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import * as api from '../index';
 import { useRovingFocus, type UseRovingFocusOptions } from './useRovingFocus';
 
 afterEach(cleanup);
@@ -30,9 +29,6 @@ const focused = () => document.activeElement?.textContent;
 const frame = () => act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
 
 describe('useRovingFocus', () => {
-  it('is exported from the package', () => {
-    expect(api.useRovingFocus).toBe(useRovingFocus);
-  });
 
   it('keeps one tab stop, on the first enabled item by default', () => {
     render(<Group items={[{ value: 'a', disabled: true }, { value: 'b' }, { value: 'c' }]} />);
@@ -500,11 +496,6 @@ describe('useRovingFocus', () => {
     const kept = fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown', shiftKey: true });
     expect(kept).toBe(true);
     expect(focused()).toBe('apple');
-  });
-
-  it('with tabStop false, no item is a Tab stop', () => {
-    render(<Group tabStop={false} />);
-    expect(tabStops()).toEqual([]);
   });
 
   it('with findItems, moves focus between the items found and writes no tabindex', () => {

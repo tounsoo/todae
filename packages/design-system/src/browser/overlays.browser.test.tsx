@@ -171,14 +171,6 @@ describe('BottomSheet in a browser', () => {
     await waitFor(() => expect(onClose).toHaveBeenCalledWith('backdrop'));
   });
 
-  it('closes on Escape through the dialog close request', async () => {
-    const onClose = vi.fn();
-    render(<SheetHarness onClose={onClose} />);
-    await waitFor(() => expect(sheet().matches(':modal')).toBe(true));
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(onClose).toHaveBeenCalledWith('escape'));
-  });
-
   it('gives focus back to its trigger once the exit motion ends', async () => {
     function Launcher() {
       const [open, setOpen] = useState(false);

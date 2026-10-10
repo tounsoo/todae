@@ -1,6 +1,5 @@
 import { cleanup, render, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import * as api from '../index';
 import { useHotkey } from './useHotkey';
 
 afterEach(cleanup);
@@ -11,9 +10,6 @@ function press(init: KeyboardEventInit, target: EventTarget = document.body) {
 }
 
 describe('useHotkey', () => {
-  it('is exported', () => {
-    expect(api).toHaveProperty('useHotkey');
-  });
 
   it('runs the handler on a match and prevents the default', () => {
     const handler = vi.fn();

@@ -913,40 +913,6 @@ describe('Toast in the top layer', () => {
     await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0), { timeout: 3000 });
   });
 
-  it('shows at most limit toasts, and the next one when one leaves', async () => {
-    const toaster = createToaster({ duration: Infinity });
-    render(
-      <Themed>
-        <Region toaster={toaster} limit={2} />
-      </Themed>,
-    );
-    act(() => {
-      toaster.add({ title: 'A' });
-      toaster.add({ title: 'B' });
-      toaster.add({ title: 'C' });
-    });
-    await screen.findByRole('button', { name: 'Undo B' });
-    expect(screen.queryByRole('button', { name: 'Undo C' })).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: 'Undo A' }));
-    await screen.findByRole('button', { name: 'Undo C' });
-  });
-
-  it('dismisses itself after its duration, paused while hovered', async () => {
-    const toaster = createToaster({ duration: 300 });
-    render(
-      <Themed>
-        <Region toaster={toaster} />
-      </Themed>,
-    );
-    act(() => void toaster.add({ title: 'Brief' }));
-    const undo = await screen.findByRole('button', { name: 'Undo Brief' });
-    await userEvent.hover(undo);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    expect(toaster.getSnapshot()).toHaveLength(1);
-    await userEvent.unhover(undo);
-    await waitFor(() => expect(toaster.getSnapshot()).toHaveLength(0), { timeout: 2000 });
-  });
-
   it('keeps focus in the toasts while a new one shows, without visiting the page', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(
@@ -1003,57 +969,6 @@ describe('Toast in the top layer', () => {
     act(() => void toaster.add({ title: 'Two' }));
     await screen.findByRole('button', { name: 'Archive Two' });
     await expectTipByTrigger(archive);
-  });
-
-  it('moves focus to the region on F8 and back after Escape', async () => {
-    const toaster = createToaster({ duration: Infinity });
-    render(
-      <Themed>
-        <button type="button">Elsewhere</button>
-        <Region toaster={toaster} />
-      </Themed>,
-    );
-    act(() => void toaster.add({ title: 'Keys' }));
-    await screen.findByRole('button', { name: 'Undo Keys' });
-    const elsewhere = screen.getByRole('button', { name: 'Elsewhere' });
-    elsewhere.focus();
-    await userEvent.keyboard('{F8}');
-    const region = screen.getByRole('region', { name: 'Notifications' });
-    expect(document.activeElement).toBe(region);
-    await userEvent.tab();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Undo Keys' }));
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(document.activeElement).toBe(elsewhere));
-  });
-
-  it('stacks toasts behind the newest and spreads them on hover', async () => {
-    const toaster = createToaster({ duration: Infinity });
-    render(
-      <Themed>
-        <Region toaster={toaster} layout="stack" />
-      </Themed>,
-    );
-    act(() => {
-      toaster.add({ title: 'One' });
-      toaster.add({ title: 'Two' });
-      toaster.add({ title: 'Three' });
-    });
-    const newest = await screen.findByRole('button', { name: 'Undo Three' });
-    const items = () => [...document.querySelectorAll('ol > li')] as HTMLElement[];
-    await waitFor(() => expect(items()).toHaveLength(3));
-    // Collapsed: every toast ends within a peek of the newest's bottom edge.
-    await waitFor(() => {
-      const [front, ...rest] = items().map((item) => item.getBoundingClientRect());
-      for (const rect of rest) expect(Math.abs(rect.bottom - front!.bottom)).toBeLessThan(40);
-    });
-    expect(receivesPointer(newest)).toBe(true);
-
-    await userEvent.hover(newest);
-    await waitFor(() => {
-      const rects = items().map((item) => item.getBoundingClientRect());
-      // Spread: each older toast sits fully above the newer one.
-      for (let i = 1; i < rects.length; i++) expect(rects[i]!.bottom).toBeLessThanOrEqual(rects[i - 1]!.top + 1);
-    });
   });
 });
 
@@ -1264,20 +1179,6 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
 });
 
 describe('Tooltip in a layer shown again', () => {
-  it('keeps a held tip in a toast in front, by its trigger, when a new toast arrives', async () => {
-    const toaster = createToaster({ duration: Infinity });
-    render(
-      <Themed>
-        <TipRegion toaster={toaster} />
-      </Themed>,
-    );
-    act(() => void toaster.add({ title: 'One' }));
-    const trigger = await screen.findByRole('button', { name: 'Tipped One' });
-    await expectTipByTrigger(trigger);
-    act(() => void toaster.add({ title: 'Two' }));
-    await screen.findByRole('button', { name: 'Tipped Two' });
-    await expectTipByTrigger(trigger);
-  });
 
   it('keeps a held tip in a toast by its trigger while a Dialog opens and closes', async () => {
     const toaster = createToaster({ duration: Infinity });

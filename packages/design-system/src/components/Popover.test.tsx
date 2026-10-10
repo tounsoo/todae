@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useRef, useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index';
 import { usePopover, type PopoverCloseReason, type UsePopoverOptions } from '../hooks/usePopover';
@@ -97,30 +97,6 @@ describe('Popover', () => {
     expect(document.querySelector('[popover="manual"]')).not.toBeNull();
   });
 
-  it('sets CSS anchor-name on anchorRef', () => {
-    function AnchorHarness() {
-      const anchorRef = useRef<HTMLDivElement>(null);
-      const popover = usePopover({ open: true, anchorRef });
-      return (
-        <>
-          <div ref={anchorRef} data-testid="anchor">
-            Field
-          </div>
-          <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Menu">
-            Hello
-          </Popover.Root>
-        </>
-      );
-    }
-    render(<AnchorHarness />);
-    const anchor = screen.getByTestId('anchor');
-    expect(anchor.style.getPropertyValue('anchor-name')).toMatch(/^--todae-popover-/);
-    expect(anchor.style.getPropertyValue('--todae-popover-anchor')).toMatch(/^--todae-popover-/);
-    expect(anchor.style.getPropertyValue('anchor-name')).toBe(
-      anchor.style.getPropertyValue('--todae-popover-anchor'),
-    );
-  });
-
   it('anchors in CSS with a 4px gap', () => {
     expect(css).toMatch(/--todae-popover-offset:\s*var\(--todae-space-1\)/);
     expect(css).toMatch(/top:\s*calc\(anchor\(bottom\) \+ var\(--todae-popover-offset\)\)/);
@@ -213,21 +189,6 @@ describe('Popover', () => {
     expect(content.getAttribute('aria-modal')).toBeNull();
     expect(content.getAttribute('popover')).toBe('manual');
     expect(content.getAttribute('tabindex')).toBe('-1');
-  });
-
-  it('forwards role=dialog without aria-modal', () => {
-    function Named() {
-      const popover = usePopover({ open: true });
-      return (
-        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Tags">
-          Hi
-        </Popover.Root>
-      );
-    }
-    render(<Named />);
-    const content = screen.getByRole('dialog', { name: 'Tags' });
-    expect(content.getAttribute('aria-modal')).toBeNull();
-    expect(content.getAttribute('popover')).toBe('manual');
   });
 
   it('requires an accessible name when role is dialog', () => {

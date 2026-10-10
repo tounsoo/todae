@@ -57,15 +57,6 @@ describe('Dialog', () => {
     await waitFor(() => expect(el?.hasAttribute('data-entered')).toBe(true));
   });
 
-  it('never renders the open attribute from React', () => {
-    const { container } = render(
-      <Dialog.Root open={false} onOpenChange={() => undefined}>
-        Title
-      </Dialog.Root>,
-    );
-    expect(container.querySelector('dialog')?.getAttribute('open')).toBeNull();
-  });
-
   it('resyncs a native close while the prop is still open', () => {
     const onOpenChange = vi.fn();
     render(

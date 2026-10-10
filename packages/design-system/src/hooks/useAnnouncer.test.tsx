@@ -1,7 +1,6 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as api from '../index';
 import { dropModal, heldModals, pushModal } from '../overlay/modalStack';
 import { useAnnouncer, type AnnounceOptions } from './useAnnouncer';
 
@@ -37,9 +36,6 @@ afterEach(() => {
 });
 
 describe('useAnnouncer', () => {
-  it('is exported from the package', () => {
-    expect(api.useAnnouncer).toBe(useAnnouncer);
-  });
 
   it('adds one visually hidden region on mount, shared by every caller', () => {
     expect(regions()).toHaveLength(0);

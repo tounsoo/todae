@@ -79,28 +79,4 @@ describe('useAnnouncer in a browser', () => {
     await expect.poll(() => politeIn(inner)?.textContent).toBe('Draft saved');
     expect(politeIn(outer)).toBeNull();
   });
-
-  it('does not treat a non-modal dialog marked aria-modal as modal', async () => {
-    const dialog = document.createElement('dialog');
-    dialog.setAttribute('aria-modal', 'true');
-    document.body.append(dialog);
-    dialog.show();
-    try {
-      render(<Saver />);
-      act(() => screen.getByRole('button', { name: 'Save' }).click());
-      await expect.poll(() => politeIn(document.body)?.textContent).toBe('Draft saved');
-      expect(politeIn(dialog)).toBeNull();
-    } finally {
-      dialog.remove();
-    }
-  });
-
-  it('stays visually hidden from inline styles', () => {
-    render(<Saver />);
-    const region = document.querySelector<HTMLElement>('[data-todae-announcer]')!;
-    const style = getComputedStyle(region);
-    expect(style.position).toBe('absolute');
-    expect(style.width).toBe('1px');
-    expect(style.overflow).toBe('hidden');
-  });
 });

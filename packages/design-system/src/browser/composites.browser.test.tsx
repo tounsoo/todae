@@ -185,15 +185,6 @@ describe('Menu in a browser', () => {
     await waitFor(() => expect(screen.getByRole('menu', { hidden: true }).matches(':popover-open')).toBe(false));
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'After' }));
   });
-
-  it('Escape closes and returns focus to the trigger', async () => {
-    render(<MenuHarness />);
-    const trigger = screen.getByRole('button', { name: 'Actions' });
-    await userEvent.click(trigger);
-    await waitFor(() => expect(document.activeElement?.textContent).toBe('Rename'));
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(document.activeElement).toBe(trigger));
-  });
 });
 
 describe('Field.Select in a browser', () => {

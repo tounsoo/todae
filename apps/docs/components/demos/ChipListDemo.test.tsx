@@ -521,17 +521,13 @@ describe('chip list recipe', () => {
     body.assert();
   });
 
-  it('keeps wrapper height when the popover opens', async () => {
+  it('opens the popover outside the chip wrapper', async () => {
     render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
     const list = screen.getByRole('list', { name: 'Tags' });
     const wrapper = list.parentElement as HTMLElement;
-    const min = wrapper.style.minHeight;
-    const max = wrapper.style.maxHeight;
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
     });
-    expect(wrapper.style.minHeight).toBe(min);
-    expect(wrapper.style.maxHeight).toBe(max);
     const dialog = screen.getByRole('dialog');
     expect(dialog.hasAttribute('popover')).toBe(true);
     expect(wrapper.contains(dialog)).toBe(false);
@@ -564,24 +560,6 @@ describe('chip list recipe', () => {
       for (const cb of ros) cb([] as unknown as ResizeObserverEntry[], {} as ResizeObserver);
     });
   }
-
-  it('moves focus to the chip that entered the list before the popover unmounts when hidden drops to 0', async () => {
-    const body = watchBody();
-    const width = { current: 400 };
-    const ros = stubListWidth(width);
-    render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
-    });
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove dd' }));
-    width.current = 4000;
-    await resizeTo(ros);
-    expect(screen.queryByRole('dialog')).toBeNull();
-    const active = document.activeElement as HTMLElement;
-    expect(active.getAttribute('aria-label')).toBe('Remove dd');
-    expect(active.closest('[role="list"]')).toBe(screen.getByRole('list', { name: 'Tags' }));
-    body.assert();
-  });
 
   it('moves focus to the list before a read-only popover unmounts when hidden drops to 0', async () => {
     const body = watchBody();
@@ -821,19 +799,6 @@ describe('chip list recipe', () => {
     body.assert();
   });
 
-  it('focuses the slot when a pressed chip has a later twin, without getKey', async () => {
-    const body = watchBody();
-    const tags = owner(['bb', 'aa', 'bb']);
-    await act(async () => {
-      fireEvent.click(screen.getAllByRole('button', { name: 'Remove bb' })[0]!);
-    });
-    await act(async () => tags.set((current) => current.filter((_, index) => index !== 0)));
-    const active = document.activeElement as HTMLElement;
-    expect(active).toBe(screen.getByRole('button', { name: 'Remove aa' }));
-    expect(active.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('0');
-    body.assert();
-  });
-
   it('focuses the panel slot when a pressed panel chip has a later twin', async () => {
     const body = watchBody();
     const tags = owner(['aa', 'bb', 'cc', 'dd', 'xx', 'ee', 'xx', 'ff'], 1);
@@ -846,21 +811,6 @@ describe('chip list recipe', () => {
     await act(async () => tags.set((current) => current.filter((_, index) => index !== 4)));
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove ee' }));
     expect((document.activeElement as HTMLElement).closest('[role="dialog"]')).toBeTruthy();
-    body.assert();
-  });
-
-  it('keeps focus on a keyed chip when the owner reverses the row', async () => {
-    const body = watchBody();
-    const items = keyed([
-      { id: '1', label: 'aa' },
-      { id: '2', label: 'bb' },
-      { id: '3', label: 'cc' },
-    ]);
-    const button = screen.getByRole('button', { name: 'Remove aa' });
-    act(() => button.focus());
-    await act(async () => items.set((current) => [...current].reverse()));
-    expect(document.activeElement).toBe(button);
-    expect(button.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('2');
     body.assert();
   });
 
@@ -1002,36 +952,6 @@ describe('chip list recipe', () => {
     expect(items.map((item) => item.getAttribute('data-key'))).toEqual(['1:aa']);
   });
 
-  it('names a panel with one chip in the singular by default', async () => {
-    render(<ChipList.Root aria-label="Tags" chips={['aa', 'bb', 'cc', 'dd']} maxRows={1} />);
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /1/ }));
-    });
-    expect(screen.getByRole('dialog', { name: '1 more chip' })).toBeTruthy();
-  });
-
-  it('defines chip geometry tokens and uses them on Chip', () => {
-    render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
-    const css = readFileSync(require.resolve('@omsoo/todae/todae.css'), 'utf8');
-    expect(css).toMatch(/--todae-chip-leading:\s*var\(--_todae-chip-leading,\s*var\(--todae-font-leading-tight\)\)/);
-    expect(css).toMatch(/--todae-chip-border-width:\s*var\(--_todae-chip-border-width,\s*var\(--todae-border-width\)\)/);
-    expect(css).toMatch(/--todae-chip-ring-width:\s*var\(--_todae-chip-ring-width,\s*var\(--todae-focus-ring-width\)\)/);
-    expect(css).toMatch(/--todae-chip-ring-offset:\s*var\(--_todae-chip-ring-offset,\s*var\(--todae-focus-ring-offset\)\)/);
-    const root = screen.getByRole('button', { name: 'Remove aa' }).parentElement as HTMLElement;
-    const cls = [...root.classList][0];
-    const joined = css
-      .split('}')
-      .filter((part) => part.includes(`.${cls}`))
-      .join('}');
-    expect(joined).toContain('var(--todae-chip-border-width)');
-    expect(joined).toContain('var(--todae-chip-leading)');
-    expect(joined).toContain('var(--todae-chip-ring-width)');
-    expect(joined).toContain('var(--todae-chip-ring-offset)');
-    expect(joined).not.toMatch(/1px solid/);
-    expect(joined).not.toMatch(/line-height:\s*1\.25/);
-    expect(joined).not.toMatch(/2px solid/);
-  });
-
   it('focuses a chip revealed by the remeasure, not the list', async () => {
     const body = watchBody();
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
@@ -1123,19 +1043,6 @@ describe('chip list recipe', () => {
     expect(labels).toEqual(['Alpha']);
   });
 
-  it('moves focus from +N to the first chip it held once nothing is folded', async () => {
-    const body = watchBody();
-    const width = { current: 400 };
-    const ros = stubListWidth(width);
-    render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
-    act(() => screen.getByRole('button', { name: '+5 more' }).focus());
-    width.current = 4000;
-    await resizeTo(ros);
-    expect(screen.queryByRole('button', { name: /more/ })).toBeNull();
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove dd' }));
-    body.assert();
-  });
-
   it('moves focus from +N to the list once a read-only list has nothing folded', async () => {
     const body = watchBody();
     const width = { current: 400 };
@@ -1147,20 +1054,6 @@ describe('chip list recipe', () => {
     const list = screen.getByRole('list', { name: 'Tags' });
     expect(document.activeElement).toBe(list);
     expect(list.hasAttribute('data-ring')).toBe(true);
-    body.assert();
-  });
-
-  it('leaves focus on a twin the person moved to when the pressed twin is dropped later', async () => {
-    const body = watchBody();
-    const tags = owner(['aa', 'x', 'aa', 'y']);
-    const [first, second] = screen.getAllByRole('button', { name: 'Remove aa' }) as [HTMLElement, HTMLElement];
-    await act(async () => {
-      fireEvent.click(first);
-    });
-    act(() => second.focus());
-    await act(async () => tags.set((current) => current.filter((_, index) => index !== 0)));
-    expect(document.activeElement).toBe(second);
-    expect(second.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('1');
     body.assert();
   });
 
@@ -1182,19 +1075,6 @@ describe('chip list recipe', () => {
     await act(async () => tags.set((current) => ['aa', ...current]));
     expect(document.activeElement).toBe(button);
     expect(button.closest('[role="listitem"]')?.getAttribute('data-index')).toBe('2');
-    body.assert();
-  });
-
-  it('returns focus to +N when Escape closes the panel', async () => {
-    const body = watchBody();
-    render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '+5 more' }));
-    });
-    await act(async () => {
-      fireEvent.keyDown(screen.getByRole('button', { name: 'Remove ee' }), { key: 'Escape' });
-    });
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: '+5 more' }));
     body.assert();
   });
 

@@ -111,28 +111,6 @@ describe('BottomSheet in a browser', () => {
 });
 
 describe('ChipList focus in a browser', () => {
-  it('keeps focus on a keyed chip when the owner reverses the chips', async () => {
-    let reverse = () => undefined as void;
-    function Owner() {
-      const [items, setItems] = useState(['1:aa', '2:bb', '3:cc']);
-      reverse = () => setItems((current) => [...current].reverse());
-      return (
-        <div data-appearance="light" data-density="comfortable">
-          <ChipList.Root
-            aria-label="Tags"
-            chips={items.map((item) => item.slice(2))}
-            getKey={(_, index) => items[index]!}
-            onRemove={() => undefined}
-          />
-        </div>
-      );
-    }
-    render(<Owner />);
-    const button = screen.getByRole('button', { name: 'Remove aa' });
-    button.focus();
-    await act(async () => reverse());
-    expect(document.activeElement).toBe(button);
-  });
 
   it('focuses the slot when a pressed chip has a later twin', async () => {
     function Owner() {

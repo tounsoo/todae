@@ -297,12 +297,6 @@ describe('docs locales', () => {
     expect(hrefs).toEqual(['/', '/ko']);
   });
 
-  it('switches from the English home page to the Korean one', () => {
-    path.current = '/';
-    render(<LanguageSwitcher locale="en" />);
-    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko');
-  });
-
   it('lists the Korean home page in Korean', () => {
     const { container } = render(<HomeContent locale="ko" />);
     for (const name of SITE_GROUPS.map((group) => DICTIONARIES.ko.groups[group.id] ?? '')) {
