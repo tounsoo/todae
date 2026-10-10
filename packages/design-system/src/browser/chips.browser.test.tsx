@@ -111,7 +111,6 @@ describe('BottomSheet in a browser', () => {
 });
 
 describe('ChipList focus in a browser', () => {
-
   it('focuses the slot when a pressed chip has a later twin', async () => {
     function Owner() {
       const [tags, setTags] = useState(['bb', 'aa', 'bb']);

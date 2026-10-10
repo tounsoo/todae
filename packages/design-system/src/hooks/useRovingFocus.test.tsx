@@ -29,7 +29,6 @@ const focused = () => document.activeElement?.textContent;
 const frame = () => act(() => new Promise((resolve) => requestAnimationFrame(() => resolve(undefined))));
 
 describe('useRovingFocus', () => {
-
   it('keeps one tab stop, on the first enabled item by default', () => {
     render(<Group items={[{ value: 'a', disabled: true }, { value: 'b' }, { value: 'c' }]} />);
     expect(tabStops()).toEqual(['b']);

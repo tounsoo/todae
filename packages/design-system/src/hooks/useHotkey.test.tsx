@@ -10,7 +10,6 @@ function press(init: KeyboardEventInit, target: EventTarget = document.body) {
 }
 
 describe('useHotkey', () => {
-
   it('runs the handler on a match and prevents the default', () => {
     const handler = vi.fn();
     renderHook(() => useHotkey('Control+K', handler));

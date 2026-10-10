@@ -39,7 +39,6 @@ function Search({ text = 'Apple pie and apple tart', ...options }: Partial<UseHi
 const count = () => screen.getByTestId('count').textContent;
 
 describe('useHighlight', () => {
-
   it('paints every match under the name, ignoring case by default', () => {
     render(<Search query="apple" />);
     expect(count()).toBe('2');

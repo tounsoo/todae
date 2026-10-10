@@ -32,7 +32,6 @@ describe('acceptsFile', () => {
 });
 
 describe('useDropzone', () => {
-
   it('wires the native input', () => {
     render(<Zone accept="image/*" multiple disabled />);
     const input = screen.getByTestId('input') as HTMLInputElement;

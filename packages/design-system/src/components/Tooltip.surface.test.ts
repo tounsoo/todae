@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { contentPolicyError, resolveSurface } from './Tooltip.surface';
 
 describe('Tooltip.surface', () => {
-
   it('rejects tabbables in tip content', () => {
     const tip = resolveSurface(false, 'tip-1');
     const el = document.createElement('div');

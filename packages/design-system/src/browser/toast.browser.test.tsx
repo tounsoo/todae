@@ -1179,7 +1179,6 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
 });
 
 describe('Tooltip in a layer shown again', () => {
-
   it('keeps a held tip in a toast by its trigger while a Dialog opens and closes', async () => {
     const toaster = createToaster({ duration: Infinity });
     function Page() {

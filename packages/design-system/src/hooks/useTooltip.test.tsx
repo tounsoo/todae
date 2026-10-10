@@ -53,6 +53,30 @@ function TipHarness({
   );
 }
 
+function PanelHarness(options: UseTooltipOptions<true> = { interactive: true }) {
+  const tooltip = useTooltip({ interactive: true, ...options });
+  const wire = tooltip.getTooltipProps();
+  return (
+    <>
+      <button type="button" {...tooltip.getTriggerProps()}>
+        Hint
+      </button>
+      <div
+        role="dialog"
+        aria-label="Policy"
+        id={wire.id}
+        ref={wire.ref}
+        style={wire.style}
+        data-open={tooltip.open ? '' : undefined}
+        onPointerEnter={wire.onPointerEnter}
+        onPointerLeave={wire.onPointerLeave}
+      >
+        Short prose. <a href="/tooltip">Read the policy</a>
+      </div>
+    </>
+  );
+}
+
 describe('useTooltip exports', () => {
   it('exports the hook and does not import overlay dismiss machines', () => {
     expect(api.useTooltip).toBe(useTooltip);
@@ -140,6 +164,22 @@ describe('useTooltip', () => {
     const wire = panel.result.current.getTooltipProps();
     expect(typeof wire.onPointerEnter).toBe('function');
     expectTypeOf(wire).toMatchTypeOf<TooltipWire<true>>();
+  });
+
+  it('keeps the panel open across the hover bridge', () => {
+    render(<PanelHarness />);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    const panel = screen.getByRole('dialog', { name: 'Policy', hidden: true });
+    fireEvent.pointerEnter(trigger);
+    advance(300);
+    expect(panel.getAttribute('data-open')).toBe('');
+    fireEvent.pointerLeave(trigger, { relatedTarget: panel });
+    fireEvent.pointerEnter(panel);
+    advance(100);
+    expect(panel.getAttribute('data-open')).toBe('');
+    fireEvent.pointerLeave(panel, { relatedTarget: document.body });
+    advance(100);
+    expect(panel.getAttribute('data-open')).toBeNull();
   });
 });
 

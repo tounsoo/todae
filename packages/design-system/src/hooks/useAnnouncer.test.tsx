@@ -36,7 +36,6 @@ afterEach(() => {
 });
 
 describe('useAnnouncer', () => {
-
   it('adds one visually hidden region on mount, shared by every caller', () => {
     expect(regions()).toHaveLength(0);
     render(

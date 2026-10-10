@@ -9,7 +9,7 @@ on:
 
 # A new push to a pull request cancels its older run; runs on main always finish.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.sha }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # The jobs run side by side, so a pull request waits for the slowest one.
@@ -54,6 +54,8 @@ jobs:
         run: pnpm --filter @omsoo/todae exec playwright install --with-deps chromium
       - if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm --filter @omsoo/todae exec playwright install-deps chromium
+      # Some docs demos import the package's subpath entries, which only exist in dist.
+      - run: pnpm build:ds
       - run: pnpm test:browser
 
   docs:

@@ -18,7 +18,6 @@ describe('Radio exports', () => {
 });
 
 describe('RadioGroup', () => {
-
   it('selects one value and shares a name', () => {
     render(
       <RadioGroup.Root aria-label="Plan" defaultValue="free">
