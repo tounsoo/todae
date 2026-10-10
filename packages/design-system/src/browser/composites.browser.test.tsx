@@ -9,6 +9,7 @@ import { Menu } from '../components/Menu';
 import { Tabs } from '../components/Tabs';
 import { useField } from '../hooks/useField';
 import { useRovingFocus } from '../hooks/useRovingFocus';
+import { useTooltip } from '../hooks/useTooltip';
 
 function Themed({ children, dir }: { children: ReactNode; dir?: 'rtl' }) {
   return (
@@ -175,7 +176,8 @@ describe('The Tabs indicator', () => {
     expectUnder(first, 'Alpha');
     expectUnder(second, 'Gamma');
 
-    await userEvent.click(tab(first, 'Beta, a longer tab'));
+    // A synchronous click, so sampling starts on the frame the slide does.
+    tab(first, 'Beta, a longer tab').click();
     const frames = await sampleIndicator(first);
     const from = along(tab(first, 'Alpha').getBoundingClientRect())[0]!;
     const to = along(tab(first, 'Beta, a longer tab').getBoundingClientRect())[0]!;
@@ -184,6 +186,32 @@ describe('The Tabs indicator', () => {
     expectUnder(first, 'Beta, a longer tab');
     // The other list keeps its own selection's indicator.
     expectUnder(second, 'Gamma');
+  });
+
+  it('spans a selected tab that is also a tooltip trigger', () => {
+    function TipTabs() {
+      const tooltip = useTooltip();
+      return (
+        <Themed>
+          <Tabs.Root defaultValue="a">
+            <Tabs.List aria-label="Sections">
+              <Tabs.Tab {...tooltip.getTriggerProps()} value="a" aria-label="Home">
+                H
+              </Tabs.Tab>
+              <Tabs.Tab value="b">Beta</Tabs.Tab>
+            </Tabs.List>
+          </Tabs.Root>
+        </Themed>
+      );
+    }
+    render(<TipTabs />);
+    const home = screen.getByRole('tab', { name: 'Home' });
+    expect(home.style.getPropertyValue('anchor-name')).not.toBe('');
+    const box = indicatorOf(screen.getByRole('tablist'))!;
+    const tabBox = home.getBoundingClientRect();
+    expect(tabBox.width).toBeGreaterThan(10);
+    expect(Math.abs(box.left - tabBox.left)).toBeLessThanOrEqual(1);
+    expect(Math.abs(box.right - tabBox.right)).toBeLessThanOrEqual(1);
   });
 
   it('jumps without sliding when the user prefers reduced motion', async () => {

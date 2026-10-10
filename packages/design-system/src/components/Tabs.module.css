@@ -14,8 +14,6 @@
     display: flex;
     gap: var(--todae-tabs-gap);
     border-bottom: var(--todae-tabs-border-width) solid var(--todae-tabs-border);
-    /* Each list's indicator follows its own selected tab, not another list's. */
-    anchor-scope: --todae-tabs-selected;
   }
 
   .list[data-orientation='vertical'] {
@@ -64,8 +62,14 @@
     color: var(--todae-tabs-fg-selected);
   }
 
-  .tab[data-selected] {
+  /* The anchor is a pseudo-element covering the tab, so a tooltip or popover
+     that sets an inline anchor-name on the tab itself does not replace it. */
+  .tab[data-selected]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     anchor-name: --todae-tabs-selected;
+    pointer-events: none;
   }
 
   /* One indicator per list sits on its border and is anchored to the
