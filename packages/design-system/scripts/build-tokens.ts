@@ -518,7 +518,7 @@ function serializeShadowLayer(layer: unknown, path: string): string {
   if (layer.inset !== undefined && typeof layer.inset !== 'boolean') fail(`Token "${path}" shadow inset must be a boolean`);
   if (isRef(layer.color)) fail(`Token "${path}" shadow color must be a literal OKLCH color`);
   const color = serializeColor(layer.color, path);
-  if (color.refs.length > 0) fail(`Token "${path}" shadow color must be a literal OKLCH color`);
+  if (color.refs.length > 0) fail(`Token "${path}" shadow color must be a literal OKLCH color, with no $ref in its channels or alpha`);
   const lengths = (['offsetX', 'offsetY', 'blur', 'spread'] as const).map((key) => {
     const length = layer[key];
     if (isRef(length)) fail(`Token "${path}" shadow ${key} must be a literal dimension`);

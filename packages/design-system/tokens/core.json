@@ -190,7 +190,6 @@
     }
   },
   "opacity": {
-    "0": { "$type": "number", "$value": 0 },
     "8": { "$type": "number", "$value": 0.08 },
     "10": { "$type": "number", "$value": 0.1 },
     "12": { "$type": "number", "$value": 0.12 },

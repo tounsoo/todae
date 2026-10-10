@@ -443,15 +443,6 @@
       "context": null
     },
     {
-      "path": "opacity.0",
-      "type": "number",
-      "cssVar": "--todae-opacity-0",
-      "cssValue": "0",
-      "ref": null,
-      "layer": "core",
-      "context": null
-    },
-    {
       "path": "opacity.8",
       "type": "number",
       "cssVar": "--todae-opacity-8",
@@ -797,7 +788,7 @@
       "path": "color.bg.transparent",
       "type": "color",
       "cssVar": "--todae-color-bg-transparent",
-      "cssValue": "oklch(from var(--todae-color-gray-50) l c h / var(--todae-opacity-0))",
+      "cssValue": "oklch(from var(--todae-color-gray-50) l c h / 0)",
       "ref": "color.gray.50",
       "layer": "appearance",
       "context": "light"
@@ -1094,7 +1085,7 @@
       "path": "color.bg.transparent",
       "type": "color",
       "cssVar": "--todae-color-bg-transparent",
-      "cssValue": "oklch(from var(--todae-color-gray-900) l c h / var(--todae-opacity-0))",
+      "cssValue": "oklch(from var(--todae-color-gray-900) l c h / 0)",
       "ref": "color.gray.900",
       "layer": "appearance",
       "context": "dark"

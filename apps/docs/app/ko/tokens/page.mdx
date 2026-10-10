@@ -32,7 +32,7 @@ DTCG 파이프라인에서 생성한 카탈로그입니다. 컴포넌트는 cont
 
 토큰 파일은 DTCG 2025.10을 따릅니다. 별칭은 `{ "$ref": "#/color/gray/900/$value" }`처럼 JSON Pointer `$ref`로 쓰며, `"{color.gray.900}"` 같은 중괄호 별칭은 빌드가 거부합니다. 반투명 색상은 `#/<token>/$value/components/0`부터 `2`까지로 기준 색상의 세 채널을 가리키고, 자체 `alpha`를 설정합니다.
 
-`alpha`는 0에서 1 사이의 숫자이거나 `number` 토큰을 가리키는 `$ref`입니다. Todae의 반투명 색상은 `opacity` 스케일에서 값을 가져오며, `opacity.<n>`은 n 퍼센트입니다. 예를 들어 `"alpha": { "$ref": "#/opacity/12/$value" }`입니다. 빌드는 alpha를 그 토큰의 CSS 변수로 내보내므로, `opacity.12`를 오버라이드하면 그것을 쓰는 모든 색상이 바뀝니다.
+`alpha`는 0에서 1 사이의 숫자이거나 `number` 토큰을 가리키는 `$ref`입니다. Todae의 반투명 색상은 `opacity` 스케일에서 값을 가져오며, `opacity.<n>`은 n 퍼센트입니다. 예를 들어 `"alpha": { "$ref": "#/opacity/12/$value" }`입니다. 빌드는 alpha를 그 토큰의 CSS 변수로 내보냅니다.
 
 ## 상태 톤
 

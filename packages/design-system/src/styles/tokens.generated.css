@@ -49,7 +49,6 @@
   --todae-motion-duration-slow: 280ms;
   --todae-motion-duration-slower: 300ms;
   --todae-motion-easing-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --todae-opacity-0: 0;
   --todae-opacity-8: 0.08;
   --todae-opacity-10: 0.1;
   --todae-opacity-12: 0.12;
@@ -92,7 +91,7 @@
   --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20));
   --todae-color-bg-subtle: var(--todae-color-gray-100);
   --todae-color-bg-surface: var(--todae-color-gray-50);
-  --todae-color-bg-transparent: oklch(from var(--todae-color-gray-50) l c h / var(--todae-opacity-0));
+  --todae-color-bg-transparent: oklch(from var(--todae-color-gray-50) l c h / 0);
   --todae-color-border-default: var(--todae-color-gray-900);
   --todae-color-border-subtle: var(--todae-color-gray-300);
   --todae-color-danger-default: var(--todae-color-red-600);
@@ -130,7 +129,7 @@
     --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20));
     --todae-color-bg-subtle: var(--todae-color-gray-100);
     --todae-color-bg-surface: var(--todae-color-gray-50);
-    --todae-color-bg-transparent: oklch(from var(--todae-color-gray-50) l c h / var(--todae-opacity-0));
+    --todae-color-bg-transparent: oklch(from var(--todae-color-gray-50) l c h / 0);
     --todae-color-border-default: var(--todae-color-gray-900);
     --todae-color-border-subtle: var(--todae-color-gray-300);
     --todae-color-danger-default: var(--todae-color-red-600);
@@ -168,7 +167,7 @@
   --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20));
   --todae-color-bg-subtle: var(--todae-color-gray-800);
   --todae-color-bg-surface: var(--todae-color-gray-900);
-  --todae-color-bg-transparent: oklch(from var(--todae-color-gray-900) l c h / var(--todae-opacity-0));
+  --todae-color-bg-transparent: oklch(from var(--todae-color-gray-900) l c h / 0);
   --todae-color-border-default: var(--todae-color-gray-50);
   --todae-color-border-subtle: var(--todae-color-gray-700);
   --todae-color-danger-default: var(--todae-color-red-300);
@@ -206,7 +205,7 @@
     --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20));
     --todae-color-bg-subtle: var(--todae-color-gray-800);
     --todae-color-bg-surface: var(--todae-color-gray-900);
-    --todae-color-bg-transparent: oklch(from var(--todae-color-gray-900) l c h / var(--todae-opacity-0));
+    --todae-color-bg-transparent: oklch(from var(--todae-color-gray-900) l c h / 0);
     --todae-color-border-default: var(--todae-color-gray-50);
     --todae-color-border-subtle: var(--todae-color-gray-700);
     --todae-color-danger-default: var(--todae-color-red-300);

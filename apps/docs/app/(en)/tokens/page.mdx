@@ -32,7 +32,7 @@ A brand accent is four tokens per appearance: `color.accent.default`, `color.acc
 
 Token files follow DTCG 2025.10: an alias is a JSON Pointer `$ref`, such as `{ "$ref": "#/color/gray/900/$value" }`, and the build rejects a curly-brace alias such as `"{color.gray.900}"`. A translucent color points at the three channels of its base color with `#/<token>/$value/components/0` to `2`, and sets its own `alpha`.
 
-`alpha` is a number from 0 to 1, or a `$ref` to a `number` token. Todae's translucent colors take theirs from the `opacity` scale, where `opacity.<n>` is n percent, for example `"alpha": { "$ref": "#/opacity/12/$value" }`. The build emits the alpha as that token's CSS variable, so overriding `opacity.12` changes every color that uses it.
+`alpha` is a number from 0 to 1, or a `$ref` to a `number` token. Todae's translucent colors take theirs from the `opacity` scale, where `opacity.<n>` is n percent, for example `"alpha": { "$ref": "#/opacity/12/$value" }`. The build emits the alpha as that token's CSS variable.
 
 ## Status tones
 

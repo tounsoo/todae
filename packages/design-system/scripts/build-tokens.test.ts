@@ -276,7 +276,7 @@ describe('build-tokens validations', () => {
     );
     expect(() => v('shadow', { ...layer, color: { $ref: '#/color/gray/950/$value' } })).toThrow(/literal OKLCH/);
     expect(() => v('shadow', { ...layer, color: { ...layer.color, alpha: { $ref: '#/opacity/20/$value' } } })).toThrow(
-      /literal OKLCH/,
+      /no \$ref in its channels or alpha/,
     );
     expect(() => v('shadow', { ...layer, blur: { $ref: '#/space/2/$value' } })).toThrow(/literal dimension/);
     expect(() => v('shadow', { ...layer, extra: 1 })).toThrow(/unknown key "extra"/);
@@ -417,11 +417,13 @@ describe('committed token graph', () => {
       expect(value('color.accent.soft-strong')).toBe(
         'oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-28))',
       );
+      // A theme's opacity scale cannot tint fills meant to be transparent.
+      expect(value('color.bg.transparent')).toMatch(/^oklch\(from var\(--todae-color-gray-\d+\) l c h \/ 0\)$/);
       expect(value('color.bg.scrim')).toMatch(/^oklch\(from var\(--todae-color-gray-950\) l c h \/ var\(--todae-opacity-\d+\)\)$/);
     }
     expect(graph.tokens.filter((t) => t.type === 'color' && t.layer === 'appearance' && t.ref === null)).toEqual([]);
-    // Every translucent color takes its alpha from the opacity scale.
-    const translucent = graph.tokens.filter((t) => t.layer !== 'core' && t.type === 'color' && /\/ (?!1\))/.test(t.cssValue));
+    // Every translucent color takes its alpha from the opacity scale; transparent stays a literal 0.
+    const translucent = graph.tokens.filter((t) => t.layer !== 'core' && t.type === 'color' && /\/ (?![01]\))/.test(t.cssValue));
     expect(translucent.length).toBeGreaterThan(0);
     for (const token of translucent) expect(token.cssValue, token.path).toMatch(/ \/ var\(--todae-opacity-\d+\)\)$/);
   });
