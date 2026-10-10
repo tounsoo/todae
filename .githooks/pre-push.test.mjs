@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -142,6 +142,43 @@ test('installs into the clone without touching core.hooksPath or another pre-pus
   writeFileSync(own, '#!/bin/sh\nexit 0\n');
   const result = install();
   assert.equal(result.status, 0);
-  assert.match(result.stderr, /already exists/);
+  assert.match(result.stdout, /already exists/);
   assert.equal(readFileSync(own, 'utf8'), '#!/bin/sh\nexit 0\n');
+});
+
+test('installs nothing when core.hooksPath is set, locally or globally', (t) => {
+  const { root, work, git } = repo(t);
+  git('config', '--unset', 'core.hooksPath');
+  const install = (env) => spawnSync('sh', [join(hooks, 'install')], { env: { ...env, CLAUDE_PROJECT_DIR: work }, encoding: 'utf8' });
+
+  // A tracked hooks dir, as husky keeps, gains no untracked file.
+  git('config', 'core.hooksPath', '.husky');
+  const local = install(gitEnv);
+  assert.equal(local.status, 0);
+  assert.match(local.stdout, /core\.hooksPath is set/);
+  assert.equal(git('status', '--porcelain'), '');
+  git('config', '--unset', 'core.hooksPath');
+
+  // A global hooks dir is neither created nor written.
+  const globalConfig = join(root, 'gitconfig');
+  const globalHooks = join(root, 'global-hooks');
+  writeFileSync(globalConfig, `[core]\n\thooksPath = ${globalHooks}\n`);
+  const global = install({ ...gitEnv, GIT_CONFIG_GLOBAL: globalConfig });
+  assert.equal(global.status, 0);
+  assert.match(global.stdout, /core\.hooksPath is set/);
+  assert.equal(existsSync(globalHooks), false);
+});
+
+test('gates a push from a worktree of the clone', (t) => {
+  const { root, git, commit } = repo(t);
+  git('config', '--unset', 'core.hooksPath');
+  const tree = join(root, 'tree');
+  git('worktree', 'add', '-q', '-b', 'other', tree);
+  execFileSync('cp', ['-R', hooks, join(tree, '.githooks')]);
+  assert.equal(spawnSync('sh', [join(hooks, 'install')], { env: { ...gitEnv, CLAUDE_PROJECT_DIR: tree } }).status, 0);
+  commit('fix on feature');
+  execFileSync('git', ['commit', '-q', '--allow-empty', '-m', 'fix on other'], { cwd: tree, env: gitEnv });
+  const result = spawnSync('git', ['push', '-q', 'origin', 'other'], { cwd: tree, env: { ...gitEnv, CLAUDECODE: '1' }, encoding: 'utf8' });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Push blocked/);
 });

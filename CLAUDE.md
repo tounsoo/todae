@@ -6,7 +6,7 @@ The docs site is in English and Korean. A change to an English `page.mdx` in `ap
 
 ## Pull request review loop
 
-Open the pull request, and post its link, only after a review round comes back with no blocking findings. Until then, commit to the session's branch but don't push it, even when a turn ends and the environment asks for a push. A git `pre-push` hook in `.githooks` blocks a push from Claude Code that would send a commit no review round has passed; a SessionStart hook in `.claude/settings.json` installs it. The goal is to finish in as few rounds as possible, so each round should fix the cause, not just the symptom the reviewer pointed at.
+Open the pull request, and post its link, only after a review round comes back with no blocking findings. Until then, commit to the session's branch but don't push it, even when a turn ends and the environment asks for a push. When the clone has no other `pre-push` hook and no `core.hooksPath`, a SessionStart hook in `.claude/settings.json` installs one from `.githooks` that refuses such pushes from Claude Code. The goal is to finish in as few rounds as possible, so each round should fix the cause, not just the symptom the reviewer pointed at.
 
 Each round's review runs in an `Agent` at that round's row of this table. `<base>` is `git merge-base origin/main HEAD`, so commits that landed on `main` after the branch started are not in the review. The table is for the reviewer only: the advisor runs as step 4 says, and the fixes always run on the session's default model and effort.
 

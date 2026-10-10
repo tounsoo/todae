@@ -1,14 +1,19 @@
 #!/bin/sh
 # Run by the SessionStart hook in .claude/settings.json. Puts a small
-# pre-push hook in the clone's hooks dir that runs .githooks/pre-push from
-# whatever is checked out, so core.hooksPath and the person's other hooks
-# stay as they are. A pre-push hook that is not this one is left alone.
+# pre-push hook in the clone's own hooks dir that runs .githooks/pre-push from
+# whatever is checked out. It changes nothing when core.hooksPath is set or
+# another pre-push hook is there, and says so on stdout, which Claude reads.
 cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
-hooks=$(git rev-parse --path-format=absolute --git-path hooks 2>/dev/null) || exit 0
+git rev-parse --git-dir >/dev/null 2>&1 || exit 0
+if [ -n "$(git config core.hooksPath)" ]; then
+  echo "todae: core.hooksPath is set, so the review push gate is not installed. Keep unreviewed commits local yourself."
+  exit 0
+fi
+hooks=$(git rev-parse --git-path hooks) || exit 0
 target="$hooks/pre-push"
 tag='# todae review gate'
 if [ -e "$target" ] && ! grep -q "^$tag" "$target"; then
-  echo "todae: $target already exists, so the review push gate is not installed." >&2
+  echo "todae: $target already exists, so the review push gate is not installed. Keep unreviewed commits local yourself."
   exit 0
 fi
 mkdir -p "$hooks" || exit 0
