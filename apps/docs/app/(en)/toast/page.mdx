@@ -55,7 +55,7 @@ The region sets these variables on each `li` for your own stack styles: `--toast
 
 ## Timing
 
-A toast dismisses itself after `duration`: 5000 milliseconds unless `createToaster()` or `add()` says otherwise. `Infinity` keeps it until it is dismissed. Every timer pauses while the pointer is over the region, while keyboard focus is inside it, while a finger is on it and from a tap on it until a press outside, and while the page is hidden.
+A toast dismisses itself after `duration`: 5000 milliseconds unless `createToaster()` or `add()` says otherwise. `Infinity` keeps it until it is dismissed. Every timer pauses while the pointer is over the region, while keyboard focus is inside it, while a finger or a pen that isn't hovering presses it, from a tap on it until a press outside, and while the page is hidden.
 
 A toast can leave before someone reaches it, so it should not be the only way to do something. Offer Undo somewhere else too, or give a toast with an action `duration: Infinity`. `Toast.Action` dismisses its toast after `onClick`; call `event.preventDefault()` to keep it. An action that opens a Dialog leaves it nothing to return focus to once the toast is gone, so pass the Dialog a `restoreFocusRef`.
 

@@ -180,7 +180,7 @@ describe('Toast', () => {
     expect(region.hasAttribute('data-expanded')).toBe(false);
     fireEvent.pointerUp(title, { pointerType: 'touch' });
     fireEvent.pointerLeave(region, { pointerType: 'touch' });
-    fireEvent.click(title);
+    fireEvent.click(title, { detail: 1 });
     expect(region.hasAttribute('data-expanded')).toBe(true);
     act(() => void vi.advanceTimersByTime(2000));
     expect(toaster.getSnapshot()[0]!.open).toBe(true);
@@ -215,13 +215,13 @@ describe('Toast', () => {
     fireEvent.pointerEnter(region, { pointerType: 'pen', buttons: 0, pointerId: 4 });
     fireEvent.pointerDown(region, { pointerType: 'pen', buttons: 1, pointerId: 4 });
     fireEvent.pointerUp(region, { pointerType: 'pen', pointerId: 4 });
-    fireEvent.click(region);
+    fireEvent.click(region, { detail: 1 });
     fireEvent.pointerLeave(region, { pointerType: 'pen', pointerId: 4 });
     expect(region.hasAttribute('data-expanded')).toBe(false);
     fireEvent.pointerEnter(region, { pointerType: 'pen', buttons: 1, pointerId: 5 });
     fireEvent.pointerDown(region, { pointerType: 'pen', buttons: 1, pointerId: 5 });
     fireEvent.pointerUp(region, { pointerType: 'pen', pointerId: 5 });
-    fireEvent.click(region);
+    fireEvent.click(region, { detail: 1 });
     fireEvent.pointerLeave(region, { pointerType: 'pen', pointerId: 5 });
     expect(region.hasAttribute('data-expanded')).toBe(true);
   });
@@ -234,7 +234,7 @@ describe('Toast', () => {
     const region = screen.getByRole('region');
     fireEvent.pointerDown(region, { pointerType: 'touch', buttons: 1 });
     fireEvent.pointerUp(region, { pointerType: 'touch' });
-    fireEvent.click(region);
+    fireEvent.click(region, { detail: 1 });
     expect(region.hasAttribute('data-expanded')).toBe(true);
     act(() => toaster.dismiss('a'));
     expect(region.hasAttribute('data-expanded')).toBe(false);
@@ -253,7 +253,7 @@ describe('Toast', () => {
     expect(region.hasAttribute('data-expanded')).toBe(true);
     fireEvent.pointerDown(region, { pointerType: 'mouse', buttons: 1, pointerId: 1 });
     fireEvent.pointerUp(region, { pointerType: 'mouse', pointerId: 1 });
-    fireEvent.click(region);
+    fireEvent.click(region, { detail: 1 });
     fireEvent.pointerLeave(region, { pointerType: 'mouse', pointerId: 1 });
     expect(region.hasAttribute('data-expanded')).toBe(false);
   });
@@ -280,10 +280,27 @@ describe('Toast', () => {
     fireEvent.pointerDown(region, { pointerType: 'touch', buttons: 1, pointerId: 3 });
     fireEvent.pointerUp(region, { pointerType: 'touch', pointerId: 3 });
     fireEvent.pointerLeave(region, { pointerType: 'touch', pointerId: 3 });
-    fireEvent.click(region);
+    fireEvent.click(region, { detail: 1 });
     fireEvent.pointerLeave(region, { pointerType: 'mouse', pointerId: 1 });
     expect(region.hasAttribute('data-expanded')).toBe(true);
     fireEvent.pointerDown(screen.getByRole('button', { name: 'Outside' }), { pointerType: 'touch', buttons: 1 });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+  });
+
+  it('does not spread on a click with no press after a tap released off the region', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} layout="stack" />);
+    act(() => void toaster.add({ title: 'Hold' }));
+    const region = screen.getByRole('region');
+    const title = screen.getByText('Hold');
+    fireEvent.pointerDown(title, { pointerType: 'touch', buttons: 1, pointerId: 6 });
+    fireEvent.pointerUp(document.body, { pointerType: 'touch', pointerId: 6 });
+    fireEvent.click(title, { detail: 1 });
+    expect(region.hasAttribute('data-expanded')).toBe(false);
+    // Nor on one from the keyboard or click(), even right after a tap.
+    fireEvent.pointerDown(title, { pointerType: 'touch', buttons: 1, pointerId: 7 });
+    fireEvent.pointerUp(title, { pointerType: 'touch', pointerId: 7 });
+    fireEvent.click(title);
     expect(region.hasAttribute('data-expanded')).toBe(false);
   });
 
@@ -300,14 +317,14 @@ describe('Toast', () => {
     fireEvent.pointerUp(back, { pointerType: 'touch' });
     // Nothing moves until the click.
     expect(region.hasAttribute('data-expanded')).toBe(false);
-    fireEvent.click(back);
+    fireEvent.click(back, { detail: 1 });
     expect(toaster.getSnapshot().find((toast) => toast.id === 'back')!.open).toBe(true);
     expect(region.hasAttribute('data-expanded')).toBe(true);
     // Spread, a tap on the back toast's Close reaches it.
     const backClose = screen.getAllByRole('button', { name: 'Dismiss' })[1]!;
     fireEvent.pointerDown(backClose, { pointerType: 'touch', buttons: 1 });
     fireEvent.pointerUp(backClose, { pointerType: 'touch' });
-    fireEvent.click(backClose);
+    fireEvent.click(backClose, { detail: 1 });
     expect(toaster.getSnapshot().find((toast) => toast.id === 'back')!.open).toBe(false);
   });
 

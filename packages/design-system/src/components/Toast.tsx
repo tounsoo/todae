@@ -480,8 +480,11 @@ function Region<T extends object = object>({
     if (!pressed || !doc) return;
     const onEnd = (event: PointerEvent) => {
       pressIds.current.delete(event.pointerId);
-      // A press that turns into a scroll sends no click.
-      if (event.type === 'pointercancel' && tapFrom.current === event.pointerId) tapFrom.current = null;
+      // A press that turns into a scroll, or ends off the region, sends the
+      // region no click.
+      const section = sectionRef.current;
+      const clicks = event.type === 'pointerup' && eventInside(section, event);
+      if (!clicks && tapFrom.current === event.pointerId) tapFrom.current = null;
       if (pressIds.current.size === 0) setPressed(false);
     };
     doc.addEventListener('pointerup', onEnd, true);
@@ -630,8 +633,10 @@ function Region<T extends object = object>({
         pressIds.current.add(event.pointerId);
         setPressed(true);
       })}
-      onClickCapture={alongside(onClickCapture, () => {
-        if (tapFrom.current === null) return;
+      // Only a click a press made: one from the keyboard, assistive
+      // technology or click() has no detail.
+      onClickCapture={alongside(onClickCapture, (event) => {
+        if (tapFrom.current === null || event.detail === 0) return;
         tapFrom.current = null;
         setTapped(true);
       })}
