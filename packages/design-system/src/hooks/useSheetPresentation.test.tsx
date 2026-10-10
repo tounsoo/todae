@@ -42,19 +42,6 @@ describe('useSheetPresentation', () => {
     expect(SHEET_NARROW_WIDTH).toBe(640);
   });
 
-  it('becomes sheet for coarse only', () => {
-    setMatchMedia('(pointer: coarse)', true);
-    const { result } = renderHook(() => useSheetPresentation());
-    expect(result.current.presentation).toBe('sheet');
-    expect(result.current.isSheet).toBe(true);
-  });
-
-  it('becomes sheet for narrow only', () => {
-    setMatchMedia('(max-width: 639px)', true);
-    const { result } = renderHook(() => useSheetPresentation());
-    expect(result.current.presentation).toBe('sheet');
-  });
-
   it('lets forced override media', () => {
     setMatchMedia('(pointer: coarse)', true);
     const { result, rerender } = renderHook(

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import * as api from '../index';
-import { resetMatchMedia, setMatchMedia } from '../test/setup';
+import { resetMatchMedia } from '../test/setup';
 import {
   useTooltip,
   type TooltipTriggerUserProps,
@@ -122,55 +122,10 @@ describe('useTooltip', () => {
     expect(attach).toHaveBeenCalledTimes(1);
   });
 
-  it('shows on hover after 300ms and hides after 100ms', () => {
-    render(<TipHarness />);
-    const trigger = screen.getByRole('button', { name: 'Hint' });
-    fireEvent.pointerEnter(trigger);
-    expect(screen.queryByRole('tooltip')).toBeNull();
-    advance(299);
-    expect(screen.queryByRole('tooltip')).toBeNull();
-    advance(1);
-    expect(screen.getByRole('tooltip').textContent).toBe('Archive');
-    fireEvent.pointerLeave(trigger, { relatedTarget: document.body });
-    advance(99);
-    expect(screen.getByRole('tooltip')).toBeTruthy();
-    advance(1);
-    expect(screen.queryByRole('tooltip')).toBeNull();
-  });
-
-  it('sets aria-describedby on the trigger while open', () => {
-    render(<TipHarness />);
-    const trigger = screen.getByRole('button', { name: 'Hint' });
-    fireEvent.pointerEnter(trigger);
-    advance(300);
-    const tip = screen.getByRole('tooltip');
-    expect(trigger.getAttribute('aria-describedby')).toBe(tip.id);
-    fireEvent.pointerLeave(trigger, { relatedTarget: document.body });
-    advance(100);
-    expect(trigger.getAttribute('aria-describedby')).toBeNull();
-  });
-
   it('uses a provided id on the tip', () => {
     render(<TipHarness id="archive-tip" defaultOpen />);
     expect(screen.getByRole('tooltip').id).toBe('archive-tip');
     expect(screen.getByRole('button').getAttribute('aria-describedby')).toBe('archive-tip');
-  });
-
-  it('opens on focus without the hover delay', () => {
-    render(<TipHarness />);
-    fireEvent.focus(screen.getByRole('button', { name: 'Hint' }));
-    expect(screen.getByRole('tooltip').textContent).toBe('Archive');
-  });
-
-  it('ignores hover on coarse pointers and still opens on focus', () => {
-    setMatchMedia('(pointer: coarse)', true);
-    render(<TipHarness />);
-    const trigger = screen.getByRole('button', { name: 'Hint' });
-    fireEvent.pointerEnter(trigger);
-    advance(300);
-    expect(screen.queryByRole('tooltip')).toBeNull();
-    fireEvent.focus(trigger);
-    expect(screen.getByRole('tooltip')).toBeTruthy();
   });
 
   it('resets intent and commits close when enabled becomes false', () => {

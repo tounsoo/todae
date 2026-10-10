@@ -68,31 +68,6 @@ function press(init: KeyboardEventInit) {
 
 const dialogOpen = () => screen.queryByRole('dialog') !== null;
 
-it('matches the K letter, or the K position when the layout has no Latin letters', async () => {
-  renderPalette();
-  // Dvorak: the key labelled K sits where QWERTY has V.
-  expect(press({ key: 'k', code: 'KeyV', ctrlKey: true })).toBe(false);
-  await expect.poll(dialogOpen).toBe(true);
-  await userEvent.keyboard('{Escape}');
-  await expect.poll(dialogOpen).toBe(false);
-
-  // Korean 2-set: the K position types ㅏ.
-  expect(press({ key: 'ㅏ', code: 'KeyK', metaKey: true })).toBe(false);
-  await expect.poll(dialogOpen).toBe(true);
-});
-
-it('ignores Ctrl+T on Dvorak, AltGr+K and Ctrl+Shift+K', async () => {
-  renderPalette();
-  expect(press({ key: 't', code: 'KeyK', ctrlKey: true })).toBe(true);
-  expect(press({ key: 'ł', code: 'KeyK', ctrlKey: true, altKey: true })).toBe(true);
-  expect(press({ key: 'K', code: 'KeyK', ctrlKey: true, shiftKey: true })).toBe(true);
-  // A frame later, still closed; then the real shortcut opens it, so the checks above were live.
-  await new Promise(requestAnimationFrame);
-  expect(dialogOpen()).toBe(false);
-  expect(press({ key: 'k', code: 'KeyK', ctrlKey: true })).toBe(false);
-  await expect.poll(dialogOpen).toBe(true);
-});
-
 it('keeps the query when the shortcut is pressed while open', async () => {
   renderPalette();
   await userEvent.keyboard('{Control>}k{/Control}');

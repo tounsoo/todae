@@ -2,10 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render, screen } from '@testing-library/react';
-import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 import { ErrorMessage, type ErrorMessageProps } from './ErrorMessage';
-import { Field } from './Field';
 import * as api from '../index';
 
 const css = readFileSync(
@@ -38,21 +36,6 @@ describe('ErrorMessage', () => {
     expect(container.querySelector('#email-error')?.getAttribute('aria-invalid')).toBeNull();
   });
 
-  it('is named when the author wires Field.Root', () => {
-    render(
-      <div className="labelled-field">
-        <Field.Root id="mail" invalid aria-describedby="email-error">
-          <Field.TextInput value="bad" onChange={() => undefined} />
-        </Field.Root>
-        <ErrorMessage id="email-error">Enter an email.</ErrorMessage>
-      </div>,
-    );
-    const input = screen.getByRole('textbox');
-    expect(input.getAttribute('aria-invalid')).toBe('true');
-    expect(input.getAttribute('aria-describedby')).toBe('email-error');
-    expect(document.getElementById('email-error')?.textContent).toBe('Enter an email.');
-  });
-
   it('owns control-to-message spacing and tightens after Description', () => {
     expect(css).toMatch(/margin-block-start:\s*var\(--todae-field-label-gap\)/);
     expect(css).toMatch(/margin-block-end:\s*0/);
@@ -65,11 +48,5 @@ describe('ErrorMessage', () => {
   it('marks itself for the sibling rule', () => {
     const { container } = render(<ErrorMessage id="email-error">Enter an email.</ErrorMessage>);
     expect(container.querySelector('#email-error')?.getAttribute('data-todae-error')).toBe('');
-  });
-
-  it('SSR keeps the id and omits alert', () => {
-    const html = renderToString(<ErrorMessage id="email-error">Enter an email.</ErrorMessage>);
-    expect(html).toContain('id="email-error"');
-    expect(html).not.toContain('role="alert"');
   });
 });

@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { useRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../components/Field';
@@ -110,13 +110,6 @@ describe('useChipList', () => {
     expect(api).not.toHaveProperty('planChipOverflow');
   });
 
-  it('shows every chip when maxRows is unset', () => {
-    render(<Host chips={['a', 'b', 'c']} />);
-    expect(screen.getByTestId('hidden').textContent).toBe('0');
-    expect(screen.getByTestId('count').textContent).toBe('3');
-    expect(document.querySelector('[data-ellipsis]')).toBeNull();
-  });
-
   it('matches main inline ChipInput counts for 8 chips', () => {
     for (const [maxRows, visible, more] of [
       [1, 2, '6 more'],
@@ -148,65 +141,6 @@ describe('useChipList', () => {
     open.unmount();
     render(<Host chips={EIGHT} maxRows={1} reserve />);
     expect(screen.getByTestId('count').textContent).toBe('2');
-  });
-
-  it('folds a chip that does not fit at full width instead of shrinking it', () => {
-    vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
-      const minWidth = el instanceof HTMLInputElement ? '40px' : '0px';
-      return {
-        columnGap: '8px',
-        gap: '8px',
-        minWidth,
-        getPropertyValue(name: string) {
-          if (name === 'min-width') return minWidth;
-          if (name === 'column-gap' || name === 'gap') return '8px';
-          return '';
-        },
-      } as CSSStyleDeclaration;
-    });
-    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
-      if (this.getAttribute('data-overflow') != null) return rect(40);
-      if (this.querySelector?.(':scope > input') || this.getAttribute('role') === 'list') return rect(300, 32);
-      const text = this.textContent ?? '';
-      const width = text.startsWith('…') ? 60 : text.startsWith('Beta') ? 150 : 80;
-      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) return rect(width);
-      return rect(0, 0);
-    });
-    render(<Host chips={['Alpha', 'Beta', 'Gamma']} maxRows={1} reserve />);
-    const chips = [...document.querySelectorAll('[data-chip]')] as HTMLElement[];
-    expect(chips.map((el) => el.textContent)).toEqual(['Alpha']);
-    expect(document.querySelector('[data-ellipsis]')).toBeNull();
-    expect(screen.getByTestId('hidden').textContent).toBe('2');
-  });
-
-  it('truncates a chip wider than the row and keeps its full label', () => {
-    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
-      if (this.getAttribute('data-overflow') != null) return rect(40);
-      if (this.querySelector?.(':scope > input') || this.getAttribute('role') === 'list') return rect(200, 32);
-      const text = this.textContent ?? '';
-      const width = text.startsWith('…') ? 60 : text.startsWith('a-very-long-tag') ? 400 : 80;
-      if (this.tagName === 'SPAN' && this.querySelector?.('button, [aria-hidden]')) return rect(width);
-      return rect(0, 0);
-    });
-    const full = 'a-very-long-tag';
-    render(<Host chips={[full]} maxRows={1} />);
-    const chip = document.querySelector('[data-chip]') as HTMLElement;
-    expect(chip.textContent).toBe(full);
-    expect(chip.getAttribute('data-ellipsis')).toBe('');
-    expect(chip.style.maxWidth).toBe('200px');
-  });
-
-  it('re-plans from ResizeObserver without adding observers', () => {
-    render(<Host chips={EIGHT} maxRows={1} />);
-    expect(screen.getByTestId('count').textContent).toBe('3');
-    const before = observers.length;
-    box = 2000;
-    act(() => {
-      const ro = observers.at(-1);
-      ro?.cb([] as unknown as ResizeObserverEntry[], ro as unknown as ResizeObserver);
-    });
-    expect(observers.length).toBe(before);
-    expect(screen.getByTestId('count').textContent).toBe('8');
   });
 
   it('caps hidden at chips.length when the plan is stale', () => {

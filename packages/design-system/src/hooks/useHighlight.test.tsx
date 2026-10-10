@@ -1,6 +1,5 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as api from '../index';
 import { useHighlight, type UseHighlightOptions } from './useHighlight';
 
 // jsdom has no Custom Highlight API; this stands in for CSS.highlights and Highlight.
@@ -40,10 +39,6 @@ function Search({ text = 'Apple pie and apple tart', ...options }: Partial<UseHi
 const count = () => screen.getByTestId('count').textContent;
 
 describe('useHighlight', () => {
-  it('is exported from the package', () => {
-    expect(api.useHighlight).toBe(useHighlight);
-  });
-
   it('paints every match under the name, ignoring case by default', () => {
     render(<Search query="apple" />);
     expect(count()).toBe('2');

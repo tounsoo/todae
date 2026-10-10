@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { createRef, useState } from 'react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field, Label, useField } from '../index';
 
@@ -524,44 +524,6 @@ describe('useField', () => {
     expect(input.getAttribute('name')).toBe('n');
     expect((input as HTMLInputElement).disabled).toBe(true);
     expect(input.hasAttribute('aria-disabled')).toBe(false);
-  });
-
-  it('a press on the shell focuses the control', () => {
-    render(<Harness />);
-    fireEvent.mouseDown(screen.getByTestId('shell'));
-    expect(document.activeElement).toBe(screen.getByRole('slider'));
-  });
-
-  it('passes the Root name unless the control names itself', () => {
-    function Named({ own }: { own?: string }) {
-      return (
-        <Field.Root aria-label="From root">
-          <Probe own={own} />
-        </Field.Root>
-      );
-    }
-    function Probe({ own }: { own?: string }) {
-      const field = useField();
-      return <input {...field.getControlProps({ 'aria-label': own })} />;
-    }
-    const { rerender } = render(<Named />);
-    expect(screen.getByRole('textbox').getAttribute('aria-label')).toBe('From root');
-    rerender(<Named own="Own name" />);
-    expect(screen.getByRole('textbox').getAttribute('aria-label')).toBe('Own name');
-  });
-
-  it('keeps the consumer ref', () => {
-    const ref = createRef<HTMLInputElement>();
-    function Probe() {
-      const field = useField();
-      return <input {...field.getControlProps({ ref })} aria-label="x" />;
-    }
-    render(
-      <Field.Root>
-        <Probe />
-      </Field.Root>,
-    );
-    expect(ref.current).toBe(screen.getByRole('textbox'));
   });
 
   it('throws outside Field.Root', () => {

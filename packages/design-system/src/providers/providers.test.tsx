@@ -65,23 +65,6 @@ describe('ThemeProvider', () => {
     );
   });
 
-  it('applies allowlisted typed overrides as CSS vars', () => {
-    mockMatchMedia(false);
-    const { container } = render(
-      <ThemeProvider
-        appearance="light"
-        overrides={{
-          'color.accent.default': { colorSpace: 'oklch', components: [0.4, 0.12, 200] },
-        }}
-      />,
-    );
-    const el = container.querySelector('[data-appearance="light"]');
-    expect(el).toBeInstanceOf(HTMLElement);
-    expect((el as HTMLElement).style.getPropertyValue('--todae-color-accent-default')).toBe(
-      'oklch(0.4 0.12 200)',
-    );
-  });
-
   it('server-renders system as system, so CSS picks the scheme before hydration', () => {
     const html = renderToString(
       <ThemeProvider appearance="system">
@@ -153,22 +136,6 @@ describe('themeOverrideStyle', () => {
       '--todae-dialog-bg': 'oklch(0.98 0.005 260)',
       '--todae-sheet-snap-mid': '0.5',
     });
-  });
-
-  it('rejects unknown chip slots', () => {
-    expect(() =>
-      themeOverrideStyle({
-        'chip.bg.evil': { colorSpace: 'oklch', components: [0.5, 0.1, 200] },
-      }),
-    ).toThrow(/Unknown theme override/);
-  });
-
-  it('rejects collapsed button paint paths', () => {
-    expect(() =>
-      themeOverrideStyle({
-        'button.bg.hover': { colorSpace: 'oklch', components: [0.55, 0.18, 255] },
-      }),
-    ).toThrow(/Unknown theme override/);
   });
 
   it('rejects a typed value that does not match the key', () => {

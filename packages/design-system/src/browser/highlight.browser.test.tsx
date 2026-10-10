@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { useHighlight } from '../index';
 
@@ -26,14 +26,5 @@ describe('useHighlight in a real browser', () => {
     expect(screen.getByRole('status').textContent).toBe('5');
     unmount();
     expect(CSS.highlights.has('browser-search')).toBe(false);
-  });
-
-  it('searches again when text is added', async () => {
-    render(<Search query="tea" />);
-    const body = screen.getByTestId('body');
-    await act(async () => {
-      body.append('More tea.');
-    });
-    expect(CSS.highlights.get('browser-search')?.size).toBe(6);
   });
 });

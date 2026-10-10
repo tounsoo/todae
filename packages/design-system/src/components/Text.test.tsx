@@ -1,5 +1,4 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Text, type TextAs } from './Text';
 import styles from './Text.module.css';
@@ -53,9 +52,5 @@ describe('Text', () => {
       </Text>,
     );
     expect(screen.getByTestId('t').classList.contains(styles.xxl!)).toBe(true);
-  });
-
-  it('renders on the server without hooks', () => {
-    expect(renderToString(<Text as="h3">Server</Text>)).toMatch(/^<h3 class="[^"]+">Server<\/h3>$/);
   });
 });

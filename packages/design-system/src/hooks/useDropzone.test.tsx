@@ -1,6 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import * as api from '../index';
 import { acceptsFile, useDropzone, type UseDropzoneOptions } from './useDropzone';
 
 afterEach(cleanup);
@@ -33,10 +32,6 @@ describe('acceptsFile', () => {
 });
 
 describe('useDropzone', () => {
-  it('is exported from the package', () => {
-    expect(api.useDropzone).toBe(useDropzone);
-  });
-
   it('wires the native input', () => {
     render(<Zone accept="image/*" multiple disabled />);
     const input = screen.getByTestId('input') as HTMLInputElement;

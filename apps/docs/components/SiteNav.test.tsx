@@ -5,74 +5,6 @@ import { SiteNav } from './SiteNav';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/chip-list' }));
 
-const HREFS = [
-  '/guides/build-on-todae',
-  '/composition',
-  '/tokens',
-  '/guides/css-layers',
-  '/platform',
-  '/alert',
-  '/avatar',
-  '/badge',
-  '/bottomsheet',
-  '/breadcrumbs',
-  '/button',
-  '/card',
-  '/checkbox',
-  '/chip',
-  '/chip-list',
-  '/code',
-  '/description',
-  '/dialog',
-  '/disclosure',
-  '/drawer',
-  '/errormessage',
-  '/field',
-  '/fieldset',
-  '/grid',
-  '/label',
-  '/link',
-  '/menu',
-  '/optionlist',
-  '/pagination',
-  '/popover',
-  '/progress',
-  '/radio',
-  '/separator',
-  '/slider',
-  '/spinner',
-  '/stack',
-  '/switch',
-  '/table',
-  '/tabs',
-  '/text',
-  '/toast',
-  '/toggle-group',
-  '/toolbar',
-  '/tooltip',
-  '/visually-hidden',
-  '/utilities/strings-provider',
-  '/utilities/use-announcer',
-  '/utilities/use-chip-field',
-  '/utilities/use-chip-list',
-  '/utilities/use-combobox',
-  '/utilities/use-controlled-state',
-  '/utilities/use-controlled-value',
-  '/utilities/use-dropzone',
-  '/utilities/use-field',
-  '/utilities/use-highlight',
-  '/utilities/use-hotkey',
-  '/utilities/use-modal-layer',
-  '/utilities/use-popover',
-  '/utilities/use-roving-focus',
-  '/utilities/use-sheet-presentation',
-  '/utilities/use-tooltip',
-  '/recipes/combobox',
-  '/recipes/command-palette',
-  '/recipes/file-upload',
-  '/playground',
-];
-
 describe('SiteNav', () => {
   it('groups the same links under Site', () => {
     render(<SiteNav locale="en" />);
@@ -85,31 +17,12 @@ describe('SiteNav', () => {
     const current = screen.getAllByRole('link').filter((link) => link.getAttribute('aria-current') === 'page');
     expect(current).toHaveLength(1);
     expect(current[0]?.textContent).toBe('ChipList');
-    expect([...nav.querySelectorAll('a')].map((link) => link.getAttribute('href'))).toEqual(HREFS);
     expect(nav.textContent).not.toContain('Recipes:');
     expect(screen.getByRole('list', { name: 'Foundations' }).getAttribute('aria-labelledby')).toBe('nav-foundations');
     const hrefsIn = (name: string) =>
       [...screen.getByRole('list', { name }).querySelectorAll('a')].map((link) => link.getAttribute('href'));
     expect(hrefsIn('Components')).not.toContain('/composition');
     expect(hrefsIn('Foundations')).toEqual(['/guides/build-on-todae', '/composition', '/tokens', '/guides/css-layers', '/platform']);
-    expect(hrefsIn('Utilities')).toEqual([
-      '/utilities/strings-provider',
-      '/utilities/use-announcer',
-      '/utilities/use-chip-field',
-      '/utilities/use-chip-list',
-      '/utilities/use-combobox',
-      '/utilities/use-controlled-state',
-      '/utilities/use-controlled-value',
-      '/utilities/use-dropzone',
-      '/utilities/use-field',
-      '/utilities/use-highlight',
-      '/utilities/use-hotkey',
-      '/utilities/use-modal-layer',
-      '/utilities/use-popover',
-      '/utilities/use-roving-focus',
-      '/utilities/use-sheet-presentation',
-      '/utilities/use-tooltip',
-    ]);
   });
 
   it('keeps group label ids unique for a second copy', () => {

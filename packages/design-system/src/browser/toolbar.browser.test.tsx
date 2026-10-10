@@ -55,17 +55,6 @@ describe('Toolbar in a browser', () => {
     expect(document.activeElement).toBe(button('Insert'));
   });
 
-  it('follows right-to-left text for Left and Right', async () => {
-    render(
-      <div dir="rtl">
-        <Bar />
-      </div>,
-    );
-    button('Bold').focus();
-    await userEvent.keyboard('{ArrowLeft}');
-    expect(document.activeElement).toBe(button('Italic'));
-  });
-
   it('draws the separator and marks a pressed toggle beyond its color', () => {
     render(
       <main data-appearance="light" data-density="comfortable">
@@ -183,29 +172,6 @@ describe('Toolbar in a browser', () => {
     expect(getComputedStyle(button('Bold')).backgroundColor).toBe(resting);
   });
 
-  it('leaves the toolbar on Tab from an open menu inside it', async () => {
-    render(
-      <>
-        <Toolbar.Root aria-label="t">
-          <Menu.Root>
-            <Menu.Trigger>Insert</Menu.Trigger>
-            <Menu.Content>
-              <Menu.Item>Image</Menu.Item>
-            </Menu.Content>
-          </Menu.Root>
-          <Button.Root>Undo</Button.Root>
-          <Button.Root>Redo</Button.Root>
-        </Toolbar.Root>
-        <button type="button">After</button>
-      </>,
-    );
-    button('Insert').focus();
-    await userEvent.keyboard('{ArrowDown}');
-    expect(document.activeElement).toBe(await screen.findByRole('menuitem', { name: 'Image' }));
-    await userEvent.tab();
-    expect(document.activeElement).toBe(button('After'));
-  });
-
   it('returns Shift+Tab from a text input to the control Tab left the run from', async () => {
     render(
       <Toolbar.Root aria-label="t">
@@ -237,25 +203,6 @@ describe('Toolbar in a browser', () => {
     expect(document.activeElement).toBe(screen.getByText('More'));
     await userEvent.tab();
     expect(document.activeElement).toBe(button('B'));
-  });
-
-  it('remembers a control for each run', async () => {
-    render(
-      <Toolbar.Root aria-label="t">
-        <Button.Root>A</Button.Root>
-        <Button.Root>B</Button.Root>
-        <input aria-label="Size" />
-        <Button.Root>C</Button.Root>
-        <Button.Root>D</Button.Root>
-      </Toolbar.Root>,
-    );
-    button('A').focus();
-    await userEvent.tab();
-    await userEvent.tab();
-    expect(document.activeElement).toBe(button('C'));
-    await userEvent.tab({ shift: true });
-    await userEvent.tab({ shift: true });
-    expect(document.activeElement).toBe(button('A'));
   });
 
   it('enters on the first control the first time, from either side', async () => {

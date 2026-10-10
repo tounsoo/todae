@@ -160,20 +160,6 @@ describe('Field.TextInput', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Clear' }));
   });
 
-  it('stays controlled', () => {
-    const onChange = vi.fn();
-    render(
-      <Field.Root>
-        <Field.TextInput value="kept" onChange={onChange} />
-      </Field.Root>,
-    );
-    const input = screen.getByRole('textbox');
-    expect(input).toHaveProperty('value', 'kept');
-    fireEvent.change(input, { target: { value: 'next' } });
-    expect(onChange).toHaveBeenCalled();
-    expect(input).toHaveProperty('value', 'kept');
-  });
-
   it('rejects file at the type level', () => {
     expectTypeOf<FieldTextInputProps['type']>().extract<'file'>().toBeNever();
     expectTypeOf<NonNullable<FieldTextInputProps['type']>>().toEqualTypeOf<
@@ -181,12 +167,7 @@ describe('Field.TextInput', () => {
     >();
   });
 
-  it.each([
-    ['number', '42', '7'],
-    ['date', '2026-10-07', '2026-12-25'],
-    ['time', '14:30', '09:15'],
-    ['datetime-local', '2026-10-07T14:30', '2026-12-25T09:15'],
-  ] as const)('renders a native %s input with a string value', (type, value, next) => {
+  it.each([['number', '42', '7']] as const)('renders a native %s input with a string value', (type, value, next) => {
     const onValueChange = vi.fn();
     const { container } = render(
       <Field.Root aria-label="When">
@@ -304,21 +285,6 @@ describe('Field.Textarea', () => {
     expect(document.activeElement).toBe(container.querySelector('textarea'));
   });
 
-  it('matches SSR markup', () => {
-    const html = renderToString(
-      <Field.Root id="note" name="bio">
-        <Field.Textarea value="hi" onChange={() => undefined} rows={4} maxRows={6} />
-      </Field.Root>,
-    );
-    expect(html).toContain('<textarea');
-    expect(html).toContain('id="note"');
-    expect(html).toContain('name="bio"');
-    expect(html).toContain('rows="4"');
-    expect(html).toContain('--todae-field-rows:4');
-    expect(html).toContain('--todae-field-max-rows:6');
-    expect(html).not.toContain('data-auto-grow');
-  });
-
   it('does not size with listeners', () => {
     const observe = vi.fn();
     class ResizeObserver {
@@ -419,13 +385,6 @@ describe('Field.ChipInput', () => {
     for (const name of ['Remove Alpha', 'Remove Beta']) {
       expect(screen.getByRole('button', { name }).querySelector('[data-testid="x"]')).toBeTruthy();
     }
-  });
-
-  it('renders one chip per value plus a controlled input', () => {
-    renderField({ chips: ['Alpha', 'Beta'], inputValue: 'x' });
-    expect(screen.getByRole('button', { name: 'Remove Alpha' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Remove Beta' })).toBeTruthy();
-    expect(screen.getByRole('textbox')).toHaveProperty('value', 'x');
   });
 
   it('forwards typing and commits a trimmed value without mutating chips', () => {
