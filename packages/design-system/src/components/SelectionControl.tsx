@@ -3,6 +3,7 @@ import { useGlyphs } from '../providers/GlyphsProvider';
 import { useFieldsetState } from './Fieldset.context';
 import { CheckGlyph, glyphOr } from './glyphs';
 import styles from './selection.module.css';
+import { cx } from './cx';
 
 export type SelectionKind = 'checkbox' | 'radio' | 'switch';
 
@@ -58,7 +59,7 @@ export function SelectionControl({
   const { check } = useGlyphs();
   return (
     <label
-      className={[styles.root, className].filter(Boolean).join(' ')}
+      className={cx(styles.root, className)}
       data-control={kind}
       data-checked={checked ? '' : undefined}
       data-disabled={disabled ? '' : undefined}

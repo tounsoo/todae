@@ -20,7 +20,7 @@ export interface Strings {
   pagination: string;
   /** Name of BottomSheet.Grabber's resize control. */
   resizeSheet: string;
-  /** Name in the sheet props from useCombobox's getSheetProps. */
+  /** Name in the sheet and dialog props from useCombobox's getSheetProps and getDialogProps. */
   options: string;
   /** Name of a chip's remove button. */
   removeChip: (label: string) => string;

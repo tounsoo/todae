@@ -34,7 +34,6 @@ function outsideForcedColors(css: string): string {
 // Components read contract tokens only. These sheets still read a core
 // spacing step for an anchor offset or a gap fallback.
 const CORE_READS: Record<string, string[]> = {
-  Tooltip: ['space'],
   ChipList: ['space'],
   Field: ['space'],
 };

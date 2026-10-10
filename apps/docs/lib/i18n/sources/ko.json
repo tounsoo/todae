@@ -326,7 +326,7 @@
   "recipes/command-palette": {
     "(top)": "b133afb40440",
     "# Command palette": "20b4257003e3",
-    "## Accessible composition": "95d140d0cb05",
+    "## Accessible composition": "362e1cfca3f9",
     "## When to use": "06c9b0d8a7e9",
     "(section order)": "46352d9bb2ec"
   },
@@ -479,7 +479,7 @@
   "utilities/strings-provider": {
     "(top)": "1224055afc40",
     "# StringsProvider": "0a9ce6b4f646",
-    "## Strings": "a017854d474c",
+    "## Strings": "db74b2bb78d8",
     "## Accessible composition": "8cc16824f136",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",
@@ -512,7 +512,7 @@
   "utilities/use-combobox": {
     "(top)": "e79476ff32f4",
     "# useCombobox": "3433da5ec31c",
-    "## Accessible composition": "4ef2b088ea8e",
+    "## Accessible composition": "47ddacf194b0",
     "## When to use": "cc4af763e6a8",
     "## Props": "f8b827f1b42b",
     "(section order)": "80890c96c652"

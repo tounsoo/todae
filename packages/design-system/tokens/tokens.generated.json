@@ -4259,6 +4259,15 @@
       "context": null
     },
     {
+      "path": "tooltip.offset",
+      "type": "dimension",
+      "cssVar": "--todae-tooltip-offset",
+      "cssValue": "var(--todae-space-1)",
+      "ref": "space.1",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "tooltip.padding.x",
       "type": "dimension",
       "cssVar": "--todae-tooltip-padding-x",
