@@ -7,6 +7,7 @@ import { DICTIONARIES } from '../lib/i18n/dictionaries';
 // Reads the file system, so SiteShell renders on the server only.
 import { untranslatedByLocale } from '../lib/i18n/pages';
 import { GitHubIcon } from './icons';
+import { HashHistoryGuard } from './HashHistoryGuard';
 import { LanguageAlternates } from './LanguageAlternates';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { MobileNav } from './MobileNav';
@@ -47,6 +48,7 @@ export function SiteShell({
       <body>
         {/* A 404 is prerendered once, so its path is Next's internal one: no page to pair. */}
         {!notFound && <LanguageAlternates untranslated={untranslatedByLocale()} />}
+        <HashHistoryGuard />
         <Providers>
           <script dangerouslySetInnerHTML={{ __html: APPEARANCE_SCRIPT }} />
           <VisuallyHidden.Root focusable>

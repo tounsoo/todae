@@ -142,12 +142,10 @@ describe('mobile drawer', () => {
     const link = within(drawer()!).getByRole('link', { name: 'Tokens' });
     // Keep the test page in place; the drawer only needs the click.
     link.addEventListener('click', (event) => event.preventDefault());
-    // A modified click opens the link elsewhere, so the drawer stays.
-    await userEvent.keyboard('{Control>}');
-    await userEvent.click(link);
-    await userEvent.keyboard('{/Control}');
-    await frame();
-    expect(drawer()).toBeTruthy();
+    // A modified click opens the link elsewhere, so the drawer stays, past the time it takes to slide out.
+    link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(drawer()?.hasAttribute('data-exiting')).toBe(false);
     await userEvent.click(link);
     await expect.poll(drawer).toBeNull();
   });

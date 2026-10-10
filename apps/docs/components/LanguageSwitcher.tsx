@@ -35,8 +35,9 @@ export function LanguageSwitcher({ locale, toHome = false }: { locale: Locale; t
     <nav className="language-switcher" aria-label={DICTIONARIES[locale].languageNav}>
       <ul>
         {LOCALES.map((target) => {
-          // Another language has its own root layout, which Next always loads in full, so next/link would only add a prefetch.
-          const Anchor = target === locale ? SiteLink : Link.Root;
+          // Another language, or a 404's home page, has its own root layout, which Next always loads in full,
+          // so next/link would only add a prefetch.
+          const Anchor = target === locale && !toHome ? SiteLink : Link.Root;
           return (
             <li key={target}>
               <Anchor

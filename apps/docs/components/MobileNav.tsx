@@ -43,7 +43,7 @@ export function MobileNav({ locale }: { locale: Locale }) {
         <Dialog.Body
           onClick={(event) => {
             // A modified click opens the link elsewhere and leaves this page, and the drawer, as they are.
-            const elsewhere = event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+            const elsewhere = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
             if (!elsewhere && (event.target as Element).closest('a[href]')) setOpen(false);
           }}
         >

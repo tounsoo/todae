@@ -279,7 +279,7 @@ describe('docs locales', () => {
   });
 
   it('keeps the query and hash when switching, through every URL change', async () => {
-    // jsdom has no Navigation API, so stand in for the event it fires, as the URL changes, on each change.
+    // jsdom has no Navigation API, so stand in for the currententrychange it fires on each URL change.
     const navigation = new EventTarget();
     window.navigation = navigation;
     const setUrl = (url: string) => {
