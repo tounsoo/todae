@@ -9,18 +9,19 @@
     "(section order)": "9c0be073b378"
   },
   "avatar": {
-    "(top)": "c52866df678e",
+    "(top)": "d01aa6771c0c",
     "# Avatar": "24e9d98ee594",
     "## Naming": "f27c425ac914",
-    "## Sizes": "11a266d8a56c",
+    "## Sizes": "166b7c6e1c4a",
+    "## Colors": "b87102ab0c53",
     "## Accessible composition": "a4759450c7bd",
     "## When to use": "3adea664305f",
     "## Props": "1ae5e2219004",
-    "(section order)": "4f494c472d8c"
+    "(section order)": "a0d8de1c05f5"
   },
   "badge": {
     "(top)": "dcf90380de7b",
-    "# Badge": "9b5a567d4938",
+    "# Badge": "4351a385b369",
     "## Accessible composition": "f30a0931691b",
     "## When to use": "0be2d0ae4577",
     "## Props": "614ea6c48fb6",
@@ -74,7 +75,7 @@
   },
   "chip": {
     "(top)": "d56bfe4010f4",
-    "# Chip": "406df41d481b",
+    "# Chip": "cf9656c91358",
     "## Accessible composition": "4aa0768730ca",
     "## When to use": "633dd339b67b",
     "## Props": "96a28a5c8dc6",
@@ -82,7 +83,7 @@
   },
   "chip-list": {
     "(top)": "a9e5001350e4",
-    "# ChipList": "a816322ccf3c",
+    "# ChipList": "f4078bd144e8",
     "## One row / Two rows": "4ea8a7cdc9c2",
     "## Read-only": "8b7e5f70eb72",
     "## Accessible composition": "0e767dafb800",
@@ -420,8 +421,9 @@
     "### DensityProvider": "b60121bd3031",
     "## Contrast": "e3223e4198e2",
     "## Status tones": "9db538465fa4",
+    "## Category tones": "66f99d412c6c",
     "## Catalog": "fbadfcf96811",
-    "(section order)": "8569d4f667bf"
+    "(section order)": "d810695ca5e4"
   },
   "toolbar": {
     "(top)": "65f7c00fa816",

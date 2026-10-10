@@ -22,6 +22,10 @@ export function ChipExamples() {
       <Chip.Root disabled onRemove={() => undefined}>
         Disabled
       </Chip.Root>
+      <Chip.Root tone="success">Paid</Chip.Root>
+      <Chip.Root tone="category-3" onRemove={() => undefined}>
+        Design
+      </Chip.Root>
       <Chip.Overflow overflowCount={4} />
     </>
   );

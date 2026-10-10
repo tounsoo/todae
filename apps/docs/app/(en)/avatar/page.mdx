@@ -1,4 +1,4 @@
-import { AvatarBesideName, AvatarSizes, AvatarStates } from '../../../components/demos/AvatarDemo';
+import { AvatarBesideName, AvatarSizes, AvatarStates, AvatarTones } from '../../../components/demos/AvatarDemo';
 
 # Avatar
 
@@ -41,7 +41,21 @@ When the name is written next to the avatar, leave out `label`. The avatar is th
   <AvatarSizes />
 </Example>
 
-Initials are yours to choose: how to shorten a name depends on the language and the person. Restyle the shape and colors through `avatar.radius`, `avatar.bg` and `avatar.fg`.
+Initials are yours to choose: how to shorten a name depends on the language and the person. Restyle the shape through `avatar.radius`.
+
+## Colors
+
+`tone` sets the avatar's colors, which show behind the fallback. `neutral`, the default, reads `avatar.bg` and `avatar.fg`. `category-1` to `category-8` read the `avatar.category-<n>` contract tokens, from `color.category.<n>`. To give each person a color that stays the same, pass a stable key such as a user id to `categoryTone`:
+
+```tsx
+<Avatar.Root label={user.name} tone={categoryTone(user.id)}>
+  <Avatar.Fallback>{user.initials}</Avatar.Fallback>
+</Avatar.Root>
+```
+
+<Example>
+  <AvatarTones />
+</Example>
 
 ## Accessible composition
 

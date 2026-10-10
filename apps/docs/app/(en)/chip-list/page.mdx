@@ -17,6 +17,8 @@ With `onRemove`, each chip gets a remove button. Once `chips` drops the focused 
 
 In the popover, Tab past the last chip goes on to the control after +N, Shift+Tab from the first chip returns to +N, and Escape closes it and returns to +N.
 
+`getTone` gives each chip a `tone`, as on Chip. To color tags by name, pass `categoryTone`, which maps a string to the same category tone every time: `getTone={(value) => categoryTone(value)}`.
+
 ## One row / Two rows
 
 <Example>

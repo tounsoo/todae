@@ -10,8 +10,12 @@ import {
 import { cx } from './cx';
 import { useComposedRefs } from './props';
 import styles from './Avatar.module.css';
+import type { CategoryTone } from './tone';
 
 export type AvatarSize = 'sm' | 'md' | 'lg';
+
+/** `neutral`, or a category hue. `categoryTone(id)` picks a stable one per person. */
+export type AvatarTone = 'neutral' | CategoryTone;
 
 /** Where the avatar's image stands: `idle` while no Avatar.Image renders. */
 export type AvatarImageStatus = 'idle' | 'loading' | 'loaded' | 'error';
@@ -27,6 +31,8 @@ export type AvatarRootProps = {
   /** Names the avatar for assistive technology, such as "Ada Lovelace". */
   label?: string;
   size?: AvatarSize;
+  /** Fallback colors from the avatar.<tone> contract tokens. */
+  tone?: AvatarTone;
 } & Omit<ComponentPropsWithRef<'span'>, 'role' | 'aria-label' | 'aria-labelledby'>;
 
 /**
@@ -51,7 +57,7 @@ function useAvatar(part: string): AvatarContextValue {
   return ctx;
 }
 
-function Root({ label, size = 'md', className, 'aria-hidden': ariaHidden, ...props }: AvatarRootProps) {
+function Root({ label, size = 'md', tone = 'neutral', className, 'aria-hidden': ariaHidden, ...props }: AvatarRootProps) {
   const [status, setStatus] = useState<AvatarImageStatus>('idle');
   const value = useMemo(() => ({ status, setStatus }), [status]);
   const named = Boolean(label);
@@ -63,6 +69,7 @@ function Root({ label, size = 'md', className, 'aria-hidden': ariaHidden, ...pro
         aria-label={named ? label : undefined}
         aria-hidden={named ? ariaHidden : (ariaHidden ?? true)}
         data-size={size}
+        data-tone={tone}
         data-status={status}
         className={cx(styles.root, className)}
       />

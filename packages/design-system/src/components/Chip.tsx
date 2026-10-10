@@ -1,9 +1,15 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { useStrings } from '../providers/StringsProvider';
+import type { AlertTone } from './Alert';
+import type { CategoryTone } from './tone';
 import styles from './Chip.module.css';
+
+export type ChipTone = 'neutral' | AlertTone | CategoryTone;
 
 export type ChipRootProps = {
   children: string;
+  /** Colors from the chip.<tone> contract tokens. A disabled chip takes the disabled colors instead. */
+  tone?: ChipTone;
   onRemove?: () => void;
   /** Remove button name. Default is the `removeChip` string, "Remove {label}" in English. */
   removeLabel?: string;
@@ -28,6 +34,7 @@ function ChipRoot({
   removeLabel,
   removeIcon,
   disabled,
+  tone = 'neutral',
   className,
   ...props
 }: ChipRootProps) {
@@ -37,7 +44,7 @@ function ChipRoot({
   }
   const label = typeof children === 'string' ? children : String(children);
   return (
-    <span {...props} className={chipClass(className)} data-disabled={disabled ? '' : undefined}>
+    <span {...props} className={chipClass(className)} data-tone={tone} data-disabled={disabled ? '' : undefined}>
       <span className={styles.label}>{label}</span>
       {onRemove ? (
         <button

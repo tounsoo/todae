@@ -1,4 +1,4 @@
-import { AvatarBesideName, AvatarSizes, AvatarStates } from '../../../components/demos/AvatarDemo';
+import { AvatarBesideName, AvatarSizes, AvatarStates, AvatarTones } from '../../../components/demos/AvatarDemo';
 
 # Avatar
 
@@ -41,7 +41,21 @@ import { AvatarBesideName, AvatarSizes, AvatarStates } from '../../../components
   <AvatarSizes />
 </Example>
 
-이니셜은 직접 정하세요. 이름을 줄이는 방법은 언어와 사람마다 다릅니다. 모양과 색은 `avatar.radius`, `avatar.bg`, `avatar.fg`로 바꾸세요.
+이니셜은 직접 정하세요. 이름을 줄이는 방법은 언어와 사람마다 다릅니다. 모양은 `avatar.radius`로 바꾸세요.
+
+## 색
+
+`tone`은 대체 표시 뒤에 보이는 아바타의 색을 정합니다. 기본값인 `neutral`은 `avatar.bg`와 `avatar.fg`를 읽습니다. `category-1`부터 `category-8`은 `color.category.<n>`에서 오는 `avatar.category-<n>` contract 토큰을 읽습니다. 사람마다 늘 같은 색을 주려면 사용자 id 같은 안정적인 키를 `categoryTone`에 넘기세요.
+
+```tsx
+<Avatar.Root label={user.name} tone={categoryTone(user.id)}>
+  <Avatar.Fallback>{user.initials}</Avatar.Fallback>
+</Avatar.Root>
+```
+
+<Example>
+  <AvatarTones />
+</Example>
 
 ## 접근성을 지키는 조합
 

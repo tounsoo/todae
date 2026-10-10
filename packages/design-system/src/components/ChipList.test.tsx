@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { ChipTone } from './Chip';
 import { ChipList } from './ChipList';
 
 afterEach(cleanup);
@@ -21,6 +22,17 @@ describe('ChipList', () => {
     expect(list.querySelectorAll('[role="listitem"]')).toHaveLength(3);
     expect(list.parentElement?.hasAttribute('data-rows')).toBe(false);
     expect(screen.queryByRole('button', { name: /more/ })).toBeNull();
+  });
+
+  it('tones each chip from getTone, and leaves chips neutral without it', () => {
+    const getTone = vi.fn((value: string): ChipTone => (value === 'a' ? 'critical' : 'category-2'));
+    const { rerender } = render(<ChipList.Root aria-label="Tags" chips={['a', 'b']} getTone={getTone} />);
+    const tones = () =>
+      [...screen.getByRole('list', { name: 'Tags' }).querySelectorAll('[role="listitem"]')].map((chip) => chip.getAttribute('data-tone'));
+    expect(tones()).toEqual(['critical', 'category-2']);
+    expect(getTone).toHaveBeenCalledWith('b', 1);
+    rerender(<ChipList.Root aria-label="Tags" chips={['a', 'b']} />);
+    expect(tones()).toEqual(['neutral', 'neutral']);
   });
 
   it('is read-only without onRemove', () => {

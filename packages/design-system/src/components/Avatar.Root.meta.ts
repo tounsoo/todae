@@ -19,6 +19,13 @@ export const meta = {
       description: 'Size from the avatar.size contract tokens.',
     },
     {
+      name: 'tone',
+      type: '"neutral" | "category-1" | "category-2" | "category-3" | "category-4" | "category-5" | "category-6" | "category-7" | "category-8"',
+      required: false,
+      default: '"neutral"',
+      description: 'Fallback colors from the avatar.<tone> contract tokens. categoryTone(id) picks a stable category per person.',
+    },
+    {
       name: 'children',
       type: 'React.ReactNode',
       required: false,

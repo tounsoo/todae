@@ -11,6 +11,38 @@
     "font": {
       "scale": { "$type": "number", "$value": 0.4 },
       "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+    },
+    "category-1": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/category/1/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/category/1/bg/$value" } }
+    },
+    "category-2": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/category/2/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/category/2/bg/$value" } }
+    },
+    "category-3": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/category/3/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/category/3/bg/$value" } }
+    },
+    "category-4": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/category/4/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/category/4/bg/$value" } }
+    },
+    "category-5": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/category/5/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/category/5/bg/$value" } }
+    },
+    "category-6": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/category/6/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/category/6/bg/$value" } }
+    },
+    "category-7": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/category/7/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/category/7/bg/$value" } }
+    },
+    "category-8": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/category/8/fg/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/category/8/bg/$value" } }
     }
   }
 }

@@ -32,6 +32,10 @@ DTCG 파이프라인에서 생성한 카탈로그입니다. 컴포넌트는 cont
 
 네 가지 톤이 상태를 나타냅니다. `info`, `success`, `warning`, `critical`입니다. 각 톤은 appearance마다 세 개의 토큰입니다. 텍스트와 아이콘에 쓰는 `color.status.<tone>.fg`, 채우기에 쓰는 `.bg`, 그리고 `.border`입니다. 빌드는 `bg` 위의 `fg`를 Lc 75로, `color.bg.surface` 위의 `fg`를 Lc 60으로 검사합니다. [Alert](/alert)는 `alert.<tone>` contract 토큰을 거쳐 이 토큰을 읽습니다. `info`는 액센트와 같은 중립적인 잉크이며, 회사는 토큰 패키지에서 여기에 색조를 줄 수 있습니다.
 
+## 카테고리 톤
+
+여덟 가지 톤이 태그나 사람 같은 카테고리를 구분합니다. `color.category.1`부터 `color.category.8`까지이며, 각각 appearance마다 `fg`, `bg`, `border`가 있습니다. 색조 이름이 아니라 번호를 붙였기 때문에 회사는 이름을 바꾸지 않고도 토큰 패키지에서 색조를 바꿀 수 있습니다. 빌드는 `bg` 위의 `fg`를 Lc 75로 검사합니다. [Badge](/badge), [Chip](/chip), [Avatar](/avatar)는 이 톤을 `category-1`부터 `category-8`로 받고, `categoryTone(key)`는 문자열에서 톤 하나를 고릅니다.
+
 ## 카탈로그
 
 <TokensCatalog />

@@ -17,7 +17,9 @@ export {
   type AvatarImageStatus,
   type AvatarRootProps,
   type AvatarSize,
+  type AvatarTone,
 } from './components/Avatar';
+export { categoryTone, CATEGORY_TONES, type CategoryTone } from './components/tone';
 export { Link, type LinkRootProps, type LinkRenderProps } from './components/Link';
 export { Disclosure, type DisclosureRootProps, type DisclosureSummaryProps } from './components/Disclosure';
 export { Separator, type SeparatorRootProps } from './components/Separator';
@@ -131,7 +133,7 @@ export {
   type UseTooltipResult,
 } from './hooks/useTooltip';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
-export { Chip, type ChipOverflowProps, type ChipRootProps } from './components/Chip';
+export { Chip, type ChipOverflowProps, type ChipRootProps, type ChipTone } from './components/Chip';
 export { ChipList, type ChipListRootProps } from './components/ChipList';
 export { Description, type DescriptionProps } from './components/Description';
 export { ErrorMessage, type ErrorMessageProps } from './components/ErrorMessage';

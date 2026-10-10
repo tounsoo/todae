@@ -17,6 +17,8 @@ import { ChipListDemo } from '../../../components/demos/ChipListDemo';
 
 팝오버에서 마지막 칩에서 Tab을 누르면 +N 다음 컨트롤로 가고, 첫 칩에서 Shift+Tab을 누르면 +N으로 돌아가며, Escape를 누르면 팝오버가 닫히고 +N으로 돌아갑니다.
 
+`getTone`은 Chip처럼 칩마다 `tone`을 줍니다. 태그를 이름별로 색칠하려면 문자열을 늘 같은 카테고리 톤으로 바꾸는 `categoryTone`을 넘기세요. `getTone={(value) => categoryTone(value)}`처럼 씁니다.
+
 ## 한 줄 / 두 줄
 
 <Example>
