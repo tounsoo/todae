@@ -25,6 +25,12 @@ export const meta = {
         'A stable, unique key for each chip, so focus can follow it when chips change. Without it, chips are matched by value, so focus can land on another chip with the same value.',
     },
     {
+      name: 'getTone',
+      type: '(value: string, index: number) => ChipTone',
+      required: false,
+      description: 'Each chip\'s tone, such as (value) => categoryTone(value). Without it, every chip is neutral.',
+    },
+    {
       name: 'onRemove',
       type: '(index: number, value: string) => void',
       required: false,

@@ -21,6 +21,13 @@ describe('Avatar', () => {
     expect(screen.getByRole('img', { name: 'Ada Lovelace' })).toBe(root);
   });
 
+  it('is neutral by default and takes a category tone', () => {
+    const { rerender } = render(<Avatar.Root data-testid="a" />);
+    expect(screen.getByTestId('a').getAttribute('data-tone')).toBe('neutral');
+    rerender(<Avatar.Root data-testid="a" tone="category-2" />);
+    expect(screen.getByTestId('a').getAttribute('data-tone')).toBe('category-2');
+  });
+
   it('is hidden from assistive technology without a label', () => {
     render(
       <Avatar.Root data-testid="a">

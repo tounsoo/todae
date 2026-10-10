@@ -463,7 +463,9 @@ describe('committed token graph', () => {
         expect(at(`color.accent.${slot}`, context)).toMatch(/^var\(--todae-color-gray-\d+\)$/);
       }
     }
-    expect(graph.tokens.some((t) => t.path.startsWith('color.blue.'))).toBe(false);
+    // Blue is one of the category hues, and nothing else reads it.
+    const readsBlue = graph.tokens.filter((t) => String(t.cssValue).includes('--todae-color-blue-')).map((t) => t.path);
+    expect(readsBlue.filter((path) => !path.startsWith('color.category.'))).toEqual([]);
   });
 
   it('keeps hover, selected and selected-hover option fills apart under a neutral accent', async () => {

@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { CATEGORY_TONES } from '../components/tone';
 
 const componentsDir = join(import.meta.dirname, '..', 'components');
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -126,6 +127,23 @@ describe('token consistency across component styles', () => {
     ];
     for (const [token, previous] of pairs) {
       expect(tokensCss).toContain(`--todae-${token}: var(--_todae-${token}, var(--todae-${previous}));`);
+    }
+  });
+
+  it('styles every tone a component takes, from tokens that exist', () => {
+    const tokensCss = readFileSync(join(import.meta.dirname, 'tokens.generated.css'), 'utf8');
+    const status = ['info', 'success', 'warning', 'critical'];
+    const toned: [sheet: string, tones: readonly string[], parts: string[]][] = [
+      ['Badge', [...status, ...CATEGORY_TONES], ['fg', 'bg', 'border']],
+      ['Chip', [...status, ...CATEGORY_TONES], ['fg', 'bg', 'border']],
+      ['Avatar', CATEGORY_TONES, ['fg', 'bg']],
+    ];
+    for (const [sheet, tones, parts] of toned) {
+      const root = sheet.toLowerCase();
+      for (const tone of tones) {
+        expect({ sheet, tone, styled: sheets[sheet]?.includes(`.root[data-tone='${tone}']`) }).toEqual({ sheet, tone, styled: true });
+        for (const part of parts) expect(tokensCss).toContain(`--todae-${root}-${tone}-${part}:`);
+      }
     }
   });
 });

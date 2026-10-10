@@ -10,6 +10,8 @@ Text-only label. Optional remove is a named button. `Chip.Overflow` is display-o
 
 `+N` is not a button and is not in the tab order.
 
+`tone` takes the same tones as Badge: `neutral`, the default, the status tones `info`, `success`, `warning` and `critical`, and the category tones `category-1` to `category-8`. `neutral` reads the `chip.bg`, `chip.fg` and `chip.border` state tokens; the other tones read the `chip.<tone>` contract tokens and keep their colors on hover. A disabled chip takes the disabled colors whatever its tone.
+
 The remove button holds no glyph or icon of its own: without content, its stylesheet draws a cross. Pass `removeIcon` to show an icon from your own set instead. The button's name still comes from `removeLabel` or its default, so mark the icon `aria-hidden`. That default, `Remove {label}`, and the `{n} more` read for `+N` come from [StringsProvider](/utilities/strings-provider).
 
 ```tsx

@@ -1,28 +1,34 @@
 @layer todae.components {
+  /* Neutral is the base: a tone sets these, and every state falls back to its
+     own chip token while they are unset. initial stops them inheriting. */
   .root {
+    --todae-chip-tone-fg: initial;
+    --todae-chip-tone-bg: initial;
+    --todae-chip-tone-border: initial;
+
     position: relative;
     display: inline-flex;
     align-items: center;
     max-width: 100%;
     gap: var(--todae-chip-gap);
     padding: var(--todae-chip-padding-y) var(--todae-chip-padding-x);
-    border: var(--todae-chip-border-width) solid var(--todae-chip-border-default);
+    border: var(--todae-chip-border-width) solid var(--todae-chip-tone-border, var(--todae-chip-border-default));
     border-radius: var(--todae-chip-radius);
-    background: var(--todae-chip-bg-default);
-    color: var(--todae-chip-fg-default);
+    background: var(--todae-chip-tone-bg, var(--todae-chip-bg-default));
+    color: var(--todae-chip-tone-fg, var(--todae-chip-fg-default));
     font-size: var(--todae-chip-font-size);
     line-height: var(--todae-chip-leading);
   }
 
   .root:hover:not([data-disabled]):not([data-overflow]) {
-    background: var(--todae-chip-bg-hover);
-    color: var(--todae-chip-fg-hover);
-    border-color: var(--todae-chip-border-hover);
+    background: var(--todae-chip-tone-bg, var(--todae-chip-bg-hover));
+    color: var(--todae-chip-tone-fg, var(--todae-chip-fg-hover));
+    border-color: var(--todae-chip-tone-border, var(--todae-chip-border-hover));
   }
 
   .root:has(.dismiss:focus-visible) {
-    background: var(--todae-chip-bg-focus);
-    color: var(--todae-chip-fg-focus);
+    background: var(--todae-chip-tone-bg, var(--todae-chip-bg-focus));
+    color: var(--todae-chip-tone-fg, var(--todae-chip-fg-focus));
     border-color: var(--todae-chip-border-focus);
     outline: var(--todae-chip-ring-width) solid var(--todae-chip-ring-focus);
     outline-offset: var(--todae-chip-ring-offset);
@@ -33,6 +39,85 @@
     color: var(--todae-chip-fg-disabled);
     border-color: var(--todae-chip-border-disabled);
     cursor: not-allowed;
+  }
+
+  .root[data-tone='info'] {
+    --todae-chip-tone-fg: var(--todae-chip-info-fg);
+    --todae-chip-tone-bg: var(--todae-chip-info-bg);
+    --todae-chip-tone-border: var(--todae-chip-info-border);
+  }
+
+  .root[data-tone='success'] {
+    --todae-chip-tone-fg: var(--todae-chip-success-fg);
+    --todae-chip-tone-bg: var(--todae-chip-success-bg);
+    --todae-chip-tone-border: var(--todae-chip-success-border);
+  }
+
+  .root[data-tone='warning'] {
+    --todae-chip-tone-fg: var(--todae-chip-warning-fg);
+    --todae-chip-tone-bg: var(--todae-chip-warning-bg);
+    --todae-chip-tone-border: var(--todae-chip-warning-border);
+  }
+
+  .root[data-tone='critical'] {
+    --todae-chip-tone-fg: var(--todae-chip-critical-fg);
+    --todae-chip-tone-bg: var(--todae-chip-critical-bg);
+    --todae-chip-tone-border: var(--todae-chip-critical-border);
+  }
+
+  .root[data-tone='category-1'] {
+    --todae-chip-tone-fg: var(--todae-chip-category-1-fg);
+    --todae-chip-tone-bg: var(--todae-chip-category-1-bg);
+    --todae-chip-tone-border: var(--todae-chip-category-1-border);
+  }
+
+  .root[data-tone='category-2'] {
+    --todae-chip-tone-fg: var(--todae-chip-category-2-fg);
+    --todae-chip-tone-bg: var(--todae-chip-category-2-bg);
+    --todae-chip-tone-border: var(--todae-chip-category-2-border);
+  }
+
+  .root[data-tone='category-3'] {
+    --todae-chip-tone-fg: var(--todae-chip-category-3-fg);
+    --todae-chip-tone-bg: var(--todae-chip-category-3-bg);
+    --todae-chip-tone-border: var(--todae-chip-category-3-border);
+  }
+
+  .root[data-tone='category-4'] {
+    --todae-chip-tone-fg: var(--todae-chip-category-4-fg);
+    --todae-chip-tone-bg: var(--todae-chip-category-4-bg);
+    --todae-chip-tone-border: var(--todae-chip-category-4-border);
+  }
+
+  .root[data-tone='category-5'] {
+    --todae-chip-tone-fg: var(--todae-chip-category-5-fg);
+    --todae-chip-tone-bg: var(--todae-chip-category-5-bg);
+    --todae-chip-tone-border: var(--todae-chip-category-5-border);
+  }
+
+  .root[data-tone='category-6'] {
+    --todae-chip-tone-fg: var(--todae-chip-category-6-fg);
+    --todae-chip-tone-bg: var(--todae-chip-category-6-bg);
+    --todae-chip-tone-border: var(--todae-chip-category-6-border);
+  }
+
+  .root[data-tone='category-7'] {
+    --todae-chip-tone-fg: var(--todae-chip-category-7-fg);
+    --todae-chip-tone-bg: var(--todae-chip-category-7-bg);
+    --todae-chip-tone-border: var(--todae-chip-category-7-border);
+  }
+
+  .root[data-tone='category-8'] {
+    --todae-chip-tone-fg: var(--todae-chip-category-8-fg);
+    --todae-chip-tone-bg: var(--todae-chip-category-8-bg);
+    --todae-chip-tone-border: var(--todae-chip-category-8-border);
+  }
+
+  /* A disabled chip takes the disabled colors whatever its tone. */
+  .root[data-disabled] {
+    --todae-chip-tone-fg: initial;
+    --todae-chip-tone-bg: initial;
+    --todae-chip-tone-border: initial;
   }
 
   .root[data-overflow] {
@@ -55,7 +140,8 @@
     padding: 0;
     border: 0;
     background: transparent;
-    color: var(--todae-chip-dismiss-fg-default);
+    /* On a tone, the cross takes the label's color. */
+    color: var(--todae-chip-tone-fg, var(--todae-chip-dismiss-fg-default));
     font: inherit;
     line-height: 1;
     cursor: pointer;
@@ -85,7 +171,7 @@
   }
 
   .dismiss:hover:not(:disabled) {
-    color: var(--todae-chip-dismiss-fg-hover);
+    color: var(--todae-chip-tone-fg, var(--todae-chip-dismiss-fg-hover));
   }
 
   .dismiss:disabled {

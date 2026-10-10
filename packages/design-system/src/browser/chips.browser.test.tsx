@@ -282,6 +282,57 @@ describe('ChipList focus never falls to the body in a browser', () => {
   }
 });
 
+describe('Chip tones in a browser', () => {
+  it('keeps its tone on hover, recolors it in dark mode, and drops it when disabled', async () => {
+    render(
+      <>
+        <div data-appearance="light" data-density="comfortable">
+          <Chip.Root data-testid="neutral" onRemove={() => undefined}>
+            Plain
+          </Chip.Root>
+          <Chip.Root data-testid="tone" tone="category-6" onRemove={() => undefined}>
+            Toned
+          </Chip.Root>
+          <Chip.Root data-testid="neutral-off" disabled onRemove={() => undefined}>
+            Off
+          </Chip.Root>
+          <Chip.Root data-testid="tone-off" tone="category-6" disabled onRemove={() => undefined}>
+            Toned off
+          </Chip.Root>
+        </div>
+        <div data-appearance="dark" data-density="comfortable">
+          <Chip.Root data-testid="tone-dark" tone="category-6">
+            Toned
+          </Chip.Root>
+        </div>
+      </>,
+    );
+    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+    const tone = style('tone');
+    const rest = { bg: tone.backgroundColor, fg: tone.color, border: tone.borderTopColor };
+    expect(rest.bg).not.toBe(style('neutral').backgroundColor);
+    expect(rest.fg).not.toBe(style('neutral').color);
+    expect(style('tone-dark').backgroundColor).not.toBe(rest.bg);
+    expect(style('tone-dark').color).not.toBe(rest.fg);
+    // The cross takes the label's color on a tone.
+    expect(getComputedStyle(screen.getByRole('button', { name: 'Remove Toned' })).color).toBe(rest.fg);
+
+    // Hover reaches the chip: a neutral chip's border changes under it.
+    const neutralBorder = style('neutral').borderTopColor;
+    await userEvent.hover(screen.getByTestId('neutral'));
+    expect(style('neutral').borderTopColor).not.toBe(neutralBorder);
+    await userEvent.hover(screen.getByTestId('tone'));
+    expect({ bg: tone.backgroundColor, fg: tone.color, border: tone.borderTopColor }).toEqual(rest);
+
+    for (const key of ['backgroundColor', 'color', 'borderTopColor'] as const) {
+      expect(style('tone-off')[key]).toBe(style('neutral-off')[key]);
+    }
+    expect(getComputedStyle(screen.getByRole('button', { name: 'Remove Toned off' })).color).toBe(
+      getComputedStyle(screen.getByRole('button', { name: 'Remove Off' })).color,
+    );
+  });
+});
+
 describe('Chip remove content in a browser', () => {
   it('draws a cross in CSS when given no content, and shows removeIcon instead when given one', () => {
     render(

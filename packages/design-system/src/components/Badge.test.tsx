@@ -21,4 +21,13 @@ describe('Badge', () => {
     );
     expect(screen.getByTestId('b').getAttribute('data-tone')).toBe('critical');
   });
+
+  it('takes a category tone', () => {
+    render(
+      <Badge.Root tone="category-3" data-testid="b">
+        Design
+      </Badge.Root>,
+    );
+    expect(screen.getByTestId('b').getAttribute('data-tone')).toBe('category-3');
+  });
 });

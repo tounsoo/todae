@@ -52,4 +52,52 @@
     --todae-badge-tone-bg: var(--todae-badge-critical-bg);
     --todae-badge-tone-border: var(--todae-badge-critical-border);
   }
+
+  .root[data-tone='category-1'] {
+    --todae-badge-tone-fg: var(--todae-badge-category-1-fg);
+    --todae-badge-tone-bg: var(--todae-badge-category-1-bg);
+    --todae-badge-tone-border: var(--todae-badge-category-1-border);
+  }
+
+  .root[data-tone='category-2'] {
+    --todae-badge-tone-fg: var(--todae-badge-category-2-fg);
+    --todae-badge-tone-bg: var(--todae-badge-category-2-bg);
+    --todae-badge-tone-border: var(--todae-badge-category-2-border);
+  }
+
+  .root[data-tone='category-3'] {
+    --todae-badge-tone-fg: var(--todae-badge-category-3-fg);
+    --todae-badge-tone-bg: var(--todae-badge-category-3-bg);
+    --todae-badge-tone-border: var(--todae-badge-category-3-border);
+  }
+
+  .root[data-tone='category-4'] {
+    --todae-badge-tone-fg: var(--todae-badge-category-4-fg);
+    --todae-badge-tone-bg: var(--todae-badge-category-4-bg);
+    --todae-badge-tone-border: var(--todae-badge-category-4-border);
+  }
+
+  .root[data-tone='category-5'] {
+    --todae-badge-tone-fg: var(--todae-badge-category-5-fg);
+    --todae-badge-tone-bg: var(--todae-badge-category-5-bg);
+    --todae-badge-tone-border: var(--todae-badge-category-5-border);
+  }
+
+  .root[data-tone='category-6'] {
+    --todae-badge-tone-fg: var(--todae-badge-category-6-fg);
+    --todae-badge-tone-bg: var(--todae-badge-category-6-bg);
+    --todae-badge-tone-border: var(--todae-badge-category-6-border);
+  }
+
+  .root[data-tone='category-7'] {
+    --todae-badge-tone-fg: var(--todae-badge-category-7-fg);
+    --todae-badge-tone-bg: var(--todae-badge-category-7-bg);
+    --todae-badge-tone-border: var(--todae-badge-category-7-border);
+  }
+
+  .root[data-tone='category-8'] {
+    --todae-badge-tone-fg: var(--todae-badge-category-8-fg);
+    --todae-badge-tone-bg: var(--todae-badge-category-8-bg);
+    --todae-badge-tone-border: var(--todae-badge-category-8-border);
+  }
 }

@@ -6,6 +6,7 @@ import {
   Badge,
   Button,
   Card,
+  categoryTone,
   Checkbox,
   Chip,
   Field,
@@ -31,7 +32,7 @@ export function Preview() {
     <div className="preview" lang="en">
       <div className="preview-head">
         <div className="preview-user">
-          <Avatar.Root label="Ada Lovelace">
+          <Avatar.Root label="Ada Lovelace" tone={categoryTone('ada')}>
             <Avatar.Fallback>AL</Avatar.Fallback>
           </Avatar.Root>
           <div>
@@ -141,9 +142,9 @@ export function Preview() {
               <Switch defaultChecked>Weekly digest</Switch>
               <Switch>Product news</Switch>
               <div className="preview-chips">
-                <Chip.Root>design</Chip.Root>
-                <Chip.Root>billing</Chip.Root>
-                <Chip.Root>urgent</Chip.Root>
+                <Chip.Root tone={categoryTone('design')}>design</Chip.Root>
+                <Chip.Root tone={categoryTone('billing')}>billing</Chip.Root>
+                <Chip.Root tone="critical">urgent</Chip.Root>
               </div>
             </div>
           </Card.Body>

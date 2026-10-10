@@ -136,6 +136,13 @@
           "default": "\"md\""
         },
         {
+          "name": "tone",
+          "type": "\"neutral\" | \"category-1\" | \"category-2\" | \"category-3\" | \"category-4\" | \"category-5\" | \"category-6\" | \"category-7\" | \"category-8\"",
+          "required": false,
+          "description": "Colors behind the fallback. neutral reads avatar.bg and avatar.fg; other tones read the avatar.<tone> contract tokens. categoryTone(id) picks a stable category per person.",
+          "default": "\"neutral\""
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
@@ -145,11 +152,11 @@
     },
     {
       "name": "Badge.Root",
-      "description": "A short static label or count in one of five tones. A span with no role; takes native span attributes.",
+      "description": "A short static label or count in a status or category tone. A span with no role; takes native span attributes.",
       "props": [
         {
           "name": "tone",
-          "type": "\"neutral\" | \"info\" | \"success\" | \"warning\" | \"critical\"",
+          "type": "\"neutral\" | \"info\" | \"success\" | \"warning\" | \"critical\" | \"category-1\" | \"category-2\" | \"category-3\" | \"category-4\" | \"category-5\" | \"category-6\" | \"category-7\" | \"category-8\"",
           "required": false,
           "description": "Colors from the badge.<tone> contract tokens.",
           "default": "\"neutral\""
@@ -569,6 +576,13 @@
           "description": "Chip label. Text only."
         },
         {
+          "name": "tone",
+          "type": "\"neutral\" | \"info\" | \"success\" | \"warning\" | \"critical\" | \"category-1\" | \"category-2\" | \"category-3\" | \"category-4\" | \"category-5\" | \"category-6\" | \"category-7\" | \"category-8\"",
+          "required": false,
+          "description": "neutral reads the chip.bg, chip.fg and chip.border state tokens; other tones read the chip.<tone> contract tokens. A disabled chip takes the disabled colors instead.",
+          "default": "\"neutral\""
+        },
+        {
           "name": "onRemove",
           "type": "() => void",
           "required": false,
@@ -616,6 +630,12 @@
           "type": "(value: string, index: number) => string",
           "required": false,
           "description": "A stable, unique key for each chip, so focus can follow it when chips change. Without it, chips are matched by value, so focus can land on another chip with the same value."
+        },
+        {
+          "name": "getTone",
+          "type": "(value: string, index: number) => ChipTone",
+          "required": false,
+          "description": "Each chip's tone, such as (value) => categoryTone(value). Without it, every chip is neutral."
         },
         {
           "name": "onRemove",

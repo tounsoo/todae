@@ -2,7 +2,7 @@ import { BadgeCount, BadgeTones } from '../../../components/demos/BadgeDemo';
 
 # Badge
 
-A short static label or count, such as a status on a row or the number of unread messages. It comes in five tones: `neutral`, the default, and the four status tones `info`, `success`, `warning` and `critical`, which take their colors from `color.status.<tone>` through the `badge.<tone>` contract tokens.
+A short static label or count, such as a status on a row or the number of unread messages. `tone` is `neutral`, the default, one of the four status tones `info`, `success`, `warning` and `critical`, or one of the eight category tones `category-1` to `category-8`. Each tone reads its colors through the `badge.<tone>` contract tokens: the status tones from `color.status.<tone>` and the category tones from `color.category.<n>`.
 
 ```tsx
 <Badge.Root tone="success">Paid</Badge.Root>

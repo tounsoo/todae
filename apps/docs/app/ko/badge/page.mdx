@@ -2,7 +2,7 @@ import { BadgeCount, BadgeTones } from '../../../components/demos/BadgeDemo';
 
 # Badge
 
-행의 상태나 읽지 않은 메시지 수처럼 짧은 정적 레이블이나 개수입니다. 다섯 가지 톤이 있습니다. 기본값인 `neutral`과 네 가지 상태 톤 `info`, `success`, `warning`, `critical`이며, 상태 톤은 `badge.<tone>` contract 토큰을 거쳐 `color.status.<tone>`에서 색을 가져옵니다.
+행의 상태나 읽지 않은 메시지 수처럼 짧은 정적 레이블이나 개수입니다. `tone`은 기본값인 `neutral`, 네 가지 상태 톤 `info`, `success`, `warning`, `critical` 중 하나, 또는 여덟 가지 카테고리 톤 `category-1`부터 `category-8` 중 하나입니다. 각 톤은 `badge.<tone>` contract 토큰을 거쳐 색을 읽습니다. 상태 톤은 `color.status.<tone>`에서, 카테고리 톤은 `color.category.<n>`에서 가져옵니다.
 
 ```tsx
 <Badge.Root tone="success">Paid</Badge.Root>

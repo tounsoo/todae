@@ -38,6 +38,10 @@ Token files follow DTCG 2025.10: an alias is a JSON Pointer `$ref`, such as `{ "
 
 Four tones carry status: `info`, `success`, `warning` and `critical`. Each is three tokens per appearance: `color.status.<tone>.fg` for text and icons, `.bg` for the fill, and `.border`. The build checks `fg` on `bg` at Lc 75 and `fg` on `color.bg.surface` at Lc 60. [Alert](/alert) reads them through its `alert.<tone>` contract tokens. `info` is neutral ink, matching the accent; a company can give it a hue in its token package.
 
+## Category tones
+
+Eight tones label categories such as tags or people: `color.category.1` to `color.category.8`, each with `fg`, `bg` and `border` per appearance. They are numbered rather than named after hues, so a company can change a hue in its token package without renaming anything. The build checks `fg` on `bg` at Lc 75. [Badge](/badge), [Chip](/chip) and [Avatar](/avatar) take them as the tones `category-1` to `category-8`, and `categoryTone(key)` picks one from a string.
+
 ## Catalog
 
 <TokensCatalog />

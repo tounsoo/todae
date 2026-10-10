@@ -13,7 +13,7 @@ import { usePopover } from '../hooks/usePopover';
 import { isReachable } from '../hooks/useRovingFocus';
 import { getTabbables } from '../overlay/tabbables';
 import { useStrings } from '../providers/StringsProvider';
-import { Chip } from './Chip';
+import { Chip, type ChipTone } from './Chip';
 import { useChipKeys } from './chipKeys';
 import { Popover } from './Popover';
 import styles from './ChipList.module.css';
@@ -33,6 +33,8 @@ export type ChipListRootProps = {
    * another chip with the same value.
    */
   getKey?: (value: string, index: number) => string;
+  /** Each chip's tone, such as `(value) => categoryTone(value)`. Without it, every chip is neutral. */
+  getTone?: (value: string, index: number) => ChipTone;
   /** Renders a remove button on each chip. */
   onRemove?: (index: number, value: string) => void;
   /** Remove button name. Default is the `removeChip` string, "Remove {value}" in English. */
@@ -135,6 +137,7 @@ function Root({
   chips,
   maxRows,
   getKey,
+  getTone,
   onRemove,
   removeLabel,
   removeIcon,
@@ -297,6 +300,7 @@ function Root({
               data-key={keys[index]}
               data-value={chip.value}
               data-index={index}
+              tone={getTone?.(chip.value, index)}
               removeLabel={removeLabel?.(chip.value)}
               removeIcon={removeIcon}
               style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}
@@ -339,6 +343,7 @@ function Root({
                 data-key={keys[at]}
                 data-value={value}
                 data-index={at}
+                tone={getTone?.(value, at)}
                 className={styles.panelChip}
                 removeLabel={removeLabel?.(value)}
                 removeIcon={removeIcon}

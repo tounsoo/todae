@@ -104,7 +104,15 @@
             { "fg": "color.status.warning.fg", "bg": "color.status.warning.bg", "min": 75 },
             { "fg": "color.status.warning.fg", "bg": "color.bg.surface", "min": 60 },
             { "fg": "color.status.critical.fg", "bg": "color.status.critical.bg", "min": 75 },
-            { "fg": "color.status.critical.fg", "bg": "color.bg.surface", "min": 60 }
+            { "fg": "color.status.critical.fg", "bg": "color.bg.surface", "min": 60 },
+            { "fg": "color.category.1.fg", "bg": "color.category.1.bg", "min": 75 },
+            { "fg": "color.category.2.fg", "bg": "color.category.2.bg", "min": 75 },
+            { "fg": "color.category.3.fg", "bg": "color.category.3.bg", "min": 75 },
+            { "fg": "color.category.4.fg", "bg": "color.category.4.bg", "min": 75 },
+            { "fg": "color.category.5.fg", "bg": "color.category.5.bg", "min": 75 },
+            { "fg": "color.category.6.fg", "bg": "color.category.6.bg", "min": 75 },
+            { "fg": "color.category.7.fg", "bg": "color.category.7.bg", "min": 75 },
+            { "fg": "color.category.8.fg", "bg": "color.category.8.bg", "min": 75 }
           ]
         }
       }

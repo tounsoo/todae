@@ -5,6 +5,7 @@ import { useId, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import {
   Alert,
+  Avatar,
   Badge,
   Breadcrumbs,
   Button,
@@ -573,5 +574,39 @@ describe('content parts in a browser', () => {
     expect(style('neutral').backgroundColor).not.toBe(style('critical').backgroundColor);
     expect(style('card').borderTopStyle).toBe('solid');
     expect(style('card').paddingTop).not.toBe('0px');
+  });
+
+  it('colors category badges and avatars from tokens, and recolors them in dark mode', () => {
+    const toned = (suffix: string) => (
+      <>
+        <Badge.Root data-testid={`badge${suffix}`} tone="category-1">
+          Bug
+        </Badge.Root>
+        <Avatar.Root data-testid={`avatar${suffix}`} tone="category-7">
+          <Avatar.Fallback>AL</Avatar.Fallback>
+        </Avatar.Root>
+      </>
+    );
+    render(
+      <>
+        <div data-appearance="light" data-density="comfortable">
+          <Badge.Root data-testid="badge-neutral">Draft</Badge.Root>
+          <Avatar.Root data-testid="avatar-neutral">
+            <Avatar.Fallback>AL</Avatar.Fallback>
+          </Avatar.Root>
+          {toned('')}
+        </div>
+        <div data-appearance="dark" data-density="comfortable">
+          {toned('-dark')}
+        </div>
+      </>,
+    );
+    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+    for (const part of ['badge', 'avatar']) {
+      expect(style(part).backgroundColor).not.toBe(style(`${part}-neutral`).backgroundColor);
+      expect(style(part).color).not.toBe(style(`${part}-neutral`).color);
+      expect(style(`${part}-dark`).backgroundColor).not.toBe(style(part).backgroundColor);
+      expect(style(`${part}-dark`).color).not.toBe(style(part).color);
+    }
   });
 });

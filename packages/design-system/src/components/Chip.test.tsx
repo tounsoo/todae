@@ -21,6 +21,15 @@ describe('Chip', () => {
     error.mockRestore();
   });
 
+  it('is neutral by default and takes a status or category tone', () => {
+    const { rerender } = render(<Chip.Root data-testid="c">Alpha</Chip.Root>);
+    expect(screen.getByTestId('c').getAttribute('data-tone')).toBe('neutral');
+    rerender(<Chip.Root data-testid="c" tone="warning">Alpha</Chip.Root>);
+    expect(screen.getByTestId('c').getAttribute('data-tone')).toBe('warning');
+    rerender(<Chip.Root data-testid="c" tone="category-8">Alpha</Chip.Root>);
+    expect(screen.getByTestId('c').getAttribute('data-tone')).toBe('category-8');
+  });
+
   it('names dismiss and ignores clicks when disabled', () => {
     const onRemove = vi.fn();
     const { rerender } = render(

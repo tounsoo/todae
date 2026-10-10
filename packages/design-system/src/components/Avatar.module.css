@@ -1,5 +1,9 @@
 @layer todae.components {
+  /* Neutral is the base, so a tone the CSS does not know still draws an avatar. */
   .root {
+    --todae-avatar-tone-fg: var(--todae-avatar-fg);
+    --todae-avatar-tone-bg: var(--todae-avatar-bg);
+
     position: relative;
     display: inline-flex;
     flex: none;
@@ -11,8 +15,8 @@
     block-size: var(--todae-avatar-size);
     overflow: hidden;
     border-radius: var(--todae-avatar-radius);
-    background: var(--todae-avatar-bg);
-    color: var(--todae-avatar-fg);
+    background: var(--todae-avatar-tone-bg);
+    color: var(--todae-avatar-tone-fg);
     font-size: calc(var(--todae-avatar-size) * var(--todae-avatar-font-scale));
     font-weight: var(--todae-avatar-font-weight);
     line-height: 1;
@@ -30,6 +34,46 @@
 
   .root[data-size='lg'] {
     --todae-avatar-size: var(--todae-avatar-size-lg);
+  }
+
+  .root[data-tone='category-1'] {
+    --todae-avatar-tone-fg: var(--todae-avatar-category-1-fg);
+    --todae-avatar-tone-bg: var(--todae-avatar-category-1-bg);
+  }
+
+  .root[data-tone='category-2'] {
+    --todae-avatar-tone-fg: var(--todae-avatar-category-2-fg);
+    --todae-avatar-tone-bg: var(--todae-avatar-category-2-bg);
+  }
+
+  .root[data-tone='category-3'] {
+    --todae-avatar-tone-fg: var(--todae-avatar-category-3-fg);
+    --todae-avatar-tone-bg: var(--todae-avatar-category-3-bg);
+  }
+
+  .root[data-tone='category-4'] {
+    --todae-avatar-tone-fg: var(--todae-avatar-category-4-fg);
+    --todae-avatar-tone-bg: var(--todae-avatar-category-4-bg);
+  }
+
+  .root[data-tone='category-5'] {
+    --todae-avatar-tone-fg: var(--todae-avatar-category-5-fg);
+    --todae-avatar-tone-bg: var(--todae-avatar-category-5-bg);
+  }
+
+  .root[data-tone='category-6'] {
+    --todae-avatar-tone-fg: var(--todae-avatar-category-6-fg);
+    --todae-avatar-tone-bg: var(--todae-avatar-category-6-bg);
+  }
+
+  .root[data-tone='category-7'] {
+    --todae-avatar-tone-fg: var(--todae-avatar-category-7-fg);
+    --todae-avatar-tone-bg: var(--todae-avatar-category-7-bg);
+  }
+
+  .root[data-tone='category-8'] {
+    --todae-avatar-tone-fg: var(--todae-avatar-category-8-fg);
+    --todae-avatar-tone-bg: var(--todae-avatar-category-8-bg);
   }
 
   /* The image covers the fallback once it loads. While a source loads, such
