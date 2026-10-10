@@ -1893,6 +1893,14 @@
     "onActiveValueChange": {
       "en": "Fires when an item other than activeValue takes focus, including a fallback tab stop, so a controlled owner can pin it.",
       "ko": "대체 탭 정지점을 포함해 activeValue가 아닌 항목이 포커스를 받으면 호출되므로, 제어하는 쪽이 이를 고정할 수 있습니다."
+    },
+    "tree": {
+      "en": "Tree view keys. Up and Down skip items inside an item with aria-expanded=\"false\" and do not wrap. Right opens a closed item or moves into an open one; Left closes an open item or moves to its parent. orientation and loop are ignored.",
+      "ko": "트리 뷰 키. 위쪽과 아래쪽 화살표는 aria-expanded=\"false\"인 항목 안의 항목을 건너뛰며 끝에서 돌아가지 않습니다. 오른쪽 화살표는 닫힌 항목을 열거나 열린 항목 안으로 움직이고, 왼쪽 화살표는 열린 항목을 닫거나 부모로 움직입니다. orientation과 loop는 무시됩니다."
+    },
+    "onExpandedChange": {
+      "en": "In tree mode, fires when Right asks to open a closed item or Left asks to close an open one.",
+      "ko": "트리 모드에서 오른쪽 화살표가 닫힌 항목을 열려 하거나 왼쪽 화살표가 열린 항목을 닫으려 할 때 호출됩니다."
     }
   },
   "useSheetPresentation": {
@@ -1951,6 +1959,88 @@
     "focusable": {
       "en": "Whether it takes a Tab stop, so a keyboard can scroll it, while its content overflows. Without it, only when nothing inside can take focus. Name it with aria-label or aria-labelledby when it can take one.",
       "ko": "콘텐츠가 넘치는 동안 키보드로 스크롤할 수 있도록 Tab 정지점이 될지 정합니다. 주지 않으면 안에 포커스를 받을 요소가 없을 때만 됩니다. 정지점이 될 수 있으면 aria-label이나 aria-labelledby로 이름을 붙이세요."
+    }
+  },
+  "Tree.Root": {
+    "value": {
+      "en": "Controlled selected item. null selects none. Pass with onValueChange.",
+      "ko": "제어 선택 항목. null이면 아무것도 선택하지 않습니다. onValueChange와 함께 전달합니다."
+    },
+    "defaultValue": {
+      "en": "Initial selected item when uncontrolled.",
+      "ko": "비제어일 때의 초기 선택 항목."
+    },
+    "onValueChange": {
+      "en": "Fires with the item a click, Enter or Space selects. A tree given none of value, defaultValue and onValueChange has no selection.",
+      "ko": "클릭, Enter, Space가 선택한 항목과 함께 호출됩니다. value, defaultValue, onValueChange를 하나도 받지 않은 트리에는 선택이 없습니다."
+    },
+    "expanded": {
+      "en": "Controlled open items. Pass with onExpandedChange.",
+      "ko": "제어 열린 항목. onExpandedChange와 함께 전달합니다."
+    },
+    "defaultExpanded": {
+      "en": "Initial open items when uncontrolled.",
+      "ko": "비제어일 때의 초기 열린 항목."
+    },
+    "onExpandedChange": {
+      "en": "Fires with the open items after an item opens or closes.",
+      "ko": "항목이 열리거나 닫힌 뒤 열린 항목과 함께 호출됩니다."
+    },
+    "children": {
+      "en": "Tree.Item children.",
+      "ko": "Tree.Item 자식."
+    },
+    "className": {
+      "en": "Optional class on the tree.",
+      "ko": "트리에 붙는 선택적 클래스."
+    }
+  },
+  "Tree.Item": {
+    "value": {
+      "en": "Names the item for selection and for expanded. Unique in the tree.",
+      "ko": "선택과 expanded에서 항목을 가리키는 이름. 트리 안에서 고유해야 합니다."
+    },
+    "disabled": {
+      "en": "Can't be selected. Still takes focus, so a screen reader announces it as unavailable, and still opens and closes.",
+      "ko": "선택할 수 없습니다. 포커스는 받으므로 스크린 리더가 사용할 수 없다고 알리고, 열고 닫을 수도 있습니다."
+    },
+    "children": {
+      "en": "A Tree.Label, then a Tree.Group for a branch.",
+      "ko": "Tree.Label, 그리고 가지라면 그 뒤의 Tree.Group."
+    },
+    "className": {
+      "en": "Optional class on the item.",
+      "ko": "항목에 붙는 선택적 클래스."
+    }
+  },
+  "Tree.Label": {
+    "children": {
+      "en": "The item text, with an optional Tree.Icon before it.",
+      "ko": "항목 텍스트. 앞에 Tree.Icon을 둘 수 있습니다."
+    },
+    "className": {
+      "en": "Optional class on the row.",
+      "ko": "행에 붙는 선택적 클래스."
+    }
+  },
+  "Tree.Group": {
+    "children": {
+      "en": "Tree.Item children. Leave it empty for a branch whose children load when it opens.",
+      "ko": "Tree.Item 자식. 열릴 때 자식을 불러오는 가지라면 비워 두세요."
+    },
+    "className": {
+      "en": "Optional class on the group.",
+      "ko": "그룹에 붙는 선택적 클래스."
+    }
+  },
+  "Tree.Icon": {
+    "children": {
+      "en": "The icon, such as a file or folder from your icon library.",
+      "ko": "아이콘 라이브러리의 파일이나 폴더 같은 아이콘."
+    },
+    "className": {
+      "en": "Optional class on the slot.",
+      "ko": "슬롯에 붙는 선택적 클래스."
     }
   }
 }

@@ -26,7 +26,7 @@ Rules:
 - **A recipe is thin glue.** Keyboard handling, focus management, ARIA wiring, measurement and positioning go in a component or hook, so a company can copy a recipe and restyle it without breaking accessibility. If copied recipe code would still carry hard behavior, move that behavior into Todae.
 - **A container that gives context or keyboard handling to whatever children it holds is a component** (Fieldset shares `disabled` and `invalid`; Toolbar gives roving focus). **A composition that wires specific exports to each other is a recipe** (Combobox connects a Field to an OptionList).
 - **Don't ship a wrapper with no behavior, styles or tokens of its own.** If the arrangement is worth showing, write a recipe.
-- **Don't add a headless hook that only mirrors a component.** `useTabs` and `useMenu` were dropped because the thin native parts plus `useRovingFocus` cover custom markup.
+- **Don't add a headless hook that only mirrors a component.** `useTabs` and `useMenu` were dropped because the thin native parts plus `useRovingFocus` cover custom markup. Tree's keys are likewise a `tree` mode of `useRovingFocus`, not a `useTree` hook.
 - **No icon component and no icon set.** Components take icons as children or slots (`Button.Icon`, `Alert.Icon`). Todae draws the few glyphs a part needs to look whole, such as a close cross or a check, and `GlyphsProvider` swaps them for any library's icons. There is no global icon size scale; give a new icon slot its own `icon.size` token.
 
 ## Component API

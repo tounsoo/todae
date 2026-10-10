@@ -58,6 +58,7 @@ export const SITE_GROUPS = [
       ['/toggle-group', 'ToggleGroup'],
       ['/toolbar', 'Toolbar'],
       ['/tooltip', 'Tooltip'],
+      ['/tree', 'Tree'],
       ['/visually-hidden', 'VisuallyHidden'],
     ],
   },

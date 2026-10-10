@@ -467,10 +467,18 @@
     "## Props": "63a3bb317d94",
     "(section order)": "28600b829282"
   },
+  "tree": {
+    "(top)": "3fd9d6322503",
+    "# Tree": "dd7ec30db430",
+    "## Accessible composition": "8d4dd5abadf4",
+    "## When to use": "ecbda7d963ff",
+    "## Props": "5dc9e1f0ecff",
+    "(section order)": "a507fd436fd2"
+  },
   "utilities/glyphs-provider": {
     "(top)": "795842950415",
     "# GlyphsProvider": "833b71e767fb",
-    "## Glyphs": "1ec1ba6dea4e",
+    "## Glyphs": "a03303160485",
     "## Accessible composition": "705d17ec4c9e",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",
@@ -576,7 +584,7 @@
   },
   "utilities/use-roving-focus": {
     "(top)": "f6ba0918724f",
-    "# useRovingFocus": "46e9540521b0",
+    "# useRovingFocus": "677aa6720761",
     "## Accessible composition": "343ae8989fca",
     "## When to use": "5513b39d7e62",
     "## Props": "56a67702b8d8",

@@ -1,0 +1,136 @@
+@layer todae.components {
+  .root,
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-tree-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* `display` on a consumer class must not show a closed item's children. A
+     layered rule loses to any unlayered one, so only !important holds here. */
+  .group[hidden] {
+    display: none !important;
+  }
+
+  .item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-tree-gap);
+    outline: none;
+  }
+
+  /* The row: indented by the item's depth, so its highlight spans the tree. */
+  .label {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--todae-tree-item-gap);
+    padding-block: var(--todae-tree-item-padding-y);
+    padding-inline: calc(var(--todae-tree-item-padding-x) + (var(--_level, 1) - 1) * var(--todae-tree-indent))
+      var(--todae-tree-item-padding-x);
+    border-radius: var(--todae-tree-item-radius);
+    background: var(--todae-tree-item-bg-default);
+    color: var(--todae-tree-item-fg-default);
+    font-size: var(--todae-tree-item-font-size);
+    font-weight: var(--todae-tree-item-font-weight);
+    line-height: var(--todae-tree-item-leading);
+    cursor: default;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (hover: hover) {
+    .item:not([data-disabled]):not([data-selected]) > .label:hover {
+      background: var(--todae-tree-item-bg-hover);
+    }
+  }
+
+  .item[data-selected] > .label {
+    background: var(--todae-tree-item-bg-selected);
+    color: var(--todae-tree-item-fg-selected);
+  }
+
+  .item[data-disabled] > .label {
+    color: var(--todae-tree-item-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  /* Focus sits on the item, which holds its children too; ring only its row. */
+  .item:focus-visible > .label {
+    outline: var(--todae-focus-ring-width) solid var(--todae-tree-item-ring-focus);
+    outline-offset: calc(-1 * var(--todae-focus-ring-width));
+  }
+
+  /* The chevron points down. A closed item turns it toward the text; an item
+     with no children keeps its room, so labels at one depth line up. */
+  .chevron {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--todae-tree-chevron-size);
+    block-size: var(--todae-tree-chevron-size);
+    color: var(--todae-tree-chevron-fg);
+    line-height: 1;
+    transition: rotate var(--todae-tree-motion-duration) var(--todae-tree-motion-easing);
+  }
+
+  .chevron > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .item:not([aria-expanded]) > .label > .chevron {
+    visibility: hidden;
+  }
+
+  .item[aria-expanded='false'] > .label > [data-todae-glyph] {
+    rotate: -90deg;
+  }
+
+  .item[aria-expanded='false'] > .label:dir(rtl) > [data-todae-glyph] {
+    rotate: 90deg;
+  }
+
+  .icon {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--todae-tree-icon-fg);
+    line-height: 1;
+  }
+
+  /* An icon from a library renders an svg: it takes the tree's icon size. */
+  .icon > :is(svg, img) {
+    inline-size: var(--todae-tree-icon-size);
+    block-size: var(--todae-tree-icon-size);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chevron {
+      transition: none;
+    }
+  }
+
+  /* Forced colors drop backgrounds: paint the selected row with system colors. */
+  @media (forced-colors: active) {
+    .item[data-selected] > .label {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    .item[data-selected] > .label > :is(.chevron, .icon) {
+      color: HighlightText;
+    }
+
+    /* The selected row opts out of forced colors, so its ring must too. */
+    .item[data-selected]:focus-visible > .label {
+      outline-color: HighlightText;
+    }
+  }
+}

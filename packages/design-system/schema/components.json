@@ -2966,6 +2966,144 @@
       ]
     },
     {
+      "name": "Tree.Group",
+      "description": "A role=\"group\" list of the Tree.Item children of an item. Hidden while that item is closed.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Tree.Item children. Leave it empty for a branch whose children load when it opens."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the group."
+        }
+      ]
+    },
+    {
+      "name": "Tree.Icon",
+      "description": "An aria-hidden slot for an icon before the item text. An svg or img inside takes tree.icon.size.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The icon, such as a file or folder from your icon library."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the slot."
+        }
+      ]
+    },
+    {
+      "name": "Tree.Item",
+      "description": "A role=\"treeitem\" list item, named by its Tree.Label. With a Tree.Group inside, it opens and closes, and aria-expanded says which.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": true,
+          "description": "Names the item for selection and for expanded. Unique in the tree."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Can't be selected. Still takes focus, so a screen reader announces it as unavailable, and still opens and closes."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A Tree.Label, then a Tree.Group for a branch."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the item."
+        }
+      ]
+    },
+    {
+      "name": "Tree.Label",
+      "description": "The item's row and its name. Draws the chevron, from GlyphsProvider when one is set. A click selects the item and opens or closes a branch.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The item text, with an optional Tree.Icon before it."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the row."
+        }
+      ]
+    },
+    {
+      "name": "Tree.Root",
+      "description": "A role=\"tree\" list with one tab stop. Up and Down move between the items shown, Right and Left open, close and move in and out, Home and End go to the ends, and typing finds an item.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string | null",
+          "required": false,
+          "description": "Controlled selected item. null selects none. Pass with onValueChange."
+        },
+        {
+          "name": "defaultValue",
+          "type": "string | null",
+          "required": false,
+          "description": "Initial selected item when uncontrolled."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Fires with the item a click, Enter or Space selects. A tree given none of value, defaultValue and onValueChange has no selection."
+        },
+        {
+          "name": "expanded",
+          "type": "string[]",
+          "required": false,
+          "description": "Controlled open items. Pass with onExpandedChange."
+        },
+        {
+          "name": "defaultExpanded",
+          "type": "string[]",
+          "required": false,
+          "description": "Initial open items when uncontrolled."
+        },
+        {
+          "name": "onExpandedChange",
+          "type": "(expanded: string[]) => void",
+          "required": false,
+          "description": "Fires with the open items after an item opens or closes."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Tree.Item children."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the tree."
+        }
+      ]
+    },
+    {
       "name": "useAnnouncer",
       "description": "Takes no arguments and returns announce(message, options?), which reads message to screen readers through visually hidden live regions shared by the whole document; while a modal in the Todae modal stack is open, the one inside the modal in front. The props below are announce arguments.",
       "props": [
@@ -3406,6 +3544,19 @@
           "type": "(value: string) => void",
           "required": false,
           "description": "Fires when an item other than activeValue takes focus, including a fallback tab stop, so a controlled owner can pin it."
+        },
+        {
+          "name": "tree",
+          "type": "boolean",
+          "required": false,
+          "description": "Tree view keys. Up and Down skip items inside an item with aria-expanded=\"false\" and do not wrap. Right opens a closed item or moves into an open one; Left closes an open item or moves to its parent. orientation and loop are ignored.",
+          "default": "false"
+        },
+        {
+          "name": "onExpandedChange",
+          "type": "(value: string, expanded: boolean) => void",
+          "required": false,
+          "description": "In tree mode, fires when Right asks to open a closed item or Left asks to close an open one."
         }
       ]
     },

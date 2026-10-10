@@ -1,0 +1,64 @@
+import { TreeFiles } from '../../../components/demos/TreeDemo';
+
+# Tree
+
+A list whose items hold lists of their own, such as files in folders. `Tree.Root` is the `role="tree"` and owns which items are open and which one is selected. Each `Tree.Item` is a `role="treeitem"` named by its `Tree.Label`, the row you see. An item with a `Tree.Group` inside is a branch: it opens and closes, and the group holds its child items. `Tree.Icon` holds an icon before the text.
+
+```tsx
+<Tree.Root aria-label="Files" defaultExpanded={['src']}>
+	<Tree.Item value="src">
+		<Tree.Label>
+			<Tree.Icon><Folder /></Tree.Icon>
+			src
+		</Tree.Label>
+		<Tree.Group>
+			<Tree.Item value="src/index.ts">
+				<Tree.Label>index.ts</Tree.Label>
+			</Tree.Item>
+		</Tree.Group>
+	</Tree.Item>
+	<Tree.Item value="README.md">
+		<Tree.Label>README.md</Tree.Label>
+	</Tree.Item>
+</Tree.Root>
+```
+
+<Example block>
+  <TreeFiles />
+</Example>
+
+The tree holds one tab stop, on the selected item, or the first item when none is selected or the selected one is inside a closed item. Keys follow the tree view pattern through the `tree` mode of [useRovingFocus](/utilities/use-roving-focus). Up and Down move between the items shown, without wrapping. Right opens a closed item, or moves to the first item inside an open one. Left closes an open item, or moves to the item that holds this one. Home and End go to the first and last items shown, and typing a letter moves to the next item whose label starts with it. Left and Right swap in a right-to-left page.
+
+A click on a label, Enter or Space selects the item and opens or closes a branch. The root takes `value` with `onValueChange`, or `defaultValue`, for the selected item, and `expanded` with `onExpandedChange`, or `defaultExpanded`, for the open items. A tree given none of `value`, `defaultValue` and `onValueChange` has no selection: its items only open and close, and no item gets `aria-selected`. A `disabled` item can't be selected but still takes focus, so a screen reader announces it as unavailable.
+
+A closed item's group stays mounted and gets `hidden`. To load children when an item opens, render an empty `Tree.Group` so the item is a branch, and fill it from `onExpandedChange`.
+
+The chevron is a glyph: set `chevron` in [GlyphsProvider](/utilities/glyphs-provider) to draw it with your icon library. Draw it pointing down; a closed item turns it toward the text. An item with no group keeps the chevron's room, so labels at one depth line up. Each level is indented by `tree.indent`.
+
+There is no native tree element. Nested `<details>` look similar, but each summary is its own Tab stop and there is no selection or tree keys.
+
+## Accessible composition
+
+**Todae handles:** `Tree.Root` is the `role="tree"`, each `Tree.Item` a `role="treeitem"` with `aria-labelledby` pointing at its `Tree.Label`, and each `Tree.Group` a `role="group"`. A branch gets `aria-expanded`, and in a tree with selection every item gets `aria-selected`. A disabled item gets `aria-disabled`. Todae keeps one tab stop, moves focus with the keys above, and keeps focus on an item that closes while focus is inside it. The chevron and `Tree.Icon` are `aria-hidden`.
+
+**You supply:** A name for the tree: `aria-label`, or `aria-labelledby` pointing at a visible heading. The type does not require one. One `Tree.Label` in each item, with text that names it, and a `value` unique in the tree.
+
+**Watch for:** An item with no `Tree.Label`: its `aria-labelledby` points at an id that does not exist. Buttons or links inside a label: they are inside the tree item, which a screen reader reads as one item, and the keys move between items, not into them. A selected item marked by color alone after restyling.
+
+## When to use
+
+**When:** Browse a hierarchy where people open and close levels, such as files and folders, an outline, or nested categories.
+
+**When not:** A flat list to pick from → OptionList. Site navigation with a few levels → links in nested lists, or `<details>`. A list of actions → Menu. Rows with columns → Table.
+
+## Props
+
+<PropsTable name="Tree.Root" />
+
+<PropsTable name="Tree.Item" />
+
+<PropsTable name="Tree.Label" />
+
+<PropsTable name="Tree.Group" />
+
+<PropsTable name="Tree.Icon" />
