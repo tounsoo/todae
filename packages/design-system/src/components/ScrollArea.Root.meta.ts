@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'ScrollArea.Root',
   description:
-    'A div that scrolls and keeps the focus rings of what it holds whole: it pads by a ring\'s room with a matching negative margin, and scroll-pads by the same. Takes native div attributes.',
+    'A div that scrolls and keeps the focus rings of what it holds whole: its children sit in a content box padded by a ring\'s room, and it scroll-pads by the same. Takes native div attributes.',
   props: [
     {
       name: 'axis',

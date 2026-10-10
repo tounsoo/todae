@@ -1,15 +1,9 @@
 @layer todae.components {
-  /* The padding is a focus ring's room, and the negative margin gives it back,
-     so the area takes the space it would without it. A width or height set on
-     it sizes the content box, as the default content-box sizing does. */
   .root {
     --_room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
 
-    box-sizing: content-box;
     min-inline-size: 0;
     min-block-size: 0;
-    margin: calc(-1 * var(--_room));
-    padding: var(--_room);
     scroll-padding: var(--_room);
     overflow: auto;
   }
@@ -20,6 +14,19 @@
 
   .root[data-axis='inline'] {
     overflow-y: hidden;
+  }
+
+  /* The room for focus rings. On its own box, inside the area's padding, so
+     padding on the area adds to it, and nothing past the area's edge is needed. */
+  .content {
+    box-sizing: border-box;
+    padding: var(--_room);
+  }
+
+  /* As wide as what it holds, so the room stays at the end of a sideways scroll. */
+  .root:is([data-axis='inline'], [data-axis='both']) > .content {
+    inline-size: max-content;
+    min-inline-size: 100%;
   }
 
   /* Inside its own edge, which its parent may clip. */

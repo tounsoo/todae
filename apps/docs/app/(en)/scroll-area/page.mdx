@@ -2,7 +2,7 @@ import { ScrollAreaLinks, ScrollAreaText } from '../../../components/demos/Scrol
 
 # ScrollArea
 
-`ScrollArea.Root` is a `div` that scrolls and keeps the focus rings of what it holds whole. A scroll container clips everything past its padding box, so a ring around a control at its edge is cut. `ScrollArea.Root` pads itself by a ring's width and offset and gives that back with a matching negative margin, so it takes the same space it would without the room. It also sets the same amount as scroll padding, so focus scrolls a control's whole ring into view.
+`ScrollArea.Root` is a `div` that scrolls and keeps the focus rings of what it holds whole. A scroll container clips everything past its padding box, so a ring around a control at its edge is cut. `ScrollArea.Root` puts its children in a content box padded by a ring's width and offset, inside any padding you give the area, so the room is always there and nothing reaches past the area's edge. When focus lands on a control whose ring would still be cut, it scrolls the rest of the ring into view.
 
 <Example>
   <ScrollAreaLinks />
@@ -16,7 +16,7 @@ import { ScrollAreaLinks, ScrollAreaText } from '../../../components/demos/Scrol
 </nav>
 ```
 
-`axis` picks the direction it scrolls in, `block` by default, and clips the other. Give it a height or width the way you would any `div`; they size its content box. It has no server entry, so a Server Component renders it inside a client component.
+`axis` picks the direction it scrolls in, `block` by default, and clips the other. Give it a size and padding the way you would any `div`. Lay its children out with an element inside it, since they sit in its content box. It has no server entry, so a Server Component renders it inside a client component.
 
 ## A Tab stop for content with no controls
 
@@ -36,11 +36,11 @@ When its content overflows and nothing inside can take focus, a keyboard could n
 
 ## Accessible composition
 
-**Todae handles:** Room for focus rings at every edge, and scroll padding so focus brings a whole ring into view. A Tab stop with the `region` role while the content overflows and holds nothing focusable, kept while focus is on it so a resize never drops focus, and removed once the content fits. Its own focus ring, inside its edge.
+**Todae handles:** Room for focus rings at every edge, and scrolling so focus brings a whole ring into view. A Tab stop with the `region` role while the content overflows and holds nothing focusable, kept while focus is on it so a resize never drops focus, and removed once the content fits. Its own focus ring, inside its edge.
 
 **You supply:** A name with `aria-label` or `aria-labelledby` whenever it can take a Tab stop. A height or width that makes it scroll.
 
-**Watch for:** Padding on `ScrollArea.Root` itself, which replaces the ring room; pad an element inside it instead. An area flush with an edge that clips, such as the viewport or a parent with `overflow: hidden`: the negative margin pushes its ring room past that edge, so set `margin: 0` on it there and the room stays inside.
+**Watch for:** Layout styles such as `display: grid` or `gap` on `ScrollArea.Root`: its only child is its content box, so they never reach your children. Put them on an element inside it.
 
 ## When to use
 

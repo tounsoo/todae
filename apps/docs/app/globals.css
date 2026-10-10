@@ -223,16 +223,10 @@ body {
     block-size: calc(100dvh - var(--docs-topbar));
   }
 
-  /* Flush with the viewport's bottom and the top bar, so its ring room stays inside it there. */
   .sidebar-scroll {
     flex: 1 1 auto;
-    margin-block: 0;
-    overscroll-behavior: contain;
-  }
-
-  /* Inside the scroll area: its own padding is the room for focus rings. */
-  .sidebar-scroll > .site-nav {
     padding-block: 1.75rem 3rem;
+    overscroll-behavior: contain;
   }
 }
 
@@ -830,18 +824,15 @@ table {
   background: var(--todae-color-bg-surface);
 }
 
-/* Flush with the viewport's edges, so its ring room stays inside it. */
 .pg-rail-scroll {
   flex: 1 1 auto;
-  margin: 0;
+  padding: 1.5rem 1.25rem 0;
 }
 
-/* Inside the scroll area: its own padding is the room for focus rings. */
 .pg-rail-body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1.5rem 1.25rem 0;
 }
 
 @media (min-width: 64rem) {
@@ -1120,7 +1111,7 @@ table {
     flex: 1 1 auto;
   }
 
-  .pg-rail-body {
+  .pg-rail-scroll {
     padding-block-end: 1.25rem;
   }
 
@@ -1190,6 +1181,9 @@ table {
   grid-template-columns: none;
   grid-auto-flow: column;
   grid-auto-columns: 6.5rem;
+}
+
+.pg-sheet .preset-scroll {
   scroll-snap-type: x proximity;
 }
 

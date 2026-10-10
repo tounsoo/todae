@@ -6,10 +6,10 @@ import styles from './ScrollArea.module.css';
 export type ScrollAreaAxis = 'block' | 'inline' | 'both';
 
 /**
- * A `div` that scrolls and keeps the focus rings of what it holds whole. It
- * pads itself by a focus ring's width and offset and gives that back with a
- * matching negative margin, so it takes the same space it would without the
- * room, and it scroll-pads by the same amount, so focus scrolls a control's
+ * A `div` that scrolls and keeps the focus rings of what it holds whole. Its
+ * children sit in a content box padded by a focus ring's width and offset, so
+ * a ring at the edge stays inside what it clips whatever padding you give the
+ * area, and it scroll-pads by the same amount, so focus scrolls a control's
  * whole ring into view.
  */
 export type ScrollAreaRootProps = {
@@ -32,8 +32,38 @@ function overflows(el: HTMLElement, axis: ScrollAreaAxis): boolean {
   return axis === 'block' ? block : axis === 'inline' ? inline : block || inline;
 }
 
-function Root({ axis = 'block', focusable, className, ref, onFocus, onBlur, ...props }: ScrollAreaRootProps) {
+/**
+ * Scrolls `area` so the ring around `target` is inside it. Focus scrolls a
+ * control into view only when part of its box is hidden, so one that just fits
+ * would keep a cut ring. The ring can be on an ancestor, such as a Field shell.
+ */
+function revealRing(area: HTMLElement, target: Element) {
+  let ringed = target;
+  let ring = 0;
+  for (let el: Element | null = target; el && el !== area; el = el.parentElement) {
+    const style = getComputedStyle(el);
+    const width = style.outlineStyle === 'none' ? 0 : Number.parseFloat(style.outlineWidth) || 0;
+    if (width > 0) {
+      ringed = el;
+      ring = width + (Number.parseFloat(style.outlineOffset) || 0);
+      break;
+    }
+  }
+  const room = Math.max(ring, Number.parseFloat(getComputedStyle(area).scrollPaddingTop) || 0);
+  const box = ringed.getBoundingClientRect();
+  const port = area.getBoundingClientRect();
+  const top = port.top + area.clientTop;
+  const left = port.left + area.clientLeft;
+  const dy =
+    box.top - room < top ? box.top - room - top : box.bottom + room > top + area.clientHeight ? box.bottom + room - top - area.clientHeight : 0;
+  const dx =
+    box.left - room < left ? box.left - room - left : box.right + room > left + area.clientWidth ? box.right + room - left - area.clientWidth : 0;
+  if (dx || dy) area.scrollBy({ left: dx, top: dy, behavior: 'instant' });
+}
+
+function Root({ axis = 'block', focusable, className, ref, onFocus, onBlur, children, ...props }: ScrollAreaRootProps) {
   const own = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
   const refs = useComposedRefs(own, ref);
   const [tabStop, setTabStop] = useState(false);
   // Keeps the Tab stop while focus is on it, so a resize never drops focus.
@@ -50,16 +80,9 @@ function Root({ axis = 'block', focusable, className, ref, onFocus, onBlur, ...p
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const resize = new ResizeObserver(measure);
-    const watch = () => {
-      resize.disconnect();
-      resize.observe(el);
-      for (const child of el.children) resize.observe(child);
-    };
-    watch();
-    const mutations = new MutationObserver(() => {
-      watch();
-      measure();
-    });
+    resize.observe(el);
+    if (content.current) resize.observe(content.current);
+    const mutations = new MutationObserver(measure);
     mutations.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'href', 'tabindex'] });
     return () => {
       resize.disconnect();
@@ -84,11 +107,16 @@ function Root({ axis = 'block', focusable, className, ref, onFocus, onBlur, ...p
       className={cx(styles.root, className)}
       onFocus={composeHandlers(onFocus, (event: FocusEvent<HTMLDivElement>) => {
         if (event.target === event.currentTarget) setFocused(true);
+        else revealRing(event.currentTarget, event.target);
       })}
       onBlur={composeHandlers(onBlur, (event: FocusEvent<HTMLDivElement>) => {
         if (event.target === event.currentTarget) setFocused(false);
       })}
-    />
+    >
+      <div ref={content} className={styles.content}>
+        {children}
+      </div>
+    </div>
   );
 }
 

@@ -182,7 +182,7 @@ describe('narrow screens', () => {
     // The presets scroll in their own row, so the sheet does not scroll sideways.
     const body = sheet.querySelector<HTMLElement>('.pg-sheet-body')!;
     expect(body.scrollWidth).toBeLessThanOrEqual(body.clientWidth);
-    const row = sheet.querySelector<HTMLElement>('.preset-grid')!;
+    const row = sheet.querySelector<HTMLElement>('.preset-scroll')!;
     expect(row.scrollWidth).toBeGreaterThan(row.clientWidth);
     await userEvent.click(within(sheet).getByRole('button', { name: 'light' }));
     // The count shows on the button that opens the sheet, and names the change for a screen reader.

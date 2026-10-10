@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ScrollArea } from '../index';
+import { Field, ScrollArea } from '../index';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -45,19 +45,67 @@ describe('ScrollArea.Root', () => {
     expect(area.scrollTop).toBeGreaterThan(0);
   });
 
-  it('takes the space it would without its ring room', () => {
+  it('keeps its ring room inside padding you give it', () => {
     render(
-      <div data-testid="parent" style={{ width: 200, display: 'flow-root' }}>
-        <ScrollArea.Root data-testid="area" axis="inline">
-          <div data-testid="content" style={{ height: 20 }} />
+      <ScrollArea.Root data-testid="area" style={{ height: 80, padding: 12 }}>
+        {links(12)}
+      </ScrollArea.Root>,
+    );
+    const area = screen.getByTestId('area');
+    const first = screen.getAllByRole('link')[0]!;
+    first.focus({ focusVisible: true } as FocusOptions);
+    const room = Number.parseFloat(getComputedStyle(area).scrollPaddingLeft);
+    expect(room).toBeGreaterThan(0);
+    expect(first.getBoundingClientRect().left - area.getBoundingClientRect().left).toBeCloseTo(12 + room, 1);
+    for (const link of screen.getAllByRole('link')) {
+      link.focus({ focusVisible: true } as FocusOptions);
+      expect({ link: link.textContent, cut: cutEdges(link, area) }).toEqual({ link: link.textContent, cut: [] });
+    }
+  });
+
+  it('keeps rings whole flush against an edge that clips', () => {
+    render(
+      <div data-testid="frame" style={{ width: 200, height: 80, overflow: 'hidden', display: 'flex' }}>
+        <ScrollArea.Root data-testid="area" axis="inline" style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {Array.from({ length: 8 }, (_, i) => (
+              <button key={i} type="button" style={{ flex: 'none', width: 60 }}>
+                {i + 1}
+              </button>
+            ))}
+          </div>
         </ScrollArea.Root>
       </div>,
     );
-    const parent = screen.getByTestId('parent').getBoundingClientRect();
-    const content = screen.getByTestId('content').getBoundingClientRect();
-    expect(content.width).toBeCloseTo(parent.width, 1);
-    expect(content.left).toBeCloseTo(parent.left, 1);
-    expect(parent.height).toBeCloseTo(20, 1);
+    const frame = screen.getByTestId('frame');
+    const area = screen.getByTestId('area');
+    expect(area.scrollWidth).toBeGreaterThan(area.clientWidth);
+    for (const button of screen.getAllByRole('button')) {
+      button.focus({ focusVisible: true } as FocusOptions);
+      expect({ button: button.textContent, cut: [...cutEdges(button, area), ...cutEdges(button, frame)] }).toEqual({
+        button: button.textContent,
+        cut: [],
+      });
+    }
+    expect(area.scrollLeft).toBeGreaterThan(0);
+  });
+
+  it('reveals a ring drawn on an ancestor, such as a Field shell', () => {
+    render(
+      <ScrollArea.Root data-testid="area" style={{ height: 120 }}>
+        <div style={{ height: 120 }} />
+        <Field.Root>
+          <Field.TextInput aria-label="Last" value="" onChange={() => undefined} />
+        </Field.Root>
+      </ScrollArea.Root>,
+    );
+    const area = screen.getByTestId('area');
+    const input = screen.getByRole('textbox', { name: 'Last' });
+    input.focus({ focusVisible: true } as FocusOptions);
+    let shell: HTMLElement = input;
+    while (getComputedStyle(shell).outlineStyle === 'none' && shell.parentElement !== area) shell = shell.parentElement!;
+    expect(getComputedStyle(shell).outlineStyle).not.toBe('none');
+    expect(cutEdges(shell, area)).toEqual([]);
   });
 
   it('takes a Tab stop while it overflows and holds nothing focusable', async () => {

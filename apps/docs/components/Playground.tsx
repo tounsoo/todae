@@ -352,20 +352,23 @@ export function Playground({ locale }: { locale: Locale }) {
     <>
       <fieldset className="pg-section">
         <legend className="pg-heading">{t.presets}</legend>
-        <ScrollArea.Root className="preset-grid" axis="inline" focusable={false}>
-          {PRESETS.map((candidate) => (
-            <PresetCard
-              key={candidate.id}
-              preset={candidate}
-              appearance={resolved}
-              selected={candidate.id === preset?.id}
-              // A new preset starts clean, so its tokens show instead of earlier edits.
-              onSelect={() => {
-                setPresetId(candidate.id);
-                setEdits(NO_EDITS);
-              }}
-            />
-          ))}
+        {/* Sideways in the sheet's one row; a grid that fits in the rail. */}
+        <ScrollArea.Root className="preset-scroll" axis={narrow ? 'inline' : 'block'} focusable={false}>
+          <div className="preset-grid">
+            {PRESETS.map((candidate) => (
+              <PresetCard
+                key={candidate.id}
+                preset={candidate}
+                appearance={resolved}
+                selected={candidate.id === preset?.id}
+                // A new preset starts clean, so its tokens show instead of earlier edits.
+                onSelect={() => {
+                  setPresetId(candidate.id);
+                  setEdits(NO_EDITS);
+                }}
+              />
+            ))}
+          </div>
         </ScrollArea.Root>
       </fieldset>
 
