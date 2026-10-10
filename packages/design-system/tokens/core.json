@@ -188,5 +188,16 @@
     "easing": {
       "standard": { "$type": "cubicBezier", "$value": [0.2, 0.8, 0.2, 1] }
     }
+  },
+  "opacity": {
+    "8": { "$type": "number", "$value": 0.08 },
+    "10": { "$type": "number", "$value": 0.1 },
+    "12": { "$type": "number", "$value": 0.12 },
+    "14": { "$type": "number", "$value": 0.14 },
+    "16": { "$type": "number", "$value": 0.16 },
+    "20": { "$type": "number", "$value": 0.2 },
+    "28": { "$type": "number", "$value": 0.28 },
+    "45": { "$type": "number", "$value": 0.45 },
+    "70": { "$type": "number", "$value": 0.7 }
   }
 }

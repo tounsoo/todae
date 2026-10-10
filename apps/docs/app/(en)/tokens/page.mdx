@@ -28,6 +28,12 @@ The pairs live in `$extensions["dev.todae"].contrast` on the appearance modifier
 
 A brand accent is four tokens per appearance: `color.accent.default`, `color.accent.hover`, `color.accent.active` and `color.on-accent`. Set them together, since Todae's dark `on-accent` is near-black to sit on its near-white ink. Put the brand accent in a company token package so the build checks it. `ThemeProvider` overrides apply at runtime and are not checked.
 
+## References and opacity
+
+Token files follow DTCG 2025.10: an alias is a JSON Pointer `$ref`, such as `{ "$ref": "#/color/gray/900/$value" }`, and the build rejects a curly-brace alias such as `"{color.gray.900}"`. A translucent color points at the three channels of its base color with `#/<token>/$value/components/0` to `2`, and sets its own `alpha`.
+
+`alpha` is a number from 0 to 1, or a `$ref` to a `number` token. Todae's translucent colors take theirs from the `opacity` scale, where `opacity.<n>` is n percent, for example `"alpha": { "$ref": "#/opacity/12/$value" }`. The build emits the alpha as that token's CSS variable.
+
 ## Status tones
 
 Four tones carry status: `info`, `success`, `warning` and `critical`. Each is three tokens per appearance: `color.status.<tone>.fg` for text and icons, `.bg` for the fill, and `.border`. The build checks `fg` on `bg` at Lc 75 and `fg` on `color.bg.surface` at Lc 60. [Alert](/alert) reads them through its `alert.<tone>` contract tokens. `info` is neutral ink, matching the accent; a company can give it a hue in its token package.

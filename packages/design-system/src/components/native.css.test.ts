@@ -65,7 +65,10 @@ describe('native element component styles', () => {
     // A light tint keeps the pair close to the text and surface around it,
     // which the resolver's contrast list cannot check for a color-mix.
     const tokens = JSON.parse(readFileSync(join(import.meta.dirname, '../../tokens/components/code.json'), 'utf8'));
-    expect(tokens.code.tint.$value).toBeLessThanOrEqual(0.15);
+    const core = JSON.parse(readFileSync(join(import.meta.dirname, '../../tokens/core.json'), 'utf8'));
+    // The tint points into the opacity scale: `#/opacity/<n>/$value`.
+    const step = tokens.code.tint.$value.$ref.match(/^#\/opacity\/(\d+)\/\$value$/)?.[1];
+    expect(core.opacity[step].$value).toBeLessThanOrEqual(0.15);
     expect(rule(code, '.block')).toContain('color: var(--todae-code-block-fg);');
     // Code in a block drops its box, whether it is a Code.Root or a plain code.
     expect(code.indexOf('.block code {')).toBeGreaterThan(code.indexOf('.root {'));

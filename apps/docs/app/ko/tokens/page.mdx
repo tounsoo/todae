@@ -28,6 +28,12 @@ DTCG 파이프라인에서 생성한 카탈로그입니다. 컴포넌트는 cont
 
 브랜드 액센트는 appearance마다 네 개의 토큰입니다. `color.accent.default`, `color.accent.hover`, `color.accent.active`, `color.on-accent`입니다. Todae의 다크 `on-accent`는 거의 흰색인 잉크 위에 놓이도록 거의 검은색이므로, 넷을 함께 설정하세요. 빌드가 검사하도록 브랜드 액센트는 회사 토큰 패키지에 넣으세요. `ThemeProvider` 오버라이드는 런타임에 적용되며 검사되지 않습니다.
 
+## 참조와 불투명도
+
+토큰 파일은 DTCG 2025.10을 따릅니다. 별칭은 `{ "$ref": "#/color/gray/900/$value" }`처럼 JSON Pointer `$ref`로 쓰며, `"{color.gray.900}"` 같은 중괄호 별칭은 빌드가 거부합니다. 반투명 색상은 `#/<token>/$value/components/0`부터 `2`까지로 기준 색상의 세 채널을 가리키고, 자체 `alpha`를 설정합니다.
+
+`alpha`는 0에서 1 사이의 숫자이거나 `number` 토큰을 가리키는 `$ref`입니다. Todae의 반투명 색상은 `opacity` 스케일에서 값을 가져오며, `opacity.<n>`은 n 퍼센트입니다. 예를 들어 `"alpha": { "$ref": "#/opacity/12/$value" }`입니다. 빌드는 alpha를 그 토큰의 CSS 변수로 내보냅니다.
+
 ## 상태 톤
 
 네 가지 톤이 상태를 나타냅니다. `info`, `success`, `warning`, `critical`입니다. 각 톤은 appearance마다 세 개의 토큰입니다. 텍스트와 아이콘에 쓰는 `color.status.<tone>.fg`, 채우기에 쓰는 `.bg`, 그리고 `.border`입니다. 빌드는 `bg` 위의 `fg`를 Lc 75로, `color.bg.surface` 위의 `fg`를 Lc 60으로 검사합니다. [Alert](/alert)는 `alert.<tone>` contract 토큰을 거쳐 이 토큰을 읽습니다. `info`는 액센트와 같은 중립적인 잉크이며, 회사는 토큰 패키지에서 여기에 색조를 줄 수 있습니다.

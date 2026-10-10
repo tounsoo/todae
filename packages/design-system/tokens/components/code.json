@@ -1,6 +1,6 @@
 {
   "code": {
-    "tint": { "$type": "number", "$value": 0.1 },
+    "tint": { "$type": "number", "$value": { "$ref": "#/opacity/10/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "font": {
       "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/mono/$value" } },
