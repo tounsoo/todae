@@ -1078,7 +1078,7 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
     await waitFor(() => expect(receivesPointer(backClose)).toBe(true));
   });
 
-  it('spreads on a tap so the toast behind the newest can be used, until a press outside', async () => {
+  it('spreads on a touch so the toast behind the newest can be used, until a press outside', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(
       <Themed>
@@ -1098,7 +1098,17 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
     const backClose = screen.getAllByRole('button', { name: 'Dismiss' })[1]!;
     // A touch: in on press, out on release, as a browser sends it.
     const touch = (target: Element, type: string) =>
-      act(() => void target.dispatchEvent(new PointerEvent(type, { pointerType: 'touch', bubbles: true, composed: true })));
+      act(
+        () =>
+          void target.dispatchEvent(
+            new PointerEvent(type, {
+              pointerType: 'touch',
+              buttons: type === 'pointerup' || type === 'pointerout' ? 0 : 1,
+              bubbles: true,
+              composed: true,
+            }),
+          ),
+      );
     touch(back, 'pointerover');
     touch(back, 'pointerdown');
     touch(back, 'pointerup');
@@ -1138,6 +1148,8 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
     await waitFor(() => expect(items()).toHaveLength(2));
     await userEvent.unhover(region);
     await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    // Settled, not still moving in from a spread left by a pointer over it.
+    await waitFor(() => expect(region.getAnimations({ subtree: true })).toHaveLength(0));
     const [front, back] = items();
     // A part of the back toast inside the strip that peeks out from behind
     // the front one, and a point on it there: its Close at the bottom, where

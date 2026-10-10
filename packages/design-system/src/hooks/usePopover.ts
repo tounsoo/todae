@@ -18,6 +18,7 @@ import { useComposedRefs, useStableComposedRef } from '../components/props';
 import { useDomId } from '../components/domId';
 import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from '../overlay/anchorName';
 import { useControlledValue } from './useControlledState';
+import { eventInside } from '../overlay/eventInside';
 
 export type { PopoverWire };
 
@@ -59,13 +60,6 @@ export type UsePopoverResult = {
   getTriggerProps: <P extends PopoverTriggerUserProps>(props?: P) => P & PopoverTriggerWire;
   getPopoverProps: () => PopoverWire;
 };
-
-function eventInside(el: HTMLElement | null, event: Event): boolean {
-  if (!el) return false;
-  const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
-  if (path.includes(el)) return true;
-  return event.target instanceof Node && el.contains(event.target);
-}
 
 function popoverStyle(anchorName: string): CSSProperties {
   return {

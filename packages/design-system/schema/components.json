@@ -2716,7 +2716,7 @@
           "name": "layout",
           "type": "\"list\" | \"stack\"",
           "required": false,
-          "description": "list shows every toast in full. stack collapses them behind the newest and spreads them while the pointer is over them or keyboard focus is inside, and from a tap until a press outside.",
+          "description": "list shows every toast in full. stack collapses them behind the newest and spreads them while the pointer is over them or keyboard focus is inside, and from a touch until a press outside or no toast is left.",
           "default": "\"list\""
         },
         {
