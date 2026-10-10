@@ -241,6 +241,7 @@ export function Playground({ locale }: { locale: Locale }) {
   const [computed, setComputed] = useState<Partial<Record<ThemeOverrideKey, string>>>({});
   const [sheetOpen, setSheetOpen] = useState(false);
   const narrow = useNarrow();
+  const Rail = narrow ? 'div' : 'aside';
   const resolved = useResolvedAppearance(appearance);
   const preset = PRESETS.find((candidate) => candidate.id === presetId) ?? PRESETS[0];
   const overrides: ThemeOverride = { ...preset?.[resolved], ...edits[resolved] };
@@ -345,101 +346,112 @@ export function Playground({ locale }: { locale: Locale }) {
     </div>
   );
 
+  // The presets and modes, in the rail on wide screens and in the sheet on narrow ones.
+  const themeControls = (
+    <>
+      <fieldset className="pg-section">
+        <legend className="pg-heading">{t.presets}</legend>
+        <div className="preset-grid focus-room">
+          {PRESETS.map((candidate) => (
+            <PresetCard
+              key={candidate.id}
+              preset={candidate}
+              appearance={resolved}
+              selected={candidate.id === preset?.id}
+              // A new preset starts clean, so its tokens show instead of earlier edits.
+              onSelect={() => {
+                setPresetId(candidate.id);
+                setEdits(NO_EDITS);
+              }}
+            />
+          ))}
+        </div>
+      </fieldset>
+
+      <div className="pg-section pg-modes">
+        <div>
+          <span className="pg-heading" id="pg-appearance">
+            {t.appearance}
+          </span>
+          <ToggleGroup.Root
+            aria-labelledby="pg-appearance"
+            value={appearance}
+            onValueChange={(next) => next && setAppearance(next as Appearance)}
+          >
+            {APPEARANCES.map((value) => (
+              <ToggleGroup.Item key={value} value={value} lang="en">
+                {value}
+              </ToggleGroup.Item>
+            ))}
+          </ToggleGroup.Root>
+        </div>
+        <div>
+          <span className="pg-heading" id="pg-density">
+            {t.density}
+          </span>
+          <ToggleGroup.Root
+            aria-labelledby="pg-density"
+            value={density}
+            onValueChange={(next) => next && setDensity(next as Density)}
+          >
+            {DENSITIES.map((value) => (
+              <ToggleGroup.Item key={value} value={value} lang="en">
+                {value}
+              </ToggleGroup.Item>
+            ))}
+          </ToggleGroup.Root>
+        </div>
+        <div>
+          <span className="pg-heading" id="pg-icons">
+            {t.icons}
+          </span>
+          <ToggleGroup.Root aria-labelledby="pg-icons" value={iconsId} onValueChange={(next) => next && setIconsId(next)}>
+            <ToggleGroup.Item value="todae" lang="en">
+              Todae
+            </ToggleGroup.Item>
+            {ICON_LIBRARIES.map((library) => (
+              <ToggleGroup.Item key={library.id} value={library.id} lang="en">
+                {library.name}
+              </ToggleGroup.Item>
+            ))}
+          </ToggleGroup.Root>
+        </div>
+      </div>
+    </>
+  );
+
+  const tokenSection = (
+    <section className="pg-section pg-tokens" aria-labelledby="pg-tokens">
+      <div className="pg-tokens-head">
+        <h2 className="pg-heading" id="pg-tokens">
+          {t.tokens}
+        </h2>
+        {changedLabel}
+      </div>
+      {tokenEditor}
+    </section>
+  );
+
   return (
     <div className="playground">
       {/* The presets' typefaces. React hoists this into <head>. */}
       <link rel="stylesheet" href={PRESET_FONTS_HREF} precedence="default" />
-      <aside className="pg-rail" aria-label={t.rail}>
+      {/* On narrow screens the controls are in the sheet, so the rail is only the intro, not a landmark. */}
+      <Rail className="pg-rail" aria-label={narrow ? undefined : t.rail}>
         <div className="pg-intro">
           <h1>{t.title}</h1>
           <p>{t.lead}</p>
         </div>
 
-        <fieldset className="pg-section">
-          <legend className="pg-heading">{t.presets}</legend>
-          <div className="preset-grid">
-            {PRESETS.map((candidate) => (
-              <PresetCard
-                key={candidate.id}
-                preset={candidate}
-                appearance={resolved}
-                selected={candidate.id === preset?.id}
-                // A new preset starts clean, so its tokens show instead of earlier edits.
-                onSelect={() => {
-                  setPresetId(candidate.id);
-                  setEdits(NO_EDITS);
-                }}
-              />
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="pg-section pg-modes">
-          <div>
-            <span className="pg-heading" id="pg-appearance">
-              {t.appearance}
-            </span>
-            <ToggleGroup.Root
-              aria-labelledby="pg-appearance"
-              value={appearance}
-              onValueChange={(next) => next && setAppearance(next as Appearance)}
-            >
-              {APPEARANCES.map((value) => (
-                <ToggleGroup.Item key={value} value={value} lang="en">
-                  {value}
-                </ToggleGroup.Item>
-              ))}
-            </ToggleGroup.Root>
-          </div>
-          <div>
-            <span className="pg-heading" id="pg-density">
-              {t.density}
-            </span>
-            <ToggleGroup.Root
-              aria-labelledby="pg-density"
-              value={density}
-              onValueChange={(next) => next && setDensity(next as Density)}
-            >
-              {DENSITIES.map((value) => (
-                <ToggleGroup.Item key={value} value={value} lang="en">
-                  {value}
-                </ToggleGroup.Item>
-              ))}
-            </ToggleGroup.Root>
-          </div>
-          <div>
-            <span className="pg-heading" id="pg-icons">
-              {t.icons}
-            </span>
-            <ToggleGroup.Root aria-labelledby="pg-icons" value={iconsId} onValueChange={(next) => next && setIconsId(next)}>
-              <ToggleGroup.Item value="todae" lang="en">
-                Todae
-              </ToggleGroup.Item>
-              {ICON_LIBRARIES.map((library) => (
-                <ToggleGroup.Item key={library.id} value={library.id} lang="en">
-                  {library.name}
-                </ToggleGroup.Item>
-              ))}
-            </ToggleGroup.Root>
-          </div>
-        </div>
-
         {narrow ? null : (
           <>
-            <section className="pg-section pg-tokens" aria-labelledby="pg-tokens">
-              <div className="pg-tokens-head">
-                <h2 className="pg-heading" id="pg-tokens">
-                  {t.tokens}
-                </h2>
-                {changedLabel}
-              </div>
-              {tokenEditor}
-            </section>
+            {themeControls}
+            {tokenSection}
             {actions}
             <p className="pg-hint">{copyStatus ?? t.exportHint}</p>
           </>
         )}
-      </aside>
+      </Rail>
       {/* Overrides only beat density tokens on the element that carries
           data-density, so the stage carries both. */}
       <div className="pg-stage-theme">
@@ -471,7 +483,7 @@ export function Playground({ locale }: { locale: Locale }) {
                 setSheetOpen(true);
               }}
             >
-              {t.editTokens}
+              {t.editTheme}
               {changed > 0 ? (
                 <>
                   <Badge.Root aria-hidden="true">{changed}</Badge.Root>
@@ -486,12 +498,12 @@ export function Playground({ locale }: { locale: Locale }) {
             {/* The site sets no StringsProvider, so the sheet's own controls get this locale's names here. */}
             <BottomSheet.Grabber aria-label={t.resizeSheet} />
             <BottomSheet.Header className="pg-sheet-head">
-              <BottomSheet.Title>{t.tokens}</BottomSheet.Title>
-              {changedLabel}
-              <BottomSheet.Close aria-label={t.closeTokens} />
+              <BottomSheet.Title>{t.rail}</BottomSheet.Title>
+              <BottomSheet.Close aria-label={t.closeSheet} />
             </BottomSheet.Header>
             <BottomSheet.Body className="pg-sheet-body">
-              {tokenEditor}
+              {themeControls}
+              {tokenSection}
               {/* At the end of the list, so it leaves the short sheet's room to the tokens. */}
               <BottomSheet.Description className="pg-hint">{t.exportHint}</BottomSheet.Description>
             </BottomSheet.Body>

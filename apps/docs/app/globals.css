@@ -798,6 +798,18 @@ table {
   background: var(--todae-color-bg-highlight);
 }
 
+/* ---------- Focus room ---------- */
+
+/* A scroll container clips what paints past its padding box, focus rings
+   included. This pads it by a ring's width plus offset and takes the same
+   back with a negative margin, so the content stays where it was. */
+.focus-room {
+  --docs-focus-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+  margin: calc(-1 * var(--docs-focus-room));
+  padding: var(--docs-focus-room);
+  scroll-padding-inline: var(--docs-focus-room);
+}
+
 /* ---------- Playground ---------- */
 
 .playground {
@@ -1097,33 +1109,13 @@ table {
   }
 
   .pg-rail {
-    gap: 1.25rem;
     padding-block-end: 1.25rem;
   }
 
-  /* The server sends the wide layout; its editor stays hidden until the sheet takes over. */
-  .pg-rail > .pg-tokens,
-  .pg-rail > .pg-actions,
-  .pg-rail > .pg-hint {
+  /* The server sends the wide layout; everything but the intro stays hidden
+     until the sheet takes it over. */
+  .pg-rail > :not(.pg-intro) {
     display: none;
-  }
-
-  /* Presets scroll sideways in one row instead of taking two. */
-  .preset-grid {
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: 6.5rem;
-    margin-inline: -1.25rem;
-    padding: 0.25rem 1.25rem;
-    overflow-x: auto;
-    scroll-padding-inline: 1.25rem;
-    scroll-snap-type: x proximity;
-  }
-
-  /* Positioned, so each card's visually hidden radio scrolls with it instead of widening the page. */
-  .preset {
-    position: relative;
-    scroll-snap-align: start;
   }
 
   /* Fixed, not sticky: focusing a sticky bar's buttons would scroll the page
@@ -1173,6 +1165,27 @@ table {
 
 .pg-sheet-head > h2 {
   margin-inline-end: auto;
+}
+
+.pg-sheet-body {
+  display: grid;
+  align-content: start;
+  gap: 1.5rem;
+}
+
+/* Presets scroll sideways in one row instead of taking two. */
+.pg-sheet .preset-grid {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 6.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+
+/* Positioned, so each card's visually hidden radio scrolls with it instead of widening the sheet. */
+.pg-sheet .preset {
+  position: relative;
+  scroll-snap-align: start;
 }
 
 .pg-sheet-body .pg-token-panel {

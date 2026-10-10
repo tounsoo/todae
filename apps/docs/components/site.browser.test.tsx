@@ -139,15 +139,17 @@ describe('narrow screens', () => {
     };
   }
 
-  it('puts the playground stage under the theme controls and edits tokens in a sheet', async () => {
+  it('puts the playground stage right under its title and every control in a sheet', async () => {
     await page.viewport(390, 800);
     const { stage, bar } = renderNarrowPlayground();
     await frame();
-    // The token editor is only in the sheet, and the stage follows the theme controls.
+    // Every control is in the sheet, and the stage follows the title and lead.
     expect(screen.queryByRole('tab', { name: 'raw' })).toBeNull();
-    const controls = screen.getByRole('complementary', { name: 'Theme controls' });
-    expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(controls.getBoundingClientRect().bottom);
-    // The presets scroll in their own row, so the page does not scroll sideways.
+    expect(screen.queryByRole('radio', { name: 'Forest' })).toBeNull();
+    expect(screen.queryByRole('complementary')).toBeNull();
+    const lead = screen.getByText(/Start from a preset/);
+    expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(lead.getBoundingClientRect().bottom);
+    expect(stage.getBoundingClientRect().top).toBeLessThan(innerHeight / 3);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
     // The playground keeps the bar's height free under the stage.
     expect(getComputedStyle(document.querySelector('.playground')!).paddingBlockEnd).toBe(
@@ -161,8 +163,8 @@ describe('narrow screens', () => {
     bar.style.paddingBlockEnd = '';
     await expect.poll(reserved).toBe(idle);
     expect(await violations()).toEqual([]);
-    await userEvent.click(within(bar).getByRole('button', { name: 'Edit tokens' }));
-    const sheet = await screen.findByRole('dialog', { name: 'Tokens' });
+    await userEvent.click(within(bar).getByRole('button', { name: 'Edit theme' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Theme controls' });
     await frame();
     expect(await violations()).toEqual([]);
     // The export hint the rail shows on wide screens describes the sheet here.
@@ -170,15 +172,27 @@ describe('narrow screens', () => {
     expect(document.getElementById(sheet.getAttribute('aria-describedby')!)?.textContent).toContain('light and dark differ');
     await userEvent.fill(within(sheet).getByLabelText('color.accent.default'), 'oklch(0.5 0.1 30)');
     expect(stage.style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.1 30)');
+    // Presets and modes are in the sheet too, and change the stage behind it.
+    await userEvent.click(within(sheet).getByRole('button', { name: 'dark' }));
+    expect(stage.getAttribute('data-appearance')).toBe('dark');
+    // The presets scroll in their own row, so the sheet does not scroll sideways.
+    const body = sheet.querySelector<HTMLElement>('.pg-sheet-body')!;
+    expect(body.scrollWidth).toBeLessThanOrEqual(body.clientWidth);
+    const row = sheet.querySelector<HTMLElement>('.preset-grid')!;
+    expect(row.scrollWidth).toBeGreaterThan(row.clientWidth);
+    // A card's focus ring at the row's start edge has room inside the row's scrollport.
+    const first = within(row).getByRole('radio', { name: 'Todae' }).closest('label')!;
+    expect(first.getBoundingClientRect().left - 4).toBeGreaterThanOrEqual(row.getBoundingClientRect().left);
+    await userEvent.click(within(sheet).getByRole('button', { name: 'light' }));
     // The count shows on the button that opens the sheet, and names the change for a screen reader.
-    expect(within(bar).getByRole('button', { name: 'Edit tokens (1 changed)' })).toBeTruthy();
+    expect(within(bar).getByRole('button', { name: 'Edit theme (1 changed)' })).toBeTruthy();
     // The stage fills the room above the sheet while tokens change.
     const box = stage.getBoundingClientRect();
     expect(box.top).toBeGreaterThanOrEqual(0);
     expect(box.top).toBeLessThan(innerHeight / 4);
     expect(box.bottom).toBeGreaterThan(sheet.getBoundingClientRect().top);
-    await userEvent.click(within(sheet).getByRole('button', { name: 'Close tokens' }));
-    await expect.poll(() => screen.queryByRole('dialog', { name: 'Tokens' })).toBeNull();
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Close theme controls' }));
+    await expect.poll(() => screen.queryByRole('dialog', { name: 'Theme controls' })).toBeNull();
   });
 
   it('keeps the page still when focus moves onto the playground bar or back to it', async () => {
@@ -188,18 +202,18 @@ describe('narrow screens', () => {
     stage.scrollIntoView({ block: 'start' });
     await frame();
     const still = scrollY;
-    const edit = within(bar).getByRole('button', { name: 'Edit tokens' });
+    const edit = within(bar).getByRole('button', { name: 'Edit theme' });
     edit.focus();
     await userEvent.tab();
     expect(document.activeElement).toBe(within(bar).getByRole('button', { name: 'Copy JSON' }));
     await frame();
     expect(scrollY).toBe(still);
     await userEvent.click(edit);
-    await screen.findByRole('dialog', { name: 'Tokens' });
+    await screen.findByRole('dialog', { name: 'Theme controls' });
     await frame();
     expect(scrollY).toBe(still);
     await userEvent.keyboard('{Escape}');
-    await expect.poll(() => screen.queryByRole('dialog', { name: 'Tokens' })).toBeNull();
+    await expect.poll(() => screen.queryByRole('dialog', { name: 'Theme controls' })).toBeNull();
     // Focus goes back to the button that opened the sheet, without moving the page.
     await expect.poll(() => document.activeElement).toBe(edit);
     await frame();
@@ -216,7 +230,7 @@ describe('narrow screens', () => {
     await frame();
     const barTop = () => bar.getBoundingClientRect().top;
     // A control on screen, entirely behind the bar.
-    const target = within(stage).getByRole('button', { name: 'Invite' });
+    const target = within(stage).getByRole('button', { name: 'Upgrade to Pro' });
     scrollBy(0, target.getBoundingClientRect().top - barTop() - 4);
     await frame();
     expect(target.getBoundingClientRect().top).toBeGreaterThan(barTop());
@@ -257,8 +271,8 @@ describe('narrow screens', () => {
   it('keeps the playground sheet open after printing', async () => {
     await page.viewport(390, 800);
     const { bar } = renderNarrowPlayground();
-    await userEvent.click(within(bar).getByRole('button', { name: 'Edit tokens' }));
-    await screen.findByRole('dialog', { name: 'Tokens' });
+    await userEvent.click(within(bar).getByRole('button', { name: 'Edit theme' }));
+    await screen.findByRole('dialog', { name: 'Theme controls' });
     await cdp().send('Emulation.setEmulatedMedia', { media: 'print' });
     try {
       await frame();
@@ -266,16 +280,16 @@ describe('narrow screens', () => {
       await cdp().send('Emulation.setEmulatedMedia', { media: '' });
     }
     await frame();
-    expect(screen.getByRole('dialog', { name: 'Tokens' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Theme controls' })).toBeTruthy();
   });
 
   it('names the playground sheet controls in Korean on the Korean page', async () => {
     await page.viewport(390, 800);
     const { bar } = renderNarrowPlayground('ko');
-    await userEvent.click(within(bar).getByRole('button', { name: '토큰 편집' }));
-    const sheet = await screen.findByRole('dialog', { name: '토큰' });
-    expect(within(sheet).getAllByRole('button', { name: '토큰 시트 크기 조절' })).toHaveLength(1);
-    expect(within(sheet).getByRole('button', { name: '토큰 닫기' })).toBeTruthy();
+    await userEvent.click(within(bar).getByRole('button', { name: '테마 편집' }));
+    const sheet = await screen.findByRole('dialog', { name: '테마 컨트롤' });
+    expect(within(sheet).getAllByRole('button', { name: '테마 컨트롤 크기 조절' })).toHaveLength(1);
+    expect(within(sheet).getByRole('button', { name: '테마 컨트롤 닫기' })).toBeTruthy();
   });
 });
 
