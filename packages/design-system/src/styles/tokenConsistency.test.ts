@@ -34,7 +34,6 @@ function outsideForcedColors(css: string): string {
 // Components read contract tokens only. These sheets still read a core
 // spacing step for an anchor offset or a gap fallback.
 const CORE_READS: Record<string, string[]> = {
-  Popover: ['space'],
   Tooltip: ['space'],
   ChipList: ['space'],
   Field: ['space'],
@@ -65,6 +64,13 @@ describe('token consistency across component styles', () => {
       const roots = new Set([...css.matchAll(/var\(--todae-([a-z0-9]+)-/g)].map((match) => match[1] ?? ''));
       const foreign = [...roots].filter((root) => !own.includes(root) && !SHARED_ROOTS.includes(root));
       expect({ name, foreign }).toEqual({ name, foreign: [] });
+    }
+  });
+
+  it('names the custom properties a sheet sets for itself --_<name>, not like a token', () => {
+    for (const [name, css] of Object.entries(sheets)) {
+      const declared = [...css.matchAll(/(?:^|[{;\s])(--todae-[a-z0-9-]+)\s*:/g)].map((match) => match[1]);
+      expect({ name, declared }).toEqual({ name, declared: [] });
     }
   });
 

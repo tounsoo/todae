@@ -28,6 +28,6 @@
   .root:any-link:focus-visible {
     outline: var(--todae-focus-ring-width) solid var(--todae-link-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
-    border-radius: 2px;
+    border-radius: var(--todae-link-ring-radius);
   }
 }
