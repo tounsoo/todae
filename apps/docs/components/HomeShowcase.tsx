@@ -20,7 +20,16 @@ export function HomeShowcase() {
           <Text as="span" size="l" weight="bold">
             Workspace
           </Text>
-          <Badge.Root tone="success">Active</Badge.Root>
+          <div className="showcase-meta">
+            <div className="showcase-avatars">
+              {MEMBERS.map((member) => (
+                <Avatar.Root key={member.id} size="sm" label={member.name} tone={categoryTone(member.id)}>
+                  <Avatar.Fallback>{member.initials}</Avatar.Fallback>
+                </Avatar.Root>
+              ))}
+            </div>
+            <Badge.Root tone="success">Active</Badge.Root>
+          </div>
         </div>
       </Card.Header>
       <Card.Body>

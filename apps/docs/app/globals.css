@@ -705,6 +705,17 @@ table {
   padding-block-start: 1rem;
 }
 
+.showcase-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.showcase-avatars {
+  display: flex;
+  gap: 0.25rem;
+}
+
 .showcase-member {
   display: flex;
   align-items: center;
