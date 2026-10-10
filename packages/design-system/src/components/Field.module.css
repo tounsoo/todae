@@ -174,11 +174,11 @@
   }
 
   .shell:has(> .adornment ~ .textarea) > .textarea {
-    padding-left: var(--todae-field-gap);
+    padding-inline-start: var(--todae-field-gap);
   }
 
   .shell:has(> .textarea ~ .adornment) > .textarea {
-    padding-right: var(--todae-field-gap);
+    padding-inline-end: var(--todae-field-gap);
   }
 
   .shell:has(> [data-todae-counter]) {
