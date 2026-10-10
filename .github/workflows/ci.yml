@@ -3,29 +3,70 @@ name: CI
 on:
   push:
     branches: [main]
+  # Drafts skip CI; marking one ready for review runs it.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
+# A new push to a pull request cancels its older run; runs on main always finish.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# The jobs run side by side, so a pull request waits for the slowest one.
 jobs:
-  check:
+  static:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Typecheck, lint and generated files
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm tokens:check
       - run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
       - run: pnpm typecheck
       - run: pnpm lint
-      - name: Build @omsoo/todae
-        run: pnpm --filter @omsoo/todae build
-      - name: Test
-        run: pnpm test
-      - name: Install Chromium for browser tests
+
+  unit:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      # The docs tests import the package from dist.
+      - run: pnpm build:ds
+      - run: pnpm test
+
+  browser:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Browser tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      # Keyed on the lockfile, which pins Playwright and so its Chromium build.
+      - id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @omsoo/todae exec playwright install --with-deps chromium
-      - name: Browser tests
-        run: pnpm test:browser
-      - run: pnpm build
+      - if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm --filter @omsoo/todae exec playwright install-deps chromium
+      - run: pnpm test:browser
+
+  docs:
+    if: ${{ !github.event.pull_request.draft }}
+    name: Docs build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/cache@v4
+        with:
+          path: apps/docs/.next/cache
+          key: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('apps/docs/**', 'packages/design-system/src/**', '!**/node_modules/**', '!apps/docs/.next/**') }}
+          restore-keys: nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+      - run: pnpm build:ds
+      - run: pnpm --filter docs build
