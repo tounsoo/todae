@@ -1122,9 +1122,11 @@ table {
     scroll-snap-align: start;
   }
 
+  /* Fixed, not sticky: focusing a sticky bar's buttons would scroll the page
+     to clear them of the padding below, which is there for everything else. */
   .pg-sheet-bar {
-    position: sticky;
-    inset-block-end: 0;
+    position: fixed;
+    inset: auto 0 0;
     z-index: 1;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1134,9 +1136,15 @@ table {
     background: var(--todae-color-bg-surface);
   }
 
-  /* Keyboard focus scrolls clear of the sticky bar instead of under it. */
-  html:has(.pg-sheet-bar) {
-    scroll-padding-block-end: 6rem;
+  /* Playground measures the bar into --docs-pg-bar, so the end of the stage
+     clears it and keyboard focus scrolls clear of it instead of under it.
+     Other pages leave it unset, and both properties keep their initial values. */
+  .playground {
+    padding-block-end: var(--docs-pg-bar);
+  }
+
+  html {
+    scroll-padding-block-end: var(--docs-pg-bar);
   }
 
   .pg-sheet-bar .pg-hint {

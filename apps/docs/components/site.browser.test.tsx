@@ -16,6 +16,13 @@ import { ThemeSwitcher } from './ThemeSwitcher';
 
 afterEach(cleanup);
 
+// The playground copies its JSON here; a test can make it fail.
+const writeText = vi.fn<(text: string) => Promise<void>>();
+beforeEach(() => {
+  writeText.mockReset().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+});
+
 const path = vi.hoisted(() => ({ current: '/' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
 
@@ -143,13 +150,11 @@ describe('narrow screens', () => {
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
     expect(bar.getBoundingClientRect().bottom).toBeLessThanOrEqual(innerHeight);
     expect(await violations()).toEqual([]);
-    // A DOM click: after the runner's own click, the test frame ends up scrolled past where the page put the stage.
-    within(bar).getByRole('button', { name: 'Edit tokens' }).click();
+    await userEvent.click(within(bar).getByRole('button', { name: 'Edit tokens' }));
     const sheet = await screen.findByRole('dialog', { name: 'Tokens' });
     await frame();
     expect(await violations()).toEqual([]);
     // The export hint the rail shows on wide screens describes the sheet here.
-    expect(sheet.getAttribute('aria-describedby')).toBeTruthy();
     expect(document.getElementById(sheet.getAttribute('aria-describedby')!)?.textContent).toContain('light and dark differ');
     await userEvent.fill(within(sheet).getByLabelText('color.accent.default'), 'oklch(0.5 0.1 30)');
     expect(stage.style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.1 30)');
@@ -164,24 +169,62 @@ describe('narrow screens', () => {
     await expect.poll(() => screen.queryByRole('dialog', { name: 'Tokens' })).toBeNull();
   });
 
+  it('keeps the page still when focus moves onto the playground bar or back to it', async () => {
+    await page.viewport(390, 800);
+    const { stage, bar } = renderNarrowPlayground();
+    await frame();
+    stage.scrollIntoView({ block: 'start' });
+    await frame();
+    const still = scrollY;
+    const edit = within(bar).getByRole('button', { name: 'Edit tokens' });
+    edit.focus();
+    await userEvent.tab();
+    expect(document.activeElement).toBe(within(bar).getByRole('button', { name: 'Copy JSON' }));
+    await frame();
+    expect(scrollY).toBe(still);
+    await userEvent.click(edit);
+    await screen.findByRole('dialog', { name: 'Tokens' });
+    await frame();
+    expect(scrollY).toBe(still);
+    await userEvent.keyboard('{Escape}');
+    await expect.poll(() => screen.queryByRole('dialog', { name: 'Tokens' })).toBeNull();
+    // Focus goes back to the button that opened the sheet, without moving the page.
+    await expect.poll(() => document.activeElement).toBe(edit);
+    await frame();
+    expect(scrollY).toBe(still);
+  });
+
+  it('keeps focus and the end of the stage clear of the playground bar at its tallest', async () => {
+    await page.viewport(320, 700);
+    // The failure text is the longer status, so the bar wraps to its tallest.
+    writeText.mockRejectedValue(new Error('denied'));
+    const { stage, bar } = renderNarrowPlayground();
+    await userEvent.click(within(bar).getByRole('button', { name: 'Copy JSON' }));
+    await expect.poll(() => bar.textContent).toContain('Could not copy');
+    await frame();
+    const barTop = () => bar.getBoundingClientRect().top;
+    // A control on screen, entirely behind the bar.
+    const target = within(stage).getByRole('button', { name: 'Invite' });
+    scrollBy(0, target.getBoundingClientRect().top - barTop() - 4);
+    await frame();
+    expect(target.getBoundingClientRect().top).toBeGreaterThan(barTop());
+    expect(target.getBoundingClientRect().bottom).toBeLessThanOrEqual(innerHeight);
+    target.focus();
+    await frame();
+    expect(target.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop());
+    // The end of the stage scrolls clear of the bar.
+    scrollTo(0, document.documentElement.scrollHeight);
+    await frame();
+    expect(stage.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop() + 1);
+  });
+
   it('names the playground sheet controls in Korean on the Korean page', async () => {
     await page.viewport(390, 800);
     const { bar } = renderNarrowPlayground('ko');
     await userEvent.click(within(bar).getByRole('button', { name: '토큰 편집' }));
     const sheet = await screen.findByRole('dialog', { name: '토큰' });
-    expect(within(sheet).getByRole('button', { name: '토큰 시트 크기 조절' })).toBeTruthy();
+    expect(within(sheet).getAllByRole('button', { name: '토큰 시트 크기 조절' })).toHaveLength(1);
     expect(within(sheet).getByRole('button', { name: '토큰 닫기' })).toBeTruthy();
-  });
-
-  it('scrolls a focused playground control clear of the sticky bar', async () => {
-    await page.viewport(390, 800);
-    const { stage, bar } = renderNarrowPlayground();
-    await frame();
-    const target = within(stage).getByRole('button', { name: 'Upgrade to Pro' });
-    expect(target.getBoundingClientRect().top).toBeGreaterThan(innerHeight);
-    target.focus();
-    await frame();
-    expect(target.getBoundingClientRect().bottom).toBeLessThanOrEqual(bar.getBoundingClientRect().top);
   });
 });
 

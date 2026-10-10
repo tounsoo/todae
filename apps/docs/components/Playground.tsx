@@ -196,6 +196,24 @@ function useNarrow(): boolean {
   );
 }
 
+/**
+ * Writes the fixed bar's height to --docs-pg-bar on the root, for the space
+ * globals.css keeps under the stage and the root's scroll padding. Measured,
+ * since the copy status and the safe area change it.
+ */
+function reserveBar(bar: HTMLElement | null) {
+  if (!bar) return;
+  const root = document.documentElement;
+  const observer = new ResizeObserver(() => {
+    root.style.setProperty('--docs-pg-bar', `${Math.ceil(bar.getBoundingClientRect().height)}px`);
+  });
+  observer.observe(bar);
+  return () => {
+    observer.disconnect();
+    root.style.removeProperty('--docs-pg-bar');
+  };
+}
+
 /** The theme playground. Each locale's /playground page renders it. */
 export function Playground({ locale }: { locale: Locale }) {
   // Option values, layer names and preset names are Todae's own names and stay in English.
@@ -434,13 +452,13 @@ export function Playground({ locale }: { locale: Locale }) {
         <>
           {/* Narrow screens: the stage sits right under the theme controls, and the
             tokens open in a sheet over its lower half. */}
-          <div className="pg-sheet-bar">
+          <div className="pg-sheet-bar" ref={reserveBar}>
             <Button.Root
               variant="secondary"
               aria-haspopup="dialog"
               onClick={() => {
-                // The sheet covers the lower half, so a stage still below the fold moves up to fill
-                // the rest. One already scrolled into stays where it is.
+                // The sheet covers the lower half, so a stage whose top is below the viewport's top
+                // moves up to fill the rest. One already scrolled into stays put.
                 const stage = stageRef.current;
                 if (stage && stage.getBoundingClientRect().top > 0) stage.scrollIntoView({ block: 'start' });
                 setSheetOpen(true);
