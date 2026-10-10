@@ -1,0 +1,53 @@
+import { ScrollAreaLinks, ScrollAreaText } from '../../../components/demos/ScrollAreaDemo';
+
+# ScrollArea
+
+`ScrollArea.Root` is a `div` that scrolls and keeps the focus rings of what it holds whole. A scroll container clips everything past its padding box, so a ring around a control at its edge is cut. `ScrollArea.Root` pads itself by a ring's width and offset and gives that back with a matching negative margin, so it takes the same space it would without the room. It also sets the same amount as scroll padding, so focus scrolls a control's whole ring into view.
+
+<Example>
+  <ScrollAreaLinks />
+</Example>
+
+```tsx
+<nav aria-label="Guide sections">
+  <ScrollArea.Root style={{ blockSize: '9rem' }}>
+    <ul>{/* links */}</ul>
+  </ScrollArea.Root>
+</nav>
+```
+
+`axis` picks the direction it scrolls in, `block` by default, and clips the other. Give it a height or width the way you would any `div`; they size its content box. It has no server entry, so a Server Component renders it inside a client component.
+
+## A Tab stop for content with no controls
+
+When its content overflows and nothing inside can take focus, a keyboard could not reach the rest. So it then takes a Tab stop with the `region` role, and the arrow keys scroll it. Name it with `aria-label` or `aria-labelledby`; it warns in development when it takes a stop without a name. Its own ring is drawn inside its edge from `scroll.ring.focus`.
+
+<Example>
+  <ScrollAreaText />
+</Example>
+
+```tsx
+<ScrollArea.Root aria-label="Release notes" style={{ blockSize: '7rem' }}>
+  <Text>…</Text>
+</ScrollArea.Root>
+```
+
+`focusable` sets the stop either way: `true` keeps one while it overflows even with controls inside, and `false` never takes one, for a list of links that focus already scrolls through.
+
+## Accessible composition
+
+**Todae handles:** Room for focus rings at every edge, and scroll padding so focus brings a whole ring into view. A Tab stop with the `region` role while the content overflows and holds nothing focusable, kept while focus is on it so a resize never drops focus, and removed once the content fits. Its own focus ring, inside its edge.
+
+**You supply:** A name with `aria-label` or `aria-labelledby` whenever it can take a Tab stop. A height or width that makes it scroll.
+
+**Watch for:** Padding on `ScrollArea.Root` itself, which replaces the ring room; pad an element inside it instead. An area flush with an edge that clips, such as the viewport or a parent with `overflow: hidden`: the negative margin pushes its ring room past that edge, so set `margin: 0` on it there and the room stays inside.
+
+## When to use
+
+**When:** A region that scrolls on its own, such as a sidebar, a list in a panel or a row of cards that scrolls sideways.
+
+**When not:** The page itself scrolls → let it, with no scroll area. Content that should fold rows away rather than scroll → [ChipList](/chip-list) or `maxRows` on [Field](/field). A sheet's body → [BottomSheet](/bottomsheet)'s `BottomSheet.Body`, which already scrolls and leaves the same room.
+
+## Props
+
+<PropsTable name="ScrollArea.Root" />

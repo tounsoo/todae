@@ -6984,6 +6984,15 @@
       "ref": null,
       "layer": "contract",
       "context": null
+    },
+    {
+      "path": "scroll.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-scroll-ring-focus",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
     }
   ]
 }

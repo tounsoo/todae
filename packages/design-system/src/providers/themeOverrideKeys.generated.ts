@@ -704,6 +704,7 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'pagination.radius',
   'pagination.ring.focus',
   'pagination.size',
+  'scroll.ring.focus',
 ] as const;
 
 export const THEME_OVERRIDE_TYPES = {
@@ -1404,4 +1405,5 @@ export const THEME_OVERRIDE_TYPES = {
   'pagination.radius': 'dimension',
   'pagination.ring.focus': 'color',
   'pagination.size': 'dimension',
+  'scroll.ring.focus': 'color',
 } as const;

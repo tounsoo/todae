@@ -8,6 +8,7 @@ import {
   COMPONENT_OVERRIDE_KEYS,
   Field,
   RAW_OVERRIDE_KEYS,
+  ScrollArea,
   SEMANTIC_OVERRIDE_KEYS,
   Tabs,
   ThemeProvider,
@@ -351,7 +352,7 @@ export function Playground({ locale }: { locale: Locale }) {
     <>
       <fieldset className="pg-section">
         <legend className="pg-heading">{t.presets}</legend>
-        <div className="preset-grid focus-room">
+        <ScrollArea.Root className="preset-grid" axis="inline" focusable={false}>
           {PRESETS.map((candidate) => (
             <PresetCard
               key={candidate.id}
@@ -365,7 +366,7 @@ export function Playground({ locale }: { locale: Locale }) {
               }}
             />
           ))}
-        </div>
+        </ScrollArea.Root>
       </fieldset>
 
       <div className="pg-section pg-modes">
@@ -438,19 +439,23 @@ export function Playground({ locale }: { locale: Locale }) {
       <link rel="stylesheet" href={PRESET_FONTS_HREF} precedence="default" />
       {/* On narrow screens the controls are in the sheet, so the rail is only the intro, not a landmark. */}
       <Rail className="pg-rail" aria-label={narrow ? undefined : t.rail}>
-        <div className="pg-intro">
-          <h1>{t.title}</h1>
-          <p>{t.lead}</p>
-        </div>
+        <ScrollArea.Root className="pg-rail-scroll" focusable={false}>
+          <div className="pg-rail-body">
+            <div className="pg-intro">
+              <h1>{t.title}</h1>
+              <p>{t.lead}</p>
+            </div>
 
-        {narrow ? null : (
-          <>
-            {themeControls}
-            {tokenSection}
-            {actions}
-            <p className="pg-hint">{copyStatus ?? t.exportHint}</p>
-          </>
-        )}
+            {narrow ? null : (
+              <>
+                {themeControls}
+                {tokenSection}
+                {actions}
+                <p className="pg-hint">{copyStatus ?? t.exportHint}</p>
+              </>
+            )}
+          </div>
+        </ScrollArea.Root>
       </Rail>
       {/* Overrides only beat density tokens on the element that carries
           data-density, so the stage carries both. */}

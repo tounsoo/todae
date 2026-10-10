@@ -55,6 +55,7 @@ const OWN_ROOTS: Record<string, string[]> = {
   ToggleGroup: ['toolbar'],
   // Progress and meter share one sheet.
   Progress: ['progress', 'meter'],
+  ScrollArea: ['scroll'],
 };
 
 describe('token consistency across component styles', () => {

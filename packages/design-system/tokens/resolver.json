@@ -48,7 +48,8 @@
         { "$ref": "./components/code.json" },
         { "$ref": "./components/avatar.json" },
         { "$ref": "./components/grid.json" },
-        { "$ref": "./components/pagination.json" }
+        { "$ref": "./components/pagination.json" },
+        { "$ref": "./components/scroll.json" }
       ],
       "$extensions": {
         "dev.todae": {

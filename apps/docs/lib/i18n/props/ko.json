@@ -1942,5 +1942,15 @@
       "en": "Tooltip id. Default is a generated id.",
       "ko": "팁 id. 기본값은 생성된 id입니다."
     }
+  },
+  "ScrollArea.Root": {
+    "axis": {
+      "en": "The direction it scrolls in. The other direction is clipped.",
+      "ko": "스크롤할 방향. 다른 방향은 잘라 냅니다."
+    },
+    "focusable": {
+      "en": "Whether it takes a Tab stop, so a keyboard can scroll it, while its content overflows. Without it, only when nothing inside can take focus. Name it with aria-label or aria-labelledby when it can take one.",
+      "ko": "콘텐츠가 넘치는 동안 키보드로 스크롤할 수 있도록 Tab 정지점이 될지 정합니다. 주지 않으면 안에 포커스를 받을 요소가 없을 때만 됩니다. 정지점이 될 수 있으면 aria-label이나 aria-labelledby로 이름을 붙이세요."
+    }
   }
 }

@@ -13,8 +13,8 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { MobileNav } from './MobileNav';
 import { APPEARANCE_SCRIPT } from './appearanceScript';
 import { Providers } from './Providers';
+import { Sidebar } from './Sidebar';
 import { SiteLink } from './SiteLink';
-import { SiteNav } from './SiteNav';
 import { SITE_GROUPS } from './siteGroups';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import '../app/globals.css';
@@ -82,9 +82,7 @@ export function SiteShell({
             </div>
           </header>
           <div className="layout">
-            <aside className="sidebar">
-              <SiteNav locale={locale} />
-            </aside>
+            <Sidebar locale={locale} />
             <main id="content" tabIndex={-1}>
               {children}
             </main>

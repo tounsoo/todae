@@ -45,6 +45,7 @@ export const SITE_GROUPS = [
       ['/popover', 'Popover'],
       ['/progress', 'Progress and Meter'],
       ['/radio', 'Radio'],
+      ['/scroll-area', 'ScrollArea'],
       ['/separator', 'Separator'],
       ['/slider', 'Slider'],
       ['/spinner', 'Spinner and Skeleton'],

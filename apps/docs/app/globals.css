@@ -216,12 +216,22 @@ body {
   }
 
   .sidebar {
-    display: block;
+    display: flex;
+    flex-direction: column;
     position: sticky;
     inset-block-start: var(--docs-topbar);
     block-size: calc(100dvh - var(--docs-topbar));
-    overflow-y: auto;
+  }
+
+  /* Flush with the viewport's bottom and the top bar, so its ring room stays inside it there. */
+  .sidebar-scroll {
+    flex: 1 1 auto;
+    margin-block: 0;
     overscroll-behavior: contain;
+  }
+
+  /* Inside the scroll area: its own padding is the room for focus rings. */
+  .sidebar-scroll > .site-nav {
     padding-block: 1.75rem 3rem;
   }
 }
@@ -798,33 +808,6 @@ table {
   background: var(--todae-color-bg-highlight);
 }
 
-/* ---------- Focus room ---------- */
-
-/* A scroll container clips what paints past its padding box, focus rings
-   included. Each one needs a ring's width plus offset as room: padding with a
-   matching negative margin where its content would touch the edge, and as
-   scroll padding, so a control the browser scrolls into view on focus stops
-   short of the edge. Todae's own containers (ChipList, Field's chip rows,
-   BottomSheet.Body) do the same. clippedRings in test/ checks for cut rings. */
-.focus-room,
-.sidebar,
-.pg-rail {
-  --docs-focus-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
-  scroll-padding: var(--docs-focus-room);
-}
-
-/* For a container with no padding of its own. */
-.focus-room {
-  margin: calc(-1 * var(--docs-focus-room));
-  padding: var(--docs-focus-room);
-}
-
-/* The sidebar's links fill its width, so it takes inline room; its own block padding covers the rest. */
-.sidebar {
-  margin-inline: calc(-1 * var(--docs-focus-room));
-  padding-inline: var(--docs-focus-room);
-}
-
 /* ---------- Playground ---------- */
 
 .playground {
@@ -843,10 +826,22 @@ table {
 .pg-rail {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem 1.25rem 0;
   border-block-end: 1px solid var(--docs-line);
   background: var(--todae-color-bg-surface);
+}
+
+/* Flush with the viewport's edges, so its ring room stays inside it. */
+.pg-rail-scroll {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+/* Inside the scroll area: its own padding is the room for focus rings. */
+.pg-rail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem 1.25rem 0;
 }
 
 @media (min-width: 64rem) {
@@ -854,10 +849,12 @@ table {
     position: sticky;
     inset-block-start: var(--docs-topbar);
     block-size: calc(100dvh - var(--docs-topbar));
-    overflow-y: auto;
-    overscroll-behavior: contain;
     border-block-end: 0;
     border-inline-end: 1px solid var(--docs-line);
+  }
+
+  .pg-rail-scroll {
+    overscroll-behavior: contain;
   }
 }
 
@@ -1123,13 +1120,13 @@ table {
     flex: 1 1 auto;
   }
 
-  .pg-rail {
+  .pg-rail-body {
     padding-block-end: 1.25rem;
   }
 
   /* The server sends the wide layout; everything but the intro stays hidden
      until the sheet takes it over. */
-  .pg-rail > :not(.pg-intro) {
+  .pg-rail-body > :not(.pg-intro) {
     display: none;
   }
 
@@ -1193,7 +1190,6 @@ table {
   grid-template-columns: none;
   grid-auto-flow: column;
   grid-auto-columns: 6.5rem;
-  overflow-x: auto;
   scroll-snap-type: x proximity;
 }
 

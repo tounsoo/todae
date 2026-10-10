@@ -14,7 +14,7 @@ import { PropsTable } from './PropsTable';
 import { PropsTableView, type PropsTableRow } from './PropsTableView';
 import schema from '@omsoo/todae/schema/components.json';
 import { ThemeSwitcher } from './ThemeSwitcher';
-import { SiteNav } from './SiteNav';
+import { Sidebar } from './Sidebar';
 import { clippedRings } from '../test/clippedRings';
 
 afterEach(cleanup);
@@ -434,16 +434,14 @@ describe('focus rings in the site scroll containers', () => {
     render(
       <Providers>
         <div className="layout">
-          <aside className="sidebar">
-            <SiteNav locale="en" />
-          </aside>
+          <Sidebar locale="en" />
           <main />
         </div>
       </Providers>,
     );
     await frame();
     // The sidebar scrolls, so the last links start out of view and are scrolled in on focus.
-    const sidebar = document.querySelector<HTMLElement>('.sidebar')!;
+    const sidebar = document.querySelector<HTMLElement>('.sidebar-scroll')!;
     expect(sidebar.scrollHeight).toBeGreaterThan(sidebar.clientHeight);
     expect(clippedRings(sidebar)).toEqual([]);
   });
