@@ -4,7 +4,7 @@ Read this before adding a component, hook, recipe, token or docs page. It record
 
 These are rules for new and changed code. Some older code predates a rule and does not follow it yet. Don't copy an exception into new code; bring old code in line when you are already changing it.
 
-The docs site explains the same ideas to people who use Todae: [Composition](apps/docs/app/(en)/composition/page.mdx), [Build on Todae](apps/docs/app/(en)/guides/build-on-todae/page.mdx), [CSS layers](apps/docs/app/(en)/guides/css-layers/page.mdx), [Tokens](apps/docs/app/(en)/tokens/page.mdx) and [Native platform](apps/docs/app/(en)/platform/page.mdx). This file is for the people and agents who change Todae. When a decision here changes, update this file in the same pull request.
+The docs site explains the same ideas to people who use Todae: [Composition](apps/docs/app/(en)/composition/page.mdx), [Build on Todae](apps/docs/app/(en)/guides/build-on-todae/page.mdx), [CSS layers](apps/docs/app/(en)/guides/css-layers/page.mdx), [Tokens](apps/docs/app/(en)/tokens/page.mdx) and [Native platform](apps/docs/app/(en)/platform/page.mdx). This file is for the people and agents who change Todae. Paths such as `src/…`, `tokens/…` and `vite.config.ts` are relative to `packages/design-system`. When a decision here changes, update this file in the same pull request.
 
 ## What Todae is
 
@@ -38,7 +38,7 @@ Rules:
 - **Routers plug in through a `render` prop** (`Link.Root`), not an `as` prop or a router dependency.
 - **Text Todae writes by itself**, such as a close button's default name, comes from `StringsProvider` (`useStrings()`), not a hard-coded English string. A server entry, which can't read context, uses `DEFAULT_STRINGS`.
 - **Glyphs** are read from `GlyphsProvider`. Put glyph state (hidden, rotated, mirrored) on the `[data-todae-glyph]` wrapper span, not on the `svg`, so a swapped-in icon follows it.
-- **Server entries.** A component that a Server Component should render directly gets a server-safe entry: `src/server/<slug>.ts`, an entry in `vite.config.ts`, an `exports` entry in `package.json` as `@omsoo/todae/<slug>`, and its slug in the server-entry list in `src/entries.test.ts`. Where the component reads a client provider, the client version is a `*.client.tsx` wrapper exported from the root entry.
+- **Server entries.** A component that a Server Component should render directly gets a server-safe entry, `src/server/<slug>.ts`, imported as `@omsoo/todae/<slug>`. The slug is also listed in build, test and docs files; search the repo for an existing slug such as `visually-hidden` and add yours wherever it appears. Where the component reads a client provider, the client version is a `*.client.tsx` wrapper exported from the root entry.
 - **Keep `'use client'` out of component and hook files.** It sits in `src/index.ts` and the provider files. `src/entries.test.ts` checks that a server entry's import closure has no `'use client'`, hooks, `createContext` or CSS import, so helpers a server entry needs stay hook-free in their own files (`cx.ts`, `tone.ts`).
 
 The rules below were read from the code rather than decided in a thread. Follow them unless there is a reason not to.
@@ -78,7 +78,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 - **Take colors, spacing, radii and sizes from tokens** through their `--todae-*` custom properties rather than literals. Restyling goes through tokens first; a class works for layout.
 - **Classes are camelCase**, and a part's main class is usually `.root`. Name a custom property a sheet sets for its own arithmetic `--_<name>` (`--_ring-room`), so it doesn't look like a token.
 - **Use logical properties** (`inline`, `block`) for layout, and `:dir(rtl)` for anything that must flip.
-- **Some CSS rules are tested.** Read `src/styles/tokenConsistency.test.ts` before writing a new sheet: it covers focus rings, disabled styles, tones and which tokens a sheet may read.
+- **Some CSS rules are tested.** Read `src/styles/tokenConsistency.test.ts` before writing a new sheet: it covers focus rings, disabled styles, tones and which tokens a sheet may read. `src/components/noScrollbarStyling.test.ts` bans scrollbar styling, and `src/styles/no-container-transforms.test.ts` bans a `transform` on an element that may contain a tooltip trigger.
 - **Forced colors.** Where a state shows only through fill (pressed, selected, checked, current), add an `@media (forced-colors: active)` rule that maps it to system colors.
 - **Use `!important` only for rules that must hold**, such as `VisuallyHidden.Root` and hidden tab panels.
 - **Wrap hand-written selectors in `todae.base` in `:where()`,** so any class a company adds wins.
@@ -88,7 +88,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 - **Use the best native HTML and CSS features, with no JavaScript fallbacks and no support matrix.** The feature list is on the [Native platform](apps/docs/app/(en)/platform/page.mdx) page; add a feature there when a component starts to depend on it. *Why:* Todae stays small and gets better as browsers do.
 - **Overlays.** `Dialog` and `BottomSheet` render in place on a modal `<dialog>` (no portal), so they inherit the theme. `Popover`, `Menu` and `Tooltip` use `popover="manual"` with CSS anchor positioning. Page scroll stops through `:root:has(dialog:modal)` in CSS, not a scroll-lock hook.
 - **Toast** holds text and buttons, no nested menus or dialogs. Its region follows Todae's modal stack into the front modal; a product's own modal `<dialog>` joins that stack through `useModalLayer`.
-- **Motion** takes its durations and easings from the component's contract tokens, respects `prefers-reduced-motion`, and only has to work in Chrome. Don't add workarounds for Safari motion gaps.
+- **Motion** takes its durations and easings from contract tokens, respects `prefers-reduced-motion`, and only has to work in Chrome. Don't add workarounds for Safari motion gaps.
 
 ## Accessibility
 
@@ -98,7 +98,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 
 ## Tests
 
-- Unit tests sit next to the code as `*.test.ts(x)` and run in jsdom unless a file sets another environment.
+- Design-system unit tests sit next to the code as `*.test.ts(x)` and run in jsdom unless a file sets another environment.
 - Behavior that needs real layout, focus or the top layer goes in `src/browser/*.browser.test.tsx`, which runs in Chromium through Playwright (`pnpm test:browser`).
 - Add each new part to `src/components/parts.test.tsx`, which checks that parts forward native attributes and their ref.
 - `src/components/overlay.parity.test.tsx` holds Dialog, Drawer and BottomSheet to one contract (labelled, initial focus, Escape, backdrop reason, focus restore, named close button). A new modal overlay should join it.
