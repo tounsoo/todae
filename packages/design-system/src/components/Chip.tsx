@@ -1,14 +1,18 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
 import { useStrings } from '../providers/StringsProvider';
-import type { AlertTone } from './Alert';
-import type { CategoryTone } from './tone';
+import type { BadgeTone } from './Badge';
 import styles from './Chip.module.css';
 
-export type ChipTone = 'neutral' | AlertTone | CategoryTone;
+/** The same tones as Badge. */
+export type ChipTone = BadgeTone;
 
 export type ChipRootProps = {
   children: string;
-  /** Colors from the chip.<tone> contract tokens. A disabled chip takes the disabled colors instead. */
+  /**
+   * `neutral` reads the chip.bg, chip.fg and chip.border state tokens; other
+   * tones read the chip.<tone> contract tokens. A disabled chip takes the
+   * disabled colors instead.
+   */
   tone?: ChipTone;
   onRemove?: () => void;
   /** Remove button name. Default is the `removeChip` string, "Remove {label}" in English. */

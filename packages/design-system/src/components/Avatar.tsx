@@ -31,7 +31,10 @@ export type AvatarRootProps = {
   /** Names the avatar for assistive technology, such as "Ada Lovelace". */
   label?: string;
   size?: AvatarSize;
-  /** Fallback colors from the avatar.<tone> contract tokens. */
+  /**
+   * Colors behind the fallback. `neutral` reads avatar.bg and avatar.fg; other
+   * tones read the avatar.<tone> contract tokens.
+   */
   tone?: AvatarTone;
 } & Omit<ComponentPropsWithRef<'span'>, 'role' | 'aria-label' | 'aria-labelledby'>;
 

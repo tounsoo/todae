@@ -15,7 +15,7 @@ export const meta = {
       type: '"neutral" | "info" | "success" | "warning" | "critical" | "category-1" | "category-2" | "category-3" | "category-4" | "category-5" | "category-6" | "category-7" | "category-8"',
       required: false,
       default: '"neutral"',
-      description: 'Colors from the chip.<tone> contract tokens. A disabled chip takes the disabled colors instead.',
+      description: 'neutral reads the chip.bg, chip.fg and chip.border state tokens; other tones read the chip.<tone> contract tokens. A disabled chip takes the disabled colors instead.',
     },
     {
       name: 'onRemove',

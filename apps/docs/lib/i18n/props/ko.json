@@ -69,8 +69,8 @@
       "ko": "avatar.size contract 토큰의 크기입니다."
     },
     "tone": {
-      "en": "Fallback colors from the avatar.<tone> contract tokens. categoryTone(id) picks a stable category per person.",
-      "ko": "avatar.<tone> contract 토큰의 대체 표시 색입니다. categoryTone(id)는 사람마다 늘 같은 카테고리를 고릅니다."
+      "en": "Colors behind the fallback. neutral reads avatar.bg and avatar.fg; other tones read the avatar.<tone> contract tokens. categoryTone(id) picks a stable category per person.",
+      "ko": "대체 표시 뒤의 색입니다. neutral은 avatar.bg와 avatar.fg를 읽고, 다른 톤은 avatar.<tone> contract 토큰을 읽습니다. categoryTone(id)는 사람마다 늘 같은 카테고리를 고릅니다."
     },
     "children": {
       "en": "Avatar.Image and Avatar.Fallback.",
@@ -301,8 +301,8 @@
       "ko": "칩 레이블. 텍스트만."
     },
     "tone": {
-      "en": "Colors from the chip.<tone> contract tokens. A disabled chip takes the disabled colors instead.",
-      "ko": "chip.<tone> contract 토큰의 색을 씁니다. 비활성 칩은 대신 비활성 색을 씁니다."
+      "en": "neutral reads the chip.bg, chip.fg and chip.border state tokens; other tones read the chip.<tone> contract tokens. A disabled chip takes the disabled colors instead.",
+      "ko": "neutral은 chip.bg, chip.fg, chip.border 상태 토큰을 읽고, 다른 톤은 chip.<tone> contract 토큰을 읽습니다. 비활성 칩은 대신 비활성 색을 씁니다."
     },
     "onRemove": {
       "en": "Renders a named remove button.",

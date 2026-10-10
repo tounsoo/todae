@@ -317,6 +317,10 @@ describe('Chip tones in a browser', () => {
     // The cross takes the label's color on a tone.
     expect(getComputedStyle(screen.getByRole('button', { name: 'Remove Toned' })).color).toBe(rest.fg);
 
+    // Hover reaches the chip: a neutral chip's border changes under it.
+    const neutralBorder = style('neutral').borderTopColor;
+    await userEvent.hover(screen.getByTestId('neutral'));
+    expect(style('neutral').borderTopColor).not.toBe(neutralBorder);
     await userEvent.hover(screen.getByTestId('tone'));
     expect({ bg: tone.backgroundColor, fg: tone.color, border: tone.borderTopColor }).toEqual(rest);
 

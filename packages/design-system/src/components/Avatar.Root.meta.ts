@@ -23,7 +23,7 @@ export const meta = {
       type: '"neutral" | "category-1" | "category-2" | "category-3" | "category-4" | "category-5" | "category-6" | "category-7" | "category-8"',
       required: false,
       default: '"neutral"',
-      description: 'Fallback colors from the avatar.<tone> contract tokens. categoryTone(id) picks a stable category per person.',
+      description: 'Colors behind the fallback. neutral reads avatar.bg and avatar.fg; other tones read the avatar.<tone> contract tokens. categoryTone(id) picks a stable category per person.',
     },
     {
       name: 'children',
