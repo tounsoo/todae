@@ -39,26 +39,26 @@ Selecting in `OptionList` does not close the popover. The fruit demo closes on s
 ## What goes where
 
 <Table.Root>
-  <thead>
-    <tr>
-      <th scope="col">Concern</th>
-      <th scope="col">API</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">Behavior</th>
-      <td>
+  <Table.Head>
+    <Table.Row>
+      <Table.HeaderCell scope="col">Concern</Table.HeaderCell>
+      <Table.HeaderCell scope="col">API</Table.HeaderCell>
+    </Table.Row>
+  </Table.Head>
+  <Table.Body>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Behavior</Table.HeaderCell>
+      <Table.Cell>
         <LocalizedLink href="/utilities/use-popover"><Code.Root>usePopover</Code.Root></LocalizedLink> — <Code.Root>open</Code.Root> / <Code.Root>defaultOpen</Code.Root> / <Code.Root>onOpenChange</Code.Root>, <Code.Root>haspopup</Code.Root>, <Code.Root>anchorRef</Code.Root>, focus refs, <Code.Root>enabled</Code.Root>, <Code.Root>id</Code.Root>
-      </td>
-    </tr>
-    <tr>
-      <th scope="row">Chrome</th>
-      <td>
+      </Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">Chrome</Table.HeaderCell>
+      <Table.Cell>
         <Code.Root>Popover</Code.Root> — <Code.Root>children</Code.Root>, <Code.Root>className</Code.Root>, <Code.Root>style</Code.Root>, accessible name
-      </td>
-    </tr>
-  </tbody>
+      </Table.Cell>
+    </Table.Row>
+  </Table.Body>
 </Table.Root>
 
 ## Accessible composition

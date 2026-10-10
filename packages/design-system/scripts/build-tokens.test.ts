@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -134,6 +134,7 @@ describe('build-tokens validations', () => {
         type: 'color',
         value: { $ref: '#/button/bg/default/$value' },
         ref: 'button.bg.default',
+        refs: [{ path: 'button.bg.default', type: 'color', role: 'value' }],
         cssVar: '--todae-color-bg-canvas',
         cssValue: 'var(--todae-button-bg-default)',
         layer: 'appearance',
@@ -144,6 +145,7 @@ describe('build-tokens validations', () => {
         type: 'color',
         value: { $ref: '#/color/bg/canvas/$value' },
         ref: 'color.bg.canvas',
+        refs: [{ path: 'color.bg.canvas', type: 'color', role: 'value' }],
         cssVar: '--todae-button-bg-default',
         cssValue: 'var(--todae-color-bg-canvas)',
         layer: 'contract',
@@ -189,13 +191,17 @@ describe('build-tokens validations', () => {
 
   it('emits relative color syntax for channel refs', () => {
     const ref = (path: string, i: number) => ({ $ref: `#/${path.replaceAll('.', '/')}/$value/components/${i}` });
-    const color = (components: unknown[], alpha?: number) => ({
+    const color = (components: unknown[], alpha?: unknown) => ({
       $type: 'color',
       $value: { colorSpace: 'oklch', components, ...(alpha === undefined ? {} : { alpha }) },
     });
     expect(
       serializeValue(color([ref('color.accent.default', 0), ref('color.accent.default', 1), ref('color.accent.default', 2)], 0.12), 'x'),
-    ).toEqual({ ref: 'color.accent.default', cssValue: 'oklch(from var(--todae-color-accent-default) l c h / 0.12)' });
+    ).toEqual({
+      ref: 'color.accent.default',
+      refs: [{ path: 'color.accent.default', type: 'color', role: 'component' }],
+      cssValue: 'oklch(from var(--todae-color-accent-default) l c h / 0.12)',
+    });
     expect(serializeValue(color([0.4, ref('color.accent.default', 1), ref('color.accent.default', 2)]), 'x').cssValue).toBe(
       'oklch(from var(--todae-color-accent-default) 0.4 c h / 1)',
     );
@@ -204,6 +210,43 @@ describe('build-tokens validations', () => {
     );
     expect(() => serializeValue(color([0.5, 0.1]), 'x')).toThrow(/three components/);
     expect(() => serializeValue(color(['0.5', 0.1, 30]), 'x')).toThrow(/number or a component \$ref/);
+  });
+
+  it('takes a color alpha as a number in [0, 1] or a JSON Pointer to a number token', () => {
+    const channel = (i: number) => ({ $ref: `#/color/accent/default/$value/components/${i}` });
+    const color = (components: unknown[], alpha: unknown) => ({
+      $type: 'color',
+      $value: { colorSpace: 'oklch', components, alpha },
+    });
+    const opacity = { $ref: '#/opacity/12/$value' };
+    expect(serializeValue(color([channel(0), channel(1), channel(2)], opacity), 'x')).toEqual({
+      ref: 'color.accent.default',
+      refs: [
+        { path: 'color.accent.default', type: 'color', role: 'component' },
+        { path: 'opacity.12', type: 'number', role: 'alpha' },
+      ],
+      cssValue: 'oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-12))',
+    });
+    expect(serializeValue(color([0.5, 0.1, 30], opacity), 'x')).toEqual({
+      ref: null,
+      refs: [{ path: 'opacity.12', type: 'number', role: 'alpha' }],
+      cssValue: 'oklch(0.5 0.1 30 / var(--todae-opacity-12))',
+    });
+    expect(serializeValue(color([0.5, 0.1, 30], 0), 'x').cssValue).toBe('oklch(0.5 0.1 30 / 0)');
+    expect(serializeValue(color([0.5, 0.1, 30], 1), 'x').cssValue).toBe('oklch(0.5 0.1 30)');
+    for (const bad of [1.5, -0.1, '0.5', Number.NaN]) {
+      expect(() => serializeValue(color([0.5, 0.1, 30], bad), 'x'), String(bad)).toThrow(/alpha must be a number in \[0, 1\]/);
+    }
+    expect(() => serializeValue(color([0.5, 0.1, 30], { $ref: 'opacity.12' }), 'x')).toThrow(
+      /alpha \$ref "opacity\.12" must be a JSON Pointer/,
+    );
+  });
+
+  it('rejects curly-brace aliases with a JSON Pointer hint', () => {
+    expect(() => serializeValue({ $type: 'color', $value: '{color.gray.50}' }, 'x')).toThrow(
+      /curly-brace alias; write \{ "\$ref": "#\/color\/gray\/50\/\$value" \}/,
+    );
+    expect(() => serializeValue({ $type: 'dimension', $value: '{Space.2}' }, 'x')).toThrow(/curly-brace alias/);
   });
 
   it('serializes motion, font family and shadow types', () => {
@@ -232,6 +275,9 @@ describe('build-tokens validations', () => {
       '0px 4px 12px -2px oklch(0 0 0 / 0.2), inset 0px 4px 12px -2px oklch(0 0 0 / 0.2)',
     );
     expect(() => v('shadow', { ...layer, color: { $ref: '#/color/gray/950/$value' } })).toThrow(/literal OKLCH/);
+    expect(() => v('shadow', { ...layer, color: { ...layer.color, alpha: { $ref: '#/opacity/20/$value' } } })).toThrow(
+      /no \$ref in its channels or alpha/,
+    );
     expect(() => v('shadow', { ...layer, blur: { $ref: '#/space/2/$value' } })).toThrow(/literal dimension/);
     expect(() => v('shadow', { ...layer, extra: 1 })).toThrow(/unknown key "extra"/);
     expect(() => v('shadow', [])).toThrow(/at least one layer/);
@@ -265,6 +311,28 @@ describe('committed token graph', () => {
       for (const pointer of pointers) expect(pointer.startsWith(pathToPointer(token.ref!)), token.path).toBe(true);
       expect(token.ref).toMatch(PATH_RE);
     }
+  });
+
+  it('references only through JSON Pointers in every token source file', async () => {
+    const dir = join(import.meta.dirname, '../tokens');
+    const files = (await readdir(dir, { recursive: true }))
+      .filter((file) => file.endsWith('.json') && !file.includes('generated') && file !== 'resolver.json')
+      .sort();
+    expect(files).toContain('core.json');
+    const refs: string[] = [];
+    function walk(node: unknown, at: string): void {
+      if (typeof node === 'string') expect(node, at).not.toMatch(/^\{.*\}$/);
+      if (Array.isArray(node)) node.forEach((child, i) => walk(child, `${at}[${i}]`));
+      if (typeof node !== 'object' || node === null || Array.isArray(node)) return;
+      for (const [key, child] of Object.entries(node)) {
+        if (key === '$ref') refs.push(child as string);
+        walk(child, `${at}.${key}`);
+      }
+    }
+    for (const file of files) walk(JSON.parse(await readFile(join(dir, file), 'utf8')), file);
+    expect(refs.length).toBeGreaterThan(0);
+    for (const ref of refs) expect(ref).toMatch(/^#\/[a-z0-9-]+(?:\/[a-z0-9-]+)*\/\$value(?:\/components\/[0-2])?$/);
+    expect(refs).toContain('#/opacity/12/$value');
   });
 
   it('builds and snapshots CSS selectors', async () => {
@@ -344,12 +412,20 @@ describe('committed token graph', () => {
     for (const context of ['light', 'dark'] as const) {
       const value = (path: string) =>
         graph.tokens.find((t) => t.layer === 'appearance' && t.context === context && t.path === path)?.cssValue;
-      expect(value('color.bg.selected')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.2)');
-      expect(value('color.accent.soft')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.12)');
-      expect(value('color.accent.soft-strong')).toBe('oklch(from var(--todae-color-accent-default) l c h / 0.28)');
-      expect(value('color.bg.scrim')).toMatch(/^oklch\(from var\(--todae-color-gray-950\) l c h \/ 0\.\d+\)$/);
+      expect(value('color.bg.selected')).toBe('oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20))');
+      expect(value('color.accent.soft')).toBe('oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-12))');
+      expect(value('color.accent.soft-strong')).toBe(
+        'oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-28))',
+      );
+      // A theme's opacity scale cannot tint fills meant to be transparent.
+      expect(value('color.bg.transparent')).toMatch(/^oklch\(from var\(--todae-color-gray-\d+\) l c h \/ 0\)$/);
+      expect(value('color.bg.scrim')).toMatch(/^oklch\(from var\(--todae-color-gray-950\) l c h \/ var\(--todae-opacity-\d+\)\)$/);
     }
     expect(graph.tokens.filter((t) => t.type === 'color' && t.layer === 'appearance' && t.ref === null)).toEqual([]);
+    // Every translucent color takes its alpha from the opacity scale; transparent stays a literal 0.
+    const translucent = graph.tokens.filter((t) => t.layer !== 'core' && t.type === 'color' && /\/ (?![01]\))/.test(t.cssValue));
+    expect(translucent.length).toBeGreaterThan(0);
+    for (const token of translucent) expect(token.cssValue, token.path).toMatch(/ \/ var\(--todae-opacity-\d+\)\)$/);
   });
 
   it('matches the APCA-W3 reference values', () => {
@@ -397,7 +473,8 @@ describe('committed token graph', () => {
     for (const context of ['light', 'dark']) {
       const alpha = (path: string) => {
         const token = graph.tokens.find((t) => t.path === path && t.context === context);
-        return (token?.value as { alpha: number }).alpha;
+        const ref = token?.refs.find((r) => r.role === 'alpha');
+        return graph.tokens.find((t) => t.path === ref?.path)?.value as number;
       };
       // option.bg.hover is color.bg.highlight, selected is color.bg.selected, selected-highlighted is accent.soft-strong.
       expect(alpha('color.bg.selected'), context).toBeGreaterThanOrEqual(2 * alpha('color.bg.highlight'));
@@ -596,6 +673,46 @@ describe('resolver-driven build', () => {
     await expect(buildTokensGraph(root)).rejects.toThrow(
       /token "space\.tint" in modifier "size" depends on "color\.accent" from modifier "appearance"/,
     );
+  });
+
+  it('checks a color alpha $ref: it must exist, be a number in [0, 1], and respect layer order', async () => {
+    const veil = (alpha: unknown) => ({
+      $type: 'color',
+      $value: {
+        colorSpace: 'oklch',
+        components: [0, 1, 2].map((i) => ({ $ref: `#/color/gray/950/$value/components/${i}` })),
+        alpha,
+      },
+    });
+    const withVeil = (alpha: unknown, extra: Record<string, unknown> = {}) =>
+      fixture((resolver) => {
+        (resolver.sets.contract!.sources as unknown[]).push({ field: { veil: veil(alpha), ...extra } });
+      });
+
+    const ok = await buildTokensGraph(await withVeil({ $ref: '#/opacity/45/$value' }));
+    expect(ok.css).toContain('--todae-field-veil: var(--_todae-field-veil, oklch(from var(--todae-color-gray-950) l c h / var(--todae-opacity-45)));');
+    // A number alias chain is followed to its literal.
+    const chained = await buildTokensGraph(
+      await withVeil({ $ref: '#/field/fade/$value' }, { fade: { $type: 'number', $value: { $ref: '#/opacity/20/$value' } } }),
+    );
+    expect(chained.tokens.find((t) => t.path === 'field.veil')?.refs.map((r) => r.path)).toEqual(['color.gray.950', 'field.fade']);
+
+    await expect(buildTokensGraph(await withVeil({ $ref: '#/opacity/99/$value' }))).rejects.toThrow(
+      /\$ref "opacity\.99" does not exist/,
+    );
+    await expect(buildTokensGraph(await withVeil({ $ref: '#/space/2/$value' }))).rejects.toThrow(
+      /token "field\.veil" alpha must reference a number, not the dimension "space\.2"/,
+    );
+    await expect(
+      buildTokensGraph(await withVeil({ $ref: '#/field/fade/$value' }, { fade: { $type: 'number', $value: 1.5 } })),
+    ).rejects.toThrow(/token "field\.veil" alpha "field\.fade" must stay in \[0, 1\], not 1\.5/);
+
+    const upward = await fixture((resolver) => {
+      resolver.modifiers.appearance!.contexts.light!.push({ color: { veil: veil({ $ref: '#/field/fade/$value' }) } });
+      resolver.modifiers.appearance!.contexts.dark!.push({ color: { veil: veil(0.5) } });
+      (resolver.sets.contract!.sources as unknown[]).push({ field: { fade: { $type: 'number', $value: 0.5 } } });
+    });
+    await expect(buildTokensGraph(upward)).rejects.toThrow(/must point at a lower layer than appearance/);
   });
 
   it('allows refs within one set or context, but not cycles or type changes', async () => {
@@ -1022,7 +1139,7 @@ describe('company token build', () => {
   });
 
   it('composites a translucent text color and rejects a translucent background', async () => {
-    const veil = (alpha: number, min: number) =>
+    const veil = (alpha: unknown, min: number) =>
       company((r) => {
         const ch = (i: number) => ({ $ref: `#/color/fg/default/$value/components/${i}` });
         r.sets.brand.sources.push({
@@ -1034,6 +1151,12 @@ describe('company token build', () => {
     await expect(buildCompanyTokens({ resolver: await veil(0.6, 45), base: tokensDir })).resolves.toBeDefined();
     await expect(buildCompanyTokens({ resolver: await veil(0.6, 90), base: tokensDir })).rejects.toThrow(
       /"brand\.veil" on "color\.bg\.canvas" in appearance "light" is Lc \d+\.\d, below 90/,
+    );
+    // An alpha $ref is resolved to its number before compositing.
+    const faint = { $ref: '#/opacity/45/$value' };
+    await expect(buildCompanyTokens({ resolver: await veil(faint, 15), base: tokensDir })).resolves.toBeDefined();
+    await expect(buildCompanyTokens({ resolver: await veil(faint, 60), base: tokensDir })).rejects.toThrow(
+      /"brand\.veil" on "color\.bg\.canvas" in appearance "light" is Lc \d+\.\d, below 60/,
     );
     // A set's pairs run in every appearance, not just the default one.
     const darkOnly = await company((r) => {

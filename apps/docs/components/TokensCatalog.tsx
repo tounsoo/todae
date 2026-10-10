@@ -48,25 +48,25 @@ export function TokensCatalog() {
         return (
           <ScrollRegion key={layer}>
           <Table.Root>
-            <caption>{layer}</caption>
+            <Table.Caption>{layer}</Table.Caption>
             <TokensTableHead />
-            <tbody>
+            <Table.Body>
               {rows.map((row) => (
-                <tr key={`${row.layer}:${row.context ?? ''}:${row.path}`}>
-                  <th scope="row">
+                <Table.Row key={`${row.layer}:${row.context ?? ''}:${row.path}`}>
+                  <Table.HeaderCell scope="row">
                     <Code.Root>{row.path}</Code.Root>
-                  </th>
-                  <td>{row.context ?? '—'}</td>
-                  <td>
+                  </Table.HeaderCell>
+                  <Table.Cell>{row.context ?? '—'}</Table.Cell>
+                  <Table.Cell>
                     <Code.Root>{row.cssVar}</Code.Root>
-                  </td>
-                  <td>
+                  </Table.Cell>
+                  <Table.Cell>
                     <Code.Root>{row.cssValue}</Code.Root>
-                  </td>
-                  <td>{row.ref ? <Code.Root>{row.ref}</Code.Root> : '—'}</td>
-                </tr>
+                  </Table.Cell>
+                  <Table.Cell>{row.ref ? <Code.Root>{row.ref}</Code.Root> : '—'}</Table.Cell>
+                </Table.Row>
               ))}
-            </tbody>
+            </Table.Body>
           </Table.Root>
           </ScrollRegion>
         );

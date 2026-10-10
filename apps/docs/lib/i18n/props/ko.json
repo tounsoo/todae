@@ -1263,8 +1263,54 @@
   },
   "Table.Root": {
     "children": {
-      "en": "A caption, then thead, tbody and tfoot with their rows and cells.",
-      "ko": "caption, 그다음 행과 셀을 담은 thead, tbody, tfoot."
+      "en": "A Table.Caption, then Table.Head, Table.Body and Table.Foot with their rows and cells.",
+      "ko": "먼저 Table.Caption, 그다음 행과 셀을 담은 Table.Head, Table.Body, Table.Foot."
+    }
+  },
+  "Table.Caption": {
+    "children": {
+      "en": "What the table holds.",
+      "ko": "표에 담긴 내용."
+    }
+  },
+  "Table.Head": {
+    "children": {
+      "en": "Table.Row parts with the column headers.",
+      "ko": "열 머리글을 담은 Table.Row 파트."
+    }
+  },
+  "Table.Body": {
+    "children": {
+      "en": "Table.Row parts with the data.",
+      "ko": "데이터를 담은 Table.Row 파트."
+    }
+  },
+  "Table.Foot": {
+    "children": {
+      "en": "Table.Row parts with the totals.",
+      "ko": "합계를 담은 Table.Row 파트."
+    }
+  },
+  "Table.Row": {
+    "children": {
+      "en": "Table.HeaderCell and Table.Cell parts.",
+      "ko": "Table.HeaderCell과 Table.Cell 파트."
+    }
+  },
+  "Table.HeaderCell": {
+    "scope": {
+      "en": "Which cells it heads: col, row, colgroup or rowgroup. Use col in Table.Head and row for the first cell of a body row.",
+      "ko": "어느 셀의 머리글인지: col, row, colgroup, rowgroup. Table.Head 안에서는 col, 본문 행의 첫 셀에는 row를 쓰세요."
+    },
+    "children": {
+      "en": "The header text.",
+      "ko": "머리글 텍스트."
+    }
+  },
+  "Table.Cell": {
+    "children": {
+      "en": "The cell content.",
+      "ko": "셀 내용."
     }
   },
   "Tabs.List": {

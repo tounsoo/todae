@@ -456,13 +456,13 @@ describe('docs locales', () => {
       path.current = '/ko/button';
       const korean = renderToStaticMarkup(<PropsTable name="Button.Root" />);
       // Nothing but the table inside its scroll region.
-      expect(korean).toMatch(/data-overflow-kind="table"><table lang="ko" role="table" class="[^"]+"><caption>Button.Root props<\/caption>/);
-      expect(korean).toContain('<th scope="col" role="columnheader">설명</th>');
+      expect(korean).toMatch(/data-overflow-kind="table"><table lang="ko" role="table" class="[^"]+"><caption class="[^"]+">Button.Root props<\/caption>/);
+      expect(korean).toMatch(/<th scope="col" role="columnheader" class="[^"]+">설명<\/th>/);
       expect(korean).toContain('<p>시각 스타일. primary가 아니면 data-button-variant를 설정합니다.</p>');
       path.current = '/button';
       const english = renderToStaticMarkup(<PropsTable name="Button.Root" />);
       expect(english).toMatch(/data-overflow-kind="table"><table lang="en" role="table" class="[^"]+">/);
-      expect(english).toContain('<th scope="col" role="columnheader">Description</th>');
+      expect(english).toMatch(/<th scope="col" role="columnheader" class="[^"]+">Description<\/th>/);
       expect(english).toContain('<p>Visual style. Non-primary sets data-button-variant.</p>');
     } finally {
       path.current = '/ko/button';
@@ -472,9 +472,9 @@ describe('docs locales', () => {
   it('shows token catalog headings in the page language', () => {
     try {
       path.current = '/ko/tokens';
-      expect(renderToStaticMarkup(<TokensCatalog />)).toContain('<th scope="col">경로</th><th scope="col">컨텍스트</th><th scope="col">CSS 변수</th>');
+      expect(renderToStaticMarkup(<TokensCatalog />)).toMatch(/<th scope="col" class="[^"]+">경로<\/th><th scope="col" class="[^"]+">컨텍스트<\/th><th scope="col" class="[^"]+">CSS 변수<\/th>/);
       path.current = '/tokens';
-      expect(renderToStaticMarkup(<TokensCatalog />)).toContain('<th scope="col">Path</th><th scope="col">Context</th><th scope="col">CSS variable</th>');
+      expect(renderToStaticMarkup(<TokensCatalog />)).toMatch(/<th scope="col" class="[^"]+">Path<\/th><th scope="col" class="[^"]+">Context<\/th><th scope="col" class="[^"]+">CSS variable<\/th>/);
     } finally {
       path.current = '/ko/button';
     }

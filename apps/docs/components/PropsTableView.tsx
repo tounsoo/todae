@@ -83,26 +83,26 @@ export function PropsTableView({
     <div className="props-table">
       <ScrollRegion>
         <Table.Root lang={locale} role="table">
-          <caption>{words.caption.replace('{name}', name)}</caption>
-          <thead role="rowgroup">
-            <tr role="row">
-              <th scope="col" role="columnheader">
+          <Table.Caption>{words.caption.replace('{name}', name)}</Table.Caption>
+          <Table.Head role="rowgroup">
+            <Table.Row role="row">
+              <Table.HeaderCell scope="col" role="columnheader">
                 {words.name}
-              </th>
-              <th scope="col" role="columnheader">
+              </Table.HeaderCell>
+              <Table.HeaderCell scope="col" role="columnheader">
                 {words.type}
-              </th>
-              <th scope="col" role="columnheader">
+              </Table.HeaderCell>
+              <Table.HeaderCell scope="col" role="columnheader">
                 {words.description}
-              </th>
-            </tr>
-          </thead>
-          <tbody role="rowgroup">
+              </Table.HeaderCell>
+            </Table.Row>
+          </Table.Head>
+          <Table.Body role="rowgroup">
             {rows.map((prop) => {
               const description = prop.descriptions[locale];
               return (
-                <tr key={prop.name} role="row">
-                  <th scope="row" role="rowheader" className="props-name">
+                <Table.Row key={prop.name} role="row">
+                  <Table.HeaderCell scope="row" role="rowheader" className="props-name">
                     <Code.Root>{prop.name}</Code.Root>
                     {prop.required ? (
                       <>
@@ -110,11 +110,11 @@ export function PropsTableView({
                         <Badge.Root className="props-required">{words.required}</Badge.Root>
                       </>
                     ) : null}
-                  </th>
-                  <td role="cell">
+                  </Table.HeaderCell>
+                  <Table.Cell role="cell">
                     <TypeCode type={prop.type} />
-                  </td>
-                  <td role="cell">
+                  </Table.Cell>
+                  <Table.Cell role="cell">
                     <p lang={description.lang === locale ? undefined : description.lang}>{description.text}</p>
                     {prop.default === undefined ? null : (
                       <p className="props-default">
@@ -123,11 +123,11 @@ export function PropsTableView({
                         <span lang={locale === 'en' ? undefined : 'en'}>{prop.default}</span>
                       </p>
                     )}
-                  </td>
-                </tr>
+                  </Table.Cell>
+                </Table.Row>
               );
             })}
-          </tbody>
+          </Table.Body>
         </Table.Root>
       </ScrollRegion>
     </div>

@@ -5,11 +5,11 @@
       "surface": { "$type": "color", "$value": { "$ref": "#/color/gray/900/$value" } },
       "subtle": { "$type": "color", "$value": { "$ref": "#/color/gray/800/$value" } },
       "elevated": { "$type": "color", "$value": { "$ref": "#/color/gray/800/$value" } },
-      "scrim": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/gray/950/$value/components/0" }, { "$ref": "#/color/gray/950/$value/components/1" }, { "$ref": "#/color/gray/950/$value/components/2" }], "alpha": 0.7 } },
+      "scrim": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/gray/950/$value/components/0" }, { "$ref": "#/color/gray/950/$value/components/1" }, { "$ref": "#/color/gray/950/$value/components/2" }], "alpha": { "$ref": "#/opacity/70/$value" } } },
       "transparent": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/gray/900/$value/components/0" }, { "$ref": "#/color/gray/900/$value/components/1" }, { "$ref": "#/color/gray/900/$value/components/2" }], "alpha": 0 } },
-      "highlight": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/fg/default/$value/components/0" }, { "$ref": "#/color/fg/default/$value/components/1" }, { "$ref": "#/color/fg/default/$value/components/2" }], "alpha": 0.1 } },
-      "pressed": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/fg/default/$value/components/0" }, { "$ref": "#/color/fg/default/$value/components/1" }, { "$ref": "#/color/fg/default/$value/components/2" }], "alpha": 0.16 } },
-      "selected": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": 0.2 } }
+      "highlight": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/fg/default/$value/components/0" }, { "$ref": "#/color/fg/default/$value/components/1" }, { "$ref": "#/color/fg/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/10/$value" } } },
+      "pressed": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/fg/default/$value/components/0" }, { "$ref": "#/color/fg/default/$value/components/1" }, { "$ref": "#/color/fg/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/16/$value" } } },
+      "selected": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/20/$value" } } }
     },
     "fg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/gray/50/$value" } },
@@ -27,8 +27,8 @@
       "default": { "$type": "color", "$value": { "$ref": "#/color/gray/50/$value" } },
       "hover": { "$type": "color", "$value": { "$ref": "#/color/gray/100/$value" } },
       "active": { "$type": "color", "$value": { "$ref": "#/color/gray/200/$value" } },
-      "soft": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": 0.12 } },
-      "soft-strong": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": 0.28 } }
+      "soft": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/12/$value" } } },
+      "soft-strong": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/28/$value" } } }
     },
     "status": {
       "info": {
