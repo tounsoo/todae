@@ -50,7 +50,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 - **Run the consumer's handler first** with `composeHandlers(theirs, ours)`, which skips Todae's behavior when the consumer calls `preventDefault()`.
 - **A part rendered outside its Root should throw.** Misuse that can still render (an icon-only button with no name, both `checked` and `defaultChecked`) logs a development-only `console.error` or `console.warn` behind `process.env.NODE_ENV !== 'production'`.
 - **State reaches CSS through `data-*` attributes.** Boolean state is an empty attribute, left off when false (`data-selected`, `data-disabled`); enum state is its value (`data-tone`, `data-size`, `data-orientation`). Name an attribute that other Todae code looks up `data-todae-*` (`data-todae-glyph`, `data-todae-roving`).
-- **Disabled items.** Menu items and listbox options take `aria-disabled` and stay in the arrow-key order, so a screen reader announces them as unavailable. Items that are buttons, such as tabs and toggle-group items, take native `disabled`, and arrow keys skip them. Standalone native controls take `disabled`.
+- **Disabled items.** Menu items and listbox options take `aria-disabled`; menu items also stay in the arrow-key order, so a screen reader announces them as unavailable. Items that are buttons, such as tabs and toggle-group items, take native `disabled`. Standalone native controls take `disabled`.
 
 ## Hooks
 
