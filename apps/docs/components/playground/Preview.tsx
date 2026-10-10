@@ -10,6 +10,7 @@ import {
   Chip,
   Field,
   Label,
+  Progress,
   RadioGroup,
   Switch,
   Tabs,
@@ -87,7 +88,7 @@ export function Preview() {
                 <Text size="2xl" weight="bold">
                   72%
                 </Text>
-                <progress value={72} max={100} aria-label="Quota used" />
+                <Progress.Root value={72} max={100} aria-label="Quota used" />
               </div>
             </div>
           </Card.Body>

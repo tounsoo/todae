@@ -51,7 +51,6 @@ function regionIn(host: HTMLElement, create: boolean): HTMLElement | null {
   if (existing || !create) return existing;
   const root = document.createElement('div');
   root.setAttribute(ATTR, '');
-  root.className = 'todae-visually-hidden';
   Object.assign(root.style, HIDDEN);
   for (const politeness of ['polite', 'assertive'] as const) {
     const live = document.createElement('div');

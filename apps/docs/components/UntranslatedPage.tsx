@@ -1,3 +1,4 @@
+import { Link } from '@omsoo/todae/link';
 import type { ReactNode } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
@@ -10,7 +11,7 @@ export function UntranslatedPage({ locale, children }: { locale: Locale; childre
   return (
     <>
       <p className="untranslated-notice" role="note">
-        {dict.untranslated} <a href={TRANSLATING_GUIDE}>{dict.contribute}</a>
+        {dict.untranslated} <Link.Root href={TRANSLATING_GUIDE}>{dict.contribute}</Link.Root>
       </p>
       <div lang="en">{children}</div>
     </>

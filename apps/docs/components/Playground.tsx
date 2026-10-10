@@ -2,6 +2,7 @@
 
 import {
   Button,
+  Code,
   COMPONENT_OVERRIDE_KEYS,
   Field,
   RAW_OVERRIDE_KEYS,
@@ -14,6 +15,7 @@ import {
   themeOverrideType,
   themeValueCss,
   useAnnouncer,
+  VisuallyHidden,
   type Appearance,
   type Density,
   type ThemeOverride,
@@ -105,7 +107,7 @@ function TokenField({
   return (
     <div className="token-row" data-edited={edited || undefined}>
       <label htmlFor={id}>
-        <code>{path}</code>
+        <Code.Root>{path}</Code.Root>
       </label>
       <div className="token-row-inputs">
         {color ? (
@@ -151,14 +153,9 @@ function PresetCard({
 }) {
   return (
     <label className="preset" data-selected={selected || undefined}>
-      <input
-        type="radio"
-        name="preset"
-        className="todae-visually-hidden"
-        aria-label={preset.name}
-        checked={selected}
-        onChange={onSelect}
-      />
+      <VisuallyHidden.Root>
+        <input type="radio" name="preset" aria-label={preset.name} checked={selected} onChange={onSelect} />
+      </VisuallyHidden.Root>
       {/* A tiny stage of its own: the preset paints its own swatch with Todae's tokens. */}
       <ThemeProvider appearance={appearance} overrides={preset[appearance]} className="preset-swatch" aria-hidden="true">
         <span className="preset-swatch-surface">

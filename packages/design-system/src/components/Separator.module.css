@@ -1,0 +1,9 @@
+@layer todae.components.native {
+  .root {
+    block-size: 0;
+    margin-block: var(--todae-separator-space);
+    margin-inline: 0;
+    border: 0;
+    border-block-start: var(--todae-separator-thickness) solid var(--todae-separator-color);
+  }
+}

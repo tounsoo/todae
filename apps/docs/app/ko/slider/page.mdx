@@ -2,7 +2,7 @@ import { SliderVolume } from '../../../components/demos/NativeControlsDemo';
 
 # Slider
 
-슬라이더는 네이티브 `<input type="range">`입니다. 컴포넌트는 없습니다. 화살표 키, Page Up과 Page Down, Home과 End는 브라우저가 이미 처리하고 값도 읽어 줍니다. Todae는 `todae.base` 레이어에서 `slider` contract 토큰으로 `accent-color`를 정하고, 브라우저가 그 색으로 손잡이와 채워진 트랙을 칠합니다. 그 색이 컨트롤의 어디까지 닿는지는 브라우저마다 다릅니다.
+`Slider.Root`는 네이티브 `<input type="range">`입니다. 화살표 키, Page Up과 Page Down, Home과 End는 브라우저가 처리하고 값도 읽어 줍니다. Todae는 `slider` contract 토큰으로 `accent-color`를 정하고, 브라우저가 그 색으로 손잡이와 채워진 트랙을 칠합니다. 그 색이 컨트롤의 어디까지 닿는지는 브라우저마다 다릅니다.
 
 <Example block>
   <SliderVolume />
@@ -10,10 +10,10 @@ import { SliderVolume } from '../../../components/demos/NativeControlsDemo';
 
 ```tsx
 <Label htmlFor="volume">Volume</Label>
-<input id="volume" type="range" min={0} max={100} step={5} value={value} onChange={onChange} />
+<Slider.Root id="volume" min={0} max={100} step={5} value={value} onChange={onChange} />
 ```
 
-[Label](/label)로 이름을 붙이고, 정확한 숫자가 중요하면 현재 값을 근처에 텍스트로 보여 주세요. `slider.fill`과 `slider.ring.focus`로 스타일을 바꾸세요. 범위를 고르는 손잡이 두 개짜리 슬라이더는 네이티브가 아니며 아직 Todae에 없습니다.
+Server Components는 `@omsoo/todae/slider`에서 가져올 수 있습니다. [Label](/label)로 이름을 붙이고, 정확한 숫자가 중요하면 현재 값을 근처에 텍스트로 보여 주세요. `slider.fill`과 `slider.ring.focus`로 스타일을 바꾸세요. 범위를 고르는 손잡이 두 개짜리 슬라이더는 네이티브가 아니며 아직 Todae에 없습니다.
 
 ## 접근성을 지키는 조합
 
@@ -21,10 +21,14 @@ import { SliderVolume } from '../../../components/demos/NativeControlsDemo';
 
 **직접 제공할 것:** 이름. `htmlFor`를 쓴 [Label](/label)이나 `aria-label`로 주세요. 숫자만으로 뜻이 잘 전해지지 않으면 `"40%"`나 `"Medium"`처럼 `aria-valuetext`를 주세요. 정확한 숫자가 중요하면 현재 값을 보이는 텍스트로 보여 주고, 힌트가 있으면 `aria-describedby`로 연결하세요.
 
-**주의할 점:** 직접 만든 `div` 슬라이더에는 role, 값 속성, 키를 하나하나 더해야 합니다. Field 안이라면 [useField](/utilities/use-field)를 보세요. Todae의 규칙은 `todae.base` 레이어에 있으므로, 직접 쓴 `outline: none`은 포커스 링을 없앱니다.
+**주의할 점:** 직접 만든 `div` 슬라이더에는 role, 값 속성, 키를 하나하나 더해야 합니다. Field 안이라면 [useField](/utilities/use-field)를 보세요. 직접 쓴 `outline: none`은 포커스 링을 없앱니다.
 
 ## 언제 쓰나요
 
 **쓸 때:** 볼륨이나 확대처럼 정확한 숫자보다 대략적인 위치가 중요한 범위 안의 값을 고를 때.
 
 **쓰지 않을 때:** 정확한 숫자 → `type="number"`인 `Field.TextInput`. 이름 붙은 몇 가지 선택지 → [Radio](/radio). 사용자가 조절하지 않는 진행 상황 → [Progress](/progress).
+
+## Props
+
+<PropsTable name="Slider.Root" />

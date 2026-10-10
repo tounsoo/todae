@@ -2,44 +2,44 @@ import { MeterLevels, ProgressStates } from '../../../components/demos/NativeCon
 
 # Progress and Meter
 
-진행 막대와 미터는 네이티브 `<progress>`와 `<meter>` 요소입니다. 컴포넌트는 없습니다. 역할과 값은 브라우저가 이미 보조 기술에 알려 줍니다. Todae는 `progress`와 `meter` contract 토큰으로 `todae.base` 레이어에서 브라우저 기본 막대를 트랙과 채움으로 바꿉니다.
+`Progress.Root`는 네이티브 `<progress>`, `Meter.Root`는 네이티브 `<meter>`입니다. 역할과 값은 브라우저가 보조 기술에 알려 줍니다. Todae는 `progress`와 `meter` contract 토큰으로 브라우저 기본 막대를 트랙과 채움으로 바꿉니다. Server Components는 `@omsoo/todae/progress`와 `@omsoo/todae/meter`에서 가져올 수 있습니다.
 
 ## Progress
 
-`<progress>`는 작업이 얼마나 진행됐는지 보여 줍니다. 끝을 알 수 없으면 `value`를 빼세요. 띠가 트랙을 가로지르며, 사용자가 동작 줄이기를 요청하면 멈춥니다.
+`Progress.Root`는 작업이 얼마나 진행됐는지 보여 줍니다. 끝을 알 수 없으면 `value`를 빼세요. 띠가 트랙을 가로지르며, 사용자가 동작 줄이기를 요청하면 멈춥니다.
 
 <Example block>
   <ProgressStates />
 </Example>
 
 ```tsx
-<label htmlFor="upload">Uploading report.pdf</label>
-<progress id="upload" value={64} max={100}>64%</progress>
+<Label htmlFor="upload">Uploading report.pdf</Label>
+<Progress.Root id="upload" value={64} max={100}>64%</Progress.Root>
 
-<label htmlFor="results">Loading results</label>
-<progress id="results" />
+<Label htmlFor="results">Loading results</Label>
+<Progress.Root id="results" />
 ```
 
 ## Meter
 
-`<meter>`는 저장 공간이나 배터리처럼 범위가 정해진 측정값을 보여 줍니다. `low`, `high`, `optimum`을 정하면 값이 좋음, 보통, 나쁨 중 어디인지 브라우저가 판단합니다. Todae는 이 세 상태를 `meter.fill.optimum`, `meter.fill.suboptimum`, `meter.fill.critical`로 칠합니다.
+`Meter.Root`는 저장 공간이나 배터리처럼 범위가 정해진 측정값을 보여 줍니다. `low`, `high`, `optimum`을 정하면 값이 좋음, 보통, 나쁨 중 어디인지 브라우저가 판단합니다. Todae는 이 세 상태를 `meter.fill.optimum`, `meter.fill.suboptimum`, `meter.fill.critical`로 칠합니다.
 
 <Example block>
   <MeterLevels />
 </Example>
 
 ```tsx
-<label htmlFor="storage">Storage used</label>
-<meter id="storage" min={0} max={100} low={70} high={90} optimum={0} value={92}>92%</meter>
+<Label htmlFor="storage">Storage used</Label>
+<Meter.Root id="storage" min={0} max={100} low={70} high={90} optimum={0} value={92}>92%</Meter.Root>
 ```
 
-각각 `<label>`이나 `aria-label`로 이름을 붙이고, 막대를 그리지 않는 브라우저를 위해 값을 요소 안에 텍스트로 넣으세요. 트랙, 높이, 모서리는 `progress.track`, `progress.height`, `progress.radius`로 바꾸세요. Meter도 같은 세 토큰을 읽으므로 바꾸면 둘 다 바뀝니다.
+각각 [Label](/label)이나 `aria-label`로 이름을 붙이고, 막대를 그리지 않는 브라우저를 위해 값을 요소 안에 텍스트로 넣으세요. 트랙, 높이, 모서리는 `progress.track`, `progress.height`, `progress.radius`로 바꾸세요. Meter도 같은 세 토큰을 읽으므로 바꾸면 둘 다 바뀝니다.
 
 ## 접근성을 지키는 조합
 
 **Todae가 맡는 것:** 스타일만 맡습니다. 브라우저가 `<progress>`에 `progressbar` role을, `<meter>`에 자체 role을 주고 값을 노출하며, Todae는 이를 모두 그대로 둡니다. 동작 줄이기 설정에서는 불확정 띠가 멈추고, 강제 색상 모드에서도 트랙과 채움은 서로 다른 시스템 색을 유지합니다.
 
-**직접 제공할 것:** 각각의 이름. `<label>`, `aria-label`, `aria-labelledby` 중 하나로 붙이세요. 요소 안에 텍스트로 쓴 값. Todae는 값이 바뀌어도 아무것도 읽어 주지 않으므로, 작업이 끝나거나 실패하면 텍스트로 알리고, 사용자가 보고 있지 않을 수 있다면 [useAnnouncer](/utilities/use-announcer)로 읽어 주세요.
+**직접 제공할 것:** 각각의 이름. [Label](/label), `aria-label`, `aria-labelledby` 중 하나로 붙이세요. 요소 안에 텍스트로 쓴 값. Todae는 값이 바뀌어도 아무것도 읽어 주지 않으므로, 작업이 끝나거나 실패하면 텍스트로 알리고, 사용자가 보고 있지 않을 수 있다면 [useAnnouncer](/utilities/use-announcer)로 읽어 주세요.
 
 **주의할 점:** `div`로 막대를 직접 그리는 래퍼. role과 값을 잃습니다. `label` prop을 받지만 요소에 연결하지 않는 래퍼. 채움 색으로만 수준을 알리는 Meter. 중요하다면 "Almost full"처럼 텍스트로 적으세요. 끝나자마자 사라져서 작업이 끝났다고 알려 주는 것이 하나도 남지 않는 진행 막대.
 
@@ -48,3 +48,9 @@ import { MeterLevels, ProgressStates } from '../../../components/demos/NativeCon
 **쓸 때:** Progress → 완료를 향해 가는 작업. Meter → 사용자의 작업과 상관없이 범위 안에 있는 수준.
 
 **쓰지 않을 때:** 사용자가 정하는 값 → [Slider](/slider). 짧은 기다림이나 배치를 아는 내용 → [Spinner and Skeleton](/spinner).
+
+## Props
+
+<PropsTable name="Progress.Root" />
+
+<PropsTable name="Meter.Root" />

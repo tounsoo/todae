@@ -1,0 +1,148 @@
+@layer todae.components.native {
+  /* The browser's own bar is replaced by a track and a fill from tokens; the
+     elements keep their roles and values. */
+  .root {
+    appearance: none;
+    display: inline-block;
+    inline-size: 100%;
+    block-size: var(--todae-progress-height);
+    border: 0;
+    border-radius: var(--todae-progress-radius);
+    background: var(--todae-progress-track);
+    overflow: hidden;
+    vertical-align: middle;
+  }
+
+  .progress::-webkit-progress-bar {
+    background: var(--todae-progress-track);
+  }
+
+  .progress::-webkit-progress-value {
+    background: var(--todae-progress-fill);
+  }
+
+  .progress::-moz-progress-bar {
+    background: var(--todae-progress-fill);
+  }
+
+  /* No value means the work has no known end: a band of fill sweeps the track.
+     A percentage background-position moves the band across track minus band
+     width, so the stops start and end with the band fully off the track. */
+  .progress:indeterminate {
+    background:
+      linear-gradient(
+        to right,
+        transparent 0%,
+        var(--todae-progress-fill) 40%,
+        var(--todae-progress-fill) 60%,
+        transparent 100%
+      )
+      no-repeat var(--todae-progress-track);
+    background-size: 40% 100%;
+    animation: todae-progress-sweep var(--todae-progress-motion-duration) linear infinite;
+  }
+
+  /* Right-to-left pages fill from the right, so the band sweeps that way too. */
+  .progress:indeterminate:dir(rtl) {
+    animation-direction: reverse;
+  }
+
+  .progress:indeterminate::-webkit-progress-bar {
+    background: transparent;
+  }
+
+  .progress:indeterminate::-moz-progress-bar {
+    background: transparent;
+  }
+
+  @keyframes todae-progress-sweep {
+    from {
+      background-position: -66.67% 0;
+    }
+    to {
+      background-position: 166.67% 0;
+    }
+  }
+
+  /* Under reduced motion the band holds still in the middle, so the bar
+     still reads as busy rather than empty. */
+  @media (prefers-reduced-motion: reduce) {
+    .progress:indeterminate {
+      animation: none;
+      background-position: 50% 0;
+    }
+  }
+
+  .meter::-webkit-meter-bar {
+    block-size: 100%;
+    border: 0;
+    background: var(--todae-progress-track);
+  }
+
+  .meter::-webkit-meter-optimum-value {
+    background: var(--todae-meter-fill-optimum);
+  }
+
+  .meter::-webkit-meter-suboptimum-value {
+    background: var(--todae-meter-fill-suboptimum);
+  }
+
+  .meter::-webkit-meter-even-less-good-value {
+    background: var(--todae-meter-fill-critical);
+  }
+
+  .meter:where(:-moz-meter-optimum)::-moz-meter-bar {
+    background: var(--todae-meter-fill-optimum);
+  }
+
+  .meter:where(:-moz-meter-sub-optimum)::-moz-meter-bar {
+    background: var(--todae-meter-fill-suboptimum);
+  }
+
+  .meter:where(:-moz-meter-sub-sub-optimum)::-moz-meter-bar {
+    background: var(--todae-meter-fill-critical);
+  }
+
+  /* Forced colors replace author backgrounds, which would draw the track and
+     the fill in one color. Keep the bar's own colors from system ones. */
+  @media (forced-colors: active) {
+    .root {
+      forced-color-adjust: none;
+      border: 1px solid CanvasText;
+      background-color: Canvas;
+    }
+
+    /* One rule per engine: a list with a pseudo-element the browser does not
+       know is dropped whole. */
+    .progress::-webkit-progress-bar,
+    .meter::-webkit-meter-bar {
+      background: Canvas;
+    }
+
+    .progress::-webkit-progress-value,
+    .meter::-webkit-meter-optimum-value,
+    .meter::-webkit-meter-suboptimum-value,
+    .meter::-webkit-meter-even-less-good-value {
+      background: Highlight;
+    }
+
+    .progress::-moz-progress-bar,
+    .meter::-moz-meter-bar {
+      background: Highlight;
+    }
+
+    .progress:indeterminate::-webkit-progress-bar {
+      background: transparent;
+    }
+
+    .progress:indeterminate::-moz-progress-bar {
+      background: transparent;
+    }
+
+    /* Longhands, so the band keeps the position the motion rules gave it. */
+    .progress:indeterminate {
+      background-image: linear-gradient(to right, Highlight, Highlight);
+      background-color: Canvas;
+    }
+  }
+}

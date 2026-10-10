@@ -2,14 +2,14 @@ import { TableOfInvoices } from '../../../components/demos/NativeDemo';
 
 # Table
 
-Tables are native `<table>` elements. There is no component: the browser already gives rows, column headers and captions their meaning, and Todae styles them in the `todae.base` layer from the `table` contract tokens. Numbers use tabular figures, so digits have equal width; give a numeric column `text-align: end` so its values line up on the right.
+`Table.Root` is a native `<table>` styled from the `table` contract tokens. Write its caption, rows and cells as plain `<caption>`, `<thead>`, `<tbody>`, `<tr>`, `<th>` and `<td>` inside: they keep the meaning the browser gives them, and the root styles them. Numbers use tabular figures, so digits have equal width; give a numeric column `text-align: end` so its values line up on the right.
 
 <Example>
   <TableOfInvoices />
 </Example>
 
 ```tsx
-<table>
+<Table.Root>
 	<caption>Invoices this quarter</caption>
 	<thead>
 		<tr>
@@ -23,14 +23,14 @@ Tables are native `<table>` elements. There is no component: the browser already
 			<td>$1,200.00</td>
 		</tr>
 	</tbody>
-</table>
+</Table.Root>
 ```
 
-Give every column header `scope="col"` and every row header `scope="row"`. A `<caption>` names the table for screen readers. Restyle through `table.border`, `table.rule.thickness`, `table.header.*`, `table.caption.fg` and `table.cell.padding.*`; the padding follows density.
+Server Components can import it from `@omsoo/todae/table`. Give every column header `scope="col"` and every row header `scope="row"`. A `<caption>` names the table for screen readers. Restyle through `table.border`, `table.rule.thickness`, `table.header.*`, `table.caption.fg` and `table.cell.padding.*`; the padding follows density.
 
 ## Accessible composition
 
-**Todae handles:** Style only. Native `<table>`, `<caption>`, `<th>` and `<td>` keep their meaning, and Todae adds no role, ARIA or keyboard behaviour. Header cells get their own weight and color, so they stand out without a shade.
+**Todae handles:** Style only. The native `<table>`, `<caption>`, `<th>` and `<td>` keep their meaning, and Todae adds no role, ARIA or keyboard behaviour. Header cells get their own weight and color, so they stand out without a shade.
 
 **You supply:** A name for the table: a `<caption>`, or `aria-labelledby` pointing at a heading. A `<th>` with `scope` for every header, as above. For a table wider than its container, a scrolling wrapper with `tabIndex={0}`, `role="region"` and a name, so keyboard users can scroll it.
 
@@ -41,3 +41,7 @@ Give every column header `scope="col"` and every row header `scope="row"`. A `<c
 **When:** Data people compare across rows and columns.
 
 **When not:** Laying out content that is not tabular → [Stack](/stack) or CSS grid. Sorting, column resizing, virtual scrolling or cell editing → a data grid, which is out of scope for Todae.
+
+## Props
+
+<PropsTable name="Table.Root" />

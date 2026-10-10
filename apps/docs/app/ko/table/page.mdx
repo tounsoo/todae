@@ -2,14 +2,14 @@ import { TableOfInvoices } from '../../../components/demos/NativeDemo';
 
 # Table
 
-표는 네이티브 `<table>` 요소입니다. 컴포넌트는 없습니다. 행, 열 머리글, 캡션의 의미는 브라우저가 이미 제공하고, Todae는 `table` contract 토큰으로 `todae.base` 레이어에서 스타일을 정합니다. 숫자는 고정폭 숫자를 써서 자릿수의 폭이 같습니다. 숫자 열에 `text-align: end`를 주면 값이 오른쪽으로 맞춰집니다.
+`Table.Root`는 `table` contract 토큰으로 스타일을 정한 네이티브 `<table>`입니다. 캡션, 행, 셀은 그 안에 평범한 `<caption>`, `<thead>`, `<tbody>`, `<tr>`, `<th>`, `<td>`로 쓰세요. 브라우저가 주는 의미를 그대로 유지하고, 스타일은 루트가 정합니다. 숫자는 고정폭 숫자를 써서 자릿수의 폭이 같습니다. 숫자 열에 `text-align: end`를 주면 값이 오른쪽으로 맞춰집니다.
 
 <Example>
   <TableOfInvoices />
 </Example>
 
 ```tsx
-<table>
+<Table.Root>
 	<caption>Invoices this quarter</caption>
 	<thead>
 		<tr>
@@ -23,10 +23,10 @@ import { TableOfInvoices } from '../../../components/demos/NativeDemo';
 			<td>$1,200.00</td>
 		</tr>
 	</tbody>
-</table>
+</Table.Root>
 ```
 
-모든 열 머리글에는 `scope="col"`을, 모든 행 머리글에는 `scope="row"`를 주세요. `<caption>`은 스크린 리더에 표의 이름을 알려 줍니다. `table.border`, `table.rule.thickness`, `table.header.*`, `table.caption.fg`, `table.cell.padding.*`로 스타일을 바꾸세요. 패딩은 밀도를 따릅니다.
+Server Components는 `@omsoo/todae/table`에서 가져올 수 있습니다. 모든 열 머리글에는 `scope="col"`을, 모든 행 머리글에는 `scope="row"`를 주세요. `<caption>`은 스크린 리더에 표의 이름을 알려 줍니다. `table.border`, `table.rule.thickness`, `table.header.*`, `table.caption.fg`, `table.cell.padding.*`로 스타일을 바꾸세요. 패딩은 밀도를 따릅니다.
 
 ## 접근성을 지키는 조합
 
@@ -41,3 +41,7 @@ import { TableOfInvoices } from '../../../components/demos/NativeDemo';
 **쓸 때:** 행과 열을 가로질러 비교하는 데이터.
 
 **쓰지 않을 때:** 표 형식이 아닌 콘텐츠의 배치 → [Stack](/stack)이나 CSS grid. 정렬, 열 크기 조절, 가상 스크롤, 셀 편집 → Todae의 범위 밖인 데이터 그리드.
+
+## Props
+
+<PropsTable name="Table.Root" />

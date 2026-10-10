@@ -1,0 +1,33 @@
+@layer todae.components.native {
+  /* Neutral ink: a link keeps the text color and stands out by its underline,
+     which darkens on hover. An `a` without href is not a link and gets none of it. */
+  .root:any-link {
+    color: var(--todae-link-fg-default);
+    text-decoration-line: underline;
+    text-decoration-color: var(--todae-link-decoration-default);
+    text-decoration-thickness: var(--todae-link-decoration-thickness);
+    text-underline-offset: var(--todae-link-decoration-offset);
+  }
+
+  /* The current page or step, as a router marks it with aria-current. Any
+     value other than empty or false (in any case) marks the link current, and
+     its underline thickens so it reads without a hover. The states sit in
+     :where() so every rule has one specificity; hover comes after, so the
+     hover tokens still apply to a current link. */
+  .root:any-link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) {
+    color: var(--todae-link-fg-current);
+    text-decoration-color: var(--todae-link-decoration-current);
+    text-decoration-thickness: var(--todae-link-decoration-current-thickness);
+  }
+
+  .root:any-link:where(:hover) {
+    color: var(--todae-link-fg-hover);
+    text-decoration-color: var(--todae-link-decoration-hover);
+  }
+
+  .root:any-link:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-link-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+    border-radius: 2px;
+  }
+}

@@ -52,7 +52,7 @@ describe('useAnnouncer', () => {
     render(<Speaker />);
     expect(regions()).toHaveLength(1);
     const root = regions()[0] as HTMLElement;
-    expect(root.className).toBe('todae-visually-hidden');
+    expect(root.style.position).toBe('absolute');
     expect(root.parentElement).toBe(document.body);
     expect(live('polite').getAttribute('aria-atomic')).toBe('true');
     expect(live('assertive').getAttribute('aria-atomic')).toBe('true');

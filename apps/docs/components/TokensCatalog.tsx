@@ -1,3 +1,5 @@
+import { Code } from '@omsoo/todae/code';
+import { Table } from '@omsoo/todae/table';
 import catalog from '@omsoo/todae/tokens.json';
 import { ScrollRegion } from './OverflowRegion';
 import { TokensTableHead } from './TokensTableHead';
@@ -45,27 +47,27 @@ export function TokensCatalog() {
         if (rows.length === 0) return null;
         return (
           <ScrollRegion key={layer}>
-          <table>
+          <Table.Root>
             <caption>{layer}</caption>
             <TokensTableHead />
             <tbody>
               {rows.map((row) => (
                 <tr key={`${row.layer}:${row.context ?? ''}:${row.path}`}>
                   <th scope="row">
-                    <code>{row.path}</code>
+                    <Code.Root>{row.path}</Code.Root>
                   </th>
                   <td>{row.context ?? '—'}</td>
                   <td>
-                    <code>{row.cssVar}</code>
+                    <Code.Root>{row.cssVar}</Code.Root>
                   </td>
                   <td>
-                    <code>{row.cssValue}</code>
+                    <Code.Root>{row.cssValue}</Code.Root>
                   </td>
-                  <td>{row.ref ? <code>{row.ref}</code> : '—'}</td>
+                  <td>{row.ref ? <Code.Root>{row.ref}</Code.Root> : '—'}</td>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </Table.Root>
           </ScrollRegion>
         );
       })}

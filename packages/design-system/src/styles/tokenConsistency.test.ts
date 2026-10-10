@@ -52,20 +52,8 @@ const OWN_ROOTS: Record<string, string[]> = {
   Field: ['field', 'option'],
   // A toggle group is a toolbar segment and spaces its items like one.
   ToggleGroup: ['toolbar'],
-  base: [
-    'link',
-    'disclosure',
-    'separator',
-    'table',
-    'progress',
-    'meter',
-    'slider',
-    'spinner',
-    'skeleton',
-    'code',
-    'kbd',
-    'text',
-  ],
+  // Progress and meter share one sheet.
+  Progress: ['progress', 'meter'],
 };
 
 describe('token consistency across component styles', () => {

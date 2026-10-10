@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -37,5 +37,13 @@ describe('HomePage', () => {
   it('lists every docs page in a section', () => {
     const listed = new Set<string>(SITE_GROUPS.flatMap((group) => group.links.map(([href]) => href)));
     expect(pagePaths(__dirname).filter((path) => !listed.has(path))).toEqual([]);
+  });
+
+  it('lists a page under Components only when it documents an exported component', () => {
+    // A page with a props table documents an export; anything else is a guide or a recipe.
+    const components = SITE_GROUPS.find((group) => group.id === 'components')?.links ?? [];
+    expect(components.length).toBeGreaterThan(0);
+    const hasProps = (href: string) => /^<PropsTable name="/m.test(readFileSync(join(__dirname, href, 'page.mdx'), 'utf8'));
+    expect(components.map(([href]) => href).filter((href) => !hasProps(href))).toEqual([]);
   });
 });

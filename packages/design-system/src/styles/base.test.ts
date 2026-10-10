@@ -45,11 +45,15 @@ describe('todae.base styles', () => {
 
   it('wrap every selector in :where(), so a company class always wins', () => {
     const list = selectors(base);
-    expect(list.length).toBeGreaterThan(5);
+    expect(list.length).toBeGreaterThan(0);
     for (const selector of list) {
       // Only pseudo-elements, which add no specificity of their own, may follow.
       expect(selector, selector).toMatch(/^:where\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)(?:\s*>\s*:where\((?:[^()]|\([^()]*\))*\))?(?:::[a-z-]+)?$/);
     }
+  });
+
+  it('styles no native element: components carry those styles', () => {
+    expect(selectors(base)).toEqual([':where(:root:has(dialog:modal))']);
   });
 
   it('stops page scroll, without !important, while a modal dialog is open', () => {
@@ -58,86 +62,6 @@ describe('todae.base styles', () => {
     const body = rule.slice(rule.indexOf('{') + 1, rule.indexOf('}'));
     expect(body).toContain('overflow: hidden;');
     expect(body).not.toContain('!important');
-  });
-
-  it('styles links, disclosures and the visually hidden utilities', () => {
-    const list = selectors(base).join('\n');
-    expect(list).toContain(':where(a:any-link)');
-    expect(list).toContain(':where(summary)');
-    expect(list).toContain(':where(details)::details-content');
-    expect(list).toContain(':where(.todae-visually-hidden, .todae-visually-hidden-focusable:not(:focus-within))');
-  });
-
-  it('styles separators, tables, progress, meters and sliders', () => {
-    const list = selectors(base).join('\n');
-    for (const selector of [
-      ':where(hr)',
-      ':where(table)',
-      ':where(thead th)',
-      ':where(progress, meter)',
-      ':where(progress)::-webkit-progress-value',
-      ':where(progress)::-moz-progress-bar',
-      ':where(progress:indeterminate)',
-      ':where(meter)::-webkit-meter-optimum-value',
-      ':where(meter:-moz-meter-sub-sub-optimum)::-moz-meter-bar',
-      ":where(input[type='range'])",
-    ]) {
-      expect(list).toContain(selector);
-    }
-    expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(progress:indeterminate\) \{\s*animation: none;/);
-  });
-
-  it('styles spinners and skeletons, and stops them under reduced motion', () => {
-    const list = selectors(base);
-    for (const selector of [
-      ':where(progress.todae-spinner:indeterminate)',
-      ':where(progress.todae-spinner:indeterminate)::-webkit-progress-bar',
-      ':where(progress.todae-spinner:indeterminate)::-webkit-progress-value',
-      ':where(progress.todae-spinner:indeterminate)::-moz-progress-bar',
-      ':where(.todae-skeleton)',
-      ':where(.todae-skeleton > *)',
-    ]) {
-      expect(list).toContain(selector);
-    }
-    // Same specificity as the progress rules, so the spinner must come after
-    // every one of them, the forced-colors block included.
-    const lastProgress = list.reduce(
-      (last, selector, i) => (/^:where\((progress|meter)\b/.test(selector) && !selector.includes('todae-spinner') ? i : last),
-      -1,
-    );
-    expect(lastProgress).toBeGreaterThan(0);
-    expect(list.indexOf(':where(progress.todae-spinner:indeterminate)')).toBeGreaterThan(lastProgress);
-    expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(progress\.todae-spinner:indeterminate\) \{\s*animation: none;/);
-    expect(base).toMatch(/prefers-reduced-motion: reduce\) \{\s*:where\(\.todae-skeleton\) \{\s*animation: none;/);
-    expect(base).toMatch(/forced-colors: active\) \{\s*:where\(progress\.todae-spinner:indeterminate\) \{\s*forced-color-adjust: none;/);
-    expect(base).toMatch(/forced-colors: active\) \{\s*:where\(\.todae-skeleton\) \{\s*forced-color-adjust: none;\s*background: GrayText;/);
-    // The ring draws in the text color, so it shows inside a primary button.
-    const spinner = base.slice(base.indexOf(':where(progress.todae-spinner:indeterminate) {'));
-    expect(spinner.slice(0, spinner.indexOf('}'))).toContain('currentColor 0 25%');
-  });
-
-  it('tints inline code from the text color, lightly, and gives blocks their own colors', () => {
-    const code = base.slice(base.indexOf(':where(code) {'));
-    const rule = code.slice(0, code.indexOf('}'));
-    expect(rule).not.toMatch(/\bcolor:/);
-    expect(rule).toContain('color-mix(in oklch, currentColor calc(var(--todae-code-tint) * 100%), transparent)');
-    // A light tint keeps the pair close to the text and surface around it,
-    // which the resolver's contrast list cannot check for a color-mix.
-    const tokens = JSON.parse(readFileSync(join(import.meta.dirname, '../../tokens/components/code.json'), 'utf8'));
-    expect(tokens.code.tint.$value).toBeLessThanOrEqual(0.15);
-    const pre = base.slice(base.indexOf(':where(pre) {'));
-    expect(pre.slice(0, pre.indexOf('}'))).toContain('color: var(--todae-code-block-fg);');
-  });
-
-  it('styles code, code blocks and keys', () => {
-    const list = selectors(base);
-    for (const selector of [':where(code)', ':where(pre)', ':where(pre code)', ':where(kbd)', ':where(kbd:has(kbd, samp))']) {
-      expect(list).toContain(selector);
-    }
-    // The outer <kbd> of a shortcut and the <code> in a <pre> undo the box,
-    // so they must follow the rules they undo.
-    expect(list.indexOf(':where(kbd:has(kbd, samp))')).toBeGreaterThan(list.indexOf(':where(kbd)'));
-    expect(list.indexOf(':where(pre code)')).toBeGreaterThan(list.indexOf(':where(code)'));
   });
 
   it('only reads tokens the build declares', () => {

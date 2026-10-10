@@ -3,7 +3,32 @@ import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useId, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-import { Alert, Badge, Breadcrumbs, Button, Card, Checkbox, ErrorMessage, Field, Fieldset, Label, Text } from '../index';
+import {
+  Alert,
+  Badge,
+  Breadcrumbs,
+  Button,
+  Card,
+  Checkbox,
+  Code,
+  Disclosure,
+  ErrorMessage,
+  Field,
+  Fieldset,
+  Kbd,
+  Label,
+  Link,
+  Meter,
+  Pagination,
+  Progress,
+  Separator,
+  Skeleton,
+  Slider,
+  Spinner,
+  Table,
+  Text,
+  VisuallyHidden,
+} from '../index';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -11,16 +36,16 @@ async function violations(): Promise<string[]> {
   return result.violations.map((v) => `${v.id}: ${v.help}\n  ${v.nodes.map((n) => n.target.join(' ')).join('\n  ')}`);
 }
 
-/** The background of the first top-level rule that styles `pseudo` on its bare element. */
+/** The background of the first rule that styles `pseudo` on the Progress or Meter class alone. */
 function pseudoBackground(pseudo: string): string | undefined {
   const element = pseudo.includes('meter') ? 'meter' : 'progress';
-  const selector = `:where(${element})${pseudo}`;
+  const selector = new RegExp(`^\\.todae_${element}_[0-9a-f]+${pseudo}$`);
   const rules = (list: CSSRuleList): CSSStyleRule[] =>
     [...list].flatMap((rule) =>
       rule instanceof CSSStyleRule ? [rule] : rule instanceof CSSLayerBlockRule ? rules(rule.cssRules) : [],
     );
   const sheets = [...document.styleSheets].flatMap((sheet) => rules(sheet.cssRules));
-  const match = sheets.find((rule) => rule.selectorText === selector);
+  const match = sheets.find((rule) => selector.test(rule.selectorText));
   return match?.style.getPropertyValue('background').trim();
 }
 
@@ -49,7 +74,7 @@ function Gallery() {
         <Alert.Title>Payment failed</Alert.Title>
         <Alert.Description>Update your card to keep the plan.</Alert.Description>
         <Alert.Actions>
-          <a href="#billing">Open billing</a>
+          <Link.Root href="#billing">Open billing</Link.Root>
         </Alert.Actions>
       </Alert.Root>
       <Fieldset.Root invalid aria-describedby={errorId}>
@@ -62,16 +87,16 @@ function Gallery() {
       <Field.Root id={dateId}>
         <Field.TextInput type="date" value="2026-10-07" onChange={() => undefined} />
       </Field.Root>
-      <details name="faq">
-        <summary>What is Todae?</summary>
+      <Disclosure.Root name="faq">
+        <Disclosure.Summary>What is Todae?</Disclosure.Summary>
         <p>A base for company design systems.</p>
-      </details>
-      <details name="faq">
-        <summary>Does it ship icons?</summary>
+      </Disclosure.Root>
+      <Disclosure.Root name="faq">
+        <Disclosure.Summary>Does it ship icons?</Disclosure.Summary>
         <p>No. Pass your own.</p>
-      </details>
-      <hr />
-      <table>
+      </Disclosure.Root>
+      <Separator.Root />
+      <Table.Root>
         <caption>Invoices</caption>
         <thead>
           <tr>
@@ -85,22 +110,22 @@ function Gallery() {
             <td>$120</td>
           </tr>
         </tbody>
-      </table>
+      </Table.Root>
       <label>
         Upload
-        <progress value={40} max={100} />
+        <Progress.Root value={40} max={100} />
       </label>
       <label>
         Storage
-        <meter value={0.9} low={0.5} high={0.8} optimum={0.2} />
+        <Meter.Root value={0.9} low={0.5} high={0.8} optimum={0.2} />
       </label>
       <label>
         Volume
-        <input type="range" defaultValue={30} />
+        <Slider.Root defaultValue={30} />
       </label>
       <Breadcrumbs.Root>
         <Breadcrumbs.Item>
-          <a href="#home">Home</a>
+          <Link.Root href="#home">Home</Link.Root>
         </Breadcrumbs.Item>
         <Breadcrumbs.Item current>Settings</Breadcrumbs.Item>
       </Breadcrumbs.Root>
@@ -112,23 +137,23 @@ function Gallery() {
           Pro <Badge.Root tone="success">Paid</Badge.Root>
         </Card.Body>
       </Card.Root>
-      <progress className="todae-spinner" aria-label="Loading invoices" />
+      <Spinner.Root aria-label="Loading invoices" />
       <div aria-busy="true">
-        <div className="todae-skeleton" aria-hidden="true" />
+        <Skeleton.Root aria-hidden="true" />
       </div>
       <p>
         Press{' '}
-        <kbd>
-          <kbd>Ctrl</kbd> + <kbd>K</kbd>
-        </kbd>{' '}
-        to run <code>open()</code>.
+        <Kbd.Root>
+          <Kbd.Root>Ctrl</Kbd.Root> + <Kbd.Root>K</Kbd.Root>
+        </Kbd.Root>{' '}
+        to run <Code.Root>open()</Code.Root>.
       </p>
-      <pre tabIndex={0} role="region" aria-label="Example code">
+      <Code.Block tabIndex={0} role="region" aria-label="Example code">
         <code>{'const plan = await getPlan();'}</code>
-      </pre>
-      <a href="#gallery-end" className="todae-visually-hidden-focusable">
-        Skip to content
-      </a>
+      </Code.Block>
+      <VisuallyHidden.Root focusable>
+        <a href="#gallery-end">Skip to content</a>
+      </VisuallyHidden.Root>
       <p id="gallery-end" tabIndex={-1}>
         End
       </p>
@@ -212,11 +237,11 @@ describe('content parts in a browser', () => {
   it('underlines links and lets a class override them', () => {
     render(
       <Themed>
-        <a href="#a">Plain</a>
-        <a href="#b" style={{ textDecorationLine: 'none' }}>
+        <Link.Root href="#a">Plain</Link.Root>
+        <Link.Root href="#b" style={{ textDecorationLine: 'none' }}>
           Styled
-        </a>
-        <a>Placeholder</a>
+        </Link.Root>
+        <Link.Root>Placeholder</Link.Root>
       </Themed>,
     );
     expect(getComputedStyle(screen.getByText('Plain')).textDecorationLine).toBe('underline');
@@ -225,29 +250,61 @@ describe('content parts in a browser', () => {
     expect(getComputedStyle(screen.getByText('Placeholder')).textDecorationLine).toBe('none');
   });
 
+  it('lets a container component style a Link.Root inside it, as Pagination does', async () => {
+    render(
+      <Themed>
+        <Pagination.Root>
+          <Pagination.Item>
+            <Link.Root href="#1">1</Link.Root>
+          </Pagination.Item>
+          <Pagination.Item>
+            <Link.Root href="#2" aria-current="page">
+              2
+            </Link.Root>
+          </Pagination.Item>
+        </Pagination.Root>
+      </Themed>,
+    );
+    const root = screen.getByText('1').closest('main') as HTMLElement;
+    root.style.setProperty('--todae-pagination-fg-default', 'rgb(1, 2, 3)');
+    root.style.setProperty('--todae-pagination-current-fg', 'rgb(4, 5, 6)');
+    root.style.setProperty('--todae-pagination-ring-focus', 'rgb(7, 8, 9)');
+    root.style.setProperty('--todae-pagination-radius', '5px');
+    const page = screen.getByText('1');
+    const current = screen.getByText('2');
+    expect(getComputedStyle(page).textDecorationLine).toBe('none');
+    expect(getComputedStyle(page).color).toBe('rgb(1, 2, 3)');
+    expect(getComputedStyle(current).textDecorationLine).toBe('none');
+    expect(getComputedStyle(current).color).toBe('rgb(4, 5, 6)');
+    await userEvent.tab();
+    expect(document.activeElement).toBe(page);
+    expect(getComputedStyle(page).outlineColor).toBe('rgb(7, 8, 9)');
+    expect(getComputedStyle(page).borderTopLeftRadius).toBe('5px');
+  });
+
   it('marks the current link from its tokens and treats false and empty as not current', async () => {
     render(
       <Themed>
-        <a href="#a">Other</a>
-        <a href="#b" aria-current="page">
+        <Link.Root href="#a">Other</Link.Root>
+        <Link.Root href="#b" aria-current="page">
           Current
-        </a>
-        <a href="#c" aria-current="step">
+        </Link.Root>
+        <Link.Root href="#c" aria-current="step">
           Step
-        </a>
-        <a href="#d" aria-current="true">
+        </Link.Root>
+        <Link.Root href="#d" aria-current="true">
           True
-        </a>
-        <a href="#e" aria-current="false">
+        </Link.Root>
+        <Link.Root href="#e" aria-current="false">
           False
-        </a>
+        </Link.Root>
         {/* React types allow only the ARIA tokens, but markup can carry these. */}
-        <a href="#f" {...{ 'aria-current': 'FALSE' as 'false' }}>
+        <Link.Root href="#f" {...{ 'aria-current': 'FALSE' as 'false' }}>
           Upper false
-        </a>
-        <a href="#g" {...{ 'aria-current': '' as 'false' }}>
+        </Link.Root>
+        <Link.Root href="#g" {...{ 'aria-current': '' as 'false' }}>
           Empty
-        </a>
+        </Link.Root>
       </Themed>,
     );
     const style = (text: string) => getComputedStyle(screen.getByText(text));
@@ -280,36 +337,35 @@ describe('content parts in a browser', () => {
     render(
       <Themed>
         <button type="button">Before</button>
-        <span className="todae-visually-hidden" data-testid="hidden">
-          Only for screen readers
-        </span>
-        <a href="#main" className="todae-visually-hidden-focusable">
-          Skip to content
-        </a>
+        <VisuallyHidden.Root data-testid="hidden">Only for screen readers</VisuallyHidden.Root>
+        <VisuallyHidden.Root focusable data-testid="skip">
+          <a href="#main">Skip to content</a>
+        </VisuallyHidden.Root>
       </Themed>,
     );
     const hidden = screen.getByTestId('hidden').getBoundingClientRect();
     expect(hidden.width).toBeLessThanOrEqual(1);
     expect(hidden.height).toBeLessThanOrEqual(1);
     const skip = screen.getByText('Skip to content');
-    expect(skip.getBoundingClientRect().width).toBeLessThanOrEqual(1);
+    const box = screen.getByTestId('skip');
+    expect(box.getBoundingClientRect().width).toBeLessThanOrEqual(1);
     screen.getByRole('button', { name: 'Before' }).focus();
     await userEvent.tab();
     expect(document.activeElement).toBe(skip);
-    expect(skip.getBoundingClientRect().width).toBeGreaterThan(1);
+    expect(box.getBoundingClientRect().width).toBeGreaterThan(1);
   });
 
-  it('opens and closes a native disclosure, one at a time in a named group', async () => {
+  it('opens and closes a disclosure, one at a time in a named group', async () => {
     render(
       <Themed>
-        <details name="faq" data-testid="one">
-          <summary>One</summary>
+        <Disclosure.Root name="faq" data-testid="one">
+          <Disclosure.Summary>One</Disclosure.Summary>
           <p>First answer</p>
-        </details>
-        <details name="faq" data-testid="two">
-          <summary>Two</summary>
+        </Disclosure.Root>
+        <Disclosure.Root name="faq" data-testid="two">
+          <Disclosure.Summary>Two</Disclosure.Summary>
           <p>Second answer</p>
-        </details>
+        </Disclosure.Root>
       </Themed>,
     );
     await userEvent.click(screen.getByText('One'));
@@ -320,10 +376,10 @@ describe('content parts in a browser', () => {
     expect(getComputedStyle(screen.getByTestId('one')).borderBottomStyle).toBe('solid');
   });
 
-  it('styles native tables, progress, meter and range from their tokens', () => {
+  it('styles tables, progress, meter and sliders from their tokens', () => {
     render(
       <Themed>
-        <table>
+        <Table.Root>
           <thead>
             <tr>
               <th scope="col" data-testid="col">
@@ -339,10 +395,10 @@ describe('content parts in a browser', () => {
               <td data-testid="cell">$120</td>
             </tr>
           </tbody>
-        </table>
-        <progress data-testid="progress" value={40} max={100} />
-        <progress data-testid="busy" />
-        <input data-testid="range" type="range" />
+        </Table.Root>
+        <Progress.Root data-testid="progress" value={40} max={100} />
+        <Progress.Root data-testid="busy" />
+        <Slider.Root data-testid="range" />
       </Themed>,
     );
     const style = (id: string, pseudo?: string) => getComputedStyle(screen.getByTestId(id), pseudo);
@@ -350,7 +406,7 @@ describe('content parts in a browser', () => {
     expect(style('row').fontWeight).toBe(style('col').fontWeight);
     expect(style('col').borderBottomColor).not.toBe(style('cell').borderBottomColor);
     expect(style('cell').borderBottomStyle).toBe('solid');
-    expect(style('busy').animationName).toBe('todae-progress-sweep');
+    expect(style('busy').animationName).toContain('todae-progress-sweep');
     // Chromium does not report the bar's pseudo-elements, so check the rules that draw them.
     expect(pseudoBackground('::-webkit-progress-value')).toBe('var(--todae-progress-fill)');
     expect(pseudoBackground('::-webkit-progress-bar')).toBe('var(--todae-progress-track)');
@@ -363,9 +419,9 @@ describe('content parts in a browser', () => {
   it('sweeps the busy band the way the fill grows', () => {
     render(
       <Themed>
-        <progress data-testid="ltr" />
+        <Progress.Root data-testid="ltr" />
         <div dir="rtl">
-          <progress data-testid="rtl" />
+          <Progress.Root data-testid="rtl" />
         </div>
       </Themed>,
     );
@@ -376,21 +432,20 @@ describe('content parts in a browser', () => {
   it('turns a spinner ring and pulses a skeleton', () => {
     render(
       <Themed>
-        <progress data-testid="spinner" className="todae-spinner" aria-label="Loading" />
+        <Spinner.Root data-testid="spinner" aria-label="Loading" />
         <Button.Root variant="primary" data-testid="button">
-          <progress data-testid="in-button" className="todae-spinner" aria-label="Saving" /> Save <code data-testid="button-code">x</code>
+          <Spinner.Root data-testid="in-button" aria-label="Saving" /> Save <Code.Root data-testid="button-code">x</Code.Root>
         </Button.Root>
         <div dir="rtl">
-          <progress data-testid="rtl" className="todae-spinner" aria-label="Loading" />
+          <Spinner.Root data-testid="rtl" aria-label="Loading" />
         </div>
-        <progress data-testid="valued" className="todae-spinner" aria-label="Uploading" value={40} max={100} />
-        <span data-testid="skeleton" className="todae-skeleton" aria-hidden="true">
+        <Skeleton.Root data-testid="skeleton" aria-hidden="true">
           Placeholder <b data-testid="inside">text</b>
-        </span>
+        </Skeleton.Root>
       </Themed>,
     );
     const style = (id: string) => getComputedStyle(screen.getByTestId(id));
-    expect(style('spinner').animationName).toBe('todae-spinner-turn');
+    expect(style('spinner').animationName).toContain('todae-spinner-turn');
     expect(style('spinner').width).toBe(style('spinner').height);
     expect(style('spinner').borderTopLeftRadius).toBe('50%');
     expect(style('spinner').backgroundImage).toContain('conic-gradient');
@@ -401,11 +456,8 @@ describe('content parts in a browser', () => {
     expect(style('in-button').backgroundImage).toContain(style('button').color);
     expect(style('button-code').color).toBe(style('button').color);
     expect(style('button-code').backgroundColor).not.toBe(style('button').backgroundColor);
-    // With a value it stays a bar, as it is announced.
-    expect(style('valued').animationName).toBe('none');
-    expect(style('valued').backgroundImage).not.toContain('conic-gradient');
     expect(style('skeleton').display).toBe('block');
-    expect(style('skeleton').animationName).toBe('todae-skeleton-pulse');
+    expect(style('skeleton').animationName).toContain('todae-skeleton-pulse');
     expect(style('skeleton').color).toBe('rgba(0, 0, 0, 0)');
     expect(style('inside').visibility).toBe('hidden');
   });
@@ -414,10 +466,10 @@ describe('content parts in a browser', () => {
     render(
       <Themed>
         <p data-testid="line">x</p>
-        <div data-testid="short" className="todae-skeleton" style={{ blockSize: '2px' }} />
-        <div data-testid="tall" className="todae-skeleton">
+        <Skeleton.Root data-testid="short" style={{ blockSize: '2px' }} />
+        <Skeleton.Root data-testid="tall">
           <div style={{ blockSize: '200px' }} />
-        </div>
+        </Skeleton.Root>
       </Themed>,
     );
     const height = (id: string) => screen.getByTestId(id).getBoundingClientRect().height;
@@ -429,17 +481,20 @@ describe('content parts in a browser', () => {
     render(
       <Themed>
         <p style={{ color: 'rgb(1, 2, 3)' }}>
-          <kbd data-testid="shortcut">
-            <kbd data-testid="key">Ctrl</kbd>+<kbd>K</kbd>
-          </kbd>
+          <Kbd.Root data-testid="shortcut">
+            <Kbd.Root data-testid="key">Ctrl</Kbd.Root>+<Kbd.Root>K</Kbd.Root>
+          </Kbd.Root>
         </p>
-        <code data-testid="inline">x</code>
-        <a href="#x" data-testid="link">
-          <code data-testid="linked">x</code>
-        </a>
-        <pre data-testid="block">
-          <code data-testid="nested">x</code>
-        </pre>
+        <Code.Root data-testid="inline">x</Code.Root>
+        <Link.Root href="#x" data-testid="link">
+          <Code.Root data-testid="linked">x</Code.Root>
+        </Link.Root>
+        <Code.Block data-testid="block">
+          <Code.Root data-testid="nested">x</Code.Root>
+        </Code.Block>
+        <Code.Block>
+          <code data-testid="plain-nested">x</code>
+        </Code.Block>
       </Themed>,
     );
     const style = (id: string) => getComputedStyle(screen.getByTestId(id));
@@ -456,6 +511,34 @@ describe('content parts in a browser', () => {
     expect(style('block').overflowX).toBe('auto');
     expect(style('nested').backgroundColor).toBe('rgba(0, 0, 0, 0)');
     expect(style('nested').paddingLeft).toBe('0px');
+    expect(style('plain-nested').backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  });
+
+  it('leaves plain native elements without Todae styles', () => {
+    render(
+      <Themed>
+        <Table.Root data-testid="styled">
+          <tbody>
+            <tr>
+              <td data-testid="styled-cell">a</td>
+            </tr>
+          </tbody>
+        </Table.Root>
+        <table>
+          <tbody>
+            <tr>
+              <td data-testid="plain-cell">a</td>
+            </tr>
+          </tbody>
+        </table>
+        <hr data-testid="plain-rule" />
+        <Separator.Root data-testid="rule" />
+      </Themed>,
+    );
+    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+    expect(style('styled-cell').borderBottomStyle).toBe('solid');
+    expect(style('plain-cell').borderBottomStyle).toBe('none');
+    expect(style('rule').borderTopColor).not.toBe(style('plain-rule').borderTopColor);
   });
 
   it('draws the breadcrumb glyph between items only, and colors badges and cards from tokens', () => {
@@ -463,7 +546,7 @@ describe('content parts in a browser', () => {
       <Themed>
         <Breadcrumbs.Root separator="›">
           <Breadcrumbs.Item data-testid="first">
-            <a href="#home">Home</a>
+            <Link.Root href="#home">Home</Link.Root>
           </Breadcrumbs.Item>
           <Breadcrumbs.Item data-testid="last" current>
             Billing

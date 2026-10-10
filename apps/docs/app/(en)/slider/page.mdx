@@ -2,7 +2,7 @@ import { SliderVolume } from '../../../components/demos/NativeControlsDemo';
 
 # Slider
 
-A slider is a native `<input type="range">`. There is no component: the browser already handles arrow keys, Page Up and Down, Home and End, and announces the value. Todae sets `accent-color` from the `slider` contract tokens in the `todae.base` layer, and the browser uses it to tint the thumb and filled track. How much of the control that color reaches differs by browser.
+`Slider.Root` is a native `<input type="range">`. The browser handles arrow keys, Page Up and Down, Home and End, and announces the value. Todae sets `accent-color` from the `slider` contract tokens, and the browser uses it to tint the thumb and filled track. How much of the control that color reaches differs by browser.
 
 <Example block>
   <SliderVolume />
@@ -10,10 +10,10 @@ A slider is a native `<input type="range">`. There is no component: the browser 
 
 ```tsx
 <Label htmlFor="volume">Volume</Label>
-<input id="volume" type="range" min={0} max={100} step={5} value={value} onChange={onChange} />
+<Slider.Root id="volume" min={0} max={100} step={5} value={value} onChange={onChange} />
 ```
 
-Name it with [Label](/label) and show the current value as text nearby when the exact number matters. Restyle through `slider.fill` and `slider.ring.focus`. A slider with two thumbs for a range is not native and is not part of Todae yet.
+Server Components can import it from `@omsoo/todae/slider`. Name it with [Label](/label) and show the current value as text nearby when the exact number matters. Restyle through `slider.fill` and `slider.ring.focus`. A slider with two thumbs for a range is not native and is not part of Todae yet.
 
 ## Accessible composition
 
@@ -21,10 +21,14 @@ Name it with [Label](/label) and show the current value as text nearby when the 
 
 **You supply:** A name, from a [Label](/label) with `htmlFor` or from `aria-label`. `aria-valuetext` when the number alone does not mean much, such as `"40%"` or `"Medium"`. The current value as visible text when the exact number matters, and `aria-describedby` for any hint.
 
-**Watch for:** A `div` slider built by hand needs its role, value attributes and keys added one by one; inside a Field, see [useField](/utilities/use-field). Todae's rules sit in the `todae.base` layer, so an `outline: none` of yours removes the focus ring.
+**Watch for:** A `div` slider built by hand needs its role, value attributes and keys added one by one; inside a Field, see [useField](/utilities/use-field). An `outline: none` of yours removes the focus ring.
 
 ## When to use
 
 **When:** Picking a value in a range where the rough position matters more than the exact number, such as volume or zoom.
 
 **When not:** An exact number → `Field.TextInput` with `type="number"`. A few named choices → [Radio](/radio). Showing progress the user does not control → [Progress](/progress).
+
+## Props
+
+<PropsTable name="Slider.Root" />
