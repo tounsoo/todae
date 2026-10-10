@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge, Code, Table } from '@tounsoo/todae';
+import { Badge, Code, Table } from '@omsoo/todae';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { useLocale } from '../lib/i18n/useLocale';

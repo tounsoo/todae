@@ -1,7 +1,7 @@
-import { Badge } from '@tounsoo/todae/badge';
-import { Stack } from '@tounsoo/todae/stack';
-import { Text } from '@tounsoo/todae/text';
-import { VisuallyHidden } from '@tounsoo/todae/visually-hidden';
+import { Badge } from '@omsoo/todae/badge';
+import { Stack } from '@omsoo/todae/stack';
+import { Text } from '@omsoo/todae/text';
+import { VisuallyHidden } from '@omsoo/todae/visually-hidden';
 
 export function BadgeTones() {
   return (

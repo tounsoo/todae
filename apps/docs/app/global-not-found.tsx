@@ -1,4 +1,4 @@
-import { Link } from '@tounsoo/todae/link';
+import { Link } from '@omsoo/todae/link';
 import { SiteShell } from '../components/SiteShell';
 import { LOCALES, localizePath } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';

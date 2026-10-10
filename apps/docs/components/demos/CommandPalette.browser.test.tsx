@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { afterEach, expect, it } from 'vitest';
-import '@tounsoo/todae/todae.css';
+import '@omsoo/todae/todae.css';
 import { Providers } from '../Providers';
 import { CommandPalette } from './CommandPaletteDemo';
 

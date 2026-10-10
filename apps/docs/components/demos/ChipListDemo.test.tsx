@@ -5,7 +5,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { renderToString } from 'react-dom/server';
 import { StrictMode, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChipList, Field } from '@tounsoo/todae';
+import { ChipList, Field } from '@omsoo/todae';
 import { ChipListDemo } from './ChipListDemo';
 
 const require = createRequire(import.meta.url);
@@ -17,7 +17,7 @@ const PAD = 'calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset))'
 
 // The built stylesheet's rules that name one of el's classes.
 function rulesFor(el: HTMLElement) {
-  const css = readFileSync(require.resolve('@tounsoo/todae/todae.css'), 'utf8');
+  const css = readFileSync(require.resolve('@omsoo/todae/todae.css'), 'utf8');
   return css
     .split('}')
     .filter((part) => [...el.classList].some((cls) => new RegExp(`\\.${cls}(?![\\w-])`).test(part)))
@@ -238,7 +238,7 @@ describe('chip list recipe', () => {
     expect(truncated.getAttribute('title')).toBeNull();
     const label = truncated.querySelector('span');
     expect(label?.textContent).toBe(full);
-    const css = readFileSync(require.resolve('@tounsoo/todae/todae.css'), 'utf8');
+    const css = readFileSync(require.resolve('@omsoo/todae/todae.css'), 'utf8');
     const cls = [...(label?.classList ?? [])].find((name) => name.includes('label'));
     expect(cls).toBeTruthy();
     const rule = css.slice(css.indexOf(`.${cls}`), css.indexOf('}', css.indexOf(`.${cls}`)));
@@ -1012,7 +1012,7 @@ describe('chip list recipe', () => {
 
   it('defines chip geometry tokens and uses them on Chip', () => {
     render(<ChipListDemo maxRows={1} initialChips={EIGHT} />);
-    const css = readFileSync(require.resolve('@tounsoo/todae/todae.css'), 'utf8');
+    const css = readFileSync(require.resolve('@omsoo/todae/todae.css'), 'utf8');
     expect(css).toMatch(/--todae-chip-leading:\s*var\(--_todae-chip-leading,\s*var\(--todae-font-leading-tight\)\)/);
     expect(css).toMatch(/--todae-chip-border-width:\s*var\(--_todae-chip-border-width,\s*var\(--todae-border-width\)\)/);
     expect(css).toMatch(/--todae-chip-ring-width:\s*var\(--_todae-chip-ring-width,\s*var\(--todae-focus-ring-width\)\)/);

@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
-import '@tounsoo/todae/todae.css';
-import { VisuallyHidden } from '@tounsoo/todae/visually-hidden';
+import '@omsoo/todae/todae.css';
+import { VisuallyHidden } from '@omsoo/todae/visually-hidden';
 import { localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 // Reads the file system, so SiteShell renders on the server only.

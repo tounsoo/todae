@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Chip, Stack, Tooltip, useTooltip } from '@tounsoo/todae';
+import { Button, Chip, Stack, Tooltip, useTooltip } from '@omsoo/todae';
 import { LocalizedLink } from '../LocalizedLink';
 
 export function TooltipArchive() {

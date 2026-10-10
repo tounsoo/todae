@@ -1,6 +1,6 @@
 'use client';
 
-import { Code } from '@tounsoo/todae/code';
+import { Code } from '@omsoo/todae/code';
 import type { ComponentProps } from 'react';
 import { useOverflowRegion } from './OverflowRegion';
 

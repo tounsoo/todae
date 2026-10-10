@@ -1,6 +1,6 @@
 'use client';
 
-import { Link } from '@tounsoo/todae/link';
+import { Link } from '@omsoo/todae/link';
 import type { ComponentProps } from 'react';
 import { localizePath } from '../lib/i18n/config';
 import { useLocale } from '../lib/i18n/useLocale';

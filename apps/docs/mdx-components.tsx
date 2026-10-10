@@ -1,8 +1,8 @@
 import type { ComponentProps } from 'react';
-import { Code } from '@tounsoo/todae/code';
-import { Kbd } from '@tounsoo/todae/kbd';
-import { Separator } from '@tounsoo/todae/separator';
-import { Table as TodaeTable } from '@tounsoo/todae/table';
+import { Code } from '@omsoo/todae/code';
+import { Kbd } from '@omsoo/todae/kbd';
+import { Separator } from '@omsoo/todae/separator';
+import { Table as TodaeTable } from '@omsoo/todae/table';
 import type { MDXComponents } from 'mdx/types';
 import { DocsPre } from './components/DocsPre';
 import { Example } from './components/Example';

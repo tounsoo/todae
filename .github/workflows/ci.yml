@@ -20,12 +20,12 @@ jobs:
       - run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
       - run: pnpm typecheck
       - run: pnpm lint
-      - name: Build @tounsoo/todae
-        run: pnpm --filter @tounsoo/todae build
+      - name: Build @omsoo/todae
+        run: pnpm --filter @omsoo/todae build
       - name: Test
         run: pnpm test
       - name: Install Chromium for browser tests
-        run: pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium
+        run: pnpm --filter @omsoo/todae exec playwright install --with-deps chromium
       - name: Browser tests
         run: pnpm test:browser
       - run: pnpm build
