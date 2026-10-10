@@ -287,21 +287,27 @@ describe('Toast', () => {
     expect(region.hasAttribute('data-expanded')).toBe(false);
   });
 
-  it('does not spread on a click with no press after a tap released off the region', () => {
+  it('spreads on a click only when a tap made it', () => {
     const toaster = createToaster({ duration: Infinity });
     render(<Region toaster={toaster} layout="stack" />);
     act(() => void toaster.add({ title: 'Hold' }));
     const region = screen.getByRole('region');
     const title = screen.getByText('Hold');
+    const click = (init: PointerEventInit) =>
+      fireEvent(title, new PointerEvent('click', { bubbles: true, detail: 1, ...init }));
+    // A long press that sent no click, then a mouse click: no tap.
     fireEvent.pointerDown(title, { pointerType: 'touch', buttons: 1, pointerId: 6 });
-    fireEvent.pointerUp(document.body, { pointerType: 'touch', pointerId: 6 });
-    fireEvent.click(title, { detail: 1 });
+    fireEvent.pointerUp(title, { pointerType: 'touch', pointerId: 6 });
+    click({ pointerType: 'mouse', pointerId: 1 });
     expect(region.hasAttribute('data-expanded')).toBe(false);
-    // Nor on one from the keyboard or click(), even right after a tap.
+    // Nor a click that names no pointer, from the keyboard or click().
     fireEvent.pointerDown(title, { pointerType: 'touch', buttons: 1, pointerId: 7 });
     fireEvent.pointerUp(title, { pointerType: 'touch', pointerId: 7 });
+    click({ pointerType: '', pointerId: -1, detail: 0 });
     fireEvent.click(title);
     expect(region.hasAttribute('data-expanded')).toBe(false);
+    click({ pointerType: 'touch', pointerId: 8 });
+    expect(region.hasAttribute('data-expanded')).toBe(true);
   });
 
   it('lets a tap on the collapsed stack reach what was under it, and spreads after', () => {

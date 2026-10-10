@@ -1123,7 +1123,7 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
     touch('pointerdown');
     touch('pointerup');
     touch('pointerout');
-    act(() => void at().dispatchEvent(new MouseEvent('click', { detail: 1, bubbles: true, composed: true })));
+    act(() => void at().dispatchEvent(new PointerEvent('click', { pointerType: 'touch', detail: 1, bubbles: true, composed: true })));
     await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(true));
     expect(toaster.getSnapshot().find((toast) => toast.id === 'back')?.open).toBe(true);
     await waitFor(() => expect(receivesPointer(backClose)).toBe(true));

@@ -10,6 +10,7 @@ import {
   useSyncExternalStore,
   type ComponentPropsWithRef,
   type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
@@ -147,6 +148,20 @@ function alongside<E>(theirs: ((event: E) => void) | undefined, ours: (event: E)
 /** Whether `event` comes from a pointer that hovers: a mouse, or a pen above the screen. */
 function hovers(event: ReactPointerEvent): boolean {
   return event.pointerType === 'mouse' || (event.pointerType !== 'touch' && event.buttons === 0);
+}
+
+/**
+ * Whether a click ends a tap. Most engines say which pointer made it; a
+ * click from the keyboard, assistive technology or click() names none.
+ * Elsewhere, a click a pointer made has a detail, and the last press on the
+ * region says whether it was a tap.
+ */
+function isTap(event: ReactMouseEvent, from: number | null, hoverIds: ReadonlySet<number>): boolean {
+  const native = event.nativeEvent as Partial<PointerEvent>;
+  if (typeof native.pointerType === 'string' && typeof native.pointerId === 'number') {
+    return native.pointerType !== '' && native.pointerType !== 'mouse' && !hoverIds.has(native.pointerId);
+  }
+  return from !== null && event.detail > 0;
 }
 
 function Item<T extends object>({
@@ -305,7 +320,8 @@ function Region<T extends object = object>({
   // finger taps it.
   const hoverIds = useRef(new Set<number>());
   const pressIds = useRef(new Set<number>());
-  // The pointer of the last press on the region, when it was a tap's.
+  // The pointer of the last press on the region, when it was a tap's, for
+  // an engine whose click doesn't say which pointer made it.
   const tapFrom = useRef<number | null>(null);
   const [pageHidden, setPageHidden] = useState(false);
   const expanded = hovered || focused || tapped;
@@ -480,11 +496,6 @@ function Region<T extends object = object>({
     if (!pressed || !doc) return;
     const onEnd = (event: PointerEvent) => {
       pressIds.current.delete(event.pointerId);
-      // A press that turns into a scroll, or ends off the region, sends the
-      // region no click.
-      const section = sectionRef.current;
-      const clicks = event.type === 'pointerup' && eventInside(section, event);
-      if (!clicks && tapFrom.current === event.pointerId) tapFrom.current = null;
       if (pressIds.current.size === 0) setPressed(false);
     };
     doc.addEventListener('pointerup', onEnd, true);
@@ -633,12 +644,10 @@ function Region<T extends object = object>({
         pressIds.current.add(event.pointerId);
         setPressed(true);
       })}
-      // Only a click a press made: one from the keyboard, assistive
-      // technology or click() has no detail.
       onClickCapture={alongside(onClickCapture, (event) => {
-        if (tapFrom.current === null || event.detail === 0) return;
+        const from = tapFrom.current;
         tapFrom.current = null;
-        setTapped(true);
+        if (isTap(event, from, hoverIds.current)) setTapped(true);
       })}
       onFocus={alongside(onFocus, (event) => {
         focusLeave.onFocus();
@@ -652,8 +661,6 @@ function Region<T extends object = object>({
       })}
       onBlur={alongside(onBlur, focusLeave.onBlur)}
       onKeyDown={composeHandlers(onKeyDown, (event: ReactKeyboardEvent<HTMLElement>) => {
-        // A click from the keyboard is no tap.
-        tapFrom.current = null;
         if (event.key !== 'Escape' || event.target !== event.currentTarget) return;
         event.preventDefault();
         event.stopPropagation();
