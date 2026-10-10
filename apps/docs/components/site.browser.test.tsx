@@ -1,7 +1,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { page, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@omsoo/todae/todae.css';
 import '../app/globals.css';
 import { APPEARANCE_KEY, APPEARANCE_SCRIPT } from './appearanceScript';
@@ -58,6 +58,7 @@ describe('docs site chrome under axe', () => {
   });
 
   it('playground, with a preset in dark', async () => {
+    await page.viewport(1280, 800);
     render(
       <Providers>
         <main>
@@ -115,6 +116,39 @@ describe('narrow screens', () => {
     }
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
   });
+
+  it('puts the playground stage under the theme controls and edits tokens in a sheet', async () => {
+    await page.viewport(390, 800);
+    render(
+      <Providers>
+        <main>
+          <Playground locale="en" />
+        </main>
+      </Providers>,
+    );
+    await frame();
+    const stage = screen.getByRole('region', { name: 'Preview' });
+    // The token editor is only in the sheet, and the stage follows the theme controls.
+    expect(screen.queryByRole('tab', { name: 'raw' })).toBeNull();
+    const controls = screen.getByRole('complementary', { name: 'Theme controls' });
+    expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(controls.getBoundingClientRect().bottom);
+    // The presets scroll in their own row, so the page does not scroll sideways.
+    expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(innerWidth);
+    const bar = document.querySelector('.pg-sheet-bar')!;
+    expect(bar.getBoundingClientRect().bottom).toBeLessThanOrEqual(innerHeight);
+    await userEvent.click(within(bar as HTMLElement).getByRole('button', { name: 'Edit tokens' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Tokens' });
+    await frame();
+    expect(await violations()).toEqual([]);
+    await userEvent.fill(within(sheet).getByLabelText('color.accent.default'), 'oklch(0.5 0.1 30)');
+    expect(stage.style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.1 30)');
+    // The count shows on the button that opens the sheet, and names the change for a screen reader.
+    expect(within(bar as HTMLElement).getByRole('button', { name: 'Edit tokens (1 changed)' })).toBeTruthy();
+    // The stage stays visible above the sheet while tokens change.
+    expect(stage.getBoundingClientRect().top).toBeLessThan(sheet.getBoundingClientRect().top);
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
+    await expect.poll(() => screen.queryByRole('dialog', { name: 'Tokens' })).toBeNull();
+  });
 });
 
 describe('mobile drawer', () => {
@@ -171,13 +205,20 @@ describe('mobile drawer', () => {
 describe('props table', () => {
   const describe_ = (text: string) => ({ en: { text, lang: 'en' as const }, ko: { text, lang: 'en' as const } });
   const rows: PropsTableRow[] = [
-    { name: 'onActiveValueChange', type: '(value: string | null) => void', required: true, descriptions: describe_('Called when the active option changes.') },
+    {
+      name: 'onActiveValueChange',
+      type: '(value: string | null) => void',
+      required: true,
+      descriptions: describe_('Called when the active option changes.'),
+    },
     {
       name: 'type',
       type: '"text" | "search" | "email" | "url" | "tel" | "password" | "number" | "date" | "time" | "datetime-local"',
       required: false,
       default: '"text"',
-      descriptions: describe_('Native input type. Number, date and time keep the native spinner and picker, and value stays the input string.'),
+      descriptions: describe_(
+        'Native input type. Number, date and time keep the native spinner and picker, and value stays the input string.',
+      ),
     },
   ];
 
@@ -245,6 +286,11 @@ describe('props table', () => {
 });
 
 describe('playground stage', () => {
+  // The token editor sits in the rail on wide screens.
+  beforeEach(async () => {
+    await page.viewport(1280, 800);
+  });
+
   function renderPlayground() {
     render(
       <Providers>

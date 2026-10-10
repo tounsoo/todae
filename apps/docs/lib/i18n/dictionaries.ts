@@ -48,6 +48,7 @@ export type Dictionary = {
     | 'lead'
     | 'presets'
     | 'tokens'
+    | 'editTokens'
     | 'tokenLayer'
     | 'filter'
     | 'noMatch'
@@ -112,6 +113,7 @@ const en: Dictionary = {
     lead: 'Start from a preset, change any token, and copy the result as ThemeProvider overrides.',
     presets: 'Presets',
     tokens: 'Tokens',
+    editTokens: 'Edit tokens',
     tokenLayer: 'Token layer',
     filter: 'Filter tokens',
     noMatch: 'No token matches.',
@@ -179,6 +181,7 @@ const ko: Dictionary = {
     lead: '프리셋에서 시작해 원하는 토큰을 바꾸고, 결과를 ThemeProvider 오버라이드로 복사하세요.',
     presets: '프리셋',
     tokens: '토큰',
+    editTokens: '토큰 편집',
     tokenLayer: '토큰 레이어',
     filter: '토큰 필터',
     noMatch: '일치하는 토큰이 없습니다.',
