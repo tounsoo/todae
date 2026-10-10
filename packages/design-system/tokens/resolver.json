@@ -8,6 +8,11 @@
       "sources": [{ "$ref": "./core.json" }],
       "$extensions": { "dev.todae": { "layer": "core", "rules": ["reserved-roots"] } }
     },
+    "focus": {
+      "description": "Focus ring shared by every component; later contract entries read it",
+      "sources": [{ "$ref": "./components/focus.json" }],
+      "$extensions": { "dev.todae": { "layer": "contract", "rules": ["reserved-roots"] } }
+    },
     "button": {
       "description": "Button geometry shared by every variant",
       "sources": [{ "$ref": "./components/button.base.json" }],
@@ -17,7 +22,6 @@
       "sources": [
         { "$ref": "./components/stack.json" },
         { "$ref": "./components/text.json" },
-        { "$ref": "./components/focus.json" },
         { "$ref": "./components/field.json" },
         { "$ref": "./components/chip.json" },
         { "$ref": "./components/overlay.json" },
@@ -153,6 +157,7 @@
     { "$ref": "#/sets/core" },
     { "$ref": "#/modifiers/appearance" },
     { "$ref": "#/modifiers/density" },
+    { "$ref": "#/sets/focus" },
     { "$ref": "#/sets/button" },
     { "$ref": "#/modifiers/buttonVariant" },
     { "$ref": "#/sets/contract" }

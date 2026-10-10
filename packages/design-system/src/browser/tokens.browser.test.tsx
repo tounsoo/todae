@@ -40,6 +40,21 @@ describe('shared focus ring tokens in a browser', () => {
     expect(tab.outlineOffset).toBe('-2px');
   });
 
+  it('recolors component rings, button variants included, from focus.ring.color', async () => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ ['--_todae-focus-ring-color' as string]: 'rgb(200, 0, 0)' }}>
+        <Button.Root variant="secondary">Save</Button.Root>
+        <Checkbox.Root>Agree</Checkbox.Root>
+      </div>,
+    );
+    await userEvent.tab();
+    expect(getComputedStyle(screen.getByRole('button', { name: 'Save' })).outlineColor).toBe('rgb(200, 0, 0)');
+    await userEvent.tab();
+    // Checkbox draws its ring on the indicator after the input.
+    const indicator = screen.getByRole('checkbox', { name: 'Agree' }).nextElementSibling!;
+    expect(getComputedStyle(indicator).outlineColor).toBe('rgb(200, 0, 0)');
+  });
+
   it('moves an inset tab ring with a wider focus.ring.width', async () => {
     render(
       <div data-appearance="light" data-density="comfortable" style={{ ['--todae-focus-ring-width' as string]: '3px' }}>

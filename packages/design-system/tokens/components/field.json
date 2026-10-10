@@ -33,7 +33,7 @@
       "invalid": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } },
       "invalid": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } }
     },
     "label": {

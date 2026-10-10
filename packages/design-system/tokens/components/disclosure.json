@@ -17,7 +17,7 @@
       "scale": { "$type": "number", "$value": 1 }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } },
       "radius": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
     },
     "motion": {

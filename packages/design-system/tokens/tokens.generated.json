@@ -2216,6 +2216,33 @@
       "context": "spacious"
     },
     {
+      "path": "focus.ring.color",
+      "type": "color",
+      "cssVar": "--todae-focus-ring-color",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "focus.ring.offset",
+      "type": "dimension",
+      "cssVar": "--todae-focus-ring-offset",
+      "cssValue": "2px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "focus.ring.width",
+      "type": "dimension",
+      "cssVar": "--todae-focus-ring-width",
+      "cssValue": "2px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "button.base.font.size",
       "type": "dimension",
       "cssVar": "--todae-button-base-font-size",
@@ -2417,8 +2444,8 @@
       "path": "button.primary.ring.focus",
       "type": "color",
       "cssVar": "--todae-button-primary-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": "primary"
     },
@@ -2561,8 +2588,8 @@
       "path": "button.secondary.ring.focus",
       "type": "color",
       "cssVar": "--todae-button-secondary-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": "secondary"
     },
@@ -2705,8 +2732,8 @@
       "path": "button.ghost.ring.focus",
       "type": "color",
       "cssVar": "--todae-button-ghost-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": "ghost"
     },
@@ -2851,24 +2878,6 @@
       "cssVar": "--todae-text-weight-regular",
       "cssValue": "var(--todae-font-weight-regular)",
       "ref": "font.weight.regular",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "focus.ring.offset",
-      "type": "dimension",
-      "cssVar": "--todae-focus-ring-offset",
-      "cssValue": "2px",
-      "ref": null,
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "focus.ring.width",
-      "type": "dimension",
-      "cssVar": "--todae-focus-ring-width",
-      "cssValue": "2px",
-      "ref": null,
       "layer": "contract",
       "context": null
     },
@@ -3227,8 +3236,8 @@
       "path": "field.ring.focus",
       "type": "color",
       "cssVar": "--todae-field-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -3722,8 +3731,8 @@
       "path": "chip.ring.focus",
       "type": "color",
       "cssVar": "--todae-chip-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -4082,8 +4091,8 @@
       "path": "sheet.ring.focus",
       "type": "color",
       "cssVar": "--todae-sheet-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -4460,8 +4469,8 @@
       "path": "option.ring.focus",
       "type": "color",
       "cssVar": "--todae-option-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -4586,8 +4595,8 @@
       "path": "menu.item.ring.focus",
       "type": "color",
       "cssVar": "--todae-menu-item-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -4766,8 +4775,8 @@
       "path": "tabs.ring.focus",
       "type": "color",
       "cssVar": "--todae-tabs-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -4910,8 +4919,8 @@
       "path": "selection.ring.focus",
       "type": "color",
       "cssVar": "--todae-selection-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -5306,8 +5315,8 @@
       "path": "toast.ring.focus",
       "type": "color",
       "cssVar": "--todae-toast-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -5522,8 +5531,8 @@
       "path": "link.ring.focus",
       "type": "color",
       "cssVar": "--todae-link-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -5612,8 +5621,8 @@
       "path": "disclosure.ring.focus",
       "type": "color",
       "cssVar": "--todae-disclosure-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -5837,8 +5846,8 @@
       "path": "slider.ring.focus",
       "type": "color",
       "cssVar": "--todae-slider-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -7052,8 +7061,8 @@
       "path": "pagination.ring.focus",
       "type": "color",
       "cssVar": "--todae-pagination-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -7070,8 +7079,8 @@
       "path": "scroll.ring.focus",
       "type": "color",
       "cssVar": "--todae-scroll-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },
@@ -7250,8 +7259,8 @@
       "path": "tree.item.ring.focus",
       "type": "color",
       "cssVar": "--todae-tree-item-ring-focus",
-      "cssValue": "var(--todae-color-accent-default)",
-      "ref": "color.accent.default",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
       "layer": "contract",
       "context": null
     },

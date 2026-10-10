@@ -31,7 +31,7 @@
       "disabled": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
     },
     "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },

@@ -42,6 +42,17 @@ Four tones carry status: `info`, `success`, `warning` and `critical`. Each is th
 
 Eight tones label categories such as tags or people: `color.category.1` to `color.category.8`, each with `fg`, `bg` and `border` per appearance. They are numbered rather than named after hues, so a company can change a hue in its token package without renaming anything. The build checks `fg` on `bg` at Lc 75. [Badge](/badge), [Chip](/chip) and [Avatar](/avatar) take them as the tones `category-1` to `category-8`, and `categoryTone(key)` picks one from a string.
 
+## Focus ring
+
+`focus.ring.color`, `focus.ring.width` and `focus.ring.offset` describe Todae's focus ring. Each component's `ring.focus` color token, such as `button.primary.ring.focus` or `field.ring.focus`, points at `focus.ring.color`, so changing it recolors those rings. A component's own token still overrides it for that component. Read the three tokens to draw the same ring on a focusable element of your own:
+
+```css
+.my-card:focus-visible {
+  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
+  outline-offset: var(--todae-focus-ring-offset);
+}
+```
+
 ## Catalog
 
 <TokensCatalog />

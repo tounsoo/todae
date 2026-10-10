@@ -208,7 +208,7 @@
   },
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
-    "## Token layers": "ffce8700cbe1",
+    "## Token layers": "4b9cc0e80a6c",
     "## A company resolver": "bc1b48f00efd",
     "## Overrides: CSS or ThemeProvider": "f3c47c9be9f3",
     "## Adding a variant or a density": "18296d631573",
@@ -445,8 +445,9 @@
     "## References and opacity": "dbea45e0372e",
     "## Status tones": "9db538465fa4",
     "## Category tones": "66f99d412c6c",
+    "## Focus ring": "d4f6cb5c0687",
     "## Catalog": "fbadfcf96811",
-    "(section order)": "cf0c84adc2d2"
+    "(section order)": "1a0509b1ade0"
   },
   "toolbar": {
     "(top)": "65f7c00fa816",

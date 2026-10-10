@@ -4,7 +4,7 @@
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
     },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/lg/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },

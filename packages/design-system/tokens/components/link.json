@@ -14,7 +14,7 @@
       "offset": { "$type": "dimension", "$value": { "value": 3, "unit": "px" } }
     },
     "ring": {
-      "focus": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } },
       "radius": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
     }
   }
