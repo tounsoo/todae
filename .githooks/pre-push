@@ -1,8 +1,8 @@
 #!/bin/sh
 # Blocks a push from Claude Code that would send a commit no review round has
-# passed (CLAUDE.md, review loop step 6). People pushing from their own shell
-# are not gated. A SessionStart hook in .claude/settings.json points
-# core.hooksPath here.
+# passed (CLAUDE.md, review loop step 6). Pushes outside Claude Code are not
+# gated. .githooks/install, run by a SessionStart hook in .claude/settings.json,
+# hooks it into the clone.
 [ -n "$CLAUDECODE" ] || exit 0
 
 zero=0000000000000000000000000000000000000000

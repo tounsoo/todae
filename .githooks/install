@@ -1,0 +1,22 @@
+#!/bin/sh
+# Run by the SessionStart hook in .claude/settings.json. Puts a small
+# pre-push hook in the clone's hooks dir that runs .githooks/pre-push from
+# whatever is checked out, so core.hooksPath and the person's other hooks
+# stay as they are. A pre-push hook that is not this one is left alone.
+cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
+hooks=$(git rev-parse --path-format=absolute --git-path hooks 2>/dev/null) || exit 0
+target="$hooks/pre-push"
+tag='# todae review gate'
+if [ -e "$target" ] && ! grep -q "^$tag" "$target"; then
+  echo "todae: $target already exists, so the review push gate is not installed." >&2
+  exit 0
+fi
+mkdir -p "$hooks" || exit 0
+cat > "$target" <<SHIM
+#!/bin/sh
+$tag: runs .githooks/pre-push when the checkout has one.
+hook="\$(git rev-parse --show-toplevel)/.githooks/pre-push"
+[ -x "\$hook" ] || exit 0
+exec "\$hook" "\$@"
+SHIM
+chmod +x "$target"
