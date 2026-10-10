@@ -1,5 +1,6 @@
+/// <reference types="@vitest/browser/providers/playwright" />
 import { cleanup, render, screen, within } from '@testing-library/react';
-import { page, userEvent } from '@vitest/browser/context';
+import { cdp, page, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@omsoo/todae/todae.css';
@@ -153,11 +154,12 @@ describe('narrow screens', () => {
       `${Math.ceil(bar.getBoundingClientRect().height)}px`,
     );
     // The border box is measured, so padding such as the safe area counts too.
+    const reserved = () => document.documentElement.style.getPropertyValue('--docs-pg-bar');
+    const idle = reserved();
     bar.style.paddingBlockEnd = '3rem';
-    await expect.poll(() => document.documentElement.style.getPropertyValue('--docs-pg-bar')).toBe(
-      `${Math.ceil(bar.getBoundingClientRect().height)}px`,
-    );
+    await expect.poll(reserved).toBe(`${Math.ceil(bar.getBoundingClientRect().height)}px`);
     bar.style.paddingBlockEnd = '';
+    await expect.poll(reserved).toBe(idle);
     expect(await violations()).toEqual([]);
     await userEvent.click(within(bar).getByRole('button', { name: 'Edit tokens' }));
     const sheet = await screen.findByRole('dialog', { name: 'Tokens' });
@@ -226,6 +228,30 @@ describe('narrow screens', () => {
     scrollTo(0, document.documentElement.scrollHeight);
     await frame();
     expect(stage.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop() + 1);
+  });
+
+  it('leaves the playground bar, the open sheet and their space out of print', async () => {
+    await page.viewport(390, 800);
+    // Static markup with the playground's classes: printing can also flip the
+    // playground's own media query, and this checks the stylesheet alone.
+    document.documentElement.style.setProperty('--docs-pg-bar', '80px');
+    render(
+      <div className="playground">
+        <div className="pg-sheet-bar" />
+        <dialog className="pg-sheet" open />
+      </div>,
+    );
+    const playground = document.querySelector<HTMLElement>('.playground')!;
+    expect(getComputedStyle(playground).paddingBlockEnd).toBe('80px');
+    await cdp().send('Emulation.setEmulatedMedia', { media: 'print' });
+    try {
+      expect(getComputedStyle(document.querySelector('.pg-sheet-bar')!).display).toBe('none');
+      expect(getComputedStyle(document.querySelector('.pg-sheet')!).display).toBe('none');
+      expect(getComputedStyle(playground).paddingBlockEnd).toBe('0px');
+    } finally {
+      await cdp().send('Emulation.setEmulatedMedia', { media: '' });
+      document.documentElement.style.removeProperty('--docs-pg-bar');
+    }
   });
 
   it('names the playground sheet controls in Korean on the Korean page', async () => {

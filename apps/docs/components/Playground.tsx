@@ -46,7 +46,7 @@ const NO_EDITS = { light: {}, dark: {} };
 const DARK = '(prefers-color-scheme: dark)';
 // Below the width that fits the rail beside the stage, the token editor moves into a sheet.
 // globals.css uses the same breakpoint.
-const NARROW = '(width < 64rem)';
+const NARROW = 'screen and (width < 64rem)';
 
 function subscribeTo(media: string) {
   return (onChange: () => void) => {
@@ -204,9 +204,8 @@ function useNarrow(): boolean {
 function reserveBar(bar: HTMLElement | null) {
   if (!bar) return;
   const root = document.documentElement;
-  const observer = new ResizeObserver(([entry]) => {
-    const height = entry?.borderBoxSize[0]?.blockSize ?? bar.getBoundingClientRect().height;
-    root.style.setProperty('--docs-pg-bar', `${Math.ceil(height)}px`);
+  const observer = new ResizeObserver(() => {
+    root.style.setProperty('--docs-pg-bar', `${Math.ceil(bar.getBoundingClientRect().height)}px`);
   });
   // The border box, since the safe area changes the bar's padding and not its content.
   observer.observe(bar, { box: 'border-box' });
