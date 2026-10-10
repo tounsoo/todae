@@ -33,13 +33,13 @@ It draws in the text color, so it shows on any surface, a primary button include
 ```tsx
 <div>
   <VisuallyHidden.Root>Loading profile</VisuallyHidden.Root>
-  <Stack direction="row" aria-hidden="true">
+  <Stack.Root direction="row" aria-hidden="true">
     <Skeleton.Root style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />
-    <Stack style={{ flex: 1 }}>
+    <Stack.Root style={{ flex: 1 }}>
       <Skeleton.Root style={{ inlineSize: '40%' }} />
       <Skeleton.Root style={{ inlineSize: '70%' }} />
-    </Stack>
-  </Stack>
+    </Stack.Root>
+  </Stack.Root>
 </div>
 ```
 

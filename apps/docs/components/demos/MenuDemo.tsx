@@ -6,7 +6,7 @@ import { useState } from 'react';
 export function MenuActions() {
   const [last, setLast] = useState('nothing yet');
   return (
-    <Stack>
+    <Stack.Root>
       <Menu.Root>
         <Menu.Trigger variant="secondary">Actions</Menu.Trigger>
         <Menu.Content>
@@ -17,10 +17,10 @@ export function MenuActions() {
           <Menu.Item onSelect={() => setLast('Delete')}>Delete</Menu.Item>
         </Menu.Content>
       </Menu.Root>
-      <Text size="s" tone="muted">
+      <Text.Root size="s" tone="muted">
         Last action: {last}
-      </Text>
-    </Stack>
+      </Text.Root>
+    </Stack.Root>
   );
 }
 

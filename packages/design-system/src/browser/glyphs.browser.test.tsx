@@ -72,7 +72,7 @@ describe('Glyphs in a browser', () => {
   it('shows the check glyph only while a checkbox is checked', async () => {
     render(
       <Themed>
-        <Checkbox data-testid="box">Terms</Checkbox>
+        <Checkbox.Root data-testid="box">Terms</Checkbox.Root>
       </Themed>,
     );
     const input = screen.getByRole('checkbox');
@@ -88,7 +88,7 @@ describe('Glyphs in a browser', () => {
     render(
       <Themed>
         <GlyphsProvider glyphs={{ check: '✓' }}>
-          <Checkbox>Terms</Checkbox>
+          <Checkbox.Root>Terms</Checkbox.Root>
         </GlyphsProvider>
       </Themed>,
     );

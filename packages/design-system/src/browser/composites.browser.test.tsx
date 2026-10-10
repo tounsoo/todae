@@ -193,7 +193,7 @@ describe('Field.Select in a browser', () => {
       const [value, setValue] = useState('m');
       return (
         <Themed>
-          <Label htmlFor="size">Size</Label>
+          <Label.Root htmlFor="size">Size</Label.Root>
           <Field.Root id="size" data-testid="shell">
             <Field.Select value={value} onChange={(event) => setValue(event.target.value)}>
               <option value="s">Small</option>
@@ -216,7 +216,7 @@ describe('Field.Select in a browser', () => {
   it('opens a focused select on a press beside it and closes an open one', async () => {
     render(
       <Themed>
-        <Label htmlFor="fruit">Fruit</Label>
+        <Label.Root htmlFor="fruit">Fruit</Label.Root>
         <Field.Root id="fruit" data-testid="shell">
           <Field.Icon data-testid="icon">*</Field.Icon>
           <Field.Select value="a" onValueChange={() => {}}>

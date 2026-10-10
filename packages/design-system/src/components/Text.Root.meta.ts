@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Text',
+  name: 'Text.Root',
   description: 'Text and headings styled through the text contract tokens.',
   props: [
     {

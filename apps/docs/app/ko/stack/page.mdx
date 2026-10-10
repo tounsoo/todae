@@ -12,9 +12,9 @@ Server Components는 `@omsoo/todae/stack`에서 가져올 수 있습니다. 이 
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 레이아웃만 맡습니다. `Stack`은 role이 없는 `div`를 렌더링하고, `as` prop은 없습니다. `direction`은 `row`나 `column`이고 뒤집히지 않으므로, 항목은 DOM 순서대로 보이고 읽는 순서와 Tab 순서가 화면에 그려진 순서를 따릅니다. 나머지 prop은 `ref`, `role`, `aria-*`까지 모두 `div`에 전달됩니다.
+**Todae가 맡는 것:** 레이아웃만 맡습니다. `Stack.Root`은 role이 없는 `div`를 렌더링하고, `as` prop은 없습니다. `direction`은 `row`나 `column`이고 뒤집히지 않으므로, 항목은 DOM 순서대로 보이고 읽는 순서와 Tab 순서가 화면에 그려진 순서를 따릅니다. 나머지 prop은 `ref`, `role`, `aria-*`까지 모두 `div`에 전달됩니다.
 
-**직접 제공할 것:** 의미를 정하세요. 한 대상에 작용하고 함께 쓸 이름이 필요한 버튼에는 `role="group"`과 `aria-label`을 줍니다. [Button.Group](/button)은 `role="group"`을 직접 설정합니다. 화살표 키로 오가는 하나의 Tab 정지점이어야 하는 도구 행은 `Stack`이 아니라 [Toolbar](/toolbar)입니다. 목록인 항목에는 `role="list"`와 `role="listitem"`을 줍니다.
+**직접 제공할 것:** 의미를 정하세요. 한 대상에 작용하고 함께 쓸 이름이 필요한 버튼에는 `role="group"`과 `aria-label`을 줍니다. [Button.Group](/button)은 `role="group"`을 직접 설정합니다. 화살표 키로 오가는 하나의 Tab 정지점이어야 하는 도구 행은 `Stack.Root`이 아니라 [Toolbar](/toolbar)입니다. 목록인 항목에는 `role="list"`와 `role="listitem"`을 줍니다.
 
 **주의할 점:** `className`이나 `style`로 `row-reverse`, `column-reverse`, `order`를 설정하면 항목은 화면에서만 옮겨지고, 읽는 순서와 Tab 순서는 그대로입니다. 주 버튼을 마지막에 보이려면 DOM에서도 마지막에 두세요.
 
@@ -26,4 +26,4 @@ Server Components는 `@omsoo/todae/stack`에서 가져올 수 있습니다. 이 
 
 ## Props
 
-<PropsTable name="Stack" />
+<PropsTable name="Stack.Root" />

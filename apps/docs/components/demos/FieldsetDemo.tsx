@@ -13,17 +13,17 @@ export function FieldsetCheckboxes() {
   return (
     <Fieldset.Root invalid={invalid} aria-describedby={invalid ? `${hintId} ${errorId}` : hintId}>
       <Fieldset.Legend>Email topics</Fieldset.Legend>
-      <Description id={hintId}>We send at most one email a week.</Description>
-      <Checkbox checked={topics.includes('product')} onCheckedChange={toggle('product')}>
+      <Description.Root id={hintId}>We send at most one email a week.</Description.Root>
+      <Checkbox.Root checked={topics.includes('product')} onCheckedChange={toggle('product')}>
         Product news
-      </Checkbox>
-      <Checkbox checked={topics.includes('security')} onCheckedChange={toggle('security')}>
+      </Checkbox.Root>
+      <Checkbox.Root checked={topics.includes('security')} onCheckedChange={toggle('security')}>
         Security notices
-      </Checkbox>
-      <Checkbox checked={topics.includes('events')} onCheckedChange={toggle('events')}>
+      </Checkbox.Root>
+      <Checkbox.Root checked={topics.includes('events')} onCheckedChange={toggle('events')}>
         Events
-      </Checkbox>
-      {invalid ? <ErrorMessage id={errorId}>Pick at least one topic.</ErrorMessage> : null}
+      </Checkbox.Root>
+      {invalid ? <ErrorMessage.Root id={errorId}>Pick at least one topic.</ErrorMessage.Root> : null}
     </Fieldset.Root>
   );
 }
@@ -31,18 +31,18 @@ export function FieldsetCheckboxes() {
 export function FieldsetDisabled() {
   const [paused, setPaused] = useState(true);
   return (
-    <Stack>
-      <Switch checked={paused} onCheckedChange={setPaused}>
+    <Stack.Root>
+      <Switch.Root checked={paused} onCheckedChange={setPaused}>
         Pause notifications
-      </Switch>
+      </Switch.Root>
       <Fieldset.Root disabled={paused}>
         <Fieldset.Legend>Channels</Fieldset.Legend>
-        <Stack direction="row">
-          <Checkbox defaultChecked>Email</Checkbox>
-          <Checkbox>Push</Checkbox>
-          <Checkbox>SMS</Checkbox>
-        </Stack>
+        <Stack.Root direction="row">
+          <Checkbox.Root defaultChecked>Email</Checkbox.Root>
+          <Checkbox.Root>Push</Checkbox.Root>
+          <Checkbox.Root>SMS</Checkbox.Root>
+        </Stack.Root>
       </Fieldset.Root>
-    </Stack>
+    </Stack.Root>
   );
 }

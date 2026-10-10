@@ -9,18 +9,18 @@ export function CheckboxStates() {
   const invalid = !accepted;
   return (
     <>
-      <Checkbox defaultChecked>Product updates</Checkbox>
-      <Checkbox disabled>Archived list</Checkbox>
+      <Checkbox.Root defaultChecked>Product updates</Checkbox.Root>
+      <Checkbox.Root disabled>Archived list</Checkbox.Root>
       <div className="labelled-field">
-        <Checkbox
+        <Checkbox.Root
           checked={accepted}
           onCheckedChange={setAccepted}
           invalid={invalid}
           aria-describedby={invalid ? errorId : undefined}
         >
           I accept the terms
-        </Checkbox>
-        {invalid ? <ErrorMessage id={errorId}>Accept the terms to continue.</ErrorMessage> : null}
+        </Checkbox.Root>
+        {invalid ? <ErrorMessage.Root id={errorId}>Accept the terms to continue.</ErrorMessage.Root> : null}
       </div>
     </>
   );

@@ -1,7 +1,7 @@
 import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
-  name: 'Stack',
+  name: 'Stack.Root',
   description: 'Flex layout. Gap comes from the stack.gap contract token.',
   props: [
     {

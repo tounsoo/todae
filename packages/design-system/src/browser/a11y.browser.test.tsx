@@ -62,8 +62,8 @@ function Gallery() {
   return (
     <Themed>
       <h1>Gallery</h1>
-      <Stack>
-        <Text>Body text</Text>
+      <Stack.Root>
+        <Text.Root>Body text</Text.Root>
         <Button.Root>Save</Button.Root>
         <Button.Root variant="ghost" aria-label="Archive">
           <Button.Icon>
@@ -75,7 +75,7 @@ function Gallery() {
           <Button.Root variant="secondary">Right</Button.Root>
         </Button.Group>
         <div>
-          <Label htmlFor={emailId}>Email</Label>
+          <Label.Root htmlFor={emailId}>Email</Label.Root>
           <Field.Root id={emailId} invalid>
             <Field.TextInput
               value={email}
@@ -83,8 +83,8 @@ function Gallery() {
               aria-describedby={`${hintId} ${errorId}`}
             />
           </Field.Root>
-          <Description id={hintId}>Work address.</Description>
-          <ErrorMessage id={errorId}>Enter an email.</ErrorMessage>
+          <Description.Root id={hintId}>Work address.</Description.Root>
+          <ErrorMessage.Root id={errorId}>Enter an email.</ErrorMessage.Root>
         </div>
         <Field.Root aria-label="Tags">
           <Field.ChipInput
@@ -99,11 +99,11 @@ function Gallery() {
             maxRows={1}
           />
         </Field.Root>
-        <Checkbox defaultChecked>Email me</Checkbox>
-        <Switch>Dark mode</Switch>
-        <Text as="span" id={planId}>
+        <Checkbox.Root defaultChecked>Email me</Checkbox.Root>
+        <Switch.Root>Dark mode</Switch.Root>
+        <Text.Root as="span" id={planId}>
           Plan
-        </Text>
+        </Text.Root>
         <RadioGroup.Root aria-labelledby={planId} defaultValue="free">
           <RadioGroup.Item value="free">Free</RadioGroup.Item>
           <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
@@ -111,15 +111,15 @@ function Gallery() {
             Enterprise
           </RadioGroup.Item>
         </RadioGroup.Root>
-        <Stack direction="row">
+        <Stack.Root direction="row">
           <Chip.Root onRemove={() => undefined}>Design</Chip.Root>
           <Chip.Overflow overflowCount={3} />
-        </Stack>
+        </Stack.Root>
         <OptionList.Root value={fruit} onValueChange={setFruit} aria-label="Fruit">
           <OptionList.Option value="apple">Apple</OptionList.Option>
           <OptionList.Option value="pear">Pear</OptionList.Option>
         </OptionList.Root>
-      </Stack>
+      </Stack.Root>
     </Themed>
   );
 }
@@ -134,9 +134,9 @@ function ComboboxHarness() {
   const cb = useCombobox({ options: FRAMEWORKS, presentation: 'popover' });
   return (
     <Themed>
-      <Text as="span" id={labelId}>
+      <Text.Root as="span" id={labelId}>
         Framework
-      </Text>
+      </Text.Root>
       <Field.Root {...cb.getAnchorProps()} aria-labelledby={labelId}>
         <Field.TextInput {...cb.getInputProps()} />
       </Field.Root>
@@ -158,7 +158,7 @@ function OverlayHarness() {
     <Themed>
       <Button.Root {...popover.getTriggerProps()}>Filters</Button.Root>
       <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Filters panel">
-        <Checkbox>Archived</Checkbox>
+        <Checkbox.Root>Archived</Checkbox.Root>
       </Popover.Root>
       <Button.Root variant="ghost" tooltip={false} {...tooltip.getTriggerProps()}>
         Policy
@@ -211,7 +211,7 @@ describe('axe in a browser', () => {
             <BottomSheet.Close>×</BottomSheet.Close>
           </BottomSheet.Header>
           <BottomSheet.Body>
-            <Checkbox>Newest first</Checkbox>
+            <Checkbox.Root>Newest first</Checkbox.Root>
           </BottomSheet.Body>
         </BottomSheet.Root>
       </Themed>,

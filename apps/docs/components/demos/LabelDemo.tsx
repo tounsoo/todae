@@ -8,7 +8,7 @@ export function LabelSibling() {
   const [value, setValue] = useState('');
   return (
     <div className="labelled-field">
-      <Label htmlFor={id}>Email</Label>
+      <Label.Root htmlFor={id}>Email</Label.Root>
       <Field.Root id={id}>
         <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
       </Field.Root>

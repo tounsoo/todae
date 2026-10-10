@@ -27,7 +27,7 @@ useHotkey(['Control+K', 'Meta+K'], () => !cb.open && cb.setOpen(true))
       <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
     ))}
   </OptionList.Root>
-  <Text role="status">{cb.isEmpty ? 'No matching commands.' : ''}</Text>
+  <Text.Root role="status">{cb.isEmpty ? 'No matching commands.' : ''}</Text.Root>
 </Dialog.Root>
 ```
 

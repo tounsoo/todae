@@ -4,14 +4,14 @@ import { RadioPlan } from '../../../components/demos/RadioDemo';
 
 페이지에 계속 보이는 배타적 선택입니다. `RadioGroup.Root`가 값, 공유 `name`, `disabled`, `invalid`를 소유합니다. `RadioGroup.Item`은 `checked`나 `name`을 받을 수 없습니다. 루트 밖의 항목은 오류를 던집니다.
 
-그룹 타입은 `aria-label`이나 `aria-labelledby`를 요구합니다. `role="radiogroup"` div는 레이블을 붙일 수 있는 컨트롤이 아니므로, `Label htmlFor`로 그룹을 가리키지 마세요. `Text`와 `aria-labelledby`로 캡션을 붙이세요.
+그룹 타입은 `aria-label`이나 `aria-labelledby`를 요구합니다. `role="radiogroup"` div는 레이블을 붙일 수 있는 컨트롤이 아니므로, `Label.Root htmlFor`로 그룹을 가리키지 마세요. `Text.Root`와 `aria-labelledby`로 캡션을 붙이세요.
 
 `value={null}`은 아무것도 선택되지 않은 제어 상태입니다. 비제어로 쓰려면 `value`를 생략하세요.
 
 ```tsx
 const captionId = useId()
 
-<Text as="span" id={captionId} size="s" weight="medium">Plan</Text>
+<Text.Root as="span" id={captionId} size="s" weight="medium">Plan</Text.Root>
 <RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
 	<RadioGroup.Item value="free">Free</RadioGroup.Item>
 	<RadioGroup.Item value="pro">Pro</RadioGroup.Item>
@@ -46,7 +46,7 @@ function PlanPicker({ plans, ...group }: PlanPickerProps) {
 }
 ```
 
-**주의할 점:** `Omit<RadioGroupRootProps, …>`는 이름 유니언을 선택적 prop 두 개로 바꾸므로, 그 위에 만든 래퍼는 이름 없이도 컴파일됩니다. `Label htmlFor`는 `radiogroup` div의 이름을 짓지 않습니다. 한 폼 안에서 `name`이 같은 두 그룹은 브라우저의 화살표 키에 하나의 묶음입니다.
+**주의할 점:** `Omit<RadioGroupRootProps, …>`는 이름 유니언을 선택적 prop 두 개로 바꾸므로, 그 위에 만든 래퍼는 이름 없이도 컴파일됩니다. `Label.Root htmlFor`는 `radiogroup` div의 이름을 짓지 않습니다. 한 폼 안에서 `name`이 같은 두 그룹은 브라우저의 화살표 키에 하나의 묶음입니다.
 
 ## 언제 쓰나요
 

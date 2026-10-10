@@ -98,10 +98,10 @@ describe('state in forced colors', () => {
   it('paints the switch thumb, the on-track and the radio dot', () => {
     render(
       <Themed>
-        <Switch data-testid="off">Off</Switch>
-        <Switch defaultChecked data-testid="on">
+        <Switch.Root data-testid="off">Off</Switch.Root>
+        <Switch.Root defaultChecked data-testid="on">
           On
-        </Switch>
+        </Switch.Root>
         <RadioGroup.Root aria-label="Plan" defaultValue="free">
           <RadioGroup.Item value="free" data-testid="radio">
             Free
@@ -140,10 +140,10 @@ describe('state in forced colors', () => {
           Bold
         </Button.Root>
         <Button.Root variant="secondary">Plain</Button.Root>
-        <Switch defaultChecked data-testid="on">
+        <Switch.Root defaultChecked data-testid="on">
           On
-        </Switch>
-        <Switch data-testid="off">Off</Switch>
+        </Switch.Root>
+        <Switch.Root data-testid="off">Off</Switch.Root>
       </Themed>,
     );
     const ring = (element: Element) => getComputedStyle(element).outlineColor;
@@ -160,9 +160,9 @@ describe('state in forced colors', () => {
   it('tells a disabled checked switch thumb from its track', () => {
     render(
       <Themed>
-        <Switch defaultChecked disabled data-testid="on">
+        <Switch.Root defaultChecked disabled data-testid="on">
           On
-        </Switch>
+        </Switch.Root>
       </Themed>,
     );
     const track = screen.getByTestId('on').nextElementSibling!;
@@ -244,9 +244,9 @@ describe('switch in rtl', () => {
   it('moves the checked thumb toward the inline end, which is left', () => {
     render(
       <Themed dir="rtl">
-        <Switch defaultChecked data-testid="on">
+        <Switch.Root defaultChecked data-testid="on">
           On
-        </Switch>
+        </Switch.Root>
       </Themed>,
     );
     const track = screen.getByTestId('on').nextElementSibling!;

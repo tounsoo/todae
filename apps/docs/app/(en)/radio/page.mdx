@@ -4,14 +4,14 @@ import { RadioPlan } from '../../../components/demos/RadioDemo';
 
 Exclusive choice that stays on the page. `RadioGroup.Root` owns the value, the shared `name`, `disabled`, and `invalid`. `RadioGroup.Item` cannot take `checked` or `name`. An item outside a root throws.
 
-The group type requires `aria-label` or `aria-labelledby`. A `role="radiogroup"` div is not a labelable control, so do not point `Label htmlFor` at the group. Caption it with `Text` and `aria-labelledby`.
+The group type requires `aria-label` or `aria-labelledby`. A `role="radiogroup"` div is not a labelable control, so do not point `Label.Root htmlFor` at the group. Caption it with `Text.Root` and `aria-labelledby`.
 
 `value={null}` is controlled with nothing selected. Omit `value` for uncontrolled.
 
 ```tsx
 const captionId = useId()
 
-<Text as="span" id={captionId} size="s" weight="medium">Plan</Text>
+<Text.Root as="span" id={captionId} size="s" weight="medium">Plan</Text.Root>
 <RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
 	<RadioGroup.Item value="free">Free</RadioGroup.Item>
 	<RadioGroup.Item value="pro">Pro</RadioGroup.Item>
@@ -46,7 +46,7 @@ function PlanPicker({ plans, ...group }: PlanPickerProps) {
 }
 ```
 
-**Watch for:** `Omit<RadioGroupRootProps, …>` turns the naming union into two optional props, so a wrapper built on it compiles without a name. `Label htmlFor` does not name a `radiogroup` div. Two groups with the same `name` in one form are one set to the browser's arrow keys.
+**Watch for:** `Omit<RadioGroupRootProps, …>` turns the naming union into two optional props, so a wrapper built on it compiles without a name. `Label.Root htmlFor` does not name a `radiogroup` div. Two groups with the same `name` in one form are one set to the browser's arrow keys.
 
 ## When to use
 

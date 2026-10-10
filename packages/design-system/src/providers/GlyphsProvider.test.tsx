@@ -117,7 +117,7 @@ describe('GlyphsProvider', () => {
     render(
       withIcons(
         <>
-          <Checkbox>Terms</Checkbox>
+          <Checkbox.Root>Terms</Checkbox.Root>
           <Alert.Root>
             <Alert.Close />
           </Alert.Root>
@@ -151,7 +151,7 @@ describe('GlyphsProvider', () => {
     render(
       withIcons(
         <>
-          <Checkbox>Terms</Checkbox>
+          <Checkbox.Root>Terms</Checkbox.Root>
           <Menu.Root>
             <Menu.Trigger>Actions</Menu.Trigger>
             <Menu.Content>
@@ -174,7 +174,7 @@ describe('GlyphsProvider', () => {
   });
 
   it("draws Todae's check where no provider sets one", () => {
-    render(<Checkbox>Terms</Checkbox>);
+    render(<Checkbox.Root>Terms</Checkbox.Root>);
     expect(screen.getByRole('checkbox').parentElement!.querySelector('[aria-hidden="true"] > [data-todae-glyph] > svg')).not.toBeNull();
   });
 

@@ -8,7 +8,7 @@ import { useRef, useState } from 'react';
 
 export function AlertTones() {
   return (
-    <Stack>
+    <Stack.Root>
       <Alert.Root tone="info" role="none">
         <Alert.Icon>
           <Info />
@@ -39,7 +39,7 @@ export function AlertTones() {
           <Button.Root variant="secondary">Update card</Button.Root>
         </Alert.Actions>
       </Alert.Root>
-    </Stack>
+    </Stack.Root>
   );
 }
 
@@ -47,7 +47,7 @@ export function AlertDismissible() {
   const [shown, setShown] = useState(false);
   const saveRef = useRef<HTMLButtonElement>(null);
   return (
-    <Stack>
+    <Stack.Root>
       <Button.Root ref={saveRef} variant="secondary" onClick={() => setShown(true)}>
         Save changes
       </Button.Root>
@@ -66,6 +66,6 @@ export function AlertDismissible() {
           </Alert.Root>
         ) : null}
       </div>
-    </Stack>
+    </Stack.Root>
   );
 }

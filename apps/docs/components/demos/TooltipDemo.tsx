@@ -16,14 +16,14 @@ export function TooltipArchive() {
 export function TooltipOverflow() {
   const tooltip = useTooltip();
   return (
-    <Stack direction="row">
+    <Stack.Root direction="row">
       <Chip.Root>Design</Chip.Root>
       <Chip.Root>Tokens</Chip.Root>
       <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>
         <Chip.Overflow overflowCount={2} />
       </span>
       <Tooltip.Root {...tooltip.getTooltipProps()}>Schema, Docs</Tooltip.Root>
-    </Stack>
+    </Stack.Root>
   );
 }
 

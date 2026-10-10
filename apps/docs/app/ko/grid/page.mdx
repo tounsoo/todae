@@ -15,9 +15,9 @@ Server Component에서는 `@omsoo/todae/grid`에서 가져올 수 있습니다. 
 </Example>
 
 ```tsx
-<Grid columns={2}>
+<Grid.Root columns={2}>
   {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
-</Grid>
+</Grid.Root>
 ```
 
 ## Fill
@@ -29,20 +29,20 @@ Server Component에서는 `@omsoo/todae/grid`에서 가져올 수 있습니다. 
 </Example>
 
 ```tsx
-<Grid minItemSize="10rem">
+<Grid.Root minItemSize="10rem">
   {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
-</Grid>
+</Grid.Root>
 ```
 
 사이드바와 본문 열처럼 다른 트랙 목록은 둘 다 빼고 `style`이나 클래스에서 `gridTemplateColumns`로 정하세요.
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 레이아웃만 맡습니다. `Grid`는 role이 없는 `div`를 렌더링하고, `as` prop은 없습니다. 항목은 DOM 순서대로 배치됩니다. `columns`와 `minItemSize`는 한 행에 몇 개가 들어가는지만 바꾸고 어느 것이 먼저 오는지는 바꾸지 않으므로, 읽는 순서와 Tab 순서가 화면에 그려진 순서를 따릅니다. 나머지 prop은 `ref`, `role`, `aria-*`까지 모두 `div`에 전달됩니다.
+**Todae가 맡는 것:** 레이아웃만 맡습니다. `Grid.Root`는 role이 없는 `div`를 렌더링하고, `as` prop은 없습니다. 항목은 DOM 순서대로 배치됩니다. `columns`와 `minItemSize`는 한 행에 몇 개가 들어가는지만 바꾸고 어느 것이 먼저 오는지는 바꾸지 않으므로, 읽는 순서와 Tab 순서가 화면에 그려진 순서를 따릅니다. 나머지 prop은 `ref`, `role`, `aria-*`까지 모두 `div`에 전달됩니다.
 
-**직접 제공할 것:** 의미를 정하세요. 요금제 카드처럼 읽는 사람에게 목록인 항목은 `Grid`에 `role="list"`를, 각 자식에 `role="listitem"`을 줍니다. `Card.Root`는 role을 그대로 전달합니다. 항목이 무엇인지 알아야 한다면 묶음 앞에 제목을 두세요.
+**직접 제공할 것:** 의미를 정하세요. 요금제 카드처럼 읽는 사람에게 목록인 항목은 `Grid.Root`에 `role="list"`를, 각 자식에 `role="listitem"`을 줍니다. `Card.Root`는 role을 그대로 전달합니다. 항목이 무엇인지 알아야 한다면 묶음 앞에 제목을 두세요.
 
-**주의할 점:** CSS로 화면 위치만 옮기지 마세요. `order`, `grid-auto-flow: dense`, 명시적인 `grid-row`와 `grid-column` 배치는 항목이 보이는 곳만 바꾸고, 읽히는 순서나 Tab으로 닿는 순서는 바꾸지 않습니다. 읽혀야 할 순서대로 DOM에 두세요. 레이아웃용 그리드에 `role="grid"`를 주지 마세요. 이 role은 화살표 키로 이동하는 대화형 데이터 그리드를 뜻하는데, `Grid`는 그런 동작을 제공하지 않습니다. 표 형식 데이터는 [table](/table)에 넣으세요.
+**주의할 점:** CSS로 화면 위치만 옮기지 마세요. `order`, `grid-auto-flow: dense`, 명시적인 `grid-row`와 `grid-column` 배치는 항목이 보이는 곳만 바꾸고, 읽히는 순서나 Tab으로 닿는 순서는 바꾸지 않습니다. 읽혀야 할 순서대로 DOM에 두세요. 레이아웃용 그리드에 `role="grid"`를 주지 마세요. 이 role은 화살표 키로 이동하는 대화형 데이터 그리드를 뜻하는데, `Grid.Root`는 그런 동작을 제공하지 않습니다. 표 형식 데이터는 [table](/table)에 넣으세요.
 
 ## 언제 쓰나요
 
@@ -52,4 +52,4 @@ Server Component에서는 `@omsoo/todae/grid`에서 가져올 수 있습니다. 
 
 ## Props
 
-<PropsTable name="Grid" />
+<PropsTable name="Grid.Root" />

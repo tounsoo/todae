@@ -2,7 +2,7 @@ import type { InputHTMLAttributes, ReactNode, Ref } from 'react';
 import { useControlledState } from '../hooks/useControlledState';
 import { SelectionControl } from './SelectionControl';
 
-export type CheckboxProps = {
+export type CheckboxRootProps = {
   children: ReactNode;
   checked?: boolean;
   defaultChecked?: boolean;
@@ -18,15 +18,15 @@ export type CheckboxProps = {
   'type' | 'role' | 'checked' | 'defaultChecked' | 'children' | 'disabled' | 'name' | 'value'
 >;
 
-export function Checkbox({
+function Root({
   checked: checkedProp,
   defaultChecked,
   onCheckedChange,
   children,
   ...props
-}: CheckboxProps) {
+}: CheckboxRootProps) {
   if (process.env.NODE_ENV !== 'production' && checkedProp !== undefined && defaultChecked !== undefined) {
-    console.error('Checkbox cannot take both checked and defaultChecked');
+    console.error('Checkbox.Root cannot take both checked and defaultChecked');
   }
   const [checked, setChecked] = useControlledState(checkedProp, defaultChecked ?? false);
   return (
@@ -43,3 +43,5 @@ export function Checkbox({
     </SelectionControl>
   );
 }
+
+export const Checkbox = { Root } as const;

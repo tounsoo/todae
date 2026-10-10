@@ -7,8 +7,8 @@ import { SwitchStates } from '../../../components/demos/SwitchDemo';
 입력은 `role="switch"`를 가진 `type="checkbox"`입니다. 제어와 비제어는 [Checkbox](/checkbox)와 같은 규칙을 따릅니다.
 
 ```tsx
-<Switch defaultChecked>Play a sound on mention</Switch>
-<Switch checked={digest} onCheckedChange={setDigest}>Send a weekly digest</Switch>
+<Switch.Root defaultChecked>Play a sound on mention</Switch.Root>
+<Switch.Root checked={digest} onCheckedChange={setDigest}>Send a weekly digest</Switch.Root>
 ```
 
 <Example block>
@@ -33,4 +33,4 @@ import { SwitchStates } from '../../../components/demos/SwitchDemo';
 
 ## Props
 
-<PropsTable name="Switch" />
+<PropsTable name="Switch.Root" />

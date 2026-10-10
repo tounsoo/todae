@@ -9,11 +9,11 @@ export function DescriptionSibling() {
   const [value, setValue] = useState('');
   return (
     <div className="labelled-field">
-      <Label htmlFor={id}>Work email</Label>
+      <Label.Root htmlFor={id}>Work email</Label.Root>
       <Field.Root id={id} aria-describedby={hintId}>
         <Field.TextInput value={value} onChange={(event) => setValue(event.target.value)} />
       </Field.Root>
-      <Description id={hintId}>We only use this for billing receipts.</Description>
+      <Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
     </div>
   );
 }

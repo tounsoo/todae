@@ -30,11 +30,11 @@ const id = useId()
 const hintId = useId()
 
 <div className="labelled-field">
-	<Label htmlFor={id}>Work email</Label>
+	<Label.Root htmlFor={id}>Work email</Label.Root>
 	<Field.Root id={id} aria-describedby={hintId}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
-	<Description id={hintId}>We only use this for billing receipts.</Description>
+	<Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
 </div>
 ```
 
@@ -46,7 +46,7 @@ const hintId = useId()
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Description`은 넘긴 `id`(타입에서 필수)와 `data-todae-description`을 가진 `<span>`을 렌더링합니다. 컨트롤에는 아무것도 쓰지 않고 라이브 영역도 없습니다. `Field.Root`는 자신의 `aria-describedby`를 입력 자체의 값과 합쳐 입력에 넘깁니다.
+**Todae가 맡는 것:** `Description.Root`은 넘긴 `id`(타입에서 필수)와 `data-todae-description`을 가진 `<span>`을 렌더링합니다. 컨트롤에는 아무것도 쓰지 않고 라이브 영역도 없습니다. `Field.Root`는 자신의 `aria-describedby`를 입력 자체의 값과 합쳐 입력에 넘깁니다.
 
 **직접 제공할 것:** 컨트롤과의 연결. id를 `Field.Root`, Checkbox나 Switch, `RadioGroup.Root`, 또는 그룹이라면 `Fieldset.Root`의 `aria-describedby`에 넣으세요. 텍스트는 짧게 쓰세요. 일반 텍스트로 읽히므로, 안에 있는 링크는 컨트롤 설명을 읽을 때 링크로 알려지지 않습니다.
 
@@ -60,4 +60,4 @@ const hintId = useId()
 
 ## Props
 
-<PropsTable name="Description" />
+<PropsTable name="Description.Root" />

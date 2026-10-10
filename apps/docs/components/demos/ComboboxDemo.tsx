@@ -69,7 +69,7 @@ export function ComboboxSingle() {
   });
   return (
     <div className="labelled-field">
-      <Label htmlFor={cb.ids.input}>Framework</Label>
+      <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
         <Field.Icon>
@@ -90,7 +90,7 @@ export function ComboboxHighlight() {
   const found = useHighlight({ name: 'docs-combobox-match', query: cb.query });
   return (
     <div className="labelled-field">
-      <Label htmlFor={cb.ids.input}>City</Label>
+      <Label.Root htmlFor={cb.ids.input}>City</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} placeholder="Try “san”" />
         <Field.Icon>
@@ -98,7 +98,7 @@ export function ComboboxHighlight() {
         </Field.Icon>
       </Field.Root>
       <Popover.Root {...cb.getPopoverProps()}>
-        {cb.isEmpty ? <Text role="status">No matches</Text> : null}
+        {cb.isEmpty ? <Text.Root role="status">No matches</Text.Root> : null}
         <OptionList.Root ref={found.ref} {...cb.getListboxProps()} hidden={cb.isEmpty}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
@@ -116,7 +116,7 @@ export function ComboboxMulti() {
   });
   return (
     <div className="labelled-field">
-      <Label htmlFor={cb.ids.input}>Type</Label>
+      <Label.Root htmlFor={cb.ids.input}>Type</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.ChipInput {...cb.getChipInputProps()} />
         <Field.Icon>
@@ -141,7 +141,7 @@ export function ComboboxSheet() {
   const selected = CITIES.find((city) => city.value === cb.value)?.label ?? 'City';
   return (
     <div className="labelled-field">
-      <Label htmlFor={cb.ids.trigger}>City</Label>
+      <Label.Root htmlFor={cb.ids.trigger}>City</Label.Root>
       <Button.Root {...cb.getTriggerProps()} variant="secondary">
         {selected}
         <Button.Icon>
@@ -152,7 +152,7 @@ export function ComboboxSheet() {
         <BottomSheet.Grabber />
         <BottomSheet.Body>
           <div className="labelled-field">
-            <Label htmlFor={cb.ids.input}>Search</Label>
+            <Label.Root htmlFor={cb.ids.input}>Search</Label.Root>
             <Field.Root id={cb.ids.input}>
               <Field.Icon>
                 <Search />
@@ -177,10 +177,10 @@ export function ComboboxAuto() {
   });
   return (
     <div className="labelled-field">
-      <Text size="s" tone="muted">
+      <Text.Root size="s" tone="muted">
         presentation: {sheet.presentation}
         {sheet.isSheet ? ' (sheet)' : ' (popover)'}
-      </Text>
+      </Text.Root>
       {cb.isSheet ? (
         <>
           <Button.Root {...cb.getTriggerProps()} variant="secondary">
@@ -201,7 +201,7 @@ export function ComboboxAuto() {
         </>
       ) : (
         <>
-          <Label htmlFor={cb.ids.input}>Framework</Label>
+          <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
           <Field.Root {...cb.getAnchorProps()}>
             <Field.TextInput {...cb.getInputProps()} />
           </Field.Root>
@@ -239,7 +239,7 @@ export function ComboboxAsync() {
   });
   return (
     <div className="labelled-field">
-      <Label htmlFor={cb.ids.input}>Package</Label>
+      <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} placeholder="Type to load" />
         <Field.Icon>
@@ -248,12 +248,12 @@ export function ComboboxAsync() {
       </Field.Root>
       <Popover.Root {...cb.getPopoverProps()}>
         {cb.loading ? (
-          <Text role="status" aria-live="polite">
+          <Text.Root role="status" aria-live="polite">
             Loading…
-          </Text>
+          </Text.Root>
         ) : cb.error ? (
           <div role="status" aria-live="polite">
-            <Text as="span">Couldn’t load options.</Text>{' '}
+            <Text.Root as="span">Couldn’t load options.</Text.Root>{' '}
             <Button.Root variant="ghost" onClick={cb.retry}>
               Retry
             </Button.Root>
@@ -275,7 +275,7 @@ export function ComboboxEmpty() {
   });
   return (
     <div className="labelled-field">
-      <Label htmlFor={cb.ids.input}>Package</Label>
+      <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
         <Field.Icon>
@@ -283,7 +283,7 @@ export function ComboboxEmpty() {
         </Field.Icon>
       </Field.Root>
       <Popover.Root {...cb.getPopoverProps()}>
-        {cb.isEmpty ? <Text role="status">No matches</Text> : null}
+        {cb.isEmpty ? <Text.Root role="status">No matches</Text.Root> : null}
         {/* Keep the listbox mounted: the input's aria-controls points at it. */}
         <OptionList.Root {...cb.getListboxProps()} hidden={cb.isEmpty}>
           {optionNodes(cb.items, cb.getOptionProps)}
@@ -312,7 +312,7 @@ export function ComboboxCreate() {
   });
   return (
     <div className="labelled-field">
-      <Label htmlFor={cb.ids.input}>Package</Label>
+      <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
         <Field.Icon>
@@ -343,7 +343,7 @@ export function ComboboxCreateMulti() {
   });
   return (
     <div className="labelled-field">
-      <Label htmlFor={cb.ids.input}>Tags</Label>
+      <Label.Root htmlFor={cb.ids.input}>Tags</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.ChipInput {...cb.getChipInputProps()} />
         <Field.Icon>
@@ -362,8 +362,8 @@ export function ComboboxCreateMulti() {
 export function PresentationBadge() {
   const sheet = useSheetPresentation();
   return (
-    <Text size="s">
+    <Text.Root size="s">
       {sheet.presentation} · isSheet={String(sheet.isSheet)}
-    </Text>
+    </Text.Root>
   );
 }

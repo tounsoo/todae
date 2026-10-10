@@ -5,7 +5,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { Switch, type SwitchProps } from './Switch';
+import { Switch, type SwitchRootProps } from './Switch';
 import * as api from '../index';
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'selection.module.css'), 'utf8');
@@ -15,13 +15,13 @@ afterEach(cleanup);
 describe('Switch exports', () => {
   it('is a top-level primitive', () => {
     expect(api.Switch).toBe(Switch);
-    expectTypeOf<SwitchProps>().toHaveProperty('children');
+    expectTypeOf<SwitchRootProps>().toHaveProperty('children');
   });
 });
 
 describe('Switch', () => {
   it('toggles when the visible label is clicked', () => {
-    render(<Switch>Play a sound on mention</Switch>);
+    render(<Switch.Root>Play a sound on mention</Switch.Root>);
     const input = screen.getByRole('switch', { name: 'Play a sound on mention' });
     expect(input).toHaveProperty('checked', false);
     fireEvent.click(screen.getByText('Play a sound on mention'));
@@ -29,7 +29,7 @@ describe('Switch', () => {
   });
 
   it('is a checkbox input with role switch', () => {
-    render(<Switch defaultChecked>Weekly digest</Switch>);
+    render(<Switch.Root defaultChecked>Weekly digest</Switch.Root>);
     const input = screen.getByRole('switch');
     expect(input).toHaveProperty('type', 'checkbox');
     expect(input.getAttribute('role')).toBe('switch');
@@ -40,9 +40,9 @@ describe('Switch', () => {
     function Harness() {
       const [on, setOn] = useState(true);
       return (
-        <Switch checked={on} onCheckedChange={setOn}>
+        <Switch.Root checked={on} onCheckedChange={setOn}>
           Weekly digest
-        </Switch>
+        </Switch.Root>
       );
     }
     render(<Harness />);
@@ -57,7 +57,7 @@ describe('Switch', () => {
   });
 
   it('SSR keeps the switch role', () => {
-    const html = renderToString(<Switch>Weekly digest</Switch>);
+    const html = renderToString(<Switch.Root>Weekly digest</Switch.Root>);
     expect(html).toContain('role="switch"');
     expect(html).toContain('type="checkbox"');
     expect(html).toContain('Weekly digest');

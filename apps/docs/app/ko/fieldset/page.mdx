@@ -7,9 +7,9 @@ import { FieldsetCheckboxes, FieldsetDisabled } from '../../../components/demos/
 ```tsx
 <Fieldset.Root invalid={none} aria-describedby={none ? errorId : undefined}>
 	<Fieldset.Legend>Email topics</Fieldset.Legend>
-	<Checkbox>Product news</Checkbox>
-	<Checkbox>Security notices</Checkbox>
-	{none ? <ErrorMessage id={errorId}>Pick at least one topic.</ErrorMessage> : null}
+	<Checkbox.Root>Product news</Checkbox.Root>
+	<Checkbox.Root>Security notices</Checkbox.Root>
+	{none ? <ErrorMessage.Root id={errorId}>Pick at least one topic.</ErrorMessage.Root> : null}
 </Fieldset.Root>
 ```
 
@@ -25,7 +25,7 @@ import { FieldsetCheckboxes, FieldsetDisabled } from '../../../components/demos/
   <FieldsetDisabled />
 </Example>
 
-파트는 `fieldset.gap` 간격으로 쌓입니다. 컨트롤을 나란히 두려면 `Stack direction="row"` 안에 넣으세요.
+파트는 `fieldset.gap` 간격으로 쌓입니다. 컨트롤을 나란히 두려면 `Stack.Root direction="row"` 안에 넣으세요.
 
 ## 접근성을 지키는 조합
 

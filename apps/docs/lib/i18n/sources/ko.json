@@ -12,7 +12,7 @@
   "avatar": {
     "(top)": "d01aa6771c0c",
     "# Avatar": "24e9d98ee594",
-    "## Naming": "f27c425ac914",
+    "## Naming": "ca37a2fc83fd",
     "## Sizes": "166b7c6e1c4a",
     "## Colors": "b87102ab0c53",
     "## Accessible composition": "a4759450c7bd",
@@ -63,19 +63,19 @@
   },
   "card": {
     "(top)": "7894bae600a4",
-    "# Card": "e175622ff597",
-    "## Accessible composition": "7e97b27fa61e",
+    "# Card": "dc4d8ac49614",
+    "## Accessible composition": "e569c528cb89",
     "## When to use": "5da3c6554b0c",
     "## Props": "5224ceef64c7",
     "(section order)": "ac06e0ab5697"
   },
   "checkbox": {
     "(top)": "c5fb16238b3e",
-    "# Checkbox": "f00e4c821c8e",
-    "## Icons": "7607d8920d4e",
+    "# Checkbox": "0852565ada8a",
+    "## Icons": "bd3712c0ac55",
     "## Accessible composition": "4e682c9e7ff7",
     "## When to use": "063ad2a22656",
-    "## Props": "190a3a61257d",
+    "## Props": "c454f74315b1",
     "(section order)": "abc6b1d2e623"
   },
   "chip": {
@@ -100,7 +100,7 @@
   "code": {
     "(top)": "f1eb2a9590ae",
     "# Code and Kbd": "e18c97c0d644",
-    "## Code": "dba1714f4c5a",
+    "## Code": "d70ba3915c75",
     "## Kbd": "3b91e8c2dddd",
     "## Accessible composition": "105b0bcdfb6e",
     "## When to use": "2d81a4d8f4de",
@@ -109,10 +109,10 @@
   },
   "composition": {
     "(top)": "daa9c66a4c98",
-    "# Composition": "6a5c6aa6f04f",
-    "## Placing something new": "cb496110bd03",
+    "# Composition": "5df38cfb773f",
+    "## Placing something new": "7535f6400597",
     "## Components": "c6a7dcca87eb",
-    "## Recipes": "6ba1b842019d",
+    "## Recipes": "f1ce70af46f8",
     "## Hook": "8af7df6c27f7",
     "## Never": "683d91a3b1f8",
     "(section order)": "5f36e5fc4a2e"
@@ -120,10 +120,10 @@
   "description": {
     "(top)": "33dbf419d7e5",
     "# Description": "f869c1805fd8",
-    "## With Field": "cdfce3c94817",
-    "## Accessible composition": "9d035f6f8358",
+    "## With Field": "ff7a1446c5b5",
+    "## Accessible composition": "bd58b0786574",
     "## When to use": "d28a08e84abd",
-    "## Props": "d50b1a6c158a",
+    "## Props": "4158bdf875a4",
     "(section order)": "99b29f254b91"
   },
   "dialog": {
@@ -137,7 +137,7 @@
   },
   "disclosure": {
     "(top)": "2e46991fea65",
-    "# Disclosure": "2b4e1c93378c",
+    "# Disclosure": "54720ee33307",
     "## Accordion": "dedb3bcd061b",
     "## Icons": "45da985b6b16",
     "## Accessible composition": "05aa8f7934a1",
@@ -155,23 +155,23 @@
   },
   "errormessage": {
     "(top)": "15d7e1436ec8",
-    "# ErrorMessage": "6e11f34bc415",
-    "## Accessible composition": "a27fcdee697a",
+    "# ErrorMessage": "baf7b2334122",
+    "## Accessible composition": "41cd21efd548",
     "## When to use": "ecd653f836fe",
-    "## Props": "07276d02047a",
+    "## Props": "23966ad21e68",
     "(section order)": "d5b027f46b1c"
   },
   "field": {
     "(top)": "261936901466",
-    "# Field": "00f590fcded3",
-    "## Label": "8015c907fa22",
-    "## Messages": "e0060581d1d5",
+    "# Field": "1b7b0ba93f7b",
+    "## Label": "0614a462dd2c",
+    "## Messages": "8179d442da54",
     "## Textarea": "ce54c009bb1e",
     "## Counter": "ca3bd330d359",
-    "## Chip input": "f3cc6673a899",
+    "## Chip input": "303633621dbc",
     "## Row": "e3226fa80f55",
     "## Number, date and time": "7abe8ec941e5",
-    "## Select": "40bc6360c076",
+    "## Select": "2d0edd632123",
     "## Custom controls": "2cde30976b50",
     "## Icons": "f52060c8de88",
     "## Accessible composition": "47e541b991bc",
@@ -190,7 +190,7 @@
   },
   "fieldset": {
     "(top)": "d88e18f28a84",
-    "# Fieldset": "ad828b919e5d",
+    "# Fieldset": "420795d18885",
     "## Accessible composition": "8aff64058273",
     "## When to use": "400414abe505",
     "## Props": "cfc1221a511f",
@@ -199,11 +199,11 @@
   "grid": {
     "(top)": "10102724ef24",
     "# Grid": "78d0a1a0e094",
-    "## Columns": "8f5c6fa048f0",
-    "## Fill": "aff64057c72e",
-    "## Accessible composition": "d5eb448eb6f2",
+    "## Columns": "1cd952c64049",
+    "## Fill": "c2b54f6f626a",
+    "## Accessible composition": "770b6cc86bb6",
     "## When to use": "82fb1f5f9226",
-    "## Props": "9bcc12000fa2",
+    "## Props": "9ac3d5243510",
     "(section order)": "6a27765bb93c"
   },
   "guides/build-on-todae": {
@@ -227,11 +227,11 @@
   "label": {
     "(top)": "905dfe6cc1e6",
     "# Label": "30dc84f7eeb0",
-    "## With Field": "2f202bb1efb1",
+    "## With Field": "07d351c6328e",
     "## States": "00634daf1bfd",
-    "## Accessible composition": "ae7fd5cdcc5e",
+    "## Accessible composition": "7dcf1ec73b86",
     "## When to use": "8fc9bad57d0d",
-    "## Props": "52d7fbd0ca73",
+    "## Props": "5e83f299f954",
     "(section order)": "553694b4d2b0"
   },
   "link": {
@@ -292,8 +292,8 @@
   "progress": {
     "(top)": "63cb86569d79",
     "# Progress and Meter": "34527c314abd",
-    "## Progress": "b3172d1f21c4",
-    "## Meter": "1bca2e60ddeb",
+    "## Progress": "e74428332bd2",
+    "## Meter": "1d5fd023f079",
     "## Accessible composition": "c35050e7f172",
     "## When to use": "02f1c1910865",
     "## Props": "b9e792e827ad",
@@ -301,8 +301,8 @@
   },
   "radio": {
     "(top)": "44e2b511c2eb",
-    "# Radio": "013fd7debf09",
-    "## Accessible composition": "1f7a755d6e9a",
+    "# Radio": "af95695438ec",
+    "## Accessible composition": "c79617a502dd",
     "## When to use": "28bf43164b3d",
     "## Props": "4135f3760033",
     "(section order)": "b7619809f1fa"
@@ -311,7 +311,7 @@
     "(top)": "5c9493a206c8",
     "# Combobox": "bdfd58ac5cfe",
     "## Presentation": "58f8fe7fca53",
-    "## Popover · single": "657f25535d9d",
+    "## Popover · single": "a2c16a232dce",
     "## Popover · multi": "ea6c7f2a429d",
     "## Sheet": "34db4879bd1c",
     "## Auto": "4eba42da06ea",
@@ -325,7 +325,7 @@
   },
   "recipes/command-palette": {
     "(top)": "b133afb40440",
-    "# Command palette": "4b4d3eab7916",
+    "# Command palette": "20b4257003e3",
     "## Accessible composition": "95d140d0cb05",
     "## When to use": "06c9b0d8a7e9",
     "(section order)": "46352d9bb2ec"
@@ -333,15 +333,15 @@
   "recipes/file-upload": {
     "(top)": "630a61784a0e",
     "# File upload": "2a6084494126",
-    "## Images": "ae06f9682ced",
+    "## Images": "5910454a72ba",
     "## Uploading": "d43ef19d4d00",
-    "## Accessible composition": "1f9334def949",
+    "## Accessible composition": "7408811ad653",
     "(section order)": "2ce6dd09df8f"
   },
   "scroll-area": {
     "(top)": "a2750334232a",
     "# ScrollArea": "e402aa323406",
-    "## A Tab stop for content with no controls": "0dd8837361a3",
+    "## A Tab stop for content with no controls": "002ea4976809",
     "## Accessible composition": "f4d66c232ace",
     "## When to use": "b34ea3e391b2",
     "## Props": "fc86f0416810",
@@ -349,7 +349,7 @@
   },
   "separator": {
     "(top)": "7514440d9427",
-    "# Separator": "4ddb6c1e4fce",
+    "# Separator": "dca9b726f83c",
     "## Accessible composition": "118b4135c8f6",
     "## When to use": "8e20e5985922",
     "## Props": "58f0d11e9b13",
@@ -357,7 +357,7 @@
   },
   "slider": {
     "(top)": "42cde11261eb",
-    "# Slider": "baffb37e4822",
+    "# Slider": "a240c352d954",
     "## Accessible composition": "85a57c99624e",
     "## When to use": "8d3da407f5e1",
     "## Props": "a289d00d67fe",
@@ -367,7 +367,7 @@
     "(top)": "591f7c15859e",
     "# Spinner and Skeleton": "d6ad83fbb9e9",
     "## Spinner": "993e556fedf4",
-    "## Skeleton": "cdbf1119ac06",
+    "## Skeleton": "910723a1ea98",
     "## Accessible composition": "03b5f164a7a3",
     "## When to use": "3252391cafb7",
     "## Props": "029573d1fca8",
@@ -376,17 +376,17 @@
   "stack": {
     "(top)": "292d577450b0",
     "# Stack": "3d0c93c984d4",
-    "## Accessible composition": "952e0fca1630",
+    "## Accessible composition": "91e7a7d38276",
     "## When to use": "8ceb8c89e2f9",
-    "## Props": "c1f04dc92bc9",
+    "## Props": "49963aa313e9",
     "(section order)": "82039f81711a"
   },
   "switch": {
     "(top)": "5b6bda868294",
-    "# Switch": "6931b4a6990c",
+    "# Switch": "541d866c34f6",
     "## Accessible composition": "861816c2022e",
     "## When to use": "f1b8decec311",
-    "## Props": "94ba42ce1646",
+    "## Props": "b71e3003eff1",
     "(section order)": "692e72360183"
   },
   "table": {
@@ -407,11 +407,11 @@
   },
   "text": {
     "(top)": "b9141c2221e0",
-    "# Text": "b9f9c2f52e17",
+    "# Text": "a1321aa86926",
     "## Headings": "3ccae81674ca",
     "## Accessible composition": "60ba7e690e76",
     "## When to use": "504f4a606802",
-    "## Props": "cc8951cb577d",
+    "## Props": "c29450776f88",
     "(section order)": "a613cff43ca1"
   },
   "toast": {
@@ -470,7 +470,7 @@
   "utilities/glyphs-provider": {
     "(top)": "795842950415",
     "# GlyphsProvider": "833b71e767fb",
-    "## Glyphs": "a02f8ee6aa2e",
+    "## Glyphs": "1ec1ba6dea4e",
     "## Accessible composition": "705d17ec4c9e",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",
@@ -538,7 +538,7 @@
   },
   "utilities/use-field": {
     "(top)": "1ba672062eb8",
-    "# useField": "1dd64949cdbe",
+    "# useField": "8e3a47daf185",
     "## Accessible composition": "b6ed7b4ca1d1",
     "## When to use": "0f267a553fa6",
     "## Props": "6c08c2462796",

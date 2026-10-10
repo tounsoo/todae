@@ -7,7 +7,7 @@ import styles from './Grid.module.css';
  * most one of `columns` or `minItemSize`. With neither, set the tracks
  * yourself with `gridTemplateColumns` in `style` or a class.
  */
-export type GridProps = (
+export type GridRootProps = (
   | {
       /** A fixed number of equal columns, a whole number from 1. */
       columns: number;
@@ -25,7 +25,7 @@ export type GridProps = (
 ) &
   ComponentPropsWithRef<'div'>;
 
-export function Grid({ columns, minItemSize, className, style, ...props }: GridProps) {
+function Root({ columns, minItemSize, className, style, ...props }: GridRootProps) {
   const layout = minItemSize ? 'fill' : columns !== undefined ? 'columns' : undefined;
   const tracks =
     layout === 'fill'
@@ -42,3 +42,5 @@ export function Grid({ columns, minItemSize, className, style, ...props }: GridP
     />
   );
 }
+
+export const Grid = { Root } as const;

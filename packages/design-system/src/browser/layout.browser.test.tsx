@@ -130,12 +130,12 @@ describe('Grid in a browser', () => {
     render(
       <Themed>
         <div style={{ width: 600 }}>
-          <Grid columns={3} data-testid="grid">
+          <Grid.Root columns={3} data-testid="grid">
             <div data-testid="a">A</div>
             <div data-testid="b">B</div>
             <div data-testid="c">C</div>
             <div data-testid="d">D</div>
-          </Grid>
+          </Grid.Root>
         </div>
       </Themed>,
     );
@@ -150,16 +150,16 @@ describe('Grid in a browser', () => {
     render(
       <Themed>
         <div style={{ width: 400 }}>
-          <Grid minItemSize="150px" data-testid="wide">
+          <Grid.Root minItemSize="150px" data-testid="wide">
             <div data-testid="w1">1</div>
             <div data-testid="w2">2</div>
             <div data-testid="w3">3</div>
-          </Grid>
+          </Grid.Root>
         </div>
         <div style={{ width: 100 }}>
-          <Grid minItemSize="150px" data-testid="narrow">
+          <Grid.Root minItemSize="150px" data-testid="narrow">
             <div data-testid="n1">1</div>
-          </Grid>
+          </Grid.Root>
         </div>
       </Themed>,
     );

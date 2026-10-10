@@ -16,7 +16,7 @@ describe('Fieldset', () => {
     render(
       <Fieldset.Root>
         <Fieldset.Legend>Notifications</Fieldset.Legend>
-        <Checkbox>Email</Checkbox>
+        <Checkbox.Root>Email</Checkbox.Root>
       </Fieldset.Root>,
     );
     expect(screen.getByRole('group', { name: 'Notifications' }).tagName).toBe('FIELDSET');
@@ -26,8 +26,8 @@ describe('Fieldset', () => {
     render(
       <Fieldset.Root disabled data-testid="set">
         <Fieldset.Legend>Notifications</Fieldset.Legend>
-        <Checkbox>Email</Checkbox>
-        <Switch>Push</Switch>
+        <Checkbox.Root>Email</Checkbox.Root>
+        <Switch.Root>Push</Switch.Root>
       </Fieldset.Root>,
     );
     const set = screen.getByTestId('set') as HTMLFieldSetElement;
@@ -43,8 +43,8 @@ describe('Fieldset', () => {
     render(
       <Fieldset.Root invalid aria-describedby="err" data-testid="set">
         <Fieldset.Legend>Topics</Fieldset.Legend>
-        <Checkbox>News</Checkbox>
-        <ErrorMessage id="err">Pick one</ErrorMessage>
+        <Checkbox.Root>News</Checkbox.Root>
+        <ErrorMessage.Root id="err">Pick one</ErrorMessage.Root>
       </Fieldset.Root>,
     );
     const set = screen.getByTestId('set');
@@ -84,7 +84,7 @@ describe('Fieldset', () => {
         <Fieldset.Legend>Outer</Fieldset.Legend>
         <Fieldset.Root data-testid="inner">
           <Fieldset.Legend>Inner</Fieldset.Legend>
-          <Checkbox>Item</Checkbox>
+          <Checkbox.Root>Item</Checkbox.Root>
         </Fieldset.Root>
       </Fieldset.Root>,
     );
@@ -98,15 +98,15 @@ describe('Fieldset', () => {
       <>
         <Fieldset.Root disabled>
           <Fieldset.Legend>
-            <Switch>Enable alerts</Switch>
+            <Switch.Root>Enable alerts</Switch.Root>
           </Fieldset.Legend>
-          <Checkbox>Email</Checkbox>
+          <Checkbox.Root>Email</Checkbox.Root>
         </Fieldset.Root>
         <Fieldset.Root disabled>
           <Fieldset.Legend>Outer</Fieldset.Legend>
           <Fieldset.Root>
             <Fieldset.Legend>
-              <Switch>Nested toggle</Switch>
+              <Switch.Root>Nested toggle</Switch.Root>
             </Fieldset.Legend>
           </Fieldset.Root>
         </Fieldset.Root>
@@ -142,7 +142,7 @@ describe('Fieldset', () => {
       <Fieldset.Root disabled>
         <div>
           <Fieldset.Legend>
-            <Switch>Wrapped</Switch>
+            <Switch.Root>Wrapped</Switch.Root>
           </Fieldset.Legend>
         </div>
       </Fieldset.Root>,
@@ -158,7 +158,7 @@ describe('Fieldset', () => {
         <Fieldset.Root disabled>
           {intro ? <Fieldset.Legend>Intro</Fieldset.Legend> : null}
           <Fieldset.Legend>
-            <Switch>Toggle</Switch>
+            <Switch.Root>Toggle</Switch.Root>
           </Fieldset.Legend>
         </Fieldset.Root>
       );
@@ -174,9 +174,9 @@ describe('Fieldset', () => {
     render(
       <Fieldset.Root invalid>
         <Fieldset.Legend>
-          <Checkbox>Select all</Checkbox>
+          <Checkbox.Root>Select all</Checkbox.Root>
         </Fieldset.Legend>
-        <Checkbox>Item</Checkbox>
+        <Checkbox.Root>Item</Checkbox.Root>
       </Fieldset.Root>,
     );
     expect(screen.getByRole('checkbox', { name: 'Select all' }).hasAttribute('aria-invalid')).toBe(false);
@@ -184,7 +184,7 @@ describe('Fieldset', () => {
   });
 
   it('leaves controls outside a fieldset alone', () => {
-    render(<Checkbox>Alone</Checkbox>);
+    render(<Checkbox.Root>Alone</Checkbox.Root>);
     const box = screen.getByRole('checkbox');
     expect(box).toHaveProperty('disabled', false);
     expect(box.hasAttribute('aria-invalid')).toBe(false);

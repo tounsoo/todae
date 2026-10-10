@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { Description, type DescriptionProps } from './Description';
+import { Description, type DescriptionRootProps } from './Description';
 import * as api from '../index';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -15,14 +15,14 @@ afterEach(cleanup);
 describe('Description exports', () => {
   it('is a top-level primitive', () => {
     expect(api.Description).toBe(Description);
-    expectTypeOf<DescriptionProps>().toHaveProperty('id');
-    expectTypeOf<DescriptionProps['id']>().toEqualTypeOf<string>();
+    expectTypeOf<DescriptionRootProps>().toHaveProperty('id');
+    expectTypeOf<DescriptionRootProps['id']>().toEqualTypeOf<string>();
   });
 });
 
 describe('Description', () => {
   it('renders a span with the required id', () => {
-    const { container } = render(<Description id="email-hint">Use your work address.</Description>);
+    const { container } = render(<Description.Root id="email-hint">Use your work address.</Description.Root>);
     const hint = container.querySelector('#email-hint');
     expect(hint?.tagName).toBe('SPAN');
     expect(hint?.textContent).toBe('Use your work address.');
@@ -32,9 +32,9 @@ describe('Description', () => {
 
   it('merges className and forwards extra attributes', () => {
     const { container } = render(
-      <Description id="email-hint" className="extra" data-test="hint">
+      <Description.Root id="email-hint" className="extra" data-test="hint">
         Use your work address.
-      </Description>,
+      </Description.Root>,
     );
     const hint = container.querySelector('#email-hint');
     expect(hint?.className).toContain('description');

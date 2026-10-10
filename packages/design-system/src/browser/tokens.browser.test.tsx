@@ -62,9 +62,9 @@ describe('disabled and hover styles in a browser', () => {
   it('greys a disabled Checkbox with the placeholder color and the not-allowed cursor', () => {
     render(
       <Themed>
-        <Checkbox disabled data-testid="box">
+        <Checkbox.Root disabled data-testid="box">
           Remember me
-        </Checkbox>
+        </Checkbox.Root>
         <span data-testid="placeholder" style={{ color: 'var(--todae-color-fg-placeholder)' }} />
       </Themed>,
     );

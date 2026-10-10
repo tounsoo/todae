@@ -32,7 +32,7 @@ import {
 
 # Field
 
-공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
+공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
 
 <Example block>
   <FieldStates />
@@ -40,13 +40,13 @@ import {
 
 ## Label
 
-`Label`은 컴파운드 파트가 아니라 형제 요소입니다. `Field.Root`에 넘기는 것과 같은 `id`를 받습니다. 둘을 하나의 `.labelled-field`로 감싸세요. 간격은 `field.label.gap`입니다. API는 [Label](/label)을 보세요.
+`Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. `Field.Root`에 넘기는 것과 같은 `id`를 받습니다. 둘을 하나의 `.labelled-field`로 감싸세요. 간격은 `field.label.gap`입니다. API는 [Label](/label)을 보세요.
 
 ```tsx
 const id = useId()
 
 <div className="labelled-field">
-	<Label htmlFor={id}>Email</Label>
+	<Label.Root htmlFor={id}>Email</Label.Root>
 	<Field.Root id={id}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
@@ -77,12 +77,12 @@ Label은 Icon, Affix, ChipInput과 함께 동작합니다.
 const describedBy = invalid ? `${hintId} ${errorId}` : hintId
 
 <div className="labelled-field">
-	<Label htmlFor={id}>Email</Label>
+	<Label.Root htmlFor={id}>Email</Label.Root>
 	<Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
 		<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
 	</Field.Root>
-	<Description id={hintId}>Use your work address.</Description>
-	{invalid ? <ErrorMessage id={errorId}>{error}</ErrorMessage> : null}
+	<Description.Root id={hintId}>Use your work address.</Description.Root>
+	{invalid ? <ErrorMessage.Root id={errorId}>{error}</ErrorMessage.Root> : null}
 </div>
 ```
 
@@ -180,7 +180,7 @@ compact, comfortable, spacious.
 
 ## Chip input
 
-제어되는 칩과 입력입니다. 필드는 칩을 직접 추가하지 않습니다. 부모의 `onCommit`이 결정합니다. 장식 요소는 칩 흐름 밖, `Field.Root`에 남습니다. ChipInput 안의 칩은 모든 밀도에서 입력과 같은 필드 한 줄 높이입니다. `chipLayout="row"`는 ChipInput 안에서 칩을 입력 위의 전체 너비 줄에 놓습니다. Icon과 Affix는 첫 줄에 놓입니다. 칩이 없으면 `Field.TextInput`과 같은 높이의 한 줄 필드입니다. row에서 `maxRows`는 칩 줄만 세고, 인라인 흐름처럼 잘라 냅니다. `Label htmlFor`나 Root의 `aria-label`로 레이블을 붙이세요.
+제어되는 칩과 입력입니다. 필드는 칩을 직접 추가하지 않습니다. 부모의 `onCommit`이 결정합니다. 장식 요소는 칩 흐름 밖, `Field.Root`에 남습니다. ChipInput 안의 칩은 모든 밀도에서 입력과 같은 필드 한 줄 높이입니다. `chipLayout="row"`는 ChipInput 안에서 칩을 입력 위의 전체 너비 줄에 놓습니다. Icon과 Affix는 첫 줄에 놓입니다. 칩이 없으면 `Field.TextInput`과 같은 높이의 한 줄 필드입니다. row에서 `maxRows`는 칩 줄만 세고, 인라인 흐름처럼 잘라 냅니다. `Label.Root htmlFor`나 Root의 `aria-label`로 레이블을 붙이세요.
 
 `maxRows`가 설정되면 흐름은 첫 페인트부터 토큰에서 계산한 줄 수로 제한되고, 첫 레이아웃 측정 전까지 칩을 숨깁니다. 그래서 SSR이 `+N`으로 접히기 전에 펼쳐지지 않습니다. 보이는 영역은 앞쪽 칩들입니다. 가장 새 칩은 `+N`으로 접히고 실제 흐름에서 언마운트됩니다. 이후 칩이 전체 너비로 들어가지 않으면 `+N`으로 옮겨집니다. 첫 칩과 `+N`, 입력이 한 줄을 함께 쓸 수 없으면 첫 칩은 말줄임표로 잘립니다. 접근 가능한 이름은 전체 레이블을 유지합니다.
 
@@ -246,10 +246,10 @@ compact, comfortable, spacious에서의 같은 작성기.
 
 ## Select
 
-`Field.Select`는 네이티브 `<select>`입니다. `appearance: base-select`를 지원하는 브라우저에서는 버튼과 선택 창을 field, option 토큰으로 그립니다. 그 밖의 브라우저에서는 같은 값과 키보드 동작으로 브라우저 자체 선택 창이 나타납니다. JavaScript listbox는 없습니다. 자식은 네이티브 `<option>`과 `<optgroup>` 요소이며, 다른 필드처럼 `Label htmlFor`로 이름을 붙입니다.
+`Field.Select`는 네이티브 `<select>`입니다. `appearance: base-select`를 지원하는 브라우저에서는 버튼과 선택 창을 field, option 토큰으로 그립니다. 그 밖의 브라우저에서는 같은 값과 키보드 동작으로 브라우저 자체 선택 창이 나타납니다. JavaScript listbox는 없습니다. 자식은 네이티브 `<option>`과 `<optgroup>` 요소이며, 다른 필드처럼 `Label.Root htmlFor`로 이름을 붙입니다.
 
 ```tsx
-<Label htmlFor={id}>Size</Label>
+<Label.Root htmlFor={id}>Size</Label.Root>
 <Field.Root id={id}>
 	<Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
 		<option value="s">Small</option>
