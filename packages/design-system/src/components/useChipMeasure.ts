@@ -37,8 +37,15 @@ export function useChipMeasure({
     const layer = measureRef.current;
     const input = inputRef?.current;
     if (!flow || !layer || (inputRef && !input)) return;
-    const W = flow.getBoundingClientRect().width;
-    const gap = getComputedStyle(flow).columnGap || getComputedStyle(flow).gap;
+    const style = getComputedStyle(flow);
+    // The content width: a clipped flow pads itself to leave room for focus rings.
+    const W =
+      flow.getBoundingClientRect().width -
+      (Number.parseFloat(style.paddingLeft) || 0) -
+      (Number.parseFloat(style.paddingRight) || 0) -
+      (Number.parseFloat(style.borderLeftWidth) || 0) -
+      (Number.parseFloat(style.borderRightWidth) || 0);
+    const gap = style.columnGap || style.gap;
     const g = Number.parseFloat(gap) || 0;
     const kids = [...layer.children] as HTMLElement[];
     const overflowEl = kids.at(-1);

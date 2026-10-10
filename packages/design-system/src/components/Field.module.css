@@ -268,11 +268,22 @@
     padding-block: 0;
   }
 
+  /* Clips the rows past maxRows. Like ChipList's clip, it pads by a focus
+     ring's room and gives it back with a matching negative margin, so a chip's
+     ring at the edge is never cut. Border-box, so the width and max-height add
+     the room the padding takes; useChipMeasure plans with the content width.
+     The row layout's clip below repeats these declarations. */
   .flow[data-max-rows] {
+    --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+    box-sizing: border-box;
+    flex-basis: calc(100% + 2 * var(--_ring-room));
+    width: calc(100% + 2 * var(--_ring-room));
     max-height: calc(
       var(--todae-field-chip-row-h) * var(--todae-field-chip-rows) +
-        var(--todae-field-gap) * (var(--todae-field-chip-rows) - 1)
+        var(--todae-field-gap) * (var(--todae-field-chip-rows) - 1) + 2 * var(--_ring-room)
     );
+    margin: calc(-1 * var(--_ring-room));
+    padding: var(--_ring-room);
     overflow: hidden;
     align-content: flex-start;
   }
@@ -343,10 +354,16 @@
   }
 
   .flow > .row[data-max-rows] {
+    --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+    box-sizing: border-box;
+    flex-basis: calc(100% + 2 * var(--_ring-room));
+    width: calc(100% + 2 * var(--_ring-room));
     max-height: calc(
       var(--todae-field-chip-row-h) * var(--todae-field-chip-rows) +
-        var(--todae-field-gap) * (var(--todae-field-chip-rows) - 1)
+        var(--todae-field-gap) * (var(--todae-field-chip-rows) - 1) + 2 * var(--_ring-room)
     );
+    margin: calc(-1 * var(--_ring-room));
+    padding: var(--_ring-room);
     overflow: hidden;
     align-content: flex-start;
   }

@@ -801,13 +801,28 @@ table {
 /* ---------- Focus room ---------- */
 
 /* A scroll container clips what paints past its padding box, focus rings
-   included. This pads it by a ring's width plus offset and takes the same
-   back with a negative margin, so the content stays where it was. */
-.focus-room {
+   included. Each one needs a ring's width plus offset as room: padding with a
+   matching negative margin where its content would touch the edge, and as
+   scroll padding, so a control the browser scrolls into view on focus stops
+   short of the edge. Todae's own containers (ChipList, Field's chip rows,
+   BottomSheet.Body) do the same. clippedRings in test/ checks for cut rings. */
+.focus-room,
+.sidebar,
+.pg-rail {
   --docs-focus-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+  scroll-padding: var(--docs-focus-room);
+}
+
+/* For a container with no padding of its own. */
+.focus-room {
   margin: calc(-1 * var(--docs-focus-room));
   padding: var(--docs-focus-room);
-  scroll-padding-inline: var(--docs-focus-room);
+}
+
+/* The sidebar's links fill its width, so it takes inline room; its own block padding covers the rest. */
+.sidebar {
+  margin-inline: calc(-1 * var(--docs-focus-room));
+  padding-inline: var(--docs-focus-room);
 }
 
 /* ---------- Playground ---------- */

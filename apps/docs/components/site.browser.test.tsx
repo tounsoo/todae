@@ -14,6 +14,8 @@ import { PropsTable } from './PropsTable';
 import { PropsTableView, type PropsTableRow } from './PropsTableView';
 import schema from '@omsoo/todae/schema/components.json';
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { SiteNav } from './SiteNav';
+import { clippedRings } from '../test/clippedRings';
 
 afterEach(cleanup);
 
@@ -167,6 +169,8 @@ describe('narrow screens', () => {
     const sheet = await screen.findByRole('dialog', { name: 'Theme controls' });
     await frame();
     expect(await violations()).toEqual([]);
+    // Nothing in the sheet, including the sideways preset row, cuts a focus ring.
+    expect(clippedRings(sheet)).toEqual([]);
     // The export hint the rail shows on wide screens describes the sheet here.
     expect(sheet.getAttribute('aria-describedby')).toBeTruthy();
     expect(document.getElementById(sheet.getAttribute('aria-describedby')!)?.textContent).toContain('light and dark differ');
@@ -180,9 +184,6 @@ describe('narrow screens', () => {
     expect(body.scrollWidth).toBeLessThanOrEqual(body.clientWidth);
     const row = sheet.querySelector<HTMLElement>('.preset-grid')!;
     expect(row.scrollWidth).toBeGreaterThan(row.clientWidth);
-    // A card's focus ring at the row's start edge has room inside the row's scrollport.
-    const first = within(row).getByRole('radio', { name: 'Todae' }).closest('label')!;
-    expect(first.getBoundingClientRect().left - 4).toBeGreaterThanOrEqual(row.getBoundingClientRect().left);
     await userEvent.click(within(sheet).getByRole('button', { name: 'light' }));
     // The count shows on the button that opens the sheet, and names the change for a screen reader.
     expect(within(bar).getByRole('button', { name: 'Edit theme (1 changed)' })).toBeTruthy();
@@ -424,6 +425,40 @@ describe('props table', () => {
     expect(description!.getBoundingClientRect().top).toBeGreaterThan(type!.getBoundingClientRect().top);
     expect(within(table).getAllByRole('columnheader')).toHaveLength(3);
     expect(await violations()).toEqual([]);
+  });
+});
+
+describe('focus rings in the site scroll containers', () => {
+  it('keeps every sidebar link ring whole', async () => {
+    await page.viewport(1280, 600);
+    render(
+      <Providers>
+        <div className="layout">
+          <aside className="sidebar">
+            <SiteNav locale="en" />
+          </aside>
+          <main />
+        </div>
+      </Providers>,
+    );
+    await frame();
+    // The sidebar scrolls, so the last links start out of view and are scrolled in on focus.
+    const sidebar = document.querySelector<HTMLElement>('.sidebar')!;
+    expect(sidebar.scrollHeight).toBeGreaterThan(sidebar.clientHeight);
+    expect(clippedRings(sidebar)).toEqual([]);
+  });
+
+  it('keeps every ring in the playground rail whole', async () => {
+    await page.viewport(1280, 800);
+    render(
+      <Providers>
+        <main>
+          <Playground locale="en" />
+        </main>
+      </Providers>,
+    );
+    await frame();
+    expect(clippedRings(screen.getByRole('complementary', { name: 'Theme controls' }))).toEqual([]);
   });
 });
 
