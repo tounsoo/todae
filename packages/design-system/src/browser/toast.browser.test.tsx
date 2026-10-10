@@ -1078,6 +1078,59 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
     await waitFor(() => expect(receivesPointer(backClose)).toBe(true));
   });
 
+  it('spreads on a tap so the toast behind the newest can be used, until a press outside', async () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(
+      <Themed>
+        <StackRegion toaster={toaster} placement={placement} />
+      </Themed>,
+    );
+    act(() => {
+      toaster.add({ id: 'back', title: 'Back' });
+      toaster.add({ title: 'Front' });
+    });
+    const region = await screen.findByRole('region', { name: 'Notifications' });
+    const items = () => [...region.querySelectorAll('ol > li')] as HTMLElement[];
+    await waitFor(() => expect(items()).toHaveLength(2));
+    await userEvent.unhover(region);
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    await waitFor(() => expect(region.getAnimations({ subtree: true })).toHaveLength(0));
+    const [front, back] = items();
+    const backClose = screen.getAllByRole('button', { name: 'Dismiss' })[1]!;
+    // A point in the strip the back toast peeks out by, over its Close where
+    // the strip is the back toast's top edge.
+    const f = front!.getBoundingClientRect();
+    const b = back!.getBoundingClientRect();
+    const c = backClose.getBoundingClientRect();
+    const x = c.left + c.width / 2;
+    const y = placement.startsWith('bottom') ? (Math.max(b.top, c.top) + f.top) / 2 : (f.bottom + b.bottom) / 2;
+    const at = () => document.elementFromPoint(x, y)!;
+    expect(back!.contains(at())).toBe(true);
+    // A finger, as a browser sends it: each event at what is under it then.
+    const touch = (type: string) =>
+      act(
+        () =>
+          void at().dispatchEvent(
+            new PointerEvent(type, {
+              pointerType: 'touch',
+              buttons: type === 'pointerup' || type === 'pointerout' ? 0 : 1,
+              bubbles: true,
+              composed: true,
+            }),
+          ),
+      );
+    touch('pointerover');
+    touch('pointerdown');
+    touch('pointerup');
+    touch('pointerout');
+    act(() => void at().dispatchEvent(new PointerEvent('click', { pointerType: 'touch', detail: 1, bubbles: true, composed: true })));
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(true));
+    expect(toaster.getSnapshot().find((toast) => toast.id === 'back')?.open).toBe(true);
+    await waitFor(() => expect(receivesPointer(backClose)).toBe(true));
+    act(() => void document.body.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', buttons: 1, bubbles: true })));
+    await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+  });
+
   it('lets the pointer through the parts of a toast behind the newest where it peeks out', async () => {
     const toaster = createToaster({ duration: Infinity });
     render(
@@ -1101,6 +1154,8 @@ describe.each(['bottom-end', 'top-end'] as const)('Stacked toasts placed %s', (p
     await waitFor(() => expect(items()).toHaveLength(2));
     await userEvent.unhover(region);
     await waitFor(() => expect(region.hasAttribute('data-expanded')).toBe(false));
+    // Settled, not still moving in from a spread left by a pointer over it.
+    await waitFor(() => expect(region.getAnimations({ subtree: true })).toHaveLength(0));
     const [front, back] = items();
     // A part of the back toast inside the strip that peeks out from behind
     // the front one, and a point on it there: its Close at the bottom, where
