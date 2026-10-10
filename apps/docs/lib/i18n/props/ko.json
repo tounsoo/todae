@@ -625,6 +625,16 @@
       "ko": "행에 붙는 추가 클래스."
     }
   },
+  "Field.Group": {
+    "children": {
+      "en": "A label or caption, the control, then any Description.Root and ErrorMessage.Root.",
+      "ko": "레이블이나 캡션, 컨트롤, 그리고 Description.Root와 ErrorMessage.Root."
+    },
+    "className": {
+      "en": "Extra class on the group.",
+      "ko": "그룹에 붙는 추가 클래스."
+    }
+  },
   "Field.Select": {
     "value": {
       "en": "Controlled value.",

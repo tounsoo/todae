@@ -10,32 +10,19 @@ Put `aria-describedby` on `Field.Root`. Root copies the string onto the input, a
 
 Description owns its spacing. `margin-block-start` is `field.label.gap` (0.4rem) from the control. `margin-block-end` is 0. Put it after the control. Do not wrap it.
 
-`.labelled-field` still spaces Label to the control. It does not space the control to Description.
-
-```css
-.labelled-field {
-	display: flex;
-	flex-direction: column;
-}
-
-.labelled-field
-	> :not([data-todae-description], [data-todae-error])
-	+ :not([data-todae-description], [data-todae-error]) {
-	margin-block-start: var(--todae-field-label-gap);
-}
-```
+Inside a `Field.Group`, the group's gap replaces that margin, so the distance stays `field.label.gap`. The group also spaces Label from the control.
 
 ```tsx
 const id = useId()
 const hintId = useId()
 
-<div className="labelled-field">
+<Field.Group>
 	<Label.Root htmlFor={id}>Work email</Label.Root>
 	<Field.Root id={id} aria-describedby={hintId}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
 	<Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
-</div>
+</Field.Group>
 ```
 
 <Example block>

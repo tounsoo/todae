@@ -68,7 +68,7 @@ export function ComboboxSingle() {
     defaultValue: 'react',
   });
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
@@ -81,7 +81,7 @@ export function ComboboxSingle() {
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </div>
+    </Field.Group>
   );
 }
 
@@ -89,7 +89,7 @@ export function ComboboxHighlight() {
   const cb = useCombobox({ options: CITIES, presentation: 'popover' });
   const found = useHighlight({ name: 'docs-combobox-match', query: cb.query });
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Label.Root htmlFor={cb.ids.input}>City</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} placeholder="Try “san”" />
@@ -103,7 +103,7 @@ export function ComboboxHighlight() {
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </div>
+    </Field.Group>
   );
 }
 
@@ -115,7 +115,7 @@ export function ComboboxMulti() {
     defaultValue: ['design'],
   });
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Label.Root htmlFor={cb.ids.input}>Type</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.ChipInput {...cb.getChipInputProps()} />
@@ -128,7 +128,7 @@ export function ComboboxMulti() {
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </div>
+    </Field.Group>
   );
 }
 
@@ -140,7 +140,7 @@ export function ComboboxSheet() {
   });
   const selected = CITIES.find((city) => city.value === cb.value)?.label ?? 'City';
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Label.Root htmlFor={cb.ids.trigger}>City</Label.Root>
       <Button.Root {...cb.getTriggerProps()} variant="secondary">
         {selected}
@@ -151,7 +151,7 @@ export function ComboboxSheet() {
       <BottomSheet.Root {...cb.getSheetProps()}>
         <BottomSheet.Grabber />
         <BottomSheet.Body>
-          <div className="labelled-field">
+          <Field.Group>
             <Label.Root htmlFor={cb.ids.input}>Search</Label.Root>
             <Field.Root id={cb.ids.input}>
               <Field.Icon>
@@ -159,13 +159,13 @@ export function ComboboxSheet() {
               </Field.Icon>
               <Field.TextInput {...cb.getInputProps()} placeholder="Filter cities" />
             </Field.Root>
-          </div>
+          </Field.Group>
           <OptionList.Root {...cb.getListboxProps()}>
             {optionNodes(cb.items, cb.getOptionProps)}
           </OptionList.Root>
         </BottomSheet.Body>
       </BottomSheet.Root>
-    </div>
+    </Field.Group>
   );
 }
 
@@ -176,7 +176,7 @@ export function ComboboxAuto() {
     presentation: 'auto',
   });
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Text.Root size="s" tone="muted">
         presentation: {sheet.presentation}
         {sheet.isSheet ? ' (sheet)' : ' (popover)'}
@@ -212,7 +212,7 @@ export function ComboboxAuto() {
           </Popover.Root>
         </>
       )}
-    </div>
+    </Field.Group>
   );
 }
 
@@ -238,7 +238,7 @@ export function ComboboxAsync() {
     presentation: 'popover',
   });
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} placeholder="Type to load" />
@@ -264,7 +264,7 @@ export function ComboboxAsync() {
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </div>
+    </Field.Group>
   );
 }
 
@@ -274,7 +274,7 @@ export function ComboboxEmpty() {
     presentation: 'popover',
   });
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
@@ -289,7 +289,7 @@ export function ComboboxEmpty() {
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </div>
+    </Field.Group>
   );
 }
 
@@ -311,7 +311,7 @@ export function ComboboxCreate() {
     },
   });
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
@@ -324,7 +324,7 @@ export function ComboboxCreate() {
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </div>
+    </Field.Group>
   );
 }
 
@@ -342,7 +342,7 @@ export function ComboboxCreateMulti() {
     },
   });
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Label.Root htmlFor={cb.ids.input}>Tags</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.ChipInput {...cb.getChipInputProps()} />
@@ -355,7 +355,7 @@ export function ComboboxCreateMulti() {
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </div>
+    </Field.Group>
   );
 }
 

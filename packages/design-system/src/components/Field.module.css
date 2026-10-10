@@ -310,6 +310,25 @@
     max-width: none;
   }
 
+  /* Outside the shell: a label or caption, the control, then Description and ErrorMessage.
+     Closed popovers are display: none and open ones sit in the top layer, so neither takes a gap. */
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-field-label-gap);
+    min-inline-size: 0;
+  }
+
+  /* The gap already spaces the messages, so their own top margins step aside. */
+  .group > :is([data-todae-description], [data-todae-error]) {
+    margin-block-start: 0;
+  }
+
+  /* A message after a message keeps the tighter field.messages.gap. */
+  .group > :is([data-todae-description], [data-todae-error]) + :is([data-todae-description], [data-todae-error]) {
+    margin-block-start: calc(var(--todae-field-messages-gap) - var(--todae-field-label-gap));
+  }
+
   .row {
     box-sizing: border-box;
     display: flex;

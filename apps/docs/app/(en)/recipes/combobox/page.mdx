@@ -34,13 +34,13 @@ Sibling `Label.Root` + `Field.Root` id. The input is the combobox. The list live
 ```tsx
 const cb = useCombobox({ options, presentation: 'popover' })
 
-<div className="labelled-field">
+<Field.Group>
   <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
   <Field.Root {...cb.getAnchorProps()}>
     <Field.TextInput {...cb.getInputProps()} />
     <Field.Icon><Chevron /></Field.Icon>
   </Field.Root>
-</div>
+</Field.Group>
 <Popover.Root {...cb.getPopoverProps()}>
   <OptionList.Root {...cb.getListboxProps()}>
     {cb.items.map((item) => (

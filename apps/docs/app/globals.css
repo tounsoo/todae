@@ -576,17 +576,6 @@ table {
   }
 }
 
-.labelled-field {
-  display: flex;
-  flex-direction: column;
-}
-
-.labelled-field
-  > :not([data-todae-description], [data-todae-error])
-  + :not([data-todae-description], [data-todae-error]) {
-  margin-block-start: var(--todae-field-label-gap);
-}
-
 /* ---------- Home ---------- */
 
 .home {

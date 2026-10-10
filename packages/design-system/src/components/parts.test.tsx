@@ -221,6 +221,7 @@ const cases: Case[] = [
       </Field.Root>
     ),
   ],
+  ['Field.Group', (p) => <Field.Group {...p} />],
   [
     'Dialog.Root',
     (p) => (

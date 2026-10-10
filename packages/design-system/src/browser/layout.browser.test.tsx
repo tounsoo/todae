@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Grid, Pagination, paginationRange } from '../index';
+import { Avatar, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Text, paginationRange } from '../index';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -280,5 +280,52 @@ describe('Pagination in a browser', () => {
     await userEvent.hover(screen.getByTestId('page-1'));
     expect(getComputedStyle(screen.getByTestId('page-1')).backgroundColor).toBe(fill);
     expect(await violations()).toEqual([]);
+  });
+});
+
+describe('Field.Group in a browser', () => {
+  const gaps = { ['--_todae-field-label-gap' as string]: '10px', ['--_todae-field-messages-gap' as string]: '3px' };
+  const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+
+  it('spaces label, control and messages by field.label.gap, and message from message by field.messages.gap', () => {
+    render(
+      <main data-appearance="light" data-density="comfortable" style={gaps}>
+        <Field.Group>
+          <Label.Root htmlFor="email" data-testid="label">
+            Email
+          </Label.Root>
+          <Field.Root id="email" data-testid="shell">
+            <Field.TextInput value="" onChange={() => {}} />
+          </Field.Root>
+          <Description.Root id="hint" data-testid="hint">Use your work address.</Description.Root>
+          <ErrorMessage.Root id="error" data-testid="error">Enter an email.</ErrorMessage.Root>
+        </Field.Group>
+      </main>,
+    );
+    expect(Math.round(box('shell').top - box('label').bottom)).toBe(10);
+    expect(Math.round(box('hint').top - box('shell').bottom)).toBe(10);
+    expect(Math.round(box('error').top - box('hint').bottom)).toBe(3);
+  });
+
+  it('spaces a text caption from a radio group, and leaves an open popover out of the column', () => {
+    render(
+      <main data-appearance="light" data-density="comfortable" style={gaps}>
+        <Field.Group data-testid="group">
+          <Text.Root as="span" id="plan" data-testid="caption">
+            Plan
+          </Text.Root>
+          <RadioGroup.Root aria-labelledby="plan" defaultValue="a" data-testid="radios">
+            <RadioGroup.Item value="a">A</RadioGroup.Item>
+          </RadioGroup.Root>
+          <div popover="manual" data-testid="pop">
+            Options
+          </div>
+        </Field.Group>
+      </main>,
+    );
+    expect(Math.round(box('radios').top - box('caption').bottom)).toBe(10);
+    const height = box('group').height;
+    (screen.getByTestId('pop') as HTMLElement).showPopover();
+    expect(box('group').height).toBe(height);
   });
 });

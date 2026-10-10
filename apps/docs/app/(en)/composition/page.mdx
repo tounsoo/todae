@@ -52,14 +52,14 @@ Desktop (`presentation="popover"`). The closed control is a real Field. Spread `
 ```tsx
 const cb = useCombobox({ presentation: 'popover' })
 
-<div className="labelled-field">
+<Field.Group>
 	<Label.Root htmlFor={cb.ids.input}>Tags</Label.Root>
 	<Field.Root {...cb.getAnchorProps()}>
 		<Field.Icon><Search /></Field.Icon>
 		<Field.ChipInput {...cb.getChipInputProps()} />
 		<Field.Icon><ChevronDown /></Field.Icon>
 	</Field.Root>
-</div>
+</Field.Group>
 <Popover.Root {...cb.getPopoverProps()}>
 	<OptionList.Root {...cb.getListboxProps()}>...</OptionList.Root>
 </Popover.Root>
@@ -74,13 +74,13 @@ const cb = useCombobox({ presentation: 'sheet' })
 
 <Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
 <BottomSheet.Root {...cb.getSheetProps()}>
-	<div className="labelled-field">
+	<Field.Group>
 		<Label.Root htmlFor={cb.ids.input}>Search</Label.Root>
 		<Field.Root id={cb.ids.input}>
 			<Field.Icon><Search /></Field.Icon>
 			<Field.TextInput {...cb.getInputProps()} />
 		</Field.Root>
-	</div>
+	</Field.Group>
 	<OptionList.Root {...cb.getListboxProps()}>...</OptionList.Root>
 </BottomSheet.Root>
 ```

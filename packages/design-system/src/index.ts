@@ -144,6 +144,7 @@ export {
   type FieldAffixProps,
   type FieldChipInputProps,
   type FieldCounterProps,
+  type FieldGroupProps,
   type FieldIconProps,
   type FieldRootProps,
   type FieldRowProps,
