@@ -16,13 +16,15 @@ Server Components는 `@omsoo/todae/link`에서 가져올 수 있습니다. 모�
 
 ## 라우터 링크
 
-라우터의 링크 컴포넌트는 자기 `<a>`를 렌더링합니다. 그 컴포넌트를 `render`로 넘기세요. `Link.Root`는 `<a>`에 붙였을 모든 prop을 클래스까지 포함해 넘기며 그 함수를 부릅니다. 그 prop을 라우터 링크에 넘기고, 목적지는 라우터 링크가 받는 prop에 넣으세요. Next.js라면 이렇게 합니다.
+라우터의 링크 컴포넌트는 자기 `<a>`를 렌더링합니다. 그 컴포넌트를 `render`로 넘기세요. `Link.Root`는 `<a>`에 붙였을 모든 prop을 클래스까지 포함해 넘기며 그 함수를 부릅니다. 그 prop을 라우터 링크에 넘기고, 목적지는 라우터 링크가 받는 prop에 넣으세요. Next.js는 `href`가 있어야 하므로, `href`가 없는 링크는 평범한 `<a>`로 둡니다.
 
 ```tsx
-<Link.Root href="/billing" render={({ href = '', ...props }) => <NextLink href={href} {...props} />}>
+<Link.Root href="/billing" render={({ href, ...props }) => (href ? <NextLink href={href} {...props} /> : <a {...props} />)}>
   Billing
 </Link.Root>
 ```
+
+Server Component에서 `render`를 넘기려면 `Link`를 `@omsoo/todae/link`에서 가져오세요. `@omsoo/todae`는 클라이언트 모듈이라 Server Component가 함수를 넘길 수 없습니다.
 
 ## 현재 페이지
 

@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';
+import { SiteLink } from './SiteLink';
 
 /** The sidebar. `idPrefix` keeps group label ids unique when a second copy renders in the mobile drawer. */
 export function SiteNav({ locale, idPrefix = 'nav' }: { locale: Locale; idPrefix?: string }) {
@@ -17,9 +18,9 @@ export function SiteNav({ locale, idPrefix = 'nav' }: { locale: Locale; idPrefix
           <ul aria-labelledby={`${idPrefix}-${group.id}`}>
             {group.links.map(([href, label]) => (
               <li key={href}>
-                <a href={href} aria-current={path === href ? 'page' : undefined}>
+                <SiteLink href={href} aria-current={path === href ? 'page' : undefined}>
                   {label}
-                </a>
+                </SiteLink>
               </li>
             ))}
           </ul>

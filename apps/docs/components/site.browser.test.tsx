@@ -1,7 +1,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { page, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import '@omsoo/todae/todae.css';
 import '../app/globals.css';
 import { APPEARANCE_KEY, APPEARANCE_SCRIPT } from './appearanceScript';
@@ -15,6 +15,9 @@ import schema from '@omsoo/todae/schema/components.json';
 import { ThemeSwitcher } from './ThemeSwitcher';
 
 afterEach(cleanup);
+
+const path = vi.hoisted(() => ({ current: '/' }));
+vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
 
 // axe's color-contrast rule is WCAG 2; Todae checks contrast with APCA, so it is off here.
 async function violations(): Promise<string[]> {
@@ -94,6 +97,32 @@ describe('narrow screens', () => {
     await frame();
     const drawer = screen.getByRole('dialog', { name: 'Todae' });
     expect(within(drawer).getByRole('group', { name: 'Theme' }).checkVisibility()).toBe(true);
+  });
+});
+
+describe('mobile drawer', () => {
+  afterEach(async () => {
+    await page.viewport(1280, 800);
+  });
+
+  it('closes when a link in it moves to another page', async () => {
+    await page.viewport(360, 700);
+    path.current = '/tokens';
+    const shell = () => (
+      <Providers>
+        <MobileNav locale="en" />
+      </Providers>
+    );
+    const { rerender } = render(shell());
+    await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }));
+    await frame();
+    expect(screen.getByRole('dialog', { name: 'Todae' })).toBeTruthy();
+    // A client-side navigation keeps the drawer mounted and changes only the path.
+    path.current = '/link';
+    rerender(shell());
+    // It slides out before the dialog closes.
+    await expect.poll(() => screen.queryByRole('dialog', { name: 'Todae' })).toBeNull();
+    path.current = '/';
   });
 });
 

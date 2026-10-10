@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { useInsertionEffect } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HomeContent } from '../../components/HomeContent';
 import { Example } from '../../components/Example';
@@ -287,6 +288,21 @@ describe('docs locales', () => {
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
     expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/tokens#props');
+    window.history.replaceState(null, '', '/');
+  });
+
+  it('drops the old hash after a client-side navigation', () => {
+    // Like Next: the new path renders first, and the URL changes as that render commits, with no event.
+    function Router({ url }: { url: string }) {
+      useInsertionEffect(() => window.history.replaceState(null, '', url), [url]);
+      return <LanguageSwitcher locale="en" />;
+    }
+    path.current = '/tokens';
+    const { rerender } = render(<Router url="/tokens#contrast" />);
+    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/tokens#contrast');
+    path.current = '/link';
+    rerender(<Router url="/link" />);
+    expect(screen.getByRole('link', { name: '한국어' }).getAttribute('href')).toBe('/ko/link');
     window.history.replaceState(null, '', '/');
   });
 

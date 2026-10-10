@@ -1,4 +1,4 @@
-import { Link } from '@omsoo/todae/link';
+import { SiteLink } from '../components/SiteLink';
 import { SiteShell } from '../components/SiteShell';
 import { LOCALES, localizePath } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
@@ -14,7 +14,7 @@ export default function GlobalNotFound() {
       <h1>404</h1>
       {LOCALES.map((locale) => (
         <p key={locale} lang={locale}>
-          {DICTIONARIES[locale].notFound} <Link.Root href={localizePath('/', locale)}>{DICTIONARIES[locale].home}</Link.Root>
+          {DICTIONARIES[locale].notFound} <SiteLink href={localizePath('/', locale)}>{DICTIONARIES[locale].home}</SiteLink>
         </p>
       ))}
     </SiteShell>

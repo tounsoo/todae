@@ -12,6 +12,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { MobileNav } from './MobileNav';
 import { APPEARANCE_SCRIPT } from './appearanceScript';
 import { Providers } from './Providers';
+import { SiteLink } from './SiteLink';
 import { SiteNav } from './SiteNav';
 import { SITE_GROUPS } from './siteGroups';
 import { ThemeSwitcher } from './ThemeSwitcher';
@@ -56,15 +57,15 @@ export function SiteShell({
           <header className="topbar">
             <div className="topbar-inner">
               <MobileNav locale={locale} />
-              <a className="brand" href={localizePath('/', locale)}>
+              <SiteLink className="brand" href={localizePath('/', locale)}>
                 <span className="brand-mark" aria-hidden="true" />
                 Todae
-              </a>
+              </SiteLink>
               <nav className="top-links" aria-label={dict.mainNav}>
                 <ul>
                   {top.map(([href, label]) => (
                     <li key={href}>
-                      <a href={localizePath(href, locale)}>{label}</a>
+                      <SiteLink href={localizePath(href, locale)}>{label}</SiteLink>
                     </li>
                   ))}
                 </ul>
@@ -72,9 +73,9 @@ export function SiteShell({
               <div className="topbar-tools">
                 <ThemeSwitcher locale={locale} />
                 <LanguageSwitcher locale={locale} toHome={notFound} />
-                <a className="topbar-icon-link" href={REPO} aria-label={dict.github}>
+                <SiteLink className="topbar-icon-link" href={REPO} aria-label={dict.github}>
                   <GitHubIcon size={18} />
-                </a>
+                </SiteLink>
               </div>
             </div>
           </header>
