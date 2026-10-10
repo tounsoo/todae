@@ -1142,17 +1142,16 @@ describe('Field.Counter', () => {
     expect(ids.filter((id) => container.querySelector(`input, textarea`) && id).length).toBeGreaterThan(1);
   });
 
-  it('warns once outside Root and once with no input', async () => {
+  it('throws outside Root, naming the part and its Root', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(() => render(<Field.Counter />)).toThrow('Field.Counter must render inside Field.Root');
+    error.mockRestore();
+  });
+
+  it('warns once with no input', async () => {
     vi.resetModules();
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const mod = await import('./Field');
     const { render: renderFresh } = await import('@testing-library/react');
-    renderFresh(<mod.Field.Counter />);
-    renderFresh(<mod.Field.Counter />);
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    cleanup();
-    vi.resetModules();
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const again = await import('./Field');
     renderFresh(
       <again.Field.Root>

@@ -560,20 +560,10 @@ export type FieldCounterProps = {
   style?: CSSProperties;
 } & Omit<ComponentPropsWithRef<'span'>, 'children'>;
 
-let warnedOutsideRoot = false;
 let warnedNoInput = false;
 
 function liveCopy(remaining: number, strings: Strings) {
   return remaining <= 0 ? strings.characterLimitReached : strings.charactersLeft(remaining);
-}
-
-function CounterMissing() {
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'production' || warnedOutsideRoot) return;
-    warnedOutsideRoot = true;
-    console.warn('Field.Counter must render inside Field.Root');
-  }, []);
-  return null;
 }
 
 function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: FieldContextValue }) {
@@ -629,7 +619,7 @@ function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: F
 
 function Counter(props: FieldCounterProps) {
   const ctx = useContext(FieldContext);
-  if (!ctx) return <CounterMissing />;
+  if (!ctx) throw new Error('Field.Counter must render inside Field.Root');
   return <CounterInner {...props} ctx={ctx} />;
 }
 
