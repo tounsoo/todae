@@ -40,7 +40,13 @@ export function MobileNav({ locale }: { locale: Locale }) {
           <Dialog.Close>{dict.closeMenu}</Dialog.Close>
         </Dialog.Header>
         {/* Following one of its links closes it too, even a link to this page, which leaves the path as it is. */}
-        <Dialog.Body onClick={(event) => (event.target as Element).closest('a[href]') && setOpen(false)}>
+        <Dialog.Body
+          onClick={(event) => {
+            // A modified click opens the link elsewhere and leaves this page, and the drawer, as they are.
+            const elsewhere = event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+            if (!elsewhere && (event.target as Element).closest('a[href]')) setOpen(false);
+          }}
+        >
           <SiteNav locale={locale} idPrefix="drawer-nav" />
         </Dialog.Body>
         {/* The top bar hides its theme switch on the narrowest screens; the drawer keeps one. */}
