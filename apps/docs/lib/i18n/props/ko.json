@@ -1287,8 +1287,8 @@
   },
   "Table.HeaderCell": {
     "scope": {
-      "en": "Which cells it heads: col in Table.Head, row for the first cell of a body row.",
-      "ko": "어느 셀의 머리글인지. Table.Head 안에서는 col, 본문 행의 첫 셀에는 row."
+      "en": "Which cells it heads: col, row, colgroup or rowgroup. Use col in Table.Head and row for the first cell of a body row.",
+      "ko": "어느 셀의 머리글인지: col, row, colgroup, rowgroup. Table.Head 안에서는 col, 본문 행의 첫 셀에는 row를 쓰세요."
     },
     "children": {
       "en": "The header text.",

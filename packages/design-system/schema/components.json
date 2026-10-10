@@ -2337,13 +2337,13 @@
     },
     {
       "name": "Table.HeaderCell",
-      "description": "A native th styled from the table.header tokens: a column or row header. Takes native th attributes.",
+      "description": "A native th styled from the table tokens: a column or row header. Takes native th attributes.",
       "props": [
         {
           "name": "scope",
-          "type": "'col' | 'row' | 'colgroup' | 'rowgroup'",
+          "type": "string",
           "required": false,
-          "description": "Which cells it heads: col in Table.Head, row for the first cell of a body row."
+          "description": "Which cells it heads: col, row, colgroup or rowgroup. Use col in Table.Head and row for the first cell of a body row."
         },
         {
           "name": "children",

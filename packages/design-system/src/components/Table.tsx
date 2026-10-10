@@ -4,8 +4,8 @@ import styles from './Table.module.css';
 
 /**
  * A native `table` styled from the table tokens. Build it from the Table parts:
- * each renders its native element, so the table keeps its meaning, and carries
- * its own styles. A data grid is out of scope.
+ * each renders its native element, so the table keeps its meaning. Plain
+ * elements inside get no Todae style. A data grid is out of scope.
  */
 export type TableRootProps = ComponentPropsWithRef<'table'>;
 /** A native `caption`, the table's name. Put it first in the root. */

@@ -1,6 +1,6 @@
 @layer todae.components.native {
   /* Native table semantics stay as they are; Todae only sets the rules,
-     padding and header weight. Each part carries its own class, so plain
+     padding and header weight. The styles sit on the part classes, so plain
      elements and the cells of a nested plain table take no Todae style. */
   .root {
     inline-size: 100%;
