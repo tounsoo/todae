@@ -214,6 +214,7 @@ body {
     column-gap: 3.5rem;
     padding-inline: 1.5rem;
   }
+
   .sidebar {
     display: flex;
     flex-direction: column;
@@ -305,7 +306,7 @@ body {
   padding: 1.5rem 1.25rem;
 }
 
-/* The same inline padding as .layout, so the footer lines up with the page. */
+/* The same inline padding as .layout on wide screens. */
 @media (min-width: 64rem) {
   .site-footer-inner {
     padding-inline: 1.5rem;
@@ -1125,6 +1126,8 @@ table {
   .playground {
     display: flex;
     flex-direction: column;
+    /* The screen's height less the bar, so the stage ends at the bar's top. */
+    min-block-size: calc(100dvh - var(--docs-topbar) - var(--docs-pg-bar, 0px));
   }
 
   /* Playground measures the fixed bar into --docs-pg-bar. The space goes at

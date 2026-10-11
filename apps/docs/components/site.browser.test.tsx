@@ -1,4 +1,5 @@
 /// <reference types="@vitest/browser/providers/playwright" />
+import { Text } from '@omsoo/todae/text';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { cdp, page, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
@@ -135,7 +136,14 @@ describe('narrow screens', () => {
         </main>
         {/* SiteShell's footer comes after the playground on every page. */}
         <footer className="site-footer">
-          <a href="#license">MIT License</a>
+          <div className="site-footer-inner">
+            <Text.Root size="s" tone="muted">
+              Todae is released under the <a href="#license">MIT License</a>.
+            </Text.Root>
+            <Text.Root size="s" tone="muted">
+              Copyright © 2026 Ben Ho
+            </Text.Root>
+          </div>
         </footer>
       </Providers>,
     );
@@ -249,9 +257,37 @@ describe('narrow screens', () => {
     expect(stage.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop() + 1);
     const footer = document.querySelector<HTMLElement>('.site-footer')!;
     expect(footer.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop() + 1);
-    footer.querySelector('a')!.focus();
+    // The footer's link, scrolled behind the bar, scrolls clear of it on focus.
+    const link = within(footer).getByRole('link');
+    scrollBy(0, link.getBoundingClientRect().top - barTop() - 4);
     await frame();
-    expect(footer.querySelector('a')!.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop());
+    expect(link.getBoundingClientRect().top).toBeGreaterThan(barTop());
+    link.focus();
+    await frame();
+    expect(link.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop());
+  });
+
+  it('ends the stage at the playground bar on a screen taller than the page', async () => {
+    await page.viewport(390, 2400);
+    // With the top bar, as on the site, since the stage's height leaves room for it.
+    render(
+      <Providers>
+        <header className="topbar">
+          <div className="topbar-inner" />
+        </header>
+        <main>
+          <Playground locale="en" />
+        </main>
+      </Providers>,
+    );
+    const bar = document.querySelector<HTMLElement>('.pg-sheet-bar')!;
+    await frame();
+    // The stage's backdrop grows to fill the screen, and stops where the bar starts.
+    const backdrop = document.querySelector('.pg-stage-theme')!.getBoundingClientRect();
+    const barTop = bar.getBoundingClientRect().top;
+    expect(document.documentElement.scrollHeight).toBeGreaterThan(innerHeight);
+    expect(backdrop.bottom).toBeLessThanOrEqual(barTop + 1);
+    expect(backdrop.bottom).toBeGreaterThan(barTop - 2);
   });
 
   it('leaves the playground bar, the open sheet and their space out of print', async () => {

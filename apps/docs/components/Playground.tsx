@@ -205,7 +205,7 @@ function narrowSnapshot(): boolean {
 
 /**
  * Writes the fixed bar's height to --docs-pg-bar on the root, for the space
- * globals.css keeps under the stage and the root's scroll padding. Measured,
+ * globals.css keeps at the end of the page and the root's scroll padding. Measured,
  * since the copy status and the safe area change it.
  */
 function reserveBar(bar: HTMLElement | null) {
