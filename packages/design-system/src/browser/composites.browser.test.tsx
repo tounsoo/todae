@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState, type ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Button } from '../components/Button';
 import { Field } from '../components/Field';
 import { Label } from '../components/Label';
@@ -274,5 +274,61 @@ describe('Field.Select in a browser', () => {
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'One' }));
     expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
+  });
+});
+
+describe('Field.ColorInput in a browser', () => {
+  function Accent({ disabled, affix = true }: { disabled?: boolean; affix?: boolean }) {
+    const [value, setValue] = useState('#3366ff');
+    return (
+      <Themed>
+        <Label.Root htmlFor="accent">Accent</Label.Root>
+        <Field.Root id="accent" disabled={disabled} data-testid="shell">
+          <Field.ColorInput value={value} onValueChange={setValue} />
+          {affix ? <Field.Affix data-testid="value">{value}</Field.Affix> : null}
+        </Field.Root>
+      </Themed>
+    );
+  }
+
+  it('is a labelled color input drawn as a square swatch one field line tall', async () => {
+    render(<Accent />);
+    const input = screen.getByLabelText('Accent') as HTMLInputElement;
+    expect(input.type).toBe('color');
+    const swatch = input.getBoundingClientRect();
+    expect(swatch.width).toBe(swatch.height);
+    expect(swatch.height).toBeCloseTo(screen.getByTestId('value').getBoundingClientRect().height, 0);
+    await userEvent.tab();
+    expect(document.activeElement).toBe(input);
+    expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
+  });
+
+  it('reports a picked color to onValueChange', () => {
+    render(<Accent />);
+    const input = screen.getByLabelText('Accent') as HTMLInputElement;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, '#00ff00');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(screen.getByTestId('value').textContent).toBe('#00ff00');
+  });
+
+  it('opens its picker on a press elsewhere in the field', async () => {
+    render(<Accent />);
+    const input = screen.getByLabelText('Accent') as HTMLInputElement;
+    const showPicker = vi.spyOn(input, 'showPicker').mockImplementation(() => undefined);
+    await userEvent.click(screen.getByTestId('value'));
+    expect(document.activeElement).toBe(input);
+    expect(showPicker).toHaveBeenCalledTimes(1);
+  });
+
+  it('is as wide as the swatch on its own, and disabled with the field', () => {
+    render(<Accent affix={false} disabled />);
+    const input = screen.getByLabelText('Accent') as HTMLInputElement;
+    const shell = screen.getByTestId('shell');
+    const style = getComputedStyle(shell);
+    const inset = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + parseFloat(style.borderLeftWidth) * 2;
+    expect(shell.getBoundingClientRect().width).toBeCloseTo(input.getBoundingClientRect().width + inset, 0);
+    expect(input.disabled).toBe(true);
+    expect(style.cursor).toBe('not-allowed');
+    expect(getComputedStyle(input).cursor).toBe('not-allowed');
   });
 });

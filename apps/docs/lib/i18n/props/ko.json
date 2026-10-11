@@ -657,6 +657,24 @@
       "ko": "select에 붙는 선택적 클래스."
     }
   },
+  "Field.ColorInput": {
+    "value": {
+      "en": "Controlled value as #rrggbb.",
+      "ko": "#rrggbb 형식의 제어 값."
+    },
+    "onChange": {
+      "en": "Native change handler. Optional when onValueChange is enough.",
+      "ko": "네이티브 change 핸들러. onValueChange로 충분하면 생략할 수 있습니다."
+    },
+    "onValueChange": {
+      "en": "Optional value callback.",
+      "ko": "선택적 값 콜백."
+    },
+    "className": {
+      "en": "Optional class on the input.",
+      "ko": "input에 붙는 선택적 클래스."
+    }
+  },
   "Field.Textarea": {
     "value": {
       "en": "Controlled value.",

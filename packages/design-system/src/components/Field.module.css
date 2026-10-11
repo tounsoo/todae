@@ -410,6 +410,51 @@
     padding-inline-end: 0;
   }
 
+  /* A swatch one line of field text tall: square on its own, and a press
+     anywhere in the shell opens its picker. */
+  .color {
+    flex: none;
+    box-sizing: border-box;
+    inline-size: 1lh;
+    block-size: 1lh;
+    margin: 0;
+    padding: 0;
+    border: var(--todae-field-border-width) solid var(--todae-field-swatch-border);
+    border-radius: var(--todae-field-swatch-radius);
+    background: transparent;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-field-leading);
+    outline: none;
+    cursor: pointer;
+  }
+
+  .color::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  .color::-webkit-color-swatch {
+    border: 0;
+    border-radius: calc(var(--todae-field-swatch-radius) - var(--todae-field-border-width));
+  }
+
+  .color::-moz-color-swatch {
+    border: 0;
+    border-radius: calc(var(--todae-field-swatch-radius) - var(--todae-field-border-width));
+  }
+
+  .shell:not([data-disabled]):has(> .color) {
+    cursor: pointer;
+  }
+
+  .color:disabled {
+    cursor: not-allowed;
+  }
+
+  /* With nothing beside it, the field is as wide as the swatch. */
+  .shell:has(> .color:only-child) {
+    inline-size: fit-content;
+  }
+
   .select {
     appearance: base-select;
     flex: 1 1 var(--todae-field-min-width);

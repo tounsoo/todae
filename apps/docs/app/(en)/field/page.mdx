@@ -13,6 +13,7 @@ import {
   CounterPlain,
   CounterTextarea,
   FieldAdornments,
+  FieldColorAccent,
   FieldDateTime,
   FieldLabelAdornments,
   FieldLabelStates,
@@ -32,7 +33,7 @@ import {
 
 # Field
 
-Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.Textarea`, or `Field.ChipInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label.Root` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
+Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select` or `Field.ColorInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label.Root` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
 
 <Example block>
   <FieldStates />
@@ -262,9 +263,25 @@ Stepper buttons and a calendar grid are app compositions; build them around thes
   <FieldSelectSize />
 </Example>
 
+## Color
+
+`Field.ColorInput` is a native `<input type="color">`, drawn as a swatch one field line tall. Its value is a `#rrggbb` string. A press elsewhere in the field opens the browser's picker. To show the value as text, put a `Field.Affix` after it. On its own, the field is as wide as the swatch.
+
+```tsx
+<Label.Root htmlFor={id}>Accent</Label.Root>
+<Field.Root id={id}>
+	<Field.ColorInput value={color} onValueChange={setColor} />
+	<Field.Affix>{color}</Field.Affix>
+</Field.Root>
+```
+
+<Example block>
+  <FieldColorAccent />
+</Example>
+
 ## Custom controls
 
-Your own control, such as a rating or a color well, joins a `Field.Root` through [useField](/utilities/use-field).
+Your own control, such as a rating, joins a `Field.Root` through [useField](/utilities/use-field).
 
 ## Icons
 
@@ -328,6 +345,12 @@ import { ChevronDown, Search } from 'lucide-react';
 
 **When not:** Filtering or searching a long list → Combobox recipe. Several values → Checkbox or `Field.ChipInput`. Commands rather than values → Menu.
 
+### Field.ColorInput
+
+**When:** Pick one color with the browser's picker, such as a brand or accent color.
+
+**When not:** A color in another form, such as `oklch()` → `Field.TextInput`, with a `Field.ColorInput` in its own field beside it for picking. A fixed set of colors → RadioGroup.
+
 ### Field.Icon
 
 **When:** Leading/trailing icon or icon control inside Root. Position = DOM order. Decorative → `interactive={false}` (aria-hidden).
@@ -368,6 +391,8 @@ import { ChevronDown, Search } from 'lucide-react';
 <PropsTable name="Field.ChipInput" />
 
 <PropsTable name="Field.Select" />
+
+<PropsTable name="Field.ColorInput" />
 
 <PropsTable name="Field.Icon" />
 

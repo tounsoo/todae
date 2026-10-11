@@ -203,6 +203,14 @@ const cases: Case[] = [
     ),
   ],
   [
+    'Field.ColorInput',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.ColorInput {...p} value="" onChange={noop} />
+      </Field.Root>
+    ),
+  ],
+  [
     'Field.Select',
     (p) => (
       <Field.Root aria-label="t">

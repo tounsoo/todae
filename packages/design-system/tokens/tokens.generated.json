@@ -3332,6 +3332,24 @@
       "context": null
     },
     {
+      "path": "field.swatch.border",
+      "type": "color",
+      "cssVar": "--todae-field-swatch-border",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.swatch.radius",
+      "type": "dimension",
+      "cssVar": "--todae-field-swatch-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "chip.bg.default",
       "type": "color",
       "cssVar": "--todae-chip-bg-default",

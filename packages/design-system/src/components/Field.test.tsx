@@ -53,6 +53,7 @@ describe('Field exports', () => {
       Textarea: Field.Textarea,
       ChipInput: Field.ChipInput,
       Select: Field.Select,
+      ColorInput: Field.ColorInput,
       Icon: Field.Icon,
       Affix: Field.Affix,
       Counter: Field.Counter,

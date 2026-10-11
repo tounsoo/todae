@@ -121,11 +121,18 @@ function Affix({ className, ...props }: FieldAffixProps) {
   return <span {...props} className={cx(styles.adornment, className)} />;
 }
 
-// Whether a select's picker is showing. A browser without `:open` throws,
+type PickerControl = HTMLSelectElement | HTMLInputElement;
+
+// A control whose picker a press beside it opens: a select or a color input.
+function hasPicker(control: Element | null | undefined): control is PickerControl {
+  return control instanceof HTMLSelectElement || (control instanceof HTMLInputElement && control.type === 'color');
+}
+
+// Whether a control's picker is showing. A browser without `:open` throws,
 // and treats the picker as closed.
-function isOpen(select: HTMLSelectElement): boolean {
+function isOpen(control: PickerControl): boolean {
   try {
-    return select.matches(':open');
+    return control.matches(':open');
   } catch {
     return false;
   }
@@ -167,7 +174,7 @@ function Root({
   const autoId = useDomId();
   const hintId = useDomId();
   const inputRef = useRef<HTMLElement>(null);
-  const pendingPicker = useRef<HTMLSelectElement | null>(null);
+  const pendingPicker = useRef<PickerControl | null>(null);
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
 
@@ -201,20 +208,21 @@ function Root({
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
     control?.focus();
-    // A press beside a select opens it, as a press on the select would. The
-    // picker opens on click: one opened now would close again as the press
-    // goes on. The press that closes an open picker must not open it again.
-    pendingPicker.current = control instanceof HTMLSelectElement && !isOpen(control) ? control : null;
+    // A press beside a select or color input opens its picker, as a press on
+    // the control would. The picker opens on click: one opened now would close
+    // again as the press goes on. The press that closes an open picker must
+    // not open it again.
+    pendingPicker.current = hasPicker(control) && !isOpen(control) ? control : null;
   }
 
   function onClick(event: MouseEvent<HTMLDivElement>) {
-    const select = pendingPicker.current;
+    const picker = pendingPicker.current;
     pendingPicker.current = null;
     // Only the click that ends this press: one from the keyboard or from
     // assistive technology has no press (detail 0) and opens nothing.
-    if (!select?.isConnected || event.detail === 0 || isInteractiveTarget(event.target)) return;
+    if (!picker?.isConnected || event.detail === 0 || isInteractiveTarget(event.target)) return;
     try {
-      select.showPicker?.();
+      picker.showPicker?.();
     } catch {
       // Not allowed here, or not supported: focus is enough.
     }
@@ -555,6 +563,41 @@ function Select({ value, onChange, onValueChange, className, children, ...props 
   );
 }
 
+export type FieldColorInputProps = {
+  /** A color as `#rrggbb`. */
+  value: string;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  onValueChange?: (value: string) => void;
+  ref?: Ref<HTMLInputElement>;
+  // `readonly` has no effect on a color input.
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'type' | 'disabled' | 'onChange' | 'readOnly'>;
+
+/**
+ * A native color input drawn as a swatch the height of a line of field text.
+ * The browser's own picker opens from it, or from a press elsewhere in the
+ * field. Put the value beside it as text with Field.Affix.
+ */
+function ColorInput({ value, onChange, onValueChange, className, ...props }: FieldColorInputProps) {
+  const field = useField();
+  return (
+    <input
+      {...field.getControlProps(props)}
+      type="color"
+      value={value}
+      className={cx(styles.color, className)}
+      // Without either handler the input is read-only, and React says so.
+      onChange={
+        onChange || onValueChange
+          ? (event) => {
+              onChange?.(event);
+              onValueChange?.(event.target.value);
+            }
+          : undefined
+      }
+    />
+  );
+}
+
 export type FieldCounterProps = {
   className?: string;
   style?: CSSProperties;
@@ -642,4 +685,4 @@ function Group({ className, ...props }: FieldGroupProps) {
   return <div {...props} className={cx(styles.group, className)} />;
 }
 
-export const Field = { Root, TextInput, Textarea, ChipInput, Select, Icon, Affix, Counter, Row, Group } as const;
+export const Field = { Root, TextInput, Textarea, ChipInput, Select, ColorInput, Icon, Affix, Counter, Row, Group } as const;
