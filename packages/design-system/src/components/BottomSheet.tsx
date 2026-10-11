@@ -8,7 +8,6 @@ import {
   useState,
   type ComponentPropsWithRef,
   type CSSProperties,
-  type FocusEvent,
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
@@ -27,7 +26,6 @@ import { initialFocusTarget, useInitialFocus } from '../overlay/useInitialFocus'
 import { useModalDialog } from '../overlay/useModalDialog';
 import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag';
 import { composeHandlers, cx, useComposedRefs } from './props';
-import { revealRing } from './revealRing';
 import styles from './BottomSheet.module.css';
 import { ToolbarContext } from './toolbarContext';
 
@@ -169,7 +167,7 @@ function BottomSheetDescription({
   );
 }
 
-function BottomSheetBody({ className, ref, onFocus, ...props }: ComponentPropsWithRef<'div'>) {
+function BottomSheetBody({ className, ref, ...props }: ComponentPropsWithRef<'div'>) {
   const { bodyRef } = useSheet();
   const refs = useComposedRefs(bodyRef as RefObject<HTMLDivElement | null>, ref);
   return (
@@ -177,9 +175,6 @@ function BottomSheetBody({ className, ref, onFocus, ...props }: ComponentPropsWi
       {...props}
       ref={refs}
       className={cx(styles.body, className)}
-      onFocus={composeHandlers(onFocus, (event: FocusEvent<HTMLDivElement>) => {
-        if (event.target !== event.currentTarget) revealRing(event.currentTarget, event.target);
-      })}
     />
   );
 }

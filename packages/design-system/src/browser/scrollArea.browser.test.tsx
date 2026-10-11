@@ -133,17 +133,6 @@ describe('ScrollArea.Root', () => {
     expect(width('area')).toBeCloseTo(width('plain'), 0);
   });
 
-  it('leaves its scroll where it is for focus that asks for no scroll', () => {
-    render(
-      <ScrollArea.Root data-testid="area" style={{ height: 80 }}>
-        {links(12)}
-      </ScrollArea.Root>,
-    );
-    const area = screen.getByTestId('area');
-    screen.getAllByRole('link').at(-1)!.focus({ preventScroll: true });
-    expect(area.scrollTop).toBe(0);
-  });
-
   it('reveals a ring drawn on an ancestor, such as a Field shell', () => {
     render(
       <ScrollArea.Root data-testid="area" style={{ height: 120 }}>

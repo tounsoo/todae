@@ -7,7 +7,6 @@ import { BottomSheet, type SheetCloseReason } from '../components/BottomSheet';
 import { Button } from '../components/Button';
 import { Dialog, type DialogCloseReason } from '../components/Dialog';
 import { Drawer } from '../components/Drawer';
-import { Field } from '../components/Field';
 import { Popover } from '../components/Popover';
 
 function Themed({ children }: { children: ReactNode }) {
@@ -171,54 +170,6 @@ describe('BottomSheet in a browser', () => {
     const box = sheet().getBoundingClientRect();
     expect(Math.round(box.left)).toBe(0);
     expect(box.width).toBeGreaterThan(window.innerWidth - 24);
-  });
-
-  it('scrolls the whole ring of a Field shell into view when its input takes focus', async () => {
-    render(
-      <Themed>
-        <BottomSheet.Root open onOpenChange={() => undefined}>
-          <BottomSheet.Title>Filter</BottomSheet.Title>
-          <BottomSheet.Body data-testid="body" style={{ maxBlockSize: 120 }}>
-            <div style={{ blockSize: 300 }} />
-            <Field.Root aria-label="Last" data-testid="shell">
-              <Field.TextInput value="" onChange={() => undefined} />
-            </Field.Root>
-            <div style={{ blockSize: 300 }} />
-          </BottomSheet.Body>
-        </BottomSheet.Root>
-      </Themed>,
-    );
-    await waitFor(() => expect(sheet().matches(':modal')).toBe(true));
-    const body = screen.getByTestId('body');
-    const input = screen.getByRole('textbox', { name: 'Last' });
-    // Scrolled so the input shows all but its last pixels: focus scrolls the least it can.
-    const bottom = () => body.getBoundingClientRect().top + body.clientTop + body.clientHeight;
-    body.scrollTop += input.getBoundingClientRect().bottom + 2 - bottom();
-    input.focus({ focusVisible: true } as FocusOptions);
-    const shell = screen.getByTestId('shell');
-    const style = getComputedStyle(shell);
-    const room = parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
-    expect(room).toBeGreaterThan(0);
-    const port = body.getBoundingClientRect();
-    expect(shell.getBoundingClientRect().bottom + room).toBeLessThanOrEqual(port.top + body.clientTop + body.clientHeight + 0.5);
-  });
-
-  it('leaves its body where it is for focus that asks for no scroll', async () => {
-    render(
-      <Themed>
-        <BottomSheet.Root open onOpenChange={() => undefined}>
-          <BottomSheet.Title>Filter</BottomSheet.Title>
-          <BottomSheet.Body data-testid="body" style={{ maxBlockSize: 120 }}>
-            <div style={{ blockSize: 400 }} />
-            <button type="button">Far</button>
-          </BottomSheet.Body>
-        </BottomSheet.Root>
-      </Themed>,
-    );
-    await waitFor(() => expect(sheet().matches(':modal')).toBe(true));
-    const body = screen.getByTestId('body');
-    screen.getByRole('button', { name: 'Far' }).focus({ preventScroll: true });
-    expect(body.scrollTop).toBe(0);
   });
 
   it('leaves room in its scrolling body for the focus ring of a control at its edge', async () => {
