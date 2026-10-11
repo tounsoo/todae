@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.Group',
   description:
-    'Column that stacks a Label.Root or caption, the control, Description.Root and ErrorMessage.Root, spaced by field.label.gap. Renders a div outside Field.Root.',
+    'Column that stacks a Label.Root or caption, the control, then Description.Root and ErrorMessage.Root. The label or caption sits field.label.gap above the control; the messages keep the distances they have outside a group. Renders a div outside Field.Root.',
   props: [
     {
       name: 'children',

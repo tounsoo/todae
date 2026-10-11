@@ -40,7 +40,7 @@ Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. V
 
 ## Label
 
-`Label.Root` is a sibling, not a compound part. It takes the same `id` you pass to `Field.Root`. Wrap the pair in one `Field.Group`, which stacks them `field.label.gap` apart. See [Label](/label) for the API.
+`Label.Root` is a sibling, not a compound part. It takes the same `id` you pass to `Field.Root`. Wrap the pair in one `Field.Group`, which puts the label `field.label.gap` above the shell. See [Label](/label) for the API.
 
 ```tsx
 const id = useId()
@@ -71,7 +71,7 @@ Label works with Icon, Affix, and ChipInput.
 
 ## Messages
 
-[Description](/description) and [ErrorMessage](/errormessage) sit under the shell as siblings. They are not Field parts. Each owns `margin-block-start`. Put `aria-describedby` on `Field.Root`. Root copies it onto the input.
+[Description](/description) and [ErrorMessage](/errormessage) sit under the shell as siblings. They are not Field parts. Put `aria-describedby` on `Field.Root`. Root copies it onto the input.
 
 ```tsx
 const describedBy = invalid ? `${hintId} ${errorId}` : hintId
@@ -342,7 +342,7 @@ import { ChevronDown, Search } from 'lucide-react';
 
 ### Field.Group
 
-**When:** Stack a label or caption, the control, and any Description or ErrorMessage, `field.label.gap` apart. It sits outside `Field.Root` and works for any control, such as a RadioGroup under a `Text.Root` caption.
+**When:** Stack a label or caption `field.label.gap` above its control, with any Description or ErrorMessage below. It sits outside `Field.Root` and works for any control, such as a RadioGroup under a `Text.Root` caption.
 
 **When not:** To space separate fields from each other, use `Stack.Root`. To group related controls under one legend, use [Fieldset](/fieldset).
 

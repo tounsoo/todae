@@ -307,6 +307,22 @@ describe('Field.Group in a browser', () => {
     expect(Math.round(box('error').top - box('hint').bottom)).toBe(3);
   });
 
+  it('keeps field.label.gap between messages in any other order, as outside a group', () => {
+    render(
+      <main data-appearance="light" data-density="comfortable" style={gaps}>
+        <Field.Group>
+          <ErrorMessage.Root id="error" data-testid="error">
+            Enter an email.
+          </ErrorMessage.Root>
+          <Description.Root id="hint" data-testid="hint">
+            Use your work address.
+          </Description.Root>
+        </Field.Group>
+      </main>,
+    );
+    expect(Math.round(box('hint').top - box('error').bottom)).toBe(10);
+  });
+
   it('spaces a text caption from a radio group, and leaves an open popover out of the column', () => {
     render(
       <main data-appearance="light" data-density="comfortable" style={gaps}>

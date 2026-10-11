@@ -8,6 +8,7 @@ import {
   Label,
   OptionList,
   Popover,
+  Stack,
   Text,
   useCombobox,
   useHighlight,
@@ -68,20 +69,22 @@ export function ComboboxSingle() {
     defaultValue: 'react',
   });
   return (
-    <Field.Group>
-      <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
-      <Field.Root {...cb.getAnchorProps()}>
-        <Field.TextInput {...cb.getInputProps()} />
-        <Field.Icon>
-          <Chevron />
-        </Field.Icon>
-      </Field.Root>
+    <>
+      <Field.Group>
+        <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.TextInput {...cb.getInputProps()} />
+          <Field.Icon>
+            <Chevron />
+          </Field.Icon>
+        </Field.Root>
+      </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
         <OptionList.Root {...cb.getListboxProps()}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </Field.Group>
+    </>
   );
 }
 
@@ -89,21 +92,23 @@ export function ComboboxHighlight() {
   const cb = useCombobox({ options: CITIES, presentation: 'popover' });
   const found = useHighlight({ name: 'docs-combobox-match', query: cb.query });
   return (
-    <Field.Group>
-      <Label.Root htmlFor={cb.ids.input}>City</Label.Root>
-      <Field.Root {...cb.getAnchorProps()}>
-        <Field.TextInput {...cb.getInputProps()} placeholder="Try “san”" />
-        <Field.Icon>
-          <Chevron />
-        </Field.Icon>
-      </Field.Root>
+    <>
+      <Field.Group>
+        <Label.Root htmlFor={cb.ids.input}>City</Label.Root>
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.TextInput {...cb.getInputProps()} placeholder="Try “san”" />
+          <Field.Icon>
+            <Chevron />
+          </Field.Icon>
+        </Field.Root>
+      </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
         {cb.isEmpty ? <Text.Root role="status">No matches</Text.Root> : null}
         <OptionList.Root ref={found.ref} {...cb.getListboxProps()} hidden={cb.isEmpty}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </Field.Group>
+    </>
   );
 }
 
@@ -115,20 +120,22 @@ export function ComboboxMulti() {
     defaultValue: ['design'],
   });
   return (
-    <Field.Group>
-      <Label.Root htmlFor={cb.ids.input}>Type</Label.Root>
-      <Field.Root {...cb.getAnchorProps()}>
-        <Field.ChipInput {...cb.getChipInputProps()} />
-        <Field.Icon>
-          <Chevron />
-        </Field.Icon>
-      </Field.Root>
+    <>
+      <Field.Group>
+        <Label.Root htmlFor={cb.ids.input}>Type</Label.Root>
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.ChipInput {...cb.getChipInputProps()} />
+          <Field.Icon>
+            <Chevron />
+          </Field.Icon>
+        </Field.Root>
+      </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
         <OptionList.Root {...cb.getListboxProps()}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </Field.Group>
+    </>
   );
 }
 
@@ -140,14 +147,16 @@ export function ComboboxSheet() {
   });
   const selected = CITIES.find((city) => city.value === cb.value)?.label ?? 'City';
   return (
-    <Field.Group>
-      <Label.Root htmlFor={cb.ids.trigger}>City</Label.Root>
-      <Button.Root {...cb.getTriggerProps()} variant="secondary">
-        {selected}
-        <Button.Icon>
-          <Chevron />
-        </Button.Icon>
-      </Button.Root>
+    <>
+      <Field.Group>
+        <Label.Root htmlFor={cb.ids.trigger}>City</Label.Root>
+        <Button.Root {...cb.getTriggerProps()} variant="secondary">
+          {selected}
+          <Button.Icon>
+            <Chevron />
+          </Button.Icon>
+        </Button.Root>
+      </Field.Group>
       <BottomSheet.Root {...cb.getSheetProps()}>
         <BottomSheet.Grabber />
         <BottomSheet.Body>
@@ -165,7 +174,7 @@ export function ComboboxSheet() {
           </OptionList.Root>
         </BottomSheet.Body>
       </BottomSheet.Root>
-    </Field.Group>
+    </>
   );
 }
 
@@ -176,7 +185,7 @@ export function ComboboxAuto() {
     presentation: 'auto',
   });
   return (
-    <Field.Group>
+    <Stack.Root>
       <Text.Root size="s" tone="muted">
         presentation: {sheet.presentation}
         {sheet.isSheet ? ' (sheet)' : ' (popover)'}
@@ -201,10 +210,12 @@ export function ComboboxAuto() {
         </>
       ) : (
         <>
-          <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
-          <Field.Root {...cb.getAnchorProps()}>
-            <Field.TextInput {...cb.getInputProps()} />
-          </Field.Root>
+          <Field.Group>
+            <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
+            <Field.Root {...cb.getAnchorProps()}>
+              <Field.TextInput {...cb.getInputProps()} />
+            </Field.Root>
+          </Field.Group>
           <Popover.Root {...cb.getPopoverProps()}>
             <OptionList.Root {...cb.getListboxProps()}>
               {optionNodes(cb.items, cb.getOptionProps)}
@@ -212,7 +223,7 @@ export function ComboboxAuto() {
           </Popover.Root>
         </>
       )}
-    </Field.Group>
+    </Stack.Root>
   );
 }
 
@@ -238,14 +249,16 @@ export function ComboboxAsync() {
     presentation: 'popover',
   });
   return (
-    <Field.Group>
-      <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
-      <Field.Root {...cb.getAnchorProps()}>
-        <Field.TextInput {...cb.getInputProps()} placeholder="Type to load" />
-        <Field.Icon>
-          <Chevron />
-        </Field.Icon>
-      </Field.Root>
+    <>
+      <Field.Group>
+        <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.TextInput {...cb.getInputProps()} placeholder="Type to load" />
+          <Field.Icon>
+            <Chevron />
+          </Field.Icon>
+        </Field.Root>
+      </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
         {cb.loading ? (
           <Text.Root role="status" aria-live="polite">
@@ -264,7 +277,7 @@ export function ComboboxAsync() {
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </Field.Group>
+    </>
   );
 }
 
@@ -274,14 +287,16 @@ export function ComboboxEmpty() {
     presentation: 'popover',
   });
   return (
-    <Field.Group>
-      <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
-      <Field.Root {...cb.getAnchorProps()}>
-        <Field.TextInput {...cb.getInputProps()} />
-        <Field.Icon>
-          <Chevron />
-        </Field.Icon>
-      </Field.Root>
+    <>
+      <Field.Group>
+        <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.TextInput {...cb.getInputProps()} />
+          <Field.Icon>
+            <Chevron />
+          </Field.Icon>
+        </Field.Root>
+      </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
         {cb.isEmpty ? <Text.Root role="status">No matches</Text.Root> : null}
         {/* Keep the listbox mounted: the input's aria-controls points at it. */}
@@ -289,7 +304,7 @@ export function ComboboxEmpty() {
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </Field.Group>
+    </>
   );
 }
 
@@ -311,20 +326,22 @@ export function ComboboxCreate() {
     },
   });
   return (
-    <Field.Group>
-      <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
-      <Field.Root {...cb.getAnchorProps()}>
-        <Field.TextInput {...cb.getInputProps()} />
-        <Field.Icon>
-          <Chevron />
-        </Field.Icon>
-      </Field.Root>
+    <>
+      <Field.Group>
+        <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.TextInput {...cb.getInputProps()} />
+          <Field.Icon>
+            <Chevron />
+          </Field.Icon>
+        </Field.Root>
+      </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
         <OptionList.Root {...cb.getListboxProps()}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </Field.Group>
+    </>
   );
 }
 
@@ -342,20 +359,22 @@ export function ComboboxCreateMulti() {
     },
   });
   return (
-    <Field.Group>
-      <Label.Root htmlFor={cb.ids.input}>Tags</Label.Root>
-      <Field.Root {...cb.getAnchorProps()}>
-        <Field.ChipInput {...cb.getChipInputProps()} />
-        <Field.Icon>
-          <Chevron />
-        </Field.Icon>
-      </Field.Root>
+    <>
+      <Field.Group>
+        <Label.Root htmlFor={cb.ids.input}>Tags</Label.Root>
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.ChipInput {...cb.getChipInputProps()} />
+          <Field.Icon>
+            <Chevron />
+          </Field.Icon>
+        </Field.Root>
+      </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
         <OptionList.Root {...cb.getListboxProps()}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
       </Popover.Root>
-    </Field.Group>
+    </>
   );
 }
 

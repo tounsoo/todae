@@ -316,7 +316,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--todae-field-label-gap);
-    min-inline-size: 0;
   }
 
   /* The gap already spaces the messages, so their own top margins step aside. */
@@ -324,8 +323,8 @@
     margin-block-start: 0;
   }
 
-  /* A message after a message keeps the tighter field.messages.gap. */
-  .group > :is([data-todae-description], [data-todae-error]) + :is([data-todae-description], [data-todae-error]) {
+  /* An ErrorMessage after a Description is field.messages.gap below it, as outside a group. */
+  .group > [data-todae-description] + [data-todae-error] {
     margin-block-start: calc(var(--todae-field-messages-gap) - var(--todae-field-label-gap));
   }
 
