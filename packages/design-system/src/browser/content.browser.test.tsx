@@ -30,6 +30,7 @@ import {
   Stack,
   Table,
   Text,
+  Tree,
   VisuallyHidden,
 } from '../index';
 
@@ -724,7 +725,7 @@ describe('Prose.Root in a browser', () => {
     expect(screen.getByTestId('last').getBoundingClientRect().bottom).toBe(root.bottom);
   });
 
-  it('leaves the indent and item spacing of a list with a class alone', () => {
+  it('leaves the indent and item spacing of a list with a role alone', () => {
     render(
       <Themed>
         <Prose.Root>
@@ -732,11 +733,42 @@ describe('Prose.Root in a browser', () => {
             <li data-testid="a">A</li>
             <li data-testid="b">B</li>
           </Stack.Root>
+          <Tree.Root aria-label="Files">
+            <Tree.Item value="a" data-testid="tree-a">
+              <Tree.Label>A</Tree.Label>
+            </Tree.Item>
+            <Tree.Item value="b" data-testid="tree-b">
+              <Tree.Label>B</Tree.Label>
+            </Tree.Item>
+          </Tree.Root>
         </Prose.Root>
       </Themed>,
     );
-    expect(style('stack').paddingInlineStart).toBe('0px');
     expect(style('b').marginBlockStart).toBe('0px');
     expect(screen.getByTestId('b').getBoundingClientRect().top).toBe(screen.getByTestId('a').getBoundingClientRect().top);
+    expect(style('tree-b').marginBlockStart).toBe('0px');
+  });
+
+  it('styles markdown lists that carry a class, such as GFM task lists', () => {
+    render(
+      <Themed>
+        <Prose.Root>
+          <ul className="contains-task-list" data-testid="tasks">
+            <li className="task-list-item">One</li>
+            <li className="task-list-item" data-testid="task-2">
+              Two
+            </li>
+          </ul>
+          <ol className="" data-testid="empty-class">
+            <li>One</li>
+            <li data-testid="empty-2">Two</li>
+          </ol>
+        </Prose.Root>
+      </Themed>,
+    );
+    expect(style('tasks').paddingInlineStart).toBe('24px');
+    expect(style('task-2').marginBlockStart).toBe('8px');
+    expect(style('empty-class').paddingInlineStart).toBe('24px');
+    expect(style('empty-2').marginBlockStart).toBe('8px');
   });
 });

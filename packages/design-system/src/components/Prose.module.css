@@ -12,10 +12,11 @@
   /* Rhythm. Every child but the first sits prose.gap below the one before
      it, a heading further below, and what follows a heading closer to it. The
      first child and the last touch the edges, so a card or message holds it
-     evenly. These selectors weigh more than a component's own class, so a
-     child with margins of its own, such as Code.Block or Separator.Root, or
-     one that resets them, such as Text.Root, is spaced the same way; the
-     heading rules weigh the same as each other, so the later one wins. */
+     evenly. These rules sit in todae.components and weigh more than one
+     class, so they also space a child with margins of its own, such as
+     Code.Block or Separator.Root from the native sublayer, or one that
+     resets them, such as Text.Root. The heading rules weigh the same as
+     each other, so the later one wins. */
   .root > :nth-child(n) {
     margin-block-end: 0;
   }
@@ -45,7 +46,7 @@
       margin-block-end: 0;
     }
 
-    :is(h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote):first-child {
+    :is(h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote):where(:first-child) {
       margin-block-start: 0;
     }
 
@@ -80,13 +81,14 @@
       font-size: var(--todae-prose-h6-size);
     }
 
-    /* Markdown's lists carry no class. A list with one, such as
-       Stack.Root as="ul" or Tree.Root, keeps its own layout. */
-    :is(ul, ol):not([class]) {
+    /* Markdown puts no role on a list. A list with one, such as
+       Stack.Root as="ul" or Tree.Root, keeps its own indent and the space
+       between its items. :where keeps these at element weight. */
+    :is(ul, ol):where(:not([role])) {
       padding-inline-start: var(--todae-prose-list-indent);
     }
 
-    :is(ul, ol):not([class]) > li + li,
+    :is(ul, ol):where(:not([role])) > li + li,
     li > * + * {
       margin-block-start: var(--todae-prose-list-item-gap);
     }

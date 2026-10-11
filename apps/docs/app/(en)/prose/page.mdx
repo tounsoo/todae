@@ -28,7 +28,7 @@ These gaps and `prose.list.item-gap` read density tokens, so they follow `data-d
 
 ## Where the styles stop
 
-`Prose.Root` styles `h1` to `h6`, `p`, `ul`, `ol`, `li` and `blockquote` when every element between them and the root is one of these. Any other element, such as a `div`, `table` or `pre`, is where its styles stop: it is still spaced as a child, but what it holds keeps its own type. A list with a class, such as `Stack.Root as="ul"`, keeps its own indent and the space between its items.
+`Prose.Root` styles `h1` to `h6`, `p`, `ul`, `ol`, `li` and `blockquote` when every element between them and the root is one of these. Any other element, such as a `div`, `table` or `pre`, is where its styles stop: it is still spaced as a child, but what it holds keeps its own type. A list with a `role`, such as `Stack.Root as="ul"` or `Tree.Root`, keeps its own indent and the space between its items.
 
 A class on one of those elements wins over the type `Prose.Root` sets, so `<Text.Root as="h2" size="s">` inside it keeps its small size.
 
