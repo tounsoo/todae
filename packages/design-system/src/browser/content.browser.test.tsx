@@ -27,6 +27,7 @@ import {
   Skeleton,
   Slider,
   Spinner,
+  Stack,
   Table,
   Text,
   VisuallyHidden,
@@ -700,5 +701,42 @@ describe('Prose.Root in a browser', () => {
     // Text.Root resets its own margin, and the rhythm still spaces it.
     expect(style('text').marginBlockStart).toBe('32px');
     expect(style('text-p').marginBlockStart).toBe('12px');
+  });
+  it('replaces the margins of a component child, so the first and last children touch the edges', () => {
+    render(
+      <main data-appearance="light" data-density="compact">
+        <Prose.Root data-testid="root">
+          <Code.Block data-testid="first">code</Code.Block>
+          <p data-testid="after-code">Text</p>
+          <Separator.Root data-testid="rule" />
+          <Code.Block data-testid="last">code</Code.Block>
+        </Prose.Root>
+      </main>,
+    );
+    // Compact density: prose.gap is 12px.
+    expect(style('first').marginBlockStart).toBe('0px');
+    expect(style('after-code').marginBlockStart).toBe('12px');
+    expect(style('rule').marginBlockStart).toBe('12px');
+    expect(style('rule').marginBlockEnd).toBe('0px');
+    expect(style('last').marginBlockEnd).toBe('0px');
+    const root = screen.getByTestId('root').getBoundingClientRect();
+    expect(screen.getByTestId('first').getBoundingClientRect().top).toBe(root.top);
+    expect(screen.getByTestId('last').getBoundingClientRect().bottom).toBe(root.bottom);
+  });
+
+  it('leaves the indent and item spacing of a list with a class alone', () => {
+    render(
+      <Themed>
+        <Prose.Root>
+          <Stack.Root as="ul" direction="row" data-testid="stack">
+            <li data-testid="a">A</li>
+            <li data-testid="b">B</li>
+          </Stack.Root>
+        </Prose.Root>
+      </Themed>,
+    );
+    expect(style('stack').paddingInlineStart).toBe('0px');
+    expect(style('b').marginBlockStart).toBe('0px');
+    expect(screen.getByTestId('b').getBoundingClientRect().top).toBe(screen.getByTestId('a').getBoundingClientRect().top);
   });
 });

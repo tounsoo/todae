@@ -22,13 +22,13 @@ Server Components can import it from `@omsoo/todae/prose`. The MDX pages of this
 
 ## Spacing
 
-Each child sits `prose.gap` below the one before it, including a component that resets its own margin, such as `Text.Root`. A heading sits `prose.heading.space-before` below what comes before it, and whatever follows a heading sits `prose.heading.space-after` below it. The first child and the last touch the edges of `Prose.Root`, so a card or a message bubble holds it with even padding.
+Each child sits `prose.gap` below the one before it. A heading sits `prose.heading.space-before` below anything but a heading, and whatever follows a heading, another heading included, sits `prose.heading.space-after` below it. The first child and the last touch the edges of `Prose.Root`, so a card or a message bubble holds it with even padding. These spaces replace the margins of a Todae component that is a child, such as `Code.Block`, `Separator.Root` or `Text.Root`.
 
 These gaps and `prose.list.item-gap` read density tokens, so they follow `data-density` as `Stack.Root` does.
 
 ## Where the styles stop
 
-`Prose.Root` styles `h1` to `h6`, `p`, `ul`, `ol`, `li` and `blockquote` when every element between them and the root is one of these. Any other element, such as a `div`, `table`, `pre` or a component's root, is where its styles stop: it is still spaced as a child, but what it holds keeps its own type.
+`Prose.Root` styles `h1` to `h6`, `p`, `ul`, `ol`, `li` and `blockquote` when every element between them and the root is one of these. Any other element, such as a `div`, `table` or `pre`, is where its styles stop: it is still spaced as a child, but what it holds keeps its own type. A list with a class, such as `Stack.Root as="ul"`, keeps its own indent and the space between its items.
 
 A class on one of those elements wins over the type `Prose.Root` sets, so `<Text.Root as="h2" size="s">` inside it keeps its small size.
 

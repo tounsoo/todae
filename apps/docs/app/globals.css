@@ -319,16 +319,12 @@ main:focus {
   max-inline-size: 46rem;
 }
 
-/* Prose.Root sets the type and rhythm of every MDX page. The docs give it a
-   larger title, a lede, a rule over each section and roomier lines, through
-   its tokens where one exists. */
-.docs-prose {
-  --todae-prose-leading: 1.7;
-  --todae-prose-h1-size: clamp(2rem, 1.6rem + 1.5vw, 2.5rem);
-  --todae-prose-h3-size: 1.125rem;
-}
-
+/* Prose.Root sets the type and rhythm of every MDX page and the 404. The
+   docs give it a larger title, a lede, a rule over each section and roomier
+   lines. These rules reach only the page's own top-level elements, not the
+   demos, which show Todae's defaults. */
 .docs-prose > h1 {
+  font-size: clamp(2rem, 1.6rem + 1.5vw, 2.5rem);
   line-height: 1.15;
   letter-spacing: -0.03em;
 }
@@ -347,6 +343,7 @@ main:focus {
 }
 
 .docs-prose > h3 {
+  font-size: 1.125rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -360,7 +357,14 @@ main:focus {
 }
 
 .docs-prose > :is(p, ul, ol) {
+  line-height: 1.7;
   text-wrap: pretty;
+}
+
+/* Prose.Root breaks long words only where nothing else fits; Korean keeps the
+   site's own rule. */
+:root:lang(ko) .docs-prose {
+  overflow-wrap: anywhere;
 }
 
 .untranslated-notice {

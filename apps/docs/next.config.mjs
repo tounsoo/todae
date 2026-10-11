@@ -17,7 +17,9 @@ const nextConfig = {
   env: { DOCS_ORIGIN: PRODUCTION_HOST ? `https://${PRODUCTION_HOST}` : '' },
   // Each locale has its own root layout (app/(en), app/ko), so a 404 needs a page with its own <html>.
   // Lightning CSS compiles Todae's CSS Modules: Next's default compiler leaves the class in
-  // Prose.module.css's @scope rule unrenamed. It lowers CSS for the browsers in package.json's browserslist.
+  // Prose.module.css's @scope rule unrenamed. It lowers CSS for the browsers in package.json's browserslist,
+  // which reaches back to Safari 18 so Lightning keeps -webkit-box-decoration-break: Safari still ships
+  // only the prefixed form, and Lightning drops the prefix for newer Safari.
   experimental: { globalNotFound: true, useLightningcss: true },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   outputFileTracingIncludes: {

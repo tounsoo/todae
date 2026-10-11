@@ -1,6 +1,6 @@
 /* cssmodules-pure-no-check */
-/* The @scope rules below select bare elements, which CSS Modules in pure mode
-   (the docs site's Next.js build compiles this source) would reject. */
+/* The @scope rules below select bare elements, which a CSS Modules compiler in
+   pure mode would reject. */
 @layer todae.components {
   .root {
     color: var(--todae-prose-fg);
@@ -12,9 +12,18 @@
   /* Rhythm. Every child but the first sits prose.gap below the one before
      it, a heading further below, and what follows a heading closer to it. The
      first child and the last touch the edges, so a card or message holds it
-     evenly. :nth-child(n + 2) weighs more than a component's own class, so a
-     child that resets its margin, such as Text.Root, is still spaced; the
+     evenly. These selectors weigh more than a component's own class, so a
+     child with margins of its own, such as Code.Block or Separator.Root, or
+     one that resets them, such as Text.Root, is spaced the same way; the
      heading rules weigh the same as each other, so the later one wins. */
+  .root > :nth-child(n) {
+    margin-block-end: 0;
+  }
+
+  .root > :first-child {
+    margin-block-start: 0;
+  }
+
   .root > :nth-child(n + 2) {
     margin-block-start: var(--todae-prose-gap);
   }
@@ -71,11 +80,13 @@
       font-size: var(--todae-prose-h6-size);
     }
 
-    :is(ul, ol) {
+    /* Markdown's lists carry no class. A list with one, such as
+       Stack.Root as="ul" or Tree.Root, keeps its own layout. */
+    :is(ul, ol):not([class]) {
       padding-inline-start: var(--todae-prose-list-indent);
     }
 
-    li + li,
+    :is(ul, ol):not([class]) > li + li,
     li > * + * {
       margin-block-start: var(--todae-prose-list-item-gap);
     }
