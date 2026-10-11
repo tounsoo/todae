@@ -61,6 +61,10 @@
       "types": "./dist/server/separator.d.ts",
       "import": "./dist/separator.js"
     },
+    "./prose": {
+      "types": "./dist/server/prose.d.ts",
+      "import": "./dist/prose.js"
+    },
     "./table": {
       "types": "./dist/server/table.d.ts",
       "import": "./dist/table.js"

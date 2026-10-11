@@ -19,6 +19,7 @@ const entries = {
   link: src('server/link.ts'),
   disclosure: src('server/disclosure.ts'),
   separator: src('server/separator.ts'),
+  prose: src('server/prose.ts'),
   table: src('server/table.ts'),
   progress: src('server/progress.ts'),
   meter: src('server/meter.ts'),

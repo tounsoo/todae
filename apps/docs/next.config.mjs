@@ -16,7 +16,9 @@ const PRODUCTION_HOST = process.env.VERCEL_PROJECT_PRODUCTION_URL;
 const nextConfig = {
   env: { DOCS_ORIGIN: PRODUCTION_HOST ? `https://${PRODUCTION_HOST}` : '' },
   // Each locale has its own root layout (app/(en), app/ko), so a 404 needs a page with its own <html>.
-  experimental: { globalNotFound: true },
+  // Lightning CSS compiles Todae's CSS Modules: Next's default compiler leaves the class in
+  // Prose.module.css's @scope rule unrenamed. It lowers CSS for the browsers in package.json's browserslist.
+  experimental: { globalNotFound: true, useLightningcss: true },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   outputFileTracingIncludes: {
     // The MCP reads English pages only.

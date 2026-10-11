@@ -9,6 +9,12 @@
       "gap-condensed": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
       "gap-spacious": { "$type": "dimension", "$value": { "$ref": "#/space/8/$value" } }
     },
+    "prose": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/5/$value" } },
+      "heading-before": { "$type": "dimension", "$value": { "$ref": "#/space/10/$value" } },
+      "heading-after": { "$type": "dimension", "$value": { "$ref": "#/space/4/$value" } },
+      "item-gap": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } }
+    },
     "inline": {
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } }
     },

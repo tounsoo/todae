@@ -2100,6 +2100,11 @@
       ]
     },
     {
+      "name": "Prose.Root",
+      "description": "A div that styles the headings, paragraphs, lists and block quotes of rendered markdown inside it, and spaces its children. An element of any other kind, such as a div, table or pre, stops the styles from reaching what it holds; takes native div attributes.",
+      "props": []
+    },
+    {
       "name": "RadioGroup.Item",
       "description": "One option in a RadioGroup. No checked, name, or invalid. Children are the visible label.",
       "props": [

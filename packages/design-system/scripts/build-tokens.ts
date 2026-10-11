@@ -18,6 +18,7 @@ export const RESERVED_ROOTS = [
   'button',
   'stack',
   'text',
+  'prose',
   'field',
   'chip',
   'overlay',

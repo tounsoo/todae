@@ -1,0 +1,83 @@
+import { ProseArticle } from '../../../components/demos/ProseDemo';
+
+# Prose
+
+`Prose.Root`는 렌더링된 마크다운이나 MDX의 글자와 간격을 정하는 `div`입니다. 제목, 문단, 목록, 인용문을 `prose` contract 토큰으로 그립니다. 문서 페이지나 글, 채팅 메시지의 본문을 감싸세요.
+
+<Example block>
+  <ProseArticle />
+</Example>
+
+```tsx
+<Prose.Root>
+  <h2>Release notes</h2>
+  <p>This release adds a prose token group.</p>
+  <ul>
+    <li>Headings take their size from the prose tokens.</li>
+  </ul>
+</Prose.Root>
+```
+
+Server Component에서는 `@omsoo/todae/prose`에서 가져올 수 있습니다. 이 사이트의 MDX 페이지는 모두 이것으로 조판합니다.
+
+## 간격
+
+각 자식은 앞의 자식에서 `prose.gap`만큼 아래에 놓입니다. 자기 여백을 초기화하는 컴포넌트(`Text.Root` 등)도 마찬가지입니다. 제목은 앞의 요소에서 `prose.heading.space-before`만큼, 제목 다음에 오는 요소는 제목에서 `prose.heading.space-after`만큼 아래에 놓입니다. 첫 자식과 마지막 자식은 `Prose.Root`의 가장자리에 붙으므로, 카드나 메시지 말풍선이 고른 안쪽 여백으로 감쌀 수 있습니다.
+
+이 간격들과 `prose.list.item-gap`은 density 토큰을 읽으므로, `Stack.Root`처럼 `data-density`를 따릅니다.
+
+## 스타일이 멈추는 곳
+
+`Prose.Root`는 루트와의 사이에 있는 요소가 모두 `h1`~`h6`, `p`, `ul`, `ol`, `li`, `blockquote`일 때 이 요소들을 스타일합니다. `div`, `table`, `pre`, 컴포넌트의 루트처럼 다른 종류의 요소에서 스타일이 멈춥니다. 그 요소도 자식으로서 간격은 받지만, 그 안의 내용은 자기 글자 스타일을 유지합니다.
+
+이 요소에 붙은 클래스는 `Prose.Root`가 정하는 글자 스타일보다 우선합니다. 그래서 그 안의 `<Text.Root as="h2" size="s">`는 작은 크기를 유지합니다.
+
+## 마크다운을 Todae에 연결하기
+
+`Prose.Root`는 블록 텍스트를 스타일합니다. 인라인 코드, 코드 블록, 링크, 구분선, 표는 Todae 컴포넌트가 그리며, 이 컴포넌트들을 마크다운 렌더러에 넘깁니다. MDX에서는 이렇게 합니다.
+
+```tsx
+const components = {
+  // MDX passes its wrapper a `components` prop, so don't spread the props onto the div.
+  wrapper: ({ children }) => <Prose.Root>{children}</Prose.Root>,
+  a: Link.Root,
+  code: Code.Root,
+  pre: Code.Block,
+  hr: Separator.Root,
+  kbd: Kbd.Root,
+  table: Table.Root,
+  thead: Table.Head,
+  tbody: Table.Body,
+  tr: Table.Row,
+  th: Table.HeaderCell,
+  td: Table.Cell,
+};
+```
+
+`Prose.Root`는 글꼴과 페이지 배경을 정하지 않습니다. Todae는 둘 다 제품에 맡깁니다. Todae 토큰으로 정하려면 이렇게 합니다.
+
+```css
+:root {
+  font-family: var(--todae-text-font-family);
+  color: var(--todae-color-fg-default);
+  background: var(--todae-color-bg-canvas);
+}
+```
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 스타일만 맡습니다. 모든 요소가 자기 역할을 유지하므로 제목은 페이지 개요에 그대로 남습니다.
+
+**직접 제공할 것:** 페이지 개요에 맞는 제목 수준. 페이지 안의 채팅 메시지나 카드는 보통 페이지 자체의 제목보다 낮은 수준에서 시작하므로, 렌더러에서 마크다운의 최상위 제목을 `h3` 이하로 연결하세요.
+
+**주의할 점:** 크기 때문에 고른 제목 수준. 수준은 개요에 맞춰 고르고, 크기는 `prose` 토큰으로 바꾸세요. 들여쓰기만을 위한 인용문.
+
+## 언제 쓰나요
+
+**쓸 때:** 요소를 하나씩 컴포넌트로 쓰지 않고 마크다운이나 MDX로 렌더링하는 텍스트. 문서 페이지, 글, 도움말, 채팅 메시지 등.
+
+**쓰지 않을 때:** 직접 작성하는 인터페이스 텍스트 → [Text](/text)와 [Stack](/stack). 따로 있는 코드 블록이나 표 → [Code](/code) 또는 [Table](/table).
+
+## Props
+
+<PropsTable name="Prose.Root" />

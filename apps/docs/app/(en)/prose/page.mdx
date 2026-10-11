@@ -1,0 +1,83 @@
+import { ProseArticle } from '../../../components/demos/ProseDemo';
+
+# Prose
+
+`Prose.Root` is a `div` that sets the type and spacing of rendered markdown or MDX: headings, paragraphs, lists and block quotes, drawn from the `prose` contract tokens. Wrap a docs page or an article in it, or the text of a chat message.
+
+<Example block>
+  <ProseArticle />
+</Example>
+
+```tsx
+<Prose.Root>
+  <h2>Release notes</h2>
+  <p>This release adds a prose token group.</p>
+  <ul>
+    <li>Headings take their size from the prose tokens.</li>
+  </ul>
+</Prose.Root>
+```
+
+Server Components can import it from `@omsoo/todae/prose`. The MDX pages of this site are set in it.
+
+## Spacing
+
+Each child sits `prose.gap` below the one before it, including a component that resets its own margin, such as `Text.Root`. A heading sits `prose.heading.space-before` below what comes before it, and whatever follows a heading sits `prose.heading.space-after` below it. The first child and the last touch the edges of `Prose.Root`, so a card or a message bubble holds it with even padding.
+
+These gaps and `prose.list.item-gap` read density tokens, so they follow `data-density` as `Stack.Root` does.
+
+## Where the styles stop
+
+`Prose.Root` styles `h1` to `h6`, `p`, `ul`, `ol`, `li` and `blockquote` when every element between them and the root is one of these. Any other element, such as a `div`, `table`, `pre` or a component's root, is where its styles stop: it is still spaced as a child, but what it holds keeps its own type.
+
+A class on one of those elements wins over the type `Prose.Root` sets, so `<Text.Root as="h2" size="s">` inside it keeps its small size.
+
+## Map markdown onto Todae
+
+`Prose.Root` styles block text. Inline code, code blocks, links, rules and tables come from Todae's own components, which you hand to your markdown renderer. With MDX:
+
+```tsx
+const components = {
+  // MDX passes its wrapper a `components` prop, so don't spread the props onto the div.
+  wrapper: ({ children }) => <Prose.Root>{children}</Prose.Root>,
+  a: Link.Root,
+  code: Code.Root,
+  pre: Code.Block,
+  hr: Separator.Root,
+  kbd: Kbd.Root,
+  table: Table.Root,
+  thead: Table.Head,
+  tbody: Table.Body,
+  tr: Table.Row,
+  th: Table.HeaderCell,
+  td: Table.Cell,
+};
+```
+
+`Prose.Root` sets no typeface and no page background; Todae leaves both to the product. To set them from Todae's tokens:
+
+```css
+:root {
+  font-family: var(--todae-text-font-family);
+  color: var(--todae-color-fg-default);
+  background: var(--todae-color-bg-canvas);
+}
+```
+
+## Accessible composition
+
+**Todae handles:** Style only. Every element keeps its own role, so headings stay in the page outline.
+
+**You supply:** Heading levels that fit the page outline. A chat message or a card inside a page usually starts below the page's own headings, so map the markdown's top level onto `h3` or lower in your renderer.
+
+**Watch for:** A heading level picked for its size; pick the level for the outline and change the size through the `prose` tokens. A block quote used only to indent text.
+
+## When to use
+
+**When:** Text you render from markdown or MDX, where you don't write each element as a component: docs pages, articles, help text, chat messages.
+
+**When not:** Interface text you write yourself → [Text](/text) and [Stack](/stack). A code block or a table on its own → [Code](/code) or [Table](/table).
+
+## Props
+
+<PropsTable name="Prose.Root" />

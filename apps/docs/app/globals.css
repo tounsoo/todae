@@ -319,69 +319,48 @@ main:focus {
   max-inline-size: 46rem;
 }
 
-/* Prose: only the page's own top-level elements, so demos and Todae's
-   components keep their own type. */
-:where(main, main > div[lang]) > h1 {
-  margin: 0 0 1rem;
-  font-size: clamp(2rem, 1.6rem + 1.5vw, 2.5rem);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  text-wrap: balance;
+/* Prose.Root sets the type and rhythm of every MDX page. The docs give it a
+   larger title, a lede, a rule over each section and roomier lines, through
+   its tokens where one exists. */
+.docs-prose {
+  --todae-prose-leading: 1.7;
+  --todae-prose-h1-size: clamp(2rem, 1.6rem + 1.5vw, 2.5rem);
+  --todae-prose-h3-size: 1.125rem;
 }
 
-:where(main, main > div[lang]) > h1 + p {
+.docs-prose > h1 {
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.docs-prose > h1 + p {
   color: var(--todae-color-fg-muted);
   font-size: 1.125rem;
 }
 
-:where(main, main > div[lang]) > h2 {
-  margin: 3rem 0 0.75rem;
+.docs-prose > h2 {
+  margin-block-start: 3rem;
   padding-block-start: 2rem;
   border-block-start: 1px solid var(--docs-line);
-  font-size: 1.5rem;
   font-weight: 650;
-  line-height: 1.25;
   letter-spacing: -0.02em;
 }
 
-:where(main, main > div[lang]) > h3 {
-  margin: 2rem 0 0.5rem;
-  font-size: 1.125rem;
+.docs-prose > h3 {
   font-weight: 600;
-  line-height: 1.35;
   letter-spacing: -0.01em;
 }
 
-:where(main, main > div[lang]) > h4 {
-  margin: 1.5rem 0 0.5rem;
-  font-size: 1rem;
+.docs-prose > h4 {
   font-weight: 600;
 }
 
-:where(main, main > div[lang]) > :is(h1, h2, h3, h4) {
+.docs-prose > :is(h1, h2, h3, h4) {
   scroll-margin-block-start: calc(var(--docs-topbar) + 1.5rem);
 }
 
-:where(main, main > div[lang]) > :is(p, ul, ol) {
-  margin-block: 0.875rem;
-  line-height: 1.7;
+.docs-prose > :is(p, ul, ol) {
   text-wrap: pretty;
-}
-
-:where(main, main > div[lang]) > :is(ul, ol) {
-  padding-inline-start: 1.25rem;
-}
-
-:where(main, main > div[lang]) > :is(ul, ol) > li + li {
-  margin-block-start: 0.375rem;
-}
-
-:where(main, main > div[lang]) > blockquote {
-  margin: 1.25rem 0;
-  padding: 0.25rem 0 0.25rem 1rem;
-  border-inline-start: 3px solid var(--todae-color-border-default);
-  color: var(--todae-color-fg-muted);
 }
 
 .untranslated-notice {
