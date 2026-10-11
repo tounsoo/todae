@@ -564,16 +564,17 @@ function Select({ value, onChange, onValueChange, className, children, ...props 
 }
 
 export type FieldColorInputProps = {
-  /** A color as `#rrggbb`, the only form a color input takes. */
+  /** A color as `#rrggbb`. */
   value: string;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
   onValueChange?: (value: string) => void;
   ref?: Ref<HTMLInputElement>;
-} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'type' | 'disabled' | 'onChange'>;
+  // `readonly` has no effect on a color input.
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'type' | 'disabled' | 'onChange' | 'readOnly'>;
 
 /**
  * A native color input drawn as a swatch the height of a line of field text.
- * The browser's own picker opens from it, or from a press anywhere else in the
+ * The browser's own picker opens from it, or from a press elsewhere in the
  * field. Put the value beside it as text with Field.Affix.
  */
 function ColorInput({ value, onChange, onValueChange, className, ...props }: FieldColorInputProps) {

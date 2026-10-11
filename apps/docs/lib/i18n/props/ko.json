@@ -659,8 +659,8 @@
   },
   "Field.ColorInput": {
     "value": {
-      "en": "Controlled value as #rrggbb, the only form a color input takes.",
-      "ko": "#rrggbb 형식의 제어 값. 색상 입력이 받는 유일한 형식입니다."
+      "en": "Controlled value as #rrggbb.",
+      "ko": "#rrggbb 형식의 제어 값."
     },
     "onChange": {
       "en": "Native change handler. Optional when onValueChange is enough.",

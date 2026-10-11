@@ -177,7 +177,6 @@ function BottomSheetBody({ className, ref, onFocus, ...props }: ComponentPropsWi
       {...props}
       ref={refs}
       className={cx(styles.body, className)}
-      // Focus scrolls only a control's own box into view; its ring can be on an ancestor, such as a Field shell.
       onFocus={composeHandlers(onFocus, (event: FocusEvent<HTMLDivElement>) => {
         if (event.target !== event.currentTarget) revealRing(event.currentTarget, event.target);
       })}

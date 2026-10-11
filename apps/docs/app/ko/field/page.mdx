@@ -33,7 +33,7 @@ import {
 
 # Field
 
-공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
+공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorInput`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
 
 <Example block>
   <FieldStates />
@@ -265,7 +265,7 @@ compact, comfortable, spacious에서의 같은 작성기.
 
 ## Color
 
-`Field.ColorInput`은 네이티브 `<input type="color">`이며, 필드 한 줄 높이의 색 견본으로 그려집니다. 값은 항상 `#rrggbb`입니다. 필드 어디를 눌러도 브라우저의 선택 창이 열립니다. 값을 텍스트로 보이려면 뒤에 `Field.Affix`를 두세요. 혼자 있으면 필드 너비는 견본 너비와 같습니다.
+`Field.ColorInput`은 네이티브 `<input type="color">`이며, 필드 한 줄 높이의 색 견본으로 그려집니다. 값은 `#rrggbb` 문자열입니다. 필드의 다른 곳을 눌러도 브라우저의 선택 창이 열립니다. 값을 텍스트로 보이려면 뒤에 `Field.Affix`를 두세요. 혼자 있으면 필드 너비는 견본 너비와 같습니다.
 
 ```tsx
 <Label.Root htmlFor={id}>Accent</Label.Root>

@@ -11,6 +11,14 @@
     font-size: var(--todae-field-font-size);
   }
 
+  /* The ring is on the shell, around the control. Focus scrolls the control
+     into view with room for the shell and its ring, so a scroll container
+     never cuts the ring. */
+  .shell :is(input, textarea, select, [data-todae-field-control]) {
+    --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset) + var(--todae-field-border-width));
+    scroll-margin: calc(var(--todae-field-padding-y) + var(--_ring-room)) calc(var(--todae-field-padding-x) + var(--_ring-room));
+  }
+
   .shell:hover:not([data-disabled]) {
     border-color: var(--todae-field-border-hover);
   }
@@ -442,8 +450,12 @@
     border-radius: calc(var(--todae-field-swatch-radius) - var(--todae-field-border-width));
   }
 
-  .shell:has(> .color) {
+  .shell:not([data-disabled]):has(> .color) {
     cursor: pointer;
+  }
+
+  .color:disabled {
+    cursor: not-allowed;
   }
 
   /* With nothing beside it, the field is as wide as the swatch. */

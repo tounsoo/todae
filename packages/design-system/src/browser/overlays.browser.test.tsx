@@ -203,6 +203,24 @@ describe('BottomSheet in a browser', () => {
     expect(shell.getBoundingClientRect().bottom + room).toBeLessThanOrEqual(port.top + body.clientTop + body.clientHeight + 0.5);
   });
 
+  it('leaves its body where it is for focus that asks for no scroll', async () => {
+    render(
+      <Themed>
+        <BottomSheet.Root open onOpenChange={() => undefined}>
+          <BottomSheet.Title>Filter</BottomSheet.Title>
+          <BottomSheet.Body data-testid="body" style={{ maxBlockSize: 120 }}>
+            <div style={{ blockSize: 400 }} />
+            <button type="button">Far</button>
+          </BottomSheet.Body>
+        </BottomSheet.Root>
+      </Themed>,
+    );
+    await waitFor(() => expect(sheet().matches(':modal')).toBe(true));
+    const body = screen.getByTestId('body');
+    screen.getByRole('button', { name: 'Far' }).focus({ preventScroll: true });
+    expect(body.scrollTop).toBe(0);
+  });
+
   it('leaves room in its scrolling body for the focus ring of a control at its edge', async () => {
     render(
       <Themed>

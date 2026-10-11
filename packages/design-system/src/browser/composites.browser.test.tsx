@@ -328,5 +328,7 @@ describe('Field.ColorInput in a browser', () => {
     const inset = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + parseFloat(style.borderLeftWidth) * 2;
     expect(shell.getBoundingClientRect().width).toBeCloseTo(input.getBoundingClientRect().width + inset, 0);
     expect(input.disabled).toBe(true);
+    expect(style.cursor).toBe('not-allowed');
+    expect(getComputedStyle(input).cursor).toBe('not-allowed');
   });
 });
