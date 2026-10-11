@@ -415,67 +415,39 @@ main:focus {
   align-items: stretch;
 }
 
+/* Code blocks and tables scroll sideways in a ScrollArea.Root, which draws its
+   focus ring inside its own edge and keeps the rings of what it holds whole. */
 .docs-pre {
-  max-width: 100%;
-  padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
   margin-block: 1rem;
-  margin-inline: calc((var(--todae-focus-ring-width) + var(--todae-focus-ring-offset)) * -1);
-  border-radius: calc(var(--todae-radius-lg) + var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
-}
-
-.docs-pre:has(pre:focus-visible) {
-  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
-  outline-offset: calc(var(--todae-focus-ring-offset) * -1);
+  border: 1px solid var(--docs-line);
+  border-radius: var(--todae-radius-lg);
+  background: var(--docs-raised);
 }
 
 .docs-pre pre {
   margin: 0;
-  max-width: 100%;
-  overflow-x: auto;
+  /* The scroll area around it scrolls, not the block. */
+  overflow: visible;
   padding: 1rem 1.25rem;
-  border: 1px solid var(--docs-line);
-  border-radius: var(--todae-radius-lg);
-  background: var(--docs-raised);
+  background: none;
   font-size: 0.8125rem;
   line-height: 1.7;
 }
 
-.docs-pre pre:focus-visible {
-  outline: none;
-}
-
 .scroll-x {
-  max-width: 100%;
-  padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
   margin-block: 1.25rem;
-  margin-inline: calc((var(--todae-focus-ring-width) + var(--todae-focus-ring-offset)) * -1);
-}
-
-.scroll-x:has(.scroll-x-body:focus-visible) {
-  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
-  outline-offset: calc(var(--todae-focus-ring-offset) * -1);
-  border-radius: var(--todae-radius-lg);
-}
-
-.scroll-x-body {
-  max-width: 100%;
-  overflow-x: auto;
   border: 1px solid var(--docs-line);
   border-radius: var(--todae-radius-lg);
 }
 
-.scroll-x-body:focus-visible {
-  outline: none;
-}
-
 /* Table.Root styles the table; the docs frame it and tighten the type. */
-.scroll-x-body > table {
+.scroll-x table {
   inline-size: 100%;
   margin: 0;
   font-size: 0.875rem;
 }
 
-.scroll-x-body > table > caption {
+.scroll-x caption {
   padding: 0.75rem 1rem 0;
   text-align: start;
   font-weight: 600;

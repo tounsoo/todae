@@ -4,7 +4,7 @@ import { Badge, Code, Table } from '@omsoo/todae';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { useLocale } from '../lib/i18n/useLocale';
-import { ScrollRegion } from './OverflowRegion';
+import { ScrollRegion } from './ScrollRegion';
 import type { PropRow } from './PropsTable';
 
 export type PropDescription = { text: string; lang: Locale };

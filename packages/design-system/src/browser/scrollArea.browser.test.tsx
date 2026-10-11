@@ -90,6 +90,49 @@ describe('ScrollArea.Root', () => {
     expect(area.scrollLeft).toBeGreaterThan(0);
   });
 
+  it('wraps text to its width sideways, and scrolls only what cannot wrap', () => {
+    render(
+      <div style={{ width: 200 }}>
+        <ScrollArea.Root data-testid="text" axis="inline">
+          <p style={{ margin: 0 }}>A sentence long enough to need several lines at this width, which it should wrap onto.</p>
+        </ScrollArea.Root>
+        <ScrollArea.Root data-testid="code" axis="inline" aria-label="Code">
+          <pre style={{ margin: 0 }}>a line of code that does not wrap and runs past the edge</pre>
+        </ScrollArea.Root>
+      </div>,
+    );
+    const text = screen.getByTestId('text');
+    expect(text.scrollWidth).toBe(text.clientWidth);
+    const code = screen.getByTestId('code');
+    expect(code.scrollWidth).toBeGreaterThan(code.clientWidth);
+    // The ring room stays after the end of the line.
+    code.scrollLeft = code.scrollWidth;
+    const pre = code.querySelector('pre')!;
+    const room = Number.parseFloat(getComputedStyle(code).scrollPaddingLeft);
+    expect(code.getBoundingClientRect().right - pre.getBoundingClientRect().right).toBeCloseTo(room, 0);
+  });
+
+  it('shrinks a row of items as a plain scrolling div does', () => {
+    const cards = (testid: string) =>
+      Array.from({ length: 6 }, (_, i) => (
+        <div key={i} data-testid={testid}>
+          Card title number {i + 1}
+        </div>
+      ));
+    render(
+      <div style={{ width: 300 }}>
+        <ScrollArea.Root axis="inline" aria-label="Cards">
+          <div style={{ display: 'flex', gap: 8 }}>{cards('area')}</div>
+        </ScrollArea.Root>
+        <div style={{ overflowX: 'auto' }}>
+          <div style={{ display: 'flex', gap: 8 }}>{cards('plain')}</div>
+        </div>
+      </div>,
+    );
+    const width = (id: string) => screen.getAllByTestId(id)[0]!.getBoundingClientRect().width;
+    expect(width('area')).toBeCloseTo(width('plain'), 0);
+  });
+
   it('reveals a ring drawn on an ancestor, such as a Field shell', () => {
     render(
       <ScrollArea.Root data-testid="area" style={{ height: 120 }}>

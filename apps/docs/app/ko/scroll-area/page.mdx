@@ -40,7 +40,7 @@ import { ScrollAreaLinks, ScrollAreaText } from '../../../components/demos/Scrol
 
 **직접 제공할 것:** Tab 정지점이 될 수 있을 때는 `aria-label`이나 `aria-labelledby`로 이름을 주세요. 스크롤이 생기도록 높이나 너비를 주세요.
 
-**주의할 점:** `ScrollArea.Root`에 준 `display: grid`나 `gap` 같은 레이아웃 스타일. 유일한 자식이 콘텐츠 상자이므로 여러분의 자식에는 닿지 않습니다. 안쪽 요소에 주세요.
+**주의할 점:** `ScrollArea.Root`에 준 `display: grid`나 `gap` 같은 레이아웃 스타일. 유일한 자식이 콘텐츠 상자이므로 여러분의 자식에는 닿지 않습니다. 안쪽 요소에 주세요. 가로로 스크롤할 때 너비를 지켜야 하는 항목 행: 스크롤되는 일반 `div`에서처럼, flex와 grid 항목은 행이 스크롤되기 전에 가장 좁은 너비까지 줄어듭니다. `flex: none`이나 고정된 트랙 크기를 주세요.
 
 ## 언제 쓰나요
 

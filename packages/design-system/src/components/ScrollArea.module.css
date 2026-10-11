@@ -23,9 +23,11 @@
     padding: var(--_room);
   }
 
-  /* As wide as what it holds, so the room stays at the end of a sideways scroll. */
+  /* Lays out like a plain scrolling div: as wide as the area, or as what it
+     holds when that can't get any narrower, so text and tables wrap first,
+     and the room stays at the end of a sideways scroll. */
   .root:is([data-axis='inline'], [data-axis='both']) > .content {
-    inline-size: max-content;
+    inline-size: fit-content;
     min-inline-size: 100%;
   }
 

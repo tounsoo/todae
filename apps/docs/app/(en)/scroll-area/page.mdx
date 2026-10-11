@@ -40,7 +40,7 @@ When its content overflows and nothing inside can take focus, a keyboard could n
 
 **You supply:** A name with `aria-label` or `aria-labelledby` whenever it can take a Tab stop. A height or width that makes it scroll.
 
-**Watch for:** Layout styles such as `display: grid` or `gap` on `ScrollArea.Root`: its only child is its content box, so they never reach your children. Put them on an element inside it.
+**Watch for:** Layout styles such as `display: grid` or `gap` on `ScrollArea.Root`: its only child is its content box, so they never reach your children. Put them on an element inside it. A row of items that should keep their width when it scrolls sideways: as in any scrolling `div`, flex and grid items shrink to their narrowest before the row scrolls. Give them `flex: none` or a fixed track size.
 
 ## When to use
 

@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DocsPre } from './DocsPre';
-import { ScrollRegion } from './OverflowRegion';
+import { ScrollRegion } from './ScrollRegion';
 
 const path = vi.hoisted(() => ({ current: '/' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));

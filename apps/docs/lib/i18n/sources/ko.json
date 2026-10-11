@@ -343,7 +343,7 @@
     "(top)": "a2750334232a",
     "# ScrollArea": "e402aa323406",
     "## A Tab stop for content with no controls": "002ea4976809",
-    "## Accessible composition": "f4d66c232ace",
+    "## Accessible composition": "c798bbf50d31",
     "## When to use": "b34ea3e391b2",
     "## Props": "fc86f0416810",
     "(section order)": "5078874aa1c2"
@@ -480,7 +480,7 @@
     "(section order)": "a507fd436fd2"
   },
   "utilities/glyphs-provider": {
-    "(top)": "795842950415",
+    "(top)": "b4635bf6501c",
     "# GlyphsProvider": "833b71e767fb",
     "## Glyphs": "a03303160485",
     "## Accessible composition": "705d17ec4c9e",
@@ -489,7 +489,7 @@
     "(section order)": "a2c772dae730"
   },
   "utilities/strings-provider": {
-    "(top)": "1224055afc40",
+    "(top)": "6b6dcb6bc3e1",
     "# StringsProvider": "0a9ce6b4f646",
     "## Strings": "db74b2bb78d8",
     "## Accessible composition": "8cc16824f136",

@@ -2,25 +2,12 @@
 
 import { Code } from '@omsoo/todae/code';
 import type { ComponentProps } from 'react';
-import { useOverflowRegion } from './OverflowRegion';
+import { ScrollRegion } from './ScrollRegion';
 
-export function DocsPre({ className, children, ...props }: ComponentProps<'pre'>) {
-  const region = useOverflowRegion<HTMLPreElement>('code');
+export function DocsPre(props: ComponentProps<'pre'>) {
   return (
-    <div className="docs-pre">
-      <Code.Block
-        {...props}
-        ref={region.ref}
-        className={className}
-        data-overflow-kind="code"
-        tabIndex={region.focusable ? 0 : undefined}
-        role={region.focusable ? 'region' : undefined}
-        aria-label={region.focusable ? region.label : undefined}
-        onFocus={region.onFocus}
-        onBlur={region.onBlur}
-      >
-        {children}
-      </Code.Block>
-    </div>
+    <ScrollRegion kind="code" className="docs-pre">
+      <Code.Block {...props} />
+    </ScrollRegion>
   );
 }

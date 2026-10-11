@@ -1,7 +1,7 @@
 import { Code } from '@omsoo/todae/code';
 import { Table } from '@omsoo/todae/table';
 import catalog from '@omsoo/todae/tokens.json';
-import { ScrollRegion } from './OverflowRegion';
+import { ScrollRegion } from './ScrollRegion';
 import { TokensTableHead } from './TokensTableHead';
 
 type TokenRow = {
