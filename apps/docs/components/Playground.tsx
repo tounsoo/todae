@@ -124,16 +124,15 @@ function TokenField({
       </label>
       <div className="token-row-inputs">
         {color ? (
-          <input
-            type="color"
-            className="token-swatch"
-            aria-label={`${path} ${colorLabel}`}
-            value={toHex(value || '#000000')}
-            onChange={(event) => {
-              const parsed = parseThemeValue(path, event.target.value);
-              if (parsed !== null) onCommit(parsed);
-            }}
-          />
+          <Field.Root aria-label={`${path} ${colorLabel}`}>
+            <Field.ColorInput
+              value={toHex(value || '#000000')}
+              onValueChange={(next) => {
+                const parsed = parseThemeValue(path, next);
+                if (parsed !== null) onCommit(parsed);
+              }}
+            />
+          </Field.Root>
         ) : null}
         <Field.Root id={id} invalid={invalid}>
           <Field.TextInput

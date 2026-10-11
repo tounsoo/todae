@@ -534,6 +534,20 @@ export function FieldSelectSize() {
   );
 }
 
+export function FieldColorAccent() {
+  const id = useId();
+  const [color, setColor] = useState('#3366ff');
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Accent</Label.Root>
+      <Field.Root id={id}>
+        <Field.ColorInput value={color} onValueChange={setColor} />
+        <Field.Affix>{color}</Field.Affix>
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
 export function FieldDateTime() {
   const quantityId = useId();
   const dateId = useId();

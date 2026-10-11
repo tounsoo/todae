@@ -13,6 +13,7 @@ import {
   CounterPlain,
   CounterTextarea,
   FieldAdornments,
+  FieldColorAccent,
   FieldDateTime,
   FieldLabelAdornments,
   FieldLabelStates,
@@ -262,9 +263,25 @@ compact, comfortable, spacious에서의 같은 작성기.
   <FieldSelectSize />
 </Example>
 
+## Color
+
+`Field.ColorInput`은 네이티브 `<input type="color">`이며, 필드 한 줄 높이의 색 견본으로 그려집니다. 값은 항상 `#rrggbb`입니다. 필드 어디를 눌러도 브라우저의 선택 창이 열립니다. 값을 텍스트로 보이려면 뒤에 `Field.Affix`를 두세요. 혼자 있으면 필드 너비는 견본 너비와 같습니다.
+
+```tsx
+<Label.Root htmlFor={id}>Accent</Label.Root>
+<Field.Root id={id}>
+	<Field.ColorInput value={color} onValueChange={setColor} />
+	<Field.Affix>{color}</Field.Affix>
+</Field.Root>
+```
+
+<Example block>
+  <FieldColorAccent />
+</Example>
+
 ## 커스텀 컨트롤
 
-별점이나 색상 선택처럼 직접 만든 컨트롤은 [useField](/utilities/use-field)로 `Field.Root`에 연결됩니다.
+별점처럼 직접 만든 컨트롤은 [useField](/utilities/use-field)로 `Field.Root`에 연결됩니다.
 
 ## 아이콘
 
@@ -328,6 +345,12 @@ import { ChevronDown, Search } from 'lucide-react';
 
 **쓰지 않을 때:** 긴 목록을 필터링하거나 검색 → Combobox 레시피. 여러 값 → Checkbox 또는 `Field.ChipInput`. 값이 아닌 명령 → Menu.
 
+### Field.ColorInput
+
+**언제:** 브랜드나 강조 색처럼 색 하나를 브라우저 선택 창으로 고를 때.
+
+**쓰지 않을 때:** `oklch()`처럼 다른 형식의 색 → `Field.TextInput`, 고르기용으로 옆의 별도 필드에 `Field.ColorInput`. 정해진 색 몇 가지 → RadioGroup.
+
 ### Field.Icon
 
 **언제:** Root 안의 앞쪽/뒤쪽 아이콘이나 아이콘 컨트롤. 위치 = DOM 순서. 장식용 → `interactive={false}`(aria-hidden).
@@ -368,6 +391,8 @@ import { ChevronDown, Search } from 'lucide-react';
 <PropsTable name="Field.ChipInput" />
 
 <PropsTable name="Field.Select" />
+
+<PropsTable name="Field.ColorInput" />
 
 <PropsTable name="Field.Icon" />
 

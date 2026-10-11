@@ -10,6 +10,10 @@
     "icon": {
       "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } }
     },
+    "swatch": {
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+      "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
+    },
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } }
     },

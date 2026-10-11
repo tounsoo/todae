@@ -121,6 +121,7 @@
     min-height: 0;
     margin: calc(-1 * var(--_ring-room));
     padding: var(--_ring-room);
+    scroll-padding: var(--_ring-room);
     overflow: auto;
     overscroll-behavior: contain;
     touch-action: pan-y;

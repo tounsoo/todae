@@ -162,7 +162,7 @@
     "(section order)": "d5b027f46b1c"
   },
   "field": {
-    "(top)": "261936901466",
+    "(top)": "aa5ec964f344",
     "# Field": "1b7b0ba93f7b",
     "## Label": "7d0c50d3c651",
     "## Messages": "3baebdf13c83",
@@ -172,7 +172,8 @@
     "## Row": "e3226fa80f55",
     "## Number, date and time": "7abe8ec941e5",
     "## Select": "2d0edd632123",
-    "## Custom controls": "2cde30976b50",
+    "## Color": "c4150bba1e1f",
+    "## Custom controls": "edafb0ec7ed8",
     "## Icons": "f52060c8de88",
     "## Accessible composition": "47e541b991bc",
     "## When to use": "d57fe8233a0b",
@@ -181,13 +182,14 @@
     "### Field.Textarea": "11b51d7095d4",
     "### Field.ChipInput": "60917640f930",
     "### Field.Select": "6b76ce318e76",
+    "### Field.ColorInput": "997575198b6e",
     "### Field.Icon": "d229fcf9502c",
     "### Field.Row": "93ba826baf7c",
     "### Field.Group": "21e130ff2653",
     "### Field.Affix": "c7c545a7e130",
     "### Field.Counter": "c7b2d96cc1b4",
-    "## Props": "eae65fe6fbf4",
-    "(section order)": "48e8c236277a"
+    "## Props": "3389b1076b77",
+    "(section order)": "8cfc11381a31"
   },
   "fieldset": {
     "(top)": "d88e18f28a84",
