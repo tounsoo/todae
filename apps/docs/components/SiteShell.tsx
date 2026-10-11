@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 import '@omsoo/todae/todae.css';
+import { Stack } from '@omsoo/todae/stack';
 import { Text } from '@omsoo/todae/text';
 import { VisuallyHidden } from '@omsoo/todae/visually-hidden';
 import { localizePath, type Locale } from '../lib/i18n/config';
@@ -67,13 +68,13 @@ export function SiteShell({
                 Todae
               </SiteLink>
               <nav className="top-links" aria-label={dict.mainNav}>
-                <ul>
+                <Stack.Root as="ul" direction="row" gap="condensed">
                   {top.map(([href, label]) => (
                     <li key={href}>
                       <SiteLink href={localizePath(href, locale)}>{label}</SiteLink>
                     </li>
                   ))}
-                </ul>
+                </Stack.Root>
               </nav>
               <div className="topbar-tools">
                 <ThemeSwitcher locale={locale} />

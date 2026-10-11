@@ -5,7 +5,9 @@
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "stack": {
-      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } }
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
+      "gap-condensed": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } },
+      "gap-spacious": { "$type": "dimension", "$value": { "$ref": "#/space/6/$value" } }
     },
     "inline": {
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }

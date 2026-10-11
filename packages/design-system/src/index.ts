@@ -179,7 +179,15 @@ export {
   type TabsTabProps,
 } from './components/Tabs';
 export { Tree, type TreeGroupProps, type TreeIconProps, type TreeItemProps, type TreeLabelProps, type TreeRootProps } from './components/Tree';
-export { Stack, type StackRootProps, type StackDirection } from './components/Stack';
+export {
+  Stack,
+  type StackAlign,
+  type StackAs,
+  type StackDirection,
+  type StackGap,
+  type StackJustify,
+  type StackRootProps,
+} from './components/Stack';
 export { Grid, type GridRootProps } from './components/Grid';
 export {
   Text,

@@ -1,8 +1,8 @@
-import { StackButtons } from '../../../components/demos/StackDemo';
+import { StackButtons, StackGaps, StackSpread } from '../../../components/demos/StackDemo';
 
 # Stack
 
-Gap is `stack.gap` (density-aware). There is no `gap` prop.
+`gap` picks one of four steps. `condensed`, `normal` and `spacious` come from the `stack.gap`, `stack.gap-condensed` and `stack.gap-spacious` tokens, so they follow the density; `none` is no space. The default is `normal`.
 
 Server Components can import it from `@omsoo/todae/stack`. That entry has no `'use client'` and no hooks; the main `@omsoo/todae` entry is a client module.
 
@@ -10,19 +10,33 @@ Server Components can import it from `@omsoo/todae/stack`. That entry has no `'u
   <StackButtons />
 </Example>
 
+## Gap
+
+<Example>
+  <StackGaps />
+</Example>
+
+## Alignment and wrapping
+
+`align` sets the cross axis and `justify` the main axis; `between` pushes the first and last items to the edges. `wrap` lets items run onto more lines when the row is full.
+
+<Example>
+  <StackSpread />
+</Example>
+
 ## Accessible composition
 
-**Todae handles:** Layout only. `Stack.Root` renders a `div` with no role, and there is no `as` prop. `direction` is `row` or `column`, never reversed, so items show in DOM order and reading and Tab order follow what is drawn. Every other prop, `ref`, `role` and `aria-*` included, reaches the `div`.
+**Todae handles:** Layout only. `Stack.Root` renders a `div` with no role unless `as` picks another element. As a `ul` or `ol` it drops the bullets and indent and sets `role="list"`, since Safari drops list semantics from a list without bullets otherwise. `direction` is `row` or `column`, never reversed, and `justify` and `align` only move items within that order, so items show in DOM order and reading and Tab order follow what is drawn. Every other prop, `ref`, `role` and `aria-*` included, reaches the element.
 
-**You supply:** The semantics. Buttons that act on one thing and need a shared name take `role="group"` and `aria-label`; [Button.Group](/button) sets `role="group"` itself. A row of tools that should be one Tab stop moved through with arrow keys is a [Toolbar](/toolbar), not a `Stack.Root`. Items that form a list take `role="list"` and `role="listitem"`.
+**You supply:** The semantics. Buttons that act on one thing and need a shared name take `role="group"` and `aria-label`; [Button.Group](/button) sets `role="group"` itself. A row of tools that should be one Tab stop moved through with arrow keys is a [Toolbar](/toolbar), not a `Stack.Root`. Items that form a list go in `as="ul"` or `as="ol"`, each child an `li`. A `nav` is a navigation landmark: give each one an `aria-label` when a page has more than one. A `section` becomes a region landmark only when it has a name.
 
 **Watch for:** `row-reverse`, `column-reverse` or `order` set through `className` or `style`: items move on screen but not in reading or Tab order. To show a primary button last, put it last in the DOM.
 
 ## When to use
 
-**When:** Flex row or column spaced by density-aware `stack.gap`. Spacing between fields or buttons.
+**When:** A flex row or column spaced by one of the gap steps. Spacing between fields or buttons, a list of links, a header row with items at both ends.
 
-**When not:** Label-to-control gap → `Field.Group` (`field.label.gap`). Custom gap values (no gap prop). Attached button row → Button.Group.
+**When not:** Label-to-control gap → `Field.Group` (`field.label.gap`). A gap that is not one of the steps → your own CSS. Attached button row → Button.Group.
 
 ## Props
 

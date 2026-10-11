@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, Badge, Button, Card, categoryTone, Field, Label, Switch, Tabs, Text, type CategoryTone } from '@omsoo/todae';
+import { Avatar, Badge, Button, Card, categoryTone, Field, Label, Stack, Switch, Tabs, Text, type CategoryTone } from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 const MEMBERS = [
@@ -16,21 +16,22 @@ export function HomeShowcase() {
   return (
     <Card.Root className="showcase-card">
       <Card.Header>
-        <div className="showcase-title">
+        {/* On a phone the avatars and badge drop below the title. */}
+        <Stack.Root className="showcase-title" direction="row" wrap align="center" justify="between">
           <Text.Root as="span" size="l" weight="bold">
             Workspace
           </Text.Root>
-          <div className="showcase-meta">
-            <div className="showcase-avatars" role="group" aria-label="Members">
+          <Stack.Root className="showcase-meta" direction="row" align="center">
+            <Stack.Root className="showcase-avatars" direction="row" gap="condensed" role="group" aria-label="Members">
               {MEMBERS.map((member) => (
                 <Avatar.Root key={member.id} size="sm" label={member.name} tone={member.tone}>
                   <Avatar.Fallback>{member.initials}</Avatar.Fallback>
                 </Avatar.Root>
               ))}
-            </div>
+            </Stack.Root>
             <Badge.Root tone="success">Active</Badge.Root>
-          </div>
-        </div>
+          </Stack.Root>
+        </Stack.Root>
       </Card.Header>
       <Card.Body>
         <Tabs.Root defaultValue="general">

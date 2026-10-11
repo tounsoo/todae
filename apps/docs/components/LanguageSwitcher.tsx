@@ -1,6 +1,7 @@
 'use client';
 
 import { Link } from '@omsoo/todae/link';
+import { Stack } from '@omsoo/todae/stack';
 import { usePathname } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
 import { LOCALE_NAMES, LOCALES, localizePath, type Locale } from '../lib/i18n/config';
@@ -33,7 +34,7 @@ export function LanguageSwitcher({ locale, toHome = false }: { locale: Locale; t
   const suffix = useSyncExternalStore(subscribe, getSuffix, getServerSuffix);
   return (
     <nav className="language-switcher" aria-label={DICTIONARIES[locale].languageNav}>
-      <ul>
+      <Stack.Root as="ul" direction="row" gap="condensed">
         {LOCALES.map((target) => {
           // Another language, or a 404's home page, has its own root layout, which Next always loads in full,
           // so next/link would only add a prefetch.
@@ -51,7 +52,7 @@ export function LanguageSwitcher({ locale, toHome = false }: { locale: Locale; t
             </li>
           );
         })}
-      </ul>
+      </Stack.Root>
     </nav>
   );
 }

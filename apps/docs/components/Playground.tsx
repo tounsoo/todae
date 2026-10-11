@@ -10,6 +10,7 @@ import {
   RAW_OVERRIDE_KEYS,
   ScrollArea,
   SEMANTIC_OVERRIDE_KEYS,
+  Stack,
   Tabs,
   ThemeProvider,
   ToggleGroup,
@@ -426,12 +427,12 @@ export function Playground({ locale }: { locale: Locale }) {
 
   const tokenSection = (
     <section className="pg-section pg-tokens" aria-labelledby="pg-tokens">
-      <div className="pg-tokens-head">
+      <Stack.Root direction="row" justify="between" align="baseline">
         <h2 className="pg-heading" id="pg-tokens">
           {t.tokens}
         </h2>
         {changedLabel}
-      </div>
+      </Stack.Root>
       {tokenEditor}
     </section>
   );

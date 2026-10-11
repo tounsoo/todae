@@ -362,6 +362,8 @@
   --todae-space-selection-gap: var(--todae-space-2);
   --todae-space-selection-size: var(--todae-space-4);
   --todae-space-stack-gap: var(--todae-space-2);
+  --todae-space-stack-gap-condensed: var(--todae-space-1);
+  --todae-space-stack-gap-spacious: var(--todae-space-4);
 }
 
 :root:not([data-density]),
@@ -377,6 +379,8 @@
   --todae-space-selection-gap: var(--todae-space-2);
   --todae-space-selection-size: var(--todae-space-5);
   --todae-space-stack-gap: var(--todae-space-3);
+  --todae-space-stack-gap-condensed: var(--todae-space-1);
+  --todae-space-stack-gap-spacious: var(--todae-space-6);
 }
 
 [data-density="spacious"] {
@@ -391,6 +395,8 @@
   --todae-space-selection-gap: var(--todae-space-3);
   --todae-space-selection-size: var(--todae-space-6);
   --todae-space-stack-gap: var(--todae-space-5);
+  --todae-space-stack-gap-condensed: var(--todae-space-2);
+  --todae-space-stack-gap-spacious: var(--todae-space-8);
 }
 
 :root,
@@ -455,6 +461,8 @@
   --todae-button-ghost-fg-hover: var(--_todae-button-ghost-fg-hover, var(--todae-color-fg-default));
   --todae-button-ghost-ring-focus: var(--_todae-button-ghost-ring-focus, var(--todae-focus-ring-color));
   --todae-stack-gap: var(--_todae-stack-gap, var(--todae-space-stack-gap));
+  --todae-stack-gap-condensed: var(--_todae-stack-gap-condensed, var(--todae-space-stack-gap-condensed));
+  --todae-stack-gap-spacious: var(--_todae-stack-gap-spacious, var(--todae-space-stack-gap-spacious));
   --todae-text-fg-accent: var(--_todae-text-fg-accent, var(--todae-color-accent-default));
   --todae-text-fg-default: var(--_todae-text-fg-default, var(--todae-color-fg-default));
   --todae-text-fg-muted: var(--_todae-text-fg-muted, var(--todae-color-fg-muted));

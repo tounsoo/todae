@@ -375,12 +375,14 @@
     "(section order)": "3a4d8b5c2050"
   },
   "stack": {
-    "(top)": "292d577450b0",
-    "# Stack": "3d0c93c984d4",
-    "## Accessible composition": "91e7a7d38276",
-    "## When to use": "037b83fcef50",
+    "(top)": "3dde9f089aaf",
+    "# Stack": "7ed38c3861f6",
+    "## Gap": "60f023baac11",
+    "## Alignment and wrapping": "8301a4853788",
+    "## Accessible composition": "753bca9bb489",
+    "## When to use": "e4f17f5fa29d",
     "## Props": "49963aa313e9",
-    "(section order)": "82039f81711a"
+    "(section order)": "d9525eb32a1a"
   },
   "switch": {
     "(top)": "5b6bda868294",
