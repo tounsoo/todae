@@ -57,6 +57,7 @@ describe('Field exports', () => {
       Affix: Field.Affix,
       Counter: Field.Counter,
       Row: Field.Row,
+      Group: Field.Group,
     });
     expect(api.Field).not.toHaveProperty('Label');
     expectTypeOf<typeof Field>().not.toHaveProperty('Label');

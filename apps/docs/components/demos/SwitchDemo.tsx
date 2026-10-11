@@ -1,6 +1,6 @@
 'use client';
 
-import { Description, Switch } from '@omsoo/todae';
+import { Description, Field, Switch } from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 export function SwitchStates() {
@@ -9,12 +9,12 @@ export function SwitchStates() {
   return (
     <>
       <Switch.Root defaultChecked>Play a sound on mention</Switch.Root>
-      <div className="labelled-field">
+      <Field.Group>
         <Switch.Root checked={digest} onCheckedChange={setDigest} aria-describedby={hintId}>
           Send a weekly digest
         </Switch.Root>
         <Description.Root id={hintId}>One email on Monday. No ads.</Description.Root>
-      </div>
+      </Field.Group>
       <Switch.Root disabled>Beta channel</Switch.Root>
     </>
   );

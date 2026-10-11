@@ -40,12 +40,12 @@ export function HomeShowcase() {
             <Tabs.Tab value="billing">Billing</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="general" className="showcase-panel">
-            <div className="labelled-field">
+            <Field.Group>
               <Label.Root htmlFor={nameId}>Name</Label.Root>
               <Field.Root id={nameId}>
                 <Field.TextInput value={name} onChange={(event) => setName(event.target.value)} />
               </Field.Root>
-            </div>
+            </Field.Group>
             <Switch.Root defaultChecked>Weekly digest</Switch.Root>
             <Switch.Root>Mention alerts</Switch.Root>
           </Tabs.Panel>

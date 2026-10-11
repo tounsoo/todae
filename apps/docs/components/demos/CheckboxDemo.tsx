@@ -1,6 +1,6 @@
 'use client';
 
-import { Checkbox, ErrorMessage } from '@omsoo/todae';
+import { Checkbox, ErrorMessage, Field } from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 export function CheckboxStates() {
@@ -11,7 +11,7 @@ export function CheckboxStates() {
     <>
       <Checkbox.Root defaultChecked>Product updates</Checkbox.Root>
       <Checkbox.Root disabled>Archived list</Checkbox.Root>
-      <div className="labelled-field">
+      <Field.Group>
         <Checkbox.Root
           checked={accepted}
           onCheckedChange={setAccepted}
@@ -21,7 +21,7 @@ export function CheckboxStates() {
           I accept the terms
         </Checkbox.Root>
         {invalid ? <ErrorMessage.Root id={errorId}>Accept the terms to continue.</ErrorMessage.Root> : null}
-      </div>
+      </Field.Group>
     </>
   );
 }

@@ -123,14 +123,14 @@ export function Preview({ library }: { library?: IconLibrary }) {
             </Card.Header>
             <Card.Body>
               <form className="preview-form" onSubmit={(event) => event.preventDefault()}>
-                <div className="labelled-field">
+                <Field.Group>
                   <Label.Root htmlFor={emailId}>Work email</Label.Root>
                   <Field.Root id={emailId}>
                     {icons ? <Field.Icon>{icons.mail}</Field.Icon> : null}
                     <Field.TextInput type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
                   </Field.Root>
-                </div>
-                <div className="labelled-field">
+                </Field.Group>
+                <Field.Group>
                   <Label.Root htmlFor={planId}>Plan</Label.Root>
                   <Field.Root id={planId}>
                     <Field.Select value={plan} onValueChange={setPlan}>
@@ -139,8 +139,8 @@ export function Preview({ library }: { library?: IconLibrary }) {
                       <option value="scale">Scale</option>
                     </Field.Select>
                   </Field.Root>
-                </div>
-                <div className="labelled-field">
+                </Field.Group>
+                <Field.Group>
                   <Text.Root as="span" id={billingId} size="s" weight="medium">
                     Billing
                   </Text.Root>
@@ -148,7 +148,7 @@ export function Preview({ library }: { library?: IconLibrary }) {
                     <RadioGroup.Item value="monthly">Monthly</RadioGroup.Item>
                     <RadioGroup.Item value="yearly">Yearly, save 20%</RadioGroup.Item>
                   </RadioGroup.Root>
-                </div>
+                </Field.Group>
                 <Checkbox.Root defaultChecked>Email me the invoice</Checkbox.Root>
                 <Button.Root type="submit">Upgrade to Pro</Button.Root>
               </form>

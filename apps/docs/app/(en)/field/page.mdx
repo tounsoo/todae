@@ -40,17 +40,17 @@ Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. V
 
 ## Label
 
-`Label.Root` is a sibling, not a compound part. It takes the same `id` you pass to `Field.Root`. Wrap the pair in one `.labelled-field`. The gap is `field.label.gap`. See [Label](/label) for the API.
+`Label.Root` is a sibling, not a compound part. It takes the same `id` you pass to `Field.Root`. Wrap the pair in one `Field.Group`, which puts the label `field.label.gap` above the shell. See [Label](/label) for the API.
 
 ```tsx
 const id = useId()
 
-<div className="labelled-field">
+<Field.Group>
 	<Label.Root htmlFor={id}>Email</Label.Root>
 	<Field.Root id={id}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
-</div>
+</Field.Group>
 ```
 
 <Example block>
@@ -71,19 +71,19 @@ Label works with Icon, Affix, and ChipInput.
 
 ## Messages
 
-[Description](/description) and [ErrorMessage](/errormessage) sit under the shell as siblings. They are not Field parts. Each owns `margin-block-start`. Put `aria-describedby` on `Field.Root`. Root copies it onto the input.
+[Description](/description) and [ErrorMessage](/errormessage) sit under the shell as siblings. They are not Field parts. Put `aria-describedby` on `Field.Root`. Root copies it onto the input.
 
 ```tsx
 const describedBy = invalid ? `${hintId} ${errorId}` : hintId
 
-<div className="labelled-field">
+<Field.Group>
 	<Label.Root htmlFor={id}>Email</Label.Root>
 	<Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
 		<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
 	</Field.Root>
 	<Description.Root id={hintId}>Use your work address.</Description.Root>
 	{invalid ? <ErrorMessage.Root id={errorId}>{error}</ErrorMessage.Root> : null}
-</div>
+</Field.Group>
 ```
 
 <Example block>
@@ -340,6 +340,12 @@ import { ChevronDown, Search } from 'lucide-react';
 
 **When not:** For a single Icon or Affix beside the input, compose it inline without a Row, and don't use a Row to lay out separate fields.
 
+### Field.Group
+
+**When:** Stack a label or caption `field.label.gap` above its control, with any Description or ErrorMessage below. It sits outside `Field.Root` and works for any control, such as a RadioGroup under a `Text.Root` caption.
+
+**When not:** To space separate fields from each other, use `Stack.Root`. To group related controls under one legend, use [Fieldset](/fieldset).
+
 ### Field.Affix
 
 **When:** Static text adornment (currency, unit) inside Root. Order = position.
@@ -368,5 +374,7 @@ import { ChevronDown, Search } from 'lucide-react';
 <PropsTable name="Field.Affix" />
 
 <PropsTable name="Field.Row" />
+
+<PropsTable name="Field.Group" />
 
 <PropsTable name="Field.Counter" />

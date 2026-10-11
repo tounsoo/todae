@@ -8,37 +8,24 @@ Server Components can import it from `@omsoo/todae/label`. That entry has no `'u
 
 ## With Field
 
-Label carries no margin. The gap between a label and its shell is `field.label.gap` (0.4rem). Put it on the wrapper that stacks the pair. Do not let that wrapper space Description or ErrorMessage. Those components own `margin-block-start`.
-
-```css
-.labelled-field {
-	display: flex;
-	flex-direction: column;
-}
-
-.labelled-field
-	> :not([data-todae-description], [data-todae-error])
-	+ :not([data-todae-description], [data-todae-error]) {
-	margin-block-start: var(--todae-field-label-gap);
-}
-```
+Label carries no margin. Put the label, the control and any [Description](/description) or [ErrorMessage](/errormessage) in a `Field.Group`, which puts the label `field.label.gap` (0.4rem) above the control.
 
 ```tsx
 const id = useId()
 
-<div className="labelled-field">
+<Field.Group>
 	<Label.Root htmlFor={id}>Email</Label.Root>
 	<Field.Root id={id}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
-</div>
+</Field.Group>
 ```
 
 <Example block>
   <LabelSibling />
 </Example>
 
-One `.labelled-field` per stack. The order is Label, control, then [Description](/description) and [ErrorMessage](/errormessage) as siblings. The control-to-message gap is the component `margin-block-start` of 0.4rem. When ErrorMessage follows Description, that start margin is 0.2rem. Do not wrap several stacks in one wrapper. Do not wrap the stack in `Stack.Root`. `stack.gap` is the density gap between fields, not between a label and its shell. Put `.labelled-field` stacks inside `Stack.Root`.
+One `Field.Group` per field. The order is Label, control, then Description and ErrorMessage. When ErrorMessage follows Description, the gap between them is `field.messages.gap` (0.2rem). Do not put several fields in one group. Put groups inside `Stack.Root`: `stack.gap` is the density gap between fields, not between a label and its shell.
 
 ## States
 

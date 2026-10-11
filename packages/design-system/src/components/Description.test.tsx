@@ -50,9 +50,8 @@ describe('Description', () => {
 
   it('does not use a docs .messages stack', () => {
     expect(docsCss).not.toMatch(/\.messages/);
-    expect(docsCss).toMatch(
-      /\.labelled-field\s*>\s*:not\(\[data-todae-description\],\s*\[data-todae-error\]\)/,
-    );
+    // Field.Group spaces label, control and messages, so the docs keep no stack class of their own.
+    expect(docsCss).not.toMatch(/\.labelled-field/);
     const demos = join(here, '../../../../apps/docs/components/demos');
     for (const name of [
       'DescriptionDemo.tsx',

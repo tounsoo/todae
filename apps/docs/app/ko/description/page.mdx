@@ -8,34 +8,21 @@ import { DescriptionSibling } from '../../../components/demos/DescriptionDemo';
 
 ## Field와 함께
 
-Description은 자신의 간격을 스스로 가집니다. `margin-block-start`는 컨트롤로부터 `field.label.gap`(0.4rem)입니다. `margin-block-end`는 0입니다. 컨트롤 뒤에 두세요. 감싸지 마세요.
+Description은 자신의 간격을 스스로 가집니다. `margin-block-start`는 컨트롤로부터 `field.label.gap`(0.4rem)입니다. `margin-block-end`는 0입니다. 컨트롤 뒤에 두세요. 별도의 요소로 감싸지 마세요.
 
-`.labelled-field`는 여전히 Label과 컨트롤 사이 간격을 잡습니다. 컨트롤과 Description 사이 간격은 잡지 않습니다.
-
-```css
-.labelled-field {
-	display: flex;
-	flex-direction: column;
-}
-
-.labelled-field
-	> :not([data-todae-description], [data-todae-error])
-	+ :not([data-todae-description], [data-todae-error]) {
-	margin-block-start: var(--todae-field-label-gap);
-}
-```
+`Field.Group` 안에서는 그룹의 간격이 이 마진을 대신하므로, 거리는 그대로 `field.label.gap`입니다. 그룹은 Label과 컨트롤 사이 간격도 잡습니다.
 
 ```tsx
 const id = useId()
 const hintId = useId()
 
-<div className="labelled-field">
+<Field.Group>
 	<Label.Root htmlFor={id}>Work email</Label.Root>
 	<Field.Root id={id} aria-describedby={hintId}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
 	<Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
-</div>
+</Field.Group>
 ```
 
 <Example block>

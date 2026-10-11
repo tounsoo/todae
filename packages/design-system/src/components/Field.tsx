@@ -632,4 +632,14 @@ function Row({ className, ...props }: FieldRowProps) {
   return <div {...props} className={cx(styles.row, className)} />;
 }
 
-export const Field = { Root, TextInput, Textarea, ChipInput, Select, Icon, Affix, Counter, Row } as const;
+export type FieldGroupProps = {
+  children?: ReactNode;
+  className?: string;
+} & ComponentPropsWithRef<'div'>;
+
+/** Puts a label or caption field.label.gap above the control; Description and ErrorMessage keep the distances they have outside a group. */
+function Group({ className, ...props }: FieldGroupProps) {
+  return <div {...props} className={cx(styles.group, className)} />;
+}
+
+export const Field = { Root, TextInput, Textarea, ChipInput, Select, Icon, Affix, Counter, Row, Group } as const;

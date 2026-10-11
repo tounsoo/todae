@@ -29,7 +29,7 @@ export function FieldLabelStates() {
   const [email, setEmail] = useState('');
   return (
     <>
-      <div className="labelled-field">
+      <Field.Group>
         <Label.Root htmlFor={idleId}>Email</Label.Root>
         <Field.Root id={idleId}>
           <Field.TextInput
@@ -38,19 +38,19 @@ export function FieldLabelStates() {
             placeholder="you@example.com"
           />
         </Field.Root>
-      </div>
-      <div className="labelled-field">
+      </Field.Group>
+      <Field.Group>
         <Label.Root htmlFor={disabledId}>Email</Label.Root>
         <Field.Root id={disabledId} disabled>
           <Field.TextInput value="Disabled" onChange={() => undefined} />
         </Field.Root>
-      </div>
-      <div className="labelled-field">
+      </Field.Group>
+      <Field.Group>
         <Label.Root htmlFor={invalidId}>Email</Label.Root>
         <Field.Root id={invalidId} invalid>
           <Field.TextInput value="Invalid" onChange={() => undefined} />
         </Field.Root>
-      </div>
+      </Field.Group>
     </>
   );
 }
@@ -62,7 +62,7 @@ export function FieldLabelAdornments() {
   const [amount, setAmount] = useState('12');
   return (
     <>
-      <div className="labelled-field">
+      <Field.Group>
         <Label.Root htmlFor={searchId}>Search</Label.Root>
         <Field.Root id={searchId}>
           <Field.Icon>
@@ -70,15 +70,15 @@ export function FieldLabelAdornments() {
           </Field.Icon>
           <Field.TextInput value={search} onChange={(event) => setSearch(event.target.value)} />
         </Field.Root>
-      </div>
-      <div className="labelled-field">
+      </Field.Group>
+      <Field.Group>
         <Label.Root htmlFor={amountId}>Amount</Label.Root>
         <Field.Root id={amountId}>
           <Field.Affix>$</Field.Affix>
           <Field.TextInput value={amount} onChange={(event) => setAmount(event.target.value)} />
           <Field.Affix>USD</Field.Affix>
         </Field.Root>
-      </div>
+      </Field.Group>
     </>
   );
 }
@@ -179,20 +179,20 @@ export function TextareaMessages() {
   const invalid = value.trim().length < 8;
   return (
     <>
-      <div className="labelled-field">
+      <Field.Group>
         <Label.Root htmlFor={id}>Note</Label.Root>
         <Field.Root id={id} invalid={invalid} aria-describedby={invalid ? `${hintId} ${errorId}` : hintId}>
           <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} />
         </Field.Root>
         <Description.Root id={hintId}>A short description of the work.</Description.Root>
         {invalid ? <ErrorMessage.Root id={errorId}>Use at least 8 characters.</ErrorMessage.Root> : null}
-      </div>
-      <div className="labelled-field">
+      </Field.Group>
+      <Field.Group>
         <Label.Root htmlFor={disabledId}>Note</Label.Root>
         <Field.Root id={disabledId} disabled>
           <Field.Textarea value="Disabled" onChange={() => undefined} />
         </Field.Root>
-      </div>
+      </Field.Group>
     </>
   );
 }
@@ -263,13 +263,13 @@ export function ChipInputLabel() {
   const field = useChipField({ initialChips: ['alpha'] });
   return (
     <>
-      <div className="labelled-field">
+      <Field.Group>
         <Label.Root htmlFor={tagsId}>Tags</Label.Root>
         <Field.Root id={tagsId}>
           <Field.ChipInput {...field.getChipInputProps()} placeholder="Type and press Enter" />
         </Field.Root>
-      </div>
-      <div className="labelled-field">
+      </Field.Group>
+      <Field.Group>
         <Label.Root htmlFor={invalidId}>Tags</Label.Root>
         <Field.Root id={invalidId} invalid>
           <Field.ChipInput
@@ -280,7 +280,7 @@ export function ChipInputLabel() {
             onChipRemove={() => undefined}
           />
         </Field.Root>
-      </div>
+      </Field.Group>
     </>
   );
 }
@@ -437,7 +437,7 @@ function ChipRow({ density, chips }: { density: 'compact' | 'comfortable' | 'spa
   const field = useChipField({ initialChips: chips });
   return (
     <DensityProvider density={density}>
-      <div className="labelled-field">
+      <Field.Group>
         <Label.Root htmlFor={id}>Tags</Label.Root>
         <Field.Root id={id} style={{ maxWidth: '18rem' }}>
           <Field.Icon>
@@ -446,7 +446,7 @@ function ChipRow({ density, chips }: { density: 'compact' | 'comfortable' | 'spa
           <Field.ChipInput {...field.getChipInputProps()} chipLayout="row" maxRows={2} placeholder="Tags" />
           <Field.Affix>tag</Field.Affix>
         </Field.Root>
-      </div>
+      </Field.Group>
     </DensityProvider>
   );
 }
@@ -461,7 +461,7 @@ export function RowChipInput() {
       {(['compact', 'comfortable', 'spacious'] as const).map((density) => (
         <ChipRow key={density} density={density} chips={MANY} />
       ))}
-      <div className="labelled-field">
+      <Field.Group>
         <Label.Root htmlFor={emptyId}>Tags</Label.Root>
         <Field.Root id={emptyId}>
           <Field.Icon>
@@ -470,8 +470,8 @@ export function RowChipInput() {
           <Field.ChipInput {...empty.getChipInputProps()} chipLayout="row" placeholder="No chips" />
           <Field.Affix>tag</Field.Affix>
         </Field.Root>
-      </div>
-      <div className="labelled-field">
+      </Field.Group>
+      <Field.Group>
         <Label.Root htmlFor={textId}>Tags</Label.Root>
         <Field.Root id={textId}>
           <Field.Icon>
@@ -484,7 +484,7 @@ export function RowChipInput() {
           />
           <Field.Affix>tag</Field.Affix>
         </Field.Root>
-      </div>
+      </Field.Group>
     </>
   );
 }
@@ -518,7 +518,7 @@ export function FieldSelectSize() {
   const id = useId();
   const [size, setSize] = useState('m');
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Label.Root htmlFor={id}>Size</Label.Root>
       <Field.Root id={id}>
         <Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
@@ -530,7 +530,7 @@ export function FieldSelectSize() {
           </option>
         </Field.Select>
       </Field.Root>
-    </div>
+    </Field.Group>
   );
 }
 
@@ -543,24 +543,24 @@ export function FieldDateTime() {
   const [time, setTime] = useState('14:30');
   return (
     <>
-      <div className="labelled-field">
+      <Field.Group>
         <Label.Root htmlFor={quantityId}>Seats</Label.Root>
         <Field.Root id={quantityId}>
           <Field.TextInput type="number" min={1} max={20} value={quantity} onValueChange={setQuantity} onChange={() => undefined} />
         </Field.Root>
-      </div>
-      <div className="labelled-field">
+      </Field.Group>
+      <Field.Group>
         <Label.Root htmlFor={dateId}>Start date</Label.Root>
         <Field.Root id={dateId}>
           <Field.TextInput type="date" value={date} onValueChange={setDate} onChange={() => undefined} />
         </Field.Root>
-      </div>
-      <div className="labelled-field">
+      </Field.Group>
+      <Field.Group>
         <Label.Root htmlFor={timeId}>Start time</Label.Root>
         <Field.Root id={timeId}>
           <Field.TextInput type="time" step={900} value={time} onValueChange={setTime} onChange={() => undefined} />
         </Field.Root>
-      </div>
+      </Field.Group>
     </>
   );
 }
@@ -600,7 +600,7 @@ export function FieldUseField() {
   const hintId = useId();
   const [stars, setStars] = useState(3);
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Text.Root as="span" id={captionId} size="s" weight="medium">
         Rating
       </Text.Root>
@@ -608,6 +608,6 @@ export function FieldUseField() {
         <Stars value={stars} onChange={setStars} />
       </Field.Root>
       <Description.Root id={hintId}>Arrow keys change the rating.</Description.Root>
-    </div>
+    </Field.Group>
   );
 }

@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Grid, Pagination, paginationRange } from '../index';
+import { Avatar, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Text, paginationRange } from '../index';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -280,5 +280,104 @@ describe('Pagination in a browser', () => {
     await userEvent.hover(screen.getByTestId('page-1'));
     expect(getComputedStyle(screen.getByTestId('page-1')).backgroundColor).toBe(fill);
     expect(await violations()).toEqual([]);
+  });
+});
+
+describe('Field.Group in a browser', () => {
+  const gaps = { ['--_todae-field-label-gap' as string]: '10px', ['--_todae-field-messages-gap' as string]: '3px' };
+  const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+
+  it('spaces label, control and messages by field.label.gap, and an ErrorMessage after a Description by field.messages.gap', () => {
+    render(
+      <main data-appearance="light" data-density="comfortable" style={gaps}>
+        <Field.Group>
+          <Label.Root htmlFor="email" data-testid="label">
+            Email
+          </Label.Root>
+          <Field.Root id="email" data-testid="shell">
+            <Field.TextInput value="" onChange={() => {}} />
+          </Field.Root>
+          <Description.Root id="hint" data-testid="hint">Use your work address.</Description.Root>
+          <ErrorMessage.Root id="error" data-testid="error">Enter an email.</ErrorMessage.Root>
+        </Field.Group>
+      </main>,
+    );
+    expect(Math.round(box('shell').top - box('label').bottom)).toBe(10);
+    expect(Math.round(box('hint').top - box('shell').bottom)).toBe(10);
+    expect(Math.round(box('error').top - box('hint').bottom)).toBe(3);
+  });
+
+  it('keeps field.label.gap between messages in any other order, as outside a group', () => {
+    render(
+      <main data-appearance="light" data-density="comfortable" style={gaps}>
+        <Field.Group>
+          <ErrorMessage.Root id="error" data-testid="error">
+            Enter an email.
+          </ErrorMessage.Root>
+          <Description.Root id="hint" data-testid="hint">
+            Use your work address.
+          </Description.Root>
+          <Description.Root id="hint2" data-testid="hint2">
+            Shown to admins.
+          </Description.Root>
+          <ErrorMessage.Root id="error2" data-testid="error2">
+            Too long.
+          </ErrorMessage.Root>
+          <ErrorMessage.Root id="error3" data-testid="error3">
+            Not allowed.
+          </ErrorMessage.Root>
+        </Field.Group>
+      </main>,
+    );
+    expect(Math.round(box('hint').top - box('error').bottom)).toBe(10);
+    expect(Math.round(box('hint2').top - box('hint').bottom)).toBe(10);
+    expect(Math.round(box('error3').top - box('error2').bottom)).toBe(10);
+  });
+
+  it('keeps every message gap the same inside a group as outside one', () => {
+    const sequence = (prefix: string) => (
+      <>
+        <Field.Root aria-label={`${prefix} email`} data-testid={`${prefix}-0`}>
+          <Field.TextInput value="" onChange={() => {}} />
+        </Field.Root>
+        <Description.Root id={`${prefix}-d1`} data-testid={`${prefix}-1`}>Hint</Description.Root>
+        <ErrorMessage.Root id={`${prefix}-e1`} data-testid={`${prefix}-2`}>Error</ErrorMessage.Root>
+        <Description.Root id={`${prefix}-d2`} data-testid={`${prefix}-3`}>Hint</Description.Root>
+        <Description.Root id={`${prefix}-d3`} data-testid={`${prefix}-4`}>Hint</Description.Root>
+        <ErrorMessage.Root id={`${prefix}-e2`} data-testid={`${prefix}-5`}>Error</ErrorMessage.Root>
+        <ErrorMessage.Root id={`${prefix}-e3`} data-testid={`${prefix}-6`}>Error</ErrorMessage.Root>
+      </>
+    );
+    render(
+      <main data-appearance="light" data-density="comfortable" style={gaps}>
+        <div>{sequence('out')}</div>
+        <Field.Group>{sequence('in')}</Field.Group>
+      </main>,
+    );
+    const gapsOf = (prefix: string) =>
+      [1, 2, 3, 4, 5, 6].map((i) => Math.round(box(`${prefix}-${i}`).top - box(`${prefix}-${i - 1}`).bottom));
+    expect(gapsOf('in')).toEqual(gapsOf('out'));
+  });
+
+  it('spaces a text caption from a radio group, and leaves an open popover out of the column', () => {
+    render(
+      <main data-appearance="light" data-density="comfortable" style={gaps}>
+        <Field.Group data-testid="group">
+          <Text.Root as="span" id="plan" data-testid="caption">
+            Plan
+          </Text.Root>
+          <RadioGroup.Root aria-labelledby="plan" defaultValue="a" data-testid="radios">
+            <RadioGroup.Item value="a">A</RadioGroup.Item>
+          </RadioGroup.Root>
+          <div popover="manual" data-testid="pop">
+            Options
+          </div>
+        </Field.Group>
+      </main>,
+    );
+    expect(Math.round(box('radios').top - box('caption').bottom)).toBe(10);
+    const height = box('group').height;
+    (screen.getByTestId('pop') as HTMLElement).showPopover();
+    expect(box('group').height).toBe(height);
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { Description, RadioGroup, Text } from '@omsoo/todae';
+import { Description, Field, RadioGroup, Text } from '@omsoo/todae';
 import { useId, useState } from 'react';
 
 export function RadioPlan() {
@@ -8,7 +8,7 @@ export function RadioPlan() {
   const proHintId = useId();
   const [plan, setPlan] = useState('free');
   return (
-    <div className="labelled-field">
+    <Field.Group>
       <Text.Root as="span" id={captionId} size="s" weight="medium">
         Plan
       </Text.Root>
@@ -22,6 +22,6 @@ export function RadioPlan() {
         </RadioGroup.Item>
       </RadioGroup.Root>
       <Description.Root id={proHintId}>Pro adds seats and audit logs.</Description.Root>
-    </div>
+    </Field.Group>
   );
 }

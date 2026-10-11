@@ -8,37 +8,24 @@ Server Components에서는 `@omsoo/todae/label`에서 가져올 수 있습니다
 
 ## Field와 함께
 
-Label에는 마진이 없습니다. 레이블과 셸 사이의 간격은 `field.label.gap`(0.4rem)입니다. 이 간격은 둘을 쌓는 래퍼에 두세요. 그 래퍼가 Description이나 ErrorMessage의 간격을 잡게 하지 마세요. 이 컴포넌트들은 `margin-block-start`를 스스로 가집니다.
-
-```css
-.labelled-field {
-	display: flex;
-	flex-direction: column;
-}
-
-.labelled-field
-	> :not([data-todae-description], [data-todae-error])
-	+ :not([data-todae-description], [data-todae-error]) {
-	margin-block-start: var(--todae-field-label-gap);
-}
-```
+Label에는 마진이 없습니다. 레이블, 컨트롤, 그리고 [Description](/description)이나 [ErrorMessage](/errormessage)를 `Field.Group`에 넣으세요. `Field.Group`은 레이블을 컨트롤 위 `field.label.gap`(0.4rem) 간격에 둡니다.
 
 ```tsx
 const id = useId()
 
-<div className="labelled-field">
+<Field.Group>
 	<Label.Root htmlFor={id}>Email</Label.Root>
 	<Field.Root id={id}>
 		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
 	</Field.Root>
-</div>
+</Field.Group>
 ```
 
 <Example block>
   <LabelSibling />
 </Example>
 
-스택 하나에 `.labelled-field` 하나를 씁니다. 순서는 Label, 컨트롤, 그리고 형제 요소인 [Description](/description)과 [ErrorMessage](/errormessage)입니다. 컨트롤과 메시지 사이 간격은 컴포넌트의 `margin-block-start`인 0.4rem입니다. ErrorMessage가 Description 뒤에 오면 그 시작 마진은 0.2rem입니다. 여러 스택을 래퍼 하나로 감싸지 마세요. 스택을 `Stack.Root`으로 감싸지 마세요. `stack.gap`은 필드 사이의 밀도 간격이지, 레이블과 셸 사이의 간격이 아닙니다. `.labelled-field` 스택들을 `Stack.Root` 안에 넣으세요.
+필드 하나에 `Field.Group` 하나를 씁니다. 순서는 Label, 컨트롤, 그리고 Description과 ErrorMessage입니다. ErrorMessage가 Description 뒤에 오면 둘 사이 간격은 `field.messages.gap`(0.2rem)입니다. 여러 필드를 그룹 하나에 넣지 마세요. 그룹들을 `Stack.Root` 안에 넣으세요. `stack.gap`은 필드 사이의 밀도 간격이지, 레이블과 셸 사이의 간격이 아닙니다.
 
 ## 상태
 

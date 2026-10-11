@@ -16,7 +16,7 @@ export function HighlightSearch() {
   const step = (by: number) => setIndex((at + by + total) % total);
   return (
     <Stack.Root>
-      <div className="labelled-field">
+      <Field.Group>
         <Label.Root htmlFor={inputId}>Find</Label.Root>
         <Field.Root id={inputId}>
           <Field.TextInput
@@ -28,7 +28,7 @@ export function HighlightSearch() {
             }}
           />
         </Field.Root>
-      </div>
+      </Field.Group>
       <Stack.Root direction="row">
         <Button.Root variant="ghost" disabled={total === 0} onClick={() => step(-1)}>
           Previous

@@ -1094,6 +1094,24 @@
       ]
     },
     {
+      "name": "Field.Group",
+      "description": "Column that stacks a Label.Root or caption, the control, then Description.Root and ErrorMessage.Root. The label or caption sits field.label.gap above the control; the messages keep the distances they have outside a group. Renders a div outside Field.Root.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A label or caption, the control, then any Description.Root and ErrorMessage.Root."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Extra class on the group."
+        }
+      ]
+    },
+    {
       "name": "Field.Icon",
       "description": "Order-only icon. Decorative unless interactive. No side prop.",
       "props": [
