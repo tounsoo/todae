@@ -426,7 +426,7 @@ describe('props table', () => {
   it('gives the description a readable column on a wide page, without scrolling', async () => {
     const table = renderTable('46rem');
     await frame();
-    const scroller = table.parentElement!;
+    const scroller = table.closest<HTMLElement>('[data-scroll-kind]')!;
     expect(scroller.scrollWidth).toBeLessThanOrEqual(scroller.clientWidth);
     const description = within(table).getAllByRole('row')[2]!.querySelectorAll('td')[1]!;
     expect(description.getBoundingClientRect().width).toBeGreaterThanOrEqual(16 * 16);
@@ -450,7 +450,7 @@ describe('props table', () => {
       // Reading scrollWidth lays the page out, container queries included.
       main.style.inlineSize = `${rem}rem`;
       for (const table of main.querySelectorAll('table')) {
-        const scroller = table.parentElement!;
+        const scroller = table.closest<HTMLElement>('[data-scroll-kind]')!;
         if (scroller.scrollWidth > scroller.clientWidth) {
           overflowing.push(`${rem}rem ${table.caption?.textContent}: ${scroller.scrollWidth} > ${scroller.clientWidth}`);
         }
@@ -462,7 +462,7 @@ describe('props table', () => {
   it('stacks each prop on a phone, keeping table semantics and no horizontal scroll', async () => {
     const table = renderTable('22rem');
     await frame();
-    const scroller = table.parentElement!;
+    const scroller = table.closest<HTMLElement>('[data-scroll-kind]')!;
     expect(scroller.scrollWidth).toBeLessThanOrEqual(scroller.clientWidth);
     expect(scroller.hasAttribute('tabindex')).toBe(false);
     const [, first] = within(table).getAllByRole('row');

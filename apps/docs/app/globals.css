@@ -426,6 +426,8 @@ main:focus {
 
 .docs-pre pre {
   margin: 0;
+  /* The scroll area around it scrolls, not the block. */
+  overflow: visible;
   padding: 1rem 1.25rem;
   background: none;
   font-size: 0.8125rem;
