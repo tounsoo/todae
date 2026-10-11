@@ -171,6 +171,8 @@ export const SEMANTIC_OVERRIDE_KEYS = [
   'space.selection.gap',
   'space.selection.size',
   'space.stack.gap',
+  'space.stack.gap-condensed',
+  'space.stack.gap-spacious',
 ] as const;
 
 export const COMPONENT_OVERRIDE_KEYS = [
@@ -233,6 +235,8 @@ export const COMPONENT_OVERRIDE_KEYS = [
   'button.ghost.fg.hover',
   'button.ghost.ring.focus',
   'stack.gap',
+  'stack.gap-condensed',
+  'stack.gap-spacious',
   'text.fg.accent',
   'text.fg.default',
   'text.fg.muted',
@@ -907,6 +911,8 @@ export const THEME_OVERRIDE_TYPES = {
   'space.selection.gap': 'dimension',
   'space.selection.size': 'dimension',
   'space.stack.gap': 'dimension',
+  'space.stack.gap-condensed': 'dimension',
+  'space.stack.gap-spacious': 'dimension',
   'focus.ring.color': 'color',
   'focus.ring.offset': 'dimension',
   'focus.ring.width': 'dimension',
@@ -966,6 +972,8 @@ export const THEME_OVERRIDE_TYPES = {
   'button.ghost.fg.hover': 'color',
   'button.ghost.ring.focus': 'color',
   'stack.gap': 'dimension',
+  'stack.gap-condensed': 'dimension',
+  'stack.gap-spacious': 'dimension',
   'text.fg.accent': 'color',
   'text.fg.default': 'color',
   'text.fg.muted': 'color',

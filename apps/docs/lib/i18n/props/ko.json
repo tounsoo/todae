@@ -1222,6 +1222,26 @@
       "en": "Flex direction.",
       "ko": "Flex 방향."
     },
+    "gap": {
+      "en": "Space between items. `condensed`, `normal` and `spacious` follow the density; `none` is no space.",
+      "ko": "항목 사이 간격. `condensed`, `normal`, `spacious`는 밀도를 따르고, `none`은 간격이 없습니다."
+    },
+    "wrap": {
+      "en": "Lets items wrap onto more lines.",
+      "ko": "항목이 여러 줄로 줄바꿈되게 합니다."
+    },
+    "align": {
+      "en": "Cross-axis alignment. Omitted, items stretch.",
+      "ko": "교차 축 정렬. 생략하면 항목이 늘어납니다."
+    },
+    "justify": {
+      "en": "Main-axis distribution. Omitted, items pack at the start.",
+      "ko": "주 축 배치. 생략하면 항목이 시작 쪽에 모입니다."
+    },
+    "as": {
+      "en": "The element to render. A `ul` or `ol` loses its bullets and indent and keeps `role=\"list\"`.",
+      "ko": "렌더링할 요소. `ul`이나 `ol`은 글머리표와 들여쓰기가 없어지고 `role=\"list\"`를 유지합니다."
+    },
     "children": {
       "en": "Laid-out children.",
       "ko": "배치될 자식."

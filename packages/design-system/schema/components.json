@@ -2261,7 +2261,7 @@
     },
     {
       "name": "Stack.Root",
-      "description": "Flex layout. Gap comes from the stack.gap contract token.",
+      "description": "Flex layout. Each gap step but none reads a contract token: stack.gap-condensed, stack.gap or stack.gap-spacious.",
       "props": [
         {
           "name": "direction",
@@ -2269,6 +2269,39 @@
           "required": false,
           "description": "Flex direction.",
           "default": "\"column\""
+        },
+        {
+          "name": "gap",
+          "type": "\"none\" | \"condensed\" | \"normal\" | \"spacious\"",
+          "required": false,
+          "description": "Space between items. `condensed`, `normal` and `spacious` follow the density; `none` is no space.",
+          "default": "\"normal\""
+        },
+        {
+          "name": "wrap",
+          "type": "boolean",
+          "required": false,
+          "description": "Lets items wrap onto more lines.",
+          "default": "false"
+        },
+        {
+          "name": "align",
+          "type": "\"start\" | \"center\" | \"end\" | \"baseline\" | \"stretch\"",
+          "required": false,
+          "description": "Cross-axis alignment. Omitted, items stretch."
+        },
+        {
+          "name": "justify",
+          "type": "\"start\" | \"center\" | \"end\" | \"between\"",
+          "required": false,
+          "description": "Main-axis distribution. Omitted, items pack at the start."
+        },
+        {
+          "name": "as",
+          "type": "\"div\" | \"ul\" | \"ol\" | \"nav\" | \"section\" | \"header\" | \"footer\"",
+          "required": false,
+          "description": "The element to render. A `ul` or `ol` loses its bullets and indent and keeps `role=\"list\"`.",
+          "default": "\"div\""
         },
         {
           "name": "children",

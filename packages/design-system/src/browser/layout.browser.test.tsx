@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Text, paginationRange } from '../index';
+import { Avatar, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, paginationRange } from '../index';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {
@@ -281,6 +281,24 @@ describe('Pagination in a browser', () => {
     expect(getComputedStyle(screen.getByTestId('page-1')).backgroundColor).toBe(fill);
     expect(await violations()).toEqual([]);
   });
+
+  it('gives an ordered list the list role, and lets a role you pass win', () => {
+    render(
+      <Themed>
+        <Stack.Root as="ol" data-testid="ordered">
+          <li>One</li>
+        </Stack.Root>
+        <Stack.Root as="ul" role="none" data-testid="plain">
+          <li>One</li>
+        </Stack.Root>
+        <Stack.Root as="nav" aria-label="Pages" data-testid="nav" />
+      </Themed>,
+    );
+    expect(screen.getByTestId('ordered').tagName).toBe('OL');
+    expect(screen.getByTestId('ordered').getAttribute('role')).toBe('list');
+    expect(screen.getByTestId('plain').getAttribute('role')).toBe('none');
+    expect(screen.getByTestId('nav').hasAttribute('role')).toBe(false);
+  });
 });
 
 describe('Field.Group in a browser', () => {
@@ -379,5 +397,78 @@ describe('Field.Group in a browser', () => {
     const height = box('group').height;
     (screen.getByTestId('pop') as HTMLElement).showPopover();
     expect(box('group').height).toBe(height);
+  });
+});
+
+describe('Stack in a browser', () => {
+  const gapOf = (id: string) => getComputedStyle(screen.getByTestId(id)).rowGap;
+
+  it('maps each gap step to its density token, and none to zero', () => {
+    const steps = ['none', 'condensed', 'normal', 'spacious'] as const;
+    const sizes = (density: string) => {
+      render(
+        <main data-appearance="light" data-density={density}>
+          {steps.map((gap) => (
+            <Stack.Root key={gap} gap={gap} data-testid={`${density}-${gap}`} />
+          ))}
+        </main>,
+      );
+      return steps.map((gap) => gapOf(`${density}-${gap}`));
+    };
+    expect(sizes('compact')).toEqual(['0px', '4px', '8px', '16px']);
+    expect(sizes('comfortable')).toEqual(['0px', '4px', '12px', '24px']);
+    expect(sizes('spacious')).toEqual(['0px', '8px', '20px', '32px']);
+  });
+
+  it('defaults to the normal gap', () => {
+    render(
+      <Themed>
+        <Stack.Root data-testid="default" />
+      </Themed>,
+    );
+    expect(gapOf('default')).toBe('12px');
+  });
+
+  it('wraps, aligns and spreads items', () => {
+    render(
+      <Themed>
+        <div style={{ width: 200 }}>
+          <Stack.Root direction="row" wrap data-testid="wrap">
+            <div data-testid="w1" style={{ width: 120 }}>1</div>
+            <div data-testid="w2" style={{ width: 120 }}>2</div>
+          </Stack.Root>
+          <Stack.Root direction="row" justify="between" align="center" data-testid="spread">
+            <div data-testid="s1" style={{ height: 40 }}>1</div>
+            <div data-testid="s2">2</div>
+          </Stack.Root>
+        </div>
+      </Themed>,
+    );
+    const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+    expect(box('w2').top).toBeGreaterThan(box('w1').top);
+    expect(box('s2').right).toBe(box('spread').right);
+    expect(box('s2').top + box('s2').height / 2).toBe(box('s1').top + box('s1').height / 2);
+  });
+
+  it('renders a list without bullets or indent, and keeps it a list', async () => {
+    render(
+      <Themed>
+        <Stack.Root as="ul" direction="row" data-testid="list">
+          <li>One</li>
+          <li>Two</li>
+        </Stack.Root>
+      </Themed>,
+    );
+    const list = screen.getByTestId('list');
+    expect(list.tagName).toBe('UL');
+    // Explicit, since Safari drops the implicit role once the bullets are gone.
+    expect(list.getAttribute('role')).toBe('list');
+    expect(screen.getByRole('list')).toBe(list);
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    const style = getComputedStyle(list);
+    expect(style.listStyleType).toBe('none');
+    expect(style.paddingInlineStart).toBe('0px');
+    expect(style.marginBlockStart).toBe('0px');
+    expect(await violations()).toEqual([]);
   });
 });

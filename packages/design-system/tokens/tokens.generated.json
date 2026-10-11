@@ -2018,6 +2018,24 @@
       "context": "compact"
     },
     {
+      "path": "space.stack.gap-condensed",
+      "type": "dimension",
+      "cssVar": "--todae-space-stack-gap-condensed",
+      "cssValue": "var(--todae-space-1)",
+      "ref": "space.1",
+      "layer": "density",
+      "context": "compact"
+    },
+    {
+      "path": "space.stack.gap-spacious",
+      "type": "dimension",
+      "cssVar": "--todae-space-stack-gap-spacious",
+      "cssValue": "var(--todae-space-4)",
+      "ref": "space.4",
+      "layer": "density",
+      "context": "compact"
+    },
+    {
       "path": "space.chip.x",
       "type": "dimension",
       "cssVar": "--todae-space-chip-x",
@@ -2117,6 +2135,24 @@
       "context": "comfortable"
     },
     {
+      "path": "space.stack.gap-condensed",
+      "type": "dimension",
+      "cssVar": "--todae-space-stack-gap-condensed",
+      "cssValue": "var(--todae-space-1)",
+      "ref": "space.1",
+      "layer": "density",
+      "context": "comfortable"
+    },
+    {
+      "path": "space.stack.gap-spacious",
+      "type": "dimension",
+      "cssVar": "--todae-space-stack-gap-spacious",
+      "cssValue": "var(--todae-space-6)",
+      "ref": "space.6",
+      "layer": "density",
+      "context": "comfortable"
+    },
+    {
       "path": "space.chip.x",
       "type": "dimension",
       "cssVar": "--todae-space-chip-x",
@@ -2212,6 +2248,24 @@
       "cssVar": "--todae-space-stack-gap",
       "cssValue": "var(--todae-space-5)",
       "ref": "space.5",
+      "layer": "density",
+      "context": "spacious"
+    },
+    {
+      "path": "space.stack.gap-condensed",
+      "type": "dimension",
+      "cssVar": "--todae-space-stack-gap-condensed",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
+      "layer": "density",
+      "context": "spacious"
+    },
+    {
+      "path": "space.stack.gap-spacious",
+      "type": "dimension",
+      "cssVar": "--todae-space-stack-gap-spacious",
+      "cssValue": "var(--todae-space-8)",
+      "ref": "space.8",
       "layer": "density",
       "context": "spacious"
     },
@@ -2743,6 +2797,24 @@
       "cssVar": "--todae-stack-gap",
       "cssValue": "var(--todae-space-stack-gap)",
       "ref": "space.stack.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "stack.gap-condensed",
+      "type": "dimension",
+      "cssVar": "--todae-stack-gap-condensed",
+      "cssValue": "var(--todae-space-stack-gap-condensed)",
+      "ref": "space.stack.gap-condensed",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "stack.gap-spacious",
+      "type": "dimension",
+      "cssVar": "--todae-stack-gap-spacious",
+      "cssValue": "var(--todae-space-stack-gap-spacious)",
+      "ref": "space.stack.gap-spacious",
       "layer": "contract",
       "context": null
     },

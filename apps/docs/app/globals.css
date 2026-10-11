@@ -103,15 +103,6 @@ body {
   box-shadow: inset 0 0 0 1px var(--docs-line);
 }
 
-.top-links ul,
-.language-switcher ul {
-  display: flex;
-  gap: 0.125rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
 .top-links a,
 .language-switcher a {
   display: block;
@@ -655,9 +646,6 @@ table {
 }
 
 .hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
   margin-block-start: 2rem;
 }
 
@@ -708,30 +696,10 @@ table {
     0 16px 40px -16px oklch(0 0 0 / 0.22);
 }
 
-.showcase-title {
-  display: flex;
-  /* On a phone the avatars and badge drop below the title. */
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-}
-
 .showcase-panel {
   display: grid;
   gap: 0.875rem;
   padding-block-start: 1rem;
-}
-
-.showcase-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.showcase-avatars {
-  display: flex;
-  gap: 0.25rem;
 }
 
 .showcase-member {
@@ -764,13 +732,6 @@ table {
   }
 }
 
-.home-group-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
 .home-group h2 {
   margin: 0;
   font-size: 1.125rem;
@@ -788,15 +749,6 @@ table {
   margin: 0.375rem 0 1rem;
   color: var(--todae-color-fg-muted);
   font-size: 0.9375rem;
-}
-
-.home-group ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .home-group a {
@@ -977,13 +929,6 @@ table {
 
 .pg-modes {
   display: grid;
-  gap: 1rem;
-}
-
-.pg-tokens-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
   gap: 1rem;
 }
 

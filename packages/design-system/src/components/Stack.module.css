@@ -11,4 +11,62 @@
   .column {
     flex-direction: column;
   }
+
+  .root[data-gap='none'] {
+    gap: 0;
+  }
+
+  .root[data-gap='condensed'] {
+    gap: var(--todae-stack-gap-condensed);
+  }
+
+  .root[data-gap='spacious'] {
+    gap: var(--todae-stack-gap-spacious);
+  }
+
+  .root[data-wrap] {
+    flex-wrap: wrap;
+  }
+
+  .root[data-align='start'] {
+    align-items: start;
+  }
+
+  .root[data-align='center'] {
+    align-items: center;
+  }
+
+  .root[data-align='end'] {
+    align-items: end;
+  }
+
+  .root[data-align='baseline'] {
+    align-items: baseline;
+  }
+
+  .root[data-align='stretch'] {
+    align-items: stretch;
+  }
+
+  .root[data-justify='start'] {
+    justify-content: start;
+  }
+
+  .root[data-justify='center'] {
+    justify-content: center;
+  }
+
+  .root[data-justify='end'] {
+    justify-content: end;
+  }
+
+  .root[data-justify='between'] {
+    justify-content: space-between;
+  }
+
+  .list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
 }
