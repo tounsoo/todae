@@ -281,6 +281,24 @@ describe('Pagination in a browser', () => {
     expect(getComputedStyle(screen.getByTestId('page-1')).backgroundColor).toBe(fill);
     expect(await violations()).toEqual([]);
   });
+
+  it('gives an ordered list the list role, and lets a role you pass win', () => {
+    render(
+      <Themed>
+        <Stack.Root as="ol" data-testid="ordered">
+          <li>One</li>
+        </Stack.Root>
+        <Stack.Root as="ul" role="none" data-testid="plain">
+          <li>One</li>
+        </Stack.Root>
+        <Stack.Root as="nav" aria-label="Pages" data-testid="nav" />
+      </Themed>,
+    );
+    expect(screen.getByTestId('ordered').tagName).toBe('OL');
+    expect(screen.getByTestId('ordered').getAttribute('role')).toBe('list');
+    expect(screen.getByTestId('plain').getAttribute('role')).toBe('none');
+    expect(screen.getByTestId('nav').hasAttribute('role')).toBe(false);
+  });
 });
 
 describe('Field.Group in a browser', () => {
@@ -443,6 +461,8 @@ describe('Stack in a browser', () => {
     );
     const list = screen.getByTestId('list');
     expect(list.tagName).toBe('UL');
+    // Explicit, since Safari drops the implicit role once the bullets are gone.
+    expect(list.getAttribute('role')).toBe('list');
     expect(screen.getByRole('list')).toBe(list);
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
     const style = getComputedStyle(list);

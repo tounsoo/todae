@@ -376,10 +376,10 @@
   },
   "stack": {
     "(top)": "3dde9f089aaf",
-    "# Stack": "7ed38c3861f6",
+    "# Stack": "d83a9069fd43",
     "## Gap": "60f023baac11",
     "## Alignment and wrapping": "8301a4853788",
-    "## Accessible composition": "753bca9bb489",
+    "## Accessible composition": "32bfac7e4ef4",
     "## When to use": "e4f17f5fa29d",
     "## Props": "49963aa313e9",
     "(section order)": "d9525eb32a1a"

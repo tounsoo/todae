@@ -2,7 +2,7 @@ import { StackButtons, StackGaps, StackSpread } from '../../../components/demos/
 
 # Stack
 
-`gap` picks one of four steps. `condensed`, `normal` and `spacious` come from the `stack.gap`, `stack.gap-condensed` and `stack.gap-spacious` tokens, so they follow the density; `none` is no space. The default is `normal`.
+`gap` picks one of four steps. `condensed`, `normal` and `spacious` come from the `stack.gap-condensed`, `stack.gap` and `stack.gap-spacious` tokens, so they follow the density; `none` is no space. The default is `normal`.
 
 Server Components can import it from `@omsoo/todae/stack`. That entry has no `'use client'` and no hooks; the main `@omsoo/todae` entry is a client module.
 
@@ -26,7 +26,7 @@ Server Components can import it from `@omsoo/todae/stack`. That entry has no `'u
 
 ## Accessible composition
 
-**Todae handles:** Layout only. `Stack.Root` renders a `div` with no role unless `as` picks another element. As a `ul` or `ol` it drops the bullets and indent and sets `role="list"`, since Safari drops list semantics from a list without bullets otherwise. `direction` is `row` or `column`, never reversed, and `justify` and `align` only move items within that order, so items show in DOM order and reading and Tab order follow what is drawn. Every other prop, `ref`, `role` and `aria-*` included, reaches the element.
+**Todae handles:** Layout only. `Stack.Root` renders a `div` with no role unless `as` picks another element. As a `ul` or `ol` it drops the bullets and indent and sets `role="list"`, since Safari drops list semantics from a list without bullets otherwise. `direction` is `row` or `column`, never reversed, and `justify` and `align` only move items within that order, so items show in DOM order and reading and Tab order follow what is drawn. Every other prop, `ref`, `role` and `aria-*` included, reaches the element; a `role` you pass replaces the list role.
 
 **You supply:** The semantics. Buttons that act on one thing and need a shared name take `role="group"` and `aria-label`; [Button.Group](/button) sets `role="group"` itself. A row of tools that should be one Tab stop moved through with arrow keys is a [Toolbar](/toolbar), not a `Stack.Root`. Items that form a list go in `as="ul"` or `as="ol"`, each child an `li`. A `nav` is a navigation landmark: give each one an `aria-label` when a page has more than one. A `section` becomes a region landmark only when it has a name.
 

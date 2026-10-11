@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Stack.Root',
-  description: 'Flex layout. Gap comes from the stack.gap contract tokens.',
+  description: 'Flex layout. Each gap step but none reads a contract token: stack.gap-condensed, stack.gap or stack.gap-spacious.',
   props: [
     {
       name: 'direction',

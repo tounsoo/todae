@@ -22,7 +22,7 @@ export function HomeShowcase() {
             Workspace
           </Text.Root>
           <Stack.Root className="showcase-meta" direction="row" align="center">
-            <Stack.Root className="showcase-avatars" direction="row" gap="condensed" role="group" aria-label="Members">
+            <Stack.Root direction="row" gap="condensed" role="group" aria-label="Members">
               {MEMBERS.map((member) => (
                 <Avatar.Root key={member.id} size="sm" label={member.name} tone={member.tone}>
                   <Avatar.Fallback>{member.initials}</Avatar.Fallback>

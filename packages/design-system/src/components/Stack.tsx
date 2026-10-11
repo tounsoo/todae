@@ -27,9 +27,9 @@ function Root({ direction = 'column', gap = 'normal', wrap, align, justify, as: 
   const list = Tag === 'ul' || Tag === 'ol';
   return (
     <Tag
-      // Safari drops list semantics from a list without bullets unless the role is explicit.
-      role={list ? 'list' : undefined}
       {...props}
+      // Safari drops list semantics from a list without bullets unless the role is explicit.
+      role={props.role ?? (list ? 'list' : undefined)}
       // Each tag's element type extends HTMLElement; the ref is typed to the common base.
       ref={ref as Ref<HTMLDivElement & HTMLUListElement & HTMLOListElement>}
       data-gap={gap === 'normal' ? undefined : gap}
