@@ -637,7 +637,7 @@ export type FieldGroupProps = {
   className?: string;
 } & ComponentPropsWithRef<'div'>;
 
-/** Stacks a label or caption, the control, Description and ErrorMessage, at the distances they have outside a group. */
+/** Puts a label or caption field.label.gap above the control; Description and ErrorMessage keep the distances they have outside a group. */
 function Group({ className, ...props }: FieldGroupProps) {
   return <div {...props} className={cx(styles.group, className)} />;
 }

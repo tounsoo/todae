@@ -317,10 +317,21 @@ describe('Field.Group in a browser', () => {
           <Description.Root id="hint" data-testid="hint">
             Use your work address.
           </Description.Root>
+          <Description.Root id="hint2" data-testid="hint2">
+            Shown to admins.
+          </Description.Root>
+          <ErrorMessage.Root id="error2" data-testid="error2">
+            Too long.
+          </ErrorMessage.Root>
+          <ErrorMessage.Root id="error3" data-testid="error3">
+            Not allowed.
+          </ErrorMessage.Root>
         </Field.Group>
       </main>,
     );
     expect(Math.round(box('hint').top - box('error').bottom)).toBe(10);
+    expect(Math.round(box('hint2').top - box('hint').bottom)).toBe(10);
+    expect(Math.round(box('error3').top - box('error2').bottom)).toBe(10);
   });
 
   it('spaces a text caption from a radio group, and leaves an open popover out of the column', () => {
