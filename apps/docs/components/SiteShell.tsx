@@ -1,9 +1,11 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 import '@omsoo/todae/todae.css';
+import { Text } from '@omsoo/todae/text';
 import { VisuallyHidden } from '@omsoo/todae/visually-hidden';
 import { localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
+import { LICENSE } from '../lib/license';
 // Reads the file system, so SiteShell renders on the server only.
 import { untranslatedByLocale } from '../lib/i18n/pages';
 import { GitHubIcon } from './icons';
@@ -43,6 +45,7 @@ export function SiteShell({
     [FIRST_COMPONENT, dict.topLinks.components],
     ['/playground', dict.topLinks.playground],
   ] as const;
+  const [licenseBefore, licenseAfter] = dict.license.split('{license}');
   return (
     <html lang={locale} className={`${sans.variable} ${mono.variable}`}>
       <body>
@@ -87,6 +90,18 @@ export function SiteShell({
               {children}
             </main>
           </div>
+          <footer className="site-footer">
+            <div className="site-footer-inner">
+              <Text.Root size="s" tone="muted">
+                {licenseBefore}
+                <SiteLink href={LICENSE.href}>{dict.licenseName}</SiteLink>
+                {licenseAfter}
+              </Text.Root>
+              <Text.Root size="s" tone="muted">
+                {`Copyright © ${LICENSE.year} ${LICENSE.holder}`}
+              </Text.Root>
+            </div>
+          </footer>
         </Providers>
       </body>
     </html>
