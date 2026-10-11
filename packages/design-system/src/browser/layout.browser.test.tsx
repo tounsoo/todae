@@ -287,7 +287,7 @@ describe('Field.Group in a browser', () => {
   const gaps = { ['--_todae-field-label-gap' as string]: '10px', ['--_todae-field-messages-gap' as string]: '3px' };
   const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
 
-  it('spaces label, control and messages by field.label.gap, and message from message by field.messages.gap', () => {
+  it('spaces label, control and messages by field.label.gap, and an ErrorMessage after a Description by field.messages.gap', () => {
     render(
       <main data-appearance="light" data-density="comfortable" style={gaps}>
         <Field.Group>
@@ -332,6 +332,31 @@ describe('Field.Group in a browser', () => {
     expect(Math.round(box('hint').top - box('error').bottom)).toBe(10);
     expect(Math.round(box('hint2').top - box('hint').bottom)).toBe(10);
     expect(Math.round(box('error3').top - box('error2').bottom)).toBe(10);
+  });
+
+  it('keeps every message gap the same inside a group as outside one', () => {
+    const sequence = (prefix: string) => (
+      <>
+        <Field.Root aria-label={`${prefix} email`} data-testid={`${prefix}-0`}>
+          <Field.TextInput value="" onChange={() => {}} />
+        </Field.Root>
+        <Description.Root id={`${prefix}-d1`} data-testid={`${prefix}-1`}>Hint</Description.Root>
+        <ErrorMessage.Root id={`${prefix}-e1`} data-testid={`${prefix}-2`}>Error</ErrorMessage.Root>
+        <Description.Root id={`${prefix}-d2`} data-testid={`${prefix}-3`}>Hint</Description.Root>
+        <Description.Root id={`${prefix}-d3`} data-testid={`${prefix}-4`}>Hint</Description.Root>
+        <ErrorMessage.Root id={`${prefix}-e2`} data-testid={`${prefix}-5`}>Error</ErrorMessage.Root>
+        <ErrorMessage.Root id={`${prefix}-e3`} data-testid={`${prefix}-6`}>Error</ErrorMessage.Root>
+      </>
+    );
+    render(
+      <main data-appearance="light" data-density="comfortable" style={gaps}>
+        <div>{sequence('out')}</div>
+        <Field.Group>{sequence('in')}</Field.Group>
+      </main>,
+    );
+    const gapsOf = (prefix: string) =>
+      [1, 2, 3, 4, 5, 6].map((i) => Math.round(box(`${prefix}-${i}`).top - box(`${prefix}-${i - 1}`).bottom));
+    expect(gapsOf('in')).toEqual(gapsOf('out'));
   });
 
   it('spaces a text caption from a radio group, and leaves an open popover out of the column', () => {
