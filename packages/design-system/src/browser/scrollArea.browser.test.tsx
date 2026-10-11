@@ -90,6 +90,28 @@ describe('ScrollArea.Root', () => {
     expect(area.scrollLeft).toBeGreaterThan(0);
   });
 
+  it('wraps text to its width sideways, and scrolls only what cannot wrap', () => {
+    render(
+      <div style={{ width: 200 }}>
+        <ScrollArea.Root data-testid="text" axis="inline">
+          <p style={{ margin: 0 }}>A sentence long enough to need several lines at this width, which it should wrap onto.</p>
+        </ScrollArea.Root>
+        <ScrollArea.Root data-testid="code" axis="inline">
+          <pre style={{ margin: 0 }}>a line of code that does not wrap and runs past the edge</pre>
+        </ScrollArea.Root>
+      </div>,
+    );
+    const text = screen.getByTestId('text');
+    expect(text.scrollWidth).toBe(text.clientWidth);
+    const code = screen.getByTestId('code');
+    expect(code.scrollWidth).toBeGreaterThan(code.clientWidth);
+    // The ring room stays after the end of the line.
+    code.scrollLeft = code.scrollWidth;
+    const pre = code.querySelector('pre')!;
+    const room = Number.parseFloat(getComputedStyle(code).scrollPaddingLeft);
+    expect(code.getBoundingClientRect().right - pre.getBoundingClientRect().right).toBeCloseTo(room, 0);
+  });
+
   it('reveals a ring drawn on an ancestor, such as a Field shell', () => {
     render(
       <ScrollArea.Root data-testid="area" style={{ height: 120 }}>

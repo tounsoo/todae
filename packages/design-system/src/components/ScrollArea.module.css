@@ -23,9 +23,11 @@
     padding: var(--_room);
   }
 
-  /* As wide as what it holds, so the room stays at the end of a sideways scroll. */
+  /* As wide as the area, or as what it holds when that can't wrap any
+     narrower, so the room stays at the end of a sideways scroll. Text and
+     tables still wrap to the area's width first. */
   .root:is([data-axis='inline'], [data-axis='both']) > .content {
-    inline-size: max-content;
+    inline-size: fit-content;
     min-inline-size: 100%;
   }
 

@@ -475,12 +475,12 @@ describe('docs locales', () => {
       path.current = '/ko/button';
       const korean = renderToStaticMarkup(<PropsTable name="Button.Root" />);
       // Nothing but the table inside its scroll region.
-      expect(korean).toMatch(/data-overflow-kind="table"><table lang="ko" role="table" class="[^"]+"><caption class="[^"]+">Button.Root props<\/caption>/);
+      expect(korean).toMatch(/data-scroll-kind="table"[^>]*><div class="[^"]+"><table lang="ko" role="table" class="[^"]+"><caption class="[^"]+">Button.Root props<\/caption>/);
       expect(korean).toMatch(/<th scope="col" role="columnheader" class="[^"]+">설명<\/th>/);
       expect(korean).toContain('<p>시각 스타일. primary가 아니면 data-button-variant를 설정합니다.</p>');
       path.current = '/button';
       const english = renderToStaticMarkup(<PropsTable name="Button.Root" />);
-      expect(english).toMatch(/data-overflow-kind="table"><table lang="en" role="table" class="[^"]+">/);
+      expect(english).toMatch(/data-scroll-kind="table"[^>]*><div class="[^"]+"><table lang="en" role="table" class="[^"]+">/);
       expect(english).toMatch(/<th scope="col" role="columnheader" class="[^"]+">Description<\/th>/);
       expect(english).toContain('<p>Visual style. Non-primary sets data-button-variant.</p>');
     } finally {
