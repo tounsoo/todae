@@ -279,7 +279,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "e3914e7f9386",
+    "# Native platform": "a59db7732a9f",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -301,6 +301,17 @@
     "## When to use": "02f1c1910865",
     "## Props": "b9e792e827ad",
     "(section order)": "eb8c827884bd"
+  },
+  "prose": {
+    "(top)": "3b30d99936ef",
+    "# Prose": "b89cbb167b2d",
+    "## Spacing": "5fc9e64dbe15",
+    "## Where the styles stop": "0454e788cf8f",
+    "## Map markdown onto Todae": "20f309de6089",
+    "## Accessible composition": "ead52f9648b2",
+    "## When to use": "4a1c3e03570d",
+    "## Props": "7fd923db90b6",
+    "(section order)": "9d2339ea57e1"
   },
   "radio": {
     "(top)": "44e2b511c2eb",

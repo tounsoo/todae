@@ -22,12 +22,15 @@ import {
   Meter,
   Pagination,
   Progress,
+  Prose,
   Separator,
   Skeleton,
   Slider,
   Spinner,
+  Stack,
   Table,
   Text,
+  Tree,
   VisuallyHidden,
 } from '../index';
 
@@ -608,5 +611,164 @@ describe('content parts in a browser', () => {
       expect(style(`${part}-dark`).backgroundColor).not.toBe(style(part).backgroundColor);
       expect(style(`${part}-dark`).color).not.toBe(style(part).color);
     }
+  });
+});
+
+describe('Prose.Root in a browser', () => {
+  const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+
+  it('spaces its children from the prose tokens, with the first and last touching its edges', () => {
+    render(
+      <Themed>
+        <Prose.Root data-testid="root">
+          <h1 data-testid="h1">Title</h1>
+          <p data-testid="lede">Lede</p>
+          <p data-testid="p">Body</p>
+          <h2 data-testid="h2">Section</h2>
+          <h3 data-testid="h3">Subsection</h3>
+          <p data-testid="last">End</p>
+        </Prose.Root>
+      </Themed>,
+    );
+    expect(style('h1').marginBlockStart).toBe('0px');
+    expect(style('h1').fontSize).toBe('30px');
+    // What follows a heading sits heading.space-after below it; a paragraph after a paragraph sits prose.gap below.
+    expect(style('lede').marginBlockStart).toBe('12px');
+    expect(style('p').marginBlockStart).toBe('16px');
+    expect(style('h2').marginBlockStart).toBe('32px');
+    expect(style('h2').fontSize).toBe('24px');
+    // A heading right after a heading follows it closely.
+    expect(style('h3').marginBlockStart).toBe('12px');
+    expect(style('h3').fontSize).toBe('20px');
+    expect(style('last').marginBlockEnd).toBe('0px');
+    const root = screen.getByTestId('root').getBoundingClientRect();
+    expect(screen.getByTestId('h1').getBoundingClientRect().top).toBe(root.top);
+    expect(screen.getByTestId('last').getBoundingClientRect().bottom).toBe(root.bottom);
+  });
+
+  it('styles lists and block quotes', () => {
+    render(
+      <Themed>
+        <Prose.Root>
+          <ul data-testid="list">
+            <li>One</li>
+            <li data-testid="second">
+              <p data-testid="loose">Two</p>
+              <ol data-testid="nested">
+                <li>Nested</li>
+              </ol>
+            </li>
+          </ul>
+          <blockquote data-testid="quote">
+            <p data-testid="quoted">Quoted</p>
+            <p data-testid="quoted-2">More</p>
+          </blockquote>
+        </Prose.Root>
+      </Themed>,
+    );
+    expect(style('list').paddingInlineStart).toBe('24px');
+    expect(style('second').marginBlockStart).toBe('8px');
+    expect(style('loose').marginBlockStart).toBe('0px');
+    expect(style('nested').marginBlockStart).toBe('8px');
+    expect(style('quote').marginInlineStart).toBe('0px');
+    expect(style('quote').borderInlineStartWidth).toBe('3px');
+    expect(style('quote').paddingInlineStart).toBe('16px');
+    expect(style('quoted').marginBlockStart).toBe('0px');
+    expect(style('quoted-2').marginBlockStart).toBe('16px');
+  });
+
+  it("stops at any element that isn't markdown's, and lets a class on an element win", () => {
+    render(
+      <Themed>
+        <Prose.Root>
+          <p>Before</p>
+          <div data-testid="demo">
+            <h3 data-testid="demo-h3">Demo heading</h3>
+            <p data-testid="demo-p">Demo text</p>
+          </div>
+          <Text.Root as="h2" size="s" data-testid="text">
+            Small heading
+          </Text.Root>
+          <Text.Root data-testid="text-p">After</Text.Root>
+        </Prose.Root>
+      </Themed>,
+    );
+    // The div still takes the rhythm as a child, but what it holds keeps the browser's own styles.
+    expect(style('demo').marginBlockStart).toBe('16px');
+    expect(style('demo-h3').fontSize).not.toBe('20px');
+    expect(style('demo-p').marginBlockStart).toBe('16px');
+    expect(style('demo-p').marginBlockEnd).toBe('16px');
+    expect(style('text').fontSize).toBe('14px');
+    // Text.Root resets its own margin, and the rhythm still spaces it.
+    expect(style('text').marginBlockStart).toBe('32px');
+    expect(style('text-p').marginBlockStart).toBe('12px');
+  });
+  it('replaces the margins of a component child, so the first and last children touch the edges', () => {
+    render(
+      <main data-appearance="light" data-density="compact">
+        <Prose.Root data-testid="root">
+          <Code.Block data-testid="first">code</Code.Block>
+          <p data-testid="after-code">Text</p>
+          <Separator.Root data-testid="rule" />
+          <Code.Block data-testid="last">code</Code.Block>
+        </Prose.Root>
+      </main>,
+    );
+    // Compact density: prose.gap is 12px.
+    expect(style('first').marginBlockStart).toBe('0px');
+    expect(style('after-code').marginBlockStart).toBe('12px');
+    expect(style('rule').marginBlockStart).toBe('12px');
+    expect(style('rule').marginBlockEnd).toBe('0px');
+    expect(style('last').marginBlockEnd).toBe('0px');
+    const root = screen.getByTestId('root').getBoundingClientRect();
+    expect(screen.getByTestId('first').getBoundingClientRect().top).toBe(root.top);
+    expect(screen.getByTestId('last').getBoundingClientRect().bottom).toBe(root.bottom);
+  });
+
+  it('leaves the indent and item spacing of a list with a role alone', () => {
+    render(
+      <Themed>
+        <Prose.Root>
+          <Stack.Root as="ul" direction="row" data-testid="stack">
+            <li data-testid="a">A</li>
+            <li data-testid="b">B</li>
+          </Stack.Root>
+          <Tree.Root aria-label="Files">
+            <Tree.Item value="a" data-testid="tree-a">
+              <Tree.Label>A</Tree.Label>
+            </Tree.Item>
+            <Tree.Item value="b" data-testid="tree-b">
+              <Tree.Label>B</Tree.Label>
+            </Tree.Item>
+          </Tree.Root>
+        </Prose.Root>
+      </Themed>,
+    );
+    expect(style('b').marginBlockStart).toBe('0px');
+    expect(screen.getByTestId('b').getBoundingClientRect().top).toBe(screen.getByTestId('a').getBoundingClientRect().top);
+    expect(style('tree-b').marginBlockStart).toBe('0px');
+  });
+
+  it('styles markdown lists that carry a class, such as GFM task lists', () => {
+    render(
+      <Themed>
+        <Prose.Root>
+          <ul className="contains-task-list" data-testid="tasks">
+            <li className="task-list-item">One</li>
+            <li className="task-list-item" data-testid="task-2">
+              Two
+            </li>
+          </ul>
+          <ol className="" data-testid="empty-class">
+            <li>One</li>
+            <li data-testid="empty-2">Two</li>
+          </ol>
+        </Prose.Root>
+      </Themed>,
+    );
+    expect(style('tasks').paddingInlineStart).toBe('24px');
+    expect(style('task-2').marginBlockStart).toBe('8px');
+    expect(style('empty-class').paddingInlineStart).toBe('24px');
+    expect(style('empty-2').marginBlockStart).toBe('8px');
   });
 });

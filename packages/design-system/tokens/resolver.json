@@ -22,6 +22,7 @@
       "sources": [
         { "$ref": "./components/stack.json" },
         { "$ref": "./components/text.json" },
+        { "$ref": "./components/prose.json" },
         { "$ref": "./components/field.json" },
         { "$ref": "./components/chip.json" },
         { "$ref": "./components/overlay.json" },

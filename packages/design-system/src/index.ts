@@ -23,6 +23,7 @@ export { categoryTone, CATEGORY_TONES, type CategoryTone } from './components/to
 export { Link, type LinkRootProps, type LinkRenderProps } from './components/Link';
 export { Disclosure, type DisclosureRootProps, type DisclosureSummaryProps } from './components/Disclosure.client';
 export { Separator, type SeparatorRootProps } from './components/Separator';
+export { Prose, type ProseRootProps } from './components/Prose';
 export { ScrollArea, type ScrollAreaAxis, type ScrollAreaRootProps } from './components/ScrollArea';
 export { Table, type TableBodyProps, type TableCaptionProps, type TableCellProps, type TableFootProps, type TableHeadProps, type TableHeaderCellProps, type TableRootProps, type TableRowProps } from './components/Table';
 export { Progress, type ProgressRootProps } from './components/Progress';

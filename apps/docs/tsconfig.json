@@ -30,6 +30,7 @@
       "@omsoo/todae/link": ["../../packages/design-system/src/server/link.ts"],
       "@omsoo/todae/disclosure": ["../../packages/design-system/src/server/disclosure.ts"],
       "@omsoo/todae/separator": ["../../packages/design-system/src/server/separator.ts"],
+      "@omsoo/todae/prose": ["../../packages/design-system/src/server/prose.ts"],
       "@omsoo/todae/table": ["../../packages/design-system/src/server/table.ts"],
       "@omsoo/todae/progress": ["../../packages/design-system/src/server/progress.ts"],
       "@omsoo/todae/meter": ["../../packages/design-system/src/server/meter.ts"],

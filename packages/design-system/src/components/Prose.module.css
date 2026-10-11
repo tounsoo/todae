@@ -1,0 +1,107 @@
+/* cssmodules-pure-no-check */
+/* The @scope rules below select bare elements, which a CSS Modules compiler in
+   pure mode would reject. */
+@layer todae.components {
+  .root {
+    color: var(--todae-prose-fg);
+    font-size: var(--todae-prose-size);
+    line-height: var(--todae-prose-leading);
+    overflow-wrap: break-word;
+  }
+
+  /* Rhythm. Every child but the first sits prose.gap below the one before
+     it, a heading further below, and what follows a heading closer to it. The
+     first child and the last touch the edges, so a card or message holds it
+     evenly. These rules sit in todae.components and weigh more than one
+     class, so they also space a child with margins of its own, such as
+     Code.Block or Separator.Root from the native sublayer, or one that
+     resets them, such as Text.Root. The heading rules weigh the same as
+     each other, so the later one wins. */
+  .root > :nth-child(n) {
+    margin-block-end: 0;
+  }
+
+  .root > :first-child {
+    margin-block-start: 0;
+  }
+
+  .root > :nth-child(n + 2) {
+    margin-block-start: var(--todae-prose-gap);
+  }
+
+  .root > :nth-child(n + 2):is(h1, h2, h3, h4, h5, h6) {
+    margin-block-start: var(--todae-prose-heading-space-before);
+  }
+
+  .root > :is(h1, h2, h3, h4, h5, h6) + :nth-child(n + 2) {
+    margin-block-start: var(--todae-prose-heading-space-after);
+  }
+
+  /* Markdown's own elements, reached through a chain of them. Any other
+     element, such as a div, table or pre, is a lower bound: a demo, a card or a
+     code block inside the prose keeps its own type. Inside @scope these
+     selectors weigh one element, so a class on the element wins. */
+  @scope (.root) to (:not(h1, h2, h3, h4, h5, h6, p, ul, ol, li, blockquote)) {
+    :is(h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote) {
+      margin-block-end: 0;
+    }
+
+    :is(h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote):where(:first-child) {
+      margin-block-start: 0;
+    }
+
+    :is(h1, h2, h3, h4, h5, h6) {
+      color: var(--todae-prose-heading-fg);
+      font-weight: var(--todae-prose-heading-weight);
+      line-height: var(--todae-prose-heading-leading);
+      text-wrap: balance;
+    }
+
+    h1 {
+      font-size: var(--todae-prose-h1-size);
+    }
+
+    h2 {
+      font-size: var(--todae-prose-h2-size);
+    }
+
+    h3 {
+      font-size: var(--todae-prose-h3-size);
+    }
+
+    h4 {
+      font-size: var(--todae-prose-h4-size);
+    }
+
+    h5 {
+      font-size: var(--todae-prose-h5-size);
+    }
+
+    h6 {
+      font-size: var(--todae-prose-h6-size);
+    }
+
+    /* Markdown puts no role on a list. A list with one, such as
+       Stack.Root as="ul" or Tree.Root, keeps its own indent and the space
+       between its items. :where keeps these at element weight. */
+    :is(ul, ol):where(:not([role])) {
+      padding-inline-start: var(--todae-prose-list-indent);
+    }
+
+    :is(ul, ol):where(:not([role])) > li + li,
+    li > * + * {
+      margin-block-start: var(--todae-prose-list-item-gap);
+    }
+
+    blockquote {
+      margin-inline: 0;
+      padding-inline-start: var(--todae-prose-quote-padding);
+      border-inline-start: var(--todae-prose-quote-border-width) solid var(--todae-prose-quote-border);
+      color: var(--todae-prose-quote-fg);
+    }
+
+    blockquote > * + * {
+      margin-block-start: var(--todae-prose-gap);
+    }
+  }
+}

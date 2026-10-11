@@ -44,6 +44,7 @@ export const SITE_GROUPS = [
       ['/pagination', 'Pagination'],
       ['/popover', 'Popover'],
       ['/progress', 'Progress and Meter'],
+      ['/prose', 'Prose'],
       ['/radio', 'Radio'],
       ['/scroll-area', 'ScrollArea'],
       ['/separator', 'Separator'],
