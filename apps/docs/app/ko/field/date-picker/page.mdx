@@ -5,14 +5,15 @@ import { FieldDatePicked, FieldDatePickerAlone } from '../../../../components/de
 `Field.DatePicker`는 [Field](/field) 안에서 [Calendar](/calendar)를 [Popover](/popover)로 여는 버튼입니다. `value`는 `Temporal.PlainDate`나 `null`이고, `onValueChange`는 달력에서 고른 날짜를 받으며, 그러면 달력이 닫힙니다. 달력의 `min`, `max`, `isDateDisabled`, `firstDayOfWeek`, `locale`을 받습니다.
 
 ```tsx
-const [date, setDate] = useState<Temporal.PlainDate | null>(null)
+const id = useId();
+const [date, setDate] = useState<Temporal.PlainDate | null>(null);
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Start date</Label.Root>
-	<Field.Root id={id}>
-		<Field.DateInput value={date} onValueChange={setDate} />
-		<Field.DatePicker value={date} onValueChange={setDate} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Start date</Label.Root>
+  <Field.Root id={id}>
+    <Field.DateInput value={date} onValueChange={setDate} />
+    <Field.DatePicker value={date} onValueChange={setDate} />
+  </Field.Root>
 </Field.Group>
 ```
 

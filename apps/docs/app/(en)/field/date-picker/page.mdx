@@ -5,14 +5,15 @@ import { FieldDatePicked, FieldDatePickerAlone } from '../../../../components/de
 `Field.DatePicker` is a button inside a [Field](/field) that opens a [Calendar](/calendar) in a [Popover](/popover). Its `value` is a `Temporal.PlainDate` or `null`, and `onValueChange` gets the date picked in the calendar, which then closes. It takes the calendar's `min`, `max`, `isDateDisabled`, `firstDayOfWeek` and `locale`.
 
 ```tsx
-const [date, setDate] = useState<Temporal.PlainDate | null>(null)
+const id = useId();
+const [date, setDate] = useState<Temporal.PlainDate | null>(null);
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Start date</Label.Root>
-	<Field.Root id={id}>
-		<Field.DateInput value={date} onValueChange={setDate} />
-		<Field.DatePicker value={date} onValueChange={setDate} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Start date</Label.Root>
+  <Field.Root id={id}>
+    <Field.DateInput value={date} onValueChange={setDate} />
+    <Field.DatePicker value={date} onValueChange={setDate} />
+  </Field.Root>
 </Field.Group>
 ```
 
