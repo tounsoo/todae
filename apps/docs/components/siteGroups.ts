@@ -30,6 +30,7 @@ export const SITE_GROUPS = [
       ['/chip', 'Chip'],
       ['/chip-list', 'ChipList'],
       ['/code', 'Code and Kbd'],
+      ['/color-picker', 'ColorPicker'],
       ['/description', 'Description'],
       ['/dialog', 'Dialog'],
       ['/disclosure', 'Disclosure'],
@@ -40,7 +41,7 @@ export const SITE_GROUPS = [
         'Field',
         [
           ['/field/chip-input', 'ChipInput'],
-          ['/field/color-input', 'ColorInput'],
+          ['/field/color-picker', 'ColorPicker'],
           ['/field/date-input', 'DateInput'],
           ['/field/date-time-input', 'DateTimeInput'],
           ['/field/select', 'Select'],

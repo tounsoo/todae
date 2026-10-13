@@ -1,0 +1,127 @@
+@layer todae.components {
+  .root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-picker-gap);
+    inline-size: var(--todae-picker-width);
+    max-inline-size: 100%;
+  }
+
+  /* Saturation runs left to right and brightness bottom to top, over the
+     current hue. The black and white are the HSV model's ends, not theme colors. */
+  .area {
+    position: relative;
+    block-size: var(--todae-picker-area-height);
+    border-radius: var(--todae-picker-area-radius);
+    background:
+      linear-gradient(to top, black, transparent),
+      linear-gradient(to right, white, hsl(var(--_hue) 100% 50%));
+    touch-action: none;
+    cursor: crosshair;
+    user-select: none;
+  }
+
+  /* The two inputs only carry the values: the area is what is drawn. */
+  .axis {
+    position: absolute;
+    inset: 0;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    border: 0;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .thumb {
+    position: absolute;
+    /* Physical, like the pointer math and the arrow keys: the area doesn't
+       flip in a right-to-left page. */
+    left: calc(var(--_x) * 100%);
+    top: calc((1 - var(--_y)) * 100%);
+    box-sizing: border-box;
+    inline-size: var(--todae-picker-thumb-size);
+    block-size: var(--todae-picker-thumb-size);
+    border: var(--todae-picker-thumb-border-width) solid var(--todae-picker-thumb-border-color);
+    border-radius: 50%;
+    background: var(--_color);
+    box-shadow: 0 0 0 var(--todae-picker-thumb-edge-width) var(--todae-picker-thumb-edge-color);
+    margin-top: calc(var(--todae-picker-thumb-size) / -2);
+    margin-left: calc(var(--todae-picker-thumb-size) / -2);
+    pointer-events: none;
+  }
+
+  .area:has(.axis:focus-visible) > .thumb {
+    outline: var(--todae-focus-ring-width) solid var(--todae-picker-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .area[data-disabled] {
+    filter: saturate(0);
+    cursor: not-allowed;
+  }
+
+  .hue {
+    appearance: none;
+    display: block;
+    box-sizing: border-box;
+    inline-size: 100%;
+    block-size: var(--todae-picker-hue-height);
+    margin: 0;
+    border-radius: var(--todae-picker-hue-radius);
+    background: linear-gradient(
+      to right in hsl longer hue,
+      hsl(0 100% 50%),
+      hsl(360 100% 50%)
+    );
+    cursor: pointer;
+  }
+
+  /* A right-to-left range runs from the right, so its hues do too. */
+  .hue:dir(rtl) {
+    background: linear-gradient(to left in hsl longer hue, hsl(0 100% 50%), hsl(360 100% 50%));
+  }
+
+  .hue::-webkit-slider-thumb {
+    appearance: none;
+    box-sizing: border-box;
+    inline-size: var(--todae-picker-thumb-size);
+    block-size: var(--todae-picker-thumb-size);
+    border: var(--todae-picker-thumb-border-width) solid var(--todae-picker-thumb-border-color);
+    border-radius: 50%;
+    background: hsl(var(--_hue) 100% 50%);
+    box-shadow: 0 0 0 var(--todae-picker-thumb-edge-width) var(--todae-picker-thumb-edge-color);
+  }
+
+  .hue::-moz-range-thumb {
+    box-sizing: border-box;
+    inline-size: var(--todae-picker-thumb-size);
+    block-size: var(--todae-picker-thumb-size);
+    border: var(--todae-picker-thumb-border-width) solid var(--todae-picker-thumb-border-color);
+    border-radius: 50%;
+    background: hsl(var(--_hue) 100% 50%);
+    box-shadow: 0 0 0 var(--todae-picker-thumb-edge-width) var(--todae-picker-thumb-edge-color);
+  }
+
+  .hue:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-picker-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .hue:disabled {
+    filter: saturate(0);
+    cursor: not-allowed;
+  }
+
+  /* Forced colors drop the gradients; keep the thumb visible on the system canvas. */
+  @media (forced-colors: active) {
+    .area,
+    .hue {
+      forced-color-adjust: none;
+    }
+  }
+}

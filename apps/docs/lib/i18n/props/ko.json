@@ -375,6 +375,30 @@
       "ko": "코드."
     }
   },
+  "ColorPicker.Hue": {
+    "aria-label": {
+      "en": "Its name. Without it, the hue string from StringsProvider names it.",
+      "ko": "이름. 없으면 StringsProvider의 hue 문자열이 이름이 됩니다."
+    }
+  },
+  "ColorPicker.Root": {
+    "value": {
+      "en": "Controlled color as #rrggbb. Pass with onValueChange.",
+      "ko": "#rrggbb 형식의 제어 색. onValueChange와 함께 전달하세요."
+    },
+    "defaultValue": {
+      "en": "Initial color as #rrggbb when uncontrolled.",
+      "ko": "비제어일 때 #rrggbb 형식의 처음 색."
+    },
+    "onValueChange": {
+      "en": "Fires with the new color as #rrggbb while it is dragged or keyed.",
+      "ko": "끌거나 키로 바꾸는 동안 새 색을 #rrggbb로 받아 호출됩니다."
+    },
+    "disabled": {
+      "en": "Stops every part from changing the color. A disabled Fieldset sets it too.",
+      "ko": "모든 파트가 색을 바꾸지 못하게 합니다. 비활성화된 Fieldset도 이것을 설정합니다."
+    }
+  },
   "Description.Root": {
     "id": {
       "en": "Id the author lists in aria-describedby on the control or Field.Root.",
@@ -657,22 +681,26 @@
       "ko": "select에 붙는 선택적 클래스."
     }
   },
-  "Field.ColorInput": {
+  "Field.ColorPicker": {
     "value": {
-      "en": "Controlled value as #rrggbb.",
-      "ko": "#rrggbb 형식의 제어 값."
-    },
-    "onChange": {
-      "en": "Native change handler. Optional when onValueChange is enough.",
-      "ko": "네이티브 change 핸들러. onValueChange로 충분하면 생략할 수 있습니다."
+      "en": "The color as #rrggbb.",
+      "ko": "#rrggbb 형식의 색."
     },
     "onValueChange": {
-      "en": "Optional value callback.",
-      "ko": "선택적 값 콜백."
+      "en": "Fires with the new color as #rrggbb while it is dragged or keyed in the picker.",
+      "ko": "선택기에서 끌거나 키로 바꾸는 동안 새 색을 #rrggbb로 받아 호출됩니다."
     },
-    "className": {
-      "en": "Optional class on the input.",
-      "ko": "input에 붙는 선택적 클래스."
+    "open": {
+      "en": "Controlled open state of the picker. Pass with onOpenChange.",
+      "ko": "선택기의 제어 열림 상태. onOpenChange와 함께 전달하세요."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때 처음 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Fires when the picker opens or closes, with why it closed.",
+      "ko": "선택기가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
     }
   },
   "Field.DateInput": {

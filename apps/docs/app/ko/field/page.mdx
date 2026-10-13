@@ -18,7 +18,7 @@ import {
 
 # Field
 
-공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorInput`, `Field.DateInput`, `Field.TimeInput`, `Field.DateTimeInput`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
+공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorPicker`, `Field.DateInput`, `Field.TimeInput`, `Field.DateTimeInput`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
 
 <Example block>
   <FieldStates />
@@ -32,7 +32,7 @@ import {
 - [Field.Textarea](/field/textarea): 여러 줄 텍스트.
 - [Field.ChipInput](/field/chip-input): 칩과 입력.
 - [Field.Select](/field/select): 네이티브 `<select>`.
-- [Field.ColorInput](/field/color-input): 네이티브 색상 입력.
+- [Field.ColorPicker](/field/color-picker): 색 선택기를 여는 견본.
 - [Field.DateInput](/field/date-input): 값이 `Temporal.PlainDate`인 네이티브 날짜 입력.
 - [Field.TimeInput](/field/time-input): 값이 `Temporal.PlainTime`인 네이티브 시간 입력.
 - [Field.DateTimeInput](/field/date-time-input): 값이 `Temporal.PlainDateTime`인 네이티브 `datetime-local` 입력.

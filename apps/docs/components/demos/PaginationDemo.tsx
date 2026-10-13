@@ -1,6 +1,6 @@
 'use client';
 
-import { Pagination, paginationRange } from '@omsoo/todae';
+import { Pagination, paginationRange } from '@omsoo.design/todae';
 import { useState } from 'react';
 
 export function PaginationButtons() {

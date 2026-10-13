@@ -15,6 +15,7 @@ import {
   Chip,
   ChipList,
   Code,
+  ColorPicker,
   Description,
   Disclosure,
   Dialog,
@@ -218,11 +219,31 @@ const cases: Case[] = [
     ),
   ],
   [
-    'Field.ColorInput',
+    'Field.ColorPicker',
     (p) => (
       <Field.Root aria-label="t">
-        <Field.ColorInput {...p} value="" onChange={noop} />
+        <Field.ColorPicker {...p} value="#000000" />
       </Field.Root>
+    ),
+  ],
+  [
+    'ColorPicker.Root',
+    (p) => <ColorPicker.Root {...p} aria-label="c" />,
+  ],
+  [
+    'ColorPicker.Area',
+    (p) => (
+      <ColorPicker.Root aria-label="c">
+        <ColorPicker.Area {...p} />
+      </ColorPicker.Root>
+    ),
+  ],
+  [
+    'ColorPicker.Hue',
+    (p) => (
+      <ColorPicker.Root aria-label="c">
+        <ColorPicker.Hue {...p} />
+      </ColorPicker.Root>
     ),
   ],
   [

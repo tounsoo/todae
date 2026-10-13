@@ -1,6 +1,6 @@
-import { Code } from '@omsoo/todae/code';
-import { Kbd } from '@omsoo/todae/kbd';
-import { Separator } from '@omsoo/todae/separator';
+import { Code } from '@omsoo.design/todae/code';
+import { Kbd } from '@omsoo.design/todae/kbd';
+import { Separator } from '@omsoo.design/todae/separator';
 import type { MDXComponents } from 'mdx/types';
 import { DocsPre } from './components/DocsPre';
 import { DocsProse } from './components/DocsProse';

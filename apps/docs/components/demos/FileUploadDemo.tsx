@@ -1,6 +1,6 @@
 'use client';
 
-import { Description, ErrorMessage, Stack, Text, useDropzone, type FileRejection, type FileRejectionReason } from '@omsoo/todae';
+import { Description, ErrorMessage, Stack, Text, useDropzone, type FileRejection, type FileRejectionReason } from '@omsoo.design/todae';
 import { useId, useState } from 'react';
 
 const MAX_SIZE = 2_000_000;

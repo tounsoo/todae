@@ -13,7 +13,7 @@ import {
   Stack,
   ToggleGroup,
   type Glyphs,
-} from '@omsoo/todae';
+} from '@omsoo.design/todae';
 import { useState, type ReactNode } from 'react';
 import { ICON_LIBRARIES, type IconLibrary } from '../iconLibraries';
 

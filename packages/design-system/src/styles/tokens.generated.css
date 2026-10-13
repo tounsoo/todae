@@ -1002,6 +1002,18 @@
   --todae-tree-item-ring-focus: var(--_todae-tree-item-ring-focus, var(--todae-focus-ring-color));
   --todae-tree-motion-duration: var(--_todae-tree-motion-duration, var(--todae-motion-duration-normal));
   --todae-tree-motion-easing: var(--_todae-tree-motion-easing, var(--todae-motion-easing-standard));
+  --todae-picker-area-height: var(--_todae-picker-area-height, 10rem);
+  --todae-picker-area-radius: var(--_todae-picker-area-radius, var(--todae-radius-md));
+  --todae-picker-gap: var(--_todae-picker-gap, var(--todae-space-stack-gap));
+  --todae-picker-hue-height: var(--_todae-picker-hue-height, 0.75rem);
+  --todae-picker-hue-radius: var(--_todae-picker-hue-radius, var(--todae-radius-full));
+  --todae-picker-ring-focus: var(--_todae-picker-ring-focus, var(--todae-focus-ring-color));
+  --todae-picker-thumb-border-color: var(--_todae-picker-thumb-border-color, var(--todae-color-bg-surface));
+  --todae-picker-thumb-border-width: var(--_todae-picker-thumb-border-width, 2px);
+  --todae-picker-thumb-edge-color: var(--_todae-picker-thumb-edge-color, var(--todae-color-border-default));
+  --todae-picker-thumb-edge-width: var(--_todae-picker-thumb-edge-width, var(--todae-border-width));
+  --todae-picker-thumb-size: var(--_todae-picker-thumb-size, 1rem);
+  --todae-picker-width: var(--_todae-picker-width, 15rem);
   --todae-button-font-size: var(--todae-button-base-font-size);
   --todae-button-font-weight: var(--todae-button-base-font-weight);
   --todae-button-gap: var(--todae-button-base-gap);

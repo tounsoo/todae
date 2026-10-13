@@ -1,4 +1,4 @@
-import { THEME_OVERRIDE_KEYS, themeOverrideStyle, type ThemeColorValue, type ThemeOverride } from '@omsoo/todae';
+import { THEME_OVERRIDE_KEYS, themeOverrideStyle, type ThemeColorValue, type ThemeOverride } from '@omsoo.design/todae';
 import { describe, expect, it } from 'vitest';
 import { apcaContrast, oklchToSrgb } from '../../../../packages/design-system/scripts/build-tokens';
 import { PRESETS } from './presets';

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, ToggleGroup } from '@omsoo/todae';
+import { Button, ToggleGroup } from '@omsoo.design/todae';
 import { useState } from 'react';
 
 export function ButtonToggle() {

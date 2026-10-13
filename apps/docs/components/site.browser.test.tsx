@@ -1,10 +1,10 @@
 /// <reference types="@vitest/browser/providers/playwright" />
-import { Text } from '@omsoo/todae/text';
+import { Text } from '@omsoo.design/todae/text';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { cdp, page, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import '@omsoo/todae/todae.css';
+import '@omsoo.design/todae/todae.css';
 import '../app/globals.css';
 import { APPEARANCE_KEY, APPEARANCE_SCRIPT } from './appearanceScript';
 import { HomeContent } from './HomeContent';
@@ -13,7 +13,7 @@ import { Playground } from './Playground';
 import { Providers } from './Providers';
 import { PropsTable } from './PropsTable';
 import { PropsTableView, type PropsTableRow } from './PropsTableView';
-import schema from '@omsoo/todae/schema/components.json';
+import schema from '@omsoo.design/todae/schema/components.json';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { Sidebar } from './Sidebar';
 import { clippedRings } from '../test/clippedRings';
@@ -457,7 +457,8 @@ describe('props table', () => {
       }
     }
     expect(overflowing).toEqual([]);
-  });
+    // Every table in the schema at 57 widths: its time grows with the schema.
+  }, 60_000);
 
   it('stacks each prop on a phone, keeping table semantics and no horizontal scroll', async () => {
     const table = renderTable('22rem');

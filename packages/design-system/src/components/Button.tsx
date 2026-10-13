@@ -20,7 +20,7 @@ import { Tooltip } from './Tooltip';
 /**
  * Button variants, one per `buttonVariant` context in the token resolver. A
  * company that adds a context declares it here too:
- * `declare module '@omsoo/todae' { interface ButtonVariants { outline: true } }`.
+ * `declare module '@omsoo.design/todae' { interface ButtonVariants { outline: true } }`.
  */
 export interface ButtonVariants {
   primary: true;

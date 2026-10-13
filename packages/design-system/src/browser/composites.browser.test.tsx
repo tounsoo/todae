@@ -277,58 +277,246 @@ describe('Field.Select in a browser', () => {
   });
 });
 
-describe('Field.ColorInput in a browser', () => {
-  function Accent({ disabled, affix = true }: { disabled?: boolean; affix?: boolean }) {
+describe('Field.ColorPicker in a browser', () => {
+  function Accent({
+    disabled,
+    affix = true,
+    name,
+    onClick,
+  }: {
+    disabled?: boolean;
+    affix?: boolean;
+    name?: string;
+    onClick?: () => void;
+  }) {
     const [value, setValue] = useState('#3366ff');
     return (
       <Themed>
         <Label.Root htmlFor="accent">Accent</Label.Root>
-        <Field.Root id="accent" disabled={disabled} data-testid="shell">
-          <Field.ColorInput value={value} onValueChange={setValue} />
+        <Field.Root id="accent" name={name} disabled={disabled} onClick={onClick} data-testid="shell">
+          <Field.ColorPicker value={value} onValueChange={setValue} />
           {affix ? <Field.Affix data-testid="value">{value}</Field.Affix> : null}
         </Field.Root>
       </Themed>
     );
   }
 
-  it('is a labelled color input drawn as a square swatch one field line tall', async () => {
+  it('is a labelled button drawn as a square swatch one field line tall', async () => {
     render(<Accent />);
-    const input = screen.getByLabelText('Accent') as HTMLInputElement;
-    expect(input.type).toBe('color');
-    const swatch = input.getBoundingClientRect();
+    const button = screen.getByRole('button', { name: 'Accent' });
+    expect(button.getAttribute('aria-haspopup')).toBe('dialog');
+    const swatch = button.getBoundingClientRect();
     expect(swatch.width).toBe(swatch.height);
     expect(swatch.height).toBeCloseTo(screen.getByTestId('value').getBoundingClientRect().height, 0);
+    expect(getComputedStyle(button).backgroundColor).toBe('rgb(51, 102, 255)');
     await userEvent.tab();
-    expect(document.activeElement).toBe(input);
+    expect(document.activeElement).toBe(button);
     expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
+    // The shell's ring is the only one.
+    expect(getComputedStyle(button).outlineStyle).toBe('none');
   });
 
-  it('reports a picked color to onValueChange', () => {
+  it('opens the picker, reports a picked color, and closes on Escape back to the button', async () => {
     render(<Accent />);
-    const input = screen.getByLabelText('Accent') as HTMLInputElement;
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, '#00ff00');
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    expect(screen.getByTestId('value').textContent).toBe('#00ff00');
+    const button = screen.getByRole('button', { name: 'Accent' });
+    await userEvent.click(button);
+    const dialog = await screen.findByRole('dialog', { name: 'Color picker' });
+    await waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    const hue = screen.getByRole('slider', { name: 'Hue' });
+    hue.focus();
+    await userEvent.keyboard('{Home}');
+    expect(screen.getByTestId('value').textContent).toBe('#ff3333');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(dialog.matches(':popover-open')).toBe(false));
+    expect(document.activeElement).toBe(button);
+  });
+
+  it('picks saturation and brightness from a press in the area', async () => {
+    render(<Accent />);
+    await userEvent.click(screen.getByRole('button', { name: 'Accent' }));
+    const area = screen.getByRole('slider', { name: 'Saturation' }).parentElement!;
+    await waitFor(() => expect(area.getBoundingClientRect().width).toBeGreaterThan(0));
+    const rect = area.getBoundingClientRect();
+    area.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientX: rect.left + 1, clientY: rect.top + 1 }),
+    );
+    // The top-left corner is white: no saturation, full brightness.
+    await waitFor(() => expect(screen.getByTestId('value').textContent).toMatch(/^#f[a-f0-9]f[a-f0-9]f[a-f0-9]$/));
+    expect(document.activeElement).toBe(screen.getByRole('slider', { name: 'Saturation' }));
   });
 
   it('opens its picker on a press elsewhere in the field', async () => {
     render(<Accent />);
-    const input = screen.getByLabelText('Accent') as HTMLInputElement;
-    const showPicker = vi.spyOn(input, 'showPicker').mockImplementation(() => undefined);
+    const button = screen.getByRole('button', { name: 'Accent' });
     await userEvent.click(screen.getByTestId('value'));
-    expect(document.activeElement).toBe(input);
-    expect(showPicker).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(button.getAttribute('aria-expanded')).toBe('true'));
+    // The open picker takes focus, as a dialog does.
+    expect(screen.getByRole('dialog', { name: 'Color picker' }).contains(document.activeElement)).toBe(true);
   });
+
+  it('closes on a second press in the field or on the label, running the shell handler once a press', async () => {
+    const onClick = vi.fn();
+    render(<Accent onClick={onClick} />);
+    const button = screen.getByRole('button', { name: 'Accent' });
+    await userEvent.click(screen.getByTestId('value'));
+    await waitFor(() => expect(button.getAttribute('aria-expanded')).toBe('true'));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByTestId('value'));
+    await waitFor(() => expect(button.getAttribute('aria-expanded')).toBe('false'));
+    expect(onClick).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await userEvent.click(button);
+    await waitFor(() => expect(button.getAttribute('aria-expanded')).toBe('true'));
+    await userEvent.click(screen.getByText('Accent'));
+    await waitFor(() => expect(button.getAttribute('aria-expanded')).toBe('false'));
+  });
+
+  it('keeps focus in the picker on a press between its parts', async () => {
+    render(<Accent />);
+    await userEvent.click(screen.getByRole('button', { name: 'Accent' }));
+    const hue = screen.getByRole('slider', { name: 'Hue' });
+    hue.focus();
+    const group = screen.getByRole('group');
+    group.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 }));
+    expect(document.activeElement).toBe(hue);
+  });
+
+  it('sends its value with a form under the field name', () => {
+    render(
+      <form data-testid="form">
+        <Accent name="accent" />
+      </form>,
+    );
+    const form = screen.getByTestId('form') as HTMLFormElement;
+    expect([...new FormData(form).entries()]).toEqual([['accent', '#3366ff']]);
+  });
+
+  it('sends its value with the form its form attribute names', () => {
+    render(
+      <>
+        <form id="other" data-testid="other" />
+        <Themed>
+          <Field.Root aria-label="Accent" name="accent">
+            <Field.ColorPicker value="#3366ff" form="other" />
+          </Field.Root>
+        </Themed>
+      </>,
+    );
+    const form = screen.getByTestId('other') as HTMLFormElement;
+    expect([...new FormData(form).entries()]).toEqual([['accent', '#3366ff']]);
+  });
+
+  it('reports a close for disabling once, to an owner that keeps it open', async () => {
+    const spy = vi.fn();
+    function Vetoing({ disabled, note }: { disabled?: boolean; note?: string }) {
+      return (
+        <Themed>
+          <Field.Root aria-label="Accent" disabled={disabled} data-note={note}>
+            <Field.ColorPicker value="#3366ff" open onOpenChange={(open, reason) => spy(open, reason)} />
+          </Field.Root>
+        </Themed>
+      );
+    }
+    const { rerender } = render(<Vetoing />);
+    await screen.findByRole('dialog', { name: 'Color picker' });
+    rerender(<Vetoing disabled />);
+    rerender(<Vetoing disabled note="again" />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(spy.mock.calls).toEqual([[false, 'disabled']]);
+  });
+
+  it('closes an open picker when the field is disabled, and keeps it closed when enabled again', async () => {
+    const onOpenChange = vi.fn();
+    function Toggled({ disabled }: { disabled?: boolean }) {
+      return (
+        <Themed>
+          <button type="button">before</button>
+          <Field.Root aria-label="Accent" disabled={disabled}>
+            <Field.ColorPicker value="#3366ff" onOpenChange={onOpenChange} />
+          </Field.Root>
+        </Themed>
+      );
+    }
+    const { rerender } = render(<Toggled />);
+    await userEvent.click(screen.getByRole('button', { name: 'Accent' }));
+    await screen.findByRole('dialog', { name: 'Color picker' });
+    rerender(<Toggled disabled />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'disabled');
+    const before = screen.getByRole('button', { name: 'before' });
+    before.focus();
+    rerender(<Toggled />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Accent' }).getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(before);
+  });
+
+  function WithText({ swatchFirst = true }: { swatchFirst?: boolean }) {
+    const [color, setColor] = useState('#3366ff');
+    const [text, setText] = useState(color);
+    const swatch = (
+      <Field.ColorPicker
+        value={color}
+        onValueChange={(next) => {
+          setColor(next);
+          setText(next);
+        }}
+      />
+    );
+    return (
+      <Themed>
+        <form data-testid="form">
+          <Label.Root htmlFor="hex">Accent</Label.Root>
+          <Field.Root id="hex" name="accent" data-testid="shell">
+            {swatchFirst ? swatch : null}
+            <Field.TextInput
+              value={text}
+              onChange={() => undefined}
+              onValueChange={setText}
+            />
+            {swatchFirst ? null : swatch}
+            <Field.Affix data-testid="affix">hex</Field.Affix>
+          </Field.Root>
+        </form>
+      </Themed>
+    );
+  }
+
+  for (const swatchFirst of [true, false]) {
+    it(`leaves the field to a text input beside it (swatch ${swatchFirst ? 'first' : 'last'})`, async () => {
+      render(<WithText swatchFirst={swatchFirst} />);
+      const input = screen.getByRole('textbox', { name: 'Accent' });
+      const button = screen.getByRole('button', { name: 'Color picker' });
+      expect(input.id).toBe('hex');
+      expect(button.id).toBe('');
+      expect(document.querySelectorAll('#hex')).toHaveLength(1);
+      expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([['accent', '#3366ff']]);
+      // A press elsewhere in the field focuses the input and opens nothing.
+      await userEvent.click(screen.getByTestId('affix'));
+      expect(document.activeElement).toBe(input);
+      expect(button.getAttribute('aria-expanded')).toBe('false');
+      // The swatch still opens the picker, and a picked color reaches the input.
+      await userEvent.click(button);
+      const hue = await screen.findByRole('slider', { name: 'Hue' });
+      hue.focus();
+      await userEvent.keyboard('{Home}');
+      expect((input as HTMLInputElement).value).toBe('#ff3333');
+      await userEvent.keyboard('{Escape}');
+      expect(document.activeElement).toBe(button);
+      expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
+    });
+  }
 
   it('is as wide as the swatch on its own, and disabled with the field', () => {
     render(<Accent affix={false} disabled />);
-    const input = screen.getByLabelText('Accent') as HTMLInputElement;
+    const button = screen.getByRole('button', { name: 'Accent' }) as HTMLButtonElement;
     const shell = screen.getByTestId('shell');
     const style = getComputedStyle(shell);
     const inset = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + parseFloat(style.borderLeftWidth) * 2;
-    expect(shell.getBoundingClientRect().width).toBeCloseTo(input.getBoundingClientRect().width + inset, 0);
-    expect(input.disabled).toBe(true);
+    expect(shell.getBoundingClientRect().width).toBeCloseTo(button.getBoundingClientRect().width + inset, 0);
+    expect(button.disabled).toBe(true);
     expect(style.cursor).toBe('not-allowed');
-    expect(getComputedStyle(input).cursor).toBe('not-allowed');
+    expect(getComputedStyle(button).cursor).toBe('not-allowed');
   });
 });

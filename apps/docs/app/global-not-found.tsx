@@ -1,4 +1,4 @@
-import { Link } from '@omsoo/todae/link';
+import { Link } from '@omsoo.design/todae/link';
 import { DocsProse } from '../components/DocsProse';
 import { SiteShell } from '../components/SiteShell';
 import { LOCALES, localizePath } from '../lib/i18n/config';

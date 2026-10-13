@@ -1,9 +1,9 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
-import '@omsoo/todae/todae.css';
-import { Stack } from '@omsoo/todae/stack';
-import { Text } from '@omsoo/todae/text';
-import { VisuallyHidden } from '@omsoo/todae/visually-hidden';
+import '@omsoo.design/todae/todae.css';
+import { Stack } from '@omsoo.design/todae/stack';
+import { Text } from '@omsoo.design/todae/text';
+import { VisuallyHidden } from '@omsoo.design/todae/visually-hidden';
 import { localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { LICENSE } from '../lib/license';

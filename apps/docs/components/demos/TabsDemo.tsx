@@ -1,6 +1,6 @@
 'use client';
 
-import { Stack, Tabs, Text } from '@omsoo/todae';
+import { Stack, Tabs, Text } from '@omsoo.design/todae';
 import { useState } from 'react';
 
 export function TabsBasic() {
