@@ -596,6 +596,25 @@ describe('Field.DatePicker in a browser', () => {
     expect(button.textContent).toBe('Oct 20, 2026');
   });
 
+  it('closes on a pick of the date it already has', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <Themed>
+        <Field.Root aria-label="Start">
+          <Field.DatePicker value={plainDate('2026-10-13')} locale="en-US" onOpenChange={onOpenChange} />
+        </Field.Root>
+      </Themed>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Start' }));
+    await screen.findByRole('dialog');
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Tuesday, October 13, 2026' })),
+    );
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'select');
+  });
+
   it('closes on Escape without picking, and reports why it closed', async () => {
     const onOpenChange = vi.fn();
     render(

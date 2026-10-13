@@ -44,7 +44,7 @@ import { useStrings, type Strings } from '../providers/StringsProvider';
 import { usePopover, type PopoverCloseReason, type PopoverTriggerUserProps } from '../hooks/usePopover';
 import { Popover } from './Popover';
 import { ColorPicker as ColorPickerParts } from './ColorPicker';
-import { Calendar as CalendarParts, type CalendarDayOfWeek } from './Calendar';
+import { Calendar as CalendarParts, GREGORY, type CalendarDayOfWeek } from './Calendar';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -65,7 +65,7 @@ export type FieldRootProps = {
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
 
 function createCountStore(): CountStore {
-  return { entry: null, counters: 0, texts: 0, listeners: new Set(), presence: new Set() };
+  return { entry: null, counters: 0, texts: 0, dates: 0, listeners: new Set(), presence: new Set() };
 }
 
 function publishCount(store: CountStore, value: string, maxLength: number | undefined) {
@@ -96,25 +96,28 @@ function notifyPresence(store: CountStore) {
   for (const listener of store.presence) listener();
 }
 
-// A Field.ColorPicker or Field.DatePicker beside a typed input gives up the
-// field's id once it hears of one.
-function useTypedPresence(store: CountStore) {
+type TypedKind = 'texts' | 'dates';
+
+// A Field.ColorPicker beside a text input, or a Field.DatePicker beside a date
+// input, gives up the field's id once it hears of it. `kind` is fixed per input.
+function useTypedPresence(store: CountStore, kind: TypedKind | null) {
   useLayoutEffect(() => {
-    store.texts += 1;
+    if (!kind) return;
+    store[kind] += 1;
     notifyPresence(store);
     return () => {
-      store.texts -= 1;
+      store[kind] -= 1;
       notifyPresence(store);
     };
-  }, [store]);
+  }, [store, kind]);
 }
 
-// Whether a typed input shares the field. The server cannot know of one yet,
+// Whether such an input shares the field. The server cannot know of one yet,
 // so a picker holds the field's id until hydration.
-function useTypedBeside(store: CountStore) {
+function useTypedBeside(store: CountStore, kind: TypedKind) {
   return useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
-    () => store.texts > 0,
+    () => store[kind] > 0,
     () => false,
   );
 }
@@ -124,7 +127,7 @@ function useTextEntry(store: CountStore, value: string, maxLength: number | unde
   useEffect(() => {
     for (const listener of store.listeners) listener();
   });
-  useTypedPresence(store);
+  useTypedPresence(store, 'texts');
   return useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
     () => counterMounted(store),
@@ -159,7 +162,7 @@ function Affix({ className, ...props }: FieldAffixProps) {
 
 type PickerControl = HTMLSelectElement | HTMLButtonElement;
 
-// A control whose picker a press beside it opens: a select or Field.ColorPicker.
+// A control whose picker a press beside it opens: a select, Field.ColorPicker or Field.DatePicker.
 function hasPicker(control: Element | null | undefined): control is PickerControl {
   return (
     control instanceof HTMLSelectElement ||
@@ -167,7 +170,7 @@ function hasPicker(control: Element | null | undefined): control is PickerContro
   );
 }
 
-// How the shell opens or closes each Field.ColorPicker's popover, by its button.
+// How the shell opens or closes each Field.ColorPicker's or Field.DatePicker's popover, by its button.
 const pickerToggles = new WeakMap<HTMLButtonElement, () => void>();
 
 // Whether a select's picker is showing. A browser without `:open` throws,
@@ -431,7 +434,7 @@ function TemporalInput<T>({
   ...props
 }: TemporalInputProps<T> & { kind: TemporalInputKind<T> }) {
   const field = useField();
-  useTypedPresence(useFieldContext().store);
+  useTypedPresence(useFieldContext().store, kind.type === 'date' ? 'dates' : null);
   return (
     <input
       {...field.getControlProps(props)}
@@ -756,7 +759,7 @@ function ColorPicker({
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
   // A text input in the field takes its id, name and description.
-  const beside = useTypedBeside(store);
+  const beside = useTypedBeside(store, 'texts');
   const { name, ...control } = beside
     ? {
         ...props,
@@ -886,7 +889,7 @@ function DatePicker({
   const { calendar } = useGlyphs();
   const textId = useDomId();
   // A date input in the field takes its id, name and description.
-  const beside = useTypedBeside(store);
+  const beside = useTypedBeside(store, 'dates');
   const { name, ...control } = beside
     ? {
         ...props,
@@ -962,7 +965,7 @@ function DatePicker({
       >
         {beside ? null : (
           <span id={textId} className={styles.dateText} data-placeholder={value ? undefined : ''}>
-            {value ? value.toLocaleString(locale, { dateStyle: 'medium' }) : placeholder}
+            {value ? value.toLocaleString(locale, { dateStyle: 'medium', calendar: GREGORY }) : placeholder}
           </span>
         )}
         {glyph}

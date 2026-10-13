@@ -1017,7 +1017,7 @@
   --todae-calendar-day-bg-default: var(--_todae-calendar-day-bg-default, var(--todae-color-bg-transparent));
   --todae-calendar-day-bg-hover: var(--_todae-calendar-day-bg-hover, var(--todae-color-bg-highlight));
   --todae-calendar-day-bg-selected: var(--_todae-calendar-day-bg-selected, var(--todae-color-accent-default));
-  --todae-calendar-day-border-today: var(--_todae-calendar-day-border-today, var(--todae-color-border-default));
+  --todae-calendar-day-border-current: var(--_todae-calendar-day-border-current, var(--todae-color-border-default));
   --todae-calendar-day-border-width: var(--_todae-calendar-day-border-width, var(--todae-border-width));
   --todae-calendar-day-fg-default: var(--_todae-calendar-day-fg-default, var(--todae-color-fg-default));
   --todae-calendar-day-fg-disabled: var(--_todae-calendar-day-fg-disabled, var(--todae-color-fg-placeholder));

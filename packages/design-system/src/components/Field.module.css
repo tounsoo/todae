@@ -508,7 +508,7 @@
 
   /* Beside Field.DatePicker, a date input drops the browser's own picker
      button where the browser lets it. */
-  .shell:has(> .datePicker) > .input::-webkit-calendar-picker-indicator {
+  .shell:has(> .datePicker[data-beside]) > .input[type='date']::-webkit-calendar-picker-indicator {
     display: none;
   }
 

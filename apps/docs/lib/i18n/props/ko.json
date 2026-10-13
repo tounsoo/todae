@@ -2207,8 +2207,8 @@
       "ko": "비제어일 때 처음 선택된 날짜."
     },
     "onValueChange": {
-      "en": "Fires with the date a person picks.",
-      "ko": "사람이 고른 날짜를 받아 호출됩니다."
+      "en": "Fires with each date a person picks, even the one already selected.",
+      "ko": "사람이 고른 날짜마다, 이미 선택된 날짜라도 받아 호출됩니다."
     },
     "min": {
       "en": "The earliest date that can be picked.",

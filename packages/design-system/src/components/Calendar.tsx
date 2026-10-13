@@ -30,7 +30,7 @@ export type CalendarRootProps = {
   value?: Temporal.PlainDate | null;
   /** Initial selected date when uncontrolled. */
   defaultValue?: Temporal.PlainDate | null;
-  /** Fires with the date a person picks. */
+  /** Fires with each date a person picks, even the one already selected. */
   onValueChange?: (value: Temporal.PlainDate) => void;
   /** The earliest date that can be picked. */
   min?: Temporal.PlainDate;
@@ -69,8 +69,13 @@ type CalendarContextValue = {
   focusRequest: RefObject<boolean>;
   moveFocus: (date: Temporal.PlainDate, focus: boolean) => void;
   select: (date: Temporal.PlainDate) => void;
+  /** Outside min and max: such a day is a disabled button. */
+  outOfRange: (date: Temporal.PlainDate) => boolean;
   /** Outside min and max, or ruled out by isDateDisabled. */
   unavailable: (date: Temporal.PlainDate) => boolean;
+  /** Whether a Calendar.Header is mounted to label the grid. */
+  hasHeader: boolean;
+  setHasHeader: (has: boolean) => void;
   canShow: (month: Temporal.PlainYearMonth) => boolean;
 };
 
@@ -82,11 +87,16 @@ function useCalendar(part: string): CalendarContextValue {
   return ctx;
 }
 
-type WeekInfoLocale = Intl.Locale & { getWeekInfo?: () => { firstDay: number } };
+// Browsers ship the method; Node 22 and older Chromium and Safari, the accessor.
+type WeekInfoLocale = Intl.Locale & {
+  getWeekInfo?: () => { firstDay: number };
+  weekInfo?: { firstDay: number };
+};
 
 function localeFirstDay(locale: string): CalendarDayOfWeek {
   try {
-    const day = (new Intl.Locale(locale) as WeekInfoLocale).getWeekInfo?.().firstDay;
+    const info = new Intl.Locale(locale) as WeekInfoLocale;
+    const day = (info.getWeekInfo?.() ?? info.weekInfo)?.firstDay;
     if (day && day >= 1 && day <= 7) return day as CalendarDayOfWeek;
   } catch {
     // A locale Intl cannot read keeps the default.
@@ -105,6 +115,9 @@ function clampDate(date: Temporal.PlainDate, min?: Temporal.PlainDate, max?: Tem
 const subscribeNothing = () => () => {};
 const todayNow = () => Temporal.Now.plainDateISO().toString();
 const todayOnServer = () => null;
+
+/** The grid is laid out in ISO months, so names come from the Gregorian calendar whatever the locale's own. */
+export const GREGORY = 'gregory';
 
 const same = (a: Temporal.PlainDate | null, b: Temporal.PlainDate | null) =>
   a === b || (a !== null && b !== null && a.equals(b));
@@ -154,12 +167,16 @@ function Root({
   const focusRequest = useRef(false);
   const headingId = useDomId();
 
-  const unavailable = useCallback(
+  const [hasHeader, setHasHeader] = useState(false);
+  const outOfRange = useCallback(
     (date: Temporal.PlainDate) =>
       (min !== undefined && Temporal.PlainDate.compare(date, min) < 0) ||
-      (max !== undefined && Temporal.PlainDate.compare(date, max) > 0) ||
-      Boolean(isDateDisabled?.(date)),
-    [isDateDisabled, max, min],
+      (max !== undefined && Temporal.PlainDate.compare(date, max) > 0),
+    [max, min],
+  );
+  const unavailable = useCallback(
+    (date: Temporal.PlainDate) => outOfRange(date) || Boolean(isDateDisabled?.(date)),
+    [isDateDisabled, outOfRange],
   );
   const canShow = useCallback(
     (month: Temporal.PlainYearMonth) =>
@@ -169,18 +186,23 @@ function Root({
   );
   const moveFocus = useCallback(
     (date: Temporal.PlainDate, focus: boolean) => {
+      const next = clampDate(date, min, max);
+      // At a bound nothing changes and nothing renders, so ask for no focus
+      // a later render would act on.
+      if (focused !== null && next.equals(focused)) return;
       focusRequest.current = focus;
-      setFocused(clampDate(date, min, max));
+      setFocused(next);
     },
-    [max, min],
+    [focused, max, min],
   );
   const select = useCallback(
     (date: Temporal.PlainDate) => {
       if (disabled || unavailable(date)) return;
       setFocused(date);
-      if (!same(date, value)) setValue(date);
+      // A pick is reported even when it is the date already selected.
+      setValue(date);
     },
-    [disabled, setValue, unavailable, value],
+    [disabled, setValue, unavailable],
   );
 
   const ctx = useMemo(
@@ -195,10 +217,13 @@ function Root({
       focusRequest,
       moveFocus,
       select,
+      outOfRange,
       unavailable,
       canShow,
+      hasHeader,
+      setHasHeader,
     }),
-    [value, focused, today, locale, firstDay, disabled, headingId, moveFocus, select, unavailable, canShow],
+    [value, focused, today, locale, firstDay, disabled, headingId, moveFocus, select, outOfRange, unavailable, canShow, hasHeader],
   );
   return (
     <CalendarContext.Provider value={ctx}>
@@ -223,7 +248,11 @@ function Header({ className, ...props }: CalendarHeaderProps) {
   const cal = useCalendar('Header');
   const strings = useStrings();
   const { chevron } = useGlyphs();
-  const { focused } = cal;
+  const { focused, setHasHeader } = cal;
+  useLayoutEffect(() => {
+    setHasHeader(true);
+    return () => setHasHeader(false);
+  }, [setHasHeader]);
   const month = focused?.toPlainYearMonth() ?? null;
   const nav = (dir: 'previous' | 'next') => {
     const months = dir === 'previous' ? -1 : 1;
@@ -253,7 +282,7 @@ function Header({ className, ...props }: CalendarHeaderProps) {
     <div {...props} className={cx(styles.header, className)}>
       {nav('previous')}
       <span id={cal.headingId} className={styles.heading} aria-live="polite">
-        {focused?.toLocaleString(cal.locale, { month: 'long', year: 'numeric' })}
+        {focused?.toLocaleString(cal.locale, { month: 'long', year: 'numeric', calendar: GREGORY })}
       </span>
       {nav('next')}
     </div>
@@ -341,7 +370,9 @@ function Grid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridProp
       {...props}
       ref={composedRef}
       role="grid"
-      aria-labelledby={props['aria-label'] ? undefined : props['aria-labelledby'] ?? cal.headingId}
+      aria-labelledby={
+        props['aria-label'] ? undefined : props['aria-labelledby'] ?? (cal.hasHeader ? cal.headingId : undefined)
+      }
       className={cx(styles.grid, className)}
       onKeyDown={composeHandlers(onKeyDown, onDayKeyDown)}
     >
@@ -351,10 +382,10 @@ function Grid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridProp
             <th
               key={day.dayOfWeek}
               scope="col"
-              abbr={day.toLocaleString(locale, { weekday: 'long' })}
+              abbr={day.toLocaleString(locale, { weekday: 'long', calendar: GREGORY })}
               className={styles.weekday}
             >
-              {day.toLocaleString(locale, { weekday: 'short' })}
+              {day.toLocaleString(locale, { weekday: 'short', calendar: GREGORY })}
             </th>
           ))}
         </tr>
@@ -379,6 +410,7 @@ function Grid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridProp
 function Day({ date }: { date: Temporal.PlainDate }) {
   const cal = useCalendar('Grid');
   const selected = cal.value !== null && date.equals(cal.value);
+  const outOfRange = cal.outOfRange(date);
   const unavailable = cal.unavailable(date);
   const isToday = cal.today !== null && date.equals(cal.today);
   return (
@@ -387,14 +419,16 @@ function Day({ date }: { date: Temporal.PlainDate }) {
         type="button"
         className={styles.day}
         tabIndex={cal.focused !== null && date.equals(cal.focused) ? 0 : -1}
-        disabled={cal.disabled}
-        aria-disabled={unavailable ? true : undefined}
+        // Outside min and max a day is disabled, as the keys never reach it;
+        // one ruled out by isDateDisabled still takes focus, to be read.
+        disabled={cal.disabled || outOfRange}
+        aria-disabled={unavailable && !outOfRange ? true : undefined}
         aria-current={isToday ? 'date' : undefined}
-        aria-label={date.toLocaleString(cal.locale, { dateStyle: 'full' })}
+        aria-label={date.toLocaleString(cal.locale, { dateStyle: 'full', calendar: GREGORY })}
         data-selected={selected ? '' : undefined}
         data-todae-calendar-day=""
         onClick={(event: MouseEvent<HTMLButtonElement>) => {
-          // A click also moves the Tab stop, even to a date that can't be picked.
+          // A click also moves the Tab stop, even to a date isDateDisabled rules out.
           cal.moveFocus(date, false);
           cal.select(date);
           event.currentTarget.focus();

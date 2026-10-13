@@ -19,7 +19,7 @@ import { CalendarInline } from '../../../components/demos/CalendarDemo';
 
 ## 범위와 로캘
 
-`min`과 `max`는 고를 수 있는 날짜의 범위를 정하고, 달 버튼은 그 달에서 멈춥니다. `isDateDisabled`는 주말이나 공휴일처럼 다른 날짜를 제외합니다. 범위 밖이거나 제외된 날짜도 포커스는 받을 수 있어서 스크린 리더가 읽을 수 있지만, 누르거나 Enter를 눌러도 선택되지 않습니다.
+`min`과 `max`는 고를 수 있는 날짜의 범위를 정하고, 달 버튼은 그 달에서 멈춥니다. `isDateDisabled`는 주말이나 공휴일처럼 다른 날짜를 제외합니다. `min`과 `max` 밖의 날은 비활성화된 버튼입니다. `isDateDisabled`가 제외한 날짜는 포커스를 받을 수 있어서 스크린 리더가 읽을 수 있지만, 누르거나 Enter를 눌러도 선택되지 않습니다.
 
 값이 없으면 그리드는 `defaultMonth`에서, 없으면 오늘이 있는 달에서 시작하며, `min`과 `max` 안에 머뭅니다. 달과 요일 이름은 `locale`을, 없으면 브라우저의 로캘을 따릅니다. 첫 열은 1(월요일)부터 7(일요일)까지의 `firstDayOfWeek`입니다. 없으면 브라우저가 `Intl.Locale`로 알려 주는 로캘의 첫 요일을, 알려 주지 않으면 일요일을 씁니다.
 
@@ -31,9 +31,9 @@ Todae는 Temporal 폴리필을 포함하지 않습니다. `Calendar.Root`는 렌
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Calendar.Root`는 `role="group"`입니다. `Calendar.Grid`는 헤더의 달로 이름이 붙은 `role="grid"` 표이며, 요일마다 `abbr`가 전체 이름인 열 머리글이 있습니다. Tab 정지점은 하나입니다. 화살표 키는 하루와 한 주씩, Home과 End는 주의 처음과 끝으로, Page Up과 Page Down은 한 달씩, Shift와 함께면 한 해씩 움직입니다. 오른쪽에서 왼쪽으로 읽는 페이지에서는 왼쪽과 오른쪽이 바뀝니다. 날마다 전체 날짜로 이름 붙은 버튼이고, 선택한 날의 칸에는 `aria-selected`가, 오늘에는 `aria-current="date"`가 붙습니다. 고를 수 없는 날짜에는 `aria-disabled`가 붙습니다. 달은 라이브 영역이어서 바뀌면 스크린 리더가 알려 줍니다. 달 버튼은 [StringsProvider](/utilities/strings-provider)의 `previousMonth`와 `nextMonth` 문자열로 이름이 붙고, [GlyphsProvider](/utilities/glyphs-provider)의 `chevron` 글리프를 그립니다. `disabled`나 비활성화된 [Fieldset](/fieldset)은 모든 버튼을 비활성화합니다.
+**Todae가 맡는 것:** `Calendar.Root`는 `role="group"`입니다. `Calendar.Grid`는 `Calendar.Header`가 렌더링되어 있는 동안 헤더의 달로 이름이 붙는 `role="grid"` 표이며, 요일마다 `abbr`가 전체 이름인 열 머리글이 있습니다. Tab 정지점은 하나입니다. 화살표 키는 하루와 한 주씩, Home과 End는 주의 처음과 끝으로, Page Up과 Page Down은 한 달씩, Shift와 함께면 한 해씩 움직입니다. 오른쪽에서 왼쪽으로 읽는 페이지에서는 왼쪽과 오른쪽이 바뀝니다. 날마다 전체 날짜로 이름 붙은 버튼이고, 선택한 날의 칸에는 `aria-selected`가, 오늘에는 `aria-current="date"`가 붙습니다. `isDateDisabled`가 제외한 날짜에는 `aria-disabled`가 붙고, `min`과 `max` 밖의 날은 비활성화됩니다. 달은 라이브 영역이어서 바뀌면 스크린 리더가 알려 줍니다. 달 버튼은 [StringsProvider](/utilities/strings-provider)의 `previousMonth`와 `nextMonth` 문자열로 이름이 붙고, [GlyphsProvider](/utilities/glyphs-provider)의 `chevron` 글리프를 그립니다. `disabled`나 비활성화된 [Fieldset](/fieldset)은 모든 버튼을 비활성화합니다.
 
-**직접 제공할 것:** `aria-label`이나 `aria-labelledby`로 그룹의 이름. 페이지의 언어가 브라우저의 언어와 다르면 `locale`.
+**직접 제공할 것:** `aria-label`이나 `aria-labelledby`로 그룹의 이름, 그리고 `Calendar.Header`가 없으면 그리드의 이름. 페이지의 언어가 브라우저의 언어와 다르면 `locale`.
 
 **주의할 점:** `isDateDisabled`로 날짜를 제외하면서 이유를 알리지 않는 것. "평일만"처럼 규칙을 가까이에 설명하세요.
 

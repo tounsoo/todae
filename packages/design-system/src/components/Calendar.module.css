@@ -3,7 +3,10 @@
     display: inline-flex;
     flex-direction: column;
     gap: var(--todae-calendar-gap);
+    inline-size: fit-content;
     font-size: var(--todae-calendar-font-size);
+    /* Inside a field, the shell's pointer is not the calendar's. */
+    cursor: default;
   }
 
   .header {
@@ -105,7 +108,7 @@
   }
 
   .day[aria-current='date'] {
-    border-color: var(--todae-calendar-day-border-today);
+    border-color: var(--todae-calendar-day-border-current);
   }
 
   .day[data-selected] {

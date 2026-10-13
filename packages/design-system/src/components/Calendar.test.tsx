@@ -84,9 +84,9 @@ describe('Calendar', () => {
     expect(screen.getByTestId('value').textContent).toBe('2026-10-05');
     expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(focusedDay()).toBe(day('Monday, October 5, 2026'));
-    // Picking the date it already has reports nothing.
+    // Picking the date it already has is reported too, so a picker can close on it.
     fireEvent.click(day('Monday, October 5, 2026'));
-    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledTimes(2);
   });
 
   it('moves focus by day, week, week end, month and year from the keyboard', () => {
@@ -154,10 +154,68 @@ describe('Calendar', () => {
     expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, October 20, 2026');
     fireEvent.keyDown(focusedDay(), { key: 'PageUp' });
     expect(focusedDay().getAttribute('aria-label')).toBe('Monday, October 5, 2026');
-    const outside = day('Sunday, October 4, 2026');
-    expect(outside.getAttribute('aria-disabled')).toBe('true');
+    // Outside the range a day is disabled, as the keys never reach it.
+    const outside = day('Sunday, October 4, 2026') as HTMLButtonElement;
+    expect(outside.disabled).toBe(true);
+    expect(outside.hasAttribute('aria-disabled')).toBe(false);
     fireEvent.click(outside);
     expect(screen.getByTestId('value').textContent).toBe('2026-10-13');
+    expect(focusedDay().getAttribute('aria-label')).toBe('Monday, October 5, 2026');
+  });
+
+  it('takes no focus on a later render after a key at a bound', () => {
+    function Parent() {
+      const [count, setCount] = useState(0);
+      return (
+        <>
+          <button type="button" onClick={() => setCount(count + 1)}>
+            {`render ${count}`}
+          </button>
+          <Controlled min={date('2026-10-13')} />
+        </>
+      );
+    }
+    render(<Parent />);
+    focusedDay().focus();
+    fireEvent.keyDown(focusedDay(), { key: 'ArrowLeft' });
+    fireEvent.keyDown(focusedDay(), { key: 'ArrowLeft' });
+    const other = screen.getByRole('button', { name: 'render 0' });
+    other.focus();
+    fireEvent.click(other);
+    expect(screen.getByRole('button', { name: 'render 1' })).toBe(document.activeElement);
+  });
+
+  it('names months and days from the Gregorian calendar, whatever the locale uses', () => {
+    render(<Controlled locale="fa-IR" />);
+    const heading = document.getElementById(grid().getAttribute('aria-labelledby')!)!;
+    expect(heading.textContent).toBe(Temporal.PlainDate.from('2026-10-13').toLocaleString('fa-IR', { month: 'long', year: 'numeric', calendar: 'gregory' }));
+    expect(heading.textContent).not.toBe(Temporal.PlainDate.from('2026-10-13').toLocaleString('fa-IR', { month: 'long', year: 'numeric' }));
+  });
+
+  it("starts on the locale's first day, read from either form of Intl.Locale's week info", () => {
+    // Node 22 has only the weekInfo accessor; browsers have getWeekInfo().
+    render(
+      <Calendar.Root aria-label="Start" locale="de-DE" defaultValue={date('2026-10-13')}>
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    expect(within(grid()).getAllByRole('columnheader')[0]!.getAttribute('abbr')).toBe('Montag');
+  });
+
+  it('labels the grid by the header only while a header is rendered', () => {
+    const { rerender } = render(
+      <Calendar.Root aria-label="Start" locale="en-US" defaultValue={date('2026-10-13')}>
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    expect(grid().hasAttribute('aria-labelledby')).toBe(false);
+    rerender(
+      <Calendar.Root aria-label="Start" locale="en-US" defaultValue={date('2026-10-13')}>
+        <Calendar.Header />
+        <Calendar.Grid />
+      </Calendar.Root>,
+    );
+    expect(document.getElementById(grid().getAttribute('aria-labelledby')!)!.textContent).toBe('October 2026');
   });
 
   it('keeps a date from isDateDisabled focusable but not pickable', () => {

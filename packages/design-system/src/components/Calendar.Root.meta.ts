@@ -21,7 +21,7 @@ export const meta = {
       name: 'onValueChange',
       type: '(value: Temporal.PlainDate) => void',
       required: false,
-      description: 'Fires with the date a person picks.',
+      description: 'Fires with each date a person picks, even the one already selected.',
     },
     {
       name: 'min',

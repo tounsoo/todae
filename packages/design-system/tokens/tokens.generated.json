@@ -7805,9 +7805,9 @@
       "context": null
     },
     {
-      "path": "calendar.day.border.today",
+      "path": "calendar.day.border.current",
       "type": "color",
-      "cssVar": "--todae-calendar-day-border-today",
+      "cssVar": "--todae-calendar-day-border-current",
       "cssValue": "var(--todae-color-border-default)",
       "ref": "color.border.default",
       "layer": "contract",
