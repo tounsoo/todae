@@ -4,12 +4,12 @@
 
 ```tsx
 function Mute({ pressed, defaultPressed = false, onPressedChange }: MuteProps) {
-	const [on, setOn] = useControlledState(pressed, defaultPressed)
-	return (
-		<button aria-pressed={on} onClick={() => { setOn(!on); onPressedChange?.(!on) }}>
-			Mute
-		</button>
-	)
+  const [on, setOn] = useControlledState(pressed, defaultPressed);
+  return (
+    <button aria-pressed={on} onClick={() => { setOn(!on); onPressedChange?.(!on); }}>
+      Mute
+    </button>
+  );
 }
 ```
 

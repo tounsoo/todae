@@ -4,14 +4,26 @@ import { SliderVolume } from '../../../components/demos/NativeControlsDemo';
 
 `Slider.Root` is a native `<input type="range">`. The browser handles arrow keys, Page Up and Down, Home and End, and announces the value. Todae sets `accent-color` from the `slider` contract tokens, and the browser uses it to tint the thumb and filled track. How much of the control that color reaches differs by browser.
 
+```tsx
+const id = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Volume</Label.Root>
+  <Slider.Root
+    id={id}
+    min={0}
+    max={100}
+    step={5}
+    value={value}
+    onChange={(event) => setValue(Number(event.target.value))}
+  />
+</Field.Group>
+<Text.Root>{value}%</Text.Root>
+```
+
 <Example block>
   <SliderVolume />
 </Example>
-
-```tsx
-<Label.Root htmlFor="volume">Volume</Label.Root>
-<Slider.Root id="volume" min={0} max={100} step={5} value={value} onChange={onChange} />
-```
 
 Server Components can import it from `@omsoo.design/todae/slider`. Name it with [Label](/label) and show the current value as text nearby when the exact number matters. Restyle through `slider.fill` and `slider.ring.focus`. A slider with two thumbs for a range is not native and is not part of Todae yet.
 

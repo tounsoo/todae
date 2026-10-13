@@ -32,13 +32,17 @@ import {
 형제 `Label.Root` + `Field.Root` id. 입력이 combobox입니다. 목록은 `Popover.Root` 안에 있습니다.
 
 ```tsx
-const cb = useCombobox({ options, presentation: 'popover' })
+import { ChevronDown } from 'lucide-react';
+
+const cb = useCombobox({ options, presentation: 'popover' });
 
 <Field.Group>
   <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
   <Field.Root {...cb.getAnchorProps()}>
     <Field.TextInput {...cb.getInputProps()} />
-    <Field.Icon><Chevron /></Field.Icon>
+    <Field.Icon>
+      <ChevronDown />
+    </Field.Icon>
   </Field.Root>
 </Field.Group>
 <Popover.Root {...cb.getPopoverProps()}>
@@ -58,6 +62,20 @@ const cb = useCombobox({ options, presentation: 'popover' })
 
 `getChipInputProps`로 `Field.ChipInput`을 씁니다. 칩은 레이블입니다. 값은 중복이 제거됩니다.
 
+```tsx
+const cb = useCombobox({ options, selectionMode: 'multiple', presentation: 'popover' });
+
+<Field.Group>
+  <Label.Root htmlFor={cb.ids.input}>Type</Label.Root>
+  <Field.Root {...cb.getAnchorProps()}>
+    <Field.ChipInput {...cb.getChipInputProps()} />
+  </Field.Root>
+</Field.Group>
+<Popover.Root {...cb.getPopoverProps()}>
+  <OptionList.Root {...cb.getListboxProps()}>…</OptionList.Root>
+</Popover.Root>
+```
+
 <Example block>
   <ComboboxMulti />
 </Example>
@@ -67,9 +85,18 @@ const cb = useCombobox({ options, presentation: 'popover' })
 닫힌 컨트롤은 `Button.Root`입니다. 검색 Field는 시트 안에 있습니다. `inputValue`와 목록은 팝오버와 같습니다.
 
 ```tsx
-const cb = useCombobox({ options, presentation: 'sheet' })
+const cb = useCombobox({ options, presentation: 'sheet' });
+const labelId = useId();
+const selected = options.find((option) => option.value === cb.value)?.label ?? 'Choose';
 
-<Button.Root {...cb.getTriggerProps()}>{selected}</Button.Root>
+<Field.Group>
+  <Label.Root id={labelId} htmlFor={cb.ids.trigger}>
+    City
+  </Label.Root>
+  <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${labelId} ${cb.ids.trigger}`}>
+    {selected}
+  </Button.Root>
+</Field.Group>
 <BottomSheet.Root {...cb.getSheetProps()}>
   <Field.Root id={cb.ids.input} aria-label="Search">
     <Field.TextInput {...cb.getInputProps()} />
@@ -96,6 +123,25 @@ const cb = useCombobox({ options, presentation: 'sheet' })
 
 `fail`을 입력하면 오류 행을 볼 수 있습니다.
 
+```tsx
+const cb = useCombobox({
+  loadOptions: (query, signal) => fetchPackages(query, { signal }),
+  presentation: 'popover',
+});
+
+<Popover.Root {...cb.getPopoverProps()}>
+  <Text.Root role="status">{cb.loading ? 'Loading…' : cb.error ? 'Couldn’t load options.' : ''}</Text.Root>
+  {cb.error && !cb.loading ? (
+    <Button.Root variant="ghost" onClick={cb.retry}>
+      Retry
+    </Button.Root>
+  ) : null}
+  <OptionList.Root {...cb.getListboxProps()} hidden={cb.loading || cb.error != null}>
+    …
+  </OptionList.Root>
+</Popover.Root>
+```
+
 <Example block>
   <ComboboxAsync />
 </Example>
@@ -121,7 +167,7 @@ const cb = useCombobox({ options, presentation: 'sheet' })
 [useHighlight](/utilities/use-highlight)는 옵션의 마크업을 바꾸지 않고 각 옵션에서 query를 표시합니다. 훅의 `query`(입력에 선택한 레이블이 보이는 동안은 비어 있음)를 넘기고, `ref`를 목록에 두고, `::highlight(search)`로 그 이름에 스타일을 주세요.
 
 ```tsx
-const found = useHighlight({ name: 'search', query: cb.query })
+const found = useHighlight({ name: 'search', query: cb.query });
 
 <OptionList.Root ref={found.ref} {...cb.getListboxProps()}>…</OptionList.Root>
 ```

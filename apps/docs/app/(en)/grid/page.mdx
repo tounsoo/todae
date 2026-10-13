@@ -10,29 +10,37 @@ Server Components can import it from `@omsoo.design/todae/grid`. That entry has 
 
 `columns` sets a fixed number of equal columns. They stay equal even when an item's content is wider than its share.
 
+```tsx
+<Grid.Root columns={2} role="list" aria-label="Plans">
+  {plans.map((plan) => (
+    <Card.Root key={plan.id} role="listitem">
+      {plan.name}
+    </Card.Root>
+  ))}
+</Grid.Root>
+```
+
 <Example block>
   <GridColumns />
 </Example>
-
-```tsx
-<Grid.Root columns={2}>
-  {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
-</Grid.Root>
-```
 
 ## Fill
 
 `minItemSize` is the narrowest a column may get. As many columns fit as the width allows, so the grid reflows without a media query, and a single column never overflows a container narrower than `minItemSize`.
 
+```tsx
+<Grid.Root minItemSize="10rem" role="list" aria-label="Plans">
+  {plans.map((plan) => (
+    <Card.Root key={plan.id} role="listitem">
+      {plan.name}
+    </Card.Root>
+  ))}
+</Grid.Root>
+```
+
 <Example block>
   <GridFill />
 </Example>
-
-```tsx
-<Grid.Root minItemSize="10rem">
-  {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
-</Grid.Root>
-```
 
 For any other track list, such as a sidebar and a main column, leave both out and set `gridTemplateColumns` in `style` or a class.
 

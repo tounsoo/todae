@@ -12,16 +12,16 @@ Controlled chips plus input, inside a [Field](/field). The field never appends c
 
 ```tsx
 <Field.Root aria-label="Tags">
-	<Field.ChipInput
-		chips={chips}
-		inputValue={inputValue}
-		onInputValueChange={setInputValue}
-		onCommit={(value) => {
-			setChips((prev) => (prev.includes(value) ? prev : [...prev, value]));
-			setInputValue('');
-		}}
-		onChipRemove={(index) => setChips((prev) => prev.filter((_, i) => i !== index))}
-	/>
+  <Field.ChipInput
+    chips={chips}
+    inputValue={inputValue}
+    onInputValueChange={setInputValue}
+    onCommit={(value) => {
+      setChips((prev) => (prev.includes(value) ? prev : [...prev, value]));
+      setInputValue('');
+    }}
+    onChipRemove={(index) => setChips((prev) => prev.filter((_, i) => i !== index))}
+  />
 </Field.Root>
 ```
 
@@ -30,6 +30,14 @@ Controlled chips plus input, inside a [Field](/field). The field never appends c
 </Example>
 
 Optional [useChipField](/utilities/use-chip-field) holds chips and input; spread its `getChipInputProps()` onto `Field.ChipInput`.
+
+```tsx
+const field = useChipField();
+
+<Field.Root aria-label="Tags">
+  <Field.ChipInput {...field.getChipInputProps()} placeholder="Add a tag" />
+</Field.Root>
+```
 
 Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key roving.
 

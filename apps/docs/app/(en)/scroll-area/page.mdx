@@ -4,17 +4,22 @@ import { ScrollAreaLinks, ScrollAreaText } from '../../../components/demos/Scrol
 
 `ScrollArea.Root` is a `div` that scrolls and keeps the focus rings of what it holds whole. A scroll container clips everything past its padding box, so a ring around a control at its edge is cut. `ScrollArea.Root` puts its children in a content box padded by a ring's width and offset, inside any padding you give the area, so the room is always there and nothing reaches past the area's edge. When focus lands on a control whose ring would still be cut, it scrolls the rest of the ring into view.
 
-<Example>
-  <ScrollAreaLinks />
-</Example>
-
 ```tsx
 <nav aria-label="Guide sections">
   <ScrollArea.Root style={{ blockSize: '9rem' }}>
-    <ul>{/* links */}</ul>
+    <Stack.Root as="ul" gap="condensed">
+      <li>
+        <Link.Root href="#overview">Overview</Link.Root>
+      </li>
+      …
+    </Stack.Root>
   </ScrollArea.Root>
 </nav>
 ```
+
+<Example>
+  <ScrollAreaLinks />
+</Example>
 
 `axis` picks the direction it scrolls in, `block` by default, and clips the other. Give it a size and padding the way you would any `div`. Lay its children out with an element inside it, since they sit in its content box. It has no server entry, so a Server Component renders it inside a client component.
 
@@ -22,15 +27,15 @@ import { ScrollAreaLinks, ScrollAreaText } from '../../../components/demos/Scrol
 
 When its content overflows and nothing inside can take focus, a keyboard could not reach the rest. So it then takes a Tab stop with the `region` role, and the arrow keys scroll it. Name it with `aria-label` or `aria-labelledby`; it warns in development when it takes a stop without a name. Its own ring is drawn inside its edge from `scroll.ring.focus`.
 
-<Example>
-  <ScrollAreaText />
-</Example>
-
 ```tsx
 <ScrollArea.Root aria-label="Release notes" style={{ blockSize: '7rem' }}>
   <Text.Root>…</Text.Root>
 </ScrollArea.Root>
 ```
+
+<Example>
+  <ScrollAreaText />
+</Example>
 
 `focusable` sets the stop either way: `true` keeps one while it overflows even with controls inside, and `false` never takes one, for a list of links that focus already scrolls through.
 

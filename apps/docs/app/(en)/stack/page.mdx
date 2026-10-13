@@ -6,6 +6,14 @@ import { StackButtons, StackGaps, StackSpread } from '../../../components/demos/
 
 Server Components can import it from `@omsoo.design/todae/stack`. That entry has no `'use client'` and no hooks; the main `@omsoo.design/todae` entry is a client module.
 
+```tsx
+<Stack.Root>
+  <Text.Root>Stacked label</Text.Root>
+  <Button.Root>Primary</Button.Root>
+  <Button.Root variant="secondary">Secondary</Button.Root>
+</Stack.Root>
+```
+
 <Example>
   <StackButtons />
 </Example>
@@ -19,6 +27,20 @@ Server Components can import it from `@omsoo.design/todae/stack`. That entry has
 ## Alignment and wrapping
 
 `align` sets the cross axis and `justify` the main axis; `between` pushes the first and last items to the edges. `wrap` lets items run onto more lines when the row is full.
+
+```tsx
+<Stack.Root direction="row" justify="between" align="center" wrap>
+  <Text.Root weight="bold">Billing</Text.Root>
+  <Stack.Root as="ul" direction="row" gap="condensed" aria-label="Plan features">
+    <li>
+      <Badge.Root>Monthly</Badge.Root>
+    </li>
+    <li>
+      <Badge.Root>Invoices</Badge.Root>
+    </li>
+  </Stack.Root>
+</Stack.Root>
+```
 
 <Example>
   <StackSpread />

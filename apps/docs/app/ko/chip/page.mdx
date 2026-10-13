@@ -4,6 +4,20 @@ import { ChipExamples } from '../../../components/demos/ChipDemo';
 
 텍스트만 담는 레이블입니다. 선택적인 제거는 이름이 있는 버튼입니다. `Chip.Overflow`는 표시 전용 `+N`입니다.
 
+```tsx
+<Stack.Root as="ul" direction="row" wrap aria-label="Tags">
+  <li>
+    <Chip.Root>Design</Chip.Root>
+  </li>
+  <li>
+    <Chip.Root onRemove={remove}>Tokens</Chip.Root>
+  </li>
+  <li>
+    <Chip.Overflow overflowCount={4} />
+  </li>
+</Stack.Root>
+```
+
 <Example>
   <ChipExamples />
 </Example>

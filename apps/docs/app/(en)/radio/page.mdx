@@ -9,14 +9,14 @@ The group type requires `aria-label` or `aria-labelledby`. A `role="radiogroup"`
 `value={null}` is controlled with nothing selected. Omit `value` for uncontrolled.
 
 ```tsx
-const captionId = useId()
+const captionId = useId();
 
 <Field.Group>
-	<Text.Root as="span" id={captionId} size="s" weight="medium">Plan</Text.Root>
-	<RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
-		<RadioGroup.Item value="free">Free</RadioGroup.Item>
-		<RadioGroup.Item value="pro">Pro</RadioGroup.Item>
-	</RadioGroup.Root>
+  <Text.Root as="span" id={captionId} size="s" weight="medium">Plan</Text.Root>
+  <RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
+    <RadioGroup.Item value="free">Free</RadioGroup.Item>
+    <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+  </RadioGroup.Root>
 </Field.Group>
 ```
 
@@ -35,16 +35,16 @@ Use Radio when the options stay visible. Use [OptionList](/optionlist) when the 
 **You supply:** The group's name: a visible caption with an id in `aria-labelledby`, or `aria-label`. Children on every item. For an error, `invalid` and the [ErrorMessage](/errormessage) id in the root's `aria-describedby`. When you wrap the root, keep its props type whole so the name stays required:
 
 ```tsx
-type PlanPickerProps = RadioGroupRootProps & { plans: readonly string[] }
+type PlanPickerProps = RadioGroupRootProps & { plans: readonly string[] };
 
 function PlanPicker({ plans, ...group }: PlanPickerProps) {
-	return (
-		<RadioGroup.Root {...group}>
-			{plans.map((plan) => (
-				<RadioGroup.Item key={plan} value={plan}>{plan}</RadioGroup.Item>
-			))}
-		</RadioGroup.Root>
-	)
+  return (
+    <RadioGroup.Root {...group}>
+      {plans.map((plan) => (
+        <RadioGroup.Item key={plan} value={plan}>{plan}</RadioGroup.Item>
+      ))}
+    </RadioGroup.Root>
+  );
 }
 ```
 

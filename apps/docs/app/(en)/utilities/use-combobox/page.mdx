@@ -6,6 +6,24 @@ import { ComboboxSingle } from '../../../../components/demos/ComboboxDemo';
 
 `presentation` defaults to `'auto'`, which picks a sheet on a coarse pointer or a narrow viewport through [useSheetPresentation](/utilities/use-sheet-presentation). Force `popover` or `sheet` to keep it fixed, as the demo below forces `popover`. `dialog` puts the input and list in a `Dialog`, as the [Command palette](/recipes/command-palette) does. [Composition](/composition) lists which getter goes on which part.
 
+```tsx
+const cb = useCombobox({ options, presentation: 'popover' });
+
+<Field.Group>
+  <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
+  <Field.Root {...cb.getAnchorProps()}>
+    <Field.TextInput {...cb.getInputProps()} />
+  </Field.Root>
+</Field.Group>
+<Popover.Root {...cb.getPopoverProps()}>
+  <OptionList.Root {...cb.getListboxProps()}>
+    {cb.items.map((item) => (
+      <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+    ))}
+  </OptionList.Root>
+</Popover.Root>
+```
+
 <Example>
   <ComboboxSingle />
 </Example>

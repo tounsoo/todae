@@ -4,20 +4,19 @@ import { VisuallyHiddenLabel } from '../../../components/demos/NativeDemo';
 
 `VisuallyHidden.Root` hides its content on screen and keeps it for assistive technology. It is a `span`, so it fits inside a button or a line of text. With `focusable`, it shows its content again while focus is inside, for skip links.
 
+```tsx
+<VisuallyHidden.Root focusable>
+  <Link.Root href="#main">Skip to content</Link.Root>
+</VisuallyHidden.Root>
+
+<Text.Root>
+  3 <VisuallyHidden.Root>unread messages</VisuallyHidden.Root>
+</Text.Root>
+```
+
 <Example>
   <VisuallyHiddenLabel />
 </Example>
-
-```tsx
-<VisuallyHidden.Root focusable>
-	<a href="#main">Skip to content</a>
-</VisuallyHidden.Root>
-
-<Button.Root>
-	<Button.Icon><TrashIcon /></Button.Icon>
-	<VisuallyHidden.Root>Delete draft</VisuallyHidden.Root>
-</Button.Root>
-```
 
 Server Components can import it from `@omsoo.design/todae/visually-hidden`. The declarations use `!important`, so a class or style you add never shows the hidden content. Prefer `aria-label` when the element already takes one, such as an icon-only `Button.Root`.
 

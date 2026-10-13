@@ -5,26 +5,31 @@ import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
 `Field.ColorPicker`는 [Field](/field) 안의 버튼으로, 필드 한 줄 높이의 색 견본으로 그려지고 그 색으로 채워집니다. [Popover](/popover) 안에 [ColorPicker](/color-picker)를 엽니다. 값은 `#rrggbb` 문자열이고, `onValueChange`는 끌거나 키로 바꾸는 동안 새 색을 하나씩 받습니다.
 
 ```tsx
-<Label.Root htmlFor={id}>Accent</Label.Root>
-<Field.Root id={id}>
-	<Field.ColorPicker
-		value={color}
-		onValueChange={(next) => {
-			setColor(next);
-			setText(next);
-		}}
-	/>
-	<Field.TextInput
-		value={text}
-		onChange={() => undefined}
-		onValueChange={(next) => {
-			setText(next);
-			const hex = normalizeHex(next);
-			if (hex) setColor(hex);
-		}}
-		onBlur={() => setText(color)}
-	/>
-</Field.Root>
+const id = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Accent</Label.Root>
+  <Field.Root id={id}>
+    <Field.ColorPicker
+      value={color}
+      onValueChange={(next) => {
+        setColor(next);
+        setText(next);
+      }}
+    />
+    <Field.TextInput
+      value={text}
+      onChange={() => undefined}
+      onValueChange={(next) => {
+        setText(next);
+        const hex = normalizeHex(next);
+        if (hex) setColor(hex);
+      }}
+      onBlur={() => setText(color)}
+      spellCheck={false}
+    />
+  </Field.Root>
+</Field.Group>
 ```
 
 <Example block>

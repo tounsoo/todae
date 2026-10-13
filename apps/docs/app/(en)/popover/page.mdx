@@ -28,6 +28,23 @@ A trimmed version of the fruit picker's code is on [usePopover](/utilities/use-p
 
 Veto outside clicks. Escape still closes. `onOpenChange` still receives `reason` so Combobox and this veto can ignore `outside`.
 
+```tsx
+const popover = usePopover({
+  open,
+  onOpenChange: (next, reason) => {
+    if (reason === 'outside') return;
+    setOpen(next);
+  },
+});
+
+<Button.Root tooltip={false} {...popover.getTriggerProps()}>
+  Outside is vetoed
+</Button.Root>
+<Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Pinned">
+  …
+</Popover.Root>
+```
+
 <Example>
   <PopoverVeto />
 </Example>

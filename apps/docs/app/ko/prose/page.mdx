@@ -4,10 +4,6 @@ import { ProseArticle } from '../../../components/demos/ProseDemo';
 
 `Prose.Root`는 렌더링된 마크다운이나 MDX의 글자와 간격을 정하는 `div`입니다. 제목, 문단, 목록, 인용문을 `prose` contract 토큰으로 그립니다. 문서 페이지나 글, 채팅 메시지의 본문을 감싸세요.
 
-<Example block>
-  <ProseArticle />
-</Example>
-
 ```tsx
 <Prose.Root>
   <h2>Release notes</h2>
@@ -17,6 +13,10 @@ import { ProseArticle } from '../../../components/demos/ProseDemo';
   </ul>
 </Prose.Root>
 ```
+
+<Example block>
+  <ProseArticle />
+</Example>
 
 Server Component에서는 `@omsoo.design/todae/prose`에서 가져올 수 있습니다. 이 사이트의 MDX 페이지는 모두 이것으로 조판합니다.
 

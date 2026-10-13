@@ -119,6 +119,19 @@ Each component, hook and recipe gets a page in `apps/docs/app/(en)` and a Korean
 - **Tables are JSX** with `Table` parts. The docs MDX has no GFM, so pipe tables render as plain text.
 - **Write narrow claims.** Absolute words such as "only", "never" and "always" are the claims reviews most often find wrong. State what the code does and stop.
 
+### Code blocks and live examples
+
+Code on a docs page is copied into products, so write it in the package's own style and wiring. `apps/docs/lib/codeBlocks.test.ts` checks three of these rules mechanically: that each fence names one of the languages below, that no line starts with a tab, and that `...` is not used as a placeholder. It skips the pages in its `PENDING` set, which don't follow this section yet.
+
+- **Every fence names its language:** `tsx` for code with JSX or a hook call, `ts` for other TypeScript, `css`, `json` or `sh`.
+- **Indent with two spaces**, not tabs. In TypeScript, use single quotes for strings, double quotes for JSX attributes, semicolons, and trailing commas in lists that span lines, as `packages/design-system` does.
+- **Mark left-out content with `…`**, such as `<Dialog.Body>…</Dialog.Body>`. Don't use `...`, which reads as a spread.
+- **Declare each id that a snippet names in `htmlFor` or an `aria-*` attribute,** such as `const id = useId();` or `const cb = useCombobox({ … });`, above the JSX. App state such as `value` and `setValue` can be assumed.
+- **Show real wiring.** A `Label.Root` sits with its control in a `Field.Group` and points at it with an id from `useId()` or a hook's `ids`, not a literal. Every control has an accessible name. Links are `Link.Root`, and a router's link goes in through its `render` prop.
+- **Icons are real icons with their import,** from `lucide-react`, not placeholder names such as `YourIcon`. Inside a slot such as `Button.Icon`, put the icon element on its own line.
+- **Imports.** A block with an `export function` imports everything it uses: Todae from `'@omsoo.design/todae'`, or from a server entry such as `'@omsoo.design/todae/code'` when a Server Component should render it.
+- **The site renders code with Todae's own parts.** MDX maps fenced blocks to `Code.Block` (inside a `ScrollArea.Root`, through `DocsPre`) and inline code to `Code.Root`. The docs set the fenced blocks' `code.block.bg` and `code.block.radius` tokens on that wrapper rather than overriding `Code.Block`'s padding, type or colors.
+
 ## Recording a decision
 
 When the project settles a question about concepts, API shape, tokens, CSS or platform use, add it to the section it belongs to here: the rule, then why. Remove a rule that a later decision replaces instead of keeping both.

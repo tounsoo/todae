@@ -8,10 +8,6 @@ Two components for content that is still loading. `Spinner.Root` is a native `<p
 
 `Spinner.Root` keeps the progressbar role, so screen readers announce it as a progress bar, and it needs a name like any progress: wrap it in a `<label>` with the text, or give it `aria-label`. It is drawn as a ring with one arc of fill that turns, and it holds still when the user asks for reduced motion. It takes no `value`: a wait with a known end is a [Progress](/progress) bar.
 
-<Example>
-  <SpinnerLabelled />
-</Example>
-
 ```tsx
 <label>
   <Spinner.Root /> Loading invoices
@@ -20,15 +16,15 @@ Two components for content that is still loading. `Spinner.Root` is a native `<p
 <Spinner.Root aria-label="Saving" />
 ```
 
+<Example>
+  <SpinnerLabelled />
+</Example>
+
 It draws in the text color, so it shows on any surface, a primary button included: set `color` to change it. Restyle it through `spinner.size`, `spinner.thickness`, `spinner.track-tint` (how much of the text color the track takes) and `spinner.motion.duration`.
 
 ## Skeleton
 
 `Skeleton.Root` stands in for content before it arrives. It is at least one line high, and elements inside it only give it a size: they are hidden. It pulses, and holds still under reduced motion.
-
-<Example block>
-  <SkeletonProfile />
-</Example>
 
 ```tsx
 <div>
@@ -42,6 +38,10 @@ It draws in the text color, so it shows on any surface, a primary button include
   </Stack.Root>
 </div>
 ```
+
+<Example block>
+  <SkeletonProfile />
+</Example>
 
 A skeleton means nothing to a screen reader, so hide it with `aria-hidden` and say what is loading in text. Restyle it through `skeleton.bg`, `skeleton.radius` and `skeleton.motion.duration`.
 

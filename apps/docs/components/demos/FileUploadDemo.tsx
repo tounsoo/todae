@@ -37,7 +37,8 @@ export function FileUploadImages() {
           justifyItems: 'center',
           gap: 'var(--todae-space-3)',
           padding: 'var(--todae-space-6)',
-          border: '2px dashed var(--todae-color-border-default)',
+          // A solid border while dragging, so the state shows by more than color.
+          border: `2px ${zone.dragging ? 'solid' : 'dashed'} var(--todae-color-border-default)`,
           borderRadius: 'var(--todae-radius-md)',
           background: zone.dragging ? 'var(--todae-color-bg-subtle)' : undefined,
         }}

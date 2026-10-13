@@ -14,7 +14,7 @@ import {
 
 ```tsx
 <Field.Root aria-label="Note">
-	<Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} />
+  <Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} />
 </Field.Root>
 ```
 
@@ -27,6 +27,12 @@ import {
 `autoGrow`는 브라우저가 지원하면 `field-sizing: content`를 쓰고, `maxRows`를 생략하면 상한 없이 늘어납니다. `field-sizing`이 없는 브라우저에서는 `rows`에 머물고 안에서 스크롤됩니다. `autoGrow`가 켜져 있을 때는 인라인 `height`를 설정하지 마세요. 늘어나는 동작을 덮어씁니다.
 
 `autoGrow`와 `maxRows={6}`.
+
+```tsx
+<Field.Root aria-label="Note">
+  <Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} autoGrow maxRows={6} />
+</Field.Root>
+```
 
 <Example block>
   <TextareaAutoGrow />

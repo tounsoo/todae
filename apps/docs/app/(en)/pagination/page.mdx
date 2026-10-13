@@ -4,31 +4,31 @@ import { PaginationButtons } from '../../../components/demos/PaginationDemo';
 
 A `nav` landmark around an ordered list of pages. `paginationRange` decides which pages to show, and your own links or buttons go inside the items, so a router's link works as it is.
 
-<Example>
-  <PaginationButtons />
-</Example>
-
 ```tsx
 <Pagination.Root>
   <Pagination.Item>
-    {page > 1 ? <Link href={`?page=${page - 1}`}>Previous</Link> : <a role="link" aria-disabled="true">Previous</a>}
+    {page > 1 ? <Link.Root href={`?page=${page - 1}`}>Previous</Link.Root> : <Link.Root role="link" aria-disabled="true">Previous</Link.Root>}
   </Pagination.Item>
   {paginationRange({ page, count }).map((item) =>
     typeof item === 'number' ? (
       <Pagination.Item key={item}>
-        <Link href={`?page=${item}`} aria-current={item === page ? 'page' : undefined}>
+        <Link.Root href={`?page=${item}`} aria-current={item === page ? 'page' : undefined}>
           {item}
-        </Link>
+        </Link.Root>
       </Pagination.Item>
     ) : (
       <Pagination.Ellipsis key={item} />
     ),
   )}
   <Pagination.Item>
-    {page < count ? <Link href={`?page=${page + 1}`}>Next</Link> : <a role="link" aria-disabled="true">Next</a>}
+    {page < count ? <Link.Root href={`?page=${page + 1}`}>Next</Link.Root> : <Link.Root role="link" aria-disabled="true">Next</Link.Root>}
   </Pagination.Item>
 </Pagination.Root>
 ```
+
+<Example>
+  <PaginationButtons />
+</Example>
 
 ## The page range
 
@@ -50,14 +50,14 @@ Server Components can import it from `@omsoo.design/todae/pagination`.
 import { ChevronLeft, Ellipsis } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ ellipsis: <Ellipsis /> }}>
-	<Pagination.Root>
-		<Pagination.Item>
-			<Link href={`?page=${page - 1}`} aria-label="Previous page">
-				<ChevronLeft aria-hidden />
-			</Link>
-		</Pagination.Item>
-		…
-	</Pagination.Root>
+  <Pagination.Root>
+    <Pagination.Item>
+      <Link.Root href={`?page=${page - 1}`} aria-label="Previous page">
+        <ChevronLeft aria-hidden />
+      </Link.Root>
+    </Pagination.Item>
+    …
+  </Pagination.Root>
 </GlyphsProvider>
 ```
 

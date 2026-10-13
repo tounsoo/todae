@@ -9,6 +9,8 @@ import { FileUploadImages } from '../../../../components/demos/FileUploadDemo';
 라벨이 드롭 대상입니다. 그래서 라벨 어디를 클릭해도 선택기가 열리고, 라벨의 텍스트가 입력의 이름이 됩니다. 거부된 파일은 입력의 `aria-describedby`가 가리키는 `ErrorMessage.Root`에 나열하고, 입력에는 `aria-invalid`를 줍니다. 받은 파일은 그 아래에 나열합니다.
 
 ```tsx
+const hintId = useId();
+const errorId = useId();
 const zone = useDropzone({
   accept: 'image/*',
   multiple: true,
@@ -16,10 +18,10 @@ const zone = useDropzone({
   maxSize: 2_000_000,
   minSize: 1,
   onFiles: (accepted, rejected) => {
-    setFiles(accepted)
-    setRejected(rejected)
+    setFiles(accepted);
+    setRejected(rejected);
   },
-})
+});
 
 <label {...zone.getRootProps()}>
   <Text.Root as="span">Drop images here, or choose them</Text.Root>

@@ -11,7 +11,7 @@ export function PopoverMenu() {
   return (
     <Stack.Root>
       <Button.Root tooltip={false} {...popover.getTriggerProps()}>
-        {value ?? 'Choose fruit'}
+        {value ? `Fruit: ${value}` : 'Choose fruit'}
       </Button.Root>
       <Popover.Root {...popover.getPopoverProps()}>
         <OptionList.Root

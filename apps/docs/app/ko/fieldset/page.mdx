@@ -5,11 +5,18 @@ import { FieldsetCheckboxes, FieldsetDisabled } from '../../../components/demos/
 체크박스 묶음처럼 관련된 컨트롤을 하나의 `<legend>` 아래로 묶는 네이티브 `<fieldset>`입니다. 포커스가 그룹 안으로 들어가면 스크린 리더가 legend를 그룹 이름으로 읽습니다.
 
 ```tsx
+const errorId = useId();
+const none = topics.length === 0;
+
 <Fieldset.Root invalid={none} aria-describedby={none ? errorId : undefined}>
-	<Fieldset.Legend>Email topics</Fieldset.Legend>
-	<Checkbox.Root>Product news</Checkbox.Root>
-	<Checkbox.Root>Security notices</Checkbox.Root>
-	{none ? <ErrorMessage.Root id={errorId}>Pick at least one topic.</ErrorMessage.Root> : null}
+  <Fieldset.Legend>Email topics</Fieldset.Legend>
+  <Checkbox.Root checked={topics.includes('product')} onCheckedChange={toggle('product')}>
+    Product news
+  </Checkbox.Root>
+  <Checkbox.Root checked={topics.includes('security')} onCheckedChange={toggle('security')}>
+    Security notices
+  </Checkbox.Root>
+  {none ? <ErrorMessage.Root id={errorId}>Pick at least one topic.</ErrorMessage.Root> : null}
 </Fieldset.Root>
 ```
 
