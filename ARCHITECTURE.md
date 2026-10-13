@@ -130,7 +130,7 @@ Code on a docs page is copied into products, so it follows the package's own sty
 - **Show real wiring.** A label sits with its control in a `Field.Group`, gets its `id` from `useId()` rather than a literal, and every control has a name. Links are `Link.Root`, with a router passed through `render`.
 - **Icons are real icons with their import,** from `lucide-react`, not placeholder names such as `YourIcon`. Write an icon slot on three lines, the slot, the icon, then the slot's closing tag.
 - **Imports.** A fragment imports only what doesn't come from Todae, such as icons. A complete component (`export function …`) imports everything it uses, Todae from `'@omsoo/todae'`, or from a server entry such as `'@omsoo/todae/code'` when a Server Component should render it.
-- **The site renders code with Todae's own parts.** MDX maps fenced blocks to `Code.Block` (inside a `ScrollArea.Root`, through `DocsPre`) and inline code to `Code.Root`. The docs change their look through the `code` tokens in `@layer todae.theme`, as a company would, not by overriding the parts' padding, type or colors.
+- **The site renders code with Todae's own parts.** MDX maps fenced blocks to `Code.Block` (inside a `ScrollArea.Root`, through `DocsPre`) and inline code to `Code.Root`. The docs set the fenced blocks' `code.block.bg` and `code.block.radius` tokens on that wrapper rather than overriding `Code.Block`'s padding, type or colors.
 - **Code comes before the `<Example>` that shows it,** and a live example uses the same props and wiring as the snippet above it, so what a reader runs matches what they copy.
 
 ## Recording a decision

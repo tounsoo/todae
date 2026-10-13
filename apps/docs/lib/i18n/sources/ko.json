@@ -49,7 +49,7 @@
   },
   "button": {
     "(top)": "22a0a77f5821",
-    "# Button": "bb390515e6e0",
+    "# Button": "aae9c2136ae4",
     "## Toggle": "b7fa7b0a3692",
     "## Button.Group": "8f53cd84f2c3",
     "## Icons": "030e0279e3e2",
@@ -256,7 +256,7 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "4b9cc0e80a6c",
-    "## A company resolver": "bc1b48f00efd",
+    "## A company resolver": "1909688f1ba7",
     "## Overrides: CSS or ThemeProvider": "f3c47c9be9f3",
     "## Adding a variant or a density": "18296d631573",
     "## Wrapping a component": "1ab28f3e8c41",
@@ -275,7 +275,7 @@
     "(top)": "99eaa411e53d",
     "# Label": "30dc84f7eeb0",
     "## With Field": "fef6b9cd2276",
-    "## States": "0a3054380a59",
+    "## States": "82c29cefbfd7",
     "## Accessible composition": "7dcf1ec73b86",
     "## When to use": "8fc9bad57d0d",
     "## Props": "5e83f299f954",
