@@ -21,7 +21,7 @@ const [start, setStart] = useState<Temporal.PlainDateTime | null>(null)
 
 ## Temporal
 
-Todae ships no Temporal polyfill. `Field.DateTimeInput` calls `Temporal` when the user changes the input, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)). Todae's types need TypeScript 6 or later, which declares `Temporal`.
+Todae ships no Temporal polyfill. `onValueChange` reads the input with `Temporal`, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)). Todae's types need TypeScript 6 or later, which declares `Temporal`.
 
 ## Accessible composition
 

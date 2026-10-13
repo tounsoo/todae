@@ -2,7 +2,7 @@ import { FieldTime } from '../../../../components/demos/FieldDemo';
 
 # Field.TimeInput
 
-`Field.TimeInput`은 [Field](/field) 안에서 브라우저 자체의 시간 선택기와 로캘 형식을 쓰는 네이티브 `<input type="time">`입니다. `value`, `min`, `max`는 `Temporal.PlainTime`이며, `onValueChange`는 `Temporal.PlainTime`를, 입력이 비어 있거나 덜 끝났을 때는 `null`을 받습니다. `PlainTime`에는 날짜와 시간대가 없습니다. `step`은 네이티브 그대로이며 초 단위입니다. `id`는 `Field.Root`에 두세요.
+`Field.TimeInput`은 [Field](/field) 안에서 브라우저 자체의 시간 선택기와 로캘 형식을 쓰는 네이티브 `<input type="time">`입니다. `value`, `min`, `max`는 `Temporal.PlainTime`이며, `onValueChange`는 `Temporal.PlainTime`을, 입력이 비어 있거나 덜 끝났을 때는 `null`을 받습니다. `PlainTime`에는 날짜와 시간대가 없습니다. `step`은 네이티브 그대로이며 초 단위입니다. `id`는 `Field.Root`에 두세요.
 
 ```tsx
 const [time, setTime] = useState<Temporal.PlainTime | null>(null)
@@ -21,7 +21,7 @@ const [time, setTime] = useState<Temporal.PlainTime | null>(null)
 
 ## Temporal
 
-Todae는 Temporal 폴리필을 포함하지 않습니다. `Field.TimeInput`은 사용자가 입력을 바꿀 때 `Temporal`을 호출하므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고). Todae의 타입에는 `Temporal`을 선언하는 TypeScript 6 이상이 필요합니다.
+Todae는 Temporal 폴리필을 포함하지 않습니다. `onValueChange`는 `Temporal`로 입력을 읽으므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고). Todae의 타입에는 `Temporal`을 선언하는 TypeScript 6 이상이 필요합니다.
 
 ## 접근성을 지키는 조합
 

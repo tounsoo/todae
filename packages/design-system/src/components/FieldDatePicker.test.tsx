@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Field, GlyphsProvider, Label } from '../index';
+import { Field, GlyphsProvider, Label, useField } from '../index';
 
 afterEach(cleanup);
 
@@ -136,6 +136,39 @@ describe('Field.DatePicker', () => {
       ['day', '2026-10-13'],
     ]);
     expect(screen.getByRole('button', { name: 'Choose date' }).getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it("keeps the field's name beside a control that does not carry it", () => {
+    render(
+      <form data-testid="form">
+        <Field.Root aria-label="Start" name="day">
+          <Field.TimeInput name="time" value={Temporal.PlainTime.from('09:30')} onValueChange={() => undefined} />
+          <Field.DatePicker value={day} />
+        </Field.Root>
+      </form>,
+    );
+    expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
+      ['time', '09:30'],
+      ['day', '2026-10-13'],
+    ]);
+  });
+
+  it('gives the field to a custom control wired with useField, and still shows its date', () => {
+    function Custom() {
+      const field = useField();
+      return <input {...field.getControlProps({})} />;
+    }
+    render(
+      <Field.Root id="f" aria-label="Start">
+        <Custom />
+        <Field.DatePicker value={day} />
+      </Field.Root>,
+    );
+    const button = screen.getByRole('button', { name: 'Choose date' });
+    expect(button.id).not.toBe('f');
+    expect(document.querySelectorAll('#f')).toHaveLength(1);
+    expect(button.hasAttribute('data-beside')).toBe(false);
+    expect(button.textContent).toContain('2026');
   });
 
   it('draws the calendar glyph from GlyphsProvider', () => {

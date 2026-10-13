@@ -1,5 +1,11 @@
 import { useCallback, useMemo, type Ref } from 'react';
-import { inputLabel, mergeDescribedBy, useControlSetter, useFieldContext } from '../components/Field.context';
+import {
+  inputLabel,
+  mergeDescribedBy,
+  useControlPresence,
+  useControlSetter,
+  useFieldContext,
+} from '../components/Field.context';
 import { useStableComposedRef } from '../components/props';
 
 /** `id` and `name` are not taken here: they come from `Field.Root`, which a `Label htmlFor` and the form use. */
@@ -64,9 +70,26 @@ export type UseFieldResult = {
  * joins it. Throws outside `Field.Root`.
  */
 export function useField(): UseFieldResult {
+  return useFieldControl(true);
+}
+
+/**
+ * useField, with `counted` false for a control that leaves the field to any
+ * other control beside it, as Field.ColorPicker does. Not exported from the
+ * package.
+ */
+export function useFieldControl(counted: boolean): UseFieldResult {
   const ctx = useFieldContext();
   const { inputRef } = ctx;
-  const setControl = useControlSetter(inputRef);
+  const setFocusTarget = useControlSetter(inputRef);
+  const setPresence = useControlPresence(ctx.store, ctx.name, counted);
+  const setControl = useCallback(
+    (node: HTMLElement | null) => {
+      setFocusTarget(node);
+      setPresence(node);
+    },
+    [setFocusTarget, setPresence],
+  );
   const composedRef = useStableComposedRef(setControl);
   const getControlProps = useCallback(
     <P extends FieldControlUserProps>(
