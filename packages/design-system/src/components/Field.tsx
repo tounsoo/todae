@@ -590,6 +590,9 @@ function Select({ value, onChange, onValueChange, className, children, ...props 
   );
 }
 
+/** Why Field.ColorPicker's picker closed: a popover's reasons, or the field became disabled. */
+export type FieldColorPickerCloseReason = PopoverCloseReason | 'disabled';
+
 export type FieldColorPickerProps = {
   /** The color as #rrggbb. */
   value: string;
@@ -600,7 +603,7 @@ export type FieldColorPickerProps = {
   /** Initial open state when uncontrolled. */
   defaultOpen?: boolean;
   /** Fires when the picker opens or closes, with why it closed. */
-  onOpenChange?: (open: boolean, reason: PopoverCloseReason) => void;
+  onOpenChange?: (open: boolean, reason: FieldColorPickerCloseReason) => void;
 } & Omit<ComponentPropsWithRef<'button'>, 'value' | 'defaultValue' | 'children' | 'type' | 'color' | 'onChange'>;
 
 /**
@@ -622,9 +625,17 @@ function ColorPicker({
   const { shellRef } = useFieldContext();
   const strings = useStrings();
   const { name, ...control } = field.getControlProps(props);
-  const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
-  // A disabled field shows no picker, even one left open.
+  const [open, setOpen] = useControlledValue<boolean, [FieldColorPickerCloseReason]>(
+    openProp,
+    defaultOpen ?? false,
+    onOpenChange,
+  );
+  // A disabled field shows no picker. One open when the field is disabled
+  // closes, so it does not come back when the field is enabled again.
   const shown = open && !control.disabled;
+  useEffect(() => {
+    if (open && control.disabled) setOpen(false, 'disabled');
+  }, [control.disabled, open, setOpen]);
   const popover = usePopover({
     open: shown,
     onOpenChange: setOpen,

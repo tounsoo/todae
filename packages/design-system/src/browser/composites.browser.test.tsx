@@ -392,13 +392,30 @@ describe('Field.ColorPicker in a browser', () => {
     expect([...new FormData(form).entries()]).toEqual([['accent', '#3366ff']]);
   });
 
-  it('hides an open picker when the field is disabled', async () => {
-    const { rerender } = render(<Accent />);
+  it('closes an open picker when the field is disabled, and keeps it closed when enabled again', async () => {
+    const onOpenChange = vi.fn();
+    function Toggled({ disabled }: { disabled?: boolean }) {
+      return (
+        <Themed>
+          <button type="button">before</button>
+          <Field.Root aria-label="Accent" disabled={disabled}>
+            <Field.ColorPicker value="#3366ff" onOpenChange={onOpenChange} />
+          </Field.Root>
+        </Themed>
+      );
+    }
+    const { rerender } = render(<Toggled />);
     await userEvent.click(screen.getByRole('button', { name: 'Accent' }));
     await screen.findByRole('dialog', { name: 'Color picker' });
-    rerender(<Accent disabled />);
+    rerender(<Toggled disabled />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'disabled');
+    const before = screen.getByRole('button', { name: 'before' });
+    before.focus();
+    rerender(<Toggled />);
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.getByRole('button', { name: 'Accent' }).getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(before);
   });
 
   it('is as wide as the swatch on its own, and disabled with the field', () => {

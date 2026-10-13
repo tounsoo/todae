@@ -31,7 +31,7 @@ export const meta = {
     },
     {
       name: 'onOpenChange',
-      type: "(open: boolean, reason: 'escape' | 'outside' | 'trigger') => void",
+      type: "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'disabled') => void",
       required: false,
       description: 'Fires when the picker opens or closes, with why it closed.',
     },

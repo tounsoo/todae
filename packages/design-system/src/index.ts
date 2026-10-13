@@ -150,6 +150,7 @@ export {
   type FieldRootProps,
   type FieldRowProps,
   type FieldSelectProps,
+  type FieldColorPickerCloseReason,
   type FieldColorPickerProps,
   type FieldTextInputProps,
   type FieldTextInputType,
