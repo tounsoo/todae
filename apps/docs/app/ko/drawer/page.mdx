@@ -6,11 +6,6 @@ import { DrawerBasic } from '../../../components/demos/DrawerDemo';
 
 `side`의 기본값은 `end`입니다. 시작과 끝은 텍스트 방향을 따르므로, 오른쪽에서 왼쪽으로 쓰는 텍스트에서는 `end`가 왼쪽 가장자리입니다.
 
-<Example>
-  <DrawerBasic />
-  <DrawerBasic side="start" />
-</Example>
-
 ```tsx
 <Drawer.Root open={open} onOpenChange={setOpen}>
   <Dialog.Header>
@@ -20,6 +15,11 @@ import { DrawerBasic } from '../../../components/demos/DrawerDemo';
   <Dialog.Body>…</Dialog.Body>
 </Drawer.Root>
 ```
+
+<Example>
+  <DrawerBasic />
+  <DrawerBasic side="start" />
+</Example>
 
 ## 접근성을 지키는 조합
 

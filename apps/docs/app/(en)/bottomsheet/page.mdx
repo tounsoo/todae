@@ -1,4 +1,5 @@
-import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos/BottomSheetDemo';
+import { BottomSheetBasic } from '../../../components/demos/BottomSheetDemo';
+import { ComboboxSheet } from '../../../components/demos/ComboboxDemo';
 
 # BottomSheet
 
@@ -8,18 +9,35 @@ The sheet renders where you put it, so it takes the theme of its parent. That al
 
 Enter slides up from below into the snap height (first-frame pose, not a height tween). Both overlays use `data-entered`; Dialog also keeps `@starting-style`. Exit slides off and unmounts on `transitionend` (240ms fallback). Drag keeps `transition: none`.
 
+```tsx
+<Button.Root onClick={() => setOpen(true)}>Open sheet</Button.Root>
+<BottomSheet.Root open={open} onOpenChange={setOpen} snap={snap} onSnapChange={setSnap}>
+  <BottomSheet.Header>
+    <BottomSheet.Title>Share</BottomSheet.Title>
+    <BottomSheet.Close>Close</BottomSheet.Close>
+  </BottomSheet.Header>
+  <BottomSheet.Description>Drag the grabber. Mid and full snap.</BottomSheet.Description>
+  <BottomSheet.Body>…</BottomSheet.Body>
+  <BottomSheet.Footer>
+    <Button.Root variant="secondary" onClick={() => setOpen(false)}>
+      Cancel
+    </Button.Root>
+  </BottomSheet.Footer>
+</BottomSheet.Root>
+```
+
 <Example>
   <BottomSheetBasic />
 </Example>
 
 The sheet renders where you place it, with no portal, so it inherits appearance, density and theme overrides like any other part. `dismissOnEscape={false}` sets `closedby="none"`, so the browser ignores Escape; otherwise Escape and a backdrop click call `onOpenChange(false, reason)`. A controlled sheet closes once you set `open` to false; an uncontrolled one closes right away. When something outside Todae closes the `<dialog>`, such as a script calling `close()`, `onOpenChange` gets the reason `native`.
 
-## Consumer sketch
+## In a combobox
 
-Touch Combobox later. A button opens this sheet. Search plus options live in the sheet. Desktop typeahead-while-open stays a popover in the Combobox PRD.
+[useCombobox](/utilities/use-combobox) with `presentation: 'sheet'` shows its list in a BottomSheet. A `Button.Root` opens the sheet, and the search field and options sit inside it. The [Combobox](/recipes/combobox) recipe has the code.
 
 <Example>
-  <ComboboxTouchSketch />
+  <ComboboxSheet />
 </Example>
 
 ## Icons
@@ -30,9 +48,9 @@ Touch Combobox later. A button opens this sheet. Search plus options live in the
 import { X } from 'lucide-react';
 
 <BottomSheet.Close>
-	<Button.Icon>
-		<X />
-	</Button.Icon>
+  <Button.Icon>
+    <X />
+  </Button.Icon>
 </BottomSheet.Close>
 ```
 

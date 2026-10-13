@@ -5,21 +5,25 @@ import { TreeFiles } from '../../../components/demos/TreeDemo';
 A list whose items hold lists of their own, such as files in folders. `Tree.Root` is the `role="tree"` and owns which items are open and which one is selected. Each `Tree.Item` is a `role="treeitem"` named by its `Tree.Label`, the row you see. An item with a `Tree.Group` inside is a branch: it opens and closes, and the group holds its child items. `Tree.Icon` holds an icon before the text.
 
 ```tsx
+import { Folder } from 'lucide-react';
+
 <Tree.Root aria-label="Files" defaultExpanded={['src']}>
-	<Tree.Item value="src">
-		<Tree.Label>
-			<Tree.Icon><Folder /></Tree.Icon>
-			src
-		</Tree.Label>
-		<Tree.Group>
-			<Tree.Item value="src/index.ts">
-				<Tree.Label>index.ts</Tree.Label>
-			</Tree.Item>
-		</Tree.Group>
-	</Tree.Item>
-	<Tree.Item value="README.md">
-		<Tree.Label>README.md</Tree.Label>
-	</Tree.Item>
+  <Tree.Item value="src">
+    <Tree.Label>
+      <Tree.Icon>
+        <Folder />
+      </Tree.Icon>
+      src
+    </Tree.Label>
+    <Tree.Group>
+      <Tree.Item value="src/index.ts">
+        <Tree.Label>index.ts</Tree.Label>
+      </Tree.Item>
+    </Tree.Group>
+  </Tree.Item>
+  <Tree.Item value="README.md">
+    <Tree.Label>README.md</Tree.Label>
+  </Tree.Item>
 </Tree.Root>
 ```
 

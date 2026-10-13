@@ -7,10 +7,10 @@ The trail of pages above the current one. `Breadcrumbs.Root` is a `nav` landmark
 ```tsx
 <Breadcrumbs.Root>
   <Breadcrumbs.Item>
-    <YourLink to="/">Home</YourLink>
+    <Link.Root href="/">Home</Link.Root>
   </Breadcrumbs.Item>
   <Breadcrumbs.Item>
-    <YourLink to="/settings">Settings</YourLink>
+    <Link.Root href="/settings">Settings</Link.Root>
   </Breadcrumbs.Item>
   <Breadcrumbs.Item current>Billing</Breadcrumbs.Item>
 </Breadcrumbs.Root>
@@ -36,7 +36,7 @@ With a `separator` glyph from a [GlyphsProvider](/utilities/glyphs-provider), ea
 import { ChevronRight } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ separator: <ChevronRight /> }}>
-	<Breadcrumbs.Root>…</Breadcrumbs.Root>
+  <Breadcrumbs.Root>…</Breadcrumbs.Root>
 </GlyphsProvider>
 ```
 

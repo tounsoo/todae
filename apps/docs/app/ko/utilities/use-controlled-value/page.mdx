@@ -4,13 +4,13 @@
 
 ```tsx
 function Filter({ value, defaultValue = 'all', onValueChange }: FilterProps) {
-	const [current, change] = useControlledValue(value, defaultValue, onValueChange)
-	return (
-		<select value={current} onChange={(event) => change(event.currentTarget.value)}>
-			<option value="all">All</option>
-			<option value="open">Open</option>
-		</select>
-	)
+  const [current, change] = useControlledValue(value, defaultValue, onValueChange);
+  return (
+    <select aria-label="Status" value={current} onChange={(event) => change(event.currentTarget.value)}>
+      <option value="all">All</option>
+      <option value="open">Open</option>
+    </select>
+  );
 }
 ```
 

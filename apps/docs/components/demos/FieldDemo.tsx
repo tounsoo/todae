@@ -222,7 +222,7 @@ export function ChipInputHook() {
   const field = useChipField({ initialChips: ['react'] });
   return (
     <Field.Root aria-label="Tags">
-      <Field.ChipInput {...field.getChipInputProps()} placeholder="useChipField" />
+      <Field.ChipInput {...field.getChipInputProps()} placeholder="Add a tag" />
     </Field.Root>
   );
 }
@@ -573,7 +573,7 @@ export function FieldNumber() {
     <Field.Group>
       <Label.Root htmlFor={id}>Seats</Label.Root>
       <Field.Root id={id}>
-        <Field.TextInput type="number" min={1} max={20} value={quantity} onValueChange={setQuantity} onChange={() => undefined} />
+        <Field.TextInput type="number" min={1} max={20} value={quantity} onChange={(event) => setQuantity(event.target.value)} />
       </Field.Root>
     </Field.Group>
   );

@@ -1,3 +1,4 @@
+import { FieldLabelStates } from '../../../components/demos/FieldDemo';
 import { LabelSibling } from '../../../components/demos/LabelDemo';
 
 # Label
@@ -11,13 +12,13 @@ Server Components can import it from `@omsoo.design/todae/label`. That entry has
 Label carries no margin. Put the label, the control and any [Description](/description) or [ErrorMessage](/errormessage) in a `Field.Group`, which puts the label `field.label.gap` (0.4rem) above the control.
 
 ```tsx
-const id = useId()
+const id = useId();
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Email</Label.Root>
-	<Field.Root id={id}>
-		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Email</Label.Root>
+  <Field.Root id={id}>
+    <Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+  </Field.Root>
 </Field.Group>
 ```
 
@@ -30,6 +31,28 @@ One `Field.Group` per field. The order is Label, control, then Description and E
 ## States
 
 Disabled and invalid live on `Field.Root`. Label does not repaint. A required mark is authored in the label text.
+
+```tsx
+const disabledId = useId();
+const invalidId = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={disabledId}>Email</Label.Root>
+  <Field.Root id={disabledId} disabled>
+    <Field.TextInput value={disabledEmail} onChange={(event) => setDisabledEmail(event.target.value)} />
+  </Field.Root>
+</Field.Group>
+<Field.Group>
+  <Label.Root htmlFor={invalidId}>Email</Label.Root>
+  <Field.Root id={invalidId} invalid>
+    <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
+  </Field.Root>
+</Field.Group>
+```
+
+<Example block>
+  <FieldLabelStates />
+</Example>
 
 ## Accessible composition
 

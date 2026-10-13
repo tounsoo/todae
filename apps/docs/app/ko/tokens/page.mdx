@@ -6,6 +6,20 @@ DTCG 파이프라인에서 생성한 카탈로그입니다. 컴포넌트는 cont
 
 코드에서 프로바이더 값을 읽으려면, `useAppearance()`는 가장 가까운 ThemeProvider의 확정된 appearance(`light` 또는 `dark`)를, `useDensity()`는 가장 가까운 DensityProvider의 density를 반환합니다. 위에 프로바이더가 없으면 `light`와 `comfortable`을 반환합니다.
 
+```tsx
+function Panel() {
+  const appearance = useAppearance(); // 'dark'
+  const density = useDensity(); // 'compact'
+  return <Text.Root>{appearance}, {density}</Text.Root>;
+}
+
+<ThemeProvider appearance="dark">
+  <DensityProvider density="compact">
+    <Panel />
+  </DensityProvider>
+</ThemeProvider>
+```
+
 ## 언제 쓰나요
 
 ### ThemeProvider

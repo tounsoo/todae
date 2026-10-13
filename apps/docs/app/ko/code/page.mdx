@@ -8,10 +8,6 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 
 `Code.Root`는 주변 텍스트 색을 그대로 쓰고 그 색으로 상자를 옅게 칠합니다. 그래서 링크나 기본 버튼 안에서도 똑같이 읽힙니다. 주변 텍스트보다 한 단계 작습니다. `Code.Block`은 줄이 너무 길면 가로로 스크롤하는 블록이고, 그 안의 코드는 `Code.Root`든 평범한 `<code>`든 자기 상자를 버립니다.
 
-<Example block>
-  <CodeInText />
-</Example>
-
 ```tsx
 <Text.Root>
   Call <Code.Root>getPlan()</Code.Root> before you render the billing page.
@@ -21,21 +17,25 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 </Code.Block>
 ```
 
+<Example block>
+  <CodeInText />
+</Example>
+
 스크롤하는 `Code.Block`에는 `tabIndex={0}`을 주어 키보드 사용자가 닿아서 스크롤할 수 있게 하고, 그 탭 위치에 이름이 있도록 `role="region"`과 `aria-label`을 주세요. `code.font.family`와 `code.font.scale`(주변 텍스트에 대한 크기 비율)은 인라인 코드와 코드 블록의 글꼴을 함께 정합니다. 인라인 상자는 `code.tint`(텍스트 색을 얼마나 쓰는지), `code.radius`, `code.padding.x`, `code.padding.y`로, 블록은 `code.block` 토큰으로 바꾸세요.
 
 ## Kbd
 
 `Kbd.Root`는 키캡으로 그려집니다. 단축키는 HTML이 정한 대로 바깥 `Kbd.Root` 안에 키마다 `Kbd.Root`를 하나씩 넣으세요. 바깥 것은 주변 색 그대로 평범한 텍스트로 남으므로 키를 잇는 `+`에는 상자가 없습니다.
 
-<Example>
-  <KbdShortcut />
-</Example>
-
 ```tsx
 <Kbd.Root>
   <Kbd.Root>Ctrl</Kbd.Root>+<Kbd.Root>K</Kbd.Root>
 </Kbd.Root>
 ```
+
+<Example>
+  <KbdShortcut />
+</Example>
 
 `kbd.fg`, `kbd.bg`, `kbd.border`, `kbd.border-width`, `kbd.radius`, `kbd.font.family`, `kbd.font.scale`, `kbd.padding.x`, `kbd.padding.y`로 바꾸세요.
 
@@ -46,6 +46,9 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 **직접 제공할 것:** 스크롤되는 `Code.Block`에는 위에서 설명한 `tabIndex={0}`, `role="region"`, `aria-label`을 붙이세요. 회사의 코드 블록 컴포넌트는 기본 이름 하나를 채워 넣지 말고 props로 이름을 꼭 받으세요. 복사 버튼을 더한다면 버튼에 이름을 주고, 결과를 알리세요. 예를 들어 [useAnnouncer](/utilities/use-announcer)를 쓸 수 있습니다.
 
 ```tsx
+// The server entry, so a Server Component can render it.
+import { Code } from '@omsoo.design/todae/code';
+
 type CodeBlockProps = { label: string; children: string };
 
 export function CodeBlock({ label, children }: CodeBlockProps) {

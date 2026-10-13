@@ -1,10 +1,10 @@
 {
   "alert": {
     "(top)": "1aef904811bf",
-    "# Alert": "4453e19f9d03",
-    "## Announcements": "310cd3b22e21",
-    "## Icons": "2f927911dc6f",
-    "## Accessible composition": "6ad2f6cff8a4",
+    "# Alert": "ad1ae47c4a54",
+    "## Announcements": "578ac3f4371f",
+    "## Icons": "a8e0adf621d1",
+    "## Accessible composition": "4b8c6a4ab6d2",
     "## When to use": "93f223e4afba",
     "## Props": "dd99811bd89f",
     "(section order)": "744d738b4b15"
@@ -12,7 +12,7 @@
   "avatar": {
     "(top)": "d01aa6771c0c",
     "# Avatar": "24e9d98ee594",
-    "## Naming": "ca37a2fc83fd",
+    "## Naming": "29a0e2eb6064",
     "## Sizes": "166b7c6e1c4a",
     "## Colors": "b87102ab0c53",
     "## Accessible composition": "a4759450c7bd",
@@ -29,19 +29,19 @@
     "(section order)": "1954e64fafc5"
   },
   "bottomsheet": {
-    "(top)": "869c844dfd66",
-    "# BottomSheet": "795c341da685",
-    "## Consumer sketch": "ea52751df0f4",
-    "## Icons": "7a7ed6c34d7d",
+    "(top)": "bcd7a0394e4d",
+    "# BottomSheet": "5115bb263015",
+    "## In a combobox": "c5ae345f314b",
+    "## Icons": "57e92e5df1aa",
     "## Accessible composition": "cb54472f49ed",
     "## When to use": "79c9f4f301a8",
     "## Props": "2fc00bcb8519",
-    "(section order)": "b5b9e52eec27"
+    "(section order)": "26c197f1a8cd"
   },
   "breadcrumbs": {
     "(top)": "d83f5d0fccc4",
-    "# Breadcrumbs": "020b30f44a29",
-    "## Icons": "87d0f743456d",
+    "# Breadcrumbs": "41ae9574cfc6",
+    "## Icons": "63b80d081538",
     "## Accessible composition": "a95e5f5f8c8d",
     "## When to use": "b97e96f2e859",
     "## Props": "f3d2b7ce64e4",
@@ -49,10 +49,10 @@
   },
   "button": {
     "(top)": "22a0a77f5821",
-    "# Button": "3ba2f86a4510",
+    "# Button": "aae9c2136ae4",
     "## Toggle": "b7fa7b0a3692",
-    "## Button.Group": "bef2a314957a",
-    "## Icons": "2c07dd0a3045",
+    "## Button.Group": "8f53cd84f2c3",
+    "## Icons": "030e0279e3e2",
     "## Accessible composition": "fcd699585bdc",
     "## When to use": "d57fe8233a0b",
     "### Button.Root": "dc5668e9f4d2",
@@ -81,8 +81,8 @@
   },
   "checkbox": {
     "(top)": "c5fb16238b3e",
-    "# Checkbox": "0852565ada8a",
-    "## Icons": "bd3712c0ac55",
+    "# Checkbox": "488c523ce88e",
+    "## Icons": "23b9bd93a117",
     "## Accessible composition": "4e682c9e7ff7",
     "## When to use": "063ad2a22656",
     "## Props": "c454f74315b1",
@@ -90,7 +90,7 @@
   },
   "chip": {
     "(top)": "d56bfe4010f4",
-    "# Chip": "3a3848dbca5f",
+    "# Chip": "c81bd71e02d3",
     "## Accessible composition": "4aa0768730ca",
     "## When to use": "633dd339b67b",
     "## Props": "96a28a5c8dc6",
@@ -100,7 +100,7 @@
     "(top)": "a9e5001350e4",
     "# ChipList": "f4078bd144e8",
     "## One row / Two rows": "4ea8a7cdc9c2",
-    "## Read-only": "8b7e5f70eb72",
+    "## Read-only": "bf8f7bba4f06",
     "## Icons": "b76e9ef78246",
     "## Accessible composition": "0e767dafb800",
     "## When to use": "660aafd186ab",
@@ -110,16 +110,16 @@
   "code": {
     "(top)": "f1eb2a9590ae",
     "# Code and Kbd": "229da84714e8",
-    "## Code": "d70ba3915c75",
-    "## Kbd": "3b91e8c2dddd",
-    "## Accessible composition": "105b0bcdfb6e",
+    "## Code": "f86f6c8749c6",
+    "## Kbd": "868d798a03bf",
+    "## Accessible composition": "a95de3482ad6",
     "## When to use": "2d81a4d8f4de",
     "## Props": "d269d46cd0cc",
     "(section order)": "809b0e250585"
   },
   "color-picker": {
     "(top)": "9c8a041066e7",
-    "# ColorPicker": "d1ef5ff72c02",
+    "# ColorPicker": "f66b814e900e",
     "## Keys and values": "99c6e3175913",
     "## Accessible composition": "4546795fd18a",
     "## When to use": "3c01076e78db",
@@ -139,7 +139,7 @@
   "description": {
     "(top)": "33dbf419d7e5",
     "# Description": "f869c1805fd8",
-    "## With Field": "5a0c3321df0f",
+    "## With Field": "b367e77c886b",
     "## Accessible composition": "bd58b0786574",
     "## When to use": "d28a08e84abd",
     "## Props": "4158bdf875a4",
@@ -147,18 +147,18 @@
   },
   "dialog": {
     "(top)": "9efb9052a45c",
-    "# Dialog": "7ec274426557",
-    "## Icons": "b65776b0c0e2",
-    "## Accessible composition": "fc7ed9251fc9",
+    "# Dialog": "12e0ddb97918",
+    "## Icons": "53e5ccf42b18",
+    "## Accessible composition": "bac14ea4cfb7",
     "## When to use": "b2fab8d962b5",
     "## Props": "81014f51f216",
     "(section order)": "29ce64bcc0ad"
   },
   "disclosure": {
     "(top)": "2e46991fea65",
-    "# Disclosure": "08c95dbf32d2",
-    "## Accordion": "dedb3bcd061b",
-    "## Icons": "7acf9b57fa0d",
+    "# Disclosure": "ff7405a1b403",
+    "## Accordion": "9b661bdebd9d",
+    "## Icons": "1ee3b907a691",
     "## Accessible composition": "05aa8f7934a1",
     "## When to use": "e742af5b01d9",
     "## Props": "1ff9b4973419",
@@ -166,7 +166,7 @@
   },
   "drawer": {
     "(top)": "6eefecb2497a",
-    "# Drawer": "b797a0ff3a4b",
+    "# Drawer": "43937489d766",
     "## Accessible composition": "a1cdf763c5d0",
     "## When to use": "7b295d50ea3d",
     "## Props": "0c170a1d2846",
@@ -174,7 +174,7 @@
   },
   "errormessage": {
     "(top)": "15d7e1436ec8",
-    "# ErrorMessage": "baf7b2334122",
+    "# ErrorMessage": "5ac4b307c45e",
     "## Accessible composition": "41cd21efd548",
     "## When to use": "ecd653f836fe",
     "## Props": "23966ad21e68",
@@ -203,7 +203,7 @@
   },
   "field/chip-input": {
     "(top)": "d383594b17bd",
-    "# Field.ChipInput": "d01cceaae4b0",
+    "# Field.ChipInput": "a98df7ac8fdb",
     "## Commit keys": "6abd72f00908",
     "## Rows": "9b376e3a521a",
     "## States": "c13eefed8eee",
@@ -216,7 +216,7 @@
   },
   "field/color-picker": {
     "(top)": "a10298fe8c00",
-    "# Field.ColorPicker": "a72ba75e55e4",
+    "# Field.ColorPicker": "66ea84ccedfa",
     "## Accessible composition": "5871a8f6df0e",
     "## When to use": "d57fe8233a0b",
     "### Field.ColorPicker": "f274c18b0118",
@@ -255,8 +255,8 @@
   },
   "field/select": {
     "(top)": "9ef76a8a6752",
-    "# Field.Select": "d928f9c6b37f",
-    "## Icons": "9b99f5c51977",
+    "# Field.Select": "6f1a75574122",
+    "## Icons": "f1cbdc746aca",
     "## Accessible composition": "17b396ab794d",
     "## When to use": "d57fe8233a0b",
     "### Field.Select": "6b76ce318e76",
@@ -265,8 +265,8 @@
   },
   "field/text-input": {
     "(top)": "72a1aded0b2b",
-    "# Field.TextInput": "aa4bc33f6abe",
-    "## Number": "8d751d373381",
+    "# Field.TextInput": "a0bd3a5f41ae",
+    "## Number": "b3642ffccc26",
     "## Accessible composition": "7608bd1c3eb6",
     "## When to use": "d57fe8233a0b",
     "### Field.TextInput": "9cb5e567a382",
@@ -275,8 +275,8 @@
   },
   "field/textarea": {
     "(top)": "4d3ac00b8ea3",
-    "# Field.Textarea": "539a016e0378",
-    "## Height": "c1ca0a53dd2b",
+    "# Field.Textarea": "14c1c3cd31ad",
+    "## Height": "c62990618acf",
     "## Density and states": "bdbe9831349f",
     "## Accessible composition": "a5629b389560",
     "## When to use": "d57fe8233a0b",
@@ -296,7 +296,7 @@
   },
   "fieldset": {
     "(top)": "d88e18f28a84",
-    "# Fieldset": "420795d18885",
+    "# Fieldset": "5314bf566091",
     "## Accessible composition": "8aff64058273",
     "## When to use": "400414abe505",
     "## Props": "cfc1221a511f",
@@ -305,8 +305,8 @@
   "grid": {
     "(top)": "10102724ef24",
     "# Grid": "5cac62ac4b75",
-    "## Columns": "1cd952c64049",
-    "## Fill": "c2b54f6f626a",
+    "## Columns": "28f7dc750b22",
+    "## Fill": "f6022bf99c06",
     "## Accessible composition": "770b6cc86bb6",
     "## When to use": "82fb1f5f9226",
     "## Props": "9ac3d5243510",
@@ -315,10 +315,10 @@
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "4b9cc0e80a6c",
-    "## A company resolver": "10218df3c8a8",
+    "## A company resolver": "871ad5179923",
     "## Overrides: CSS or ThemeProvider": "f3c47c9be9f3",
     "## Adding a variant or a density": "e5bc0cabac85",
-    "## Wrapping a component": "89bd51ce6d1e",
+    "## Wrapping a component": "37193cebd631",
     "(section order)": "280102156fc8"
   },
   "guides/css-layers": {
@@ -331,10 +331,10 @@
     "(section order)": "dda7603e8a16"
   },
   "label": {
-    "(top)": "905dfe6cc1e6",
+    "(top)": "99eaa411e53d",
     "# Label": "dc756a653435",
-    "## With Field": "1454fc7d6f25",
-    "## States": "00634daf1bfd",
+    "## With Field": "fef6b9cd2276",
+    "## States": "46b3274e41d0",
     "## Accessible composition": "7dcf1ec73b86",
     "## When to use": "8fc9bad57d0d",
     "## Props": "5e83f299f954",
@@ -352,19 +352,19 @@
   },
   "menu": {
     "(top)": "eac8bba851e2",
-    "# Menu": "4ddd958cfc88",
+    "# Menu": "e7f09e8bde16",
     "## Keyboard": "9867469041ca",
     "## Checkbox and radio items": "12e9d43400c3",
-    "## Icons": "a4dac4a45486",
-    "## Accessible composition": "8164e715c7ad",
+    "## Icons": "5a8e880339a4",
+    "## Accessible composition": "691244f29774",
     "## When to use": "87f5e7618788",
     "## Props": "b96e6aef6f4c",
     "(section order)": "cb3b9adc4188"
   },
   "optionlist": {
     "(top)": "fc5bc6e35f0e",
-    "# OptionList": "320462cdb8be",
-    "## Icons": "9784d4d97bc1",
+    "# OptionList": "cd3a0a738656",
+    "## Icons": "c64f640cde20",
     "## Accessible composition": "8599bfab1214",
     "## When to use": "f5fbfd42f51c",
     "## Props": "5341a504c460",
@@ -372,10 +372,10 @@
   },
   "pagination": {
     "(top)": "a22db2c5c5da",
-    "# Pagination": "b7b57a89d13d",
+    "# Pagination": "a2ade111a813",
     "## The page range": "b12b2453c51a",
     "## Current page and steps": "ce15d66b1636",
-    "## Icons": "d93f916b9f81",
+    "## Icons": "11bc3c7da979",
     "## Accessible composition": "7e878166331f",
     "## When to use": "845543a903b7",
     "## Props": "c301ffbdb503",
@@ -388,7 +388,7 @@
   "popover": {
     "(top)": "0f4772e626c1",
     "# Popover": "9ade3fcbfefc",
-    "## Examples": "b71b9ec78d34",
+    "## Examples": "b31a912f1f31",
     "## What goes where": "29b404e398a5",
     "## Accessible composition": "3195d8b658e7",
     "## When to use": "3e7e1aacc083",
@@ -398,8 +398,8 @@
   "progress": {
     "(top)": "63cb86569d79",
     "# Progress and Meter": "413f0e4fa704",
-    "## Progress": "e74428332bd2",
-    "## Meter": "1d5fd023f079",
+    "## Progress": "804ce16cc183",
+    "## Meter": "04e016844334",
     "## Accessible composition": "c35050e7f172",
     "## When to use": "02f1c1910865",
     "## Props": "b9e792e827ad",
@@ -407,7 +407,7 @@
   },
   "prose": {
     "(top)": "3b30d99936ef",
-    "# Prose": "38767d5a0d47",
+    "# Prose": "ec13e429e413",
     "## Spacing": "5fc9e64dbe15",
     "## Where the styles stop": "0454e788cf8f",
     "## Map markdown onto Todae": "20f309de6089",
@@ -418,8 +418,8 @@
   },
   "radio": {
     "(top)": "44e2b511c2eb",
-    "# Radio": "6319ae7882b6",
-    "## Accessible composition": "c79617a502dd",
+    "# Radio": "20ca1ffac9bb",
+    "## Accessible composition": "a85f757c07d1",
     "## When to use": "28bf43164b3d",
     "## Props": "4135f3760033",
     "(section order)": "b7619809f1fa"
@@ -428,13 +428,13 @@
     "(top)": "5c9493a206c8",
     "# Combobox": "bdfd58ac5cfe",
     "## Presentation": "58f8fe7fca53",
-    "## Popover · single": "2721b1cf44d5",
-    "## Popover · multi": "ea6c7f2a429d",
-    "## Sheet": "34db4879bd1c",
+    "## Popover · single": "69f4ac97d8a6",
+    "## Popover · multi": "e44788d3a52c",
+    "## Sheet": "74995ca1a533",
     "## Auto": "4eba42da06ea",
-    "## Async": "08a3365966a0",
+    "## Async": "1535a85f7a01",
     "## Empty and create": "466ecda18e4d",
-    "## Highlight matches": "56e6aa501bf9",
+    "## Highlight matches": "30c2e008f88e",
     "## Composition rules": "6eb89b3bf8e3",
     "## Accessible composition": "2876b46505fe",
     "## Hooks": "3218ba8110b3",
@@ -442,7 +442,7 @@
   },
   "recipes/command-palette": {
     "(top)": "b133afb40440",
-    "# Command palette": "20b4257003e3",
+    "# Command palette": "7adc1fba52bb",
     "## Accessible composition": "362e1cfca3f9",
     "## When to use": "06c9b0d8a7e9",
     "(section order)": "46352d9bb2ec"
@@ -450,15 +450,15 @@
   "recipes/file-upload": {
     "(top)": "630a61784a0e",
     "# File upload": "2a6084494126",
-    "## Images": "5910454a72ba",
+    "## Images": "4b5a68d12763",
     "## Uploading": "d43ef19d4d00",
     "## Accessible composition": "7408811ad653",
     "(section order)": "2ce6dd09df8f"
   },
   "scroll-area": {
     "(top)": "a2750334232a",
-    "# ScrollArea": "e402aa323406",
-    "## A Tab stop for content with no controls": "002ea4976809",
+    "# ScrollArea": "ba2e630a84ac",
+    "## A Tab stop for content with no controls": "668734e0d9c4",
     "## Accessible composition": "c798bbf50d31",
     "## When to use": "ca7297f65849",
     "## Props": "fc86f0416810",
@@ -466,7 +466,7 @@
   },
   "separator": {
     "(top)": "7514440d9427",
-    "# Separator": "d1e4dfd17d96",
+    "# Separator": "138429d693dd",
     "## Accessible composition": "118b4135c8f6",
     "## When to use": "8e20e5985922",
     "## Props": "58f0d11e9b13",
@@ -474,7 +474,7 @@
   },
   "slider": {
     "(top)": "42cde11261eb",
-    "# Slider": "bf5b03b3ac0a",
+    "# Slider": "649cb7e0d4e9",
     "## Accessible composition": "85a57c99624e",
     "## When to use": "8d3da407f5e1",
     "## Props": "a289d00d67fe",
@@ -483,8 +483,8 @@
   "spinner": {
     "(top)": "591f7c15859e",
     "# Spinner and Skeleton": "11283107e3b2",
-    "## Spinner": "993e556fedf4",
-    "## Skeleton": "910723a1ea98",
+    "## Spinner": "a81e843e050e",
+    "## Skeleton": "4b18ed84d21b",
     "## Accessible composition": "03b5f164a7a3",
     "## When to use": "3252391cafb7",
     "## Props": "029573d1fca8",
@@ -492,9 +492,9 @@
   },
   "stack": {
     "(top)": "3dde9f089aaf",
-    "# Stack": "680899981e5b",
+    "# Stack": "ea5438463764",
     "## Gap": "60f023baac11",
-    "## Alignment and wrapping": "8301a4853788",
+    "## Alignment and wrapping": "fb8968c69e75",
     "## Accessible composition": "32bfac7e4ef4",
     "## When to use": "e4f17f5fa29d",
     "## Props": "49963aa313e9",
@@ -502,7 +502,7 @@
   },
   "switch": {
     "(top)": "5b6bda868294",
-    "# Switch": "541d866c34f6",
+    "# Switch": "587e05affa45",
     "## Accessible composition": "861816c2022e",
     "## When to use": "f1b8decec311",
     "## Props": "b71e3003eff1",
@@ -510,15 +510,15 @@
   },
   "table": {
     "(top)": "831eacdf5e42",
-    "# Table": "f612200314c4",
-    "## Accessible composition": "04ad077acb14",
+    "# Table": "3afabb0cce8a",
+    "## Accessible composition": "eb73911057a1",
     "## When to use": "246cc8d19142",
     "## Props": "5c602fcf9b31",
     "(section order)": "47a493b24d96"
   },
   "tabs": {
     "(top)": "f1bc4dbe0d3d",
-    "# Tabs": "ddcc1b17d8ff",
+    "# Tabs": "154586e0ce04",
     "## Accessible composition": "5a77dc0a2eed",
     "## When to use": "7ad4ffcdaf0d",
     "## Props": "b49fd1369394",
@@ -526,8 +526,8 @@
   },
   "text": {
     "(top)": "bb7a1e26de75",
-    "# Text": "755c96a1106b",
-    "## Headings": "3ccae81674ca",
+    "# Text": "5f6d5c953367",
+    "## Headings": "7ef059d65ca4",
     "## Accessible composition": "60ba7e690e76",
     "## When to use": "504f4a606802",
     "## Props": "c29450776f88",
@@ -535,12 +535,12 @@
   },
   "toast": {
     "(top)": "85a2f957060f",
-    "# Toast": "0795c3a5fa33",
+    "# Toast": "5ecb000f0dfa",
     "## Toasts and modal dialogs": "fe09d74b1564",
     "## Layouts": "75573fe700ef",
     "## Timing": "0190702d1e9c",
     "## Keyboard and screen readers": "a035847bdda4",
-    "## Icons": "30005476dce8",
+    "## Icons": "cd98fd7f28ec",
     "## Accessible composition": "d3c8a6e48baa",
     "## When to use": "1ab9761e32b4",
     "## Props": "d3b292888390",
@@ -548,7 +548,7 @@
   },
   "toggle-group": {
     "(top)": "00e70da2439c",
-    "# ToggleGroup": "fa4897ef75b2",
+    "# ToggleGroup": "810663a76d34",
     "## Accessible composition": "dc7693b6a613",
     "## When to use": "7f754185d7b0",
     "## Props": "862a7b077e89",
@@ -556,7 +556,7 @@
   },
   "tokens": {
     "(top)": "9f7f155f1290",
-    "# Tokens": "776f9fab5b92",
+    "# Tokens": "5797b1d8fe42",
     "## When to use": "d57fe8233a0b",
     "### ThemeProvider": "fb9c7530fef5",
     "### DensityProvider": "b60121bd3031",
@@ -579,9 +579,9 @@
   "tooltip": {
     "(top)": "8d2a15f35086",
     "# Tooltip": "b926b9d66879",
-    "## Examples": "15cee637b896",
+    "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
-    "## Button sugar": "46b44ad23966",
+    "## Button sugar": "f729d4d99b51",
     "## Accessible composition": "5bc1f940b882",
     "## When to use": "77a279496991",
     "## Props": "63a3bb317d94",
@@ -589,7 +589,7 @@
   },
   "tree": {
     "(top)": "3fd9d6322503",
-    "# Tree": "dd7ec30db430",
+    "# Tree": "4913f92884d2",
     "## Accessible composition": "8d4dd5abadf4",
     "## When to use": "ecbda7d963ff",
     "## Props": "5dc9e1f0ecff",
@@ -597,7 +597,7 @@
   },
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
-    "# GlyphsProvider": "39cd10ae14b7",
+    "# GlyphsProvider": "d545d6d246f4",
     "## Glyphs": "6dd3b86474ee",
     "## Accessible composition": "705d17ec4c9e",
     "## When to use": "58a152b85e04",
@@ -615,7 +615,7 @@
   },
   "utilities/use-announcer": {
     "(top)": "02cb952a3840",
-    "# useAnnouncer": "6d5064b3b370",
+    "# useAnnouncer": "11d09254dcf2",
     "## Accessible composition": "199362281d42",
     "## When to use": "814fbba6d8cf",
     "## Props": "f7c1bf555f99",
@@ -623,7 +623,7 @@
   },
   "utilities/use-chip-field": {
     "(top)": "5629127518fd",
-    "# useChipField": "b6852532aebe",
+    "# useChipField": "9f64affef382",
     "## Accessible composition": "8f9103997416",
     "## When to use": "8397cb9fb880",
     "## Props": "dfc821979ea8",
@@ -631,7 +631,7 @@
   },
   "utilities/use-chip-list": {
     "(top)": "c9de0d3dd8c7",
-    "# useChipList": "998563fa45a1",
+    "# useChipList": "f4b348a373cd",
     "## Accessible composition": "f945fb414bcc",
     "## When to use": "3028b67d239a",
     "## Props": "0f41e5ff7947",
@@ -639,26 +639,26 @@
   },
   "utilities/use-combobox": {
     "(top)": "e79476ff32f4",
-    "# useCombobox": "3433da5ec31c",
+    "# useCombobox": "dd8c8f3ee64e",
     "## Accessible composition": "47ddacf194b0",
     "## When to use": "cc4af763e6a8",
     "## Props": "f8b827f1b42b",
     "(section order)": "80890c96c652"
   },
   "utilities/use-controlled-state": {
-    "# useControlledState": "a5aba86ccede",
+    "# useControlledState": "21852158c1df",
     "## When to use": "06595b4c27fe",
     "## Props": "086905cc163b",
     "(section order)": "1666f868c727"
   },
   "utilities/use-controlled-value": {
-    "# useControlledValue": "04a4efc54127",
+    "# useControlledValue": "572e8147a749",
     "## When to use": "9854f80dde78",
     "## Props": "479579cd5e3b",
     "(section order)": "bb763bd86155"
   },
   "utilities/use-dropzone": {
-    "# useDropzone": "1a111c7e7dad",
+    "# useDropzone": "4b70e64ac9cf",
     "## Accessible composition": "65eadb3fad49",
     "## When to use": "eb0c79e2522e",
     "## Props": "5587a8d7ce2b",
@@ -666,7 +666,7 @@
   },
   "utilities/use-field": {
     "(top)": "1ba672062eb8",
-    "# useField": "8e3a47daf185",
+    "# useField": "9707f4664ce2",
     "## Accessible composition": "b6ed7b4ca1d1",
     "## When to use": "e08f8ff9959e",
     "## Props": "6c08c2462796",
@@ -674,21 +674,21 @@
   },
   "utilities/use-highlight": {
     "(top)": "bff7d331f656",
-    "# useHighlight": "915526e1645c",
+    "# useHighlight": "f57928d7a48c",
     "## Accessible composition": "75acde477e72",
     "## When to use": "4b2cc31bf020",
     "## Props": "79050128b65f",
     "(section order)": "e2126a397a0e"
   },
   "utilities/use-hotkey": {
-    "# useHotkey": "e882ab835cc8",
-    "## Accessible composition": "a4dd3157de38",
+    "# useHotkey": "d19a9ff5fb44",
+    "## Accessible composition": "36a7e58b6717",
     "## When to use": "fe7a9ae7f4c7",
     "## Props": "a80f6dc00ca3",
     "(section order)": "b7ca335f1524"
   },
   "utilities/use-modal-layer": {
-    "# useModalLayer": "3f34a2a911fc",
+    "# useModalLayer": "ab9c7fb8b312",
     "## Accessible composition": "9f367f0deb61",
     "## When to use": "438fa9ab3d43",
     "## Props": "4c6c20ec68bd",
@@ -696,7 +696,7 @@
   },
   "utilities/use-popover": {
     "(top)": "312cb56df699",
-    "# usePopover": "4a64802c7e71",
+    "# usePopover": "b093e5ad8527",
     "## Accessible composition": "7e2e9d73e309",
     "## When to use": "fdd59fc7e86b",
     "## Props": "7ba034ef8a21",
@@ -704,22 +704,22 @@
   },
   "utilities/use-roving-focus": {
     "(top)": "f6ba0918724f",
-    "# useRovingFocus": "677aa6720761",
-    "## Accessible composition": "343ae8989fca",
+    "# useRovingFocus": "c2dfb266e9e2",
+    "## Accessible composition": "49b32925e860",
     "## When to use": "5513b39d7e62",
     "## Props": "56a67702b8d8",
     "(section order)": "880d50d096f3"
   },
   "utilities/use-sheet-presentation": {
     "(top)": "3a8163d5375e",
-    "# useSheetPresentation": "01907c7d9b80",
+    "# useSheetPresentation": "0e88077db182",
     "## When to use": "fca42e377dfb",
     "## Props": "fe78ba4c943c",
     "(section order)": "6d31ec8b55f3"
   },
   "utilities/use-tooltip": {
     "(top)": "6a88821fc13f",
-    "# useTooltip": "483cd03b00ff",
+    "# useTooltip": "f4273d8f73d1",
     "## Accessible composition": "8cb577a4cfae",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",
@@ -727,7 +727,7 @@
   },
   "visually-hidden": {
     "(top)": "d82828b7c9d7",
-    "# VisuallyHidden": "072e27b2b245",
+    "# VisuallyHidden": "9c5625b4e0c3",
     "## Accessible composition": "59687d1cd450",
     "## When to use": "82b555627164",
     "## Props": "91aa22d193e4",

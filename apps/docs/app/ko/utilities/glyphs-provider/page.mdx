@@ -7,19 +7,18 @@ import { GlyphsLibraries } from '../../../../components/demos/GlyphsDemo';
 Todae는 아이콘 세트를 제공하지 않습니다. 그래도 닫기 버튼의 X 모양이나 체크박스의 체크 표시처럼, 몇몇 파트는 온전해 보이려면 글리프가 필요해서 Todae가 직접 그립니다. `GlyphsProvider`는 그 안의 모든 요소에 대해 이 글리프를 정하므로, 대신 사용하는 아이콘 라이브러리의 아이콘을 쓸 수 있습니다. 바꿀 키만 전달하세요. 생략한 키는 가장 가까운 상위 `GlyphsProvider`에서 가져오고, `null`은 Todae 자체 글리프로 되돌립니다. 요소는 렌더링하지 않습니다.
 
 ```tsx
-import { GlyphsProvider } from '@omsoo.design/todae';
 import { Check, ChevronDown, ChevronRight, Ellipsis, X } from 'lucide-react';
 
 <GlyphsProvider
-	glyphs={{
-		close: <X />,
-		check: <Check />,
-		chevron: <ChevronDown />,
-		separator: <ChevronRight />,
-		ellipsis: <Ellipsis />,
-	}}
+  glyphs={{
+    close: <X />,
+    check: <Check />,
+    chevron: <ChevronDown />,
+    separator: <ChevronRight />,
+    ellipsis: <Ellipsis />,
+  }}
 >
-	<App />
+  <App />
 </GlyphsProvider>
 ```
 

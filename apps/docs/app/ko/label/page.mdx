@@ -1,3 +1,4 @@
+import { FieldLabelStates } from '../../../components/demos/FieldDemo';
 import { LabelSibling } from '../../../components/demos/LabelDemo';
 
 # Label
@@ -11,13 +12,13 @@ Server Components에서는 `@omsoo.design/todae/label`에서 가져올 수 있�
 Label에는 마진이 없습니다. 레이블, 컨트롤, 그리고 [Description](/description)이나 [ErrorMessage](/errormessage)를 `Field.Group`에 넣으세요. `Field.Group`은 레이블을 컨트롤 위 `field.label.gap`(0.4rem) 간격에 둡니다.
 
 ```tsx
-const id = useId()
+const id = useId();
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Email</Label.Root>
-	<Field.Root id={id}>
-		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Email</Label.Root>
+  <Field.Root id={id}>
+    <Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+  </Field.Root>
 </Field.Group>
 ```
 
@@ -30,6 +31,28 @@ const id = useId()
 ## 상태
 
 비활성과 유효하지 않음 상태는 `Field.Root`에 있습니다. Label은 다시 칠해지지 않습니다. 필수 표시는 레이블 텍스트에 직접 씁니다.
+
+```tsx
+const disabledId = useId();
+const invalidId = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={disabledId}>Email</Label.Root>
+  <Field.Root id={disabledId} disabled>
+    <Field.TextInput value={disabledEmail} onChange={(event) => setDisabledEmail(event.target.value)} />
+  </Field.Root>
+</Field.Group>
+<Field.Group>
+  <Label.Root htmlFor={invalidId}>Email</Label.Root>
+  <Field.Root id={invalidId} invalid>
+    <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
+  </Field.Root>
+</Field.Group>
+```
+
+<Example block>
+  <FieldLabelStates />
+</Example>
 
 ## 접근성을 지키는 조합
 

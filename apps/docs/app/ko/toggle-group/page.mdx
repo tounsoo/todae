@@ -20,6 +20,14 @@ import { ToggleGroupAlign, ToggleGroupStyles } from '../../../components/demos/T
 
 `selectionMode="multiple"`이면 몇 개든 누를 수 있고, 값은 배열입니다.
 
+```tsx
+<ToggleGroup.Root aria-label="Text style" selectionMode="multiple" defaultValue={['bold']}>
+  <ToggleGroup.Item value="bold">Bold</ToggleGroup.Item>
+  <ToggleGroup.Item value="italic">Italic</ToggleGroup.Item>
+  <ToggleGroup.Item value="underline">Underline</ToggleGroup.Item>
+</ToggleGroup.Root>
+```
+
 <Example>
   <ToggleGroupStyles />
 </Example>

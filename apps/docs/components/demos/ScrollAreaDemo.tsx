@@ -1,6 +1,6 @@
 'use client';
 
-import { Link, ScrollArea, Text } from '@omsoo.design/todae';
+import { Link, ScrollArea, Stack, Text } from '@omsoo.design/todae';
 
 const SECTIONS = ['Overview', 'Install', 'Tokens', 'Themes', 'Density', 'Components', 'Hooks', 'Recipes', 'Testing', 'Releases'];
 
@@ -8,13 +8,13 @@ export function ScrollAreaLinks() {
   return (
     <nav aria-label="Guide sections" style={{ inlineSize: '14rem' }}>
       <ScrollArea.Root style={{ blockSize: '9rem' }}>
-        <ul style={{ display: 'grid', gap: 'var(--todae-space-2)', margin: 0, padding: 0, listStyle: 'none' }}>
+        <Stack.Root as="ul" gap="condensed">
           {SECTIONS.map((section) => (
             <li key={section}>
               <Link.Root href={`#${section.toLowerCase()}`}>{section}</Link.Root>
             </li>
           ))}
-        </ul>
+        </Stack.Root>
       </ScrollArea.Root>
     </nav>
   );

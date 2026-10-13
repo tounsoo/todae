@@ -6,12 +6,12 @@ A button that opens a list of actions. `Menu.Trigger` is a `Button.Root` with `a
 
 ```tsx
 <Menu.Root>
-	<Menu.Trigger variant="secondary">Actions</Menu.Trigger>
-	<Menu.Content>
-		<Menu.Item onSelect={rename}>Rename</Menu.Item>
-		<Menu.Separator />
-		<Menu.Item onSelect={remove}>Delete</Menu.Item>
-	</Menu.Content>
+  <Menu.Trigger variant="secondary">Actions</Menu.Trigger>
+  <Menu.Content>
+    <Menu.Item onSelect={rename}>Rename</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item onSelect={remove}>Delete</Menu.Item>
+  </Menu.Content>
 </Menu.Root>
 ```
 
@@ -41,18 +41,18 @@ An item's children are presentational to assistive technology, as ARIA defines f
 import { Check, Ellipsis } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ check: <Check /> }}>
-	<Menu.Root>
-		<Menu.Trigger variant="ghost" aria-label="View options">
-			<Button.Icon>
-				<Ellipsis />
-			</Button.Icon>
-		</Menu.Trigger>
-		<Menu.Content>
-			<Menu.CheckboxItem checked={grid} onCheckedChange={setGrid}>
-				Show grid
-			</Menu.CheckboxItem>
-		</Menu.Content>
-	</Menu.Root>
+  <Menu.Root>
+    <Menu.Trigger variant="ghost" aria-label="View options">
+      <Button.Icon>
+        <Ellipsis />
+      </Button.Icon>
+    </Menu.Trigger>
+    <Menu.Content>
+      <Menu.CheckboxItem checked={grid} onCheckedChange={setGrid}>
+        Show grid
+      </Menu.CheckboxItem>
+    </Menu.Content>
+  </Menu.Root>
 </GlyphsProvider>
 ```
 
@@ -63,7 +63,11 @@ import { Check, Ellipsis } from 'lucide-react';
 **You supply:** A name for the trigger, which also names the menu. Text children are enough. An icon-only trigger needs `aria-label` or `aria-labelledby`; without one, `Button.Root` logs an error in development. A menu opened from code with no `Menu.Trigger` needs its own `aria-label` or `aria-labelledby`, and every `Menu.Group` and `Menu.RadioGroup` needs one, as its type requires. Pass `textValue` when an item's children are not plain text, so typeahead can match it.
 
 ```tsx
-function RowActions({ label, children }: { label: string; children: ReactNode }) {
+import type { ReactNode } from 'react';
+import { Button, Menu } from '@omsoo.design/todae';
+import { Ellipsis } from 'lucide-react';
+
+export function RowActions({ label, children }: { label: string; children: ReactNode }) {
   return (
     <Menu.Root>
       <Menu.Trigger variant="ghost" aria-label={label}>
@@ -73,7 +77,7 @@ function RowActions({ label, children }: { label: string; children: ReactNode })
       </Menu.Trigger>
       <Menu.Content>{children}</Menu.Content>
     </Menu.Root>
-  )
+  );
 }
 ```
 

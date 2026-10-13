@@ -9,6 +9,8 @@ A recipe, not a package namespace. A native `<input type="file">` is the control
 The label is the drop target, so a click anywhere on it opens the picker and its text names the input. Rejected files are listed in an `ErrorMessage.Root` that the input's `aria-describedby` points to, and the input gets `aria-invalid`. Accepted files are listed below it.
 
 ```tsx
+const hintId = useId();
+const errorId = useId();
 const zone = useDropzone({
   accept: 'image/*',
   multiple: true,
@@ -16,10 +18,10 @@ const zone = useDropzone({
   maxSize: 2_000_000,
   minSize: 1,
   onFiles: (accepted, rejected) => {
-    setFiles(accepted)
-    setRejected(rejected)
+    setFiles(accepted);
+    setRejected(rejected);
   },
-})
+});
 
 <label {...zone.getRootProps()}>
   <Text.Root as="span">Drop images here, or choose them</Text.Root>

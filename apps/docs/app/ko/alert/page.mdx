@@ -5,16 +5,18 @@ import { AlertDismissible, AlertTones } from '../../../components/demos/AlertDem
 페이지나 작업에 대한 메시지를 `info`, `success`, `warning`, `critical` 네 가지 톤 중 하나로 보여 줍니다. 각 톤은 `alert.<tone>` contract 토큰을 거쳐 `color.status.<tone>` 토큰에서 색을 가져오며, 토큰을 빌드할 때 각 색 쌍이 APCA 검사를 통과합니다. `info`는 Todae의 다른 부분처럼 중립적인 잉크이며, 회사 테마에서 색조를 줄 수 있습니다.
 
 ```tsx
-<Alert.Root tone="warning">
-	<Alert.Icon>
-		<YourWarningIcon />
-	</Alert.Icon>
-	<Alert.Title>Storage almost full</Alert.Title>
-	<Alert.Description>You have used 92% of your plan.</Alert.Description>
-	<Alert.Actions>
-		<Button.Root variant="secondary">Upgrade</Button.Root>
-	</Alert.Actions>
-	<Alert.Close onClick={hide} />
+import { TriangleAlert } from 'lucide-react';
+
+<Alert.Root tone="warning" role="none">
+  <Alert.Icon>
+    <TriangleAlert />
+  </Alert.Icon>
+  <Alert.Title>Storage almost full</Alert.Title>
+  <Alert.Description>You have used 92% of your plan.</Alert.Description>
+  <Alert.Actions>
+    <Button.Root variant="secondary">Upgrade</Button.Root>
+  </Alert.Actions>
+  <Alert.Close onClick={hide} />
 </Alert.Root>
 ```
 
@@ -30,6 +32,27 @@ Todae는 아이콘을 제공하지 않습니다. `Alert.Icon`은 슬롯입니다
 
 `Alert.Close`는 ghost `Button.Root`입니다. "Got it"처럼 자체 텍스트가 이름이 되지 않으면 이름은 "Dismiss"입니다. 이 기본값은 [StringsProvider](/utilities/strings-provider)의 `dismiss` 문자열이며, 설정하지 않으면 영어입니다. 비어 있지 않은 `aria-label`이 여전히 우선합니다. Alert에는 열림 상태가 없으므로 `onClick`에서 제거하세요.
 
+```tsx
+const saveRef = useRef<HTMLButtonElement>(null);
+
+<Button.Root ref={saveRef} variant="secondary" onClick={() => setShown(true)}>
+  Save changes
+</Button.Root>
+<div role="status">
+  {shown ? (
+    <Alert.Root tone="success" role="none">
+      <Alert.Title>Changes saved</Alert.Title>
+      <Alert.Close
+        onClick={() => {
+          saveRef.current?.focus();
+          setShown(false);
+        }}
+      />
+    </Alert.Root>
+  ) : null}
+</div>
+```
+
 <Example block>
   <AlertDismissible />
 </Example>
@@ -42,15 +65,15 @@ Todae는 아이콘을 제공하지 않습니다. `Alert.Icon`은 슬롯입니다
 import { TriangleAlert, X } from 'lucide-react';
 
 <Alert.Root tone="warning">
-	<Alert.Icon>
-		<TriangleAlert />
-	</Alert.Icon>
-	<Alert.Title>Storage almost full</Alert.Title>
-	<Alert.Close onClick={hide}>
-		<Button.Icon>
-			<X />
-		</Button.Icon>
-	</Alert.Close>
+  <Alert.Icon>
+    <TriangleAlert />
+  </Alert.Icon>
+  <Alert.Title>Storage almost full</Alert.Title>
+  <Alert.Close onClick={hide}>
+    <Button.Icon>
+      <X />
+    </Button.Icon>
+  </Alert.Close>
 </Alert.Root>
 ```
 
@@ -58,7 +81,7 @@ import { TriangleAlert, X } from 'lucide-react';
 
 **Todae가 맡는 것:** `Alert.Root`는 위에서 설명한 대로 톤에 따라 `role="status"`나 `role="alert"`를 설정하고, 전달한 `role`은 그대로 둡니다. `Alert.Icon`은 `aria-hidden`입니다. `Alert.Close`는 이름이 있는 네이티브 버튼입니다. 이름은 버튼 자체의 텍스트, 비어 있지 않은 `aria-label`, 또는 `dismiss` 문자열입니다. Todae는 Alert가 나타날 때도 사라질 때도 포커스를 옮기지 않습니다.
 
-**직접 제공할 것:** 메시지를 `Alert.Title`과 `Alert.Description`에 텍스트로 넣으세요. 톤은 색과 숨겨진 아이콘으로만 보이므로, 중요하다면 "Payment failed"처럼 말로도 적으세요. 어떤 동작 뒤에 나오는 메시지라면 래퍼의 `Alert.Root`를 마운트한 채로 두고 내용만 바꾸세요. 닫기 버튼이 Alert를 없앤다면, 메시지가 가리키던 컨트롤처럼 알맞은 곳으로 포커스를 옮기세요.
+**직접 제공할 것:** 메시지를 `Alert.Title`과 `Alert.Description`에 텍스트로 넣으세요. 톤은 색과 숨겨진 아이콘으로만 보이므로, 중요하다면 "Payment failed"처럼 말로도 적으세요. 어떤 동작 뒤에 나오는 메시지라면 톤에 맞는 라이브 role(`status` 또는 `alert`)을 가진 래퍼를 마운트한 채로 두고, 그 안에 `role="none"`인 `Alert.Root`를 렌더링하세요. 닫기 버튼이 Alert를 없앤다면, 메시지가 가리키던 컨트롤처럼 알맞은 곳으로 포커스를 옮기세요.
 
 **주의할 점:** 라이브 영역을 메시지와 함께 새로 마운트하는 것. 스크린 리더가 읽지 않을 수 있습니다. `role`이나 나머지 props를 버리는 래퍼. 그러면 `role="none"`이 루트에 닿지 않습니다. 자체 닫기 버튼으로 Alert를 없애면서 포커스를 옮기지 않는 것. 포커스가 페이지 body로 떨어집니다.
 

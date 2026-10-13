@@ -6,6 +6,33 @@ import { ChipListDemo } from '../../../../components/demos/ChipListDemo';
 
 감싸는 목록에 `listRef`를 두고, 측정용 행은 `measureRef`에 렌더링하세요. 서버는 항상 측정 전 상태로 렌더링하므로, `measured`가 될 때까지 목록을 숨기세요.
 
+```tsx
+const { listRef, measureRef, visible, hidden, measured } = useChipList({ chips, maxRows: 1 });
+
+<div style={{ position: 'relative' }}>
+  <div ref={listRef} role="list" aria-label="Tags" className="chips" style={{ visibility: measured ? undefined : 'hidden' }}>
+    {visible.map((chip) => (
+      <Chip.Root key={chip.key} role="listitem" style={chip.ellipsis ? { maxWidth: chip.maxWidth } : undefined}>
+        {chip.value}
+      </Chip.Root>
+    ))}
+    {hidden > 0 ? (
+      <span role="listitem">
+        <Chip.Overflow overflowCount={hidden} />
+      </span>
+    ) : null}
+  </div>
+  {/* A hidden row laid out like the list: every chip, then a chip holding `…`, then the overflow count, in that order. */}
+  <div ref={measureRef} aria-hidden inert className="chips chips-measure">
+    {chips.map((value, index) => (
+      <Chip.Root key={index}>{value}</Chip.Root>
+    ))}
+    <Chip.Root>…</Chip.Root>
+    <Chip.Overflow overflowCount={chips.length || 1} />
+  </div>
+</div>
+```
+
 <Example block>
   <ChipListDemo maxRows={1} />
 </Example>

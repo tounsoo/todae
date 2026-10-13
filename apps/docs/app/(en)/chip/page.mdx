@@ -4,6 +4,20 @@ import { ChipExamples } from '../../../components/demos/ChipDemo';
 
 Text-only label. Optional remove is a named button. `Chip.Overflow` is display-only `+N`.
 
+```tsx
+<Stack.Root as="ul" direction="row" wrap aria-label="Tags">
+  <li>
+    <Chip.Root>Design</Chip.Root>
+  </li>
+  <li>
+    <Chip.Root onRemove={remove}>Tokens</Chip.Root>
+  </li>
+  <li>
+    <Chip.Overflow overflowCount={4} />
+  </li>
+</Stack.Root>
+```
+
 <Example>
   <ChipExamples />
 </Example>

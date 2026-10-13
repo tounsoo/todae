@@ -5,11 +5,11 @@ import { AnnounceSave } from '../../../../components/demos/AnnouncerDemo';
 `useAnnouncer()`는 `announce(message, options?)`를 반환합니다. 이 함수는 `message`를 화면에 보여 주지 않고 스크린 리더로 읽어 줍니다. "Draft saved"나 "12 results"처럼 자체적으로 보이는 메시지가 없는 비동기 작업의 결과에 쓰세요.
 
 ```tsx
-const announce = useAnnouncer()
+const announce = useAnnouncer();
 
 async function save() {
-	await saveDraft()
-	announce('Draft saved')
+  await saveDraft();
+  announce('Draft saved');
 }
 ```
 

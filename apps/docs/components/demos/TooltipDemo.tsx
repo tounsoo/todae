@@ -1,13 +1,14 @@
 'use client';
 
 import { Button, Chip, Stack, Tooltip, useTooltip } from '@omsoo.design/todae';
+import { Archive } from 'lucide-react';
 import { LocalizedLink } from '../LocalizedLink';
 
 export function TooltipArchive() {
   return (
     <Button.Root aria-label="Archive">
       <Button.Icon>
-        <span>+</span>
+        <Archive />
       </Button.Icon>
     </Button.Root>
   );

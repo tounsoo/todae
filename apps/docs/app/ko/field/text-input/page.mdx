@@ -5,13 +5,13 @@ import { FieldLabelStates, FieldNumber } from '../../../../components/demos/Fiel
 `Field.TextInput`은 [Field](/field) 안에서 한 줄 텍스트를 받는 네이티브 `<input>`입니다. `value`는 문자열이고 `onChange`는 필수이며, `onValueChange`도 새 문자열을 받습니다. `type`은 `text`, `search`, `email`, `url`, `tel`, `password`, `number`를 받습니다. 날짜와 시간에는 전용 파트가 있습니다. [Field.DateInput](/field/date-input), [Field.TimeInput](/field/time-input), [Field.DateTimeInput](/field/date-time-input)입니다. `id`는 `Field.Root`에 두세요.
 
 ```tsx
-const id = useId()
+const id = useId();
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Email</Label.Root>
-	<Field.Root id={id}>
-		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Email</Label.Root>
+  <Field.Root id={id}>
+    <Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+  </Field.Root>
 </Field.Group>
 ```
 
@@ -22,6 +22,17 @@ const id = useId()
 ## 숫자
 
 `type="number"`인 `Field.TextInput`은 브라우저 자체의 스피너를 쓰는 네이티브 입력으로 남으며, 필드 토큰으로 스타일을 입히고 숫자를 세로로 맞춥니다. `value`는 입력의 문자열입니다. `"2"`이거나, 입력이 덜 끝났을 때는 빈 문자열입니다. 네이티브 `min`, `max`, `step`으로 제한하세요.
+
+```tsx
+const id = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Start date</Label.Root>
+  <Field.Root id={id}>
+    <Field.TextInput type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+  </Field.Root>
+</Field.Group>
+```
 
 <Example block>
   <FieldNumber />

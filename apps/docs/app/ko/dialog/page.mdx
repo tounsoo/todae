@@ -6,6 +6,26 @@ import { DialogBasic, DialogThemed } from '../../../components/demos/DialogDemo'
 
 열릴 때는 200ms 동안 opacity가 변합니다. 지원되는 곳에서는 `@starting-style`을 쓰고, `data-entered`가 대체 수단이라 지원하지 않는 엔진에서도 전환이 일어납니다. 닫힐 때는 `transitionend`까지 마운트된 채로 있습니다(대체 시간 160ms).
 
+```tsx
+const keepRef = useRef<HTMLButtonElement>(null);
+
+<Button.Root onClick={() => setOpen(true)}>Open dialog</Button.Root>
+<Dialog.Root open={open} onOpenChange={setOpen} initialFocusRef={keepRef}>
+  <Dialog.Header>
+    <Dialog.Title>Discard draft?</Dialog.Title>
+    <Dialog.Close>Close</Dialog.Close>
+  </Dialog.Header>
+  <Dialog.Description>This cannot be undone.</Dialog.Description>
+  <Dialog.Body>…</Dialog.Body>
+  <Dialog.Footer>
+    <Button.Root ref={keepRef} variant="secondary" onClick={() => setOpen(false)}>
+      Keep
+    </Button.Root>
+    <Button.Root onClick={discard}>Discard</Button.Root>
+  </Dialog.Footer>
+</Dialog.Root>
+```
+
 <Example>
   <DialogBasic />
 </Example>
@@ -28,9 +48,9 @@ iOS에서는 열린 오버레이 뒤의 페이지가 여전히 고무줄처럼 �
 import { X } from 'lucide-react';
 
 <Dialog.Close>
-	<Button.Icon>
-		<X />
-	</Button.Icon>
+  <Button.Icon>
+    <X />
+  </Button.Icon>
 </Dialog.Close>
 ```
 
@@ -41,16 +61,22 @@ import { X } from 'lucide-react';
 **직접 제공할 것:** 이름입니다. `Dialog.Title`을 렌더링하거나, `Dialog.Root`에 `aria-label`이나 `aria-labelledby`를 넘기세요. 대화 상자를 닫는 버튼도 필요합니다. 특히 `dismissOnEscape`가 false라면 `Dialog.Close` 같은 버튼을 두세요. 메뉴 항목이나 `Toast.Action`처럼 닫힐 때 여는 요소가 사라지고 없다면 `restoreFocusRef`를 넘기세요. 파괴적인 확인에서 안전한 버튼처럼 작업이 첫 번째 컨트롤에서 시작하지 않는다면 `initialFocusRef`를 넘기세요.
 
 ```tsx
+import type { ReactNode } from 'react';
+import { Dialog, type DialogRootProps } from '@omsoo.design/todae';
+
 type ConfirmDialogProps = Omit<DialogRootProps, 'children'> & {
   title: string;
   children: ReactNode;
 };
 
-function ConfirmDialog({ title, children, ...rest }: ConfirmDialogProps) {
+export function ConfirmDialog({ title, children, ...rest }: ConfirmDialogProps) {
   return (
     <Dialog.Root {...rest}>
       <Dialog.Title>{title}</Dialog.Title>
       <Dialog.Body>{children}</Dialog.Body>
+      <Dialog.Footer>
+        <Dialog.Close>Cancel</Dialog.Close>
+      </Dialog.Footer>
     </Dialog.Root>
   );
 }
