@@ -235,9 +235,9 @@
   },
   "field/date-picker": {
     "(top)": "40872dd1fdc5",
-    "# Field.DatePicker": "b6031a1d7cbb",
-    "## On its own": "c7bd477c706d",
-    "## Accessible composition": "c5aa50a0c9cf",
+    "# Field.DatePicker": "aa6f7c18918c",
+    "## On its own": "c7d2bc3205b6",
+    "## Accessible composition": "ab3706670dfd",
     "## When to use": "d57fe8233a0b",
     "### Field.DatePicker": "b3c1c234ea3a",
     "## Props": "4d3b8d5a61e4",
@@ -607,7 +607,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "0a9ce6b4f646",
-    "## Strings": "8ecbe2c7638a",
+    "## Strings": "d99ef77a5c1a",
     "## Accessible composition": "8cc16824f136",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",

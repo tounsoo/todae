@@ -291,7 +291,7 @@ function Root({
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
     control?.focus();
-    // A press beside a select or color picker acts as a press on the control
+    // A press beside a select, color picker or date picker acts as a press on the control
     // would. The picker opens on click: one opened now would close again as
     // the press goes on. A select's open picker closes on this press, which
     // must not open it again; Field.ColorPicker's toggles on the click.
@@ -814,7 +814,7 @@ function ColorPicker({
   style,
   ...props
 }: FieldColorPickerProps) {
-  // The swatch does not count itself as a control another swatch should leave the field to.
+  // The swatch does not count itself as a control another picker should leave the field to.
   const field = useFieldControl(false);
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();

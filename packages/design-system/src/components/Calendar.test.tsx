@@ -237,12 +237,11 @@ describe('Calendar', () => {
     expect(grid().querySelector('[aria-selected]')).toBeNull();
   });
 
-  // The test polyfill holds the ISO and Gregorian calendars; any other converts the same way.
-  it('lays out a value and limits in another calendar on the ISO grid', () => {
+  it.each(['japanese', 'hebrew', 'gregory'])('lays out a %s value and limits on the ISO grid', (calendar) => {
     render(
       <Controlled
-        initial={date('2026-10-13').withCalendar('gregory')}
-        min={date('2026-10-05').withCalendar('gregory')}
+        initial={date('2026-10-13').withCalendar(calendar)}
+        min={date('2026-10-05').withCalendar(calendar)}
       />,
     );
     expect(screen.getByText('October 2026')).toBeTruthy();

@@ -35,7 +35,7 @@ describe('Field.DatePicker', () => {
     expect(screen.getByText('Pick a date').hasAttribute('data-placeholder')).toBe(true);
   });
 
-  it('sends the date as an ISO string under the field name', () => {
+  it('sends the date under the field name', () => {
     render(
       <form data-testid="form">
         <Field.Root aria-label="Start" name="start">
@@ -175,7 +175,7 @@ describe('Field.DatePicker', () => {
     render(
       <form data-testid="form">
         <Field.Root aria-label="Start" name="day">
-          <Field.DatePicker value={day.withCalendar('gregory')} locale="en-US" />
+          <Field.DatePicker value={day.withCalendar('japanese')} locale="en-US" />
         </Field.Root>
       </form>,
     );

@@ -38,7 +38,7 @@ function notifyPresence(store: CountStore) {
 /**
  * A stable ref callback that counts the element it is attached to as a
  * control in the field, and as named when its name attribute is the field's
- * name. A Field.ColorPicker beside a control gives up the field's id and
+ * name. A Field.ColorPicker or Field.DatePicker beside a control gives up the field's id and
  * description, and beside a named one the field's name, so only one element
  * takes each. A date input is also counted in `dates`, so a Field.DatePicker
  * beside one shows no date text. The count follows the element and its name after each commit,

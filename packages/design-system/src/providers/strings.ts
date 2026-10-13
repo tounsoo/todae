@@ -42,9 +42,9 @@ export interface Strings {
   brightness: string;
   /** Name of ColorPicker.Hue when it has no aria-label. */
   hue: string;
-  /** Name of Field.ColorPicker's popover, and of its swatch beside another control. */
+  /** Name of Field.ColorPicker's popover, and of its swatch beside another control but a picker. */
   colorPicker: string;
-  /** Name of Field.DatePicker's popover, and of its button beside another control. */
+  /** Name of Field.DatePicker's popover, and of its button beside another control but a picker. */
   datePicker: string;
   /** Name of Calendar.Header's button to the previous month. */
   previousMonth: string;
