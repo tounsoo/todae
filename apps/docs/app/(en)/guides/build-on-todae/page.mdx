@@ -67,14 +67,14 @@ It writes three files:
 - `tokens.catalog.json`: Todae's and the company's tokens together.
 - `todae-theme.types.ts`: `THEME_OVERRIDE_TYPES` for the company's keys, for `ThemeProvider`.
 
-`--css`, `--catalog` and `--types` change the output paths. Add `--check` in CI to fail when the outputs are missing or out of date. The same build is a function, `buildCompanyTokens` from `@omsoo/todae/tokens-builder`.
+`--css`, `--catalog` and `--types` change the output paths. Add `--check` in CI to fail when the outputs are missing or out of date. The same build is a function, `buildCompanyTokens` from `@omsoo.design/todae/tokens-builder`.
 
 The build runs every check Todae's own build runs: path format, reference cycles, layer order, light and dark parity, and APCA contrast. The contrast pairs in Todae's resolver apply to the company's colors too, so a brand accent that fails them fails the build. See the Contrast section of [Tokens](/tokens) for the pairs and how to change a minimum.
 
 Load the CSS after Todae's:
 
 ```ts
-import '@omsoo/todae/todae.css';
+import '@omsoo.design/todae/todae.css';
 import './todae-theme.css';
 ```
 
@@ -153,7 +153,7 @@ A density is a `density` context that sets spacing tokens only:
 Then tell TypeScript about the new names:
 
 ```ts
-declare module '@omsoo/todae' {
+declare module '@omsoo.design/todae' {
   interface ButtonVariants {
     outline: true;
   }
@@ -170,7 +170,7 @@ declare module '@omsoo/todae' {
 Wrap a part to fix a company default or add a company prop. Spread the rest of the props and pass `ref` through, since every part forwards native attributes and its ref:
 
 ```tsx
-import { Button, type ButtonRootProps } from '@omsoo/todae';
+import { Button, type ButtonRootProps } from '@omsoo.design/todae';
 
 export function AcmeButton({ variant = 'outline', ...props }: ButtonRootProps) {
   return <Button.Root {...props} variant={variant} />;

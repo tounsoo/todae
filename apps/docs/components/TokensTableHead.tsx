@@ -1,6 +1,6 @@
 'use client';
 
-import { Table } from '@omsoo/todae/table';
+import { Table } from '@omsoo.design/todae/table';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { useLocale } from '../lib/i18n/useLocale';
 

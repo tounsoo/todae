@@ -1,4 +1,4 @@
-import { Text } from '@omsoo/todae/text';
+import { Text } from '@omsoo.design/todae/text';
 
 export function TextHeadings() {
   return (

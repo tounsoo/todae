@@ -1,0 +1,50 @@
+import { ColorPickerInline } from '../../../components/demos/ColorPickerDemo';
+
+# ColorPicker
+
+`ColorPicker.Root` holds one color as a `#rrggbb` string. `ColorPicker.Area` sets saturation, left to right, and brightness, bottom to top, over the current hue. `ColorPicker.Hue` sets the hue. The root takes `value` with `onValueChange`, or `defaultValue`, and calls `onValueChange` as the color is dragged or keyed.
+
+```tsx
+<ColorPicker.Root aria-label="Accent" value={color} onValueChange={setColor}>
+  <ColorPicker.Area />
+  <ColorPicker.Hue />
+</ColorPicker.Root>
+```
+
+<Example block>
+  <ColorPickerInline />
+</Example>
+
+For a color in a form, use [Field.ColorPicker](/field/color-picker): a swatch in a field that opens this picker in a popover.
+
+## Keys and values
+
+The area holds two native range inputs, one for saturation and one for brightness, from 0 to 100. Left and Right change saturation, Up and Down change brightness, and Page Up and Page Down change brightness by ten. Shift with an arrow moves ten. Focus moves to the input that changed, so a screen reader reads its value. Only the saturation input is a Tab stop. The area does not flip in a right-to-left page.
+
+`ColorPicker.Hue` is a native range input from 0 to 359 degrees, so the browser handles its keys.
+
+A `#rrggbb` string has no hue for a gray and no saturation for black. For those, the picker keeps the hue it last showed, and for black the saturation too, so dragging to a gray and back keeps the hue.
+
+`normalizeHex(text)` turns a three- or six-digit hex color, with or without `#`, into `#rrggbb`, and returns `null` for anything else. Use it to check a hex value someone types.
+
+## Accessible composition
+
+**Todae handles:** `ColorPicker.Root` is a `role="group"`. The area's inputs are named from the `saturation` and `brightness` strings and the hue input from the `hue` string in [StringsProvider](/utilities/strings-provider), and each gets an `aria-valuetext` such as `"40%"` or `"120°"`. A focus ring is drawn on the area's thumb while either of its inputs is focus-visible, and on the hue input. `disabled`, or a disabled [Fieldset](/fieldset), disables every input.
+
+**You supply:** A name for the group, with `aria-label` or `aria-labelledby`. The value as text nearby when the exact color matters, such as its hex.
+
+**Watch for:** A color named only by its swatch. The percentages and degrees do not say which color it is, so show or announce the value in a form people know.
+
+## When to use
+
+**When:** Pick any color, shown inline, such as in a theme editor.
+
+**When not:** A color in a form field → [Field.ColorPicker](/field/color-picker). A fixed set of colors → [Radio](/radio). A color in another form, such as `oklch()` → `Field.TextInput`.
+
+## Props
+
+<PropsTable name="ColorPicker.Root" />
+
+<PropsTable name="ColorPicker.Area" />
+
+<PropsTable name="ColorPicker.Hue" />

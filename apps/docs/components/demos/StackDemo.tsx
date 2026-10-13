@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge, Button, Stack, Text } from '@omsoo/todae';
+import { Badge, Button, Stack, Text } from '@omsoo.design/todae';
 
 export function StackButtons() {
   return (

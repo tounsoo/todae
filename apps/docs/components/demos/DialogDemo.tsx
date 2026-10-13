@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, DensityProvider, Dialog, ThemeProvider } from '@omsoo/todae';
+import { Button, DensityProvider, Dialog, ThemeProvider } from '@omsoo.design/todae';
 import { useRef, useState } from 'react';
 
 export function DialogBasic() {

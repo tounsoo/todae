@@ -1,0 +1,50 @@
+import { ColorPickerInline } from '../../../components/demos/ColorPickerDemo';
+
+# ColorPicker
+
+`ColorPicker.Root`는 색 하나를 `#rrggbb` 문자열로 가집니다. `ColorPicker.Area`는 현재 색상(hue) 위에서 채도(왼쪽에서 오른쪽)와 밝기(아래에서 위)를 정합니다. `ColorPicker.Hue`는 색상을 정합니다. 루트는 `value`와 `onValueChange`, 또는 `defaultValue`를 받고, 색을 끌거나 키로 바꾸는 동안 `onValueChange`를 호출합니다.
+
+```tsx
+<ColorPicker.Root aria-label="Accent" value={color} onValueChange={setColor}>
+  <ColorPicker.Area />
+  <ColorPicker.Hue />
+</ColorPicker.Root>
+```
+
+<Example block>
+  <ColorPickerInline />
+</Example>
+
+폼의 색에는 [Field.ColorPicker](/field/color-picker)를 쓰세요. 필드 안의 색 견본이 이 선택기를 팝오버로 엽니다.
+
+## 키와 값
+
+영역에는 채도와 밝기를 위한 네이티브 range 입력 두 개가 있고, 값은 0부터 100까지입니다. 왼쪽과 오른쪽 화살표는 채도를, 위쪽과 아래쪽 화살표는 밝기를 바꾸고, Page Up과 Page Down은 밝기를 10씩 바꿉니다. Shift와 화살표를 함께 누르면 10씩 움직입니다. 포커스는 바뀐 입력으로 옮겨 가므로 스크린 리더가 그 값을 읽습니다. 채도 입력만 Tab 정지점입니다. 오른쪽에서 왼쪽으로 읽는 페이지에서도 영역은 뒤집히지 않습니다.
+
+`ColorPicker.Hue`는 0도부터 359도까지의 네이티브 range 입력이므로 키는 브라우저가 처리합니다.
+
+`#rrggbb` 문자열에는 회색의 색상과 검정의 채도가 없습니다. 이런 색에서는 선택기가 마지막으로 보인 색상을, 검정이면 채도까지 유지하므로, 회색으로 끌었다가 돌아와도 색상이 남습니다.
+
+`normalizeHex(text)`는 `#`이 있든 없든 세 자리나 여섯 자리 hex 색을 `#rrggbb`로 바꾸고, 그 밖에는 `null`을 돌려줍니다. 사람이 입력한 hex 값을 확인할 때 쓰세요.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `ColorPicker.Root`는 `role="group"`입니다. 영역의 입력은 [StringsProvider](/utilities/strings-provider)의 `saturation`과 `brightness` 문자열로, 색상 입력은 `hue` 문자열로 이름이 붙고, 각각 `"40%"`나 `"120°"` 같은 `aria-valuetext`를 받습니다. 영역의 두 입력 중 하나가 focus-visible이면 영역의 썸에, 색상 입력이 그러면 그 입력에 포커스 링이 그려집니다. `disabled`나 비활성화된 [Fieldset](/fieldset)은 모든 입력을 비활성화합니다.
+
+**직접 제공할 것:** `aria-label`이나 `aria-labelledby`로 그룹의 이름. 정확한 색이 중요하면 hex 같은 값을 가까이에 텍스트로.
+
+**주의할 점:** 견본으로만 알려 주는 색. 퍼센트와 각도로는 어떤 색인지 알 수 없으니, 사람들이 아는 형식으로 값을 보여 주거나 알려 주세요.
+
+## 언제 쓰나요
+
+**쓸 때:** 테마 편집기처럼 아무 색이나 화면에 펼쳐 놓고 고를 때.
+
+**쓰지 않을 때:** 폼 필드의 색 → [Field.ColorPicker](/field/color-picker). 정해진 색 몇 가지 → [Radio](/radio). `oklch()`처럼 다른 형식의 색 → `Field.TextInput`.
+
+## Props
+
+<PropsTable name="ColorPicker.Root" />
+
+<PropsTable name="ColorPicker.Area" />
+
+<PropsTable name="ColorPicker.Hue" />

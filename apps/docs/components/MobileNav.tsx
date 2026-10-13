@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Dialog, Drawer } from '@omsoo/todae';
+import { Button, Dialog, Drawer } from '@omsoo.design/todae';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import type { Locale } from '../lib/i18n/config';

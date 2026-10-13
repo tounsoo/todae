@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Card, Text } from '@omsoo/todae';
+import { Button, Card, Text } from '@omsoo.design/todae';
 
 export function CardPlan() {
   return (

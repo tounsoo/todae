@@ -1,6 +1,7 @@
 import {
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -34,9 +35,13 @@ import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
 import { useField } from '../hooks/useField';
+import { useControlledValue } from '../hooks/useControlledState';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { hasGlyph } from './glyphs';
 import { useStrings, type Strings } from '../providers/StringsProvider';
+import { usePopover, type PopoverCloseReason, type PopoverTriggerUserProps } from '../hooks/usePopover';
+import { Popover } from './Popover';
+import { ColorPicker as ColorPickerParts } from './ColorPicker';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -57,7 +62,7 @@ export type FieldRootProps = {
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
 
 function createCountStore(): CountStore {
-  return { entry: null, counters: 0, listeners: new Set(), presence: new Set() };
+  return { entry: null, counters: 0, texts: 0, listeners: new Set(), presence: new Set() };
 }
 
 function publishCount(store: CountStore, value: string, maxLength: number | undefined) {
@@ -84,11 +89,24 @@ function counterMounted(store: CountStore) {
   return store.counters > 0;
 }
 
+function notifyPresence(store: CountStore) {
+  for (const listener of store.presence) listener();
+}
+
 function useTextEntry(store: CountStore, value: string, maxLength: number | undefined) {
   publishCount(store, value, maxLength);
   useEffect(() => {
     for (const listener of store.listeners) listener();
   });
+  // A Field.ColorPicker beside it gives up the field's id once it hears of this.
+  useLayoutEffect(() => {
+    store.texts += 1;
+    notifyPresence(store);
+    return () => {
+      store.texts -= 1;
+      notifyPresence(store);
+    };
+  }, [store]);
   return useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
     () => counterMounted(store),
@@ -121,16 +139,22 @@ function Affix({ className, ...props }: FieldAffixProps) {
   return <span {...props} className={cx(styles.adornment, className)} />;
 }
 
-type PickerControl = HTMLSelectElement | HTMLInputElement;
+type PickerControl = HTMLSelectElement | HTMLButtonElement;
 
-// A control whose picker a press beside it opens: a select or a color input.
+// A control whose picker a press beside it opens: a select or Field.ColorPicker.
 function hasPicker(control: Element | null | undefined): control is PickerControl {
-  return control instanceof HTMLSelectElement || (control instanceof HTMLInputElement && control.type === 'color');
+  return (
+    control instanceof HTMLSelectElement ||
+    (control instanceof HTMLButtonElement && control.hasAttribute('data-todae-field-picker'))
+  );
 }
 
-// Whether a control's picker is showing. A browser without `:open` throws,
+// How the shell opens or closes each Field.ColorPicker's popover, by its button.
+const pickerToggles = new WeakMap<HTMLButtonElement, () => void>();
+
+// Whether a select's picker is showing. A browser without `:open` throws,
 // and treats the picker as closed.
-function isOpen(control: PickerControl): boolean {
+function isOpen(control: HTMLSelectElement): boolean {
   try {
     return control.matches(':open');
   } catch {
@@ -144,6 +168,12 @@ function inAdornment(node: HTMLElement, shell: HTMLElement): boolean {
     if (styles.adornment && el.classList.contains(styles.adornment)) return true;
   }
   return false;
+}
+
+// A press in a part's own popover, such as Field.ColorPicker's, is not a press on the shell.
+function inOwnPopover(target: EventTarget | null, shell: HTMLElement): boolean {
+  const popover = target instanceof Element ? target.closest('[popover]') : null;
+  return popover != null && shell.contains(popover);
 }
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
@@ -174,6 +204,8 @@ function Root({
   const autoId = useDomId();
   const hintId = useDomId();
   const inputRef = useRef<HTMLElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const shellComposed = useComposedRefs(shellRef, props.ref);
   const pendingPicker = useRef<PickerControl | null>(null);
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
@@ -190,6 +222,7 @@ function Root({
       labelledBy,
       ariaLabel,
       inputRef,
+      shellRef,
       store,
     }),
     [ariaLabel, describedBy, disabled, hintId, inputId, invalid, labelledBy, name, store],
@@ -198,6 +231,7 @@ function Root({
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
     // Only a primary press: a right or middle click keeps its own meaning.
     if (event.button !== 0 || disabled || isInteractiveTarget(event.target)) return;
+    if (inOwnPopover(event.target, event.currentTarget)) return;
     event.preventDefault();
     // The ref is the last control to mount. If that one has gone, a control
     // still in the shell takes the press, never one inside an Icon or Affix.
@@ -208,11 +242,12 @@ function Root({
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
     control?.focus();
-    // A press beside a select or color input opens its picker, as a press on
-    // the control would. The picker opens on click: one opened now would close
-    // again as the press goes on. The press that closes an open picker must
-    // not open it again.
-    pendingPicker.current = hasPicker(control) && !isOpen(control) ? control : null;
+    // A press beside a select or color picker acts as a press on the control
+    // would. The picker opens on click: one opened now would close again as
+    // the press goes on. A select's open picker closes on this press, which
+    // must not open it again; Field.ColorPicker's toggles on the click.
+    pendingPicker.current =
+      hasPicker(control) && (control instanceof HTMLButtonElement || !isOpen(control)) ? control : null;
   }
 
   function onClick(event: MouseEvent<HTMLDivElement>) {
@@ -221,6 +256,10 @@ function Root({
     // Only the click that ends this press: one from the keyboard or from
     // assistive technology has no press (detail 0) and opens nothing.
     if (!picker?.isConnected || event.detail === 0 || isInteractiveTarget(event.target)) return;
+    if (picker instanceof HTMLButtonElement) {
+      pickerToggles.get(picker)?.();
+      return;
+    }
     try {
       picker.showPicker?.();
     } catch {
@@ -232,6 +271,7 @@ function Root({
     <FieldContext.Provider value={ctx}>
       <div
         {...props}
+        ref={shellComposed}
         className={cx(styles.shell, className)}
         data-disabled={disabled ? '' : undefined}
         data-invalid={invalid ? '' : undefined}
@@ -563,38 +603,115 @@ function Select({ value, onChange, onValueChange, className, children, ...props 
   );
 }
 
-export type FieldColorInputProps = {
-  /** A color as `#rrggbb`. */
+/** Why Field.ColorPicker's picker closed: a popover's reasons, or the field became disabled. */
+export type FieldColorPickerCloseReason = PopoverCloseReason | 'disabled';
+
+export type FieldColorPickerProps = {
+  /** The color as #rrggbb. */
   value: string;
-  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  /** Fires with the new color as #rrggbb while it is dragged or keyed in the picker. */
   onValueChange?: (value: string) => void;
-  ref?: Ref<HTMLInputElement>;
-  // `readonly` has no effect on a color input.
-} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'type' | 'disabled' | 'onChange' | 'readOnly'>;
+  /** Controlled open state of the picker. Pass with onOpenChange. */
+  open?: boolean;
+  /** Initial open state when uncontrolled. */
+  defaultOpen?: boolean;
+  /** Fires when the picker opens or closes, with why it closed. */
+  onOpenChange?: (open: boolean, reason: FieldColorPickerCloseReason) => void;
+} & Omit<ComponentPropsWithRef<'button'>, 'value' | 'defaultValue' | 'children' | 'type' | 'color' | 'onChange'>;
 
 /**
- * A native color input drawn as a swatch the height of a line of field text.
- * The browser's own picker opens from it, or from a press elsewhere in the
- * field. Put the value beside it as text with Field.Affix.
+ * The field's control: a button the height of a line of field text, filled
+ * with the color. It opens a ColorPicker in a popover, as does a press
+ * elsewhere in the field. Beside a Field.TextInput or Field.Textarea, that
+ * input is the field's control instead, and the button is named from the
+ * colorPicker string.
  */
-function ColorInput({ value, onChange, onValueChange, className, ...props }: FieldColorInputProps) {
+function ColorPicker({
+  value,
+  onValueChange,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  className,
+  style,
+  ...props
+}: FieldColorPickerProps) {
   const field = useField();
-  return (
-    <input
-      {...field.getControlProps(props)}
-      type="color"
-      value={value}
-      className={cx(styles.color, className)}
-      // Without either handler the input is read-only, and React says so.
-      onChange={
-        onChange || onValueChange
-          ? (event) => {
-              onChange?.(event);
-              onValueChange?.(event.target.value);
-            }
-          : undefined
+  const { shellRef, store } = useFieldContext();
+  const strings = useStrings();
+  // A text input in the field takes its id, name and description. The server
+  // cannot know of one yet, so the button holds them until hydration.
+  const beside = useSyncExternalStore(
+    (listener) => subscribePresence(store, listener),
+    () => store.texts > 0,
+    () => false,
+  );
+  const { name, ...control } = beside
+    ? {
+        ...props,
+        name: undefined,
+        disabled: field.disabled || Boolean(props.disabled),
+        'aria-label': props['aria-label'] ?? strings.colorPicker,
       }
-    />
+    : field.getControlProps(props);
+  const [open, setOpen] = useControlledValue<boolean, [FieldColorPickerCloseReason]>(
+    openProp,
+    defaultOpen ?? false,
+    onOpenChange,
+  );
+  // A disabled field shows no picker. One open when the field is disabled
+  // closes, so it does not come back when the field is enabled again.
+  const shown = open && !control.disabled;
+  // The latest setter, so a new onOpenChange each render does not fire it again.
+  const close = useRef(setOpen);
+  close.current = setOpen;
+  useEffect(() => {
+    if (open && control.disabled) close.current(false, 'disabled');
+  }, [control.disabled, open]);
+  const popover = usePopover({
+    open: shown,
+    onOpenChange: setOpen,
+    // For the outside-press check: a press anywhere in the field is not outside.
+    anchorRef: shellRef,
+    enabled: !control.disabled,
+  });
+  const trigger = popover.getTriggerProps({ ...control, style } as PopoverTriggerUserProps);
+  const toggle = useRef(() => {});
+  toggle.current = () => {
+    if (!control.disabled) setOpen(!shown, 'trigger');
+  };
+  useLayoutEffect(() => {
+    const button = popover.triggerRef.current;
+    if (!(button instanceof HTMLButtonElement)) return;
+    pickerToggles.set(button, () => toggle.current());
+    return () => {
+      pickerToggles.delete(button);
+    };
+  }, [popover.triggerRef]);
+  // The popover exists only while open, so only then does the button control it.
+  const controls = shown ? trigger['aria-controls'] : undefined;
+  return (
+    <>
+      <button
+        {...(trigger as ComponentPropsWithRef<'button'>)}
+        aria-controls={controls}
+        type="button"
+        data-todae-field-picker=""
+        className={cx(styles.swatch, className)}
+        style={{ ...trigger.style, '--_swatch': value } as CSSProperties}
+      />
+      {/* A button sends nothing with a form, so the value goes in a hidden input. */}
+      {name ? <input type="hidden" name={name} value={value} disabled={control.disabled} form={control.form} /> : null}
+      {/* Mounted while open only: a form can hold many swatches. */}
+      {shown ? (
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label={strings.colorPicker}>
+          <ColorPickerParts.Root value={value} onValueChange={onValueChange}>
+            <ColorPickerParts.Area />
+            <ColorPickerParts.Hue />
+          </ColorPickerParts.Root>
+        </Popover.Root>
+      ) : null}
+    </>
   );
 }
 
@@ -685,4 +802,4 @@ function Group({ className, ...props }: FieldGroupProps) {
   return <div {...props} className={cx(styles.group, className)} />;
 }
 
-export const Field = { Root, TextInput, Textarea, ChipInput, Select, ColorInput, Icon, Affix, Counter, Row, Group } as const;
+export const Field = { Root, TextInput, Textarea, ChipInput, Select, ColorPicker, Icon, Affix, Counter, Row, Group } as const;

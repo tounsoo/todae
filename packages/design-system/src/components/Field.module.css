@@ -21,7 +21,7 @@
     gap: 0;
   }
 
-  .shell:has(:is(input, textarea, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell:has(:is(input, textarea, .swatch, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: var(--todae-focus-ring-width) solid var(--todae-field-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
@@ -31,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(:is(input, textarea, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell[data-invalid]:has(:is(input, textarea, .swatch, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 
@@ -410,9 +410,8 @@
     padding-inline-end: 0;
   }
 
-  /* A swatch one line of field text tall: square on its own, and a press
-     anywhere in the shell opens its picker. */
-  .color {
+  /* Field.ColorPicker's button: one line of field text tall, filled with its color. */
+  .swatch {
     flex: none;
     box-sizing: border-box;
     inline-size: 1lh;
@@ -421,37 +420,32 @@
     padding: 0;
     border: var(--todae-field-border-width) solid var(--todae-field-swatch-border);
     border-radius: var(--todae-field-swatch-radius);
-    background: transparent;
+    background: var(--_swatch);
     font-size: var(--todae-field-font-size);
     line-height: var(--todae-field-leading);
+    cursor: pointer;
+    /* The shell draws the focus ring. */
     outline: none;
-    cursor: pointer;
   }
 
-  .color::-webkit-color-swatch-wrapper {
-    padding: 0;
-  }
-
-  .color::-webkit-color-swatch {
-    border: 0;
-    border-radius: calc(var(--todae-field-swatch-radius) - var(--todae-field-border-width));
-  }
-
-  .color::-moz-color-swatch {
-    border: 0;
-    border-radius: calc(var(--todae-field-swatch-radius) - var(--todae-field-border-width));
-  }
-
-  .shell:not([data-disabled]):has(> .color) {
-    cursor: pointer;
-  }
-
-  .color:disabled {
+  .swatch:disabled {
     cursor: not-allowed;
   }
 
-  /* With nothing beside it, the field is as wide as the swatch. */
-  .shell:has(> .color:only-child) {
+  /* The swatch is the color, so forced colors must not replace it. */
+  @media (forced-colors: active) {
+    .swatch {
+      forced-color-adjust: none;
+    }
+  }
+
+  /* A press in the field opens the picker, unless a text input there takes it. */
+  .shell:not([data-disabled]):has(> .swatch):not(:has(> :is(.input, .textarea))) {
+    cursor: pointer;
+  }
+
+  /* With nothing beside it but its popover, the field is as wide as the swatch. */
+  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover], input[type='hidden']))) {
     inline-size: fit-content;
   }
 

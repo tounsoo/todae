@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Chip, Stack, Tooltip, useTooltip } from '@omsoo/todae';
+import { Button, Chip, Stack, Tooltip, useTooltip } from '@omsoo.design/todae';
 import { Archive } from 'lucide-react';
 import { LocalizedLink } from '../LocalizedLink';
 
