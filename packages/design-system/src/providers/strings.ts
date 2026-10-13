@@ -50,6 +50,10 @@ export interface Strings {
   previousMonth: string;
   /** Name of Calendar.Header's button to the next month. */
   nextMonth: string;
+  /** useClipboard's message after a copy. */
+  copied: string;
+  /** useClipboard's message when a copy fails. */
+  copyFailed: string;
 }
 
 /** The English Todae ships with. */
@@ -75,4 +79,6 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   datePicker: 'Choose date',
   previousMonth: 'Previous month',
   nextMonth: 'Next month',
+  copied: 'Copied',
+  copyFailed: 'Could not copy',
 });

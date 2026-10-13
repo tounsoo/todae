@@ -47,6 +47,8 @@ const FRENCH: Strings = {
   datePicker: 'Choisir une date',
   previousMonth: 'Mois précédent',
   nextMonth: 'Mois suivant',
+  copied: 'Copié',
+  copyFailed: 'Copie impossible',
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {

@@ -65,13 +65,14 @@ describe('Playground', () => {
   });
 
   it('copies one flat set when light and dark agree, and both sets when they differ', async () => {
-    render(<Playground locale="en" />);
+    // Queries stay in the container, so the announcer's live region in body doesn't match the status text.
+    const page = within(render(<Playground locale="en" />).container);
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
     expect(JSON.parse(writeText.mock.calls[0]?.[0] ?? '')).toEqual({});
-    expect(screen.getByText('Copied theme override JSON.')).toBeTruthy();
+    expect(await page.findByText('Copied theme override JSON.')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Forest'));
     // The status was for the old theme, so it gives way to the hint again.
-    expect(screen.queryByText('Copied theme override JSON.')).toBeNull();
+    expect(page.queryByText('Copied theme override JSON.')).toBeNull();
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
     const copied = JSON.parse(writeText.mock.calls[1]?.[0] ?? '');
     expect(Object.keys(copied)).toEqual(['light', 'dark']);
@@ -93,9 +94,9 @@ describe('Playground', () => {
 
   it('shows when the copy fails', async () => {
     writeText.mockRejectedValue(new Error('denied'));
-    render(<Playground locale="en" />);
+    const page = within(render(<Playground locale="en" />).container);
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
-    expect(screen.getByText('Could not copy. Clipboard permission was denied.')).toBeTruthy();
+    expect(await page.findByText('Could not copy. Clipboard permission was denied.')).toBeTruthy();
   });
 
   it('puts the overrides on the element that carries the density', () => {
