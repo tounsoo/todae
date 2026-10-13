@@ -633,13 +633,16 @@ function ColorPicker({
   // A disabled field shows no picker. One open when the field is disabled
   // closes, so it does not come back when the field is enabled again.
   const shown = open && !control.disabled;
+  // The latest setter, so a new onOpenChange each render does not fire it again.
+  const close = useRef(setOpen);
+  close.current = setOpen;
   useEffect(() => {
-    if (open && control.disabled) setOpen(false, 'disabled');
-  }, [control.disabled, open, setOpen]);
+    if (open && control.disabled) close.current(false, 'disabled');
+  }, [control.disabled, open]);
   const popover = usePopover({
     open: shown,
     onOpenChange: setOpen,
-    // Anchored to the shell, so a press anywhere in the field is not outside.
+    // For the outside-press check: a press anywhere in the field is not outside.
     anchorRef: shellRef,
     enabled: !control.disabled,
   });
@@ -669,7 +672,7 @@ function ColorPicker({
         style={{ ...trigger.style, '--_swatch': value } as CSSProperties}
       />
       {/* A button sends nothing with a form, so the value goes in a hidden input. */}
-      {name ? <input type="hidden" name={name} value={value} disabled={control.disabled} /> : null}
+      {name ? <input type="hidden" name={name} value={value} disabled={control.disabled} form={control.form} /> : null}
       {/* Mounted while open only: a form can hold many swatches. */}
       {shown ? (
         <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label={strings.colorPicker}>

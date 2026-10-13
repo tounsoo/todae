@@ -392,6 +392,40 @@ describe('Field.ColorPicker in a browser', () => {
     expect([...new FormData(form).entries()]).toEqual([['accent', '#3366ff']]);
   });
 
+  it('sends its value with the form its form attribute names', () => {
+    render(
+      <>
+        <form id="other" data-testid="other" />
+        <Themed>
+          <Field.Root aria-label="Accent" name="accent">
+            <Field.ColorPicker value="#3366ff" form="other" />
+          </Field.Root>
+        </Themed>
+      </>,
+    );
+    const form = screen.getByTestId('other') as HTMLFormElement;
+    expect([...new FormData(form).entries()]).toEqual([['accent', '#3366ff']]);
+  });
+
+  it('reports a close for disabling once, to an owner that keeps it open', async () => {
+    const spy = vi.fn();
+    function Vetoing({ disabled, note }: { disabled?: boolean; note?: string }) {
+      return (
+        <Themed>
+          <Field.Root aria-label="Accent" disabled={disabled} data-note={note}>
+            <Field.ColorPicker value="#3366ff" open onOpenChange={(open, reason) => spy(open, reason)} />
+          </Field.Root>
+        </Themed>
+      );
+    }
+    const { rerender } = render(<Vetoing />);
+    await screen.findByRole('dialog', { name: 'Color picker' });
+    rerender(<Vetoing disabled />);
+    rerender(<Vetoing disabled note="again" />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(spy.mock.calls).toEqual([[false, 'disabled']]);
+  });
+
   it('closes an open picker when the field is disabled, and keeps it closed when enabled again', async () => {
     const onOpenChange = vi.fn();
     function Toggled({ disabled }: { disabled?: boolean }) {
