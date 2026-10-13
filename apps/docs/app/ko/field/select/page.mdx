@@ -1,0 +1,55 @@
+import { FieldSelectSize } from '../../../../components/demos/FieldDemo';
+
+# Field.Select
+
+`Field.Select`는 [Field](/field) 안의 네이티브 `<select>`입니다. `appearance: base-select`를 지원하는 브라우저에서는 버튼과 선택 창을 field, option 토큰으로 그립니다. 그 밖의 브라우저에서는 같은 값과 키보드 동작으로 브라우저 자체 선택 창이 나타납니다. JavaScript listbox는 없습니다. 자식은 네이티브 `<option>`과 `<optgroup>` 요소이며, 다른 필드처럼 `Label.Root htmlFor`로 이름을 붙입니다.
+
+```tsx
+<Label.Root htmlFor={id}>Size</Label.Root>
+<Field.Root id={id}>
+	<Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
+		<option value="s">Small</option>
+		<option value="m">Medium</option>
+	</Field.Select>
+</Field.Root>
+```
+
+<Example block>
+  <FieldSelectSize />
+</Example>
+
+## 아이콘
+
+`Field.Select`는 브라우저가 `::picker-icon`을 지원하고 select가 필드의 마지막 파트일 때 [GlyphsProvider](/utilities/glyphs-provider)의 `chevron` 글리프를 브라우저의 선택기 아이콘 위에 그립니다. 그렇지 않거나 provider가 없으면 브라우저의 아이콘이 보입니다. 선택된 `<option>` 옆의 체크 표시는 브라우저 자체의 것입니다.
+
+```tsx
+import { ChevronDown } from 'lucide-react';
+
+<GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
+	<Field.Root aria-label="Plan">
+		<Field.Select value={plan} onValueChange={setPlan}>
+			…
+		</Field.Select>
+	</Field.Root>
+</GlyphsProvider>
+```
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** select는 `Field.Root`에서 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 필드의 다른 곳을 마우스로 누르면 select에 포커스가 가고, 브라우저가 허용하면 선택 창이 열립니다. chevron 글리프는 `aria-hidden`입니다. 키보드와 선택 창은 브라우저가 처리합니다.
+
+**직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. `onChange`나 `onValueChange`도 주세요. 둘 다 없으면 select는 읽기 전용입니다.
+
+**주의할 점:** `multiple`과 `size`는 `Field.Select`의 props가 아닙니다. 여러 값에는 Checkbox나 `Field.ChipInput`을 쓰세요.
+
+## 언제 쓰나요
+
+### Field.Select
+
+**언제:** 폼 안에서 짧고 고정된 목록 중 값 하나를 네이티브 선택 창과 키보드로 고를 때.
+
+**쓰지 않을 때:** 긴 목록을 필터링하거나 검색 → Combobox 레시피. 여러 값 → Checkbox 또는 `Field.ChipInput`. 값이 아닌 명령 → Menu.
+
+## Props
+
+<PropsTable name="Field.Select" />

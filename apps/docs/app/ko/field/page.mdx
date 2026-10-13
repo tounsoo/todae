@@ -1,10 +1,5 @@
 import { ErrorMessageSibling } from '../../../components/demos/ErrorMessageDemo';
 import {
-  ChipInputCommitKeys,
-  ChipInputControlled,
-  ChipInputLabel,
-  ChipInputMaxRows,
-  ChipInputStates,
   CounterBefore,
   CounterDefault,
   CounterInline,
@@ -13,22 +8,12 @@ import {
   CounterPlain,
   CounterTextarea,
   FieldAdornments,
-  FieldColorAccent,
-  FieldDateTime,
   FieldLabelAdornments,
   FieldLabelStates,
-  FieldSelectSize,
   FieldStates,
   RowChipInput,
   RowComposer,
   RowComposerDensity,
-  TextareaAutoGrow,
-  TextareaDark,
-  TextareaDensity,
-  TextareaMaxRows,
-  TextareaMessages,
-  TextareaResize,
-  TextareaRows,
 } from '../../../components/demos/FieldDemo';
 
 # Field
@@ -38,6 +23,16 @@ import {
 <Example block>
   <FieldStates />
 </Example>
+
+## 입력
+
+입력 파트마다 자체 페이지가 있습니다.
+
+- [Field.TextInput](/field/text-input): 한 줄 텍스트, 또는 네이티브 숫자, 날짜, 시간.
+- [Field.Textarea](/field/textarea): 여러 줄 텍스트.
+- [Field.ChipInput](/field/chip-input): 칩과 입력.
+- [Field.Select](/field/select): 네이티브 `<select>`.
+- [Field.ColorInput](/field/color-input): 네이티브 색상 입력.
 
 ## Label
 
@@ -91,50 +86,6 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
   <ErrorMessageSibling />
 </Example>
 
-## Textarea
-
-여러 줄 텍스트입니다. 높이는 CSS로만 정해집니다. `rows`는 높이와 드래그 최솟값을, `maxRows`는 상한을 정합니다. `autoGrow`는 브라우저가 지원하면 `field-sizing: content`를 쓰고, `maxRows`를 생략하면 상한 없이 늘어납니다. `field-sizing`이 없는 브라우저에서는 `rows`에 머물고 안에서 스크롤됩니다. `autoGrow`가 켜져 있을 때는 인라인 `height`를 설정하지 마세요. 늘어나는 동작을 덮어씁니다. 패딩은 셸 안쪽의 textarea에 있습니다.
-
-<Example block>
-  <TextareaRows />
-</Example>
-
-`autoGrow`와 `maxRows={6}`.
-
-<Example block>
-  <TextareaAutoGrow />
-</Example>
-
-`rows` 없이 `maxRows`만 주면 `min(3, maxRows)`에서 시작합니다.
-
-<Example block>
-  <TextareaMaxRows />
-</Example>
-
-`autoGrow`를 끈 상태에서 드래그로 크기를 바꾸면 `rows`와 `maxRows`에서 멈춥니다.
-
-<Example block>
-  <TextareaResize />
-</Example>
-
-compact, comfortable, spacious.
-
-<Example block>
-  <TextareaDensity />
-</Example>
-
-네이티브 스크롤바를 위한 다크 appearance.
-
-<Example block>
-  <TextareaDark />
-</Example>
-
-레이블, 설명, 오류, invalid, disabled.
-
-<Example block>
-  <TextareaMessages />
-</Example>
-
 ## Counter
 
 `Field.Counter`는 `Field.TextInput`이나 `Field.Textarea`의 실시간 글자 수를 보여 줍니다. 자체 줄을 차지합니다. 서버 HTML에 글자 수가 포함되도록 입력 뒤에 쓰세요. `Field.Root`마다 Counter는 하나입니다. 입력은 계속 제어 상태이며, `defaultValue`는 읽지 않습니다.
@@ -177,45 +128,7 @@ compact, comfortable, spacious.
   <CounterPlain />
 </Example>
 
-`maxLength`가 있으면 Counter는 스크린 리더에 한도를 알리고, 남은 글자가 20자 이하가 되면 몇 자 남았는지도 알립니다. 이 텍스트는 [StringsProvider](/utilities/strings-provider)의 `characterLimit`, `charactersLeft`, `characterLimitReached` 문자열에서 오며, 설정하지 않으면 영어입니다.
-
-## Chip input
-
-제어되는 칩과 입력입니다. 필드는 칩을 직접 추가하지 않습니다. 부모의 `onCommit`이 결정합니다. 장식 요소는 칩 흐름 밖, `Field.Root`에 남습니다. ChipInput 안의 칩은 모든 밀도에서 입력과 같은 필드 한 줄 높이입니다. `chipLayout="row"`는 ChipInput 안에서 칩을 입력 위의 전체 너비 줄에 놓습니다. Icon과 Affix는 첫 줄에 놓입니다. 칩이 없으면 `Field.TextInput`과 같은 높이의 한 줄 필드입니다. row에서 `maxRows`는 칩 줄만 세고, 인라인 흐름처럼 잘라 냅니다. `Label.Root htmlFor`나 Root의 `aria-label`로 레이블을 붙이세요.
-
-`maxRows`가 설정되면 흐름은 첫 페인트부터 토큰에서 계산한 줄 수로 제한되고, 첫 레이아웃 측정 전까지 칩을 숨깁니다. 그래서 SSR이 `+N`으로 접히기 전에 펼쳐지지 않습니다. 보이는 영역은 앞쪽 칩들입니다. 가장 새 칩은 `+N`으로 접히고 실제 흐름에서 언마운트됩니다. 이후 칩이 전체 너비로 들어가지 않으면 `+N`으로 옮겨집니다. 첫 칩과 `+N`, 입력이 한 줄을 함께 쓸 수 없으면 첫 칩은 말줄임표로 잘립니다. 접근 가능한 이름은 전체 레이블을 유지합니다.
-
-칩 제거 버튼은 `chipRemoveIcon`을 전달하지 않으면 `close` 글리프를 보여 줍니다. [Chip](/chip)과 같습니다.
-
-이번 단계에서 미룬 것: 내장 지우기, 붙여넣기 분할, 클릭 가능한 `+N`, 칩 화살표 키 로빙.
-
-<Example block>
-  <ChipInputControlled />
-</Example>
-
-선택 사항인 [useChipField](/utilities/use-chip-field)는 칩과 입력을 보관하고, 그 `getChipInputProps()`를 `Field.ChipInput`에 펼쳐 넘깁니다.
-
-`commitKeys={['Enter', ',']}`. 알 수 없는 키는 버려집니다.
-
-<Example block>
-  <ChipInputCommitKeys />
-</Example>
-
-compact와 comfortable에서의 `maxRows={1}`과 `{2}`.
-
-<Example block>
-  <ChipInputMaxRows />
-</Example>
-
-disabled와 invalid는 `Field.Root`에 있습니다.
-
-<Example block>
-  <ChipInputStates />
-</Example>
-
-<Example block>
-  <ChipInputLabel />
-</Example>
+숫자, 날짜, 시간 입력이 아닌 곳에 `maxLength`가 있으면 Counter는 스크린 리더에 한도를 알리고, 남은 글자가 20자 이하가 되면 몇 자 남았는지도 알립니다. 이 텍스트는 [StringsProvider](/utilities/strings-provider)의 `characterLimit`, `charactersLeft`, `characterLimitReached` 문자열에서 오며, 설정하지 않으면 영어입니다.
 
 ## Row
 
@@ -235,60 +148,16 @@ compact, comfortable, spacious에서의 같은 작성기.
   <RowChipInput />
 </Example>
 
-## 숫자, 날짜, 시간
-
-`Field.TextInput`은 `type="number"`, `"date"`, `"time"`, `"datetime-local"`을 받습니다. 브라우저 자체의 스피너, 날짜 선택기, 로캘 형식을 그대로 쓰는 네이티브 입력으로 남으며, 필드 토큰으로 스타일을 입히고 숫자를 세로로 맞춥니다. `value`는 입력의 문자열입니다. `"2"`, `"2026-10-07"`, `"14:30"`이거나, 입력이 덜 끝났을 때는 빈 문자열입니다. 네이티브 `min`, `max`, `step`으로 제한하세요.
-
-<Example block>
-  <FieldDateTime />
-</Example>
-
-스테퍼 버튼과 달력 그리드는 앱에서 조합할 부분입니다. 네이티브 입력으로 부족할 때 이 입력을 중심으로 만드세요.
-
-## Select
-
-`Field.Select`는 네이티브 `<select>`입니다. `appearance: base-select`를 지원하는 브라우저에서는 버튼과 선택 창을 field, option 토큰으로 그립니다. 그 밖의 브라우저에서는 같은 값과 키보드 동작으로 브라우저 자체 선택 창이 나타납니다. JavaScript listbox는 없습니다. 자식은 네이티브 `<option>`과 `<optgroup>` 요소이며, 다른 필드처럼 `Label.Root htmlFor`로 이름을 붙입니다.
-
-```tsx
-<Label.Root htmlFor={id}>Size</Label.Root>
-<Field.Root id={id}>
-	<Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
-		<option value="s">Small</option>
-		<option value="m">Medium</option>
-	</Field.Select>
-</Field.Root>
-```
-
-<Example block>
-  <FieldSelectSize />
-</Example>
-
-## Color
-
-`Field.ColorInput`은 네이티브 `<input type="color">`이며, 필드 한 줄 높이의 색 견본으로 그려집니다. 값은 `#rrggbb` 문자열입니다. 필드의 다른 곳을 눌러도 브라우저의 선택 창이 열립니다. 값을 텍스트로 보이려면 뒤에 `Field.Affix`를 두세요. 혼자 있으면 필드 너비는 견본 너비와 같습니다.
-
-```tsx
-<Label.Root htmlFor={id}>Accent</Label.Root>
-<Field.Root id={id}>
-	<Field.ColorInput value={color} onValueChange={setColor} />
-	<Field.Affix>{color}</Field.Affix>
-</Field.Root>
-```
-
-<Example block>
-  <FieldColorAccent />
-</Example>
-
 ## 커스텀 컨트롤
 
 별점처럼 직접 만든 컨트롤은 [useField](/utilities/use-field)로 `Field.Root`에 연결됩니다.
 
 ## 아이콘
 
-`Field.Icon`에는 어떤 라이브러리의 아이콘도 넣을 수 있고, 그 안에 바로 들어간 `svg`나 `img`는 `field.icon.size` 토큰의 크기를 따릅니다. `Field.Select`는 브라우저가 `::picker-icon`을 지원하고 select가 필드의 마지막 파트일 때 [GlyphsProvider](/utilities/glyphs-provider)의 `chevron` 글리프를 브라우저의 선택기 아이콘 위에 그립니다. 그렇지 않거나 provider가 없으면 브라우저의 아이콘이 보입니다. 선택된 `<option>` 옆의 체크 표시는 브라우저 자체의 것입니다. `Field.ChipInput`의 칩 제거 버튼은 `chipRemoveIcon`을 전달하지 않으면 `close` 글리프를 보여 줍니다.
+`Field.Icon`에는 어떤 라이브러리의 아이콘도 넣을 수 있고, 그 안에 바로 들어간 `svg`나 `img`는 `field.icon.size` 토큰의 크기를 따릅니다. `Field.Select`와 `Field.ChipInput`이 그리는 글리프는 각 파트의 페이지에 있습니다.
 
 ```tsx
-import { ChevronDown, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 <Field.Root aria-label="Search">
 	<Field.Icon>
@@ -296,23 +165,15 @@ import { ChevronDown, Search } from 'lucide-react';
 	</Field.Icon>
 	<Field.TextInput />
 </Field.Root>
-
-<GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
-	<Field.Root aria-label="Plan">
-		<Field.Select value={plan} onValueChange={setPlan}>
-			…
-		</Field.Select>
-	</Field.Root>
-</GlyphsProvider>
 ```
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Field.Root`는 자신의 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 입력에 넘깁니다. 다른 ARIA props는 셸 `div`에 남습니다. 입력은 Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 셸을 누르면 입력에 포커스가 가고, 입력이 focus-visible인 동안 셸이 포커스 링을 그립니다. 장식용 `Field.Icon`은 `aria-hidden`입니다. `maxLength`가 있으면 `Field.Counter`가 한도를 입력의 설명에 더하고, 20자 남았을 때부터 남은 글자 수를 알립니다. `Field.ChipInput`에서는 각 삭제 버튼이 칩 이름을 따서 이름을 갖고, 칩을 지우면 포커스가 입력으로 돌아갑니다.
+**Todae가 맡는 것:** `Field.Root`는 자신의 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 입력에 넘깁니다. 다른 ARIA props는 셸 `div`에 남습니다. 입력은 Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 셸을 누르면 입력에 포커스가 가고, 입력이 focus-visible인 동안 셸이 포커스 링을 그립니다. 장식용 `Field.Icon`은 `aria-hidden`입니다. 숫자, 날짜, 시간 입력이 아닌 곳에 `maxLength`가 있으면 `Field.Counter`가 한도를 입력의 설명에 더하고, 20자 남았을 때부터 남은 글자 수를 알립니다.
 
-**직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. [Description](/description)이나 [ErrorMessage](/errormessage)의 id는 Root의 `aria-describedby`에 넣고, 오류가 보이는 동안 `invalid`를 켜세요. 상호작용하는 `Field.Icon` 안의 버튼마다 이름을 주세요. 칩과 글자 수 문구는 [StringsProvider](/utilities/strings-provider)로 제품의 언어에 맞추세요.
+**직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. [Description](/description)이나 [ErrorMessage](/errormessage)의 id는 Root의 `aria-describedby`에 넣고, 오류가 보이는 동안 `invalid`를 켜세요. 상호작용하는 `Field.Icon` 안의 버튼마다 이름을 주세요. 글자 수 문구는 [StringsProvider](/utilities/strings-provider)로 제품의 언어에 맞추세요.
 
-**주의할 점:** `Field.TextInput`에 준 `id`는 Root의 id로 바뀝니다. id는 Root에 두세요. `Field.Root`에 준 `role`이나 `onClick`은 셸에 붙는데, 셸은 컨트롤이 아닙니다. 오버레이는 실제 버튼으로 여세요. `invalid`는 입력을 유효하지 않다고 표시하지만 이유는 말하지 않으므로 ErrorMessage를 함께 보여 주세요. `commitKeys`에 `'Tab'`을 넣으면 Tab이 포커스를 옮기지 않고 입력한 텍스트를 확정합니다.
+**주의할 점:** `Field.TextInput`에 준 `id`는 Root의 id로 바뀝니다. id는 Root에 두세요. `Field.Root`에 준 `role`이나 `onClick`은 셸에 붙는데, 셸은 컨트롤이 아닙니다. 오버레이는 실제 버튼으로 여세요. `invalid`는 입력을 유효하지 않다고 표시하지만 이유는 말하지 않으므로 ErrorMessage를 함께 보여 주세요.
 
 ## 언제 쓰나요
 
@@ -321,35 +182,6 @@ import { ChevronDown, Search } from 'lucide-react';
 **언제:** 텍스트, textarea, 칩 입력 하나를 위한 공유 필드 외형 — 포커스 링, disabled/invalid, 밀도. 값은 입력 파트에 있습니다.
 
 **쓰지 않을 때:** 선택 컨트롤(Checkbox / Radio / Switch). 버튼인 오버레이 트리거. 안에 다른 컴파운드 루트를 중첩할 때.
-
-### Field.TextInput
-
-**언제:** `Field.Root` 안에서 한 줄로 입력하는 값(text / search / email / url / tel / password), 또는 네이티브 숫자, 날짜, 시간.
-
-**쓰지 않을 때:** 여러 값의 토큰 → `Field.ChipInput`. 여러 줄 → `Field.Textarea`. Root 없이 단독으로 쓸 때.
-
-### Field.Textarea
-
-**언제:** 메모, 메시지, 설명 같은 여러 줄 자유 텍스트. `rows`가 시작 높이를 정하고, `autoGrow`는 CSS만으로 `maxRows`까지 늘립니다.
-**쓰지 않을 때:** 한 줄 값에는 `Field.TextInput`을 쓰세요. 개별 태그나 토큰에는 `Field.ChipInput`을 쓰세요. 서식 있는 텍스트나 서식 지정은 제공하지 않습니다.
-
-### Field.ChipInput
-
-**언제:** `Field.Root` 안의 제어되는 칩 + 입력 하나. 부모가 `onCommit`으로 확정/추가를 담당하거나, [useChipField](/utilities/use-chip-field)의 `getChipInputProps()`를 펼쳐 그 상태를 보관합니다.
-
-**쓰지 않을 때:** 자유 형식의 단일 문자열 → TextInput. 목록에서 고르는 옵션 → [Combobox 레시피](/recipes/combobox) + OptionList.
-
-### Field.Select
-
-**언제:** 폼 안에서 짧고 고정된 목록 중 값 하나를 네이티브 선택 창과 키보드로 고를 때.
-
-**쓰지 않을 때:** 긴 목록을 필터링하거나 검색 → Combobox 레시피. 여러 값 → Checkbox 또는 `Field.ChipInput`. 값이 아닌 명령 → Menu.
-
-### Field.ColorInput
-
-**언제:** 브랜드나 강조 색처럼 색 하나를 브라우저 선택 창으로 고를 때.
-
-**쓰지 않을 때:** `oklch()`처럼 다른 형식의 색 → `Field.TextInput`, 고르기용으로 옆의 별도 필드에 `Field.ColorInput`. 정해진 색 몇 가지 → RadioGroup.
 
 ### Field.Icon
 
@@ -377,22 +209,12 @@ import { ChevronDown, Search } from 'lucide-react';
 
 ### Field.Counter
 
-**언제:** `Field.TextInput`이나 `Field.Textarea`의 실시간 글자 수를 보여 줄 때. `maxLength`가 설정되면 `n / max`로, 그렇지 않으면 `n`으로 표시합니다.
+**언제:** `Field.TextInput`이나 `Field.Textarea`의 실시간 글자 수를 보여 줄 때. `maxLength`가 설정되면 `n / max`로, 그렇지 않거나 숫자, 날짜, 시간 입력이면 `n`으로 표시합니다.
 **쓰지 않을 때:** 글자 수를 보이지 않는 엄격한 제한에는 `maxLength`만 설정하고, 코드나 PIN 같은 짧은 고정 길이 값에는 쓰지 마세요.
 
 ## Props
 
 <PropsTable name="Field.Root" />
-
-<PropsTable name="Field.TextInput" />
-
-<PropsTable name="Field.Textarea" />
-
-<PropsTable name="Field.ChipInput" />
-
-<PropsTable name="Field.Select" />
-
-<PropsTable name="Field.ColorInput" />
 
 <PropsTable name="Field.Icon" />
 

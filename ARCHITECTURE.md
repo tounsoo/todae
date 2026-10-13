@@ -114,6 +114,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 Each component, hook and recipe gets a page in `apps/docs/app/(en)` and a Korean twin in `apps/docs/app/ko`, changed in the same pull request (see [`CLAUDE.md`](CLAUDE.md) and [`apps/docs/TRANSLATING.md`](apps/docs/TRANSLATING.md)).
 
 - **Page shape for a component or hook:** a short intro with a live `<Example>` and code, any topic sections, then `## Accessible composition` (**Todae handles:** / **You supply:** / **Watch for:**), `## When to use` (**When:** / **When not:**), and `## Props`. The docs MCP server reads "When to use".
+- **A part with enough to say gets its own page** under its component, such as `/field/select`. List it as a child of the component's link in `siteGroups.ts`; the sidebar shows children as real links in a collapsible list, not a `role="tree"`. *Why:* Ben chose collapsible links, so every entry stays a link.
 - **Prop descriptions** live in each part's `*.meta.ts` and reach the props table through `pnpm schema`. When one changes, update its Korean entry in `apps/docs/lib/i18n/props/ko.json`.
 - **Tables are JSX** with `Table` parts. The docs MDX has no GFM, so pipe tables render as plain text.
 - **Write narrow claims.** Absolute words such as "only", "never" and "always" are the claims reviews most often find wrong. State what the code does and stop.

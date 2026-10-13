@@ -17,7 +17,7 @@ const LOCALE_DIRS: Record<Locale, string> = { en: '(en)', ko: 'ko' };
 /** The sidebar section a page sits in, in `locale`. */
 function sectionOf(locale: Locale, slug: string): string {
   const english = `/${slug}`;
-  const group = localizedGroups('en').findIndex((item) => item.links.some(([href]) => href === english));
+  const group = localizedGroups('en').findIndex((item) => item.links.some(([href, , children]) => href === english || children.some(([child]) => child === english)));
   return group < 0 ? '' : (localizedGroups(locale)[group]?.label ?? '');
 }
 

@@ -1,0 +1,50 @@
+import { FieldDateTime, FieldLabelStates } from '../../../../components/demos/FieldDemo';
+
+# Field.TextInput
+
+`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string and `onChange` is required; `onValueChange` also gets the new string. `type` takes `text`, `search`, `email`, `url`, `tel`, `password`, `number`, `date`, `time` or `datetime-local`. Put `id` on `Field.Root`.
+
+```tsx
+const id = useId()
+
+<Field.Group>
+	<Label.Root htmlFor={id}>Email</Label.Root>
+	<Field.Root id={id}>
+		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+	</Field.Root>
+</Field.Group>
+```
+
+<Example block>
+  <FieldLabelStates />
+</Example>
+
+## Number, date and time
+
+`Field.TextInput` takes `type="number"`, `"date"`, `"time"` and `"datetime-local"`. They stay native inputs, with the browser's own spinner, date picker and locale format, styled from the field tokens with figures lined up. `value` is the input's string: `"2"`, `"2026-10-07"`, `"14:30"`, or an empty string while the input is incomplete. Constrain them with the native `min`, `max` and `step`.
+
+<Example block>
+  <FieldDateTime />
+</Example>
+
+Stepper buttons and a calendar grid are app compositions; build them around these inputs when the native ones are not enough.
+
+## Accessible composition
+
+**Todae handles:** The input takes `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset).
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root.
+
+**Watch for:** An `id` on `Field.TextInput` is replaced by the Root's; put it on the Root. A number, date or time input whose value is incomplete reports an empty string, so don't treat an empty `value` as a cleared field while the user is still typing.
+
+## When to use
+
+### Field.TextInput
+
+**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password), or a native number, date or time.
+
+**When not:** Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
+
+## Props
+
+<PropsTable name="Field.TextInput" />
