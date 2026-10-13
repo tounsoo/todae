@@ -18,6 +18,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'chip': () => import('../../app/(en)/chip/page.mdx'),
   'chip-list': () => import('../../app/(en)/chip-list/page.mdx'),
   'code': () => import('../../app/(en)/code/page.mdx'),
+  'color-picker': () => import('../../app/(en)/color-picker/page.mdx'),
   'composition': () => import('../../app/(en)/composition/page.mdx'),
   'description': () => import('../../app/(en)/description/page.mdx'),
   'dialog': () => import('../../app/(en)/dialog/page.mdx'),

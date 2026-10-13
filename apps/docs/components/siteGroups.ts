@@ -29,6 +29,7 @@ export const SITE_GROUPS = [
       ['/chip', 'Chip'],
       ['/chip-list', 'ChipList'],
       ['/code', 'Code and Kbd'],
+      ['/color-picker', 'ColorPicker'],
       ['/description', 'Description'],
       ['/dialog', 'Dialog'],
       ['/disclosure', 'Disclosure'],

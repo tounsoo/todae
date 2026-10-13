@@ -949,39 +949,9 @@ table {
   min-inline-size: 0;
 }
 
-.token-row-inputs input:not([type='color']) {
+.token-row-inputs input:not([type='range']) {
   font-family: var(--todae-font-family-mono);
   font-size: 0.75rem;
-}
-
-.token-swatch {
-  flex: none;
-  inline-size: 2rem;
-  block-size: 2rem;
-  padding: 0.1875rem;
-  border: 1px solid var(--todae-color-border-default);
-  border-radius: var(--todae-field-radius);
-  background: var(--todae-color-bg-surface);
-  cursor: pointer;
-}
-
-.token-swatch::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
-.token-swatch::-webkit-color-swatch {
-  border: 0;
-  border-radius: calc(var(--todae-field-radius) - 0.1875rem);
-}
-
-.token-swatch::-moz-color-swatch {
-  border: 0;
-  border-radius: calc(var(--todae-field-radius) - 0.1875rem);
-}
-
-.token-swatch:focus-visible {
-  outline: var(--todae-focus-ring-width) solid var(--todae-focus-ring-color);
-  outline-offset: var(--todae-focus-ring-offset);
 }
 
 .pg-actions {

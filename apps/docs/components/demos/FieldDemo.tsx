@@ -541,7 +541,7 @@ export function FieldColorAccent() {
     <Field.Group>
       <Label.Root htmlFor={id}>Accent</Label.Root>
       <Field.Root id={id}>
-        <Field.ColorInput value={color} onValueChange={setColor} />
+        <Field.ColorPicker value={color} onValueChange={setColor} />
         <Field.Affix>{color}</Field.Affix>
       </Field.Root>
     </Field.Group>

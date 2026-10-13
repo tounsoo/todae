@@ -107,6 +107,15 @@
     "## Props": "d269d46cd0cc",
     "(section order)": "809b0e250585"
   },
+  "color-picker": {
+    "(top)": "9c8a041066e7",
+    "# ColorPicker": "d1ef5ff72c02",
+    "## Keys and values": "35d72d740b23",
+    "## Accessible composition": "4546795fd18a",
+    "## When to use": "3c01076e78db",
+    "## Props": "4299d93f81be",
+    "(section order)": "5b4b04f4c6fa"
+  },
   "composition": {
     "(top)": "daa9c66a4c98",
     "# Composition": "5df38cfb773f",
@@ -504,7 +513,7 @@
   "utilities/strings-provider": {
     "(top)": "6b6dcb6bc3e1",
     "# StringsProvider": "0a9ce6b4f646",
-    "## Strings": "db74b2bb78d8",
+    "## Strings": "c17e2e813d16",
     "## Accessible composition": "8cc16824f136",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",
