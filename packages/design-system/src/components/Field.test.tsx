@@ -500,6 +500,30 @@ describe('Field.ColorPicker beside another control part', () => {
     expect(named[0]!.tagName).toBe('TODAE-RATING');
   });
 
+  it('leaves the name to a custom element that keeps it as a property', () => {
+    // Like a Shoelace control, which sends its value under its name property.
+    class PropertyRating extends HTMLElement {
+      name = '';
+    }
+    if (!customElements.get('todae-property-rating')) customElements.define('todae-property-rating', PropertyRating);
+    function Rating() {
+      const field = useField();
+      return createElement('todae-property-rating', field.getControlProps());
+    }
+    const { container } = render(
+      <form data-testid="form">
+        <Field.Root id="x" name="accent" aria-label="Accent">
+          <Rating />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </form>,
+    );
+    const rating = container.querySelector('todae-property-rating') as PropertyRating;
+    expect(rating.name).toBe('accent');
+    expect(rating.hasAttribute('name')).toBe(false);
+    expect(container.querySelector('input[type="hidden"]')).toBeNull();
+  });
+
   function WithText({ inputName, rootName = 'accent', swatchName }: { inputName?: string; rootName?: string; swatchName?: string }) {
     return (
       <form data-testid="form">
@@ -526,6 +550,11 @@ describe('Field.ColorPicker beside another control part', () => {
       ['accentHex', '#3366ff'],
       ['accent', '#3366ff'],
     ]);
+  });
+
+  it('leaves the name to a text input that names itself with it', () => {
+    render(<WithText inputName="accent" />);
+    expect(formEntries()).toEqual([['accent', '#3366ff']]);
   });
 
   it('follows a change to the field name', () => {

@@ -758,9 +758,9 @@ function ColorPicker({
   const field = useFieldControl(false);
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
-  // Another control in the field takes its id and description, and one whose
-  // name attribute is the field's name, that name. The server cannot know of
-  // one yet, so the button holds them until hydration.
+  // Another control in the field takes its id and description, and one that
+  // useField gave the field's name, that name. The server cannot know of one
+  // yet, so the button holds them until hydration.
   const subscribe = useCallback((listener: () => void) => subscribePresence(store, listener), [store]);
   const presence = useSyncExternalStore(
     subscribe,
