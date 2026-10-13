@@ -452,7 +452,7 @@
     "# File upload": "2a6084494126",
     "## Images": "4b5a68d12763",
     "## Uploading": "d43ef19d4d00",
-    "## Accessible composition": "7408811ad653",
+    "## Accessible composition": "a51aedc3e4e1",
     "(section order)": "2ce6dd09df8f"
   },
   "scroll-area": {
@@ -666,8 +666,8 @@
     "(section order)": "bb763bd86155"
   },
   "utilities/use-dropzone": {
-    "# useDropzone": "85e3014cb928",
-    "## Accessible composition": "c2594e5ce7c6",
+    "# useDropzone": "97a9fd5e6cd7",
+    "## Accessible composition": "8193170f3eaf",
     "## When to use": "eb0c79e2522e",
     "## Props": "5587a8d7ce2b",
     "(section order)": "79c25db48345"

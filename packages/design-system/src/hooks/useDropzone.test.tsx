@@ -183,8 +183,46 @@ describe('useDropzone', () => {
       expect(fireEvent.paste(screen.getByTestId('text'), clip([shot]))).toBe(true);
       rerender(<PasteZone paste onFiles={onFiles} />);
       expect(fireEvent.paste(screen.getByTestId('text'), clip([shot], ['Files', 'text/plain']))).toBe(true);
-      expect(fireEvent.paste(screen.getByTestId('text'), clip([shot], ['Files', 'text/html']))).toBe(true);
       expect(fireEvent.paste(screen.getByTestId('text'), clip([], ['text/plain']))).toBe(true);
+      expect(fireEvent.paste(screen.getByTestId('text'), clip([], ['Files']))).toBe(true);
+      expect(onFiles).not.toHaveBeenCalled();
+    });
+
+    it('takes an image copied from a web page, which carries HTML beside its file', () => {
+      const onFiles = vi.fn();
+      render(<PasteZone paste onFiles={onFiles} />);
+      const image = file('image.png', 'image/png');
+      expect(fireEvent.paste(screen.getByTestId('text'), clip([image], ['text/html', 'Files']))).toBe(false);
+      expect(onFiles).toHaveBeenCalledWith([image], []);
+    });
+
+    it("keeps the root's own onPaste without the paste option", () => {
+      const own = vi.fn();
+      function OwnPaste() {
+        const zone = useDropzone();
+        return (
+          <div onPaste={own} {...zone.getRootProps()}>
+            <textarea data-testid="text" aria-label="Message" />
+          </div>
+        );
+      }
+      render(<OwnPaste />);
+      fireEvent.paste(screen.getByTestId('text'), clip([file('shot.png', 'image/png')]));
+      expect(own).toHaveBeenCalledOnce();
+    });
+
+    it('skips a paste a child React handler cancelled', () => {
+      const onFiles = vi.fn();
+      function ChildCancels() {
+        const zone = useDropzone({ paste: true, onFiles });
+        return (
+          <div {...zone.getRootProps()}>
+            <textarea data-testid="text" aria-label="Message" onPaste={(event) => event.preventDefault()} />
+          </div>
+        );
+      }
+      render(<ChildCancels />);
+      fireEvent.paste(screen.getByTestId('text'), clip([file('shot.png', 'image/png')]));
       expect(onFiles).not.toHaveBeenCalled();
     });
 

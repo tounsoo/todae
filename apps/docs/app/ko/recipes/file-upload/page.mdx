@@ -48,7 +48,7 @@ const zone = useDropzone({
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** [useDropzone](/utilities/use-dropzone)은 네이티브 `<input type="file">`을 계속 컨트롤로 두므로 role, 키보드, 선택기는 브라우저가 제공합니다. `getInputProps()`는 `type`, `accept`, `multiple`, `disabled`를 설정하고, `getRootProps()`는 드래그 핸들러와 `data-dragging`만 추가합니다. 검사가 끝나면 입력에는 받은 파일만 남습니다. 훅은 ARIA를 설정하지 않고 아무것도 읽어 주지 않습니다.
+**Todae가 맡는 것:** [useDropzone](/utilities/use-dropzone)은 네이티브 `<input type="file">`을 계속 컨트롤로 두므로 role, 키보드, 선택기는 브라우저가 제공합니다. `getInputProps()`는 `type`, `accept`, `multiple`, `disabled`를 설정하고, `getRootProps()`는 드래그 핸들러, `paste`가 있을 때의 붙여넣기 핸들러, `data-dragging`만 추가합니다. 검사가 끝나면 입력에는 받은 파일만 남습니다. 훅은 ARIA를 설정하지 않고 아무것도 읽어 주지 않습니다.
 
 **직접 제공할 것:** 레시피의 마크업이 하는 일을 직접 하세요. 입력의 이름이 되는 `<label>` 텍스트, `aria-describedby`로 연결한 힌트, 말로 풀어 쓴 거부 이유, 파일이 거부되었을 때의 `aria-invalid`와 `aria-describedby`에 더한 `ErrorMessage.Root` id, 이름이 있는 받은 파일 목록이 필요합니다. 거부를 들려주어야 한다면 알리세요. 업로드 진행률과 결과는 레이블이 있는 `<progress>`처럼 텍스트로도 보여 주세요.
 

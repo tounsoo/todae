@@ -9,7 +9,7 @@ export type FileRejection = {
 };
 
 export type UseDropzoneOptions = {
-  /** File types to take, in the input's accept syntax: '.pdf', 'image/*', 'application/json', comma separated. The picker applies it; the hook checks dropped files against it. */
+  /** File types to take, in the input's accept syntax: '.pdf', 'image/*', 'application/json', comma separated. The picker applies it; the hook checks dropped and pasted files against it. */
   accept?: string;
   /** Take more than one file. */
   multiple?: boolean;
@@ -19,7 +19,7 @@ export type UseDropzoneOptions = {
   maxSize?: number;
   /** Smallest file size in bytes. */
   minSize?: number;
-  /** Also take files pasted while focus is inside the root, such as a screenshot pasted into a textarea there. A paste that also carries text is left to the browser. */
+  /** Also take files pasted while focus is inside the root, such as a screenshot pasted into a textarea there. A paste that also carries plain text is left to the browser. */
   paste?: boolean;
   /** Turn off the input, drops and pastes. */
   disabled?: boolean;
@@ -32,7 +32,8 @@ export type UseDropzoneRootProps = {
   onDragOver: (event: DragEvent<HTMLElement>) => void;
   onDragLeave: (event: DragEvent<HTMLElement>) => void;
   onDrop: (event: DragEvent<HTMLElement>) => void;
-  onPaste: (event: ClipboardEvent<HTMLElement>) => void;
+  /** Only with the paste option, so a root's own onPaste is kept otherwise. */
+  onPaste?: (event: ClipboardEvent<HTMLElement>) => void;
   'data-dragging'?: '';
 };
 
@@ -70,8 +71,8 @@ export function acceptsFile(file: Pick<File, 'name' | 'type'>, accept: string | 
   });
 }
 
-/** Dropped or pasted files without folders, which browsers list as typeless files. */
-function droppedFiles(data: DataTransfer): File[] {
+/** Dropped or pasted files, without dropped folders, which browsers list as typeless files. */
+function transferFiles(data: DataTransfer): File[] {
   const items = Array.from(data.items ?? []);
   if (items.length === 0) return Array.from(data.files);
   return items.flatMap((item) => {
@@ -81,10 +82,8 @@ function droppedFiles(data: DataTransfer): File[] {
   });
 }
 
-const hasFiles = (event: DragEvent) => Array.from(event.dataTransfer?.types ?? []).includes('Files');
-
-/** Clipboard types that mean the paste is text, which the focused field should get as usual. */
-const TEXT_TYPES = ['text/plain', 'text/html'];
+const carriesFiles = (data: DataTransfer | null) => Array.from(data?.types ?? []).includes('Files');
+const hasFiles = (event: DragEvent) => carriesFiles(event.dataTransfer);
 
 export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult {
   const { accept, multiple = false, paste = false, disabled = false } = options;
@@ -155,21 +154,24 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
       event.preventDefault();
       endDrag();
       if (disabled) return;
-      const files = droppedFiles(event.dataTransfer);
+      const files = transferFiles(event.dataTransfer);
       if (files.length > 0) take(files, true);
     },
-    onPaste: (event) => {
-      if (!paste || disabled || event.defaultPrevented) return;
-      const data = event.clipboardData;
-      if (!data) return;
-      const types = Array.from(data.types ?? []);
-      // Cells copied from a spreadsheet carry an image too; the text is what was meant.
-      if (!types.includes('Files') || types.some((type) => TEXT_TYPES.includes(type))) return;
-      const files = droppedFiles(data);
-      if (files.length === 0) return;
-      event.preventDefault();
-      take(files, true);
-    },
+    ...(paste
+      ? {
+          onPaste: (event: ClipboardEvent<HTMLElement>) => {
+            const data = event.clipboardData;
+            if (disabled || event.defaultPrevented || !carriesFiles(data)) return;
+            // Cells copied from a spreadsheet carry an image too; the text is what was meant.
+            // HTML alone doesn't count: a copied web image carries an <img> tag beside its file.
+            if (Array.from(data.types).includes('text/plain')) return;
+            const files = transferFiles(data);
+            if (files.length === 0) return;
+            event.preventDefault();
+            take(files, true);
+          },
+        }
+      : {}),
     ...(active ? { 'data-dragging': '' as const } : {}),
   });
 
