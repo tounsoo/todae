@@ -218,7 +218,7 @@ function Area({ className, style, onPointerDown, onPointerMove, ...props }: Colo
         onChange={(event) => change({ ...hsv, v: Number(event.target.value) / 100 })}
         onKeyDown={onKeyDown}
       />
-      <span className={styles.thumb} aria-hidden="true" />
+      <span className={styles.thumb} aria-hidden="true" data-todae-focus-ring="" />
     </div>
   );
 }

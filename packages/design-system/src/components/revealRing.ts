@@ -1,9 +1,7 @@
-// Keeps a focus ring whole inside the scroll container that holds it. Chrome
-// scrolls a focused control into view only when part of its own box is
-// hidden, so a control that just fits keeps a ring cut by the edge, and a ring
-// drawn on an ancestor wider than the control, such as a Field shell, is
-// never considered at all. A ring drawn on a sibling, such as a Checkbox
-// indicator, is covered by the area's scroll-padding instead.
+// Brings a focus ring whole into view in the scroll container that holds it
+// when focus lands. The browser scrolls a focused control into view by its
+// own box, so a ring drawn on another element, such as a Field shell around
+// the control or a Checkbox indicator beside it, can stay cut at the edge.
 
 let quiet = 0;
 
@@ -22,12 +20,29 @@ export function focusWithoutScroll(el: HTMLElement) {
   }
 }
 
-/** The element that draws the ring around `target`: itself, or the nearest ancestor below `area` with an outline. */
+/** Room an outline takes past `el`'s box, or null when it draws none. */
+function outlineRoom(el: Element): number | null {
+  const style = getComputedStyle(el);
+  const width = style.outlineStyle === 'none' ? 0 : Number.parseFloat(style.outlineWidth) || 0;
+  return width > 0 ? width + (Number.parseFloat(style.outlineOffset) || 0) : null;
+}
+
+/**
+ * The element that draws the ring around `target`. A Todae part that draws it
+ * on a child or sibling of the focused element, such as a Checkbox indicator,
+ * marks that element `data-todae-focus-ring`; otherwise it is the target or
+ * the nearest ancestor below `area` with an outline, such as a Field shell.
+ */
 function ringOf(area: Element, target: Element): { ringed: Element; room: number } {
+  // Marked rings first: a visually hidden input keeps the browser's own outline.
+  for (const el of [...target.children, ...(target.parentElement?.children ?? [])]) {
+    if (!el.hasAttribute('data-todae-focus-ring')) continue;
+    const room = outlineRoom(el);
+    if (room !== null) return { ringed: el, room };
+  }
   for (let el: Element | null = target; el && el !== area; el = el.parentElement) {
-    const style = getComputedStyle(el);
-    const width = style.outlineStyle === 'none' ? 0 : Number.parseFloat(style.outlineWidth) || 0;
-    if (width > 0) return { ringed: el, room: width + (Number.parseFloat(style.outlineOffset) || 0) };
+    const room = outlineRoom(el);
+    if (room !== null) return { ringed: el, room };
   }
   return { ringed: target, room: 0 };
 }

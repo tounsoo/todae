@@ -16,7 +16,8 @@ function ringOf(el: HTMLElement): { ringed: HTMLElement; box: DOMRect; room: num
 
 /**
  * Focuses each tabbable control under `root` as a keyboard would and lists
- * every ring that a scroll or clip container cuts: a container whose overflow
+ * each ring on the control or a close ancestor that a scroll or clip container
+ * cuts (not a ring drawn on a sibling, such as a Checkbox indicator): a container whose overflow
  * is not visible, on an edge the ring crosses while the control itself is
  * inside that edge. A control the container has scrolled out of view does not
  * count. The ring can sit on an ancestor wider than the control, such as a

@@ -122,8 +122,7 @@
     margin: calc(-1 * var(--_ring-room));
     padding: var(--_ring-room);
     overflow: auto;
-    /* Room for a ring past the focused box, read by revealRing, which covers
-       a ring drawn on a sibling, such as a Checkbox indicator. */
+    /* Room for a ring past the focused box when it scrolls into view. */
     scroll-padding: var(--_ring-room);
     overscroll-behavior: contain;
     touch-action: pan-y;

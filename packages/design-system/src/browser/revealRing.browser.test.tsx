@@ -7,9 +7,12 @@ import { BottomSheet } from '../components/BottomSheet';
 import { Dialog } from '../components/Dialog';
 import { Drawer } from '../components/Drawer';
 import { Checkbox } from '../components/Checkbox';
+import { ColorPicker } from '../components/ColorPicker';
 import { Field } from '../components/Field';
 import { Popover } from '../components/Popover';
 import { ScrollArea } from '../components/ScrollArea';
+import { Switch } from '../components/Switch';
+import { Tree } from '../components/Tree';
 import { focusWithoutScroll } from '../components/revealRing';
 
 function Themed({ children }: { children: ReactNode }) {
@@ -149,6 +152,30 @@ describe('focus rings in a scrolling container', () => {
       expect(cutEdges(indicator, area())).toEqual([]);
     });
 
+    it(`scrolls ${name} to show the ColorPicker thumb's ring, away from the focused input`, async () => {
+      render(
+        <Themed>
+          {ui(
+            <>
+              {spacer}
+              <ColorPicker.Root aria-label="Accent" defaultValue="#804040">
+                <ColorPicker.Area />
+              </ColorPicker.Root>
+              {tail}
+            </>,
+          )}
+        </Themed>,
+      );
+      const axis = await screen.findByRole('slider', { name: 'Saturation' });
+      await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+      // The input is a pixel at the area's top-left corner; the thumb sits well below it.
+      justFit(area(), axis);
+      await keyboardFocus(axis);
+      const thumb = axis.parentElement!.querySelector<HTMLElement>('[data-todae-focus-ring]')!;
+      expect(getComputedStyle(thumb).outlineStyle).not.toBe('none');
+      expect(cutEdges(thumb, area())).toEqual([]);
+    });
+
     it(`leaves ${name} where it is for a focused part taller than it`, async () => {
       render(
         <Themed>
@@ -168,6 +195,60 @@ describe('focus rings in a scrolling container', () => {
       expect(area().scrollTop).toBe(1000);
     });
   }
+
+  it('scrolls to show the whole ring of a Switch track, wider than its input', async () => {
+    render(
+      <Themed>
+        <ScrollArea.Root axis="inline" data-testid="area" style={{ width: 160 }}>
+          <div style={{ display: 'flex' }}>
+            <div style={{ width: 2000, flex: 'none' }} />
+            <Switch.Root>Dark</Switch.Root>
+            <div style={{ width: 200, flex: 'none' }} />
+          </div>
+        </ScrollArea.Root>
+      </Themed>,
+    );
+    const area = screen.getByTestId('area');
+    const input = screen.getByRole('switch', { name: 'Dark' });
+    const port = area.getBoundingClientRect();
+    // The input's inline end a pixel inside the area's: wholly visible, while the track runs past it.
+    area.scrollLeft += input.getBoundingClientRect().right - (port.left + area.clientLeft + area.clientWidth - 1);
+    await keyboardFocus(input);
+    const track = input.parentElement!.querySelector<HTMLElement>('[data-todae-focus-ring]')!;
+    expect(track.getBoundingClientRect().width).toBeGreaterThan(input.getBoundingClientRect().width);
+    expect(cutEdges(track, area)).toEqual([]);
+  });
+
+  it('scrolls to show the row of an expanded Tree item taller than the area', async () => {
+    render(
+      <Themed>
+        <ScrollArea.Root data-testid="area" style={{ height: 160 }}>
+          {tail}
+          <Tree.Root aria-label="Files" defaultExpanded={['src']}>
+            <Tree.Item value="src">
+              <Tree.Label>src</Tree.Label>
+              <Tree.Group>
+                {Array.from({ length: 20 }, (_, i) => (
+                  <Tree.Item key={i} value={`f${i}`}>
+                    <Tree.Label>{`file ${i}`}</Tree.Label>
+                  </Tree.Item>
+                ))}
+              </Tree.Group>
+            </Tree.Item>
+          </Tree.Root>
+          {tail}
+        </ScrollArea.Root>
+      </Themed>,
+    );
+    const area = screen.getByTestId('area');
+    const item = screen.getByRole('treeitem', { name: 'src' });
+    expect(item.getBoundingClientRect().height).toBeGreaterThan(area.clientHeight);
+    // The row above the top edge, the item's subtree still filling the area.
+    area.scrollTop += item.getBoundingClientRect().top - area.getBoundingClientRect().top + 60;
+    await keyboardFocus(item);
+    const row = item.querySelector<HTMLElement>(':scope > [data-todae-focus-ring]')!;
+    expect(cutEdges(row, area)).toEqual([]);
+  });
 
   it('lets a Dialog.Root onFocus that calls preventDefault() skip the reveal', async () => {
     render(

@@ -315,7 +315,7 @@ function Root({
           {hidden > 0 ? (
             <span role="listitem">
               <button type="button" className={styles.more} {...popover.getTriggerProps({ ref: moreRef })}>
-                <Chip.Overflow overflowCount={hidden} overflowLabel={overflowLabel} />
+                <Chip.Overflow overflowCount={hidden} overflowLabel={overflowLabel} data-todae-focus-ring="" />
               </button>
             </span>
           ) : null}
