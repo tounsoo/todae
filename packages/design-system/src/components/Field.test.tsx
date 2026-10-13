@@ -47,13 +47,14 @@ describe('Field exports', () => {
     expect(api).not.toHaveProperty('Prefix');
     expect(api).not.toHaveProperty('Suffix');
     expect(api).not.toHaveProperty('FieldLabelProps');
+    expect(api.Field).not.toHaveProperty('ColorInput');
     expect(api.Field).toEqual({
       Root: Field.Root,
       TextInput: Field.TextInput,
       Textarea: Field.Textarea,
       ChipInput: Field.ChipInput,
       Select: Field.Select,
-      ColorInput: Field.ColorInput,
+      ColorPicker: Field.ColorPicker,
       Icon: Field.Icon,
       Affix: Field.Affix,
       Counter: Field.Counter,

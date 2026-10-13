@@ -297,7 +297,10 @@ describe('contract-only components', () => {
 
   it('forbids hard-coded color and appearance branches', () => {
     const root = join(import.meta.dirname, '../components');
-    const files = readdirSync(root).map((name) => join(root, name));
+    // Tests and prop docs may name a color value, such as ColorPicker's #rrggbb.
+    const files = readdirSync(root)
+      .filter((name) => !/\.test\.tsx?$|\.meta\.ts$/.test(name))
+      .map((name) => join(root, name));
     const banned =
       /#(?:[0-9a-fA-F]{3}){1,2}\b|oklch\(|data-appearance|prefers-color-scheme|--todae-color-/;
     for (const file of files) {

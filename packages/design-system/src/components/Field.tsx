@@ -37,6 +37,9 @@ import { useField } from '../hooks/useField';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { hasGlyph } from './glyphs';
 import { useStrings, type Strings } from '../providers/StringsProvider';
+import { usePopover, type PopoverCloseReason, type PopoverTriggerUserProps } from '../hooks/usePopover';
+import { Popover } from './Popover';
+import { ColorPicker as ColorPickerParts } from './ColorPicker';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -121,16 +124,20 @@ function Affix({ className, ...props }: FieldAffixProps) {
   return <span {...props} className={cx(styles.adornment, className)} />;
 }
 
-type PickerControl = HTMLSelectElement | HTMLInputElement;
+type PickerControl = HTMLSelectElement | HTMLButtonElement;
 
-// A control whose picker a press beside it opens: a select or a color input.
+// A control whose picker a press beside it opens: a select or Field.ColorPicker.
 function hasPicker(control: Element | null | undefined): control is PickerControl {
-  return control instanceof HTMLSelectElement || (control instanceof HTMLInputElement && control.type === 'color');
+  return (
+    control instanceof HTMLSelectElement ||
+    (control instanceof HTMLButtonElement && control.hasAttribute('data-todae-field-picker'))
+  );
 }
 
 // Whether a control's picker is showing. A browser without `:open` throws,
 // and treats the picker as closed.
 function isOpen(control: PickerControl): boolean {
+  if (control instanceof HTMLButtonElement) return control.getAttribute('aria-expanded') === 'true';
   try {
     return control.matches(':open');
   } catch {
@@ -208,7 +215,7 @@ function Root({
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
     control?.focus();
-    // A press beside a select or color input opens its picker, as a press on
+    // A press beside a select or color picker opens its picker, as a press on
     // the control would. The picker opens on click: one opened now would close
     // again as the press goes on. The press that closes an open picker must
     // not open it again.
@@ -221,6 +228,10 @@ function Root({
     // Only the click that ends this press: one from the keyboard or from
     // assistive technology has no press (detail 0) and opens nothing.
     if (!picker?.isConnected || event.detail === 0 || isInteractiveTarget(event.target)) return;
+    if (picker instanceof HTMLButtonElement) {
+      picker.click();
+      return;
+    }
     try {
       picker.showPicker?.();
     } catch {
@@ -563,38 +574,55 @@ function Select({ value, onChange, onValueChange, className, children, ...props 
   );
 }
 
-export type FieldColorInputProps = {
-  /** A color as `#rrggbb`. */
+export type FieldColorPickerProps = {
+  /** The color as #rrggbb. */
   value: string;
-  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  /** Fires with the new color as #rrggbb while it is dragged or keyed in the picker. */
   onValueChange?: (value: string) => void;
-  ref?: Ref<HTMLInputElement>;
-  // `readonly` has no effect on a color input.
-} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'type' | 'disabled' | 'onChange' | 'readOnly'>;
+  /** Controlled open state of the picker. Pass with onOpenChange. */
+  open?: boolean;
+  /** Initial open state when uncontrolled. */
+  defaultOpen?: boolean;
+  /** Fires when the picker opens or closes, with why it closed. */
+  onOpenChange?: (open: boolean, reason: PopoverCloseReason) => void;
+} & Omit<ComponentPropsWithRef<'button'>, 'value' | 'defaultValue' | 'children' | 'type' | 'color' | 'onChange'>;
 
 /**
- * A native color input drawn as a swatch the height of a line of field text.
- * The browser's own picker opens from it, or from a press elsewhere in the
- * field. Put the value beside it as text with Field.Affix.
+ * The field's control: a button the height of a line of field text, filled
+ * with the color. It opens a ColorPicker in a popover, as does a press
+ * elsewhere in the field. Put the value beside it as text with Field.Affix.
  */
-function ColorInput({ value, onChange, onValueChange, className, ...props }: FieldColorInputProps) {
+function ColorPicker({
+  value,
+  onValueChange,
+  open,
+  defaultOpen,
+  onOpenChange,
+  className,
+  style,
+  ...props
+}: FieldColorPickerProps) {
   const field = useField();
+  const strings = useStrings();
+  const control = field.getControlProps(props);
+  const popover = usePopover({ open, defaultOpen, onOpenChange, enabled: !control.disabled });
+  const trigger = popover.getTriggerProps({ ...control, style } as PopoverTriggerUserProps);
   return (
-    <input
-      {...field.getControlProps(props)}
-      type="color"
-      value={value}
-      className={cx(styles.color, className)}
-      // Without either handler the input is read-only, and React says so.
-      onChange={
-        onChange || onValueChange
-          ? (event) => {
-              onChange?.(event);
-              onValueChange?.(event.target.value);
-            }
-          : undefined
-      }
-    />
+    <>
+      <button
+        {...(trigger as ComponentPropsWithRef<'button'>)}
+        type="button"
+        data-todae-field-picker=""
+        className={cx(styles.swatch, className)}
+        style={{ ...trigger.style, '--_swatch': value } as CSSProperties}
+      />
+      <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label={strings.colorPicker}>
+        <ColorPickerParts.Root value={value} onValueChange={onValueChange} disabled={control.disabled}>
+          <ColorPickerParts.Area />
+          <ColorPickerParts.Hue />
+        </ColorPickerParts.Root>
+      </Popover.Root>
+    </>
   );
 }
 
@@ -685,4 +713,4 @@ function Group({ className, ...props }: FieldGroupProps) {
   return <div {...props} className={cx(styles.group, className)} />;
 }
 
-export const Field = { Root, TextInput, Textarea, ChipInput, Select, ColorInput, Icon, Affix, Counter, Row, Group } as const;
+export const Field = { Root, TextInput, Textarea, ChipInput, Select, ColorPicker, Icon, Affix, Counter, Row, Group } as const;

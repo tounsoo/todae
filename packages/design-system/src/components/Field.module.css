@@ -410,9 +410,8 @@
     padding-inline-end: 0;
   }
 
-  /* A swatch one line of field text tall: square on its own, and a press
-     anywhere in the shell opens its picker. */
-  .color {
+  /* Field.ColorPicker's button: one line of field text tall, filled with its color. */
+  .swatch {
     flex: none;
     box-sizing: border-box;
     inline-size: 1lh;
@@ -421,37 +420,22 @@
     padding: 0;
     border: var(--todae-field-border-width) solid var(--todae-field-swatch-border);
     border-radius: var(--todae-field-swatch-radius);
-    background: transparent;
+    background: var(--_swatch);
     font-size: var(--todae-field-font-size);
     line-height: var(--todae-field-leading);
-    outline: none;
     cursor: pointer;
   }
 
-  .color::-webkit-color-swatch-wrapper {
-    padding: 0;
-  }
-
-  .color::-webkit-color-swatch {
-    border: 0;
-    border-radius: calc(var(--todae-field-swatch-radius) - var(--todae-field-border-width));
-  }
-
-  .color::-moz-color-swatch {
-    border: 0;
-    border-radius: calc(var(--todae-field-swatch-radius) - var(--todae-field-border-width));
-  }
-
-  .shell:not([data-disabled]):has(> .color) {
-    cursor: pointer;
-  }
-
-  .color:disabled {
+  .swatch:disabled {
     cursor: not-allowed;
   }
 
-  /* With nothing beside it, the field is as wide as the swatch. */
-  .shell:has(> .color:only-child) {
+  .shell:not([data-disabled]):has(> .swatch) {
+    cursor: pointer;
+  }
+
+  /* With nothing beside it but its popover, the field is as wide as the swatch. */
+  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover]))) {
     inline-size: fit-content;
   }
 

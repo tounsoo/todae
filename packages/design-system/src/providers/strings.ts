@@ -36,6 +36,14 @@ export interface Strings {
   characterLimitReached: string;
   /** Label of useCombobox's create row when its `createLabel` is not set. */
   createOption: (query: string) => string;
+  /** Name of ColorPicker.Area's left-to-right input. */
+  saturation: string;
+  /** Name of ColorPicker.Area's bottom-to-top input. */
+  brightness: string;
+  /** Name of ColorPicker.Hue when it has no aria-label. */
+  hue: string;
+  /** Name of Field.ColorPicker's popover. */
+  colorPicker: string;
 }
 
 /** The English Todae ships with. */
@@ -54,4 +62,8 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   charactersLeft: (remaining) => `${remaining} ${remaining === 1 ? 'character' : 'characters'} left`,
   characterLimitReached: 'Character limit reached',
   createOption: (query) => `Create "${query}"`,
+  saturation: 'Saturation',
+  brightness: 'Brightness',
+  hue: 'Hue',
+  colorPicker: 'Color picker',
 });
