@@ -27,6 +27,15 @@ export function MenuIcon(props: IconProps) {
   );
 }
 
+/** Points down; Disclosure turns it toward the text while closed. */
+export function ChevronIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 6l4 4 4-4" />
+    </Svg>
+  );
+}
+
 export function SunIcon(props: IconProps) {
   return (
     <Svg {...props}>

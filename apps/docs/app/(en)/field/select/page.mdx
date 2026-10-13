@@ -1,0 +1,55 @@
+import { FieldSelectSize } from '../../../../components/demos/FieldDemo';
+
+# Field.Select
+
+`Field.Select` is a native `<select>` inside a [Field](/field). In browsers with `appearance: base-select` the button and its picker are drawn from field and option tokens; elsewhere the browser's own picker shows, with the same value and keyboard. There is no JavaScript listbox. Children are native `<option>` and `<optgroup>` elements, and a `Label.Root htmlFor` names it like any other field.
+
+```tsx
+<Label.Root htmlFor={id}>Size</Label.Root>
+<Field.Root id={id}>
+	<Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
+		<option value="s">Small</option>
+		<option value="m">Medium</option>
+	</Field.Select>
+</Field.Root>
+```
+
+<Example block>
+  <FieldSelectSize />
+</Example>
+
+## Icons
+
+`Field.Select` draws the `chevron` glyph from a [GlyphsProvider](/utilities/glyphs-provider) over the browser's picker icon when the browser supports `::picker-icon` and the select is the field's last part; otherwise, and without a provider, the browser's icon shows. The check mark beside a selected `<option>` is the browser's own.
+
+```tsx
+import { ChevronDown } from 'lucide-react';
+
+<GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
+	<Field.Root aria-label="Plan">
+		<Field.Select value={plan} onValueChange={setPlan}>
+			…
+		</Field.Select>
+	</Field.Root>
+</GlyphsProvider>
+```
+
+## Accessible composition
+
+**Todae handles:** The select takes `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). A mouse press elsewhere in the field focuses the select and, where the browser allows, opens its picker. The chevron glyph is `aria-hidden`. The browser handles the keyboard and the picker.
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. `onChange` or `onValueChange`; without either, the select is read-only.
+
+**Watch for:** `multiple` and `size` are not props of `Field.Select`; for several values use Checkbox or `Field.ChipInput`.
+
+## When to use
+
+### Field.Select
+
+**When:** Pick one value from a short, fixed list inside a form, with the native picker and keyboard.
+
+**When not:** Filtering or searching a long list → Combobox recipe. Several values → Checkbox or `Field.ChipInput`. Commands rather than values → Menu.
+
+## Props
+
+<PropsTable name="Field.Select" />

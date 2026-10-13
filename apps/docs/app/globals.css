@@ -281,6 +281,46 @@ body {
   text-decoration: none;
 }
 
+/* A link with child pages: the link keeps its row, and a chevron toggle sits at
+   the row's end. The child pages are a nested list, indented under a rule. */
+.site-nav-branch {
+  position: relative;
+}
+
+.site-nav-branch > a {
+  padding-inline-end: 2rem;
+}
+
+.site-nav-branch summary {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  display: grid;
+  place-items: center;
+  inline-size: 2rem;
+  /* One link row: its padding plus one line. */
+  block-size: calc(0.625rem + 0.875rem * 1.4);
+  padding: 0;
+  border-radius: var(--todae-radius-md);
+  color: var(--todae-color-fg-muted);
+}
+
+.site-nav-branch summary:hover {
+  color: var(--todae-color-fg-default);
+  background: var(--todae-color-bg-highlight);
+}
+
+.site-nav-branch summary > [data-todae-glyph] {
+  margin: 0;
+}
+
+.site-nav-branch details > ul {
+  margin-block: 1px 0;
+  margin-inline-start: 0.625rem;
+  padding-inline-start: 0.375rem;
+  border-inline-start: 1px solid var(--docs-line);
+}
+
 /* ---------- Footer ---------- */
 
 .site-footer {
