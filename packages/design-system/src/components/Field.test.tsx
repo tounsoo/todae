@@ -17,6 +17,7 @@ import {
   type FieldTextInputProps,
 } from './Field';
 import { useChipField } from '../hooks/useChipField';
+import { useField } from '../hooks/useField';
 import * as api from '../index';
 import { StringsProvider } from '../providers/StringsProvider';
 
@@ -388,6 +389,12 @@ describe('Field.ColorPicker beside another control part', () => {
     ],
   ];
 
+  function Custom() {
+    const field = useField();
+    return <input {...field.getControlProps()} type="range" />;
+  }
+  parts.push(['control joined with useField', <Custom key="c" />]);
+
   for (const [label, control] of parts) {
     it(`leaves the field's id and name to a ${label}`, () => {
       const { container } = render(
@@ -403,6 +410,32 @@ describe('Field.ColorPicker beside another control part', () => {
       expect(container.querySelectorAll('[name="n"]')).toHaveLength(1);
     });
   }
+
+  it('takes the id back, and is named by the field again, when the other control goes', () => {
+    const { container, rerender } = render(
+      <Field.Root id="x" aria-label="Accent">
+        <Field.DateInput value={null} onValueChange={noop} />
+        <Field.ColorPicker value="#3366ff" />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('button', { name: 'Color picker' }).id).toBe('');
+    rerender(
+      <Field.Root id="x" aria-label="Accent">
+        <Field.ColorPicker value="#3366ff" />
+      </Field.Root>,
+    );
+    expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
+    expect(screen.getByRole('button', { name: 'Accent' })).toBeTruthy();
+  });
+
+  it('keeps the field when it is the only control', () => {
+    const { container } = render(
+      <Field.Root id="x" aria-label="Accent">
+        <Field.ColorPicker value="#3366ff" />
+      </Field.Root>,
+    );
+    expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
+  });
 });
 
 describe('Field.Textarea', () => {

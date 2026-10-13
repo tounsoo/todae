@@ -1,11 +1,11 @@
-import { createContext, useCallback, useContext, useRef, type RefObject } from 'react';
+import { createContext, useCallback, useContext, useLayoutEffect, useRef, type RefObject } from 'react';
 
 type CountEntry = { value: string; maxLength?: number };
 
 export type CountStore = {
   entry: CountEntry | null;
   counters: number;
-  /** Parts other than Field.ColorPicker that take the field's id, mounted in the field. */
+  /** Controls joined through useField, other than Field.ColorPicker, mounted in the field. */
   controls: number;
   listeners: Set<() => void>;
   presence: Set<() => void>;
@@ -26,6 +26,27 @@ export type FieldContextValue = {
   shellRef: RefObject<HTMLDivElement | null>;
   store: CountStore;
 };
+
+function notifyPresence(store: CountStore) {
+  for (const listener of store.presence) listener();
+}
+
+/**
+ * Counts a control in the field while it is mounted. A Field.ColorPicker
+ * beside one gives up the field's id, name and description once it hears of
+ * it, so only one element takes them.
+ */
+export function useControlPresence(store: CountStore, counted: boolean) {
+  useLayoutEffect(() => {
+    if (!counted) return;
+    store.controls += 1;
+    notifyPresence(store);
+    return () => {
+      store.controls -= 1;
+      notifyPresence(store);
+    };
+  }, [store, counted]);
+}
 
 export const FieldContext = createContext<FieldContextValue | null>(null);
 

@@ -31,7 +31,7 @@ import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
   <FieldColorAccent />
 </Example>
 
-Here a `Field.TextInput` in the same field lets people type the color too. The two share state: a picked color sets the text, and [`normalizeHex`](/color-picker) turns typed text into a color when it is one. Beside a `Field.TextInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. Any other Field control part, such as a `Field.Textarea` or `Field.DateInput`, takes them in the same way.
+Here a `Field.TextInput` in the same field lets people type the color too. The two share state: a picked color sets the text, and [`normalizeHex`](/color-picker) turns typed text into a color when it is one. Beside a `Field.TextInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. Any other control in the field takes them in the same way, such as a `Field.Select`, a `Field.DateInput` or a control joined with [`useField`](/utilities/use-field), but a second `Field.ColorPicker` does not.
 
 On its own, `Field.ColorPicker` is the field's control, a press elsewhere in the field opens the picker, and the field is as wide as the swatch. Put the value after it in a `Field.Affix` to show it as text.
 
@@ -39,7 +39,7 @@ The picker opens and closes through `open` with `onOpenChange`, or `defaultOpen`
 
 ## Accessible composition
 
-**Todae handles:** On its own, the button takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). Beside a text input, the input takes those, and the button keeps `disabled` and is named from the `colorPicker` string in [StringsProvider](/utilities/strings-provider) unless it has its own `aria-label`. It gets `aria-haspopup="dialog"` and `aria-expanded`, and `aria-controls` while the picker is open. The popover is a `role="dialog"` named from the `colorPicker` string in [StringsProvider](/utilities/strings-provider), and its inputs are named and keyed as on [ColorPicker](/color-picker).
+**Todae handles:** On its own, the button takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). Beside another control, that control takes those, and the button keeps `disabled` and is named from the `colorPicker` string in [StringsProvider](/utilities/strings-provider) unless it has its own `aria-label`. It gets `aria-haspopup="dialog"` and `aria-expanded`, and `aria-controls` while the picker is open. The popover is a `role="dialog"` named from the `colorPicker` string in [StringsProvider](/utilities/strings-provider), and its inputs are named and keyed as on [ColorPicker](/color-picker).
 
 **You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root.
 

@@ -35,7 +35,7 @@ import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
-import { useField } from '../hooks/useField';
+import { useField, useFieldControl } from '../hooks/useField';
 import { useControlledValue } from '../hooks/useControlledState';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { hasGlyph } from './glyphs';
@@ -90,29 +90,11 @@ function counterMounted(store: CountStore) {
   return store.counters > 0;
 }
 
-function notifyPresence(store: CountStore) {
-  for (const listener of store.presence) listener();
-}
-
-// A Field.ColorPicker beside the calling part gives up the field's id, name
-// and description once it hears of it, so only one element takes them.
-function useControlPresence(store: CountStore) {
-  useLayoutEffect(() => {
-    store.controls += 1;
-    notifyPresence(store);
-    return () => {
-      store.controls -= 1;
-      notifyPresence(store);
-    };
-  }, [store]);
-}
-
 function useTextEntry(store: CountStore, value: string, maxLength: number | undefined) {
   publishCount(store, value, maxLength);
   useEffect(() => {
     for (const listener of store.listeners) listener();
   });
-  useControlPresence(store);
   return useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
     () => counterMounted(store),
@@ -445,7 +427,6 @@ function TemporalInput<T>({
   ...props
 }: TemporalInputProps<T> & { kind: TemporalInputKind<T> }) {
   const field = useField();
-  useControlPresence(useFieldContext().store);
   // The string the browser last reported, kept while it still shows `value`.
   const [typed, setTyped] = useState<string | null>(null);
   const formatted = value === null ? '' : kind.format(value);
@@ -581,7 +562,6 @@ function ChipInput({
   ...props
 }: FieldChipInputProps) {
   const field = useField();
-  useControlPresence(useFieldContext().store);
   // Its own input, for chip measuring and refocus; the Root's inputRef may
   // point at another control.
   const ownInput = useRef<HTMLInputElement | null>(null);
@@ -711,7 +691,6 @@ export type FieldSelectProps = {
 
 function Select({ value, onChange, onValueChange, className, children, ...props }: FieldSelectProps) {
   const field = useField();
-  useControlPresence(useFieldContext().store);
   const { chevron } = useGlyphs();
   return (
     <>
@@ -760,9 +739,9 @@ export type FieldColorPickerProps = {
 /**
  * The field's control: a button the height of a line of field text, filled
  * with the color. It opens a ColorPicker in a popover, as does a press
- * elsewhere in the field. Beside another Field control part, such as a
- * Field.TextInput, that part is the field's control instead, and the button
- * is named from the colorPicker string.
+ * elsewhere in the field. Beside any other control in the field but another
+ * swatch, such as a Field.TextInput, that control is the field's control
+ * instead, and the button is named from the colorPicker string.
  */
 function ColorPicker({
   value,
@@ -774,10 +753,11 @@ function ColorPicker({
   style,
   ...props
 }: FieldColorPickerProps) {
-  const field = useField();
+  // The swatch does not count itself as a control another swatch should leave the field to.
+  const field = useFieldControl(false);
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
-  // Another control part in the field takes its id, name and description. The server
+  // Another control in the field takes its id, name and description. The server
   // cannot know of one yet, so the button holds them until hydration.
   const beside = useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
