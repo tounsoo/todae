@@ -33,6 +33,13 @@ function notifyPresence(store: CountStore) {
   for (const listener of store.presence) listener();
 }
 
+// React sets a custom element's name as a property when it has one, and such
+// an element need not reflect it to the attribute.
+function nameOf(el: HTMLElement): string | null {
+  const own = (el as { name?: unknown }).name;
+  return typeof own === 'string' ? own : el.getAttribute('name');
+}
+
 /**
  * A stable ref callback that counts the element it is attached to as a
  * control in the field, and as named when its name attribute is the field's
@@ -54,7 +61,7 @@ export function useControlPresence(
     const el = counted ? node.current : null;
     const next = {
       control: el !== null,
-      named: el !== null && Boolean(name.current) && el.getAttribute('name') === name.current,
+      named: el !== null && Boolean(name.current) && nameOf(el) === name.current,
     };
     const prev = own.current;
     if (next.control === prev.control && next.named === prev.named) return;
