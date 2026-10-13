@@ -12,6 +12,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Calendar,
   Chip,
   ChipList,
   Code,
@@ -224,6 +225,34 @@ const cases: Case[] = [
       <Field.Root aria-label="t">
         <Field.ColorPicker {...p} value="#000000" />
       </Field.Root>
+    ),
+  ],
+  [
+    'Field.DatePicker',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.DatePicker {...p} value={null} />
+      </Field.Root>
+    ),
+  ],
+  [
+    'Calendar.Root',
+    (p) => <Calendar.Root {...p} aria-label="c" />,
+  ],
+  [
+    'Calendar.Header',
+    (p) => (
+      <Calendar.Root aria-label="c">
+        <Calendar.Header {...p} />
+      </Calendar.Root>
+    ),
+  ],
+  [
+    'Calendar.Grid',
+    (p) => (
+      <Calendar.Root aria-label="c">
+        <Calendar.Grid {...p} />
+      </Calendar.Root>
     ),
   ],
   [

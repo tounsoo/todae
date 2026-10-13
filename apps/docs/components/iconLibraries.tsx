@@ -5,6 +5,7 @@
 import type { Glyphs } from '@omsoo.design/todae';
 import {
   ArrowRight as PhArrowRight,
+  CalendarBlank,
   CaretDown,
   CaretRight,
   Check as PhCheck,
@@ -20,6 +21,7 @@ import {
 import {
   IconAlertTriangle,
   IconArrowRight,
+  IconCalendar,
   IconCheck,
   IconChevronDown,
   IconChevronRight,
@@ -33,6 +35,7 @@ import {
 } from '@tabler/icons-react';
 import {
   ArrowRight,
+  Calendar,
   Check,
   ChevronDown,
   ChevronRight,
@@ -73,6 +76,7 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       chevron: <ChevronDown />,
       separator: <ChevronRight />,
       ellipsis: <Ellipsis />,
+      calendar: <Calendar />,
     },
     icons: {
       plus: <Plus />,
@@ -94,6 +98,7 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       chevron: <CaretDown />,
       separator: <CaretRight />,
       ellipsis: <DotsThree weight="bold" />,
+      calendar: <CalendarBlank />,
     },
     icons: {
       plus: <PhPlus />,
@@ -115,6 +120,7 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       chevron: <IconChevronDown />,
       separator: <IconChevronRight />,
       ellipsis: <IconDots />,
+      calendar: <IconCalendar />,
     },
     icons: {
       plus: <IconPlus />,

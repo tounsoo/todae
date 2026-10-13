@@ -44,6 +44,9 @@ const FRENCH: Strings = {
   brightness: 'Luminosité',
   hue: 'Teinte',
   colorPicker: 'Sélecteur de couleur',
+  datePicker: 'Choisir une date',
+  previousMonth: 'Mois précédent',
+  nextMonth: 'Mois suivant',
   copied: 'Copié',
   copyFailed: 'Copie impossible',
 };

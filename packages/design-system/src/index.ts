@@ -154,6 +154,8 @@ export {
   type FieldSelectProps,
   type FieldColorPickerCloseReason,
   type FieldColorPickerProps,
+  type FieldDatePickerCloseReason,
+  type FieldDatePickerProps,
   type FieldTextInputProps,
   type FieldTextInputType,
   type FieldTimeInputProps,
@@ -191,6 +193,13 @@ export {
   type ColorPickerRootProps,
 } from './components/ColorPicker';
 export { normalizeHex } from './components/color';
+export {
+  Calendar,
+  type CalendarFirstDayOfWeek,
+  type CalendarGridProps,
+  type CalendarHeaderProps,
+  type CalendarRootProps,
+} from './components/Calendar';
 export { Tree, type TreeGroupProps, type TreeIconProps, type TreeItemProps, type TreeLabelProps, type TreeRootProps } from './components/Tree';
 export {
   Stack,
