@@ -68,6 +68,29 @@ describe('Field.DatePicker', () => {
     expect([...new FormData(form).entries()]).toEqual([['start', '2026-10-13']]);
   });
 
+  it('gives the field to any typed input beside a picker, so one element has its id', () => {
+    render(
+      <>
+        <Field.Root id="typed">
+          <Field.TextInput value="" onChange={() => undefined} />
+          <Field.DatePicker value={null} />
+        </Field.Root>
+        <Field.Root id="timed">
+          <Field.TimeInput value={null} onValueChange={() => undefined} />
+          <Field.DatePicker value={null} />
+        </Field.Root>
+        <Field.Root id="tinted">
+          <Field.DateInput value={null} onValueChange={() => undefined} />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </>,
+    );
+    for (const id of ['typed', 'timed', 'tinted']) {
+      expect(document.querySelectorAll(`#${id}`)).toHaveLength(1);
+      expect(document.getElementById(id)!.tagName).toBe('INPUT');
+    }
+  });
+
   it('draws the calendar glyph from GlyphsProvider', () => {
     render(
       <GlyphsProvider glyphs={{ calendar: <svg data-testid="calendar" /> }}>

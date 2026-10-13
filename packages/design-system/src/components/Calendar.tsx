@@ -426,6 +426,7 @@ function Day({ date }: { date: Temporal.PlainDate }) {
         aria-current={isToday ? 'date' : undefined}
         aria-label={date.toLocaleString(cal.locale, { dateStyle: 'full', calendar: GREGORY })}
         data-selected={selected ? '' : undefined}
+        data-unavailable={unavailable ? '' : undefined}
         data-todae-calendar-day=""
         onClick={(event: MouseEvent<HTMLButtonElement>) => {
           // A click also moves the Tab stop, even to a date isDateDisabled rules out.

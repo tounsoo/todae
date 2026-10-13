@@ -65,7 +65,7 @@ export type FieldRootProps = {
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
 
 function createCountStore(): CountStore {
-  return { entry: null, counters: 0, texts: 0, dates: 0, listeners: new Set(), presence: new Set() };
+  return { entry: null, counters: 0, texts: 0, listeners: new Set(), presence: new Set() };
 }
 
 function publishCount(store: CountStore, value: string, maxLength: number | undefined) {
@@ -96,28 +96,26 @@ function notifyPresence(store: CountStore) {
   for (const listener of store.presence) listener();
 }
 
-type TypedKind = 'texts' | 'dates';
-
-// A Field.ColorPicker beside a text input, or a Field.DatePicker beside a date
-// input, gives up the field's id once it hears of it. `kind` is fixed per input.
-function useTypedPresence(store: CountStore, kind: TypedKind | null) {
+// A Field.ColorPicker or Field.DatePicker beside a typed input (text,
+// textarea, date or time) gives up the field's id once it hears of it, so
+// one element carries the id.
+function useTypedPresence(store: CountStore) {
   useLayoutEffect(() => {
-    if (!kind) return;
-    store[kind] += 1;
+    store.texts += 1;
     notifyPresence(store);
     return () => {
-      store[kind] -= 1;
+      store.texts -= 1;
       notifyPresence(store);
     };
-  }, [store, kind]);
+  }, [store]);
 }
 
-// Whether such an input shares the field. The server cannot know of one yet,
+// Whether a typed input shares the field. The server cannot know of one yet,
 // so a picker holds the field's id until hydration.
-function useTypedBeside(store: CountStore, kind: TypedKind) {
+function useTypedBeside(store: CountStore) {
   return useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
-    () => store[kind] > 0,
+    () => store.texts > 0,
     () => false,
   );
 }
@@ -127,7 +125,7 @@ function useTextEntry(store: CountStore, value: string, maxLength: number | unde
   useEffect(() => {
     for (const listener of store.listeners) listener();
   });
-  useTypedPresence(store, 'texts');
+  useTypedPresence(store);
   return useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
     () => counterMounted(store),
@@ -434,7 +432,7 @@ function TemporalInput<T>({
   ...props
 }: TemporalInputProps<T> & { kind: TemporalInputKind<T> }) {
   const field = useField();
-  useTypedPresence(useFieldContext().store, kind.type === 'date' ? 'dates' : null);
+  useTypedPresence(useFieldContext().store);
   return (
     <input
       {...field.getControlProps(props)}
@@ -759,7 +757,7 @@ function ColorPicker({
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
   // A text input in the field takes its id, name and description.
-  const beside = useTypedBeside(store, 'texts');
+  const beside = useTypedBeside(store);
   const { name, ...control } = beside
     ? {
         ...props,
@@ -889,7 +887,7 @@ function DatePicker({
   const { calendar } = useGlyphs();
   const textId = useDomId();
   // A date input in the field takes its id, name and description.
-  const beside = useTypedBeside(store, 'dates');
+  const beside = useTypedBeside(store);
   const { name, ...control } = beside
     ? {
         ...props,

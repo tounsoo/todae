@@ -59,7 +59,7 @@
     cursor: not-allowed;
   }
 
-  .day[aria-disabled='true'] {
+  .day[data-unavailable] {
     text-decoration: line-through;
   }
 
