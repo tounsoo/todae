@@ -1,6 +1,6 @@
 'use client';
 
-import { Menu, Stack, Text } from '@omsoo/todae';
+import { Menu, Stack, Text } from '@omsoo.design/todae';
 import { useState } from 'react';
 
 export function MenuActions() {

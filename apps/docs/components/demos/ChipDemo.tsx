@@ -1,6 +1,6 @@
 'use client';
 
-import { Chip } from '@omsoo/todae';
+import { Chip } from '@omsoo.design/todae';
 import { X } from 'lucide-react';
 
 export function ChipExamples() {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Disclosure, GlyphsProvider, VisuallyHidden } from '@omsoo/todae';
+import { Disclosure, GlyphsProvider, VisuallyHidden } from '@omsoo.design/todae';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';

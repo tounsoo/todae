@@ -1,7 +1,7 @@
-import { Badge, CATEGORY_TONES } from '@omsoo/todae/badge';
-import { Stack } from '@omsoo/todae/stack';
-import { Text } from '@omsoo/todae/text';
-import { VisuallyHidden } from '@omsoo/todae/visually-hidden';
+import { Badge, CATEGORY_TONES } from '@omsoo.design/todae/badge';
+import { Stack } from '@omsoo.design/todae/stack';
+import { Text } from '@omsoo.design/todae/text';
+import { VisuallyHidden } from '@omsoo.design/todae/visually-hidden';
 
 const CATEGORIES = ['Bug', 'Design', 'Docs', 'Tokens', 'Research', 'Mobile', 'Web', 'Infra'];
 

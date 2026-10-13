@@ -2,7 +2,7 @@
 
 What you need to do today.
 
-Todae is a pnpm workspace. `@omsoo/todae` is a private Vite library. `apps/docs` is a Next.js 15 app that renders live MDX examples from that library.
+Todae is a pnpm workspace. `@omsoo.design/todae` is a private Vite library. `apps/docs` is a Next.js 15 app that renders live MDX examples from that library.
 
 ## Requirements
 
@@ -44,14 +44,14 @@ pnpm tokens:check
 
 Commit both generated files. `tokens:check` fails if they drift.
 
-Layers: core (`:root` literals) → appearance (`[data-appearance]`; light on a `:root` without that attribute) → density (`[data-density]`; comfortable on a `:root` without that attribute) → contract (`:root, [data-appearance], [data-density]`) → button variants (`[data-button-variant]`). Flatten `a.b.c` → `--todae-a-b-c`. Import the catalog as `@omsoo/todae/tokens.json`.
+Layers: core (`:root` literals) → appearance (`[data-appearance]`; light on a `:root` without that attribute) → density (`[data-density]`; comfortable on a `:root` without that attribute) → contract (`:root, [data-appearance], [data-density]`) → button variants (`[data-button-variant]`). Flatten `a.b.c` → `--todae-a-b-c`. Import the catalog as `@omsoo.design/todae/tokens.json`.
 
 ## Providers
 
 Wrap the tree in `ThemeProvider` and `DensityProvider`. `appearance="system"` (default) writes `data-appearance="system"`, which follows `prefers-color-scheme` in CSS, so server-rendered HTML already matches the user's scheme. `useAppearance()` returns `light` or `dark` from `matchMedia`, and `light` on the server. `DensityProvider` writes `data-density` (`compact` | `comfortable` | `spacious`, default `comfortable`). Nested providers override. Both are optional: with neither, the page gets light and comfortable. Components read contract vars only.
 
 ```tsx
-import { DensityProvider, ThemeProvider, Button } from '@omsoo/todae';
+import { DensityProvider, ThemeProvider, Button } from '@omsoo.design/todae';
 
 <ThemeProvider appearance="system">
   <DensityProvider density="comfortable">
@@ -97,7 +97,7 @@ pnpm typecheck
 
 ## Deploy docs
 
-Set the Vercel project Root Directory to `apps/docs`. `apps/docs/vercel.json` installs from the repo root, builds `@omsoo/todae`, then builds the docs app.
+Set the Vercel project Root Directory to `apps/docs`. `apps/docs/vercel.json` installs from the repo root, builds `@omsoo.design/todae`, then builds the docs app.
 
 ## Docs MCP
 
@@ -107,7 +107,7 @@ Read-only Streamable HTTP MCP at `https://todae.omsoo.design/api/mcp` (`apps/doc
 "todae-docs": { "url": "https://todae.omsoo.design/api/mcp" }
 ```
 
-Tools: `list_components`, `get_component`, `when_to_use`. They read `@omsoo/todae/schema/components.json` and the English pages, `apps/docs/app/(en)/**/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
+Tools: `list_components`, `get_component`, `when_to_use`. They read `@omsoo.design/todae/schema/components.json` and the English pages, `apps/docs/app/(en)/**/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
 
 ## Graft
 
@@ -123,7 +123,7 @@ pnpm graft:check
 
 ## Layout
 
-- `packages/design-system` is `@omsoo/todae`, a private Vite library.
+- `packages/design-system` is `@omsoo.design/todae`, a private Vite library.
 - `apps/docs` is the Next.js 15 docs app with MDX examples.
 
 Before adding a component, hook, recipe or token, read [`ARCHITECTURE.md`](ARCHITECTURE.md) for the decisions they follow.

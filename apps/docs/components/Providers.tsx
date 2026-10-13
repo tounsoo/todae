@@ -1,6 +1,6 @@
 'use client';
 
-import { DensityProvider, ThemeProvider, type Appearance } from '@omsoo/todae';
+import { DensityProvider, ThemeProvider, type Appearance } from '@omsoo.design/todae';
 import { createContext, useContext, useSyncExternalStore, type ReactNode } from 'react';
 import { APPEARANCE_KEY as KEY } from './appearanceScript';
 const CHANGE = 'todae-docs-appearance-change';

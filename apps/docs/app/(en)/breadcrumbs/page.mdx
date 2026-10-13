@@ -20,9 +20,9 @@ The trail of pages above the current one. `Breadcrumbs.Root` is a `nav` landmark
   <BreadcrumbsTrail />
 </Example>
 
-Server Components can import it from `@omsoo/todae/breadcrumbs`. That entry has no `'use client'` and no hooks; the main `@omsoo/todae` entry is a client module.
+Server Components can import it from `@omsoo.design/todae/breadcrumbs`. That entry has no `'use client'` and no hooks; the main `@omsoo.design/todae` entry is a client module.
 
-The landmark is named "Breadcrumb" unless you pass a non-empty `aria-label` or `aria-labelledby`. That default is the `breadcrumbs` string of [StringsProvider](/utilities/strings-provider), English unless you set it, and always English from the `@omsoo/todae/breadcrumbs` server entry. A separator is drawn between items, `/` unless you pass `separator` or set a `separator` glyph (see Icons below), and screen readers skip it. The items wrap onto more lines when they do not fit.
+The landmark is named "Breadcrumb" unless you pass a non-empty `aria-label` or `aria-labelledby`. That default is the `breadcrumbs` string of [StringsProvider](/utilities/strings-provider), English unless you set it, and always English from the `@omsoo.design/todae/breadcrumbs` server entry. A separator is drawn between items, `/` unless you pass `separator` or set a `separator` glyph (see Icons below), and screen readers skip it. The items wrap onto more lines when they do not fit.
 
 <Example>
   <BreadcrumbsChevron />
@@ -30,7 +30,7 @@ The landmark is named "Breadcrumb" unless you pass a non-empty `aria-label` or `
 
 ## Icons
 
-With a `separator` glyph from a [GlyphsProvider](/utilities/glyphs-provider), each item draws that icon in place of the separator text. Draw it pointing toward the next item in a left-to-right page: it is mirrored in right-to-left. A `separator` on `Breadcrumbs.Root` wins over it, and the `@omsoo/todae/breadcrumbs` server entry reads no provider.
+With a `separator` glyph from a [GlyphsProvider](/utilities/glyphs-provider), each item draws that icon in place of the separator text. Draw it pointing toward the next item in a left-to-right page: it is mirrored in right-to-left. A `separator` on `Breadcrumbs.Root` wins over it, and the `@omsoo.design/todae/breadcrumbs` server entry reads no provider.
 
 ```tsx
 import { ChevronRight } from 'lucide-react';
@@ -44,7 +44,7 @@ import { ChevronRight } from 'lucide-react';
 
 **Todae handles:** A named `nav` landmark around an `ol role="list"`, with each `Breadcrumbs.Item` as a list item. `current` wraps the item's text in a `span` with `aria-current="page"`. The separator is CSS content with empty alternative text, or a glyph inside the item hidden with `aria-hidden`, so screen readers skip it and it adds no list items.
 
-**You supply:** A link in every item but the last, with text that names the page it goes to. Plain text in the last item, marked `current`. On a page in another language, the translated name through [StringsProvider](/utilities/strings-provider), or `aria-label` when you import from the `@omsoo/todae/breadcrumbs` server entry.
+**You supply:** A link in every item but the last, with text that names the page it goes to. Plain text in the last item, marked `current`. On a page in another language, the translated name through [StringsProvider](/utilities/strings-provider), or `aria-label` when you import from the `@omsoo.design/todae/breadcrumbs` server entry.
 
 **Watch for:** Separators of your own, such as an icon or a `/` between items: they are read aloud, and outside an item they break the list. Pass `separator`, or set a `separator` glyph, instead. An element that wraps `Breadcrumbs.Item`, which puts something other than a list item inside the list. A current page marked by style alone, without `current`.
 

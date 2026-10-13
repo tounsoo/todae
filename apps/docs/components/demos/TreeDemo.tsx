@@ -1,6 +1,6 @@
 'use client';
 
-import { Stack, Text, Tree } from '@omsoo/todae';
+import { Stack, Text, Tree } from '@omsoo.design/todae';
 import { File, FileCode, FileText, Folder, FolderOpen } from 'lucide-react';
 import { useState } from 'react';
 
