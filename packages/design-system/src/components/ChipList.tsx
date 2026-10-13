@@ -18,6 +18,7 @@ import { useChipKeys } from './chipKeys';
 import { Popover } from './Popover';
 import { cx } from './cx';
 import styles from './ChipList.module.css';
+import { focusWithoutScroll } from './revealRing';
 
 /**
  * A read-only or removable list of chips that folds the ones past `maxRows`
@@ -196,7 +197,7 @@ function Root({
     }
     if (!spot || stays(spot, prev, next)) return;
     parked.current = spot;
-    list.focus({ preventScroll: true });
+    focusWithoutScroll(list);
   };
 
   // After the commit, once the fold is measured for these chips: the same
@@ -262,7 +263,7 @@ function Root({
     // A click does not focus a button in every browser (Safari). Focus the
     // pressed button, so focus moves on when its chip leaves.
     const button = buttonFor(box, keys[index]!);
-    if (button && button !== document.activeElement) button.focus({ preventScroll: true });
+    if (button && button !== document.activeElement) focusWithoutScroll(button);
     onRemove?.(index, value);
   };
 

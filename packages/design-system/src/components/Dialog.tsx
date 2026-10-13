@@ -22,6 +22,7 @@ import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useModalDialog } from '../overlay/useModalDialog';
 import { composeHandlers, cx, useComposedRefs } from './props';
+import { revealRing } from './revealRing';
 import styles from './Dialog.module.css';
 import { ToolbarContext } from './toolbarContext';
 
@@ -239,7 +240,11 @@ export function DialogShellRoot({
           }
         })}
       >
-        <div className={shell.panelClassName} role="document">
+        <div
+          className={shell.panelClassName}
+          role="document"
+          onFocus={(event) => revealRing(event.currentTarget, event.target)}
+        >
           <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
         </div>
       </dialog>

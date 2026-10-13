@@ -3,6 +3,7 @@ import { dropModal } from './modalStack';
 import { inToastHostWithin } from './tabbables';
 import { useModalLayerElement } from './useModalLayerElement';
 import { reshowHeldInside } from './usePopoverSync';
+import { focusWithoutScroll } from '../components/revealRing';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
 export type ModalDialogCloseReason = 'escape' | 'form' | 'native';
@@ -106,7 +107,7 @@ export function useModalDialog({
       el.close();
       if (!toast) return;
       dropModal(el);
-      toast.focus({ preventScroll: true });
+      focusWithoutScroll(toast);
     };
   }, [dialogRef, present, node]);
 
