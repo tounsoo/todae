@@ -21,7 +21,7 @@ const [date, setDate] = useState<Temporal.PlainDate | null>(null)
 
 ## Temporal
 
-Todae는 Temporal 폴리필을 포함하지 않습니다. `Field.DateInput`은 사용자가 입력을 바꿀 때 `Temporal`을 호출하므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고). Todae의 타입에는 `Temporal`을 선언하는 TypeScript 6 이상이 필요합니다.
+Todae는 Temporal 폴리필을 포함하지 않습니다. `onValueChange`는 `Temporal`로 입력을 읽으므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고). Todae의 타입에는 `Temporal`을 선언하는 TypeScript 6 이상이 필요합니다.
 
 ## 접근성을 지키는 조합
 

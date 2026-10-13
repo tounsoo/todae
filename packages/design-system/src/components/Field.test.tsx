@@ -286,6 +286,28 @@ describe('Field date and time inputs', () => {
     expect(onChange.mock.calls[0]![0].target).toBe(input);
   });
 
+  it('reads and writes a year past 9999 the way the input does', () => {
+    const onValueChange = vi.fn();
+    const { input } = renderInput(
+      <Field.DateInput value={Temporal.PlainDate.from('+010000-01-01')} onValueChange={onValueChange} />,
+    );
+    expect(input.value).toBe('10000-01-01');
+    fireEvent.change(input, { target: { value: '20261-10-07' } });
+    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainDate;
+    expect(next.year).toBe(20261);
+  });
+
+  it('skips onValueChange for a date past what Temporal can hold', () => {
+    const onValueChange = vi.fn();
+    const onChange = vi.fn();
+    const { input } = renderInput(
+      <Field.DateInput value={Temporal.PlainDate.from('2026-10-07')} onChange={onChange} onValueChange={onValueChange} />,
+    );
+    fireEvent.change(input, { target: { value: '275760-12-31' } });
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
   it('follows the Root for disabled and invalid', () => {
     render(
       <Field.Root aria-label="When" disabled invalid>

@@ -326,17 +326,27 @@ type TemporalInputKind<T> = {
   parse: (text: string) => T;
 };
 
-// The native inputs read times to the millisecond and show seconds only when
-// the value has them, so the string stops at the smallest unit that is set.
+// A string for the input stops at the smallest unit that is set. The browser may
+// report more, such as 01:30:00 when step is under a minute; see sameText.
 function timeUnit(value: Temporal.PlainTime | Temporal.PlainDateTime) {
   if (value.millisecond || value.microsecond || value.nanosecond) return 'millisecond';
   return value.second ? 'second' : 'minute';
 }
 
+// HTML writes a year past 9999 as plain digits (20261-10-07); Temporal writes it
+// with a sign and six digits (+020261-10-07).
+function fromHtmlYear(text: string) {
+  return text.replace(/^(\d{5,6})(?=-)/, (year) => `+${year.padStart(6, '0')}`);
+}
+
+function toHtmlYear(text: string) {
+  return text.replace(/^\+0*(\d{4,})(?=-)/, '$1');
+}
+
 const DATE: TemporalInputKind<Temporal.PlainDate> = {
   type: 'date',
-  format: (value) => value.toString({ calendarName: 'never' }),
-  parse: (text) => Temporal.PlainDate.from(text),
+  format: (value) => toHtmlYear(value.toString({ calendarName: 'never' })),
+  parse: (text) => Temporal.PlainDate.from(fromHtmlYear(text)),
 };
 
 const TIME: TemporalInputKind<Temporal.PlainTime> = {
@@ -347,18 +357,34 @@ const TIME: TemporalInputKind<Temporal.PlainTime> = {
 
 const DATE_TIME: TemporalInputKind<Temporal.PlainDateTime> = {
   type: 'datetime-local',
-  format: (value) => value.toString({ smallestUnit: timeUnit(value), calendarName: 'never' }),
-  parse: (text) => Temporal.PlainDateTime.from(text),
+  format: (value) => toHtmlYear(value.toString({ smallestUnit: timeUnit(value), calendarName: 'never' })),
+  parse: (text) => Temporal.PlainDateTime.from(fromHtmlYear(text)),
 };
 
-function readTemporal<T>(kind: TemporalInputKind<T>, text: string): T | null {
+// Drops zero seconds and trailing zeros of a fraction, so 01:30:00.000 and 01:30 match.
+function canonicalTime(text: string) {
+  return text.replace(/(\d{2}:\d{2})(?::(\d{2})(?:\.(\d+))?)?$/, (_match, minutes: string, seconds = '00', digits = '') => {
+    const fraction = (digits as string).replace(/0+$/, '');
+    if (fraction) return `${minutes}:${seconds}.${fraction}`;
+    return seconds === '00' ? minutes : `${minutes}:${seconds}`;
+  });
+}
+
+// Whether the browser's own string already shows the value. Writing a different
+// string for the same value would reset what the user is typing.
+function sameText(typed: string, formatted: string) {
+  return canonicalTime(typed) === canonicalTime(formatted);
+}
+
+/** The value, `null` for an empty or incomplete input, or `undefined` for a string Temporal can't read. */
+function readTemporal<T>(kind: TemporalInputKind<T>, text: string): T | null | undefined {
   if (text === '') return null;
   try {
     return kind.parse(text);
   } catch (error) {
-    // A string the browser accepts but Temporal does not, such as a year past 9999.
+    // A date the browser accepts past Temporal's range, which ends in the year 275760.
     // Anything else, such as no Temporal at all, is the app's to fix, so it throws.
-    if (error instanceof RangeError) return null;
+    if (error instanceof RangeError) return undefined;
     throw error;
   }
 }
@@ -374,11 +400,15 @@ function TemporalInput<T>({
   ...props
 }: TemporalInputProps<T> & { kind: TemporalInputKind<T> }) {
   const field = useField();
+  // The string the browser last reported, kept while it still shows `value`.
+  const [typed, setTyped] = useState<string | null>(null);
+  const formatted = value === null ? '' : kind.format(value);
+  const text = typed !== null && value !== null && sameText(typed, formatted) ? typed : formatted;
   return (
     <input
       {...field.getControlProps(props)}
       type={kind.type}
-      value={value === null ? '' : kind.format(value)}
+      value={text}
       min={min === undefined ? undefined : kind.format(min)}
       max={max === undefined ? undefined : kind.format(max)}
       className={cx(styles.input, className)}
@@ -386,8 +416,10 @@ function TemporalInput<T>({
       onChange={
         onChange || onValueChange
           ? (event) => {
+              const next = onValueChange ? readTemporal(kind, event.target.value) : undefined;
+              setTyped(event.target.value);
               onChange?.(event);
-              onValueChange?.(readTemporal(kind, event.target.value));
+              if (next !== undefined) onValueChange?.(next);
             }
           : undefined
       }
