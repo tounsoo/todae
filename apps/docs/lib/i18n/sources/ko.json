@@ -206,7 +206,7 @@
   },
   "field/color-picker": {
     "(top)": "a10298fe8c00",
-    "# Field.ColorPicker": "38599cf4a007",
+    "# Field.ColorPicker": "2ce7218fbc62",
     "## Accessible composition": "22f585e1b518",
     "## When to use": "d57fe8233a0b",
     "### Field.ColorPicker": "f274c18b0118",
@@ -362,7 +362,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "700d3fbbbe3b",
+    "# Native platform": "b10b184db6bd",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {

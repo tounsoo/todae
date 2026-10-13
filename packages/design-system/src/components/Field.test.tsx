@@ -365,6 +365,46 @@ describe('Field date and time inputs', () => {
   });
 });
 
+describe('Field.ColorPicker beside another control part', () => {
+  const noop = () => undefined;
+  const parts: [string, ReactNode][] = [
+    ['TextInput', <Field.TextInput key="c" value="#3366ff" onChange={noop} />],
+    ['Textarea', <Field.Textarea key="c" value="#3366ff" onChange={noop} />],
+    [
+      'ChipInput',
+      <Field.ChipInput key="c" chips={[]} inputValue="" onInputValueChange={noop} onCommit={noop} onChipRemove={noop} />,
+    ],
+    [
+      'Select',
+      <Field.Select key="c" value="a" onChange={noop}>
+        <option value="a">A</option>
+      </Field.Select>,
+    ],
+    ['DateInput', <Field.DateInput key="c" value={Temporal.PlainDate.from('2026-10-07')} onValueChange={noop} />],
+    ['TimeInput', <Field.TimeInput key="c" value={Temporal.PlainTime.from('09:30')} onValueChange={noop} />],
+    [
+      'DateTimeInput',
+      <Field.DateTimeInput key="c" value={Temporal.PlainDateTime.from('2026-10-07T09:30')} onValueChange={noop} />,
+    ],
+  ];
+
+  for (const [label, control] of parts) {
+    it(`leaves the field's id and name to a ${label}`, () => {
+      const { container } = render(
+        <form data-testid="form">
+          <Field.Root id="x" name="n" aria-label="Value">
+            {control}
+            <Field.ColorPicker value="#3366ff" />
+          </Field.Root>
+        </form>,
+      );
+      expect(container.querySelectorAll('#x')).toHaveLength(1);
+      expect(container.querySelector('#x')!.tagName).not.toBe('BUTTON');
+      expect(container.querySelectorAll('[name="n"]')).toHaveLength(1);
+    });
+  }
+});
+
 describe('Field.Textarea', () => {
   it('sets native rows, css vars, and data attributes from coerced integers', () => {
     const { container } = render(

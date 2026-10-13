@@ -5,8 +5,8 @@ type CountEntry = { value: string; maxLength?: number };
 export type CountStore = {
   entry: CountEntry | null;
   counters: number;
-  /** Text inputs and textareas mounted in the field. */
-  texts: number;
+  /** Parts other than Field.ColorPicker that take the field's id, mounted in the field. */
+  controls: number;
   listeners: Set<() => void>;
   presence: Set<() => void>;
 };
