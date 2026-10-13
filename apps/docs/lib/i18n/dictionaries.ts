@@ -1,13 +1,14 @@
-import { SITE_GROUPS } from '../../components/siteGroups';
+import { childLinks, SITE_GROUPS, type SiteHref } from '../../components/siteGroups';
 import { localizePath, type Locale } from './config';
 
 type GroupId = (typeof SITE_GROUPS)[number]['id'];
-type Href = (typeof SITE_GROUPS)[number]['links'][number][0];
 
 /** The site's own words: everything around the page content. Page text lives in each page's MDX. */
 export type Dictionary = {
   /** Accessible name of the sidebar. */
   siteNav: string;
+  /** Name of the sidebar toggle that shows or hides a page's child pages. `{name}` is the page's link text. */
+  subpages: string;
   /** Accessible name of the top bar's links. */
   mainNav: string;
   /** The top bar's links. */
@@ -76,11 +77,12 @@ export type Dictionary = {
   /** Section names; a missing one keeps its English name from `siteGroups.ts`. */
   groups: Partial<Record<GroupId, string>>;
   /** Link text by href; a missing one keeps its English text. Component, hook and pattern names (Button, useField, Combobox, ChipList) stay in English. */
-  links: Partial<Record<Href, string>>;
+  links: Partial<Record<SiteHref, string>>;
 };
 
 const en: Dictionary = {
   siteNav: 'Site',
+  subpages: '{name} pages',
   mainNav: 'Main',
   topLinks: { start: 'Get started', components: 'Components', playground: 'Playground' },
   skipToContent: 'Skip to content',
@@ -153,6 +155,7 @@ const en: Dictionary = {
 
 const ko: Dictionary = {
   siteNav: '사이트',
+  subpages: '{name} 하위 페이지',
   mainNav: '주요 메뉴',
   topLinks: { start: '시작하기', components: '컴포넌트', playground: '플레이그라운드' },
   skipToContent: '본문으로 건너뛰기',
@@ -238,12 +241,13 @@ const ko: Dictionary = {
 
 export const DICTIONARIES: Record<Locale, Dictionary> = { en, ko };
 
-/** SITE_GROUPS with section names, link text and hrefs in `locale`. */
+/** SITE_GROUPS with section names, link text and hrefs in `locale`. Each link's third element is its child pages, localized the same way. */
 export function localizedGroups(locale: Locale) {
   const dict = DICTIONARIES[locale];
+  const localize = ([href, label]: readonly [SiteHref, string, ...unknown[]]) => [localizePath(href, locale), dict.links[href] ?? label] as const;
   return SITE_GROUPS.map((group) => ({
     id: group.id,
     label: dict.groups[group.id] ?? group.label,
-    links: group.links.map(([href, label]) => [localizePath(href, locale), dict.links[href] ?? label] as const),
+    links: group.links.map((link) => [...localize(link), childLinks(link).map(localize)] as const),
   }));
 }

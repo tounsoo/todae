@@ -1,0 +1,84 @@
+import {
+  TextareaAutoGrow,
+  TextareaDark,
+  TextareaDensity,
+  TextareaMaxRows,
+  TextareaMessages,
+  TextareaResize,
+  TextareaRows,
+} from '../../../../components/demos/FieldDemo';
+
+# Field.Textarea
+
+`Field.Textarea`는 [Field](/field) 안에서 여러 줄 텍스트를 받는 네이티브 `<textarea>`입니다. 높이는 CSS로만 정해집니다. `rows`는 높이와 드래그 최솟값을, `maxRows`는 상한을 정합니다. 패딩은 셸 안쪽의 textarea에 있습니다.
+
+```tsx
+<Field.Root aria-label="Note">
+	<Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} />
+</Field.Root>
+```
+
+<Example block>
+  <TextareaRows />
+</Example>
+
+## 높이
+
+`autoGrow`는 브라우저가 지원하면 `field-sizing: content`를 쓰고, `maxRows`를 생략하면 상한 없이 늘어납니다. `field-sizing`이 없는 브라우저에서는 `rows`에 머물고 안에서 스크롤됩니다. `autoGrow`가 켜져 있을 때는 인라인 `height`를 설정하지 마세요. 늘어나는 동작을 덮어씁니다.
+
+`autoGrow`와 `maxRows={6}`.
+
+<Example block>
+  <TextareaAutoGrow />
+</Example>
+
+`rows` 없이 `maxRows`만 주면 `min(3, maxRows)`에서 시작합니다.
+
+<Example block>
+  <TextareaMaxRows />
+</Example>
+
+`autoGrow`를 끈 상태에서 드래그로 크기를 바꾸면 `rows`와 `maxRows`에서 멈춥니다.
+
+<Example block>
+  <TextareaResize />
+</Example>
+
+## 밀도와 상태
+
+compact, comfortable, spacious.
+
+<Example block>
+  <TextareaDensity />
+</Example>
+
+네이티브 스크롤바를 위한 다크 appearance.
+
+<Example block>
+  <TextareaDark />
+</Example>
+
+레이블, 설명, 오류, invalid, disabled.
+
+<Example block>
+  <TextareaMessages />
+</Example>
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** textarea는 `Field.Root`에서 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. `Field.Counter`와 `maxLength`가 있으면 글자 수의 스크린 리더 텍스트가 textarea의 설명에 더해집니다.
+
+**직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다.
+
+**주의할 점:** `autoGrow`가 켜진 상태에서 인라인 `height`를 주면 늘어나지 않습니다. `field-sizing`이 없으면 `autoGrow` textarea는 `rows`에 머물고 스크롤됩니다.
+
+## 언제 쓰나요
+
+### Field.Textarea
+
+**언제:** 메모, 메시지, 설명 같은 여러 줄 자유 텍스트. `rows`가 시작 높이를 정하고, `autoGrow`는 CSS만으로 `maxRows`까지 늘립니다.
+**쓰지 않을 때:** 한 줄 값에는 `Field.TextInput`을 쓰세요. 개별 태그나 토큰에는 `Field.ChipInput`을 쓰세요. 서식 있는 텍스트나 서식 지정은 제공하지 않습니다.
+
+## Props
+
+<PropsTable name="Field.Textarea" />

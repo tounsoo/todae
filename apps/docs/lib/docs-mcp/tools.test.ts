@@ -245,7 +245,7 @@ describe('docs mcp tools', () => {
     expect(whenToUse('Dialog')).not.toHaveProperty('scope');
     expect(whenToUse('Field.Textarea')).toMatchObject({
       status: 'present',
-      docsUrl: `${DOCS_ORIGIN}/field`,
+      docsUrl: `${DOCS_ORIGIN}/field/textarea`,
       section: 'When to use',
       whenToUse:
         'Multi-line free text such as notes, messages or descriptions. `rows` sets the starting height, and `autoGrow` grows it up to `maxRows` with CSS only.',

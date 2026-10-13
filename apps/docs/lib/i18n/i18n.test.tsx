@@ -15,7 +15,7 @@ import { PropsTable } from '../../components/PropsTable';
 import { TokensCatalog } from '../../components/TokensCatalog';
 import { SiteNav } from '../../components/SiteNav';
 import { SiteShell } from '../../components/SiteShell';
-import { SITE_GROUPS } from '../../components/siteGroups';
+import { childLinks, flatLinks, SITE_GROUPS } from '../../components/siteGroups';
 import { UntranslatedPage } from '../../components/UntranslatedPage';
 import { COMPLETE_LOCALES, LOCALES, stripLocale } from './config';
 import { DICTIONARIES } from './dictionaries';
@@ -245,7 +245,7 @@ describe('docs locales', () => {
     render(<SiteNav locale="ko" />);
     const nav = screen.getByRole('navigation', { name: '사이트' });
     const hrefs = [...nav.querySelectorAll('a')].map((link) => link.getAttribute('href'));
-    expect(hrefs).toHaveLength(SITE_GROUPS.reduce((count, group) => count + group.links.length, 0));
+    expect(hrefs).toHaveLength(SITE_GROUPS.reduce((count, group) => count + flatLinks(group.links).length, 0));
     expect(hrefs.every((href) => href?.startsWith('/ko/'))).toBe(true);
     expect(screen.getByRole('list', { name: '컴포넌트' })).toBeTruthy();
     const current = [...nav.querySelectorAll('[aria-current="page"]')];
@@ -257,8 +257,12 @@ describe('docs locales', () => {
     for (const group of SITE_GROUPS.filter(({ id }) => id !== 'foundations')) {
       const names = group.links.map(([, label]) => label);
       expect(names, group.id).toEqual([...names].sort(byName));
+      for (const link of group.links) {
+        const children = childLinks(link).map(([, label]) => label);
+        expect(children, link[0]).toEqual([...children].sort(byName));
+      }
     }
-    const english = SITE_GROUPS.flatMap((group) => group.links.map(([href]) => href));
+    const english = SITE_GROUPS.flatMap((group) => flatLinks(group.links).map(([href]) => href));
     for (const locale of LOCALES) {
       cleanup();
       render(<SiteNav locale={locale} />);
