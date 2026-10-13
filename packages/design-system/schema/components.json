@@ -700,6 +700,55 @@
       ]
     },
     {
+      "name": "ColorPicker.Area",
+      "description": "Saturation left to right and brightness bottom to top, over the current hue. Two native range inputs carry the values: Left and Right change saturation, Up and Down brightness, Shift moves ten steps, and only the saturation input is a Tab stop. Takes div attributes except children.",
+      "props": []
+    },
+    {
+      "name": "ColorPicker.Hue",
+      "description": "A native range input over the hues, 0 to 359 degrees. Takes native input attributes except type, value, defaultValue, min, max, step and disabled.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Its name. Without it, the hue string from StringsProvider names it.",
+          "default": "\"Hue\""
+        }
+      ]
+    },
+    {
+      "name": "ColorPicker.Root",
+      "description": "A role=\"group\" that holds the color for its ColorPicker.Area and ColorPicker.Hue. The color is #rrggbb; the parts work in hue, saturation and brightness, and keep the hue while the color is a gray.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "required": false,
+          "description": "Controlled color as #rrggbb. Pass with onValueChange."
+        },
+        {
+          "name": "defaultValue",
+          "type": "string",
+          "required": false,
+          "description": "Initial color as #rrggbb when uncontrolled.",
+          "default": "\"#000000\""
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: string) => void",
+          "required": false,
+          "description": "Fires with the new color as #rrggbb while it is dragged or keyed."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Stops every part from changing the color. A disabled Fieldset sets it too."
+        }
+      ]
+    },
+    {
       "name": "createToaster",
       "description": "Returns a toast store { add, update, dismiss, remove, subscribe, getSnapshot } that works outside React. Make one per app at module scope and pass it to Toast.Region. add() takes id, tone, title, description, duration and any fields of your own, and returns the id; an id that is still showing is replaced in place.",
       "props": [
@@ -1076,32 +1125,38 @@
       ]
     },
     {
-      "name": "Field.ColorInput",
-      "description": "Controlled native <input type=\"color\"> inside Field.Root, drawn as a swatch one line of field text tall. A press elsewhere in the field opens the browser picker.",
+      "name": "Field.ColorPicker",
+      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside a Field.TextInput or Field.Textarea, that input is the field's control. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
       "props": [
         {
           "name": "value",
           "type": "string",
           "required": true,
-          "description": "Controlled value as #rrggbb."
-        },
-        {
-          "name": "onChange",
-          "type": "(event: ChangeEvent<HTMLInputElement>) => void",
-          "required": false,
-          "description": "Native change handler. Optional when onValueChange is enough."
+          "description": "The color as #rrggbb."
         },
         {
           "name": "onValueChange",
           "type": "(value: string) => void",
           "required": false,
-          "description": "Optional value callback."
+          "description": "Fires with the new color as #rrggbb while it is dragged or keyed in the picker."
         },
         {
-          "name": "className",
-          "type": "string",
+          "name": "open",
+          "type": "boolean",
           "required": false,
-          "description": "Optional class on the input."
+          "description": "Controlled open state of the picker. Pass with onOpenChange."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'disabled') => void",
+          "required": false,
+          "description": "Fires when the picker opens or closes, with why it closed."
         }
       ]
     },

@@ -76,6 +76,11 @@ export function usePopover(options: UsePopoverOptions = {}): UsePopoverResult {
   return usePopoverInternal(options, true);
 }
 
+function labelsOf(el: HTMLElement | null): HTMLElement[] {
+  const labels = el && 'labels' in el ? (el as HTMLButtonElement).labels : null;
+  return labels ? [...labels] : [];
+}
+
 /** Not re-exported from the package index. `restoreOnOutside` false skips the outside-click focus return. */
 export function usePopoverInternal(
   options: UsePopoverOptions,
@@ -143,6 +148,8 @@ export function usePopoverInternal(
       if (eventInside(popoverRef.current, event)) return;
       if (eventInside(triggerRef.current, event)) return;
       if (eventInside(anchorRef?.current ?? null, event)) return;
+      // A label's press clicks its trigger, which toggles the popover itself.
+      if (labelsOf(triggerRef.current).some((label) => eventInside(label, event))) return;
       requestClose('outside');
       if (!restoreOnOutside) return;
       const trigger = restoreFocusRef?.current ?? triggerRef.current;

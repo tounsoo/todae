@@ -47,13 +47,14 @@ describe('Field exports', () => {
     expect(api).not.toHaveProperty('Prefix');
     expect(api).not.toHaveProperty('Suffix');
     expect(api).not.toHaveProperty('FieldLabelProps');
+    expect(api.Field).not.toHaveProperty('ColorInput');
     expect(api.Field).toEqual({
       Root: Field.Root,
       TextInput: Field.TextInput,
       Textarea: Field.Textarea,
       ChipInput: Field.ChipInput,
       Select: Field.Select,
-      ColorInput: Field.ColorInput,
+      ColorPicker: Field.ColorPicker,
       DateInput: Field.DateInput,
       TimeInput: Field.TimeInput,
       DateTimeInput: Field.DateTimeInput,
@@ -467,7 +468,7 @@ describe('Field.Textarea', () => {
     expect(fieldCss.slice(0, supports)).not.toContain('field-sizing');
     expect(fieldCss.slice(supports)).toContain('field-sizing: content');
     expect(fieldCss).toMatch(/\.textarea\[data-auto-grow\]\s*\{[^}]*resize:\s*none/);
-    expect(fieldCss).toContain('.shell:has(:is(input, textarea, [data-todae-field-control], [data-todae-field-control] *):focus-visible)');
+    expect(fieldCss).toContain('.shell:has(:is(input, textarea, .swatch, [data-todae-field-control], [data-todae-field-control] *):focus-visible)');
     expect(fieldCss).toMatch(/\.textarea\s*\{[^}]*outline:\s*none/);
     expect(fieldCss).toContain('min-height: calc(var(--_text-rows) * 1lh + var(--_pad-block))');
     expect(fieldCss).not.toContain('min-height: calc(1lh');

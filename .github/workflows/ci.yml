@@ -51,9 +51,9 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter @omsoo/todae exec playwright install --with-deps chromium
+        run: pnpm --filter @omsoo.design/todae exec playwright install --with-deps chromium
       - if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm --filter @omsoo/todae exec playwright install-deps chromium
+        run: pnpm --filter @omsoo.design/todae exec playwright install-deps chromium
       # Some docs demos import the package's subpath entries, which only exist in dist.
       - run: pnpm build:ds
       - run: pnpm test:browser

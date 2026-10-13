@@ -1,6 +1,6 @@
 'use client';
 
-import { Description, Field, Switch } from '@omsoo/todae';
+import { Description, Field, Switch } from '@omsoo.design/todae';
 import { useId, useState } from 'react';
 
 export function SwitchStates() {

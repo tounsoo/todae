@@ -152,7 +152,8 @@ export {
   type FieldRootProps,
   type FieldRowProps,
   type FieldSelectProps,
-  type FieldColorInputProps,
+  type FieldColorPickerCloseReason,
+  type FieldColorPickerProps,
   type FieldTextInputProps,
   type FieldTextInputType,
   type FieldTimeInputProps,
@@ -183,6 +184,13 @@ export {
   type TabsRootProps,
   type TabsTabProps,
 } from './components/Tabs';
+export {
+  ColorPicker,
+  type ColorPickerAreaProps,
+  type ColorPickerHueProps,
+  type ColorPickerRootProps,
+} from './components/ColorPicker';
+export { normalizeHex } from './components/color';
 export { Tree, type TreeGroupProps, type TreeIconProps, type TreeItemProps, type TreeLabelProps, type TreeRootProps } from './components/Tree';
 export {
   Stack,

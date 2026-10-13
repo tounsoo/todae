@@ -1,5 +1,5 @@
-import { Breadcrumbs } from '@omsoo/todae/breadcrumbs';
-import { Link } from '@omsoo/todae/link';
+import { Breadcrumbs } from '@omsoo.design/todae/breadcrumbs';
+import { Link } from '@omsoo.design/todae/link';
 
 export function BreadcrumbsTrail() {
   return (

@@ -18,7 +18,7 @@
     "@mdx-js/react": "^3.1.0",
     "@modelcontextprotocol/sdk": "1.26.0",
     "@next/mdx": "^15.2.4",
-    "@omsoo/todae": "workspace:*",
+    "@omsoo.design/todae": "workspace:*",
     "@phosphor-icons/react": "2.1.10",
     "@tabler/icons-react": "3.35.0",
     "lucide-react": "0.544.0",

@@ -5,6 +5,8 @@ type CountEntry = { value: string; maxLength?: number };
 export type CountStore = {
   entry: CountEntry | null;
   counters: number;
+  /** Text inputs and textareas mounted in the field. */
+  texts: number;
   listeners: Set<() => void>;
   presence: Set<() => void>;
 };
@@ -20,6 +22,8 @@ export type FieldContextValue = {
   ariaLabel?: string;
   /** The control the shell focuses on a press outside it. */
   inputRef: RefObject<HTMLElement | null>;
+  /** The shell element. */
+  shellRef: RefObject<HTMLDivElement | null>;
   store: CountStore;
 };
 

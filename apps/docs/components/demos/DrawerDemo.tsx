@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Dialog, Drawer, type DrawerSide } from '@omsoo/todae';
+import { Button, Dialog, Drawer, type DrawerSide } from '@omsoo.design/todae';
 import { useState } from 'react';
 
 export function DrawerBasic({ side }: { side?: DrawerSide }) {

@@ -1,0 +1,28 @@
+{
+  "picker": {
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
+    "width": { "$type": "dimension", "$value": { "value": 15, "unit": "rem" } },
+    "area": {
+      "height": { "$type": "dimension", "$value": { "value": 10, "unit": "rem" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } }
+    },
+    "hue": {
+      "height": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/full/$value" } }
+    },
+    "thumb": {
+      "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } },
+      "border": {
+        "width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
+        "color": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } }
+      },
+      "edge": {
+        "width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+        "color": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
+      }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+    }
+  }
+}

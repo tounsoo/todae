@@ -1,4 +1,4 @@
-import { Table } from '@omsoo/todae/table';
+import { Table } from '@omsoo.design/todae/table';
 import { ScrollRegion } from '../../../../components/ScrollRegion';
 
 # StringsProvider
@@ -117,11 +117,31 @@ const korean: Partial<Strings> = {
       <Table.Cell>`createLabel`이 없을 때 `useCombobox`의 만들기 행</Table.Cell>
       <Table.Cell>`Create "{query}"`</Table.Cell>
     </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`saturation`</Table.HeaderCell>
+      <Table.Cell>`ColorPicker.Area`의 왼쪽에서 오른쪽 입력</Table.Cell>
+      <Table.Cell>`Saturation`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`brightness`</Table.HeaderCell>
+      <Table.Cell>`ColorPicker.Area`의 아래에서 위 입력</Table.Cell>
+      <Table.Cell>`Brightness`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`hue`</Table.HeaderCell>
+      <Table.Cell>`aria-label`이 없을 때 `ColorPicker.Hue`</Table.Cell>
+      <Table.Cell>`Hue`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`colorPicker`</Table.HeaderCell>
+      <Table.Cell>`Field.ColorPicker`의 팝오버</Table.Cell>
+      <Table.Cell>`Color picker`</Table.Cell>
+    </Table.Row>
   </Table.Body>
 </Table.Root>
 </ScrollRegion>
 
-서버 엔트리 `@omsoo/todae/breadcrumbs`와 `@omsoo/todae/pagination`의 `Breadcrumbs`와 `Pagination`은 컨텍스트 없이 서버에서 렌더링되므로 항상 영어를 씁니다. `aria-label`을 전달하거나, provider를 쓰려면 `@omsoo/todae`에서 가져오세요.
+서버 엔트리 `@omsoo.design/todae/breadcrumbs`와 `@omsoo.design/todae/pagination`의 `Breadcrumbs`와 `Pagination`은 컨텍스트 없이 서버에서 렌더링되므로 항상 영어를 씁니다. `aria-label`을 전달하거나, provider를 쓰려면 `@omsoo.design/todae`에서 가져오세요.
 
 ## 접근성을 지키는 조합
 

@@ -19,7 +19,7 @@ import {
   Text,
   ToggleGroup,
   type Glyphs,
-} from '@omsoo/todae';
+} from '@omsoo.design/todae';
 import { useId, useState } from 'react';
 import type { IconLibrary } from '../iconLibraries';
 
