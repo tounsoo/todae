@@ -168,9 +168,11 @@ export function DialogShellRoot({
   onPointerDown,
   onClick,
   onSubmit,
+  onFocus,
   ...props
 }: DialogRootProps & { shell: DialogShell }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [dialogNode, setDialogNode] = useState<HTMLDialogElement | null>(null);
   const pointerOnDialog = useRef(false);
   const [open, onOpenChange] = useControlledValue<boolean, [reason: DialogCloseReason]>(
@@ -230,6 +232,11 @@ export function DialogShellRoot({
           onSubmit?.(event);
           closeOnFormSubmit(event);
         }}
+        // On the dialog, not the panel, so the consumer's onFocus runs first
+        // and can skip the reveal with preventDefault().
+        onFocus={composeHandlers(onFocus, (event) => {
+          if (panelRef.current) revealRing(panelRef.current, event.target);
+        })}
         onClick={composeHandlers(onClick, (event) => {
           if (
             dismissOnBackdrop &&
@@ -243,7 +250,7 @@ export function DialogShellRoot({
         <div
           className={shell.panelClassName}
           role="document"
-          onFocus={(event) => revealRing(event.currentTarget, event.target)}
+          ref={panelRef}
         >
           <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
         </div>

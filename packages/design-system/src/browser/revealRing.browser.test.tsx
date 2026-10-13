@@ -6,6 +6,7 @@ import { usePopover } from '../hooks/usePopover';
 import { BottomSheet } from '../components/BottomSheet';
 import { Dialog } from '../components/Dialog';
 import { Drawer } from '../components/Drawer';
+import { Checkbox } from '../components/Checkbox';
 import { Field } from '../components/Field';
 import { Popover } from '../components/Popover';
 import { ScrollArea } from '../components/ScrollArea';
@@ -59,87 +60,132 @@ const field = (
   </Field.Root>
 );
 
-function PopoverArea() {
+function PopoverArea({ children }: { children: ReactNode }) {
   const popover = usePopover({ defaultOpen: true });
   return (
     <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Panel" data-testid="area" style={{ maxHeight: 160 }}>
-      {spacer}
-      {field}
-      {tail}
+      {children}
     </Popover.Root>
   );
 }
 
-const containers: [string, () => ReactNode, () => HTMLElement][] = [
+const byTestId = () => screen.getByTestId('area');
+const panel = () => screen.getByRole('document');
+
+/** Each scroll container, holding `content`, and how to find it. */
+const containers: [string, (content: ReactNode) => ReactNode, () => HTMLElement][] = [
   [
     'ScrollArea.Root',
-    () => (
+    (content) => (
       <ScrollArea.Root data-testid="area" style={{ height: 160 }}>
-        {spacer}
-        {field}
-        {tail}
+        {content}
       </ScrollArea.Root>
     ),
-    () => screen.getByTestId('area'),
+    byTestId,
   ],
   [
     'BottomSheet.Body',
-    () => (
+    (content) => (
       <BottomSheet.Root open onOpenChange={() => undefined}>
         <BottomSheet.Title>Filter</BottomSheet.Title>
-        <BottomSheet.Body data-testid="area">
-          {spacer}
-          {field}
-          {tail}
-        </BottomSheet.Body>
+        <BottomSheet.Body data-testid="area">{content}</BottomSheet.Body>
       </BottomSheet.Root>
     ),
-    () => screen.getByTestId('area'),
+    byTestId,
   ],
   [
     'the Dialog panel',
-    () => (
+    (content) => (
       <Dialog.Root open onOpenChange={() => undefined} aria-label="Edit">
-        {spacer}
-        {field}
-        {tail}
+        {content}
       </Dialog.Root>
     ),
-    () => screen.getByRole('document'),
+    panel,
   ],
   [
     'the Drawer panel',
-    () => (
+    (content) => (
       <Drawer.Root open onOpenChange={() => undefined} aria-label="Edit">
-        {spacer}
-        {field}
-        {tail}
+        {content}
       </Drawer.Root>
     ),
-    () => screen.getByRole('document'),
+    panel,
   ],
-  ['Popover.Root', () => <PopoverArea />, () => screen.getByTestId('area')],
+  ['Popover.Root', (content) => <PopoverArea>{content}</PopoverArea>, byTestId],
 ];
+
+/** Shows keyboard focus on `el` the way Tab would, from elsewhere, without the browser's own scroll. */
+async function keyboardFocus(el: HTMLElement) {
+  // Overlays focus their first control on open; start from elsewhere.
+  el.blur();
+  await userEvent.keyboard('{Shift}');
+  el.focus({ preventScroll: true });
+}
 
 describe('focus rings in a scrolling container', () => {
   for (const [name, ui, area] of containers) {
     it(`scrolls ${name} to show the whole ring of a control that just fits`, async () => {
-      render(<Themed>{ui()}</Themed>);
+      render(<Themed>{ui(<>{spacer}{field}{tail}</>)}</Themed>);
       const input = await screen.findByRole('textbox', { name: 'Name' });
       await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
-      // Overlays focus their first control on open; start from elsewhere.
-      input.blur();
       justFit(area(), input);
       const before = area().scrollTop;
-      await userEvent.keyboard('{Shift}');
-      input.focus();
-      // The ring sits on the Field shell, wider than the input. Chrome leaves an
-      // input that just fits where it is, so only the reveal moves the area.
+      await keyboardFocus(input);
+      // The ring sits on the Field shell, wider than the input, so only the
+      // reveal moves the area for an input that just fits.
       expect(ringed(input)).not.toBe(input);
       expect(area().scrollTop).toBeGreaterThan(before);
       expect(cutEdges(input, area())).toEqual([]);
     });
+
+    it(`scrolls ${name} to show the whole ring of a Checkbox, drawn on its indicator`, async () => {
+      render(<Themed>{ui(<>{spacer}<Checkbox.Root>Archived</Checkbox.Root>{tail}</>)}</Themed>);
+      const box = await screen.findByRole('checkbox', { name: 'Archived' });
+      await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+      justFit(area(), box);
+      await keyboardFocus(box);
+      const indicator = box.nextElementSibling as HTMLElement;
+      expect(getComputedStyle(indicator).outlineStyle).not.toBe('none');
+      expect(cutEdges(indicator, area())).toEqual([]);
+    });
+
+    it(`leaves ${name} where it is for a focused part taller than it`, async () => {
+      render(
+        <Themed>
+          {ui(
+            <>
+              <div tabIndex={0} aria-label="Tall" style={{ height: 3000, flex: 'none' }} />
+              {tail}
+            </>,
+          )}
+        </Themed>,
+      );
+      const tall = await screen.findByLabelText('Tall');
+      await waitFor(() => expect(area().scrollHeight).toBeGreaterThan(area().clientHeight));
+      area().scrollTop = 1000;
+      await keyboardFocus(tall);
+      expect(tall.matches(':focus-visible')).toBe(true);
+      expect(area().scrollTop).toBe(1000);
+    });
   }
+
+  it('lets a Dialog.Root onFocus that calls preventDefault() skip the reveal', async () => {
+    render(
+      <Themed>
+        <Dialog.Root open onOpenChange={() => undefined} aria-label="Edit" onFocus={(event) => event.preventDefault()}>
+          {spacer}
+          {field}
+          {tail}
+        </Dialog.Root>
+      </Themed>,
+    );
+    const input = await screen.findByRole('textbox', { name: 'Name' });
+    justFit(panel(), input);
+    const before = panel().scrollTop;
+    await keyboardFocus(input);
+    expect(input.matches(':focus-visible')).toBe(true);
+    expect(panel().scrollTop).toBe(before);
+  });
 
   it('leaves the area where it is for a focus that shows no ring', async () => {
     render(

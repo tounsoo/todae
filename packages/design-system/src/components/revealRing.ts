@@ -2,14 +2,16 @@
 // scrolls a focused control into view only when part of its own box is
 // hidden, so a control that just fits keeps a ring cut by the edge, and a ring
 // drawn on an ancestor wider than the control, such as a Field shell, is
-// never considered at all.
+// never considered at all. A ring drawn on a sibling, such as a Checkbox
+// indicator, is covered by the area's scroll-padding instead.
 
 let quiet = 0;
 
 /**
  * Focuses `el` without scrolling, the way `focus({ preventScroll: true })`
  * does, and tells `revealRing` to leave it where it is. Todae moves focus this
- * way when the move must not scroll, such as roving focus in a toolbar.
+ * way when the move must not scroll, such as Toolbar's Tab hop to the edge of a
+ * run.
  */
 export function focusWithoutScroll(el: HTMLElement) {
   quiet++;
@@ -55,14 +57,20 @@ export function revealRing(area: HTMLElement, target: EventTarget | null) {
   const portLeft = port.left + area.clientLeft;
   const portBottom = portTop + area.clientHeight;
   const portRight = portLeft + area.clientWidth;
-  const dy =
-    box.top - pad('Top') < portTop
+  // Like Chrome, leave an axis alone when the box and its ring can't fit, so a
+  // tall list or panel keeps the part in view instead of jumping to an edge.
+  const fitsY = box.height + pad('Top') + pad('Bottom') <= area.clientHeight;
+  const fitsX = box.width + pad('Left') + pad('Right') <= area.clientWidth;
+  const dy = !fitsY
+    ? 0
+    : box.top - pad('Top') < portTop
       ? box.top - pad('Top') - portTop
       : box.bottom + pad('Bottom') > portBottom
         ? box.bottom + pad('Bottom') - portBottom
         : 0;
-  const dx =
-    box.left - pad('Left') < portLeft
+  const dx = !fitsX
+    ? 0
+    : box.left - pad('Left') < portLeft
       ? box.left - pad('Left') - portLeft
       : box.right + pad('Right') > portRight
         ? box.right + pad('Right') - portRight

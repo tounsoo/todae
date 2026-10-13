@@ -47,6 +47,10 @@
     inline-size: min(100%, var(--todae-drawer-size));
     block-size: 100%;
     overflow: auto;
+    /* Room for a focus ring past the focused box, for scrolling it into
+       view, as ScrollArea has. revealRing reads it too, which covers a ring
+       drawn on a sibling, such as a Checkbox indicator. */
+    scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
     display: flex;
     flex-direction: column;
     gap: var(--todae-drawer-gap);
