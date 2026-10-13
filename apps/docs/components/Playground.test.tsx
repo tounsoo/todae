@@ -68,7 +68,7 @@ describe('Playground', () => {
     render(<Playground locale="en" />);
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
     expect(JSON.parse(writeText.mock.calls[0]?.[0] ?? '')).toEqual({});
-    expect(screen.getByText('Copied theme override JSON.')).toBeTruthy();
+    expect(await screen.findByText('Copied theme override JSON.')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Forest'));
     // The status was for the old theme, so it gives way to the hint again.
     expect(screen.queryByText('Copied theme override JSON.')).toBeNull();
@@ -95,7 +95,7 @@ describe('Playground', () => {
     writeText.mockRejectedValue(new Error('denied'));
     render(<Playground locale="en" />);
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
-    expect(screen.getByText('Could not copy. Clipboard permission was denied.')).toBeTruthy();
+    expect(await screen.findByText('Could not copy. Clipboard permission was denied.')).toBeTruthy();
   });
 
   it('puts the overrides on the element that carries the density', () => {

@@ -44,6 +44,10 @@ export interface Strings {
   hue: string;
   /** Name of Field.ColorPicker's popover, and of its swatch beside another control. */
   colorPicker: string;
+  /** useClipboard's message after a copy. */
+  copied: string;
+  /** useClipboard's message when a copy fails. */
+  copyFailed: string;
 }
 
 /** The English Todae ships with. */
@@ -66,4 +70,6 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   brightness: 'Brightness',
   hue: 'Hue',
   colorPicker: 'Color picker',
+  copied: 'Copied',
+  copyFailed: 'Could not copy',
 });

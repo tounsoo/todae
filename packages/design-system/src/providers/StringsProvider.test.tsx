@@ -44,6 +44,8 @@ const FRENCH: Strings = {
   brightness: 'Luminosité',
   hue: 'Teinte',
   colorPicker: 'Sélecteur de couleur',
+  copied: 'Copié',
+  copyFailed: 'Copie impossible',
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {

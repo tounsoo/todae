@@ -87,6 +87,7 @@ export const SITE_GROUPS = [
       ['/utilities/use-announcer', 'useAnnouncer'],
       ['/utilities/use-chip-field', 'useChipField'],
       ['/utilities/use-chip-list', 'useChipList'],
+      ['/utilities/use-clipboard', 'useClipboard'],
       ['/utilities/use-combobox', 'useCombobox'],
       ['/utilities/use-controlled-state', 'useControlledState'],
       ['/utilities/use-controlled-value', 'useControlledValue'],

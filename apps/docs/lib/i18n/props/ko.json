@@ -2196,5 +2196,19 @@
       "en": "Optional class on the slot.",
       "ko": "슬롯에 붙는 선택적 클래스."
     }
+  },
+  "useClipboard": {
+    "resetAfter": {
+      "en": "Milliseconds before status returns to \"idle\". false keeps it until the next copy or reset().",
+      "ko": "status가 \"idle\"로 돌아가기까지의 밀리초. false면 다음 복사나 reset()까지 유지합니다."
+    },
+    "copiedMessage": {
+      "en": "Read to screen readers after a copy. Default is the copied string from StringsProvider. An empty string reads nothing.",
+      "ko": "복사 뒤 스크린 리더로 읽을 텍스트. 기본값은 StringsProvider의 copied 문자열입니다. 빈 문자열이면 아무것도 읽지 않습니다."
+    },
+    "failedMessage": {
+      "en": "Read to screen readers, assertively, when a copy fails. Default is the copyFailed string from StringsProvider. An empty string reads nothing.",
+      "ko": "복사가 실패하면 스크린 리더로 assertive하게 읽을 텍스트. 기본값은 StringsProvider의 copyFailed 문자열입니다. 빈 문자열이면 아무것도 읽지 않습니다."
+    }
   }
 }

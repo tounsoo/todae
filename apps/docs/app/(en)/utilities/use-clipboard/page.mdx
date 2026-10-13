@@ -1,0 +1,38 @@
+import { CopyCommand } from '../../../../components/demos/ClipboardDemo';
+
+# useClipboard
+
+`useClipboard(options?)` returns `copy(text)`, which writes `text` to the clipboard, and `status`, the outcome of the latest copy. Use it for copy buttons, such as on a code block, a link or a message.
+
+```tsx
+const { copy, status } = useClipboard();
+
+<Button.Root onClick={() => copy(command)}>Copy command</Button.Root>
+{status === 'copied' ? <Text.Root>Copied</Text.Root> : null}
+```
+
+<Example>
+  <CopyCommand />
+</Example>
+
+`copy` calls `navigator.clipboard.writeText` and resolves to `true` when the text was copied and `false` when it was not. `status` is `'idle'` while a copy is pending, `'copied'` or `'failed'` once it settles, then `'idle'` again once `resetAfter` passes, 2000 milliseconds by default. Pass `resetAfter: false` to keep it until the next copy or `reset()`. When copies overlap, only the latest one sets `status`.
+
+There is no `execCommand` fallback. Where the Clipboard API is missing or refused, such as on a page that is not a [secure context](https://developer.mozilla.org/docs/Web/Security/Secure_Contexts), the copy fails.
+
+## Accessible composition
+
+**Todae handles:** Announcing the outcome through [useAnnouncer](/utilities/use-announcer): the `copied` string politely after a copy, and the `copyFailed` string assertively when a copy fails. Both come from [StringsProvider](/utilities/strings-provider) unless you pass `copiedMessage` or `failedMessage`.
+
+**You supply:** A button with a name that says what it copies, such as "Copy command" rather than "Copy" when a page has several. A visible result next to it for sighted users, from `status`. Messages in the reader's language, through StringsProvider or the options.
+
+**Watch for:** A visible result in a live region of its own, such as an [Alert](/alert), is read twice; pass an empty `copiedMessage` or `failedMessage` to read nothing. Changing the button's own text to "Copied" can be read by a screen reader as well as the announcement.
+
+## When to use
+
+**When:** A control that copies text the product already has, such as a command, a link or a message.
+
+**When not:** Copying rich content such as images or HTML → `navigator.clipboard.write` in your own code. Text the reader selects and copies themselves → the browser does that already.
+
+## Props
+
+<PropsTable name="useClipboard" />

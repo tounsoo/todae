@@ -18,7 +18,7 @@ import {
   parseThemeValue,
   themeOverrideType,
   themeValueCss,
-  useAnnouncer,
+  useClipboard,
   VisuallyHidden,
   type Appearance,
   type Density,
@@ -226,7 +226,7 @@ function reserveBar(bar: HTMLElement | null) {
 export function Playground({ locale }: { locale: Locale }) {
   // Option values, layer names and preset names are Todae's own names and stay in English.
   const t = DICTIONARIES[locale].playground;
-  const announce = useAnnouncer();
+  const clipboard = useClipboard({ resetAfter: false, copiedMessage: t.copied, failedMessage: t.copyFailed });
   const stageRef = useRef<HTMLDivElement>(null);
   const [appearance, setAppearance] = useState<Appearance>('system');
   const [density, setDensity] = useState<Density>('comfortable');
@@ -237,8 +237,8 @@ export function Playground({ locale }: { locale: Locale }) {
   const [presetId, setPresetId] = useState(PRESETS[0]?.id ?? 'todae');
   // Edits belong to the appearance they were made in, like a preset's own two sets.
   const [edits, setEdits] = useState<Record<'light' | 'dark', ThemeOverride>>(NO_EDITS);
-  // The copy result, and the JSON it was for, so it clears once the theme changes.
-  const [status, setStatus] = useState<{ text: string; json: string } | null>(null);
+  // The JSON the last copy was for, so its result clears once the theme changes.
+  const [copiedJson, setCopiedJson] = useState<string | null>(null);
   const [computed, setComputed] = useState<Partial<Record<ThemeOverrideKey, string>>>({});
   const [sheetOpen, setSheetOpen] = useState(false);
   const narrow = useNarrow();
@@ -274,19 +274,13 @@ export function Playground({ locale }: { locale: Locale }) {
     2,
   )}\n`;
 
-  async function exportOverrides() {
-    const json = exportJson;
-    try {
-      await navigator.clipboard.writeText(json);
-      setStatus({ text: t.copied, json });
-      announce(t.copied);
-    } catch {
-      setStatus({ text: t.copyFailed, json });
-      announce(t.copyFailed, { politeness: 'assertive' });
-    }
+  function exportOverrides() {
+    setCopiedJson(exportJson);
+    void clipboard.copy(exportJson);
   }
 
-  const copyStatus = status?.json === exportJson ? status.text : null;
+  const copyResult = { idle: null, copied: t.copied, failed: t.copyFailed }[clipboard.status];
+  const copyStatus = copiedJson === exportJson ? copyResult : null;
   const copyStatusLine = copyStatus ? <p className="pg-hint">{copyStatus}</p> : null;
   // A sheet left open when the window widens does not come back on its own.
   if (!narrow && sheetOpen) setSheetOpen(false);
@@ -343,7 +337,7 @@ export function Playground({ locale }: { locale: Locale }) {
       <Button.Root variant="secondary" onClick={() => setEdits(NO_EDITS)}>
         {t.reset}
       </Button.Root>
-      <Button.Root onClick={() => void exportOverrides()}>{t.export}</Button.Root>
+      <Button.Root onClick={exportOverrides}>{t.export}</Button.Root>
     </div>
   );
 
@@ -499,7 +493,7 @@ export function Playground({ locale }: { locale: Locale }) {
                 </>
               ) : null}
             </Button.Root>
-            <Button.Root onClick={() => void exportOverrides()}>{t.export}</Button.Root>
+            <Button.Root onClick={exportOverrides}>{t.export}</Button.Root>
             {copyStatusLine}
           </div>
           <BottomSheet.Root className="pg-sheet" open={sheetOpen} onOpenChange={setSheetOpen}>

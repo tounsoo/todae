@@ -260,6 +260,12 @@ export {
   type UseSheetPresentationOptions,
 } from './hooks/useSheetPresentation';
 export {
+  useClipboard,
+  type ClipboardStatus,
+  type UseClipboardOptions,
+  type UseClipboardResult,
+} from './hooks/useClipboard';
+export {
   useCombobox,
   type ComboboxCloseReason,
   type ComboboxItem,

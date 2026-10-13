@@ -362,7 +362,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "b10b184db6bd",
+    "# Native platform": "4303dd39f38d",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -587,7 +587,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "0a9ce6b4f646",
-    "## Strings": "146e04f6b764",
+    "## Strings": "d324286af66e",
     "## Accessible composition": "8cc16824f136",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",
@@ -616,6 +616,14 @@
     "## When to use": "3028b67d239a",
     "## Props": "0f41e5ff7947",
     "(section order)": "118b817169c6"
+  },
+  "utilities/use-clipboard": {
+    "(top)": "5f26d8f14d9f",
+    "# useClipboard": "c5a651634531",
+    "## Accessible composition": "35b0813a6459",
+    "## When to use": "ef2fa8a19a14",
+    "## Props": "b6f64f9aa75c",
+    "(section order)": "e620d3facf57"
   },
   "utilities/use-combobox": {
     "(top)": "e79476ff32f4",

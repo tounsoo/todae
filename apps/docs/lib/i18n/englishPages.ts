@@ -72,6 +72,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'utilities/use-announcer': () => import('../../app/(en)/utilities/use-announcer/page.mdx'),
   'utilities/use-chip-field': () => import('../../app/(en)/utilities/use-chip-field/page.mdx'),
   'utilities/use-chip-list': () => import('../../app/(en)/utilities/use-chip-list/page.mdx'),
+  'utilities/use-clipboard': () => import('../../app/(en)/utilities/use-clipboard/page.mdx'),
   'utilities/use-combobox': () => import('../../app/(en)/utilities/use-combobox/page.mdx'),
   'utilities/use-controlled-state': () => import('../../app/(en)/utilities/use-controlled-state/page.mdx'),
   'utilities/use-controlled-value': () => import('../../app/(en)/utilities/use-controlled-value/page.mdx'),

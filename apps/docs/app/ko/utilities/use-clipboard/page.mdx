@@ -1,0 +1,38 @@
+import { CopyCommand } from '../../../../components/demos/ClipboardDemo';
+
+# useClipboard
+
+`useClipboard(options?)`는 `text`를 클립보드에 쓰는 `copy(text)`와 가장 최근 복사의 결과인 `status`를 반환합니다. 코드 블록, 링크, 메시지의 복사 버튼처럼 복사 버튼에 쓰세요.
+
+```tsx
+const { copy, status } = useClipboard();
+
+<Button.Root onClick={() => copy(command)}>Copy command</Button.Root>
+{status === 'copied' ? <Text.Root>Copied</Text.Root> : null}
+```
+
+<Example>
+  <CopyCommand />
+</Example>
+
+`copy`는 `navigator.clipboard.writeText`를 호출하고, 텍스트가 복사되면 `true`로, 복사되지 않으면 `false`로 resolve됩니다. `status`는 복사가 끝나기 전에는 `'idle'`, 끝나면 `'copied'` 또는 `'failed'`가 되고, `resetAfter`가 지나면 다시 `'idle'`이 됩니다. 기본값은 2000밀리초입니다. 다음 복사나 `reset()`까지 유지하려면 `resetAfter: false`를 전달하세요. 복사가 겹치면 가장 최근 복사만 `status`를 정합니다.
+
+`execCommand` 대체 경로는 없습니다. [보안 컨텍스트](https://developer.mozilla.org/docs/Web/Security/Secure_Contexts)가 아닌 페이지처럼 Clipboard API가 없거나 거부되는 곳에서는 복사가 실패합니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** [useAnnouncer](/utilities/use-announcer)로 결과를 알립니다. 복사 뒤에는 `copied` 문자열을 polite로, 복사가 실패하면 `copyFailed` 문자열을 assertive로 읽습니다. `copiedMessage`나 `failedMessage`를 전달하지 않으면 둘 다 [StringsProvider](/utilities/strings-provider)에서 옵니다.
+
+**직접 제공할 것:** 무엇을 복사하는지 말하는 이름이 있는 버튼. 페이지에 복사 버튼이 여럿이면 "Copy" 대신 "Copy command"처럼 쓰세요. 화면을 보는 사용자를 위해 `status`로 그 옆에 보이는 결과. StringsProvider나 옵션으로 넘기는, 읽는 사람의 언어로 된 메시지.
+
+**주의할 점:** [Alert](/alert)처럼 자체 라이브 영역 안에 있는 보이는 결과는 두 번 읽힙니다. 아무것도 읽지 않으려면 빈 `copiedMessage`나 `failedMessage`를 전달하세요. 버튼 자체의 텍스트를 "Copied"로 바꾸면 스크린 리더가 알림과 함께 그 텍스트도 읽을 수 있습니다.
+
+## 언제 쓰나요
+
+**언제:** 명령어, 링크, 메시지처럼 제품이 이미 가진 텍스트를 복사하는 컨트롤.
+
+**쓰지 않을 때:** 이미지나 HTML 같은 서식 있는 콘텐츠 복사 → 직접 작성한 코드의 `navigator.clipboard.write`. 읽는 사람이 직접 선택해 복사하는 텍스트 → 브라우저가 이미 처리합니다.
+
+## Props
+
+<PropsTable name="useClipboard" />
