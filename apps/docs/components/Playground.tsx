@@ -237,8 +237,6 @@ export function Playground({ locale }: { locale: Locale }) {
   const [presetId, setPresetId] = useState(PRESETS[0]?.id ?? 'todae');
   // Edits belong to the appearance they were made in, like a preset's own two sets.
   const [edits, setEdits] = useState<Record<'light' | 'dark', ThemeOverride>>(NO_EDITS);
-  // The JSON the last copy was for, so its result clears once the theme changes.
-  const [copiedJson, setCopiedJson] = useState<string | null>(null);
   const [computed, setComputed] = useState<Partial<Record<ThemeOverrideKey, string>>>({});
   const [sheetOpen, setSheetOpen] = useState(false);
   const narrow = useNarrow();
@@ -275,12 +273,12 @@ export function Playground({ locale }: { locale: Locale }) {
   )}\n`;
 
   function exportOverrides() {
-    setCopiedJson(exportJson);
     void clipboard.copy(exportJson);
   }
 
+  // The result shows only for the JSON it was for, so it clears once the theme changes.
   const copyResult = { idle: null, copied: t.copied, failed: t.copyFailed }[clipboard.status];
-  const copyStatus = copiedJson === exportJson ? copyResult : null;
+  const copyStatus = clipboard.text === exportJson ? copyResult : null;
   const copyStatusLine = copyStatus ? <p className="pg-hint">{copyStatus}</p> : null;
   // A sheet left open when the window widens does not come back on its own.
   if (!narrow && sheetOpen) setSheetOpen(false);

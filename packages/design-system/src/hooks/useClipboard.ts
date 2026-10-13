@@ -16,13 +16,19 @@ export type UseClipboardOptions = {
 export type UseClipboardResult = {
   /** Writes text to the clipboard. Resolves to true when it was copied. */
   copy: (text: string) => Promise<boolean>;
-  /** The latest copy's outcome, until `resetAfter` passes. `idle` while a copy is pending. */
+  /** The outcome of the latest copy once it settles, until `resetAfter` passes. */
   status: ClipboardStatus;
+  /** The text `status` is about, or null while `status` is `idle`. */
+  text: string | null;
   /** Sets `status` back to `idle`. */
   reset: () => void;
 };
 
+type State = { status: ClipboardStatus; text: string | null; settled: number };
+
 const DEFAULT_RESET_AFTER = 2000;
+// setTimeout runs a longer delay at once, so a resetAfter past it never resets.
+const MAX_DELAY = 2 ** 31 - 1;
 
 /**
  * Copies text with `navigator.clipboard.writeText`, keeps the outcome as
@@ -34,36 +40,32 @@ export function useClipboard(options: UseClipboardOptions = {}): UseClipboardRes
   const { resetAfter = DEFAULT_RESET_AFTER, copiedMessage, failedMessage } = options;
   const strings = useStrings();
   const announce = useAnnouncer();
-  const [status, setStatus] = useState<ClipboardStatus>('idle');
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  // Each copy takes a number, so only the latest one sets status.
+  const [state, setState] = useState<State>({ status: 'idle', text: null, settled: 0 });
+  // Each copy takes a number, so only the latest one sets status and is announced.
   const latest = useRef(0);
-  // Read at settle time, so a copy uses the options of the latest render.
-  const current = { resetAfter, copied: copiedMessage ?? strings.copied, failed: failedMessage ?? strings.copyFailed };
-  const settings = useRef(current);
-  settings.current = current;
+  // Read at settle time, so a copy uses the messages of the latest render.
+  const current = { copied: copiedMessage ?? strings.copied, failed: failedMessage ?? strings.copyFailed };
+  const messages = useRef(current);
+  messages.current = current;
 
-  useEffect(
-    () => () => {
-      clearTimeout(timer.current);
-      // A copy that settles after unmount sets nothing.
-      latest.current += 1;
-    },
-    [],
-  );
+  // The reset timer lives in an effect, so it starts again when effects are
+  // re-run, as when an Activity is shown again.
+  const { status, settled } = state;
+  useEffect(() => {
+    if (status === 'idle' || resetAfter === false || !(resetAfter <= MAX_DELAY)) return;
+    const timer = setTimeout(() => {
+      setState((prev) => (prev.settled === settled ? { status: 'idle', text: null, settled } : prev));
+    }, Math.max(0, resetAfter));
+    return () => clearTimeout(timer);
+  }, [status, settled, resetAfter]);
 
   const reset = useCallback(() => {
-    clearTimeout(timer.current);
-    latest.current += 1;
-    setStatus('idle');
+    setState((prev) => (prev.status === 'idle' ? prev : { status: 'idle', text: null, settled: prev.settled }));
   }, []);
 
   const copy = useCallback(
     async (text: string) => {
       const id = ++latest.current;
-      clearTimeout(timer.current);
-      // The last outcome no longer describes what is being copied.
-      setStatus('idle');
       let ok: boolean;
       try {
         await navigator.clipboard.writeText(text);
@@ -73,22 +75,18 @@ export function useClipboard(options: UseClipboardOptions = {}): UseClipboardRes
         ok = false;
       }
       if (id !== latest.current) return ok;
-      const { resetAfter: after, copied, failed } = settings.current;
-      setStatus(ok ? 'copied' : 'failed');
+      // Announced even when the component has unmounted since, as the text did reach the clipboard.
+      const { copied, failed } = messages.current;
       if (ok) {
         if (copied) announce(copied);
       } else if (failed) {
         announce(failed, { politeness: 'assertive' });
       }
-      if (after !== false && Number.isFinite(after)) {
-        timer.current = setTimeout(() => {
-          if (id === latest.current) setStatus('idle');
-        }, Math.max(0, after));
-      }
+      setState((prev) => ({ status: ok ? 'copied' : 'failed', text, settled: prev.settled + 1 }));
       return ok;
     },
     [announce],
   );
 
-  return { copy, status, reset };
+  return { copy, status, text: state.text, reset };
 }

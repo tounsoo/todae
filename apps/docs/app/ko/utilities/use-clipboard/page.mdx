@@ -15,13 +15,13 @@ const { copy, status } = useClipboard();
   <CopyCommand />
 </Example>
 
-`copy`는 `navigator.clipboard.writeText`를 호출하고, 텍스트가 복사되면 `true`로, 복사되지 않으면 `false`로 resolve됩니다. `status`는 복사가 끝나기 전에는 `'idle'`, 끝나면 `'copied'` 또는 `'failed'`가 되고, `resetAfter`가 지나면 다시 `'idle'`이 됩니다. 기본값은 2000밀리초입니다. 다음 복사나 `reset()`까지 유지하려면 `resetAfter: false`를 전달하세요. 복사가 겹치면 가장 최근 복사만 `status`를 정합니다.
+`copy`는 `navigator.clipboard.writeText`를 호출하고, 텍스트가 복사되면 `true`로, 복사되지 않으면 `false`로 resolve됩니다. 가장 최근 복사가 끝나면 `status`는 `'copied'` 또는 `'failed'`가 되고, `text`는 그 복사가 복사한 텍스트가 됩니다. 둘 다 `resetAfter`가 지나거나 `reset()`을 호출하면 `'idle'`과 `null`로 돌아갑니다. `resetAfter`의 기본값은 2000밀리초이고, `resetAfter: false`를 전달하면 다음 복사나 `reset()`까지 유지합니다. 복사가 진행 중인 동안에는 이전 결과가 그대로 남습니다. 복사가 겹치면 가장 최근 복사만 `status`를 정하고 알려집니다.
 
 `execCommand` 대체 경로는 없습니다. [보안 컨텍스트](https://developer.mozilla.org/docs/Web/Security/Secure_Contexts)가 아닌 페이지처럼 Clipboard API가 없거나 거부되는 곳에서는 복사가 실패합니다.
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** [useAnnouncer](/utilities/use-announcer)로 결과를 알립니다. 복사 뒤에는 `copied` 문자열을 polite로, 복사가 실패하면 `copyFailed` 문자열을 assertive로 읽습니다. `copiedMessage`나 `failedMessage`를 전달하지 않으면 둘 다 [StringsProvider](/utilities/strings-provider)에서 옵니다.
+**Todae가 맡는 것:** [useAnnouncer](/utilities/use-announcer)로 가장 최근 복사의 결과를 알립니다. 복사 뒤에는 `copied` 문자열을 polite로, 복사가 실패하면 `copyFailed` 문자열을 assertive로 읽습니다. `copiedMessage`나 `failedMessage`를 전달하지 않으면 둘 다 [StringsProvider](/utilities/strings-provider)에서 옵니다. 컴포넌트가 언마운트된 뒤에 끝난 복사도 알립니다.
 
 **직접 제공할 것:** 무엇을 복사하는지 말하는 이름이 있는 버튼. 페이지에 복사 버튼이 여럿이면 "Copy" 대신 "Copy command"처럼 쓰세요. 화면을 보는 사용자를 위해 `status`로 그 옆에 보이는 결과. StringsProvider나 옵션으로 넘기는, 읽는 사람의 언어로 된 메시지.
 

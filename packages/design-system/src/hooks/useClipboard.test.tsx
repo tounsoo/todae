@@ -1,4 +1,5 @@
 import { act, cleanup, render } from '@testing-library/react';
+import { Activity } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StringsProvider } from '../providers/StringsProvider';
 import { useClipboard, type UseClipboardOptions, type UseClipboardResult } from './useClipboard';
@@ -135,23 +136,24 @@ describe('useClipboard', () => {
     expect(result.status).toBe('failed');
   });
 
-  it('shows no earlier outcome while a new copy is pending', async () => {
+  it('keeps the last outcome and its text while a new copy is pending', async () => {
     render(<Probe resetAfter={false} />);
     await act(async () => {
       await result.copy('first');
     });
-    expect(result.status).toBe('copied');
+    expect(result).toMatchObject({ status: 'copied', text: 'first' });
     writeText.mockImplementationOnce(() => new Promise<void>(() => {}));
     act(() => {
       void result.copy('second');
     });
-    expect(result.status).toBe('idle');
+    expect(result).toMatchObject({ status: 'copied', text: 'first' });
+    act(() => result.reset());
+    expect(result).toMatchObject({ status: 'idle', text: null });
   });
 
-  it('sets nothing when a copy settles after unmount', async () => {
+  it('still announces a copy that settles after unmount', async () => {
     let finish: () => void = () => {};
     writeText.mockImplementationOnce(() => new Promise<void>((resolve) => (finish = resolve)));
-    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { unmount } = render(<Probe />);
     let pending: Promise<boolean> | undefined;
     act(() => {
@@ -161,8 +163,53 @@ describe('useClipboard', () => {
     finish();
     expect(await pending).toBe(true);
     await act(() => vi.advanceTimersByTimeAsync(1000));
-    expect(live('polite')).toBe('');
-    expect(errors).not.toHaveBeenCalled();
-    errors.mockRestore();
+    expect(live('polite')).toBe('Copied');
+  });
+
+  it('restarts the reset timer when an Activity is shown again', async () => {
+    const { rerender } = render(
+      <Activity mode="visible">
+        <Probe />
+      </Activity>,
+    );
+    await act(async () => {
+      await result.copy('a');
+    });
+    rerender(
+      <Activity mode="hidden">
+        <Probe />
+      </Activity>,
+    );
+    await act(() => vi.advanceTimersByTimeAsync(5000));
+    rerender(
+      <Activity mode="visible">
+        <Probe />
+      </Activity>,
+    );
+    expect(result.status).toBe('copied');
+    await act(() => vi.advanceTimersByTimeAsync(2000));
+    expect(result.status).toBe('idle');
+  });
+
+  it('restarts the timer for each copy, and never resets past the longest setTimeout delay', async () => {
+    const { rerender } = render(<Probe />);
+    await act(async () => {
+      await result.copy('a');
+    });
+    await act(() => vi.advanceTimersByTimeAsync(1500));
+    await act(async () => {
+      await result.copy('b');
+    });
+    await act(() => vi.advanceTimersByTimeAsync(1500));
+    expect(result).toMatchObject({ status: 'copied', text: 'b' });
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(result.status).toBe('idle');
+
+    rerender(<Probe resetAfter={2 ** 31} />);
+    await act(async () => {
+      await result.copy('c');
+    });
+    await act(() => vi.advanceTimersByTimeAsync(10_000));
+    expect(result.status).toBe('copied');
   });
 });

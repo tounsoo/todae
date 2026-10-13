@@ -15,13 +15,13 @@ const { copy, status } = useClipboard();
   <CopyCommand />
 </Example>
 
-`copy` calls `navigator.clipboard.writeText` and resolves to `true` when the text was copied and `false` when it was not. `status` is `'idle'` while a copy is pending, `'copied'` or `'failed'` once it settles, then `'idle'` again once `resetAfter` passes, 2000 milliseconds by default. Pass `resetAfter: false` to keep it until the next copy or `reset()`. When copies overlap, only the latest one sets `status`.
+`copy` calls `navigator.clipboard.writeText` and resolves to `true` when the text was copied and `false` when it was not. Once the latest copy settles, `status` is `'copied'` or `'failed'` and `text` is the text it copied. Both go back to `'idle'` and `null` once `resetAfter` passes, 2000 milliseconds by default, or when you call `reset()`. Pass `resetAfter: false` to keep them until the next copy or `reset()`. While a copy is pending, the previous outcome stays. When copies overlap, only the latest one sets `status` and is announced.
 
 There is no `execCommand` fallback. Where the Clipboard API is missing or refused, such as on a page that is not a [secure context](https://developer.mozilla.org/docs/Web/Security/Secure_Contexts), the copy fails.
 
 ## Accessible composition
 
-**Todae handles:** Announcing the outcome through [useAnnouncer](/utilities/use-announcer): the `copied` string politely after a copy, and the `copyFailed` string assertively when a copy fails. Both come from [StringsProvider](/utilities/strings-provider) unless you pass `copiedMessage` or `failedMessage`.
+**Todae handles:** Announcing the latest copy's outcome through [useAnnouncer](/utilities/use-announcer): the `copied` string politely after a copy, and the `copyFailed` string assertively when a copy fails. Both come from [StringsProvider](/utilities/strings-provider) unless you pass `copiedMessage` or `failedMessage`. A copy that settles after the component unmounts is still announced.
 
 **You supply:** A button with a name that says what it copies, such as "Copy command" rather than "Copy" when a page has several. A visible result next to it for sighted users, from `status`. Messages in the reader's language, through StringsProvider or the options.
 

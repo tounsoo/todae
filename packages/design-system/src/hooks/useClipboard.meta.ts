@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'useClipboard',
   description:
-    'useClipboard(options?) returns { copy, status, reset }. copy(text) writes text with navigator.clipboard.writeText and resolves to whether it was copied; status is "idle" while a copy is pending, "copied" or "failed" once it settles, then "idle" again once resetAfter passes. Each outcome is announced through useAnnouncer. There is no execCommand fallback.',
+    'useClipboard(options?) returns { copy, status, text, reset }. copy(text) writes text with navigator.clipboard.writeText and resolves to whether it was copied. Once the latest copy settles, status is "copied" or "failed" and text is what it copied, until resetAfter passes. The outcome of the latest copy is announced through useAnnouncer. There is no execCommand fallback.',
   props: [
     {
       name: 'resetAfter',
