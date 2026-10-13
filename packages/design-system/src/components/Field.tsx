@@ -36,7 +36,7 @@ import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
-import { useField } from '../hooks/useField';
+import { useField, type FieldControlUserProps } from '../hooks/useField';
 import { useControlledValue } from '../hooks/useControlledState';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { CalendarGlyph, glyphOr, hasGlyph } from './glyphs';
@@ -116,12 +116,39 @@ function useTypedPresence(store: CountStore, kind: ValueKind | null) {
 
 /**
  * How a picker shares its field. 'none': it is the field's control. 'other':
- * a typed input takes the field's id, label and description, and the picker
- * keeps its value. 'same': the input holds the picker's value too, so it also
- * takes the field's name, and the picker shows no value of its own. The
- * server cannot know of an input yet, so a picker is 'none' until hydration.
+ * a typed input takes the field's id, name, label and description, and the
+ * picker sends its value only under a `name` of its own. 'same': the input
+ * holds the picker's value too, so the picker sends nothing, and
+ * Field.DatePicker shows no date text. The server cannot know of an input
+ * yet, so a picker is 'none' until hydration.
  */
 type Pairing = 'none' | 'other' | 'same';
+
+type PickerOwnProps = {
+  name?: string;
+  disabled?: boolean;
+  'aria-label'?: string;
+  'aria-describedby'?: string;
+  'aria-invalid'?: FieldControlUserProps['aria-invalid'];
+};
+
+/** A picker's control props for its pairing. `label` names it beside an input. */
+function pickerControl<P extends PickerOwnProps>(
+  pairing: Pairing,
+  field: ReturnType<typeof useField>,
+  props: P,
+  label: string,
+) {
+  if (pairing === 'none') return field.getControlProps(props);
+  return {
+    ...props,
+    // The field's name belongs to the input, so the picker sends a value only under its own.
+    name: pairing === 'same' ? undefined : props.name,
+    disabled: field.disabled || Boolean(props.disabled),
+    'aria-invalid': field.invalid ? true : props['aria-invalid'],
+    'aria-label': props['aria-label'] ?? label,
+  };
+}
 
 function usePairing(store: CountStore, kind: ValueKind): Pairing {
   return useSyncExternalStore(
@@ -767,18 +794,9 @@ function ColorPicker({
   const field = useField();
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
-  // A typed input in the field takes its id and description; a text input or
-  // textarea, which holds the color too, also takes its name.
+  // A typed input in the field takes its id, name and description.
   const pairing = usePairing(store, 'texts');
-  const { name, ...control } =
-    pairing === 'none'
-      ? field.getControlProps(props)
-      : {
-          ...props,
-          name: pairing === 'same' ? undefined : (props.name ?? field.name),
-          disabled: field.disabled || Boolean(props.disabled),
-          'aria-label': props['aria-label'] ?? strings.colorPicker,
-        };
+  const { name, ...control } = pickerControl(pairing, field, props, strings.colorPicker);
   const [open, setOpen] = useControlledValue<boolean, [FieldColorPickerCloseReason]>(
     openProp,
     defaultOpen ?? false,
@@ -899,23 +917,18 @@ function DatePicker({
   const strings = useStrings();
   const { calendar } = useGlyphs();
   const textId = useDomId();
-  // A typed input in the field takes its id and description; a date input,
-  // which holds the date too, also takes its name, and the button shows only
-  // the glyph.
+  // A typed input in the field takes its id, name and description; beside a
+  // date input, which holds the date too, the button shows only the glyph.
   const pairing = usePairing(store, 'dates');
   const showText = pairing !== 'same';
   // The button's name is not the date, so the date it shows is its description.
   const ownDescribedBy = showText ? mergeDescribedBy(describedBy, textId) : describedBy;
-  const { name, ...control } =
-    pairing === 'none'
-      ? field.getControlProps({ ...props, 'aria-describedby': ownDescribedBy })
-      : {
-          ...props,
-          'aria-describedby': ownDescribedBy,
-          name: pairing === 'same' ? undefined : (props.name ?? field.name),
-          disabled: field.disabled || Boolean(props.disabled),
-          'aria-label': props['aria-label'] ?? strings.datePicker,
-        };
+  const { name, ...control } = pickerControl(
+    pairing,
+    field,
+    { ...props, 'aria-describedby': ownDescribedBy },
+    strings.datePicker,
+  );
   const [open, setOpen] = useControlledValue<boolean, [FieldDatePickerCloseReason]>(
     openProp,
     defaultOpen ?? false,

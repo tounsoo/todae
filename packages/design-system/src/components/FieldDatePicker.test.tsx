@@ -87,7 +87,7 @@ describe('Field.DatePicker', () => {
     { name: 'DateInput + ColorPicker', input: <Field.DateInput value={day} onValueChange={() => undefined} />, picker: 'color', same: false, inputEntry: ['f', '2026-10-13'] },
   ];
 
-  it.each(PAIRS)('$name: the input takes the id, and the picker keeps its value unless the input holds it', ({ input, picker, same, inputEntry }) => {
+  it.each(PAIRS)('$name: the input takes the id and the field name, and the picker shows its date only beside another kind', ({ input, picker, same, inputEntry }) => {
     const pickerEl =
       picker === 'date' ? <Field.DatePicker value={day} locale="en-US" /> : <Field.ColorPicker value="#3366ff" />;
     const tree = (withInput: boolean) => (
@@ -104,8 +104,9 @@ describe('Field.DatePicker', () => {
     expect(document.getElementById('f')!.tagName).toMatch(/^(INPUT|TEXTAREA)$/);
     const button = screen.getByRole('button', { name: picker === 'date' ? 'Choose date' : 'Color picker' });
     const pickerEntry: [string, string] = ['f', picker === 'date' ? '2026-10-13' : '#3366ff'];
+    // The field's name is the input's: the picker sends nothing without a name of its own.
     const entries = [...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()];
-    expect(entries).toEqual(same ? [inputEntry] : [inputEntry, pickerEntry]);
+    expect(entries).toEqual([inputEntry]);
     if (picker === 'date') {
       const text = screen.queryByText('Oct 13, 2026');
       expect(button.hasAttribute('data-beside')).toBe(same);
@@ -121,10 +122,10 @@ describe('Field.DatePicker', () => {
     if (picker === 'date') expect(alone.textContent).toBe('Oct 13, 2026');
   });
 
-  it('beside a typed input of another kind sends its value under its own name when it has one', () => {
+  it('beside a typed input of another kind sends its value under its own name, and is invalid with the field', () => {
     render(
       <form data-testid="form">
-        <Field.Root aria-label="Start" name="time">
+        <Field.Root aria-label="Start" name="time" invalid>
           <Field.TimeInput value={Temporal.PlainTime.from('09:30')} onValueChange={() => undefined} />
           <Field.DatePicker value={day} name="day" />
         </Field.Root>
@@ -134,6 +135,7 @@ describe('Field.DatePicker', () => {
       ['time', '09:30'],
       ['day', '2026-10-13'],
     ]);
+    expect(screen.getByRole('button', { name: 'Choose date' }).getAttribute('aria-invalid')).toBe('true');
   });
 
   it('draws the calendar glyph from GlyphsProvider', () => {
