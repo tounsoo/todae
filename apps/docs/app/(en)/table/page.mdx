@@ -34,7 +34,7 @@ Server Components can import it from `@omsoo/todae/table`. Give every column hea
 
 **Todae handles:** Style only. The native `<table>`, `<caption>`, `<th>` and `<td>` the parts render keep their meaning, and Todae adds no role, ARIA or keyboard behaviour. Header cells get their own weight and color, so they stand out without a shade.
 
-**You supply:** A name for the table: a `Table.Caption`, or `aria-labelledby` pointing at a heading. A `Table.HeaderCell` with `scope` for every header, as above. For a table wider than its container, a [ScrollArea](/scroll-area) with `axis="inline"` and an `aria-label`, so keyboard users can scroll it.
+**You supply:** A name for the table: a `Table.Caption`, or `aria-labelledby` pointing at a heading. A `Table.HeaderCell` with `scope` for every header, as above. For a table wider than its container, a [ScrollArea](/scroll-area) with `axis="inline"`, `focusable` and an `aria-label`, so keyboard users can scroll it.
 
 **Watch for:** A table drawn from `div`s, which has no rows or headers for assistive technology. Bold `Table.Cell` cells used as headers. A row made clickable with `onClick` on `Table.Row`: it takes no focus, so put a link or button in a cell. A sortable column without a `<button>` in its `Table.HeaderCell` and `aria-sort` on the `Table.HeaderCell`; Todae adds neither.
 

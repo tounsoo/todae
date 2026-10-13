@@ -438,23 +438,32 @@ main:focus {
   align-items: stretch;
 }
 
+/* Code blocks are Code.Block. The docs restyle them through its tokens in the
+   todae.theme layer, as a company's token build would; the selectors match the
+   ones Todae re-declares contract tokens on, so every provider picks them up. */
+@layer todae.theme {
+  :root,
+  [data-appearance],
+  [data-density] {
+    --todae-code-block-bg: color-mix(in oklch, var(--todae-color-bg-subtle) 45%, var(--todae-color-bg-canvas));
+    --todae-code-block-radius: var(--todae-radius-lg);
+  }
+}
+
 /* Code blocks and tables scroll sideways in a ScrollArea.Root, which draws its
-   focus ring inside its own edge and keeps the rings of what it holds whole. */
+   focus ring inside its own edge and keeps the rings of what it holds whole.
+   The frame takes the block's own tokens, so a short block still fills the row. */
 .docs-pre {
   margin-block: 1rem;
   border: 1px solid var(--docs-line);
-  border-radius: var(--todae-radius-lg);
-  background: var(--docs-raised);
+  border-radius: var(--todae-code-block-radius);
+  background: var(--todae-code-block-bg);
 }
 
+/* Code.Block draws its own padding, type and colors; only the scrolling moves to the frame. */
 .docs-pre pre {
   margin: 0;
-  /* The scroll area around it scrolls, not the block. */
   overflow: visible;
-  padding: 1rem 1.25rem;
-  background: none;
-  font-size: 0.8125rem;
-  line-height: 1.7;
 }
 
 .scroll-x {

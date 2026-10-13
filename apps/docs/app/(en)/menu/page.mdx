@@ -63,7 +63,11 @@ import { Check, Ellipsis } from 'lucide-react';
 **You supply:** A name for the trigger, which also names the menu. Text children are enough. An icon-only trigger needs `aria-label` or `aria-labelledby`; without one, `Button.Root` logs an error in development. A menu opened from code with no `Menu.Trigger` needs its own `aria-label` or `aria-labelledby`, and every `Menu.Group` and `Menu.RadioGroup` needs one, as its type requires. Pass `textValue` when an item's children are not plain text, so typeahead can match it.
 
 ```tsx
-function RowActions({ label, children }: { label: string; children: ReactNode }) {
+import type { ReactNode } from 'react';
+import { Button, Menu } from '@omsoo/todae';
+import { Ellipsis } from 'lucide-react';
+
+export function RowActions({ label, children }: { label: string; children: ReactNode }) {
   return (
     <Menu.Root>
       <Menu.Trigger variant="ghost" aria-label={label}>

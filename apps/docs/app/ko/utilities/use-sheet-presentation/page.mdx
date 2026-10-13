@@ -6,7 +6,7 @@ import { PresentationBadge } from '../../../../components/demos/ComboboxDemo';
 
 ```tsx
 const { isSheet } = useSheetPresentation();
-const popover = usePopover({ open, onOpenChange: setOpen });
+const popover = usePopover({ open, onOpenChange: setOpen, enabled: !isSheet });
 
 return isSheet ? (
   <BottomSheet.Root open={open} onOpenChange={setOpen}>…</BottomSheet.Root>

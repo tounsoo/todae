@@ -46,7 +46,8 @@ Restyle keys through `kbd.fg`, `kbd.bg`, `kbd.border`, `kbd.border-width`, `kbd.
 **You supply:** For a `Code.Block` that scrolls, the `tabIndex={0}`, `role="region"` and `aria-label` described above. A company code block component should require the name in its props instead of filling in one default. If it adds a copy button, give the button a name and report the result, for example with [useAnnouncer](/utilities/use-announcer).
 
 ```tsx
-import { Code } from '@omsoo/todae';
+// The server entry, so a Server Component can render it.
+import { Code } from '@omsoo/todae/code';
 
 type CodeBlockProps = { label: string; children: string };
 

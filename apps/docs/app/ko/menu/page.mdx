@@ -63,7 +63,11 @@ import { Check, Ellipsis } from 'lucide-react';
 **직접 제공할 것:** 트리거의 이름을 주세요. 이 이름이 메뉴의 이름도 됩니다. 텍스트 자식이면 충분합니다. 아이콘만 있는 트리거에는 `aria-label`이나 `aria-labelledby`가 필요하며, 없으면 개발 환경에서 `Button.Root`가 오류를 기록합니다. `Menu.Trigger` 없이 코드로 여는 메뉴에는 자체 `aria-label`이나 `aria-labelledby`가 필요하고, 모든 `Menu.Group`과 `Menu.RadioGroup`에도 타입이 요구하는 대로 하나가 필요합니다. 항목의 자식이 일반 텍스트가 아니면 타입어헤드가 찾을 수 있도록 `textValue`를 넘기세요.
 
 ```tsx
-function RowActions({ label, children }: { label: string; children: ReactNode }) {
+import type { ReactNode } from 'react';
+import { Button, Menu } from '@omsoo/todae';
+import { Ellipsis } from 'lucide-react';
+
+export function RowActions({ label, children }: { label: string; children: ReactNode }) {
   return (
     <Menu.Root>
       <Menu.Trigger variant="ghost" aria-label={label}>

@@ -10,17 +10,14 @@ Icon-only roots tip that name. A labeled button tips the full string only while 
 Variants use the existing paint packs. Default `type` is `button`.
 
 ```tsx
-import { Plus } from 'lucide-react';
-
 <Button.Root onClick={save}>Save</Button.Root>
 <Button.Root variant="secondary" onClick={cancel}>
   Cancel
 </Button.Root>
-<Button.Root variant="ghost" aria-label="Add">
-  <Button.Icon>
-    <Plus />
-  </Button.Icon>
+<Button.Root variant="ghost" onClick={skip}>
+  Skip
 </Button.Root>
+<Button.Root disabled>Disabled</Button.Root>
 ```
 
 <Example>

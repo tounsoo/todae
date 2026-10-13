@@ -250,7 +250,7 @@ export function ComboboxAsync() {
         </Field.Root>
       </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
-        {/* One status element stays mounted; only its text changes, so each change is read. */}
+        {/* One status element for loading and errors; only its text changes. */}
         <Text.Root role="status">{cb.loading ? 'Loading…' : cb.error ? 'Couldn’t load options.' : ''}</Text.Root>
         {cb.error && !cb.loading ? (
           <Button.Root variant="ghost" onClick={cb.retry}>

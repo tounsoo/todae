@@ -81,7 +81,7 @@ import { TriangleAlert, X } from 'lucide-react';
 
 **Todae handles:** `Alert.Root` sets `role="status"` or `role="alert"` by tone, as described above, and keeps any `role` you pass. `Alert.Icon` is `aria-hidden`. `Alert.Close` is a native button with a name: its own text, a non-empty `aria-label`, or the `dismiss` string. Todae does not move focus, either when the alert appears or when it goes.
 
-**You supply:** The message as text, in `Alert.Title` and `Alert.Description`. The tone shows only as color and an icon that is hidden, so when it matters, say it in the words, such as "Payment failed". For a message that follows an action, keep a `role="status"` wrapper mounted and render an `Alert.Root` with `role="none"` inside it. When a close button removes the alert, move focus somewhere sensible, such as the control the message was about.
+**You supply:** The message as text, in `Alert.Title` and `Alert.Description`. The tone shows only as color and an icon that is hidden, so when it matters, say it in the words, such as "Payment failed". For a message that follows an action, keep a wrapper with the tone's live role (`status` or `alert`) mounted and render an `Alert.Root` with `role="none"` inside it. When a close button removes the alert, move focus somewhere sensible, such as the control the message was about.
 
 **Watch for:** Mounting a new live region together with its message, which screen readers may not announce. A wrapper that drops `role` or the rest props, so `role="none"` never reaches the root. Removing the alert from its own close button without moving focus, which leaves focus on the page body.
 

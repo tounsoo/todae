@@ -33,10 +33,19 @@ One `Field.Group` per field. The order is Label, control, then Description and E
 Disabled and invalid live on `Field.Root`. Label does not repaint. A required mark is authored in the label text.
 
 ```tsx
+const disabledId = useId();
+const invalidId = useId();
+
 <Field.Group>
-  <Label.Root htmlFor={id}>Email (required)</Label.Root>
-  <Field.Root id={id} invalid={invalid} disabled={saving}>
-    <Field.TextInput required value={email} onChange={(event) => setEmail(event.target.value)} />
+  <Label.Root htmlFor={disabledId}>Email</Label.Root>
+  <Field.Root id={disabledId} disabled>
+    <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
+  </Field.Root>
+</Field.Group>
+<Field.Group>
+  <Label.Root htmlFor={invalidId}>Email</Label.Root>
+  <Field.Root id={invalidId} invalid>
+    <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
   </Field.Root>
 </Field.Group>
 ```

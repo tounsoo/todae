@@ -11,14 +11,6 @@ A picture of a person or a team, with a fallback such as initials. `Avatar.Fallb
 </Avatar.Root>
 ```
 
-```tsx
-<Avatar.Root>
-  <Avatar.Image src={user.photoUrl} />
-  <Avatar.Fallback>AL</Avatar.Fallback>
-</Avatar.Root>
-<Text.Root>Ada Lovelace</Text.Root>
-```
-
 <Example>
   <AvatarStates />
 </Example>
@@ -28,6 +20,14 @@ A picture of a person or a team, with a fallback such as initials. `Avatar.Fallb
 With `label`, the avatar is one image named by `label`, whichever of the image and the fallback shows, so a screen reader reads "Ada Lovelace" rather than "AL". `Avatar.Image` takes no `alt` for that reason.
 
 When the name is written next to the avatar, leave out `label`. The avatar is then decorative and hidden from assistive technology, so the name is not read twice.
+
+```tsx
+<Avatar.Root>
+  <Avatar.Image src={user.photoUrl} />
+  <Avatar.Fallback>AL</Avatar.Fallback>
+</Avatar.Root>
+<Text.Root>Ada Lovelace</Text.Root>
+```
 
 <Example>
   <AvatarBesideName />

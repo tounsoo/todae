@@ -121,15 +121,16 @@ Each component, hook and recipe gets a page in `apps/docs/app/(en)` and a Korean
 
 ### Code blocks and live examples
 
-Code on a docs page is copied into products, so it follows the package's own style and wiring. `codeBlocks.test.ts` checks the first three rules.
+Code on a docs page is copied into products, so it follows the package's own style and wiring. `apps/docs/lib/codeBlocks.test.ts` checks three of these rules mechanically: that each fence names one of the languages below, that no line starts with a tab, and that `...` is not used as a placeholder. It skips the pages listed in its `PENDING` set.
 
-- **Every fence names its language:** `tsx` for anything with JSX or a hook call, `ts` for types only, `css`, `json` or `sh`.
+- **Every fence names its language:** `tsx` for code with JSX or a hook call, `ts` for other TypeScript, `css`, `json` or `sh`.
 - **Indent with two spaces**, never tabs. Use single quotes in TypeScript, double quotes for JSX attributes, semicolons, and trailing commas in lists that span lines, as `packages/design-system` does.
 - **Mark left-out content with `…`**, as a child (`<Dialog.Body>…</Dialog.Body>`) or in place of the rest of a list. Don't use `...`, which reads as a spread.
 - **A usage snippet starts with what it calls,** such as `const id = useId();` or `const cb = useCombobox({ … });`, then a blank line, then the JSX. Declare every id the snippet wires into ARIA or `htmlFor`; app state such as `value` and `setValue` can be assumed.
 - **Show real wiring.** A label sits with its control in a `Field.Group`, gets its `id` from `useId()` rather than a literal, and every control has a name. Links are `Link.Root`, with a router passed through `render`.
 - **Icons are real icons with their import,** from `lucide-react`, not placeholder names such as `YourIcon`. Write an icon slot on three lines, the slot, the icon, then the slot's closing tag.
-- **Imports.** A fragment imports only what doesn't come from Todae, such as icons. A complete component (`export function …`) imports everything it uses, Todae from `'@omsoo/todae'`.
+- **Imports.** A fragment imports only what doesn't come from Todae, such as icons. A complete component (`export function …`) imports everything it uses, Todae from `'@omsoo/todae'`, or from a server entry such as `'@omsoo/todae/code'` when a Server Component should render it.
+- **The site renders code with Todae's own parts.** MDX maps fenced blocks to `Code.Block` (inside a `ScrollArea.Root`, through `DocsPre`) and inline code to `Code.Root`. The docs change their look through the `code` tokens in `@layer todae.theme`, as a company would, not by overriding the parts' padding, type or colors.
 - **Code comes before the `<Example>` that shows it,** and a live example uses the same props and wiring as the snippet above it, so what a reader runs matches what they copy.
 
 ## Recording a decision

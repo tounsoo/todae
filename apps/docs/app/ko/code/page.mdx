@@ -46,7 +46,8 @@ import { CodeInText, KbdShortcut } from '../../../components/demos/NativeDemo';
 **직접 제공할 것:** 스크롤되는 `Code.Block`에는 위에서 설명한 `tabIndex={0}`, `role="region"`, `aria-label`을 붙이세요. 회사의 코드 블록 컴포넌트는 기본 이름 하나를 채워 넣지 말고 props로 이름을 꼭 받으세요. 복사 버튼을 더한다면 버튼에 이름을 주고, 결과를 알리세요. 예를 들어 [useAnnouncer](/utilities/use-announcer)를 쓸 수 있습니다.
 
 ```tsx
-import { Code } from '@omsoo/todae';
+// The server entry, so a Server Component can render it.
+import { Code } from '@omsoo/todae/code';
 
 type CodeBlockProps = { label: string; children: string };
 

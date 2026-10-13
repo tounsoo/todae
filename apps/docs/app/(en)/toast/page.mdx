@@ -36,7 +36,7 @@ toaster.add({ title: 'Draft deleted', duration: Infinity, onUndo: restoreDraft }
 
 `toaster.add()` returns the toast's id. Pass that id to `update()` to change the toast while it shows, such as from "Uploading" to "Uploaded" (give a toast that waits on work `duration: Infinity`), or to `dismiss()` to close it. Adding a toast with an id the toaster already has replaces that toast in place. Give `createToaster<YourFields>()` a type to put fields of your own on each toast and read them in the render function.
 
-```tsx
+```ts
 const id = toaster.add({ title: 'Uploading report.pdf', duration: Infinity });
 await upload(file);
 toaster.update(id, { tone: 'success', title: 'Uploaded report.pdf', duration: 5000 });

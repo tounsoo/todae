@@ -1,10 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
-import type { Code, Nodes } from 'mdast';
-import { fromMarkdown } from 'mdast-util-from-markdown';
-import { mdxFromMarkdown } from 'mdast-util-mdx';
-import { mdxjs } from 'micromark-extension-mdxjs';
 import { describe, expect, it } from 'vitest';
+import { codeBlocks } from './i18n/sections';
 
 const APP = join(process.cwd(), 'app');
 const LANGUAGES = new Set(['tsx', 'ts', 'css', 'json', 'sh']);
@@ -20,22 +17,16 @@ function pages(dir: string): string[] {
   });
 }
 
-function blocks(): { page: string; code: Code }[] {
+/** Each fenced block as its language and body, named by its page and its place on the page. */
+function blocks(): { name: string; lang: string; body: string }[] {
   return pages(APP)
-    .filter((path) => {
-      const slug = relative(APP, path).split(sep).slice(1, -1).join('/');
-      return !PENDING.has(slug);
-    })
-    .flatMap((path) => {
-      const tree = fromMarkdown(readFileSync(path, 'utf8'), { extensions: [mdxjs()], mdastExtensions: [mdxFromMarkdown()] });
-      const found: { page: string; code: Code }[] = [];
-      const walk = (node: Nodes) => {
-        if (node.type === 'code') found.push({ page: `${relative(APP, path)}:${node.position?.start.line}`, code: node });
-        if ('children' in node) node.children.forEach((child) => walk(child as Nodes));
-      };
-      walk(tree);
-      return found;
-    });
+    .filter((path) => !PENDING.has(relative(APP, path).split(sep).slice(1, -1).join('/')))
+    .flatMap((path) =>
+      codeBlocks(readFileSync(path, 'utf8')).code.map((source, index) => {
+        const [fence = '', ...lines] = source.split('\n');
+        return { name: `${relative(APP, path)} #${index + 1}`, lang: fence.replace(/^`+/, '').trim(), body: lines.slice(0, -1).join('\n') };
+      }),
+    );
 }
 
 describe('docs code blocks', () => {
@@ -46,15 +37,15 @@ describe('docs code blocks', () => {
   });
 
   it('name a language', () => {
-    expect(all.filter(({ code }) => !LANGUAGES.has(code.lang ?? '')).map(({ page }) => page)).toEqual([]);
+    expect(all.filter(({ lang }) => !LANGUAGES.has(lang)).map(({ name }) => name)).toEqual([]);
   });
 
   it('indent with spaces', () => {
-    expect(all.filter(({ code }) => /^\t/m.test(code.value)).map(({ page }) => page)).toEqual([]);
+    expect(all.filter(({ body }) => /^\t/m.test(body)).map(({ name }) => name)).toEqual([]);
   });
 
   it('mark left-out content with an ellipsis, not three dots', () => {
     // `...` followed by a name, call or literal is a spread or rest.
-    expect(all.filter(({ code }) => /\.\.\.(?![\w({[])/.test(code.value)).map(({ page }) => page)).toEqual([]);
+    expect(all.filter(({ body }) => /\.\.\.(?![\w({[])/.test(body)).map(({ name }) => name)).toEqual([]);
   });
 });

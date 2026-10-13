@@ -10,17 +10,14 @@ import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 변형은 기존 페인트 팩을 씁니다. 기본 `type`은 `button`입니다.
 
 ```tsx
-import { Plus } from 'lucide-react';
-
 <Button.Root onClick={save}>Save</Button.Root>
 <Button.Root variant="secondary" onClick={cancel}>
   Cancel
 </Button.Root>
-<Button.Root variant="ghost" aria-label="Add">
-  <Button.Icon>
-    <Plus />
-  </Button.Icon>
+<Button.Root variant="ghost" onClick={skip}>
+  Skip
 </Button.Root>
+<Button.Root disabled>Disabled</Button.Root>
 ```
 
 <Example>

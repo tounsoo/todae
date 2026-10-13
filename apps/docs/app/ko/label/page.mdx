@@ -33,10 +33,19 @@ const id = useId();
 비활성과 유효하지 않음 상태는 `Field.Root`에 있습니다. Label은 다시 칠해지지 않습니다. 필수 표시는 레이블 텍스트에 직접 씁니다.
 
 ```tsx
+const disabledId = useId();
+const invalidId = useId();
+
 <Field.Group>
-  <Label.Root htmlFor={id}>Email (required)</Label.Root>
-  <Field.Root id={id} invalid={invalid} disabled={saving}>
-    <Field.TextInput required value={email} onChange={(event) => setEmail(event.target.value)} />
+  <Label.Root htmlFor={disabledId}>Email</Label.Root>
+  <Field.Root id={disabledId} disabled>
+    <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
+  </Field.Root>
+</Field.Group>
+<Field.Group>
+  <Label.Root htmlFor={invalidId}>Email</Label.Root>
+  <Field.Root id={invalidId} invalid>
+    <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
   </Field.Root>
 </Field.Group>
 ```
