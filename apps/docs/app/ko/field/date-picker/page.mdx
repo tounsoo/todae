@@ -34,7 +34,7 @@ const [date, setDate] = useState<Temporal.PlainDate | null>(null)
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 단독으로 쓰면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 레이블이 버튼의 이름이 되므로, 버튼에 보이는 날짜는 `aria-describedby`에 더해집니다. 날짜 입력 옆에서는 입력이 그것들을 받고, 버튼은 `disabled`를 유지하며, 자체 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `datePicker` 문자열로 이름이 붙습니다. 버튼에는 `aria-haspopup="dialog"`와 `aria-expanded`가, 달력이 열려 있는 동안에는 `aria-controls`가 붙습니다. 팝오버는 `datePicker` 문자열로 이름이 붙은 `role="dialog"`이고, 안의 달력은 [Calendar](/calendar)와 같은 키로 움직입니다. 글리프는 [GlyphsProvider](/utilities/glyphs-provider)의 `calendar`입니다.
+**Todae가 맡는 것:** 단독으로 쓰면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 레이블이 버튼의 이름이 되므로, 버튼에 보이는 날짜는 `aria-describedby`에 더해집니다. 날짜 입력 옆에서는 입력이 그것들을 받고, 버튼은 `disabled`와 `aria-invalid`를 유지하며, 자체 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `datePicker` 문자열로 이름이 붙습니다. 버튼에는 `aria-haspopup="dialog"`와 `aria-expanded`가, 달력이 열려 있는 동안에는 `aria-controls`가 붙습니다. 팝오버는 `datePicker` 문자열로 이름이 붙은 `role="dialog"`이고, 안의 달력은 [Calendar](/calendar)와 같은 키로 움직입니다. 글리프는 [GlyphsProvider](/utilities/glyphs-provider)의 `calendar`입니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. `Field.DateInput`과 그 옆의 선택기에는 같은 상태를 주세요.
 

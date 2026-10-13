@@ -217,7 +217,7 @@
   "field/color-picker": {
     "(top)": "a10298fe8c00",
     "# Field.ColorPicker": "38599cf4a007",
-    "## Accessible composition": "22f585e1b518",
+    "## Accessible composition": "8886e55c3f5e",
     "## When to use": "d57fe8233a0b",
     "### Field.ColorPicker": "f274c18b0118",
     "## Props": "24158ef7493e",
@@ -237,7 +237,7 @@
     "(top)": "40872dd1fdc5",
     "# Field.DatePicker": "8375f59dfaa9",
     "## On its own": "c7bd477c706d",
-    "## Accessible composition": "aea77e8e509f",
+    "## Accessible composition": "2d95b9a36cb9",
     "## When to use": "d57fe8233a0b",
     "### Field.DatePicker": "b3c1c234ea3a",
     "## Props": "4d3b8d5a61e4",
