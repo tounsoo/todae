@@ -40,6 +40,10 @@ const FRENCH: Strings = {
   charactersLeft: (remaining) => `${remaining} restants`,
   characterLimitReached: 'Limite atteinte',
   createOption: (query) => `Créer « ${query} »`,
+  saturation: 'Saturation',
+  brightness: 'Luminosité',
+  hue: 'Teinte',
+  colorPicker: 'Sélecteur de couleur',
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {

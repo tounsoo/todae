@@ -60,7 +60,7 @@ describe('SiteNav', () => {
     expect(closed.details?.querySelector('summary')?.textContent).toBe('Field pages');
     expect(closed.links.map((link) => link.getAttribute('href'))).toEqual([
       '/field/chip-input',
-      '/field/color-input',
+      '/field/color-picker',
       '/field/select',
       '/field/textarea',
       '/field/text-input',

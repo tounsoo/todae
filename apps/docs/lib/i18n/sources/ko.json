@@ -107,11 +107,20 @@
     "## Props": "d269d46cd0cc",
     "(section order)": "809b0e250585"
   },
+  "color-picker": {
+    "(top)": "9c8a041066e7",
+    "# ColorPicker": "d1ef5ff72c02",
+    "## Keys and values": "99c6e3175913",
+    "## Accessible composition": "4546795fd18a",
+    "## When to use": "3c01076e78db",
+    "## Props": "4299d93f81be",
+    "(section order)": "5b4b04f4c6fa"
+  },
   "composition": {
     "(top)": "daa9c66a4c98",
     "# Composition": "5df38cfb773f",
     "## Placing something new": "7535f6400597",
-    "## Components": "c6a7dcca87eb",
+    "## Components": "9db230c231a6",
     "## Recipes": "fe3389573b71",
     "## Hook": "8af7df6c27f7",
     "## Never": "683d91a3b1f8",
@@ -163,8 +172,8 @@
   },
   "field": {
     "(top)": "4995db135d8d",
-    "# Field": "db4f9d99de11",
-    "## Inputs": "20c94141ddf4",
+    "# Field": "4f0029eabb66",
+    "## Inputs": "55c4ab968fcf",
     "## Label": "7d0c50d3c651",
     "## Messages": "3baebdf13c83",
     "## Counter": "06f967ffc949",
@@ -195,14 +204,14 @@
     "## Props": "79a006629aa3",
     "(section order)": "41b467fbf7d3"
   },
-  "field/color-input": {
+  "field/color-picker": {
     "(top)": "a10298fe8c00",
-    "# Field.ColorInput": "83b988c6abb3",
-    "## Accessible composition": "4d1ba75e131b",
+    "# Field.ColorPicker": "38599cf4a007",
+    "## Accessible composition": "22f585e1b518",
     "## When to use": "d57fe8233a0b",
-    "### Field.ColorInput": "997575198b6e",
-    "## Props": "fe134ede4644",
-    "(section order)": "41c763fa7630"
+    "### Field.ColorPicker": "f274c18b0118",
+    "## Props": "24158ef7493e",
+    "(section order)": "124193e3094a"
   },
   "field/select": {
     "(top)": "9ef76a8a6752",
@@ -548,7 +557,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "0a9ce6b4f646",
-    "## Strings": "edd0cfc87d04",
+    "## Strings": "146e04f6b764",
     "## Accessible composition": "8cc16824f136",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",

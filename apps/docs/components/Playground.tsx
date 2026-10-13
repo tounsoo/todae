@@ -75,7 +75,7 @@ let swatchContext: CanvasRenderingContext2D | null | undefined;
 const hexCache = new Map<string, string>();
 
 /**
- * Any CSS color as #rrggbb, for the native color input. Painting one pixel
+ * Any CSS color as #rrggbb, for Field.ColorPicker. Painting one pixel
  * resolves every syntax the browser knows (oklch, relative colors) to sRGB.
  * One canvas serves every swatch, and each value is resolved once.
  */
@@ -124,16 +124,15 @@ function TokenField({
       </label>
       <div className="token-row-inputs">
         {color ? (
-          <input
-            type="color"
-            className="token-swatch"
-            aria-label={`${path} ${colorLabel}`}
-            value={toHex(value || '#000000')}
-            onChange={(event) => {
-              const parsed = parseThemeValue(path, event.target.value);
-              if (parsed !== null) onCommit(parsed);
-            }}
-          />
+          <Field.Root aria-label={`${path} ${colorLabel}`}>
+            <Field.ColorPicker
+              value={toHex(value || '#000000')}
+              onValueChange={(next) => {
+                const parsed = parseThemeValue(path, next);
+                if (parsed !== null) onCommit(parsed);
+              }}
+            />
+          </Field.Root>
         ) : null}
         <Field.Root id={id} invalid={invalid}>
           <Field.TextInput
