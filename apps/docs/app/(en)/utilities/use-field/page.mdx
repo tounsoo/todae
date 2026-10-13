@@ -53,7 +53,7 @@ const captionId = useId();
 
 **You supply:** What the control is and does: a `role`, since the hook sets none, a `tabIndex`, keyboard handling, and the role's state, such as `aria-valuenow`, `aria-valuemin` and `aria-valuemax` for a `slider`. A name through `aria-labelledby` or `aria-label` on `Field.Root`. While `field.disabled` is true, skip the tab stop and ignore keys.
 
-**Watch for:** An `aria-describedby` or `ref` spread after `getControlProps()` replaces the wired one; pass yours in as `getControlProps(props)` so they merge. The `aria-disabled` from `{ native: false }` does not stop focus or keys. Every control that calls `getControlProps()` gets the same `id`, so use one per `Field.Root`.
+**Watch for:** An `aria-describedby`, `name` or `ref` spread after `getControlProps()` replaces the wired one without the field knowing; pass yours in as `getControlProps(props)` instead. The `aria-disabled` from `{ native: false }` does not stop focus or keys. Every control that calls `getControlProps()` gets the same `id`, so use one per `Field.Root`.
 
 ## When to use
 

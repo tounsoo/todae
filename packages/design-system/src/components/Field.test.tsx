@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps, ReactNode } from 'react';
-import { createRef, Profiler, StrictMode, useState } from 'react';
+import { createElement, createRef, Profiler, StrictMode, useState } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -17,6 +17,7 @@ import {
   type FieldTextInputProps,
 } from './Field';
 import { useChipField } from '../hooks/useChipField';
+import { useField } from '../hooks/useField';
 import * as api from '../index';
 import { StringsProvider } from '../providers/StringsProvider';
 
@@ -55,6 +56,9 @@ describe('Field exports', () => {
       ChipInput: Field.ChipInput,
       Select: Field.Select,
       ColorPicker: Field.ColorPicker,
+      DateInput: Field.DateInput,
+      TimeInput: Field.TimeInput,
+      DateTimeInput: Field.DateTimeInput,
       Icon: Field.Icon,
       Affix: Field.Affix,
       Counter: Field.Counter,
@@ -166,7 +170,7 @@ describe('Field.TextInput', () => {
   it('rejects file at the type level', () => {
     expectTypeOf<FieldTextInputProps['type']>().extract<'file'>().toBeNever();
     expectTypeOf<NonNullable<FieldTextInputProps['type']>>().toEqualTypeOf<
-      'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number' | 'date' | 'time' | 'datetime-local'
+      'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number'
     >();
   });
 
@@ -190,6 +194,392 @@ const fieldDir = dirname(fileURLToPath(import.meta.url));
 const fieldCss = readFileSync(join(fieldDir, 'Field.module.css'), 'utf8');
 const chipCss = readFileSync(join(fieldDir, 'Chip.module.css'), 'utf8');
 const tokensCss = readFileSync(join(fieldDir, '../styles/tokens.generated.css'), 'utf8');
+
+describe('Field date and time inputs', () => {
+  function renderInput(node: ReactNode) {
+    const { container, rerender } = render(<Field.Root aria-label="When">{node}</Field.Root>);
+    return { input: container.querySelector('input')!, rerender };
+  }
+
+  it('shows a Temporal.PlainDate as the native date string and reads it back', () => {
+    const onValueChange = vi.fn();
+    const { input } = renderInput(
+      <Field.DateInput
+        value={Temporal.PlainDate.from('2026-10-07')}
+        min={Temporal.PlainDate.from('2026-01-01')}
+        max={Temporal.PlainDate.from('2026-12-31')}
+        onValueChange={onValueChange}
+      />,
+    );
+    expect(input.type).toBe('date');
+    expect(input.value).toBe('2026-10-07');
+    expect(input.min).toBe('2026-01-01');
+    expect(input.max).toBe('2026-12-31');
+    expect(input.getAttribute('aria-label')).toBe('When');
+    fireEvent.change(input, { target: { value: '2026-10-08' } });
+    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainDate;
+    expect(next).toBeInstanceOf(Temporal.PlainDate);
+    expect(next.equals(Temporal.PlainDate.from('2026-10-08'))).toBe(true);
+  });
+
+  it('gives null for an empty or incomplete input', () => {
+    const onValueChange = vi.fn();
+    const { input } = renderInput(
+      <Field.DateInput value={Temporal.PlainDate.from('2026-10-07')} onValueChange={onValueChange} />,
+    );
+    fireEvent.change(input, { target: { value: '' } });
+    expect(onValueChange).toHaveBeenLastCalledWith(null);
+  });
+
+  it('renders null as an empty input', () => {
+    const { input } = renderInput(<Field.DateInput value={null} onValueChange={() => undefined} />);
+    expect(input.value).toBe('');
+  });
+
+  it('writes an ISO date for a date in another calendar', () => {
+    const { input } = renderInput(
+      <Field.DateInput
+        value={Temporal.PlainDate.from('2026-10-07').withCalendar('gregory')}
+        onValueChange={() => undefined}
+      />,
+    );
+    expect(input.value).toBe('2026-10-07');
+  });
+
+  it('writes a time to the minute unless it has seconds', () => {
+    const onValueChange = vi.fn();
+    const { input, rerender } = renderInput(
+      <Field.TimeInput value={Temporal.PlainTime.from('14:30')} onValueChange={onValueChange} />,
+    );
+    expect(input.type).toBe('time');
+    expect(input.value).toBe('14:30');
+    rerender(
+      <Field.Root aria-label="When">
+        <Field.TimeInput value={Temporal.PlainTime.from('14:30:15.250')} onValueChange={onValueChange} />
+      </Field.Root>,
+    );
+    expect(input.value).toBe('14:30:15.250');
+    fireEvent.change(input, { target: { value: '09:05' } });
+    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainTime;
+    expect(next.equals(Temporal.PlainTime.from('09:05'))).toBe(true);
+  });
+
+  it('shows a Temporal.PlainDateTime in a datetime-local input', () => {
+    const onValueChange = vi.fn();
+    const { input } = renderInput(
+      <Field.DateTimeInput
+        value={Temporal.PlainDateTime.from('2026-10-07T14:30')}
+        step={1}
+        onValueChange={onValueChange}
+      />,
+    );
+    expect(input.type).toBe('datetime-local');
+    expect(input.value).toBe('2026-10-07T14:30');
+    expect(input.step).toBe('1');
+    fireEvent.change(input, { target: { value: '2026-10-08T08:00:30' } });
+    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainDateTime;
+    expect(next.equals(Temporal.PlainDateTime.from('2026-10-08T08:00:30'))).toBe(true);
+  });
+
+  it('passes the native event to onChange', () => {
+    const onChange = vi.fn();
+    const { input } = renderInput(<Field.DateInput value={null} onChange={onChange} />);
+    fireEvent.change(input, { target: { value: '2026-10-07' } });
+    expect(onChange.mock.calls[0]![0].target).toBe(input);
+  });
+
+  it('reads and writes a year past 9999 the way the input does', () => {
+    const onValueChange = vi.fn();
+    const { input } = renderInput(
+      <Field.DateInput value={Temporal.PlainDate.from('+010000-01-01')} onValueChange={onValueChange} />,
+    );
+    expect(input.value).toBe('10000-01-01');
+    fireEvent.change(input, { target: { value: '20261-10-07' } });
+    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainDate;
+    expect(next.year).toBe(20261);
+  });
+
+  it('skips onValueChange for a date past what Temporal can hold', () => {
+    const onValueChange = vi.fn();
+    const onChange = vi.fn();
+    const { input } = renderInput(
+      <Field.DateInput value={Temporal.PlainDate.from('2026-10-07')} onChange={onChange} onValueChange={onValueChange} />,
+    );
+    fireEvent.change(input, { target: { value: '275760-12-31' } });
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it('follows the Root for disabled and invalid', () => {
+    render(
+      <Field.Root aria-label="When" disabled invalid>
+        <Field.DateInput value={null} onValueChange={() => undefined} />
+      </Field.Root>,
+    );
+    const input = document.querySelector('input')!;
+    expect(input.disabled).toBe(true);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  describe('without Temporal', () => {
+    const temporal = Object.getOwnPropertyDescriptor(globalThis, 'Temporal')!;
+    beforeEach(() => {
+      Reflect.deleteProperty(globalThis, 'Temporal');
+    });
+    afterEach(() => {
+      Object.defineProperty(globalThis, 'Temporal', temporal);
+    });
+
+    it('renders an empty input on a server', () => {
+      expect(
+        renderToString(
+          <Field.Root aria-label="When">
+            <Field.DateInput value={null} onValueChange={() => undefined} />
+          </Field.Root>,
+        ),
+      ).toContain('type="date"');
+    });
+
+    it('reports the missing Temporal on change instead of giving null', () => {
+      const onValueChange = vi.fn();
+      const errors: unknown[] = [];
+      const onError = (event: ErrorEvent) => {
+        errors.push(event.error);
+        event.preventDefault();
+      };
+      window.addEventListener('error', onError);
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        const { container } = render(
+          <Field.Root aria-label="When">
+            <Field.DateInput value={null} onValueChange={onValueChange} />
+          </Field.Root>,
+        );
+        fireEvent.change(container.querySelector('input')!, { target: { value: '2026-10-07' } });
+      } finally {
+        window.removeEventListener('error', onError);
+        consoleError.mockRestore();
+      }
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(errors.some((error) => error instanceof ReferenceError)).toBe(true);
+    });
+  });
+});
+
+describe('Field.ColorPicker beside another control part', () => {
+  const noop = () => undefined;
+  const parts: [string, ReactNode][] = [
+    ['TextInput', <Field.TextInput key="c" value="#3366ff" onChange={noop} />],
+    ['Textarea', <Field.Textarea key="c" value="#3366ff" onChange={noop} />],
+    [
+      'ChipInput',
+      <Field.ChipInput key="c" chips={[]} inputValue="" onInputValueChange={noop} onCommit={noop} onChipRemove={noop} />,
+    ],
+    [
+      'Select',
+      <Field.Select key="c" value="a" onChange={noop}>
+        <option value="a">A</option>
+      </Field.Select>,
+    ],
+    ['DateInput', <Field.DateInput key="c" value={Temporal.PlainDate.from('2026-10-07')} onValueChange={noop} />],
+    ['TimeInput', <Field.TimeInput key="c" value={Temporal.PlainTime.from('09:30')} onValueChange={noop} />],
+    [
+      'DateTimeInput',
+      <Field.DateTimeInput key="c" value={Temporal.PlainDateTime.from('2026-10-07T09:30')} onValueChange={noop} />,
+    ],
+  ];
+
+  function Custom() {
+    const field = useField();
+    return <input {...field.getControlProps()} type="range" />;
+  }
+  parts.push(['control joined with useField', <Custom key="c" />]);
+
+  for (const [label, control] of parts) {
+    it(`leaves the field's id and name to a ${label}`, () => {
+      const { container } = render(
+        <form data-testid="form">
+          <Field.Root id="x" name="n" aria-label="Value">
+            {control}
+            <Field.ColorPicker value="#3366ff" />
+          </Field.Root>
+        </form>,
+      );
+      expect(container.querySelectorAll('#x')).toHaveLength(1);
+      expect(container.querySelector('#x')!.tagName).not.toBe('BUTTON');
+      expect(container.querySelectorAll('[name="n"]')).toHaveLength(1);
+    });
+  }
+
+  it('takes the id back, and is named by the field again, when the other control goes', () => {
+    const { container, rerender } = render(
+      <Field.Root id="x" aria-label="Accent">
+        <Field.DateInput value={null} onValueChange={noop} />
+        <Field.ColorPicker value="#3366ff" />
+      </Field.Root>,
+    );
+    expect(screen.getByRole('button', { name: 'Color picker' }).id).toBe('');
+    rerender(
+      <Field.Root id="x" aria-label="Accent">
+        <Field.ColorPicker value="#3366ff" />
+      </Field.Root>,
+    );
+    expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
+    expect(screen.getByRole('button', { name: 'Accent' })).toBeTruthy();
+  });
+
+  function Stars() {
+    const field = useField();
+    return <div role="slider" aria-valuenow={3} tabIndex={0} {...field.getControlProps({}, { native: false })} />;
+  }
+
+  it('keeps the name, and gives up the id, beside a control that is not a form element', () => {
+    const { container, getByTestId } = render(
+      <form data-testid="form">
+        <Field.Root id="x" name="accent" aria-label="Accent">
+          <Stars />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </form>,
+    );
+    expect(container.querySelector('#x')!.getAttribute('role')).toBe('slider');
+    expect([...new FormData(getByTestId('form') as HTMLFormElement).entries()]).toEqual([['accent', '#3366ff']]);
+  });
+
+  it('keeps the field beside a part that reads useField but renders no control', () => {
+    function Reader() {
+      const field = useField();
+      return <span>{field.disabled ? 'off' : 'on'}</span>;
+    }
+    const { container } = render(
+      <Field.Root id="x" name="n" aria-label="Accent">
+        <Reader />
+        <Field.ColorPicker value="#3366ff" />
+      </Field.Root>,
+    );
+    expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
+    expect(container.querySelectorAll('[name="n"]')).toHaveLength(1);
+  });
+
+  function formEntries() {
+    return [...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()];
+  }
+
+  it('keeps the name beside a button that does not take it', () => {
+    function Switch() {
+      const field = useField();
+      return <button type="button" role="switch" aria-checked {...field.getControlProps({}, { native: false })} />;
+    }
+    const { container } = render(
+      <form data-testid="form">
+        <Field.Root id="x" name="accent" aria-label="Accent">
+          <Switch />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </form>,
+    );
+    expect(container.querySelector('#x')!.getAttribute('role')).toBe('switch');
+    expect(formEntries()).toEqual([['accent', '#3366ff']]);
+  });
+
+  it('leaves the name to a custom element that takes it', () => {
+    function Rating() {
+      const field = useField();
+      return createElement('todae-rating', field.getControlProps());
+    }
+    const { container } = render(
+      <form data-testid="form">
+        <Field.Root id="x" name="accent" aria-label="Accent">
+          <Rating />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </form>,
+    );
+    const named = container.querySelectorAll('[name="accent"]');
+    expect(named).toHaveLength(1);
+    expect(named[0]!.tagName).toBe('TODAE-RATING');
+  });
+
+  it('leaves the name to a custom element that keeps it as a property', () => {
+    // Like a Shoelace control, which sends its value under its name property.
+    class PropertyRating extends HTMLElement {
+      name = '';
+    }
+    if (!customElements.get('todae-property-rating')) customElements.define('todae-property-rating', PropertyRating);
+    function Rating() {
+      const field = useField();
+      return createElement('todae-property-rating', field.getControlProps());
+    }
+    const { container } = render(
+      <form data-testid="form">
+        <Field.Root id="x" name="accent" aria-label="Accent">
+          <Rating />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </form>,
+    );
+    const rating = container.querySelector('todae-property-rating') as PropertyRating;
+    expect(rating.name).toBe('accent');
+    expect(rating.hasAttribute('name')).toBe(false);
+    expect(container.querySelector('input[type="hidden"]')).toBeNull();
+  });
+
+  function WithText({ inputName, rootName = 'accent', swatchName }: { inputName?: string; rootName?: string; swatchName?: string }) {
+    return (
+      <form data-testid="form">
+        <Field.Root id="x" name={rootName} aria-label="Accent">
+          <Field.TextInput name={inputName} value="#3366ff" onChange={noop} />
+          <Field.ColorPicker name={swatchName} value="#3366ff" />
+        </Field.Root>
+      </form>
+    );
+  }
+
+  it('sends the field name beside a text input with its own name, and follows a change to it', () => {
+    const { rerender } = render(<WithText inputName="accentHex" />);
+    expect(formEntries()).toEqual([
+      ['accentHex', '#3366ff'],
+      ['accent', '#3366ff'],
+    ]);
+    rerender(<WithText />);
+    expect(formEntries()).toEqual([['accent', '#3366ff']]);
+    expect(document.querySelector('[name="accent"]')!.tagName).toBe('INPUT');
+    expect(document.querySelector('[name="accent"]')!.getAttribute('type')).not.toBe('hidden');
+    rerender(<WithText inputName="accentHex" />);
+    expect(formEntries()).toEqual([
+      ['accentHex', '#3366ff'],
+      ['accent', '#3366ff'],
+    ]);
+  });
+
+  it('leaves the name to a text input that names itself with it', () => {
+    render(<WithText inputName="accent" />);
+    expect(formEntries()).toEqual([['accent', '#3366ff']]);
+  });
+
+  it('follows a change to the field name', () => {
+    const { rerender } = render(<WithText />);
+    rerender(<WithText rootName="color" />);
+    expect(formEntries()).toEqual([['color', '#3366ff']]);
+  });
+
+  it('keeps its own name beside a text input', () => {
+    render(<WithText swatchName="swatch" />);
+    expect(formEntries()).toEqual([
+      ['accent', '#3366ff'],
+      ['swatch', '#3366ff'],
+    ]);
+  });
+
+  it('keeps the field when it is the only control', () => {
+    const { container } = render(
+      <Field.Root id="x" aria-label="Accent">
+        <Field.ColorPicker value="#3366ff" />
+      </Field.Root>,
+    );
+    expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
+  });
+});
 
 describe('Field.Textarea', () => {
   it('sets native rows, css vars, and data attributes from coerced integers', () => {

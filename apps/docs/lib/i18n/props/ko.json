@@ -703,6 +703,84 @@
       "ko": "선택기가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
     }
   },
+  "Field.DateInput": {
+    "value": {
+      "en": "Controlled value, or null while the input is empty or incomplete.",
+      "ko": "제어 값. 입력이 비어 있거나 덜 끝났을 때는 null입니다."
+    },
+    "onChange": {
+      "en": "Native change handler. Optional when onValueChange is enough.",
+      "ko": "네이티브 change 핸들러. onValueChange로 충분하면 생략할 수 있습니다."
+    },
+    "onValueChange": {
+      "en": "Called with the new Temporal.PlainDate, or null while the input is empty or incomplete.",
+      "ko": "새 Temporal.PlainDate로, 입력이 비어 있거나 덜 끝났을 때는 null로 호출됩니다."
+    },
+    "min": {
+      "en": "Earliest value the input accepts, written to the native min.",
+      "ko": "입력이 받는 가장 이른 값. 네이티브 min으로 씁니다."
+    },
+    "max": {
+      "en": "Latest value the input accepts, written to the native max.",
+      "ko": "입력이 받는 가장 늦은 값. 네이티브 max로 씁니다."
+    },
+    "className": {
+      "en": "Optional class on the input.",
+      "ko": "input에 붙는 선택적 클래스."
+    }
+  },
+  "Field.TimeInput": {
+    "value": {
+      "en": "Controlled value, or null while the input is empty or incomplete.",
+      "ko": "제어 값. 입력이 비어 있거나 덜 끝났을 때는 null입니다."
+    },
+    "onChange": {
+      "en": "Native change handler. Optional when onValueChange is enough.",
+      "ko": "네이티브 change 핸들러. onValueChange로 충분하면 생략할 수 있습니다."
+    },
+    "onValueChange": {
+      "en": "Called with the new Temporal.PlainTime, or null while the input is empty or incomplete.",
+      "ko": "새 Temporal.PlainTime으로, 입력이 비어 있거나 덜 끝났을 때는 null로 호출됩니다."
+    },
+    "min": {
+      "en": "Earliest value the input accepts, written to the native min.",
+      "ko": "입력이 받는 가장 이른 값. 네이티브 min으로 씁니다."
+    },
+    "max": {
+      "en": "Latest value the input accepts, written to the native max.",
+      "ko": "입력이 받는 가장 늦은 값. 네이티브 max로 씁니다."
+    },
+    "className": {
+      "en": "Optional class on the input.",
+      "ko": "input에 붙는 선택적 클래스."
+    }
+  },
+  "Field.DateTimeInput": {
+    "value": {
+      "en": "Controlled value, or null while the input is empty or incomplete.",
+      "ko": "제어 값. 입력이 비어 있거나 덜 끝났을 때는 null입니다."
+    },
+    "onChange": {
+      "en": "Native change handler. Optional when onValueChange is enough.",
+      "ko": "네이티브 change 핸들러. onValueChange로 충분하면 생략할 수 있습니다."
+    },
+    "onValueChange": {
+      "en": "Called with the new Temporal.PlainDateTime, or null while the input is empty or incomplete.",
+      "ko": "새 Temporal.PlainDateTime으로, 입력이 비어 있거나 덜 끝났을 때는 null로 호출됩니다."
+    },
+    "min": {
+      "en": "Earliest value the input accepts, written to the native min.",
+      "ko": "입력이 받는 가장 이른 값. 네이티브 min으로 씁니다."
+    },
+    "max": {
+      "en": "Latest value the input accepts, written to the native max.",
+      "ko": "입력이 받는 가장 늦은 값. 네이티브 max로 씁니다."
+    },
+    "className": {
+      "en": "Optional class on the input.",
+      "ko": "input에 붙는 선택적 클래스."
+    }
+  },
   "Field.Textarea": {
     "value": {
       "en": "Controlled value.",
@@ -751,8 +829,8 @@
       "ko": "네이티브 placeholder."
     },
     "type": {
-      "en": "Native input type. Number, date and time keep the native spinner and picker, and value stays the input string, such as \"2026-10-07\".",
-      "ko": "네이티브 입력 type. number, date, time은 네이티브 스피너와 선택기를 그대로 쓰며, value는 \"2026-10-07\"처럼 입력 문자열 그대로입니다."
+      "en": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". Dates and times use Field.DateInput, Field.TimeInput and Field.DateTimeInput.",
+      "ko": "네이티브 입력 type. number는 네이티브 스피너를 그대로 쓰며, value는 \"42\"처럼 입력 문자열 그대로입니다. 날짜와 시간은 Field.DateInput, Field.TimeInput, Field.DateTimeInput을 쓰세요."
     }
   },
   "Fieldset.Legend": {

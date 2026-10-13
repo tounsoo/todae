@@ -42,7 +42,7 @@ export interface Strings {
   brightness: string;
   /** Name of ColorPicker.Hue when it has no aria-label. */
   hue: string;
-  /** Name of Field.ColorPicker's popover, and of its swatch beside a text input. */
+  /** Name of Field.ColorPicker's popover, and of its swatch beside another control. */
   colorPicker: string;
 }
 

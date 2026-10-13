@@ -6,10 +6,10 @@ describe('isModal', () => {
     // jsdom has no :modal, and matching it there overflows the call stack.
     const el = document.createElement('dialog');
     const asked: string[] = [];
-    el.matches = (selector: string) => {
+    el.matches = ((selector: string) => {
       asked.push(selector);
       return false;
-    };
+    }) as Element['matches'];
     el.setAttribute('aria-modal', 'true');
     expect(isModal(el)).toBe(true);
     el.removeAttribute('aria-modal');

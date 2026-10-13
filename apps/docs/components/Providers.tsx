@@ -1,5 +1,8 @@
 'use client';
 
+// The site supports browsers without Temporal, which Field's date and time parts need. The shim
+// installs only where Temporal is missing.
+import 'temporal-polyfill/global';
 import { DensityProvider, ThemeProvider, type Appearance } from '@omsoo.design/todae';
 import { createContext, useContext, useSyncExternalStore, type ReactNode } from 'react';
 import { APPEARANCE_KEY as KEY } from './appearanceScript';

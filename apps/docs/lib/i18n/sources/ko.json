@@ -172,22 +172,22 @@
   },
   "field": {
     "(top)": "4995db135d8d",
-    "# Field": "4f0029eabb66",
-    "## Inputs": "55c4ab968fcf",
+    "# Field": "1bca2b35cfeb",
+    "## Inputs": "fb7bf9e1002e",
     "## Label": "7d0c50d3c651",
     "## Messages": "3baebdf13c83",
-    "## Counter": "06f967ffc949",
+    "## Counter": "3c5316a2038b",
     "## Row": "e3226fa80f55",
     "## Custom controls": "edafb0ec7ed8",
     "## Icons": "4a52c267d4a7",
-    "## Accessible composition": "677d98d89c6d",
+    "## Accessible composition": "a2047885e806",
     "## When to use": "d57fe8233a0b",
     "### Field.Root": "b7b667157199",
     "### Field.Icon": "d229fcf9502c",
     "### Field.Row": "93ba826baf7c",
     "### Field.Group": "21e130ff2653",
     "### Field.Affix": "c7c545a7e130",
-    "### Field.Counter": "f0602c274632",
+    "### Field.Counter": "1a4c28d839e8",
     "## Props": "4cbed1bf162f",
     "(section order)": "aeb03827a487"
   },
@@ -206,12 +206,32 @@
   },
   "field/color-picker": {
     "(top)": "a10298fe8c00",
-    "# Field.ColorPicker": "06613da77319",
-    "## Accessible composition": "22f585e1b518",
+    "# Field.ColorPicker": "602d8578e6ee",
+    "## Accessible composition": "ae52cf757ae2",
     "## When to use": "d57fe8233a0b",
     "### Field.ColorPicker": "f274c18b0118",
     "## Props": "24158ef7493e",
     "(section order)": "124193e3094a"
+  },
+  "field/date-input": {
+    "(top)": "d0aa4859f972",
+    "# Field.DateInput": "8642fa7acdc7",
+    "## Temporal": "fdb3c62be316",
+    "## Accessible composition": "5f08e1bda3fa",
+    "## When to use": "d57fe8233a0b",
+    "### Field.DateInput": "0b5c7c088a92",
+    "## Props": "16709dfa6aa9",
+    "(section order)": "4797bdcec426"
+  },
+  "field/date-time-input": {
+    "(top)": "bd0d9d9e37e0",
+    "# Field.DateTimeInput": "96a0ad896e8f",
+    "## Temporal": "fdb3c62be316",
+    "## Accessible composition": "5f08e1bda3fa",
+    "## When to use": "d57fe8233a0b",
+    "### Field.DateTimeInput": "f76610479017",
+    "## Props": "3019547178cc",
+    "(section order)": "d7c7e410a9f0"
   },
   "field/select": {
     "(top)": "9ef76a8a6752",
@@ -224,14 +244,14 @@
     "(section order)": "6db778bd3da0"
   },
   "field/text-input": {
-    "(top)": "172c2c0e2324",
-    "# Field.TextInput": "2dcea949e1e1",
-    "## Number, date and time": "b73c8f9c08d0",
-    "## Accessible composition": "ce8a887f78ab",
+    "(top)": "72a1aded0b2b",
+    "# Field.TextInput": "a0bd3a5f41ae",
+    "## Number": "1a051e370546",
+    "## Accessible composition": "7608bd1c3eb6",
     "## When to use": "d57fe8233a0b",
-    "### Field.TextInput": "58bdade895f9",
+    "### Field.TextInput": "9cb5e567a382",
     "## Props": "286d56b43a7f",
-    "(section order)": "17b12a757df9"
+    "(section order)": "8530bb19e469"
   },
   "field/textarea": {
     "(top)": "4d3ac00b8ea3",
@@ -243,6 +263,16 @@
     "### Field.Textarea": "11b51d7095d4",
     "## Props": "ea6d8a003de8",
     "(section order)": "b21f3734faec"
+  },
+  "field/time-input": {
+    "(top)": "abb7c622b36a",
+    "# Field.TimeInput": "50456dd537cb",
+    "## Temporal": "fdb3c62be316",
+    "## Accessible composition": "5f08e1bda3fa",
+    "## When to use": "d57fe8233a0b",
+    "### Field.TimeInput": "12a15f328e34",
+    "## Props": "f90e91d69375",
+    "(section order)": "76c49c0becb2"
   },
   "fieldset": {
     "(top)": "d88e18f28a84",
@@ -332,7 +362,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "a59db7732a9f",
+    "# Native platform": "b10b184db6bd",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -617,7 +647,7 @@
   "utilities/use-field": {
     "(top)": "1ba672062eb8",
     "# useField": "9707f4664ce2",
-    "## Accessible composition": "b6ed7b4ca1d1",
+    "## Accessible composition": "2747e1de0671",
     "## When to use": "e08f8ff9959e",
     "## Props": "6c08c2462796",
     "(section order)": "35c08bde8f0b"

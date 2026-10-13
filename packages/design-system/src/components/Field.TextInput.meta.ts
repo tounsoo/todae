@@ -30,10 +30,11 @@ export const meta = {
     },
     {
       name: 'type',
-      type: '"text" | "search" | "email" | "url" | "tel" | "password" | "number" | "date" | "time" | "datetime-local"',
+      type: '"text" | "search" | "email" | "url" | "tel" | "password" | "number"',
       required: false,
       default: '"text"',
-      description: 'Native input type. Number, date and time keep the native spinner and picker, and value stays the input string, such as "2026-10-07".',
+      description:
+        'Native input type. Number keeps the native spinner, and value stays the input string, such as "42". Dates and times use Field.DateInput, Field.TimeInput and Field.DateTimeInput.',
     },
   ],
 } as const satisfies ComponentMeta;

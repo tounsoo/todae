@@ -1,3 +1,4 @@
+import './temporal';
 function polyfillDialog(): void {
   const proto = globalThis.HTMLDialogElement?.prototype;
   if (!proto) return;

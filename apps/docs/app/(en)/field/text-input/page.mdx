@@ -1,8 +1,8 @@
-import { FieldDateTime, FieldLabelStates } from '../../../../components/demos/FieldDemo';
+import { FieldLabelStates, FieldNumber } from '../../../../components/demos/FieldDemo';
 
 # Field.TextInput
 
-`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string and `onChange` is required; `onValueChange` also gets the new string. `type` takes `text`, `search`, `email`, `url`, `tel`, `password`, `number`, `date`, `time` or `datetime-local`. Put `id` on `Field.Root`.
+`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string and `onChange` is required; `onValueChange` also gets the new string. `type` takes `text`, `search`, `email`, `url`, `tel`, `password` or `number`. Dates and times have their own parts: [Field.DateInput](/field/date-input), [Field.TimeInput](/field/time-input) and [Field.DateTimeInput](/field/date-time-input). Put `id` on `Field.Root`.
 
 ```tsx
 const id = useId();
@@ -19,26 +19,26 @@ const id = useId();
   <FieldLabelStates />
 </Example>
 
-## Number, date and time
+## Number
 
-`Field.TextInput` takes `type="number"`, `"date"`, `"time"` and `"datetime-local"`. They stay native inputs, with the browser's own spinner, date picker and locale format, styled from the field tokens with figures lined up. `value` is the input's string: `"2"`, `"2026-10-07"`, `"14:30"`, or an empty string while the input is incomplete. Constrain them with the native `min`, `max` and `step`.
+`Field.TextInput` with `type="number"` stays a native input, with the browser's own spinner, styled from the field tokens with figures lined up. `value` is the input's string: `"2"`, or an empty string while the input is incomplete. Constrain it with the native `min`, `max` and `step`.
 
 ```tsx
 const id = useId();
 
 <Field.Group>
-  <Label.Root htmlFor={id}>Start date</Label.Root>
+  <Label.Root htmlFor={id}>Seats</Label.Root>
   <Field.Root id={id}>
-    <Field.TextInput type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+    <Field.TextInput type="number" min={1} max={20} value={quantity} onChange={(event) => setQuantity(event.target.value)} />
   </Field.Root>
 </Field.Group>
 ```
 
 <Example block>
-  <FieldDateTime />
+  <FieldNumber />
 </Example>
 
-Stepper buttons and a calendar grid are app compositions; build them around these inputs when the native ones are not enough.
+Stepper buttons are an app composition; build them around this input when the native spinner is not enough.
 
 ## Accessible composition
 
@@ -46,15 +46,15 @@ Stepper buttons and a calendar grid are app compositions; build them around thes
 
 **You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root.
 
-**Watch for:** An `id` on `Field.TextInput` is replaced by the Root's; put it on the Root. A number, date or time input whose value is incomplete reports an empty string, so don't treat an empty `value` as a cleared field while the user is still typing.
+**Watch for:** An `id` on `Field.TextInput` is replaced by the Root's; put it on the Root. A number input whose value is incomplete reports an empty string, so don't treat an empty `value` as a cleared field while the user is still typing.
 
 ## When to use
 
 ### Field.TextInput
 
-**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password), or a native number, date or time.
+**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password), or a native number.
 
-**When not:** Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
+**When not:** A date or time → `Field.DateInput`, `Field.TimeInput` or `Field.DateTimeInput`. Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
 
 ## Props
 
