@@ -132,7 +132,7 @@ function Area({ className, style, onPointerDown, onPointerMove, ...props }: Colo
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     const step = event.shiftKey ? 0.1 : 0.01;
-    let next: Hsv | null = null;
+    let next: Hsv;
     let axis = xRef;
     switch (event.key) {
       case 'ArrowLeft':

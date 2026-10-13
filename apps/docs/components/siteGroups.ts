@@ -41,7 +41,7 @@ export const SITE_GROUPS = [
         'Field',
         [
           ['/field/chip-input', 'ChipInput'],
-          ['/field/color-input', 'ColorInput'],
+          ['/field/color-picker', 'ColorPicker'],
           ['/field/select', 'Select'],
           ['/field/textarea', 'Textarea'],
           ['/field/text-input', 'TextInput'],

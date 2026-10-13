@@ -607,21 +607,27 @@ function ColorPicker({
   const control = field.getControlProps(props);
   const popover = usePopover({ open, defaultOpen, onOpenChange, enabled: !control.disabled });
   const trigger = popover.getTriggerProps({ ...control, style } as PopoverTriggerUserProps);
+  // The popover exists only while open, so only then does the button control it.
+  const controls = popover.open ? trigger['aria-controls'] : undefined;
   return (
     <>
       <button
         {...(trigger as ComponentPropsWithRef<'button'>)}
+        aria-controls={controls}
         type="button"
         data-todae-field-picker=""
         className={cx(styles.swatch, className)}
         style={{ ...trigger.style, '--_swatch': value } as CSSProperties}
       />
-      <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label={strings.colorPicker}>
-        <ColorPickerParts.Root value={value} onValueChange={onValueChange} disabled={control.disabled}>
-          <ColorPickerParts.Area />
-          <ColorPickerParts.Hue />
-        </ColorPickerParts.Root>
-      </Popover.Root>
+      {/* Mounted while open only: a form can hold many swatches. */}
+      {popover.open ? (
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label={strings.colorPicker}>
+          <ColorPickerParts.Root value={value} onValueChange={onValueChange} disabled={control.disabled}>
+            <ColorPickerParts.Area />
+            <ColorPickerParts.Hue />
+          </ColorPickerParts.Root>
+        </Popover.Root>
+      ) : null}
     </>
   );
 }

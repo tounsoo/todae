@@ -172,8 +172,8 @@
   },
   "field": {
     "(top)": "4995db135d8d",
-    "# Field": "db4f9d99de11",
-    "## Inputs": "20c94141ddf4",
+    "# Field": "4f0029eabb66",
+    "## Inputs": "55c4ab968fcf",
     "## Label": "7d0c50d3c651",
     "## Messages": "3baebdf13c83",
     "## Counter": "ca3bd330d359",
@@ -204,14 +204,14 @@
     "## Props": "79a006629aa3",
     "(section order)": "41b467fbf7d3"
   },
-  "field/color-input": {
+  "field/color-picker": {
     "(top)": "a10298fe8c00",
-    "# Field.ColorInput": "83b988c6abb3",
-    "## Accessible composition": "4d1ba75e131b",
+    "# Field.ColorPicker": "a9074c839b4f",
+    "## Accessible composition": "986073964651",
     "## When to use": "d57fe8233a0b",
-    "### Field.ColorInput": "997575198b6e",
-    "## Props": "fe134ede4644",
-    "(section order)": "41c763fa7630"
+    "### Field.ColorPicker": "a26227b2c468",
+    "## Props": "24158ef7493e",
+    "(section order)": "124193e3094a"
   },
   "field/select": {
     "(top)": "9ef76a8a6752",
