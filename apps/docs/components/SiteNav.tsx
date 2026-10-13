@@ -7,12 +7,12 @@ import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';
 import { ChevronIcon } from './icons';
 import { SiteLink } from './SiteLink';
 
-const GLYPHS = { chevron: <ChevronIcon size={14} /> };
+const GLYPHS = { chevron: <ChevronIcon /> };
 
 /**
  * The sidebar. `idPrefix` keeps group label ids unique when a second copy renders in the mobile drawer.
  * A link with child pages stays a link; a disclosure after it shows the child pages as a nested list,
- * open while the current page is the link or one of its children.
+ * open on a page in the group and opened when navigation moves into it; a list closed inside the group stays closed.
  */
 export function SiteNav({ locale, idPrefix = 'nav' }: { locale: Locale; idPrefix?: string }) {
   const path = usePathname();
@@ -34,7 +34,7 @@ export function SiteNav({ locale, idPrefix = 'nav' }: { locale: Locale; idPrefix
                   <GlyphsProvider glyphs={GLYPHS}>
                     <Disclosure.Root open={path === href || children.some(([child]) => child === path)}>
                       <Disclosure.Summary>
-                        <VisuallyHidden.Root>{dict.subpages.replace('{name}', label)}</VisuallyHidden.Root>
+                        <VisuallyHidden.Root>{dict.subpages.replace('{name}', () => label)}</VisuallyHidden.Root>
                       </Disclosure.Summary>
                       <ul>
                         {children.map(([childHref, childLabel]) => (

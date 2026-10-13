@@ -31,7 +31,7 @@ const id = useId()
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 입력은 `Field.Root`에서 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. `Field.Counter`와 `maxLength`가 있으면 글자 수의 스크린 리더 텍스트가 입력의 설명에 더해집니다.
+**Todae가 맡는 것:** 입력은 `Field.Root`에서 `id`, `name`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다.
 

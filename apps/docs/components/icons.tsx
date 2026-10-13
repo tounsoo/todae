@@ -27,7 +27,7 @@ export function MenuIcon(props: IconProps) {
   );
 }
 
-/** Points down; Disclosure turns it toward the text while closed. */
+/** Points down; Disclosure turns it toward the inline end while closed. */
 export function ChevronIcon(props: IconProps) {
   return (
     <Svg {...props}>

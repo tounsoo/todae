@@ -104,7 +104,8 @@ describe('docs locales', () => {
         expect(translation, `${locale}/${slug}`).toEqual(withPage(`en/${slug}`, () => shape(english)));
       }
     }
-  });
+    // Reads every English and translated page: its time grows with the docs.
+  }, 20_000);
 
   it('records which English each translated page was made from', () => {
     // The structure check above cannot see prose edits, so each translated page records a fingerprint
@@ -130,7 +131,7 @@ describe('docs locales', () => {
         `Update app/${locale}/<slug>/page.mdx to match the English sections listed, then run pnpm --filter docs i18n:stamp ${locale} <slug>`,
       ).toEqual([]);
     }
-  });
+  }, 20_000);
 
   it('notices a changed, new, removed or moved English section', () => {
     const english = '# Badge\n\nA label.\n\n## When to use\n\nOften.\n';
