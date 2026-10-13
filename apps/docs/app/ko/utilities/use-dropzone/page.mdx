@@ -18,15 +18,28 @@ const zone = useDropzone({
 </label>
 ```
 
-브라우저의 선택기가 `accept`를 적용하고, 드롭한 파일은 훅이 `accept`에 맞춰 확인합니다(`.ext` 규칙은 파일 이름과, 다른 규칙은 파일의 MIME 형식과 맞춥니다). 드롭한 파일과 고른 파일 모두 `maxSize`, `minSize`, 파일 개수를 확인합니다. 드롭한 폴더는 건너뜁니다. `onFiles`는 통과한 파일과, 통과하지 못한 파일마다 `{ file, reasons }` 항목을 받습니다. `multiple`이 없으면 통과한 첫 파일만 받습니다. 확인이 끝나면 입력에는 받은 파일만 남습니다.
+브라우저의 선택기가 `accept`를 적용하고, 드롭하거나 붙여 넣은 파일은 훅이 `accept`에 맞춰 확인합니다(`.ext` 규칙은 파일 이름과, 다른 규칙은 파일의 MIME 형식과 맞춥니다). 드롭하거나 붙여 넣거나 고른 파일 모두 `maxSize`, `minSize`, 파일 개수를 확인합니다. 드롭한 폴더는 건너뜁니다. `onFiles`는 통과한 파일과, 통과하지 못한 파일마다 `{ file, reasons }` 항목을 받습니다. `multiple`이 없으면 통과한 첫 파일만 받습니다. 확인이 끝나면 입력에는 받은 파일만 남습니다.
 
 파일을 대상 위로 끄는 동안 `dragging`은 true이고, 대상에는 CSS용 `data-dragging`이 붙습니다. 선택한 텍스트처럼 파일이 없는 드래그는 브라우저에 맡깁니다.
+
+`paste: true`면 대상 안에 포커스가 있을 때 붙여 넣은 파일도 받습니다. 예를 들어 대상 안의 textarea에 붙여 넣은 스크린샷입니다. 필드가 같은 붙여넣기를 또 받지 않도록 훅이 그 붙여넣기를 취소합니다. 스프레드시트에서 복사한 셀처럼 텍스트도 함께 담은 붙여넣기와, 다른 핸들러가 이미 취소한 붙여넣기는 브라우저에 맡깁니다.
+
+```tsx
+const zone = useDropzone({ paste: true, accept: 'image/*', onFiles });
+
+<div {...zone.getRootProps()}>
+  <Field.Root aria-label="Message">
+    <Field.Textarea autoGrow />
+  </Field.Root>
+  <input {...zone.getInputProps()} aria-label="Attach images" />
+</div>
+```
 
 오류와 파일 목록까지 갖춘 전체 예시는 [File upload 레시피](/recipes/file-upload)를 보세요.
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 네이티브 `<input type="file">`이 계속 컨트롤이므로 role, 키보드, 파일 선택기는 브라우저가 제공합니다. `getInputProps()`는 `type`, `accept`, `multiple`, `disabled`를 설정하고, `disabled`면 드롭도 거부합니다. `getRootProps()`는 드래그 핸들러와 `data-dragging`만 추가합니다. 훅은 ARIA를 설정하지 않고 아무것도 읽어 주지 않습니다.
+**Todae가 맡는 것:** 네이티브 `<input type="file">`이 계속 컨트롤이므로 role, 키보드, 파일 선택기는 브라우저가 제공합니다. `getInputProps()`는 `type`, `accept`, `multiple`, `disabled`를 설정하고, `disabled`면 드롭과 붙여넣기도 거부합니다. `getRootProps()`는 드래그와 붙여넣기 핸들러, `data-dragging`만 추가합니다. 훅은 ARIA를 설정하지 않고 아무것도 읽어 주지 않습니다.
 
 **직접 제공할 것:** 입력을 감싸는 `<label>`의 텍스트 같은 입력의 이름을 주세요. 규칙을 알려 주는 힌트를 `aria-describedby`로 연결하세요. 파일이 거부되면, `reasons`는 코드이므로 이유를 말로 보여 주고, `aria-invalid`와 그 메시지를 가리키는 `aria-describedby`를 주며, 들려주어야 한다면 [useAnnouncer](/utilities/use-announcer)로 알리세요. 받은 파일은 이름이 있는 목록으로 보여 주세요.
 

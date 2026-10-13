@@ -1919,8 +1919,8 @@
       "ko": "받을 파일 형식. 입력의 accept 문법으로 쉼표로 나눠 적습니다: '.pdf', 'image/*', 'application/json'. 선택기가 적용하고, 드롭한 파일은 훅이 확인합니다."
     },
     "disabled": {
-      "en": "Turn off the input and drops.",
-      "ko": "입력과 드롭을 끕니다."
+      "en": "Turn off the input, drops and pastes.",
+      "ko": "입력, 드롭, 붙여넣기를 끕니다."
     },
     "maxFiles": {
       "en": "Most files to take when multiple is set. Files past it are rejected as 'too-many'.",
@@ -1939,8 +1939,12 @@
       "ko": "파일을 둘 이상 받습니다."
     },
     "onFiles": {
-      "en": "Called with the files that passed and the files that did not, after a drop or a pick.",
-      "ko": "드롭하거나 고른 뒤, 통과한 파일과 통과하지 못한 파일로 호출됩니다."
+      "en": "Called with the files that passed and the files that did not, after a drop, a paste or a pick.",
+      "ko": "드롭하거나 붙여 넣거나 고른 뒤, 통과한 파일과 통과하지 못한 파일로 호출됩니다."
+    },
+    "paste": {
+      "en": "Also take files pasted while focus is inside the root, such as a screenshot pasted into a textarea there. A paste that also carries text is left to the browser.",
+      "ko": "루트 안에 포커스가 있을 때 붙여 넣은 파일도 받습니다. 예를 들어 그 안의 textarea에 붙여 넣은 스크린샷입니다. 텍스트도 함께 담은 붙여넣기는 브라우저에 맡깁니다."
     }
   },
   "useModalLayer": {

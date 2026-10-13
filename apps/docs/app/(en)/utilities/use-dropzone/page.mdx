@@ -18,15 +18,28 @@ const zone = useDropzone({
 </label>
 ```
 
-The browser's picker applies `accept`; the hook checks dropped files against it (a `.ext` rule matches the file name, other rules match the file's MIME type). Files from a drop or a pick are checked against `maxSize`, `minSize` and the file count. Dropped folders are skipped. `onFiles` gets the files that passed and a `{ file, reasons }` entry for each one that did not. Without `multiple`, only the first passing file is taken. After the checks, the input holds only the accepted files.
+The browser's picker applies `accept`; the hook checks dropped and pasted files against it (a `.ext` rule matches the file name, other rules match the file's MIME type). Files from a drop, a paste or a pick are checked against `maxSize`, `minSize` and the file count. Dropped folders are skipped. `onFiles` gets the files that passed and a `{ file, reasons }` entry for each one that did not. Without `multiple`, only the first passing file is taken. After the checks, the input holds only the accepted files.
 
 `dragging` is true while files are dragged over the target, and the target carries `data-dragging` for CSS. Drags that carry no files, such as selected text, are left to the browser.
+
+With `paste: true`, files pasted while focus is inside the target are taken too, such as a screenshot pasted into a textarea in it. The hook cancels that paste so the field does not also get it. A paste that also carries text, such as cells copied from a spreadsheet, is left to the browser, and so is a paste another handler already cancelled.
+
+```tsx
+const zone = useDropzone({ paste: true, accept: 'image/*', onFiles });
+
+<div {...zone.getRootProps()}>
+  <Field.Root aria-label="Message">
+    <Field.Textarea autoGrow />
+  </Field.Root>
+  <input {...zone.getInputProps()} aria-label="Attach images" />
+</div>
+```
 
 See the [File upload recipe](/recipes/file-upload) for a full example with errors and a file list.
 
 ## Accessible composition
 
-**Todae handles:** The native `<input type="file">` stays the control, so its role, the keyboard and the file picker come from the browser. `getInputProps()` sets `type`, `accept`, `multiple` and `disabled`; with `disabled`, drops are refused as well. `getRootProps()` adds only drag handlers and `data-dragging`. The hook sets no ARIA and announces nothing.
+**Todae handles:** The native `<input type="file">` stays the control, so its role, the keyboard and the file picker come from the browser. `getInputProps()` sets `type`, `accept`, `multiple` and `disabled`; with `disabled`, drops and pastes are refused as well. `getRootProps()` adds only drag and paste handlers and `data-dragging`. The hook sets no ARIA and announces nothing.
 
 **You supply:** The input's name, such as the text of a `<label>` around it. A hint about the rules, joined with `aria-describedby`. When files are rejected: the reasons in words, since `reasons` are codes; `aria-invalid` and `aria-describedby` pointing at the message; and an announcement through [useAnnouncer](/utilities/use-announcer) if it must be heard. A labelled list of the accepted files.
 
