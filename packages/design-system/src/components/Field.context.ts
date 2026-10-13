@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useRef, type RefObject } from 'react';
+import { createContext, useCallback, useContext, useLayoutEffect, useRef, type RefObject } from 'react';
 
 type CountEntry = { value: string; maxLength?: number };
 
@@ -7,8 +7,8 @@ export type CountStore = {
   counters: number;
   /** Elements wired with useField's getControlProps, other than Field.ColorPicker's, mounted in the field. */
   controls: number;
-  /** Of those, the form elements, which take the field's name. */
-  formControls: number;
+  /** Of those, the ones whose name attribute is the field's name. */
+  named: number;
   listeners: Set<() => void>;
   presence: Set<() => void>;
 };
@@ -35,29 +35,45 @@ function notifyPresence(store: CountStore) {
 
 /**
  * A stable ref callback that counts the element it is attached to as a
- * control in the field, and as a form control when it is one. A
- * Field.ColorPicker beside a control gives up the field's id and description,
- * and beside a form control its name, so only one element takes each. The
- * count follows the element, so a control that is not rendered, or a
- * component that only reads useField, does not count.
+ * control in the field, and as named when its name attribute is the field's
+ * name. A Field.ColorPicker beside a control gives up the field's id and
+ * description, and beside a named one the field's name, so only one element
+ * takes each. The count follows the element and its name after each commit,
+ * so a control that is not rendered, or a component that only reads
+ * useField, does not count.
  */
-export function useControlPresence(store: CountStore, counted: boolean): (node: HTMLElement | null) => void {
-  const own = useRef<{ node: HTMLElement; form: boolean } | null>(null);
+export function useControlPresence(
+  store: CountStore,
+  fieldName: string | undefined,
+  counted: boolean,
+): (node: HTMLElement | null) => void {
+  const node = useRef<HTMLElement | null>(null);
+  const name = useRef(fieldName);
+  const own = useRef({ control: false, named: false });
+  const sync = useCallback(() => {
+    const el = counted ? node.current : null;
+    const next = {
+      control: el !== null,
+      named: el !== null && Boolean(name.current) && el.getAttribute('name') === name.current,
+    };
+    const prev = own.current;
+    if (next.control === prev.control && next.named === prev.named) return;
+    store.controls += Number(next.control) - Number(prev.control);
+    store.named += Number(next.named) - Number(prev.named);
+    own.current = next;
+    notifyPresence(store);
+  }, [store, counted]);
+  // After each commit: the element's name can change, from its own name prop or the Root's.
+  useLayoutEffect(() => {
+    name.current = fieldName;
+    sync();
+  });
   return useCallback(
-    (node: HTMLElement | null) => {
-      if (!counted || own.current?.node === node) return;
-      if (own.current) {
-        store.controls -= 1;
-        if (own.current.form) store.formControls -= 1;
-      }
-      own.current = node ? { node, form: 'form' in node } : null;
-      if (own.current) {
-        store.controls += 1;
-        if (own.current.form) store.formControls += 1;
-      }
-      notifyPresence(store);
+    (el: HTMLElement | null) => {
+      node.current = el;
+      sync();
     },
-    [store, counted],
+    [sync],
   );
 }
 

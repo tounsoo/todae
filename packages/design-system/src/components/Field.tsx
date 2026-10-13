@@ -1,5 +1,6 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import {
+  useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
@@ -63,7 +64,7 @@ export type FieldRootProps = {
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
 
 function createCountStore(): CountStore {
-  return { entry: null, counters: 0, controls: 0, formControls: 0, listeners: new Set(), presence: new Set() };
+  return { entry: null, counters: 0, controls: 0, named: 0, listeners: new Set(), presence: new Set() };
 }
 
 function publishCount(store: CountStore, value: string, maxLength: number | undefined) {
@@ -757,23 +758,20 @@ function ColorPicker({
   const field = useFieldControl(false);
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
-  // Another control in the field takes its id and description, and a form
-  // control its name. The server cannot know of one yet, so the button holds
-  // them until hydration.
-  const beside = useSyncExternalStore(
-    (listener) => subscribePresence(store, listener),
-    () => store.controls > 0,
-    () => false,
+  // Another control in the field takes its id and description, and one whose
+  // name attribute is the field's name, that name. The server cannot know of
+  // one yet, so the button holds them until hydration.
+  const subscribe = useCallback((listener: () => void) => subscribePresence(store, listener), [store]);
+  const presence = useSyncExternalStore(
+    subscribe,
+    () => (store.named > 0 ? 2 : store.controls > 0 ? 1 : 0),
+    () => 0,
   );
-  const besideForm = useSyncExternalStore(
-    (listener) => subscribePresence(store, listener),
-    () => store.formControls > 0,
-    () => false,
-  );
+  const beside = presence > 0;
   const { name, ...control } = beside
     ? {
         ...props,
-        name: besideForm ? undefined : (props.name ?? field.name),
+        name: props.name ?? (presence === 2 ? undefined : field.name),
         disabled: field.disabled || Boolean(props.disabled),
         'aria-label': props['aria-label'] ?? strings.colorPicker,
       }

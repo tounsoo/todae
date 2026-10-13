@@ -82,7 +82,7 @@ export function useFieldControl(counted: boolean): UseFieldResult {
   const ctx = useFieldContext();
   const { inputRef } = ctx;
   const setFocusTarget = useControlSetter(inputRef);
-  const setPresence = useControlPresence(ctx.store, counted);
+  const setPresence = useControlPresence(ctx.store, ctx.name, counted);
   const setControl = useCallback(
     (node: HTMLElement | null) => {
       setFocusTarget(node);

@@ -206,8 +206,8 @@
   },
   "field/color-picker": {
     "(top)": "a10298fe8c00",
-    "# Field.ColorPicker": "c4362caea90a",
-    "## Accessible composition": "1b3416c1141d",
+    "# Field.ColorPicker": "a72ba75e55e4",
+    "## Accessible composition": "ae52cf757ae2",
     "## When to use": "d57fe8233a0b",
     "### Field.ColorPicker": "f274c18b0118",
     "## Props": "24158ef7493e",

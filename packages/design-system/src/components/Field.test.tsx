@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps, ReactNode } from 'react';
-import { createRef, Profiler, StrictMode, useState } from 'react';
+import { createElement, createRef, Profiler, StrictMode, useState } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -459,6 +459,87 @@ describe('Field.ColorPicker beside another control part', () => {
     );
     expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
     expect(container.querySelectorAll('[name="n"]')).toHaveLength(1);
+  });
+
+  function formEntries() {
+    return [...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()];
+  }
+
+  it('keeps the name beside a button that does not take it', () => {
+    function Switch() {
+      const field = useField();
+      return <button type="button" role="switch" aria-checked {...field.getControlProps({}, { native: false })} />;
+    }
+    const { container } = render(
+      <form data-testid="form">
+        <Field.Root id="x" name="accent" aria-label="Accent">
+          <Switch />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </form>,
+    );
+    expect(container.querySelector('#x')!.getAttribute('role')).toBe('switch');
+    expect(formEntries()).toEqual([['accent', '#3366ff']]);
+  });
+
+  it('leaves the name to a custom element that takes it', () => {
+    function Rating() {
+      const field = useField();
+      return createElement('todae-rating', field.getControlProps());
+    }
+    const { container } = render(
+      <form data-testid="form">
+        <Field.Root id="x" name="accent" aria-label="Accent">
+          <Rating />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </form>,
+    );
+    const named = container.querySelectorAll('[name="accent"]');
+    expect(named).toHaveLength(1);
+    expect(named[0]!.tagName).toBe('TODAE-RATING');
+  });
+
+  function WithText({ inputName, rootName = 'accent', swatchName }: { inputName?: string; rootName?: string; swatchName?: string }) {
+    return (
+      <form data-testid="form">
+        <Field.Root id="x" name={rootName} aria-label="Accent">
+          <Field.TextInput name={inputName} value="#3366ff" onChange={noop} />
+          <Field.ColorPicker name={swatchName} value="#3366ff" />
+        </Field.Root>
+      </form>
+    );
+  }
+
+  it('sends the field name beside a text input with its own name, and follows a change to it', () => {
+    const { rerender } = render(<WithText inputName="accentHex" />);
+    expect(formEntries()).toEqual([
+      ['accentHex', '#3366ff'],
+      ['accent', '#3366ff'],
+    ]);
+    rerender(<WithText />);
+    expect(formEntries()).toEqual([['accent', '#3366ff']]);
+    expect(document.querySelector('[name="accent"]')!.tagName).toBe('INPUT');
+    expect(document.querySelector('[name="accent"]')!.getAttribute('type')).not.toBe('hidden');
+    rerender(<WithText inputName="accentHex" />);
+    expect(formEntries()).toEqual([
+      ['accentHex', '#3366ff'],
+      ['accent', '#3366ff'],
+    ]);
+  });
+
+  it('follows a change to the field name', () => {
+    const { rerender } = render(<WithText />);
+    rerender(<WithText rootName="color" />);
+    expect(formEntries()).toEqual([['color', '#3366ff']]);
+  });
+
+  it('keeps its own name beside a text input', () => {
+    render(<WithText swatchName="swatch" />);
+    expect(formEntries()).toEqual([
+      ['accent', '#3366ff'],
+      ['swatch', '#3366ff'],
+    ]);
   });
 
   it('keeps the field when it is the only control', () => {
