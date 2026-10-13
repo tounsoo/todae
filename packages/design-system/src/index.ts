@@ -145,6 +145,8 @@ export {
   type FieldAffixProps,
   type FieldChipInputProps,
   type FieldCounterProps,
+  type FieldDateInputProps,
+  type FieldDateTimeInputProps,
   type FieldGroupProps,
   type FieldIconProps,
   type FieldRootProps,
@@ -153,6 +155,7 @@ export {
   type FieldColorInputProps,
   type FieldTextInputProps,
   type FieldTextInputType,
+  type FieldTimeInputProps,
   type FieldTextareaProps,
 } from './components/Field';
 export {

@@ -54,6 +54,9 @@ describe('Field exports', () => {
       ChipInput: Field.ChipInput,
       Select: Field.Select,
       ColorInput: Field.ColorInput,
+      DateInput: Field.DateInput,
+      TimeInput: Field.TimeInput,
+      DateTimeInput: Field.DateTimeInput,
       Icon: Field.Icon,
       Affix: Field.Affix,
       Counter: Field.Counter,
@@ -165,7 +168,7 @@ describe('Field.TextInput', () => {
   it('rejects file at the type level', () => {
     expectTypeOf<FieldTextInputProps['type']>().extract<'file'>().toBeNever();
     expectTypeOf<NonNullable<FieldTextInputProps['type']>>().toEqualTypeOf<
-      'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number' | 'date' | 'time' | 'datetime-local'
+      'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number'
     >();
   });
 
@@ -189,6 +192,121 @@ const fieldDir = dirname(fileURLToPath(import.meta.url));
 const fieldCss = readFileSync(join(fieldDir, 'Field.module.css'), 'utf8');
 const chipCss = readFileSync(join(fieldDir, 'Chip.module.css'), 'utf8');
 const tokensCss = readFileSync(join(fieldDir, '../styles/tokens.generated.css'), 'utf8');
+
+describe('Field date and time inputs', () => {
+  function renderInput(node: ReactNode) {
+    const { container, rerender } = render(<Field.Root aria-label="When">{node}</Field.Root>);
+    return { input: container.querySelector('input')!, rerender };
+  }
+
+  it('shows a Temporal.PlainDate as the native date string and reads it back', () => {
+    const onValueChange = vi.fn();
+    const { input } = renderInput(
+      <Field.DateInput
+        value={Temporal.PlainDate.from('2026-10-07')}
+        min={Temporal.PlainDate.from('2026-01-01')}
+        max={Temporal.PlainDate.from('2026-12-31')}
+        onValueChange={onValueChange}
+      />,
+    );
+    expect(input.type).toBe('date');
+    expect(input.value).toBe('2026-10-07');
+    expect(input.min).toBe('2026-01-01');
+    expect(input.max).toBe('2026-12-31');
+    expect(input.getAttribute('aria-label')).toBe('When');
+    fireEvent.change(input, { target: { value: '2026-10-08' } });
+    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainDate;
+    expect(next).toBeInstanceOf(Temporal.PlainDate);
+    expect(next.equals(Temporal.PlainDate.from('2026-10-08'))).toBe(true);
+  });
+
+  it('gives null for an empty or incomplete input', () => {
+    const onValueChange = vi.fn();
+    const { input } = renderInput(
+      <Field.DateInput value={Temporal.PlainDate.from('2026-10-07')} onValueChange={onValueChange} />,
+    );
+    fireEvent.change(input, { target: { value: '' } });
+    expect(onValueChange).toHaveBeenLastCalledWith(null);
+  });
+
+  it('renders null as an empty input', () => {
+    const { input } = renderInput(<Field.DateInput value={null} onValueChange={() => undefined} />);
+    expect(input.value).toBe('');
+  });
+
+  it('writes an ISO date for a date in another calendar', () => {
+    const { input } = renderInput(
+      <Field.DateInput
+        value={Temporal.PlainDate.from('2026-10-07').withCalendar('gregory')}
+        onValueChange={() => undefined}
+      />,
+    );
+    expect(input.value).toBe('2026-10-07');
+  });
+
+  it('writes a time to the minute unless it has seconds', () => {
+    const onValueChange = vi.fn();
+    const { input, rerender } = renderInput(
+      <Field.TimeInput value={Temporal.PlainTime.from('14:30')} onValueChange={onValueChange} />,
+    );
+    expect(input.type).toBe('time');
+    expect(input.value).toBe('14:30');
+    rerender(
+      <Field.Root aria-label="When">
+        <Field.TimeInput value={Temporal.PlainTime.from('14:30:15.250')} onValueChange={onValueChange} />
+      </Field.Root>,
+    );
+    expect(input.value).toBe('14:30:15.250');
+    fireEvent.change(input, { target: { value: '09:05' } });
+    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainTime;
+    expect(next.equals(Temporal.PlainTime.from('09:05'))).toBe(true);
+  });
+
+  it('shows a Temporal.PlainDateTime in a datetime-local input', () => {
+    const onValueChange = vi.fn();
+    const { input } = renderInput(
+      <Field.DateTimeInput
+        value={Temporal.PlainDateTime.from('2026-10-07T14:30')}
+        step={1}
+        onValueChange={onValueChange}
+      />,
+    );
+    expect(input.type).toBe('datetime-local');
+    expect(input.value).toBe('2026-10-07T14:30');
+    expect(input.step).toBe('1');
+    fireEvent.change(input, { target: { value: '2026-10-08T08:00:30' } });
+    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainDateTime;
+    expect(next.equals(Temporal.PlainDateTime.from('2026-10-08T08:00:30'))).toBe(true);
+  });
+
+  it('passes the native event to onChange', () => {
+    const onChange = vi.fn();
+    const { input } = renderInput(<Field.DateInput value={null} onChange={onChange} />);
+    fireEvent.change(input, { target: { value: '2026-10-07' } });
+    expect(onChange.mock.calls[0]![0].target).toBe(input);
+  });
+
+  it('follows the Root and Fieldset for disabled and invalid', () => {
+    render(
+      <Field.Root aria-label="When" disabled invalid>
+        <Field.DateInput value={null} onValueChange={() => undefined} />
+      </Field.Root>,
+    );
+    const input = document.querySelector('input')!;
+    expect(input.disabled).toBe(true);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('renders on a server with no Temporal value to read', () => {
+    expect(
+      renderToString(
+        <Field.Root aria-label="When">
+          <Field.DateInput value={null} onValueChange={() => undefined} />
+        </Field.Root>,
+      ),
+    ).toContain('type="date"');
+  });
+});
 
 describe('Field.Textarea', () => {
   it('sets native rows, css vars, and data attributes from coerced integers', () => {

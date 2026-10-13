@@ -163,14 +163,14 @@
   },
   "field": {
     "(top)": "aa5ec964f344",
-    "# Field": "db4f9d99de11",
+    "# Field": "756fcbcd997c",
     "## Label": "7d0c50d3c651",
     "## Messages": "3baebdf13c83",
     "## Textarea": "ce54c009bb1e",
     "## Counter": "ca3bd330d359",
     "## Chip input": "303633621dbc",
     "## Row": "e3226fa80f55",
-    "## Number, date and time": "5ea15b166b9b",
+    "## Number, date and time": "c6678ae1bc0f",
     "## Select": "2d0edd632123",
     "## Color": "b1bbc8233434",
     "## Custom controls": "edafb0ec7ed8",
@@ -178,18 +178,21 @@
     "## Accessible composition": "47e541b991bc",
     "## When to use": "d57fe8233a0b",
     "### Field.Root": "b7b667157199",
-    "### Field.TextInput": "58bdade895f9",
+    "### Field.TextInput": "6f5dc60c884d",
     "### Field.Textarea": "11b51d7095d4",
     "### Field.ChipInput": "60917640f930",
     "### Field.Select": "6b76ce318e76",
     "### Field.ColorInput": "997575198b6e",
+    "### Field.DateInput": "181b140f550b",
+    "### Field.TimeInput": "12a15f328e34",
+    "### Field.DateTimeInput": "f76610479017",
     "### Field.Icon": "d229fcf9502c",
     "### Field.Row": "93ba826baf7c",
     "### Field.Group": "21e130ff2653",
     "### Field.Affix": "c7c545a7e130",
     "### Field.Counter": "c7b2d96cc1b4",
-    "## Props": "3389b1076b77",
-    "(section order)": "8cfc11381a31"
+    "## Props": "7c736042dae7",
+    "(section order)": "b60bfaf1b5c7"
   },
   "fieldset": {
     "(top)": "d88e18f28a84",
@@ -279,7 +282,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "a59db7732a9f",
+    "# Native platform": "e6a8465dcdab",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {

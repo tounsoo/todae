@@ -254,24 +254,14 @@ function Root({
 }
 
 /**
- * Input types that take a string value. The number, date and time types keep
- * their native spinner and picker; `value` is the input's string, such as
- * `"2026-10-07"` or `"14:30"`.
+ * Input types that take a string value. The number type keeps its native
+ * spinner; `value` is the input's string, such as `"42"`. Dates and times are
+ * `Field.DateInput`, `Field.TimeInput` and `Field.DateTimeInput`.
  */
-export type FieldTextInputType =
-  | 'text'
-  | 'search'
-  | 'email'
-  | 'url'
-  | 'tel'
-  | 'password'
-  | 'number'
-  | 'date'
-  | 'time'
-  | 'datetime-local';
+export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number';
 
 // Browsers ignore maxLength on these, so no limit is shown or announced.
-const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = new Set(['number', 'date', 'time', 'datetime-local']);
+const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = new Set(['number']);
 
 export type FieldTextInputProps = {
   value: string;
@@ -310,6 +300,111 @@ function TextInput({
       }}
     />
   );
+}
+
+type TemporalInputProps<T> = {
+  /** The value, or `null` while the input is empty or incomplete. */
+  value: T | null;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  onValueChange?: (value: T | null) => void;
+  min?: T;
+  max?: T;
+  ref?: Ref<HTMLInputElement>;
+} & Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'defaultValue' | 'type' | 'disabled' | 'onChange' | 'min' | 'max' | 'maxLength' | 'minLength'
+>;
+
+export type FieldDateInputProps = TemporalInputProps<Temporal.PlainDate>;
+export type FieldTimeInputProps = TemporalInputProps<Temporal.PlainTime>;
+export type FieldDateTimeInputProps = TemporalInputProps<Temporal.PlainDateTime>;
+
+type TemporalInputKind<T> = {
+  type: 'date' | 'time' | 'datetime-local';
+  format: (value: T) => string;
+  parse: (text: string) => T;
+};
+
+// The native inputs read times to the millisecond and show seconds only when
+// the value has them, so the string stops at the smallest unit that is set.
+function timeUnit(value: Temporal.PlainTime | Temporal.PlainDateTime) {
+  if (value.millisecond || value.microsecond || value.nanosecond) return 'millisecond';
+  return value.second ? 'second' : 'minute';
+}
+
+const DATE: TemporalInputKind<Temporal.PlainDate> = {
+  type: 'date',
+  format: (value) => value.toString({ calendarName: 'never' }),
+  parse: (text) => Temporal.PlainDate.from(text),
+};
+
+const TIME: TemporalInputKind<Temporal.PlainTime> = {
+  type: 'time',
+  format: (value) => value.toString({ smallestUnit: timeUnit(value) }),
+  parse: (text) => Temporal.PlainTime.from(text),
+};
+
+const DATE_TIME: TemporalInputKind<Temporal.PlainDateTime> = {
+  type: 'datetime-local',
+  format: (value) => value.toString({ smallestUnit: timeUnit(value), calendarName: 'never' }),
+  parse: (text) => Temporal.PlainDateTime.from(text),
+};
+
+function readTemporal<T>(kind: TemporalInputKind<T>, text: string): T | null {
+  if (text === '') return null;
+  try {
+    return kind.parse(text);
+  } catch {
+    // A string the browser accepts but Temporal does not, such as a year past 9999.
+    return null;
+  }
+}
+
+function TemporalInput<T>({
+  kind,
+  value,
+  onChange,
+  onValueChange,
+  min,
+  max,
+  className,
+  ...props
+}: TemporalInputProps<T> & { kind: TemporalInputKind<T> }) {
+  const field = useField();
+  return (
+    <input
+      {...field.getControlProps(props)}
+      type={kind.type}
+      value={value === null ? '' : kind.format(value)}
+      min={min === undefined ? undefined : kind.format(min)}
+      max={max === undefined ? undefined : kind.format(max)}
+      className={cx(styles.input, className)}
+      // Without either handler the input is read-only, and React says so.
+      onChange={
+        onChange || onValueChange
+          ? (event) => {
+              onChange?.(event);
+              onValueChange?.(readTemporal(kind, event.target.value));
+            }
+          : undefined
+      }
+    />
+  );
+}
+
+/** A native date input whose value is a `Temporal.PlainDate`. */
+function DateInput(props: FieldDateInputProps) {
+  return <TemporalInput {...props} kind={DATE} />;
+}
+
+/** A native time input whose value is a `Temporal.PlainTime`. */
+function TimeInput(props: FieldTimeInputProps) {
+  return <TemporalInput {...props} kind={TIME} />;
+}
+
+/** A native `datetime-local` input whose value is a `Temporal.PlainDateTime`. */
+function DateTimeInput(props: FieldDateTimeInputProps) {
+  return <TemporalInput {...props} kind={DATE_TIME} />;
 }
 
 export type FieldTextareaProps = {
@@ -685,4 +780,19 @@ function Group({ className, ...props }: FieldGroupProps) {
   return <div {...props} className={cx(styles.group, className)} />;
 }
 
-export const Field = { Root, TextInput, Textarea, ChipInput, Select, ColorInput, Icon, Affix, Counter, Row, Group } as const;
+export const Field = {
+  Root,
+  TextInput,
+  Textarea,
+  ChipInput,
+  Select,
+  ColorInput,
+  DateInput,
+  TimeInput,
+  DateTimeInput,
+  Icon,
+  Affix,
+  Counter,
+  Row,
+  Group,
+} as const;

@@ -33,7 +33,7 @@ import {
 
 # Field
 
-Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select` or `Field.ColorInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label.Root` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
+Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. Value lives on `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorInput`, `Field.DateInput`, `Field.TimeInput` or `Field.DateTimeInput`. Adornments are order-only: put `Icon` / `Affix` before the input to lead, after to trail. No `side` prop. `Label.Root` is a sibling, not a compound part. Every part inside the field (input, Icon, Affix, chips) is one field line tall, and the shell's padding is the inset.
 
 <Example block>
   <FieldStates />
@@ -237,7 +237,11 @@ The same composer at compact, comfortable, and spacious.
 
 ## Number, date and time
 
-`Field.TextInput` takes `type="number"`, `"date"`, `"time"` and `"datetime-local"`. They stay native inputs, with the browser's own spinner, date picker and locale format, styled from the field tokens with figures lined up. `value` is the input's string: `"2"`, `"2026-10-07"`, `"14:30"`, or an empty string while the input is incomplete. Constrain them with the native `min`, `max` and `step`. `Field.TextInput` never turns the string into a `Date`, so no time zone is applied. When your app needs a date value, parse it with `Temporal.PlainDate.from(value)` (or `PlainTime`, `PlainDateTime` for the other types) rather than `new Date(value)`, which reads `"2026-10-07"` as midnight UTC and shows the previous day in time zones west of UTC.
+`Field.TextInput` with `type="number"` is a native number input with the browser's spinner. Its `value` is the input's string, such as `"2"`, or an empty string while the input is incomplete.
+
+Dates and times have their own parts: `Field.DateInput`, `Field.TimeInput` and `Field.DateTimeInput`, native `date`, `time` and `datetime-local` inputs with the browser's own picker and locale format. Their `value`, `min` and `max` are a `Temporal.PlainDate`, `Temporal.PlainTime` or `Temporal.PlainDateTime`, and `onValueChange` gets the same type, or `null` while the input is empty or incomplete. These types carry no time zone, so the date is the day the user picked. `step` is the native one: days for a date, seconds for a time. All of these inputs are styled from the field tokens with figures lined up.
+
+Todae ships no Temporal polyfill. The date and time parts call `Temporal` when the user changes the input, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)).
 
 <Example block>
   <FieldDateTime />
@@ -324,7 +328,7 @@ import { ChevronDown, Search } from 'lucide-react';
 
 ### Field.TextInput
 
-**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password), or a native number, date or time.
+**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password), or a native number.
 
 **When not:** Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
 
@@ -350,6 +354,24 @@ import { ChevronDown, Search } from 'lucide-react';
 **When:** Pick one color with the browser's picker, such as a brand or accent color.
 
 **When not:** A color in another form, such as `oklch()` → `Field.TextInput`, with a `Field.ColorInput` in its own field beside it for picking. A fixed set of colors → RadioGroup.
+
+### Field.DateInput
+
+**When:** A calendar date, such as a start date or a birthday, with the browser's date picker.
+
+**When not:** A date with a time of day → `Field.DateTimeInput`. A partial date, such as a month and year only → `Field.TextInput`.
+
+### Field.TimeInput
+
+**When:** A time of day with no date, such as opening hours or a daily reminder.
+
+**When not:** A time on a given day → `Field.DateTimeInput`. A duration → `Field.TextInput` with `type="number"` and an `Affix` for the unit.
+
+### Field.DateTimeInput
+
+**When:** A date and time on the user's own clock, such as when a meeting starts.
+
+**When not:** A date alone → `Field.DateInput`. A time alone → `Field.TimeInput`.
 
 ### Field.Icon
 
@@ -393,6 +415,12 @@ import { ChevronDown, Search } from 'lucide-react';
 <PropsTable name="Field.Select" />
 
 <PropsTable name="Field.ColorInput" />
+
+<PropsTable name="Field.DateInput" />
+
+<PropsTable name="Field.TimeInput" />
+
+<PropsTable name="Field.DateTimeInput" />
 
 <PropsTable name="Field.Icon" />
 

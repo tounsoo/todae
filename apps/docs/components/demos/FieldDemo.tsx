@@ -553,8 +553,9 @@ export function FieldDateTime() {
   const dateId = useId();
   const timeId = useId();
   const [quantity, setQuantity] = useState('2');
-  const [date, setDate] = useState('2026-10-07');
-  const [time, setTime] = useState('14:30');
+  // Starts empty, so the server render needs no Temporal.
+  const [date, setDate] = useState<Temporal.PlainDate | null>(null);
+  const [time, setTime] = useState<Temporal.PlainTime | null>(null);
   return (
     <>
       <Field.Group>
@@ -566,13 +567,13 @@ export function FieldDateTime() {
       <Field.Group>
         <Label.Root htmlFor={dateId}>Start date</Label.Root>
         <Field.Root id={dateId}>
-          <Field.TextInput type="date" value={date} onValueChange={setDate} onChange={() => undefined} />
+          <Field.DateInput value={date} onValueChange={setDate} />
         </Field.Root>
       </Field.Group>
       <Field.Group>
         <Label.Root htmlFor={timeId}>Start time</Label.Root>
         <Field.Root id={timeId}>
-          <Field.TextInput type="time" step={900} value={time} onValueChange={setTime} onChange={() => undefined} />
+          <Field.TimeInput step={900} value={time} onValueChange={setTime} />
         </Field.Root>
       </Field.Group>
     </>

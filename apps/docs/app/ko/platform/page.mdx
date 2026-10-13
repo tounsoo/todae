@@ -16,6 +16,7 @@ Todae는 브라우저를 다시 구현하지 않고 그 위에 만들어집니�
 - **[캐스케이드 레이어](https://developer.mozilla.org/docs/Web/CSS/@layer)**: Todae의 리셋, 토큰, 컴포넌트와 회사 테마의 순서를 정합니다. Todae에 필수입니다.
 - **[상대 색상 문법](https://developer.mozilla.org/docs/Web/CSS/color_value/oklch)**: `color.bg.selected`처럼 토큰에서 만든 반투명 색상. Todae에 필수입니다.
 - **[`@starting-style`](https://developer.mozilla.org/docs/Web/CSS/@starting-style)**: `Dialog` 진입 전환. 없으면: 다이얼로그가 전환 없이 나타납니다.
+- **[Temporal](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Temporal)**: `Field.DateInput`, `Field.TimeInput`, `Field.DateTimeInput`의 값. 없으면: 앱이 Temporal 폴리필을 불러오지 않는 한, 사용자가 이 파트를 바꿀 때 예외가 발생합니다.
 - **[`dvh` 단위](https://developer.mozilla.org/docs/Web/CSS/length#dynamic)**: 모바일 브라우저 UI를 따르는 `Dialog`와 `BottomSheet` 높이. Todae에 필수입니다.
 
 가장 중요한 동작은 실제 브라우저(Playwright를 통한 Chromium)에서 테스트합니다. 겹쳐 쌓인 오버레이 사이의 Escape 순서, 모달 포커스와 복원, 뷰포트 가장자리에서의 뒤집기, 칩 오버플로 측정, 바텀 시트 드래그입니다. 모든 문서 예시도 그곳에서 axe로 검사합니다.

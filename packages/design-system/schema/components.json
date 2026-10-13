@@ -1124,6 +1124,90 @@
       ]
     },
     {
+      "name": "Field.DateInput",
+      "description": "Controlled native <input type=\"date\"> inside Field.Root whose value is a Temporal.PlainDate. Todae ships no Temporal polyfill.",
+      "props": [
+        {
+          "name": "value",
+          "type": "Temporal.PlainDate | null",
+          "required": true,
+          "description": "Controlled value, or null while the input is empty or incomplete."
+        },
+        {
+          "name": "onChange",
+          "type": "(event: ChangeEvent<HTMLInputElement>) => void",
+          "required": false,
+          "description": "Native change handler. Optional when onValueChange is enough."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: Temporal.PlainDate | null) => void",
+          "required": false,
+          "description": "Called with the new Temporal.PlainDate, or null while the input is empty or incomplete."
+        },
+        {
+          "name": "min",
+          "type": "Temporal.PlainDate",
+          "required": false,
+          "description": "Earliest value the input accepts, written to the native min."
+        },
+        {
+          "name": "max",
+          "type": "Temporal.PlainDate",
+          "required": false,
+          "description": "Latest value the input accepts, written to the native max."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the input."
+        }
+      ]
+    },
+    {
+      "name": "Field.DateTimeInput",
+      "description": "Controlled native <input type=\"datetime-local\"> inside Field.Root whose value is a Temporal.PlainDateTime. Todae ships no Temporal polyfill.",
+      "props": [
+        {
+          "name": "value",
+          "type": "Temporal.PlainDateTime | null",
+          "required": true,
+          "description": "Controlled value, or null while the input is empty or incomplete."
+        },
+        {
+          "name": "onChange",
+          "type": "(event: ChangeEvent<HTMLInputElement>) => void",
+          "required": false,
+          "description": "Native change handler. Optional when onValueChange is enough."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: Temporal.PlainDateTime | null) => void",
+          "required": false,
+          "description": "Called with the new Temporal.PlainDateTime, or null while the input is empty or incomplete."
+        },
+        {
+          "name": "min",
+          "type": "Temporal.PlainDateTime",
+          "required": false,
+          "description": "Earliest value the input accepts, written to the native min."
+        },
+        {
+          "name": "max",
+          "type": "Temporal.PlainDateTime",
+          "required": false,
+          "description": "Latest value the input accepts, written to the native max."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the input."
+        }
+      ]
+    },
+    {
       "name": "Field.Group",
       "description": "Column that stacks a Label.Root or caption, the control, then Description.Root and ErrorMessage.Root. The label or caption sits field.label.gap above the control; the messages keep the distances they have outside a group. Renders a div outside Field.Root.",
       "props": [
@@ -1344,10 +1428,52 @@
         },
         {
           "name": "type",
-          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\" | \"number\" | \"date\" | \"time\" | \"datetime-local\"",
+          "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\" | \"number\"",
           "required": false,
-          "description": "Native input type. Number, date and time keep the native spinner and picker, and value stays the input string, such as \"2026-10-07\".",
+          "description": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". Dates and times use Field.DateInput, Field.TimeInput and Field.DateTimeInput.",
           "default": "\"text\""
+        }
+      ]
+    },
+    {
+      "name": "Field.TimeInput",
+      "description": "Controlled native <input type=\"time\"> inside Field.Root whose value is a Temporal.PlainTime. Todae ships no Temporal polyfill.",
+      "props": [
+        {
+          "name": "value",
+          "type": "Temporal.PlainTime | null",
+          "required": true,
+          "description": "Controlled value, or null while the input is empty or incomplete."
+        },
+        {
+          "name": "onChange",
+          "type": "(event: ChangeEvent<HTMLInputElement>) => void",
+          "required": false,
+          "description": "Native change handler. Optional when onValueChange is enough."
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: Temporal.PlainTime | null) => void",
+          "required": false,
+          "description": "Called with the new Temporal.PlainTime, or null while the input is empty or incomplete."
+        },
+        {
+          "name": "min",
+          "type": "Temporal.PlainTime",
+          "required": false,
+          "description": "Earliest value the input accepts, written to the native min."
+        },
+        {
+          "name": "max",
+          "type": "Temporal.PlainTime",
+          "required": false,
+          "description": "Latest value the input accepts, written to the native max."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "required": false,
+          "description": "Optional class on the input."
         }
       ]
     },

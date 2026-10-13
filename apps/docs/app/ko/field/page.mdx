@@ -33,7 +33,7 @@ import {
 
 # Field
 
-공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorInput`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
+공유 외형입니다. `Field.Root`는 컴파운드 스코프입니다. 테두리가 있는 셸이 Root입니다. 값은 `Field.TextInput`, `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.ColorInput`, `Field.DateInput`, `Field.TimeInput`, `Field.DateTimeInput`에 있습니다. 장식 요소는 순서로만 위치가 정해집니다. `Icon` / `Affix`를 입력 앞에 두면 앞쪽에, 뒤에 두면 뒤쪽에 놓입니다. `side` prop은 없습니다. `Label.Root`은 컴파운드 파트가 아니라 형제 요소입니다. 필드 안의 모든 파트(입력, Icon, Affix, 칩)는 필드 한 줄 높이이고, 셸의 패딩이 안쪽 여백입니다.
 
 <Example block>
   <FieldStates />
@@ -237,7 +237,11 @@ compact, comfortable, spacious에서의 같은 작성기.
 
 ## 숫자, 날짜, 시간
 
-`Field.TextInput`은 `type="number"`, `"date"`, `"time"`, `"datetime-local"`을 받습니다. 브라우저 자체의 스피너, 날짜 선택기, 로캘 형식을 그대로 쓰는 네이티브 입력으로 남으며, 필드 토큰으로 스타일을 입히고 숫자를 세로로 맞춥니다. `value`는 입력의 문자열입니다. `"2"`, `"2026-10-07"`, `"14:30"`이거나, 입력이 덜 끝났을 때는 빈 문자열입니다. 네이티브 `min`, `max`, `step`으로 제한하세요. `Field.TextInput`은 문자열을 `Date`로 바꾸지 않으므로 시간대가 적용되지 않습니다. 앱에서 날짜 값이 필요하면 `new Date(value)` 대신 `Temporal.PlainDate.from(value)`(다른 유형은 `PlainTime`, `PlainDateTime`)로 파싱하세요. `new Date(value)`는 `"2026-10-07"`을 UTC 자정으로 읽어, UTC보다 서쪽 시간대에서는 전날로 표시됩니다.
+`type="number"`인 `Field.TextInput`은 브라우저 스피너가 있는 네이티브 숫자 입력입니다. `value`는 `"2"`처럼 입력의 문자열이며, 입력이 덜 끝났을 때는 빈 문자열입니다.
+
+날짜와 시간에는 전용 파트가 있습니다. `Field.DateInput`, `Field.TimeInput`, `Field.DateTimeInput`은 브라우저 자체 선택기와 로캘 형식을 쓰는 네이티브 `date`, `time`, `datetime-local` 입력입니다. `value`, `min`, `max`는 `Temporal.PlainDate`, `Temporal.PlainTime`, `Temporal.PlainDateTime`이며, `onValueChange`는 같은 타입을, 입력이 비어 있거나 덜 끝났을 때는 `null`을 받습니다. 이 타입들에는 시간대가 없으므로 날짜는 사용자가 고른 그날입니다. `step`은 네이티브 그대로이며, 날짜는 일 단위, 시간은 초 단위입니다. 이 입력들은 모두 필드 토큰으로 스타일을 입히고 숫자를 세로로 맞춥니다.
+
+Todae는 Temporal 폴리필을 포함하지 않습니다. 날짜와 시간 파트는 사용자가 입력을 바꿀 때 `Temporal`을 호출하므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고).
 
 <Example block>
   <FieldDateTime />
@@ -324,7 +328,7 @@ import { ChevronDown, Search } from 'lucide-react';
 
 ### Field.TextInput
 
-**언제:** `Field.Root` 안에서 한 줄로 입력하는 값(text / search / email / url / tel / password), 또는 네이티브 숫자, 날짜, 시간.
+**언제:** `Field.Root` 안에서 한 줄로 입력하는 값(text / search / email / url / tel / password), 또는 네이티브 숫자.
 
 **쓰지 않을 때:** 여러 값의 토큰 → `Field.ChipInput`. 여러 줄 → `Field.Textarea`. Root 없이 단독으로 쓸 때.
 
@@ -350,6 +354,24 @@ import { ChevronDown, Search } from 'lucide-react';
 **언제:** 브랜드나 강조 색처럼 색 하나를 브라우저 선택 창으로 고를 때.
 
 **쓰지 않을 때:** `oklch()`처럼 다른 형식의 색 → `Field.TextInput`, 고르기용으로 옆의 별도 필드에 `Field.ColorInput`. 정해진 색 몇 가지 → RadioGroup.
+
+### Field.DateInput
+
+**언제:** 시작일이나 생일처럼 달력의 날짜 하나를 브라우저 날짜 선택기로 받을 때.
+
+**쓰지 않을 때:** 시각이 있는 날짜 → `Field.DateTimeInput`. 연월만처럼 일부만 있는 날짜 → `Field.TextInput`.
+
+### Field.TimeInput
+
+**언제:** 영업시간이나 매일 알림처럼 날짜 없는 하루 중 시각.
+
+**쓰지 않을 때:** 특정 날의 시각 → `Field.DateTimeInput`. 기간 → `type="number"`인 `Field.TextInput`과 단위를 보여 주는 `Affix`.
+
+### Field.DateTimeInput
+
+**언제:** 회의 시작 시각처럼 사용자 자신의 시계 기준 날짜와 시각.
+
+**쓰지 않을 때:** 날짜만 → `Field.DateInput`. 시각만 → `Field.TimeInput`.
 
 ### Field.Icon
 
@@ -393,6 +415,12 @@ import { ChevronDown, Search } from 'lucide-react';
 <PropsTable name="Field.Select" />
 
 <PropsTable name="Field.ColorInput" />
+
+<PropsTable name="Field.DateInput" />
+
+<PropsTable name="Field.TimeInput" />
+
+<PropsTable name="Field.DateTimeInput" />
 
 <PropsTable name="Field.Icon" />
 
