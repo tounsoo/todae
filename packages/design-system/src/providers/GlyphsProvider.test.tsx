@@ -35,6 +35,7 @@ const ICONS: Required<Glyphs> = {
   chevron: <svg data-testid="chevron" />,
   separator: <svg data-testid="separator" />,
   ellipsis: <svg data-testid="ellipsis" />,
+  calendar: <svg data-testid="calendar" />,
 };
 
 function withIcons(children: ReactNode, glyphs: Glyphs = ICONS) {

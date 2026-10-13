@@ -1,0 +1,52 @@
+import { CalendarInline } from '../../../components/demos/CalendarDemo';
+
+# Calendar
+
+`Calendar.Root`는 선택한 날짜 하나를 `Temporal.PlainDate`로 가집니다. `Calendar.Header`는 이전 달과 다음 달로 가는 버튼 사이에 연월을 보여 주고, `Calendar.Grid`는 그 달의 날짜를 한 줄에 한 주씩 보여 줍니다. 루트는 `value`와 `onValueChange`, 또는 `defaultValue`를 받고, 사람이 고른 날짜로 `onValueChange`를 호출합니다.
+
+```tsx
+<Calendar.Root aria-label="Start date" value={date} onValueChange={setDate}>
+  <Calendar.Header />
+  <Calendar.Grid />
+</Calendar.Root>
+```
+
+<Example block>
+  <CalendarInline />
+</Example>
+
+폼의 날짜에는 [Field.DatePicker](/field/date-picker)를 쓰세요. 필드 안의 버튼이 이 달력을 팝오버로 엽니다.
+
+## 범위와 로캘
+
+`min`과 `max`는 고를 수 있는 날짜의 범위를 정하고, 달 버튼은 그 달에서 멈춥니다. `isDateDisabled`는 주말이나 공휴일처럼 다른 날짜를 제외합니다. `min`과 `max` 밖의 날은 비활성화된 버튼입니다. `isDateDisabled`가 제외한 날짜는 포커스를 받을 수 있어서 스크린 리더가 읽을 수 있지만, 누르거나 Enter를 눌러도 선택되지 않습니다.
+
+값이 없으면 그리드는 `defaultMonth`에서, 없으면 오늘이 있는 달에서 시작하며, `min`과 `max` 안에 머뭅니다. 달과 요일 이름은 `locale`을, 없으면 브라우저의 로캘을 따릅니다. 첫 열은 1(월요일)부터 7(일요일)까지의 `firstDayOfWeek`입니다. 없으면 브라우저가 `Intl.Locale`로 알려 주는 로캘의 첫 요일을, 알려 주지 않으면 일요일을 씁니다.
+
+서버 렌더는 오늘을 모르므로, `value`나 `defaultMonth`가 없으면 페이지가 하이드레이션될 때까지 그리드에 주가 없고, 오늘 표시도 그때 붙습니다. 달력을 서버에서 렌더링할 때는 `locale`과 `firstDayOfWeek`도 넘겨서 서버와 브라우저가 같은 이름과 열을 그리게 하세요.
+
+## Temporal
+
+Todae는 Temporal 폴리필을 포함하지 않습니다. `Calendar.Root`는 렌더링할 때 `Temporal`을 호출하므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고).
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `Calendar.Root`는 `role="group"`입니다. `Calendar.Grid`는 `Calendar.Header`가 렌더링되어 있는 동안 헤더의 달로 이름이 붙는 `role="grid"` 표이며, 요일마다 `abbr`가 전체 이름인 열 머리글이 있습니다. Tab 정지점은 하나입니다. 화살표 키는 하루와 한 주씩, Home과 End는 주의 처음과 끝으로, Page Up과 Page Down은 한 달씩, Shift와 함께면 한 해씩 움직입니다. 오른쪽에서 왼쪽으로 읽는 페이지에서는 왼쪽과 오른쪽이 바뀝니다. 날마다 전체 날짜로 이름 붙은 버튼이고, 선택한 날의 칸에는 `aria-selected`가, 오늘에는 `aria-current="date"`가 붙습니다. `isDateDisabled`가 제외한 날짜에는 `aria-disabled`가 붙고, `min`과 `max` 밖의 날은 비활성화됩니다. 달은 라이브 영역이어서 바뀌면 스크린 리더가 알려 줍니다. 달 버튼은 [StringsProvider](/utilities/strings-provider)의 `previousMonth`와 `nextMonth` 문자열로 이름이 붙고, [GlyphsProvider](/utilities/glyphs-provider)의 `chevron` 글리프를 그립니다. `disabled`나 비활성화된 [Fieldset](/fieldset)은 모든 버튼을 비활성화합니다.
+
+**직접 제공할 것:** `aria-label`이나 `aria-labelledby`로 그룹의 이름, 그리고 `Calendar.Header`가 없으면 그리드의 이름. 페이지의 언어가 브라우저의 언어와 다르면 `locale`.
+
+**주의할 점:** `isDateDisabled`로 날짜를 제외하면서 이유를 알리지 않는 것. "평일만"처럼 규칙을 가까이에 설명하세요.
+
+## 언제 쓰나요
+
+**언제:** 예약 화면처럼 페이지에 펼쳐 둔 달력에서 날짜 하나를 고를 때.
+
+**쓰지 않을 때:** 폼 필드의 날짜 → [Field.DatePicker](/field/date-picker)나 [Field.DateInput](/field/date-input). 시각이 있는 날짜 → [Field.DateTimeInput](/field/date-time-input).
+
+## Props
+
+<PropsTable name="Calendar.Root" />
+
+<PropsTable name="Calendar.Header" />
+
+<PropsTable name="Calendar.Grid" />

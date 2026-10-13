@@ -2,6 +2,7 @@
 
 import { Button, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, normalizeHex, useChipField, useField } from '@omsoo.design/todae';
 import { useId, useState } from 'react';
+import { useLocale } from '../../lib/i18n/useLocale';
 
 const MANY = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta'];
 
@@ -587,6 +588,41 @@ export function FieldDate() {
       <Label.Root htmlFor={id}>Start date</Label.Root>
       <Field.Root id={id}>
         <Field.DateInput value={date} onValueChange={setDate} />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+// The picker and the input share one state, so typing and picking stay in step.
+export function FieldDatePicked() {
+  const id = useId();
+  const locale = useLocale();
+  const [date, setDate] = useState<Temporal.PlainDate | null>(null);
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Start date</Label.Root>
+      <Field.Root id={id}>
+        <Field.DateInput value={date} onValueChange={setDate} />
+        <Field.DatePicker value={date} onValueChange={setDate} locale={locale} />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+export function FieldDatePickerAlone() {
+  const id = useId();
+  const locale = useLocale();
+  const [date, setDate] = useState<Temporal.PlainDate | null>(null);
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Check-in</Label.Root>
+      <Field.Root id={id}>
+        <Field.DatePicker
+          value={date}
+          onValueChange={setDate}
+          locale={locale}
+          placeholder="Pick a date"
+        />
       </Field.Root>
     </Field.Group>
   );

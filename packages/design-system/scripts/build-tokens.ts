@@ -55,6 +55,7 @@ export const RESERVED_ROOTS = [
   'scroll',
   'tree',
   'picker',
+  'calendar',
   'opacity',
 ] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;

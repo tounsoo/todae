@@ -7776,6 +7776,168 @@
       "ref": null,
       "layer": "contract",
       "context": null
+    },
+    {
+      "path": "calendar.day.bg.default",
+      "type": "color",
+      "cssVar": "--todae-calendar-day-bg-default",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.day.bg.hover",
+      "type": "color",
+      "cssVar": "--todae-calendar-day-bg-hover",
+      "cssValue": "var(--todae-color-bg-highlight)",
+      "ref": "color.bg.highlight",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.day.bg.selected",
+      "type": "color",
+      "cssVar": "--todae-calendar-day-bg-selected",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.day.border.current",
+      "type": "color",
+      "cssVar": "--todae-calendar-day-border-current",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.day.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-calendar-day-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.day.fg.default",
+      "type": "color",
+      "cssVar": "--todae-calendar-day-fg-default",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.day.fg.disabled",
+      "type": "color",
+      "cssVar": "--todae-calendar-day-fg-disabled",
+      "cssValue": "var(--todae-color-fg-placeholder)",
+      "ref": "color.fg.placeholder",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.day.fg.selected",
+      "type": "color",
+      "cssVar": "--todae-calendar-day-fg-selected",
+      "cssValue": "var(--todae-color-on-accent)",
+      "ref": "color.on-accent",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.day.radius",
+      "type": "dimension",
+      "cssVar": "--todae-calendar-day-radius",
+      "cssValue": "var(--todae-radius-md)",
+      "ref": "radius.md",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.day.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-calendar-day-ring-focus",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.day.size",
+      "type": "dimension",
+      "cssVar": "--todae-calendar-day-size",
+      "cssValue": "2.25rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-calendar-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.gap",
+      "type": "dimension",
+      "cssVar": "--todae-calendar-gap",
+      "cssValue": "var(--todae-space-stack-gap)",
+      "ref": "space.stack.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.heading.fg",
+      "type": "color",
+      "cssVar": "--todae-calendar-heading-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.heading.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-calendar-heading-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.nav.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-calendar-nav-icon-size",
+      "cssValue": "1rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.weekday.fg",
+      "type": "color",
+      "cssVar": "--todae-calendar-weekday-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.weekday.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-calendar-weekday-font-weight",
+      "cssValue": "var(--todae-font-weight-regular)",
+      "ref": "font.weight.regular",
+      "layer": "contract",
+      "context": null
     }
   ]
 }

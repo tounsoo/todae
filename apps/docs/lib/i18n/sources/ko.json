@@ -61,6 +61,16 @@
     "## Props": "01a8223cf786",
     "(section order)": "b674be3a6d01"
   },
+  "calendar": {
+    "(top)": "f59a557c8526",
+    "# Calendar": "d2630565b6c7",
+    "## Range and locale": "86d0beb7e674",
+    "## Temporal": "084d2fd73acf",
+    "## Accessible composition": "3a54081e2b13",
+    "## When to use": "fc36d200f649",
+    "## Props": "1736b176a33c",
+    "(section order)": "b32de0f3c71a"
+  },
   "card": {
     "(top)": "7894bae600a4",
     "# Card": "ddfc6395a3be",
@@ -172,8 +182,8 @@
   },
   "field": {
     "(top)": "4995db135d8d",
-    "# Field": "1bca2b35cfeb",
-    "## Inputs": "fb7bf9e1002e",
+    "# Field": "5cf1d7be5e50",
+    "## Inputs": "2ee1c10e5e2b",
     "## Label": "7d0c50d3c651",
     "## Messages": "3baebdf13c83",
     "## Counter": "3c5316a2038b",
@@ -207,7 +217,7 @@
   "field/color-picker": {
     "(top)": "a10298fe8c00",
     "# Field.ColorPicker": "602d8578e6ee",
-    "## Accessible composition": "ae52cf757ae2",
+    "## Accessible composition": "5871a8f6df0e",
     "## When to use": "d57fe8233a0b",
     "### Field.ColorPicker": "f274c18b0118",
     "## Props": "24158ef7493e",
@@ -219,9 +229,19 @@
     "## Temporal": "fdb3c62be316",
     "## Accessible composition": "5f08e1bda3fa",
     "## When to use": "d57fe8233a0b",
-    "### Field.DateInput": "0b5c7c088a92",
+    "### Field.DateInput": "36a0de7cb852",
     "## Props": "16709dfa6aa9",
     "(section order)": "4797bdcec426"
+  },
+  "field/date-picker": {
+    "(top)": "40872dd1fdc5",
+    "# Field.DatePicker": "aa6f7c18918c",
+    "## On its own": "c7d2bc3205b6",
+    "## Accessible composition": "ab3706670dfd",
+    "## When to use": "d57fe8233a0b",
+    "### Field.DatePicker": "b3c1c234ea3a",
+    "## Props": "4d3b8d5a61e4",
+    "(section order)": "a672041b4c18"
   },
   "field/date-time-input": {
     "(top)": "bd0d9d9e37e0",
@@ -362,7 +382,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "b10b184db6bd",
+    "# Native platform": "e2fcbb146245",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -578,7 +598,7 @@
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "8fb56a23dbe8",
+    "## Glyphs": "6dd3b86474ee",
     "## Accessible composition": "705d17ec4c9e",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",
@@ -587,7 +607,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "0a9ce6b4f646",
-    "## Strings": "146e04f6b764",
+    "## Strings": "d99ef77a5c1a",
     "## Accessible composition": "8cc16824f136",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",

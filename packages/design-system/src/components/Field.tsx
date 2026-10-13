@@ -16,6 +16,7 @@ import {
   type MouseEvent,
   type ReactNode,
   type Ref,
+  type RefObject,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
@@ -36,14 +37,21 @@ import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
-import { useField, useFieldControl } from '../hooks/useField';
+import { useField, useFieldControl, type FieldControlUserProps, type UseFieldResult } from '../hooks/useField';
 import { useControlledValue } from '../hooks/useControlledState';
 import { useGlyphs } from '../providers/GlyphsProvider';
-import { hasGlyph } from './glyphs';
+import { CalendarGlyph, glyphOr, hasGlyph } from './glyphs';
 import { useStrings, type Strings } from '../providers/StringsProvider';
 import { usePopover, type PopoverCloseReason, type PopoverTriggerUserProps } from '../hooks/usePopover';
 import { Popover } from './Popover';
 import { ColorPicker as ColorPickerParts } from './ColorPicker';
+import {
+  Calendar as CalendarParts,
+  CALENDAR_TAB_STOP,
+  GREGORY,
+  isoDate,
+  type CalendarFirstDayOfWeek,
+} from './Calendar';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -64,7 +72,7 @@ export type FieldRootProps = {
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
 
 function createCountStore(): CountStore {
-  return { entry: null, counters: 0, controls: 0, named: 0, listeners: new Set(), presence: new Set() };
+  return { entry: null, counters: 0, controls: 0, named: 0, dates: 0, listeners: new Set(), presence: new Set() };
 }
 
 function publishCount(store: CountStore, value: string, maxLength: number | undefined) {
@@ -89,6 +97,58 @@ function subscribePresence(store: CountStore, listener: () => void) {
 
 function counterMounted(store: CountStore) {
   return store.counters > 0;
+}
+
+type PickerOwnProps = {
+  name?: string;
+  disabled?: boolean;
+  'aria-label'?: string;
+  'aria-describedby'?: string;
+  'aria-invalid'?: FieldControlUserProps['aria-invalid'];
+};
+
+const BESIDE_CONTROL = 1;
+const BESIDE_NAMED = 2;
+const BESIDE_DATE = 4;
+
+/**
+ * Which controls a picker shares its field with, as bits: BESIDE_CONTROL for
+ * any control wired with useField, BESIDE_NAMED when useField gave one the
+ * field's name, BESIDE_DATE when one is a date input. The server cannot know of one yet, so it reads 0
+ * until hydration.
+ */
+function usePickerPresence(store: CountStore) {
+  const subscribe = useCallback((listener: () => void) => subscribePresence(store, listener), [store]);
+  return useSyncExternalStore(
+    subscribe,
+    () => (store.controls > 0 ? BESIDE_CONTROL : 0) |
+      (store.named > 0 ? BESIDE_NAMED : 0) |
+      (store.dates > 0 ? BESIDE_DATE : 0),
+    () => 0,
+  );
+}
+
+/**
+ * A picker's control props. Alone, it is the field's control. Beside another
+ * control, that control takes the field's id and description, and the field's
+ * name too when useField gave it that name. The picker keeps its own
+ * `name`, else the field's name when no other control has it, and `disabled`
+ * and `aria-invalid`, and is named `label`.
+ */
+function pickerControl<P extends PickerOwnProps>(
+  presence: number,
+  field: UseFieldResult,
+  props: P,
+  label: string,
+) {
+  if (!(presence & BESIDE_CONTROL)) return field.getControlProps(props);
+  return {
+    ...props,
+    name: props.name ?? (presence & BESIDE_NAMED ? undefined : field.name),
+    disabled: field.disabled || Boolean(props.disabled),
+    'aria-invalid': field.invalid ? true : props['aria-invalid'],
+    'aria-label': props['aria-label'] ?? label,
+  };
 }
 
 function useTextEntry(store: CountStore, value: string, maxLength: number | undefined) {
@@ -130,7 +190,7 @@ function Affix({ className, ...props }: FieldAffixProps) {
 
 type PickerControl = HTMLSelectElement | HTMLButtonElement;
 
-// A control whose picker a press beside it opens: a select or Field.ColorPicker.
+// A control whose picker a press beside it opens: a select, Field.ColorPicker or Field.DatePicker.
 function hasPicker(control: Element | null | undefined): control is PickerControl {
   return (
     control instanceof HTMLSelectElement ||
@@ -138,7 +198,7 @@ function hasPicker(control: Element | null | undefined): control is PickerContro
   );
 }
 
-// How the shell opens or closes each Field.ColorPicker's popover, by its button.
+// How the shell opens or closes each Field.ColorPicker's or Field.DatePicker's popover, by its button.
 const pickerToggles = new WeakMap<HTMLButtonElement, () => void>();
 
 // Whether a select's picker is showing. A browser without `:open` throws,
@@ -231,7 +291,7 @@ function Root({
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
     control?.focus();
-    // A press beside a select or color picker acts as a press on the control
+    // A press beside a select, color picker or date picker acts as a press on the control
     // would. The picker opens on click: one opened now would close again as
     // the press goes on. A select's open picker closes on this press, which
     // must not open it again; Field.ColorPicker's toggles on the click.
@@ -740,9 +800,9 @@ export type FieldColorPickerProps = {
 /**
  * The field's control: a button the height of a line of field text, filled
  * with the color. It opens a ColorPicker in a popover, as does a press
- * elsewhere in the field. Beside any other control in the field but another
- * swatch, such as a Field.TextInput, that control is the field's control
- * instead, and the button is named from the colorPicker string.
+ * elsewhere in the field. Beside any other control in the field but a
+ * Field.ColorPicker or Field.DatePicker, such as a Field.TextInput, that
+ * control is the field's control instead, and the button is named from the colorPicker string.
  */
 function ColorPicker({
   value,
@@ -754,28 +814,14 @@ function ColorPicker({
   style,
   ...props
 }: FieldColorPickerProps) {
-  // The swatch does not count itself as a control another swatch should leave the field to.
+  // The swatch does not count itself as a control another picker should leave the field to.
   const field = useFieldControl(false);
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
   // Another control in the field takes its id and description, and one that
-  // useField gave the field's name, that name. The server cannot know of one
-  // yet, so the button holds them until hydration.
-  const subscribe = useCallback((listener: () => void) => subscribePresence(store, listener), [store]);
-  const presence = useSyncExternalStore(
-    subscribe,
-    () => (store.named > 0 ? 2 : store.controls > 0 ? 1 : 0),
-    () => 0,
-  );
-  const beside = presence > 0;
-  const { name, ...control } = beside
-    ? {
-        ...props,
-        name: props.name ?? (presence === 2 ? undefined : field.name),
-        disabled: field.disabled || Boolean(props.disabled),
-        'aria-label': props['aria-label'] ?? strings.colorPicker,
-      }
-    : field.getControlProps(props);
+  // useField gave the field's name, that name.
+  const presence = usePickerPresence(store);
+  const { name, ...control } = pickerControl(presence, field, props, strings.colorPicker);
   const [open, setOpen] = useControlledValue<boolean, [FieldColorPickerCloseReason]>(
     openProp,
     defaultOpen ?? false,
@@ -831,6 +877,184 @@ function ColorPicker({
             <ColorPickerParts.Area />
             <ColorPickerParts.Hue />
           </ColorPickerParts.Root>
+        </Popover.Root>
+      ) : null}
+    </>
+  );
+}
+
+/** Why Field.DatePicker's calendar closed: a popover's reasons, a picked date, or the field became disabled. */
+export type FieldDatePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
+
+export type FieldDatePickerProps = {
+  /** The date, or null for none. */
+  value: Temporal.PlainDate | null;
+  /** Fires with the date picked in the calendar. */
+  onValueChange?: (value: Temporal.PlainDate) => void;
+  /** The earliest date that can be picked. */
+  min?: Temporal.PlainDate;
+  /** The latest date that can be picked. */
+  max?: Temporal.PlainDate;
+  /** Returns true for a date that cannot be picked, such as a holiday. */
+  isDateDisabled?: (date: Temporal.PlainDate) => boolean;
+  /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
+  firstDayOfWeek?: CalendarFirstDayOfWeek;
+  /** The locale for the button's date and the calendar's names, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
+  locale?: string;
+  /** Shown on the button while there is no date, when no date input is beside it. */
+  placeholder?: string;
+  /** Controlled open state of the calendar. Pass with onOpenChange. */
+  open?: boolean;
+  /** Initial open state when uncontrolled. */
+  defaultOpen?: boolean;
+  /** Fires when the calendar opens or closes, with why it closed. */
+  onOpenChange?: (open: boolean, reason: FieldDatePickerCloseReason) => void;
+} & Omit<
+  ComponentPropsWithRef<'button'>,
+  'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
+>;
+
+/**
+ * A button that opens a Calendar in a popover. On its own it is the field's
+ * control and shows the date, and a press elsewhere in the field opens the
+ * calendar. Beside any other control but a Field.ColorPicker or
+ * Field.DatePicker, such as a Field.DateInput, that control is the field's
+ * control instead, and the button is named from the datePicker
+ * string. Beside a date input, the button shows only a calendar glyph.
+ */
+function DatePicker({
+  value,
+  onValueChange,
+  min,
+  max,
+  isDateDisabled,
+  firstDayOfWeek,
+  locale,
+  placeholder,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  className,
+  style,
+  'aria-describedby': describedBy,
+  ...props
+}: FieldDatePickerProps) {
+  // The button does not count itself as a control another picker should leave the field to.
+  const field = useFieldControl(false);
+  const { shellRef, store } = useFieldContext();
+  const strings = useStrings();
+  const { calendar } = useGlyphs();
+  const textId = useDomId();
+  // Another control in the field takes its id and description; beside a date
+  // input, which holds the date too, the button shows only the glyph.
+  const presence = usePickerPresence(store);
+  const showText = !(presence & BESIDE_DATE);
+  // The button's name is not the date, so the date it shows is its description.
+  const ownDescribedBy = showText ? mergeDescribedBy(describedBy, textId) : describedBy;
+  const { name, ...control } = pickerControl(
+    presence,
+    field,
+    { ...props, 'aria-describedby': ownDescribedBy },
+    strings.datePicker,
+  );
+  const [open, setOpen] = useControlledValue<boolean, [FieldDatePickerCloseReason]>(
+    openProp,
+    defaultOpen ?? false,
+    onOpenChange,
+  );
+  // A disabled field shows no calendar, and one open when the field is
+  // disabled closes, so it does not come back when the field is enabled again.
+  const shown = open && !control.disabled;
+  const close = useRef(setOpen);
+  close.current = setOpen;
+  useEffect(() => {
+    if (open && control.disabled) close.current(false, 'disabled');
+  }, [control.disabled, open]);
+  // Focus goes to the calendar's Tab stop: the date, or else today or the
+  // nearest date in range.
+  const popoverRef = useRef<RefObject<HTMLElement | null> | null>(null);
+  const initialFocusRef = useMemo(
+    () => ({
+      get current() {
+        const panel = popoverRef.current?.current;
+        return panel?.querySelector<HTMLElement>(CALENDAR_TAB_STOP) ?? null;
+      },
+    }),
+    [],
+  );
+  const popover = usePopover({
+    open: shown,
+    onOpenChange: setOpen,
+    // For the outside-press check: a press anywhere in the field is not outside.
+    anchorRef: shellRef,
+    initialFocusRef,
+    enabled: !control.disabled,
+  });
+  popoverRef.current = popover.popoverRef;
+  const trigger = popover.getTriggerProps({ ...control, style } as PopoverTriggerUserProps);
+  const toggle = useRef(() => {});
+  toggle.current = () => {
+    if (!control.disabled) setOpen(!shown, 'trigger');
+  };
+  useLayoutEffect(() => {
+    const button = popover.triggerRef.current;
+    if (!(button instanceof HTMLButtonElement)) return;
+    pickerToggles.set(button, () => toggle.current());
+    return () => {
+      pickerToggles.delete(button);
+    };
+  }, [popover.triggerRef]);
+  const controls = shown ? trigger['aria-controls'] : undefined;
+  const glyph = (
+    <span className={styles.dateGlyph} data-todae-glyph="" aria-hidden="true">
+      {glyphOr(calendar, <CalendarGlyph />)}
+    </span>
+  );
+  return (
+    <>
+      <button
+        {...(trigger as ComponentPropsWithRef<'button'>)}
+        aria-controls={controls}
+        type="button"
+        data-todae-field-picker=""
+        data-beside={showText ? undefined : ''}
+        className={cx(styles.datePicker, className)}
+      >
+        {showText ? (
+          <span id={textId} className={styles.dateText} data-placeholder={value ? undefined : ''}>
+            {value ? isoDate(value).toLocaleString(locale, { dateStyle: 'medium', calendar: GREGORY }) : placeholder}
+          </span>
+        ) : null}
+        {glyph}
+      </button>
+      {/* A button sends nothing with a form, so the value goes in a hidden input. */}
+      {name ? (
+        <input
+          type="hidden"
+          name={name}
+          value={value ? DATE.format(isoDate(value)) : ''}
+          disabled={control.disabled}
+          form={control.form}
+        />
+      ) : null}
+      {/* Mounted while open only: a form can hold many date pickers. */}
+      {shown ? (
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label={strings.datePicker}>
+          <CalendarParts.Root
+            value={value}
+            onValueChange={(next) => {
+              onValueChange?.(next);
+              setOpen(false, 'select');
+            }}
+            min={min}
+            max={max}
+            isDateDisabled={isDateDisabled}
+            firstDayOfWeek={firstDayOfWeek}
+            locale={locale}
+          >
+            <CalendarParts.Header />
+            <CalendarParts.Grid />
+          </CalendarParts.Root>
         </Popover.Root>
       ) : null}
     </>
@@ -931,6 +1155,7 @@ export const Field = {
   ChipInput,
   Select,
   ColorPicker,
+  DatePicker,
   DateInput,
   TimeInput,
   DateTimeInput,
