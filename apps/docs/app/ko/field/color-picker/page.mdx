@@ -2,7 +2,7 @@ import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
 
 # Field.ColorPicker
 
-`Field.ColorPicker`는 필드의 컨트롤입니다. [Field](/field) 안의 버튼으로, 필드 한 줄 높이의 색 견본으로 그려지고 그 색으로 채워집니다. [Popover](/popover) 안에 [ColorPicker](/color-picker)를 엽니다. 값은 `#rrggbb` 문자열이고, `onValueChange`는 끌거나 키로 바꾸는 동안 새 색을 하나씩 받습니다.
+`Field.ColorPicker`는 [Field](/field) 안의 버튼으로, 필드 한 줄 높이의 색 견본으로 그려지고 그 색으로 채워집니다. [Popover](/popover) 안에 [ColorPicker](/color-picker)를 엽니다. 값은 `#rrggbb` 문자열이고, `onValueChange`는 끌거나 키로 바꾸는 동안 새 색을 하나씩 받습니다.
 
 ```tsx
 <Label.Root htmlFor={id}>Accent</Label.Root>
@@ -35,7 +35,7 @@ import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
 
 혼자 있으면 `Field.ColorPicker`가 필드의 컨트롤이고, 필드의 다른 곳을 누르면 선택기가 열리며, 필드 너비는 견본 너비와 같습니다. 값을 텍스트로 보이려면 뒤에 `Field.Affix`를 두세요.
 
-선택기는 `open`과 `onOpenChange`, 또는 `defaultOpen`으로 열고 닫습니다. `onOpenChange`는 닫힌 이유 `'escape'`, `'outside'`, `'trigger'`, 또는 필드가 비활성화될 때의 `'disabled'`를 받습니다. 열리면 선택기가 포커스를 가져가고, Escape는 선택기를 닫고 포커스를 견본으로 돌려줍니다.
+선택기는 `open`과 `onOpenChange`, 또는 `defaultOpen`으로 열고 닫습니다. `onOpenChange`는 닫힌 이유 `'escape'`, `'outside'`, `'trigger'`, 또는 필드가 비활성화될 때의 `'disabled'`를 받습니다. 열리면 선택기가 포커스를 가져가고, 그 안에서 Escape를 누르면 선택기를 닫고 포커스를 견본으로 돌려줍니다.
 
 ## 접근성을 지키는 조합
 

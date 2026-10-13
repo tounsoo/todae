@@ -2,7 +2,7 @@ import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
 
 # Field.ColorPicker
 
-`Field.ColorPicker` is the field's control: a button inside a [Field](/field), drawn as a swatch one field line tall and filled with its color. It opens a [ColorPicker](/color-picker) in a [Popover](/popover). Its value is a `#rrggbb` string, and `onValueChange` gets each new color as it is dragged or keyed.
+`Field.ColorPicker` is a button inside a [Field](/field), drawn as a swatch one field line tall and filled with its color. It opens a [ColorPicker](/color-picker) in a [Popover](/popover). Its value is a `#rrggbb` string, and `onValueChange` gets each new color as it is dragged or keyed.
 
 ```tsx
 <Label.Root htmlFor={id}>Accent</Label.Root>
@@ -35,7 +35,7 @@ Here a `Field.TextInput` in the same field lets people type the color too. The t
 
 On its own, `Field.ColorPicker` is the field's control, a press elsewhere in the field opens the picker, and the field is as wide as the swatch. Put the value after it in a `Field.Affix` to show it as text.
 
-The picker opens and closes through `open` with `onOpenChange`, or `defaultOpen`. `onOpenChange` gets the reason it closed: `'escape'`, `'outside'`, `'trigger'`, or `'disabled'` when the field becomes disabled. Open, the picker takes focus, and Escape closes it and returns focus to the swatch.
+The picker opens and closes through `open` with `onOpenChange`, or `defaultOpen`. `onOpenChange` gets the reason it closed: `'escape'`, `'outside'`, `'trigger'`, or `'disabled'` when the field becomes disabled. Open, the picker takes focus, and Escape there closes it and returns focus to the swatch.
 
 ## Accessible composition
 

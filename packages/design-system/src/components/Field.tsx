@@ -98,7 +98,7 @@ function useTextEntry(store: CountStore, value: string, maxLength: number | unde
   useEffect(() => {
     for (const listener of store.listeners) listener();
   });
-  // Before paint, so a Field.ColorPicker beside it gives up the field's id first.
+  // A Field.ColorPicker beside it gives up the field's id once it hears of this.
   useLayoutEffect(() => {
     store.texts += 1;
     notifyPresence(store);
@@ -650,7 +650,6 @@ function ColorPicker({
     ? {
         ...props,
         name: undefined,
-        form: props.form,
         disabled: field.disabled || Boolean(props.disabled),
         'aria-label': props['aria-label'] ?? strings.colorPicker,
       }
