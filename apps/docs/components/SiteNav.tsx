@@ -12,7 +12,7 @@ const GLYPHS = { chevron: <ChevronIcon /> };
 /**
  * The sidebar. `idPrefix` keeps group label ids unique when a second copy renders in the mobile drawer.
  * A link with child pages stays a link; a disclosure after it shows the child pages as a nested list,
- * opened when navigation lands on the link or one of its children.
+ * open on a page in the group and opened when navigation moves into it; a list closed inside the group stays closed.
  */
 export function SiteNav({ locale, idPrefix = 'nav' }: { locale: Locale; idPrefix?: string }) {
   const path = usePathname();

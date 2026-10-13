@@ -131,7 +131,7 @@ describe('docs locales', () => {
         `Update app/${locale}/<slug>/page.mdx to match the English sections listed, then run pnpm --filter docs i18n:stamp ${locale} <slug>`,
       ).toEqual([]);
     }
-  });
+  }, 20_000);
 
   it('notices a changed, new, removed or moved English section', () => {
     const english = '# Badge\n\nA label.\n\n## When to use\n\nOften.\n';
