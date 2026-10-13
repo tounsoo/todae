@@ -206,10 +206,10 @@
   },
   "field/color-picker": {
     "(top)": "a10298fe8c00",
-    "# Field.ColorPicker": "c089d549d343",
-    "## Accessible composition": "8d79d6705e7b",
+    "# Field.ColorPicker": "eae23fa0de79",
+    "## Accessible composition": "22f585e1b518",
     "## When to use": "d57fe8233a0b",
-    "### Field.ColorPicker": "a26227b2c468",
+    "### Field.ColorPicker": "f274c18b0118",
     "## Props": "24158ef7493e",
     "(section order)": "124193e3094a"
   },

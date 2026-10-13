@@ -62,7 +62,7 @@ export type FieldRootProps = {
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
 
 function createCountStore(): CountStore {
-  return { entry: null, counters: 0, listeners: new Set(), presence: new Set() };
+  return { entry: null, counters: 0, texts: 0, listeners: new Set(), presence: new Set() };
 }
 
 function publishCount(store: CountStore, value: string, maxLength: number | undefined) {
@@ -89,11 +89,24 @@ function counterMounted(store: CountStore) {
   return store.counters > 0;
 }
 
+function notifyPresence(store: CountStore) {
+  for (const listener of store.presence) listener();
+}
+
 function useTextEntry(store: CountStore, value: string, maxLength: number | undefined) {
   publishCount(store, value, maxLength);
   useEffect(() => {
     for (const listener of store.listeners) listener();
   });
+  // Before paint, so a Field.ColorPicker beside it gives up the field's id first.
+  useLayoutEffect(() => {
+    store.texts += 1;
+    notifyPresence(store);
+    return () => {
+      store.texts -= 1;
+      notifyPresence(store);
+    };
+  }, [store]);
   return useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
     () => counterMounted(store),
@@ -609,7 +622,9 @@ export type FieldColorPickerProps = {
 /**
  * The field's control: a button the height of a line of field text, filled
  * with the color. It opens a ColorPicker in a popover, as does a press
- * elsewhere in the field. Put the value beside it as text with Field.Affix.
+ * elsewhere in the field. Beside a Field.TextInput or Field.Textarea, that
+ * input is the field's control instead, and the button is named from the
+ * colorPicker string.
  */
 function ColorPicker({
   value,
@@ -622,9 +637,24 @@ function ColorPicker({
   ...props
 }: FieldColorPickerProps) {
   const field = useField();
-  const { shellRef } = useFieldContext();
+  const { shellRef, store } = useFieldContext();
   const strings = useStrings();
-  const { name, ...control } = field.getControlProps(props);
+  // A text input in the field takes its id, name and description. The server
+  // cannot know of one yet, so the button holds them until hydration.
+  const beside = useSyncExternalStore(
+    (listener) => subscribePresence(store, listener),
+    () => store.texts > 0,
+    () => false,
+  );
+  const { name, ...control } = beside
+    ? {
+        ...props,
+        name: undefined,
+        form: props.form,
+        disabled: field.disabled || Boolean(props.disabled),
+        'aria-label': props['aria-label'] ?? strings.colorPicker,
+      }
+    : field.getControlProps(props);
   const [open, setOpen] = useControlledValue<boolean, [FieldColorPickerCloseReason]>(
     openProp,
     defaultOpen ?? false,

@@ -21,7 +21,7 @@
     gap: 0;
   }
 
-  .shell:has(:is(input, textarea, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell:has(:is(input, textarea, .swatch, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: var(--todae-focus-ring-width) solid var(--todae-field-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
@@ -31,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(:is(input, textarea, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell[data-invalid]:has(:is(input, textarea, .swatch, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 
@@ -439,7 +439,8 @@
     }
   }
 
-  .shell:not([data-disabled]):has(> .swatch) {
+  /* A press in the field opens the picker, unless a text input there takes it. */
+  .shell:not([data-disabled]):has(> .swatch):not(:has(> :is(.input, .textarea))) {
     cursor: pointer;
   }
 

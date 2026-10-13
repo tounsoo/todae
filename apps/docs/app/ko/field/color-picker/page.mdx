@@ -2,13 +2,28 @@ import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
 
 # Field.ColorPicker
 
-`Field.ColorPicker`는 필드의 컨트롤입니다. [Field](/field) 안의 버튼으로, 필드 한 줄 높이의 색 견본으로 그려지고 그 색으로 채워집니다. [Popover](/popover) 안에 [ColorPicker](/color-picker)를 열고, 필드의 다른 곳을 눌러도 열립니다. 값은 `#rrggbb` 문자열이고, `onValueChange`는 끌거나 키로 바꾸는 동안 새 색을 하나씩 받습니다. 값을 텍스트로 보이려면 뒤에 `Field.Affix`를 두세요. 혼자 있으면 필드 너비는 견본 너비와 같습니다.
+`Field.ColorPicker`는 필드의 컨트롤입니다. [Field](/field) 안의 버튼으로, 필드 한 줄 높이의 색 견본으로 그려지고 그 색으로 채워집니다. [Popover](/popover) 안에 [ColorPicker](/color-picker)를 엽니다. 값은 `#rrggbb` 문자열이고, `onValueChange`는 끌거나 키로 바꾸는 동안 새 색을 하나씩 받습니다.
 
 ```tsx
 <Label.Root htmlFor={id}>Accent</Label.Root>
 <Field.Root id={id}>
-	<Field.ColorPicker value={color} onValueChange={setColor} />
-	<Field.Affix>{color}</Field.Affix>
+	<Field.ColorPicker
+		value={color}
+		onValueChange={(next) => {
+			setColor(next);
+			setText(next);
+		}}
+	/>
+	<Field.TextInput
+		value={text}
+		onChange={() => undefined}
+		onValueChange={(next) => {
+			setText(next);
+			const hex = normalizeHex(next);
+			if (hex) setColor(hex);
+		}}
+		onBlur={() => setText(color)}
+	/>
 </Field.Root>
 ```
 
@@ -16,15 +31,19 @@ import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
   <FieldColorAccent />
 </Example>
 
+여기서는 같은 필드 안의 `Field.TextInput`으로 색을 입력할 수도 있습니다. 둘은 상태를 함께 씁니다. 고른 색이 텍스트를 바꾸고, [`normalizeHex`](/color-picker)는 입력한 텍스트가 색이면 색으로 바꿉니다. `Field.TextInput`이나 `Field.Textarea`가 옆에 있으면 그 입력이 필드의 컨트롤입니다. 그 입력이 필드의 `id`, `name`, 설명을 받고, 필드의 다른 곳을 누르면 그 입력에 포커스가 갑니다.
+
+혼자 있으면 `Field.ColorPicker`가 필드의 컨트롤이고, 필드의 다른 곳을 누르면 선택기가 열리며, 필드 너비는 견본 너비와 같습니다. 값을 텍스트로 보이려면 뒤에 `Field.Affix`를 두세요.
+
 선택기는 `open`과 `onOpenChange`, 또는 `defaultOpen`으로 열고 닫습니다. `onOpenChange`는 닫힌 이유 `'escape'`, `'outside'`, `'trigger'`, 또는 필드가 비활성화될 때의 `'disabled'`를 받습니다. 열리면 선택기가 포커스를 가져가고, Escape는 선택기를 닫고 포커스를 견본으로 돌려줍니다.
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. `aria-haspopup="dialog"`와 `aria-expanded`를 받고, 선택기가 열려 있는 동안에는 `aria-controls`도 받습니다. 팝오버는 [StringsProvider](/utilities/strings-provider)의 `colorPicker` 문자열로 이름이 붙는 `role="dialog"`이고, 그 안의 입력은 [ColorPicker](/color-picker)와 같은 이름과 키를 가집니다.
+**Todae가 맡는 것:** 혼자 있으면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 텍스트 입력이 옆에 있으면 그 입력이 이것들을 받고, 버튼은 `disabled`만 받으며, 자신의 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `colorPicker` 문자열로 이름이 붙습니다. `aria-haspopup="dialog"`와 `aria-expanded`를 받고, 선택기가 열려 있는 동안에는 `aria-controls`도 받습니다. 팝오버는 [StringsProvider](/utilities/strings-provider)의 `colorPicker` 문자열로 이름이 붙는 `role="dialog"`이고, 그 안의 입력은 [ColorPicker](/color-picker)와 같은 이름과 키를 가집니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다.
 
-**주의할 점:** 견본의 이름은 색이 아니라 레이블이므로, 스크린 리더는 버튼에서 값을 듣지 못합니다. 값을 읽어야 한다면 `Field.Affix`에 넣으세요.
+**주의할 점:** 견본의 이름은 색이 아니므로, 스크린 리더는 버튼에서 값을 듣지 못합니다. 값을 읽어야 한다면 `Field.TextInput`이나 `Field.Affix`에 텍스트로 보이세요.
 
 ## 언제 쓰나요
 
@@ -32,7 +51,7 @@ import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
 
 **언제:** 브랜드나 강조 색처럼 폼에서 색 하나를 고를 때.
 
-**쓰지 않을 때:** `oklch()`처럼 다른 형식의 색 → `Field.TextInput`, 고르기용으로 옆의 별도 필드에 `Field.ColorPicker`. 필드 없이 화면에 펼쳐 놓은 선택기 → [ColorPicker](/color-picker). 정해진 색 몇 가지 → RadioGroup.
+**쓰지 않을 때:** `oklch()`처럼 다른 형식의 색 → `Field.TextInput`. 필드 없이 화면에 펼쳐 놓은 선택기 → [ColorPicker](/color-picker). 정해진 색 몇 가지 → RadioGroup.
 
 ## Props
 

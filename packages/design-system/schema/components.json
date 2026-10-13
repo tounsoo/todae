@@ -1126,7 +1126,7 @@
     },
     {
       "name": "Field.ColorPicker",
-      "description": "The field's control: a button one line of field text tall, filled with the color. It opens a ColorPicker in a popover, as does a press elsewhere in the field. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
+      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside a Field.TextInput or Field.Textarea, that input is the field's control. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
       "props": [
         {
           "name": "value",

@@ -452,6 +452,62 @@ describe('Field.ColorPicker in a browser', () => {
     expect(document.activeElement).toBe(before);
   });
 
+  function WithText({ swatchFirst = true }: { swatchFirst?: boolean }) {
+    const [color, setColor] = useState('#3366ff');
+    const [text, setText] = useState(color);
+    const swatch = (
+      <Field.ColorPicker
+        value={color}
+        onValueChange={(next) => {
+          setColor(next);
+          setText(next);
+        }}
+      />
+    );
+    return (
+      <Themed>
+        <form data-testid="form">
+          <Label.Root htmlFor="hex">Accent</Label.Root>
+          <Field.Root id="hex" name="accent" data-testid="shell">
+            {swatchFirst ? swatch : null}
+            <Field.TextInput
+              value={text}
+              onChange={() => undefined}
+              onValueChange={setText}
+            />
+            {swatchFirst ? null : swatch}
+            <Field.Affix data-testid="affix">hex</Field.Affix>
+          </Field.Root>
+        </form>
+      </Themed>
+    );
+  }
+
+  for (const swatchFirst of [true, false]) {
+    it(`leaves the field to a text input beside it (swatch ${swatchFirst ? 'first' : 'last'})`, async () => {
+      render(<WithText swatchFirst={swatchFirst} />);
+      const input = screen.getByRole('textbox', { name: 'Accent' });
+      const button = screen.getByRole('button', { name: 'Color picker' });
+      expect(input.id).toBe('hex');
+      expect(button.id).toBe('');
+      expect(document.querySelectorAll('#hex')).toHaveLength(1);
+      expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([['accent', '#3366ff']]);
+      // A press elsewhere in the field focuses the input and opens nothing.
+      await userEvent.click(screen.getByTestId('affix'));
+      expect(document.activeElement).toBe(input);
+      expect(button.getAttribute('aria-expanded')).toBe('false');
+      // The swatch still opens the picker, and a picked color reaches the input.
+      await userEvent.click(button);
+      const hue = await screen.findByRole('slider', { name: 'Hue' });
+      hue.focus();
+      await userEvent.keyboard('{Home}');
+      expect((input as HTMLInputElement).value).toBe('#ff3333');
+      await userEvent.keyboard('{Escape}');
+      expect(document.activeElement).toBe(button);
+      expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
+    });
+  }
+
   it('is as wide as the swatch on its own, and disabled with the field', () => {
     render(<Accent affix={false} disabled />);
     const button = screen.getByRole('button', { name: 'Accent' }) as HTMLButtonElement;
