@@ -81,8 +81,15 @@ export function useField(): UseFieldResult {
 export function useFieldControl(counted: boolean): UseFieldResult {
   const ctx = useFieldContext();
   const { inputRef } = ctx;
-  useControlPresence(ctx.store, counted);
-  const setControl = useControlSetter(inputRef);
+  const setFocusTarget = useControlSetter(inputRef);
+  const setPresence = useControlPresence(ctx.store, counted);
+  const setControl = useCallback(
+    (node: HTMLElement | null) => {
+      setFocusTarget(node);
+      setPresence(node);
+    },
+    [setFocusTarget, setPresence],
+  );
   const composedRef = useStableComposedRef(setControl);
   const getControlProps = useCallback(
     <P extends FieldControlUserProps>(

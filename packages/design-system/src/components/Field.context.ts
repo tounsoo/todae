@@ -1,12 +1,14 @@
-import { createContext, useCallback, useContext, useLayoutEffect, useRef, type RefObject } from 'react';
+import { createContext, useCallback, useContext, useRef, type RefObject } from 'react';
 
 type CountEntry = { value: string; maxLength?: number };
 
 export type CountStore = {
   entry: CountEntry | null;
   counters: number;
-  /** Controls joined through useField, other than Field.ColorPicker, mounted in the field. */
+  /** Elements wired with useField's getControlProps, other than Field.ColorPicker's, mounted in the field. */
   controls: number;
+  /** Of those, the form elements, which take the field's name. */
+  formControls: number;
   listeners: Set<() => void>;
   presence: Set<() => void>;
 };
@@ -32,20 +34,31 @@ function notifyPresence(store: CountStore) {
 }
 
 /**
- * Counts a control in the field while it is mounted. A Field.ColorPicker
- * beside one gives up the field's id, name and description once it hears of
- * it, so only one element takes them.
+ * A stable ref callback that counts the element it is attached to as a
+ * control in the field, and as a form control when it is one. A
+ * Field.ColorPicker beside a control gives up the field's id and description,
+ * and beside a form control its name, so only one element takes each. The
+ * count follows the element, so a control that is not rendered, or a
+ * component that only reads useField, does not count.
  */
-export function useControlPresence(store: CountStore, counted: boolean) {
-  useLayoutEffect(() => {
-    if (!counted) return;
-    store.controls += 1;
-    notifyPresence(store);
-    return () => {
-      store.controls -= 1;
+export function useControlPresence(store: CountStore, counted: boolean): (node: HTMLElement | null) => void {
+  const own = useRef<{ node: HTMLElement; form: boolean } | null>(null);
+  return useCallback(
+    (node: HTMLElement | null) => {
+      if (!counted || own.current?.node === node) return;
+      if (own.current) {
+        store.controls -= 1;
+        if (own.current.form) store.formControls -= 1;
+      }
+      own.current = node ? { node, form: 'form' in node } : null;
+      if (own.current) {
+        store.controls += 1;
+        if (own.current.form) store.formControls += 1;
+      }
       notifyPresence(store);
-    };
-  }, [store, counted]);
+    },
+    [store, counted],
+  );
 }
 
 export const FieldContext = createContext<FieldContextValue | null>(null);

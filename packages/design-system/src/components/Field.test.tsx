@@ -428,6 +428,39 @@ describe('Field.ColorPicker beside another control part', () => {
     expect(screen.getByRole('button', { name: 'Accent' })).toBeTruthy();
   });
 
+  function Stars() {
+    const field = useField();
+    return <div role="slider" aria-valuenow={3} tabIndex={0} {...field.getControlProps({}, { native: false })} />;
+  }
+
+  it('keeps the name, and gives up the id, beside a control that is not a form element', () => {
+    const { container, getByTestId } = render(
+      <form data-testid="form">
+        <Field.Root id="x" name="accent" aria-label="Accent">
+          <Stars />
+          <Field.ColorPicker value="#3366ff" />
+        </Field.Root>
+      </form>,
+    );
+    expect(container.querySelector('#x')!.getAttribute('role')).toBe('slider');
+    expect([...new FormData(getByTestId('form') as HTMLFormElement).entries()]).toEqual([['accent', '#3366ff']]);
+  });
+
+  it('keeps the field beside a part that reads useField but renders no control', () => {
+    function Reader() {
+      const field = useField();
+      return <span>{field.disabled ? 'off' : 'on'}</span>;
+    }
+    const { container } = render(
+      <Field.Root id="x" name="n" aria-label="Accent">
+        <Reader />
+        <Field.ColorPicker value="#3366ff" />
+      </Field.Root>,
+    );
+    expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
+    expect(container.querySelectorAll('[name="n"]')).toHaveLength(1);
+  });
+
   it('keeps the field when it is the only control', () => {
     const { container } = render(
       <Field.Root id="x" aria-label="Accent">

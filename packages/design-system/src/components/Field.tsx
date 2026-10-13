@@ -63,7 +63,7 @@ export type FieldRootProps = {
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
 
 function createCountStore(): CountStore {
-  return { entry: null, counters: 0, controls: 0, listeners: new Set(), presence: new Set() };
+  return { entry: null, counters: 0, controls: 0, formControls: 0, listeners: new Set(), presence: new Set() };
 }
 
 function publishCount(store: CountStore, value: string, maxLength: number | undefined) {
@@ -757,17 +757,23 @@ function ColorPicker({
   const field = useFieldControl(false);
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
-  // Another control in the field takes its id, name and description. The server
-  // cannot know of one yet, so the button holds them until hydration.
+  // Another control in the field takes its id and description, and a form
+  // control its name. The server cannot know of one yet, so the button holds
+  // them until hydration.
   const beside = useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
     () => store.controls > 0,
     () => false,
   );
+  const besideForm = useSyncExternalStore(
+    (listener) => subscribePresence(store, listener),
+    () => store.formControls > 0,
+    () => false,
+  );
   const { name, ...control } = beside
     ? {
         ...props,
-        name: undefined,
+        name: besideForm ? undefined : (props.name ?? field.name),
         disabled: field.disabled || Boolean(props.disabled),
         'aria-label': props['aria-label'] ?? strings.colorPicker,
       }
