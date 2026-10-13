@@ -10,29 +10,37 @@ Server Component에서는 `@omsoo/todae/grid`에서 가져올 수 있습니다. 
 
 `columns`는 같은 너비의 열 개수를 정합니다. 항목의 내용이 제 몫보다 넓어도 열 너비는 같게 유지됩니다.
 
+```tsx
+<Grid.Root columns={2} role="list" aria-label="Plans">
+  {plans.map((plan) => (
+    <Card.Root key={plan.id} role="listitem">
+      {plan.name}
+    </Card.Root>
+  ))}
+</Grid.Root>
+```
+
 <Example block>
   <GridColumns />
 </Example>
-
-```tsx
-<Grid.Root columns={2}>
-  {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
-</Grid.Root>
-```
 
 ## Fill
 
 `minItemSize`는 열이 좁아질 수 있는 최소 너비입니다. 너비가 허락하는 만큼 열이 들어가므로 미디어 쿼리 없이 다시 배치되고, `minItemSize`보다 좁은 컨테이너에서도 열 하나가 넘치지 않습니다.
 
+```tsx
+<Grid.Root minItemSize="10rem" role="list" aria-label="Plans">
+  {plans.map((plan) => (
+    <Card.Root key={plan.id} role="listitem">
+      {plan.name}
+    </Card.Root>
+  ))}
+</Grid.Root>
+```
+
 <Example block>
   <GridFill />
 </Example>
-
-```tsx
-<Grid.Root minItemSize="10rem">
-  {plans.map((plan) => <Card.Root key={plan.id}>{plan.name}</Card.Root>)}
-</Grid.Root>
-```
 
 사이드바와 본문 열처럼 다른 트랙 목록은 둘 다 빼고 `style`이나 클래스에서 `gridTemplateColumns`로 정하세요.
 

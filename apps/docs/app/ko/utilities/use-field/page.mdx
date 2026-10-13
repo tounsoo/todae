@@ -5,10 +5,37 @@ import { FieldUseField } from '../../../../components/demos/FieldDemo';
 `useField()`는 내장 파트가 가장 가까운 `Field.Root`에 합류하는 방식 그대로, 직접 만든 컨트롤을 합류시킵니다. 컨트롤에 `getControlProps()`를 펼치세요. 여기에는 Root의 `id`, `name`, `disabled`, `aria-invalid`, 병합된 `aria-describedby`, 컨트롤이 스스로 이름을 붙이지 않을 때의 Root 이름, 그리고 셸을 누르면 컨트롤에 포커스가 가도록 하는 ref가 담깁니다. 셸은 이 컨트롤의 포커스 링도 그립니다. 네이티브 폼 요소가 아닌 컨트롤에는 `getControlProps(props, { native: false })`를 호출하세요. `disabled` 대신 `aria-disabled`를 설정하고, 폼 요소만 제출하는 `name`은 빼 줍니다. 탭 정지를 건너뛰고 키를 무시하려면 `useField()`에서 Root의 `disabled`를 읽으세요. 직접 넘긴 `disabled`나 `aria-invalid`는 Root의 값에 더해질 뿐 그 값을 지우지 않으므로, 같은 검사에서 자신의 값과 함께 조합하세요. `Label.Root htmlFor`는 레이블을 붙일 수 있는 요소에만 이름을 주므로, 커스텀 요소는 Root의 `aria-labelledby`로 이름을 붙이세요.
 
 ```tsx
-function Stars(props) {
-	const field = useField()
-	return <span {...field.getControlProps({}, { native: false })} role="slider" tabIndex={field.disabled ? -1 : 0} … />
+function Stars({ value, onValueChange }: StarsProps) {
+  const field = useField();
+  return (
+    <span
+      {...field.getControlProps({}, { native: false })}
+      role="slider"
+      aria-valuemin={0}
+      aria-valuemax={5}
+      aria-valuenow={value}
+      tabIndex={field.disabled ? -1 : 0}
+      onKeyDown={(event) => {
+        if (field.disabled) return;
+        if (event.key === 'ArrowRight') onValueChange(Math.min(5, value + 1));
+        if (event.key === 'ArrowLeft') onValueChange(Math.max(0, value - 1));
+      }}
+    >
+      {'★'.repeat(value)}
+    </span>
+  );
 }
+
+const captionId = useId();
+
+<Field.Group>
+  <Text.Root as="span" id={captionId} size="s" weight="medium">
+    Rating
+  </Text.Root>
+  <Field.Root aria-labelledby={captionId}>
+    <Stars value={rating} onValueChange={setRating} />
+  </Field.Root>
+</Field.Group>
 ```
 
 <Example block>

@@ -16,10 +16,10 @@ const zone = useDropzone({
   maxSize: 2_000_000,
   minSize: 1,
   onFiles: (accepted, rejected) => {
-    setFiles(accepted)
-    setRejected(rejected)
+    setFiles(accepted);
+    setRejected(rejected);
   },
-})
+});
 
 <label {...zone.getRootProps()}>
   <Text.Root as="span">Drop images here, or choose them</Text.Root>

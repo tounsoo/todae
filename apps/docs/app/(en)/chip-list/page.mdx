@@ -31,6 +31,12 @@ In the popover, Tab past the last chip goes on to the control after +N, Shift+Ta
 
 ## Read-only
 
+Leave out `onRemove`, and the chips have no remove buttons.
+
+```tsx
+<ChipList.Root aria-label="Tags" chips={tags} maxRows={1} />
+```
+
 <Example>
   <ChipListDemo maxRows={1} readOnly />
 </Example>

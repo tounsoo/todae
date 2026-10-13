@@ -4,6 +4,17 @@ import { PresentationBadge } from '../../../../components/demos/ComboboxDemo';
 
 `useSheetPresentation`은 포인터가 coarse이거나 **또는** 뷰포트가 640px보다 좁으면 시트를, 그렇지 않으면 popover를 고릅니다. 이는 기본값이며 `coarseQuery`와 `narrowWidth`로 바꿀 수 있습니다. `forced`가 `'popover'`나 `'sheet'`가 아니면 서버 렌더링과 첫 페인트는 popover입니다. `isSheet`는 `presentation === "sheet"`를 그대로 반영합니다. `isTouch`가 아닙니다. [useCombobox](/utilities/use-combobox)는 `presentation: 'auto'`에 이 훅을 씁니다.
 
+```tsx
+const { isSheet } = useSheetPresentation();
+const popover = usePopover({ open, onOpenChange: setOpen });
+
+return isSheet ? (
+  <BottomSheet.Root open={open} onOpenChange={setOpen}>…</BottomSheet.Root>
+) : (
+  <Popover.Root {...popover.getPopoverProps()}>…</Popover.Root>
+);
+```
+
 <Example>
   <PresentationBadge />
 </Example>

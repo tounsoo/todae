@@ -5,26 +5,29 @@ import { ToastDemo } from '../../../components/demos/ToastDemo';
 A short message about something that just happened, which leaves by itself. Toasts live in a store you make with `createToaster()`, so any code can show one, and appear in one `Toast.Region` near the root of your app, which takes the theme where it is rendered.
 
 ```tsx
+import { CircleCheck } from 'lucide-react';
+
 // Once, at module scope.
-export const toaster = createToaster();
+export const toaster = createToaster<{ onUndo?: () => void }>();
 
 // Once, near the app root.
 <Toast.Region toaster={toaster}>
-	{(toast) => (
-		<Toast.Root>
-			<Toast.Icon>
-				<YourIcon />
-			</Toast.Icon>
-			<Toast.Title>{toast.title}</Toast.Title>
-			<Toast.Description>{toast.description}</Toast.Description>
-			<Toast.Action onClick={undo}>Undo</Toast.Action>
-			<Toast.Close />
-		</Toast.Root>
-	)}
+  {(toast) => (
+    <Toast.Root>
+      <Toast.Icon>
+        <CircleCheck />
+      </Toast.Icon>
+      <Toast.Title>{toast.title}</Toast.Title>
+      <Toast.Description>{toast.description}</Toast.Description>
+      {toast.onUndo ? <Toast.Action onClick={toast.onUndo}>Undo delete</Toast.Action> : null}
+      <Toast.Close />
+    </Toast.Root>
+  )}
 </Toast.Region>
 
 // Anywhere, even outside React.
 toaster.add({ tone: 'success', title: 'Changes saved' });
+toaster.add({ title: 'Draft deleted', duration: Infinity, onUndo: restoreDraft });
 ```
 
 <Example block>
@@ -32,6 +35,12 @@ toaster.add({ tone: 'success', title: 'Changes saved' });
 </Example>
 
 `toaster.add()` returns the toast's id. Pass that id to `update()` to change the toast while it shows, such as from "Uploading" to "Uploaded" (give a toast that waits on work `duration: Infinity`), or to `dismiss()` to close it. Adding a toast with an id the toaster already has replaces that toast in place. Give `createToaster<YourFields>()` a type to put fields of your own on each toast and read them in the render function.
+
+```tsx
+const id = toaster.add({ title: 'Uploading report.pdf', duration: Infinity });
+await upload(file);
+toaster.update(id, { tone: 'success', title: 'Uploaded report.pdf', duration: 5000 });
+```
 
 Todae ships no icons. `Toast.Icon` is a slot for one from your own set, as in [Alert](/alert).
 
@@ -74,15 +83,15 @@ An `svg` or `img` directly inside `Toast.Icon` takes the `toast.icon.size` token
 import { CircleCheck, X } from 'lucide-react';
 
 <Toast.Root>
-	<Toast.Icon>
-		<CircleCheck />
-	</Toast.Icon>
-	<Toast.Title>{toast.title}</Toast.Title>
-	<Toast.Close>
-		<Button.Icon>
-			<X />
-		</Button.Icon>
-	</Toast.Close>
+  <Toast.Icon>
+    <CircleCheck />
+  </Toast.Icon>
+  <Toast.Title>{toast.title}</Toast.Title>
+  <Toast.Close>
+    <Button.Icon>
+      <X />
+    </Button.Icon>
+  </Toast.Close>
 </Toast.Root>
 ```
 

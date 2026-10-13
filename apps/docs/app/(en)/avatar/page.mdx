@@ -11,6 +11,14 @@ A picture of a person or a team, with a fallback such as initials. `Avatar.Fallb
 </Avatar.Root>
 ```
 
+```tsx
+<Avatar.Root>
+  <Avatar.Image src={user.photoUrl} />
+  <Avatar.Fallback>AL</Avatar.Fallback>
+</Avatar.Root>
+<Text.Root>Ada Lovelace</Text.Root>
+```
+
 <Example>
   <AvatarStates />
 </Example>
@@ -24,14 +32,6 @@ When the name is written next to the avatar, leave out `label`. The avatar is th
 <Example>
   <AvatarBesideName />
 </Example>
-
-```tsx
-<Avatar.Root>
-  <Avatar.Image src={user.photoUrl} />
-  <Avatar.Fallback>AL</Avatar.Fallback>
-</Avatar.Root>
-<Text.Root>Ada Lovelace</Text.Root>
-```
 
 ## Sizes
 

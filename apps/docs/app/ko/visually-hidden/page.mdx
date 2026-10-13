@@ -4,20 +4,19 @@ import { VisuallyHiddenLabel } from '../../../components/demos/NativeDemo';
 
 `VisuallyHidden.Root`는 화면에서는 내용을 숨기고 보조 기술에는 남겨 둡니다. `span`이므로 버튼이나 텍스트 줄 안에 들어갑니다. `focusable`을 주면 포커스가 안에 있는 동안 내용을 다시 보여 줍니다. 건너뛰기 링크에 씁니다.
 
+```tsx
+<VisuallyHidden.Root focusable>
+  <Link.Root href="#main">Skip to content</Link.Root>
+</VisuallyHidden.Root>
+
+<Text.Root>
+  3 <VisuallyHidden.Root>unread messages</VisuallyHidden.Root>
+</Text.Root>
+```
+
 <Example>
   <VisuallyHiddenLabel />
 </Example>
-
-```tsx
-<VisuallyHidden.Root focusable>
-	<a href="#main">Skip to content</a>
-</VisuallyHidden.Root>
-
-<Button.Root>
-	<Button.Icon><TrashIcon /></Button.Icon>
-	<VisuallyHidden.Root>Delete draft</VisuallyHidden.Root>
-</Button.Root>
-```
 
 Server Components는 `@omsoo/todae/visually-hidden`에서 가져올 수 있습니다. 선언에 `!important`를 쓰므로 더한 클래스나 스타일 때문에 숨긴 내용이 보이는 일은 없습니다. 아이콘만 있는 `Button.Root`처럼 요소가 이미 `aria-label`을 받는다면 `aria-label`을 쓰세요.
 

@@ -1,4 +1,5 @@
-import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos/BottomSheetDemo';
+import { BottomSheetBasic } from '../../../components/demos/BottomSheetDemo';
+import { ComboboxSheet } from '../../../components/demos/ComboboxDemo';
 
 # BottomSheet
 
@@ -8,18 +9,35 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
 
 열릴 때는 아래에서 스냅 높이로 미끄러져 올라옵니다(높이 전환이 아니라 첫 프레임 자세입니다). 두 오버레이 모두 `data-entered`를 쓰고, Dialog는 `@starting-style`도 유지합니다. 닫힐 때는 아래로 미끄러져 나가고 `transitionend`에서 언마운트됩니다(대체 시간 240ms). 드래그 중에는 `transition: none`을 유지합니다.
 
+```tsx
+<Button.Root onClick={() => setOpen(true)}>Open sheet</Button.Root>
+<BottomSheet.Root open={open} onOpenChange={setOpen} snap={snap} onSnapChange={setSnap}>
+  <BottomSheet.Header>
+    <BottomSheet.Title>Share</BottomSheet.Title>
+    <BottomSheet.Close>Close</BottomSheet.Close>
+  </BottomSheet.Header>
+  <BottomSheet.Description>Drag the grabber. Mid and full snap.</BottomSheet.Description>
+  <BottomSheet.Body>…</BottomSheet.Body>
+  <BottomSheet.Footer>
+    <Button.Root variant="secondary" onClick={() => setOpen(false)}>
+      Cancel
+    </Button.Root>
+  </BottomSheet.Footer>
+</BottomSheet.Root>
+```
+
 <Example>
   <BottomSheetBasic />
 </Example>
 
 시트는 포털 없이 놓은 자리에서 렌더링되므로, 다른 파트처럼 appearance, density, 테마 오버라이드를 상속합니다. `dismissOnEscape={false}`는 `closedby="none"`을 설정해 브라우저가 Escape를 무시하게 합니다. 그렇지 않으면 Escape와 배경 클릭이 `onOpenChange(false, reason)`을 호출합니다. 제어 방식의 시트는 `open`을 false로 바꾸면 닫히고, 비제어 방식의 시트는 바로 닫힙니다. 스크립트가 `close()`를 호출하는 것처럼 Todae 바깥에서 `<dialog>`를 닫으면 `onOpenChange`는 `native` 이유를 받습니다.
 
-## 사용 예시 스케치
+## Combobox에서
 
-나중에 나올 터치용 Combobox입니다. 버튼이 이 시트를 엽니다. 검색과 옵션은 시트 안에 있습니다. 열린 동안 입력하는 데스크톱 타입어헤드는 Combobox PRD에서 팝오버로 남습니다.
+[useCombobox](/utilities/use-combobox)에 `presentation: 'sheet'`를 주면 목록을 BottomSheet에 보여 줍니다. `Button.Root`가 시트를 열고, 검색 필드와 옵션은 시트 안에 있습니다. 코드는 [Combobox](/recipes/combobox) 레시피에 있습니다.
 
 <Example>
-  <ComboboxTouchSketch />
+  <ComboboxSheet />
 </Example>
 
 ## 아이콘
@@ -30,9 +48,9 @@ import { BottomSheetBasic, ComboboxTouchSketch } from '../../../components/demos
 import { X } from 'lucide-react';
 
 <BottomSheet.Close>
-	<Button.Icon>
-		<X />
-	</Button.Icon>
+  <Button.Icon>
+    <X />
+  </Button.Icon>
 </BottomSheet.Close>
 ```
 

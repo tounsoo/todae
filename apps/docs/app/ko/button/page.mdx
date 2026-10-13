@@ -9,6 +9,20 @@ import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 
 변형은 기존 페인트 팩을 씁니다. 기본 `type`은 `button`입니다.
 
+```tsx
+import { Plus } from 'lucide-react';
+
+<Button.Root onClick={save}>Save</Button.Root>
+<Button.Root variant="secondary" onClick={cancel}>
+  Cancel
+</Button.Root>
+<Button.Root variant="ghost" aria-label="Add">
+  <Button.Icon>
+    <Plus />
+  </Button.Icon>
+</Button.Root>
+```
+
 <Example>
   <ButtonVariants />
 </Example>
@@ -43,6 +57,19 @@ import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 
 형제 외형입니다. `role="group"`입니다. 자식은 `Button.Root`입니다. 붙은 가장자리는 1px 겹치고 바깥 모서리 반경을 공유합니다. 선택 상태는 없습니다.
 
+```tsx
+import { AlignLeft } from 'lucide-react';
+
+<Button.Group aria-label="Align">
+  <Button.Root variant="secondary" aria-label="Left">
+    <Button.Icon>
+      <AlignLeft />
+    </Button.Icon>
+  </Button.Root>
+  …
+</Button.Group>
+```
+
 <Example>
   <ButtonGroupAlign />
 </Example>
@@ -55,15 +82,15 @@ import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 import { Plus, Settings } from 'lucide-react';
 
 <Button.Root>
-	<Button.Icon>
-		<Plus />
-	</Button.Icon>
-	New project
+  <Button.Icon>
+    <Plus />
+  </Button.Icon>
+  New project
 </Button.Root>
 <Button.Root variant="ghost" aria-label="Settings">
-	<Button.Icon>
-		<Settings />
-	</Button.Icon>
+  <Button.Icon>
+    <Settings />
+  </Button.Icon>
 </Button.Root>
 ```
 

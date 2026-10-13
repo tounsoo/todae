@@ -1,14 +1,15 @@
 'use client';
 
 import { Button, DensityProvider, Dialog, ThemeProvider } from '@omsoo/todae';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 export function DialogBasic() {
   const [open, setOpen] = useState(false);
+  const keepRef = useRef<HTMLButtonElement>(null);
   return (
     <>
       <Button.Root onClick={() => setOpen(true)}>Open dialog</Button.Root>
-      <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Root open={open} onOpenChange={setOpen} initialFocusRef={keepRef}>
         <Dialog.Header>
           <Dialog.Title>Discard draft?</Dialog.Title>
           <Dialog.Close>Close</Dialog.Close>
@@ -16,7 +17,7 @@ export function DialogBasic() {
         <Dialog.Description>This cannot be undone.</Dialog.Description>
         <Dialog.Body>The dialog stays centered on every viewport. It does not become a sheet.</Dialog.Body>
         <Dialog.Footer>
-          <Button.Root variant="secondary" onClick={() => setOpen(false)}>
+          <Button.Root ref={keepRef} variant="secondary" onClick={() => setOpen(false)}>
             Keep
           </Button.Root>
           <Button.Root onClick={() => setOpen(false)}>Discard</Button.Root>

@@ -28,6 +28,23 @@ CSS 앵커가 없는 브라우저는 표면을 트리거 옆에 놓지 않습니
 
 바깥 클릭을 거부합니다. Escape는 여전히 닫습니다. `onOpenChange`는 여전히 `reason`을 받으므로 Combobox와 이 거부 예시는 `outside`를 무시할 수 있습니다.
 
+```tsx
+const popover = usePopover({
+  open,
+  onOpenChange: (next, reason) => {
+    if (reason === 'outside') return;
+    setOpen(next);
+  },
+});
+
+<Button.Root tooltip={false} {...popover.getTriggerProps()}>
+  Outside is vetoed
+</Button.Root>
+<Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label="Pinned">
+  …
+</Popover.Root>
+```
+
 <Example>
   <PopoverVeto />
 </Example>

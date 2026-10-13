@@ -5,26 +5,29 @@ import { ToastDemo } from '../../../components/demos/ToastDemo';
 방금 일어난 일을 짧게 알리고 스스로 사라지는 메시지입니다. 토스트는 `createToaster()`로 만든 스토어에 들어 있어 어떤 코드에서든 띄울 수 있고, 앱 루트 가까이에 둔 `Toast.Region` 하나에 나타납니다. 영역은 렌더링된 자리의 테마를 따릅니다.
 
 ```tsx
+import { CircleCheck } from 'lucide-react';
+
 // Once, at module scope.
-export const toaster = createToaster();
+export const toaster = createToaster<{ onUndo?: () => void }>();
 
 // Once, near the app root.
 <Toast.Region toaster={toaster}>
-	{(toast) => (
-		<Toast.Root>
-			<Toast.Icon>
-				<YourIcon />
-			</Toast.Icon>
-			<Toast.Title>{toast.title}</Toast.Title>
-			<Toast.Description>{toast.description}</Toast.Description>
-			<Toast.Action onClick={undo}>Undo</Toast.Action>
-			<Toast.Close />
-		</Toast.Root>
-	)}
+  {(toast) => (
+    <Toast.Root>
+      <Toast.Icon>
+        <CircleCheck />
+      </Toast.Icon>
+      <Toast.Title>{toast.title}</Toast.Title>
+      <Toast.Description>{toast.description}</Toast.Description>
+      {toast.onUndo ? <Toast.Action onClick={toast.onUndo}>Undo delete</Toast.Action> : null}
+      <Toast.Close />
+    </Toast.Root>
+  )}
 </Toast.Region>
 
 // Anywhere, even outside React.
 toaster.add({ tone: 'success', title: 'Changes saved' });
+toaster.add({ title: 'Draft deleted', duration: Infinity, onUndo: restoreDraft });
 ```
 
 <Example block>
@@ -32,6 +35,12 @@ toaster.add({ tone: 'success', title: 'Changes saved' });
 </Example>
 
 `toaster.add()`는 토스트의 id를 돌려줍니다. 이 id를 `update()`에 넘기면 토스트가 보이는 동안 "Uploading"을 "Uploaded"로 바꾸듯 토스트를 바꿀 수 있고(작업을 기다리는 토스트에는 `duration: Infinity`를 주세요), `dismiss()`에 넘기면 닫힙니다. 토스터에 이미 있는 id로 다시 추가하면 그 토스트가 그 자리에서 바뀝니다. `createToaster<YourFields>()`에 타입을 주면 토스트마다 직접 정한 필드를 넣고 렌더 함수에서 읽을 수 있습니다.
+
+```tsx
+const id = toaster.add({ title: 'Uploading report.pdf', duration: Infinity });
+await upload(file);
+toaster.update(id, { tone: 'success', title: 'Uploaded report.pdf', duration: 5000 });
+```
 
 Todae는 아이콘을 제공하지 않습니다. `Toast.Icon`은 [Alert](/alert)처럼 직접 사용하는 아이콘 세트의 아이콘을 넣는 슬롯입니다.
 
@@ -74,15 +83,15 @@ Todae는 아이콘을 제공하지 않습니다. `Toast.Icon`은 [Alert](/alert)
 import { CircleCheck, X } from 'lucide-react';
 
 <Toast.Root>
-	<Toast.Icon>
-		<CircleCheck />
-	</Toast.Icon>
-	<Toast.Title>{toast.title}</Toast.Title>
-	<Toast.Close>
-		<Button.Icon>
-			<X />
-		</Button.Icon>
-	</Toast.Close>
+  <Toast.Icon>
+    <CircleCheck />
+  </Toast.Icon>
+  <Toast.Title>{toast.title}</Toast.Title>
+  <Toast.Close>
+    <Button.Icon>
+      <X />
+    </Button.Icon>
+  </Toast.Close>
 </Toast.Root>
 ```
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { ChevronDown, Search } from 'lucide-react';
+import { useId, useState } from 'react';
 import {
   BottomSheet,
   Button,
@@ -38,23 +39,6 @@ const PACKAGES: ComboboxOption[] = [
   { value: 'tokens', label: 'tokens' },
 ];
 
-function Chevron() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
-      <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-function Search() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
-      <circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
 function optionNodes(
   items: ReturnType<typeof useCombobox>['items'],
   getOptionProps: ReturnType<typeof useCombobox>['getOptionProps'],
@@ -75,7 +59,7 @@ export function ComboboxSingle() {
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} />
           <Field.Icon>
-            <Chevron />
+            <ChevronDown />
           </Field.Icon>
         </Field.Root>
       </Field.Group>
@@ -98,12 +82,12 @@ export function ComboboxHighlight() {
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} placeholder="Try “san”" />
           <Field.Icon>
-            <Chevron />
+            <ChevronDown />
           </Field.Icon>
         </Field.Root>
       </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
-        {cb.isEmpty ? <Text.Root role="status">No matches</Text.Root> : null}
+        <Text.Root role="status">{cb.isEmpty ? 'No matches' : ''}</Text.Root>
         <OptionList.Root ref={found.ref} {...cb.getListboxProps()} hidden={cb.isEmpty}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
@@ -126,7 +110,7 @@ export function ComboboxMulti() {
         <Field.Root {...cb.getAnchorProps()}>
           <Field.ChipInput {...cb.getChipInputProps()} />
           <Field.Icon>
-            <Chevron />
+            <ChevronDown />
           </Field.Icon>
         </Field.Root>
       </Field.Group>
@@ -145,15 +129,19 @@ export function ComboboxSheet() {
     presentation: 'sheet',
     defaultValue: 'sf',
   });
-  const selected = CITIES.find((city) => city.value === cb.value)?.label ?? 'City';
+  const labelId = useId();
+  const selected = CITIES.find((city) => city.value === cb.value)?.label ?? 'Choose';
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.trigger}>City</Label.Root>
-        <Button.Root {...cb.getTriggerProps()} variant="secondary">
+        <Label.Root id={labelId} htmlFor={cb.ids.trigger}>
+          City
+        </Label.Root>
+        {/* Named by the label and its own text, so it reads "City, San Francisco". */}
+        <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${labelId} ${cb.ids.trigger}`} variant="secondary">
           {selected}
           <Button.Icon>
-            <Chevron />
+            <ChevronDown />
           </Button.Icon>
         </Button.Root>
       </Field.Group>
@@ -179,7 +167,7 @@ export function ComboboxSheet() {
 }
 
 export function ComboboxAuto() {
-  const sheet = useSheetPresentation();
+  const labelId = useId();
   const cb = useCombobox({
     options: FRAMEWORKS,
     presentation: 'auto',
@@ -187,16 +175,18 @@ export function ComboboxAuto() {
   return (
     <Stack.Root>
       <Text.Root size="s" tone="muted">
-        presentation: {sheet.presentation}
-        {sheet.isSheet ? ' (sheet)' : ' (popover)'}
+        presentation: {cb.presentation}
       </Text.Root>
       {cb.isSheet ? (
         <>
-          <Button.Root {...cb.getTriggerProps()} variant="secondary">
-            {typeof cb.value === 'string' && cb.value
-              ? FRAMEWORKS.find((item) => item.value === cb.value)?.label ?? 'Framework'
-              : 'Framework'}
-          </Button.Root>
+          <Field.Group>
+            <Label.Root id={labelId} htmlFor={cb.ids.trigger}>
+              Framework
+            </Label.Root>
+            <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${labelId} ${cb.ids.trigger}`} variant="secondary">
+              {FRAMEWORKS.find((item) => item.value === cb.value)?.label ?? 'Choose'}
+            </Button.Root>
+          </Field.Group>
           <BottomSheet.Root {...cb.getSheetProps()}>
             <BottomSheet.Body>
               <Field.Root id={cb.ids.input} aria-label="Framework">
@@ -255,22 +245,17 @@ export function ComboboxAsync() {
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} placeholder="Type to load" />
           <Field.Icon>
-            <Chevron />
+            <ChevronDown />
           </Field.Icon>
         </Field.Root>
       </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
-        {cb.loading ? (
-          <Text.Root role="status" aria-live="polite">
-            Loading…
-          </Text.Root>
-        ) : cb.error ? (
-          <div role="status" aria-live="polite">
-            <Text.Root as="span">Couldn’t load options.</Text.Root>{' '}
-            <Button.Root variant="ghost" onClick={cb.retry}>
-              Retry
-            </Button.Root>
-          </div>
+        {/* One status element stays mounted; only its text changes, so each change is read. */}
+        <Text.Root role="status">{cb.loading ? 'Loading…' : cb.error ? 'Couldn’t load options.' : ''}</Text.Root>
+        {cb.error && !cb.loading ? (
+          <Button.Root variant="ghost" onClick={cb.retry}>
+            Retry
+          </Button.Root>
         ) : null}
         {/* Keep the listbox mounted: the input's aria-controls points at it. */}
         <OptionList.Root {...cb.getListboxProps()} hidden={cb.loading || cb.error != null}>
@@ -293,12 +278,12 @@ export function ComboboxEmpty() {
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} />
           <Field.Icon>
-            <Chevron />
+            <ChevronDown />
           </Field.Icon>
         </Field.Root>
       </Field.Group>
       <Popover.Root {...cb.getPopoverProps()}>
-        {cb.isEmpty ? <Text.Root role="status">No matches</Text.Root> : null}
+        <Text.Root role="status">{cb.isEmpty ? 'No matches' : ''}</Text.Root>
         {/* Keep the listbox mounted: the input's aria-controls points at it. */}
         <OptionList.Root {...cb.getListboxProps()} hidden={cb.isEmpty}>
           {optionNodes(cb.items, cb.getOptionProps)}
@@ -332,7 +317,7 @@ export function ComboboxCreate() {
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} />
           <Field.Icon>
-            <Chevron />
+            <ChevronDown />
           </Field.Icon>
         </Field.Root>
       </Field.Group>
@@ -365,7 +350,7 @@ export function ComboboxCreateMulti() {
         <Field.Root {...cb.getAnchorProps()}>
           <Field.ChipInput {...cb.getChipInputProps()} />
           <Field.Icon>
-            <Chevron />
+            <ChevronDown />
           </Field.Icon>
         </Field.Root>
       </Field.Group>

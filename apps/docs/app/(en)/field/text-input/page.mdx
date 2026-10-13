@@ -5,13 +5,13 @@ import { FieldDateTime, FieldLabelStates } from '../../../../components/demos/Fi
 `Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string and `onChange` is required; `onValueChange` also gets the new string. `type` takes `text`, `search`, `email`, `url`, `tel`, `password`, `number`, `date`, `time` or `datetime-local`. Put `id` on `Field.Root`.
 
 ```tsx
-const id = useId()
+const id = useId();
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Email</Label.Root>
-	<Field.Root id={id}>
-		<Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Email</Label.Root>
+  <Field.Root id={id}>
+    <Field.TextInput value={v} onChange={(event) => setV(event.target.value)} />
+  </Field.Root>
 </Field.Group>
 ```
 
@@ -22,6 +22,17 @@ const id = useId()
 ## Number, date and time
 
 `Field.TextInput` takes `type="number"`, `"date"`, `"time"` and `"datetime-local"`. They stay native inputs, with the browser's own spinner, date picker and locale format, styled from the field tokens with figures lined up. `value` is the input's string: `"2"`, `"2026-10-07"`, `"14:30"`, or an empty string while the input is incomplete. Constrain them with the native `min`, `max` and `step`.
+
+```tsx
+const id = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Start date</Label.Root>
+  <Field.Root id={id}>
+    <Field.TextInput type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+  </Field.Root>
+</Field.Group>
+```
 
 <Example block>
   <FieldDateTime />

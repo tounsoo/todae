@@ -20,6 +20,14 @@ In the default single mode, one item is pressed at most, and pressing it again c
 
 With `selectionMode="multiple"`, any number can be pressed, and the value is an array.
 
+```tsx
+<ToggleGroup.Root aria-label="Text style" selectionMode="multiple" value={styles} onValueChange={setStyles}>
+  <ToggleGroup.Item value="bold">Bold</ToggleGroup.Item>
+  <ToggleGroup.Item value="italic">Italic</ToggleGroup.Item>
+  <ToggleGroup.Item value="underline">Underline</ToggleGroup.Item>
+</ToggleGroup.Root>
+```
+
 <Example>
   <ToggleGroupStyles />
 </Example>

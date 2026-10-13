@@ -7,7 +7,7 @@ import { HighlightSearch } from '../../../../components/demos/HighlightDemo';
 검색할 요소에 `ref`를 두고 `query`를 넘기세요. `ref` 아래의 텍스트나 요소가 바뀌면 훅이 다시 검색합니다. `caseSensitive`를 설정하지 않으면 대소문자를 구분하지 않으며, 쿼리는 패턴이 아니라 일반 텍스트입니다. 목록을 넘기면 그중 어느 단어든 일치시킵니다.
 
 ```tsx
-const found = useHighlight({ name: 'search', query })
+const found = useHighlight({ name: 'search', query });
 
 <article ref={found.ref}>{children}</article>
 <output>{found.matches.length} results</output>
@@ -15,8 +15,8 @@ const found = useHighlight({ name: 'search', query })
 
 ```css
 ::highlight(search) {
-	background-color: var(--todae-color-status-warning-bg);
-	color: var(--todae-color-fg-default);
+  background-color: var(--todae-color-status-warning-bg);
+  color: var(--todae-color-fg-default);
 }
 ```
 
@@ -27,6 +27,11 @@ const found = useHighlight({ name: 'search', query })
 `matches`에는 일치 항목마다 살아 있는(live) `Range`가 문서 순서대로 들어 있습니다. CSS로 숨긴 텍스트도 일치 항목에 들어갑니다. 일치 항목은 텍스트 노드 하나 안에 있어야 하므로, `fo<b>o</b>`처럼 마크업으로 나뉜 단어는 찾지 못합니다.
 
 현재 결과를 표시하려면, 그 범위를 다른 이름의 두 번째 훅에 `ranges`로 넘기고 `priority`를 더 높게 주어 위에 칠해지게 하세요. 위 데모가 이렇게 합니다. 훅마다 다른 `name`을 주세요. 여러 이름을 같은 스타일로 칠하려면 `::highlight(a), ::highlight(b)`처럼 나열하세요. `type`은 맞춤법과 문법 표시를 위해 `spelling-error`나 `grammar-error`를 설정합니다.
+
+```tsx
+const current = found.matches[index];
+useHighlight({ name: 'search-current', ranges: current ? [current] : undefined, priority: 1 });
+```
 
 훅은 아무것도 알리지 않습니다. 스크린 리더 사용자에게 개수가 필요하면 `<output>`이나 다른 라이브 영역에 보여 주세요.
 

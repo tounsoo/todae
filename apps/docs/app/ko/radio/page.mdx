@@ -9,14 +9,14 @@ import { RadioPlan } from '../../../components/demos/RadioDemo';
 `value={null}`은 아무것도 선택되지 않은 제어 상태입니다. 비제어로 쓰려면 `value`를 생략하세요.
 
 ```tsx
-const captionId = useId()
+const captionId = useId();
 
 <Field.Group>
-	<Text.Root as="span" id={captionId} size="s" weight="medium">Plan</Text.Root>
-	<RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
-		<RadioGroup.Item value="free">Free</RadioGroup.Item>
-		<RadioGroup.Item value="pro">Pro</RadioGroup.Item>
-	</RadioGroup.Root>
+  <Text.Root as="span" id={captionId} size="s" weight="medium">Plan</Text.Root>
+  <RadioGroup.Root aria-labelledby={captionId} value={plan} onValueChange={setPlan}>
+    <RadioGroup.Item value="free">Free</RadioGroup.Item>
+    <RadioGroup.Item value="pro">Pro</RadioGroup.Item>
+  </RadioGroup.Root>
 </Field.Group>
 ```
 
@@ -35,16 +35,16 @@ const captionId = useId()
 **직접 제공할 것:** 그룹의 이름. id를 가진 보이는 캡션을 `aria-labelledby`로 연결하거나 `aria-label`을 주세요. 모든 항목에 children을 주세요. 오류가 있으면 `invalid`를 켜고 [ErrorMessage](/errormessage)의 id를 루트의 `aria-describedby`에 넣으세요. 루트를 감쌀 때는 props 타입을 그대로 두어 이름이 계속 필수가 되게 하세요.
 
 ```tsx
-type PlanPickerProps = RadioGroupRootProps & { plans: readonly string[] }
+type PlanPickerProps = RadioGroupRootProps & { plans: readonly string[] };
 
 function PlanPicker({ plans, ...group }: PlanPickerProps) {
-	return (
-		<RadioGroup.Root {...group}>
-			{plans.map((plan) => (
-				<RadioGroup.Item key={plan} value={plan}>{plan}</RadioGroup.Item>
-			))}
-		</RadioGroup.Root>
-	)
+  return (
+    <RadioGroup.Root {...group}>
+      {plans.map((plan) => (
+        <RadioGroup.Item key={plan} value={plan}>{plan}</RadioGroup.Item>
+      ))}
+    </RadioGroup.Root>
+  );
 }
 ```
 

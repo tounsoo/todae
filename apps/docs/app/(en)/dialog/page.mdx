@@ -6,6 +6,26 @@ Centered native `<dialog>` via `showModal()`. `open` is controlled, or `defaultO
 
 Enter is an opacity fade over 200ms. `@starting-style` where supported; `data-entered` is the fallback so unsupported engines still tween. Exit stays mounted until `transitionend` (160ms fallback).
 
+```tsx
+const keepRef = useRef<HTMLButtonElement>(null);
+
+<Button.Root onClick={() => setOpen(true)}>Open dialog</Button.Root>
+<Dialog.Root open={open} onOpenChange={setOpen} initialFocusRef={keepRef}>
+  <Dialog.Header>
+    <Dialog.Title>Discard draft?</Dialog.Title>
+    <Dialog.Close>Close</Dialog.Close>
+  </Dialog.Header>
+  <Dialog.Description>This cannot be undone.</Dialog.Description>
+  <Dialog.Body>…</Dialog.Body>
+  <Dialog.Footer>
+    <Button.Root ref={keepRef} variant="secondary" onClick={() => setOpen(false)}>
+      Keep
+    </Button.Root>
+    <Button.Root onClick={discard}>Discard</Button.Root>
+  </Dialog.Footer>
+</Dialog.Root>
+```
+
 <Example>
   <DialogBasic />
 </Example>
@@ -28,9 +48,9 @@ iOS may still rubber-band the page behind an open overlay. Chrome may ignore `ca
 import { X } from 'lucide-react';
 
 <Dialog.Close>
-	<Button.Icon>
-		<X />
-	</Button.Icon>
+  <Button.Icon>
+    <X />
+  </Button.Icon>
 </Dialog.Close>
 ```
 
@@ -41,16 +61,22 @@ import { X } from 'lucide-react';
 **You supply:** A name: render `Dialog.Title`, or pass `aria-label` or `aria-labelledby` to `Dialog.Root`. A button that closes it, such as `Dialog.Close`, above all when `dismissOnEscape` is false. A `restoreFocusRef` when the opener is gone by the time it closes, such as a menu item or a `Toast.Action`. An `initialFocusRef` when the task does not start at the first control, such as the safe button of a destructive confirm.
 
 ```tsx
+import type { ReactNode } from 'react';
+import { Dialog, type DialogRootProps } from '@omsoo/todae';
+
 type ConfirmDialogProps = Omit<DialogRootProps, 'children'> & {
   title: string;
   children: ReactNode;
 };
 
-function ConfirmDialog({ title, children, ...rest }: ConfirmDialogProps) {
+export function ConfirmDialog({ title, children, ...rest }: ConfirmDialogProps) {
   return (
     <Dialog.Root {...rest}>
       <Dialog.Title>{title}</Dialog.Title>
       <Dialog.Body>{children}</Dialog.Body>
+      <Dialog.Footer>
+        <Dialog.Close>Cancel</Dialog.Close>
+      </Dialog.Footer>
     </Dialog.Root>
   );
 }

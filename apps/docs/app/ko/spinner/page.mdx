@@ -8,10 +8,6 @@ import { SkeletonProfile, SpinnerLabelled } from '../../../components/demos/Nati
 
 `Spinner.Root`는 progressbar 역할이 그대로 남으므로 스크린 리더는 진행 막대로 알려 주고, 다른 progress처럼 이름이 필요합니다. 텍스트와 함께 `<label>`로 감싸거나 `aria-label`을 주세요. 채움 호 하나가 도는 고리로 그려지고, 사용자가 동작 줄이기를 요청하면 멈춥니다. `value`는 받지 않습니다. 끝을 아는 기다림에는 [Progress](/progress) 막대를 쓰세요.
 
-<Example>
-  <SpinnerLabelled />
-</Example>
-
 ```tsx
 <label>
   <Spinner.Root /> Loading invoices
@@ -20,15 +16,15 @@ import { SkeletonProfile, SpinnerLabelled } from '../../../components/demos/Nati
 <Spinner.Root aria-label="Saving" />
 ```
 
+<Example>
+  <SpinnerLabelled />
+</Example>
+
 텍스트 색으로 그리므로 기본 버튼을 포함해 어떤 표면에서도 보입니다. 색을 바꾸려면 `color`를 정하세요. `spinner.size`, `spinner.thickness`, `spinner.track-tint`(트랙이 텍스트 색을 얼마나 쓰는지), `spinner.motion.duration`으로 바꾸세요.
 
 ## Skeleton
 
 `Skeleton.Root`는 내용이 오기 전에 그 자리를 대신합니다. 높이는 최소 한 줄이고, 안에 든 요소는 크기만 정할 뿐 숨겨집니다. 깜빡이며, 동작 줄이기에서는 멈춥니다.
-
-<Example block>
-  <SkeletonProfile />
-</Example>
 
 ```tsx
 <div>
@@ -42,6 +38,10 @@ import { SkeletonProfile, SpinnerLabelled } from '../../../components/demos/Nati
   </Stack.Root>
 </div>
 ```
+
+<Example block>
+  <SkeletonProfile />
+</Example>
 
 Skeleton은 스크린 리더에게 아무 뜻이 없으니 `aria-hidden`으로 숨기고, 무엇을 불러오는지 텍스트로 알리세요. `skeleton.bg`, `skeleton.radius`, `skeleton.motion.duration`으로 바꾸세요.
 

@@ -11,6 +11,14 @@ import { AvatarBesideName, AvatarSizes, AvatarStates, AvatarTones } from '../../
 </Avatar.Root>
 ```
 
+```tsx
+<Avatar.Root>
+  <Avatar.Image src={user.photoUrl} />
+  <Avatar.Fallback>AL</Avatar.Fallback>
+</Avatar.Root>
+<Text.Root>Ada Lovelace</Text.Root>
+```
+
 <Example>
   <AvatarStates />
 </Example>
@@ -24,14 +32,6 @@ import { AvatarBesideName, AvatarSizes, AvatarStates, AvatarTones } from '../../
 <Example>
   <AvatarBesideName />
 </Example>
-
-```tsx
-<Avatar.Root>
-  <Avatar.Image src={user.photoUrl} />
-  <Avatar.Fallback>AL</Avatar.Fallback>
-</Avatar.Root>
-<Text.Root>Ada Lovelace</Text.Root>
-```
 
 ## 크기
 

@@ -31,6 +31,12 @@ import { ChipListDemo } from '../../../components/demos/ChipListDemo';
 
 ## 읽기 전용
 
+`onRemove`를 빼면 칩에 제거 버튼이 없습니다.
+
+```tsx
+<ChipList.Root aria-label="Tags" chips={tags} maxRows={1} />
+```
+
 <Example>
   <ChipListDemo maxRows={1} readOnly />
 </Example>

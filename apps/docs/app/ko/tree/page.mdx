@@ -5,21 +5,25 @@ import { TreeFiles } from '../../../components/demos/TreeDemo';
 폴더 안의 파일처럼 항목이 자기 목록을 품는 목록입니다. `Tree.Root`는 `role="tree"`이며, 어떤 항목이 열려 있고 어떤 항목이 선택됐는지를 가집니다. 각 `Tree.Item`은 `role="treeitem"`이고, 눈에 보이는 행인 `Tree.Label`이 이름을 붙입니다. 안에 `Tree.Group`이 있는 항목은 가지(branch)입니다. 열고 닫을 수 있고, 그룹이 자식 항목을 담습니다. `Tree.Icon`은 텍스트 앞의 아이콘을 담습니다.
 
 ```tsx
+import { Folder } from 'lucide-react';
+
 <Tree.Root aria-label="Files" defaultExpanded={['src']}>
-	<Tree.Item value="src">
-		<Tree.Label>
-			<Tree.Icon><Folder /></Tree.Icon>
-			src
-		</Tree.Label>
-		<Tree.Group>
-			<Tree.Item value="src/index.ts">
-				<Tree.Label>index.ts</Tree.Label>
-			</Tree.Item>
-		</Tree.Group>
-	</Tree.Item>
-	<Tree.Item value="README.md">
-		<Tree.Label>README.md</Tree.Label>
-	</Tree.Item>
+  <Tree.Item value="src">
+    <Tree.Label>
+      <Tree.Icon>
+        <Folder />
+      </Tree.Icon>
+      src
+    </Tree.Label>
+    <Tree.Group>
+      <Tree.Item value="src/index.ts">
+        <Tree.Label>index.ts</Tree.Label>
+      </Tree.Item>
+    </Tree.Group>
+  </Tree.Item>
+  <Tree.Item value="README.md">
+    <Tree.Label>README.md</Tree.Label>
+  </Tree.Item>
 </Tree.Root>
 ```
 

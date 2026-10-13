@@ -7,11 +7,15 @@ import { RovingToolbar } from '../../../../components/demos/RovingFocusDemo';
 묶음에는 `getContainerProps()`를, 각 항목에는 `getItemProps(value, { disabled })`를 펼치세요. 항목은 훅이 소유한 속성으로 DOM에서 찾으므로, 직접 만든 래퍼 안의 항목도 포함되며 순서는 문서 순서를 따릅니다. 비활성화된 항목은 건너뜁니다. 브라우저에는 아직 내장 포커스 그룹이 없으므로, 이 기능은 JavaScript에 남아 있습니다.
 
 ```tsx
-const roving = useRovingFocus({ orientation: 'horizontal', defaultActiveValue: 'bold' })
+const roving = useRovingFocus({ orientation: 'horizontal', defaultActiveValue: 'cut' });
 
-<div role="toolbar" aria-label="Text style" {...roving.getContainerProps()}>
-	<Button.Root {...roving.getItemProps('bold')}>Bold</Button.Root>
-	<Button.Root {...roving.getItemProps('italic')}>Italic</Button.Root>
+<div role="toolbar" aria-label="Clipboard" {...roving.getContainerProps()}>
+  <Button.Root variant="ghost" {...roving.getItemProps('cut')}>
+    Cut
+  </Button.Root>
+  <Button.Root variant="ghost" {...roving.getItemProps('copy')}>
+    Copy
+  </Button.Root>
 </div>
 ```
 
@@ -32,7 +36,7 @@ const roving = useRovingFocus({ orientation: 'horizontal', defaultActiveValue: '
 **직접 제공할 것:** 컨테이너의 `role`과 이름(`aria-label` 또는 `aria-labelledby`), 그리고 역할의 기본값과 다를 때 `aria-orientation`을 주세요. 각 항목의 역할과 `aria-selected`, `aria-checked`, `aria-pressed` 같은 상태도 주세요. 항목 자체의 `disabled`나 `aria-disabled`도 직접 주세요. props는 포커스를 받는 요소 자체에 펼치고, 직접 만든 `onFocus`는 props 인자로 넘겨 훅의 것과 함께 실행되게 하세요.
 
 ```tsx
-type ToolProps = Omit<ButtonRootProps, 'value'> & { value: string; roving: UseRovingFocusResult }
+type ToolProps = Omit<ButtonRootProps, 'value'> & { value: string; roving: UseRovingFocusResult };
 
 function Tool({ value, roving, disabled, onFocus, ...props }: ToolProps) {
   return (
@@ -42,7 +46,7 @@ function Tool({ value, roving, disabled, onFocus, ...props }: ToolProps) {
       {...roving.getItemProps(value, { disabled }, { onFocus })}
       disabled={disabled}
     />
-  )
+  );
 }
 ```
 

@@ -6,12 +6,12 @@ import { MenuActions, MenuOptions } from '../../../components/demos/MenuDemo';
 
 ```tsx
 <Menu.Root>
-	<Menu.Trigger variant="secondary">Actions</Menu.Trigger>
-	<Menu.Content>
-		<Menu.Item onSelect={rename}>Rename</Menu.Item>
-		<Menu.Separator />
-		<Menu.Item onSelect={remove}>Delete</Menu.Item>
-	</Menu.Content>
+  <Menu.Trigger variant="secondary">Actions</Menu.Trigger>
+  <Menu.Content>
+    <Menu.Item onSelect={rename}>Rename</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item onSelect={remove}>Delete</Menu.Item>
+  </Menu.Content>
 </Menu.Root>
 ```
 
@@ -41,18 +41,18 @@ ARIA가 `menuitem`에 대해 정의한 대로, 항목의 자식은 보조 기술
 import { Check, Ellipsis } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ check: <Check /> }}>
-	<Menu.Root>
-		<Menu.Trigger variant="ghost" aria-label="View options">
-			<Button.Icon>
-				<Ellipsis />
-			</Button.Icon>
-		</Menu.Trigger>
-		<Menu.Content>
-			<Menu.CheckboxItem checked={grid} onCheckedChange={setGrid}>
-				Show grid
-			</Menu.CheckboxItem>
-		</Menu.Content>
-	</Menu.Root>
+  <Menu.Root>
+    <Menu.Trigger variant="ghost" aria-label="View options">
+      <Button.Icon>
+        <Ellipsis />
+      </Button.Icon>
+    </Menu.Trigger>
+    <Menu.Content>
+      <Menu.CheckboxItem checked={grid} onCheckedChange={setGrid}>
+        Show grid
+      </Menu.CheckboxItem>
+    </Menu.Content>
+  </Menu.Root>
 </GlyphsProvider>
 ```
 
@@ -73,7 +73,7 @@ function RowActions({ label, children }: { label: string; children: ReactNode })
       </Menu.Trigger>
       <Menu.Content>{children}</Menu.Content>
     </Menu.Root>
-  )
+  );
 }
 ```
 

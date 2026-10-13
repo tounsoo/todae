@@ -4,14 +4,26 @@ import { SliderVolume } from '../../../components/demos/NativeControlsDemo';
 
 `Slider.Root`는 네이티브 `<input type="range">`입니다. 화살표 키, Page Up과 Page Down, Home과 End는 브라우저가 처리하고 값도 읽어 줍니다. Todae는 `slider` contract 토큰으로 `accent-color`를 정하고, 브라우저가 그 색으로 손잡이와 채워진 트랙을 칠합니다. 그 색이 컨트롤의 어디까지 닿는지는 브라우저마다 다릅니다.
 
+```tsx
+const id = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Volume</Label.Root>
+  <Slider.Root
+    id={id}
+    min={0}
+    max={100}
+    step={5}
+    value={value}
+    onChange={(event) => setValue(Number(event.target.value))}
+  />
+</Field.Group>
+<Text.Root>{value}%</Text.Root>
+```
+
 <Example block>
   <SliderVolume />
 </Example>
-
-```tsx
-<Label.Root htmlFor="volume">Volume</Label.Root>
-<Slider.Root id="volume" min={0} max={100} step={5} value={value} onChange={onChange} />
-```
 
 Server Components는 `@omsoo/todae/slider`에서 가져올 수 있습니다. [Label](/label)로 이름을 붙이고, 정확한 숫자가 중요하면 현재 값을 근처에 텍스트로 보여 주세요. `slider.fill`과 `slider.ring.focus`로 스타일을 바꾸세요. 범위를 고르는 손잡이 두 개짜리 슬라이더는 네이티브가 아니며 아직 Todae에 없습니다.
 

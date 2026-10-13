@@ -6,11 +6,25 @@ import { OptionListMultiple, OptionListSingle } from '../../../components/demos/
 
 Single `value` is `string | null`. Multiple `value` is `string[]`. Selected options stay `font-weight: 400` and use an accent-soft row fill (`color.bg.selected`, 12% accent). Highlighted selected is 20% (`color.accent.soft-strong`). Rows are `2px` apart. Hover is gated with `@media (hover: hover)`.
 
+```tsx
+<OptionList.Root aria-label="Fruit" value={value} onValueChange={setValue}>
+  <OptionList.Option value="apple">Apple</OptionList.Option>
+  <OptionList.Option value="pear">Pear</OptionList.Option>
+</OptionList.Root>
+```
+
 <Example>
   <OptionListSingle />
 </Example>
 
-Multiple keeps a check gutter on every row. Selected fills the box and draws the check glyph.
+With `selectionMode="multiple"`, every row keeps a check gutter. Selected fills the box and draws the check glyph.
+
+```tsx
+<OptionList.Root aria-label="Fruit" selectionMode="multiple" value={values} onValueChange={setValues}>
+  <OptionList.Option value="apple">Apple</OptionList.Option>
+  <OptionList.Option value="pear">Pear</OptionList.Option>
+</OptionList.Root>
+```
 
 <Example>
   <OptionListMultiple />
@@ -28,10 +42,10 @@ A selected option shows the `check` glyph: Todae's check mark, unless a [GlyphsP
 import { Check } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ check: <Check /> }}>
-	<OptionList.Root aria-label="Fruit" value={value} onValueChange={setValue}>
-		<OptionList.Option value="apple">Apple</OptionList.Option>
-		<OptionList.Option value="pear">Pear</OptionList.Option>
-	</OptionList.Root>
+  <OptionList.Root aria-label="Fruit" value={value} onValueChange={setValue}>
+    <OptionList.Option value="apple">Apple</OptionList.Option>
+    <OptionList.Option value="pear">Pear</OptionList.Option>
+  </OptionList.Root>
 </GlyphsProvider>
 ```
 

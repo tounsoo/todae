@@ -180,8 +180,8 @@ export function AcmeButton({ variant = 'outline', ...props }: ButtonRootProps) {
 부모는 컴포넌트 타입으로 자식을 찾지 않으므로 감싼 자식도 동작합니다. `OptionList.Option`은 컨텍스트로 목록에 등록되므로 감싼 옵션도 선택과 탐색이 됩니다. `Button.Root`는 `Button.Icon`이 렌더링하는 data 속성으로 아이콘을 찾으므로, `Button.Icon`을 렌더링하는 래퍼도 버튼의 아이콘으로 인식됩니다.
 
 ```tsx
-function AcmeOption(props: OptionListOptionProps) {
-  return <OptionList.Option {...props} className="acme-option" />;
+function AcmeOption({ className, ...props }: OptionListOptionProps) {
+  return <OptionList.Option {...props} className={['acme-option', className].filter(Boolean).join(' ')} />;
 }
 
 <OptionList.Root aria-label="Size" value={size} onValueChange={setSize}>

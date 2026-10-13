@@ -221,7 +221,7 @@ export function ChipInputHook() {
   const field = useChipField({ initialChips: ['react'] });
   return (
     <Field.Root aria-label="Tags">
-      <Field.ChipInput {...field.getChipInputProps()} placeholder="useChipField" />
+      <Field.ChipInput {...field.getChipInputProps()} placeholder="Add a tag" />
     </Field.Root>
   );
 }
@@ -560,19 +560,19 @@ export function FieldDateTime() {
       <Field.Group>
         <Label.Root htmlFor={quantityId}>Seats</Label.Root>
         <Field.Root id={quantityId}>
-          <Field.TextInput type="number" min={1} max={20} value={quantity} onValueChange={setQuantity} onChange={() => undefined} />
+          <Field.TextInput type="number" min={1} max={20} value={quantity} onChange={(event) => setQuantity(event.target.value)} />
         </Field.Root>
       </Field.Group>
       <Field.Group>
         <Label.Root htmlFor={dateId}>Start date</Label.Root>
         <Field.Root id={dateId}>
-          <Field.TextInput type="date" value={date} onValueChange={setDate} onChange={() => undefined} />
+          <Field.TextInput type="date" value={date} onChange={(event) => setDate(event.target.value)} />
         </Field.Root>
       </Field.Group>
       <Field.Group>
         <Label.Root htmlFor={timeId}>Start time</Label.Root>
         <Field.Root id={timeId}>
-          <Field.TextInput type="time" step={900} value={time} onValueChange={setTime} onChange={() => undefined} />
+          <Field.TextInput type="time" step={900} value={time} onChange={(event) => setTime(event.target.value)} />
         </Field.Root>
       </Field.Group>
     </>

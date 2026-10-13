@@ -6,8 +6,8 @@ import { DisclosureAccordion, DisclosureSingle } from '../../../components/demos
 
 ```tsx
 <Disclosure.Root>
-	<Disclosure.Summary>Shipping details</Disclosure.Summary>
-	<Text.Root>Orders ship within two business days.</Text.Root>
+  <Disclosure.Summary>Shipping details</Disclosure.Summary>
+  <Text.Root>Orders ship within two business days.</Text.Root>
 </Disclosure.Root>
 ```
 
@@ -23,12 +23,12 @@ Server Components는 `@omsoo/todae/disclosure`에서 가져올 수 있습니다.
 
 ```tsx
 <Disclosure.Root name="faq" open>
-	<Disclosure.Summary>What is Todae?</Disclosure.Summary>
-	…
+  <Disclosure.Summary>What is Todae?</Disclosure.Summary>
+  …
 </Disclosure.Root>
 <Disclosure.Root name="faq">
-	<Disclosure.Summary>Does it ship icons?</Disclosure.Summary>
-	…
+  <Disclosure.Summary>Does it ship icons?</Disclosure.Summary>
+  …
 </Disclosure.Root>
 ```
 
@@ -46,10 +46,10 @@ Server Components는 `@omsoo/todae/disclosure`에서 가져올 수 있습니다.
 import { ChevronDown } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
-	<Disclosure.Root>
-		<Disclosure.Summary>Shipping</Disclosure.Summary>
-		…
-	</Disclosure.Root>
+  <Disclosure.Root>
+    <Disclosure.Summary>Shipping</Disclosure.Summary>
+    …
+  </Disclosure.Root>
 </GlyphsProvider>
 ```
 

@@ -3,18 +3,18 @@
 `useModalLayer(ref, open)`은 직접 만든 모달 `<dialog>`를 Todae가 열려 있다고 아는 모달 목록인 모달 스택에 넣습니다. Dialog와 BottomSheet는 스스로 스택에 들어갑니다.
 
 ```tsx
-function YourDialog({ open, onClose, children }) {
-	const ref = useRef<HTMLDialogElement>(null);
-	useModalLayer(ref, open);
-	useEffect(() => {
-		if (open) ref.current?.showModal();
-		else ref.current?.close();
-	}, [open]);
-	return (
-		<dialog ref={ref} onClose={onClose}>
-			{children}
-		</dialog>
-	);
+function YourDialog({ open, onClose, labelledBy, children }: YourDialogProps) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useModalLayer(ref, open);
+  useEffect(() => {
+    if (open) ref.current?.showModal();
+    else ref.current?.close();
+  }, [open]);
+  return (
+    <dialog ref={ref} aria-labelledby={labelledBy} onClose={onClose}>
+      {children}
+    </dialog>
+  );
 }
 ```
 
