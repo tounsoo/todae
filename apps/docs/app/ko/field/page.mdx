@@ -237,7 +237,7 @@ compact, comfortable, spacious에서의 같은 작성기.
 
 ## 숫자, 날짜, 시간
 
-`Field.TextInput`은 `type="number"`, `"date"`, `"time"`, `"datetime-local"`을 받습니다. 브라우저 자체의 스피너, 날짜 선택기, 로캘 형식을 그대로 쓰는 네이티브 입력으로 남으며, 필드 토큰으로 스타일을 입히고 숫자를 세로로 맞춥니다. `value`는 입력의 문자열입니다. `"2"`, `"2026-10-07"`, `"14:30"`이거나, 입력이 덜 끝났을 때는 빈 문자열입니다. 네이티브 `min`, `max`, `step`으로 제한하세요.
+`Field.TextInput`은 `type="number"`, `"date"`, `"time"`, `"datetime-local"`을 받습니다. 브라우저 자체의 스피너, 날짜 선택기, 로캘 형식을 그대로 쓰는 네이티브 입력으로 남으며, 필드 토큰으로 스타일을 입히고 숫자를 세로로 맞춥니다. `value`는 입력의 문자열입니다. `"2"`, `"2026-10-07"`, `"14:30"`이거나, 입력이 덜 끝났을 때는 빈 문자열입니다. 네이티브 `min`, `max`, `step`으로 제한하세요. `Field.TextInput`은 문자열을 `Date`로 바꾸지 않으므로 시간대가 적용되지 않습니다. 앱에서 날짜 값이 필요하면 `new Date(value)` 대신 `Temporal.PlainDate.from(value)`(다른 유형은 `PlainTime`, `PlainDateTime`)로 파싱하세요. `new Date(value)`는 `"2026-10-07"`을 UTC 자정으로 읽어, UTC보다 서쪽 시간대에서는 전날로 표시됩니다.
 
 <Example block>
   <FieldDateTime />

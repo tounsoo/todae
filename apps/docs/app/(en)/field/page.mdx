@@ -237,7 +237,7 @@ The same composer at compact, comfortable, and spacious.
 
 ## Number, date and time
 
-`Field.TextInput` takes `type="number"`, `"date"`, `"time"` and `"datetime-local"`. They stay native inputs, with the browser's own spinner, date picker and locale format, styled from the field tokens with figures lined up. `value` is the input's string: `"2"`, `"2026-10-07"`, `"14:30"`, or an empty string while the input is incomplete. Constrain them with the native `min`, `max` and `step`.
+`Field.TextInput` takes `type="number"`, `"date"`, `"time"` and `"datetime-local"`. They stay native inputs, with the browser's own spinner, date picker and locale format, styled from the field tokens with figures lined up. `value` is the input's string: `"2"`, `"2026-10-07"`, `"14:30"`, or an empty string while the input is incomplete. Constrain them with the native `min`, `max` and `step`. `Field.TextInput` never turns the string into a `Date`, so no time zone is applied. When your app needs a date value, parse it with `Temporal.PlainDate.from(value)` (or `PlainTime`, `PlainDateTime` for the other types) rather than `new Date(value)`, which reads `"2026-10-07"` as midnight UTC and shows the previous day in time zones west of UTC.
 
 <Example block>
   <FieldDateTime />
