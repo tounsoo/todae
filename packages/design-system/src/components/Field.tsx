@@ -45,7 +45,13 @@ import { useStrings, type Strings } from '../providers/StringsProvider';
 import { usePopover, type PopoverCloseReason, type PopoverTriggerUserProps } from '../hooks/usePopover';
 import { Popover } from './Popover';
 import { ColorPicker as ColorPickerParts } from './ColorPicker';
-import { Calendar as CalendarParts, GREGORY, type CalendarDayOfWeek } from './Calendar';
+import {
+  Calendar as CalendarParts,
+  CALENDAR_TAB_STOP,
+  GREGORY,
+  isoDate,
+  type CalendarFirstDayOfWeek,
+} from './Calendar';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -794,9 +800,9 @@ export type FieldColorPickerProps = {
 /**
  * The field's control: a button the height of a line of field text, filled
  * with the color. It opens a ColorPicker in a popover, as does a press
- * elsewhere in the field. Beside any other control in the field but another
- * swatch, such as a Field.TextInput, that control is the field's control
- * instead, and the button is named from the colorPicker string.
+ * elsewhere in the field. Beside any other control in the field but a
+ * Field.ColorPicker or Field.DatePicker, such as a Field.TextInput, that
+ * control is the field's control instead, and the button is named from the colorPicker string.
  */
 function ColorPicker({
   value,
@@ -892,8 +898,8 @@ export type FieldDatePickerProps = {
   /** Returns true for a date that cannot be picked, such as a holiday. */
   isDateDisabled?: (date: Temporal.PlainDate) => boolean;
   /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
-  firstDayOfWeek?: CalendarDayOfWeek;
-  /** The locale for the button's date and the calendar's names, such as "ko". The browser's own when not set. */
+  firstDayOfWeek?: CalendarFirstDayOfWeek;
+  /** The locale for the button's date and the calendar's names, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
   locale?: string;
   /** Shown on the button while there is no date, when no date input is beside it. */
   placeholder?: string;
@@ -911,8 +917,9 @@ export type FieldDatePickerProps = {
 /**
  * A button that opens a Calendar in a popover. On its own it is the field's
  * control and shows the date, and a press elsewhere in the field opens the
- * calendar. Beside another control, such as a Field.DateInput, that control
- * is the field's control instead, and the button is named from the datePicker
+ * calendar. Beside any other control but a Field.ColorPicker or
+ * Field.DatePicker, such as a Field.DateInput, that control is the field's
+ * control instead, and the button is named from the datePicker
  * string. Beside a date input, the button shows only a calendar glyph.
  */
 function DatePicker({
@@ -970,7 +977,7 @@ function DatePicker({
     () => ({
       get current() {
         const panel = popoverRef.current?.current;
-        return panel?.querySelector<HTMLElement>('[data-todae-calendar-day][tabindex="0"]') ?? null;
+        return panel?.querySelector<HTMLElement>(CALENDAR_TAB_STOP) ?? null;
       },
     }),
     [],
@@ -1015,7 +1022,7 @@ function DatePicker({
       >
         {showText ? (
           <span id={textId} className={styles.dateText} data-placeholder={value ? undefined : ''}>
-            {value ? value.toLocaleString(locale, { dateStyle: 'medium', calendar: GREGORY }) : placeholder}
+            {value ? isoDate(value).toLocaleString(locale, { dateStyle: 'medium', calendar: GREGORY }) : placeholder}
           </span>
         ) : null}
         {glyph}
@@ -1025,7 +1032,7 @@ function DatePicker({
         <input
           type="hidden"
           name={name}
-          value={value ? value.toString({ calendarName: 'never' }) : ''}
+          value={value ? DATE.format(isoDate(value)) : ''}
           disabled={control.disabled}
           form={control.form}
         />

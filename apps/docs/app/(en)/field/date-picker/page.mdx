@@ -21,7 +21,7 @@ const [date, setDate] = useState<Temporal.PlainDate | null>(null);
   <FieldDatePicked />
 </Example>
 
-Here a [Field.DateInput](/field/date-input) in the same field lets people type the date too. The two share one state, so a picked date fills the input, and a typed date moves the calendar to its month. Beside a `Field.DateInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. The button shows only a calendar glyph, and in Chromium browsers the input's own picker button is hidden.
+Here a [Field.DateInput](/field/date-input) in the same field lets people type the date too. The two share one state, so a picked date fills the input, and a typed date moves the calendar to its month. Beside a `Field.DateInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. The button shows only a calendar glyph, and in Chromium browsers the input's own picker button is hidden. The button sends the date with a form under its own `name` if it has one, and otherwise under the field's `name`, unless another control has that `name`, as a `Field.DateInput` or `Field.TimeInput` does when it has no `name` of its own.
 
 ## On its own
 
@@ -39,7 +39,7 @@ The calendar opens and closes through `open` with `onOpenChange`, or `defaultOpe
 
 **You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. The same state for a `Field.DateInput` and the picker beside it.
 
-**Watch for:** A server render can't know another control sits beside the button, so until the page hydrates, the button and that control both carry the field's `id`.
+**Watch for:** A server render can't know another control sits beside the button, so until the page hydrates, the button and that control both carry the field's `id`, and the button shows its date. With a `value`, the server writes that date in its own locale, so pass `locale` when the picker renders on a server.
 
 ## When to use
 

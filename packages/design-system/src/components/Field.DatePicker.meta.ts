@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.DatePicker',
   description:
-    "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside a Field.DateInput, that input is the field's control, and the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+    "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker or Field.DatePicker, such as a Field.DateInput, that control is the field's control. Beside a date input, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
   props: [
     {
       name: 'value',
@@ -45,7 +45,7 @@ export const meta = {
       name: 'locale',
       type: 'string',
       required: false,
-      description: 'The locale for the button\'s date and the calendar\'s names, such as "ko". The browser\'s own when not set.',
+      description: 'The locale for the button\'s date and the calendar\'s names, such as "ko". The browser\'s own when not set, so pass it when the picker renders on a server.',
     },
     {
       name: 'placeholder',

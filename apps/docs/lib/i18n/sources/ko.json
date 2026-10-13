@@ -235,9 +235,9 @@
   },
   "field/date-picker": {
     "(top)": "40872dd1fdc5",
-    "# Field.DatePicker": "29acca8a76ea",
+    "# Field.DatePicker": "b6031a1d7cbb",
     "## On its own": "c7bd477c706d",
-    "## Accessible composition": "ddb171ee7a29",
+    "## Accessible composition": "c5aa50a0c9cf",
     "## When to use": "d57fe8233a0b",
     "### Field.DatePicker": "b3c1c234ea3a",
     "## Props": "4d3b8d5a61e4",
@@ -266,7 +266,7 @@
   "field/text-input": {
     "(top)": "72a1aded0b2b",
     "# Field.TextInput": "a0bd3a5f41ae",
-    "## Number": "b3642ffccc26",
+    "## Number": "1a051e370546",
     "## Accessible composition": "7608bd1c3eb6",
     "## When to use": "d57fe8233a0b",
     "### Field.TextInput": "9cb5e567a382",
@@ -382,7 +382,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "b10b184db6bd",
+    "# Native platform": "e2fcbb146245",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -607,7 +607,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "0a9ce6b4f646",
-    "## Strings": "e893cf74d39b",
+    "## Strings": "8ecbe2c7638a",
     "## Accessible composition": "8cc16824f136",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",

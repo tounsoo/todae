@@ -44,7 +44,7 @@ export interface Strings {
   hue: string;
   /** Name of Field.ColorPicker's popover, and of its swatch beside another control. */
   colorPicker: string;
-  /** Name of Field.DatePicker's popover, and of its button beside a date input. */
+  /** Name of Field.DatePicker's popover, and of its button beside another control. */
   datePicker: string;
   /** Name of Calendar.Header's button to the previous month. */
   previousMonth: string;

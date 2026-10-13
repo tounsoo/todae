@@ -23,7 +23,7 @@ import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Calendar.module.css';
 
 /** A day of the week as Temporal numbers it: 1 is Monday, 7 is Sunday. */
-export type CalendarDayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type CalendarFirstDayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export type CalendarRootProps = {
   /** Controlled selected date, or null for none. Pass with onValueChange. */
@@ -41,7 +41,7 @@ export type CalendarRootProps = {
   /** The month shown first when there is no value. Today's month when not set. */
   defaultMonth?: Temporal.PlainYearMonth;
   /** The first column of the grid, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
-  firstDayOfWeek?: CalendarDayOfWeek;
+  firstDayOfWeek?: CalendarFirstDayOfWeek;
   /** The locale for month and weekday names, such as "ko". The browser's own when not set. */
   locale?: string;
   /** Stops every part from changing the date or month. Also set by a disabled Fieldset. */
@@ -62,7 +62,7 @@ type CalendarContextValue = {
   /** Null in a server render and hydration. */
   today: Temporal.PlainDate | null;
   locale: string;
-  firstDay: CalendarDayOfWeek;
+  firstDay: CalendarFirstDayOfWeek;
   disabled: boolean;
   headingId: string;
   /** Set when the next render should move DOM focus to the focused date. */
@@ -93,11 +93,11 @@ type WeekInfoLocale = Intl.Locale & {
   weekInfo?: { firstDay: number };
 };
 
-function localeFirstDay(locale: string): CalendarDayOfWeek {
+function localeFirstDay(locale: string): CalendarFirstDayOfWeek {
   try {
     const info = new Intl.Locale(locale) as WeekInfoLocale;
     const day = (info.getWeekInfo?.() ?? info.weekInfo)?.firstDay;
-    if (day && day >= 1 && day <= 7) return day as CalendarDayOfWeek;
+    if (day && day >= 1 && day <= 7) return day as CalendarFirstDayOfWeek;
   } catch {
     // A locale Intl cannot read keeps the default.
   }
@@ -116,8 +116,19 @@ const subscribeNothing = () => () => {};
 const todayNow = () => Temporal.Now.plainDateISO().toString();
 const todayOnServer = () => null;
 
+/** The day that holds the grid's Tab stop. */
+export const CALENDAR_TAB_STOP = '[data-todae-calendar-day][tabindex="0"]';
+
 /** The grid is laid out in ISO months, so names come from the Gregorian calendar whatever the locale's own. */
 export const GREGORY = 'gregory';
+
+/**
+ * The date in the ISO calendar, which the grid is laid out in. A date in
+ * another calendar, such as Japanese, names the same day.
+ */
+export function isoDate<T extends Temporal.PlainDate | null | undefined>(date: T): T {
+  return (date && date.calendarId !== 'iso8601' ? date.withCalendar('iso8601') : date) as T;
+}
 
 const same = (a: Temporal.PlainDate | null, b: Temporal.PlainDate | null) =>
   a === b || (a !== null && b !== null && a.equals(b));
@@ -126,8 +137,8 @@ function Root({
   value: valueProp,
   defaultValue,
   onValueChange,
-  min,
-  max,
+  min: minProp,
+  max: maxProp,
   isDateDisabled,
   defaultMonth,
   firstDayOfWeek,
@@ -138,9 +149,11 @@ function Root({
   ...props
 }: CalendarRootProps) {
   const { disabled } = useFieldsetState({ disabled: disabledProp });
+  const min = isoDate(minProp);
+  const max = isoDate(maxProp);
   const [value, setValue] = useControlledValue<Temporal.PlainDate | null>(
-    valueProp,
-    defaultValue ?? null,
+    isoDate(valueProp),
+    isoDate(defaultValue) ?? null,
     onValueChange as ((next: Temporal.PlainDate | null) => void) | undefined,
   );
   const todayText = useSyncExternalStore(subscribeNothing, todayNow, todayOnServer);
@@ -153,7 +166,7 @@ function Root({
   // Null until something sets it: then the grid starts on today, which a
   // server render and hydration do not know.
   const [focusedState, setFocused] = useState<Temporal.PlainDate | null>(
-    () => value ?? defaultMonth?.toPlainDate({ day: 1 }) ?? null,
+    () => value ?? isoDate(defaultMonth?.toPlainDate({ day: 1 })) ?? null,
   );
   const start = focusedState ?? today;
   const focused = start === null ? null : clampDate(start, min, max);
@@ -312,7 +325,7 @@ function Grid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridProp
   useLayoutEffect(() => {
     if (!focusRequest.current) return;
     focusRequest.current = false;
-    ref.current?.querySelector<HTMLButtonElement>('[data-todae-calendar-day][tabindex="0"]')?.focus();
+    ref.current?.querySelector<HTMLButtonElement>(CALENDAR_TAB_STOP)?.focus();
   });
 
   // With no date to start from yet (a server render), the grid has no weeks.

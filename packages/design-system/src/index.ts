@@ -195,7 +195,7 @@ export {
 export { normalizeHex } from './components/color';
 export {
   Calendar,
-  type CalendarDayOfWeek,
+  type CalendarFirstDayOfWeek,
   type CalendarGridProps,
   type CalendarHeaderProps,
   type CalendarRootProps,

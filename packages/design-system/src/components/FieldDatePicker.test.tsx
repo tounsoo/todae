@@ -171,6 +171,29 @@ describe('Field.DatePicker', () => {
     expect(button.textContent).toContain('2026');
   });
 
+  it('shows and sends a date in another calendar as its ISO day', () => {
+    render(
+      <form data-testid="form">
+        <Field.Root aria-label="Start" name="day">
+          <Field.DatePicker value={day.withCalendar('gregory')} locale="en-US" />
+        </Field.Root>
+      </form>,
+    );
+    expect(screen.getByRole('button').textContent).toContain('Oct 13, 2026');
+    expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([['day', '2026-10-13']]);
+  });
+
+  it('sends a year past 9999 as a date input does', () => {
+    render(
+      <form data-testid="form">
+        <Field.Root aria-label="Start" name="day">
+          <Field.DatePicker value={date('+020261-10-07')} />
+        </Field.Root>
+      </form>,
+    );
+    expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([['day', '20261-10-07']]);
+  });
+
   it('draws the calendar glyph from GlyphsProvider', () => {
     render(
       <GlyphsProvider glyphs={{ calendar: <svg data-testid="calendar" /> }}>

@@ -237,6 +237,26 @@ describe('Calendar', () => {
     expect(grid().querySelector('[aria-selected]')).toBeNull();
   });
 
+  // The test polyfill holds the ISO and Gregorian calendars; any other converts the same way.
+  it('lays out a value and limits in another calendar on the ISO grid', () => {
+    render(
+      <Controlled
+        initial={date('2026-10-13').withCalendar('gregory')}
+        min={date('2026-10-05').withCalendar('gregory')}
+      />,
+    );
+    expect(screen.getByText('October 2026')).toBeTruthy();
+    const selected = day('Tuesday, October 13, 2026');
+    expect(selected.closest('td')!.getAttribute('aria-selected')).toBe('true');
+    expect(day('Sunday, October 4, 2026')).toHaveProperty('disabled', true);
+  });
+
+  it('marks today with aria-current when the value is in another calendar', () => {
+    const today = Temporal.Now.plainDateISO();
+    render(<Controlled initial={today.withCalendar('gregory')} />);
+    expect(focusedDay().getAttribute('aria-current')).toBe('date');
+  });
+
   it('starts on defaultMonth without a value', () => {
     render(<Controlled initial={null} defaultMonth={Temporal.PlainYearMonth.from('2027-02')} />);
     expect(screen.getByText('February 2027')).toBeTruthy();

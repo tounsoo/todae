@@ -5,7 +5,7 @@ type CountEntry = { value: string; maxLength?: number };
 export type CountStore = {
   entry: CountEntry | null;
   counters: number;
-  /** Elements wired with useField's getControlProps, other than Field.ColorPicker's, mounted in the field. */
+  /** Elements wired with useField's getControlProps, other than a Field.ColorPicker's or Field.DatePicker's, mounted in the field. */
   controls: number;
   /** Of those, the ones whose name attribute is the field's name. */
   named: number;

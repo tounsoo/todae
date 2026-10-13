@@ -2265,8 +2265,8 @@
       "ko": "달력의 첫 열, 1(월요일)부터 7(일요일)까지. 없으면 브라우저가 알려 주는 로캘의 첫 요일, 그것도 없으면 7."
     },
     "locale": {
-      "en": "The locale for the button's date and the calendar's names, such as \"ko\". The browser's own when not set.",
-      "ko": "버튼의 날짜와 달력 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘."
+      "en": "The locale for the button's date and the calendar's names, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
+      "ko": "버튼의 날짜와 달력 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
     },
     "placeholder": {
       "en": "Shown on the button while there is no date, when no date input is beside it.",
