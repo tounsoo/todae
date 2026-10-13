@@ -440,9 +440,9 @@ main:focus {
 
 /* Code blocks and tables scroll sideways in a ScrollArea.Root, which draws its
    focus ring inside its own edge and keeps the rings of what it holds whole.
-   The docs' fenced blocks are Code.Block, restyled only through its tokens, set
-   here so the Playground and live examples keep Todae's defaults. The frame
-   reads the same tokens, so a short block still fills the row. */
+   The docs' fenced blocks are Code.Block. Its bg and radius tokens are set
+   here, on the frame, so the Playground and live examples keep Todae's
+   defaults. The frame paints the same background around the block. */
 .docs-pre {
   --todae-code-block-bg: var(--docs-raised);
   --todae-code-block-radius: var(--todae-radius-lg);

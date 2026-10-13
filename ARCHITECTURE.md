@@ -127,11 +127,11 @@ Code on a docs page is copied into products, so it follows the package's own sty
 - **Indent with two spaces**, never tabs. Use single quotes in TypeScript, double quotes for JSX attributes, semicolons, and trailing commas in lists that span lines, as `packages/design-system` does.
 - **Mark left-out content with `…`**, as a child (`<Dialog.Body>…</Dialog.Body>`) or in place of the rest of a list. Don't use `...`, which reads as a spread.
 - **A usage snippet starts with what it calls,** such as `const id = useId();` or `const cb = useCombobox({ … });`, then a blank line, then the JSX. Declare every id the snippet wires into ARIA or `htmlFor`; app state such as `value` and `setValue` can be assumed.
-- **Show real wiring.** A label sits with its control in a `Field.Group`, gets its `id` from `useId()` rather than a literal, and every control has a name. Links are `Link.Root`, with a router passed through `render`.
+- **Show real wiring.** A label sits with its control in a `Field.Group`, gets its `id` from `useId()` rather than a literal, and every control has an accessible name. Links are `Link.Root`, with a router passed through `render`.
 - **Icons are real icons with their import,** from `lucide-react`, not placeholder names such as `YourIcon`. Write an icon slot on three lines, the slot, the icon, then the slot's closing tag.
-- **Imports.** A fragment imports only what doesn't come from Todae, such as icons. A complete component (`export function …`) imports everything it uses, Todae from `'@omsoo/todae'`, or from a server entry such as `'@omsoo/todae/code'` when a Server Component should render it.
+- **Imports.** A fragment imports only its icons; Todae parts and React hooks are assumed. A complete component (`export function …`) imports everything it uses, Todae from `'@omsoo/todae'`, or from a server entry such as `'@omsoo/todae/code'` when a Server Component should render it.
 - **The site renders code with Todae's own parts.** MDX maps fenced blocks to `Code.Block` (inside a `ScrollArea.Root`, through `DocsPre`) and inline code to `Code.Root`. The docs set the fenced blocks' `code.block.bg` and `code.block.radius` tokens on that wrapper rather than overriding `Code.Block`'s padding, type or colors.
-- **Code comes before the `<Example>` that shows it,** and a live example uses the same props and wiring as the snippet above it, so what a reader runs matches what they copy.
+- **Put code before the `<Example>` it describes.**
 
 ## Recording a decision
 
