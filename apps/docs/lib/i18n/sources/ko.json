@@ -206,7 +206,7 @@
   },
   "field/color-picker": {
     "(top)": "a10298fe8c00",
-    "# Field.ColorPicker": "a72ba75e55e4",
+    "# Field.ColorPicker": "095423a2d0c8",
     "## Accessible composition": "ae52cf757ae2",
     "## When to use": "d57fe8233a0b",
     "### Field.ColorPicker": "f274c18b0118",
@@ -647,7 +647,7 @@
   "utilities/use-field": {
     "(top)": "1ba672062eb8",
     "# useField": "8e3a47daf185",
-    "## Accessible composition": "b6ed7b4ca1d1",
+    "## Accessible composition": "2747e1de0671",
     "## When to use": "e08f8ff9959e",
     "## Props": "6c08c2462796",
     "(section order)": "35c08bde8f0b"
