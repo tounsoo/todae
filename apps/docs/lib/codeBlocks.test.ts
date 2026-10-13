@@ -6,8 +6,8 @@ import { codeBlocks } from './i18n/sections';
 const APP = join(process.cwd(), 'app');
 const LANGUAGES = new Set(['tsx', 'ts', 'css', 'json', 'sh']);
 
-// Pages the ColorPicker pull request (#123) rewrites. Bring them in line once it lands.
-const PENDING = new Set(['composition', 'field', 'field/color-input', 'utilities/strings-provider']);
+// Pages whose code blocks don't follow the conventions yet. Bring them in line, then remove them here.
+const PENDING = new Set(['composition', 'field', 'utilities/strings-provider']);
 
 function pages(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
