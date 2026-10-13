@@ -8,14 +8,8 @@ import { LOCALE_NAMES, LOCALES, localizePath, type Locale } from '../lib/i18n/co
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { SiteLink } from './SiteLink';
 
-// The Navigation API, which TypeScript's DOM types leave out. Its currententrychange fires for every URL
-// change in the tab: a hash link, back and forward, and the history.pushState of a client-side navigation.
-declare global {
-  interface Window {
-    navigation?: EventTarget;
-  }
-}
-
+// The Navigation API's currententrychange fires for every URL change in the tab: a hash link, back and
+// forward, and the history.pushState of a client-side navigation.
 // Next changes the URL in an insertion effect, where React allows no updates, so the read waits a microtask.
 function subscribe(onChange: () => void) {
   const later = () => queueMicrotask(onChange);

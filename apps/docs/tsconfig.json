@@ -4,8 +4,11 @@
     "lib": [
       "DOM",
       "DOM.Iterable",
-      "ES2022"
+      "ES2022",
+      "ESNext.Temporal"
     ],
+    "types": ["mdx", "node"],
+    "noUncheckedSideEffectImports": false,
     "noEmit": true,
     "incremental": true,
     "plugins": [
@@ -16,7 +19,6 @@
     "allowJs": true,
     "allowImportingTsExtensions": true,
     "jsx": "preserve",
-    "baseUrl": ".",
     "paths": {
       "@omsoo/todae": ["../../packages/design-system/src/index.ts"],
       "@omsoo/todae/stack": ["../../packages/design-system/src/server/stack.ts"],
