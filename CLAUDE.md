@@ -19,11 +19,13 @@ Each round's review runs in an `Agent` at that round's row of this table. `<base
 | 1     | `opus`  | `xhigh`  | `/code-review xhigh <base>..HEAD`                |
 | 2–5   | `opus`  | `high`   | `/code-review high <last-reviewed-commit>..HEAD` |
 
+A review covers the diff and the code the diff affects, not the whole repository. Have the reviewer find what depends on anything the diff changes and review that too: code that imports a changed export, CSS that reads a changed token, custom property or selector, docs pages in both languages that describe the changed behavior, and the tests that cover it. A whole-repository review is a separate task, run when the person asks for one.
+
 1. Commit the work and run `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm tokens:check`, and `pnpm schema` (it must leave no diff), committing any fixes they need. Then start an `Agent` with this round's `model` and `effort` from the table, have it run this round's command, and return the findings. The reviewer only reviews: it does not edit files, commit, or push. If the reviewer cannot run, tell the person in your next reply rather than reviewing at a different row.
 
-   From round 2, the command reviews only the commits made since the last review. Also give the reviewer the previous round's blocking findings, and have it say which are still open. If the branch was rebased or `origin/main` was merged in since the last review, have the reviewer run `/code-review high <base>..HEAD` instead.
+   From round 2, the command reviews only the commits made since the last review, and the affected code is what those commits change. Also give the reviewer the previous round's blocking findings, and have it say which are still open. If the branch was rebased or `origin/main` was merged in since the last review, have the reviewer run `/code-review high <base>..HEAD` instead.
 
-2. Sort the findings. Only blocking findings start another round: a bug, a test or CI failure, or a statement in docs that is wrong about what the code does. Wording, style, missing edge-case caveats and other nits are not blocking: fix the ones that are plainly right along with the blocking fixes, but they never start a round of their own. In a round with no blocking findings, leave the nits.
+2. Sort the findings. Only blocking findings start another round: a bug, a test or CI failure, or a statement in docs that is wrong about what the code does. Wording, style, missing edge-case caveats and other nits are not blocking: fix the ones that are plainly right along with the blocking fixes, but they never start a round of their own. In a round with no blocking findings, leave the nits. A bug the change did not cause, found in the affected code, is blocking only if the change touches that behavior or makes it worse; otherwise list it as a follow-up when you report back.
 3. Before fixing anything, work through each blocking finding:
    - Does your diagnosis name the root cause, or only the symptom?
    - Does the same bug or pattern exist elsewhere in the change? Fix it there too.
