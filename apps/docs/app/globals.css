@@ -980,7 +980,8 @@ table {
 
 .token-row-inputs {
   display: flex;
-  align-items: center;
+  /* Both fields as tall as the taller one, so neither's ring room sits inside the row. */
+  align-items: stretch;
   gap: 0.375rem;
 }
 

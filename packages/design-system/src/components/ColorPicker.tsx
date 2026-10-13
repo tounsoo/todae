@@ -57,8 +57,8 @@ const snap = (n: number) => clamp(Math.round(n * 100) / 100);
 
 /**
  * The HSV for `value`. Hex alone loses the hue of a gray and the saturation
- * of black, so while `value` is still the color `last` makes, `last` wins,
- * and a gray keeps `last`'s hue.
+ * of black, so while `value` is still the color `last` makes, `last` wins.
+ * Otherwise a gray keeps `last`'s hue, and black its hue and saturation.
  */
 function resolveHsv(value: string, last: Hsv): Hsv {
   const hex = normalizeHex(value);
@@ -82,6 +82,9 @@ function Root({
   const [value, setValue] = useControlledValue(valueProp, defaultValue ?? BLACK, onValueChange);
   const [last, setLast] = useState<Hsv>(() => hexToHsv(value) ?? { h: 0, s: 0, v: 0 });
   const hsv = resolveHsv(value, last);
+  // A value from outside becomes the color the picker last showed, so a gray
+  // after it keeps its hue rather than an older one.
+  if (hsv !== last) setLast(hsv);
   const change = useCallback(
     (next: Hsv) => {
       setLast(next);

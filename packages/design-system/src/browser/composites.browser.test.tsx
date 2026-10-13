@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState, type ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Button } from '../components/Button';
 import { Field } from '../components/Field';
 import { Label } from '../components/Label';
@@ -278,12 +278,22 @@ describe('Field.Select in a browser', () => {
 });
 
 describe('Field.ColorPicker in a browser', () => {
-  function Accent({ disabled, affix = true }: { disabled?: boolean; affix?: boolean }) {
+  function Accent({
+    disabled,
+    affix = true,
+    name,
+    onClick,
+  }: {
+    disabled?: boolean;
+    affix?: boolean;
+    name?: string;
+    onClick?: () => void;
+  }) {
     const [value, setValue] = useState('#3366ff');
     return (
       <Themed>
         <Label.Root htmlFor="accent">Accent</Label.Root>
-        <Field.Root id="accent" disabled={disabled} data-testid="shell">
+        <Field.Root id="accent" name={name} disabled={disabled} onClick={onClick} data-testid="shell">
           <Field.ColorPicker value={value} onValueChange={setValue} />
           {affix ? <Field.Affix data-testid="value">{value}</Field.Affix> : null}
         </Field.Root>
@@ -302,6 +312,8 @@ describe('Field.ColorPicker in a browser', () => {
     await userEvent.tab();
     expect(document.activeElement).toBe(button);
     expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
+    // The shell's ring is the only one.
+    expect(getComputedStyle(button).outlineStyle).toBe('none');
   });
 
   it('opens the picker, reports a picked color, and closes on Escape back to the button', async () => {
@@ -341,6 +353,52 @@ describe('Field.ColorPicker in a browser', () => {
     await waitFor(() => expect(button.getAttribute('aria-expanded')).toBe('true'));
     // The open picker takes focus, as a dialog does.
     expect(screen.getByRole('dialog', { name: 'Color picker' }).contains(document.activeElement)).toBe(true);
+  });
+
+  it('closes on a second press in the field or on the label, running the shell handler once a press', async () => {
+    const onClick = vi.fn();
+    render(<Accent onClick={onClick} />);
+    const button = screen.getByRole('button', { name: 'Accent' });
+    await userEvent.click(screen.getByTestId('value'));
+    await waitFor(() => expect(button.getAttribute('aria-expanded')).toBe('true'));
+    expect(onClick).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByTestId('value'));
+    await waitFor(() => expect(button.getAttribute('aria-expanded')).toBe('false'));
+    expect(onClick).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await userEvent.click(button);
+    await waitFor(() => expect(button.getAttribute('aria-expanded')).toBe('true'));
+    await userEvent.click(screen.getByText('Accent'));
+    await waitFor(() => expect(button.getAttribute('aria-expanded')).toBe('false'));
+  });
+
+  it('keeps focus in the picker on a press between its parts', async () => {
+    render(<Accent />);
+    await userEvent.click(screen.getByRole('button', { name: 'Accent' }));
+    const hue = screen.getByRole('slider', { name: 'Hue' });
+    hue.focus();
+    const group = screen.getByRole('group');
+    group.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 }));
+    expect(document.activeElement).toBe(hue);
+  });
+
+  it('sends its value with a form under the field name', () => {
+    render(
+      <form data-testid="form">
+        <Accent name="accent" />
+      </form>,
+    );
+    const form = screen.getByTestId('form') as HTMLFormElement;
+    expect([...new FormData(form).entries()]).toEqual([['accent', '#3366ff']]);
+  });
+
+  it('hides an open picker when the field is disabled', async () => {
+    const { rerender } = render(<Accent />);
+    await userEvent.click(screen.getByRole('button', { name: 'Accent' }));
+    await screen.findByRole('dialog', { name: 'Color picker' });
+    rerender(<Accent disabled />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Accent' }).getAttribute('aria-expanded')).toBe('false');
   });
 
   it('is as wide as the swatch on its own, and disabled with the field', () => {

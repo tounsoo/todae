@@ -23,7 +23,7 @@ The area holds two native range inputs, one for saturation and one for brightnes
 
 `ColorPicker.Hue` is a native range input from 0 to 359 degrees, so the browser handles its keys.
 
-A `#rrggbb` string has no hue for a gray and no saturation for black. While the value is still the color the picker last made, the picker keeps its own hue and saturation, so dragging to a gray and back keeps the hue. A new `value` from outside replaces them, except that a gray keeps the hue the picker had.
+A `#rrggbb` string has no hue for a gray and no saturation for black. For those, the picker keeps the hue it last showed, and for black the saturation too, so dragging to a gray and back keeps the hue.
 
 `normalizeHex(text)` turns a three- or six-digit hex color, with or without `#`, into `#rrggbb`, and returns `null` for anything else. Use it to check a hex value someone types.
 

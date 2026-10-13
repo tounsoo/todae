@@ -20,6 +20,8 @@ export type FieldContextValue = {
   ariaLabel?: string;
   /** The control the shell focuses on a press outside it. */
   inputRef: RefObject<HTMLElement | null>;
+  /** The shell itself, which a part's popover anchors to. */
+  shellRef: RefObject<HTMLDivElement | null>;
   store: CountStore;
 };
 

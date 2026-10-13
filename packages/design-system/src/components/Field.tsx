@@ -1,6 +1,7 @@
 import {
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -34,6 +35,7 @@ import styles from './Field.module.css';
 import { resolveTextareaRows } from './textareaRows';
 import { useChipList } from '../hooks/useChipList';
 import { useField } from '../hooks/useField';
+import { useControlledValue } from '../hooks/useControlledState';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { hasGlyph } from './glyphs';
 import { useStrings, type Strings } from '../providers/StringsProvider';
@@ -134,10 +136,12 @@ function hasPicker(control: Element | null | undefined): control is PickerContro
   );
 }
 
-// Whether a control's picker is showing. A browser without `:open` throws,
+// How the shell opens or closes each Field.ColorPicker's popover, by its button.
+const pickerToggles = new WeakMap<HTMLButtonElement, () => void>();
+
+// Whether a select's picker is showing. A browser without `:open` throws,
 // and treats the picker as closed.
-function isOpen(control: PickerControl): boolean {
-  if (control instanceof HTMLButtonElement) return control.getAttribute('aria-expanded') === 'true';
+function isOpen(control: HTMLSelectElement): boolean {
   try {
     return control.matches(':open');
   } catch {
@@ -151,6 +155,12 @@ function inAdornment(node: HTMLElement, shell: HTMLElement): boolean {
     if (styles.adornment && el.classList.contains(styles.adornment)) return true;
   }
   return false;
+}
+
+// A press in a part's own popover, such as Field.ColorPicker's, is not a press on the shell.
+function inOwnPopover(target: EventTarget | null, shell: HTMLElement): boolean {
+  const popover = target instanceof Element ? target.closest('[popover]') : null;
+  return popover != null && shell.contains(popover);
 }
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
@@ -181,6 +191,8 @@ function Root({
   const autoId = useDomId();
   const hintId = useDomId();
   const inputRef = useRef<HTMLElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const shellComposed = useComposedRefs(shellRef, props.ref);
   const pendingPicker = useRef<PickerControl | null>(null);
   const [store] = useState(createCountStore);
   const inputId = id ?? autoId;
@@ -197,6 +209,7 @@ function Root({
       labelledBy,
       ariaLabel,
       inputRef,
+      shellRef,
       store,
     }),
     [ariaLabel, describedBy, disabled, hintId, inputId, invalid, labelledBy, name, store],
@@ -205,6 +218,7 @@ function Root({
   function onMouseDown(event: MouseEvent<HTMLDivElement>) {
     // Only a primary press: a right or middle click keeps its own meaning.
     if (event.button !== 0 || disabled || isInteractiveTarget(event.target)) return;
+    if (inOwnPopover(event.target, event.currentTarget)) return;
     event.preventDefault();
     // The ref is the last control to mount. If that one has gone, a control
     // still in the shell takes the press, never one inside an Icon or Affix.
@@ -215,11 +229,12 @@ function Root({
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
     control?.focus();
-    // A press beside a select or color picker opens its picker, as a press on
-    // the control would. The picker opens on click: one opened now would close
-    // again as the press goes on. The press that closes an open picker must
-    // not open it again.
-    pendingPicker.current = hasPicker(control) && !isOpen(control) ? control : null;
+    // A press beside a select or color picker acts as a press on the control
+    // would. The picker opens on click: one opened now would close again as
+    // the press goes on. A select's open picker closes on this press, which
+    // must not open it again; Field.ColorPicker's toggles on the click.
+    pendingPicker.current =
+      hasPicker(control) && (control instanceof HTMLButtonElement || !isOpen(control)) ? control : null;
   }
 
   function onClick(event: MouseEvent<HTMLDivElement>) {
@@ -229,7 +244,7 @@ function Root({
     // assistive technology has no press (detail 0) and opens nothing.
     if (!picker?.isConnected || event.detail === 0 || isInteractiveTarget(event.target)) return;
     if (picker instanceof HTMLButtonElement) {
-      picker.click();
+      pickerToggles.get(picker)?.();
       return;
     }
     try {
@@ -243,6 +258,7 @@ function Root({
     <FieldContext.Provider value={ctx}>
       <div
         {...props}
+        ref={shellComposed}
         className={cx(styles.shell, className)}
         data-disabled={disabled ? '' : undefined}
         data-invalid={invalid ? '' : undefined}
@@ -595,7 +611,7 @@ export type FieldColorPickerProps = {
 function ColorPicker({
   value,
   onValueChange,
-  open,
+  open: openProp,
   defaultOpen,
   onOpenChange,
   className,
@@ -603,12 +619,34 @@ function ColorPicker({
   ...props
 }: FieldColorPickerProps) {
   const field = useField();
+  const { shellRef } = useFieldContext();
   const strings = useStrings();
-  const control = field.getControlProps(props);
-  const popover = usePopover({ open, defaultOpen, onOpenChange, enabled: !control.disabled });
+  const { name, ...control } = field.getControlProps(props);
+  const [open, setOpen] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);
+  // A disabled field shows no picker, even one left open.
+  const shown = open && !control.disabled;
+  const popover = usePopover({
+    open: shown,
+    onOpenChange: setOpen,
+    // Anchored to the shell, so a press anywhere in the field is not outside.
+    anchorRef: shellRef,
+    enabled: !control.disabled,
+  });
   const trigger = popover.getTriggerProps({ ...control, style } as PopoverTriggerUserProps);
+  const toggle = useRef(() => {});
+  toggle.current = () => {
+    if (!control.disabled) setOpen(!shown, 'trigger');
+  };
+  useLayoutEffect(() => {
+    const button = popover.triggerRef.current;
+    if (!(button instanceof HTMLButtonElement)) return;
+    pickerToggles.set(button, () => toggle.current());
+    return () => {
+      pickerToggles.delete(button);
+    };
+  }, [popover.triggerRef]);
   // The popover exists only while open, so only then does the button control it.
-  const controls = popover.open ? trigger['aria-controls'] : undefined;
+  const controls = shown ? trigger['aria-controls'] : undefined;
   return (
     <>
       <button
@@ -619,10 +657,12 @@ function ColorPicker({
         className={cx(styles.swatch, className)}
         style={{ ...trigger.style, '--_swatch': value } as CSSProperties}
       />
+      {/* A button sends nothing with a form, so the value goes in a hidden input. */}
+      {name ? <input type="hidden" name={name} value={value} disabled={control.disabled} /> : null}
       {/* Mounted while open only: a form can hold many swatches. */}
-      {popover.open ? (
+      {shown ? (
         <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label={strings.colorPicker}>
-          <ColorPickerParts.Root value={value} onValueChange={onValueChange} disabled={control.disabled}>
+          <ColorPickerParts.Root value={value} onValueChange={onValueChange}>
             <ColorPickerParts.Area />
             <ColorPickerParts.Hue />
           </ColorPickerParts.Root>

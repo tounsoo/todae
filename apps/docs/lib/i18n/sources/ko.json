@@ -110,7 +110,7 @@
   "color-picker": {
     "(top)": "9c8a041066e7",
     "# ColorPicker": "d1ef5ff72c02",
-    "## Keys and values": "35d72d740b23",
+    "## Keys and values": "99c6e3175913",
     "## Accessible composition": "4546795fd18a",
     "## When to use": "3c01076e78db",
     "## Props": "4299d93f81be",
@@ -120,7 +120,7 @@
     "(top)": "daa9c66a4c98",
     "# Composition": "5df38cfb773f",
     "## Placing something new": "7535f6400597",
-    "## Components": "c6a7dcca87eb",
+    "## Components": "9db230c231a6",
     "## Recipes": "fe3389573b71",
     "## Hook": "8af7df6c27f7",
     "## Never": "683d91a3b1f8",
@@ -207,7 +207,7 @@
   "field/color-picker": {
     "(top)": "a10298fe8c00",
     "# Field.ColorPicker": "a9074c839b4f",
-    "## Accessible composition": "986073964651",
+    "## Accessible composition": "8d79d6705e7b",
     "## When to use": "d57fe8233a0b",
     "### Field.ColorPicker": "a26227b2c468",
     "## Props": "24158ef7493e",

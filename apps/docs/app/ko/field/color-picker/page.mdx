@@ -20,7 +20,7 @@ import { FieldColorAccent } from '../../../../components/demos/FieldDemo';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. `aria-haspopup="dialog"`, `aria-expanded`, `aria-controls`도 받습니다. 팝오버는 [StringsProvider](/utilities/strings-provider)의 `colorPicker` 문자열로 이름이 붙는 `role="dialog"`이고, 그 안의 입력은 [ColorPicker](/color-picker)와 같은 이름과 키를 가집니다.
+**Todae가 맡는 것:** 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. `aria-haspopup="dialog"`와 `aria-expanded`를 받고, 선택기가 열려 있는 동안에는 `aria-controls`도 받습니다. 팝오버는 [StringsProvider](/utilities/strings-provider)의 `colorPicker` 문자열로 이름이 붙는 `role="dialog"`이고, 그 안의 입력은 [ColorPicker](/color-picker)와 같은 이름과 키를 가집니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다.
 

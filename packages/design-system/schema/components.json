@@ -706,7 +706,7 @@
     },
     {
       "name": "ColorPicker.Hue",
-      "description": "A native range input over the hues, 0 to 359 degrees. Takes native input attributes except type, value, min, max, step and disabled.",
+      "description": "A native range input over the hues, 0 to 359 degrees. Takes native input attributes except type, value, defaultValue, min, max, step and disabled.",
       "props": [
         {
           "name": "aria-label",
@@ -1126,7 +1126,7 @@
     },
     {
       "name": "Field.ColorPicker",
-      "description": "The field's control: a button one line of field text tall, filled with the color. It opens a ColorPicker in a popover, as does a press elsewhere in the field. Takes native button attributes except type.",
+      "description": "The field's control: a button one line of field text tall, filled with the color. It opens a ColorPicker in a popover, as does a press elsewhere in the field. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
       "props": [
         {
           "name": "value",

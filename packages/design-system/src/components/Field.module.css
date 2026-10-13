@@ -424,10 +424,19 @@
     font-size: var(--todae-field-font-size);
     line-height: var(--todae-field-leading);
     cursor: pointer;
+    /* The shell draws the focus ring. */
+    outline: none;
   }
 
   .swatch:disabled {
     cursor: not-allowed;
+  }
+
+  /* The swatch is the color, so forced colors must not replace it. */
+  @media (forced-colors: active) {
+    .swatch {
+      forced-color-adjust: none;
+    }
   }
 
   .shell:not([data-disabled]):has(> .swatch) {
@@ -435,7 +444,7 @@
   }
 
   /* With nothing beside it but its popover, the field is as wide as the swatch. */
-  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover]))) {
+  .shell:has(> .swatch):not(:has(> :not(.swatch, [popover], input[type='hidden']))) {
     inline-size: fit-content;
   }
 

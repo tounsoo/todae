@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'ColorPicker.Hue',
-  description: 'A native range input over the hues, 0 to 359 degrees. Takes native input attributes except type, value, min, max, step and disabled.',
+  description: 'A native range input over the hues, 0 to 359 degrees. Takes native input attributes except type, value, defaultValue, min, max, step and disabled.',
   props: [
     {
       name: 'aria-label',

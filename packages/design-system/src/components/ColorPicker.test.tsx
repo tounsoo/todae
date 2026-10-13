@@ -114,6 +114,36 @@ describe('ColorPicker', () => {
     expect((screen.getByRole('slider', { name: 'Hue' }) as HTMLInputElement).value).toBe('240');
   });
 
+  it('gives a gray from outside the hue of the last color, even one from outside', () => {
+    function Outside() {
+      const [value, setValue] = useState('#3366ff');
+      return (
+        <>
+          <button type="button" onClick={() => setValue('#ff0000')}>red</button>
+          <button type="button" onClick={() => setValue('#808080')}>gray</button>
+          <button type="button" onClick={() => setValue('#000000')}>black</button>
+          <ColorPicker.Root aria-label="c" value={value} onValueChange={setValue}>
+            <ColorPicker.Area />
+            <ColorPicker.Hue />
+          </ColorPicker.Root>
+        </>
+      );
+    }
+    render(<Outside />);
+    const hue = screen.getByRole('slider', { name: 'Hue' }) as HTMLInputElement;
+    const saturation = screen.getByRole('slider', { name: 'Saturation' }) as HTMLInputElement;
+    fireEvent.change(hue, { target: { value: '200' } });
+    fireEvent.click(screen.getByRole('button', { name: 'red' }));
+    expect(hue.value).toBe('0');
+    fireEvent.click(screen.getByRole('button', { name: 'gray' }));
+    expect(hue.value).toBe('0');
+    expect(saturation.value).toBe('0');
+    fireEvent.click(screen.getByRole('button', { name: 'red' }));
+    fireEvent.click(screen.getByRole('button', { name: 'black' }));
+    expect(hue.value).toBe('0');
+    expect(saturation.value).toBe('100');
+  });
+
   it('disables every input when disabled or inside a disabled Fieldset', () => {
     render(
       <Fieldset.Root disabled>
