@@ -1,0 +1,52 @@
+import { CalendarInline } from '../../../components/demos/CalendarDemo';
+
+# Calendar
+
+`Calendar.Root` holds one selected date as a `Temporal.PlainDate`. `Calendar.Header` shows the month and year between buttons to the previous and next month, and `Calendar.Grid` shows that month's days, one week to a row. The root takes `value` with `onValueChange`, or `defaultValue`, and calls `onValueChange` with the date a person picks.
+
+```tsx
+<Calendar.Root aria-label="Start date" value={date} onValueChange={setDate}>
+	<Calendar.Header />
+	<Calendar.Grid />
+</Calendar.Root>
+```
+
+<Example block>
+  <CalendarInline />
+</Example>
+
+For a date in a form, use [Field.DatePicker](/field/date-picker): a button in a field that opens this calendar in a popover.
+
+## Range and locale
+
+`min` and `max` bound the dates that can be picked, and the month buttons stop at their months. `isDateDisabled` rules out other dates, such as weekends or holidays. A date outside the range or ruled out can still take focus, so a screen reader can read it, but a press or Enter does not pick it.
+
+With no value, the grid starts on `defaultMonth`, else on today's month, kept within `min` and `max`. Month and weekday names come from `locale`, else the browser's own locale. The first column is `firstDayOfWeek`, from 1 (Monday) to 7 (Sunday); without it, the calendar uses the locale's first day where the browser reports one through `Intl.Locale`, else Sunday.
+
+A server render does not know today, so with no `value` or `defaultMonth` the grid has no weeks until the page hydrates, and today is marked only then. When the calendar renders on a server, also pass `locale` and `firstDayOfWeek`, so the server and the browser draw the same names and columns.
+
+## Temporal
+
+Todae ships no Temporal polyfill. `Calendar.Root` calls `Temporal` when it renders, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)).
+
+## Accessible composition
+
+**Todae handles:** `Calendar.Root` is a `role="group"`. `Calendar.Grid` is a `role="grid"` table labelled by the header's month, with a column header for each weekday whose `abbr` is the full name. It is one Tab stop: arrow keys move by day and week, Home and End to the ends of the week, Page Up and Page Down by month, and with Shift by year. Left and Right swap in a right-to-left page. Each day is a button named with the full date, the selected one's cell has `aria-selected`, and today has `aria-current="date"`. Dates that can't be picked have `aria-disabled`. The month is a live region, so a screen reader hears it change. The month buttons are named from the `previousMonth` and `nextMonth` strings in [StringsProvider](/utilities/strings-provider) and draw the `chevron` glyph from [GlyphsProvider](/utilities/glyphs-provider). `disabled`, or a disabled [Fieldset](/fieldset), disables every button.
+
+**You supply:** A name for the group, with `aria-label` or `aria-labelledby`. `locale` when the page's language is not the browser's.
+
+**Watch for:** Ruling dates out with `isDateDisabled` but not saying why. Explain the rule nearby, such as "Weekdays only".
+
+## When to use
+
+**When:** Pick one date from a calendar shown on the page, such as on a booking screen.
+
+**When not:** A date in a form field → [Field.DatePicker](/field/date-picker) or [Field.DateInput](/field/date-input). A date with a time → [Field.DateTimeInput](/field/date-time-input).
+
+## Props
+
+<PropsTable name="Calendar.Root" />
+
+<PropsTable name="Calendar.Header" />
+
+<PropsTable name="Calendar.Grid" />

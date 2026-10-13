@@ -1,0 +1,133 @@
+@layer todae.components {
+  .root {
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--todae-calendar-gap);
+    font-size: var(--todae-calendar-font-size);
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--todae-calendar-gap);
+  }
+
+  .heading {
+    color: var(--todae-calendar-heading-fg);
+    font-weight: var(--todae-calendar-heading-font-weight);
+  }
+
+  /* The month buttons and the days share one box. */
+  .nav,
+  .day {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: var(--todae-calendar-day-size);
+    block-size: var(--todae-calendar-day-size);
+    margin: 0;
+    padding: 0;
+    /* Transparent here, the border shows the button's edge in forced colors. */
+    border: var(--todae-calendar-day-border-width) solid transparent;
+    border-radius: var(--todae-calendar-day-radius);
+    background: var(--todae-calendar-day-bg-default);
+    color: var(--todae-calendar-day-fg-default);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+
+  .nav:focus-visible,
+  .day:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-calendar-day-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  /* Kept at low specificity so the selected day's fill wins over it. */
+  :where(.nav, .day):where(:enabled:not([aria-disabled='true'])):hover {
+    background: var(--todae-calendar-day-bg-hover);
+  }
+
+  .nav:is(:disabled, [aria-disabled='true']),
+  .day:is(:disabled, [aria-disabled='true']) {
+    color: var(--todae-calendar-day-fg-disabled);
+    cursor: not-allowed;
+  }
+
+  .day[aria-disabled='true'] {
+    text-decoration: line-through;
+  }
+
+  .navGlyph {
+    display: inline-flex;
+    inline-size: var(--todae-calendar-nav-icon-size);
+    block-size: var(--todae-calendar-nav-icon-size);
+  }
+
+  .navGlyph > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* The chevron points down: turn it toward the month it goes to. */
+  .nav[data-direction='previous'] > [data-todae-glyph] {
+    rotate: 90deg;
+  }
+
+  .nav[data-direction='next'] > [data-todae-glyph] {
+    rotate: -90deg;
+  }
+
+  .nav[data-direction='previous']:dir(rtl) > [data-todae-glyph] {
+    rotate: -90deg;
+  }
+
+  .nav[data-direction='next']:dir(rtl) > [data-todae-glyph] {
+    rotate: 90deg;
+  }
+
+  .grid {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  .grid :is(th, td) {
+    padding: 0;
+    text-align: center;
+  }
+
+  .weekday {
+    block-size: var(--todae-calendar-day-size);
+    color: var(--todae-calendar-weekday-fg);
+    font-weight: var(--todae-calendar-weekday-font-weight);
+  }
+
+  .day[aria-current='date'] {
+    border-color: var(--todae-calendar-day-border-today);
+  }
+
+  .day[data-selected] {
+    background: var(--todae-calendar-day-bg-selected);
+    color: var(--todae-calendar-day-fg-selected);
+  }
+
+  /* Forced colors drop backgrounds: paint the selected day with system colors. */
+  @media (forced-colors: active) {
+    .day[data-selected] {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    .day[aria-current='date']:not([data-selected]) {
+      border-color: CanvasText;
+    }
+
+    .nav:is(:disabled, [aria-disabled='true']),
+    .day:is(:disabled, [aria-disabled='true']) {
+      color: GrayText;
+    }
+  }
+}

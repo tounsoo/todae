@@ -21,7 +21,7 @@
     gap: 0;
   }
 
-  .shell:has(:is(input, textarea, .swatch, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell:has(:is(input, textarea, .swatch, .datePicker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: var(--todae-focus-ring-width) solid var(--todae-field-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
@@ -31,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(:is(input, textarea, .swatch, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell[data-invalid]:has(:is(input, textarea, .swatch, .datePicker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 
@@ -447,6 +447,74 @@
   /* With nothing beside it but its popover, the field is as wide as the swatch. */
   .shell:has(> .swatch):not(:has(> :not(.swatch, [popover], input[type='hidden']))) {
     inline-size: fit-content;
+  }
+
+  /* Field.DatePicker's button. On its own it fills the field and shows the
+     date; beside a date input it is just the glyph. */
+  .datePicker {
+    flex: 1 1 var(--todae-field-min-width);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--todae-field-gap);
+    min-width: var(--todae-field-min-width);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--todae-field-fg-default);
+    font: inherit;
+    font-size: var(--todae-field-font-size);
+    line-height: var(--todae-field-leading);
+    text-align: start;
+    cursor: pointer;
+    /* The shell draws the focus ring. */
+    outline: none;
+  }
+
+  .datePicker[data-beside] {
+    flex: none;
+    min-width: 0;
+    color: var(--todae-field-fg-adornment);
+  }
+
+  .datePicker:disabled {
+    color: inherit;
+    cursor: not-allowed;
+  }
+
+  .dateText {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dateText[data-placeholder] {
+    color: var(--todae-field-fg-placeholder);
+  }
+
+  .dateGlyph {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    block-size: 1lh;
+  }
+
+  .dateGlyph > :is(svg, img) {
+    inline-size: var(--todae-field-icon-size);
+    block-size: var(--todae-field-icon-size);
+  }
+
+  /* Beside Field.DatePicker, a date input drops the browser's own picker
+     button where the browser lets it. */
+  .shell:has(> .datePicker) > .input::-webkit-calendar-picker-indicator {
+    display: none;
+  }
+
+  /* A press in the field opens the calendar, unless a date input there takes it. */
+  .shell:not([data-disabled]):has(> .datePicker:not([data-beside])) {
+    cursor: pointer;
   }
 
   .select {

@@ -11,10 +11,12 @@ export interface Glyphs {
   close?: ReactNode;
   /** Checkbox, Menu.CheckboxItem and a selected OptionList.Option. Todae draws a check mark. */
   check?: ReactNode;
-  /** Field.Select, Disclosure.Summary and Tree.Label. Point it down: a closed disclosure or tree item turns it. The browser's own marker by default; Todae draws one for Tree.Label. */
+  /** Field.Select, Disclosure.Summary, Tree.Label and Calendar.Header's month buttons. Point it down: a closed disclosure or tree item turns it, and a month button turns it toward its month. The browser's own marker by default; Todae draws one for Tree.Label and Calendar.Header. */
   chevron?: ReactNode;
   /** Between Breadcrumbs items. Point it toward the next item in a left-to-right page: it is mirrored in right-to-left. The separator text by default. */
   separator?: ReactNode;
+  /** Field.DatePicker's button. Todae draws a calendar. */
+  calendar?: ReactNode;
   /** Pagination.Ellipsis with no content. "…" by default. */
   ellipsis?: ReactNode;
 }

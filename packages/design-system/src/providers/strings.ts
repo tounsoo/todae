@@ -44,6 +44,12 @@ export interface Strings {
   hue: string;
   /** Name of Field.ColorPicker's popover, and of its swatch beside a text input. */
   colorPicker: string;
+  /** Name of Field.DatePicker's popover, and of its button beside a date input. */
+  datePicker: string;
+  /** Name of Calendar.Header's button to the previous month. */
+  previousMonth: string;
+  /** Name of Calendar.Header's button to the next month. */
+  nextMonth: string;
 }
 
 /** The English Todae ships with. */
@@ -66,4 +72,7 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   brightness: 'Brightness',
   hue: 'Hue',
   colorPicker: 'Color picker',
+  datePicker: 'Choose date',
+  previousMonth: 'Previous month',
+  nextMonth: 'Next month',
 });

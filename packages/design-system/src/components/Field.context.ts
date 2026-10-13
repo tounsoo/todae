@@ -5,7 +5,7 @@ type CountEntry = { value: string; maxLength?: number };
 export type CountStore = {
   entry: CountEntry | null;
   counters: number;
-  /** Text inputs and textareas mounted in the field. */
+  /** Typed inputs mounted in the field: text inputs, textareas, and date and time inputs. */
   texts: number;
   listeners: Set<() => void>;
   presence: Set<() => void>;

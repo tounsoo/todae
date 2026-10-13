@@ -3,6 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Button } from '../components/Button';
+import { Calendar } from '../components/Calendar';
 import { Field } from '../components/Field';
 import { Label } from '../components/Label';
 import { Menu } from '../components/Menu';
@@ -518,5 +519,136 @@ describe('Field.ColorPicker in a browser', () => {
     expect(button.disabled).toBe(true);
     expect(style.cursor).toBe('not-allowed');
     expect(getComputedStyle(button).cursor).toBe('not-allowed');
+  });
+});
+
+const plainDate = (text: string) => Temporal.PlainDate.from(text);
+
+describe('Calendar in a browser', () => {
+  it('swaps Left and Right in a right-to-left page', async () => {
+    render(
+      <Themed dir="rtl">
+        <Calendar.Root aria-label="Start" locale="en-US" defaultValue={plainDate('2026-10-13')}>
+          <Calendar.Header />
+          <Calendar.Grid />
+        </Calendar.Root>
+      </Themed>,
+    );
+    screen.getByRole('button', { name: 'Tuesday, October 13, 2026' }).focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026');
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}');
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Monday, October 12, 2026');
+  });
+
+  it('is one Tab stop in the grid, after the month buttons', async () => {
+    render(
+      <Themed>
+        <Calendar.Root aria-label="Start" locale="en-US" defaultValue={plainDate('2026-10-13')}>
+          <Calendar.Header />
+          <Calendar.Grid />
+        </Calendar.Root>
+        <button type="button">after</button>
+      </Themed>,
+    );
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Previous month' }));
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Next month' }));
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Tuesday, October 13, 2026' }));
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'after' }));
+  });
+});
+
+describe('Field.DatePicker in a browser', () => {
+  function Start({ withInput = false, onClick }: { withInput?: boolean; onClick?: () => void }) {
+    const [value, setValue] = useState<Temporal.PlainDate | null>(plainDate('2026-10-13'));
+    return (
+      <Themed>
+        <Label.Root htmlFor="start">Start</Label.Root>
+        <Field.Root id="start" data-testid="shell" onClick={onClick}>
+          {withInput ? <Field.DateInput value={value} onValueChange={setValue} /> : null}
+          <Field.DatePicker value={value} onValueChange={setValue} locale="en-US" />
+          <Field.Affix data-testid="affix">UTC</Field.Affix>
+        </Field.Root>
+        <output data-testid="value">{value?.toString() ?? ''}</output>
+      </Themed>
+    );
+  }
+
+  it('opens a calendar on the date, picks a date from the keyboard, and returns focus to the button', async () => {
+    render(<Start />);
+    const button = screen.getByRole('button', { name: 'Start' });
+    await userEvent.click(button);
+    const dialog = await screen.findByRole('dialog', { name: 'Choose date' });
+    await waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
+    expect(button.getAttribute('aria-controls')).toBe(dialog.id);
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Tuesday, October 13, 2026' })),
+    );
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-20');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    await waitFor(() => expect(document.activeElement).toBe(button));
+    expect(button.textContent).toBe('Oct 20, 2026');
+  });
+
+  it('closes on Escape without picking, and reports why it closed', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <Themed>
+        <Field.Root aria-label="Start">
+          <Field.DatePicker value={plainDate('2026-10-13')} onOpenChange={onOpenChange} />
+        </Field.Root>
+      </Themed>,
+    );
+    const button = screen.getByRole('button', { name: 'Start' });
+    await userEvent.click(button);
+    await screen.findByRole('dialog');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(onOpenChange.mock.calls).toEqual([
+      [true, 'trigger'],
+      [false, 'escape'],
+    ]);
+    expect(document.activeElement).toBe(button);
+  });
+
+  it('opens on a press elsewhere in the field when it is the control', async () => {
+    render(<Start />);
+    await userEvent.click(screen.getByTestId('affix'));
+    await screen.findByRole('dialog', { name: 'Choose date' });
+  });
+
+  it('beside a date input, stays in step with typing and picking', async () => {
+    render(<Start withInput />);
+    const input = screen.getByLabelText('Start') as HTMLInputElement;
+    const button = screen.getByRole('button', { name: 'Choose date' });
+    // A press elsewhere focuses the input and opens nothing.
+    await userEvent.click(screen.getByTestId('affix'));
+    expect(document.activeElement).toBe(input);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    await userEvent.click(button);
+    await screen.findByRole('dialog', { name: 'Choose date' });
+    await userEvent.click(screen.getByRole('button', { name: 'Thursday, October 1, 2026' }));
+    expect(input.value).toBe('2026-10-01');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    // A typed date moves the calendar to its month.
+    input.focus();
+    await userEvent.keyboard('{Control>}a{/Control}');
+    await userEvent.type(input, '03022027');
+    await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('2027-03-02'));
+    await userEvent.click(button);
+    await screen.findByText('March 2027');
+  });
+
+  it('draws the focus ring on the shell', async () => {
+    render(<Start />);
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Start' }));
+    expect(getComputedStyle(screen.getByTestId('shell')).outlineStyle).toBe('solid');
   });
 });

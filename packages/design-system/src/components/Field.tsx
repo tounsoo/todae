@@ -15,6 +15,7 @@ import {
   type MouseEvent,
   type ReactNode,
   type Ref,
+  type RefObject,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
@@ -38,11 +39,12 @@ import { useChipList } from '../hooks/useChipList';
 import { useField } from '../hooks/useField';
 import { useControlledValue } from '../hooks/useControlledState';
 import { useGlyphs } from '../providers/GlyphsProvider';
-import { hasGlyph } from './glyphs';
+import { CalendarGlyph, glyphOr, hasGlyph } from './glyphs';
 import { useStrings, type Strings } from '../providers/StringsProvider';
 import { usePopover, type PopoverCloseReason, type PopoverTriggerUserProps } from '../hooks/usePopover';
 import { Popover } from './Popover';
 import { ColorPicker as ColorPickerParts } from './ColorPicker';
+import { Calendar as CalendarParts, type CalendarDayOfWeek } from './Calendar';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -94,12 +96,9 @@ function notifyPresence(store: CountStore) {
   for (const listener of store.presence) listener();
 }
 
-function useTextEntry(store: CountStore, value: string, maxLength: number | undefined) {
-  publishCount(store, value, maxLength);
-  useEffect(() => {
-    for (const listener of store.listeners) listener();
-  });
-  // A Field.ColorPicker beside it gives up the field's id once it hears of this.
+// A Field.ColorPicker or Field.DatePicker beside a typed input gives up the
+// field's id once it hears of one.
+function useTypedPresence(store: CountStore) {
   useLayoutEffect(() => {
     store.texts += 1;
     notifyPresence(store);
@@ -108,6 +107,24 @@ function useTextEntry(store: CountStore, value: string, maxLength: number | unde
       notifyPresence(store);
     };
   }, [store]);
+}
+
+// Whether a typed input shares the field. The server cannot know of one yet,
+// so a picker holds the field's id until hydration.
+function useTypedBeside(store: CountStore) {
+  return useSyncExternalStore(
+    (listener) => subscribePresence(store, listener),
+    () => store.texts > 0,
+    () => false,
+  );
+}
+
+function useTextEntry(store: CountStore, value: string, maxLength: number | undefined) {
+  publishCount(store, value, maxLength);
+  useEffect(() => {
+    for (const listener of store.listeners) listener();
+  });
+  useTypedPresence(store);
   return useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
     () => counterMounted(store),
@@ -414,6 +431,7 @@ function TemporalInput<T>({
   ...props
 }: TemporalInputProps<T> & { kind: TemporalInputKind<T> }) {
   const field = useField();
+  useTypedPresence(useFieldContext().store);
   return (
     <input
       {...field.getControlProps(props)}
@@ -737,13 +755,8 @@ function ColorPicker({
   const field = useField();
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
-  // A text input in the field takes its id, name and description. The server
-  // cannot know of one yet, so the button holds them until hydration.
-  const beside = useSyncExternalStore(
-    (listener) => subscribePresence(store, listener),
-    () => store.texts > 0,
-    () => false,
-  );
+  // A text input in the field takes its id, name and description.
+  const beside = useTypedBeside(store);
   const { name, ...control } = beside
     ? {
         ...props,
@@ -807,6 +820,181 @@ function ColorPicker({
             <ColorPickerParts.Area />
             <ColorPickerParts.Hue />
           </ColorPickerParts.Root>
+        </Popover.Root>
+      ) : null}
+    </>
+  );
+}
+
+/** Why Field.DatePicker's calendar closed: a popover's reasons, a picked date, or the field became disabled. */
+export type FieldDatePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
+
+export type FieldDatePickerProps = {
+  /** The date, or null for none. */
+  value: Temporal.PlainDate | null;
+  /** Fires with the date picked in the calendar. */
+  onValueChange?: (value: Temporal.PlainDate) => void;
+  /** The earliest date that can be picked. */
+  min?: Temporal.PlainDate;
+  /** The latest date that can be picked. */
+  max?: Temporal.PlainDate;
+  /** Returns true for a date that cannot be picked, such as a holiday. */
+  isDateDisabled?: (date: Temporal.PlainDate) => boolean;
+  /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
+  firstDayOfWeek?: CalendarDayOfWeek;
+  /** The locale for the button's date and the calendar's names, such as "ko". The browser's own when not set. */
+  locale?: string;
+  /** Shown on the button while there is no date, when no date input is beside it. */
+  placeholder?: string;
+  /** Controlled open state of the calendar. Pass with onOpenChange. */
+  open?: boolean;
+  /** Initial open state when uncontrolled. */
+  defaultOpen?: boolean;
+  /** Fires when the calendar opens or closes, with why it closed. */
+  onOpenChange?: (open: boolean, reason: FieldDatePickerCloseReason) => void;
+} & Omit<
+  ComponentPropsWithRef<'button'>,
+  'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
+>;
+
+/**
+ * A button that opens a Calendar in a popover. On its own it is the field's
+ * control and shows the date, and a press elsewhere in the field opens the
+ * calendar. Beside a Field.DateInput, that input is the field's control, and
+ * the button shows only a calendar glyph, named from the datePicker string.
+ */
+function DatePicker({
+  value,
+  onValueChange,
+  min,
+  max,
+  isDateDisabled,
+  firstDayOfWeek,
+  locale,
+  placeholder,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  className,
+  style,
+  'aria-describedby': describedBy,
+  ...props
+}: FieldDatePickerProps) {
+  const field = useField();
+  const { shellRef, store } = useFieldContext();
+  const strings = useStrings();
+  const { calendar } = useGlyphs();
+  const textId = useDomId();
+  // A date input in the field takes its id, name and description.
+  const beside = useTypedBeside(store);
+  const { name, ...control } = beside
+    ? {
+        ...props,
+        'aria-describedby': describedBy,
+        name: undefined,
+        disabled: field.disabled || Boolean(props.disabled),
+        'aria-label': props['aria-label'] ?? strings.datePicker,
+      }
+    : // The label names the button, so the date it shows is its description.
+      field.getControlProps({ ...props, 'aria-describedby': mergeDescribedBy(describedBy, textId) });
+  const [open, setOpen] = useControlledValue<boolean, [FieldDatePickerCloseReason]>(
+    openProp,
+    defaultOpen ?? false,
+    onOpenChange,
+  );
+  // A disabled field shows no calendar, and one open when the field is
+  // disabled closes, so it does not come back when the field is enabled again.
+  const shown = open && !control.disabled;
+  const close = useRef(setOpen);
+  close.current = setOpen;
+  useEffect(() => {
+    if (open && control.disabled) close.current(false, 'disabled');
+  }, [control.disabled, open]);
+  // Focus goes to the calendar's Tab stop: the date, or else today or the
+  // nearest date in range.
+  const popoverRef = useRef<RefObject<HTMLElement | null> | null>(null);
+  const initialFocusRef = useMemo(
+    () => ({
+      get current() {
+        const panel = popoverRef.current?.current;
+        return panel?.querySelector<HTMLElement>('[data-todae-calendar-day][tabindex="0"]') ?? null;
+      },
+    }),
+    [],
+  );
+  const popover = usePopover({
+    open: shown,
+    onOpenChange: setOpen,
+    // For the outside-press check: a press anywhere in the field is not outside.
+    anchorRef: shellRef,
+    initialFocusRef,
+    enabled: !control.disabled,
+  });
+  popoverRef.current = popover.popoverRef;
+  const trigger = popover.getTriggerProps({ ...control, style } as PopoverTriggerUserProps);
+  const toggle = useRef(() => {});
+  toggle.current = () => {
+    if (!control.disabled) setOpen(!shown, 'trigger');
+  };
+  useLayoutEffect(() => {
+    const button = popover.triggerRef.current;
+    if (!(button instanceof HTMLButtonElement)) return;
+    pickerToggles.set(button, () => toggle.current());
+    return () => {
+      pickerToggles.delete(button);
+    };
+  }, [popover.triggerRef]);
+  const controls = shown ? trigger['aria-controls'] : undefined;
+  const glyph = (
+    <span className={styles.dateGlyph} data-todae-glyph="" aria-hidden="true">
+      {glyphOr(calendar, <CalendarGlyph />)}
+    </span>
+  );
+  return (
+    <>
+      <button
+        {...(trigger as ComponentPropsWithRef<'button'>)}
+        aria-controls={controls}
+        type="button"
+        data-todae-field-picker=""
+        data-beside={beside ? '' : undefined}
+        className={cx(styles.datePicker, className)}
+      >
+        {beside ? null : (
+          <span id={textId} className={styles.dateText} data-placeholder={value ? undefined : ''}>
+            {value ? value.toLocaleString(locale, { dateStyle: 'medium' }) : placeholder}
+          </span>
+        )}
+        {glyph}
+      </button>
+      {/* A button sends nothing with a form, so the value goes in a hidden input. */}
+      {name ? (
+        <input
+          type="hidden"
+          name={name}
+          value={value ? value.toString({ calendarName: 'never' }) : ''}
+          disabled={control.disabled}
+          form={control.form}
+        />
+      ) : null}
+      {/* Mounted while open only: a form can hold many date pickers. */}
+      {shown ? (
+        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label={strings.datePicker}>
+          <CalendarParts.Root
+            value={value}
+            onValueChange={(next) => {
+              onValueChange?.(next);
+              setOpen(false, 'select');
+            }}
+            min={min}
+            max={max}
+            isDateDisabled={isDateDisabled}
+            firstDayOfWeek={firstDayOfWeek}
+            locale={locale}
+          >
+            <CalendarParts.Header />
+            <CalendarParts.Grid />
+          </CalendarParts.Root>
         </Popover.Root>
       ) : null}
     </>
@@ -907,6 +1095,7 @@ export const Field = {
   ChipInput,
   Select,
   ColorPicker,
+  DatePicker,
   DateInput,
   TimeInput,
   DateTimeInput,

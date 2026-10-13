@@ -55,6 +55,7 @@ describe('Field exports', () => {
       ChipInput: Field.ChipInput,
       Select: Field.Select,
       ColorPicker: Field.ColorPicker,
+      DatePicker: Field.DatePicker,
       DateInput: Field.DateInput,
       TimeInput: Field.TimeInput,
       DateTimeInput: Field.DateTimeInput,
@@ -468,7 +469,7 @@ describe('Field.Textarea', () => {
     expect(fieldCss.slice(0, supports)).not.toContain('field-sizing');
     expect(fieldCss.slice(supports)).toContain('field-sizing: content');
     expect(fieldCss).toMatch(/\.textarea\[data-auto-grow\]\s*\{[^}]*resize:\s*none/);
-    expect(fieldCss).toContain('.shell:has(:is(input, textarea, .swatch, [data-todae-field-control], [data-todae-field-control] *):focus-visible)');
+    expect(fieldCss).toContain('.shell:has(:is(input, textarea, .swatch, .datePicker, [data-todae-field-control], [data-todae-field-control] *):focus-visible)');
     expect(fieldCss).toMatch(/\.textarea\s*\{[^}]*outline:\s*none/);
     expect(fieldCss).toContain('min-height: calc(var(--_text-rows) * 1lh + var(--_pad-block))');
     expect(fieldCss).not.toContain('min-height: calc(1lh');

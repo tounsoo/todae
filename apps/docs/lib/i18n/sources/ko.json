@@ -61,6 +61,16 @@
     "## Props": "01a8223cf786",
     "(section order)": "b674be3a6d01"
   },
+  "calendar": {
+    "(top)": "f59a557c8526",
+    "# Calendar": "71975c826c6e",
+    "## Range and locale": "2342d88ab9da",
+    "## Temporal": "084d2fd73acf",
+    "## Accessible composition": "e5275dffb12b",
+    "## When to use": "fc36d200f649",
+    "## Props": "1736b176a33c",
+    "(section order)": "b32de0f3c71a"
+  },
   "card": {
     "(top)": "7894bae600a4",
     "# Card": "ddfc6395a3be",
@@ -172,8 +182,8 @@
   },
   "field": {
     "(top)": "4995db135d8d",
-    "# Field": "1bca2b35cfeb",
-    "## Inputs": "fb7bf9e1002e",
+    "# Field": "5cf1d7be5e50",
+    "## Inputs": "2ee1c10e5e2b",
     "## Label": "7d0c50d3c651",
     "## Messages": "3baebdf13c83",
     "## Counter": "3c5316a2038b",
@@ -219,9 +229,19 @@
     "## Temporal": "c08285d803c5",
     "## Accessible composition": "5f08e1bda3fa",
     "## When to use": "d57fe8233a0b",
-    "### Field.DateInput": "0b5c7c088a92",
+    "### Field.DateInput": "36a0de7cb852",
     "## Props": "16709dfa6aa9",
     "(section order)": "4797bdcec426"
+  },
+  "field/date-picker": {
+    "(top)": "40872dd1fdc5",
+    "# Field.DatePicker": "8375f59dfaa9",
+    "## On its own": "c7bd477c706d",
+    "## Accessible composition": "aea77e8e509f",
+    "## When to use": "d57fe8233a0b",
+    "### Field.DatePicker": "b3c1c234ea3a",
+    "## Props": "4d3b8d5a61e4",
+    "(section order)": "a672041b4c18"
   },
   "field/date-time-input": {
     "(top)": "bd0d9d9e37e0",
@@ -578,7 +598,7 @@
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
     "# GlyphsProvider": "39cd10ae14b7",
-    "## Glyphs": "8fb56a23dbe8",
+    "## Glyphs": "6dd3b86474ee",
     "## Accessible composition": "705d17ec4c9e",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",
@@ -587,7 +607,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "0a9ce6b4f646",
-    "## Strings": "146e04f6b764",
+    "## Strings": "e893cf74d39b",
     "## Accessible composition": "8cc16824f136",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",

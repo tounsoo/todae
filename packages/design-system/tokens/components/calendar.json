@@ -1,0 +1,46 @@
+{
+  "calendar": {
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
+    "font": {
+      "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }
+    },
+    "heading": {
+      "font": {
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+      },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+    },
+    "weekday": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+      "font": {
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
+      }
+    },
+    "nav": {
+      "icon": {
+        "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } }
+      }
+    },
+    "day": {
+      "size": { "$type": "dimension", "$value": { "value": 2.25, "unit": "rem" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+      "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+      "bg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } },
+        "selected": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } }
+      },
+      "fg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+        "selected": { "$type": "color", "$value": { "$ref": "#/color/on-accent/$value" } },
+        "disabled": { "$type": "color", "$value": { "$ref": "#/color/fg/placeholder/$value" } }
+      },
+      "border": {
+        "today": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
+      },
+      "ring": {
+        "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+      }
+    }
+  }
+}
