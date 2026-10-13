@@ -5,10 +5,42 @@ import { FieldUseField } from '../../../../components/demos/FieldDemo';
 `useField()` joins your own control to the nearest `Field.Root`, the way the built-in parts join it. Spread `getControlProps()` on the control: it carries the Root's `id`, `name`, `disabled`, `aria-invalid`, the merged `aria-describedby`, the Root's name unless the control names itself, and a ref so a press on the shell focuses the control. The shell draws its focus ring for it too. For a control that is not a native form element, call `getControlProps(props, { native: false })`: it sets `aria-disabled` instead of `disabled` and leaves out `name`, which only form elements submit. Read `disabled` from `useField()`, the Root's, to skip the tab stop and ignore keys; a `disabled` or `aria-invalid` you pass in adds to the Root's and never clears it, so combine your own with it in the same checks. `Label.Root htmlFor` only names labelable elements, so name a custom element through `aria-labelledby` on the Root.
 
 ```tsx
-function Stars(props) {
-	const field = useField()
-	return <span {...field.getControlProps({}, { native: false })} role="slider" tabIndex={field.disabled ? -1 : 0} … />
+function Stars({ value, onChange }: { value: number; onChange: (value: number) => void }) {
+  const field = useField();
+  const step = (delta: number) => onChange(Math.min(5, Math.max(0, value + delta)));
+  return (
+    <span
+      {...field.getControlProps({}, { native: false })}
+      role="slider"
+      tabIndex={field.disabled ? -1 : 0}
+      aria-valuemin={0}
+      aria-valuemax={5}
+      aria-valuenow={value}
+      aria-valuetext={`${value} of 5 stars`}
+      onKeyDown={(event) => {
+        if (field.disabled) return;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowUp') step(1);
+        else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') step(-1);
+        else return;
+        event.preventDefault();
+      }}
+    >
+      {'★'.repeat(value)}
+      {'☆'.repeat(5 - value)}
+    </span>
+  );
 }
+
+const captionId = useId();
+
+<Field.Group>
+  <Text.Root as="span" id={captionId} size="s" weight="medium">
+    Rating
+  </Text.Root>
+  <Field.Root aria-labelledby={captionId}>
+    <Stars value={rating} onChange={setRating} />
+  </Field.Root>
+</Field.Group>
 ```
 
 <Example block>

@@ -5,13 +5,14 @@ import { FieldTime } from '../../../../components/demos/FieldDemo';
 `Field.TimeInput` is a native `<input type="time">` inside a [Field](/field), with the browser's own time picker and locale format. Its `value`, `min` and `max` are a `Temporal.PlainTime`, and `onValueChange` gets a `Temporal.PlainTime`, or `null` while the input is empty or incomplete. A `PlainTime` has no date or time zone. `step` is the native one, in seconds. Put `id` on `Field.Root`.
 
 ```tsx
-const [time, setTime] = useState<Temporal.PlainTime | null>(null)
+const id = useId();
+const [time, setTime] = useState<Temporal.PlainTime | null>(null);
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Start time</Label.Root>
-	<Field.Root id={id}>
-		<Field.TimeInput value={time} onValueChange={setTime} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Start time</Label.Root>
+  <Field.Root id={id}>
+    <Field.TimeInput value={time} onValueChange={setTime} />
+  </Field.Root>
 </Field.Group>
 ```
 

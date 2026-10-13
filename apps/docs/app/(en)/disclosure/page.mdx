@@ -6,8 +6,8 @@ import { DisclosureAccordion, DisclosureSingle } from '../../../components/demos
 
 ```tsx
 <Disclosure.Root>
-	<Disclosure.Summary>Shipping details</Disclosure.Summary>
-	<Text.Root>Orders ship within two business days.</Text.Root>
+  <Disclosure.Summary>Shipping details</Disclosure.Summary>
+  <Text.Root>Orders ship within two business days.</Text.Root>
 </Disclosure.Root>
 ```
 
@@ -23,12 +23,12 @@ Give disclosures the same `name` and the browser keeps at most one of them open:
 
 ```tsx
 <Disclosure.Root name="faq" open>
-	<Disclosure.Summary>What is Todae?</Disclosure.Summary>
-	…
+  <Disclosure.Summary>What is Todae?</Disclosure.Summary>
+  …
 </Disclosure.Root>
 <Disclosure.Root name="faq">
-	<Disclosure.Summary>Does it ship icons?</Disclosure.Summary>
-	…
+  <Disclosure.Summary>Does it ship icons?</Disclosure.Summary>
+  …
 </Disclosure.Root>
 ```
 
@@ -46,10 +46,10 @@ With a `chevron` glyph from a [GlyphsProvider](/utilities/glyphs-provider), the 
 import { ChevronDown } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
-	<Disclosure.Root>
-		<Disclosure.Summary>Shipping</Disclosure.Summary>
-		…
-	</Disclosure.Root>
+  <Disclosure.Root>
+    <Disclosure.Summary>Shipping</Disclosure.Summary>
+    …
+  </Disclosure.Root>
 </GlyphsProvider>
 ```
 

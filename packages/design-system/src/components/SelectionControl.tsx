@@ -85,7 +85,7 @@ export function SelectionControl({
           onChecked(event.target.checked);
         }}
       />
-      <span className={styles.indicator} aria-hidden="true">
+      <span className={styles.indicator} aria-hidden="true" data-todae-focus-ring="">
         {kind === 'checkbox' ? (
           <span className={styles.glyph} data-todae-glyph="">
             {glyphOr(check, <CheckGlyph />)}

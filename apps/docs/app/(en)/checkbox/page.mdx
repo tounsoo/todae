@@ -7,10 +7,21 @@ Native checkbox. Children are the visible label. There is no indeterminate state
 Controlled when `checked` is defined. Uncontrolled when you pass `defaultChecked` or omit both. `useControlledState` does not fire `onCheckedChange`. The component does.
 
 ```tsx
+const errorId = useId();
+const invalid = !accepted;
+
 <Checkbox.Root defaultChecked>Product updates</Checkbox.Root>
-<Checkbox.Root checked={accepted} onCheckedChange={setAccepted} invalid={invalid} aria-describedby={errorId}>
-	I accept the terms
-</Checkbox.Root>
+<Field.Group>
+  <Checkbox.Root
+    checked={accepted}
+    onCheckedChange={setAccepted}
+    invalid={invalid}
+    aria-describedby={invalid ? errorId : undefined}
+  >
+    I accept the terms
+  </Checkbox.Root>
+  {invalid ? <ErrorMessage.Root id={errorId}>Accept the terms to continue.</ErrorMessage.Root> : null}
+</Field.Group>
 ```
 
 <Example block>
@@ -29,7 +40,7 @@ The check is the `check` glyph: Todae's check mark, unless a [GlyphsProvider](/u
 import { Check } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ check: <Check strokeWidth={3} /> }}>
-	<Checkbox.Root defaultChecked>Product updates</Checkbox.Root>
+  <Checkbox.Root defaultChecked>Product updates</Checkbox.Root>
 </GlyphsProvider>
 ```
 

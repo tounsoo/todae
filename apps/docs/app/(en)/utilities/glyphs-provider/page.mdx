@@ -7,19 +7,18 @@ import { GlyphsLibraries } from '../../../../components/demos/GlyphsDemo';
 Todae ships no icon set. A few parts still need a glyph to look whole, such as the cross on a close button or the check in a checkbox, so Todae draws those itself. `GlyphsProvider` sets them for everything inside it, so they can come from your icon library instead. Pass the keys you want to change; each key you leave out comes from the nearest `GlyphsProvider` above, and `null` brings back Todae's own. It renders no element.
 
 ```tsx
-import { GlyphsProvider } from '@omsoo.design/todae';
 import { Check, ChevronDown, ChevronRight, Ellipsis, X } from 'lucide-react';
 
 <GlyphsProvider
-	glyphs={{
-		close: <X />,
-		check: <Check />,
-		chevron: <ChevronDown />,
-		separator: <ChevronRight />,
-		ellipsis: <Ellipsis />,
-	}}
+  glyphs={{
+    close: <X />,
+    check: <Check />,
+    chevron: <ChevronDown />,
+    separator: <ChevronRight />,
+    ellipsis: <Ellipsis />,
+  }}
 >
-	<App />
+  <App />
 </GlyphsProvider>
 ```
 

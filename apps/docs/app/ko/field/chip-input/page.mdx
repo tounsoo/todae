@@ -12,16 +12,16 @@ import {
 
 ```tsx
 <Field.Root aria-label="Tags">
-	<Field.ChipInput
-		chips={chips}
-		inputValue={inputValue}
-		onInputValueChange={setInputValue}
-		onCommit={(value) => {
-			setChips((prev) => (prev.includes(value) ? prev : [...prev, value]));
-			setInputValue('');
-		}}
-		onChipRemove={(index) => setChips((prev) => prev.filter((_, i) => i !== index))}
-	/>
+  <Field.ChipInput
+    chips={chips}
+    inputValue={inputValue}
+    onInputValueChange={setInputValue}
+    onCommit={(value) => {
+      setChips((prev) => (prev.includes(value) ? prev : [...prev, value]));
+      setInputValue('');
+    }}
+    onChipRemove={(index) => setChips((prev) => prev.filter((_, i) => i !== index))}
+  />
 </Field.Root>
 ```
 
@@ -30,6 +30,14 @@ import {
 </Example>
 
 선택 사항인 [useChipField](/utilities/use-chip-field)는 칩과 입력을 보관하고, 그 `getChipInputProps()`를 `Field.ChipInput`에 펼쳐 넘깁니다.
+
+```tsx
+const field = useChipField();
+
+<Field.Root aria-label="Tags">
+  <Field.ChipInput {...field.getChipInputProps()} placeholder="Add a tag" />
+</Field.Root>
+```
 
 이번 단계에서 미룬 것: 내장 지우기, 붙여넣기 분할, 클릭 가능한 `+N`, 칩 화살표 키 로빙.
 

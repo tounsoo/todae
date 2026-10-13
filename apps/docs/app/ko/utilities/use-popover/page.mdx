@@ -7,15 +7,15 @@ import { PopoverMenu } from '../../../../components/demos/PopoverDemo';
 밖을 누르거나 Escape를 누르면 `outside` 또는 `escape`로 `onOpenChange(false, reason)`을 호출합니다. 트리거는 토글이므로 열 때와 닫을 때 모두 `trigger`를 알립니다. 소유자는 한 가지 이유를 거부하고 나머지는 유지할 수 있습니다. `onOpenChange(open, reason)`에서 `trigger`로 닫힘을 거부하기 전에 `open === false`인지 확인하세요. [Popover](/popover)에 거부 데모가 있습니다. `haspopup`은 트리거의 `aria-haspopup`을 설정합니다. `anchorRef`는 트리거가 `getTriggerProps`가 표시하는 요소가 아닐 때 쓰는 CSS 앵커입니다. 이것을 넘기면서 `getTriggerProps`도 펼치지는 마세요.
 
 ```tsx
-const [open, setOpen] = useState(false)
-const [value, setValue] = useState<string | null>(null)
-const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' })
+const [open, setOpen] = useState(false);
+const [value, setValue] = useState<string | null>(null);
+const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' });
 
 <>
-  <Button.Root tooltip={false} {...getTriggerProps()}>{value ?? 'Choose fruit'}</Button.Root>
+  <Button.Root tooltip={false} {...getTriggerProps()}>{value ? `Fruit: ${value}` : 'Choose fruit'}</Button.Root>
   <Popover.Root {...getPopoverProps()}>
     {/* Selecting does not close the popover: the owner closes it. */}
-    <OptionList.Root aria-label="Fruit" value={value} onValueChange={(next) => { setValue(next); setOpen(false) }}>
+    <OptionList.Root aria-label="Fruit" value={value} onValueChange={(next) => { setValue(next); setOpen(false); }}>
       <OptionList.Option value="apple">Apple</OptionList.Option>
     </OptionList.Root>
   </Popover.Root>

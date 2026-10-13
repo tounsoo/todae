@@ -5,13 +5,17 @@ import { FieldSelectSize } from '../../../../components/demos/FieldDemo';
 `Field.Select`는 [Field](/field) 안의 네이티브 `<select>`입니다. `appearance: base-select`를 지원하는 브라우저에서는 버튼과 선택 창을 field, option 토큰으로 그립니다. 그 밖의 브라우저에서는 같은 값과 키보드 동작으로 브라우저 자체 선택 창이 나타납니다. JavaScript listbox는 없습니다. 자식은 네이티브 `<option>`과 `<optgroup>` 요소이며, 다른 필드처럼 `Label.Root htmlFor`로 이름을 붙입니다.
 
 ```tsx
-<Label.Root htmlFor={id}>Size</Label.Root>
-<Field.Root id={id}>
-	<Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
-		<option value="s">Small</option>
-		<option value="m">Medium</option>
-	</Field.Select>
-</Field.Root>
+const id = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Size</Label.Root>
+  <Field.Root id={id}>
+    <Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
+      <option value="s">Small</option>
+      <option value="m">Medium</option>
+    </Field.Select>
+  </Field.Root>
+</Field.Group>
 ```
 
 <Example block>
@@ -26,11 +30,11 @@ import { FieldSelectSize } from '../../../../components/demos/FieldDemo';
 import { ChevronDown } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
-	<Field.Root aria-label="Plan">
-		<Field.Select value={plan} onValueChange={setPlan}>
-			…
-		</Field.Select>
-	</Field.Root>
+  <Field.Root aria-label="Plan">
+    <Field.Select value={plan} onValueChange={setPlan}>
+      …
+    </Field.Select>
+  </Field.Root>
 </GlyphsProvider>
 ```
 

@@ -6,11 +6,6 @@ A modal native `<dialog>` pinned to the start or end edge, full height. `Drawer.
 
 `side` is `end` by default. Start and end follow text direction, so in right-to-left text `end` is the left edge.
 
-<Example>
-  <DrawerBasic />
-  <DrawerBasic side="start" />
-</Example>
-
 ```tsx
 <Drawer.Root open={open} onOpenChange={setOpen}>
   <Dialog.Header>
@@ -20,6 +15,11 @@ A modal native `<dialog>` pinned to the start or end edge, full height. `Drawer.
   <Dialog.Body>…</Dialog.Body>
 </Drawer.Root>
 ```
+
+<Example>
+  <DrawerBasic />
+  <DrawerBasic side="start" />
+</Example>
 
 ## Accessible composition
 

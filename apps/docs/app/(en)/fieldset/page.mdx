@@ -5,11 +5,18 @@ import { FieldsetCheckboxes, FieldsetDisabled } from '../../../components/demos/
 A native `<fieldset>` that groups related controls under one `<legend>`, such as a set of checkboxes. A screen reader reads the legend as the group's name when focus enters it.
 
 ```tsx
+const errorId = useId();
+const none = topics.length === 0;
+
 <Fieldset.Root invalid={none} aria-describedby={none ? errorId : undefined}>
-	<Fieldset.Legend>Email topics</Fieldset.Legend>
-	<Checkbox.Root>Product news</Checkbox.Root>
-	<Checkbox.Root>Security notices</Checkbox.Root>
-	{none ? <ErrorMessage.Root id={errorId}>Pick at least one topic.</ErrorMessage.Root> : null}
+  <Fieldset.Legend>Email topics</Fieldset.Legend>
+  <Checkbox.Root checked={topics.includes('product')} onCheckedChange={toggle('product')}>
+    Product news
+  </Checkbox.Root>
+  <Checkbox.Root checked={topics.includes('security')} onCheckedChange={toggle('security')}>
+    Security notices
+  </Checkbox.Root>
+  {none ? <ErrorMessage.Root id={errorId}>Pick at least one topic.</ErrorMessage.Root> : null}
 </Fieldset.Root>
 ```
 

@@ -95,17 +95,17 @@ export function TableOfInvoices() {
       </Table.Head>
       <Table.Body>
         <Table.Row>
-          <Table.Cell>INV-1042</Table.Cell>
+          <Table.HeaderCell scope="row">INV-1042</Table.HeaderCell>
           <Table.Cell>2026-07-03</Table.Cell>
           <Table.Cell style={{ textAlign: 'end' }}>$1,200.00</Table.Cell>
         </Table.Row>
         <Table.Row>
-          <Table.Cell>INV-1043</Table.Cell>
+          <Table.HeaderCell scope="row">INV-1043</Table.HeaderCell>
           <Table.Cell>2026-08-01</Table.Cell>
           <Table.Cell style={{ textAlign: 'end' }}>$980.00</Table.Cell>
         </Table.Row>
         <Table.Row>
-          <Table.Cell>INV-1044</Table.Cell>
+          <Table.HeaderCell scope="row">INV-1044</Table.HeaderCell>
           <Table.Cell>2026-09-02</Table.Cell>
           <Table.Cell style={{ textAlign: 'end' }}>$1,450.00</Table.Cell>
         </Table.Row>

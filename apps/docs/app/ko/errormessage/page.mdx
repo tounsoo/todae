@@ -9,13 +9,19 @@ import { ErrorMessageSibling } from '../../../components/demos/ErrorMessageDemo'
 ErrorMessage는 자신의 간격을 직접 관리합니다. 컨트롤 다음에서는 `margin-block-start`가 `field.label.gap`(0.4rem)입니다. Description 다음에서는 형제 규칙이 이를 `field.messages.gap`(0.2rem)으로 줄입니다. `margin-block-end`는 0입니다.
 
 ```tsx
-const describedBy = invalid ? `${hintId} ${errorId}` : hintId
+const id = useId();
+const hintId = useId();
+const errorId = useId();
+const describedBy = invalid ? `${hintId} ${errorId}` : hintId;
 
-<Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
-	<Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
-</Field.Root>
-<Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
-{invalid ? <ErrorMessage.Root id={errorId}>Enter an address that contains an @.</ErrorMessage.Root> : null}
+<Field.Group>
+  <Label.Root htmlFor={id}>Work email</Label.Root>
+  <Field.Root id={id} invalid={invalid} aria-describedby={describedBy}>
+    <Field.TextInput value={email} onChange={(event) => setEmail(event.target.value)} />
+  </Field.Root>
+  <Description.Root id={hintId}>We only use this for billing receipts.</Description.Root>
+  {invalid ? <ErrorMessage.Root id={errorId}>Enter an address that contains an @.</ErrorMessage.Root> : null}
+</Field.Group>
 ```
 
 <Example block>

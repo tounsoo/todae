@@ -6,6 +6,20 @@ Generated catalog from the DTCG pipeline. Components consume contract vars only.
 
 To read the providers from code, `useAppearance()` returns the nearest ThemeProvider's resolved appearance (`light` or `dark`) and `useDensity()` the nearest DensityProvider's density. With no provider above, they return `light` and `comfortable`.
 
+```tsx
+function Panel() {
+  const appearance = useAppearance(); // 'dark'
+  const density = useDensity(); // 'compact'
+  return <Text.Root>{appearance}, {density}</Text.Root>;
+}
+
+<ThemeProvider appearance="dark">
+  <DensityProvider density="compact">
+    <Panel />
+  </DensityProvider>
+</ThemeProvider>
+```
+
 ## When to use
 
 ### ThemeProvider

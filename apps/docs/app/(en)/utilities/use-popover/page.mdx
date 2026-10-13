@@ -7,15 +7,15 @@ import { PopoverMenu } from '../../../../components/demos/PopoverDemo';
 An outside press and Escape call `onOpenChange(false, reason)` with `outside` or `escape`. The trigger toggles, so it reports `trigger` on both open and close. An owner can veto one reason and keep the others; in `onOpenChange(open, reason)`, check `open === false` before vetoing a `trigger` close. [Popover](/popover) has a veto demo. `haspopup` sets the trigger's `aria-haspopup`. `anchorRef` is the CSS anchor when the trigger is not the element `getTriggerProps` marks; do not pass it and also spread `getTriggerProps`.
 
 ```tsx
-const [open, setOpen] = useState(false)
-const [value, setValue] = useState<string | null>(null)
-const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' })
+const [open, setOpen] = useState(false);
+const [value, setValue] = useState<string | null>(null);
+const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: setOpen, haspopup: 'listbox' });
 
 <>
-  <Button.Root tooltip={false} {...getTriggerProps()}>{value ?? 'Choose fruit'}</Button.Root>
+  <Button.Root tooltip={false} {...getTriggerProps()}>{value ? `Fruit: ${value}` : 'Choose fruit'}</Button.Root>
   <Popover.Root {...getPopoverProps()}>
     {/* Selecting does not close the popover: the owner closes it. */}
-    <OptionList.Root aria-label="Fruit" value={value} onValueChange={(next) => { setValue(next); setOpen(false) }}>
+    <OptionList.Root aria-label="Fruit" value={value} onValueChange={(next) => { setValue(next); setOpen(false); }}>
       <OptionList.Option value="apple">Apple</OptionList.Option>
     </OptionList.Root>
   </Popover.Root>

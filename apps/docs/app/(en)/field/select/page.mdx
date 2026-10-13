@@ -5,13 +5,17 @@ import { FieldSelectSize } from '../../../../components/demos/FieldDemo';
 `Field.Select` is a native `<select>` inside a [Field](/field). In browsers with `appearance: base-select` the button and its picker are drawn from field and option tokens; elsewhere the browser's own picker shows, with the same value and keyboard. There is no JavaScript listbox. Children are native `<option>` and `<optgroup>` elements, and a `Label.Root htmlFor` names it like any other field.
 
 ```tsx
-<Label.Root htmlFor={id}>Size</Label.Root>
-<Field.Root id={id}>
-	<Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
-		<option value="s">Small</option>
-		<option value="m">Medium</option>
-	</Field.Select>
-</Field.Root>
+const id = useId();
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Size</Label.Root>
+  <Field.Root id={id}>
+    <Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
+      <option value="s">Small</option>
+      <option value="m">Medium</option>
+    </Field.Select>
+  </Field.Root>
+</Field.Group>
 ```
 
 <Example block>
@@ -26,11 +30,11 @@ import { FieldSelectSize } from '../../../../components/demos/FieldDemo';
 import { ChevronDown } from 'lucide-react';
 
 <GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
-	<Field.Root aria-label="Plan">
-		<Field.Select value={plan} onValueChange={setPlan}>
-			…
-		</Field.Select>
-	</Field.Root>
+  <Field.Root aria-label="Plan">
+    <Field.Select value={plan} onValueChange={setPlan}>
+      …
+    </Field.Select>
+  </Field.Root>
 </GlyphsProvider>
 ```
 

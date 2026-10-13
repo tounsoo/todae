@@ -3,10 +3,10 @@
 `useHotkey(hotkey, handler, options)`는 페이지 어디에서든 누른 키가 `hotkey`와 일치하면 `handler`를 실행합니다. 문서에서 `keydown`을 듣고, 일치한 키의 기본 동작을 막아 브라우저 자체 단축키가 함께 실행되지 않게 합니다.
 
 ```tsx
-useHotkey(['Control+K', 'Meta+K'], () => setOpen(true))
+useHotkey(['Control+K', 'Meta+K'], () => setOpen(true));
 ```
 
-단축키는 `Alt+T`나 `F8`처럼 수정 키와 키를 `+`로 이어 씁니다. 수정 키는 `Alt`, `Control`, `Meta`, `Shift`이고 `Option`, `Ctrl`, `Cmd`로도 쓸 수 있으며, 정확히 일치해야 합니다. 그래서 `Control+K`는 Ctrl+Shift+K에서 실행되지 않습니다. 글자나 숫자는 그 키가 입력하는 문자로 일치시킵니다. 한글 자판처럼 키가 라틴 글자나 숫자를 입력하지 않으면, 그 글자 자리에 있는 키로 일치시킵니다. 훅이 모르는 수정 키 이름이 든 단축키는 꺼지고, 개발 중에는 경고가 나옵니다.
+단축키는 `Alt+T`나 `F8`처럼 수정 키와 키를 `+`로 이어 씁니다. 수정 키는 `Alt`, `Control`, `Meta`, `Shift`이고 `Option`, `Ctrl`, `Cmd`로도 쓸 수 있으며, 정확히 일치해야 합니다. 그래서 `Control+K`는 Ctrl+Shift+K에서 실행되지 않습니다. 글자나 숫자는 그 키가 입력하는 문자로 일치시킵니다. 한글 자판처럼 키가 라틴 글자나 숫자를 입력하지 않으면, 그 글자 자리에 있는 키로 일치시킵니다. 훅이 모르는 수정 키 이름이 든 단축키는 꺼지고, 개발 중에는 오류를 기록합니다.
 
 훅은 다른 곳에서 이미 기본 동작을 막은 키, 입력기가 글자를 조합하는 중에 누른 키, 누르고 있어 반복되는 키를 건너뜁니다. 텍스트 필드 안에서는 기능 키나 Meta, 또는 Alt 없는 Control 조합만 실행합니다. `Shift+A`, `Escape`, 화살표 키 같은 나머지 단축키는 필드에 맡깁니다.
 
@@ -21,8 +21,8 @@ useHotkey(['Control+K', 'Meta+K'], () => setOpen(true))
 **직접 제공할 것:** 단축키가 대신하는 컨트롤에 `aria-keyshortcuts`를 주고, 단축키마다 공백으로 구분하세요. `Alt`, `Control`, `Meta`, `Shift`라는 이름은 거기서도 유효하므로 목록 하나로 둘 다 채울 수 있습니다. 별칭인 `Ctrl`, `Cmd`, `Option`은 유효하지 않습니다. 컨트롤의 툴팁이나 도움말 페이지처럼 보이는 텍스트로도 단축키를 보여 주세요.
 
 ```tsx
-const keys = ['Control+K', 'Meta+K']
-useHotkey(keys, () => setOpen(true))
+const keys = ['Control+K', 'Meta+K'];
+useHotkey(keys, () => setOpen(true));
 
 <Button.Root aria-keyshortcuts={keys.join(' ')} onClick={() => setOpen(true)}>
   Search

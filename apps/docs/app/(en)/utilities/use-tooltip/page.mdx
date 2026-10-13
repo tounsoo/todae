@@ -7,7 +7,7 @@ import { TooltipOverflow } from '../../../../components/demos/TooltipDemo';
 Overflow chips and other non-button triggers use the hook directly. Mark a non-tabbable wrap with `tabIndex={0}`. `Button.Root` already tips its own label, so set `tooltip={false}` on it when the hook owns the tip.
 
 ```tsx
-const tooltip = useTooltip()
+const tooltip = useTooltip();
 
 <>
   <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>

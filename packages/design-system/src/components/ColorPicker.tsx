@@ -16,6 +16,7 @@ import { hexToHsv, hsvToHex, normalizeHex, type Hsv } from './color';
 import { useFieldsetState } from './Fieldset.context';
 import { composeHandlers, cx } from './props';
 import styles from './ColorPicker.module.css';
+import { focusWithoutScroll } from './revealRing';
 
 export type ColorPickerRootProps = {
   /** Controlled color as #rrggbb. Pass with onValueChange. */
@@ -182,7 +183,7 @@ function Area({ className, style, onPointerDown, onPointerMove, ...props }: Colo
         event.preventDefault();
         event.currentTarget.setPointerCapture?.(event.pointerId);
         moveTo(event);
-        xRef.current?.focus({ preventScroll: true });
+        if (xRef.current) focusWithoutScroll(xRef.current);
       })}
       onPointerMove={composeHandlers(onPointerMove, (event: PointerEvent<HTMLDivElement>) => {
         if (!disabled && event.currentTarget.hasPointerCapture?.(event.pointerId)) moveTo(event);
@@ -217,7 +218,7 @@ function Area({ className, style, onPointerDown, onPointerMove, ...props }: Colo
         onChange={(event) => change({ ...hsv, v: Number(event.target.value) / 100 })}
         onKeyDown={onKeyDown}
       />
-      <span className={styles.thumb} aria-hidden="true" />
+      <span className={styles.thumb} aria-hidden="true" data-todae-focus-ring="" />
     </div>
   );
 }

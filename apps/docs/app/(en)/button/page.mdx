@@ -9,6 +9,15 @@ Icon-only roots tip that name. A labeled button tips the full string only while 
 
 Variants use the existing paint packs. Default `type` is `button`.
 
+```tsx
+<Button.Root onClick={save}>Save</Button.Root>
+<Button.Root variant="secondary" onClick={cancel}>
+  Cancel
+</Button.Root>
+<Button.Root variant="ghost">Ghost</Button.Root>
+<Button.Root disabled>Disabled</Button.Root>
+```
+
 <Example>
   <ButtonVariants />
 </Example>
@@ -43,6 +52,19 @@ Pass `pressed` or `defaultPressed` and the button becomes a toggle: it sets `ari
 
 Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overlap by 1px and share the outer radius. No selection state.
 
+```tsx
+import { AlignLeft } from 'lucide-react';
+
+<Button.Group aria-label="Align">
+  <Button.Root variant="secondary" aria-label="Left">
+    <Button.Icon>
+      <AlignLeft />
+    </Button.Icon>
+  </Button.Root>
+  …
+</Button.Group>
+```
+
 <Example>
   <ButtonGroupAlign />
 </Example>
@@ -55,15 +77,15 @@ Sibling chrome. `role="group"`. Children are `Button.Root`. Attached edges overl
 import { Plus, Settings } from 'lucide-react';
 
 <Button.Root>
-	<Button.Icon>
-		<Plus />
-	</Button.Icon>
-	New project
+  <Button.Icon>
+    <Plus />
+  </Button.Icon>
+  New project
 </Button.Root>
 <Button.Root variant="ghost" aria-label="Settings">
-	<Button.Icon>
-		<Settings />
-	</Button.Icon>
+  <Button.Icon>
+    <Settings />
+  </Button.Icon>
 </Button.Root>
 ```
 

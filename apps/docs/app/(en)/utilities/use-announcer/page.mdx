@@ -5,11 +5,11 @@ import { AnnounceSave } from '../../../../components/demos/AnnouncerDemo';
 `useAnnouncer()` returns `announce(message, options?)`, which reads `message` to screen readers without showing it. Use it for the result of something async that has no visible message of its own, such as "Draft saved" or "12 results".
 
 ```tsx
-const announce = useAnnouncer()
+const announce = useAnnouncer();
 
 async function save() {
-	await saveDraft()
-	announce('Draft saved')
+  await saveDraft();
+  announce('Draft saved');
 }
 ```
 

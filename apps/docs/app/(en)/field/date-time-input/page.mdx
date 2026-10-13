@@ -5,13 +5,14 @@ import { FieldDateTime } from '../../../../components/demos/FieldDemo';
 `Field.DateTimeInput` is a native `<input type="datetime-local">` inside a [Field](/field), with the browser's own date and time picker and locale format. Its `value`, `min` and `max` are a `Temporal.PlainDateTime`, and `onValueChange` gets a `Temporal.PlainDateTime`, or `null` while the input is empty or incomplete. A `PlainDateTime` has no time zone: it is the date and time on the user's clock. To store an instant, combine it with a time zone in your own code, such as `value.toZonedDateTime(zone)`. `step` is the native one, in seconds. Put `id` on `Field.Root`.
 
 ```tsx
-const [start, setStart] = useState<Temporal.PlainDateTime | null>(null)
+const id = useId();
+const [start, setStart] = useState<Temporal.PlainDateTime | null>(null);
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Meeting starts</Label.Root>
-	<Field.Root id={id}>
-		<Field.DateTimeInput value={start} onValueChange={setStart} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Meeting starts</Label.Root>
+  <Field.Root id={id}>
+    <Field.DateTimeInput value={start} onValueChange={setStart} />
+  </Field.Root>
 </Field.Group>
 ```
 

@@ -5,9 +5,11 @@ const PLANS = ['Free', 'Team', 'Business', 'Enterprise'];
 
 export function GridColumns() {
   return (
-    <Grid.Root columns={2}>
+    <Grid.Root columns={2} role="list" aria-label="Plans">
       {PLANS.map((plan) => (
-        <Card.Root key={plan}>{plan}</Card.Root>
+        <Card.Root key={plan} role="listitem">
+          {plan}
+        </Card.Root>
       ))}
     </Grid.Root>
   );
@@ -15,9 +17,11 @@ export function GridColumns() {
 
 export function GridFill() {
   return (
-    <Grid.Root minItemSize="10rem">
+    <Grid.Root minItemSize="10rem" role="list" aria-label="Plans">
       {PLANS.map((plan) => (
-        <Card.Root key={plan}>{plan}</Card.Root>
+        <Card.Root key={plan} role="listitem">
+          {plan}
+        </Card.Root>
       ))}
     </Grid.Root>
   );

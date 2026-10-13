@@ -3,10 +3,10 @@
 `useHotkey(hotkey, handler, options)` runs `handler` when a key pressed anywhere on the page matches `hotkey`. It listens for `keydown` on the document and prevents the default of a key it matches, so the browser's own shortcut does not also run.
 
 ```tsx
-useHotkey(['Control+K', 'Meta+K'], () => setOpen(true))
+useHotkey(['Control+K', 'Meta+K'], () => setOpen(true));
 ```
 
-Write a hotkey as modifiers and a key joined by `+`, such as `Alt+T` or `F8`. Modifiers are `Alt`, `Control`, `Meta` and `Shift`, which can also be written as `Option`, `Ctrl` or `Cmd`, and they must match exactly, so `Control+K` does not run on Ctrl+Shift+K. A letter or digit matches what the key types. When the key types no Latin letter or digit, as on a Korean layout, it matches the key in that letter's place. A hotkey with a modifier name the hook does not know is off, with a warning in development.
+Write a hotkey as modifiers and a key joined by `+`, such as `Alt+T` or `F8`. Modifiers are `Alt`, `Control`, `Meta` and `Shift`, which can also be written as `Option`, `Ctrl` or `Cmd`, and they must match exactly, so `Control+K` does not run on Ctrl+Shift+K. A letter or digit matches what the key types. When the key types no Latin letter or digit, as on a Korean layout, it matches the key in that letter's place. A hotkey with a modifier name the hook does not know is off, and logs an error in development.
 
 The hook skips a key something else already prevented, a key pressed while an input method composes text, and a held key that repeats. In a text field it runs only a function key, or a chord with Meta or with Control but not Alt; every other hotkey, such as `Shift+A`, `Escape` or an arrow key, is left to the field.
 
@@ -21,8 +21,8 @@ Tell assistive technology about a shortcut with `aria-keyshortcuts` on the contr
 **You supply:** `aria-keyshortcuts` on the control the shortcut stands for, with each hotkey separated by a space. The names `Alt`, `Control`, `Meta` and `Shift` are valid there too, so one list can feed both; the aliases `Ctrl`, `Cmd` and `Option` are not. Show the shortcut in visible text as well, such as in the control's tooltip or a help page.
 
 ```tsx
-const keys = ['Control+K', 'Meta+K']
-useHotkey(keys, () => setOpen(true))
+const keys = ['Control+K', 'Meta+K'];
+useHotkey(keys, () => setOpen(true));
 
 <Button.Root aria-keyshortcuts={keys.join(' ')} onClick={() => setOpen(true)}>
   Search

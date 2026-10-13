@@ -5,13 +5,14 @@ import { FieldDate } from '../../../../components/demos/FieldDemo';
 `Field.DateInput`은 [Field](/field) 안에서 브라우저 자체의 날짜 선택기와 로캘 형식을 쓰는 네이티브 `<input type="date">`입니다. `value`, `min`, `max`는 `Temporal.PlainDate`이며, `onValueChange`는 `Temporal.PlainDate`를, 입력이 비어 있거나 덜 끝났을 때는 `null`을 받습니다. `PlainDate`에는 시간대가 없으므로 값은 사용자가 고른 그날입니다. `step`은 네이티브 그대로이며 일 단위입니다. `id`는 `Field.Root`에 두세요.
 
 ```tsx
-const [date, setDate] = useState<Temporal.PlainDate | null>(null)
+const id = useId();
+const [date, setDate] = useState<Temporal.PlainDate | null>(null);
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Start date</Label.Root>
-	<Field.Root id={id}>
-		<Field.DateInput value={date} onValueChange={setDate} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Start date</Label.Root>
+  <Field.Root id={id}>
+    <Field.DateInput value={date} onValueChange={setDate} />
+  </Field.Root>
 </Field.Group>
 ```
 

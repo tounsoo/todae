@@ -4,7 +4,7 @@ import { Button, Dialog, Stack, Toast, createToaster, type ToastLayout, type Toa
 import { useState } from 'react';
 
 // One store for the page. In an app, make it once at module scope.
-const toaster = createToaster();
+const toaster = createToaster<{ onUndo?: () => void }>();
 
 const MESSAGES: Record<ToastTone, string> = {
   info: 'Draft synced',
@@ -17,7 +17,9 @@ let count = 0;
 
 function notify(tone: ToastTone) {
   count += 1;
-  toaster.add({ tone, title: MESSAGES[tone], description: `Toast ${count}` });
+  // A toast with an action stays until it is dismissed, so the action can't leave before someone reaches it.
+  const undo = tone === 'success' ? { duration: Infinity, onUndo: () => toaster.add({ title: 'Changes undone' }) } : {};
+  toaster.add({ tone, title: MESSAGES[tone], description: `Toast ${count}`, ...undo });
 }
 
 export function ToastDemo() {
@@ -33,7 +35,7 @@ export function ToastDemo() {
         ))}
       </Stack.Root>
       <Stack.Root direction="row">
-        <Button.Root variant="ghost" aria-pressed={layout === 'stack'} onClick={() => setLayout(layout === 'list' ? 'stack' : 'list')}>
+        <Button.Root variant="ghost" pressed={layout === 'stack'} onPressedChange={(pressed) => setLayout(pressed ? 'stack' : 'list')}>
           Stack layout
         </Button.Root>
         <Button.Root variant="ghost" onClick={() => setOpen(true)}>
@@ -55,7 +57,7 @@ export function ToastDemo() {
           <Toast.Root>
             <Toast.Title>{toast.title}</Toast.Title>
             <Toast.Description>{toast.description}</Toast.Description>
-            <Toast.Action onClick={() => undefined}>Undo</Toast.Action>
+            {toast.onUndo ? <Toast.Action onClick={toast.onUndo}>Undo save</Toast.Action> : null}
             <Toast.Close />
           </Toast.Root>
         )}

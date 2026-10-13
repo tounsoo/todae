@@ -5,13 +5,14 @@ import { FieldDate } from '../../../../components/demos/FieldDemo';
 `Field.DateInput` is a native `<input type="date">` inside a [Field](/field), with the browser's own date picker and locale format. Its `value`, `min` and `max` are a `Temporal.PlainDate`, and `onValueChange` gets a `Temporal.PlainDate`, or `null` while the input is empty or incomplete. A `PlainDate` has no time zone, so the value is the day the user picked. `step` is the native one, in days. Put `id` on `Field.Root`.
 
 ```tsx
-const [date, setDate] = useState<Temporal.PlainDate | null>(null)
+const id = useId();
+const [date, setDate] = useState<Temporal.PlainDate | null>(null);
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Start date</Label.Root>
-	<Field.Root id={id}>
-		<Field.DateInput value={date} onValueChange={setDate} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Start date</Label.Root>
+  <Field.Root id={id}>
+    <Field.DateInput value={date} onValueChange={setDate} />
+  </Field.Root>
 </Field.Group>
 ```
 

@@ -97,6 +97,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 ## Accessibility
 
 - **Follow the ARIA Authoring Practices pattern** for each interactive component, and keep that behavior in the component or a hook, not in a recipe.
+- **Scroll containers that hold controls keep focus rings whole.** `ScrollArea`, `BottomSheet.Body`, `Popover` and the `Dialog` and `Drawer` panel run `revealRing` from `src/components/revealRing.ts` when focus lands (Dialog and Drawer from the `<dialog>`'s composed `onFocus`, with the panel as the area), and set `scroll-padding` to a ring's width plus offset. A new part that scrolls controls with outset rings does the same. A part that draws a control's ring on a child or sibling of the focused element, such as a Checkbox indicator, the ColorPicker thumb or a Tree row, marks that element `data-todae-focus-ring=""`; `tokenConsistency.test.ts` lists those rules. Code that moves focus where it must not scroll calls `focusWithoutScroll(el)`, not `el.focus({ preventScroll: true })`, so `revealRing` leaves it alone too. *Why:* the browser scrolls a focused control into view by its own box, so a ring drawn on another element, such as a Field shell, can stay cut at the edge.
 - **Toolbar keeps its no-tabindex design:** Tab is steered to the edge of a run instead of managed `tabindex`. This was chosen knowing its limits (an ancestor that cancels Tab after the hop, an item that stops Tab propagating, Safari skipping buttons by default); don't switch back.
 - **axe runs over the docs demos in a real browser**, with color contrast off, since contrast is APCA in the token build.
 
@@ -118,6 +119,19 @@ Each component, hook and recipe gets a page in `apps/docs/app/(en)` and a Korean
 - **Prop descriptions** live in each part's `*.meta.ts` and reach the props table through `pnpm schema`. When one changes, update its Korean entry in `apps/docs/lib/i18n/props/ko.json`.
 - **Tables are JSX** with `Table` parts. The docs MDX has no GFM, so pipe tables render as plain text.
 - **Write narrow claims.** Absolute words such as "only", "never" and "always" are the claims reviews most often find wrong. State what the code does and stop.
+
+### Code blocks and live examples
+
+Code on a docs page is copied into products, so write it in the package's own style and wiring. `apps/docs/lib/codeBlocks.test.ts` checks three of these rules mechanically: that each fence names one of the languages below, that no line starts with a tab, and that `...` is not used as a placeholder. It skips the pages in its `PENDING` set, which don't follow this section yet.
+
+- **Every fence names its language:** `tsx` for code with JSX or a hook call, `ts` for other TypeScript, `css`, `json` or `sh`.
+- **Indent with two spaces**, not tabs. In TypeScript, use single quotes for strings, double quotes for JSX attributes, semicolons, and trailing commas in lists that span lines, as `packages/design-system` does.
+- **Mark left-out content with `…`**, such as `<Dialog.Body>…</Dialog.Body>`. Don't use `...`, which reads as a spread.
+- **Declare each id that a snippet names in `htmlFor` or an `aria-*` attribute,** such as `const id = useId();` or `const cb = useCombobox({ … });`, above the JSX. App state such as `value` and `setValue` can be assumed.
+- **Show real wiring.** A `Label.Root` sits with its control in a `Field.Group` and points at it with an id from `useId()` or a hook's `ids`, not a literal. Every control has an accessible name. Links are `Link.Root`, and a router's link goes in through its `render` prop.
+- **Icons are real icons with their import,** from `lucide-react`, not placeholder names such as `YourIcon`. Inside a slot such as `Button.Icon`, put the icon element on its own line.
+- **Imports.** A block with an `export function` imports everything it uses: Todae from `'@omsoo.design/todae'`, or from a server entry such as `'@omsoo.design/todae/code'` when a Server Component should render it.
+- **The site renders code with Todae's own parts.** MDX maps fenced blocks to `Code.Block` (inside a `ScrollArea.Root`, through `DocsPre`) and inline code to `Code.Root`. The docs set the fenced blocks' `code.block.bg` and `code.block.radius` tokens on that wrapper rather than overriding `Code.Block`'s padding, type or colors.
 
 ## Recording a decision
 

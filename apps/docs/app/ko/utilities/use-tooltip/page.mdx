@@ -7,7 +7,7 @@ import { TooltipOverflow } from '../../../../components/demos/TooltipDemo';
 오버플로 칩과 버튼이 아닌 다른 트리거는 훅을 직접 씁니다. 탭으로 갈 수 없는 감싸는 요소에는 `tabIndex={0}`을 붙이세요. `Button.Root`는 이미 자신의 레이블을 팁으로 보여 주므로, 훅이 팁을 담당할 때는 그 버튼에 `tooltip={false}`를 설정하세요.
 
 ```tsx
-const tooltip = useTooltip()
+const tooltip = useTooltip();
 
 <>
   <span {...tooltip.getTriggerProps({ tabIndex: 0 })}>

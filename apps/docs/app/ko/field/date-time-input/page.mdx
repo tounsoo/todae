@@ -5,13 +5,14 @@ import { FieldDateTime } from '../../../../components/demos/FieldDemo';
 `Field.DateTimeInput`은 [Field](/field) 안에서 브라우저 자체의 날짜·시간 선택기와 로캘 형식을 쓰는 네이티브 `<input type="datetime-local">`입니다. `value`, `min`, `max`는 `Temporal.PlainDateTime`이며, `onValueChange`는 `Temporal.PlainDateTime`을, 입력이 비어 있거나 덜 끝났을 때는 `null`을 받습니다. `PlainDateTime`에는 시간대가 없습니다. 사용자 시계의 날짜와 시각입니다. 시점으로 저장하려면 `value.toZonedDateTime(zone)`처럼 직접 작성하는 코드에서 시간대와 합치세요. `step`은 네이티브 그대로이며 초 단위입니다. `id`는 `Field.Root`에 두세요.
 
 ```tsx
-const [start, setStart] = useState<Temporal.PlainDateTime | null>(null)
+const id = useId();
+const [start, setStart] = useState<Temporal.PlainDateTime | null>(null);
 
 <Field.Group>
-	<Label.Root htmlFor={id}>Meeting starts</Label.Root>
-	<Field.Root id={id}>
-		<Field.DateTimeInput value={start} onValueChange={setStart} />
-	</Field.Root>
+  <Label.Root htmlFor={id}>Meeting starts</Label.Root>
+  <Field.Root id={id}>
+    <Field.DateTimeInput value={start} onValueChange={setStart} />
+  </Field.Root>
 </Field.Group>
 ```
 

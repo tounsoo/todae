@@ -6,6 +6,24 @@ import { ComboboxSingle } from '../../../../components/demos/ComboboxDemo';
 
 `presentation`의 기본값은 `'auto'`이며, [useSheetPresentation](/utilities/use-sheet-presentation)을 통해 coarse 포인터나 좁은 뷰포트에서 시트를 고릅니다. 고정하려면 `popover`나 `sheet`를 강제하세요. 아래 데모는 `popover`를 강제합니다. `dialog`는 [Command palette](/recipes/command-palette)처럼 입력과 목록을 `Dialog`에 둡니다. 어느 getter가 어느 파트에 가는지는 [조합](/composition)에 나와 있습니다.
 
+```tsx
+const cb = useCombobox({ options, presentation: 'popover' });
+
+<Field.Group>
+  <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
+  <Field.Root {...cb.getAnchorProps()}>
+    <Field.TextInput {...cb.getInputProps()} />
+  </Field.Root>
+</Field.Group>
+<Popover.Root {...cb.getPopoverProps()}>
+  <OptionList.Root {...cb.getListboxProps()}>
+    {cb.items.map((item) => (
+      <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+    ))}
+  </OptionList.Root>
+</Popover.Root>
+```
+
 <Example>
   <ComboboxSingle />
 </Example>
