@@ -93,6 +93,62 @@ describe('token consistency across component styles', () => {
     }
   });
 
+  // revealRing finds a ring on the focused element or an ancestor by itself.
+  // A ring drawn on any other element must be marked data-todae-focus-ring
+  // where the component renders it; revealRing.browser.test.tsx checks each.
+  it('marks every focus ring drawn off the focused element and its ancestors', () => {
+    /** The compound selector a complex selector styles: what follows its last combinator. */
+    const subject = (selector: string) => {
+      let depth = 0;
+      let start = 0;
+      for (const [i, c] of [...selector].entries()) {
+        if (c === '(' || c === '[') depth++;
+        else if (c === ')' || c === ']') depth--;
+        else if (depth === 0 && /[\s>+~]/.test(c)) start = i + 1;
+      }
+      return selector.slice(start);
+    };
+    const splitList = (list: string) => {
+      const parts: string[] = [];
+      let depth = 0;
+      let start = 0;
+      for (const [i, c] of [...list].entries()) {
+        if (c === '(' || c === '[') depth++;
+        else if (c === ')' || c === ']') depth--;
+        else if (c === ',' && depth === 0) {
+          parts.push(list.slice(start, i));
+          start = i + 1;
+        }
+      }
+      return [...parts, list.slice(start)].map((part) => part.trim().replace(/\s+/g, ' '));
+    };
+    const offElement: Record<string, string[]> = {};
+    for (const [name, css] of Object.entries(sheets)) {
+      for (const [, list = '', body = ''] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        if (!/\boutline:\s*(?!none\b)/.test(body)) continue;
+        for (const selector of splitList(list)) {
+          if (selector.includes(':focus') && !subject(selector).includes(':focus')) (offElement[name] ??= []).push(selector);
+        }
+      }
+    }
+    expect(offElement).toEqual({
+      selection: ['.input:focus-visible + .indicator'],
+      ColorPicker: ['.area:has(.axis:focus-visible) > .thumb'],
+      Tree: ['.item:focus-visible > .label'],
+      ChipList: ['.more:focus-visible [data-overflow]'],
+    });
+    const renderedIn: Record<string, string> = {
+      selection: 'SelectionControl',
+      ColorPicker: 'ColorPicker',
+      Tree: 'Tree',
+      ChipList: 'ChipList',
+    };
+    for (const [name, file] of Object.entries(renderedIn)) {
+      const source = readFileSync(join(componentsDir, `${file}.tsx`), 'utf8');
+      expect({ name, marked: source.includes('data-todae-focus-ring=""') }).toEqual({ name, marked: true });
+    }
+  });
+
   it('colors every focus ring token from focus.ring.color', () => {
     const generated = JSON.parse(readFileSync(join(import.meta.dirname, '../../tokens/tokens.generated.json'), 'utf8')) as {
       tokens: { path: string; ref: string | null }[];

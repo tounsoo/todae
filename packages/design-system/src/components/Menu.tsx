@@ -27,6 +27,7 @@ import { composeHandlers, cx, useComposedRefs } from './props';
 import popoverStyles from './Popover.module.css';
 import styles from './Menu.module.css';
 import { ToolbarContext, useToolbar } from './toolbarContext';
+import { focusWithoutScroll } from './revealRing';
 
 /** Why the menu opened or closed. `select` is an item choice; `tab` is focus leaving with Tab. */
 export type MenuOpenChangeReason = PopoverCloseReason | 'select' | 'tab';
@@ -415,7 +416,7 @@ function useItem(
     // other item stays highlighted for Enter and the arrow keys keep their place.
     onPointerMove: composeHandlers(onPointerMove, (event: PointerEvent<HTMLDivElement>) => {
       if (event.pointerType === 'touch') return;
-      if (document.activeElement !== event.currentTarget) event.currentTarget.focus({ preventScroll: true });
+      if (document.activeElement !== event.currentTarget) focusWithoutScroll(event.currentTarget);
     }),
   };
 }

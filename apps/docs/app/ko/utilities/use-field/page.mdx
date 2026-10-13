@@ -53,7 +53,7 @@ const captionId = useId();
 
 **직접 제공할 것:** 컨트롤이 무엇이고 무엇을 하는지. 훅은 role을 설정하지 않으므로 `role`, 그리고 `tabIndex`, 키보드 처리, `slider`라면 `aria-valuenow`, `aria-valuemin`, `aria-valuemax` 같은 role의 상태를 주세요. 이름은 `Field.Root`의 `aria-labelledby`나 `aria-label`로 주세요. `field.disabled`가 true인 동안에는 탭 정지를 빼고 키를 무시하세요.
 
-**주의할 점:** `getControlProps()` 뒤에 펼친 `aria-describedby`나 `ref`는 연결된 값을 대체합니다. 합쳐지도록 `getControlProps(props)`로 넘기세요. `{ native: false }`가 설정하는 `aria-disabled`는 포커스나 키를 막지 않습니다. `getControlProps()`를 부르는 컨트롤은 모두 같은 `id`를 받으므로, `Field.Root` 하나에 컨트롤 하나만 쓰세요.
+**주의할 점:** `getControlProps()` 뒤에 펼친 `aria-describedby`, `name`, `ref`는 필드가 모르는 채로 연결된 값을 대체합니다. 대신 `getControlProps(props)`로 넘기세요. `{ native: false }`가 설정하는 `aria-disabled`는 포커스나 키를 막지 않습니다. `getControlProps()`를 부르는 컨트롤은 모두 같은 `id`를 받으므로, `Field.Root` 하나에 컨트롤 하나만 쓰세요.
 
 ## 언제 쓰나요
 

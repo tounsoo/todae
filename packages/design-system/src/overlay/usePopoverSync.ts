@@ -1,4 +1,5 @@
 import { useLayoutEffect, type RefObject } from 'react';
+import { focusWithoutScroll } from '../components/revealRing';
 
 export function isPopoverOpen(el: HTMLElement): boolean {
   return el.matches(':popover-open') || el.hasAttribute('data-popover-open');
@@ -40,6 +41,6 @@ export function reshowHeldInside(layer: HTMLElement): void {
     el.showPopover();
   }
   if (active instanceof HTMLElement && active !== doc.activeElement && layer.contains(active)) {
-    active.focus({ preventScroll: true });
+    focusWithoutScroll(active);
   }
 }

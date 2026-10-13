@@ -1,6 +1,7 @@
-import { useRef, type ComponentPropsWithoutRef, type CSSProperties, type ReactNode } from 'react';
+import { useRef, type ComponentPropsWithoutRef, type CSSProperties, type FocusEvent, type ReactNode } from 'react';
 import { usePopoverSync } from '../overlay/usePopoverSync';
-import { useComposedRefs } from './props';
+import { composeHandlers, useComposedRefs } from './props';
+import { revealRing } from './revealRing';
 import type { PopoverWire } from './Popover.wire';
 import { cx } from './cx';
 import styles from './Popover.module.css';
@@ -52,6 +53,7 @@ function PopoverRoot({
   style,
   onPointerDown,
   onClick,
+  onFocus,
   children,
   className,
   role,
@@ -75,6 +77,7 @@ function PopoverRoot({
       style={style}
       onPointerDown={onPointerDown}
       onClick={onClick}
+      onFocus={composeHandlers(onFocus, (event: FocusEvent<HTMLDivElement>) => revealRing(event.currentTarget, event.target))}
       aria-label={role ? ariaLabel : undefined}
       aria-labelledby={role ? ariaLabelledby : undefined}
     >

@@ -22,6 +22,7 @@ import { useFocusRestore } from '../overlay/useFocusRestore';
 import { useInitialFocus } from '../overlay/useInitialFocus';
 import { useModalDialog } from '../overlay/useModalDialog';
 import { composeHandlers, cx, useComposedRefs } from './props';
+import { revealRing } from './revealRing';
 import styles from './Dialog.module.css';
 import { ToolbarContext } from './toolbarContext';
 
@@ -167,9 +168,11 @@ export function DialogShellRoot({
   onPointerDown,
   onClick,
   onSubmit,
+  onFocus,
   ...props
 }: DialogRootProps & { shell: DialogShell }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [dialogNode, setDialogNode] = useState<HTMLDialogElement | null>(null);
   const pointerOnDialog = useRef(false);
   const [open, onOpenChange] = useControlledValue<boolean, [reason: DialogCloseReason]>(
@@ -229,6 +232,11 @@ export function DialogShellRoot({
           onSubmit?.(event);
           closeOnFormSubmit(event);
         }}
+        // On the dialog, not the panel, so the consumer's onFocus runs first
+        // and can skip the reveal with preventDefault().
+        onFocus={composeHandlers(onFocus, (event) => {
+          if (panelRef.current) revealRing(panelRef.current, event.target);
+        })}
         onClick={composeHandlers(onClick, (event) => {
           if (
             dismissOnBackdrop &&
@@ -239,7 +247,11 @@ export function DialogShellRoot({
           }
         })}
       >
-        <div className={shell.panelClassName} role="document">
+        <div
+          className={shell.panelClassName}
+          role="document"
+          ref={panelRef}
+        >
           <ToolbarContext.Provider value={null}>{children}</ToolbarContext.Provider>
         </div>
       </dialog>

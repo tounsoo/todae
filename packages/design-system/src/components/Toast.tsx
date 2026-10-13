@@ -30,6 +30,7 @@ import { useCloseGlyph } from './closeGlyph';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import type { Toaster, ToastRecord, ToastTone } from './toaster';
 import styles from './Toast.module.css';
+import { focusWithoutScroll } from './revealRing';
 
 export { matchesHotkey } from '../hooks/hotkey';
 
@@ -121,7 +122,7 @@ function isKeyboardFocus(el: Element): boolean {
 /** Focuses `el` and says whether it took focus: an inert or hidden one does not. */
 function tryFocus(el: HTMLElement | null | undefined): boolean {
   if (!el?.isConnected) return false;
-  el.focus({ preventScroll: true });
+  focusWithoutScroll(el);
   return el.ownerDocument.activeElement === el;
 }
 
@@ -134,7 +135,7 @@ function keepingFocus(el: HTMLElement, change: () => void): void {
   const active = el.ownerDocument.activeElement;
   const focused = active instanceof HTMLElement && el.contains(active) ? active : null;
   change();
-  if (focused && el.isConnected) focused.focus({ preventScroll: true });
+  if (focused && el.isConnected) focusWithoutScroll(focused);
 }
 
 /** Runs the consumer's handler, then the region's bookkeeping, which has no default to prevent. */

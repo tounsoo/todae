@@ -43,7 +43,8 @@ export type FieldControlWire = {
   'aria-describedby': string | undefined;
   'aria-label': string | undefined;
   'aria-labelledby': string | undefined;
-  'data-todae-field-control': '';
+  /** `name` when the control took the field's name, so a Field.ColorPicker beside it leaves the name to it. */
+  'data-todae-field-control': '' | 'name';
 };
 
 export type UseFieldResult = {
@@ -82,7 +83,7 @@ export function useFieldControl(counted: boolean): UseFieldResult {
   const ctx = useFieldContext();
   const { inputRef } = ctx;
   const setFocusTarget = useControlSetter(inputRef);
-  const setPresence = useControlPresence(ctx.store, ctx.name, counted);
+  const setPresence = useControlPresence(ctx.store, counted);
   const setControl = useCallback(
     (node: HTMLElement | null) => {
       setFocusTarget(node);
@@ -98,11 +99,12 @@ export function useFieldControl(counted: boolean): UseFieldResult {
     ): Omit<P, keyof FieldControlWire> & FieldControlWire => {
       const user = (props ?? {}) as P;
       const disabled = ctx.disabled || Boolean(user.disabled);
+      const name = native ? (user.name ?? ctx.name) : undefined;
       return {
         ...user,
         ref: composedRef(user.ref),
         id: ctx.inputId,
-        name: native ? (user.name ?? ctx.name) : undefined,
+        name,
         disabled: native ? disabled : undefined,
         // A control's own aria-disabled stays unless the Field disables it.
         'aria-disabled': !native && disabled ? true : user['aria-disabled'],
@@ -110,7 +112,7 @@ export function useFieldControl(counted: boolean): UseFieldResult {
         'aria-invalid': ctx.invalid ? true : user['aria-invalid'],
         'aria-describedby': mergeDescribedBy(ctx.describedBy, user['aria-describedby']),
         ...inputLabel(user, ctx),
-        'data-todae-field-control': '',
+        'data-todae-field-control': name !== undefined && name === ctx.name ? 'name' : '',
       } as Omit<P, keyof FieldControlWire> & FieldControlWire;
     },
     [composedRef, ctx],

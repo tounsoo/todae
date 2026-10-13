@@ -7,7 +7,7 @@ export type CountStore = {
   counters: number;
   /** Elements wired with useField's getControlProps, other than a Field.ColorPicker's or Field.DatePicker's, mounted in the field. */
   controls: number;
-  /** Of those, the ones whose name attribute is the field's name. */
+  /** Of those, the ones getControlProps gave the field's name. */
   named: number;
   /** Of those, date inputs, which hold a Field.DatePicker's value. */
   dates: number;
@@ -37,27 +37,22 @@ function notifyPresence(store: CountStore) {
 
 /**
  * A stable ref callback that counts the element it is attached to as a
- * control in the field, and as named when its name attribute is the field's
- * name. A Field.ColorPicker or Field.DatePicker beside a control gives up the field's id and
- * description, and beside a named one the field's name, so only one element
- * takes each. A date input is also counted in `dates`, so a Field.DatePicker
- * beside one shows no date text. The count follows the element and its name after each commit,
- * so a control that is not rendered, or a component that only reads
- * useField, does not count.
+ * control in the field, and as named when getControlProps gave it the field's
+ * name. A Field.ColorPicker or Field.DatePicker beside a control gives up the
+ * field's id and description, and beside a named one the field's name, so only
+ * one element takes each. A date input is also counted in `dates`, so a
+ * Field.DatePicker beside one shows no date text. The count follows the
+ * element after each commit, so a control that is not rendered, or a component
+ * that only reads useField, does not count.
  */
-export function useControlPresence(
-  store: CountStore,
-  fieldName: string | undefined,
-  counted: boolean,
-): (node: HTMLElement | null) => void {
+export function useControlPresence(store: CountStore, counted: boolean): (node: HTMLElement | null) => void {
   const node = useRef<HTMLElement | null>(null);
-  const name = useRef(fieldName);
   const own = useRef({ control: false, named: false, date: false });
   const sync = useCallback(() => {
     const el = counted ? node.current : null;
     const next = {
       control: el !== null,
-      named: el !== null && Boolean(name.current) && el.getAttribute('name') === name.current,
+      named: el?.getAttribute('data-todae-field-control') === 'name',
       date: el instanceof HTMLInputElement && el.type === 'date',
     };
     const prev = own.current;
@@ -68,11 +63,8 @@ export function useControlPresence(
     own.current = next;
     notifyPresence(store);
   }, [store, counted]);
-  // After each commit: the element's name can change, from its own name prop or the Root's.
-  useLayoutEffect(() => {
-    name.current = fieldName;
-    sync();
-  });
+  // After each commit: whether the element took the field's name can change.
+  useLayoutEffect(() => sync());
   return useCallback(
     (el: HTMLElement | null) => {
       node.current = el;

@@ -122,6 +122,8 @@
     margin: calc(-1 * var(--_ring-room));
     padding: var(--_ring-room);
     overflow: auto;
+    /* Room for a ring past the focused box when it scrolls into view. */
+    scroll-padding: var(--_ring-room);
     overscroll-behavior: contain;
     touch-action: pan-y;
   }

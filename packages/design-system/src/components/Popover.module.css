@@ -8,6 +8,9 @@
     width: max-content;
     max-height: var(--todae-popover-max-height);
     overflow: auto;
+    /* Room for a focus ring past the focused box when it scrolls into view,
+       as ScrollArea has. */
+    scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
     background: var(--todae-popover-bg);
     color: var(--todae-popover-fg);
     border: var(--todae-popover-border-width) solid var(--todae-popover-border);

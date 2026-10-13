@@ -44,6 +44,9 @@
     max-height: calc(100vh - (2 * var(--todae-dialog-padding-y)));
     max-height: calc(100dvh - (2 * var(--todae-dialog-padding-y)));
     overflow: auto;
+    /* Room for a focus ring past the focused box when it scrolls into view,
+       as ScrollArea has. */
+    scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
     display: flex;
     flex-direction: column;
     gap: var(--todae-dialog-gap);

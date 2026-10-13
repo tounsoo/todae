@@ -113,8 +113,8 @@ const BESIDE_DATE = 4;
 
 /**
  * Which controls a picker shares its field with, as bits: BESIDE_CONTROL for
- * any control wired with useField, BESIDE_NAMED when one carries the field's
- * name, BESIDE_DATE when one is a date input. The server cannot know of one yet, so it reads 0
+ * any control wired with useField, BESIDE_NAMED when useField gave one the
+ * field's name, BESIDE_DATE when one is a date input. The server cannot know of one yet, so it reads 0
  * until hydration.
  */
 function usePickerPresence(store: CountStore) {
@@ -131,7 +131,7 @@ function usePickerPresence(store: CountStore) {
 /**
  * A picker's control props. Alone, it is the field's control. Beside another
  * control, that control takes the field's id and description, and the field's
- * name too when its name attribute is that name. The picker keeps its own
+ * name too when useField gave it that name. The picker keeps its own
  * `name`, else the field's name when no other control has it, and `disabled`
  * and `aria-invalid`, and is named `label`.
  */
@@ -818,8 +818,8 @@ function ColorPicker({
   const field = useFieldControl(false);
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
-  // Another control in the field takes its id and description, and one whose
-  // name attribute is the field's name, that name.
+  // Another control in the field takes its id and description, and one that
+  // useField gave the field's name, that name.
   const presence = usePickerPresence(store);
   const { name, ...control } = pickerControl(presence, field, props, strings.colorPicker);
   const [open, setOpen] = useControlledValue<boolean, [FieldColorPickerCloseReason]>(
