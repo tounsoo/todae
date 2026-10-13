@@ -55,7 +55,8 @@
         { "$ref": "./components/grid.json" },
         { "$ref": "./components/pagination.json" },
         { "$ref": "./components/scroll.json" },
-        { "$ref": "./components/tree.json" }
+        { "$ref": "./components/tree.json" },
+        { "$ref": "./components/picker.json" }
       ],
       "$extensions": {
         "dev.todae": {
