@@ -19,6 +19,7 @@ import { useDomId } from '../components/domId';
 import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from '../overlay/anchorName';
 import { useControlledValue } from './useControlledState';
 import { eventInside } from '../overlay/eventInside';
+import { focusWithoutScroll } from '../components/revealRing';
 
 export type { PopoverWire };
 
@@ -160,7 +161,7 @@ export function usePopoverInternal(
         outsideRestore.current = null;
         if (openRef.current) return;
         const active = document.activeElement;
-        if (active == null || active === document.body) trigger?.focus({ preventScroll: true });
+        if ((active == null || active === document.body) && trigger) focusWithoutScroll(trigger);
       };
       outsideRestore.current = () => {
         document.removeEventListener('pointerup', finish, true);

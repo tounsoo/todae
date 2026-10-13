@@ -13,6 +13,7 @@ import { cx } from './cx';
 import { useComposedRefs } from './props';
 import styles from './Toolbar.module.css';
 import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from './toolbarContext';
+import { focusWithoutScroll } from './revealRing';
 
 export type { ToolbarOrientation };
 
@@ -200,7 +201,7 @@ function Root({
     leaves.current += 1;
     left.current.set(from, leaves.current);
     const edge = event.shiftKey ? run[0]! : run[run.length - 1]!;
-    if (edge !== from) edge.focus({ preventScroll: true });
+    if (edge !== from) focusWithoutScroll(edge);
   };
 
   return (

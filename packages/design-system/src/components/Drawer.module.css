@@ -47,6 +47,9 @@
     inline-size: min(100%, var(--todae-drawer-size));
     block-size: 100%;
     overflow: auto;
+    /* Room for a focus ring past the focused box when it scrolls into view,
+       as ScrollArea has. */
+    scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
     display: flex;
     flex-direction: column;
     gap: var(--todae-drawer-gap);

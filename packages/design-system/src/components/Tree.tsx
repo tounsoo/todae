@@ -252,6 +252,7 @@ function Label({ children, className, onClick, ...props }: TreeLabelProps) {
       {...props}
       id={item.labelId}
       className={cx(styles.label, className)}
+      data-todae-focus-ring=""
       // A click selects the item and opens or closes a branch.
       onClick={composeHandlers(onClick, () => {
         if (!item.disabled && tree.selectable) tree.select(item.value);
