@@ -191,6 +191,17 @@ describe('useClipboard', () => {
     expect(result.status).toBe('idle');
   });
 
+  it('keeps the resetAfter a copy settled with when the option changes', async () => {
+    const { rerender } = render(<Probe resetAfter={1000} />);
+    await act(async () => {
+      await result.copy('a');
+    });
+    await act(() => vi.advanceTimersByTimeAsync(600));
+    rerender(<Probe resetAfter={5000} />);
+    await act(() => vi.advanceTimersByTimeAsync(400));
+    expect(result.status).toBe('idle');
+  });
+
   it('restarts the timer for each copy, and never resets past the longest setTimeout delay', async () => {
     const { rerender } = render(<Probe />);
     await act(async () => {

@@ -2,7 +2,7 @@ import { CopyCommand } from '../../../../components/demos/ClipboardDemo';
 
 # useClipboard
 
-`useClipboard(options?)`는 `text`를 클립보드에 쓰는 `copy(text)`와 가장 최근 복사의 결과인 `status`를 반환합니다. 코드 블록, 링크, 메시지의 복사 버튼처럼 복사 버튼에 쓰세요.
+`useClipboard(options?)`는 `text`를 클립보드에 쓰는 `copy(text)`, 가장 최근 복사의 결과인 `status`, 그 결과가 가리키는 텍스트인 `text`, 그리고 `reset()`을 반환합니다. 코드 블록, 링크, 메시지의 복사 버튼처럼 복사 버튼에 쓰세요.
 
 ```tsx
 const { copy, status } = useClipboard();
@@ -15,7 +15,7 @@ const { copy, status } = useClipboard();
   <CopyCommand />
 </Example>
 
-`copy`는 `navigator.clipboard.writeText`를 호출하고, 텍스트가 복사되면 `true`로, 복사되지 않으면 `false`로 resolve됩니다. 가장 최근 복사가 끝나면 `status`는 `'copied'` 또는 `'failed'`가 되고, `text`는 그 복사가 복사한 텍스트가 됩니다. 둘 다 `resetAfter`가 지나거나 `reset()`을 호출하면 `'idle'`과 `null`로 돌아갑니다. `resetAfter`의 기본값은 2000밀리초이고, `resetAfter: false`를 전달하면 다음 복사나 `reset()`까지 유지합니다. 복사가 진행 중인 동안에는 이전 결과가 그대로 남습니다. 복사가 겹치면 가장 최근 복사만 `status`를 정하고 알려집니다.
+`copy`는 `navigator.clipboard.writeText`를 호출하고, 텍스트가 복사되면 `true`로, 복사되지 않으면 `false`로 resolve됩니다. 가장 최근 복사가 끝나면 `status`는 `'copied'` 또는 `'failed'`가 되고, `text`는 그 복사에 넘긴 텍스트가 됩니다. 둘 다 `resetAfter`가 지나거나 `reset()`을 호출하면 `'idle'`과 `null`로 돌아갑니다. `resetAfter`의 기본값은 2000밀리초이고, `resetAfter: false`를 전달하면 다음 복사나 `reset()`까지 유지합니다. 복사가 진행 중인 동안에는 이전 결과가 그대로 남습니다. 복사가 겹치면 가장 최근 복사만 `status`를 정하고 알려집니다.
 
 `execCommand` 대체 경로는 없습니다. [보안 컨텍스트](https://developer.mozilla.org/docs/Web/Security/Secure_Contexts)가 아닌 페이지처럼 Clipboard API가 없거나 거부되는 곳에서는 복사가 실패합니다.
 
