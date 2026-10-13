@@ -241,7 +241,7 @@ The same composer at compact, comfortable, and spacious.
 
 Dates and times have their own parts: `Field.DateInput`, `Field.TimeInput` and `Field.DateTimeInput`, native `date`, `time` and `datetime-local` inputs with the browser's own picker and locale format. Their `value`, `min` and `max` are a `Temporal.PlainDate`, `Temporal.PlainTime` or `Temporal.PlainDateTime`, and `onValueChange` gets the same type, or `null` while the input is empty or incomplete. These types carry no time zone, so the date is the day the user picked. `step` is the native one: days for a date, seconds for a time. All of these inputs are styled from the field tokens with figures lined up.
 
-Todae ships no Temporal polyfill. The date and time parts call `Temporal` when the user changes the input, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)).
+Todae ships no Temporal polyfill. The date and time parts call `Temporal` when the user changes the input, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)). Their types need TypeScript 6 or later, which declares `Temporal`.
 
 <Example block>
   <FieldDateTime />

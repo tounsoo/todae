@@ -712,7 +712,7 @@
     },
     "onValueChange": {
       "en": "Called with the new Temporal.PlainTime, or null while the input is empty or incomplete.",
-      "ko": "새 Temporal.PlainTime로, 입력이 비어 있거나 덜 끝났을 때는 null로 호출됩니다."
+      "ko": "새 Temporal.PlainTime으로, 입력이 비어 있거나 덜 끝났을 때는 null로 호출됩니다."
     },
     "min": {
       "en": "Earliest value the input accepts, written to the native min.",
@@ -738,7 +738,7 @@
     },
     "onValueChange": {
       "en": "Called with the new Temporal.PlainDateTime, or null while the input is empty or incomplete.",
-      "ko": "새 Temporal.PlainDateTime로, 입력이 비어 있거나 덜 끝났을 때는 null로 호출됩니다."
+      "ko": "새 Temporal.PlainDateTime으로, 입력이 비어 있거나 덜 끝났을 때는 null로 호출됩니다."
     },
     "min": {
       "en": "Earliest value the input accepts, written to the native min.",

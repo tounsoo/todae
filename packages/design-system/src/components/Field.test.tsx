@@ -286,7 +286,7 @@ describe('Field date and time inputs', () => {
     expect(onChange.mock.calls[0]![0].target).toBe(input);
   });
 
-  it('follows the Root and Fieldset for disabled and invalid', () => {
+  it('follows the Root for disabled and invalid', () => {
     render(
       <Field.Root aria-label="When" disabled invalid>
         <Field.DateInput value={null} onValueChange={() => undefined} />
@@ -297,14 +297,48 @@ describe('Field date and time inputs', () => {
     expect(input.getAttribute('aria-invalid')).toBe('true');
   });
 
-  it('renders on a server with no Temporal value to read', () => {
-    expect(
-      renderToString(
-        <Field.Root aria-label="When">
-          <Field.DateInput value={null} onValueChange={() => undefined} />
-        </Field.Root>,
-      ),
-    ).toContain('type="date"');
+  describe('without Temporal', () => {
+    const temporal = Object.getOwnPropertyDescriptor(globalThis, 'Temporal')!;
+    beforeEach(() => {
+      Reflect.deleteProperty(globalThis, 'Temporal');
+    });
+    afterEach(() => {
+      Object.defineProperty(globalThis, 'Temporal', temporal);
+    });
+
+    it('renders an empty input on a server', () => {
+      expect(
+        renderToString(
+          <Field.Root aria-label="When">
+            <Field.DateInput value={null} onValueChange={() => undefined} />
+          </Field.Root>,
+        ),
+      ).toContain('type="date"');
+    });
+
+    it('reports the missing Temporal on change instead of giving null', () => {
+      const onValueChange = vi.fn();
+      const errors: unknown[] = [];
+      const onError = (event: ErrorEvent) => {
+        errors.push(event.error);
+        event.preventDefault();
+      };
+      window.addEventListener('error', onError);
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        const { container } = render(
+          <Field.Root aria-label="When">
+            <Field.DateInput value={null} onValueChange={onValueChange} />
+          </Field.Root>,
+        );
+        fireEvent.change(container.querySelector('input')!, { target: { value: '2026-10-07' } });
+      } finally {
+        window.removeEventListener('error', onError);
+        consoleError.mockRestore();
+      }
+      expect(onValueChange).not.toHaveBeenCalled();
+      expect(errors.some((error) => error instanceof ReferenceError)).toBe(true);
+    });
   });
 });
 

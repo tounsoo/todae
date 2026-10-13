@@ -1,3 +1,4 @@
+/// <reference lib="esnext.temporal" preserve="true" />
 import {
   useContext,
   useEffect,
@@ -354,9 +355,11 @@ function readTemporal<T>(kind: TemporalInputKind<T>, text: string): T | null {
   if (text === '') return null;
   try {
     return kind.parse(text);
-  } catch {
+  } catch (error) {
     // A string the browser accepts but Temporal does not, such as a year past 9999.
-    return null;
+    // Anything else, such as no Temporal at all, is the app's to fix, so it throws.
+    if (error instanceof RangeError) return null;
+    throw error;
   }
 }
 
