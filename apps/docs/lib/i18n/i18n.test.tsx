@@ -104,7 +104,8 @@ describe('docs locales', () => {
         expect(translation, `${locale}/${slug}`).toEqual(withPage(`en/${slug}`, () => shape(english)));
       }
     }
-  });
+    // Reads every English and translated page: its time grows with the docs.
+  }, 20_000);
 
   it('records which English each translated page was made from', () => {
     // The structure check above cannot see prose edits, so each translated page records a fingerprint

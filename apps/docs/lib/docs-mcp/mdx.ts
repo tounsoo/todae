@@ -20,7 +20,7 @@ export type WhenCopy = {
 const WHEN_TO_USE = 'When to use';
 const WHEN_NOT_TO_USE = 'When not to use';
 
-/** Names whose copy is only a `### Name` block on another page (same as Field parts). */
+/** Names whose copy is only a `### Name` block on another page. */
 const PART_PAGE: Record<string, string> = {
   ThemeProvider: 'tokens',
   DensityProvider: 'tokens',
