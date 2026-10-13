@@ -1,0 +1,44 @@
+import { FieldDate } from '../../../../components/demos/FieldDemo';
+
+# Field.DateInput
+
+`Field.DateInput` is a native `<input type="date">` inside a [Field](/field), with the browser's own date picker and locale format. Its `value`, `min` and `max` are a `Temporal.PlainDate`, and `onValueChange` gets a `Temporal.PlainDate`, or `null` while the input is empty or incomplete. A `PlainDate` has no time zone, so the value is the day the user picked. `step` is the native one, in days. Put `id` on `Field.Root`.
+
+```tsx
+const [date, setDate] = useState<Temporal.PlainDate | null>(null)
+
+<Field.Group>
+	<Label.Root htmlFor={id}>Start date</Label.Root>
+	<Field.Root id={id}>
+		<Field.DateInput value={date} onValueChange={setDate} />
+	</Field.Root>
+</Field.Group>
+```
+
+<Example block>
+  <FieldDate />
+</Example>
+
+## Temporal
+
+Todae ships no Temporal polyfill. `Field.DateInput` calls `Temporal` when the user changes the input, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)). Todae's types need TypeScript 6 or later, which declares `Temporal`.
+
+## Accessible composition
+
+**Todae handles:** The input takes `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). The browser handles the keyboard and the picker.
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. `onChange` or `onValueChange`; without either, the input is read-only.
+
+**Watch for:** While the user is still filling in the input, `onValueChange` gets `null`, so don't treat `null` as a cleared field until they leave it.
+
+## When to use
+
+### Field.DateInput
+
+**When:** A calendar date, such as a start date or a birthday, with the browser's date picker.
+
+**When not:** A date with a time of day → `Field.DateTimeInput`. A partial date, such as a month and year only → `Field.TextInput`. A calendar grid that stays open on the page is an app composition built around this input.
+
+## Props
+
+<PropsTable name="Field.DateInput" />

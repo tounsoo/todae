@@ -1,15 +1,22 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SiteNav } from './SiteNav';
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/chip-list' }));
+const path = vi.hoisted(() => ({ current: '/chip-list' }));
+vi.mock('next/navigation', () => ({ usePathname: () => path.current }));
 
 describe('SiteNav', () => {
+  afterEach(() => {
+    cleanup();
+    path.current = '/chip-list';
+  });
+
   it('groups the same links under Site', () => {
     render(<SiteNav locale="en" />);
     const nav = screen.getByRole('navigation', { name: 'Site' });
-    expect(screen.getAllByRole('list')).toHaveLength(5);
+    // Five sections, and Field's child pages.
+    expect(screen.getAllByRole('list')).toHaveLength(6);
     for (const name of ['Foundations', 'Components', 'Utilities', 'Recipes', 'Tools']) {
       expect(screen.getByRole('list', { name })).toBeTruthy();
       expect(screen.getByText(name).tagName).toBe('SPAN');
@@ -38,5 +45,43 @@ describe('SiteNav', () => {
     for (const list of container.querySelectorAll('ul[aria-labelledby]')) {
       expect(container.querySelector(`#${list.getAttribute('aria-labelledby')}`)).not.toBeNull();
     }
+  });
+
+  it('nests child pages under their parent link, open on the parent or a child', () => {
+    const fieldPages = () => {
+      const field = screen.getByRole('link', { name: 'Field' });
+      const details = field.parentElement?.querySelector('details');
+      return { field, details, links: [...(details?.querySelectorAll('ul a') ?? [])] };
+    };
+    render(<SiteNav locale="en" />);
+    const closed = fieldPages();
+    expect(closed.field.getAttribute('href')).toBe('/field');
+    expect(closed.details?.open).toBe(false);
+    expect(closed.details?.querySelector('summary')?.textContent).toBe('Field pages');
+    expect(closed.links.map((link) => link.getAttribute('href'))).toEqual([
+      '/field/chip-input',
+      '/field/color-input',
+      '/field/date-input',
+      '/field/date-time-input',
+      '/field/select',
+      '/field/textarea',
+      '/field/text-input',
+      '/field/time-input',
+    ]);
+    cleanup();
+
+    path.current = '/field';
+    render(<SiteNav locale="en" />);
+    expect(fieldPages().details?.open).toBe(true);
+    expect(fieldPages().field.getAttribute('aria-current')).toBe('page');
+    cleanup();
+
+    path.current = '/field/select';
+    render(<SiteNav locale="en" />);
+    const open = fieldPages();
+    expect(open.details?.open).toBe(true);
+    expect(open.field.getAttribute('aria-current')).toBeNull();
+    const current = screen.getAllByRole('link').filter((link) => link.getAttribute('aria-current') === 'page');
+    expect(current.map((link) => link.getAttribute('href'))).toEqual(['/field/select']);
   });
 });

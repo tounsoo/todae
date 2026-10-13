@@ -548,35 +548,56 @@ export function FieldColorAccent() {
   );
 }
 
-export function FieldDateTime() {
-  const quantityId = useId();
-  const dateId = useId();
-  const timeId = useId();
+export function FieldNumber() {
+  const id = useId();
   const [quantity, setQuantity] = useState('2');
-  // Starts empty, so the server render needs no Temporal.
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Seats</Label.Root>
+      <Field.Root id={id}>
+        <Field.TextInput type="number" min={1} max={20} value={quantity} onValueChange={setQuantity} onChange={() => undefined} />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+// The date and time demos start empty, so the server render needs no Temporal.
+export function FieldDate() {
+  const id = useId();
   const [date, setDate] = useState<Temporal.PlainDate | null>(null);
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Start date</Label.Root>
+      <Field.Root id={id}>
+        <Field.DateInput value={date} onValueChange={setDate} />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+export function FieldTime() {
+  const id = useId();
   const [time, setTime] = useState<Temporal.PlainTime | null>(null);
   return (
-    <>
-      <Field.Group>
-        <Label.Root htmlFor={quantityId}>Seats</Label.Root>
-        <Field.Root id={quantityId}>
-          <Field.TextInput type="number" min={1} max={20} value={quantity} onValueChange={setQuantity} onChange={() => undefined} />
-        </Field.Root>
-      </Field.Group>
-      <Field.Group>
-        <Label.Root htmlFor={dateId}>Start date</Label.Root>
-        <Field.Root id={dateId}>
-          <Field.DateInput value={date} onValueChange={setDate} />
-        </Field.Root>
-      </Field.Group>
-      <Field.Group>
-        <Label.Root htmlFor={timeId}>Start time</Label.Root>
-        <Field.Root id={timeId}>
-          <Field.TimeInput step={900} value={time} onValueChange={setTime} />
-        </Field.Root>
-      </Field.Group>
-    </>
+    <Field.Group>
+      <Label.Root htmlFor={id}>Start time</Label.Root>
+      <Field.Root id={id}>
+        <Field.TimeInput step={900} value={time} onValueChange={setTime} />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+export function FieldDateTime() {
+  const id = useId();
+  const [start, setStart] = useState<Temporal.PlainDateTime | null>(null);
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Meeting starts</Label.Root>
+      <Field.Root id={id}>
+        <Field.DateTimeInput value={start} onValueChange={setStart} />
+      </Field.Root>
+    </Field.Group>
   );
 }
 

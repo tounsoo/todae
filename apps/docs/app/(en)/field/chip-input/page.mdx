@@ -1,0 +1,88 @@
+import {
+  ChipInputCommitKeys,
+  ChipInputControlled,
+  ChipInputLabel,
+  ChipInputMaxRows,
+  ChipInputStates,
+} from '../../../../components/demos/FieldDemo';
+
+# Field.ChipInput
+
+Controlled chips plus input, inside a [Field](/field). The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow. Chips inside a ChipInput are one field line tall, the same as the input, at every density. `chipLayout="row"` puts them on a full-width line above the input, inside the ChipInput. Icon and Affix sit on the first line. With no chips it is a one-line field the same height as `Field.TextInput`. In a row, `maxRows` counts chip lines only and clips like the inline flow. Label it with `Label.Root htmlFor` or Root's `aria-label`.
+
+```tsx
+<Field.Root aria-label="Tags">
+	<Field.ChipInput
+		chips={chips}
+		inputValue={inputValue}
+		onInputValueChange={setInputValue}
+		onCommit={(value) => {
+			setChips((prev) => (prev.includes(value) ? prev : [...prev, value]));
+			setInputValue('');
+		}}
+		onChipRemove={(index) => setChips((prev) => prev.filter((_, i) => i !== index))}
+	/>
+</Field.Root>
+```
+
+<Example block>
+  <ChipInputControlled />
+</Example>
+
+Optional [useChipField](/utilities/use-chip-field) holds chips and input; spread its `getChipInputProps()` onto `Field.ChipInput`.
+
+Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key roving.
+
+## Commit keys
+
+`commitKeys={['Enter', ',']}`. Unknown keys are dropped.
+
+<Example block>
+  <ChipInputCommitKeys />
+</Example>
+
+## Rows
+
+When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. A later chip that does not fit at its full width moves into `+N`. The first chip truncates with an ellipsis when it, `+N`, and the input cannot share the row; its accessible name stays the full label.
+
+`maxRows={1}` and `{2}` under compact and comfortable.
+
+<Example block>
+  <ChipInputMaxRows />
+</Example>
+
+## States
+
+Disabled and invalid live on `Field.Root`.
+
+<Example block>
+  <ChipInputStates />
+</Example>
+
+<Example block>
+  <ChipInputLabel />
+</Example>
+
+## Icons
+
+Chip remove buttons show the `close` glyph unless you pass `chipRemoveIcon`, as on [Chip](/chip).
+
+## Accessible composition
+
+**Todae handles:** The input takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset); the chips follow the input's `disabled`. Each remove button is named after its chip, and focus returns to the input after a remove.
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` on the Root. Chip strings in the product's language, through [StringsProvider](/utilities/strings-provider) or `chipRemoveLabel` and `overflowLabel`.
+
+**Watch for:** Adding `'Tab'` to `commitKeys` makes Tab commit typed text instead of moving focus.
+
+## When to use
+
+### Field.ChipInput
+
+**When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`, or spreads `getChipInputProps()` from [useChipField](/utilities/use-chip-field) to hold that state.
+
+**When not:** Free-form single string → TextInput. Options from a list → [Combobox recipe](/recipes/combobox) + OptionList.
+
+## Props
+
+<PropsTable name="Field.ChipInput" />

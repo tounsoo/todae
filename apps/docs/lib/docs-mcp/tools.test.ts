@@ -245,7 +245,7 @@ describe('docs mcp tools', () => {
     expect(whenToUse('Dialog')).not.toHaveProperty('scope');
     expect(whenToUse('Field.Textarea')).toMatchObject({
       status: 'present',
-      docsUrl: `${DOCS_ORIGIN}/field`,
+      docsUrl: `${DOCS_ORIGIN}/field/textarea`,
       section: 'When to use',
       whenToUse:
         'Multi-line free text such as notes, messages or descriptions. `rows` sets the starting height, and `autoGrow` grows it up to `maxRows` with CSS only.',
@@ -256,7 +256,7 @@ describe('docs mcp tools', () => {
     expect(whenToUse('Field.Counter')).toMatchObject({
       status: 'present',
       whenToUse:
-        'Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise.',
+        'Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise or on a number input.',
       whenNotToUse:
         'For a hard limit with no visible count, set `maxLength` alone, and skip it on short fixed-length values like codes or PINs.',
     });

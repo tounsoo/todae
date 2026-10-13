@@ -1,6 +1,7 @@
 /**
  * The docs sections, in order. The sidebar and the home page both list these.
  * Foundations reads as a path, so it keeps its own order; every other section is alphabetical by name.
+ * A link's optional third element lists its child pages, which the sidebar nests under it.
  */
 export const SITE_GROUPS = [
   {
@@ -34,7 +35,20 @@ export const SITE_GROUPS = [
       ['/disclosure', 'Disclosure'],
       ['/drawer', 'Drawer'],
       ['/errormessage', 'ErrorMessage'],
-      ['/field', 'Field'],
+      [
+        '/field',
+        'Field',
+        [
+          ['/field/chip-input', 'ChipInput'],
+          ['/field/color-input', 'ColorInput'],
+          ['/field/date-input', 'DateInput'],
+          ['/field/date-time-input', 'DateTimeInput'],
+          ['/field/select', 'Select'],
+          ['/field/textarea', 'Textarea'],
+          ['/field/text-input', 'TextInput'],
+          ['/field/time-input', 'TimeInput'],
+        ],
+      ],
       ['/fieldset', 'Fieldset'],
       ['/grid', 'Grid'],
       ['/label', 'Label'],
@@ -101,3 +115,19 @@ export const SITE_GROUPS = [
     links: [['/playground', 'Playground']],
   },
 ] as const;
+
+type SiteGroupLink = (typeof SITE_GROUPS)[number]['links'][number];
+type ParentLink = Extract<SiteGroupLink, readonly [string, string, unknown]>;
+
+/** Every href in the sidebar, child pages included. */
+export type SiteHref = SiteGroupLink[0] | ParentLink[2][number][0];
+
+/** A link's child pages, or none. */
+export function childLinks(link: SiteGroupLink): readonly (readonly [SiteHref, string])[] {
+  return link.length === 3 ? link[2] : [];
+}
+
+/** A group's links in sidebar order, each followed by its child pages. */
+export function flatLinks(links: readonly SiteGroupLink[]): (readonly [SiteHref, string])[] {
+  return links.flatMap((link) => [[link[0], link[1]] as const, ...childLinks(link)]);
+}

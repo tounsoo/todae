@@ -1,10 +1,5 @@
 import { ErrorMessageSibling } from '../../../components/demos/ErrorMessageDemo';
 import {
-  ChipInputCommitKeys,
-  ChipInputControlled,
-  ChipInputLabel,
-  ChipInputMaxRows,
-  ChipInputStates,
   CounterBefore,
   CounterDefault,
   CounterInline,
@@ -13,22 +8,12 @@ import {
   CounterPlain,
   CounterTextarea,
   FieldAdornments,
-  FieldColorAccent,
-  FieldDateTime,
   FieldLabelAdornments,
   FieldLabelStates,
-  FieldSelectSize,
   FieldStates,
   RowChipInput,
   RowComposer,
   RowComposerDensity,
-  TextareaAutoGrow,
-  TextareaDark,
-  TextareaDensity,
-  TextareaMaxRows,
-  TextareaMessages,
-  TextareaResize,
-  TextareaRows,
 } from '../../../components/demos/FieldDemo';
 
 # Field
@@ -38,6 +23,19 @@ Shared chrome. `Field.Root` is the compound scope. The bordered shell is Root. V
 <Example block>
   <FieldStates />
 </Example>
+
+## Inputs
+
+Each input part has its own page:
+
+- [Field.TextInput](/field/text-input): a single line of text, or a native number.
+- [Field.Textarea](/field/textarea): multi-line text.
+- [Field.ChipInput](/field/chip-input): chips plus an input.
+- [Field.Select](/field/select): a native `<select>`.
+- [Field.ColorInput](/field/color-input): a native color input.
+- [Field.DateInput](/field/date-input): a native date input with a `Temporal.PlainDate` value.
+- [Field.TimeInput](/field/time-input): a native time input with a `Temporal.PlainTime` value.
+- [Field.DateTimeInput](/field/date-time-input): a native `datetime-local` input with a `Temporal.PlainDateTime` value.
 
 ## Label
 
@@ -91,50 +89,6 @@ const describedBy = invalid ? `${hintId} ${errorId}` : hintId
   <ErrorMessageSibling />
 </Example>
 
-## Textarea
-
-Multi-line text. Height is CSS only: `rows` sets the height and the drag floor, and `maxRows` sets the cap. `autoGrow` uses `field-sizing: content` where the browser has it, and grows with no cap when `maxRows` is omitted. Browsers without `field-sizing` stay at `rows` and scroll inside. Do not set an inline `height` when `autoGrow` is on; it overrides the growth. Padding sits on the textarea, inside the shell.
-
-<Example block>
-  <TextareaRows />
-</Example>
-
-`autoGrow` with `maxRows={6}`.
-
-<Example block>
-  <TextareaAutoGrow />
-</Example>
-
-`maxRows` without `rows` starts at `min(3, maxRows)`.
-
-<Example block>
-  <TextareaMaxRows />
-</Example>
-
-Drag-resize with `autoGrow` off stops at `rows` and at `maxRows`.
-
-<Example block>
-  <TextareaResize />
-</Example>
-
-Compact, comfortable, and spacious.
-
-<Example block>
-  <TextareaDensity />
-</Example>
-
-Dark appearance, for the native scrollbar.
-
-<Example block>
-  <TextareaDark />
-</Example>
-
-Label, description, error, invalid, and disabled.
-
-<Example block>
-  <TextareaMessages />
-</Example>
-
 ## Counter
 
 `Field.Counter` shows a live count for `Field.TextInput` or `Field.Textarea`. It takes its own row. Write it after the input so the server HTML includes the count. One counter per `Field.Root`. The input stays controlled; `defaultValue` is not read.
@@ -177,45 +131,7 @@ Without `maxLength` the count is just the number.
   <CounterPlain />
 </Example>
 
-With `maxLength`, the Counter also tells screen readers the limit and, from 20 characters left, how many remain. That text comes from the `characterLimit`, `charactersLeft` and `characterLimitReached` strings of [StringsProvider](/utilities/strings-provider), English unless you set them.
-
-## Chip input
-
-Controlled chips plus input. The field never appends chips. Parent `onCommit` decides. Adornments stay on `Field.Root`, outside the chip flow. Chips inside a ChipInput are one field line tall, the same as the input, at every density. `chipLayout="row"` puts them on a full-width line above the input, inside the ChipInput. Icon and Affix sit on the first line. With no chips it is a one-line field the same height as `Field.TextInput`. In a row, `maxRows` counts chip lines only and clips like the inline flow. Label it with `Label.Root htmlFor` or Root's `aria-label`.
-
-When `maxRows` is set, the flow clamps to that many token-derived rows from the first paint and hides chips until the first layout measure, so SSR does not unfold before `+N` fold. The visible window is the leading prefix; newest chips fold into `+N` and unmount from the live flow. A later chip that does not fit at its full width moves into `+N`. The first chip truncates with an ellipsis when it, `+N`, and the input cannot share the row; its accessible name stays the full label.
-
-Chip remove buttons show the `close` glyph unless you pass `chipRemoveIcon`, as on [Chip](/chip).
-
-Deferred this slice: built-in clear, paste-split, clickable `+N`, chip arrow-key roving.
-
-<Example block>
-  <ChipInputControlled />
-</Example>
-
-Optional [useChipField](/utilities/use-chip-field) holds chips and input; spread its `getChipInputProps()` onto `Field.ChipInput`.
-
-`commitKeys={['Enter', ',']}`. Unknown keys are dropped.
-
-<Example block>
-  <ChipInputCommitKeys />
-</Example>
-
-`maxRows={1}` and `{2}` under compact and comfortable.
-
-<Example block>
-  <ChipInputMaxRows />
-</Example>
-
-Disabled and invalid live on `Field.Root`.
-
-<Example block>
-  <ChipInputStates />
-</Example>
-
-<Example block>
-  <ChipInputLabel />
-</Example>
+With `maxLength`, except on a number input, the Counter also tells screen readers the limit and, from 20 characters left, how many remain. That text comes from the `characterLimit`, `charactersLeft` and `characterLimitReached` strings of [StringsProvider](/utilities/strings-provider), English unless you set them.
 
 ## Row
 
@@ -235,64 +151,16 @@ The same composer at compact, comfortable, and spacious.
   <RowChipInput />
 </Example>
 
-## Number, date and time
-
-`Field.TextInput` with `type="number"` is a native number input with the browser's spinner. Its `value` is the input's string, such as `"2"`, or an empty string while the input is incomplete.
-
-Dates and times have their own parts: `Field.DateInput`, `Field.TimeInput` and `Field.DateTimeInput`, native `date`, `time` and `datetime-local` inputs with the browser's own picker and locale format. Their `value`, `min` and `max` are a `Temporal.PlainDate`, `Temporal.PlainTime` or `Temporal.PlainDateTime`, and `onValueChange` gets the same type, or `null` while the input is empty or incomplete. These types carry no time zone, so the date is the day the user picked. `step` is the native one: days for a date, seconds for a time. All of these inputs are styled from the field tokens with figures lined up.
-
-Todae ships no Temporal polyfill. The date and time parts call `Temporal` when the user changes the input, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)). Their types need TypeScript 6 or later, which declares `Temporal`.
-
-<Example block>
-  <FieldDateTime />
-</Example>
-
-Stepper buttons and a calendar grid are app compositions; build them around these inputs when the native ones are not enough.
-
-## Select
-
-`Field.Select` is a native `<select>`. In browsers with `appearance: base-select` the button and its picker are drawn from field and option tokens; elsewhere the browser's own picker shows, with the same value and keyboard. There is no JavaScript listbox. Children are native `<option>` and `<optgroup>` elements, and a `Label.Root htmlFor` names it like any other field.
-
-```tsx
-<Label.Root htmlFor={id}>Size</Label.Root>
-<Field.Root id={id}>
-	<Field.Select value={size} onChange={(event) => setSize(event.target.value)}>
-		<option value="s">Small</option>
-		<option value="m">Medium</option>
-	</Field.Select>
-</Field.Root>
-```
-
-<Example block>
-  <FieldSelectSize />
-</Example>
-
-## Color
-
-`Field.ColorInput` is a native `<input type="color">`, drawn as a swatch one field line tall. Its value is a `#rrggbb` string. A press elsewhere in the field opens the browser's picker. To show the value as text, put a `Field.Affix` after it. On its own, the field is as wide as the swatch.
-
-```tsx
-<Label.Root htmlFor={id}>Accent</Label.Root>
-<Field.Root id={id}>
-	<Field.ColorInput value={color} onValueChange={setColor} />
-	<Field.Affix>{color}</Field.Affix>
-</Field.Root>
-```
-
-<Example block>
-  <FieldColorAccent />
-</Example>
-
 ## Custom controls
 
 Your own control, such as a rating, joins a `Field.Root` through [useField](/utilities/use-field).
 
 ## Icons
 
-`Field.Icon` takes an icon from any library; an `svg` or `img` directly inside it takes the `field.icon.size` token. `Field.Select` draws the `chevron` glyph from a [GlyphsProvider](/utilities/glyphs-provider) over the browser's picker icon when the browser supports `::picker-icon` and the select is the field's last part; otherwise, and without a provider, the browser's icon shows. The check mark beside a selected `<option>` is the browser's own. Chip remove buttons in `Field.ChipInput` show the `close` glyph unless you pass `chipRemoveIcon`.
+`Field.Icon` takes an icon from any library; an `svg` or `img` directly inside it takes the `field.icon.size` token. The glyphs that `Field.Select` and `Field.ChipInput` draw are on their own pages.
 
 ```tsx
-import { ChevronDown, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 <Field.Root aria-label="Search">
 	<Field.Icon>
@@ -300,23 +168,15 @@ import { ChevronDown, Search } from 'lucide-react';
 	</Field.Icon>
 	<Field.TextInput />
 </Field.Root>
-
-<GlyphsProvider glyphs={{ chevron: <ChevronDown /> }}>
-	<Field.Root aria-label="Plan">
-		<Field.Select value={plan} onValueChange={setPlan}>
-			…
-		</Field.Select>
-	</Field.Root>
-</GlyphsProvider>
 ```
 
 ## Accessible composition
 
-**Todae handles:** `Field.Root` hands its `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` to the input. Other ARIA props stay on the shell `div`. The input gets native `disabled` and `aria-invalid` from the Root, or from a surrounding [Fieldset](/fieldset). A press on the shell focuses the input, and the shell draws the focus ring while the input is focus-visible. A decorative `Field.Icon` is `aria-hidden`. With `maxLength`, `Field.Counter` adds the limit to the input's description and, from 20 characters left, announces what remains. In `Field.ChipInput`, each remove button is named after its chip, and focus returns to the input after a remove.
+**Todae handles:** `Field.Root` hands its `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` to the input. Other ARIA props stay on the shell `div`. The input gets native `disabled` and `aria-invalid` from the Root, or from a surrounding [Fieldset](/fieldset). A press on the shell focuses the input, and the shell draws the focus ring while the input is focus-visible. A decorative `Field.Icon` is `aria-hidden`. With `maxLength`, except on a number input, `Field.Counter` adds the limit to the input's description and, from 20 characters left, announces what remains.
 
-**You supply:** A name: a [Label](/label) whose `htmlFor` is the Root `id`, or `aria-label` / `aria-labelledby` on the Root. The ids of any [Description](/description) or [ErrorMessage](/errormessage) in the Root's `aria-describedby`, and `invalid` while the error shows. A name for every button inside an interactive `Field.Icon`. Chip and counter strings in the product's language, through [StringsProvider](/utilities/strings-provider).
+**You supply:** A name: a [Label](/label) whose `htmlFor` is the Root `id`, or `aria-label` / `aria-labelledby` on the Root. The ids of any [Description](/description) or [ErrorMessage](/errormessage) in the Root's `aria-describedby`, and `invalid` while the error shows. A name for every button inside an interactive `Field.Icon`. Counter strings in the product's language, through [StringsProvider](/utilities/strings-provider).
 
-**Watch for:** An `id` on `Field.TextInput` is replaced by the Root's; put it on the Root. A `role` or `onClick` on `Field.Root` lands on the shell, which is not a control; open overlays from a real button. `invalid` marks the input invalid but does not say why, so show an ErrorMessage with it. Adding `'Tab'` to `commitKeys` makes Tab commit typed text instead of moving focus.
+**Watch for:** An `id` on `Field.TextInput` is replaced by the Root's; put it on the Root. A `role` or `onClick` on `Field.Root` lands on the shell, which is not a control; open overlays from a real button. `invalid` marks the input invalid but does not say why, so show an ErrorMessage with it.
 
 ## When to use
 
@@ -325,53 +185,6 @@ import { ChevronDown, Search } from 'lucide-react';
 **When:** Shared field chrome for one text, textarea, or chip input — focus ring, disabled/invalid, density. Value lives on the input part.
 
 **When not:** Selection controls (Checkbox / Radio / Switch). Overlay triggers that are buttons. Nesting another compound root inside.
-
-### Field.TextInput
-
-**When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password), or a native number.
-
-**When not:** Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
-
-### Field.Textarea
-
-**When:** Multi-line free text such as notes, messages or descriptions. `rows` sets the starting height, and `autoGrow` grows it up to `maxRows` with CSS only.
-**When not:** Single-line values, use `Field.TextInput`. Separate tags or tokens, use `Field.ChipInput`. Rich text or formatting, not shipped.
-
-### Field.ChipInput
-
-**When:** Controlled chips + one input inside `Field.Root`. Parent owns commit/append via `onCommit`, or spreads `getChipInputProps()` from [useChipField](/utilities/use-chip-field) to hold that state.
-
-**When not:** Free-form single string → TextInput. Options from a list → [Combobox recipe](/recipes/combobox) + OptionList.
-
-### Field.Select
-
-**When:** Pick one value from a short, fixed list inside a form, with the native picker and keyboard.
-
-**When not:** Filtering or searching a long list → Combobox recipe. Several values → Checkbox or `Field.ChipInput`. Commands rather than values → Menu.
-
-### Field.ColorInput
-
-**When:** Pick one color with the browser's picker, such as a brand or accent color.
-
-**When not:** A color in another form, such as `oklch()` → `Field.TextInput`, with a `Field.ColorInput` in its own field beside it for picking. A fixed set of colors → RadioGroup.
-
-### Field.DateInput
-
-**When:** A calendar date, such as a start date or a birthday, with the browser's date picker.
-
-**When not:** A date with a time of day → `Field.DateTimeInput`. A partial date, such as a month and year only → `Field.TextInput`.
-
-### Field.TimeInput
-
-**When:** A time of day with no date, such as opening hours or a daily reminder.
-
-**When not:** A time on a given day → `Field.DateTimeInput`. A duration → `Field.TextInput` with `type="number"` and an `Affix` for the unit.
-
-### Field.DateTimeInput
-
-**When:** A date and time on the user's own clock, such as when a meeting starts.
-
-**When not:** A date alone → `Field.DateInput`. A time alone → `Field.TimeInput`.
 
 ### Field.Icon
 
@@ -399,28 +212,12 @@ import { ChevronDown, Search } from 'lucide-react';
 
 ### Field.Counter
 
-**When:** Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise.
+**When:** Show a live character count for a `Field.TextInput` or `Field.Textarea`, as `n / max` when `maxLength` is set and `n` otherwise or on a number input.
 **When not:** For a hard limit with no visible count, set `maxLength` alone, and skip it on short fixed-length values like codes or PINs.
 
 ## Props
 
 <PropsTable name="Field.Root" />
-
-<PropsTable name="Field.TextInput" />
-
-<PropsTable name="Field.Textarea" />
-
-<PropsTable name="Field.ChipInput" />
-
-<PropsTable name="Field.Select" />
-
-<PropsTable name="Field.ColorInput" />
-
-<PropsTable name="Field.DateInput" />
-
-<PropsTable name="Field.TimeInput" />
-
-<PropsTable name="Field.DateTimeInput" />
 
 <PropsTable name="Field.Icon" />
 

@@ -1,0 +1,84 @@
+import {
+  TextareaAutoGrow,
+  TextareaDark,
+  TextareaDensity,
+  TextareaMaxRows,
+  TextareaMessages,
+  TextareaResize,
+  TextareaRows,
+} from '../../../../components/demos/FieldDemo';
+
+# Field.Textarea
+
+`Field.Textarea` is a native `<textarea>` for multi-line text inside a [Field](/field). Height is CSS only: `rows` sets the height and the drag floor, and `maxRows` sets the cap. Padding sits on the textarea, inside the shell.
+
+```tsx
+<Field.Root aria-label="Note">
+	<Field.Textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} />
+</Field.Root>
+```
+
+<Example block>
+  <TextareaRows />
+</Example>
+
+## Height
+
+`autoGrow` uses `field-sizing: content` where the browser has it, and grows with no cap when `maxRows` is omitted. Browsers without `field-sizing` stay at `rows` and scroll inside. Do not set an inline `height` when `autoGrow` is on; it overrides the growth.
+
+`autoGrow` with `maxRows={6}`.
+
+<Example block>
+  <TextareaAutoGrow />
+</Example>
+
+`maxRows` without `rows` starts at `min(3, maxRows)`.
+
+<Example block>
+  <TextareaMaxRows />
+</Example>
+
+Drag-resize with `autoGrow` off stops at `rows` and at `maxRows`.
+
+<Example block>
+  <TextareaResize />
+</Example>
+
+## Density and states
+
+Compact, comfortable, and spacious.
+
+<Example block>
+  <TextareaDensity />
+</Example>
+
+Dark appearance, for the native scrollbar.
+
+<Example block>
+  <TextareaDark />
+</Example>
+
+Label, description, error, invalid, and disabled.
+
+<Example block>
+  <TextareaMessages />
+</Example>
+
+## Accessible composition
+
+**Todae handles:** The textarea takes `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset).
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root.
+
+**Watch for:** An inline `height` with `autoGrow` on stops the growth. Without `field-sizing`, an `autoGrow` textarea stays at `rows` and scrolls.
+
+## When to use
+
+### Field.Textarea
+
+**When:** Multi-line free text such as notes, messages or descriptions. `rows` sets the starting height, and `autoGrow` grows it up to `maxRows` with CSS only.
+**When not:** Single-line values, use `Field.TextInput`. Separate tags or tokens, use `Field.ChipInput`. Rich text or formatting, not shipped.
+
+## Props
+
+<PropsTable name="Field.Textarea" />
