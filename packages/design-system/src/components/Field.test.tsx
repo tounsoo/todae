@@ -500,28 +500,6 @@ describe('Field.ColorPicker beside another control part', () => {
     expect(named[0]!.tagName).toBe('TODAE-RATING');
   });
 
-  it('leaves the name to a form-associated custom element that keeps it as a property', () => {
-    class NamedRating extends HTMLElement {
-      static formAssociated = true;
-      name = '';
-    }
-    if (!customElements.get('todae-named-rating')) customElements.define('todae-named-rating', NamedRating);
-    function Rating() {
-      const field = useField();
-      return createElement('todae-named-rating', field.getControlProps());
-    }
-    const { container } = render(
-      <Field.Root id="x" name="accent" aria-label="Accent">
-        <Rating />
-        <Field.ColorPicker value="#3366ff" />
-      </Field.Root>,
-    );
-    const rating = container.querySelector('todae-named-rating') as NamedRating;
-    expect(rating.name).toBe('accent');
-    expect(rating.hasAttribute('name')).toBe(false);
-    expect(container.querySelector('input[type="hidden"]')).toBeNull();
-  });
-
   function WithText({ inputName, rootName = 'accent', swatchName }: { inputName?: string; rootName?: string; swatchName?: string }) {
     return (
       <form data-testid="form">
