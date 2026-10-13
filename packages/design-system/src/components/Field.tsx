@@ -65,7 +65,7 @@ export type FieldRootProps = {
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
 
 function createCountStore(): CountStore {
-  return { entry: null, counters: 0, texts: 0, listeners: new Set(), presence: new Set() };
+  return { entry: null, counters: 0, typed: 0, texts: 0, dates: 0, listeners: new Set(), presence: new Set() };
 }
 
 function publishCount(store: CountStore, value: string, maxLength: number | undefined) {
@@ -96,27 +96,38 @@ function notifyPresence(store: CountStore) {
   for (const listener of store.presence) listener();
 }
 
-// A Field.ColorPicker or Field.DatePicker beside a typed input (text,
-// textarea, date or time) gives up the field's id once it hears of it, so
-// one element carries the id.
-function useTypedPresence(store: CountStore) {
+type ValueKind = 'texts' | 'dates';
+
+// Registers a typed input (text, textarea, date, time or datetime-local) with
+// the field, and the kind of value it holds when a picker can share it.
+// `kind` is fixed for an input.
+function useTypedPresence(store: CountStore, kind: ValueKind | null) {
   useLayoutEffect(() => {
-    store.texts += 1;
+    store.typed += 1;
+    if (kind) store[kind] += 1;
     notifyPresence(store);
     return () => {
-      store.texts -= 1;
+      store.typed -= 1;
+      if (kind) store[kind] -= 1;
       notifyPresence(store);
     };
-  }, [store]);
+  }, [store, kind]);
 }
 
-// Whether a typed input shares the field. The server cannot know of one yet,
-// so a picker holds the field's id until hydration.
-function useTypedBeside(store: CountStore) {
+/**
+ * How a picker shares its field. 'none': it is the field's control. 'other':
+ * a typed input takes the field's id, label and description, and the picker
+ * keeps its value. 'same': the input holds the picker's value too, so it also
+ * takes the field's name, and the picker shows no value of its own. The
+ * server cannot know of an input yet, so a picker is 'none' until hydration.
+ */
+type Pairing = 'none' | 'other' | 'same';
+
+function usePairing(store: CountStore, kind: ValueKind): Pairing {
   return useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
-    () => store.texts > 0,
-    () => false,
+    () => (store[kind] > 0 ? 'same' : store.typed > 0 ? 'other' : 'none'),
+    () => 'none',
   );
 }
 
@@ -125,7 +136,7 @@ function useTextEntry(store: CountStore, value: string, maxLength: number | unde
   useEffect(() => {
     for (const listener of store.listeners) listener();
   });
-  useTypedPresence(store);
+  useTypedPresence(store, 'texts');
   return useSyncExternalStore(
     (listener) => subscribePresence(store, listener),
     () => counterMounted(store),
@@ -432,7 +443,7 @@ function TemporalInput<T>({
   ...props
 }: TemporalInputProps<T> & { kind: TemporalInputKind<T> }) {
   const field = useField();
-  useTypedPresence(useFieldContext().store);
+  useTypedPresence(useFieldContext().store, kind.type === 'date' ? 'dates' : null);
   return (
     <input
       {...field.getControlProps(props)}
@@ -756,16 +767,18 @@ function ColorPicker({
   const field = useField();
   const { shellRef, store } = useFieldContext();
   const strings = useStrings();
-  // A text input in the field takes its id, name and description.
-  const beside = useTypedBeside(store);
-  const { name, ...control } = beside
-    ? {
-        ...props,
-        name: undefined,
-        disabled: field.disabled || Boolean(props.disabled),
-        'aria-label': props['aria-label'] ?? strings.colorPicker,
-      }
-    : field.getControlProps(props);
+  // A typed input in the field takes its id and description; a text input or
+  // textarea, which holds the color too, also takes its name.
+  const pairing = usePairing(store, 'texts');
+  const { name, ...control } =
+    pairing === 'none'
+      ? field.getControlProps(props)
+      : {
+          ...props,
+          name: pairing === 'same' ? undefined : (props.name ?? field.name),
+          disabled: field.disabled || Boolean(props.disabled),
+          'aria-label': props['aria-label'] ?? strings.colorPicker,
+        };
   const [open, setOpen] = useControlledValue<boolean, [FieldColorPickerCloseReason]>(
     openProp,
     defaultOpen ?? false,
@@ -886,18 +899,23 @@ function DatePicker({
   const strings = useStrings();
   const { calendar } = useGlyphs();
   const textId = useDomId();
-  // A date input in the field takes its id, name and description.
-  const beside = useTypedBeside(store);
-  const { name, ...control } = beside
-    ? {
-        ...props,
-        'aria-describedby': describedBy,
-        name: undefined,
-        disabled: field.disabled || Boolean(props.disabled),
-        'aria-label': props['aria-label'] ?? strings.datePicker,
-      }
-    : // The label names the button, so the date it shows is its description.
-      field.getControlProps({ ...props, 'aria-describedby': mergeDescribedBy(describedBy, textId) });
+  // A typed input in the field takes its id and description; a date input,
+  // which holds the date too, also takes its name, and the button shows only
+  // the glyph.
+  const pairing = usePairing(store, 'dates');
+  const showText = pairing !== 'same';
+  // The button's name is not the date, so the date it shows is its description.
+  const ownDescribedBy = showText ? mergeDescribedBy(describedBy, textId) : describedBy;
+  const { name, ...control } =
+    pairing === 'none'
+      ? field.getControlProps({ ...props, 'aria-describedby': ownDescribedBy })
+      : {
+          ...props,
+          'aria-describedby': ownDescribedBy,
+          name: pairing === 'same' ? undefined : (props.name ?? field.name),
+          disabled: field.disabled || Boolean(props.disabled),
+          'aria-label': props['aria-label'] ?? strings.datePicker,
+        };
   const [open, setOpen] = useControlledValue<boolean, [FieldDatePickerCloseReason]>(
     openProp,
     defaultOpen ?? false,
@@ -958,14 +976,14 @@ function DatePicker({
         aria-controls={controls}
         type="button"
         data-todae-field-picker=""
-        data-beside={beside ? '' : undefined}
+        data-beside={pairing === 'same' ? '' : undefined}
         className={cx(styles.datePicker, className)}
       >
-        {beside ? null : (
+        {showText ? (
           <span id={textId} className={styles.dateText} data-placeholder={value ? undefined : ''}>
             {value ? value.toLocaleString(locale, { dateStyle: 'medium', calendar: GREGORY }) : placeholder}
           </span>
-        )}
+        ) : null}
         {glyph}
       </button>
       {/* A button sends nothing with a form, so the value goes in a hidden input. */}

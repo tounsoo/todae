@@ -512,8 +512,8 @@
     display: none;
   }
 
-  /* A press in the field opens the calendar, unless a date input there takes it. */
-  .shell:not([data-disabled]):has(> .datePicker:not([data-beside])) {
+  /* A press in the field opens the calendar, unless a typed input there takes it. */
+  .shell:not([data-disabled]):has(> .datePicker):not(:has(> :is(.input, .textarea))) {
     cursor: pointer;
   }
 

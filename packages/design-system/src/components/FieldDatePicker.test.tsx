@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Field, GlyphsProvider, Label } from '../index';
 
@@ -68,27 +69,71 @@ describe('Field.DatePicker', () => {
     expect([...new FormData(form).entries()]).toEqual([['start', '2026-10-13']]);
   });
 
-  it('gives the field to any typed input beside a picker, so one element has its id', () => {
-    render(
-      <>
-        <Field.Root id="typed">
-          <Field.TextInput value="" onChange={() => undefined} />
-          <Field.DatePicker value={null} />
+  type Pair = {
+    name: string;
+    input: ReactNode;
+    picker: 'date' | 'color';
+    same: boolean;
+    inputEntry: [string, string];
+  };
+  const day = date('2026-10-13');
+  const PAIRS: Pair[] = [
+    { name: 'TextInput + ColorPicker', input: <Field.TextInput value="#3366ff" onChange={() => undefined} />, picker: 'color', same: true, inputEntry: ['f', '#3366ff'] },
+    { name: 'Textarea + ColorPicker', input: <Field.Textarea value="#3366ff" onChange={() => undefined} />, picker: 'color', same: true, inputEntry: ['f', '#3366ff'] },
+    { name: 'DateInput + DatePicker', input: <Field.DateInput value={day} onValueChange={() => undefined} />, picker: 'date', same: true, inputEntry: ['f', '2026-10-13'] },
+    { name: 'TimeInput + DatePicker', input: <Field.TimeInput value={Temporal.PlainTime.from('09:30')} onValueChange={() => undefined} />, picker: 'date', same: false, inputEntry: ['f', '09:30'] },
+    { name: 'DateTimeInput + DatePicker', input: <Field.DateTimeInput value={Temporal.PlainDateTime.from('2026-10-13T09:30')} onValueChange={() => undefined} />, picker: 'date', same: false, inputEntry: ['f', '2026-10-13T09:30'] },
+    { name: 'TextInput + DatePicker', input: <Field.TextInput value="note" onChange={() => undefined} />, picker: 'date', same: false, inputEntry: ['f', 'note'] },
+    { name: 'DateInput + ColorPicker', input: <Field.DateInput value={day} onValueChange={() => undefined} />, picker: 'color', same: false, inputEntry: ['f', '2026-10-13'] },
+  ];
+
+  it.each(PAIRS)('$name: the input takes the id, and the picker keeps its value unless the input holds it', ({ input, picker, same, inputEntry }) => {
+    const pickerEl =
+      picker === 'date' ? <Field.DatePicker value={day} locale="en-US" /> : <Field.ColorPicker value="#3366ff" />;
+    const tree = (withInput: boolean) => (
+      <form data-testid="form">
+        <Label.Root htmlFor="f">Field</Label.Root>
+        <Field.Root id="f" name="f" aria-describedby="hint">
+          {withInput ? input : null}
+          {pickerEl}
         </Field.Root>
-        <Field.Root id="timed">
-          <Field.TimeInput value={null} onValueChange={() => undefined} />
-          <Field.DatePicker value={null} />
-        </Field.Root>
-        <Field.Root id="tinted">
-          <Field.DateInput value={null} onValueChange={() => undefined} />
-          <Field.ColorPicker value="#3366ff" />
-        </Field.Root>
-      </>,
+      </form>
     );
-    for (const id of ['typed', 'timed', 'tinted']) {
-      expect(document.querySelectorAll(`#${id}`)).toHaveLength(1);
-      expect(document.getElementById(id)!.tagName).toBe('INPUT');
+    const { rerender } = render(tree(true));
+    expect(document.querySelectorAll('#f')).toHaveLength(1);
+    expect(document.getElementById('f')!.tagName).toMatch(/^(INPUT|TEXTAREA)$/);
+    const button = screen.getByRole('button', { name: picker === 'date' ? 'Choose date' : 'Color picker' });
+    const pickerEntry: [string, string] = ['f', picker === 'date' ? '2026-10-13' : '#3366ff'];
+    const entries = [...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()];
+    expect(entries).toEqual(same ? [inputEntry] : [inputEntry, pickerEntry]);
+    if (picker === 'date') {
+      const text = screen.queryByText('Oct 13, 2026');
+      expect(button.hasAttribute('data-beside')).toBe(same);
+      if (same) expect(text).toBeNull();
+      else expect(button.getAttribute('aria-describedby')).toBe(text!.id);
     }
+    // Without the input, the picker is the field's control again.
+    rerender(tree(false));
+    const alone = screen.getByRole('button', { name: 'Field' });
+    expect(alone.id).toBe('f');
+    expect(alone.getAttribute('aria-describedby')!.split(' ')[0]).toBe('hint');
+    expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([pickerEntry]);
+    if (picker === 'date') expect(alone.textContent).toBe('Oct 13, 2026');
+  });
+
+  it('beside a typed input of another kind sends its value under its own name when it has one', () => {
+    render(
+      <form data-testid="form">
+        <Field.Root aria-label="Start" name="time">
+          <Field.TimeInput value={Temporal.PlainTime.from('09:30')} onValueChange={() => undefined} />
+          <Field.DatePicker value={day} name="day" />
+        </Field.Root>
+      </form>,
+    );
+    expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
+      ['time', '09:30'],
+      ['day', '2026-10-13'],
+    ]);
   });
 
   it('draws the calendar glyph from GlyphsProvider', () => {

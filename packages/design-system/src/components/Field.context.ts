@@ -6,7 +6,11 @@ export type CountStore = {
   entry: CountEntry | null;
   counters: number;
   /** Typed inputs mounted in the field: text inputs, textareas, and date and time inputs. */
+  typed: number;
+  /** Of those, text inputs and textareas, which hold a Field.ColorPicker's value. */
   texts: number;
+  /** Of those, date inputs, which hold a Field.DatePicker's value. */
+  dates: number;
   listeners: Set<() => void>;
   presence: Set<() => void>;
 };
