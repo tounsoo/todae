@@ -24,7 +24,7 @@ import {
   type Density,
   type ThemeOverride,
   type ThemeOverrideKey,
-} from '@omsoo/todae';
+} from '@omsoo.design/todae';
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';

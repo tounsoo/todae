@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 
 const src = (path: string) => fileURLToPath(new URL(`../../packages/design-system/src/${path}`, import.meta.url));
 
-// The server-safe entries (`@omsoo/todae/stack` and the rest), so they load the same CSS modules as the main entry.
+// The server-safe entries (`@omsoo.design/todae/stack` and the rest), so they load the same CSS modules as the main entry.
 const serverEntries = readdirSync(src('server')).map((file) => file.replace(/\.ts$/, ''));
 
 // Runs every docs demo in headless Chromium against the package source.
@@ -14,9 +14,9 @@ export default defineConfig({
   define: { 'process.env': '{}' },
   resolve: {
     alias: [
-      { find: /^@omsoo\/todae\/todae\.css$/, replacement: src('styles/todae.css') },
-      { find: /^@omsoo\/todae$/, replacement: src('index.ts') },
-      ...serverEntries.map((name) => ({ find: new RegExp(`^@omsoo/todae/${name}$`), replacement: src(`server/${name}.ts`) })),
+      { find: /^@omsoo\.design\/todae\/todae\.css$/, replacement: src('styles/todae.css') },
+      { find: /^@omsoo\.design\/todae$/, replacement: src('index.ts') },
+      ...serverEntries.map((name) => ({ find: new RegExp(`^@omsoo.design/todae/${name}$`), replacement: src(`server/${name}.ts`) })),
     ],
   },
   // Pre-bundle what demos import, so a cold cache does not re-optimize and reload mid-run,

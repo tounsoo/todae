@@ -1,6 +1,6 @@
 'use client';
 
-import { Code } from '@omsoo/todae/code';
+import { Code } from '@omsoo.design/todae/code';
 import type { ComponentProps } from 'react';
 import { ScrollRegion } from './ScrollRegion';
 

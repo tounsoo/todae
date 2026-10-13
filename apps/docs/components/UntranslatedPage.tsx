@@ -1,4 +1,4 @@
-import { Link } from '@omsoo/todae/link';
+import { Link } from '@omsoo.design/todae/link';
 import type { ReactNode } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';

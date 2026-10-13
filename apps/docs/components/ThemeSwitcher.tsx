@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, ToggleGroup, type Appearance } from '@omsoo/todae';
+import { Button, ToggleGroup, type Appearance } from '@omsoo.design/todae';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { MonitorIcon, MoonIcon, SunIcon } from './icons';

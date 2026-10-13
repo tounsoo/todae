@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Field, Label, Stack, useHighlight } from '@omsoo/todae';
+import { Button, Field, Label, Stack, useHighlight } from '@omsoo.design/todae';
 import { useId, useState } from 'react';
 
 export function HighlightSearch() {

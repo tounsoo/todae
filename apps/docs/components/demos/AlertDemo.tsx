@@ -1,6 +1,6 @@
 'use client';
 
-import { Alert, Button, Stack } from '@omsoo/todae';
+import { Alert, Button, Stack } from '@omsoo.design/todae';
 import { CircleCheck, CircleX, Info, TriangleAlert } from 'lucide-react';
 import { useRef, useState } from 'react';
 

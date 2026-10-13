@@ -1,6 +1,6 @@
 'use client';
 
-import { Link, ScrollArea, Text } from '@omsoo/todae';
+import { Link, ScrollArea, Text } from '@omsoo.design/todae';
 
 const SECTIONS = ['Overview', 'Install', 'Tokens', 'Themes', 'Density', 'Components', 'Hooks', 'Recipes', 'Testing', 'Releases'];
 

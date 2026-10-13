@@ -1,5 +1,5 @@
-import { Code } from '@omsoo/todae/code';
-import { Prose } from '@omsoo/todae/prose';
+import { Code } from '@omsoo.design/todae/code';
+import { Prose } from '@omsoo.design/todae/prose';
 
 export function ProseArticle() {
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Menu, ToggleGroup, Toolbar } from '@omsoo/todae';
+import { Button, Menu, ToggleGroup, Toolbar } from '@omsoo.design/todae';
 
 export function ToolbarEditor() {
   return (

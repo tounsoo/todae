@@ -1,6 +1,6 @@
-import { Code } from '@omsoo/todae/code';
-import { Table } from '@omsoo/todae/table';
-import catalog from '@omsoo/todae/tokens.json';
+import { Code } from '@omsoo.design/todae/code';
+import { Table } from '@omsoo.design/todae/table';
+import catalog from '@omsoo.design/todae/tokens.json';
 import { ScrollRegion } from './ScrollRegion';
 import { TokensTableHead } from './TokensTableHead';
 

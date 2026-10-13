@@ -67,14 +67,14 @@ todae-tokens build --resolver ./tokens/resolver.json
 - `tokens.catalog.json`: Todae와 회사의 토큰을 함께 담습니다.
 - `todae-theme.types.ts`: `ThemeProvider`에 쓸 회사 키의 `THEME_OVERRIDE_TYPES`.
 
-`--css`, `--catalog`, `--types`로 출력 경로를 바꿉니다. CI에서는 `--check`를 더해 출력이 없거나 오래되었을 때 실패하게 합니다. 같은 빌드를 함수로도 쓸 수 있습니다. `@omsoo/todae/tokens-builder`의 `buildCompanyTokens`입니다.
+`--css`, `--catalog`, `--types`로 출력 경로를 바꿉니다. CI에서는 `--check`를 더해 출력이 없거나 오래되었을 때 실패하게 합니다. 같은 빌드를 함수로도 쓸 수 있습니다. `@omsoo.design/todae/tokens-builder`의 `buildCompanyTokens`입니다.
 
 빌드는 Todae 자체 빌드가 하는 모든 검사를 실행합니다. 경로 형식, 참조 순환, 레이어 순서, 라이트와 다크의 대응, APCA 대비입니다. Todae 리졸버의 대비 쌍은 회사 색상에도 적용되므로, 대비 기준을 통과하지 못하는 브랜드 액센트는 빌드를 실패시킵니다. 대비 쌍과 최솟값을 바꾸는 방법은 [토큰](/tokens)의 Contrast 섹션을 보세요.
 
 CSS는 Todae 다음에 로드합니다.
 
 ```tsx
-import '@omsoo/todae/todae.css';
+import '@omsoo.design/todae/todae.css';
 import './todae-theme.css';
 ```
 
@@ -153,7 +153,7 @@ import { THEME_OVERRIDE_TYPES } from './todae-theme.types';
 그다음 TypeScript에 새 이름을 알려 줍니다.
 
 ```ts
-declare module '@omsoo/todae' {
+declare module '@omsoo.design/todae' {
   interface ButtonVariants {
     outline: true;
   }
@@ -170,7 +170,7 @@ declare module '@omsoo/todae' {
 회사 기본값을 고정하거나 회사용 prop을 더하려면 파트를 감싸세요. 모든 파트는 네이티브 속성과 ref를 전달하므로, 나머지 props를 펼치고 `ref`를 넘겨 주세요.
 
 ```tsx
-import { Button, type ButtonRootProps } from '@omsoo/todae';
+import { Button, type ButtonRootProps } from '@omsoo.design/todae';
 
 export function AcmeButton({ variant = 'outline', ...props }: ButtonRootProps) {
   return <Button.Root {...props} variant={variant} />;

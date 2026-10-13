@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, useRovingFocus } from '@omsoo/todae';
+import { Button, useRovingFocus } from '@omsoo.design/todae';
 
 const TOOLS = ['Bold', 'Italic', 'Underline', 'Strike'];
 
