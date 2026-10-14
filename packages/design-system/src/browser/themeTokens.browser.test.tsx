@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Button, Card, Label, Table, Tabs, ThemeProvider, type ThemeOverride, type ThemeShadowLayer } from '../index';
+import { Button, Card, Label, Table, Tabs, ThemeProvider, ToggleGroup, type ThemeOverride, type ThemeShadowLayer } from '../index';
 
 afterEach(cleanup);
 
@@ -22,6 +22,7 @@ const caps: ThemeOverride = {
   'table.header.font.text-transform': 'uppercase',
   'card.shadow': hard,
   'button.primary.shadow': hard,
+  'button.secondary.shadow': hard,
   'button.ghost.shadow': hard,
 };
 const HARD = 'oklch(0.2 0 0) 3px 3px 0px 0px';
@@ -33,6 +34,11 @@ function Themed() {
         <Card.Body>
           <Button.Root>Save</Button.Root>
           <Button.Root variant="ghost">Skip</Button.Root>
+          <Button.Root variant="secondary">Back</Button.Root>
+          <ToggleGroup.Root aria-label="View" defaultValue="list">
+            <ToggleGroup.Item value="list">List</ToggleGroup.Item>
+            <ToggleGroup.Item value="board">Board</ToggleGroup.Item>
+          </ToggleGroup.Root>
           <Button.Root disabled>Off</Button.Root>
           <Button.Group aria-label="Range">
             <Button.Root>Day</Button.Root>
@@ -80,6 +86,8 @@ describe('theme tokens for case, spacing and shadows in a browser', () => {
     expect(getComputedStyle(screen.getByTestId('card')).boxShadow).toBe(HARD);
     expect(shadow('Save')).toBe(HARD);
     expect(shadow('Skip')).toBe(HARD);
+    expect(shadow('Back')).toBe(HARD);
+    expect(shadow('Board')).not.toContain('3px 3px');
     expect(shadow('Off')).not.toContain('3px 3px');
     expect(shadow('Day')).not.toContain('3px 3px');
     expect(shadow('Week')).toContain('inset');

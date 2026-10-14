@@ -20,6 +20,15 @@ function lc(fg: ThemeColorValue, bg: ThemeColorValue): number {
 const color = (overrides: ThemeOverride, key: keyof ThemeOverride) => overrides[key] as ThemeColorValue | undefined;
 
 describe('playground presets', () => {
+  it('leave disabled states to Todae, so a disabled control never looks enabled', () => {
+    for (const preset of PRESETS) {
+      for (const appearance of ['light', 'dark'] as const) {
+        const keys = Object.keys(preset[appearance]).filter((key) => key.endsWith('.disabled'));
+        expect(keys, `${preset.id} ${appearance}`).toEqual([]);
+      }
+    }
+  });
+
   it('have unique ids and start from plain Todae', () => {
     expect(new Set(PRESETS.map((preset) => preset.id)).size).toBe(PRESETS.length);
     expect(PRESETS[0]).toEqual({ id: 'graphite', name: 'Graphite', light: {}, dark: {} });

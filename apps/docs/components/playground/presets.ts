@@ -71,19 +71,18 @@ function shade(color: ThemeColorValue, step: number): ThemeColorValue {
 }
 
 /**
- * Filled fields and secondary buttons: in every state but focus and invalid,
- * the border is the fill's own color, so the shape stays the same size. Hover
- * and press deepen the fill.
+ * Filled fields and secondary buttons: at rest, hover and press the border is
+ * the fill's own color, so the shape stays the same size, and hover and press
+ * deepen the fill. Focus, invalid and disabled keep Todae's own look, so a
+ * disabled control doesn't read as an enabled one.
  */
 function filled(field: ThemeColorValue, button: ThemeColorValue): ThemeOverride {
   const out: ThemeOverride = {
     'field.bg.default': field,
-    'field.bg.disabled': field,
     'field.border.default': field,
     'field.border.hover': shade(field, 0.06),
-    'field.border.disabled': field,
   };
-  const fills = { default: button, hover: shade(button, 0.03), active: shade(button, 0.06), focus: button, disabled: button };
+  const fills = { default: button, hover: shade(button, 0.03), active: shade(button, 0.06), focus: button };
   for (const [state, fill] of Object.entries(fills)) {
     out[`button.secondary.bg.${state}` as keyof ThemeOverride] = fill;
     if (state !== 'focus') out[`button.secondary.border.${state}` as keyof ThemeOverride] = fill;
