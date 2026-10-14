@@ -18,7 +18,7 @@
     color: var(--todae-steps-fg-pending);
   }
 
-  .item:has(+ .item) {
+  .item:not(:last-child) {
     padding-block-end: var(--todae-steps-gap);
   }
 

@@ -56,7 +56,7 @@ describe('Steps in a browser', () => {
     });
   }
 
-  it('draws no line after the last step when another child follows it', () => {
+  it('draws no line after the last step when another child follows it, and keeps the gap before that child', () => {
     render(
       <Steps.Root>
         <Steps.Item status="done">A</Steps.Item>
@@ -64,9 +64,11 @@ describe('Steps in a browser', () => {
         <li>Add a step</li>
       </Steps.Root>,
     );
-    const [first, last] = screen.getAllByRole('listitem');
+    const [first, lastStep] = screen.getAllByRole('listitem');
     expect(getComputedStyle(first!, '::after').content).not.toBe('none');
-    expect(getComputedStyle(last!, '::after').content).toBe('none');
+    expect(getComputedStyle(lastStep!, '::after').content).toBe('none');
+    expect(parseFloat(getComputedStyle(lastStep!).paddingBlockEnd)).toBe(parseFloat(getComputedStyle(first!).paddingBlockEnd));
+    expect(parseFloat(getComputedStyle(first!).paddingBlockEnd)).toBeGreaterThan(0);
   });
 
   it('centres the marker on the first line of the step and puts it at the start', () => {

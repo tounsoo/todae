@@ -43,8 +43,8 @@ export function StepsExample() {
         >
           Run again
         </Button.Root>
-        {/* Not disabled: disabling the focused button would drop focus to the page. */}
-        <Button.Root variant="secondary" onClick={() => running && setFailed(true)}>
+        {/* aria-disabled, not disabled: disabling the focused button would drop focus to the page. */}
+        <Button.Root variant="secondary" aria-disabled={!running || undefined} onClick={() => running && setFailed(true)}>
           Fail this step
         </Button.Root>
       </Stack.Root>
