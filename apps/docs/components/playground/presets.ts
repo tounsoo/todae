@@ -72,8 +72,8 @@ function shade(color: ThemeColorValue, step: number): ThemeColorValue {
 
 /**
  * Filled fields and secondary buttons. The border takes the fill's color, so
- * the shape stays the same size: a field's border darkens on hover, and a
- * button's fill and border deepen on hover and press. Focus and invalid
+ * the shape stays the same size: a field's border moves toward the text color
+ * on hover, and a button's fill and border do on hover and press. Focus and invalid
  * borders stay Todae's. Disabled drops the fill: a disabled field is
  * transparent, and a disabled button keeps Todae's transparent look.
  */
@@ -129,6 +129,8 @@ function capsLabels(value: number): ThemeOverride {
   };
 }
 
+const PORCELAIN_GRAYS = grays(200, 0.008);
+
 const MONO = ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'];
 
 export const PRESETS: readonly ThemePreset[] = [
@@ -137,14 +139,15 @@ export const PRESETS: readonly ThemePreset[] = [
   preset(
     'porcelain',
     'Porcelain',
-    { ...grays(200, 0.008), ...radii(0.625, 0.875, 1.5), ...PILLS },
+    { ...PORCELAIN_GRAYS, ...radii(0.625, 0.875, 1.5), ...PILLS },
     {
       'color.bg.canvas': oklch(0.965, 0.004, 200),
       'card.border': oklch(1, 0, 0),
       'card.shadow': [shadow(0, 1, 2, 0, alpha(oklch(0.2, 0.01, 255), 0.05)), shadow(0, 10, 30, 0, alpha(oklch(0.2, 0.01, 255), 0.07))],
       ...filled(oklch(0.935, 0.005, 200), oklch(0.925, 0.006, 200)),
-      // Gray 600: gray 500 is too faint on the fill.
-      'field.fg.placeholder': oklch(0.48, 0.008, 200),
+      // Placeholder, adornment and disabled text read color.fg.placeholder;
+      // Porcelain's gray 500 is too faint on the field fill, so use gray 600.
+      'color.fg.placeholder': PORCELAIN_GRAYS['color.gray.600'],
       ...accent(oklch(0.5, 0.09, 165), oklch(0.56, 0.09, 165), oklch(0.44, 0.09, 165), oklch(0.99, 0, 0)),
     },
     {
