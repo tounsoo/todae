@@ -37,7 +37,7 @@
   /* Three dots in a row, each rising in turn: a wave, as a typing indicator
      draws. The dots are background layers of the one progress element. */
   progress.root[data-variant='dots'] {
-    --_dot: radial-gradient(circle closest-side, currentColor 90%, transparent);
+    --_dot: radial-gradient(circle closest-side, currentColor 70%, transparent 75%);
     inline-size: calc(var(--todae-spinner-size) * 1.5);
     border-radius: 0;
     mask: none;
@@ -50,9 +50,10 @@
     animation-name: todae-spinner-wave;
   }
 
-  /* The wave runs from the end the text starts at. */
+  /* The wave runs from the end the text starts at. Mirroring the box, not
+     reversing the animation, keeps each dot rising before it falls. */
   progress.root[data-variant='dots']:dir(rtl) {
-    animation-direction: reverse;
+    scale: -1 1;
   }
 
   @keyframes todae-spinner-wave {
@@ -91,13 +92,7 @@
     }
 
     progress.root[data-variant='dots'] {
-      --_dot: radial-gradient(circle closest-side, Highlight 90%, transparent);
-      background:
-        var(--_dot) 0% 50%,
-        var(--_dot) 50% 50%,
-        var(--_dot) 100% 50%;
-      background-size: calc(100% / 3) 50%;
-      background-repeat: no-repeat;
+      --_dot: radial-gradient(circle closest-side, Highlight 70%, transparent 75%);
     }
   }
 }

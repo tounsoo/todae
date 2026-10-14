@@ -6,7 +6,7 @@ Two components for content that is still loading. `Spinner.Root` is a native `<p
 
 ## Spinner
 
-`Spinner.Root` keeps the progressbar role, so screen readers announce it as a progress bar, and it needs a name like any progress: wrap it in a `<label>` with the text, or give it `aria-label`. It is drawn as a ring with one arc of fill that turns, and it holds still when the user asks for reduced motion. It takes no `value`: a wait with a known end is a [Progress](/progress) bar.
+`Spinner.Root` keeps the progressbar role, so screen readers announce it as a progress bar, and it needs a name like any progress: wrap it in a `<label>` with the text, or give it `aria-label`. By default it is drawn as a ring with one arc of fill that turns, and it holds still when the user asks for reduced motion. It takes no `value`: a wait with a known end is a [Progress](/progress) bar.
 
 ```tsx
 <label>

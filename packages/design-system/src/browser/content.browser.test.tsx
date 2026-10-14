@@ -489,17 +489,31 @@ describe('content parts in a browser', () => {
     expect(style('dots').borderTopLeftRadius).toBe('0px');
     expect(style('dots').maskImage).toBe('none');
     expect(style('dots').backgroundImage.match(/radial-gradient/g)).toHaveLength(3);
-    expect(style('dots').animationDirection).toBe('normal');
-    expect(style('rtl-dots').animationDirection).toBe('reverse');
+    // Each dot rises first: a quarter of the way into the first step, the
+    // first layer sits above the line. In RTL the box is mirrored with the same
+    // motion, so the dot at the text's start leads there too.
+    const firstDot = (id: string) => {
+      const animation = screen.getByTestId(id).getAnimations()[0]!;
+      animation.pause();
+      animation.currentTime = parseFloat(style(id).animationDuration) * 1000 * 0.1;
+      return parseFloat(style(id).backgroundPositionY.split(',')[0] ?? '');
+    };
+    expect(firstDot('dots')).toBeLessThan(50);
+    expect(firstDot('rtl-dots')).toBe(firstDot('dots'));
+    expect(style('rtl-dots').animationDirection).toBe('normal');
+    expect(style('rtl-dots').scale).toBe('-1 1');
+    expect(style('dots').scale).toBe('none');
     const media = (features: { name: string; value: string }[]) =>
       (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', { features });
     try {
       await media([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
       expect(style('dots').animationName).toBe('none');
-      expect(style('ring').animationName).toBe('none');
       await media([{ name: 'forced-colors', value: 'active' }]);
       expect(style('dots').backgroundImage.match(/radial-gradient/g)).toHaveLength(3);
-      expect(style('dots').backgroundImage).not.toContain('conic-gradient');
+      // The dots take Highlight, as the ring's arc does.
+      const highlight = style('ring').backgroundImage.match(/rgba?\([^)]*\)/)?.[0];
+      expect(highlight).toBeTruthy();
+      expect(style('dots').backgroundImage).toContain(highlight);
     } finally {
       await media([]);
     }
