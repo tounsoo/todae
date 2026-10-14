@@ -17,7 +17,7 @@
       "placeholder": { "$type": "color", "$value": { "$ref": "#/color/gray/400/$value" } }
     },
     "border": {
-      "default": { "$type": "color", "$value": { "$ref": "#/color/gray/600/$value" } },
+      "default": { "$type": "color", "$value": { "$ref": "#/color/gray/500/$value" } },
       "subtle": { "$type": "color", "$value": { "$ref": "#/color/gray/800/$value" } }
     },
     "danger": {

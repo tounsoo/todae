@@ -22,8 +22,9 @@ async function googleFont(family: string, weight: Weight, text: string): Promise
 }
 
 /**
- * Geist, the site's face, for Latin text, Noto Sans KR for Hangul, which
- * Geist lacks, and Geist Mono for the address. The renderer takes each
+ * Geist for Latin text, since the image renderer has no system faces to fall
+ * back on, Noto Sans KR for Hangul, which Geist lacks, and Geist Mono for the
+ * address. The renderer takes each
  * character from the first font that has it.
  */
 export async function ogFonts(text: string): Promise<OgFont[]> {

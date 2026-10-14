@@ -142,9 +142,14 @@ function typeOf(key: string, extra: ThemeOverrideTypes | undefined): ThemeOverri
   return typeof type === 'string' && OVERRIDE_TYPES.has(type) ? type : undefined;
 }
 
-function isValueOfType(type: ThemeOverrideType, value: unknown): value is ThemeOverrideValue {
+// Letter spacing may tighten; every other dimension, such as a radius or a gap, is a size.
+function isSigned(key: string): boolean {
+  return key.split('.').includes('letter-spacing');
+}
+
+function isValueOfType(type: ThemeOverrideType, value: unknown, key: string): value is ThemeOverrideValue {
   if (type === 'color') return isThemeColorValue(value);
-  if (type === 'dimension') return isThemeDimensionValue(value);
+  if (type === 'dimension') return isThemeDimensionValue(value) || (isSigned(key) && isRemValue(value));
   if (type === 'fontWeight') return isFontWeight(value);
   if (type === 'duration') return isThemeDurationValue(value);
   if (type === 'cubicBezier') return isThemeCubicBezierValue(value);
@@ -156,7 +161,7 @@ function isValueOfType(type: ThemeOverrideType, value: unknown): value is ThemeO
 
 function valueCss(type: ThemeOverrideType, value: ThemeOverrideValue): string {
   if (type === 'color' && isThemeColorValue(value)) return themeColorCss(value);
-  if (type === 'dimension' && isThemeDimensionValue(value)) return `${value.value}${value.unit}`;
+  if (type === 'dimension' && isRemValue(value)) return `${value.value}${value.unit}`;
   if (type === 'duration' && isThemeDurationValue(value)) return `${value.value}${value.unit}`;
   if (type === 'cubicBezier' && isThemeCubicBezierValue(value)) return `cubic-bezier(${value.join(', ')})`;
   if (type === 'fontFamily' && isThemeFontFamilyValue(value)) {
@@ -248,9 +253,11 @@ export function isThemeColorValue(value: unknown): value is ThemeColorValue {
 }
 
 export function isThemeDimensionValue(value: unknown): value is ThemeDimensionValue {
-  if (!isRecord(value)) return false;
-  const extra = Object.keys(value).filter((key) => !['value', 'unit'].includes(key));
-  return extra.length === 0 && finite(value.value) && value.value >= 0 && value.unit === 'rem';
+  return isRemValue(value) && value.value >= 0;
+}
+
+function isRemValue(value: unknown): value is ThemeDimensionValue {
+  return isRecord(value) && onlyKeys(value, ['value', 'unit']) && finite(value.value) && value.unit === 'rem';
 }
 
 function isFontWeight(value: unknown): value is number {
@@ -262,7 +269,7 @@ function isUnitlessNumber(value: unknown): value is number {
 }
 
 export function isThemeOverrideValue(key: ThemeOverrideKey, value: unknown): value is ThemeOverrideValue {
-  return isValueOfType(themeOverrideType(key), value);
+  return isValueOfType(themeOverrideType(key), value, key);
 }
 
 export function parseThemeColor(raw: string): ThemeColorValue | null {
@@ -286,7 +293,7 @@ export function parseThemeValue(key: ThemeOverrideKey, raw: string): ThemeOverri
     const match = value.match(REM);
     if (!match) return null;
     const dimension: ThemeDimensionValue = { value: Number(match[1]), unit: 'rem' };
-    return isThemeDimensionValue(dimension) ? dimension : null;
+    return isValueOfType(type, dimension, key) ? dimension : null;
   }
   if (type === 'fontWeight') return WEIGHT.test(value) ? Number(value) : null;
   if (type === 'duration') {
@@ -366,7 +373,7 @@ export function themeOverrideStyle(overrides: unknown, overrideTypes?: ThemeOver
       reject(`Unknown theme override "${key}"`);
       continue;
     }
-    if (!isValueOfType(type, value)) {
+    if (!isValueOfType(type, value, key)) {
       reject(`Invalid theme override value for "${key}"`);
       continue;
     }

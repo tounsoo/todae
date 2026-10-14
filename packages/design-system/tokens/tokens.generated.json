@@ -1580,8 +1580,8 @@
       "path": "color.border.default",
       "type": "color",
       "cssVar": "--todae-color-border-default",
-      "cssValue": "var(--todae-color-gray-600)",
-      "ref": "color.gray.600",
+      "cssValue": "var(--todae-color-gray-500)",
+      "ref": "color.gray.500",
       "layer": "appearance",
       "context": "dark"
     },
@@ -2531,15 +2531,6 @@
       "context": null
     },
     {
-      "path": "button.base.shadow",
-      "type": "shadow",
-      "cssVar": "--todae-button-base-shadow",
-      "cssValue": "var(--todae-shadow-none)",
-      "ref": "shadow.none",
-      "layer": "contract",
-      "context": null
-    },
-    {
       "path": "button.primary.bg.active",
       "type": "color",
       "cssVar": "--todae-button-primary-bg-active",
@@ -2680,6 +2671,15 @@
       "cssVar": "--todae-button-primary-ring-focus",
       "cssValue": "var(--todae-focus-ring-color)",
       "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": "primary"
+    },
+    {
+      "path": "button.primary.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-button-primary-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
       "layer": "contract",
       "context": "primary"
     },
@@ -2828,6 +2828,15 @@
       "context": "secondary"
     },
     {
+      "path": "button.secondary.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-button-secondary-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
+      "layer": "contract",
+      "context": "secondary"
+    },
+    {
       "path": "button.ghost.bg.active",
       "type": "color",
       "cssVar": "--todae-button-ghost-bg-active",
@@ -2968,6 +2977,15 @@
       "cssVar": "--todae-button-ghost-ring-focus",
       "cssValue": "var(--todae-focus-ring-color)",
       "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": "ghost"
+    },
+    {
+      "path": "button.ghost.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-button-ghost-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
       "layer": "contract",
       "context": "ghost"
     },

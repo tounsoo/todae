@@ -36,7 +36,8 @@ function grays(hue: number, chroma: number): ThemeOverride {
   const out: ThemeOverride = {};
   for (const [step, l] of RAMP) {
     const middle = 1 - Math.abs(l - 0.55) / 0.55;
-    out[`color.gray.${step}` as keyof ThemeOverride] = oklch(l, Number((chroma * (0.5 + 0.5 * middle)).toFixed(4)), hue);
+    // White stays neutral: any chroma at L 1 is outside sRGB.
+    out[`color.gray.${step}` as keyof ThemeOverride] = oklch(l, l >= 1 ? 0 : Number((chroma * (0.5 + 0.5 * middle)).toFixed(4)), hue);
   }
   return out;
 }
@@ -63,14 +64,31 @@ const alpha = (color: ThemeColorValue, a: number): ThemeColorValue => ({ ...colo
 /** Pill-shaped buttons, chips and badges. */
 const PILLS: ThemeOverride = { 'button.base.radius': rem(99), 'chip.radius': rem(99), 'badge.radius': rem(99) };
 
-/** Filled fields and secondary buttons: the fill doubles as the border, so the shape stays the same size. */
+/** A fill moved toward the text color: darker in light mode, lighter in dark. */
+function shade(color: ThemeColorValue, step: number): ThemeColorValue {
+  const [l, c, h] = color.components;
+  return oklch(Math.round((l > 0.5 ? l - step : l + step) * 1000) / 1000, c, h);
+}
+
+/**
+ * Filled fields and secondary buttons: in every state but focus and invalid,
+ * the border is the fill's own color, so the shape stays the same size. Hover
+ * and press deepen the fill.
+ */
 function filled(field: ThemeColorValue, button: ThemeColorValue): ThemeOverride {
-  return {
+  const out: ThemeOverride = {
     'field.bg.default': field,
+    'field.bg.disabled': field,
     'field.border.default': field,
-    'button.secondary.bg.default': button,
-    'button.secondary.border.default': button,
+    'field.border.hover': shade(field, 0.06),
+    'field.border.disabled': field,
   };
+  const fills = { default: button, hover: shade(button, 0.03), active: shade(button, 0.06), focus: button, disabled: button };
+  for (const [state, fill] of Object.entries(fills)) {
+    out[`button.secondary.bg.${state}` as keyof ThemeOverride] = fill;
+    if (state !== 'focus') out[`button.secondary.border.${state}` as keyof ThemeOverride] = fill;
+  }
+  return out;
 }
 
 /** The same overrides in both appearances, plus each appearance's own. */
@@ -90,9 +108,9 @@ function chartreuseButton(ink: ThemeColorValue): ThemeOverride {
   return out;
 }
 
-/** Acid's hard, unblurred shadows in the border's color. */
+/** Acid's hard, unblurred shadows in the border's color; ghost buttons stay flat. */
 function hardShadows(color: ThemeColorValue): ThemeOverride {
-  return { 'card.shadow': shadow(6, 6, 0, 0, color), 'button.base.shadow': shadow(3, 3, 0, 0, color) };
+  return { 'card.shadow': shadow(6, 6, 0, 0, color), 'button.primary.shadow': shadow(3, 3, 0, 0, color), 'button.secondary.shadow': shadow(3, 3, 0, 0, color) };
 }
 
 /** Uppercase, widely spaced buttons, tabs, labels and table headers; spacing in rem. */

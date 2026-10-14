@@ -600,16 +600,6 @@ describe('resolver-driven build', () => {
               },
               gap: px(8),
               icon: { size: px(16) },
-              shadow: {
-                $type: 'shadow',
-                $value: {
-                  color: { colorSpace: 'oklch', components: [0, 0, 0], alpha: 0 },
-                  offsetX: { value: 0, unit: 'px' },
-                  offsetY: { value: 0, unit: 'px' },
-                  blur: { value: 0, unit: 'px' },
-                  spread: { value: 0, unit: 'px' },
-                },
-              },
             },
           },
         },
@@ -1077,16 +1067,16 @@ describe('company token build', () => {
       for (const paint of ['primary', 'secondary', 'ghost', 'outline']) {
         r.modifiers.buttonVariant.contexts[paint] = [
           ...(r.modifiers.buttonVariant.contexts[paint] ?? []),
-          { button: { [paint]: { shadow: px(2) } } },
+          { button: { [paint]: { lift: px(2) } } },
         ];
       }
     });
     const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
     const rescoped = blockOf(css, '[data-appearance],\n[data-density]');
-    expect(rescoped).toContain('--todae-button-shadow: var(--todae-button-primary-shadow);');
+    expect(rescoped).toContain('--todae-button-lift: var(--todae-button-primary-lift);');
     expect(rescoped).not.toContain('--todae-button-bg-default:');
     expect(blockOf(css, '[data-button-variant="secondary"]')).toBe(
-      '[data-button-variant="secondary"] {\n  --todae-button-shadow: var(--todae-button-secondary-shadow);',
+      '[data-button-variant="secondary"] {\n  --todae-button-lift: var(--todae-button-secondary-lift);',
     );
   });
 

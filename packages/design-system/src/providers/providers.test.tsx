@@ -280,6 +280,14 @@ describe('motion, font family, shadow and text transform overrides', () => {
     }
   });
 
+  it('lets letter spacing go negative but no other dimension', () => {
+    const tight = { value: -0.01, unit: 'rem' } as const;
+    expect(themeOverrideStyle({ 'tabs.font.letter-spacing': tight })).toEqual({ '--todae-tabs-font-letter-spacing': '-0.01rem' });
+    expect(() => themeOverrideStyle({ 'radius.md': tight })).toThrow(/Invalid theme override value/);
+    expect(parseThemeValue('button.base.font.letter-spacing', '-0.01rem')).toEqual(tight);
+    expect(parseThemeValue('radius.md', '-0.01rem')).toBeNull();
+  });
+
   it('parses playground text for the new types', () => {
     expect(parseThemeValue('motion.duration.fast', '0.12s')).toEqual({ value: 0.12, unit: 's' });
     expect(parseThemeValue('motion.duration.fast', '12px')).toBeNull();
