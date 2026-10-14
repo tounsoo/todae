@@ -3647,6 +3647,24 @@
       "context": null
     },
     {
+      "path": "field.token.bg",
+      "type": "color",
+      "cssVar": "--todae-field-token-bg",
+      "cssValue": "var(--todae-color-bg-subtle)",
+      "ref": "color.bg.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.token.radius",
+      "type": "dimension",
+      "cssVar": "--todae-field-token-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "chip.bg.default",
       "type": "color",
       "cssVar": "--todae-chip-bg-default",

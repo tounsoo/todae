@@ -555,6 +555,8 @@
   --todae-field-row-control-size: var(--_todae-field-row-control-size, 1.625rem);
   --todae-field-swatch-border: var(--_todae-field-swatch-border, var(--todae-color-border-default));
   --todae-field-swatch-radius: var(--_todae-field-swatch-radius, var(--todae-radius-sm));
+  --todae-field-token-bg: var(--_todae-field-token-bg, var(--todae-color-bg-subtle));
+  --todae-field-token-radius: var(--_todae-field-token-radius, var(--todae-radius-sm));
   --todae-chip-bg-default: var(--_todae-chip-bg-default, var(--todae-color-bg-subtle));
   --todae-chip-bg-disabled: var(--_todae-chip-bg-disabled, var(--todae-color-bg-subtle));
   --todae-chip-bg-focus: var(--_todae-chip-bg-focus, var(--todae-color-bg-subtle));

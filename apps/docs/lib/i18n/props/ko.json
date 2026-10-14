@@ -847,6 +847,10 @@
     "autoGrow": {
       "en": "Grows with content up to maxRows using CSS only. No maxRows means no cap.",
       "ko": "CSS만으로 내용에 맞춰 maxRows까지 늘어납니다. maxRows가 없으면 상한이 없습니다."
+    },
+    "highlights": {
+      "en": "Ranges of the text, { start, end, kind?, anchorName?, draw? }, drawn as tokens on a layer behind it. useMentions' getTextareaProps sets it.",
+      "ko": "텍스트의 범위 { start, end, kind?, anchorName?, draw? }를 텍스트 뒤의 레이어에 토큰으로 그립니다. useMentions의 getTextareaProps가 설정합니다."
     }
   },
   "Field.TextInput": {
@@ -2409,6 +2413,48 @@
     "children": {
       "en": "The button's content. Without it, the send glyph named by the send string, or the stop glyph named by the stop string while busy.",
       "ko": "버튼의 내용. 없으면 send 문자열로 이름이 붙은 send 글리프를, busy인 동안에는 stop 문자열로 이름이 붙은 stop 글리프를 보여 줍니다."
+    }
+  },
+  "useMentions": {
+    "triggers": {
+      "en": "One entry per trigger character, such as { char: \"@\", options } or { char: \"/\", position: \"start\", loadOptions }. Each takes options or loadOptions, filter, text for what a pick inserts, and label for the list's name.",
+      "ko": "트리거 문자마다 하나, 예를 들어 { char: \"@\", options }나 { char: \"/\", position: \"start\", loadOptions }. 각각 options나 loadOptions, filter, 고른 항목이 넣을 텍스트인 text, 목록의 이름인 label을 받습니다."
+    },
+    "value": {
+      "en": "Controlled text.",
+      "ko": "제어 텍스트."
+    },
+    "defaultValue": {
+      "en": "Starting text when uncontrolled.",
+      "ko": "비제어일 때의 시작 텍스트."
+    },
+    "onValueChange": {
+      "en": "Called with the new text on every edit, including a pick.",
+      "ko": "고르기를 포함해 편집할 때마다 새 텍스트로 불립니다."
+    },
+    "tokens": {
+      "en": "Controlled tokens: { start, end, char, value, text } ranges of the text. Pass them with value to load a draft.",
+      "ko": "제어 토큰: 텍스트의 { start, end, char, value, text } 범위. 임시 저장본을 불러오려면 value와 함께 넘기세요."
+    },
+    "defaultTokens": {
+      "en": "Starting tokens when uncontrolled.",
+      "ko": "비제어일 때의 시작 토큰."
+    },
+    "onTokensChange": {
+      "en": "Called when a pick adds a token, or an edit moves or drops one.",
+      "ko": "고르기가 토큰을 더하거나, 편집이 토큰을 옮기거나 버릴 때 불립니다."
+    },
+    "maxLength": {
+      "en": "The textarea's maxLength. A pick whose text would not fit is disabled.",
+      "ko": "textarea의 maxLength. 텍스트가 들어가지 않는 고르기는 비활성화됩니다."
+    },
+    "disabled": {
+      "en": "Keeps the list closed.",
+      "ko": "목록을 닫아 둡니다."
+    },
+    "id": {
+      "en": "Base for the listbox id.",
+      "ko": "listbox id의 기반."
     }
   }
 }

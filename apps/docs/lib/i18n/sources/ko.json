@@ -301,11 +301,12 @@
     "# Field.Textarea": "14c1c3cd31ad",
     "## Height": "c62990618acf",
     "## Density and states": "bdbe9831349f",
+    "## Highlights": "e18e517ab4bb",
     "## Accessible composition": "a5629b389560",
     "## When to use": "d57fe8233a0b",
     "### Field.Textarea": "11b51d7095d4",
     "## Props": "ea6d8a003de8",
-    "(section order)": "b21f3734faec"
+    "(section order)": "fca6b71e7c11"
   },
   "field/time-input": {
     "(top)": "abb7c622b36a",
@@ -415,7 +416,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "5f97a87c3984",
+    "# Native platform": "df33c3883e71",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -641,7 +642,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "1dfd3f30006f",
-    "## Strings": "58a4bf22e4db",
+    "## Strings": "1d43abee22a5",
     "## Accessible composition": "ce80e59fbde4",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",
@@ -728,6 +729,17 @@
     "## When to use": "fe7a9ae7f4c7",
     "## Props": "a80f6dc00ca3",
     "(section order)": "b7ca335f1524"
+  },
+  "utilities/use-mentions": {
+    "(top)": "4868b466fa49",
+    "# useMentions": "c69e88cf20fe",
+    "## Triggers": "2108bb6562f5",
+    "## Picking and editing": "99c72cb94a30",
+    "## Drawing tokens": "01c86baed977",
+    "## Accessible composition": "6052007a7a2e",
+    "## When to use": "9ec50166c73a",
+    "## Props": "d6846222f1f5",
+    "(section order)": "4f7a49b7b144"
   },
   "utilities/use-modal-layer": {
     "# useModalLayer": "ab9c7fb8b312",

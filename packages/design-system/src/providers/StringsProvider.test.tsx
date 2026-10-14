@@ -41,6 +41,8 @@ const FRENCH: Strings = {
   charactersLeft: (remaining) => `${remaining} restants`,
   characterLimitReached: 'Limite atteinte',
   createOption: (query) => `Créer « ${query} »`,
+  suggestions: 'Suggestions',
+  suggestionCount: (count) => (count === 0 ? 'Aucune suggestion' : `${count} suggestion${count === 1 ? '' : 's'}`),
   saturation: 'Saturation',
   brightness: 'Luminosité',
   hue: 'Teinte',

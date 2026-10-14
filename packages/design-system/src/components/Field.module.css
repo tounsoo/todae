@@ -141,6 +141,54 @@
     color: var(--todae-field-fg-disabled);
   }
 
+  /* Highlights: a copy of the text, without color, behind the textarea, that
+     draws tokens. The textarea keeps its own text, caret and selection on top. */
+  .shell:has(> .highlights) {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .textarea[data-highlighted] {
+    position: relative;
+    z-index: 1;
+  }
+
+  .highlights {
+    position: absolute;
+    top: anchor(top);
+    bottom: anchor(bottom);
+    left: anchor(left);
+    right: anchor(right);
+    z-index: 0;
+    margin: 0;
+    border-style: solid;
+    border-color: transparent;
+    overflow: hidden;
+    color: transparent;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Only a background: padding or a border would move the text after it. */
+  .token {
+    border-radius: var(--todae-field-token-radius);
+    background: var(--todae-field-token-bg);
+    box-decoration-break: clone;
+  }
+
+  @media (forced-colors: active) {
+    /* The textarea's forced background would hide the layer, so it goes on top and draws outlines only. */
+    .highlights {
+      z-index: 2;
+      forced-color-adjust: none;
+    }
+
+    .token {
+      background: none;
+      box-shadow: 0 0 0 1px CanvasText;
+    }
+  }
+
   /* An icon from a library renders an svg: it takes the field's icon size. */
   .icon > :is(svg, img),
   .selectGlyph > :is(svg, img) {
