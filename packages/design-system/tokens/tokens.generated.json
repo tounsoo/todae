@@ -7472,36 +7472,36 @@
       "context": null
     },
     {
-      "path": "spinner.motion.duration",
+      "path": "loader.motion.duration",
       "type": "duration",
-      "cssVar": "--todae-spinner-motion-duration",
+      "cssVar": "--todae-loader-motion-duration",
       "cssValue": "800ms",
       "ref": null,
       "layer": "contract",
       "context": null
     },
     {
-      "path": "spinner.size",
+      "path": "loader.size",
       "type": "dimension",
-      "cssVar": "--todae-spinner-size",
+      "cssVar": "--todae-loader-size",
       "cssValue": "1.25rem",
       "ref": null,
       "layer": "contract",
       "context": null
     },
     {
-      "path": "spinner.thickness",
+      "path": "loader.thickness",
       "type": "dimension",
-      "cssVar": "--todae-spinner-thickness",
+      "cssVar": "--todae-loader-thickness",
       "cssValue": "2px",
       "ref": null,
       "layer": "contract",
       "context": null
     },
     {
-      "path": "spinner.track-tint",
+      "path": "loader.track-tint",
       "type": "number",
-      "cssVar": "--todae-spinner-track-tint",
+      "cssVar": "--todae-loader-track-tint",
       "cssValue": "var(--todae-opacity-20)",
       "ref": "opacity.20",
       "layer": "contract",

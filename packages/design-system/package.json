@@ -82,9 +82,9 @@
       "types": "./dist/server/meter.d.ts",
       "import": "./dist/meter.js"
     },
-    "./spinner": {
-      "types": "./dist/server/spinner.d.ts",
-      "import": "./dist/spinner.js"
+    "./loader": {
+      "types": "./dist/server/loader.d.ts",
+      "import": "./dist/loader.js"
     },
     "./skeleton": {
       "types": "./dist/server/skeleton.d.ts",

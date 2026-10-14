@@ -3,7 +3,7 @@ import { useGlyphs } from '../providers/GlyphsProvider';
 import { useStrings } from '../providers/StringsProvider';
 import { cx } from './cx';
 import { CheckGlyph, ErrorGlyph, glyphOr } from './glyphs';
-import { Spinner } from './Spinner';
+import { Loader } from './Loader';
 import { VisuallyHidden } from './VisuallyHidden';
 import styles from './Steps.module.css';
 
@@ -55,7 +55,7 @@ function Item({ status = 'pending', statusLabel, className, children, ...props }
       className={cx(styles.item, className)}
     >
       <span className={styles.marker} aria-hidden="true">
-        {status === 'current' ? <Spinner.Root className={styles.spinner} /> : null}
+        {status === 'current' ? <Loader.Root className={styles.spinner} /> : null}
         {status === 'done' ? <span data-todae-glyph="">{glyphOr(glyphs.check, <CheckGlyph />)}</span> : null}
         {status === 'error' ? <span data-todae-glyph="">{glyphOr(glyphs.error, <ErrorGlyph />)}</span> : null}
       </span>

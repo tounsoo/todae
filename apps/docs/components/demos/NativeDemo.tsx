@@ -4,7 +4,7 @@ import { Kbd } from '@omsoo.design/todae/kbd';
 import { Link } from '@omsoo.design/todae/link';
 import { Separator } from '@omsoo.design/todae/separator';
 import { Skeleton } from '@omsoo.design/todae/skeleton';
-import { Spinner } from '@omsoo.design/todae/spinner';
+import { Loader } from '@omsoo.design/todae/loader';
 import { Stack } from '@omsoo.design/todae/stack';
 import { Table } from '@omsoo.design/todae/table';
 import { Text } from '@omsoo.design/todae/text';
@@ -114,19 +114,19 @@ export function TableOfInvoices() {
   );
 }
 
-export function SpinnerLabelled() {
+export function LoaderLabelled() {
   return (
     <Stack.Root direction="row">
       <label>
-        <Spinner.Root /> Loading invoices
+        <Loader.Root /> Loading invoices
       </label>
-      <Spinner.Root aria-label="Saving" />
+      <Loader.Root aria-label="Saving" />
     </Stack.Root>
   );
 }
 
-export function SpinnerDots() {
-  return <Spinner.Root variant="dots" aria-label="Assistant is typing" />;
+export function LoaderDots() {
+  return <Loader.Root variant="dots" aria-label="Assistant is typing" />;
 }
 
 export function SkeletonProfile() {

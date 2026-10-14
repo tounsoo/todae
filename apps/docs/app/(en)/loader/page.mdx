@@ -1,0 +1,78 @@
+import { LoaderDots, LoaderLabelled, SkeletonProfile } from '../../../components/demos/NativeDemo';
+
+# Loader and Skeleton
+
+Two components for content that is still loading. `Loader.Root` is a native `<progress>` with no value, and `Skeleton.Root` a placeholder `div`. Server Components can import them from `@omsoo.design/todae/loader` and `@omsoo.design/todae/skeleton`.
+
+## Loader
+
+`Loader.Root` keeps the progressbar role, so screen readers announce it as a progress bar, and it needs a name like any progress: wrap it in a `<label>` with the text, or give it `aria-label`. By default, as `variant="spinner"`, it is drawn as a ring with one arc of fill that turns, and it holds still when the user asks for reduced motion. It takes no `value`: a wait with a known end is a [Progress](/progress) bar.
+
+```tsx
+<label>
+  <Loader.Root /> Loading invoices
+</label>
+
+<Loader.Root aria-label="Saving" />
+```
+
+<Example>
+  <LoaderLabelled />
+</Example>
+
+### Dots
+
+`variant="dots"` draws three dots that rise in turn, starting from the side the text starts on, as a typing indicator does. Use it where someone or something is writing a reply, such as an assistant in a chat. It is the same `<progress>`, with the same role, so it needs a name too; under reduced motion the dots hold still.
+
+```tsx
+<Loader.Root variant="dots" aria-label="Assistant is typing" />
+```
+
+<Example>
+  <LoaderDots />
+</Example>
+
+Either variant draws in the text color, so it shows on any surface, a primary button included: set `color` to change it. Restyle it through `loader.size` (the dots are one and a half times as wide), `loader.thickness`, `loader.track-tint` (how much of the text color the track takes) and `loader.motion.duration` (one wave of the dots); `loader.thickness` and `loader.track-tint` only change the spinner.
+
+## Skeleton
+
+`Skeleton.Root` stands in for content before it arrives. It is at least one line high, and elements inside it only give it a size: they are hidden. It pulses, and holds still under reduced motion.
+
+```tsx
+<div>
+  <VisuallyHidden.Root>Loading profile</VisuallyHidden.Root>
+  <Stack.Root direction="row" aria-hidden="true">
+    <Skeleton.Root style={{ inlineSize: '2.5rem', blockSize: '2.5rem', borderRadius: '50%' }} />
+    <Stack.Root style={{ flex: 1 }}>
+      <Skeleton.Root style={{ inlineSize: '40%' }} />
+      <Skeleton.Root style={{ inlineSize: '70%' }} />
+    </Stack.Root>
+  </Stack.Root>
+</div>
+```
+
+<Example block>
+  <SkeletonProfile />
+</Example>
+
+A skeleton means nothing to a screen reader, so hide it with `aria-hidden` and say what is loading in text. Restyle it through `skeleton.bg`, `skeleton.radius` and `skeleton.motion.duration`.
+
+## Accessible composition
+
+**Todae handles:** Style only. `Loader.Root` stays a native `<progress>` with the `progressbar` role and never takes a `value`, so it is always announced as busy. It holds still under reduced motion. `Skeleton.Root` hides the elements inside it with `visibility: hidden`, which also hides them from assistive technology, but bare text directly inside it is only made transparent and is still read.
+
+**You supply:** A name for each loader, from a `<label>` or `aria-label`, that says what is loading. `aria-hidden` on each skeleton, with the loading text next to it, such as in a [VisuallyHidden](/visually-hidden), as above. When the content arrives, it replaces both.
+
+**Watch for:** A loader with `aria-hidden` and no other text, so nothing says the area is busy. A loader in every row of a list, each read as a progress bar; one for the whole area reads better.
+
+## When to use
+
+**When:** Spinner → a short wait for one action or a small area, such as a save or a search. Dots → a reply being written. Skeleton → the layout of a page or section is known before its content arrives.
+
+**When not:** The wait has a known end → [Progress](/progress) with a `value`. The wait is long or can fail → say so in text, with a way to cancel or retry.
+
+## Props
+
+<PropsTable name="Loader.Root" />
+
+<PropsTable name="Skeleton.Root" />
