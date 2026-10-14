@@ -120,6 +120,8 @@ export type UseMentionsResult = {
 const EMPTY_DRAFT: MentionDraft = { text: '', tokens: [] };
 const EMPTY_OPTIONS: readonly ComboboxOption[] = [];
 const SPACE = /\s/;
+/** Keys that move the caret without editing. */
+const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
 /** How many texts the undo history remembers tokens for. */
 const HISTORY = 100;
 
@@ -382,6 +384,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
         setCaret(caretTo);
         const list = validTokens(value, [...tokens, token]);
         remember(value, list);
+        selectionBefore.current = null;
         if (!sameTokens(list, tokens)) send({ text: value, tokens: list });
         return;
       }
@@ -426,10 +429,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    // A key ends the wait for a pick the product never commits; this key still sees no list.
-    // Only the wait this render saw, so a pick made earlier in this event stays.
-    const waiting = caretAfter;
-    if (waiting) setCaretAfter((current) => (current === waiting ? null : current));
+    // A key that moves the caret ends the wait for a pick the product never commits; edits end it in onChange.
+    if (caretAfter && CARET_KEYS.has(event.key)) setCaretAfter(null);
     if (latest.current.disabled) return;
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
     const el = event.currentTarget;
@@ -504,7 +505,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       selectionBefore.current = { start: el.selectionStart, end: el.selectionEnd };
     };
     // A press on the textarea ends the wait for a pick the product never commits.
-    const release = () => setCaretAfter(null);
+    const release = (event: PointerEvent) => {
+      if (event.button === 0) setCaretAfter(null);
+    };
     el.addEventListener('selectionchange', onChange);
     el.addEventListener('beforeinput', onBeforeInput);
     el.addEventListener('pointerdown', release);

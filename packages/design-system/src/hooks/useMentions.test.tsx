@@ -531,4 +531,73 @@ describe('useMentions edge cases', () => {
     fireEvent.select(el);
     expect(result.open).toBe(true);
   });
+
+  it('keeps waiting for a later commit through a key that moves nothing, then places the caret', async () => {
+    let result!: UseMentionsResult;
+    render(<Harness initial="@ad hi @zz" commit="timeout" expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    el.setSelectionRange(3, 3);
+    fireEvent.select(el);
+    act(() => result.select('ada'));
+    fireEvent.keyDown(el, { key: 'Shift', shiftKey: true });
+    await tick();
+    expect(el.value).toBe('@Ada Lovelace hi @zz');
+    expect(el.selectionStart).toBe(13);
+    expect(result.open).toBe(false);
+  });
+
+  it('ends the wait for a rejected pick when the product puts in another text', () => {
+    let result!: UseMentionsResult;
+    render(<Harness initial="@al" accept={() => false} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    el.setSelectionRange(3, 3);
+    fireEvent.select(el);
+    act(() => result.select('alan'));
+    fireEvent.click(screen.getByRole('button', { name: 'Replace' }));
+    el.focus();
+    el.setSelectionRange(6, 6);
+    fireEvent.select(el);
+    expect(result.open).toBe(true);
+  });
+
+  it('ends the wait for a rejected pick on a primary press, not another button', () => {
+    let result!: UseMentionsResult;
+    render(<Harness initial="@al @gr" accept={() => false} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    el.setSelectionRange(3, 3);
+    fireEvent.select(el);
+    act(() => result.select('alan'));
+    el.setSelectionRange(7, 7);
+    fireEvent.pointerDown(el, { button: 2 });
+    fireEvent.select(el);
+    expect(result.open).toBe(false);
+    fireEvent.pointerDown(el, { button: 0 });
+    fireEvent.select(el);
+    expect(result.open).toBe(true);
+  });
+
+  it('does not count a focused textarea in a window without focus', () => {
+    const hasFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+    let result!: UseMentionsResult;
+    const container = document.createElement('div');
+    document.body.append(container);
+    container.innerHTML = renderToString(<Harness />);
+    const el = container.querySelector('textarea')!;
+    el.focus();
+    let root!: ReturnType<typeof hydrateRoot>;
+    act(() => {
+      root = hydrateRoot(container, <Harness expose={(r) => (result = r)} />);
+    });
+    try {
+      fireEvent.change(el, { target: { value: '@a', selectionStart: 2, selectionEnd: 2 } });
+      expect(result.open).toBe(false);
+    } finally {
+      act(() => root.unmount());
+      container.remove();
+      hasFocus.mockRestore();
+    }
+  });
 });
