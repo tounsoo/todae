@@ -1,6 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
-import { useState } from 'react';
+import { StrictMode, useState } from 'react';
+import { createRoot } from 'react-dom/client';
 import axe from 'axe-core';
 import { describe, expect, it } from 'vitest';
 import { Attachment } from '../index';
@@ -162,6 +163,144 @@ describe('Attachment.Root in a browser', () => {
     render(<Files />);
     await userEvent.click(screen.getByRole('button', { name: 'Remove a.png' }));
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove b.png' }));
+  });
+
+  it('moves focus past a neighbor that cannot take it', async () => {
+    function Files() {
+      const [files, setFiles] = useState(['a.png', 'b.png', 'c.png']);
+      return (
+        <div>
+          {files.map((file) => (
+            <Attachment.Root key={file} style={file === 'c.png' ? { visibility: 'hidden' } : undefined}>
+              <Attachment.Name>{file}</Attachment.Name>
+              <Attachment.Remove onClick={() => setFiles((all) => all.filter((f) => f !== file))} />
+            </Attachment.Root>
+          ))}
+        </div>
+      );
+    }
+    render(<Files />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove b.png' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove a.png' }));
+  });
+
+  it('moves no focus when an attachment holding it unmounts without a remove press', async () => {
+    function Files({ keys, strict }: { keys: string[]; strict?: boolean }) {
+      const list = (
+        <div>
+          {keys.map((key, index) => (
+            <Attachment.Root key={key}>
+              <Attachment.Name>{`file-${index}.png`}</Attachment.Name>
+              <Attachment.Remove autoFocus={strict && index === keys.length - 1} />
+            </Attachment.Root>
+          ))}
+        </div>
+      );
+      return strict ? <StrictMode>{list}</StrictMode> : list;
+    }
+    // A new key once an upload finishes remounts the attachment.
+    const { rerender, unmount } = render(<Files keys={['tmp-0', 'b']} />);
+    const first = screen.getByRole('button', { name: 'Remove file-0.png' });
+    act(() => first.focus());
+    rerender(<Files keys={['srv-0', 'b']} />);
+    expect(document.activeElement).not.toBe(screen.getByRole('button', { name: 'Remove file-1.png' }));
+    unmount();
+    // StrictMode mounts, unmounts and mounts again: focus stays on the new file.
+    render(<Files strict keys={['a', 'b']} />);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove file-1.png' }));
+  });
+
+  it('reads focus in the shadow root that holds it', async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    const mount = document.createElement('div');
+    shadow.append(mount);
+    function Files() {
+      const [files, setFiles] = useState(['a.png', 'b.png']);
+      return (
+        <div>
+          {files.map((file) => (
+            <Attachment.Root key={file}>
+              <Attachment.Name>{file}</Attachment.Name>
+              <Attachment.Remove onClick={() => setFiles((all) => all.filter((f) => f !== file))} />
+            </Attachment.Root>
+          ))}
+        </div>
+      );
+    }
+    const root = createRoot(mount);
+    act(() => root.render(<Files />));
+    const a = shadow.querySelector<HTMLButtonElement>('[aria-label="Remove a.png"]')!;
+    act(() => a.focus());
+    act(() => a.click());
+    expect(shadow.activeElement).toBe(shadow.querySelector('[aria-label="Remove b.png"]'));
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it('closes up the rows of a missing meta line', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Attachment.Root data-testid="no-meta">
+          <Attachment.Preview data-testid="preview">
+            <Icon />
+          </Attachment.Preview>
+          <Attachment.Name data-testid="name">notes.txt</Attachment.Name>
+          <Attachment.Remove data-testid="remove" />
+        </Attachment.Root>
+        <Attachment.Root data-testid="bar" status="uploading">
+          <Attachment.Preview data-testid="bar-preview">
+            <Icon />
+          </Attachment.Preview>
+          <Attachment.Name data-testid="bar-name">notes.txt</Attachment.Name>
+          <Attachment.Progress data-testid="bar-progress" value={1} max={2} />
+        </Attachment.Root>
+      </div>,
+    );
+    const middle = (r: DOMRect) => r.top + r.height / 2;
+    expect(middle(box('name'))).toBeCloseTo(middle(box('preview')), 0);
+    expect(middle(box('remove'))).toBeCloseTo(middle(box('preview')), 0);
+    // The bar sits under the name, inside the preview's height.
+    expect(box('bar-progress').top).toBeGreaterThan(box('bar-name').bottom - 0.5);
+    expect(box('bar-progress').bottom).toBeLessThanOrEqual(box('bar-preview').bottom + 0.5);
+  });
+
+  it('covers the preview with the img of a picture, cropped to it', () => {
+    const src =
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="teal"/></svg>',
+      );
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Attachment.Root>
+          <Attachment.Preview data-testid="preview">
+            <picture>
+              <img data-testid="img" src={src} width={400} height={200} alt="" />
+            </picture>
+          </Attachment.Preview>
+          <Attachment.Name>wide.svg</Attachment.Name>
+        </Attachment.Root>
+      </div>,
+    );
+    expect(box('img').width).toBeCloseTo(box('preview').width, 0);
+    expect(box('img').height).toBeCloseTo(box('preview').height, 0);
+  });
+
+  it('keeps a list item as narrow as an attachment with a long name', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <ul style={{ display: 'flex', flexWrap: 'wrap', listStyle: 'none', padding: 0 }}>
+          <li data-testid="item">
+            <Attachment.Root data-testid="root">
+              <Attachment.Name>{'a-very-long-file-name-that-goes-on-and-on-and-on.pdf'}</Attachment.Name>
+            </Attachment.Root>
+          </li>
+        </ul>
+      </div>,
+    );
+    expect(box('item').width).toBeCloseTo(box('root').width, 0);
   });
 
   it('leaves focus alone when an attachment without focus is removed', async () => {

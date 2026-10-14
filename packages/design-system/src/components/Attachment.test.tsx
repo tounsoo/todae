@@ -1,4 +1,5 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StringsProvider } from '../providers/StringsProvider';
 import { Attachment } from './Attachment';
@@ -80,6 +81,49 @@ describe('Attachment', () => {
     expect(screen.getByRole('progressbar', { name: 'a.png' })).toBeTruthy();
     const named = screen.getByRole('progressbar', { name: 'Uploading b.png' });
     expect(named.hasAttribute('aria-labelledby')).toBe(false);
+  });
+
+  it('keeps its default names with an id of your own on the name, or an aria-labelledby left undefined', () => {
+    render(
+      <Attachment.Root status="uploading" aria-labelledby={undefined}>
+        <Attachment.Name id="file-1-name">a.png</Attachment.Name>
+        <Attachment.Progress value={1} max={2} aria-labelledby={undefined} />
+      </Attachment.Root>,
+    );
+    expect(screen.getByRole('group', { name: 'a.png' }).getAttribute('aria-labelledby')).toBe('file-1-name');
+    expect(screen.getByRole('progressbar', { name: 'a.png' })).toBeTruthy();
+  });
+
+  it('takes an aria-label of its own over the file name', () => {
+    render(
+      <Attachment.Root aria-label="Photo, failed">
+        <Attachment.Name>a.png</Attachment.Name>
+      </Attachment.Root>,
+    );
+    const group = screen.getByRole('group', { name: 'Photo, failed' });
+    expect(group.hasAttribute('aria-labelledby')).toBe(false);
+  });
+
+  it('hands focus on after a remove press where elements have no checkVisibility', () => {
+    function Files() {
+      const [files, setFiles] = useState(['a.png', 'b.png']);
+      return (
+        <div>
+          {files.map((file) => (
+            <Attachment.Root key={file}>
+              <Attachment.Name>{file}</Attachment.Name>
+              <Attachment.Remove onClick={() => setFiles((all) => all.filter((f) => f !== file))} />
+            </Attachment.Root>
+          ))}
+        </div>
+      );
+    }
+    render(<Files />);
+    expect('checkVisibility' in HTMLElement.prototype).toBe(false);
+    const a = screen.getByRole('button', { name: 'Remove a.png' });
+    a.focus();
+    fireEvent.click(a);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove b.png' }));
   });
 
   it('shows its status to CSS', () => {

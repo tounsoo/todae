@@ -6,7 +6,9 @@
     column-gap: var(--todae-attachment-gap);
     box-sizing: border-box;
     min-inline-size: 0;
-    max-inline-size: min(100%, var(--todae-attachment-max-width));
+    /* No percentage here: a wrapper that sizes to its content, such as a list
+       item in a wrapping row, would size to the uncapped name. */
+    max-inline-size: var(--todae-attachment-max-width);
     padding: var(--todae-attachment-padding-y) var(--todae-attachment-padding-x);
     border: var(--todae-attachment-border-width) solid var(--todae-attachment-border-default);
     border-radius: var(--todae-attachment-radius);
@@ -42,9 +44,20 @@
     display: none;
   }
 
-  .root > .preview {
-    grid-column: preview;
-    grid-row: 1 / span 2;
+  /* One row for each text part that is there: the name, then the meta line,
+     then the upload bar. The preview and the button span them all, so a
+     missing part leaves no empty row. */
+  .root {
+    grid-template-rows: auto;
+  }
+
+  .root:has(> .meta:not([hidden])),
+  .root:has(> .progress:not([hidden])) {
+    grid-template-rows: auto auto;
+  }
+
+  .root:has(> .meta:not([hidden])):has(> .progress:not([hidden])) {
+    grid-template-rows: auto auto auto;
   }
 
   .root > .name {
@@ -56,13 +69,18 @@
   }
 
   .root > .progress {
-    grid-row: 3;
+    grid-row: -2;
     margin-block-start: var(--todae-attachment-padding-y);
+  }
+
+  .root > .preview {
+    grid-column: preview;
+    grid-row: 1 / -1;
   }
 
   .root > .remove {
     grid-column: remove;
-    grid-row: 1 / span 2;
+    grid-row: 1 / -1;
   }
 
   .preview {
@@ -76,8 +94,14 @@
     overflow: hidden;
   }
 
-  /* A thumbnail fills the box; an icon from a library takes the icon size. */
-  .preview > :is(img, video, picture) {
+  /* A thumbnail covers the box, cropped to it; an icon from a library takes
+     the icon size. */
+  .preview > picture {
+    display: contents;
+  }
+
+  .preview > :is(img, video),
+  .preview > picture > img {
     inline-size: 100%;
     block-size: 100%;
     object-fit: cover;

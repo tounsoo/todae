@@ -22,8 +22,8 @@ import { AttachmentExample } from '../../../components/demos/AttachmentDemo';
 
 ## Parts
 
-- `Attachment.Root` is a `div` with `role="group"`, named by `Attachment.Name`. Its `status` is `ready`, `uploading` or `error`, and sets `data-status`. An `error` colors the border and `Attachment.Meta` with the `attachment.border.error` and `attachment.meta.fg.error` tokens. It is at most `attachment.max-width` wide.
-- `Attachment.Preview` is a box of `attachment.preview.size` at the start. An `img`, `video` or `picture` fills it, so a thumbnail shows whole; an `svg` icon takes `attachment.icon.size`.
+- `Attachment.Root` is a `div` with `role="group"`, named by `Attachment.Name` unless you give it `aria-label` or `aria-labelledby`. Its `status` is `ready`, `uploading` or `error`, and sets `data-status`. An `error` colors the border and `Attachment.Meta` with the `attachment.border.error` and `attachment.meta.fg.error` tokens. It is at most `attachment.max-width` wide.
+- `Attachment.Preview` is a box of `attachment.preview.size` at the start. An `img` or `video`, or the `img` in a `picture`, covers it and is cropped to it; an `svg` icon takes `attachment.icon.size`.
 - `Attachment.Name` is the file name, as text. A name too long for the width ends in an ellipsis.
 - `Attachment.Meta` is a line under the name, such as the size and type, or what went wrong.
 - `Attachment.Progress` is a [Progress](/progress) bar under them, for an upload. It is named by `Attachment.Name` unless you give it `aria-label` or `aria-labelledby`.
@@ -33,11 +33,11 @@ Leave out a part you don't need, and the others close up.
 
 ## Removing
 
-When an attachment that holds focus is removed, focus moves to the remove button of the next attachment beside it, or the one before when it was the last. Beside it means a sibling element, or, when each attachment is the only child of an `li`, the attachment in another item of the same list. When it was the only one, focus is yours to place, such as on the composer's text field.
+When pressing `Attachment.Remove` removes its attachment, focus moves to the remove button of the next attachment beside it, or the one before when it was the last. Beside it means a sibling element, or, when each attachment is the only child of an `li`, the attachment in another item of the same list. When it was the only one, focus is yours to place, such as on the composer's text field. An attachment removed any other way, such as when you clear them all, leaves focus to you.
 
 ## Accessible composition
 
-**Todae handles:** A group for each file, named by its file name. A remove button named after the file, and a progress bar named by it. Focus moving to the next remove button when an attachment holding focus is removed.
+**Todae handles:** A group for each file, named by its file name. A remove button named after the file, and a progress bar named by it. Focus moving to the next remove button when a press of a remove button removes its attachment.
 
 **You supply:** The file name in `Attachment.Name`. An `alt=""` on a thumbnail, since the name already says what the file is. Focus after the last attachment is removed. An upload error said in words in `Attachment.Meta`, and announced when it happens, such as through [useAnnouncer](/utilities/use-announcer).
 

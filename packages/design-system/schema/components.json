@@ -120,7 +120,7 @@
     },
     {
       "name": "Attachment.Preview",
-      "description": "A box of attachment.preview.size beside the name. An img, video or picture fills it; an svg icon takes attachment.icon.size. Takes native div attributes.",
+      "description": "A box of attachment.preview.size beside the name. An img or video, or the img in a picture, covers it and is cropped to it; an svg icon takes attachment.icon.size. Takes native div attributes.",
       "props": [
         {
           "name": "children",
@@ -156,7 +156,7 @@
     },
     {
       "name": "Attachment.Root",
-      "description": "One file in a composer or a message, as a div with role=\"group\" named by Attachment.Name. The upload is product code: status shows its state. Takes native div attributes.",
+      "description": "One file in a composer or a message, as a div with role=\"group\" named by Attachment.Name unless it has an aria-label or aria-labelledby. The upload is product code: status shows its state. Takes native div attributes.",
       "props": [
         {
           "name": "status",

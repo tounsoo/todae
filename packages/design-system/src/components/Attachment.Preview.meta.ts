@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Attachment.Preview',
   description:
-    'A box of attachment.preview.size beside the name. An img, video or picture fills it; an svg icon takes attachment.icon.size. Takes native div attributes.',
+    'A box of attachment.preview.size beside the name. An img or video, or the img in a picture, covers it and is cropped to it; an svg icon takes attachment.icon.size. Takes native div attributes.',
   props: [
     {
       name: 'children',
