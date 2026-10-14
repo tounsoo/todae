@@ -53,6 +53,17 @@ describe('Field.DateTimePicker', () => {
     ]);
   });
 
+  it('sends a year past 9999 as HTML writes it', () => {
+    render(
+      <form data-testid="form">
+        <Field.Root aria-label="Start" name="start">
+          <Field.DateTimePicker value={at('+020261-10-13T09:30')} />
+        </Field.Root>
+      </form>,
+    );
+    expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([['start', '20261-10-13T09:30']]);
+  });
+
   it('beside a Field.TextInput gives it the field, and with showValue off is a glyph button named from the strings', () => {
     render(
       <form data-testid="form">
@@ -87,7 +98,15 @@ describe('Field.DateTimePicker', () => {
     const onOpenChange = vi.fn();
     render(
       <Field.Root aria-label="Start">
-        <Field.DateTimePicker value={null} onValueChange={onValueChange} min={at('2026-10-01T00:00')} locale="en-US" defaultOpen onOpenChange={onOpenChange} />
+        <Field.DateTimePicker
+          value={null}
+          onValueChange={onValueChange}
+          min={at('2026-10-01T00:00')}
+          max={at('2026-10-31T23:59')}
+          locale="en-US"
+          defaultOpen
+          onOpenChange={onOpenChange}
+        />
       </Field.Root>,
     );
     fireEvent.click(screen.getByRole('option', { name: '9:30 AM' }));
@@ -147,6 +166,53 @@ describe('Field.DateTimePicker', () => {
     expect(screen.queryByRole('option', { selected: true })).toBeNull();
     fireEvent.click(screen.getByRole('option', { name: '11:00 PM' }));
     expect(reported(onValueChange)).toEqual(['2026-10-13T23:00:00']);
+  });
+
+  it('treats a date the calendar does not offer as no date', () => {
+    const onValueChange = vi.fn();
+    const onOpenChange = vi.fn();
+    const { rerender } = render(
+      <Field.Root aria-label="Start">
+        <Field.DateTimePicker
+          value={at('2026-10-01T09:30')}
+          onValueChange={onValueChange}
+          min={at('2026-10-10T08:00')}
+          locale="en-US"
+          defaultOpen
+          onOpenChange={onOpenChange}
+        />
+      </Field.Root>,
+    );
+    fireEvent.click(screen.getByRole('option', { name: '10:00 AM' }));
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(document.activeElement!.hasAttribute('data-todae-calendar-cell')).toBe(true);
+    // A date isDateDisabled refuses is no date either.
+    rerender(
+      <Field.Root aria-label="Start">
+        <Field.DateTimePicker
+          value={at('2026-10-13T09:30')}
+          onValueChange={onValueChange}
+          isDateDisabled={(date) => date.day === 13}
+          locale="en-US"
+          defaultOpen
+          onOpenChange={onOpenChange}
+        />
+      </Field.Root>,
+    );
+    fireEvent.click(screen.getByRole('option', { name: '10:00 AM' }));
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+
+  it("starts the calendar the day after min when min's time is past the day's last time", () => {
+    render(
+      <Field.Root aria-label="Start">
+        <Field.DateTimePicker value={at('2026-10-14T09:00')} min={at('2026-10-13T23:45')} locale="en-US" defaultOpen />
+      </Field.Root>,
+    );
+    expect((day('Tuesday, October 13, 2026') as HTMLButtonElement).disabled).toBe(true);
+    expect((day('Wednesday, October 14, 2026') as HTMLButtonElement).disabled).toBe(false);
   });
 
   it('follows a value set from outside while open', () => {

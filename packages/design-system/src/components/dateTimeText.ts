@@ -1,14 +1,14 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe date and time text for a text input beside Field.DateTimePicker: no hooks or context.
 import { parseDate, type DateTextOptions } from './dateText';
-import { parseTime, splitWords } from './timeText';
+import { parseTime, spaceWords, splitWords } from './timeText';
 
 export type DateTimeTextOptions = DateTextOptions;
 
 const hasSeconds = (value: Temporal.PlainDateTime) =>
   value.second !== 0 || value.millisecond !== 0 || value.microsecond !== 0 || value.nanosecond !== 0;
 
-// The date in numbers, as formatDate writes it, and the time as formatTime does.
+// The date in numbers, as formatDate writes it, and the time in hours and minutes, with seconds when it has them.
 const fieldsFor = (seconds: boolean): Intl.DateTimeFormatOptions => ({
   year: 'numeric',
   month: 'numeric',
@@ -92,13 +92,20 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
  */
 export function parseDateTime(text: string, options: DateTimeTextOptions = {}): Temporal.PlainDateTime | null {
   const { joiners, dateFirst, timeFirst } = localeDateTime(options.locale);
-  const all = splitWords(text);
+  // The date ends and the time starts between pieces: runs of text between
+  // spaces or commas, a letter and a digit beside it, or letters of two
+  // scripts. A piece such as "9:05" or "10/13" is one number or date part.
+  const all = spaceWords(text)
+    .split(/[\s,，、،]+/u)
+    .map(splitWords)
+    .filter((words) => words.length > 0);
   // Words the locale writes before or after both halves may be left in or out.
+  const joiner = (piece: string[]) => piece.length === 1 && joiners.has(piece[0]!);
   let first = 0;
-  while (first < all.length - 1 && joiners.has(all[first]!)) first++;
+  while (first < all.length - 1 && joiner(all[first]!)) first++;
   let last = all.length;
-  while (last > first + 1 && joiners.has(all[last - 1]!)) last--;
-  const words = all.slice(first, last);
+  while (last > first + 1 && joiner(all[last - 1]!)) last--;
+  const pieces = all.slice(first, last);
   const found = new Map<string, Temporal.PlainDateTime>();
   const read = (dateWords: string[], timeWords: string[]) => {
     const date = parseDate(dateWords.join(' '), options);
@@ -108,15 +115,16 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
     const value = date.toPlainDateTime(time);
     found.set(value.toString(), value);
   };
-  for (let at = 1; at < words.length; at++) {
+  const words = (from: number, to: number) => pieces.slice(from, to).flat();
+  for (let at = 1; at < pieces.length; at++) {
     // The words the locale writes between the halves may be left in or out.
     let end = at;
-    while (end > 1 && joiners.has(words[end - 1]!)) end--;
+    while (end > 1 && joiner(pieces[end - 1]!)) end--;
     let start = at;
-    while (start < words.length - 1 && joiners.has(words[start]!)) start++;
+    while (start < pieces.length - 1 && joiner(pieces[start]!)) start++;
     for (const [before, after] of [
-      [words.slice(0, at), words.slice(at)],
-      [words.slice(0, end), words.slice(start)],
+      [words(0, at), words(at, pieces.length)],
+      [words(0, end), words(start, pieces.length)],
     ]) {
       if (dateFirst) read(before!, after!);
       if (timeFirst) read(after!, before!);

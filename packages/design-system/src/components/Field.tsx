@@ -1022,8 +1022,11 @@ export type FieldTimePickerProps = {
 const MINUTES_PER_DAY = 24 * 60;
 
 /** The times every `step` minutes from midnight between `min` and `max`, with `value` among them when it is in range. */
+// Minutes between the times in a list: `step`, or 30 when it is not a number of minutes.
+const stepMinutes = (step: number) => (Number.isFinite(step) && step >= 1 ? Math.round(step) : 30);
+
 function timeSlots(step: number, min?: Temporal.PlainTime, max?: Temporal.PlainTime, value?: Temporal.PlainTime | null) {
-  const every = Number.isFinite(step) && step >= 1 ? Math.round(step) : 30;
+  const every = stepMinutes(step);
   const inRange = (time: Temporal.PlainTime) =>
     (!min || Temporal.PlainTime.compare(time, min) >= 0) && (!max || Temporal.PlainTime.compare(time, max) <= 0);
   const slots: Temporal.PlainTime[] = [];
@@ -1273,11 +1276,35 @@ function DateTimePanel({
     setDate(value ? isoDate(value.toPlainDate()) : null);
     setTime(value?.toPlainTime() ?? null);
   }
-  const minDate = min?.toPlainDate();
-  const maxDate = max?.toPlainDate();
+  const maxDate = max ? isoDate(max.toPlainDate()) : undefined;
+  // The first date with a time in the list: min's own, or the next one when
+  // min's time is past the day's last time.
+  const minDate = useMemo(() => {
+    if (!min) return undefined;
+    const every = stepMinutes(step);
+    const sub = min.second || min.millisecond || min.microsecond || min.nanosecond;
+    const first = isoDate(min.toPlainDate());
+    return min.hour * 60 + min.minute + (sub ? 1 : 0) > MINUTES_PER_DAY - 1 - ((MINUTES_PER_DAY - 1) % every)
+      ? first.add({ days: 1 })
+      : first;
+  }, [min, step]);
+  // A date the calendar does not offer, such as one typed out of range, is no date yet.
+  const offered =
+    date &&
+    (!minDate || Temporal.PlainDate.compare(date, minDate) >= 0) &&
+    (!maxDate || Temporal.PlainDate.compare(date, maxDate) <= 0) &&
+    !isDateDisabled?.(date)
+      ? date
+      : null;
   // Only the times on the date that are in range.
-  const minTime = min && date?.equals(isoDate(min.toPlainDate())) ? min.toPlainTime() : undefined;
-  const maxTime = max && date?.equals(isoDate(max.toPlainDate())) ? max.toPlainTime() : undefined;
+  const minTime = useMemo(
+    () => (min && offered?.equals(isoDate(min.toPlainDate())) ? min.toPlainTime() : undefined),
+    [min, offered],
+  );
+  const maxTime = useMemo(
+    () => (max && offered?.equals(isoDate(max.toPlainDate())) ? max.toPlainTime() : undefined),
+    [max, offered],
+  );
   const report = (nextDate: Temporal.PlainDate, nextTime: Temporal.PlainTime) => {
     const next = nextDate.toPlainDateTime(nextTime);
     const inRange =
@@ -1314,8 +1341,8 @@ function DateTimePanel({
           label={label}
           onPick={(next) => {
             setTime(next);
-            if (date) {
-              if (report(date, next)) onDone();
+            if (offered) {
+              if (report(offered, next)) onDone();
             } else {
               // The date comes next.
               focusNext.current = CALENDAR_TAB_STOP;
@@ -1337,8 +1364,9 @@ function dateTimeLabel(value: Temporal.PlainDateTime, locale: string | undefined
 
 /**
  * A button that opens a Calendar and a list of times in a popover, side by
- * side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking the
- * time closes the popover. On its own it is the field's control and shows
+ * side, or the list under the calendar on a narrow screen. A picked date and a
+ * picked time make the value, and picking a time while a date is set closes
+ * the popover. On its own it is the field's control and shows
  * the date and time, and a press elsewhere in the field opens the popover.
  * Beside any other control but a Field.ColorPicker, Field.DatePicker,
  * Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type

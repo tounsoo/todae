@@ -2,7 +2,7 @@ import { FieldDateTimePicked, FieldDateTimePickerAlone } from '../../../../compo
 
 # Field.DateTimePicker
 
-`Field.DateTimePicker` is a button inside a [Field](/field) that opens a [Calendar](/calendar) and a list of times in a [Popover](/popover), side by side, or the list under the calendar on a narrow screen. Its `value` is a `Temporal.PlainDateTime` or `null`. `onValueChange` gets the date and time once both are picked, and again whenever either changes while the popover is open. Picking a time closes the popover. It works like [Field.DatePicker](/field/date-picker) and [Field.TimePicker](/field/time-picker), and takes the same props where they mean the same thing. A `PlainDateTime` has no time zone: it is the date and time on the user's clock. To store an instant, combine it with a time zone in your own code, such as `value.toZonedDateTime(zone)`.
+`Field.DateTimePicker` is a button inside a [Field](/field) that opens a [Calendar](/calendar) and a list of times in a [Popover](/popover), side by side, or the list under the calendar on a narrow screen. Its `value` is a `Temporal.PlainDateTime` or `null`. `onValueChange` gets the date and time once both are picked, and again whenever either changes while the popover is open. Picking a time while a date is set closes the popover. It works like [Field.DatePicker](/field/date-picker) and [Field.TimePicker](/field/time-picker), and takes the same props where they mean the same thing. A `PlainDateTime` has no time zone: it is the date and time on the user's clock. To store an instant, combine it with a time zone in your own code, such as `value.toZonedDateTime(zone)`.
 
 ```tsx
 const id = useId();
@@ -49,11 +49,11 @@ Here a [Field.TextInput](/field/text-input) in the same field lets people type t
 
 `formatDateTime(value, { locale })` writes the date in numbers, as `formatDate` does, and the time in hours and minutes, or with seconds when it has seconds, such as `10/13/2026, 9:30 PM` in `en-US`, `13.10.2026, 21:30` in `de` and `2026. 10. 13. 오후 9:30` in `ko`. `parseDateTime(text, { locale })` reads typed text back into a `Temporal.PlainDateTime`, or returns `null` when the text is not one. It reads a date as [`parseDate`](/field/date-picker#typed-dates) does, then a time as [`parseTime`](/field/time-picker#typed-times) does, in the order the locale writes them, with or without the words the locale writes between them, such as `Oct 13, 2026 at 9:30 PM` or `10/13/2026 9:30 pm` in `en-US`. A date without a time is not read. Without `locale`, both use the runtime's own.
 
-In the example, text that isn't a date and time clears the value, so the form sends none, and the field is marked invalid when it loses focus. `parseDateTime` doesn't check the picker's `min` or `max`, so check a typed value against them yourself.
+In the example, text that isn't a date and time clears the value, so the form sends none, and the field is marked invalid when it loses focus. `parseDateTime` doesn't check the picker's `min`, `max` or `isDateDisabled`, so check a typed value against them yourself.
 
 ## On its own
 
-On its own, `Field.DateTimePicker` is the field's control. It shows the date in the locale's medium date style and the time in its short time style, or `placeholder` while there is no value, and a press elsewhere in the field opens the popover. With a `name` on the Root, a hidden input sends the value the way HTML writes one, such as `2026-10-13T09:30`.
+On its own, `Field.DateTimePicker` is the field's control. It shows the date in the locale's medium date style and the time in its short time style, or its medium style when the time has seconds, or `placeholder` while there is no value, and a press elsewhere in the field opens the popover. With a `name` on the Root, a hidden input sends the value the way HTML writes one, such as `2026-10-13T09:30`.
 
 <Example block>
   <FieldDateTimePickerAlone />
@@ -61,7 +61,7 @@ On its own, `Field.DateTimePicker` is the field's control. It shows the date in 
 
 The popover opens and closes through `open` with `onOpenChange`, or `defaultOpen`. `onOpenChange` gets the reason it closed: `'select'` when a time is picked while a date is set, `'escape'`, `'outside'`, `'trigger'`, or `'disabled'` when the field becomes disabled. Open, the calendar takes focus on the date, or else today or the nearest date in range. Picking a date moves focus to the list of times, and picking a time before any date moves it to the calendar. Escape closes the popover, and focus goes back to where it was before it opened.
 
-`min` and `max` limit both halves: the calendar offers only the dates between them, and on the first and last of those dates the list offers only the times in range. A date picked with a time out of range for it isn't reported until a time in range is picked. `isDateDisabled` and `firstDayOfWeek` work as on [Field.DatePicker](/field/date-picker), and `step` as on [Field.TimePicker](/field/time-picker).
+`min` and `max` limit both halves: the calendar offers only the dates between them, and on the first and last of those dates the list offers only the times in range. A date picked with a time out of range for it isn't reported until a time in range is picked. A date the calendar doesn't offer, such as one typed beside the picker, counts as no date: picking a time then moves focus to the calendar. `isDateDisabled` and `firstDayOfWeek` work as on [Field.DatePicker](/field/date-picker), and `step` as on [Field.TimePicker](/field/time-picker).
 
 ## Temporal
 

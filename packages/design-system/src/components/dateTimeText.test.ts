@@ -62,6 +62,23 @@ describe('parseDateTime', () => {
     expect(read('2026年10月13日21:30', 'ja')).toBe('2026-10-13T21:30:00');
   });
 
+  it('does not read the hour of a time as the year of a date typed without one', () => {
+    expect(read('Oct 13 9:05 PM', 'en-US')).toBeNull();
+    expect(read('10/13 9:05', 'en-US')).toBeNull();
+    expect(read('10/13 12:05', 'en-US')).toBeNull();
+    expect(read('13.10. 9:05', 'de')).toBeNull();
+    expect(read('13/10 21:05', 'en-GB')).toBeNull();
+    expect(read('10/13 21:05', 'ja')).toBeNull();
+  });
+
+  it('reads a word with a letter of no one script', () => {
+    const value = at('2026-10-13T00:00');
+    for (const locale of ['haw', 'to', 'ha']) {
+      const text = value.toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short', calendar: 'gregory', timeZone: 'UTC' });
+      expect(read(text, locale), `${locale}: ${text}`).toBe(value.toString());
+    }
+  });
+
   it('returns null for text that is not one date and time', () => {
     for (const text of ['', '10/13/2026', '9:30 pm', '10/13/2026 25:00', '2/30/2026 9:30', 'tomorrow at 9', '10/13/2026 9:30 pm 9:30']) {
       expect(read(text, 'en-US'), text).toBeNull();
