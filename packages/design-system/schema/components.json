@@ -2175,7 +2175,7 @@
     },
     {
       "name": "Message.Content",
-      "description": "The message body. A div; for a user's message it is the bubble. While the message streams, the last one shows a caret after the last paragraph, list item, heading or table cell when it ends with one, or after its text when it holds only text.",
+      "description": "The message body. A div; for a user's message it is the bubble. While the message streams, the last one shows a caret after the last paragraph, list item, heading or non-empty table cell when it ends with one, or after its text when it holds only text.",
       "props": [
         {
           "name": "children",
@@ -2212,7 +2212,7 @@
           "name": "streaming",
           "type": "boolean",
           "required": false,
-          "description": "True while the message is still arriving. Sets aria-busy and data-streaming, and Message.Content draws a caret after the text. Set it back to false when the message finishes or fails.",
+          "description": "True while the message is still arriving. Sets aria-busy and data-streaming, and the last Message.Content draws a caret after the text. Set it back to false when the message finishes or fails.",
           "default": "false"
         },
         {

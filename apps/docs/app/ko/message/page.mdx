@@ -46,7 +46,7 @@ Server Components는 `@omsoo.design/todae/message`에서 가져올 수 있습니
 
 ## 스트리밍
 
-메시지가 아직 도착하는 동안 `streaming`을 주고, 끝나거나 실패하면 `false`로 되돌리세요. article에 `aria-busy="true"`와 `data-streaming`을 설정하고, 마지막 `Message.Content`가 텍스트 뒤에 커서를 그립니다. 내용이 문단, 목록 항목, 제목, 표 셀로 끝나면 그 마지막 요소 뒤에, 요소 없이 텍스트만 담고 있으면 텍스트 바로 뒤에 그립니다. 코드 블록이나 구분선처럼 다른 것으로 끝나는 내용에는 커서가 없습니다. 커서는 깜빡이며, 동작 줄이기에서는 멈춰 있습니다.
+메시지가 아직 도착하는 동안 `streaming`을 주고, 끝나거나 실패하면 `false`로 되돌리세요. article에 `aria-busy="true"`와 `data-streaming`을 설정하고, 마지막 `Message.Content`가 텍스트 뒤에 커서를 그립니다. 내용이 문단, 목록 항목, 제목, 비어 있지 않은 표 셀로 끝나면 그 마지막 요소 뒤에, 요소 없이 텍스트만 담고 있으면 텍스트 바로 뒤에 그립니다. 코드 블록이나 구분선처럼 다른 것으로 끝나는 내용에는 커서가 없습니다. 커서는 깜빡이며, 동작 줄이기에서는 멈춰 있습니다.
 
 ```tsx
 <Message.Root streaming={status === 'streaming'} aria-label="Assistant">

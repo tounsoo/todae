@@ -1129,8 +1129,8 @@
       "ko": "메시지를 쓴 쪽. data-from을 설정하며, 이는 레이아웃과 토큰만 정합니다."
     },
     "streaming": {
-      "en": "True while the message is still arriving. Sets aria-busy and data-streaming, and Message.Content draws a caret after the text. Set it back to false when the message finishes or fails.",
-      "ko": "메시지가 아직 도착하는 중이면 true. aria-busy와 data-streaming을 설정하고, Message.Content가 텍스트 뒤에 커서를 그립니다. 메시지가 끝나거나 실패하면 false로 되돌리세요."
+      "en": "True while the message is still arriving. Sets aria-busy and data-streaming, and the last Message.Content draws a caret after the text. Set it back to false when the message finishes or fails.",
+      "ko": "메시지가 아직 도착하는 중이면 true. aria-busy와 data-streaming을 설정하고, 마지막 Message.Content가 텍스트 뒤에 커서를 그립니다. 메시지가 끝나거나 실패하면 false로 되돌리세요."
     },
     "children": {
       "en": "Message parts: Avatar, Header, Content and Actions.",

@@ -46,7 +46,7 @@ Every part is a `div`, and all of them are optional.
 
 ## Streaming
 
-Set `streaming` while the message is still arriving, and set it back to `false` when it finishes or fails. It sets `aria-busy="true"` on the article and `data-streaming`, and the last `Message.Content` draws a caret after the text: after the last paragraph, list item, heading or table cell when the content ends with one, or right after the text when `Message.Content` holds only text, with no elements in it. Content that ends with anything else, such as a code block or a rule, shows no caret. The caret blinks, and holds still under reduced motion.
+Set `streaming` while the message is still arriving, and set it back to `false` when it finishes or fails. It sets `aria-busy="true"` on the article and `data-streaming`, and the last `Message.Content` draws a caret after the text: after the last paragraph, list item, heading or non-empty table cell when the content ends with one, or right after the text when `Message.Content` holds only text, with no elements in it. Content that ends with anything else, such as a code block or a rule, shows no caret. The caret blinks, and holds still under reduced motion.
 
 ```tsx
 <Message.Root streaming={status === 'streaming'} aria-label="Assistant">
