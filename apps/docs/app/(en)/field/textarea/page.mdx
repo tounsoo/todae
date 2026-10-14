@@ -70,6 +70,10 @@ Label, description, error, invalid, and disabled.
   <TextareaMessages />
 </Example>
 
+## Highlights
+
+`highlights` draws ranges of the text as tokens, on a layer behind the textarea that copies its type, padding and scroll. Each range is `{ start, end }`, with an optional `kind` set as `data-kind`, an `anchorName` a popover can sit at, and `draw: false` to keep only the anchor. [useMentions](/utilities/use-mentions) sets it through `getTextareaProps()`, for mentions and slash commands. Tokens read `field.token.bg` and `field.token.radius`.
+
 ## Accessible composition
 
 **Todae handles:** The textarea takes `id`, `name`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset).

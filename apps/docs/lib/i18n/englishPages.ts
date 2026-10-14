@@ -86,6 +86,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'utilities/use-field': () => import('../../app/(en)/utilities/use-field/page.mdx'),
   'utilities/use-highlight': () => import('../../app/(en)/utilities/use-highlight/page.mdx'),
   'utilities/use-hotkey': () => import('../../app/(en)/utilities/use-hotkey/page.mdx'),
+  'utilities/use-mentions': () => import('../../app/(en)/utilities/use-mentions/page.mdx'),
   'utilities/use-modal-layer': () => import('../../app/(en)/utilities/use-modal-layer/page.mdx'),
   'utilities/use-popover': () => import('../../app/(en)/utilities/use-popover/page.mdx'),
   'utilities/use-roving-focus': () => import('../../app/(en)/utilities/use-roving-focus/page.mdx'),

@@ -101,6 +101,7 @@ export const SITE_GROUPS = [
       ['/utilities/use-field', 'useField'],
       ['/utilities/use-highlight', 'useHighlight'],
       ['/utilities/use-hotkey', 'useHotkey'],
+      ['/utilities/use-mentions', 'useMentions'],
       ['/utilities/use-modal-layer', 'useModalLayer'],
       ['/utilities/use-popover', 'usePopover'],
       ['/utilities/use-roving-focus', 'useRovingFocus'],

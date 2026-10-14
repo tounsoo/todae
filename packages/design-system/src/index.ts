@@ -187,6 +187,7 @@ export {
   type FieldTextInputType,
   type FieldTimePickerCloseReason,
   type FieldTimePickerProps,
+  type FieldTextareaHighlight,
   type FieldTextareaProps,
 } from './components/Field';
 export {
@@ -315,6 +316,17 @@ export {
   type UseComboboxSingleOptions,
 } from './hooks/useCombobox';
 export { useControlledState, useControlledValue } from './hooks/useControlledState';
+export {
+  useMentions,
+  type MentionDraft,
+  type MentionItem,
+  type MentionToken,
+  type MentionTrigger,
+  type MentionTriggerPosition,
+  type UseMentionsOptions,
+  type UseMentionsResult,
+  type UseMentionsTextareaProps,
+} from './hooks/useMentions';
 export {
   ThemeProvider,
   useAppearance,
