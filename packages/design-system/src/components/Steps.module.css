@@ -1,0 +1,138 @@
+@layer todae.components {
+  .root {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    line-height: var(--todae-steps-leading);
+  }
+
+  /* The marker sits in its own column, centred on the content's first line.
+     --_cell is the taller of that line and the marker. */
+  .item {
+    --_cell: max(1lh, var(--todae-steps-marker-size));
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--todae-steps-marker-size) minmax(0, 1fr);
+    column-gap: var(--todae-steps-marker-gap);
+    align-items: start;
+    color: var(--todae-steps-fg-pending);
+  }
+
+  .item:not(:last-child) {
+    padding-block-end: var(--todae-steps-gap);
+  }
+
+  /* The line joining a marker to the next one, through the gap between items. */
+  .item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: calc((var(--todae-steps-marker-size) - var(--todae-steps-line-width)) / 2);
+    inset-block-start: calc((var(--_cell) + var(--todae-steps-marker-size)) / 2 + var(--todae-steps-line-gap));
+    inset-block-end: calc(var(--todae-steps-line-gap) - (var(--_cell) - var(--todae-steps-marker-size)) / 2);
+    inline-size: var(--todae-steps-line-width);
+    background: var(--todae-steps-line-color);
+  }
+
+  .marker {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: var(--todae-steps-marker-size);
+    block-size: var(--todae-steps-marker-size);
+    margin-block-start: calc((var(--_cell) - var(--todae-steps-marker-size)) / 2);
+    border: var(--todae-steps-marker-border-width) solid var(--todae-steps-marker-border-pending);
+    border-radius: 50%;
+    background: var(--todae-steps-marker-bg-pending);
+    color: var(--todae-steps-marker-fg-pending);
+  }
+
+  .marker > [data-todae-glyph] {
+    display: inline-flex;
+  }
+
+  .marker > [data-todae-glyph] > :is(svg, img) {
+    inline-size: var(--todae-steps-icon-size);
+    block-size: var(--todae-steps-icon-size);
+  }
+
+  /* The running step's marker is the spinner, over the marker's whole box,
+     border included. */
+  .spinner {
+    position: absolute;
+    inset-block-start: calc(-1 * var(--todae-steps-marker-border-width));
+    inset-inline-start: calc(-1 * var(--todae-steps-marker-border-width));
+    inline-size: var(--todae-steps-marker-size);
+    block-size: var(--todae-steps-marker-size);
+  }
+
+  .content {
+    min-inline-size: 0;
+    padding-block-start: calc((var(--_cell) - 1lh) / 2);
+  }
+
+  .item[data-status='done'] {
+    color: var(--todae-steps-fg-done);
+  }
+
+  .item[data-status='done'] > .content {
+    text-decoration-line: line-through;
+  }
+
+  .item[data-status='done'] > .marker {
+    border-color: var(--todae-steps-marker-border-done);
+    background: var(--todae-steps-marker-bg-done);
+    color: var(--todae-steps-marker-fg-done);
+  }
+
+  .item[data-status='current'] {
+    color: var(--todae-steps-fg-current);
+  }
+
+  .item[data-status='current'] > .marker {
+    border-color: var(--todae-steps-marker-border-current);
+    background: var(--todae-steps-marker-bg-current);
+    color: var(--todae-steps-marker-fg-current);
+  }
+
+  .item[data-status='error'] {
+    color: var(--todae-steps-fg-error);
+  }
+
+  .item[data-status='error'] > .marker {
+    border-color: var(--todae-steps-marker-border-error);
+    background: var(--todae-steps-marker-bg-error);
+    color: var(--todae-steps-marker-fg-error);
+  }
+
+  /* Fill shows which steps are done or failed; system colors keep that, and
+     the glyph inside each marker still tells them apart. */
+  @media (forced-colors: active) {
+    .marker {
+      border-color: CanvasText;
+    }
+
+    .item:not(:last-child)::after {
+      background: CanvasText;
+    }
+
+    .item[data-status='done'] > .marker {
+      forced-color-adjust: none;
+      border-color: Highlight;
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    .item[data-status='current'] > .marker {
+      border-color: transparent;
+    }
+
+    .item[data-status='error'] > .marker {
+      forced-color-adjust: none;
+      border-color: Mark;
+      background: Mark;
+      color: MarkText;
+    }
+  }
+}
