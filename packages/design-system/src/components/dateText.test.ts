@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { formatDate, parseDate } from './dateText';
 
 const date = (text: string) => Temporal.PlainDate.from(text);
@@ -200,5 +200,20 @@ describe('parseDate', () => {
     expect(read('de de 13 oct 2026', 'es')).toBeNull();
     expect(read('13 octubre 2026 de', 'es')).toBeNull();
     expect(read('mdmd', 'lt')).toBeNull();
+  });
+
+  describe('without Temporal', () => {
+    const temporal = Object.getOwnPropertyDescriptor(globalThis, 'Temporal')!;
+    beforeEach(() => {
+      Reflect.deleteProperty(globalThis, 'Temporal');
+    });
+    afterEach(() => {
+      Object.defineProperty(globalThis, 'Temporal', temporal);
+    });
+
+    it('can throw', () => {
+      expect(() => parseDate('10/13/2026', { locale: 'en-US' })).toThrow(ReferenceError);
+      expect(parseDate('soon', { locale: 'en-US' })).toBeNull();
+    });
   });
 });
