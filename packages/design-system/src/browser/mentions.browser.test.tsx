@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { useState, type FormEvent } from 'react';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Composer, Field, OptionList, Popover, useMentions, type MentionToken, type MentionTrigger } from '../index';
+import { Composer, Field, OptionList, Popover, useMentions, type MentionDraft, type MentionToken, type MentionTrigger } from '../index';
 
 afterEach(cleanup);
 
@@ -16,6 +16,7 @@ const commands = [
   { value: 'summarize', label: 'summarize' },
   { value: 'translate', label: 'translate' },
 ];
+const EMPTY: MentionDraft = { text: '', tokens: [] };
 const TRIGGERS: MentionTrigger[] = [
   { char: '@', options: people, label: 'People' },
   { char: '/', position: 'start', options: commands, label: 'Commands' },
@@ -23,19 +24,26 @@ const TRIGGERS: MentionTrigger[] = [
 
 function Chat({
   onSend = () => {},
-  onTokens = () => {},
+  onChange = () => {},
   dir,
 }: {
   onSend?: (text: string, tokens: readonly MentionToken[]) => void;
-  onTokens?: (tokens: MentionToken[]) => void;
+  onChange?: (draft: MentionDraft) => void;
   dir?: 'rtl';
 }) {
-  const [value, setValue] = useState('');
-  const mentions = useMentions({ triggers: TRIGGERS, value, onValueChange: setValue, onTokensChange: onTokens });
+  const [draft, setDraft] = useState<MentionDraft>(EMPTY);
+  const mentions = useMentions({
+    triggers: TRIGGERS,
+    value: draft,
+    onValueChange: (next) => {
+      onChange(next);
+      setDraft(next);
+    },
+  });
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSend(value, mentions.tokens);
-    setValue('');
+    onSend(draft.text, draft.tokens);
+    setDraft(EMPTY);
   };
   return (
     <main data-appearance="light" data-density="comfortable" style={{ inlineSize: '24rem' }} dir={dir}>
@@ -43,7 +51,7 @@ function Chat({
         <Field.Root aria-label="Message">
           <Field.Textarea {...mentions.getTextareaProps()} autoGrow maxRows={4} />
           <Field.Row>
-            <Composer.Submit disabled={value.trim() === ''} />
+            <Composer.Submit disabled={draft.text.trim() === ''} />
           </Field.Row>
         </Field.Root>
       </Composer.Root>
@@ -120,17 +128,20 @@ describe('useMentions in a browser', () => {
   });
 
   it('undoes a pick back to the typed word, and redo brings the token back', async () => {
-    const onTokens = vi.fn();
-    render(<Chat onTokens={onTokens} />);
+    const onChange = vi.fn();
+    render(<Chat onChange={onChange} />);
     await userEvent.click(field());
     await userEvent.keyboard('@ad{Enter}');
     expect(field().value).toBe('@Ada Lovelace ');
     await userEvent.keyboard('{Control>}z{/Control}');
     expect(field().value).toBe('@ad');
-    expect(onTokens).toHaveBeenLastCalledWith([]);
+    expect(onChange).toHaveBeenLastCalledWith({ text: '@ad', tokens: [] });
     await userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}');
     expect(field().value).toBe('@Ada Lovelace ');
-    expect(onTokens).toHaveBeenLastCalledWith([{ start: 0, end: 13, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
+    expect(onChange).toHaveBeenLastCalledWith({
+      text: '@Ada Lovelace ',
+      tokens: [{ start: 0, end: 13, char: '@', value: 'ada', text: '@Ada Lovelace' }],
+    });
   });
 
   it('removes a whole token with one Backspace at its end', async () => {
@@ -182,8 +193,7 @@ describe('useMentions in a browser', () => {
 
   it('follows the direction dir="auto" resolves from the text', async () => {
     function Auto() {
-      const [value, setValue] = useState('');
-      const mentions = useMentions({ triggers: TRIGGERS, value, onValueChange: setValue });
+      const mentions = useMentions({ triggers: TRIGGERS });
       return (
         <main data-appearance="light" data-density="comfortable" style={{ inlineSize: '24rem' }}>
           <Field.Root aria-label="Message">
@@ -200,51 +210,11 @@ describe('useMentions in a browser', () => {
     expect(getComputedStyle(layer).direction).toBe('rtl');
   });
 
-  it('sends the token from a parent that holds the tokens, on the Enter right after a pick', async () => {
-    const onSend = vi.fn();
-    function Mirrored() {
-      const [value, setValue] = useState('');
-      const [tokens, setTokens] = useState<MentionToken[]>([]);
-      const mentions = useMentions({ triggers: TRIGGERS, value, onValueChange: setValue, tokens, onTokensChange: setTokens });
-      const submit = (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        onSend(value, tokens);
-        setValue('');
-      };
-      return (
-        <main data-appearance="light" data-density="comfortable" style={{ inlineSize: '24rem' }}>
-          <Composer.Root onSubmit={submit}>
-            <Field.Root aria-label="Message">
-              <Field.Textarea {...mentions.getTextareaProps()} lang="ko" />
-              <Field.Row>
-                <Composer.Submit disabled={value.trim() === ''} />
-              </Field.Row>
-            </Field.Root>
-          </Composer.Root>
-          <Popover.Root {...mentions.getPopoverProps()}>
-            <OptionList.Root {...mentions.getListboxProps()}>
-              {mentions.items.map((item) => (
-                <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
-              ))}
-            </OptionList.Root>
-          </Popover.Root>
-        </main>
-      );
-    }
-    render(<Mirrored />);
-    await userEvent.click(field());
-    await userEvent.keyboard('@gr{Enter}{Backspace}{Enter}');
-    expect(onSend).toHaveBeenCalledWith('@Grace Hopper', [{ start: 0, end: 13, char: '@', value: 'grace', text: '@Grace Hopper' }]);
-  });
-
   it("copies the textarea's own lang to the layer", async () => {
     function Lang() {
-      const [value, setValue] = useState('@Ada');
       const mentions = useMentions({
         triggers: TRIGGERS,
-        value,
-        onValueChange: setValue,
-        defaultTokens: [{ start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' }],
+        defaultValue: { text: '@Ada', tokens: [{ start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' }] },
       });
       return (
         <main data-appearance="light" data-density="comfortable">

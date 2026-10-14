@@ -2421,28 +2421,16 @@
       "ko": "트리거 문자마다 하나, 예를 들어 { char: \"@\", options }나 { char: \"/\", position: \"start\", loadOptions }. 각각 options나 loadOptions, filter, 고른 항목이 넣을 텍스트인 text, 목록의 이름인 label을 받습니다."
     },
     "value": {
-      "en": "Controlled text.",
-      "ko": "제어 텍스트."
+      "en": "Controlled draft: the text and its tokens, { start, end, char, value, text } ranges of it. A token that does not hold its text is left out. Set both to load or clear a draft.",
+      "ko": "제어 임시 저장본: 텍스트와 그 토큰, 즉 텍스트의 { start, end, char, value, text } 범위. 자기 텍스트를 담지 않은 토큰은 빠집니다. 임시 저장본을 불러오거나 비울 때는 둘 다 설정하세요."
     },
     "defaultValue": {
-      "en": "Starting text when uncontrolled.",
-      "ko": "비제어일 때의 시작 텍스트."
+      "en": "Starting draft when uncontrolled.",
+      "ko": "비제어일 때의 시작 임시 저장본."
     },
     "onValueChange": {
-      "en": "Called with the new text on every edit, including a pick.",
-      "ko": "고르기를 포함해 편집할 때마다 새 텍스트로 불립니다."
-    },
-    "tokens": {
-      "en": "Controlled tokens: { start, end, char, value, text } ranges of the text, shown as given (a token that does not hold its text is left out). Update them from onTokensChange, like value from onValueChange, and set them with value to load a draft.",
-      "ko": "제어 토큰: 텍스트의 { start, end, char, value, text } 범위로, 받은 그대로 보여 줍니다(자기 텍스트를 담지 않은 토큰은 빠집니다). value를 onValueChange로 갱신하듯 onTokensChange로 갱신하고, 임시 저장본을 불러오려면 value와 함께 설정하세요."
-    },
-    "defaultTokens": {
-      "en": "Starting tokens when uncontrolled.",
-      "ko": "비제어일 때의 시작 토큰."
-    },
-    "onTokensChange": {
-      "en": "Called with the new tokens when the hook changes them. For an edit, that is once the edit's text renders as value, so an edit the product rejects changes nothing. For a value set from outside: uncontrolled, the tokens move with the change; controlled, any token that no longer holds its text is dropped.",
-      "ko": "훅이 토큰을 바꿀 때 새 토큰으로 호출됩니다. 편집이면 그 편집의 텍스트가 value로 렌더링된 뒤에 호출되므로, 제품이 거부한 편집은 아무것도 바꾸지 않습니다. 바깥에서 value를 바꾸면, 비제어일 때는 토큰이 그 변경을 따라 옮겨지고, 제어일 때는 자기 텍스트를 더 이상 담지 않는 토큰이 빠집니다."
+      "en": "Called with the next text and its tokens together on every edit, including a pick. The tokens move with the edit, and a pick adds one.",
+      "ko": "고르기를 포함해 편집할 때마다 다음 텍스트와 그 토큰을 함께 넘겨 불립니다. 토큰은 편집을 따라 옮겨지고, 고르기는 토큰을 하나 더합니다."
     },
     "maxLength": {
       "en": "The textarea's maxLength. A pick whose text would not fit is disabled.",

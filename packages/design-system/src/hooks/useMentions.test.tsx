@@ -1,9 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { StrictMode, useState } from 'react';
+import { StrictMode, startTransition, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../components/Field';
-import { validTokens } from './useMentions.detect';
-import { useMentions, type MentionToken, type MentionTrigger, type UseMentionsResult } from './useMentions';
+import { useMentions, type MentionDraft, type MentionToken, type MentionTrigger, type UseMentionsResult } from './useMentions';
 
 afterEach(cleanup);
 
@@ -12,38 +11,56 @@ const people = [
   { value: 'alan', label: 'Alan Turing' },
 ];
 
+const ada = { start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' };
+const short = [{ value: 'ada', label: 'Ada' }];
+type Commit = 'sync' | 'timeout' | 'transition';
+const tick = (ms = 20) => act(() => new Promise((resolve) => setTimeout(resolve, ms)));
+
+/** A product that holds the draft, and may reject or delay an edit. */
 function Harness({
   triggers = [{ char: '@', options: people }],
   initial = '',
-  tokens,
+  tokens = [],
   maxLength,
-  onTokens,
+  accept = () => true,
+  commit = 'sync',
+  onChange,
   expose,
 }: {
   triggers?: MentionTrigger[];
   initial?: string;
   tokens?: MentionToken[];
   maxLength?: number;
-  onTokens?: (tokens: MentionToken[]) => void;
-  expose?: (result: UseMentionsResult) => void;
+  accept?: (draft: MentionDraft) => boolean;
+  commit?: Commit;
+  onChange?: (draft: MentionDraft) => void;
+  expose?: (result: UseMentionsResult, held: MentionDraft) => void;
 }) {
-  const [value, setValue] = useState(initial);
+  const [draft, setDraft] = useState<MentionDraft>({ text: initial, tokens });
   const mentions = useMentions({
     triggers,
-    value,
-    onValueChange: setValue,
-    defaultTokens: tokens,
-    onTokensChange: onTokens,
+    value: draft,
+    onValueChange: (next) => {
+      onChange?.(next);
+      if (!accept(next)) return;
+      const set = () => setDraft(next);
+      if (commit === 'sync') set();
+      else if (commit === 'timeout') setTimeout(set, 10);
+      else startTransition(set);
+    },
     maxLength,
   });
-  expose?.(mentions);
+  expose?.(mentions, draft);
   return (
     <>
       <Field.Root aria-label="Message">
         <Field.Textarea {...mentions.getTextareaProps()} maxLength={maxLength} />
       </Field.Root>
-      <button type="button" onClick={() => setValue('')}>
-        Clear
+      <button type="button" onClick={() => setDraft((current) => ({ ...current, text: '' }))}>
+        Clear text
+      </button>
+      <button type="button" onClick={() => setDraft({ text: 'yo @Bob', tokens: [{ start: 3, end: 7, char: '@', value: 'bob', text: '@Bob' }] })}>
+        Load
       </button>
     </>
   );
@@ -72,26 +89,31 @@ describe('useMentions', () => {
 
   it('inserts a pick and tracks it as a token when the textarea cannot edit natively', () => {
     let result!: UseMentionsResult;
-    const onTokens = vi.fn();
-    render(<Harness expose={(r) => (result = r)} onTokens={onTokens} />);
+    const onChange = vi.fn();
+    render(<Harness expose={(r) => (result = r)} onChange={onChange} />);
     const el = screen.getByRole('textbox') as HTMLTextAreaElement;
     fireEvent.focus(el);
     type(el, 'hi @al');
     act(() => result.select('alan'));
     expect(el.value).toBe('hi @Alan Turing ');
-    expect(onTokens).toHaveBeenLastCalledWith([{ start: 3, end: 15, char: '@', value: 'alan', text: '@Alan Turing' }]);
+    expect(onChange).toHaveBeenLastCalledWith({
+      text: 'hi @Alan Turing ',
+      tokens: [{ start: 3, end: 15, char: '@', value: 'alan', text: '@Alan Turing' }],
+    });
     expect(result.open).toBe(false);
   });
 
-  it('drops tokens when the product clears the text', () => {
+  it('leaves out tokens that no longer hold their text when the product changes only the text', () => {
     let result!: UseMentionsResult;
-    const onTokens = vi.fn();
-    const token = { start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' };
-    render(<Harness initial="@Ada hi" tokens={[token]} onTokens={onTokens} expose={(r) => (result = r)} />);
-    expect(result.tokens).toEqual([token]);
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
-    expect(result.tokens).toEqual([]);
-    expect(onTokens).toHaveBeenLastCalledWith([]);
+    let held!: MentionDraft;
+    const onChange = vi.fn();
+    render(<Harness initial="@Ada hi" tokens={[ada]} onChange={onChange} expose={(r, h) => ((result = r), (held = h))} />);
+    expect(result.value.tokens).toEqual([ada]);
+    fireEvent.click(screen.getByRole('button', { name: 'Clear text' }));
+    expect(result.value).toEqual({ text: '', tokens: [] });
+    expect(onChange).not.toHaveBeenCalled();
+    type(screen.getByRole('textbox') as HTMLTextAreaElement, 'hi');
+    expect(held).toEqual({ text: 'hi', tokens: [] });
   });
 
   it('disables a pick whose text would pass maxLength', () => {
@@ -139,60 +161,45 @@ describe('useMentions', () => {
     expect(result.open).toBe(true);
   });
 
-  it('loads a draft passed as value and tokens together', () => {
+  it('loads a draft set as text and tokens together', () => {
     let result!: UseMentionsResult;
-    const ada = { start: 3, end: 7, char: '@', value: 'ada', text: '@Ada' };
-    const bob = { start: 3, end: 7, char: '@', value: 'bob', text: '@Bob' };
-    function Drafts() {
-      const [draft, setDraft] = useState<{ value: string; tokens: MentionToken[] }>({ value: 'hi @Ada', tokens: [ada] });
-      const mentions = useMentions({
-        triggers: [{ char: '@', options: people }],
-        value: draft.value,
-        onValueChange: (value) => setDraft((current) => ({ ...current, value })),
-        tokens: draft.tokens,
-        onTokensChange: (tokens) => setDraft((current) => ({ ...current, tokens })),
-      });
-      result = mentions;
-      return (
-        <button type="button" onClick={() => setDraft({ value: 'yo @Bob', tokens: [bob] })}>
-          Load
-        </button>
-      );
-    }
-    render(<Drafts />);
-    expect(result.tokens).toEqual([ada]);
+    render(<Harness initial="hi @Ada" tokens={[{ ...ada, start: 3, end: 7 }]} expose={(r) => (result = r)} />);
+    expect(result.value.tokens).toEqual([{ ...ada, start: 3, end: 7 }]);
     fireEvent.click(screen.getByRole('button', { name: 'Load' }));
-    expect(result.tokens).toEqual([bob]);
+    expect(result.value).toEqual({ text: 'yo @Bob', tokens: [{ start: 3, end: 7, char: '@', value: 'bob', text: '@Bob' }] });
   });
 
-  it('moves no tokens for an edit the product rejects', () => {
+  it('keeps the draft as it was for an edit the product rejects', () => {
     let result!: UseMentionsResult;
-    const onTokens = vi.fn();
-    const ada = { start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' };
-    function Fixed() {
-      const mentions = useMentions({ triggers: [{ char: '@', options: people }], value: '@Ada hi', defaultTokens: [ada], onTokensChange: onTokens });
-      result = mentions;
-      return (
-        <Field.Root aria-label="Message">
-          <Field.Textarea {...mentions.getTextareaProps()} />
-        </Field.Root>
-      );
-    }
-    render(<Fixed />);
-    type(screen.getByRole('textbox') as HTMLTextAreaElement, 'Z@Ada hi');
-    expect(result.tokens).toEqual([ada]);
-    expect(onTokens).not.toHaveBeenCalled();
+    let held!: MentionDraft;
+    render(<Harness initial="@Ada hi" tokens={[ada]} accept={() => false} expose={(r, h) => ((result = r), (held = h))} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.change(el, { target: { value: 'Z@Ada hi', selectionStart: 1, selectionEnd: 1 } });
+    expect(el.value).toBe('@Ada hi');
+    expect(result.value).toEqual({ text: '@Ada hi', tokens: [ada] });
+    expect(held).toEqual({ text: '@Ada hi', tokens: [ada] });
   });
+
+  for (const commit of ['timeout', 'transition'] as const) {
+    it(`keeps the text and its tokens together when the product commits them later (${commit})`, async () => {
+      let held!: MentionDraft;
+      render(<Harness initial="@Ada hi" tokens={[ada]} commit={commit} expose={(_, h) => (held = h)} />);
+      const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+      fireEvent.change(el, { target: { value: 'Z@Ada hi', selectionStart: 1, selectionEnd: 1 } });
+      await tick();
+      expect(held).toEqual({ text: 'Z@Ada hi', tokens: [{ ...ada, start: 1, end: 5 }] });
+    });
+  }
 
   it('drops starting tokens that do not match the text, and typing their text does not bring them back', () => {
     let result!: UseMentionsResult;
-    const onTokens = vi.fn();
-    render(<Harness tokens={[{ start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' }]} onTokens={onTokens} expose={(r) => (result = r)} />);
-    expect(result.tokens).toEqual([]);
-    expect(onTokens).toHaveBeenCalledWith([]);
+    let held!: MentionDraft;
+    render(<Harness tokens={[ada]} expose={(r, h) => ((result = r), (held = h))} />);
+    expect(result.value.tokens).toEqual([]);
     const el = screen.getByRole('textbox') as HTMLTextAreaElement;
     type(el, '@Ada');
-    expect(result.tokens).toEqual([]);
+    expect(result.value.tokens).toEqual([]);
+    expect(held.tokens).toEqual([]);
   });
 
   it('puts the caret right after the token when whitespace already follows it', () => {
@@ -222,7 +229,7 @@ describe('useMentions', () => {
   it('opens no list and inserts nothing in a read-only textarea', () => {
     let result!: UseMentionsResult;
     function ReadOnly() {
-      const mentions = useMentions({ triggers: [{ char: '@', options: people }], defaultValue: '@a' });
+      const mentions = useMentions({ triggers: [{ char: '@', options: people }], defaultValue: { text: '@a', tokens: [] } });
       result = mentions;
       return (
         <Field.Root aria-label="Message">
@@ -284,46 +291,30 @@ describe('useMentions', () => {
     expect(anchor).toMatch(/^--[A-Za-z0-9_-]+$/);
   });
 
-  it('settles when the parent passes a new tokens array on each render', () => {
-    for (const copy of [(t: MentionToken[] | undefined) => t ?? [], (t: MentionToken[] | undefined) => (t ?? []).map((token) => ({ ...token }))]) {
-      let result!: UseMentionsResult;
-      function Copying() {
-        const [value, setValue] = useState('');
-        const [tokens, setTokens] = useState<MentionToken[]>();
-        const mentions = useMentions({ triggers: [{ char: '@', options: people }], value, onValueChange: setValue, tokens: copy(tokens), onTokensChange: setTokens });
-        result = mentions;
-        return (
-          <Field.Root aria-label="Message">
-            <Field.Textarea {...mentions.getTextareaProps()} />
-          </Field.Root>
-        );
-      }
-      const { unmount } = render(<Copying />);
-      const el = screen.getByRole('textbox') as HTMLTextAreaElement;
-      fireEvent.focus(el);
-      type(el, '@a');
-      act(() => result.select('ada'));
-      expect(result.tokens).toEqual([{ start: 0, end: 13, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
-      fireEvent.change(el, { target: { value: 'Hi @Ada Lovelace ', selectionStart: 3, selectionEnd: 3 } });
-      expect(result.tokens).toEqual([{ start: 3, end: 16, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
-      unmount();
-    }
-  });
-
-  it('settles with an inline tokens literal', () => {
-    function Inline() {
-      const [value, setValue] = useState('');
-      const mentions = useMentions({ triggers: [{ char: '@', options: people }], value, onValueChange: setValue, tokens: [] });
+  it('settles when the product passes a new draft object or tokens array on each render', () => {
+    let result!: UseMentionsResult;
+    function Copying() {
+      const [draft, setDraft] = useState<MentionDraft>({ text: '', tokens: [] });
+      const mentions = useMentions({
+        triggers: [{ char: '@', options: people }],
+        value: { text: draft.text, tokens: draft.tokens.map((token) => ({ ...token })) },
+        onValueChange: setDraft,
+      });
+      result = mentions;
       return (
         <Field.Root aria-label="Message">
           <Field.Textarea {...mentions.getTextareaProps()} />
         </Field.Root>
       );
     }
-    render(<Inline />);
+    render(<Copying />);
     const el = screen.getByRole('textbox') as HTMLTextAreaElement;
-    expect(() => type(el, 'hi')).not.toThrow();
-    expect(el.value).toBe('hi');
+    fireEvent.focus(el);
+    type(el, '@a');
+    act(() => result.select('ada'));
+    expect(result.value.tokens).toEqual([{ start: 0, end: 13, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
+    fireEvent.change(el, { target: { value: 'Hi @Ada Lovelace ', selectionStart: 3, selectionEnd: 3 } });
+    expect(result.value.tokens).toEqual([{ start: 3, end: 16, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
   });
 
   it('leaves Enter alone during an IME composition', () => {
@@ -337,176 +328,36 @@ describe('useMentions', () => {
   });
 });
 
-describe('useMentions with controlled tokens', () => {
-  function Mirror({
-    initial = '',
-    initialTokens = [],
-    onTokens,
-    check,
-    expose,
-    fixedTokens,
-  }: {
-    initial?: string;
-    initialTokens?: MentionToken[];
-    onTokens?: (tokens: MentionToken[]) => void;
-    check?: (value: string, tokens: readonly MentionToken[]) => void;
-    expose?: (result: UseMentionsResult, set: (value: string, tokens?: MentionToken[]) => void) => void;
-    fixedTokens?: MentionToken[];
-  }) {
-    const [value, setValue] = useState(initial);
-    const [tokens, setTokens] = useState<MentionToken[]>(initialTokens);
-    check?.(value, tokens);
-    const mentions = useMentions({
-      triggers: [{ char: '@', options: people }],
-      value,
-      onValueChange: setValue,
-      tokens: fixedTokens ?? tokens,
-      onTokensChange: (next) => {
-        onTokens?.(next);
-        setTokens(next);
-      },
-    });
-    expose?.(mentions, (nextValue, nextTokens) => {
-      setValue(nextValue);
-      if (nextTokens) setTokens(nextTokens);
-    });
-    return (
-      <Field.Root aria-label="Message">
-        <Field.Textarea {...mentions.getTextareaProps()} />
-      </Field.Root>
-    );
-  }
-
-  it('shows each text with its own tokens, and the parent holds them once each edit settles', () => {
-    let result!: UseMentionsResult;
-    let held: readonly MentionToken[] = [];
-    const shown = vi.fn();
-    render(
-      <Mirror
-        check={(_, tokens) => (held = tokens)}
-        expose={(r) => {
-          result = r;
-          shown();
-          expect(validTokens(r.value, r.tokens)).toEqual(r.tokens);
-        }}
-      />,
-    );
-    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
-    fireEvent.focus(el);
-    type(el, '@a');
-    act(() => result.select('ada'));
-    expect(held).toEqual(result.tokens);
-    fireEvent.change(el, { target: { value: 'Hi @Ada Lovelace ', selectionStart: 3, selectionEnd: 3 } });
-    expect(result.tokens).toEqual([{ start: 3, end: 16, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
-    expect(held).toEqual(result.tokens);
-    fireEvent.change(el, { target: { value: 'Hi @Ada Lovelac ', selectionStart: 15, selectionEnd: 15 } });
-    expect(result.tokens).toEqual([]);
-    expect(held).toEqual([]);
-    expect(shown).toHaveBeenCalled();
-  });
-
-  it('shows only the tokens the parent holds, and still hands out a pick', () => {
-    let result!: UseMentionsResult;
-    const onTokens = vi.fn();
-    render(<Mirror fixedTokens={[]} onTokens={onTokens} expose={(r) => (result = r)} />);
-    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
-    fireEvent.focus(el);
-    type(el, '@a');
-    act(() => result.select('ada'));
-    expect(onTokens).toHaveBeenCalledWith([{ start: 0, end: 13, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
-    expect(result.tokens).toEqual([]);
-  });
-
-  it('restores a draft reloaded after edits', () => {
-    let result!: UseMentionsResult;
-    let set!: (value: string, tokens?: MentionToken[]) => void;
-    const ada = { start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' };
-    render(<Mirror initial="@Ada hi" initialTokens={[ada]} expose={(r, s) => ((result = r), (set = s))} />);
-    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
-    fireEvent.change(el, { target: { value: '@Ad hi', selectionStart: 3, selectionEnd: 3 } });
-    expect(result.tokens).toEqual([]);
-    act(() => set('@Ada hi', [ada]));
-    expect(result.tokens).toEqual([ada]);
-  });
-
-  it('hands out nothing for an edit the parent rejects', () => {
-    const onTokens = vi.fn();
-    const ada = { start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' };
-    function Fixed() {
-      const mentions = useMentions({
-        triggers: [{ char: '@', options: people }],
-        value: '@Ada hi',
-        tokens: [ada],
-        onTokensChange: onTokens,
-      });
-      return (
-        <Field.Root aria-label="Message">
-          <Field.Textarea {...mentions.getTextareaProps()} />
-        </Field.Root>
-      );
-    }
-    render(<Fixed />);
-    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
-    fireEvent.change(el, { target: { value: '@Aa hi', selectionStart: 2, selectionEnd: 2 } });
-    expect(onTokens).not.toHaveBeenCalled();
-    expect(screen.getByRole('textbox')).toHaveProperty('value', '@Ada hi');
-  });
-
-  it('hands out empty tokens once when the parent clears only the text', () => {
-    let set!: (value: string, tokens?: MentionToken[]) => void;
-    const onTokens = vi.fn();
-    const ada = { start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' };
-    render(<Mirror initial="@Ada hi" initialTokens={[ada]} onTokens={onTokens} expose={(_, s) => (set = s)} />);
-    act(() => set(''));
-    expect(onTokens).toHaveBeenCalledTimes(1);
-    expect(onTokens).toHaveBeenLastCalledWith([]);
-  });
-});
-
 describe('useMentions edge cases', () => {
-  it('lands a fallback pick and its caret when the parent commits the text later', async () => {
+  it('lands a fallback pick and its caret when the product commits the draft later', async () => {
     let result!: UseMentionsResult;
-    function Later() {
-      const [value, setValue] = useState('');
-      const mentions = useMentions({
-        triggers: [{ char: '@', options: people }],
-        value,
-        onValueChange: (next) => setTimeout(() => setValue(next), 10),
-      });
-      result = mentions;
-      return (
-        <Field.Root aria-label="Message">
-          <Field.Textarea {...mentions.getTextareaProps()} />
-        </Field.Root>
-      );
-    }
-    render(<Later />);
+    let held!: MentionDraft;
+    render(<Harness commit="timeout" expose={(r, h) => ((result = r), (held = h))} />);
     const el = screen.getByRole('textbox') as HTMLTextAreaElement;
     el.focus();
     fireEvent.change(el, { target: { value: '@a', selectionStart: 2, selectionEnd: 2 } });
-    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+    await tick();
     expect(result.open).toBe(true);
     act(() => result.select('ada'));
-    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+    await tick();
     expect(el.value).toBe('@Ada Lovelace ');
     expect(el.selectionStart).toBe(14);
-    expect(result.tokens).toEqual([{ start: 0, end: 13, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
+    expect(held.tokens).toEqual([{ start: 0, end: 13, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
   });
 
-  it('hands out tokens once per change in StrictMode, and once at mount for starting tokens that do not hold their text', () => {
-    const onTokens = vi.fn();
+  it('hands out one draft per edit in StrictMode', () => {
+    const onChange = vi.fn();
     let result!: UseMentionsResult;
     render(
       <StrictMode>
-        <Harness tokens={[{ start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' }]} onTokens={onTokens} expose={(r) => (result = r)} />
+        <Harness onChange={onChange} expose={(r) => (result = r)} />
       </StrictMode>,
     );
-    expect(onTokens).toHaveBeenCalledTimes(1);
     const el = screen.getByRole('textbox') as HTMLTextAreaElement;
     fireEvent.focus(el);
     type(el, '@a');
     act(() => result.select('ada'));
-    expect(onTokens).toHaveBeenCalledTimes(2);
+    expect(onChange).toHaveBeenCalledTimes(2);
   });
 
   it('keeps the list closed for a dismissed word through an edit before it', () => {
@@ -518,11 +369,78 @@ describe('useMentions edge cases', () => {
     fireEvent.keyDown(el, { key: 'Escape' });
     expect(result.open).toBe(false);
     fireEvent.change(el, { target: { value: 'xy @a', selectionStart: 2, selectionEnd: 2 } });
-    fireEvent.change(el, { target: { value: 'xy @a', selectionStart: 5, selectionEnd: 5 } });
     el.setSelectionRange(5, 5);
     fireEvent.select(el);
     expect(result.open).toBe(false);
     type(el, 'xy @a @g');
     expect(result.open).toBe(true);
+  });
+
+  it('keeps Escape when the product commits the edit later', async () => {
+    let result!: UseMentionsResult;
+    render(<Harness initial="@abc" commit="timeout" expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    el.setSelectionRange(4, 4);
+    fireEvent.select(el);
+    fireEvent.change(el, { target: { value: '@ab', selectionStart: 3, selectionEnd: 3 } });
+    fireEvent.keyDown(el, { key: 'Escape' });
+    await tick();
+    expect(result.value.text).toBe('@ab');
+    expect(result.open).toBe(false);
+  });
+
+  it('does not reopen the list or reload after a pick of a one-word option before whitespace', async () => {
+    const loadOptions = vi.fn(async () => short);
+    let result!: UseMentionsResult;
+    let held!: MentionDraft;
+    render(<Harness initial={'@Ad\nnext'} triggers={[{ char: '@', loadOptions }]} expose={(r, h) => ((result = r), (held = h))} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    el.setSelectionRange(3, 3);
+    fireEvent.select(el);
+    await act(async () => {});
+    expect(result.open).toBe(true);
+    act(() => result.select('ada'));
+    await act(async () => {});
+    expect(held.tokens).toEqual([ada]);
+    expect(result.open).toBe(false);
+    expect(loadOptions).toHaveBeenCalledTimes(1);
+  });
+
+  it('commits the token of a pick that leaves the text as it is', () => {
+    let result!: UseMentionsResult;
+    let held!: MentionDraft;
+    const onChange = vi.fn();
+    render(<Harness initial="@Ada hi" triggers={[{ char: '@', options: short }]} onChange={onChange} expose={(r, h) => ((result = r), (held = h))} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    el.setSelectionRange(4, 4);
+    fireEvent.select(el);
+    act(() => result.select('ada'));
+    expect(held).toEqual({ text: '@Ada hi', tokens: [ada] });
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(result.open).toBe(false);
+  });
+
+  it('commits the token of a pick that leaves the text as it is, uncontrolled', () => {
+    let result!: UseMentionsResult;
+    const onChange = vi.fn();
+    function Uncontrolled() {
+      result = useMentions({ triggers: [{ char: '@', options: short }], defaultValue: { text: '@Ada hi', tokens: [] }, onValueChange: onChange });
+      return (
+        <Field.Root aria-label="Message">
+          <Field.Textarea {...result.getTextareaProps()} />
+        </Field.Root>
+      );
+    }
+    render(<Uncontrolled />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    el.setSelectionRange(4, 4);
+    fireEvent.select(el);
+    act(() => result.select('ada'));
+    expect(result.value.tokens).toEqual([ada]);
+    expect(onChange).toHaveBeenCalledWith({ text: '@Ada hi', tokens: [ada] });
   });
 });

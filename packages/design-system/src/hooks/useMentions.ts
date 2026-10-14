@@ -39,6 +39,9 @@ import { usePopoverInternal } from './usePopover';
 
 export type { MentionToken, MentionTriggerPosition } from './useMentions.detect';
 
+/** The text and its tokens, which change together. */
+export type MentionDraft = { text: string; tokens: readonly MentionToken[] };
+
 export type MentionTrigger = {
   /** One character that starts a suggestion word, such as `@` or `/`. */
   char: string;
@@ -58,13 +61,11 @@ export type MentionTrigger = {
 
 export type UseMentionsOptions = {
   triggers: readonly MentionTrigger[];
-  value?: string;
-  defaultValue?: string;
-  onValueChange?: (value: string) => void;
-  /** Controlled tokens, as ranges of the text. Update them from `onTokensChange`. */
-  tokens?: readonly MentionToken[];
-  defaultTokens?: readonly MentionToken[];
-  onTokensChange?: (tokens: MentionToken[]) => void;
+  /** The text and its tokens, controlled together. */
+  value?: MentionDraft;
+  defaultValue?: MentionDraft;
+  /** Called with the next text and its tokens on every edit, including a pick. */
+  onValueChange?: (value: { text: string; tokens: MentionToken[] }) => void;
   /** The textarea's maxLength. A pick that would not fit is disabled. */
   maxLength?: number;
   disabled?: boolean;
@@ -91,8 +92,8 @@ type TextareaWire = Pick<
 export type UseMentionsTextareaProps = Partial<FieldTextareaProps>;
 
 export type UseMentionsResult = {
-  value: string;
-  tokens: readonly MentionToken[];
+  /** The text, and the tokens that still hold their text. */
+  value: MentionDraft;
   open: boolean;
   /** The trigger of the word being typed, while there is one. */
   trigger: MentionTrigger | null;
@@ -116,7 +117,7 @@ export type UseMentionsResult = {
   getOptionProps: (item: MentionItem) => OptionListOptionProps;
 };
 
-const EMPTY_TOKENS: readonly MentionToken[] = [];
+const EMPTY_DRAFT: MentionDraft = { text: '', tokens: [] };
 const EMPTY_OPTIONS: readonly ComboboxOption[] = [];
 const SPACE = /\s/;
 /** How many texts the undo history remembers tokens for. */
@@ -132,36 +133,8 @@ function insertion(value: string, query: MentionQuery, text: string): string {
   return after !== undefined && SPACE.test(after) ? text : `${text} `;
 }
 
-/** A text with the tokens and dismissed trigger that belong to it. */
-type Snap = {
-  text: string;
-  tokens: readonly MentionToken[];
-  /** The trigger index Escape or a press outside closed the list for. It moves with edits. */
-  dismissed: number | null;
-};
-
-/** An edit's text and tokens, held until that text renders. */
-type Pending = {
-  text: string;
-  tokens: readonly MentionToken[];
-  /** The caret after the edit, which places the changed span. */
-  caret: number | null;
-  /** The tokens prop when the edit happened. */
-  base: readonly MentionToken[];
-};
-
-/** Tokens handed out for a text, and the product's tokens from before it took them. */
-type Awaiting = { text: string; tokens: readonly MentionToken[]; stale: readonly (readonly MentionToken[])[] };
-
-/** The product's token lists that mean it has not taken the newest hand-out yet. */
-function staleLists(
-  previous: Awaiting | null,
-  held: readonly MentionToken[],
-  text: string,
-): readonly (readonly MentionToken[])[] {
-  const chained = previous !== null && previous.text === text && previous.stale.some((list) => sameTokens(list, held));
-  return chained ? [...previous.stale, previous.tokens].slice(-HISTORY) : [held];
-}
+/** The text the dismissed trigger index belongs to, and the last edit, which places its changed span. */
+type Dismissal = { text: string; dismissed: number | null; edit: { text: string; caret: number | null } | null };
 
 /** The collapsed caret of a textarea that takes typing, or null. */
 function caretOf(el: HTMLTextAreaElement): number | null {
@@ -180,7 +153,15 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const latest = useRef(options);
   latest.current = options;
 
-  const [value, setValueState] = useControlledState(options.value, options.defaultValue ?? '');
+  const [draft, setDraft] = useControlledState(options.value, options.defaultValue ?? EMPTY_DRAFT);
+  const value = draft.text;
+  const given = draft.tokens;
+  // The tokens that still hold their text; the others are left out.
+  const tokens = useMemo(() => validTokens(value, given), [given, value]);
+  const shown = useMemo<MentionDraft>(
+    () => (tokens === given || sameTokens(tokens, given) ? draft : { text: value, tokens }),
+    [draft, given, tokens, value],
+  );
   const [caret, setCaret] = useState<number | null>(null);
   const [focused, setFocused] = useState(false);
   const [active, setActive] = useState<{ session: string; value: string | null } | null>(null);
@@ -194,67 +175,14 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   // The token a pick is inserting, read by the change event its native edit fires.
   const picking = useRef<MentionToken | null>(null);
 
-  // The hook's own tokens, kept with the text they belong to. An edit works
-  // out the next text's tokens when it happens, and holds them as `pending`
-  // until that text renders; a text set from outside carries the tokens along.
-  const [own, setOwn] = useState<Snap & { pending: Pending | null; unsent: boolean; awaiting: Awaiting | null }>(() => ({
-    text: value,
-    tokens: validTokens(value, options.tokens ?? options.defaultTokens ?? EMPTY_TOKENS),
-    dismissed: null,
-    pending: null,
-    unsent: false,
-    awaiting: null,
-  }));
-  const raw = options.tokens;
-  let snap: Snap = own;
-  // Controlled: the edit's tokens, shown until the layout effect hands them out.
-  let unsent = own.unsent;
-  // Controlled: tokens handed out that the product may still be committing.
-  let awaiting = own.awaiting;
+  // The trigger Escape closed the list for moves with the text.
+  const [own, setOwn] = useState<Dismissal>(() => ({ text: value, dismissed: null, edit: null }));
+  let dismissed = own.dismissed;
   if (own.text !== value) {
-    // The edit that made this text, if one did.
-    const edited = own.pending?.text === value ? own.pending : null;
-    // Its tokens, unless the product set tokens of its own since the edit.
-    const fromEdit = edited !== null && (raw === undefined || sameTokens(raw, edited.base));
-    snap = {
-      text: value,
-      tokens: fromEdit ? edited.tokens : raw === undefined ? shiftTokens(own.text, value, own.tokens) : validTokens(value, raw),
-      dismissed: own.dismissed === null ? null : shiftIndex(own.text, value, own.dismissed, edited?.caret),
-    };
-    unsent = fromEdit && raw !== undefined && !sameTokens(edited.tokens, raw);
-    awaiting = unsent && edited && raw ? { text: value, tokens: edited.tokens, stale: staleLists(own.awaiting, raw, own.text) } : null;
-    setOwn({ ...snap, pending: null, unsent, awaiting });
+    const caretOfEdit = own.edit?.text === value ? own.edit.caret : undefined;
+    dismissed = dismissed === null ? null : shiftIndex(own.text, value, dismissed, caretOfEdit);
+    setOwn({ text: value, dismissed, edit: null });
   }
-  // Controlled tokens are the product's, like a controlled value; the hook
-  // shows the ones that still hold their text.
-  const shownControlled = useMemo(() => (raw === undefined ? null : validTokens(value, raw)), [raw, value]);
-  const tokens = shownControlled === null || unsent ? snap.tokens : shownControlled;
-  // The tokens the next edit builds on. While the product has not yet taken
-  // tokens handed out for this text, such as in a transition, they are the
-  // handed ones, so a second edit before they arrive does not drop them.
-  const working =
-    raw !== undefined && awaiting !== null && awaiting.text === value && awaiting.stale.some((list) => sameTokens(list, raw))
-      ? awaiting.tokens
-      : tokens;
-  const dismissed = snap.dismissed;
-
-  // The text the last commit rendered, and the tokens handed out for it.
-  const seen = useRef<{ text: string; tokens: readonly MentionToken[] }>({
-    text: value,
-    tokens: options.tokens ?? options.defaultTokens ?? EMPTY_TOKENS,
-  });
-  // Hands out the tokens once the text they belong to renders.
-  useLayoutEffect(() => {
-    const held = latest.current.tokens;
-    const prev = seen.current;
-    // Controlled, with the text unchanged: the product's tokens stand.
-    if (held !== undefined && value === prev.text) return;
-    seen.current = { text: value, tokens: snap.tokens };
-    // From here on the product's tokens are shown, whether or not it takes these.
-    if (unsent) setOwn((current) => (current.unsent ? { ...current, unsent: false } : current));
-    if (sameTokens(snap.tokens, held ?? prev.tokens)) return;
-    latest.current.onTokensChange?.([...snap.tokens]);
-  }, [value, snap.tokens, unsent]);
 
   const remember = (text: string, list: readonly MentionToken[]) => {
     const map = history.current;
@@ -263,39 +191,27 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     if (map.size > HISTORY) map.delete(map.keys().next().value!);
   };
 
-  /** Works out the tokens of an edit's text against the rendered text, then sends the text. */
+  /** Hands out a text and its tokens together. */
+  const send = (next: MentionDraft) => {
+    setDraft(next);
+    latest.current.onValueChange?.({ text: next.text, tokens: [...next.tokens] });
+  };
+
+  /** Works out the tokens of an edit's text from the rendered text and tokens, then sends both. */
   const edit = (next: string, how: { inputType?: string; caret: number | null; pick?: MentionToken | null }) => {
     const restored =
       how.inputType === 'historyUndo' || how.inputType === 'historyRedo' ? history.current.get(next) : undefined;
     let list: readonly MentionToken[];
     if (restored) list = validTokens(next, restored);
     else {
-      list = shiftTokens(value, next, working, how.caret);
+      list = shiftTokens(value, next, tokens, how.caret);
       const pick = how.pick;
       if (pick && next.slice(pick.start, pick.end) === pick.text) list = validTokens(next, [...list, pick]);
     }
-    remember(value, working);
+    remember(value, tokens);
     remember(next, list);
-    setOwn({
-      text: value,
-      tokens: working,
-      dismissed,
-      pending: { text: next, tokens: list, caret: how.caret, base: raw ?? EMPTY_TOKENS },
-      unsent: false,
-      awaiting,
-    });
-    setValue(next);
-  };
-
-  /** A pick that leaves the text as it is: its text has rendered already, so its token is handed out now. */
-  const commitInPlace = (list: readonly MentionToken[]) => {
-    remember(value, list);
-    const held = latest.current.tokens;
-    if (held === undefined) setOwn((current) => ({ ...current, tokens: list, pending: null }));
-    else if (!sameTokens(list, held))
-      setOwn((current) => ({ ...current, awaiting: { text: value, tokens: list, stale: staleLists(awaiting, held, value) } }));
-    seen.current = { text: value, tokens: list };
-    if (!sameTokens(list, held ?? tokens)) latest.current.onTokensChange?.([...list]);
+    setOwn((current) => ({ ...current, edit: { text: next, caret: how.caret } }));
+    send({ text: next, tokens: list });
   };
 
   // A value set from outside, such as clearing the text after sending, can move the caret.
@@ -314,16 +230,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     setCaret(caretAfter.to);
   }, [caretAfter, value]);
 
-  const setValue = useCallback(
-    (next: string) => {
-      setValueState(next);
-      latest.current.onValueChange?.(next);
-    },
-    [setValueState],
-  );
-
   const triggers = options.triggers;
-  const found = focused && caret !== null && !options.disabled ? findQuery(value, caret, triggers, working) : null;
+  const found = focused && caret !== null && !options.disabled ? findQuery(value, caret, triggers, tokens) : null;
   const query = found && found.start !== dismissed ? found : null;
   const trigger = query ? (triggers[query.trigger] ?? null) : null;
   const session = query ? `${query.trigger}:${query.start}` : null;
@@ -441,7 +349,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       if (next === value) {
         el?.setSelectionRange(caretTo, caretTo);
         setCaret(caretTo);
-        commitInPlace(validTokens(value, [...working, token]));
+        const list = validTokens(value, [...tokens, token]);
+        remember(value, list);
+        if (!sameTokens(list, tokens)) send({ text: value, tokens: list });
         return;
       }
       const doc = el?.ownerDocument;
@@ -467,9 +377,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       setCaretAfter({ to: caretTo, value: next });
       edit(next, { caret: caretTo, pick: token });
     },
-    // edit reads the rendered text and tokens, which value and tokens stand for.
+    // edit and send read the rendered text and tokens, which value and tokens stand for.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fits, items, query, trigger, value, working],
+    [fits, items, query, tokens, trigger, value],
   );
 
   const onChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -523,7 +433,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     // token, so the key removes it in one step the textarea can undo.
     if ((event.key === 'Backspace' || event.key === 'Delete') && plain && el.selectionStart === el.selectionEnd) {
       const at = el.selectionStart;
-      const token = working.find((item) => (event.key === 'Backspace' ? item.end === at : item.start === at));
+      const token = tokens.find((item) => (event.key === 'Backspace' ? item.end === at : item.start === at));
       if (token) el.setSelectionRange(token.start, token.end);
     }
   };
@@ -626,8 +536,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   });
 
   return {
-    value,
-    tokens,
+    value: shown,
     open,
     trigger,
     query: query?.query ?? '',

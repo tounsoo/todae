@@ -8,7 +8,7 @@ import {
   Popover,
   Stack,
   useMentions,
-  type MentionToken,
+  type MentionDraft,
   type MentionTrigger,
 } from '@omsoo.design/todae';
 import { useState, type FormEvent } from 'react';
@@ -31,17 +31,18 @@ const triggers: MentionTrigger[] = [
   { char: '/', position: 'start', options: commands, label: 'Commands' },
 ];
 
-type Sent = { id: number; text: string; tokens: readonly MentionToken[] };
+type Sent = MentionDraft & { id: number };
+const EMPTY: MentionDraft = { text: '', tokens: [] };
 
 export function MentionsExample() {
-  const [value, setValue] = useState('');
+  const [draft, setDraft] = useState(EMPTY);
   const [sent, setSent] = useState<Sent[]>([]);
-  const mentions = useMentions({ triggers, value, onValueChange: setValue });
+  const mentions = useMentions({ triggers, value: draft, onValueChange: setDraft });
 
   const send = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSent((all) => [...all, { id: all.length, text: value, tokens: mentions.tokens }]);
-    setValue('');
+    setSent((all) => [...all, { id: all.length, ...mentions.value }]);
+    setDraft(EMPTY);
   };
 
   return (
@@ -58,7 +59,7 @@ export function MentionsExample() {
         <Field.Root aria-label="Message">
           <Field.Textarea {...mentions.getTextareaProps()} autoGrow maxRows={6} placeholder="Type @ or /" />
           <Field.Row>
-            <Composer.Submit disabled={value.trim() === ''} />
+            <Composer.Submit disabled={draft.text.trim() === ''} />
           </Field.Row>
         </Field.Root>
       </Composer.Root>

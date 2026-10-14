@@ -10,15 +10,15 @@ const mentions = useMentions({
     { char: '@', options: people, label: 'People' },
     { char: '/', position: 'start', options: commands, label: 'Commands' },
   ],
-  value,
-  onValueChange: setValue,
+  value: draft,
+  onValueChange: setDraft,
 });
 
 <Composer.Root onSubmit={send}>
   <Field.Root aria-label="Message">
     <Field.Textarea {...mentions.getTextareaProps()} autoGrow maxRows={6} />
     <Field.Row>
-      <Composer.Submit disabled={value.trim() === ''} />
+      <Composer.Submit disabled={draft.text.trim() === ''} />
     </Field.Row>
   </Field.Root>
 </Composer.Root>
@@ -47,7 +47,7 @@ While the list is open, ArrowDown and ArrowUp move through its options, and Ente
 
 A pick replaces the word through `document.execCommand('insertText')`, so it is one step on the textarea's own undo stack, and adds a space unless whitespace follows. Undo and redo bring back the tokens that the restored text had. Backspace at a token's end, or Delete at its start, removes the whole token. An edit inside a token turns it back into plain text.
 
-`mentions.tokens` lists each token's `start`, `end`, `char`, `value` and `text`; send them with the text to your backend. A token whose range no longer holds its text is dropped. To start from a draft, pass its tokens as `defaultTokens` with its text when the hook mounts. To hold the tokens in your own state, pass `tokens` with `onTokensChange`, as you pass `value` with `onValueChange`, and set both to load a draft.
+`value` is the draft: its `text` and its `tokens`, which list each token's `start`, `end`, `char`, `value` and `text`. `onValueChange` hands back both on every edit, so they are stored together; send them to your backend together, and set both to load or clear a draft. A token whose range no longer holds its text is dropped.
 
 ## Drawing tokens
 

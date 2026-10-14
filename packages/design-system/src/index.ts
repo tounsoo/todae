@@ -315,6 +315,7 @@ export {
 export { useControlledState, useControlledValue } from './hooks/useControlledState';
 export {
   useMentions,
+  type MentionDraft,
   type MentionItem,
   type MentionToken,
   type MentionTrigger,
