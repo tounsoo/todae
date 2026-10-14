@@ -551,6 +551,15 @@
       "context": null
     },
     {
+      "path": "font.letter-spacing.default",
+      "type": "dimension",
+      "cssVar": "--todae-font-letter-spacing-default",
+      "cssValue": "0rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "font.size.1",
       "type": "dimension",
       "cssVar": "--todae-font-size-1",
@@ -798,6 +807,15 @@
       "type": "dimension",
       "cssVar": "--todae-radius-sm",
       "cssValue": "0.125rem",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "shadow.none",
+      "type": "shadow",
+      "cssVar": "--todae-shadow-none",
+      "cssValue": "0px 0px 0px 0px oklch(0 0 0 / 0)",
       "ref": null,
       "layer": "core",
       "context": null
@@ -2423,6 +2441,15 @@
       "context": null
     },
     {
+      "path": "button.base.font.letter-spacing",
+      "type": "dimension",
+      "cssVar": "--todae-button-base-font-letter-spacing",
+      "cssValue": "var(--todae-font-letter-spacing-default)",
+      "ref": "font.letter-spacing.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "button.base.font.size",
       "type": "dimension",
       "cssVar": "--todae-button-base-font-size",
@@ -2482,6 +2509,15 @@
       "cssVar": "--todae-button-base-radius",
       "cssValue": "var(--todae-radius-md)",
       "ref": "radius.md",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.base.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-button-base-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
       "layer": "contract",
       "context": null
     },
@@ -3472,6 +3508,15 @@
       "cssVar": "--todae-field-label-fg",
       "cssValue": "var(--todae-color-fg-default)",
       "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.label.font.letter-spacing",
+      "type": "dimension",
+      "cssVar": "--todae-field-label-font-letter-spacing",
+      "cssValue": "var(--todae-font-letter-spacing-default)",
+      "ref": "font.letter-spacing.default",
       "layer": "contract",
       "context": null
     },
@@ -5096,6 +5141,15 @@
       "context": null
     },
     {
+      "path": "tabs.font.letter-spacing",
+      "type": "dimension",
+      "cssVar": "--todae-tabs-font-letter-spacing",
+      "cssValue": "var(--todae-font-letter-spacing-default)",
+      "ref": "font.letter-spacing.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "tabs.font.size",
       "type": "dimension",
       "cssVar": "--todae-tabs-font-size",
@@ -6149,6 +6203,15 @@
       "context": null
     },
     {
+      "path": "table.header.font.letter-spacing",
+      "type": "dimension",
+      "cssVar": "--todae-table-header-font-letter-spacing",
+      "cssValue": "var(--todae-font-letter-spacing-default)",
+      "ref": "font.letter-spacing.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "table.header.font.weight",
       "type": "fontWeight",
       "cssVar": "--todae-table-header-font-weight",
@@ -6730,6 +6793,15 @@
       "cssVar": "--todae-card-radius",
       "cssValue": "var(--todae-radius-lg)",
       "ref": "radius.lg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "card.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-card-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
       "layer": "contract",
       "context": null
     },

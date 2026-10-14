@@ -5,7 +5,8 @@
     "header": {
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
       "font": {
-        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } },
+        "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } }
       },
       "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
     },

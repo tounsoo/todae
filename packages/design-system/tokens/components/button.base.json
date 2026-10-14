@@ -8,12 +8,14 @@
       },
       "font": {
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } },
-        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } },
+        "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } }
       },
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
       "icon": {
         "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } }
-      }
+      },
+      "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } }
     }
   }
 }

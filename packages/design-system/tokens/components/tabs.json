@@ -10,7 +10,8 @@
     },
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
-      "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+      "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } },
+      "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } }
     },
     "bg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },

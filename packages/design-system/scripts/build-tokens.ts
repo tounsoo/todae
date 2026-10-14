@@ -60,6 +60,7 @@ export const RESERVED_ROOTS = [
   'picker',
   'calendar',
   'opacity',
+  'shadow',
 ] as const;
 export const INTERACTIVE_SLOTS = ['default', 'hover', 'active', 'focus', 'disabled'] as const;
 export const INTERACTIVE_GROUPS = ['bg', 'fg', 'border'] as const;
@@ -72,6 +73,8 @@ export const BUTTON_BASE_PATHS = [
   'button.base.font.weight',
   'button.base.gap',
   'button.base.icon.size',
+  'button.base.font.letter-spacing',
+  'button.base.shadow',
 ] as const;
 
 const LAYER_RANK = { core: 0, appearance: 1, density: 2, contract: 3 } as const;
@@ -219,7 +222,7 @@ export function validateButtonBase(tokens: Map<string, TokenNode>, loc: string):
   const keys = [...tokens.keys()].filter((path) => path.startsWith('button.base.')).sort();
   const expected = [...BUTTON_BASE_PATHS].sort();
   if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
-    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight, gap, icon.size`);
+    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight/letter-spacing, gap, icon.size, shadow`);
   }
 }
 

@@ -44,7 +44,8 @@
       "gap": { "$type": "dimension", "$value": { "value": 0.4, "unit": "rem" } },
       "font": {
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
-        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } },
+        "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } }
       },
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
     },

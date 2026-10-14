@@ -1,4 +1,4 @@
-import type { ThemeColorValue, ThemeDimensionValue, ThemeOverride } from '@omsoo.design/todae';
+import type { ThemeColorValue, ThemeDimensionValue, ThemeOverride, ThemeShadowLayer } from '@omsoo.design/todae';
 
 /** A playground starting point: one override set per appearance, since Todae's accent flips between light and dark. */
 export type ThemePreset = {
@@ -51,6 +51,15 @@ function radii(sm: number, md: number, lg: number): ThemeOverride {
   return { 'radius.sm': rem(sm), 'radius.md': rem(md), 'radius.lg': rem(lg) };
 }
 
+const px = (value: number) => ({ value, unit: 'px' }) as const;
+
+/** One shadow layer: x, y, blur and spread in px, then its color. */
+function shadow(x: number, y: number, blur: number, spread: number, color: ThemeColorValue): ThemeShadowLayer {
+  return { offsetX: px(x), offsetY: px(y), blur: px(blur), spread: px(spread), color };
+}
+
+const alpha = (color: ThemeColorValue, a: number): ThemeColorValue => ({ ...color, alpha: a });
+
 /** Pill-shaped buttons, chips and badges. */
 const PILLS: ThemeOverride = { 'button.base.radius': rem(99), 'chip.radius': rem(99), 'badge.radius': rem(99) };
 
@@ -81,6 +90,22 @@ function chartreuseButton(ink: ThemeColorValue): ThemeOverride {
   return out;
 }
 
+/** Acid's hard, unblurred shadows in the border's color. */
+function hardShadows(color: ThemeColorValue): ThemeOverride {
+  return { 'card.shadow': shadow(6, 6, 0, 0, color), 'button.base.shadow': shadow(3, 3, 0, 0, color) };
+}
+
+/** Wider letter-spacing on buttons, tabs, labels and table headers, in rem. */
+function tracking(value: number): ThemeOverride {
+  const spacing = rem(value);
+  return {
+    'button.base.font.letter-spacing': spacing,
+    'tabs.font.letter-spacing': spacing,
+    'field.label.font.letter-spacing': spacing,
+    'table.header.font.letter-spacing': spacing,
+  };
+}
+
 const MONO = ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'];
 
 export const PRESETS: readonly ThemePreset[] = [
@@ -93,12 +118,14 @@ export const PRESETS: readonly ThemePreset[] = [
     {
       'color.bg.canvas': oklch(0.965, 0.004, 200),
       'card.border': oklch(1, 0, 0),
+      'card.shadow': [shadow(0, 1, 2, 0, alpha(oklch(0.2, 0.01, 255), 0.05)), shadow(0, 10, 30, 0, alpha(oklch(0.2, 0.01, 255), 0.07))],
       ...filled(oklch(0.935, 0.005, 200), oklch(0.925, 0.006, 200)),
       ...accent(oklch(0.5, 0.09, 165), oklch(0.56, 0.09, 165), oklch(0.44, 0.09, 165), oklch(0.99, 0, 0)),
     },
     {
       'color.bg.canvas': oklch(0.13, 0.006, 200),
       'card.border': oklch(0.19, 0.004, 200),
+      'card.shadow': [shadow(0, 1, 0, 0, alpha(oklch(1, 0, 0), 0.05)), shadow(0, 12, 32, 0, alpha(oklch(0, 0, 0), 0.45))],
       ...filled(oklch(0.24, 0.006, 200), oklch(0.26, 0.006, 200)),
       ...accent(oklch(0.8, 0.077, 165), oklch(0.85, 0.077, 165), oklch(0.75, 0.077, 165), oklch(0.17, 0.03, 165)),
     },
@@ -115,12 +142,14 @@ export const PRESETS: readonly ThemePreset[] = [
       'font.weight.medium': 600,
       'font.weight.bold': 800,
       'button.base.font.weight': 800,
+      ...tracking(0.04),
     },
     {
       // Chartreuse can't carry a checkbox or a tab line on a light canvas, so
       // the accent stays ink and only the primary button turns chartreuse.
       ...accent(oklch(0.15, 0.028, 110), oklch(0.26, 0.028, 110), oklch(0.1, 0.028, 110), oklch(0.9, 0.2, 122)),
       ...chartreuseButton(oklch(0.15, 0.028, 110)),
+      ...hardShadows(oklch(0.15, 0.028, 110)),
       'color.bg.canvas': oklch(0.96, 0.02, 110),
       'color.border.default': oklch(0.15, 0.028, 110),
       'color.border.subtle': oklch(0.2, 0.024, 110),
@@ -129,6 +158,7 @@ export const PRESETS: readonly ThemePreset[] = [
     {
       ...accent(oklch(0.9, 0.2, 122), oklch(0.93, 0.19, 122), oklch(0.85, 0.2, 122), oklch(0.15, 0.02, 120)),
       'color.border.default': oklch(0.92, 0.014, 120),
+      ...hardShadows(oklch(0.92, 0.014, 120)),
       'color.border.subtle': oklch(0.9, 0.012, 120),
       'focus.ring.color': oklch(0.72, 0.22, 330),
     },
@@ -140,6 +170,7 @@ export const PRESETS: readonly ThemePreset[] = [
     {
       'color.bg.canvas': oklch(0.965, 0.02, 340),
       'card.border': oklch(1, 0, 0),
+      'card.shadow': shadow(0, 12, 40, 0, alpha(oklch(0.6, 0.24, 350), 0.18)),
       ...accent(oklch(0.6, 0.25, 350), oklch(0.66, 0.24, 350), oklch(0.54, 0.25, 350), oklch(0.99, 0, 0)),
       'focus.ring.color': oklch(0.6, 0.25, 350),
     },
@@ -147,6 +178,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'color.bg.canvas': oklch(0.15, 0.04, 320),
       'color.bg.surface': oklch(0.2, 0.024, 320),
       'card.border': oklch(0.2, 0.024, 320),
+      'card.shadow': shadow(0, 12, 48, 0, alpha(oklch(0.7, 0.22, 350), 0.22)),
       ...accent(oklch(0.82, 0.14, 350), oklch(0.86, 0.12, 350), oklch(0.79, 0.15, 350), oklch(0.15, 0.05, 340)),
       'focus.ring.color': oklch(0.82, 0.14, 350),
     },

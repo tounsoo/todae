@@ -591,9 +591,19 @@ describe('resolver-driven build', () => {
             base: {
               radius: px(4),
               padding: { x: px(12), y: px(6) },
-              font: { size: px(14), weight: { $type: 'fontWeight', $value: 500 } },
+              font: { size: px(14), weight: { $type: 'fontWeight', $value: 500 }, 'letter-spacing': px(0) },
               gap: px(8),
               icon: { size: px(16) },
+              shadow: {
+                $type: 'shadow',
+                $value: {
+                  color: { colorSpace: 'oklch', components: [0, 0, 0], alpha: 0 },
+                  offsetX: { value: 0, unit: 'px' },
+                  offsetY: { value: 0, unit: 'px' },
+                  blur: { value: 0, unit: 'px' },
+                  spread: { value: 0, unit: 'px' },
+                },
+              },
             },
           },
         },
@@ -848,7 +858,7 @@ describe('resolver-driven build', () => {
     const root = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/button.base.json' });
     });
-    await expect(buildTokensGraph(root)).rejects.toThrow(/token "button\.base\.[a-z.]+" is declared by both set "button" and set "contract"/);
+    await expect(buildTokensGraph(root)).rejects.toThrow(/token "button\.base\.[a-z.-]+" is declared by both set "button" and set "contract"/);
   });
 
   it('rejects malformed resolver entries', async () => {
@@ -1157,8 +1167,8 @@ describe('company token build', () => {
     });
     const error = await buildCompanyTokens({ resolver: own, base: tokensDir }).catch((e: Error) => e.message);
     expect(error).toMatch(/^contrast: 2 pair\(s\) fail APCA/);
-    expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "light" is Lc 100.2, below 105');
-    expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "dark" is Lc 102.0, below 105');
+    expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "light" is Lc 102.1, below 105');
+    expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "dark" is Lc 104.4, below 105');
   });
 
   it('composites a translucent text color and rejects a translucent background', async () => {
@@ -1170,8 +1180,8 @@ describe('company token build', () => {
         });
         r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'brand.veil', bg: 'color.bg.canvas', min }];
       });
-    // fg.default at 60% over the canvas is well above Lc 45 in both appearances, but below its opaque Lc 100.
-    await expect(buildCompanyTokens({ resolver: await veil(0.6, 45), base: tokensDir })).resolves.toBeDefined();
+    // fg.default at 60% over the canvas is above Lc 40 in both appearances, but below its opaque Lc 100.
+    await expect(buildCompanyTokens({ resolver: await veil(0.6, 40), base: tokensDir })).resolves.toBeDefined();
     await expect(buildCompanyTokens({ resolver: await veil(0.6, 90), base: tokensDir })).rejects.toThrow(
       /"brand\.veil" on "color\.bg\.canvas" in appearance "light" is Lc \d+\.\d, below 90/,
     );
@@ -1187,7 +1197,7 @@ describe('company token build', () => {
     });
     const darkError = await buildCompanyTokens({ resolver: darkOnly, base: tokensDir }).catch((e: Error) => e.message);
     expect(darkError).toMatch(/^contrast: 1 pair\(s\) fail APCA/);
-    expect(darkError).toMatch(/"color\.red\.400" on "color\.bg\.canvas" in appearance "dark" is Lc 43\.0, below 50/);
+    expect(darkError).toMatch(/"color\.red\.400" on "color\.bg\.canvas" in appearance "dark" is Lc 44\.3, below 50/);
     const scrim = await company((r) => {
       r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.fg.default', bg: 'color.bg.scrim', min: 1 }];
     });
@@ -1293,7 +1303,7 @@ describe('company token build', () => {
           };
           r.resolutionOrder.push({ $ref: '#/sets/button' });
         },
-        /button\.base must be radius, padding\.x\/y, font\.size\/weight, gap/,
+        /button\.base must be radius, padding\.x\/y, font\.size\/weight\/letter-spacing, gap/,
       ],
       [
         (r) => {

@@ -3,6 +3,7 @@
     display: block;
     font-size: var(--todae-field-label-font-size);
     font-weight: var(--todae-field-label-font-weight);
+    letter-spacing: var(--todae-field-label-font-letter-spacing);
     color: var(--todae-field-label-fg);
   }
 }
