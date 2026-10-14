@@ -58,8 +58,8 @@ function Mirror({
   );
 }
 
-describe('controlled tokens, recommended design', () => {
-  it('B1: a mirroring parent that rejects an edit keeps its token, and is not called', () => {
+describe('useMentions with tokens the product holds', () => {
+  it('a mirroring parent that rejects an edit keeps its token, and is not called', () => {
     let r!: UseMentionsResult;
     let st!: { value: string; tokens: MentionToken[] };
     const onTokens = vi.fn();
@@ -74,7 +74,7 @@ describe('controlled tokens, recommended design', () => {
   });
 
   for (const commit of ['timeout', 'transition'] as const) {
-    it(`B2: value committed later (${commit}) keeps a typed shift`, async () => {
+    it(`value committed later (${commit}) keeps a typed shift`, async () => {
       let st!: { value: string; tokens: MentionToken[] };
       render(<Mirror initial="@Ada hi" initialTokens={[ada]} commit={commit} expose={(_x, s) => (st = s)} />);
       fireEvent.change(el(), { target: { value: 'Z@Ada hi', selectionStart: 1, selectionEnd: 1 } });
@@ -82,7 +82,7 @@ describe('controlled tokens, recommended design', () => {
       expect(st.value).toBe('Z@Ada hi');
       expect(st.tokens).toEqual([{ ...ada, start: 1, end: 5 }]);
     });
-    it(`B2: value committed later (${commit}) keeps a fallback pick`, async () => {
+    it(`value committed later (${commit}) keeps a fallback pick`, async () => {
       let r!: UseMentionsResult;
       let st!: { value: string; tokens: MentionToken[] };
       render(<Mirror commit={commit} expose={(x, s) => ((r = x), (st = s))} />);
@@ -101,9 +101,18 @@ describe('controlled tokens, recommended design', () => {
       await tick();
       expect(st.tokens).toEqual([{ ...ada, start: 1, end: 5 }]);
     });
+    it(`tokens committed later (${commit}) survive a second edit before they arrive`, async () => {
+      let st!: { value: string; tokens: MentionToken[] };
+      render(<Mirror initial="@Ada hi" initialTokens={[ada]} tokensCommit={commit} expose={(_x, s) => (st = s)} />);
+      fireEvent.change(el(), { target: { value: 'Z@Ada hi', selectionStart: 1, selectionEnd: 1 } });
+      fireEvent.change(el(), { target: { value: 'ZZ@Ada hi', selectionStart: 2, selectionEnd: 2 } });
+      await tick();
+      expect(st.value).toBe('ZZ@Ada hi');
+      expect(st.tokens).toEqual([{ ...ada, start: 2, end: 6 }]);
+    });
   }
 
-  it('B6: Escape before a deferred commit stays dismissed', async () => {
+  it('Escape before a deferred commit stays dismissed', async () => {
     let r!: UseMentionsResult;
     render(<Mirror initial="@abc" commit="timeout" expose={(x) => (r = x)} />);
     el().focus();
@@ -215,6 +224,20 @@ describe('controlled tokens, recommended design', () => {
     fireEvent.select(el());
     act(() => r.select('ada'));
     expect(st.tokens).toEqual([ada]);
+  });
+
+  it('a pick that leaves the text as it is closes the list and hands out once while the tokens commit later', async () => {
+    let r!: UseMentionsResult;
+    const onTokens = vi.fn();
+    render(<Mirror initial="@Ada hi" options={short} tokensCommit="timeout" onTokens={onTokens} expose={(x) => (r = x)} />);
+    el().focus();
+    el().setSelectionRange(4, 4);
+    fireEvent.select(el());
+    act(() => r.select('ada'));
+    expect(r.open).toBe(false);
+    fireEvent.keyDown(el(), { key: 'Enter' });
+    await tick();
+    expect(onTokens).toHaveBeenCalledTimes(1);
   });
 
   it('a pick that leaves the text as it is commits its token (uncontrolled)', () => {
