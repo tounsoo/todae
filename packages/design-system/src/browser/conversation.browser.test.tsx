@@ -216,6 +216,22 @@ describe('Conversation in a browser', () => {
     await waitFor(() => expect(politeRegion()?.textContent).toBe('New message'));
   });
 
+  it('shows the chevron when its children render nothing', async () => {
+    render(
+      <Conversation.Root style={{ blockSize: '100px' }}>
+        <Conversation.Viewport>
+          <Conversation.Content>
+            <div style={{ blockSize: '400px' }} />
+          </Conversation.Content>
+        </Conversation.Viewport>
+        <Conversation.ScrollButton data-testid="scroll">{false}</Conversation.ScrollButton>
+      </Conversation.Root>,
+    );
+    const button = screen.getByTestId('scroll');
+    expect(button.querySelector('[data-todae-glyph] svg')).not.toBeNull();
+    expect(button.getAttribute('aria-label')).toBe('Scroll to latest message');
+  });
+
   it('passes axe', async () => {
     render(
       <main>

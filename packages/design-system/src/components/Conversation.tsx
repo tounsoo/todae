@@ -66,6 +66,12 @@ function useConversation(part: string): ConversationContext {
   return context;
 }
 
+// Instant whatever scroll-behavior the viewport has: a glide steps it frame
+// by frame, and following must land in the frame the content grew.
+function jump(el: HTMLElement, top: number) {
+  el.scrollTo({ top, behavior: 'instant' });
+}
+
 function distanceToEnd(el: HTMLElement): number {
   return el.scrollHeight - el.clientHeight - el.scrollTop;
 }
@@ -81,7 +87,8 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
   const button = useRef<HTMLButtonElement | null>(null);
   // Whether to keep the end in view when the content or the viewport resizes.
   const following = useRef(true);
-  // The scroll position last seen or set. Todae only ever scrolls down, so a
+  // The scroll position last seen or set. Todae only scrolls down, other than
+  // revealRing following the reader's own focus, so a
   // scroll event that reads a position above it is the reader scrolling up.
   // Being short of the end alone isn't: a scroll event can land after the
   // content grew.
@@ -126,7 +133,7 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
   const follow = useCallback(() => {
     const el = viewport.current;
     if (!el || glideFrame.current) return;
-    if (following.current) el.scrollTop = el.scrollHeight;
+    if (following.current) jump(el, el.scrollHeight);
     else if (distanceToEnd(el) <= END_SLACK) following.current = true;
     expected.current = el.scrollTop;
     setAtEnd(following.current);
@@ -142,7 +149,7 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
     setAtEnd(true);
     stopGlide();
     if (reducedMotion()) {
-      el.scrollTop = el.scrollHeight;
+      jump(el, el.scrollHeight);
       expected.current = el.scrollTop;
       return;
     }
@@ -156,18 +163,19 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
       // Past its time, it lands, however fast the end is still moving.
       if (performance.now() - start >= GLIDE_MS) {
         glideFrame.current = 0;
-        el.scrollTop = el.scrollHeight;
+        jump(el, el.scrollHeight);
         expected.current = el.scrollTop;
         return;
       }
-      el.scrollTop += Math.max(left * GLIDE_SHARE, GLIDE_MIN_STEP);
+      jump(el, el.scrollTop + Math.max(left * GLIDE_SHARE, GLIDE_MIN_STEP));
       expected.current = el.scrollTop;
       glideFrame.current = requestAnimationFrame(step);
     };
     step();
   }, [setAtEnd, stopGlide]);
 
-  // Keeps focus that lands under the scroll button clear of it.
+  // Keeps focus that lands under the scroll button clear of it, measured
+  // again when the button's size changes, such as with the density.
   useLayoutEffect(() => {
     const el = viewport.current;
     const own = button.current;
@@ -176,8 +184,15 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
       el.style.removeProperty('--_cover');
       return;
     }
-    const cover = el.getBoundingClientRect().bottom - own.getBoundingClientRect().top;
-    el.style.setProperty('--_cover', `${Math.max(0, cover)}px`);
+    const measure = () => {
+      const cover = el.getBoundingClientRect().bottom - own.getBoundingClientRect().top;
+      el.style.setProperty('--_cover', `${Math.max(0, cover)}px`);
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const resize = new ResizeObserver(measure);
+    resize.observe(own);
+    return () => resize.disconnect();
   }, [atEnd]);
 
   const value = useMemo<ConversationContext>(
@@ -305,7 +320,7 @@ function ScrollButton({ 'aria-label': ariaLabel, onClick, className, children, r
       className={cx(styles.scrollButton, className)}
       onClick={composeHandlers(onClick, () => context.scrollToEnd())}
     >
-      {children ?? <Button.Icon data-todae-glyph="">{glyphOr(chevron, <ChevronGlyph />)}</Button.Icon>}
+      {empty ? <Button.Icon data-todae-glyph="">{glyphOr(chevron, <ChevronGlyph />)}</Button.Icon> : children}
     </Button.Root>
   );
 }

@@ -75,7 +75,7 @@ export function ConversationExample() {
         <Conversation.ScrollButton />
       </Conversation.Root>
       <Button.Root variant="secondary" onClick={ask} aria-disabled={streaming || undefined} style={{ alignSelf: 'start' }}>
-        Ask for a long reply
+        {streaming ? 'Writing a reply…' : 'Ask for a long reply'}
       </Button.Root>
     </Stack.Root>
   );
