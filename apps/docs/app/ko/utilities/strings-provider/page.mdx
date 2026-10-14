@@ -31,7 +31,7 @@ const korean: Partial<Strings> = {
 </StringsProvider>
 ```
 
-파트 자체의 prop이 provider보다 여전히 우선합니다. 닫기 버튼, `Attachment.Remove`, `Conversation.ScrollButton`, 랜드마크의 비어 있지 않은 `aria-label`, `Chip.Root`의 `removeLabel`, `ChipList.Root`의 `removeLabel`, `overflowLabel`, `panelLabel`, `Field.ChipInput`의 `chipRemoveLabel`, `overflowLabel`, `useCombobox`의 `createLabel`이 그렇습니다. `useStrings()`는 현재 적용되는 문자열을 반환하므로 직접 만든 컴포넌트에서 쓸 수 있습니다.
+파트 자체의 prop이 provider보다 여전히 우선합니다. 닫기 버튼, `Attachment.Remove`, `Conversation.ScrollButton`, `Composer.Submit`, 랜드마크의 비어 있지 않은 `aria-label`, `Chip.Root`의 `removeLabel`, `ChipList.Root`의 `removeLabel`, `overflowLabel`, `panelLabel`, `Field.ChipInput`의 `chipRemoveLabel`, `overflowLabel`, `useCombobox`의 `createLabel`이 그렇습니다. `useStrings()`는 현재 적용되는 문자열을 반환하므로 직접 만든 컴포넌트에서 쓸 수 있습니다.
 
 ## 문자열
 
@@ -196,6 +196,16 @@ const korean: Partial<Strings> = {
       <Table.HeaderCell scope="row">`messageFinished`</Table.HeaderCell>
       <Table.Cell>메시지가 다 도착했을 때의 `Conversation`</Table.Cell>
       <Table.Cell>`Message complete`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`send`</Table.HeaderCell>
+      <Table.Cell>내용이 없는 `Composer.Submit`</Table.Cell>
+      <Table.Cell>`Send`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`stop`</Table.HeaderCell>
+      <Table.Cell>작성창이 busy일 때 내용이 없는 `Composer.Submit`</Table.Cell>
+      <Table.Cell>`Stop`</Table.Cell>
     </Table.Row>
   </Table.Body>
 </Table.Root>

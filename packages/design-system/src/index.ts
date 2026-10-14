@@ -62,6 +62,7 @@ export {
   type AttachmentRootProps,
   type AttachmentStatus,
 } from './components/Attachment';
+export { Composer, type ComposerRootProps, type ComposerSubmitProps } from './components/Composer';
 export {
   Conversation,
   type ConversationContentProps,

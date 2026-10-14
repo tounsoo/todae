@@ -5,6 +5,7 @@
 import type { Glyphs } from '@omsoo.design/todae';
 import {
   ArrowRight as PhArrowRight,
+  ArrowUp as PhArrowUp,
   CalendarBlank,
   CaretDown,
   CaretRight,
@@ -15,12 +16,14 @@ import {
   Info as PhInfo,
   MagnifyingGlass,
   Plus as PhPlus,
+  Stop as PhStop,
   Warning,
   X as PhX,
 } from '@phosphor-icons/react';
 import {
   IconAlertTriangle,
   IconArrowRight,
+  IconArrowUp,
   IconCalendar,
   IconCheck,
   IconChevronDown,
@@ -28,6 +31,7 @@ import {
   IconDots,
   IconInfoCircle,
   IconMail,
+  IconPlayerStopFilled,
   IconPlus,
   IconSearch,
   IconSettings,
@@ -35,6 +39,7 @@ import {
 } from '@tabler/icons-react';
 import {
   ArrowRight,
+  ArrowUp,
   Calendar,
   Check,
   ChevronDown,
@@ -45,6 +50,7 @@ import {
   Plus,
   Search,
   Settings,
+  Square,
   TriangleAlert,
   X,
 } from 'lucide-react';
@@ -77,6 +83,8 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       separator: <ChevronRight />,
       ellipsis: <Ellipsis />,
       calendar: <Calendar />,
+      send: <ArrowUp />,
+      stop: <Square fill="currentColor" />,
     },
     icons: {
       plus: <Plus />,
@@ -99,6 +107,8 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       separator: <CaretRight />,
       ellipsis: <DotsThree weight="bold" />,
       calendar: <CalendarBlank />,
+      send: <PhArrowUp />,
+      stop: <PhStop weight="fill" />,
     },
     icons: {
       plus: <PhPlus />,
@@ -121,6 +131,8 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       separator: <IconChevronRight />,
       ellipsis: <IconDots />,
       calendar: <IconCalendar />,
+      send: <IconArrowUp />,
+      stop: <IconPlayerStopFilled />,
     },
     icons: {
       plus: <IconPlus />,

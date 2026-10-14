@@ -2386,5 +2386,29 @@
       "en": "Read to screen readers, assertively, when a copy fails. Default is the copyFailed string from StringsProvider. An empty string reads nothing.",
       "ko": "복사가 실패하면 스크린 리더로 assertive하게 읽을 텍스트. 기본값은 StringsProvider의 copyFailed 문자열입니다. 빈 문자열이면 아무것도 읽지 않습니다."
     }
+  },
+  "Composer.Root": {
+    "onSubmit": {
+      "en": "Called for this form's own submits, not those of a form rendered inside it with createPortal.",
+      "ko": "이 폼 자체의 제출에만 호출되고, createPortal로 그 안에 렌더링한 폼의 제출에는 호출되지 않습니다."
+    },
+    "busy": {
+      "en": "A response is running: no submit of this form goes through, from Enter, a submit button or requestSubmit, and Composer.Submit turns into Stop. Sets data-busy.",
+      "ko": "응답이 진행 중입니다. Enter로든 제출 버튼이나 requestSubmit으로든 이 폼의 제출은 통과하지 않고, Composer.Submit은 Stop이 됩니다. data-busy를 설정합니다."
+    }
+  },
+  "Composer.Submit": {
+    "onStop": {
+      "en": "Called when Stop is pressed. Without it, Stop is disabled while the composer is busy.",
+      "ko": "Stop을 누르면 호출됩니다. 없으면 작성창이 busy인 동안 Stop이 비활성화됩니다."
+    },
+    "disabled": {
+      "en": "Disables Send, such as while nothing is typed. Stop ignores it.",
+      "ko": "아무것도 입력하지 않았을 때처럼 Send를 비활성화합니다. Stop에는 적용되지 않습니다."
+    },
+    "children": {
+      "en": "The button's content. Without it, the send glyph named by the send string, or the stop glyph named by the stop string while busy.",
+      "ko": "버튼의 내용. 없으면 send 문자열로 이름이 붙은 send 글리프를, busy인 동안에는 stop 문자열로 이름이 붙은 stop 글리프를 보여 줍니다."
+    }
   }
 }

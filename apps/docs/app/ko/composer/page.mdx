@@ -1,0 +1,55 @@
+import { ComposerExample } from '../../../components/demos/ComposerDemo';
+
+# Composer
+
+`Composer.Root`는 채팅의 프롬프트 입력창입니다. `Field.Textarea`를 담은 [Field](/field)를 감싸는 `<form>`입니다. `Composer.Submit`은 입력을 보내는 버튼이고, 답이 진행 중일 때는 답을 멈추는 버튼입니다. 나머지는 Field로 만듭니다. 버튼은 텍스트 영역 뒤의 `Field.Row`에, 첨부는 텍스트 영역 앞의 `Field.Row`에 둡니다.
+
+```tsx
+<Composer.Root busy={replying} onSubmit={send}>
+  <Field.Root aria-label="Message">
+    <Field.Textarea value={value} onChange={(event) => setValue(event.target.value)} autoGrow maxRows={6} />
+    <Field.Row>
+      <Composer.Submit disabled={value.trim() === ''} onStop={stop} />
+    </Field.Row>
+  </Field.Root>
+</Composer.Root>
+```
+
+<Example>
+  <ComposerExample />
+</Example>
+
+## 파트
+
+- `Composer.Root`는 `form`입니다. 그 안의 텍스트 영역에서 Enter를 누르면 폼의 첫 제출 버튼을 submitter로 `requestSubmit`을 불러 폼을 보내고, 그 버튼이 비활성화되어 있으면 아무것도 보내지 않습니다. Shift+Enter, Alt나 Ctrl, Meta와 함께 누른 Enter, 그리고 한국어 단어처럼 IME 조합을 끝내는 Enter는 텍스트 영역에 맡깁니다. `busy`는 답이 진행 중이라는 뜻입니다. Enter로든 제출 버튼이나 `requestSubmit`으로든 이 폼의 제출은 통과하지 않고, 루트에 `data-busy`를 설정합니다.
+- `Composer.Submit`은 행의 끝에 놓이는 [Button](/button)입니다. `send` 글리프를 보여 주고 `send` 문자열로 이름이 붙는 제출 버튼입니다. 작성창이 busy인 동안에는 `stop` 글리프를 보여 주고 `stop` 문자열로 이름이 붙는 일반 버튼이 되어 `onStop`을 부릅니다. `disabled`는 Send에 적용되고, Stop은 `onStop`이 없을 때만 비활성화됩니다.
+
+## 보내기와 멈추기
+
+루트의 `onSubmit`에서 보내고, 페이지에 머물도록 `event.preventDefault()`를 부른 뒤, 답이 끝날 때까지 `busy`를 설정하세요. `onSubmit`은 `createPortal`로 그 안에 렌더링한 폼의 제출이 아니라 작성창 자체의 제출을 받습니다. Send와 Stop은 같은 버튼이므로 포커스를 가진 버튼은 활성화되어 있는 한 둘이 바뀌는 동안 포커스를 그대로 가집니다. Composer는 버튼에서의 더블 클릭의 두 번째 클릭과, 버튼이나 텍스트 영역에서 누르고 있는 Enter의 반복을 무시하므로, Send 바로 뒤에 Stop으로 누른 두 번째 클릭은 멈추지 않습니다. 직접 작성한 `onClick`은 두 번째 클릭에도 실행됩니다. Stop을 클릭해도 답이 진행되는 동안 입력한 내용을 함께 보내지 않습니다.
+
+포커스를 가진 Send가 비활성화되고 Chromium처럼 브라우저가 그 버튼에서 포커스를 빼면, 예를 들어 아무것도 입력하지 않은 채 Stop이 Send로 돌아가면, 포커스는 폼에서 첫 번째로 활성화된 텍스트 영역으로 옮겨집니다.
+
+## 첨부
+
+[Attachment](/attachment)마다 이름이 붙은 목록에 담아 텍스트 영역 앞의 `Field.Row`에 두세요. 붙여 넣거나 끌어다 놓은 파일을 받으려면 [useDropzone](/utilities/use-dropzone)의 `getRootProps()`를 `paste: true`와 함께 `Composer.Root`에 펼치세요. 위 예시처럼 아래 행의 버튼이 입력의 ref로 파일 선택 창을 열 수 있습니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** Enter로 보내기, 그리고 Shift+Enter나 IME 조합으로 계속 쓰기. [StringsProvider](/utilities/strings-provider)에서 오는 Send와 Stop의 이름. Send와 Stop이 바뀌는 동안 포커스를 가진 버튼에 남는 포커스와, 버튼이 비활성화되면서 브라우저가 포커스를 뺄 때 텍스트 필드로 옮겨지는 포커스.
+
+**직접 제공할 것:** `Field.Root`의 `aria-label`이나 [Label](/label) 같은 필드의 이름. 답이 진행되는 동안의 `busy`와 `onStop`. 행에 있는 다른 모든 버튼의 이름. [Conversation](/conversation) 등으로 하는 답의 알림.
+
+**주의할 점:** 플레이스홀더를 필드의 유일한 이름으로 쓰는 것. 여는 버튼 없이 숨긴 파일 입력. 끌어다 놓기는 포인터로만 할 수 있습니다.
+
+## 언제 쓰나요
+
+**쓸 때:** 어시스턴트에게나 채팅에서 글을 쓰는 텍스트 상자.
+
+**쓰지 않을 때:** 텍스트 필드와 버튼이 있는 폼 → `form` 안의 [Field](/field)와 [Button](/button). 한 줄 검색 → `Field.TextInput`.
+
+## Props
+
+<PropsTable name="Composer.Root" />
+
+<PropsTable name="Composer.Submit" />

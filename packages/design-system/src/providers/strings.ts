@@ -68,6 +68,10 @@ export interface Strings {
   messageStarted: string;
   /** Conversation's message when a message finishes arriving. */
   messageFinished: string;
+  /** Name of Composer.Submit when its own text does not name it. */
+  send: string;
+  /** Name of Composer.Submit while the composer is busy, when its own text does not name it. */
+  stop: string;
 }
 
 /** The English Todae ships with. */
@@ -102,4 +106,6 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   scrollToLatest: 'Scroll to latest message',
   messageStarted: 'New message',
   messageFinished: 'Message complete',
+  send: 'Send',
+  stop: 'Stop',
 });

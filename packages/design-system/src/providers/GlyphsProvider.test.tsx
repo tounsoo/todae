@@ -9,6 +9,7 @@ import {
   Breadcrumbs,
   Checkbox,
   Chip,
+  Composer,
   Dialog,
   Disclosure,
   Field,
@@ -36,6 +37,8 @@ const ICONS: Required<Glyphs> = {
   separator: <svg data-testid="separator" />,
   ellipsis: <svg data-testid="ellipsis" />,
   calendar: <svg data-testid="calendar" />,
+  send: <svg data-testid="send" />,
+  stop: <svg data-testid="stop" />,
 };
 
 function withIcons(children: ReactNode, glyphs: Glyphs = ICONS) {
@@ -268,6 +271,21 @@ describe('GlyphsProvider', () => {
     const [, own, server] = container.querySelectorAll('li');
     expect(own!.textContent).toBe('...');
     expect(server!.textContent).toBe('…');
+  });
+
+  it('uses the send and stop glyphs for an empty Composer.Submit; content still wins', () => {
+    const composer = (busy: boolean) =>
+      withIcons(
+        <Composer.Root busy={busy}>
+          <Composer.Submit onStop={() => {}} />
+          <Composer.Submit onStop={() => {}}>Go</Composer.Submit>
+        </Composer.Root>,
+      );
+    const { rerender } = render(composer(false));
+    expect(screen.getAllByTestId('send')).toHaveLength(1);
+    rerender(composer(true));
+    expect(screen.queryByTestId('send')).toBeNull();
+    expect(screen.getAllByTestId('stop')).toHaveLength(1);
   });
 
   it('sizes glyphs in each part from its tokens, and turns or mirrors directional ones', () => {

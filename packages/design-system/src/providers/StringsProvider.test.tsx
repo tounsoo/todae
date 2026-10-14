@@ -56,6 +56,8 @@ const FRENCH: Strings = {
   scrollToLatest: 'Aller au dernier message',
   messageStarted: 'Nouveau message',
   messageFinished: 'Message terminé',
+  send: 'Envoyer',
+  stop: 'Arrêter',
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {
