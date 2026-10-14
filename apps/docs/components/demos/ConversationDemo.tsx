@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Conversation, Message, Prose, Spinner, Stack } from '@omsoo.design/todae';
+import { Button, Conversation, Message, Prose, Loader, Stack } from '@omsoo.design/todae';
 import { useEffect, useRef, useState } from 'react';
 
 type Turn = { id: number; from: 'user' | 'assistant'; text: string; streaming?: boolean };
@@ -65,7 +65,7 @@ export function ConversationExample() {
                 </Message.Content>
                 {turn.streaming && (
                   <Message.Actions>
-                    <Spinner.Root variant="dots" aria-label="Writing" />
+                    <Loader.Root variant="dots" aria-label="Writing" />
                   </Message.Actions>
                 )}
               </Message.Root>

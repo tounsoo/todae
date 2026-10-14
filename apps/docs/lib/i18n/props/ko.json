@@ -971,6 +971,16 @@
       "ko": "링크 텍스트."
     }
   },
+  "Loader.Root": {
+    "variant": {
+      "en": "spinner turns one arc of a ring; dots sends a wave through three dots, as a typing indicator does. Sets data-variant.",
+      "ko": "spinner는 고리의 호 하나를 돌리고, dots는 타이핑 표시처럼 점 세 개에 물결을 보냅니다. data-variant를 설정합니다."
+    },
+    "aria-label": {
+      "en": "Names the indicator when it is not inside a label with text. It keeps the progressbar role, so it needs a name.",
+      "ko": "텍스트가 있는 label 안에 있지 않을 때 표시에 이름을 붙입니다. progressbar role을 유지하므로 이름이 필요합니다."
+    }
+  },
   "Menu.CheckboxItem": {
     "checked": {
       "en": "Controlled checked state.",
@@ -1433,16 +1443,6 @@
     "aria-valuetext": {
       "en": "What a screen reader says instead of the number, such as \"40%\" or \"Medium\".",
       "ko": "\"40%\"나 \"Medium\"처럼 스크린 리더가 숫자 대신 읽는 말."
-    }
-  },
-  "Spinner.Root": {
-    "variant": {
-      "en": "ring turns one arc of a circle; dots sends a wave through three dots, as a typing indicator does. Sets data-variant.",
-      "ko": "ring은 원의 호 하나를 돌리고, dots는 타이핑 표시처럼 점 세 개에 물결을 보냅니다. data-variant를 설정합니다."
-    },
-    "aria-label": {
-      "en": "Names the spinner when it is not inside a label with text. It keeps the progressbar role, so it needs a name.",
-      "ko": "텍스트가 있는 label 안에 있지 않을 때 Spinner에 이름을 붙입니다. progressbar role을 유지하므로 이름이 필요합니다."
     }
   },
   "Stack.Root": {
