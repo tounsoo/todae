@@ -554,6 +554,8 @@ describe('Calendar in a browser', () => {
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Previous month' }));
     await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'October 2026' }));
+    await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Next month' }));
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Tuesday, October 13, 2026' }));
@@ -594,6 +596,23 @@ describe('Field.DatePicker in a browser', () => {
     expect(button.getAttribute('aria-expanded')).toBe('false');
     await waitFor(() => expect(document.activeElement).toBe(button));
     expect(button.textContent).toBe('Oct 20, 2026');
+  });
+
+  it('picks a year in the open calendar from the keyboard, and stays open on its month', async () => {
+    render(<Start />);
+    await userEvent.click(screen.getByRole('button', { name: 'Start' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Choose date' });
+    await waitFor(() => expect(document.activeElement?.getAttribute('aria-label')).toBe('Tuesday, October 13, 2026'));
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'October 2026' }));
+    await userEvent.keyboard('{Enter}');
+    await userEvent.tab();
+    await userEvent.tab();
+    expect(document.activeElement?.textContent).toBe('2026');
+    await userEvent.keyboard('{ArrowLeft}{Enter}');
+    await waitFor(() => expect(document.activeElement?.getAttribute('aria-label')).toBe('Monday, October 13, 2025'));
+    expect(dialog.matches(':popover-open')).toBe(true);
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-13');
   });
 
   it('closes on a pick of the date it already has', async () => {

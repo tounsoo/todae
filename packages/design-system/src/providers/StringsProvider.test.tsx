@@ -47,6 +47,8 @@ const FRENCH: Strings = {
   datePicker: 'Choisir une date',
   previousMonth: 'Mois précédent',
   nextMonth: 'Mois suivant',
+  previousYears: 'Années précédentes',
+  nextYears: 'Années suivantes',
   copied: 'Copié',
   copyFailed: 'Copie impossible',
 };

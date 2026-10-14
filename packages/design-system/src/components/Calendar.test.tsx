@@ -43,8 +43,9 @@ describe('Calendar', () => {
   it('is a named group with the month heading, month buttons and a grid of the month', () => {
     render(<Controlled />);
     expect(screen.getByRole('group', { name: 'Start' })).toBeTruthy();
-    const heading = screen.getByText('October 2026');
-    expect(heading.getAttribute('aria-live')).toBe('polite');
+    const heading = screen.getByRole('button', { name: 'October 2026' });
+    expect(heading.getAttribute('aria-expanded')).toBe('false');
+    expect(heading.parentElement!.getAttribute('aria-live')).toBe('polite');
     expect(grid().getAttribute('aria-labelledby')).toBe(heading.id);
     expect(screen.getByRole('button', { name: 'Previous month' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Next month' })).toBeTruthy();
@@ -134,6 +135,104 @@ describe('Calendar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Previous month' }));
     expect(screen.getByText('September 2026')).toBeTruthy();
     expect(screen.getByTestId('value').textContent).toBe('2026-10-13');
+  });
+
+  it('switches the grid to a page of years from the heading, and back', () => {
+    render(<Controlled />);
+    const heading = screen.getByRole('button', { name: 'October 2026' });
+    fireEvent.click(heading);
+    expect(heading.getAttribute('aria-expanded')).toBe('true');
+    expect(heading.textContent).toBe('2016 – 2027');
+    const years = within(grid()).getAllByRole('button');
+    expect(years.map((year) => year.textContent)).toEqual(
+      Array.from({ length: 12 }, (_, index) => String(2016 + index)),
+    );
+    expect(within(grid()).getAllByRole('row')).toHaveLength(3);
+    expect(focusedDay().textContent).toBe('2026');
+    expect(focusedDay().closest('td')!.getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Previous years' })).toBeTruthy();
+    fireEvent.click(heading);
+    expect(heading.textContent).toBe('October 2026');
+    expect(screen.getByRole('button', { name: 'Previous month' })).toBeTruthy();
+  });
+
+  it('picks a year, keeping the month and day, and shows its month with focus on the date', () => {
+    render(<Controlled />);
+    fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    fireEvent.click(within(grid()).getByRole('button', { name: '2021' }));
+    expect(screen.getByRole('button', { name: 'October 2021' })).toBeTruthy();
+    expect(document.activeElement).toBe(day('Wednesday, October 13, 2021'));
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-13');
+  });
+
+  it('keeps February 29 where the picked year has no such day', () => {
+    render(<Controlled initial={date('2028-02-29')} />);
+    fireEvent.click(screen.getByRole('button', { name: 'February 2028' }));
+    fireEvent.click(within(grid()).getByRole('button', { name: '2029' }));
+    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, February 28, 2029');
+  });
+
+  it('moves through the years from the keyboard, by year, row and page', () => {
+    render(<Controlled />);
+    fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    focusedDay().focus();
+    const press = (key: string) => fireEvent.keyDown(document.activeElement!, { key });
+    press('ArrowRight');
+    expect(document.activeElement!.textContent).toBe('2027');
+    press('ArrowUp');
+    expect(document.activeElement!.textContent).toBe('2023');
+    press('Home');
+    expect(document.activeElement!.textContent).toBe('2020');
+    press('End');
+    expect(document.activeElement!.textContent).toBe('2023');
+    press('PageDown');
+    expect(document.activeElement!.textContent).toBe('2035');
+    expect(screen.getByRole('button', { name: '2028 – 2039' })).toBeTruthy();
+    press('ArrowLeft');
+    press('PageUp');
+    expect(document.activeElement!.textContent).toBe('2022');
+  });
+
+  it('pages the years from the header buttons', () => {
+    render(<Controlled />);
+    fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
+    expect(screen.getByRole('button', { name: '2028 – 2039' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Previous years' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Previous years' }));
+    expect(screen.getByRole('button', { name: '2004 – 2015' })).toBeTruthy();
+  });
+
+  it('disables the years outside min and max, and the page buttons past them', () => {
+    render(<Controlled min={date('2024-03-01')} max={date('2027-06-30')} />);
+    fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    const enabled = within(grid())
+      .getAllByRole('button')
+      .filter((year) => !(year as HTMLButtonElement).disabled)
+      .map((year) => year.textContent);
+    expect(enabled).toEqual(['2024', '2025', '2026', '2027']);
+    expect(screen.getByRole('button', { name: 'Previous years' }).getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Next years' }).getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(within(grid()).getByRole('button', { name: '2027' }));
+    expect(focusedDay().getAttribute('aria-label')).toBe('Wednesday, June 30, 2027');
+    fireEvent.click(screen.getByRole('button', { name: 'June 2027' }));
+    focusedDay().focus();
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    expect(document.activeElement!.textContent).toBe('2027');
+  });
+
+  it.each([
+    ['+275759-10-15', '275760', 'Sunday, August 31, 275760'],
+    ['+275759-09-10', '275760', 'Sunday, August 31, 275760'],
+    ['-271820-02-15', '-271821', 'Tuesday, June 1, 271822'],
+    ['-271820-05-15', '-271821', 'Tuesday, June 1, 271822'],
+  ] as const)('from %s, picking %s stops at the months the calendar can show', (iso, year, label) => {
+    render(<Controlled initial={date(iso)} />);
+    fireEvent.click(screen.getByRole('button', { expanded: false }));
+    // 275760 starts the next page of years.
+    if (year === '275760') fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
+    fireEvent.click(within(grid()).getByRole('button', { name: year }));
+    expect(focusedDay().getAttribute('aria-label')).toBe(label);
   });
 
   it('keeps the day of the month as far as the next month has it', () => {

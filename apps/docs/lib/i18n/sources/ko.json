@@ -63,10 +63,10 @@
   },
   "calendar": {
     "(top)": "f59a557c8526",
-    "# Calendar": "d2630565b6c7",
-    "## Range and locale": "86d0beb7e674",
+    "# Calendar": "e7168712ba53",
+    "## Range and locale": "38c6da99f7fd",
     "## Temporal": "084d2fd73acf",
-    "## Accessible composition": "3a54081e2b13",
+    "## Accessible composition": "0c0c5d991a3f",
     "## When to use": "fc36d200f649",
     "## Props": "1736b176a33c",
     "(section order)": "b32de0f3c71a"
@@ -599,7 +599,7 @@
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "6dd3b86474ee",
+    "## Glyphs": "930fa39fec8d",
     "## Accessible composition": "705d17ec4c9e",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",
@@ -608,7 +608,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "0a9ce6b4f646",
-    "## Strings": "547d9927c8f6",
+    "## Strings": "ef6df56f3c9a",
     "## Accessible composition": "8cc16824f136",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",

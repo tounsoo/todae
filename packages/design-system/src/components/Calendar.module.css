@@ -16,14 +16,58 @@
     gap: var(--todae-calendar-gap);
   }
 
+  /* The month and year, a button to the page of years, in the day's box. */
   .heading {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--todae-calendar-heading-gap);
+    box-sizing: border-box;
+    block-size: var(--todae-calendar-day-size);
+    margin: 0;
+    padding-inline: var(--todae-calendar-heading-padding-inline);
+    border: var(--todae-calendar-day-border-width) solid transparent;
+    border-radius: var(--todae-calendar-day-radius);
+    background: var(--todae-calendar-day-bg-default);
     color: var(--todae-calendar-heading-fg);
+    font: inherit;
     font-weight: var(--todae-calendar-heading-font-weight);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+
+  .heading:enabled:hover {
+    background: var(--todae-calendar-day-bg-hover);
+  }
+
+  .heading:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-calendar-day-ring-focus);
+    outline-offset: var(--todae-focus-ring-offset);
+  }
+
+  .heading:disabled {
+    cursor: not-allowed;
+  }
+
+  .headingGlyph {
+    display: inline-flex;
+    inline-size: var(--todae-calendar-nav-icon-size);
+    block-size: var(--todae-calendar-nav-icon-size);
+  }
+
+  .headingGlyph > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* Points up while the years show, as the button folds them away. */
+  .heading[aria-expanded='true'] > [data-todae-glyph] {
+    rotate: 180deg;
   }
 
   /* The month buttons and the days share one box. */
   .nav,
-  .day {
+  .day,
+  .year {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -43,18 +87,20 @@
   }
 
   .nav:focus-visible,
-  .day:focus-visible {
+  .day:focus-visible,
+  .year:focus-visible {
     outline: var(--todae-focus-ring-width) solid var(--todae-calendar-day-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
   }
 
   /* Kept at low specificity so the selected day's fill wins over it. */
-  :where(.nav, .day):where(:enabled:not([aria-disabled='true'])):hover {
+  :where(.nav, .day, .year):where(:enabled:not([aria-disabled='true'])):hover {
     background: var(--todae-calendar-day-bg-hover);
   }
 
   .nav:is(:disabled, [aria-disabled='true']),
-  .day:is(:disabled, [aria-disabled='true']) {
+  .day:is(:disabled, [aria-disabled='true']),
+  .year:disabled {
     color: var(--todae-calendar-day-fg-disabled);
     cursor: not-allowed;
   }
@@ -107,29 +153,39 @@
     font-weight: var(--todae-calendar-weekday-font-weight);
   }
 
-  .day[aria-current='date'] {
+  /* Four years fill the width of a week's seven days. */
+  .year {
+    inline-size: calc(var(--todae-calendar-day-size) * 7 / 4);
+    block-size: calc(var(--todae-calendar-day-size) * 2);
+  }
+
+  .day[aria-current='date'],
+  .year[aria-current='date'] {
     border-color: var(--todae-calendar-day-border-current);
   }
 
-  .day[data-selected] {
+  .day[data-selected],
+  .year[data-selected] {
     background: var(--todae-calendar-day-bg-selected);
     color: var(--todae-calendar-day-fg-selected);
   }
 
   /* Forced colors drop backgrounds: paint the selected day with system colors. */
   @media (forced-colors: active) {
-    .day[data-selected] {
+    .day[data-selected],
+  .year[data-selected] {
       forced-color-adjust: none;
       background: Highlight;
       color: HighlightText;
     }
 
-    .day[aria-current='date']:not([data-selected]) {
+    :is(.day, .year)[aria-current='date']:not([data-selected]) {
       border-color: CanvasText;
     }
 
     .nav:is(:disabled, [aria-disabled='true']),
-    .day:is(:disabled, [aria-disabled='true']) {
+    .day:is(:disabled, [aria-disabled='true']),
+    .year:disabled {
       color: GrayText;
     }
   }
