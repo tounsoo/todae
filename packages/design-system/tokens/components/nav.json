@@ -1,8 +1,10 @@
 {
   "nav": {
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/6/$value" } },
+    "list": {
+      "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+    },
     "group": {
-      "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
       "label": {
         "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
         "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },

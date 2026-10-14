@@ -54,9 +54,9 @@ import NextLink from 'next/link';
 
 같은 항목에서 `Nav.Link` 뒤에 오는 `Nav.Branch`는 그 페이지의 하위 페이지를 담습니다. 링크는 자기 행을 유지하고, 토글은 행 끝의 chevron이므로 `label`은 화면에서 숨겨지고 토글의 이름으로만 쓰입니다. 링크 자체의 텍스트가 아니라 "Field 하위 페이지"처럼 하위 페이지를 가리키는 이름을 붙이세요. 항목에 `Nav.Branch`만 있으면 `label`이 토글의 텍스트로 보이며, 자기 페이지가 없는 페이지 묶음에 씁니다.
 
-가지는 네이티브 `<details>`이므로 열림 상태는 브라우저가 가집니다. `open`은 렌더링될 때나 prop이 `true`로 바뀔 때, 예를 들어 내비게이션이 가지 안으로 이동할 때 가지를 엽니다. 사용자의 토글은 `onToggle`로 따라가세요. 중첩된 목록은 `nav.indent`만큼 들여 쓰고, `nav.rule.color`와 `nav.rule.width`로 그린 선 아래에 놓입니다.
+가지는 네이티브 `<details>`입니다. `open`은 렌더링될 때와 prop이 바뀔 때마다 가지가 열려 있을지를 정합니다. `true`는 내비게이션이 가지 안으로 이동할 때처럼 가지를 열고, `false`는 닫습니다. 그 사이에는 사용자가 열고 닫으며, 이는 `onToggle`로 따라가세요. 중첩된 목록은 `nav.indent`만큼 들여 쓰고, `nav.rule.color`와 `nav.rule.width`로 그린 선 아래에 놓입니다.
 
-chevron은 글리프입니다. [GlyphsProvider](/utilities/glyphs-provider)에서 `chevron`을 설정하면 아이콘 라이브러리로 그립니다. 아래쪽을 가리키게 그리세요. 닫힌 가지는 이를 텍스트 쪽으로 돌립니다.
+chevron은 글리프입니다. [GlyphsProvider](/utilities/glyphs-provider)에서 `chevron`을 설정하면 아이콘 라이브러리로 그립니다. 아래쪽을 가리키게 그리세요. 닫힌 가지는 이를 행의 끝 쪽으로 돌립니다.
 
 ## 접근성을 지키는 조합
 

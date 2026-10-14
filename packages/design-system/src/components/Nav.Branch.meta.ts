@@ -14,7 +14,7 @@ export const meta = {
       name: 'open',
       type: 'boolean',
       required: false,
-      description: 'Opens the branch when it renders or changes to true. The browser then owns the state; follow it with onToggle.',
+      description: 'Sets whether the branch is open when it renders and whenever the prop changes: true opens it, false closes it. In between, the user opens and closes it; follow that with onToggle.',
     },
     {
       name: 'onToggle',

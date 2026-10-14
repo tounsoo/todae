@@ -96,6 +96,28 @@ describe('Nav', () => {
     expect(details.open).toBe(true);
   });
 
+  it('closes a branch when open turns false, even after the user opened it', () => {
+    const { rerender } = render(<Docs open />);
+    const details = screen.getByText('Field pages').closest('details')!;
+    rerender(<Docs open={false} />);
+    expect(details.open).toBe(false);
+  });
+
+  it('names a group\'s list with aria-label, and leaves a label of true unrendered', () => {
+    render(
+      <Nav.Root aria-label="Docs">
+        <Nav.Group aria-label="Pages" label={true as never}>
+          <Nav.Item>
+            <Nav.Link href="/a">A</Nav.Link>
+          </Nav.Item>
+        </Nav.Group>
+      </Nav.Root>,
+    );
+    const list = screen.getByRole('list', { name: 'Pages' });
+    expect(list.previousElementSibling).toBeNull();
+    expect(list.parentElement?.hasAttribute('aria-label')).toBe(false);
+  });
+
   it('draws the chevron GlyphsProvider sets', () => {
     render(
       <GlyphsProvider glyphs={{ chevron: <i data-testid="chevron" /> }}>

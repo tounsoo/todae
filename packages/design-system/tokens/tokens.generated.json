@@ -8048,15 +8048,6 @@
       "context": null
     },
     {
-      "path": "nav.group.gap",
-      "type": "dimension",
-      "cssVar": "--todae-nav-group-gap",
-      "cssValue": "2px",
-      "ref": null,
-      "layer": "contract",
-      "context": null
-    },
-    {
       "path": "nav.group.label.fg",
       "type": "color",
       "cssVar": "--todae-nav-group-label-fg",
@@ -8242,6 +8233,15 @@
       "cssVar": "--todae-nav-item-ring-focus",
       "cssValue": "var(--todae-focus-ring-color)",
       "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "nav.list.gap",
+      "type": "dimension",
+      "cssVar": "--todae-nav-list-gap",
+      "cssValue": "2px",
+      "ref": null,
       "layer": "contract",
       "context": null
     },

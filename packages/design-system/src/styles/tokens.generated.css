@@ -1044,7 +1044,6 @@
   --todae-nav-chevron-fg: var(--_todae-nav-chevron-fg, var(--todae-color-fg-muted));
   --todae-nav-chevron-size: var(--_todae-nav-chevron-size, 1rem);
   --todae-nav-gap: var(--_todae-nav-gap, var(--todae-space-6));
-  --todae-nav-group-gap: var(--_todae-nav-group-gap, 2px);
   --todae-nav-group-label-fg: var(--_todae-nav-group-label-fg, var(--todae-color-fg-default));
   --todae-nav-group-label-font-size: var(--_todae-nav-group-label-font-size, var(--todae-font-size-1));
   --todae-nav-group-label-font-weight: var(--_todae-nav-group-label-font-weight, var(--todae-font-weight-medium));
@@ -1066,6 +1065,7 @@
   --todae-nav-item-padding-y: var(--_todae-nav-item-padding-y, var(--todae-space-chip-y));
   --todae-nav-item-radius: var(--_todae-nav-item-radius, var(--todae-radius-md));
   --todae-nav-item-ring-focus: var(--_todae-nav-item-ring-focus, var(--todae-focus-ring-color));
+  --todae-nav-list-gap: var(--_todae-nav-list-gap, 2px);
   --todae-nav-motion-duration: var(--_todae-nav-motion-duration, var(--todae-motion-duration-normal));
   --todae-nav-motion-easing: var(--_todae-nav-motion-easing, var(--todae-motion-easing-standard));
   --todae-nav-rule-color: var(--_todae-nav-rule-color, var(--todae-color-border-subtle));

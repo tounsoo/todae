@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { cdp, userEvent } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
 import { Nav } from '../components/Nav';
 import { ScrollArea } from '../components/ScrollArea';
@@ -38,6 +38,14 @@ function Docs({ dir }: { dir?: 'rtl' }) {
 }
 
 const box = (el: Element) => el.getBoundingClientRect();
+
+/** vitest types the session without its methods; Playwright's session has `send`. */
+function emulateMedia(features: { name: string; value: string }[]) {
+  return (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', {
+    features,
+  });
+}
+
 const toggle = (name: string) => screen.getByText(name).closest('summary')!;
 
 describe('Nav in a browser', () => {
@@ -91,5 +99,36 @@ describe('Nav in a browser', () => {
     expect(before).not.toBe(getComputedStyle(screen.getByRole('link', { name: 'Button' })).backgroundColor);
     await userEvent.hover(current);
     expect(getComputedStyle(current).backgroundColor).toBe(before);
+  });
+
+  it('draws the toggle on a current link in the same system colors under forced colors', async () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Nav.Root aria-label="Docs">
+          <Nav.Group>
+            <Nav.Item>
+              <Nav.Link href="#field" aria-current="page">
+                Field
+              </Nav.Link>
+              <Nav.Branch label="Field pages">
+                <Nav.Item>
+                  <Nav.Link href="#select">Select</Nav.Link>
+                </Nav.Item>
+              </Nav.Branch>
+            </Nav.Item>
+          </Nav.Group>
+        </Nav.Root>
+      </div>,
+    );
+    await emulateMedia([{ name: 'forced-colors', value: 'active' }]);
+    try {
+      expect(matchMedia('(forced-colors: active)').matches).toBe(true);
+      const link = screen.getByRole('link', { name: 'Field' });
+      const chevron = toggle('Field pages').querySelector('[data-todae-glyph]')!;
+      expect(getComputedStyle(chevron).color).toBe(getComputedStyle(link).color);
+      expect(getComputedStyle(toggle('Field pages')).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    } finally {
+      await emulateMedia([]);
+    }
   });
 });

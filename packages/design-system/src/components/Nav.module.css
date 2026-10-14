@@ -22,7 +22,7 @@
   .list {
     display: flex;
     flex-direction: column;
-    gap: var(--todae-nav-group-gap);
+    gap: var(--todae-nav-list-gap);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -30,7 +30,7 @@
 
   /* A branch's list sits indented under a rule. */
   .branch > .list {
-    margin-block-start: var(--todae-nav-group-gap);
+    margin-block-start: var(--todae-nav-list-gap);
     margin-inline-start: var(--todae-nav-indent);
     padding-inline-start: calc(var(--todae-nav-item-padding-x) - var(--todae-nav-rule-width));
     border-inline-start: var(--todae-nav-rule-width) solid var(--todae-nav-rule-color);
@@ -106,7 +106,7 @@
     min-inline-size: 0;
   }
 
-  /* The chevron points down. A closed branch turns it toward the text. */
+  /* The chevron points down. A closed branch turns it toward the row's end. */
   .chevron {
     flex: none;
     display: inline-flex;
@@ -150,13 +150,17 @@
     padding: 0;
   }
 
+  /* VisuallyHidden's rules, which must hold over any class a product adds. */
   .link + .branch > .toggle > .toggleLabel {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    position: absolute !important;
+    inline-size: 1px !important;
+    block-size: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -174,6 +178,22 @@
     }
 
     .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])):focus-visible {
+      outline-color: HighlightText;
+    }
+
+    /* The toggle sits over the current link's Highlight row, so it takes the
+       same system colors, with no fill of its own. */
+    .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) + .branch > .toggle {
+      forced-color-adjust: none;
+      background: transparent;
+      color: HighlightText;
+    }
+
+    .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) + .branch > .toggle > .chevron {
+      color: HighlightText;
+    }
+
+    .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) + .branch > .toggle:focus-visible {
       outline-color: HighlightText;
     }
   }

@@ -1,6 +1,6 @@
 import { useId, type ComponentPropsWithRef, type ReactElement, type ReactNode } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider';
-import { ChevronGlyph, glyphOr } from './glyphs';
+import { ChevronGlyph, glyphOr, hasGlyph } from './glyphs';
 import { cx } from './props';
 import type { LinkRenderProps } from './Link';
 import styles from './Nav.module.css';
@@ -8,7 +8,7 @@ import styles from './Nav.module.css';
 /** A `nav` landmark. Name it with `aria-label` or `aria-labelledby` when the page has more than one. */
 export type NavRootProps = ComponentPropsWithRef<'nav'>;
 
-/** A list of Nav.Item elements, named by its `label` when it has one. */
+/** A list of Nav.Item elements, named by its `label` when it has one. `aria-label` and `aria-labelledby` name the list too, in place of the label. */
 export type NavGroupProps = {
   /** Text shown above the list, which also names it for screen readers. */
   label?: ReactNode;
@@ -43,9 +43,9 @@ function Root({ className, ...props }: NavRootProps) {
   return <nav {...props} className={cx(styles.root, className)} />;
 }
 
-function Group({ label, children, className, ...props }: NavGroupProps) {
+function Group({ label, children, className, 'aria-label': ariaLabel, 'aria-labelledby': labelledby, ...props }: NavGroupProps) {
   const labelId = useId();
-  const labelled = label != null && label !== false && label !== '';
+  const labelled = hasGlyph(label);
   return (
     <div {...props} className={cx(styles.group, className)}>
       {labelled ? (
@@ -53,8 +53,13 @@ function Group({ label, children, className, ...props }: NavGroupProps) {
           {label}
         </span>
       ) : null}
-      {/* Safari drops the list role from a list without markers; role="list" keeps it. */}
-      <ul role="list" aria-labelledby={labelled ? labelId : undefined} className={styles.list}>
+      {/* Safari drops the list role from a list without markers; role="list" keeps it. A name goes on the list, not the div. */}
+      <ul
+        role="list"
+        aria-label={ariaLabel}
+        aria-labelledby={labelledby ?? (labelled && !ariaLabel ? labelId : undefined)}
+        className={styles.list}
+      >
         {children}
       </ul>
     </div>

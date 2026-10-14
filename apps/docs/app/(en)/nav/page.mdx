@@ -54,9 +54,9 @@ An icon before the link text takes the `nav.icon.size` token.
 
 A `Nav.Branch` after a `Nav.Link` in the same item holds that page's child pages. The link keeps its row, and the toggle is a chevron at the end of the row, so its `label` is visually hidden and only names it. Name the child pages, such as "Field pages", not the link's own text. A `Nav.Branch` on its own in an item shows its `label` as the toggle's text, for a group of pages with no page of its own.
 
-The branch is a native `<details>`, so the browser owns whether it is open. `open` opens it when it renders or when the prop changes to `true`, such as when navigation moves into the branch; follow the user's toggles with `onToggle`. The nested list is indented by `nav.indent` under a rule drawn from `nav.rule.color` and `nav.rule.width`.
+The branch is a native `<details>`. `open` sets whether it is open when it renders and whenever the prop changes: `true` opens it, such as when navigation moves into the branch, and `false` closes it. In between, the user opens and closes it; follow that with `onToggle`. The nested list is indented by `nav.indent` under a rule drawn from `nav.rule.color` and `nav.rule.width`.
 
-The chevron is a glyph: set `chevron` in [GlyphsProvider](/utilities/glyphs-provider) to draw it with your icon library. Draw it pointing down; a closed branch turns it toward the text.
+The chevron is a glyph: set `chevron` in [GlyphsProvider](/utilities/glyphs-provider) to draw it with your icon library. Draw it pointing down; a closed branch turns it toward the end of its row.
 
 ## Accessible composition
 

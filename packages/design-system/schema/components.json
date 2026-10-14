@@ -2461,7 +2461,7 @@
           "name": "open",
           "type": "boolean",
           "required": false,
-          "description": "Opens the branch when it renders or changes to true. The browser then owns the state; follow it with onToggle."
+          "description": "Sets whether the branch is open when it renders and whenever the prop changes: true opens it, false closes it. In between, the user opens and closes it; follow that with onToggle."
         },
         {
           "name": "onToggle",
@@ -2486,6 +2486,12 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Text shown above the list. It also names the list for screen readers."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the list when it has no label, or in place of it. aria-labelledby goes on the list too."
         },
         {
           "name": "children",
