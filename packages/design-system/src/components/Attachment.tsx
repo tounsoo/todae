@@ -89,7 +89,7 @@ function deepActive(doc: Document): Element | null {
 
 /**
  * Called as an attachment holding focus unmounts, while it is still in the
- * page. Once React has finished the update, if the attachment is gone and
+ * page. Once the commit is done, if the attachment is gone and
  * nothing else has focus, focus goes to the remove button of the attachment
  * now in its place, else the one before. The items are the parent's children,
  * or the `li`s of a list when the attachment is an `li`'s only child, so focus
@@ -130,7 +130,7 @@ function Root({ className, status = 'ready', ref, ...props }: AttachmentRootProp
   const [named, setNamed] = useState<Named | undefined>(undefined);
   const context = useMemo(() => ({ named, setNamed }), [named]);
   // Layout cleanup runs before React takes the element out, so focus is still
-  // inside it then; the hand-off itself waits until the update is done.
+  // inside it then; the hand-off itself waits until the commit is done.
   useLayoutEffect(() => {
     const root = own.current;
     return () => {

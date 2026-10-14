@@ -118,12 +118,18 @@ describe('Attachment', () => {
         </div>
       );
     }
-    render(<Files />);
-    expect('checkVisibility' in HTMLElement.prototype).toBe(false);
-    const a = screen.getByRole('button', { name: 'Remove a.png' });
-    a.focus();
-    await act(async () => fireEvent.click(a));
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove b.png' }));
+    const proto = Element.prototype as { checkVisibility?: unknown };
+    const own = Object.getOwnPropertyDescriptor(proto, 'checkVisibility');
+    delete proto.checkVisibility;
+    try {
+      render(<Files />);
+      const a = screen.getByRole('button', { name: 'Remove a.png' });
+      a.focus();
+      await act(async () => fireEvent.click(a));
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove b.png' }));
+    } finally {
+      if (own) Object.defineProperty(proto, 'checkVisibility', own);
+    }
   });
 
   it('shows its status to CSS', () => {
