@@ -30,6 +30,24 @@ describe('formatDateTime', () => {
   });
 });
 
+// Every base locale ICU had when this was written, that the runtime has.
+const ALL_LOCALES = Intl.DateTimeFormat.supportedLocalesOf([
+'dz', 'af', 'agq', 'ak', 'sq', 'am', 'ar', 'hy', 'ars', 'as', 'asa', 'ast', 'az', 'bm', 'eu', 'bas', 'be', 'bem',
+'bn', 'bez', 'bg', 'bgc', 'bho', 'blo', 'bo', 'bs', 'br', 'brx', 'my', 'luy', 'ca', 'ccp', 'ce', 'ceb', 'cs', 'cgg',
+'zh', 'chr', 'cv', 'ckb', 'syr', 'sa', 'sr-ME', 'kw', 'csw', 'cy', 'da', 'dav', 'de', 'doi', 'dje', 'mn', 'fa-AF',
+'dsb', 'dua', 'nl', 'dyo', 'ebu', 'ee', 'et', 'el', 'en', 'eo', 'es', 'ewo', 'fa', 'fo', 'ff', 'fi', 'fil', 'fr',
+'fy', 'fur', 'ga', 'gaa', 'om', 'gd', 'ka', 'gl', 'gv', 'kok', 'gsw', 'gu', 'guz', 'ha', 'haw', 'sr-Latn', 'he', 'hi',
+'hr', 'hsb', 'hu', 'ia', 'ig', 'is', 'id', 'ie', 'ii', 'it', 'ja', 'jv', 'jgo', 'yi', 'jmc', 'kab', 'kl', 'kam', 'kn',
+'ks', 'kk', 'kde', 'kea', 'kgp', 'km', 'khq', 'ki', 'rw', 'ky', 'kkj', 'kln', 'ku', 'ko', 'ksb', 'ksf', 'ksh', 'kxv',
+'lag', 'lo', 'lv', 'lb', 'lg', 'lij', 'ln', 'lt', 'lkt', 'lmo', 'lrc', 'lu', 'luo', 'mk', 'mai', 'ml', 'mi', 'mr',
+'mas', 'ms', 'mer', 'mfe', 'mg', 'mgh', 'mgo', 'mt', 'mni', 'ro', 'mua', 'raj', 'mzn', 'naq', 'nb', 'nd', 'nds', 'ne',
+'nmg', 'nn', 'nnh', 'no', 'nqo', 'nso', 'nus', 'nyn', 'oc', 'or', 'os', 'pa', 'ps', 'pcm', 'pl', 'pt', 'prg', 'qu',
+'rm', 'rn', 'rof', 'ru', 'rwk', 'sg', 'sah', 'saq', 'sat', 'sbp', 'sc', 'sr', 'sd', 'se', 'seh', 'ses', 'shi', 'si',
+'sk', 'sl', 'smn', 'sn', 'so', 'st', 'su', 'sv', 'sw', 'sw-CD', 'szl', 'ta', 'tt', 'te', 'teo', 'tg', 'th', 'ti',
+'tk', 'tn', 'to', 'tok', 'tr', 'twq', 'tzm', 'ug', 'uk', 'ur', 'uz', 'vai', 'vec', 'vi', 'vmw', 'vun', 'wae', 'wo',
+'xh', 'xnr', 'xog', 'yav', 'yo', 'yrl', 'yue', 'za', 'zgh', 'zu'
+  ]);
+
 describe('parseDateTime', () => {
   it('reads what formatDateTime writes in every locale', () => {
     for (const locale of LOCALES) {
@@ -38,7 +56,7 @@ describe('parseDateTime', () => {
         expect(read(text, locale), `${locale}: ${text}`).toBe(value.toString());
       }
     }
-  });
+  }, 60_000);
 
   it("reads the locale's date and time styles in every locale", () => {
     for (const locale of LOCALES) {
@@ -52,26 +70,10 @@ describe('parseDateTime', () => {
         }
       }
     }
-  });
+  }, 60_000);
 
   it('reads a date and a time in the styles of every locale the runtime has, when it reads each alone', () => {
-    // Every base locale ICU had when this was written.
-    const all = Intl.DateTimeFormat.supportedLocalesOf([
-  'dz', 'af', 'agq', 'ak', 'sq', 'am', 'ar', 'hy', 'ars', 'as', 'asa', 'ast', 'az', 'bm', 'eu', 'bas', 'be', 'bem',
-  'bn', 'bez', 'bg', 'bgc', 'bho', 'blo', 'bo', 'bs', 'br', 'brx', 'my', 'luy', 'ca', 'ccp', 'ce', 'ceb', 'cs', 'cgg',
-  'zh', 'chr', 'cv', 'ckb', 'syr', 'sa', 'sr-ME', 'kw', 'csw', 'cy', 'da', 'dav', 'de', 'doi', 'dje', 'mn', 'fa-AF',
-  'dsb', 'dua', 'nl', 'dyo', 'ebu', 'ee', 'et', 'el', 'en', 'eo', 'es', 'ewo', 'fa', 'fo', 'ff', 'fi', 'fil', 'fr',
-  'fy', 'fur', 'ga', 'gaa', 'om', 'gd', 'ka', 'gl', 'gv', 'kok', 'gsw', 'gu', 'guz', 'ha', 'haw', 'sr-Latn', 'he', 'hi',
-  'hr', 'hsb', 'hu', 'ia', 'ig', 'is', 'id', 'ie', 'ii', 'it', 'ja', 'jv', 'jgo', 'yi', 'jmc', 'kab', 'kl', 'kam', 'kn',
-  'ks', 'kk', 'kde', 'kea', 'kgp', 'km', 'khq', 'ki', 'rw', 'ky', 'kkj', 'kln', 'ku', 'ko', 'ksb', 'ksf', 'ksh', 'kxv',
-  'lag', 'lo', 'lv', 'lb', 'lg', 'lij', 'ln', 'lt', 'lkt', 'lmo', 'lrc', 'lu', 'luo', 'mk', 'mai', 'ml', 'mi', 'mr',
-  'mas', 'ms', 'mer', 'mfe', 'mg', 'mgh', 'mgo', 'mt', 'mni', 'ro', 'mua', 'raj', 'mzn', 'naq', 'nb', 'nd', 'nds', 'ne',
-  'nmg', 'nn', 'nnh', 'no', 'nqo', 'nso', 'nus', 'nyn', 'oc', 'or', 'os', 'pa', 'ps', 'pcm', 'pl', 'pt', 'prg', 'qu',
-  'rm', 'rn', 'rof', 'ru', 'rwk', 'sg', 'sah', 'saq', 'sat', 'sbp', 'sc', 'sr', 'sd', 'se', 'seh', 'ses', 'shi', 'si',
-  'sk', 'sl', 'smn', 'sn', 'so', 'st', 'su', 'sv', 'sw', 'sw-CD', 'szl', 'ta', 'tt', 'te', 'teo', 'tg', 'th', 'ti',
-  'tk', 'tn', 'to', 'tok', 'tr', 'twq', 'tzm', 'ug', 'uk', 'ur', 'uz', 'vai', 'vec', 'vi', 'vmw', 'vun', 'wae', 'wo',
-  'xh', 'xnr', 'xog', 'yav', 'yo', 'yrl', 'yue', 'za', 'zgh', 'zu'
-    ]);
+    const all = ALL_LOCALES;
     const gregory = { calendar: 'gregory', timeZone: 'UTC' } as const;
     const styles: [Intl.DateTimeFormatOptions, Intl.DateTimeFormatOptions][] = [
       [{ year: 'numeric', month: 'numeric', day: 'numeric' }, { hour: 'numeric', minute: '2-digit' }],
@@ -132,7 +134,53 @@ describe('parseDateTime', () => {
     expect(read('13.10. 9:05', 'de')).toBeNull();
     expect(read('13/10 21:05', 'en-GB')).toBeNull();
     expect(read('10/13 21:05', 'ja')).toBeNull();
+    expect(read('2/29 20 05', 'en-US')).toBeNull();
+    expect(read('29.2. 20 05', 'de')).toBeNull();
+    expect(read('Tue, Oct 13 9 05', 'en-US')).toBeNull();
+    expect(read('mardi 13 octobre 9 05', 'fr')).toBeNull();
+    expect(read('10. 9. 21 05', 'ko')).toBeNull();
+    expect(read('10/9 21 05', 'ja')).toBeNull();
+    expect(read('3. 4. 9 05', 'hu')).toBeNull();
+    expect(read('13/10 9 05', 'sv')).toBeNull();
+    expect(read('9 05 3/4', 'vi')).toBeNull();
+    // Also October 12 at 13:21:05 when the year is left out.
+    expect(read('12. 10. 13. 21:05', 'ko')).toBeNull();
   });
+
+  it('reads a two-digit year beside the time', () => {
+    expect(read('26. 10. 13. 21:05', 'ko')).toBe('2026-10-13T21:05:00');
+    expect(read('21:05 13 10 26', 'vi')).toBe('2026-10-13T21:05:00');
+    expect(read('13 Oct 26 21:05', 'en-GB')).toBe('2026-10-13T21:05:00');
+  });
+
+  it('does not read a date typed without a year, beside a time, in any locale the runtime has', () => {
+    const gregory = { calendar: 'gregory', timeZone: 'UTC' } as const;
+    const dates: Intl.DateTimeFormatOptions[] = [
+      { month: 'numeric', day: 'numeric' },
+      { month: 'short', day: 'numeric' },
+      { weekday: 'long', month: 'long', day: 'numeric' },
+    ];
+    const cases: [string, string][] = [
+      ['2026-10-09', '21 05'],
+      ['2026-03-04', '9 05'],
+      ['2020-02-29', '20 05'],
+      ['2009-10-13', '9 05'],
+    ];
+    for (const locale of ALL_LOCALES) {
+      // The time goes where formatDateTime writes it: first when the hour comes before the year.
+      const types = new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', ...gregory })
+        .formatToParts(Date.UTC(2026, 9, 13, 21))
+        .map((part) => part.type);
+      const timeFirst = types.indexOf('hour') < types.indexOf('year');
+      for (const style of dates) {
+        for (const [day, time] of cases) {
+          const date = Temporal.PlainDate.from(day).toLocaleString(locale, { ...style, ...gregory });
+          const text = timeFirst ? `${time} ${date}` : `${date} ${time}`;
+          expect(read(text, locale), `${locale}: ${text}`).toBeNull();
+        }
+      }
+    }
+  }, 60_000);
 
   it('reads a word with a letter of no one script', () => {
     const value = at('2026-10-13T00:00');

@@ -37,6 +37,8 @@ type LocaleDateTime = {
   /** Whether the locale writes the date before the time, after it, or both, in its styles. */
   dateFirst: boolean;
   timeFirst: boolean;
+  /** The orders the locale writes a month and a day in numbers, with a year and without. */
+  monthDay: Set<'md' | 'dm'>;
 };
 
 const localeDateTimes = new Map<string, LocaleDateTime>();
@@ -78,7 +80,14 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
       for (const word of splitWords(part.value)) if (/\p{L}/u.test(word)) joiners.add(word);
     }
   }
-  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst };
+  const monthDay = new Set<'md' | 'dm'>();
+  for (const style of [{ month: 'numeric', day: 'numeric' }, { year: 'numeric', month: 'numeric', day: 'numeric' }] as const) {
+    const types = new Intl.DateTimeFormat(locale, { ...style, calendar: 'gregory', timeZone: 'UTC' })
+      .formatToParts(Date.UTC(2026, 9, 13))
+      .map((part) => part.type);
+    monthDay.add(types.indexOf('month') < types.indexOf('day') ? 'md' : 'dm');
+  }
+  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, monthDay };
   localeDateTimes.set(key, text);
   return text;
 }
@@ -114,6 +123,9 @@ function canCut(list: Atom[], at: number) {
   return !(before.number && after.number && !SPACE_OR_COMMA.test(after.gap));
 }
 
+// Leap years four years apart: every month and day, February 29 too, falls on every weekday in one of them.
+const ANY_YEAR = [2000, 2004, 2008, 2012, 2016, 2020, 2024];
+
 const render = (list: Atom[]) => list.map((atom, index) => (index ? atom.gap : '') + atom.text).join('');
 
 /**
@@ -126,7 +138,7 @@ const render = (list: Atom[]) => list.map((atom, index) => (index ? atom.gap : '
  * more than one date and time is not read.
  */
 export function parseDateTime(text: string, options: DateTimeTextOptions = {}): Temporal.PlainDateTime | null {
-  const { joiners, dateFirst, timeFirst } = localeDateTime(options.locale);
+  const { joiners, dateFirst, timeFirst, monthDay } = localeDateTime(options.locale);
   const list = atoms(text);
   const found = new Map<string, Temporal.PlainDateTime>();
   // The words the locale writes between, before or after the halves may be left in or out.
@@ -144,36 +156,54 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
     const value = date.toPlainDateTime(time);
     found.set(value.toString(), value);
   };
+  // Whether part of a date reads as a date without a year: two numbers that are
+  // a month and a day in an order the locale writes them in, or words that read
+  // as a date with a year after or before them.
+  const yearless = (half: string) => {
+    const numbers = /^(\d{1,2}) (\d{1,2})$/.exec(half);
+    if (!numbers) return ANY_YEAR.some((year) => parseDate(`${half} ${year}`, options) || parseDate(`${year} ${half}`, options));
+    return [...monthDay].some((order) => {
+      const [month, day] = (order === 'md' ? [numbers[1], numbers[2]] : [numbers[2], numbers[1]]).map(Number) as [number, number];
+      return month >= 1 && month <= 12 && day >= 1 && day <= new Temporal.PlainYearMonth(2000, month).daysInMonth;
+    });
+  };
   for (let at = 1; at < list.length; at++) {
     if (!canCut(list, at)) continue;
     const before = render(list.slice(0, at));
     const after = render(list.slice(at));
     for (const strip of [false, true]) {
+      // A date typed without a year must not take a number of the time to make
+      // one up, as "10/13 9 05" would read as 2009-10-13T05:00 in en-US and
+      // "10. 9. 21 05" as 2010-09-21T05:00 in ko: when the date's number beside
+      // the time stands apart, the time reads with it, and the rest of the date
+      // reads without a year, the text may be that date and time, so this cut
+      // is not read.
       if (dateFirst) {
-        const timeText = trim(after, strip, true);
-        // A date typed without a year must not take the time's hour as one, as
-        // in "10/13 9 05": a last number of one or two digits, standing alone,
-        // read as the year, since another number there changes the year and
-        // not the day, and that also starts a time with the rest.
-        const last = list[at - 1]!;
         const date = parseDate(trim(before, true, strip), options);
-        const asYear = () => {
-          const other = [...list.slice(0, at - 1), { ...last, text: String((Number(last.text) + 1) % 100) }];
-          const changed = parseDate(trim(render(other), true, strip), options);
-          return changed !== null && changed.year !== date!.year;
-        };
-        const hour =
-          date &&
+        const timeText = trim(after, strip, true);
+        const last = list[at - 1]!;
+        const taken =
+          date !== null &&
           last.number &&
-          last.text.length <= 2 &&
           at > 1 &&
           canCut(list, at - 1) &&
-          Number(last.text) === date.year % 100 &&
-          parseTime(`${last.text} ${timeText}`, options) &&
-          asYear();
-        if (!hour) read(date, timeText);
+          parseTime(`${last.text} ${timeText}`, options) !== null &&
+          yearless(trim(render(list.slice(0, at - 1)), true, strip));
+        if (!taken) read(date, timeText);
       }
-      if (timeFirst) read(parseDate(trim(after, strip, true), options), trim(before, true, strip));
+      if (timeFirst) {
+        const date = parseDate(trim(after, strip, true), options);
+        const timeText = trim(before, true, strip);
+        const first = list[at]!;
+        const taken =
+          date !== null &&
+          first.number &&
+          at + 1 < list.length &&
+          canCut(list, at + 1) &&
+          parseTime(`${timeText} ${first.text}`, options) !== null &&
+          yearless(trim(render(list.slice(at + 1)), strip, true));
+        if (!taken) read(date, timeText);
+      }
     }
   }
   if (found.size !== 1) return null;
