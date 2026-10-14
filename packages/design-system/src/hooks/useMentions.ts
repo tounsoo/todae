@@ -61,7 +61,7 @@ export type UseMentionsOptions = {
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
-  /** The committed tokens, as ranges of the text. Pass them with `value` to load a draft. */
+  /** Controlled tokens, as ranges of the text. Update them from `onTokensChange`. */
   tokens?: readonly MentionToken[];
   defaultTokens?: readonly MentionToken[];
   onTokensChange?: (tokens: MentionToken[]) => void;
@@ -140,6 +140,16 @@ type Snap = {
   dismissed: number | null;
 };
 
+/** An edit's text and tokens, held until that text renders. */
+type Pending = {
+  text: string;
+  tokens: readonly MentionToken[];
+  /** The caret after the edit, which places the changed span. */
+  caret: number | null;
+  /** The tokens prop when the edit happened. */
+  base: readonly MentionToken[];
+};
+
 /** The collapsed caret of a textarea that takes typing, or null. */
 function caretOf(el: HTMLTextAreaElement): number | null {
   if (el.readOnly || el.disabled) return null;
@@ -174,51 +184,53 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   // The hook's own tokens, kept with the text they belong to. An edit works
   // out the next text's tokens when it happens, and holds them as `pending`
   // until that text renders; a text set from outside carries the tokens along.
-  const [own, setOwn] = useState<Snap & { pending: Snap | null }>(() => ({
+  const [own, setOwn] = useState<Snap & { pending: Pending | null; unsent: boolean }>(() => ({
     text: value,
     tokens: validTokens(value, options.tokens ?? options.defaultTokens ?? EMPTY_TOKENS),
     dismissed: null,
     pending: null,
+    unsent: false,
   }));
+  const raw = options.tokens;
   let snap: Snap = own;
+  // Controlled: the edit's tokens, shown until the layout effect hands them out.
+  let unsent = own.unsent;
   if (own.text !== value) {
-    const next =
-      own.pending?.text === value
-        ? own.pending
-        : {
-            text: value,
-            tokens: shiftTokens(own.text, value, own.tokens),
-            dismissed: own.dismissed === null ? null : shiftIndex(own.text, value, own.dismissed),
-          };
-    snap = next;
-    setOwn({ ...next, pending: null });
+    // The edit that made this text, if one did.
+    const edited = own.pending?.text === value ? own.pending : null;
+    // Its tokens, unless the product set tokens of its own since the edit.
+    const fromEdit = edited !== null && (raw === undefined || sameTokens(raw, edited.base));
+    snap = {
+      text: value,
+      tokens: fromEdit ? edited.tokens : raw === undefined ? shiftTokens(own.text, value, own.tokens) : validTokens(value, raw),
+      dismissed: own.dismissed === null ? null : shiftIndex(own.text, value, own.dismissed, edited?.caret),
+    };
+    unsent = fromEdit && raw !== undefined && !sameTokens(edited.tokens, raw);
+    setOwn({ ...snap, pending: null, unsent });
   }
   // Controlled tokens are the product's, like a controlled value; the hook
   // shows the ones that still hold their text.
-  const controlledTokens = options.tokens;
-  const shownControlled = useMemo(
-    () => (controlledTokens === undefined ? null : validTokens(value, controlledTokens)),
-    [controlledTokens, value],
-  );
-  const tokens = shownControlled ?? snap.tokens;
+  const shownControlled = useMemo(() => (raw === undefined ? null : validTokens(value, raw)), [raw, value]);
+  const tokens = shownControlled === null || unsent ? snap.tokens : shownControlled;
   const dismissed = snap.dismissed;
 
-  // The tokens the hook last handed to onTokensChange, or was given at the start.
-  const handed = useRef<readonly MentionToken[]>(options.tokens ?? options.defaultTokens ?? EMPTY_TOKENS);
-  // The text those tokens are for. A controlled parent that sets the text
-  // before the tokens, such as in a transition, is caught up, not changed.
-  const handedFor = useRef<string | null>(null);
-  // Hands out tokens that changed without an edit handing them out: a text set
-  // from outside, starting tokens that don't hold their text, and uncontrolled edits.
-  useLayoutEffect(() => {
-    const controlled = latest.current.tokens !== undefined;
-    if (controlled && value === handedFor.current) return;
-    const held = latest.current.tokens ?? handed.current;
-    if (sameTokens(tokens, held) || sameTokens(tokens, handed.current)) return;
-    handed.current = tokens;
-    handedFor.current = value;
-    latest.current.onTokensChange?.([...tokens]);
+  // The text the last commit rendered, and the tokens handed out for it.
+  const seen = useRef<{ text: string; tokens: readonly MentionToken[] }>({
+    text: value,
+    tokens: options.tokens ?? options.defaultTokens ?? EMPTY_TOKENS,
   });
+  // Hands out the tokens once the text they belong to renders.
+  useLayoutEffect(() => {
+    const held = latest.current.tokens;
+    const prev = seen.current;
+    // Controlled, with the text unchanged: the product's tokens stand.
+    if (held !== undefined && value === prev.text) return;
+    seen.current = { text: value, tokens: snap.tokens };
+    // From here on the product's tokens are shown, whether or not it takes these.
+    if (unsent) setOwn((current) => (current.unsent ? { ...current, unsent: false } : current));
+    if (sameTokens(snap.tokens, held ?? prev.tokens)) return;
+    latest.current.onTokensChange?.([...snap.tokens]);
+  }, [value, snap.tokens, unsent]);
 
   const remember = (text: string, list: readonly MentionToken[]) => {
     const map = history.current;
@@ -240,14 +252,16 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     }
     remember(value, tokens);
     remember(next, list);
-    const nextDismissed = dismissed === null ? null : shiftIndex(value, next, dismissed, how.caret);
-    setOwn({ text: value, tokens, dismissed, pending: { text: next, tokens: list, dismissed: nextDismissed } });
-    if (latest.current.tokens !== undefined && !sameTokens(list, tokens)) {
-      handed.current = list;
-      handedFor.current = next;
-      latest.current.onTokensChange?.([...list]);
-    }
+    setOwn({ text: value, tokens, dismissed, pending: { text: next, tokens: list, caret: how.caret, base: raw ?? EMPTY_TOKENS }, unsent: false });
     setValue(next);
+  };
+
+  /** A pick that leaves the text as it is: its text has rendered already, so its token is handed out now. */
+  const commitInPlace = (list: readonly MentionToken[]) => {
+    remember(value, list);
+    if (latest.current.tokens === undefined) setOwn((current) => ({ ...current, tokens: list, pending: null }));
+    seen.current = { text: value, tokens: list };
+    if (!sameTokens(list, latest.current.tokens ?? tokens)) latest.current.onTokensChange?.([...list]);
   };
 
   // A value set from outside, such as clearing the text after sending, can move the caret.
@@ -389,6 +403,13 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       const inserted = insertion(value, query, text);
       const caretTo = query.start + inserted.length;
       const token: MentionToken = { start: query.start, end: query.start + text.length, char: trigger.char, value: option.value, text };
+      const next = value.slice(0, query.start) + inserted + value.slice(query.end);
+      if (next === value) {
+        el?.setSelectionRange(caretTo, caretTo);
+        setCaret(caretTo);
+        commitInPlace(validTokens(value, [...tokens, token]));
+        return;
+      }
       const doc = el?.ownerDocument;
       let native = false;
       // insertText puts the pick on the textarea's own undo stack, and fires
@@ -409,7 +430,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
         return;
       }
       el?.focus();
-      const next = value.slice(0, query.start) + inserted + value.slice(query.end);
       setCaretAfter({ to: caretTo, value: next });
       edit(next, { caret: caretTo, pick: token });
     },

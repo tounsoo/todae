@@ -103,7 +103,8 @@ export function useTextareaHighlights(
     const set = (property: string, value: string) => {
       if (div.style.getPropertyValue(property) !== value) div.style.setProperty(property, value);
     };
-    for (const property of COPIED) set(property, computed.getPropertyValue(property));
+    const side = computed.direction === 'rtl' ? 'padding-left' : 'padding-right';
+    for (const property of COPIED) if (property !== side) set(property, computed.getPropertyValue(property));
     // The layer inherits the ancestors' lang; only the textarea's own one needs copying.
     const lang = el.getAttribute('lang');
     if (lang === null) div.removeAttribute('lang');
@@ -111,7 +112,6 @@ export function useTextareaHighlights(
     // A scrollbar takes room from the textarea's text, not from the layer's.
     const borders = px(computed.borderLeftWidth) + px(computed.borderRightWidth);
     const scrollbar = Math.max(0, el.offsetWidth - el.clientWidth - borders);
-    const side = computed.direction === 'rtl' ? 'padding-left' : 'padding-right';
     set(side, `${px(computed.getPropertyValue(side)) + scrollbar}px`);
     scroll();
   }, [scroll, textarea]);

@@ -35,7 +35,7 @@ export const meta = {
       name: 'tokens',
       type: 'readonly MentionToken[]',
       required: false,
-      description: 'Controlled tokens: { start, end, char, value, text } ranges of the text, shown as given (a token that does not hold its text is left out). Update them from onTokensChange, like value from onValueChange, and pass them with value to load a draft.',
+      description: 'Controlled tokens: { start, end, char, value, text } ranges of the text, shown as given (a token that does not hold its text is left out). Update them from onTokensChange, like value from onValueChange, and set them with value to load a draft.',
     },
     {
       name: 'defaultTokens',
@@ -47,7 +47,7 @@ export const meta = {
       name: 'onTokensChange',
       type: '(tokens: MentionToken[]) => void',
       required: false,
-      description: 'Called with the tokens for each edit that adds, moves or drops one, at the edit, before the text arrives as value. Also called when value changes from outside: uncontrolled, with the tokens moved by the change; controlled, without the tokens that no longer hold their text.',
+      description: 'Called with the new tokens when the hook changes them. For an edit, that is once the edit\'s text renders as value, so an edit the product rejects changes nothing. For a value set from outside: uncontrolled, the tokens move with the change; controlled, any token that no longer holds its text is dropped.',
     },
     {
       name: 'maxLength',

@@ -47,7 +47,7 @@ While the list is open, ArrowDown and ArrowUp move through its options, and Ente
 
 A pick replaces the word through `document.execCommand('insertText')`, so it is one step on the textarea's own undo stack, and adds a space unless whitespace follows. Undo and redo bring back the tokens that the restored text had. Backspace at a token's end, or Delete at its start, removes the whole token. An edit inside a token turns it back into plain text.
 
-`tokens` lists each token's `start`, `end`, `char`, `value` and `text`. Send them with the text to your backend, and pass `value` and `tokens` together to load a draft. A token whose range no longer holds its text is dropped. To hold the tokens in your own state, pass `tokens` with `onTokensChange`, as you pass `value` with `onValueChange`.
+`mentions.tokens` lists each token's `start`, `end`, `char`, `value` and `text`; send them with the text to your backend. A token whose range no longer holds its text is dropped. To start from a draft, pass its tokens as `defaultTokens` with its text when the hook mounts. To hold the tokens in your own state, pass `tokens` with `onTokensChange`, as you pass `value` with `onValueChange`, and set both to load a draft.
 
 ## Drawing tokens
 

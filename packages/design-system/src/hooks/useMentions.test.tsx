@@ -377,21 +377,32 @@ describe('useMentions with controlled tokens', () => {
     );
   }
 
-  it('never renders the parent with tokens that do not hold their text', () => {
+  it('shows each text with its own tokens, and the parent holds them once each edit settles', () => {
     let result!: UseMentionsResult;
-    const check = vi.fn((value: string, tokens: readonly MentionToken[]) => {
-      expect(validTokens(value, tokens)).toEqual(tokens);
-    });
-    render(<Mirror check={check} expose={(r) => (result = r)} />);
+    let held: readonly MentionToken[] = [];
+    const shown = vi.fn();
+    render(
+      <Mirror
+        check={(_, tokens) => (held = tokens)}
+        expose={(r) => {
+          result = r;
+          shown();
+          expect(validTokens(r.value, r.tokens)).toEqual(r.tokens);
+        }}
+      />,
+    );
     const el = screen.getByRole('textbox') as HTMLTextAreaElement;
     fireEvent.focus(el);
     type(el, '@a');
     act(() => result.select('ada'));
+    expect(held).toEqual(result.tokens);
     fireEvent.change(el, { target: { value: 'Hi @Ada Lovelace ', selectionStart: 3, selectionEnd: 3 } });
     expect(result.tokens).toEqual([{ start: 3, end: 16, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
+    expect(held).toEqual(result.tokens);
     fireEvent.change(el, { target: { value: 'Hi @Ada Lovelac ', selectionStart: 15, selectionEnd: 15 } });
     expect(result.tokens).toEqual([]);
-    expect(check).toHaveBeenCalled();
+    expect(held).toEqual([]);
+    expect(shown).toHaveBeenCalled();
   });
 
   it('shows only the tokens the parent holds, and still hands out a pick', () => {
@@ -437,8 +448,7 @@ describe('useMentions with controlled tokens', () => {
     render(<Fixed />);
     const el = screen.getByRole('textbox') as HTMLTextAreaElement;
     fireEvent.change(el, { target: { value: '@Aa hi', selectionStart: 2, selectionEnd: 2 } });
-    expect(onTokens).toHaveBeenCalledTimes(1);
-    expect(onTokens).toHaveBeenLastCalledWith([]);
+    expect(onTokens).not.toHaveBeenCalled();
     expect(screen.getByRole('textbox')).toHaveProperty('value', '@Ada hi');
   });
 
