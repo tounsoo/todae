@@ -25,7 +25,6 @@ describe('SiteNav', () => {
     expect(current).toHaveLength(1);
     expect(current[0]?.textContent).toBe('ChipList');
     expect(nav.textContent).not.toContain('Recipes:');
-    expect(screen.getByRole('list', { name: 'Foundations' }).getAttribute('aria-labelledby')).toBe('nav-foundations');
     const hrefsIn = (name: string) =>
       [...screen.getByRole('list', { name }).querySelectorAll('a')].map((link) => link.getAttribute('href'));
     expect(hrefsIn('Components')).not.toContain('/composition');
@@ -36,15 +35,13 @@ describe('SiteNav', () => {
     const { container } = render(
       <>
         <SiteNav locale="en" />
-        <SiteNav locale="en" idPrefix="drawer-nav" />
+        <SiteNav locale="en" />
       </>,
     );
-    const ids = [...container.querySelectorAll('.site-nav-label')].map((label) => label.id);
+    const ids = [...container.querySelectorAll('ul[aria-labelledby]')].map((list) => list.getAttribute('aria-labelledby'));
     expect(ids).toHaveLength(10);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const list of container.querySelectorAll('ul[aria-labelledby]')) {
-      expect(container.querySelector(`#${list.getAttribute('aria-labelledby')}`)).not.toBeNull();
-    }
+    for (const id of ids) expect(document.getElementById(id ?? '')).not.toBeNull();
   });
 
   it('nests child pages under their parent link, open on the parent or a child', () => {

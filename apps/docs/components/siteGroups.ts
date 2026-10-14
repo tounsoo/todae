@@ -61,6 +61,7 @@ export const SITE_GROUPS = [
       ['/loader', 'Loader and Skeleton'],
       ['/menu', 'Menu'],
       ['/message', 'Message'],
+      ['/nav', 'Nav'],
       ['/optionlist', 'OptionList'],
       ['/pagination', 'Pagination'],
       ['/popover', 'Popover'],

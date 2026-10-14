@@ -2473,6 +2473,120 @@
       ]
     },
     {
+      "name": "Nav.Branch",
+      "description": "A native details with a toggle and a nested list. Takes native details attributes.",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": true,
+          "description": "The toggle's text. After a Nav.Link in the same item, the toggle shows only a chevron and this text only names it, so name the child pages, such as \"Field pages\"."
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Sets whether the branch is open when it renders and whenever the prop changes: true opens it, false closes it. In between, the user opens and closes it; follow that with onToggle."
+        },
+        {
+          "name": "onToggle",
+          "type": "(event: React.ToggleEvent<HTMLDetailsElement>) => void",
+          "required": false,
+          "description": "Called after the branch opens or closes."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Nav.Item elements, the child pages."
+        }
+      ]
+    },
+    {
+      "name": "Nav.Group",
+      "description": "A list of Nav.Item elements with an optional label above it. A div holding a ul; takes native div attributes.",
+      "props": [
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Text shown above the list. It also names the list for screen readers."
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the list when it has no label, or in place of it. aria-labelledby goes on the list too."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Nav.Item elements."
+        }
+      ]
+    },
+    {
+      "name": "Nav.Item",
+      "description": "One entry in a Nav.Group or Nav.Branch. An li; takes native li attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A Nav.Link, a Nav.Branch, or a Nav.Link followed by the Nav.Branch of its child pages."
+        }
+      ]
+    },
+    {
+      "name": "Nav.Link",
+      "description": "A link drawn as a nav row. Renders an a, or a router link through render; takes native a attributes.",
+      "props": [
+        {
+          "name": "href",
+          "type": "string",
+          "required": false,
+          "description": "Where the link goes."
+        },
+        {
+          "name": "render",
+          "type": "(props: React.ComponentPropsWithRef<\"a\">) => React.ReactElement",
+          "required": false,
+          "description": "Renders something other than a plain a, such as a router link. It receives every prop, the class name included, and must pass them to an a."
+        },
+        {
+          "name": "aria-current",
+          "type": "\"page\" | \"step\" | \"location\" | \"date\" | \"time\" | \"true\" | \"false\"",
+          "required": false,
+          "description": "Marks the link to the page you are on, which draws it as the current row."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The link text, with an optional icon before it."
+        }
+      ]
+    },
+    {
+      "name": "Nav.Root",
+      "description": "A nav landmark that stacks Nav.Group lists. Takes native nav attributes.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Landmark name. Give one when the page has more than one nav, such as \"Docs\" beside a header nav."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Nav.Group elements."
+        }
+      ]
+    },
+    {
       "name": "OptionList.Option",
       "description": "String-only option inside OptionList.Root.",
       "props": [

@@ -58,6 +58,7 @@ export const RESERVED_ROOTS = [
   'pagination',
   'scroll',
   'tree',
+  'nav',
   'picker',
   'calendar',
   'opacity',
