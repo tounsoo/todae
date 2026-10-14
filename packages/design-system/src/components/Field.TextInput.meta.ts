@@ -34,7 +34,7 @@ export const meta = {
       required: false,
       default: '"text"',
       description:
-        'Native input type. Number keeps the native spinner, and value stays the input string, such as "42". Dates and times use Field.DateInput, Field.TimeInput and Field.DateTimeInput.',
+        'Native input type. Number keeps the native spinner, and value stays the input string, such as "42". Times use Field.TimeInput and Field.DateTimeInput; a date uses Field.DatePicker, with a text input beside it read by parseDate.',
     },
   ],
 } as const satisfies ComponentMeta;

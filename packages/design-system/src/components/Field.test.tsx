@@ -57,7 +57,6 @@ describe('Field exports', () => {
       Select: Field.Select,
       ColorPicker: Field.ColorPicker,
       DatePicker: Field.DatePicker,
-      DateInput: Field.DateInput,
       TimeInput: Field.TimeInput,
       DateTimeInput: Field.DateTimeInput,
       Icon: Field.Icon,
@@ -202,49 +201,42 @@ describe('Field date and time inputs', () => {
     return { input: container.querySelector('input')!, rerender };
   }
 
-  it('shows a Temporal.PlainDate as the native date string and reads it back', () => {
-    const onValueChange = vi.fn();
+  it('shows min and max as the native strings', () => {
     const { input } = renderInput(
-      <Field.DateInput
-        value={Temporal.PlainDate.from('2026-10-07')}
-        min={Temporal.PlainDate.from('2026-01-01')}
-        max={Temporal.PlainDate.from('2026-12-31')}
-        onValueChange={onValueChange}
+      <Field.DateTimeInput
+        value={Temporal.PlainDateTime.from('2026-10-07T09:30')}
+        min={Temporal.PlainDateTime.from('2026-01-01T00:00')}
+        max={Temporal.PlainDateTime.from('2026-12-31T23:30')}
+        onValueChange={() => undefined}
       />,
     );
-    expect(input.type).toBe('date');
-    expect(input.value).toBe('2026-10-07');
-    expect(input.min).toBe('2026-01-01');
-    expect(input.max).toBe('2026-12-31');
+    expect(input.min).toBe('2026-01-01T00:00');
+    expect(input.max).toBe('2026-12-31T23:30');
     expect(input.getAttribute('aria-label')).toBe('When');
-    fireEvent.change(input, { target: { value: '2026-10-08' } });
-    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainDate;
-    expect(next).toBeInstanceOf(Temporal.PlainDate);
-    expect(next.equals(Temporal.PlainDate.from('2026-10-08'))).toBe(true);
   });
 
   it('gives null for an empty or incomplete input', () => {
     const onValueChange = vi.fn();
     const { input } = renderInput(
-      <Field.DateInput value={Temporal.PlainDate.from('2026-10-07')} onValueChange={onValueChange} />,
+      <Field.DateTimeInput value={Temporal.PlainDateTime.from('2026-10-07T09:30')} onValueChange={onValueChange} />,
     );
     fireEvent.change(input, { target: { value: '' } });
     expect(onValueChange).toHaveBeenLastCalledWith(null);
   });
 
   it('renders null as an empty input', () => {
-    const { input } = renderInput(<Field.DateInput value={null} onValueChange={() => undefined} />);
+    const { input } = renderInput(<Field.DateTimeInput value={null} onValueChange={() => undefined} />);
     expect(input.value).toBe('');
   });
 
   it('writes an ISO date for a date in another calendar', () => {
     const { input } = renderInput(
-      <Field.DateInput
-        value={Temporal.PlainDate.from('2026-10-07').withCalendar('gregory')}
+      <Field.DateTimeInput
+        value={Temporal.PlainDateTime.from('2026-10-07T09:30').withCalendar('gregory')}
         onValueChange={() => undefined}
       />,
     );
-    expect(input.value).toBe('2026-10-07');
+    expect(input.value).toBe('2026-10-07T09:30');
   });
 
   it('writes a time to the minute unless it has seconds', () => {
@@ -284,19 +276,19 @@ describe('Field date and time inputs', () => {
 
   it('passes the native event to onChange', () => {
     const onChange = vi.fn();
-    const { input } = renderInput(<Field.DateInput value={null} onChange={onChange} />);
-    fireEvent.change(input, { target: { value: '2026-10-07' } });
+    const { input } = renderInput(<Field.DateTimeInput value={null} onChange={onChange} />);
+    fireEvent.change(input, { target: { value: '2026-10-07T09:30' } });
     expect(onChange.mock.calls[0]![0].target).toBe(input);
   });
 
   it('reads and writes a year past 9999 the way the input does', () => {
     const onValueChange = vi.fn();
     const { input } = renderInput(
-      <Field.DateInput value={Temporal.PlainDate.from('+010000-01-01')} onValueChange={onValueChange} />,
+      <Field.DateTimeInput value={Temporal.PlainDateTime.from('+010000-01-01T09:30')} onValueChange={onValueChange} />,
     );
-    expect(input.value).toBe('10000-01-01');
-    fireEvent.change(input, { target: { value: '20261-10-07' } });
-    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainDate;
+    expect(input.value).toBe('10000-01-01T09:30');
+    fireEvent.change(input, { target: { value: '20261-10-07T09:30' } });
+    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainDateTime;
     expect(next.year).toBe(20261);
   });
 
@@ -304,9 +296,13 @@ describe('Field date and time inputs', () => {
     const onValueChange = vi.fn();
     const onChange = vi.fn();
     const { input } = renderInput(
-      <Field.DateInput value={Temporal.PlainDate.from('2026-10-07')} onChange={onChange} onValueChange={onValueChange} />,
+      <Field.DateTimeInput
+        value={Temporal.PlainDateTime.from('2026-10-07T09:30')}
+        onChange={onChange}
+        onValueChange={onValueChange}
+      />,
     );
-    fireEvent.change(input, { target: { value: '275760-12-31' } });
+    fireEvent.change(input, { target: { value: '275760-12-31T09:30' } });
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).not.toHaveBeenCalled();
   });
@@ -314,7 +310,7 @@ describe('Field date and time inputs', () => {
   it('follows the Root for disabled and invalid', () => {
     render(
       <Field.Root aria-label="When" disabled invalid>
-        <Field.DateInput value={null} onValueChange={() => undefined} />
+        <Field.TimeInput value={null} onValueChange={() => undefined} />
       </Field.Root>,
     );
     const input = document.querySelector('input')!;
@@ -335,10 +331,10 @@ describe('Field date and time inputs', () => {
       expect(
         renderToString(
           <Field.Root aria-label="When">
-            <Field.DateInput value={null} onValueChange={() => undefined} />
+            <Field.TimeInput value={null} onValueChange={() => undefined} />
           </Field.Root>,
         ),
-      ).toContain('type="date"');
+      ).toContain('type="time"');
     });
 
     it('reports the missing Temporal on change instead of giving null', () => {
@@ -353,10 +349,10 @@ describe('Field date and time inputs', () => {
       try {
         const { container } = render(
           <Field.Root aria-label="When">
-            <Field.DateInput value={null} onValueChange={onValueChange} />
+            <Field.TimeInput value={null} onValueChange={onValueChange} />
           </Field.Root>,
         );
-        fireEvent.change(container.querySelector('input')!, { target: { value: '2026-10-07' } });
+        fireEvent.change(container.querySelector('input')!, { target: { value: '09:30' } });
       } finally {
         window.removeEventListener('error', onError);
         consoleError.mockRestore();
@@ -382,7 +378,6 @@ describe('Field.ColorPicker beside another control part', () => {
         <option value="a">A</option>
       </Field.Select>,
     ],
-    ['DateInput', <Field.DateInput key="c" value={Temporal.PlainDate.from('2026-10-07')} onValueChange={noop} />],
     ['TimeInput', <Field.TimeInput key="c" value={Temporal.PlainTime.from('09:30')} onValueChange={noop} />],
     [
       'DateTimeInput',
@@ -415,7 +410,7 @@ describe('Field.ColorPicker beside another control part', () => {
   it('takes the id back, and is named by the field again, when the other control goes', () => {
     const { container, rerender } = render(
       <Field.Root id="x" aria-label="Accent">
-        <Field.DateInput value={null} onValueChange={noop} />
+        <Field.TimeInput value={null} onValueChange={noop} />
         <Field.ColorPicker value="#3366ff" />
       </Field.Root>,
     );

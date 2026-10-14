@@ -7,12 +7,31 @@ import { FieldDatePicked, FieldDatePickerAlone } from '../../../../components/de
 ```tsx
 const id = useId();
 const [date, setDate] = useState<Temporal.PlainDate | null>(null);
+const [text, setText] = useState('');
+const invalid = text.trim() !== '' && parseDate(text) === null;
 
 <Field.Group>
   <Label.Root htmlFor={id}>Start date</Label.Root>
-  <Field.Root id={id}>
-    <Field.DateInput value={date} onValueChange={setDate} />
-    <Field.DatePicker value={date} onValueChange={setDate} />
+  <Field.Root id={id} invalid={invalid}>
+    <Field.TextInput
+      value={text}
+      onChange={(event) => {
+        setText(event.target.value);
+        const next = parseDate(event.target.value);
+        if (next || event.target.value.trim() === '') setDate(next);
+      }}
+      onBlur={() => {
+        if (date && !invalid) setText(formatDate(date));
+      }}
+    />
+    <Field.DatePicker
+      value={date}
+      onValueChange={(next) => {
+        setDate(next);
+        setText(formatDate(next));
+      }}
+      showDate={false}
+    />
   </Field.Root>
 </Field.Group>
 ```
@@ -21,11 +40,15 @@ const [date, setDate] = useState<Temporal.PlainDate | null>(null);
   <FieldDatePicked />
 </Example>
 
-Here a [Field.DateInput](/field/date-input) in the same field lets people type the date too. The two share one state, so a picked date fills the input, and a typed date moves the calendar to its month. Beside a `Field.DateInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. The button shows only a calendar glyph, and in Chromium browsers the input's own picker button is hidden. The button sends the date with a form under its own `name` if it has one, and otherwise under the field's `name`, unless a Field part or a control joined with [`useField`](/utilities/use-field), other than a `Field.ColorPicker`, has that `name`, as a `Field.DateInput` or `Field.TimeInput` does when it has no `name` of its own.
+Here a [Field.TextInput](/field/text-input) in the same field lets people type the date too. A picked date is written into the text with `formatDate`, and typed text that `parseDate` reads as a date moves the calendar to its month. Beside a `Field.TextInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. With `showDate={false}`, the button shows only a calendar glyph. The button sends the date with a form under its own `name` if it has one, and otherwise under the field's `name`, unless a Field part or a control joined with [`useField`](/utilities/use-field), other than a `Field.ColorPicker`, has that `name`, as a `Field.TextInput` does when it has no `name` of its own. To send the date as `2026-10-13` rather than the typed text, put `name` on the picker instead of the Root.
+
+## Typed dates
+
+`formatDate(date, { locale })` writes a date in the locale's numbers, such as `10/13/2026` in `en-US`, `13.10.2026` in `de` and `2026. 10. 13.` in `ko`. `parseDate(text, { locale })` reads typed text back into a `Temporal.PlainDate`, or returns `null` when the text is not a date. It reads the numbers in the locale's order with any separators, and a year written first, such as `2026-10-13` or `2026년 10월 13일`, as year, month and day. A month may be a name in the locale or in English, such as `Oct 13, 2026`, and a weekday name is skipped. A year of one or two digits is read as the nearest such year to the current one. Without `locale`, both use the runtime's own.
 
 ## On its own
 
-On its own, `Field.DatePicker` is the field's control. It shows the date in `locale`'s medium style, or `placeholder` while there is none, and a press elsewhere in the field opens the calendar. With a `name` on the Root, a hidden input sends the date as a date input does, such as `2026-10-13`.
+On its own, `Field.DatePicker` is the field's control. It shows the date in `locale`'s medium style, or `placeholder` while there is none, and a press elsewhere in the field opens the calendar. With a `name` on the Root, a hidden input sends the date as an ISO date, such as `2026-10-13`.
 
 <Example block>
   <FieldDatePickerAlone />
@@ -35,11 +58,11 @@ The calendar opens and closes through `open` with `onOpenChange`, or `defaultOpe
 
 ## Accessible composition
 
-**Todae handles:** On its own, the button takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). Its label names it, so the date it shows is added to its `aria-describedby`. Beside a Field part or a control joined with `useField`, other than a `Field.ColorPicker` or another `Field.DatePicker`, such as a date input, that control takes the `id` and `aria-describedby` in its place, and the button keeps `disabled` and `aria-invalid` and is named from the `datePicker` string in [StringsProvider](/utilities/strings-provider) unless it has its own `aria-label`. The button gets `aria-haspopup="dialog"` and `aria-expanded`, and `aria-controls` while the calendar is open. The popover is a `role="dialog"` named from the `datePicker` string, and the calendar inside is keyed as on [Calendar](/calendar). The glyph is `calendar` from [GlyphsProvider](/utilities/glyphs-provider).
+**Todae handles:** On its own, the button takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). Its label names it, so the date it shows is added to its `aria-describedby`. Beside a Field part or a control joined with `useField`, other than a `Field.ColorPicker` or another `Field.DatePicker`, such as a text input, that control takes the `id` and `aria-describedby` in its place, and the button keeps `disabled` and `aria-invalid` and is named from the `datePicker` string in [StringsProvider](/utilities/strings-provider) unless it has its own `aria-label`. The button gets `aria-haspopup="dialog"` and `aria-expanded`, and `aria-controls` while the calendar is open. The popover is a `role="dialog"` named from the `datePicker` string, and the calendar inside is keyed as on [Calendar](/calendar). The glyph is `calendar` from [GlyphsProvider](/utilities/glyphs-provider).
 
-**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. The same state for a `Field.DateInput` and the picker beside it.
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. The same date for a text input and the picker beside it, written with `formatDate` and read with `parseDate`.
 
-**Watch for:** A server render can't know another control sits beside the button, so until the page hydrates, the button and that control both carry the field's `id`, both send a value under the field's `name`, and the button shows its date. With a `value`, the server writes that date in its own locale, so pass `locale` when the picker renders on a server.
+**Watch for:** A server render can't know another control sits beside the button, so until the page hydrates, the button and that control both carry the field's `id`, and both send a value under the field's `name`. With a `value`, the server writes that date in its own locale, so pass `locale` when the picker renders on a server.
 
 ## When to use
 
@@ -47,7 +70,7 @@ The calendar opens and closes through `open` with `onOpenChange`, or `defaultOpe
 
 **When:** A date in a form where people benefit from seeing a month, such as a booking or a deadline.
 
-**When not:** A date people know by heart, such as a birthday → [Field.DateInput](/field/date-input) alone. A calendar shown on the page → [Calendar](/calendar). A date with a time → [Field.DateTimeInput](/field/date-time-input).
+**When not:** A date people know by heart, such as a birthday → a [Field.TextInput](/field/text-input) read with `parseDate`. A calendar shown on the page → [Calendar](/calendar). A date with a time → [Field.DateTimeInput](/field/date-time-input).
 
 ## Props
 

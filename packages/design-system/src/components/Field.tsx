@@ -72,7 +72,7 @@ export type FieldRootProps = {
 } & Omit<ComponentPropsWithRef<'div'>, 'id'>;
 
 function createCountStore(): CountStore {
-  return { entry: null, counters: 0, controls: 0, named: 0, dates: 0, listeners: new Set(), presence: new Set() };
+  return { entry: null, counters: 0, controls: 0, named: 0, listeners: new Set(), presence: new Set() };
 }
 
 function publishCount(store: CountStore, value: string, maxLength: number | undefined) {
@@ -109,21 +109,18 @@ type PickerOwnProps = {
 
 const BESIDE_CONTROL = 1;
 const BESIDE_NAMED = 2;
-const BESIDE_DATE = 4;
 
 /**
  * Which controls a picker shares its field with, as bits: BESIDE_CONTROL for
  * any control wired with useField, BESIDE_NAMED when useField gave one the
- * field's name, BESIDE_DATE when one is a date input. The server cannot know of one yet, so it reads 0
- * until hydration.
+ * field's name. The server cannot know of one yet, so it reads 0 until
+ * hydration.
  */
 function usePickerPresence(store: CountStore) {
   const subscribe = useCallback((listener: () => void) => subscribePresence(store, listener), [store]);
   return useSyncExternalStore(
     subscribe,
-    () => (store.controls > 0 ? BESIDE_CONTROL : 0) |
-      (store.named > 0 ? BESIDE_NAMED : 0) |
-      (store.dates > 0 ? BESIDE_DATE : 0),
+    () => (store.controls > 0 ? BESIDE_CONTROL : 0) | (store.named > 0 ? BESIDE_NAMED : 0),
     () => 0,
   );
 }
@@ -344,8 +341,9 @@ function Root({
 
 /**
  * Input types that take a string value. The number type keeps its native
- * spinner; `value` is the input's string, such as `"42"`. Dates and times are
- * `Field.DateInput`, `Field.TimeInput` and `Field.DateTimeInput`.
+ * spinner; `value` is the input's string, such as `"42"`. Times are
+ * `Field.TimeInput` and `Field.DateTimeInput`; a date is `Field.DatePicker`,
+ * with a text input beside it read by `parseDate` for a typed date.
  */
 export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number';
 
@@ -404,7 +402,6 @@ type TemporalInputProps<T> = {
   'value' | 'defaultValue' | 'type' | 'disabled' | 'onChange' | 'min' | 'max' | 'maxLength' | 'minLength'
 >;
 
-export type FieldDateInputProps = TemporalInputProps<Temporal.PlainDate>;
 export type FieldTimeInputProps = TemporalInputProps<Temporal.PlainTime>;
 export type FieldDateTimeInputProps = TemporalInputProps<Temporal.PlainDateTime>;
 
@@ -513,11 +510,6 @@ function TemporalInput<T>({
       }
     />
   );
-}
-
-/** A native date input whose value is a `Temporal.PlainDate`. */
-function DateInput(props: FieldDateInputProps) {
-  return <TemporalInput {...props} kind={DATE} />;
 }
 
 /** A native time input whose value is a `Temporal.PlainTime`. */
@@ -901,8 +893,10 @@ export type FieldDatePickerProps = {
   firstDayOfWeek?: CalendarFirstDayOfWeek;
   /** The locale for the button's date and the calendar's names, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
   locale?: string;
-  /** Shown on the button while there is no date, when no date input is beside it. */
+  /** Shown on the button while there is no date. */
   placeholder?: string;
+  /** Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date. Defaults to true. */
+  showDate?: boolean;
   /** Controlled open state of the calendar. Pass with onOpenChange. */
   open?: boolean;
   /** Initial open state when uncontrolled. */
@@ -918,9 +912,10 @@ export type FieldDatePickerProps = {
  * A button that opens a Calendar in a popover. On its own it is the field's
  * control and shows the date, and a press elsewhere in the field opens the
  * calendar. Beside any other control but a Field.ColorPicker or
- * Field.DatePicker, such as a Field.DateInput, that control is the field's
- * control instead, and the button is named from the datePicker
- * string. Beside a date input, the button shows only a calendar glyph.
+ * Field.DatePicker, such as a Field.TextInput to type the date in, that
+ * control is the field's control instead, and the button is named from the
+ * datePicker string. With `showDate={false}` the button shows only a calendar
+ * glyph.
  */
 function DatePicker({
   value,
@@ -931,6 +926,7 @@ function DatePicker({
   firstDayOfWeek,
   locale,
   placeholder,
+  showDate = true,
   open: openProp,
   defaultOpen,
   onOpenChange,
@@ -945,12 +941,10 @@ function DatePicker({
   const strings = useStrings();
   const { calendar } = useGlyphs();
   const textId = useDomId();
-  // Another control in the field takes its id and description; beside a date
-  // input, which holds the date too, the button shows only the glyph.
+  // Another control in the field takes its id and description.
   const presence = usePickerPresence(store);
-  const showText = !(presence & BESIDE_DATE);
-  // The button's name is not the date, so the date it shows is its description.
-  const ownDescribedBy = showText ? mergeDescribedBy(describedBy, textId) : describedBy;
+    // The button's name is not the date, so the date it shows is its description.
+  const ownDescribedBy = showDate ? mergeDescribedBy(describedBy, textId) : describedBy;
   const { name, ...control } = pickerControl(
     presence,
     field,
@@ -1017,10 +1011,10 @@ function DatePicker({
         aria-controls={controls}
         type="button"
         data-todae-field-picker=""
-        data-beside={showText ? undefined : ''}
+        data-glyph-only={showDate ? undefined : ''}
         className={cx(styles.datePicker, className)}
       >
-        {showText ? (
+        {showDate ? (
           <span id={textId} className={styles.dateText} data-placeholder={value ? undefined : ''}>
             {value ? isoDate(value).toLocaleString(locale, { dateStyle: 'medium', calendar: GREGORY }) : placeholder}
           </span>
@@ -1161,7 +1155,6 @@ export const Field = {
   Select,
   ColorPicker,
   DatePicker,
-  DateInput,
   TimeInput,
   DateTimeInput,
   Icon,

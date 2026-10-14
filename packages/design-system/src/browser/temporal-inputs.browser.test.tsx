@@ -16,18 +16,6 @@ function Time({ step, initial }: { step?: number; initial: string }) {
   );
 }
 
-function DateField() {
-  const [date, setDate] = useState<Temporal.PlainDate | null>(Temporal.PlainDate.from('2026-10-07'));
-  return (
-    <>
-      <Field.Root aria-label="Date">
-        <Field.DateInput value={date} onValueChange={setDate} />
-      </Field.Root>
-      <output>{date?.toString() ?? 'none'}</output>
-    </>
-  );
-}
-
 function DateTime() {
   const [start, setStart] = useState<Temporal.PlainDateTime | null>(Temporal.PlainDateTime.from('2026-10-07T01:30'));
   return (
@@ -63,12 +51,12 @@ describe('Field date and time inputs in a browser', () => {
   });
 
   it('reads and shows a year past 9999', async () => {
-    const { container } = render(<DateField />);
+    const { container } = render(<DateTime />);
     const input = container.querySelector('input')!;
     input.focus();
-    // The year is the last segment in an en-US date.
+    // The year is the third segment in an en-US date and time.
     await userEvent.keyboard('{ArrowRight}{ArrowRight}20261');
-    expect(container.querySelector('output')!.textContent).toBe('+020261-10-07');
-    expect(input.value).toBe('20261-10-07');
+    expect(container.querySelector('output')!.textContent).toBe('+020261-10-07T01:30:00');
+    expect(input.value).toBe('20261-10-07T01:30');
   });
 });

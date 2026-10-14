@@ -449,8 +449,8 @@
     inline-size: fit-content;
   }
 
-  /* Field.DatePicker's button. On its own it fills the field and shows the
-     date; beside a date input it is just the glyph. */
+  /* Field.DatePicker's button. It fills the field and shows the date, or
+     with showDate={false} is just the glyph. */
   .datePicker {
     flex: 1 1 var(--todae-field-min-width);
     display: inline-flex;
@@ -471,7 +471,7 @@
     outline: none;
   }
 
-  .datePicker[data-beside] {
+  .datePicker[data-glyph-only] {
     flex: none;
     min-width: 0;
     color: var(--todae-field-fg-adornment);
@@ -510,12 +510,6 @@
   .dateGlyph > :is(svg, img) {
     inline-size: var(--todae-field-icon-size);
     block-size: var(--todae-field-icon-size);
-  }
-
-  /* Beside Field.DatePicker, a date input drops the browser's own picker
-     button where the browser lets it. */
-  .shell:has(> .datePicker[data-beside]) > .input[type='date']::-webkit-calendar-picker-indicator {
-    display: none;
   }
 
   /* A press in the field opens the calendar, unless a typed input there takes it. */
