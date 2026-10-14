@@ -8,7 +8,7 @@ import { MentionsExample } from '../../../../components/demos/MentionsDemo';
 const mentions = useMentions({
   triggers: [
     { char: '@', options: people, label: 'People' },
-    { char: '/', position: 'start', options: commands, label: 'Commands' },
+    { char: '/', options: commands, label: 'Commands' },
   ],
   value: draft,
   onValueChange: setDraft,

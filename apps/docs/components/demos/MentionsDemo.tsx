@@ -28,7 +28,7 @@ const commands = [
 
 const triggers: MentionTrigger[] = [
   { char: '@', options: people, label: 'People' },
-  { char: '/', position: 'start', options: commands, label: 'Commands' },
+  { char: '/', options: commands, label: 'Commands' },
 ];
 
 type Sent = MentionDraft & { id: number };
