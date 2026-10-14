@@ -7,7 +7,7 @@ const read = (text: string, locale?: string) => parseTime(text, { locale })?.toS
 const LOCALES = [
   'en-US', 'en-GB', 'en-AU', 'de', 'fr', 'fr-CA', 'es', 'es-MX', 'it', 'pt', 'pt-BR', 'nl', 'sv', 'nb', 'da', 'fi',
   'pl', 'ru', 'uk', 'cs', 'tr', 'el', 'he', 'ar', 'ar-EG', 'fa', 'hi', 'hi-IN-u-nu-deva', 'bn', 'ta', 'te', 'mr',
-  'ko', 'ja', 'zh', 'zh-TW', 'zh-HK', 'vi', 'th', 'id', 'ms', 'fil', 'sw', 'am', 'my', 'km', 'lo', 'ka', 'hy', 'kk',
+  'ko', 'ja', 'zh', 'en-CA', 'es-US', 'zh-TW', 'zh-HK', 'vi', 'th', 'id', 'ms', 'fil', 'sw', 'am', 'my', 'km', 'lo', 'ka', 'hy', 'kk',
   'mn', 'ur', 'ps', 'ckb', 'so', 'sq', 'ca', 'eu', 'gl', 'cy', 'ga', 'is', 'lt', 'lv', 'et', 'hu', 'ro', 'bg', 'sr',
 ];
 const TIMES = [
@@ -52,6 +52,24 @@ describe('parseTime', () => {
     expect(read('2130')).toBe('21:30:00');
   });
 
+  it('reads a 0 to 11 clock, as ja may write one', () => {
+    expect(read('午後0:30', 'ja')).toBe('12:30:00');
+    expect(read('午前0:30', 'ja')).toBe('00:30:00');
+    for (const value of TIMES) {
+      const text = value.toLocaleString('ja', { hour: 'numeric', minute: '2-digit', hourCycle: 'h11' });
+      expect(read(text, 'ja'), text).toBe(value.with({ second: 0 }).toString());
+    }
+  });
+
+  it('reads a part of the day written as several words with or without its spaces and dots', () => {
+    const pm = (locale: string) => time('21:30').toLocaleString(locale, { hour: 'numeric', minute: '2-digit', hourCycle: 'h12' });
+    expect(read(pm('es-MX'), 'es-MX')).toBe('21:30:00');
+    expect(read('9:30 pm', 'es-MX')).toBe('21:30:00');
+    expect(read('9:30pm', 'en-CA')).toBe('21:30:00');
+    expect(read('9:30 p.m.', 'en-CA')).toBe('21:30:00');
+    expect(read('9:30 pm', 'es')).toBe('21:30:00');
+  });
+
   it('reads the locale’s words for the morning and afternoon on either side', () => {
     expect(read('9pm', 'en-US')).toBe('21:00:00');
     expect(read('9:30 PM', 'en-US')).toBe('21:30:00');
@@ -70,7 +88,7 @@ describe('parseTime', () => {
   });
 
   it('returns null for text that is not a time', () => {
-    for (const text of ['', ' ', 'noon', '24:00', '9:60', '9:5', '13 pm', '0 am', '9:30:5', '1:2:3:4', '12345', 'am 9 pm', '9 30 xyz']) {
+    for (const text of ['', ' ', 'noon', '24:00', '9:60', '9:5', '13 pm', '9:30:5', '1:2:3:4', '12345', 'am 9 pm', '9 30 xyz']) {
       expect(read(text, 'en-US'), text).toBeNull();
     }
   });

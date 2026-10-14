@@ -19,7 +19,7 @@ describe('Field.TimePicker', () => {
     );
     const button = screen.getByRole('button', { name: 'Start' });
     expect(button.id).toBe('start');
-    expect(button.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(button.getAttribute('aria-haspopup')).toBe('listbox');
     expect(button.getAttribute('aria-expanded')).toBe('false');
     const text = screen.getByText('9:30 PM');
     expect(button.getAttribute('aria-describedby')!.split(' ')).toEqual(['hint', text.id]);
@@ -95,6 +95,44 @@ describe('Field.TimePicker', () => {
     expect(options()).toEqual(['12:00 AM', '12:30 AM', '1:00 AM']);
   });
 
+  it('opens in a role-less popover on a list named from the strings, at the time', () => {
+    render(
+      <Field.Root aria-label="Start">
+        <Field.TimePicker value={time('09:30')} locale="en-US" defaultOpen />
+      </Field.Root>,
+    );
+    const list = screen.getByRole('listbox', { name: 'Choose time' });
+    expect(list.closest('[popover]')!.hasAttribute('role')).toBe(false);
+    expect(document.getElementById(list.getAttribute('aria-activedescendant')!)!.textContent).toBe('9:30 AM');
+  });
+
+  it('starts at the next time from now when the time is not in the list', () => {
+    render(
+      <Field.Root aria-label="Start">
+        <Field.TimePicker value={time('07:00')} min={time('08:00')} locale="en-US" defaultOpen />
+      </Field.Root>,
+    );
+    const now = Temporal.Now.plainTimeISO();
+    const slots = options();
+    const next = slots.map((text, index) => ({ text, at: time('08:00').add({ minutes: 30 * index }) }))
+      .find(({ at }) => Temporal.PlainTime.compare(at, now) >= 0 && at.hour >= 8);
+    const list = screen.getByRole('listbox');
+    expect(document.getElementById(list.getAttribute('aria-activedescendant')!)!.textContent).toBe(next?.text ?? slots[0]);
+    expect(screen.queryByRole('option', { selected: true })).toBeNull();
+  });
+
+  it('keeps a time between the steps as it is when it is picked again', () => {
+    const onValueChange = vi.fn();
+    const value = time('09:07:00.000001');
+    render(
+      <Field.Root aria-label="Start">
+        <Field.TimePicker value={value} onValueChange={onValueChange} min={time('09:00')} max={time('09:30')} locale="en-US" defaultOpen />
+      </Field.Root>,
+    );
+    fireEvent.click(screen.getByRole('option', { selected: true }));
+    expect((onValueChange.mock.calls[0]![0] as Temporal.PlainTime).equals(value)).toBe(true);
+  });
+
   it('leaves out a time outside min and max', () => {
     render(
       <Field.Root aria-label="Start">
@@ -133,6 +171,7 @@ describe('Field.TimePicker', () => {
       </Field.Root>,
     );
     expect(screen.getByRole('button', { name: 'Start' }).textContent).toBe(time('21:30').toLocaleString('ko', { timeStyle: 'short' }));
+    expect(options()).toEqual(['00:00', '00:30'].map((text) => time(text).toLocaleString('ko', { timeStyle: 'short' })));
   });
 
   it('draws the clock glyph from GlyphsProvider', () => {

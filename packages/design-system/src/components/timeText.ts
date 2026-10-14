@@ -4,6 +4,9 @@ import { normalize, type DateTextOptions } from './dateText';
 
 export type TimeTextOptions = DateTextOptions;
 
+// One formatter per locale and style: a list of times formats hundreds at once.
+const formats = new Map<string, Intl.DateTimeFormat>();
+
 const hasSeconds = (time: Temporal.PlainTime) =>
   time.second !== 0 || time.millisecond !== 0 || time.microsecond !== 0 || time.nanosecond !== 0;
 
@@ -13,7 +16,15 @@ const hasSeconds = (time: Temporal.PlainTime) =>
  * seconds, when the time has seconds.
  */
 export function formatTime(time: Temporal.PlainTime, options: TimeTextOptions = {}): string {
-  return time.toLocaleString(options.locale, { timeStyle: hasSeconds(time) ? 'medium' : 'short' });
+  const style = hasSeconds(time) ? 'medium' : 'short';
+  const key = `${options.locale ?? ''}|${style}`;
+  let format = formats.get(key);
+  if (!format) {
+    format = new Intl.DateTimeFormat(options.locale, { timeStyle: style, timeZone: 'UTC' });
+    formats.set(key, format);
+  }
+  // A Date in UTC, as Intl formats it everywhere, Temporal or not.
+  return format.format(Date.UTC(1970, 0, 1, time.hour, time.minute, time.second, time.millisecond));
 }
 
 type LocaleTime = {
@@ -21,6 +32,7 @@ type LocaleTime = {
    * The locale's words for a part of the day, normalized, such as "pm" in
    * en-US or "오후" in ko, by the hour they are written with, to the hour of
    * the day. Some locales name more than two parts, such as 凌晨 and 中午 in zh-TW.
+   * Keyed without spaces, so "p. m." can be typed as "pm".
    */
   periods: Map<string, Map<number, number>>;
   /** Words the locale's time styles write between the numbers, such as "h" in fr-CA. */
@@ -41,8 +53,8 @@ function localeTime(locale: string | undefined): LocaleTime {
   if (cached) return cached;
   const periods = new Map<string, Map<number, number>>();
   const literals = new Set<string>();
-  // The locale's own clock, its own 12-hour clock (0 to 11 in ja), and 1 to 12 and 0 to 23.
-  const clocks: Intl.DateTimeFormatOptions[] = [{}, { hour12: true }, { hourCycle: 'h12' }, { hourCycle: 'h23' }];
+  // The locale's own clock, and every clock it may be written in: 0 to 11, as in ja, 1 to 12 and 0 to 23.
+  const clocks: Intl.DateTimeFormatOptions[] = [{}, { hourCycle: 'h11' }, { hourCycle: 'h12' }, { hourCycle: 'h23' }];
   for (const clock of clocks) {
     // The time styles, and hours and minutes alone, which some locales write with other words, such as 上午 for 凌晨 in zh-TW.
     const styles: Intl.DateTimeFormatOptions[] = [{ timeStyle: 'short' }, { timeStyle: 'medium' }, { hour: 'numeric', minute: '2-digit' }];
@@ -53,7 +65,7 @@ function localeTime(locale: string | undefined): LocaleTime {
         const shown = Number(normalize(parts.find((part) => part.type === 'hour')?.value ?? ''));
         for (const part of parts) {
           if (part.type === 'dayPeriod') {
-            const name = normalize(part.value);
+            const name = normalize(part.value).replace(/ /g, '');
             if (!name) continue;
             const hours = periods.get(name) ?? new Map<number, number>();
             hours.set(shown, hour);
@@ -85,15 +97,18 @@ export function parseTime(text: string, options: TimeTextOptions = {}): Temporal
   const { periods, literals } = localeTime(options.locale);
   const tokens = split(text).split(' ').filter(Boolean);
   if (tokens.length === 0) return null;
-  // A word for the part of the day, first or last; the locale may write it as two words.
+  // A word for the part of the day, first or last. The locale may write it as
+  // several words, such as "p. m.", which may be typed with or without spaces.
   let period: Map<number, number> | undefined;
-  for (const [name, hours] of [...periods].sort(([a], [b]) => b.length - a.length)) {
-    const count = name.split(' ').length;
-    const atStart = tokens.slice(0, count).join(' ') === name;
-    if (!atStart && tokens.slice(-count).join(' ') !== name) continue;
-    period = hours;
-    tokens.splice(atStart ? 0 : tokens.length - count, count);
-    break;
+  find: for (let count = Math.min(tokens.length, 4); count >= 1; count--) {
+    for (const atStart of [true, false]) {
+      const words = atStart ? tokens.slice(0, count) : tokens.slice(-count);
+      const hours = periods.get(words.join(''));
+      if (!hours) continue;
+      period = hours;
+      tokens.splice(atStart ? 0 : tokens.length - count, count);
+      break find;
+    }
   }
   const numbers: string[] = [];
   for (const token of tokens) {

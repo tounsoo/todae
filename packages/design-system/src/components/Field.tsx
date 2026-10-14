@@ -42,7 +42,12 @@ import { useControlledValue } from '../hooks/useControlledState';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { CalendarGlyph, ClockGlyph, glyphOr, hasGlyph } from './glyphs';
 import { useStrings, type Strings } from '../providers/StringsProvider';
-import { usePopover, type PopoverCloseReason, type PopoverTriggerUserProps } from '../hooks/usePopover';
+import {
+  usePopover,
+  type PopoverCloseReason,
+  type PopoverHaspopup,
+  type PopoverTriggerUserProps,
+} from '../hooks/usePopover';
 import { Popover } from './Popover';
 import { ColorPicker as ColorPickerParts } from './ColorPicker';
 import { OptionList } from './OptionList';
@@ -290,7 +295,7 @@ function Root({
       ? current
       : [...event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE_FIELD_CONTROL_SELECTOR)].find(usable);
     control?.focus();
-    // A press beside a select, color picker or date picker acts as a press on the control
+    // A press beside a select, color, date or time picker acts as a press on the control
     // would. The picker opens on click: one opened now would close again as
     // the press goes on. A select's open picker closes on this press, which
     // must not open it again; Field.ColorPicker's toggles on the click.
@@ -876,6 +881,7 @@ function useFieldPicker<Reason extends string>({
   onOpenChange,
   style,
   focusSelector,
+  haspopup,
 }: {
   props: PickerOwnProps & Record<string, unknown>;
   label: string;
@@ -884,6 +890,8 @@ function useFieldPicker<Reason extends string>({
   onOpenChange?: (open: boolean, reason: Reason | PopoverCloseReason | 'disabled') => void;
   style?: CSSProperties;
   focusSelector: string;
+  /** What the popover holds, for the button's aria-haspopup: a dialog by default. */
+  haspopup?: PopoverHaspopup;
 }) {
   // The button does not count itself as a control another picker should leave the field to.
   const field = useFieldControl(false);
@@ -920,6 +928,7 @@ function useFieldPicker<Reason extends string>({
     anchorRef: shellRef,
     initialFocusRef,
     enabled: !control.disabled,
+    haspopup,
   });
   popoverRef.current = popover.popoverRef;
   const trigger = popover.getTriggerProps({ ...control, style } as PopoverTriggerUserProps);
@@ -1128,41 +1137,65 @@ function timeSlots(step: number, min?: Temporal.PlainTime, max?: Temporal.PlainT
   return slots;
 }
 
-/** A time as HTML writes one, such as 09:30 or 09:30:15, for Field.TimePicker's hidden input and its options. */
+/** A time as HTML writes one, such as 09:30 or 09:30:15, for Field.TimePicker's hidden input. */
 const htmlTime = (value: Temporal.PlainTime) => value.toString({ smallestUnit: timeUnit(value) });
 
-// The list's times. Mounted while the list is open, so "now" is read on the client only.
+const subscribeNothing = () => () => {};
+// The time to the minute, as a string so the snapshot stays the same within a minute.
+const nowOnClient = () => Temporal.Now.plainTimeISO().round({ smallestUnit: 'minute', roundingMode: 'floor' }).toString();
+const nowOnServer = () => null;
+
+// The list's times, in an OptionList. It starts at the time when the list
+// has it, or else at the next time from now, which a server render and
+// hydration do not know, or else at its first time.
 function TimeList({
   value,
-  slots,
+  step,
+  min,
+  max,
   locale,
   label,
   onPick,
 }: {
   value: Temporal.PlainTime | null;
-  slots: Temporal.PlainTime[];
+  step: number;
+  min?: Temporal.PlainTime;
+  max?: Temporal.PlainTime;
   locale?: string;
   label: string;
   onPick: (time: Temporal.PlainTime) => void;
 }) {
-  // The list starts at the time, or else at the first time from now.
-  const [active, setActive] = useState<string | null>(() => {
-    if (value) return htmlTime(value);
-    const now = Temporal.Now.plainTimeISO();
-    const next = slots.find((time) => Temporal.PlainTime.compare(time, now) >= 0) ?? slots[0];
-    return next ? htmlTime(next) : null;
-  });
+  const slots = useMemo(() => timeSlots(step, min, max, value), [step, min, max, value]);
+  // Formatted once per list, which can hold 1,440 times. Keyed to the
+  // nanosecond, so a value between the steps stays as it is when picked.
+  const options = useMemo(
+    () => slots.map((time) => ({ time, key: time.toString(), label: formatTime(time, { locale }) })),
+    [slots, locale],
+  );
+  const nowText = useSyncExternalStore(subscribeNothing, nowOnClient, nowOnServer);
+  // Set once the user moves through the list.
+  const [moved, setMoved] = useState<string | null>(null);
+  const selected = value && slots.some((time) => time.equals(value)) ? value.toString() : null;
+  const start = useMemo(() => {
+    if (selected) return selected;
+    const now = nowText === null ? null : Temporal.PlainTime.from(nowText);
+    const next = (now && slots.find((time) => Temporal.PlainTime.compare(time, now) >= 0)) ?? slots[0];
+    return next ? next.toString() : null;
+  }, [selected, nowText, slots]);
   return (
     <OptionList.Root
       aria-label={label}
-      value={value ? htmlTime(value) : null}
-      onValueChange={(next) => onPick(Temporal.PlainTime.from(next))}
-      activeValue={active}
-      onActiveValueChange={setActive}
+      value={selected}
+      onValueChange={(next) => {
+        const option = options.find((item) => item.key === next);
+        if (option) onPick(option.time);
+      }}
+      activeValue={moved ?? start}
+      onActiveValueChange={setMoved}
     >
-      {slots.map((time) => (
-        <OptionList.Option key={htmlTime(time)} value={htmlTime(time)}>
-          {formatTime(time, { locale })}
+      {options.map((option) => (
+        <OptionList.Option key={option.key} value={option.key}>
+          {option.label}
         </OptionList.Option>
       ))}
     </OptionList.Root>
@@ -1208,6 +1241,8 @@ function TimePicker({
     style,
     // The list, which shows its active time.
     focusSelector: '[role="listbox"]',
+    // A role-less popover around a named list of times.
+    haspopup: 'listbox',
   });
   return (
     <>
@@ -1239,10 +1274,12 @@ function TimePicker({
       ) : null}
       {/* Mounted while open only: a form can hold many time pickers. */}
       {picker.shown ? (
-        <Popover.Root {...picker.popover.getPopoverProps()} role="dialog" aria-label={strings.timePicker}>
+        <Popover.Root {...picker.popover.getPopoverProps()}>
           <TimeList
             value={value}
-            slots={timeSlots(step, min, max, value)}
+            step={step}
+            min={min}
+            max={max}
             locale={locale}
             label={strings.timePicker}
             onPick={(next) => {

@@ -44,14 +44,6 @@ describe('Field time and date-time parts in a browser', () => {
     expect(button.textContent).toBe('10:00 AM');
   });
 
-  it('shows the time it was given in the list, between the steps', async () => {
-    render(<Time initial="09:07" />);
-    await userEvent.click(screen.getByRole('button', { name: 'Time' }));
-    const options = screen.getAllByRole('option').map((option) => option.textContent);
-    expect(options.slice(18, 21)).toEqual(['9:00 AM', '9:07 AM', '9:30 AM']);
-    expect(screen.getByRole('option', { selected: true }).textContent).toBe('9:07 AM');
-  });
-
   it('keeps typing intact in a date and time input that shows seconds', async () => {
     const { container } = render(<DateTime />);
     const input = container.querySelector('input')!;
