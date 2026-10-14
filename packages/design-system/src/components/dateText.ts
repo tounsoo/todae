@@ -240,6 +240,7 @@ export function parseDate(text: string, options: DateTextOptions = {}): Temporal
     if (template.month !== undefined) fields.month = String(template.month);
     const date = toDate(fields, weekdays);
     if (date) found.set(date.toString(), date);
+    if (found.size > 1) return null;
   }
   return found.size === 1 ? found.values().next().value! : null;
 }
