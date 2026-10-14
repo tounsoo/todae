@@ -132,11 +132,10 @@ describe('Composer', () => {
     expect(screen.getByRole('form', { name: 'Busy' }).hasAttribute('data-busy')).toBe(true);
   });
 
-  it('sends nothing while busy, from a text input or a call to requestSubmit', () => {
+  it('sends nothing while busy, from requestSubmit or a submit event', () => {
     const onSend = vi.fn();
     render(
       <Composer.Root busy aria-label="Prompt" onSubmit={onSend}>
-        <input aria-label="Line" />
         <Composer.Submit onStop={() => {}} />
       </Composer.Root>,
     );

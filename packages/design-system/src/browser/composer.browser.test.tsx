@@ -1,6 +1,7 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState, type FormEvent } from 'react';
+import { createRoot } from 'react-dom/client';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, Composer, Field } from '../index';
@@ -123,6 +124,47 @@ describe('Composer in a browser', () => {
     await act(async () => {});
     const field = screen.getByRole('textbox');
     expect(document.activeElement).toBe(field);
+    await userEvent.keyboard('{Enter}');
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing past a disabled send button inside a shadow root, and names the button as submitter', async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    const onSend = vi.fn();
+    const root = createRoot(shadow);
+    const mount = (disabled: boolean) =>
+      root.render(
+        <Composer.Root onSubmit={(event) => (event.preventDefault(), onSend(event.nativeEvent.submitter))}>
+          <textarea aria-label="Message" />
+          <Composer.Submit disabled={disabled} />
+        </Composer.Root>,
+      );
+    try {
+      await act(async () => mount(true));
+      const field = shadow.querySelector('textarea')!;
+      field.focus();
+      await userEvent.keyboard('{Enter}');
+      expect(onSend).not.toHaveBeenCalled();
+      await act(async () => mount(false));
+      await userEvent.keyboard('{Enter}');
+      expect(onSend).toHaveBeenCalledWith(shadow.querySelector('button'));
+    } finally {
+      await act(async () => root.unmount());
+      host.remove();
+    }
+  });
+
+  it('sends nothing on Enter in a text input while busy', async () => {
+    const onSend = vi.fn();
+    render(
+      <Composer.Root busy onSubmit={(event) => (event.preventDefault(), onSend())}>
+        <input aria-label="Line" />
+        <Composer.Submit onStop={() => {}} />
+      </Composer.Root>,
+    );
+    await userEvent.click(screen.getByRole('textbox'));
     await userEvent.keyboard('{Enter}');
     expect(onSend).not.toHaveBeenCalled();
   });

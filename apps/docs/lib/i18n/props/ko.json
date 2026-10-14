@@ -2389,8 +2389,8 @@
   },
   "Composer.Root": {
     "busy": {
-      "en": "A response is running: the form sends nothing, from Enter or anything else, and Composer.Submit turns into Stop. Sets data-busy.",
-      "ko": "응답이 진행 중입니다. Enter로든 다른 방법으로든 폼은 아무것도 보내지 않고, Composer.Submit은 Stop이 됩니다. data-busy를 설정합니다."
+      "en": "A response is running: no submit event goes through, from Enter, a submit button or requestSubmit, and Composer.Submit turns into Stop. Sets data-busy.",
+      "ko": "응답이 진행 중입니다. Enter로든 제출 버튼이나 requestSubmit으로든 submit 이벤트가 통과하지 않고, Composer.Submit은 Stop이 됩니다. data-busy를 설정합니다."
     }
   },
   "Composer.Submit": {

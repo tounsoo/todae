@@ -25,7 +25,7 @@ import styles from './Composer.module.css';
  * line.
  */
 export type ComposerRootProps = ComponentPropsWithRef<'form'> & {
-  /** A response is running: the form sends nothing, from Enter or anything else, and Composer.Submit turns into Stop. Sets `data-busy`. */
+  /** A response is running: no submit event goes through, from Enter, a submit button or requestSubmit, and Composer.Submit turns into Stop. Sets `data-busy`. */
   busy?: boolean;
 };
 /** A Button.Root that sends the form, or stops the response while the composer is busy. With no content it shows the send or stop glyph. */
@@ -47,9 +47,11 @@ function useComposer(part: string): ComposerContext {
 /**
  * The button implicit submission would press: the form's first submit button
  * in tree order, including an image input, which `form.elements` leaves out.
+ * It searches the document or shadow root that holds the form.
  */
 function defaultButton(form: HTMLFormElement): HTMLButtonElement | HTMLInputElement | undefined {
-  const candidates = form.ownerDocument.querySelectorAll<HTMLButtonElement | HTMLInputElement>(
+  const tree = form.getRootNode() as Document | ShadowRoot;
+  const candidates = tree.querySelectorAll<HTMLButtonElement | HTMLInputElement>(
     'button, input[type="submit" i], input[type="image" i]',
   );
   for (const el of candidates) {

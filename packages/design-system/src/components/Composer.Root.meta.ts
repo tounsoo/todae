@@ -10,7 +10,7 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'false',
-      description: 'A response is running: the form sends nothing, from Enter or anything else, and Composer.Submit turns into Stop. Sets data-busy.',
+      description: 'A response is running: no submit event goes through, from Enter, a submit button or requestSubmit, and Composer.Submit turns into Stop. Sets data-busy.',
     },
   ],
 } as const satisfies ComponentMeta;
