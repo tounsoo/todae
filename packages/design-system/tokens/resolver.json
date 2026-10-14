@@ -47,6 +47,7 @@
         { "$ref": "./components/card.json" },
         { "$ref": "./components/message.json" },
         { "$ref": "./components/conversation.json" },
+        { "$ref": "./components/attachment.json" },
         { "$ref": "./components/breadcrumbs.json" },
         { "$ref": "./components/toolbar.json" },
         { "$ref": "./components/drawer.json" },

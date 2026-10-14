@@ -95,6 +95,79 @@
       ]
     },
     {
+      "name": "Attachment.Meta",
+      "description": "A line under the name, such as the file's size and type, or what went wrong. Takes native span attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Size, type, or an error."
+        }
+      ]
+    },
+    {
+      "name": "Attachment.Name",
+      "description": "The file name, cut with an ellipsis when it is too long. It names the group, Attachment.Progress and Attachment.Remove. Takes native span attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "string",
+          "required": true,
+          "description": "The file name. Text only."
+        }
+      ]
+    },
+    {
+      "name": "Attachment.Preview",
+      "description": "A box of attachment.preview.size beside the name. An img, video or picture fills it; an svg icon takes attachment.icon.size. Takes native div attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "A thumbnail, such as an img with alt=\"\", or an icon of the file type."
+        }
+      ]
+    },
+    {
+      "name": "Attachment.Progress",
+      "description": "A Progress.Root under the name, for an upload. It is named by Attachment.Name unless it has an aria-label or aria-labelledby. Takes native progress attributes.",
+      "props": [
+        {
+          "name": "value",
+          "type": "number",
+          "required": false,
+          "description": "How far the upload has come, out of max. Leave it out when the end is unknown."
+        }
+      ]
+    },
+    {
+      "name": "Attachment.Remove",
+      "description": "A ghost Button.Root that removes the file. Takes Button.Root props but pressed.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The button's content. Without it, the close glyph, named by the removeAttachment string, Remove {name} in English."
+        }
+      ]
+    },
+    {
+      "name": "Attachment.Root",
+      "description": "One file in a composer or a message, as a div with role=\"group\" named by Attachment.Name. The upload is product code: status shows its state. Takes native div attributes.",
+      "props": [
+        {
+          "name": "status",
+          "type": "\"ready\" | \"uploading\" | \"error\"",
+          "required": false,
+          "description": "Sets data-status. An error takes the attachment.border.error and attachment.meta.fg.error tokens.",
+          "default": "\"ready\""
+        }
+      ]
+    },
+    {
       "name": "Avatar.Fallback",
       "description": "Shows until the image loads, and stays when it fails or there is none. Takes native span attributes.",
       "props": [

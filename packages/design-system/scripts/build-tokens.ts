@@ -44,6 +44,7 @@ export const RESERVED_ROOTS = [
   'card',
   'message',
   'conversation',
+  'attachment',
   'breadcrumbs',
   'toolbar',
   'drawer',

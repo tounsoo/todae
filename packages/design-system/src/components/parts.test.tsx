@@ -12,6 +12,7 @@ import {
   Button,
   Card,
   Message,
+  Attachment,
   Conversation,
   Checkbox,
   Calendar,
@@ -535,6 +536,28 @@ const cases: Case[] = [
       },
     ],
   ),
+  ['Attachment.Root', (p) => <Attachment.Root {...p} />],
+  ...(['Preview', 'Meta', 'Progress', 'Remove'] as const).map(
+    (part): Case => [
+      `Attachment.${part}`,
+      (p) => {
+        const Part = Attachment[part] as (props: Native) => ReactNode;
+        return (
+          <Attachment.Root>
+            <Part {...p} />
+          </Attachment.Root>
+        );
+      },
+    ],
+  ),
+  [
+    'Attachment.Name',
+    (p) => (
+      <Attachment.Root>
+        <Attachment.Name {...p}>report.pdf</Attachment.Name>
+      </Attachment.Root>
+    ),
+  ],
   ['Conversation.Root', (p) => <Conversation.Root {...p} />],
   ...(['Viewport', 'Content', 'ScrollButton'] as const).map(
     (part): Case => [

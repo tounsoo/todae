@@ -47,6 +47,42 @@
       "ko": "제목 텍스트."
     }
   },
+  "Attachment.Meta": {
+    "children": {
+      "en": "Size, type, or an error.",
+      "ko": "크기, 형식, 또는 오류."
+    }
+  },
+  "Attachment.Name": {
+    "children": {
+      "en": "The file name. Text only.",
+      "ko": "파일 이름. 텍스트만 받습니다."
+    }
+  },
+  "Attachment.Preview": {
+    "children": {
+      "en": "A thumbnail, such as an img with alt=\"\", or an icon of the file type.",
+      "ko": "alt=\"\"인 img 같은 썸네일, 또는 파일 형식의 아이콘."
+    }
+  },
+  "Attachment.Progress": {
+    "value": {
+      "en": "How far the upload has come, out of max. Leave it out when the end is unknown.",
+      "ko": "max 중 업로드가 얼마나 진행됐는지. 끝을 모르면 빼세요."
+    }
+  },
+  "Attachment.Remove": {
+    "children": {
+      "en": "The button's content. Without it, the close glyph, named by the removeAttachment string, Remove {name} in English.",
+      "ko": "버튼의 내용. 없으면 close 글리프를 보여 주고 removeAttachment 문자열로 이름이 붙습니다. 영어로는 Remove {name}입니다."
+    }
+  },
+  "Attachment.Root": {
+    "status": {
+      "en": "Sets data-status. An error takes the attachment.border.error and attachment.meta.fg.error tokens.",
+      "ko": "data-status를 설정합니다. error이면 attachment.border.error와 attachment.meta.fg.error 토큰을 씁니다."
+    }
+  },
   "Avatar.Fallback": {
     "children": {
       "en": "Initials or an icon.",

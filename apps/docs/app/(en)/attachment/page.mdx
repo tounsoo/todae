@@ -1,0 +1,64 @@
+import { AttachmentExample } from '../../../components/demos/AttachmentDemo';
+
+# Attachment
+
+`Attachment.Root` shows one file in a composer or a message: a preview, its name, a line such as its size, an upload bar, and a button that removes it. It shows the state of an upload; the upload itself is your code, such as a `fetch` for each file that [useDropzone](/utilities/use-dropzone) accepts.
+
+```tsx
+<Attachment.Root status={file.status}>
+  <Attachment.Preview>
+    <FileText aria-hidden />
+  </Attachment.Preview>
+  <Attachment.Name>{file.name}</Attachment.Name>
+  <Attachment.Meta>{file.size}</Attachment.Meta>
+  {file.status === 'uploading' ? <Attachment.Progress value={file.progress} max={100} /> : null}
+  <Attachment.Remove onClick={() => remove(file)} />
+</Attachment.Root>
+```
+
+<Example>
+  <AttachmentExample />
+</Example>
+
+## Parts
+
+- `Attachment.Root` is a `div` with `role="group"`, named by `Attachment.Name`. Its `status` is `ready`, `uploading` or `error`, and sets `data-status`. An `error` colors the border and `Attachment.Meta` with the `attachment.border.error` and `attachment.meta.fg.error` tokens. It is at most `attachment.max-width` wide.
+- `Attachment.Preview` is a box of `attachment.preview.size` at the start. An `img`, `video` or `picture` fills it, so a thumbnail shows whole; an `svg` icon takes `attachment.icon.size`.
+- `Attachment.Name` is the file name, as text. A name too long for the width ends in an ellipsis.
+- `Attachment.Meta` is a line under the name, such as the size and type, or what went wrong.
+- `Attachment.Progress` is a [Progress](/progress) bar under them, for an upload. It is named by `Attachment.Name` unless you give it `aria-label` or `aria-labelledby`.
+- `Attachment.Remove` is a ghost [Button](/button) at the end. With no content it shows the `close` glyph and is named by the `removeAttachment` string, "Remove {name}" in English.
+
+Leave out a part you don't need, and the others close up.
+
+## Removing
+
+When an attachment that holds focus is removed, focus moves to the remove button of the next attachment beside it, or the one before when it was the last. Beside it means a sibling element, or, when each attachment is the only child of an `li`, the attachment in another item of the same list. When it was the only one, focus is yours to place, such as on the composer's text field.
+
+## Accessible composition
+
+**Todae handles:** A group for each file, named by its file name. A remove button named after the file, and a progress bar named by it. Focus moving to the next remove button when an attachment holding focus is removed.
+
+**You supply:** The file name in `Attachment.Name`. An `alt=""` on a thumbnail, since the name already says what the file is. Focus after the last attachment is removed. An upload error said in words in `Attachment.Meta`, and announced when it happens, such as through [useAnnouncer](/utilities/use-announcer).
+
+**Watch for:** Showing an error by the border color alone. Announcing every step of an upload's progress: the bar can be read when a reader moves to it.
+
+## When to use
+
+**When:** A file attached to a message, before or after it is sent.
+
+**When not:** A text label with a remove button → [Chip](/chip). Choosing files → [useDropzone](/utilities/use-dropzone).
+
+## Props
+
+<PropsTable name="Attachment.Root" />
+
+<PropsTable name="Attachment.Preview" />
+
+<PropsTable name="Attachment.Name" />
+
+<PropsTable name="Attachment.Meta" />
+
+<PropsTable name="Attachment.Progress" />
+
+<PropsTable name="Attachment.Remove" />

@@ -34,6 +34,7 @@ const FRENCH: Strings = {
   resizeSheet: 'Redimensionner',
   options: 'Choix',
   removeChip: (label) => `Retirer ${label}`,
+  removeAttachment: (name) => `Retirer ${name}`,
   moreChips: (count) => `${count} de plus`,
   moreChipsPanel: (count) => `${count} puces de plus`,
   characterLimit: (max) => `${max} caractères maximum`,

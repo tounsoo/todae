@@ -24,6 +24,8 @@ export interface Strings {
   options: string;
   /** Name of a chip's remove button. */
   removeChip: (label: string) => string;
+  /** Name of Attachment.Remove when its own text does not name it. `name` is Attachment.Name's text, or empty without one. */
+  removeAttachment: (name: string) => string;
   /** Name of the +N chip that stands for folded chips. */
   moreChips: (count: number) => string;
   /** Name of ChipList's popover with the folded chips. */
@@ -78,6 +80,7 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   resizeSheet: 'Resize sheet',
   options: 'Options',
   removeChip: (label) => `Remove ${label}`,
+  removeAttachment: (name) => (name ? `Remove ${name}` : 'Remove'),
   moreChips: (count) => `${count} more`,
   moreChipsPanel: (count) => `${count} more ${count === 1 ? 'chip' : 'chips'}`,
   characterLimit: (max) => `Up to ${max} characters`,

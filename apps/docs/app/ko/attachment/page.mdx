@@ -1,0 +1,64 @@
+import { AttachmentExample } from '../../../components/demos/AttachmentDemo';
+
+# Attachment
+
+`Attachment.Root`는 작성창이나 메시지 안의 파일 하나를 보여 줍니다. 미리보기, 이름, 크기 같은 한 줄, 업로드 막대, 그리고 파일을 빼는 버튼입니다. 업로드의 상태를 보여 줄 뿐, 업로드 자체는 [useDropzone](/utilities/use-dropzone)이 받은 파일마다 보내는 `fetch`처럼 직접 작성하는 코드입니다.
+
+```tsx
+<Attachment.Root status={file.status}>
+  <Attachment.Preview>
+    <FileText aria-hidden />
+  </Attachment.Preview>
+  <Attachment.Name>{file.name}</Attachment.Name>
+  <Attachment.Meta>{file.size}</Attachment.Meta>
+  {file.status === 'uploading' ? <Attachment.Progress value={file.progress} max={100} /> : null}
+  <Attachment.Remove onClick={() => remove(file)} />
+</Attachment.Root>
+```
+
+<Example>
+  <AttachmentExample />
+</Example>
+
+## 파트
+
+- `Attachment.Root`는 `role="group"`인 `div`이고, `Attachment.Name`으로 이름이 붙습니다. `status`는 `ready`, `uploading`, `error` 중 하나이며 `data-status`를 설정합니다. `error`이면 테두리와 `Attachment.Meta`를 `attachment.border.error`와 `attachment.meta.fg.error` 토큰으로 칠합니다. 너비는 최대 `attachment.max-width`입니다.
+- `Attachment.Preview`는 시작 쪽에 놓이는 `attachment.preview.size` 크기의 상자입니다. `img`, `video`, `picture`는 상자를 채우므로 썸네일이 온전히 보이고, `svg` 아이콘은 `attachment.icon.size`를 따릅니다.
+- `Attachment.Name`은 텍스트로 된 파일 이름입니다. 너비보다 긴 이름은 말줄임표로 끝납니다.
+- `Attachment.Meta`는 이름 아래 한 줄로, 크기와 형식이나 무엇이 잘못됐는지를 담습니다.
+- `Attachment.Progress`는 그 아래에 놓이는 업로드용 [Progress](/progress) 막대입니다. `aria-label`이나 `aria-labelledby`를 주지 않으면 `Attachment.Name`으로 이름이 붙습니다.
+- `Attachment.Remove`는 끝에 놓이는 ghost [Button](/button)입니다. 내용이 없으면 `close` 글리프를 보여 주고 `removeAttachment` 문자열로 이름이 붙습니다. 영어로는 "Remove {name}"입니다.
+
+필요 없는 파트는 빼면 나머지가 그 자리를 채웁니다.
+
+## 빼기
+
+포커스를 가진 첨부가 빠지면, 포커스는 그 옆에 있는 다음 첨부의 빼기 버튼으로, 마지막이었다면 앞의 첨부로 옮겨집니다. 옆이란 형제 요소를 말하고, 첨부마다 `li`의 유일한 자식이라면 같은 목록의 다른 항목에 있는 첨부를 말합니다. 하나뿐이었다면 포커스는 작성창의 텍스트 필드처럼 직접 옮길 곳을 정하세요.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 파일 이름으로 이름이 붙은 파일마다의 그룹. 파일 이름이 들어간 빼기 버튼의 이름과, 그 이름으로 이름이 붙는 진행 막대. 포커스를 가진 첨부가 빠질 때 다음 빼기 버튼으로 옮겨지는 포커스.
+
+**직접 제공할 것:** `Attachment.Name` 안의 파일 이름. 이름이 이미 무슨 파일인지 말하므로 썸네일에 주는 `alt=""`. 마지막 첨부가 빠진 뒤의 포커스. `Attachment.Meta`에 말로 쓰고, [useAnnouncer](/utilities/use-announcer) 등으로 그때 알리는 업로드 오류.
+
+**주의할 점:** 오류를 테두리 색으로만 보여 주는 것. 업로드 진행을 단계마다 알리는 것. 막대는 읽는 사람이 그곳으로 갈 때 읽을 수 있습니다.
+
+## 언제 쓰나요
+
+**쓸 때:** 보내기 전이든 후든 메시지에 붙은 파일.
+
+**쓰지 않을 때:** 빼기 버튼이 있는 텍스트 라벨 → [Chip](/chip). 파일 고르기 → [useDropzone](/utilities/use-dropzone).
+
+## Props
+
+<PropsTable name="Attachment.Root" />
+
+<PropsTable name="Attachment.Preview" />
+
+<PropsTable name="Attachment.Name" />
+
+<PropsTable name="Attachment.Meta" />
+
+<PropsTable name="Attachment.Progress" />
+
+<PropsTable name="Attachment.Remove" />

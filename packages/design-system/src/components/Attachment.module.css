@@ -1,0 +1,119 @@
+@layer todae.components {
+  .root {
+    display: inline-grid;
+    grid-template-columns: [text] minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--todae-attachment-gap);
+    box-sizing: border-box;
+    min-inline-size: 0;
+    max-inline-size: min(100%, var(--todae-attachment-max-width));
+    padding: var(--todae-attachment-padding-y) var(--todae-attachment-padding-x);
+    border: var(--todae-attachment-border-width) solid var(--todae-attachment-border-default);
+    border-radius: var(--todae-attachment-radius);
+    background: var(--todae-attachment-bg);
+    color: var(--todae-attachment-fg);
+    line-height: var(--todae-attachment-leading);
+    vertical-align: top;
+  }
+
+  .root[data-status='error'] {
+    border-color: var(--todae-attachment-border-error);
+  }
+
+  /* The columns follow the parts that are there, so a missing preview or
+     remove button leaves no empty gap. */
+  .root:has(> .preview:not([hidden])) {
+    grid-template-columns: [preview] auto [text] minmax(0, 1fr);
+  }
+
+  .root:has(> .remove:not([hidden])) {
+    grid-template-columns: [text] minmax(0, 1fr) [remove] auto;
+  }
+
+  .root:has(> .preview:not([hidden])):has(> .remove:not([hidden])) {
+    grid-template-columns: [preview] auto [text] minmax(0, 1fr) [remove] auto;
+  }
+
+  .root > * {
+    grid-column: text;
+  }
+
+  .root > [hidden] {
+    display: none;
+  }
+
+  .root > .preview {
+    grid-column: preview;
+    grid-row: 1 / span 2;
+  }
+
+  .root > .name {
+    grid-row: 1;
+  }
+
+  .root > .meta {
+    grid-row: 2;
+  }
+
+  .root > .progress {
+    grid-row: 3;
+    margin-block-start: var(--todae-attachment-padding-y);
+  }
+
+  .root > .remove {
+    grid-column: remove;
+    grid-row: 1 / span 2;
+  }
+
+  .preview {
+    display: grid;
+    place-items: center;
+    inline-size: var(--todae-attachment-preview-size);
+    block-size: var(--todae-attachment-preview-size);
+    border-radius: var(--todae-attachment-preview-radius);
+    background: var(--todae-attachment-preview-bg);
+    color: var(--todae-attachment-preview-fg);
+    overflow: hidden;
+  }
+
+  /* A thumbnail fills the box; an icon from a library takes the icon size. */
+  .preview > :is(img, video, picture) {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .preview > svg {
+    inline-size: var(--todae-attachment-icon-size);
+    block-size: var(--todae-attachment-icon-size);
+  }
+
+  .name,
+  .meta {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .name {
+    font-size: var(--todae-attachment-name-font-size);
+    font-weight: var(--todae-attachment-name-font-weight);
+  }
+
+  .meta {
+    color: var(--todae-attachment-meta-fg-default);
+    font-size: var(--todae-attachment-meta-font-size);
+  }
+
+  .root[data-status='error'] > .meta {
+    color: var(--todae-attachment-meta-fg-error);
+  }
+
+  /* An error shows through color alone, so forced colors mark it in the border. */
+  @media (forced-colors: active) {
+    .root[data-status='error'] {
+      border-color: Mark;
+    }
+  }
+}

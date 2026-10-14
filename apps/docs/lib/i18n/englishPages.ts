@@ -8,6 +8,7 @@ import type { ComponentType } from 'react';
  */
 export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentType; metadata?: Metadata }>> = {
   'alert': () => import('../../app/(en)/alert/page.mdx'),
+  'attachment': () => import('../../app/(en)/attachment/page.mdx'),
   'avatar': () => import('../../app/(en)/avatar/page.mdx'),
   'badge': () => import('../../app/(en)/badge/page.mdx'),
   'bottomsheet': () => import('../../app/(en)/bottomsheet/page.mdx'),
