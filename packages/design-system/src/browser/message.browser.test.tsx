@@ -193,6 +193,16 @@ describe('Message.Root in a browser', () => {
     expect(partGap).toBeGreaterThan(headerGap);
   });
 
+  // The gap above a part, from the lowest visible thing before it.
+  const gapAbove = (el: HTMLElement) => {
+    let bottom = el.parentElement!.getBoundingClientRect().top;
+    for (let prev = el.previousElementSibling; prev; prev = prev.previousElementSibling) {
+      const r = prev.getBoundingClientRect();
+      if (r.height > 0) bottom = Math.max(bottom, r.bottom);
+    }
+    return el.getBoundingClientRect().top - bottom;
+  };
+
   it.each([
     [
       'a hidden part',
@@ -220,10 +230,48 @@ describe('Message.Root in a browser', () => {
         </Message.Root>
       </div>,
     );
-    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
-    const headerGap = parseFloat(style('content').marginTop);
+    const headerGap = gapAbove(screen.getByTestId('content'));
     expect(headerGap).toBeGreaterThan(0);
-    expect(parseFloat(style('actions').marginTop)).toBeGreaterThan(headerGap);
+    expect(gapAbove(screen.getByTestId('actions'))).toBeGreaterThan(headerGap + 1);
+  });
+
+  it.each([false, true])('gives the header gap after a later header too (avatar: %s)', (avatar) => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
+        <Message.Root>
+          {avatar && <Message.Avatar>A</Message.Avatar>}
+          <Message.Header>Assistant</Message.Header>
+          <Message.Content data-testid="first">Give it a name.</Message.Content>
+          <Message.Header data-testid="later">Edited</Message.Header>
+          <Message.Content data-testid="second">Pick a variant.</Message.Content>
+        </Message.Root>
+      </div>,
+    );
+    const rowGap = gapAbove(screen.getByTestId('later'));
+    const headerGap = gapAbove(screen.getByTestId('second'));
+    expect(headerGap).toBeGreaterThan(0);
+    expect(rowGap).toBeGreaterThan(headerGap + 1);
+  });
+
+  it('keeps five parts spaced beside an avatar taller than four of them', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
+        <Message.Root>
+          <Message.Avatar>
+            <span style={{ display: 'block', blockSize: '300px', inlineSize: '40px' }} />
+          </Message.Avatar>
+          <Message.Content>1</Message.Content>
+          <Message.Content>2</Message.Content>
+          <Message.Content data-testid="third">3</Message.Content>
+          <Message.Content data-testid="fourth">4</Message.Content>
+          <Message.Actions data-testid="fifth">
+            <button type="button">Copy</button>
+          </Message.Actions>
+        </Message.Root>
+      </div>,
+    );
+    const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+    expect(box('fifth').top - box('fourth').bottom).toBeCloseTo(box('fourth').top - box('third').bottom, 0);
   });
 
   it('lays out as if hidden parts were not there', () => {

@@ -15,17 +15,24 @@
     margin-block-start: var(--todae-message-row-gap);
   }
 
-  /* A header labels the first visible part after it, so that part sits
-     closer to it. Avatars and hidden parts in between don't count. */
-  .root > .header:not([hidden]) ~ :not(.avatar, [hidden]):not(:not(.avatar, [hidden], .header) ~ *) {
-    margin-block-start: var(--todae-message-header-space-after);
+  /* A header sits closer to the part after it. The header shortens its own
+     end margin rather than the next part looking back past avatars and
+     hidden parts to find it. */
+  .root > .header:not([hidden]) {
+    margin-block-end: calc(var(--todae-message-header-space-after) - var(--todae-message-row-gap));
   }
 
-  /* Without a leading header, the last row takes whatever height an avatar taller
-     than the parts adds, so the parts keep their spacing. */
+  .root > :nth-last-child(1 of :not(.avatar, [hidden])) {
+    margin-block-end: 0;
+  }
+
+  /* Without a leading header, the 1fr row after the parts takes whatever
+     height an avatar taller than them adds, so the parts keep their spacing.
+     Rows no part fills are 0 tall, so the count only needs to outnumber the
+     parts. */
   .root:has(> .avatar:not([hidden])) {
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto auto 1fr;
+    grid-template-rows: repeat(15, auto) 1fr;
   }
 
   .root:has(> .avatar:not([hidden])) > :not(.avatar) {
@@ -47,10 +54,16 @@
   /* When a header comes first, the avatar sits in its row and the two are
      centered on each other; the parts below start under that row. A header
      after another part stays where the DOM puts it. */
-  .root:has(> .avatar:not([hidden])):has(> .header:not([hidden]):not(:not(.avatar, [hidden]) ~ *))
-    > :is(.avatar, .header:not([hidden]):not(:not(.avatar, [hidden]) ~ *)) {
+  .root:has(> .avatar:not([hidden])):has(> .header:nth-child(1 of :not(.avatar, [hidden])))
+    > :is(.avatar, .header:nth-child(1 of :not(.avatar, [hidden]))) {
     grid-row: 1;
     align-self: center;
+    margin-block-end: 0;
+  }
+
+  /* Beside the avatar row, the next part keeps the header gap below it. */
+  .root:has(> .avatar:not([hidden])):has(> .header:nth-child(1 of :not(.avatar, [hidden]))) > :nth-child(2 of :not(.avatar, [hidden])) {
+    margin-block-start: var(--todae-message-header-space-after);
   }
 
   /* A user's message sits at the end side, its text in a bubble, with the
