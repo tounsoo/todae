@@ -2163,7 +2163,7 @@
     },
     {
       "name": "Message.Avatar",
-      "description": "A slot beside the message for an Avatar.Root. A div; with one, the other parts sit in a column next to it, after it for a user's message.",
+      "description": "A slot beside the message for an Avatar.Root. A div; with one, the other parts sit in a column next to it, before it for a user's message.",
       "props": [
         {
           "name": "children",
@@ -2175,7 +2175,7 @@
     },
     {
       "name": "Message.Content",
-      "description": "The message body. A div; for a user's message it is the bubble. While the message streams, a caret follows the last paragraph, list item, heading, cell or code block, or the text itself when there are none.",
+      "description": "The message body. A div; for a user's message it is the bubble. While the message streams, a caret follows the last paragraph, list item, heading or table cell when the content ends with one, or plain text with no blocks in it.",
       "props": [
         {
           "name": "children",
@@ -2187,7 +2187,7 @@
     },
     {
       "name": "Message.Header",
-      "description": "A row above the content for the author's name and the product's own time element. A div; headings and paragraphs inside lose their margin. Todae formats no dates here.",
+      "description": "A row above the content for the author's name and the product's own time element. A div; headings and paragraphs directly inside lose their margin. Todae formats no dates here.",
       "props": [
         {
           "name": "children",

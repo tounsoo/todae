@@ -6,7 +6,6 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     column-gap: var(--todae-message-gap);
-    justify-items: start;
     align-items: start;
     min-inline-size: 0;
     color: var(--todae-message-fg);
@@ -16,8 +15,11 @@
     margin-block-start: var(--todae-message-row-gap);
   }
 
+  /* The last row takes whatever height an avatar taller than the parts adds,
+     so the parts keep their spacing. */
   .root:has(> .avatar) {
     grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto 1fr;
   }
 
   .root:has(> .avatar) > * {
@@ -26,7 +28,7 @@
 
   .root > .avatar {
     grid-column: 1;
-    grid-row: 1 / span 3;
+    grid-row: 1 / -1;
     display: flex;
   }
 
@@ -93,15 +95,48 @@
   }
 
   /* While a message streams, a caret follows its text: after the last
-     paragraph, list item, heading, cell or code block, or after the text
-     itself when there are none. Only the innermost such element that ends
-     the content takes it. */
-  .root[data-streaming] > .content:not(:has(:is(p, li, h1, h2, h3, h4, h5, h6, td, th, dt, dd, pre, figcaption)))::after,
+     paragraph, list item, heading or table cell when the content ends with
+     one, or after plain text with no blocks in it. Only the innermost such
+     element that ends the content takes it, and none inside a closed
+     details. A code block takes none: rendered markdown ends its code with
+     a newline, which would put the caret on a line of its own. */
+  .root[data-streaming]
+    > .content:not(
+      :has(
+        :is(
+          address,
+          article,
+          aside,
+          blockquote,
+          details,
+          div,
+          dl,
+          figure,
+          footer,
+          form,
+          h1,
+          h2,
+          h3,
+          h4,
+          h5,
+          h6,
+          header,
+          hr,
+          li,
+          ol,
+          p,
+          pre,
+          section,
+          table,
+          ul
+        )
+      )
+    )::after,
   .root[data-streaming]
     > .content
-    :is(p, li, h1, h2, h3, h4, h5, h6, td, th, dt, dd, pre, figcaption):not(:has(~ *)):not(
-      :has(:is(p, li, h1, h2, h3, h4, h5, h6, td, th, dt, dd, pre, figcaption))
-    ):not(.content :has(~ *) *)::after {
+    :is(p, li, h1, h2, h3, h4, h5, h6, td, th):not(:has(~ *)):not(:has(:is(p, li, h1, h2, h3, h4, h5, h6, td, th))):not(
+      .content :has(~ *) *
+    ):not(details:not([open]) *)::after {
     content: '';
     display: inline-block;
     block-size: 1em;

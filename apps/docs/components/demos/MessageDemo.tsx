@@ -6,7 +6,7 @@ import { useState } from 'react';
 export function MessageTurns() {
   return (
     <Stack.Root style={{ inlineSize: '100%', maxInlineSize: '36rem' }}>
-      <Message.Root from="system">
+      <Message.Root from="system" aria-label="System">
         <Message.Content>Conversation started</Message.Content>
       </Message.Root>
       <Message.Root from="user" aria-label="You">
@@ -42,7 +42,7 @@ export function MessageStreaming() {
       <Message.Root streaming={streaming} aria-label="Assistant">
         <Message.Content>
           <Prose.Root>
-            <p>Three steps:</p>
+            <p>Two steps:</p>
             <ul>
               <li>Pick a variant</li>
               <li>Give it a name</li>

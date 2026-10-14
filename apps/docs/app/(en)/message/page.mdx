@@ -46,10 +46,10 @@ Every part is a `div`, and all of them are optional.
 
 ## Streaming
 
-Set `streaming` while the message is still arriving, and set it back to `false` when it finishes or fails. It sets `aria-busy="true"` on the article and `data-streaming`, and `Message.Content` draws a caret after the text: after the last paragraph, list item, heading, table cell or code block, or after the text itself when there are none. The caret blinks, and holds still under reduced motion.
+Set `streaming` while the message is still arriving, and set it back to `false` when it finishes or fails. It sets `aria-busy="true"` on the article and `data-streaming`, and `Message.Content` draws a caret after the text: after the last paragraph, list item, heading or table cell when the content ends with one, or after plain text with no blocks in it. Content that ends with anything else, such as a code block or a rule, shows no caret. The caret blinks, and holds still under reduced motion.
 
 ```tsx
-<Message.Root streaming={status === 'streaming'}>
+<Message.Root streaming={status === 'streaming'} aria-label="Assistant">
   <Message.Content>
     <Prose.Root>{rendered}</Prose.Root>
   </Message.Content>
@@ -60,13 +60,13 @@ Set `streaming` while the message is still arriving, and set it back to `false` 
   <MessageStreaming />
 </Example>
 
-Restyle it through the `message` tokens: `message.gap` and `message.row-gap` space the parts, `message.header.*` sets the header's color and size, `message.user.*` the bubble's background, text color, radius, padding, `max-width` and the `border-width` of its forced-colors outline, `message.system.*` the system line, and `message.caret.width` and `message.caret.motion.duration` the caret.
+Restyle it through the `message` tokens: `message.fg` sets the text color, `message.gap` and `message.row-gap` space the parts, `message.header.*` sets the header's color and size, `message.user.*` the bubble's background, text color, radius, padding, `max-width` and the `border-width` of its forced-colors outline, `message.system.*` the system line, and `message.caret.width` and `message.caret.motion.duration` the caret. A `Prose.Root` inside keeps the `prose` tokens' text color and size.
 
 ## Accessible composition
 
 **Todae handles:** An `<article>` for each message, so screen reader users can move between them. `aria-busy` while it streams. The caret is drawn from CSS, so it is never read. In forced colors the user bubble keeps an outline, since its background is replaced.
 
-**You supply:** A name for each message that says who wrote it, such as `aria-label="You"` or `aria-labelledby` pointing at the author in `Message.Header`. Names for icon-only action buttons. A parent with `role="log"` around the conversation, and one announcement when a message finishes rather than the streamed text.
+**You supply:** A name for each message that says who wrote it, such as `aria-label="You"` or `aria-labelledby` pointing at the author in `Message.Header`. Names for icon-only action buttons. One announcement when a message finishes, rather than the streamed text.
 
 **Watch for:** Putting the message that is streaming in a live region: every token is read as it arrives. A timestamp with no `<time dateTime>`, which machines can't read. Telling user and assistant apart by color or side alone; the name says it too.
 
