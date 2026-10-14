@@ -48,6 +48,9 @@ const COPIED = [
   'font-variation-settings',
   'font-kerning',
   'font-optical-sizing',
+  'font-size-adjust',
+  'font-synthesis',
+  'font-language-override',
   'line-height',
   'letter-spacing',
   'word-spacing',
@@ -59,6 +62,10 @@ const COPIED = [
   'word-break',
   'overflow-wrap',
   'hyphens',
+  'line-break',
+  'text-wrap-style',
+  'text-spacing-trim',
+  'text-autospace',
   'direction',
   'unicode-bidi',
   'writing-mode',
@@ -93,12 +100,19 @@ export function useTextareaHighlights(
     const view = el.ownerDocument.defaultView;
     if (!view) return;
     const computed = view.getComputedStyle(el);
-    for (const property of COPIED) div.style.setProperty(property, computed.getPropertyValue(property));
+    const set = (property: string, value: string) => {
+      if (div.style.getPropertyValue(property) !== value) div.style.setProperty(property, value);
+    };
+    for (const property of COPIED) set(property, computed.getPropertyValue(property));
+    // The layer inherits the ancestors' lang; only the textarea's own one needs copying.
+    const lang = el.getAttribute('lang');
+    if (lang === null) div.removeAttribute('lang');
+    else if (div.getAttribute('lang') !== lang) div.setAttribute('lang', lang);
     // A scrollbar takes room from the textarea's text, not from the layer's.
     const borders = px(computed.borderLeftWidth) + px(computed.borderRightWidth);
     const scrollbar = Math.max(0, el.offsetWidth - el.clientWidth - borders);
     const side = computed.direction === 'rtl' ? 'padding-left' : 'padding-right';
-    div.style.setProperty(side, `${px(computed.getPropertyValue(side)) + scrollbar}px`);
+    set(side, `${px(computed.getPropertyValue(side)) + scrollbar}px`);
     scroll();
   }, [scroll, textarea]);
 

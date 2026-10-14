@@ -1,7 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { StrictMode, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../components/Field';
+import { validTokens } from './useMentions.detect';
 import { useMentions, type MentionToken, type MentionTrigger, type UseMentionsResult } from './useMentions';
 
 afterEach(cleanup);
@@ -333,5 +334,185 @@ describe('useMentions', () => {
     expect(fireEvent.keyDown(el, { key: 'Enter', keyCode: 229 })).toBe(true);
     expect(fireEvent.keyDown(el, { key: 'Enter', isComposing: true })).toBe(true);
     expect(fireEvent.keyDown(el, { key: 'Enter' })).toBe(false);
+  });
+});
+
+describe('useMentions with controlled tokens', () => {
+  function Mirror({
+    initial = '',
+    initialTokens = [],
+    onTokens,
+    check,
+    expose,
+    fixedTokens,
+  }: {
+    initial?: string;
+    initialTokens?: MentionToken[];
+    onTokens?: (tokens: MentionToken[]) => void;
+    check?: (value: string, tokens: readonly MentionToken[]) => void;
+    expose?: (result: UseMentionsResult, set: (value: string, tokens?: MentionToken[]) => void) => void;
+    fixedTokens?: MentionToken[];
+  }) {
+    const [value, setValue] = useState(initial);
+    const [tokens, setTokens] = useState<MentionToken[]>(initialTokens);
+    check?.(value, tokens);
+    const mentions = useMentions({
+      triggers: [{ char: '@', options: people }],
+      value,
+      onValueChange: setValue,
+      tokens: fixedTokens ?? tokens,
+      onTokensChange: (next) => {
+        onTokens?.(next);
+        setTokens(next);
+      },
+    });
+    expose?.(mentions, (nextValue, nextTokens) => {
+      setValue(nextValue);
+      if (nextTokens) setTokens(nextTokens);
+    });
+    return (
+      <Field.Root aria-label="Message">
+        <Field.Textarea {...mentions.getTextareaProps()} />
+      </Field.Root>
+    );
+  }
+
+  it('never renders the parent with tokens that do not hold their text', () => {
+    let result!: UseMentionsResult;
+    const check = vi.fn((value: string, tokens: readonly MentionToken[]) => {
+      expect(validTokens(value, tokens)).toEqual(tokens);
+    });
+    render(<Mirror check={check} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, '@a');
+    act(() => result.select('ada'));
+    fireEvent.change(el, { target: { value: 'Hi @Ada Lovelace ', selectionStart: 3, selectionEnd: 3 } });
+    expect(result.tokens).toEqual([{ start: 3, end: 16, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
+    fireEvent.change(el, { target: { value: 'Hi @Ada Lovelac ', selectionStart: 15, selectionEnd: 15 } });
+    expect(result.tokens).toEqual([]);
+    expect(check).toHaveBeenCalled();
+  });
+
+  it('shows only the tokens the parent holds, and still hands out a pick', () => {
+    let result!: UseMentionsResult;
+    const onTokens = vi.fn();
+    render(<Mirror fixedTokens={[]} onTokens={onTokens} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, '@a');
+    act(() => result.select('ada'));
+    expect(onTokens).toHaveBeenCalledWith([{ start: 0, end: 13, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
+    expect(result.tokens).toEqual([]);
+  });
+
+  it('restores a draft reloaded after edits', () => {
+    let result!: UseMentionsResult;
+    let set!: (value: string, tokens?: MentionToken[]) => void;
+    const ada = { start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' };
+    render(<Mirror initial="@Ada hi" initialTokens={[ada]} expose={(r, s) => ((result = r), (set = s))} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.change(el, { target: { value: '@Ad hi', selectionStart: 3, selectionEnd: 3 } });
+    expect(result.tokens).toEqual([]);
+    act(() => set('@Ada hi', [ada]));
+    expect(result.tokens).toEqual([ada]);
+  });
+
+  it('hands out nothing for an edit the parent rejects', () => {
+    const onTokens = vi.fn();
+    const ada = { start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' };
+    function Fixed() {
+      const mentions = useMentions({
+        triggers: [{ char: '@', options: people }],
+        value: '@Ada hi',
+        tokens: [ada],
+        onTokensChange: onTokens,
+      });
+      return (
+        <Field.Root aria-label="Message">
+          <Field.Textarea {...mentions.getTextareaProps()} />
+        </Field.Root>
+      );
+    }
+    render(<Fixed />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.change(el, { target: { value: '@Aa hi', selectionStart: 2, selectionEnd: 2 } });
+    expect(onTokens).toHaveBeenCalledTimes(1);
+    expect(onTokens).toHaveBeenLastCalledWith([]);
+    expect(screen.getByRole('textbox')).toHaveProperty('value', '@Ada hi');
+  });
+
+  it('hands out empty tokens once when the parent clears only the text', () => {
+    let set!: (value: string, tokens?: MentionToken[]) => void;
+    const onTokens = vi.fn();
+    const ada = { start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' };
+    render(<Mirror initial="@Ada hi" initialTokens={[ada]} onTokens={onTokens} expose={(_, s) => (set = s)} />);
+    act(() => set(''));
+    expect(onTokens).toHaveBeenCalledTimes(1);
+    expect(onTokens).toHaveBeenLastCalledWith([]);
+  });
+});
+
+describe('useMentions edge cases', () => {
+  it('lands a fallback pick and its caret when the parent commits the text later', async () => {
+    let result!: UseMentionsResult;
+    function Later() {
+      const [value, setValue] = useState('');
+      const mentions = useMentions({
+        triggers: [{ char: '@', options: people }],
+        value,
+        onValueChange: (next) => setTimeout(() => setValue(next), 10),
+      });
+      result = mentions;
+      return (
+        <Field.Root aria-label="Message">
+          <Field.Textarea {...mentions.getTextareaProps()} />
+        </Field.Root>
+      );
+    }
+    render(<Later />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    fireEvent.change(el, { target: { value: '@a', selectionStart: 2, selectionEnd: 2 } });
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+    expect(result.open).toBe(true);
+    act(() => result.select('ada'));
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
+    expect(el.value).toBe('@Ada Lovelace ');
+    expect(el.selectionStart).toBe(14);
+    expect(result.tokens).toEqual([{ start: 0, end: 13, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
+  });
+
+  it('hands out tokens once per change in StrictMode, and once at mount for starting tokens that do not hold their text', () => {
+    const onTokens = vi.fn();
+    let result!: UseMentionsResult;
+    render(
+      <StrictMode>
+        <Harness tokens={[{ start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' }]} onTokens={onTokens} expose={(r) => (result = r)} />
+      </StrictMode>,
+    );
+    expect(onTokens).toHaveBeenCalledTimes(1);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, '@a');
+    act(() => result.select('ada'));
+    expect(onTokens).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the list closed for a dismissed word through an edit before it', () => {
+    let result!: UseMentionsResult;
+    render(<Harness expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, 'x @a');
+    fireEvent.keyDown(el, { key: 'Escape' });
+    expect(result.open).toBe(false);
+    fireEvent.change(el, { target: { value: 'xy @a', selectionStart: 2, selectionEnd: 2 } });
+    fireEvent.change(el, { target: { value: 'xy @a', selectionStart: 5, selectionEnd: 5 } });
+    el.setSelectionRange(5, 5);
+    fireEvent.select(el);
+    expect(result.open).toBe(false);
+    type(el, 'xy @a @g');
+    expect(result.open).toBe(true);
   });
 });

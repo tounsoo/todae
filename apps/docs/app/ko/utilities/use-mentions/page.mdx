@@ -47,7 +47,7 @@ const mentions = useMentions({
 
 고르기는 `document.execCommand('insertText')`로 단어를 바꾸므로 textarea 자체의 실행 취소 기록에 한 단계로 남고, 뒤에 공백이 없으면 공백을 하나 더합니다. 실행 취소와 다시 실행은 되돌린 텍스트가 가졌던 토큰을 되살립니다. 토큰 끝에서 Backspace를, 토큰 앞에서 Delete를 누르면 토큰 전체가 지워집니다. 토큰 안을 편집하면 그 토큰은 일반 텍스트로 돌아갑니다.
 
-`tokens`는 토큰마다 `start`, `end`, `char`, `value`, `text`를 담습니다. 텍스트와 함께 백엔드로 보내고, 임시 저장본을 불러올 때는 `value`와 `tokens`를 함께 넘기세요. 범위가 더 이상 자기 텍스트를 담지 않는 토큰은 버려집니다.
+`tokens`는 토큰마다 `start`, `end`, `char`, `value`, `text`를 담습니다. 텍스트와 함께 백엔드로 보내고, 임시 저장본을 불러올 때는 `value`와 `tokens`를 함께 넘기세요. 범위가 더 이상 자기 텍스트를 담지 않는 토큰은 버려집니다. 토큰을 직접 상태로 들고 있으려면 `value`를 `onValueChange`와 함께 넘기듯 `tokens`를 `onTokensChange`와 함께 넘기세요.
 
 ## 토큰 그리기
 

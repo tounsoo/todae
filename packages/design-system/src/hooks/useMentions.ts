@@ -132,68 +132,13 @@ function insertion(value: string, query: MentionQuery, text: string): string {
   return after !== undefined && SPACE.test(after) ? text : `${text} `;
 }
 
-/** What the hook knows about the edit that produced a text, from the change event. */
-type EditHint = { id: number; value: string; inputType?: string; caret: number | null; pick?: MentionToken };
-
-/** The text the tokens were last carried to, and what came with it. */
-type Track = {
-  value: string;
-  /** The tokens prop or state the hook last saw. New tokens in it replace the hook's. */
-  raw: readonly MentionToken[];
+/** A text with the tokens and dismissed trigger that belong to it. */
+type Snap = {
+  text: string;
   tokens: readonly MentionToken[];
   /** The trigger index Escape or a press outside closed the list for. It moves with edits. */
   dismissed: number | null;
-  /** Bumped when the hook changes the tokens itself, so they are handed out once. */
-  version: number;
-  hint: number;
 };
-
-/**
- * Carries the tokens to a newly rendered text. Tokens passed in from outside
- * win; otherwise the edit moves them, undo and redo restore the tokens the
- * restored text had, and a pick adds its token once its text is there.
- */
-function advance(
-  prev: Track,
-  value: string,
-  raw: readonly MentionToken[],
-  hint: EditHint | null,
-  history: ReadonlyMap<string, readonly MentionToken[]>,
-): Track {
-  // Tokens from outside are new ones: not the ones last seen, and not the
-  // hook's own handed back. A copy with the same tokens is the same.
-  if (!sameTokens(raw, prev.raw) && !sameTokens(raw, prev.tokens)) {
-    const tokens = validTokens(value, raw);
-    const changed = !sameTokens(tokens, raw);
-    return {
-      value,
-      raw,
-      tokens,
-      dismissed: value === prev.value ? prev.dismissed : null,
-      version: changed ? prev.version + 1 : prev.version,
-      hint: hint?.id ?? prev.hint,
-    };
-  }
-  const edit = hint && hint.id !== prev.hint && hint.value === value ? hint : null;
-  const restored =
-    edit?.inputType === 'historyUndo' || edit?.inputType === 'historyRedo' ? history.get(value) : undefined;
-  let tokens: readonly MentionToken[];
-  if (restored) tokens = validTokens(value, restored);
-  else {
-    tokens = shiftTokens(prev.value, value, prev.tokens, edit?.caret);
-    const pick = edit?.pick;
-    if (pick && value.slice(pick.start, pick.end) === pick.text) tokens = validTokens(value, [...tokens, pick]);
-  }
-  const changed = !sameTokens(tokens, prev.tokens);
-  return {
-    value,
-    raw,
-    tokens: changed ? tokens : prev.tokens,
-    dismissed: prev.dismissed === null ? null : shiftIndex(prev.value, value, prev.dismissed, edit?.caret),
-    version: changed ? prev.version + 1 : prev.version,
-    hint: hint?.id ?? prev.hint,
-  };
-}
 
 /** The collapsed caret of a textarea that takes typing, or null. */
 function caretOf(el: HTMLTextAreaElement): number | null {
@@ -213,50 +158,97 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   latest.current = options;
 
   const [value, setValueState] = useControlledState(options.value, options.defaultValue ?? '');
-  const [tokenState, setTokenState] = useControlledState(options.tokens, options.defaultTokens ?? EMPTY_TOKENS);
   const [caret, setCaret] = useState<number | null>(null);
   const [focused, setFocused] = useState(false);
   const [active, setActive] = useState<{ session: string; value: string | null } | null>(null);
-  const [hint, setHint] = useState<EditHint | null>(null);
   // Where the caret goes after a pick that could not edit the textarea natively, once its text is in.
   const [caretAfter, setCaretAfter] = useState<{ to: number; value: string } | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  // Tokens for texts seen before, so undo and redo bring back the tokens of the text they restore.
+  // Tokens for texts seen before, so undo and redo bring back the tokens of
+  // the text they restore. Read and written only in event handlers.
   const history = useRef(new Map<string, readonly MentionToken[]>());
   // The token a pick is inserting, read by the change event its native edit fires.
   const picking = useRef<MentionToken | null>(null);
-  const hints = useRef(0);
 
-  // The tokens follow the rendered text, worked out while rendering so the
-  // text and its tokens never disagree, as React's docs do for state that
-  // follows a prop.
-  const [trackState, setTrack] = useState<Track>(() => {
-    const tokens = validTokens(value, tokenState);
-    const changed = !sameTokens(tokens, tokenState);
-    return { value, raw: tokenState, tokens, dismissed: null, version: changed ? 1 : 0, hint: 0 };
-  });
-  let track = trackState;
-  // Compared by content, so a parent that passes a new array with the same
-  // tokens on each render settles.
-  if (track.value !== value || !sameTokens(track.raw, tokenState)) {
-    track = advance(track, value, tokenState, hint, history.current);
-    setTrack(track);
+  // The hook's own tokens, kept with the text they belong to. An edit works
+  // out the next text's tokens when it happens, and holds them as `pending`
+  // until that text renders; a text set from outside carries the tokens along.
+  const [own, setOwn] = useState<Snap & { pending: Snap | null }>(() => ({
+    text: value,
+    tokens: validTokens(value, options.tokens ?? options.defaultTokens ?? EMPTY_TOKENS),
+    dismissed: null,
+    pending: null,
+  }));
+  let snap: Snap = own;
+  if (own.text !== value) {
+    const next =
+      own.pending?.text === value
+        ? own.pending
+        : {
+            text: value,
+            tokens: shiftTokens(own.text, value, own.tokens),
+            dismissed: own.dismissed === null ? null : shiftIndex(own.text, value, own.dismissed),
+          };
+    snap = next;
+    setOwn({ ...next, pending: null });
   }
-  const tokens = track.tokens;
-  const dismissed = track.dismissed;
+  // Controlled tokens are the product's, like a controlled value; the hook
+  // shows the ones that still hold their text.
+  const controlledTokens = options.tokens;
+  const shownControlled = useMemo(
+    () => (controlledTokens === undefined ? null : validTokens(value, controlledTokens)),
+    [controlledTokens, value],
+  );
+  const tokens = shownControlled ?? snap.tokens;
+  const dismissed = snap.dismissed;
 
-  const handedOut = useRef(0);
-  useEffect(() => {
+  // The tokens the hook last handed to onTokensChange, or was given at the start.
+  const handed = useRef<readonly MentionToken[]>(options.tokens ?? options.defaultTokens ?? EMPTY_TOKENS);
+  // The text those tokens are for. A controlled parent that sets the text
+  // before the tokens, such as in a transition, is caught up, not changed.
+  const handedFor = useRef<string | null>(null);
+  // Hands out tokens that changed without an edit handing them out: a text set
+  // from outside, starting tokens that don't hold their text, and uncontrolled edits.
+  useLayoutEffect(() => {
+    const controlled = latest.current.tokens !== undefined;
+    if (controlled && value === handedFor.current) return;
+    const held = latest.current.tokens ?? handed.current;
+    if (sameTokens(tokens, held) || sameTokens(tokens, handed.current)) return;
+    handed.current = tokens;
+    handedFor.current = value;
+    latest.current.onTokensChange?.([...tokens]);
+  });
+
+  const remember = (text: string, list: readonly MentionToken[]) => {
     const map = history.current;
-    map.delete(track.value);
-    map.set(track.value, track.tokens);
+    map.delete(text);
+    map.set(text, list);
     if (map.size > HISTORY) map.delete(map.keys().next().value!);
-    if (track.version === handedOut.current) return;
-    handedOut.current = track.version;
-    setTokenState(track.tokens);
-    latest.current.onTokensChange?.([...track.tokens]);
-  }, [setTokenState, track]);
+  };
+
+  /** Works out the tokens of an edit's text against the rendered text, then sends the text. */
+  const edit = (next: string, how: { inputType?: string; caret: number | null; pick?: MentionToken | null }) => {
+    const restored =
+      how.inputType === 'historyUndo' || how.inputType === 'historyRedo' ? history.current.get(next) : undefined;
+    let list: readonly MentionToken[];
+    if (restored) list = validTokens(next, restored);
+    else {
+      list = shiftTokens(value, next, tokens, how.caret);
+      const pick = how.pick;
+      if (pick && next.slice(pick.start, pick.end) === pick.text) list = validTokens(next, [...list, pick]);
+    }
+    remember(value, tokens);
+    remember(next, list);
+    const nextDismissed = dismissed === null ? null : shiftIndex(value, next, dismissed, how.caret);
+    setOwn({ text: value, tokens, dismissed, pending: { text: next, tokens: list, dismissed: nextDismissed } });
+    if (latest.current.tokens !== undefined && !sameTokens(list, tokens)) {
+      handed.current = list;
+      handedFor.current = next;
+      latest.current.onTokensChange?.([...list]);
+    }
+    setValue(next);
+  };
 
   // A value set from outside, such as clearing the text after sending, can move the caret.
   useLayoutEffect(() => {
@@ -370,7 +362,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const dismiss = useCallback(() => {
     const start = query?.start ?? null;
     if (start === null) return;
-    setTrack((current) => ({ ...current, dismissed: start }));
+    setOwn((current) => ({ ...current, dismissed: start }));
   }, [query?.start]);
 
   const highlight = useCallback(
@@ -418,28 +410,23 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       }
       el?.focus();
       const next = value.slice(0, query.start) + inserted + value.slice(query.end);
-      hints.current += 1;
-      setHint({ id: hints.current, value: next, caret: caretTo, pick: token });
       setCaretAfter({ to: caretTo, value: next });
-      setValue(next);
+      edit(next, { caret: caretTo, pick: token });
     },
-    [fits, items, query, setValue, trigger, value],
+    // edit reads the rendered text and tokens, which value and tokens stand for.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fits, items, query, tokens, trigger, value],
   );
 
   const onChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     const el = event.currentTarget;
-    const at = caretOf(el);
-    hints.current += 1;
-    setHint({
-      id: hints.current,
-      value: el.value,
+    setCaret(caretOf(el));
+    setCaretAfter(null);
+    edit(el.value, {
       inputType: (event.nativeEvent as InputEvent).inputType,
       caret: el.selectionStart === el.selectionEnd ? el.selectionStart : null,
-      pick: picking.current ?? undefined,
+      pick: picking.current,
     });
-    setCaret(at);
-    setCaretAfter(null);
-    setValue(el.value);
   };
 
   const onSelect = (event: SyntheticEvent<HTMLTextAreaElement>) => {

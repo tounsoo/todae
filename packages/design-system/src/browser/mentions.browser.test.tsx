@@ -200,6 +200,64 @@ describe('useMentions in a browser', () => {
     expect(getComputedStyle(layer).direction).toBe('rtl');
   });
 
+  it('sends the token from a parent that holds the tokens, on the Enter right after a pick', async () => {
+    const onSend = vi.fn();
+    function Mirrored() {
+      const [value, setValue] = useState('');
+      const [tokens, setTokens] = useState<MentionToken[]>([]);
+      const mentions = useMentions({ triggers: TRIGGERS, value, onValueChange: setValue, tokens, onTokensChange: setTokens });
+      const submit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        onSend(value, tokens);
+        setValue('');
+      };
+      return (
+        <main data-appearance="light" data-density="comfortable" style={{ inlineSize: '24rem' }}>
+          <Composer.Root onSubmit={submit}>
+            <Field.Root aria-label="Message">
+              <Field.Textarea {...mentions.getTextareaProps()} lang="ko" />
+              <Field.Row>
+                <Composer.Submit disabled={value.trim() === ''} />
+              </Field.Row>
+            </Field.Root>
+          </Composer.Root>
+          <Popover.Root {...mentions.getPopoverProps()}>
+            <OptionList.Root {...mentions.getListboxProps()}>
+              {mentions.items.map((item) => (
+                <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </main>
+      );
+    }
+    render(<Mirrored />);
+    await userEvent.click(field());
+    await userEvent.keyboard('@gr{Enter}{Backspace}{Enter}');
+    expect(onSend).toHaveBeenCalledWith('@Grace Hopper', [{ start: 0, end: 13, char: '@', value: 'grace', text: '@Grace Hopper' }]);
+  });
+
+  it("copies the textarea's own lang to the layer", async () => {
+    function Lang() {
+      const [value, setValue] = useState('@Ada');
+      const mentions = useMentions({
+        triggers: TRIGGERS,
+        value,
+        onValueChange: setValue,
+        defaultTokens: [{ start: 0, end: 4, char: '@', value: 'ada', text: '@Ada' }],
+      });
+      return (
+        <main data-appearance="light" data-density="comfortable">
+          <Field.Root aria-label="Message">
+            <Field.Textarea {...mentions.getTextareaProps()} lang="ja" />
+          </Field.Root>
+        </main>
+      );
+    }
+    render(<Lang />);
+    expect(document.querySelector('[data-kind="@"]')!.parentElement!.getAttribute('lang')).toBe('ja');
+  });
+
   it('passes axe while open', async () => {
     render(<Chat />);
     await userEvent.click(field());
