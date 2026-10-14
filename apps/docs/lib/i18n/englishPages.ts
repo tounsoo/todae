@@ -62,6 +62,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'slider': () => import('../../app/(en)/slider/page.mdx'),
   'spinner': () => import('../../app/(en)/spinner/page.mdx'),
   'stack': () => import('../../app/(en)/stack/page.mdx'),
+  'steps': () => import('../../app/(en)/steps/page.mdx'),
   'switch': () => import('../../app/(en)/switch/page.mdx'),
   'table': () => import('../../app/(en)/table/page.mdx'),
   'tabs': () => import('../../app/(en)/tabs/page.mdx'),

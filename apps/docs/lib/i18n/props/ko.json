@@ -1473,8 +1473,8 @@
   },
   "GlyphsProvider": {
     "glyphs": {
-      "en": "The glyphs to change: close, check, chevron, separator and ellipsis. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins.",
-      "ko": "바꿀 글리프: close, check, chevron, separator, ellipsis. 생략한 키는 가장 가까운 상위 GlyphsProvider에서 가져오고, null은 Todae 자체 글리프로 되돌립니다. 파트 자체의 내용이 있으면 그것이 우선합니다."
+      "en": "The glyphs to change, by the keys of the Glyphs type. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins.",
+      "ko": "바꿀 글리프. Glyphs 타입의 키로 지정합니다. 생략한 키는 가장 가까운 상위 GlyphsProvider에서 가져오고, null은 Todae 자체 글리프로 되돌립니다. 파트 자체의 내용이 있으면 그것이 우선합니다."
     },
     "children": {
       "en": "Subtree that uses these glyphs.",
@@ -2429,6 +2429,16 @@
     "children": {
       "en": "The button's content. Without it, the send glyph named by the send string, or the stop glyph named by the stop string while busy.",
       "ko": "버튼의 내용. 없으면 send 문자열로 이름이 붙은 send 글리프를, busy인 동안에는 stop 문자열로 이름이 붙은 stop 글리프를 보여 줍니다."
+    }
+  },
+  "Steps.Item": {
+    "status": {
+      "en": "Sets data-status and the marker. A current step takes aria-current=\"step\".",
+      "ko": "data-status와 표시를 정합니다. current 단계는 aria-current=\"step\"을 받습니다."
+    },
+    "statusLabel": {
+      "en": "The hidden status word read before the step, in place of the stepDone, stepCurrent, stepPending or stepError string when not empty.",
+      "ko": "단계 앞에서 읽히는 숨은 상태 단어. 비어 있지 않으면 stepDone, stepCurrent, stepPending, stepError 문자열 대신 쓰입니다."
     }
   }
 }

@@ -71,6 +71,7 @@ export const SITE_GROUPS = [
       ['/slider', 'Slider'],
       ['/spinner', 'Spinner and Skeleton'],
       ['/stack', 'Stack'],
+      ['/steps', 'Steps'],
       ['/switch', 'Switch'],
       ['/table', 'Table'],
       ['/tabs', 'Tabs'],
