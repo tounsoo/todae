@@ -16,13 +16,18 @@
     overflow-x: hidden;
     overflow-y: auto;
     scroll-padding: var(--_room);
-    /* --_cover is how far the shown scroll button reaches up from the end,
-       set from script, so focus doesn't land under it. */
-    scroll-padding-block-end: calc(var(--_room) + var(--_cover, 0px));
   }
 
-  /* While it follows the end, the end is its anchor. Scrolled up, the
-     browser's anchoring keeps the reader's place. */
+  /* While the scroll button shows, focus lands clear of it. Its height,
+     --_button-size, is set from script. */
+  .root:has(> .scrollButton:not([hidden])) > .viewport {
+    scroll-padding-block-end: calc(var(--_room) + var(--todae-conversation-scroll-button-inset) + var(--_button-size, 0px));
+  }
+
+  /* Scroll anchoring is off while it follows the end, set from script with
+     the following state: it could move the position up when content above
+     shrinks, which would read as the reader. Scrolled up, the browser's
+     anchoring keeps the reader's place. */
   .viewport[data-following] {
     overflow-anchor: none;
   }

@@ -166,6 +166,7 @@ describe('Conversation in a browser', () => {
       expect(el.hidden).toBe(false);
       return el;
     });
+    await frame();
     const box = button.getBoundingClientRect();
     expect(button.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2))).toBe(true);
     const padding = parseFloat(getComputedStyle(viewport).scrollPaddingBottom);
@@ -297,7 +298,10 @@ describe('Conversation in a browser', () => {
     expect(screen.getByTestId('scroll').hidden).toBe(false);
   });
 
-  it('measures the scroll button again when the density changes', async () => {
+  it.each([
+    ['the density changes', (root: HTMLElement) => root.setAttribute('data-density', 'spacious')],
+    ['its inset changes', (root: HTMLElement) => root.style.setProperty('--todae-conversation-scroll-button-inset', '120px')],
+  ])('keeps the scroll padding past the shown button when %s', async (_, change) => {
     const { container } = render(<Thread count={10} />);
     const viewport = screen.getByTestId('viewport');
     await frame();
@@ -307,10 +311,22 @@ describe('Conversation in a browser', () => {
       expect(el.hidden).toBe(false);
       return el;
     });
-    container.querySelector('[data-density]')!.setAttribute('data-density', 'spacious');
+    await frame();
+    change(container.querySelector<HTMLElement>('[data-density]')!);
     await frame();
     const cover = viewport.getBoundingClientRect().bottom - button.getBoundingClientRect().top;
-    expect(parseFloat(viewport.style.getPropertyValue('--_cover'))).toBeCloseTo(cover, 0);
+    expect(parseFloat(getComputedStyle(viewport).scrollPaddingBottom)).toBeGreaterThanOrEqual(cover - 0.5);
+  });
+
+  it('turns scroll anchoring off in the same task that following starts', async () => {
+    render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 0;
+    await waitFor(() => expect(viewport.hasAttribute('data-following')).toBe(false));
+    viewport.scrollTop = viewport.scrollHeight;
+    viewport.dispatchEvent(new Event('scroll'));
+    expect(getComputedStyle(viewport).overflowAnchor).toBe('none');
   });
 
   it('passes axe', async () => {

@@ -57,7 +57,6 @@ type ConversationContext = {
   onScroll: () => void;
   follow: () => void;
   scrollToEnd: () => void;
-  measureCover: () => void;
 };
 
 const Context = createContext<ConversationContext | null>(null);
@@ -116,20 +115,27 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
 
   useEffect(() => stopGlide, [stopGlide]);
 
+  // The ref and the viewport's data-following change together, in the same
+  // task, so scroll anchoring is never on for a frame while following.
+  const setFollowing = useCallback((on: boolean) => {
+    following.current = on;
+    viewport.current?.toggleAttribute('data-following', on);
+  }, []);
+
   const onScroll = useCallback(() => {
     const el = viewport.current;
     if (!el) return;
     const top = el.scrollTop;
     // At the end first: a shrinking conversation clamps the position up to
     // its new end, which is no reader's doing.
-    if (distanceToEnd(el) <= END_SLACK) following.current = true;
+    if (distanceToEnd(el) <= END_SLACK) setFollowing(true);
     else if (top < expected.current - 0.5) {
-      following.current = false;
+      setFollowing(false);
       stopGlide();
     }
     expected.current = top;
     setAtEnd(following.current);
-  }, [setAtEnd, stopGlide]);
+  }, [setAtEnd, setFollowing, stopGlide]);
 
   // Called on every resize: back to the end while following it, so a growing
   // message stays in view, and following again once the end comes to the
@@ -138,12 +144,12 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
     const el = viewport.current;
     // A viewport with no box, such as in a hidden tab panel, reads 0 for
     // everything, which would look like the end.
-    if (!el || glideFrame.current || el.getClientRects().length === 0) return;
+    if (!el || glideFrame.current || el.clientHeight === 0) return;
     if (following.current) jump(el, el.scrollHeight);
-    else if (distanceToEnd(el) <= END_SLACK) following.current = true;
+    setFollowing(following.current || distanceToEnd(el) <= END_SLACK);
     expected.current = el.scrollTop;
     setAtEnd(following.current);
-  }, [setAtEnd]);
+  }, [setAtEnd, setFollowing]);
 
   // Each frame covers a share of what is left, so it slows into an end that
   // may still be moving away while a message grows, and it lands after
@@ -151,7 +157,7 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
   const scrollToEnd = useCallback(() => {
     const el = viewport.current;
     if (!el) return;
-    following.current = true;
+    setFollowing(true);
     setAtEnd(true);
     stopGlide();
     if (reducedMotion()) {
@@ -178,36 +184,25 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
       glideFrame.current = requestAnimationFrame(step);
     };
     step();
-  }, [setAtEnd, stopGlide]);
+  }, [setAtEnd, setFollowing, stopGlide]);
 
-  // Keeps focus that lands under the shown scroll button clear of it. It is
-  // measured when the button shows, when its box resizes, and again as focus
-  // lands in the viewport, before the browser scrolls to it, which catches a
-  // change no observer sees, such as its inset token.
-  const measureCover = useCallback(() => {
+  // The scroll button's height, so the viewport's scroll padding keeps focus
+  // clear of it while it shows. Its inset is added in CSS.
+  useLayoutEffect(() => {
     const el = viewport.current;
     const own = button.current;
-    if (!el) return;
-    if (!own || own.hidden) {
-      el.style.removeProperty('--_cover');
-      return;
-    }
-    const cover = el.getBoundingClientRect().bottom - own.getBoundingClientRect().top;
-    el.style.setProperty('--_cover', `${Math.max(0, cover)}px`);
-  }, []);
-
-  useLayoutEffect(() => {
-    measureCover();
-    const own = button.current;
-    if (atEnd || !own || typeof ResizeObserver === 'undefined') return;
-    const resize = new ResizeObserver(measureCover);
+    if (!el || !own || typeof ResizeObserver === 'undefined') return;
+    const resize = new ResizeObserver(([entry]) => {
+      const size = entry?.borderBoxSize[0]?.blockSize ?? own.offsetHeight;
+      if (size > 0) el.style.setProperty('--_button-size', `${size}px`);
+    });
     resize.observe(own, { box: 'border-box' });
     return () => resize.disconnect();
-  }, [atEnd, measureCover]);
+  }, []);
 
   const value = useMemo<ConversationContext>(
-    () => ({ viewport, content, button, announceMessages, atEnd, onScroll, follow, scrollToEnd, measureCover }),
-    [announceMessages, atEnd, onScroll, follow, scrollToEnd, measureCover],
+    () => ({ viewport, content, button, announceMessages, atEnd, onScroll, follow, scrollToEnd }),
+    [announceMessages, atEnd, onScroll, follow, scrollToEnd],
   );
 
   return (
@@ -251,17 +246,11 @@ function Viewport({ 'aria-label': ariaLabel, className, ref, onScroll, onFocus, 
       tabIndex={stop ? 0 : -1}
       {...props}
       ref={refs}
-      // Scroll anchoring is off while following: it could move the position
-      // up when content above shrinks, which would read as the reader.
-      data-following={context.atEnd ? '' : undefined}
       className={cx(styles.viewport, className)}
       onScroll={composeHandlers(onScroll, (_event: UIEvent<HTMLElement>) => context.onScroll())}
       onFocus={composeHandlers(onFocus, (event: FocusEvent<HTMLElement>) => {
         if (event.target === event.currentTarget) setFocused(true);
-        else {
-          context.measureCover();
-          revealRing(event.currentTarget, event.target);
-        }
+        else revealRing(event.currentTarget, event.target);
       })}
       onBlur={composeHandlers(onBlur, (event: FocusEvent<HTMLElement>) => {
         if (event.target === event.currentTarget) setFocused(false);
@@ -295,7 +284,7 @@ function Content({ className, ref, ...props }: ConversationContentProps) {
     const el = context.content.current;
     if (!el || !announceMessages || typeof MutationObserver === 'undefined') return;
     const busy = () => new Set(el.querySelectorAll('article[aria-busy="true"]'));
-    // Messages already arriving when it mounts are not news.
+    // A message already arriving when it mounts has no start to announce.
     let arriving = busy();
     const mutations = new MutationObserver(() => {
       const now = busy();
