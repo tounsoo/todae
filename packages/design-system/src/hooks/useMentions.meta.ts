@@ -42,7 +42,7 @@ export const meta = {
       name: 'disabled',
       type: 'boolean',
       required: false,
-      description: 'Keeps the list closed.',
+      description: 'Keeps the list closed and leaves Backspace and Delete to the textarea.',
     },
     {
       name: 'id',

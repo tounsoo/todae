@@ -2437,8 +2437,8 @@
       "ko": "textarea의 maxLength. 텍스트가 들어가지 않는 고르기는 비활성화됩니다."
     },
     "disabled": {
-      "en": "Keeps the list closed.",
-      "ko": "목록을 닫아 둡니다."
+      "en": "Keeps the list closed and leaves Backspace and Delete to the textarea.",
+      "ko": "목록을 닫아 두고, Backspace와 Delete는 textarea에 맡깁니다."
     },
     "id": {
       "en": "Base for the listbox id.",

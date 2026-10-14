@@ -1,4 +1,6 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToString } from 'react-dom/server';
 import { StrictMode, startTransition, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Field } from '../components/Field';
@@ -61,6 +63,9 @@ function Harness({
       </button>
       <button type="button" onClick={() => setDraft({ text: 'yo @Bob', tokens: [{ start: 3, end: 7, char: '@', value: 'bob', text: '@Bob' }] })}>
         Load
+      </button>
+      <button type="button" onClick={() => setDraft({ text: 'yo @bo', tokens: [] })}>
+        Replace
       </button>
     </>
   );
@@ -442,5 +447,49 @@ describe('useMentions edge cases', () => {
     act(() => result.select('ada'));
     expect(result.value.tokens).toEqual([ada]);
     expect(onChange).toHaveBeenCalledWith({ text: '@Ada hi', tokens: [ada] });
+  });
+
+  it('opens a new draft from outside without the last draft\'s dismissal', () => {
+    let result!: UseMentionsResult;
+    render(<Harness initial="yo @a" expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    el.setSelectionRange(5, 5);
+    fireEvent.select(el);
+    fireEvent.keyDown(el, { key: 'Escape' });
+    expect(result.open).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Replace' }));
+    el.focus();
+    el.setSelectionRange(6, 6);
+    fireEvent.select(el);
+    expect(result.open).toBe(true);
+  });
+
+  it('opens again for a trigger typed over a selection that held the dismissed one', () => {
+    let result!: UseMentionsResult;
+    render(<Harness expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    fireEvent.focus(el);
+    type(el, '@a');
+    fireEvent.keyDown(el, { key: 'Escape' });
+    el.setSelectionRange(0, 2);
+    el.dispatchEvent(new Event('beforeinput'));
+    type(el, '@');
+    expect(result.open).toBe(true);
+  });
+
+  it('opens for a textarea focused before the page hydrates', () => {
+    let result!: UseMentionsResult;
+    const container = document.createElement('div');
+    document.body.append(container);
+    container.innerHTML = renderToString(<Harness />);
+    const el = container.querySelector('textarea')!;
+    el.focus();
+    act(() => {
+      hydrateRoot(container, <Harness expose={(r) => (result = r)} />);
+    });
+    fireEvent.change(el, { target: { value: '@a', selectionStart: 2, selectionEnd: 2 } });
+    expect(result.open).toBe(true);
+    container.remove();
   });
 });

@@ -45,7 +45,7 @@ const mentions = useMentions({
 
 목록이 열려 있는 동안 ArrowDown과 ArrowUp은 목록의 옵션 사이를 움직이고, Enter나 Tab은 활성 옵션을 고릅니다. 단어의 옵션을 아직 불러오는 중에 누른 Enter는 아무것도 하지 않으므로, [Composer](/composer)가 덜 입력한 멘션을 보내지 않습니다. 고를 수 있는 옵션이 없을 때 누른 Enter는 목록을 닫고 textarea에 맡깁니다. Escape나 textarea와 목록 바깥을 누르면 그 단어에 대해 목록이 닫히고, 다음 트리거에서 다시 열립니다.
 
-고르기는 `document.execCommand('insertText')`로 단어를 바꾸므로 textarea 자체의 실행 취소 기록에 한 단계로 남고, 뒤에 공백이 없으면 공백을 하나 더합니다. 실행 취소와 다시 실행은 되돌린 텍스트가 가졌던 토큰을 되살립니다. 토큰 끝에서 Backspace를, 토큰 앞에서 Delete를 누르면 토큰 전체가 지워집니다. 토큰 안을 편집하면 그 토큰은 일반 텍스트로 돌아갑니다.
+고르기는 `document.execCommand('insertText')`로 단어를 바꾸므로 textarea 자체의 실행 취소 기록에 한 단계로 남고, 뒤에 공백이 없으면 공백을 하나 더합니다. 실행 취소와 다시 실행은 되돌린 텍스트가 마지막으로 가졌던 토큰을 되살립니다. 토큰 끝에서 Backspace를, 토큰 앞에서 Delete를 누르면 토큰 전체가 지워집니다. 토큰 안을 편집하면 그 토큰은 일반 텍스트로 돌아갑니다.
 
 `value`는 임시 저장본으로, `text`와 `tokens`를 담습니다. `tokens`는 토큰마다 `start`, `end`, `char`, `value`, `text`를 담습니다. `onValueChange`는 편집마다 둘을 함께 돌려주므로 둘은 함께 저장됩니다. 백엔드에도 함께 보내고, 임시 저장본을 불러오거나 비울 때는 둘 다 설정하세요. 범위가 더 이상 자기 텍스트를 담지 않는 토큰은 버려집니다.
 

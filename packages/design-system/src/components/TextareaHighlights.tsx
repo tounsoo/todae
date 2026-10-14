@@ -55,6 +55,7 @@ const COPIED = [
   'letter-spacing',
   'word-spacing',
   'text-indent',
+  'text-rendering',
   'text-transform',
   'text-align',
   'tab-size',
@@ -188,6 +189,8 @@ export function TextareaHighlights({
     <div
       ref={ref}
       aria-hidden="true"
+      // Page translation would rewrite these text nodes under React.
+      translate="no"
       className={styles.highlights}
       style={{ positionAnchor: anchorName } as CSSProperties}
     >

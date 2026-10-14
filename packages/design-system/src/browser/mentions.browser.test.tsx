@@ -182,6 +182,37 @@ describe('useMentions in a browser', () => {
     expect(screen.queryByRole('listbox')).toBeNull();
   });
 
+  it('puts the caret after a pick when the product commits the draft later', async () => {
+    function Late() {
+      const [draft, setDraft] = useState<MentionDraft>({ text: 'hi @al there', tokens: [] });
+      const mentions = useMentions({ triggers: TRIGGERS, value: draft, onValueChange: (next) => setTimeout(() => setDraft(next), 10) });
+      return (
+        <main data-appearance="light" data-density="comfortable" style={{ inlineSize: '24rem' }}>
+          <Field.Root aria-label="Message">
+            <Field.Textarea {...mentions.getTextareaProps()} />
+          </Field.Root>
+          <Popover.Root {...mentions.getPopoverProps()}>
+            <OptionList.Root {...mentions.getListboxProps()}>
+              {mentions.items.map((item) => (
+                <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </main>
+      );
+    }
+    render(<Late />);
+    await userEvent.click(field());
+    await act(async () => {
+      field().setSelectionRange(6, 6);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    await act(() => new Promise((resolve) => setTimeout(resolve, 40)));
+    expect(field().value).toBe('hi @Alan Turing there');
+    expect(field().selectionStart).toBe(15);
+  });
+
   it('picks with a click and keeps focus in the textarea', async () => {
     render(<Chat />);
     await userEvent.click(field());
@@ -210,7 +241,7 @@ describe('useMentions in a browser', () => {
     expect(getComputedStyle(layer).direction).toBe('rtl');
   });
 
-  it("copies the textarea's own lang to the layer", async () => {
+  it("copies the textarea's own lang to the layer, and keeps page translation off it", async () => {
     function Lang() {
       const mentions = useMentions({
         triggers: TRIGGERS,
@@ -225,7 +256,9 @@ describe('useMentions in a browser', () => {
       );
     }
     render(<Lang />);
-    expect(document.querySelector('[data-kind="@"]')!.parentElement!.getAttribute('lang')).toBe('ja');
+    const layer = document.querySelector('[data-kind="@"]')!.parentElement!;
+    expect(layer.getAttribute('lang')).toBe('ja');
+    expect(layer.getAttribute('translate')).toBe('no');
   });
 
   it('passes axe while open', async () => {

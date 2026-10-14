@@ -134,7 +134,12 @@ function insertion(value: string, query: MentionQuery, text: string): string {
 }
 
 /** The text the dismissed trigger index belongs to, and the last edit, which places its changed span. */
-type Dismissal = { text: string; dismissed: number | null; edit: { text: string; caret: number | null } | null };
+type Dismissal = {
+  text: string;
+  dismissed: number | null;
+  /** The hook's own last edit: its text, its caret, and whether it replaced a selection holding the dismissed trigger. */
+  edit: { text: string; caret: number | null; replacedDismissed: boolean } | null;
+};
 
 /** The collapsed caret of a textarea that takes typing, or null. */
 function caretOf(el: HTMLTextAreaElement): number | null {
@@ -174,13 +179,17 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const history = useRef(new Map<string, readonly MentionToken[]>());
   // The token a pick is inserting, read by the change event its native edit fires.
   const picking = useRef<MentionToken | null>(null);
+  // The selection an edit replaces, read at beforeinput.
+  const selectionBefore = useRef<{ start: number; end: number } | null>(null);
 
   // The trigger Escape closed the list for moves with the text.
   const [own, setOwn] = useState<Dismissal>(() => ({ text: value, dismissed: null, edit: null }));
   let dismissed = own.dismissed;
   if (own.text !== value) {
-    const caretOfEdit = own.edit?.text === value ? own.edit.caret : undefined;
-    dismissed = dismissed === null ? null : shiftIndex(own.text, value, dismissed, caretOfEdit);
+    // A text set from outside is a new draft, so nothing stays dismissed in it.
+    const edited = own.edit?.text === value ? own.edit : null;
+    dismissed =
+      dismissed === null || !edited || edited.replacedDismissed ? null : shiftIndex(own.text, value, dismissed, edited.caret);
     setOwn({ text: value, dismissed, edit: null });
   }
 
@@ -210,14 +219,28 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     }
     remember(value, tokens);
     remember(next, list);
-    setOwn((current) => ({ ...current, edit: { text: next, caret: how.caret } }));
+    const before = selectionBefore.current;
+    selectionBefore.current = null;
+    setOwn((current) => ({
+      ...current,
+      edit: {
+        text: next,
+        caret: how.caret,
+        replacedDismissed:
+          before !== null && current.dismissed !== null && before.start <= current.dismissed && current.dismissed < before.end,
+      },
+    }));
     send({ text: next, tokens: list });
   };
 
   // A value set from outside, such as clearing the text after sending, can move the caret.
   useLayoutEffect(() => {
     const el = textareaRef.current;
-    if (el && el.ownerDocument.activeElement === el) setCaret(caretOf(el));
+    if (el && el.ownerDocument.activeElement === el) {
+      // Focus can come before hydration, which onFocus never hears.
+      setFocused(true);
+      setCaret(caretOf(el));
+    }
   }, [value]);
 
   // Waits for the picked text, which a parent may commit later; typing clears it.
@@ -371,6 +394,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       if (native && el) {
         el.setSelectionRange(caretTo, caretTo);
         setCaret(caretTo);
+        // A product that commits the draft later puts the old text back first, which moves the caret.
+        setCaretAfter({ to: caretTo, value: next });
         return;
       }
       el?.focus();
@@ -468,8 +493,15 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const watchCaret = useCallback((el: HTMLTextAreaElement | null) => {
     if (!el) return;
     const onChange = () => setCaret(caretOf(el));
+    const onBeforeInput = () => {
+      selectionBefore.current = { start: el.selectionStart, end: el.selectionEnd };
+    };
     el.addEventListener('selectionchange', onChange);
-    return () => el.removeEventListener('selectionchange', onChange);
+    el.addEventListener('beforeinput', onBeforeInput);
+    return () => {
+      el.removeEventListener('selectionchange', onChange);
+      el.removeEventListener('beforeinput', onBeforeInput);
+    };
   }, []);
   const ownRef = useComposedRefs(textareaRef, watchCaret);
   const composeRef = useStableComposedRef(ownRef);
