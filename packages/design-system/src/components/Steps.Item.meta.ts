@@ -16,7 +16,7 @@ export const meta = {
       name: 'statusLabel',
       type: 'string',
       required: false,
-      description: 'The hidden status word read before the step, in place of the stepDone, stepCurrent, stepPending or stepError string.',
+      description: 'The hidden status word read before the step, in place of the stepDone, stepCurrent, stepPending or stepError string when not empty.',
     },
   ],
 } as const satisfies ComponentMeta;

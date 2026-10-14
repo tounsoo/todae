@@ -18,12 +18,12 @@
     color: var(--todae-steps-fg-pending);
   }
 
-  .item:not(:last-child) {
+  .item:has(+ .item) {
     padding-block-end: var(--todae-steps-gap);
   }
 
-  /* The line joining a marker to the next one, through the gap between items. */
-  .item:not(:last-child)::after {
+  /* The line joining a marker to the next step's, through the gap between items. */
+  .item:has(+ .item)::after {
     content: '';
     position: absolute;
     inset-inline-start: calc((var(--todae-steps-marker-size) - var(--todae-steps-line-width)) / 2);
@@ -113,7 +113,7 @@
       border-color: CanvasText;
     }
 
-    .item:not(:last-child)::after {
+    .item:has(+ .item)::after {
       background: CanvasText;
     }
 
@@ -122,10 +122,6 @@
       border-color: Highlight;
       background: Highlight;
       color: HighlightText;
-    }
-
-    .item[data-status='current'] > .marker {
-      border-color: transparent;
     }
 
     .item[data-status='error'] > .marker {

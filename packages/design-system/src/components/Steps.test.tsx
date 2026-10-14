@@ -47,7 +47,7 @@ describe('Steps', () => {
     expect(error!.querySelector('[aria-hidden="true"] [data-todae-glyph] > svg')).not.toBeNull();
   });
 
-  it('reads the status words from StringsProvider unless statusLabel is set', () => {
+  it('reads the status words from StringsProvider unless statusLabel is set and not empty', () => {
     render(
       <StringsProvider strings={{ stepDone: '완료' }}>
         <Steps.Root>
@@ -55,10 +55,13 @@ describe('Steps', () => {
           <Steps.Item status="done" statusLabel="Skipped">
             B
           </Steps.Item>
+          <Steps.Item status="done" statusLabel="">
+            C
+          </Steps.Item>
         </Steps.Root>
       </StringsProvider>,
     );
-    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['완료: A', 'Skipped: B']);
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['완료: A', 'Skipped: B', '완료: C']);
   });
 
   it('throws when an item is rendered outside Steps.Root', () => {

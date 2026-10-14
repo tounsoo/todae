@@ -539,7 +539,7 @@
   "steps": {
     "(top)": "2ea27e601f9e",
     "# Steps": "cc3c0b7c3b01",
-    "## Parts": "94590681eed6",
+    "## Parts": "8124f4932285",
     "## Status words": "5e1bbccafcfa",
     "## Accessible composition": "ff32888d1c88",
     "## When to use": "6d68608bb7ba",
@@ -652,7 +652,7 @@
   },
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
-    "# StringsProvider": "1dfd3f30006f",
+    "# StringsProvider": "a18713b4e742",
     "## Strings": "44b969fc16d6",
     "## Accessible composition": "3a78acb70781",
     "## When to use": "214f070a73a5",

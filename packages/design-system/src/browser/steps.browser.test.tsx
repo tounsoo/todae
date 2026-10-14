@@ -56,6 +56,19 @@ describe('Steps in a browser', () => {
     });
   }
 
+  it('draws no line after the last step when another child follows it', () => {
+    render(
+      <Steps.Root>
+        <Steps.Item status="done">A</Steps.Item>
+        <Steps.Item>B</Steps.Item>
+        <li>Add a step</li>
+      </Steps.Root>,
+    );
+    const [first, last] = screen.getAllByRole('listitem');
+    expect(getComputedStyle(first!, '::after').content).not.toBe('none');
+    expect(getComputedStyle(last!, '::after').content).toBe('none');
+  });
+
   it('centres the marker on the first line of the step and puts it at the start', () => {
     render(plan('rtl'));
     const item = screen.getAllByRole('listitem')[1]!;

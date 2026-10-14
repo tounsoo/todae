@@ -20,7 +20,7 @@ export type StepsRootProps = ComponentPropsWithRef<'ol'>;
 export type StepsItemProps = ComponentPropsWithRef<'li'> & {
   /** Sets `data-status` and the marker. A `current` step takes `aria-current="step"`. Default `pending`. */
   status?: StepsStatus;
-  /** The hidden status word read before the step, in place of the StringsProvider one. */
+  /** The hidden status word read before the step, in place of the StringsProvider one when not empty. */
   statusLabel?: string;
 };
 
@@ -46,7 +46,7 @@ function Item({ status = 'pending', statusLabel, className, children, ...props }
   if (!useContext(InRoot)) throw new Error('Steps.Item must be rendered inside Steps.Root');
   const strings = useStrings();
   const glyphs = useGlyphs();
-  const word = statusLabel ?? strings[STATUS_STRING[status]];
+  const word = statusLabel || strings[STATUS_STRING[status]];
   return (
     <li
       {...props}
