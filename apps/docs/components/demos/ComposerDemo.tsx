@@ -12,6 +12,7 @@ export function ComposerExample() {
   const [sent, setSent] = useState<Sent[]>([]);
   const [busy, setBusy] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const field = useRef<HTMLTextAreaElement>(null);
   const zone = useDropzone({
     multiple: true,
     paste: true,
@@ -56,7 +57,13 @@ export function ComposerExample() {
                         <FileText aria-hidden />
                       </Attachment.Preview>
                       <Attachment.Name>{file.name}</Attachment.Name>
-                      <Attachment.Remove onClick={() => setFiles((all) => all.filter((other) => other !== file))} />
+                      <Attachment.Remove
+                        onClick={() => {
+                          // After the last file, focus goes back to the text field.
+                          if (files.length === 1) field.current?.focus();
+                          setFiles((all) => all.filter((other) => other !== file));
+                        }}
+                      />
                     </Attachment.Root>
                   </li>
                 ))}
@@ -64,6 +71,7 @@ export function ComposerExample() {
             </Field.Row>
           ) : null}
           <Field.Textarea
+            ref={field}
             value={value}
             onChange={(event) => setValue(event.target.value)}
             placeholder="Ask anything, or paste a file"

@@ -82,6 +82,51 @@ describe('Composer in a browser', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Stop' }));
   });
 
+  it('stops without sending what was typed while the reply ran, by click or by key', async () => {
+    const onSend = vi.fn();
+    render(<Chat onSend={onSend} />);
+    const field = screen.getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement;
+    await userEvent.click(field);
+    await userEvent.keyboard('Hi{Enter}next draft');
+    await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
+    expect(screen.getByRole('button', { name: 'Send' })).toBeTruthy();
+    expect(onSend).toHaveBeenCalledTimes(1);
+    expect(field.value).toBe('next draft');
+    for (const key of ['{Enter}', ' ']) {
+      await userEvent.click(field);
+      await userEvent.keyboard('{Enter}draft');
+      const sends = onSend.mock.calls.length;
+      screen.getByRole('button', { name: 'Stop' }).focus();
+      await userEvent.keyboard(key);
+      expect(screen.getByRole('button', { name: 'Send' })).toBeTruthy();
+      expect(onSend).toHaveBeenCalledTimes(sends);
+    }
+    expect(onSend).toHaveBeenCalledTimes(3);
+  });
+
+  it('sends nothing on Enter, and moves focus to the text field, when a fieldset disables the send button', async () => {
+    const onSend = vi.fn();
+    function Fenced() {
+      const [off, setOff] = useState(false);
+      return (
+        <Composer.Root onSubmit={(event) => (event.preventDefault(), onSend())}>
+          <textarea aria-label="Message" />
+          <fieldset disabled={off}>
+            <legend>Actions</legend>
+            <Composer.Submit onFocus={() => setOff(true)} />
+          </fieldset>
+        </Composer.Root>
+      );
+    }
+    render(<Fenced />);
+    screen.getByRole('button', { name: 'Send' }).focus();
+    await act(async () => {});
+    const field = screen.getByRole('textbox');
+    expect(document.activeElement).toBe(field);
+    await userEvent.keyboard('{Enter}');
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
   it('passes axe', async () => {
     render(<Chat />);
     const results = await axe.run(document.body, { rules: { 'color-contrast': { enabled: false } } });

@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Composer.Submit',
   description:
-    "A Button.Root that sends the form, at the end of a Field.Row. While the composer is busy it is a Stop button instead. Takes Button.Root props but pressed.",
+    "A Button.Root that sends the form, at the end of a Field.Row. While the composer is busy it is a Stop button instead. Takes Button.Root props but pressed and type: it is a submit button, or a plain button while busy.",
   props: [
     {
       name: 'onStop',

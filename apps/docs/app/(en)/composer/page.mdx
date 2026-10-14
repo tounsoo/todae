@@ -21,12 +21,12 @@ import { ComposerExample } from '../../../components/demos/ComposerDemo';
 
 ## Parts
 
-- `Composer.Root` is a `form`. Enter in one of its textareas sends it through `requestSubmit`, with the form's first submit button as the submitter, and sends nothing while that button is disabled. Shift+Enter, Enter with Alt, Ctrl or Meta, and Enter that ends an IME composition, such as a Korean word, are left to the textarea. `busy` means a reply is running: Enter sends nothing, and the root sets `data-busy`.
+- `Composer.Root` is a `form`. Enter in one of its textareas sends it through `requestSubmit`, with the form's first submit button as the submitter, and sends nothing while that button is disabled. Shift+Enter, Enter with Alt, Ctrl or Meta, and Enter that ends an IME composition, such as a Korean word, are left to the textarea. `busy` means a reply is running: the form sends nothing, from Enter or anything else, and the root sets `data-busy`.
 - `Composer.Submit` is a [Button](/button) that sits at the end of its row. It is a submit button with the `send` glyph, named by the `send` string. While the composer is busy it is a plain button with the `stop` glyph, named by the `stop` string, that calls `onStop`. `disabled` applies to Send; Stop is disabled only when there is no `onStop`.
 
 ## Sending and stopping
 
-Send from the root's `onSubmit`, calling `event.preventDefault()` to stay on the page, and set `busy` until the reply is done. Send and Stop are the same button, so focus stays on it when you press Send.
+Send from the root's `onSubmit`, calling `event.preventDefault()` to stay on the page, and set `busy` until the reply is done. Send and Stop are the same button, so a button that has focus keeps it as they swap. Pressing Stop does not also send what was typed while the reply ran.
 
 When Send turns disabled while it has focus and the browser takes focus off it, as Chromium does, such as when Stop turns back into Send with nothing typed, focus moves to the first enabled textarea of the form.
 
@@ -36,7 +36,7 @@ Put each [Attachment](/attachment) in a labelled list in a `Field.Row` before th
 
 ## Accessible composition
 
-**Todae handles:** Enter to send, and Shift+Enter or an IME composition to keep writing. The names of Send and Stop, from [StringsProvider](/utilities/strings-provider). Focus staying on the button as Send and Stop swap, and moving to the text field when the button turns disabled under it.
+**Todae handles:** Enter to send, and Shift+Enter or an IME composition to keep writing. The names of Send and Stop, from [StringsProvider](/utilities/strings-provider). Focus staying on a focused button as Send and Stop swap, and moving to the text field when the browser takes focus off the button as it turns disabled.
 
 **You supply:** A name for the field, such as `aria-label` on `Field.Root` or a [Label](/label). `busy` while the reply runs, and `onStop`. A name for every other button in the row. Announcing the reply, such as through [Conversation](/conversation).
 

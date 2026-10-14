@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState, type FormEvent } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StringsProvider } from '../providers/StringsProvider';
+import { Button } from './Button';
 import { Composer } from './Composer';
 import { Field } from './Field';
 
@@ -129,6 +130,51 @@ describe('Composer', () => {
     expect(screen.getByRole('button', { name: 'Go' }).hasAttribute('aria-label')).toBe(false);
     expect(screen.getByRole('button', { name: 'Arrêter' })).toBeTruthy();
     expect(screen.getByRole('form', { name: 'Busy' }).hasAttribute('data-busy')).toBe(true);
+  });
+
+  it('sends nothing while busy, from a text input or a call to requestSubmit', () => {
+    const onSend = vi.fn();
+    render(
+      <Composer.Root busy aria-label="Prompt" onSubmit={onSend}>
+        <input aria-label="Line" />
+        <Composer.Submit onStop={() => {}} />
+      </Composer.Root>,
+    );
+    const form = screen.getByRole('form') as HTMLFormElement;
+    form.requestSubmit();
+    fireEvent.submit(form);
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
+  it('takes an image input as the default button, in tree order', () => {
+    const onSend = vi.fn();
+    render(
+      <Composer.Root onSubmit={(event) => (event.preventDefault(), onSend((event.nativeEvent as SubmitEvent).submitter))}>
+        <textarea aria-label="Message" />
+        <input type="image" alt="Send as image" disabled />
+        <Composer.Submit />
+      </Composer.Root>,
+    );
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
+  it('names itself from the strings for an empty aria-label, empty children or icon-only content', () => {
+    render(
+      <Composer.Root>
+        <Composer.Submit aria-label="" data-testid="empty-label" />
+        <Composer.Submit data-testid="false-child">{false}</Composer.Submit>
+        <Composer.Submit data-testid="icon-only">
+          <Button.Icon>
+            <svg viewBox="0 0 16 16" aria-hidden />
+          </Button.Icon>
+        </Composer.Submit>
+      </Composer.Root>,
+    );
+    for (const id of ['empty-label', 'false-child', 'icon-only']) {
+      expect(screen.getByTestId(id).getAttribute('aria-label')).toBe('Send');
+    }
+    expect(screen.getByTestId('false-child').querySelector('svg')).toBeTruthy();
   });
 
   it('throws for Composer.Submit outside Composer.Root', () => {

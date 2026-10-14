@@ -1,16 +1,20 @@
 import {
+  Children,
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   type ComponentPropsWithRef,
   type KeyboardEvent,
   type MouseEvent,
+  type SubmitEvent as ReactSubmitEvent,
 } from 'react';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { useStrings } from '../providers/StringsProvider';
 import { Button, type ButtonActionProps } from './Button';
+import { useDismissLabel } from './dismissLabel';
 import { glyphOr, SendGlyph, StopGlyph } from './glyphs';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Composer.module.css';
@@ -21,11 +25,11 @@ import styles from './Composer.module.css';
  * line.
  */
 export type ComposerRootProps = ComponentPropsWithRef<'form'> & {
-  /** A response is running: Enter sends nothing, and Composer.Submit turns into Stop. Sets `data-busy`. */
+  /** A response is running: the form sends nothing, from Enter or anything else, and Composer.Submit turns into Stop. Sets `data-busy`. */
   busy?: boolean;
 };
 /** A Button.Root that sends the form, or stops the response while the composer is busy. With no content it shows the send or stop glyph. */
-export type ComposerSubmitProps = ButtonActionProps & {
+export type ComposerSubmitProps = Omit<ButtonActionProps, 'type'> & {
   /** Called when Stop is pressed. Without it, Stop is disabled while the composer is busy. */
   onStop?: () => void;
 };
@@ -40,16 +44,21 @@ function useComposer(part: string): ComposerContext {
   return context;
 }
 
-/** The button implicit submission would press: the form's first submit button. */
+/**
+ * The button implicit submission would press: the form's first submit button
+ * in tree order, including an image input, which `form.elements` leaves out.
+ */
 function defaultButton(form: HTMLFormElement): HTMLButtonElement | HTMLInputElement | undefined {
-  for (const el of form.elements) {
-    if (el instanceof HTMLButtonElement && el.type === 'submit') return el;
-    if (el instanceof HTMLInputElement && (el.type === 'submit' || el.type === 'image')) return el;
+  const candidates = form.ownerDocument.querySelectorAll<HTMLButtonElement | HTMLInputElement>(
+    'button, input[type="submit" i], input[type="image" i]',
+  );
+  for (const el of candidates) {
+    if (el.form === form && el.type !== 'button' && el.type !== 'reset') return el;
   }
   return undefined;
 }
 
-function Root({ busy = false, className, onKeyDown, ...props }: ComposerRootProps) {
+function Root({ busy = false, className, onKeyDown, onSubmit, ...props }: ComposerRootProps) {
   const context = useMemo(() => ({ busy }), [busy]);
   const handleKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
     const target = event.target;
@@ -58,22 +67,32 @@ function Root({ busy = false, className, onKeyDown, ...props }: ComposerRootProp
     // Enter that ends an IME composition, such as a Korean or Japanese word,
     // only commits the word. Safari sends it after compositionend, with keyCode 229.
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
-    if (event.defaultPrevented || target.readOnly || target.disabled) return;
+    if (event.defaultPrevented || target.readOnly || target.matches(':disabled')) return;
     event.preventDefault();
     if (busy) return;
     const form = event.currentTarget;
     const button = defaultButton(form);
     // As implicit submission does: a disabled default button sends nothing.
-    if (button?.disabled) return;
+    if (button?.matches(':disabled')) return;
     form.requestSubmit(button);
+  };
+  // Nothing sends while busy, whatever starts it: Enter in a text input, a
+  // product button, or a call to requestSubmit.
+  const handleSubmit = (event: ReactSubmitEvent<HTMLFormElement>) => {
+    if (busy) {
+      event.preventDefault();
+      return;
+    }
+    onSubmit?.(event);
   };
   return (
     <Context.Provider value={context}>
       <form
         {...props}
         onKeyDown={composeHandlers(onKeyDown, handleKeyDown)}
+        onSubmit={handleSubmit}
         data-busy={busy ? '' : undefined}
-        className={cx(styles.root, className)}
+        className={className}
       />
     </Context.Provider>
   );
@@ -93,8 +112,17 @@ function Submit({
   const strings = useStrings();
   const glyphs = useGlyphs();
   const own = useRef<HTMLButtonElement>(null);
-  const refs = useComposedRefs(own, ref);
+  const empty = Children.toArray(children).length === 0;
+  const [label, labelRef] = useDismissLabel(empty ? undefined : children, ariaLabel, ref, busy ? strings.stop : strings.send);
+  const refs = useComposedRefs(own, labelRef);
   const off = busy ? !onStop : Boolean(disabled);
+  // Whether the button was enabled at the last commit. A focusout while the
+  // layout effect below has not caught up yet comes from the commit that
+  // disabled it.
+  const enabled = useRef(false);
+  useLayoutEffect(() => {
+    enabled.current = own.current ? !own.current.matches(':disabled') : false;
+  });
   // A focused button that turns disabled, such as Stop turning back into Send
   // with nothing typed, drops focus to the page: Chromium blurs it at once,
   // during React's commit. Focus goes to the form's text field instead, once
@@ -103,7 +131,7 @@ function Submit({
     const button = own.current;
     if (!button) return;
     const onFocusOut = (event: FocusEvent) => {
-      if (!button.disabled || event.relatedTarget) return;
+      if (event.relatedTarget || !enabled.current || !button.matches(':disabled')) return;
       queueMicrotask(() => {
         const doc = button.ownerDocument;
         if (doc.activeElement && doc.activeElement !== doc.body) return;
@@ -113,22 +141,28 @@ function Submit({
     button.addEventListener('focusout', onFocusOut);
     return () => button.removeEventListener('focusout', onFocusOut);
   }, []);
-  const handleClick = () => {
-    if (busy) onStop?.();
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    if (!busy) return;
+    // Stopping clears busy before the browser acts on the click, and the
+    // button is a submit button again by then: cancel that, so Stop does not
+    // also send what was typed meanwhile.
+    event.preventDefault();
+    onStop?.();
   };
-  const name = ariaLabel ?? (children == null ? (busy ? strings.stop : strings.send) : undefined);
   return (
     <Button.Root
       {...props}
-      aria-label={name}
+      aria-label={label}
       type={busy ? 'button' : 'submit'}
       disabled={off}
-      onClick={composeHandlers<MouseEvent<HTMLButtonElement>>(onClick, handleClick)}
+      onClick={composeHandlers(onClick, handleClick)}
       ref={refs}
       className={cx(styles.submit, className)}
     >
-      {children ?? (
+      {empty ? (
         <Button.Icon>{busy ? glyphOr(glyphs.stop, <StopGlyph />) : glyphOr(glyphs.send, <SendGlyph />)}</Button.Icon>
+      ) : (
+        children
       )}
     </Button.Root>
   );
