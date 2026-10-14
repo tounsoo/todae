@@ -21,7 +21,7 @@ import { ComposerExample } from '../../../components/demos/ComposerDemo';
 
 ## 파트
 
-- `Composer.Root`는 `form`입니다. 그 안의 텍스트 영역에서 Enter를 누르면 폼의 첫 제출 버튼을 submitter로 `requestSubmit`을 불러 폼을 보내고, 그 버튼이 비활성화되어 있으면 아무것도 보내지 않습니다. Shift+Enter, Alt나 Ctrl, Meta와 함께 누른 Enter, 그리고 한국어 단어처럼 IME 조합을 끝내는 Enter는 텍스트 영역에 맡깁니다. `busy`는 답이 진행 중이라는 뜻입니다. Enter로든 제출 버튼이나 `requestSubmit`으로든 submit 이벤트가 통과하지 않고, 루트에 `data-busy`를 설정합니다.
+- `Composer.Root`는 `form`입니다. 그 안의 텍스트 영역에서 Enter를 누르면 폼의 첫 제출 버튼을 submitter로 `requestSubmit`을 불러 폼을 보내고, 그 버튼이 비활성화되어 있으면 아무것도 보내지 않습니다. Shift+Enter, Alt나 Ctrl, Meta와 함께 누른 Enter, 그리고 한국어 단어처럼 IME 조합을 끝내는 Enter는 텍스트 영역에 맡깁니다. `busy`는 답이 진행 중이라는 뜻입니다. Enter로든 제출 버튼이나 `requestSubmit`으로든 이 폼의 제출은 통과하지 않고, 루트에 `data-busy`를 설정합니다.
 - `Composer.Submit`은 행의 끝에 놓이는 [Button](/button)입니다. `send` 글리프를 보여 주고 `send` 문자열로 이름이 붙는 제출 버튼입니다. 작성창이 busy인 동안에는 `stop` 글리프를 보여 주고 `stop` 문자열로 이름이 붙는 일반 버튼이 되어 `onStop`을 부릅니다. `disabled`는 Send에 적용되고, Stop은 `onStop`이 없을 때만 비활성화됩니다.
 
 ## 보내기와 멈추기

@@ -216,6 +216,7 @@ describe('Composer in a browser', () => {
     await userEvent.click(screen.getByRole('textbox'));
     await userEvent.keyboard('{Enter>5/}');
     expect(onSend).toHaveBeenCalledTimes(1);
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('');
   });
 
   it("leaves the submit of a form portaled inside it to that form, busy or not", async () => {
@@ -226,7 +227,7 @@ describe('Composer in a browser', () => {
         <Composer.Root busy={busy} onSubmit={(event) => (event.preventDefault(), outer())}>
           <textarea aria-label="Message" />
           {createPortal(
-            <form aria-label="Link" onSubmit={(event) => inner(event.defaultPrevented)}>
+            <form aria-label="Link" onSubmit={() => inner()}>
               <button type="submit">Add link</button>
             </form>,
             document.body,

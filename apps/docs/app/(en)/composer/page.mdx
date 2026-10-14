@@ -21,7 +21,7 @@ import { ComposerExample } from '../../../components/demos/ComposerDemo';
 
 ## Parts
 
-- `Composer.Root` is a `form`. Enter in one of its textareas sends it through `requestSubmit`, with the form's first submit button as the submitter, and sends nothing while that button is disabled. Shift+Enter, Enter with Alt, Ctrl or Meta, and Enter that ends an IME composition, such as a Korean word, are left to the textarea. `busy` means a reply is running: no submit event goes through, from Enter, a submit button or `requestSubmit`, and the root sets `data-busy`.
+- `Composer.Root` is a `form`. Enter in one of its textareas sends it through `requestSubmit`, with the form's first submit button as the submitter, and sends nothing while that button is disabled. Shift+Enter, Enter with Alt, Ctrl or Meta, and Enter that ends an IME composition, such as a Korean word, are left to the textarea. `busy` means a reply is running: no submit of this form goes through, from Enter, a submit button or `requestSubmit`, and the root sets `data-busy`.
 - `Composer.Submit` is a [Button](/button) that sits at the end of its row. It is a submit button with the `send` glyph, named by the `send` string. While the composer is busy it is a plain button with the `stop` glyph, named by the `stop` string, that calls `onStop`. `disabled` applies to Send; Stop is disabled only when there is no `onStop`.
 
 ## Sending and stopping

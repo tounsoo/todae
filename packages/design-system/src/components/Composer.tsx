@@ -27,7 +27,7 @@ import styles from './Composer.module.css';
 export type ComposerRootProps = ComponentPropsWithRef<'form'> & {
   /** Called for this form's own submits, not those of a form rendered inside it with createPortal. */
   onSubmit?: ComponentPropsWithRef<'form'>['onSubmit'];
-  /** A response is running: no submit event goes through, from Enter, a submit button or requestSubmit, and Composer.Submit turns into Stop. Sets `data-busy`. */
+  /** A response is running: no submit of this form goes through, from Enter, a submit button or requestSubmit, and Composer.Submit turns into Stop. Sets `data-busy`. */
   busy?: boolean;
 };
 /** A Button.Root that sends the form, or stops the response while the composer is busy. With no content it shows the send or stop glyph. */
@@ -143,7 +143,11 @@ function Submit({
       queueMicrotask(() => {
         const doc = button.ownerDocument;
         if (doc.activeElement && doc.activeElement !== doc.body) return;
-        button.form?.querySelector<HTMLTextAreaElement>('textarea:not(:disabled)')?.focus();
+        const form = button.form;
+        if (!form) return;
+        for (const el of form.elements) {
+          if (el instanceof HTMLTextAreaElement && !el.matches(':disabled')) return el.focus();
+        }
       });
     };
     button.addEventListener('focusout', onFocusOut);
