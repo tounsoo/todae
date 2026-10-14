@@ -37,6 +37,7 @@ const ICONS: Required<Glyphs> = {
   separator: <svg data-testid="separator" />,
   ellipsis: <svg data-testid="ellipsis" />,
   calendar: <svg data-testid="calendar" />,
+  clock: <svg data-testid="clock" />,
   send: <svg data-testid="send" />,
   stop: <svg data-testid="stop" />,
 };

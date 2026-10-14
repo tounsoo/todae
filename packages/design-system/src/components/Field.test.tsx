@@ -49,6 +49,7 @@ describe('Field exports', () => {
     expect(api).not.toHaveProperty('Suffix');
     expect(api).not.toHaveProperty('FieldLabelProps');
     expect(api.Field).not.toHaveProperty('ColorInput');
+    expect(api.Field).not.toHaveProperty('TimeInput');
     expect(api.Field).toEqual({
       Root: Field.Root,
       TextInput: Field.TextInput,
@@ -57,7 +58,7 @@ describe('Field exports', () => {
       Select: Field.Select,
       ColorPicker: Field.ColorPicker,
       DatePicker: Field.DatePicker,
-      TimeInput: Field.TimeInput,
+      TimePicker: Field.TimePicker,
       DateTimeInput: Field.DateTimeInput,
       Icon: Field.Icon,
       Affix: Field.Affix,
@@ -239,24 +240,6 @@ describe('Field date and time inputs', () => {
     expect(input.value).toBe('2026-10-07T09:30');
   });
 
-  it('writes a time to the minute unless it has seconds', () => {
-    const onValueChange = vi.fn();
-    const { input, rerender } = renderInput(
-      <Field.TimeInput value={Temporal.PlainTime.from('14:30')} onValueChange={onValueChange} />,
-    );
-    expect(input.type).toBe('time');
-    expect(input.value).toBe('14:30');
-    rerender(
-      <Field.Root aria-label="When">
-        <Field.TimeInput value={Temporal.PlainTime.from('14:30:15.250')} onValueChange={onValueChange} />
-      </Field.Root>,
-    );
-    expect(input.value).toBe('14:30:15.250');
-    fireEvent.change(input, { target: { value: '09:05' } });
-    const next = onValueChange.mock.calls[0]![0] as Temporal.PlainTime;
-    expect(next.equals(Temporal.PlainTime.from('09:05'))).toBe(true);
-  });
-
   it('shows a Temporal.PlainDateTime in a datetime-local input', () => {
     const onValueChange = vi.fn();
     const { input } = renderInput(
@@ -310,7 +293,7 @@ describe('Field date and time inputs', () => {
   it('follows the Root for disabled and invalid', () => {
     render(
       <Field.Root aria-label="When" disabled invalid>
-        <Field.TimeInput value={null} onValueChange={() => undefined} />
+        <Field.DateTimeInput value={null} onValueChange={() => undefined} />
       </Field.Root>,
     );
     const input = document.querySelector('input')!;
@@ -331,10 +314,10 @@ describe('Field date and time inputs', () => {
       expect(
         renderToString(
           <Field.Root aria-label="When">
-            <Field.TimeInput value={null} onValueChange={() => undefined} />
+            <Field.DateTimeInput value={null} onValueChange={() => undefined} />
           </Field.Root>,
         ),
-      ).toContain('type="time"');
+      ).toContain('type="datetime-local"');
     });
 
     it('reports the missing Temporal on change instead of giving null', () => {
@@ -349,10 +332,10 @@ describe('Field date and time inputs', () => {
       try {
         const { container } = render(
           <Field.Root aria-label="When">
-            <Field.TimeInput value={null} onValueChange={onValueChange} />
+            <Field.DateTimeInput value={null} onValueChange={onValueChange} />
           </Field.Root>,
         );
-        fireEvent.change(container.querySelector('input')!, { target: { value: '09:30' } });
+        fireEvent.change(container.querySelector('input')!, { target: { value: '2026-10-07T09:30' } });
       } finally {
         window.removeEventListener('error', onError);
         consoleError.mockRestore();
@@ -378,7 +361,6 @@ describe('Field.ColorPicker beside another control part', () => {
         <option value="a">A</option>
       </Field.Select>,
     ],
-    ['TimeInput', <Field.TimeInput key="c" value={Temporal.PlainTime.from('09:30')} onValueChange={noop} />],
     [
       'DateTimeInput',
       <Field.DateTimeInput key="c" value={Temporal.PlainDateTime.from('2026-10-07T09:30')} onValueChange={noop} />,
@@ -410,7 +392,7 @@ describe('Field.ColorPicker beside another control part', () => {
   it('takes the id back, and is named by the field again, when the other control goes', () => {
     const { container, rerender } = render(
       <Field.Root id="x" aria-label="Accent">
-        <Field.TimeInput value={null} onValueChange={noop} />
+        <Field.DateTimeInput value={null} onValueChange={noop} />
         <Field.ColorPicker value="#3366ff" />
       </Field.Root>,
     );
@@ -709,7 +691,7 @@ describe('Field.Textarea', () => {
     expect(fieldCss.slice(0, supports)).not.toContain('field-sizing');
     expect(fieldCss.slice(supports)).toContain('field-sizing: content');
     expect(fieldCss).toMatch(/\.textarea\[data-auto-grow\]\s*\{[^}]*resize:\s*none/);
-    expect(fieldCss).toContain('.shell:has(:is(input, textarea, .swatch, .datePicker, [data-todae-field-control], [data-todae-field-control] *):focus-visible)');
+    expect(fieldCss).toContain('.shell:has(:is(input, textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible)');
     expect(fieldCss).toMatch(/\.textarea\s*\{[^}]*outline:\s*none/);
     expect(fieldCss).toContain('min-height: calc(var(--_text-rows) * 1lh + var(--_pad-block))');
     expect(fieldCss).not.toContain('min-height: calc(1lh');

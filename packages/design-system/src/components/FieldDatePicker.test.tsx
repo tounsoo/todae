@@ -47,13 +47,13 @@ describe('Field.DatePicker', () => {
     expect([...new FormData(form).entries()]).toEqual([['start', '2026-10-13']]);
   });
 
-  it('beside a Field.TextInput gives it the field, and with showDate off is a glyph button named from the strings', () => {
+  it('beside a Field.TextInput gives it the field, and with showValue off is a glyph button named from the strings', () => {
     render(
       <form data-testid="form">
         <Label.Root htmlFor="start">Start</Label.Root>
         <Field.Root id="start">
           <Field.TextInput value="10/13/2026" onChange={() => undefined} />
-          <Field.DatePicker value={date('2026-10-13')} name="start" showDate={false} />
+          <Field.DatePicker value={date('2026-10-13')} name="start" showValue={false} />
         </Field.Root>
       </form>,
     );
@@ -71,10 +71,10 @@ describe('Field.DatePicker', () => {
     expect([...new FormData(form).entries()]).toEqual([['start', '2026-10-13']]);
   });
 
-  it('with showDate off on its own is a glyph button named by the field', () => {
+  it('with showValue off on its own is a glyph button named by the field', () => {
     render(
       <Field.Root aria-label="Start">
-        <Field.DatePicker value={date('2026-10-13')} showDate={false} placeholder="Pick a date" />
+        <Field.DatePicker value={date('2026-10-13')} showValue={false} placeholder="Pick a date" />
       </Field.Root>,
     );
     const button = screen.getByRole('button', { name: 'Start' });
@@ -92,7 +92,6 @@ describe('Field.DatePicker', () => {
   const PAIRS: Pair[] = [
     { name: 'TextInput + ColorPicker', input: <Field.TextInput value="#3366ff" onChange={() => undefined} />, picker: 'color', inputEntry: ['f', '#3366ff'] },
     { name: 'Textarea + ColorPicker', input: <Field.Textarea value="#3366ff" onChange={() => undefined} />, picker: 'color', inputEntry: ['f', '#3366ff'] },
-    { name: 'TimeInput + DatePicker', input: <Field.TimeInput value={Temporal.PlainTime.from('09:30')} onValueChange={() => undefined} />, picker: 'date', inputEntry: ['f', '09:30'] },
     { name: 'DateTimeInput + DatePicker', input: <Field.DateTimeInput value={Temporal.PlainDateTime.from('2026-10-13T09:30')} onValueChange={() => undefined} />, picker: 'date', inputEntry: ['f', '2026-10-13T09:30'] },
     { name: 'TextInput + DatePicker', input: <Field.TextInput value="note" onChange={() => undefined} />, picker: 'date', inputEntry: ['f', 'note'] },
   ];
@@ -135,13 +134,13 @@ describe('Field.DatePicker', () => {
     render(
       <form data-testid="form">
         <Field.Root aria-label="Start" name="time" invalid>
-          <Field.TimeInput value={Temporal.PlainTime.from('09:30')} onValueChange={() => undefined} />
+          <Field.DateTimeInput value={Temporal.PlainDateTime.from('2026-10-13T09:30')} onValueChange={() => undefined} />
           <Field.DatePicker value={day} name="day" />
         </Field.Root>
       </form>,
     );
     expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
-      ['time', '09:30'],
+      ['time', '2026-10-13T09:30'],
       ['day', '2026-10-13'],
     ]);
     expect(screen.getByRole('button', { name: 'Choose date' }).getAttribute('aria-invalid')).toBe('true');
@@ -151,13 +150,13 @@ describe('Field.DatePicker', () => {
     render(
       <form data-testid="form">
         <Field.Root aria-label="Start" name="day">
-          <Field.TimeInput name="time" value={Temporal.PlainTime.from('09:30')} onValueChange={() => undefined} />
+          <Field.DateTimeInput name="time" value={Temporal.PlainDateTime.from('2026-10-13T09:30')} onValueChange={() => undefined} />
           <Field.DatePicker value={day} />
         </Field.Root>
       </form>,
     );
     expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
-      ['time', '09:30'],
+      ['time', '2026-10-13T09:30'],
       ['day', '2026-10-13'],
     ]);
   });

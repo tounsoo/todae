@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, normalizeHex, parseDate, useChipField, useField } from '@omsoo.design/todae';
+import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, formatTime, normalizeHex, parseDate, parseTime, useChipField, useField } from '@omsoo.design/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 
@@ -608,7 +608,7 @@ export function FieldDatePicked() {
             setInvalid(false);
           }}
           locale={locale}
-          showDate={false}
+          showValue={false}
         />
       </Field.Root>
     </Field.Group>
@@ -634,14 +634,59 @@ export function FieldDatePickerAlone() {
   );
 }
 
-export function FieldTime() {
+// The picker and the input share one state, so typing and picking stay in step.
+export function FieldTimePicked() {
   const id = useId();
+  const locale = useLocale();
   const [time, setTime] = useState<Temporal.PlainTime | null>(null);
+  const [text, setText] = useState('');
+  const [invalid, setInvalid] = useState(false);
   return (
     <Field.Group>
       <Label.Root htmlFor={id}>Start time</Label.Root>
+      <Field.Root id={id} invalid={invalid}>
+        <Field.TextInput
+          value={text}
+          onChange={(event) => {
+            setText(event.target.value);
+            setTime(parseTime(event.target.value, { locale }));
+            setInvalid(false);
+          }}
+          onBlur={() => {
+            if (time) setText(formatTime(time, { locale }));
+            else setInvalid(text.trim() !== '');
+          }}
+        />
+        <Field.TimePicker
+          value={time}
+          onValueChange={(next) => {
+            setTime(next);
+            setText(formatTime(next, { locale }));
+            setInvalid(false);
+          }}
+          locale={locale}
+          step={15}
+          showValue={false}
+        />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+export function FieldTimePickerAlone() {
+  const id = useId();
+  const locale = useLocale();
+  const [time, setTime] = useState<Temporal.PlainTime | null>(null);
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Opens at</Label.Root>
       <Field.Root id={id}>
-        <Field.TimeInput step={900} value={time} onValueChange={setTime} />
+        <Field.TimePicker
+          value={time}
+          onValueChange={setTime}
+          locale={locale}
+          placeholder="Pick a time"
+        />
       </Field.Root>
     </Field.Group>
   );
