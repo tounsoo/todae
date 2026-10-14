@@ -26,7 +26,7 @@ import {
   Separator,
   Skeleton,
   Slider,
-  Spinner,
+  Loader,
   Stack,
   Table,
   Text,
@@ -141,7 +141,7 @@ function Gallery() {
           Pro <Badge.Root tone="success">Paid</Badge.Root>
         </Card.Body>
       </Card.Root>
-      <Spinner.Root aria-label="Loading invoices" />
+      <Loader.Root aria-label="Loading invoices" />
       <div aria-busy="true">
         <Skeleton.Root aria-hidden="true" />
       </div>
@@ -440,12 +440,12 @@ describe('content parts in a browser', () => {
   it('turns a spinner ring and pulses a skeleton', () => {
     render(
       <Themed>
-        <Spinner.Root data-testid="spinner" aria-label="Loading" />
+        <Loader.Root data-testid="spinner" aria-label="Loading" />
         <Button.Root variant="primary" data-testid="button">
-          <Spinner.Root data-testid="in-button" aria-label="Saving" /> Save <Code.Root data-testid="button-code">x</Code.Root>
+          <Loader.Root data-testid="in-button" aria-label="Saving" /> Save <Code.Root data-testid="button-code">x</Code.Root>
         </Button.Root>
         <div dir="rtl">
-          <Spinner.Root data-testid="rtl" aria-label="Loading" />
+          <Loader.Root data-testid="rtl" aria-label="Loading" />
         </div>
         <Skeleton.Root data-testid="skeleton" aria-hidden="true">
           Placeholder <b data-testid="inside">text</b>
@@ -453,7 +453,7 @@ describe('content parts in a browser', () => {
       </Themed>,
     );
     const style = (id: string) => getComputedStyle(screen.getByTestId(id));
-    expect(style('spinner').animationName).toContain('todae-spinner-turn');
+    expect(style('spinner').animationName).toContain('todae-loader-turn');
     expect(style('spinner').width).toBe(style('spinner').height);
     expect(style('spinner').borderTopLeftRadius).toBe('50%');
     expect(style('spinner').backgroundImage).toContain('conic-gradient');
@@ -473,19 +473,19 @@ describe('content parts in a browser', () => {
   it('draws dots as a wave, from the start of the text, and holds them still under reduced motion', async () => {
     render(
       <Themed>
-        <Spinner.Root data-testid="dots" variant="dots" aria-label="Typing" />
+        <Loader.Root data-testid="dots" variant="dots" aria-label="Typing" />
         <div dir="rtl">
-          <Spinner.Root data-testid="rtl-dots" variant="dots" aria-label="Typing" />
+          <Loader.Root data-testid="rtl-dots" variant="dots" aria-label="Typing" />
         </div>
-        <Spinner.Root data-testid="ring" aria-label="Loading" />
+        <Loader.Root data-testid="spinner-variant" aria-label="Loading" />
       </Themed>,
     );
     const style = (id: string) => getComputedStyle(screen.getByTestId(id));
     expect(screen.getAllByRole('progressbar', { name: 'Typing' })).toHaveLength(2);
-    expect(style('dots').animationName).toContain('todae-spinner-wave');
-    expect(style('dots').animationDuration).toBe(style('ring').animationDuration);
-    expect(parseFloat(style('dots').width)).toBeCloseTo(parseFloat(style('ring').width) * 1.5);
-    expect(style('dots').height).toBe(style('ring').height);
+    expect(style('dots').animationName).toContain('todae-loader-wave');
+    expect(style('dots').animationDuration).toBe(style('spinner-variant').animationDuration);
+    expect(parseFloat(style('dots').width)).toBeCloseTo(parseFloat(style('spinner-variant').width) * 1.5);
+    expect(style('dots').height).toBe(style('spinner-variant').height);
     expect(style('dots').borderTopLeftRadius).toBe('0px');
     expect(style('dots').maskImage).toBe('none');
     expect(style('dots').backgroundImage.match(/radial-gradient/g)).toHaveLength(3);
@@ -511,7 +511,7 @@ describe('content parts in a browser', () => {
       await media([{ name: 'forced-colors', value: 'active' }]);
       expect(style('dots').backgroundImage.match(/radial-gradient/g)).toHaveLength(3);
       // The dots take Highlight, as the ring's arc does.
-      const highlight = style('ring').backgroundImage.match(/rgba?\([^)]*\)/)?.[0];
+      const highlight = style('spinner-variant').backgroundImage.match(/rgba?\([^)]*\)/)?.[0];
       expect(highlight).toBeTruthy();
       expect(style('dots').backgroundImage).toContain(highlight);
     } finally {

@@ -38,7 +38,7 @@
       "@omsoo.design/todae/table": ["../../packages/design-system/src/server/table.ts"],
       "@omsoo.design/todae/progress": ["../../packages/design-system/src/server/progress.ts"],
       "@omsoo.design/todae/meter": ["../../packages/design-system/src/server/meter.ts"],
-      "@omsoo.design/todae/spinner": ["../../packages/design-system/src/server/spinner.ts"],
+      "@omsoo.design/todae/loader": ["../../packages/design-system/src/server/loader.ts"],
       "@omsoo.design/todae/skeleton": ["../../packages/design-system/src/server/skeleton.ts"],
       "@omsoo.design/todae/slider": ["../../packages/design-system/src/server/slider.ts"],
       "@omsoo.design/todae/code": ["../../packages/design-system/src/server/code.ts"],

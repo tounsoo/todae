@@ -1,5 +1,5 @@
 {
-  "spinner": {
+  "loader": {
     "size": { "$type": "dimension", "$value": { "value": 1.25, "unit": "rem" } },
     "thickness": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
     "track-tint": { "$type": "number", "$value": { "$ref": "#/opacity/20/$value" } },

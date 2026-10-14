@@ -49,7 +49,7 @@ export const RESERVED_ROOTS = [
   'breadcrumbs',
   'toolbar',
   'drawer',
-  'spinner',
+  'loader',
   'skeleton',
   'code',
   'kbd',

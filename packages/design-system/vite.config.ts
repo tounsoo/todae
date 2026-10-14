@@ -24,7 +24,7 @@ const entries = {
   table: src('server/table.ts'),
   progress: src('server/progress.ts'),
   meter: src('server/meter.ts'),
-  spinner: src('server/spinner.ts'),
+  loader: src('server/loader.ts'),
   skeleton: src('server/skeleton.ts'),
   slider: src('server/slider.ts'),
   code: src('server/code.ts'),
