@@ -13,6 +13,7 @@ import {
   Card,
   Message,
   Attachment,
+  Composer,
   Conversation,
   Checkbox,
   Calendar,
@@ -556,6 +557,15 @@ const cases: Case[] = [
       <Attachment.Root>
         <Attachment.Name {...p}>report.pdf</Attachment.Name>
       </Attachment.Root>
+    ),
+  ],
+  ['Composer.Root', (p) => <Composer.Root {...p} />],
+  [
+    'Composer.Submit',
+    (p) => (
+      <Composer.Root>
+        <Composer.Submit {...p} />
+      </Composer.Root>
     ),
   ],
   ['Conversation.Root', (p) => <Conversation.Root {...p} />],

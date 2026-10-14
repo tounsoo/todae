@@ -19,4 +19,8 @@ export interface Glyphs {
   calendar?: ReactNode;
   /** Pagination.Ellipsis with no content. "…" by default. */
   ellipsis?: ReactNode;
+  /** Composer.Submit with no content. Todae draws an arrow pointing up. */
+  send?: ReactNode;
+  /** Composer.Submit with no content while the composer is busy. Todae draws a square. */
+  stop?: ReactNode;
 }

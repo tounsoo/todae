@@ -136,6 +136,17 @@
     "## Props": "4299d93f81be",
     "(section order)": "5b4b04f4c6fa"
   },
+  "composer": {
+    "(top)": "8b1c09e2edc7",
+    "# Composer": "d9048ed43a08",
+    "## Parts": "c24498687b14",
+    "## Sending and stopping": "dcbc2c374e1a",
+    "## Attachments": "dc80e94ef4d1",
+    "## Accessible composition": "1aba21b457bc",
+    "## When to use": "facc46d850a1",
+    "## Props": "1d66d97cff3e",
+    "(section order)": "75139535fcad"
+  },
   "composition": {
     "(top)": "daa9c66a4c98",
     "# Composition": "5df38cfb773f",
@@ -621,7 +632,7 @@
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "6b4d772f2430",
+    "## Glyphs": "020c1488e641",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",
@@ -629,8 +640,8 @@
   },
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
-    "# StringsProvider": "a8e64b7609f3",
-    "## Strings": "3ca79b0c9b50",
+    "# StringsProvider": "1dfd3f30006f",
+    "## Strings": "58a4bf22e4db",
     "## Accessible composition": "ce80e59fbde4",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",

@@ -21,6 +21,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'chip-list': () => import('../../app/(en)/chip-list/page.mdx'),
   'code': () => import('../../app/(en)/code/page.mdx'),
   'color-picker': () => import('../../app/(en)/color-picker/page.mdx'),
+  'composer': () => import('../../app/(en)/composer/page.mdx'),
   'composition': () => import('../../app/(en)/composition/page.mdx'),
   'conversation': () => import('../../app/(en)/conversation/page.mdx'),
   'description': () => import('../../app/(en)/description/page.mdx'),
