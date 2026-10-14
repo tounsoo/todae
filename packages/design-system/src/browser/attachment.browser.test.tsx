@@ -1,6 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { StrictMode, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import axe from 'axe-core';
 import { describe, expect, it } from 'vitest';
@@ -163,6 +164,70 @@ describe('Attachment.Root in a browser', () => {
     render(<Files />);
     await userEvent.click(screen.getByRole('button', { name: 'Remove a.png' }));
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove b.png' }));
+  });
+
+  it('leaves focus where the product moves it in its own click handler', async () => {
+    function Files({ start }: { start: string[] }) {
+      const [files, setFiles] = useState(start);
+      return (
+        <div>
+          <div>
+            {files.map((file) => (
+              <Attachment.Root key={file}>
+                <Attachment.Name>{file}</Attachment.Name>
+                <Attachment.Remove
+                  onClick={() => {
+                    setFiles((all) => all.filter((f) => f !== file));
+                    document.getElementById('message')!.focus();
+                  }}
+                />
+              </Attachment.Root>
+            ))}
+          </div>
+          <input id="message" aria-label="Message" />
+        </div>
+      );
+    }
+    const { unmount } = render(<Files start={['a.png']} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove a.png' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Message' }));
+    unmount();
+    render(<Files start={['a.png', 'b.png']} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove a.png' }));
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Message' }));
+  });
+
+  it('hands focus on after a removal flushed inside the click handler, and not after preventDefault', async () => {
+    function Files({ prevent }: { prevent?: boolean }) {
+      const [files, setFiles] = useState(['a.png', 'b.png']);
+      return (
+        <div>
+          {files.map((file) => (
+            <Attachment.Root key={file}>
+              <Attachment.Name>{file}</Attachment.Name>
+              <Attachment.Remove
+                onClick={(event) => {
+                  if (prevent) {
+                    event.preventDefault();
+                    setFiles((all) => all.filter((f) => f !== file));
+                  } else {
+                    flushSync(() => setFiles((all) => all.filter((f) => f !== file)));
+                  }
+                }}
+              />
+            </Attachment.Root>
+          ))}
+        </div>
+      );
+    }
+    const { unmount } = render(<Files />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove a.png' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove b.png' }));
+    unmount();
+    render(<Files prevent />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove a.png' }));
+    // preventDefault() turns off Todae's own part of the press, as on other parts.
+    expect(document.activeElement).not.toBe(screen.getByRole('button', { name: 'Remove b.png' }));
   });
 
   it('moves focus past a neighbor that cannot take it', async () => {

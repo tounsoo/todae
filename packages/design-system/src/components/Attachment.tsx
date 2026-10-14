@@ -50,8 +50,8 @@ type Named = { id: string; text: string };
 type AttachmentContext = {
   named: Named | undefined;
   setNamed: (named: Named | undefined) => void;
-  /** Called when Attachment.Remove is pressed, so the unmount that follows hands focus on. */
-  removing: () => void;
+  /** Set when Attachment.Remove is pressed, so the unmount that follows hands focus on. */
+  removing: (pressed: boolean) => void;
 };
 
 const Context = createContext<AttachmentContext | null>(null);
@@ -108,7 +108,7 @@ function focusNeighbor(root: HTMLElement) {
 
 /** The part's own name wins; else Attachment.Name's id names it. */
 function labelledBy(props: { 'aria-label'?: string; 'aria-labelledby'?: string }, named: Named | undefined) {
-  return props['aria-labelledby'] ?? (props['aria-label'] ? undefined : named?.id);
+  return props['aria-labelledby'] || (props['aria-label'] ? undefined : named?.id);
 }
 
 function Root({ className, status = 'ready', ref, ...props }: AttachmentRootProps) {
@@ -116,8 +116,8 @@ function Root({ className, status = 'ready', ref, ...props }: AttachmentRootProp
   const refs = useComposedRefs(own, ref);
   const [named, setNamed] = useState<Named | undefined>(undefined);
   const pressed = useRef(false);
-  const removing = useCallback(() => {
-    pressed.current = true;
+  const removing = useCallback((on: boolean) => {
+    pressed.current = on;
   }, []);
   const context = useMemo(() => ({ named, setNamed, removing }), [named, removing]);
   // Layout cleanup runs before React takes the element out, so focus is still
@@ -158,7 +158,7 @@ function Preview({ className, ...props }: AttachmentPreviewProps) {
 function Name({ className, children, id: idProp, ...props }: AttachmentNameProps) {
   const { setNamed } = useAttachment('Name');
   const uid = useDomId();
-  const id = idProp ?? uid;
+  const id = idProp || uid;
   if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
     console.error('Attachment.Name children must be a string');
   }
@@ -189,13 +189,17 @@ function Remove({ 'aria-label': ariaLabel, className, children, ref, onClick, ..
   const { removeAttachment } = useStrings();
   const [label, refs] = useDismissLabel(children, ariaLabel, ref, removeAttachment(named?.text ?? ''));
   const glyph = useCloseGlyph();
-  const handleClick = composeHandlers(onClick, (event: MouseEvent<HTMLButtonElement>) => {
-    // A click does not focus a button in every browser (Safari). Focus the
-    // pressed button, so focus moves on when its attachment leaves.
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    // Before the product's handler, which may remove the attachment at once
+    // (flushSync) or move focus itself. A click does not focus a button in
+    // every browser (Safari), so focus the pressed button for focus to move on
+    // from when its attachment leaves.
     const button = event.currentTarget;
     if (activeIn(button) !== button) focusWithoutScroll(button);
-    removing();
-  });
+    removing(true);
+    onClick?.(event);
+    if (event.defaultPrevented) removing(false);
+  };
   return (
     <Button.Root
       variant="ghost"

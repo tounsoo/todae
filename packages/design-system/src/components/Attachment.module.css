@@ -2,6 +2,7 @@
   .root {
     display: inline-grid;
     grid-template-columns: [text] minmax(0, 1fr);
+    grid-template-rows: auto;
     align-items: center;
     column-gap: var(--todae-attachment-gap);
     box-sizing: border-box;
@@ -47,10 +48,6 @@
   /* One row for each text part that is there: the name, then the meta line,
      then the upload bar. The preview and the button span them all, so a
      missing part leaves no empty row. */
-  .root {
-    grid-template-rows: auto;
-  }
-
   .root:has(> .meta:not([hidden])),
   .root:has(> .progress:not([hidden])) {
     grid-template-rows: auto auto;

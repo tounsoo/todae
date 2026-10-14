@@ -33,7 +33,7 @@ Leave out a part you don't need, and the others close up.
 
 ## Removing
 
-When pressing `Attachment.Remove` removes its attachment, focus moves to the remove button of the next attachment beside it, or the one before when it was the last. Beside it means a sibling element, or, when each attachment is the only child of an `li`, the attachment in another item of the same list. When it was the only one, focus is yours to place, such as on the composer's text field. An attachment removed any other way, such as when you clear them all, leaves focus to you.
+When pressing `Attachment.Remove` removes its attachment, focus moves to the remove button of the next attachment beside it, or the one before when it was the last. Beside it means a sibling element, or, when each attachment is the only child of an `li`, the attachment in another item of the same list. When it was the only one, focus is yours to place, such as on the composer's text field. Focus you move in your own `onClick` stays where you put it. An attachment removed any other way, such as when you clear them all, or after your `onClick` calls `preventDefault()`, leaves focus to you.
 
 ## Accessible composition
 
