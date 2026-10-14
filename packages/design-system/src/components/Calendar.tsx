@@ -181,7 +181,7 @@ function Root({
   );
   const start = focusedState ?? today;
   const focused = start === null ? null : clampDate(start, min, max);
-  // A value from outside, such as one typed in a Field.DateInput, moves the
+  // A value from outside, such as one typed in a text input beside Field.DatePicker, moves the
   // grid to it.
   const [lastValue, setLastValue] = useState(value);
   if (!same(value, lastValue)) {

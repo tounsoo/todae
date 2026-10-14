@@ -1255,50 +1255,8 @@
       ]
     },
     {
-      "name": "Field.DateInput",
-      "description": "Controlled native <input type=\"date\"> inside Field.Root whose value is a Temporal.PlainDate. Todae ships no Temporal polyfill.",
-      "props": [
-        {
-          "name": "value",
-          "type": "Temporal.PlainDate | null",
-          "required": true,
-          "description": "Controlled value, or null while the input is empty or incomplete."
-        },
-        {
-          "name": "onChange",
-          "type": "(event: ChangeEvent<HTMLInputElement>) => void",
-          "required": false,
-          "description": "Native change handler. Optional when onValueChange is enough."
-        },
-        {
-          "name": "onValueChange",
-          "type": "(value: Temporal.PlainDate | null) => void",
-          "required": false,
-          "description": "Called with the new Temporal.PlainDate, or null while the input is empty or incomplete."
-        },
-        {
-          "name": "min",
-          "type": "Temporal.PlainDate",
-          "required": false,
-          "description": "Earliest value the input accepts, written to the native min."
-        },
-        {
-          "name": "max",
-          "type": "Temporal.PlainDate",
-          "required": false,
-          "description": "Latest value the input accepts, written to the native max."
-        },
-        {
-          "name": "className",
-          "type": "string",
-          "required": false,
-          "description": "Optional class on the input."
-        }
-      ]
-    },
-    {
       "name": "Field.DatePicker",
-      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker or Field.DatePicker, such as a Field.DateInput, that control is the field's control. Beside a date input, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker or Field.DatePicker, such as a Field.TextInput to type the date in, that control is the field's control. With showDate set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1346,7 +1304,14 @@
           "name": "placeholder",
           "type": "string",
           "required": false,
-          "description": "Shown on the button while there is no date, when no date input is beside it."
+          "description": "Shown on the button while there is no date, when showDate is true."
+        },
+        {
+          "name": "showDate",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date.",
+          "default": "true"
         },
         {
           "name": "open",
@@ -1633,7 +1598,7 @@
           "name": "type",
           "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\" | \"number\"",
           "required": false,
-          "description": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". Dates and times use Field.DateInput, Field.TimeInput and Field.DateTimeInput.",
+          "description": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". Times use Field.TimeInput and Field.DateTimeInput; a date uses Field.DatePicker, with a text input beside it read by parseDate.",
           "default": "\"text\""
         }
       ]

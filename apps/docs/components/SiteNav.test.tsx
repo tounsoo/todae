@@ -61,7 +61,6 @@ describe('SiteNav', () => {
     expect(closed.links.map((link) => link.getAttribute('href'))).toEqual([
       '/field/chip-input',
       '/field/color-picker',
-      '/field/date-input',
       '/field/date-picker',
       '/field/date-time-input',
       '/field/select',

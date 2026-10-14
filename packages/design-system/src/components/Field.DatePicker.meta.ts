@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Field.DatePicker',
   description:
-    "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker or Field.DatePicker, such as a Field.DateInput, that control is the field's control. Beside a date input, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+    "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker or Field.DatePicker, such as a Field.TextInput to type the date in, that control is the field's control. With showDate set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
   props: [
     {
       name: 'value',
@@ -51,7 +51,14 @@ export const meta = {
       name: 'placeholder',
       type: 'string',
       required: false,
-      description: 'Shown on the button while there is no date, when no date input is beside it.',
+      description: 'Shown on the button while there is no date, when showDate is true.',
+    },
+    {
+      name: 'showDate',
+      type: 'boolean',
+      required: false,
+      default: 'true',
+      description: 'Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date.',
     },
     {
       name: 'open',

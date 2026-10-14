@@ -67,7 +67,7 @@
     "## Range and locale": "38c6da99f7fd",
     "## Temporal": "084d2fd73acf",
     "## Accessible composition": "0c0c5d991a3f",
-    "## When to use": "fc36d200f649",
+    "## When to use": "0b11dc7559bc",
     "## Props": "1736b176a33c",
     "(section order)": "b32de0f3c71a"
   },
@@ -182,8 +182,8 @@
   },
   "field": {
     "(top)": "4995db135d8d",
-    "# Field": "5cf1d7be5e50",
-    "## Inputs": "2ee1c10e5e2b",
+    "# Field": "ae95a55c41cc",
+    "## Inputs": "13429baaed10",
     "## Label": "7d0c50d3c651",
     "## Messages": "3baebdf13c83",
     "## Counter": "3c5316a2038b",
@@ -216,32 +216,23 @@
   },
   "field/color-picker": {
     "(top)": "a10298fe8c00",
-    "# Field.ColorPicker": "602d8578e6ee",
+    "# Field.ColorPicker": "30d46b05f5b8",
     "## Accessible composition": "5871a8f6df0e",
     "## When to use": "d57fe8233a0b",
     "### Field.ColorPicker": "f274c18b0118",
     "## Props": "24158ef7493e",
     "(section order)": "124193e3094a"
   },
-  "field/date-input": {
-    "(top)": "d0aa4859f972",
-    "# Field.DateInput": "8642fa7acdc7",
-    "## Temporal": "fdb3c62be316",
-    "## Accessible composition": "5f08e1bda3fa",
-    "## When to use": "d57fe8233a0b",
-    "### Field.DateInput": "36a0de7cb852",
-    "## Props": "16709dfa6aa9",
-    "(section order)": "4797bdcec426"
-  },
   "field/date-picker": {
     "(top)": "40872dd1fdc5",
-    "# Field.DatePicker": "aa6f7c18918c",
-    "## On its own": "c7d2bc3205b6",
-    "## Accessible composition": "ab3706670dfd",
+    "# Field.DatePicker": "bc536be6e438",
+    "## Typed dates": "dbf209b1f6da",
+    "## On its own": "295428996e2c",
+    "## Accessible composition": "12fb3517a0d1",
     "## When to use": "d57fe8233a0b",
-    "### Field.DatePicker": "b3c1c234ea3a",
+    "### Field.DatePicker": "4f6d0fdc3d52",
     "## Props": "4d3b8d5a61e4",
-    "(section order)": "a672041b4c18"
+    "(section order)": "e66dc8c40754"
   },
   "field/date-time-input": {
     "(top)": "bd0d9d9e37e0",
@@ -249,7 +240,7 @@
     "## Temporal": "fdb3c62be316",
     "## Accessible composition": "5f08e1bda3fa",
     "## When to use": "d57fe8233a0b",
-    "### Field.DateTimeInput": "f76610479017",
+    "### Field.DateTimeInput": "d342764447ea",
     "## Props": "3019547178cc",
     "(section order)": "d7c7e410a9f0"
   },
@@ -265,11 +256,11 @@
   },
   "field/text-input": {
     "(top)": "72a1aded0b2b",
-    "# Field.TextInput": "a0bd3a5f41ae",
+    "# Field.TextInput": "3ab7678e8bc9",
     "## Number": "1a051e370546",
     "## Accessible composition": "7608bd1c3eb6",
     "## When to use": "d57fe8233a0b",
-    "### Field.TextInput": "9cb5e567a382",
+    "### Field.TextInput": "3b65bc4a3986",
     "## Props": "286d56b43a7f",
     "(section order)": "8530bb19e469"
   },
@@ -392,7 +383,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "b99a4ef650b6",
+    "# Native platform": "5f97a87c3984",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {

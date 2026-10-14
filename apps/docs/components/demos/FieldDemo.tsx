@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, normalizeHex, useChipField, useField } from '@omsoo.design/todae';
+import { Button, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, normalizeHex, parseDate, useChipField, useField } from '@omsoo.design/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 
@@ -580,30 +580,39 @@ export function FieldNumber() {
 }
 
 // The date and time demos start empty, so the server render needs no Temporal.
-export function FieldDate() {
-  const id = useId();
-  const [date, setDate] = useState<Temporal.PlainDate | null>(null);
-  return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Start date</Label.Root>
-      <Field.Root id={id}>
-        <Field.DateInput value={date} onValueChange={setDate} />
-      </Field.Root>
-    </Field.Group>
-  );
-}
-
 // The picker and the input share one state, so typing and picking stay in step.
 export function FieldDatePicked() {
   const id = useId();
   const locale = useLocale();
   const [date, setDate] = useState<Temporal.PlainDate | null>(null);
+  const [text, setText] = useState('');
+  const [invalid, setInvalid] = useState(false);
   return (
     <Field.Group>
       <Label.Root htmlFor={id}>Start date</Label.Root>
-      <Field.Root id={id}>
-        <Field.DateInput value={date} onValueChange={setDate} />
-        <Field.DatePicker value={date} onValueChange={setDate} locale={locale} />
+      <Field.Root id={id} invalid={invalid}>
+        <Field.TextInput
+          value={text}
+          onChange={(event) => {
+            setText(event.target.value);
+            setDate(parseDate(event.target.value, { locale }));
+            setInvalid(false);
+          }}
+          onBlur={() => {
+            if (date) setText(formatDate(date, { locale }));
+            else setInvalid(text.trim() !== '');
+          }}
+        />
+        <Field.DatePicker
+          value={date}
+          onValueChange={(next) => {
+            setDate(next);
+            setText(formatDate(next, { locale }));
+            setInvalid(false);
+          }}
+          locale={locale}
+          showDate={false}
+        />
       </Field.Root>
     </Field.Group>
   );

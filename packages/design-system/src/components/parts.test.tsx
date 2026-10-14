@@ -184,7 +184,7 @@ const cases: Case[] = [
       </Field.Root>
     ),
   ],
-  ...(['DateInput', 'TimeInput', 'DateTimeInput'] as const).map(
+  ...(['TimeInput', 'DateTimeInput'] as const).map(
     (part): Case => [
       `Field.${part}`,
       (p) => {

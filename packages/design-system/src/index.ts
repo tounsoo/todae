@@ -154,7 +154,6 @@ export {
   type FieldAffixProps,
   type FieldChipInputProps,
   type FieldCounterProps,
-  type FieldDateInputProps,
   type FieldDateTimeInputProps,
   type FieldGroupProps,
   type FieldIconProps,
@@ -202,6 +201,7 @@ export {
   type ColorPickerRootProps,
 } from './components/ColorPicker';
 export { normalizeHex } from './components/color';
+export { formatDate, parseDate, type DateTextOptions } from './components/dateText';
 export {
   Calendar,
   type CalendarFirstDayOfWeek,

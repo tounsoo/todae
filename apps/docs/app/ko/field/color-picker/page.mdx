@@ -36,7 +36,7 @@ const id = useId();
   <FieldColorAccent />
 </Example>
 
-여기서는 같은 필드 안의 `Field.TextInput`으로 색을 입력할 수도 있습니다. 둘은 상태를 함께 씁니다. 고른 색이 텍스트를 바꾸고, [`normalizeHex`](/color-picker)는 입력한 텍스트가 색이면 색으로 바꿉니다. `Field.TextInput`이 옆에 있으면 그 입력이 필드의 컨트롤입니다. 그 입력이 필드의 `id`와 설명을 받고, 필드의 다른 곳을 누르면 그 입력에 포커스가 갑니다. `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.DateInput`, `Field.TimeInput`, `Field.DateTimeInput`, [`useField`](/utilities/use-field)로 연결한 컨트롤도 같은 방식으로 `id`와 설명을 받습니다. 견본은 자신의 `name`이 있으면 그 이름으로 폼에 색을 보냅니다. 없으면 필드의 `name`으로 보내는데, `useField`가 이 컨트롤 중 하나에 그 `name`을 주었으면 보내지 않습니다. 자신의 `name`이 없는 `Field.TextInput`이 그런 경우입니다.
+여기서는 같은 필드 안의 `Field.TextInput`으로 색을 입력할 수도 있습니다. 둘은 상태를 함께 씁니다. 고른 색이 텍스트를 바꾸고, [`normalizeHex`](/color-picker)는 입력한 텍스트가 색이면 색으로 바꿉니다. `Field.TextInput`이 옆에 있으면 그 입력이 필드의 컨트롤입니다. 그 입력이 필드의 `id`와 설명을 받고, 필드의 다른 곳을 누르면 그 입력에 포커스가 갑니다. `Field.Textarea`, `Field.ChipInput`, `Field.Select`, `Field.TimeInput`, `Field.DateTimeInput`, [`useField`](/utilities/use-field)로 연결한 컨트롤도 같은 방식으로 `id`와 설명을 받습니다. 견본은 자신의 `name`이 있으면 그 이름으로 폼에 색을 보냅니다. 없으면 필드의 `name`으로 보내는데, `useField`가 이 컨트롤 중 하나에 그 `name`을 주었으면 보내지 않습니다. 자신의 `name`이 없는 `Field.TextInput`이 그런 경우입니다.
 
 혼자 있으면 `Field.ColorPicker`가 필드의 컨트롤이고, 필드의 다른 곳을 누르면 선택기가 열리며, 필드 너비는 견본 너비와 같습니다. 값을 텍스트로 보이려면 뒤에 `Field.Affix`를 두세요.
 

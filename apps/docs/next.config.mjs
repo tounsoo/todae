@@ -7,6 +7,7 @@ const LOCALE_PREFIXES = ['/ko'];
 const REDIRECTS = [
   ['/combobox', '/recipes/combobox'],
   ['/recipes/chip-list', '/chip-list'],
+  ['/field/date-input', '/field/date-picker'],
 ];
 
 // Vercel names the project's production domain in every deployment, previews included.

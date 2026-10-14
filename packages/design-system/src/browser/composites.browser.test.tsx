@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Button } from '../components/Button';
 import { Calendar } from '../components/Calendar';
 import { Field } from '../components/Field';
+import { formatDate, parseDate } from '../components/dateText';
 import { Label } from '../components/Label';
 import { Menu } from '../components/Menu';
 import { Tabs } from '../components/Tabs';
@@ -574,12 +575,30 @@ describe('Calendar in a browser', () => {
 describe('Field.DatePicker in a browser', () => {
   function Start({ withInput = false, onClick }: { withInput?: boolean; onClick?: () => void }) {
     const [value, setValue] = useState<Temporal.PlainDate | null>(plainDate('2026-10-13'));
+    const [text, setText] = useState('10/13/2026');
     return (
       <Themed>
         <Label.Root htmlFor="start">Start</Label.Root>
         <Field.Root id="start" data-testid="shell" onClick={onClick}>
-          {withInput ? <Field.DateInput value={value} onValueChange={setValue} /> : null}
-          <Field.DatePicker value={value} onValueChange={setValue} locale="en-US" />
+          {withInput ? (
+            <Field.TextInput
+              value={text}
+              onChange={(event) => {
+                setText(event.target.value);
+                const date = parseDate(event.target.value, { locale: 'en-US' });
+                if (date) setValue(date);
+              }}
+            />
+          ) : null}
+          <Field.DatePicker
+            value={value}
+            onValueChange={(date) => {
+              setValue(date);
+              setText(formatDate(date, { locale: 'en-US' }));
+            }}
+            locale="en-US"
+            showDate={!withInput}
+          />
           <Field.Affix data-testid="affix">UTC</Field.Affix>
         </Field.Root>
         <output data-testid="value">{value?.toString() ?? ''}</output>
@@ -688,7 +707,7 @@ describe('Field.DatePicker in a browser', () => {
     await screen.findByRole('dialog', { name: 'Choose date' });
   });
 
-  it('beside a date input, stays in step with typing and picking', async () => {
+  it('beside a text input read with parseDate, stays in step with typing and picking', async () => {
     render(<Start withInput />);
     const input = screen.getByLabelText('Start') as HTMLInputElement;
     const button = screen.getByRole('button', { name: 'Choose date' });
@@ -699,12 +718,11 @@ describe('Field.DatePicker in a browser', () => {
     await userEvent.click(button);
     await screen.findByRole('dialog', { name: 'Choose date' });
     await userEvent.click(screen.getByRole('button', { name: 'Thursday, October 1, 2026' }));
-    expect(input.value).toBe('2026-10-01');
+    expect(input.value).toBe('10/1/2026');
     expect(screen.queryByRole('dialog')).toBeNull();
     // A typed date moves the calendar to its month.
-    input.focus();
-    await userEvent.keyboard('{Control>}a{/Control}');
-    await userEvent.type(input, '03022027');
+    await userEvent.clear(input);
+    await userEvent.type(input, 'Mar 2, 2027');
     await waitFor(() => expect(screen.getByTestId('value').textContent).toBe('2027-03-02'));
     await userEvent.click(button);
     await screen.findByText('March 2027');

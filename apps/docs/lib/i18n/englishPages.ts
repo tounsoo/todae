@@ -29,7 +29,6 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'field': () => import('../../app/(en)/field/page.mdx'),
   'field/chip-input': () => import('../../app/(en)/field/chip-input/page.mdx'),
   'field/color-picker': () => import('../../app/(en)/field/color-picker/page.mdx'),
-  'field/date-input': () => import('../../app/(en)/field/date-input/page.mdx'),
   'field/date-picker': () => import('../../app/(en)/field/date-picker/page.mdx'),
   'field/date-time-input': () => import('../../app/(en)/field/date-time-input/page.mdx'),
   'field/select': () => import('../../app/(en)/field/select/page.mdx'),

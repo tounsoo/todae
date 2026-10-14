@@ -89,7 +89,7 @@ function Gallery() {
       </Fieldset.Root>
       <Label.Root htmlFor={dateId}>Start date</Label.Root>
       <Field.Root id={dateId}>
-        <Field.DateInput value={Temporal.PlainDate.from('2026-10-07')} onValueChange={() => undefined} />
+        <Field.DatePicker value={Temporal.PlainDate.from('2026-10-07')} locale="en-US" />
       </Field.Root>
       <Disclosure.Root name="faq">
         <Disclosure.Summary>What is Todae?</Disclosure.Summary>
