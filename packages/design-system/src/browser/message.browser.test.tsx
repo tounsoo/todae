@@ -169,7 +169,51 @@ describe('Message.Root in a browser', () => {
     expect(box('header').height).toBeLessThan(box('avatar').height);
     expect(middle(box('header'))).toBeCloseTo(middle(box('avatar')), 0);
     expect(box('avatar').top).toBeCloseTo(box('message').top, 0);
-    expect(box('content').top).toBeGreaterThanOrEqual(box('avatar').bottom - 0.5);
+    const rowGap = parseFloat(getComputedStyle(screen.getByTestId('content')).marginTop);
+    expect(rowGap).toBeGreaterThan(0);
+    expect(box('content').top - Math.max(box('avatar').bottom, box('header').bottom)).toBeCloseTo(rowGap, 0);
+  });
+
+  it('keeps a later header in DOM order beside an avatar', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
+        <Message.Root>
+          <Message.Avatar>
+            <Avatar.Root size="lg">
+              <Avatar.Fallback>A</Avatar.Fallback>
+            </Avatar.Root>
+          </Message.Avatar>
+          <Message.Header data-testid="name">Assistant</Message.Header>
+          <Message.Content data-testid="content">Give it a name.</Message.Content>
+          <Message.Header data-testid="edited">Edited</Message.Header>
+          <Message.Header data-testid="hidden" hidden>
+            Hidden
+          </Message.Header>
+        </Message.Root>
+      </div>,
+    );
+    const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+    expect(box('content').top).toBeGreaterThanOrEqual(box('name').bottom);
+    expect(box('edited').top).toBeGreaterThanOrEqual(box('content').bottom);
+    expect(getComputedStyle(screen.getByTestId('hidden')).display).toBe('none');
+  });
+
+  it('keeps a header after the content below it beside an avatar', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
+        <Message.Root>
+          <Message.Avatar>
+            <Avatar.Root size="lg">
+              <Avatar.Fallback>A</Avatar.Fallback>
+            </Avatar.Root>
+          </Message.Avatar>
+          <Message.Content data-testid="content">Give it a name.</Message.Content>
+          <Message.Header data-testid="time">9:41</Message.Header>
+        </Message.Root>
+      </div>,
+    );
+    const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+    expect(box('time').top).toBeGreaterThanOrEqual(box('content').bottom);
   });
 
   it('outlines the user bubble in forced colors', async () => {
