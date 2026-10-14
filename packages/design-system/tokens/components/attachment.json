@@ -1,0 +1,43 @@
+{
+  "attachment": {
+    "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
+    "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+    "border": {
+      "default": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+      "error": { "$type": "color", "$value": { "$ref": "#/color/status/critical/border/$value" } }
+    },
+    "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+    "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+    "padding": {
+      "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } },
+      "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
+    },
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+    "max-width": { "$type": "dimension", "$value": { "value": 16, "unit": "rem" } },
+    "preview": {
+      "size": { "$type": "dimension", "$value": { "$ref": "#/space/10/$value" } },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
+    },
+    "icon": {
+      "size": { "$type": "dimension", "$value": { "value": 1.25, "unit": "rem" } }
+    },
+    "name": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
+      }
+    },
+    "meta": {
+      "fg": {
+        "default": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+        "error": { "$type": "color", "$value": { "$ref": "#/color/status/critical/fg/$value" } }
+      },
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/1/$value" } }
+      }
+    },
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } }
+  }
+}

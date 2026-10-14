@@ -20,6 +20,7 @@ export const SITE_GROUPS = [
     label: 'Components',
     links: [
       ['/alert', 'Alert'],
+      ['/attachment', 'Attachment'],
       ['/avatar', 'Avatar'],
       ['/badge', 'Badge'],
       ['/bottomsheet', 'BottomSheet'],

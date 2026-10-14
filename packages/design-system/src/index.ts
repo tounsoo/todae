@@ -53,6 +53,16 @@ export {
   type MessageRootProps,
 } from './components/Message';
 export {
+  Attachment,
+  type AttachmentMetaProps,
+  type AttachmentNameProps,
+  type AttachmentPreviewProps,
+  type AttachmentProgressProps,
+  type AttachmentRemoveProps,
+  type AttachmentRootProps,
+  type AttachmentStatus,
+} from './components/Attachment';
+export {
   Conversation,
   type ConversationContentProps,
   type ConversationRootProps,

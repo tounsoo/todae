@@ -6878,6 +6878,195 @@
       "context": null
     },
     {
+      "path": "attachment.bg",
+      "type": "color",
+      "cssVar": "--todae-attachment-bg",
+      "cssValue": "var(--todae-color-bg-surface)",
+      "ref": "color.bg.surface",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.border.default",
+      "type": "color",
+      "cssVar": "--todae-attachment-border-default",
+      "cssValue": "var(--todae-color-border-subtle)",
+      "ref": "color.border.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.border.error",
+      "type": "color",
+      "cssVar": "--todae-attachment-border-error",
+      "cssValue": "var(--todae-color-status-critical-border)",
+      "ref": "color.status.critical.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.fg",
+      "type": "color",
+      "cssVar": "--todae-attachment-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.gap",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-icon-size",
+      "cssValue": "1.25rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.leading",
+      "type": "number",
+      "cssVar": "--todae-attachment-leading",
+      "cssValue": "var(--todae-font-leading-tight)",
+      "ref": "font.leading.tight",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.max-width",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-max-width",
+      "cssValue": "16rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.meta.fg.default",
+      "type": "color",
+      "cssVar": "--todae-attachment-meta-fg-default",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.meta.fg.error",
+      "type": "color",
+      "cssVar": "--todae-attachment-meta-fg-error",
+      "cssValue": "var(--todae-color-status-critical-fg)",
+      "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.meta.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-meta-font-size",
+      "cssValue": "var(--todae-font-size-1)",
+      "ref": "font.size.1",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.name.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-name-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.name.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-attachment-name-font-weight",
+      "cssValue": "var(--todae-font-weight-medium)",
+      "ref": "font.weight.medium",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-padding-x",
+      "cssValue": "var(--todae-space-control-y)",
+      "ref": "space.control.y",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-padding-y",
+      "cssValue": "var(--todae-space-control-y)",
+      "ref": "space.control.y",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.preview.bg",
+      "type": "color",
+      "cssVar": "--todae-attachment-preview-bg",
+      "cssValue": "var(--todae-color-bg-subtle)",
+      "ref": "color.bg.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.preview.fg",
+      "type": "color",
+      "cssVar": "--todae-attachment-preview-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.preview.radius",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-preview-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.preview.size",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-preview-size",
+      "cssValue": "var(--todae-space-10)",
+      "ref": "space.10",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "attachment.radius",
+      "type": "dimension",
+      "cssVar": "--todae-attachment-radius",
+      "cssValue": "var(--todae-radius-md)",
+      "ref": "radius.md",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "breadcrumbs.current.fg",
       "type": "color",
       "cssVar": "--todae-breadcrumbs-current-fg",

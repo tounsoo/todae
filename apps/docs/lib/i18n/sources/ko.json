@@ -9,6 +9,16 @@
     "## Props": "dd99811bd89f",
     "(section order)": "744d738b4b15"
   },
+  "attachment": {
+    "(top)": "41f134035ae8",
+    "# Attachment": "4141c1840660",
+    "## Parts": "f3189cbccc07",
+    "## Removing": "0b45cb54d4b6",
+    "## Accessible composition": "45f5f3964563",
+    "## When to use": "79a5e36a19d3",
+    "## Props": "7604dada6b6b",
+    "(section order)": "a6f04dcc4c06"
+  },
   "avatar": {
     "(top)": "d01aa6771c0c",
     "# Avatar": "24e9d98ee594",
@@ -611,17 +621,17 @@
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "c0590dd4d599",
-    "## Accessible composition": "705d17ec4c9e",
+    "## Glyphs": "6b4d772f2430",
+    "## Accessible composition": "63d5e085e78a",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",
     "(section order)": "a2c772dae730"
   },
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
-    "# StringsProvider": "9bc5bcd8c129",
-    "## Strings": "d7b63d43f941",
-    "## Accessible composition": "ded8cdf9b4c1",
+    "# StringsProvider": "a8e64b7609f3",
+    "## Strings": "3ca79b0c9b50",
+    "## Accessible composition": "ce80e59fbde4",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",
     "(section order)": "e23de084b1da"

@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
  * Toast.Close children or Chip.Root's removeIcon, still wins.
  */
 export interface Glyphs {
-  /** Alert.Close, Toast.Close, Dialog.Close and BottomSheet.Close with no content, and chip remove buttons. Todae draws a cross. */
+  /** Alert.Close, Toast.Close, Dialog.Close, BottomSheet.Close and Attachment.Remove with no content, and chip remove buttons. Todae draws a cross. */
   close?: ReactNode;
   /** Checkbox, Menu.CheckboxItem and a selected OptionList.Option. Todae draws a check mark. */
   check?: ReactNode;
