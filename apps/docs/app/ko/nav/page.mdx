@@ -1,0 +1,85 @@
+import { NavApp } from '../../../components/demos/NavDemo';
+
+# Nav
+
+사이드바 같은 사이트나 앱의 내비게이션입니다. `Nav.Root`는 `nav` 랜드마크입니다. 각 `Nav.Group`은 목록이고, `label`이 있으면 그것이 이름이 됩니다. 각 `Nav.Item`은 `Nav.Link`를 담는 목록 항목입니다. `Nav.Branch`는 네이티브 `<details>`이며, 토글이 항목들의 중첩된 목록을 엽니다.
+
+```tsx
+<Nav.Root aria-label="Docs">
+  <Nav.Group label="Components">
+    <Nav.Item>
+      <Nav.Link href="/button">Button</Nav.Link>
+    </Nav.Item>
+    <Nav.Item>
+      <Nav.Link href="/field" aria-current="page">
+        Field
+      </Nav.Link>
+      <Nav.Branch label="Field pages" open>
+        <Nav.Item>
+          <Nav.Link href="/field/select">Select</Nav.Link>
+        </Nav.Item>
+      </Nav.Branch>
+    </Nav.Item>
+  </Nav.Group>
+</Nav.Root>
+```
+
+<Example>
+  <NavApp />
+</Example>
+
+링크와 가지(branch) 토글은 각각 하나의 Tab 정지점입니다. Nav에는 화살표 키도 선택도 없으므로 [Tree](/tree)가 아닙니다.
+
+## 현재 페이지
+
+지금 있는 페이지로 가는 링크에 `aria-current="page"`를 표시하세요. 비어 있거나 `false`가 아닌 값이면 링크를 현재 행으로 그리며, `nav.item.bg.current`, `nav.item.fg.current`, `nav.item.font.current-weight` 토큰을 씁니다. 속성은 라우터가 설정합니다.
+
+`Nav.Link`는 [Link](/link)처럼 `render`를 받습니다. 그래서 라우터의 링크가 `<a>`에 넣었을 모든 prop을 클래스까지 받아 행을 그립니다.
+
+```tsx
+import NextLink from 'next/link';
+
+<Nav.Link
+  href="/billing"
+  aria-current={pathname === '/billing' ? 'page' : undefined}
+  render={({ href, ...props }) => (href ? <NextLink href={href} {...props} /> : <a {...props} />)}
+>
+  Billing
+</Nav.Link>
+```
+
+링크 텍스트 앞의 아이콘은 `nav.icon.size` 토큰의 크기를 받습니다.
+
+## 가지
+
+같은 항목에서 `Nav.Link` 뒤에 오는 `Nav.Branch`는 그 페이지의 하위 페이지를 담습니다. 링크는 자기 행을 유지하고, 토글은 행 끝의 chevron이므로 `label`은 화면에서 숨겨지고 토글의 이름으로만 쓰입니다. 링크 자체의 텍스트가 아니라 "Field 하위 페이지"처럼 하위 페이지를 가리키는 이름을 붙이세요. 항목에 `Nav.Branch`만 있으면 `label`이 토글의 텍스트로 보이며, 자기 페이지가 없는 페이지 묶음에 씁니다.
+
+가지는 네이티브 `<details>`이므로 열림 상태는 브라우저가 가집니다. `open`은 렌더링될 때나 prop이 `true`로 바뀔 때, 예를 들어 내비게이션이 가지 안으로 이동할 때 가지를 엽니다. 사용자의 토글은 `onToggle`로 따라가세요. 중첩된 목록은 `nav.indent`만큼 들여 쓰고, `nav.rule.color`와 `nav.rule.width`로 그린 선 아래에 놓입니다.
+
+chevron은 글리프입니다. [GlyphsProvider](/utilities/glyphs-provider)에서 `chevron`을 설정하면 아이콘 라이브러리로 그립니다. 아래쪽을 가리키게 그리세요. 닫힌 가지는 이를 텍스트 쪽으로 돌립니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** `nav` 랜드마크입니다. 각 그룹은 레이블이 `aria-labelledby`로 이름을 붙이는 `ul role="list"`이고, 각 항목은 목록 항목입니다. 가지는 `<details>`이며, 브라우저는 그 `<summary>`를 열림 상태가 있는 버튼으로 노출하고 `label`이 이름을 붙입니다. 링크 뒤에서는 레이블이 화면에서 숨겨지지만 여전히 토글의 이름이 됩니다. chevron은 `aria-hidden`입니다. 포커스 링은 행 안쪽에 그려지므로, 행의 옆을 자르는 스크롤 컨테이너 안에서도 온전히 보입니다.
+
+**직접 제공할 것:** 페이지에 `nav`가 둘 이상이면 `aria-label`이나 `aria-labelledby`로 붙인 랜드마크 이름. 지금 있는 페이지로 가는 링크의 `aria-current="page"`. 모든 가지의 `label`. 링크 뒤에서는 "Field 하위 페이지"처럼 토글이 보여 주는 것을 말하는 레이블.
+
+**주의할 점:** `aria-current` 없이 스타일로만 표시한 현재 페이지. 링크의 텍스트를 되풀이하는 가지 레이블: 스크린 리더가 이름이 같은 컨트롤 두 개를 읽습니다. 검색 필드처럼 링크와 가지가 아닌 컨트롤을 nav 안에 두는 것: 목록 밖에 두어야 합니다.
+
+## 언제 쓰나요
+
+**언제:** 사이드바, 드로어, 메뉴 패널에서 그룹과 한두 단계의 하위 페이지를 두고 사이트나 앱의 페이지 사이를 이동할 때.
+
+**쓰지 않을 때:** 현재 페이지 위의 경로 → [Breadcrumbs](/breadcrumbs). 한 페이지의 섹션 → Tabs. 파일처럼 단계별로 열어 보는 계층 → [Tree](/tree). 동작 목록 → Menu.
+
+## Props
+
+<PropsTable name="Nav.Root" />
+
+<PropsTable name="Nav.Group" />
+
+<PropsTable name="Nav.Item" />
+
+<PropsTable name="Nav.Link" />
+
+<PropsTable name="Nav.Branch" />

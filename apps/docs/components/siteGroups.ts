@@ -60,6 +60,7 @@ export const SITE_GROUPS = [
       ['/link', 'Link'],
       ['/menu', 'Menu'],
       ['/message', 'Message'],
+      ['/nav', 'Nav'],
       ['/optionlist', 'OptionList'],
       ['/pagination', 'Pagination'],
       ['/popover', 'Popover'],
