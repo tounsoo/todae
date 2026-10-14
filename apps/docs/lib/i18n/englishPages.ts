@@ -43,6 +43,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'label': () => import('../../app/(en)/label/page.mdx'),
   'link': () => import('../../app/(en)/link/page.mdx'),
   'menu': () => import('../../app/(en)/menu/page.mdx'),
+  'message': () => import('../../app/(en)/message/page.mdx'),
   'optionlist': () => import('../../app/(en)/optionlist/page.mdx'),
   'pagination': () => import('../../app/(en)/pagination/page.mdx'),
   'platform': () => import('../../app/(en)/platform/page.mdx'),

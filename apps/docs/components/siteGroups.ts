@@ -57,6 +57,7 @@ export const SITE_GROUPS = [
       ['/label', 'Label'],
       ['/link', 'Link'],
       ['/menu', 'Menu'],
+      ['/message', 'Message'],
       ['/optionlist', 'OptionList'],
       ['/pagination', 'Pagination'],
       ['/popover', 'Popover'],

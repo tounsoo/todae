@@ -2150,6 +2150,80 @@
       ]
     },
     {
+      "name": "Message.Actions",
+      "description": "A row below the content for the message's actions, such as copy and retry. A div; put a Toolbar.Root in it for arrow-key focus.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Buttons, or a Toolbar.Root holding them."
+        }
+      ]
+    },
+    {
+      "name": "Message.Avatar",
+      "description": "A slot beside the message for an Avatar.Root. A div; with one, the other parts sit in a column next to it, after it for a user's message.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "An Avatar.Root."
+        }
+      ]
+    },
+    {
+      "name": "Message.Content",
+      "description": "The message body. A div; for a user's message it is the bubble. While the message streams, a caret follows the last paragraph, list item, heading, cell or code block, or the text itself when there are none.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The text, often a Prose.Root with rendered markdown."
+        }
+      ]
+    },
+    {
+      "name": "Message.Header",
+      "description": "A row above the content for the author's name and the product's own time element. A div; headings and paragraphs inside lose their margin. Todae formats no dates here.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The author's name and, if any, a time element."
+        }
+      ]
+    },
+    {
+      "name": "Message.Root",
+      "description": "A turn of a conversation, as an article from the message tokens. from sets the layout: a user's message sits at the end side in a bubble, a system message is a quiet centered line. Takes native article attributes.",
+      "props": [
+        {
+          "name": "from",
+          "type": "\"user\" | \"assistant\" | \"system\"",
+          "required": false,
+          "description": "Who wrote the message. Sets data-from, which sets layout and tokens only.",
+          "default": "\"assistant\""
+        },
+        {
+          "name": "streaming",
+          "type": "boolean",
+          "required": false,
+          "description": "True while the message is still arriving. Sets aria-busy and data-streaming, and Message.Content draws a caret after the text. Set it back to false when the message finishes or fails.",
+          "default": "false"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Message parts: Avatar, Header, Content and Actions."
+        }
+      ]
+    },
+    {
       "name": "Meter.Root",
       "description": "A native meter drawn as a track and a fill from the progress and meter tokens. Takes native meter attributes.",
       "props": [

@@ -26,6 +26,7 @@
       "@omsoo.design/todae/label": ["../../packages/design-system/src/server/label.ts"],
       "@omsoo.design/todae/badge": ["../../packages/design-system/src/server/badge.ts"],
       "@omsoo.design/todae/card": ["../../packages/design-system/src/server/card.ts"],
+      "@omsoo.design/todae/message": ["../../packages/design-system/src/server/message.ts"],
       "@omsoo.design/todae/breadcrumbs": ["../../packages/design-system/src/server/breadcrumbs.ts"],
       "@omsoo.design/todae/grid": ["../../packages/design-system/src/server/grid.ts"],
       "@omsoo.design/todae/pagination": ["../../packages/design-system/src/server/pagination.ts"],
