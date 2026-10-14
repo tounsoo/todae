@@ -459,12 +459,12 @@
     },
     {
       "name": "Calendar.Grid",
-      "description": "The shown month as a role=\"grid\" table, one week to a row, labelled by Calendar.Header's month while one is rendered, unless it has its own aria-label or aria-labelledby. One Tab stop; arrow keys move by day and week, Home and End to the ends of the week, Page Up and Page Down by month, and with Shift by year. Takes native table attributes except role and children.",
+      "description": "The shown month as a role=\"grid\" table, one week to a row, labelled by Calendar.Header's month while one is rendered, unless it has its own aria-label or aria-labelledby. One Tab stop; arrow keys move by day and week, Home and End to the ends of the week, Page Up and Page Down by month, and with Shift by year. While Calendar.Header shows the years, it is a grid of twelve years in the same pattern, by year and row of four, and by page. Takes native table attributes except role and children.",
       "props": []
     },
     {
       "name": "Calendar.Header",
-      "description": "The shown month and year, announced as they change, between buttons to the previous and next month. The buttons are named from the previousMonth and nextMonth strings and draw the chevron glyph. Takes native div attributes except children.",
+      "description": "The shown month and year, announced as they change, between buttons to the previous and next month. The month and year is a button that swaps the grid for a page of twelve years and back; while the years show, the buttons go to the previous and next page. The buttons are named from the previousMonth and nextMonth strings, or previousYears and nextYears, and they and the heading draw the chevron glyph. Takes native div attributes except children.",
       "props": []
     },
     {

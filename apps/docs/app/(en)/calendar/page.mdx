@@ -2,7 +2,7 @@ import { CalendarInline } from '../../../components/demos/CalendarDemo';
 
 # Calendar
 
-`Calendar.Root` holds one selected date as a `Temporal.PlainDate`. `Calendar.Header` shows the month and year between buttons to the previous and next month, and `Calendar.Grid` shows that month's days, one week to a row. The root takes `value` with `onValueChange`, or `defaultValue`, and calls `onValueChange` with the date a person picks.
+`Calendar.Root` holds one selected date as a `Temporal.PlainDate`. `Calendar.Header` shows the month and year between buttons to the previous and next month, and `Calendar.Grid` shows that month's days, one week to a row. Pressing the month and year swaps the days for a page of twelve years, and the buttons beside it go to the previous and next page. Picking a year shows its month again, keeping the month and day where it can. The root takes `value` with `onValueChange`, or `defaultValue`, and calls `onValueChange` with the date a person picks.
 
 ```tsx
 <Calendar.Root aria-label="Start date" value={date} onValueChange={setDate}>
@@ -19,7 +19,7 @@ For a date in a form, use [Field.DatePicker](/field/date-picker): a button in a 
 
 ## Range and locale
 
-`min` and `max` bound the dates that can be picked, and the month buttons stop at their months. `isDateDisabled` rules out other dates, such as weekends or holidays. Days outside `min` and `max` are disabled buttons. A date `isDateDisabled` rules out can still take focus, so a screen reader can read it, but a press or Enter does not pick it.
+`min` and `max` bound the dates that can be picked, the month buttons stop at their months, and years outside them are disabled. `isDateDisabled` rules out other dates, such as weekends or holidays. Days outside `min` and `max` are disabled buttons. A date `isDateDisabled` rules out can still take focus, so a screen reader can read it, but a press or Enter does not pick it.
 
 With no value, the grid starts on `defaultMonth`, else on today's month, kept within `min` and `max`. Month and weekday names come from `locale`, else the browser's own locale. The first column is `firstDayOfWeek`, from 1 (Monday) to 7 (Sunday); without it, the calendar uses the locale's first day where the browser reports one through `Intl.Locale`, else Sunday.
 
@@ -31,7 +31,7 @@ Todae ships no Temporal polyfill. `Calendar.Root` calls `Temporal` when it rende
 
 ## Accessible composition
 
-**Todae handles:** `Calendar.Root` is a `role="group"`. `Calendar.Grid` is a `role="grid"` table, labelled by the header's month while a `Calendar.Header` is rendered, with a column header for each weekday whose `abbr` is the full name. It is one Tab stop: arrow keys move by day and week, Home and End to the ends of the week, Page Up and Page Down by month, and with Shift by year. Left and Right swap in a right-to-left page. Each day is a button named with the full date, the selected one's cell has `aria-selected`, and today has `aria-current="date"`. Dates `isDateDisabled` rules out have `aria-disabled`, and days outside `min` and `max` are disabled. The month is a live region, so a screen reader hears it change. The month buttons are named from the `previousMonth` and `nextMonth` strings in [StringsProvider](/utilities/strings-provider) and draw the `chevron` glyph from [GlyphsProvider](/utilities/glyphs-provider). `disabled`, or a disabled [Fieldset](/fieldset), disables every button.
+**Todae handles:** `Calendar.Root` is a `role="group"`. `Calendar.Grid` is a `role="grid"` table, labelled by the header's month while a `Calendar.Header` is rendered, with a column header for each weekday whose `abbr` is the full name. It is one Tab stop: arrow keys move by day and week, Home and End to the ends of the week, Page Up and Page Down by month, and with Shift by year. Left and Right swap in a right-to-left page. Each day is a button named with the full date, the selected one's cell has `aria-selected`, and today has `aria-current="date"`. Dates `isDateDisabled` rules out have `aria-disabled`, and days outside `min` and `max` are disabled. The month and year is a button with `aria-expanded`, true while the years show, inside a live region, so a screen reader hears it change. The page of years is a `role="grid"` with the same single Tab stop: arrow keys move by year and row, Home and End to the ends of the row, and Page Up and Page Down by page. The buttons beside the heading are named from the `previousMonth` and `nextMonth` strings in [StringsProvider](/utilities/strings-provider), or `previousYears` and `nextYears` while the years show, and they and the heading draw the `chevron` glyph from [GlyphsProvider](/utilities/glyphs-provider). `disabled`, or a disabled [Fieldset](/fieldset), disables every button.
 
 **You supply:** A name for the group, with `aria-label` or `aria-labelledby`, and one for the grid when there is no `Calendar.Header`. `locale` when the page's language is not the browser's.
 

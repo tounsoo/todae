@@ -5,6 +5,7 @@
       "DOM",
       "DOM.Iterable",
       "ES2022",
+      "ES2023.Intl",
       "ESNext.Temporal"
     ],
     "types": ["mdx", "node"],

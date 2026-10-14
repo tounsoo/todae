@@ -50,6 +50,10 @@ export interface Strings {
   previousMonth: string;
   /** Name of Calendar.Header's button to the next month. */
   nextMonth: string;
+  /** Name of Calendar.Header's button to the previous page of years. */
+  previousYears: string;
+  /** Name of Calendar.Header's button to the next page of years. */
+  nextYears: string;
   /** useClipboard's message after a copy. */
   copied: string;
   /** useClipboard's message when a copy fails. */
@@ -79,6 +83,8 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   datePicker: 'Choose date',
   previousMonth: 'Previous month',
   nextMonth: 'Next month',
+  previousYears: 'Previous years',
+  nextYears: 'Next years',
   copied: 'Copied',
   copyFailed: 'Could not copy',
 });

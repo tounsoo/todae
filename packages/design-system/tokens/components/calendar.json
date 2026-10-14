@@ -8,7 +8,14 @@
       "font": {
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } }
       },
-      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+      "padding": {
+        "x": { "$type": "dimension", "$value": { "$ref": "#/space/chip/x/$value" } }
+      },
+      "icon": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/calendar/nav/icon/size/$value" } }
+      }
     },
     "weekday": {
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },

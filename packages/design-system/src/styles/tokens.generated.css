@@ -1029,6 +1029,9 @@
   --todae-calendar-gap: var(--_todae-calendar-gap, var(--todae-space-stack-gap));
   --todae-calendar-heading-fg: var(--_todae-calendar-heading-fg, var(--todae-color-fg-default));
   --todae-calendar-heading-font-weight: var(--_todae-calendar-heading-font-weight, var(--todae-font-weight-medium));
+  --todae-calendar-heading-gap: var(--_todae-calendar-heading-gap, var(--todae-space-inline-gap));
+  --todae-calendar-heading-icon-size: var(--_todae-calendar-heading-icon-size, var(--todae-calendar-nav-icon-size));
+  --todae-calendar-heading-padding-x: var(--_todae-calendar-heading-padding-x, var(--todae-space-chip-x));
   --todae-calendar-nav-icon-size: var(--_todae-calendar-nav-icon-size, 1rem);
   --todae-calendar-weekday-fg: var(--_todae-calendar-weekday-fg, var(--todae-color-fg-muted));
   --todae-calendar-weekday-font-weight: var(--_todae-calendar-weekday-font-weight, var(--todae-font-weight-regular));

@@ -1039,7 +1039,12 @@ function DatePicker({
       ) : null}
       {/* Mounted while open only: a form can hold many date pickers. */}
       {shown ? (
-        <Popover.Root {...popover.getPopoverProps()} role="dialog" aria-label={strings.datePicker}>
+        <Popover.Root
+          {...popover.getPopoverProps()}
+          role="dialog"
+          aria-label={strings.datePicker}
+          className={styles.datePickerPopover}
+        >
           <CalendarParts.Root
             value={value}
             onValueChange={(next) => {

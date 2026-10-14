@@ -539,6 +539,13 @@ describe('Calendar in a browser', () => {
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026');
     await userEvent.keyboard('{ArrowRight}{ArrowRight}');
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Monday, October 12, 2026');
+    // The years swap them too.
+    await userEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    screen.getByRole('button', { name: '2026' }).focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(document.activeElement?.textContent).toBe('2027');
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}');
+    expect(document.activeElement?.textContent).toBe('2025');
   });
 
   it('is one Tab stop in the grid, after the month buttons', async () => {
@@ -553,6 +560,8 @@ describe('Calendar in a browser', () => {
     );
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Previous month' }));
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'October 2026' }));
     await userEvent.tab();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Next month' }));
     await userEvent.tab();
@@ -594,6 +603,43 @@ describe('Field.DatePicker in a browser', () => {
     expect(button.getAttribute('aria-expanded')).toBe('false');
     await waitFor(() => expect(document.activeElement).toBe(button));
     expect(button.textContent).toBe('Oct 20, 2026');
+  });
+
+  it.each(['compact', 'comfortable', 'spacious'] as const)(
+    'shows a six-week month whole, without scrolling, at %s density',
+    async (density) => {
+      render(
+        <div data-appearance="light" data-density={density}>
+          <Label.Root htmlFor="when">When</Label.Root>
+          <Field.Root id="when">
+            <Field.DatePicker value={plainDate('2022-10-21')} locale="en-US" />
+          </Field.Root>
+        </div>,
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'When' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Choose date' });
+      await waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
+      // October 2022 starts on a Saturday, so it spans six weeks.
+      expect(screen.getByRole('grid').querySelectorAll('tbody tr')).toHaveLength(6);
+      expect(dialog.scrollHeight).toBeLessThanOrEqual(dialog.clientHeight);
+    },
+  );
+
+  it('picks a year in the open calendar from the keyboard, and stays open on its month', async () => {
+    render(<Start />);
+    await userEvent.click(screen.getByRole('button', { name: 'Start' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Choose date' });
+    await waitFor(() => expect(document.activeElement?.getAttribute('aria-label')).toBe('Tuesday, October 13, 2026'));
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'October 2026' }));
+    await userEvent.keyboard('{Enter}');
+    await userEvent.tab();
+    await userEvent.tab();
+    expect(document.activeElement?.textContent).toBe('2026');
+    await userEvent.keyboard('{ArrowLeft}{Enter}');
+    await waitFor(() => expect(document.activeElement?.getAttribute('aria-label')).toBe('Monday, October 13, 2025'));
+    expect(dialog.matches(':popover-open')).toBe(true);
+    expect(screen.getByTestId('value').textContent).toBe('2026-10-13');
   });
 
   it('closes on a pick of the date it already has', async () => {

@@ -77,7 +77,18 @@ type CalendarContextValue = {
   hasHeader: boolean;
   setHasHeader: (has: boolean) => void;
   canShow: (month: Temporal.PlainYearMonth) => boolean;
+  /** Whether the grid shows the month's days or a page of years to pick from. */
+  view: CalendarView;
+  setView: (view: CalendarView) => void;
+  /** Whether a year can be picked: in min and max, and in the months Temporal can show. */
+  yearInRange: (year: number) => boolean;
+  /** The year within min, max and Temporal's range nearest to the year. */
+  clampYear: (year: number) => number;
+  /** Moves to the year, keeping the month and day where it can. */
+  moveToYear: (year: number, focus: boolean) => void;
 };
+
+type CalendarView = 'days' | 'years';
 
 const CalendarContext = createContext<CalendarContextValue | null>(null);
 
@@ -116,8 +127,8 @@ const subscribeNothing = () => () => {};
 const todayNow = () => Temporal.Now.plainDateISO().toString();
 const todayOnServer = () => null;
 
-/** The day that holds the grid's Tab stop. */
-export const CALENDAR_TAB_STOP = '[data-todae-calendar-day][tabindex="0"]';
+/** The day or year that holds the grid's Tab stop. */
+export const CALENDAR_TAB_STOP = '[data-todae-calendar-cell][tabindex="0"]';
 
 /** The grid is laid out in ISO months, so names come from the Gregorian calendar whatever the locale's own. */
 export const GREGORY = 'gregory';
@@ -208,6 +219,34 @@ function Root({
     },
     [focused, max, min],
   );
+  const [view, setView] = useState<CalendarView>('days');
+  const firstYear = Math.max(min?.year ?? FIRST_YEAR, FIRST_YEAR);
+  const lastYear = Math.min(max?.year ?? LAST_YEAR, LAST_YEAR);
+  const yearInRange = useCallback(
+    (year: number) => year >= firstYear && year <= lastYear,
+    [firstYear, lastYear],
+  );
+  const clampYear = useCallback(
+    (year: number) => Math.min(Math.max(year, firstYear), lastYear),
+    [firstYear, lastYear],
+  );
+  const moveToYear = useCallback(
+    (year: number, focus: boolean) => {
+      if (!focused) return;
+      const firstDay = Temporal.PlainDate.from(FIRST_DAY);
+      const lastDay = Temporal.PlainDate.from(LAST_DAY);
+      let date: Temporal.PlainDate;
+      try {
+        date = focused.with({ year });
+      } catch {
+        // Past Temporal's range.
+        date = year < focused.year ? firstDay : lastDay;
+      }
+      // moveFocus then keeps the date within min and max.
+      moveFocus(clampDate(date, firstDay, lastDay), focus);
+    },
+    [focused, moveFocus],
+  );
   const select = useCallback(
     (date: Temporal.PlainDate) => {
       if (disabled || unavailable(date)) return;
@@ -235,8 +274,31 @@ function Root({
       canShow,
       hasHeader,
       setHasHeader,
+      view,
+      setView,
+      yearInRange,
+      clampYear,
+      moveToYear,
     }),
-    [value, focused, today, locale, firstDay, disabled, headingId, moveFocus, select, outOfRange, unavailable, canShow, hasHeader],
+    [
+      value,
+      focused,
+      today,
+      locale,
+      firstDay,
+      disabled,
+      headingId,
+      moveFocus,
+      select,
+      outOfRange,
+      unavailable,
+      canShow,
+      hasHeader,
+      view,
+      yearInRange,
+      clampYear,
+      moveToYear,
+    ],
   );
   return (
     <CalendarContext.Provider value={ctx}>
@@ -253,36 +315,63 @@ function Root({
 }
 
 /**
- * The month and year, announced as they change, between buttons for the
- * previous and next month. A month button stays focusable at the end of the
- * range, with aria-disabled, so focus does not drop to the page.
+ * The month and year between buttons for the previous and next month. The
+ * month and year is a button that switches the grid to a page of years and
+ * back; on that page the buttons go to the previous and next page. A month
+ * button stays focusable at the end of the range, with aria-disabled, so focus
+ * does not drop to the page.
  */
 function Header({ className, ...props }: CalendarHeaderProps) {
   const cal = useCalendar('Header');
   const strings = useStrings();
   const { chevron } = useGlyphs();
-  const { focused, setHasHeader } = cal;
+  const { focused, setHasHeader, setView, view } = cal;
   useLayoutEffect(() => {
     setHasHeader(true);
-    return () => setHasHeader(false);
-  }, [setHasHeader]);
+    return () => {
+      setHasHeader(false);
+      // Only the header leads back from the years.
+      setView('days');
+    };
+  }, [setHasHeader, setView]);
+  const years = view === 'years';
+  const page = focused ? yearPage(focused.year) : null;
   const month = focused?.toPlainYearMonth() ?? null;
   const nav = (dir: 'previous' | 'next') => {
-    const months = dir === 'previous' ? -1 : 1;
-    const next = month?.add({ months }) ?? null;
-    const blocked = next === null || !cal.canShow(next);
+    const step = dir === 'previous' ? -1 : 1;
+    let blocked: boolean;
+    let go: () => void;
+    if (years) {
+      const target = page === null ? null : page + step * YEARS_PER_PAGE;
+      blocked =
+        target === null ||
+        !Array.from({ length: YEARS_PER_PAGE }, (_, index) => target + index).some(cal.yearInRange);
+      go = () => cal.moveToYear(focused!.year + step * YEARS_PER_PAGE, false);
+    } else {
+      const next = month?.add({ months: step }) ?? null;
+      blocked = next === null || !cal.canShow(next);
+      // Keep the day of the month, as far as the next month has it.
+      go = () => cal.moveFocus(next!.toPlainDate({ day: Math.min(focused!.day, next!.daysInMonth) }), false);
+    }
     return (
       <button
         type="button"
         className={styles.nav}
         data-direction={dir}
-        aria-label={dir === 'previous' ? strings.previousMonth : strings.nextMonth}
+        aria-label={
+          years
+            ? dir === 'previous'
+              ? strings.previousYears
+              : strings.nextYears
+            : dir === 'previous'
+              ? strings.previousMonth
+              : strings.nextMonth
+        }
         aria-disabled={blocked ? true : undefined}
         disabled={cal.disabled}
         onClick={() => {
           if (blocked || cal.disabled || !focused) return;
-          // Keep the day of the month, as far as the next month has it.
-          cal.moveFocus(next.toPlainDate({ day: Math.min(focused.day, next.daysInMonth) }), false);
+          go();
         }}
       >
         <span className={styles.navGlyph} data-todae-glyph="" aria-hidden="true">
@@ -294,12 +383,52 @@ function Header({ className, ...props }: CalendarHeaderProps) {
   return (
     <div {...props} className={cx(styles.header, className)}>
       {nav('previous')}
-      <span id={cal.headingId} className={styles.heading} aria-live="polite">
-        {focused?.toLocaleString(cal.locale, { month: 'long', year: 'numeric', calendar: GREGORY })}
+      {/* Announced as it changes. */}
+      <span aria-live="polite">
+        <button
+          type="button"
+          id={cal.headingId}
+          className={styles.heading}
+          aria-expanded={years}
+          disabled={cal.disabled || !focused}
+          onClick={() => cal.setView(years ? 'days' : 'years')}
+        >
+          {focused
+            ? years
+              ? yearFormat(cal.locale).formatRange(page!, page! + YEARS_PER_PAGE - 1)
+              : focused.toLocaleString(cal.locale, { month: 'long', year: 'numeric', calendar: GREGORY })
+            : null}
+          <span className={styles.headingGlyph} data-todae-glyph="" aria-hidden="true">
+            {glyphOr(chevron, <ChevronGlyph />)}
+          </span>
+        </button>
       </span>
       {nav('next')}
     </div>
   );
+}
+
+const YEARS_PER_PAGE = 12;
+const YEARS_PER_ROW = 4;
+// Temporal's first and last years.
+const FIRST_YEAR = -271821;
+const LAST_YEAR = 275760;
+// The first and last days of the months the header can show: it names the months
+// either side, which Temporal cannot reach from the months at the ends of its range.
+const FIRST_DAY = '-271821-06-01';
+const LAST_DAY = '+275760-08-31';
+
+/** The first year of the page of years that holds the year. */
+const yearPage = (year: number) => year - (((year % YEARS_PER_PAGE) + YEARS_PER_PAGE) % YEARS_PER_PAGE);
+
+const yearFormats = new Map<string, Intl.NumberFormat>();
+function yearFormat(locale: string) {
+  let format = yearFormats.get(locale);
+  if (!format) {
+    format = new Intl.NumberFormat(locale, { useGrouping: false });
+    yearFormats.set(locale, format);
+  }
+  return format;
 }
 
 const startOfWeek = (date: Temporal.PlainDate, firstDay: number) =>
@@ -314,9 +443,15 @@ const weekAnchor = () => (week ??= Temporal.PlainDate.from(WEEK_ISO));
  * The days of the shown month as a grid, one week to a row, following the
  * ARIA date picker grid: one Tab stop, arrow keys by day and week, Home and
  * End to the week's ends, Page Up and Page Down by month, and with Shift by
- * year. Left and Right swap in a right-to-left page.
+ * year. Left and Right swap in a right-to-left page. While Calendar.Header
+ * shows the years, it is a page of twelve years in the same pattern instead.
  */
-function Grid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridProps) {
+function Grid(props: CalendarGridProps) {
+  const cal = useCalendar('Grid');
+  return cal.view === 'years' ? <YearGrid {...props} /> : <DayGrid {...props} />;
+}
+
+function DayGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridProps) {
   const cal = useCalendar('Grid');
   const ref = useRef<HTMLTableElement>(null);
   const composedRef = useComposedRefs(ref, refProp);
@@ -342,7 +477,7 @@ function Grid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridProp
   const weekdays = Array.from({ length: 7 }, (_, i) => weekStart.add({ days: i }));
 
   const onDayKeyDown = (event: KeyboardEvent<HTMLTableElement>) => {
-    const day = event.target instanceof HTMLElement ? event.target.closest('[data-todae-calendar-day]') : null;
+    const day = event.target instanceof HTMLElement ? event.target.closest('[data-todae-calendar-cell]') : null;
     if (!day || !focused || event.altKey || event.ctrlKey || event.metaKey) return;
     const rtl = getComputedStyle(day).direction === 'rtl';
     let next: Temporal.PlainDate;
@@ -440,7 +575,7 @@ function Day({ date }: { date: Temporal.PlainDate }) {
         aria-label={date.toLocaleString(cal.locale, { dateStyle: 'full', calendar: GREGORY })}
         data-selected={selected ? '' : undefined}
         data-unavailable={unavailable ? '' : undefined}
-        data-todae-calendar-day=""
+        data-todae-calendar-cell=""
         onClick={(event: MouseEvent<HTMLButtonElement>) => {
           // A click also moves the Tab stop, even to a date isDateDisabled rules out.
           cal.moveFocus(date, false);
@@ -449,6 +584,124 @@ function Day({ date }: { date: Temporal.PlainDate }) {
         }}
       >
         {date.day}
+      </button>
+    </td>
+  );
+}
+
+/**
+ * A page of years, four to a row, in the same grid pattern as the days: arrow
+ * keys by year and row, Home and End to the row's ends, Page Up and Page Down
+ * by page. Picking a year shows its month again, with the month and day kept
+ * where they can be.
+ */
+function YearGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGridProps) {
+  const cal = useCalendar('Grid');
+  const ref = useRef<HTMLTableElement>(null);
+  const composedRef = useComposedRefs(ref, refProp);
+  const { focused, focusRequest } = cal;
+
+  useLayoutEffect(() => {
+    if (!focusRequest.current) return;
+    focusRequest.current = false;
+    ref.current?.querySelector<HTMLButtonElement>(CALENDAR_TAB_STOP)?.focus();
+  });
+
+  const page = focused ? yearPage(focused.year) : null;
+  const rows =
+    page === null
+      ? []
+      : Array.from({ length: YEARS_PER_PAGE / YEARS_PER_ROW }, (_, row) =>
+          Array.from({ length: YEARS_PER_ROW }, (_, col) => page + row * YEARS_PER_ROW + col),
+        );
+
+  const onYearKeyDown = (event: KeyboardEvent<HTMLTableElement>) => {
+    const cell = event.target instanceof HTMLElement ? event.target.closest('[data-todae-calendar-cell]') : null;
+    if (!cell || !focused || event.altKey || event.ctrlKey || event.metaKey) return;
+    const rtl = getComputedStyle(cell).direction === 'rtl';
+    const year = focused.year;
+    const rowStart = year - (year - yearPage(year)) % YEARS_PER_ROW;
+    let next: number;
+    switch (event.key) {
+      case 'ArrowLeft':
+        next = year + (rtl ? 1 : -1);
+        break;
+      case 'ArrowRight':
+        next = year + (rtl ? -1 : 1);
+        break;
+      case 'ArrowUp':
+        next = year - YEARS_PER_ROW;
+        break;
+      case 'ArrowDown':
+        next = year + YEARS_PER_ROW;
+        break;
+      case 'Home':
+        next = rowStart;
+        break;
+      case 'End':
+        next = rowStart + YEARS_PER_ROW - 1;
+        break;
+      case 'PageUp':
+        next = year - YEARS_PER_PAGE;
+        break;
+      case 'PageDown':
+        next = year + YEARS_PER_PAGE;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    // Stop at min and max, as the days do. Staying put keeps the month and day.
+    const target = cal.clampYear(next);
+    if (target !== year) cal.moveToYear(target, true);
+  };
+
+  return (
+    <table
+      {...props}
+      ref={composedRef}
+      role="grid"
+      aria-labelledby={
+        props['aria-label'] ? undefined : props['aria-labelledby'] ?? (cal.hasHeader ? cal.headingId : undefined)
+      }
+      className={cx(styles.grid, className)}
+      onKeyDown={composeHandlers(onKeyDown, onYearKeyDown)}
+    >
+      <tbody>
+        {rows.map((row, index) => (
+          <tr key={index}>
+            {row.map((year) => (
+              <Year key={year} year={year} />
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function Year({ year }: { year: number }) {
+  const cal = useCalendar('Grid');
+  const selected = cal.value !== null && cal.value.year === year;
+  const inRange = cal.yearInRange(year);
+  return (
+    <td aria-selected={selected ? true : undefined}>
+      <button
+        type="button"
+        className={styles.year}
+        tabIndex={cal.focused !== null && cal.focused.year === year ? 0 : -1}
+        disabled={cal.disabled || !inRange}
+        aria-current={cal.today !== null && cal.today.year === year ? 'date' : undefined}
+        data-selected={selected ? '' : undefined}
+        data-todae-calendar-cell=""
+        onClick={() => {
+          // The days take focus back, on the same date in the picked year.
+          cal.moveToYear(year, true);
+          cal.focusRequest.current = true;
+          cal.setView('days');
+        }}
+      >
+        {yearFormat(cal.locale).format(year)}
       </button>
     </td>
   );
