@@ -21,7 +21,7 @@
     gap: 0;
   }
 
-  .shell:has(:is(input, textarea, .swatch, .datePicker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell:has(:is(input, textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     border-color: var(--todae-field-border-focus);
     outline: var(--todae-focus-ring-width) solid var(--todae-field-ring-focus);
     outline-offset: var(--todae-focus-ring-offset);
@@ -31,7 +31,7 @@
     border-color: var(--todae-field-border-invalid);
   }
 
-  .shell[data-invalid]:has(:is(input, textarea, .swatch, .datePicker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
+  .shell[data-invalid]:has(:is(input, textarea, .swatch, .picker, [data-todae-field-control], [data-todae-field-control] *):focus-visible) {
     outline-color: var(--todae-field-ring-invalid);
   }
 
@@ -69,10 +69,10 @@
     color: var(--todae-field-fg-disabled);
   }
 
-  /* Number and time inputs keep their native spinner and picker. Figures
-     line up, and WebKit's date and time text starts at the edge like any
-     other value. */
-  .input:is([type='number'], [type='time'], [type='datetime-local']) {
+  /* Number and date-time inputs keep their native spinner and picker.
+     Figures line up, and WebKit's date and time text starts at the edge like
+     any other value. */
+  .input:is([type='number'], [type='datetime-local']) {
     font-variant-numeric: tabular-nums;
   }
 
@@ -449,9 +449,11 @@
     inline-size: fit-content;
   }
 
-  /* Field.DatePicker's button. It fills the field and shows the date, or
-     with showDate={false} is just the glyph. */
-  .datePicker {
+  /* Field.DatePicker's and Field.TimePicker's button. It fills the field and
+     shows the value, or with showValue={false} is just the glyph. Figures
+     line up, as in a typed time. */
+  .picker {
+    font-variant-numeric: tabular-nums;
     flex: 1 1 var(--todae-field-min-width);
     display: inline-flex;
     align-items: center;
@@ -471,7 +473,7 @@
     outline: none;
   }
 
-  .datePicker[data-glyph-only] {
+  .picker[data-glyph-only] {
     flex: none;
     min-width: 0;
     color: var(--todae-field-fg-adornment);
@@ -483,12 +485,12 @@
     max-height: none;
   }
 
-  .datePicker:disabled {
+  .picker:disabled {
     color: inherit;
     cursor: not-allowed;
   }
 
-  .dateText {
+  .pickerText {
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
@@ -496,24 +498,24 @@
     white-space: nowrap;
   }
 
-  .dateText[data-placeholder] {
+  .pickerText[data-placeholder] {
     color: var(--todae-field-fg-placeholder);
   }
 
-  .dateGlyph {
+  .pickerGlyph {
     display: inline-flex;
     align-items: center;
     flex: none;
     block-size: 1lh;
   }
 
-  .dateGlyph > :is(svg, img) {
+  .pickerGlyph > :is(svg, img) {
     inline-size: var(--todae-field-icon-size);
     block-size: var(--todae-field-icon-size);
   }
 
-  /* A press in the field opens the calendar, unless a typed input there takes it. */
-  .shell:not([data-disabled]):has(> .datePicker):not(:has(> :is(.input, .textarea))) {
+  /* A press in the field opens the picker, unless a typed input there takes it. */
+  .shell:not([data-disabled]):has(> .picker):not(:has(> :is(.input, .textarea))) {
     cursor: pointer;
   }
 

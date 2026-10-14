@@ -1,0 +1,86 @@
+import { FieldTimePicked, FieldTimePickerAlone } from '../../../../components/demos/FieldDemo';
+
+# Field.TimePicker
+
+`Field.TimePicker` is a button inside a [Field](/field) that opens a list of times in a [Popover](/popover). Its `value` is a `Temporal.PlainTime` or `null`, and `onValueChange` gets the time picked in the list, which then closes. The list has a time every `step` minutes from midnight, 30 by default, between `min` and `max`. It works like [Field.DatePicker](/field/date-picker) and takes the same props where they mean the same thing.
+
+```tsx
+const id = useId();
+const [time, setTime] = useState<Temporal.PlainTime | null>(null);
+const [text, setText] = useState('');
+const [invalid, setInvalid] = useState(false);
+
+<Field.Group>
+  <Label.Root htmlFor={id}>Start time</Label.Root>
+  <Field.Root id={id} invalid={invalid}>
+    <Field.TextInput
+      value={text}
+      onChange={(event) => {
+        setText(event.target.value);
+        setTime(parseTime(event.target.value));
+        setInvalid(false);
+      }}
+      onBlur={() => {
+        if (time) setText(formatTime(time));
+        else setInvalid(text.trim() !== '');
+      }}
+    />
+    <Field.TimePicker
+      value={time}
+      onValueChange={(next) => {
+        setTime(next);
+        setText(formatTime(next));
+        setInvalid(false);
+      }}
+      step={15}
+      showValue={false}
+    />
+  </Field.Root>
+</Field.Group>
+```
+
+<Example block>
+  <FieldTimePicked />
+</Example>
+
+Here a [Field.TextInput](/field/text-input) in the same field lets people type the time too, including one between the list's times, such as `9:07`. A picked time is written into the text with `formatTime`, and a typed time that `parseTime` reads shows in the list among its own when it is between `min` and `max`. Beside a `Field.TextInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. With `showValue={false}`, the button shows only a clock glyph. The button sends the time with a form under its own `name` if it has one, and otherwise under the field's `name`, unless a Field part or a control joined with [`useField`](/utilities/use-field), other than a `Field.ColorPicker`, `Field.DatePicker` or `Field.TimePicker`, has that `name`, as a `Field.TextInput` does when it has no `name` of its own. To send the time as `09:30` rather than the typed text, put `name` on the picker instead of the Root.
+
+## Typed times
+
+`formatTime(time, { locale })` writes a time in the locale's short time style, such as `9:30 PM` in `en-US`, `21:30` in `de` and `오후 9:30` in `ko`, or in its medium style, with seconds, when the time has seconds. `parseTime(text, { locale })` reads typed text back into a `Temporal.PlainTime`, or returns `null` when the text is not a time. It reads an hour, an hour and minutes, or an hour, minutes and seconds, such as `9`, `9:30`, `21.30.15` or `0930`, with the locale's own word for the part of the day before or after them, such as `9:30 pm` in `en-US` or `오후 9:30` in `ko`. Letter case doesn't matter, digits may be in any script, and the numbers may be separated by any punctuation, symbols or spaces, or by words the locale writes between them, such as `21 h 30` in `fr-CA`. Without a word for the part of the day, the hour is 0 to 23. Without `locale`, both use the runtime's own.
+
+In the example, text that isn't a time clears the time, so the form sends no time, and the field is marked invalid when it loses focus. `parseTime` doesn't check the picker's `min` or `max`, so check a typed time against them yourself.
+
+## On its own
+
+On its own, `Field.TimePicker` is the field's control. It shows the time as `formatTime` writes it in `locale`, or `placeholder` while there is none, and a press elsewhere in the field opens the list. With a `name` on the Root, a hidden input sends the time the way HTML writes one, such as `09:30`, or `09:30:15` with seconds.
+
+<Example block>
+  <FieldTimePickerAlone />
+</Example>
+
+The list opens and closes through `open` with `onOpenChange`, or `defaultOpen`. `onOpenChange` gets the reason it closed: `'select'` when a time is picked, `'escape'`, `'outside'`, `'trigger'`, or `'disabled'` when the field becomes disabled. Open, the list takes focus and starts at the time, or else at the next time from now, or its first time. Escape closes it, and focus goes back to where it was before it opened.
+
+## Temporal
+
+Todae ships no Temporal polyfill. The picker's values, `formatTime` and `parseTime` are `Temporal.PlainTime`, so where the browser has no Temporal, the app loads a polyfill (see [Native platform](/platform)). Todae's types need TypeScript 6 or later, which declares `Temporal`.
+
+## Accessible composition
+
+**Todae handles:** On its own, the button takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). Its label names it, so the time it shows is added to its `aria-describedby`. Beside a Field part or a control joined with `useField`, other than a `Field.ColorPicker`, `Field.DatePicker` or another `Field.TimePicker`, such as a text input, that control takes the `id` and `aria-describedby` in its place, and the button keeps `disabled` and `aria-invalid` and is named from the `timePicker` string in [StringsProvider](/utilities/strings-provider) unless it has its own `aria-label`. The button gets `aria-haspopup="dialog"` and `aria-expanded`, and `aria-controls` while the list is open. The popover is a `role="dialog"`, and the list inside is an [OptionList](/optionlist), both named from the `timePicker` string. Arrow keys, Home and End move through the times, and Enter or Space picks one. The glyph is `clock` from [GlyphsProvider](/utilities/glyphs-provider).
+
+**You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. The same time for a text input and the picker beside it, written with `formatTime` and read with `parseTime`.
+
+**Watch for:** A server render can't know another control sits beside the button, so until the page hydrates, the button and that control both carry the field's `id`, and both send a value under the field's `name`. With a `value`, the server writes that time in its own locale, so pass `locale` when the picker renders on a server.
+
+## When to use
+
+### Field.TimePicker
+
+**When:** A time of day, such as opening hours, a daily reminder or when a meeting starts.
+
+**When not:** A date and time in one value → [Field.DateTimeInput](/field/date-time-input). A duration → [Field.TextInput](/field/text-input) with `type="number"` and an `Affix` for the unit.
+
+## Props
+
+<PropsTable name="Field.TimePicker" />

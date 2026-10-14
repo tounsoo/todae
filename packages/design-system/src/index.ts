@@ -184,7 +184,8 @@ export {
   type FieldDatePickerProps,
   type FieldTextInputProps,
   type FieldTextInputType,
-  type FieldTimeInputProps,
+  type FieldTimePickerCloseReason,
+  type FieldTimePickerProps,
   type FieldTextareaProps,
 } from './components/Field';
 export {
@@ -220,6 +221,7 @@ export {
 } from './components/ColorPicker';
 export { normalizeHex } from './components/color';
 export { formatDate, parseDate, type DateTextOptions } from './components/dateText';
+export { formatTime, parseTime, type TimeTextOptions } from './components/timeText';
 export {
   Calendar,
   type CalendarFirstDayOfWeek,
