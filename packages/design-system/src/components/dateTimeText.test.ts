@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { parseDate } from './dateText';
 import { formatDateTime, parseDateTime } from './dateTimeText';
+import { parseTime } from './timeText';
 
 const at = (text: string) => Temporal.PlainDateTime.from(text);
 const read = (text: string, locale?: string) => parseDateTime(text, { locale })?.toString() ?? null;
@@ -52,6 +54,45 @@ describe('parseDateTime', () => {
     }
   });
 
+  it('reads a date and a time in the styles of every locale the runtime has, when it reads each alone', () => {
+    // Every base locale ICU had when this was written.
+    const all = Intl.DateTimeFormat.supportedLocalesOf([
+  'dz', 'af', 'agq', 'ak', 'sq', 'am', 'ar', 'hy', 'ars', 'as', 'asa', 'ast', 'az', 'bm', 'eu', 'bas', 'be', 'bem',
+  'bn', 'bez', 'bg', 'bgc', 'bho', 'blo', 'bo', 'bs', 'br', 'brx', 'my', 'luy', 'ca', 'ccp', 'ce', 'ceb', 'cs', 'cgg',
+  'zh', 'chr', 'cv', 'ckb', 'syr', 'sa', 'sr-ME', 'kw', 'csw', 'cy', 'da', 'dav', 'de', 'doi', 'dje', 'mn', 'fa-AF',
+  'dsb', 'dua', 'nl', 'dyo', 'ebu', 'ee', 'et', 'el', 'en', 'eo', 'es', 'ewo', 'fa', 'fo', 'ff', 'fi', 'fil', 'fr',
+  'fy', 'fur', 'ga', 'gaa', 'om', 'gd', 'ka', 'gl', 'gv', 'kok', 'gsw', 'gu', 'guz', 'ha', 'haw', 'sr-Latn', 'he', 'hi',
+  'hr', 'hsb', 'hu', 'ia', 'ig', 'is', 'id', 'ie', 'ii', 'it', 'ja', 'jv', 'jgo', 'yi', 'jmc', 'kab', 'kl', 'kam', 'kn',
+  'ks', 'kk', 'kde', 'kea', 'kgp', 'km', 'khq', 'ki', 'rw', 'ky', 'kkj', 'kln', 'ku', 'ko', 'ksb', 'ksf', 'ksh', 'kxv',
+  'lag', 'lo', 'lv', 'lb', 'lg', 'lij', 'ln', 'lt', 'lkt', 'lmo', 'lrc', 'lu', 'luo', 'mk', 'mai', 'ml', 'mi', 'mr',
+  'mas', 'ms', 'mer', 'mfe', 'mg', 'mgh', 'mgo', 'mt', 'mni', 'ro', 'mua', 'raj', 'mzn', 'naq', 'nb', 'nd', 'nds', 'ne',
+  'nmg', 'nn', 'nnh', 'no', 'nqo', 'nso', 'nus', 'nyn', 'oc', 'or', 'os', 'pa', 'ps', 'pcm', 'pl', 'pt', 'prg', 'qu',
+  'rm', 'rn', 'rof', 'ru', 'rwk', 'sg', 'sah', 'saq', 'sat', 'sbp', 'sc', 'sr', 'sd', 'se', 'seh', 'ses', 'shi', 'si',
+  'sk', 'sl', 'smn', 'sn', 'so', 'st', 'su', 'sv', 'sw', 'sw-CD', 'szl', 'ta', 'tt', 'te', 'teo', 'tg', 'th', 'ti',
+  'tk', 'tn', 'to', 'tok', 'tr', 'twq', 'tzm', 'ug', 'uk', 'ur', 'uz', 'vai', 'vec', 'vi', 'vmw', 'vun', 'wae', 'wo',
+  'xh', 'xnr', 'xog', 'yav', 'yo', 'yrl', 'yue', 'za', 'zgh', 'zu'
+    ]);
+    const gregory = { calendar: 'gregory', timeZone: 'UTC' } as const;
+    const styles: [Intl.DateTimeFormatOptions, Intl.DateTimeFormatOptions][] = [
+      [{ year: 'numeric', month: 'numeric', day: 'numeric' }, { hour: 'numeric', minute: '2-digit' }],
+      ...(['medium', 'long', 'full'] as const).flatMap((dateStyle) =>
+        (['short', 'medium'] as const).map((timeStyle): [Intl.DateTimeFormatOptions, Intl.DateTimeFormatOptions] => [{ dateStyle }, { timeStyle }]),
+      ),
+    ];
+    for (const locale of all) {
+      for (const value of [at('2026-10-13T21:30:15'), at('1999-01-02T09:05:59')]) {
+        for (const [date, time] of styles) {
+          const dateOnly = value.toPlainDate().toLocaleString(locale, { ...date, ...gregory });
+          const timeOnly = value.toLocaleString(locale, { ...time, ...gregory });
+          if (!parseDate(dateOnly, { locale }) || !parseTime(timeOnly, { locale })) continue;
+          const text = value.toLocaleString(locale, { ...date, ...time, ...gregory });
+          const expected = parseTime(timeOnly, { locale })!;
+          expect(read(text, locale), `${locale}: ${text}`).toBe(value.toPlainDate().toPlainDateTime(expected).toString());
+        }
+      }
+    }
+  }, 60_000);
+
   it('reads typed text, with or without the words between the date and the time', () => {
     expect(read('10/13/2026 9:30 pm', 'en-US')).toBe('2026-10-13T21:30:00');
     expect(read('Oct 13, 2026 at 9:30 PM', 'en-US')).toBe('2026-10-13T21:30:00');
@@ -62,7 +103,23 @@ describe('parseDateTime', () => {
     expect(read('2026年10月13日21:30', 'ja')).toBe('2026-10-13T21:30:00');
   });
 
+  it('reads a date and a time joined by punctuation where a word meets a number', () => {
+    expect(read('2026.10.13.오후9:30', 'ko')).toBe('2026-10-13T21:30:00');
+    expect(read('2026년 10월 13일 화요일오후 9:30', 'ko')).toBe('2026-10-13T21:30:00');
+    expect(read('2026年10月13日下午9:30', 'zh')).toBe('2026-10-13T21:30:00');
+    expect(read('13.10.2026,21:30', 'de')).toBe('2026-10-13T21:30:00');
+    expect(read('10/13/26 9:05', 'en-US')).toBe('2026-10-13T09:05:00');
+    expect(read('Oct 13 26 9:05', 'en-US')).toBe('2026-10-13T09:05:00');
+  });
+
+  it('needs a space or a comma where a number of the date meets a number of the time', () => {
+    expect(read('13.10.2026-21:30', 'de')).toBeNull();
+    expect(read('Oct 13, 2026-9:30 PM', 'en-US')).toBeNull();
+  });
+
   it('does not read the hour of a time as the year of a date typed without one', () => {
+    expect(read('10/13 9 05', 'en-US')).toBeNull();
+    expect(read('Oct 13 9 05 PM', 'en-US')).toBeNull();
     expect(read('Oct 13 9:05 PM', 'en-US')).toBeNull();
     expect(read('10/13 9:05', 'en-US')).toBeNull();
     expect(read('10/13 12:05', 'en-US')).toBeNull();

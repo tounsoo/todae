@@ -215,6 +215,39 @@ describe('Field.DateTimePicker', () => {
     expect((day('Wednesday, October 14, 2026') as HTMLButtonElement).disabled).toBe(false);
   });
 
+  it("keeps min's date when the held time is the one time left on it", () => {
+    render(
+      <Field.Root aria-label="Start">
+        <Field.DateTimePicker value={at('2026-10-13T23:45')} min={at('2026-10-13T23:45')} step={30} locale="en-US" defaultOpen />
+      </Field.Root>,
+    );
+    expect((day('Tuesday, October 13, 2026') as HTMLButtonElement).disabled).toBe(false);
+    expect(options()).toEqual(['11:45 PM']);
+    expect(screen.getByRole('option', { selected: true }).textContent).toBe('11:45 PM');
+  });
+
+  it('offers no date when min and max share a day with no time between them', () => {
+    render(
+      <Field.Root aria-label="Start">
+        <Field.DateTimePicker value={null} min={at('2026-10-13T09:10')} max={at('2026-10-13T09:20')} locale="en-US" defaultOpen />
+      </Field.Root>,
+    );
+    expect((day('Tuesday, October 13, 2026') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('moves focus to the calendar when a time is picked while the date is after max', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Field.Root aria-label="Start">
+        <Field.DateTimePicker value={at('2026-10-20T09:30')} onValueChange={onValueChange} max={at('2026-10-15T23:59')} locale="en-US" defaultOpen />
+      </Field.Root>,
+    );
+    fireEvent.click(screen.getByRole('option', { name: '10:00 AM' }));
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(document.activeElement!.hasAttribute('data-todae-calendar-cell')).toBe(true);
+  });
+
   it('follows a value set from outside while open', () => {
     const { rerender } = render(
       <Field.Root aria-label="Start">

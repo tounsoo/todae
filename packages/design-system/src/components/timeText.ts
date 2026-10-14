@@ -44,14 +44,14 @@ const localeTimes = new Map<string, LocaleTime>();
 // Spaces a letter from a digit beside it, so "9pm" and "21h30" read as words
 // and numbers, and a Latin letter from a letter of another script, so "AMకి"
 // in te reads as "am" and "కి". A letter of no one script, such as ʻ, stays with its word.
-export const spaceWords = (text: string) =>
+const spaceWords = (text: string) =>
   text
     .replace(/(\p{Nd})(\p{L})/gu, '$1 $2')
     .replace(/(\p{L}\p{M}*)(\p{Nd})/gu, '$1 $2')
     .replace(/(\p{Script=Latin}\p{M}*)(?=[^\P{L}\p{Script=Latin}\p{Script=Common}])/gu, '$1 ')
     .replace(/([^\P{L}\p{Script=Latin}\p{Script=Common}]\p{M}*)(?=\p{Script=Latin})/gu, '$1 ');
 
-const split = (text: string) => normalize(spaceWords(text));
+const split = (text: string) => spaceWords(normalize(text));
 
 /** The words and numbers of typed text, normalized, split where `split` splits them. */
 export const splitWords = (text: string) => split(text).split(' ').filter(Boolean);

@@ -1,7 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe date and time text for a text input beside Field.DateTimePicker: no hooks or context.
-import { parseDate, type DateTextOptions } from './dateText';
-import { parseTime, spaceWords, splitWords } from './timeText';
+import { fold, parseDate, type DateTextOptions } from './dateText';
+import { parseTime, splitWords } from './timeText';
 
 export type DateTimeTextOptions = DateTextOptions;
 
@@ -83,51 +83,91 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
   return text;
 }
 
+/** A number, or a letter with its marks, and the punctuation, symbols or spaces before it. */
+type Atom = { text: string; number: boolean; gap: string };
+
+function atoms(text: string): Atom[] {
+  const out: Atom[] = [];
+  let gap = '';
+  for (const [piece] of fold(text).matchAll(/\p{N}+|\p{L}\p{M}*|\p{M}+|[^\p{L}\p{M}\p{N}]+/gu)) {
+    if (!/^[\p{L}\p{M}\p{N}]/u.test(piece)) {
+      gap += piece;
+      continue;
+    }
+    out.push({ text: piece, number: /^\p{N}/u.test(piece), gap });
+    gap = '';
+  }
+  return out;
+}
+
+const SPACE_OR_COMMA = /[\s,，、،]/u;
+
+/**
+ * Whether a date may end and a time start before `atoms[at]`: anywhere but
+ * inside a word's marks, or between two numbers with no space or comma
+ * between them, such as in "9:05" or "10/13".
+ */
+function canCut(list: Atom[], at: number) {
+  const before = list[at - 1]!;
+  const after = list[at]!;
+  if (/^\p{M}/u.test(after.text)) return false;
+  return !(before.number && after.number && !SPACE_OR_COMMA.test(after.gap));
+}
+
+const render = (list: Atom[]) => list.map((atom, index) => (index ? atom.gap : '') + atom.text).join('');
+
 /**
  * The date and time in typed text, or `null` when the text is not one. It
  * reads a date as `parseDate` does, then a time as `parseTime` does, in the
- * order the locale writes them, with any of the words the locale writes
+ * order the locale writes them, with or without the words the locale writes
  * between them, such as `10/13/2026 9:30 pm` or `Oct 13, 2026 at 9:30 PM` in
- * en-US. Text that reads as more than one date and time is not read.
+ * en-US. Where a number of the date meets a number of the time, as in
+ * `13.10.2026 21:30`, a space or a comma goes between them. Text that reads as
+ * more than one date and time is not read.
  */
 export function parseDateTime(text: string, options: DateTimeTextOptions = {}): Temporal.PlainDateTime | null {
   const { joiners, dateFirst, timeFirst } = localeDateTime(options.locale);
-  // The date ends and the time starts between pieces: runs of text between
-  // spaces or commas, a letter and a digit beside it, or letters of two
-  // scripts. A piece such as "9:05" or "10/13" is one number or date part.
-  const all = spaceWords(text)
-    .split(/[\s,，、،]+/u)
-    .map(splitWords)
-    .filter((words) => words.length > 0);
-  // Words the locale writes before or after both halves may be left in or out.
-  const joiner = (piece: string[]) => piece.length === 1 && joiners.has(piece[0]!);
-  let first = 0;
-  while (first < all.length - 1 && joiner(all[first]!)) first++;
-  let last = all.length;
-  while (last > first + 1 && joiner(all[last - 1]!)) last--;
-  const pieces = all.slice(first, last);
+  const list = atoms(text);
   const found = new Map<string, Temporal.PlainDateTime>();
-  const read = (dateWords: string[], timeWords: string[]) => {
-    const date = parseDate(dateWords.join(' '), options);
-    if (!date) return;
-    const time = parseTime(timeWords.join(' '), options);
-    if (!time) return;
+  // The words the locale writes between, before or after the halves may be left in or out.
+  const trim = (half: string, start: boolean, end: boolean) => {
+    const words = splitWords(half);
+    let first = 0;
+    while (start && first < words.length - 1 && joiners.has(words[first]!)) first++;
+    let last = words.length;
+    while (end && last > first + 1 && joiners.has(words[last - 1]!)) last--;
+    return words.slice(first, last).join(' ');
+  };
+  const read = (dateText: string, timeText: string) => {
+    const date = parseDate(dateText, options);
+    const time = date && parseTime(timeText, options);
+    if (!date || !time) return;
     const value = date.toPlainDateTime(time);
     found.set(value.toString(), value);
   };
-  const words = (from: number, to: number) => pieces.slice(from, to).flat();
-  for (let at = 1; at < pieces.length; at++) {
-    // The words the locale writes between the halves may be left in or out.
-    let end = at;
-    while (end > 1 && joiner(pieces[end - 1]!)) end--;
-    let start = at;
-    while (start < pieces.length - 1 && joiner(pieces[start]!)) start++;
-    for (const [before, after] of [
-      [words(0, at), words(at, pieces.length)],
-      [words(0, end), words(start, pieces.length)],
-    ]) {
-      if (dateFirst) read(before!, after!);
-      if (timeFirst) read(after!, before!);
+  for (let at = 1; at < list.length; at++) {
+    if (!canCut(list, at)) continue;
+    const before = render(list.slice(0, at));
+    const after = render(list.slice(at));
+    for (const strip of [false, true]) {
+      if (dateFirst) {
+        const timeText = trim(after, strip, true);
+        // A date typed without a year must not take the time's hour as one, as
+        // in "10/13 9 05": a last number of one or two digits, standing alone,
+        // that is the year and also starts a time with the rest.
+        const last = list[at - 1]!;
+        const date = parseDate(trim(before, true, strip), options);
+        const hour =
+          date &&
+          last.number &&
+          last.text.length <= 2 &&
+          at > 1 &&
+          canCut(list, at - 1) &&
+          Number(last.text) === date.year % 100 &&
+          parseTime(`${last.text} ${timeText}`, options);
+        if (!hour) read(trim(before, true, strip), timeText);
+      }
+      if (timeFirst) read(trim(after, strip, true), trim(before, true, strip));
     }
   }
   if (found.size !== 1) return null;

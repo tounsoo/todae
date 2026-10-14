@@ -773,8 +773,8 @@
       "ko": "날짜와 시각, 없으면 null."
     },
     "onValueChange": {
-      "en": "Fires with the date and time once both are picked, and again as either changes.",
-      "ko": "날짜와 시각을 둘 다 고르면 그 값을 받아 호출되고, 둘 중 하나가 바뀔 때마다 다시 호출됩니다."
+      "en": "Fires with the date and time when a pick leaves a date the calendar offers and a time in range for it.",
+      "ko": "고른 뒤에 달력이 내놓는 날짜와 그 날짜의 범위 안 시각이 있으면 그 날짜와 시각을 받아 호출됩니다."
     },
     "min": {
       "en": "The earliest date and time that can be picked.",

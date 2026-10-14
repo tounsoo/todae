@@ -36,6 +36,13 @@ function digitValue(char: string) {
  * as one space.
  */
 export function normalize(text: string) {
+  return fold(text)
+    .replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ')
+    .trim();
+}
+
+/** Text as `normalize` folds it, with its punctuation, symbols and spaces as they are. */
+export function fold(text: string) {
   return (
     text
       .normalize('NFKC')
@@ -48,8 +55,6 @@ export function normalize(text: string) {
       .normalize('NFC')
       .replace(/\p{Nd}/gu, (char) => String(digitValue(char)))
       .replace(/\p{Cf}/gu, '')
-      .replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ')
-      .trim()
   );
 }
 
