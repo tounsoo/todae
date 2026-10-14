@@ -61,7 +61,6 @@
 
   /* A system message is a quiet line in the middle, such as "Model changed". */
   .root[data-from='system'] {
-    justify-items: center;
     text-align: center;
     color: var(--todae-message-system-fg);
     font-size: var(--todae-message-system-font-size);
@@ -96,9 +95,9 @@
 
   /* While a message streams, a caret follows its text: after the last
      paragraph, list item, heading or table cell when the content ends with
-     one, or after plain text with no blocks in it. Only the innermost such
-     element that ends the content takes it, and none inside a closed
-     details. A code block takes none: rendered markdown ends its code with
+     one, or after plain text with no blocks in it. Only such an element
+     that ends the content and holds no block of its own takes it, and none
+     inside a closed details. One list of blocks serves both rules. A code block takes none: rendered markdown ends its code with
      a newline, which would put the caret on a line of its own. */
   .root[data-streaming]
     > .content:not(
@@ -134,9 +133,37 @@
     )::after,
   .root[data-streaming]
     > .content
-    :is(p, li, h1, h2, h3, h4, h5, h6, td, th):not(:has(~ *)):not(:has(:is(p, li, h1, h2, h3, h4, h5, h6, td, th))):not(
-      .content :has(~ *) *
-    ):not(details:not([open]) *)::after {
+    :is(p, li, h1, h2, h3, h4, h5, h6, td, th):not(:has(~ *)):not(
+      :has(
+        :is(
+          address,
+          article,
+          aside,
+          blockquote,
+          details,
+          div,
+          dl,
+          figure,
+          footer,
+          form,
+          h1,
+          h2,
+          h3,
+          h4,
+          h5,
+          h6,
+          header,
+          hr,
+          li,
+          ol,
+          p,
+          pre,
+          section,
+          table,
+          ul
+        )
+      )
+    ):not(.content :has(~ *) *):not(details:not([open]) *)::after {
     content: '';
     display: inline-block;
     block-size: 1em;

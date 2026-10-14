@@ -174,6 +174,28 @@ describe('Message.Root in a browser', () => {
         </Message.Root>
         <Message.Root streaming>
           <Message.Content>
+            <ol>
+              <li data-testid="step-code">
+                Run
+                <pre>
+                  <code>{'pnpm test\n'}</code>
+                </pre>
+              </li>
+            </ol>
+          </Message.Content>
+        </Message.Root>
+        <Message.Root streaming>
+          <Message.Content>
+            <ul>
+              <li data-testid="step-rule">
+                Done
+                <hr />
+              </li>
+            </ul>
+          </Message.Content>
+        </Message.Root>
+        <Message.Root streaming>
+          <Message.Content>
             <p data-testid="shown">Shown</p>
             <details>
               <summary>Thinking</summary>
