@@ -169,6 +169,41 @@ describe('Composer in a browser', () => {
     expect(onSend).not.toHaveBeenCalled();
   });
 
+  it('acts once for a double click or a held Enter, in either mode', async () => {
+    const onSend = vi.fn();
+    render(<Chat onSend={onSend} />);
+    const field = screen.getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement;
+    await userEvent.click(field);
+    await userEvent.keyboard('Hi{Enter}next draft');
+    await userEvent.dblClick(screen.getByRole('button', { name: 'Stop' }));
+    expect(onSend).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Send' })).toBeTruthy();
+    await userEvent.dblClick(screen.getByRole('button', { name: 'Send' }));
+    expect(onSend).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Stop' }));
+    await userEvent.click(field);
+    await userEvent.keyboard('again');
+    screen.getByRole('button', { name: 'Send' }).focus();
+    await userEvent.keyboard('{Enter>4/}');
+    expect(onSend).toHaveBeenCalledTimes(3);
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeTruthy();
+  });
+
+  it('leaves focus alone on a focusout of a button that was already disabled', async () => {
+    render(
+      <Composer.Root>
+        <textarea aria-label="Message" />
+        <Composer.Submit disabled />
+      </Composer.Root>,
+    );
+    const send = screen.getByRole('button', { name: 'Send' });
+    await act(async () => {
+      send.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    });
+    expect(document.activeElement).toBe(document.body);
+  });
+
   it('passes axe', async () => {
     render(<Chat />);
     const results = await axe.run(document.body, { rules: { 'color-contrast': { enabled: false } } });

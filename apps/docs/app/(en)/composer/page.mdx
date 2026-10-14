@@ -26,7 +26,7 @@ import { ComposerExample } from '../../../components/demos/ComposerDemo';
 
 ## Sending and stopping
 
-Send from the root's `onSubmit`, calling `event.preventDefault()` to stay on the page, and set `busy` until the reply is done. Send and Stop are the same button, so with `onStop` a button that has focus keeps it as they swap. Pressing Stop does not also send what was typed while the reply ran.
+Send from the root's `onSubmit`, calling `event.preventDefault()` to stay on the page, and set `busy` until the reply is done. Send and Stop are the same button, so a button that has focus keeps it as they swap, while it stays enabled. A second press within a double click, or a held Enter, does nothing. Pressing Stop does not also send what was typed while the reply ran.
 
 When Send turns disabled while it has focus and the browser takes focus off it, as Chromium does, such as when Stop turns back into Send with nothing typed, focus moves to the first enabled textarea of the form.
 

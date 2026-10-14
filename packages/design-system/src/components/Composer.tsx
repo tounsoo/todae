@@ -106,6 +106,7 @@ function Submit({
   children,
   disabled,
   onClick,
+  onKeyDown,
   onStop,
   ref,
   ...props
@@ -144,12 +145,23 @@ function Submit({
     return () => button.removeEventListener('focusout', onFocusOut);
   }, []);
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    // Send and Stop swap under a repeated press: the second click of a double
+    // click lands after the swap, so it does nothing rather than act in the
+    // other mode.
+    if (event.detail > 1) {
+      event.preventDefault();
+      return;
+    }
     if (!busy) return;
     // Stopping clears busy before the browser acts on the click, and the
     // button is a submit button again by then: cancel that, so Stop does not
     // also send what was typed meanwhile.
     event.preventDefault();
     onStop?.();
+  };
+  // A held Enter clicks once for each repeat, so it would swap back and forth.
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Enter' && event.repeat) event.preventDefault();
   };
   return (
     <Button.Root
@@ -158,6 +170,7 @@ function Submit({
       type={busy ? 'button' : 'submit'}
       disabled={off}
       onClick={composeHandlers(onClick, handleClick)}
+      onKeyDown={composeHandlers(onKeyDown, handleKeyDown)}
       ref={refs}
       className={cx(styles.submit, className)}
     >
