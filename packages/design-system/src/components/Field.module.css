@@ -477,6 +477,12 @@
     color: var(--todae-field-fg-adornment);
   }
 
+  /* The calendar is a fixed size, six weeks at most, so the popover holds it
+     whole rather than scrolling it at the popover's list height. */
+  .datePickerPopover:popover-open {
+    max-height: none;
+  }
+
   .datePicker:disabled {
     color: inherit;
     cursor: not-allowed;

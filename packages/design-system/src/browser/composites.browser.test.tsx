@@ -605,6 +605,26 @@ describe('Field.DatePicker in a browser', () => {
     expect(button.textContent).toBe('Oct 20, 2026');
   });
 
+  it.each(['compact', 'comfortable', 'spacious'] as const)(
+    'shows a six-week month whole, without scrolling, at %s density',
+    async (density) => {
+      render(
+        <div data-appearance="light" data-density={density}>
+          <Label.Root htmlFor="when">When</Label.Root>
+          <Field.Root id="when">
+            <Field.DatePicker value={plainDate('2022-10-21')} locale="en-US" />
+          </Field.Root>
+        </div>,
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'When' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Choose date' });
+      await waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
+      // October 2022 starts on a Saturday, so it spans six weeks.
+      expect(screen.getByRole('grid').querySelectorAll('tbody tr')).toHaveLength(6);
+      expect(dialog.scrollHeight).toBeLessThanOrEqual(dialog.clientHeight);
+    },
+  );
+
   it('picks a year in the open calendar from the keyboard, and stays open on its month', async () => {
     render(<Start />);
     await userEvent.click(screen.getByRole('button', { name: 'Start' }));
