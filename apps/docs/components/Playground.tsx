@@ -28,7 +28,7 @@ import {
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
-import { PRESET_FONTS_HREF, PRESETS, type ThemePreset } from './playground/presets';
+import { PRESETS, type ThemePreset } from './playground/presets';
 import { ICON_LIBRARIES } from './iconLibraries';
 import { Preview } from './playground/Preview';
 
@@ -234,7 +234,7 @@ export function Playground({ locale }: { locale: Locale }) {
   const [iconsId, setIconsId] = useState('todae');
   const [layer, setLayer] = useState<Layer>('semantic');
   const [filter, setFilter] = useState('');
-  const [presetId, setPresetId] = useState(PRESETS[0]?.id ?? 'todae');
+  const [presetId, setPresetId] = useState(PRESETS[0]?.id ?? 'graphite');
   // Edits belong to the appearance they were made in, like a preset's own two sets.
   const [edits, setEdits] = useState<Record<'light' | 'dark', ThemeOverride>>(NO_EDITS);
   const [computed, setComputed] = useState<Partial<Record<ThemeOverrideKey, string>>>({});
@@ -430,8 +430,6 @@ export function Playground({ locale }: { locale: Locale }) {
 
   return (
     <div className="playground">
-      {/* The presets' typefaces. React hoists this into <head>. */}
-      <link rel="stylesheet" href={PRESET_FONTS_HREF} precedence="default" />
       {/* On narrow screens the controls are in the sheet, so the rail is only the intro, not a landmark. */}
       <Rail className="pg-rail" aria-label={narrow ? undefined : t.rail}>
         <ScrollArea.Root className="pg-rail-scroll" focusable={false}>

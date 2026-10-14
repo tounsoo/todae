@@ -9,10 +9,6 @@ export type ThemePreset = {
   dark: ThemeOverride;
 };
 
-/** The web fonts the presets name. The playground loads them; a company loads its own. */
-export const PRESET_FONTS_HREF =
-  'https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;700&family=Nunito:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap';
-
 const oklch = (l: number, c: number, h: number): ThemeColorValue => ({ colorSpace: 'oklch', components: [l, c, h] });
 const rem = (value: number): ThemeDimensionValue => ({ value, unit: 'rem' });
 
@@ -20,17 +16,19 @@ const rem = (value: number): ThemeDimensionValue => ({ value, unit: 'rem' });
 // changes the hue and chroma, so every semantic color that reads the ramp,
 // in both appearances, follows along.
 const RAMP = [
-  ['50', 0.98],
-  ['100', 0.93],
-  ['200', 0.87],
-  ['300', 0.78],
-  ['400', 0.68],
-  ['500', 0.55],
-  ['600', 0.45],
+  ['0', 1],
+  ['50', 0.985],
+  ['100', 0.955],
+  ['200', 0.9],
+  ['300', 0.82],
+  ['400', 0.78],
+  ['500', 0.6],
+  ['600', 0.48],
   ['700', 0.36],
   ['800', 0.28],
-  ['900', 0.22],
-  ['950', 0.16],
+  ['850', 0.235],
+  ['900', 0.19],
+  ['950', 0.145],
 ] as const;
 
 /** The gray ramp tinted toward `hue`, with chroma highest in the middle steps. */
@@ -38,19 +36,14 @@ function grays(hue: number, chroma: number): ThemeOverride {
   const out: ThemeOverride = {};
   for (const [step, l] of RAMP) {
     const middle = 1 - Math.abs(l - 0.55) / 0.55;
-    out[`color.gray.${step}` as keyof ThemeOverride] = oklch(l, Number((chroma * (0.4 + 0.6 * middle)).toFixed(3)), hue);
+    out[`color.gray.${step}` as keyof ThemeOverride] = oklch(l, Number((chroma * (0.5 + 0.5 * middle)).toFixed(4)), hue);
   }
   return out;
 }
 
-/** A hue accent. `step` is how far hover and active move away from the default, toward more contrast. */
-function accent(l: number, c: number, h: number, onAccent: ThemeColorValue, step: number): ThemeOverride {
-  return {
-    'color.accent.default': oklch(l, c, h),
-    'color.accent.hover': oklch(Number((l + step).toFixed(3)), c, h),
-    'color.accent.active': oklch(Number((l + step * 2).toFixed(3)), c, h),
-    'color.on-accent': onAccent,
-  };
+/** The accent's three states and the color drawn on it. */
+function accent(base: ThemeColorValue, hover: ThemeColorValue, active: ThemeColorValue, onAccent: ThemeColorValue): ThemeOverride {
+  return { 'color.accent.default': base, 'color.accent.hover': hover, 'color.accent.active': active, 'color.on-accent': onAccent };
 }
 
 /** Corner radii, from small to large. */
@@ -61,86 +54,101 @@ function radii(sm: number, md: number, lg: number): ThemeOverride {
 /** Pill-shaped buttons, chips and badges. */
 const PILLS: ThemeOverride = { 'button.base.radius': rem(99), 'chip.radius': rem(99), 'badge.radius': rem(99) };
 
+/** Filled fields and secondary buttons: the fill doubles as the border, so the shape stays the same size. */
+function filled(field: ThemeColorValue, button: ThemeColorValue): ThemeOverride {
+  return {
+    'field.bg.default': field,
+    'field.border.default': field,
+    'button.secondary.bg.default': button,
+    'button.secondary.border.default': button,
+  };
+}
+
 /** The same overrides in both appearances, plus each appearance's own. */
 function preset(id: string, name: string, shared: ThemeOverride, light: ThemeOverride, dark: ThemeOverride): ThemePreset {
   return { id, name, light: { ...shared, ...light }, dark: { ...shared, ...dark } };
 }
 
+/** Acid's light primary button: chartreuse with ink type and an ink edge. */
+function chartreuseButton(ink: ThemeColorValue): ThemeOverride {
+  const out: ThemeOverride = {};
+  const fills = { default: oklch(0.9, 0.2, 122), hover: oklch(0.93, 0.19, 122), active: oklch(0.85, 0.2, 122), focus: oklch(0.9, 0.2, 122) };
+  for (const [state, fill] of Object.entries(fills)) {
+    out[`button.primary.bg.${state}` as keyof ThemeOverride] = fill;
+    out[`button.primary.fg.${state}` as keyof ThemeOverride] = ink;
+    out[`button.primary.border.${state}` as keyof ThemeOverride] = ink;
+  }
+  return out;
+}
+
+const MONO = ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'];
+
 export const PRESETS: readonly ThemePreset[] = [
-  preset('todae', 'Todae', {}, {}, {}),
+  // Todae as it ships.
+  preset('graphite', 'Graphite', {}, {}, {}),
   preset(
-    'editorial',
-    'Editorial',
+    'porcelain',
+    'Porcelain',
+    { ...grays(200, 0.008), ...radii(0.625, 0.875, 1.5), ...PILLS },
     {
-      ...grays(75, 0.024),
-      ...radii(0.0625, 0.125, 0.25),
-      'button.base.radius': rem(0),
-      'font.family.sans': ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
-      'font.weight.medium': 600,
-      'font.weight.bold': 700,
+      'color.bg.canvas': oklch(0.965, 0.004, 200),
+      'card.border': oklch(1, 0, 0),
+      ...filled(oklch(0.935, 0.005, 200), oklch(0.925, 0.006, 200)),
+      ...accent(oklch(0.5, 0.09, 165), oklch(0.56, 0.09, 165), oklch(0.44, 0.09, 165), oklch(0.99, 0, 0)),
     },
-    accent(0.4, 0.1, 35, oklch(0.97, 0.015, 75), -0.05),
-    accent(0.84, 0.07, 65, oklch(0.18, 0.02, 65), 0.05),
+    {
+      'color.bg.canvas': oklch(0.13, 0.006, 200),
+      'card.border': oklch(0.19, 0.004, 200),
+      ...filled(oklch(0.24, 0.006, 200), oklch(0.26, 0.006, 200)),
+      ...accent(oklch(0.8, 0.077, 165), oklch(0.85, 0.077, 165), oklch(0.75, 0.077, 165), oklch(0.17, 0.03, 165)),
+    },
   ),
   preset(
-    'forest',
-    'Forest',
+    'acid',
+    'Acid',
     {
-      ...grays(160, 0.018),
-      ...radii(0.5, 0.875, 1.25),
-      ...PILLS,
-      'font.family.sans': ['Nunito', 'ui-rounded', 'system-ui', 'sans-serif'],
-      'font.weight.medium': 700,
-      'font.weight.bold': 800,
-    },
-    accent(0.47, 0.1, 160, oklch(0.98, 0.01, 160), -0.05),
-    accent(0.8, 0.12, 160, oklch(0.18, 0.03, 160), 0.05),
-  ),
-  preset(
-    'grape',
-    'Grape',
-    {
-      ...grays(300, 0.024),
-      ...radii(0.25, 0.5, 0.75),
+      ...grays(120, 0.01),
+      ...radii(0, 0, 0),
+      'radius.full': rem(0),
       'border.width': rem(0.125),
-      'font.family.sans': ['Space Grotesk', 'system-ui', 'sans-serif'],
+      'font.family.sans': MONO,
       'font.weight.medium': 600,
-      'font.weight.bold': 700,
-    },
-    accent(0.5, 0.2, 300, oklch(0.98, 0.01, 300), -0.05),
-    accent(0.82, 0.11, 300, oklch(0.18, 0.03, 300), 0.04),
-  ),
-  preset(
-    'terminal',
-    'Terminal',
-    {
-      ...grays(150, 0.03),
-      ...radii(0, 0, 0),
-      'radius.full': rem(0),
-      'button.base.radius': rem(0),
-      'font.family.sans': ['JetBrains Mono', 'ui-monospace', 'monospace'],
-      'font.family.mono': ['JetBrains Mono', 'ui-monospace', 'monospace'],
-      'font.weight.medium': 500,
-      'font.weight.bold': 700,
-    },
-    accent(0.45, 0.13, 150, oklch(0.98, 0.02, 150), -0.05),
-    accent(0.84, 0.19, 150, oklch(0.16, 0.03, 150), 0.04),
-  ),
-  preset(
-    'brutal',
-    'Brutal',
-    {
-      ...grays(0, 0),
-      ...radii(0, 0, 0),
-      'radius.full': rem(0),
-      'button.base.radius': rem(0),
-      'border.width': rem(0.1875),
-      'font.family.sans': ['Archivo', 'system-ui', 'sans-serif'],
-      'font.weight.medium': 700,
       'font.weight.bold': 800,
       'button.base.font.weight': 800,
     },
-    {},
-    {},
+    {
+      // Chartreuse can't carry a checkbox or a tab line on a light canvas, so
+      // the accent stays ink and only the primary button turns chartreuse.
+      ...accent(oklch(0.15, 0.028, 110), oklch(0.26, 0.028, 110), oklch(0.1, 0.028, 110), oklch(0.9, 0.2, 122)),
+      ...chartreuseButton(oklch(0.15, 0.028, 110)),
+      'color.bg.canvas': oklch(0.96, 0.02, 110),
+      'color.border.default': oklch(0.15, 0.028, 110),
+      'color.border.subtle': oklch(0.2, 0.024, 110),
+      'focus.ring.color': oklch(0.6, 0.25, 330),
+    },
+    {
+      ...accent(oklch(0.9, 0.2, 122), oklch(0.93, 0.19, 122), oklch(0.85, 0.2, 122), oklch(0.15, 0.02, 120)),
+      'color.border.default': oklch(0.92, 0.014, 120),
+      'color.border.subtle': oklch(0.9, 0.012, 120),
+      'focus.ring.color': oklch(0.72, 0.22, 330),
+    },
+  ),
+  preset(
+    'bloom',
+    'Bloom',
+    { ...grays(330, 0.03), ...radii(0.75, 1, 1.75), ...PILLS, 'font.weight.medium': 600, 'font.weight.bold': 800 },
+    {
+      'color.bg.canvas': oklch(0.965, 0.02, 340),
+      'card.border': oklch(1, 0, 0),
+      ...accent(oklch(0.6, 0.25, 350), oklch(0.66, 0.24, 350), oklch(0.54, 0.25, 350), oklch(0.99, 0, 0)),
+      'focus.ring.color': oklch(0.6, 0.25, 350),
+    },
+    {
+      'color.bg.canvas': oklch(0.15, 0.04, 320),
+      'color.bg.surface': oklch(0.2, 0.024, 320),
+      'card.border': oklch(0.2, 0.024, 320),
+      ...accent(oklch(0.82, 0.14, 350), oklch(0.86, 0.12, 350), oklch(0.79, 0.15, 350), oklch(0.15, 0.05, 340)),
+      'focus.ring.color': oklch(0.82, 0.14, 350),
+    },
   ),
 ];

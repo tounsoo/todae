@@ -79,7 +79,7 @@ describe('docs site chrome under axe', () => {
     );
     await frame();
     expect(await violations()).toEqual([]);
-    await userEvent.click(screen.getByText('Forest'));
+    await userEvent.click(screen.getByText('Porcelain'));
     await userEvent.click(screen.getByRole('button', { name: 'dark' }));
     await frame();
     expect(await violations()).toEqual([]);
@@ -159,7 +159,7 @@ describe('narrow screens', () => {
     await frame();
     // Every control is in the sheet, and the stage follows the title and lead.
     expect(screen.queryByRole('tab', { name: 'raw' })).toBeNull();
-    expect(screen.queryByRole('radio', { name: 'Forest' })).toBeNull();
+    expect(screen.queryByRole('radio', { name: 'Porcelain' })).toBeNull();
     expect(screen.queryByRole('complementary')).toBeNull();
     const lead = screen.getByText(/Start from a preset/);
     expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(lead.getBoundingClientRect().bottom);
@@ -527,11 +527,11 @@ describe('playground stage', () => {
 
   it('takes a preset typeface on the stage only, and the site keeps its own', async () => {
     const stage = renderPlayground();
-    await userEvent.click(screen.getByText('Editorial'));
+    await userEvent.click(screen.getByText('Acid'));
     await frame();
-    expect(getComputedStyle(stage).fontFamily).toContain('Fraunces');
-    expect(getComputedStyle(screen.getByRole('button', { name: 'Copy JSON' })).fontFamily).not.toContain('Fraunces');
-    expect(getComputedStyle(document.querySelector('.shell') as Element).fontFamily).toContain('Apple SD Gothic Neo');
+    expect(getComputedStyle(stage).fontFamily).toContain('ui-monospace');
+    expect(getComputedStyle(screen.getByRole('button', { name: 'Copy JSON' })).fontFamily).not.toContain('ui-monospace');
+    expect(getComputedStyle(document.querySelector('.shell') as Element).fontFamily).toContain('ui-sans-serif');
   });
 
   it('applies both raw and semantic space edits to density tokens', async () => {

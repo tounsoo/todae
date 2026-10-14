@@ -6,10 +6,10 @@ import { PRESETS } from './presets';
 const KEYS = new Set<string>(THEME_OVERRIDE_KEYS);
 const MODES = ['light', 'dark'] as const;
 
-// Todae's canvas in each appearance (gray 50 and gray 900), for presets that keep the ramp.
+// Todae's canvas in each appearance (gray 50 and gray 950), for presets that keep it.
 const CANVAS: Record<(typeof MODES)[number], ThemeColorValue> = {
-  light: { colorSpace: 'oklch', components: [0.98, 0.005, 260] },
-  dark: { colorSpace: 'oklch', components: [0.22, 0.02, 260] },
+  light: { colorSpace: 'oklch', components: [0.985, 0.004, 255] },
+  dark: { colorSpace: 'oklch', components: [0.145, 0.007, 255] },
 };
 
 function lc(fg: ThemeColorValue, bg: ThemeColorValue): number {
@@ -22,7 +22,7 @@ const color = (overrides: ThemeOverride, key: keyof ThemeOverride) => overrides[
 describe('playground presets', () => {
   it('have unique ids and start from plain Todae', () => {
     expect(new Set(PRESETS.map((preset) => preset.id)).size).toBe(PRESETS.length);
-    expect(PRESETS[0]).toEqual({ id: 'todae', name: 'Todae', light: {}, dark: {} });
+    expect(PRESETS[0]).toEqual({ id: 'graphite', name: 'Graphite', light: {}, dark: {} });
   });
 
   it.each(PRESETS.flatMap((preset) => MODES.map((mode) => [preset.id, mode, preset[mode]] as const)))(
@@ -49,7 +49,8 @@ describe('playground presets', () => {
         expect(state).toBeDefined();
         expect(lc(onAccent!, state!)).toBeGreaterThanOrEqual(60);
       }
-      const canvas = color(overrides, mode === 'light' ? 'color.gray.50' : 'color.gray.900') ?? CANVAS[mode];
+      const canvas =
+        color(overrides, 'color.bg.canvas') ?? color(overrides, mode === 'light' ? 'color.gray.50' : 'color.gray.950') ?? CANVAS[mode];
       expect(lc(states[0]!, canvas)).toBeGreaterThanOrEqual(45);
     },
   );
