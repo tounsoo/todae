@@ -11,18 +11,23 @@
     color: var(--todae-message-fg);
   }
 
-  .root > :not(.avatar) ~ :not(.avatar) {
+  .root > :not(.avatar, [hidden]) ~ :not(.avatar) {
     margin-block-start: var(--todae-message-row-gap);
   }
 
-  /* Without a header, the last row takes whatever height an avatar taller
+  /* A header labels the part after it, so it sits closer to it. */
+  .root > .header:not([hidden]) + :not(.avatar) {
+    margin-block-start: var(--todae-message-header-space-after);
+  }
+
+  /* Without a leading header, the last row takes whatever height an avatar taller
      than the parts adds, so the parts keep their spacing. */
-  .root:has(> .avatar) {
+  .root:has(> .avatar:not([hidden])) {
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-rows: auto auto auto 1fr;
   }
 
-  .root:has(> .avatar) > * {
+  .root:has(> .avatar:not([hidden])) > :not(.avatar) {
     grid-column: 2;
   }
 
@@ -32,7 +37,8 @@
     display: flex;
   }
 
-  /* `display: flex` on the parts beats the UA [hidden] rule, so restate it. */
+  /* `display: flex` on the parts beats the UA [hidden] rule, so restate it;
+     the layout rules here skip hidden parts. */
   .root > [hidden] {
     display: none;
   }
@@ -40,7 +46,8 @@
   /* When a header comes first, the avatar sits in its row and the two are
      centered on each other; the parts below start under that row. A header
      after another part stays where the DOM puts it. */
-  .root:has(> .avatar):has(> .header:not(:not(.avatar) ~ *)) > :is(.avatar, .header:not(:not(.avatar) ~ *)) {
+  .root:has(> .avatar:not([hidden])):has(> .header:not([hidden]):not(:not(.avatar, [hidden]) ~ *))
+    > :is(.avatar, .header:not([hidden]):not(:not(.avatar, [hidden]) ~ *)) {
     grid-row: 1;
     align-self: center;
   }
@@ -51,11 +58,11 @@
     justify-items: end;
   }
 
-  .root[data-from='user']:has(> .avatar) {
+  .root[data-from='user']:has(> .avatar:not([hidden])) {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .root[data-from='user']:has(> .avatar) > * {
+  .root[data-from='user']:has(> .avatar:not([hidden])) > :not(.avatar) {
     grid-column: 1;
   }
 

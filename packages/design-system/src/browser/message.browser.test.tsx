@@ -174,6 +174,52 @@ describe('Message.Root in a browser', () => {
     expect(box('content').top - Math.max(box('avatar').bottom, box('header').bottom)).toBeCloseTo(rowGap, 0);
   });
 
+  it('spaces the parts apart more than a header from the part it labels', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
+        <Message.Root>
+          <Message.Header data-testid="header">Assistant</Message.Header>
+          <Message.Content data-testid="content">Give it a name.</Message.Content>
+          <Message.Actions data-testid="actions">
+            <button type="button">Copy</button>
+          </Message.Actions>
+        </Message.Root>
+      </div>,
+    );
+    const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+    const headerGap = box('content').top - box('header').bottom;
+    const partGap = box('actions').top - box('content').bottom;
+    expect(headerGap).toBeGreaterThan(0);
+    expect(partGap).toBeGreaterThan(headerGap);
+  });
+
+  it('lays out as if hidden parts were not there', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
+        <Message.Root data-testid="hidden-header">
+          <Message.Avatar data-testid="avatar">
+            <Avatar.Root size="lg">
+              <Avatar.Fallback>A</Avatar.Fallback>
+            </Avatar.Root>
+          </Message.Avatar>
+          <Message.Header hidden>Assistant</Message.Header>
+          <Message.Content data-testid="tall" style={{ blockSize: '200px' }}>
+            Long reply
+          </Message.Content>
+        </Message.Root>
+        <Message.Root data-testid="hidden-avatar">
+          <Message.Avatar hidden>A</Message.Avatar>
+          <Message.Content data-testid="indented">Grouped reply</Message.Content>
+        </Message.Root>
+      </div>,
+    );
+    const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+    expect(box('avatar').top).toBeCloseTo(box('hidden-header').top, 0);
+    expect(box('tall').top).toBeCloseTo(box('hidden-header').top, 0);
+    expect(box('indented').left).toBeCloseTo(box('hidden-avatar').left, 0);
+    expect(box('indented').top).toBeCloseTo(box('hidden-avatar').top, 0);
+  });
+
   it('keeps a later header in DOM order beside an avatar', () => {
     render(
       <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>

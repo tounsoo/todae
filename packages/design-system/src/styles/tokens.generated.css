@@ -900,7 +900,8 @@
   --todae-message-gap: var(--_todae-message-gap, var(--todae-space-inline-gap));
   --todae-message-header-fg: var(--_todae-message-header-fg, var(--todae-color-fg-muted));
   --todae-message-header-font-size: var(--_todae-message-header-font-size, var(--todae-font-size-2));
-  --todae-message-row-gap: var(--_todae-message-row-gap, var(--todae-space-stack-gap-condensed));
+  --todae-message-header-space-after: var(--_todae-message-header-space-after, var(--todae-space-stack-gap-condensed));
+  --todae-message-row-gap: var(--_todae-message-row-gap, var(--todae-space-stack-gap));
   --todae-message-system-fg: var(--_todae-message-system-fg, var(--todae-color-fg-muted));
   --todae-message-system-font-size: var(--_todae-message-system-font-size, var(--todae-font-size-2));
   --todae-message-user-bg: var(--_todae-message-user-bg, var(--todae-color-bg-subtle));
