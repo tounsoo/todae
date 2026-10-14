@@ -120,6 +120,18 @@ describe('parseDateTime', () => {
     expect(read('2020. febr. 20. 20:20', 'hu')).toBe('2020-02-20T20:20:00');
   });
 
+  it("reads the locale's own words and marks between the date and the time", () => {
+    // "/" is what az writes between them in newer locale data.
+    expect(read('13 oktyabr 2026/21:30', 'az')).toBe('2026-10-13T21:30:00');
+    // "am" is cy for "at", and also AM.
+    expect(read('12 Rhagfyr 2012 am 12:12', 'cy')).toBe('2012-12-12T12:12:00');
+  });
+
+  it('does not read a date typed without a year in an order other than its full date', () => {
+    // rw writes a date with a year as "2026 Ukw. 13", and without one as "13 Ukw.".
+    expect(read('9 Ukw. 21 05', 'rw')).toBeNull();
+  });
+
   it('needs a space or a comma where a number of the date meets a number of the time', () => {
     expect(read('13.10.2026-21:30', 'de')).toBeNull();
     expect(read('Oct 13, 2026-9:30 PM', 'en-US')).toBeNull();

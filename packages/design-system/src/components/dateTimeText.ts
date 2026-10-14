@@ -39,6 +39,8 @@ type LocaleDateTime = {
   timeFirst: boolean;
   /** The orders the locale writes a month and a day in numbers, with a year and without. */
   monthDay: Set<'md' | 'dm'>;
+  /** Punctuation the locale writes between the date and the time, such as "/" in az. */
+  marks: Set<string>;
 };
 
 const localeDateTimes = new Map<string, LocaleDateTime>();
@@ -51,6 +53,7 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
   const cached = localeDateTimes.get(key);
   if (cached) return cached;
   const joiners = new Set<string>();
+  const marks = new Set<string>();
   let dateFirst = false;
   let timeFirst = false;
   const styles: Intl.DateTimeFormatOptions[] = [fieldsFor(false), fieldsFor(true)];
@@ -74,7 +77,9 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
       [from, to] = [times.at(-1)!, dates[0]!];
     } else continue;
     // The literals between the two halves, and before and after them, such as बजे after the time in hi.
-    const outside = [...parts.slice(0, Math.min(dates[0]!, times[0]!)), ...parts.slice(from + 1, to), ...parts.slice(Math.max(dates.at(-1)!, times.at(-1)!) + 1)];
+    const between = parts.slice(from + 1, to);
+    for (const part of between) for (const char of fold(part.value)) if (/[^\p{L}\p{M}\p{N}\s]/u.test(char)) marks.add(char);
+    const outside = [...parts.slice(0, Math.min(dates[0]!, times[0]!)), ...between, ...parts.slice(Math.max(dates.at(-1)!, times.at(-1)!) + 1)];
     for (const part of outside) {
       if (part.type !== 'literal') continue;
       for (const word of splitWords(part.value)) if (/\p{L}/u.test(word)) joiners.add(word);
@@ -87,7 +92,7 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
       .map((part) => part.type);
     monthDay.add(types.indexOf('month') < types.indexOf('day') ? 'md' : 'dm');
   }
-  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, monthDay };
+  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, monthDay, marks };
   localeDateTimes.set(key, text);
   return text;
 }
@@ -113,14 +118,15 @@ const SPACE_OR_COMMA = /[\s,，、،]/u;
 
 /**
  * Whether a date may end and a time start before `atoms[at]`: anywhere but
- * inside a word's marks, or between two numbers with no space or comma
- * between them, such as in "9:05" or "10/13".
+ * inside a word's marks, or between two numbers with no space, comma or mark
+ * the locale writes between the date and the time, such as in "9:05" or
+ * "10/13" in en-US.
  */
-function canCut(list: Atom[], at: number) {
+function canCut(list: Atom[], at: number, marks: Set<string>) {
   const before = list[at - 1]!;
   const after = list[at]!;
   if (/^\p{M}/u.test(after.text)) return false;
-  return !(before.number && after.number && !SPACE_OR_COMMA.test(after.gap));
+  return !(before.number && after.number && !SPACE_OR_COMMA.test(after.gap) && ![...after.gap].some((char) => marks.has(char)));
 }
 
 // Leap years four years apart: every month and day, February 29 too, falls on every weekday in one of them.
@@ -138,9 +144,13 @@ const render = (list: Atom[]) => list.map((atom, index) => (index ? atom.gap : '
  * more than one date and time is not read.
  */
 export function parseDateTime(text: string, options: DateTimeTextOptions = {}): Temporal.PlainDateTime | null {
-  const { joiners, dateFirst, timeFirst, monthDay } = localeDateTime(options.locale);
+  const { joiners, dateFirst, timeFirst, monthDay, marks } = localeDateTime(options.locale);
   const list = atoms(text);
   const found = new Map<string, Temporal.PlainDateTime>();
+  // Readings with a word the locale writes between the halves left out of
+  // them, which win over readings that take the word into a half, as "am" in
+  // cy, which is "at" between the halves and also AM.
+  const joined = new Map<string, Temporal.PlainDateTime>();
   // The words the locale writes between, before or after the halves may be left in or out.
   const trim = (half: string, start: boolean, end: boolean) => {
     const words = splitWords(half);
@@ -150,25 +160,35 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
     while (end && last > first + 1 && joiners.has(words[last - 1]!)) last--;
     return words.slice(first, last).join(' ');
   };
-  const read = (date: Temporal.PlainDate | null, timeText: string) => {
+  const read = (date: Temporal.PlainDate | null, timeText: string, between: boolean) => {
     const time = date && parseTime(timeText, options);
     if (!date || !time) return;
     const value = date.toPlainDateTime(time);
-    found.set(value.toString(), value);
+    (between ? joined : found).set(value.toString(), value);
   };
   // Whether part of a date reads as a date without a year: two numbers that are
   // a month and a day in an order the locale writes them in, or words that read
-  // as a date with a year after or before them.
+  // as a date with a year put before, after or, beside one number, on either
+  // side of it, as "13 Ukw." in rw, which writes the year first and the day last.
   const yearless = (half: string) => {
     const numbers = /^(\d{1,2}) (\d{1,2})$/.exec(half);
-    if (!numbers) return ANY_YEAR.some((year) => parseDate(`${half} ${year}`, options) || parseDate(`${year} ${half}`, options));
+    if (!numbers) {
+      const words = half.split(' ');
+      const day = words.filter((word) => /^\d+$/.test(word));
+      const rest = words.filter((word) => !/^\d+$/.test(word)).join(' ');
+      return ANY_YEAR.some((year) =>
+        [`${half} ${year}`, `${year} ${half}`, ...(day.length === 1 ? [`${year} ${rest} ${day[0]}`, `${day[0]} ${rest} ${year}`, `${rest} ${year} ${day[0]}`, `${rest} ${day[0]} ${year}`] : [])].some(
+          (candidate) => parseDate(candidate, options),
+        ),
+      );
+    }
     return [...monthDay].some((order) => {
       const [month, day] = (order === 'md' ? [numbers[1], numbers[2]] : [numbers[2], numbers[1]]).map(Number) as [number, number];
       return month >= 1 && month <= 12 && day >= 1 && day <= new Temporal.PlainYearMonth(2000, month).daysInMonth;
     });
   };
   for (let at = 1; at < list.length; at++) {
-    if (!canCut(list, at)) continue;
+    if (!canCut(list, at, marks)) continue;
     const before = render(list.slice(0, at));
     const after = render(list.slice(at));
     for (const strip of [false, true]) {
@@ -178,6 +198,8 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
       // the time stands apart, the time reads with it, and the rest of the date
       // reads without a year, the text may be that date and time, so this cut
       // is not read.
+      // Whether this pass left out a word between the halves.
+      const between = strip && (trim(before, true, true) !== trim(before, true, false) || trim(after, true, true) !== trim(after, false, true));
       if (dateFirst) {
         const date = parseDate(trim(before, true, strip), options);
         const timeText = trim(after, strip, true);
@@ -186,10 +208,10 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
           date !== null &&
           last.number &&
           at > 1 &&
-          canCut(list, at - 1) &&
+          canCut(list, at - 1, marks) &&
           parseTime(`${last.text} ${timeText}`, options) !== null &&
           yearless(trim(render(list.slice(0, at - 1)), true, strip));
-        if (!taken) read(date, timeText);
+        if (!taken) read(date, timeText, between);
       }
       if (timeFirst) {
         const date = parseDate(trim(after, strip, true), options);
@@ -199,13 +221,14 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
           date !== null &&
           first.number &&
           at + 1 < list.length &&
-          canCut(list, at + 1) &&
+          canCut(list, at + 1, marks) &&
           parseTime(`${timeText} ${first.text}`, options) !== null &&
           yearless(trim(render(list.slice(at + 1)), strip, true));
-        if (!taken) read(date, timeText);
+        if (!taken) read(date, timeText, between);
       }
     }
   }
-  if (found.size !== 1) return null;
-  return found.values().next().value!;
+  const readings = joined.size > 0 ? joined : found;
+  if (readings.size !== 1) return null;
+  return readings.values().next().value!;
 }
