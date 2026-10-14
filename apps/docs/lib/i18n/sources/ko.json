@@ -226,7 +226,7 @@
   "field/date-picker": {
     "(top)": "40872dd1fdc5",
     "# Field.DatePicker": "bc536be6e438",
-    "## Typed dates": "d2269d7c881a",
+    "## Typed dates": "dbf209b1f6da",
     "## On its own": "295428996e2c",
     "## Accessible composition": "12fb3517a0d1",
     "## When to use": "d57fe8233a0b",
@@ -373,7 +373,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "9cea94bd454b",
+    "# Native platform": "182208a5fb42",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {

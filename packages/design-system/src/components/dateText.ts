@@ -7,6 +7,7 @@ export type DateTextOptions = {
 };
 
 type Part = 'year' | 'month' | 'day';
+type Slot = Part | 'weekday';
 
 // Dates are shown in the Gregorian calendar whatever the locale's own, as Calendar does.
 const GREGORY = { calendar: 'gregory', timeZone: 'UTC' } as const;
@@ -21,20 +22,6 @@ export function formatDate(date: Temporal.PlainDate, options: DateTextOptions = 
   return date.withCalendar('iso8601').toLocaleString(options.locale, NUMERIC);
 }
 
-/** What a word in a date can be: a month (1–12), or a word to skip, such as a weekday or "de". */
-type Word = { month?: number; skip?: boolean };
-
-type LocaleText = {
-  /** The order `locale` writes the year, month and day in, in numbers. */
-  order: Part[];
-  /** The words of the locale's dates, and of English ones, as `normalize` writes them. */
-  words: Map<string, Word>;
-  /** The longest word, so a scan knows how far to look. */
-  longest: number;
-};
-
-const localeTexts = new Map<string, LocaleText>();
-
 /** The digit a decimal digit of any script stands for. Each script's digits run 0 to 9 in a row. */
 function digitValue(char: string) {
   let first = char.codePointAt(0)!;
@@ -44,82 +31,145 @@ function digitValue(char: string) {
 
 /**
  * Text as dates are compared: compatibility forms folded (full-width digits
- * become ASCII), lower case, every script's digits as ASCII, and punctuation
- * as spaces, so "Oct." matches "oct" and "terça-feira" matches "terça feira".
+ * become ASCII), case folded, accents that Greek capitals drop removed, every
+ * script's digits as ASCII, and each run of anything but letters and digits
+ * as one space.
  */
 function normalize(text: string) {
   return (
     text
       .normalize('NFKC')
+      // Upper then lower case, so ı and İ, or ß and SS, fold the same.
+      .toUpperCase()
       .toLowerCase()
-      // The dot that "İ" leaves in lower case outside Turkish.
-      .replace(/̇/g, '')
+      .normalize('NFD')
+      .replace(/i\u0307/g, 'i')
+      .replace(/(\p{Script=Greek})\p{M}+/gu, '$1')
+      .normalize('NFC')
       .replace(/\p{Nd}/gu, (char) => String(digitValue(char)))
       .replace(/\p{Cf}/gu, '')
-      .replace(/[\p{P}\p{Z}\s]+/gu, ' ')
+      .replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ')
       .trim()
   );
 }
 
-function addWord(words: Map<string, Word>, text: string, word: Word) {
-  for (const piece of normalize(text).split(/\d+/)) {
-    const key = piece.trim();
-    if (key === '') continue;
-    const known = words.get(key) ?? {};
-    // A word is a month only when it names one month, in the locale or in English.
-    if (word.month !== undefined && known.month === undefined) known.month = word.month;
-    if (word.skip) known.skip = true;
-    words.set(key, known);
-  }
-}
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// A name's words, with the spaces between them optional.
+const words = (name: string) => name.split(' ').filter(Boolean).map(escape).join(' ?');
+// Any of the names, longest first so a longer name wins.
+const anyOf = (names: Iterable<string>) =>
+  `(?:${[...names].sort((a, b) => b.length - a.length).map(words).join('|')})`;
+const NUMBER = '(?<!\\d)(\\d+)(?!\\d)';
 
-// The styles a date is written in, so the words are the forms used inside a date,
-// such as "octubre" with "de", "октября" and "באוקטובר".
-const STYLES: Intl.DateTimeFormatOptions[] = [
-  { dateStyle: 'full' },
-  { dateStyle: 'long' },
+// The styles typed text may follow, and the styles that name months and weekdays.
+const TEMPLATE_STYLES: Intl.DateTimeFormatOptions[] = [
   { dateStyle: 'medium' },
+  { dateStyle: 'long' },
+  { dateStyle: 'full' },
+];
+const NAME_STYLES: Intl.DateTimeFormatOptions[] = [
+  ...TEMPLATE_STYLES,
+  { day: 'numeric', month: 'short', year: 'numeric' },
+  { day: 'numeric', month: 'long', year: 'numeric' },
   { month: 'long' },
   { month: 'short' },
-  { day: 'numeric', month: 'long', year: 'numeric' },
-  { day: 'numeric', month: 'short', year: 'numeric' },
+  { weekday: 'long' },
   { weekday: 'short' },
 ];
 
-// A day in each month, and a week of days for the weekdays.
-const SAMPLE_DAYS = [
-  ...Array.from({ length: 12 }, (_, month) => new Date(Date.UTC(2026, month, 13, 12))),
-  ...Array.from({ length: 7 }, (_, index) => new Date(Date.UTC(2026, 9, 11 + index, 12))),
-];
+/** A date style for one month, as a pattern over normalized text. */
+type Template = { regex: RegExp; slots: Slot[]; month?: number };
+
+type LocaleText = {
+  /** The order `formatDate` writes the year, month and day in. */
+  order: Part[];
+  templates: Template[];
+  /** ISO weekdays (1 is Monday) by name, without spaces. */
+  weekdays: Map<string, number[]>;
+};
+
+const localeTexts = new Map<string, LocaleText>();
+
+const sample = (month: number, day: number) => new Date(Date.UTC(2026, month - 1, day, 12));
 
 function localeText(locale: string | undefined): LocaleText {
   const key = locale ?? '';
-  let text = localeTexts.get(key);
-  if (text) return text;
-  const order = new Intl.DateTimeFormat(locale, NUMERIC)
-    .formatToParts(new Date(Date.UTC(2026, 9, 13, 12)))
-    .map((part) => part.type)
-    .filter((type): type is Part => type === 'year' || type === 'month' || type === 'day');
-  const words = new Map<string, Word>();
-  for (const names of new Set([locale, 'en'])) {
-    for (const style of STYLES) {
-      const format = new Intl.DateTimeFormat(names, { ...style, ...GREGORY });
-      for (const day of SAMPLE_DAYS) {
-        const month = day.getUTCMonth();
-        for (const part of format.formatToParts(day)) {
-          if (part.type === 'month') {
-            // A month written with its number, such as "tháng 10", keeps only its word.
-            if (/\p{Nd}/u.test(part.value)) addWord(words, part.value, { skip: true });
-            else addWord(words, part.value, { month: month + 1 });
-          } else if (part.type !== 'day' && part.type !== 'year') {
-            addWord(words, part.value, { skip: true });
-          }
-        }
+  const cached = localeTexts.get(key);
+  if (cached) return cached;
+
+  // Month names by month, and weekday names by ISO weekday.
+  const monthNames = Array.from({ length: 13 }, () => new Set<string>());
+  const weekdayNames = Array.from({ length: 8 }, () => new Set<string>());
+  for (const style of NAME_STYLES) {
+    const format = new Intl.DateTimeFormat(locale, { ...style, ...GREGORY });
+    for (let month = 1; month <= 12; month++) {
+      for (const part of format.formatToParts(sample(month, 13))) {
+        if (part.type === 'month' && !/\p{Nd}/u.test(part.value)) monthNames[month]!.add(normalize(part.value));
+      }
+    }
+    // 2026-10-12 is a Monday.
+    for (let weekday = 1; weekday <= 7; weekday++) {
+      for (const part of format.formatToParts(sample(10, 11 + weekday))) {
+        if (part.type === 'weekday') weekdayNames[weekday]!.add(normalize(part.value));
       }
     }
   }
-  const longest = Math.max(0, ...[...words.keys()].map((word) => word.length));
-  text = { order, words, longest };
+  for (const names of [...monthNames, ...weekdayNames]) names.delete('');
+  const weekdays = new Map<string, number[]>();
+  weekdayNames.forEach((names, weekday) => {
+    for (const name of names) {
+      const bare = name.replace(/ /g, '');
+      weekdays.set(bare, [...(weekdays.get(bare) ?? []), weekday]);
+    }
+  });
+  const anyWeekday = anyOf(weekdayNames.flatMap((names) => [...names]));
+
+  const templates: Template[] = [];
+  const seen = new Set<string>();
+  for (const style of TEMPLATE_STYLES) {
+    const format = new Intl.DateTimeFormat(locale, { ...style, ...GREGORY });
+    for (let month = 1; month <= 12; month++) {
+      const pieces: string[] = [];
+      const slots: Slot[] = [];
+      let named = false;
+      for (const part of format.formatToParts(sample(month, 13))) {
+        const value = normalize(part.value);
+        if (part.type === 'year' || part.type === 'day') {
+          pieces.push(NUMBER);
+          slots.push(part.type);
+        } else if (part.type === 'month' && !/\d/.test(value)) {
+          // Any of this month's names, so a name that is also a weekday's cannot be read as another month.
+          pieces.push(anyOf(monthNames[month]!));
+          named = true;
+        } else if (part.type === 'weekday') {
+          pieces.push(`(${anyWeekday})?`);
+          slots.push('weekday');
+        } else {
+          // A literal, an era, or a month written with its number, such as "tháng 10":
+          // its words may be left out, and its number is the month.
+          for (const bit of value.split(/(\d+)/)) {
+            if (/^\d+$/.test(bit)) {
+              pieces.push(NUMBER);
+              slots.push('month');
+            } else {
+              for (const word of bit.split(' ').filter(Boolean)) pieces.push(`(?:${escape(word)})?`);
+            }
+          }
+        }
+      }
+      const source = `^${pieces.join(' ?')}$`;
+      const id = `${source}|${slots.join()}|${named ? month : ''}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      templates.push({ regex: new RegExp(source, 'u'), slots, month: named ? month : undefined });
+    }
+  }
+
+  const order = new Intl.DateTimeFormat(locale, NUMERIC)
+    .formatToParts(sample(10, 13))
+    .map((part) => part.type)
+    .filter((type): type is Part => type === 'year' || type === 'month' || type === 'day');
+  const text = { order, templates, weekdays };
   localeTexts.set(key, text);
   return text;
 }
@@ -133,75 +183,14 @@ function fullYear(digits: string) {
   return near > now + 50 ? near - 100 : near <= now - 50 ? near + 100 : near;
 }
 
-type Token = { number: string } | { word: Word };
+type Fields = Partial<Record<Slot, string>>;
 
-/** The numbers and known words in the text, or null when a word is not a date's. */
-function scan(text: string, { words, longest }: LocaleText): Token[] | null {
-  const tokens: Token[] = [];
-  let index = 0;
-  while (index < text.length) {
-    const rest = text.slice(index);
-    const number = /^\d+/.exec(rest);
-    if (number) {
-      tokens.push({ number: number[0] });
-      index += number[0].length;
-      continue;
-    }
-    if (rest[0] === ' ') {
-      index++;
-      continue;
-    }
-    // The longest word that starts here, so "marzo" wins over "mar".
-    let length = Math.min(longest, rest.length);
-    while (length > 0 && !words.has(rest.slice(0, length).trimEnd())) length--;
-    if (length === 0) return null;
-    tokens.push({ word: words.get(rest.slice(0, length).trimEnd())! });
-    index += length;
-  }
-  return tokens;
-}
-
-/**
- * The date in typed text, or `null` when the text is not one. It reads the
- * numbers in `locale`'s order, so `10/13/2026` in en-US and `13.10.2026` in de,
- * with any separators and in any script's digits. Text that starts with a
- * year of four or more digits, such as `2026-10-13`, is read as year, month
- * and day unless the locale writes the year first in another order. A month
- * may be a name the locale or English uses in a date, such as `13 Oct 2026`
- * or `13 de octubre de 2026`, and the locale's other date words, such as
- * weekdays, are skipped. A year of one or two digits is the nearest such year
- * to this one; a year of three digits is not read.
- */
-export function parseDate(text: string, options: DateTextOptions = {}): Temporal.PlainDate | null {
-  const locale = localeText(options.locale);
-  const tokens = scan(normalize(text), locale);
-  if (!tokens) return null;
-  const numbers = tokens.flatMap((token) => ('number' in token ? [token.number] : []));
-  const named = tokens.flatMap((token) => ('word' in token && token.word.month !== undefined ? [token.word] : []));
-  const { order } = locale;
-  let parts: Partial<Record<Part, string>>;
-  if (numbers.length === 3) {
-    // A month name beside three numbers is a weekday that shares its name, as "mar" does in Spanish.
-    if (named.some((word) => !word.skip)) return null;
-    const fields: Part[] = order[0] !== 'year' && numbers[0]!.length > 3 ? ['year', 'month', 'day'] : order;
-    parts = Object.fromEntries(fields.map((part, index) => [part, numbers[index]]));
-  } else if (numbers.length === 2) {
-    // The month is the one word that is only a month, else the last that can be one.
-    const only = named.filter((word) => !word.skip);
-    if (only.length > 1) return null;
-    const month = only[0]?.month ?? named.at(-1)?.month;
-    if (month === undefined) return null;
-    const yearIndex =
-      numbers[0]!.length > 3 ? 0 : numbers[1]!.length > 3 ? 1 : order.indexOf('year') < order.indexOf('day') ? 0 : 1;
-    parts = { year: numbers[yearIndex], day: numbers[1 - yearIndex], month: String(month) };
-  } else {
-    return null;
-  }
-  const { year, month, day } = parts as Record<Part, string>;
+function toDate({ year, month, day, weekday }: Fields, weekdays: LocaleText['weekdays']) {
   // A three-digit year is one still being typed; a day or month has at most two digits.
-  if (year.length === 3 || month.length > 2 || day.length > 2) return null;
+  if (!year || !month || !day || year.length === 3 || month.length > 2 || day.length > 2) return null;
+  let date: Temporal.PlainDate;
   try {
-    return Temporal.PlainDate.from(
+    date = Temporal.PlainDate.from(
       { year: fullYear(year), month: Number(month), day: Number(day) },
       { overflow: 'reject' },
     );
@@ -210,4 +199,47 @@ export function parseDate(text: string, options: DateTextOptions = {}): Temporal
     if (error instanceof RangeError) return null;
     throw error;
   }
+  // A weekday must be the date's.
+  if (weekday !== undefined && !weekdays.get(weekday.replace(/ /g, ''))?.includes(date.dayOfWeek)) return null;
+  return date;
+}
+
+/**
+ * The date in typed text, or `null` when the text is not one. It reads a date
+ * in numbers in the order `formatDate` writes them, or as `Intl.DateTimeFormat`
+ * writes it in the locale's medium, long or full date style. Letter case does
+ * not matter, digits may be in any script, and the parts may be separated by
+ * any punctuation, symbols or spaces. The month may be any of its long or
+ * short names. A weekday may be long, short or left out, but must be the
+ * date's. The style's other words may be replaced by a space. Three numbers
+ * that start with a year of four or more digits are read as year, month and
+ * day, unless the locale writes the year first in another order. A year of one
+ * or two digits is the nearest such year to this one; a year of three digits
+ * is not read.
+ */
+export function parseDate(text: string, options: DateTextOptions = {}): Temporal.PlainDate | null {
+  const { order, templates, weekdays } = localeText(options.locale);
+  const input = normalize(text);
+  if (!/\p{L}/u.test(input)) {
+    const numbers = /^(\d+) (\d+) (\d+)$/.exec(input);
+    if (!numbers) return null;
+    const fields: Fields = Object.fromEntries(order.map((part, index) => [part, numbers[index + 1]]));
+    const date = toDate(fields, weekdays);
+    if (date || order[0] === 'year' || numbers[1]!.length < 4) return date;
+    return toDate({ year: numbers[1], month: numbers[2], day: numbers[3] }, weekdays);
+  }
+  // Text with words follows one of the locale's date styles, and must read as one date.
+  const found = new Map<string, Temporal.PlainDate>();
+  for (const template of templates) {
+    const match = template.regex.exec(input);
+    if (!match) continue;
+    const fields: Fields = {};
+    template.slots.forEach((slot, index) => {
+      fields[slot] = match[index + 1];
+    });
+    if (template.month !== undefined) fields.month = String(template.month);
+    const date = toDate(fields, weekdays);
+    if (date) found.set(date.toString(), date);
+  }
+  return found.size === 1 ? found.values().next().value! : null;
 }
