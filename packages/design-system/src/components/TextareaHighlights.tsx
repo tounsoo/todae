@@ -76,6 +76,16 @@ export function useTextareaHighlights(
   const anchorName = `--todae-textarea-${useDomId()}`;
   const layer = useRef<HTMLDivElement | null>(null);
 
+  const scroll = useCallback(() => {
+    const el = textarea.current;
+    const div = layer.current;
+    if (!el || !div) return;
+    div.scrollTop = el.scrollTop;
+    div.scrollLeft = el.scrollLeft;
+  }, [textarea]);
+
+  // Copying the styles reads layout, so it runs when the textarea mounts or
+  // changes size, which includes a scrollbar showing up, not on every edit.
   const sync = useCallback(() => {
     const el = textarea.current;
     const div = layer.current;
@@ -89,30 +99,27 @@ export function useTextareaHighlights(
     const scrollbar = Math.max(0, el.offsetWidth - el.clientWidth - borders);
     const side = computed.direction === 'rtl' ? 'padding-left' : 'padding-right';
     div.style.setProperty(side, `${px(computed.getPropertyValue(side)) + scrollbar}px`);
-    div.scrollTop = el.scrollTop;
-    div.scrollLeft = el.scrollLeft;
-  }, [textarea]);
-
-  useLayoutEffect(() => {
-    if (!enabled) return;
-    sync();
-  });
+    scroll();
+  }, [scroll, textarea]);
 
   useLayoutEffect(() => {
     const el = textarea.current;
-    if (!enabled || !el || typeof ResizeObserver === 'undefined') return;
+    if (!enabled || !el) return;
+    sync();
+    if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(() => sync());
     observer.observe(el);
     return () => observer.disconnect();
   }, [enabled, sync, textarea]);
 
+  // The layer's text changes with each edit, which can reset its scroll.
+  useLayoutEffect(() => {
+    if (enabled) scroll();
+  });
+
   const onScroll = useCallback(() => {
-    const el = textarea.current;
-    const div = layer.current;
-    if (!enabled || !el || !div) return;
-    div.scrollTop = el.scrollTop;
-    div.scrollLeft = el.scrollLeft;
-  }, [enabled, textarea]);
+    if (enabled) scroll();
+  }, [enabled, scroll]);
 
   return { ref: layer, anchorName, onScroll };
 }

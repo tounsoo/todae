@@ -34,7 +34,9 @@ const SPACE = /\s/;
  * The trigger word the caret is in, if any. The word runs from a trigger
  * character to the next whitespace. With `position: 'word'` the trigger sits
  * at the start of the text or after whitespace; with `'start'` only
- * whitespace comes before it. A word inside a committed token is not one.
+ * whitespace comes before it. The nearest trigger character before the caret
+ * that may start a word there starts it. A word inside a committed token is
+ * not one.
  */
 export function findQuery(
   text: string,
@@ -50,7 +52,12 @@ export function findQuery(
       const position = triggers[trigger]!.position ?? 'word';
       const before = text.slice(0, start);
       const allowed = position === 'start' ? before.trim() === '' : start === 0 || SPACE.test(before[before.length - 1]!);
-      if (!allowed) return null;
+      // A trigger character that can't start a word here is part of the word,
+      // such as the slash in `@src/index`: look further back.
+      if (!allowed) {
+        start -= 1;
+        continue;
+      }
       let end = caret;
       while (end < text.length && !SPACE.test(text[end]!)) end += 1;
       if (tokens.some((token) => token.start < end && start < token.end)) return null;
@@ -61,8 +68,26 @@ export function findQuery(
   return null;
 }
 
-/** The changed span between two texts: the common prefix length and how much of each text's end is common. */
-function changedSpan(prev: string, next: string): { from: number; prevTo: number; nextTo: number } {
+type Span = { from: number; prevTo: number; nextTo: number };
+
+/**
+ * The changed span between two texts: where the change starts, and where it
+ * ends in each. With the caret after the edit, the span that ends at the
+ * caret wins, so typing `@` right before `@Bob` is an insertion before the
+ * token, not inside it. Without one, or when the texts don't fit it, the
+ * longest common start and end decide.
+ */
+function changedSpan(prev: string, next: string, caret?: number | null): Span {
+  if (caret != null) {
+    const nextTo = caret;
+    const prevTo = caret - (next.length - prev.length);
+    if (nextTo >= 0 && nextTo <= next.length && prevTo >= 0 && prevTo <= prev.length && prev.slice(prevTo) === next.slice(nextTo)) {
+      const limit = Math.min(prevTo, nextTo);
+      let from = 0;
+      while (from < limit && prev[from] === next[from]) from += 1;
+      return { from, prevTo, nextTo };
+    }
+  }
   const limit = Math.min(prev.length, next.length);
   let from = 0;
   while (from < limit && prev[from] === next[from]) from += 1;
@@ -76,9 +101,9 @@ function changedSpan(prev: string, next: string): { from: number; prevTo: number
  * before the change stays, one after it shifts by the change in length, and
  * one the change replaced or removed is gone.
  */
-export function shiftIndex(prev: string, next: string, index: number): number | null {
+export function shiftIndex(prev: string, next: string, index: number, caret?: number | null): number | null {
   if (prev === next) return index;
-  const { from, prevTo, nextTo } = changedSpan(prev, next);
+  const { from, prevTo, nextTo } = changedSpan(prev, next, caret);
   if (index < from) return index;
   if (index >= prevTo) return index + (nextTo - prevTo);
   return null;
@@ -87,11 +112,17 @@ export function shiftIndex(prev: string, next: string, index: number): number | 
 /**
  * Carries tokens through an edit from `prev` to `next`. Tokens before the
  * change stay, tokens after it shift, and tokens the change touches are
- * dropped. Every token left must still hold its own text.
+ * dropped. Every token left must still hold its own text. `caret` is where
+ * the caret is after the edit, when the edit came from typing.
  */
-export function shiftTokens(prev: string, next: string, tokens: readonly MentionToken[]): MentionToken[] {
+export function shiftTokens(
+  prev: string,
+  next: string,
+  tokens: readonly MentionToken[],
+  caret?: number | null,
+): MentionToken[] {
   if (prev === next) return validTokens(next, tokens);
-  const { from, prevTo, nextTo } = changedSpan(prev, next);
+  const { from, prevTo, nextTo } = changedSpan(prev, next, caret);
   const delta = nextTo - prevTo;
   const moved: MentionToken[] = [];
   for (const token of tokens) {

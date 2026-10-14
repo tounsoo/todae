@@ -416,7 +416,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "df33c3883e71",
+    "# Native platform": "3e2242698c19",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -733,8 +733,8 @@
   "utilities/use-mentions": {
     "(top)": "4868b466fa49",
     "# useMentions": "c69e88cf20fe",
-    "## Triggers": "2108bb6562f5",
-    "## Picking and editing": "99c72cb94a30",
+    "## Triggers": "f8479853365c",
+    "## Picking and editing": "f0ff2c6d6aa1",
     "## Drawing tokens": "01c86baed977",
     "## Accessible composition": "6052007a7a2e",
     "## When to use": "9ec50166c73a",

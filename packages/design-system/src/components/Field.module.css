@@ -153,20 +153,28 @@
     z-index: 1;
   }
 
+  /* Without anchor positioning the layer can't follow the textarea's box, so it isn't drawn. */
   .highlights {
-    position: absolute;
-    top: anchor(top);
-    bottom: anchor(bottom);
-    left: anchor(left);
-    right: anchor(right);
-    z-index: 0;
-    margin: 0;
-    border-style: solid;
-    border-color: transparent;
-    overflow: hidden;
-    color: transparent;
-    pointer-events: none;
-    user-select: none;
+    display: none;
+  }
+
+  @supports (top: anchor(top)) {
+    .highlights {
+      display: block;
+      position: absolute;
+      top: anchor(top);
+      bottom: anchor(bottom);
+      left: anchor(left);
+      right: anchor(right);
+      z-index: 0;
+      margin: 0;
+      border-style: solid;
+      border-color: transparent;
+      overflow: hidden;
+      color: transparent;
+      pointer-events: none;
+      user-select: none;
+    }
   }
 
   /* Only a background: padding or a border would move the text after it. */

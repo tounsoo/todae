@@ -27,6 +27,11 @@ describe('findQuery', () => {
     expect(findQuery('see /he', 7, at, [])).toBeNull();
   });
 
+  it('keeps a trigger character that cannot start a word inside the word', () => {
+    expect(findQuery('@src/in', 7, at, [])).toEqual({ trigger: 0, start: 0, end: 7, query: 'src/in' });
+    expect(findQuery('hi ben@x', 8, at, [])).toBeNull();
+  });
+
   it('finds nothing inside a token', () => {
     expect(findQuery('hey @Ada Lovelace ', 8, at, [ada])).toBeNull();
     expect(findQuery('hey @Ada Lovelace', 17, at, [ada])).toBeNull();
@@ -44,6 +49,12 @@ describe('shiftTokens', () => {
   it('drops a token an edit touches', () => {
     expect(shiftTokens(text, 'hey @Ada Lovelac hi', [ada])).toEqual([]);
     expect(shiftTokens(text, '', [ada])).toEqual([]);
+  });
+
+  it('places a typed character at the caret, so typing the token\'s first character before it keeps it', () => {
+    const bob: MentionToken = { start: 3, end: 7, char: '@', value: 'bob', text: '@Bob' };
+    expect(shiftTokens('hi @Bob', 'hi @@Bob', [bob], 4)).toEqual([{ ...bob, start: 4, end: 8 }]);
+    expect(shiftTokens('hi @Bob', 'hi @@Bob', [bob])).toEqual([]);
   });
 
   it('keeps a token when text is typed right after it', () => {

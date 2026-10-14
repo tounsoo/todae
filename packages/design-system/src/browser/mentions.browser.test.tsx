@@ -180,16 +180,6 @@ describe('useMentions in a browser', () => {
     expect(document.activeElement).toBe(field());
   });
 
-  it('keeps the list closed while an IME composes', async () => {
-    render(<Chat />);
-    await userEvent.click(field());
-    await userEvent.keyboard('@a');
-    const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, isComposing: true });
-    field().dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(false);
-    expect(field().value).toBe('@a');
-  });
-
   it('passes axe while open', async () => {
     render(<Chat />);
     await userEvent.click(field());

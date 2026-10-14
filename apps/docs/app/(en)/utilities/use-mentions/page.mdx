@@ -37,13 +37,13 @@ const mentions = useMentions({
 
 ## Triggers
 
-Each trigger names one character. With `position: 'word'`, the default, it starts a suggestion word at the start of the text or after whitespace, so an email address does not open the list. With `position: 'start'`, only whitespace may come before it, as for slash commands. The word runs from the trigger to the next whitespace, and the list stays open while the caret is in it.
+Each trigger names one character. With `position: 'word'`, the default, it starts a suggestion word at the start of the text or after whitespace, so an email address does not open the list. With `position: 'start'`, only whitespace may come before it, as for slash commands. The word runs from the trigger to the next whitespace, so a mention can hold another trigger character, such as `@src/index`, and the list stays open while the caret is in it.
 
 A trigger takes `options`, filtered by `filter` against the word, or `loadOptions`, called with the word and an `AbortSignal`, whose stale results are dropped. `text` sets what a pick inserts, by default the trigger character and the option's label. `label` names the list for screen readers, by default the `suggestions` string of [StringsProvider](/utilities/strings-provider).
 
 ## Picking and editing
 
-While the list is open, ArrowDown and ArrowUp move through it, and Enter or Tab picks the active option. Enter while the word's options are still loading does nothing, so a [Composer](/composer) does not send a half-typed mention. Enter with no options closes the list and is left to the textarea. Escape, or a press outside the list, closes it for that word; it opens again for the next trigger.
+While the list is open, ArrowDown and ArrowUp move through its options, and Enter or Tab picks the active option. Enter while the word's options are still loading does nothing, so a [Composer](/composer) does not send a half-typed mention. Enter with no option it can pick closes the list and is left to the textarea. Escape, or a press outside the textarea and the list, closes it for that word; it opens again for the next trigger.
 
 A pick replaces the word through `document.execCommand('insertText')`, so it is one step on the textarea's own undo stack, and adds a space unless whitespace follows. Undo and redo bring back the tokens that the restored text had. Backspace at a token's end, or Delete at its start, removes the whole token. An edit inside a token turns it back into plain text.
 
