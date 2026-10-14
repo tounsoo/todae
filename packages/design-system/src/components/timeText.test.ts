@@ -70,6 +70,14 @@ describe('parseTime', () => {
     expect(read('9:30 pm', 'es')).toBe('21:30:00');
   });
 
+  it('reads an hour of 0 or 12 with a word for the part of the day', () => {
+    expect(read('0 pm', 'en-US')).toBe('12:00:00');
+    expect(read('12 pm', 'en-US')).toBe('12:00:00');
+    expect(read('0:30 am', 'en-US')).toBe('00:30:00');
+    expect(read('12:30 am', 'en-US')).toBe('00:30:00');
+    expect(read('13 pm', 'en-US')).toBeNull();
+  });
+
   it('reads the locale’s words for the morning and afternoon on either side', () => {
     expect(read('9pm', 'en-US')).toBe('21:00:00');
     expect(read('9:30 PM', 'en-US')).toBe('21:30:00');

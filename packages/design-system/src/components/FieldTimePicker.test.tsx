@@ -106,19 +106,22 @@ describe('Field.TimePicker', () => {
     expect(document.getElementById(list.getAttribute('aria-activedescendant')!)!.textContent).toBe('9:30 AM');
   });
 
-  it('starts at the next time from now when the time is not in the list', () => {
+  it.each([
+    ['07:15', '8:00 AM'],
+    ['10:30:20', '10:30 AM'],
+    ['10:31', '11:00 AM'],
+    ['23:45', '8:00 AM'],
+  ])('starts at the next time from %s when the time is not in the list', (now, expected) => {
+    vi.spyOn(Temporal.Now, 'plainTimeISO').mockReturnValue(time(now));
     render(
       <Field.Root aria-label="Start">
         <Field.TimePicker value={time('07:00')} min={time('08:00')} locale="en-US" defaultOpen />
       </Field.Root>,
     );
-    const now = Temporal.Now.plainTimeISO();
-    const slots = options();
-    const next = slots.map((text, index) => ({ text, at: time('08:00').add({ minutes: 30 * index }) }))
-      .find(({ at }) => Temporal.PlainTime.compare(at, now) >= 0 && at.hour >= 8);
     const list = screen.getByRole('listbox');
-    expect(document.getElementById(list.getAttribute('aria-activedescendant')!)!.textContent).toBe(next?.text ?? slots[0]);
+    expect(document.getElementById(list.getAttribute('aria-activedescendant')!)!.textContent).toBe(expected);
     expect(screen.queryByRole('option', { selected: true })).toBeNull();
+    vi.restoreAllMocks();
   });
 
   it('keeps a time between the steps as it is when it is picked again', () => {

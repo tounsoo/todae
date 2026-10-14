@@ -90,8 +90,8 @@ function localeTime(locale: string | undefined): LocaleTime {
  * `9:30 pm` in en-US or `오후 9:30` in ko. Letter case does not matter,
  * digits may be in any script, and the numbers may be separated by any
  * punctuation, symbols, spaces or words the locale writes between them, such as `21 h 30` in fr-CA. Without a word for
- * a part of the day, the hour is 0 to 23; with one, it is an hour the locale
- * writes with that word, such as 1 to 12 with pm in en-US.
+ * a part of the day, the hour is 0 to 23; with one, it is 0 to 12, read as
+ * the locale reads that word, so `0 pm` and `12 pm` are both noon in en-US.
  */
 export function parseTime(text: string, options: TimeTextOptions = {}): Temporal.PlainTime | null {
   const { periods, literals } = localeTime(options.locale);
