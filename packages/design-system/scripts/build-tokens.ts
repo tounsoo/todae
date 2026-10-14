@@ -43,6 +43,7 @@ export const RESERVED_ROOTS = [
   'badge',
   'card',
   'message',
+  'conversation',
   'breadcrumbs',
   'toolbar',
   'drawer',

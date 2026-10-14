@@ -911,6 +911,9 @@
   --todae-message-user-padding-x: var(--_todae-message-user-padding-x, var(--todae-space-control-x));
   --todae-message-user-padding-y: var(--_todae-message-user-padding-y, var(--todae-space-control-y));
   --todae-message-user-radius: var(--_todae-message-user-radius, var(--todae-radius-lg));
+  --todae-conversation-gap: var(--_todae-conversation-gap, var(--todae-space-stack-gap-spacious));
+  --todae-conversation-ring-focus: var(--_todae-conversation-ring-focus, var(--todae-focus-ring-color));
+  --todae-conversation-scroll-button-inset: var(--_todae-conversation-scroll-button-inset, var(--todae-space-stack-gap));
   --todae-breadcrumbs-current-fg: var(--_todae-breadcrumbs-current-fg, var(--todae-color-fg-default));
   --todae-breadcrumbs-current-font-weight: var(--_todae-breadcrumbs-current-font-weight, var(--todae-font-weight-medium));
   --todae-breadcrumbs-font-size: var(--_todae-breadcrumbs-font-size, var(--todae-font-size-2));

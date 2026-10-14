@@ -12,6 +12,7 @@ import {
   Button,
   Card,
   Message,
+  Conversation,
   Checkbox,
   Calendar,
   Chip,
@@ -530,6 +531,20 @@ const cases: Case[] = [
           <Message.Root>
             <Part {...p} />
           </Message.Root>
+        );
+      },
+    ],
+  ),
+  ['Conversation.Root', (p) => <Conversation.Root {...p} />],
+  ...(['Viewport', 'Content', 'ScrollButton'] as const).map(
+    (part): Case => [
+      `Conversation.${part}`,
+      (p) => {
+        const Part = Conversation[part] as (props: Native) => ReactNode;
+        return (
+          <Conversation.Root>
+            <Part {...p} />
+          </Conversation.Root>
         );
       },
     ],
