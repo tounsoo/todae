@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, normalizeHex, parseDate, useChipField, useField } from '@omsoo.design/todae';
+import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, normalizeHex, parseDate, useChipField, useField } from '@omsoo.design/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 
@@ -385,40 +385,37 @@ function attachIcon() {
   );
 }
 
-function sendIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-function Composer() {
+function PromptComposer() {
   const [value, setValue] = useState('');
   return (
-    <Field.Root aria-label="Message">
-      <Field.Textarea
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        autoGrow
-        maxRows={6}
-        maxLength={280}
-      />
-      <Field.Row>
-        <Button.Root variant="ghost" aria-label="Attach file">
-          <Button.Icon>{attachIcon()}</Button.Icon>
-        </Button.Root>
-        <Field.Counter />
-        <Button.Root aria-label="Send" disabled={value.trim() === ''} style={{ marginInlineStart: 'auto' }}>
-          <Button.Icon>{sendIcon()}</Button.Icon>
-        </Button.Root>
-      </Field.Row>
-    </Field.Root>
+    <Composer.Root
+      onSubmit={(event) => {
+        event.preventDefault();
+        setValue('');
+      }}
+    >
+      <Field.Root aria-label="Message">
+        <Field.Textarea
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          autoGrow
+          maxRows={6}
+          maxLength={280}
+        />
+        <Field.Row>
+          <Button.Root variant="ghost" aria-label="Attach file">
+            <Button.Icon>{attachIcon()}</Button.Icon>
+          </Button.Root>
+          <Field.Counter />
+          <Composer.Submit disabled={value.trim() === ''} />
+        </Field.Row>
+      </Field.Root>
+    </Composer.Root>
   );
 }
 
 export function RowComposer() {
-  return <Composer />;
+  return <PromptComposer />;
 }
 
 export function RowComposerDensity() {
@@ -426,7 +423,7 @@ export function RowComposerDensity() {
     <>
       {(['compact', 'comfortable', 'spacious'] as const).map((density) => (
         <DensityProvider key={density} density={density}>
-          <Composer />
+          <PromptComposer />
         </DensityProvider>
       ))}
     </>
