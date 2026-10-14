@@ -54,7 +54,7 @@ describe('Calendar', () => {
     expect(headers[0]!.getAttribute('abbr')).toBe('Sunday');
     // October 2026 starts on a Thursday: four empty cells, then 31 days, in five weeks.
     expect(within(grid()).getAllByRole('row')).toHaveLength(6);
-    expect(grid().querySelectorAll('[data-todae-calendar-day]')).toHaveLength(31);
+    expect(grid().querySelectorAll('[data-todae-calendar-cell]')).toHaveLength(31);
     expect(grid().querySelector('tbody td')!.childElementCount).toBe(0);
   });
 
@@ -142,7 +142,7 @@ describe('Calendar', () => {
     const heading = screen.getByRole('button', { name: 'October 2026' });
     fireEvent.click(heading);
     expect(heading.getAttribute('aria-expanded')).toBe('true');
-    expect(heading.textContent).toBe('2016 – 2027');
+    expect(heading.textContent).toBe('2016–2027');
     const years = within(grid()).getAllByRole('button');
     expect(years.map((year) => year.textContent)).toEqual(
       Array.from({ length: 12 }, (_, index) => String(2016 + index)),
@@ -187,7 +187,7 @@ describe('Calendar', () => {
     expect(document.activeElement!.textContent).toBe('2023');
     press('PageDown');
     expect(document.activeElement!.textContent).toBe('2035');
-    expect(screen.getByRole('button', { name: '2028 – 2039' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '2028–2039' })).toBeTruthy();
     press('ArrowLeft');
     press('PageUp');
     expect(document.activeElement!.textContent).toBe('2022');
@@ -197,10 +197,10 @@ describe('Calendar', () => {
     render(<Controlled />);
     fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
     fireEvent.click(screen.getByRole('button', { name: 'Next years' }));
-    expect(screen.getByRole('button', { name: '2028 – 2039' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '2028–2039' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Previous years' }));
     fireEvent.click(screen.getByRole('button', { name: 'Previous years' }));
-    expect(screen.getByRole('button', { name: '2004 – 2015' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '2004–2015' })).toBeTruthy();
   });
 
   it('disables the years outside min and max, and the page buttons past them', () => {
@@ -219,6 +219,51 @@ describe('Calendar', () => {
     focusedDay().focus();
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
     expect(document.activeElement!.textContent).toBe('2027');
+  });
+
+  it('stops the year keys at min and max, keeping the month and day where the year stays', () => {
+    render(<Controlled initial={date('2027-06-10')} min={date('2025-03-01')} max={date('2030-06-30')} />);
+    fireEvent.click(screen.getByRole('button', { name: 'June 2027' }));
+    focusedDay().focus();
+    const press = (key: string) => fireEvent.keyDown(document.activeElement!, { key });
+    press('Home');
+    expect(document.activeElement!.textContent).toBe('2025');
+    press('ArrowUp');
+    expect(document.activeElement!.textContent).toBe('2025');
+    press('End');
+    expect(document.activeElement!.textContent).toBe('2027');
+    press('PageDown');
+    expect(document.activeElement!.textContent).toBe('2030');
+    press('PageDown');
+    press('ArrowRight');
+    expect(document.activeElement!.textContent).toBe('2030');
+    press('PageUp');
+    expect(document.activeElement!.textContent).toBe('2025');
+    // The year never moved past a bound, so neither did the month and day.
+    fireEvent.click(document.activeElement!);
+    expect(focusedDay().getAttribute('aria-label')).toBe('Tuesday, June 10, 2025');
+  });
+
+  it('shows the days again when the header goes while the years show', () => {
+    function Toggle() {
+      const [header, setHeader] = useState(true);
+      return (
+        <>
+          <button type="button" onClick={() => setHeader(false)}>
+            Hide
+          </button>
+          <Calendar.Root aria-label="Start" locale="en-US" defaultValue={date('2026-10-13')}>
+            {header && <Calendar.Header />}
+            <Calendar.Grid />
+          </Calendar.Root>
+        </>
+      );
+    }
+    render(<Toggle />);
+    fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    expect(within(grid()).getAllByRole('button')).toHaveLength(12);
+    fireEvent.click(screen.getByRole('button', { name: 'Hide' }));
+    expect(grid().querySelectorAll('[data-todae-calendar-cell]')).toHaveLength(31);
   });
 
   it.each([
@@ -406,14 +451,19 @@ describe('Calendar', () => {
     expect(screen.getByTestId('value').textContent).toBe('2026-10-13');
   });
 
-  it('names its month buttons from StringsProvider', () => {
+  it('names its month and year page buttons from StringsProvider', () => {
     render(
-      <StringsProvider strings={{ previousMonth: '이전 달', nextMonth: '다음 달' }}>
+      <StringsProvider
+        strings={{ previousMonth: '이전 달', nextMonth: '다음 달', previousYears: '이전 해', nextYears: '다음 해' }}
+      >
         <Controlled />
       </StringsProvider>,
     );
     expect(screen.getByRole('button', { name: '이전 달' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '다음 달' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    expect(screen.getByRole('button', { name: '이전 해' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '다음 해' })).toBeTruthy();
   });
 
   it('renders no today and, without a value or defaultMonth, no weeks on the server', () => {

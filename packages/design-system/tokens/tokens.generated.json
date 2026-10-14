@@ -7922,9 +7922,18 @@
       "context": null
     },
     {
-      "path": "calendar.heading.padding-inline",
+      "path": "calendar.heading.icon.size",
       "type": "dimension",
-      "cssVar": "--todae-calendar-heading-padding-inline",
+      "cssVar": "--todae-calendar-heading-icon-size",
+      "cssValue": "var(--todae-calendar-nav-icon-size)",
+      "ref": "calendar.nav.icon.size",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "calendar.heading.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-calendar-heading-padding-x",
       "cssValue": "var(--todae-space-chip-x)",
       "ref": "space.chip.x",
       "layer": "contract",

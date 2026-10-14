@@ -539,6 +539,13 @@ describe('Calendar in a browser', () => {
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Wednesday, October 14, 2026');
     await userEvent.keyboard('{ArrowRight}{ArrowRight}');
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Monday, October 12, 2026');
+    // The years swap them too.
+    await userEvent.click(screen.getByRole('button', { name: 'October 2026' }));
+    screen.getByRole('button', { name: '2026' }).focus();
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(document.activeElement?.textContent).toBe('2027');
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}');
+    expect(document.activeElement?.textContent).toBe('2025');
   });
 
   it('is one Tab stop in the grid, after the month buttons', async () => {

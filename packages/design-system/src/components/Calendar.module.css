@@ -24,7 +24,7 @@
     box-sizing: border-box;
     block-size: var(--todae-calendar-day-size);
     margin: 0;
-    padding-inline: var(--todae-calendar-heading-padding-inline);
+    padding-inline: var(--todae-calendar-heading-padding-x);
     border: var(--todae-calendar-day-border-width) solid transparent;
     border-radius: var(--todae-calendar-day-radius);
     background: var(--todae-calendar-day-bg-default);
@@ -45,13 +45,14 @@
   }
 
   .heading:disabled {
+    color: var(--todae-calendar-day-fg-disabled);
     cursor: not-allowed;
   }
 
   .headingGlyph {
     display: inline-flex;
-    inline-size: var(--todae-calendar-nav-icon-size);
-    block-size: var(--todae-calendar-nav-icon-size);
+    inline-size: var(--todae-calendar-heading-icon-size);
+    block-size: var(--todae-calendar-heading-icon-size);
   }
 
   .headingGlyph > :is(svg, img) {
@@ -173,7 +174,7 @@
   /* Forced colors drop backgrounds: paint the selected day with system colors. */
   @media (forced-colors: active) {
     .day[data-selected],
-  .year[data-selected] {
+    .year[data-selected] {
       forced-color-adjust: none;
       background: Highlight;
       color: HighlightText;
@@ -185,7 +186,8 @@
 
     .nav:is(:disabled, [aria-disabled='true']),
     .day:is(:disabled, [aria-disabled='true']),
-    .year:disabled {
+    .year:disabled,
+    .heading:disabled {
       color: GrayText;
     }
   }

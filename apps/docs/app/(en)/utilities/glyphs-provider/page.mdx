@@ -54,7 +54,7 @@ A part's own content still wins: children of a close part, `removeIcon` on `Chip
     </Table.Row>
     <Table.Row>
       <Table.HeaderCell scope="row">`chevron`</Table.HeaderCell>
-      <Table.Cell>`Field.Select`, `Disclosure.Summary`, `Tree.Label`, `Calendar.Header`'s month buttons</Table.Cell>
+      <Table.Cell>`Field.Select`, `Disclosure.Summary`, `Tree.Label`, `Calendar.Header`'s month buttons and heading</Table.Cell>
       <Table.Cell>The browser's own marker; a drawn chevron in `Tree.Label` and `Calendar.Header`</Table.Cell>
     </Table.Row>
     <Table.Row>
@@ -78,7 +78,7 @@ A part's own content still wins: children of a close part, `removeIcon` on `Chip
 
 Draw `chevron` pointing down: a closed disclosure or tree item turns it toward its text, and a month button turns it toward its month. Draw `separator` pointing toward the next item in a left-to-right page: it is mirrored in right-to-left. In `Field.Select`, the chevron sits over the browser's picker icon when the browser supports `::picker-icon` and the select is the field's last part; otherwise the browser's icon stays. The check mark beside a selected `<option>` is the browser's own.
 
-Each glyph that is an `svg` or `img`, as icon libraries render, takes the size of the box its part gives it, whatever its own `size` or `width`: `button.icon.size` in a close part, `chip.icon.size` in a chip, `field.icon.size` in a select and a date picker, `calendar.nav.icon.size` in a calendar's month buttons and heading, `tree.chevron.size` in a tree, the whole box in a checkbox, and a box about the size of the text elsewhere. An icon drawn in `currentColor` takes the part's text color.
+Each glyph that is an `svg` or `img`, as icon libraries render, takes the size of the box its part gives it, whatever its own `size` or `width`: `button.icon.size` in a close part, `chip.icon.size` in a chip, `field.icon.size` in a select and a date picker, `calendar.nav.icon.size` in a calendar's month buttons, `calendar.heading.icon.size` in its heading, `tree.chevron.size` in a tree, the whole box in a checkbox, and a box about the size of the text elsewhere. An icon drawn in `currentColor` takes the part's text color.
 
 The radio dot, the switch thumb, the spinner and the selected tab's bar are shapes drawn from tokens, not glyphs, so they are not here.
 

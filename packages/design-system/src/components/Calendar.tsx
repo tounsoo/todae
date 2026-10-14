@@ -82,6 +82,8 @@ type CalendarContextValue = {
   setView: (view: CalendarView) => void;
   /** Whether a year can be picked: in min and max, and in the months Temporal can show. */
   yearInRange: (year: number) => boolean;
+  /** The year within min, max and Temporal's range nearest to the year. */
+  clampYear: (year: number) => number;
   /** Moves to the year, keeping the month and day where it can. */
   moveToYear: (year: number, focus: boolean) => void;
 };
@@ -125,7 +127,7 @@ const subscribeNothing = () => () => {};
 const todayNow = () => Temporal.Now.plainDateISO().toString();
 const todayOnServer = () => null;
 
-/** The day that holds the grid's Tab stop. */
+/** The day or year that holds the grid's Tab stop. */
 export const CALENDAR_TAB_STOP = '[data-todae-calendar-cell][tabindex="0"]';
 
 /** The grid is laid out in ISO months, so names come from the Gregorian calendar whatever the locale's own. */
@@ -218,10 +220,15 @@ function Root({
     [focused, max, min],
   );
   const [view, setView] = useState<CalendarView>('days');
+  const firstYear = Math.max(min?.year ?? FIRST_YEAR, FIRST_YEAR);
+  const lastYear = Math.min(max?.year ?? LAST_YEAR, LAST_YEAR);
   const yearInRange = useCallback(
-    (year: number) =>
-      year >= Math.max(min?.year ?? FIRST_YEAR, FIRST_YEAR) && year <= Math.min(max?.year ?? LAST_YEAR, LAST_YEAR),
-    [max, min],
+    (year: number) => year >= firstYear && year <= lastYear,
+    [firstYear, lastYear],
+  );
+  const clampYear = useCallback(
+    (year: number) => Math.min(Math.max(year, firstYear), lastYear),
+    [firstYear, lastYear],
   );
   const moveToYear = useCallback(
     (year: number, focus: boolean) => {
@@ -270,6 +277,7 @@ function Root({
       view,
       setView,
       yearInRange,
+      clampYear,
       moveToYear,
     }),
     [
@@ -288,6 +296,7 @@ function Root({
       hasHeader,
       view,
       yearInRange,
+      clampYear,
       moveToYear,
     ],
   );
@@ -316,11 +325,15 @@ function Header({ className, ...props }: CalendarHeaderProps) {
   const cal = useCalendar('Header');
   const strings = useStrings();
   const { chevron } = useGlyphs();
-  const { focused, setHasHeader, view } = cal;
+  const { focused, setHasHeader, setView, view } = cal;
   useLayoutEffect(() => {
     setHasHeader(true);
-    return () => setHasHeader(false);
-  }, [setHasHeader]);
+    return () => {
+      setHasHeader(false);
+      // Only the header leads back from the years.
+      setView('days');
+    };
+  }, [setHasHeader, setView]);
   const years = view === 'years';
   const page = focused ? yearPage(focused.year) : null;
   const month = focused?.toPlainYearMonth() ?? null;
@@ -382,7 +395,7 @@ function Header({ className, ...props }: CalendarHeaderProps) {
         >
           {focused
             ? years
-              ? `${formatYear(cal.locale, page!)} – ${formatYear(cal.locale, page! + YEARS_PER_PAGE - 1)}`
+              ? yearFormat(cal.locale).formatRange(page!, page! + YEARS_PER_PAGE - 1)
               : focused.toLocaleString(cal.locale, { month: 'long', year: 'numeric', calendar: GREGORY })
             : null}
           <span className={styles.headingGlyph} data-todae-glyph="" aria-hidden="true">
@@ -408,8 +421,14 @@ const LAST_DAY = '+275760-08-31';
 /** The first year of the page of years that holds the year. */
 const yearPage = (year: number) => year - (((year % YEARS_PER_PAGE) + YEARS_PER_PAGE) % YEARS_PER_PAGE);
 
-function formatYear(locale: string, year: number) {
-  return new Intl.NumberFormat(locale, { useGrouping: false }).format(year);
+const yearFormats = new Map<string, Intl.NumberFormat>();
+function yearFormat(locale: string) {
+  let format = yearFormats.get(locale);
+  if (!format) {
+    format = new Intl.NumberFormat(locale, { useGrouping: false });
+    yearFormats.set(locale, format);
+  }
+  return format;
 }
 
 const startOfWeek = (date: Temporal.PlainDate, firstDay: number) =>
@@ -424,7 +443,8 @@ const weekAnchor = () => (week ??= Temporal.PlainDate.from(WEEK_ISO));
  * The days of the shown month as a grid, one week to a row, following the
  * ARIA date picker grid: one Tab stop, arrow keys by day and week, Home and
  * End to the week's ends, Page Up and Page Down by month, and with Shift by
- * year. Left and Right swap in a right-to-left page.
+ * year. Left and Right swap in a right-to-left page. While Calendar.Header
+ * shows the years, it is a page of twelve years in the same pattern instead.
  */
 function Grid(props: CalendarGridProps) {
   const cal = useCalendar('Grid');
@@ -555,7 +575,6 @@ function Day({ date }: { date: Temporal.PlainDate }) {
         aria-label={date.toLocaleString(cal.locale, { dateStyle: 'full', calendar: GREGORY })}
         data-selected={selected ? '' : undefined}
         data-unavailable={unavailable ? '' : undefined}
-        data-todae-calendar-day=""
         data-todae-calendar-cell=""
         onClick={(event: MouseEvent<HTMLButtonElement>) => {
           // A click also moves the Tab stop, even to a date isDateDisabled rules out.
@@ -632,7 +651,9 @@ function YearGrid({ className, onKeyDown, ref: refProp, ...props }: CalendarGrid
         return;
     }
     event.preventDefault();
-    if (cal.yearInRange(next)) cal.moveToYear(next, true);
+    // Stop at min and max, as the days do. Staying put keeps the month and day.
+    const target = cal.clampYear(next);
+    if (target !== year) cal.moveToYear(target, true);
   };
 
   return (
@@ -680,7 +701,7 @@ function Year({ year }: { year: number }) {
           cal.setView('days');
         }}
       >
-        {formatYear(cal.locale, year)}
+        {yearFormat(cal.locale).format(year)}
       </button>
     </td>
   );
