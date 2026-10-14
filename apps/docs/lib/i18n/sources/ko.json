@@ -343,7 +343,7 @@
     "## Token layers": "4b9cc0e80a6c",
     "## A company resolver": "871ad5179923",
     "## Overrides: CSS or ThemeProvider": "f3c47c9be9f3",
-    "## Adding a variant or a density": "e5bc0cabac85",
+    "## Adding a variant or a density": "6a2f6e98c97b",
     "## Wrapping a component": "37193cebd631",
     "(section order)": "280102156fc8"
   },
@@ -619,11 +619,12 @@
     "### DensityProvider": "b60121bd3031",
     "## Contrast": "e3223e4198e2",
     "## References and opacity": "dbea45e0372e",
+    "## Letter case": "beaf90851101",
     "## Status tones": "9db538465fa4",
     "## Category tones": "66f99d412c6c",
     "## Focus ring": "d4f6cb5c0687",
     "## Catalog": "fbadfcf96811",
-    "(section order)": "1a0509b1ade0"
+    "(section order)": "b9b2c2639be4"
   },
   "toolbar": {
     "(top)": "65f7c00fa816",

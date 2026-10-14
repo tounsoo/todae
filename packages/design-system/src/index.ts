@@ -360,6 +360,7 @@ export {
   type ThemeOverrideValue,
   type ThemeShadowLayer,
   type ThemeShadowValue,
+  type ThemeTextTransformValue,
 } from './providers/themeOverride';
 export {
   DensityProvider,

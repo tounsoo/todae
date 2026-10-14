@@ -1,4 +1,4 @@
-import type { ThemeColorValue, ThemeDimensionValue, ThemeOverride } from '@omsoo.design/todae';
+import type { ThemeColorValue, ThemeDimensionValue, ThemeOverride, ThemeShadowLayer } from '@omsoo.design/todae';
 
 /** A playground starting point: one override set per appearance, since Todae's accent flips between light and dark. */
 export type ThemePreset = {
@@ -9,10 +9,6 @@ export type ThemePreset = {
   dark: ThemeOverride;
 };
 
-/** The web fonts the presets name. The playground loads them; a company loads its own. */
-export const PRESET_FONTS_HREF =
-  'https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;700&family=Nunito:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap';
-
 const oklch = (l: number, c: number, h: number): ThemeColorValue => ({ colorSpace: 'oklch', components: [l, c, h] });
 const rem = (value: number): ThemeDimensionValue => ({ value, unit: 'rem' });
 
@@ -20,17 +16,19 @@ const rem = (value: number): ThemeDimensionValue => ({ value, unit: 'rem' });
 // changes the hue and chroma, so every semantic color that reads the ramp,
 // in both appearances, follows along.
 const RAMP = [
-  ['50', 0.98],
-  ['100', 0.93],
-  ['200', 0.87],
-  ['300', 0.78],
-  ['400', 0.68],
-  ['500', 0.55],
-  ['600', 0.45],
+  ['0', 1],
+  ['50', 0.985],
+  ['100', 0.955],
+  ['200', 0.9],
+  ['300', 0.82],
+  ['400', 0.78],
+  ['500', 0.6],
+  ['600', 0.48],
   ['700', 0.36],
   ['800', 0.28],
-  ['900', 0.22],
-  ['950', 0.16],
+  ['850', 0.235],
+  ['900', 0.19],
+  ['950', 0.145],
 ] as const;
 
 /** The gray ramp tinted toward `hue`, with chroma highest in the middle steps. */
@@ -38,25 +36,30 @@ function grays(hue: number, chroma: number): ThemeOverride {
   const out: ThemeOverride = {};
   for (const [step, l] of RAMP) {
     const middle = 1 - Math.abs(l - 0.55) / 0.55;
-    out[`color.gray.${step}` as keyof ThemeOverride] = oklch(l, Number((chroma * (0.4 + 0.6 * middle)).toFixed(3)), hue);
+    // White stays neutral: any chroma at L 1 is outside sRGB.
+    out[`color.gray.${step}` as keyof ThemeOverride] = oklch(l, l >= 1 ? 0 : Number((chroma * (0.5 + 0.5 * middle)).toFixed(4)), hue);
   }
   return out;
 }
 
-/** A hue accent. `step` is how far hover and active move away from the default, toward more contrast. */
-function accent(l: number, c: number, h: number, onAccent: ThemeColorValue, step: number): ThemeOverride {
-  return {
-    'color.accent.default': oklch(l, c, h),
-    'color.accent.hover': oklch(Number((l + step).toFixed(3)), c, h),
-    'color.accent.active': oklch(Number((l + step * 2).toFixed(3)), c, h),
-    'color.on-accent': onAccent,
-  };
+/** The accent's three states and the color drawn on it. */
+function accent(base: ThemeColorValue, hover: ThemeColorValue, active: ThemeColorValue, onAccent: ThemeColorValue): ThemeOverride {
+  return { 'color.accent.default': base, 'color.accent.hover': hover, 'color.accent.active': active, 'color.on-accent': onAccent };
 }
 
 /** Corner radii, from small to large. */
 function radii(sm: number, md: number, lg: number): ThemeOverride {
   return { 'radius.sm': rem(sm), 'radius.md': rem(md), 'radius.lg': rem(lg) };
 }
+
+const px = (value: number) => ({ value, unit: 'px' }) as const;
+
+/** One shadow layer: x, y, blur and spread in px, then its color. */
+function shadow(x: number, y: number, blur: number, spread: number, color: ThemeColorValue, inset = false): ThemeShadowLayer {
+  return { offsetX: px(x), offsetY: px(y), blur: px(blur), spread: px(spread), color, ...(inset ? { inset } : {}) };
+}
+
+const alpha = (color: ThemeColorValue, a: number): ThemeColorValue => ({ ...color, alpha: a });
 
 /** Pill-shaped buttons, chips and badges. */
 const PILLS: ThemeOverride = { 'button.base.radius': rem(99), 'chip.radius': rem(99), 'badge.radius': rem(99) };
@@ -66,81 +69,167 @@ function preset(id: string, name: string, shared: ThemeOverride, light: ThemeOve
   return { id, name, light: { ...shared, ...light }, dark: { ...shared, ...dark } };
 }
 
+/** Acid's light primary button: chartreuse with ink type and an ink edge. */
+function chartreuseButton(ink: ThemeColorValue): ThemeOverride {
+  const out: ThemeOverride = {};
+  const fills = { default: oklch(0.9, 0.2, 122), hover: oklch(0.93, 0.19, 122), active: oklch(0.85, 0.2, 122), focus: oklch(0.9, 0.2, 122) };
+  for (const [state, fill] of Object.entries(fills)) {
+    out[`button.primary.bg.${state}` as keyof ThemeOverride] = fill;
+    out[`button.primary.fg.${state}` as keyof ThemeOverride] = ink;
+    out[`button.primary.border.${state}` as keyof ThemeOverride] = ink;
+  }
+  return out;
+}
+
+/** Acid's hard, unblurred shadows in the border's color; ghost buttons stay flat. */
+function hardShadows(color: ThemeColorValue): ThemeOverride {
+  return { 'card.shadow': shadow(6, 6, 0, 0, color), 'button.primary.shadow': shadow(3, 3, 0, 0, color), 'button.secondary.shadow': shadow(3, 3, 0, 0, color) };
+}
+
+/** Riso's second ink, printed off-register behind cards and the filled buttons. */
+function offsetInk(ink: ThemeColorValue): ThemeOverride {
+  return { 'card.shadow': shadow(5, 5, 0, 0, ink), 'button.primary.shadow': shadow(3, 3, 0, 0, ink), 'button.secondary.shadow': shadow(3, 3, 0, 0, ink) };
+}
+
+/** Y2K Chrome's glossy buttons: a highlight along the top edge over a soft tinted drop. */
+function gloss(highlight: ThemeColorValue, drop: ThemeColorValue): ThemeOverride {
+  const layers = [shadow(0, 1, 0, 0, highlight, true), shadow(0, 2, 6, 0, drop)];
+  return { 'button.primary.shadow': layers, 'button.secondary.shadow': layers };
+}
+
+/** Uppercase, widely spaced buttons, tabs, labels and table headers; spacing in rem. */
+function capsLabels(value: number): ThemeOverride {
+  const spacing = rem(value);
+  return {
+    'button.base.font.letter-spacing': spacing,
+    'tabs.font.letter-spacing': spacing,
+    'field.label.font.letter-spacing': spacing,
+    'table.header.font.letter-spacing': spacing,
+    'button.base.font.text-transform': 'uppercase',
+    'tabs.font.text-transform': 'uppercase',
+    'field.label.font.text-transform': 'uppercase',
+    'table.header.font.text-transform': 'uppercase',
+  };
+}
+
+const MONO = ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'];
+
 export const PRESETS: readonly ThemePreset[] = [
-  preset('todae', 'Todae', {}, {}, {}),
+  // Todae as it ships.
+  preset('graphite', 'Graphite', {}, {}, {}),
   preset(
-    'editorial',
-    'Editorial',
+    'porcelain',
+    'Porcelain',
+    { ...grays(200, 0.008), ...radii(0.625, 0.875, 1.5), ...PILLS },
     {
-      ...grays(75, 0.024),
-      ...radii(0.0625, 0.125, 0.25),
-      'button.base.radius': rem(0),
-      'font.family.sans': ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
-      'font.weight.medium': 600,
-      'font.weight.bold': 700,
+      'color.bg.canvas': oklch(0.965, 0.004, 200),
+      'card.border': oklch(1, 0, 0),
+      'card.shadow': [shadow(0, 1, 2, 0, alpha(oklch(0.2, 0.01, 255), 0.05)), shadow(0, 10, 30, 0, alpha(oklch(0.2, 0.01, 255), 0.07))],
+      ...accent(oklch(0.5, 0.09, 165), oklch(0.56, 0.09, 165), oklch(0.44, 0.09, 165), oklch(0.99, 0, 0)),
     },
-    accent(0.4, 0.1, 35, oklch(0.97, 0.015, 75), -0.05),
-    accent(0.84, 0.07, 65, oklch(0.18, 0.02, 65), 0.05),
+    {
+      'color.bg.canvas': oklch(0.13, 0.006, 200),
+      'card.border': oklch(0.19, 0.004, 200),
+      'card.shadow': [shadow(0, 1, 0, 0, alpha(oklch(1, 0, 0), 0.05)), shadow(0, 12, 32, 0, alpha(oklch(0, 0, 0), 0.45))],
+      ...accent(oklch(0.8, 0.077, 165), oklch(0.85, 0.077, 165), oklch(0.75, 0.077, 165), oklch(0.17, 0.03, 165)),
+    },
   ),
   preset(
-    'forest',
-    'Forest',
+    'acid',
+    'Acid',
     {
-      ...grays(160, 0.018),
-      ...radii(0.5, 0.875, 1.25),
-      ...PILLS,
-      'font.family.sans': ['Nunito', 'ui-rounded', 'system-ui', 'sans-serif'],
-      'font.weight.medium': 700,
-      'font.weight.bold': 800,
-    },
-    accent(0.47, 0.1, 160, oklch(0.98, 0.01, 160), -0.05),
-    accent(0.8, 0.12, 160, oklch(0.18, 0.03, 160), 0.05),
-  ),
-  preset(
-    'grape',
-    'Grape',
-    {
-      ...grays(300, 0.024),
-      ...radii(0.25, 0.5, 0.75),
+      ...grays(120, 0.01),
+      ...radii(0, 0, 0),
+      'radius.full': rem(0),
       'border.width': rem(0.125),
-      'font.family.sans': ['Space Grotesk', 'system-ui', 'sans-serif'],
+      'font.family.sans': MONO,
       'font.weight.medium': 600,
-      'font.weight.bold': 700,
-    },
-    accent(0.5, 0.2, 300, oklch(0.98, 0.01, 300), -0.05),
-    accent(0.82, 0.11, 300, oklch(0.18, 0.03, 300), 0.04),
-  ),
-  preset(
-    'terminal',
-    'Terminal',
-    {
-      ...grays(150, 0.03),
-      ...radii(0, 0, 0),
-      'radius.full': rem(0),
-      'button.base.radius': rem(0),
-      'font.family.sans': ['JetBrains Mono', 'ui-monospace', 'monospace'],
-      'font.family.mono': ['JetBrains Mono', 'ui-monospace', 'monospace'],
-      'font.weight.medium': 500,
-      'font.weight.bold': 700,
-    },
-    accent(0.45, 0.13, 150, oklch(0.98, 0.02, 150), -0.05),
-    accent(0.84, 0.19, 150, oklch(0.16, 0.03, 150), 0.04),
-  ),
-  preset(
-    'brutal',
-    'Brutal',
-    {
-      ...grays(0, 0),
-      ...radii(0, 0, 0),
-      'radius.full': rem(0),
-      'button.base.radius': rem(0),
-      'border.width': rem(0.1875),
-      'font.family.sans': ['Archivo', 'system-ui', 'sans-serif'],
-      'font.weight.medium': 700,
       'font.weight.bold': 800,
       'button.base.font.weight': 800,
+      ...capsLabels(0.04),
     },
-    {},
-    {},
+    {
+      // Chartreuse can't carry a checkbox or a tab line on a light canvas, so
+      // the accent stays ink and only the primary button turns chartreuse.
+      ...accent(oklch(0.15, 0.028, 110), oklch(0.26, 0.028, 110), oklch(0.1, 0.028, 110), oklch(0.9, 0.2, 122)),
+      ...chartreuseButton(oklch(0.15, 0.028, 110)),
+      ...hardShadows(oklch(0.15, 0.028, 110)),
+      'color.bg.canvas': oklch(0.96, 0.02, 110),
+      'color.border.default': oklch(0.15, 0.028, 110),
+      'color.border.subtle': oklch(0.2, 0.024, 110),
+      'focus.ring.color': oklch(0.6, 0.25, 330),
+    },
+    {
+      ...accent(oklch(0.9, 0.2, 122), oklch(0.93, 0.19, 122), oklch(0.85, 0.2, 122), oklch(0.15, 0.02, 120)),
+      'color.border.default': oklch(0.92, 0.014, 120),
+      ...hardShadows(oklch(0.92, 0.014, 120)),
+      'color.border.subtle': oklch(0.9, 0.012, 120),
+      'focus.ring.color': oklch(0.72, 0.22, 330),
+    },
+  ),
+  preset(
+    'bloom',
+    'Bloom',
+    { ...grays(330, 0.03), ...radii(0.75, 1, 1.75), ...PILLS, 'font.weight.medium': 600, 'font.weight.bold': 800 },
+    {
+      'color.bg.canvas': oklch(0.965, 0.02, 340),
+      'card.border': oklch(1, 0, 0),
+      'card.shadow': shadow(0, 12, 40, 0, alpha(oklch(0.6, 0.24, 350), 0.18)),
+      ...accent(oklch(0.6, 0.25, 350), oklch(0.66, 0.24, 350), oklch(0.54, 0.25, 350), oklch(0.99, 0, 0)),
+      'focus.ring.color': oklch(0.6, 0.25, 350),
+    },
+    {
+      'color.bg.canvas': oklch(0.15, 0.04, 320),
+      'color.bg.surface': oklch(0.2, 0.024, 320),
+      'card.border': oklch(0.2, 0.024, 320),
+      'card.shadow': shadow(0, 12, 48, 0, alpha(oklch(0.7, 0.22, 350), 0.22)),
+      ...accent(oklch(0.82, 0.14, 350), oklch(0.86, 0.12, 350), oklch(0.79, 0.15, 350), oklch(0.15, 0.05, 340)),
+      'focus.ring.color': oklch(0.82, 0.14, 350),
+    },
+  ),
+  preset(
+    'riso',
+    'Riso',
+    { ...radii(0.125, 0.25, 0.375), 'border.width': rem(0.125), 'font.weight.medium': 600, 'font.weight.bold': 800 },
+    {
+      // Uncoated paper, fluorescent pink ink and a teal second color.
+      ...grays(80, 0.02),
+      'color.bg.canvas': oklch(0.95, 0.02, 85),
+      ...accent(oklch(0.62, 0.24, 0), oklch(0.67, 0.23, 0), oklch(0.57, 0.24, 0), oklch(0.99, 0.01, 0)),
+      ...offsetInk(alpha(oklch(0.62, 0.12, 190), 0.85)),
+      'focus.ring.color': oklch(0.55, 0.12, 200),
+    },
+    {
+      // The same inks printed on navy stock.
+      ...grays(260, 0.03),
+      'color.bg.canvas': oklch(0.17, 0.035, 260),
+      ...accent(oklch(0.8, 0.15, 0), oklch(0.84, 0.13, 0), oklch(0.78, 0.16, 0), oklch(0.13, 0.03, 0)),
+      ...offsetInk(alpha(oklch(0.7, 0.12, 190), 0.85)),
+      'focus.ring.color': oklch(0.75, 0.12, 190),
+    },
+  ),
+  preset(
+    'y2k-chrome',
+    'Y2K Chrome',
+    { ...radii(0.75, 1, 1.5), ...PILLS, 'font.weight.medium': 600, 'font.weight.bold': 800 },
+    {
+      // Lilac and silver, with an iridescent card edge.
+      ...grays(300, 0.03),
+      'color.bg.canvas': oklch(0.95, 0.02, 300),
+      'card.border': oklch(0.85, 0.05, 300),
+      'card.shadow': shadow(0, 12, 32, 0, alpha(oklch(0.5, 0.1, 300), 0.15)),
+      ...accent(oklch(0.56, 0.18, 305), oklch(0.61, 0.17, 305), oklch(0.51, 0.18, 305), oklch(0.99, 0, 0)),
+      ...gloss(alpha(oklch(1, 0, 0), 0.6), alpha(oklch(0.4, 0.1, 300), 0.25)),
+      'focus.ring.color': oklch(0.56, 0.18, 305),
+    },
+    {
+      ...grays(290, 0.035),
+      'color.bg.canvas': oklch(0.15, 0.03, 290),
+      'card.border': oklch(0.45, 0.08, 300),
+      'card.shadow': shadow(0, 12, 40, 0, alpha(oklch(0, 0, 0), 0.5)),
+      ...accent(oklch(0.82, 0.12, 305), oklch(0.86, 0.1, 305), oklch(0.78, 0.13, 305), oklch(0.17, 0.04, 300)),
+      ...gloss(alpha(oklch(1, 0, 0), 0.35), alpha(oklch(0, 0, 0), 0.4)),
+      'focus.ring.color': oklch(0.82, 0.12, 305),
+    },
   ),
 ];

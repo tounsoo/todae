@@ -1,11 +1,8 @@
-/* The docs site's own styles. Everything reads Todae's tokens, so the site
-   follows the reader's light or dark choice like any product built on Todae. */
+/* The docs site's own styles. The site shows Todae exactly as it ships: it
+   sets no Todae token, and its own chrome reads Todae's tokens as they are,
+   so it follows the reader's light or dark choice like any product built on Todae. */
 
 :root {
-  /* The docs pick their own typefaces through Todae's tokens, as a company would.
-     Korean falls back to the system's Korean face. */
-  --todae-font-family-sans: var(--docs-font-sans, system-ui), system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  --todae-font-family-mono: var(--docs-font-mono, ui-monospace), ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   font-size: 16px;
   line-height: 1.6;
   --docs-topbar: 3.5rem;
@@ -37,9 +34,6 @@ body {
 }
 
 .shell {
-  /* Hairlines lighter than Todae's subtle border, for the site's own chrome. */
-  --docs-line: color-mix(in oklch, var(--todae-color-border-subtle) 50%, var(--todae-color-bg-canvas));
-  --docs-raised: color-mix(in oklch, var(--todae-color-bg-subtle) 45%, var(--todae-color-bg-canvas));
   min-height: 100vh;
   color: var(--todae-color-fg-default);
   background: var(--todae-color-bg-canvas);
@@ -64,9 +58,8 @@ body {
   position: sticky;
   inset-block-start: 0;
   z-index: 20;
-  border-block-end: 1px solid var(--docs-line);
-  background: color-mix(in oklch, var(--todae-color-bg-canvas) 82%, transparent);
-  backdrop-filter: saturate(1.4) blur(12px);
+  border-block-end: 1px solid var(--todae-color-border-subtle);
+  background: var(--todae-color-bg-canvas);
 }
 
 .topbar-inner {
@@ -100,7 +93,7 @@ body {
     linear-gradient(var(--todae-color-fg-default), var(--todae-color-fg-default)) center 0.1875rem / 0.625rem 0.5rem no-repeat,
     linear-gradient(var(--todae-color-fg-default), var(--todae-color-fg-default)) center bottom 0.1875rem / 0.875rem 0.25rem no-repeat,
     var(--todae-color-bg-subtle);
-  box-shadow: inset 0 0 0 1px var(--docs-line);
+  box-shadow: inset 0 0 0 1px var(--todae-color-border-subtle);
 }
 
 .top-links a,
@@ -150,7 +143,7 @@ body {
 
 .theme-switcher {
   padding: 0.125rem;
-  border: 1px solid var(--docs-line);
+  border: 1px solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-md);
 }
 
@@ -235,15 +228,10 @@ body {
   padding-inline: 0;
 }
 
-/* The sidebar is Nav.Root; its branch rule takes the site's line color. */
-.site-nav {
-  --todae-nav-rule-color: var(--docs-line);
-}
-
 /* ---------- Footer ---------- */
 
 .site-footer {
-  border-block-start: 1px solid var(--docs-line);
+  border-block-start: 1px solid var(--todae-color-border-subtle);
 }
 
 .site-footer-inner {
@@ -296,7 +284,7 @@ main:focus {
 .docs-prose > h2 {
   margin-block-start: 3rem;
   padding-block-start: 2rem;
-  border-block-start: 1px solid var(--docs-line);
+  border-block-start: 1px solid var(--todae-color-border-subtle);
   font-weight: 650;
   letter-spacing: -0.02em;
 }
@@ -329,9 +317,9 @@ main:focus {
 .untranslated-notice {
   margin: 0 0 2rem;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--docs-line);
+  border: 1px solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-md);
-  background: var(--docs-raised);
+  background: var(--todae-color-bg-subtle);
   color: var(--todae-color-fg-muted);
   font-size: 0.875rem;
 }
@@ -345,10 +333,10 @@ main:focus {
   align-items: center;
   margin: 1.5rem 0;
   padding: 2rem 1.5rem;
-  border: 1px solid var(--docs-line);
+  border: 1px solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-lg);
   background:
-    radial-gradient(circle at 1px 1px, var(--docs-line) 1px, transparent 0) 0 0 / 1rem 1rem,
+    radial-gradient(circle at 1px 1px, var(--todae-color-border-subtle) 1px, transparent 0) 0 0 / 1rem 1rem,
     var(--todae-color-bg-surface);
 }
 
@@ -359,14 +347,11 @@ main:focus {
 
 /* Code blocks and tables scroll sideways in a ScrollArea.Root, which draws its
    focus ring inside its own edge and keeps the rings of what it holds whole.
-   The docs' fenced blocks are Code.Block. Its bg and radius tokens are set
-   here, on the frame, so the Playground and live examples keep Todae's
-   defaults. The frame paints the same background around the block. */
+   The docs' fenced blocks are Code.Block, with Todae's own bg and radius.
+   The frame paints the same background around the block. */
 .docs-pre {
-  --todae-code-block-bg: var(--docs-raised);
-  --todae-code-block-radius: var(--todae-radius-lg);
   margin-block: 1rem;
-  border: 1px solid var(--docs-line);
+  border: 1px solid var(--todae-color-border-subtle);
   border-radius: var(--todae-code-block-radius);
   background: var(--todae-code-block-bg);
 }
@@ -379,7 +364,7 @@ main:focus {
 
 .scroll-x {
   margin-block: 1.25rem;
-  border: 1px solid var(--docs-line);
+  border: 1px solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-lg);
 }
 
@@ -534,9 +519,9 @@ table {
   display: inline-block;
   margin: 0;
   padding: 0.25rem 0.75rem;
-  border: 1px solid var(--docs-line);
+  border: 1px solid var(--todae-color-border-subtle);
   border-radius: 999px;
-  background: var(--docs-raised);
+  background: var(--todae-color-bg-subtle);
   color: var(--todae-color-fg-muted);
   font-size: 0.8125rem;
   font-weight: 500;
@@ -598,11 +583,11 @@ table {
 
 .hero-showcase {
   padding: clamp(1rem, 3vw, 2rem);
-  border: 1px solid var(--docs-line);
+  border: 1px solid var(--todae-color-border-subtle);
   border-radius: 1.25rem;
   background:
-    radial-gradient(circle at 1px 1px, var(--docs-line) 1px, transparent 0) 0 0 / 1.25rem 1.25rem,
-    var(--docs-raised);
+    radial-gradient(circle at 1px 1px, var(--todae-color-border-subtle) 1px, transparent 0) 0 0 / 1.25rem 1.25rem,
+    var(--todae-color-bg-subtle);
 }
 
 .showcase-card {
@@ -635,7 +620,7 @@ table {
 
 .home-group {
   padding: 1.5rem;
-  border: 1px solid var(--docs-line);
+  border: 1px solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-lg);
   background: var(--todae-color-bg-surface);
 }
@@ -669,7 +654,7 @@ table {
 .home-group a {
   display: block;
   padding: 0.1875rem 0.625rem;
-  border: 1px solid var(--docs-line);
+  border: 1px solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-md);
   color: var(--todae-color-fg-default);
   font-size: 0.8125rem;
@@ -699,7 +684,7 @@ table {
 .pg-rail {
   display: flex;
   flex-direction: column;
-  border-block-end: 1px solid var(--docs-line);
+  border-block-end: 1px solid var(--todae-color-border-subtle);
   background: var(--todae-color-bg-surface);
 }
 
@@ -720,7 +705,7 @@ table {
     inset-block-start: var(--docs-topbar);
     block-size: calc(100dvh - var(--docs-topbar));
     border-block-end: 0;
-    border-inline-end: 1px solid var(--docs-line);
+    border-inline-end: 1px solid var(--todae-color-border-subtle);
   }
 
   .pg-rail-scroll {
@@ -762,7 +747,7 @@ table {
 
 .preset-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
@@ -770,7 +755,7 @@ table {
   display: grid;
   gap: 0.375rem;
   padding: 0.375rem 0.375rem 0.5rem;
-  border: 1px solid var(--docs-line);
+  border: 1px solid var(--todae-color-border-subtle);
   border-radius: var(--todae-radius-md);
   background: var(--todae-color-bg-canvas);
   cursor: pointer;
@@ -796,7 +781,7 @@ table {
   display: block;
   padding: 0.375rem;
   border-radius: calc(var(--todae-radius-md) - 0.125rem);
-  background: var(--todae-color-bg-subtle);
+  background: var(--todae-color-bg-canvas);
 }
 
 .preset-swatch-surface {
@@ -923,7 +908,7 @@ table {
   margin-block-start: auto;
   margin-inline: -1.25rem;
   padding: 0.875rem 1.25rem;
-  border-block-start: 1px solid var(--docs-line);
+  border-block-start: 1px solid var(--todae-color-border-subtle);
   background: var(--todae-color-bg-surface);
 }
 
@@ -982,7 +967,7 @@ table {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
     padding: 0.75rem 1.25rem max(0.75rem, env(safe-area-inset-bottom));
-    border-block-start: 1px solid var(--docs-line);
+    border-block-start: 1px solid var(--todae-color-border-subtle);
     background: var(--todae-color-bg-surface);
   }
 
@@ -1079,7 +1064,7 @@ table {
   scroll-margin-block-start: var(--docs-topbar);
   min-inline-size: 0;
   padding: clamp(1rem, 3vw, 2.5rem);
-  background: var(--todae-color-bg-subtle);
+  background: var(--todae-color-bg-canvas);
   color: var(--todae-color-fg-default);
   container-type: inline-size;
 }
@@ -1212,8 +1197,23 @@ table {
   border-block-end: 1px solid var(--todae-color-border-subtle);
 }
 
+.preview-list li > :last-child {
+  flex: none;
+}
+
 .preview-list li:last-child {
   border-block-end: 0;
+}
+
+.preview-num {
+  text-align: end;
+}
+
+.preview-loading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
 }
 
 .preview-alerts {

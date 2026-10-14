@@ -48,6 +48,10 @@ function Panel() {
 
 `alpha`는 0에서 1 사이의 숫자이거나 `number` 토큰을 가리키는 `$ref`입니다. Todae의 반투명 색상은 `opacity` 스케일에서 값을 가져오며, `opacity.<n>`은 n 퍼센트입니다. 예를 들어 `"alpha": { "$ref": "#/opacity/12/$value" }`입니다. 빌드는 alpha를 그 토큰의 CSS 변수로 내보냅니다.
 
+## 대소문자
+
+DTCG 2025.10에는 대소문자를 위한 타입이 없어서 Todae가 `textTransform` 타입을 추가합니다. 값은 `none`, `uppercase`, `lowercase`, `capitalize` 중 하나입니다. `font.text-transform.default`은 `none`을 담고, Button, Tabs, Label, Table 헤더는 각자 이 토큰을 가리키는 `font.text-transform` 토큰을 읽습니다. DTCG 타입만 아는 도구는 `textTransform` 토큰을 받아들이지 않을 수 있습니다. DTCG에 대소문자를 위한 표준 타입이 생기면 Todae는 그 타입으로 옮깁니다.
+
 ## 상태 톤
 
 네 가지 톤이 상태를 나타냅니다. `info`, `success`, `warning`, `critical`입니다. 각 톤은 appearance마다 세 개의 토큰입니다. 텍스트와 아이콘에 쓰는 `color.status.<tone>.fg`, 채우기에 쓰는 `.bg`, 그리고 `.border`입니다. 빌드는 `bg` 위의 `fg`를 Lc 75로, `color.bg.surface` 위의 `fg`를 Lc 60으로 검사합니다. [Alert](/alert)는 `alert.<tone>` contract 토큰을 거쳐 이 토큰을 읽습니다. `info`는 액센트와 같은 중립적인 잉크이며, 회사는 토큰 패키지에서 여기에 색조를 줄 수 있습니다.

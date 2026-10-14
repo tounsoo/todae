@@ -10,6 +10,7 @@
     border-radius: var(--todae-card-radius);
     background: var(--todae-card-bg);
     color: var(--todae-card-fg);
+    box-shadow: var(--todae-card-shadow);
   }
 
   .header > :where(h1, h2, h3, h4, h5, h6, p) {

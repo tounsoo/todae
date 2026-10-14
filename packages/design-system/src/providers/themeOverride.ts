@@ -25,6 +25,7 @@ export const THEME_OVERRIDE_TYPE_NAMES = [
   'cubicBezier',
   'fontFamily',
   'shadow',
+  'textTransform',
 ] as const;
 export type ThemeOverrideType = (typeof THEME_OVERRIDE_TYPE_NAMES)[number];
 type GeneratedTypesAreKnown = (typeof THEME_OVERRIDE_TYPES)[ThemeOverrideKey] extends ThemeOverrideType ? true : never;
@@ -68,6 +69,10 @@ export type ThemeLengthValue = {
 
 export type ThemeShadowValue = ThemeShadowLayer | readonly ThemeShadowLayer[];
 
+/** Letter case. Todae's own `$type`: DTCG has none for it yet. */
+export type ThemeTextTransformValue = 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+const TEXT_TRANSFORMS: readonly string[] = ['none', 'uppercase', 'lowercase', 'capitalize'] satisfies ThemeTextTransformValue[];
+
 export type ThemeOverrideValue =
   | ThemeColorValue
   | ThemeDimensionValue
@@ -75,7 +80,8 @@ export type ThemeOverrideValue =
   | ThemeDurationValue
   | ThemeCubicBezierValue
   | ThemeFontFamilyValue
-  | ThemeShadowValue;
+  | ThemeShadowValue
+  | ThemeTextTransformValue;
 export type ThemeOverride = { [K in ThemeOverrideKey]?: ThemeOverrideValue };
 
 /** Types of extra override keys, such as `THEME_OVERRIDE_TYPES` from a company's `todae-tokens build`. */
@@ -136,20 +142,26 @@ function typeOf(key: string, extra: ThemeOverrideTypes | undefined): ThemeOverri
   return typeof type === 'string' && OVERRIDE_TYPES.has(type) ? type : undefined;
 }
 
-function isValueOfType(type: ThemeOverrideType, value: unknown): value is ThemeOverrideValue {
+// Letter spacing may tighten; every other dimension, such as a radius or a gap, is a size.
+function isSigned(key: string): boolean {
+  return key.split('.').includes('letter-spacing');
+}
+
+function isValueOfType(type: ThemeOverrideType, value: unknown, key: string): value is ThemeOverrideValue {
   if (type === 'color') return isThemeColorValue(value);
-  if (type === 'dimension') return isThemeDimensionValue(value);
+  if (type === 'dimension') return isThemeDimensionValue(value) || (isSigned(key) && isRemValue(value));
   if (type === 'fontWeight') return isFontWeight(value);
   if (type === 'duration') return isThemeDurationValue(value);
   if (type === 'cubicBezier') return isThemeCubicBezierValue(value);
   if (type === 'fontFamily') return isThemeFontFamilyValue(value);
   if (type === 'shadow') return isThemeShadowValue(value);
+  if (type === 'textTransform') return isThemeTextTransformValue(value);
   return isUnitlessNumber(value);
 }
 
 function valueCss(type: ThemeOverrideType, value: ThemeOverrideValue): string {
   if (type === 'color' && isThemeColorValue(value)) return themeColorCss(value);
-  if (type === 'dimension' && isThemeDimensionValue(value)) return `${value.value}${value.unit}`;
+  if (type === 'dimension' && isRemValue(value)) return `${value.value}${value.unit}`;
   if (type === 'duration' && isThemeDurationValue(value)) return `${value.value}${value.unit}`;
   if (type === 'cubicBezier' && isThemeCubicBezierValue(value)) return `cubic-bezier(${value.join(', ')})`;
   if (type === 'fontFamily' && isThemeFontFamilyValue(value)) {
@@ -165,6 +177,7 @@ function valueCss(type: ThemeOverrideType, value: ThemeOverrideValue): string {
       })
       .join(', ');
   }
+  if (type === 'textTransform' && isThemeTextTransformValue(value)) return value;
   if (typeof value === 'number') return String(value);
   return '';
 }
@@ -181,6 +194,10 @@ export function isThemeDurationValue(value: unknown): value is ThemeDurationValu
     value.value >= 0 &&
     (value.unit === 'ms' || value.unit === 's')
   );
+}
+
+export function isThemeTextTransformValue(value: unknown): value is ThemeTextTransformValue {
+  return typeof value === 'string' && TEXT_TRANSFORMS.includes(value);
 }
 
 export function isThemeCubicBezierValue(value: unknown): value is ThemeCubicBezierValue {
@@ -236,9 +253,11 @@ export function isThemeColorValue(value: unknown): value is ThemeColorValue {
 }
 
 export function isThemeDimensionValue(value: unknown): value is ThemeDimensionValue {
-  if (!isRecord(value)) return false;
-  const extra = Object.keys(value).filter((key) => !['value', 'unit'].includes(key));
-  return extra.length === 0 && finite(value.value) && value.value >= 0 && value.unit === 'rem';
+  return isRemValue(value) && value.value >= 0;
+}
+
+function isRemValue(value: unknown): value is ThemeDimensionValue {
+  return isRecord(value) && onlyKeys(value, ['value', 'unit']) && finite(value.value) && value.unit === 'rem';
 }
 
 function isFontWeight(value: unknown): value is number {
@@ -250,7 +269,7 @@ function isUnitlessNumber(value: unknown): value is number {
 }
 
 export function isThemeOverrideValue(key: ThemeOverrideKey, value: unknown): value is ThemeOverrideValue {
-  return isValueOfType(themeOverrideType(key), value);
+  return isValueOfType(themeOverrideType(key), value, key);
 }
 
 export function parseThemeColor(raw: string): ThemeColorValue | null {
@@ -274,7 +293,7 @@ export function parseThemeValue(key: ThemeOverrideKey, raw: string): ThemeOverri
     const match = value.match(REM);
     if (!match) return null;
     const dimension: ThemeDimensionValue = { value: Number(match[1]), unit: 'rem' };
-    return isThemeDimensionValue(dimension) ? dimension : null;
+    return isValueOfType(type, dimension, key) ? dimension : null;
   }
   if (type === 'fontWeight') return WEIGHT.test(value) ? Number(value) : null;
   if (type === 'duration') {
@@ -293,6 +312,7 @@ export function parseThemeValue(key: ThemeOverrideKey, raw: string): ThemeOverri
     return isThemeFontFamilyValue(names) ? names : null;
   }
   if (type === 'shadow') return parseShadow(value);
+  if (type === 'textTransform') return isThemeTextTransformValue(value) ? value : null;
   if (!NUMBER.test(value)) return null;
   const n = Number(value);
   return isUnitlessNumber(n) ? n : null;
@@ -353,7 +373,7 @@ export function themeOverrideStyle(overrides: unknown, overrideTypes?: ThemeOver
       reject(`Unknown theme override "${key}"`);
       continue;
     }
-    if (!isValueOfType(type, value)) {
+    if (!isValueOfType(type, value, key)) {
       reject(`Invalid theme override value for "${key}"`);
       continue;
     }

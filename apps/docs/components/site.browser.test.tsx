@@ -79,7 +79,7 @@ describe('docs site chrome under axe', () => {
     );
     await frame();
     expect(await violations()).toEqual([]);
-    await userEvent.click(screen.getByText('Forest'));
+    await userEvent.click(screen.getByText('Porcelain'));
     await userEvent.click(screen.getByRole('button', { name: 'dark' }));
     await frame();
     expect(await violations()).toEqual([]);
@@ -159,7 +159,7 @@ describe('narrow screens', () => {
     await frame();
     // Every control is in the sheet, and the stage follows the title and lead.
     expect(screen.queryByRole('tab', { name: 'raw' })).toBeNull();
-    expect(screen.queryByRole('radio', { name: 'Forest' })).toBeNull();
+    expect(screen.queryByRole('radio', { name: 'Porcelain' })).toBeNull();
     expect(screen.queryByRole('complementary')).toBeNull();
     const lead = screen.getByText(/Start from a preset/);
     expect(stage.getBoundingClientRect().top).toBeGreaterThanOrEqual(lead.getBoundingClientRect().bottom);
@@ -268,7 +268,7 @@ describe('narrow screens', () => {
   });
 
   it('ends the stage at the playground bar on a screen taller than the page', async () => {
-    await page.viewport(390, 2400);
+    await page.viewport(390, 6000);
     // With the top bar, as on the site, since the stage's height leaves room for it.
     render(
       <Providers>
@@ -527,11 +527,22 @@ describe('playground stage', () => {
 
   it('takes a preset typeface on the stage only, and the site keeps its own', async () => {
     const stage = renderPlayground();
-    await userEvent.click(screen.getByText('Editorial'));
+    await userEvent.click(screen.getByText('Acid'));
     await frame();
-    expect(getComputedStyle(stage).fontFamily).toContain('Fraunces');
-    expect(getComputedStyle(screen.getByRole('button', { name: 'Copy JSON' })).fontFamily).not.toContain('Fraunces');
-    expect(getComputedStyle(document.querySelector('.shell') as Element).fontFamily).toContain('Apple SD Gothic Neo');
+    expect(getComputedStyle(stage).fontFamily).toContain('ui-monospace');
+    expect(getComputedStyle(screen.getByRole('button', { name: 'Copy JSON' })).fontFamily).not.toContain('ui-monospace');
+    expect(getComputedStyle(document.querySelector('.shell') as Element).fontFamily).toContain('ui-sans-serif');
+  });
+
+  it('scrolls the Invoices table sideways on a phone instead of cutting it off', async () => {
+    await page.viewport(390, 800);
+    const stage = renderPlayground();
+    await frame();
+    const area = within(stage).getByRole('region', { name: 'Invoices' });
+    expect(area.scrollWidth).toBeGreaterThan(area.clientWidth);
+    expect(getComputedStyle(area).overflowX).not.toBe('hidden');
+    area.scrollLeft = area.scrollWidth;
+    expect(area.scrollLeft).toBeGreaterThan(0);
   });
 
   it('applies both raw and semantic space edits to density tokens', async () => {
