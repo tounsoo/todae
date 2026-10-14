@@ -433,7 +433,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     if (caretAfter && CARET_KEYS.has(event.key)) setCaretAfter(null);
     if (latest.current.disabled) return;
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
-    const el = event.currentTarget;
     const plain = !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
     if (open) {
       // With nothing to move to, the arrows move the caret as usual.
@@ -461,13 +460,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
         dismiss();
         return;
       }
-    }
-    // Backspace at a token's end, or Delete at its start, selects the whole
-    // token, so the key removes it in one step the textarea can undo.
-    if ((event.key === 'Backspace' || event.key === 'Delete') && plain && el.selectionStart === el.selectionEnd) {
-      const at = el.selectionStart;
-      const token = tokens.find((item) => (event.key === 'Backspace' ? item.end === at : item.start === at));
-      if (token) el.setSelectionRange(token.start, token.end);
     }
   };
 

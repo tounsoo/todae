@@ -144,12 +144,20 @@ describe('useMentions in a browser', () => {
     });
   });
 
-  it('removes a whole token with one Backspace at its end', async () => {
-    render(<Chat />);
+  it('turns a token back into plain text when Backspace or Delete removes one of its characters', async () => {
+    const onChange = vi.fn();
+    render(<Chat onChange={onChange} />);
     await userEvent.click(field());
     await userEvent.keyboard('Hi @ad{Enter}{Backspace}{Backspace}');
-    expect(field().value).toBe('Hi ');
+    expect(field().value).toBe('Hi @Ada Lovelac');
+    expect(onChange).toHaveBeenLastCalledWith({ text: 'Hi @Ada Lovelac', tokens: [] });
     expect(document.querySelector('[data-kind="@"]')).toBeNull();
+    await userEvent.clear(field());
+    await userEvent.keyboard('Hi @ad{Enter}');
+    await act(async () => field().setSelectionRange(3, 3));
+    await userEvent.keyboard('{Delete}');
+    expect(field().value).toBe('Hi Ada Lovelace ');
+    expect(onChange).toHaveBeenLastCalledWith({ text: 'Hi Ada Lovelace ', tokens: [] });
   });
 
   it('opens slash commands only at the start', async () => {
