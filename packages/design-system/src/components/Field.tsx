@@ -194,7 +194,7 @@ function Affix({ className, ...props }: FieldAffixProps) {
 
 type PickerControl = HTMLSelectElement | HTMLButtonElement;
 
-// A control whose picker a press beside it opens: a select, Field.ColorPicker, Field.DatePicker or Field.TimePicker.
+// A control whose picker a press beside it opens: a select, Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker.
 function hasPicker(control: Element | null | undefined): control is PickerControl {
   return (
     control instanceof HTMLSelectElement ||
@@ -202,7 +202,7 @@ function hasPicker(control: Element | null | undefined): control is PickerContro
   );
 }
 
-// How the shell opens or closes each Field.ColorPicker's, Field.DatePicker's or Field.TimePicker's popover, by its button.
+// How the shell opens or closes each Field.ColorPicker's, Field.DatePicker's, Field.TimePicker's or Field.DateTimePicker's popover, by its button.
 const pickerToggles = new WeakMap<HTMLButtonElement, () => void>();
 
 // Whether a select's picker is showing. A browser without `:open` throws,
@@ -349,9 +349,9 @@ function Root({
 /**
  * Input types that take a string value. The number type keeps its native
  * spinner; `value` is the input's string, such as `"42"`. A time is
- * `Field.TimePicker` and a date `Field.DatePicker`, with a text input beside
- * either read by `parseTime` or `parseDate` for a typed value. A date and
- * time is `Field.DateTimeInput`.
+ * `Field.TimePicker`, a date `Field.DatePicker` and both
+ * `Field.DateTimePicker`, with a text input beside any of them read by
+ * `parseTime`, `parseDate` or `parseDateTime` for a typed value.
  */
 export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number';
 
@@ -397,29 +397,7 @@ function TextInput({
   );
 }
 
-type TemporalInputProps<T> = {
-  /** The value, or `null` while the input is empty or incomplete. */
-  value: T | null;
-  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
-  onValueChange?: (value: T | null) => void;
-  min?: T;
-  max?: T;
-  ref?: Ref<HTMLInputElement>;
-} & Omit<
-  InputHTMLAttributes<HTMLInputElement>,
-  'value' | 'defaultValue' | 'type' | 'disabled' | 'onChange' | 'min' | 'max' | 'maxLength' | 'minLength'
->;
-
-export type FieldDateTimeInputProps = TemporalInputProps<Temporal.PlainDateTime>;
-
-type TemporalInputKind<T> = {
-  type: 'datetime-local';
-  format: (value: T) => string;
-  parse: (text: string) => T;
-};
-
-// A string for the input stops at the smallest unit that is set. The browser may
-// report more, such as 01:30:00 when step is under a minute; see sameText.
+// A time for a hidden input stops at the smallest unit that is set.
 function timeUnit(value: Temporal.PlainTime | Temporal.PlainDateTime) {
   if (value.millisecond || value.microsecond || value.nanosecond) return 'millisecond';
   return value.second ? 'second' : 'minute';
@@ -427,10 +405,6 @@ function timeUnit(value: Temporal.PlainTime | Temporal.PlainDateTime) {
 
 // HTML writes a year past 9999 as plain digits (20261-10-07); Temporal writes it
 // with a sign and six digits (+020261-10-07).
-function fromHtmlYear(text: string) {
-  return text.replace(/^(\d{5,6})(?=-)/, (year) => `+${year.padStart(6, '0')}`);
-}
-
 function toHtmlYear(text: string) {
   return text.replace(/^\+0*(\d{4,})(?=-)/, '$1');
 }
@@ -438,82 +412,9 @@ function toHtmlYear(text: string) {
 /** A date as HTML writes one, such as 2026-10-07, for Field.DatePicker's hidden input. */
 const htmlDate = (value: Temporal.PlainDate) => toHtmlYear(value.toString({ calendarName: 'never' }));
 
-const DATE_TIME: TemporalInputKind<Temporal.PlainDateTime> = {
-  type: 'datetime-local',
-  format: (value) => toHtmlYear(value.toString({ smallestUnit: timeUnit(value), calendarName: 'never' })),
-  parse: (text) => Temporal.PlainDateTime.from(fromHtmlYear(text)),
-};
-
-// Drops zero seconds and trailing zeros of a fraction, so 01:30:00.000 and 01:30 match.
-function canonicalTime(text: string) {
-  return text.replace(/(\d{2}:\d{2})(?::(\d{2})(?:\.(\d+))?)?$/, (_match, minutes: string, seconds = '00', digits = '') => {
-    const fraction = (digits as string).replace(/0+$/, '');
-    if (fraction) return `${minutes}:${seconds}.${fraction}`;
-    return seconds === '00' ? minutes : `${minutes}:${seconds}`;
-  });
-}
-
-// Whether the browser's own string already shows the value. Writing a different
-// string for the same value would reset what the user is typing.
-function sameText(typed: string, formatted: string) {
-  return canonicalTime(typed) === canonicalTime(formatted);
-}
-
-/** The value, `null` for an empty or incomplete input, or `undefined` for a string Temporal can't read. */
-function readTemporal<T>(kind: TemporalInputKind<T>, text: string): T | null | undefined {
-  if (text === '') return null;
-  try {
-    return kind.parse(text);
-  } catch (error) {
-    // A date the browser accepts past Temporal's range, which ends in the year 275760.
-    // Anything else, such as no Temporal at all, is the app's to fix, so it throws.
-    if (error instanceof RangeError) return undefined;
-    throw error;
-  }
-}
-
-function TemporalInput<T>({
-  kind,
-  value,
-  onChange,
-  onValueChange,
-  min,
-  max,
-  className,
-  ...props
-}: TemporalInputProps<T> & { kind: TemporalInputKind<T> }) {
-  const field = useField();
-  // The string the browser last reported, kept while it still shows `value`.
-  const [typed, setTyped] = useState<string | null>(null);
-  const formatted = value === null ? '' : kind.format(value);
-  const text = typed !== null && value !== null && sameText(typed, formatted) ? typed : formatted;
-  return (
-    <input
-      {...field.getControlProps(props)}
-      type={kind.type}
-      value={text}
-      min={min === undefined ? undefined : kind.format(min)}
-      max={max === undefined ? undefined : kind.format(max)}
-      className={cx(styles.input, className)}
-      // Without either handler the input is read-only, and React says so.
-      onChange={
-        onChange || onValueChange
-          ? (event) => {
-              const next = onValueChange ? readTemporal(kind, event.target.value) : undefined;
-              setTyped(event.target.value);
-              onChange?.(event);
-              if (next !== undefined) onValueChange?.(next);
-            }
-          : undefined
-      }
-    />
-  );
-}
-
-/** A native `datetime-local` input whose value is a `Temporal.PlainDateTime`. */
-function DateTimeInput(props: FieldDateTimeInputProps) {
-  return <TemporalInput {...props} kind={DATE_TIME} />;
-}
+/** A date and time as HTML writes one, such as 2026-10-07T09:30, for Field.DateTimePicker's hidden input. */
+const htmlDateTime = (value: Temporal.PlainDateTime) =>
+  toHtmlYear(value.withCalendar('iso8601').toString({ smallestUnit: timeUnit(value), calendarName: 'never' }));
 
 export type FieldTextareaProps = {
   value: string;
@@ -786,7 +687,7 @@ export type FieldColorPickerProps = {
  * The field's control: a button the height of a line of field text, filled
  * with the color. It opens a ColorPicker in a popover, as does a press
  * elsewhere in the field. Beside any other control in the field but a
- * Field.ColorPicker, Field.DatePicker or Field.TimePicker, such as a Field.TextInput, that
+ * Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput, that
  * control is the field's control instead, and the button is named from the colorPicker string.
  */
 function ColorPicker({
@@ -869,7 +770,7 @@ function ColorPicker({
 }
 
 /**
- * What Field.DatePicker and Field.TimePicker share: the button's control
+ * What Field.DatePicker, Field.TimePicker and Field.DateTimePicker share: the button's control
  * props, the open state, which closes when the field is disabled, and the
  * popover, which focuses the element `focusSelector` finds when it opens.
  */
@@ -993,7 +894,7 @@ export type FieldDatePickerProps = {
  * A button that opens a Calendar in a popover. On its own it is the field's
  * control and shows the date, and a press elsewhere in the field opens the
  * calendar. Beside any other control but a Field.ColorPicker,
- * Field.DatePicker or Field.TimePicker, such as a Field.TextInput to type the date in, that
+ * Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type the date in, that
  * control is the field's control instead, and the button is named from the
  * datePicker string. With `showValue={false}` the button shows only a
  * calendar glyph.
@@ -1206,7 +1107,7 @@ function TimeList({
  * A button that opens a list of times in a popover and closes it on a picked
  * time. On its own it is the field's control and shows the time, and a press
  * elsewhere in the field opens the list. Beside any other control but a
- * Field.ColorPicker, Field.DatePicker or Field.TimePicker, such as a
+ * Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a
  * Field.TextInput to type the time in, that control is the field's control
  * instead, and the button is named from the timePicker string. With
  * `showValue={false}` the button shows only a clock glyph.
@@ -1286,6 +1187,245 @@ function TimePicker({
               onValueChange?.(next);
               picker.setOpen(false, 'select');
             }}
+          />
+        </Popover.Root>
+      ) : null}
+    </>
+  );
+}
+
+/** Why Field.DateTimePicker's popover closed: a popover's reasons, a picked time with a date, or the field became disabled. */
+export type FieldDateTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
+
+export type FieldDateTimePickerProps = {
+  /** The date and time, or null for none. */
+  value: Temporal.PlainDateTime | null;
+  /** Fires with the date and time once both are picked, and again as either changes. */
+  onValueChange?: (value: Temporal.PlainDateTime) => void;
+  /** The earliest date and time that can be picked. */
+  min?: Temporal.PlainDateTime;
+  /** The latest date and time that can be picked. */
+  max?: Temporal.PlainDateTime;
+  /** Returns true for a date that cannot be picked, such as a holiday. */
+  isDateDisabled?: (date: Temporal.PlainDate) => boolean;
+  /** The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7. */
+  firstDayOfWeek?: CalendarFirstDayOfWeek;
+  /** Minutes between the times in the list, from midnight. Defaults to 30. */
+  step?: number;
+  /** The locale for the button's text, the calendar's names and the times, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
+  locale?: string;
+  /** Shown on the button while there is no date and time, when showValue is true. */
+  placeholder?: string;
+  /** Whether the button shows the date and time, or the placeholder, beside its glyph. Set it to false beside a text input that shows them. Defaults to true. */
+  showValue?: boolean;
+  /** Controlled open state of the popover. Pass with onOpenChange. */
+  open?: boolean;
+  /** Initial open state when uncontrolled. */
+  defaultOpen?: boolean;
+  /** Fires when the popover opens or closes, with why it closed. */
+  onOpenChange?: (open: boolean, reason: FieldDateTimePickerCloseReason) => void;
+} & Omit<
+  ComponentPropsWithRef<'button'>,
+  'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
+>;
+
+const LIST = '[role="listbox"]';
+
+// The calendar and the list of times, which hold a date or a time picked
+// before the other, and report the two together.
+function DateTimePanel({
+  value,
+  min,
+  max,
+  isDateDisabled,
+  firstDayOfWeek,
+  step,
+  locale,
+  label,
+  onValueChange,
+  onDone,
+}: {
+  value: Temporal.PlainDateTime | null;
+  min?: Temporal.PlainDateTime;
+  max?: Temporal.PlainDateTime;
+  isDateDisabled?: (date: Temporal.PlainDate) => boolean;
+  firstDayOfWeek?: CalendarFirstDayOfWeek;
+  step: number;
+  locale?: string;
+  label: string;
+  onValueChange?: (value: Temporal.PlainDateTime) => void;
+  onDone: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  // What takes focus once a pick has rendered, after the calendar or list has moved its own.
+  const focusNext = useRef<string | null>(null);
+  useEffect(() => {
+    if (!focusNext.current) return;
+    ref.current?.querySelector<HTMLElement>(focusNext.current)?.focus();
+    focusNext.current = null;
+  });
+  const [date, setDate] = useState(() => (value ? isoDate(value.toPlainDate()) : null));
+  const [time, setTime] = useState(() => value?.toPlainTime() ?? null);
+  // A new value from outside, such as one typed beside the picker, replaces what was picked.
+  const [shown, setShown] = useState(value);
+  if (shown === null ? value !== null : value === null || !shown.equals(value)) {
+    setShown(value);
+    setDate(value ? isoDate(value.toPlainDate()) : null);
+    setTime(value?.toPlainTime() ?? null);
+  }
+  const minDate = min?.toPlainDate();
+  const maxDate = max?.toPlainDate();
+  // Only the times on the date that are in range.
+  const minTime = min && date?.equals(isoDate(min.toPlainDate())) ? min.toPlainTime() : undefined;
+  const maxTime = max && date?.equals(isoDate(max.toPlainDate())) ? max.toPlainTime() : undefined;
+  const report = (nextDate: Temporal.PlainDate, nextTime: Temporal.PlainTime) => {
+    const next = nextDate.toPlainDateTime(nextTime);
+    const inRange =
+      (!min || Temporal.PlainDateTime.compare(next, min) >= 0) && (!max || Temporal.PlainDateTime.compare(next, max) <= 0);
+    if (inRange) onValueChange?.(next);
+    return inRange;
+  };
+  return (
+    <div ref={ref} className={styles.dateTimePanel}>
+      <CalendarParts.Root
+        value={date}
+        onValueChange={(next) => {
+          setDate(next);
+          if (time) report(next, time);
+          // The time comes next.
+          focusNext.current = LIST;
+        }}
+        min={minDate}
+        max={maxDate}
+        isDateDisabled={isDateDisabled}
+        firstDayOfWeek={firstDayOfWeek}
+        locale={locale}
+      >
+        <CalendarParts.Header />
+        <CalendarParts.Grid />
+      </CalendarParts.Root>
+      <div className={styles.dateTimeTimes}>
+        <TimeList
+          value={time}
+          step={step}
+          min={minTime}
+          max={maxTime}
+          locale={locale}
+          label={label}
+          onPick={(next) => {
+            setTime(next);
+            if (date) {
+              if (report(date, next)) onDone();
+            } else {
+              // The date comes next.
+              focusNext.current = CALENDAR_TAB_STOP;
+            }
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/** The date and time as the button shows them: the date in its medium style and the time in its short style, or medium with seconds. */
+function dateTimeLabel(value: Temporal.PlainDateTime, locale: string | undefined) {
+  const seconds = value.second || value.millisecond || value.microsecond || value.nanosecond;
+  return value
+    .withCalendar('iso8601')
+    .toLocaleString(locale, { dateStyle: 'medium', timeStyle: seconds ? 'medium' : 'short', calendar: GREGORY });
+}
+
+/**
+ * A button that opens a Calendar and a list of times in a popover, side by
+ * side, or the list under the calendar on a narrow screen. A picked date and a picked time make the value, and picking the
+ * time closes the popover. On its own it is the field's control and shows
+ * the date and time, and a press elsewhere in the field opens the popover.
+ * Beside any other control but a Field.ColorPicker, Field.DatePicker,
+ * Field.TimePicker or Field.DateTimePicker, such as a Field.TextInput to type
+ * the date and time in, that control is the field's control instead, and the
+ * button is named from the dateTimePicker string. With `showValue={false}`
+ * the button shows only a calendar glyph.
+ */
+function DateTimePicker({
+  value,
+  onValueChange,
+  min,
+  max,
+  isDateDisabled,
+  firstDayOfWeek,
+  step = 30,
+  locale,
+  placeholder,
+  showValue = true,
+  open,
+  defaultOpen,
+  onOpenChange,
+  className,
+  style,
+  'aria-describedby': describedBy,
+  ...props
+}: FieldDateTimePickerProps) {
+  const strings = useStrings();
+  const { calendar } = useGlyphs();
+  const textId = useDomId();
+  // The button's name is not the date and time, so what it shows is its description.
+  const picker = useFieldPicker<'select'>({
+    props: { ...props, 'aria-describedby': showValue ? mergeDescribedBy(describedBy, textId) : describedBy },
+    label: strings.dateTimePicker,
+    open,
+    defaultOpen,
+    onOpenChange,
+    style,
+    // The calendar's Tab stop: the date, or else today or the nearest date in range.
+    focusSelector: CALENDAR_TAB_STOP,
+  });
+  return (
+    <>
+      <button
+        {...picker.triggerProps}
+        type="button"
+        data-todae-field-picker=""
+        data-glyph-only={showValue ? undefined : ''}
+        className={cx(styles.picker, className)}
+      >
+        {showValue ? (
+          <span id={textId} className={styles.pickerText} data-placeholder={value ? undefined : ''}>
+            {value ? dateTimeLabel(value, locale) : placeholder}
+          </span>
+        ) : null}
+        <span className={styles.pickerGlyph} data-todae-glyph="" aria-hidden="true">
+          {glyphOr(calendar, <CalendarGlyph />)}
+        </span>
+      </button>
+      {/* A button sends nothing with a form, so the value goes in a hidden input. */}
+      {picker.name ? (
+        <input
+          type="hidden"
+          name={picker.name}
+          value={value ? htmlDateTime(value) : ''}
+          disabled={picker.disabled}
+          form={picker.form}
+        />
+      ) : null}
+      {/* Mounted while open only: a form can hold many date and time pickers. */}
+      {picker.shown ? (
+        <Popover.Root
+          {...picker.popover.getPopoverProps()}
+          role="dialog"
+          aria-label={strings.dateTimePicker}
+          className={styles.datePickerPopover}
+        >
+          <DateTimePanel
+            value={value}
+            min={min}
+            max={max}
+            isDateDisabled={isDateDisabled}
+            firstDayOfWeek={firstDayOfWeek}
+            step={step}
+            locale={locale}
+            label={strings.timePicker}
+            onValueChange={onValueChange}
+            onDone={() => picker.setOpen(false, 'select')}
           />
         </Popover.Root>
       ) : null}
@@ -1389,7 +1529,7 @@ export const Field = {
   ColorPicker,
   DatePicker,
   TimePicker,
-  DateTimeInput,
+  DateTimePicker,
   Icon,
   Affix,
   Counter,

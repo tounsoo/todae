@@ -172,7 +172,8 @@ export {
   type FieldAffixProps,
   type FieldChipInputProps,
   type FieldCounterProps,
-  type FieldDateTimeInputProps,
+  type FieldDateTimePickerCloseReason,
+  type FieldDateTimePickerProps,
   type FieldGroupProps,
   type FieldIconProps,
   type FieldRootProps,
@@ -222,6 +223,7 @@ export {
 export { normalizeHex } from './components/color';
 export { formatDate, parseDate, type DateTextOptions } from './components/dateText';
 export { formatTime, parseTime, type TimeTextOptions } from './components/timeText';
+export { formatDateTime, parseDateTime, type DateTimeTextOptions } from './components/dateTimeText';
 export {
   Calendar,
   type CalendarFirstDayOfWeek,

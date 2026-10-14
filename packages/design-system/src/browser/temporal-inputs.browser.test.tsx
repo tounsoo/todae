@@ -21,7 +21,7 @@ function DateTime() {
   return (
     <>
       <Field.Root aria-label="Start">
-        <Field.DateTimeInput step={1} value={start} onValueChange={setStart} />
+        <Field.DateTimePicker locale="en-US" value={start} onValueChange={setStart} />
       </Field.Root>
       <output>{start?.toString() ?? 'none'}</output>
     </>
@@ -44,22 +44,23 @@ describe('Field time and date-time parts in a browser', () => {
     expect(button.textContent).toBe('10:00 AM');
   });
 
-  it('keeps typing intact in a date and time input that shows seconds', async () => {
+  it('picks a date, then a time, with the keyboard, and gives focus back to the button', async () => {
     const { container } = render(<DateTime />);
-    const input = container.querySelector('input')!;
-    input.focus();
-    // Month, day and year come first in en-US; three moves reach the hour.
-    await userEvent.keyboard('{ArrowRight}{ArrowRight}{ArrowRight}14');
-    expect(container.querySelector('output')!.textContent).toBe('2026-10-07T14:30:00');
-  });
-
-  it('reads and shows a year past 9999', async () => {
-    const { container } = render(<DateTime />);
-    const input = container.querySelector('input')!;
-    input.focus();
-    // The year is the third segment in an en-US date and time.
-    await userEvent.keyboard('{ArrowRight}{ArrowRight}20261');
-    expect(container.querySelector('output')!.textContent).toBe('+020261-10-07T01:30:00');
-    expect(input.value).toBe('20261-10-07T01:30');
+    const output = () => container.querySelector('output')!.textContent;
+    const button = screen.getByRole('button', { name: 'Start' });
+    await userEvent.click(button);
+    screen.getByRole('dialog', { name: 'Choose date and time' });
+    await expect.poll(() => document.activeElement?.textContent).toBe('7');
+    // A new date keeps the time, and the list of times takes focus.
+    await userEvent.keyboard('{ArrowRight}{Enter}');
+    expect(output()).toBe('2026-10-08T01:30:00');
+    const list = screen.getByRole('listbox', { name: 'Choose time' });
+    await expect.poll(() => document.activeElement).toBe(list);
+    expect(document.getElementById(list.getAttribute('aria-activedescendant')!)!.textContent).toBe('1:30 AM');
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    expect(output()).toBe('2026-10-08T02:00:00');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await expect.poll(() => document.activeElement).toBe(button);
+    expect(button.textContent).toBe('Oct 8, 2026, 2:00 AM');
   });
 });

@@ -62,7 +62,7 @@ describe('SiteNav', () => {
       '/field/chip-input',
       '/field/color-picker',
       '/field/date-picker',
-      '/field/date-time-input',
+      '/field/date-time-picker',
       '/field/select',
       '/field/textarea',
       '/field/text-input',

@@ -41,11 +41,18 @@ type LocaleTime = {
 
 const localeTimes = new Map<string, LocaleTime>();
 
-// Splits a letter from a digit beside it, so "9pm" and "21h30" read as words and numbers.
+// Splits a letter from a digit beside it, so "9pm" and "21h30" read as words
+// and numbers, and a Latin letter from a letter of another script, so "AMకి"
+// in te reads as "am" and "కి".
 const split = (text: string) =>
   normalize(text)
     .replace(/(\d)(\p{L})/gu, '$1 $2')
-    .replace(/(\p{L})(\d)/gu, '$1 $2');
+    .replace(/(\p{L}\p{M}*)(\d)/gu, '$1 $2')
+    .replace(/(\p{Script=Latin}\p{M}*)(?=[^\P{L}\p{Script=Latin}])/gu, '$1 ')
+    .replace(/([^\P{L}\p{Script=Latin}]\p{M}*)(?=\p{Script=Latin})/gu, '$1 ');
+
+/** The words and numbers of typed text, normalized, split where `split` splits them. */
+export const splitWords = (text: string) => split(text).split(' ').filter(Boolean);
 
 function localeTime(locale: string | undefined): LocaleTime {
   const key = locale ?? '';
@@ -96,7 +103,7 @@ function localeTime(locale: string | undefined): LocaleTime {
  */
 export function parseTime(text: string, options: TimeTextOptions = {}): Temporal.PlainTime | null {
   const { periods, literals } = localeTime(options.locale);
-  const tokens = split(text).split(' ').filter(Boolean);
+  const tokens = splitWords(text);
   if (tokens.length === 0) return null;
   // A word for the part of the day, first or last. The locale may write it as
   // several words, such as "p. m.", which may be typed with or without spaces.
