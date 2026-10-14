@@ -145,9 +145,11 @@ export const PRESETS: readonly ThemePreset[] = [
       'card.border': oklch(1, 0, 0),
       'card.shadow': [shadow(0, 1, 2, 0, alpha(oklch(0.2, 0.01, 255), 0.05)), shadow(0, 10, 30, 0, alpha(oklch(0.2, 0.01, 255), 0.07))],
       ...filled(oklch(0.935, 0.005, 200), oklch(0.925, 0.006, 200)),
-      // Placeholder, adornment and disabled text read color.fg.placeholder;
-      // Porcelain's gray 500 is too faint on the field fill, so use gray 600.
-      'color.fg.placeholder': PORCELAIN_GRAYS['color.gray.600'],
+      // Gray 500 is too faint on the field fill, so a field's placeholder and
+      // adornment use gray 600. The global placeholder color stays, so disabled
+      // text elsewhere stays fainter than muted text.
+      'field.fg.placeholder': PORCELAIN_GRAYS['color.gray.600'],
+      'field.fg.adornment': PORCELAIN_GRAYS['color.gray.600'],
       ...accent(oklch(0.5, 0.09, 165), oklch(0.56, 0.09, 165), oklch(0.44, 0.09, 165), oklch(0.99, 0, 0)),
     },
     {
