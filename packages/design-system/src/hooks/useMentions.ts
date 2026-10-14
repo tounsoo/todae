@@ -245,7 +245,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     }
   }, [value]);
 
-  // Waits for the picked text, which a parent may commit later; an edit, a key, a press or another text ends the wait.
+  // Waits for the picked text, which a parent may commit later; an edit, a caret key, a primary press or another text ends the wait.
   useLayoutEffect(() => {
     if (!caretAfter) return;
     if (value !== caretAfter.value) {
@@ -504,7 +504,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     const onBeforeInput = () => {
       selectionBefore.current = { start: el.selectionStart, end: el.selectionEnd };
     };
-    // A press on the textarea ends the wait for a pick the product never commits.
+    // A primary press on the textarea ends the wait for a pick the product never commits.
     const release = (event: PointerEvent) => {
       if (event.button === 0) setCaretAfter(null);
     };
