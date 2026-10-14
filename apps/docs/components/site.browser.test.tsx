@@ -268,7 +268,7 @@ describe('narrow screens', () => {
   });
 
   it('ends the stage at the playground bar on a screen taller than the page', async () => {
-    await page.viewport(390, 2400);
+    await page.viewport(390, 6000);
     // With the top bar, as on the site, since the stage's height leaves room for it.
     render(
       <Providers>

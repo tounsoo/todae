@@ -1283,8 +1283,28 @@ table {
   border-block-end: 1px solid var(--todae-color-border-subtle);
 }
 
+.preview-list li > :last-child {
+  flex: none;
+}
+
 .preview-list li:last-child {
   border-block-end: 0;
+}
+
+.preview table {
+  inline-size: 100%;
+}
+
+.preview-num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.preview-loading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
 }
 
 .preview-alerts {
