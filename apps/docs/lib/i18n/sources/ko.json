@@ -77,7 +77,7 @@
     "## Range and locale": "38c6da99f7fd",
     "## Temporal": "084d2fd73acf",
     "## Accessible composition": "0c0c5d991a3f",
-    "## When to use": "a8ee5136ab16",
+    "## When to use": "606318938d38",
     "## Props": "1736b176a33c",
     "(section order)": "b32de0f3c71a"
   },
@@ -262,7 +262,7 @@
     "## On its own": "295428996e2c",
     "## Accessible composition": "12fb3517a0d1",
     "## When to use": "d57fe8233a0b",
-    "### Field.DatePicker": "01386d1ffa51",
+    "### Field.DatePicker": "ec98024d5cfe",
     "## Props": "4d3b8d5a61e4",
     "(section order)": "e66dc8c40754"
   },
@@ -300,11 +300,11 @@
   "field/time-input": {
     "(top)": "e65d0e5ede0b",
     "# Field.TimeInput": "50456dd537cb",
-    "## A date and time": "b02364afeda8",
+    "## A date and time": "5f5c1b8515f8",
     "## Temporal": "fdb3c62be316",
     "## Accessible composition": "5f08e1bda3fa",
     "## When to use": "d57fe8233a0b",
-    "### Field.TimeInput": "bf7791bd8499",
+    "### Field.TimeInput": "2dc1470e51d2",
     "## Props": "f90e91d69375",
     "(section order)": "8a12f2fd555d"
   },
@@ -406,7 +406,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "b528c9e13955",
+    "# Native platform": "278d868b9a62",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {

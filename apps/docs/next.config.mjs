@@ -8,6 +8,7 @@ const REDIRECTS = [
   ['/combobox', '/recipes/combobox'],
   ['/recipes/chip-list', '/chip-list'],
   ['/field/date-input', '/field/date-picker'],
+  ['/field/date-time-input', '/field/time-input'],
 ];
 
 // Vercel names the project's production domain in every deployment, previews included.

@@ -647,7 +647,7 @@ export function FieldTime() {
   );
 }
 
-// A date and a time are two fields in one fieldset; the app joins them.
+// A date and a time are two fields in one fieldset.
 export function FieldDateAndTime() {
   const dateId = useId();
   const timeId = useId();
@@ -657,7 +657,7 @@ export function FieldDateAndTime() {
   return (
     <Fieldset.Root>
       <Fieldset.Legend>Meeting starts</Fieldset.Legend>
-      <Stack.Root direction="row">
+      <Stack.Root direction="row" wrap>
         <Field.Group>
           <Label.Root htmlFor={dateId}>Date</Label.Root>
           <Field.Root id={dateId}>

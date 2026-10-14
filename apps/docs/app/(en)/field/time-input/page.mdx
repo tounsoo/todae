@@ -22,7 +22,7 @@ const [time, setTime] = useState<Temporal.PlainTime | null>(null);
 
 ## A date and time
 
-A date and time on the user's clock, such as when a meeting starts, is a [Field.DatePicker](/field/date-picker) and a `Field.TimeInput`, each in its own field, grouped by a [Fieldset](/fieldset). Once both are set, `date.toPlainDateTime(time)` joins them into a `Temporal.PlainDateTime`, which has no time zone. To store an instant, combine it with a time zone in your own code, such as `dateTime.toZonedDateTime(zone)`.
+A date and time on the user's clock, such as when a meeting starts, is a [Field.DatePicker](/field/date-picker) and a `Field.TimeInput`, each in its own field, grouped by a [Fieldset](/fieldset). Once both are set, `date.toPlainDateTime(time)` joins them into a `Temporal.PlainDateTime`, which has no time zone. To store an instant, combine it with a time zone in your own code, such as `start.toZonedDateTime(zone)`.
 
 ```tsx
 const dateId = useId();
@@ -33,7 +33,7 @@ const start = date && time ? date.toPlainDateTime(time) : null;
 
 <Fieldset.Root>
   <Fieldset.Legend>Meeting starts</Fieldset.Legend>
-  <Stack.Root direction="row">
+  <Stack.Root direction="row" wrap>
     <Field.Group>
       <Label.Root htmlFor={dateId}>Date</Label.Root>
       <Field.Root id={dateId}>
@@ -70,9 +70,9 @@ Todae ships no Temporal polyfill. `onValueChange` reads the input with `Temporal
 
 ### Field.TimeInput
 
-**When:** A time of day with no date, such as opening hours or a daily reminder.
+**When:** A time of day, such as opening hours or a daily reminder. For a time on a given day, put it beside a `Field.DatePicker` in a Fieldset.
 
-**When not:** A time on a given day → this input beside a `Field.DatePicker`, as above. A duration → `Field.TextInput` with `type="number"` and an `Affix` for the unit.
+**When not:** A duration → `Field.TextInput` with `type="number"` and an `Affix` for the unit.
 
 ## Props
 

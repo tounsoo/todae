@@ -453,6 +453,7 @@ function TimeInput({ value, onChange, onValueChange, min, max, className, ...pro
       onChange={
         onChange || onValueChange
           ? (event) => {
+              // The browser only reports a valid time or '', which Temporal always reads.
               const next = onValueChange && event.target.value !== '' ? Temporal.PlainTime.from(event.target.value) : null;
               setTyped(event.target.value);
               onChange?.(event);
