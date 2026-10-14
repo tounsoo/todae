@@ -55,8 +55,8 @@ function radii(sm: number, md: number, lg: number): ThemeOverride {
 const px = (value: number) => ({ value, unit: 'px' }) as const;
 
 /** One shadow layer: x, y, blur and spread in px, then its color. */
-function shadow(x: number, y: number, blur: number, spread: number, color: ThemeColorValue): ThemeShadowLayer {
-  return { offsetX: px(x), offsetY: px(y), blur: px(blur), spread: px(spread), color };
+function shadow(x: number, y: number, blur: number, spread: number, color: ThemeColorValue, inset = false): ThemeShadowLayer {
+  return { offsetX: px(x), offsetY: px(y), blur: px(blur), spread: px(spread), color, ...(inset ? { inset } : {}) };
 }
 
 const alpha = (color: ThemeColorValue, a: number): ThemeColorValue => ({ ...color, alpha: a });
@@ -84,6 +84,17 @@ function chartreuseButton(ink: ThemeColorValue): ThemeOverride {
 /** Acid's hard, unblurred shadows in the border's color; ghost buttons stay flat. */
 function hardShadows(color: ThemeColorValue): ThemeOverride {
   return { 'card.shadow': shadow(6, 6, 0, 0, color), 'button.primary.shadow': shadow(3, 3, 0, 0, color), 'button.secondary.shadow': shadow(3, 3, 0, 0, color) };
+}
+
+/** Riso's second ink, printed off-register behind cards and the filled buttons. */
+function offsetInk(ink: ThemeColorValue): ThemeOverride {
+  return { 'card.shadow': shadow(5, 5, 0, 0, ink), 'button.primary.shadow': shadow(3, 3, 0, 0, ink), 'button.secondary.shadow': shadow(3, 3, 0, 0, ink) };
+}
+
+/** Y2K Chrome's glossy buttons: a highlight along the top edge over a soft tinted drop. */
+function gloss(highlight: ThemeColorValue, drop: ThemeColorValue): ThemeOverride {
+  const layers = [shadow(0, 1, 0, 0, highlight, true), shadow(0, 2, 6, 0, drop)];
+  return { 'button.primary.shadow': layers, 'button.secondary.shadow': layers };
 }
 
 /** Uppercase, widely spaced buttons, tabs, labels and table headers; spacing in rem. */
@@ -174,6 +185,51 @@ export const PRESETS: readonly ThemePreset[] = [
       'card.shadow': shadow(0, 12, 48, 0, alpha(oklch(0.7, 0.22, 350), 0.22)),
       ...accent(oklch(0.82, 0.14, 350), oklch(0.86, 0.12, 350), oklch(0.79, 0.15, 350), oklch(0.15, 0.05, 340)),
       'focus.ring.color': oklch(0.82, 0.14, 350),
+    },
+  ),
+  preset(
+    'riso',
+    'Riso',
+    { ...radii(0.125, 0.25, 0.375), 'border.width': rem(0.125), 'font.weight.medium': 600, 'font.weight.bold': 800 },
+    {
+      // Uncoated paper, fluorescent pink ink and a teal second color.
+      ...grays(80, 0.02),
+      'color.bg.canvas': oklch(0.95, 0.02, 85),
+      ...accent(oklch(0.62, 0.24, 0), oklch(0.67, 0.23, 0), oklch(0.57, 0.24, 0), oklch(0.99, 0.01, 0)),
+      ...offsetInk(alpha(oklch(0.62, 0.12, 190), 0.85)),
+      'focus.ring.color': oklch(0.55, 0.12, 200),
+    },
+    {
+      // The same inks printed on navy stock.
+      ...grays(260, 0.03),
+      'color.bg.canvas': oklch(0.17, 0.035, 260),
+      ...accent(oklch(0.8, 0.15, 0), oklch(0.84, 0.13, 0), oklch(0.78, 0.16, 0), oklch(0.13, 0.03, 0)),
+      ...offsetInk(alpha(oklch(0.7, 0.12, 190), 0.85)),
+      'focus.ring.color': oklch(0.75, 0.12, 190),
+    },
+  ),
+  preset(
+    'y2k-chrome',
+    'Y2K Chrome',
+    { ...radii(0.75, 1, 1.5), ...PILLS, 'font.weight.medium': 600, 'font.weight.bold': 800 },
+    {
+      // Lilac and silver, with an iridescent card edge.
+      ...grays(300, 0.03),
+      'color.bg.canvas': oklch(0.95, 0.02, 300),
+      'card.border': oklch(0.85, 0.05, 300),
+      'card.shadow': shadow(0, 12, 32, 0, alpha(oklch(0.5, 0.1, 300), 0.15)),
+      ...accent(oklch(0.56, 0.18, 305), oklch(0.61, 0.17, 305), oklch(0.51, 0.18, 305), oklch(0.99, 0, 0)),
+      ...gloss(alpha(oklch(1, 0, 0), 0.6), alpha(oklch(0.4, 0.1, 300), 0.25)),
+      'focus.ring.color': oklch(0.56, 0.18, 305),
+    },
+    {
+      ...grays(290, 0.035),
+      'color.bg.canvas': oklch(0.15, 0.03, 290),
+      'card.border': oklch(0.45, 0.08, 300),
+      'card.shadow': shadow(0, 12, 40, 0, alpha(oklch(0, 0, 0), 0.5)),
+      ...accent(oklch(0.82, 0.12, 305), oklch(0.86, 0.1, 305), oklch(0.78, 0.13, 305), oklch(0.17, 0.04, 300)),
+      ...gloss(alpha(oklch(1, 0, 0), 0.35), alpha(oklch(0, 0, 0), 0.4)),
+      'focus.ring.color': oklch(0.82, 0.12, 305),
     },
   ),
 ];

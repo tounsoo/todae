@@ -18,6 +18,7 @@ import {
   GlyphsProvider,
   Kbd,
   Label,
+  Link,
   Menu,
   Message,
   Meter,
@@ -91,9 +92,9 @@ export function Preview({ library }: { library?: IconLibrary }) {
             <div>
               <Breadcrumbs.Root>
                 <Breadcrumbs.Item>
-                  <a href="#preview" onClick={(event) => event.preventDefault()}>
+                  <Link.Root href="#preview" onClick={(event) => event.preventDefault()}>
                     Acme
-                  </a>
+                  </Link.Root>
                 </Breadcrumbs.Item>
                 <Breadcrumbs.Item current>Billing</Breadcrumbs.Item>
               </Breadcrumbs.Root>
