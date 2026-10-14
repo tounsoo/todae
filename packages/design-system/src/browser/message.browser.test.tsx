@@ -124,12 +124,12 @@ describe('Message.Root in a browser', () => {
     for (const id of ['header-text', 'content-text', 'button']) expect(center(id), id).toBeCloseTo(center('system'), 0);
   });
 
-  it('runs assistant content the full width, and keeps the parts spaced beside a tall avatar', () => {
+  it('runs assistant content the full width, and keeps the parts spaced beside a tall avatar with no header', () => {
     render(
       <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
         <Message.Root data-testid="assistant">
           <Message.Avatar data-testid="avatar" style={{ blockSize: '200px' }} />
-          <Message.Header data-testid="header">Assistant</Message.Header>
+          <Message.Content data-testid="first">Reasoning</Message.Content>
           <Message.Content data-testid="content">Short</Message.Content>
           <Message.Actions data-testid="actions">
             <button type="button">Copy</button>
@@ -141,9 +141,35 @@ describe('Message.Root in a browser', () => {
     expect(box('content').right).toBeCloseTo(box('assistant').right, 0);
     const gap = parseFloat(getComputedStyle(screen.getByTestId('content')).marginBlockStart);
     expect(gap).toBeGreaterThan(0);
-    expect(box('content').top - box('header').bottom).toBeCloseTo(gap, 0);
+    expect(box('first').top).toBeCloseTo(box('assistant').top, 0);
+    expect(box('content').top - box('first').bottom).toBeCloseTo(gap, 0);
     expect(box('actions').top - box('content').bottom).toBeCloseTo(gap, 0);
     expect(box('assistant').height).toBeCloseTo(200, 0);
+  });
+
+  it.each(['assistant', 'user'] as const)('centers the avatar on the header row of a %s message', (from) => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
+        <Message.Root data-testid="message" from={from}>
+          <Message.Avatar data-testid="avatar">
+            <Avatar.Root size="lg">
+              <Avatar.Fallback>A</Avatar.Fallback>
+            </Avatar.Root>
+          </Message.Avatar>
+          <Message.Header data-testid="header">
+            <strong>Assistant</strong>
+            <time dateTime="2026-10-14T09:41">9:41</time>
+          </Message.Header>
+          <Message.Content data-testid="content">Give it a name.</Message.Content>
+        </Message.Root>
+      </div>,
+    );
+    const box = (id: string) => screen.getByTestId(id).getBoundingClientRect();
+    const middle = (r: DOMRect) => r.top + r.height / 2;
+    expect(box('header').height).toBeLessThan(box('avatar').height);
+    expect(middle(box('header'))).toBeCloseTo(middle(box('avatar')), 0);
+    expect(box('avatar').top).toBeCloseTo(box('message').top, 0);
+    expect(box('content').top).toBeGreaterThanOrEqual(box('avatar').bottom - 0.5);
   });
 
   it('outlines the user bubble in forced colors', async () => {

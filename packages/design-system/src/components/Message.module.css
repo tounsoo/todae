@@ -32,6 +32,18 @@
     display: flex;
   }
 
+  /* With a header, the avatar sits in the header's row, and the two are
+     centered on each other; the parts below start under that row. */
+  .root:has(> .header) > .avatar {
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .root:has(> .avatar) > .header {
+    grid-row: 1;
+    align-self: center;
+  }
+
   /* A user's message sits at the end side, its text in a bubble, with the
      avatar after it. */
   .root[data-from='user'] {
