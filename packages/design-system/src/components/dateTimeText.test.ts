@@ -14,7 +14,7 @@ const LOCALES = [
 ];
 const VALUES = [
   at('2026-10-13T00:00'), at('2026-10-13T09:30'), at('2026-01-02T12:45'), at('2026-12-31T21:30'),
-  at('1999-07-04T23:59'), at('2026-03-09T09:30:15'),
+  at('1999-07-04T23:59'), at('2026-03-09T09:30:15'), at('2023-10-23T21:30'), at('2012-12-12T12:12'),
 ];
 
 describe('formatDateTime', () => {
@@ -80,7 +80,7 @@ describe('parseDateTime', () => {
       ),
     ];
     for (const locale of all) {
-      for (const value of [at('2026-10-13T21:30:15'), at('1999-01-02T09:05:59')]) {
+      for (const value of [at('2026-10-13T21:30:15'), at('1999-01-02T09:05:59'), at('2023-10-23T21:30:15'), at('2012-12-12T12:12:12')]) {
         for (const [date, time] of styles) {
           const dateOnly = value.toPlainDate().toLocaleString(locale, { ...date, ...gregory });
           const timeOnly = value.toLocaleString(locale, { ...time, ...gregory });
@@ -110,6 +110,12 @@ describe('parseDateTime', () => {
     expect(read('13.10.2026,21:30', 'de')).toBe('2026-10-13T21:30:00');
     expect(read('10/13/26 9:05', 'en-US')).toBe('2026-10-13T09:05:00');
     expect(read('Oct 13 26 9:05', 'en-US')).toBe('2026-10-13T09:05:00');
+  });
+
+  it('reads a day that matches the last digits of the year, where the day ends the date', () => {
+    expect(read('2023. 10. 23. 21:30', 'ko')).toBe('2023-10-23T21:30:00');
+    expect(read('2012. 12. 12. 12:12', 'hu')).toBe('2012-12-12T12:12:00');
+    expect(read('2020. febr. 20. 20:20', 'hu')).toBe('2020-02-20T20:20:00');
   });
 
   it('needs a space or a comma where a number of the date meets a number of the time', () => {

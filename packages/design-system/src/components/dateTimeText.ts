@@ -138,8 +138,7 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
     while (end && last > first + 1 && joiners.has(words[last - 1]!)) last--;
     return words.slice(first, last).join(' ');
   };
-  const read = (dateText: string, timeText: string) => {
-    const date = parseDate(dateText, options);
+  const read = (date: Temporal.PlainDate | null, timeText: string) => {
     const time = date && parseTime(timeText, options);
     if (!date || !time) return;
     const value = date.toPlainDateTime(time);
@@ -154,9 +153,15 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
         const timeText = trim(after, strip, true);
         // A date typed without a year must not take the time's hour as one, as
         // in "10/13 9 05": a last number of one or two digits, standing alone,
-        // that is the year and also starts a time with the rest.
+        // read as the year, since another number there changes the year and
+        // not the day, and that also starts a time with the rest.
         const last = list[at - 1]!;
         const date = parseDate(trim(before, true, strip), options);
+        const asYear = () => {
+          const other = [...list.slice(0, at - 1), { ...last, text: String((Number(last.text) + 1) % 100) }];
+          const changed = parseDate(trim(render(other), true, strip), options);
+          return changed !== null && changed.year !== date!.year;
+        };
         const hour =
           date &&
           last.number &&
@@ -164,10 +169,11 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
           at > 1 &&
           canCut(list, at - 1) &&
           Number(last.text) === date.year % 100 &&
-          parseTime(`${last.text} ${timeText}`, options);
-        if (!hour) read(trim(before, true, strip), timeText);
+          parseTime(`${last.text} ${timeText}`, options) &&
+          asYear();
+        if (!hour) read(date, timeText);
       }
-      if (timeFirst) read(trim(after, strip, true), trim(before, true, strip));
+      if (timeFirst) read(parseDate(trim(after, strip, true), options), trim(before, true, strip));
     }
   }
   if (found.size !== 1) return null;

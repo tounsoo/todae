@@ -226,6 +226,15 @@ describe('Field.DateTimePicker', () => {
     expect(screen.getByRole('option', { selected: true }).textContent).toBe('11:45 PM');
   });
 
+  it("offers min's date by its own list, whatever time is held on another date", () => {
+    render(
+      <Field.Root aria-label="Start">
+        <Field.DateTimePicker value={at('2026-10-15T23:50')} min={at('2026-10-13T23:45')} step={30} locale="en-US" defaultOpen />
+      </Field.Root>,
+    );
+    expect((day('Tuesday, October 13, 2026') as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it('offers no date when min and max share a day with no time between them', () => {
     render(
       <Field.Root aria-label="Start">

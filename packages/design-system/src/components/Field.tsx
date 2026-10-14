@@ -1284,10 +1284,14 @@ function DateTimePanel({
     [min, max, minDay, maxDate],
   );
   // The first date with a time in its list: min's own, or the next one when
-  // its list is empty, as when min's time is past the day's last time.
+  // its list is empty, as when min's time is past the day's last time. The
+  // held time is in that list only while the held date is min's own.
   const minDate = useMemo(
-    () => (minDay && timeSlots(step, ...boundsOn(minDay), time).length === 0 ? minDay.add({ days: 1 }) : minDay),
-    [minDay, boundsOn, step, time],
+    () =>
+      minDay && timeSlots(step, ...boundsOn(minDay), date?.equals(minDay) ? time : null).length === 0
+        ? minDay.add({ days: 1 })
+        : minDay,
+    [minDay, boundsOn, step, date, time],
   );
   // A date the calendar does not offer, such as one typed out of range, is no date yet.
   const offered =
