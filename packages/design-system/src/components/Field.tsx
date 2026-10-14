@@ -406,7 +406,7 @@ export type FieldTimeInputProps = TemporalInputProps<Temporal.PlainTime>;
 export type FieldDateTimeInputProps = TemporalInputProps<Temporal.PlainDateTime>;
 
 type TemporalInputKind<T> = {
-  type: 'date' | 'time' | 'datetime-local';
+  type: 'time' | 'datetime-local';
   format: (value: T) => string;
   parse: (text: string) => T;
 };
@@ -428,11 +428,8 @@ function toHtmlYear(text: string) {
   return text.replace(/^\+0*(\d{4,})(?=-)/, '$1');
 }
 
-const DATE: TemporalInputKind<Temporal.PlainDate> = {
-  type: 'date',
-  format: (value) => toHtmlYear(value.toString({ calendarName: 'never' })),
-  parse: (text) => Temporal.PlainDate.from(fromHtmlYear(text)),
-};
+/** A date as HTML writes one, such as 2026-10-07, for Field.DatePicker's hidden input. */
+const htmlDate = (value: Temporal.PlainDate) => toHtmlYear(value.toString({ calendarName: 'never' }));
 
 const TIME: TemporalInputKind<Temporal.PlainTime> = {
   type: 'time',
@@ -893,7 +890,7 @@ export type FieldDatePickerProps = {
   firstDayOfWeek?: CalendarFirstDayOfWeek;
   /** The locale for the button's date and the calendar's names, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
   locale?: string;
-  /** Shown on the button while there is no date. */
+  /** Shown on the button while there is no date, when showDate is true. */
   placeholder?: string;
   /** Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date. Defaults to true. */
   showDate?: boolean;
@@ -943,7 +940,7 @@ function DatePicker({
   const textId = useDomId();
   // Another control in the field takes its id and description.
   const presence = usePickerPresence(store);
-    // The button's name is not the date, so the date it shows is its description.
+  // The button's name is not the date, so the date it shows is its description.
   const ownDescribedBy = showDate ? mergeDescribedBy(describedBy, textId) : describedBy;
   const { name, ...control } = pickerControl(
     presence,
@@ -1026,7 +1023,7 @@ function DatePicker({
         <input
           type="hidden"
           name={name}
-          value={value ? DATE.format(isoDate(value)) : ''}
+          value={value ? htmlDate(isoDate(value)) : ''}
           disabled={control.disabled}
           form={control.form}
         />

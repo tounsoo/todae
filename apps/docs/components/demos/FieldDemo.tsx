@@ -586,7 +586,7 @@ export function FieldDatePicked() {
   const locale = useLocale();
   const [date, setDate] = useState<Temporal.PlainDate | null>(null);
   const [text, setText] = useState('');
-  const invalid = text.trim() !== '' && parseDate(text, { locale }) === null;
+  const [invalid, setInvalid] = useState(false);
   return (
     <Field.Group>
       <Label.Root htmlFor={id}>Start date</Label.Root>
@@ -595,11 +595,12 @@ export function FieldDatePicked() {
           value={text}
           onChange={(event) => {
             setText(event.target.value);
-            const next = parseDate(event.target.value, { locale });
-            if (next || event.target.value.trim() === '') setDate(next);
+            setDate(parseDate(event.target.value, { locale }));
+            setInvalid(false);
           }}
           onBlur={() => {
-            if (date && !invalid) setText(formatDate(date, { locale }));
+            if (date) setText(formatDate(date, { locale }));
+            else setInvalid(text.trim() !== '');
           }}
         />
         <Field.DatePicker
@@ -607,6 +608,7 @@ export function FieldDatePicked() {
           onValueChange={(next) => {
             setDate(next);
             setText(formatDate(next, { locale }));
+            setInvalid(false);
           }}
           locale={locale}
           showDate={false}

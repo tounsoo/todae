@@ -225,9 +225,9 @@
   },
   "field/date-picker": {
     "(top)": "40872dd1fdc5",
-    "# Field.DatePicker": "dc601cd84f08",
-    "## Typed dates": "4582bf91d7e8",
-    "## On its own": "c132c69d538c",
+    "# Field.DatePicker": "bc536be6e438",
+    "## Typed dates": "d2269d7c881a",
+    "## On its own": "295428996e2c",
     "## Accessible composition": "12fb3517a0d1",
     "## When to use": "d57fe8233a0b",
     "### Field.DatePicker": "4f6d0fdc3d52",
@@ -373,7 +373,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "182208a5fb42",
+    "# Native platform": "9cea94bd454b",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {

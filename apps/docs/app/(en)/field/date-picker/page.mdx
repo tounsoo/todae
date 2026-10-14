@@ -8,7 +8,7 @@ import { FieldDatePicked, FieldDatePickerAlone } from '../../../../components/de
 const id = useId();
 const [date, setDate] = useState<Temporal.PlainDate | null>(null);
 const [text, setText] = useState('');
-const invalid = text.trim() !== '' && parseDate(text) === null;
+const [invalid, setInvalid] = useState(false);
 
 <Field.Group>
   <Label.Root htmlFor={id}>Start date</Label.Root>
@@ -17,11 +17,12 @@ const invalid = text.trim() !== '' && parseDate(text) === null;
       value={text}
       onChange={(event) => {
         setText(event.target.value);
-        const next = parseDate(event.target.value);
-        if (next || event.target.value.trim() === '') setDate(next);
+        setDate(parseDate(event.target.value));
+        setInvalid(false);
       }}
       onBlur={() => {
-        if (date && !invalid) setText(formatDate(date));
+        if (date) setText(formatDate(date));
+        else setInvalid(text.trim() !== '');
       }}
     />
     <Field.DatePicker
@@ -29,6 +30,7 @@ const invalid = text.trim() !== '' && parseDate(text) === null;
       onValueChange={(next) => {
         setDate(next);
         setText(formatDate(next));
+        setInvalid(false);
       }}
       showDate={false}
     />
@@ -44,11 +46,13 @@ Here a [Field.TextInput](/field/text-input) in the same field lets people type t
 
 ## Typed dates
 
-`formatDate(date, { locale })` writes a date in the locale's numbers, such as `10/13/2026` in `en-US`, `13.10.2026` in `de` and `2026. 10. 13.` in `ko`. `parseDate(text, { locale })` reads typed text back into a `Temporal.PlainDate`, or returns `null` when the text is not a date. It reads the numbers in the locale's order with any separators, and a year written first, such as `2026-10-13` or `2026년 10월 13일`, as year, month and day. A month may be a name in the locale or in English, such as `Oct 13, 2026`, and a weekday name is skipped. A year of one or two digits is read as the nearest such year to the current one. Without `locale`, both use the runtime's own.
+`formatDate(date, { locale })` writes a date in the locale's numbers, such as `10/13/2026` in `en-US`, `13.10.2026` in `de` and `2026. 10. 13.` in `ko`. `parseDate(text, { locale })` reads typed text back into a `Temporal.PlainDate`, or returns `null` when the text is not a date. It reads the numbers in the locale's order, with any separators and in any script's digits. Text that starts with a year of four or more digits, such as `2026-10-13`, is read as year, month and day, unless the locale writes the year first in another order. A month may be a name that the locale or English uses in a date, such as `Oct 13, 2026` or `13 de octubre de 2026`, and the locale's other date words, such as weekday names, are skipped. A year is a Gregorian year, whatever the locale's own calendar. A year of one or two digits is read as the nearest such year to the current one, so a date about 50 years away needs all four digits, and a year of three digits is not read. Without `locale`, both use the runtime's own.
+
+In the example, text that isn't a date clears the date, so the form sends no date, and the field is marked invalid when it loses focus. `parseDate` doesn't check the picker's `min`, `max` or `isDateDisabled`, so check a typed date against them yourself.
 
 ## On its own
 
-On its own, `Field.DatePicker` is the field's control. It shows the date in `locale`'s medium style, or `placeholder` while there is none, and a press elsewhere in the field opens the calendar. With a `name` on the Root, a hidden input sends the date as an ISO date, such as `2026-10-13`.
+On its own, `Field.DatePicker` is the field's control. It shows the date in `locale`'s medium style, or `placeholder` while there is none, and a press elsewhere in the field opens the calendar. With a `name` on the Root, a hidden input sends the date the way HTML writes one, such as `2026-10-13`.
 
 <Example block>
   <FieldDatePickerAlone />

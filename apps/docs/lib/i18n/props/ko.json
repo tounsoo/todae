@@ -2251,8 +2251,8 @@
       "ko": "버튼의 날짜와 달력 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
     },
     "placeholder": {
-      "en": "Shown on the button while there is no date.",
-      "ko": "날짜가 없는 동안 버튼에 보입니다."
+      "en": "Shown on the button while there is no date, when showDate is true.",
+      "ko": "showDate가 true일 때, 날짜가 없는 동안 버튼에 보입니다."
     },
     "showDate": {
       "en": "Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date.",

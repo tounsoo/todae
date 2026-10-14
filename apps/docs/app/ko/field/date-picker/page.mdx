@@ -8,7 +8,7 @@ import { FieldDatePicked, FieldDatePickerAlone } from '../../../../components/de
 const id = useId();
 const [date, setDate] = useState<Temporal.PlainDate | null>(null);
 const [text, setText] = useState('');
-const invalid = text.trim() !== '' && parseDate(text) === null;
+const [invalid, setInvalid] = useState(false);
 
 <Field.Group>
   <Label.Root htmlFor={id}>Start date</Label.Root>
@@ -17,11 +17,12 @@ const invalid = text.trim() !== '' && parseDate(text) === null;
       value={text}
       onChange={(event) => {
         setText(event.target.value);
-        const next = parseDate(event.target.value);
-        if (next || event.target.value.trim() === '') setDate(next);
+        setDate(parseDate(event.target.value));
+        setInvalid(false);
       }}
       onBlur={() => {
-        if (date && !invalid) setText(formatDate(date));
+        if (date) setText(formatDate(date));
+        else setInvalid(text.trim() !== '');
       }}
     />
     <Field.DatePicker
@@ -29,6 +30,7 @@ const invalid = text.trim() !== '' && parseDate(text) === null;
       onValueChange={(next) => {
         setDate(next);
         setText(formatDate(next));
+        setInvalid(false);
       }}
       showDate={false}
     />
@@ -44,11 +46,13 @@ const invalid = text.trim() !== '' && parseDate(text) === null;
 
 ## 입력한 날짜
 
-`formatDate(date, { locale })`는 날짜를 로캘의 숫자로 씁니다. 예: `en-US`에서는 `10/13/2026`, `de`에서는 `13.10.2026`, `ko`에서는 `2026. 10. 13.`. `parseDate(text, { locale })`는 입력한 텍스트를 `Temporal.PlainDate`로 읽고, 날짜가 아니면 `null`을 돌려줍니다. 숫자는 구분 기호와 상관없이 로캘의 순서대로 읽고, `2026-10-13`이나 `2026년 10월 13일`처럼 연도가 앞에 오면 연, 월, 일로 읽습니다. 달은 로캘이나 영어의 이름이어도 되고(예: `Oct 13, 2026`), 요일 이름은 건너뜁니다. 한두 자리 연도는 올해에 가장 가까운 그런 해로 읽습니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다.
+`formatDate(date, { locale })`는 날짜를 로캘의 숫자로 씁니다. 예: `en-US`에서는 `10/13/2026`, `de`에서는 `13.10.2026`, `ko`에서는 `2026. 10. 13.`. `parseDate(text, { locale })`는 입력한 텍스트를 `Temporal.PlainDate`로 읽고, 날짜가 아니면 `null`을 돌려줍니다. 숫자는 구분 기호나 문자 체계와 상관없이 로캘의 순서대로 읽습니다. `2026-10-13`처럼 네 자리 이상의 연도로 시작하는 텍스트는 연, 월, 일로 읽는데, 로캘이 연도를 앞에 두고 다른 순서로 쓰면 그 순서를 따릅니다. 달은 로캘이나 영어가 날짜에 쓰는 이름이어도 되고(예: `Oct 13, 2026`, `13 de octubre de 2026`), 요일 이름처럼 로캘의 다른 날짜 단어는 건너뜁니다. 연도는 로캘의 달력과 상관없이 그레고리력 연도입니다. 한두 자리 연도는 올해에 가장 가까운 그런 해로 읽으므로, 50년쯤 떨어진 날짜는 네 자리를 모두 써야 하고, 세 자리 연도는 읽지 않습니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다.
+
+예시에서는 날짜가 아닌 텍스트가 날짜를 비우므로 폼은 날짜를 보내지 않고, 필드는 포커스를 잃을 때 유효하지 않음으로 표시됩니다. `parseDate`는 선택기의 `min`, `max`, `isDateDisabled`를 확인하지 않으므로, 입력한 날짜는 직접 확인하세요.
 
 ## 단독으로
 
-단독으로 쓰면 `Field.DatePicker`가 필드의 컨트롤입니다. 날짜를 `locale`의 medium 스타일로, 날짜가 없으면 `placeholder`를 보여 주고, 필드의 다른 곳을 누르면 달력이 열립니다. Root에 `name`이 있으면 숨은 입력이 날짜를 ISO 날짜로 보냅니다. 예: `2026-10-13`.
+단독으로 쓰면 `Field.DatePicker`가 필드의 컨트롤입니다. 날짜를 `locale`의 medium 스타일로, 날짜가 없으면 `placeholder`를 보여 주고, 필드의 다른 곳을 누르면 달력이 열립니다. Root에 `name`이 있으면 숨은 입력이 HTML이 쓰는 형식으로 날짜를 보냅니다. 예: `2026-10-13`.
 
 <Example block>
   <FieldDatePickerAlone />

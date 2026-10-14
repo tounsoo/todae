@@ -69,10 +69,10 @@
     color: var(--todae-field-fg-disabled);
   }
 
-  /* Number, date and time inputs keep their native spinner and picker.
-     Figures line up, and WebKit's date and time text starts at the edge
-     like any other value. */
-  .input:is([type='number'], [type='date'], [type='time'], [type='datetime-local']) {
+  /* Number and time inputs keep their native spinner and picker. Figures
+     line up, and WebKit's date and time text starts at the edge like any
+     other value. */
+  .input:is([type='number'], [type='time'], [type='datetime-local']) {
     font-variant-numeric: tabular-nums;
   }
 

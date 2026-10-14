@@ -51,7 +51,7 @@ export const meta = {
       name: 'placeholder',
       type: 'string',
       required: false,
-      description: 'Shown on the button while there is no date.',
+      description: 'Shown on the button while there is no date, when showDate is true.',
     },
     {
       name: 'showDate',
