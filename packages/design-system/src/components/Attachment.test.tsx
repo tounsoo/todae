@@ -119,6 +119,7 @@ describe('Attachment', () => {
       );
     }
     render(<Files />);
+    expect('checkVisibility' in HTMLElement.prototype).toBe(false);
     const a = screen.getByRole('button', { name: 'Remove a.png' });
     a.focus();
     await act(async () => fireEvent.click(a));
