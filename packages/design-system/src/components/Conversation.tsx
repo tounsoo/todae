@@ -186,20 +186,6 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
     step();
   }, [setAtEnd, setFollowing, stopGlide]);
 
-  // The scroll button's height, so the viewport's scroll padding keeps focus
-  // clear of it while it shows. Its inset is added in CSS.
-  useLayoutEffect(() => {
-    const el = viewport.current;
-    const own = button.current;
-    if (!el || !own || typeof ResizeObserver === 'undefined') return;
-    const resize = new ResizeObserver(([entry]) => {
-      const size = entry?.borderBoxSize[0]?.blockSize ?? own.offsetHeight;
-      if (size > 0) el.style.setProperty('--_button-size', `${size}px`);
-    });
-    resize.observe(own, { box: 'border-box' });
-    return () => resize.disconnect();
-  }, []);
-
   const value = useMemo<ConversationContext>(
     () => ({ viewport, content, button, announceMessages, atEnd, onScroll, follow, scrollToEnd }),
     [announceMessages, atEnd, onScroll, follow, scrollToEnd],
@@ -313,6 +299,24 @@ function ScrollButton({ 'aria-label': ariaLabel, onClick, className, children, r
   const strings = useStrings();
   const { chevron } = useGlyphs();
   const refs = useComposedRefs(context.button, ref);
+
+  // The button's height, so the viewport's scroll padding keeps focus clear
+  // of it while it shows; its inset is added in CSS. Set on the root, which
+  // outlives the viewport, and measured for whichever button is mounted.
+  useLayoutEffect(() => {
+    const own = context.button.current;
+    const root = own?.parentElement;
+    if (!own || !root || typeof ResizeObserver === 'undefined') return;
+    const resize = new ResizeObserver(([entry]) => {
+      const size = entry?.borderBoxSize?.[0]?.blockSize ?? own.offsetHeight;
+      if (size > 0) root.style.setProperty('--_button-size', `${size}px`);
+    });
+    resize.observe(own, { box: 'border-box' });
+    return () => {
+      resize.disconnect();
+      root.style.removeProperty('--_button-size');
+    };
+  }, [context.button]);
   // What React would render: no nodes, or only empty text.
   const empty = Children.toArray(children).every((child) => child === '');
 

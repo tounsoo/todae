@@ -166,6 +166,7 @@ describe('Conversation in a browser', () => {
       expect(el.hidden).toBe(false);
       return el;
     });
+    // The button's height reaches the scroll padding in the frame it shows.
     await frame();
     const box = button.getBoundingClientRect();
     expect(button.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2))).toBe(true);
@@ -313,6 +314,36 @@ describe('Conversation in a browser', () => {
     });
     await frame();
     change(container.querySelector<HTMLElement>('[data-density]')!);
+    await frame();
+    const cover = viewport.getBoundingClientRect().bottom - button.getBoundingClientRect().top;
+    expect(parseFloat(getComputedStyle(viewport).scrollPaddingBottom)).toBeGreaterThanOrEqual(cover - 0.5);
+  });
+
+  it('measures a scroll button that mounts after the root', async () => {
+    function Late({ ready }: { ready: boolean }) {
+      return (
+        <div data-appearance="light" data-density="comfortable">
+          <Conversation.Root style={{ blockSize: '200px', inlineSize: '400px' }}>
+            <Conversation.Viewport data-testid="viewport">
+              <Conversation.Content>
+                <div style={{ blockSize: '800px' }} />
+              </Conversation.Content>
+            </Conversation.Viewport>
+            {ready && <Conversation.ScrollButton data-testid="scroll" />}
+          </Conversation.Root>
+        </div>
+      );
+    }
+    const { rerender } = render(<Late ready={false} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    rerender(<Late ready />);
+    viewport.scrollTop = 0;
+    const button = await waitFor(() => {
+      const el = screen.getByTestId('scroll');
+      expect(el.hidden).toBe(false);
+      return el;
+    });
     await frame();
     const cover = viewport.getBoundingClientRect().bottom - button.getBoundingClientRect().top;
     expect(parseFloat(getComputedStyle(viewport).scrollPaddingBottom)).toBeGreaterThanOrEqual(cover - 0.5);
