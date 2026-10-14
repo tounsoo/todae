@@ -71,14 +71,16 @@ function shade(color: ThemeColorValue, step: number): ThemeColorValue {
 }
 
 /**
- * Filled fields and secondary buttons: at rest, hover and press the border is
- * the fill's own color, so the shape stays the same size, and hover and press
- * deepen the fill. Focus, invalid and disabled keep Todae's own look, so a
- * disabled control doesn't read as an enabled one.
+ * Filled fields and secondary buttons. The border takes the fill's color, so
+ * the shape stays the same size: a field's border darkens on hover, and a
+ * button's fill and border deepen on hover and press. Focus and invalid
+ * borders stay Todae's. Disabled drops the fill: a disabled field is
+ * transparent, and a disabled button keeps Todae's transparent look.
  */
 function filled(field: ThemeColorValue, button: ThemeColorValue): ThemeOverride {
   const out: ThemeOverride = {
     'field.bg.default': field,
+    'field.bg.disabled': alpha(field, 0),
     'field.border.default': field,
     'field.border.hover': shade(field, 0.06),
   };
@@ -141,6 +143,8 @@ export const PRESETS: readonly ThemePreset[] = [
       'card.border': oklch(1, 0, 0),
       'card.shadow': [shadow(0, 1, 2, 0, alpha(oklch(0.2, 0.01, 255), 0.05)), shadow(0, 10, 30, 0, alpha(oklch(0.2, 0.01, 255), 0.07))],
       ...filled(oklch(0.935, 0.005, 200), oklch(0.925, 0.006, 200)),
+      // Gray 600: gray 500 is too faint on the fill.
+      'field.fg.placeholder': oklch(0.48, 0.008, 200),
       ...accent(oklch(0.5, 0.09, 165), oklch(0.56, 0.09, 165), oklch(0.44, 0.09, 165), oklch(0.99, 0, 0)),
     },
     {
