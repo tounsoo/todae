@@ -485,11 +485,50 @@ describe('useMentions edge cases', () => {
     container.innerHTML = renderToString(<Harness />);
     const el = container.querySelector('textarea')!;
     el.focus();
+    let root!: ReturnType<typeof hydrateRoot>;
     act(() => {
-      hydrateRoot(container, <Harness expose={(r) => (result = r)} />);
+      root = hydrateRoot(container, <Harness expose={(r) => (result = r)} />);
     });
-    fireEvent.change(el, { target: { value: '@a', selectionStart: 2, selectionEnd: 2 } });
+    try {
+      fireEvent.change(el, { target: { value: '@a', selectionStart: 2, selectionEnd: 2 } });
+      expect(result.open).toBe(true);
+    } finally {
+      act(() => root.unmount());
+      container.remove();
+    }
+  });
+
+  it('keeps a dismissal through a later pick after a beforeinput that changed nothing', () => {
+    let result!: UseMentionsResult;
+    render(<Harness initial="@a @l" expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    el.setSelectionRange(2, 2);
+    fireEvent.select(el);
+    fireEvent.keyDown(el, { key: 'Escape' });
+    el.setSelectionRange(0, 2);
+    el.dispatchEvent(new Event('beforeinput'));
+    el.setSelectionRange(5, 5);
+    fireEvent.select(el);
+    act(() => result.select('ada'));
+    el.setSelectionRange(2, 2);
+    fireEvent.select(el);
+    expect(result.open).toBe(false);
+  });
+
+  it('opens no list while a rejected pick waits, and again after a key', () => {
+    let result!: UseMentionsResult;
+    render(<Harness initial="@al @gr" accept={() => false} expose={(r) => (result = r)} />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    el.focus();
+    el.setSelectionRange(3, 3);
+    fireEvent.select(el);
+    act(() => result.select('alan'));
+    el.setSelectionRange(7, 7);
+    fireEvent.select(el);
+    expect(result.open).toBe(false);
+    fireEvent.keyDown(el, { key: 'ArrowRight' });
+    fireEvent.select(el);
     expect(result.open).toBe(true);
-    container.remove();
   });
 });

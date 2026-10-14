@@ -213,6 +213,68 @@ describe('useMentions in a browser', () => {
     expect(field().selectionStart).toBe(15);
   });
 
+  describe('with a product that commits the draft later', () => {
+    function Late({ loads, opened, expose }: { loads: string[]; opened: string[]; expose: (result: ReturnType<typeof useMentions>) => void }) {
+      const [draft, setDraft] = useState<MentionDraft>({ text: '@al @gracehopperxx @zz', tokens: [] });
+      const mentions = useMentions({
+        triggers: [{ char: '@', loadOptions: (query) => (loads.push(query), Promise.resolve(people)) }],
+        value: draft,
+        onValueChange: (next) => setTimeout(() => setDraft(next), 30),
+      });
+      expose(mentions);
+      if (mentions.open) opened.push(mentions.query);
+      return (
+        <main data-appearance="light" data-density="comfortable" style={{ inlineSize: '24rem' }}>
+          <Field.Root aria-label="Message">
+            <Field.Textarea {...mentions.getTextareaProps()} />
+          </Field.Root>
+          <Popover.Root {...mentions.getPopoverProps()}>
+            <OptionList.Root {...mentions.getListboxProps()}>
+              {mentions.items.map((item) => (
+                <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
+              ))}
+            </OptionList.Root>
+          </Popover.Root>
+        </main>
+      );
+    }
+    async function setup() {
+      const loads: string[] = [];
+      const opened: string[] = [];
+      let result!: ReturnType<typeof useMentions>;
+      render(<Late loads={loads} opened={opened} expose={(r) => (result = r)} />);
+      await userEvent.click(field());
+      await act(async () => {
+        field().setSelectionRange(3, 3);
+        await new Promise((resolve) => setTimeout(resolve, 30));
+      });
+      loads.length = 0;
+      opened.length = 0;
+      return { loads, opened, result: () => result };
+    }
+
+    it('opens no list for another word while a pick waits for its text', async () => {
+      const { loads, opened } = await setup();
+      await userEvent.keyboard('{Enter}');
+      await act(() => new Promise((resolve) => setTimeout(resolve, 80)));
+      expect(field().value).toBe('@Ada Lovelace @gracehopperxx @zz');
+      expect(field().selectionStart).toBe(13);
+      expect(loads).toEqual([]);
+      expect(opened).toEqual([]);
+    });
+
+    it('opens no list for another word while a pick made outside a React event waits', async () => {
+      const { loads, opened, result } = await setup();
+      await act(async () => {
+        setTimeout(() => result().select('ada'), 0);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      });
+      expect(field().value).toBe('@Ada Lovelace @gracehopperxx @zz');
+      expect(loads).toEqual([]);
+      expect(opened).toEqual([]);
+    });
+  });
+
   it('picks with a click and keeps focus in the textarea', async () => {
     render(<Chat />);
     await userEvent.click(field());

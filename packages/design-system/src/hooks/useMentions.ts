@@ -170,8 +170,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const [caret, setCaret] = useState<number | null>(null);
   const [focused, setFocused] = useState(false);
   const [active, setActive] = useState<{ session: string; value: string | null } | null>(null);
-  // Where the caret goes after a pick that could not edit the textarea natively, once its text is in.
-  const [caretAfter, setCaretAfter] = useState<{ to: number; value: string } | null>(null);
+  // Where the caret goes after a pick, once its text is in. Until then no list opens.
+  const [caretAfter, setCaretAfter] = useState<{ to: number; value: string; from: string } | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   // Tokens for texts seen before, so undo and redo bring back the tokens of
@@ -238,14 +238,19 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     const el = textareaRef.current;
     if (el && el.ownerDocument.activeElement === el) {
       // Focus can come before hydration, which onFocus never hears.
-      setFocused(true);
+      if (el.ownerDocument.hasFocus()) setFocused(true);
       setCaret(caretOf(el));
     }
   }, [value]);
 
-  // Waits for the picked text, which a parent may commit later; typing clears it.
+  // Waits for the picked text, which a parent may commit later; an edit, a key, a press or another text ends the wait.
   useLayoutEffect(() => {
-    if (!caretAfter || value !== caretAfter.value) return;
+    if (!caretAfter) return;
+    if (value !== caretAfter.value) {
+      // The product put another text in: the pick is not coming.
+      if (value !== caretAfter.from) setCaretAfter(null);
+      return;
+    }
     setCaretAfter(null);
     const el = textareaRef.current;
     if (!el) return;
@@ -254,7 +259,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   }, [caretAfter, value]);
 
   const triggers = options.triggers;
-  const found = focused && caret !== null && !options.disabled ? findQuery(value, caret, triggers, tokens) : null;
+  // While a pick waits for its text, the caret belongs to neither text, so no word is being typed.
+  const found = focused && caret !== null && caretAfter === null && !options.disabled ? findQuery(value, caret, triggers, tokens) : null;
   const query = found && found.start !== dismissed ? found : null;
   const trigger = query ? (triggers[query.trigger] ?? null) : null;
   const session = query ? `${query.trigger}:${query.start}` : null;
@@ -364,6 +370,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       if (!query || !trigger || el?.readOnly || el?.disabled) return;
       const option = items.find((item) => item.option.value === raw)?.option;
       if (!option || option.disabled || !fits(option)) return;
+      // A pick replaces the word, and no beforeinput reports that.
+      selectionBefore.current = { start: query.start, end: query.end };
       const text = textOf(trigger, option);
       const inserted = insertion(value, query, text);
       const caretTo = query.start + inserted.length;
@@ -379,6 +387,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       }
       const doc = el?.ownerDocument;
       let native = false;
+      // Set first: React may render the pick's change event inside execCommand.
+      setCaretAfter({ to: caretTo, value: next, from: value });
       // insertText puts the pick on the textarea's own undo stack, and fires
       // the input event that reaches onChange.
       if (el && doc && doc.activeElement === el && typeof doc.execCommand === 'function') {
@@ -391,15 +401,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
         }
         picking.current = null;
       }
-      if (native && el) {
-        el.setSelectionRange(caretTo, caretTo);
-        setCaret(caretTo);
-        // A product that commits the draft later puts the old text back first, which moves the caret.
-        setCaretAfter({ to: caretTo, value: next });
-        return;
-      }
+      if (native) return;
       el?.focus();
-      setCaretAfter({ to: caretTo, value: next });
       edit(next, { caret: caretTo, pick: token });
     },
     // edit and send read the rendered text and tokens, which value and tokens stand for.
@@ -410,7 +413,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const onChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     const el = event.currentTarget;
     setCaret(caretOf(el));
-    setCaretAfter(null);
+    if (!picking.current) setCaretAfter(null);
     edit(el.value, {
       inputType: (event.nativeEvent as InputEvent).inputType,
       caret: el.selectionStart === el.selectionEnd ? el.selectionStart : null,
@@ -423,6 +426,10 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    // A key ends the wait for a pick the product never commits; this key still sees no list.
+    // Only the wait this render saw, so a pick made earlier in this event stays.
+    const waiting = caretAfter;
+    if (waiting) setCaretAfter((current) => (current === waiting ? null : current));
     if (latest.current.disabled) return;
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
     const el = event.currentTarget;
@@ -496,11 +503,15 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     const onBeforeInput = () => {
       selectionBefore.current = { start: el.selectionStart, end: el.selectionEnd };
     };
+    // A press on the textarea ends the wait for a pick the product never commits.
+    const release = () => setCaretAfter(null);
     el.addEventListener('selectionchange', onChange);
     el.addEventListener('beforeinput', onBeforeInput);
+    el.addEventListener('pointerdown', release);
     return () => {
       el.removeEventListener('selectionchange', onChange);
       el.removeEventListener('beforeinput', onBeforeInput);
+      el.removeEventListener('pointerdown', release);
     };
   }, []);
   const ownRef = useComposedRefs(textareaRef, watchCaret);
