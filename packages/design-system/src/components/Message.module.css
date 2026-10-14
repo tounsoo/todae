@@ -66,6 +66,10 @@
     font-size: var(--todae-message-system-font-size);
   }
 
+  .root[data-from='system'] > :is(.header, .actions) {
+    justify-content: center;
+  }
+
   .header {
     display: flex;
     flex-wrap: wrap;
@@ -93,14 +97,20 @@
     gap: var(--todae-message-gap);
   }
 
-  /* While a message streams, a caret follows its text: after the last
-     paragraph, list item, heading or table cell when the content ends with
-     one, or after plain text with no blocks in it. Only such an element
-     that ends the content and holds no block of its own takes it, and none
-     inside a closed details. One list of blocks serves both rules. A code block takes none: rendered markdown ends its code with
-     a newline, which would put the caret on a line of its own. */
+  /* While a message streams, the last Message.Content shows a caret after
+     its text: after the last paragraph, list item, heading or table cell
+     when the content ends with one, or right after the text when the
+     content holds only text, with no elements in it. Every element on the
+     path to it must be the last child, it must hold no block of its own,
+     and it must not sit in a closed details. An element this rule doesn't
+     know hides the caret; it never moves it. A code block takes none,
+     because rendered markdown ends its code with a newline that would put
+     the caret on a line of its own, and an empty cell takes none, because
+     a table row still arriving is padded with empty cells. */
+  .root[data-streaming] > .content:not(:has(~ .content)):not(:empty):not(:has(> *))::after,
   .root[data-streaming]
-    > .content:not(
+    > .content:not(:has(~ .content))
+    :is(p, li, h1, h2, h3, h4, h5, h6, td, th):last-child:not(
       :has(
         :is(
           address,
@@ -130,40 +140,7 @@
           ul
         )
       )
-    )::after,
-  .root[data-streaming]
-    > .content
-    :is(p, li, h1, h2, h3, h4, h5, h6, td, th):not(:has(~ *)):not(
-      :has(
-        :is(
-          address,
-          article,
-          aside,
-          blockquote,
-          details,
-          div,
-          dl,
-          figure,
-          footer,
-          form,
-          h1,
-          h2,
-          h3,
-          h4,
-          h5,
-          h6,
-          header,
-          hr,
-          li,
-          ol,
-          p,
-          pre,
-          section,
-          table,
-          ul
-        )
-      )
-    ):not(.content :has(~ *) *):not(details:not([open]) *)::after {
+    ):not(.content :not(:last-child) *):not(details:not([open]) *):not(:is(td, th):empty)::after {
     content: '';
     display: inline-block;
     block-size: 1em;

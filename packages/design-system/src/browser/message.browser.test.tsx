@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { cdp } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Message, Prose } from '../index';
+import { Avatar, Message, Prose, Spinner } from '../index';
 
 /** vitest types the session without its methods; Playwright's session has `send`. */
 function emulateMedia(features: { name: string; value: string }[]) {
@@ -17,6 +17,8 @@ function emulateMedia(features: { name: string; value: string }[]) {
 
 const caret = (el: Element) => getComputedStyle(el, '::after');
 const hasCaret = (el: Element) => caret(el).content !== 'none' && caret(el).content !== 'normal';
+/** Every element in `root`, itself included, that draws a caret, so a stray or second caret fails too. */
+const carets = (root: Element) => [root, ...root.querySelectorAll('*')].filter(hasCaret);
 
 describe('Message.Root in a browser', () => {
   it('puts a user message at the end side in a bubble, with the avatar after it', () => {
@@ -80,148 +82,255 @@ describe('Message.Root in a browser', () => {
     expect(box('content').left).toBeGreaterThan(box('avatar').right);
   });
 
-  it('draws the caret after the last text only while streaming', async () => {
-    const { rerender } = render(
+  it.each([
+    [
+      'a final paragraph',
+      <>
+        <p>Intro</p>
+        <p data-caret>End</p>
+      </>,
+    ],
+    [
+      'a nested item of a tight list',
+      <ul>
+        <li>One</li>
+        <li>
+          Two
+          <ul>
+            <li data-caret>Nested</li>
+          </ul>
+        </li>
+      </ul>,
+    ],
+    [
+      'the paragraph of a loose list item',
+      <ul>
+        <li>
+          <p>a</p>
+        </li>
+        <li>
+          <p data-caret>b</p>
+        </li>
+      </ul>,
+    ],
+    [
+      'a final heading',
+      <>
+        <p>Intro</p>
+        <h3 data-caret>Next</h3>
+      </>,
+    ],
+    [
+      'the last cell of a table',
+      <table>
+        <tbody>
+          <tr>
+            <td>a</td>
+            <td data-caret>b</td>
+          </tr>
+        </tbody>
+      </table>,
+    ],
+    [
+      'a paragraph ending an open details',
+      <details open>
+        <summary>Thinking</summary>
+        <p data-caret>Shown</p>
+      </details>,
+    ],
+    [
+      'a paragraph ending a block quote',
+      <blockquote>
+        <p data-caret>Quoted</p>
+      </blockquote>,
+    ],
+  ])('puts the only caret after %s', (_, content) => {
+    render(
       <div data-appearance="light" data-density="comfortable">
-        <Message.Root data-testid="plain" streaming>
-          <Message.Content data-testid="plain-content">
-            Plain <b data-testid="bold">text</b> so far
-          </Message.Content>
-        </Message.Root>
         <Message.Root streaming>
-          <Message.Content>
-            <Prose.Root>
-              <p data-testid="first">First</p>
-              <ul>
-                <li data-testid="item-1">One</li>
-                <li data-testid="item-2">
-                  Two
-                  <ul>
-                    <li data-testid="nested">Nested</li>
-                  </ul>
-                </li>
-              </ul>
-            </Prose.Root>
-          </Message.Content>
-        </Message.Root>
-        <Message.Root>
-          <Message.Content>
-            <p data-testid="done">Done</p>
+          <Message.Content data-testid="content">
+            <Prose.Root>{content}</Prose.Root>
           </Message.Content>
         </Message.Root>
       </div>,
     );
-    expect(hasCaret(screen.getByTestId('plain-content'))).toBe(true);
-    expect(hasCaret(screen.getByTestId('bold'))).toBe(false);
-    expect(hasCaret(screen.getByTestId('nested'))).toBe(true);
-    for (const id of ['first', 'item-1', 'item-2', 'done']) expect(hasCaret(screen.getByTestId(id)), id).toBe(false);
-    const nested = caret(screen.getByTestId('nested'));
-    expect(nested.display).toBe('inline-block');
-    expect(parseFloat(nested.borderInlineStartWidth)).toBeGreaterThan(0);
-    expect(nested.animationName).toContain('todae-message-caret');
-    expect(nested.animationIterationCount).toBe('infinite');
+    const content_ = screen.getByTestId('content');
+    expect(carets(content_)).toEqual([content_.querySelector('[data-caret]')]);
+  });
+
+  it('puts the caret right after content that is only text', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Message.Root streaming>
+          <Message.Content data-testid="content">Plain text so far</Message.Content>
+        </Message.Root>
+      </div>,
+    );
+    expect(carets(screen.getByTestId('content'))).toEqual([screen.getByTestId('content')]);
+  });
+
+  it.each([
+    ['empty content', null],
+    [
+      'text with an element in it',
+      <>
+        Plain <b>text</b> so far
+      </>,
+    ],
+    [
+      'a code block',
+      <>
+        <p>Run</p>
+        <pre>
+          <code>{'pnpm test\n'}</code>
+        </pre>
+      </>,
+    ],
+    [
+      'a rule',
+      <>
+        <p>Done</p>
+        <hr />
+      </>,
+    ],
+    ['a wrapper around text', <div>Wrapped text</div>],
+    [
+      'a list item ending in a code block',
+      <ol>
+        <li>
+          Run
+          <pre>
+            <code>{'pnpm test\n'}</code>
+          </pre>
+        </li>
+      </ol>,
+    ],
+    [
+      'a list item ending in a rule',
+      <ul>
+        <li>
+          Done
+          <hr />
+        </li>
+      </ul>,
+    ],
+    [
+      'a list item ending in a code block with a copy button',
+      <ul>
+        <li>
+          Run
+          <div>
+            <pre>
+              <code>x</code>
+            </pre>
+            <button type="button">Copy</button>
+          </div>
+        </li>
+      </ul>,
+    ],
+    [
+      'a closed details',
+      <>
+        <p>Shown</p>
+        <details>
+          <summary>Thinking</summary>
+          <p>Hidden</p>
+        </details>
+      </>,
+    ],
+    ['Spinner dots', <Spinner.Root variant="dots" aria-label="Assistant is typing" />],
+    ['an empty Prose', <Prose.Root />],
+    [
+      'an empty cell padding a row',
+      <table>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>2</td>
+            <td />
+          </tr>
+        </tbody>
+      </table>,
+    ],
+  ])('draws no caret after %s', (_, content) => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Message.Root streaming>
+          <Message.Content data-testid="content">{content}</Message.Content>
+        </Message.Root>
+      </div>,
+    );
+    expect(carets(screen.getByTestId('content'))).toEqual([]);
+  });
+
+  it('draws the caret only in the last content, and only while streaming', async () => {
+    const { rerender } = render(
+      <div data-appearance="light" data-density="comfortable">
+        <Message.Root data-testid="message" streaming>
+          <Message.Content>
+            <p>Reasoning</p>
+          </Message.Content>
+          <Message.Content>
+            <p data-testid="answer">Answer</p>
+          </Message.Content>
+          <Message.Actions>
+            <button type="button">Stop</button>
+          </Message.Actions>
+        </Message.Root>
+      </div>,
+    );
+    const message = screen.getByTestId('message');
+    expect(carets(message)).toEqual([screen.getByTestId('answer')]);
+    const style = caret(screen.getByTestId('answer'));
+    expect(style.display).toBe('inline-block');
+    expect(parseFloat(style.borderInlineStartWidth)).toBeGreaterThan(0);
+    expect(style.animationName).toContain('todae-message-caret');
+    expect(style.animationIterationCount).toBe('infinite');
     try {
       await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
-      expect(caret(screen.getByTestId('nested')).animationIterationCount).toBe('0');
-      expect(hasCaret(screen.getByTestId('nested'))).toBe(true);
+      expect(caret(screen.getByTestId('answer')).animationIterationCount).toBe('0');
+      expect(carets(message)).toEqual([screen.getByTestId('answer')]);
     } finally {
       await emulateMedia([]);
     }
     rerender(
       <div data-appearance="light" data-density="comfortable">
-        <Message.Root data-testid="plain">
-          <Message.Content data-testid="plain-content">Plain text</Message.Content>
+        <Message.Root data-testid="message">
+          <Message.Content>
+            <p>Reasoning</p>
+          </Message.Content>
+          <Message.Content>
+            <p data-testid="answer">Answer</p>
+          </Message.Content>
         </Message.Root>
       </div>,
     );
-    expect(hasCaret(screen.getByTestId('plain-content'))).toBe(false);
+    expect(carets(screen.getByTestId('message'))).toEqual([]);
   });
 
-  it('puts the caret in the last cell of a table, and none after a code block, a rule or a wrapper', () => {
+  it('centers every part of a system message', () => {
     render(
-      <div data-appearance="light" data-density="comfortable">
-        <Message.Root streaming>
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
+        <Message.Root data-testid="system" from="system">
+          <Message.Header>
+            <span data-testid="header-text">System</span>
+          </Message.Header>
           <Message.Content>
-            <p data-testid="intro">Intro</p>
-            <table>
-              <tbody>
-                <tr>
-                  <td data-testid="a">a</td>
-                  <td data-testid="b">b</td>
-                </tr>
-              </tbody>
-            </table>
+            <span data-testid="content-text">Model changed</span>
           </Message.Content>
-        </Message.Root>
-        <Message.Root streaming>
-          <Message.Content data-testid="code-content">
-            <p data-testid="before-code">Run</p>
-            <pre data-testid="code">
-              <code>{'pnpm test\n'}</code>
-            </pre>
-          </Message.Content>
-        </Message.Root>
-        <Message.Root streaming>
-          <Message.Content data-testid="rule-content">
-            <p data-testid="before-rule">Done</p>
-            <hr />
-          </Message.Content>
-        </Message.Root>
-        <Message.Root streaming>
-          <Message.Content data-testid="wrapper-content">
-            <div data-testid="wrapper">Wrapped text</div>
-          </Message.Content>
-        </Message.Root>
-        <Message.Root streaming>
-          <Message.Content>
-            <ol>
-              <li data-testid="step-code">
-                Run
-                <pre>
-                  <code>{'pnpm test\n'}</code>
-                </pre>
-              </li>
-            </ol>
-          </Message.Content>
-        </Message.Root>
-        <Message.Root streaming>
-          <Message.Content>
-            <ul>
-              <li data-testid="step-rule">
-                Done
-                <hr />
-              </li>
-            </ul>
-          </Message.Content>
-        </Message.Root>
-        <Message.Root streaming>
-          <Message.Content>
-            <p data-testid="shown">Shown</p>
-            <details>
-              <summary>Thinking</summary>
-              <p data-testid="hidden">Hidden</p>
-            </details>
-          </Message.Content>
+          <Message.Actions>
+            <button type="button" data-testid="button">
+              Undo
+            </button>
+          </Message.Actions>
         </Message.Root>
       </div>,
     );
-    expect(hasCaret(screen.getByTestId('b'))).toBe(true);
-    expect(hasCaret(screen.getByTestId('a'))).toBe(false);
-    expect(hasCaret(screen.getByTestId('intro'))).toBe(false);
-    // Rendered markdown ends code with a newline, so a caret there would sit on a line of its own.
-    for (const id of [
-      'code',
-      'before-code',
-      'code-content',
-      'before-rule',
-      'rule-content',
-      'wrapper',
-      'wrapper-content',
-      'hidden',
-      'shown',
-    ]) {
-      expect(hasCaret(screen.getByTestId(id)), id).toBe(false);
-    }
+    const center = (id: string) => {
+      const r = screen.getByTestId(id).getBoundingClientRect();
+      return r.left + r.width / 2;
+    };
+    for (const id of ['header-text', 'content-text', 'button']) expect(center(id), id).toBeCloseTo(center('system'), 0);
   });
 
   it('runs assistant content the full width, and keeps the parts spaced beside a tall avatar', () => {
