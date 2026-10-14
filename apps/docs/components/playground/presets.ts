@@ -64,34 +64,6 @@ const alpha = (color: ThemeColorValue, a: number): ThemeColorValue => ({ ...colo
 /** Pill-shaped buttons, chips and badges. */
 const PILLS: ThemeOverride = { 'button.base.radius': rem(99), 'chip.radius': rem(99), 'badge.radius': rem(99) };
 
-/** A fill moved toward the text color: darker in light mode, lighter in dark. */
-function shade(color: ThemeColorValue, step: number): ThemeColorValue {
-  const [l, c, h] = color.components;
-  return oklch(Math.round((l > 0.5 ? l - step : l + step) * 1000) / 1000, c, h);
-}
-
-/**
- * Filled fields and secondary buttons. The border takes the fill's color, so
- * the shape stays the same size: a field's border moves toward the text color
- * on hover, and a button's fill and border do on hover and press. Focus and invalid
- * borders stay Todae's. Disabled drops the fill: a disabled field is
- * transparent, and a disabled button keeps Todae's transparent look.
- */
-function filled(field: ThemeColorValue, button: ThemeColorValue): ThemeOverride {
-  const out: ThemeOverride = {
-    'field.bg.default': field,
-    'field.bg.disabled': alpha(field, 0),
-    'field.border.default': field,
-    'field.border.hover': shade(field, 0.06),
-  };
-  const fills = { default: button, hover: shade(button, 0.03), active: shade(button, 0.06), focus: button };
-  for (const [state, fill] of Object.entries(fills)) {
-    out[`button.secondary.bg.${state}` as keyof ThemeOverride] = fill;
-    if (state !== 'focus') out[`button.secondary.border.${state}` as keyof ThemeOverride] = fill;
-  }
-  return out;
-}
-
 /** The same overrides in both appearances, plus each appearance's own. */
 function preset(id: string, name: string, shared: ThemeOverride, light: ThemeOverride, dark: ThemeOverride): ThemePreset {
   return { id, name, light: { ...shared, ...light }, dark: { ...shared, ...dark } };
@@ -129,18 +101,6 @@ function capsLabels(value: number): ThemeOverride {
   };
 }
 
-const PORCELAIN_GRAYS = grays(200, 0.008);
-
-/**
- * A field's faint text (placeholder, adornment and disabled text) in one
- * color, for a fill too dark for color.fg.placeholder. Pick a color between
- * placeholder and muted, so faint text stays fainter than a field's
- * description, and set only field tokens, so other components keep theirs.
- */
-function fieldFaintText(color: ThemeColorValue): ThemeOverride {
-  return { 'field.fg.placeholder': color, 'field.fg.adornment': color, 'field.fg.disabled': color };
-}
-
 const MONO = ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'];
 
 export const PRESETS: readonly ThemePreset[] = [
@@ -149,20 +109,17 @@ export const PRESETS: readonly ThemePreset[] = [
   preset(
     'porcelain',
     'Porcelain',
-    { ...PORCELAIN_GRAYS, ...radii(0.625, 0.875, 1.5), ...PILLS },
+    { ...grays(200, 0.008), ...radii(0.625, 0.875, 1.5), ...PILLS },
     {
       'color.bg.canvas': oklch(0.965, 0.004, 200),
       'card.border': oklch(1, 0, 0),
       'card.shadow': [shadow(0, 1, 2, 0, alpha(oklch(0.2, 0.01, 255), 0.05)), shadow(0, 10, 30, 0, alpha(oklch(0.2, 0.01, 255), 0.07))],
-      ...filled(oklch(0.935, 0.005, 200), oklch(0.925, 0.006, 200)),
-      ...fieldFaintText(oklch(0.52, 0.008, 200)),
       ...accent(oklch(0.5, 0.09, 165), oklch(0.56, 0.09, 165), oklch(0.44, 0.09, 165), oklch(0.99, 0, 0)),
     },
     {
       'color.bg.canvas': oklch(0.13, 0.006, 200),
       'card.border': oklch(0.19, 0.004, 200),
       'card.shadow': [shadow(0, 1, 0, 0, alpha(oklch(1, 0, 0), 0.05)), shadow(0, 12, 32, 0, alpha(oklch(0, 0, 0), 0.45))],
-      ...filled(oklch(0.24, 0.006, 200), oklch(0.26, 0.006, 200)),
       ...accent(oklch(0.8, 0.077, 165), oklch(0.85, 0.077, 165), oklch(0.75, 0.077, 165), oklch(0.17, 0.03, 165)),
     },
   ),

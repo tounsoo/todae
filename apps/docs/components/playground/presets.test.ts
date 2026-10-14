@@ -70,25 +70,6 @@ describe('playground presets', () => {
     }
   });
 
-  it.each(PRESET_MODES)('%s %s drops the fill of a disabled filled field', (_id, _mode, overrides) => {
-    if (!color(overrides, 'field.bg.default')) return;
-    expect(color(overrides, 'field.bg.disabled')?.alpha).toBe(0);
-    expect(overrides['button.secondary.bg.disabled']).toBeUndefined();
-  });
-
-  // A filled field replaces the surface Todae checks text on, so it keeps the
-  // same floors: placeholder and adornment at Lc 60, and text at Lc 75.
-  it.each(PRESET_MODES)('%s %s keeps text readable on a filled field', (_id, mode, overrides) => {
-    const fill = color(overrides, 'field.bg.default');
-    if (!fill) return;
-    const faint = color(overrides, 'color.fg.placeholder') ?? gray(overrides, mode === 'light' ? '500' : '400');
-    const text = color(overrides, 'field.fg.default') ?? color(overrides, 'color.fg.default') ?? gray(overrides, mode === 'light' ? '900' : '100');
-    for (const key of ['field.fg.placeholder', 'field.fg.adornment'] as const) {
-      expect(lc(color(overrides, key) ?? faint, fill), key).toBeGreaterThanOrEqual(60);
-    }
-    expect(lc(text, fill)).toBeGreaterThanOrEqual(75);
-  });
-
   // Disabled and placeholder text must stay fainter than muted text, in every
   // component and inside fields.
   it.each(PRESET_MODES)('%s %s keeps faint text apart from muted text', (_id, mode, overrides) => {
