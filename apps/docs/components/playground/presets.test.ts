@@ -88,4 +88,19 @@ describe('playground presets', () => {
     }
     expect(lc(text, fill)).toBeGreaterThanOrEqual(75);
   });
+
+  // Disabled and placeholder text must stay fainter than muted text, in every
+  // component and inside fields.
+  it.each(PRESET_MODES)('%s %s keeps faint text apart from muted text', (_id, mode, overrides) => {
+    const muted = color(overrides, 'color.fg.muted') ?? gray(overrides, mode === 'light' ? '600' : '300');
+    const faint = color(overrides, 'color.fg.placeholder') ?? gray(overrides, mode === 'light' ? '500' : '400');
+    expect(faint).not.toEqual(muted);
+    const field = ['field.fg.placeholder', 'field.fg.adornment', 'field.fg.disabled'].map(
+      (key) => color(overrides, key as keyof ThemeOverride) ?? faint,
+    );
+    for (const value of field) {
+      expect(value).toEqual(field[0]);
+      expect(value).not.toEqual(muted);
+    }
+  });
 });
