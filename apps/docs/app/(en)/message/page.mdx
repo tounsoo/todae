@@ -71,7 +71,7 @@ Restyle it through the `message` tokens: `message.fg` sets the text color, `mess
 
 **Todae handles:** An `<article>` for each message, so screen reader users can move between them. `aria-busy` while it streams. In forced colors the user bubble keeps an outline, since its background is replaced.
 
-**You supply:** A name for each message that says who wrote it, such as `aria-label="You"` or `aria-labelledby` pointing at the author in `Message.Header`. Names for icon-only action buttons. One announcement when a message finishes, rather than the streamed text.
+**You supply:** A name for each message that says who wrote it, such as `aria-label="You"` or `aria-labelledby` pointing at the author in `Message.Header`. Names for icon-only action buttons. One announcement when a message finishes, rather than the streamed text; inside a [Conversation](/conversation), it makes that announcement.
 
 **Watch for:** Putting the message that is streaming in a live region: every token is read as it arrives. A timestamp with no `<time dateTime>`, which machines can't read. Telling user and assistant apart by color or side alone; the name says it too.
 

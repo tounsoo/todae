@@ -1,0 +1,64 @@
+import { ConversationExample } from '../../../components/demos/ConversationDemo';
+
+# Conversation
+
+`Conversation.Root` holds the messages of a chat and keeps the newest one in view while it grows. It opens at the end and follows it as a message streams in. When the reader scrolls up, it stops following, and `Conversation.ScrollButton` brings them back.
+
+```tsx
+<Conversation.Root style={{ blockSize: '24rem' }}>
+  <Conversation.Viewport>
+    <Conversation.Content>
+      {messages.map((message) => (
+        <Message.Root key={message.id} from={message.role} streaming={message.streaming} aria-label={message.author}>
+          <Message.Content>…</Message.Content>
+        </Message.Root>
+      ))}
+    </Conversation.Content>
+  </Conversation.Viewport>
+  <Conversation.ScrollButton />
+</Conversation.Root>
+```
+
+<Example block>
+  <ConversationExample />
+</Example>
+
+Give the root a height, or put it in a layout that gives it one, such as a flex column. The viewport scrolls inside it.
+
+## Parts
+
+- `Conversation.Viewport` is the scroller, a `<section>`. It is a region landmark named "Conversation" by the `conversation` string, unless you name it with `aria-label` or `aria-labelledby`. Its content box is padded by a focus ring's room, as [ScrollArea](/scroll-area)'s is, so rings of buttons at its edge stay whole.
+- `Conversation.Content` holds the messages and spaces them by `conversation.gap`.
+- `Conversation.ScrollButton` is a [Button](/button) over the end of the viewport that scrolls to the newest message. It is hidden while the reader is at the end. With no children it shows the `chevron` glyph and is named by the `scrollToLatest` string.
+
+## Following the end
+
+While the reader is at the end, the viewport goes back to the end each time its content or its own size changes, so a growing message stays in view. Scrolling up stops that, and scrolling back to the end, or pressing `Conversation.ScrollButton`, starts it again. The button scrolls smoothly, or at once under reduced motion.
+
+## Announcements
+
+Streamed text is not read as it arrives: the viewport is not a live region. Instead, Conversation tells screen readers when a message starts and finishes arriving, through [useAnnouncer](/utilities/use-announcer). It watches the `article`s in `Conversation.Content` for `aria-busy="true"`, which [Message](/message)'s `streaming` sets. It reads the `messageStarted` string when one starts, and `messageFinished` when it clears. When the message holds an element with `role="alert"` by then, such as an error [Alert](/alert), it says nothing, since the alert is read. When one message finishes as another starts, it reads only `messageStarted`. A message already streaming when it mounts has no start announced. Set `announceMessages={false}` on the root to make your own announcements instead.
+
+## Accessible composition
+
+**Todae handles:** A region landmark for the conversation, with a default name. A Tab stop on the viewport while it overflows and holds nothing focusable, so a keyboard can scroll it. Announcements when a message starts and finishes. When `Conversation.ScrollButton` hides while it has focus, focus moves to the viewport rather than to the page.
+
+**You supply:** A name for each message that says who wrote it. A name for the viewport that says whose conversation it is, when the page has more than one. A failed message's error, in an element with `role="alert"`.
+
+**Watch for:** Putting the conversation in a live region, or `role="log"`, which is one: every streamed word would be read. Removing messages that scroll out of view, as a JavaScript virtualizer does: find in page and screen readers can no longer reach them.
+
+## When to use
+
+**When:** A chat with an assistant or a person, where new messages arrive at the end and may grow while they arrive.
+
+**When not:** A list that only grows when the reader asks for more → [ScrollArea](/scroll-area). A feed of notices that come and go → [Toast](/toast).
+
+## Props
+
+<PropsTable name="Conversation.Root" />
+
+<PropsTable name="Conversation.Viewport" />
+
+<PropsTable name="Conversation.Content" />
+
+<PropsTable name="Conversation.ScrollButton" />

@@ -52,6 +52,13 @@ export {
   type MessageHeaderProps,
   type MessageRootProps,
 } from './components/Message';
+export {
+  Conversation,
+  type ConversationContentProps,
+  type ConversationRootProps,
+  type ConversationScrollButtonProps,
+  type ConversationViewportProps,
+} from './components/Conversation';
 export { BottomSheet, type BottomSheetRootProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet';
 export {
   Button,

@@ -58,6 +58,14 @@ export interface Strings {
   copied: string;
   /** useClipboard's message when a copy fails. */
   copyFailed: string;
+  /** Name of the Conversation.Viewport region when it has no aria-label. */
+  conversation: string;
+  /** Name of Conversation.ScrollButton when its own text does not name it. */
+  scrollToLatest: string;
+  /** Conversation's message when a message starts arriving. */
+  messageStarted: string;
+  /** Conversation's message when a message finishes arriving. */
+  messageFinished: string;
 }
 
 /** The English Todae ships with. */
@@ -87,4 +95,8 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   nextYears: 'Next years',
   copied: 'Copied',
   copyFailed: 'Could not copy',
+  conversation: 'Conversation',
+  scrollToLatest: 'Scroll to latest message',
+  messageStarted: 'New message',
+  messageFinished: 'Message complete',
 });

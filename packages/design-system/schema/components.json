@@ -825,6 +825,61 @@
       ]
     },
     {
+      "name": "Conversation.Content",
+      "description": "Holds the messages, spaced by conversation.gap. When an article in it takes aria-busy=\"true\", as Message.Root does while streaming, Conversation announces that a message is arriving; when that clears, that it finished, unless the message holds a role=\"alert\" or another message starts at the same time. Takes native div attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Message.Root elements."
+        }
+      ]
+    },
+    {
+      "name": "Conversation.Root",
+      "description": "A conversation of messages that keeps the newest one in view while it grows. It follows the end until the reader scrolls up, and Conversation.ScrollButton brings them back. Give it a height. Takes native div attributes.",
+      "props": [
+        {
+          "name": "announceMessages",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether it tells screen readers when a message starts and finishes arriving, read from aria-busy on the articles in Conversation.Content. The text is the messageStarted and messageFinished strings.",
+          "default": "true"
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Conversation.Viewport and Conversation.ScrollButton."
+        }
+      ]
+    },
+    {
+      "name": "Conversation.ScrollButton",
+      "description": "A Button.Root over the end of the viewport that scrolls to the newest message, hidden while the reader is at the end. Takes Button.Root props but pressed.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "The button's content. Without it, the chevron glyph, named by the scrollToLatest string."
+        }
+      ]
+    },
+    {
+      "name": "Conversation.Viewport",
+      "description": "The scroller, a section that is a region landmark named by the conversation string unless it has aria-label or aria-labelledby. It opens at the end, follows it while the content grows, and stops following when the reader scrolls up. It takes a Tab stop while it overflows and nothing inside can take focus. Takes native section attributes.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Conversation.Content."
+        }
+      ]
+    },
+    {
       "name": "createToaster",
       "description": "Returns a toast store { add, update, dismiss, remove, subscribe, getSnapshot } that works outside React. Make one per app at module scope and pass it to Toast.Region. add() takes id, tone, title, description, duration and any fields of your own, and returns the id; an id that is still showing is replaced in place.",
       "props": [

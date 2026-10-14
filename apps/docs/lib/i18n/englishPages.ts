@@ -21,6 +21,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'code': () => import('../../app/(en)/code/page.mdx'),
   'color-picker': () => import('../../app/(en)/color-picker/page.mdx'),
   'composition': () => import('../../app/(en)/composition/page.mdx'),
+  'conversation': () => import('../../app/(en)/conversation/page.mdx'),
   'description': () => import('../../app/(en)/description/page.mdx'),
   'dialog': () => import('../../app/(en)/dialog/page.mdx'),
   'disclosure': () => import('../../app/(en)/disclosure/page.mdx'),

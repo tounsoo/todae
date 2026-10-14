@@ -31,7 +31,7 @@ A nested provider changes only the keys it passes:
 </StringsProvider>
 ```
 
-A part's own prop still wins over the provider: a non-empty `aria-label` on a close button or landmark, `removeLabel` on `Chip.Root`, `removeLabel`, `overflowLabel` or `panelLabel` on `ChipList.Root`, `chipRemoveLabel` or `overflowLabel` on `Field.ChipInput`, and `createLabel` on `useCombobox`. `useStrings()` returns the strings in effect, for your own components.
+A part's own prop still wins over the provider: a non-empty `aria-label` on a close button, `Conversation.ScrollButton` or landmark, `removeLabel` on `Chip.Root`, `removeLabel`, `overflowLabel` or `panelLabel` on `ChipList.Root`, `chipRemoveLabel` or `overflowLabel` on `Field.ChipInput`, and `createLabel` on `useCombobox`. `useStrings()` returns the strings in effect, for your own components.
 
 ## Strings
 
@@ -172,6 +172,26 @@ A string that depends on a number or a label is a function.
       <Table.Cell>`useClipboard`, when a copy fails</Table.Cell>
       <Table.Cell>`Could not copy`</Table.Cell>
     </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`conversation`</Table.HeaderCell>
+      <Table.Cell>`Conversation.Viewport`'s region, without `aria-label` or `aria-labelledby`</Table.Cell>
+      <Table.Cell>`Conversation`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`scrollToLatest`</Table.HeaderCell>
+      <Table.Cell>`Conversation.ScrollButton` with no content</Table.Cell>
+      <Table.Cell>`Scroll to latest message`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`messageStarted`</Table.HeaderCell>
+      <Table.Cell>`Conversation`, when a message starts arriving</Table.Cell>
+      <Table.Cell>`New message`</Table.Cell>
+    </Table.Row>
+    <Table.Row>
+      <Table.HeaderCell scope="row">`messageFinished`</Table.HeaderCell>
+      <Table.Cell>`Conversation`, when a message finishes arriving</Table.Cell>
+      <Table.Cell>`Message complete`</Table.Cell>
+    </Table.Row>
   </Table.Body>
 </Table.Root>
 </ScrollRegion>
@@ -180,7 +200,7 @@ A string that depends on a number or a label is a function.
 
 ## Accessible composition
 
-**Todae handles:** The text Todae writes by itself: default names of close buttons, landmarks, chip remove buttons and the `+N` chip, the sheet name from `useCombobox`, and `Field.Counter`'s description and live messages. A part's own prop wins, as listed above.
+**Todae handles:** The text Todae writes by itself: default names of close buttons, landmarks, chip remove buttons, the `+N` chip and `Conversation.ScrollButton`, the sheet name from `useCombobox`, and the live messages of `Field.Counter`, `useClipboard` and `Conversation`, with the counter's description. A part's own prop wins, as listed above.
 
 **You supply:** Every key your app shows, in the reader's language. The function keys get the label or the number, so place it where your language needs it and pick the plural form there. `StringsProvider` renders no element and sets no `lang`, so set `lang` on `<html>`, or on an element around a part in another language, so screen readers pronounce the words right. For `Breadcrumbs` and `Pagination` from the server entries, pass `aria-label` yourself, as above.
 

@@ -1,0 +1,72 @@
+@layer todae.components {
+  /* The viewport and the scroll button share one cell, so the button sits
+     over the end of the viewport. Give the root a height. */
+  .root {
+    display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    min-block-size: 0;
+    min-inline-size: 0;
+  }
+
+  .viewport {
+    --_room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+
+    grid-area: 1 / 1;
+    min-block-size: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-padding: var(--_room);
+  }
+
+  /* While the scroll button shows, focus lands clear of it. Its height,
+     --_button-size, is set on the root from script. */
+  .root:has(> .scrollButton:not([hidden])) > .viewport {
+    scroll-padding-block-end: calc(var(--_room) + var(--todae-conversation-scroll-button-inset) + var(--_button-size, 0px));
+  }
+
+  /* Scroll anchoring is off while it follows the end, set from script with
+     the following state: it could move the position up when content above
+     shrinks, which would read as the reader. Scrolled up, the browser's
+     anchoring keeps the reader's place. */
+  .viewport[data-following] {
+    overflow-anchor: none;
+  }
+
+  /* The room for focus rings, as in ScrollArea. */
+  .room {
+    box-sizing: border-box;
+    padding: var(--_room);
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-conversation-gap);
+  }
+
+  .scrollButton {
+    grid-area: 1 / 1;
+    align-self: end;
+    justify-self: center;
+    /* Above positioned parts of the messages it sits over. */
+    z-index: 1;
+    margin-block-end: var(--todae-conversation-scroll-button-inset);
+  }
+
+  /* Button.Root's display beats the UA [hidden] rule. */
+  .scrollButton[hidden] {
+    display: none;
+  }
+
+  /* Inside its own edge, which its parent may clip. */
+  .viewport:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-conversation-ring-focus);
+    outline-offset: calc(-1 * var(--todae-focus-ring-width));
+  }
+
+  @media (forced-colors: active) {
+    .viewport:focus-visible {
+      outline: var(--todae-focus-ring-width) solid Highlight;
+    }
+  }
+}

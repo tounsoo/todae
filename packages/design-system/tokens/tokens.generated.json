@@ -6851,6 +6851,33 @@
       "context": null
     },
     {
+      "path": "conversation.gap",
+      "type": "dimension",
+      "cssVar": "--todae-conversation-gap",
+      "cssValue": "var(--todae-space-stack-gap-spacious)",
+      "ref": "space.stack.gap-spacious",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "conversation.ring.focus",
+      "type": "color",
+      "cssVar": "--todae-conversation-ring-focus",
+      "cssValue": "var(--todae-focus-ring-color)",
+      "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "conversation.scroll-button.inset",
+      "type": "dimension",
+      "cssVar": "--todae-conversation-scroll-button-inset",
+      "cssValue": "var(--todae-space-stack-gap)",
+      "ref": "space.stack.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "breadcrumbs.current.fg",
       "type": "color",
       "cssVar": "--todae-breadcrumbs-current-fg",

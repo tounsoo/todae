@@ -1,10 +1,11 @@
-import { useLayoutEffect, useRef, useState, type ComponentPropsWithRef, type FocusEvent } from 'react';
+import { useLayoutEffect, useRef, type ComponentPropsWithRef, type FocusEvent } from 'react';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import { revealRing } from './revealRing';
+import { useScrollTabStop, type ScrollAxis } from './scrollTabStop';
 import styles from './ScrollArea.module.css';
 
 /** The direction a scroll area scrolls in. */
-export type ScrollAreaAxis = 'block' | 'inline' | 'both';
+export type ScrollAreaAxis = ScrollAxis;
 
 /**
  * A `div` that scrolls and keeps the focus rings of what it holds whole. Its
@@ -24,45 +25,11 @@ export type ScrollAreaRootProps = {
   focusable?: boolean;
 } & ComponentPropsWithRef<'div'>;
 
-const FOCUSABLE =
-  'a[href], button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), summary, iframe, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
-
-function overflows(el: HTMLElement, axis: ScrollAreaAxis): boolean {
-  const block = el.scrollHeight > el.clientHeight;
-  const inline = el.scrollWidth > el.clientWidth;
-  return axis === 'block' ? block : axis === 'inline' ? inline : block || inline;
-}
-
 function Root({ axis = 'block', focusable, className, ref, onFocus, onBlur, children, ...props }: ScrollAreaRootProps) {
   const own = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const refs = useComposedRefs(own, ref);
-  const [tabStop, setTabStop] = useState(false);
-  // Keeps the Tab stop while focus is on it, so a resize never drops focus.
-  const [focused, setFocused] = useState(false);
-
-  useLayoutEffect(() => {
-    const el = own.current;
-    if (!el || focusable === false) {
-      setTabStop(false);
-      return;
-    }
-    const measure = () =>
-      setTabStop(overflows(el, axis) && (focusable === true || el.querySelector(FOCUSABLE) === null));
-    measure();
-    if (typeof ResizeObserver === 'undefined') return;
-    const resize = new ResizeObserver(measure);
-    resize.observe(el);
-    if (content.current) resize.observe(content.current);
-    const mutations = new MutationObserver(measure);
-    mutations.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'href', 'tabindex'] });
-    return () => {
-      resize.disconnect();
-      mutations.disconnect();
-    };
-  }, [axis, focusable]);
-
-  const stop = tabStop || focused;
+  const [stop, setFocused] = useScrollTabStop(own, content, axis, focusable);
   const named = props['aria-label'] != null || props['aria-labelledby'] != null;
   useLayoutEffect(() => {
     if (process.env.NODE_ENV === 'production' || !stop || named) return;

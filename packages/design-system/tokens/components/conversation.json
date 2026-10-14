@@ -1,0 +1,11 @@
+{
+  "conversation": {
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap-spacious/$value" } },
+    "scroll-button": {
+      "inset": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } }
+    },
+    "ring": {
+      "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
+    }
+  }
+}

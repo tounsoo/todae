@@ -29,7 +29,7 @@ export function transitionMs(node: Element, propertyName: string): number | null
   return duration === null ? null : Math.max(0, duration) + Math.max(0, delay);
 }
 
-function reducedMotion(): boolean {
+export function reducedMotion(): boolean {
   return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
 }
 

@@ -399,6 +399,34 @@
       "ko": "모든 파트가 색을 바꾸지 못하게 합니다. 비활성화된 Fieldset도 이것을 설정합니다."
     }
   },
+  "Conversation.Content": {
+    "children": {
+      "en": "Message.Root elements.",
+      "ko": "Message.Root 요소."
+    }
+  },
+  "Conversation.Root": {
+    "announceMessages": {
+      "en": "Whether it tells screen readers when a message starts and finishes arriving, read from aria-busy on the articles in Conversation.Content. The text is the messageStarted and messageFinished strings.",
+      "ko": "메시지가 도착하기 시작할 때와 다 도착했을 때 스크린 리더에 알릴지 여부. Conversation.Content 안 article의 aria-busy로 판단합니다. 텍스트는 messageStarted와 messageFinished 문자열입니다."
+    },
+    "children": {
+      "en": "Conversation.Viewport and Conversation.ScrollButton.",
+      "ko": "Conversation.Viewport와 Conversation.ScrollButton."
+    }
+  },
+  "Conversation.ScrollButton": {
+    "children": {
+      "en": "The button's content. Without it, the chevron glyph, named by the scrollToLatest string.",
+      "ko": "버튼의 내용. 없으면 chevron 글리프를 보여 주고 scrollToLatest 문자열로 이름이 붙습니다."
+    }
+  },
+  "Conversation.Viewport": {
+    "children": {
+      "en": "Conversation.Content.",
+      "ko": "Conversation.Content."
+    }
+  },
   "Description.Root": {
     "id": {
       "en": "Id the author lists in aria-describedby on the control or Field.Root.",

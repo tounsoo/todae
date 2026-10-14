@@ -51,6 +51,10 @@ const FRENCH: Strings = {
   nextYears: 'Années suivantes',
   copied: 'Copié',
   copyFailed: 'Copie impossible',
+  conversation: 'Conversation',
+  scrollToLatest: 'Aller au dernier message',
+  messageStarted: 'Nouveau message',
+  messageFinished: 'Message terminé',
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {
