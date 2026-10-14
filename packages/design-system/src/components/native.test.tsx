@@ -101,6 +101,17 @@ describe('native element components', () => {
     expect(spinner.hasAttribute('value')).toBe(false);
   });
 
+  it('marks the variant, ring by default', () => {
+    render(
+      <>
+        <Spinner.Root aria-label="Typing" variant="dots" />
+        <Spinner.Root aria-label="Loading" />
+      </>,
+    );
+    expect(screen.getByRole('progressbar', { name: 'Typing' }).dataset.variant).toBe('dots');
+    expect(screen.getByRole('progressbar', { name: 'Loading' }).dataset.variant).toBe('ring');
+  });
+
   it('always renders a range input', () => {
     const props = { type: 'text' } as Record<string, unknown>;
     render(<Slider.Root aria-label="Volume" {...props} />);

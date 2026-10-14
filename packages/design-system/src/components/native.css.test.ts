@@ -43,7 +43,7 @@ describe('native element component styles', () => {
   it('stop motion under reduced motion', () => {
     expect(sheet('Disclosure')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.root::details-content \{\s*transition: none;/);
     expect(sheet('Progress')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.progress:indeterminate \{\s*animation: none;/);
-    expect(sheet('Spinner')).toMatch(/prefers-reduced-motion: reduce\) \{\s*progress\.root \{\s*animation: none;/);
+    expect(sheet('Spinner')).toMatch(/prefers-reduced-motion: reduce\) \{\s*progress\.root,\s*progress\.root\[data-variant='dots'\] \{\s*animation: none;/);
     expect(sheet('Skeleton')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.root \{\s*animation: none;/);
   });
 

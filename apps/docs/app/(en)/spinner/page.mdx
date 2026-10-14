@@ -1,4 +1,4 @@
-import { SkeletonProfile, SpinnerLabelled } from '../../../components/demos/NativeDemo';
+import { SkeletonProfile, SpinnerDots, SpinnerLabelled } from '../../../components/demos/NativeDemo';
 
 # Spinner and Skeleton
 
@@ -6,7 +6,7 @@ Two components for content that is still loading. `Spinner.Root` is a native `<p
 
 ## Spinner
 
-`Spinner.Root` keeps the progressbar role, so screen readers announce it as a progress bar, and it needs a name like any progress: wrap it in a `<label>` with the text, or give it `aria-label`. It is drawn as a ring with one arc of fill that turns, and it holds still when the user asks for reduced motion. It takes no `value`: a wait with a known end is a [Progress](/progress) bar.
+`Spinner.Root` keeps the progressbar role, so screen readers announce it as a progress bar, and it needs a name like any progress: wrap it in a `<label>` with the text, or give it `aria-label`. By default it is drawn as a ring with one arc of fill that turns, and it holds still when the user asks for reduced motion. It takes no `value`: a wait with a known end is a [Progress](/progress) bar.
 
 ```tsx
 <label>
@@ -20,7 +20,19 @@ Two components for content that is still loading. `Spinner.Root` is a native `<p
   <SpinnerLabelled />
 </Example>
 
-It draws in the text color, so it shows on any surface, a primary button included: set `color` to change it. Restyle it through `spinner.size`, `spinner.thickness`, `spinner.track-tint` (how much of the text color the track takes) and `spinner.motion.duration`.
+### Dots
+
+`variant="dots"` draws three dots that rise in turn, starting from the side the text starts on, as a typing indicator does. Use it where someone or something is writing a reply, such as an assistant in a chat. It is the same `<progress>`, with the same role, so it needs a name too; under reduced motion the dots hold still.
+
+```tsx
+<Spinner.Root variant="dots" aria-label="Assistant is typing" />
+```
+
+<Example>
+  <SpinnerDots />
+</Example>
+
+Either variant draws in the text color, so it shows on any surface, a primary button included: set `color` to change it. Restyle it through `spinner.size` (the dots are one and a half times as wide), `spinner.thickness`, `spinner.track-tint` (how much of the text color the track takes) and `spinner.motion.duration` (one wave of the dots); `spinner.thickness` and `spinner.track-tint` only change the ring.
 
 ## Skeleton
 
@@ -55,7 +67,7 @@ A skeleton means nothing to a screen reader, so hide it with `aria-hidden` and s
 
 ## When to use
 
-**When:** Spinner → a short wait for one action or a small area, such as a save or a search. Skeleton → the layout of a page or section is known before its content arrives.
+**When:** Spinner → a short wait for one action or a small area, such as a save or a search. Dots → a reply being written. Skeleton → the layout of a page or section is known before its content arrives.
 
 **When not:** The wait has a known end → [Progress](/progress) with a `value`. The wait is long or can fail → say so in text, with a way to cancel or retry.
 

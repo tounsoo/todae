@@ -1,4 +1,4 @@
-import { SkeletonProfile, SpinnerLabelled } from '../../../components/demos/NativeDemo';
+import { SkeletonProfile, SpinnerDots, SpinnerLabelled } from '../../../components/demos/NativeDemo';
 
 # Spinner and Skeleton
 
@@ -6,7 +6,7 @@ import { SkeletonProfile, SpinnerLabelled } from '../../../components/demos/Nati
 
 ## Spinner
 
-`Spinner.Root`는 progressbar 역할이 그대로 남으므로 스크린 리더는 진행 막대로 알려 주고, 다른 progress처럼 이름이 필요합니다. 텍스트와 함께 `<label>`로 감싸거나 `aria-label`을 주세요. 채움 호 하나가 도는 고리로 그려지고, 사용자가 동작 줄이기를 요청하면 멈춥니다. `value`는 받지 않습니다. 끝을 아는 기다림에는 [Progress](/progress) 막대를 쓰세요.
+`Spinner.Root`는 progressbar 역할이 그대로 남으므로 스크린 리더는 진행 막대로 알려 주고, 다른 progress처럼 이름이 필요합니다. 텍스트와 함께 `<label>`로 감싸거나 `aria-label`을 주세요. 기본으로는 채움 호 하나가 도는 고리로 그려지고, 사용자가 동작 줄이기를 요청하면 멈춥니다. `value`는 받지 않습니다. 끝을 아는 기다림에는 [Progress](/progress) 막대를 쓰세요.
 
 ```tsx
 <label>
@@ -20,7 +20,19 @@ import { SkeletonProfile, SpinnerLabelled } from '../../../components/demos/Nati
   <SpinnerLabelled />
 </Example>
 
-텍스트 색으로 그리므로 기본 버튼을 포함해 어떤 표면에서도 보입니다. 색을 바꾸려면 `color`를 정하세요. `spinner.size`, `spinner.thickness`, `spinner.track-tint`(트랙이 텍스트 색을 얼마나 쓰는지), `spinner.motion.duration`으로 바꾸세요.
+### Dots
+
+`variant="dots"`는 타이핑 표시처럼 점 세 개가 차례로 올라가며, 텍스트가 시작하는 쪽부터 움직입니다. 채팅의 어시스턴트처럼 누군가 답을 쓰고 있을 때 쓰세요. 같은 `<progress>`이고 역할도 같으므로 역시 이름이 필요하며, 동작 줄이기에서는 점이 멈춥니다.
+
+```tsx
+<Spinner.Root variant="dots" aria-label="Assistant is typing" />
+```
+
+<Example>
+  <SpinnerDots />
+</Example>
+
+두 변형 모두 텍스트 색으로 그리므로 기본 버튼을 포함해 어떤 표면에서도 보입니다. 색을 바꾸려면 `color`를 정하세요. `spinner.size`(점은 너비가 1.5배입니다), `spinner.thickness`, `spinner.track-tint`(트랙이 텍스트 색을 얼마나 쓰는지), `spinner.motion.duration`(점의 물결 한 번)으로 바꾸세요. `spinner.thickness`와 `spinner.track-tint`는 고리에만 적용됩니다.
 
 ## Skeleton
 
@@ -55,7 +67,7 @@ Skeleton은 스크린 리더에게 아무 뜻이 없으니 `aria-hidden`으로 �
 
 ## 언제 쓰나요
 
-**쓸 때:** Spinner → 저장이나 검색처럼 동작 하나나 작은 영역을 잠깐 기다릴 때. Skeleton → 내용이 오기 전에 페이지나 구역의 배치를 이미 알 때.
+**쓸 때:** Spinner → 저장이나 검색처럼 동작 하나나 작은 영역을 잠깐 기다릴 때. Dots → 답을 쓰고 있을 때. Skeleton → 내용이 오기 전에 페이지나 구역의 배치를 이미 알 때.
 
 **쓰지 않을 때:** 끝을 아는 기다림 → `value`가 있는 [Progress](/progress). 길거나 실패할 수 있는 기다림 → 텍스트로 알리고 취소나 다시 시도할 방법을 주세요.
 

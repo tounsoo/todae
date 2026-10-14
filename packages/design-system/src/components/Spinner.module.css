@@ -34,15 +34,53 @@
     background: transparent;
   }
 
+  /* Three dots in a row, each rising in turn: a wave, as a typing indicator
+     draws. The dots are background layers of the one progress element. */
+  progress.root[data-variant='dots'] {
+    --_dot: radial-gradient(circle closest-side, currentColor 70%, transparent 75%);
+    inline-size: calc(var(--todae-spinner-size) * 1.5);
+    border-radius: 0;
+    mask: none;
+    background:
+      var(--_dot) 0% 50%,
+      var(--_dot) 50% 50%,
+      var(--_dot) 100% 50%;
+    background-size: calc(100% / 3) 50%;
+    background-repeat: no-repeat;
+    animation-name: todae-spinner-wave;
+  }
+
+  /* The wave runs from the end the text starts at. Mirroring the box, not
+     reversing the animation, keeps each dot rising before it falls. */
+  progress.root[data-variant='dots']:dir(rtl) {
+    scale: -1 1;
+  }
+
+  @keyframes todae-spinner-wave {
+    20% {
+      background-position: 0% 0%, 50% 50%, 100% 50%;
+    }
+    40% {
+      background-position: 0% 100%, 50% 0%, 100% 50%;
+    }
+    60% {
+      background-position: 0% 50%, 50% 100%, 100% 0%;
+    }
+    80% {
+      background-position: 0% 50%, 50% 50%, 100% 100%;
+    }
+  }
+
   @keyframes todae-spinner-turn {
     to {
       transform: rotate(1turn);
     }
   }
 
-  /* Under reduced motion the ring holds still; the arc still reads as busy. */
+  /* Under reduced motion the ring and the dots hold still; both still read as busy. */
   @media (prefers-reduced-motion: reduce) {
-    progress.root {
+    progress.root,
+    progress.root[data-variant='dots'] {
       animation: none;
     }
   }
@@ -51,6 +89,10 @@
     progress.root {
       forced-color-adjust: none;
       background: conic-gradient(Highlight 0 25%, GrayText 0);
+    }
+
+    progress.root[data-variant='dots'] {
+      --_dot: radial-gradient(circle closest-side, Highlight 70%, transparent 75%);
     }
   }
 }
