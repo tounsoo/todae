@@ -19,6 +19,7 @@ import {
   Kbd,
   Label,
   Link,
+  Loader,
   Menu,
   Message,
   Meter,
@@ -30,7 +31,6 @@ import {
   ScrollArea,
   Skeleton,
   Slider,
-  Spinner,
   Switch,
   Table,
   Tabs,
@@ -379,7 +379,7 @@ export function Preview({ library }: { library?: IconLibrary }) {
                 </Tabs.Panel>
                 <Tabs.Panel value="loading">
                   <div className="preview-loading">
-                    <Spinner.Root aria-label="Loading activity" />
+                    <Loader.Root aria-label="Loading activity" />
                     <div className="preview-stack">
                       <Skeleton.Root />
                       <Skeleton.Root style={{ inlineSize: '60%' }} />
