@@ -13,6 +13,7 @@
     font-size: var(--todae-button-font-size);
     font-weight: var(--todae-button-font-weight);
     letter-spacing: var(--todae-button-font-letter-spacing);
+    text-transform: var(--todae-button-font-text-transform);
     gap: var(--todae-button-gap);
     box-shadow: var(--todae-button-shadow);
     max-width: 100%;

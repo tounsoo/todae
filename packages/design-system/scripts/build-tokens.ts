@@ -74,6 +74,7 @@ export const BUTTON_BASE_PATHS = [
   'button.base.gap',
   'button.base.icon.size',
   'button.base.font.letter-spacing',
+  'button.base.font.text-transform',
   'button.base.shadow',
 ] as const;
 
@@ -222,7 +223,7 @@ export function validateButtonBase(tokens: Map<string, TokenNode>, loc: string):
   const keys = [...tokens.keys()].filter((path) => path.startsWith('button.base.')).sort();
   const expected = [...BUTTON_BASE_PATHS].sort();
   if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
-    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight/letter-spacing, gap, icon.size, shadow`);
+    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight/letter-spacing/text-transform, gap, icon.size, shadow`);
   }
 }
 
@@ -470,6 +471,14 @@ export function serializeValue(token: TokenNode, path: string): Serialized {
     return { ref: null, refs: [], cssValue: `cubic-bezier(${value.join(', ')})` };
   }
   if (token.$type === 'fontFamily') return { ref: null, refs: [], cssValue: serializeFontFamily(token.$value, path) };
+  // DTCG 2025.10 has no type for letter case. Todae adds textTransform until it
+  // does; ARCHITECTURE.md asks to revisit this when a standard type lands.
+  if (token.$type === 'textTransform') {
+    if (typeof token.$value !== 'string' || !TEXT_TRANSFORMS.includes(token.$value)) {
+      fail(`Token "${path}" textTransform must be one of ${TEXT_TRANSFORMS.join(', ')}`);
+    }
+    return { ref: null, refs: [], cssValue: token.$value };
+  }
   if (token.$type === 'shadow') {
     const layers = Array.isArray(token.$value) ? token.$value : [token.$value];
     if (layers.length === 0) fail(`Token "${path}" shadow must have at least one layer`);
@@ -477,6 +486,8 @@ export function serializeValue(token: TokenNode, path: string): Serialized {
   }
   fail(`Token "${path}" has unsupported $type "${token.$type ?? ''}"`);
 }
+
+export const TEXT_TRANSFORMS = ['none', 'uppercase', 'lowercase', 'capitalize'];
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);

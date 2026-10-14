@@ -95,14 +95,18 @@ function hardShadows(color: ThemeColorValue): ThemeOverride {
   return { 'card.shadow': shadow(6, 6, 0, 0, color), 'button.base.shadow': shadow(3, 3, 0, 0, color) };
 }
 
-/** Wider letter-spacing on buttons, tabs, labels and table headers, in rem. */
-function tracking(value: number): ThemeOverride {
+/** Uppercase, widely spaced buttons, tabs, labels and table headers; spacing in rem. */
+function capsLabels(value: number): ThemeOverride {
   const spacing = rem(value);
   return {
     'button.base.font.letter-spacing': spacing,
     'tabs.font.letter-spacing': spacing,
     'field.label.font.letter-spacing': spacing,
     'table.header.font.letter-spacing': spacing,
+    'button.base.font.text-transform': 'uppercase',
+    'tabs.font.text-transform': 'uppercase',
+    'field.label.font.text-transform': 'uppercase',
+    'table.header.font.text-transform': 'uppercase',
   };
 }
 
@@ -142,7 +146,7 @@ export const PRESETS: readonly ThemePreset[] = [
       'font.weight.medium': 600,
       'font.weight.bold': 800,
       'button.base.font.weight': 800,
-      ...tracking(0.04),
+      ...capsLabels(0.04),
     },
     {
       // Chartreuse can't carry a checkbox or a tab line on a light canvas, so

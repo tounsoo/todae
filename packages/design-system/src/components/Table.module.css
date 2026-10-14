@@ -29,6 +29,7 @@
     color: var(--todae-table-header-fg);
     font-weight: var(--todae-table-header-font-weight);
     letter-spacing: var(--todae-table-header-font-letter-spacing);
+    text-transform: var(--todae-table-header-font-text-transform);
   }
 
   .head > * > .headerCell {

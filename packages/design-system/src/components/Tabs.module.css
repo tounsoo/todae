@@ -37,6 +37,7 @@
     font-size: var(--todae-tabs-font-size);
     font-weight: var(--todae-tabs-font-weight);
     letter-spacing: var(--todae-tabs-font-letter-spacing);
+    text-transform: var(--todae-tabs-font-text-transform);
     line-height: var(--todae-tabs-leading);
     white-space: nowrap;
     cursor: pointer;

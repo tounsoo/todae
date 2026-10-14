@@ -48,6 +48,10 @@ Token files follow DTCG 2025.10: an alias is a JSON Pointer `$ref`, such as `{ "
 
 `alpha` is a number from 0 to 1, or a `$ref` to a `number` token. Todae's translucent colors take theirs from the `opacity` scale, where `opacity.<n>` is n percent, for example `"alpha": { "$ref": "#/opacity/12/$value" }`. The build emits the alpha as that token's CSS variable.
 
+## Letter case
+
+DTCG 2025.10 has no type for letter case, so Todae adds one: `textTransform`, whose value is `none`, `uppercase`, `lowercase` or `capitalize`. `font.text-transform.none` holds `none`, and Button, Tabs, Label and the Table header each read their own `font.text-transform` token, which points at it. Tools that only know the DTCG types may not accept a `textTransform` token. When DTCG adds a standard type for letter case, Todae will move to it.
+
 ## Status tones
 
 Four tones carry status: `info`, `success`, `warning` and `critical`. Each is three tokens per appearance: `color.status.<tone>.fg` for text and icons, `.bg` for the fill, and `.border`. The build checks `fg` on `bg` at Lc 75 and `fg` on `color.bg.surface` at Lc 60. [Alert](/alert) reads them through its `alert.<tone>` contract tokens. `info` is neutral ink, matching the accent; a company can give it a hue in its token package.

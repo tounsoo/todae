@@ -68,6 +68,7 @@
   --todae-font-size-4: 1.25rem;
   --todae-font-size-5: 1.5rem;
   --todae-font-size-6: 1.875rem;
+  --todae-font-text-transform-none: none;
   --todae-font-weight-bold: 600;
   --todae-font-weight-medium: 500;
   --todae-font-weight-regular: 400;
@@ -423,6 +424,7 @@
   --todae-focus-ring-width: var(--_todae-focus-ring-width, 2px);
   --todae-button-base-font-letter-spacing: var(--_todae-button-base-font-letter-spacing, var(--todae-font-letter-spacing-default));
   --todae-button-base-font-size: var(--_todae-button-base-font-size, var(--todae-font-size-3));
+  --todae-button-base-font-text-transform: var(--_todae-button-base-font-text-transform, var(--todae-font-text-transform-none));
   --todae-button-base-font-weight: var(--_todae-button-base-font-weight, var(--todae-font-weight-medium));
   --todae-button-base-gap: var(--_todae-button-base-gap, var(--todae-space-inline-gap));
   --todae-button-base-icon-size: var(--_todae-button-base-icon-size, 1rem);
@@ -542,6 +544,7 @@
   --todae-field-label-fg: var(--_todae-field-label-fg, var(--todae-color-fg-default));
   --todae-field-label-font-letter-spacing: var(--_todae-field-label-font-letter-spacing, var(--todae-font-letter-spacing-default));
   --todae-field-label-font-size: var(--_todae-field-label-font-size, var(--todae-font-size-2));
+  --todae-field-label-font-text-transform: var(--_todae-field-label-font-text-transform, var(--todae-font-text-transform-none));
   --todae-field-label-font-weight: var(--_todae-field-label-font-weight, var(--todae-font-weight-medium));
   --todae-field-label-gap: var(--_todae-field-label-gap, 0.4rem);
   --todae-field-leading: var(--_todae-field-leading, var(--todae-font-leading-default));
@@ -723,6 +726,7 @@
   --todae-tabs-fg-selected: var(--_todae-tabs-fg-selected, var(--todae-color-fg-default));
   --todae-tabs-font-letter-spacing: var(--_todae-tabs-font-letter-spacing, var(--todae-font-letter-spacing-default));
   --todae-tabs-font-size: var(--_todae-tabs-font-size, var(--todae-font-size-2));
+  --todae-tabs-font-text-transform: var(--_todae-tabs-font-text-transform, var(--todae-font-text-transform-none));
   --todae-tabs-font-weight: var(--_todae-tabs-font-weight, var(--todae-font-weight-medium));
   --todae-tabs-gap: var(--_todae-tabs-gap, var(--todae-space-inline-gap));
   --todae-tabs-indicator-color: var(--_todae-tabs-indicator-color, var(--todae-color-accent-default));
@@ -840,6 +844,7 @@
   --todae-table-header-border: var(--_todae-table-header-border, var(--todae-color-border-default));
   --todae-table-header-fg: var(--_todae-table-header-fg, var(--todae-color-fg-default));
   --todae-table-header-font-letter-spacing: var(--_todae-table-header-font-letter-spacing, var(--todae-font-letter-spacing-default));
+  --todae-table-header-font-text-transform: var(--_todae-table-header-font-text-transform, var(--todae-font-text-transform-none));
   --todae-table-header-font-weight: var(--_todae-table-header-font-weight, var(--todae-font-weight-medium));
   --todae-table-rule-thickness: var(--_todae-table-rule-thickness, 1px);
   --todae-meter-fill-critical: var(--_todae-meter-fill-critical, var(--todae-color-status-critical-fg));
@@ -1086,6 +1091,7 @@
   --todae-calendar-weekday-font-weight: var(--_todae-calendar-weekday-font-weight, var(--todae-font-weight-regular));
   --todae-button-font-letter-spacing: var(--todae-button-base-font-letter-spacing);
   --todae-button-font-size: var(--todae-button-base-font-size);
+  --todae-button-font-text-transform: var(--todae-button-base-font-text-transform);
   --todae-button-font-weight: var(--todae-button-base-font-weight);
   --todae-button-gap: var(--todae-button-base-gap);
   --todae-button-icon-size: var(--todae-button-base-icon-size);

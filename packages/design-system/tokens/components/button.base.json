@@ -9,7 +9,8 @@
       "font": {
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } },
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } },
-        "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } }
+        "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } },
+        "text-transform": { "$type": "textTransform", "$value": { "$ref": "#/font/text-transform/none/$value" } }
       },
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
       "icon": {

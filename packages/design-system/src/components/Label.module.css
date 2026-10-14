@@ -4,6 +4,7 @@
     font-size: var(--todae-field-label-font-size);
     font-weight: var(--todae-field-label-font-weight);
     letter-spacing: var(--todae-field-label-font-letter-spacing);
+    text-transform: var(--todae-field-label-font-text-transform);
     color: var(--todae-field-label-fg);
   }
 }

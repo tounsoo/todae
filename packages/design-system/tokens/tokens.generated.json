@@ -614,6 +614,15 @@
       "context": null
     },
     {
+      "path": "font.text-transform.none",
+      "type": "textTransform",
+      "cssVar": "--todae-font-text-transform-none",
+      "cssValue": "none",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "font.weight.bold",
       "type": "fontWeight",
       "cssVar": "--todae-font-weight-bold",
@@ -2459,6 +2468,15 @@
       "context": null
     },
     {
+      "path": "button.base.font.text-transform",
+      "type": "textTransform",
+      "cssVar": "--todae-button-base-font-text-transform",
+      "cssValue": "var(--todae-font-text-transform-none)",
+      "ref": "font.text-transform.none",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "button.base.font.weight",
       "type": "fontWeight",
       "cssVar": "--todae-button-base-font-weight",
@@ -3526,6 +3544,15 @@
       "cssVar": "--todae-field-label-font-size",
       "cssValue": "var(--todae-font-size-2)",
       "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.label.font.text-transform",
+      "type": "textTransform",
+      "cssVar": "--todae-field-label-font-text-transform",
+      "cssValue": "var(--todae-font-text-transform-none)",
+      "ref": "font.text-transform.none",
       "layer": "contract",
       "context": null
     },
@@ -5159,6 +5186,15 @@
       "context": null
     },
     {
+      "path": "tabs.font.text-transform",
+      "type": "textTransform",
+      "cssVar": "--todae-tabs-font-text-transform",
+      "cssValue": "var(--todae-font-text-transform-none)",
+      "ref": "font.text-transform.none",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "tabs.font.weight",
       "type": "fontWeight",
       "cssVar": "--todae-tabs-font-weight",
@@ -6208,6 +6244,15 @@
       "cssVar": "--todae-table-header-font-letter-spacing",
       "cssValue": "var(--todae-font-letter-spacing-default)",
       "ref": "font.letter-spacing.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "table.header.font.text-transform",
+      "type": "textTransform",
+      "cssVar": "--todae-table-header-font-text-transform",
+      "cssValue": "var(--todae-font-text-transform-none)",
+      "ref": "font.text-transform.none",
       "layer": "contract",
       "context": null
     },

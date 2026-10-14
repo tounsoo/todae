@@ -283,6 +283,9 @@
     "letter-spacing": {
       "default": { "$type": "dimension", "$value": { "value": 0, "unit": "rem" } }
     },
+    "text-transform": {
+      "none": { "$type": "textTransform", "$value": "none" }
+    },
     "leading": {
       "default": { "$type": "number", "$value": 1.5 },
       "tight": { "$type": "number", "$value": 1.25 }

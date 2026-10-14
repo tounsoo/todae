@@ -6,7 +6,8 @@
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
       "font": {
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/medium/$value" } },
-        "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } }
+        "letter-spacing": { "$type": "dimension", "$value": { "$ref": "#/font/letter-spacing/default/$value" } },
+        "text-transform": { "$type": "textTransform", "$value": { "$ref": "#/font/text-transform/none/$value" } }
       },
       "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } }
     },

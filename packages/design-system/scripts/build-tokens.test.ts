@@ -249,7 +249,7 @@ describe('build-tokens validations', () => {
     expect(() => serializeValue({ $type: 'dimension', $value: '{Space.2}' }, 'x')).toThrow(/curly-brace alias/);
   });
 
-  it('serializes motion, font family and shadow types', () => {
+  it('serializes motion, font family, shadow and text transform types', () => {
     const v = ($type: string, $value: unknown) => serializeValue({ $type, $value }, 'x').cssValue;
     expect(v('duration', { value: 200, unit: 'ms' })).toBe('200ms');
     expect(v('duration', { value: 0.3, unit: 's' })).toBe('0.3s');
@@ -263,6 +263,9 @@ describe('build-tokens validations', () => {
     expect(v('fontFamily', ['Inter Variable', 'system-ui', 'sans-serif'])).toBe('"Inter Variable", system-ui, sans-serif');
     expect(() => v('fontFamily', 'Inter"; color: red')).toThrow(/fontFamily names may only use/);
     expect(() => v('fontFamily', [])).toThrow(/at least one family/);
+    expect(v('textTransform', 'uppercase')).toBe('uppercase');
+    expect(() => v('textTransform', 'small-caps')).toThrow(/textTransform must be one of none, uppercase/);
+    expect(() => v('textTransform', 'none; color: red')).toThrow(/textTransform must be one of/);
     const layer = {
       color: { colorSpace: 'oklch', components: [0, 0, 0], alpha: 0.2 },
       offsetX: { value: 0, unit: 'px' },
@@ -591,7 +594,10 @@ describe('resolver-driven build', () => {
             base: {
               radius: px(4),
               padding: { x: px(12), y: px(6) },
-              font: { size: px(14), weight: { $type: 'fontWeight', $value: 500 }, 'letter-spacing': px(0) },
+              font: { size: px(14), weight: { $type: 'fontWeight', $value: 500 },
+                'letter-spacing': px(0),
+                'text-transform': { $type: 'textTransform', $value: 'none' },
+              },
               gap: px(8),
               icon: { size: px(16) },
               shadow: {
@@ -1303,7 +1309,7 @@ describe('company token build', () => {
           };
           r.resolutionOrder.push({ $ref: '#/sets/button' });
         },
-        /button\.base must be radius, padding\.x\/y, font\.size\/weight\/letter-spacing, gap/,
+        /button\.base must be radius, padding\.x\/y, font\.size\/weight\/letter-spacing\/text-transform, gap/,
       ],
       [
         (r) => {
