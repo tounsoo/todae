@@ -16,6 +16,9 @@
     overflow-x: hidden;
     overflow-y: auto;
     scroll-padding: var(--_room);
+    /* --_cover is how far the shown scroll button reaches up from the end,
+       set from script, so focus doesn't land under it. */
+    scroll-padding-block-end: calc(var(--_room) + var(--_cover, 0px));
   }
 
   /* The room for focus rings, as in ScrollArea. */
@@ -34,6 +37,8 @@
     grid-area: 1 / 1;
     align-self: end;
     justify-self: center;
+    /* Above positioned parts of the messages it sits over. */
+    z-index: 1;
     margin-block-end: var(--todae-conversation-scroll-button-inset);
   }
 

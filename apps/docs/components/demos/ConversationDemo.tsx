@@ -23,6 +23,7 @@ export function ConversationExample() {
   useEffect(() => () => clearInterval(timer.current), []);
 
   function ask() {
+    if (streaming) return;
     const words = REPLY.split(' ');
     const id = turns.length + 1;
     let shown = 0;
@@ -73,7 +74,7 @@ export function ConversationExample() {
         </Conversation.Viewport>
         <Conversation.ScrollButton />
       </Conversation.Root>
-      <Button.Root variant="secondary" onClick={ask} disabled={streaming} style={{ alignSelf: 'start' }}>
+      <Button.Root variant="secondary" onClick={ask} aria-disabled={streaming || undefined} style={{ alignSelf: 'start' }}>
         Ask for a long reply
       </Button.Root>
     </Stack.Root>

@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Conversation.Content',
   description:
-    'Holds the messages, spaced by conversation.gap. When an article in it takes aria-busy="true", as Message.Root does while streaming, Conversation announces that a message is arriving; when that clears, that it finished, unless the message holds a role="alert". Takes native div attributes.',
+    'Holds the messages, spaced by conversation.gap. When an article in it takes aria-busy="true", as Message.Root does while streaming, Conversation announces that a message is arriving; when that clears, that it finished, unless the message holds a role="alert" or another message starts at the same time. Takes native div attributes.',
   props: [
     {
       name: 'children',

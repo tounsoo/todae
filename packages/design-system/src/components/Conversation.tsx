@@ -13,6 +13,7 @@ import {
   type UIEvent,
 } from 'react';
 import { useAnnouncer } from '../hooks/useAnnouncer';
+import { reducedMotion } from '../overlay/useOverlayPresence';
 import { useGlyphs } from '../providers/GlyphsProvider';
 import { useStrings } from '../providers/StringsProvider';
 import { Button, type ButtonActionProps } from './Button';
@@ -38,7 +39,13 @@ export type ConversationScrollButtonProps = ButtonActionProps;
 
 // How far from the end still counts as at the end, for fractional scroll
 // positions at some zoom levels.
-const END_SLACK = 2;
+const END_SLACK = 1;
+// The share of the distance left that a glide covers each frame, and its
+// smallest step in pixels.
+const GLIDE_SHARE = 0.18;
+const GLIDE_MIN_STEP = 4;
+// The longest a glide runs before it lands at the end.
+const GLIDE_MS = 500;
 
 type ConversationContext = {
   viewport: RefObject<HTMLElement | null>;
@@ -47,7 +54,6 @@ type ConversationContext = {
   announceMessages: boolean;
   atEnd: boolean;
   onScroll: () => void;
-  onScrollEnd: () => void;
   follow: () => void;
   scrollToEnd: () => void;
 };
@@ -64,10 +70,6 @@ function distanceToEnd(el: HTMLElement): number {
   return el.scrollHeight - el.clientHeight - el.scrollTop;
 }
 
-function prefersReducedMotion(): boolean {
-  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
 /**
  * A conversation of messages that keeps the newest one in view while it
  * grows. It follows the end of the conversation until the reader scrolls up,
@@ -79,13 +81,13 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
   const button = useRef<HTMLButtonElement | null>(null);
   // Whether to keep the end in view when the content or the viewport resizes.
   const following = useRef(true);
-  // The scroll position last seen, so a scroll event that reads a position
-  // further up than it is a reader scrolling up. A scroll event can land
-  // after the content grew, so being short of the end alone isn't one.
-  const lastTop = useRef(0);
-  // True while a smooth scroll Todae started is running, so its own scroll
-  // events don't read as the reader leaving the end.
-  const gliding = useRef(false);
+  // The scroll position last seen or set. Todae only ever scrolls down, so a
+  // scroll event that reads a position above it is the reader scrolling up.
+  // Being short of the end alone isn't: a scroll event can land after the
+  // content grew.
+  const expected = useRef(0);
+  // The frame of the glide Conversation.ScrollButton started, or 0.
+  const glideFrame = useRef(0);
   const [atEnd, setAtEndState] = useState(true);
 
   // Conversation.ScrollButton hides at the end, so focus on it moves to the
@@ -96,52 +98,91 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
     setAtEndState(end);
   }, []);
 
+  const stopGlide = useCallback(() => {
+    cancelAnimationFrame(glideFrame.current);
+    glideFrame.current = 0;
+  }, []);
+
+  useEffect(() => stopGlide, [stopGlide]);
+
   const onScroll = useCallback(() => {
     const el = viewport.current;
     if (!el) return;
     const top = el.scrollTop;
-    const up = top < lastTop.current - END_SLACK;
-    lastTop.current = top;
-    if (gliding.current) return;
+    // At the end first: a shrinking conversation clamps the position up to
+    // its new end, which is no reader's doing.
     if (distanceToEnd(el) <= END_SLACK) following.current = true;
-    else if (up) following.current = false;
+    else if (top < expected.current - 0.5) {
+      following.current = false;
+      stopGlide();
+    }
+    expected.current = top;
     setAtEnd(following.current);
-  }, [setAtEnd]);
-
-  const onScrollEnd = useCallback(() => {
-    if (!gliding.current) return;
-    gliding.current = false;
-    const el = viewport.current;
-    // A reader who scrolled during the glide decides where it ends.
-    if (el) following.current = distanceToEnd(el) <= END_SLACK;
-    setAtEnd(following.current);
-  }, [setAtEnd]);
+  }, [setAtEnd, stopGlide]);
 
   // Called on every resize: back to the end while following it, so a growing
-  // message stays in view.
+  // message stays in view, and following again once the end comes to the
+  // reader, such as when the content shrinks.
   const follow = useCallback(() => {
     const el = viewport.current;
-    if (!el || !following.current) return;
-    if (gliding.current) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-    else el.scrollTop = el.scrollHeight;
-    lastTop.current = el.scrollTop;
-  }, []);
+    if (!el || glideFrame.current) return;
+    if (following.current) el.scrollTop = el.scrollHeight;
+    else if (distanceToEnd(el) <= END_SLACK) following.current = true;
+    expected.current = el.scrollTop;
+    setAtEnd(following.current);
+  }, [setAtEnd]);
 
+  // Each frame covers a share of what is left, so it slows into an end that
+  // may still be moving away while a message grows, and it lands after
+  // GLIDE_MS at most.
   const scrollToEnd = useCallback(() => {
     const el = viewport.current;
     if (!el) return;
     following.current = true;
     setAtEnd(true);
-    if (distanceToEnd(el) <= END_SLACK) return;
-    const smooth = !prefersReducedMotion();
-    gliding.current = smooth;
-    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
-    if (!smooth) lastTop.current = el.scrollTop;
-  }, [setAtEnd]);
+    stopGlide();
+    if (reducedMotion()) {
+      el.scrollTop = el.scrollHeight;
+      expected.current = el.scrollTop;
+      return;
+    }
+    const start = performance.now();
+    const step = () => {
+      const left = distanceToEnd(el);
+      if (left <= END_SLACK) {
+        glideFrame.current = 0;
+        return;
+      }
+      // Past its time, it lands, however fast the end is still moving.
+      if (performance.now() - start >= GLIDE_MS) {
+        glideFrame.current = 0;
+        el.scrollTop = el.scrollHeight;
+        expected.current = el.scrollTop;
+        return;
+      }
+      el.scrollTop += Math.max(left * GLIDE_SHARE, GLIDE_MIN_STEP);
+      expected.current = el.scrollTop;
+      glideFrame.current = requestAnimationFrame(step);
+    };
+    step();
+  }, [setAtEnd, stopGlide]);
+
+  // Keeps focus that lands under the scroll button clear of it.
+  useLayoutEffect(() => {
+    const el = viewport.current;
+    const own = button.current;
+    if (!el) return;
+    if (atEnd || !own) {
+      el.style.removeProperty('--_cover');
+      return;
+    }
+    const cover = el.getBoundingClientRect().bottom - own.getBoundingClientRect().top;
+    el.style.setProperty('--_cover', `${Math.max(0, cover)}px`);
+  }, [atEnd]);
 
   const value = useMemo<ConversationContext>(
-    () => ({ viewport, content, button, announceMessages, atEnd, onScroll, onScrollEnd, follow, scrollToEnd }),
-    [announceMessages, atEnd, onScroll, onScrollEnd, follow, scrollToEnd],
+    () => ({ viewport, content, button, announceMessages, atEnd, onScroll, follow, scrollToEnd }),
+    [announceMessages, atEnd, onScroll, follow, scrollToEnd],
   );
 
   return (
@@ -162,7 +203,7 @@ function Viewport({ 'aria-label': ariaLabel, className, ref, onScroll, onFocus, 
   const refs = useComposedRefs(context.viewport, ref);
   const [stop, setFocused] = useScrollTabStop(context.viewport, inner, 'block', undefined);
   const strings = useStrings();
-  const { follow, onScrollEnd } = context;
+  const { follow } = context;
 
   useLayoutEffect(() => {
     const el = context.viewport.current;
@@ -172,12 +213,8 @@ function Viewport({ 'aria-label': ariaLabel, className, ref, onScroll, onFocus, 
     const resize = new ResizeObserver(follow);
     resize.observe(el);
     if (inner.current) resize.observe(inner.current);
-    el.addEventListener('scrollend', onScrollEnd);
-    return () => {
-      resize.disconnect();
-      el.removeEventListener('scrollend', onScrollEnd);
-    };
-  }, [context.viewport, follow, onScrollEnd]);
+    return () => resize.disconnect();
+  }, [context.viewport, follow]);
 
   // An empty aria-label names nothing, so the default stands in for it, as on a close button.
   const label = ariaLabel || (props['aria-labelledby'] == null ? strings.conversation : undefined);
@@ -210,7 +247,8 @@ function Viewport({ 'aria-label': ariaLabel, className, ref, onScroll, onFocus, 
  * Holds the messages. When an `article` in it takes `aria-busy="true"`, as
  * Message.Root does while `streaming`, it announces that a message is arriving;
  * when that clears, that it finished, unless the message now holds a
- * `role="alert"`, which speaks for itself.
+ * `role="alert"`, which speaks for itself, or another message starts at the
+ * same time.
  */
 function Content({ className, ref, ...props }: ConversationContentProps) {
   const context = useConversation('Content');
@@ -255,12 +293,13 @@ function ScrollButton({ 'aria-label': ariaLabel, onClick, className, children, r
   const strings = useStrings();
   const { chevron } = useGlyphs();
   const refs = useComposedRefs(context.button, ref);
+  const empty = children == null || children === false || children === '';
 
   return (
     <Button.Root
       variant="secondary"
       hidden={context.atEnd}
-      aria-label={ariaLabel || (children == null ? strings.scrollToLatest : undefined)}
+      aria-label={ariaLabel || (empty ? strings.scrollToLatest : undefined)}
       {...props}
       ref={refs}
       className={cx(styles.scrollButton, className)}
