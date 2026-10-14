@@ -1,6 +1,7 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -202,6 +203,55 @@ describe('Composer in a browser', () => {
       send.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
     });
     expect(document.activeElement).toBe(document.body);
+  });
+
+  it('sends once for a held Enter in the textarea, even before busy is set', async () => {
+    const onSend = vi.fn();
+    render(
+      <Composer.Root onSubmit={(event) => (event.preventDefault(), onSend())}>
+        <textarea aria-label="Message" />
+        <Composer.Submit />
+      </Composer.Root>,
+    );
+    await userEvent.click(screen.getByRole('textbox'));
+    await userEvent.keyboard('{Enter>5/}');
+    expect(onSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the submit of a form portaled inside it to that form, busy or not", async () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    function Portaled({ busy }: { busy: boolean }) {
+      return (
+        <Composer.Root busy={busy} onSubmit={(event) => (event.preventDefault(), outer())}>
+          <textarea aria-label="Message" />
+          {createPortal(
+            <form aria-label="Link" onSubmit={(event) => inner(event.defaultPrevented)}>
+              <button type="submit">Add link</button>
+            </form>,
+            document.body,
+          )}
+        </Composer.Root>
+      );
+    }
+    const { rerender } = render(<Portaled busy={false} />);
+    const form = () => screen.getByRole('form', { name: 'Link' }) as HTMLFormElement;
+    const cancelled: boolean[] = [];
+    const listener = (event: Event) => {
+      cancelled.push(event.defaultPrevented);
+      event.preventDefault();
+    };
+    window.addEventListener('submit', listener);
+    try {
+      form().requestSubmit();
+      rerender(<Portaled busy />);
+      form().requestSubmit();
+    } finally {
+      window.removeEventListener('submit', listener);
+    }
+    expect(inner).toHaveBeenCalledTimes(2);
+    expect(outer).not.toHaveBeenCalled();
+    expect(cancelled).toEqual([false, false]);
   });
 
   it('passes axe', async () => {

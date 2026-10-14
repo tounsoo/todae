@@ -25,6 +25,8 @@ import styles from './Composer.module.css';
  * line.
  */
 export type ComposerRootProps = ComponentPropsWithRef<'form'> & {
+  /** Called for this form's own submits, not those of a form rendered inside it with createPortal. */
+  onSubmit?: ComponentPropsWithRef<'form'>['onSubmit'];
   /** A response is running: no submit event goes through, from Enter, a submit button or requestSubmit, and Composer.Submit turns into Stop. Sets `data-busy`. */
   busy?: boolean;
 };
@@ -71,7 +73,8 @@ function Root({ busy = false, className, onKeyDown, onSubmit, ...props }: Compos
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
     if (event.defaultPrevented || target.readOnly || target.matches(':disabled')) return;
     event.preventDefault();
-    if (busy) return;
+    // A held Enter sends once, even if busy is not set yet when it repeats.
+    if (busy || event.repeat) return;
     const form = event.currentTarget;
     const button = defaultButton(form);
     // As implicit submission does: a disabled default button sends nothing.
@@ -79,8 +82,10 @@ function Root({ busy = false, className, onKeyDown, onSubmit, ...props }: Compos
     form.requestSubmit(button);
   };
   // Nothing sends while busy, whatever starts it: Enter in a text input, a
-  // product button, or a call to requestSubmit.
+  // product button, or a call to requestSubmit. A form rendered inside the
+  // composer with createPortal is its own: its submit is left alone.
   const handleSubmit = (event: ReactSubmitEvent<HTMLFormElement>) => {
+    if (event.target !== event.currentTarget) return;
     if (busy) {
       event.preventDefault();
       return;
