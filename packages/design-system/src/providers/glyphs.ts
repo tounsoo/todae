@@ -17,6 +17,8 @@ export interface Glyphs {
   separator?: ReactNode;
   /** Field.DatePicker's button. Todae draws a calendar. */
   calendar?: ReactNode;
+  /** Field.TimePicker's button. Todae draws a clock. */
+  clock?: ReactNode;
   /** Pagination.Ellipsis with no content. "…" by default. */
   ellipsis?: ReactNode;
   /** Composer.Submit with no content. Todae draws an arrow pointing up. */

@@ -66,7 +66,7 @@ describe('SiteNav', () => {
       '/field/select',
       '/field/textarea',
       '/field/text-input',
-      '/field/time-input',
+      '/field/time-picker',
     ]);
     cleanup();
 

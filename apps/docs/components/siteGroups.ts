@@ -51,7 +51,7 @@ export const SITE_GROUPS = [
           ['/field/select', 'Select'],
           ['/field/textarea', 'Textarea'],
           ['/field/text-input', 'TextInput'],
-          ['/field/time-input', 'TimeInput'],
+          ['/field/time-picker', 'TimePicker'],
         ],
       ],
       ['/fieldset', 'Fieldset'],

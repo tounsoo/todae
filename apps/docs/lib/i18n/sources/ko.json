@@ -214,8 +214,8 @@
   },
   "field": {
     "(top)": "4995db135d8d",
-    "# Field": "ae95a55c41cc",
-    "## Inputs": "13429baaed10",
+    "# Field": "16a15e6fbe08",
+    "## Inputs": "0b5f6b58bd19",
     "## Label": "7d0c50d3c651",
     "## Messages": "3baebdf13c83",
     "## Counter": "3c5316a2038b",
@@ -248,7 +248,7 @@
   },
   "field/color-picker": {
     "(top)": "a10298fe8c00",
-    "# Field.ColorPicker": "30d46b05f5b8",
+    "# Field.ColorPicker": "b3e07a04577e",
     "## Accessible composition": "5871a8f6df0e",
     "## When to use": "d57fe8233a0b",
     "### Field.ColorPicker": "f274c18b0118",
@@ -257,10 +257,10 @@
   },
   "field/date-picker": {
     "(top)": "40872dd1fdc5",
-    "# Field.DatePicker": "bc536be6e438",
+    "# Field.DatePicker": "25ca5bf4ed77",
     "## Typed dates": "dbf209b1f6da",
     "## On its own": "295428996e2c",
-    "## Accessible composition": "12fb3517a0d1",
+    "## Accessible composition": "99d597418c5f",
     "## When to use": "d57fe8233a0b",
     "### Field.DatePicker": "4f6d0fdc3d52",
     "## Props": "4d3b8d5a61e4",
@@ -272,7 +272,7 @@
     "## Temporal": "fdb3c62be316",
     "## Accessible composition": "5f08e1bda3fa",
     "## When to use": "d57fe8233a0b",
-    "### Field.DateTimeInput": "d342764447ea",
+    "### Field.DateTimeInput": "1466e5689f62",
     "## Props": "3019547178cc",
     "(section order)": "d7c7e410a9f0"
   },
@@ -288,11 +288,11 @@
   },
   "field/text-input": {
     "(top)": "72a1aded0b2b",
-    "# Field.TextInput": "3ab7678e8bc9",
+    "# Field.TextInput": "e762ce0495ee",
     "## Number": "1a051e370546",
     "## Accessible composition": "7608bd1c3eb6",
     "## When to use": "d57fe8233a0b",
-    "### Field.TextInput": "3b65bc4a3986",
+    "### Field.TextInput": "ed3fef1eac74",
     "## Props": "286d56b43a7f",
     "(section order)": "8530bb19e469"
   },
@@ -307,15 +307,17 @@
     "## Props": "ea6d8a003de8",
     "(section order)": "b21f3734faec"
   },
-  "field/time-input": {
-    "(top)": "abb7c622b36a",
-    "# Field.TimeInput": "50456dd537cb",
-    "## Temporal": "fdb3c62be316",
-    "## Accessible composition": "5f08e1bda3fa",
+  "field/time-picker": {
+    "(top)": "c91058d9eff0",
+    "# Field.TimePicker": "f5343bcf803d",
+    "## Typed times": "bbf503246d6e",
+    "## On its own": "926177e5c068",
+    "## Temporal": "d7c947f6ad86",
+    "## Accessible composition": "4361ab015316",
     "## When to use": "d57fe8233a0b",
-    "### Field.TimeInput": "12a15f328e34",
-    "## Props": "f90e91d69375",
-    "(section order)": "76c49c0becb2"
+    "### Field.TimePicker": "2a8a763f320e",
+    "## Props": "b0c145a7d49f",
+    "(section order)": "39237f394310"
   },
   "fieldset": {
     "(top)": "d88e18f28a84",
@@ -415,7 +417,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "5f97a87c3984",
+    "# Native platform": "eefe11700083",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -632,7 +634,7 @@
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "020c1488e641",
+    "## Glyphs": "41e49a5b3949",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",
@@ -641,7 +643,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "1dfd3f30006f",
-    "## Strings": "58a4bf22e4db",
+    "## Strings": "7ff97b2921f9",
     "## Accessible composition": "ce80e59fbde4",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",

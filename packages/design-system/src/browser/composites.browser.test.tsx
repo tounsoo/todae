@@ -597,7 +597,7 @@ describe('Field.DatePicker in a browser', () => {
               setText(formatDate(date, { locale: 'en-US' }));
             }}
             locale="en-US"
-            showDate={!withInput}
+            showValue={!withInput}
           />
           <Field.Affix data-testid="affix">UTC</Field.Affix>
         </Field.Root>
