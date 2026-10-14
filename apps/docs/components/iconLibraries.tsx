@@ -13,6 +13,7 @@ import {
   Check as PhCheck,
   DotsThree,
   Envelope,
+  ExclamationMark,
   GearSix,
   Info as PhInfo,
   MagnifyingGlass,
@@ -31,6 +32,7 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconDots,
+  IconExclamationMark,
   IconInfoCircle,
   IconMail,
   IconPlayerStopFilled,
@@ -89,6 +91,7 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       clock: <Clock />,
       send: <ArrowUp />,
       stop: <Square fill="currentColor" />,
+      error: <X />,
     },
     icons: {
       plus: <Plus />,
@@ -114,6 +117,7 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       clock: <PhClock />,
       send: <PhArrowUp />,
       stop: <PhStop weight="fill" />,
+      error: <ExclamationMark weight="bold" />,
     },
     icons: {
       plus: <PhPlus />,
@@ -139,6 +143,7 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       clock: <IconClock />,
       send: <IconArrowUp />,
       stop: <IconPlayerStopFilled />,
+      error: <IconExclamationMark />,
     },
     icons: {
       plus: <IconPlus />,

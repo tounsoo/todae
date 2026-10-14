@@ -3647,6 +3647,24 @@
       "context": null
     },
     {
+      "path": "field.token.bg",
+      "type": "color",
+      "cssVar": "--todae-field-token-bg",
+      "cssValue": "var(--todae-color-bg-subtle)",
+      "ref": "color.bg.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.token.radius",
+      "type": "dimension",
+      "cssVar": "--todae-field-token-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "chip.bg.default",
       "type": "color",
       "cssVar": "--todae-chip-bg-default",
@@ -7063,6 +7081,231 @@
       "cssVar": "--todae-attachment-radius",
       "cssValue": "var(--todae-radius-md)",
       "ref": "radius.md",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.fg.current",
+      "type": "color",
+      "cssVar": "--todae-steps-fg-current",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.fg.done",
+      "type": "color",
+      "cssVar": "--todae-steps-fg-done",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.fg.error",
+      "type": "color",
+      "cssVar": "--todae-steps-fg-error",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.fg.pending",
+      "type": "color",
+      "cssVar": "--todae-steps-fg-pending",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.gap",
+      "type": "dimension",
+      "cssVar": "--todae-steps-gap",
+      "cssValue": "var(--todae-space-stack-gap)",
+      "ref": "space.stack.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.icon.size",
+      "type": "dimension",
+      "cssVar": "--todae-steps-icon-size",
+      "cssValue": "0.75rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.leading",
+      "type": "number",
+      "cssVar": "--todae-steps-leading",
+      "cssValue": "var(--todae-font-leading-default)",
+      "ref": "font.leading.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.line.color",
+      "type": "color",
+      "cssVar": "--todae-steps-line-color",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.line.gap",
+      "type": "dimension",
+      "cssVar": "--todae-steps-line-gap",
+      "cssValue": "2px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.line.width",
+      "type": "dimension",
+      "cssVar": "--todae-steps-line-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.bg.current",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-bg-current",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.bg.done",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-bg-done",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.bg.error",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-bg-error",
+      "cssValue": "var(--todae-color-status-critical-bg)",
+      "ref": "color.status.critical.bg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.bg.pending",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-bg-pending",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.border.current",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-border-current",
+      "cssValue": "var(--todae-color-bg-transparent)",
+      "ref": "color.bg.transparent",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.border.done",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-border-done",
+      "cssValue": "var(--todae-color-accent-default)",
+      "ref": "color.accent.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.border.error",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-border-error",
+      "cssValue": "var(--todae-color-status-critical-border)",
+      "ref": "color.status.critical.border",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.border.pending",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-border-pending",
+      "cssValue": "var(--todae-color-border-default)",
+      "ref": "color.border.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-steps-marker-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.fg.current",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-fg-current",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.fg.done",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-fg-done",
+      "cssValue": "var(--todae-color-on-accent)",
+      "ref": "color.on-accent",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.fg.error",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-fg-error",
+      "cssValue": "var(--todae-color-status-critical-fg)",
+      "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.fg.pending",
+      "type": "color",
+      "cssVar": "--todae-steps-marker-fg-pending",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.gap",
+      "type": "dimension",
+      "cssVar": "--todae-steps-marker-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "steps.marker.size",
+      "type": "dimension",
+      "cssVar": "--todae-steps-marker-size",
+      "cssValue": "1.25rem",
+      "ref": null,
       "layer": "contract",
       "context": null
     },

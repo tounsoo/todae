@@ -48,5 +48,12 @@ export const meta = {
       default: '"false"',
       description: 'Grows with content up to maxRows using CSS only. No maxRows means no cap.',
     },
+    {
+      name: 'highlights',
+      type: 'readonly FieldTextareaHighlight[]',
+      required: false,
+      description:
+        'Ranges of the text, { start, end, kind?, anchorName?, draw? }, drawn as tokens on a layer behind it. useMentions\' getTextareaProps sets it.',
+    },
   ],
 } as const satisfies ComponentMeta;

@@ -85,3 +85,12 @@ export function StopGlyph() {
     </svg>
   );
 }
+
+export function ErrorGlyph() {
+  return (
+    <svg {...svgProps}>
+      <path d="M8 3.5v5.5" />
+      <circle cx="8" cy="12" r="0.5" fill="currentColor" />
+    </svg>
+  );
+}

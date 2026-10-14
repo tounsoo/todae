@@ -41,6 +41,8 @@ const FRENCH: Strings = {
   charactersLeft: (remaining) => `${remaining} restants`,
   characterLimitReached: 'Limite atteinte',
   createOption: (query) => `Créer « ${query} »`,
+  suggestions: 'Suggestions',
+  suggestionCount: (count) => (count === 0 ? 'Aucune suggestion' : `${count} suggestion${count === 1 ? '' : 's'}`),
   saturation: 'Saturation',
   brightness: 'Luminosité',
   hue: 'Teinte',
@@ -59,6 +61,10 @@ const FRENCH: Strings = {
   messageFinished: 'Message terminé',
   send: 'Envoyer',
   stop: 'Arrêter',
+  stepDone: 'Terminé',
+  stepCurrent: 'En cours',
+  stepPending: 'À faire',
+  stepError: 'Échec',
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {

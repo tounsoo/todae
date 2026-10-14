@@ -10,7 +10,7 @@ export const meta = {
       type: 'Glyphs',
       required: true,
       description:
-        "The glyphs to change: close, check, chevron, separator and ellipsis. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins.",
+        "The glyphs to change, by the keys of the Glyphs type. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins.",
     },
     {
       name: 'children',
