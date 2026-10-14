@@ -1,5 +1,7 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToString } from 'react-dom/server';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { Field, GlyphsProvider, Label } from '../index';
 
 afterEach(cleanup);
@@ -108,11 +110,15 @@ describe('Field.TimePicker', () => {
 
   it.each([
     ['07:15', '8:00 AM'],
-    ['10:30:20', '10:30 AM'],
+    ['10:30', '10:30 AM'],
+    ['10:30:20', '11:00 AM'],
     ['10:31', '11:00 AM'],
     ['23:45', '8:00 AM'],
   ])('starts at the next time from %s when the time is not in the list', (now, expected) => {
     vi.spyOn(Temporal.Now, 'plainTimeISO').mockReturnValue(time(now));
+    onTestFinished(() => {
+      vi.restoreAllMocks();
+    });
     render(
       <Field.Root aria-label="Start">
         <Field.TimePicker value={time('07:00')} min={time('08:00')} locale="en-US" defaultOpen />
@@ -121,7 +127,30 @@ describe('Field.TimePicker', () => {
     const list = screen.getByRole('listbox');
     expect(document.getElementById(list.getAttribute('aria-activedescendant')!)!.textContent).toBe(expected);
     expect(screen.queryByRole('option', { selected: true })).toBeNull();
-    vi.restoreAllMocks();
+  });
+
+  it('starts at the first time on the server and moves to the next time from now once hydrated', async () => {
+    vi.spyOn(Temporal.Now, 'plainTimeISO').mockReturnValue(time('10:31'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    onTestFinished(() => {
+      vi.restoreAllMocks();
+    });
+    const tree = () => (
+      <Field.Root aria-label="Start">
+        <Field.TimePicker value={null} min={time('08:00')} locale="en-US" defaultOpen />
+      </Field.Root>
+    );
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    onTestFinished(() => host.remove());
+    host.innerHTML = renderToString(tree());
+    const active = () => document.getElementById(host.querySelector('[role="listbox"]')!.getAttribute('aria-activedescendant')!)!.textContent;
+    expect(active()).toBe('8:00 AM');
+    await act(async () => {
+      hydrateRoot(host, tree());
+    });
+    expect(active()).toBe('11:00 AM');
+    expect(error).not.toHaveBeenCalled();
   });
 
   it('keeps a time between the steps as it is when it is picked again', () => {

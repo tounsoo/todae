@@ -33,9 +33,9 @@ describe('parseTime', () => {
     }
   });
 
-  it('reads both hour cycles in every locale', () => {
+  it('reads every hour cycle in every locale', () => {
     for (const locale of LOCALES) {
-      for (const hourCycle of ['h12', 'h23'] as const) {
+      for (const hourCycle of ['h11', 'h12', 'h23'] as const) {
         for (const value of TIMES) {
           const text = value.toLocaleString(locale, { hour: 'numeric', minute: '2-digit', hourCycle });
           expect(read(text, locale), `${locale} ${hourCycle}: ${text}`).toBe(value.with({ second: 0 }).toString());
@@ -76,6 +76,9 @@ describe('parseTime', () => {
     expect(read('0:30 am', 'en-US')).toBe('00:30:00');
     expect(read('12:30 am', 'en-US')).toBe('00:30:00');
     expect(read('13 pm', 'en-US')).toBeNull();
+    // A word that covers only some hours takes only those.
+    expect(read('中午 12', 'zh-TW')).toBe('12:00:00');
+    expect(read('中午 1', 'zh-TW')).toBeNull();
   });
 
   it('reads the locale’s words for the morning and afternoon on either side', () => {

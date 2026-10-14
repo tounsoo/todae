@@ -48,7 +48,7 @@ export interface Strings {
   colorPicker: string;
   /** Name of Field.DatePicker's popover, and of its button beside another control but a picker. */
   datePicker: string;
-  /** Name of Field.TimePicker's popover and list of times, and of its button beside another control but a picker. */
+  /** Name of Field.TimePicker's list of times, and of its button beside another control but a picker. */
   timePicker: string;
   /** Name of Calendar.Header's button to the previous month. */
   previousMonth: string;

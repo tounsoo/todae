@@ -1141,8 +1141,8 @@ function timeSlots(step: number, min?: Temporal.PlainTime, max?: Temporal.PlainT
 const htmlTime = (value: Temporal.PlainTime) => value.toString({ smallestUnit: timeUnit(value) });
 
 const subscribeNothing = () => () => {};
-// The time to the minute, as a string so the snapshot stays the same within a minute.
-const nowOnClient = () => Temporal.Now.plainTimeISO().round({ smallestUnit: 'minute', roundingMode: 'floor' }).toString();
+// Now, up to the next whole minute, as the list's times are whole minutes, as a string so the snapshot stays the same within a minute.
+const nowOnClient = () => Temporal.Now.plainTimeISO().round({ smallestUnit: 'minute', roundingMode: 'ceil' }).toString();
 const nowOnServer = () => null;
 
 // The list's times, in an OptionList. It starts at the time when the list
