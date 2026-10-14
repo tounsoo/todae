@@ -1,7 +1,6 @@
 import {
   Children,
   createContext,
-  useCallback,
   useContext,
   useLayoutEffect,
   useMemo,
@@ -17,7 +16,7 @@ import { useCloseGlyph } from './closeGlyph';
 import { useDismissLabel } from './dismissLabel';
 import { useDomId } from './domId';
 import { Progress, type ProgressRootProps } from './Progress';
-import { composeHandlers, cx, useComposedRefs } from './props';
+import { cx, useComposedRefs } from './props';
 import { focusWithoutScroll } from './revealRing';
 import styles from './Attachment.module.css';
 
@@ -50,8 +49,6 @@ type Named = { id: string; text: string };
 type AttachmentContext = {
   named: Named | undefined;
   setNamed: (named: Named | undefined) => void;
-  /** Set when Attachment.Remove is pressed, so the unmount that follows hands focus on. */
-  removing: (pressed: boolean) => void;
 };
 
 const Context = createContext<AttachmentContext | null>(null);
@@ -72,6 +69,7 @@ function removeButton(root: Element): HTMLButtonElement | null {
   return null;
 }
 
+/** The attachment an item holds: the item itself, or the one inside an `li`. */
 function attachmentIn(el: Element): Element | null {
   return el.matches(`[${ROOT_ATTR}]`) ? el : el.querySelector(`:scope > [${ROOT_ATTR}]`);
 }
@@ -82,28 +80,43 @@ function activeIn(el: Element): Element | null {
   return node instanceof Document || node instanceof ShadowRoot ? node.activeElement : null;
 }
 
+/** The focused element, looking into shadow roots. */
+function deepActive(doc: Document): Element | null {
+  let active = doc.activeElement;
+  while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+  return active;
+}
+
 /**
- * After a remove press, focus goes to the remove button of the next
- * attachment beside this one, else the one before. Beside it means a sibling
- * element, or, for an attachment that is an `li`'s only child, the attachment
- * in another `li` of the same list, so focus stays among the same files.
+ * Called as an attachment holding focus unmounts, while it is still in the
+ * page. Once React has finished the update, if the attachment is gone and
+ * nothing else has focus, focus goes to the remove button of the attachment
+ * now in its place, else the one before. The items are the parent's children,
+ * or the `li`s of a list when the attachment is an `li`'s only child, so focus
+ * stays among the same files.
  */
-function focusNeighbor(root: HTMLElement) {
-  const active = activeIn(root);
-  // Focus went somewhere else since the press: leave it there.
-  if (active && active !== root.ownerDocument.body && !root.contains(active)) return;
+function handOffFocus(root: HTMLElement) {
   const parent = root.parentElement;
   if (!parent) return;
   const item = parent.localName === 'li' && parent.childElementCount === 1 ? parent : root;
-  const siblings = [...(item.parentElement?.children ?? [])];
-  const index = siblings.indexOf(item);
-  for (const sibling of [...siblings.slice(index + 1), ...siblings.slice(0, index).reverse()]) {
-    const other = attachmentIn(sibling);
-    const button = other && removeButton(other);
-    if (!button) continue;
-    button.focus();
-    if (activeIn(root) === button) return;
-  }
+  const list = item.parentElement;
+  if (!list) return;
+  const items = () => [...list.children].filter((child) => attachmentIn(child));
+  const slot = items().indexOf(item);
+  const doc = root.ownerDocument;
+  queueMicrotask(() => {
+    // Still there: a StrictMode check, or a hidden Suspense or Activity tree.
+    if (root.isConnected || !list.isConnected) return;
+    const active = deepActive(doc);
+    if (active && active.isConnected && active !== doc.body) return;
+    const now = items();
+    for (const other of [...now.slice(slot), ...now.slice(0, slot).reverse()]) {
+      const button = removeButton(attachmentIn(other)!);
+      if (!button) continue;
+      button.focus();
+      if (activeIn(button) === button) return;
+    }
+  });
 }
 
 /** The part's own name wins; else Attachment.Name's id names it. */
@@ -115,32 +128,21 @@ function Root({ className, status = 'ready', ref, ...props }: AttachmentRootProp
   const own = useRef<HTMLDivElement>(null);
   const refs = useComposedRefs(own, ref);
   const [named, setNamed] = useState<Named | undefined>(undefined);
-  const pressed = useRef(false);
-  const removing = useCallback((on: boolean) => {
-    pressed.current = on;
-  }, []);
-  const context = useMemo(() => ({ named, setNamed, removing }), [named, removing]);
+  const context = useMemo(() => ({ named, setNamed }), [named]);
   // Layout cleanup runs before React takes the element out, so focus is still
-  // inside it then. Only an unmount after a remove press hands focus on, not a
-  // remount for a new key or a StrictMode check.
+  // inside it then; the hand-off itself waits until the update is done.
   useLayoutEffect(() => {
     const root = own.current;
     return () => {
-      if (root && pressed.current) focusNeighbor(root);
+      if (root && root.contains(activeIn(root))) handOffFocus(root);
     };
   }, []);
-  // A press that removed nothing, such as one the product confirms first,
-  // stops counting once focus leaves the attachment.
-  const onBlur = composeHandlers(props.onBlur, (event) => {
-    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) pressed.current = false;
-  });
   return (
     <Context.Provider value={context}>
       <div
         role="group"
         {...props}
         aria-labelledby={labelledBy(props, named)}
-        onBlur={onBlur}
         ref={refs}
         {...{ [ROOT_ATTR]: '' }}
         data-status={status}
@@ -185,20 +187,18 @@ function AttachmentProgress({ className, ...props }: AttachmentProgressProps) {
 }
 
 function Remove({ 'aria-label': ariaLabel, className, children, ref, onClick, ...props }: AttachmentRemoveProps) {
-  const { named, removing } = useAttachment('Remove');
+  const { named } = useAttachment('Remove');
   const { removeAttachment } = useStrings();
   const [label, refs] = useDismissLabel(children, ariaLabel, ref, removeAttachment(named?.text ?? ''));
   const glyph = useCloseGlyph();
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    // Before the product's handler, which may remove the attachment at once
-    // (flushSync) or move focus itself. A click does not focus a button in
-    // every browser (Safari), so focus the pressed button for focus to move on
-    // from when its attachment leaves.
+    // A click does not focus a button in every browser (Safari). Focus the
+    // pressed button before the product's handler, which may remove the
+    // attachment at once or move focus itself, so focus moves on when the
+    // attachment leaves.
     const button = event.currentTarget;
     if (activeIn(button) !== button) focusWithoutScroll(button);
-    removing(true);
     onClick?.(event);
-    if (event.defaultPrevented) removing(false);
   };
   return (
     <Button.Root

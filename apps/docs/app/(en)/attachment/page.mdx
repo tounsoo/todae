@@ -33,11 +33,11 @@ Leave out a part you don't need, and the others close up.
 
 ## Removing
 
-When pressing `Attachment.Remove` removes its attachment, focus moves to the remove button of the next attachment beside it, or the one before when it was the last. Beside it means a sibling element, or, when each attachment is the only child of an `li`, the attachment in another item of the same list. When it was the only one, focus is yours to place, such as on the composer's text field. Focus you move in your own `onClick` stays where you put it. An attachment removed any other way, such as when you clear them all, or after your `onClick` calls `preventDefault()`, leaves focus to you.
+When an attachment that holds focus is removed, and nothing else has focus once React has finished the update, focus moves to the remove button of the attachment now in its place, else the one before. The attachments counted are its parent's children, or, when each attachment is the only child of an `li`, the items of the same list. Focus you move in your own `onClick` stays where you put it. When no attachment is left, focus is yours to place, such as on the composer's text field.
 
 ## Accessible composition
 
-**Todae handles:** A group for each file, named by its file name. A remove button named after the file, and a progress bar named by it. Focus moving to the next remove button when a press of a remove button removes its attachment.
+**Todae handles:** A group for each file, named by its file name. A remove button named after the file, and a progress bar named by it. Focus moving to the next remove button when an attachment holding focus is removed.
 
 **You supply:** The file name in `Attachment.Name`. An `alt=""` on a thumbnail, since the name already says what the file is. Focus after the last attachment is removed. An upload error said in words in `Attachment.Meta`, and announced when it happens, such as through [useAnnouncer](/utilities/use-announcer).
 

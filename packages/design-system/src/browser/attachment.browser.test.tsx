@@ -4,8 +4,8 @@ import { StrictMode, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import axe from 'axe-core';
-import { describe, expect, it } from 'vitest';
-import { Attachment } from '../index';
+import { describe, expect, it, vi } from 'vitest';
+import { Attachment, ScrollArea } from '../index';
 
 function Icon() {
   return (
@@ -197,22 +197,18 @@ describe('Attachment.Root in a browser', () => {
     expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Message' }));
   });
 
-  it('hands focus on after a removal flushed inside the click handler, and not after preventDefault', async () => {
-    function Files({ prevent }: { prevent?: boolean }) {
-      const [files, setFiles] = useState(['a.png', 'b.png']);
+  it('hands focus on after a removal flushed inside the click handler, or one that removes the next file too', async () => {
+    function Files({ both }: { both?: boolean }) {
+      const [files, setFiles] = useState(['a.png', 'b.png', 'c.png']);
       return (
         <div>
-          {files.map((file) => (
+          {files.map((file, index) => (
             <Attachment.Root key={file}>
               <Attachment.Name>{file}</Attachment.Name>
               <Attachment.Remove
-                onClick={(event) => {
-                  if (prevent) {
-                    event.preventDefault();
-                    setFiles((all) => all.filter((f) => f !== file));
-                  } else {
-                    flushSync(() => setFiles((all) => all.filter((f) => f !== file)));
-                  }
+                onClick={() => {
+                  if (both) setFiles((all) => all.filter((_, i) => i !== index && i !== index + 1));
+                  else flushSync(() => setFiles((all) => all.filter((f) => f !== file)));
                 }}
               />
             </Attachment.Root>
@@ -224,10 +220,35 @@ describe('Attachment.Root in a browser', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Remove a.png' }));
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove b.png' }));
     unmount();
-    render(<Files prevent />);
+    render(<Files both />);
     await userEvent.click(screen.getByRole('button', { name: 'Remove a.png' }));
-    // preventDefault() turns off Todae's own part of the press, as on other parts.
-    expect(document.activeElement).not.toBe(screen.getByRole('button', { name: 'Remove b.png' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove c.png' }));
+  });
+
+  it('fires the focus event of the button it hands focus to, so a scroll area reveals its ring', async () => {
+    const onFocus = vi.fn();
+    function Files() {
+      const [files, setFiles] = useState(['a.png', 'b.png']);
+      return (
+        <ScrollArea.Root axis="inline" aria-label="Files">
+          <div style={{ display: 'flex' }}>
+            {files.map((file) => (
+              <Attachment.Root key={file}>
+                <Attachment.Name>{file}</Attachment.Name>
+                <Attachment.Remove
+                  onFocus={file === 'b.png' ? onFocus : undefined}
+                  onClick={() => setFiles((all) => all.filter((f) => f !== file))}
+                />
+              </Attachment.Root>
+            ))}
+          </div>
+        </ScrollArea.Root>
+      );
+    }
+    render(<Files />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove a.png' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove b.png' }));
+    expect(onFocus).toHaveBeenCalledTimes(1);
   });
 
   it('moves focus past a neighbor that cannot take it', async () => {
@@ -249,7 +270,7 @@ describe('Attachment.Root in a browser', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove a.png' }));
   });
 
-  it('moves no focus when an attachment holding it unmounts without a remove press', async () => {
+  it('keeps focus on the same file through a new key, and moves none in a StrictMode check', async () => {
     function Files({ keys, strict }: { keys: string[]; strict?: boolean }) {
       const list = (
         <div>
@@ -267,11 +288,13 @@ describe('Attachment.Root in a browser', () => {
     const { rerender, unmount } = render(<Files keys={['tmp-0', 'b']} />);
     const first = screen.getByRole('button', { name: 'Remove file-0.png' });
     act(() => first.focus());
-    rerender(<Files keys={['srv-0', 'b']} />);
-    expect(document.activeElement).not.toBe(screen.getByRole('button', { name: 'Remove file-1.png' }));
+    await act(async () => rerender(<Files keys={['srv-0', 'b']} />));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove file-0.png' }));
     unmount();
     // StrictMode mounts, unmounts and mounts again: focus stays on the new file.
-    render(<Files strict keys={['a', 'b']} />);
+    await act(async () => {
+      render(<Files strict keys={['a', 'b']} />);
+    });
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove file-1.png' }));
   });
 
@@ -298,10 +321,47 @@ describe('Attachment.Root in a browser', () => {
     act(() => root.render(<Files />));
     const a = shadow.querySelector<HTMLButtonElement>('[aria-label="Remove a.png"]')!;
     act(() => a.focus());
-    act(() => a.click());
+    await act(async () => a.click());
     expect(shadow.activeElement).toBe(shadow.querySelector('[aria-label="Remove b.png"]'));
     act(() => root.unmount());
     host.remove();
+  });
+
+  it('leaves focus that a click handler moves out of a shadow root where it went', async () => {
+    const input = document.createElement('input');
+    input.setAttribute('aria-label', 'Message');
+    const host = document.createElement('div');
+    document.body.append(input, host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    const mount = document.createElement('div');
+    shadow.append(mount);
+    function Files() {
+      const [files, setFiles] = useState(['a.png', 'b.png']);
+      return (
+        <div>
+          {files.map((file) => (
+            <Attachment.Root key={file}>
+              <Attachment.Name>{file}</Attachment.Name>
+              <Attachment.Remove
+                onClick={() => {
+                  setFiles((all) => all.filter((f) => f !== file));
+                  input.focus();
+                }}
+              />
+            </Attachment.Root>
+          ))}
+        </div>
+      );
+    }
+    const root = createRoot(mount);
+    act(() => root.render(<Files />));
+    const a = shadow.querySelector<HTMLButtonElement>('[aria-label="Remove a.png"]')!;
+    act(() => a.focus());
+    await act(async () => a.click());
+    expect(document.activeElement).toBe(input);
+    act(() => root.unmount());
+    host.remove();
+    input.remove();
   });
 
   it('closes up the rows of a missing meta line', () => {

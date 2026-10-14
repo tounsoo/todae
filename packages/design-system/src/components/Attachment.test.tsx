@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StringsProvider } from '../providers/StringsProvider';
@@ -104,7 +104,7 @@ describe('Attachment', () => {
     expect(group.hasAttribute('aria-labelledby')).toBe(false);
   });
 
-  it('hands focus on after a remove press where elements have no checkVisibility', () => {
+  it('hands focus on where elements have no checkVisibility', async () => {
     function Files() {
       const [files, setFiles] = useState(['a.png', 'b.png']);
       return (
@@ -121,7 +121,7 @@ describe('Attachment', () => {
     render(<Files />);
     const a = screen.getByRole('button', { name: 'Remove a.png' });
     a.focus();
-    fireEvent.click(a);
+    await act(async () => fireEvent.click(a));
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove b.png' }));
   });
 
