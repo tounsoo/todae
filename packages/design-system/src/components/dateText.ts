@@ -35,7 +35,7 @@ function digitValue(char: string) {
  * script's digits as ASCII, and each run of anything but letters and digits
  * as one space.
  */
-function normalize(text: string) {
+export function normalize(text: string) {
   return (
     text
       .normalize('NFKC')

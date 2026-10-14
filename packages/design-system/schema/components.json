@@ -1373,7 +1373,7 @@
     },
     {
       "name": "Field.ColorPicker",
-      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker or Field.DatePicker, such as a Field.TextInput, that control is the field's control. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
+      "description": "A button one line of field text tall, filled with the color, that opens a ColorPicker in a popover. On its own it is the field's control, and a press elsewhere in the field opens the picker. Beside any other control in the field but a Field.ColorPicker, Field.DatePicker or Field.TimePicker, such as a Field.TextInput, that control is the field's control. Takes native button attributes except type, value, defaultValue, color, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1427,7 +1427,7 @@
     },
     {
       "name": "Field.DatePicker",
-      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker or Field.DatePicker, such as a Field.TextInput to type the date in, that control is the field's control. With showDate set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
+      "description": "A button that opens a Calendar in a popover and closes it on a picked date. On its own it is the field's control, shows the date, and a press elsewhere in the field opens the calendar. Beside any other control but a Field.ColorPicker, Field.DatePicker or Field.TimePicker, such as a Field.TextInput to type the date in, that control is the field's control. With showValue set to false, the button shows only a calendar glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
@@ -1475,10 +1475,10 @@
           "name": "placeholder",
           "type": "string",
           "required": false,
-          "description": "Shown on the button while there is no date, when showDate is true."
+          "description": "Shown on the button while there is no date, when showValue is true."
         },
         {
-          "name": "showDate",
+          "name": "showValue",
           "type": "boolean",
           "required": false,
           "description": "Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date.",
@@ -1769,50 +1769,82 @@
           "name": "type",
           "type": "\"text\" | \"search\" | \"email\" | \"url\" | \"tel\" | \"password\" | \"number\"",
           "required": false,
-          "description": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". Times use Field.TimeInput and Field.DateTimeInput; a date uses Field.DatePicker, with a text input beside it read by parseDate.",
+          "description": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". A time uses Field.TimePicker and a date Field.DatePicker, with a text input beside either read by parseTime or parseDate; a date and time uses Field.DateTimeInput.",
           "default": "\"text\""
         }
       ]
     },
     {
-      "name": "Field.TimeInput",
-      "description": "Controlled native <input type=\"time\"> inside Field.Root whose value is a Temporal.PlainTime. Todae ships no Temporal polyfill.",
+      "name": "Field.TimePicker",
+      "description": "A button that opens a list of times in a popover and closes it on a picked time. On its own it is the field's control, shows the time, and a press elsewhere in the field opens the list. Beside any other control but a Field.ColorPicker, Field.DatePicker or Field.TimePicker, such as a Field.TextInput to type the time in, that control is the field's control. With showValue set to false, the button shows only a clock glyph. Takes native button attributes except type, value, defaultValue, placeholder, onChange and children.",
       "props": [
         {
           "name": "value",
           "type": "Temporal.PlainTime | null",
           "required": true,
-          "description": "Controlled value, or null while the input is empty or incomplete."
-        },
-        {
-          "name": "onChange",
-          "type": "(event: ChangeEvent<HTMLInputElement>) => void",
-          "required": false,
-          "description": "Native change handler. Optional when onValueChange is enough."
+          "description": "The time, or null for none."
         },
         {
           "name": "onValueChange",
-          "type": "(value: Temporal.PlainTime | null) => void",
+          "type": "(value: Temporal.PlainTime) => void",
           "required": false,
-          "description": "Called with the new Temporal.PlainTime, or null while the input is empty or incomplete."
+          "description": "Fires with the time picked in the list."
         },
         {
           "name": "min",
           "type": "Temporal.PlainTime",
           "required": false,
-          "description": "Earliest value the input accepts, written to the native min."
+          "description": "The earliest time the list offers."
         },
         {
           "name": "max",
           "type": "Temporal.PlainTime",
           "required": false,
-          "description": "Latest value the input accepts, written to the native max."
+          "description": "The latest time the list offers."
         },
         {
-          "name": "className",
+          "name": "step",
+          "type": "number",
+          "required": false,
+          "description": "Minutes between the times in the list, from midnight.",
+          "default": "30"
+        },
+        {
+          "name": "locale",
           "type": "string",
           "required": false,
-          "description": "Optional class on the input."
+          "description": "The locale for the times' text, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server."
+        },
+        {
+          "name": "placeholder",
+          "type": "string",
+          "required": false,
+          "description": "Shown on the button while there is no time, when showValue is true."
+        },
+        {
+          "name": "showValue",
+          "type": "boolean",
+          "required": false,
+          "description": "Whether the button shows the time, or the placeholder, beside its glyph. Set it to false beside a text input that shows the time.",
+          "default": "true"
+        },
+        {
+          "name": "open",
+          "type": "boolean",
+          "required": false,
+          "description": "Controlled open state of the list. Pass with onOpenChange."
+        },
+        {
+          "name": "defaultOpen",
+          "type": "boolean",
+          "required": false,
+          "description": "Initial open state when uncontrolled."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "(open: boolean, reason: 'escape' | 'outside' | 'trigger' | 'select' | 'disabled') => void",
+          "required": false,
+          "description": "Fires when the list opens or closes, with why it closed."
         }
       ]
     },
@@ -1868,7 +1900,7 @@
           "name": "glyphs",
           "type": "Glyphs",
           "required": true,
-          "description": "The glyphs to change: close, check, chevron, separator and ellipsis. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins."
+          "description": "The glyphs to change, by the keys of the Glyphs type. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins."
         },
         {
           "name": "children",
@@ -2891,6 +2923,30 @@
           "description": "Laid-out children."
         }
       ]
+    },
+    {
+      "name": "Steps.Item",
+      "description": "One step, as an li with a marker for its status and a hidden status word read before its content. A done step shows the check glyph and struck-through text, the current step a spinner, and a step with an error the error glyph. Takes native li attributes.",
+      "props": [
+        {
+          "name": "status",
+          "type": "\"done\" | \"current\" | \"pending\" | \"error\"",
+          "required": false,
+          "description": "Sets data-status and the marker. A current step takes aria-current=\"step\".",
+          "default": "\"pending\""
+        },
+        {
+          "name": "statusLabel",
+          "type": "string",
+          "required": false,
+          "description": "The hidden status word read before the step, in place of the stepDone, stepCurrent, stepPending or stepError string when not empty."
+        }
+      ]
+    },
+    {
+      "name": "Steps.Root",
+      "description": "An ordered list of steps, such as an agent's plan or a checklist, as an ol with role=\"list\". Name it with aria-label or aria-labelledby when the page has more than one. Takes native ol attributes.",
+      "props": []
     },
     {
       "name": "StringsProvider",

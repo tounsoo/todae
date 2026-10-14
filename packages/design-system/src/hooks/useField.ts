@@ -76,7 +76,7 @@ export function useField(): UseFieldResult {
 
 /**
  * useField, with `counted` false for a control that leaves the field to any
- * other control beside it, as Field.ColorPicker and Field.DatePicker do. Not exported from the
+ * other control beside it, as Field.ColorPicker, Field.DatePicker and Field.TimePicker do. Not exported from the
  * package.
  */
 export function useFieldControl(counted: boolean): UseFieldResult {

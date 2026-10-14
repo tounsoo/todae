@@ -767,32 +767,6 @@
       "ko": "선택기가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
     }
   },
-  "Field.TimeInput": {
-    "value": {
-      "en": "Controlled value, or null while the input is empty or incomplete.",
-      "ko": "제어 값. 입력이 비어 있거나 덜 끝났을 때는 null입니다."
-    },
-    "onChange": {
-      "en": "Native change handler. Optional when onValueChange is enough.",
-      "ko": "네이티브 change 핸들러. onValueChange로 충분하면 생략할 수 있습니다."
-    },
-    "onValueChange": {
-      "en": "Called with the new Temporal.PlainTime, or null while the input is empty or incomplete.",
-      "ko": "새 Temporal.PlainTime으로, 입력이 비어 있거나 덜 끝났을 때는 null로 호출됩니다."
-    },
-    "min": {
-      "en": "Earliest value the input accepts, written to the native min.",
-      "ko": "입력이 받는 가장 이른 값. 네이티브 min으로 씁니다."
-    },
-    "max": {
-      "en": "Latest value the input accepts, written to the native max.",
-      "ko": "입력이 받는 가장 늦은 값. 네이티브 max로 씁니다."
-    },
-    "className": {
-      "en": "Optional class on the input.",
-      "ko": "input에 붙는 선택적 클래스."
-    }
-  },
   "Field.DateTimeInput": {
     "value": {
       "en": "Controlled value, or null while the input is empty or incomplete.",
@@ -867,8 +841,54 @@
       "ko": "네이티브 placeholder."
     },
     "type": {
-      "en": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". Times use Field.TimeInput and Field.DateTimeInput; a date uses Field.DatePicker, with a text input beside it read by parseDate.",
-      "ko": "네이티브 입력 type. number는 네이티브 스피너를 그대로 쓰며, value는 \"42\"처럼 입력 문자열 그대로입니다. 시간은 Field.TimeInput과 Field.DateTimeInput을, 날짜는 Field.DatePicker를 쓰고, 그 옆의 텍스트 입력은 parseDate로 읽습니다."
+      "en": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". A time uses Field.TimePicker and a date Field.DatePicker, with a text input beside either read by parseTime or parseDate; a date and time uses Field.DateTimeInput.",
+      "ko": "네이티브 입력 type. number는 네이티브 스피너를 그대로 쓰며, value는 \"42\"처럼 입력 문자열 그대로입니다. 시각은 Field.TimePicker를, 날짜는 Field.DatePicker를 쓰고, 그 옆의 텍스트 입력은 parseTime이나 parseDate로 읽습니다. 날짜와 시각은 Field.DateTimeInput을 씁니다."
+    }
+  },
+  "Field.TimePicker": {
+    "value": {
+      "en": "The time, or null for none.",
+      "ko": "시각, 없으면 null."
+    },
+    "onValueChange": {
+      "en": "Fires with the time picked in the list.",
+      "ko": "목록에서 고른 시각을 받아 호출됩니다."
+    },
+    "min": {
+      "en": "The earliest time the list offers.",
+      "ko": "목록이 보여 주는 가장 이른 시각."
+    },
+    "max": {
+      "en": "The latest time the list offers.",
+      "ko": "목록이 보여 주는 가장 늦은 시각."
+    },
+    "step": {
+      "en": "Minutes between the times in the list, from midnight.",
+      "ko": "자정부터 센, 목록의 시각 사이 간격(분)."
+    },
+    "locale": {
+      "en": "The locale for the times' text, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
+      "ko": "시각 텍스트의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+    },
+    "placeholder": {
+      "en": "Shown on the button while there is no time, when showValue is true.",
+      "ko": "showValue가 true일 때, 시각이 없는 동안 버튼에 보입니다."
+    },
+    "showValue": {
+      "en": "Whether the button shows the time, or the placeholder, beside its glyph. Set it to false beside a text input that shows the time.",
+      "ko": "버튼이 글리프 옆에 시각이나 placeholder를 보여 줄지 여부. 시각을 보여 주는 텍스트 입력 옆에서는 false로 두세요."
+    },
+    "open": {
+      "en": "Controlled open state of the list. Pass with onOpenChange.",
+      "ko": "목록의 제어 열림 상태. onOpenChange와 함께 전달하세요."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때 처음 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Fires when the list opens or closes, with why it closed.",
+      "ko": "목록이 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
     }
   },
   "Fieldset.Legend": {
@@ -1453,8 +1473,8 @@
   },
   "GlyphsProvider": {
     "glyphs": {
-      "en": "The glyphs to change: close, check, chevron, separator and ellipsis. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins.",
-      "ko": "바꿀 글리프: close, check, chevron, separator, ellipsis. 생략한 키는 가장 가까운 상위 GlyphsProvider에서 가져오고, null은 Todae 자체 글리프로 되돌립니다. 파트 자체의 내용이 있으면 그것이 우선합니다."
+      "en": "The glyphs to change, by the keys of the Glyphs type. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins.",
+      "ko": "바꿀 글리프. Glyphs 타입의 키로 지정합니다. 생략한 키는 가장 가까운 상위 GlyphsProvider에서 가져오고, null은 Todae 자체 글리프로 되돌립니다. 파트 자체의 내용이 있으면 그것이 우선합니다."
     },
     "children": {
       "en": "Subtree that uses these glyphs.",
@@ -2353,10 +2373,10 @@
       "ko": "버튼의 날짜와 달력 이름의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
     },
     "placeholder": {
-      "en": "Shown on the button while there is no date, when showDate is true.",
-      "ko": "showDate가 true일 때, 날짜가 없는 동안 버튼에 보입니다."
+      "en": "Shown on the button while there is no date, when showValue is true.",
+      "ko": "showValue가 true일 때, 날짜가 없는 동안 버튼에 보입니다."
     },
-    "showDate": {
+    "showValue": {
       "en": "Whether the button shows the date, or the placeholder, beside its glyph. Set it to false beside a text input that shows the date.",
       "ko": "버튼이 글리프 옆에 날짜나 placeholder를 보여 줄지 여부. 날짜를 보여 주는 텍스트 입력 옆에서는 false로 두세요."
     },
@@ -2409,6 +2429,16 @@
     "children": {
       "en": "The button's content. Without it, the send glyph named by the send string, or the stop glyph named by the stop string while busy.",
       "ko": "버튼의 내용. 없으면 send 문자열로 이름이 붙은 send 글리프를, busy인 동안에는 stop 문자열로 이름이 붙은 stop 글리프를 보여 줍니다."
+    }
+  },
+  "Steps.Item": {
+    "status": {
+      "en": "Sets data-status and the marker. A current step takes aria-current=\"step\".",
+      "ko": "data-status와 표시를 정합니다. current 단계는 aria-current=\"step\"을 받습니다."
+    },
+    "statusLabel": {
+      "en": "The hidden status word read before the step, in place of the stepDone, stepCurrent, stepPending or stepError string when not empty.",
+      "ko": "단계 앞에서 읽히는 숨은 상태 단어. 비어 있지 않으면 stepDone, stepCurrent, stepPending, stepError 문자열 대신 쓰입니다."
     }
   }
 }

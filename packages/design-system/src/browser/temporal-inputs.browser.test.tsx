@@ -1,15 +1,15 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import { Field } from '../components/Field';
 
-function Time({ step, initial }: { step?: number; initial: string }) {
-  const [time, setTime] = useState<Temporal.PlainTime | null>(Temporal.PlainTime.from(initial));
+function Time({ initial }: { initial: string | null }) {
+  const [time, setTime] = useState<Temporal.PlainTime | null>(initial ? Temporal.PlainTime.from(initial) : null);
   return (
     <>
       <Field.Root aria-label="Time">
-        <Field.TimeInput step={step} value={time} onValueChange={setTime} />
+        <Field.TimePicker locale="en-US" value={time} onValueChange={setTime} />
       </Field.Root>
       <output>{time?.toString() ?? 'none'}</output>
     </>
@@ -28,17 +28,20 @@ function DateTime() {
   );
 }
 
-describe('Field date and time inputs in a browser', () => {
-  it('keeps typing intact in a time input that shows seconds', async () => {
-    const { container } = render(<Time step={1} initial="01:30" />);
-    const input = container.querySelector('input')!;
-    await userEvent.click(input);
-    input.focus();
-    // The first segment is the hour: two digits move on to the minutes.
-    await userEvent.keyboard('14');
-    expect(container.querySelector('output')!.textContent).toBe('14:30:00');
-    await userEvent.keyboard('45');
-    expect(container.querySelector('output')!.textContent).toBe('14:45:00');
+describe('Field time and date-time parts in a browser', () => {
+  it('picks a time from the list with the keyboard and gives focus back to the button', async () => {
+    const { container } = render(<Time initial="09:30" />);
+    const button = screen.getByRole('button', { name: 'Time' });
+    await userEvent.click(button);
+    const list = screen.getByRole('listbox', { name: 'Choose time' });
+    await expect.poll(() => document.activeElement).toBe(list);
+    // The list starts at the time, and the times are every 30 minutes.
+    expect(document.getElementById(list.getAttribute('aria-activedescendant')!)!.textContent).toBe('9:30 AM');
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    expect(container.querySelector('output')!.textContent).toBe('10:00:00');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    await expect.poll(() => document.activeElement).toBe(button);
+    expect(button.textContent).toBe('10:00 AM');
   });
 
   it('keeps typing intact in a date and time input that shows seconds', async () => {

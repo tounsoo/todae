@@ -46,6 +46,7 @@ const FRENCH: Strings = {
   hue: 'Teinte',
   colorPicker: 'Sélecteur de couleur',
   datePicker: 'Choisir une date',
+  timePicker: 'Choisir une heure',
   previousMonth: 'Mois précédent',
   nextMonth: 'Mois suivant',
   previousYears: 'Années précédentes',
@@ -58,6 +59,10 @@ const FRENCH: Strings = {
   messageFinished: 'Message terminé',
   send: 'Envoyer',
   stop: 'Arrêter',
+  stepDone: 'Terminé',
+  stepCurrent: 'En cours',
+  stepPending: 'À faire',
+  stepError: 'Échec',
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {

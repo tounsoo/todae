@@ -48,6 +48,8 @@ export interface Strings {
   colorPicker: string;
   /** Name of Field.DatePicker's popover, and of its button beside another control but a picker. */
   datePicker: string;
+  /** Name of Field.TimePicker's list of times, and of its button beside another control but a picker. */
+  timePicker: string;
   /** Name of Calendar.Header's button to the previous month. */
   previousMonth: string;
   /** Name of Calendar.Header's button to the next month. */
@@ -72,6 +74,14 @@ export interface Strings {
   send: string;
   /** Name of Composer.Submit while the composer is busy, when its own text does not name it. */
   stop: string;
+  /** Steps.Item's hidden status word for a `done` step, read before the step's text. */
+  stepDone: string;
+  /** Steps.Item's hidden status word for the `current` step. */
+  stepCurrent: string;
+  /** Steps.Item's hidden status word for a `pending` step. */
+  stepPending: string;
+  /** Steps.Item's hidden status word for a step with an `error`. */
+  stepError: string;
 }
 
 /** The English Todae ships with. */
@@ -96,6 +106,7 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   hue: 'Hue',
   colorPicker: 'Color picker',
   datePicker: 'Choose date',
+  timePicker: 'Choose time',
   previousMonth: 'Previous month',
   nextMonth: 'Next month',
   previousYears: 'Previous years',
@@ -108,4 +119,8 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   messageFinished: 'Message complete',
   send: 'Send',
   stop: 'Stop',
+  stepDone: 'Done',
+  stepCurrent: 'In progress',
+  stepPending: 'Not started',
+  stepError: 'Failed',
 });

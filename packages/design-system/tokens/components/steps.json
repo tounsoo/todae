@@ -1,0 +1,43 @@
+{
+  "steps": {
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
+    "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
+    "fg": {
+      "done": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+      "current": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+      "pending": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+      "error": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
+    },
+    "marker": {
+      "size": { "$type": "dimension", "$value": { "value": 1.25, "unit": "rem" } },
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+      "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+      "bg": {
+        "done": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+        "current": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "pending": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "error": { "$type": "color", "$value": { "$ref": "#/color/status/critical/bg/$value" } }
+      },
+      "fg": {
+        "done": { "$type": "color", "$value": { "$ref": "#/color/on-accent/$value" } },
+        "current": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
+        "pending": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+        "error": { "$type": "color", "$value": { "$ref": "#/color/status/critical/fg/$value" } }
+      },
+      "border": {
+        "done": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
+        "current": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
+        "pending": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+        "error": { "$type": "color", "$value": { "$ref": "#/color/status/critical/border/$value" } }
+      }
+    },
+    "icon": {
+      "size": { "$type": "dimension", "$value": { "value": 0.75, "unit": "rem" } }
+    },
+    "line": {
+      "color": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+      "width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+      "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+    }
+  }
+}

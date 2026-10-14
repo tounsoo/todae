@@ -2,7 +2,7 @@ import { FieldLabelStates, FieldNumber } from '../../../../components/demos/Fiel
 
 # Field.TextInput
 
-`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string and `onChange` is required; `onValueChange` also gets the new string. `type` takes `text`, `search`, `email`, `url`, `tel`, `password` or `number`. Times have their own parts, [Field.TimeInput](/field/time-input) and [Field.DateTimeInput](/field/date-time-input). For a typed date, read the text with `parseDate`, beside a [Field.DatePicker](/field/date-picker). Put `id` on `Field.Root`.
+`Field.TextInput` is a native `<input>` for one line of text inside a [Field](/field). Its `value` is a string and `onChange` is required; `onValueChange` also gets the new string. `type` takes `text`, `search`, `email`, `url`, `tel`, `password` or `number`. A date and time has its own part, [Field.DateTimeInput](/field/date-time-input). For a typed date or time, read the text with `parseDate` or `parseTime`, beside a [Field.DatePicker](/field/date-picker) or [Field.TimePicker](/field/time-picker). Put `id` on `Field.Root`.
 
 ```tsx
 const id = useId();
@@ -54,7 +54,7 @@ Stepper buttons are an app composition; build them around this input when the na
 
 **When:** Single-line typed value inside `Field.Root` (text / search / email / url / tel / password), or a native number.
 
-**When not:** A time → `Field.TimeInput` or `Field.DateTimeInput`. Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
+**When not:** A time → `Field.TimePicker`. A date and time → `Field.DateTimeInput`. Multi-value tokens → `Field.ChipInput`. Multi-line → `Field.Textarea`. Standalone without Root.
 
 ## Props
 

@@ -60,6 +60,15 @@ export function CalendarGlyph() {
   );
 }
 
+export function ClockGlyph() {
+  return (
+    <svg {...svgProps}>
+      <circle cx="8" cy="8" r="5.5" />
+      <path d="M8 5v3l2 1.5" />
+    </svg>
+  );
+}
+
 /** Points up, toward the conversation the message goes to. */
 export function SendGlyph() {
   return (
@@ -73,6 +82,15 @@ export function StopGlyph() {
   return (
     <svg {...svgProps}>
       <rect x="4" y="4" width="8" height="8" rx="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function ErrorGlyph() {
+  return (
+    <svg {...svgProps}>
+      <path d="M8 3.5v5.5" />
+      <circle cx="8" cy="12" r="0.5" fill="currentColor" />
     </svg>
   );
 }
