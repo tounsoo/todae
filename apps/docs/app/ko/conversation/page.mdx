@@ -37,7 +37,7 @@ import { ConversationExample } from '../../../components/demos/ConversationDemo'
 
 ## 알림
 
-스트리밍되는 텍스트는 도착하는 대로 읽히지 않습니다. 뷰포트는 live region이 아닙니다. 대신 Conversation은 메시지가 도착하기 시작할 때와 다 도착했을 때 [useAnnouncer](/utilities/use-announcer)로 스크린 리더에 알립니다. `Conversation.Content` 안의 `article`에서 [Message](/message)의 `streaming`이 설정하는 `aria-busy="true"`를 지켜봅니다. 시작될 때 `messageStarted` 문자열을, 그것이 풀릴 때 `messageFinished`를 읽습니다. 그때 메시지 안에 오류 [Alert](/alert)처럼 `role="alert"`인 요소가 있으면 아무것도 말하지 않습니다. 알림이 읽히기 때문입니다. 한 메시지가 끝나면서 다른 메시지가 시작되면 `messageStarted`만 읽습니다. 마운트될 때 이미 스트리밍 중인 메시지는 알리지 않습니다. 직접 안내하려면 루트에 `announceMessages={false}`를 주세요.
+스트리밍되는 텍스트는 도착하는 대로 읽히지 않습니다. 뷰포트는 live region이 아닙니다. 대신 Conversation은 메시지가 도착하기 시작할 때와 다 도착했을 때 [useAnnouncer](/utilities/use-announcer)로 스크린 리더에 알립니다. `Conversation.Content` 안의 `article`에서 [Message](/message)의 `streaming`이 설정하는 `aria-busy="true"`를 지켜봅니다. 시작될 때 `messageStarted` 문자열을, 그것이 풀릴 때 `messageFinished`를 읽습니다. 그때 메시지 안에 오류 [Alert](/alert)처럼 `role="alert"`인 요소가 있으면 아무것도 말하지 않습니다. 알림이 읽히기 때문입니다. 한 메시지가 끝나면서 다른 메시지가 시작되면 `messageStarted`만 읽습니다. 마운트될 때 이미 스트리밍 중인 메시지는 시작을 알리지 않습니다. 직접 안내하려면 루트에 `announceMessages={false}`를 주세요.
 
 ## 접근성을 지키는 조합
 

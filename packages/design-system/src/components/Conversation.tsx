@@ -1,4 +1,5 @@
 import {
+  Children,
   createContext,
   useCallback,
   useContext,
@@ -56,6 +57,7 @@ type ConversationContext = {
   onScroll: () => void;
   follow: () => void;
   scrollToEnd: () => void;
+  measureCover: () => void;
 };
 
 const Context = createContext<ConversationContext | null>(null);
@@ -90,10 +92,10 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
   // Whether to keep the end in view when the content or the viewport resizes.
   const following = useRef(true);
   // The scroll position last seen or set. Todae only scrolls down, other than
-  // revealRing following the reader's own focus, so a
-  // scroll event that reads a position above it is the reader scrolling up.
-  // Being short of the end alone isn't: a scroll event can land after the
-  // content grew.
+  // revealRing following the reader's own focus, and scroll anchoring is off
+  // while following, so a scroll event that reads a position above it is the
+  // reader scrolling up, or a clamp to a new end. Being short of the end alone
+  // isn't: a scroll event can land after the content grew.
   const expected = useRef(0);
   // The frame of the glide Conversation.ScrollButton started, or 0.
   const glideFrame = useRef(0);
@@ -134,7 +136,9 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
   // reader, such as when the content shrinks.
   const follow = useCallback(() => {
     const el = viewport.current;
-    if (!el || glideFrame.current) return;
+    // A viewport with no box, such as in a hidden tab panel, reads 0 for
+    // everything, which would look like the end.
+    if (!el || glideFrame.current || el.getClientRects().length === 0) return;
     if (following.current) jump(el, el.scrollHeight);
     else if (distanceToEnd(el) <= END_SLACK) following.current = true;
     expected.current = el.scrollTop;
@@ -176,30 +180,34 @@ function Root({ announceMessages = true, className, ...props }: ConversationRoot
     step();
   }, [setAtEnd, stopGlide]);
 
-  // Keeps focus that lands under the scroll button clear of it, measured
-  // again when the button's size changes, such as with the density.
-  useLayoutEffect(() => {
+  // Keeps focus that lands under the shown scroll button clear of it. It is
+  // measured when the button shows, when its box resizes, and again as focus
+  // lands in the viewport, before the browser scrolls to it, which catches a
+  // change no observer sees, such as its inset token.
+  const measureCover = useCallback(() => {
     const el = viewport.current;
     const own = button.current;
     if (!el) return;
-    if (atEnd || !own) {
+    if (!own || own.hidden) {
       el.style.removeProperty('--_cover');
       return;
     }
-    const measure = () => {
-      const cover = el.getBoundingClientRect().bottom - own.getBoundingClientRect().top;
-      el.style.setProperty('--_cover', `${Math.max(0, cover)}px`);
-    };
-    measure();
-    if (typeof ResizeObserver === 'undefined') return;
-    const resize = new ResizeObserver(measure);
-    resize.observe(own);
+    const cover = el.getBoundingClientRect().bottom - own.getBoundingClientRect().top;
+    el.style.setProperty('--_cover', `${Math.max(0, cover)}px`);
+  }, []);
+
+  useLayoutEffect(() => {
+    measureCover();
+    const own = button.current;
+    if (atEnd || !own || typeof ResizeObserver === 'undefined') return;
+    const resize = new ResizeObserver(measureCover);
+    resize.observe(own, { box: 'border-box' });
     return () => resize.disconnect();
-  }, [atEnd]);
+  }, [atEnd, measureCover]);
 
   const value = useMemo<ConversationContext>(
-    () => ({ viewport, content, button, announceMessages, atEnd, onScroll, follow, scrollToEnd }),
-    [announceMessages, atEnd, onScroll, follow, scrollToEnd],
+    () => ({ viewport, content, button, announceMessages, atEnd, onScroll, follow, scrollToEnd, measureCover }),
+    [announceMessages, atEnd, onScroll, follow, scrollToEnd, measureCover],
   );
 
   return (
@@ -243,11 +251,17 @@ function Viewport({ 'aria-label': ariaLabel, className, ref, onScroll, onFocus, 
       tabIndex={stop ? 0 : -1}
       {...props}
       ref={refs}
+      // Scroll anchoring is off while following: it could move the position
+      // up when content above shrinks, which would read as the reader.
+      data-following={context.atEnd ? '' : undefined}
       className={cx(styles.viewport, className)}
       onScroll={composeHandlers(onScroll, (_event: UIEvent<HTMLElement>) => context.onScroll())}
       onFocus={composeHandlers(onFocus, (event: FocusEvent<HTMLElement>) => {
         if (event.target === event.currentTarget) setFocused(true);
-        else revealRing(event.currentTarget, event.target);
+        else {
+          context.measureCover();
+          revealRing(event.currentTarget, event.target);
+        }
       })}
       onBlur={composeHandlers(onBlur, (event: FocusEvent<HTMLElement>) => {
         if (event.target === event.currentTarget) setFocused(false);
@@ -310,7 +324,8 @@ function ScrollButton({ 'aria-label': ariaLabel, onClick, className, children, r
   const strings = useStrings();
   const { chevron } = useGlyphs();
   const refs = useComposedRefs(context.button, ref);
-  const empty = children == null || children === false || children === '';
+  // What React would render: no nodes, or only empty text.
+  const empty = Children.toArray(children).every((child) => child === '');
 
   return (
     <Button.Root

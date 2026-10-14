@@ -232,6 +232,87 @@ describe('Conversation in a browser', () => {
     expect(button.getAttribute('aria-label')).toBe('Scroll to latest message');
   });
 
+  it.each([
+    ['[false, false]', [false, false]],
+    ['true', true],
+  ])('shows the chevron when its children are %s', (_, children) => {
+    render(
+      <Conversation.Root>
+        <Conversation.Viewport>
+          <Conversation.Content />
+        </Conversation.Viewport>
+        <Conversation.ScrollButton data-testid="scroll">{children}</Conversation.ScrollButton>
+      </Conversation.Root>,
+    );
+    const button = screen.getByTestId('scroll');
+    expect(button.querySelector('[data-todae-glyph] svg')).not.toBeNull();
+    expect(button.getAttribute('aria-label')).toBe('Scroll to latest message');
+  });
+
+  it('keeps following when content above shrinks as the end grows', async () => {
+    function Collapsing({ step }: { step: number }) {
+      return (
+        <Conversation.Root style={{ blockSize: '200px' }}>
+          <Conversation.Viewport data-testid="viewport">
+            <Conversation.Content>
+              <div style={{ blockSize: step ? '20px' : '120px' }} />
+              {Array.from({ length: 10 }, (_, i) => (
+                <div key={i} style={{ blockSize: '60px' }} />
+              ))}
+              <div style={{ blockSize: step ? '160px' : '60px' }} />
+            </Conversation.Content>
+          </Conversation.Viewport>
+          <Conversation.ScrollButton data-testid="scroll" />
+        </Conversation.Root>
+      );
+    }
+    const { rerender } = render(<Collapsing step={0} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    rerender(<Collapsing step={1} />);
+    viewport.dispatchEvent(new Event('scroll'));
+    await frame();
+    expect(distanceToEnd(viewport)).toBeLessThanOrEqual(1);
+    expect(screen.getByTestId('scroll').hidden).toBe(true);
+  });
+
+  it('keeps the reader in place while hidden and shown again', async () => {
+    function Hideable({ hidden }: { hidden: boolean }) {
+      return (
+        <div hidden={hidden}>
+          <Thread count={10} />
+        </div>
+      );
+    }
+    const { rerender } = render(<Hideable hidden={false} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 100;
+    await waitFor(() => expect(screen.getByTestId('scroll').hidden).toBe(false));
+    rerender(<Hideable hidden />);
+    await frame();
+    rerender(<Hideable hidden={false} />);
+    await frame();
+    expect(viewport.scrollTop).toBe(100);
+    expect(screen.getByTestId('scroll').hidden).toBe(false);
+  });
+
+  it('measures the scroll button again when the density changes', async () => {
+    const { container } = render(<Thread count={10} />);
+    const viewport = screen.getByTestId('viewport');
+    await frame();
+    viewport.scrollTop = 0;
+    const button = await waitFor(() => {
+      const el = screen.getByTestId('scroll');
+      expect(el.hidden).toBe(false);
+      return el;
+    });
+    container.querySelector('[data-density]')!.setAttribute('data-density', 'spacious');
+    await frame();
+    const cover = viewport.getBoundingClientRect().bottom - button.getBoundingClientRect().top;
+    expect(parseFloat(viewport.style.getPropertyValue('--_cover'))).toBeCloseTo(cover, 0);
+  });
+
   it('passes axe', async () => {
     render(
       <main>

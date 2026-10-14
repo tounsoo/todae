@@ -21,6 +21,12 @@
     scroll-padding-block-end: calc(var(--_room) + var(--_cover, 0px));
   }
 
+  /* While it follows the end, the end is its anchor. Scrolled up, the
+     browser's anchoring keeps the reader's place. */
+  .viewport[data-following] {
+    overflow-anchor: none;
+  }
+
   /* The room for focus rings, as in ScrollArea. */
   .room {
     box-sizing: border-box;

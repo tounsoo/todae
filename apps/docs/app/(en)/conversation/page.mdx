@@ -37,7 +37,7 @@ While the reader is at the end, the viewport goes back to the end each time its 
 
 ## Announcements
 
-Streamed text is not read as it arrives: the viewport is not a live region. Instead, Conversation tells screen readers when a message starts and finishes arriving, through [useAnnouncer](/utilities/use-announcer). It watches the `article`s in `Conversation.Content` for `aria-busy="true"`, which [Message](/message)'s `streaming` sets. It reads the `messageStarted` string when one starts, and `messageFinished` when it clears. When the message holds an element with `role="alert"` by then, such as an error [Alert](/alert), it says nothing, since the alert is read. When one message finishes as another starts, it reads only `messageStarted`. Messages that are already streaming when it mounts are not announced. Set `announceMessages={false}` on the root to make your own announcements instead.
+Streamed text is not read as it arrives: the viewport is not a live region. Instead, Conversation tells screen readers when a message starts and finishes arriving, through [useAnnouncer](/utilities/use-announcer). It watches the `article`s in `Conversation.Content` for `aria-busy="true"`, which [Message](/message)'s `streaming` sets. It reads the `messageStarted` string when one starts, and `messageFinished` when it clears. When the message holds an element with `role="alert"` by then, such as an error [Alert](/alert), it says nothing, since the alert is read. When one message finishes as another starts, it reads only `messageStarted`. A message already streaming when it mounts has no start announced. Set `announceMessages={false}` on the root to make your own announcements instead.
 
 ## Accessible composition
 
