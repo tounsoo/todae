@@ -17,6 +17,7 @@ import {
   Menu,
   OptionList,
   Pagination,
+  Steps,
   Toast,
   useGlyphs,
   type Glyphs,
@@ -40,6 +41,7 @@ const ICONS: Required<Glyphs> = {
   clock: <svg data-testid="clock" />,
   send: <svg data-testid="send" />,
   stop: <svg data-testid="stop" />,
+  error: <svg data-testid="error" />,
 };
 
 function withIcons(children: ReactNode, glyphs: Glyphs = ICONS) {
@@ -287,6 +289,21 @@ describe('GlyphsProvider', () => {
     rerender(composer(true));
     expect(screen.queryByTestId('send')).toBeNull();
     expect(screen.getAllByTestId('stop')).toHaveLength(1);
+  });
+
+  it('uses the check and error glyphs for done and failed Steps.Item markers', () => {
+    render(
+      withIcons(
+        <Steps.Root>
+          <Steps.Item status="done">A</Steps.Item>
+          <Steps.Item status="error">B</Steps.Item>
+          <Steps.Item>C</Steps.Item>
+        </Steps.Root>,
+      ),
+    );
+    expect(screen.getAllByTestId('check')).toHaveLength(1);
+    expect(screen.getAllByTestId('error')).toHaveLength(1);
+    expect(sheet('Steps.module.css')).toMatch(/\.marker > \[data-todae-glyph\] > :is\(svg, img\) \{[^}]*inline-size: var\(--todae-steps-icon-size\);/);
   });
 
   it('sizes glyphs in each part from its tokens, and turns or mirrors directional ones', () => {

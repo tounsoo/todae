@@ -78,6 +78,14 @@ export interface Strings {
   send: string;
   /** Name of Composer.Submit while the composer is busy, when its own text does not name it. */
   stop: string;
+  /** Steps.Item's hidden status word for a `done` step, read before the step's text. */
+  stepDone: string;
+  /** Steps.Item's hidden status word for the `current` step. */
+  stepCurrent: string;
+  /** Steps.Item's hidden status word for a `pending` step. */
+  stepPending: string;
+  /** Steps.Item's hidden status word for a step with an `error`. */
+  stepError: string;
 }
 
 /** The English Todae ships with. */
@@ -118,4 +126,8 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   messageFinished: 'Message complete',
   send: 'Send',
   stop: 'Stop',
+  stepDone: 'Done',
+  stepCurrent: 'In progress',
+  stepPending: 'Not started',
+  stepError: 'Failed',
 });

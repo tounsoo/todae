@@ -9,7 +9,7 @@ import type { ReactNode } from 'react';
 export interface Glyphs {
   /** Alert.Close, Toast.Close, Dialog.Close, BottomSheet.Close and Attachment.Remove with no content, and chip remove buttons. Todae draws a cross. */
   close?: ReactNode;
-  /** Checkbox, Menu.CheckboxItem and a selected OptionList.Option. Todae draws a check mark. */
+  /** Checkbox, Menu.CheckboxItem, a selected OptionList.Option and a done Steps.Item. Todae draws a check mark. */
   check?: ReactNode;
   /** Field.Select, Disclosure.Summary, Tree.Label, Calendar.Header's month buttons and Conversation.ScrollButton. Point it down: a closed disclosure or tree item turns it, and a month button turns it toward its month. The browser's own marker by default; Todae draws one for Tree.Label, Calendar.Header and Conversation.ScrollButton. */
   chevron?: ReactNode;
@@ -25,4 +25,6 @@ export interface Glyphs {
   send?: ReactNode;
   /** Composer.Submit with no content while the composer is busy. Todae draws a square. */
   stop?: ReactNode;
+  /** A Steps.Item with an error. Todae draws an exclamation mark. */
+  error?: ReactNode;
 }

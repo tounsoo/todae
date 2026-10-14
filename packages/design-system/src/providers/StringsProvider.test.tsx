@@ -61,6 +61,10 @@ const FRENCH: Strings = {
   messageFinished: 'Message terminé',
   send: 'Envoyer',
   stop: 'Arrêter',
+  stepDone: 'Terminé',
+  stepCurrent: 'En cours',
+  stepPending: 'À faire',
+  stepError: 'Échec',
 };
 
 function strings(wrapper?: (props: { children: ReactNode }) => ReactNode) {

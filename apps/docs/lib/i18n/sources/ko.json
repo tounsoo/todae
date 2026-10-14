@@ -537,6 +537,16 @@
     "## Props": "49963aa313e9",
     "(section order)": "d9525eb32a1a"
   },
+  "steps": {
+    "(top)": "2ea27e601f9e",
+    "# Steps": "cc3c0b7c3b01",
+    "## Parts": "58f438bb813f",
+    "## Status words": "5e1bbccafcfa",
+    "## Accessible composition": "ff32888d1c88",
+    "## When to use": "6d68608bb7ba",
+    "## Props": "f0031e9635af",
+    "(section order)": "441fbe7ff385"
+  },
   "switch": {
     "(top)": "5b6bda868294",
     "# Switch": "587e05affa45",
@@ -635,7 +645,7 @@
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "41e49a5b3949",
+    "## Glyphs": "9ea9494941f6",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",
@@ -643,9 +653,9 @@
   },
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
-    "# StringsProvider": "1dfd3f30006f",
-    "## Strings": "684bf1b74299",
-    "## Accessible composition": "ce80e59fbde4",
+    "# StringsProvider": "a18713b4e742",
+    "## Strings": "13a1c064a6c7",
+    "## Accessible composition": "3a78acb70781",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",
     "(section order)": "e23de084b1da"
