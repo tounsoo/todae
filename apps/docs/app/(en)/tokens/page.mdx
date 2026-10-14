@@ -50,7 +50,7 @@ Token files follow DTCG 2025.10: an alias is a JSON Pointer `$ref`, such as `{ "
 
 ## Letter case
 
-DTCG 2025.10 has no type for letter case, so Todae adds one: `textTransform`, whose value is `none`, `uppercase`, `lowercase` or `capitalize`. `font.text-transform.none` holds `none`, and Button, Tabs, Label and the Table header each read their own `font.text-transform` token, which points at it. Tools that only know the DTCG types may not accept a `textTransform` token. When DTCG adds a standard type for letter case, Todae will move to it.
+DTCG 2025.10 has no type for letter case, so Todae adds one: `textTransform`, whose value is `none`, `uppercase`, `lowercase` or `capitalize`. `font.text-transform.default` holds `none`, and Button, Tabs, Label and the Table header each read their own `font.text-transform` token, which points at it. Tools that only know the DTCG types may not accept a `textTransform` token. When DTCG adds a standard type for letter case, Todae will move to it.
 
 ## Status tones
 

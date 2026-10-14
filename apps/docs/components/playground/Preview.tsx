@@ -53,8 +53,7 @@ const INVOICES = [
 /**
  * A product-like screen built from Todae parts. The playground's theme paints
  * it, and its icons and Todae's own glyphs come from `library` when one is
- * picked. Copy is English, like every demo. Every control works, but nothing
- * leaves the page.
+ * picked. Copy is English, like every demo. Nothing leaves the page.
  */
 export function Preview({ library }: { library?: IconLibrary }) {
   const icons = library?.icons;
@@ -230,7 +229,7 @@ export function Preview({ library }: { library?: IconLibrary }) {
               <Text.Root as="h3">Invoices</Text.Root>
             </Card.Header>
             <Card.Body>
-              <ScrollArea.Root aria-label="Invoices">
+              <ScrollArea.Root axis="inline" aria-label="Invoices">
                 <Table.Root>
                   <Table.Head>
                     <Table.Row>

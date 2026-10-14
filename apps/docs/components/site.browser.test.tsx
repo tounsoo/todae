@@ -534,6 +534,17 @@ describe('playground stage', () => {
     expect(getComputedStyle(document.querySelector('.shell') as Element).fontFamily).toContain('ui-sans-serif');
   });
 
+  it('scrolls the Invoices table sideways on a phone instead of cutting it off', async () => {
+    await page.viewport(390, 800);
+    const stage = renderPlayground();
+    await frame();
+    const area = within(stage).getByRole('region', { name: 'Invoices' });
+    expect(area.scrollWidth).toBeGreaterThan(area.clientWidth);
+    expect(getComputedStyle(area).overflowX).not.toBe('hidden');
+    area.scrollLeft = area.scrollWidth;
+    expect(area.scrollLeft).toBeGreaterThan(0);
+  });
+
   it('applies both raw and semantic space edits to density tokens', async () => {
     const stage = renderPlayground();
     const invite = () => getComputedStyle(within(stage).getByRole('button', { name: 'Invite' })).paddingInlineStart;
