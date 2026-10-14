@@ -193,6 +193,39 @@ describe('Message.Root in a browser', () => {
     expect(partGap).toBeGreaterThan(headerGap);
   });
 
+  it.each([
+    [
+      'a hidden part',
+      <Message.Content key="h" hidden>
+        Hidden
+      </Message.Content>,
+    ],
+    ['an avatar', <Message.Avatar key="a">A</Message.Avatar>],
+    [
+      'a hidden avatar',
+      <Message.Avatar key="a" hidden>
+        A
+      </Message.Avatar>,
+    ],
+  ])('keeps the header gap across %s', (_, between) => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>
+        <Message.Root>
+          <Message.Header>Assistant</Message.Header>
+          {between}
+          <Message.Content data-testid="content">Give it a name.</Message.Content>
+          <Message.Actions data-testid="actions">
+            <button type="button">Copy</button>
+          </Message.Actions>
+        </Message.Root>
+      </div>,
+    );
+    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+    const headerGap = parseFloat(style('content').marginTop);
+    expect(headerGap).toBeGreaterThan(0);
+    expect(parseFloat(style('actions').marginTop)).toBeGreaterThan(headerGap);
+  });
+
   it('lays out as if hidden parts were not there', () => {
     render(
       <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '600px' }}>

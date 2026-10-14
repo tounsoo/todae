@@ -15,8 +15,9 @@
     margin-block-start: var(--todae-message-row-gap);
   }
 
-  /* A header labels the part after it, so it sits closer to it. */
-  .root > .header:not([hidden]) + :not(.avatar) {
+  /* A header labels the first visible part after it, so that part sits
+     closer to it. Avatars and hidden parts in between don't count. */
+  .root > .header:not([hidden]) ~ :not(.avatar, [hidden]):not(:not(.avatar, [hidden], .header) ~ *) {
     margin-block-start: var(--todae-message-header-space-after);
   }
 
