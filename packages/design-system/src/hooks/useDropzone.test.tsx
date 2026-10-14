@@ -150,4 +150,89 @@ describe('useDropzone', () => {
     fireEvent.drop(zone, drag([file('a.txt', 'text/plain')]));
     expect(onFiles).not.toHaveBeenCalled();
   });
+
+  describe('paste', () => {
+    const clip = (files: File[], types = ['Files']) => ({ clipboardData: { files, types, items: [] } });
+
+    function PasteZone(options: UseDropzoneOptions) {
+      const zone = useDropzone(options);
+      return (
+        <div data-testid="zone" {...zone.getRootProps()}>
+          <textarea data-testid="text" aria-label="Message" />
+          <input aria-label="Files" {...zone.getInputProps()} />
+        </div>
+      );
+    }
+
+    it('takes pasted files inside the root, checked like dropped ones', () => {
+      const onFiles = vi.fn();
+      render(<PasteZone paste accept="image/*" multiple onFiles={onFiles} />);
+      const shot = file('shot.png', 'image/png');
+      const doc = file('a.pdf', 'application/pdf');
+      const notCancelled = fireEvent.paste(screen.getByTestId('text'), clip([shot, doc]));
+      expect(notCancelled).toBe(false);
+      expect(onFiles).toHaveBeenCalledWith([shot], [{ file: doc, reasons: ['type'] }]);
+    });
+
+    it('leaves pastes alone without the paste option, while disabled, or when the paste carries text', () => {
+      const onFiles = vi.fn();
+      const shot = file('shot.png', 'image/png');
+      const { rerender } = render(<PasteZone onFiles={onFiles} />);
+      expect(fireEvent.paste(screen.getByTestId('text'), clip([shot]))).toBe(true);
+      rerender(<PasteZone paste disabled onFiles={onFiles} />);
+      expect(fireEvent.paste(screen.getByTestId('text'), clip([shot]))).toBe(true);
+      rerender(<PasteZone paste onFiles={onFiles} />);
+      expect(fireEvent.paste(screen.getByTestId('text'), clip([shot], ['Files', 'text/plain']))).toBe(true);
+      expect(fireEvent.paste(screen.getByTestId('text'), clip([], ['text/plain']))).toBe(true);
+      expect(fireEvent.paste(screen.getByTestId('text'), clip([], ['Files']))).toBe(true);
+      expect(onFiles).not.toHaveBeenCalled();
+    });
+
+    it('takes an image copied from a web page, which carries HTML beside its file', () => {
+      const onFiles = vi.fn();
+      render(<PasteZone paste onFiles={onFiles} />);
+      const image = file('image.png', 'image/png');
+      expect(fireEvent.paste(screen.getByTestId('text'), clip([image], ['text/html', 'Files']))).toBe(false);
+      expect(onFiles).toHaveBeenCalledWith([image], []);
+    });
+
+    it("keeps the root's own onPaste without the paste option", () => {
+      const own = vi.fn();
+      function OwnPaste() {
+        const zone = useDropzone();
+        return (
+          <div onPaste={own} {...zone.getRootProps()}>
+            <textarea data-testid="text" aria-label="Message" />
+          </div>
+        );
+      }
+      render(<OwnPaste />);
+      fireEvent.paste(screen.getByTestId('text'), clip([file('shot.png', 'image/png')]));
+      expect(own).toHaveBeenCalledOnce();
+    });
+
+    it('skips a paste a child React handler cancelled', () => {
+      const onFiles = vi.fn();
+      function ChildCancels() {
+        const zone = useDropzone({ paste: true, onFiles });
+        return (
+          <div {...zone.getRootProps()}>
+            <textarea data-testid="text" aria-label="Message" onPaste={(event) => event.preventDefault()} />
+          </div>
+        );
+      }
+      render(<ChildCancels />);
+      fireEvent.paste(screen.getByTestId('text'), clip([file('shot.png', 'image/png')]));
+      expect(onFiles).not.toHaveBeenCalled();
+    });
+
+    it('skips a paste something else already cancelled', () => {
+      const onFiles = vi.fn();
+      render(<PasteZone paste onFiles={onFiles} />);
+      const text = screen.getByTestId('text');
+      text.addEventListener('paste', (event) => event.preventDefault());
+      fireEvent.paste(text, clip([file('shot.png', 'image/png')]));
+      expect(onFiles).not.toHaveBeenCalled();
+    });
+  });
 });

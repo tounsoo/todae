@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type DragEvent, type RefObject } from 'react';
+import { useRef, useState, type ChangeEvent, type ClipboardEvent, type DragEvent, type RefObject } from 'react';
 
 export type FileRejectionReason = 'type' | 'too-large' | 'too-small' | 'too-many';
 
@@ -9,7 +9,7 @@ export type FileRejection = {
 };
 
 export type UseDropzoneOptions = {
-  /** File types to take, in the input's accept syntax: '.pdf', 'image/*', 'application/json', comma separated. The picker applies it; the hook checks dropped files against it. */
+  /** File types to take, in the input's accept syntax: '.pdf', 'image/*', 'application/json', comma separated. The picker applies it; the hook checks dropped and pasted files against it. */
   accept?: string;
   /** Take more than one file. */
   multiple?: boolean;
@@ -19,9 +19,11 @@ export type UseDropzoneOptions = {
   maxSize?: number;
   /** Smallest file size in bytes. */
   minSize?: number;
-  /** Turn off the input and drops. */
+  /** Also take files pasted while focus is inside the root, such as a screenshot pasted into a textarea there. A paste that also carries plain text is left to the browser. */
+  paste?: boolean;
+  /** Turn off the input, drops and pastes. */
   disabled?: boolean;
-  /** Called with the files that passed and the files that did not, after a drop or a pick. */
+  /** Called with the files that passed and the files that did not, after a drop, a paste or a pick. */
   onFiles?: (accepted: File[], rejected: FileRejection[]) => void;
 };
 
@@ -30,6 +32,8 @@ export type UseDropzoneRootProps = {
   onDragOver: (event: DragEvent<HTMLElement>) => void;
   onDragLeave: (event: DragEvent<HTMLElement>) => void;
   onDrop: (event: DragEvent<HTMLElement>) => void;
+  /** Only with the paste option, so a root's own onPaste is kept otherwise. */
+  onPaste?: (event: ClipboardEvent<HTMLElement>) => void;
   'data-dragging'?: '';
 };
 
@@ -45,7 +49,7 @@ export type UseDropzoneInputProps = {
 export type UseDropzoneResult = {
   /** True while files are dragged over the root. */
   dragging: boolean;
-  /** Drag and drop handlers for the drop target, usually the input's label. */
+  /** Drag and drop handlers for the drop target, usually the input's label, and its paste handler. */
   getRootProps: () => UseDropzoneRootProps;
   /** Props for the native file input. */
   getInputProps: () => UseDropzoneInputProps;
@@ -67,8 +71,8 @@ export function acceptsFile(file: Pick<File, 'name' | 'type'>, accept: string | 
   });
 }
 
-/** Dropped files without folders, which browsers list as typeless files. */
-function droppedFiles(data: DataTransfer): File[] {
+/** Dropped or pasted files, without dropped folders, which browsers list as typeless files. */
+function transferFiles(data: DataTransfer): File[] {
   const items = Array.from(data.items ?? []);
   if (items.length === 0) return Array.from(data.files);
   return items.flatMap((item) => {
@@ -78,10 +82,11 @@ function droppedFiles(data: DataTransfer): File[] {
   });
 }
 
-const hasFiles = (event: DragEvent) => Array.from(event.dataTransfer?.types ?? []).includes('Files');
+const carriesFiles = (data: DataTransfer | null) => Array.from(data?.types ?? []).includes('Files');
+const hasFiles = (event: DragEvent) => carriesFiles(event.dataTransfer);
 
 export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult {
-  const { accept, multiple = false, disabled = false } = options;
+  const { accept, multiple = false, paste = false, disabled = false } = options;
   const inputRef = useRef<HTMLInputElement>(null);
   const depth = useRef(0);
   const [dragging, setDragging] = useState(false);
@@ -149,9 +154,24 @@ export function useDropzone(options: UseDropzoneOptions = {}): UseDropzoneResult
       event.preventDefault();
       endDrag();
       if (disabled) return;
-      const files = droppedFiles(event.dataTransfer);
+      const files = transferFiles(event.dataTransfer);
       if (files.length > 0) take(files, true);
     },
+    ...(paste
+      ? {
+          onPaste: (event: ClipboardEvent<HTMLElement>) => {
+            const data = event.clipboardData;
+            if (disabled || event.defaultPrevented || !carriesFiles(data)) return;
+            // Cells copied from a spreadsheet carry an image too; the text is what was meant.
+            // HTML alone doesn't count: a copied web image carries an <img> tag beside its file.
+            if (Array.from(data.types).includes('text/plain')) return;
+            const files = transferFiles(data);
+            if (files.length === 0) return;
+            event.preventDefault();
+            take(files, true);
+          },
+        }
+      : {}),
     ...(active ? { 'data-dragging': '' as const } : {}),
   });
 

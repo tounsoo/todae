@@ -48,7 +48,7 @@ Send the files from `onFiles`, or leave them in the input and let the form submi
 
 ## Accessible composition
 
-**Todae handles:** [useDropzone](/utilities/use-dropzone) keeps the native `<input type="file">` as the control, so its role, the keyboard and the picker come from the browser. `getInputProps()` sets `type`, `accept`, `multiple` and `disabled`, and `getRootProps()` adds only drag handlers and `data-dragging`. After the checks, the input holds only the accepted files. The hook sets no ARIA and announces nothing.
+**Todae handles:** [useDropzone](/utilities/use-dropzone) keeps the native `<input type="file">` as the control, so its role, the keyboard and the picker come from the browser. `getInputProps()` sets `type`, `accept`, `multiple` and `disabled`, and `getRootProps()` adds only drag handlers, a paste handler with `paste`, and `data-dragging`. After the checks, the input holds only the accepted files. The hook sets no ARIA and announces nothing.
 
 **You supply:** What the recipe's markup does: the `<label>` text that names the input, a hint joined with `aria-describedby`, rejection reasons written out in words, `aria-invalid` and the `ErrorMessage.Root` id added to `aria-describedby` when files are rejected, and a labelled list of the accepted files. An announcement of rejections, if they must be heard. Upload progress and results in text, such as a `<progress>` with a label.
 

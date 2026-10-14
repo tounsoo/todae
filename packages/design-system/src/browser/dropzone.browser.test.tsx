@@ -70,6 +70,30 @@ describe('useDropzone in a browser', () => {
     expect([...input.files!].map((f) => f.name)).toEqual(['a.png']);
   });
 
+  it('takes a real pasted file in a textarea inside the root, and puts it in the input', () => {
+    const onFiles = vi.fn();
+    function Composer() {
+      const zone = useDropzone({ paste: true, accept: 'image/*', onFiles });
+      return (
+        <div {...zone.getRootProps()}>
+          <textarea data-testid="text" aria-label="Message" />
+          <input name="files" data-testid="input" aria-label="Attach" {...zone.getInputProps()} />
+        </div>
+      );
+    }
+    render(<Composer />);
+    const png = new File(['png'], 'shot.png', { type: 'image/png' });
+    const data = new DataTransfer();
+    data.items.add(png);
+    const text = screen.getByTestId('text');
+    text.focus();
+    const event = new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData: data });
+    expect(text.dispatchEvent(event)).toBe(false);
+    expect(onFiles).toHaveBeenCalledWith([png], []);
+    const input = screen.getByTestId('input') as HTMLInputElement;
+    expect([...input.files!].map((f) => f.name)).toEqual(['shot.png']);
+  });
+
   it('keeps the native input focusable, so the keyboard reaches the picker', () => {
     render(<Upload />);
     const input = screen.getByTestId('input') as HTMLInputElement;
