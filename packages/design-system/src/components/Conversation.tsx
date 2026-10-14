@@ -69,7 +69,9 @@ function useConversation(part: string): ConversationContext {
 // Instant whatever scroll-behavior the viewport has: a glide steps it frame
 // by frame, and following must land in the frame the content grew.
 function jump(el: HTMLElement, top: number) {
-  el.scrollTo({ top, behavior: 'instant' });
+  // jsdom, where a product's tests run, has no scrollTo.
+  if (typeof el.scrollTo === 'function') el.scrollTo({ top, behavior: 'instant' });
+  else el.scrollTop = top;
 }
 
 function distanceToEnd(el: HTMLElement): number {
