@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { userEvent } from '@vitest/browser/context';
+import { cdp, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useId, type ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -468,6 +468,41 @@ describe('content parts in a browser', () => {
     expect(style('skeleton').animationName).toContain('todae-skeleton-pulse');
     expect(style('skeleton').color).toBe('rgba(0, 0, 0, 0)');
     expect(style('inside').visibility).toBe('hidden');
+  });
+
+  it('draws dots as a wave, from the start of the text, and holds them still under reduced motion', async () => {
+    render(
+      <Themed>
+        <Spinner.Root data-testid="dots" variant="dots" aria-label="Typing" />
+        <div dir="rtl">
+          <Spinner.Root data-testid="rtl-dots" variant="dots" aria-label="Typing" />
+        </div>
+        <Spinner.Root data-testid="ring" aria-label="Loading" />
+      </Themed>,
+    );
+    const style = (id: string) => getComputedStyle(screen.getByTestId(id));
+    expect(screen.getAllByRole('progressbar', { name: 'Typing' })).toHaveLength(2);
+    expect(style('dots').animationName).toContain('todae-spinner-wave');
+    expect(style('dots').animationDuration).toBe(style('ring').animationDuration);
+    expect(parseFloat(style('dots').width)).toBeCloseTo(parseFloat(style('ring').width) * 1.5);
+    expect(style('dots').height).toBe(style('ring').height);
+    expect(style('dots').borderTopLeftRadius).toBe('0px');
+    expect(style('dots').maskImage).toBe('none');
+    expect(style('dots').backgroundImage.match(/radial-gradient/g)).toHaveLength(3);
+    expect(style('dots').animationDirection).toBe('normal');
+    expect(style('rtl-dots').animationDirection).toBe('reverse');
+    const media = (features: { name: string; value: string }[]) =>
+      (cdp() as unknown as { send(method: string, params: object): Promise<unknown> }).send('Emulation.setEmulatedMedia', { features });
+    try {
+      await media([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+      expect(style('dots').animationName).toBe('none');
+      expect(style('ring').animationName).toBe('none');
+      await media([{ name: 'forced-colors', value: 'active' }]);
+      expect(style('dots').backgroundImage.match(/radial-gradient/g)).toHaveLength(3);
+      expect(style('dots').backgroundImage).not.toContain('conic-gradient');
+    } finally {
+      await media([]);
+    }
   });
 
   it('keeps a skeleton at least one line high, and lets what is inside make it taller', () => {

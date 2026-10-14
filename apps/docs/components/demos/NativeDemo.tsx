@@ -125,6 +125,10 @@ export function SpinnerLabelled() {
   );
 }
 
+export function SpinnerDots() {
+  return <Spinner.Root variant="dots" aria-label="Assistant is typing" />;
+}
+
 export function SkeletonProfile() {
   return (
     <div>

@@ -481,14 +481,15 @@
     "(section order)": "87884b291211"
   },
   "spinner": {
-    "(top)": "591f7c15859e",
+    "(top)": "a23b4741a44a",
     "# Spinner and Skeleton": "11283107e3b2",
-    "## Spinner": "a81e843e050e",
+    "## Spinner": "0f9426d88327",
+    "### Dots": "66a5f636515f",
     "## Skeleton": "4b18ed84d21b",
     "## Accessible composition": "03b5f164a7a3",
-    "## When to use": "3252391cafb7",
+    "## When to use": "450ef0ffce4b",
     "## Props": "029573d1fca8",
-    "(section order)": "3a4d8b5c2050"
+    "(section order)": "b2822933e323"
   },
   "stack": {
     "(top)": "3dde9f089aaf",
