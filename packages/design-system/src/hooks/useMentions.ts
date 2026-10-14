@@ -138,7 +138,7 @@ type EditHint = { id: number; value: string; inputType?: string; caret: number |
 /** The text the tokens were last carried to, and what came with it. */
 type Track = {
   value: string;
-  /** The tokens prop or state the hook last saw. A new one replaces the tokens. */
+  /** The tokens prop or state the hook last saw. New tokens in it replace the hook's. */
   raw: readonly MentionToken[];
   tokens: readonly MentionToken[];
   /** The trigger index Escape or a press outside closed the list for. It moves with edits. */
@@ -160,7 +160,9 @@ function advance(
   hint: EditHint | null,
   history: ReadonlyMap<string, readonly MentionToken[]>,
 ): Track {
-  if (prev.raw !== raw) {
+  // Tokens from outside are new ones: not the ones last seen, and not the
+  // hook's own handed back. A copy with the same tokens is the same.
+  if (!sameTokens(raw, prev.raw) && !sameTokens(raw, prev.tokens)) {
     const tokens = validTokens(value, raw);
     const changed = !sameTokens(tokens, raw);
     return {
@@ -185,7 +187,7 @@ function advance(
   const changed = !sameTokens(tokens, prev.tokens);
   return {
     value,
-    raw: prev.raw,
+    raw,
     tokens: changed ? tokens : prev.tokens,
     dismissed: prev.dismissed === null ? null : shiftIndex(prev.value, value, prev.dismissed, edit?.caret),
     version: changed ? prev.version + 1 : prev.version,
@@ -235,7 +237,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     return { value, raw: tokenState, tokens, dismissed: null, version: changed ? 1 : 0, hint: 0 };
   });
   let track = trackState;
-  if (track.value !== value || track.raw !== tokenState) {
+  // Compared by content, so a parent that passes a new array with the same
+  // tokens on each render settles.
+  if (track.value !== value || !sameTokens(track.raw, tokenState)) {
     track = advance(track, value, tokenState, hint, history.current);
     setTrack(track);
   }
@@ -260,11 +264,12 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     if (el && el.ownerDocument.activeElement === el) setCaret(caretOf(el));
   }, [value]);
 
+  // Waits for the picked text, which a parent may commit later; typing clears it.
   useLayoutEffect(() => {
-    if (!caretAfter) return;
+    if (!caretAfter || value !== caretAfter.value) return;
     setCaretAfter(null);
     const el = textareaRef.current;
-    if (!el || value !== caretAfter.value) return;
+    if (!el) return;
     el.setSelectionRange(caretAfter.to, caretAfter.to);
     setCaret(caretAfter.to);
   }, [caretAfter, value]);
@@ -433,6 +438,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       pick: picking.current ?? undefined,
     });
     setCaret(at);
+    setCaretAfter(null);
     setValue(el.value);
   };
 

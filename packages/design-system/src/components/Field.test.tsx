@@ -696,6 +696,13 @@ describe('Field.Textarea', () => {
     vi.unstubAllGlobals();
   });
 
+  it('places the highlight layer only where anchor positioning works', () => {
+    const supports = fieldCss.indexOf('@supports (top: anchor(top))');
+    expect(supports).toBeGreaterThan(-1);
+    expect(fieldCss.slice(0, supports)).not.toMatch(/anchor\(/);
+    expect(fieldCss.slice(0, supports)).toMatch(/\.highlights\s*\{\s*display:\s*none/);
+  });
+
   it('sizes with css only and floors resize at rows', () => {
     const supports = fieldCss.indexOf('@supports (field-sizing: content)');
     expect(supports).toBeGreaterThan(-1);

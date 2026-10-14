@@ -84,8 +84,8 @@ export function useTextareaHighlights(
     div.scrollLeft = el.scrollLeft;
   }, [textarea]);
 
-  // Copying the styles reads layout, so it runs when the textarea mounts or
-  // changes size, which includes a scrollbar showing up, not on every edit.
+  // Runs after every render, since an edit can change the direction (`dir="auto"`)
+  // or show a scrollbar, and when the textarea changes size.
   const sync = useCallback(() => {
     const el = textarea.current;
     const div = layer.current;
@@ -112,9 +112,8 @@ export function useTextareaHighlights(
     return () => observer.disconnect();
   }, [enabled, sync, textarea]);
 
-  // The layer's text changes with each edit, which can reset its scroll.
   useLayoutEffect(() => {
-    if (enabled) scroll();
+    if (enabled) sync();
   });
 
   const onScroll = useCallback(() => {

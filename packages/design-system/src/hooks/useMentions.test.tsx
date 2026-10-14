@@ -283,11 +283,55 @@ describe('useMentions', () => {
     expect(anchor).toMatch(/^--[A-Za-z0-9_-]+$/);
   });
 
+  it('settles when the parent passes a new tokens array on each render', () => {
+    for (const copy of [(t: MentionToken[] | undefined) => t ?? [], (t: MentionToken[] | undefined) => (t ?? []).map((token) => ({ ...token }))]) {
+      let result!: UseMentionsResult;
+      function Copying() {
+        const [value, setValue] = useState('');
+        const [tokens, setTokens] = useState<MentionToken[]>();
+        const mentions = useMentions({ triggers: [{ char: '@', options: people }], value, onValueChange: setValue, tokens: copy(tokens), onTokensChange: setTokens });
+        result = mentions;
+        return (
+          <Field.Root aria-label="Message">
+            <Field.Textarea {...mentions.getTextareaProps()} />
+          </Field.Root>
+        );
+      }
+      const { unmount } = render(<Copying />);
+      const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+      fireEvent.focus(el);
+      type(el, '@a');
+      act(() => result.select('ada'));
+      expect(result.tokens).toEqual([{ start: 0, end: 13, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
+      fireEvent.change(el, { target: { value: 'Hi @Ada Lovelace ', selectionStart: 3, selectionEnd: 3 } });
+      expect(result.tokens).toEqual([{ start: 3, end: 16, char: '@', value: 'ada', text: '@Ada Lovelace' }]);
+      unmount();
+    }
+  });
+
+  it('settles with an inline tokens literal', () => {
+    function Inline() {
+      const [value, setValue] = useState('');
+      const mentions = useMentions({ triggers: [{ char: '@', options: people }], value, onValueChange: setValue, tokens: [] });
+      return (
+        <Field.Root aria-label="Message">
+          <Field.Textarea {...mentions.getTextareaProps()} />
+        </Field.Root>
+      );
+    }
+    render(<Inline />);
+    const el = screen.getByRole('textbox') as HTMLTextAreaElement;
+    expect(() => type(el, 'hi')).not.toThrow();
+    expect(el.value).toBe('hi');
+  });
+
   it('leaves Enter alone during an IME composition', () => {
     render(<Harness />);
     const el = screen.getByRole('textbox') as HTMLTextAreaElement;
     fireEvent.focus(el);
     type(el, '@a');
     expect(fireEvent.keyDown(el, { key: 'Enter', keyCode: 229 })).toBe(true);
+    expect(fireEvent.keyDown(el, { key: 'Enter', isComposing: true })).toBe(true);
+    expect(fireEvent.keyDown(el, { key: 'Enter' })).toBe(false);
   });
 });

@@ -180,6 +180,26 @@ describe('useMentions in a browser', () => {
     expect(document.activeElement).toBe(field());
   });
 
+  it('follows the direction dir="auto" resolves from the text', async () => {
+    function Auto() {
+      const [value, setValue] = useState('');
+      const mentions = useMentions({ triggers: TRIGGERS, value, onValueChange: setValue });
+      return (
+        <main data-appearance="light" data-density="comfortable" style={{ inlineSize: '24rem' }}>
+          <Field.Root aria-label="Message">
+            <Field.Textarea {...mentions.getTextareaProps()} dir="auto" rows={2} />
+          </Field.Root>
+        </main>
+      );
+    }
+    render(<Auto />);
+    await userEvent.click(field());
+    await userEvent.keyboard('שלום @a{Enter}');
+    const layer = document.querySelector('[data-kind="@"]')!.parentElement!;
+    expect(getComputedStyle(field()).direction).toBe('rtl');
+    expect(getComputedStyle(layer).direction).toBe('rtl');
+  });
+
   it('passes axe while open', async () => {
     render(<Chat />);
     await userEvent.click(field());
