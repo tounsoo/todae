@@ -38,6 +38,10 @@ export interface Strings {
   characterLimitReached: string;
   /** Label of useCombobox's create row when its `createLabel` is not set. */
   createOption: (query: string) => string;
+  /** Name of useMentions' list when its trigger has no `label`. */
+  suggestions: string;
+  /** useMentions' message when its list opens or its count changes. */
+  suggestionCount: (count: number) => string;
   /** Name of ColorPicker.Area's left-to-right input. */
   saturation: string;
   /** Name of ColorPicker.Area's bottom-to-top input. */
@@ -101,6 +105,9 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   charactersLeft: (remaining) => `${remaining} ${remaining === 1 ? 'character' : 'characters'} left`,
   characterLimitReached: 'Character limit reached',
   createOption: (query) => `Create "${query}"`,
+  suggestions: 'Suggestions',
+  suggestionCount: (count) =>
+    count === 0 ? 'No suggestions' : `${count} ${count === 1 ? 'suggestion' : 'suggestions'}`,
   saturation: 'Saturation',
   brightness: 'Brightness',
   hue: 'Hue',

@@ -52,7 +52,7 @@
         { "$ref": "./components/breadcrumbs.json" },
         { "$ref": "./components/toolbar.json" },
         { "$ref": "./components/drawer.json" },
-        { "$ref": "./components/spinner.json" },
+        { "$ref": "./components/loader.json" },
         { "$ref": "./components/skeleton.json" },
         { "$ref": "./components/code.json" },
         { "$ref": "./components/avatar.json" },

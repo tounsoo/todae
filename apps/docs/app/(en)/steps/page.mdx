@@ -21,7 +21,7 @@ import { StepsExample } from '../../../components/demos/StepsDemo';
 ## Parts
 
 - `Steps.Root` is an `ol` with `role="list"`, so Safari keeps it a list without its markers.
-- `Steps.Item` is an `li` with a marker, then its content. Its `status` sets `data-status` and the marker: a `done` step shows the `check` glyph on a filled circle and has its text struck through, the `current` step shows a [Spinner](/spinner) ring and takes `aria-current="step"`, a `pending` step shows an empty circle, and a step with an `error` shows the `error` glyph in the critical colors. `pending` is the default.
+- `Steps.Item` is an `li` with a marker, then its content. Its `status` sets `data-status` and the marker: a `done` step shows the `check` glyph on a filled circle and has its text struck through, the `current` step shows a [Loader](/loader) spinner and takes `aria-current="step"`, a `pending` step shows an empty circle, and a step with an `error` shows the `error` glyph in the critical colors. `pending` is the default.
 
 The markers and their colors come from the `steps.marker.*` tokens, the text colors from `steps.fg.*`, the line from `steps.line.*`, and the space between steps from `steps.gap`.
 
@@ -41,7 +41,7 @@ The marker is hidden from screen readers. Each step starts with a visually hidde
 
 **When:** A plan or checklist whose steps run in order, each with a status.
 
-**When not:** One running task → [Spinner](/spinner) or [Progress](/progress). A trail of pages → [Breadcrumbs](/breadcrumbs).
+**When not:** One running task → [Loader](/loader) or [Progress](/progress). A trail of pages → [Breadcrumbs](/breadcrumbs).
 
 ## Props
 

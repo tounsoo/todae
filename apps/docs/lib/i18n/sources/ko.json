@@ -301,11 +301,12 @@
     "# Field.Textarea": "14c1c3cd31ad",
     "## Height": "c62990618acf",
     "## Density and states": "bdbe9831349f",
+    "## Highlights": "e18e517ab4bb",
     "## Accessible composition": "a5629b389560",
     "## When to use": "d57fe8233a0b",
     "### Field.Textarea": "11b51d7095d4",
     "## Props": "ea6d8a003de8",
-    "(section order)": "b21f3734faec"
+    "(section order)": "fca6b71e7c11"
   },
   "field/time-picker": {
     "(top)": "c91058d9eff0",
@@ -375,6 +376,17 @@
     "## Props": "f78033c7396f",
     "(section order)": "c4cbb2773a28"
   },
+  "loader": {
+    "(top)": "988ae1be8397",
+    "# Loader and Skeleton": "c784256e6743",
+    "## Loader": "d92bc23dc368",
+    "### Dots": "2bc0a480e586",
+    "## Skeleton": "4b18ed84d21b",
+    "## Accessible composition": "d76cd550ca68",
+    "## When to use": "450ef0ffce4b",
+    "## Props": "beb45b8d5394",
+    "(section order)": "0a8b0f340b98"
+  },
   "menu": {
     "(top)": "eac8bba851e2",
     "# Menu": "e7f09e8bde16",
@@ -390,7 +402,7 @@
     "(top)": "826be7492f3a",
     "# Message": "2ddec1314bf0",
     "## Parts": "81e7c521c8f3",
-    "## Streaming": "d6c0411f54a0",
+    "## Streaming": "4a0bc45092d0",
     "## Accessible composition": "51235c3f6e59",
     "## When to use": "6bef71b8e38f",
     "## Props": "ba3cc8b148e9",
@@ -417,7 +429,7 @@
     "(section order)": "89f482eae21e"
   },
   "platform": {
-    "# Native platform": "eefe11700083",
+    "# Native platform": "aa5dd3cffe37",
     "(section order)": "d16f4890fdc5"
   },
   "popover": {
@@ -436,7 +448,7 @@
     "## Progress": "804ce16cc183",
     "## Meter": "04e016844334",
     "## Accessible composition": "c35050e7f172",
-    "## When to use": "02f1c1910865",
+    "## When to use": "84020da8cdd5",
     "## Props": "b9e792e827ad",
     "(section order)": "eb8c827884bd"
   },
@@ -515,17 +527,6 @@
     "## Props": "a289d00d67fe",
     "(section order)": "87884b291211"
   },
-  "spinner": {
-    "(top)": "a23b4741a44a",
-    "# Spinner and Skeleton": "11283107e3b2",
-    "## Spinner": "06bfbd428424",
-    "### Dots": "66a5f636515f",
-    "## Skeleton": "4b18ed84d21b",
-    "## Accessible composition": "03b5f164a7a3",
-    "## When to use": "450ef0ffce4b",
-    "## Props": "029573d1fca8",
-    "(section order)": "b2822933e323"
-  },
   "stack": {
     "(top)": "3dde9f089aaf",
     "# Stack": "ea5438463764",
@@ -539,10 +540,10 @@
   "steps": {
     "(top)": "2ea27e601f9e",
     "# Steps": "cc3c0b7c3b01",
-    "## Parts": "58f438bb813f",
+    "## Parts": "b9c0f0f6b5b3",
     "## Status words": "5e1bbccafcfa",
     "## Accessible composition": "ff32888d1c88",
-    "## When to use": "6d68608bb7ba",
+    "## When to use": "dc897768a123",
     "## Props": "f0031e9635af",
     "(section order)": "441fbe7ff385"
   },
@@ -654,7 +655,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "44b969fc16d6",
+    "## Strings": "13a1c064a6c7",
     "## Accessible composition": "3a78acb70781",
     "## When to use": "214f070a73a5",
     "## Props": "c7939b9d1afe",
@@ -741,6 +742,17 @@
     "## When to use": "fe7a9ae7f4c7",
     "## Props": "a80f6dc00ca3",
     "(section order)": "b7ca335f1524"
+  },
+  "utilities/use-mentions": {
+    "(top)": "4868b466fa49",
+    "# useMentions": "35b74ad67fc5",
+    "## Triggers": "f8479853365c",
+    "## Picking and editing": "a1e352f8fb40",
+    "## Drawing tokens": "01c86baed977",
+    "## Accessible composition": "6052007a7a2e",
+    "## When to use": "9ec50166c73a",
+    "## Props": "d6846222f1f5",
+    "(section order)": "4f7a49b7b144"
   },
   "utilities/use-modal-layer": {
     "# useModalLayer": "ab9c7fb8b312",
