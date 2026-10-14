@@ -2,7 +2,7 @@ import { FieldLabelStates, FieldNumber } from '../../../../components/demos/Fiel
 
 # Field.TextInput
 
-`Field.TextInput`은 [Field](/field) 안에서 한 줄 텍스트를 받는 네이티브 `<input>`입니다. `value`는 문자열이고 `onChange`는 필수이며, `onValueChange`도 새 문자열을 받습니다. `type`은 `text`, `search`, `email`, `url`, `tel`, `password`, `number`를 받습니다. 시간에는 전용 파트인 [Field.TimeInput](/field/time-input)과 [Field.DateTimeInput](/field/date-time-input)이 있습니다. 입력한 날짜는 [Field.DatePicker](/field/date-picker) 옆에서 `parseDate`로 읽으세요. `id`는 `Field.Root`에 두세요.
+`Field.TextInput`은 [Field](/field) 안에서 한 줄 텍스트를 받는 네이티브 `<input>`입니다. `value`는 문자열이고 `onChange`는 필수이며, `onValueChange`도 새 문자열을 받습니다. `type`은 `text`, `search`, `email`, `url`, `tel`, `password`, `number`를 받습니다. 시각에는 전용 파트인 [Field.TimeInput](/field/time-input)이 있습니다. 입력한 날짜는 [Field.DatePicker](/field/date-picker) 옆에서 `parseDate`로 읽으세요. `id`는 `Field.Root`에 두세요.
 
 ```tsx
 const id = useId();
@@ -54,7 +54,7 @@ const id = useId();
 
 **언제:** `Field.Root` 안에서 한 줄로 입력하는 값(text / search / email / url / tel / password), 또는 네이티브 숫자.
 
-**쓰지 않을 때:** 시간 → `Field.TimeInput`, `Field.DateTimeInput`. 여러 값의 토큰 → `Field.ChipInput`. 여러 줄 → `Field.Textarea`. Root 없이 단독으로 쓸 때.
+**쓰지 않을 때:** 시간 → `Field.TimeInput`. 여러 값의 토큰 → `Field.ChipInput`. 여러 줄 → `Field.Textarea`. Root 없이 단독으로 쓸 때.
 
 ## Props
 

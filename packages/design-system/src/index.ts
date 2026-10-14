@@ -172,7 +172,6 @@ export {
   type FieldAffixProps,
   type FieldChipInputProps,
   type FieldCounterProps,
-  type FieldDateTimeInputProps,
   type FieldGroupProps,
   type FieldIconProps,
   type FieldRootProps,

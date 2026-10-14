@@ -1,4 +1,4 @@
-import { FieldTime } from '../../../../components/demos/FieldDemo';
+import { FieldDateAndTime, FieldTime } from '../../../../components/demos/FieldDemo';
 
 # Field.TimeInput
 
@@ -20,6 +20,40 @@ const [time, setTime] = useState<Temporal.PlainTime | null>(null);
   <FieldTime />
 </Example>
 
+## 날짜와 시각
+
+회의 시작처럼 사용자 시계의 날짜와 시각은 [Field.DatePicker](/field/date-picker)와 `Field.TimeInput`을 각자의 필드에 두고 [Fieldset](/fieldset)으로 묶습니다. 둘 다 정해지면 `date.toPlainDateTime(time)`이 둘을 `Temporal.PlainDateTime`으로 합칩니다. 이 값에는 시간대가 없습니다. 특정 순간으로 저장하려면 `dateTime.toZonedDateTime(zone)`처럼 직접 작성한 코드에서 시간대와 합치세요.
+
+```tsx
+const dateId = useId();
+const timeId = useId();
+const [date, setDate] = useState<Temporal.PlainDate | null>(null);
+const [time, setTime] = useState<Temporal.PlainTime | null>(null);
+const start = date && time ? date.toPlainDateTime(time) : null;
+
+<Fieldset.Root>
+  <Fieldset.Legend>Meeting starts</Fieldset.Legend>
+  <Stack.Root direction="row">
+    <Field.Group>
+      <Label.Root htmlFor={dateId}>Date</Label.Root>
+      <Field.Root id={dateId}>
+        <Field.DatePicker value={date} onValueChange={setDate} placeholder="Pick a date" />
+      </Field.Root>
+    </Field.Group>
+    <Field.Group>
+      <Label.Root htmlFor={timeId}>Time</Label.Root>
+      <Field.Root id={timeId}>
+        <Field.TimeInput step={900} value={time} onValueChange={setTime} />
+      </Field.Root>
+    </Field.Group>
+  </Stack.Root>
+</Fieldset.Root>
+```
+
+<Example block>
+  <FieldDateAndTime />
+</Example>
+
 ## Temporal
 
 Todae는 Temporal 폴리필을 포함하지 않습니다. `onValueChange`는 `Temporal`로 입력을 읽으므로, 브라우저에 Temporal이 없는 곳에서는 앱이 폴리필을 불러옵니다([네이티브 플랫폼](/platform) 참고). Todae의 타입에는 `Temporal`을 선언하는 TypeScript 6 이상이 필요합니다.
@@ -38,7 +72,7 @@ Todae는 Temporal 폴리필을 포함하지 않습니다. `onValueChange`는 `Te
 
 **언제:** 영업시간이나 매일 알림처럼 날짜 없는 하루 중 시각.
 
-**쓰지 않을 때:** 특정 날의 시각 → `Field.DateTimeInput`. 기간 → `type="number"`인 `Field.TextInput`과 단위를 보여 주는 `Affix`.
+**쓰지 않을 때:** 특정 날의 시각 → 위처럼 `Field.DatePicker` 옆에 이 입력을 둡니다. 기간 → `type="number"`인 `Field.TextInput`과 단위를 보여 주는 `Affix`.
 
 ## Props
 

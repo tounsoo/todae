@@ -187,19 +187,14 @@ const cases: Case[] = [
       </Field.Root>
     ),
   ],
-  ...(['TimeInput', 'DateTimeInput'] as const).map(
-    (part): Case => [
-      `Field.${part}`,
-      (p) => {
-        const Part = Field[part];
-        return (
-          <Field.Root aria-label="t">
-            <Part {...p} value={null} onChange={noop} />
-          </Field.Root>
-        );
-      },
-    ],
-  ),
+  [
+    'Field.TimeInput',
+    (p) => (
+      <Field.Root aria-label="t">
+        <Field.TimeInput {...p} value={null} onChange={noop} />
+      </Field.Root>
+    ),
+  ],
   [
     'Field.Textarea',
     (p) => (

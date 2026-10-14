@@ -93,7 +93,6 @@ describe('Field.DatePicker', () => {
     { name: 'TextInput + ColorPicker', input: <Field.TextInput value="#3366ff" onChange={() => undefined} />, picker: 'color', inputEntry: ['f', '#3366ff'] },
     { name: 'Textarea + ColorPicker', input: <Field.Textarea value="#3366ff" onChange={() => undefined} />, picker: 'color', inputEntry: ['f', '#3366ff'] },
     { name: 'TimeInput + DatePicker', input: <Field.TimeInput value={Temporal.PlainTime.from('09:30')} onValueChange={() => undefined} />, picker: 'date', inputEntry: ['f', '09:30'] },
-    { name: 'DateTimeInput + DatePicker', input: <Field.DateTimeInput value={Temporal.PlainDateTime.from('2026-10-13T09:30')} onValueChange={() => undefined} />, picker: 'date', inputEntry: ['f', '2026-10-13T09:30'] },
     { name: 'TextInput + DatePicker', input: <Field.TextInput value="note" onChange={() => undefined} />, picker: 'date', inputEntry: ['f', 'note'] },
   ];
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, normalizeHex, parseDate, useChipField, useField } from '@omsoo.design/todae';
+import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Fieldset, Label, Stack, Text, ThemeProvider, formatDate, normalizeHex, parseDate, useChipField, useField } from '@omsoo.design/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 
@@ -647,16 +647,31 @@ export function FieldTime() {
   );
 }
 
-export function FieldDateTime() {
-  const id = useId();
-  const [start, setStart] = useState<Temporal.PlainDateTime | null>(null);
+// A date and a time are two fields in one fieldset; the app joins them.
+export function FieldDateAndTime() {
+  const dateId = useId();
+  const timeId = useId();
+  const locale = useLocale();
+  const [date, setDate] = useState<Temporal.PlainDate | null>(null);
+  const [time, setTime] = useState<Temporal.PlainTime | null>(null);
   return (
-    <Field.Group>
-      <Label.Root htmlFor={id}>Meeting starts</Label.Root>
-      <Field.Root id={id}>
-        <Field.DateTimeInput value={start} onValueChange={setStart} />
-      </Field.Root>
-    </Field.Group>
+    <Fieldset.Root>
+      <Fieldset.Legend>Meeting starts</Fieldset.Legend>
+      <Stack.Root direction="row">
+        <Field.Group>
+          <Label.Root htmlFor={dateId}>Date</Label.Root>
+          <Field.Root id={dateId}>
+            <Field.DatePicker value={date} onValueChange={setDate} locale={locale} placeholder="Pick a date" />
+          </Field.Root>
+        </Field.Group>
+        <Field.Group>
+          <Label.Root htmlFor={timeId}>Time</Label.Root>
+          <Field.Root id={timeId}>
+            <Field.TimeInput step={900} value={time} onValueChange={setTime} />
+          </Field.Root>
+        </Field.Group>
+      </Stack.Root>
+    </Fieldset.Root>
   );
 }
 

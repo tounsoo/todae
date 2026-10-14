@@ -341,9 +341,9 @@ function Root({
 
 /**
  * Input types that take a string value. The number type keeps its native
- * spinner; `value` is the input's string, such as `"42"`. Times are
- * `Field.TimeInput` and `Field.DateTimeInput`; a date is `Field.DatePicker`,
- * with a text input beside it read by `parseDate` for a typed date.
+ * spinner; `value` is the input's string, such as `"42"`. A time is
+ * `Field.TimeInput`; a date is `Field.DatePicker`, with a text input beside it
+ * read by `parseDate` for a typed date.
  */
 export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number';
 
@@ -389,59 +389,35 @@ function TextInput({
   );
 }
 
-type TemporalInputProps<T> = {
+export type FieldTimeInputProps = {
   /** The value, or `null` while the input is empty or incomplete. */
-  value: T | null;
+  value: Temporal.PlainTime | null;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
-  onValueChange?: (value: T | null) => void;
-  min?: T;
-  max?: T;
+  onValueChange?: (value: Temporal.PlainTime | null) => void;
+  min?: Temporal.PlainTime;
+  max?: Temporal.PlainTime;
   ref?: Ref<HTMLInputElement>;
 } & Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'value' | 'defaultValue' | 'type' | 'disabled' | 'onChange' | 'min' | 'max' | 'maxLength' | 'minLength'
 >;
 
-export type FieldTimeInputProps = TemporalInputProps<Temporal.PlainTime>;
-export type FieldDateTimeInputProps = TemporalInputProps<Temporal.PlainDateTime>;
-
-type TemporalInputKind<T> = {
-  type: 'time' | 'datetime-local';
-  format: (value: T) => string;
-  parse: (text: string) => T;
-};
-
 // A string for the input stops at the smallest unit that is set. The browser may
 // report more, such as 01:30:00 when step is under a minute; see sameText.
-function timeUnit(value: Temporal.PlainTime | Temporal.PlainDateTime) {
-  if (value.millisecond || value.microsecond || value.nanosecond) return 'millisecond';
-  return value.second ? 'second' : 'minute';
+function formatTime(value: Temporal.PlainTime) {
+  const smallestUnit =
+    value.millisecond || value.microsecond || value.nanosecond ? 'millisecond' : value.second ? 'second' : 'minute';
+  return value.toString({ smallestUnit });
 }
 
 // HTML writes a year past 9999 as plain digits (20261-10-07); Temporal writes it
 // with a sign and six digits (+020261-10-07).
-function fromHtmlYear(text: string) {
-  return text.replace(/^(\d{5,6})(?=-)/, (year) => `+${year.padStart(6, '0')}`);
-}
-
 function toHtmlYear(text: string) {
   return text.replace(/^\+0*(\d{4,})(?=-)/, '$1');
 }
 
 /** A date as HTML writes one, such as 2026-10-07, for Field.DatePicker's hidden input. */
 const htmlDate = (value: Temporal.PlainDate) => toHtmlYear(value.toString({ calendarName: 'never' }));
-
-const TIME: TemporalInputKind<Temporal.PlainTime> = {
-  type: 'time',
-  format: (value) => value.toString({ smallestUnit: timeUnit(value) }),
-  parse: (text) => Temporal.PlainTime.from(text),
-};
-
-const DATE_TIME: TemporalInputKind<Temporal.PlainDateTime> = {
-  type: 'datetime-local',
-  format: (value) => toHtmlYear(value.toString({ smallestUnit: timeUnit(value), calendarName: 'never' })),
-  parse: (text) => Temporal.PlainDateTime.from(fromHtmlYear(text)),
-};
 
 // Drops zero seconds and trailing zeros of a fraction, so 01:30:00.000 and 01:30 match.
 function canonicalTime(text: string) {
@@ -458,65 +434,34 @@ function sameText(typed: string, formatted: string) {
   return canonicalTime(typed) === canonicalTime(formatted);
 }
 
-/** The value, `null` for an empty or incomplete input, or `undefined` for a string Temporal can't read. */
-function readTemporal<T>(kind: TemporalInputKind<T>, text: string): T | null | undefined {
-  if (text === '') return null;
-  try {
-    return kind.parse(text);
-  } catch (error) {
-    // A date the browser accepts past Temporal's range, which ends in the year 275760.
-    // Anything else, such as no Temporal at all, is the app's to fix, so it throws.
-    if (error instanceof RangeError) return undefined;
-    throw error;
-  }
-}
-
-function TemporalInput<T>({
-  kind,
-  value,
-  onChange,
-  onValueChange,
-  min,
-  max,
-  className,
-  ...props
-}: TemporalInputProps<T> & { kind: TemporalInputKind<T> }) {
+/** A native time input whose value is a `Temporal.PlainTime`. */
+function TimeInput({ value, onChange, onValueChange, min, max, className, ...props }: FieldTimeInputProps) {
   const field = useField();
   // The string the browser last reported, kept while it still shows `value`.
   const [typed, setTyped] = useState<string | null>(null);
-  const formatted = value === null ? '' : kind.format(value);
+  const formatted = value === null ? '' : formatTime(value);
   const text = typed !== null && value !== null && sameText(typed, formatted) ? typed : formatted;
   return (
     <input
       {...field.getControlProps(props)}
-      type={kind.type}
+      type="time"
       value={text}
-      min={min === undefined ? undefined : kind.format(min)}
-      max={max === undefined ? undefined : kind.format(max)}
+      min={min === undefined ? undefined : formatTime(min)}
+      max={max === undefined ? undefined : formatTime(max)}
       className={cx(styles.input, className)}
       // Without either handler the input is read-only, and React says so.
       onChange={
         onChange || onValueChange
           ? (event) => {
-              const next = onValueChange ? readTemporal(kind, event.target.value) : undefined;
+              const next = onValueChange && event.target.value !== '' ? Temporal.PlainTime.from(event.target.value) : null;
               setTyped(event.target.value);
               onChange?.(event);
-              if (next !== undefined) onValueChange?.(next);
+              onValueChange?.(next);
             }
           : undefined
       }
     />
   );
-}
-
-/** A native time input whose value is a `Temporal.PlainTime`. */
-function TimeInput(props: FieldTimeInputProps) {
-  return <TemporalInput {...props} kind={TIME} />;
-}
-
-/** A native `datetime-local` input whose value is a `Temporal.PlainDateTime`. */
-function DateTimeInput(props: FieldDateTimeInputProps) {
-  return <TemporalInput {...props} kind={DATE_TIME} />;
 }
 
 export type FieldTextareaProps = {
@@ -1153,7 +1098,6 @@ export const Field = {
   ColorPicker,
   DatePicker,
   TimeInput,
-  DateTimeInput,
   Icon,
   Affix,
   Counter,

@@ -72,7 +72,7 @@
   /* Number and time inputs keep their native spinner and picker. Figures
      line up, and WebKit's date and time text starts at the edge like any
      other value. */
-  .input:is([type='number'], [type='time'], [type='datetime-local']) {
+  .input:is([type='number'], [type='time']) {
     font-variant-numeric: tabular-nums;
   }
 
