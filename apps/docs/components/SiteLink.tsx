@@ -6,7 +6,7 @@ export function SiteLink(props: Omit<LinkRootProps, 'render'>) {
   return <Link.Root {...props} render={renderSiteLink} />;
 }
 
-// next/link needs an href, so a link without one, or to another site or an anchor, stays a plain <a>.
-function renderSiteLink({ href, ...props }: LinkRenderProps) {
+/** Renders next/link for a same-site path. next/link needs an href, so a link without one, or to another site or an anchor, stays a plain <a>. */
+export function renderSiteLink({ href, ...props }: LinkRenderProps) {
   return href?.startsWith('/') && !href.startsWith('//') ? <NextLink href={href} {...props} /> : <a href={href} {...props} />;
 }

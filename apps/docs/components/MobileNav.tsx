@@ -47,7 +47,7 @@ export function MobileNav({ locale }: { locale: Locale }) {
             if (!elsewhere && (event.target as Element).closest('a[href]')) setOpen(false);
           }}
         >
-          <SiteNav locale={locale} idPrefix="drawer-nav" />
+          <SiteNav locale={locale} />
         </Dialog.Body>
         {/* The top bar hides its theme switch on the narrowest screens; the drawer keeps one. */}
         <Dialog.Footer>
