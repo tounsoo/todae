@@ -25,12 +25,6 @@
       "font": {
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }
       }
-    },
-    "caret": {
-      "width": { "$type": "dimension", "$value": { "value": 0.5, "unit": "em" } },
-      "motion": {
-        "duration": { "$type": "duration", "$value": { "value": 1000, "unit": "ms" } }
-      }
     }
   }
 }

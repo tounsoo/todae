@@ -12,7 +12,7 @@ export type MessageFrom = 'user' | 'assistant' | 'system';
 export type MessageRootProps = ComponentPropsWithRef<'article'> & {
   /** Who wrote it. Sets `data-from`. Default `assistant`. */
   from?: MessageFrom;
-  /** True while the message is still arriving. Sets `aria-busy` and `data-streaming`, and the last Message.Content draws a caret after the text. */
+  /** True while the message is still arriving. Sets `aria-busy` and `data-streaming`. */
   streaming?: boolean;
 };
 export type MessageAvatarProps = ComponentPropsWithRef<'div'>;

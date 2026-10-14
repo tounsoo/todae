@@ -6716,24 +6716,6 @@
       "context": null
     },
     {
-      "path": "message.caret.motion.duration",
-      "type": "duration",
-      "cssVar": "--todae-message-caret-motion-duration",
-      "cssValue": "1000ms",
-      "ref": null,
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "message.caret.width",
-      "type": "dimension",
-      "cssVar": "--todae-message-caret-width",
-      "cssValue": "0.5em",
-      "ref": null,
-      "layer": "contract",
-      "context": null
-    },
-    {
       "path": "message.fg",
       "type": "color",
       "cssVar": "--todae-message-fg",

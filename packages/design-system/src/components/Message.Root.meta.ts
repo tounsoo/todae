@@ -16,7 +16,7 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'false',
-      description: 'True while the message is still arriving. Sets aria-busy and data-streaming, and the last Message.Content draws a caret after the text. Set it back to false when the message finishes or fails.',
+      description: 'True while the message is still arriving. Sets aria-busy and data-streaming. Set it back to false when the message finishes or fails.',
     },
     {
       name: 'children',

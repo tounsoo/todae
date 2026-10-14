@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, Button, Message, Prose, Stack } from '@omsoo.design/todae';
+import { Avatar, Button, Message, Prose, Spinner, Stack } from '@omsoo.design/todae';
 import { useState } from 'react';
 
 export function MessageTurns() {
@@ -49,6 +49,11 @@ export function MessageStreaming() {
             </ul>
           </Prose.Root>
         </Message.Content>
+        {streaming && (
+          <Message.Actions>
+            <Spinner.Root variant="dots" aria-label="Writing" />
+          </Message.Actions>
+        )}
       </Message.Root>
       <Button.Root variant="secondary" pressed={streaming} onPressedChange={setStreaming} style={{ alignSelf: 'start' }}>
         Streaming
