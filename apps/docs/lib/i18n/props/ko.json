@@ -849,6 +849,10 @@
     "autoGrow": {
       "en": "Grows with content up to maxRows using CSS only. No maxRows means no cap.",
       "ko": "CSS만으로 내용에 맞춰 maxRows까지 늘어납니다. maxRows가 없으면 상한이 없습니다."
+    },
+    "highlights": {
+      "en": "Ranges of the text, { start, end, kind?, anchorName?, draw? }, drawn as tokens on a layer behind it. useMentions' getTextareaProps sets it.",
+      "ko": "텍스트의 범위 { start, end, kind?, anchorName?, draw? }를 텍스트 뒤의 레이어에 토큰으로 그립니다. useMentions의 getTextareaProps가 설정합니다."
     }
   },
   "Field.TextInput": {
@@ -993,6 +997,16 @@
     "children": {
       "en": "The link text.",
       "ko": "링크 텍스트."
+    }
+  },
+  "Loader.Root": {
+    "variant": {
+      "en": "spinner turns one arc of a ring; dots sends a wave through three dots, as a typing indicator does. Sets data-variant.",
+      "ko": "spinner는 고리의 호 하나를 돌리고, dots는 타이핑 표시처럼 점 세 개에 물결을 보냅니다. data-variant를 설정합니다."
+    },
+    "aria-label": {
+      "en": "Names the indicator when it is not inside a label with text. It keeps the progressbar role, so it needs a name.",
+      "ko": "텍스트가 있는 label 안에 있지 않을 때 표시에 이름을 붙입니다. progressbar role을 유지하므로 이름이 필요합니다."
     }
   },
   "Menu.CheckboxItem": {
@@ -1459,16 +1473,6 @@
       "ko": "\"40%\"나 \"Medium\"처럼 스크린 리더가 숫자 대신 읽는 말."
     }
   },
-  "Spinner.Root": {
-    "variant": {
-      "en": "ring turns one arc of a circle; dots sends a wave through three dots, as a typing indicator does. Sets data-variant.",
-      "ko": "ring은 원의 호 하나를 돌리고, dots는 타이핑 표시처럼 점 세 개에 물결을 보냅니다. data-variant를 설정합니다."
-    },
-    "aria-label": {
-      "en": "Names the spinner when it is not inside a label with text. It keeps the progressbar role, so it needs a name.",
-      "ko": "텍스트가 있는 label 안에 있지 않을 때 Spinner에 이름을 붙입니다. progressbar role을 유지하므로 이름이 필요합니다."
-    }
-  },
   "Stack.Root": {
     "direction": {
       "en": "Flex direction.",
@@ -1501,8 +1505,8 @@
   },
   "GlyphsProvider": {
     "glyphs": {
-      "en": "The glyphs to change: close, check, chevron, separator and ellipsis. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins.",
-      "ko": "바꿀 글리프: close, check, chevron, separator, ellipsis. 생략한 키는 가장 가까운 상위 GlyphsProvider에서 가져오고, null은 Todae 자체 글리프로 되돌립니다. 파트 자체의 내용이 있으면 그것이 우선합니다."
+      "en": "The glyphs to change, by the keys of the Glyphs type. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins.",
+      "ko": "바꿀 글리프. Glyphs 타입의 키로 지정합니다. 생략한 키는 가장 가까운 상위 GlyphsProvider에서 가져오고, null은 Todae 자체 글리프로 되돌립니다. 파트 자체의 내용이 있으면 그것이 우선합니다."
     },
     "children": {
       "en": "Subtree that uses these glyphs.",
@@ -2457,6 +2461,46 @@
     "children": {
       "en": "The button's content. Without it, the send glyph named by the send string, or the stop glyph named by the stop string while busy.",
       "ko": "버튼의 내용. 없으면 send 문자열로 이름이 붙은 send 글리프를, busy인 동안에는 stop 문자열로 이름이 붙은 stop 글리프를 보여 줍니다."
+    }
+  },
+  "useMentions": {
+    "triggers": {
+      "en": "One entry per trigger character, such as { char: \"@\", options } or { char: \"/\", position: \"start\", loadOptions }. Each takes options or loadOptions, filter, text for what a pick inserts, and label for the list's name.",
+      "ko": "트리거 문자마다 하나, 예를 들어 { char: \"@\", options }나 { char: \"/\", position: \"start\", loadOptions }. 각각 options나 loadOptions, filter, 고른 항목이 넣을 텍스트인 text, 목록의 이름인 label을 받습니다."
+    },
+    "value": {
+      "en": "Controlled draft: the text and its tokens, { start, end, char, value, text } ranges of it. A token that does not hold its text is left out. Set both to load or clear a draft.",
+      "ko": "제어 임시 저장본: 텍스트와 그 토큰, 즉 텍스트의 { start, end, char, value, text } 범위. 자기 텍스트를 담지 않은 토큰은 빠집니다. 임시 저장본을 불러오거나 비울 때는 둘 다 설정하세요."
+    },
+    "defaultValue": {
+      "en": "Starting draft when uncontrolled.",
+      "ko": "비제어일 때의 시작 임시 저장본."
+    },
+    "onValueChange": {
+      "en": "Called with the next text and its tokens together on every edit, including a pick. The tokens move with the edit, and a pick adds one.",
+      "ko": "고르기를 포함해 편집할 때마다 다음 텍스트와 그 토큰을 함께 넘겨 불립니다. 토큰은 편집을 따라 옮겨지고, 고르기는 토큰을 하나 더합니다."
+    },
+    "maxLength": {
+      "en": "The textarea's maxLength. A pick whose text would not fit is disabled.",
+      "ko": "textarea의 maxLength. 텍스트가 들어가지 않는 고르기는 비활성화됩니다."
+    },
+    "disabled": {
+      "en": "Keeps the list closed.",
+      "ko": "목록을 닫아 둡니다."
+    },
+    "id": {
+      "en": "Base for the listbox id.",
+      "ko": "listbox id의 기반."
+    }
+  },
+  "Steps.Item": {
+    "status": {
+      "en": "Sets data-status and the marker. A current step takes aria-current=\"step\".",
+      "ko": "data-status와 표시를 정합니다. current 단계는 aria-current=\"step\"을 받습니다."
+    },
+    "statusLabel": {
+      "en": "The hidden status word read before the step, in place of the stepDone, stepCurrent, stepPending or stepError string when not empty.",
+      "ko": "단계 앞에서 읽히는 숨은 상태 단어. 비어 있지 않으면 stepDone, stepCurrent, stepPending, stepError 문자열 대신 쓰입니다."
     }
   }
 }

@@ -1,0 +1,50 @@
+import { StepsExample } from '../../../components/demos/StepsDemo';
+
+# Steps
+
+`Steps.Root`는 단계의 순서와 각 단계가 어디까지 왔는지를 보여 줍니다. 작업 중인 에이전트의 계획이나 체크리스트가 그 예입니다. 각 `Steps.Item`은 `status`로 `done`, `current`, `pending`, `error` 중 하나를 받습니다. 단계와 그 순서는 직접 가진 데이터이고, Todae는 상태마다 표시를 그리고 표시를 잇는 선을 그립니다.
+
+```tsx
+<Steps.Root aria-label="Plan">
+  {plan.map((step) => (
+    <Steps.Item key={step.id} status={step.status}>
+      {step.title}
+    </Steps.Item>
+  ))}
+</Steps.Root>
+```
+
+<Example>
+  <StepsExample />
+</Example>
+
+## 파트
+
+- `Steps.Root`는 `role="list"`가 붙은 `ol`이므로, Safari에서도 목록 표시 없이 목록으로 남습니다.
+- `Steps.Item`은 표시와 그 뒤의 내용으로 된 `li`입니다. `status`가 `data-status`와 표시를 정합니다. `done` 단계는 채운 원 위에 `check` 글리프를 보여 주고 텍스트에 취소선을 긋습니다. `current` 단계는 [Loader](/loader) 스피너를 보여 주고 `aria-current="step"`을 받습니다. `pending` 단계는 빈 원을, `error`가 있는 단계는 critical 색으로 `error` 글리프를 보여 줍니다. 기본값은 `pending`입니다.
+
+표시와 그 색은 `steps.marker.*` 토큰에서, 텍스트 색은 `steps.fg.*`에서, 선은 `steps.line.*`에서, 단계 사이 간격은 `steps.gap`에서 옵니다.
+
+## 상태 단어
+
+표시는 스크린 리더에서 숨겨집니다. 대신 각 단계는 화면에는 보이지 않는 상태 단어로 시작하므로, 스크린 리더는 "Done: Read the failing test"처럼 읽습니다. 이 단어는 [StringsProvider](/utilities/strings-provider)의 `stepDone`, `stepCurrent`, `stepPending`, `stepError` 문자열에서 오며, 영어로는 "Done", "In progress", "Not started", "Failed"입니다. 직접 정한 단어를 쓰려면 항목에 `statusLabel`을 넘기세요. `done` 단계에 "Skipped"를 쓰는 식입니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 순서 있는 목록, 각 단계 앞에서 읽히는 상태 단어, 진행 중인 단계의 `aria-current="step"`, 그리고 접근 가능한 이름에서 빠지는 표시를 맡습니다.
+
+**직접 제공할 것:** 페이지에 목록이 둘 이상이면 `aria-label`이나 `aria-labelledby`로 목록의 이름을 붙이세요. 단계가 끝나거나 실패했을 때 목록으로 이동하지 않아도 들려야 한다면 [useAnnouncer](/utilities/use-announcer) 등으로 알리세요. 기본 단어가 맞지 않으면 알맞은 상태 단어를 주세요.
+
+**주의할 점:** 실패를 색으로만 보여 주지 마세요. 무엇이 잘못됐는지 단계의 텍스트로도 말하세요. 긴 단계의 세부 내용을 항목에 넣으면 `done` 단계의 취소선이 그 전부를 가로지릅니다.
+
+## 언제 쓰나요
+
+**쓸 때:** 단계가 차례로 진행되고 각 단계에 상태가 있는 계획이나 체크리스트.
+
+**쓰지 않을 때:** 진행 중인 작업 하나 → [Loader](/loader) 또는 [Progress](/progress). 페이지 경로 → [Breadcrumbs](/breadcrumbs).
+
+## Props
+
+<PropsTable name="Steps.Root" />
+
+<PropsTable name="Steps.Item" />

@@ -17,7 +17,7 @@ describe('native element component styles', () => {
   // it whatever their specificity or load order, so a container such as
   // Pagination still styles a Link.Root placed inside it.
   it('sit in the todae.components.native sublayer, and nothing else', () => {
-    for (const name of ['Link', 'Disclosure', 'Separator', 'Table', 'Progress', 'Spinner', 'Skeleton', 'Slider', 'Code', 'Kbd', 'VisuallyHidden']) {
+    for (const name of ['Link', 'Disclosure', 'Separator', 'Table', 'Progress', 'Loader', 'Skeleton', 'Slider', 'Code', 'Kbd', 'VisuallyHidden']) {
       const css = sheet(name);
       expect(css, name).toMatch(/^\s*@layer todae\.components\.native \{/);
       expect(css.match(/@layer/g), name).toHaveLength(1);
@@ -43,18 +43,18 @@ describe('native element component styles', () => {
   it('stop motion under reduced motion', () => {
     expect(sheet('Disclosure')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.root::details-content \{\s*transition: none;/);
     expect(sheet('Progress')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.progress:indeterminate \{\s*animation: none;/);
-    expect(sheet('Spinner')).toMatch(/prefers-reduced-motion: reduce\) \{\s*progress\.root,\s*progress\.root\[data-variant='dots'\] \{\s*animation: none;/);
+    expect(sheet('Loader')).toMatch(/prefers-reduced-motion: reduce\) \{\s*progress\.root,\s*progress\.root\[data-variant='dots'\] \{\s*animation: none;/);
     expect(sheet('Skeleton')).toMatch(/prefers-reduced-motion: reduce\) \{\s*\.root \{\s*animation: none;/);
   });
 
   it('keep progress, spinner and skeleton visible in forced colors', () => {
     expect(sheet('Progress')).toMatch(/forced-colors: active\) \{\s*\.root \{\s*forced-color-adjust: none;/);
-    expect(sheet('Spinner')).toMatch(/forced-colors: active\) \{\s*progress\.root \{\s*forced-color-adjust: none;/);
+    expect(sheet('Loader')).toMatch(/forced-colors: active\) \{\s*progress\.root \{\s*forced-color-adjust: none;/);
     expect(sheet('Skeleton')).toMatch(/forced-colors: active\) \{\s*\.root \{\s*forced-color-adjust: none;\s*background: GrayText;/);
   });
 
   it('draw the spinner in the text color, so it shows inside a primary button', () => {
-    expect(rule(sheet('Spinner'), 'progress.root')).toContain('currentColor 0 25%');
+    expect(rule(sheet('Loader'), 'progress.root')).toContain('currentColor 0 25%');
   });
 
   it('tint inline code from the text color, lightly, and give blocks their own colors', () => {

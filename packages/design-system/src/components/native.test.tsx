@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import type { ComponentPropsWithRef } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Code, Disclosure, Kbd, Link, Meter, Progress, Separator, Skeleton, Slider, Spinner, Table, VisuallyHidden } from '../index';
+import { Code, Disclosure, Kbd, Link, Meter, Progress, Separator, Loader, Skeleton, Slider, Table, VisuallyHidden } from '../index';
 
 afterEach(cleanup);
 
@@ -18,7 +18,7 @@ describe('native element components', () => {
     ['Table.Cell', () => <table><tbody><tr><Table.Cell data-testid="x" className="mine" /></tr></tbody></table>, 'TD'],
     ['Progress.Root', () => <Progress.Root data-testid="x" className="mine" />, 'PROGRESS'],
     ['Meter.Root', () => <Meter.Root value={1} data-testid="x" className="mine" />, 'METER'],
-    ['Spinner.Root', () => <Spinner.Root data-testid="x" className="mine" />, 'PROGRESS'],
+    ['Loader.Root', () => <Loader.Root data-testid="x" className="mine" />, 'PROGRESS'],
     ['Skeleton.Root', () => <Skeleton.Root data-testid="x" className="mine" />, 'DIV'],
     ['Slider.Root', () => <Slider.Root data-testid="x" className="mine" />, 'INPUT'],
     ['Code.Root', () => <Code.Root data-testid="x" className="mine" />, 'CODE'],
@@ -95,7 +95,7 @@ describe('native element components', () => {
 
   it('keeps a spinner indeterminate even if a value slips through', () => {
     const props = { value: 3 } as Record<string, unknown>;
-    render(<Spinner.Root aria-label="Saving" {...props} />);
+    render(<Loader.Root aria-label="Saving" {...props} />);
     const spinner = screen.getByRole('progressbar', { name: 'Saving' });
     expect(spinner.tagName).toBe('PROGRESS');
     expect(spinner.hasAttribute('value')).toBe(false);
@@ -104,12 +104,12 @@ describe('native element components', () => {
   it('marks the variant, ring by default', () => {
     render(
       <>
-        <Spinner.Root aria-label="Typing" variant="dots" />
-        <Spinner.Root aria-label="Loading" />
+        <Loader.Root aria-label="Typing" variant="dots" />
+        <Loader.Root aria-label="Loading" />
       </>,
     );
     expect(screen.getByRole('progressbar', { name: 'Typing' }).dataset.variant).toBe('dots');
-    expect(screen.getByRole('progressbar', { name: 'Loading' }).dataset.variant).toBe('ring');
+    expect(screen.getByRole('progressbar', { name: 'Loading' }).dataset.variant).toBe('spinner');
   });
 
   it('always renders a range input', () => {

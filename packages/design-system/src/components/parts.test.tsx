@@ -13,6 +13,7 @@ import {
   Card,
   Message,
   Attachment,
+  Steps,
   Composer,
   Conversation,
   Checkbox,
@@ -44,7 +45,7 @@ import {
   Separator,
   Skeleton,
   Slider,
-  Spinner,
+  Loader,
   Stack,
   Switch,
   Table,
@@ -108,7 +109,7 @@ const cases: Case[] = [
   ['Table.Cell', (p) => <table><tbody><tr><Table.Cell {...p}>c</Table.Cell></tr></tbody></table>],
   ['Progress.Root', (p) => <Progress.Root {...p} aria-label="p" />],
   ['Meter.Root', (p) => <Meter.Root {...p} value={0.5} aria-label="m" />],
-  ['Spinner.Root', (p) => <Spinner.Root {...p} aria-label="s" />],
+  ['Loader.Root', (p) => <Loader.Root {...p} aria-label="s" />],
   ['Skeleton.Root', (p) => <Skeleton.Root {...p} />],
   ['Slider.Root', (p) => <Slider.Root {...p} aria-label="s" />],
   ['Code.Root', (p) => <Code.Root {...p}>c</Code.Root>],
@@ -560,6 +561,15 @@ const cases: Case[] = [
       <Attachment.Root>
         <Attachment.Name {...p}>report.pdf</Attachment.Name>
       </Attachment.Root>
+    ),
+  ],
+  ['Steps.Root', (p) => <Steps.Root {...p} />],
+  [
+    'Steps.Item',
+    (p) => (
+      <Steps.Root>
+        <Steps.Item {...p} />
+      </Steps.Root>
     ),
   ],
   ['Composer.Root', (p) => <Composer.Root {...p} />],

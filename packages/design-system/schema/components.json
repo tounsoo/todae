@@ -1778,6 +1778,12 @@
           "required": false,
           "description": "Grows with content up to maxRows using CSS only. No maxRows means no cap.",
           "default": "\"false\""
+        },
+        {
+          "name": "highlights",
+          "type": "readonly FieldTextareaHighlight[]",
+          "required": false,
+          "description": "Ranges of the text, { start, end, kind?, anchorName?, draw? }, drawn as tokens on a layer behind it. useMentions' getTextareaProps sets it."
         }
       ]
     },
@@ -1944,7 +1950,7 @@
           "name": "glyphs",
           "type": "Glyphs",
           "required": true,
-          "description": "The glyphs to change: close, check, chevron, separator and ellipsis. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins."
+          "description": "The glyphs to change, by the keys of the Glyphs type. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. A part's own content still wins."
         },
         {
           "name": "children",
@@ -2041,6 +2047,25 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "The link text."
+        }
+      ]
+    },
+    {
+      "name": "Loader.Root",
+      "description": "A native progress with no value, drawn from the loader tokens as a spinner or a wave through three dots. Takes native progress attributes except value and max.",
+      "props": [
+        {
+          "name": "variant",
+          "type": "\"spinner\" | \"dots\"",
+          "required": false,
+          "description": "spinner turns one arc of a ring; dots sends a wave through three dots, as a typing indicator does. Sets data-variant.",
+          "default": "\"spinner\""
+        },
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Names the indicator when it is not inside a label with text. It keeps the progressbar role, so it needs a name."
         }
       ]
     },
@@ -2898,25 +2923,6 @@
       ]
     },
     {
-      "name": "Spinner.Root",
-      "description": "A native progress with no value, drawn from the spinner tokens as a turning ring or a wave through three dots. Takes native progress attributes except value and max.",
-      "props": [
-        {
-          "name": "variant",
-          "type": "\"ring\" | \"dots\"",
-          "required": false,
-          "description": "ring turns one arc of a circle; dots sends a wave through three dots, as a typing indicator does. Sets data-variant.",
-          "default": "\"ring\""
-        },
-        {
-          "name": "aria-label",
-          "type": "string",
-          "required": false,
-          "description": "Names the spinner when it is not inside a label with text. It keeps the progressbar role, so it needs a name."
-        }
-      ]
-    },
-    {
       "name": "Stack.Root",
       "description": "Flex layout. Each gap step but none reads a contract token: stack.gap-condensed, stack.gap or stack.gap-spacious.",
       "props": [
@@ -2967,6 +2973,30 @@
           "description": "Laid-out children."
         }
       ]
+    },
+    {
+      "name": "Steps.Item",
+      "description": "One step, as an li with a marker for its status and a hidden status word read before its content. A done step shows the check glyph and struck-through text, the current step a spinner, and a step with an error the error glyph. Takes native li attributes.",
+      "props": [
+        {
+          "name": "status",
+          "type": "\"done\" | \"current\" | \"pending\" | \"error\"",
+          "required": false,
+          "description": "Sets data-status and the marker. A current step takes aria-current=\"step\".",
+          "default": "\"pending\""
+        },
+        {
+          "name": "statusLabel",
+          "type": "string",
+          "required": false,
+          "description": "The hidden status word read before the step, in place of the stepDone, stepCurrent, stepPending or stepError string when not empty."
+        }
+      ]
+    },
+    {
+      "name": "Steps.Root",
+      "description": "An ordered list of steps, such as an agent's plan or a checklist, as an ol with role=\"list\". Name it with aria-label or aria-labelledby when the page has more than one. Takes native ol attributes.",
+      "props": []
     },
     {
       "name": "StringsProvider",
@@ -4146,6 +4176,55 @@
           "required": false,
           "description": "Listen only while true. Pass it in the options object.",
           "default": "true"
+        }
+      ]
+    },
+    {
+      "name": "useMentions",
+      "description": "Mentions and slash commands in a Field.Textarea. A trigger character at the start of a word opens a suggestion list at that word; a pick replaces the word with the token text through the textarea's own editing, so undo works. Committed tokens are ranges of the text that move with edits, drawn behind the text through Field.Textarea's highlights. Spread getters onto Field.Textarea, Popover and OptionList.",
+      "props": [
+        {
+          "name": "triggers",
+          "type": "readonly MentionTrigger[]",
+          "required": true,
+          "description": "One entry per trigger character, such as { char: \"@\", options } or { char: \"/\", position: \"start\", loadOptions }. Each takes options or loadOptions, filter, text for what a pick inserts, and label for the list's name."
+        },
+        {
+          "name": "value",
+          "type": "{ text: string; tokens: readonly MentionToken[] }",
+          "required": false,
+          "description": "Controlled draft: the text and its tokens, { start, end, char, value, text } ranges of it. A token that does not hold its text is left out. Set both to load or clear a draft."
+        },
+        {
+          "name": "defaultValue",
+          "type": "{ text: string; tokens: readonly MentionToken[] }",
+          "required": false,
+          "description": "Starting draft when uncontrolled.",
+          "default": "{ text: \"\", tokens: [] }"
+        },
+        {
+          "name": "onValueChange",
+          "type": "(value: { text: string; tokens: MentionToken[] }) => void",
+          "required": false,
+          "description": "Called with the next text and its tokens together on every edit, including a pick. The tokens move with the edit, and a pick adds one."
+        },
+        {
+          "name": "maxLength",
+          "type": "number",
+          "required": false,
+          "description": "The textarea's maxLength. A pick whose text would not fit is disabled."
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "required": false,
+          "description": "Keeps the list closed."
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "required": false,
+          "description": "Base for the listbox id."
         }
       ]
     },

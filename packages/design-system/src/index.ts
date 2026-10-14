@@ -28,7 +28,7 @@ export { ScrollArea, type ScrollAreaAxis, type ScrollAreaRootProps } from './com
 export { Table, type TableBodyProps, type TableCaptionProps, type TableCellProps, type TableFootProps, type TableHeadProps, type TableHeaderCellProps, type TableRootProps, type TableRowProps } from './components/Table';
 export { Progress, type ProgressRootProps } from './components/Progress';
 export { Meter, type MeterRootProps } from './components/Meter';
-export { Spinner, type SpinnerRootProps, type SpinnerVariant } from './components/Spinner';
+export { Loader, type LoaderRootProps, type LoaderVariant } from './components/Loader';
 export { Skeleton, type SkeletonRootProps } from './components/Skeleton';
 export { Slider, type SliderRootProps } from './components/Slider';
 export { Code, type CodeBlockProps, type CodeRootProps } from './components/Code';
@@ -62,6 +62,7 @@ export {
   type AttachmentRootProps,
   type AttachmentStatus,
 } from './components/Attachment';
+export { Steps, type StepsItemProps, type StepsRootProps, type StepsStatus } from './components/Steps';
 export { Composer, type ComposerRootProps, type ComposerSubmitProps } from './components/Composer';
 export {
   Conversation,
@@ -187,6 +188,7 @@ export {
   type FieldTextInputType,
   type FieldTimePickerCloseReason,
   type FieldTimePickerProps,
+  type FieldTextareaHighlight,
   type FieldTextareaProps,
 } from './components/Field';
 export {
@@ -316,6 +318,17 @@ export {
   type UseComboboxSingleOptions,
 } from './hooks/useCombobox';
 export { useControlledState, useControlledValue } from './hooks/useControlledState';
+export {
+  useMentions,
+  type MentionDraft,
+  type MentionItem,
+  type MentionToken,
+  type MentionTrigger,
+  type MentionTriggerPosition,
+  type UseMentionsOptions,
+  type UseMentionsResult,
+  type UseMentionsTextareaProps,
+} from './hooks/useMentions';
 export {
   ThemeProvider,
   useAppearance,

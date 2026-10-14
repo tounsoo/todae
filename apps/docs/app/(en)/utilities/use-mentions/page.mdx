@@ -1,0 +1,72 @@
+import { MentionsExample } from '../../../../components/demos/MentionsDemo';
+
+# useMentions
+
+`useMentions(options)` adds mentions and slash commands to a [Field.Textarea](/field/textarea). Typing a trigger character, such as `@`, opens a list of suggestions at that word, and a pick replaces the word with the token's text, such as `@Ada Lovelace`. The text stays plain text in a native textarea, and the hook keeps the tokens as ranges of it, drawn behind the text.
+
+```tsx
+const mentions = useMentions({
+  triggers: [
+    { char: '@', options: people, label: 'People' },
+    { char: '/', options: commands, label: 'Commands' },
+  ],
+  value: draft,
+  onValueChange: setDraft,
+});
+
+<Composer.Root onSubmit={send}>
+  <Field.Root aria-label="Message">
+    <Field.Textarea {...mentions.getTextareaProps()} autoGrow maxRows={6} />
+    <Field.Row>
+      <Composer.Submit disabled={draft.text.trim() === ''} />
+    </Field.Row>
+  </Field.Root>
+</Composer.Root>
+<Popover.Root {...mentions.getPopoverProps()}>
+  <OptionList.Root {...mentions.getListboxProps()}>
+    {mentions.items.map((item) => (
+      <OptionList.Option key={item.id} {...mentions.getOptionProps(item)} />
+    ))}
+  </OptionList.Root>
+</Popover.Root>
+```
+
+<Example>
+  <MentionsExample />
+</Example>
+
+## Triggers
+
+Each trigger names one character. With `position: 'word'`, the default, it starts a suggestion word at the start of the text or after whitespace, so an email address does not open the list. With `position: 'start'`, only whitespace may come before it, as for slash commands. The word runs from the trigger to the next whitespace, so a mention can hold another trigger character, such as `@src/index`, and the list stays open while the caret is in it.
+
+A trigger takes `options`, filtered by `filter` against the word, or `loadOptions`, called with the word and an `AbortSignal`, whose stale results are dropped. `text` sets what a pick inserts, by default the trigger character and the option's label. `label` names the list for screen readers, by default the `suggestions` string of [StringsProvider](/utilities/strings-provider).
+
+## Picking and editing
+
+While the list is open, ArrowDown and ArrowUp move through its options, and Enter or Tab picks the active option. Enter while the word's options are still loading does nothing, so a [Composer](/composer) does not send a half-typed mention. Enter with no option it can pick closes the list and is left to the textarea. Escape, or a press outside the textarea and the list, closes it for that word; it opens again for the next trigger.
+
+A pick replaces the word through `document.execCommand('insertText')`, so it is one step on the textarea's own undo stack, and adds a space unless whitespace follows. Undo and redo bring back the tokens the restored text last had. Any edit to a token's text, including Backspace or Delete on one of its characters, turns it back into plain text.
+
+`value` is the draft: its `text` and its `tokens`, which list each token's `start`, `end`, `char`, `value` and `text`. `onValueChange` hands back both on every edit, so they are stored together; send them to your backend together, and set both to load or clear a draft. A token whose range no longer holds its text is dropped.
+
+## Drawing tokens
+
+`getTextareaProps()` passes `highlights` to `Field.Textarea`, which draws each range on a layer behind the text and gives the word being typed an anchor that the popover sits at. The layer copies the textarea's type, padding and scroll, so the textarea keeps its own text, caret, selection and spellcheck. Tokens read `field.token.bg` and `field.token.radius`, and carry their trigger character as `data-kind`, so you can style mentions and commands apart.
+
+## Accessible composition
+
+**Todae handles:** The textarea keeps its textbox role, with `aria-autocomplete="list"`, `aria-haspopup="listbox"`, and, while the list is open, `aria-controls` and `aria-activedescendant` pointing at the list and its active option. The list's count is announced through [useAnnouncer](/utilities/use-announcer) when it opens and when it changes, with the `suggestionCount` string. Keys are left alone during an IME composition. The drawn tokens are hidden from screen readers, since the textarea holds the same text.
+
+**You supply:** A name for the field, and a `label` for each trigger's list. The options, and what a token means to your product.
+
+**Watch for:** Your own `onKeyDown` that cancels Enter or the arrow keys, which stops the hook's handling of them. A textarea style that is not on the textarea itself, such as a font set on a pseudo-element.
+
+## When to use
+
+**When:** Mentions of people, channels or files, and slash commands, in a message or comment box.
+
+**When not:** Picking one value for a field → [Combobox](/recipes/combobox). Separate values shown as chips → `Field.ChipInput`. Rich text with formatting → not shipped.
+
+## Props
+
+<PropsTable name="useMentions" />

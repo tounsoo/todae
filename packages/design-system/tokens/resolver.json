@@ -48,10 +48,11 @@
         { "$ref": "./components/message.json" },
         { "$ref": "./components/conversation.json" },
         { "$ref": "./components/attachment.json" },
+        { "$ref": "./components/steps.json" },
         { "$ref": "./components/breadcrumbs.json" },
         { "$ref": "./components/toolbar.json" },
         { "$ref": "./components/drawer.json" },
-        { "$ref": "./components/spinner.json" },
+        { "$ref": "./components/loader.json" },
         { "$ref": "./components/skeleton.json" },
         { "$ref": "./components/code.json" },
         { "$ref": "./components/avatar.json" },
@@ -72,7 +73,11 @@
             "chip.border": ["default", "hover", "focus", "disabled"],
             "chip.ring": ["focus"],
             "field.border": ["default", "hover", "focus", "disabled", "invalid"],
-            "field.ring": ["focus", "invalid"]
+            "field.ring": ["focus", "invalid"],
+            "steps.fg": ["done", "current", "pending", "error"],
+            "steps.marker.bg": ["done", "current", "pending", "error"],
+            "steps.marker.fg": ["done", "current", "pending", "error"],
+            "steps.marker.border": ["done", "current", "pending", "error"]
           }
         }
       }
