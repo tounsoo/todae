@@ -43,6 +43,15 @@ export {
   type CardHeaderProps,
   type CardRootProps,
 } from './components/Card';
+export {
+  Message,
+  type MessageActionsProps,
+  type MessageAvatarProps,
+  type MessageContentProps,
+  type MessageFrom,
+  type MessageHeaderProps,
+  type MessageRootProps,
+} from './components/Message';
 export { BottomSheet, type BottomSheetRootProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet';
 export {
   Button,

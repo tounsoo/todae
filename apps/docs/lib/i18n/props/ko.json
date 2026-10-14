@@ -1099,6 +1099,44 @@
       "ko": "트리거 레이블."
     }
   },
+  "Message.Actions": {
+    "children": {
+      "en": "Buttons, or a Toolbar.Root holding them.",
+      "ko": "버튼, 또는 버튼을 담은 Toolbar.Root."
+    }
+  },
+  "Message.Avatar": {
+    "children": {
+      "en": "An Avatar.Root.",
+      "ko": "Avatar.Root."
+    }
+  },
+  "Message.Content": {
+    "children": {
+      "en": "The text, often a Prose.Root with rendered markdown.",
+      "ko": "텍스트. 렌더링한 markdown을 담은 Prose.Root인 경우가 많습니다."
+    }
+  },
+  "Message.Header": {
+    "children": {
+      "en": "The author's name and, if any, a time element.",
+      "ko": "작성자 이름과, 있다면 time 요소."
+    }
+  },
+  "Message.Root": {
+    "from": {
+      "en": "Who wrote the message. Sets data-from, which sets layout and tokens only.",
+      "ko": "메시지를 쓴 쪽. data-from을 설정하며, 이는 레이아웃과 토큰만 정합니다."
+    },
+    "streaming": {
+      "en": "True while the message is still arriving. Sets aria-busy and data-streaming. Set it back to false when the message finishes or fails.",
+      "ko": "메시지가 아직 도착하는 중이면 true. aria-busy와 data-streaming을 설정합니다. 메시지가 끝나거나 실패하면 false로 되돌리세요."
+    },
+    "children": {
+      "en": "Message parts: Avatar, Header, Content and Actions.",
+      "ko": "메시지 파트: Avatar, Header, Content, Actions."
+    }
+  },
   "Meter.Root": {
     "value": {
       "en": "The measurement, between min and max.",

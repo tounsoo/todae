@@ -38,6 +38,10 @@
       "types": "./dist/server/card.d.ts",
       "import": "./dist/card.js"
     },
+    "./message": {
+      "types": "./dist/server/message.d.ts",
+      "import": "./dist/message.js"
+    },
     "./breadcrumbs": {
       "types": "./dist/server/breadcrumbs.d.ts",
       "import": "./dist/breadcrumbs.js"

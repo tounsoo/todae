@@ -1,0 +1,94 @@
+import { MessageStreaming, MessageTurns } from '../../../components/demos/MessageDemo';
+
+# Message
+
+`Message.Root`는 대화의 한 차례로, `<article>`입니다. `from`은 누가 썼는지 나타냅니다. 사용자의 메시지는 끝쪽에 말풍선으로 놓이고, 어시스턴트의 메시지는 너비 전체를 쓰며, 시스템 메시지는 가운데의 조용한 한 줄입니다. 어떤 에이전트 SDK의 메시지 형태도 알지 못하므로, 자신의 데이터를 파트에 맞춰 넣으세요.
+
+```tsx
+<Message.Root from="user" aria-label="You">
+  <Message.Content>How do I name an icon-only button?</Message.Content>
+</Message.Root>
+
+<Message.Root aria-label="Assistant">
+  <Message.Avatar>
+    <Avatar.Root tone="category-3">
+      <Avatar.Fallback>A</Avatar.Fallback>
+    </Avatar.Root>
+  </Message.Avatar>
+  <Message.Header>
+    <strong>Assistant</strong>
+    <time dateTime="2026-10-14T09:41">9:41</time>
+  </Message.Header>
+  <Message.Content>
+    <Prose.Root>
+      <p>Give it aria-label, or put a visually hidden label inside it.</p>
+    </Prose.Root>
+  </Message.Content>
+</Message.Root>
+```
+
+<Example block>
+  <MessageTurns />
+</Example>
+
+Server Components는 `@omsoo.design/todae/message`에서 가져올 수 있습니다.
+
+## 파트
+
+모든 파트는 `div`이고, 모두 넣지 않아도 됩니다.
+
+- `Message.Avatar`에는 `Avatar.Root`를 넣습니다. 이것이 있으면 다른 파트는 그 옆에 한 열로 놓입니다. 어시스턴트나 시스템 메시지에서는 그 뒤에, 사용자의 메시지에서는 그 앞에 놓입니다.
+- `Message.Header`는 작성자 이름과 시각을 담는 줄입니다. 직접 만든 `<time>` 요소를 넣으세요. Todae는 여기서 날짜를 포맷하지 않습니다. 바로 안의 제목이나 문단은 margin이 없습니다.
+- `Message.Content`는 본문입니다. 사용자의 메시지에서는 이것이 말풍선입니다. 렌더링한 markdown은 그 안의 [Prose](/prose) root에 넣으세요.
+- `Message.Actions`는 복사나 다시 시도처럼 메시지에 대한 동작을 담는 줄입니다. 동작이 여러 개면 [Toolbar](/toolbar)에 넣어 탭 정지를 하나로 만드세요.
+
+`from`은 `data-from`을 설정하고 레이아웃과 토큰만 바꿉니다. role이나 스크린 리더가 듣는 내용은 바꾸지 않습니다.
+
+## 스트리밍
+
+메시지가 아직 도착하는 동안 `streaming`을 주고, 끝나거나 실패하면 `false`로 되돌리세요. article에 `aria-busy="true"`와 `data-streaming`을 설정하고, 그 밖에는 아무것도 그리지 않습니다. 답이 아직 오고 있음을 보여 주려면 아래처럼 [Spinner](/spinner)의 `dots` 변형을 넣으세요.
+
+```tsx
+<Message.Root streaming={status === 'streaming'} aria-label="Assistant">
+  <Message.Content>
+    <Prose.Root>{rendered}</Prose.Root>
+  </Message.Content>
+  {status === 'streaming' && (
+    <Message.Actions>
+      <Spinner.Root variant="dots" aria-label="Writing" />
+    </Message.Actions>
+  )}
+</Message.Root>
+```
+
+<Example block>
+  <MessageStreaming />
+</Example>
+
+`message` 토큰으로 바꾸세요. `message.fg`는 텍스트 색, `message.gap`과 `message.row-gap`은 파트 사이 간격, `message.header.*`는 헤더의 색, 크기와 그 아래의 더 좁은 간격, `message.user.*`는 말풍선의 배경, 텍스트 색, 모서리, 패딩, `max-width`, 강제 색상 모드 외곽선의 `border-width`, `message.system.*`는 시스템 줄을 정합니다. 안에 넣은 `Prose.Root`는 `prose` 토큰의 텍스트 색과 크기를 그대로 씁니다.
+
+## 접근성을 지키는 조합
+
+**Todae가 맡는 것:** 메시지마다 `<article>`이므로 스크린 리더 사용자가 메시지 사이를 이동할 수 있습니다. streaming 동안 `aria-busy`를 줍니다. 강제 색상 모드에서는 배경이 바뀌므로 사용자 말풍선에 외곽선이 남습니다.
+
+**직접 제공할 것:** 누가 썼는지 말해 주는 각 메시지의 이름. `aria-label="You"`나, `Message.Header`의 작성자를 가리키는 `aria-labelledby`를 쓰세요. 아이콘만 있는 동작 버튼의 이름. streaming되는 텍스트 대신 메시지가 끝날 때 한 번 하는 알림.
+
+**주의할 점:** streaming 중인 메시지를 live region에 넣는 것. 토큰이 도착할 때마다 읽힙니다. `<time dateTime>`이 없는 시각. 기계가 읽을 수 없습니다. 사용자와 어시스턴트를 색이나 놓인 쪽만으로 구분하는 것. 이름으로도 말해야 합니다.
+
+## 언제 쓰나요
+
+**쓸 때:** 사람이나 어시스턴트와 나누는 채팅의 차례, 스레드의 댓글, 고객 지원 대화.
+
+**쓰지 않을 때:** 페이지에 대한 한 번의 상태 메시지 → [Alert](/alert). 나타났다 사라지는 알림 → [Toast](/toast). 테두리로 묶은 내용 → [Card](/card).
+
+## Props
+
+<PropsTable name="Message.Root" />
+
+<PropsTable name="Message.Avatar" />
+
+<PropsTable name="Message.Header" />
+
+<PropsTable name="Message.Content" />
+
+<PropsTable name="Message.Actions" />

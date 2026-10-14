@@ -6716,6 +6716,141 @@
       "context": null
     },
     {
+      "path": "message.fg",
+      "type": "color",
+      "cssVar": "--todae-message-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.gap",
+      "type": "dimension",
+      "cssVar": "--todae-message-gap",
+      "cssValue": "var(--todae-space-inline-gap)",
+      "ref": "space.inline.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.header.fg",
+      "type": "color",
+      "cssVar": "--todae-message-header-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.header.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-message-header-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.header.space-after",
+      "type": "dimension",
+      "cssVar": "--todae-message-header-space-after",
+      "cssValue": "var(--todae-space-stack-gap-condensed)",
+      "ref": "space.stack.gap-condensed",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.row-gap",
+      "type": "dimension",
+      "cssVar": "--todae-message-row-gap",
+      "cssValue": "var(--todae-space-stack-gap)",
+      "ref": "space.stack.gap",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.system.fg",
+      "type": "color",
+      "cssVar": "--todae-message-system-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.system.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-message-system-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.user.bg",
+      "type": "color",
+      "cssVar": "--todae-message-user-bg",
+      "cssValue": "var(--todae-color-bg-subtle)",
+      "ref": "color.bg.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.user.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-message-user-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.user.fg",
+      "type": "color",
+      "cssVar": "--todae-message-user-fg",
+      "cssValue": "var(--todae-color-fg-default)",
+      "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.user.max-width",
+      "type": "dimension",
+      "cssVar": "--todae-message-user-max-width",
+      "cssValue": "32rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.user.padding.x",
+      "type": "dimension",
+      "cssVar": "--todae-message-user-padding-x",
+      "cssValue": "var(--todae-space-control-x)",
+      "ref": "space.control.x",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.user.padding.y",
+      "type": "dimension",
+      "cssVar": "--todae-message-user-padding-y",
+      "cssValue": "var(--todae-space-control-y)",
+      "ref": "space.control.y",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.user.radius",
+      "type": "dimension",
+      "cssVar": "--todae-message-user-radius",
+      "cssValue": "var(--todae-radius-lg)",
+      "ref": "radius.lg",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "breadcrumbs.current.fg",
       "type": "color",
       "cssVar": "--todae-breadcrumbs-current-fg",

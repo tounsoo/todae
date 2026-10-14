@@ -11,6 +11,7 @@ import {
   Breadcrumbs,
   Button,
   Card,
+  Message,
   Checkbox,
   Calendar,
   Chip,
@@ -515,6 +516,20 @@ const cases: Case[] = [
           <Card.Root>
             <Part {...p} />
           </Card.Root>
+        );
+      },
+    ],
+  ),
+  ['Message.Root', (p) => <Message.Root {...p} />],
+  ...(['Avatar', 'Header', 'Content', 'Actions'] as const).map(
+    (part): Case => [
+      `Message.${part}`,
+      (p) => {
+        const Part = Message[part] as (props: Native) => ReactNode;
+        return (
+          <Message.Root>
+            <Part {...p} />
+          </Message.Root>
         );
       },
     ],

@@ -1,0 +1,139 @@
+@layer todae.components {
+  /* One column of parts, or two with an avatar beside them. The parts are
+     spaced with margins, not row-gap, so rows an avatar spans but no part
+     fills add no space. */
+  .root {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: var(--todae-message-gap);
+    align-items: start;
+    min-inline-size: 0;
+    color: var(--todae-message-fg);
+  }
+
+  .root > :not(.avatar, [hidden]) ~ :not(.avatar) {
+    margin-block-start: var(--todae-message-row-gap);
+  }
+
+  /* A header sits closer to the part after it. The header shortens its own
+     end margin rather than the next part looking back past avatars and
+     hidden parts to find it. */
+  .root > .header:not([hidden]) {
+    margin-block-end: calc(var(--todae-message-header-space-after) - var(--todae-message-row-gap));
+  }
+
+  .root > :nth-last-child(1 of :not(.avatar, [hidden])) {
+    margin-block-end: 0;
+  }
+
+  /* Without a leading header, the 1fr row after the parts takes whatever
+     height an avatar taller than them adds, so the parts keep their spacing.
+     Rows no part fills are 0 tall, so the count only needs to outnumber the
+     parts. */
+  .root:has(> .avatar:not([hidden])) {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: repeat(15, auto) 1fr;
+  }
+
+  .root:has(> .avatar:not([hidden])) > :not(.avatar) {
+    grid-column: 2;
+  }
+
+  .root > .avatar {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    display: flex;
+  }
+
+  /* `display: flex` on the parts beats the UA [hidden] rule, so restate it;
+     the layout rules here skip hidden parts. */
+  .root > [hidden] {
+    display: none;
+  }
+
+  /* When a header comes first, the avatar sits in its row and the two are
+     centered on each other; the parts below start under that row. A header
+     after another part stays where the DOM puts it. */
+  .root:has(> .avatar:not([hidden])):has(> .header:nth-child(1 of :not(.avatar, [hidden])))
+    > :is(.avatar, .header:nth-child(1 of :not(.avatar, [hidden]))) {
+    grid-row: 1;
+    align-self: center;
+    margin-block-end: 0;
+  }
+
+  /* Beside the avatar row, the next part keeps the header gap below it. */
+  .root:has(> .avatar:not([hidden])):has(> .header:nth-child(1 of :not(.avatar, [hidden]))) > :nth-child(2 of :not(.avatar, [hidden])) {
+    margin-block-start: var(--todae-message-header-space-after);
+  }
+
+  /* A user's message sits at the end side, its text in a bubble, with the
+     avatar after it. */
+  .root[data-from='user'] {
+    justify-items: end;
+  }
+
+  .root[data-from='user']:has(> .avatar:not([hidden])) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .root[data-from='user']:has(> .avatar:not([hidden])) > :not(.avatar) {
+    grid-column: 1;
+  }
+
+  .root[data-from='user'] > .avatar {
+    grid-column: 2;
+  }
+
+  .root[data-from='user'] > .content {
+    box-sizing: border-box;
+    max-inline-size: min(var(--todae-message-user-max-width), 100%);
+    padding: var(--todae-message-user-padding-y) var(--todae-message-user-padding-x);
+    border-radius: var(--todae-message-user-radius);
+    background: var(--todae-message-user-bg);
+    color: var(--todae-message-user-fg);
+  }
+
+  /* A system message is a quiet line in the middle, such as "Model changed". */
+  .root[data-from='system'] {
+    text-align: center;
+    color: var(--todae-message-system-fg);
+    font-size: var(--todae-message-system-font-size);
+  }
+
+  .root[data-from='system'] > :is(.header, .actions) {
+    justify-content: center;
+  }
+
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--todae-message-gap);
+    color: var(--todae-message-header-fg);
+    font-size: var(--todae-message-header-font-size);
+  }
+
+  .header > :where(h1, h2, h3, h4, h5, h6, p) {
+    margin: 0;
+    font-size: inherit;
+  }
+
+  .content {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-wrap: break-word;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--todae-message-gap);
+  }
+
+  @media (forced-colors: active) {
+    .root[data-from='user'] > .content {
+      border: var(--todae-message-user-border-width) solid CanvasText;
+    }
+  }
+}
