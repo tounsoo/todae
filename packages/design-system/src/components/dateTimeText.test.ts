@@ -128,8 +128,21 @@ describe('parseDateTime', () => {
   });
 
   it('does not read a date typed without a year in an order other than its full date', () => {
-    // rw writes a date with a year as "2026 Ukw. 13", and without one as "13 Ukw.".
-    expect(read('9 Ukw. 21 05', 'rw')).toBeNull();
+    // In newer locale data rw writes a date with a year as "2026 Ukw. 13", and without one as "13 Ukw.".
+    const date = Temporal.PlainDate.from('2026-10-09').toLocaleString('rw', { month: 'short', day: 'numeric', calendar: 'gregory' });
+    expect(read(`${date} 21 05`, 'rw')).toBeNull();
+  });
+
+  it('keeps the marks inside a date or a time from ending the date', () => {
+    expect(read('13.10.23 21:30', 'ru')).toBe('2023-10-13T21:30:00');
+    expect(read('13.10.23, 21:30', 'uk')).toBe('2023-10-13T21:30:00');
+    expect(read('13.10.23 21.30', 'da')).toBe('2023-10-13T21:30:00');
+    expect(read('9:05 2.1.26', 'nb')).toBeNull();
+  });
+
+  it("reads a two-digit year after a day and a month's name in the order the locale writes them", () => {
+    expect(read('23 Dip 13 21:30', 'tn')).toBe('2023-10-13T21:30:00');
+    expect(read('13. márc. 10. 21:05', 'hu')).toBe('2013-03-10T21:05:00');
   });
 
   it('needs a space or a comma where a number of the date meets a number of the time', () => {

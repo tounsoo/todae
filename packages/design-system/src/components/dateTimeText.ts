@@ -39,11 +39,21 @@ type LocaleDateTime = {
   timeFirst: boolean;
   /** The orders the locale writes a month and a day in numbers, with a year and without. */
   monthDay: Set<'md' | 'dm'>;
-  /** Punctuation the locale writes between the date and the time, such as "/" in az. */
+  /** Punctuation the locale writes between the date and the time and not inside either, such as "/" in az. */
   marks: Set<string>;
+  /** The orders the locale writes a month's name and a day in without a year. */
+  namedMonthDay: Set<'md' | 'dm'>;
 };
 
 const localeDateTimes = new Map<string, LocaleDateTime>();
+
+const PUNCTUATION = /[^\p{L}\p{M}\p{N}\s]/u;
+
+/** The punctuation in the literals of the locale's text in a style, such as "/" and ":" in en-US. */
+const punctuation = (locale: string | undefined, style: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat(locale, { ...style, calendar: 'gregory', timeZone: 'UTC' })
+    .formatToParts(Date.UTC(2026, 9, 13, 21, 30, 15))
+    .flatMap((part) => (part.type === 'literal' ? [...fold(part.value)].filter((char) => PUNCTUATION.test(char)) : []));
 
 const DATE_PARTS = new Set(['year', 'month', 'day', 'weekday', 'era', 'relatedYear', 'yearName']);
 const TIME_PARTS = new Set(['hour', 'minute', 'second', 'dayPeriod']);
@@ -78,12 +88,21 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
     } else continue;
     // The literals between the two halves, and before and after them, such as बजे after the time in hi.
     const between = parts.slice(from + 1, to);
-    for (const part of between) for (const char of fold(part.value)) if (/[^\p{L}\p{M}\p{N}\s]/u.test(char)) marks.add(char);
+    for (const part of between) for (const char of fold(part.value)) if (PUNCTUATION.test(char)) marks.add(char);
     const outside = [...parts.slice(0, Math.min(dates[0]!, times[0]!)), ...between, ...parts.slice(Math.max(dates.at(-1)!, times.at(-1)!) + 1)];
     for (const part of outside) {
       if (part.type !== 'literal') continue;
       for (const word of splitWords(part.value)) if (/\p{L}/u.test(word)) joiners.add(word);
     }
+  }
+  // A mark inside a date or a time, such as "." in "13.10.23" or the "." of "г." in ru, stays inside it.
+  for (const style of [
+    { year: '2-digit', month: '2-digit', day: '2-digit' },
+    { year: 'numeric', month: 'numeric', day: 'numeric' },
+    { hour: 'numeric', minute: '2-digit', second: '2-digit' },
+    { hour: 'numeric', minute: '2-digit', hourCycle: 'h23' },
+  ] as const) {
+    for (const char of punctuation(locale, style)) marks.delete(char);
   }
   const monthDay = new Set<'md' | 'dm'>();
   for (const style of [{ month: 'numeric', day: 'numeric' }, { year: 'numeric', month: 'numeric', day: 'numeric' }] as const) {
@@ -92,7 +111,14 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
       .map((part) => part.type);
     monthDay.add(types.indexOf('month') < types.indexOf('day') ? 'md' : 'dm');
   }
-  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, monthDay, marks };
+  const namedMonthDay = new Set<'md' | 'dm'>();
+  for (const month of ['short', 'long'] as const) {
+    const types = new Intl.DateTimeFormat(locale, { month, day: 'numeric', calendar: 'gregory', timeZone: 'UTC' })
+      .formatToParts(Date.UTC(2026, 9, 13))
+      .map((part) => part.type);
+    namedMonthDay.add(types.indexOf('month') < types.indexOf('day') ? 'md' : 'dm');
+  }
+  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, monthDay, marks, namedMonthDay };
   localeDateTimes.set(key, text);
   return text;
 }
@@ -132,6 +158,9 @@ function canCut(list: Atom[], at: number, marks: Set<string>) {
 // Leap years four years apart: every month and day, February 29 too, falls on every weekday in one of them.
 const ANY_YEAR = [2000, 2004, 2008, 2012, 2016, 2020, 2024];
 
+// Stands for a year in a candidate date until one of ANY_YEAR takes its place.
+const year0 = '\u0000';
+
 const render = (list: Atom[]) => list.map((atom, index) => (index ? atom.gap : '') + atom.text).join('');
 
 /**
@@ -144,7 +173,7 @@ const render = (list: Atom[]) => list.map((atom, index) => (index ? atom.gap : '
  * more than one date and time is not read.
  */
 export function parseDateTime(text: string, options: DateTimeTextOptions = {}): Temporal.PlainDateTime | null {
-  const { joiners, dateFirst, timeFirst, monthDay, marks } = localeDateTime(options.locale);
+  const { joiners, dateFirst, timeFirst, monthDay, marks, namedMonthDay } = localeDateTime(options.locale);
   const list = atoms(text);
   const found = new Map<string, Temporal.PlainDateTime>();
   // Readings with a word the locale writes between the halves left out of
@@ -168,17 +197,26 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
   };
   // Whether part of a date reads as a date without a year: two numbers that are
   // a month and a day in an order the locale writes them in, or words that read
-  // as a date with a year put before, after or, beside one number, on either
-  // side of it, as "13 Ukw." in rw, which writes the year first and the day last.
+  // as a date with a year put before or after them, or, for a day and a month's
+  // name in an order the locale writes them in without a year, on either side
+  // of the day, as "13 Ukw." in rw, which writes the year first and the day last.
   const yearless = (half: string) => {
     const numbers = /^(\d{1,2}) (\d{1,2})$/.exec(half);
     if (!numbers) {
       const words = half.split(' ');
       const day = words.filter((word) => /^\d+$/.test(word));
       const rest = words.filter((word) => !/^\d+$/.test(word)).join(' ');
+      const moved =
+        day.length !== 1
+          ? []
+          : words[0] === day[0] && namedMonthDay.has('dm')
+            ? [`${year0} ${rest} ${day[0]}`, `${rest} ${year0} ${day[0]}`]
+            : words.at(-1) === day[0] && namedMonthDay.has('md')
+              ? [`${day[0]} ${rest} ${year0}`, `${day[0]} ${year0} ${rest}`]
+              : [];
       return ANY_YEAR.some((year) =>
-        [`${half} ${year}`, `${year} ${half}`, ...(day.length === 1 ? [`${year} ${rest} ${day[0]}`, `${day[0]} ${rest} ${year}`, `${rest} ${year} ${day[0]}`, `${rest} ${day[0]} ${year}`] : [])].some(
-          (candidate) => parseDate(candidate, options),
+        [`${half} ${year}`, `${year} ${half}`, ...moved.map((candidate) => candidate.replace(year0, String(year)))].some((candidate) =>
+          parseDate(candidate, options),
         ),
       );
     }
