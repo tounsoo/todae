@@ -2,8 +2,10 @@
 
 import { Avatar, Button, Message, Prose, Loader, Stack } from '@omsoo.design/todae';
 import { useState } from 'react';
+import { useLocale } from '../../lib/i18n/useLocale';
 
 export function MessageTurns() {
+  const locale = useLocale();
   return (
     <Stack.Root style={{ inlineSize: '100%', maxInlineSize: '36rem' }}>
       <Message.Root from="system" aria-label="System">
@@ -20,7 +22,7 @@ export function MessageTurns() {
         </Message.Avatar>
         <Message.Header>
           <strong>Assistant</strong>
-          <time dateTime="2026-10-14T09:41">9:41</time>
+          <Message.Time value={Temporal.ZonedDateTime.from('2026-10-14T09:41:00+09:00[Asia/Seoul]')} locale={locale} />
         </Message.Header>
         <Message.Content>
           <Prose.Root>

@@ -4,10 +4,12 @@
 // any of them. Todae ships no icons; the docs site installs these for its demos.
 import type { Glyphs } from '@omsoo.design/todae';
 import {
+  ArrowCounterClockwise,
   ArrowRight as PhArrowRight,
   ArrowUp as PhArrowUp,
   CalendarBlank,
   Clock as PhClock,
+  Copy as PhCopy,
   CaretDown,
   CaretRight,
   Check as PhCheck,
@@ -19,6 +21,8 @@ import {
   MagnifyingGlass,
   Plus as PhPlus,
   Stop as PhStop,
+  ThumbsDown as PhThumbsDown,
+  ThumbsUp as PhThumbsUp,
   Warning,
   X as PhX,
 } from '@phosphor-icons/react';
@@ -28,6 +32,7 @@ import {
   IconArrowUp,
   IconCalendar,
   IconClock,
+  IconCopy,
   IconCheck,
   IconChevronDown,
   IconChevronRight,
@@ -37,8 +42,11 @@ import {
   IconMail,
   IconPlayerStopFilled,
   IconPlus,
+  IconRefresh,
   IconSearch,
   IconSettings,
+  IconThumbDown,
+  IconThumbUp,
   IconX,
 } from '@tabler/icons-react';
 import {
@@ -47,15 +55,19 @@ import {
   Calendar,
   Clock,
   Check,
+  Copy,
   ChevronDown,
   ChevronRight,
   Ellipsis,
   Info,
   Mail,
   Plus,
+  RotateCcw,
   Search,
   Settings,
   Square,
+  ThumbsDown,
+  ThumbsUp,
   TriangleAlert,
   X,
 } from 'lucide-react';
@@ -64,7 +76,10 @@ import type { ReactNode } from 'react';
 export type IconLibraryId = 'lucide' | 'phosphor' | 'tabler';
 
 /** The icons a demo uses beside the glyphs. */
-type Icons = Record<'plus' | 'arrowRight' | 'settings' | 'search' | 'mail' | 'info' | 'warning', ReactNode>;
+type Icons = Record<
+  'plus' | 'arrowRight' | 'settings' | 'search' | 'mail' | 'info' | 'warning' | 'copy' | 'regenerate' | 'thumbsUp' | 'thumbsDown',
+  ReactNode
+>;
 
 export type IconLibrary = {
   id: IconLibraryId;
@@ -76,7 +91,7 @@ export type IconLibrary = {
   icons: Icons;
 };
 
-export const ICON_LIBRARIES: readonly IconLibrary[] = [
+export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
   {
     id: 'lucide',
     name: 'Lucide',
@@ -101,6 +116,10 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       mail: <Mail />,
       info: <Info />,
       warning: <TriangleAlert />,
+      copy: <Copy />,
+      regenerate: <RotateCcw />,
+      thumbsUp: <ThumbsUp />,
+      thumbsDown: <ThumbsDown />,
     },
   },
   {
@@ -127,6 +146,10 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       mail: <Envelope />,
       info: <PhInfo />,
       warning: <Warning />,
+      copy: <PhCopy />,
+      regenerate: <ArrowCounterClockwise />,
+      thumbsUp: <PhThumbsUp />,
+      thumbsDown: <PhThumbsDown />,
     },
   },
   {
@@ -153,6 +176,10 @@ export const ICON_LIBRARIES: readonly IconLibrary[] = [
       mail: <IconMail />,
       info: <IconInfoCircle />,
       warning: <IconAlertTriangle />,
+      copy: <IconCopy />,
+      regenerate: <IconRefresh />,
+      thumbsUp: <IconThumbUp />,
+      thumbsDown: <IconThumbDown />,
     },
   },
 ];
