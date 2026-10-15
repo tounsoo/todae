@@ -195,45 +195,51 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     setOwn({ text: value, dismissed, edit: null });
   }
 
-  const remember = (text: string, list: readonly MentionToken[]) => {
+  const remember = useCallback((text: string, list: readonly MentionToken[]) => {
     const map = history.current;
     map.delete(text);
     map.set(text, list);
     if (map.size > HISTORY) map.delete(map.keys().next().value!);
-  };
+  }, []);
 
   /** Hands out a text and its tokens together. */
-  const send = (next: MentionDraft) => {
-    setDraft(next);
-    latest.current.onValueChange?.({ text: next.text, tokens: [...next.tokens] });
-  };
+  const send = useCallback(
+    (next: MentionDraft) => {
+      setDraft(next);
+      latest.current.onValueChange?.({ text: next.text, tokens: [...next.tokens] });
+    },
+    [setDraft],
+  );
 
   /** Works out the tokens of an edit's text from the rendered text and tokens, then sends both. */
-  const edit = (next: string, how: { inputType?: string; caret: number | null; pick?: MentionToken | null }) => {
-    const restored =
-      how.inputType === 'historyUndo' || how.inputType === 'historyRedo' ? history.current.get(next) : undefined;
-    let list: readonly MentionToken[];
-    if (restored) list = validTokens(next, restored);
-    else {
-      list = shiftTokens(value, next, tokens, how.caret);
-      const pick = how.pick;
-      if (pick && next.slice(pick.start, pick.end) === pick.text) list = validTokens(next, [...list, pick]);
-    }
-    remember(value, tokens);
-    remember(next, list);
-    const before = selectionBefore.current;
-    selectionBefore.current = null;
-    setOwn((current) => ({
-      ...current,
-      edit: {
-        text: next,
-        caret: how.caret,
-        replacedDismissed:
-          before !== null && current.dismissed !== null && before.start <= current.dismissed && current.dismissed < before.end,
-      },
-    }));
-    send({ text: next, tokens: list });
-  };
+  const edit = useCallback(
+    (next: string, how: { inputType?: string; caret: number | null; pick?: MentionToken | null }) => {
+      const restored =
+        how.inputType === 'historyUndo' || how.inputType === 'historyRedo' ? history.current.get(next) : undefined;
+      let list: readonly MentionToken[];
+      if (restored) list = validTokens(next, restored);
+      else {
+        list = shiftTokens(value, next, tokens, how.caret);
+        const pick = how.pick;
+        if (pick && next.slice(pick.start, pick.end) === pick.text) list = validTokens(next, [...list, pick]);
+      }
+      remember(value, tokens);
+      remember(next, list);
+      const before = selectionBefore.current;
+      selectionBefore.current = null;
+      setOwn((current) => ({
+        ...current,
+        edit: {
+          text: next,
+          caret: how.caret,
+          replacedDismissed:
+            before !== null && current.dismissed !== null && before.start <= current.dismissed && current.dismissed < before.end,
+        },
+      }));
+      send({ text: next, tokens: list });
+    },
+    [remember, send, tokens, value],
+  );
 
   // A value set from outside, such as clearing the text after sending, can move the caret.
   useLayoutEffect(() => {
@@ -276,14 +282,17 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const [reloads, setReloads] = useState(0);
   const gate = useRef(createAsyncGate());
   const hasLoader = Boolean(trigger?.loadOptions);
+  // The query object changes every render; its trigger and word are what a load and the filter read.
+  const queryTrigger = query?.trigger;
+  const queryText = query?.query;
   const loadFor = query ? `${query.trigger}:${query.query}` : null;
 
   useEffect(() => {
-    if (!hasLoader || loadFor === null || !query) return;
-    const load = latest.current.triggers[query.trigger]?.loadOptions;
+    if (!hasLoader || loadFor === null || queryTrigger === undefined || queryText === undefined) return;
+    const load = latest.current.triggers[queryTrigger]?.loadOptions;
     if (!load) return;
     setLoaded(null);
-    void gate.current.next(query.query, load).then((result) => {
+    void gate.current.next(queryText, load).then((result) => {
       if (!gate.current.isCurrent(result.gen)) return;
       if ('aborted' in result && result.aborted) return;
       setLoaded(
@@ -292,9 +301,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
           : { for: loadFor, options: result.result, error: null },
       );
     });
-    // The query object changes every render; loadFor names what it loads.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasLoader, loadFor, reloads]);
+  }, [hasLoader, loadFor, queryText, queryTrigger, reloads]);
 
   useEffect(() => {
     const current = gate.current;
@@ -308,12 +315,10 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const source = !trigger ? EMPTY_OPTIONS : hasLoader ? (current?.options ?? EMPTY_OPTIONS) : (trigger.options ?? EMPTY_OPTIONS);
   const filter = trigger?.filter ?? defaultFilter;
   const items = useMemo<MentionItem[]>(() => {
-    if (!query) return [];
-    const shown = hasLoader ? source : filterOptions(source, query.query, filter);
+    if (queryText === undefined) return [];
+    const shown = hasLoader ? source : filterOptions(source, queryText, filter);
     return shown.map((option) => ({ option, id: optionDomId(ids.listbox, option.value) }));
-    // query.query is what filters; the object itself changes every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, hasLoader, ids.listbox, query?.query, source]);
+  }, [filter, hasLoader, ids.listbox, queryText, source]);
 
   const fits = useCallback(
     (option: ComboboxOption) => {
@@ -408,9 +413,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       el?.focus();
       edit(next, { caret: caretTo, pick: token });
     },
-    // edit and send read the rendered text and tokens, which value and tokens stand for.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fits, items, query, tokens, trigger, value],
+    [edit, fits, items, query, remember, send, tokens, trigger, value],
   );
 
   const onChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -512,6 +515,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
   const ownRef = useComposedRefs(textareaRef, watchCaret);
   const composeRef = useStableComposedRef(ownRef);
 
+  // The word's range is what the anchor follows; the query object changes every render.
+  const queryStart = query?.start;
+  const queryEnd = query?.end;
   const highlights = useMemo<FieldTextareaHighlight[]>(() => {
     const list: FieldTextareaHighlight[] = tokens.map((token) => ({
       start: token.start,
@@ -519,11 +525,11 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
       kind: token.char,
     }));
     // The word being typed carries the anchor the list sits at, and is not drawn.
-    if (query) list.push({ start: query.start, end: Math.max(query.end, query.start + 1), anchorName, draw: false });
+    if (queryStart !== undefined && queryEnd !== undefined) {
+      list.push({ start: queryStart, end: Math.max(queryEnd, queryStart + 1), anchorName, draw: false });
+    }
     return list.sort((a, b) => a.start - b.start);
-    // query's range is what matters; the object changes every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [anchorName, query?.end, query?.start, tokens]);
+  }, [anchorName, queryEnd, queryStart, tokens]);
 
   const getTextareaProps = <P extends UseMentionsTextareaProps>(props?: P): Omit<P, keyof TextareaWire> & TextareaWire => {
     const user = (props ?? {}) as P;
