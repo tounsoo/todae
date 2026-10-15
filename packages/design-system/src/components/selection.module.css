@@ -105,9 +105,9 @@
   .root[data-control='switch'] .indicator::after {
     content: '';
     display: block;
-    width: calc(var(--todae-selection-size) - 2 * var(--todae-selection-border-width) - 2px);
-    height: calc(var(--todae-selection-size) - 2 * var(--todae-selection-border-width) - 2px);
-    margin: 1px;
+    width: calc(var(--todae-selection-size) - 2 * var(--todae-selection-border-width) - 2 * var(--todae-selection-thumb-inset));
+    height: calc(var(--todae-selection-size) - 2 * var(--todae-selection-border-width) - 2 * var(--todae-selection-thumb-inset));
+    margin: var(--todae-selection-thumb-inset);
     border-radius: 50%;
     background: var(--todae-selection-thumb-bg);
     transform: translateX(0);

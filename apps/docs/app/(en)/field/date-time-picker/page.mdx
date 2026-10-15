@@ -83,6 +83,22 @@ Todae ships no Temporal polyfill. The picker's values, `formatDateTime` and `par
 
 **When not:** A date alone → [Field.DatePicker](/field/date-picker). A time alone → [Field.TimePicker](/field/time-picker). An instant in a time zone → this picker, with the zone added in your own code.
 
+### formatDateTime
+
+**When:** Writing a date and time as text for a locale, such as into a text input beside a picker.
+
+**When not:** A date and time with a weekday or a month name → `Intl.DateTimeFormat`.
+
+### parseDateTime
+
+**When:** Reading a date and time someone typed.
+
+**When not:** Text in a fixed format such as `2026-10-13T09:30` → `Temporal.PlainDateTime.from`.
+
 ## Props
 
 <PropsTable name="Field.DateTimePicker" />
+
+<PropsTable name="formatDateTime" />
+
+<PropsTable name="parseDateTime" />

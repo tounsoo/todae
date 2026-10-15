@@ -29,9 +29,11 @@
         "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } }
       },
       "indicator": {
-        "scale": { "$type": "number", "$value": 1 }
+        "scale": { "$type": "number", "$value": 1 },
+        "dot-inset": { "$type": "number", "$value": 0.3 }
       }
     },
-    "separator": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } }
+    "separator": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
+    "separator-thickness": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } }
   }
 }

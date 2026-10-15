@@ -36,6 +36,10 @@
     },
     "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
+    "panel": {
+      "max-width": { "$type": "dimension", "$value": { "value": 18, "unit": "rem" } },
+      "viewport-inset": { "$type": "dimension", "$value": { "$ref": "#/space/4/$value" } }
+    },
     "ring-width": { "$type": "dimension", "$value": { "$ref": "#/focus/ring/width/$value" } },
     "ring-offset": { "$type": "dimension", "$value": { "$ref": "#/focus/ring/offset/$value" } },
     "dismiss": {

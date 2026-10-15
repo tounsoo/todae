@@ -2722,6 +2722,16 @@
       "description": "The focus ring every component draws; component ring.focus colors read focus.ring.color."
     },
     {
+      "path": "button.base.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-button-base-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null,
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+    },
+    {
       "path": "button.base.font.letter-spacing",
       "type": "dimension",
       "cssVar": "--todae-button-base-font-letter-spacing",
@@ -2797,6 +2807,16 @@
       "cssVar": "--todae-button-base-padding-y",
       "cssValue": "var(--todae-space-control-y)",
       "ref": "space.control.y",
+      "layer": "contract",
+      "context": null,
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+    },
+    {
+      "path": "button.base.pressed-ring-width",
+      "type": "dimension",
+      "cssVar": "--todae-button-base-pressed-ring-width",
+      "cssValue": "1px",
+      "ref": null,
       "layer": "contract",
       "context": null,
       "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
@@ -4722,6 +4742,26 @@
       "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
     },
     {
+      "path": "chip.panel.max-width",
+      "type": "dimension",
+      "cssVar": "--todae-chip-panel-max-width",
+      "cssValue": "18rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+    },
+    {
+      "path": "chip.panel.viewport-inset",
+      "type": "dimension",
+      "cssVar": "--todae-chip-panel-viewport-inset",
+      "cssValue": "var(--todae-space-4)",
+      "ref": "space.4",
+      "layer": "contract",
+      "context": null,
+      "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
+    },
+    {
       "path": "chip.radius",
       "type": "dimension",
       "cssVar": "--todae-chip-radius",
@@ -5312,6 +5352,26 @@
       "description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel."
     },
     {
+      "path": "tooltip.delay.hide",
+      "type": "duration",
+      "cssVar": "--todae-tooltip-delay-hide",
+      "cssValue": "100ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel."
+    },
+    {
+      "path": "tooltip.delay.show",
+      "type": "duration",
+      "cssVar": "--todae-tooltip-delay-show",
+      "cssValue": "300ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel."
+    },
+    {
       "path": "tooltip.fg",
       "type": "color",
       "cssVar": "--todae-tooltip-fg",
@@ -5437,6 +5497,26 @@
       "cssVar": "--todae-option-check-fg",
       "cssValue": "var(--todae-color-fg-default)",
       "ref": "color.fg.default",
+      "layer": "contract",
+      "context": null,
+      "description": "OptionList.Root: a listbox of selectable options, inline or in a popover."
+    },
+    {
+      "path": "option.check.gap",
+      "type": "number",
+      "cssVar": "--todae-option-check-gap",
+      "cssValue": "0.4",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "description": "OptionList.Root: a listbox of selectable options, inline or in a popover."
+    },
+    {
+      "path": "option.check.radius",
+      "type": "dimension",
+      "cssVar": "--todae-option-check-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
       "layer": "contract",
       "context": null,
       "description": "OptionList.Root: a listbox of selectable options, inline or in a popover."
@@ -5642,6 +5722,16 @@
       "description": "Menu.Root: a popover list of actions, with check and radio items and separators."
     },
     {
+      "path": "menu.item.indicator.dot-inset",
+      "type": "number",
+      "cssVar": "--todae-menu-item-indicator-dot-inset",
+      "cssValue": "0.3",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "description": "Menu.Root: a popover list of actions, with check and radio items and separators."
+    },
+    {
       "path": "menu.item.indicator.scale",
       "type": "number",
       "cssVar": "--todae-menu-item-indicator-scale",
@@ -5717,6 +5807,16 @@
       "cssVar": "--todae-menu-separator",
       "cssValue": "var(--todae-color-border-subtle)",
       "ref": "color.border.subtle",
+      "layer": "contract",
+      "context": null,
+      "description": "Menu.Root: a popover list of actions, with check and radio items and separators."
+    },
+    {
+      "path": "menu.separator-thickness",
+      "type": "dimension",
+      "cssVar": "--todae-menu-separator-thickness",
+      "cssValue": "1px",
+      "ref": null,
       "layer": "contract",
       "context": null,
       "description": "Menu.Root: a popover list of actions, with check and radio items and separators."
@@ -6112,6 +6212,16 @@
       "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
     },
     {
+      "path": "selection.thumb.inset",
+      "type": "dimension",
+      "cssVar": "--todae-selection-thumb-inset",
+      "cssValue": "1px",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb."
+    },
+    {
       "path": "selection.track.bg",
       "type": "color",
       "cssVar": "--todae-selection-track-bg",
@@ -6367,6 +6477,16 @@
       "cssVar": "--todae-toast-critical-fg",
       "cssValue": "var(--todae-color-status-critical-fg)",
       "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": null,
+      "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
+    },
+    {
+      "path": "toast.enter-offset",
+      "type": "dimension",
+      "cssVar": "--todae-toast-enter-offset",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
       "layer": "contract",
       "context": null,
       "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
@@ -6807,6 +6927,16 @@
       "cssVar": "--todae-disclosure-marker-fg",
       "cssValue": "var(--todae-color-fg-muted)",
       "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null,
+      "description": "Disclosure.Root: a details/summary section that opens and closes, with its marker."
+    },
+    {
+      "path": "disclosure.marker.gap",
+      "type": "number",
+      "cssVar": "--todae-disclosure-marker-gap",
+      "cssValue": "0.375",
+      "ref": null,
       "layer": "contract",
       "context": null,
       "description": "Disclosure.Root: a details/summary section that opens and closes, with its marker."

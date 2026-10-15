@@ -89,8 +89,10 @@ export const SITE_GROUPS = [
     id: 'utilities',
     label: 'Utilities',
     links: [
+      ['/utilities/compose-refs', 'composeRefs'],
       ['/utilities/glyphs-provider', 'GlyphsProvider'],
       ['/utilities/strings-provider', 'StringsProvider'],
+      ['/utilities/theme-override-style', 'themeOverrideStyle'],
       ['/utilities/use-announcer', 'useAnnouncer'],
       ['/utilities/use-chip-field', 'useChipField'],
       ['/utilities/use-chip-list', 'useChipList'],

@@ -83,6 +83,22 @@ Todae는 Temporal 폴리필을 포함하지 않습니다. 선택기의 값과 `f
 
 **쓰지 않을 때:** 날짜만 → [Field.DatePicker](/field/date-picker). 시각만 → [Field.TimePicker](/field/time-picker). 시간대가 있는 시점 → 이 선택기를 쓰고 시간대는 직접 작성한 코드에서 더하세요.
 
+### formatDateTime
+
+**언제:** 피커 옆 텍스트 입력처럼, 날짜와 시간을 로캘에 맞는 텍스트로 쓸 때.
+
+**쓰지 않을 때:** 요일이나 월 이름이 있는 날짜와 시간 → `Intl.DateTimeFormat`.
+
+### parseDateTime
+
+**언제:** 사람이 입력한 날짜와 시간을 읽을 때.
+
+**쓰지 않을 때:** `2026-10-13T09:30`처럼 형식이 정해진 텍스트 → `Temporal.PlainDateTime.from`.
+
 ## Props
 
 <PropsTable name="Field.DateTimePicker" />
+
+<PropsTable name="formatDateTime" />
+
+<PropsTable name="parseDateTime" />

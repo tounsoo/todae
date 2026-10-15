@@ -34,6 +34,24 @@ function Panel() {
 
 **When not:** Color or light / dark → ThemeProvider. Type size → Text `size`.
 
+### useAppearance
+
+**When:** A component of your own that must know whether it renders light or dark, such as one that picks an image.
+
+**When not:** Colors → tokens, which follow the appearance in CSS.
+
+### useDensity
+
+**When:** A component of your own that must know the density in JavaScript.
+
+**When not:** Spacing → tokens, which follow the density in CSS.
+
+### categoryTone
+
+**When:** A category tone that stays the same for a key, such as a user id or a tag name.
+
+**When not:** A tone that means something, such as a status → pick it yourself.
+
 ## Contrast
 
 The token build measures text pairs with APCA, not WCAG 2 ratios. Each pair names a text color, an opaque background and the lowest Lc allowed, for example `color.fg.muted` on `color.bg.elevated` at Lc 60. The build fails when a pair falls short in any appearance.

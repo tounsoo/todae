@@ -11,6 +11,10 @@
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
     },
-    "max-width": { "$type": "dimension", "$value": { "value": 16, "unit": "rem" } }
+    "max-width": { "$type": "dimension", "$value": { "value": 16, "unit": "rem" } },
+    "delay": {
+      "show": { "$type": "duration", "$value": { "value": 300, "unit": "ms" } },
+      "hide": { "$type": "duration", "$value": { "value": 100, "unit": "ms" } }
+    }
   }
 }

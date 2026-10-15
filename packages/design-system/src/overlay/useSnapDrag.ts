@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
+import { useRefElement } from './useRefElement';
 
 export type SheetSnap = 'mid' | 'full';
 
@@ -87,14 +88,7 @@ export function useSnapDrag({
   onDismissRef.current = onDismiss;
   dismissRef.current = dismissOnDrag;
 
-  const [sheet, setSheet] = useState<HTMLElement | null>(null);
-  // Runs after every render on purpose: the ref has no change signal, and the
-  // updater bails out when the node is the same.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
-    const node = sheetRef.current;
-    setSheet((prev) => (prev === node ? prev : node));
-  });
+  const sheet = useRefElement(sheetRef);
 
   useEffect(() => {
     if (!sheet || !enabled) return;
