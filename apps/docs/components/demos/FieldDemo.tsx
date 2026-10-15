@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, formatTime, normalizeHex, parseDate, parseTime, useChipField, useField } from '@omsoo.design/todae';
+import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, formatDateTime, formatTime, normalizeHex, parseDate, parseDateTime, parseTime, useChipField, useField } from '@omsoo.design/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 
@@ -692,14 +692,58 @@ export function FieldTimePickerAlone() {
   );
 }
 
-export function FieldDateTime() {
+export function FieldDateTimePicked() {
   const id = useId();
+  const locale = useLocale();
   const [start, setStart] = useState<Temporal.PlainDateTime | null>(null);
+  const [text, setText] = useState('');
+  const [invalid, setInvalid] = useState(false);
   return (
     <Field.Group>
       <Label.Root htmlFor={id}>Meeting starts</Label.Root>
+      <Field.Root id={id} invalid={invalid}>
+        <Field.TextInput
+          value={text}
+          onChange={(event) => {
+            setText(event.target.value);
+            setStart(parseDateTime(event.target.value, { locale }));
+            setInvalid(false);
+          }}
+          onBlur={() => {
+            if (start) setText(formatDateTime(start, { locale }));
+            else setInvalid(text.trim() !== '');
+          }}
+        />
+        <Field.DateTimePicker
+          value={start}
+          onValueChange={(next) => {
+            setStart(next);
+            setText(formatDateTime(next, { locale }));
+            setInvalid(false);
+          }}
+          locale={locale}
+          step={15}
+          showValue={false}
+        />
+      </Field.Root>
+    </Field.Group>
+  );
+}
+
+export function FieldDateTimePickerAlone() {
+  const id = useId();
+  const locale = useLocale();
+  const [start, setStart] = useState<Temporal.PlainDateTime | null>(null);
+  return (
+    <Field.Group>
+      <Label.Root htmlFor={id}>Departs</Label.Root>
       <Field.Root id={id}>
-        <Field.DateTimeInput value={start} onValueChange={setStart} />
+        <Field.DateTimePicker
+          value={start}
+          onValueChange={setStart}
+          locale={locale}
+          placeholder="Pick a date and time"
+        />
       </Field.Root>
     </Field.Group>
   );

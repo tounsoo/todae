@@ -69,27 +69,9 @@
     color: var(--todae-field-fg-disabled);
   }
 
-  /* Number and date-time inputs keep their native spinner and picker.
-     Figures line up, and WebKit's date and time text starts at the edge like
-     any other value. */
-  .input:is([type='number'], [type='datetime-local']) {
+  /* A number input keeps its native spinner, and its figures line up. */
+  .input[type='number'] {
     font-variant-numeric: tabular-nums;
-  }
-
-  .input::-webkit-datetime-edit {
-    padding: 0;
-  }
-
-  .input::-webkit-date-and-time-value {
-    text-align: start;
-  }
-
-  .input::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-  }
-
-  .input:disabled::-webkit-calendar-picker-indicator {
-    cursor: not-allowed;
   }
 
   .textarea {
@@ -507,7 +489,7 @@
     inline-size: fit-content;
   }
 
-  /* Field.DatePicker's and Field.TimePicker's button. It fills the field and
+  /* Field.DatePicker's, Field.TimePicker's and Field.DateTimePicker's button. It fills the field and
      shows the value, or with showValue={false} is just the glyph. Figures
      line up, as in a typed time. */
   .picker {
@@ -541,6 +523,36 @@
      whole rather than scrolling it at the popover's list height. */
   .datePickerPopover:popover-open {
     max-height: none;
+  }
+
+  /* Field.DateTimePicker's calendar and list of times, side by side, with
+     the list scrolling past its height. On a phone, where the two do not
+     fit beside each other, the list goes under the calendar at half that
+     height. */
+  .dateTimePanel {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--todae-field-date-time-gap);
+  }
+
+  .dateTimeTimes {
+    --_list-height: var(--todae-field-date-time-list-max-height);
+    align-self: stretch;
+    max-height: var(--_list-height);
+    overflow-y: auto;
+    scroll-padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+    padding: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+  }
+
+  @media (width < 32rem) {
+    .dateTimePanel {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .dateTimeTimes {
+      --_list-height: calc(var(--todae-field-date-time-list-max-height) / 2);
+    }
   }
 
   .picker:disabled {

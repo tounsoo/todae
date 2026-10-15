@@ -1,0 +1,23 @@
+# composeRefs
+
+`composeRefs(...refs)`는 넘긴 ref를 모두 설정하는 콜백 ref 하나를 반환합니다. 훅의 prop getter가 이미 `ref` 자리를 채운 요소에 내 ref도 함께 두고 싶을 때 쓰세요.
+
+```tsx
+const popover = usePopover({ open, onOpenChange: setOpen });
+const mine = useRef<HTMLDivElement>(null);
+const { ref, ...props } = popover.getPopoverProps();
+
+<Popover.Root {...props} ref={composeRefs(ref, mine)}>…</Popover.Root>
+```
+
+호출할 때마다 새 콜백을 반환하므로, React는 렌더링할 때마다 ref를 떼었다가 다시 붙입니다.
+
+## 언제 쓰나요
+
+**언제:** 내 ref와, `getPopoverProps()`처럼 props를 받지 않는 prop getter의 ref처럼 한 요소에 ref가 둘 이상일 때.
+
+**쓰지 않을 때:** ref가 하나 → 그대로 넘기세요. `popover.getTriggerProps({ ref })`처럼 내 props를 받는 getter → ref를 그 getter로 넘기세요.
+
+## Props
+
+<PropsTable name="composeRefs" />
