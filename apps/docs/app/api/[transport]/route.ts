@@ -88,7 +88,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'get_contrast_pairs',
-      "Todae's APCA contrast pairs, each with its minimum Lc and the Lc Todae's base theme measures in every appearance. A company token package inherits these pairs and may change a pair's minimum or add pairs.",
+      "Todae's APCA contrast pairs, each with its minimum Lc and the Lc Todae's base theme measures in every appearance. A pair with `over` has a translucent background, measured over each surface it can sit on. A company token package inherits these pairs and may change a pair's minimum or add pairs.",
       async () => {
         try {
           return ok(await baseContrast());

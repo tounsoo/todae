@@ -79,7 +79,16 @@
             "steps.marker.bg": ["done", "current", "pending", "error"],
             "steps.marker.fg": ["done", "current", "pending", "error"],
             "steps.marker.border": ["done", "current", "pending", "error"]
-          }
+          },
+          "contrast": [
+            { "fg": "field.fg.default", "bg": "field.bg.default", "min": 75, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle"] },
+            { "fg": "field.fg.placeholder", "bg": "field.bg.default", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle"] },
+            { "fg": "field.fg.adornment", "bg": "field.bg.default", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle"] },
+            { "fg": "nav.item.fg.current", "bg": "nav.item.bg.current", "min": 60, "over": ["color.bg.canvas", "color.bg.surface", "color.bg.subtle"] },
+            { "fg": "option.fg.selected", "bg": "option.bg.selected", "min": 60, "over": ["popover.bg", "color.bg.surface"] },
+            { "fg": "option.fg.selected", "bg": "option.bg.selected-highlighted", "min": 60, "over": ["popover.bg", "color.bg.surface"] },
+            { "fg": "tree.item.fg.selected", "bg": "tree.item.bg.selected", "min": 60, "over": ["color.bg.canvas", "color.bg.surface"] }
+          ]
         }
       }
     }
