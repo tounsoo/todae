@@ -2450,6 +2450,15 @@
       "context": null
     },
     {
+      "path": "button.base.border-width",
+      "type": "dimension",
+      "cssVar": "--todae-button-base-border-width",
+      "cssValue": "var(--todae-border-width)",
+      "ref": "border.width",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "button.base.font.letter-spacing",
       "type": "dimension",
       "cssVar": "--todae-button-base-font-letter-spacing",
@@ -2518,6 +2527,15 @@
       "cssVar": "--todae-button-base-padding-y",
       "cssValue": "var(--todae-space-control-y)",
       "ref": "space.control.y",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "button.base.pressed-ring-width",
+      "type": "dimension",
+      "cssVar": "--todae-button-base-pressed-ring-width",
+      "cssValue": "1px",
+      "ref": null,
       "layer": "contract",
       "context": null
     },
@@ -4250,6 +4268,24 @@
       "context": null
     },
     {
+      "path": "chip.panel.max-width",
+      "type": "dimension",
+      "cssVar": "--todae-chip-panel-max-width",
+      "cssValue": "18rem",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "chip.panel.viewport-inset",
+      "type": "dimension",
+      "cssVar": "--todae-chip-panel-viewport-inset",
+      "cssValue": "var(--todae-space-4)",
+      "ref": "space.4",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "chip.radius",
       "type": "dimension",
       "cssVar": "--todae-chip-radius",
@@ -4916,6 +4952,24 @@
       "context": null
     },
     {
+      "path": "option.check.gap",
+      "type": "number",
+      "cssVar": "--todae-option-check-gap",
+      "cssValue": "0.4",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "option.check.radius",
+      "type": "dimension",
+      "cssVar": "--todae-option-check-radius",
+      "cssValue": "var(--todae-radius-sm)",
+      "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "option.check.scale",
       "type": "number",
       "cssVar": "--todae-option-check-scale",
@@ -5096,6 +5150,15 @@
       "context": null
     },
     {
+      "path": "menu.item.indicator.dot-inset",
+      "type": "number",
+      "cssVar": "--todae-menu-item-indicator-dot-inset",
+      "cssValue": "0.3",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "menu.item.indicator.scale",
       "type": "number",
       "cssVar": "--todae-menu-item-indicator-scale",
@@ -5164,6 +5227,15 @@
       "cssVar": "--todae-menu-separator",
       "cssValue": "var(--todae-color-border-subtle)",
       "ref": "color.border.subtle",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "menu.separator-thickness",
+      "type": "dimension",
+      "cssVar": "--todae-menu-separator-thickness",
+      "cssValue": "1px",
+      "ref": null,
       "layer": "contract",
       "context": null
     },
@@ -5519,6 +5591,15 @@
       "context": null
     },
     {
+      "path": "selection.thumb.inset",
+      "type": "dimension",
+      "cssVar": "--todae-selection-thumb-inset",
+      "cssValue": "1px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "selection.track.bg",
       "type": "color",
       "cssVar": "--todae-selection-track-bg",
@@ -5749,6 +5830,15 @@
       "cssVar": "--todae-toast-critical-fg",
       "cssValue": "var(--todae-color-status-critical-fg)",
       "ref": "color.status.critical.fg",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.enter-offset",
+      "type": "dimension",
+      "cssVar": "--todae-toast-enter-offset",
+      "cssValue": "var(--todae-space-2)",
+      "ref": "space.2",
       "layer": "contract",
       "context": null
     },
@@ -6145,6 +6235,15 @@
       "cssVar": "--todae-disclosure-marker-fg",
       "cssValue": "var(--todae-color-fg-muted)",
       "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "disclosure.marker.gap",
+      "type": "number",
+      "cssVar": "--todae-disclosure-marker-gap",
+      "cssValue": "0.375",
+      "ref": null,
       "layer": "contract",
       "context": null
     },
