@@ -103,16 +103,13 @@ pnpm typecheck
 pnpm changeset
 ```
 
-Pick the bump and write a line for the changelog. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change. CI fails a pull request that changes `packages/design-system` outside its tests without one. If the change ships nothing, add an empty changeset with `pnpm changeset --empty`.
+Pick the bump and write a line for the changelog. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change. CI runs `changeset status`, which fails when the package changed and the pull request adds no changeset. `changedFilePatterns` in `.changeset/config.json` leaves out tests, fixtures and snapshots, and changesets doesn't count dotfiles. For a change that ships nothing, add an empty changeset with `pnpm changeset --empty`.
 
-When `main` has changesets, `.github/workflows/release.yml` opens or updates a "Version Packages" pull request. It bumps the version, writes `packages/design-system/CHANGELOG.md` and deletes the changesets it used. Merging it starts a publish job that runs in the `npm` environment, publishes the new version through [trusted publishing](https://docs.npmjs.com/trusted-publishers), and creates the git tag and a GitHub release.
+`.github/workflows/release.yml` turns changesets on `main` into a "Version Packages" pull request that bumps the version and writes `packages/design-system/CHANGELOG.md`. Merging that pull request publishes the new version to npm through [trusted publishing](https://docs.npmjs.com/trusted-publishers), from the `npm` environment. It needs:
 
-The workflow needs this setup:
-
-- In the repository settings, Actions › General › "Allow GitHub Actions to create and approve pull requests" is on.
-- The repository is `omsoo-design/todae`, the repository that `package.json` and `.changeset/config.json` name. The changelog and npm's provenance check both use it.
-- Required reviewers on the `npm` environment hold each publish until one of them approves. GitHub creates the environment on the first run if it doesn't exist.
-- On npm, `@omsoo.design/todae` has a trusted publisher for this repository, the workflow `release.yml` and the environment `npm`. npm only takes a trusted publisher for a package that exists, so the first version is published by hand: after the first Version Packages pull request merges, run `pnpm changeset publish` on an up-to-date `main` and push the tag it creates with `git push --follow-tags`. The workflow's publish job for that merge can't publish yet, so it fails, or waits for approval if the environment has reviewers; reject it. Packing runs the package's `prepack` script, which builds it.
+- Actions › General › "Allow GitHub Actions to create and approve pull requests" turned on in the repository settings.
+- The repository at `omsoo-design/todae`, as `package.json` and `.changeset/config.json` name it.
+- A trusted publisher on npm for this repository, `release.yml` and the `npm` environment. npm only takes one for a package that exists, so the first version is published by hand; until then the publish job fails.
 
 ## Deploy docs
 
