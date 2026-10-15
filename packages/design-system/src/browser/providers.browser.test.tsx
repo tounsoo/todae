@@ -363,6 +363,21 @@ describe('ThemeProvider override contrast in development', () => {
     expect(warn).toHaveBeenCalledTimes(5);
   });
 
+  it("leaves the caller's other styles as they were", () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      <ThemeProvider
+        appearance="light"
+        data-testid="provider"
+        style={{ ['--margin' as string]: '7px', margin: 'var(--margin)', marginTop: 5 }}
+        overrides={lightAccent(0.92)}
+      />,
+    );
+    const provider = screen.getByTestId('provider');
+    expect(getComputedStyle(provider).marginLeft).toBe('7px');
+    expect(getComputedStyle(provider).marginTop).toBe('5px');
+  });
+
   it('warns again when failing overrides come back, and not while the same pairs fail', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { rerender } = render(<ThemeProvider appearance="light" overrides={lightAccent(0.92)} />);

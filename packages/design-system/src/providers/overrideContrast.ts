@@ -167,7 +167,9 @@ export function overrideContrastFailures(element: HTMLElement, names: readonly s
   // elements take as their first style, so nothing transitions from the defaults.
   const failures = measureContrast(element).failures;
   if (failures.length === 0) return failures;
-  const saved = element.getAttribute('style');
+  // Restore through CSSOM, as React writes: a style attribute round trip can
+  // drop shorthand longhands, and a strict CSP blocks setAttribute('style').
+  const saved = names.map((name) => [name, element.style.getPropertyValue(name), element.style.getPropertyPriority(name)] as const);
   let before: Set<string>;
   try {
     for (const name of names) {
@@ -179,8 +181,10 @@ export function overrideContrastFailures(element: HTMLElement, names: readonly s
     }
     before = new Set(measureContrast(element).failures.map(pairKey));
   } finally {
-    if (saved === null) element.removeAttribute('style');
-    else element.setAttribute('style', saved);
+    for (const [name, value, priority] of saved) {
+      element.style.removeProperty(name);
+      if (value !== '') element.style.setProperty(name, value, priority);
+    }
     // Flush again now, so a transition the baseline started ends where it began.
     void getComputedStyle(element).color;
   }
