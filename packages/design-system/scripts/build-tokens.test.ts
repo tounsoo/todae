@@ -645,7 +645,7 @@ describe('resolver-driven build', () => {
       });
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(
-      'token "motion.easing.exit" is declared only on :root, so it can\'t alias "motion.easing.enter"',
+      'token "motion.easing.exit" is declared only on :root, so it can\'t reference "motion.easing.enter"',
     );
   });
 

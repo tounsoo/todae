@@ -1370,7 +1370,7 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
   // provider or a [data-*] element, would never reach it.
   const rootAlias = rootOnly.find((token) => token.refs.length > 0);
   if (rootAlias) {
-    fail(`token "${rootAlias.path}" is declared only on :root, so it can't alias "${rootAlias.refs[0]!.path}"`);
+    fail(`token "${rootAlias.path}" is declared only on :root, so it can't reference "${rootAlias.refs[0]!.path}"`);
   }
   const byPath = new Map<string, FlatToken[]>();
   for (const token of all) {
