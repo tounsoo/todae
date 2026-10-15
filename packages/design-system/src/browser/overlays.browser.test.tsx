@@ -339,6 +339,23 @@ describe('modal headers', () => {
     expect(Math.round(close.right)).toBe(Math.round(header.right));
   });
 
+  it.each([Dialog, Drawer, BottomSheet])('keeps a lone title at the start edge (case %#)', ({ Root, Header, Title }) => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Root open onOpenChange={() => undefined}>
+          <Header data-testid="header">
+            <Title>Sort</Title>
+          </Header>
+        </Root>
+      </div>,
+    );
+    const header = screen.getByTestId('header').getBoundingClientRect();
+    const title = screen.getByRole('heading', { name: 'Sort' });
+    const range = document.createRange();
+    range.selectNodeContents(title);
+    expect(Math.round(range.getBoundingClientRect().left)).toBe(Math.round(header.left));
+  });
+
   it('puts a lone close button at the end', () => {
     render(
       <div data-appearance="light" data-density="comfortable">
