@@ -114,9 +114,17 @@ The radio dot, the switch thumb, the spinner and the selected tab's bar are shap
 
 ## When to use
 
+### GlyphsProvider
+
 **When:** Your design system uses an icon library, and Todae's crosses, checks, chevrons, separators or ellipses should match it, across a whole app or one part of it.
 
 **When not:** An icon in a slot such as `Button.Icon`, `Field.Icon` or `Alert.Icon` → put it there directly. A different icon for one close button or chip → pass it as that part's content or `removeIcon`.
+
+### useGlyphs
+
+**When:** A component of your own that draws one of the glyphs GlyphsProvider sets, such as a close cross, so it matches Todae's parts.
+
+**When not:** An icon only your component uses → your icon library.
 
 ## Props
 

@@ -114,9 +114,17 @@ import { Check, ChevronDown, ChevronRight, Ellipsis, X } from 'lucide-react';
 
 ## 언제 쓰나요
 
+### GlyphsProvider
+
 **언제:** 디자인 시스템이 아이콘 라이브러리를 쓰고, Todae의 X 모양, 체크, chevron, 구분 기호, 줄임표를 앱 전체나 일부에서 그 라이브러리에 맞추고 싶을 때.
 
 **쓰지 않을 때:** `Button.Icon`, `Field.Icon`, `Alert.Icon` 같은 슬롯의 아이콘 → 거기에 바로 넣으세요. 닫기 버튼이나 칩 하나에만 다른 아이콘 → 그 파트의 내용이나 `removeIcon`으로 전달하세요.
+
+### useGlyphs
+
+**언제:** 닫기 X처럼 GlyphsProvider가 설정하는 글리프를 그리는 자체 컴포넌트가 Todae 파트와 맞아야 할 때.
+
+**쓰지 않을 때:** 내 컴포넌트만 쓰는 아이콘 → 아이콘 라이브러리.
 
 ## Props
 

@@ -1,0 +1,23 @@
+# composeRefs
+
+`composeRefs(...refs)` returns one callback ref that sets every ref you give it. Use it to keep a ref of your own on an element whose `ref` slot a hook's prop getter already fills.
+
+```tsx
+const popover = usePopover({ open, onOpenChange: setOpen });
+const mine = useRef<HTMLDivElement>(null);
+const { ref, ...props } = popover.getPopoverProps();
+
+<div {...props} ref={composeRefs(ref, mine)}>…</div>
+```
+
+Each call returns a new callback, so React detaches and reattaches it on every render.
+
+## When to use
+
+**When:** Two or more refs on one element, such as your own and one from a Todae hook.
+
+**When not:** One ref → pass it as is.
+
+## Props
+
+<PropsTable name="composeRefs" />
