@@ -325,6 +325,9 @@ describe('Field.ColorPicker in a browser', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Color picker' });
     await waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
     expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(button.getAttribute('aria-controls')).toBe(dialog.id);
+    // With no element of its own to focus, the picker focuses its first tabbable.
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('slider', { name: 'Saturation' })));
     const hue = screen.getByRole('slider', { name: 'Hue' });
     hue.focus();
     await userEvent.keyboard('{Home}');
@@ -332,6 +335,7 @@ describe('Field.ColorPicker in a browser', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(dialog.matches(':popover-open')).toBe(false));
     expect(document.activeElement).toBe(button);
+    expect(button.hasAttribute('aria-controls')).toBe(false);
   });
 
   it('picks saturation and brightness from a press in the area', async () => {

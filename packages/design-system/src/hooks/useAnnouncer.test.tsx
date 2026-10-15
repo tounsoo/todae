@@ -118,6 +118,17 @@ describe('useAnnouncer', () => {
     expect(live('polite').textContent).toBe('Deleted');
   });
 
+  it('drops a pending write once the document is gone', () => {
+    render(<Speaker message="Copied" />);
+    vi.stubGlobal('document', undefined);
+    try {
+      expect(() => vi.advanceTimersByTime(1000)).not.toThrow();
+      expect(pending()?.polite).toBeUndefined();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('starts over in a new, empty region when the region is removed before the write', () => {
     render(<Speaker message="Saved" />);
     for (const node of regions()) node.remove();

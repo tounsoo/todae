@@ -928,6 +928,8 @@
   --todae-card-padding: var(--_todae-card-padding, var(--todae-space-overlay-padding));
   --todae-card-radius: var(--_todae-card-radius, var(--todae-radius-lg));
   --todae-card-shadow: var(--_todae-card-shadow, var(--todae-shadow-none));
+  --todae-message-actions-motion-duration: var(--_todae-message-actions-motion-duration, var(--todae-motion-duration-normal));
+  --todae-message-actions-motion-easing: var(--_todae-message-actions-motion-easing, var(--todae-motion-easing-standard));
   --todae-message-fg: var(--_todae-message-fg, var(--todae-color-fg-default));
   --todae-message-gap: var(--_todae-message-gap, var(--todae-space-inline-gap));
   --todae-message-header-fg: var(--_todae-message-header-fg, var(--todae-color-fg-muted));
@@ -936,6 +938,8 @@
   --todae-message-row-gap: var(--_todae-message-row-gap, var(--todae-space-stack-gap));
   --todae-message-system-fg: var(--_todae-message-system-fg, var(--todae-color-fg-muted));
   --todae-message-system-font-size: var(--_todae-message-system-font-size, var(--todae-font-size-2));
+  --todae-message-time-fg: var(--_todae-message-time-fg, var(--todae-color-fg-muted));
+  --todae-message-time-font-size: var(--_todae-message-time-font-size, var(--todae-font-size-2));
   --todae-message-user-bg: var(--_todae-message-user-bg, var(--todae-color-bg-subtle));
   --todae-message-user-border-width: var(--_todae-message-user-border-width, var(--todae-border-width));
   --todae-message-user-fg: var(--_todae-message-user-fg, var(--todae-color-fg-default));

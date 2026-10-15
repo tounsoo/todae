@@ -551,6 +551,14 @@ const cases: Case[] = [
       },
     ],
   ),
+  [
+    'Message.Time',
+    (p) => (
+      <Message.Root>
+        <Message.Time {...p} value={Temporal.ZonedDateTime.from('2026-10-14T09:41:00+09:00[Asia/Seoul]')} />
+      </Message.Root>
+    ),
+  ],
   ['Attachment.Root', (p) => <Attachment.Root {...p} />],
   ...(['Preview', 'Meta', 'Progress', 'Remove'] as const).map(
     (part): Case => [

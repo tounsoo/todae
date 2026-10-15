@@ -119,6 +119,7 @@ export const SITE_GROUPS = [
       ['/recipes/combobox', 'Combobox'],
       ['/recipes/command-palette', 'Command palette'],
       ['/recipes/file-upload', 'File upload'],
+      ['/recipes/message-actions', 'Message actions'],
     ],
   },
   {
