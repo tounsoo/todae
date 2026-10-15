@@ -116,7 +116,7 @@
     block-size: var(--todae-nav-chevron-size);
     color: var(--todae-nav-chevron-fg);
     line-height: 1;
-    transition: rotate var(--todae-nav-motion-duration) var(--todae-nav-motion-easing);
+    transition: rotate var(--todae-nav-motion-duration) var(--todae-nav-motion-easing-enter);
   }
 
   .chevron > :is(svg, img) {
@@ -126,6 +126,7 @@
 
   .branch:not([open]) > .toggle > [data-todae-glyph] {
     rotate: -90deg;
+    transition-timing-function: var(--todae-nav-motion-easing-exit);
   }
 
   .branch:not([open]) > .toggle:dir(rtl) > [data-todae-glyph] {

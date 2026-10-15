@@ -695,6 +695,24 @@
       "context": null
     },
     {
+      "path": "motion.easing.enter",
+      "type": "cubicBezier",
+      "cssVar": "--todae-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-standard)",
+      "ref": "motion.easing.standard",
+      "layer": "core",
+      "context": null
+    },
+    {
+      "path": "motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-standard)",
+      "ref": "motion.easing.standard",
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "motion.easing.standard",
       "type": "cubicBezier",
       "cssVar": "--todae-motion-easing-standard",
@@ -4376,11 +4394,20 @@
       "context": null
     },
     {
-      "path": "overlay.motion.easing",
+      "path": "overlay.motion.easing.enter",
       "type": "cubicBezier",
-      "cssVar": "--todae-overlay-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssVar": "--todae-overlay-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "overlay.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-overlay-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null
     },
@@ -6266,11 +6293,20 @@
       "context": null
     },
     {
-      "path": "disclosure.motion.easing",
+      "path": "disclosure.motion.easing.enter",
       "type": "cubicBezier",
-      "cssVar": "--todae-disclosure-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssVar": "--todae-disclosure-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "disclosure.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-disclosure-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null
     },
@@ -8543,11 +8579,20 @@
       "context": null
     },
     {
-      "path": "tree.motion.easing",
+      "path": "tree.motion.easing.enter",
       "type": "cubicBezier",
-      "cssVar": "--todae-tree-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssVar": "--todae-tree-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tree.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-tree-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null
     },
@@ -8786,11 +8831,20 @@
       "context": null
     },
     {
-      "path": "nav.motion.easing",
+      "path": "nav.motion.easing.enter",
       "type": "cubicBezier",
-      "cssVar": "--todae-nav-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssVar": "--todae-nav-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "nav.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-nav-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null
     },
