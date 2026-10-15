@@ -1011,6 +1011,37 @@ describe('company token build', () => {
     expect(css).not.toContain('--_todae-brand-ink');
   });
 
+  it('checks many aliases and long alias chains in time that grows about linearly', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'todae-scale-'));
+    try {
+      const many = Object.fromEntries(
+        Array.from({ length: 2000 }, (_, i) => [`t${i}`, { $type: 'color', $value: { $ref: '#/color/gray/900/$value' } }]),
+      );
+      const chain: Record<string, unknown> = { n0: { $type: 'number', $value: 1 } };
+      for (let i = 1; i < 2000; i++) chain[`n${i}`] = { $type: 'number', $value: { $ref: `#/brand/chain/n${i - 1}/$value` } };
+      const contexts = Object.fromEntries(Array.from({ length: 16 }, (_, i) => [`c${i}`, [{ $ref: './many.json' }]]));
+      await writeFile(join(root, 'many.json'), JSON.stringify({ brand: { many } }));
+      await writeFile(join(root, 'chain.json'), JSON.stringify({ brand: { chain } }));
+      await writeFile(
+        join(root, 'resolver.json'),
+        JSON.stringify({
+          version: '2025.10',
+          sets: { chain: { sources: [{ $ref: './chain.json' }], $extensions: { 'dev.todae': { layer: 'contract' } } } },
+          modifiers: {
+            mood: { contexts, default: 'c0', $extensions: { 'dev.todae': { layer: 'appearance', attribute: 'data-mood' } } },
+          },
+          resolutionOrder: [{ $ref: '#/modifiers/mood' }, { $ref: '#/sets/chain' }],
+        }),
+      );
+      const started = performance.now();
+      await buildCompanyTokens({ resolver: join(root, 'resolver.json'), base: tokensDir });
+      // Each took over 10 seconds when every ref step scanned every token.
+      expect(performance.now() - started).toBeLessThan(5000);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it('emits only the company layer, after Todae\'s', async () => {
     const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
     expect(result.css.startsWith('@layer todae.reset, todae.base, todae.components, todae.theme;\n\n@layer todae.theme {')).toBe(

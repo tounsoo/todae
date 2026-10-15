@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { contrastResults, resolveEntries } from '@omsoo.design/todae/tokens-builder';
@@ -11,9 +11,12 @@ export const MAX_FILES = 64;
 export const MAX_BYTES = 512 * 1024;
 /** A build that runs longer is stopped. */
 export const BUILD_TIMEOUT_MS = 10_000;
-/** Theme CSS larger than this is not returned. */
+/** Theme CSS or override types larger than this are not returned. */
 export const MAX_CSS_BYTES = 1024 * 1024;
 const BUILD_MEMORY_MB = 256;
+/** Builds one server instance runs at once; a call past this is refused, not queued. */
+export const MAX_CONCURRENT_BUILDS = 2;
+let running = 0;
 const FILE_RE = /^(?:[a-z0-9][a-z0-9._-]*\/)*[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9_-]+)*\.json$/i;
 
 function packageFile(cwd: string, ...path: string[]): string | undefined {
@@ -92,7 +95,8 @@ function runCli(cli: string, args: string[], cwd: string, timeout: number): Prom
         if (error.killed || error.signal) {
           return resolve({ ok: false, error: `The build ran longer than ${timeout / 1000} seconds or ran out of memory, and was stopped` });
         }
-        resolve({ ok: false, error: String(stderr).trim() || error.message });
+        // Node's own message names the server's paths, so it is not passed on.
+        resolve({ ok: false, error: String(stderr).trim() || `The build failed with exit code ${error.code ?? 'unknown'}` });
       },
     );
   });
@@ -114,7 +118,14 @@ export async function buildTokenFiles(
   }: { resolver?: string; base?: string; cli?: string; timeout?: number } = {},
 ): Promise<BuildResult> {
   const contents = checkFiles(files, resolver);
-  const root = await mkdtemp(join(tmpdir(), 'todae-mcp-'));
+  if (running >= MAX_CONCURRENT_BUILDS) {
+    return { ok: false, error: 'The server is running other builds. Try again in a few seconds.', source: SOURCE };
+  }
+  running += 1;
+  const root = await mkdtemp(join(tmpdir(), 'todae-mcp-')).catch((error: unknown) => {
+    running -= 1;
+    throw error;
+  });
   const out = join(root, '.out');
   try {
     for (const [name, text] of contents) {
@@ -142,15 +153,17 @@ export async function buildTokenFiles(
       timeout,
     );
     if (!run.ok) return { ok: false, error: scrub(run.error, root), source: SOURCE };
-    const css = await readFile(join(out, 'theme.css'), 'utf8');
-    if (Buffer.byteLength(css, 'utf8') > MAX_CSS_BYTES) {
-      return { ok: false, error: `The theme CSS is larger than ${MAX_CSS_BYTES / 1024} KB`, source: SOURCE };
+    const cssFile = join(out, 'theme.css');
+    const typesFile = join(out, 'types.ts');
+    if ((await stat(cssFile)).size > MAX_CSS_BYTES || (await stat(typesFile)).size > MAX_CSS_BYTES) {
+      return { ok: false, error: `The build's output is larger than ${MAX_CSS_BYTES / 1024} KB`, source: SOURCE };
     }
-    return { ok: true, css, overrideTypes: await readFile(join(out, 'types.ts'), 'utf8'), source: SOURCE };
+    return { ok: true, css: await readFile(cssFile, 'utf8'), overrideTypes: await readFile(typesFile, 'utf8'), source: SOURCE };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { ok: false, error: scrub(message, root), source: SOURCE };
   } finally {
+    running -= 1;
     await rm(root, { recursive: true, force: true });
   }
 }

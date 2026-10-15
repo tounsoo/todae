@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DOCS_ORIGIN } from '../origin';
-import { baseContrast, buildTokenFiles, checkFiles, todaeTokensCli, todaeTokensDir } from './build';
+import { MAX_CONCURRENT_BUILDS, baseContrast, buildTokenFiles, checkFiles, todaeTokensCli, todaeTokensDir } from './build';
 import { GUIDES, GUIDE_TOPICS, getGuide } from './guides';
 import { scaffoldDesignSystem } from './scaffold';
 import { catalogTokens, getToken, listTokens } from './tokens';
@@ -108,23 +108,45 @@ describe('build_tokens', () => {
     expect(() => checkFiles({ 'tokens/resolver.json': {} }, 'tokens/resolver.json')).not.toThrow();
   });
 
-  it('stops a build that runs too long', async () => {
-    // Many aliases in many contexts: the builder's reference checks grow faster than linearly with them.
-    const many = Object.fromEntries(
-      Array.from({ length: 2000 }, (_, i) => [`t${i}`, { $type: 'color', $value: { $ref: '#/color/gray/900/$value' } }]),
-    );
-    const contexts = Object.fromEntries(Array.from({ length: 16 }, (_, i) => [`c${i}`, [{ $ref: './many.json' }]]));
-    const resolver = {
+  // Each color-scheme modifier doubles the contexts every appearance contrast pair is measured in.
+  function schemes(count: number) {
+    const ink = (i: number, l: number) => ({
+      brand: { [`s${i}`]: { ink: { $type: 'color', $value: { colorSpace: 'oklch', components: [l, 0, 0] } } } },
+    });
+    const names = Array.from({ length: count }, (_, i) => i);
+    return {
       version: '2025.10',
-      modifiers: {
-        mood: { contexts, default: 'c0', $extensions: { 'dev.todae': { layer: 'appearance', attribute: 'data-mood' } } },
-      },
-      resolutionOrder: [{ $ref: '#/modifiers/mood' }],
+      modifiers: Object.fromEntries(
+        names.map((i) => [
+          `s${i}`,
+          {
+            default: 'light',
+            contexts: { light: [ink(i, 0.2)], dark: [ink(i, 0.9)] },
+            $extensions: { 'dev.todae': { layer: 'appearance', attribute: `data-s${i}`, colorScheme: true } },
+          },
+        ]),
+      ),
+      resolutionOrder: names.map((i) => ({ $ref: `#/modifiers/s${i}` })),
     };
+  }
+
+  it('stops a build that runs too long', async () => {
+    expect((await buildTokenFiles({ 'resolver.json': schemes(1) })).ok).toBe(true);
     const started = performance.now();
-    const result = await buildTokenFiles({ 'resolver.json': resolver, 'many.json': { brand: many } }, { timeout: 500 });
+    const result = await buildTokenFiles({ 'resolver.json': schemes(18) }, { timeout: 500 });
     expect(performance.now() - started).toBeLessThan(3000);
     expect(result).toEqual({ ok: false, error: expect.stringContaining('was stopped'), source: 'todae-docs' });
+  });
+
+  it('refuses a build past the concurrent limit', async () => {
+    const slow = Array.from({ length: MAX_CONCURRENT_BUILDS }, () =>
+      buildTokenFiles({ 'resolver.json': schemes(18) }, { timeout: 1500 }),
+    );
+    const refused = await buildTokenFiles(readTree(ACME));
+    expect(refused).toEqual({ ok: false, error: expect.stringContaining('other builds'), source: 'todae-docs' });
+    await Promise.all(slow);
+    // The slots free up once those builds end.
+    expect((await buildTokenFiles(readTree(ACME))).ok).toBe(true);
   });
 
   it('builds a resolver that is not at the top level', async () => {

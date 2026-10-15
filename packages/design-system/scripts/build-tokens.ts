@@ -568,26 +568,48 @@ export function validateRefs(
 ): void {
   const layerPaths = new Map<string, Layer>();
   for (const [path, layer] of known) layerPaths.set(path, layer);
+  const byPath = new Map<string, FlatToken[]>();
+  for (const token of tokens) {
+    const list = byPath.get(token.path);
+    if (list) list.push(token);
+    else byPath.set(token.path, [token]);
+  }
+  // A path followed in a context checks the same refs whoever reached it, so
+  // each (path, context) is walked once. `stack` holds the chain being walked.
+  const done = new Set<string>();
+  const stack: string[] = [];
+  const onStack = new Set<string>();
 
   // Follows a ref chain within one modifier context: light and dark may each
   // alias the other way round without forming a cycle.
-  function resolveLayer(path: string, from: Layer, fromPath: string, context: string | undefined, stack: string[]): Layer {
-    if (stack.includes(path)) fail(`$ref cycle: ${[...stack, path].join(' -> ')}`);
+  function resolveLayer(path: string, from: Layer, fromPath: string, context: string | undefined): void {
     const targetLayer = layerPaths.get(path);
     if (!targetLayer) fail(`$ref "${path}" does not exist`);
     if (LAYER_RANK[targetLayer] >= LAYER_RANK[from] && !inScope(fromPath, path)) {
       fail(`$ref "${path}" must point at a lower layer than ${from}`);
     }
-    const candidates = tokens.filter((t) => t.path === path && t.layer === targetLayer);
+    const key = `${path}\u0000${context ?? ''}`;
+    if (onStack.has(key)) fail(`$ref cycle: ${[...stack, path].join(' -> ')}`);
+    if (done.has(key)) return;
+    onStack.add(key);
+    stack.push(path);
+    const candidates = (byPath.get(path) ?? []).filter((t) => t.layer === targetLayer);
     const inContext = candidates.filter((t) => t.context === context);
     for (const target of inContext.length > 0 ? inContext : candidates) {
-      for (const ref of target.refs) resolveLayer(ref.path, targetLayer, path, target.context ?? context, [...stack, path]);
+      for (const ref of target.refs) resolveLayer(ref.path, targetLayer, path, target.context ?? context);
     }
-    return targetLayer;
+    stack.pop();
+    onStack.delete(key);
+    done.add(key);
   }
 
   for (const token of tokens) {
-    for (const ref of token.refs) resolveLayer(ref.path, token.layer, token.path, token.context, [token.path]);
+    const key = `${token.path}\u0000${token.context ?? ''}`;
+    onStack.add(key);
+    stack.push(token.path);
+    for (const ref of token.refs) resolveLayer(ref.path, token.layer, token.path, token.context);
+    stack.pop();
+    onStack.delete(key);
   }
 }
 
@@ -1338,14 +1360,38 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
     return at === target || (target < at && known.get(from) === known.get(to));
   });
   const byPath = new Map<string, FlatToken[]>();
-  for (const token of all) byPath.set(token.path, [...(byPath.get(token.path) ?? []), token]);
+  for (const token of all) {
+    const list = byPath.get(token.path);
+    if (list) list.push(token);
+    else byPath.set(token.path, [token]);
+  }
   // An alpha must land in [0, 1] in every context its number token takes.
-  function literals(path: string, seen = new Set<string>()): number[] {
-    if (seen.has(path)) return [];
-    seen.add(path);
-    return (byPath.get(path) ?? []).flatMap((token) =>
-      token.refs.length > 0 ? token.refs.flatMap((ref) => literals(ref.path, seen)) : [token.value as number],
-    );
+  // Each path's literals are kept once worked out, except while a loop across
+  // contexts (light reads b, dark reads a) leaves them partial.
+  const literalCache = new Map<string, number[]>();
+  const walking = new Set<string>();
+  let partial = false;
+  function literals(path: string): number[] {
+    const cached = literalCache.get(path);
+    if (cached) return cached;
+    if (walking.has(path)) {
+      partial = true;
+      return [];
+    }
+    walking.add(path);
+    const outer = partial;
+    partial = false;
+    const values = [
+      ...new Set(
+        (byPath.get(path) ?? []).flatMap((token) =>
+          token.refs.length > 0 ? token.refs.flatMap((ref) => literals(ref.path)) : [token.value as number],
+        ),
+      ),
+    ];
+    walking.delete(path);
+    if (!partial) literalCache.set(path, values);
+    partial = outer || partial;
+    return values;
   }
   for (const token of all) {
     for (const ref of token.refs) {
@@ -1359,18 +1405,43 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
   // modifier blocks are not re-declared when another modifier's context
   // changes, so they may not alias each other either.
   const scoped = (entry: ResolvedEntry | undefined) => entry?.kind === 'modifier' && !entry.extension.alias;
-  // First token path reached through `ref` (at any depth) that a scoped modifier declares.
-  function scopedDependency(ref: string, from: number): string | null {
-    const queue = [ref];
-    const seen = new Set<string>();
-    for (let path = queue.shift(); path !== undefined; path = queue.shift()) {
-      if (seen.has(path)) continue;
-      seen.add(path);
-      const at = position.get(path) ?? -1;
-      if (at !== from && scoped(entries[at])) return path;
-      for (const token of byPath.get(path) ?? []) queue.push(...token.refs.map((ref) => ref.path));
+  // Paths that read others, so a walk can run from what is read back to its readers.
+  const readers = new Map<string, Set<string>>();
+  for (const token of all) {
+    for (const { path } of token.refs) {
+      const set = readers.get(path);
+      if (set) set.add(token.path);
+      else readers.set(path, new Set([token.path]));
     }
-    return null;
+  }
+  // For one entry, each path that reaches (at any depth) a token another scoped
+  // modifier declares, mapped to that token. One backward walk per entry.
+  const reachCache = new Map<number, Map<string, string>>();
+  function scopedReach(from: number): Map<string, string> {
+    const cached = reachCache.get(from);
+    if (cached) return cached;
+    const reach = new Map<string, string>();
+    const queue: string[] = [];
+    for (const [path, at] of position) {
+      if (at !== from && scoped(entries[at])) {
+        reach.set(path, path);
+        queue.push(path);
+      }
+    }
+    for (let i = 0; i < queue.length; i++) {
+      const path = queue[i]!;
+      for (const reader of readers.get(path) ?? []) {
+        if (reach.has(reader)) continue;
+        reach.set(reader, reach.get(path)!);
+        queue.push(reader);
+      }
+    }
+    reachCache.set(from, reach);
+    return reach;
+  }
+  // A token path reached through `ref` (at any depth) that another scoped modifier declares.
+  function scopedDependency(ref: string, from: number): string | null {
+    return scopedReach(from).get(ref) ?? null;
   }
   for (const [index, entry] of entries.entries()) {
     for (const token of entryTokens(entry)) {

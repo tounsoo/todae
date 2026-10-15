@@ -111,7 +111,7 @@ Tools, in `apps/docs/lib/docs-mcp`:
 
 - `list_components`, `get_component`, `when_to_use` read `@omsoo.design/todae/schema/components.json` and the English pages, `apps/docs/app/(en)/**/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
 - `list_tokens`, `get_token` read the token catalog, `@omsoo.design/todae/tokens.json`.
-- `get_contrast_pairs` runs `@omsoo.design/todae/tokens-builder` on Todae's `tokens/` folder. `build_tokens` and `scaffold_design_system` write token files to a temporary folder and run the built `todae-tokens` CLI on them in a child process, stopped after 10 seconds, then remove the folder. `next.config.mjs` traces the tokens folder and the CLI into the route. Both return results and write nothing to the caller's machine.
+- `get_contrast_pairs` runs `@omsoo.design/todae/tokens-builder` on Todae's `tokens/` folder. `build_tokens` and `scaffold_design_system` write token files to a temporary folder and run the built `todae-tokens` CLI on them in a child process, stopped after 10 seconds, then remove the folder; a server instance runs at most two builds at once. `next.config.mjs` traces the tokens folder and the CLI into the route. Both return results and write nothing to the caller's machine.
 - `get_guide` returns the English source of the pages in `GUIDES` (`lib/docs-mcp/guides.ts`).
 
 ## Graft
