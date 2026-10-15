@@ -48,7 +48,20 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache: false
+      # GitHub starts no workflows for pushes made with GITHUB_TOKEN, so CI would never run on the
+      # Version Packages pull request. A GitHub App's token starts them; without the app, the
+      # workflow falls back to GITHUB_TOKEN.
+      - id: app-token
+        if: ${{ vars.RELEASE_APP_CLIENT_ID != '' }}
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
       - uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        with:
+          github-token: ${{ steps.app-token.outputs.token || github.token }}
 
   pack:
     name: Build and pack
