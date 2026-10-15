@@ -28,13 +28,15 @@ export type ScaffoldFile = { path: string; contents: string };
 function checkName(kind: string, name: string, taken: readonly string[] = []): void {
   if (!NAME_RE.test(name)) throw new Error(`Invalid ${kind} "${name}": use lowercase words joined by hyphens, such as "outline"`);
   if (taken.includes(name)) throw new Error(`Todae already has the ${kind} "${name}"`);
-  if (RESERVED_CONTEXTS.includes(name)) throw new Error(`The ${kind} "${name}" is reserved`);
 }
 
-/** The context names a modifier of Todae's resolver has. */
-async function todaeContexts(base: string, modifier: string): Promise<string[]> {
-  const entry = (await resolveEntries(base)).find((row) => row.kind === 'modifier' && row.name === modifier);
-  return entry?.kind === 'modifier' ? [...entry.contexts.keys()] : [];
+/** The context names of each modifier in Todae's resolver. */
+async function todaeContexts(base: string): Promise<Map<string, string[]>> {
+  const out = new Map<string, string[]>();
+  for (const entry of await resolveEntries(base)) {
+    if (entry.kind === 'modifier') out.set(entry.name, [...entry.contexts.keys()]);
+  }
+  return out;
 }
 
 function unique(kind: string, names: readonly string[]): void {
@@ -106,10 +108,12 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
   checkName('name', name);
   unique('button variant', buttonVariants);
   unique('density', densities);
-  const variantsTaken = await todaeContexts(base, 'buttonVariant');
-  const densitiesTaken = await todaeContexts(base, 'density');
-  for (const variant of buttonVariants) checkName('button variant', variant, variantsTaken);
-  for (const density of densities) checkName('density', density, densitiesTaken);
+  const taken = await todaeContexts(base);
+  for (const variant of buttonVariants) {
+    checkName('button variant', variant, taken.get('buttonVariant'));
+    if (RESERVED_CONTEXTS.includes(variant)) throw new Error(`The button variant "${variant}" is reserved`);
+  }
+  for (const density of densities) checkName('density', density, taken.get('density'));
   if (colors) {
     const known = appearanceColorPaths();
     const light = Object.keys(colors.light);

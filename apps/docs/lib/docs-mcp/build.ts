@@ -12,8 +12,10 @@ export const MAX_BYTES = 512 * 1024;
 export const MAX_MODIFIERS = 16;
 export const MAX_CONTEXTS = 16;
 export const MAX_SOURCES = 128;
-export const MAX_COLOR_SCHEMES = 16;
 export const MAX_CONTRAST_PAIRS = 64;
+/** Contrast pairs times the contexts each is measured in, counted on Todae's and the company's entries merged. */
+export const MAX_CONTRAST_CHECKS = 2000;
+const MAX_DEPTH = 32;
 const FILE_RE = /^(?:[a-z0-9][a-z0-9._-]*\/)*[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9_-]+)*\.json$/i;
 
 /**
@@ -33,7 +35,8 @@ export function todaeTokensDir(cwd = process.cwd()): string {
 /**
  * Throws unless every key is a relative `.json` path, no path is a folder of
  * another, the resolver is one of them and the files fit the size limit.
- * Object values are measured as compact JSON.
+ * Values are measured as compact JSON: an object as it is, a string once
+ * parsed. A string that isn't JSON is kept as given, for the build to report.
  */
 export function checkFiles(files: Record<string, unknown>, resolver = 'resolver.json'): Map<string, string> {
   const names = Object.keys(files);
@@ -48,7 +51,7 @@ export function checkFiles(files: Record<string, unknown>, resolver = 'resolver.
     const folder = names.find((other) => other.startsWith(`${name}/`));
     if (folder) throw new Error(`"${name}" can't be both a file and the folder of "${folder}"`);
     const value = files[name];
-    const text = typeof value === 'string' ? value : JSON.stringify(value);
+    const text = typeof value === 'string' ? compact(value) : JSON.stringify(value);
     if (text === undefined) throw new Error(`File "${name}" has no contents`);
     bytes += Buffer.byteLength(text, 'utf8');
     if (bytes > MAX_BYTES) throw new Error(`Files may total at most ${MAX_BYTES / 1024} KB`);
@@ -57,21 +60,33 @@ export function checkFiles(files: Record<string, unknown>, resolver = 'resolver.
   return out;
 }
 
+function compact(text: string): string {
+  try {
+    return JSON.stringify(JSON.parse(text));
+  } catch {
+    return text;
+  }
+}
+
 function record(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
-function countRefs(value: unknown): number {
-  if (Array.isArray(value)) return value.reduce<number>((sum, item) => sum + countRefs(item), 0);
+function countRefs(value: unknown, depth = 0): number {
+  if (depth > MAX_DEPTH) throw new Error(`A resolver may nest at most ${MAX_DEPTH} levels deep`);
+  if (Array.isArray(value)) return value.reduce<number>((sum, item) => sum + countRefs(item, depth + 1), 0);
   const row = record(value);
-  return (typeof row.$ref === 'string' ? 1 : 0) + Object.values(row).reduce<number>((sum, child) => sum + countRefs(child), 0);
+  return (
+    (typeof row.$ref === 'string' ? 1 : 0) +
+    Object.values(row).reduce<number>((sum, child) => sum + countRefs(child, depth + 1), 0)
+  );
 }
 
 /**
- * Throws when a resolver asks for more work than one call allows. Contrast
- * pairs are measured once per combination of every color-scheme modifier's
- * contexts, so their product is capped. A resolver that isn't valid JSON is
- * left to the build to report.
+ * Throws when a resolver is larger than one call allows. How many contrast
+ * checks it adds up to depends on how it merges with Todae's, so the build
+ * counts those itself (`maxContrastChecks`). A resolver that isn't valid JSON
+ * is left to the build to report.
  */
 export function checkResolver(text: string): void {
   let parsed: unknown;
@@ -83,7 +98,6 @@ export function checkResolver(text: string): void {
   const resolver = record(parsed);
   const modifiers = Object.entries(record(resolver.modifiers));
   if (modifiers.length > MAX_MODIFIERS) throw new Error(`A resolver may declare at most ${MAX_MODIFIERS} modifiers`);
-  let schemes = 1;
   let pairs = 0;
   const entries = [...Object.values(record(resolver.sets)), ...modifiers.map(([, modifier]) => modifier)];
   for (const entry of entries) {
@@ -94,13 +108,6 @@ export function checkResolver(text: string): void {
   for (const [name, modifier] of modifiers) {
     const contexts = Object.keys(record(record(modifier).contexts)).length;
     if (contexts > MAX_CONTEXTS) throw new Error(`Modifier "${name}" may have at most ${MAX_CONTEXTS} contexts`);
-    if (record(record(record(modifier).$extensions)['dev.todae']).colorScheme === true) {
-      // Todae's appearance already has light and dark, which a company's contexts join.
-      schemes *= contexts + (name === 'appearance' ? 2 : 0);
-    }
-  }
-  if (schemes > MAX_COLOR_SCHEMES) {
-    throw new Error(`Color-scheme modifiers may combine into at most ${MAX_COLOR_SCHEMES} combinations of contexts`);
   }
   if (countRefs(resolver) > MAX_SOURCES) throw new Error(`A resolver may hold at most ${MAX_SOURCES} $refs`);
 }
@@ -136,15 +143,15 @@ export async function buildTokenFiles(
   { resolver = 'resolver.json', base = todaeTokensDir() }: { resolver?: string; base?: string } = {},
 ): Promise<BuildResult> {
   const contents = checkFiles(files, resolver);
-  checkResolver(contents.get(resolver) ?? '');
   const root = await mkdtemp(join(tmpdir(), 'todae-mcp-'));
   try {
+    checkResolver(contents.get(resolver) ?? '');
     for (const [name, text] of contents) {
       const file = join(root, name);
       await mkdir(dirname(file), { recursive: true });
       await writeFile(file, text);
     }
-    const result = await buildCompanyTokens({ resolver: join(root, resolver), base });
+    const result = await buildCompanyTokens({ resolver: join(root, resolver), base, maxContrastChecks: MAX_CONTRAST_CHECKS });
     return {
       ok: true,
       css: result.css,

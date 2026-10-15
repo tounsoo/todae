@@ -1022,6 +1022,17 @@ describe('company token build', () => {
     expect(onAccent.every((pair) => pair.lc >= pair.min)).toBe(true);
   });
 
+  it('counts contrast checks before measuring, and stops at maxContrastChecks', async () => {
+    const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
+    const checks = result.contrast.length;
+    await expect(
+      buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir, maxContrastChecks: checks }),
+    ).resolves.toBeDefined();
+    await expect(
+      buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir, maxContrastChecks: checks - 1 }),
+    ).rejects.toThrow(`asks for ${checks} pair checks`);
+  });
+
   it('emits only the company layer, after Todae\'s', async () => {
     const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
     expect(result.css.startsWith('@layer todae.reset, todae.base, todae.components, todae.theme;\n\n@layer todae.theme {')).toBe(

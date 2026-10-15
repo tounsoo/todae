@@ -108,23 +108,44 @@ describe('build_tokens', () => {
     expect(checkFiles({ ...resolver, 'appearance/light.json': '{}' }).get('appearance/light.json')).toBe('{}');
     // Objects count as compact JSON, as a client sends them.
     expect(checkFiles({ ...resolver, 'a.json': { a: { b: 1 } } }).get('a.json')).toBe('{"a":{"b":1}}');
+    expect(checkFiles({ ...resolver, 'a.json': '{\n  "a": 1\n}' }).get('a.json')).toBe('{"a":1}');
+    expect(() => checkFiles({ ...resolver, 'big.json': JSON.stringify({ a: 'x'.repeat(400 * 1024) }, null, 2) })).not.toThrow();
     expect(() => checkFiles({ 'tokens/resolver.json': {} }, 'tokens/resolver.json')).not.toThrow();
   });
 
-  it('refuses a resolver that asks for an outsized build, before building', async () => {
-    const scheme = (i: number) => [
-      `s${i}`,
-      {
-        contexts: { light: [{}], dark: [{}] },
-        $extensions: { 'dev.todae': { layer: 'appearance', attribute: `data-s${i}`, colorScheme: true } },
-      },
-    ];
-    const schemes = { modifiers: Object.fromEntries([0, 1, 2, 3, 4].map(scheme)), resolutionOrder: [] };
-    expect(() => checkResolver(JSON.stringify(schemes))).toThrow('combinations');
-    const result = buildTokenFiles({ 'resolver.json': schemes });
-    await expect(result).rejects.toThrow('combinations');
+  it('refuses a resolver that asks for an outsized build', async () => {
+    // Each color-scheme modifier doubles the contexts every appearance pair runs in.
+    const ink = (i: number, l: number) => ({
+      brand: { [`s${i}`]: { ink: { $type: 'color', $value: { colorSpace: 'oklch', components: [l, 0, 0] } } } },
+    });
+    const schemes = (count: number) => {
+      const names = Array.from({ length: count }, (_, i) => i);
+      return {
+        $schema: 'https://www.designtokens.org/schemas/2025.10/resolver.json',
+        name: 'schemes',
+        version: '2025.10',
+        modifiers: Object.fromEntries(
+          names.map((i) => [
+            `s${i}`,
+            {
+              default: 'light',
+              contexts: { light: [ink(i, 0.2)], dark: [ink(i, 0.9)] },
+              $extensions: { 'dev.todae': { layer: 'appearance', attribute: `data-s${i}`, colorScheme: true } },
+            },
+          ]),
+        ),
+        resolutionOrder: names.map((i) => ({ $ref: `#/modifiers/s${i}` })),
+      };
+    };
+    const one = await buildTokenFiles({ 'resolver.json': schemes(1) });
+    if (!one.ok) throw new Error(one.error);
+    const big = await buildTokenFiles({ 'resolver.json': schemes(8) });
+    expect(big.ok).toBe(false);
+    if (!big.ok) expect(big.error).toMatch(/^contrast: the resolver asks for \d+ pair checks/);
 
     const many = { modifiers: Object.fromEntries(Array.from({ length: MAX_MODIFIERS + 1 }, (_, i) => [`m${i}`, {}])) };
+    const tooMany = await buildTokenFiles({ 'resolver.json': many });
+    expect(tooMany).toMatchObject({ ok: false, error: expect.stringContaining('modifiers') });
     expect(() => checkResolver(JSON.stringify(many))).toThrow('modifiers');
     const contexts = { modifiers: { m: { contexts: Object.fromEntries(Array.from({ length: 17 }, (_, i) => [`c${i}`, [{}]])) } } };
     expect(() => checkResolver(JSON.stringify(contexts))).toThrow('contexts');
@@ -135,6 +156,9 @@ describe('build_tokens', () => {
     // Todae's acme example is well inside the bounds; invalid JSON is the build's to report.
     expect(() => checkResolver(JSON.stringify(readTree(ACME)['resolver.json']))).not.toThrow();
     expect(() => checkResolver('{nope')).not.toThrow();
+    let deep: unknown = {};
+    for (let i = 0; i < 40; i++) deep = { a: deep };
+    expect(() => checkResolver(JSON.stringify({ sets: deep }))).toThrow('levels deep');
   });
 
   it('builds a resolver that is not at the top level', async () => {
@@ -204,6 +228,7 @@ describe('scaffold_design_system', () => {
     await expect(scaffoldDesignSystem({ name: 'a', buttonVariants: ['ghost'] })).rejects.toThrow('already has');
     await expect(scaffoldDesignSystem({ name: 'a', densities: ['compact'] })).rejects.toThrow('already has');
     await expect(scaffoldDesignSystem({ name: 'a', buttonVariants: ['base'] })).rejects.toThrow('reserved');
+    expect((await scaffoldDesignSystem({ name: 'base', densities: ['base'] })).build.ok).toBe(true);
     await expect(scaffoldDesignSystem({ name: 'a', densities: ['roomy', 'roomy'] })).rejects.toThrow('twice');
     await expect(
       scaffoldDesignSystem({ name: 'a', colors: { light: { 'space.1': [0.5, 0.1, 10] }, dark: { 'space.1': [0.5, 0.1, 10] } } }),
