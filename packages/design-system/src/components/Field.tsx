@@ -17,7 +17,6 @@ import {
   type ReactNode,
   type Ref,
   type SelectHTMLAttributes,
-  type TextareaHTMLAttributes,
 } from 'react';
 import { useDomId } from './domId';
 import { Chip } from './Chip';
@@ -33,9 +32,6 @@ import { useFieldsetState } from './Fieldset.context';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
 import styles from './Field.module.css';
-import { resolveTextareaRows } from './textareaRows';
-import { TextareaHighlights, useTextareaHighlights, type FieldTextareaHighlight } from './TextareaHighlights';
-import { mergeAnchorNames } from '../overlay/anchorName';
 import { useChipList } from '../hooks/useChipList';
 import { useField, useFieldControl } from '../hooks/useField';
 import { useControlledValue } from '../hooks/useControlledState';
@@ -59,13 +55,14 @@ import {
   subscribeCount,
   usePickerPresence,
   pickerControl,
-  useTextEntry,
   pickerToggles,
   useFieldPicker,
   htmlDate,
   htmlDateTime,
   htmlTime,
 } from './Field.shared';
+import { TextInput } from './Field.TextInput';
+import { Textarea } from './Field.Textarea';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -261,133 +258,9 @@ function Root({
   );
 }
 
-/**
- * Input types that take a string value. The number type keeps its native
- * spinner; `value` is the input's string, such as `"42"`. A time is
- * `Field.TimePicker`, a date `Field.DatePicker` and both
- * `Field.DateTimePicker`, with a text input beside any of them read by
- * `parseTime`, `parseDate` or `parseDateTime` for a typed value.
- */
-export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number';
-
-// Browsers ignore maxLength on these, so no limit is shown or announced.
-const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = new Set(['number']);
-
-export type FieldTextInputProps = {
-  value: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  onValueChange?: (value: string) => void;
-  placeholder?: string;
-  type?: FieldTextInputType;
-  ref?: Ref<HTMLInputElement>;
-} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'type' | 'disabled' | 'onChange'>;
-
-function TextInput({
-  value,
-  onChange,
-  onValueChange,
-  type = 'text',
-  className,
-  maxLength,
-  'aria-describedby': describedBy,
-  ...props
-}: FieldTextInputProps) {
-  const field = useField();
-  const ctx = useFieldContext();
-  const limit = typeof maxLength === 'number' && !NO_LENGTH_LIMIT.has(type) ? maxLength : undefined;
-  const counterMounted = useTextEntry(ctx.store, value, limit);
-  const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
-  return (
-    <input
-      {...field.getControlProps({ ...props, 'aria-describedby': mergeDescribedBy(describedBy, hint) })}
-      maxLength={maxLength}
-      value={value}
-      type={type}
-      className={cx(styles.input, className)}
-      onChange={(event) => {
-        onChange(event);
-        onValueChange?.(event.target.value);
-      }}
-    />
-  );
-}
-
+export type { FieldTextInputType, FieldTextInputProps } from './Field.TextInput';
 export type { FieldTextareaHighlight } from './TextareaHighlights';
-
-export type FieldTextareaProps = {
-  value: string;
-  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
-  onValueChange?: (value: string) => void;
-  placeholder?: string;
-  rows?: number;
-  maxRows?: number;
-  autoGrow?: boolean;
-  /** Ranges of the text drawn as tokens on a layer behind it, such as the mentions useMentions tracks. */
-  highlights?: readonly FieldTextareaHighlight[];
-  ref?: Ref<HTMLTextAreaElement>;
-} & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'disabled' | 'onChange' | 'rows' | 'cols'>;
-
-function Textarea({
-  value,
-  onChange,
-  onValueChange,
-  rows: rowsProp,
-  maxRows: maxRowsProp,
-  autoGrow = false,
-  highlights,
-  className,
-  style,
-  maxLength,
-  'aria-describedby': describedBy,
-  onScroll,
-  ref,
-  ...props
-}: FieldTextareaProps) {
-  const field = useField();
-  const own = useRef<HTMLTextAreaElement | null>(null);
-  const textareaRef = useComposedRefs(own, ref);
-  const layer = useTextareaHighlights(own, highlights !== undefined);
-  const ctx = useFieldContext();
-  const resolved = useMemo(
-    () => resolveTextareaRows({ rows: rowsProp, maxRows: maxRowsProp }),
-    [rowsProp, maxRowsProp],
-  );
-  const limit = typeof maxLength === 'number' ? maxLength : undefined;
-  const counterMounted = useTextEntry(ctx.store, value, limit);
-  const hint = counterMounted && limit !== undefined ? ctx.hintId : undefined;
-  const textarea = (
-    <textarea
-      {...field.getControlProps({ ...props, ref: textareaRef, 'aria-describedby': mergeDescribedBy(describedBy, hint) })}
-      maxLength={maxLength}
-      value={value}
-      rows={resolved.rows}
-      data-auto-grow={autoGrow ? '' : undefined}
-      data-max-rows={resolved.maxRows}
-      data-highlighted={highlights !== undefined ? '' : undefined}
-      className={cx(styles.textarea, className)}
-      style={
-        {
-          ...style,
-          '--_text-rows': resolved.rows,
-          '--_max-rows': resolved.maxRows,
-          ...(highlights !== undefined ? { anchorName: mergeAnchorNames(style?.anchorName, layer.anchorName) } : null),
-        } as CSSProperties
-      }
-      onChange={(event) => {
-        onChange(event);
-        onValueChange?.(event.target.value);
-      }}
-      onScroll={composeHandlers(onScroll, layer.onScroll)}
-    />
-  );
-  if (highlights === undefined) return textarea;
-  return (
-    <>
-      {textarea}
-      <TextareaHighlights ref={layer.ref} anchorName={layer.anchorName} value={value} highlights={highlights} />
-    </>
-  );
-}
+export type { FieldTextareaProps } from './Field.Textarea';
 
 export type FieldChipInputProps = {
   chips: readonly string[];
