@@ -37,7 +37,7 @@ export function MobileNav({ locale }: { locale: Locale }) {
       <Drawer.Root open={open} onOpenChange={setOpen} side="start" className="mobile-nav-drawer">
         <Drawer.Header>
           <Drawer.Title>Todae</Drawer.Title>
-          <Drawer.Close>{dict.closeMenu}</Drawer.Close>
+          <Drawer.Close aria-label={dict.closeMenu} />
         </Drawer.Header>
         {/* Following one of its links closes it too, even a link to this page, which leaves the path as it is. */}
         <Drawer.Body
