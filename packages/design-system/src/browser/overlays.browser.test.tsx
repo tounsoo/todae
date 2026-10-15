@@ -426,6 +426,22 @@ describe('modal headers', () => {
     expect(Math.round(title.right)).toBe(Math.round(header.right));
   });
 
+  it.each(parts)('keeps two %s close parts together at the end', (_, part) => {
+    const header = renderHeader(
+      part,
+      <>
+        <part.Title>Sort</part.Title>
+        <part.Close>Cancel</part.Close>
+        <part.Close aria-label="Close" />
+      </>,
+    );
+    const cancel = screen.getByRole('button', { name: 'Cancel' }).getBoundingClientRect();
+    const close = screen.getByRole('button', { name: 'Close' }).getBoundingClientRect();
+    const gap = parseFloat(getComputedStyle(screen.getByTestId('header')).columnGap);
+    expect(Math.round(close.right)).toBe(Math.round(header.right));
+    expect(Math.round(close.left - cancel.right)).toBe(Math.round(gap));
+  });
+
   it("puts another modal's close part at the end of a Drawer header", () => {
     const header = renderHeader(
       Drawer,
