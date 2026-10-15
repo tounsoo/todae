@@ -2,7 +2,7 @@ import { TooltipOverflow } from '../../../../components/demos/TooltipDemo';
 
 # useTooltip
 
-`useTooltip` is the open machine behind [Tooltip](/tooltip). Spread `getTriggerProps` on the trigger and `getTooltipProps` on `Tooltip.Root`, which is tip chrome only. Hover waits `showDelay` (300ms by default), focus opens at once, and a coarse pointer uses focus only. Pass `interactive: true` for a tip with links: it becomes a non-modal tip dialog that Tab can move into, and `Tooltip.Root` then needs exactly one of `aria-label` or `aria-labelledby`.
+`useTooltip` is the open machine behind [Tooltip](/tooltip). Spread `getTriggerProps` on the trigger and `getTooltipProps` on `Tooltip.Root`, which is tip chrome only. Hover waits `showDelay`, or else the `tooltip.delay.show` token (300ms by default), focus opens at once, and a coarse pointer uses focus only. Pass `interactive: true` for a tip with links: it becomes a non-modal tip dialog that Tab can move into, and `Tooltip.Root` then needs exactly one of `aria-label` or `aria-labelledby`.
 
 Overflow chips and other non-button triggers use the hook directly. Mark a non-tabbable wrap with `tabIndex={0}`. `Button.Root` already tips its own label, so set `tooltip={false}` on it when the hook owns the tip.
 

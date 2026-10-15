@@ -52,8 +52,10 @@ export interface Strings {
   colorPicker: string;
   /** Name of Field.DatePicker's popover, and of its button beside another control but a picker. */
   datePicker: string;
-  /** Name of Field.TimePicker's list of times, and of its button beside another control but a picker. */
+  /** Name of Field.TimePicker's and Field.DateTimePicker's list of times, and of Field.TimePicker's button beside another control but a picker. */
   timePicker: string;
+  /** Name of Field.DateTimePicker's popover, and of its button beside another control but a picker. */
+  dateTimePicker: string;
   /** Name of Calendar.Header's button to the previous month. */
   previousMonth: string;
   /** Name of Calendar.Header's button to the next month. */
@@ -114,6 +116,7 @@ export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
   colorPicker: 'Color picker',
   datePicker: 'Choose date',
   timePicker: 'Choose time',
+  dateTimePicker: 'Choose date and time',
   previousMonth: 'Previous month',
   nextMonth: 'Next month',
   previousYears: 'Previous years',

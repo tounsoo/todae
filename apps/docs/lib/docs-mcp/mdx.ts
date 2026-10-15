@@ -20,10 +20,15 @@ export type WhenCopy = {
 const WHEN_TO_USE = 'When to use';
 const WHEN_NOT_TO_USE = 'When not to use';
 
-/** Names whose copy is only a `### Name` block on another page. */
+/** Names with no props table of their own, whose copy is only a `### Name` block on another page. */
 const PART_PAGE: Record<string, string> = {
   ThemeProvider: 'tokens',
   DensityProvider: 'tokens',
+  useAppearance: 'tokens',
+  useDensity: 'tokens',
+  categoryTone: 'tokens',
+  useStrings: 'utilities/strings-provider',
+  useGlyphs: 'utilities/glyphs-provider',
 };
 
 /** Page-level When copy written for these names in addition to `page.title` and its `.Root`. */
