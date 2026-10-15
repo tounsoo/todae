@@ -150,6 +150,12 @@ Code on a docs page is copied into products, so write it in the package's own st
 - **The site renders code with Todae's own parts.** MDX maps fenced blocks to `Code.Block` (inside a `ScrollArea.Root`, through `DocsPre`) and inline code to `Code.Root`. The site doesn't override `Code.Block`'s tokens, padding, type or colors.
 - **The site shows Todae as it ships.** `apps/docs` sets no Todae token, and its pages load no font of their own (the link-preview images draw with their own fonts); the site's own chrome reads Todae's tokens as they are. Themes appear only inside the Playground, through `ThemeProvider` overrides. *Why:* people judge Todae's base theme by the site itself.
 
+## Releases
+
+- **Changesets versions and publishes `@omsoo.design/todae`.** A pull request that changes what the package ships (its code, types, CSS, tokens, schema or CLI) adds a changeset with `pnpm changeset`: the bump and one or two sentences for the changelog, written for people who use Todae. A change that ships nothing, such as tests or docs, needs none. *Why:* the changelog is built from these files, so a change without one is missing from the release notes.
+- **Bumps before 1.0:** a breaking change is `minor` and everything else is `patch`. *Why:* in semver, a `0.x` minor is the breaking release, and a `major` would publish 1.0.
+- **Merging to `main` doesn't publish.** `.github/workflows/release.yml` keeps a "Version Packages" pull request open with the next version and changelog. Merging that pull request publishes to npm through trusted publishing, so the workflow holds no npm token. `apps/docs` is private and never published or versioned.
+
 ## Recording a decision
 
 When the project settles a question about concepts, API shape, tokens, CSS or platform use, add it to the section it belongs to here: the rule, then why. Remove a rule that a later decision replaces instead of keeping both.

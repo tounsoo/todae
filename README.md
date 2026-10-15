@@ -2,7 +2,7 @@
 
 What you need to do today.
 
-Todae is a pnpm workspace. `@omsoo.design/todae` is a private Vite library. `apps/docs` is a Next.js 15 app that renders live MDX examples from that library.
+Todae is a pnpm workspace. `@omsoo.design/todae` is a Vite library published to npm. `apps/docs` is a Next.js 15 app that renders live MDX examples from that library.
 
 ## Requirements
 
@@ -95,6 +95,18 @@ pnpm test
 pnpm typecheck
 ```
 
+## Release
+
+[Changesets](https://github.com/changesets/changesets) versions and publishes `@omsoo.design/todae`. A pull request that changes what the package ships adds a changeset:
+
+```sh
+pnpm changeset
+```
+
+Pick the bump and write a line for the changelog. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change.
+
+On every push to `main`, `.github/workflows/release.yml` keeps a "Version Packages" pull request open. It bumps the version, writes `packages/design-system/CHANGELOG.md` and deletes the changesets it used. Merging it publishes the new version to npm through [trusted publishing](https://docs.npmjs.com/trusted-publishers), creates the git tag and a GitHub release. The publish job runs in the `npm` environment.
+
 ## Deploy docs
 
 Set the Vercel project Root Directory to `apps/docs`. `apps/docs/vercel.json` installs from the repo root, builds `@omsoo.design/todae`, then builds the docs app.
@@ -128,7 +140,7 @@ pnpm graft:check
 
 ## Layout
 
-- `packages/design-system` is `@omsoo.design/todae`, a private Vite library.
+- `packages/design-system` is `@omsoo.design/todae`, the Vite library published to npm. Its own [README](packages/design-system/README.md) is the package's npm page.
 - `apps/docs` is the Next.js 15 docs app with MDX examples.
 
 Before adding a component, hook, recipe or token, read [`ARCHITECTURE.md`](ARCHITECTURE.md) for the decisions they follow.

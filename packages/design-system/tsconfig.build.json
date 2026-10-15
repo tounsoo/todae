@@ -5,8 +5,9 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "types": ["node"]
   },
   "include": ["src"],
-  "exclude": ["src/**/*.meta.ts", "src/meta.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": ["src/test", "src/**/*.meta.ts", "src/meta.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }

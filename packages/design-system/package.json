@@ -1,9 +1,20 @@
 {
   "name": "@omsoo.design/todae",
   "version": "0.0.0",
-  "private": true,
+  "description": "A low-level React design system to build a company design system on: components, headless hooks and DTCG design tokens.",
+  "keywords": [
+    "design-system",
+    "react",
+    "components",
+    "design-tokens",
+    "dtcg",
+    "css"
+  ],
   "license": "MIT",
   "homepage": "https://todae.omsoo.design",
+  "bugs": {
+    "url": "https://github.com/tounsoo/todae/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tounsoo/todae.git",

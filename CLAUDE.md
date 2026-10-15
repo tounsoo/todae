@@ -8,6 +8,10 @@ Read [`ARCHITECTURE.md`](ARCHITECTURE.md) before adding or changing a component,
 
 The docs site is in English and Korean. A change to an English `page.mdx` in `apps/docs/app/(en)` also changes its Korean twin in `apps/docs/app/ko`, in the same pull request, then runs `pnpm --filter docs i18n:stamp ko <slug>`. `apps/docs/TRANSLATING.md` has the details.
 
+## Changesets
+
+A pull request that changes what `@omsoo.design/todae` ships adds a changeset, as the Releases section of `ARCHITECTURE.md` says. Write it with `pnpm changeset --patch @omsoo.design/todae -m "…"` (or `--minor` for a breaking change before 1.0), since `pnpm changeset` alone asks questions in a terminal.
+
 ## pstack skills
 
 `.claude/skills/` and `.claude/agents/` hold [pstack-claude](https://github.com/michael-denyer/pstack-claude), the Claude Code port of pstack. Its licenses are in `.claude/skills/poteto-mode/references/licenses/`. Cloud sessions don't load plugins, so `sh .claude/update-pstack.sh [commit]` copies the port in at a pinned commit. To update, rerun it with a newer commit and review the diff. It leaves out `babysit`, `fix-ci`, `fix-merge-conflicts` and `get-pr-comments`, because this file and the GitHub tools already drive pull requests, and `setup-pstack`, because the container doesn't keep the model sheet it writes.
