@@ -141,13 +141,13 @@ describe('parseDateTime', () => {
     expect(read('9:05 2.1.26', 'nb')).toBeNull();
   });
 
-  it("doesn't read a two-digit year beside a month's name, which Intl writes only in full", () => {
-    expect(read('Oct 13 26 9:05', 'en-US')).toBeNull();
-    expect(read('23 Dip 13 21:30', 'tn')).toBeNull();
-    expect(read('13. márc. 10. 21:05', 'hu')).toBeNull();
+  it("reads a two-digit year beside a month's name", () => {
+    expect(read('Oct 13 26 9:05', 'en-US')).toBe('2026-10-13T09:05:00');
+    expect(read('23 Dip 13 21:30', 'tn')).toBe('2023-10-13T21:30:00');
+    expect(read('13. márc. 10. 21:05', 'hu')).toBe('2013-03-10T21:05:00');
     // lmo writes a date as "2026 marz 10".
-    expect(read('10 marz 13 21:05', 'lmo')).toBeNull();
-    expect(read('13 Oct 26 21:05', 'en-GB')).toBeNull();
+    expect(read('10 marz 13 21:05', 'lmo')).toBe('2010-03-13T21:05:00');
+    expect(read('13 Oct 26 21:05', 'en-GB')).toBe('2026-10-13T21:05:00');
   });
 
   it("reads a date and a time joined by any mark that isn't only a date's or a time's", () => {
@@ -161,8 +161,7 @@ describe('parseDateTime', () => {
     expect(read('13.10.2026 21', 'de')).toBeNull();
     expect(read('13.10.2026 2130', 'de')).toBe('2026-10-13T21:30:00');
     expect(read('10/13/2026 9 pm', 'en-US')).toBe('2026-10-13T21:00:00');
-    // "h" is a word fr-CA writes in a time, not a part of the day.
-    expect(read('13 oct. 21 h 05', 'fr-CA')).toBeNull();
+    expect(read('13 oct. 2026 21 h', 'fr-CA')).toBe('2026-10-13T21:00:00');
     expect(read('13 oct. 2026 21 h 05', 'fr-CA')).toBe('2026-10-13T21:05:00');
   });
 
@@ -200,11 +199,20 @@ describe('parseDateTime', () => {
     expect(read('13/10 26 21:30', 'kkj')).toBe('2026-10-13T21:30:00');
     // Also October 12 at 13:21:05 when the year is left out, which is not read.
     expect(read('12. 10. 13. 21:05', 'ko')).toBe('2012-10-13T21:05:00');
+    expect(read('26.10.13 21:05', 'ko')).toBe('2026-10-13T21:05:00');
+    expect(read('13.10.26 21:05', 'cs')).toBe('2026-10-13T21:05:00');
+    expect(read('13. 10. 26 21:05', 'bs')).toBe('2026-10-13T21:05:00');
+    expect(read('10-13-26 9:05', 'en-US')).toBe('2026-10-13T09:05:00');
+    expect(read('21:05 13 10 26', 'vi')).toBe('2026-10-13T21:05:00');
+    // "/" doesn't end a date in en-US, so 12 is not the hour of "10/13".
+    expect(read('10/13/12 05 pm', 'en-US')).toBe('2012-10-13T17:00:00');
+    expect(read('10/13/12 09 05', 'en-US')).toBe('2012-10-13T09:05:00');
   });
 
-  it("reads a two-digit year only where the locale's date with one has it, and not a year of one digit", () => {
-    expect(read('21:05 13 10 26', 'vi')).toBeNull();
+  it('does not read a two-digit year that may be the hour of a date without a year, nor a year of one digit', () => {
     expect(read('10/13 12 05 pm', 'en-US')).toBeNull();
+    expect(read('Oct 13 11 05 PM', 'en-US')).toBeNull();
+    expect(read('13 oct. 21 h 05', 'fr-CA')).toBeNull();
     expect(read('13.10 12.05.15', 'da')).toBeNull();
     // The day 09 has the digits of 2009, but is not its year.
     expect(read('Oct 09 9 05 pm', 'en-US')).toBeNull();
@@ -213,7 +221,9 @@ describe('parseDateTime', () => {
     // Also October 13 at 11:05:15, the date as cs writes it without a year.
     expect(read('13. 10. 11 05 15', 'cs')).toBeNull();
     expect(read('12. 12. 12 12 12', 'cs')).toBeNull();
-    expect(read('10/13/12 09 05', 'en-US')).toBeNull();
+    expect(read('13.10.12 05 15', 'de')).toBeNull();
+    expect(read('13-10 11 05 15', 'af')).toBeNull();
+    expect(read('13. Okt. 11 05 15', 'de')).toBeNull();
     expect(read('10/13/12 9:05', 'en-US')).toBe('2012-10-13T09:05:00');
   });
 
@@ -244,7 +254,9 @@ describe('parseDateTime', () => {
         .replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ')
         .trim();
       for (const style of dates) {
-        for (const [day, time] of [...cases, ['2026-10-13', own] as [string, string]]) {
+        // Where parseTime reads it, unlike a word for the part of the day between the numbers, as in blo.
+        const owns: [string, string][] = parseTime(own, { locale }) ? [['2026-10-13', own]] : [];
+        for (const [day, time] of [...cases, ...owns]) {
           const date = Temporal.PlainDate.from(day).toLocaleString(locale, { ...style, ...gregory });
           const text = timeFirst ? `${time} ${date}` : `${date} ${time}`;
           expect(read(text, locale), `${locale}: ${text}`).toBeNull();

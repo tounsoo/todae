@@ -92,28 +92,6 @@ function localeTime(locale: string | undefined): LocaleTime {
 }
 
 /**
- * Takes a word for the part of the day from the first or last of `tokens`,
- * and returns the hours it maps. The locale may write it as several words,
- * such as "p. m.", which may be typed with or without spaces.
- */
-function takePeriod(tokens: string[], periods: LocaleTime['periods']) {
-  for (let count = Math.min(tokens.length, 4); count >= 1; count--) {
-    for (const atStart of [true, false]) {
-      const words = atStart ? tokens.slice(0, count) : tokens.slice(-count);
-      const hours = periods.get(words.join(''));
-      if (!hours) continue;
-      tokens.splice(atStart ? 0 : tokens.length - count, count);
-      return hours;
-    }
-  }
-  return undefined;
-}
-
-/** Whether typed text has a word the locale writes for a part of the day, first or last, as `parseTime` reads it. */
-export const hasDayPeriod = (text: string, options: TimeTextOptions = {}) =>
-  takePeriod(splitWords(text), localeTime(options.locale).periods) !== undefined;
-
-/**
  * The time in typed text, or `null` when the text is not one. It reads an
  * hour, an hour and minutes, or an hour, minutes and seconds, such as `9`,
  * `9:30`, `21.30.15` or `0930`, with the locale's own words for the morning
@@ -129,7 +107,19 @@ export function parseTime(text: string, options: TimeTextOptions = {}): Temporal
   const { periods, literals } = localeTime(options.locale);
   const tokens = splitWords(text);
   if (tokens.length === 0) return null;
-  const period = takePeriod(tokens, periods);
+  // A word for the part of the day, first or last. The locale may write it as
+  // several words, such as "p. m.", which may be typed with or without spaces.
+  let period: Map<number, number> | undefined;
+  find: for (let count = Math.min(tokens.length, 4); count >= 1; count--) {
+    for (const atStart of [true, false]) {
+      const words = atStart ? tokens.slice(0, count) : tokens.slice(-count);
+      const hours = periods.get(words.join(''));
+      if (!hours) continue;
+      period = hours;
+      tokens.splice(atStart ? 0 : tokens.length - count, count);
+      break find;
+    }
+  }
   const numbers: string[] = [];
   for (const token of tokens) {
     if (/^\d+$/.test(token)) numbers.push(token);
