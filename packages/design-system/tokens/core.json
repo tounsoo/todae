@@ -311,8 +311,8 @@
     },
     "easing": {
       "standard": { "$type": "cubicBezier", "$value": [0.2, 0.8, 0.2, 1] },
-      "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } },
-      "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } }
+      "enter": { "$type": "cubicBezier", "$value": [0.2, 0.8, 0.2, 1] },
+      "exit": { "$type": "cubicBezier", "$value": [0.2, 0.8, 0.2, 1] }
     }
   },
   "opacity": {

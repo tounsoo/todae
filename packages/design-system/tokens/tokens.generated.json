@@ -698,8 +698,8 @@
       "path": "motion.easing.enter",
       "type": "cubicBezier",
       "cssVar": "--todae-motion-easing-enter",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssValue": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      "ref": null,
       "layer": "core",
       "context": null
     },
@@ -707,8 +707,8 @@
       "path": "motion.easing.exit",
       "type": "cubicBezier",
       "cssVar": "--todae-motion-easing-exit",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssValue": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      "ref": null,
       "layer": "core",
       "context": null
     },

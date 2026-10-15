@@ -120,6 +120,19 @@ describe('ThemeProvider overrides in a browser', () => {
     expect(cssVar(text, '--todae-text-font-family')).toContain('Georgia');
   });
 
+  it('let a provider override the core enter and exit curves for every component', () => {
+    render(
+      <ThemeProvider overrides={{ 'motion.easing.enter': [0, 0, 0.2, 1], 'motion.easing.exit': [0.4, 0, 1, 1] }}>
+        <span data-testid="inside">Text</span>
+      </ThemeProvider>,
+    );
+    const inside = screen.getByTestId('inside');
+    for (const component of ['overlay', 'disclosure', 'nav', 'tree']) {
+      expect(cssVar(inside, `--todae-${component}-motion-easing-enter`)).toBe('cubic-bezier(0, 0, 0.2, 1)');
+      expect(cssVar(inside, `--todae-${component}-motion-easing-exit`)).toBe('cubic-bezier(0.4, 0, 1, 1)');
+    }
+  });
+
   it('let a nested DensityProvider change an overridden spacing token', () => {
     render(
       <ThemeProvider overrides={{ 'space.control.x': { value: 2.5, unit: 'rem' } }}>
