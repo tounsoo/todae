@@ -542,6 +542,15 @@
       "context": null
     },
     {
+      "path": "font.leading.snug",
+      "type": "number",
+      "cssVar": "--todae-font-leading-snug",
+      "cssValue": "1.4",
+      "ref": null,
+      "layer": "core",
+      "context": null
+    },
+    {
       "path": "font.leading.tight",
       "type": "number",
       "cssVar": "--todae-font-leading-tight",
@@ -3476,6 +3485,15 @@
       "context": null
     },
     {
+      "path": "field.description.leading",
+      "type": "number",
+      "cssVar": "--todae-field-description-leading",
+      "cssValue": "var(--todae-font-leading-snug)",
+      "ref": "font.leading.snug",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.error.fg",
       "type": "color",
       "cssVar": "--todae-field-error-fg",
@@ -3499,6 +3517,15 @@
       "cssVar": "--todae-field-error-font-weight",
       "cssValue": "var(--todae-font-weight-regular)",
       "ref": "font.weight.regular",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "field.error.leading",
+      "type": "number",
+      "cssVar": "--todae-field-error-leading",
+      "cssValue": "var(--todae-font-leading-snug)",
+      "ref": "font.leading.snug",
       "layer": "contract",
       "context": null
     },
@@ -7827,6 +7854,24 @@
       "type": "duration",
       "cssVar": "--todae-skeleton-motion-duration",
       "cssValue": "1600ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "skeleton.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-skeleton-motion-easing",
+      "cssValue": "cubic-bezier(0.42, 0, 0.58, 1)",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "skeleton.pulse.opacity",
+      "type": "number",
+      "cssVar": "--todae-skeleton-pulse-opacity",
+      "cssValue": "0.5",
       "ref": null,
       "layer": "contract",
       "context": null
