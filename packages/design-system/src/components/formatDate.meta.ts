@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'formatDate',
   description:
-    'formatDate(date, options) returns the date as the locale writes it in numbers, such as 10/13/2026 in en-US, 13.10.2026 in de and 2026. 10. 13. in ko, always in the Gregorian calendar. parseDate reads the text back.',
+    'formatDate(date, options) returns the date as the locale writes it in numbers, such as 10/13/2026 in en-US, 13.10.2026 in de and 2026. 10. 13. in ko,. A date in another calendar is written as the same day in the Gregorian calendar.',
   props: [
     {
       name: 'date',

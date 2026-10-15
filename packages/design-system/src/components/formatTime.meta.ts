@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'formatTime',
   description:
-    "formatTime(time, options) returns the time in the locale's short time style, such as 9:30 PM in en-US and 21:30 in de, or in its medium style, with seconds, when the time has seconds. parseTime reads the text back.",
+    "formatTime(time, options) returns the time in the locale's short time style, such as 9:30 PM in en-US and 21:30 in de, or in its medium style, with seconds, when the time has seconds.",
   props: [
     {
       name: 'time',

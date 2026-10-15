@@ -10,7 +10,7 @@ themeOverrideStyle({ 'color.fg.default': { colorSpace: 'oklch', components: [0.2
 여기 있는 나머지 헬퍼는 키나 값 하나를 다루며, 테마 편집기처럼 오버라이드를 텍스트로 편집하는 도구를 위한 것입니다.
 
 - `themeOverrideType(key)`는 Todae 오버라이드 키의 `$type`(예: `color`, `dimension`)을 반환합니다.
-- `parseThemeValue(key, text)`는 텍스트를 `1.5rem`, `200ms`처럼 키의 타입에 맞는 값으로 읽고, 그런 값이 아니면 `null`을 반환합니다. `parseThemeColor(text)`는 `#rrggbb`나 `oklch()` 색상을 읽습니다.
+- `parseThemeValue(key, text)`는 텍스트를 `1.5rem`, `200ms`처럼 키의 타입에 맞는 값으로 읽고, 읽지 못하는 텍스트에는 차원 키의 `16px`처럼 `null`을 반환합니다. `parseThemeColor(text)`는 `#3366cc`나 `oklch(0.5 0.1 30)` 같은 색상을 읽습니다.
 - `themeValueCss(key, value)`와 `themeColorCss(value)`는 값을 CSS로 씁니다.
 - `cssVarName(path)`는 토큰 경로의 커스텀 속성을 반환합니다. 예를 들어 `color.fg.default`는 `--todae-color-fg-default`입니다.
 

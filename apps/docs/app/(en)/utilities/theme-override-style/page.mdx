@@ -10,7 +10,7 @@ themeOverrideStyle({ 'color.fg.default': { colorSpace: 'oklch', components: [0.2
 The other helpers here work on one key or value, for a tool that edits overrides as text, such as a theme editor:
 
 - `themeOverrideType(key)` returns the `$type` of one of Todae's override keys, such as `color` or `dimension`.
-- `parseThemeValue(key, text)` reads text as a value of the key's type, such as `1.5rem` or `200ms`, and returns `null` when it is not one. `parseThemeColor(text)` reads a `#rrggbb` or `oklch()` color.
+- `parseThemeValue(key, text)` reads text as a value of the key's type, such as `1.5rem` or `200ms`, and returns `null` for text it does not read, such as `16px` for a dimension. `parseThemeColor(text)` reads a color such as `#3366cc` or `oklch(0.5 0.1 30)`.
 - `themeValueCss(key, value)` and `themeColorCss(value)` write a value as CSS.
 - `cssVarName(path)` returns the custom property for a token path, such as `--todae-color-fg-default` for `color.fg.default`.
 

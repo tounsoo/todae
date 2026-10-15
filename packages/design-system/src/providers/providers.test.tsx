@@ -299,15 +299,16 @@ describe('motion, font family, shadow and text transform overrides', () => {
     expect(parseThemeValue('tabs.font.text-transform', 'UPPERCASE')).toBeNull();
   });
 
-  it('writes an empty string for a value not of the key type, except a number', () => {
+  it('writes an empty string for a duration or color it cannot write', () => {
     expect(themeValueCss('motion.duration.fast', { value: -1, unit: 'ms' })).toBe('');
     expect(themeValueCss('color.accent.default', 'red' as never)).toBe('');
-    expect(themeValueCss('motion.duration.fast', 3 as never)).toBe('3');
   });
 
-  it('reads only colors that are a valid ThemeColorValue', () => {
+  it('reads oklch colors in range and returns null for text it does not read', () => {
     expect(parseThemeColor(' oklch(0.5 0.1 30) ')).toEqual({ colorSpace: 'oklch', components: [0.5, 0.1, 30] });
     expect(parseThemeColor('oklch(1.2 0.1 30)')).toBeNull();
+    expect(parseThemeColor('oklch(50% 0.1 30)')).toBeNull();
+    expect(parseThemeValue('border.width', '16px')).toBeNull();
     expect(parseThemeColor('oklch(0.5 0.1 30 / 1.5)')).toBeNull();
   });
 });

@@ -1998,7 +1998,7 @@
     },
     {
       "name": "formatDate",
-      "description": "formatDate(date, options) returns the date as the locale writes it in numbers, such as 10/13/2026 in en-US, 13.10.2026 in de and 2026. 10. 13. in ko, always in the Gregorian calendar. parseDate reads the text back.",
+      "description": "formatDate(date, options) returns the date as the locale writes it in numbers, such as 10/13/2026 in en-US, 13.10.2026 in de and 2026. 10. 13. in ko,. A date in another calendar is written as the same day in the Gregorian calendar.",
       "props": [
         {
           "name": "date",
@@ -2016,7 +2016,7 @@
     },
     {
       "name": "formatDateTime",
-      "description": "formatDateTime(value, options) returns the date and time as the locale writes them, the date in numbers as formatDate does and the time in hours and minutes, or with seconds when it has seconds, such as 10/13/2026, 9:30 PM in en-US. parseDateTime reads the text back.",
+      "description": "formatDateTime(value, options) returns the date and time as the locale writes them, the date in numbers as formatDate does and the time in hours and minutes, or with seconds when it has seconds, such as 10/13/2026, 9:30 PM in en-US.",
       "props": [
         {
           "name": "value",
@@ -2034,7 +2034,7 @@
     },
     {
       "name": "formatTime",
-      "description": "formatTime(time, options) returns the time in the locale's short time style, such as 9:30 PM in en-US and 21:30 in de, or in its medium style, with seconds, when the time has seconds. parseTime reads the text back.",
+      "description": "formatTime(time, options) returns the time in the locale's short time style, such as 9:30 PM in en-US and 21:30 in de, or in its medium style, with seconds, when the time has seconds.",
       "props": [
         {
           "name": "time",
@@ -2920,7 +2920,7 @@
     },
     {
       "name": "parseDateTime",
-      "description": "parseDateTime(text, options) returns the Temporal.PlainDateTime in typed text, or null when the text is not one. It reads a date as parseDate does, then a time as parseTime does, in the order the locale writes them. It does not check a picker's min, max or isDateDisabled.",
+      "description": "parseDateTime(text, options) returns the Temporal.PlainDateTime in typed text, or null when the text is not one. It reads a date and a time in the order the locale writes them, such as 10/13/2026 9:30 pm or Oct 13, 2026 at 9:30 PM in en-US. It does not check a picker's min, max or isDateDisabled.",
       "props": [
         {
           "name": "text",
@@ -2938,7 +2938,7 @@
     },
     {
       "name": "parseThemeColor",
-      "description": "parseThemeColor(text) returns an oklch ThemeColorValue for a six-digit #rrggbb color, converting it to oklch, or for an oklch() color that is a valid ThemeColorValue, and null for anything else.",
+      "description": "parseThemeColor(text) returns an oklch ThemeColorValue for a color such as #3366cc, converted to oklch, or oklch(0.5 0.1 30 / 0.8). It returns null for text it does not read, such as oklch(50% 0.1 30), and for a color out of range, such as a lightness above 1.",
       "props": [
         {
           "name": "text",
@@ -2950,7 +2950,7 @@
     },
     {
       "name": "parseThemeValue",
-      "description": "parseThemeValue(key, text) reads text as a ThemeProvider override value of the key's type, such as 1.5rem for a dimension or 200ms for a duration, or returns null when the text is not one.",
+      "description": "parseThemeValue(key, text) reads text as a ThemeProvider override value of the key's type, such as 1.5rem for a dimension or 200ms for a duration, or returns null for text it does not read, such as 16px for a dimension.",
       "props": [
         {
           "name": "key",
@@ -3776,7 +3776,7 @@
           "name": "value",
           "type": "ThemeOverrideValue",
           "required": true,
-          "description": "A value of the key's type. Any other value gives an empty string, except a number, which is written as is."
+          "description": "A value of the key's type."
         }
       ]
     },
