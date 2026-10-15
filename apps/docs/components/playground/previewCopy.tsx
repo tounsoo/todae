@@ -49,6 +49,15 @@ export type PreviewCopy = {
   you: string;
   question: string;
   answer: ReactNode;
+  /** The reply Regenerate swaps in. */
+  answerAlt: ReactNode;
+  replyActions: string;
+  yourMessageActions: string;
+  copy: string;
+  regenerate: string;
+  rateReply: string;
+  goodReply: string;
+  badReply: string;
   messageLabel: string;
   askPlaceholder: string;
   notifications: string;
@@ -134,6 +143,19 @@ const EN: PreviewCopy = {
       quarter’s file.
     </>
   ),
+  answerAlt: (
+    <>
+      Yes. In <strong>Billing</strong>, set the range to last quarter and choose <Code.Root>Export CSV</Code.Root>. The
+      file is below.
+    </>
+  ),
+  replyActions: 'Reply',
+  yourMessageActions: 'Your message',
+  copy: 'Copy',
+  regenerate: 'Regenerate',
+  rateReply: 'Rate this reply',
+  goodReply: 'Good reply',
+  badReply: 'Bad reply',
   messageLabel: 'Message',
   askPlaceholder: 'Ask about your billing',
   notifications: 'Notifications',
@@ -216,6 +238,19 @@ const KO: PreviewCopy = {
       파일을 첨부했습니다.
     </>
   ),
+  answerAlt: (
+    <>
+      네. <strong>결제</strong>에서 기간을 지난 분기로 정하고 <Code.Root>CSV 내보내기</Code.Root>를 선택하세요. 파일은
+      아래에 있습니다.
+    </>
+  ),
+  replyActions: '답변',
+  yourMessageActions: '내 메시지',
+  copy: '복사',
+  regenerate: '다시 생성',
+  rateReply: '답변 평가',
+  goodReply: '좋은 답변',
+  badReply: '아쉬운 답변',
   messageLabel: '메시지',
   askPlaceholder: '결제에 대해 물어보세요',
   notifications: '알림',
