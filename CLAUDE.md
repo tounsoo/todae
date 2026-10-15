@@ -10,22 +10,22 @@ The docs site is in English and Korean. A change to an English `page.mdx` in `ap
 
 ## pstack skills
 
-`.claude/skills/` holds the [pstack](https://github.com/backnotprop/pstack) skills, under the MIT license in `.claude/PSTACK-LICENSE`. `skills-lock.json` records a content hash per skill. Update them with `npx skills add backnotprop/pstack --agent claude-code --copy -y --skill $(ls .claude/skills)`, which keeps the copies in `.claude/skills`. It refreshes only the skills already in `.claude/skills`. Don't use `npx skills update`: it reinstalls as symlinks into `.agents/skills`, which `pnpm lint` checks. Two skills are left out. `make-bot-ui` targets Cursor's Grok bots and installs Tailscale with `sudo`. `setup-pstack` writes a model file to the home folder.
+`.claude/skills/` and `.claude/agents/` hold [pstack-claude](https://github.com/michael-denyer/pstack-claude), the Claude Code port of pstack. Its licenses are in `.claude/skills/poteto-mode/references/licenses/`. Cloud sessions don't load plugins, so `sh .claude/update-pstack.sh [commit]` copies the port in at a pinned commit. To update, rerun it with a newer commit and review the diff. It leaves out `babysit`, `fix-ci`, `fix-merge-conflicts` and `get-pr-comments`, because this file and the GitHub tools already drive pull requests, and `setup-pstack`, because the container doesn't keep the model sheet it writes.
 
-Most pstack skills turn off model invocation, so the `Skill` tool can't start them. Where this file names one, read its `.claude/skills/<name>/SKILL.md` and follow it. A person can still run any of them as a slash command, such as `/poteto-mode`.
+Use the `poteto-mode` skill for a task that touches more than one file, changes a signature other files call, involves a design choice, or is a bug or performance issue whose cause isn't known yet. Work directly on smaller tasks.
 
-pstack was written for Cursor. Where it and this file disagree, this file wins:
+Where pstack and this file disagree, this file wins:
 
-- A subagent is an `Agent` call. A `claude-opus-5-5-<level>` slug means `model: opus` with `effort: <level>`. A `grok-*` slug runs on the session's own model, so leave `model` out and keep the slug's level as `effort`. `/setup-pstack`, which poteto-help and poteto-mode mention, isn't installed, and `~/.agents/pstack-models.md` is ignored if one exists, so each role uses the default slug its skill names, mapped as above. A `poteto-agent` or `generalPurpose` subagent is a `general-purpose` one, set up as poteto-mode's Harness section says, and parameters `Agent` doesn't have are dropped, except `readonly: true`, which becomes a line in the prompt telling the subagent not to edit files, commit, or push.
-- GitHub work uses the GitHub MCP tools, not `gh` or the `watch-pr` script in `poteto-mode/scripts`, which needs `gh` and runs `bun install`.
-- Reviews run `/code-review` at the rows of the review loop's table, not `interrogate`. Pull requests open as the review loop says, not as pstack's Opening a PR playbook says.
-- Merge conflicts are resolved as [Waiting on CI](#waiting-on-ci) says, not reported the way pstack's Babysit playbook does.
+- The agents are project agents, so they have no plugin prefix. Where a skill names `pstack:<agent>`, use `subagent_type: "<agent>"`.
+- Reviews in the review loop run `/code-review` at the rows of its table. Pull requests open as the review loop says, not as pstack's Opening a PR playbook says.
+- Merge conflicts are resolved as [Waiting on CI](#waiting-on-ci) says, not reported the way pstack's Babysit playbook says.
+- GitHub work uses the GitHub MCP tools, not `gh` or the `watch-pr` script in `poteto-mode/scripts`.
 
-Before committing English docs prose or writing a pull request description, give it an `unslop` pass.
+Before committing English docs prose or writing a pull request description, use the `unslop` skill on it.
 
 ## Bug fixes
 
-A reported bug, or one found while working, follows steps 1 to 5 of pstack's Bug fix playbook, `.claude/skills/poteto-mode/playbooks/bug-fix.md`. Reproduce it yourself where it shows (a unit or browser test, or the docs app driven with Playwright), narrow the cause with runtime evidence rather than guesses, and read `principle-fix-root-causes` before choosing the fix. When a cheap test path exists (see `tdd`), commit the failing test before the fix, as the playbook's step 5 says. The session makes the fix itself, at its default model and effort, as in the review loop. The playbook's step 6 is the review loop below.
+A reported bug, or one found while working, follows poteto-mode's Bug fix playbook, `.claude/skills/poteto-mode/playbooks/bug-fix.md`. Its last step, Opening a PR, is the review loop below.
 
 ## Pull request review loop
 
@@ -45,12 +45,12 @@ A review covers the commit range and the code that directly depends on what the 
    From round 2, the command reviews only the commits made since the last review. Also give the reviewer the previous round's blocking findings, and have it say which are still open. If the branch was rebased or `origin/main` was merged in since the last review, have the reviewer run `/code-review high <base>..HEAD` instead.
 
 2. Sort the findings. Only blocking findings start another round: a bug, a test or CI failure, or a statement in docs that is wrong about what the code does. Wording, style, missing edge-case caveats and other nits are not blocking: fix the ones that are plainly right along with the blocking fixes, but they never start a round of their own. In a round with no blocking findings, leave the nits. A bug or wrong docs statement that was already on `main` at `<base>` is blocking only if the branch touches that behavior or makes it worse; otherwise list it as a follow-up when you report back.
-3. Before fixing anything, read `principle-fix-root-causes`, then work through each blocking finding:
+3. Before fixing anything, use the `principle-fix-root-causes` skill, then work through each blocking finding:
    - Does your diagnosis name the root cause, or only the symptom?
    - Does the same bug or pattern exist elsewhere in the change? Fix it there too.
    - Could your fix introduce a new problem the next review would flag? Prefer the smallest fix. In docs, remove or narrow a wrong claim rather than adding new claims or examples, since every new claim is something the next review can find wrong.
    - Are your tests enough to catch a regression?
-4. Ask an advisor for advice when the loop is stuck: a finding comes back after you fixed it, or you are about to start a third round. Start an `Agent` at `opus` / `xhigh` and give it the branch, the findings, what earlier rounds changed, and your diagnosis and fix plan. Ask it to read `principle-attack-the-premise`, write down the premise the earlier fixes shared and how to test it, go through the step 3 questions, say why the earlier fixes did not hold, and say whether changing the design would end the loop sooner than another fix. The advisor only advises: it does not edit files, commit, or push. The session does the fixing itself, on its default model. If you go against the advisor's advice, say why in your summary. If the advisor cannot run, tell the person in your next reply rather than carrying on silently.
+4. Ask an advisor for advice when the loop is stuck: a finding comes back after you fixed it, or you are about to start a third round. Start an `Agent` at `opus` / `xhigh` and give it the branch, the findings, what earlier rounds changed, and your diagnosis and fix plan. Ask it to read `.claude/skills/principle-attack-the-premise/SKILL.md`, write down the premise the earlier fixes shared and how to test it, go through the step 3 questions, say why the earlier fixes did not hold, and say whether changing the design would end the loop sooner than another fix. The advisor only advises: it does not edit files, commit, or push. The session does the fixing itself, on its default model. If you go against the advisor's advice, say why in your summary. If the advisor cannot run, tell the person in your next reply rather than carrying on silently.
 5. Fix every blocking finding and commit the fixes. Add or update tests for each fix. When a cheap test path exists (see `tdd`), the test fails before the fix for the reason the finding names, and it checks behavior a user of the code can see, as `principle-test-behavior-not-implementation` says. Then go back to step 1.
 6. When a round returns no blocking findings, push the branch. If no pull request is open yet, open one and post its link. CI skips draft pull requests, so if the pull request is a draft, mark it ready for review, then wait for CI. [Waiting on CI](#waiting-on-ci) says how to wait. If CI fails, or a comment on the pull request raises something step 2 counts as blocking, treat it as a blocking finding and continue from step 3. When CI is green on the latest commit and every commit has been through a clean round, report back.
 
