@@ -767,30 +767,58 @@
       "ko": "선택기가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
     }
   },
-  "Field.DateTimeInput": {
+  "Field.DateTimePicker": {
     "value": {
-      "en": "Controlled value, or null while the input is empty or incomplete.",
-      "ko": "제어 값. 입력이 비어 있거나 덜 끝났을 때는 null입니다."
-    },
-    "onChange": {
-      "en": "Native change handler. Optional when onValueChange is enough.",
-      "ko": "네이티브 change 핸들러. onValueChange로 충분하면 생략할 수 있습니다."
+      "en": "The date and time, or null for none.",
+      "ko": "날짜와 시각, 없으면 null."
     },
     "onValueChange": {
-      "en": "Called with the new Temporal.PlainDateTime, or null while the input is empty or incomplete.",
-      "ko": "새 Temporal.PlainDateTime으로, 입력이 비어 있거나 덜 끝났을 때는 null로 호출됩니다."
+      "en": "Fires with the date and time when a pick leaves a date the calendar offers and a time in range for it.",
+      "ko": "고른 뒤에 달력이 내놓는 날짜와 그 날짜의 범위 안 시각이 있으면 그 날짜와 시각을 받아 호출됩니다."
     },
     "min": {
-      "en": "Earliest value the input accepts, written to the native min.",
-      "ko": "입력이 받는 가장 이른 값. 네이티브 min으로 씁니다."
+      "en": "The earliest date and time that can be picked.",
+      "ko": "고를 수 있는 가장 이른 날짜와 시각."
     },
     "max": {
-      "en": "Latest value the input accepts, written to the native max.",
-      "ko": "입력이 받는 가장 늦은 값. 네이티브 max로 씁니다."
+      "en": "The latest date and time that can be picked.",
+      "ko": "고를 수 있는 가장 늦은 날짜와 시각."
     },
-    "className": {
-      "en": "Optional class on the input.",
-      "ko": "input에 붙는 선택적 클래스."
+    "isDateDisabled": {
+      "en": "Returns true for a date that cannot be picked, such as a holiday.",
+      "ko": "공휴일처럼 고를 수 없는 날짜에 true를 돌려줍니다."
+    },
+    "firstDayOfWeek": {
+      "en": "The calendar's first column, 1 (Monday) to 7 (Sunday). The locale's own first day when the browser reports it, else 7.",
+      "ko": "달력의 첫 열, 1(월요일)부터 7(일요일)까지. 없으면 브라우저가 알려 주는 로캘의 첫 요일, 그것도 없으면 7."
+    },
+    "step": {
+      "en": "Minutes between the times in the list, from midnight.",
+      "ko": "자정부터 센, 목록의 시각 사이 간격(분)."
+    },
+    "locale": {
+      "en": "The locale for the button's text, the calendar's names and the times, such as \"ko\". The browser's own when not set, so pass it when the picker renders on a server.",
+      "ko": "버튼 텍스트, 달력의 이름, 시각의 로캘, 예: \"ko\". 없으면 브라우저의 로캘이므로, 서버에서 렌더링할 때는 넘기세요."
+    },
+    "placeholder": {
+      "en": "Shown on the button while there is no date and time, when showValue is true.",
+      "ko": "showValue가 true일 때, 날짜와 시각이 없는 동안 버튼에 보입니다."
+    },
+    "showValue": {
+      "en": "Whether the button shows the date and time, or the placeholder, beside its glyph. Set it to false beside a text input that shows them.",
+      "ko": "버튼이 글리프 옆에 날짜와 시각이나 placeholder를 보여 줄지 여부. 날짜와 시각을 보여 주는 텍스트 입력 옆에서는 false로 두세요."
+    },
+    "open": {
+      "en": "Controlled open state of the popover. Pass with onOpenChange.",
+      "ko": "팝오버의 제어 열림 상태. onOpenChange와 함께 전달하세요."
+    },
+    "defaultOpen": {
+      "en": "Initial open state when uncontrolled.",
+      "ko": "비제어일 때 처음 열림 상태."
+    },
+    "onOpenChange": {
+      "en": "Fires when the popover opens or closes, with why it closed.",
+      "ko": "팝오버가 열리거나 닫힐 때 호출되며, 닫힌 이유를 함께 받습니다."
     }
   },
   "Field.Textarea": {
@@ -845,8 +873,8 @@
       "ko": "네이티브 placeholder."
     },
     "type": {
-      "en": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". A time uses Field.TimePicker and a date Field.DatePicker, with a text input beside either read by parseTime or parseDate; a date and time uses Field.DateTimeInput.",
-      "ko": "네이티브 입력 type. number는 네이티브 스피너를 그대로 쓰며, value는 \"42\"처럼 입력 문자열 그대로입니다. 시각은 Field.TimePicker를, 날짜는 Field.DatePicker를 쓰고, 그 옆의 텍스트 입력은 parseTime이나 parseDate로 읽습니다. 날짜와 시각은 Field.DateTimeInput을 씁니다."
+      "en": "Native input type. Number keeps the native spinner, and value stays the input string, such as \"42\". A time uses Field.TimePicker, a date Field.DatePicker and both Field.DateTimePicker, with a text input beside any of them read by parseTime, parseDate or parseDateTime.",
+      "ko": "네이티브 입력 type. number는 네이티브 스피너를 그대로 쓰며, value는 \"42\"처럼 입력 문자열 그대로입니다. 시각은 Field.TimePicker를, 날짜는 Field.DatePicker를, 날짜와 시각은 Field.DateTimePicker를 쓰고, 그 옆의 텍스트 입력은 parseTime, parseDate, parseDateTime으로 읽습니다."
     }
   },
   "Field.TimePicker": {

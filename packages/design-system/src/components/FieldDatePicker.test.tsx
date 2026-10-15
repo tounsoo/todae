@@ -92,7 +92,6 @@ describe('Field.DatePicker', () => {
   const PAIRS: Pair[] = [
     { name: 'TextInput + ColorPicker', input: <Field.TextInput value="#3366ff" onChange={() => undefined} />, picker: 'color', inputEntry: ['f', '#3366ff'] },
     { name: 'Textarea + ColorPicker', input: <Field.Textarea value="#3366ff" onChange={() => undefined} />, picker: 'color', inputEntry: ['f', '#3366ff'] },
-    { name: 'DateTimeInput + DatePicker', input: <Field.DateTimeInput value={Temporal.PlainDateTime.from('2026-10-13T09:30')} onValueChange={() => undefined} />, picker: 'date', inputEntry: ['f', '2026-10-13T09:30'] },
     { name: 'TextInput + DatePicker', input: <Field.TextInput value="note" onChange={() => undefined} />, picker: 'date', inputEntry: ['f', 'note'] },
   ];
 
@@ -134,13 +133,13 @@ describe('Field.DatePicker', () => {
     render(
       <form data-testid="form">
         <Field.Root aria-label="Start" name="time" invalid>
-          <Field.DateTimeInput value={Temporal.PlainDateTime.from('2026-10-13T09:30')} onValueChange={() => undefined} />
+          <Field.TextInput value="09:30" onChange={() => undefined} />
           <Field.DatePicker value={day} name="day" />
         </Field.Root>
       </form>,
     );
     expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
-      ['time', '2026-10-13T09:30'],
+      ['time', '09:30'],
       ['day', '2026-10-13'],
     ]);
     expect(screen.getByRole('button', { name: 'Choose date' }).getAttribute('aria-invalid')).toBe('true');
@@ -150,13 +149,13 @@ describe('Field.DatePicker', () => {
     render(
       <form data-testid="form">
         <Field.Root aria-label="Start" name="day">
-          <Field.DateTimeInput name="time" value={Temporal.PlainDateTime.from('2026-10-13T09:30')} onValueChange={() => undefined} />
+          <Field.TextInput name="time" value="09:30" onChange={() => undefined} />
           <Field.DatePicker value={day} />
         </Field.Root>
       </form>,
     );
     expect([...new FormData(screen.getByTestId('form') as HTMLFormElement).entries()]).toEqual([
-      ['time', '2026-10-13T09:30'],
+      ['time', '09:30'],
       ['day', '2026-10-13'],
     ]);
   });
