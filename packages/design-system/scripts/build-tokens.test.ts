@@ -30,6 +30,7 @@ import {
   validatePaintPacks,
   type FlatToken,
   type TokenNode,
+  type TokenTree,
 } from './build-tokens';
 
 const color = (ref: string): TokenNode => ({ $type: 'color', $value: { $ref: pathToPointer(ref) } });
@@ -442,15 +443,17 @@ describe('committed token graph', () => {
 
   it('carries $description from a token or its nearest group into the catalog', async () => {
     const color = { $type: 'color', $value: { $ref: '#/color/gray/0/$value' } };
-    const flat = flattenTokens({
-      card: { $description: 'Card', bg: color, fg: { ...color, $description: 'Card text' }, edge: { $description: 'Edge', top: color } },
-    });
+    // A group's $description sits beside its tokens, which TokenTree's type leaves out.
+    const tree = (value: unknown) => value as TokenTree;
+    const flat = flattenTokens(
+      tree({ card: { $description: 'Card', bg: color, fg: { ...color, $description: 'Card text' }, edge: { $description: 'Edge', top: color } } }),
+    );
     expect([...flat].map(([path, node]) => [path, node.$description])).toEqual([
       ['card.bg', 'Card'],
       ['card.edge.top', 'Edge'],
       ['card.fg', 'Card text'],
     ]);
-    expect(() => flattenTokens({ card: { $description: 1, bg: color } })).toThrow(/\$description at "card" must be a non-empty string/);
+    expect(() => flattenTokens(tree({ card: { $description: 1, bg: color } }))).toThrow(/\$description at "card" must be a non-empty string/);
     expect(() => flattenTokens({ card: { bg: { ...color, $description: ' ' } } })).toThrow(/\$description at "card\.bg"/);
 
     // Every semantic and component token is described, in every context's catalog row.
