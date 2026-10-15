@@ -406,6 +406,106 @@ describe('Field.ColorPicker beside another control part', () => {
   });
 });
 
+describe("Field.ColorPicker's picker", () => {
+  function Accent({
+    disabled,
+    open,
+    onOpenChange,
+  }: {
+    disabled?: boolean;
+    open?: boolean;
+    onOpenChange?: (open: boolean, reason: string) => void;
+  }) {
+    return (
+      <Field.Root aria-label="Accent" disabled={disabled}>
+        <Field.ColorPicker value="#3366ff" open={open} onOpenChange={onOpenChange} />
+        <Field.Affix data-testid="affix">hex</Field.Affix>
+      </Field.Root>
+    );
+  }
+
+  const button = () => screen.getByRole('button', { name: 'Accent' });
+  const dialog = () => screen.queryByRole('dialog', { name: 'Color picker' });
+
+  it('opens and closes on its button, and controls the popover only while it is open', () => {
+    const onOpenChange = vi.fn();
+    render(<Accent onOpenChange={onOpenChange} />);
+    expect(button().getAttribute('aria-haspopup')).toBe('dialog');
+    expect(button().getAttribute('aria-expanded')).toBe('false');
+    expect(button().hasAttribute('aria-controls')).toBe(false);
+    expect(dialog()).toBeNull();
+    fireEvent.click(button());
+    expect(onOpenChange).toHaveBeenLastCalledWith(true, 'trigger');
+    expect(button().getAttribute('aria-expanded')).toBe('true');
+    expect(dialog()).not.toBeNull();
+    expect(button().getAttribute('aria-controls')).toBe(dialog()!.id);
+    fireEvent.click(button());
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'trigger');
+    expect(dialog()).toBeNull();
+    expect(button().hasAttribute('aria-controls')).toBe(false);
+  });
+
+  it('closes on Escape with the escape reason', () => {
+    const onOpenChange = vi.fn();
+    render(<Accent onOpenChange={onOpenChange} />);
+    fireEvent.click(button());
+    fireEvent.keyDown(dialog()!, { key: 'Escape' });
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape');
+    expect(dialog()).toBeNull();
+  });
+
+  it('toggles on a press elsewhere in the field, through the toggle it registers with the shell', () => {
+    const onOpenChange = vi.fn();
+    render(<Accent onOpenChange={onOpenChange} />);
+    const affix = screen.getByTestId('affix');
+    fireEvent.mouseDown(affix, { button: 0 });
+    fireEvent.click(affix, { detail: 1 });
+    expect(onOpenChange).toHaveBeenLastCalledWith(true, 'trigger');
+    expect(dialog()).not.toBeNull();
+    fireEvent.mouseDown(affix, { button: 0 });
+    fireEvent.click(affix, { detail: 1 });
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'trigger');
+    expect(dialog()).toBeNull();
+    // A click with no press, as from the keyboard, opens nothing.
+    fireEvent.click(affix, { detail: 0 });
+    expect(dialog()).toBeNull();
+    expect(onOpenChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('closes when the field is disabled, once, and stays closed when it is enabled again', () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<Accent onOpenChange={onOpenChange} />);
+    fireEvent.click(button());
+    expect(dialog()).not.toBeNull();
+    rerender(<Accent disabled onOpenChange={onOpenChange} />);
+    expect(dialog()).toBeNull();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'disabled');
+    expect(button().hasAttribute('aria-controls')).toBe(false);
+    rerender(<Accent disabled onOpenChange={onOpenChange} />);
+    rerender(<Accent onOpenChange={onOpenChange} />);
+    expect(dialog()).toBeNull();
+    expect(button().getAttribute('aria-expanded')).toBe('false');
+    expect(onOpenChange.mock.calls).toEqual([
+      [true, 'trigger'],
+      [false, 'disabled'],
+    ]);
+  });
+
+  it('shows no picker while disabled, even when held open, and opens nothing on a press', () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<Accent disabled open onOpenChange={onOpenChange} />);
+    expect(dialog()).toBeNull();
+    expect(button().hasAttribute('aria-controls')).toBe(false);
+    expect(onOpenChange.mock.calls).toEqual([[false, 'disabled']]);
+    rerender(<Accent disabled onOpenChange={onOpenChange} />);
+    const affix = screen.getByTestId('affix');
+    fireEvent.mouseDown(affix, { button: 0 });
+    fireEvent.click(affix, { detail: 1 });
+    expect(dialog()).toBeNull();
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('Field.Textarea', () => {
   it('sets native rows, css vars, and data attributes from coerced integers', () => {
     const { container } = render(
