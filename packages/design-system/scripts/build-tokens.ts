@@ -885,8 +885,11 @@ const OVERRIDE_GROUPS = [
   ['COMPONENT_OVERRIDE_KEYS', ['contract']],
 ] as const;
 
-/** Emits the ThemeProvider override keys and their types, grouped by layer. */
-export function emitOverrideKeys(tokens: FlatToken[]): string {
+/**
+ * Emits the ThemeProvider override keys and their types, grouped by layer,
+ * and the contrast pairs it measures in development when overrides change.
+ */
+export function emitOverrideKeys(tokens: FlatToken[], pairs: readonly ContrastPair[] = []): string {
   const types = new Map<string, string>();
   for (const token of tokens) {
     const seen = types.get(token.path);
@@ -899,6 +902,15 @@ export function emitOverrideKeys(tokens: FlatToken[]): string {
     lines.push(`export const ${name} = [`, ...paths.map((path) => `  '${path}',`), '] as const;', '');
   }
   lines.push('export const THEME_OVERRIDE_TYPES = {', ...[...types].map(([path, type]) => `  '${path}': '${type}',`), '} as const;');
+  lines.push(
+    '',
+    'export const CONTRAST_PAIRS: readonly { fg: string; bg: string; min: number; over?: readonly string[] }[] = [',
+    ...pairs.map(({ fg, bg, min, over }) => {
+      const surfaces = over ? `, over: [${over.map((path) => `'${path}'`).join(', ')}]` : '';
+      return `  { fg: '${fg}', bg: '${bg}', min: ${min}${surfaces} },`;
+    }),
+    '];',
+  );
   return `${lines.join('\n')}\n`;
 }
 
@@ -1708,7 +1720,8 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
   const entries = await resolveEntries(tokensRoot);
   const all = checkGraph(entries);
   validateContrast(entries);
-  return { css: emitCss(entries), json: emitCatalog(all), overrideKeys: emitOverrideKeys(all), tokens: all };
+  const pairs = entries.flatMap((entry) => entry.extension.contrast ?? []);
+  return { css: emitCss(entries), json: emitCatalog(all), overrideKeys: emitOverrideKeys(all, pairs), tokens: all };
 }
 
 /** Walks up from this file to the package that ships Todae's `tokens/resolver.json`. */
