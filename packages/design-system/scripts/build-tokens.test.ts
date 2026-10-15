@@ -1011,6 +1011,123 @@ describe('company token build', () => {
     expect(css).not.toContain('--_todae-brand-ink');
   });
 
+  it('checks many aliases and long alias chains in time that grows about linearly', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'todae-scale-'));
+    try {
+      const many = Object.fromEntries(
+        Array.from({ length: 2000 }, (_, i) => [`t${i}`, { $type: 'color', $value: { $ref: '#/color/gray/900/$value' } }]),
+      );
+      const chain: Record<string, unknown> = { n0: { $type: 'number', $value: 1 } };
+      for (let i = 1; i < 2000; i++) chain[`n${i}`] = { $type: 'number', $value: { $ref: `#/brand/chain/n${i - 1}/$value` } };
+      const contexts = Object.fromEntries(Array.from({ length: 16 }, (_, i) => [`c${i}`, [{ $ref: './many.json' }]]));
+      await writeFile(join(root, 'many.json'), JSON.stringify({ brand: { many } }));
+      await writeFile(join(root, 'chain.json'), JSON.stringify({ brand: { chain } }));
+      await writeFile(
+        join(root, 'resolver.json'),
+        JSON.stringify({
+          version: '2025.10',
+          sets: { chain: { sources: [{ $ref: './chain.json' }], $extensions: { 'dev.todae': { layer: 'contract' } } } },
+          modifiers: {
+            mood: { contexts, default: 'c0', $extensions: { 'dev.todae': { layer: 'appearance', attribute: 'data-mood' } } },
+          },
+          resolutionOrder: [{ $ref: '#/modifiers/mood' }, { $ref: '#/sets/chain' }],
+        }),
+      );
+      const started = performance.now();
+      await buildCompanyTokens({ resolver: join(root, 'resolver.json'), base: tokensDir });
+      // Each took over 10 seconds when every ref step scanned every token.
+      expect(performance.now() - started).toBeLessThan(5000);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('checks an alpha behind a loop across contexts once per target', async () => {
+    // d_i reads a_(i+1) in c0 and b_(i+1) in c1, both read d_(i+1), and d_k reads d0 in c2:
+    // no context has a cycle, and the graph has k diamonds between d0 and d_k.
+    const build = async (k: number, leaf: number) => {
+      const root = await mkdtemp(join(tmpdir(), 'todae-alpha-'));
+      try {
+        const ref = (path: string) => ({ $ref: `#/brand/x/${path}/$value` });
+        const num = (value: unknown) => ({ $type: 'number', $value: value });
+        const c0: Record<string, unknown> = {};
+        const c1: Record<string, unknown> = {};
+        const c2: Record<string, unknown> = {};
+        for (let i = 0; i < k; i++) {
+          c0[`d${i}`] = num(ref(`a${i + 1}`));
+          c1[`d${i}`] = num(ref(`b${i + 1}`));
+          c2[`d${i}`] = num(0.5);
+        }
+        for (let i = 1; i <= k; i++) {
+          c0[`a${i}`] = num(ref(`d${i}`));
+          c1[`b${i}`] = num(ref(`d${i}`));
+          c0[`b${i}`] = num(0.5);
+          c1[`a${i}`] = num(0.5);
+          c2[`a${i}`] = num(0.5);
+          c2[`b${i}`] = num(0.5);
+        }
+        c0[`d${k}`] = num(leaf);
+        c1[`d${k}`] = num(0.5);
+        c2[`d${k}`] = num(ref('d0'));
+        for (const [file, tree] of Object.entries({ c0, c1, c2 })) {
+          await writeFile(join(root, `${file}.json`), JSON.stringify({ brand: { x: tree } }));
+        }
+        const ink = { $type: 'color', $value: { colorSpace: 'oklch', components: [0.5, 0, 0], alpha: ref('d0') } };
+        await writeFile(join(root, 'col.json'), JSON.stringify({ brand: { y: { ink } } }));
+        await writeFile(
+          join(root, 'resolver.json'),
+          JSON.stringify({
+            version: '2025.10',
+            sets: { col: { sources: [{ $ref: './col.json' }], $extensions: { 'dev.todae': { layer: 'appearance' } } } },
+            modifiers: {
+              m: {
+                default: 'c0',
+                contexts: { c0: [{ $ref: './c0.json' }], c1: [{ $ref: './c1.json' }], c2: [{ $ref: './c2.json' }] },
+                $extensions: { 'dev.todae': { layer: 'appearance', attribute: 'data-m' } },
+              },
+            },
+            resolutionOrder: [{ $ref: '#/modifiers/m' }, { $ref: '#/sets/col' }],
+          }),
+        );
+        return await buildCompanyTokens({ resolver: join(root, 'resolver.json'), base: tokensDir });
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    };
+    const started = performance.now();
+    await build(24, 0.5);
+    // Twice the work per diamond would take minutes here.
+    expect(performance.now() - started).toBeLessThan(3000);
+    await expect(build(24, 2)).rejects.toThrow('alpha "brand.x.d0" must stay in [0, 1], not 2');
+  });
+
+  it('checks an alpha at the end of a long alias chain', async () => {
+    const build = async (leaf: number) => {
+      const root = await mkdtemp(join(tmpdir(), 'todae-alpha-chain-'));
+      try {
+        const chain: Record<string, unknown> = { n0: { $type: 'number', $value: leaf } };
+        for (let i = 1; i < 2000; i++) chain[`n${i}`] = { $type: 'number', $value: { $ref: `#/brand/chain/n${i - 1}/$value` } };
+        const ink = { $type: 'color', $value: { colorSpace: 'oklch', components: [0.5, 0, 0], alpha: { $ref: '#/brand/chain/n1999/$value' } } };
+        await writeFile(join(root, 'tokens.json'), JSON.stringify({ brand: { chain, ink } }));
+        await writeFile(
+          join(root, 'resolver.json'),
+          JSON.stringify({
+            version: '2025.10',
+            sets: { tokens: { sources: [{ $ref: './tokens.json' }], $extensions: { 'dev.todae': { layer: 'contract' } } } },
+            modifiers: {},
+            resolutionOrder: [{ $ref: '#/sets/tokens' }],
+          }),
+        );
+        return await buildCompanyTokens({ resolver: join(root, 'resolver.json'), base: tokensDir });
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    };
+    // A walk that recursed once per alias overflowed the stack at about 1500 links.
+    await expect(build(0.5)).resolves.toBeDefined();
+    await expect(build(2)).rejects.toThrow('alpha "brand.chain.n1999" must stay in [0, 1], not 2');
+  });
+
   it('emits only the company layer, after Todae\'s', async () => {
     const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
     expect(result.css.startsWith('@layer todae.reset, todae.base, todae.components, todae.theme;\n\n@layer todae.theme {')).toBe(

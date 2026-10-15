@@ -1,0 +1,99 @@
+# MCP server
+
+Todae runs a Model Context Protocol (MCP) server at `https://todae.omsoo.design/api/mcp`. An AI agent connected to it can look up Todae's components and tokens, check a company's token files with the same build `todae-tokens build` runs, and draft the starter files of a design system on Todae. It speaks Streamable HTTP and needs no sign-in or install.
+
+## Connect
+
+### Claude Code
+
+Add the server from your project folder:
+
+```sh
+claude mcp add --transport http todae https://todae.omsoo.design/api/mcp
+```
+
+Add `--scope project` to save it in the project's `.mcp.json`, so everyone who works in the repository gets it:
+
+```json
+{
+  "mcpServers": {
+    "todae": { "type": "http", "url": "https://todae.omsoo.design/api/mcp" }
+  }
+}
+```
+
+### Claude Desktop and claude.ai
+
+Open **Settings**, then **Connectors**, choose **Add custom connector**, and enter `https://todae.omsoo.design/api/mcp` as the URL.
+
+### Cursor
+
+Add the server to `.cursor/mcp.json` in your project, or to `~/.cursor/mcp.json` for every project:
+
+```json
+{
+  "mcpServers": {
+    "todae": { "url": "https://todae.omsoo.design/api/mcp" }
+  }
+}
+```
+
+### VS Code
+
+Add the server to `.vscode/mcp.json` in your project:
+
+```json
+{
+  "servers": {
+    "todae": { "type": "http", "url": "https://todae.omsoo.design/api/mcp" }
+  }
+}
+```
+
+### Other clients
+
+A client that supports Streamable HTTP takes the URL as it is. A client that only starts local servers over stdio can reach it through a bridge such as `mcp-remote`:
+
+```json
+{
+  "mcpServers": {
+    "todae": { "command": "npx", "args": ["-y", "mcp-remote", "https://todae.omsoo.design/api/mcp"] }
+  }
+}
+```
+
+## Tools
+
+Components:
+
+- `list_components`: every component and part, with its description and docs page.
+- `get_component`: one component or part, with its props and parts.
+- `when_to_use`: the "When to use" section of a component's docs page. A page without one returns `status: "missing"`; the server doesn't write the copy itself.
+
+Tokens:
+
+- `list_tokens`: tokens from Todae's catalog, with their type, layer, context, CSS custom property and CSS value. Filter by a path prefix such as `color.accent`, or by layer.
+- `get_token`: one token's value in each context, such as `light` and `dark`, and the tokens whose values read it.
+- `get_contrast_pairs`: Todae's APCA pairs, with each pair's minimum Lc and what Todae's base theme measures. A company token package inherits them, and may change a pair's minimum or add pairs.
+
+Building a design system:
+
+- `build_tokens`: runs `todae-tokens build` on a company token package. Pass each `.json` file by its path inside the token folder, and name the resolver among them with `resolver` if it isn't `resolver.json`. It returns the theme CSS and the `THEME_OVERRIDE_TYPES` module, or the build's error, which lists any contrast pairs that fall short.
+- `scaffold_design_system`: drafts a company resolver and token files. It takes a `name`, and optionally appearance colors to replace (OKLCH channels for light and dark), new button variants, which start as copies of `secondary`, and new densities, which start as copies of `comfortable`. It returns the token files by path inside a `tokens` folder, in the shape `build_tokens` takes, and `src/todae.d.ts` declaring the new variant and density names, with the result of building the token files.
+- `get_guide`: the source of a docs page about building on Todae: `build-on-todae`, `tokens`, `css-layers`, `composition`, `platform` or `mcp`.
+
+## Build a design system with an agent
+
+Ask your agent for the design system you want, for example:
+
+> Using the todae MCP, start a design system called acme on Todae. Make the accent a deep red in light and dark, add an outline button variant, and fix any contrast pairs the build reports. Save the files in this repository.
+
+An agent with these tools can read [Build on Todae](/guides/build-on-todae) with `get_guide`, find the tokens to change with `list_tokens`, draft the files with `scaffold_design_system`, then edit them and check each change with `build_tokens` until the build passes. Your agent saves the files: the server writes nothing to your machine.
+
+Then build the files in your project with the `todae-tokens` CLI, and load the CSS after Todae's, as [Build on Todae](/guides/build-on-todae) describes.
+
+## Limits
+
+`build_tokens` and `scaffold_design_system` write the token files to a temporary folder on the server and remove it when the call ends. `build_tokens` takes at most 64 files, 512 KB in all. A build that runs longer than 10 seconds is stopped, and a call that arrives while the server is busy with other builds is asked to try again.
+
+The component and guide tools read the English docs pages, so their copy is in English.

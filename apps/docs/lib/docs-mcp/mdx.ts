@@ -35,7 +35,7 @@ export function ownsPage(page: PageDoc, name: string): boolean {
   return page.title === name || name === `${page.title}.Root` || PAGE_OWNERS[page.slug]?.includes(name) === true;
 }
 
-function absolutize(markdown: string): string {
+export function absolutize(markdown: string): string {
   return markdown.replace(/\]\(([^)\s]+)\)/g, (match, href: string) => {
     if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('#')) return match;
     const path = href.startsWith('/') ? href : `/${href.replace(/^\.\//, '')}`;
@@ -191,6 +191,10 @@ export function missingWhenNote(markdown: string, slug: string): string {
     return `'When to use' on /${slug} has no page-level copy; see its parts`;
   }
   return `No 'When to use' section on /${slug}. Not inferred.`;
+}
+
+export function pageBySlug(slug: string): PageDoc | null {
+  return pages.find((page) => page.slug === slug) ?? null;
 }
 
 function findPage(name: string): PageDoc | null {

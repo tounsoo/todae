@@ -44,6 +44,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'guides/css-layers': () => import('../../app/(en)/guides/css-layers/page.mdx'),
   'label': () => import('../../app/(en)/label/page.mdx'),
   'link': () => import('../../app/(en)/link/page.mdx'),
+  'mcp': () => import('../../app/(en)/mcp/page.mdx'),
   'menu': () => import('../../app/(en)/menu/page.mdx'),
   'message': () => import('../../app/(en)/message/page.mdx'),
   'nav': () => import('../../app/(en)/nav/page.mdx'),
