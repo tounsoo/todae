@@ -561,6 +561,7 @@
   --todae-field-picker-padding-x: var(--_todae-field-picker-padding-x, var(--todae-popover-padding-x));
   --todae-field-picker-padding-y: var(--_todae-field-picker-padding-y, var(--todae-popover-padding-y));
   --todae-field-picker-radius: var(--_todae-field-picker-radius, var(--todae-popover-radius));
+  --todae-field-picker-shadow: var(--_todae-field-picker-shadow, var(--todae-popover-shadow));
   --todae-field-radius: var(--_todae-field-radius, var(--todae-radius-md));
   --todae-field-ring-focus: var(--_todae-field-ring-focus, var(--todae-focus-ring-color));
   --todae-field-ring-invalid: var(--_todae-field-ring-invalid, var(--todae-color-danger-default));
@@ -663,7 +664,7 @@
   --todae-sheet-padding-y: var(--_todae-sheet-padding-y, var(--todae-space-overlay-padding));
   --todae-sheet-radius: var(--_todae-sheet-radius, var(--todae-radius-lg));
   --todae-sheet-ring-focus: var(--_todae-sheet-ring-focus, var(--todae-focus-ring-color));
-  --todae-sheet-shadow: var(--_todae-sheet-shadow, var(--todae-shadow-none));
+  --todae-sheet-shadow: var(--_todae-sheet-shadow, var(--todae-dialog-shadow));
   --todae-sheet-snap-full-inset: var(--_todae-sheet-snap-full-inset, var(--todae-space-6));
   --todae-sheet-snap-mid: var(--_todae-sheet-snap-mid, 0.5);
   --todae-sheet-title-font-size: var(--_todae-sheet-title-font-size, var(--todae-dialog-title-font-size));
@@ -1001,7 +1002,7 @@
   --todae-drawer-motion-exit: var(--_todae-drawer-motion-exit, var(--todae-motion-duration-moderate));
   --todae-drawer-padding-x: var(--_todae-drawer-padding-x, var(--todae-space-overlay-padding));
   --todae-drawer-padding-y: var(--_todae-drawer-padding-y, var(--todae-space-overlay-padding));
-  --todae-drawer-shadow: var(--_todae-drawer-shadow, var(--todae-shadow-none));
+  --todae-drawer-shadow: var(--_todae-drawer-shadow, var(--todae-dialog-shadow));
   --todae-drawer-size: var(--_todae-drawer-size, 24rem);
   --todae-loader-motion-duration: var(--_todae-loader-motion-duration, 800ms);
   --todae-loader-size: var(--_todae-loader-size, 1.25rem);

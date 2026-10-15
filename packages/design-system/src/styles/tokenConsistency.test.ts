@@ -183,6 +183,21 @@ describe('token consistency across component styles', () => {
     }
   });
 
+  it('lifts every overlay surface with its own shadow token', () => {
+    const surfaces: [string, string][] = [
+      ['Dialog', 'dialog'],
+      ['BottomSheet', 'sheet'],
+      ['Drawer', 'drawer'],
+      ['Popover', 'popover'],
+      ['Tooltip', 'tooltip'],
+      ['Toast', 'toast'],
+      ['Field', 'field-picker'],
+    ];
+    for (const [name, token] of surfaces) {
+      expect({ name, reads: sheets[name]!.includes(`box-shadow: var(--todae-${token}-shadow);`) }).toEqual({ name, reads: true });
+    }
+  });
+
   it('keeps overrides of the tokens a component used to read reaching it', () => {
     const tokensCss = readFileSync(join(import.meta.dirname, 'tokens.generated.css'), 'utf8');
     const pairs = [
@@ -193,6 +208,9 @@ describe('token consistency across component styles', () => {
       ['field-picker-padding-x', 'popover-padding-x'],
       ['field-picker-padding-y', 'popover-padding-y'],
       ['field-picker-max-height', 'popover-max-height'],
+      ['field-picker-shadow', 'popover-shadow'],
+      ['sheet-shadow', 'dialog-shadow'],
+      ['drawer-shadow', 'dialog-shadow'],
       ['drawer-gap', 'dialog-gap'],
       ['sheet-title-font-size', 'dialog-title-font-size'],
       ['sheet-title-font-weight', 'dialog-title-font-weight'],

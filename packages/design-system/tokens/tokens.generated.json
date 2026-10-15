@@ -3701,6 +3701,15 @@
       "context": null
     },
     {
+      "path": "field.picker.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-field-picker-shadow",
+      "cssValue": "var(--todae-popover-shadow)",
+      "ref": "popover.shadow",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "field.radius",
       "type": "dimension",
       "cssVar": "--todae-field-radius",
@@ -4622,8 +4631,8 @@
       "path": "sheet.shadow",
       "type": "shadow",
       "cssVar": "--todae-sheet-shadow",
-      "cssValue": "var(--todae-shadow-none)",
-      "ref": "shadow.none",
+      "cssValue": "var(--todae-dialog-shadow)",
+      "ref": "dialog.shadow",
       "layer": "contract",
       "context": null
     },
@@ -7664,8 +7673,8 @@
       "path": "drawer.shadow",
       "type": "shadow",
       "cssVar": "--todae-drawer-shadow",
-      "cssValue": "var(--todae-shadow-none)",
-      "ref": "shadow.none",
+      "cssValue": "var(--todae-dialog-shadow)",
+      "ref": "dialog.shadow",
       "layer": "contract",
       "context": null
     },
