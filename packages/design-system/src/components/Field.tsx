@@ -8,13 +8,11 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-  type ChangeEvent,
   type ComponentPropsWithRef,
   type CSSProperties,
   type MouseEvent,
   type ReactNode,
   type Ref,
-  type SelectHTMLAttributes,
 } from 'react';
 import { useDomId } from './domId';
 import {
@@ -28,10 +26,10 @@ import {
 import { useFieldsetState } from './Fieldset.context';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Field.module.css';
-import { useField, useFieldControl } from '../hooks/useField';
+import { useFieldControl } from '../hooks/useField';
 import { useControlledValue } from '../hooks/useControlledState';
 import { useGlyphs } from '../providers/GlyphsProvider';
-import { CalendarGlyph, ClockGlyph, glyphOr, hasGlyph } from './glyphs';
+import { CalendarGlyph, ClockGlyph, glyphOr } from './glyphs';
 import { useStrings, type Strings } from '../providers/StringsProvider';
 import { usePopover, type PopoverCloseReason, type PopoverTriggerUserProps } from '../hooks/usePopover';
 import { Popover } from './Popover';
@@ -59,6 +57,7 @@ import {
 import { TextInput } from './Field.TextInput';
 import { Textarea } from './Field.Textarea';
 import { ChipInput } from './Field.ChipInput';
+import { Select } from './Field.Select';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -258,54 +257,7 @@ export type { FieldTextInputType, FieldTextInputProps } from './Field.TextInput'
 export type { FieldTextareaHighlight } from './TextareaHighlights';
 export type { FieldTextareaProps } from './Field.Textarea';
 export type { FieldChipInputProps } from './Field.ChipInput';
-
-/**
- * A native `<select>`. Browsers with `appearance: base-select` draw the picker
- * from tokens; others keep their native picker. Children are `<option>` and
- * `<optgroup>` elements. `id` and `name` go on `Field.Root`.
- */
-export type FieldSelectProps = {
-  value: string;
-  /** Optional: `onValueChange` alone is enough when the event is not needed. */
-  onChange?: (event: ChangeEvent<HTMLSelectElement>) => void;
-  onValueChange?: (value: string) => void;
-  children?: ReactNode;
-  ref?: Ref<HTMLSelectElement>;
-} & Omit<
-  SelectHTMLAttributes<HTMLSelectElement>,
-  'value' | 'defaultValue' | 'disabled' | 'onChange' | 'multiple' | 'size' | 'children' | 'id' | 'name'
->;
-
-function Select({ value, onChange, onValueChange, className, children, ...props }: FieldSelectProps) {
-  const field = useField();
-  const { chevron } = useGlyphs();
-  return (
-    <>
-      <select
-        {...field.getControlProps(props)}
-        value={value}
-        className={cx(styles.select, className)}
-        // Without either handler the select is read-only, and React says so.
-        onChange={
-          onChange || onValueChange
-            ? (event) => {
-                onChange?.(event);
-                onValueChange?.(event.target.value);
-              }
-            : undefined
-        }
-      >
-        {children}
-      </select>
-      {/* Drawn over the browser's picker icon, which keeps its place. */}
-      {hasGlyph(chevron) ? (
-        <span className={styles.selectGlyph} data-todae-glyph="" aria-hidden="true">
-          {chevron}
-        </span>
-      ) : null}
-    </>
-  );
-}
+export type { FieldSelectProps } from './Field.Select';
 
 /** Why Field.ColorPicker's picker closed: a popover's reasons, or the field became disabled. */
 export type FieldColorPickerCloseReason = PopoverCloseReason | 'disabled';
