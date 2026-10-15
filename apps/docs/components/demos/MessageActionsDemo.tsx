@@ -48,8 +48,10 @@ export function MessageActionsExample() {
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  // Stands in for the product's request for a new reply.
+  // Stands in for the product's request for a new reply. A new request cancels
+  // the one in flight, so an earlier reply can't land after it.
   const regenerate = () => {
+    clearTimeout(timer.current);
     setRating(null);
     setStreaming(true);
     timer.current = setTimeout(() => {
@@ -82,7 +84,8 @@ export function MessageActionsExample() {
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
                   onKeyDown={(event) => {
-                    if (event.key === 'Escape') closeEditor();
+                    // An Escape that ends an IME composition belongs to the composition.
+                    if (event.key === 'Escape' && !event.nativeEvent.isComposing && event.keyCode !== 229) closeEditor();
                   }}
                   autoFocus
                   autoGrow
@@ -110,7 +113,6 @@ export function MessageActionsExample() {
                   ref={editButton}
                   variant="ghost"
                   aria-label="Edit"
-                  disabled={streaming}
                   onClick={() => {
                     setDraft(question);
                     setEditing(true);
@@ -136,30 +138,28 @@ export function MessageActionsExample() {
           </Prose.Root>
         </Message.Content>
         <Message.Actions>
-          {streaming ? (
-            <Loader.Root variant="dots" aria-label="Writing" />
-          ) : (
-            <Toolbar.Root aria-label="Reply">
-              <CopyButton text={REPLIES[reply]} />
-              <Button.Root variant="ghost" aria-label="Regenerate" onClick={regenerate}>
+          {streaming && <Loader.Root variant="dots" aria-label="Writing" />}
+          {/* The toolbar stays while a reply streams, so a focused button keeps focus. */}
+          <Toolbar.Root aria-label="Reply">
+            <CopyButton text={REPLIES[reply]} />
+            <Button.Root variant="ghost" aria-label="Regenerate" onClick={regenerate}>
+              <Button.Icon>
+                <RotateCcw />
+              </Button.Icon>
+            </Button.Root>
+            <ToggleGroup.Root aria-label="Rate this reply" value={rating} onValueChange={setRating}>
+              <ToggleGroup.Item value="good" variant="ghost" aria-label="Good reply">
                 <Button.Icon>
-                  <RotateCcw />
+                  <ThumbsUp />
                 </Button.Icon>
-              </Button.Root>
-              <ToggleGroup.Root aria-label="Rate this reply" value={rating} onValueChange={setRating}>
-                <ToggleGroup.Item value="good" variant="ghost" aria-label="Good reply">
-                  <Button.Icon>
-                    <ThumbsUp />
-                  </Button.Icon>
-                </ToggleGroup.Item>
-                <ToggleGroup.Item value="bad" variant="ghost" aria-label="Bad reply">
-                  <Button.Icon>
-                    <ThumbsDown />
-                  </Button.Icon>
-                </ToggleGroup.Item>
-              </ToggleGroup.Root>
-            </Toolbar.Root>
-          )}
+              </ToggleGroup.Item>
+              <ToggleGroup.Item value="bad" variant="ghost" aria-label="Bad reply">
+                <Button.Icon>
+                  <ThumbsDown />
+                </Button.Icon>
+              </ToggleGroup.Item>
+            </ToggleGroup.Root>
+          </Toolbar.Root>
         </Message.Actions>
       </Message.Root>
     </Stack.Root>

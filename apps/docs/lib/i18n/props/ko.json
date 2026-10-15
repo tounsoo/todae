@@ -1237,8 +1237,8 @@
       "ko": "메시지가 아직 도착하는 중이면 true. aria-busy와 data-streaming을 설정합니다. 메시지가 끝나거나 실패하면 false로 되돌리세요."
     },
     "children": {
-      "en": "Message parts: Avatar, Header, Content, Time and Actions.",
-      "ko": "메시지 파트: Avatar, Header, Content, Time, Actions."
+      "en": "Message parts: Avatar, Header, Content and Actions.",
+      "ko": "메시지 파트: Avatar, Header, Content, Actions."
     }
   },
   "Message.Time": {

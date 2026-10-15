@@ -47,7 +47,7 @@ Server Components는 `@omsoo.design/todae/message`에서 가져올 수 있습니
 
 ## 시각
 
-`Message.Time`은 시각을 `Temporal.ZonedDateTime`으로 받으므로, 어느 시간대로 보여 줄지 직접 고릅니다. `dateTime`에는 `2026-10-14T09:41:00+09:00`처럼 오프셋을 붙인 시각을 쓰고, 텍스트는 `locale`의 짧은 시각 스타일로 씁니다. `en-US`에서는 `9:41 AM`, `ko`에서는 `오전 9:41`입니다. 다른 스타일은 `dateStyle`이나 `timeStyle`로 정하고, 상대 시각처럼 직접 정한 텍스트를 보여 주려면 children을 넘기세요. 그래도 `dateTime`은 `value`에서 옵니다.
+`Message.Time`은 시각을 `Temporal.ZonedDateTime`으로 받으므로, 어느 시간대로 보여 줄지 직접 고릅니다. `dateTime`에는 `2026-10-14T00:41:00Z`처럼 UTC 시각을 쓰고, 텍스트는 값의 시간대에서 `locale`의 짧은 시각 스타일과 그레고리력으로 씁니다. `en-US`에서는 `9:41 AM`, `ko`에서는 `오전 9:41`입니다. 다른 스타일은 `dateStyle`이나 `timeStyle`로 정하고, 상대 시각처럼 직접 정한 텍스트를 보여 주려면 children을 넘기세요. 그래도 `dateTime`은 `value`에서 옵니다.
 
 ```tsx
 const sentAt = Temporal.Instant.from(message.createdAt).toZonedDateTimeISO(timeZone);
@@ -55,7 +55,7 @@ const sentAt = Temporal.Instant.from(message.createdAt).toZonedDateTimeISO(timeZ
 <Message.Time value={sentAt} locale={locale} dateStyle="medium" timeStyle="short" />
 ```
 
-`locale`이 없으면 런타임의 locale을 씁니다. 서버가 메시지를 렌더링한다면 읽는 사람의 locale과 시간대를 넘겨서, 서버와 브라우저가 같은 텍스트를 쓰게 하세요.
+`locale`이 없으면 런타임의 locale을 씁니다. 서버가 메시지를 렌더링한다면 읽는 사람의 locale과 시간대를 넘겨서, 텍스트가 서버의 locale과 시간대를 따르지 않게 하세요.
 
 ## 스트리밍
 

@@ -70,16 +70,29 @@ function Actions({ className, reveal = 'always', ...props }: MessageActionsProps
   return <div {...props} data-reveal={reveal} className={cx(styles.actions, className)} />;
 }
 
+// One formatter per locale, style and zone: a conversation formats many times on each render.
+const formats = new Map<string, Intl.DateTimeFormat>();
+
+function format(value: Temporal.ZonedDateTime, locale: string | undefined, options: Intl.DateTimeFormatOptions) {
+  const key = `${locale ?? ''}|${options.dateStyle ?? ''}|${options.timeStyle ?? ''}|${value.timeZoneId}`;
+  let formatter = formats.get(key);
+  if (!formatter) {
+    // Gregorian whatever the locale's own calendar, as formatDate writes dates.
+    formatter = new Intl.DateTimeFormat(locale, { ...options, calendar: 'gregory', timeZone: value.timeZoneId });
+    formats.set(key, formatter);
+  }
+  return formatter.format(value.epochMilliseconds);
+}
+
 function Time({ className, value, locale, dateStyle, timeStyle, children, ...props }: MessageTimeProps) {
-  const format = dateStyle || timeStyle ? { dateStyle, timeStyle } : { timeStyle: 'short' as const };
+  const options = dateStyle || timeStyle ? { dateStyle, timeStyle } : { timeStyle: 'short' as const };
   return (
     <time
       {...props}
-      // A valid HTML date and time: the offset, with no zone name or calendar in brackets and no fraction of a second.
-      dateTime={value.toString({ timeZoneName: 'never', calendarName: 'never', smallestUnit: 'second' })}
+      dateTime={value.toInstant().toString({ smallestUnit: 'second' })}
       className={cx(styles.time, className)}
     >
-      {children ?? value.toLocaleString(locale, format)}
+      {children ?? format(value, locale, options)}
     </time>
   );
 }

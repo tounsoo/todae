@@ -67,11 +67,23 @@ describe('Message', () => {
     const en = screen.getByTestId('en');
     expect(en.tagName).toBe('TIME');
     expect(text('en')).toBe('9:41 PM');
-    expect(en.getAttribute('datetime')).toBe('2026-10-14T21:41:30+09:00');
+    expect(en.getAttribute('datetime')).toBe('2026-10-14T12:41:30Z');
     expect(text('ko')).toBe('오후 9:41');
     expect(text('date')).toBe('Oct 14, 2026, 9:41 PM');
     expect(screen.getByTestId('own').textContent).toBe('2 min ago');
-    expect(screen.getByTestId('own').getAttribute('datetime')).toBe('2026-10-14T21:41:30+09:00');
+    expect(screen.getByTestId('own').getAttribute('datetime')).toBe('2026-10-14T12:41:30Z');
+  });
+
+  it('writes a date in another calendar in the Gregorian calendar', () => {
+    const sent = Temporal.ZonedDateTime.from('2026-10-14T09:41:00+09:00[Asia/Tokyo][u-ca=japanese]');
+    render(
+      <>
+        <Message.Time data-testid="ja" value={sent} locale="en-US" dateStyle="medium" />
+        <Message.Time data-testid="th" value={sent.withCalendar('iso8601')} locale="th" dateStyle="short" />
+      </>,
+    );
+    expect(screen.getByTestId('ja').textContent).toBe('Oct 14, 2026');
+    expect(screen.getByTestId('th').textContent).toBe('14/10/26');
   });
 
   it('marks actions that show only on hover or focus', () => {

@@ -22,7 +22,7 @@ export const meta = {
       name: 'children',
       type: 'React.ReactNode',
       required: false,
-      description: 'Message parts: Avatar, Header, Content, Time and Actions.',
+      description: 'Message parts: Avatar, Header, Content and Actions.',
     },
   ],
 } as const satisfies ComponentMeta;

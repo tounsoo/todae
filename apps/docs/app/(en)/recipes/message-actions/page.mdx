@@ -33,12 +33,13 @@ export function CopyButton({ text }: { text: string }) {
 
 ## Regenerate and rate
 
-Regenerate is a plain button that asks your backend for a new reply and sets `streaming` on the message until it arrives. A rating is a single-choice [ToggleGroup](/toggle-group): pressing the chosen rating again clears it, and `onValueChange` gets `null`. Each icon-only button shows its name as a tooltip.
+Regenerate is a plain button that cancels any reply in flight, asks your backend for a new one and sets `streaming` on the message until it arrives. Keep the toolbar in place while the reply streams and show Loader's `dots` beside it, so a button that has focus keeps it. A rating is a single-choice [ToggleGroup](/toggle-group): pressing the chosen rating again clears it, and `onValueChange` gets `null`. Each icon-only button shows its name as a tooltip.
 
 ```tsx
 <Message.Root streaming={streaming} aria-label="Assistant">
   <Message.Content>…</Message.Content>
   <Message.Actions>
+    {streaming && <Loader.Root variant="dots" aria-label="Writing" />}
     <Toolbar.Root aria-label="Reply">
       <CopyButton text={reply.markdown} />
       <Button.Root variant="ghost" aria-label="Regenerate" onClick={regenerate}>
@@ -104,7 +105,7 @@ Edit swaps the message's content and actions for a form with a `Field.Textarea`,
 
 **You supply:** A name for each toolbar and each icon-only button. A name for the edit field. Focus placed back on the edit button when the editor closes. Feedback for an action whose result isn't visible, such as "Thanks for the feedback" through [useAnnouncer](/utilities/use-announcer).
 
-**Watch for:** Hiding the actions of the latest reply: people use them most, so leave `reveal` at `always` there. A regenerate button that stays enabled while a reply streams.
+**Watch for:** Hiding the actions of the latest reply: people use them most, so leave `reveal` at `always` there. Removing or disabling the toolbar's buttons while a reply streams: the focused button loses focus to the page. A regenerate that leaves the earlier request running, so the earlier reply can land after the new one.
 
 ## When to use
 

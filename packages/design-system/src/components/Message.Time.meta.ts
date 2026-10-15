@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'Message.Time',
   description:
-    'When the message was sent, as a time element from the message.time tokens. dateTime is the value with its offset, and the text is the value written for locale with Intl, in the short time style unless dateStyle or timeStyle is set, such as 9:41 AM in en-US. Takes native time attributes.',
+    'When the message was sent, as a time element from the message.time tokens. dateTime is the instant in UTC, and the text is the value written for locale with Intl in the value\'s time zone and the Gregorian calendar, in the short time style unless dateStyle or timeStyle is set, such as 9:41 AM in en-US. Takes native time attributes.',
   props: [
     {
       name: 'value',
