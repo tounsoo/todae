@@ -1,3 +1,4 @@
+import { BrandMark } from '../brand';
 import { DOCS_ORIGIN } from '../origin';
 import { OG_IMAGE_SIZE, pagePath, SITE_NAME } from '../i18n/metadata';
 import { coreColor } from './colors';
@@ -80,24 +81,7 @@ export function OgCard({ page }: { page: OgPage }) {
     >
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 36, fontWeight: 700, letterSpacing: '-0.02em' }}>
-          {/* The site's brand mark: two bars on a soft tile. */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: 44,
-              height: 44,
-              padding: '7px 0',
-              borderRadius: 11,
-              background: raised,
-              border: `1.5px solid ${line}`,
-            }}
-          >
-            <div style={{ width: 22, height: 17, background: ink }} />
-            <div style={{ width: 30, height: 8, background: ink }} />
-          </div>
+          <BrandMark size={52} color={ink} background={canvas} />
           {SITE_NAME}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 28 }}>

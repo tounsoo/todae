@@ -3,6 +3,7 @@ import '@omsoo.design/todae/todae.css';
 import { Stack } from '@omsoo.design/todae/stack';
 import { Text } from '@omsoo.design/todae/text';
 import { VisuallyHidden } from '@omsoo.design/todae/visually-hidden';
+import { BrandMark } from '../lib/brand';
 import { localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { LICENSE } from '../lib/license';
@@ -60,7 +61,7 @@ export function SiteShell({
             <div className="topbar-inner">
               <MobileNav locale={locale} />
               <SiteLink className="brand" href={localizePath('/', locale)}>
-                <span className="brand-mark" aria-hidden="true" />
+                <BrandMark className="brand-mark" size={22} aria-hidden="true" />
                 Todae
               </SiteLink>
               <nav className="top-links" aria-label={dict.mainNav}>

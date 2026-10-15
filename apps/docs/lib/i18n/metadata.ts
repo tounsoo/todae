@@ -51,6 +51,7 @@ export function localeMetadata(locale: Locale): Metadata {
     description,
     openGraph,
     twitter,
+    icons: { icon: { url: '/brand/icon.svg', type: 'image/svg+xml' }, apple: '/brand/apple-icon.png' },
   };
 }
 
