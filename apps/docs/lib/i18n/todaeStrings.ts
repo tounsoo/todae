@@ -25,6 +25,7 @@ const KOREAN: Strings = {
   hue: '색상',
   colorPicker: '색 선택',
   datePicker: '날짜 선택',
+  dateTimePicker: '날짜와 시각 선택',
   timePicker: '시각 선택',
   previousMonth: '이전 달',
   nextMonth: '다음 달',
