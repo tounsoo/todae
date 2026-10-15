@@ -7,7 +7,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import type { ButtonVariant, ButtonVariants } from '../components/Button';
 import { DensityProvider, useDensity, type Densities, type Density } from './DensityProvider';
 import { ThemeProvider, useAppearance } from './ThemeProvider';
-import { THEME_OVERRIDE_KEYS, parseThemeValue, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride';
+import { THEME_OVERRIDE_KEYS, parseThemeColor, parseThemeValue, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride';
 
 function AppearanceLabel() {
   return <span>{useAppearance()}</span>;
@@ -297,6 +297,18 @@ describe('motion, font family, shadow and text transform overrides', () => {
     expect(value && themeValueCss('motion.duration.fast', value)).toBe('90ms');
     expect(parseThemeValue('tabs.font.text-transform', ' uppercase ')).toBe('uppercase');
     expect(parseThemeValue('tabs.font.text-transform', 'UPPERCASE')).toBeNull();
+  });
+
+  it('writes an empty string for a value not of the key type, except a number', () => {
+    expect(themeValueCss('motion.duration.fast', { value: -1, unit: 'ms' })).toBe('');
+    expect(themeValueCss('color.accent.default', 'red' as never)).toBe('');
+    expect(themeValueCss('motion.duration.fast', 3 as never)).toBe('3');
+  });
+
+  it('reads only colors that are a valid ThemeColorValue', () => {
+    expect(parseThemeColor(' oklch(0.5 0.1 30) ')).toEqual({ colorSpace: 'oklch', components: [0.5, 0.1, 30] });
+    expect(parseThemeColor('oklch(1.2 0.1 30)')).toBeNull();
+    expect(parseThemeColor('oklch(0.5 0.1 30 / 1.5)')).toBeNull();
   });
 });
 

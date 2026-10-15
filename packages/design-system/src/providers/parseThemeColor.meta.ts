@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'parseThemeColor',
   description:
-    'parseThemeColor(text) returns an oklch ThemeColorValue for a six-digit #rrggbb color or an oklch() color written in plain numbers, converting hex to oklch, or null for anything else.',
+    'parseThemeColor(text) returns an oklch ThemeColorValue for a six-digit #rrggbb color, converting it to oklch, or for an oklch() color that is a valid ThemeColorValue, and null for anything else.',
   props: [
     {
       name: 'text',

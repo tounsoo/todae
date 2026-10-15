@@ -14,9 +14,9 @@ const { ref, ...props } = popover.getPopoverProps();
 
 ## 언제 쓰나요
 
-**언제:** 내 ref와 `getPopoverProps()`처럼 props를 받지 않는 prop getter의 ref처럼, 한 요소에 ref가 둘 이상일 때.
+**언제:** 내 ref와, `getPopoverProps()`처럼 props를 받지 않는 prop getter의 ref처럼 한 요소에 ref가 둘 이상일 때.
 
-**쓰지 않을 때:** ref가 하나 → 그대로 넘기세요. `getTriggerProps({ ref })`처럼 내 props를 받는 getter → ref를 그 getter로 넘기세요. 렌더링이 바뀌어도 붙은 채로 유지됩니다.
+**쓰지 않을 때:** ref가 하나 → 그대로 넘기세요. `popover.getTriggerProps({ ref })`처럼 내 props를 받는 getter → ref를 그 getter로 넘기세요.
 
 ## Props
 
