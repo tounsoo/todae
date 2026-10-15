@@ -612,6 +612,23 @@ describe('resolver-driven build', () => {
     expect(graph.tokens.find((t) => t.path === 'field.border.hover')?.cssValue).toBe('var(--todae-color-accent-default)');
   });
 
+  it("keeps an earlier source's description when a later source re-declares the token without one", async () => {
+    const root = await fixture((resolver) => {
+      (resolver.sets.button!.sources as unknown[]).push({
+        button: { base: { radius: { $type: 'dimension', $value: { value: 2, unit: 'px' } } } },
+      });
+      (resolver.sets.contract!.sources as unknown[]).push({
+        tooltip: { 'max-width': { $type: 'dimension', $value: { value: 20, unit: 'rem' }, $description: 'Widest tooltip.' } },
+      });
+    });
+    const graph = await buildTokensGraph(root);
+    const described = (path: string) => graph.tokens.find((t) => t.path === path)?.description;
+    // Kept from button.base.json's group description.
+    expect(described('button.base.radius')).toMatch(/^Button\.Root geometry/);
+    // A later source's own description wins.
+    expect(described('tooltip.max-width')).toBe('Widest tooltip.');
+  });
+
   it('emits consume aliases for sets declared on :root', async () => {
     const root = await fixture((resolver) => {
       const px = (value: number) => ({ $type: 'dimension', $value: { value, unit: 'px' } });

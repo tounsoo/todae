@@ -127,7 +127,7 @@ export type FlatToken = {
   context?: string;
   /**
    * The token's `$description`, or the nearest enclosing group's in the same
-   * file. Once settled (see `settleDescriptions`), the same on every context's
+   * file; a later source file with neither keeps the earlier file's. Once settled (see `settleDescriptions`), the same on every context's
    * row of a path.
    */
   description?: string;
@@ -1105,7 +1105,12 @@ async function loadTokens(
 ): Promise<FlatToken[]> {
   const merged = new Map<string, TokenNode>();
   for (const source of await loadSources(sources, loc, tokensRoot)) {
-    for (const [path, node] of flattenTokens(source.tree)) merged.set(path, node);
+    // A later source's description wins; one with none (its own or a group's) keeps the
+    // earlier source's. Precedence across contexts and over Todae is settleDescriptions'.
+    for (const [path, node] of flattenTokens(source.tree)) {
+      const description = node.$description ?? merged.get(path)?.$description;
+      merged.set(path, description === undefined ? node : { ...node, $description: description });
+    }
   }
   const { layer, rules, slots } = extension;
   return layerTokens(merged, layer, context, { rules, slots, paints, inherited: tokenMapOf(inherited) });

@@ -2729,7 +2729,7 @@
       "ref": "border.width",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.base.font.letter-spacing",
@@ -2739,7 +2739,7 @@
       "ref": "font.letter-spacing.default",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.base.font.size",
@@ -2749,7 +2749,7 @@
       "ref": "font.size.3",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.base.font.text-transform",
@@ -2759,7 +2759,7 @@
       "ref": "font.text-transform.default",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.base.font.weight",
@@ -2769,7 +2769,7 @@
       "ref": "font.weight.medium",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.base.gap",
@@ -2779,7 +2779,7 @@
       "ref": "space.inline.gap",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.base.icon.size",
@@ -2789,7 +2789,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.base.padding.x",
@@ -2799,7 +2799,7 @@
       "ref": "space.control.x",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.base.padding.y",
@@ -2809,7 +2809,7 @@
       "ref": "space.control.y",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.base.pressed-ring-width",
@@ -2819,7 +2819,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.base.radius",
@@ -2829,7 +2829,7 @@
       "ref": "radius.md",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap, icon size, and border and pressed-ring widths."
     },
     {
       "path": "button.primary.bg.active",
