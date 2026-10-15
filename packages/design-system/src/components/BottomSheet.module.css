@@ -110,7 +110,17 @@
   }
 
   .header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--todae-sheet-gap);
     touch-action: none;
+  }
+
+  /* One row: the first child, usually the title, takes the free room, so a
+     close button or other actions sit at the end. */
+  .header > :first-child:not(:last-child) {
+    margin-inline-end: auto;
   }
 
   /* A scroll container clips what paints past its padding box, focus rings

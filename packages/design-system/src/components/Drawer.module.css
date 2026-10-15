@@ -81,6 +81,55 @@
     transition-duration: var(--todae-drawer-motion-exit);
   }
 
+  .title {
+    margin: 0;
+    font-size: var(--todae-drawer-title-font-size);
+    font-weight: var(--todae-drawer-title-font-weight);
+  }
+
+  .description,
+  .header,
+  .footer {
+    margin: 0;
+    flex: none;
+  }
+
+  /* One row: the first child, usually the title, takes the free room, so a
+     close button or other actions sit at the end. */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--todae-drawer-gap);
+  }
+
+  .header > :first-child:not(:last-child) {
+    margin-inline-end: auto;
+  }
+
+  /* Takes the height the header and footer leave, and scrolls on its own, so
+     the footer stays at the bottom. A scroll container clips what paints past
+     its padding box, focus rings included. Room for a ring on every side,
+     given back with a matching negative margin, keeps the content where it was. */
+  .body {
+    --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: calc(-1 * var(--_ring-room));
+    padding: var(--_ring-room);
+    overflow: auto;
+    /* Room for a ring past the focused box when it scrolls into view. */
+    scroll-padding: var(--_ring-room);
+    overscroll-behavior: contain;
+  }
+
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--todae-drawer-gap);
+    justify-content: flex-end;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .drawer[open],
     .panel {

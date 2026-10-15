@@ -2,17 +2,20 @@ import { DrawerBasic } from '../../../components/demos/DrawerDemo';
 
 # Drawer
 
-시작이나 끝 가장자리에 고정된, 높이를 가득 채우는 모달 네이티브 `<dialog>`입니다. `Drawer.Root`는 `Dialog.Root`와 같은 props에 `side`를 더해 받고, 안쪽은 Dialog의 파트로 만듭니다: `Dialog.Header`, `Dialog.Title`, `Dialog.Description`, `Dialog.Body`, `Dialog.Footer`, `Dialog.Close`.
+시작이나 끝 가장자리에 고정된, 높이를 가득 채우는 모달 네이티브 `<dialog>`입니다. `Drawer.Root`는 `Dialog.Root`와 같은 props에 `side`를 더해 받고, 안쪽은 Drawer의 자체 파트로 만듭니다: `Drawer.Header`, `Drawer.Title`, `Drawer.Description`, `Drawer.Body`, `Drawer.Footer`, `Drawer.Close`.
+
+`Drawer.Header`는 자식을 한 줄로 놓습니다. 첫 자식(보통 제목)이 남는 공간을 차지하고 닫기 버튼은 끝에 놓입니다. `Drawer.Body`는 헤더와 푸터가 남긴 높이를 채우고 스스로 스크롤하므로, 헤더는 위에, 푸터는 아래에 머뭅니다.
 
 `side`의 기본값은 `end`입니다. 시작과 끝은 텍스트 방향을 따르므로, 오른쪽에서 왼쪽으로 쓰는 텍스트에서는 `end`가 왼쪽 가장자리입니다.
 
 ```tsx
 <Drawer.Root open={open} onOpenChange={setOpen}>
-  <Dialog.Header>
-    <Dialog.Title>Filters</Dialog.Title>
-    <Dialog.Close>Close</Dialog.Close>
-  </Dialog.Header>
-  <Dialog.Body>…</Dialog.Body>
+  <Drawer.Header>
+    <Drawer.Title>Filters</Drawer.Title>
+    <Drawer.Close>Close</Drawer.Close>
+  </Drawer.Header>
+  <Drawer.Body>…</Drawer.Body>
+  <Drawer.Footer>…</Drawer.Footer>
 </Drawer.Root>
 ```
 
@@ -23,18 +26,24 @@ import { DrawerBasic } from '../../../components/demos/DrawerDemo';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `Drawer.Root`는 `side`가 더해진 `Dialog.Root`이므로 [Dialog](/dialog)의 내용이 모두 그대로 적용됩니다. 뒤의 페이지를 inert로 만드는 네이티브 모달 `<dialog>`, `Dialog.Title`과 `Dialog.Description`에서 오는 `aria-labelledby`와 `aria-describedby`, 열릴 때의 포커스, Escape와 배경 클릭으로 닫기, 닫힘 동작이 끝난 뒤 `restoreFocusRef`나 여는 요소로 돌아가는 포커스입니다. `side`는 패널의 위치만 정하고, 스크린 리더가 읽는 것은 더하지 않습니다.
+**Todae가 맡는 것:** `Drawer.Root`는 `Dialog.Root`와 같은 모달 코드로 동작하므로 [Dialog](/dialog)의 내용이 모두 그대로 적용됩니다. 뒤의 페이지를 inert로 만드는 네이티브 모달 `<dialog>`, `Drawer.Title`과 `Drawer.Description`에서 오는 `aria-labelledby`와 `aria-describedby`, 열릴 때의 포커스, Escape와 배경 클릭으로 닫기, 닫힘 동작이 끝난 뒤 `restoreFocusRef`나 여는 요소로 돌아가는 포커스입니다. `side`는 패널의 위치만 정하고, 스크린 리더가 읽는 것은 더하지 않습니다.
 
-**직접 제공할 것:** `Dialog.Title`이나 `aria-label`로 붙이는 이름, 그리고 닫는 `Dialog.Close`나 다른 버튼입니다. 드로어는 더 긴 작업을 담으므로, 각 구역에 제목의 `h2`보다 아래 단계의 제목을 붙이세요. 닫힐 때 여는 요소가 사라지고 없다면 `restoreFocusRef`를 넘기세요.
+**직접 제공할 것:** `Drawer.Title`이나 `aria-label`로 붙이는 이름, 그리고 닫는 `Drawer.Close`나 다른 버튼입니다. 드로어는 더 긴 작업을 담으므로, 각 구역에 제목의 `h2`보다 아래 단계의 제목을 붙이세요. 닫힐 때 여는 요소가 사라지고 없다면 `restoreFocusRef`를 넘기세요.
 
-**주의할 점:** Drawer에는 자체 파트가 없습니다. 평범한 제목으로 드로어 제목을 만드는 래퍼는 드로어에 이름을 남기지 않습니다. `Dialog.Title`을 감싸거나 `aria-labelledby`를 넘기세요. 드로어가 열린 동안 뒤의 페이지는 inert이므로, 옆에서 필터가 바로 갱신하는 목록은 드로어가 닫힐 때까지 읽을 수 없습니다. 중요하다면 결과 개수를 [useAnnouncer](/utilities/use-announcer)로 알리세요.
+**주의할 점:** 평범한 제목으로 드로어 제목을 만드는 래퍼는 드로어에 이름을 남기지 않습니다. `Drawer.Title`을 감싸거나 `aria-labelledby`를 넘기세요. 드로어가 열린 동안 뒤의 페이지는 inert이므로, 옆에서 필터가 바로 갱신하는 목록은 드로어가 닫힐 때까지 읽을 수 없습니다. 중요하다면 결과 개수를 [useAnnouncer](/utilities/use-announcer)로 알리세요.
 
 ## 언제 쓰나요
 
-**언제:** 공간이 필요한 작업을 위한 모달 사이드 패널. 필터, 설정, 목록 옆의 상세 정보 같은 것. 이름은 `Dialog.Title`이나 `aria-label`로 붙이세요.
+**언제:** 공간이 필요한 작업을 위한 모달 사이드 패널. 필터, 설정, 목록 옆의 상세 정보 같은 것. 이름은 `Drawer.Title`이나 `aria-label`로 붙이세요.
 
 **쓰지 않을 때:** 짧은 가운데 작업이나 확인 → Dialog. 아래에서 올라오는 모바일 선택기 → BottomSheet. 페이지를 계속 쓸 수 있게 두는 패널 → 모달이 아닌 제품 레이아웃.
 
 ## Props
 
 <PropsTable name="Drawer.Root" />
+
+<PropsTable name="Drawer.Title" />
+
+<PropsTable name="Drawer.Description" />
+
+<PropsTable name="Drawer.Close" />

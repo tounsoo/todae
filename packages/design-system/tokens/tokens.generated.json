@@ -8742,6 +8742,26 @@
       "description": "Drawer.Root: a modal panel that slides in from the start or end edge."
     },
     {
+      "path": "drawer.title.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-drawer-title-font-size",
+      "cssValue": "var(--todae-dialog-title-font-size)",
+      "ref": "dialog.title.font.size",
+      "layer": "contract",
+      "context": null,
+      "description": "Drawer.Root: a modal panel that slides in from the start or end edge."
+    },
+    {
+      "path": "drawer.title.font.weight",
+      "type": "fontWeight",
+      "cssVar": "--todae-drawer-title-font-weight",
+      "cssValue": "var(--todae-dialog-title-font-weight)",
+      "ref": "dialog.title.font.weight",
+      "layer": "contract",
+      "context": null,
+      "description": "Drawer.Root: a modal panel that slides in from the start or end edge."
+    },
+    {
       "path": "loader.motion.duration",
       "type": "duration",
       "cssVar": "--todae-loader-motion-duration",

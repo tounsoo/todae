@@ -287,6 +287,74 @@ describe('BottomSheet in a browser', () => {
   });
 });
 
+describe('modal headers', () => {
+  const cases = [
+    [
+      'Dialog',
+      () => (
+        <Dialog.Root open onOpenChange={() => undefined}>
+          <Dialog.Header data-testid="header">
+            <Dialog.Title>Filters</Dialog.Title>
+            <Dialog.Close>Close</Dialog.Close>
+          </Dialog.Header>
+        </Dialog.Root>
+      ),
+    ],
+    [
+      'Drawer',
+      () => (
+        <Drawer.Root open onOpenChange={() => undefined}>
+          <Drawer.Header data-testid="header">
+            <Drawer.Title>Filters</Drawer.Title>
+            <Drawer.Close>Close</Drawer.Close>
+          </Drawer.Header>
+        </Drawer.Root>
+      ),
+    ],
+    [
+      'BottomSheet',
+      () => (
+        <BottomSheet.Root open onOpenChange={() => undefined}>
+          <BottomSheet.Header data-testid="header">
+            <BottomSheet.Title>Filters</BottomSheet.Title>
+            <BottomSheet.Close>Close</BottomSheet.Close>
+          </BottomSheet.Header>
+        </BottomSheet.Root>
+      ),
+    ],
+  ] as const;
+
+  it.each(cases)('puts the %s title and close button on one row, the button at the end', async (_, Surface) => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Surface />
+      </div>,
+    );
+    const header = screen.getByTestId('header').getBoundingClientRect();
+    const title = screen.getByRole('heading', { name: 'Filters' }).getBoundingClientRect();
+    const close = screen.getByRole('button', { name: 'Close' }).getBoundingClientRect();
+    expect(close.top).toBeLessThan(title.bottom);
+    expect(title.top).toBeLessThan(close.bottom);
+    expect(close.left).toBeGreaterThanOrEqual(title.right);
+    expect(Math.round(close.right)).toBe(Math.round(header.right));
+  });
+
+  it('puts a lone close button at the end', () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Drawer.Root open onOpenChange={() => undefined} aria-label="Filters">
+          <Drawer.Header data-testid="header">
+            <Drawer.Close>Close</Drawer.Close>
+          </Drawer.Header>
+        </Drawer.Root>
+      </div>,
+    );
+    const header = screen.getByTestId('header').getBoundingClientRect();
+    const close = screen.getByRole('button', { name: 'Close' }).getBoundingClientRect();
+    expect(Math.round(close.right)).toBe(Math.round(header.right));
+  });
+});
+
 describe('page scroll behind a modal', () => {
   const overflow = () => getComputedStyle(document.documentElement).overflow;
 

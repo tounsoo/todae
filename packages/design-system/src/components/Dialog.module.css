@@ -86,6 +86,19 @@
     margin: 0;
   }
 
+  /* One row: the first child, usually the title, takes the free room, so a
+     close button or other actions sit at the end. */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--todae-dialog-gap);
+  }
+
+  .header > :first-child:not(:last-child) {
+    margin-inline-end: auto;
+  }
+
   .footer {
     display: flex;
     flex-wrap: wrap;

@@ -2,17 +2,20 @@ import { DrawerBasic } from '../../../components/demos/DrawerDemo';
 
 # Drawer
 
-A modal native `<dialog>` pinned to the start or end edge, full height. `Drawer.Root` takes the same props as `Dialog.Root` plus `side`, and the inside is built from Dialog's parts: `Dialog.Header`, `Dialog.Title`, `Dialog.Description`, `Dialog.Body`, `Dialog.Footer` and `Dialog.Close`.
+A modal native `<dialog>` pinned to the start or end edge, full height. `Drawer.Root` takes the same props as `Dialog.Root` plus `side`, and the inside is built from Drawer's own parts: `Drawer.Header`, `Drawer.Title`, `Drawer.Description`, `Drawer.Body`, `Drawer.Footer` and `Drawer.Close`.
+
+`Drawer.Header` lays its children out in one row: its first child, usually the title, takes the free room, and a close button sits at the end. `Drawer.Body` takes the height the header and footer leave and scrolls on its own, so the header stays at the top and the footer at the bottom.
 
 `side` is `end` by default. Start and end follow text direction, so in right-to-left text `end` is the left edge.
 
 ```tsx
 <Drawer.Root open={open} onOpenChange={setOpen}>
-  <Dialog.Header>
-    <Dialog.Title>Filters</Dialog.Title>
-    <Dialog.Close>Close</Dialog.Close>
-  </Dialog.Header>
-  <Dialog.Body>…</Dialog.Body>
+  <Drawer.Header>
+    <Drawer.Title>Filters</Drawer.Title>
+    <Drawer.Close>Close</Drawer.Close>
+  </Drawer.Header>
+  <Drawer.Body>…</Drawer.Body>
+  <Drawer.Footer>…</Drawer.Footer>
 </Drawer.Root>
 ```
 
@@ -23,18 +26,24 @@ A modal native `<dialog>` pinned to the start or end edge, full height. `Drawer.
 
 ## Accessible composition
 
-**Todae handles:** `Drawer.Root` is `Dialog.Root` with a `side`, so everything on [Dialog](/dialog) holds: a native modal `<dialog>` that makes the page behind it inert, `aria-labelledby` and `aria-describedby` from `Dialog.Title` and `Dialog.Description`, focus on open, Escape and backdrop dismiss, and focus back to `restoreFocusRef` or the opener after the exit. `side` only places the panel; it adds nothing a screen reader reads.
+**Todae handles:** `Drawer.Root` runs the same modal code as `Dialog.Root`, so everything on [Dialog](/dialog) holds: a native modal `<dialog>` that makes the page behind it inert, `aria-labelledby` and `aria-describedby` from `Drawer.Title` and `Drawer.Description`, focus on open, Escape and backdrop dismiss, and focus back to `restoreFocusRef` or the opener after the exit. `side` only places the panel; it adds nothing a screen reader reads.
 
-**You supply:** A name, with `Dialog.Title` or `aria-label`, and a `Dialog.Close` or other button that closes it. A drawer holds a longer task, so give its sections headings below the title's `h2`. Pass `restoreFocusRef` when the opener is gone by the time it closes.
+**You supply:** A name, with `Drawer.Title` or `aria-label`, and a `Drawer.Close` or other button that closes it. A drawer holds a longer task, so give its sections headings below the title's `h2`. Pass `restoreFocusRef` when the opener is gone by the time it closes.
 
-**Watch for:** Drawer has no parts of its own. A wrapper that makes a drawer title from a plain heading leaves the drawer unnamed: wrap `Dialog.Title` instead, or pass `aria-labelledby`. While the drawer is open the page behind it is inert, so a list that filters update live beside it can't be read until it closes; announce a result count with [useAnnouncer](/utilities/use-announcer) if it matters.
+**Watch for:** A wrapper that makes a drawer title from a plain heading leaves the drawer unnamed: wrap `Drawer.Title` instead, or pass `aria-labelledby`. While the drawer is open the page behind it is inert, so a list that filters update live beside it can't be read until it closes; announce a result count with [useAnnouncer](/utilities/use-announcer) if it matters.
 
 ## When to use
 
-**When:** A modal side panel for a task that needs room, such as filters, settings or details beside a list. Name it with `Dialog.Title` or `aria-label`.
+**When:** A modal side panel for a task that needs room, such as filters, settings or details beside a list. Name it with `Drawer.Title` or `aria-label`.
 
 **When not:** A short centered task or confirm → Dialog. A mobile picker from the bottom → BottomSheet. A panel that leaves the page usable → product layout, not a modal.
 
 ## Props
 
 <PropsTable name="Drawer.Root" />
+
+<PropsTable name="Drawer.Title" />
+
+<PropsTable name="Drawer.Description" />
+
+<PropsTable name="Drawer.Close" />
