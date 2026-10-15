@@ -99,7 +99,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'build_tokens',
-      `Run todae-tokens build on a company token package layered on Todae's, with the same checks. \`files\` maps each .json file's path inside the token folder to its JSON, at most ${MAX_FILES} files and ${MAX_BYTES / 1024} KB. \`resolver\` is the resolver's path among them (default "resolver.json"); scaffold_design_system's tokenFiles fit as they are. Returns the theme CSS and the ThemeProvider override types, or the build error, which lists any contrast pairs that fail. A build that runs longer than ${BUILD_TIMEOUT_MS / 1000} seconds is stopped. Nothing is stored.`,
+      `Run todae-tokens build on a company token package layered on Todae's, with the same checks. \`files\` maps each .json file's path inside the token folder to its JSON, at most ${MAX_FILES} files and ${MAX_BYTES / 1024} KB. \`resolver\` is the resolver's path among them (default "resolver.json"); scaffold_design_system's tokenFiles fit as they are. Returns the theme CSS and the ThemeProvider override types, or the build error, which lists any contrast pairs that fail. A build that runs longer than ${BUILD_TIMEOUT_MS / 1000} seconds is stopped, and a call that arrives while the server is busy with other builds is refused; try it again a few seconds later. Nothing is stored.`,
       { files: z.record(z.string().max(200), z.unknown()), resolver: z.string().max(200).optional() },
       async ({ files, resolver }) => {
         try {

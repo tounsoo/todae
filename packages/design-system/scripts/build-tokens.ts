@@ -1366,31 +1366,22 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
     else byPath.set(token.path, [token]);
   }
   // An alpha must land in [0, 1] in every context its number token takes.
-  // Each path's literals are kept once worked out, except while a loop across
-  // contexts (light reads b, dark reads a) leaves them partial.
+  // Each alpha target is walked once, with its own `seen` set, so a loop
+  // across contexts (light reads b, dark reads a) ends the walk.
   const literalCache = new Map<string, number[]>();
-  const walking = new Set<string>();
-  let partial = false;
-  function literals(path: string): number[] {
-    const cached = literalCache.get(path);
+  function literals(root: string): number[] {
+    const cached = literalCache.get(root);
     if (cached) return cached;
-    if (walking.has(path)) {
-      partial = true;
-      return [];
-    }
-    walking.add(path);
-    const outer = partial;
-    partial = false;
-    const values = [
-      ...new Set(
-        (byPath.get(path) ?? []).flatMap((token) =>
-          token.refs.length > 0 ? token.refs.flatMap((ref) => literals(ref.path)) : [token.value as number],
-        ),
-      ),
-    ];
-    walking.delete(path);
-    if (!partial) literalCache.set(path, values);
-    partial = outer || partial;
+    const seen = new Set<string>();
+    const walk = (path: string): number[] => {
+      if (seen.has(path)) return [];
+      seen.add(path);
+      return (byPath.get(path) ?? []).flatMap((token) =>
+        token.refs.length > 0 ? token.refs.flatMap((ref) => walk(ref.path)) : [token.value as number],
+      );
+    };
+    const values = walk(root);
+    literalCache.set(root, values);
     return values;
   }
   for (const token of all) {

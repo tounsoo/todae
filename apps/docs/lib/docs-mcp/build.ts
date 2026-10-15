@@ -96,7 +96,7 @@ function runCli(cli: string, args: string[], cwd: string, timeout: number): Prom
           return resolve({ ok: false, error: `The build ran longer than ${timeout / 1000} seconds or ran out of memory, and was stopped` });
         }
         // Node's own message names the server's paths, so it is not passed on.
-        resolve({ ok: false, error: String(stderr).trim() || `The build failed with exit code ${error.code ?? 'unknown'}` });
+        resolve({ ok: false, error: String(stderr).trim() || (typeof error.code === 'number' ? `The build failed with exit code ${error.code}` : 'The build failed') });
       },
     );
   });
