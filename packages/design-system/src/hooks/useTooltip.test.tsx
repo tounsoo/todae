@@ -96,6 +96,7 @@ describe('useTooltip exports', () => {
         '../components/props',
         '../components/domId',
         '../overlay/anchorName',
+        '../overlay/cssTime',
         '../components/Tooltip.intent',
         '../components/Tooltip.wire',
         '../overlay/tabbables',
@@ -120,6 +121,56 @@ describe('useTooltip', () => {
     const { rerender } = render(<Probe tick={1} />);
     rerender(<Probe tick={2} />);
     expect(attach).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for the delay tokens the trigger computes, unless a delay is passed', () => {
+    const tokens = { ['--todae-tooltip-delay-show' as string]: '0.05s', ['--todae-tooltip-delay-hide' as string]: '20ms' };
+    function Tokened({ showDelay }: { showDelay?: number }) {
+      const tooltip = useTooltip({ showDelay });
+      return (
+        <>
+          <button type="button" {...tooltip.getTriggerProps({ style: tokens })}>
+            Hint
+          </button>
+          {tooltip.open ? <div role="tooltip" {...tooltip.getTooltipProps()}>Archive</div> : null}
+        </>
+      );
+    }
+    const { unmount } = render(<Tokened />);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    fireEvent.pointerEnter(trigger);
+    advance(49);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    advance(1);
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+    fireEvent.pointerLeave(trigger);
+    advance(19);
+    expect(screen.queryByRole('tooltip')).not.toBeNull();
+    advance(1);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    unmount();
+
+    render(<Tokened showDelay={200} />);
+    fireEvent.pointerEnter(screen.getByRole('button', { name: 'Hint' }));
+    advance(199);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    advance(1);
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+  });
+
+  it('waits 300ms to show and 100ms to hide without the delay tokens', () => {
+    render(<TipHarness />);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    fireEvent.pointerEnter(trigger);
+    advance(299);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    advance(1);
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+    fireEvent.pointerLeave(trigger);
+    advance(99);
+    expect(screen.queryByRole('tooltip')).not.toBeNull();
+    advance(1);
+    expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
   it('uses a provided id on the tip', () => {

@@ -4763,6 +4763,24 @@
       "context": null
     },
     {
+      "path": "tooltip.delay.hide",
+      "type": "duration",
+      "cssVar": "--todae-tooltip-delay-hide",
+      "cssValue": "100ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.delay.show",
+      "type": "duration",
+      "cssVar": "--todae-tooltip-delay-show",
+      "cssValue": "300ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "tooltip.fg",
       "type": "color",
       "cssVar": "--todae-tooltip-fg",

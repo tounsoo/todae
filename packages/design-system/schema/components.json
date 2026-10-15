@@ -4509,15 +4509,15 @@
           "name": "showDelay",
           "type": "number",
           "required": false,
-          "description": "Hover show delay in milliseconds. Focus shows at once.",
-          "default": "300"
+          "description": "Hover show delay in milliseconds. Without it, the tooltip.delay.show token as the trigger computes it. Focus shows at once.",
+          "default": "tooltip.delay.show (300ms)"
         },
         {
           "name": "hideDelay",
           "type": "number",
           "required": false,
-          "description": "Hide delay in milliseconds.",
-          "default": "100"
+          "description": "Hide delay in milliseconds. Without it, the tooltip.delay.hide token as the trigger computes it.",
+          "default": "tooltip.delay.hide (100ms)"
         },
         {
           "name": "enabled",
