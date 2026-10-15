@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef } from 'react';
-import { cx } from './cx';
+import { cx } from './cx.js';
 import styles from './Loader.module.css';
 
 /** `spinner` turns one arc of a ring; `dots` sends a wave through three dots, as a typing indicator does. */

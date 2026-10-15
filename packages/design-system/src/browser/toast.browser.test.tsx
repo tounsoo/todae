@@ -2,16 +2,16 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { BottomSheet } from '../components/BottomSheet';
-import { Button } from '../components/Button';
-import { Dialog } from '../components/Dialog';
-import { Popover } from '../components/Popover';
-import { Toast, type ToastLayout, type ToastPlacement } from '../components/Toast';
-import { createToaster, type Toaster } from '../components/toaster';
-import { useModalLayer } from '../hooks/useModalLayer';
-import { usePopover } from '../hooks/usePopover';
-import { heldModals } from '../overlay/modalStack';
-import { HeldTip } from '../test/heldTip';
+import { BottomSheet } from '../components/BottomSheet.js';
+import { Button } from '../components/Button.js';
+import { Dialog } from '../components/Dialog.js';
+import { Popover } from '../components/Popover.js';
+import { Toast, type ToastLayout, type ToastPlacement } from '../components/Toast.js';
+import { createToaster, type Toaster } from '../components/toaster.js';
+import { useModalLayer } from '../hooks/useModalLayer.js';
+import { usePopover } from '../hooks/usePopover.js';
+import { heldModals } from '../overlay/modalStack.js';
+import { HeldTip } from '../test/heldTip.js';
 
 function Themed({ children }: { children: ReactNode }) {
   return (

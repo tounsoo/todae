@@ -6,7 +6,7 @@ import {
   type ThemeOverride,
   type ThemeOverrideTypes,
   type ThemeOverrideValue,
-} from './themeOverride';
+} from './themeOverride.js';
 
 export type Appearance = 'system' | 'light' | 'dark';
 export type ResolvedAppearance = 'light' | 'dark';

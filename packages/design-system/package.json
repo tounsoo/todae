@@ -143,7 +143,7 @@
     "schema": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/generate-schema.ts",
     "test": "vitest run",
     "test:browser": "vitest run --config vitest.browser.config.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.build.json",
     "clean": "rm -rf dist"
   },
   "peerDependencies": {

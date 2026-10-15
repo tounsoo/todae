@@ -3,8 +3,8 @@ import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { StrictMode, startTransition, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Field } from '../components/Field';
-import { useMentions, type MentionDraft, type MentionToken, type MentionTrigger, type UseMentionsResult } from './useMentions';
+import { Field } from '../components/Field.js';
+import { useMentions, type MentionDraft, type MentionToken, type MentionTrigger, type UseMentionsResult } from './useMentions.js';
 
 afterEach(cleanup);
 

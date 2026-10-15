@@ -1,11 +1,11 @@
 import type { ComponentPropsWithRef, CSSProperties } from 'react';
-import { cx } from './props';
+import { cx } from './props.js';
 import styles from './Field.module.css';
-import { useStrings } from '../providers/StringsProvider';
-import type { PopoverCloseReason } from '../hooks/usePopover';
-import { Popover } from './Popover';
-import { ColorPicker as ColorPickerParts } from './ColorPicker';
-import { useFieldPicker } from './Field.shared';
+import { useStrings } from '../providers/StringsProvider.js';
+import type { PopoverCloseReason } from '../hooks/usePopover.js';
+import { Popover } from './Popover.js';
+import { ColorPicker as ColorPickerParts } from './ColorPicker.js';
+import { useFieldPicker } from './Field.shared.js';
 
 /** Why Field.ColorPicker's picker closed: a popover's reasons, or the field became disabled. */
 export type FieldColorPickerCloseReason = PopoverCloseReason | 'disabled';

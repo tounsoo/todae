@@ -7,7 +7,7 @@ import {
   type TooltipEvent,
   type TooltipIntentState,
   type TooltipPolicy,
-} from './Tooltip.intent';
+} from './Tooltip.intent.js';
 
 const fine: TooltipPolicy = { fidelity: 'fine', showDelayMs: 300, hideDelayMs: 100 };
 const coarse: TooltipPolicy = { fidelity: 'coarse', showDelayMs: 300, hideDelayMs: 100 };

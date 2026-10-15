@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
-import { Field, GlyphsProvider, Label } from '../index';
+import { Field, GlyphsProvider, Label } from '../index.js';
 
 afterEach(cleanup);
 

@@ -2,9 +2,9 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { StrictMode, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import type { ComboboxCloseReason } from '../hooks/useCombobox.types';
-import type { SheetCloseReason } from './BottomSheet';
-import { Dialog, type DialogCloseReason } from './Dialog';
+import type { ComboboxCloseReason } from '../hooks/useCombobox.types.js';
+import type { SheetCloseReason } from './BottomSheet.js';
+import { Dialog, type DialogCloseReason } from './Dialog.js';
 
 afterEach(cleanup);
 

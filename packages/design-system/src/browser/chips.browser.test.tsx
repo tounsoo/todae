@@ -2,11 +2,11 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { BottomSheet } from '../components/BottomSheet';
-import { Chip } from '../components/Chip';
-import { ChipList } from '../components/ChipList';
-import { Field } from '../components/Field';
-import { StringsProvider } from '../providers/StringsProvider';
+import { BottomSheet } from '../components/BottomSheet.js';
+import { Chip } from '../components/Chip.js';
+import { ChipList } from '../components/ChipList.js';
+import { Field } from '../components/Field.js';
+import { StringsProvider } from '../providers/StringsProvider.js';
 
 const TAGS = ['design', 'tokens', 'accessibility', 'react', 'density', 'dark mode', 'docs', 'motion', 'layout', 'forms'];
 

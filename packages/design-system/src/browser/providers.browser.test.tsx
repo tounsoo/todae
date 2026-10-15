@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
-import { Button, Card, Checkbox, DensityProvider, ThemeProvider } from '../index';
+import { Button, Card, Checkbox, DensityProvider, ThemeProvider } from '../index.js';
 
 /** vitest types the session without its methods; Playwright's session has `send`. */
 function emulateMedia(features: { name: string; value: string }[]) {

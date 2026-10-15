@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createToaster, DEFAULT_TOAST_DURATION } from './toaster';
+import { createToaster, DEFAULT_TOAST_DURATION } from './toaster.js';
 
 describe('createToaster', () => {
   it('adds toasts oldest first with defaults and returns their ids', () => {

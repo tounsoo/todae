@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type ComponentPropsWithRef, type FocusEvent } from 'react';
-import { composeHandlers, cx, useComposedRefs } from './props';
-import { revealRing } from './revealRing';
-import { useScrollTabStop, type ScrollAxis } from './scrollTabStop';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { revealRing } from './revealRing.js';
+import { useScrollTabStop, type ScrollAxis } from './scrollTabStop.js';
 import styles from './ScrollArea.module.css';
 
 /** The direction a scroll area scrolls in. */

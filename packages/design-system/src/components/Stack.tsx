@@ -1,5 +1,5 @@
 import type { HTMLAttributes, Ref } from 'react';
-import { cx } from './cx';
+import { cx } from './cx.js';
 import styles from './Stack.module.css';
 
 export type StackDirection = 'row' | 'column';

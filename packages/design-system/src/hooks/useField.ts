@@ -5,8 +5,8 @@ import {
   useControlPresence,
   useControlSetter,
   useFieldContext,
-} from '../components/Field.context';
-import { useStableComposedRef } from '../components/props';
+} from '../components/Field.context.js';
+import { useStableComposedRef } from '../components/props.js';
 
 /** `id` and `name` are not taken here: they come from `Field.Root`, which a `Label htmlFor` and the form use. */
 export type FieldControlUserProps = {

@@ -1,7 +1,7 @@
 import { cleanup, render } from '@testing-library/react';
 import { useRef } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { useRefElement } from './useRefElement';
+import { useRefElement } from './useRefElement.js';
 
 afterEach(cleanup);
 

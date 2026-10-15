@@ -3,7 +3,7 @@ import { cdp } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { useEffect, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Alert, Conversation, Message } from '../index';
+import { Alert, Conversation, Message } from '../index.js';
 
 /** vitest types the session without its methods; Playwright's session has `send`. */
 function emulateMedia(features: { name: string; value: string }[]) {

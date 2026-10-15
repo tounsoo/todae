@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { matchesParsed, parseHotkey, typesIn, type Hotkey } from './hotkey';
+import { matchesParsed, parseHotkey, typesIn, type Hotkey } from './hotkey.js';
 
 export type UseHotkeyOptions = {
   /** Listen only while true. */

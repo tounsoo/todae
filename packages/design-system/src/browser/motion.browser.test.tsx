@@ -1,11 +1,11 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { BottomSheet } from '../components/BottomSheet';
-import { Button } from '../components/Button';
-import { Dialog } from '../components/Dialog';
-import { Drawer, type DrawerSide } from '../components/Drawer';
-import { HeldTip } from '../test/heldTip';
+import { BottomSheet } from '../components/BottomSheet.js';
+import { Button } from '../components/Button.js';
+import { Dialog } from '../components/Dialog.js';
+import { Drawer, type DrawerSide } from '../components/Drawer.js';
+import { HeldTip } from '../test/heldTip.js';
 
 afterEach(cleanup);
 

@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Dialog } from '../components/Dialog';
-import { Drawer, type DrawerSide } from '../components/Drawer';
+import { Dialog } from '../components/Dialog.js';
+import { Drawer, type DrawerSide } from '../components/Drawer.js';
 
 afterEach(cleanup);
 

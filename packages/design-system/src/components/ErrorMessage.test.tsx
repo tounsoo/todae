@@ -3,8 +3,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { ErrorMessage, type ErrorMessageRootProps } from './ErrorMessage';
-import * as api from '../index';
+import { ErrorMessage, type ErrorMessageRootProps } from './ErrorMessage.js';
+import * as api from '../index.js';
 
 const css = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), 'ErrorMessage.module.css'),

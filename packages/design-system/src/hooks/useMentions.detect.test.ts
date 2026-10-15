@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findQuery, shiftIndex, shiftTokens, validTokens, type MentionToken } from './useMentions.detect';
+import { findQuery, shiftIndex, shiftTokens, validTokens, type MentionToken } from './useMentions.detect.js';
 
 const at = [{ char: '@' }, { char: '/', position: 'start' as const }];
 const ada: MentionToken = { start: 4, end: 17, char: '@', value: 'ada', text: '@Ada Lovelace' };

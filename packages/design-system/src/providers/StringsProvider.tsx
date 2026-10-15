@@ -1,9 +1,9 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { DEFAULT_STRINGS, type Strings } from './strings';
+import { DEFAULT_STRINGS, type Strings } from './strings.js';
 
-export type { Strings } from './strings';
+export type { Strings } from './strings.js';
 
 export type StringsProviderProps = {
   /** The strings to change. Each key left out comes from the nearest StringsProvider above, else English. */

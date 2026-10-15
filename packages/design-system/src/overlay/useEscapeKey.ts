@@ -1,5 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import { frontModal, isModal } from './modalStack';
+import { frontModal, isModal } from './modalStack.js';
 
 type Entry = { handle: () => void; enabled: () => boolean; element: () => Element | null };
 

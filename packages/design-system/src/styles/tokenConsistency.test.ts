@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CATEGORY_TONES } from '../components/tone';
+import { CATEGORY_TONES } from '../components/tone.js';
 
 const componentsDir = join(import.meta.dirname, '..', 'components');
 const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '');

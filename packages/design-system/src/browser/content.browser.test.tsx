@@ -32,7 +32,7 @@ import {
   Text,
   Tree,
   VisuallyHidden,
-} from '../index';
+} from '../index.js';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {

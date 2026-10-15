@@ -78,4 +78,4 @@ export function composeHandlers<E extends SyntheticEvent>(
   };
 }
 
-export { cx } from './cx';
+export { cx } from './cx.js';

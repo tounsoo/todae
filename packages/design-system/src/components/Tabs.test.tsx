@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { renderToString } from 'react-dom/server';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Tabs, type TabsRootProps } from '../index';
+import { Tabs, type TabsRootProps } from '../index.js';
 
 afterEach(cleanup);
 

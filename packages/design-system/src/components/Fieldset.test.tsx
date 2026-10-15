@@ -1,11 +1,11 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Checkbox } from './Checkbox';
-import { ErrorMessage } from './ErrorMessage';
-import { Field } from './Field';
-import { Fieldset } from './Fieldset';
-import { RadioGroup } from './Radio';
-import { Switch } from './Switch';
+import { Checkbox } from './Checkbox.js';
+import { ErrorMessage } from './ErrorMessage.js';
+import { Field } from './Field.js';
+import { Fieldset } from './Fieldset.js';
+import { RadioGroup } from './Radio.js';
+import { Switch } from './Switch.js';
 
 afterEach(cleanup);
 

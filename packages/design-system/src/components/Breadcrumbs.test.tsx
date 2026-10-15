@@ -1,6 +1,6 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Breadcrumbs } from './Breadcrumbs';
+import { Breadcrumbs } from './Breadcrumbs.js';
 
 afterEach(cleanup);
 

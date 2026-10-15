@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contentPolicyError, resolveSurface } from './Tooltip.surface';
+import { contentPolicyError, resolveSurface } from './Tooltip.surface.js';
 
 describe('Tooltip.surface', () => {
   it('rejects tabbables in tip content', () => {

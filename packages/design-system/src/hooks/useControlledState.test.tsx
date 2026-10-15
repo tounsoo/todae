@@ -1,7 +1,7 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import * as api from '../index';
-import { useControlledState, useControlledValue } from './useControlledState';
+import * as api from '../index.js';
+import { useControlledState, useControlledValue } from './useControlledState.js';
 
 afterEach(cleanup);
 

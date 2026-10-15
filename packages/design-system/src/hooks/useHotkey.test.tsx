@@ -1,6 +1,6 @@
 import { cleanup, render, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useHotkey } from './useHotkey';
+import { useHotkey } from './useHotkey.js';
 
 afterEach(cleanup);
 

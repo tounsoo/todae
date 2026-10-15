@@ -1,5 +1,5 @@
-import { DRAWER_EXIT_MS } from '../overlay/useOverlayPresence';
-import { DialogShellRoot, type DialogRootProps, type DialogShell } from './Dialog';
+import { DRAWER_EXIT_MS } from '../overlay/useOverlayPresence.js';
+import { DialogShellRoot, type DialogRootProps, type DialogShell } from './Dialog.js';
 import styles from './Drawer.module.css';
 
 export type DrawerSide = 'start' | 'end';

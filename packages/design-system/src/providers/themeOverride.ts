@@ -3,7 +3,7 @@ import {
   RAW_OVERRIDE_KEYS,
   SEMANTIC_OVERRIDE_KEYS,
   THEME_OVERRIDE_TYPES,
-} from './themeOverrideKeys.generated';
+} from './themeOverrideKeys.generated.js';
 
 export { COMPONENT_OVERRIDE_KEYS, RAW_OVERRIDE_KEYS, SEMANTIC_OVERRIDE_KEYS };
 

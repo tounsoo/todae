@@ -1,9 +1,9 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import type { Glyphs } from './glyphs';
+import type { Glyphs } from './glyphs.js';
 
-export type { Glyphs } from './glyphs';
+export type { Glyphs } from './glyphs.js';
 
 export type GlyphsProviderProps = {
   /** The glyphs to change. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. */

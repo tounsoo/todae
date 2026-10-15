@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { resolveTextareaRows } from './textareaRows';
+import { resolveTextareaRows } from './textareaRows.js';
 
 afterEach(() => {
   vi.unstubAllEnvs();

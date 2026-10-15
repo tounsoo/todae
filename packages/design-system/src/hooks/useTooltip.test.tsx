@@ -3,15 +3,15 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import * as api from '../index';
-import { resetMatchMedia } from '../test/setup';
+import * as api from '../index.js';
+import { resetMatchMedia } from '../test/setup.js';
 import {
   useTooltip,
   type TooltipTriggerUserProps,
   type TooltipWire,
   type UseTooltipOptions,
   type UseTooltipResult,
-} from './useTooltip';
+} from './useTooltip.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, 'useTooltip.ts'), 'utf8');
@@ -93,15 +93,15 @@ describe('useTooltip exports', () => {
     expect(new Set(froms)).toEqual(
       new Set([
         'react',
-        '../components/props',
-        '../components/domId',
-        '../overlay/anchorName',
-        '../overlay/cssTime',
-        '../components/Tooltip.intent',
-        '../components/Tooltip.wire',
-        '../overlay/tabbables',
-        '../overlay/useEscapeKey',
-        './useControlledState',
+        '../components/props.js',
+        '../components/domId.js',
+        '../overlay/anchorName.js',
+        '../overlay/cssTime.js',
+        '../components/Tooltip.intent.js',
+        '../components/Tooltip.wire.js',
+        '../overlay/tabbables.js',
+        '../overlay/useEscapeKey.js',
+        './useControlledState.js',
       ]),
     );
   });

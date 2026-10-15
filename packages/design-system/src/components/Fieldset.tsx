@@ -1,6 +1,6 @@
 import { useContext, useLayoutEffect, useMemo, useRef, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
-import { FieldsetContext, FieldsetLegendContext, useFieldsetState } from './Fieldset.context';
-import { cx, useComposedRefs } from './props';
+import { FieldsetContext, FieldsetLegendContext, useFieldsetState } from './Fieldset.context.js';
+import { cx, useComposedRefs } from './props.js';
 import styles from './Fieldset.module.css';
 
 /**

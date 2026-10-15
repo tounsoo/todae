@@ -2,12 +2,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { usePopover } from '../hooks/usePopover';
-import { BottomSheet, type SheetCloseReason } from '../components/BottomSheet';
-import { Button } from '../components/Button';
-import { Dialog, type DialogCloseReason } from '../components/Dialog';
-import { Drawer } from '../components/Drawer';
-import { Popover } from '../components/Popover';
+import { usePopover } from '../hooks/usePopover.js';
+import { BottomSheet, type SheetCloseReason } from '../components/BottomSheet.js';
+import { Button } from '../components/Button.js';
+import { Dialog, type DialogCloseReason } from '../components/Dialog.js';
+import { Drawer } from '../components/Drawer.js';
+import { Popover } from '../components/Popover.js';
 
 function Themed({ children }: { children: ReactNode }) {
   return (

@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Calendar, Fieldset, StringsProvider, type CalendarRootProps } from '../index';
+import { Calendar, Fieldset, StringsProvider, type CalendarRootProps } from '../index.js';
 
 afterEach(cleanup);
 

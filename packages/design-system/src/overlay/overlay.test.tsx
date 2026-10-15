@@ -1,9 +1,9 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { getTabbables } from './tabbables';
-import { useFocusRestore } from './useFocusRestore';
-import { isExitTransition, transitionMs } from './useOverlayPresence';
-import { dragHeight, dragOrigin, resolveRelease } from './useSnapDrag';
+import { getTabbables } from './tabbables.js';
+import { useFocusRestore } from './useFocusRestore.js';
+import { isExitTransition, transitionMs } from './useOverlayPresence.js';
+import { dragHeight, dragOrigin, resolveRelease } from './useSnapDrag.js';
 
 afterEach(cleanup);
 

@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { optionDomId } from './OptionList.ids';
-import { domSafe, useDomId } from './domId';
+import { optionDomId } from './OptionList.ids.js';
+import { domSafe, useDomId } from './domId.js';
 
 describe('domSafe', () => {
   it('keeps letters, digits and hyphens', () => {

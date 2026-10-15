@@ -10,16 +10,16 @@ import {
   type Ref,
   type RefObject,
 } from 'react';
-import type { PopoverWire } from '../components/Popover.wire';
-import { useEscapeKey } from '../overlay/useEscapeKey';
-import { useFocusRestore } from '../overlay/useFocusRestore';
-import { useInitialFocus } from '../overlay/useInitialFocus';
-import { useComposedRefs, useStableComposedRef } from '../components/props';
-import { useDomId } from '../components/domId';
-import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from '../overlay/anchorName';
-import { useControlledValue } from './useControlledState';
-import { eventInside } from '../overlay/eventInside';
-import { focusWithoutScroll } from '../components/revealRing';
+import type { PopoverWire } from '../components/Popover.wire.js';
+import { useEscapeKey } from '../overlay/useEscapeKey.js';
+import { useFocusRestore } from '../overlay/useFocusRestore.js';
+import { useInitialFocus } from '../overlay/useInitialFocus.js';
+import { useComposedRefs, useStableComposedRef } from '../components/props.js';
+import { useDomId } from '../components/domId.js';
+import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from '../overlay/anchorName.js';
+import { useControlledValue } from './useControlledState.js';
+import { eventInside } from '../overlay/eventInside.js';
+import { focusWithoutScroll } from '../components/revealRing.js';
 
 export type { PopoverWire };
 

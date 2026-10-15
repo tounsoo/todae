@@ -1,7 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe date and time text for a text input beside Field.DateTimePicker: no hooks or context.
-import { fold, isMonthDay, readDate, type DateTextOptions } from './dateText';
-import { parseTime, splitWords } from './timeText';
+import { fold, isMonthDay, readDate, type DateTextOptions } from './dateText.js';
+import { parseTime, splitWords } from './timeText.js';
 
 export type DateTimeTextOptions = DateTextOptions;
 

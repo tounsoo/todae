@@ -7,10 +7,10 @@ import {
   useState,
   type ComponentPropsWithRef,
 } from 'react';
-import { cx } from './cx';
-import { useComposedRefs } from './props';
+import { cx } from './cx.js';
+import { useComposedRefs } from './props.js';
 import styles from './Avatar.module.css';
-import type { CategoryTone } from './tone';
+import type { CategoryTone } from './tone.js';
 
 export type AvatarSize = 'sm' | 'md' | 'lg';
 

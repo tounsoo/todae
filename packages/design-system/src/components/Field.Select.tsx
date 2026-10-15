@@ -1,9 +1,9 @@
 import type { ChangeEvent, ReactNode, Ref, SelectHTMLAttributes } from 'react';
-import { cx } from './props';
+import { cx } from './props.js';
 import styles from './Field.module.css';
-import { useField } from '../hooks/useField';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { hasGlyph } from './glyphs';
+import { useField } from '../hooks/useField.js';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { hasGlyph } from './glyphs.js';
 
 /**
  * A native `<select>`. Browsers with `appearance: base-select` draw the picker

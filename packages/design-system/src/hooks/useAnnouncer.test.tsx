@@ -1,8 +1,8 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { dropModal, heldModals, pushModal } from '../overlay/modalStack';
-import { useAnnouncer, type AnnounceOptions } from './useAnnouncer';
+import { dropModal, heldModals, pushModal } from '../overlay/modalStack.js';
+import { useAnnouncer, type AnnounceOptions } from './useAnnouncer.js';
 
 const regions = () => document.querySelectorAll('[data-todae-announcer]');
 const live = (politeness: 'polite' | 'assertive') =>

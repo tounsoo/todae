@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Field, ScrollArea } from '../index';
+import { Field, ScrollArea } from '../index.js';
 
 afterEach(() => vi.restoreAllMocks());
 

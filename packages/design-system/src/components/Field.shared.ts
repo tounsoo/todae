@@ -10,15 +10,15 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
-import { useFieldContext, type CountStore } from './Field.context';
-import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from '../hooks/useField';
-import { useControlledValue } from '../hooks/useControlledState';
+import { useFieldContext, type CountStore } from './Field.context.js';
+import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from '../hooks/useField.js';
+import { useControlledValue } from '../hooks/useControlledState.js';
 import {
   usePopover,
   type PopoverCloseReason,
   type PopoverHaspopup,
   type PopoverTriggerUserProps,
-} from '../hooks/usePopover';
+} from '../hooks/usePopover.js';
 
 export function createCountStore(): CountStore {
   return { entry: null, counters: 0, controls: 0, named: 0, listeners: new Set(), presence: new Set() };

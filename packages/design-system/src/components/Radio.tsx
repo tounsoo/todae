@@ -6,11 +6,11 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { useDomId } from './domId';
-import { useControlledState } from '../hooks/useControlledState';
-import { useFieldsetState } from './Fieldset.context';
-import { SelectionControl } from './SelectionControl';
-import { cx } from './cx';
+import { useDomId } from './domId.js';
+import { useControlledState } from '../hooks/useControlledState.js';
+import { useFieldsetState } from './Fieldset.context.js';
+import { SelectionControl } from './SelectionControl.js';
+import { cx } from './cx.js';
 import styles from './selection.module.css';
 
 type RadioGroupName =

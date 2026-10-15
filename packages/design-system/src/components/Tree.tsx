@@ -14,13 +14,13 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState';
-import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
-import { useFocusLeave } from '../overlay/useFocusLeave';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { ChevronGlyph, glyphOr } from './glyphs';
-import { composeHandlers, cx, useComposedRefs } from './props';
-import { useDomId } from './domId';
+import { useControlledValue } from '../hooks/useControlledState.js';
+import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
+import { useFocusLeave } from '../overlay/useFocusLeave.js';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { ChevronGlyph, glyphOr } from './glyphs.js';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { useDomId } from './domId.js';
 import styles from './Tree.module.css';
 
 export type TreeRootProps = {

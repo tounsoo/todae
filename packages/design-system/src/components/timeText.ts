@@ -1,6 +1,6 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe time text for a text input beside Field.TimePicker: no hooks or context.
-import { normalize, type DateTextOptions } from './dateText';
+import { normalize, type DateTextOptions } from './dateText.js';
 
 export type TimeTextOptions = DateTextOptions;
 

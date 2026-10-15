@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useStrings } from '../providers/StringsProvider';
-import { useAnnouncer } from './useAnnouncer';
+import { useStrings } from '../providers/StringsProvider.js';
+import { useAnnouncer } from './useAnnouncer.js';
 
 export type ClipboardStatus = 'idle' | 'copied' | 'failed';
 

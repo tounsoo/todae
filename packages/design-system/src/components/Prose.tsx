@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef } from 'react';
-import { cx } from './cx';
+import { cx } from './cx.js';
 import styles from './Prose.module.css';
 
 /** A `div` that styles the headings, paragraphs, lists and block quotes of rendered markdown or MDX inside it. */

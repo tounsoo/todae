@@ -9,7 +9,7 @@ export {
   type AlertRootProps,
   type AlertTitleProps,
   type AlertTone,
-} from './components/Alert';
+} from './components/Alert.js';
 export {
   Avatar,
   type AvatarFallbackProps,
@@ -18,31 +18,31 @@ export {
   type AvatarRootProps,
   type AvatarSize,
   type AvatarTone,
-} from './components/Avatar';
-export { categoryTone, CATEGORY_TONES, type CategoryTone } from './components/tone';
-export { Link, type LinkRootProps, type LinkRenderProps } from './components/Link';
-export { Disclosure, type DisclosureRootProps, type DisclosureSummaryProps } from './components/Disclosure.client';
-export { Separator, type SeparatorRootProps } from './components/Separator';
-export { Prose, type ProseRootProps } from './components/Prose';
-export { ScrollArea, type ScrollAreaAxis, type ScrollAreaRootProps } from './components/ScrollArea';
-export { Table, type TableBodyProps, type TableCaptionProps, type TableCellProps, type TableFootProps, type TableHeadProps, type TableHeaderCellProps, type TableRootProps, type TableRowProps } from './components/Table';
-export { Progress, type ProgressRootProps } from './components/Progress';
-export { Meter, type MeterRootProps } from './components/Meter';
-export { Loader, type LoaderRootProps, type LoaderVariant } from './components/Loader';
-export { Skeleton, type SkeletonRootProps } from './components/Skeleton';
-export { Slider, type SliderRootProps } from './components/Slider';
-export { Code, type CodeBlockProps, type CodeRootProps } from './components/Code';
-export { Kbd, type KbdRootProps } from './components/Kbd';
-export { VisuallyHidden, type VisuallyHiddenRootProps } from './components/VisuallyHidden';
-export { Badge, type BadgeRootProps, type BadgeTone } from './components/Badge';
-export { Breadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './components/Breadcrumbs.client';
+} from './components/Avatar.js';
+export { categoryTone, CATEGORY_TONES, type CategoryTone } from './components/tone.js';
+export { Link, type LinkRootProps, type LinkRenderProps } from './components/Link.js';
+export { Disclosure, type DisclosureRootProps, type DisclosureSummaryProps } from './components/Disclosure.client.js';
+export { Separator, type SeparatorRootProps } from './components/Separator.js';
+export { Prose, type ProseRootProps } from './components/Prose.js';
+export { ScrollArea, type ScrollAreaAxis, type ScrollAreaRootProps } from './components/ScrollArea.js';
+export { Table, type TableBodyProps, type TableCaptionProps, type TableCellProps, type TableFootProps, type TableHeadProps, type TableHeaderCellProps, type TableRootProps, type TableRowProps } from './components/Table.js';
+export { Progress, type ProgressRootProps } from './components/Progress.js';
+export { Meter, type MeterRootProps } from './components/Meter.js';
+export { Loader, type LoaderRootProps, type LoaderVariant } from './components/Loader.js';
+export { Skeleton, type SkeletonRootProps } from './components/Skeleton.js';
+export { Slider, type SliderRootProps } from './components/Slider.js';
+export { Code, type CodeBlockProps, type CodeRootProps } from './components/Code.js';
+export { Kbd, type KbdRootProps } from './components/Kbd.js';
+export { VisuallyHidden, type VisuallyHiddenRootProps } from './components/VisuallyHidden.js';
+export { Badge, type BadgeRootProps, type BadgeTone } from './components/Badge.js';
+export { Breadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './components/Breadcrumbs.client.js';
 export {
   Card,
   type CardBodyProps,
   type CardFooterProps,
   type CardHeaderProps,
   type CardRootProps,
-} from './components/Card';
+} from './components/Card.js';
 export {
   Message,
   type MessageActionsProps,
@@ -53,7 +53,7 @@ export {
   type MessageHeaderProps,
   type MessageRootProps,
   type MessageTimeProps,
-} from './components/Message';
+} from './components/Message.js';
 export {
   Attachment,
   type AttachmentMetaProps,
@@ -63,17 +63,17 @@ export {
   type AttachmentRemoveProps,
   type AttachmentRootProps,
   type AttachmentStatus,
-} from './components/Attachment';
-export { Steps, type StepsItemProps, type StepsRootProps, type StepsStatus } from './components/Steps';
-export { Composer, type ComposerRootProps, type ComposerSubmitProps } from './components/Composer';
+} from './components/Attachment.js';
+export { Steps, type StepsItemProps, type StepsRootProps, type StepsStatus } from './components/Steps.js';
+export { Composer, type ComposerRootProps, type ComposerSubmitProps } from './components/Composer.js';
 export {
   Conversation,
   type ConversationContentProps,
   type ConversationRootProps,
   type ConversationScrollButtonProps,
   type ConversationViewportProps,
-} from './components/Conversation';
-export { BottomSheet, type BottomSheetRootProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet';
+} from './components/Conversation.js';
+export { BottomSheet, type BottomSheetRootProps, type SheetCloseReason, type SheetSnap } from './components/BottomSheet.js';
 export {
   Button,
   type ButtonGroupProps,
@@ -81,8 +81,8 @@ export {
   type ButtonRootProps,
   type ButtonVariant,
   type ButtonVariants,
-} from './components/Button';
-export { Toolbar, type ToolbarGroupProps, type ToolbarOrientation, type ToolbarRootProps, type ToolbarSeparatorProps } from './components/Toolbar';
+} from './components/Button.js';
+export { Toolbar, type ToolbarGroupProps, type ToolbarOrientation, type ToolbarRootProps, type ToolbarSeparatorProps } from './components/Toolbar.js';
 export {
   ToggleGroup,
   type ToggleGroupItemProps,
@@ -90,17 +90,17 @@ export {
   type ToggleGroupOrientation,
   type ToggleGroupRootProps,
   type ToggleGroupSingleProps,
-} from './components/ToggleGroup';
-export { Dialog, type DialogCloseReason, type DialogRootProps } from './components/Dialog';
-export { Drawer, type DrawerRootProps, type DrawerSide } from './components/Drawer';
-export { composeRefs } from './components/props';
+} from './components/ToggleGroup.js';
+export { Dialog, type DialogCloseReason, type DialogRootProps } from './components/Dialog.js';
+export { Drawer, type DrawerRootProps, type DrawerSide } from './components/Drawer.js';
+export { composeRefs } from './components/props.js';
 export {
   OptionList,
   type OptionListMultipleProps,
   type OptionListOptionProps,
   type OptionListRootProps,
   type OptionListSingleProps,
-} from './components/OptionList';
+} from './components/OptionList.js';
 export {
   Pagination,
   paginationRange,
@@ -109,7 +109,7 @@ export {
   type PaginationRangeItem,
   type PaginationRangeOptions,
   type PaginationRootProps,
-} from './components/Pagination.client';
+} from './components/Pagination.client.js';
 export {
   Menu,
   type MenuCheckboxItemProps,
@@ -122,8 +122,8 @@ export {
   type MenuRootProps,
   type MenuSeparatorProps,
   type MenuTriggerProps,
-} from './components/Menu';
-export { Popover, type PopoverRootProps } from './components/Popover';
+} from './components/Menu.js';
+export { Popover, type PopoverRootProps } from './components/Popover.js';
 export {
   usePopover,
   type PopoverCloseReason,
@@ -133,8 +133,8 @@ export {
   type PopoverWire,
   type UsePopoverOptions,
   type UsePopoverResult,
-} from './hooks/usePopover';
-export { Tooltip, type TooltipContentName, type TooltipRootProps } from './components/Tooltip';
+} from './hooks/usePopover.js';
+export { Tooltip, type TooltipContentName, type TooltipRootProps } from './components/Tooltip.js';
 export {
   Toast,
   type ToastActionProps,
@@ -146,7 +146,7 @@ export {
   type ToastRegionProps,
   type ToastRootProps,
   type ToastTitleProps,
-} from './components/Toast';
+} from './components/Toast.js';
 export {
   createToaster,
   type CreateToasterOptions,
@@ -154,7 +154,7 @@ export {
   type ToastOptions,
   type ToastRecord,
   type ToastTone,
-} from './components/toaster';
+} from './components/toaster.js';
 export {
   useTooltip,
   type TooltipOpenReason,
@@ -163,13 +163,13 @@ export {
   type TooltipWire,
   type UseTooltipOptions,
   type UseTooltipResult,
-} from './hooks/useTooltip';
-export { Checkbox, type CheckboxRootProps } from './components/Checkbox';
-export { Chip, type ChipOverflowProps, type ChipRootProps, type ChipTone } from './components/Chip';
-export { ChipList, type ChipListRootProps } from './components/ChipList';
-export { Description, type DescriptionRootProps } from './components/Description';
-export { ErrorMessage, type ErrorMessageRootProps } from './components/ErrorMessage';
-export { CHIP_COMMIT_KEYS, type ChipCommitKey } from './components/commitKeys';
+} from './hooks/useTooltip.js';
+export { Checkbox, type CheckboxRootProps } from './components/Checkbox.js';
+export { Chip, type ChipOverflowProps, type ChipRootProps, type ChipTone } from './components/Chip.js';
+export { ChipList, type ChipListRootProps } from './components/ChipList.js';
+export { Description, type DescriptionRootProps } from './components/Description.js';
+export { ErrorMessage, type ErrorMessageRootProps } from './components/ErrorMessage.js';
+export { CHIP_COMMIT_KEYS, type ChipCommitKey } from './components/commitKeys.js';
 export {
   Field,
   type FieldAffixProps,
@@ -192,23 +192,23 @@ export {
   type FieldTimePickerProps,
   type FieldTextareaHighlight,
   type FieldTextareaProps,
-} from './components/Field';
+} from './components/Field.js';
 export {
   useField,
   type FieldControlOptions,
   type FieldControlUserProps,
   type FieldControlWire,
   type UseFieldResult,
-} from './hooks/useField';
-export { Fieldset, type FieldsetLegendProps, type FieldsetRootProps } from './components/Fieldset';
-export { Label, type LabelRootProps } from './components/Label';
+} from './hooks/useField.js';
+export { Fieldset, type FieldsetLegendProps, type FieldsetRootProps } from './components/Fieldset.js';
+export { Label, type LabelRootProps } from './components/Label.js';
 export {
   RadioGroup,
   type RadioGroupOrientation,
   type RadioGroupItemProps,
   type RadioGroupRootProps,
-} from './components/Radio';
-export { Switch, type SwitchRootProps } from './components/Switch';
+} from './components/Radio.js';
+export { Switch, type SwitchRootProps } from './components/Switch.js';
 export {
   Tabs,
   type TabsActivation,
@@ -217,26 +217,26 @@ export {
   type TabsPanelProps,
   type TabsRootProps,
   type TabsTabProps,
-} from './components/Tabs';
+} from './components/Tabs.js';
 export {
   ColorPicker,
   type ColorPickerAreaProps,
   type ColorPickerHueProps,
   type ColorPickerRootProps,
-} from './components/ColorPicker';
-export { normalizeHex } from './components/color';
-export { formatDate, parseDate, type DateTextOptions } from './components/dateText';
-export { formatTime, parseTime, type TimeTextOptions } from './components/timeText';
-export { formatDateTime, parseDateTime, type DateTimeTextOptions } from './components/dateTimeText';
+} from './components/ColorPicker.js';
+export { normalizeHex } from './components/color.js';
+export { formatDate, parseDate, type DateTextOptions } from './components/dateText.js';
+export { formatTime, parseTime, type TimeTextOptions } from './components/timeText.js';
+export { formatDateTime, parseDateTime, type DateTimeTextOptions } from './components/dateTimeText.js';
 export {
   Calendar,
   type CalendarFirstDayOfWeek,
   type CalendarGridProps,
   type CalendarHeaderProps,
   type CalendarRootProps,
-} from './components/Calendar';
-export { Nav, type NavBranchProps, type NavGroupProps, type NavItemProps, type NavLinkProps, type NavRootProps } from './components/Nav';
-export { Tree, type TreeGroupProps, type TreeIconProps, type TreeItemProps, type TreeLabelProps, type TreeRootProps } from './components/Tree';
+} from './components/Calendar.js';
+export { Nav, type NavBranchProps, type NavGroupProps, type NavItemProps, type NavLinkProps, type NavRootProps } from './components/Nav.js';
+export { Tree, type TreeGroupProps, type TreeIconProps, type TreeItemProps, type TreeLabelProps, type TreeRootProps } from './components/Tree.js';
 export {
   Stack,
   type StackAlign,
@@ -245,8 +245,8 @@ export {
   type StackGap,
   type StackJustify,
   type StackRootProps,
-} from './components/Stack';
-export { Grid, type GridRootProps } from './components/Grid';
+} from './components/Stack.js';
+export { Grid, type GridRootProps } from './components/Grid.js';
 export {
   Text,
   type TextRootProps,
@@ -255,20 +255,20 @@ export {
   type TextSize,
   type TextTone,
   type TextWeight,
-} from './components/Text';
+} from './components/Text.js';
 export {
   useAnnouncer,
   type Announce,
   type AnnounceOptions,
   type AnnouncePoliteness,
-} from './hooks/useAnnouncer';
-export { useChipField, type UseChipFieldOptions, type UseChipFieldResult } from './hooks/useChipField';
+} from './hooks/useAnnouncer.js';
+export { useChipField, type UseChipFieldOptions, type UseChipFieldResult } from './hooks/useChipField.js';
 export {
   useChipList,
   type UseChipListItem,
   type UseChipListOptions,
   type UseChipListResult,
-} from './hooks/useChipList';
+} from './hooks/useChipList.js';
 export {
   useDropzone,
   type FileRejection,
@@ -277,14 +277,14 @@ export {
   type UseDropzoneOptions,
   type UseDropzoneResult,
   type UseDropzoneRootProps,
-} from './hooks/useDropzone';
+} from './hooks/useDropzone.js';
 export {
   useHighlight,
   type UseHighlightOptions,
   type UseHighlightResult,
-} from './hooks/useHighlight';
-export { useHotkey, type UseHotkeyOptions } from './hooks/useHotkey';
-export { useModalLayer } from './hooks/useModalLayer';
+} from './hooks/useHighlight.js';
+export { useHotkey, type UseHotkeyOptions } from './hooks/useHotkey.js';
+export { useModalLayer } from './hooks/useModalLayer.js';
 export {
   useRovingFocus,
   type RovingContainerUserProps,
@@ -295,7 +295,7 @@ export {
   type RovingOrientation,
   type UseRovingFocusOptions,
   type UseRovingFocusResult,
-} from './hooks/useRovingFocus';
+} from './hooks/useRovingFocus.js';
 export {
   useSheetPresentation,
   resolveSheetPresentation,
@@ -303,13 +303,13 @@ export {
   type SheetPresentation,
   type SheetPresentationResult,
   type UseSheetPresentationOptions,
-} from './hooks/useSheetPresentation';
+} from './hooks/useSheetPresentation.js';
 export {
   useClipboard,
   type ClipboardStatus,
   type UseClipboardOptions,
   type UseClipboardResult,
-} from './hooks/useClipboard';
+} from './hooks/useClipboard.js';
 export {
   useCombobox,
   type ComboboxCloseReason,
@@ -319,8 +319,8 @@ export {
   type UseComboboxOptions,
   type UseComboboxResult,
   type UseComboboxSingleOptions,
-} from './hooks/useCombobox';
-export { useControlledState, useControlledValue } from './hooks/useControlledState';
+} from './hooks/useCombobox.js';
+export { useControlledState, useControlledValue } from './hooks/useControlledState.js';
 export {
   useMentions,
   type MentionDraft,
@@ -331,14 +331,14 @@ export {
   type UseMentionsOptions,
   type UseMentionsResult,
   type UseMentionsTextareaProps,
-} from './hooks/useMentions';
+} from './hooks/useMentions.js';
 export {
   ThemeProvider,
   useAppearance,
   type Appearance,
   type ResolvedAppearance,
   type ThemeProviderProps,
-} from './providers/ThemeProvider';
+} from './providers/ThemeProvider.js';
 export {
   COMPONENT_OVERRIDE_KEYS,
   RAW_OVERRIDE_KEYS,
@@ -365,13 +365,13 @@ export {
   type ThemeShadowLayer,
   type ThemeShadowValue,
   type ThemeTextTransformValue,
-} from './providers/themeOverride';
+} from './providers/themeOverride.js';
 export {
   DensityProvider,
   useDensity,
   type Density,
   type Densities,
   type DensityProviderProps,
-} from './providers/DensityProvider';
-export { StringsProvider, useStrings, type Strings, type StringsProviderProps } from './providers/StringsProvider';
-export { GlyphsProvider, useGlyphs, type Glyphs, type GlyphsProviderProps } from './providers/GlyphsProvider';
+} from './providers/DensityProvider.js';
+export { StringsProvider, useStrings, type Strings, type StringsProviderProps } from './providers/StringsProvider.js';
+export { GlyphsProvider, useGlyphs, type Glyphs, type GlyphsProviderProps } from './providers/GlyphsProvider.js';

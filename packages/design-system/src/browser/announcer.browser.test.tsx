@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { useAnnouncer } from '../hooks/useAnnouncer';
-import { Dialog } from '../components/Dialog';
+import { useAnnouncer } from '../hooks/useAnnouncer.js';
+import { Dialog } from '../components/Dialog.js';
 
 afterEach(() => {
   // Drop writes still pending, so none lands in a later test.

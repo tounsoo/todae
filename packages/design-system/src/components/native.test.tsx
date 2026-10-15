@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import type { ComponentPropsWithRef } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Code, Disclosure, Kbd, Link, Meter, Progress, Separator, Loader, Skeleton, Slider, Table, VisuallyHidden } from '../index';
+import { Code, Disclosure, Kbd, Link, Meter, Progress, Separator, Loader, Skeleton, Slider, Table, VisuallyHidden } from '../index.js';
 
 afterEach(cleanup);
 

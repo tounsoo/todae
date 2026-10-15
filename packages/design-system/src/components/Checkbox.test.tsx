@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Checkbox, type CheckboxRootProps } from './Checkbox';
-import * as api from '../index';
+import { Checkbox, type CheckboxRootProps } from './Checkbox.js';
+import * as api from '../index.js';
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'selection.module.css'), 'utf8');
 

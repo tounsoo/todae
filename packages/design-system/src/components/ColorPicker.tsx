@@ -10,13 +10,13 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState';
-import { useStrings } from '../providers/StringsProvider';
-import { hexToHsv, hsvToHex, normalizeHex, type Hsv } from './color';
-import { useFieldsetState } from './Fieldset.context';
-import { composeHandlers, cx } from './props';
+import { useControlledValue } from '../hooks/useControlledState.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { hexToHsv, hsvToHex, normalizeHex, type Hsv } from './color.js';
+import { useFieldsetState } from './Fieldset.context.js';
+import { composeHandlers, cx } from './props.js';
 import styles from './ColorPicker.module.css';
-import { focusWithoutScroll } from './revealRing';
+import { focusWithoutScroll } from './revealRing.js';
 
 export type ColorPickerRootProps = {
   /** Controlled color as #rrggbb. Pass with onValueChange. */

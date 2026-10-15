@@ -1,5 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import { useRefElement } from './useRefElement';
+import { useRefElement } from './useRefElement.js';
 
 export type SheetSnap = 'mid' | 'full';
 

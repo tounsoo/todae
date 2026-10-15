@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { frontModal } from '../overlay/modalStack';
+import { frontModal } from '../overlay/modalStack.js';
 
 export type AnnouncePoliteness = 'polite' | 'assertive';
 

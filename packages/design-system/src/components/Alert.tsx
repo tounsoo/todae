@@ -1,9 +1,9 @@
 import { type ComponentPropsWithRef, type ReactNode } from 'react';
-import { Button, type ButtonActionProps } from './Button';
-import { useStrings } from '../providers/StringsProvider';
-import { useDismissLabel } from './dismissLabel';
-import { useCloseGlyph } from './closeGlyph';
-import { cx } from './props';
+import { Button, type ButtonActionProps } from './Button.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { useDismissLabel } from './dismissLabel.js';
+import { useCloseGlyph } from './closeGlyph.js';
+import { cx } from './props.js';
 import styles from './Alert.module.css';
 
 export type AlertTone = 'info' | 'success' | 'warning' | 'critical';

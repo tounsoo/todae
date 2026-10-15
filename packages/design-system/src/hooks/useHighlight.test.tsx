@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useHighlight, type UseHighlightOptions } from './useHighlight';
+import { useHighlight, type UseHighlightOptions } from './useHighlight.js';
 
 // jsdom has no Custom Highlight API; this stands in for CSS.highlights and Highlight.
 class FakeHighlight extends Set<AbstractRange> {

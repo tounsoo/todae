@@ -1,9 +1,9 @@
 import type { ComponentPropsWithRef } from 'react';
-import { DEFAULT_STRINGS } from '../providers/strings';
-import { cx } from './cx';
+import { DEFAULT_STRINGS } from '../providers/strings.js';
+import { cx } from './cx.js';
 import styles from './Pagination.module.css';
 
-export { paginationRange, type PaginationRangeItem, type PaginationRangeOptions } from './paginationRange';
+export { paginationRange, type PaginationRangeItem, type PaginationRangeOptions } from './paginationRange.js';
 
 /**
  * A `nav` landmark holding an ordered list of pages. Named by the `pagination`

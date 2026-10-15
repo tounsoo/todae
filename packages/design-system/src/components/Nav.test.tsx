@@ -1,8 +1,8 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { GlyphsProvider } from '../providers/GlyphsProvider';
-import type { LinkRenderProps } from './Link';
-import { Nav } from './Nav';
+import { GlyphsProvider } from '../providers/GlyphsProvider.js';
+import type { LinkRenderProps } from './Link.js';
+import { Nav } from './Nav.js';
 
 afterEach(cleanup);
 

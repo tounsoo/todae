@@ -1,5 +1,5 @@
 import { useRef, type RefObject } from 'react';
-import { useChipMeasure } from '../components/useChipMeasure';
+import { useChipMeasure } from '../components/useChipMeasure.js';
 
 export type UseChipListOptions = {
   chips: readonly string[];

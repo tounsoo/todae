@@ -2,18 +2,18 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-import { usePopover } from '../hooks/usePopover';
-import { BottomSheet } from '../components/BottomSheet';
-import { Dialog } from '../components/Dialog';
-import { Drawer } from '../components/Drawer';
-import { Checkbox } from '../components/Checkbox';
-import { ColorPicker } from '../components/ColorPicker';
-import { Field } from '../components/Field';
-import { Popover } from '../components/Popover';
-import { ScrollArea } from '../components/ScrollArea';
-import { Switch } from '../components/Switch';
-import { Tree } from '../components/Tree';
-import { focusWithoutScroll } from '../components/revealRing';
+import { usePopover } from '../hooks/usePopover.js';
+import { BottomSheet } from '../components/BottomSheet.js';
+import { Dialog } from '../components/Dialog.js';
+import { Drawer } from '../components/Drawer.js';
+import { Checkbox } from '../components/Checkbox.js';
+import { ColorPicker } from '../components/ColorPicker.js';
+import { Field } from '../components/Field.js';
+import { Popover } from '../components/Popover.js';
+import { ScrollArea } from '../components/ScrollArea.js';
+import { Switch } from '../components/Switch.js';
+import { Tree } from '../components/Tree.js';
+import { focusWithoutScroll } from '../components/revealRing.js';
 
 function Themed({ children }: { children: ReactNode }) {
   return (

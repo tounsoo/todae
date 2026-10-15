@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useDropzone, type UseDropzoneOptions } from '../index';
+import { useDropzone, type UseDropzoneOptions } from '../index.js';
 
 afterEach(cleanup);
 

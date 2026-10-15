@@ -1,12 +1,12 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
-import { resetMatchMedia, setMatchMedia } from '../test/setup';
+import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 import {
   resolveSheetPresentation,
   SHEET_NARROW_WIDTH,
   useSheetPresentation,
-} from './useSheetPresentation';
+} from './useSheetPresentation.js';
 
 afterEach(() => {
   cleanup();

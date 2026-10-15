@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Text, type TextAs } from './Text';
+import { Text, type TextAs } from './Text.js';
 import styles from './Text.module.css';
 
 afterEach(cleanup);

@@ -1,8 +1,8 @@
-import { GlyphsProvider, useGlyphs } from '../providers/GlyphsProvider';
-import { useStrings } from '../providers/StringsProvider';
-import { ItemWithGlyph, Breadcrumbs as ServerBreadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './Breadcrumbs';
+import { GlyphsProvider, useGlyphs } from '../providers/GlyphsProvider.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { ItemWithGlyph, Breadcrumbs as ServerBreadcrumbs, type BreadcrumbsItemProps, type BreadcrumbsRootProps } from './Breadcrumbs.js';
 
-export type { BreadcrumbsItemProps, BreadcrumbsRootProps } from './Breadcrumbs';
+export type { BreadcrumbsItemProps, BreadcrumbsRootProps } from './Breadcrumbs.js';
 
 // A separator prop set on the trail beats the provider's glyph. The provider
 // is always there, so setting the prop never remounts the trail.

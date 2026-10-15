@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { sameValues } from '../hooks/useRovingFocus';
+import { sameValues } from '../hooks/useRovingFocus.js';
 
 // Chip identity when the owner gives no getKey. Keys carry over from the
 // last chips, so a chip keeps its key, and React its node, while chips are

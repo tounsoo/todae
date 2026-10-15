@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from './anchorName';
+import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from './anchorName.js';
 
 describe('mergeAnchorNames', () => {
   it('adds a name to a list once and drops none', () => {

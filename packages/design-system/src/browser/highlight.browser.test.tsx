@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { useHighlight } from '../index';
+import { useHighlight } from '../index.js';
 
 function Search({ query }: { query: string }) {
   const highlight = useHighlight({ name: 'browser-search', query, priority: 2 });

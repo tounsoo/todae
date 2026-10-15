@@ -1,21 +1,21 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Field } from '../components/Field';
-import { OptionList } from '../components/OptionList';
-import { Popover } from '../components/Popover';
-import { optionDomId } from '../components/OptionList.ids';
-import { resetMatchMedia, setMatchMedia } from '../test/setup';
-import * as api from '../index';
-import type { BottomSheetRootProps } from '../components/BottomSheet';
-import type { DialogRootProps } from '../components/Dialog';
+import { Field } from '../components/Field.js';
+import { OptionList } from '../components/OptionList.js';
+import { Popover } from '../components/Popover.js';
+import { optionDomId } from '../components/OptionList.ids.js';
+import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
+import * as api from '../index.js';
+import type { BottomSheetRootProps } from '../components/BottomSheet.js';
+import type { DialogRootProps } from '../components/Dialog.js';
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
-import { StringsProvider } from '../providers/StringsProvider';
+import { StringsProvider } from '../providers/StringsProvider.js';
 import {
   useCombobox,
   type ComboboxOption,
   type UseComboboxResult,
   type UseComboboxSingleOptions,
-} from './useCombobox';
+} from './useCombobox.js';
 
 afterEach(() => {
   cleanup();

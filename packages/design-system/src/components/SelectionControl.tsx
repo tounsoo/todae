@@ -1,9 +1,9 @@
 import type { ChangeEvent, InputHTMLAttributes, ReactNode, Ref } from 'react';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { useFieldsetState } from './Fieldset.context';
-import { CheckGlyph, glyphOr } from './glyphs';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { useFieldsetState } from './Fieldset.context.js';
+import { CheckGlyph, glyphOr } from './glyphs.js';
 import styles from './selection.module.css';
-import { cx } from './cx';
+import { cx } from './cx.js';
 
 export type SelectionKind = 'checkbox' | 'radio' | 'switch';
 

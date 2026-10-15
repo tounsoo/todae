@@ -17,15 +17,15 @@ import {
   type TooltipCommand,
   type TooltipEvent,
   type TooltipOpenReason,
-} from '../components/Tooltip.intent';
-import type { TooltipWire } from '../components/Tooltip.wire';
-import { getTabbables } from '../overlay/tabbables';
-import { useEscapeKey } from '../overlay/useEscapeKey';
-import { useComposedRefs, useStableComposedRef } from '../components/props';
-import { useDomId } from '../components/domId';
-import { anchorTriggerStyle } from '../overlay/anchorName';
-import { cssTimeMs } from '../overlay/cssTime';
-import { useControlledState } from './useControlledState';
+} from '../components/Tooltip.intent.js';
+import type { TooltipWire } from '../components/Tooltip.wire.js';
+import { getTabbables } from '../overlay/tabbables.js';
+import { useEscapeKey } from '../overlay/useEscapeKey.js';
+import { useComposedRefs, useStableComposedRef } from '../components/props.js';
+import { useDomId } from '../components/domId.js';
+import { anchorTriggerStyle } from '../overlay/anchorName.js';
+import { cssTimeMs } from '../overlay/cssTime.js';
+import { useControlledState } from './useControlledState.js';
 
 export type { TooltipOpenReason, TooltipWire };
 

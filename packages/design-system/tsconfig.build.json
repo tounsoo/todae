@@ -6,7 +6,9 @@
     "emitDeclarationOnly": true,
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"]
+    "types": ["node"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
   },
   "include": ["src"],
   "exclude": ["src/test", "src/**/*.meta.ts", "src/meta.ts", "src/**/*.test.ts", "src/**/*.test.tsx"]

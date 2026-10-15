@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useRef, useState, type RefObject } from 'react';
-import { planChipOverflow } from './chipOverflow';
+import { planChipOverflow } from './chipOverflow.js';
 
 export function useChipMeasure({
   chips,

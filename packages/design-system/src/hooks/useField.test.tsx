@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Field, Label, useField } from '../index';
+import { Field, Label, useField } from '../index.js';
 
 afterEach(cleanup);
 

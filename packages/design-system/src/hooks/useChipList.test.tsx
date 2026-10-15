@@ -1,9 +1,9 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { useRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Field } from '../components/Field';
-import * as api from '../index';
-import { useChipList } from './useChipList';
+import { Field } from '../components/Field.js';
+import * as api from '../index.js';
+import { useChipList } from './useChipList.js';
 
 const EIGHT = ['aa', 'bb', 'cc', 'dd', 'ee', 'ff', 'gg', 'hh'];
 const observers: Array<{ cb: ResizeObserverCallback }> = [];

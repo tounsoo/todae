@@ -14,20 +14,20 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState';
-import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover';
-import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
-import { usePopoverSync } from '../overlay/usePopoverSync';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { useFocusLeave } from '../overlay/useFocusLeave';
-import { Button, type ButtonActionProps } from './Button';
-import { useDomId } from './domId';
-import { CheckGlyph, glyphOr } from './glyphs';
-import { composeHandlers, cx, useComposedRefs } from './props';
+import { useControlledValue } from '../hooks/useControlledState.js';
+import { usePopoverInternal, type PopoverCloseReason, type UsePopoverResult } from '../hooks/usePopover.js';
+import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
+import { usePopoverSync } from '../overlay/usePopoverSync.js';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { useFocusLeave } from '../overlay/useFocusLeave.js';
+import { Button, type ButtonActionProps } from './Button.js';
+import { useDomId } from './domId.js';
+import { CheckGlyph, glyphOr } from './glyphs.js';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
 import popoverStyles from './Popover.module.css';
 import styles from './Menu.module.css';
-import { ToolbarContext, useToolbar } from './toolbarContext';
-import { focusWithoutScroll } from './revealRing';
+import { ToolbarContext, useToolbar } from './toolbarContext.js';
+import { focusWithoutScroll } from './revealRing.js';
 
 /** Why the menu opened or closed. `select` is an item choice; `tab` is focus leaving with Tab. */
 export type MenuOpenChangeReason = PopoverCloseReason | 'select' | 'tab';

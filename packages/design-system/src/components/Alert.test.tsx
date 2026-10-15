@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Alert, type AlertTone } from './Alert';
+import { Alert, type AlertTone } from './Alert.js';
 import { renderToString } from 'react-dom/server';
 
 afterEach(cleanup);

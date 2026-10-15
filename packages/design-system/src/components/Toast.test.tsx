@@ -2,11 +2,11 @@ import { act, cleanup, fireEvent, render as rtlRender, screen, waitFor } from '@
 import { useRef, useState } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { heldModals } from '../overlay/modalStack';
-import { useModalLayer } from '../hooks/useModalLayer';
-import { Dialog } from './Dialog';
-import { matchesHotkey, Toast, type ToastRegionProps } from './Toast';
-import { createToaster, type Toaster } from './toaster';
+import { heldModals } from '../overlay/modalStack.js';
+import { useModalLayer } from '../hooks/useModalLayer.js';
+import { Dialog } from './Dialog.js';
+import { matchesHotkey, Toast, type ToastRegionProps } from './Toast.js';
+import { createToaster, type Toaster } from './toaster.js';
 
 afterEach(() => {
   cleanup();

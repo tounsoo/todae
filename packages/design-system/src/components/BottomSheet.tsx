@@ -13,22 +13,22 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { useDomId } from './domId';
-import { Button, type ButtonActionProps } from './Button';
-import { useControlledValue } from '../hooks/useControlledState';
-import { useStrings } from '../providers/StringsProvider';
-import { useDismissLabel } from './dismissLabel';
-import { useCloseGlyph } from './closeGlyph';
-import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen';
-import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
-import { useFocusRestore } from '../overlay/useFocusRestore';
-import { initialFocusTarget, useInitialFocus } from '../overlay/useInitialFocus';
-import { useModalDialog } from '../overlay/useModalDialog';
-import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag';
-import { composeHandlers, cx, useComposedRefs } from './props';
-import { revealRing } from './revealRing';
+import { useDomId } from './domId.js';
+import { Button, type ButtonActionProps } from './Button.js';
+import { useControlledValue } from '../hooks/useControlledState.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { useDismissLabel } from './dismissLabel.js';
+import { useCloseGlyph } from './closeGlyph.js';
+import { useControlledOpen, type OverlayCloseReason } from '../overlay/useControlledOpen.js';
+import { SHEET_EXIT_MS, useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
+import { useFocusRestore } from '../overlay/useFocusRestore.js';
+import { initialFocusTarget, useInitialFocus } from '../overlay/useInitialFocus.js';
+import { useModalDialog } from '../overlay/useModalDialog.js';
+import { useSnapDrag, type SheetSnap } from '../overlay/useSnapDrag.js';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { revealRing } from './revealRing.js';
 import styles from './BottomSheet.module.css';
-import { ToolbarContext } from './toolbarContext';
+import { ToolbarContext } from './toolbarContext.js';
 
 export type { SheetSnap };
 /**

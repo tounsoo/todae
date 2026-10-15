@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
-import { Field } from '../components/Field';
+import { Field } from '../components/Field.js';
 
 function Time({ initial }: { initial: string | null }) {
   const [time, setTime] = useState<Temporal.PlainTime | null>(initial ? Temporal.PlainTime.from(initial) : null);

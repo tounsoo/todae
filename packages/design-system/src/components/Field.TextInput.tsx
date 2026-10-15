@@ -1,9 +1,9 @@
 import type { ChangeEvent, InputHTMLAttributes, Ref } from 'react';
-import { mergeDescribedBy, useFieldContext } from './Field.context';
-import { cx } from './props';
+import { mergeDescribedBy, useFieldContext } from './Field.context.js';
+import { cx } from './props.js';
 import styles from './Field.module.css';
-import { useField } from '../hooks/useField';
-import { useTextEntry } from './Field.shared';
+import { useField } from '../hooks/useField.js';
+import { useTextEntry } from './Field.shared.js';
 
 /**
  * Input types that take a string value. The number type keeps its native

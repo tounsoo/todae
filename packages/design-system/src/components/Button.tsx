@@ -10,12 +10,12 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { useControlledState } from '../hooks/useControlledState';
-import { useTooltip } from '../hooks/useTooltip';
-import { cx } from './cx';
+import { useControlledState } from '../hooks/useControlledState.js';
+import { useTooltip } from '../hooks/useTooltip.js';
+import { cx } from './cx.js';
 import styles from './Button.module.css';
-import { composeHandlers, useComposedRefs } from './props';
-import { Tooltip } from './Tooltip';
+import { composeHandlers, useComposedRefs } from './props.js';
+import { Tooltip } from './Tooltip.js';
 
 /**
  * Button variants, one per `buttonVariant` context in the token resolver. A

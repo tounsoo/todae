@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import type { FieldChipInputProps } from '../components/Field';
-import { useChipField } from './useChipField';
+import type { FieldChipInputProps } from '../components/Field.js';
+import { useChipField } from './useChipField.js';
 
 describe('useChipField', () => {
   it('keeps reset stable and restores the latest initial values', () => {

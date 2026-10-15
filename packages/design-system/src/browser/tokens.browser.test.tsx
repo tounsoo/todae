@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-import { BottomSheet, Button, Checkbox, Pagination, Tabs } from '../index';
+import { BottomSheet, Button, Checkbox, Pagination, Tabs } from '../index.js';
 
 function Themed({ children }: { children: ReactNode }) {
   return (

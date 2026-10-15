@@ -1,11 +1,11 @@
 import { useRef, type ComponentPropsWithoutRef, type CSSProperties, type FocusEvent, type ReactNode } from 'react';
-import { usePopoverSync } from '../overlay/usePopoverSync';
-import { composeHandlers, useComposedRefs } from './props';
-import { revealRing } from './revealRing';
-import type { PopoverWire } from './Popover.wire';
-import { cx } from './cx';
+import { usePopoverSync } from '../overlay/usePopoverSync.js';
+import { composeHandlers, useComposedRefs } from './props.js';
+import { revealRing } from './revealRing.js';
+import type { PopoverWire } from './Popover.wire.js';
+import { cx } from './cx.js';
 import styles from './Popover.module.css';
-import { ToolbarContext } from './toolbarContext';
+import { ToolbarContext } from './toolbarContext.js';
 
 type PopoverBase = {
   children?: ReactNode;

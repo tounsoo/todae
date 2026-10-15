@@ -13,18 +13,18 @@ import {
   type RefObject,
   type SyntheticEvent,
 } from 'react';
-import { useDomId } from '../components/domId';
-import type { FieldTextareaHighlight, FieldTextareaProps } from '../components/Field';
-import type { OptionListOptionProps, OptionListSingleProps } from '../components/OptionList';
-import { optionDomId } from '../components/OptionList.ids';
-import type { PopoverWire } from '../components/Popover.wire';
-import { composeHandlers, useComposedRefs, useStableComposedRef } from '../components/props';
-import { useStrings } from '../providers/StringsProvider';
-import { useAnnouncer } from './useAnnouncer';
-import { createAsyncGate } from './useCombobox.async';
-import { defaultFilter, filterOptions } from './useCombobox.filter';
-import type { ComboboxOption } from './useCombobox.types';
-import { useControlledState } from './useControlledState';
+import { useDomId } from '../components/domId.js';
+import type { FieldTextareaHighlight, FieldTextareaProps } from '../components/Field.js';
+import type { OptionListOptionProps, OptionListSingleProps } from '../components/OptionList.js';
+import { optionDomId } from '../components/OptionList.ids.js';
+import type { PopoverWire } from '../components/Popover.wire.js';
+import { composeHandlers, useComposedRefs, useStableComposedRef } from '../components/props.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { useAnnouncer } from './useAnnouncer.js';
+import { createAsyncGate } from './useCombobox.async.js';
+import { defaultFilter, filterOptions } from './useCombobox.filter.js';
+import type { ComboboxOption } from './useCombobox.types.js';
+import { useControlledState } from './useControlledState.js';
 import {
   findQuery,
   sameTokens,
@@ -34,10 +34,10 @@ import {
   type MentionQuery,
   type MentionToken,
   type MentionTriggerPosition,
-} from './useMentions.detect';
-import { usePopoverInternal } from './usePopover';
+} from './useMentions.detect.js';
+import { usePopoverInternal } from './usePopover.js';
 
-export type { MentionToken, MentionTriggerPosition } from './useMentions.detect';
+export type { MentionToken, MentionTriggerPosition } from './useMentions.detect.js';
 
 /** The text and its tokens, which change together. */
 export type MentionDraft = { text: string; tokens: readonly MentionToken[] };

@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, CSSProperties } from 'react';
-import { cx } from './cx';
+import { cx } from './cx.js';
 import styles from './Grid.module.css';
 
 /**

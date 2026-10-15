@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatTime, parseTime } from './timeText';
+import { formatTime, parseTime } from './timeText.js';
 
 const time = (text: string) => Temporal.PlainTime.from(text);
 const read = (text: string, locale?: string) => parseTime(text, { locale })?.toString() ?? null;

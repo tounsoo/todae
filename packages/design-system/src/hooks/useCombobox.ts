@@ -8,38 +8,38 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from 'react';
-import { useDomId } from '../components/domId';
-import { optionDomId } from '../components/OptionList.ids';
-import type { BottomSheetRootProps } from '../components/BottomSheet';
-import type { ButtonRootProps } from '../components/Button';
-import type { DialogRootProps } from '../components/Dialog';
-import type { FieldChipInputProps, FieldRootProps, FieldTextInputProps } from '../components/Field';
+import { useDomId } from '../components/domId.js';
+import { optionDomId } from '../components/OptionList.ids.js';
+import type { BottomSheetRootProps } from '../components/BottomSheet.js';
+import type { ButtonRootProps } from '../components/Button.js';
+import type { DialogRootProps } from '../components/Dialog.js';
+import type { FieldChipInputProps, FieldRootProps, FieldTextInputProps } from '../components/Field.js';
 import type {
   OptionListMultipleProps,
   OptionListSingleProps,
   OptionListOptionProps,
-} from '../components/OptionList';
-import type { PopoverWire } from '../components/Popover.wire';
-import { useStrings } from '../providers/StringsProvider';
-import { createAsyncGate } from './useCombobox.async';
-import { usePopoverInternal } from './usePopover';
-import { defaultFilter, filterOptions } from './useCombobox.filter';
+} from '../components/OptionList.js';
+import type { PopoverWire } from '../components/Popover.wire.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { createAsyncGate } from './useCombobox.async.js';
+import { usePopoverInternal } from './usePopover.js';
+import { defaultFilter, filterOptions } from './useCombobox.filter.js';
 import type {
   ComboboxCloseReason,
   ComboboxItem,
   ComboboxOption,
-} from './useCombobox.types';
-import { useControlledState } from './useControlledState';
+} from './useCombobox.types.js';
+import { useControlledState } from './useControlledState.js';
 import {
   useSheetPresentation,
   type SheetPresentation,
-} from './useSheetPresentation';
+} from './useSheetPresentation.js';
 
 export type {
   ComboboxCloseReason,
   ComboboxItem,
   ComboboxOption,
-} from './useCombobox.types';
+} from './useCombobox.types.js';
 
 const CREATE_VALUE = '__create__';
 

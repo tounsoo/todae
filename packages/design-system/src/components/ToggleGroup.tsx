@@ -8,14 +8,14 @@ import {
   type FocusEvent,
   type ReactNode,
 } from 'react';
-import { useControlledState } from '../hooks/useControlledState';
-import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
-import { useFocusLeave } from '../overlay/useFocusLeave';
-import { Button, type ButtonRootProps } from './Button';
+import { useControlledState } from '../hooks/useControlledState.js';
+import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
+import { useFocusLeave } from '../overlay/useFocusLeave.js';
+import { Button, type ButtonRootProps } from './Button.js';
 import buttonStyles from './Button.module.css';
-import { cx } from './cx';
-import { useComposedRefs } from './props';
-import { useToolbar } from './toolbarContext';
+import { cx } from './cx.js';
+import { useComposedRefs } from './props.js';
+import { useToolbar } from './toolbarContext.js';
 import styles from './ToggleGroup.module.css';
 
 export type ToggleGroupOrientation = 'horizontal' | 'vertical';

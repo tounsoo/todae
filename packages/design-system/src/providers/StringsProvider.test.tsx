@@ -15,10 +15,10 @@ import {
   useCombobox,
   useStrings,
   type Strings,
-} from '../index';
-import { Breadcrumbs as ServerBreadcrumbs } from '../server/breadcrumbs';
-import { Pagination as ServerPagination } from '../server/pagination';
-import { DEFAULT_STRINGS } from './strings';
+} from '../index.js';
+import { Breadcrumbs as ServerBreadcrumbs } from '../server/breadcrumbs.js';
+import { Pagination as ServerPagination } from '../server/pagination.js';
+import { DEFAULT_STRINGS } from './strings.js';
 
 afterEach(() => {
   cleanup();

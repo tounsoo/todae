@@ -3,8 +3,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { Label, type LabelRootProps } from './Label';
-import * as api from '../index';
+import { Label, type LabelRootProps } from './Label.js';
+import * as api from '../index.js';
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'Label.module.css'), 'utf8');
 

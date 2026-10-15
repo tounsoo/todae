@@ -1,10 +1,10 @@
 import { useContext, useEffect, useSyncExternalStore, type ComponentPropsWithRef, type CSSProperties } from 'react';
-import { FieldContext, type FieldContextValue } from './Field.context';
-import { cx } from './props';
+import { FieldContext, type FieldContextValue } from './Field.context.js';
+import { cx } from './props.js';
 import styles from './Field.module.css';
-import { useStrings, type Strings } from '../providers/StringsProvider';
-import { subscribeCount } from './Field.shared';
-import { VisuallyHidden } from './VisuallyHidden';
+import { useStrings, type Strings } from '../providers/StringsProvider.js';
+import { subscribeCount } from './Field.shared.js';
+import { VisuallyHidden } from './VisuallyHidden.js';
 
 export type FieldCounterProps = {
   className?: string;

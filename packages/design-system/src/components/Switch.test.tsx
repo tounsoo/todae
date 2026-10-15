@@ -5,8 +5,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { Switch, type SwitchRootProps } from './Switch';
-import * as api from '../index';
+import { Switch, type SwitchRootProps } from './Switch.js';
+import * as api from '../index.js';
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'selection.module.css'), 'utf8');
 

@@ -11,11 +11,11 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState';
-import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
-import { useFocusLeave } from '../overlay/useFocusLeave';
-import { composeHandlers, cx, useComposedRefs } from './props';
-import { domSafe, useDomId } from './domId';
+import { useControlledValue } from '../hooks/useControlledState.js';
+import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
+import { useFocusLeave } from '../overlay/useFocusLeave.js';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { domSafe, useDomId } from './domId.js';
 import styles from './Tabs.module.css';
 
 export type TabsOrientation = 'horizontal' | 'vertical';

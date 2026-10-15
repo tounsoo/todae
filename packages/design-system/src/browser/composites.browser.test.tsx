@@ -2,15 +2,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { useState, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { Button } from '../components/Button';
-import { Calendar } from '../components/Calendar';
-import { Field } from '../components/Field';
-import { formatDate, parseDate } from '../components/dateText';
-import { Label } from '../components/Label';
-import { Menu } from '../components/Menu';
-import { Tabs } from '../components/Tabs';
-import { useField } from '../hooks/useField';
-import { useRovingFocus } from '../hooks/useRovingFocus';
+import { Button } from '../components/Button.js';
+import { Calendar } from '../components/Calendar.js';
+import { Field } from '../components/Field.js';
+import { formatDate, parseDate } from '../components/dateText.js';
+import { Label } from '../components/Label.js';
+import { Menu } from '../components/Menu.js';
+import { Tabs } from '../components/Tabs.js';
+import { useField } from '../hooks/useField.js';
+import { useRovingFocus } from '../hooks/useRovingFocus.js';
 
 function Themed({ children, dir }: { children: ReactNode; dir?: 'rtl' }) {
   return (

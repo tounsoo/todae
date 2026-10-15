@@ -7,12 +7,12 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { Chip } from './Chip';
-import { cx, useComposedRefs } from './props';
-import { resolveCommitKeys, type ChipCommitKey } from './commitKeys';
+import { Chip } from './Chip.js';
+import { cx, useComposedRefs } from './props.js';
+import { resolveCommitKeys, type ChipCommitKey } from './commitKeys.js';
 import styles from './Field.module.css';
-import { useChipList } from '../hooks/useChipList';
-import { useField } from '../hooks/useField';
+import { useChipList } from '../hooks/useChipList.js';
+import { useField } from '../hooks/useField.js';
 
 export type FieldChipInputProps = {
   chips: readonly string[];

@@ -7,7 +7,7 @@ import { createElement, createRef, Profiler, StrictMode, useState } from 'react'
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Button } from './Button';
+import { Button } from './Button.js';
 import {
   Field,
   type FieldAffixProps,
@@ -15,11 +15,11 @@ import {
   type FieldIconProps,
   type FieldRootProps,
   type FieldTextInputProps,
-} from './Field';
-import { useChipField } from '../hooks/useChipField';
-import { useField } from '../hooks/useField';
-import * as api from '../index';
-import { StringsProvider } from '../providers/StringsProvider';
+} from './Field.js';
+import { useChipField } from '../hooks/useChipField.js';
+import { useField } from '../hooks/useField.js';
+import * as api from '../index.js';
+import { StringsProvider } from '../providers/StringsProvider.js';
 import vhStyles from './VisuallyHidden.module.css';
 
 afterEach(cleanup);
@@ -1498,7 +1498,7 @@ describe('Field.Counter', () => {
     vi.resetModules();
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const { render: renderFresh } = await import('@testing-library/react');
-    const again = await import('./Field');
+    const again = await import('./Field.js');
     renderFresh(
       <again.Field.Root>
         <again.Field.Counter />

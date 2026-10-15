@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { formatDate, parseDate } from './dateText';
+import { formatDate, parseDate } from './dateText.js';
 
 const date = (text: string) => Temporal.PlainDate.from(text);
 const read = (text: string, locale?: string) => parseDate(text, { locale })?.toString() ?? null;

@@ -1,6 +1,6 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import type { ComponentPropsWithRef, ReactNode } from 'react';
-import { cx } from './cx';
+import { cx } from './cx.js';
 import styles from './Message.module.css';
 
 /** Who wrote the message. It sets layout and tokens only: a user's message sits at the end side in a bubble. */

@@ -1,10 +1,10 @@
 import { createContext, useContext, type ComponentPropsWithRef } from 'react';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { useStrings } from '../providers/StringsProvider';
-import { cx } from './cx';
-import { CheckGlyph, ErrorGlyph, glyphOr } from './glyphs';
-import { Loader } from './Loader';
-import { VisuallyHidden } from './VisuallyHidden';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { cx } from './cx.js';
+import { CheckGlyph, ErrorGlyph, glyphOr } from './glyphs.js';
+import { Loader } from './Loader.js';
+import { VisuallyHidden } from './VisuallyHidden.js';
 import styles from './Steps.module.css';
 
 /** Where a step is: `done`, the `current` one running now, `pending`, or stopped with an `error`. */

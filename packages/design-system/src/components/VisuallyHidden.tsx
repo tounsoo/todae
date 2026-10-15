@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef } from 'react';
-import { cx } from './cx';
+import { cx } from './cx.js';
 import styles from './VisuallyHidden.module.css';
 
 /**
