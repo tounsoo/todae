@@ -7,7 +7,6 @@ export const DIALOG_EXIT_MS = 160;
 export const SHEET_EXIT_MS = 240;
 export const DRAWER_EXIT_MS = 240;
 
-
 /** Duration plus delay of `propertyName`'s computed transition, or null when none applies. */
 export function transitionMs(node: Element, propertyName: string): number | null {
   const style = getComputedStyle(node);

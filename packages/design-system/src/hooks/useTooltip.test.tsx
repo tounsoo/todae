@@ -125,14 +125,19 @@ describe('useTooltip', () => {
 
   it('waits for the delay tokens the trigger computes, unless a delay is passed', () => {
     const tokens = { ['--todae-tooltip-delay-show' as string]: '0.05s', ['--todae-tooltip-delay-hide' as string]: '20ms' };
-    function Tokened({ showDelay }: { showDelay?: number }) {
-      const tooltip = useTooltip({ showDelay });
+    function Tokened({ showDelay, hideDelay }: { showDelay?: number; hideDelay?: number }) {
+      const tooltip = useTooltip({ showDelay, hideDelay });
+      const { id, ref, style } = tooltip.getTooltipProps();
       return (
         <>
           <button type="button" {...tooltip.getTriggerProps({ style: tokens })}>
             Hint
           </button>
-          {tooltip.open ? <div role="tooltip" {...tooltip.getTooltipProps()}>Archive</div> : null}
+          {tooltip.open ? (
+            <div role="tooltip" id={id} ref={ref} style={style}>
+              Archive
+            </div>
+          ) : null}
         </>
       );
     }
@@ -150,12 +155,18 @@ describe('useTooltip', () => {
     expect(screen.queryByRole('tooltip')).toBeNull();
     unmount();
 
-    render(<Tokened showDelay={200} />);
-    fireEvent.pointerEnter(screen.getByRole('button', { name: 'Hint' }));
+    render(<Tokened showDelay={200} hideDelay={60} />);
+    const passed = screen.getByRole('button', { name: 'Hint' });
+    fireEvent.pointerEnter(passed);
     advance(199);
     expect(screen.queryByRole('tooltip')).toBeNull();
     advance(1);
     expect(screen.getByRole('tooltip')).toBeTruthy();
+    fireEvent.pointerLeave(passed);
+    advance(59);
+    expect(screen.queryByRole('tooltip')).not.toBeNull();
+    advance(1);
+    expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
   it('waits 300ms to show and 100ms to hide without the delay tokens', () => {
