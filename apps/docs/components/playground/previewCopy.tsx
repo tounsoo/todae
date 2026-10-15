@@ -4,10 +4,10 @@ import type { Locale } from '../../lib/i18n/config';
 
 type Tone = 'success' | 'warning' | 'critical' | 'neutral';
 
-/** The preview's words in one language. Product, plan, customer and file names stay as they are. */
 /** A reply as the page shows it, and the markdown Copy puts on the clipboard. */
 export type PreviewReply = { content: ReactNode; source: string };
 
+/** The preview's words in one language. Product, plan, customer and file names stay as they are. */
 export type PreviewCopy = {
   user: { name: string; initials: string };
   page: string;
