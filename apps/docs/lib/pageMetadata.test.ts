@@ -12,7 +12,7 @@ import { ENGLISH_PAGES } from './i18n/englishPages';
 import { localeMetadata, ogImagePath, pageMetadata } from './i18n/metadata';
 import { isTranslated } from './i18n/pages';
 import { coreColor, oklchToHex } from './og/colors';
-import { displayUrl, estimateEms, TEXT_WIDTH, titleSize, urlSize } from './og/OgCard';
+import { estimateEms, TEXT_WIDTH, TITLE_HEIGHT, titleSize } from './og/OgCard';
 import { ogPages } from './og/pages';
 import remarkPageMetadata, { DESCRIPTION_LIMIT, pageOf, pageSummary, summarize } from './remarkPageMetadata.mjs';
 
@@ -134,22 +134,16 @@ describe('social images', () => {
     expect(pages.find((page) => page.locale === 'ko' && page.slug === 'utilities/use-modal-layer')?.eyebrow).toBe('유틸리티');
   });
 
-  it('sizes every title and address to fit the text column', () => {
+  it('sizes every title to fit the text block', () => {
     for (const page of pages) {
       const size = titleSize(page.title);
       const longest = Math.max(...page.title.split(/\s+/).map((word) => estimateEms(word)));
       expect(longest * size, `${page.locale} ${page.slug}`).toBeLessThanOrEqual(TEXT_WIDTH);
-      expect(size, `${page.locale} ${page.slug}`).toBeGreaterThanOrEqual(48);
-      expect(estimateEms(displayUrl(page), true) * urlSize(displayUrl(page))).toBeLessThanOrEqual(TEXT_WIDTH);
+      expect(Math.ceil((estimateEms(page.title) * 1.15 * size) / TEXT_WIDTH) * 1.05 * size, `${page.locale} ${page.slug}`).toBeLessThanOrEqual(TITLE_HEIGHT);
+      expect(size, `${page.locale} ${page.slug}`).toBeGreaterThanOrEqual(64);
     }
-    expect(titleSize('Button')).toBe(104);
+    expect(titleSize('Button')).toBe(200);
     expect(titleSize('useSheetPresentation')).toBeLessThan(titleSize('useModalLayer'));
-  });
-
-  it('shows the address a reader would type', () => {
-    const host = new URL(DOCS_ORIGIN).host;
-    expect(displayUrl({ locale: 'en', slug: '' })).toBe(host);
-    expect(displayUrl({ locale: 'ko', slug: 'button' })).toBe(`${host}/ko/button`);
   });
 
   it("converts Todae's OKLCH tokens to the hex the renderer reads", () => {
