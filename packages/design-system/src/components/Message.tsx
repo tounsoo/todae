@@ -71,7 +71,7 @@ function Actions({ className, reveal = 'always', ...props }: MessageActionsProps
 }
 
 // One formatter per locale, style and zone: a conversation formats many times on each render.
-const formats = new Map<string, Intl.DateTimeFormat>();
+const formats = /* @__PURE__ */ new Map<string, Intl.DateTimeFormat>();
 
 function format(value: Temporal.ZonedDateTime, locale: string | undefined, options: Intl.DateTimeFormatOptions) {
   const key = `${locale ?? ''}|${options.dateStyle ?? ''}|${options.timeStyle ?? ''}|${value.timeZoneId}`;

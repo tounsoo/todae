@@ -91,7 +91,7 @@ export interface Strings {
 }
 
 /** The English Todae ships with. */
-export const DEFAULT_STRINGS: Readonly<Strings> = Object.freeze<Strings>({
+export const DEFAULT_STRINGS: Readonly<Strings> = /* @__PURE__ */ Object.freeze<Strings>({
   close: 'Close',
   dismiss: 'Dismiss',
   notifications: 'Notifications',

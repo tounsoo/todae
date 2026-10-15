@@ -65,7 +65,7 @@ type OptionListContextValue = {
 
 type OptionEntry = { value: string; disabled: boolean; node: HTMLElement };
 
-const OptionListContext = createContext<OptionListContextValue | null>(null);
+const OptionListContext = /* @__PURE__ */ createContext<OptionListContextValue | null>(null);
 
 function useOptionList(): OptionListContextValue {
   const ctx = useContext(OptionListContext);

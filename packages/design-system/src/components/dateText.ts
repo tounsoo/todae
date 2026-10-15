@@ -11,7 +11,7 @@ type Slot = Part | 'weekday';
 
 // Dates are shown in the Gregorian calendar whatever the locale's own, as Calendar does.
 const GREGORY = { calendar: 'gregory', timeZone: 'UTC' } as const;
-const NUMERIC = { year: 'numeric', month: 'numeric', day: 'numeric', ...GREGORY } as const;
+const NUMERIC = { year: 'numeric', month: 'numeric', day: 'numeric', calendar: 'gregory', timeZone: 'UTC' } as const;
 
 /**
  * The date as `locale` writes it in numbers, such as `10/13/2026` in en-US,
@@ -80,15 +80,14 @@ const MONTH_DAY_STYLES: Intl.DateTimeFormatOptions[] = [
   { weekday: 'long', month: 'long', day: 'numeric' },
   { weekday: 'long', month: 'short', day: 'numeric' },
 ];
-const NAME_STYLES: Intl.DateTimeFormatOptions[] = [
-  ...TEMPLATE_STYLES,
+const NAME_STYLES: Intl.DateTimeFormatOptions[] = /* @__PURE__ */ TEMPLATE_STYLES.concat([
   { day: 'numeric', month: 'short', year: 'numeric' },
   { day: 'numeric', month: 'long', year: 'numeric' },
   { month: 'long' },
   { month: 'short' },
   { weekday: 'long' },
   { weekday: 'short' },
-];
+]);
 
 /**
  * The date styles as patterns for each month, or, with `noYear`, the same
@@ -167,7 +166,7 @@ type LocaleText = {
   weekdays: Map<string, number[]>;
 };
 
-const localeTexts = new Map<string, LocaleText>();
+const localeTexts = /* @__PURE__ */ new Map<string, LocaleText>();
 
 const sample = (month: number, day: number) => new Date(Date.UTC(2026, month - 1, day, 12));
 

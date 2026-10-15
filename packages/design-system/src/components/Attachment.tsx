@@ -51,7 +51,7 @@ type AttachmentContext = {
   setNamed: (named: Named | undefined) => void;
 };
 
-const Context = createContext<AttachmentContext | null>(null);
+const Context = /* @__PURE__ */ createContext<AttachmentContext | null>(null);
 
 const ROOT_ATTR = 'data-todae-attachment';
 const REMOVE_ATTR = 'data-todae-attachment-remove';

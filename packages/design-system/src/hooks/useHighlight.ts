@@ -95,7 +95,7 @@ type Holder = { highlight: Highlight; order: number };
 
 // Hooks holding each name, in the order they first mounted. The latest-mounted
 // one is registered; when it unmounts, the one before it takes the name back.
-const holders = new Map<string, Holder[]>();
+const holders = /* @__PURE__ */ new Map<string, Holder[]>();
 let mountCount = 0;
 
 function claim(name: string, holder: Holder): void {

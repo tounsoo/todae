@@ -7,11 +7,16 @@ import {
 
 export { COMPONENT_OVERRIDE_KEYS, RAW_OVERRIDE_KEYS, SEMANTIC_OVERRIDE_KEYS };
 
-export const THEME_OVERRIDE_KEYS = [
-  ...RAW_OVERRIDE_KEYS,
-  ...SEMANTIC_OVERRIDE_KEYS,
-  ...COMPONENT_OVERRIDE_KEYS,
-] as const;
+export const THEME_OVERRIDE_KEYS = /* @__PURE__ */ joinKeys(RAW_OVERRIDE_KEYS, SEMANTIC_OVERRIDE_KEYS, COMPONENT_OVERRIDE_KEYS);
+
+// A function call that bundlers can drop when THEME_OVERRIDE_KEYS goes unused; some keep a top-level spread.
+function joinKeys<A extends readonly string[], B extends readonly string[], C extends readonly string[]>(
+  a: A,
+  b: B,
+  c: C,
+): readonly [...A, ...B, ...C] {
+  return [...a, ...b, ...c];
+}
 
 export type ThemeOverrideKey = (typeof THEME_OVERRIDE_KEYS)[number];
 
@@ -87,7 +92,7 @@ export type ThemeOverride = { [K in ThemeOverrideKey]?: ThemeOverrideValue };
 /** Types of extra override keys, such as `THEME_OVERRIDE_TYPES` from a company's `todae-tokens build`. */
 export type ThemeOverrideTypes<Key extends string = string> = Readonly<Record<Key, ThemeOverrideType>>;
 
-const KEYS = new Set<string>(THEME_OVERRIDE_KEYS);
+const KEYS = /* @__PURE__ */ new Set<string>(THEME_OVERRIDE_KEYS);
 const DEV = process.env.NODE_ENV !== 'production';
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/;
@@ -113,8 +118,8 @@ export function themeOverrideType(key: ThemeOverrideKey): ThemeOverrideType {
   return THEME_OVERRIDE_TYPES[key];
 }
 
-const OVERRIDE_TYPES = new Set<string>(THEME_OVERRIDE_TYPE_NAMES);
-const GENERIC_FONT_FAMILIES = new Set([
+const OVERRIDE_TYPES = /* @__PURE__ */ new Set<string>(THEME_OVERRIDE_TYPE_NAMES);
+const GENERIC_FONT_FAMILIES = /* @__PURE__ */ new Set([
   'serif',
   'sans-serif',
   'monospace',

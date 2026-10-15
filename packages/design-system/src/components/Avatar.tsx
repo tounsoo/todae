@@ -52,7 +52,7 @@ type AvatarContextValue = {
   setStatus: (status: AvatarImageStatus) => void;
 };
 
-const AvatarContext = createContext<AvatarContextValue | null>(null);
+const AvatarContext = /* @__PURE__ */ createContext<AvatarContextValue | null>(null);
 
 function useAvatar(part: string): AvatarContextValue {
   const ctx = useContext(AvatarContext);

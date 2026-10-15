@@ -34,7 +34,7 @@ const HIDDEN: Partial<CSSStyleDeclaration> = {
 // The pending write's timer per politeness, kept on globalThis so every copy
 // of the package shares "a newer message replaces a pending one".
 type Pending = Partial<Record<AnnouncePoliteness, ReturnType<typeof setTimeout>>>;
-const PENDING = Symbol.for('todae.announcer.pending');
+const PENDING = /* @__PURE__ */ Symbol.for('todae.announcer.pending');
 
 function pendingWrites(): Pending {
   const scope = globalThis as unknown as Record<symbol, Pending | undefined>;

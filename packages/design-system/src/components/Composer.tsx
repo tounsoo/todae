@@ -38,7 +38,7 @@ export type ComposerSubmitProps = Omit<ButtonActionProps, 'type'> & {
 
 type ComposerContext = { busy: boolean };
 
-const Context = createContext<ComposerContext | null>(null);
+const Context = /* @__PURE__ */ createContext<ComposerContext | null>(null);
 
 function useComposer(part: string): ComposerContext {
   const context = useContext(Context);

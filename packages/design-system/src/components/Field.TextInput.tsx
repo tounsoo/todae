@@ -15,7 +15,7 @@ import { useTextEntry } from './Field.shared.js';
 export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number';
 
 // Browsers ignore maxLength on these, so no limit is shown or announced.
-const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = new Set(['number']);
+const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = /* @__PURE__ */ new Set(['number']);
 
 export type FieldTextInputProps = {
   value: string;

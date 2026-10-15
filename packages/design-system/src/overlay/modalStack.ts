@@ -1,14 +1,14 @@
 /** Modal <dialog> elements in Todae's stack, in the order they were shown, so the last one is in front. */
 const open: HTMLDialogElement[] = [];
-const listeners = new Set<(reshown: boolean) => void>();
+const listeners = /* @__PURE__ */ new Set<(reshown: boolean) => void>();
 // When each element was last shown, as a running count.
-const shownAt = new WeakMap<HTMLDialogElement, number>();
+const shownAt = /* @__PURE__ */ new WeakMap<HTMLDialogElement, number>();
 let shows = 0;
 // One observer for every element, as its records come in the order the
 // changes happened, also across elements. Elements stay observed, so their
 // shows keep being counted.
 let observer: MutationObserver | undefined;
-const watchers = new Map<HTMLDialogElement, Set<(shown: boolean) => void>>();
+const watchers = /* @__PURE__ */ new Map<HTMLDialogElement, Set<(shown: boolean) => void>>();
 
 function notify(reshown = false): void {
   for (const listener of [...listeners]) listener(reshown);

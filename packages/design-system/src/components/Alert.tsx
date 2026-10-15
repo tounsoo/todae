@@ -24,7 +24,7 @@ export type AlertDescriptionProps = ComponentPropsWithRef<'div'>;
 export type AlertActionsProps = ComponentPropsWithRef<'div'>;
 export type AlertCloseProps = ButtonActionProps;
 
-const ASSERTIVE: ReadonlySet<AlertTone> = new Set(['warning', 'critical']);
+const ASSERTIVE: ReadonlySet<AlertTone> = /* @__PURE__ */ new Set(['warning', 'critical']);
 
 function Root({ tone = 'info', role, className, ...props }: AlertRootProps) {
   return (

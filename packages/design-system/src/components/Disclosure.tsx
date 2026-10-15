@@ -11,7 +11,7 @@ export type DisclosureRootProps = ComponentPropsWithRef<'details'>;
 /** A native `summary`, the always-visible toggle. Put it first in the root. */
 export type DisclosureSummaryProps = ComponentPropsWithRef<'summary'>;
 
-function Root({ className, ...props }: DisclosureRootProps) {
+export function Root({ className, ...props }: DisclosureRootProps) {
   return <details {...props} className={cx(styles.root, className)} />;
 }
 

@@ -72,13 +72,13 @@ type TabsContextValue = {
   release: (value: string) => void;
 };
 
-const TabsContext = createContext<TabsContextValue | null>(null);
+const TabsContext = /* @__PURE__ */ createContext<TabsContextValue | null>(null);
 
 // Panels read only the selection, so arrowing through the list, which moves
 // the tab stop, does not render them.
 type TabsPanelContextValue = { baseId: string; value: string };
 
-const TabsPanelContext = createContext<TabsPanelContextValue | null>(null);
+const TabsPanelContext = /* @__PURE__ */ createContext<TabsPanelContextValue | null>(null);
 
 function useTabs(part: string): TabsContextValue {
   const ctx = useContext(TabsContext);

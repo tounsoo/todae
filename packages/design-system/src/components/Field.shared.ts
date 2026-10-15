@@ -110,7 +110,7 @@ export function useTextEntry(store: CountStore, value: string, maxLength: number
 }
 
 // How the shell opens or closes each Field.ColorPicker's, Field.DatePicker's, Field.TimePicker's or Field.DateTimePicker's popover, by its button.
-export const pickerToggles = new WeakMap<HTMLButtonElement, () => void>();
+export const pickerToggles = /* @__PURE__ */ new WeakMap<HTMLButtonElement, () => void>();
 
 // A time for a hidden input stops at the smallest unit that is set.
 function timeUnit(value: Temporal.PlainTime | Temporal.PlainDateTime) {

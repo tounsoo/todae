@@ -2,7 +2,7 @@ export const CHIP_COMMIT_KEYS = ['Enter', 'Tab', ',', ';', ' '] as const;
 
 export type ChipCommitKey = (typeof CHIP_COMMIT_KEYS)[number];
 
-const ALLOWED = new Set<string>(CHIP_COMMIT_KEYS);
+const ALLOWED = /* @__PURE__ */ new Set<string>(CHIP_COMMIT_KEYS);
 
 export function isCommitKey(key: string): key is ChipCommitKey {
   return ALLOWED.has(key);

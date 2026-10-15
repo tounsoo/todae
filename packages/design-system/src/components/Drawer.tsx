@@ -22,7 +22,7 @@ const shellFor = (side: DrawerSide): DialogShell => ({
   exitProperty: 'background-color',
   attributes: { 'data-side': side },
 });
-const SHELLS = { start: shellFor('start'), end: shellFor('end') } as const;
+const SHELLS = { start: /* @__PURE__ */ shellFor('start'), end: /* @__PURE__ */ shellFor('end') } as const;
 
 function Root({ side = 'end', ...props }: DrawerRootProps) {
   return <DialogShellRoot {...props} shell={side === 'start' ? SHELLS.start : SHELLS.end} />;

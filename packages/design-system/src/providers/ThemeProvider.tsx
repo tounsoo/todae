@@ -22,8 +22,8 @@ export type ThemeProviderProps<Extra extends string = never> = {
 
 const QUERY = '(prefers-color-scheme: dark)';
 const DEV = process.env.NODE_ENV !== 'production';
-const AppearanceContext = createContext<ResolvedAppearance>('light');
-const ThemeVarsContext = createContext<Record<string, string>>({});
+const AppearanceContext = /* @__PURE__ */ createContext<ResolvedAppearance>('light');
+const ThemeVarsContext = /* @__PURE__ */ createContext<Record<string, string>>({});
 
 function subscribe(onStoreChange: () => void) {
   const mq = window.matchMedia(QUERY);

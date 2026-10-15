@@ -38,7 +38,7 @@ function Root({ 'aria-label': ariaLabel, 'aria-labelledby': labelledby, classNam
   );
 }
 
-function Item({ className, ...props }: PaginationItemProps) {
+export function Item({ className, ...props }: PaginationItemProps) {
   return <li {...props} className={cx(styles.item, className)} />;
 }
 

@@ -55,10 +55,14 @@ export function composite(top: Rgba, bottom: readonly number[]): [number, number
   return [0, 1, 2].map((i) => top[i]! * top[3] + bottom[i]! * (1 - top[3])) as [number, number, number];
 }
 
-const NUMBER = String.raw`(-?\d*\.?\d+(?:e-?\d+)?|none)(%?)`;
-const COLOR_RE = new RegExp(
-  String.raw`^(rgba?|oklch|color)\(\s*(?:srgb\s+)?${NUMBER}[\s,]+${NUMBER}[\s,]+${NUMBER}(?:\s*[/,]\s*${NUMBER})?\s*\)$`,
-);
+const COLOR_RE = /* @__PURE__ */ colorPattern();
+
+function colorPattern(): RegExp {
+  const number = String.raw`(-?\d*\.?\d+(?:e-?\d+)?|none)(%?)`;
+  return new RegExp(
+    String.raw`^(rgba?|oklch|color)\(\s*(?:srgb\s+)?${number}[\s,]+${number}[\s,]+${number}(?:\s*[/,]\s*${number})?\s*\)$`,
+  );
+}
 
 /**
  * Parses a computed color: `rgb()`/`rgba()`, `oklch()` or `color(srgb …)`,

@@ -24,7 +24,7 @@ export type StepsItemProps = ComponentPropsWithRef<'li'> & {
   statusLabel?: string;
 };
 
-const InRoot = createContext(false);
+const InRoot = /* @__PURE__ */ createContext(false);
 
 function Root({ className, ...props }: StepsRootProps) {
   return (

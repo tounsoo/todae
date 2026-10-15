@@ -1,5 +1,5 @@
 import { useGlyphs } from '../providers/GlyphsProvider.js';
-import { Disclosure as ServerDisclosure, type DisclosureSummaryProps } from './Disclosure.js';
+import { Root, Disclosure as ServerDisclosure, type DisclosureSummaryProps } from './Disclosure.js';
 import { hasGlyph } from './glyphs.js';
 import styles from './Disclosure.module.css';
 
@@ -23,4 +23,4 @@ function Summary({ children, ...props }: DisclosureSummaryProps) {
   );
 }
 
-export const Disclosure = { ...ServerDisclosure, Summary } as const;
+export const Disclosure = { Root, Summary } as const;

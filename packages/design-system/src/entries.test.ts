@@ -2,6 +2,7 @@
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { build as esbuild } from 'esbuild';
 import { build } from 'vite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -71,5 +72,37 @@ describe('package entries', () => {
     // that path is exported too for resolvers that enforce exports.
     expect(pkg.exports['./todae.css']).toBe('./dist/todae.css');
     expect(pkg.exports['./dist/todae.css']).toBe('./dist/todae.css');
+  });
+});
+
+describe('tree shaking', () => {
+  // esbuild drops less than Rollup, so code it can drop, every bundler can. The temp dist has no
+  // package.json, so these bundles ignore `sideEffects` and test the code itself.
+  const bundle = async (contents: string) => {
+    const result = await esbuild({
+      stdin: { contents, resolveDir: dist },
+      bundle: true,
+      minify: true,
+      write: false,
+      format: 'esm',
+      external: ['react', 'react-dom', 'react/*', 'react-dom/*'],
+      logLevel: 'silent',
+    });
+    return result.outputFiles[0]!.text;
+  };
+
+  it('runs no code when nothing is imported from the main entry', async () => {
+    const code = await bundle(`import './index.js';`);
+    // Only the imports of React are left.
+    expect(code.replace(/import\s*(\{[^}]*\}\s*from\s*)?["'][^"']+["'];?/g, '').trim()).toBe('');
+  });
+
+  it('leaves out components that are not imported', async () => {
+    expect(await bundle(`export { Dialog } from './index.js';`)).toContain('showModal');
+    expect(await bundle(`export { Button } from './index.js';`)).not.toContain('showModal');
+  });
+
+  it('marks only stylesheets as having side effects', () => {
+    expect((pkg as { sideEffects?: unknown }).sideEffects).toEqual(['*.css']);
   });
 });

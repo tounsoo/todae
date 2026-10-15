@@ -43,7 +43,7 @@ type ColorPickerContextValue = {
   change: (next: Hsv) => void;
 };
 
-const ColorPickerContext = createContext<ColorPickerContextValue | null>(null);
+const ColorPickerContext = /* @__PURE__ */ createContext<ColorPickerContextValue | null>(null);
 
 function usePicker(part: string): ColorPickerContextValue {
   const ctx = useContext(ColorPickerContext);
@@ -51,7 +51,7 @@ function usePicker(part: string): ColorPickerContextValue {
   return ctx;
 }
 
-const BLACK = hsvToHex({ h: 0, s: 0, v: 0 });
+const BLACK = /* @__PURE__ */ hsvToHex({ h: 0, s: 0, v: 0 });
 const clamp = (n: number) => Math.min(1, Math.max(0, n));
 // One arrow key moves one percent; Shift or Page Up and Down move ten.
 const snap = (n: number) => clamp(Math.round(n * 100) / 100);

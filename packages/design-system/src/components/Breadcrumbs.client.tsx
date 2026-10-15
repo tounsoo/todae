@@ -22,4 +22,4 @@ function Item(props: BreadcrumbsItemProps) {
   return <ItemWithGlyph {...props} separatorGlyph={useGlyphs().separator} />;
 }
 
-export const Breadcrumbs = { ...ServerBreadcrumbs, Root, Item } as const;
+export const Breadcrumbs = { Root, Item } as const;

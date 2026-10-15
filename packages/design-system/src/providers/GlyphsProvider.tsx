@@ -11,9 +11,9 @@ export type GlyphsProviderProps = {
   children?: ReactNode;
 };
 
-const NO_GLYPHS: Readonly<Glyphs> = Object.freeze({});
+const NO_GLYPHS: Readonly<Glyphs> = /* @__PURE__ */ Object.freeze({});
 
-const GlyphsContext = createContext<Readonly<Glyphs>>(NO_GLYPHS);
+const GlyphsContext = /* @__PURE__ */ createContext<Readonly<Glyphs>>(NO_GLYPHS);
 
 /** Sets the glyphs Todae draws by itself, such as close crosses and check marks, for its subtree. Renders no element. */
 export function GlyphsProvider({ glyphs, children }: GlyphsProviderProps) {

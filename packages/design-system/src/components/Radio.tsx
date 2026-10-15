@@ -53,7 +53,7 @@ type RadioGroupContextValue = {
   select: (value: string) => void;
 };
 
-const RadioGroupContext = createContext<RadioGroupContextValue | null>(null);
+const RadioGroupContext = /* @__PURE__ */ createContext<RadioGroupContextValue | null>(null);
 
 function useRadioGroup(): RadioGroupContextValue {
   const ctx = useContext(RadioGroupContext);

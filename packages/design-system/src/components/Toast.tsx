@@ -35,7 +35,7 @@ import { focusWithoutScroll } from './revealRing.js';
 export { matchesHotkey } from '../hooks/hotkey.js';
 
 // The longest delay setTimeout takes; a longer one fires at once.
-const MAX_TIMEOUT_MS = 2 ** 31 - 1;
+const MAX_TIMEOUT_MS = 2_147_483_647; // 2 ** 31 - 1, written out since esbuild keeps `**` in unused code
 
 // Fallback for when the exit transition can't be read from computed style.
 // The real length comes from the toast.motion.exit token.
@@ -76,7 +76,7 @@ export type ToastCloseProps = ButtonActionProps;
 
 type ItemContextValue = { toast: ToastRecord; dismiss: () => void };
 
-const ItemContext = createContext<ItemContextValue | null>(null);
+const ItemContext = /* @__PURE__ */ createContext<ItemContextValue | null>(null);
 
 // One reference, so the server snapshot never changes.
 const NO_TOASTS: readonly never[] = [];

@@ -115,7 +115,7 @@ type MenuContextValue = {
   roving: UseRovingFocusResult;
 };
 
-const MenuContext = createContext<MenuContextValue | null>(null);
+const MenuContext = /* @__PURE__ */ createContext<MenuContextValue | null>(null);
 
 function useMenu(part: string): MenuContextValue {
   const ctx = useContext(MenuContext);
@@ -125,7 +125,7 @@ function useMenu(part: string): MenuContextValue {
 
 type RadioContextValue = { value: string | null; select: (value: string) => void };
 
-const RadioContext = createContext<RadioContextValue | null>(null);
+const RadioContext = /* @__PURE__ */ createContext<RadioContextValue | null>(null);
 
 function Root({ open: openProp, defaultOpen, onOpenChange, children }: MenuRootProps) {
   const [open, setOpenValue] = useControlledValue(openProp, defaultOpen ?? false, onOpenChange);

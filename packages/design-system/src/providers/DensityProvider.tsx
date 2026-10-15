@@ -19,7 +19,7 @@ export type DensityProviderProps = {
   density?: Density;
 } & ComponentProps<'div'>;
 
-const DensityContext = createContext<Density>('comfortable');
+const DensityContext = /* @__PURE__ */ createContext<Density>('comfortable');
 
 export function DensityProvider({ density = 'comfortable', ...props }: DensityProviderProps) {
   return (

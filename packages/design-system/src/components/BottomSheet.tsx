@@ -74,7 +74,7 @@ type SheetContextValue = {
   registerGrabber: () => () => void;
 };
 
-const SheetContext = createContext<SheetContextValue | null>(null);
+const SheetContext = /* @__PURE__ */ createContext<SheetContextValue | null>(null);
 
 function useSheet(): SheetContextValue {
   const ctx = useContext(SheetContext);

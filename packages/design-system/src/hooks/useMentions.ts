@@ -121,7 +121,7 @@ const EMPTY_DRAFT: MentionDraft = { text: '', tokens: [] };
 const EMPTY_OPTIONS: readonly ComboboxOption[] = [];
 const SPACE = /\s/;
 /** Keys that move the caret without editing. */
-const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
+const CARET_KEYS = /* @__PURE__ */ new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
 /** How many texts the undo history remembers tokens for. */
 const HISTORY = 100;
 

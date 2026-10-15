@@ -62,7 +62,7 @@ const ICON_ATTR = 'data-todae-button-icon';
 
 // Media outside an icon is content too: an <img alt> or a spinner can name or
 // fill the button.
-const MEDIA = new Set(['IMG', 'SVG', 'svg', 'CANVAS', 'VIDEO', 'PICTURE', 'OBJECT', 'IFRAME', 'INPUT']);
+const MEDIA = /* @__PURE__ */ new Set(['IMG', 'SVG', 'svg', 'CANVAS', 'VIDEO', 'PICTURE', 'OBJECT', 'IFRAME', 'INPUT']);
 
 // Icons are found in the rendered button, not by component type, so a
 // Button.Icon inside a company's own icon wrapper still counts.

@@ -11,7 +11,7 @@ export type StringsProviderProps = {
   children?: ReactNode;
 };
 
-const StringsContext = createContext<Readonly<Strings>>(DEFAULT_STRINGS);
+const StringsContext = /* @__PURE__ */ createContext<Readonly<Strings>>(DEFAULT_STRINGS);
 
 /** Sets the text Todae writes by itself, such as default names, for its subtree. Renders no element. */
 export function StringsProvider({ strings, children }: StringsProviderProps) {

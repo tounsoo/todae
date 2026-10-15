@@ -57,7 +57,7 @@ type ToggleGroupContextValue = {
   roving: UseRovingFocusResult | null;
 };
 
-const ToggleGroupContext = createContext<ToggleGroupContextValue | null>(null);
+const ToggleGroupContext = /* @__PURE__ */ createContext<ToggleGroupContextValue | null>(null);
 
 function Root(props: ToggleGroupRootProps) {
   const nodeRef = useRef<HTMLDivElement | null>(null);

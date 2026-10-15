@@ -59,7 +59,7 @@ type ConversationContext = {
   scrollToEnd: () => void;
 };
 
-const Context = createContext<ConversationContext | null>(null);
+const Context = /* @__PURE__ */ createContext<ConversationContext | null>(null);
 
 function useConversation(part: string): ConversationContext {
   const context = useContext(Context);

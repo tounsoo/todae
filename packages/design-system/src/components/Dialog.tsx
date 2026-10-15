@@ -55,7 +55,7 @@ type DialogContextValue = {
   setDescribedBy: (id: string | undefined) => void;
 };
 
-const DialogContext = createContext<DialogContextValue | null>(null);
+const DialogContext = /* @__PURE__ */ createContext<DialogContextValue | null>(null);
 
 function useDialog(): DialogContextValue {
   const ctx = useContext(DialogContext);
@@ -142,12 +142,14 @@ export type DialogShell = {
   attributes?: Record<`data-${string}`, string>;
 };
 
-const DIALOG_SHELL: DialogShell = {
+// Built by a call, so bundlers can drop it with Dialog: esbuild keeps a top-level object that reads `styles`.
+const dialogShell = (): DialogShell => ({
   className: styles.dialog,
   panelClassName: styles.panel,
   exitMs: DIALOG_EXIT_MS,
   exitProperty: 'opacity',
-};
+});
+const DIALOG_SHELL = /* @__PURE__ */ dialogShell();
 
 function DialogRoot(props: DialogRootProps) {
   return <DialogShellRoot {...props} shell={DIALOG_SHELL} />;
