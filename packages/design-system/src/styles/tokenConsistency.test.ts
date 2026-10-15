@@ -176,10 +176,24 @@ describe('token consistency across component styles', () => {
       const plain = outsideForcedColors(css);
       expect({ name, pill: /\b9{3,}px/.test(plain) }).toEqual({ name, pill: false });
       expect({ name, leading: /line-height:\s*1\.25\b/.test(plain) }).toEqual({ name, leading: false });
-      // Button's border stays 1px: button.base is a fixed contract (radius, padding, font, gap).
-      if (name === 'Button') continue;
       const hairline = /\bborder[-a-z]*:[^;]*\b1px\b|calc\([^;]*\b1px\b/.test(plain);
       expect({ name, hairline }).toEqual({ name, hairline: false });
+    }
+  });
+
+  it('takes lengths from tokens', () => {
+    for (const [name, css] of Object.entries(sheets)) {
+      const literals: string[] = [];
+      for (const [, body] of outsideForcedColors(css).matchAll(/\{([^{}]*)\}/g)) {
+        // Visually hidden text keeps its 1px box, as VisuallyHidden.Root does.
+        if (/overflow:\s*hidden/.test(body!) && /\bclip(-path)?:/.test(body!)) continue;
+        for (const [literal, number, unit] of body!.matchAll(/(?<![\w.#-])-?(\d*\.?\d+)(px|rem|em)\b/g)) {
+          // 0 is no length, and 1em only carries a token's scale into em.
+          if (Number(number) === 0 || (unit === 'em' && literal === '1em')) continue;
+          literals.push(literal);
+        }
+      }
+      expect({ name, literals }).toEqual({ name, literals: [] });
     }
   });
 

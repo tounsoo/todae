@@ -599,6 +599,7 @@ describe('resolver-driven build', () => {
                 'text-transform': { $type: 'textTransform', $value: 'none' },
               },
               gap: px(8),
+              'border-width': px(1),
               icon: { size: px(16) },
             },
           },

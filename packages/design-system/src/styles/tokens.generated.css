@@ -422,6 +422,7 @@
   --todae-focus-ring-color: var(--_todae-focus-ring-color, var(--todae-color-accent-default));
   --todae-focus-ring-offset: var(--_todae-focus-ring-offset, 2px);
   --todae-focus-ring-width: var(--_todae-focus-ring-width, 2px);
+  --todae-button-base-border-width: var(--_todae-button-base-border-width, var(--todae-border-width));
   --todae-button-base-font-letter-spacing: var(--_todae-button-base-font-letter-spacing, var(--todae-font-letter-spacing-default));
   --todae-button-base-font-size: var(--_todae-button-base-font-size, var(--todae-font-size-3));
   --todae-button-base-font-text-transform: var(--_todae-button-base-font-text-transform, var(--todae-font-text-transform-default));
@@ -620,6 +621,8 @@
   --todae-chip-leading: var(--_todae-chip-leading, var(--todae-font-leading-tight));
   --todae-chip-padding-x: var(--_todae-chip-padding-x, var(--todae-space-chip-x));
   --todae-chip-padding-y: var(--_todae-chip-padding-y, var(--todae-space-chip-y));
+  --todae-chip-panel-max-width: var(--_todae-chip-panel-max-width, 18rem);
+  --todae-chip-panel-viewport-inset: var(--_todae-chip-panel-viewport-inset, var(--todae-space-4));
   --todae-chip-radius: var(--_todae-chip-radius, var(--todae-radius-sm));
   --todae-chip-ring-focus: var(--_todae-chip-ring-focus, var(--todae-focus-ring-color));
   --todae-chip-ring-offset: var(--_todae-chip-ring-offset, var(--todae-focus-ring-offset));
@@ -692,6 +695,8 @@
   --todae-option-check-border: var(--_todae-option-check-border, var(--todae-color-border-default));
   --todae-option-check-border-width: var(--_todae-option-check-border-width, var(--todae-border-width));
   --todae-option-check-fg: var(--_todae-option-check-fg, var(--todae-color-fg-default));
+  --todae-option-check-gap: var(--_todae-option-check-gap, 0.4);
+  --todae-option-check-radius: var(--_todae-option-check-radius, var(--todae-radius-sm));
   --todae-option-check-scale: var(--_todae-option-check-scale, 0.85);
   --todae-option-fg-default: var(--_todae-option-fg-default, var(--todae-color-fg-default));
   --todae-option-fg-disabled: var(--_todae-option-fg-disabled, var(--todae-color-fg-placeholder));
@@ -712,6 +717,7 @@
   --todae-menu-item-fg-disabled: var(--_todae-menu-item-fg-disabled, var(--todae-color-fg-placeholder));
   --todae-menu-item-font-size: var(--_todae-menu-item-font-size, var(--todae-font-size-2));
   --todae-menu-item-font-weight: var(--_todae-menu-item-font-weight, var(--todae-font-weight-regular));
+  --todae-menu-item-indicator-dot-inset: var(--_todae-menu-item-indicator-dot-inset, 0.3);
   --todae-menu-item-indicator-scale: var(--_todae-menu-item-indicator-scale, 1);
   --todae-menu-item-leading: var(--_todae-menu-item-leading, var(--todae-font-leading-tight));
   --todae-menu-item-padding-x: var(--_todae-menu-item-padding-x, var(--todae-space-control-x));
@@ -720,6 +726,7 @@
   --todae-menu-item-ring-focus: var(--_todae-menu-item-ring-focus, var(--todae-focus-ring-color));
   --todae-menu-min-width: var(--_todae-menu-min-width, 10rem);
   --todae-menu-separator: var(--_todae-menu-separator, var(--todae-color-border-subtle));
+  --todae-menu-separator-thickness: var(--_todae-menu-separator-thickness, var(--todae-border-width));
   --todae-tabs-bg-default: var(--_todae-tabs-bg-default, var(--todae-color-bg-transparent));
   --todae-tabs-bg-hover: var(--_todae-tabs-bg-hover, var(--todae-color-bg-highlight));
   --todae-tabs-border: var(--_todae-tabs-border, var(--todae-color-border-subtle));
@@ -759,6 +766,7 @@
   --todae-selection-ring-invalid: var(--_todae-selection-ring-invalid, var(--todae-color-danger-default));
   --todae-selection-size: var(--_todae-selection-size, var(--todae-space-selection-size));
   --todae-selection-thumb-bg: var(--_todae-selection-thumb-bg, var(--todae-color-bg-surface));
+  --todae-selection-thumb-inset: var(--_todae-selection-thumb-inset, 1px);
   --todae-selection-track-bg: var(--_todae-selection-track-bg, var(--todae-color-bg-subtle));
   --todae-alert-border-width: var(--_todae-alert-border-width, var(--todae-border-width));
   --todae-alert-critical-bg: var(--_todae-alert-critical-bg, var(--todae-color-status-critical-bg));
@@ -785,6 +793,7 @@
   --todae-toast-critical-bg: var(--_todae-toast-critical-bg, var(--todae-color-status-critical-bg));
   --todae-toast-critical-border: var(--_todae-toast-critical-border, var(--todae-color-status-critical-border));
   --todae-toast-critical-fg: var(--_todae-toast-critical-fg, var(--todae-color-status-critical-fg));
+  --todae-toast-enter-offset: var(--_todae-toast-enter-offset, var(--todae-space-2));
   --todae-toast-font-size: var(--_todae-toast-font-size, var(--todae-font-size-2));
   --todae-toast-gap: var(--_todae-toast-gap, var(--todae-space-inline-gap));
   --todae-toast-icon-size: var(--_todae-toast-icon-size, 1rem);
@@ -829,6 +838,7 @@
   --todae-disclosure-border-width: var(--_todae-disclosure-border-width, var(--todae-border-width));
   --todae-disclosure-gap: var(--_todae-disclosure-gap, var(--todae-space-inline-gap));
   --todae-disclosure-marker-fg: var(--_todae-disclosure-marker-fg, var(--todae-color-fg-muted));
+  --todae-disclosure-marker-gap: var(--_todae-disclosure-marker-gap, 0.375);
   --todae-disclosure-marker-scale: var(--_todae-disclosure-marker-scale, 1);
   --todae-disclosure-motion-duration: var(--_todae-disclosure-motion-duration, var(--todae-motion-duration-normal));
   --todae-disclosure-motion-easing: var(--_todae-disclosure-motion-easing, var(--todae-motion-easing-standard));
@@ -1147,6 +1157,7 @@
   --todae-calendar-nav-icon-size: var(--_todae-calendar-nav-icon-size, 1rem);
   --todae-calendar-weekday-fg: var(--_todae-calendar-weekday-fg, var(--todae-color-fg-muted));
   --todae-calendar-weekday-font-weight: var(--_todae-calendar-weekday-font-weight, var(--todae-font-weight-regular));
+  --todae-button-border-width: var(--todae-button-base-border-width);
   --todae-button-font-letter-spacing: var(--todae-button-base-font-letter-spacing);
   --todae-button-font-size: var(--todae-button-base-font-size);
   --todae-button-font-text-transform: var(--todae-button-base-font-text-transform);

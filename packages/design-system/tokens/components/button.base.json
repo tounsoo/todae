@@ -13,6 +13,7 @@
         "text-transform": { "$type": "textTransform", "$value": { "$ref": "#/font/text-transform/default/$value" } }
       },
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
+      "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
       "icon": {
         "size": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } }
       }
