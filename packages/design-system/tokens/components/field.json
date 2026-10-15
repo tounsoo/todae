@@ -55,6 +55,7 @@
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
       },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/snug/$value" } },
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
     },
     "error": {
@@ -62,6 +63,7 @@
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
       },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/snug/$value" } },
       "fg": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } }
     },
     "messages": {

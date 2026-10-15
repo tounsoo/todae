@@ -171,11 +171,16 @@ describe('token consistency across component styles', () => {
     }
   });
 
-  it('uses tokens for pills, tight leading and hairline borders', () => {
+  it('uses tokens for pills, leading, fades, easing and hairline borders', () => {
     for (const [name, css] of Object.entries(sheets)) {
       const plain = outsideForcedColors(css);
       expect({ name, pill: /\b9{3,}px/.test(plain) }).toEqual({ name, pill: false });
-      expect({ name, leading: /line-height:\s*1\.25\b/.test(plain) }).toEqual({ name, leading: false });
+      // line-height: 1 centres a glyph in its box; any other number is text leading.
+      expect({ name, leading: /line-height:\s*(?!1\s*[;}])[\d.]+\s*[;}]/.test(plain) }).toEqual({ name, leading: false });
+      // opacity 0 and 1 show and hide; a value between is a look a theme may change.
+      expect({ name, fade: /\bopacity:\s*(?:0?\.\d+|0\.0*[1-9]\d*)\s*[;}]/.test(plain) }).toEqual({ name, fade: false });
+      // linear stays for continuous loops; a named curve is a motion style.
+      expect({ name, easing: /\b(?:ease|ease-in|ease-out|ease-in-out)\b(?![-\w])/.test(plain) }).toEqual({ name, easing: false });
       // Button's border stays 1px: button.base is a fixed contract (radius, padding, font, gap).
       if (name === 'Button') continue;
       const hairline = /\bborder[-a-z]*:[^;]*\b1px\b|calc\([^;]*\b1px\b/.test(plain);

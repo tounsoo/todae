@@ -288,6 +288,7 @@
     },
     "leading": {
       "default": { "$type": "number", "$value": 1.5 },
+      "snug": { "$type": "number", "$value": 1.4 },
       "tight": { "$type": "number", "$value": 1.25 }
     },
     "family": {
