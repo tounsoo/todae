@@ -17,6 +17,8 @@ Use the `poteto-mode` skill for a task that touches more than one file, changes 
 Where pstack and this file disagree, this file wins:
 
 - The agents are project agents, so they have no plugin prefix. Where a skill names `pstack:<agent>`, use `subagent_type: "<agent>"`.
+- The port was written as a plugin, so a `<plugin>` path in a skill means `.claude/`.
+- `Agent` has no `readonly` parameter. Where a skill spawns a subagent with `readonly: true`, add a line to its prompt telling it not to edit files, commit, or push.
 - Reviews in the review loop run `/code-review` at the rows of its table. Pull requests open as the review loop says, not as pstack's Opening a PR playbook says.
 - Merge conflicts are resolved as [Waiting on CI](#waiting-on-ci) says, not reported the way pstack's Babysit playbook says.
 - GitHub work uses the GitHub MCP tools, not `gh` or the `watch-pr` script in `poteto-mode/scripts`.
