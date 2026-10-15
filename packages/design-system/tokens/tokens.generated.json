@@ -2531,6 +2531,15 @@
       "context": null
     },
     {
+      "path": "button.base.pressed-ring-width",
+      "type": "dimension",
+      "cssVar": "--todae-button-base-pressed-ring-width",
+      "cssValue": "1px",
+      "ref": null,
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "button.base.radius",
       "type": "dimension",
       "cssVar": "--todae-button-base-radius",
@@ -5189,8 +5198,8 @@
       "path": "menu.separator-thickness",
       "type": "dimension",
       "cssVar": "--todae-menu-separator-thickness",
-      "cssValue": "var(--todae-border-width)",
-      "ref": "border.width",
+      "cssValue": "1px",
+      "ref": null,
       "layer": "contract",
       "context": null
     },

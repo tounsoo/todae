@@ -431,6 +431,7 @@
   --todae-button-base-icon-size: var(--_todae-button-base-icon-size, 1rem);
   --todae-button-base-padding-x: var(--_todae-button-base-padding-x, var(--todae-space-control-x));
   --todae-button-base-padding-y: var(--_todae-button-base-padding-y, var(--todae-space-control-y));
+  --todae-button-base-pressed-ring-width: var(--_todae-button-base-pressed-ring-width, 1px);
   --todae-button-base-radius: var(--_todae-button-base-radius, var(--todae-radius-md));
   --todae-button-primary-bg-active: var(--_todae-button-primary-bg-active, var(--todae-color-accent-active));
   --todae-button-primary-bg-default: var(--_todae-button-primary-bg-default, var(--todae-color-accent-default));
@@ -726,7 +727,7 @@
   --todae-menu-item-ring-focus: var(--_todae-menu-item-ring-focus, var(--todae-focus-ring-color));
   --todae-menu-min-width: var(--_todae-menu-min-width, 10rem);
   --todae-menu-separator: var(--_todae-menu-separator, var(--todae-color-border-subtle));
-  --todae-menu-separator-thickness: var(--_todae-menu-separator-thickness, var(--todae-border-width));
+  --todae-menu-separator-thickness: var(--_todae-menu-separator-thickness, 1px);
   --todae-tabs-bg-default: var(--_todae-tabs-bg-default, var(--todae-color-bg-transparent));
   --todae-tabs-bg-hover: var(--_todae-tabs-bg-hover, var(--todae-color-bg-highlight));
   --todae-tabs-border: var(--_todae-tabs-border, var(--todae-color-border-subtle));
@@ -1166,6 +1167,7 @@
   --todae-button-icon-size: var(--todae-button-base-icon-size);
   --todae-button-padding-x: var(--todae-button-base-padding-x);
   --todae-button-padding-y: var(--todae-button-base-padding-y);
+  --todae-button-pressed-ring-width: var(--todae-button-base-pressed-ring-width);
   --todae-button-radius: var(--todae-button-base-radius);
   --todae-button-bg-active: var(--todae-button-primary-bg-active);
   --todae-button-bg-default: var(--todae-button-primary-bg-default);

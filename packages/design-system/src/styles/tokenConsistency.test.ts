@@ -197,6 +197,14 @@ describe('token consistency across component styles', () => {
     }
   });
 
+  // A theme may set border.width to 0; these lines must still show.
+  it('keeps the pressed ring and menu separator off border.width', () => {
+    const tokensCss = readFileSync(join(import.meta.dirname, 'tokens.generated.css'), 'utf8');
+    expect(sheets.Button).toContain('inset 0 0 0 var(--todae-button-pressed-ring-width) currentColor');
+    expect(tokensCss).toContain('--todae-button-base-pressed-ring-width: var(--_todae-button-base-pressed-ring-width, 1px);');
+    expect(tokensCss).toContain('--todae-menu-separator-thickness: var(--_todae-menu-separator-thickness, 1px);');
+  });
+
   it('keeps overrides of the tokens a component used to read reaching it', () => {
     const tokensCss = readFileSync(join(import.meta.dirname, 'tokens.generated.css'), 'utf8');
     const pairs = [

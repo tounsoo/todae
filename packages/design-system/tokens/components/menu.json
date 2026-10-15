@@ -33,6 +33,6 @@
       }
     },
     "separator": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
-    "separator-thickness": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } }
+    "separator-thickness": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } }
   }
 }

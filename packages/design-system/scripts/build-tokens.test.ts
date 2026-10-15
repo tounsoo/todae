@@ -600,6 +600,7 @@ describe('resolver-driven build', () => {
               },
               gap: px(8),
               'border-width': px(1),
+              'pressed-ring-width': px(1),
               icon: { size: px(16) },
             },
           },

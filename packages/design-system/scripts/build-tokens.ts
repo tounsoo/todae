@@ -74,6 +74,7 @@ export const BUTTON_BASE_PATHS = [
   'button.base.font.size',
   'button.base.font.weight',
   'button.base.gap',
+  'button.base.pressed-ring-width',
   'button.base.border-width',
   'button.base.icon.size',
   'button.base.font.letter-spacing',
@@ -225,7 +226,7 @@ export function validateButtonBase(tokens: Map<string, TokenNode>, loc: string):
   const keys = [...tokens.keys()].filter((path) => path.startsWith('button.base.')).sort();
   const expected = [...BUTTON_BASE_PATHS].sort();
   if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
-    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight/letter-spacing/text-transform, gap, border-width, icon.size`);
+    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight/letter-spacing/text-transform, gap, border-width, pressed-ring-width, icon.size`);
   }
 }
 
