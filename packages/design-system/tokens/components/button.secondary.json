@@ -1,6 +1,7 @@
 {
   "button": {
     "secondary": {
+      "$description": "The secondary Button.Root variant: an outlined action beside a primary one. Colors per state.",
       "bg": {
         "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
         "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } },

@@ -1,5 +1,6 @@
 {
   "badge": {
+    "$description": "Badge.Root: a small non-interactive label, with neutral, status and category tones.",
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "padding": {
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/chip/x/$value" } },

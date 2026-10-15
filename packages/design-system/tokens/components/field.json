@@ -1,5 +1,6 @@
 {
   "field": {
+    "$description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages.",
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "padding": {

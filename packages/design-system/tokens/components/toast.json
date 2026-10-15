@@ -1,5 +1,6 @@
 {
   "toast": {
+    "$description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones.",
     "width": { "$type": "dimension", "$value": { "value": 22, "unit": "rem" } },
     "inset": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
     "stack-gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },

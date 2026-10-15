@@ -1,5 +1,6 @@
 {
   "separator": {
+    "$description": "Separator.Root: a horizontal or vertical rule between content.",
     "color": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
     "thickness": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
     "space": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } }

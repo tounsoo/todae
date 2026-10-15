@@ -1,5 +1,6 @@
 {
   "text": {
+    "$description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it.",
     "font": {
       "family": { "$type": "fontFamily", "$value": { "$ref": "#/font/family/sans/$value" } }
     },

@@ -1,5 +1,6 @@
 {
   "toolbar": {
+    "$description": "Toolbar.Root: a row of controls with separators between groups.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
     "separator": {
       "color": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },

@@ -1,6 +1,7 @@
 {
   "button": {
     "base": {
+      "$description": "Button.Root geometry every variant shares: radius, padding, font and icon gap.",
       "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
       "padding": {
         "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },

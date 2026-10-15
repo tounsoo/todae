@@ -1,5 +1,6 @@
 {
   "menu": {
+    "$description": "Menu.Root: a popover list of actions, with check and radio items and separators.",
     "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
     "min-width": { "$type": "dimension", "$value": { "value": 10, "unit": "rem" } },
     "item": {

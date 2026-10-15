@@ -1,5 +1,6 @@
 {
   "chip": {
+    "$description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput.",
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "padding": {
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/chip/x/$value" } },

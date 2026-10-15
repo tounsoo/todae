@@ -1,5 +1,6 @@
 {
   "tooltip": {
+    "$description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel.",
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },

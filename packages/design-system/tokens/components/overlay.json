@@ -1,5 +1,6 @@
 {
   "overlay": {
+    "$description": "Shared by modal overlays (Dialog, BottomSheet, Drawer): the scrim and the enter and exit motion.",
     "scrim": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/scrim/$value" } }
     },

@@ -1,5 +1,6 @@
 {
   "selection": {
+    "$description": "Checkbox, Radio and Switch: the box, dot and track with their indicator and thumb.",
     "size": { "$type": "dimension", "$value": { "$ref": "#/space/selection/size/$value" } },
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/selection/gap/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },

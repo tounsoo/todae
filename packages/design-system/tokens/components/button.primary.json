@@ -1,6 +1,7 @@
 {
   "button": {
     "primary": {
+      "$description": "The primary Button.Root variant: the strongest action on a screen. Colors per state.",
       "bg": {
         "default": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
         "hover": { "$type": "color", "$value": { "$ref": "#/color/accent/hover/$value" } },

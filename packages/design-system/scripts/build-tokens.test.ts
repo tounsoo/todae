@@ -440,6 +440,30 @@ describe('committed token graph', () => {
     expect(apcaContrast(hex('777777'), hex('777777'))).toBe(0);
   });
 
+  it('carries $description from a token or its nearest group into the catalog', async () => {
+    const color = { $type: 'color', $value: { $ref: '#/color/gray/0/$value' } };
+    const flat = flattenTokens({
+      card: { $description: 'Card', bg: color, fg: { ...color, $description: 'Card text' }, edge: { $description: 'Edge', top: color } },
+    });
+    expect([...flat].map(([path, node]) => [path, node.$description])).toEqual([
+      ['card.bg', 'Card'],
+      ['card.edge.top', 'Edge'],
+      ['card.fg', 'Card text'],
+    ]);
+    expect(() => flattenTokens({ card: { $description: 1, bg: color } })).toThrow(/\$description at "card" must be a non-empty string/);
+    expect(() => flattenTokens({ card: { bg: { ...color, $description: ' ' } } })).toThrow(/\$description at "card\.bg"/);
+
+    // Every semantic and component token is described, in every context's catalog row.
+    const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
+    const rows = JSON.parse(graph.json).tokens as { path: string; layer: string; description: string | null }[];
+    const undescribed = rows.filter((row) => (row.layer === 'appearance' || row.layer === 'contract') && !row.description);
+    expect(undescribed.map((row) => row.path)).toEqual([]);
+    expect(rows.filter((row) => row.path === 'color.bg.canvas').map((row) => row.description)).toEqual([
+      'The page background behind every surface.',
+      'The page background behind every surface.',
+    ]);
+  });
+
   it('checks every Todae text pair with APCA in both appearances', async () => {
     const results = contrastResults(await resolveEntries(join(import.meta.dirname, '../tokens')));
     expect(new Set(results.map((r) => r.where))).toEqual(new Set(['appearance "light"', 'appearance "dark"']));

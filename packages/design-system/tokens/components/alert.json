@@ -1,5 +1,6 @@
 {
   "alert": {
+    "$description": "Alert.Root: an inline message box, with a tone (info, success, warning, critical) for its colors.",
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "padding": {
