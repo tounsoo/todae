@@ -1,3 +1,4 @@
+import { BrandMark } from '../brand';
 import { OG_IMAGE_SIZE, SITE_NAME } from '../i18n/metadata';
 import { coreColor } from './colors';
 import type { OgPage } from './pages';
@@ -5,8 +6,6 @@ import type { OgPage } from './pages';
 // Graphite's dark ramp: ink canvas, a faint texture one step up, light text.
 const canvas = coreColor('gray.950');
 const texture = coreColor('gray.900');
-const tile = coreColor('gray.850');
-const line = coreColor('gray.800');
 const ink = coreColor('gray.50');
 const muted = coreColor('gray.500');
 
@@ -85,24 +84,7 @@ export function OgCard({ page }: { page: OgPage }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 38, fontWeight: 700, letterSpacing: '-0.02em' }}>
-          {/* The site's brand mark: two bars on a soft tile. */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: 48,
-              height: 48,
-              padding: '8px 0',
-              borderRadius: 12,
-              background: tile,
-              border: `1.5px solid ${line}`,
-            }}
-          >
-            <div style={{ width: 24, height: 18, background: ink }} />
-            <div style={{ width: 32, height: 9, background: ink }} />
-          </div>
+          <BrandMark size={52} color={ink} background={canvas} />
           {SITE_NAME}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 20 }}>
