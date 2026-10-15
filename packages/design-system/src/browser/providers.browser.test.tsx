@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Button, Card, Checkbox, DensityProvider, ThemeProvider } from '../index';
+import { Button, Card, Checkbox, DensityProvider, ThemeProvider, type ThemeOverride } from '../index';
 import { measureContrast } from '../providers/overrideContrast';
 
 /** vitest types the session without its methods; Playwright's session has `send`. */
@@ -259,7 +259,7 @@ describe('ThemeProvider override contrast in development', () => {
     const { rerender } = render(<ThemeProvider appearance="light" overrides={{ 'card.bg': { colorSpace: 'oklch', components: [0.6, 0.15, 30] } }} />);
     expect(warn).not.toHaveBeenCalled();
     // A light accent leaves white on-accent text unreadable.
-    const light = { 'color.accent.default': { colorSpace: 'oklch', components: [0.92, 0.05, 90] } } as const;
+    const light: ThemeOverride = { 'color.accent.default': { colorSpace: 'oklch', components: [0.92, 0.05, 90] } };
     rerender(<ThemeProvider appearance="light" overrides={light} />);
     expect(warn).toHaveBeenCalledTimes(1);
     const message = String(warn.mock.calls[0]![0]);
