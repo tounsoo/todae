@@ -713,15 +713,6 @@
       "context": null
     },
     {
-      "path": "motion.easing.standard",
-      "type": "cubicBezier",
-      "cssVar": "--todae-motion-easing-standard",
-      "cssValue": "cubic-bezier(0.2, 0.8, 0.2, 1)",
-      "ref": null,
-      "layer": "core",
-      "context": null
-    },
-    {
       "path": "opacity.8",
       "type": "number",
       "cssVar": "--todae-opacity-8",

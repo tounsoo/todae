@@ -79,7 +79,6 @@
   --todae-motion-duration-slower: 300ms;
   --todae-motion-easing-enter: cubic-bezier(0.2, 0.8, 0.2, 1);
   --todae-motion-easing-exit: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --todae-motion-easing-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --todae-opacity-8: 0.08;
   --todae-opacity-10: 0.1;
   --todae-opacity-12: 0.12;

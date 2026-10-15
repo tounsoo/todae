@@ -641,11 +641,11 @@ describe('resolver-driven build', () => {
   it('rejects an alias in a set declared only on :root', async () => {
     const root = await fixture((resolver) => {
       (resolver.sets.core!.sources as unknown[]).push({
-        motion: { easing: { exit: { $type: 'cubicBezier', $value: { $ref: '#/motion/easing/standard/$value' } } } },
+        motion: { easing: { exit: { $type: 'cubicBezier', $value: { $ref: '#/motion/easing/enter/$value' } } } },
       });
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(
-      'token "motion.easing.exit" is declared only on :root, so it can\'t alias "motion.easing.standard"',
+      'token "motion.easing.exit" is declared only on :root, so it can\'t alias "motion.easing.enter"',
     );
   });
 
