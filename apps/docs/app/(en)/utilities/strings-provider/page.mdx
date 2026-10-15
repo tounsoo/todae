@@ -263,9 +263,17 @@ A string that depends on a number or a label is a function.
 
 ## When to use
 
+### StringsProvider
+
 **When:** Your app is not in English, or you want other wording for Todae's own text, across a whole app or one part of it.
 
 **When not:** A name for one part → pass its prop, such as `aria-label`. Text you write yourself, such as a dialog title → it is yours to translate.
+
+### useStrings
+
+**When:** A component of your own that writes text Todae's strings cover, such as a close button's name.
+
+**When not:** Text only your component writes → your own translations.
 
 ## Props
 

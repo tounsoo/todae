@@ -2568,5 +2568,151 @@
       "en": "The hidden status word read before the step, in place of the stepDone, stepCurrent, stepPending or stepError string when not empty.",
       "ko": "단계 앞에서 읽히는 숨은 상태 단어. 비어 있지 않으면 stepDone, stepCurrent, stepPending, stepError 문자열 대신 쓰입니다."
     }
+  },
+  "Chip.Overflow": {
+    "overflowCount": {
+      "en": "The N in +N.",
+      "ko": "+N의 N."
+    },
+    "overflowLabel": {
+      "en": "Name read for +N. Default is the moreChips string from StringsProvider, {n} more in English.",
+      "ko": "+N에 읽히는 이름. 기본값은 StringsProvider의 moreChips 문자열이며, 영어로는 {n} more입니다."
+    }
+  },
+  "formatDate": {
+    "date": {
+      "en": "The date to write.",
+      "ko": "쓸 날짜."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
+  },
+  "parseDate": {
+    "text": {
+      "en": "The typed text.",
+      "ko": "입력된 텍스트."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
+  },
+  "formatDateTime": {
+    "value": {
+      "en": "The date and time to write.",
+      "ko": "쓸 날짜와 시간."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
+  },
+  "parseDateTime": {
+    "text": {
+      "en": "The typed text.",
+      "ko": "입력된 텍스트."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
+  },
+  "formatTime": {
+    "time": {
+      "en": "The time to write.",
+      "ko": "쓸 시각."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
+  },
+  "parseTime": {
+    "text": {
+      "en": "The typed text.",
+      "ko": "입력된 텍스트."
+    },
+    "options.locale": {
+      "en": "The locale, such as ko. The runtime's own when not set.",
+      "ko": "ko 같은 로캘. 지정하지 않으면 런타임의 로캘입니다."
+    }
+  },
+  "normalizeHex": {
+    "text": {
+      "en": "The text to read, such as typed input. Spaces around it are ignored.",
+      "ko": "읽을 텍스트(예: 입력값). 앞뒤 공백은 무시합니다."
+    }
+  },
+  "resolveSheetPresentation": {
+    "coarse": {
+      "en": "Whether the pointer is coarse.",
+      "ko": "포인터가 coarse인지 여부."
+    },
+    "narrow": {
+      "en": "Whether the viewport is narrow.",
+      "ko": "뷰포트가 좁은지 여부."
+    }
+  },
+  "composeRefs": {
+    "...refs": {
+      "en": "Object refs, callback refs or undefined.",
+      "ko": "객체 ref, 콜백 ref 또는 undefined."
+    }
+  },
+  "themeOverrideStyle": {
+    "overrides": {
+      "en": "Token paths and typed values, as ThemeProvider takes them. null or undefined gives {}.",
+      "ko": "ThemeProvider가 받는 것과 같은 토큰 경로와 타입이 있는 값. null이나 undefined면 {}입니다."
+    },
+    "overrideTypes": {
+      "en": "Types for a company's own token paths, as ThemeProvider takes them.",
+      "ko": "ThemeProvider가 받는 것과 같은, 회사 자체 토큰 경로의 타입."
+    }
+  },
+  "themeOverrideType": {
+    "key": {
+      "en": "A key from THEME_OVERRIDE_KEYS.",
+      "ko": "THEME_OVERRIDE_KEYS의 키."
+    }
+  },
+  "parseThemeValue": {
+    "key": {
+      "en": "A key from THEME_OVERRIDE_KEYS. Its type decides how the text is read.",
+      "ko": "THEME_OVERRIDE_KEYS의 키. 이 키의 타입에 따라 텍스트를 읽는 방식이 정해집니다."
+    },
+    "text": {
+      "en": "The text to read. Spaces around it are ignored.",
+      "ko": "읽을 텍스트. 앞뒤 공백은 무시합니다."
+    }
+  },
+  "parseThemeColor": {
+    "text": {
+      "en": "The text to read. Spaces around it are ignored.",
+      "ko": "읽을 텍스트. 앞뒤 공백은 무시합니다."
+    }
+  },
+  "themeValueCss": {
+    "key": {
+      "en": "A key from THEME_OVERRIDE_KEYS.",
+      "ko": "THEME_OVERRIDE_KEYS의 키."
+    },
+    "value": {
+      "en": "A value of the key's type.",
+      "ko": "키의 타입에 맞는 값."
+    }
+  },
+  "themeColorCss": {
+    "value": {
+      "en": "An oklch color, as parseThemeColor returns.",
+      "ko": "parseThemeColor가 반환하는 것 같은 oklch 색상."
+    }
+  },
+  "cssVarName": {
+    "path": {
+      "en": "A dotted token path. It is not checked against the token list.",
+      "ko": "점으로 구분한 토큰 경로. 토큰 목록과 대조하지 않습니다."
+    }
   }
 }

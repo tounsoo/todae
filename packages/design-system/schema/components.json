@@ -655,6 +655,18 @@
       ]
     },
     {
+      "name": "categoryTone",
+      "description": "categoryTone(key) returns one of category-1 to category-8 for a string, such as a user id or a tag name. The same key gets the same tone on the server and in every browser.",
+      "props": [
+        {
+          "name": "key",
+          "type": "string",
+          "required": true,
+          "description": "A stable key. Composed and decomposed forms of the same text get the same tone."
+        }
+      ]
+    },
+    {
       "name": "Checkbox.Root",
       "description": "Native checkbox. Children are the visible label. Never indeterminate.",
       "props": [
@@ -711,6 +723,24 @@
           "type": "string",
           "required": false,
           "description": "Optional class on the wrapping label."
+        }
+      ]
+    },
+    {
+      "name": "Chip.Overflow",
+      "description": "A display-only +N chip: a span with the visible +N hidden from assistive technology and a visually hidden name. It takes no focus; put it in a button to make it a control.",
+      "props": [
+        {
+          "name": "overflowCount",
+          "type": "number",
+          "required": true,
+          "description": "The N in +N."
+        },
+        {
+          "name": "overflowLabel",
+          "type": "(n: number) => string",
+          "required": false,
+          "description": "Name read for +N. Default is the moreChips string from StringsProvider, {n} more in English."
         }
       ]
     },
@@ -941,6 +971,18 @@
       ]
     },
     {
+      "name": "composeRefs",
+      "description": "composeRefs(...refs) returns one callback ref that sets every given ref, such as your own ref and the one a hook's prop getter returns. It returns a new callback on each call.",
+      "props": [
+        {
+          "name": "...refs",
+          "type": "(React.Ref<T> | undefined)[]",
+          "required": true,
+          "description": "Object refs, callback refs or undefined."
+        }
+      ]
+    },
+    {
       "name": "Conversation.Content",
       "description": "Holds the messages, spaced by conversation.gap. When an article in it takes aria-busy=\"true\", as Message.Root does while streaming, Conversation announces that a message is arriving; when that clears, that it finished, unless the message holds a role=\"alert\" or another message starts at the same time. Takes native div attributes.",
       "props": [
@@ -1005,6 +1047,18 @@
           "required": false,
           "description": "Default milliseconds before a toast dismisses itself. Infinity keeps toasts until dismissed.",
           "default": "5000"
+        }
+      ]
+    },
+    {
+      "name": "cssVarName",
+      "description": "cssVarName(path) returns the custom property for a token path: --todae- followed by the path with dots as hyphens, so color.fg.default is --todae-color-fg-default.",
+      "props": [
+        {
+          "name": "path",
+          "type": "string",
+          "required": true,
+          "description": "A dotted token path. It is not checked against the token list."
         }
       ]
     },
@@ -1943,6 +1997,60 @@
       ]
     },
     {
+      "name": "formatDate",
+      "description": "formatDate(date, options) returns the date as the locale writes it in numbers, such as 10/13/2026 in en-US, 13.10.2026 in de and 2026. 10. 13. in ko,. A date in another calendar is written as the same day in the Gregorian calendar.",
+      "props": [
+        {
+          "name": "date",
+          "type": "Temporal.PlainDate",
+          "required": true,
+          "description": "The date to write."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as ko. The runtime's own when not set."
+        }
+      ]
+    },
+    {
+      "name": "formatDateTime",
+      "description": "formatDateTime(value, options) returns the date and time as the locale writes them, the date in numbers as formatDate does and the time in hours and minutes, or with seconds when it has seconds, such as 10/13/2026, 9:30 PM in en-US.",
+      "props": [
+        {
+          "name": "value",
+          "type": "Temporal.PlainDateTime",
+          "required": true,
+          "description": "The date and time to write."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as ko. The runtime's own when not set."
+        }
+      ]
+    },
+    {
+      "name": "formatTime",
+      "description": "formatTime(time, options) returns the time in the locale's short time style, such as 9:30 PM in en-US and 21:30 in de, or in its medium style, with seconds, when the time has seconds.",
+      "props": [
+        {
+          "name": "time",
+          "type": "Temporal.PlainTime",
+          "required": true,
+          "description": "The time to write."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as ko. The runtime's own when not set."
+        }
+      ]
+    },
+    {
       "name": "GlyphsProvider",
       "description": "Sets the glyphs Todae draws by itself, such as close crosses, check marks and chevrons, for its subtree, so they can come from your icon library. Renders no element; useGlyphs() reads the glyphs in effect.",
       "props": [
@@ -2631,6 +2739,18 @@
       ]
     },
     {
+      "name": "normalizeHex",
+      "description": "normalizeHex(text) returns #rrggbb in lower case for a three- or six-digit hex color, with or without #, and null for anything else.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The text to read, such as typed input. Spaces around it are ignored."
+        }
+      ]
+    },
+    {
       "name": "OptionList.Option",
       "description": "String-only option inside OptionList.Root.",
       "props": [
@@ -2777,6 +2897,90 @@
           "required": false,
           "description": "Pages always shown at each end.",
           "default": "1"
+        }
+      ]
+    },
+    {
+      "name": "parseDate",
+      "description": "parseDate(text, options) returns the Temporal.PlainDate in typed text, or null when the text is not a date. It reads a date in numbers in the order formatDate writes them, or in the locale's medium, long or full Intl date style. It does not check a picker's min, max or isDateDisabled.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The typed text."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as ko. The runtime's own when not set."
+        }
+      ]
+    },
+    {
+      "name": "parseDateTime",
+      "description": "parseDateTime(text, options) returns the Temporal.PlainDateTime in typed text, or null when the text is not one. It reads a date and a time in the order the locale writes them, such as 10/13/2026 9:30 pm or Oct 13, 2026 at 9:30 PM in en-US. It does not check a picker's min, max or isDateDisabled.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The typed text."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as ko. The runtime's own when not set."
+        }
+      ]
+    },
+    {
+      "name": "parseThemeColor",
+      "description": "parseThemeColor(text) returns an oklch ThemeColorValue for a color such as #3366cc, converted to oklch, or oklch(0.5 0.1 30 / 0.8). It returns null for text it does not read, such as oklch(50% 0.1 30), and for a color out of range, such as a lightness above 1.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The text to read. Spaces around it are ignored."
+        }
+      ]
+    },
+    {
+      "name": "parseThemeValue",
+      "description": "parseThemeValue(key, text) reads text as a ThemeProvider override value of the key's type, such as 1.5rem for a dimension or 200ms for a duration, or returns null for text it does not read, such as 16px for a dimension.",
+      "props": [
+        {
+          "name": "key",
+          "type": "ThemeOverrideKey",
+          "required": true,
+          "description": "A key from THEME_OVERRIDE_KEYS. Its type decides how the text is read."
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The text to read. Spaces around it are ignored."
+        }
+      ]
+    },
+    {
+      "name": "parseTime",
+      "description": "parseTime(text, options) returns the Temporal.PlainTime in typed text, or null when the text is not a time. It reads an hour, an hour and minutes, or an hour, minutes and seconds, with or without the locale's words for a part of the day, such as 9:30 pm in en-US.",
+      "props": [
+        {
+          "name": "text",
+          "type": "string",
+          "required": true,
+          "description": "The typed text."
+        },
+        {
+          "name": "options.locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale, such as ko. The runtime's own when not set."
         }
       ]
     },
@@ -2958,6 +3162,24 @@
           "type": "string",
           "required": false,
           "description": "Optional class on the radiogroup."
+        }
+      ]
+    },
+    {
+      "name": "resolveSheetPresentation",
+      "description": "resolveSheetPresentation({ coarse, narrow }) returns sheet when either is true, else popover: useSheetPresentation's rule without its media queries.",
+      "props": [
+        {
+          "name": "coarse",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the pointer is coarse."
+        },
+        {
+          "name": "narrow",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the viewport is narrow."
         }
       ]
     },
@@ -3468,6 +3690,48 @@
       ]
     },
     {
+      "name": "themeColorCss",
+      "description": "themeColorCss(value) returns a ThemeColorValue as a CSS oklch() color, with / alpha only when alpha is set and not 1.",
+      "props": [
+        {
+          "name": "value",
+          "type": "ThemeColorValue",
+          "required": true,
+          "description": "An oklch color, as parseThemeColor returns."
+        }
+      ]
+    },
+    {
+      "name": "themeOverrideStyle",
+      "description": "themeOverrideStyle(overrides, overrideTypes) returns the public --todae-* custom properties ThemeProvider sets for overrides, as a style object such as { \"--todae-color-fg-default\": \"oklch(0.2 0 0)\" }. An unknown key or a value of the wrong type throws in development and is skipped in production.",
+      "props": [
+        {
+          "name": "overrides",
+          "type": "ThemeOverride",
+          "required": true,
+          "description": "Token paths and typed values, as ThemeProvider takes them. null or undefined gives {}."
+        },
+        {
+          "name": "overrideTypes",
+          "type": "ThemeOverrideTypes",
+          "required": false,
+          "description": "Types for a company's own token paths, as ThemeProvider takes them."
+        }
+      ]
+    },
+    {
+      "name": "themeOverrideType",
+      "description": "themeOverrideType(key) returns the $type of one of Todae's ThemeProvider override keys, such as color or dimension.",
+      "props": [
+        {
+          "name": "key",
+          "type": "ThemeOverrideKey",
+          "required": true,
+          "description": "A key from THEME_OVERRIDE_KEYS."
+        }
+      ]
+    },
+    {
       "name": "ThemeProvider",
       "description": "Sets data-appearance from system, light, or dark. Nested providers override.",
       "props": [
@@ -3495,6 +3759,24 @@
           "type": "React.ReactNode",
           "required": false,
           "description": "Themed subtree."
+        }
+      ]
+    },
+    {
+      "name": "themeValueCss",
+      "description": "themeValueCss(key, value) returns an override value as the CSS ThemeProvider writes for that key's type.",
+      "props": [
+        {
+          "name": "key",
+          "type": "ThemeOverrideKey",
+          "required": true,
+          "description": "A key from THEME_OVERRIDE_KEYS."
+        },
+        {
+          "name": "value",
+          "type": "ThemeOverrideValue",
+          "required": true,
+          "description": "A value of the key's type."
         }
       ]
     },
@@ -3975,6 +4257,11 @@
       ]
     },
     {
+      "name": "useAppearance",
+      "description": "useAppearance() returns light or dark: the nearest ThemeProvider's appearance, with system resolved through prefers-color-scheme. It is light outside any ThemeProvider, and with system it is light on the server and while hydrating.",
+      "props": []
+    },
+    {
       "name": "useChipField",
       "description": "Optional state helper. Field.ChipInput stays fully controlled without it.",
       "props": [
@@ -4162,6 +4449,11 @@
       ]
     },
     {
+      "name": "useDensity",
+      "description": "useDensity() returns the nearest DensityProvider's density, or comfortable outside one.",
+      "props": []
+    },
+    {
       "name": "useDropzone",
       "description": "Returns { dragging, getRootProps, getInputProps }. Spread getInputProps on a native <input type=\"file\"> and getRootProps on the drop target, usually the label around it, so a click and the keyboard open the file picker natively. Dropped folders are skipped. The picker applies accept and the hook checks dropped and pasted files against it. With paste, files pasted while focus is inside the root are taken too, unless the paste also carries plain text. Files from a drop, a paste or a pick are checked against maxSize, minSize and the file count, then passed to onFiles. In the browser, the input keeps only the accepted files, so a native form submits them. dragging, and data-dragging on the root, are set while files are dragged over the root.",
       "props": [
@@ -4221,6 +4513,11 @@
     {
       "name": "useField",
       "description": "Joins a custom control to the nearest Field.Root. Spread getControlProps on the control. Takes no options.",
+      "props": []
+    },
+    {
+      "name": "useGlyphs",
+      "description": "useGlyphs() returns the glyphs in effect: the nearest GlyphsProvider's, merged over its parents'. An unset or null key means Todae's own glyph.",
       "props": []
     },
     {
@@ -4519,6 +4816,11 @@
           "default": "\"auto\""
         }
       ]
+    },
+    {
+      "name": "useStrings",
+      "description": "useStrings() returns the strings in effect: the nearest StringsProvider's, merged over its parents', else English. Use it in your own components for text Todae's strings cover.",
+      "props": []
     },
     {
       "name": "useTooltip",

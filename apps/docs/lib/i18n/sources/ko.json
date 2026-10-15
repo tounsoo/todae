@@ -103,7 +103,7 @@
     "# Chip": "c81bd71e02d3",
     "## Accessible composition": "4aa0768730ca",
     "## When to use": "633dd339b67b",
-    "## Props": "96a28a5c8dc6",
+    "## Props": "cb85f32ce9f9",
     "(section order)": "fb0efba9a567"
   },
   "chip-list": {
@@ -133,7 +133,7 @@
     "## Keys and values": "99c6e3175913",
     "## Accessible composition": "4546795fd18a",
     "## When to use": "3c01076e78db",
-    "## Props": "4299d93f81be",
+    "## Props": "e964cb5c505c",
     "(section order)": "5b4b04f4c6fa"
   },
   "composer": {
@@ -263,8 +263,10 @@
     "## Accessible composition": "cc7efa5ff6e0",
     "## When to use": "d57fe8233a0b",
     "### Field.DatePicker": "9b0203cf918a",
-    "## Props": "4d3b8d5a61e4",
-    "(section order)": "e66dc8c40754"
+    "### formatDate": "8733ccff7aed",
+    "### parseDate": "9c8aa249da4e",
+    "## Props": "965c55594523",
+    "(section order)": "31048754c69b"
   },
   "field/date-time-picker": {
     "(top)": "baff6ae91b8c",
@@ -275,8 +277,10 @@
     "## Accessible composition": "120cd5b024e7",
     "## When to use": "d57fe8233a0b",
     "### Field.DateTimePicker": "641960a4b398",
-    "## Props": "0d89c32801e9",
-    "(section order)": "374d4250ebe3"
+    "### formatDateTime": "325cf00c875c",
+    "### parseDateTime": "01544bed1860",
+    "## Props": "af663e140f04",
+    "(section order)": "4ad73b6239c4"
   },
   "field/select": {
     "(top)": "9ef76a8a6752",
@@ -319,8 +323,10 @@
     "## Accessible composition": "365e5f87cb12",
     "## When to use": "d57fe8233a0b",
     "### Field.TimePicker": "4ccdb4124cea",
-    "## Props": "b0c145a7d49f",
-    "(section order)": "39237f394310"
+    "### formatTime": "fd8940b1ed01",
+    "### parseTime": "68e25c09dd81",
+    "## Props": "6af2d44fb439",
+    "(section order)": "59143873f613"
   },
   "fieldset": {
     "(top)": "d88e18f28a84",
@@ -632,6 +638,9 @@
     "## When to use": "d57fe8233a0b",
     "### ThemeProvider": "fb9c7530fef5",
     "### DensityProvider": "b60121bd3031",
+    "### useAppearance": "8d5dfda228bf",
+    "### useDensity": "49f8e7f1cea5",
+    "### categoryTone": "0384942d3b71",
     "## Contrast": "e3223e4198e2",
     "## References and opacity": "dbea45e0372e",
     "## Letter case": "beaf90851101",
@@ -639,7 +648,7 @@
     "## Category tones": "66f99d412c6c",
     "## Focus ring": "d4f6cb5c0687",
     "## Catalog": "fbadfcf96811",
-    "(section order)": "b9b2c2639be4"
+    "(section order)": "9cffcfa214fc"
   },
   "toolbar": {
     "(top)": "65f7c00fa816",
@@ -668,23 +677,39 @@
     "## Props": "5dc9e1f0ecff",
     "(section order)": "a507fd436fd2"
   },
+  "utilities/compose-refs": {
+    "# composeRefs": "4b6b82815c66",
+    "## When to use": "02fd64ae0747",
+    "## Props": "d83af1624b33",
+    "(section order)": "8da5a3f9ff32"
+  },
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
     "# GlyphsProvider": "d545d6d246f4",
     "## Glyphs": "114d6b19a0ae",
     "## Accessible composition": "63d5e085e78a",
-    "## When to use": "58a152b85e04",
+    "## When to use": "d57fe8233a0b",
+    "### GlyphsProvider": "62ce17abb01f",
+    "### useGlyphs": "60c48260decd",
     "## Props": "9169ca6f0856",
-    "(section order)": "a2c772dae730"
+    "(section order)": "ea7e5eb50a21"
   },
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "a18713b4e742",
     "## Strings": "1f76040acb4c",
     "## Accessible composition": "3a78acb70781",
-    "## When to use": "214f070a73a5",
+    "## When to use": "d57fe8233a0b",
+    "### StringsProvider": "aacaf9fe8cf2",
+    "### useStrings": "7ec0a6c8f32e",
     "## Props": "c7939b9d1afe",
-    "(section order)": "e23de084b1da"
+    "(section order)": "bf6c068e392e"
+  },
+  "utilities/theme-override-style": {
+    "# themeOverrideStyle": "39fc51c83ecd",
+    "## When to use": "ef727144bb95",
+    "## Props": "35105b6c4f4f",
+    "(section order)": "498547eab27f"
   },
   "utilities/use-announcer": {
     "(top)": "02cb952a3840",
@@ -804,9 +829,9 @@
   },
   "utilities/use-sheet-presentation": {
     "(top)": "3a8163d5375e",
-    "# useSheetPresentation": "0e88077db182",
+    "# useSheetPresentation": "e0032f4eaecd",
     "## When to use": "fca42e377dfb",
-    "## Props": "fe78ba4c943c",
+    "## Props": "ab2f16f240ae",
     "(section order)": "6d31ec8b55f3"
   },
   "utilities/use-tooltip": {

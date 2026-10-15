@@ -76,6 +76,22 @@ The calendar opens and closes through `open` with `onOpenChange`, or `defaultOpe
 
 **When not:** A date people know by heart, such as a birthday → a [Field.TextInput](/field/text-input) read with `parseDate`. A calendar shown on the page → [Calendar](/calendar). A date with a time → [Field.DateTimePicker](/field/date-time-picker).
 
+### formatDate
+
+**When:** Writing a date as text for a locale, such as into a text input beside a picker.
+
+**When not:** A date with a weekday or a month name → `Intl.DateTimeFormat`.
+
+### parseDate
+
+**When:** Reading a date someone typed.
+
+**When not:** Text in a fixed format such as `2026-10-13` → `Temporal.PlainDate.from`.
+
 ## Props
 
 <PropsTable name="Field.DatePicker" />
+
+<PropsTable name="formatDate" />
+
+<PropsTable name="parseDate" />
