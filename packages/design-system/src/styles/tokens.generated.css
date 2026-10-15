@@ -60,6 +60,7 @@
   --todae-font-family-mono: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
   --todae-font-family-sans: ui-sans-serif, system-ui, "Segoe UI", "Roboto", sans-serif;
   --todae-font-leading-default: 1.5;
+  --todae-font-leading-snug: 1.4;
   --todae-font-leading-tight: 1.25;
   --todae-font-letter-spacing-default: 0rem;
   --todae-font-size-1: 0.75rem;
@@ -537,9 +538,11 @@
   --todae-field-description-fg: var(--_todae-field-description-fg, var(--todae-color-fg-muted));
   --todae-field-description-font-size: var(--_todae-field-description-font-size, var(--todae-font-size-2));
   --todae-field-description-font-weight: var(--_todae-field-description-font-weight, var(--todae-font-weight-regular));
+  --todae-field-description-leading: var(--_todae-field-description-leading, var(--todae-font-leading-snug));
   --todae-field-error-fg: var(--_todae-field-error-fg, var(--todae-color-danger-default));
   --todae-field-error-font-size: var(--_todae-field-error-font-size, var(--todae-font-size-2));
   --todae-field-error-font-weight: var(--_todae-field-error-font-weight, var(--todae-font-weight-regular));
+  --todae-field-error-leading: var(--_todae-field-error-leading, var(--todae-font-leading-snug));
   --todae-field-fg-adornment: var(--_todae-field-fg-adornment, var(--todae-color-fg-placeholder));
   --todae-field-fg-default: var(--_todae-field-fg-default, var(--todae-color-fg-default));
   --todae-field-fg-disabled: var(--_todae-field-fg-disabled, var(--todae-color-fg-placeholder));
@@ -1022,6 +1025,8 @@
   --todae-loader-track-tint: var(--_todae-loader-track-tint, var(--todae-opacity-20));
   --todae-skeleton-bg: var(--_todae-skeleton-bg, var(--todae-color-bg-subtle));
   --todae-skeleton-motion-duration: var(--_todae-skeleton-motion-duration, 1600ms);
+  --todae-skeleton-motion-easing: var(--_todae-skeleton-motion-easing, cubic-bezier(0.42, 0, 0.58, 1));
+  --todae-skeleton-pulse-opacity: var(--_todae-skeleton-pulse-opacity, 0.5);
   --todae-skeleton-radius: var(--_todae-skeleton-radius, var(--todae-radius-sm));
   --todae-code-block-bg: var(--_todae-code-block-bg, var(--todae-color-bg-subtle));
   --todae-code-block-fg: var(--_todae-code-block-fg, var(--todae-color-fg-default));
