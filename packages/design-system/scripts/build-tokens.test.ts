@@ -1348,6 +1348,15 @@ describe('company token build', () => {
     const navError = await buildCompanyTokens({ resolver: await nav(76), base: tokensDir }).catch((e: Error) => e.message);
     expect(navError).toMatch(/^contrast: 1 pair\(s\) fail APCA/);
     expect(navError).toContain('"nav.item.fg.current" on "nav.item.bg.current" over "color.bg.subtle" in appearance "light" is Lc 75.3, below 76');
+
+    // Re-listed in two company entries, each keeps its own pair, and Todae's is gone.
+    const twice = await company((r) => {
+      r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'nav.item.fg.current', bg: 'nav.item.bg.current', min: 45 }];
+      r.modifiers.appearance.$extensions['dev.todae'].contrast = [{ fg: 'nav.item.fg.current', bg: 'nav.item.bg.current', min: 76 }];
+    });
+    const twiceError = await buildCompanyTokens({ resolver: twice, base: tokensDir }).catch((e: Error) => e.message);
+    expect(twiceError).toMatch(/^contrast: 1 pair\(s\) fail APCA/);
+    expect(twiceError).toContain('over "color.bg.subtle" in appearance "light" is Lc 75.3, below 76');
   });
 
   it('composites a translucent text color and checks a translucent background over its surfaces', async () => {

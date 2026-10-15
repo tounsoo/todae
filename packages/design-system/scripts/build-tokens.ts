@@ -1343,22 +1343,28 @@ function retuneAcrossEntries(base: ResolvedEntry[], extra: ResolvedEntry[], merg
   const todae = new Map<string, ContrastPair>();
   for (const entry of base) for (const pair of entry.extension.contrast ?? []) todae.set(pairKey(pair), pair);
   // The company's own pairs: those its entries declare that aren't Todae's inherited ones.
-  const owner = new Map<string, string>();
+  // A company may re-list a key in several of its entries; each of them keeps it.
+  const owners = new Map<string, Set<string>>();
   for (const entry of extra) {
     const upstream = base.find((candidate) => candidate.kind === entry.kind && candidate.name === entry.name);
     const inherited = new Set(upstream?.extension.contrast ?? []);
     for (const pair of entry.extension.contrast ?? []) {
-      if (!inherited.has(pair) && todae.has(pairKey(pair))) owner.set(pairKey(pair), `${entry.kind} ${entry.name}`);
+      const key = pairKey(pair);
+      if (inherited.has(pair) || !todae.has(key)) continue;
+      owners.set(key, (owners.get(key) ?? new Set()).add(`${entry.kind} ${entry.name}`));
     }
   }
-  if (owner.size === 0) return;
+  if (owners.size === 0) return;
   for (const [i, entry] of merged.entries()) {
     const pairs = entry.extension.contrast;
     if (!pairs) continue;
     const here = `${entry.kind} ${entry.name}`;
-    const kept = pairs
-      .filter((pair) => owner.get(pairKey(pair)) === undefined || owner.get(pairKey(pair)) === here)
-      .map((pair) => (owner.get(pairKey(pair)) === here ? retune(pair, todae.get(pairKey(pair))) : pair));
+    const kept: ContrastPair[] = [];
+    for (const pair of pairs) {
+      const owning = owners.get(pairKey(pair));
+      if (!owning) kept.push(pair);
+      else if (owning.has(here)) kept.push(retune(pair, todae.get(pairKey(pair))));
+    }
     const { contrast: _dropped, ...rest } = entry.extension;
     merged[i] = { ...entry, extension: kept.length > 0 ? { ...rest, contrast: kept } : rest } as ResolvedEntry;
   }
