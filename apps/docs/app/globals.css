@@ -9,6 +9,10 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* iOS Safari enlarges text in blocks wider than the screen, so a long code
+     block that scrolls sideways got far bigger type than a short one. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Todae ships the typeface token but doesn't apply it; the docs opt in, as a
