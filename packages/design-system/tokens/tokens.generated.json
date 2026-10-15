@@ -7022,6 +7022,24 @@
       "context": null
     },
     {
+      "path": "message.actions.motion.duration",
+      "type": "duration",
+      "cssVar": "--todae-message-actions-motion-duration",
+      "cssValue": "var(--todae-motion-duration-normal)",
+      "ref": "motion.duration.normal",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.actions.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-message-actions-motion-easing",
+      "cssValue": "var(--todae-motion-easing-standard)",
+      "ref": "motion.easing.standard",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "message.fg",
       "type": "color",
       "cssVar": "--todae-message-fg",
@@ -7088,6 +7106,24 @@
       "path": "message.system.font.size",
       "type": "dimension",
       "cssVar": "--todae-message-system-font-size",
+      "cssValue": "var(--todae-font-size-2)",
+      "ref": "font.size.2",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.time.fg",
+      "type": "color",
+      "cssVar": "--todae-message-time-fg",
+      "cssValue": "var(--todae-color-fg-muted)",
+      "ref": "color.fg.muted",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "message.time.font.size",
+      "type": "dimension",
+      "cssVar": "--todae-message-time-font-size",
       "cssValue": "var(--todae-font-size-2)",
       "ref": "font.size.2",
       "layer": "contract",

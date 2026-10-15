@@ -34,15 +34,29 @@ import {
   Tabs,
   Text,
   ToggleGroup,
+  Toolbar,
   Tree,
+  useClipboard,
   type Glyphs,
 } from '@omsoo.design/todae';
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import type { Locale } from '../../lib/i18n/config';
-import type { IconLibrary } from '../iconLibraries';
+import { ICON_LIBRARIES, type IconLibrary } from '../iconLibraries';
 import { PREVIEW_COPY } from './previewCopy';
 
 const NO_GLYPHS: Glyphs = {};
+
+const SENT = '2026-10-14T09:41:00+09:00[Asia/Seoul]';
+
+function CopyButton({ label, icon, copiedIcon, text }: { label: string; icon: ReactNode; copiedIcon: ReactNode; text: string }) {
+  const clipboard = useClipboard();
+  const copied = clipboard.status === 'copied' && clipboard.text === text;
+  return (
+    <Button.Root variant="ghost" aria-label={label} onClick={() => clipboard.copy(text)}>
+      <Button.Icon>{copied ? copiedIcon : icon}</Button.Icon>
+    </Button.Root>
+  );
+}
 
 /**
  * A product-like screen built from Todae parts. The playground's theme paints
@@ -68,6 +82,12 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
   const [page, setPage] = useState(2);
   const [draft, setDraft] = useState('');
   const [asked, setAsked] = useState<string[]>([]);
+  const [reply, setReply] = useState<0 | 1>(0);
+  const [rating, setRating] = useState<string | null>(null);
+  // Todae draws no icons, so with its own glyphs the actions take Lucide's.
+  const actionLibrary = library ?? ICON_LIBRARIES[0];
+  const actionIcons = actionLibrary.icons;
+  const sent = Temporal.ZonedDateTime.from(SENT);
 
   const ask = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -276,6 +296,12 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
               <div className="preview-stack">
                 <Message.Root from="user" aria-label={copy.you}>
                   <Message.Content>{copy.question}</Message.Content>
+                  <Message.Actions reveal="hover">
+                    <Message.Time value={sent} locale={locale} />
+                    <Toolbar.Root aria-label={copy.yourMessageActions}>
+                      <CopyButton label={copy.copy} icon={actionIcons.copy} copiedIcon={actionLibrary.glyphs.check} text={copy.question} />
+                    </Toolbar.Root>
+                  </Message.Actions>
                 </Message.Root>
                 <Message.Root aria-label={copy.assistant}>
                   <Message.Avatar>
@@ -285,12 +311,36 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
                   </Message.Avatar>
                   <Message.Header>
                     <strong>{copy.assistant}</strong>
+                    <Message.Time value={sent.add({ seconds: 4 })} locale={locale} />
                   </Message.Header>
                   <Message.Content>
                     <Prose.Root>
-                      <p>{copy.answer}</p>
+                      <p>{copy.answers[reply].content}</p>
                     </Prose.Root>
                   </Message.Content>
+                  <Message.Actions>
+                    <Toolbar.Root aria-label={copy.replyActions}>
+                      <CopyButton label={copy.copy} icon={actionIcons.copy} copiedIcon={actionLibrary.glyphs.check} text={copy.answers[reply].source} />
+                      <Button.Root
+                        variant="ghost"
+                        aria-label={copy.regenerate}
+                        onClick={() => {
+                          setReply((index) => (index === 0 ? 1 : 0));
+                          setRating(null);
+                        }}
+                      >
+                        <Button.Icon>{actionIcons.regenerate}</Button.Icon>
+                      </Button.Root>
+                      <ToggleGroup.Root aria-label={copy.rateReply} value={rating} onValueChange={setRating}>
+                        <ToggleGroup.Item value="good" variant="ghost" aria-label={copy.goodReply}>
+                          <Button.Icon>{actionIcons.thumbsUp}</Button.Icon>
+                        </ToggleGroup.Item>
+                        <ToggleGroup.Item value="bad" variant="ghost" aria-label={copy.badReply}>
+                          <Button.Icon>{actionIcons.thumbsDown}</Button.Icon>
+                        </ToggleGroup.Item>
+                      </ToggleGroup.Root>
+                    </Toolbar.Root>
+                  </Message.Actions>
                 </Message.Root>
                 <Attachment.Root>
                   <Attachment.Name>invoices-q3.csv</Attachment.Name>
