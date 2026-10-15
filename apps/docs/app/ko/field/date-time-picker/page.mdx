@@ -47,7 +47,7 @@ const [invalid, setInvalid] = useState(false);
 
 ## 입력한 날짜와 시각
 
-`formatDateTime(value, { locale })`은 날짜를 `formatDate`처럼 숫자로, 시각을 시와 분으로, 초가 있으면 초까지 씁니다. 예: `en-US`에서는 `10/13/2026, 9:30 PM`, `de`에서는 `13.10.2026, 21:30`, `ko`에서는 `2026. 10. 13. 오후 9:30`. `parseDateTime(text, { locale })`은 입력한 텍스트를 `Temporal.PlainDateTime`으로 읽고, 날짜와 시각이 아니면 `null`을 돌려줍니다. 날짜는 [`parseDate`](/field/date-picker#typed-dates)처럼, 이어서 시각은 [`parseTime`](/field/time-picker#typed-times)처럼 로캘이 쓰는 순서로 읽고, 로캘이 둘 사이에 쓰는 단어는 있어도 없어도 됩니다. 예: `en-US`에서는 `Oct 13, 2026 at 9:30 PM`이나 `10/13/2026 9:30 pm`. `13.10.2026 21:30`처럼 날짜의 숫자와 시각의 숫자가 맞닿는 곳에는 공백이나 쉼표를 넣으세요. 시각이 없는 날짜는 읽지 않습니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다.
+`formatDateTime(value, { locale })`은 날짜를 `formatDate`처럼 숫자로, 시각을 시와 분으로, 초가 있으면 초까지 씁니다. 예: `en-US`에서는 `10/13/2026, 9:30 PM`, `de`에서는 `13.10.2026, 21:30`, `ko`에서는 `2026. 10. 13. 오후 9:30`. `parseDateTime(text, { locale })`은 입력한 텍스트를 `Temporal.PlainDateTime`으로 읽고, 날짜와 시각이 아니면 `null`을 돌려줍니다. 날짜는 [`parseDate`](/field/date-picker#typed-dates)처럼 읽되 연도는 전부 쓰거나 끝의 두 자리로 쓰고, 이어서 시각은 [`parseTime`](/field/time-picker#typed-times)처럼 로캘이 쓰는 순서로 읽고, 로캘이 둘 사이에 쓰는 단어는 있어도 없어도 됩니다. 예: `en-US`에서는 `Oct 13, 2026 at 9:30 PM`이나 `10/13/2026 9:30 pm`. 시각에는 `21:30`이나 `2130`처럼 분이 있거나 `pm` 같은 단어가 있어야 하므로, `13.10.2026 21`처럼 시만 있는 텍스트는 읽지 않고, 시각이 없는 날짜도 읽지 않습니다. `locale`이 없으면 둘 다 런타임의 로캘을 씁니다.
 
 예시에서는 날짜와 시각이 아닌 텍스트가 값을 비우므로 폼은 값을 보내지 않고, 필드는 포커스를 잃을 때 유효하지 않음으로 표시됩니다. `parseDateTime`은 선택기의 `min`, `max`, `isDateDisabled`를 확인하지 않으므로, 입력한 값은 직접 확인하세요.
 

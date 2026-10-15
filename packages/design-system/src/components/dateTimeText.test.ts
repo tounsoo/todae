@@ -127,14 +127,17 @@ describe('parseDateTime', () => {
     expect(read('12 Rhagfyr 2012 am 12:12', 'cy')).toBe('2012-12-12T12:12:00');
   });
 
-  it('does not read a date typed without a year in an order other than its full date', () => {
+  it('does not read a date typed without a year beside a time of two numbers', () => {
     // In newer locale data rw writes a date with a year as "2026 Ukw. 13", and without one as "13 Ukw.".
     const date = Temporal.PlainDate.from('2026-10-09').toLocaleString('rw', { month: 'short', day: 'numeric', calendar: 'gregory' });
     expect(read(`${date} 21 05`, 'rw')).toBeNull();
     expect(read('9 Ukw. 21 05', 'rw')).toBeNull();
-    // nso and lmo write the month first without a year and the day first with one.
-    expect(read('9 Okt 21 05:00', 'nso')).toBeNull();
-    expect(read('10 marz 13 21:05', 'lmo')).toBeNull();
+  });
+
+  it('reads the date as parseDate reads it', () => {
+    // lmo writes a date as "2026 marz 10", so "10 marz 13" is March 13, 2010.
+    expect(read('10 marz 13 21:05', 'lmo')).toBe('2010-03-13T21:05:00');
+    expect(read('12. 10. 13. 21:05', 'ko')).toBe('2012-10-13T21:05:00');
   });
 
   it('keeps the marks inside a date or a time from ending the date', () => {
@@ -149,9 +152,17 @@ describe('parseDateTime', () => {
     expect(read('13. márc. 10. 21:05', 'hu')).toBe('2013-03-10T21:05:00');
   });
 
-  it('needs a space or a comma where a number of the date meets a number of the time', () => {
-    expect(read('13.10.2026-21:30', 'de')).toBeNull();
-    expect(read('Oct 13, 2026-9:30 PM', 'en-US')).toBeNull();
+  it("reads a date and a time joined by any mark that isn't only a date's or a time's", () => {
+    expect(read('13.10.2026-21:30', 'de')).toBe('2026-10-13T21:30:00');
+    expect(read('Oct 13, 2026-9:30 PM', 'en-US')).toBe('2026-10-13T21:30:00');
+    expect(read('10/13/2026/9:30', 'en-US')).toBeNull();
+    expect(read('13.10.2026:21:30', 'de')).toBeNull();
+  });
+
+  it('needs the minutes of a time, or a word for the part of the day', () => {
+    expect(read('13.10.2026 21', 'de')).toBeNull();
+    expect(read('13.10.2026 2130', 'de')).toBe('2026-10-13T21:30:00');
+    expect(read('10/13/2026 9 pm', 'en-US')).toBe('2026-10-13T21:00:00');
   });
 
   it('does not read the hour of a time as the year of a date typed without one', () => {
@@ -172,8 +183,11 @@ describe('parseDateTime', () => {
     expect(read('3. 4. 9 05', 'hu')).toBeNull();
     expect(read('13/10 9 05', 'sv')).toBeNull();
     expect(read('9 05 3/4', 'vi')).toBeNull();
-    // Also October 12 at 13:21:05 when the year is left out.
-    expect(read('12. 10. 13. 21:05', 'ko')).toBeNull();
+  });
+
+  it('does not read a time typed before a date the locale writes first', () => {
+    expect(read('21 05 10. 9.', 'ko')).toBeNull();
+    expect(read('9 05 4. 3.', 'cs')).toBeNull();
   });
 
   it('reads a two-digit year beside the time', () => {
