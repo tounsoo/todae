@@ -7,7 +7,7 @@
     background: var(--todae-skeleton-bg);
     color: transparent;
     user-select: none;
-    animation: todae-skeleton-pulse var(--todae-skeleton-motion-duration) ease-in-out infinite;
+    animation: todae-skeleton-pulse var(--todae-skeleton-motion-duration) var(--todae-skeleton-motion-easing) infinite;
   }
 
   .root > * {
@@ -16,7 +16,7 @@
 
   @keyframes todae-skeleton-pulse {
     50% {
-      opacity: 0.5;
+      opacity: var(--todae-skeleton-pulse-opacity);
     }
   }
 
