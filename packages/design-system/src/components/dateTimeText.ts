@@ -41,7 +41,7 @@ type LocaleDateTime = {
   monthDay: Set<'md' | 'dm'>;
   /** Punctuation the locale writes between the date and the time and not inside either, such as "/" in az. */
   marks: Set<string>;
-  /** The orders the locale writes a month's name and a day in without a year. */
+  /** The orders the locale writes a month's name and a day in, with a year and without. */
   namedMonthDay: Set<'md' | 'dm'>;
 };
 
@@ -95,7 +95,7 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
       for (const word of splitWords(part.value)) if (/\p{L}/u.test(word)) joiners.add(word);
     }
   }
-  // A mark inside a date or a time, such as "." in "13.10.23" or the "." of "г." in ru, stays inside it.
+  // A mark the locale also writes inside a numeric date or a time, such as "." in ru, which also ends "г.", can't end the date.
   for (const style of [
     { year: '2-digit', month: '2-digit', day: '2-digit' },
     { year: 'numeric', month: 'numeric', day: 'numeric' },
@@ -112,11 +112,14 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
     monthDay.add(types.indexOf('month') < types.indexOf('day') ? 'md' : 'dm');
   }
   const namedMonthDay = new Set<'md' | 'dm'>();
+  // With a year too, since some locales write "Okt 9" without one but "9 Okt 2026" with it.
   for (const month of ['short', 'long'] as const) {
-    const types = new Intl.DateTimeFormat(locale, { month, day: 'numeric', calendar: 'gregory', timeZone: 'UTC' })
-      .formatToParts(Date.UTC(2026, 9, 13))
-      .map((part) => part.type);
-    namedMonthDay.add(types.indexOf('month') < types.indexOf('day') ? 'md' : 'dm');
+    for (const year of [undefined, 'numeric', '2-digit'] as const) {
+      const types = new Intl.DateTimeFormat(locale, { year, month, day: 'numeric', calendar: 'gregory', timeZone: 'UTC' })
+        .formatToParts(Date.UTC(2026, 9, 13))
+        .map((part) => part.type);
+      namedMonthDay.add(types.indexOf('month') < types.indexOf('day') ? 'md' : 'dm');
+    }
   }
   const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, monthDay, marks, namedMonthDay };
   localeDateTimes.set(key, text);
@@ -198,8 +201,8 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
   // Whether part of a date reads as a date without a year: two numbers that are
   // a month and a day in an order the locale writes them in, or words that read
   // as a date with a year put before or after them, or, for a day and a month's
-  // name in an order the locale writes them in without a year, on either side
-  // of the day, as "13 Ukw." in rw, which writes the year first and the day last.
+  // name in an order the locale writes them in, on either side of the day, as
+  // "13 Ukw." in rw, which in newer locale data writes the year first and the day last.
   const yearless = (half: string) => {
     const numbers = /^(\d{1,2}) (\d{1,2})$/.exec(half);
     if (!numbers) {

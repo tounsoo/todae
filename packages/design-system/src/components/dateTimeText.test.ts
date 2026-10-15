@@ -131,6 +131,10 @@ describe('parseDateTime', () => {
     // In newer locale data rw writes a date with a year as "2026 Ukw. 13", and without one as "13 Ukw.".
     const date = Temporal.PlainDate.from('2026-10-09').toLocaleString('rw', { month: 'short', day: 'numeric', calendar: 'gregory' });
     expect(read(`${date} 21 05`, 'rw')).toBeNull();
+    expect(read('9 Ukw. 21 05', 'rw')).toBeNull();
+    // nso and lmo write the month first without a year and the day first with one.
+    expect(read('9 Okt 21 05:00', 'nso')).toBeNull();
+    expect(read('10 marz 13 21:05', 'lmo')).toBeNull();
   });
 
   it('keeps the marks inside a date or a time from ending the date', () => {
