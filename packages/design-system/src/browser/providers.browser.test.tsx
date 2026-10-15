@@ -315,10 +315,10 @@ describe('ThemeProvider override contrast in development', () => {
     const sheet = document.createElement('style');
     sheet.textContent = `.brand { --todae-nav-item-fg-current: ${failingNav}; }`;
     document.head.append(sheet);
+    const host = document.createElement('div');
     try {
       render(<ThemeProvider appearance="light" className="brand" overrides={card} />);
       render(<ThemeProvider appearance="light" style={{ ['--todae-nav-item-fg-current' as string]: failingNav }} overrides={card} />);
-      const host = document.createElement('div');
       document.body.append(host);
       const shadow = host.attachShadow({ mode: 'open' });
       shadow.innerHTML = `<style>div[data-appearance] { --todae-nav-item-fg-current: ${failingNav}; }</style><div></div>`;
@@ -329,9 +329,9 @@ describe('ThemeProvider override contrast in development', () => {
       expect(warn).toHaveBeenCalledTimes(1);
       expect(String(warn.mock.calls[0]![0])).toContain('color.on-accent on color.accent.default');
       expect(String(warn.mock.calls[0]![0])).not.toContain('nav.item.fg.current');
-      host.remove();
     } finally {
       sheet.remove();
+      host.remove();
     }
   });
 
@@ -345,6 +345,12 @@ describe('ThemeProvider override contrast in development', () => {
       />,
     );
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("ignores a caller style value React doesn't set", () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<ThemeProvider appearance="light" style={{ ['--todae-color-accent-default' as string]: null }} overrides={lightAccent(0.92)} />);
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 
   it('warns again when failing overrides come back, and not while the same pairs fail', () => {

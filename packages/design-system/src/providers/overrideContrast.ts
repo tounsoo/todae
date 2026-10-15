@@ -156,8 +156,8 @@ export function measureContrast(element: HTMLElement): ContrastMeasure {
 
 /**
  * The pairs that fail on `element` with its overrides but pass on the same
- * element without them, so a failure from the page around it, a class, the
- * caller's style or a company's own minimums isn't blamed on the overrides.
+ * element without them: a pair that already fails without them, from the page
+ * around it, a class or the caller's style, isn't blamed on the overrides.
  * `names` are the custom properties the overrides set on `element`'s inline
  * style; `underneath` holds the caller's own value for any of those names,
  * which an override replaced.

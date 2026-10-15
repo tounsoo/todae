@@ -44,7 +44,12 @@ function contrastInputs(vars: Record<string, string>, inputs: Record<string, str
   const names = [...Object.keys(vars), ...Object.keys(inputs)];
   const own = (style ?? {}) as Record<string, unknown>;
   const underneath: Record<string, string> = {};
-  for (const name of names) if (own[name] !== undefined) underneath[name] = String(own[name]);
+  for (const name of names) {
+    const value = own[name];
+    // React sets no property for null, a boolean or an empty string.
+    if (value !== undefined && value !== null && typeof value !== 'boolean' && value !== '') underneath[name] = String(value);
+  }
+  // `values` is only in the key so a changed value re-runs the check.
   return { names, values: vars, underneath };
 }
 
