@@ -127,4 +127,22 @@ describe('Playground', { timeout: 15_000 }, () => {
     expect(preview.getByRole('button', { name: '보내기' })).toBeTruthy();
     expect(preview.queryByText('Good morning, Ada')).toBeNull();
   });
+  it("copies the shown reply's markdown, and Regenerate clears the copied mark and the rating", async () => {
+    render(<Playground locale="en" />);
+    const reply = within(stage()).getByRole('toolbar', { name: 'Reply' });
+    const copyButton = within(reply).getByRole('button', { name: 'Copy' });
+    await act(async () => fireEvent.click(copyButton));
+    expect(writeText).toHaveBeenCalledWith(
+      'Yes. Open **Billing**, pick the range, then choose `Export CSV`. Here is last quarter’s file.',
+    );
+    expect(copyButton.querySelector('.lucide-check')).not.toBeNull();
+    const good = within(reply).getByRole('button', { name: 'Good reply' });
+    fireEvent.click(good);
+    expect(good.getAttribute('aria-pressed')).toBe('true');
+
+    fireEvent.click(within(reply).getByRole('button', { name: 'Regenerate' }));
+    expect(within(stage()).getByText(/set the range to last quarter/)).toBeTruthy();
+    expect(copyButton.querySelector('.lucide-check')).toBeNull();
+    expect(good.getAttribute('aria-pressed')).toBe('false');
+  });
 });

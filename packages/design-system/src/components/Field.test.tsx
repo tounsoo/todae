@@ -20,6 +20,7 @@ import { useChipField } from '../hooks/useChipField';
 import { useField } from '../hooks/useField';
 import * as api from '../index';
 import { StringsProvider } from '../providers/StringsProvider';
+import vhStyles from './VisuallyHidden.module.css';
 
 afterEach(cleanup);
 
@@ -403,6 +404,106 @@ describe('Field.ColorPicker beside another control part', () => {
       </Field.Root>,
     );
     expect(container.querySelector('#x')!.tagName).toBe('BUTTON');
+  });
+});
+
+describe("Field.ColorPicker's picker", () => {
+  function Accent({
+    disabled,
+    open,
+    onOpenChange,
+  }: {
+    disabled?: boolean;
+    open?: boolean;
+    onOpenChange?: (open: boolean, reason: string) => void;
+  }) {
+    return (
+      <Field.Root aria-label="Accent" disabled={disabled}>
+        <Field.ColorPicker value="#3366ff" open={open} onOpenChange={onOpenChange} />
+        <Field.Affix data-testid="affix">hex</Field.Affix>
+      </Field.Root>
+    );
+  }
+
+  const button = () => screen.getByRole('button', { name: 'Accent' });
+  const dialog = () => screen.queryByRole('dialog', { name: 'Color picker' });
+
+  it('opens and closes on its button, and controls the popover only while it is open', () => {
+    const onOpenChange = vi.fn();
+    render(<Accent onOpenChange={onOpenChange} />);
+    expect(button().getAttribute('aria-haspopup')).toBe('dialog');
+    expect(button().getAttribute('aria-expanded')).toBe('false');
+    expect(button().hasAttribute('aria-controls')).toBe(false);
+    expect(dialog()).toBeNull();
+    fireEvent.click(button());
+    expect(onOpenChange).toHaveBeenLastCalledWith(true, 'trigger');
+    expect(button().getAttribute('aria-expanded')).toBe('true');
+    expect(dialog()).not.toBeNull();
+    expect(button().getAttribute('aria-controls')).toBe(dialog()!.id);
+    fireEvent.click(button());
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'trigger');
+    expect(dialog()).toBeNull();
+    expect(button().hasAttribute('aria-controls')).toBe(false);
+  });
+
+  it('closes on Escape with the escape reason', () => {
+    const onOpenChange = vi.fn();
+    render(<Accent onOpenChange={onOpenChange} />);
+    fireEvent.click(button());
+    fireEvent.keyDown(dialog()!, { key: 'Escape' });
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'escape');
+    expect(dialog()).toBeNull();
+  });
+
+  it('toggles on a press elsewhere in the field, through the toggle it registers with the shell', () => {
+    const onOpenChange = vi.fn();
+    render(<Accent onOpenChange={onOpenChange} />);
+    const affix = screen.getByTestId('affix');
+    fireEvent.mouseDown(affix, { button: 0 });
+    fireEvent.click(affix, { detail: 1 });
+    expect(onOpenChange).toHaveBeenLastCalledWith(true, 'trigger');
+    expect(dialog()).not.toBeNull();
+    fireEvent.mouseDown(affix, { button: 0 });
+    fireEvent.click(affix, { detail: 1 });
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'trigger');
+    expect(dialog()).toBeNull();
+    // A click with no press, as from the keyboard, opens nothing.
+    fireEvent.click(affix, { detail: 0 });
+    expect(dialog()).toBeNull();
+    expect(onOpenChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('closes when the field is disabled, once, and stays closed when it is enabled again', () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<Accent onOpenChange={onOpenChange} />);
+    fireEvent.click(button());
+    expect(dialog()).not.toBeNull();
+    rerender(<Accent disabled onOpenChange={onOpenChange} />);
+    expect(dialog()).toBeNull();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'disabled');
+    expect(button().hasAttribute('aria-controls')).toBe(false);
+    rerender(<Accent disabled onOpenChange={onOpenChange} />);
+    rerender(<Accent onOpenChange={onOpenChange} />);
+    expect(dialog()).toBeNull();
+    expect(button().getAttribute('aria-expanded')).toBe('false');
+    expect(onOpenChange.mock.calls).toEqual([
+      [true, 'trigger'],
+      [false, 'disabled'],
+    ]);
+  });
+
+  it('shows no picker while disabled, even when held open, and opens nothing on a press', () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<Accent disabled open onOpenChange={onOpenChange} />);
+    expect(dialog()).toBeNull();
+    expect(button().hasAttribute('aria-controls')).toBe(false);
+    expect(onOpenChange.mock.calls).toEqual([[false, 'disabled']]);
+    rerender(<Accent disabled onOpenChange={onOpenChange} />);
+    const affix = screen.getByTestId('affix');
+    fireEvent.mouseDown(affix, { button: 0 });
+    fireEvent.click(affix, { detail: 1 });
+    expect(dialog()).toBeNull();
+    expect(onOpenChange).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -1134,13 +1235,32 @@ describe('Field.Counter', () => {
         </div>
       </Field.Root>,
     );
-    const hidden = [...container.querySelectorAll('[class*="srOnly"]')];
+    const hidden = [...container.querySelectorAll(`[class~="${vhStyles.root}"]`)];
     expect(hidden.some((node) => node.textContent === 'Up to 10 characters')).toBe(true);
     expect(hidden.some((node) => node.getAttribute('aria-live') === 'polite')).toBe(true);
     for (const line of fieldCss.split('\n')) {
       if (!line.includes('{')) continue;
-      if (line.includes('.srOnly') || line.includes('.counter')) expect(line).not.toContain(':has');
+      if (line.includes('.counter')) expect(line).not.toContain(':has');
     }
+  });
+
+  it("hides the limit and the live count with VisuallyHidden.Root, not a copy of its rules", () => {
+    const { container } = render(
+      <Field.Root>
+        <Field.TextInput value="hello" maxLength={10} onChange={() => undefined} />
+        <Field.Counter />
+      </Field.Root>,
+    );
+    const textInput = screen.getByRole('textbox');
+    const hint = screen.getByText('Up to 10 characters');
+    const live = container.querySelector('[aria-live="polite"]')!;
+    for (const node of [hint, live]) {
+      expect(node.tagName).toBe('SPAN');
+      // VisuallyHidden.Root's rules, which hold over a class a product adds.
+      expect(node.className).toBe(vhStyles.root);
+    }
+    expect(textInput.getAttribute('aria-describedby')).toBe(hint.id);
+    expect(fieldCss).not.toMatch(/srOnly|clip:\s*rect/);
   });
 
   it('server-renders the count and hydrates', async () => {
@@ -1265,7 +1385,7 @@ describe('Field.Counter', () => {
       );
       const hint = view.container.querySelector('[id]') as HTMLElement;
       const described = view.container.querySelector(input)?.getAttribute('aria-describedby');
-      const hintId = view.container.querySelector('.srOnly, [class*="srOnly"]')?.id;
+      const hintId = view.container.querySelector(`[class~="${vhStyles.root}"]`)?.id;
       expect(hintId).toBeTruthy();
       expect(described).toBe(`desc err own ${hintId}`);
       expect(hint).toBeTruthy();
@@ -1567,7 +1687,7 @@ describe('Field.Row', () => {
     const shell = container.firstElementChild as HTMLElement;
     expect(shell.lastElementChild?.textContent).toContain('bottom');
     expect(shell.querySelector(':scope > [data-todae-counter]')).toBeNull();
-    const hint = container.querySelector('[class*="srOnly"]');
+    const hint = container.querySelector(`[class~="${vhStyles.root}"]`);
     expect(shell.querySelector('textarea')?.getAttribute('aria-describedby')).toBe(`desc ${hint?.id}`);
     expect(container.querySelectorAll('[aria-live="polite"]')).toHaveLength(1);
     const row = cssBlock(fieldCss, '.row {');
