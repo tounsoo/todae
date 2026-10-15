@@ -89,7 +89,8 @@
         "x": { "$type": "dimension", "$value": { "$ref": "#/popover/padding/x/$value" } },
         "y": { "$type": "dimension", "$value": { "$ref": "#/popover/padding/y/$value" } }
       },
-      "max-height": { "$type": "dimension", "$value": { "$ref": "#/popover/max-height/$value" } }
+      "max-height": { "$type": "dimension", "$value": { "$ref": "#/popover/max-height/$value" } },
+      "shadow": { "$type": "shadow", "$value": { "$ref": "#/popover/shadow/$value" } }
     },
     "row": {
       "control": {
