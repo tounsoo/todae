@@ -14,6 +14,8 @@ export const BUILD_TIMEOUT_MS = 10_000;
 /** Theme CSS or override types larger than this are not returned. */
 export const MAX_CSS_BYTES = 1024 * 1024;
 const BUILD_MEMORY_MB = 256;
+/** How much of a failed build's error output is kept. */
+export const MAX_ERROR_BYTES = 64 * 1024;
 /** Builds one server instance runs at once; a call past this is refused, not queued. */
 export const MAX_CONCURRENT_BUILDS = 2;
 let running = 0;
@@ -89,9 +91,16 @@ function runCli(cli: string, args: string[], cwd: string, timeout: number): Prom
     execFile(
       process.execPath,
       [`--max-old-space-size=${BUILD_MEMORY_MB}`, cli, ...args],
-      { cwd, env: { NODE_ENV: 'production' }, timeout, killSignal: 'SIGKILL', maxBuffer: 64 * 1024 },
+      { cwd, env: { NODE_ENV: 'production' }, timeout, killSignal: 'SIGKILL', maxBuffer: MAX_ERROR_BYTES },
       (error, _stdout, stderr) => {
         if (!error) return resolve({ ok: true });
+        // Node kills a child whose output passes `maxBuffer`, so this comes before the time limit check.
+        if (error.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') {
+          // Cut at a line break, so no line, and no temporary path in it, is left half written.
+          const text = String(stderr);
+          const kept = text.slice(0, Math.max(0, text.lastIndexOf('\n'))).trim();
+          return resolve({ ok: false, error: `${kept ? `${kept}\n` : ''}The build printed more errors than fit, and the rest were cut` });
+        }
         if (error.killed || error.signal) {
           return resolve({ ok: false, error: `The build ran longer than ${timeout / 1000} seconds or ran out of memory, and was stopped` });
         }

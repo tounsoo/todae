@@ -1101,6 +1101,33 @@ describe('company token build', () => {
     await expect(build(24, 2)).rejects.toThrow('alpha "brand.x.d0" must stay in [0, 1], not 2');
   });
 
+  it('checks an alpha at the end of a long alias chain', async () => {
+    const build = async (leaf: number) => {
+      const root = await mkdtemp(join(tmpdir(), 'todae-alpha-chain-'));
+      try {
+        const chain: Record<string, unknown> = { n0: { $type: 'number', $value: leaf } };
+        for (let i = 1; i < 2000; i++) chain[`n${i}`] = { $type: 'number', $value: { $ref: `#/brand/chain/n${i - 1}/$value` } };
+        const ink = { $type: 'color', $value: { colorSpace: 'oklch', components: [0.5, 0, 0], alpha: { $ref: '#/brand/chain/n1999/$value' } } };
+        await writeFile(join(root, 'tokens.json'), JSON.stringify({ brand: { chain, ink } }));
+        await writeFile(
+          join(root, 'resolver.json'),
+          JSON.stringify({
+            version: '2025.10',
+            sets: { tokens: { sources: [{ $ref: './tokens.json' }], $extensions: { 'dev.todae': { layer: 'contract' } } } },
+            modifiers: {},
+            resolutionOrder: [{ $ref: '#/sets/tokens' }],
+          }),
+        );
+        return await buildCompanyTokens({ resolver: join(root, 'resolver.json'), base: tokensDir });
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    };
+    // A walk that recursed once per alias overflowed the stack at about 1500 links.
+    await expect(build(0.5)).resolves.toBeDefined();
+    await expect(build(2)).rejects.toThrow('alpha "brand.chain.n1999" must stay in [0, 1], not 2');
+  });
+
   it('emits only the company layer, after Todae\'s', async () => {
     const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
     expect(result.css.startsWith('@layer todae.reset, todae.base, todae.components, todae.theme;\n\n@layer todae.theme {')).toBe(

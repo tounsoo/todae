@@ -1367,28 +1367,42 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
   }
   // An alpha must land in [0, 1] in every context its number token takes.
   // Each alpha target is walked once, with its own `seen` set, so a loop
-  // across contexts (light reads b, dark reads a) ends the walk.
-  const literalCache = new Map<string, number[]>();
-  function literals(root: string): number[] {
-    const cached = literalCache.get(root);
-    if (cached) return cached;
+  // across contexts (light reads b, dark reads a) ends the walk. The walk
+  // keeps its own stack, so a long alias chain cannot overflow the call
+  // stack, and visits literals in the order a depth-first walk reaches them.
+  const outOfRange = new Map<string, number | null>();
+  function firstOutOfRange(root: string): number | null {
+    const cached = outOfRange.get(root);
+    if (cached !== undefined) return cached;
     const seen = new Set<string>();
-    const walk = (path: string): number[] => {
-      if (seen.has(path)) return [];
-      seen.add(path);
-      return (byPath.get(path) ?? []).flatMap((token) =>
-        token.refs.length > 0 ? token.refs.flatMap((ref) => walk(ref.path)) : [token.value as number],
-      );
-    };
-    const values = walk(root);
-    literalCache.set(root, values);
-    return values;
+    const stack: ({ path: string } | { value: number })[] = [{ path: root }];
+    let found: number | null = null;
+    while (stack.length > 0) {
+      const item = stack.pop()!;
+      if ('value' in item) {
+        if (item.value < 0 || item.value > 1) {
+          found = item.value;
+          break;
+        }
+        continue;
+      }
+      if (seen.has(item.path)) continue;
+      seen.add(item.path);
+      const tokens = byPath.get(item.path) ?? [];
+      for (let i = tokens.length - 1; i >= 0; i--) {
+        const token = tokens[i]!;
+        if (token.refs.length === 0) stack.push({ value: token.value as number });
+        else for (let j = token.refs.length - 1; j >= 0; j--) stack.push({ path: token.refs[j]!.path });
+      }
+    }
+    outOfRange.set(root, found);
+    return found;
   }
   for (const token of all) {
     for (const ref of token.refs) {
       if (ref.role !== 'alpha') continue;
-      const out = literals(ref.path).find((value) => value < 0 || value > 1);
-      if (out !== undefined) fail(`token "${token.path}" alpha "${ref.path}" must stay in [0, 1], not ${out}`);
+      const out = firstOutOfRange(ref.path);
+      if (out !== null) fail(`token "${token.path}" alpha "${ref.path}" must stay in [0, 1], not ${out}`);
     }
   }
   // CSS places each entry by its resolutionOrder position, so an alias to a

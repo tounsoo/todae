@@ -1,9 +1,9 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DOCS_ORIGIN } from '../origin';
-import { MAX_CONCURRENT_BUILDS, baseContrast, buildTokenFiles, checkFiles, todaeTokensCli, todaeTokensDir } from './build';
+import { MAX_CONCURRENT_BUILDS, MAX_ERROR_BYTES, baseContrast, buildTokenFiles, checkFiles, todaeTokensCli, todaeTokensDir } from './build';
 import { GUIDES, GUIDE_TOPICS, getGuide } from './guides';
 import { scaffoldDesignSystem } from './scaffold';
 import { catalogTokens, getToken, listTokens } from './tokens';
@@ -147,6 +147,30 @@ describe('build_tokens', () => {
     await Promise.all(slow);
     // The slots free up once those builds end.
     expect((await buildTokenFiles(readTree(ACME))).ok).toBe(true);
+  });
+
+  it('reports a build that prints too many errors, or fails without saying why', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'todae-fake-cli-'));
+    try {
+      const noisy = join(dir, 'noisy.js');
+      writeFileSync(noisy, `process.stderr.write('contrast: pair failed\\n'.repeat(${MAX_ERROR_BYTES})); process.exitCode = 1;`);
+      const loud = await buildTokenFiles(readTree(ACME), { cli: noisy });
+      expect(loud.ok).toBe(false);
+      if (!loud.ok) {
+        expect(loud.error).toMatch(/^contrast: pair failed\n/);
+        expect(loud.error).toMatch(/more errors than fit, and the rest were cut$/);
+        expect(loud.error).not.toContain('was stopped');
+      }
+      const quiet = join(dir, 'quiet.js');
+      writeFileSync(quiet, 'process.exitCode = 3;');
+      expect(await buildTokenFiles(readTree(ACME), { cli: quiet })).toEqual({
+        ok: false,
+        error: 'The build failed with exit code 3',
+        source: 'todae-docs',
+      });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('builds a resolver that is not at the top level', async () => {
