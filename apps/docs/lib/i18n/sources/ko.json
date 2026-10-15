@@ -651,7 +651,7 @@
   },
   "tooltip": {
     "(top)": "8d2a15f35086",
-    "# Tooltip": "b926b9d66879",
+    "# Tooltip": "5a6fad0ba2ee",
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "f729d4d99b51",
@@ -811,7 +811,7 @@
   },
   "utilities/use-tooltip": {
     "(top)": "6a88821fc13f",
-    "# useTooltip": "f4273d8f73d1",
+    "# useTooltip": "06367727b548",
     "## Accessible composition": "8cb577a4cfae",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",

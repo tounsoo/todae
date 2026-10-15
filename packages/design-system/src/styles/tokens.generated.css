@@ -681,6 +681,8 @@
   --todae-tooltip-bg: var(--_todae-tooltip-bg, var(--todae-color-bg-elevated));
   --todae-tooltip-border: var(--_todae-tooltip-border, var(--todae-color-border-default));
   --todae-tooltip-border-width: var(--_todae-tooltip-border-width, var(--todae-border-width));
+  --todae-tooltip-delay-hide: var(--_todae-tooltip-delay-hide, 100ms);
+  --todae-tooltip-delay-show: var(--_todae-tooltip-delay-show, 300ms);
   --todae-tooltip-fg: var(--_todae-tooltip-fg, var(--todae-color-fg-default));
   --todae-tooltip-max-width: var(--_todae-tooltip-max-width, 16rem);
   --todae-tooltip-offset: var(--_todae-tooltip-offset, var(--todae-space-1));

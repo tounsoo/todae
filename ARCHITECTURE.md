@@ -97,6 +97,7 @@ The rules below were read from the code rather than decided in a thread. Follow 
 - **Use the best native HTML and CSS features, with no JavaScript fallbacks and no support matrix.** The feature list is on the [Native platform](apps/docs/app/(en)/platform/page.mdx) page; add a feature there when a component starts to depend on it. *Why:* Todae stays small and gets better as browsers do.
 - **Overlays.** `Dialog` and `BottomSheet` render in place on a modal `<dialog>` (no portal), so they inherit the theme. `Popover`, `Menu` and `Tooltip` use `popover="manual"` with CSS anchor positioning. Page scroll stops through `:root:has(dialog:modal)` in CSS, not a scroll-lock hook.
 - **Toast** holds text and buttons, no nested menus or dialogs. Its region follows Todae's modal stack into the front modal; a product's own modal `<dialog>` joins that stack through `useModalLayer`.
+- **A timing only a hook reads**, such as a tooltip's show and hide delays, is a contract token too. The hook reads it from the trigger's computed style and falls back to the token's default when it can't. *Why:* a theme tunes every timing in one place, CSS or not.
 - **Motion** takes its durations and easings from contract tokens, respects `prefers-reduced-motion`, and only has to work in Chrome. Don't add workarounds for Safari motion gaps.
 
 ## Accessibility

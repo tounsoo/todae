@@ -2225,12 +2225,12 @@
       "ko": "커밋 뒤에 호출됩니다. open을 바꾸지 않으면 거부로 처리됩니다."
     },
     "showDelay": {
-      "en": "Hover show delay in milliseconds. Focus shows at once.",
-      "ko": "호버 시 표시 지연(밀리초). 포커스는 즉시 표시합니다."
+      "en": "Hover show delay in milliseconds. Without it, the tooltip.delay.show token as the trigger computes it. Focus shows at once.",
+      "ko": "호버 시 표시 지연(밀리초). 없으면 트리거에서 계산된 tooltip.delay.show 토큰을 씁니다. 포커스는 즉시 표시합니다."
     },
     "hideDelay": {
-      "en": "Hide delay in milliseconds.",
-      "ko": "숨김 지연(밀리초)."
+      "en": "Hide delay in milliseconds. Without it, the tooltip.delay.hide token as the trigger computes it.",
+      "ko": "숨김 지연(밀리초). 없으면 트리거에서 계산된 tooltip.delay.hide 토큰을 씁니다."
     },
     "enabled": {
       "en": "False resets intent and commits close.",
