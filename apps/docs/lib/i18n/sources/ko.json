@@ -179,7 +179,7 @@
   },
   "dialog": {
     "(top)": "9efb9052a45c",
-    "# Dialog": "12e0ddb97918",
+    "# Dialog": "57df88f350ec",
     "## Icons": "53e5ccf42b18",
     "## Accessible composition": "bac14ea4cfb7",
     "## When to use": "b2fab8d962b5",
@@ -198,7 +198,7 @@
   },
   "drawer": {
     "(top)": "6eefecb2497a",
-    "# Drawer": "8d326f70058d",
+    "# Drawer": "0517cf95421b",
     "## Accessible composition": "fbb5e5f7a61f",
     "## When to use": "63f4ee717695",
     "## Props": "0d9ea25d5717",
