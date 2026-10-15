@@ -36,3 +36,10 @@ export function coreColor(path: string): string {
   if (!token) throw new Error(`No core color token color.${path}`);
   return oklchToHex(token.cssValue);
 }
+
+/** An appearance color token, such as `fg.default`, as the site resolves it in `context`, as hex. */
+export function appearanceColor(path: string, context: 'light' | 'dark'): string {
+  const token = tokens.tokens.find((row) => row.path === `color.${path}` && row.layer === 'appearance' && row.context === context);
+  if (!token?.ref?.startsWith('color.')) throw new Error(`No ${context} appearance color token color.${path} aliasing a core color`);
+  return coreColor(token.ref.slice('color.'.length));
+}

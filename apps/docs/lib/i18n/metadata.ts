@@ -51,7 +51,14 @@ export function localeMetadata(locale: Locale): Metadata {
     description,
     openGraph,
     twitter,
-    icons: { icon: { url: '/brand/icon.svg', type: 'image/svg+xml' }, apple: '/brand/apple-icon.png' },
+    // Browsers that draw SVG icons take the SVG, which follows the color scheme; Safari before 26 takes the PNG.
+    icons: {
+      icon: [
+        { url: '/brand/mark-32.png', sizes: '32x32', type: 'image/png' },
+        { url: '/brand/mark.svg', type: 'image/svg+xml' },
+      ],
+      apple: '/brand/mark-180.png',
+    },
   };
 }
 

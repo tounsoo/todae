@@ -24,7 +24,7 @@ const ROOF = 'M3 27C22 34 74 34 93 27C86 26 80 22 77 15L79 11Q48 15 17 11L19 15C
 const RIDGE = 'M24 16Q48 19 72 16';
 export const RIDGE_MIN_SIZE = 26;
 
-type BrandMarkProps = Omit<SVGProps<SVGSVGElement>, 'children' | 'viewBox'> & {
+type BrandMarkProps = Omit<SVGProps<SVGSVGElement>, 'children' | 'viewBox' | 'width' | 'height'> & {
   size: number;
   /** The mark's color. */
   color?: string;

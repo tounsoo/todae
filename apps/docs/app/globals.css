@@ -84,9 +84,11 @@ body {
   color: inherit;
 }
 
-/* The mark is 22px, too small for its ridge line: see lib/brand.tsx. */
+/* Sized in rem so the mark grows with the text when the reader enlarges it. */
 .brand-mark {
   flex: none;
+  inline-size: 1.375rem;
+  block-size: 1.375rem;
 }
 
 .top-links a,
