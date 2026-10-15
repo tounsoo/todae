@@ -185,7 +185,7 @@ function BottomSheetFooter({ className, ...props }: ComponentPropsWithRef<'div'>
   return <div {...props} className={cx(styles.footer, className)} />;
 }
 
-function BottomSheetClose({ 'aria-label': ariaLabel, onClick, children, ref, className, ...props }: ButtonActionProps) {
+function BottomSheetClose({ 'aria-label': ariaLabel, onClick, children, ref, ...props }: ButtonActionProps) {
   const { requestClose } = useSheet();
   // Text a screen reader reads, such as "Cancel", names the button; the close string names one without, such as an icon.
   const [label, refs] = useDismissLabel(children, ariaLabel, ref, useStrings().close);
@@ -198,8 +198,8 @@ function BottomSheetClose({ 'aria-label': ariaLabel, onClick, children, ref, cla
       tooltip={children == null ? false : undefined}
       aria-label={label}
       {...props}
-      className={cx(styles.close, className)}
       ref={refs}
+      data-todae-close=""
       onClick={composeHandlers(onClick, () => requestClose('close-button'))}
     >
       {children ?? glyph}

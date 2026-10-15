@@ -298,7 +298,7 @@
     },
     {
       "name": "BottomSheet.Header",
-      "description": "Chrome. Drag-eligible. One row. A close button sits at the end, and what comes before it, such as the title, stays at the start.",
+      "description": "Chrome. Drag-eligible. One row. A BottomSheet.Close placed directly in the header sits at the end with anything after it. What comes before it, such as the title, stays at the start.",
       "props": []
     },
     {
@@ -1148,7 +1148,7 @@
     },
     {
       "name": "Dialog.Header",
-      "description": "Optional header. One row. A close button sits at the end, and what comes before it, such as the title, stays at the start.",
+      "description": "Optional header. One row. A Dialog.Close placed directly in the header sits at the end with anything after it. What comes before it, such as the title, stays at the start.",
       "props": []
     },
     {
@@ -1293,7 +1293,7 @@
     },
     {
       "name": "Drawer.Header",
-      "description": "One row. A close button sits at the end, and what comes before it, such as the title, stays at the start.",
+      "description": "One row. A Drawer.Close placed directly in the header sits at the end with anything after it. What comes before it, such as the title, stays at the start.",
       "props": []
     },
     {

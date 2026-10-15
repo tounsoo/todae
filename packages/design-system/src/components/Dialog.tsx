@@ -34,8 +34,8 @@ function DialogFooter({ className, ...props }: ComponentPropsWithRef<'div'>) {
   return <div {...props} className={cx(styles.footer, className)} />;
 }
 
-function DialogClose({ className, ...props }: ButtonActionProps) {
-  return <ShellClose {...props} className={cx(styles.close, className)} />;
+function DialogClose(props: ButtonActionProps) {
+  return <ShellClose {...props} />;
 }
 
 const DIALOG_SHELL: DialogShell = {

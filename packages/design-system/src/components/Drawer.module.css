@@ -100,9 +100,10 @@
     gap: var(--todae-drawer-gap);
   }
 
-  /* One row: the close button sits at the end, and whatever comes before it,
-     such as the title, stays at the start. */
-  .header > .close {
+  /* One row: a close part, placed directly in the header, sits at the end
+     with anything after it; what comes before it stays at the start. The
+     attribute is the close parts' own, so any modal's close part matches. */
+  .header > [data-todae-close] {
     margin-inline-start: auto;
   }
 

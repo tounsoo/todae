@@ -109,6 +109,8 @@ export function ShellClose({ 'aria-label': ariaLabel, onClick, children, ref, ..
       aria-label={label}
       {...props}
       ref={refs}
+      // Marks it for the header rule, which puts it at the end of the row.
+      data-todae-close=""
       onClick={composeHandlers(onClick, () => requestClose('close-button'))}
     >
       {children ?? glyph}

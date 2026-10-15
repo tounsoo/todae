@@ -412,6 +412,31 @@ describe('modal headers', () => {
     expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().left)).toBe(Math.round(header.left));
   });
 
+  it.each(parts)('moves what follows a leading %s close button to the end with it', (_, part) => {
+    const header = renderHeader(
+      part,
+      <>
+        <part.Close>Cancel</part.Close>
+        <part.Title>Edit</part.Title>
+      </>,
+    );
+    const cancel = screen.getByRole('button', { name: 'Cancel' }).getBoundingClientRect();
+    const title = screen.getByRole('heading', { name: 'Edit' }).getBoundingClientRect();
+    expect(cancel.left).toBeGreaterThan(header.left);
+    expect(Math.round(title.right)).toBe(Math.round(header.right));
+  });
+
+  it("puts another modal's close part at the end of a Drawer header", () => {
+    const header = renderHeader(
+      Drawer,
+      <>
+        <Drawer.Title>Sort</Drawer.Title>
+        <Dialog.Close>Close</Dialog.Close>
+      </>,
+    );
+    expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().right)).toBe(Math.round(header.right));
+  });
+
   it.each(parts)('puts a lone %s close button at the end', (_, part) => {
     const header = renderHeader(part, <part.Close>Close</part.Close>);
     expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().right)).toBe(Math.round(header.right));
