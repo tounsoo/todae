@@ -151,10 +151,13 @@ type Template = { regex: RegExp; slots: Slot[]; month?: number };
 type LocaleText = {
   /** The order `formatDate` writes the year, month and day in. */
   order: Part[];
-  /** The order the locale's short date style writes them in, such as day first in "13.10.26" in gsw, whose `formatDate` writes "2026-10-13". */
-  shortOrder: Part[];
-  /** Whether the short date style writes the year in one or two digits. */
-  shortYear: boolean;
+  /**
+   * The order the locale's short date style writes them in, when not `order`,
+   * such as day first in "13.10.26" in gsw, whose `formatDate` writes "2026-10-13".
+   */
+  shortOrder: Part[] | null;
+  /** The order a year of one or two digits is read in first: the short style's when it writes one, else `order`. */
+  shortYearOrder: Part[];
   templates: Template[];
   /** The orders the locale writes a month and a day in numbers, without a year. */
   monthDayOrders: Part[][];
@@ -209,8 +212,11 @@ function localeText(locale: string | undefined): LocaleText {
       .filter((part): part is Intl.DateTimeFormatPart & { type: Part } => ['year', 'month', 'day'].includes(part.type));
   const order = partsOf(NUMERIC).map((part) => part.type);
   const short = partsOf({ dateStyle: 'short' });
-  const shortOrder = short.map((part) => part.type);
-  const shortYear = short.some((part) => part.type === 'year' && part.value.length <= 2);
+  const shortTypes = short.map((part) => part.type);
+  const shortOrder = shortTypes.join() === order.join() ? null : shortTypes;
+  // Its digits counted as digits, not code units, as a digit of adlm is two.
+  const shortYear = short.some((part) => part.type === 'year' && normalize(part.value).length <= 2);
+  const shortYearOrder = shortOrder && shortYear ? shortOrder : order;
   const monthDayOrders = [
     order.filter((part) => part !== 'year'),
     new Intl.DateTimeFormat(locale, { month: 'numeric', day: 'numeric', ...GREGORY })
@@ -218,7 +224,7 @@ function localeText(locale: string | undefined): LocaleText {
       .map((part) => part.type)
       .filter((type): type is Part => type === 'month' || type === 'day'),
   ];
-  const text = { order, shortOrder, shortYear, templates, weekdays, monthDayOrders, monthDayTemplates };
+  const text = { order, shortOrder, shortYearOrder, templates, weekdays, monthDayOrders, monthDayTemplates };
   localeTexts.set(key, text);
   return text;
 }
@@ -276,7 +282,7 @@ export function parseDate(text: string, options: DateTextOptions = {}): Temporal
 
 /** The date `parseDate` reads in typed text, and the number it read as the year, as typed. */
 export function readDate(text: string, options: DateTextOptions = {}): { date: Temporal.PlainDate; year: string } | null {
-  const { order, shortOrder, shortYear, templates, weekdays } = localeText(options.locale);
+  const { order, shortOrder, shortYearOrder, templates, weekdays } = localeText(options.locale);
   const input = normalize(text);
   if (!/\p{L}/u.test(input)) {
     const numbers = /^(\d+) (\d+) (\d+)$/.exec(input);
@@ -286,14 +292,10 @@ export function readDate(text: string, options: DateTextOptions = {}): { date: T
       const date = toDate(fields, weekdays);
       return date && { date, year: fields.year!, parts };
     };
-    const readings = [readIn(order), shortOrder.join() === order.join() ? null : readIn(shortOrder)].filter((reading) => reading !== null);
-    // A year in full in formatDate's order first, then one in the short style's, then the order that writes a short year.
-    const shortYearOrder = shortYear ? shortOrder : order;
-    const reading =
-      readings.find((one) => one.year.length > 2 && one.parts === order) ??
-      readings.find((one) => one.year.length > 2) ??
-      readings.find((one) => one.parts === shortYearOrder) ??
-      readings[0];
+    const readings = [readIn(order), shortOrder && readIn(shortOrder)].filter((reading) => reading !== null);
+    // Two readings have years of the same length, as a day or month has at most two digits:
+    // a year in full in formatDate's order, and one of one or two digits in shortYearOrder.
+    const reading = readings.find((one) => one.parts === (one.year.length > 2 ? order : shortYearOrder)) ?? readings[0];
     if (reading) return { date: reading.date, year: reading.year };
     if (order[0] === 'year' || numbers[1]!.length < 4) return null;
     const date = toDate({ year: numbers[1], month: numbers[2], day: numbers[3] }, weekdays);

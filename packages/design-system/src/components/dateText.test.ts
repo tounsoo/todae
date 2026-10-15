@@ -149,6 +149,8 @@ describe('parseDate', () => {
     expect(read('13.10.26', 'gsw')).toBe('2026-10-13');
     expect(read('2026-10-13', 'gsw')).toBe('2026-10-13');
     expect(read('10/13/26', 'zu')).toBe('2026-10-13');
+    // Digits of a script past U+FFFF, two code units each.
+    expect(read('13.10.26', 'gsw-u-nu-adlm')).toBe('2026-10-13');
     expect(read('13/10/26', 'ha')).toBe('2026-10-13');
     // formatDate writes 10/13/2026 in so, and its short style 13/10/26.
     expect(read('06/05/26', 'so')).toBe('2026-05-06');
@@ -161,9 +163,9 @@ describe('parseDate', () => {
 
   it('reads the short date style of every locale that writes a two-digit year in it', () => {
     let checked = 0;
-    for (const locale of Intl.DateTimeFormat.supportedLocalesOf(LOCALES.concat(['gsw', 'zu', 'ha', 'sat', 'ak', 'fur', 'os']))) {
+    for (const locale of Intl.DateTimeFormat.supportedLocalesOf(LOCALES.concat(['gsw', 'zu', 'ha', 'sat', 'ak', 'fur', 'os', 'gsw-u-nu-adlm', 'so-u-nu-adlm']))) {
       const year = parts(locale, date('2026-10-13'), { dateStyle: 'short' }).find((part) => part.type === 'year');
-      if (!year || year.value.length > 2 || !/^\p{Nd}+$/u.test(year.value)) continue;
+      if (!year || [...year.value].length > 2 || !/^\p{Nd}+$/u.test(year.value)) continue;
       checked++;
       for (const day of DATES) {
         const text = join(parts(locale, day, { dateStyle: 'short' }));
