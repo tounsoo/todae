@@ -112,15 +112,14 @@
   .header {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     gap: var(--todae-sheet-gap);
     touch-action: none;
   }
 
-  /* One row: the title takes the free room, so a close button or other
-     actions sit at the end, as does a close button on its own. */
-  .header > .title {
-    flex: 1 1 auto;
+  /* One row: the close button sits at the end, and whatever comes before it,
+     such as the title, stays at the start. */
+  .header > .close {
+    margin-inline-start: auto;
   }
 
   /* A scroll container clips what paints past its padding box, focus rings

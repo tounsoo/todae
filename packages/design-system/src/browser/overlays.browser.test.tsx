@@ -339,36 +339,82 @@ describe('modal headers', () => {
     expect(Math.round(close.right)).toBe(Math.round(header.right));
   });
 
-  it.each([Dialog, Drawer, BottomSheet])('keeps a lone title at the start edge (case %#)', ({ Root, Header, Title }) => {
+  const parts = [
+    ['Dialog', Dialog],
+    ['Drawer', Drawer],
+    ['BottomSheet', BottomSheet],
+  ] as const;
+
+  function renderHeader(
+    { Root, Header }: (typeof parts)[number][1],
+    children: ReactNode,
+    dir?: 'rtl',
+  ) {
     render(
-      <div data-appearance="light" data-density="comfortable">
-        <Root open onOpenChange={() => undefined}>
-          <Header data-testid="header">
-            <Title>Sort</Title>
-          </Header>
+      <div data-appearance="light" data-density="comfortable" dir={dir}>
+        <Root open onOpenChange={() => undefined} aria-label="Panel">
+          <Header data-testid="header">{children}</Header>
         </Root>
       </div>,
     );
-    const header = screen.getByTestId('header').getBoundingClientRect();
-    const title = screen.getByRole('heading', { name: 'Sort' });
+    return screen.getByTestId('header').getBoundingClientRect();
+  }
+
+  const textLeft = (el: Element) => {
     const range = document.createRange();
-    range.selectNodeContents(title);
-    expect(Math.round(range.getBoundingClientRect().left)).toBe(Math.round(header.left));
+    range.selectNodeContents(el);
+    return range.getBoundingClientRect().left;
+  };
+
+  it.each(parts)('keeps a lone %s title at the start edge', (_, part) => {
+    const header = renderHeader(part, <part.Title>Sort</part.Title>);
+    expect(Math.round(textLeft(screen.getByRole('heading', { name: 'Sort' })))).toBe(Math.round(header.left));
   });
 
-  it('puts a lone close button at the end', () => {
-    render(
-      <div data-appearance="light" data-density="comfortable">
-        <Drawer.Root open onOpenChange={() => undefined} aria-label="Filters">
-          <Drawer.Header data-testid="header">
-            <Drawer.Close>Close</Drawer.Close>
-          </Drawer.Header>
-        </Drawer.Root>
-      </div>,
+  it.each(parts)('keeps a wrapped %s title at the start and its close button at the end', (_, part) => {
+    const header = renderHeader(
+      part,
+      <>
+        <div>
+          <part.Title>Sort</part.Title>
+          <part.Description>By date</part.Description>
+        </div>
+        <part.Close>Close</part.Close>
+      </>,
     );
-    const header = screen.getByTestId('header').getBoundingClientRect();
-    const close = screen.getByRole('button', { name: 'Close' }).getBoundingClientRect();
-    expect(Math.round(close.right)).toBe(Math.round(header.right));
+    expect(Math.round(textLeft(screen.getByRole('heading', { name: 'Sort' })))).toBe(Math.round(header.left));
+    expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().right)).toBe(Math.round(header.right));
+  });
+
+  it.each(parts)('keeps a leading %s action at the start', (_, part) => {
+    const header = renderHeader(
+      part,
+      <>
+        <button type="button">Back</button>
+        <part.Close>Close</part.Close>
+      </>,
+    );
+    expect(Math.round(screen.getByRole('button', { name: 'Back' }).getBoundingClientRect().left)).toBe(Math.round(header.left));
+    expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().right)).toBe(Math.round(header.right));
+  });
+
+  it.each(parts)('swaps the %s title and close button in right-to-left text', (_, part) => {
+    const header = renderHeader(
+      part,
+      <>
+        <part.Title>Sort</part.Title>
+        <part.Close>Close</part.Close>
+      </>,
+      'rtl',
+    );
+    const title = screen.getByRole('heading', { name: 'Sort' }).getBoundingClientRect();
+    expect(Math.round(title.right)).toBe(Math.round(header.right));
+    expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().left)).toBe(Math.round(header.left));
+  });
+
+  it.each(parts)('puts a lone %s close button at the end', (_, part) => {
+    const header = renderHeader(part, <part.Close>Close</part.Close>);
+    expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().right)).toBe(Math.round(header.right));
   });
 });
 

@@ -66,8 +66,8 @@ function Footer({ className, ...props }: ComponentPropsWithRef<'div'>) {
   return <div {...props} className={cx(styles.footer, className)} />;
 }
 
-function Close(props: ButtonActionProps) {
-  return <ShellClose {...props} />;
+function Close({ className, ...props }: ButtonActionProps) {
+  return <ShellClose {...props} className={cx(styles.close, className)} />;
 }
 
 export const Drawer = { Root, Header, Title, Description, Body, Footer, Close } as const;
