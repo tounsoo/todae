@@ -2499,6 +2499,13 @@
       "description": "A row below the content for the message's actions, such as copy and retry. A div; put a Toolbar.Root in it for arrow-key focus.",
       "props": [
         {
+          "name": "reveal",
+          "type": "\"always\" | \"hover\"",
+          "required": false,
+          "description": "hover hides the row until the pointer is over the message or focus is inside it. On a screen with no hover, such as a phone, it always shows.",
+          "default": "\"always\""
+        },
+        {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
@@ -2532,13 +2539,13 @@
     },
     {
       "name": "Message.Header",
-      "description": "A row above the content for the author's name and the product's own time element. A div; headings and paragraphs directly inside lose their margin. Todae formats no dates here.",
+      "description": "A row above the content for the author's name and a Message.Time. A div; headings and paragraphs directly inside lose their margin.",
       "props": [
         {
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "The author's name and, if any, a time element."
+          "description": "The author's name and, if any, a Message.Time."
         }
       ]
     },
@@ -2564,7 +2571,43 @@
           "name": "children",
           "type": "React.ReactNode",
           "required": false,
-          "description": "Message parts: Avatar, Header, Content and Actions."
+          "description": "Message parts: Avatar, Header, Content, Time and Actions."
+        }
+      ]
+    },
+    {
+      "name": "Message.Time",
+      "description": "When the message was sent, as a time element from the message.time tokens. dateTime is the value with its offset, and the text is the value written for locale with Intl, in the short time style unless dateStyle or timeStyle is set, such as 9:41 AM in en-US. Takes native time attributes.",
+      "props": [
+        {
+          "name": "value",
+          "type": "Temporal.ZonedDateTime",
+          "required": true,
+          "description": "When the message was sent, in the time zone to show it in."
+        },
+        {
+          "name": "locale",
+          "type": "string",
+          "required": false,
+          "description": "The locale to write it in, such as \"ko\". The runtime's own when not set, so set it when a server renders the message."
+        },
+        {
+          "name": "dateStyle",
+          "type": "\"full\" | \"long\" | \"medium\" | \"short\"",
+          "required": false,
+          "description": "Intl's dateStyle. With neither style set, the time is written in the short time style."
+        },
+        {
+          "name": "timeStyle",
+          "type": "\"full\" | \"long\" | \"medium\" | \"short\"",
+          "required": false,
+          "description": "Intl's timeStyle. With neither style set, it is short."
+        },
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Text to show in place of the formatted value, such as \"2 min ago\". dateTime still comes from value."
         }
       ]
     },

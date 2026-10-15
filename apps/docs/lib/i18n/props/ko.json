@@ -1200,6 +1200,10 @@
     }
   },
   "Message.Actions": {
+    "reveal": {
+      "en": "hover hides the row until the pointer is over the message or focus is inside it. On a screen with no hover, such as a phone, it always shows.",
+      "ko": "hover는 포인터가 메시지 위에 있거나 포커스가 그 안에 있을 때까지 줄을 숨깁니다. 휴대폰처럼 hover가 없는 화면에서는 늘 보입니다."
+    },
     "children": {
       "en": "Buttons, or a Toolbar.Root holding them.",
       "ko": "버튼, 또는 버튼을 담은 Toolbar.Root."
@@ -1219,8 +1223,8 @@
   },
   "Message.Header": {
     "children": {
-      "en": "The author's name and, if any, a time element.",
-      "ko": "작성자 이름과, 있다면 time 요소."
+      "en": "The author's name and, if any, a Message.Time.",
+      "ko": "작성자 이름과, 있다면 Message.Time."
     }
   },
   "Message.Root": {
@@ -1233,8 +1237,30 @@
       "ko": "메시지가 아직 도착하는 중이면 true. aria-busy와 data-streaming을 설정합니다. 메시지가 끝나거나 실패하면 false로 되돌리세요."
     },
     "children": {
-      "en": "Message parts: Avatar, Header, Content and Actions.",
-      "ko": "메시지 파트: Avatar, Header, Content, Actions."
+      "en": "Message parts: Avatar, Header, Content, Time and Actions.",
+      "ko": "메시지 파트: Avatar, Header, Content, Time, Actions."
+    }
+  },
+  "Message.Time": {
+    "value": {
+      "en": "When the message was sent, in the time zone to show it in.",
+      "ko": "메시지를 보낸 시각. 보여 줄 시간대로 줍니다."
+    },
+    "locale": {
+      "en": "The locale to write it in, such as \"ko\". The runtime's own when not set, so set it when a server renders the message.",
+      "ko": "시각을 쓸 locale. 예: \"ko\". 없으면 런타임의 locale을 쓰므로, 서버가 메시지를 렌더링한다면 주세요."
+    },
+    "dateStyle": {
+      "en": "Intl's dateStyle. With neither style set, the time is written in the short time style.",
+      "ko": "Intl의 dateStyle. 두 스타일 모두 없으면 시각을 짧은 시각 스타일로 씁니다."
+    },
+    "timeStyle": {
+      "en": "Intl's timeStyle. With neither style set, it is short.",
+      "ko": "Intl의 timeStyle. 두 스타일 모두 없으면 short입니다."
+    },
+    "children": {
+      "en": "Text to show in place of the formatted value, such as \"2 min ago\". dateTime still comes from value.",
+      "ko": "포맷한 값 대신 보여 줄 텍스트. 예: \"2분 전\". 그래도 dateTime은 value에서 옵니다."
     }
   },
   "Meter.Root": {

@@ -17,7 +17,7 @@ import { MessageStreaming, MessageTurns } from '../../../components/demos/Messag
   </Message.Avatar>
   <Message.Header>
     <strong>Assistant</strong>
-    <time dateTime="2026-10-14T09:41">9:41</time>
+    <Message.Time value={sentAt} locale={locale} />
   </Message.Header>
   <Message.Content>
     <Prose.Root>
@@ -35,14 +35,27 @@ Server Components can import it from `@omsoo.design/todae/message`.
 
 ## Parts
 
-Every part is a `div`, and all of them are optional.
+Every part but `Message.Time` is a `div`, and all of them are optional.
 
 - `Message.Avatar` holds an `Avatar.Root`. With one, the other parts sit in a column beside it: after it for an assistant or system message, before it for a user's.
-- `Message.Header` is a row for the author's name and a time. Pass your own `<time>` element: Todae formats no dates here. A heading or paragraph directly inside it has no margin.
+- `Message.Header` is a row for the author's name and a `Message.Time`. A heading or paragraph directly inside it has no margin.
 - `Message.Content` is the text. For a user's message it is the bubble. Put rendered markdown in a [Prose](/prose) root inside it.
-- `Message.Actions` is a row for the message's actions, such as copy and retry. Put a [Toolbar](/toolbar) in it when there are several, so they take one tab stop.
+- `Message.Time` is a `<time>` that says when the message was sent. It can sit in the header or in the actions row.
+- `Message.Actions` is a row for the message's actions, such as copy and retry. Put a [Toolbar](/toolbar) in it when there are several, so they take one tab stop. With `reveal="hover"`, the row shows only while the pointer is over the message or focus is inside it; on a screen with no hover, such as a phone, it always shows. The [Message actions](/recipes/message-actions) recipe puts copy, regenerate, rating and edit buttons in it.
 
 `from` sets `data-from` and changes only layout and tokens: it does not change the role or what screen readers hear.
+
+## Time
+
+`Message.Time` takes the time as a `Temporal.ZonedDateTime`, so you choose the time zone it is shown in. It writes `dateTime` as the time with its offset, such as `2026-10-14T09:41:00+09:00`, and the text in `locale`'s short time style, such as `9:41 AM` in `en-US` and `오전 9:41` in `ko`. Set `dateStyle` or `timeStyle` for another style, or pass children to show your own text, such as a relative time; `dateTime` still comes from `value`.
+
+```tsx
+const sentAt = Temporal.Instant.from(message.createdAt).toZonedDateTimeISO(timeZone);
+
+<Message.Time value={sentAt} locale={locale} dateStyle="medium" timeStyle="short" />
+```
+
+Without `locale`, the runtime's own locale is used. When a server renders the message, pass the reader's locale and time zone, so the server and the browser write the same text.
 
 ## Streaming
 
@@ -65,15 +78,15 @@ Set `streaming` while the message is still arriving, and set it back to `false` 
   <MessageStreaming />
 </Example>
 
-Restyle it through the `message` tokens: `message.fg` sets the text color, `message.gap` and `message.row-gap` space the parts, `message.header.*` sets the header's color, size and the smaller space below it, `message.user.*` the bubble's background, text color, radius, padding, `max-width` and the `border-width` of its forced-colors outline, and `message.system.*` the system line. A `Prose.Root` inside keeps the `prose` tokens' text color and size.
+Restyle it through the `message` tokens: `message.fg` sets the text color, `message.gap` and `message.row-gap` space the parts, `message.header.*` sets the header's color, size and the smaller space below it, `message.time.*` the time's color and size, `message.actions.motion.*` how a `reveal="hover"` row fades, `message.user.*` the bubble's background, text color, radius, padding, `max-width` and the `border-width` of its forced-colors outline, and `message.system.*` the system line. A `Prose.Root` inside keeps the `prose` tokens' text color and size.
 
 ## Accessible composition
 
-**Todae handles:** An `<article>` for each message, so screen reader users can move between them. `aria-busy` while it streams. In forced colors the user bubble keeps an outline, since its background is replaced.
+**Todae handles:** An `<article>` for each message, so screen reader users can move between them. `aria-busy` while it streams. In forced colors the user bubble keeps an outline, since its background is replaced. `Message.Time` writes a machine-readable `dateTime`. A `reveal="hover"` row shows when focus moves into the message, so keyboard users don't land on hidden buttons.
 
 **You supply:** A name for each message that says who wrote it, such as `aria-label="You"` or `aria-labelledby` pointing at the author in `Message.Header`. Names for icon-only action buttons. One announcement when a message finishes, rather than the streamed text; inside a [Conversation](/conversation), it makes that announcement.
 
-**Watch for:** Putting the message that is streaming in a live region: every token is read as it arrives. A timestamp with no `<time dateTime>`, which machines can't read. Telling user and assistant apart by color or side alone; the name says it too.
+**Watch for:** Putting the message that is streaming in a live region: every token is read as it arrives. Hiding the actions of the latest reply with `reveal="hover"`: they are the ones people use most. Telling user and assistant apart by color or side alone; the name says it too.
 
 ## When to use
 
@@ -90,5 +103,7 @@ Restyle it through the `message` tokens: `message.fg` sets the text color, `mess
 <PropsTable name="Message.Header" />
 
 <PropsTable name="Message.Content" />
+
+<PropsTable name="Message.Time" />
 
 <PropsTable name="Message.Actions" />

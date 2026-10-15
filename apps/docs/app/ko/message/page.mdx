@@ -17,7 +17,7 @@ import { MessageStreaming, MessageTurns } from '../../../components/demos/Messag
   </Message.Avatar>
   <Message.Header>
     <strong>Assistant</strong>
-    <time dateTime="2026-10-14T09:41">9:41</time>
+    <Message.Time value={sentAt} locale={locale} />
   </Message.Header>
   <Message.Content>
     <Prose.Root>
@@ -35,14 +35,27 @@ Server Components는 `@omsoo.design/todae/message`에서 가져올 수 있습니
 
 ## 파트
 
-모든 파트는 `div`이고, 모두 넣지 않아도 됩니다.
+`Message.Time`을 뺀 모든 파트는 `div`이고, 모두 넣지 않아도 됩니다.
 
 - `Message.Avatar`에는 `Avatar.Root`를 넣습니다. 이것이 있으면 다른 파트는 그 옆에 한 열로 놓입니다. 어시스턴트나 시스템 메시지에서는 그 뒤에, 사용자의 메시지에서는 그 앞에 놓입니다.
-- `Message.Header`는 작성자 이름과 시각을 담는 줄입니다. 직접 만든 `<time>` 요소를 넣으세요. Todae는 여기서 날짜를 포맷하지 않습니다. 바로 안의 제목이나 문단은 margin이 없습니다.
+- `Message.Header`는 작성자 이름과 `Message.Time`을 담는 줄입니다. 바로 안의 제목이나 문단은 margin이 없습니다.
 - `Message.Content`는 본문입니다. 사용자의 메시지에서는 이것이 말풍선입니다. 렌더링한 markdown은 그 안의 [Prose](/prose) root에 넣으세요.
-- `Message.Actions`는 복사나 다시 시도처럼 메시지에 대한 동작을 담는 줄입니다. 동작이 여러 개면 [Toolbar](/toolbar)에 넣어 탭 정지를 하나로 만드세요.
+- `Message.Time`은 메시지를 보낸 시각을 나타내는 `<time>`입니다. 헤더에 두어도 되고 동작 줄에 두어도 됩니다.
+- `Message.Actions`는 복사나 다시 시도처럼 메시지에 대한 동작을 담는 줄입니다. 동작이 여러 개면 [Toolbar](/toolbar)에 넣어 탭 정지를 하나로 만드세요. `reveal="hover"`를 주면 포인터가 메시지 위에 있거나 포커스가 그 안에 있을 때만 보입니다. 휴대폰처럼 hover가 없는 화면에서는 늘 보입니다. [Message actions](/recipes/message-actions) 레시피는 복사, 다시 생성, 평가, 편집 버튼을 이 줄에 넣습니다.
 
 `from`은 `data-from`을 설정하고 레이아웃과 토큰만 바꿉니다. role이나 스크린 리더가 듣는 내용은 바꾸지 않습니다.
+
+## 시각
+
+`Message.Time`은 시각을 `Temporal.ZonedDateTime`으로 받으므로, 어느 시간대로 보여 줄지 직접 고릅니다. `dateTime`에는 `2026-10-14T09:41:00+09:00`처럼 오프셋을 붙인 시각을 쓰고, 텍스트는 `locale`의 짧은 시각 스타일로 씁니다. `en-US`에서는 `9:41 AM`, `ko`에서는 `오전 9:41`입니다. 다른 스타일은 `dateStyle`이나 `timeStyle`로 정하고, 상대 시각처럼 직접 정한 텍스트를 보여 주려면 children을 넘기세요. 그래도 `dateTime`은 `value`에서 옵니다.
+
+```tsx
+const sentAt = Temporal.Instant.from(message.createdAt).toZonedDateTimeISO(timeZone);
+
+<Message.Time value={sentAt} locale={locale} dateStyle="medium" timeStyle="short" />
+```
+
+`locale`이 없으면 런타임의 locale을 씁니다. 서버가 메시지를 렌더링한다면 읽는 사람의 locale과 시간대를 넘겨서, 서버와 브라우저가 같은 텍스트를 쓰게 하세요.
 
 ## 스트리밍
 
@@ -65,15 +78,15 @@ Server Components는 `@omsoo.design/todae/message`에서 가져올 수 있습니
   <MessageStreaming />
 </Example>
 
-`message` 토큰으로 바꾸세요. `message.fg`는 텍스트 색, `message.gap`과 `message.row-gap`은 파트 사이 간격, `message.header.*`는 헤더의 색, 크기와 그 아래의 더 좁은 간격, `message.user.*`는 말풍선의 배경, 텍스트 색, 모서리, 패딩, `max-width`, 강제 색상 모드 외곽선의 `border-width`, `message.system.*`는 시스템 줄을 정합니다. 안에 넣은 `Prose.Root`는 `prose` 토큰의 텍스트 색과 크기를 그대로 씁니다.
+`message` 토큰으로 바꾸세요. `message.fg`는 텍스트 색, `message.gap`과 `message.row-gap`은 파트 사이 간격, `message.header.*`는 헤더의 색, 크기와 그 아래의 더 좁은 간격, `message.time.*`는 시각의 색과 크기, `message.actions.motion.*`는 `reveal="hover"` 줄이 나타나는 모션, `message.user.*`는 말풍선의 배경, 텍스트 색, 모서리, 패딩, `max-width`, 강제 색상 모드 외곽선의 `border-width`, `message.system.*`는 시스템 줄을 정합니다. 안에 넣은 `Prose.Root`는 `prose` 토큰의 텍스트 색과 크기를 그대로 씁니다.
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 메시지마다 `<article>`이므로 스크린 리더 사용자가 메시지 사이를 이동할 수 있습니다. streaming 동안 `aria-busy`를 줍니다. 강제 색상 모드에서는 배경이 바뀌므로 사용자 말풍선에 외곽선이 남습니다.
+**Todae가 맡는 것:** 메시지마다 `<article>`이므로 스크린 리더 사용자가 메시지 사이를 이동할 수 있습니다. streaming 동안 `aria-busy`를 줍니다. 강제 색상 모드에서는 배경이 바뀌므로 사용자 말풍선에 외곽선이 남습니다. `Message.Time`은 기계가 읽을 수 있는 `dateTime`을 씁니다. `reveal="hover"` 줄은 포커스가 메시지 안으로 들어오면 보이므로, 키보드 사용자가 숨은 버튼에 머무르지 않습니다.
 
 **직접 제공할 것:** 누가 썼는지 말해 주는 각 메시지의 이름. `aria-label="You"`나, `Message.Header`의 작성자를 가리키는 `aria-labelledby`를 쓰세요. 아이콘만 있는 동작 버튼의 이름. streaming되는 텍스트 대신 메시지가 끝날 때 한 번 하는 알림. [Conversation](/conversation) 안에서는 Conversation이 알립니다.
 
-**주의할 점:** streaming 중인 메시지를 live region에 넣는 것. 토큰이 도착할 때마다 읽힙니다. `<time dateTime>`이 없는 시각. 기계가 읽을 수 없습니다. 사용자와 어시스턴트를 색이나 놓인 쪽만으로 구분하는 것. 이름으로도 말해야 합니다.
+**주의할 점:** streaming 중인 메시지를 live region에 넣는 것. 토큰이 도착할 때마다 읽힙니다. 가장 최근 답의 동작을 `reveal="hover"`로 숨기는 것. 사람들이 가장 많이 쓰는 동작입니다. 사용자와 어시스턴트를 색이나 놓인 쪽만으로 구분하는 것. 이름으로도 말해야 합니다.
 
 ## 언제 쓰나요
 
@@ -90,5 +103,7 @@ Server Components는 `@omsoo.design/todae/message`에서 가져올 수 있습니
 <PropsTable name="Message.Header" />
 
 <PropsTable name="Message.Content" />
+
+<PropsTable name="Message.Time" />
 
 <PropsTable name="Message.Actions" />

@@ -49,4 +49,39 @@ describe('Message', () => {
     render(<Message.Root data-testid="m" aria-busy="false" streaming />);
     expect(screen.getByTestId('m').getAttribute('aria-busy')).toBe('false');
   });
+
+  it('writes the time for the locale in its own zone, with a machine-readable dateTime', () => {
+    const sent = Temporal.ZonedDateTime.from('2026-10-14T21:41:30.250+09:00[Asia/Seoul]');
+    render(
+      <>
+        <Message.Time data-testid="en" value={sent} locale="en-US" />
+        <Message.Time data-testid="ko" value={sent} locale="ko" />
+        <Message.Time data-testid="date" value={sent} locale="en-US" dateStyle="medium" timeStyle="short" />
+        <Message.Time data-testid="own" value={sent}>
+          2 min ago
+        </Message.Time>
+      </>,
+    );
+    // ICU versions differ in which space they put before AM and PM.
+    const text = (id: string) => screen.getByTestId(id).textContent?.replace(/\s/gu, ' ');
+    const en = screen.getByTestId('en');
+    expect(en.tagName).toBe('TIME');
+    expect(text('en')).toBe('9:41 PM');
+    expect(en.getAttribute('datetime')).toBe('2026-10-14T21:41:30+09:00');
+    expect(text('ko')).toBe('오후 9:41');
+    expect(text('date')).toBe('Oct 14, 2026, 9:41 PM');
+    expect(screen.getByTestId('own').textContent).toBe('2 min ago');
+    expect(screen.getByTestId('own').getAttribute('datetime')).toBe('2026-10-14T21:41:30+09:00');
+  });
+
+  it('marks actions that show only on hover or focus', () => {
+    render(
+      <>
+        <Message.Actions data-testid="always" />
+        <Message.Actions data-testid="hover" reveal="hover" />
+      </>,
+    );
+    expect(screen.getByTestId('always').dataset.reveal).toBe('always');
+    expect(screen.getByTestId('hover').dataset.reveal).toBe('hover');
+  });
 });

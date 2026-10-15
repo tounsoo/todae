@@ -1,18 +1,14 @@
 import { render, screen } from '@testing-library/react';
-import { cdp } from '@vitest/browser/context';
+import { cdp, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { describe, expect, it } from 'vitest';
 import { Avatar, Message, Prose } from '../index';
 
 /** vitest types the session without its methods; Playwright's session has `send`. */
+const session = () => cdp() as unknown as { send(method: string, params: object): Promise<unknown> };
+
 function emulateMedia(features: { name: string; value: string }[]) {
-  return (
-    cdp() as unknown as {
-      send(method: string, params: object): Promise<unknown>;
-    }
-  ).send('Emulation.setEmulatedMedia', {
-    features,
-  });
+  return session().send('Emulation.setEmulatedMedia', { features });
 }
 
 describe('Message.Root in a browser', () => {
@@ -355,6 +351,40 @@ describe('Message.Root in a browser', () => {
       await emulateMedia([{ name: 'forced-colors', value: 'active' }]);
       expect(parseFloat(getComputedStyle(screen.getByTestId('content')).borderTopWidth)).toBeGreaterThan(0);
     } finally {
+      await emulateMedia([]);
+    }
+  });
+
+  it('shows hover actions while the message is hovered or holds focus, and always without hover', async () => {
+    render(
+      <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '400px' }}>
+        <Message.Root data-testid="message" aria-label="Assistant">
+          <Message.Content>Hello.</Message.Content>
+          <Message.Actions data-testid="actions" reveal="hover">
+            <button type="button">Copy</button>
+          </Message.Actions>
+        </Message.Root>
+        <button type="button">Elsewhere</button>
+      </div>,
+    );
+    const opacity = () => getComputedStyle(screen.getByTestId('actions')).opacity;
+    try {
+      await emulateMedia([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+      await userEvent.hover(screen.getByRole('button', { name: 'Elsewhere' }));
+      expect(opacity()).toBe('0');
+      await userEvent.hover(screen.getByTestId('message'));
+      expect(opacity()).toBe('1');
+      await userEvent.hover(screen.getByRole('button', { name: 'Elsewhere' }));
+      expect(opacity()).toBe('0');
+      screen.getByRole('button', { name: 'Copy' }).focus();
+      expect(opacity()).toBe('1');
+      screen.getByRole('button', { name: 'Elsewhere' }).focus();
+      expect(opacity()).toBe('0');
+      // A touch screen reports no hover.
+      await session().send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
+      expect(opacity()).toBe('1');
+    } finally {
+      await session().send('Emulation.setTouchEmulationEnabled', { enabled: false });
       await emulateMedia([]);
     }
   });
