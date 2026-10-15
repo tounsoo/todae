@@ -2,7 +2,7 @@
 
 What you need to do today.
 
-Todae is a pnpm workspace. `@omsoo.design/todae` is a Vite library published to npm. `apps/docs` is a Next.js 15 app that renders live MDX examples from that library.
+Todae is a pnpm workspace. `@omsoo.design/todae` is a Vite library, released to npm with Changesets (see [Release](#release)). `apps/docs` is a Next.js 15 app that renders live MDX examples from that library.
 
 ## Requirements
 
@@ -105,7 +105,13 @@ pnpm changeset
 
 Pick the bump and write a line for the changelog. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change.
 
-On every push to `main`, `.github/workflows/release.yml` keeps a "Version Packages" pull request open. It bumps the version, writes `packages/design-system/CHANGELOG.md` and deletes the changesets it used. Merging it publishes the new version to npm through [trusted publishing](https://docs.npmjs.com/trusted-publishers), creates the git tag and a GitHub release. The publish job runs in the `npm` environment.
+When `main` has changesets, `.github/workflows/release.yml` opens or updates a "Version Packages" pull request. It bumps the version, writes `packages/design-system/CHANGELOG.md` and deletes the changesets it used. Merging it starts a publish job that runs in the `npm` environment, publishes the new version through [trusted publishing](https://docs.npmjs.com/trusted-publishers), and creates the git tag and a GitHub release.
+
+The workflow needs this setup:
+
+- In the repository settings, Actions › General › "Allow GitHub Actions to create and approve pull requests" is on.
+- An `npm` environment exists. Required reviewers on it hold each publish until one of them approves.
+- On npm, `@omsoo.design/todae` has a trusted publisher for this repository, the workflow `release.yml` and the environment `npm`. npm only takes a trusted publisher for a package that exists, so the first version is published by hand with `pnpm changeset publish`.
 
 ## Deploy docs
 
@@ -140,7 +146,7 @@ pnpm graft:check
 
 ## Layout
 
-- `packages/design-system` is `@omsoo.design/todae`, the Vite library published to npm. Its own [README](packages/design-system/README.md) is the package's npm page.
+- `packages/design-system` is `@omsoo.design/todae`, the Vite library released to npm. Its own [README](packages/design-system/README.md) is the package's npm page.
 - `apps/docs` is the Next.js 15 docs app with MDX examples.
 
 Before adding a component, hook, recipe or token, read [`ARCHITECTURE.md`](ARCHITECTURE.md) for the decisions they follow.

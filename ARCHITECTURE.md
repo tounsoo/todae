@@ -154,7 +154,7 @@ Code on a docs page is copied into products, so write it in the package's own st
 
 - **Changesets versions and publishes `@omsoo.design/todae`.** A pull request that changes what the package ships (its code, types, CSS, tokens, schema or CLI) adds a changeset with `pnpm changeset`: the bump and one or two sentences for the changelog, written for people who use Todae. A change that ships nothing, such as tests or docs, needs none. *Why:* the changelog is built from these files, so a change without one is missing from the release notes.
 - **Bumps before 1.0:** a breaking change is `minor` and everything else is `patch`. *Why:* in semver, a `0.x` minor is the breaking release, and a `major` would publish 1.0.
-- **Merging to `main` doesn't publish.** `.github/workflows/release.yml` keeps a "Version Packages" pull request open with the next version and changelog. Merging that pull request publishes to npm through trusted publishing, so the workflow holds no npm token. `apps/docs` is private and never published or versioned.
+- **Merging to `main` doesn't publish.** `.github/workflows/release.yml` keeps a "Version Packages" pull request open with the next version and changelog. Merging that pull request publishes to npm through trusted publishing, so the workflow holds no npm token. The first version is published by hand, because npm only takes a trusted publisher for a package that exists. `apps/docs` is private and never published or versioned.
 
 ## Recording a decision
 
