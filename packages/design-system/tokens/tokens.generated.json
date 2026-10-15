@@ -1149,7 +1149,7 @@
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "light",
-      "description": "A translucent accent tint behind a selected or current item. Its text is checked over each surface."
+      "description": "A translucent accent tint behind a selected or current item."
     },
     {
       "path": "color.bg.subtle",
@@ -1459,7 +1459,7 @@
       "ref": "color.gray.900",
       "layer": "appearance",
       "context": "light",
-      "description": "Body text and icons. Lc 75 or more on every background."
+      "description": "Body text and icons. Lc 75 or more on bg canvas, surface, subtle and elevated."
     },
     {
       "path": "color.fg.muted",
@@ -1469,7 +1469,7 @@
       "ref": "color.gray.600",
       "layer": "appearance",
       "context": "light",
-      "description": "Secondary text, such as descriptions and meta lines. Lc 60 or more on every background."
+      "description": "Secondary text, such as descriptions and meta lines. Lc 60 or more on bg canvas, surface, subtle and elevated."
     },
     {
       "path": "color.fg.placeholder",
@@ -1499,7 +1499,7 @@
       "ref": "color.red.100",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.critical.border",
@@ -1509,7 +1509,7 @@
       "ref": "color.red.300",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.critical.fg",
@@ -1519,7 +1519,7 @@
       "ref": "color.red.700",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.info.bg",
@@ -1529,7 +1529,7 @@
       "ref": "color.gray.100",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.info.border",
@@ -1539,7 +1539,7 @@
       "ref": "color.gray.300",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.info.fg",
@@ -1549,7 +1549,7 @@
       "ref": "color.gray.700",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.success.bg",
@@ -1559,7 +1559,7 @@
       "ref": "color.green.100",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.success.border",
@@ -1569,7 +1569,7 @@
       "ref": "color.green.300",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.success.fg",
@@ -1579,7 +1579,7 @@
       "ref": "color.green.700",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.warning.bg",
@@ -1589,7 +1589,7 @@
       "ref": "color.amber.100",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.warning.border",
@@ -1599,7 +1599,7 @@
       "ref": "color.amber.300",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.warning.fg",
@@ -1609,7 +1609,7 @@
       "ref": "color.amber.700",
       "layer": "appearance",
       "context": "light",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.accent.active",
@@ -1719,7 +1719,7 @@
       "ref": "color.accent.default",
       "layer": "appearance",
       "context": "dark",
-      "description": "A translucent accent tint behind a selected or current item. Its text is checked over each surface."
+      "description": "A translucent accent tint behind a selected or current item."
     },
     {
       "path": "color.bg.subtle",
@@ -2029,7 +2029,7 @@
       "ref": "color.gray.100",
       "layer": "appearance",
       "context": "dark",
-      "description": "Body text and icons. Lc 75 or more on every background."
+      "description": "Body text and icons. Lc 75 or more on bg canvas, surface, subtle and elevated."
     },
     {
       "path": "color.fg.muted",
@@ -2039,7 +2039,7 @@
       "ref": "color.gray.300",
       "layer": "appearance",
       "context": "dark",
-      "description": "Secondary text, such as descriptions and meta lines. Lc 60 or more on every background."
+      "description": "Secondary text, such as descriptions and meta lines. Lc 60 or more on bg canvas, surface, subtle and elevated."
     },
     {
       "path": "color.fg.placeholder",
@@ -2069,7 +2069,7 @@
       "ref": "color.red.900",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.critical.border",
@@ -2079,7 +2079,7 @@
       "ref": "color.red.700",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.critical.fg",
@@ -2089,7 +2089,7 @@
       "ref": "color.red.200",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.info.bg",
@@ -2099,7 +2099,7 @@
       "ref": "color.gray.800",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.info.border",
@@ -2109,7 +2109,7 @@
       "ref": "color.gray.600",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.info.fg",
@@ -2119,7 +2119,7 @@
       "ref": "color.gray.100",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.success.bg",
@@ -2129,7 +2129,7 @@
       "ref": "color.green.900",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.success.border",
@@ -2139,7 +2139,7 @@
       "ref": "color.green.700",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.success.fg",
@@ -2149,7 +2149,7 @@
       "ref": "color.green.200",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.warning.bg",
@@ -2159,7 +2159,7 @@
       "ref": "color.amber.900",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.warning.border",
@@ -2169,7 +2169,7 @@
       "ref": "color.amber.700",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "color.status.warning.fg",
@@ -2179,7 +2179,7 @@
       "ref": "color.amber.200",
       "layer": "appearance",
       "context": "dark",
-      "description": "Status tones for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
+      "description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more."
     },
     {
       "path": "space.chip.x",
@@ -2189,7 +2189,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Compact padding, such as inside chips and badges; changes with density."
     },
     {
       "path": "space.chip.y",
@@ -2199,7 +2199,7 @@
       "ref": null,
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Compact padding, such as inside chips and badges; changes with density."
     },
     {
       "path": "space.control.x",
@@ -2209,7 +2209,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Padding inside controls, such as buttons, fields, options and tabs; changes with density."
     },
     {
       "path": "space.control.y",
@@ -2219,7 +2219,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Padding inside controls, such as buttons, fields, options and tabs; changes with density."
     },
     {
       "path": "space.field.gap",
@@ -2229,7 +2229,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Gaps inside fields and fieldsets, such as between a label and its control; changes with density."
     },
     {
       "path": "space.inline.gap",
@@ -2239,7 +2239,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "The gap between inline items, such as an icon and its label; changes with density."
     },
     {
       "path": "space.overlay.gap",
@@ -2249,7 +2249,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
     },
     {
       "path": "space.overlay.padding",
@@ -2259,7 +2259,7 @@
       "ref": "space.4",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
     },
     {
       "path": "space.prose.gap",
@@ -2269,7 +2269,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.prose.heading-after",
@@ -2279,7 +2279,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.prose.heading-before",
@@ -2289,7 +2289,7 @@
       "ref": "space.6",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.prose.item-gap",
@@ -2299,7 +2299,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.selection.gap",
@@ -2309,7 +2309,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Checkbox, radio and switch size, and the gap to their label; changes with density."
     },
     {
       "path": "space.selection.size",
@@ -2319,7 +2319,7 @@
       "ref": "space.4",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Checkbox, radio and switch size, and the gap to their label; changes with density."
     },
     {
       "path": "space.stack.gap",
@@ -2329,7 +2329,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-condensed",
@@ -2339,7 +2339,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-spacious",
@@ -2349,7 +2349,7 @@
       "ref": "space.4",
       "layer": "density",
       "context": "compact",
-      "description": null
+      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.chip.x",
@@ -2359,7 +2359,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Compact padding, such as inside chips and badges; changes with density."
     },
     {
       "path": "space.chip.y",
@@ -2369,7 +2369,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Compact padding, such as inside chips and badges; changes with density."
     },
     {
       "path": "space.control.x",
@@ -2379,7 +2379,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Padding inside controls, such as buttons, fields, options and tabs; changes with density."
     },
     {
       "path": "space.control.y",
@@ -2389,7 +2389,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Padding inside controls, such as buttons, fields, options and tabs; changes with density."
     },
     {
       "path": "space.field.gap",
@@ -2399,7 +2399,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Gaps inside fields and fieldsets, such as between a label and its control; changes with density."
     },
     {
       "path": "space.inline.gap",
@@ -2409,7 +2409,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "The gap between inline items, such as an icon and its label; changes with density."
     },
     {
       "path": "space.overlay.gap",
@@ -2419,7 +2419,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
     },
     {
       "path": "space.overlay.padding",
@@ -2429,7 +2429,7 @@
       "ref": "space.5",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
     },
     {
       "path": "space.prose.gap",
@@ -2439,7 +2439,7 @@
       "ref": "space.4",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.prose.heading-after",
@@ -2449,7 +2449,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.prose.heading-before",
@@ -2459,7 +2459,7 @@
       "ref": "space.8",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.prose.item-gap",
@@ -2469,7 +2469,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.selection.gap",
@@ -2479,7 +2479,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Checkbox, radio and switch size, and the gap to their label; changes with density."
     },
     {
       "path": "space.selection.size",
@@ -2489,7 +2489,7 @@
       "ref": "space.5",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Checkbox, radio and switch size, and the gap to their label; changes with density."
     },
     {
       "path": "space.stack.gap",
@@ -2499,7 +2499,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-condensed",
@@ -2509,7 +2509,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-spacious",
@@ -2519,7 +2519,7 @@
       "ref": "space.6",
       "layer": "density",
       "context": "comfortable",
-      "description": null
+      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.chip.x",
@@ -2529,7 +2529,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Compact padding, such as inside chips and badges; changes with density."
     },
     {
       "path": "space.chip.y",
@@ -2539,7 +2539,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Compact padding, such as inside chips and badges; changes with density."
     },
     {
       "path": "space.control.x",
@@ -2549,7 +2549,7 @@
       "ref": "space.4",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Padding inside controls, such as buttons, fields, options and tabs; changes with density."
     },
     {
       "path": "space.control.y",
@@ -2559,7 +2559,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Padding inside controls, such as buttons, fields, options and tabs; changes with density."
     },
     {
       "path": "space.field.gap",
@@ -2569,7 +2569,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Gaps inside fields and fieldsets, such as between a label and its control; changes with density."
     },
     {
       "path": "space.inline.gap",
@@ -2579,7 +2579,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "The gap between inline items, such as an icon and its label; changes with density."
     },
     {
       "path": "space.overlay.gap",
@@ -2589,7 +2589,7 @@
       "ref": "space.4",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
     },
     {
       "path": "space.overlay.padding",
@@ -2599,7 +2599,7 @@
       "ref": "space.6",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density."
     },
     {
       "path": "space.prose.gap",
@@ -2609,7 +2609,7 @@
       "ref": "space.5",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.prose.heading-after",
@@ -2619,7 +2619,7 @@
       "ref": "space.4",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.prose.heading-before",
@@ -2629,7 +2629,7 @@
       "ref": "space.10",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.prose.item-gap",
@@ -2639,7 +2639,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density."
     },
     {
       "path": "space.selection.gap",
@@ -2649,7 +2649,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Checkbox, radio and switch size, and the gap to their label; changes with density."
     },
     {
       "path": "space.selection.size",
@@ -2659,7 +2659,7 @@
       "ref": "space.6",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Checkbox, radio and switch size, and the gap to their label; changes with density."
     },
     {
       "path": "space.stack.gap",
@@ -2669,7 +2669,7 @@
       "ref": "space.5",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-condensed",
@@ -2679,7 +2679,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-spacious",
@@ -2689,7 +2689,7 @@
       "ref": "space.8",
       "layer": "density",
       "context": "spacious",
-      "description": null
+      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
     },
     {
       "path": "focus.ring.color",
@@ -2729,7 +2729,7 @@
       "ref": "font.letter-spacing.default",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font and icon gap."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
     },
     {
       "path": "button.base.font.size",
@@ -2739,7 +2739,7 @@
       "ref": "font.size.3",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font and icon gap."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
     },
     {
       "path": "button.base.font.text-transform",
@@ -2749,7 +2749,7 @@
       "ref": "font.text-transform.default",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font and icon gap."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
     },
     {
       "path": "button.base.font.weight",
@@ -2759,7 +2759,7 @@
       "ref": "font.weight.medium",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font and icon gap."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
     },
     {
       "path": "button.base.gap",
@@ -2769,7 +2769,7 @@
       "ref": "space.inline.gap",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font and icon gap."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
     },
     {
       "path": "button.base.icon.size",
@@ -2779,7 +2779,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font and icon gap."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
     },
     {
       "path": "button.base.padding.x",
@@ -2789,7 +2789,7 @@
       "ref": "space.control.x",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font and icon gap."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
     },
     {
       "path": "button.base.padding.y",
@@ -2799,7 +2799,7 @@
       "ref": "space.control.y",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font and icon gap."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
     },
     {
       "path": "button.base.radius",
@@ -2809,7 +2809,7 @@
       "ref": "radius.md",
       "layer": "contract",
       "context": null,
-      "description": "Button.Root geometry every variant shares: radius, padding, font and icon gap."
+      "description": "Button.Root geometry every variant shares: radius, padding, font, gap and icon size."
     },
     {
       "path": "button.primary.bg.active",
@@ -4829,7 +4829,7 @@
       "ref": "motion.easing.standard",
       "layer": "contract",
       "context": null,
-      "description": "Shared by modal overlays (Dialog, BottomSheet, Drawer): the scrim and the enter and exit motion."
+      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they and Toast enter and exit with."
     },
     {
       "path": "overlay.scrim.bg",
@@ -4839,7 +4839,7 @@
       "ref": "color.bg.scrim",
       "layer": "contract",
       "context": null,
-      "description": "Shared by modal overlays (Dialog, BottomSheet, Drawer): the scrim and the enter and exit motion."
+      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they and Toast enter and exit with."
     },
     {
       "path": "dialog.bg",
@@ -5729,7 +5729,7 @@
       "ref": "color.bg.transparent",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.bg.hover",
@@ -5739,7 +5739,7 @@
       "ref": "color.bg.highlight",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.border",
@@ -5749,7 +5749,7 @@
       "ref": "color.border.subtle",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.border-width",
@@ -5759,7 +5759,7 @@
       "ref": "border.width",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.fg.default",
@@ -5769,7 +5769,7 @@
       "ref": "color.fg.muted",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.fg.disabled",
@@ -5779,7 +5779,7 @@
       "ref": "color.fg.placeholder",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.fg.hover",
@@ -5789,7 +5789,7 @@
       "ref": "color.fg.default",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.fg.selected",
@@ -5799,7 +5799,7 @@
       "ref": "color.fg.default",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.font.letter-spacing",
@@ -5809,7 +5809,7 @@
       "ref": "font.letter-spacing.default",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.font.size",
@@ -5819,7 +5819,7 @@
       "ref": "font.size.2",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.font.text-transform",
@@ -5829,7 +5829,7 @@
       "ref": "font.text-transform.default",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.font.weight",
@@ -5839,7 +5839,7 @@
       "ref": "font.weight.medium",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.gap",
@@ -5849,7 +5849,7 @@
       "ref": "space.inline.gap",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.indicator.color",
@@ -5859,7 +5859,7 @@
       "ref": "color.accent.default",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.indicator.size",
@@ -5869,7 +5869,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.leading",
@@ -5879,7 +5879,7 @@
       "ref": "font.leading.tight",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.padding.x",
@@ -5889,7 +5889,7 @@
       "ref": "space.control.x",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.padding.y",
@@ -5899,7 +5899,7 @@
       "ref": "space.control.y",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.radius",
@@ -5909,7 +5909,7 @@
       "ref": "radius.sm",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "tabs.ring.focus",
@@ -5919,7 +5919,7 @@
       "ref": "focus.ring.color",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and its sliding indicator."
+      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
     },
     {
       "path": "selection.bg.checked",
@@ -7119,7 +7119,7 @@
       "ref": "color.accent.default",
       "layer": "contract",
       "context": null,
-      "description": "Slider.Root: a range input; track and thumb come from the selection tokens."
+      "description": "Slider.Root: a native range input tinted with the fill color, and its focus ring."
     },
     {
       "path": "slider.ring.focus",
@@ -7129,7 +7129,7 @@
       "ref": "focus.ring.color",
       "layer": "contract",
       "context": null,
-      "description": "Slider.Root: a range input; track and thumb come from the selection tokens."
+      "description": "Slider.Root: a native range input tinted with the fill color, and its focus ring."
     },
     {
       "path": "badge.border-width",
@@ -8369,7 +8369,7 @@
       "ref": "space.inline.gap",
       "layer": "contract",
       "context": null,
-      "description": "Toolbar.Root: a row of controls with separators between groups."
+      "description": "Toolbar.Root: a row of controls with separators between groups. ToggleGroup also reads its gap."
     },
     {
       "path": "toolbar.separator.color",
@@ -8379,7 +8379,7 @@
       "ref": "color.border.subtle",
       "layer": "contract",
       "context": null,
-      "description": "Toolbar.Root: a row of controls with separators between groups."
+      "description": "Toolbar.Root: a row of controls with separators between groups. ToggleGroup also reads its gap."
     },
     {
       "path": "toolbar.separator.thickness",
@@ -8389,7 +8389,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Toolbar.Root: a row of controls with separators between groups."
+      "description": "Toolbar.Root: a row of controls with separators between groups. ToggleGroup also reads its gap."
     },
     {
       "path": "drawer.bg",
@@ -9669,7 +9669,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.area.radius",
@@ -9679,7 +9679,7 @@
       "ref": "radius.md",
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.gap",
@@ -9689,7 +9689,7 @@
       "ref": "space.stack.gap",
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.hue.height",
@@ -9699,7 +9699,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.hue.radius",
@@ -9709,7 +9709,7 @@
       "ref": "radius.full",
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.ring.focus",
@@ -9719,7 +9719,7 @@
       "ref": "focus.ring.color",
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.thumb.border.color",
@@ -9729,7 +9729,7 @@
       "ref": "color.bg.surface",
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.thumb.border.width",
@@ -9739,7 +9739,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.thumb.edge.color",
@@ -9749,7 +9749,7 @@
       "ref": "color.border.default",
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.thumb.edge.width",
@@ -9759,7 +9759,7 @@
       "ref": "border.width",
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.thumb.size",
@@ -9769,7 +9769,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "picker.width",
@@ -9779,7 +9779,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Field.ColorPicker panel: the color area, hue slider and their thumbs."
+      "description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs."
     },
     {
       "path": "calendar.day.bg.default",
@@ -9789,7 +9789,7 @@
       "ref": "color.bg.transparent",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.day.bg.hover",
@@ -9799,7 +9799,7 @@
       "ref": "color.bg.highlight",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.day.bg.selected",
@@ -9809,7 +9809,7 @@
       "ref": "color.accent.default",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.day.border.current",
@@ -9819,7 +9819,7 @@
       "ref": "color.border.default",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.day.border-width",
@@ -9829,7 +9829,7 @@
       "ref": "border.width",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.day.fg.default",
@@ -9839,7 +9839,7 @@
       "ref": "color.fg.default",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.day.fg.disabled",
@@ -9849,7 +9849,7 @@
       "ref": "color.fg.placeholder",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.day.fg.selected",
@@ -9859,7 +9859,7 @@
       "ref": "color.on-accent",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.day.radius",
@@ -9869,7 +9869,7 @@
       "ref": "radius.md",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.day.ring.focus",
@@ -9879,7 +9879,7 @@
       "ref": "focus.ring.color",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.day.size",
@@ -9889,7 +9889,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.font.size",
@@ -9899,7 +9899,7 @@
       "ref": "font.size.2",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.gap",
@@ -9909,7 +9909,7 @@
       "ref": "space.stack.gap",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.heading.fg",
@@ -9919,7 +9919,7 @@
       "ref": "color.fg.default",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.heading.font.weight",
@@ -9929,7 +9929,7 @@
       "ref": "font.weight.medium",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.heading.gap",
@@ -9939,7 +9939,7 @@
       "ref": "space.inline.gap",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.heading.icon.size",
@@ -9949,7 +9949,7 @@
       "ref": "calendar.nav.icon.size",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.heading.padding.x",
@@ -9959,7 +9959,7 @@
       "ref": "space.chip.x",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.nav.icon.size",
@@ -9969,7 +9969,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.weekday.fg",
@@ -9979,7 +9979,7 @@
       "ref": "color.fg.muted",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     },
     {
       "path": "calendar.weekday.font.weight",
@@ -9989,7 +9989,7 @@
       "ref": "font.weight.regular",
       "layer": "contract",
       "context": null,
-      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker; day cells per state."
+      "description": "Calendar.Root: the month grid used on its own and in Field.DatePicker and Field.DateTimePicker; day cells per state."
     }
   ]
 }

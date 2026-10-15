@@ -456,10 +456,10 @@ describe('committed token graph', () => {
     expect(() => flattenTokens(tree({ card: { $description: 1, bg: color } }))).toThrow(/\$description at "card" must be a non-empty string/);
     expect(() => flattenTokens({ card: { bg: { ...color, $description: ' ' } } })).toThrow(/\$description at "card\.bg"/);
 
-    // Every semantic and component token is described, in every context's catalog row.
+    // Every semantic, density and component token is described, in every context's catalog row.
     const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
     const rows = JSON.parse(graph.json).tokens as { path: string; layer: string; description: string | null }[];
-    const undescribed = rows.filter((row) => (row.layer === 'appearance' || row.layer === 'contract') && !row.description);
+    const undescribed = rows.filter((row) => row.layer !== 'core' && !row.description);
     expect(undescribed.map((row) => row.path)).toEqual([]);
     expect(rows.filter((row) => row.path === 'color.bg.canvas').map((row) => row.description)).toEqual([
       'The page background behind every surface.',
@@ -1005,6 +1005,15 @@ describe('company token build', () => {
       // No unconditional rule names system, so a light-only override never reaches a dark system.
       expect(catalogSelectors(result.css).filter((selector) => selector.includes('system'))).toEqual([]);
     }
+  });
+
+  it("keeps Todae's description on a token a company overrides without one", async () => {
+    const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
+    const rows = JSON.parse(result.json).tokens as { path: string; context: string | null; description: string | null }[];
+    const accent = rows.filter((row) => row.path === 'color.accent.default');
+    expect(accent.map((row) => row.context)).toEqual(['light', 'dark']);
+    for (const row of accent) expect(row.description).toMatch(/^The brand accent/);
+    expect(result.tokens.find((token) => token.path === 'color.accent.default' && token.context === 'light')?.description).toMatch(/^The brand accent/);
   });
 
   it('finds Todae tokens from the builder module', () => {

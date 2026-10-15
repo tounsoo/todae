@@ -1,6 +1,6 @@
 {
   "tabs": {
-    "$description": "Tabs.Root: a tab list and its sliding indicator.",
+    "$description": "Tabs.Root: a tab list and the indicator under the selected tab.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/tight/$value" } },

@@ -1275,7 +1275,8 @@ function mergeTokens(base: FlatToken[], extra: FlatToken[], loc: string): FlatTo
     if (previous && previous.type !== token.type) {
       fail(`${loc} token "${token.path}" overrides a ${previous.type} with a ${token.type}`);
     }
-    merged.set(token.path, token);
+    // An override that doesn't describe itself keeps the description of the token it replaces.
+    merged.set(token.path, previous?.description && !token.description ? { ...token, description: previous.description } : token);
   }
   return [...merged.values()];
 }
