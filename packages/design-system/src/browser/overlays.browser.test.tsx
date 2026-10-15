@@ -287,6 +287,178 @@ describe('BottomSheet in a browser', () => {
   });
 });
 
+describe('modal headers', () => {
+  const cases = [
+    [
+      'Dialog',
+      () => (
+        <Dialog.Root open onOpenChange={() => undefined}>
+          <Dialog.Header data-testid="header">
+            <Dialog.Title>Filters</Dialog.Title>
+            <Dialog.Close>Close</Dialog.Close>
+          </Dialog.Header>
+        </Dialog.Root>
+      ),
+    ],
+    [
+      'Drawer',
+      () => (
+        <Drawer.Root open onOpenChange={() => undefined}>
+          <Drawer.Header data-testid="header">
+            <Drawer.Title>Filters</Drawer.Title>
+            <Drawer.Close>Close</Drawer.Close>
+          </Drawer.Header>
+        </Drawer.Root>
+      ),
+    ],
+    [
+      'BottomSheet',
+      () => (
+        <BottomSheet.Root open onOpenChange={() => undefined}>
+          <BottomSheet.Header data-testid="header">
+            <BottomSheet.Title>Filters</BottomSheet.Title>
+            <BottomSheet.Close>Close</BottomSheet.Close>
+          </BottomSheet.Header>
+        </BottomSheet.Root>
+      ),
+    ],
+  ] as const;
+
+  it.each(cases)('puts the %s title and close button on one row, the button at the end', async (_, Surface) => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Surface />
+      </div>,
+    );
+    const header = screen.getByTestId('header').getBoundingClientRect();
+    const title = screen.getByRole('heading', { name: 'Filters' }).getBoundingClientRect();
+    const close = screen.getByRole('button', { name: 'Close' }).getBoundingClientRect();
+    expect(close.top).toBeLessThan(title.bottom);
+    expect(title.top).toBeLessThan(close.bottom);
+    expect(close.left).toBeGreaterThanOrEqual(title.right);
+    expect(Math.round(close.right)).toBe(Math.round(header.right));
+  });
+
+  const parts = [
+    ['Dialog', Dialog],
+    ['Drawer', Drawer],
+    ['BottomSheet', BottomSheet],
+  ] as const;
+
+  function renderHeader(
+    { Root, Header }: (typeof parts)[number][1],
+    children: ReactNode,
+    dir?: 'rtl',
+  ) {
+    render(
+      <div data-appearance="light" data-density="comfortable" dir={dir}>
+        <Root open onOpenChange={() => undefined} aria-label="Panel">
+          <Header data-testid="header">{children}</Header>
+        </Root>
+      </div>,
+    );
+    return screen.getByTestId('header').getBoundingClientRect();
+  }
+
+  const textLeft = (el: Element) => {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    return range.getBoundingClientRect().left;
+  };
+
+  it.each(parts)('keeps a lone %s title at the start edge', (_, part) => {
+    const header = renderHeader(part, <part.Title>Sort</part.Title>);
+    expect(Math.round(textLeft(screen.getByRole('heading', { name: 'Sort' })))).toBe(Math.round(header.left));
+  });
+
+  it.each(parts)('keeps a wrapped %s title at the start and its close button at the end', (_, part) => {
+    const header = renderHeader(
+      part,
+      <>
+        <div>
+          <part.Title>Sort</part.Title>
+          <part.Description>By date</part.Description>
+        </div>
+        <part.Close>Close</part.Close>
+      </>,
+    );
+    expect(Math.round(textLeft(screen.getByRole('heading', { name: 'Sort' })))).toBe(Math.round(header.left));
+    expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().right)).toBe(Math.round(header.right));
+  });
+
+  it.each(parts)('keeps a leading %s action at the start', (_, part) => {
+    const header = renderHeader(
+      part,
+      <>
+        <button type="button">Back</button>
+        <part.Close>Close</part.Close>
+      </>,
+    );
+    expect(Math.round(screen.getByRole('button', { name: 'Back' }).getBoundingClientRect().left)).toBe(Math.round(header.left));
+    expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().right)).toBe(Math.round(header.right));
+  });
+
+  it.each(parts)('swaps the %s title and close button in right-to-left text', (_, part) => {
+    const header = renderHeader(
+      part,
+      <>
+        <part.Title>Sort</part.Title>
+        <part.Close>Close</part.Close>
+      </>,
+      'rtl',
+    );
+    const title = screen.getByRole('heading', { name: 'Sort' }).getBoundingClientRect();
+    expect(Math.round(title.right)).toBe(Math.round(header.right));
+    expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().left)).toBe(Math.round(header.left));
+  });
+
+  it.each(parts)('moves what follows a leading %s close button to the end with it', (_, part) => {
+    const header = renderHeader(
+      part,
+      <>
+        <part.Close>Cancel</part.Close>
+        <part.Title>Edit</part.Title>
+      </>,
+    );
+    const cancel = screen.getByRole('button', { name: 'Cancel' }).getBoundingClientRect();
+    const title = screen.getByRole('heading', { name: 'Edit' }).getBoundingClientRect();
+    expect(cancel.left).toBeGreaterThan(header.left);
+    expect(Math.round(title.right)).toBe(Math.round(header.right));
+  });
+
+  it.each(parts)('keeps two %s close parts together at the end', (_, part) => {
+    const header = renderHeader(
+      part,
+      <>
+        <part.Title>Sort</part.Title>
+        <part.Close>Cancel</part.Close>
+        <part.Close aria-label="Close" />
+      </>,
+    );
+    const cancel = screen.getByRole('button', { name: 'Cancel' }).getBoundingClientRect();
+    const close = screen.getByRole('button', { name: 'Close' }).getBoundingClientRect();
+    const gap = parseFloat(getComputedStyle(screen.getByTestId('header')).columnGap);
+    expect(Math.round(close.right)).toBe(Math.round(header.right));
+    expect(Math.round(close.left - cancel.right)).toBe(Math.round(gap));
+  });
+
+  it("puts another modal's close part at the end of a Drawer header", () => {
+    const header = renderHeader(
+      Drawer,
+      <>
+        <Drawer.Title>Sort</Drawer.Title>
+        <Dialog.Close>Close</Dialog.Close>
+      </>,
+    );
+    expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().right)).toBe(Math.round(header.right));
+  });
+
+  it.each(parts)('puts a lone %s close button at the end', (_, part) => {
+    const header = renderHeader(part, <part.Close>Close</part.Close>);
+    expect(Math.round(screen.getByRole('button', { name: 'Close' }).getBoundingClientRect().right)).toBe(Math.round(header.right));
+  });
+});
+
 describe('page scroll behind a modal', () => {
   const overflow = () => getComputedStyle(document.documentElement).overflow;
 

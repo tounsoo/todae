@@ -8,7 +8,7 @@
  * component's own prop, such as `aria-label` or `removeLabel`, still wins.
  */
 export interface Strings {
-  /** Name of Dialog.Close and BottomSheet.Close when their own text does not name them. */
+  /** Name of Dialog.Close, Drawer.Close and BottomSheet.Close when their own text does not name them. */
   close: string;
   /** Name of Alert.Close and Toast.Close when their own text does not name them. */
   dismiss: string;

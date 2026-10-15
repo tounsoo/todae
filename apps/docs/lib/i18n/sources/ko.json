@@ -40,7 +40,7 @@
   },
   "bottomsheet": {
     "(top)": "bcd7a0394e4d",
-    "# BottomSheet": "5115bb263015",
+    "# BottomSheet": "11adbec70e8c",
     "## In a combobox": "c5ae345f314b",
     "## Icons": "57e92e5df1aa",
     "## Accessible composition": "cb54472f49ed",
@@ -179,7 +179,7 @@
   },
   "dialog": {
     "(top)": "9efb9052a45c",
-    "# Dialog": "12e0ddb97918",
+    "# Dialog": "57df88f350ec",
     "## Icons": "53e5ccf42b18",
     "## Accessible composition": "bac14ea4cfb7",
     "## When to use": "b2fab8d962b5",
@@ -198,10 +198,10 @@
   },
   "drawer": {
     "(top)": "6eefecb2497a",
-    "# Drawer": "43937489d766",
-    "## Accessible composition": "a1cdf763c5d0",
-    "## When to use": "7b295d50ea3d",
-    "## Props": "0c170a1d2846",
+    "# Drawer": "0517cf95421b",
+    "## Accessible composition": "fbb5e5f7a61f",
+    "## When to use": "63f4ee717695",
+    "## Props": "0d9ea25d5717",
     "(section order)": "d183e3412ad2"
   },
   "errormessage": {
@@ -698,7 +698,7 @@
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "114d6b19a0ae",
+    "## Glyphs": "34f86785f57e",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",
@@ -709,7 +709,7 @@
   "utilities/strings-provider": {
     "(top)": "33701b6f4e5e",
     "# StringsProvider": "a18713b4e742",
-    "## Strings": "1f76040acb4c",
+    "## Strings": "f3a1bca8e21e",
     "## Accessible composition": "3a78acb70781",
     "## When to use": "d57fe8233a0b",
     "### StringsProvider": "aacaf9fe8cf2",

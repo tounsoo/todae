@@ -1028,6 +1028,8 @@
   --todae-drawer-padding-y: var(--_todae-drawer-padding-y, var(--todae-space-overlay-padding));
   --todae-drawer-shadow: var(--_todae-drawer-shadow, var(--todae-dialog-shadow));
   --todae-drawer-size: var(--_todae-drawer-size, 24rem);
+  --todae-drawer-title-font-size: var(--_todae-drawer-title-font-size, var(--todae-dialog-title-font-size));
+  --todae-drawer-title-font-weight: var(--_todae-drawer-title-font-weight, var(--todae-dialog-title-font-weight));
   --todae-loader-motion-duration: var(--_todae-loader-motion-duration, 800ms);
   --todae-loader-size: var(--_todae-loader-size, 1.25rem);
   --todae-loader-thickness: var(--_todae-loader-thickness, 2px);

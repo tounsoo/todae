@@ -83,6 +83,59 @@
     transition-timing-function: var(--todae-overlay-motion-easing-exit);
   }
 
+  .title {
+    margin: 0;
+    font-size: var(--todae-drawer-title-font-size);
+    font-weight: var(--todae-drawer-title-font-weight);
+  }
+
+  .description,
+  .header,
+  .footer {
+    margin: 0;
+    flex: none;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: var(--todae-drawer-gap);
+  }
+
+  /* One row: the first close part placed directly in the header sits at the
+     end with anything after it; what comes before it stays at the start. The
+     attribute is every close part's own, so Dialog's and Drawer's both match. */
+  .header > [data-todae-close] {
+    margin-inline-start: auto;
+  }
+
+  .header > [data-todae-close] ~ [data-todae-close] {
+    margin-inline-start: 0;
+  }
+
+  /* Takes the height the header and footer leave, and scrolls on its own, so
+     the footer stays at the bottom. A scroll container clips what paints past
+     its padding box, focus rings included. Room for a ring on every side,
+     given back with a matching negative margin, keeps the content where it was. */
+  .body {
+    --_ring-room: calc(var(--todae-focus-ring-width) + var(--todae-focus-ring-offset));
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: calc(-1 * var(--_ring-room));
+    padding: var(--_ring-room);
+    overflow: auto;
+    /* Room for a ring past the focused box when it scrolls into view. */
+    scroll-padding: var(--_ring-room);
+    overscroll-behavior: contain;
+  }
+
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--todae-drawer-gap);
+    justify-content: flex-end;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .drawer[open],
     .panel {

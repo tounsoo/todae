@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Dialog, Drawer } from '@omsoo.design/todae';
+import { Button, Drawer } from '@omsoo.design/todae';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import type { Locale } from '../lib/i18n/config';
@@ -35,12 +35,12 @@ export function MobileNav({ locale }: { locale: Locale }) {
         </Button.Icon>
       </Button.Root>
       <Drawer.Root open={open} onOpenChange={setOpen} side="start" className="mobile-nav-drawer">
-        <Dialog.Header>
-          <Dialog.Title>Todae</Dialog.Title>
-          <Dialog.Close>{dict.closeMenu}</Dialog.Close>
-        </Dialog.Header>
+        <Drawer.Header>
+          <Drawer.Title>Todae</Drawer.Title>
+          <Drawer.Close aria-label={dict.closeMenu} />
+        </Drawer.Header>
         {/* Following one of its links closes it too, even a link to this page, which leaves the path as it is. */}
-        <Dialog.Body
+        <Drawer.Body
           onClick={(event) => {
             // A modified click opens the link elsewhere and leaves this page, and the drawer, as they are.
             const elsewhere = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
@@ -48,11 +48,11 @@ export function MobileNav({ locale }: { locale: Locale }) {
           }}
         >
           <SiteNav locale={locale} />
-        </Dialog.Body>
+        </Drawer.Body>
         {/* The top bar hides its theme switch on the narrowest screens; the drawer keeps one. */}
-        <Dialog.Footer>
+        <Drawer.Footer>
           <ThemeSwitcher locale={locale} />
-        </Dialog.Footer>
+        </Drawer.Footer>
       </Drawer.Root>
     </div>
   );

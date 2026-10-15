@@ -217,6 +217,8 @@ describe('token consistency across component styles', () => {
       ['drawer-gap', 'dialog-gap'],
       ['sheet-title-font-size', 'dialog-title-font-size'],
       ['sheet-title-font-weight', 'dialog-title-font-weight'],
+      ['drawer-title-font-size', 'dialog-title-font-size'],
+      ['drawer-title-font-weight', 'dialog-title-font-weight'],
     ];
     for (const [token, previous] of pairs) {
       expect(tokensCss).toContain(`--todae-${token}: var(--_todae-${token}, var(--todae-${previous}));`);

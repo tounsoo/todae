@@ -14,7 +14,7 @@ export function BottomSheetBasic() {
       <BottomSheet.Root open={open} onOpenChange={setOpen} snap={snap} onSnapChange={setSnap}>
         <BottomSheet.Header>
           <BottomSheet.Title>Share</BottomSheet.Title>
-          <BottomSheet.Close>Close</BottomSheet.Close>
+          <BottomSheet.Close />
         </BottomSheet.Header>
         <BottomSheet.Description>Drag the grabber. Mid and full snap.</BottomSheet.Description>
         <BottomSheet.Body>

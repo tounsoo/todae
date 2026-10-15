@@ -12,6 +12,12 @@
     },
     "gap": { "$type": "dimension", "$value": { "$ref": "#/dialog/gap/$value" } },
     "size": { "$type": "dimension", "$value": { "value": 24, "unit": "rem" } },
+    "title": {
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/dialog/title/font/size/$value" } },
+        "weight": { "$type": "fontWeight", "$value": { "$ref": "#/dialog/title/font/weight/$value" } }
+      }
+    },
     "motion": {
       "enter": { "$type": "duration", "$value": { "$ref": "#/motion/duration/slow/$value" } },
       "exit": { "$type": "duration", "$value": { "$ref": "#/motion/duration/moderate/$value" } }

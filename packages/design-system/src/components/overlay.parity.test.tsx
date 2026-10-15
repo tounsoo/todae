@@ -46,6 +46,9 @@ const drawerHarness = (): Harness => ({
   ...dialogHarness(),
   name: 'Drawer',
   Root: (props) => <Drawer.Root {...(props as ComponentProps<typeof Drawer.Root>)} />,
+  Title: Drawer.Title,
+  Description: Drawer.Description,
+  Close: Drawer.Close,
 });
 
 const sheetHarness = (): Harness => ({

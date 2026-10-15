@@ -9,9 +9,9 @@ function Open({ side, dir, open = true }: { side?: DrawerSide; dir?: 'rtl'; open
   return (
     <div data-appearance="light" data-density="comfortable" dir={dir}>
       <Drawer.Root open={open} onOpenChange={() => undefined} side={side}>
-        <Dialog.Title>Filters</Dialog.Title>
-        <Dialog.Body data-testid="body">Body</Dialog.Body>
-        <Dialog.Footer data-testid="footer">Footer</Dialog.Footer>
+        <Drawer.Title>Filters</Drawer.Title>
+        <Drawer.Body data-testid="body">Body</Drawer.Body>
+        <Drawer.Footer data-testid="footer">Footer</Drawer.Footer>
       </Drawer.Root>
     </div>
   );
@@ -63,6 +63,44 @@ describe('Drawer in a browser', () => {
     cleanup();
     render(<Open dir="rtl" />);
     expect((await edges()).left).toBe(0);
+  });
+
+  it('fills the height left by the header and footer with a body that scrolls on its own', async () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Drawer.Root open onOpenChange={() => undefined}>
+          <Drawer.Header data-testid="header">
+            <Drawer.Title>Filters</Drawer.Title>
+            <Drawer.Close>Close</Drawer.Close>
+          </Drawer.Header>
+          <Drawer.Body data-testid="body">
+            <div style={{ height: '3000px' }}>Tall</div>
+          </Drawer.Body>
+          <Drawer.Footer data-testid="footer">Footer</Drawer.Footer>
+        </Drawer.Root>
+      </div>,
+    );
+    const drawer = screen.getByRole('dialog', { name: 'Filters' });
+    await waitFor(() => expect(drawer.hasAttribute('data-entered')).toBe(true));
+    const panel = screen.getByTestId('body').parentElement!;
+    const body = screen.getByTestId('body');
+    // The panel itself doesn't scroll; the body does.
+    expect(panel.scrollHeight).toBe(panel.clientHeight);
+    expect(body.scrollHeight).toBeGreaterThan(body.clientHeight);
+    const padding = parseFloat(getComputedStyle(panel).paddingBottom);
+    const footer = screen.getByTestId('footer').getBoundingClientRect();
+    expect(Math.round(footer.bottom)).toBe(Math.round(panel.getBoundingClientRect().bottom - padding));
+    const header = screen.getByTestId('header').getBoundingClientRect();
+    expect(Math.round(header.top)).toBe(Math.round(panel.getBoundingClientRect().top + parseFloat(getComputedStyle(panel).paddingTop)));
+  });
+
+  it('keeps a short body filling the room, with the footer at the bottom', async () => {
+    render(<Open />);
+    await settledPanel();
+    const panel = screen.getByTestId('body').parentElement!.getBoundingClientRect();
+    const footer = screen.getByTestId('footer').getBoundingClientRect();
+    const padding = parseFloat(getComputedStyle(screen.getByTestId('body').parentElement!).paddingBottom);
+    expect(Math.round(footer.bottom)).toBe(Math.round(panel.bottom - padding));
   });
 
   it('turns off every transition under reduced motion, the open state included', async () => {

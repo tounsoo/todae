@@ -13,7 +13,7 @@ const keepRef = useRef<HTMLButtonElement>(null);
 <Dialog.Root open={open} onOpenChange={setOpen} initialFocusRef={keepRef}>
   <Dialog.Header>
     <Dialog.Title>Discard draft?</Dialog.Title>
-    <Dialog.Close>Close</Dialog.Close>
+    <Dialog.Close />
   </Dialog.Header>
   <Dialog.Description>This cannot be undone.</Dialog.Description>
   <Dialog.Body>…</Dialog.Body>

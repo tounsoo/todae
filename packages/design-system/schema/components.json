@@ -298,7 +298,7 @@
     },
     {
       "name": "BottomSheet.Header",
-      "description": "Chrome. Drag-eligible.",
+      "description": "Chrome. Drag-eligible. One row. A BottomSheet.Close placed directly in the header sits at the end with anything after it. What comes before it, such as the title, stays at the start.",
       "props": []
     },
     {
@@ -1148,7 +1148,7 @@
     },
     {
       "name": "Dialog.Header",
-      "description": "Optional header row.",
+      "description": "Optional header. One row. A Dialog.Close placed directly in the header sits at the end with anything after it. What comes before it, such as the title, stays at the start.",
       "props": []
     },
     {
@@ -1251,8 +1251,54 @@
       ]
     },
     {
+      "name": "Drawer.Body",
+      "description": "Fills the height the header and footer leave and scrolls on its own.",
+      "props": []
+    },
+    {
+      "name": "Drawer.Close",
+      "description": "Ghost Button.Root that requests close-button dismiss.",
+      "props": [
+        {
+          "name": "aria-label",
+          "type": "string",
+          "required": false,
+          "description": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
+          "default": "\"Close\" when its text, not counting aria-hidden or SVG parts, has fewer than two letters or digits"
+        },
+        {
+          "name": "onClick",
+          "type": "React.MouseEventHandler<HTMLButtonElement>",
+          "required": false,
+          "description": "Runs before the close request. Call event.preventDefault() to keep the drawer open."
+        }
+      ]
+    },
+    {
+      "name": "Drawer.Description",
+      "description": "Supporting text. Wires aria-describedby on the drawer.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Description text."
+        }
+      ]
+    },
+    {
+      "name": "Drawer.Footer",
+      "description": "Action row. Under a Drawer.Body it sits at the bottom.",
+      "props": []
+    },
+    {
+      "name": "Drawer.Header",
+      "description": "One row. A Drawer.Close placed directly in the header sits at the end with anything after it. What comes before it, such as the title, stays at the start.",
+      "props": []
+    },
+    {
       "name": "Drawer.Root",
-      "description": "Native modal dialog pinned to the start or end edge, full height. Uses Dialog parts inside.",
+      "description": "Native modal dialog pinned to the start or end edge, full height. Built from Drawer parts.",
       "props": [
         {
           "name": "open",
@@ -1298,7 +1344,19 @@
           "name": "aria-label",
           "type": "string",
           "required": false,
-          "description": "Name when Dialog.Title is omitted."
+          "description": "Name when Drawer.Title is omitted."
+        }
+      ]
+    },
+    {
+      "name": "Drawer.Title",
+      "description": "Heading. Wires aria-labelledby on the drawer.",
+      "props": [
+        {
+          "name": "children",
+          "type": "React.ReactNode",
+          "required": false,
+          "description": "Title text."
         }
       ]
     },

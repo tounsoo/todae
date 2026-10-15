@@ -199,6 +199,7 @@ function BottomSheetClose({ 'aria-label': ariaLabel, onClick, children, ref, ...
       aria-label={label}
       {...props}
       ref={refs}
+      data-todae-close=""
       onClick={composeHandlers(onClick, () => requestClose('close-button'))}
     >
       {children ?? glyph}
