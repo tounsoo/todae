@@ -33,6 +33,20 @@ A review covers the commit range and the code that directly depends on what the 
    - Are your tests enough to catch a regression?
 4. Ask an advisor for advice when the loop is stuck: a finding comes back after you fixed it, or you are about to start a third round. Start an `Agent` at `opus` / `xhigh` and give it the branch, the findings, what earlier rounds changed, and your diagnosis and fix plan. Ask it to go through the step 3 questions, say why the earlier fixes did not hold, and say whether changing the design would end the loop sooner than another fix. The advisor only advises: it does not edit files, commit, or push. The session does the fixing itself, on its default model. If you go against the advisor's advice, say why in your summary. If the advisor cannot run, tell the person in your next reply rather than carrying on silently.
 5. Fix every blocking finding and commit the fixes. Add or update tests for each fix. Then go back to step 1.
-6. When a round returns no blocking findings, push the branch. If no pull request is open yet, open one and post its link. CI skips draft pull requests, so if the pull request is a draft, mark it ready for review, then wait for CI. If CI fails, or a comment on the pull request raises something step 2 counts as blocking, treat it as a blocking finding and continue from step 3. When CI is green on the latest commit and every commit has been through a clean round, report back.
+6. When a round returns no blocking findings, push the branch. If no pull request is open yet, open one and post its link. CI skips draft pull requests, so if the pull request is a draft, mark it ready for review, then wait for CI. [Waiting on CI](#waiting-on-ci) says how to wait. If CI fails, or a comment on the pull request raises something step 2 counts as blocking, treat it as a blocking finding and continue from step 3. When CI is green on the latest commit and every commit has been through a clean round, report back.
 
 Never run more than 5 rounds in all, before and after the pull request opens. If round 5 still leaves blocking findings or unreviewed commits, stop and report back with what is open and why it keeps coming back, so the person can decide. Don't open a pull request then; if one is open, or the person asks for one anyway, leave it as a draft until they say otherwise.
+
+## Waiting on CI
+
+Some pull request states never produce a CI result, so never end a turn on the pull request subscription alone:
+
+- **A merge conflict means no CI run.** GitHub does not run the `pull_request` workflow on a pull request that conflicts with its base, and when the pull request was opened already conflicted, no event says so. Right before opening a pull request, pushing to it, or marking it ready, fetch `origin/main` and run `git merge-tree --write-tree HEAD origin/main`, which exits 1 on a conflict. On a conflict, merge `origin/main`, resolve it, and go back to step 1, where the reviewer runs `<base>..HEAD`. If that would be a sixth round, stop and report back as the round cap says.
+- **A draft's run is skipped.** Every job skips on a draft, so a run whose conclusion is `skipped` is not a result. Mark the pull request ready, unless the round cap says to keep it a draft, and wait for the run that starts then.
+- **Check until the head commit has a result.** After opening a pull request, pushing to it, or marking it ready, schedule a check-in with `send_later` about 5 minutes out before ending the turn; CI takes about four. When it fires, read the pull request's `mergeable_state` and the head commit's check runs with the GitHub tools, then:
+  - Green: report back as step 6 says.
+  - Red: it is a blocking finding, as step 6 says.
+  - `dirty`: a conflict, handled as above.
+  - Still running, `unknown`, or no run yet: schedule another check-in. If two check-ins in a row find no result for the head commit, tell the person what is missing rather than waiting silently.
+
+  Once the head commit has a result, cancel any pending check-in with `delete_trigger` and the `trigger_id` that `send_later` returned.
