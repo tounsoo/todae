@@ -101,13 +101,18 @@ Set the Vercel project Root Directory to `apps/docs`. `apps/docs/vercel.json` in
 
 ## Docs MCP
 
-Read-only Streamable HTTP MCP at `https://todae.omsoo.design/api/mcp` (`apps/docs/app/api/[transport]`).
+Streamable HTTP MCP at `https://todae.omsoo.design/api/mcp` (`apps/docs/app/api/[transport]`), for agents building a design system on Todae. The docs page [MCP server](apps/docs/app/(en)/mcp/page.mdx) shows how to connect each client.
 
 ```json
-"todae-docs": { "url": "https://todae.omsoo.design/api/mcp" }
+"todae": { "url": "https://todae.omsoo.design/api/mcp" }
 ```
 
-Tools: `list_components`, `get_component`, `when_to_use`. They read `@omsoo.design/todae/schema/components.json` and the English pages, `apps/docs/app/(en)/**/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
+Tools, in `apps/docs/lib/docs-mcp`:
+
+- `list_components`, `get_component`, `when_to_use` read `@omsoo.design/todae/schema/components.json` and the English pages, `apps/docs/app/(en)/**/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
+- `list_tokens`, `get_token` read the token catalog, `@omsoo.design/todae/tokens.json`.
+- `get_contrast_pairs`, `build_tokens` and `scaffold_design_system` run `@omsoo.design/todae/tokens-builder` on Todae's `tokens/` folder, which `next.config.mjs` traces into the route. `build_tokens` and `scaffold_design_system` write the caller's files to a temporary folder and remove it when the call ends; they return files and never write to the caller's machine.
+- `get_guide` returns the English source of the pages in `GUIDES` (`lib/docs-mcp/guides.ts`).
 
 ## Graft
 

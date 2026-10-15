@@ -26,8 +26,8 @@ const nextConfig = {
   experimental: { globalNotFound: true, useLightningcss: true },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   outputFileTracingIncludes: {
-    // The MCP reads English pages only.
-    '/api/[transport]': ['./app/(en)/**/page.mdx'],
+    // The MCP reads English pages only, and builds company tokens on Todae's token files.
+    '/api/[transport]': ['./app/(en)/**/page.mdx', '../../packages/design-system/tokens/**/*.json'],
   },
   // Every English redirect also applies under each locale prefix.
   redirects: async () =>

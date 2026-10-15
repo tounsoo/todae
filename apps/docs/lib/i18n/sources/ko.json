@@ -387,6 +387,19 @@
     "## Props": "beb45b8d5394",
     "(section order)": "0a8b0f340b98"
   },
+  "mcp": {
+    "# MCP server": "0efd769ac7f2",
+    "## Connect": "047ac15aa3f9",
+    "### Claude Code": "f04346316cde",
+    "### Claude Desktop and claude.ai": "a4b395854e3c",
+    "### Cursor": "01d7cbd759bf",
+    "### VS Code": "dd718ab95089",
+    "### Other clients": "be006917b24d",
+    "## Tools": "d626172fe849",
+    "## Build a design system with an agent": "ac048cff758e",
+    "## Limits": "af95f0aeaa1e",
+    "(section order)": "6681a673118f"
+  },
   "menu": {
     "(top)": "eac8bba851e2",
     "# Menu": "e7f09e8bde16",

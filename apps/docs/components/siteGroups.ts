@@ -122,7 +122,10 @@ export const SITE_GROUPS = [
   {
     id: 'tools',
     label: 'Tools',
-    links: [['/playground', 'Playground']],
+    links: [
+      ['/mcp', 'MCP server'],
+      ['/playground', 'Playground'],
+    ],
   },
 ] as const;
 
