@@ -78,7 +78,8 @@
   --todae-motion-duration-normal: 200ms;
   --todae-motion-duration-slow: 280ms;
   --todae-motion-duration-slower: 300ms;
-  --todae-motion-easing-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --todae-motion-easing-enter: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --todae-motion-easing-exit: cubic-bezier(0.2, 0.8, 0.2, 1);
   --todae-opacity-8: 0.08;
   --todae-opacity-10: 0.1;
   --todae-opacity-12: 0.12;
@@ -639,7 +640,8 @@
   --todae-chip-warning-bg: var(--_todae-chip-warning-bg, var(--todae-color-status-warning-bg));
   --todae-chip-warning-border: var(--_todae-chip-warning-border, var(--todae-color-status-warning-border));
   --todae-chip-warning-fg: var(--_todae-chip-warning-fg, var(--todae-color-status-warning-fg));
-  --todae-overlay-motion-easing: var(--_todae-overlay-motion-easing, var(--todae-motion-easing-standard));
+  --todae-overlay-motion-easing-enter: var(--_todae-overlay-motion-easing-enter, var(--todae-motion-easing-enter));
+  --todae-overlay-motion-easing-exit: var(--_todae-overlay-motion-easing-exit, var(--todae-motion-easing-exit));
   --todae-overlay-scrim-bg: var(--_todae-overlay-scrim-bg, var(--todae-color-bg-scrim));
   --todae-dialog-bg: var(--_todae-dialog-bg, var(--todae-color-bg-elevated));
   --todae-dialog-border: var(--_todae-dialog-border, var(--todae-color-border-default));
@@ -853,7 +855,8 @@
   --todae-disclosure-marker-gap: var(--_todae-disclosure-marker-gap, 0.375);
   --todae-disclosure-marker-scale: var(--_todae-disclosure-marker-scale, 1);
   --todae-disclosure-motion-duration: var(--_todae-disclosure-motion-duration, var(--todae-motion-duration-normal));
-  --todae-disclosure-motion-easing: var(--_todae-disclosure-motion-easing, var(--todae-motion-easing-standard));
+  --todae-disclosure-motion-easing-enter: var(--_todae-disclosure-motion-easing-enter, var(--todae-motion-easing-enter));
+  --todae-disclosure-motion-easing-exit: var(--_todae-disclosure-motion-easing-exit, var(--todae-motion-easing-exit));
   --todae-disclosure-padding-y: var(--_todae-disclosure-padding-y, var(--todae-space-control-y));
   --todae-disclosure-ring-focus: var(--_todae-disclosure-ring-focus, var(--todae-focus-ring-color));
   --todae-disclosure-ring-radius: var(--_todae-disclosure-ring-radius, 2px);
@@ -938,7 +941,8 @@
   --todae-card-radius: var(--_todae-card-radius, var(--todae-radius-lg));
   --todae-card-shadow: var(--_todae-card-shadow, var(--todae-shadow-none));
   --todae-message-actions-motion-duration: var(--_todae-message-actions-motion-duration, var(--todae-motion-duration-normal));
-  --todae-message-actions-motion-easing: var(--_todae-message-actions-motion-easing, var(--todae-motion-easing-standard));
+  --todae-message-actions-motion-easing-enter: var(--_todae-message-actions-motion-easing-enter, var(--todae-motion-easing-enter));
+  --todae-message-actions-motion-easing-exit: var(--_todae-message-actions-motion-easing-exit, var(--todae-motion-easing-exit));
   --todae-message-fg: var(--_todae-message-fg, var(--todae-color-fg-default));
   --todae-message-gap: var(--_todae-message-gap, var(--todae-space-inline-gap));
   --todae-message-header-fg: var(--_todae-message-header-fg, var(--todae-color-fg-muted));
@@ -1113,7 +1117,8 @@
   --todae-tree-item-radius: var(--_todae-tree-item-radius, var(--todae-radius-sm));
   --todae-tree-item-ring-focus: var(--_todae-tree-item-ring-focus, var(--todae-focus-ring-color));
   --todae-tree-motion-duration: var(--_todae-tree-motion-duration, var(--todae-motion-duration-normal));
-  --todae-tree-motion-easing: var(--_todae-tree-motion-easing, var(--todae-motion-easing-standard));
+  --todae-tree-motion-easing-enter: var(--_todae-tree-motion-easing-enter, var(--todae-motion-easing-enter));
+  --todae-tree-motion-easing-exit: var(--_todae-tree-motion-easing-exit, var(--todae-motion-easing-exit));
   --todae-nav-chevron-fg: var(--_todae-nav-chevron-fg, var(--todae-color-fg-muted));
   --todae-nav-chevron-size: var(--_todae-nav-chevron-size, 1rem);
   --todae-nav-gap: var(--_todae-nav-gap, var(--todae-space-6));
@@ -1140,7 +1145,8 @@
   --todae-nav-item-ring-focus: var(--_todae-nav-item-ring-focus, var(--todae-focus-ring-color));
   --todae-nav-list-gap: var(--_todae-nav-list-gap, 2px);
   --todae-nav-motion-duration: var(--_todae-nav-motion-duration, var(--todae-motion-duration-normal));
-  --todae-nav-motion-easing: var(--_todae-nav-motion-easing, var(--todae-motion-easing-standard));
+  --todae-nav-motion-easing-enter: var(--_todae-nav-motion-easing-enter, var(--todae-motion-easing-enter));
+  --todae-nav-motion-easing-exit: var(--_todae-nav-motion-easing-exit, var(--todae-motion-easing-exit));
   --todae-nav-rule-color: var(--_todae-nav-rule-color, var(--todae-color-border-subtle));
   --todae-nav-rule-width: var(--_todae-nav-rule-width, var(--todae-border-width));
   --todae-picker-area-height: var(--_todae-picker-area-height, 10rem);

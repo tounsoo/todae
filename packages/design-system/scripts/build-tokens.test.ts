@@ -681,8 +681,8 @@ describe('resolver-driven build', () => {
     const root = await fixture((resolver) => {
       resolver.resolutionOrder = [
         { $ref: '#/sets/core' },
-        { $ref: '#/sets/button' },
         { $ref: '#/modifiers/appearance' },
+        { $ref: '#/sets/button' },
         { $ref: '#/sets/focus' },
         { $ref: '#/sets/contract' },
         { $ref: '#/modifiers/density' },
@@ -691,6 +691,17 @@ describe('resolver-driven build', () => {
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(
       /token "button\.base\.[a-z.]+" references "space\.[a-z0-9.-]+" from modifier "density", which must come earlier/,
+    );
+  });
+
+  it('rejects an alias in a set declared only on :root', async () => {
+    const root = await fixture((resolver) => {
+      (resolver.sets.core!.sources as unknown[]).push({
+        motion: { easing: { exit: { $type: 'cubicBezier', $value: { $ref: '#/motion/easing/enter/$value' } } } },
+      });
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(
+      'token "motion.easing.exit" is declared only on :root, so it can\'t reference "motion.easing.enter"',
     );
   });
 

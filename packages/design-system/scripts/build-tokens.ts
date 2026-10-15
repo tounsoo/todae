@@ -1438,7 +1438,11 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
   const owner = new Map<string, string>();
   const position = new Map<string, number>();
   const all: FlatToken[] = [];
+  const rootOnly: FlatToken[] = [];
+  let rootSet = true;
   for (const [index, entry] of entries.entries()) {
+    if (entry.kind === 'set' && rootSet) rootOnly.push(...entry.tokens);
+    if (entry.kind === 'modifier' && !entry.extension.alias) rootSet = false;
     const declared =
       entry.kind === 'set'
         ? entry.tokens
@@ -1475,6 +1479,13 @@ export function checkGraph(entries: ResolvedEntry[]): FlatToken[] {
     const [at, target] = [position.get(from)!, position.get(to)!];
     return at === target || (target < at && known.get(from) === known.get(to));
   });
+  // Sets before the first scoped modifier are declared on :root alone, so an
+  // alias there resolves once: an override of its target below :root, on a
+  // provider or a [data-*] element, would never reach it.
+  const rootAlias = rootOnly.find((token) => token.refs.length > 0);
+  if (rootAlias) {
+    fail(`token "${rootAlias.path}" is declared only on :root, so it can't reference "${rootAlias.refs[0]!.path}"`);
+  }
   const byPath = new Map<string, FlatToken[]>();
   for (const token of all) {
     const list = byPath.get(token.path);

@@ -245,7 +245,7 @@ describe('motion, font family, shadow and text transform overrides', () => {
       themeOverrideStyle(
         {
           'motion.duration.fast': { value: 120, unit: 'ms' },
-          'motion.easing.standard': [0.4, 0, 0.2, 1],
+          'motion.easing.enter': [0.4, 0, 0.2, 1],
           'brand.font.body': ['Inter', 'sans-serif'],
           'brand.shadow.card': [layer, { ...layer, inset: true }],
           'button.base.font.text-transform': 'uppercase',
@@ -255,7 +255,7 @@ describe('motion, font family, shadow and text transform overrides', () => {
       ),
     ).toEqual({
       '--todae-motion-duration-fast': '120ms',
-      '--todae-motion-easing-standard': 'cubic-bezier(0.4, 0, 0.2, 1)',
+      '--todae-motion-easing-enter': 'cubic-bezier(0.4, 0, 0.2, 1)',
       '--todae-brand-font-body': '"Inter", sans-serif',
       '--todae-brand-shadow-card': '0px 4px 12px 0px oklch(0 0 0 / 0.2), inset 0px 4px 12px 0px oklch(0 0 0 / 0.2)',
       '--todae-button-base-font-text-transform': 'uppercase',
@@ -267,7 +267,7 @@ describe('motion, font family, shadow and text transform overrides', () => {
     const bad: [string, unknown][] = [
       ['motion.duration.fast', { value: 120, unit: 'px' }],
       ['motion.duration.fast', '120ms'],
-      ['motion.easing.standard', [2, 0, 0, 1]],
+      ['motion.easing.enter', [2, 0, 0, 1]],
       ['brand.font.body', 'Inter"; background: url(x)'],
       ['brand.font.body', []],
       ['brand.shadow.card', { ...layer, blur: { value: -1, unit: 'px' } }],
@@ -291,8 +291,8 @@ describe('motion, font family, shadow and text transform overrides', () => {
   it('parses playground text for the new types', () => {
     expect(parseThemeValue('motion.duration.fast', '0.12s')).toEqual({ value: 0.12, unit: 's' });
     expect(parseThemeValue('motion.duration.fast', '12px')).toBeNull();
-    expect(parseThemeValue('motion.easing.standard', 'cubic-bezier(0.4, 0, 0.2, 1)')).toEqual([0.4, 0, 0.2, 1]);
-    expect(parseThemeValue('motion.easing.standard', '0.4, 0, 0.2')).toBeNull();
+    expect(parseThemeValue('motion.easing.enter', 'cubic-bezier(0.4, 0, 0.2, 1)')).toEqual([0.4, 0, 0.2, 1]);
+    expect(parseThemeValue('motion.easing.enter', '0.4, 0, 0.2')).toBeNull();
     const value = parseThemeValue('motion.duration.fast', '90ms');
     expect(value && themeValueCss('motion.duration.fast', value)).toBe('90ms');
     expect(parseThemeValue('tabs.font.text-transform', ' uppercase ')).toBe('uppercase');

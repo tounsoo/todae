@@ -4,7 +4,7 @@ A company design system on Todae is three things: a token package layered on Tod
 
 ## Token layers
 
-Todae's tokens are DTCG 2025.10 files driven by `tokens/resolver.json`. Each set and modifier names its layer in `$extensions["dev.todae"].layer`, and a token may only reference tokens in a lower layer, or in its own layer when they come from the same set or modifier or from one earlier in `resolutionOrder`.
+Todae's tokens are DTCG 2025.10 files driven by `tokens/resolver.json`. Each set and modifier names its layer in `$extensions["dev.todae"].layer`, and a token may only reference tokens in a lower layer, or in its own layer when they come from the same set or modifier or from one earlier in `resolutionOrder`. A token in a set listed before the first scoped modifier, such as core, is declared only on `:root`, so it holds a literal value and references nothing.
 
 - `core`: raw scales, such as `color.gray.900` and `space.4`.
 - `appearance`: semantic colors for light and dark, such as `color.fg.muted` and `color.accent.default`.

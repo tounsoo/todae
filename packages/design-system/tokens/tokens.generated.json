@@ -782,9 +782,19 @@
       "description": null
     },
     {
-      "path": "motion.easing.standard",
+      "path": "motion.easing.enter",
       "type": "cubicBezier",
-      "cssVar": "--todae-motion-easing-standard",
+      "cssVar": "--todae-motion-easing-enter",
+      "cssValue": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      "ref": null,
+      "layer": "core",
+      "context": null,
+      "description": null
+    },
+    {
+      "path": "motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-motion-easing-exit",
       "cssValue": "cubic-bezier(0.2, 0.8, 0.2, 1)",
       "ref": null,
       "layer": "core",
@@ -4892,11 +4902,21 @@
       "description": "Chip.Root: a compact, optionally dismissible item, as in ChipList and Field.ChipInput."
     },
     {
-      "path": "overlay.motion.easing",
+      "path": "overlay.motion.easing.enter",
       "type": "cubicBezier",
-      "cssVar": "--todae-overlay-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssVar": "--todae-overlay-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they and Toast enter and exit with."
+    },
+    {
+      "path": "overlay.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-overlay-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they and Toast enter and exit with."
@@ -7032,11 +7052,21 @@
       "description": "Disclosure.Root: a details/summary section that opens and closes, with its marker."
     },
     {
-      "path": "disclosure.motion.easing",
+      "path": "disclosure.motion.easing.enter",
       "type": "cubicBezier",
-      "cssVar": "--todae-disclosure-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssVar": "--todae-disclosure-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "description": "Disclosure.Root: a details/summary section that opens and closes, with its marker."
+    },
+    {
+      "path": "disclosure.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-disclosure-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "description": "Disclosure.Root: a details/summary section that opens and closes, with its marker."
@@ -7882,11 +7912,21 @@
       "description": "Message.Root: one chat message, with user and system variants."
     },
     {
-      "path": "message.actions.motion.easing",
+      "path": "message.actions.motion.easing.enter",
       "type": "cubicBezier",
-      "cssVar": "--todae-message-actions-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssVar": "--todae-message-actions-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "description": "Message.Root: one chat message, with user and system variants."
+    },
+    {
+      "path": "message.actions.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-message-actions-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "description": "Message.Root: one chat message, with user and system variants."
@@ -9632,11 +9672,21 @@
       "description": "Tree.Root: a hierarchical list with expandable branches and a selected item."
     },
     {
-      "path": "tree.motion.easing",
+      "path": "tree.motion.easing.enter",
       "type": "cubicBezier",
-      "cssVar": "--todae-tree-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssVar": "--todae-tree-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "description": "Tree.Root: a hierarchical list with expandable branches and a selected item."
+    },
+    {
+      "path": "tree.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-tree-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "description": "Tree.Root: a hierarchical list with expandable branches and a selected item."
@@ -9902,11 +9952,21 @@
       "description": "Nav.Root: a vertical site navigation list, with groups, nested branches and the current page."
     },
     {
-      "path": "nav.motion.easing",
+      "path": "nav.motion.easing.enter",
       "type": "cubicBezier",
-      "cssVar": "--todae-nav-motion-easing",
-      "cssValue": "var(--todae-motion-easing-standard)",
-      "ref": "motion.easing.standard",
+      "cssVar": "--todae-nav-motion-easing-enter",
+      "cssValue": "var(--todae-motion-easing-enter)",
+      "ref": "motion.easing.enter",
+      "layer": "contract",
+      "context": null,
+      "description": "Nav.Root: a vertical site navigation list, with groups, nested branches and the current page."
+    },
+    {
+      "path": "nav.motion.easing.exit",
+      "type": "cubicBezier",
+      "cssVar": "--todae-nav-motion-easing-exit",
+      "cssValue": "var(--todae-motion-easing-exit)",
+      "ref": "motion.easing.exit",
       "layer": "contract",
       "context": null,
       "description": "Nav.Root: a vertical site navigation list, with groups, nested branches and the current page."

@@ -133,12 +133,13 @@
 
   /* Hidden rows stay in the tab order: focus inside the message shows them. */
   .actions[data-reveal='hover'] {
-    transition: opacity var(--todae-message-actions-motion-duration) var(--todae-message-actions-motion-easing);
+    transition: opacity var(--todae-message-actions-motion-duration) var(--todae-message-actions-motion-easing-enter);
   }
 
   @media (hover: hover) {
     .root:not(:hover, :focus-within) > .actions[data-reveal='hover'] {
       opacity: 0;
+      transition-timing-function: var(--todae-message-actions-motion-easing-exit);
     }
   }
 

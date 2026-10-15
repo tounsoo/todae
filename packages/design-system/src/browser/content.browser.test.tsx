@@ -27,7 +27,9 @@ import {
   Skeleton,
   Slider,
   Loader,
+  GlyphsProvider,
   Stack,
+  ThemeProvider,
   Table,
   Text,
   Tree,
@@ -166,6 +168,24 @@ function Gallery() {
 }
 
 describe('content parts in a browser', () => {
+  it('turns a disclosure marker on the enter curve when it opens and the exit curve when it closes', async () => {
+    render(
+      <ThemeProvider overrides={{ 'motion.easing.enter': [0, 0, 0.2, 1], 'motion.easing.exit': [0.4, 0, 1, 1] }}>
+        <GlyphsProvider glyphs={{ chevron: <svg viewBox="0 0 16 16" /> }}>
+          <Disclosure.Root data-testid="disclosure">
+            <Disclosure.Summary>What is Todae?</Disclosure.Summary>
+            <p>A base for company design systems.</p>
+          </Disclosure.Root>
+        </GlyphsProvider>
+      </ThemeProvider>,
+    );
+    const disclosure = screen.getByTestId('disclosure') as HTMLDetailsElement;
+    const marker = () => getComputedStyle(disclosure.querySelector('[data-todae-glyph]')!).transitionTimingFunction;
+    expect(marker()).toBe('cubic-bezier(0.4, 0, 1, 1)');
+    disclosure.open = true;
+    expect(marker()).toBe('cubic-bezier(0, 0, 0.2, 1)');
+  });
+
   it('pass axe', async () => {
     render(<Gallery />);
     expect(await violations()).toEqual([]);

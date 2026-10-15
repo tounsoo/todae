@@ -32,7 +32,7 @@
     margin-inline-end: calc(var(--todae-disclosure-marker-gap) * 1em);
     color: var(--todae-disclosure-marker-fg);
     line-height: 1;
-    transition: rotate var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing);
+    transition: rotate var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing-enter);
   }
 
   .marker > :is(svg, img) {
@@ -42,6 +42,7 @@
 
   .root:not([open]) > .summary > [data-todae-glyph] {
     rotate: -90deg;
+    transition-timing-function: var(--todae-disclosure-motion-easing-exit);
   }
 
   .root:not([open]) > .summary:dir(rtl) > [data-todae-glyph] {
@@ -54,15 +55,17 @@
     border-radius: var(--todae-disclosure-ring-radius);
   }
 
+  /* Closing eases with the exit curve; opening, below, with the enter curve. */
   .root::details-content {
     opacity: 0;
     transition:
-      opacity var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing),
-      content-visibility var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing) allow-discrete;
+      opacity var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing-exit),
+      content-visibility var(--todae-disclosure-motion-duration) var(--todae-disclosure-motion-easing-exit) allow-discrete;
   }
 
   .root[open]::details-content {
     opacity: 1;
+    transition-timing-function: var(--todae-disclosure-motion-easing-enter);
   }
 
   .root[open] > :not(summary):last-child {
