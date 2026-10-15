@@ -347,10 +347,20 @@ describe('ThemeProvider override contrast in development', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it("ignores a caller style value React doesn't set", () => {
+  it("ignores a caller style value React doesn't set, or the browser rejects", () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    render(<ThemeProvider appearance="light" style={{ ['--todae-color-accent-default' as string]: null }} overrides={lightAccent(0.92)} />);
-    expect(warn).toHaveBeenCalledTimes(1);
+    // White text makes a baseline that wrongly kept or dropped the accent fail too.
+    for (const value of [null, false, true, '', 'red)']) {
+      const { unmount } = render(
+        <ThemeProvider
+          appearance="light"
+          style={{ color: 'white', ['--todae-color-accent-default' as string]: value }}
+          overrides={lightAccent(0.92)}
+        />,
+      );
+      unmount();
+    }
+    expect(warn).toHaveBeenCalledTimes(5);
   });
 
   it('warns again when failing overrides come back, and not while the same pairs fail', () => {

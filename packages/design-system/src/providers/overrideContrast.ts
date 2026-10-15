@@ -171,9 +171,11 @@ export function overrideContrastFailures(element: HTMLElement, names: readonly s
   let before: Set<string>;
   try {
     for (const name of names) {
+      // Remove first: the browser ignores a value it rejects, which would
+      // leave the override in place.
+      element.style.removeProperty(name);
       const value = underneath[name];
-      if (value === undefined) element.style.removeProperty(name);
-      else element.style.setProperty(name, value);
+      if (value !== undefined) element.style.setProperty(name, value);
     }
     before = new Set(measureContrast(element).failures.map(pairKey));
   } finally {
