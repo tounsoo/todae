@@ -74,7 +74,7 @@
      toast would put a tip on its button somewhere else. */
   .item {
     position: relative;
-    inset-block-start: calc(var(--toast-dir) * -0.5rem);
+    inset-block-start: calc(var(--toast-dir) * -1 * var(--todae-toast-enter-offset));
     pointer-events: auto;
     opacity: 0;
     transition:

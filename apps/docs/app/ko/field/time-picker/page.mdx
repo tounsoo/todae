@@ -43,7 +43,7 @@ const [invalid, setInvalid] = useState(false);
   <FieldTimePicked />
 </Example>
 
-여기서는 같은 필드의 [Field.TextInput](/field/text-input)으로 시각을 입력할 수도 있습니다. `9:07`처럼 목록의 시각 사이에 있는 시각도 됩니다. 고른 시각은 `formatTime`으로 텍스트에 쓰이고, `parseTime`이 시각으로 읽은 입력은 `min`과 `max` 사이에 있으면 목록의 시각들 사이에 나타납니다. `Field.TextInput` 옆에서는 그 입력이 필드의 컨트롤입니다. 입력이 필드의 `id`, `name`, 설명을 받고, 필드의 다른 곳을 누르면 입력에 포커스가 갑니다. `showValue={false}`이면 버튼은 시계 글리프만 보여 줍니다. 버튼은 자신의 `name`이 있으면 그 이름으로 폼에 시각을 보냅니다. 없으면 필드의 `name`으로 보내는데, `Field.ColorPicker`, `Field.DatePicker`, `Field.TimePicker`가 아닌 Field 파트나 [`useField`](/utilities/use-field)로 연결한 컨트롤이 그 `name`을 가지고 있으면 보내지 않습니다. 자신의 `name`이 없는 `Field.TextInput`이 그런 경우입니다. 입력한 텍스트 대신 `09:30` 형식으로 시각을 보내려면 Root 대신 선택기에 `name`을 두세요.
+여기서는 같은 필드의 [Field.TextInput](/field/text-input)으로 시각을 입력할 수도 있습니다. `9:07`처럼 목록의 시각 사이에 있는 시각도 됩니다. 고른 시각은 `formatTime`으로 텍스트에 쓰이고, `parseTime`이 시각으로 읽은 입력은 `min`과 `max` 사이에 있으면 목록의 시각들 사이에 나타납니다. `Field.TextInput` 옆에서는 그 입력이 필드의 컨트롤입니다. 입력이 필드의 `id`, `name`, 설명을 받고, 필드의 다른 곳을 누르면 입력에 포커스가 갑니다. `showValue={false}`이면 버튼은 시계 글리프만 보여 줍니다. 버튼은 자신의 `name`이 있으면 그 이름으로 폼에 시각을 보냅니다. 없으면 필드의 `name`으로 보내는데, `Field.ColorPicker`, `Field.DatePicker`, `Field.TimePicker`, `Field.DateTimePicker`가 아닌 Field 파트나 [`useField`](/utilities/use-field)로 연결한 컨트롤이 그 `name`을 가지고 있으면 보내지 않습니다. 자신의 `name`이 없는 `Field.TextInput`이 그런 경우입니다. 입력한 텍스트 대신 `09:30` 형식으로 시각을 보내려면 Root 대신 선택기에 `name`을 두세요.
 
 ## 입력한 시각
 
@@ -67,7 +67,7 @@ Todae는 Temporal 폴리필을 포함하지 않습니다. 선택기의 값과 `f
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 단독으로 쓰면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 레이블이 버튼의 이름이 되므로, 버튼에 보이는 시각은 `aria-describedby`에 더해집니다. 텍스트 입력처럼 `Field.ColorPicker`, `Field.DatePicker`, 다른 `Field.TimePicker`가 아닌 Field 파트나 `useField`로 연결한 컨트롤이 필드에 함께 있으면 그 컨트롤이 대신 `id`와 `aria-describedby`를 받고, 버튼은 `disabled`와 `aria-invalid`를 유지하며, 자체 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `timePicker` 문자열로 이름이 붙습니다. 버튼에는 `aria-haspopup="listbox"`와 `aria-expanded`가, 목록이 열려 있는 동안에는 `aria-controls`가 붙습니다. 목록은 `timePicker` 문자열로 이름이 붙는 [OptionList](/optionlist)이고, 자체 역할이 없는 팝오버 안에 있습니다. 화살표 키, Home, End로 시각 사이를 옮기고, Enter나 Space로 고릅니다. 글리프는 [GlyphsProvider](/utilities/glyphs-provider)의 `clock`입니다.
+**Todae가 맡는 것:** 단독으로 쓰면 버튼은 `Field.Root`에서 `id`, `aria-label`, `aria-labelledby`, `aria-describedby`를 받고, Root나 바깥 [Fieldset](/fieldset)에서 네이티브 `disabled`와 `aria-invalid`를 받습니다. 레이블이 버튼의 이름이 되므로, 버튼에 보이는 시각은 `aria-describedby`에 더해집니다. 텍스트 입력처럼 `Field.ColorPicker`, `Field.DatePicker`, `Field.DateTimePicker`, 다른 `Field.TimePicker`가 아닌 Field 파트나 `useField`로 연결한 컨트롤이 필드에 함께 있으면 그 컨트롤이 대신 `id`와 `aria-describedby`를 받고, 버튼은 `disabled`와 `aria-invalid`를 유지하며, 자체 `aria-label`이 없으면 [StringsProvider](/utilities/strings-provider)의 `timePicker` 문자열로 이름이 붙습니다. 버튼에는 `aria-haspopup="listbox"`와 `aria-expanded`가, 목록이 열려 있는 동안에는 `aria-controls`가 붙습니다. 목록은 `timePicker` 문자열로 이름이 붙는 [OptionList](/optionlist)이고, 자체 역할이 없는 팝오버 안에 있습니다. 화살표 키, Home, End로 시각 사이를 옮기고, Enter나 Space로 고릅니다. 글리프는 [GlyphsProvider](/utilities/glyphs-provider)의 `clock`입니다.
 
 **직접 제공할 것:** 이름. `htmlFor`가 Root `id`인 [Label](/label)이나, Root의 `aria-label` / `aria-labelledby`입니다. 텍스트 입력과 그 옆의 선택기에는 같은 시각을 주고, `formatTime`으로 쓰고 `parseTime`으로 읽으세요.
 
@@ -79,8 +79,24 @@ Todae는 Temporal 폴리필을 포함하지 않습니다. 선택기의 값과 `f
 
 **언제:** 영업시간, 매일 알림, 회의 시작처럼 하루 중 시각.
 
-**쓰지 않을 때:** 하나의 값인 날짜와 시각 → [Field.DateTimeInput](/field/date-time-input). 기간 → `type="number"`인 [Field.TextInput](/field/text-input)과 단위를 보여 주는 `Affix`.
+**쓰지 않을 때:** 하나의 값인 날짜와 시각 → [Field.DateTimePicker](/field/date-time-picker). 기간 → `type="number"`인 [Field.TextInput](/field/text-input)과 단위를 보여 주는 `Affix`.
+
+### formatTime
+
+**언제:** 피커 옆 텍스트 입력처럼, 시각을 로캘에 맞는 텍스트로 쓸 때.
+
+**쓰지 않을 때:** 시간대를 붙이는 것처럼 다른 형식의 시각 → `Intl.DateTimeFormat`.
+
+### parseTime
+
+**언제:** 사람이 입력한 시각을 읽을 때.
+
+**쓰지 않을 때:** `09:30`처럼 형식이 정해진 텍스트 → `Temporal.PlainTime.from`.
 
 ## Props
 
 <PropsTable name="Field.TimePicker" />
+
+<PropsTable name="formatTime" />
+
+<PropsTable name="parseTime" />

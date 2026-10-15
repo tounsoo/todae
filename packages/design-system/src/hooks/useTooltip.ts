@@ -24,6 +24,7 @@ import { useEscapeKey } from '../overlay/useEscapeKey';
 import { useComposedRefs, useStableComposedRef } from '../components/props';
 import { useDomId } from '../components/domId';
 import { anchorTriggerStyle } from '../overlay/anchorName';
+import { cssTimeMs } from '../overlay/cssTime';
 import { useControlledState } from './useControlledState';
 
 export type { TooltipOpenReason, TooltipWire };
@@ -63,6 +64,17 @@ export type UseTooltipResult<I extends boolean = false> = {
   getTooltipProps: () => TooltipWire<I>;
 };
 
+// For when the delay tokens can't be read, such as without Todae's stylesheet.
+const SHOW_DELAY_MS = 300;
+const HIDE_DELAY_MS = 100;
+
+/** A duration token's milliseconds as `node` computes it, or null when it has none. */
+function tokenMs(node: Element | null, name: string): number | null {
+  if (!node) return null;
+  const ms = cssTimeMs(getComputedStyle(node).getPropertyValue(name));
+  return ms === null ? null : Math.max(0, ms);
+}
+
 function tooltipStyle(anchorName: string): CSSProperties {
   return {
     ['--todae-tooltip-anchor' as string]: anchorName,
@@ -75,8 +87,8 @@ export function useTooltip<I extends boolean = false>(
 ): UseTooltipResult<I> {
   const {
     interactive = false as I,
-    showDelay = 300,
-    hideDelay = 100,
+    showDelay,
+    hideDelay,
     open: openProp,
     defaultOpen,
     onOpenChange,
@@ -145,8 +157,9 @@ export function useTooltip<I extends boolean = false>(
       const result = step({
         policy: {
           fidelity,
-          showDelayMs: showDelayRef.current,
-          hideDelayMs: hideDelayRef.current,
+          // Read when used, so a token set in CSS or by ThemeProvider takes effect.
+          showDelayMs: showDelayRef.current ?? tokenMs(triggerRef.current, '--todae-tooltip-delay-show') ?? SHOW_DELAY_MS,
+          hideDelayMs: hideDelayRef.current ?? tokenMs(triggerRef.current, '--todae-tooltip-delay-hide') ?? HIDE_DELAY_MS,
         },
         state: intentRef.current,
         open: openRef.current,

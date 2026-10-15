@@ -116,4 +116,15 @@ describe('Playground', { timeout: 15_000 }, () => {
     expect(screen.queryByText('1 changed')).toBeNull();
     expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.6 0.25 350)');
   });
+
+  it('shows the preview and Todae’s own text in the page’s language', () => {
+    render(<Playground locale="ko" />);
+    const preview = within(screen.getByRole('region', { name: '미리보기' }));
+    expect(preview.getByRole('button', { name: 'Pro로 업그레이드' })).toBeTruthy();
+    // Names Todae writes itself come from StringsProvider.
+    expect(preview.getByRole('navigation', { name: '이동 경로' })).toBeTruthy();
+    expect(preview.getAllByRole('button', { name: '닫기' })).toHaveLength(2);
+    expect(preview.getByRole('button', { name: '보내기' })).toBeTruthy();
+    expect(preview.queryByText('Good morning, Ada')).toBeNull();
+  });
 });

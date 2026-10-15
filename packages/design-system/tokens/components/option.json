@@ -31,7 +31,9 @@
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
       "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
       "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
-      "scale": { "$type": "number", "$value": 0.85 }
+      "scale": { "$type": "number", "$value": 0.85 },
+      "gap": { "$type": "number", "$value": 0.4 },
+      "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } }
     }
   }
 }

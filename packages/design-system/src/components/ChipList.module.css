@@ -103,7 +103,7 @@
     flex-wrap: wrap;
     gap: var(--_gap, var(--todae-space-inline-gap));
     width: max-content;
-    max-width: min(18rem, calc(100vw - 32px));
+    max-width: min(var(--todae-chip-panel-max-width), calc(100vw - 2 * var(--todae-chip-panel-viewport-inset)));
   }
 
   .panel:popover-open {
