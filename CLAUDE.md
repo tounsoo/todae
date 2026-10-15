@@ -27,7 +27,7 @@ Before committing English docs prose or writing a pull request description, use 
 
 ## Bug fixes
 
-A reported bug, or one found while working, follows poteto-mode's Bug fix playbook, `.claude/skills/poteto-mode/playbooks/bug-fix.md`. Its last step, Opening a PR, is the review loop below.
+Outside the review loop, a reported bug, or one found while working, follows poteto-mode's Bug fix playbook, `.claude/skills/poteto-mode/playbooks/bug-fix.md`. Its last step, Opening a PR, is the review loop below.
 
 ## Pull request review loop
 

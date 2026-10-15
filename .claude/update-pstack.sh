@@ -23,7 +23,15 @@ src="$tmp/plugins/pstack"
 # upstream drops is removed too.
 manifest="$root/.claude/pstack-files.txt"
 if [ -f "$manifest" ]; then
-  while IFS= read -r path; do rm -rf "${root:?}/$path"; done < "$manifest"
+  while IFS= read -r path; do
+    # Only remove entries this script writes, so a hand-edited line can't
+    # reach outside .claude.
+    case "$path" in
+      *..* | */ | .claude/skills/ | .claude/agents/) continue ;;
+      .claude/skills/*/* | .claude/agents/*/*) continue ;;
+      .claude/skills/* | .claude/agents/*.md) rm -rf "${root:?}/$path" ;;
+    esac
+  done < "$manifest"
 fi
 : > "$manifest"
 
