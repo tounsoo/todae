@@ -1534,8 +1534,8 @@ export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
 }
 
 /** Fails with every contrast pair below its minimum. */
-export function validateContrast(entries: ResolvedEntry[]): void {
-  const failures = contrastResults(entries)
+export function validateContrast(entries: ResolvedEntry[], results = contrastResults(entries)): void {
+  const failures = results
     .filter((result) => result.lc < result.min)
     .map(({ fg, bg, where, lc, min }) => `"${fg}" on "${bg}" in ${where} is Lc ${lc.toFixed(1)}, below ${min}`);
   if (failures.length > 0) fail(`contrast: ${failures.length} pair(s) fail APCA\n  ${failures.join('\n  ')}`);
@@ -1575,6 +1575,10 @@ export type CompanyTokensResult = {
   /** `THEME_OVERRIDE_TYPES` for the company's tokens, for ThemeProvider `overrideTypes`. */
   overrideTypes: string;
   tokens: FlatToken[];
+  /** The company's own tokens: those its resolver adds or replaces. */
+  companyTokens: FlatToken[];
+  /** Every contrast pair, measured on Todae's and the company's tokens together. */
+  contrast: ContrastResult[];
 };
 
 /**
@@ -1587,7 +1591,8 @@ export async function buildCompanyTokens(options: { resolver: string; base?: str
   const { merged, company, inherited } = mergeEntries(upstream, extra);
   validateEntries(merged);
   const all = checkGraph(merged);
-  validateContrast(merged);
+  const contrast = contrastResults(merged);
+  validateContrast(merged, contrast);
   const css = emitCss(company, {
     layer: COMPANY_LAYER,
     preamble: COMPANY_PREAMBLE,
@@ -1604,7 +1609,7 @@ export async function buildCompanyTokens(options: { resolver: string; base?: str
     '} as const;',
     '',
   ].join('\n');
-  return { css, json: emitCatalog(all), overrideTypes, tokens: all };
+  return { css, json: emitCatalog(all), overrideTypes, tokens: all, companyTokens: own, contrast };
 }
 
 export async function buildTokens(options: { check?: boolean; root?: string } = {}): Promise<BuildTokensResult> {

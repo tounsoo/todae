@@ -14,12 +14,14 @@ describe('docs resolves the design system from source', () => {
   // lacks and whose class names the docs' source CSS does not define.
   it('maps every module entry of @omsoo.design/todae to its source file', () => {
     const modules = Object.entries(pkg.exports)
-      .filter(([key, value]) => typeof value === 'object' && value !== null && 'import' in value && key !== './tokens-builder')
+      .filter(([, value]) => typeof value === 'object' && value !== null && 'import' in value)
       .map(([key]) => (key === '.' ? '@omsoo.design/todae' : `@omsoo.design/todae/${key.slice(2)}`));
     expect(modules).toEqual(expect.arrayContaining(['@omsoo.design/todae', '@omsoo.design/todae/stack', '@omsoo.design/todae/text']));
     for (const name of modules) {
       const target = tsconfig.compilerOptions.paths[name]?.[0];
-      expect(target, name).toMatch(/^\.\.\/\.\.\/packages\/design-system\/src\/.+\.ts$/);
+      // The token builder is a script, not a component entry.
+      const dir = name === '@omsoo.design/todae/tokens-builder' ? 'scripts' : 'src';
+      expect(target, name).toMatch(new RegExp(`^\\.\\./\\.\\./packages/design-system/${dir}/.+\\.ts$`));
     }
   });
 });

@@ -31,24 +31,25 @@ function isCatalogToken(value: unknown): value is CatalogToken {
   );
 }
 
-function readCatalog(): CatalogToken[] {
+let cached: CatalogToken[] | null = null;
+
+/**
+ * Every catalog row: one per token, or one per context for a token a modifier
+ * sets. Read on first use, so a bad catalog fails the token tools only.
+ */
+export function catalogTokens(): readonly CatalogToken[] {
+  if (cached) return cached;
   const rows: unknown = (catalog as { tokens?: unknown }).tokens;
   if (!Array.isArray(rows) || !rows.every(isCatalogToken)) throw new Error('Invalid token catalog');
+  cached = rows;
   return rows;
-}
-
-const tokens = readCatalog();
-
-/** Every catalog row: one per token, or one per context for a token a modifier sets. */
-export function catalogTokens(): readonly CatalogToken[] {
-  return tokens;
 }
 
 export type ListTokensOptions = { prefix?: string; layer?: TokenLayer; limit?: number; offset?: number };
 
 /** Catalog rows whose path is `prefix` or starts with `prefix.`, in catalog order. */
 export function listTokens({ prefix, layer, limit = 200, offset = 0 }: ListTokensOptions = {}) {
-  const matches = tokens.filter(
+  const matches = catalogTokens().filter(
     (row) =>
       (prefix === undefined || row.path === prefix || row.path.startsWith(`${prefix}.`)) &&
       (layer === undefined || row.layer === layer),
@@ -57,6 +58,7 @@ export function listTokens({ prefix, layer, limit = 200, offset = 0 }: ListToken
     tokens: matches.slice(offset, offset + limit),
     total: matches.length,
     offset,
+    hasMore: offset + limit < matches.length,
     docsUrl: TOKENS_URL,
     source: SOURCE,
   };
@@ -71,6 +73,7 @@ function readsVar(row: CatalogToken, cssVar: string): boolean {
 }
 
 export function getToken(path: string) {
+  const tokens = catalogTokens();
   const rows = tokens.filter((row) => row.path === path);
   const first = rows[0];
   if (!first) throw new Error(`Unknown token "${path}". Call list_tokens.`);

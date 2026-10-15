@@ -1,13 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { DOCS_ORIGIN } from '../origin';
+import { resolveEntries } from '@omsoo.design/todae/tokens-builder';
 import { buildTokenFiles, todaeTokensDir, type BuildResult } from './build';
 import { catalogTokens } from './tokens';
 
 const SOURCE = 'todae-docs' as const;
 const NAME_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
-const TODAE_VARIANTS = ['primary', 'secondary', 'ghost'];
-const TODAE_DENSITIES = ['compact', 'comfortable', 'spacious'];
+/** The context an aliased modifier writes its shared names to, such as `button.bg.default`. */
+const RESERVED_CONTEXTS = ['base'];
 
 export type Oklch = [l: number, c: number, h: number];
 
@@ -27,6 +28,13 @@ export type ScaffoldFile = { path: string; contents: string };
 function checkName(kind: string, name: string, taken: readonly string[] = []): void {
   if (!NAME_RE.test(name)) throw new Error(`Invalid ${kind} "${name}": use lowercase words joined by hyphens, such as "outline"`);
   if (taken.includes(name)) throw new Error(`Todae already has the ${kind} "${name}"`);
+  if (RESERVED_CONTEXTS.includes(name)) throw new Error(`The ${kind} "${name}" is reserved`);
+}
+
+/** The context names a modifier of Todae's resolver has. */
+async function todaeContexts(base: string, modifier: string): Promise<string[]> {
+  const entry = (await resolveEntries(base)).find((row) => row.kind === 'modifier' && row.name === modifier);
+  return entry?.kind === 'modifier' ? [...entry.contexts.keys()] : [];
 }
 
 function unique(kind: string, names: readonly string[]): void {
@@ -89,33 +97,39 @@ function declarations(variants: readonly string[], densities: readonly string[])
 /**
  * Starter files for a design system on Todae: a company resolver, its token
  * files and TypeScript declarations, checked with the same build
- * `todae-tokens build` runs. Nothing is written; the caller saves the files.
+ * `todae-tokens build` runs. `tokenFiles` are by path inside `tokensFolder`,
+ * the shape `build_tokens` takes; `otherFiles` are by path from the project
+ * root. Nothing is written to the caller's machine; the caller saves the files.
  */
 export async function scaffoldDesignSystem(options: ScaffoldOptions, base = todaeTokensDir()) {
   const { name, colors, buttonVariants = [], densities = [] } = options;
   checkName('name', name);
   unique('button variant', buttonVariants);
   unique('density', densities);
-  for (const variant of buttonVariants) checkName('button variant', variant, TODAE_VARIANTS);
-  for (const density of densities) checkName('density', density, TODAE_DENSITIES);
+  const variantsTaken = await todaeContexts(base, 'buttonVariant');
+  const densitiesTaken = await todaeContexts(base, 'density');
+  for (const variant of buttonVariants) checkName('button variant', variant, variantsTaken);
+  for (const density of densities) checkName('density', density, densitiesTaken);
   if (colors) {
     const known = appearanceColorPaths();
-    const light = Object.keys(colors.light).sort();
-    const dark = Object.keys(colors.dark).sort();
+    const light = Object.keys(colors.light);
+    const dark = new Set(Object.keys(colors.dark));
     if (light.length === 0) throw new Error('colors.light and colors.dark need at least one token');
-    if (light.join() !== dark.join()) throw new Error('colors.light and colors.dark must set the same tokens');
+    if (light.length !== dark.size || light.some((path) => !dark.has(path))) {
+      throw new Error('colors.light and colors.dark must set the same tokens');
+    }
     for (const path of light) {
       if (!known.has(path)) throw new Error(`"${path}" is not an appearance color token. Call list_tokens with layer "appearance".`);
     }
   }
 
-  const tokenFiles: ScaffoldFile[] = [];
+  const drafted: ScaffoldFile[] = [];
   const modifiers: Record<string, unknown> = {};
   const order: { $ref: string }[] = [];
 
   if (colors) {
-    tokenFiles.push({ path: 'appearance/light.json', contents: colorFile(colors.light) });
-    tokenFiles.push({ path: 'appearance/dark.json', contents: colorFile(colors.dark) });
+    drafted.push({ path: 'appearance/light.json', contents: colorFile(colors.light) });
+    drafted.push({ path: 'appearance/dark.json', contents: colorFile(colors.dark) });
     modifiers.appearance = {
       contexts: { light: [{ $ref: './appearance/light.json' }], dark: [{ $ref: './appearance/dark.json' }] },
       $extensions: { 'dev.todae': { layer: 'appearance', attribute: 'data-appearance', root: true, colorScheme: true } },
@@ -124,7 +138,7 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
   }
   if (densities.length > 0) {
     const comfortable = await readFile(join(base, 'density', 'comfortable.json'), 'utf8');
-    for (const density of densities) tokenFiles.push({ path: `density/${density}.json`, contents: comfortable });
+    for (const density of densities) drafted.push({ path: `density/${density}.json`, contents: comfortable });
     modifiers.density = {
       contexts: Object.fromEntries(densities.map((density) => [density, [{ $ref: `./density/${density}.json` }]])),
       $extensions: { 'dev.todae': { layer: 'density', rules: ['density-space'], attribute: 'data-density', root: true } },
@@ -136,7 +150,7 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
       button: { secondary: unknown };
     };
     for (const variant of buttonVariants) {
-      tokenFiles.push({ path: `button.${variant}.json`, contents: json({ button: { [variant]: secondary.button.secondary } }) });
+      drafted.push({ path: `button.${variant}.json`, contents: json({ button: { [variant]: secondary.button.secondary } }) });
     }
     modifiers.buttonVariant = {
       contexts: Object.fromEntries(buttonVariants.map((variant) => [variant, [{ $ref: `./button.${variant}.json` }]])),
@@ -153,20 +167,20 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
     modifiers,
     resolutionOrder: order,
   };
-  tokenFiles.unshift({ path: 'resolver.json', contents: json(resolver) });
+  drafted.unshift({ path: 'resolver.json', contents: json(resolver) });
 
-  const build: BuildResult = await buildTokenFiles(
-    Object.fromEntries(tokenFiles.map((file) => [file.path, file.contents])),
-    base,
-  );
+  const tokens = Object.fromEntries(drafted.map((file) => [file.path, file.contents]));
+  const build: BuildResult = await buildTokenFiles(tokens, { base });
 
-  const files: ScaffoldFile[] = tokenFiles.map((file) => ({ path: `tokens/${file.path}`, contents: file.contents }));
+  const otherFiles: ScaffoldFile[] = [];
   if (buttonVariants.length > 0 || densities.length > 0) {
-    files.push({ path: 'src/todae.d.ts', contents: declarations(buttonVariants, densities) });
+    otherFiles.push({ path: 'src/todae.d.ts', contents: declarations(buttonVariants, densities) });
   }
 
   return {
-    files,
+    tokensFolder: 'tokens',
+    tokenFiles: tokens,
+    otherFiles,
     build: build.ok ? { ok: true as const, tokenCount: build.tokenCount } : { ok: false as const, error: build.error },
     command: 'todae-tokens build --resolver ./tokens/resolver.json',
     docsUrl: `${DOCS_ORIGIN}/guides/build-on-todae`,

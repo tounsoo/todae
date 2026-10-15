@@ -46,7 +46,8 @@
       "@omsoo.design/todae/visually-hidden": ["../../packages/design-system/src/server/visually-hidden.ts"],
       "@omsoo.design/todae/todae.css": ["../../packages/design-system/src/styles/todae.css"],
       "@omsoo.design/todae/schema/components.json": ["../../packages/design-system/schema/components.json"],
-      "@omsoo.design/todae/tokens.json": ["../../packages/design-system/tokens/tokens.generated.json"]
+      "@omsoo.design/todae/tokens.json": ["../../packages/design-system/tokens/tokens.generated.json"],
+      "@omsoo.design/todae/tokens-builder": ["../../packages/design-system/scripts/build-tokens.ts"]
     }
   },
   "include": [

@@ -72,14 +72,14 @@ Components:
 
 Tokens:
 
-- `list_tokens`: tokens from Todae's catalog, with their `$type`, layer, context, CSS custom property and CSS value. Filter by a path prefix such as `color.accent`, or by layer.
+- `list_tokens`: tokens from Todae's catalog, with their type, layer, context, CSS custom property and CSS value. Filter by a path prefix such as `color.accent`, or by layer.
 - `get_token`: one token's value in each context, such as `light` and `dark`, and the tokens whose values read it.
-- `get_contrast_pairs`: the APCA pairs a theme must meet, with each pair's minimum Lc and what Todae's base theme measures.
+- `get_contrast_pairs`: Todae's APCA pairs, with each pair's minimum Lc and what Todae's base theme measures. A company token package inherits them, and may change a pair's minimum or add pairs.
 
 Building a design system:
 
-- `build_tokens`: runs `todae-tokens build` on a company token package. Pass the files by path relative to the resolver, with `resolver.json` among them. It returns the theme CSS, the `THEME_OVERRIDE_TYPES` module and the contrast of every pair, or the build's error.
-- `scaffold_design_system`: drafts a company resolver and token files. It takes a `name`, and optionally appearance colors to replace (OKLCH channels for light and dark), new button variants, which start as copies of `secondary`, and new densities, which start as copies of `comfortable`. It also drafts `src/todae.d.ts` declaring the new variant and density names, builds the token files, and returns them with the build's result.
+- `build_tokens`: runs `todae-tokens build` on a company token package. Pass each `.json` file by its path inside the token folder, and name the resolver among them with `resolver` if it isn't `resolver.json`. It returns the theme CSS, the `THEME_OVERRIDE_TYPES` module and the contrast of every pair, or the build's error.
+- `scaffold_design_system`: drafts a company resolver and token files. It takes a `name`, and optionally appearance colors to replace (OKLCH channels for light and dark), new button variants, which start as copies of `secondary`, and new densities, which start as copies of `comfortable`. It returns the token files by path inside a `tokens` folder, in the shape `build_tokens` takes, and `src/todae.d.ts` declaring the new variant and density names, with the result of building the token files.
 - `get_guide`: the source of a docs page about building on Todae: `build-on-todae`, `tokens`, `css-layers`, `composition`, `platform` or `mcp`.
 
 ## Build a design system with an agent
@@ -94,6 +94,6 @@ Then build the files in your project with the `todae-tokens` CLI, and load the C
 
 ## Limits
 
-`build_tokens` and `scaffold_design_system` write the token files to a temporary folder on the server and remove it when the call ends. `build_tokens` takes at most 64 files, 512 KB in all.
+`build_tokens` and `scaffold_design_system` write the token files to a temporary folder on the server and remove it when the call ends. `build_tokens` takes at most 64 files, 512 KB in all as compact JSON, and refuses a resolver that asks for an outsized build, such as one with more than 16 modifiers.
 
 The component and guide tools read the English docs pages, so their copy is in English.

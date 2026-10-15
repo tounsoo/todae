@@ -1,10 +1,13 @@
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
-import { MAX_FILES, baseContrast, buildTokenFiles } from '../../../lib/docs-mcp/build';
+import { MAX_BYTES, MAX_FILES, baseContrast, buildTokenFiles } from '../../../lib/docs-mcp/build';
 import { GUIDE_TOPICS, getGuide } from '../../../lib/docs-mcp/guides';
 import { scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
 import { LAYERS, getToken, listTokens } from '../../../lib/docs-mcp/tokens';
 import { getComponent, listComponents, whenToUse } from '../../../lib/docs-mcp/tools';
+
+// A token build is bounded by the checks in build.ts; this stops a stuck call.
+export const maxDuration = 30;
 
 const name = z.string().trim().min(1).max(80);
 const tokenPath = z.string().trim().min(1).max(120);
@@ -56,7 +59,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'list_tokens',
-      "List Todae's tokens from its token catalog: path, $type, layer, context, CSS custom property and CSS value. Filter by a path prefix such as \"color.accent\" or by layer.",
+      "List Todae's tokens from its token catalog: path, type, layer, context, CSS custom property and CSS value. Filter by a path prefix such as \"color.accent\" or by layer. Returns 200 rows from offset 0 unless limit and offset say otherwise; hasMore says whether more match.",
       {
         prefix: tokenPath.optional(),
         layer: z.enum(LAYERS).optional(),
@@ -85,7 +88,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'get_contrast_pairs',
-      "Todae's APCA contrast pairs, each with its minimum Lc and the Lc Todae's base theme measures in every appearance. A company's tokens must meet the same pairs.",
+      "Todae's APCA contrast pairs, each with its minimum Lc and the Lc Todae's base theme measures in every appearance. A company token package inherits these pairs and may change a pair's minimum or add pairs.",
       async () => {
         try {
           return ok(await baseContrast());
@@ -96,11 +99,11 @@ const handler = createMcpHandler(
     );
     server.tool(
       'build_tokens',
-      `Run todae-tokens build on a company token package layered on Todae's, with the same checks. \`files\` maps paths relative to the resolver (it must include "resolver.json") to each file's JSON, at most ${MAX_FILES} files. Returns the theme CSS, the ThemeProvider override types and contrast results, or the build error. Nothing is stored.`,
-      { files: z.record(z.string().max(200), z.unknown()) },
-      async ({ files }) => {
+      `Run todae-tokens build on a company token package layered on Todae's, with the same checks. \`files\` maps each .json file's path inside the token folder to its JSON, at most ${MAX_FILES} files and ${MAX_BYTES / 1024} KB as compact JSON. \`resolver\` is the resolver's path among them (default "resolver.json"); scaffold_design_system's tokenFiles fit as they are. Returns the theme CSS, the ThemeProvider override types and contrast results, or the build error. Nothing is stored.`,
+      { files: z.record(z.string().max(200), z.unknown()), resolver: z.string().max(200).optional() },
+      async ({ files, resolver }) => {
         try {
-          return ok(await buildTokenFiles(files));
+          return ok(await buildTokenFiles(files, resolver ? { resolver } : {}));
         } catch (error) {
           return fail(error);
         }
@@ -108,7 +111,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'scaffold_design_system',
-      'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants and densities, and TypeScript declarations for them. The files are checked with todae-tokens build and returned for you to save; nothing is written.',
+      'Draft the starter files of a design system on Todae: a company resolver, token files for replaced appearance colors, new button variants (copies of secondary) and densities (copies of comfortable), and TypeScript declarations for them. Returns tokenFiles by path inside tokensFolder ("tokens"), in the shape build_tokens takes, and otherFiles by path from the project root, with the result of building tokenFiles. Save the files yourself; nothing is written to your machine.',
       {
         name: contextName,
         colors: z.object({ light: colorMap, dark: colorMap }).optional(),

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DOCS_ORIGIN } from '../origin';
-import { baseContrast, buildTokenFiles, checkFiles, todaeTokensDir } from './build';
+import { MAX_MODIFIERS, baseContrast, buildTokenFiles, checkFiles, checkResolver, todaeTokensDir } from './build';
 import { GUIDES, GUIDE_TOPICS, getGuide } from './guides';
 import { scaffoldDesignSystem } from './scaffold';
 import { catalogTokens, getToken, listTokens } from './tokens';
@@ -36,6 +36,8 @@ describe('token tools', () => {
     const all = listTokens({ limit: 500 });
     expect(all.total).toBe(catalogTokens().length);
     expect(listTokens({ limit: 10, offset: 5 }).tokens).toEqual(catalogTokens().slice(5, 15));
+    expect(listTokens({ limit: 10 }).hasMore).toBe(true);
+    expect(listTokens({ limit: 500, offset: catalogTokens().length - 1 }).hasMore).toBe(false);
   });
 
   it('gives a token its value per context and the tokens that read it', () => {
@@ -101,8 +103,43 @@ describe('build_tokens', () => {
       expect(() => checkFiles({ ...resolver, [bad]: {} }), bad).toThrow('Invalid file path');
     }
     expect(() => checkFiles({ 'appearance/light.json': {} })).toThrow('resolver.json');
+    expect(() => checkFiles({ ...resolver, 'resolver.json/x.json': {} })).toThrow('both a file and the folder');
     expect(() => checkFiles({ ...resolver, 'big.json': 'x'.repeat(600 * 1024) })).toThrow('at most');
     expect(checkFiles({ ...resolver, 'appearance/light.json': '{}' }).get('appearance/light.json')).toBe('{}');
+    // Objects count as compact JSON, as a client sends them.
+    expect(checkFiles({ ...resolver, 'a.json': { a: { b: 1 } } }).get('a.json')).toBe('{"a":{"b":1}}');
+    expect(() => checkFiles({ 'tokens/resolver.json': {} }, 'tokens/resolver.json')).not.toThrow();
+  });
+
+  it('refuses a resolver that asks for an outsized build, before building', async () => {
+    const scheme = (i: number) => [
+      `s${i}`,
+      {
+        contexts: { light: [{}], dark: [{}] },
+        $extensions: { 'dev.todae': { layer: 'appearance', attribute: `data-s${i}`, colorScheme: true } },
+      },
+    ];
+    const schemes = { modifiers: Object.fromEntries([0, 1, 2, 3, 4].map(scheme)), resolutionOrder: [] };
+    expect(() => checkResolver(JSON.stringify(schemes))).toThrow('combinations');
+    const result = buildTokenFiles({ 'resolver.json': schemes });
+    await expect(result).rejects.toThrow('combinations');
+
+    const many = { modifiers: Object.fromEntries(Array.from({ length: MAX_MODIFIERS + 1 }, (_, i) => [`m${i}`, {}])) };
+    expect(() => checkResolver(JSON.stringify(many))).toThrow('modifiers');
+    const contexts = { modifiers: { m: { contexts: Object.fromEntries(Array.from({ length: 17 }, (_, i) => [`c${i}`, [{}]])) } } };
+    expect(() => checkResolver(JSON.stringify(contexts))).toThrow('contexts');
+    const refs = { sets: { a: { sources: Array.from({ length: 129 }, () => ({ $ref: './a.json' })) } } };
+    expect(() => checkResolver(JSON.stringify(refs))).toThrow('$refs');
+    const pairs = { sets: { a: { $extensions: { 'dev.todae': { contrast: Array.from({ length: 65 }, () => ({})) } } } } };
+    expect(() => checkResolver(JSON.stringify(pairs))).toThrow('contrast pairs');
+    // Todae's acme example is well inside the bounds; invalid JSON is the build's to report.
+    expect(() => checkResolver(JSON.stringify(readTree(ACME)['resolver.json']))).not.toThrow();
+    expect(() => checkResolver('{nope')).not.toThrow();
+  });
+
+  it('builds a resolver that is not at the top level', async () => {
+    const files = Object.fromEntries(Object.entries(readTree(ACME)).map(([path, value]) => [`tokens/${path}`, value]));
+    expect((await buildTokenFiles(files, { resolver: 'tokens/resolver.json' })).ok).toBe(true);
   });
 
   it("finds Todae's tokens folder", () => {
@@ -123,26 +160,24 @@ describe('scaffold_design_system', () => {
       densities: ['roomy'],
     });
     expect(result.build).toEqual({ ok: true, tokenCount: expect.any(Number) });
-    expect(result.files.map((file) => file.path)).toEqual([
-      'tokens/resolver.json',
-      'tokens/appearance/light.json',
-      'tokens/appearance/dark.json',
-      'tokens/density/roomy.json',
-      'tokens/button.outline.json',
-      'tokens/button.soft-tint.json',
-      'src/todae.d.ts',
+    expect(result.tokensFolder).toBe('tokens');
+    expect(Object.keys(result.tokenFiles)).toEqual([
+      'resolver.json',
+      'appearance/light.json',
+      'appearance/dark.json',
+      'density/roomy.json',
+      'button.outline.json',
+      'button.soft-tint.json',
     ]);
-    const dts = result.files.find((file) => file.path === 'src/todae.d.ts')?.contents ?? '';
+    expect(result.otherFiles.map((file) => file.path)).toEqual(['src/todae.d.ts']);
+    const dts = result.otherFiles[0]?.contents ?? '';
     expect(dts).toContain('export {};');
     expect(dts).toContain('    outline: true;');
     expect(dts).toContain("    'soft-tint': true;");
     expect(dts).toContain('    roomy: true;');
 
-    // The returned files build on their own, as todae-tokens build would read them.
-    const tokens = Object.fromEntries(
-      result.files.filter((file) => file.path.startsWith('tokens/')).map((file) => [file.path.slice('tokens/'.length), file.contents]),
-    );
-    expect((await buildTokenFiles(tokens)).ok).toBe(true);
+    // tokenFiles go to build_tokens as they are.
+    expect((await buildTokenFiles(result.tokenFiles)).ok).toBe(true);
   });
 
   it('reports a failing build instead of throwing', async () => {
@@ -155,25 +190,36 @@ describe('scaffold_design_system', () => {
     });
     expect(result.build.ok).toBe(false);
     if (!result.build.ok) expect(result.build.error).toContain('color.on-accent');
-    expect(result.files.some((file) => file.path === 'src/todae.d.ts')).toBe(false);
   });
 
   it('builds an empty starter', async () => {
     const result = await scaffoldDesignSystem({ name: 'blank' });
     expect(result.build.ok).toBe(true);
-    expect(result.files.map((file) => file.path)).toEqual(['tokens/resolver.json']);
+    expect(Object.keys(result.tokenFiles)).toEqual(['resolver.json']);
+    expect(result.otherFiles).toEqual([]);
   });
 
   it('rejects names Todae has, repeats, and tokens that are not appearance colors', async () => {
     await expect(scaffoldDesignSystem({ name: 'Acme' })).rejects.toThrow('Invalid name');
     await expect(scaffoldDesignSystem({ name: 'a', buttonVariants: ['ghost'] })).rejects.toThrow('already has');
     await expect(scaffoldDesignSystem({ name: 'a', densities: ['compact'] })).rejects.toThrow('already has');
+    await expect(scaffoldDesignSystem({ name: 'a', buttonVariants: ['base'] })).rejects.toThrow('reserved');
     await expect(scaffoldDesignSystem({ name: 'a', densities: ['roomy', 'roomy'] })).rejects.toThrow('twice');
     await expect(
       scaffoldDesignSystem({ name: 'a', colors: { light: { 'space.1': [0.5, 0.1, 10] }, dark: { 'space.1': [0.5, 0.1, 10] } } }),
     ).rejects.toThrow('not an appearance color token');
     await expect(
       scaffoldDesignSystem({ name: 'a', colors: { light: { 'color.accent.default': [0.5, 0.1, 10] }, dark: {} } }),
+    ).rejects.toThrow('same tokens');
+    // Keys that would join to the same string still differ.
+    await expect(
+      scaffoldDesignSystem({
+        name: 'a',
+        colors: {
+          light: { 'color.accent.default,color.accent.hover': [0.5, 0.1, 10] },
+          dark: { 'color.accent.default': [0.5, 0.1, 10], 'color.accent.hover': [0.5, 0.1, 10] },
+        },
+      }),
     ).rejects.toThrow('same tokens');
   });
 });
