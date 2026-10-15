@@ -151,6 +151,10 @@ type Template = { regex: RegExp; slots: Slot[]; month?: number };
 type LocaleText = {
   /** The order `formatDate` writes the year, month and day in. */
   order: Part[];
+  /** The order the locale's short date style writes them in, such as day first in "13.10.26" in gsw, whose `formatDate` writes "2026-10-13". */
+  shortOrder: Part[];
+  /** Whether the short date style writes the year in one or two digits. */
+  shortYear: boolean;
   templates: Template[];
   /** The orders the locale writes a month and a day in numbers, without a year. */
   monthDayOrders: Part[][];
@@ -199,10 +203,14 @@ function localeText(locale: string | undefined): LocaleText {
   const templates = templatesFor(locale, TEMPLATE_STYLES, monthNames, anyWeekday, false);
   const monthDayTemplates = templatesFor(locale, [...TEMPLATE_STYLES, ...MONTH_DAY_STYLES], monthNames, anyWeekday, true);
 
-  const order = new Intl.DateTimeFormat(locale, NUMERIC)
-    .formatToParts(sample(10, 13))
-    .map((part) => part.type)
-    .filter((type): type is Part => type === 'year' || type === 'month' || type === 'day');
+  const partsOf = (style: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(locale, { ...style, ...GREGORY })
+      .formatToParts(sample(10, 13))
+      .filter((part): part is Intl.DateTimeFormatPart & { type: Part } => ['year', 'month', 'day'].includes(part.type));
+  const order = partsOf(NUMERIC).map((part) => part.type);
+  const short = partsOf({ dateStyle: 'short' });
+  const shortOrder = short.map((part) => part.type);
+  const shortYear = short.some((part) => part.type === 'year' && part.value.length <= 2);
   const monthDayOrders = [
     order.filter((part) => part !== 'year'),
     new Intl.DateTimeFormat(locale, { month: 'numeric', day: 'numeric', ...GREGORY })
@@ -210,7 +218,7 @@ function localeText(locale: string | undefined): LocaleText {
       .map((part) => part.type)
       .filter((type): type is Part => type === 'month' || type === 'day'),
   ];
-  const text = { order, templates, weekdays, monthDayOrders, monthDayTemplates };
+  const text = { order, shortOrder, shortYear, templates, weekdays, monthDayOrders, monthDayTemplates };
   localeTexts.set(key, text);
   return text;
 }
@@ -247,30 +255,52 @@ function toDate({ year, month, day, weekday }: Fields, weekdays: LocaleText['wee
 
 /**
  * The date in typed text, or `null` when the text is not one. It reads a date
- * in numbers in the order `formatDate` writes them, or as `Intl.DateTimeFormat`
- * writes it in the locale's medium, long or full date style. Letter case does
- * not matter, digits may be in any script, and the parts may be separated by
- * any punctuation, symbols or spaces. The month may be any of its long or
- * short names. A weekday may be long, short or left out, but must be the
- * date's. The style's other words may be replaced by a space. Three numbers
- * that start with a year of four or more digits are read as year, month and
- * day, unless the locale writes the year first in another order. A year of one
- * or two digits is the nearest such year to this one; a year of three digits
- * is not read.
+ * in numbers in the order `formatDate` writes them, or in the order of the
+ * locale's short date style, as `13.10.26` in gsw, whose `formatDate` writes
+ * `2026-10-13`. When both orders read a date, a year of four or more digits
+ * is read in `formatDate`'s order, and a year of one or two digits in the
+ * short style's order when that style writes the year in two digits. It also
+ * reads a date as `Intl.DateTimeFormat` writes it in the locale's medium, long
+ * or full date style. Letter case does not matter, digits may be in any
+ * script, and the parts may be separated by any punctuation, symbols or
+ * spaces. The month may be any of its long or short names. A weekday may be
+ * long, short or left out, but must be the date's. The style's other words
+ * may be replaced by a space. Three numbers that start with a year of four or
+ * more digits are read as year, month and day, unless the locale writes the
+ * year first in another order. A year of one or two digits is the nearest
+ * such year to this one; a year of three digits is not read.
  */
 export function parseDate(text: string, options: DateTextOptions = {}): Temporal.PlainDate | null {
-  const { order, templates, weekdays } = localeText(options.locale);
+  return readDate(text, options)?.date ?? null;
+}
+
+/** The date `parseDate` reads in typed text, and the number it read as the year, as typed. */
+export function readDate(text: string, options: DateTextOptions = {}): { date: Temporal.PlainDate; year: string } | null {
+  const { order, shortOrder, shortYear, templates, weekdays } = localeText(options.locale);
   const input = normalize(text);
   if (!/\p{L}/u.test(input)) {
     const numbers = /^(\d+) (\d+) (\d+)$/.exec(input);
     if (!numbers) return null;
-    const fields: Fields = Object.fromEntries(order.map((part, index) => [part, numbers[index + 1]]));
-    const date = toDate(fields, weekdays);
-    if (date || order[0] === 'year' || numbers[1]!.length < 4) return date;
-    return toDate({ year: numbers[1], month: numbers[2], day: numbers[3] }, weekdays);
+    const readIn = (parts: Part[]) => {
+      const fields: Fields = Object.fromEntries(parts.map((part, index) => [part, numbers[index + 1]]));
+      const date = toDate(fields, weekdays);
+      return date && { date, year: fields.year!, parts };
+    };
+    const readings = [readIn(order), shortOrder.join() === order.join() ? null : readIn(shortOrder)].filter((reading) => reading !== null);
+    // A year in full in formatDate's order first, then one in the short style's, then the order that writes a short year.
+    const shortYearOrder = shortYear ? shortOrder : order;
+    const reading =
+      readings.find((one) => one.year.length > 2 && one.parts === order) ??
+      readings.find((one) => one.year.length > 2) ??
+      readings.find((one) => one.parts === shortYearOrder) ??
+      readings[0];
+    if (reading) return { date: reading.date, year: reading.year };
+    if (order[0] === 'year' || numbers[1]!.length < 4) return null;
+    const date = toDate({ year: numbers[1], month: numbers[2], day: numbers[3] }, weekdays);
+    return date && { date, year: numbers[1]! };
   }
   // Text with words follows one of the locale's date styles, and must read as one date.
-  const found = new Map<string, Temporal.PlainDate>();
+  const found = new Map<string, { date: Temporal.PlainDate; year: string }>();
   for (const template of templates) {
     const match = template.regex.exec(input);
     if (!match) continue;
@@ -280,7 +310,7 @@ export function parseDate(text: string, options: DateTextOptions = {}): Temporal
     });
     if (template.month !== undefined) fields.month = String(template.month);
     const date = toDate(fields, weekdays);
-    if (date) found.set(date.toString(), date);
+    if (date && !found.has(date.toString())) found.set(date.toString(), { date, year: fields.year! });
     if (found.size > 1) return null;
   }
   return found.size === 1 ? found.values().next().value! : null;

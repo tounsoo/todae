@@ -1,6 +1,6 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe date and time text for a text input beside Field.DateTimePicker: no hooks or context.
-import { fold, isMonthDay, parseDate, type DateTextOptions } from './dateText';
+import { fold, isMonthDay, readDate, type DateTextOptions } from './dateText';
 import { parseTime, splitWords } from './timeText';
 
 export type DateTimeTextOptions = DateTextOptions;
@@ -229,30 +229,24 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
     if (numbers.length === 1) return numbers[0]!.length >= 3 || /\p{L}/u.test(timeText);
     return timeNumbers.has(numbers.length);
   };
-  // The date, when its year is written in full, or in its last two digits,
-  // and not a number of one digit, or a day or month with the year's digits.
+  // The date, when its year is written in full or in its last two digits, not in one digit.
   const dated = (dateText: string) => {
-    const date = parseDate(dateText, options);
-    if (!date) return null;
-    const year = String(date.year);
-    const words = dateText.split(' ');
-    if (words.includes(year)) return date;
-    const isYear = (index: number) =>
-      words[index] === year.slice(-2) && parseDate(words.map((word, at) => (at === index ? year : word)).join(' '), options)?.equals(date) === true;
-    return words.some((_, index) => isYear(index)) ? date : null;
+    const read = readDate(dateText, options);
+    if (!read) return null;
+    const year = String(read.date.year);
+    return read.year === year || read.year === year.slice(-2) ? read.date : null;
   };
   // Readings whose time has a mark of the locale's dates, as "21.30" in de,
   // which are read only when the text reads no other way.
   const loose = new Map<string, Temporal.PlainDateTime>();
   // Whether the text may also be a month and a day without a year, as
-  // isMonthDay reads it, and a time, in the order the locale writes them, as
-  // "10/13 12 05 pm" in en-US, which a date with a two-digit year, 2012, would
-  // also read, or "13. 10. 11 05 15" in cs. Where the two meet, the gap may
+  // isMonthDay reads it, and a time, in either order, as "10/13 12 05 pm" in
+  // en-US, which a date with a two-digit year, 2012, would also read,
+  // "13. 10. 11 05 15" in cs, or "11.05.15 13.10" in da, a time and October 13. Where the two meet, the gap may
   // end a month and day as the locale writes them, as "13. 10." in cs but not
   // "10/13/" in en-US, and the time has one gap between its numbers.
   let alsoYearless = false;
-  // Whether the text reads as a date and a time, or such a month and day and
-  // a time, in the order the locale doesn't write them.
+  // Whether the text reads as a date and a time in the order the locale doesn't write them.
   let otherWay = false;
   // isMonthDay for each text once, as each cut asks it of the same halves again.
   const checked = new Map<string, boolean>();
@@ -295,14 +289,9 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
     const tail = list.slice(at);
     const [before, rest] = [render(head), render(tail)];
     for (const strip of [false, true]) {
-      if (yearlessAt(head, trim(before, true, strip), after.gap, tail, trim(rest, strip, true), true)) {
-        if (dateFirst) alsoYearless = true;
-        else otherWay = true;
-      }
-      if (yearlessAt(tail, trim(rest, strip, true), after.gap, head, trim(before, true, strip), false)) {
-        if (timeFirst) alsoYearless = true;
-        else otherWay = true;
-      }
+      alsoYearless ||=
+        yearlessAt(head, trim(before, true, strip), after.gap, tail, trim(rest, strip, true), true) ||
+        yearlessAt(tail, trim(rest, strip, true), after.gap, head, trim(before, true, strip), false);
     }
     if (list[at - 1]!.number && after.number && [...after.gap].some((char) => dateMarks.has(char) || timeMarks.has(char))) continue;
     for (const strip of [false, true]) {

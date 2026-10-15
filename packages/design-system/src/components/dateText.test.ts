@@ -144,6 +144,35 @@ describe('parseDate', () => {
     expect(read('2026-10-13', 'ky')).toBeNull();
   });
 
+  it('reads a two-digit year in the order of the locale’s short date style', () => {
+    // formatDate writes 2026-10-13 in gsw, and its short style 13.10.26.
+    expect(read('13.10.26', 'gsw')).toBe('2026-10-13');
+    expect(read('2026-10-13', 'gsw')).toBe('2026-10-13');
+    expect(read('10/13/26', 'zu')).toBe('2026-10-13');
+    expect(read('13/10/26', 'ha')).toBe('2026-10-13');
+    // formatDate writes 10/13/2026 in so, and its short style 13/10/26.
+    expect(read('06/05/26', 'so')).toBe('2026-05-06');
+    expect(read('06/05/2026', 'so')).toBe('2026-06-05');
+    // mt's short style writes 13/10/2026: a year in full is read in formatDate's
+    // order when both orders read a date, and in the short style's when only it does.
+    expect(read('06/05/2026', 'mt')).toBe('2026-06-05');
+    expect(read('13/10/2026', 'mt')).toBe('2026-10-13');
+  });
+
+  it('reads the short date style of every locale that writes a two-digit year in it', () => {
+    let checked = 0;
+    for (const locale of Intl.DateTimeFormat.supportedLocalesOf(LOCALES.concat(['gsw', 'zu', 'ha', 'sat', 'ak', 'fur', 'os']))) {
+      const year = parts(locale, date('2026-10-13'), { dateStyle: 'short' }).find((part) => part.type === 'year');
+      if (!year || year.value.length > 2 || !/^\p{Nd}+$/u.test(year.value)) continue;
+      checked++;
+      for (const day of DATES) {
+        const text = join(parts(locale, day, { dateStyle: 'short' }));
+        expect(read(text, locale), `${locale} ${text}`).toBe(day.toString());
+      }
+    }
+    expect(checked).toBeGreaterThan(20);
+  });
+
   it('reads a year written first as year, month and day, as ISO does', () => {
     expect(read('2026-10-13', 'en-US')).toBe('2026-10-13');
     expect(read('2026/10/13', 'de')).toBe('2026-10-13');

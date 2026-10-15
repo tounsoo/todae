@@ -213,6 +213,10 @@ describe('parseDateTime', () => {
     // "/" doesn't end a date in en-US, so 12 is not the hour of "10/13".
     expect(read('10/13/12 05 pm', 'en-US')).toBe('2012-10-13T17:00:00');
     expect(read('10/13/12 09 05', 'en-US')).toBe('2012-10-13T09:05:00');
+    // In the order of the locale's short date style, where formatDate writes 2026-10-13.
+    expect(read('13.10.26 21:30', 'gsw')).toBe('2026-10-13T21:30:00');
+    expect(read('13 10 26 21 30', 'gsw')).toBe('2026-10-13T21:30:00');
+    expect(read('10/13/26 21:30', 'zu')).toBe('2026-10-13T21:30:00');
   });
 
   it('does not read a two-digit year that may be the hour of a date without a year, nor a year of one digit', () => {
@@ -238,6 +242,10 @@ describe('parseDateTime', () => {
     expect(read('05 06 07 04.03.09', 'de')).toBeNull();
     expect(read('05 06 07 04/03/09', 'agq')).toBeNull();
     expect(read('13.10. 21.30', 'de')).toBeNull();
+    // Also 11:05:15 on October 13, a time typed before a date without a year, though da and fi write the date first.
+    expect(read('11.05.15 13.10', 'da')).toBeNull();
+    expect(read('11.05.15 13.10.', 'fi')).toBeNull();
+    expect(read('11 05 15 13 10', 'hr')).toBeNull();
     expect(read('10/13/12 9:05', 'en-US')).toBe('2012-10-13T09:05:00');
   });
 
