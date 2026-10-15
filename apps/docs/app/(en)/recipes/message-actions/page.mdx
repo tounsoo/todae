@@ -33,13 +33,12 @@ export function CopyButton({ text }: { text: string }) {
 
 ## Regenerate and rate
 
-Regenerate is a plain button that cancels any reply in flight, asks your backend for a new one and sets `streaming` on the message until it arrives. Keep the toolbar in place while the reply streams and show Loader's `dots` beside it, so a button that has focus keeps it. A rating is a single-choice [ToggleGroup](/toggle-group): pressing the chosen rating again clears it, and `onValueChange` gets `null`. Each icon-only button shows its name as a tooltip.
+Regenerate is a plain button that cancels any reply in flight, asks your backend for a new one and sets `streaming` on the message until it arrives. Keep the toolbar in place while the reply streams and show Loader's `dots` after it, so a button that has focus keeps it and no button moves under the pointer. A rating is a single-choice [ToggleGroup](/toggle-group): pressing the chosen rating again clears it, and `onValueChange` gets `null`. Each icon-only button shows its name as a tooltip.
 
 ```tsx
 <Message.Root streaming={streaming} aria-label="Assistant">
   <Message.Content>…</Message.Content>
   <Message.Actions>
-    {streaming && <Loader.Root variant="dots" aria-label="Writing" />}
     <Toolbar.Root aria-label="Reply">
       <CopyButton text={reply.markdown} />
       <Button.Root variant="ghost" aria-label="Regenerate" onClick={regenerate}>
@@ -60,6 +59,7 @@ Regenerate is a plain button that cancels any reply in flight, asks your backend
         </ToggleGroup.Item>
       </ToggleGroup.Root>
     </Toolbar.Root>
+    {streaming && <Loader.Root variant="dots" aria-label="Writing" />}
   </Message.Actions>
 </Message.Root>
 ```

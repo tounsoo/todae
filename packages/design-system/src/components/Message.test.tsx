@@ -74,6 +74,18 @@ describe('Message', () => {
     expect(screen.getByTestId('own').getAttribute('datetime')).toBe('2026-10-14T12:41:30Z');
   });
 
+  it('writes the same instant in each value\'s own zone', () => {
+    const sent = Temporal.ZonedDateTime.from('2026-10-14T09:41:00+09:00[Asia/Seoul]');
+    render(
+      <>
+        <Message.Time data-testid="seoul" value={sent} locale="en-GB" />
+        <Message.Time data-testid="utc" value={sent.withTimeZone('UTC')} locale="en-GB" />
+      </>,
+    );
+    expect(screen.getByTestId('seoul').textContent).toBe('09:41');
+    expect(screen.getByTestId('utc').textContent).toBe('00:41');
+  });
+
   it('writes a date in another calendar in the Gregorian calendar', () => {
     const sent = Temporal.ZonedDateTime.from('2026-10-14T09:41:00+09:00[Asia/Tokyo][u-ca=japanese]');
     render(

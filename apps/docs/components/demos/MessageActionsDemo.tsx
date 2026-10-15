@@ -49,12 +49,13 @@ export function MessageActionsExample() {
   useEffect(() => () => clearTimeout(timer.current), []);
 
   // Stands in for the product's request for a new reply. A new request cancels
-  // the one in flight, so an earlier reply can't land after it.
+  // the one in flight, so an earlier reply can't land after it. The old reply
+  // and its rating stay until the new one arrives, so the toolbar acts on what is shown.
   const regenerate = () => {
     clearTimeout(timer.current);
-    setRating(null);
     setStreaming(true);
     timer.current = setTimeout(() => {
+      setRating(null);
       setReply((index) => (index === 0 ? 1 : 0));
       setStreaming(false);
     }, 1500);
@@ -134,11 +135,10 @@ export function MessageActionsExample() {
         </Message.Header>
         <Message.Content>
           <Prose.Root>
-            <p>{streaming ? '' : REPLIES[reply]}</p>
+            <p>{REPLIES[reply]}</p>
           </Prose.Root>
         </Message.Content>
         <Message.Actions>
-          {streaming && <Loader.Root variant="dots" aria-label="Writing" />}
           {/* The toolbar stays while a reply streams, so a focused button keeps focus. */}
           <Toolbar.Root aria-label="Reply">
             <CopyButton text={REPLIES[reply]} />
@@ -160,6 +160,7 @@ export function MessageActionsExample() {
               </ToggleGroup.Item>
             </ToggleGroup.Root>
           </Toolbar.Root>
+          {streaming && <Loader.Root variant="dots" aria-label="Writing" />}
         </Message.Actions>
       </Message.Root>
     </Stack.Root>
