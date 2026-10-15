@@ -1,0 +1,85 @@
+import { NavApp } from '../../../components/demos/NavDemo';
+
+# Nav
+
+A site's or app's navigation, such as a sidebar. `Nav.Root` is a `nav` landmark. Each `Nav.Group` is a list, named by its `label` when it has one, and each `Nav.Item` is a list item holding a `Nav.Link`. A `Nav.Branch` is a native `<details>` whose toggle opens a nested list of items.
+
+```tsx
+<Nav.Root aria-label="Docs">
+  <Nav.Group label="Components">
+    <Nav.Item>
+      <Nav.Link href="/button">Button</Nav.Link>
+    </Nav.Item>
+    <Nav.Item>
+      <Nav.Link href="/field" aria-current="page">
+        Field
+      </Nav.Link>
+      <Nav.Branch label="Field pages" open>
+        <Nav.Item>
+          <Nav.Link href="/field/select">Select</Nav.Link>
+        </Nav.Item>
+      </Nav.Branch>
+    </Nav.Item>
+  </Nav.Group>
+</Nav.Root>
+```
+
+<Example>
+  <NavApp />
+</Example>
+
+Each link and each branch toggle is its own Tab stop. Nav has no arrow keys and no selection, so it is not a [Tree](/tree).
+
+## Current page
+
+Mark the link to the page you are on with `aria-current="page"`. Any value other than empty or `false` draws the link as the current row, from the `nav.item.bg.current`, `nav.item.fg.current` and `nav.item.font.current-weight` tokens. Your router sets the attribute.
+
+`Nav.Link` takes `render` the way [Link](/link) does, so a router's link renders the row with every prop it would have put on the `<a>`, its class included:
+
+```tsx
+import NextLink from 'next/link';
+
+<Nav.Link
+  href="/billing"
+  aria-current={pathname === '/billing' ? 'page' : undefined}
+  render={({ href, ...props }) => (href ? <NextLink href={href} {...props} /> : <a {...props} />)}
+>
+  Billing
+</Nav.Link>
+```
+
+An icon before the link text takes the `nav.icon.size` token.
+
+## Branches
+
+A `Nav.Branch` after a `Nav.Link` in the same item holds that page's child pages. The link keeps its row, and the toggle is a chevron at the end of the row, so its `label` is visually hidden and only names it. Name the child pages, such as "Field pages", not the link's own text. A `Nav.Branch` on its own in an item shows its `label` as the toggle's text, for a group of pages with no page of its own.
+
+The branch is a native `<details>`. `open` sets whether it is open when it renders and whenever the prop changes: `true` opens it, such as when navigation moves into the branch, and `false` closes it. In between, the user opens and closes it; follow that with `onToggle`. The nested list is indented by `nav.indent` under a rule drawn from `nav.rule.color` and `nav.rule.width`.
+
+The chevron is a glyph: set `chevron` in [GlyphsProvider](/utilities/glyphs-provider) to draw it with your icon library. Draw it pointing down; a closed branch turns it toward the end of its row.
+
+## Accessible composition
+
+**Todae handles:** A `nav` landmark. Each group is a `ul role="list"` named through `aria-labelledby` by its label, and each item a list item. A branch is a `<details>` whose `<summary>` the browser exposes as a button with its expanded state, named by `label`. After a link, the label is visually hidden but still names the toggle. The chevron is `aria-hidden`. Focus rings are drawn inside the row, so a scroll container that clips the row's sides keeps them whole.
+
+**You supply:** A name for the landmark through `aria-label` or `aria-labelledby` when the page has more than one `nav`. `aria-current="page"` on the link to the page you are on. A `label` on every branch. After a link, a label that says what the toggle shows, such as "Field pages".
+
+**Watch for:** A current page marked by style alone, without `aria-current`. A branch label that repeats the link's text: a screen reader then reads two controls with one name. Controls other than links and branches inside a nav, such as a search field, which belong outside the list.
+
+## When to use
+
+**When:** Navigation between the pages of a site or app, in a sidebar, a drawer or a menu panel, with groups and a level or two of child pages.
+
+**When not:** The trail above the current page → [Breadcrumbs](/breadcrumbs). Sections of one page → Tabs. Browsing a hierarchy people open level by level, such as files → [Tree](/tree). A list of actions → Menu.
+
+## Props
+
+<PropsTable name="Nav.Root" />
+
+<PropsTable name="Nav.Group" />
+
+<PropsTable name="Nav.Item" />
+
+<PropsTable name="Nav.Link" />
+
+<PropsTable name="Nav.Branch" />

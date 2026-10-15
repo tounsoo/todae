@@ -35,6 +35,7 @@ import {
   Link,
   Menu,
   Meter,
+  Nav,
   OptionList,
   Pagination,
   Popover,
@@ -94,6 +95,15 @@ function TooltipCase({ p }: { p: Native }) {
 
 const cases: Case[] = [
   ['Link.Root', (p) => <Link.Root {...p} href="/a">a</Link.Root>],
+  ['Nav.Root', (p) => <Nav.Root {...p} aria-label="n" />],
+  ['Nav.Group', (p) => <Nav.Group {...p} label="g" />],
+  ['Nav.Item', (p) => <ul><Nav.Item {...p}>i</Nav.Item></ul>],
+  ['Nav.Link', (p) => <Nav.Link {...p} href="/a">a</Nav.Link>],
+  [
+    'Nav.Link render',
+    (p) => <Nav.Link {...p} href="/a" render={(props) => <a {...props} />}>a</Nav.Link>,
+  ],
+  ['Nav.Branch', (p) => <Nav.Branch {...p} label="b" />],
   ['Disclosure.Root', (p) => <Disclosure.Root {...p}><summary>s</summary>c</Disclosure.Root>],
   ['Disclosure.Summary', (p) => <details><Disclosure.Summary {...p}>s</Disclosure.Summary></details>],
   ['Separator.Root', (p) => <Separator.Root {...p} />],

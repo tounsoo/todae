@@ -249,7 +249,7 @@ describe('build-tokens validations', () => {
     expect(() => serializeValue({ $type: 'dimension', $value: '{Space.2}' }, 'x')).toThrow(/curly-brace alias/);
   });
 
-  it('serializes motion, font family and shadow types', () => {
+  it('serializes motion, font family, shadow and text transform types', () => {
     const v = ($type: string, $value: unknown) => serializeValue({ $type, $value }, 'x').cssValue;
     expect(v('duration', { value: 200, unit: 'ms' })).toBe('200ms');
     expect(v('duration', { value: 0.3, unit: 's' })).toBe('0.3s');
@@ -263,6 +263,9 @@ describe('build-tokens validations', () => {
     expect(v('fontFamily', ['Inter Variable', 'system-ui', 'sans-serif'])).toBe('"Inter Variable", system-ui, sans-serif');
     expect(() => v('fontFamily', 'Inter"; color: red')).toThrow(/fontFamily names may only use/);
     expect(() => v('fontFamily', [])).toThrow(/at least one family/);
+    expect(v('textTransform', 'uppercase')).toBe('uppercase');
+    expect(() => v('textTransform', 'small-caps')).toThrow(/textTransform must be one of none, uppercase/);
+    expect(() => v('textTransform', 'none; color: red')).toThrow(/textTransform must be one of/);
     const layer = {
       color: { colorSpace: 'oklch', components: [0, 0, 0], alpha: 0.2 },
       offsetX: { value: 0, unit: 'px' },
@@ -591,7 +594,10 @@ describe('resolver-driven build', () => {
             base: {
               radius: px(4),
               padding: { x: px(12), y: px(6) },
-              font: { size: px(14), weight: { $type: 'fontWeight', $value: 500 } },
+              font: { size: px(14), weight: { $type: 'fontWeight', $value: 500 },
+                'letter-spacing': px(0),
+                'text-transform': { $type: 'textTransform', $value: 'none' },
+              },
               gap: px(8),
               icon: { size: px(16) },
             },
@@ -848,7 +854,7 @@ describe('resolver-driven build', () => {
     const root = await fixture((resolver) => {
       (resolver.sets.contract!.sources as unknown[]).push({ $ref: './components/button.base.json' });
     });
-    await expect(buildTokensGraph(root)).rejects.toThrow(/token "button\.base\.[a-z.]+" is declared by both set "button" and set "contract"/);
+    await expect(buildTokensGraph(root)).rejects.toThrow(/token "button\.base\.[a-z.-]+" is declared by both set "button" and set "contract"/);
   });
 
   it('rejects malformed resolver entries', async () => {
@@ -1061,16 +1067,16 @@ describe('company token build', () => {
       for (const paint of ['primary', 'secondary', 'ghost', 'outline']) {
         r.modifiers.buttonVariant.contexts[paint] = [
           ...(r.modifiers.buttonVariant.contexts[paint] ?? []),
-          { button: { [paint]: { shadow: px(2) } } },
+          { button: { [paint]: { lift: px(2) } } },
         ];
       }
     });
     const { css } = await buildCompanyTokens({ resolver, base: tokensDir });
     const rescoped = blockOf(css, '[data-appearance],\n[data-density]');
-    expect(rescoped).toContain('--todae-button-shadow: var(--todae-button-primary-shadow);');
+    expect(rescoped).toContain('--todae-button-lift: var(--todae-button-primary-lift);');
     expect(rescoped).not.toContain('--todae-button-bg-default:');
     expect(blockOf(css, '[data-button-variant="secondary"]')).toBe(
-      '[data-button-variant="secondary"] {\n  --todae-button-shadow: var(--todae-button-secondary-shadow);',
+      '[data-button-variant="secondary"] {\n  --todae-button-lift: var(--todae-button-secondary-lift);',
     );
   });
 
@@ -1157,8 +1163,8 @@ describe('company token build', () => {
     });
     const error = await buildCompanyTokens({ resolver: own, base: tokensDir }).catch((e: Error) => e.message);
     expect(error).toMatch(/^contrast: 2 pair\(s\) fail APCA/);
-    expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "light" is Lc 100.2, below 105');
-    expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "dark" is Lc 102.0, below 105');
+    expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "light" is Lc 102.1, below 105');
+    expect(error).toContain('"brand.ink" on "color.bg.canvas" in appearance "dark" is Lc 104.4, below 105');
   });
 
   it('composites a translucent text color and rejects a translucent background', async () => {
@@ -1170,8 +1176,8 @@ describe('company token build', () => {
         });
         r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'brand.veil', bg: 'color.bg.canvas', min }];
       });
-    // fg.default at 60% over the canvas is well above Lc 45 in both appearances, but below its opaque Lc 100.
-    await expect(buildCompanyTokens({ resolver: await veil(0.6, 45), base: tokensDir })).resolves.toBeDefined();
+    // fg.default at 60% over the canvas is above Lc 40 in both appearances, but below its opaque Lc 100.
+    await expect(buildCompanyTokens({ resolver: await veil(0.6, 40), base: tokensDir })).resolves.toBeDefined();
     await expect(buildCompanyTokens({ resolver: await veil(0.6, 90), base: tokensDir })).rejects.toThrow(
       /"brand\.veil" on "color\.bg\.canvas" in appearance "light" is Lc \d+\.\d, below 90/,
     );
@@ -1187,7 +1193,7 @@ describe('company token build', () => {
     });
     const darkError = await buildCompanyTokens({ resolver: darkOnly, base: tokensDir }).catch((e: Error) => e.message);
     expect(darkError).toMatch(/^contrast: 1 pair\(s\) fail APCA/);
-    expect(darkError).toMatch(/"color\.red\.400" on "color\.bg\.canvas" in appearance "dark" is Lc 43\.0, below 50/);
+    expect(darkError).toMatch(/"color\.red\.400" on "color\.bg\.canvas" in appearance "dark" is Lc 44\.3, below 50/);
     const scrim = await company((r) => {
       r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'color.fg.default', bg: 'color.bg.scrim', min: 1 }];
     });
@@ -1293,7 +1299,7 @@ describe('company token build', () => {
           };
           r.resolutionOrder.push({ $ref: '#/sets/button' });
         },
-        /button\.base must be radius, padding\.x\/y, font\.size\/weight, gap/,
+        /button\.base must be radius, padding\.x\/y, font\.size\/weight\/letter-spacing\/text-transform, gap/,
       ],
       [
         (r) => {

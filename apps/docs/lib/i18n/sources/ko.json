@@ -53,7 +53,7 @@
     "# Breadcrumbs": "41ae9574cfc6",
     "## Icons": "63b80d081538",
     "## Accessible composition": "a95e5f5f8c8d",
-    "## When to use": "b97e96f2e859",
+    "## When to use": "f29e8862cbe5",
     "## Props": "f3d2b7ce64e4",
     "(section order)": "c4f257cb60ff"
   },
@@ -345,7 +345,7 @@
     "## Token layers": "4b9cc0e80a6c",
     "## A company resolver": "871ad5179923",
     "## Overrides: CSS or ThemeProvider": "f3c47c9be9f3",
-    "## Adding a variant or a density": "e5bc0cabac85",
+    "## Adding a variant or a density": "6a2f6e98c97b",
     "## Wrapping a component": "37193cebd631",
     "(section order)": "280102156fc8"
   },
@@ -409,6 +409,16 @@
     "## When to use": "6bef71b8e38f",
     "## Props": "ba3cc8b148e9",
     "(section order)": "14fb55a9fab4"
+  },
+  "nav": {
+    "(top)": "2dd08ab95847",
+    "# Nav": "b41508e86040",
+    "## Current page": "4db24a1d9192",
+    "## Branches": "c9ce14dec24c",
+    "## Accessible composition": "0b3bb78c8bfa",
+    "## When to use": "574a226bd17e",
+    "## Props": "7bf17a447639",
+    "(section order)": "aa315b686964"
   },
   "optionlist": {
     "(top)": "fc5bc6e35f0e",
@@ -611,11 +621,12 @@
     "### DensityProvider": "b60121bd3031",
     "## Contrast": "e3223e4198e2",
     "## References and opacity": "dbea45e0372e",
+    "## Letter case": "beaf90851101",
     "## Status tones": "9db538465fa4",
     "## Category tones": "66f99d412c6c",
     "## Focus ring": "d4f6cb5c0687",
     "## Catalog": "fbadfcf96811",
-    "(section order)": "1a0509b1ade0"
+    "(section order)": "b9b2c2639be4"
   },
   "toolbar": {
     "(top)": "65f7c00fa816",
@@ -640,14 +651,14 @@
     "(top)": "3fd9d6322503",
     "# Tree": "4913f92884d2",
     "## Accessible composition": "8d4dd5abadf4",
-    "## When to use": "ecbda7d963ff",
+    "## When to use": "88bfa9517cad",
     "## Props": "5dc9e1f0ecff",
     "(section order)": "a507fd436fd2"
   },
   "utilities/glyphs-provider": {
     "(top)": "1c3901bdb02e",
     "# GlyphsProvider": "d545d6d246f4",
-    "## Glyphs": "eb138d27d9f4",
+    "## Glyphs": "114d6b19a0ae",
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "58a152b85e04",
     "## Props": "9169ca6f0856",

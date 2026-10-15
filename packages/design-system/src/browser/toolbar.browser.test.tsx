@@ -62,8 +62,9 @@ describe('Toolbar in a browser', () => {
       </main>,
     );
     expect(screen.getByTestId('sep').getBoundingClientRect().width).toBeGreaterThan(0);
-    expect(getComputedStyle(button('Bold')).boxShadow).not.toBe('none');
-    expect(getComputedStyle(button('Italic')).boxShadow).toBe('none');
+    // The pressed ring is an inset shadow; an unpressed button keeps only button.shadow.
+    expect(getComputedStyle(button('Bold')).boxShadow).toContain('inset');
+    expect(getComputedStyle(button('Italic')).boxShadow).not.toContain('inset');
   });
 
   it('gives a text input inside its own Tab stop, both ways', async () => {

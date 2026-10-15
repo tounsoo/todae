@@ -11,17 +11,19 @@
   --todae-color-blue-300: oklch(0.82 0.095 245);
   --todae-color-blue-700: oklch(0.42 0.105 245);
   --todae-color-blue-900: oklch(0.25 0.05 245);
-  --todae-color-gray-50: oklch(0.98 0.005 260);
-  --todae-color-gray-100: oklch(0.93 0.007 260);
-  --todae-color-gray-200: oklch(0.87 0.009 260);
-  --todae-color-gray-300: oklch(0.78 0.012 260);
-  --todae-color-gray-400: oklch(0.68 0.014 260);
-  --todae-color-gray-500: oklch(0.55 0.016 260);
-  --todae-color-gray-600: oklch(0.45 0.018 260);
-  --todae-color-gray-700: oklch(0.36 0.019 260);
-  --todae-color-gray-800: oklch(0.28 0.02 260);
-  --todae-color-gray-900: oklch(0.22 0.02 260);
-  --todae-color-gray-950: oklch(0.16 0.02 260);
+  --todae-color-gray-0: oklch(1 0 0);
+  --todae-color-gray-50: oklch(0.985 0.004 255);
+  --todae-color-gray-100: oklch(0.955 0.006 255);
+  --todae-color-gray-200: oklch(0.9 0.008 255);
+  --todae-color-gray-300: oklch(0.82 0.01 255);
+  --todae-color-gray-400: oklch(0.78 0.011 255);
+  --todae-color-gray-500: oklch(0.6 0.012 255);
+  --todae-color-gray-600: oklch(0.48 0.012 255);
+  --todae-color-gray-700: oklch(0.36 0.011 255);
+  --todae-color-gray-800: oklch(0.28 0.01 255);
+  --todae-color-gray-850: oklch(0.235 0.009 255);
+  --todae-color-gray-900: oklch(0.19 0.008 255);
+  --todae-color-gray-950: oklch(0.145 0.007 255);
   --todae-color-green-100: oklch(0.95 0.04 150);
   --todae-color-green-200: oklch(0.88 0.08 150);
   --todae-color-green-300: oklch(0.82 0.11 150);
@@ -59,13 +61,15 @@
   --todae-font-family-sans: ui-sans-serif, system-ui, "Segoe UI", "Roboto", sans-serif;
   --todae-font-leading-default: 1.5;
   --todae-font-leading-tight: 1.25;
+  --todae-font-letter-spacing-default: 0rem;
   --todae-font-size-1: 0.75rem;
   --todae-font-size-2: 0.875rem;
   --todae-font-size-3: 1rem;
   --todae-font-size-4: 1.25rem;
   --todae-font-size-5: 1.5rem;
   --todae-font-size-6: 1.875rem;
-  --todae-font-weight-bold: 700;
+  --todae-font-text-transform-default: none;
+  --todae-font-weight-bold: 600;
   --todae-font-weight-medium: 500;
   --todae-font-weight-regular: 400;
   --todae-motion-duration-fast: 160ms;
@@ -84,9 +88,10 @@
   --todae-opacity-45: 0.45;
   --todae-opacity-70: 0.7;
   --todae-radius-full: 9999px;
-  --todae-radius-lg: 0.75rem;
-  --todae-radius-md: 0.5rem;
-  --todae-radius-sm: 0.25rem;
+  --todae-radius-lg: 0.5rem;
+  --todae-radius-md: 0.3125rem;
+  --todae-radius-sm: 0.125rem;
+  --todae-shadow-none: 0px 0px 0px 0px oklch(0 0 0 / 0);
   --todae-space-1: 0.25rem;
   --todae-space-2: 0.5rem;
   --todae-space-3: 0.75rem;
@@ -109,16 +114,16 @@
   --todae-color-accent-soft: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-12));
   --todae-color-accent-soft-strong: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-28));
   --todae-color-bg-canvas: var(--todae-color-gray-50);
-  --todae-color-bg-elevated: var(--todae-color-gray-50);
+  --todae-color-bg-elevated: var(--todae-color-gray-0);
   --todae-color-bg-highlight: oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-8));
   --todae-color-bg-pressed: oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-14));
   --todae-color-bg-scrim: oklch(from var(--todae-color-gray-950) l c h / var(--todae-opacity-45));
   --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20));
   --todae-color-bg-subtle: var(--todae-color-gray-100);
-  --todae-color-bg-surface: var(--todae-color-gray-50);
-  --todae-color-bg-transparent: oklch(from var(--todae-color-gray-50) l c h / 0);
-  --todae-color-border-default: var(--todae-color-gray-900);
-  --todae-color-border-subtle: var(--todae-color-gray-300);
+  --todae-color-bg-surface: var(--todae-color-gray-0);
+  --todae-color-bg-transparent: oklch(from var(--todae-color-gray-0) l c h / 0);
+  --todae-color-border-default: var(--todae-color-gray-500);
+  --todae-color-border-subtle: var(--todae-color-gray-200);
   --todae-color-category-1-bg: var(--todae-color-red-100);
   --todae-color-category-1-border: var(--todae-color-red-300);
   --todae-color-category-1-fg: var(--todae-color-red-700);
@@ -147,7 +152,7 @@
   --todae-color-fg-default: var(--todae-color-gray-900);
   --todae-color-fg-muted: var(--todae-color-gray-600);
   --todae-color-fg-placeholder: var(--todae-color-gray-500);
-  --todae-color-on-accent: var(--todae-color-gray-50);
+  --todae-color-on-accent: var(--todae-color-gray-0);
   --todae-color-status-critical-bg: var(--todae-color-red-100);
   --todae-color-status-critical-border: var(--todae-color-red-300);
   --todae-color-status-critical-fg: var(--todae-color-red-700);
@@ -171,16 +176,16 @@
     --todae-color-accent-soft: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-12));
     --todae-color-accent-soft-strong: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-28));
     --todae-color-bg-canvas: var(--todae-color-gray-50);
-    --todae-color-bg-elevated: var(--todae-color-gray-50);
+    --todae-color-bg-elevated: var(--todae-color-gray-0);
     --todae-color-bg-highlight: oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-8));
     --todae-color-bg-pressed: oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-14));
     --todae-color-bg-scrim: oklch(from var(--todae-color-gray-950) l c h / var(--todae-opacity-45));
     --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20));
     --todae-color-bg-subtle: var(--todae-color-gray-100);
-    --todae-color-bg-surface: var(--todae-color-gray-50);
-    --todae-color-bg-transparent: oklch(from var(--todae-color-gray-50) l c h / 0);
-    --todae-color-border-default: var(--todae-color-gray-900);
-    --todae-color-border-subtle: var(--todae-color-gray-300);
+    --todae-color-bg-surface: var(--todae-color-gray-0);
+    --todae-color-bg-transparent: oklch(from var(--todae-color-gray-0) l c h / 0);
+    --todae-color-border-default: var(--todae-color-gray-500);
+    --todae-color-border-subtle: var(--todae-color-gray-200);
     --todae-color-category-1-bg: var(--todae-color-red-100);
     --todae-color-category-1-border: var(--todae-color-red-300);
     --todae-color-category-1-fg: var(--todae-color-red-700);
@@ -209,7 +214,7 @@
     --todae-color-fg-default: var(--todae-color-gray-900);
     --todae-color-fg-muted: var(--todae-color-gray-600);
     --todae-color-fg-placeholder: var(--todae-color-gray-500);
-    --todae-color-on-accent: var(--todae-color-gray-50);
+    --todae-color-on-accent: var(--todae-color-gray-0);
     --todae-color-status-critical-bg: var(--todae-color-red-100);
     --todae-color-status-critical-border: var(--todae-color-red-300);
     --todae-color-status-critical-fg: var(--todae-color-red-700);
@@ -227,22 +232,22 @@
 }
 
 [data-appearance="dark"] {
-  --todae-color-accent-active: var(--todae-color-gray-200);
-  --todae-color-accent-default: var(--todae-color-gray-50);
-  --todae-color-accent-hover: var(--todae-color-gray-100);
+  --todae-color-accent-active: var(--todae-color-gray-300);
+  --todae-color-accent-default: var(--todae-color-gray-100);
+  --todae-color-accent-hover: var(--todae-color-gray-200);
   --todae-color-accent-soft: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-12));
   --todae-color-accent-soft-strong: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-28));
-  --todae-color-bg-canvas: var(--todae-color-gray-900);
-  --todae-color-bg-elevated: var(--todae-color-gray-800);
+  --todae-color-bg-canvas: var(--todae-color-gray-950);
+  --todae-color-bg-elevated: var(--todae-color-gray-850);
   --todae-color-bg-highlight: oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-10));
   --todae-color-bg-pressed: oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-16));
   --todae-color-bg-scrim: oklch(from var(--todae-color-gray-950) l c h / var(--todae-opacity-70));
   --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20));
-  --todae-color-bg-subtle: var(--todae-color-gray-800);
+  --todae-color-bg-subtle: var(--todae-color-gray-850);
   --todae-color-bg-surface: var(--todae-color-gray-900);
   --todae-color-bg-transparent: oklch(from var(--todae-color-gray-900) l c h / 0);
-  --todae-color-border-default: var(--todae-color-gray-50);
-  --todae-color-border-subtle: var(--todae-color-gray-700);
+  --todae-color-border-default: var(--todae-color-gray-500);
+  --todae-color-border-subtle: var(--todae-color-gray-800);
   --todae-color-category-1-bg: var(--todae-color-red-900);
   --todae-color-category-1-border: var(--todae-color-red-700);
   --todae-color-category-1-fg: var(--todae-color-red-200);
@@ -268,9 +273,9 @@
   --todae-color-category-8-border: var(--todae-color-pink-700);
   --todae-color-category-8-fg: var(--todae-color-pink-200);
   --todae-color-danger-default: var(--todae-color-red-300);
-  --todae-color-fg-default: var(--todae-color-gray-50);
-  --todae-color-fg-muted: var(--todae-color-gray-200);
-  --todae-color-fg-placeholder: var(--todae-color-gray-300);
+  --todae-color-fg-default: var(--todae-color-gray-100);
+  --todae-color-fg-muted: var(--todae-color-gray-300);
+  --todae-color-fg-placeholder: var(--todae-color-gray-400);
   --todae-color-on-accent: var(--todae-color-gray-950);
   --todae-color-status-critical-bg: var(--todae-color-red-900);
   --todae-color-status-critical-border: var(--todae-color-red-700);
@@ -289,22 +294,22 @@
 
 @media (prefers-color-scheme: dark) {
   [data-appearance="system"] {
-    --todae-color-accent-active: var(--todae-color-gray-200);
-    --todae-color-accent-default: var(--todae-color-gray-50);
-    --todae-color-accent-hover: var(--todae-color-gray-100);
+    --todae-color-accent-active: var(--todae-color-gray-300);
+    --todae-color-accent-default: var(--todae-color-gray-100);
+    --todae-color-accent-hover: var(--todae-color-gray-200);
     --todae-color-accent-soft: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-12));
     --todae-color-accent-soft-strong: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-28));
-    --todae-color-bg-canvas: var(--todae-color-gray-900);
-    --todae-color-bg-elevated: var(--todae-color-gray-800);
+    --todae-color-bg-canvas: var(--todae-color-gray-950);
+    --todae-color-bg-elevated: var(--todae-color-gray-850);
     --todae-color-bg-highlight: oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-10));
     --todae-color-bg-pressed: oklch(from var(--todae-color-fg-default) l c h / var(--todae-opacity-16));
     --todae-color-bg-scrim: oklch(from var(--todae-color-gray-950) l c h / var(--todae-opacity-70));
     --todae-color-bg-selected: oklch(from var(--todae-color-accent-default) l c h / var(--todae-opacity-20));
-    --todae-color-bg-subtle: var(--todae-color-gray-800);
+    --todae-color-bg-subtle: var(--todae-color-gray-850);
     --todae-color-bg-surface: var(--todae-color-gray-900);
     --todae-color-bg-transparent: oklch(from var(--todae-color-gray-900) l c h / 0);
-    --todae-color-border-default: var(--todae-color-gray-50);
-    --todae-color-border-subtle: var(--todae-color-gray-700);
+    --todae-color-border-default: var(--todae-color-gray-500);
+    --todae-color-border-subtle: var(--todae-color-gray-800);
     --todae-color-category-1-bg: var(--todae-color-red-900);
     --todae-color-category-1-border: var(--todae-color-red-700);
     --todae-color-category-1-fg: var(--todae-color-red-200);
@@ -330,9 +335,9 @@
     --todae-color-category-8-border: var(--todae-color-pink-700);
     --todae-color-category-8-fg: var(--todae-color-pink-200);
     --todae-color-danger-default: var(--todae-color-red-300);
-    --todae-color-fg-default: var(--todae-color-gray-50);
-    --todae-color-fg-muted: var(--todae-color-gray-200);
-    --todae-color-fg-placeholder: var(--todae-color-gray-300);
+    --todae-color-fg-default: var(--todae-color-gray-100);
+    --todae-color-fg-muted: var(--todae-color-gray-300);
+    --todae-color-fg-placeholder: var(--todae-color-gray-400);
     --todae-color-on-accent: var(--todae-color-gray-950);
     --todae-color-status-critical-bg: var(--todae-color-red-900);
     --todae-color-status-critical-border: var(--todae-color-red-700);
@@ -417,7 +422,9 @@
   --todae-focus-ring-color: var(--_todae-focus-ring-color, var(--todae-color-accent-default));
   --todae-focus-ring-offset: var(--_todae-focus-ring-offset, 2px);
   --todae-focus-ring-width: var(--_todae-focus-ring-width, 2px);
+  --todae-button-base-font-letter-spacing: var(--_todae-button-base-font-letter-spacing, var(--todae-font-letter-spacing-default));
   --todae-button-base-font-size: var(--_todae-button-base-font-size, var(--todae-font-size-3));
+  --todae-button-base-font-text-transform: var(--_todae-button-base-font-text-transform, var(--todae-font-text-transform-default));
   --todae-button-base-font-weight: var(--_todae-button-base-font-weight, var(--todae-font-weight-medium));
   --todae-button-base-gap: var(--_todae-button-base-gap, var(--todae-space-inline-gap));
   --todae-button-base-icon-size: var(--_todae-button-base-icon-size, 1rem);
@@ -440,6 +447,7 @@
   --todae-button-primary-fg-focus: var(--_todae-button-primary-fg-focus, var(--todae-color-on-accent));
   --todae-button-primary-fg-hover: var(--_todae-button-primary-fg-hover, var(--todae-color-on-accent));
   --todae-button-primary-ring-focus: var(--_todae-button-primary-ring-focus, var(--todae-focus-ring-color));
+  --todae-button-primary-shadow: var(--_todae-button-primary-shadow, var(--todae-shadow-none));
   --todae-button-secondary-bg-active: var(--_todae-button-secondary-bg-active, var(--todae-color-bg-pressed));
   --todae-button-secondary-bg-default: var(--_todae-button-secondary-bg-default, var(--todae-color-bg-transparent));
   --todae-button-secondary-bg-disabled: var(--_todae-button-secondary-bg-disabled, var(--todae-color-bg-transparent));
@@ -456,6 +464,7 @@
   --todae-button-secondary-fg-focus: var(--_todae-button-secondary-fg-focus, var(--todae-color-fg-default));
   --todae-button-secondary-fg-hover: var(--_todae-button-secondary-fg-hover, var(--todae-color-fg-default));
   --todae-button-secondary-ring-focus: var(--_todae-button-secondary-ring-focus, var(--todae-focus-ring-color));
+  --todae-button-secondary-shadow: var(--_todae-button-secondary-shadow, var(--todae-shadow-none));
   --todae-button-ghost-bg-active: var(--_todae-button-ghost-bg-active, var(--todae-color-bg-pressed));
   --todae-button-ghost-bg-default: var(--_todae-button-ghost-bg-default, var(--todae-color-bg-transparent));
   --todae-button-ghost-bg-disabled: var(--_todae-button-ghost-bg-disabled, var(--todae-color-bg-transparent));
@@ -472,6 +481,7 @@
   --todae-button-ghost-fg-focus: var(--_todae-button-ghost-fg-focus, var(--todae-color-fg-default));
   --todae-button-ghost-fg-hover: var(--_todae-button-ghost-fg-hover, var(--todae-color-fg-default));
   --todae-button-ghost-ring-focus: var(--_todae-button-ghost-ring-focus, var(--todae-focus-ring-color));
+  --todae-button-ghost-shadow: var(--_todae-button-ghost-shadow, var(--todae-shadow-none));
   --todae-stack-gap: var(--_todae-stack-gap, var(--todae-space-stack-gap));
   --todae-stack-gap-condensed: var(--_todae-stack-gap-condensed, var(--todae-space-stack-gap-condensed));
   --todae-stack-gap-spacious: var(--_todae-stack-gap-spacious, var(--todae-space-stack-gap-spacious));
@@ -536,7 +546,9 @@
   --todae-field-gap: var(--_todae-field-gap, var(--todae-space-field-gap));
   --todae-field-icon-size: var(--_todae-field-icon-size, 1rem);
   --todae-field-label-fg: var(--_todae-field-label-fg, var(--todae-color-fg-default));
+  --todae-field-label-font-letter-spacing: var(--_todae-field-label-font-letter-spacing, var(--todae-font-letter-spacing-default));
   --todae-field-label-font-size: var(--_todae-field-label-font-size, var(--todae-font-size-2));
+  --todae-field-label-font-text-transform: var(--_todae-field-label-font-text-transform, var(--todae-font-text-transform-default));
   --todae-field-label-font-weight: var(--_todae-field-label-font-weight, var(--todae-font-weight-medium));
   --todae-field-label-gap: var(--_todae-field-label-gap, 0.4rem);
   --todae-field-leading: var(--_todae-field-leading, var(--todae-font-leading-default));
@@ -718,7 +730,9 @@
   --todae-tabs-fg-disabled: var(--_todae-tabs-fg-disabled, var(--todae-color-fg-placeholder));
   --todae-tabs-fg-hover: var(--_todae-tabs-fg-hover, var(--todae-color-fg-default));
   --todae-tabs-fg-selected: var(--_todae-tabs-fg-selected, var(--todae-color-fg-default));
+  --todae-tabs-font-letter-spacing: var(--_todae-tabs-font-letter-spacing, var(--todae-font-letter-spacing-default));
   --todae-tabs-font-size: var(--_todae-tabs-font-size, var(--todae-font-size-2));
+  --todae-tabs-font-text-transform: var(--_todae-tabs-font-text-transform, var(--todae-font-text-transform-default));
   --todae-tabs-font-weight: var(--_todae-tabs-font-weight, var(--todae-font-weight-medium));
   --todae-tabs-gap: var(--_todae-tabs-gap, var(--todae-space-inline-gap));
   --todae-tabs-indicator-color: var(--_todae-tabs-indicator-color, var(--todae-color-accent-default));
@@ -835,6 +849,8 @@
   --todae-table-fg: var(--_todae-table-fg, var(--todae-color-fg-default));
   --todae-table-header-border: var(--_todae-table-header-border, var(--todae-color-border-default));
   --todae-table-header-fg: var(--_todae-table-header-fg, var(--todae-color-fg-default));
+  --todae-table-header-font-letter-spacing: var(--_todae-table-header-font-letter-spacing, var(--todae-font-letter-spacing-default));
+  --todae-table-header-font-text-transform: var(--_todae-table-header-font-text-transform, var(--todae-font-text-transform-default));
   --todae-table-header-font-weight: var(--_todae-table-header-font-weight, var(--todae-font-weight-medium));
   --todae-table-rule-thickness: var(--_todae-table-rule-thickness, 1px);
   --todae-meter-fill-critical: var(--_todae-meter-fill-critical, var(--todae-color-status-critical-fg));
@@ -900,6 +916,7 @@
   --todae-card-gap: var(--_todae-card-gap, var(--todae-space-overlay-gap));
   --todae-card-padding: var(--_todae-card-padding, var(--todae-space-overlay-padding));
   --todae-card-radius: var(--_todae-card-radius, var(--todae-radius-lg));
+  --todae-card-shadow: var(--_todae-card-shadow, var(--todae-shadow-none));
   --todae-message-fg: var(--_todae-message-fg, var(--todae-color-fg-default));
   --todae-message-gap: var(--_todae-message-gap, var(--todae-space-inline-gap));
   --todae-message-header-fg: var(--_todae-message-header-fg, var(--todae-color-fg-muted));
@@ -1070,6 +1087,35 @@
   --todae-tree-item-ring-focus: var(--_todae-tree-item-ring-focus, var(--todae-focus-ring-color));
   --todae-tree-motion-duration: var(--_todae-tree-motion-duration, var(--todae-motion-duration-normal));
   --todae-tree-motion-easing: var(--_todae-tree-motion-easing, var(--todae-motion-easing-standard));
+  --todae-nav-chevron-fg: var(--_todae-nav-chevron-fg, var(--todae-color-fg-muted));
+  --todae-nav-chevron-size: var(--_todae-nav-chevron-size, 1rem);
+  --todae-nav-gap: var(--_todae-nav-gap, var(--todae-space-6));
+  --todae-nav-group-label-fg: var(--_todae-nav-group-label-fg, var(--todae-color-fg-default));
+  --todae-nav-group-label-font-size: var(--_todae-nav-group-label-font-size, var(--todae-font-size-1));
+  --todae-nav-group-label-font-weight: var(--_todae-nav-group-label-font-weight, var(--todae-font-weight-medium));
+  --todae-nav-group-label-gap: var(--_todae-nav-group-label-gap, var(--todae-space-2));
+  --todae-nav-icon-size: var(--_todae-nav-icon-size, 1rem);
+  --todae-nav-indent: var(--_todae-nav-indent, var(--todae-space-3));
+  --todae-nav-item-bg-current: var(--_todae-nav-item-bg-current, var(--todae-color-bg-selected));
+  --todae-nav-item-bg-default: var(--_todae-nav-item-bg-default, var(--todae-color-bg-transparent));
+  --todae-nav-item-bg-hover: var(--_todae-nav-item-bg-hover, var(--todae-color-bg-highlight));
+  --todae-nav-item-fg-current: var(--_todae-nav-item-fg-current, var(--todae-color-fg-default));
+  --todae-nav-item-fg-default: var(--_todae-nav-item-fg-default, var(--todae-color-fg-muted));
+  --todae-nav-item-fg-hover: var(--_todae-nav-item-fg-hover, var(--todae-color-fg-default));
+  --todae-nav-item-font-current-weight: var(--_todae-nav-item-font-current-weight, var(--todae-font-weight-medium));
+  --todae-nav-item-font-size: var(--_todae-nav-item-font-size, var(--todae-font-size-2));
+  --todae-nav-item-font-weight: var(--_todae-nav-item-font-weight, var(--todae-font-weight-regular));
+  --todae-nav-item-gap: var(--_todae-nav-item-gap, var(--todae-space-inline-gap));
+  --todae-nav-item-leading: var(--_todae-nav-item-leading, var(--todae-font-leading-tight));
+  --todae-nav-item-padding-x: var(--_todae-nav-item-padding-x, var(--todae-space-chip-x));
+  --todae-nav-item-padding-y: var(--_todae-nav-item-padding-y, var(--todae-space-chip-y));
+  --todae-nav-item-radius: var(--_todae-nav-item-radius, var(--todae-radius-md));
+  --todae-nav-item-ring-focus: var(--_todae-nav-item-ring-focus, var(--todae-focus-ring-color));
+  --todae-nav-list-gap: var(--_todae-nav-list-gap, 2px);
+  --todae-nav-motion-duration: var(--_todae-nav-motion-duration, var(--todae-motion-duration-normal));
+  --todae-nav-motion-easing: var(--_todae-nav-motion-easing, var(--todae-motion-easing-standard));
+  --todae-nav-rule-color: var(--_todae-nav-rule-color, var(--todae-color-border-subtle));
+  --todae-nav-rule-width: var(--_todae-nav-rule-width, var(--todae-border-width));
   --todae-picker-area-height: var(--_todae-picker-area-height, 10rem);
   --todae-picker-area-radius: var(--_todae-picker-area-radius, var(--todae-radius-md));
   --todae-picker-gap: var(--_todae-picker-gap, var(--todae-space-stack-gap));
@@ -1103,7 +1149,9 @@
   --todae-calendar-nav-icon-size: var(--_todae-calendar-nav-icon-size, 1rem);
   --todae-calendar-weekday-fg: var(--_todae-calendar-weekday-fg, var(--todae-color-fg-muted));
   --todae-calendar-weekday-font-weight: var(--_todae-calendar-weekday-font-weight, var(--todae-font-weight-regular));
+  --todae-button-font-letter-spacing: var(--todae-button-base-font-letter-spacing);
   --todae-button-font-size: var(--todae-button-base-font-size);
+  --todae-button-font-text-transform: var(--todae-button-base-font-text-transform);
   --todae-button-font-weight: var(--todae-button-base-font-weight);
   --todae-button-gap: var(--todae-button-base-gap);
   --todae-button-icon-size: var(--todae-button-base-icon-size);
@@ -1126,6 +1174,7 @@
   --todae-button-fg-focus: var(--todae-button-primary-fg-focus);
   --todae-button-fg-hover: var(--todae-button-primary-fg-hover);
   --todae-button-ring-focus: var(--todae-button-primary-ring-focus);
+  --todae-button-shadow: var(--todae-button-primary-shadow);
 }
 
 [data-button-variant="primary"] {
@@ -1145,6 +1194,7 @@
   --todae-button-fg-focus: var(--todae-button-primary-fg-focus);
   --todae-button-fg-hover: var(--todae-button-primary-fg-hover);
   --todae-button-ring-focus: var(--todae-button-primary-ring-focus);
+  --todae-button-shadow: var(--todae-button-primary-shadow);
 }
 
 [data-button-variant="secondary"] {
@@ -1164,6 +1214,7 @@
   --todae-button-fg-focus: var(--todae-button-secondary-fg-focus);
   --todae-button-fg-hover: var(--todae-button-secondary-fg-hover);
   --todae-button-ring-focus: var(--todae-button-secondary-ring-focus);
+  --todae-button-shadow: var(--todae-button-secondary-shadow);
 }
 
 [data-button-variant="ghost"] {
@@ -1183,5 +1234,6 @@
   --todae-button-fg-focus: var(--todae-button-ghost-fg-focus);
   --todae-button-fg-hover: var(--todae-button-ghost-fg-hover);
   --todae-button-ring-focus: var(--todae-button-ghost-ring-focus);
+  --todae-button-shadow: var(--todae-button-ghost-shadow);
 }
 }

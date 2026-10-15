@@ -233,6 +233,7 @@ export {
   type CalendarHeaderProps,
   type CalendarRootProps,
 } from './components/Calendar';
+export { Nav, type NavBranchProps, type NavGroupProps, type NavItemProps, type NavLinkProps, type NavRootProps } from './components/Nav';
 export { Tree, type TreeGroupProps, type TreeIconProps, type TreeItemProps, type TreeLabelProps, type TreeRootProps } from './components/Tree';
 export {
   Stack,
@@ -361,6 +362,7 @@ export {
   type ThemeOverrideValue,
   type ThemeShadowLayer,
   type ThemeShadowValue,
+  type ThemeTextTransformValue,
 } from './providers/themeOverride';
 export {
   DensityProvider,

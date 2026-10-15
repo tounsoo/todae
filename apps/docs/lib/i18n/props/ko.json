@@ -2333,6 +2333,72 @@
       "ko": "슬롯에 붙는 선택적 클래스."
     }
   },
+  "Nav.Root": {
+    "aria-label": {
+      "en": "Landmark name. Give one when the page has more than one nav, such as \"Docs\" beside a header nav.",
+      "ko": "랜드마크 이름. 헤더의 nav 옆에 있는 \"Docs\"처럼 페이지에 nav가 둘 이상이면 붙이세요."
+    },
+    "children": {
+      "en": "Nav.Group elements.",
+      "ko": "Nav.Group 요소."
+    }
+  },
+  "Nav.Group": {
+    "label": {
+      "en": "Text shown above the list. It also names the list for screen readers.",
+      "ko": "목록 위에 보이는 텍스트. 스크린 리더에게는 목록의 이름도 됩니다."
+    },
+    "aria-label": {
+      "en": "Names the list when it has no label, or in place of it. aria-labelledby goes on the list too.",
+      "ko": "레이블이 없을 때, 또는 레이블 대신 목록의 이름을 붙입니다. aria-labelledby도 목록에 붙습니다."
+    },
+    "children": {
+      "en": "Nav.Item elements.",
+      "ko": "Nav.Item 요소."
+    }
+  },
+  "Nav.Item": {
+    "children": {
+      "en": "A Nav.Link, a Nav.Branch, or a Nav.Link followed by the Nav.Branch of its child pages.",
+      "ko": "Nav.Link, Nav.Branch, 또는 Nav.Link와 그 뒤에 오는 하위 페이지의 Nav.Branch."
+    }
+  },
+  "Nav.Link": {
+    "href": {
+      "en": "Where the link goes.",
+      "ko": "링크가 가는 곳."
+    },
+    "render": {
+      "en": "Renders something other than a plain a, such as a router link. It receives every prop, the class name included, and must pass them to an a.",
+      "ko": "라우터 링크처럼 일반 a가 아닌 것을 렌더링합니다. 클래스 이름까지 모든 prop을 받으며, 이를 a에 넘겨야 합니다."
+    },
+    "aria-current": {
+      "en": "Marks the link to the page you are on, which draws it as the current row.",
+      "ko": "지금 있는 페이지로 가는 링크를 표시하며, 링크를 현재 행으로 그립니다."
+    },
+    "children": {
+      "en": "The link text, with an optional icon before it.",
+      "ko": "링크 텍스트. 앞에 아이콘을 둘 수 있습니다."
+    }
+  },
+  "Nav.Branch": {
+    "label": {
+      "en": "The toggle's text. After a Nav.Link in the same item, the toggle shows only a chevron and this text only names it, so name the child pages, such as \"Field pages\".",
+      "ko": "토글의 텍스트. 같은 항목에서 Nav.Link 뒤에 오면 토글은 chevron만 보여 주고 이 텍스트는 이름으로만 쓰이므로, \"Field 하위 페이지\"처럼 하위 페이지를 가리키는 이름을 붙이세요."
+    },
+    "open": {
+      "en": "Sets whether the branch is open when it renders and whenever the prop changes: true opens it, false closes it. In between, the user opens and closes it; follow that with onToggle.",
+      "ko": "렌더링될 때와 prop이 바뀔 때마다 가지가 열려 있을지를 정합니다. true는 열고 false는 닫습니다. 그 사이에는 사용자가 열고 닫으며, 이는 onToggle로 따라가세요."
+    },
+    "onToggle": {
+      "en": "Called after the branch opens or closes.",
+      "ko": "가지가 열리거나 닫힌 뒤 호출됩니다."
+    },
+    "children": {
+      "en": "Nav.Item elements, the child pages.",
+      "ko": "하위 페이지인 Nav.Item 요소."
+    }
+  },
   "Calendar.Root": {
     "value": {
       "en": "Controlled selected date, or null for none. Pass with onValueChange.",

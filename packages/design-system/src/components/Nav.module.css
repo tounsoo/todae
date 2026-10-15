@@ -1,0 +1,200 @@
+@layer todae.components {
+  .root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-nav-gap);
+  }
+
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-nav-group-label-gap);
+  }
+
+  .label {
+    padding-inline: var(--todae-nav-item-padding-x);
+    color: var(--todae-nav-group-label-fg);
+    font-size: var(--todae-nav-group-label-font-size);
+    font-weight: var(--todae-nav-group-label-font-weight);
+    line-height: var(--todae-nav-item-leading);
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--todae-nav-list-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* A branch's list sits indented under a rule. */
+  .branch > .list {
+    margin-block-start: var(--todae-nav-list-gap);
+    margin-inline-start: var(--todae-nav-indent);
+    padding-inline-start: calc(var(--todae-nav-item-padding-x) - var(--todae-nav-rule-width));
+    border-inline-start: var(--todae-nav-rule-width) solid var(--todae-nav-rule-color);
+  }
+
+  .item {
+    position: relative;
+    min-inline-size: 0;
+  }
+
+  /* The row a link or a branch's toggle draws. */
+  .link,
+  .toggle {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: var(--todae-nav-item-gap);
+    padding: var(--todae-nav-item-padding-y) var(--todae-nav-item-padding-x);
+    border-radius: var(--todae-nav-item-radius);
+    background: var(--todae-nav-item-bg-default);
+    color: var(--todae-nav-item-fg-default);
+    font-size: var(--todae-nav-item-font-size);
+    font-weight: var(--todae-nav-item-font-weight);
+    line-height: var(--todae-nav-item-leading);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .toggle {
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .toggle::-webkit-details-marker {
+    display: none;
+  }
+
+  /* Hover sits in :where() so the current link below, at the same
+     specificity and later, keeps its look under the pointer. */
+  @media (hover: hover) {
+    .link:where(:hover),
+    .toggle:where(:hover) {
+      background: var(--todae-nav-item-bg-hover);
+      color: var(--todae-nav-item-fg-hover);
+    }
+  }
+
+  /* The page you are on, as a router marks it with aria-current. Any value
+     other than empty or false (in any case) marks the link current. */
+  .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) {
+    background: var(--todae-nav-item-bg-current);
+    color: var(--todae-nav-item-fg-current);
+    font-weight: var(--todae-nav-item-font-current-weight);
+  }
+
+  /* An inset ring stays whole when a scroll container clips the row's sides. */
+  .link:focus-visible,
+  .toggle:focus-visible {
+    outline: var(--todae-focus-ring-width) solid var(--todae-nav-item-ring-focus);
+    outline-offset: calc(-1 * var(--todae-focus-ring-width));
+  }
+
+  /* An icon from a library renders an svg: it takes the nav's icon size. */
+  .link > :is(svg, img) {
+    flex: none;
+    inline-size: var(--todae-nav-icon-size);
+    block-size: var(--todae-nav-icon-size);
+  }
+
+  .toggleLabel {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
+  /* The chevron points down. A closed branch turns it toward the row's end. */
+  .chevron {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--todae-nav-chevron-size);
+    block-size: var(--todae-nav-chevron-size);
+    color: var(--todae-nav-chevron-fg);
+    line-height: 1;
+    transition: rotate var(--todae-nav-motion-duration) var(--todae-nav-motion-easing);
+  }
+
+  .chevron > :is(svg, img) {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .branch:not([open]) > .toggle > [data-todae-glyph] {
+    rotate: -90deg;
+  }
+
+  .branch:not([open]) > .toggle:dir(rtl) > [data-todae-glyph] {
+    rotate: 90deg;
+  }
+
+  /* After a link, the toggle is a chevron button at the end of the link's row,
+     and its label only names it. The link leaves the toggle room. */
+  .item:has(> .link + .branch) > .link {
+    padding-inline-end: calc(var(--todae-nav-chevron-size) + 3 * var(--todae-nav-item-padding-x));
+  }
+
+  .link + .branch > .toggle {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: calc(var(--todae-nav-chevron-size) + 2 * var(--todae-nav-item-padding-x));
+    /* One link row: its padding plus one line. */
+    block-size: calc(2 * var(--todae-nav-item-padding-y) + var(--todae-nav-item-font-size) * var(--todae-nav-item-leading));
+    padding: 0;
+  }
+
+  /* VisuallyHidden's rules, which must hold over any class a product adds. */
+  .link + .branch > .toggle > .toggleLabel {
+    position: absolute !important;
+    inline-size: 1px !important;
+    block-size: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chevron {
+      transition: none;
+    }
+  }
+
+  /* Forced colors drop backgrounds: paint the current link with system colors. */
+  @media (forced-colors: active) {
+    .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])):focus-visible {
+      outline-color: HighlightText;
+    }
+
+    /* The toggle sits over the current link's Highlight row, so it takes the
+       same system colors, with no fill of its own. */
+    .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) + .branch > .toggle {
+      forced-color-adjust: none;
+      background: transparent;
+      color: HighlightText;
+    }
+
+    .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) + .branch > .toggle > .chevron {
+      color: HighlightText;
+    }
+
+    .link:where([aria-current]:not([aria-current='false' i], [aria-current=''])) + .branch > .toggle:focus-visible {
+      outline-color: HighlightText;
+    }
+  }
+}

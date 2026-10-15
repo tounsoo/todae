@@ -6,6 +6,7 @@
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/lg/$value" } },
     "padding": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
-    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/gap/$value" } }
+    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/gap/$value" } },
+    "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } }
   }
 }

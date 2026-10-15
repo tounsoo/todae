@@ -24,7 +24,8 @@
       },
       "ring": {
         "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
-      }
+      },
+      "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } }
     }
   }
 }

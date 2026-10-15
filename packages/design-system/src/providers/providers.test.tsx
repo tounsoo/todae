@@ -224,12 +224,13 @@ describe('company override types', () => {
   });
 });
 
-describe('motion, font family and shadow overrides', () => {
+describe('motion, font family, shadow and text transform overrides', () => {
   const types = {
     'brand.motion.fast': 'duration',
     'brand.motion.ease': 'cubicBezier',
     'brand.font.body': 'fontFamily',
     'brand.shadow.card': 'shadow',
+    'brand.label.case': 'textTransform',
   } as const;
   const layer = {
     color: { colorSpace: 'oklch', components: [0, 0, 0], alpha: 0.2 },
@@ -247,6 +248,8 @@ describe('motion, font family and shadow overrides', () => {
           'motion.easing.standard': [0.4, 0, 0.2, 1],
           'brand.font.body': ['Inter', 'sans-serif'],
           'brand.shadow.card': [layer, { ...layer, inset: true }],
+          'button.base.font.text-transform': 'uppercase',
+          'brand.label.case': 'capitalize',
         },
         types,
       ),
@@ -255,6 +258,8 @@ describe('motion, font family and shadow overrides', () => {
       '--todae-motion-easing-standard': 'cubic-bezier(0.4, 0, 0.2, 1)',
       '--todae-brand-font-body': '"Inter", sans-serif',
       '--todae-brand-shadow-card': '0px 4px 12px 0px oklch(0 0 0 / 0.2), inset 0px 4px 12px 0px oklch(0 0 0 / 0.2)',
+      '--todae-button-base-font-text-transform': 'uppercase',
+      '--todae-brand-label-case': 'capitalize',
     });
   });
 
@@ -267,10 +272,20 @@ describe('motion, font family and shadow overrides', () => {
       ['brand.font.body', []],
       ['brand.shadow.card', { ...layer, blur: { value: -1, unit: 'px' } }],
       ['brand.shadow.card', { ...layer, color: 'black' }],
+      ['brand.label.case', 'small-caps'],
+      ['tabs.font.text-transform', 'uppercase; color: red'],
     ];
     for (const [key, value] of bad) {
       expect(() => themeOverrideStyle({ [key]: value }, types), key).toThrow(/Invalid theme override value/);
     }
+  });
+
+  it('lets letter spacing go negative but no other dimension', () => {
+    const tight = { value: -0.01, unit: 'rem' } as const;
+    expect(themeOverrideStyle({ 'tabs.font.letter-spacing': tight })).toEqual({ '--todae-tabs-font-letter-spacing': '-0.01rem' });
+    expect(() => themeOverrideStyle({ 'radius.md': tight })).toThrow(/Invalid theme override value/);
+    expect(parseThemeValue('button.base.font.letter-spacing', '-0.01rem')).toEqual(tight);
+    expect(parseThemeValue('radius.md', '-0.01rem')).toBeNull();
   });
 
   it('parses playground text for the new types', () => {
@@ -280,6 +295,8 @@ describe('motion, font family and shadow overrides', () => {
     expect(parseThemeValue('motion.easing.standard', '0.4, 0, 0.2')).toBeNull();
     const value = parseThemeValue('motion.duration.fast', '90ms');
     expect(value && themeValueCss('motion.duration.fast', value)).toBe('90ms');
+    expect(parseThemeValue('tabs.font.text-transform', ' uppercase ')).toBe('uppercase');
+    expect(parseThemeValue('tabs.font.text-transform', 'UPPERCASE')).toBeNull();
   });
 });
 

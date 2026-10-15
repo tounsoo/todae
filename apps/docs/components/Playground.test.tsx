@@ -27,15 +27,17 @@ afterEach(cleanup);
 // The preview region sits inside the stage's ThemeProvider, which carries the overrides.
 const stage = () => screen.getByRole('region', { name: 'Preview' });
 
-describe('Playground', () => {
+// Each test renders the whole playground, preview included, and every edit re-renders it, which takes
+// seconds in jsdom; the default 5s timeout fails under a loaded parallel run.
+describe('Playground', { timeout: 15_000 }, () => {
   it('paints the stage with a preset and its light or dark overrides', () => {
     render(<Playground locale="en" />);
     expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('');
-    fireEvent.click(screen.getByLabelText('Forest'));
-    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.47 0.1 160)');
+    fireEvent.click(screen.getByLabelText('Porcelain'));
+    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.09 165)');
     fireEvent.click(screen.getByRole('button', { name: 'dark' }));
     expect(stage().getAttribute('data-appearance')).toBe('dark');
-    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.8 0.12 160)');
+    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.8 0.077 165)');
   });
 
   it('commits a token as soon as it parses and marks it invalid until then', () => {
@@ -70,26 +72,26 @@ describe('Playground', () => {
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
     expect(JSON.parse(writeText.mock.calls[0]?.[0] ?? '')).toEqual({});
     expect(await page.findByText('Copied theme override JSON.')).toBeTruthy();
-    fireEvent.click(screen.getByLabelText('Forest'));
+    fireEvent.click(screen.getByLabelText('Porcelain'));
     // The status was for the old theme, so it gives way to the hint again.
     expect(page.queryByText('Copied theme override JSON.')).toBeNull();
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
     const copied = JSON.parse(writeText.mock.calls[1]?.[0] ?? '');
     expect(Object.keys(copied)).toEqual(['light', 'dark']);
-    expect(copied.light['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.47, 0.1, 160] });
-    expect(copied.dark['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.8, 0.12, 160] });
+    expect(copied.light['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.5, 0.09, 165] });
+    expect(copied.dark['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.8, 0.077, 165] });
   });
 
   it('keeps an edit to the appearance it was made in', async () => {
     render(<Playground locale="en" />);
-    fireEvent.click(screen.getByLabelText('Forest'));
+    fireEvent.click(screen.getByLabelText('Porcelain'));
     fireEvent.change(screen.getByLabelText('color.accent.default'), { target: { value: 'oklch(0.3 0.1 160)' } });
     fireEvent.click(screen.getByRole('button', { name: 'dark' }));
-    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.8 0.12 160)');
+    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.8 0.077 165)');
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Copy JSON' })));
     const copied = JSON.parse(writeText.mock.calls[0]?.[0] ?? '');
     expect(copied.light['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.3, 0.1, 160] });
-    expect(copied.dark['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.8, 0.12, 160] });
+    expect(copied.dark['color.accent.default']).toEqual({ colorSpace: 'oklch', components: [0.8, 0.077, 165] });
   });
 
   it('shows when the copy fails', async () => {
@@ -101,17 +103,17 @@ describe('Playground', () => {
 
   it('puts the overrides on the element that carries the density', () => {
     render(<Playground locale="en" />);
-    fireEvent.click(screen.getByLabelText('Forest'));
+    fireEvent.click(screen.getByLabelText('Porcelain'));
     expect(stage().getAttribute('data-density')).toBe('comfortable');
     expect(stage().getAttribute('data-appearance')).toBe('system');
-    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.47 0.1 160)');
+    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.09 165)');
   });
 
   it('starts a new preset without the last preset’s edits', () => {
     render(<Playground locale="en" />);
     fireEvent.change(screen.getByLabelText('color.accent.default'), { target: { value: 'oklch(0.5 0.1 30)' } });
-    fireEvent.click(screen.getByLabelText('Grape'));
+    fireEvent.click(screen.getByLabelText('Bloom'));
     expect(screen.queryByText('1 changed')).toBeNull();
-    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.5 0.2 300)');
+    expect(stage().style.getPropertyValue('--todae-color-accent-default')).toBe('oklch(0.6 0.25 350)');
   });
 });

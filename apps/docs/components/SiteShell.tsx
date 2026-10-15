@@ -1,4 +1,3 @@
-import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 import '@omsoo.design/todae/todae.css';
 import { Stack } from '@omsoo.design/todae/stack';
@@ -21,9 +20,6 @@ import { SiteLink } from './SiteLink';
 import { SITE_GROUPS } from './siteGroups';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import '../app/globals.css';
-
-const sans = Geist({ subsets: ['latin'], variable: '--docs-font-sans' });
-const mono = Geist_Mono({ subsets: ['latin'], variable: '--docs-font-mono' });
 
 const REPO = 'https://github.com/tounsoo/todae';
 // The top bar's Components link opens the first page the sidebar lists under Components.
@@ -48,7 +44,7 @@ export function SiteShell({
   ] as const;
   const [licenseBefore, licenseAfter] = dict.license.split('{license}');
   return (
-    <html lang={locale} className={`${sans.variable} ${mono.variable}`}>
+    <html lang={locale}>
       <body>
         {/* A 404 is prerendered once, so its path is Next's internal one: no page to pair. */}
         {!notFound && <LanguageAlternates untranslated={untranslatedByLocale()} />}
