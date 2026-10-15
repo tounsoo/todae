@@ -1,7 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe date and time text for a text input beside Field.DateTimePicker: no hooks or context.
 import { fold, parseDate, type DateTextOptions } from './dateText';
-import { parseTime, splitWords } from './timeText';
+import { hasDayPeriod, parseTime, splitWords } from './timeText';
 
 export type DateTimeTextOptions = DateTextOptions;
 
@@ -47,18 +47,32 @@ type LocaleDateTime = {
   /** How many numbers the locale writes in a date alone, such as 2 in "Oct 13, 2026" and 3 in "10/13/2026", and in a time alone. */
   dateNumbers: Set<number>;
   timeNumbers: Set<number>;
+  /**
+   * How the locale writes a date with a two-digit year, the only date Intl
+   * writes one in: what goes between each two numbers, as "/" in "10/13/26"
+   * in en-US, what goes after the last, as "." in "13. 10. 26." in bs, and
+   * the words it writes, as "г." in bg.
+   */
+  shortYear: { gaps: string[]; after: string; words: Set<string> };
 };
 
 const localeDateTimes = new Map<string, LocaleDateTime>();
 
+// How the locale may write a month and a day in numbers without a year.
+const monthDays: Intl.DateTimeFormatOptions[] = [
+  { month: 'numeric', day: 'numeric' },
+  { month: '2-digit', day: '2-digit' },
+];
+
 const PUNCTUATION = /[^\p{L}\p{M}\p{N}\s]/u;
 
 const written = (locale: string | undefined, style: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat(locale, { ...style, calendar: 'gregory', timeZone: 'UTC' }).format(Date.UTC(2026, 9, 13, 21, 30, 15));
+  new Intl.DateTimeFormat(locale, { ...style, calendar: 'gregory', timeZone: 'UTC' }).formatToParts(Date.UTC(2026, 9, 13, 21, 30, 15));
 
-/** The punctuation in the locale's text in a style, such as "/" and ":" in en-US, or ":" in a month's name in sa. */
-const punctuation = (locale: string | undefined, style: Intl.DateTimeFormatOptions) =>
-  [...fold(written(locale, style))].filter((char) => PUNCTUATION.test(char));
+/** The punctuation in text, such as "/" and ":" in en-US, or ":" in a month's name in sa. */
+const punctuation = (text: string) => [...fold(text)].filter((char) => PUNCTUATION.test(char));
+
+const join = (parts: Intl.DateTimeFormatPart[]) => parts.map((part) => part.value).join('');
 
 const DATE_PARTS = new Set(['year', 'month', 'day', 'weekday', 'era', 'relatedYear', 'yearName']);
 const TIME_PARTS = new Set(['hour', 'minute', 'second', 'dayPeriod']);
@@ -116,15 +130,26 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
   ];
   // Their marks, such as ":" after the month in sa: a date's own are the ones
   // between its numbers, and a time's own are in none of the date's text.
-  const inNumericDate = new Set(dateStyles.slice(0, 2).flatMap((style) => punctuation(locale, style)));
-  const inDate = new Set(dateStyles.flatMap((style) => punctuation(locale, style)));
-  const inTime = new Set(timeStyles.flatMap((style) => punctuation(locale, style)));
-  // How many numbers they have, such as 4 in tok, which numbers the weekday.
-  const numbers = (style: Intl.DateTimeFormatOptions) => atoms(written(locale, style)).filter((atom) => atom.number).length;
+  const dates = dateStyles.map((style) => join(written(locale, style)));
+  const times = timeStyles.map((style) => join(written(locale, style)));
+  const inNumericDate = new Set(dates.slice(0, 2).flatMap(punctuation));
+  const inDate = new Set(dates.flatMap(punctuation));
+  const inTime = new Set(times.flatMap(punctuation));
+  // How many numbers they have, such as 4 in tok, which numbers the weekday,
+  // in digits a number reads as, which Han decimal numbers, as 一, are not.
+  const numbers = (style: Intl.DateTimeFormatOptions) =>
+    atoms(join(written(locale, { ...style, numberingSystem: 'latn' }))).filter((atom) => atom.number).length;
   const dateNumbers = new Set(dateStyles.map(numbers));
   const timeNumbers = new Set(timeStyles.map(numbers));
+  const shortText = join(written(locale, { ...dateStyles[0], numberingSystem: 'latn' }));
+  const short = atoms(shortText);
+  const shortYear = {
+    gaps: numberGaps(short),
+    after: spaced(gapAfterNumbers(short, trailing(shortText))).trim(),
+    words: new Set(splitWords(render(short)).filter((word) => /\p{L}/u.test(word))),
+  };
   const only = (marks: Set<string>, other: Set<string>) => new Set([...marks].filter((char) => !other.has(char) && !between.has(char)));
-  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, dateMarks: only(inNumericDate, inTime), timeMarks: only(inTime, inDate), dateNumbers, timeNumbers };
+  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, dateMarks: only(inNumericDate, inTime), timeMarks: only(inTime, inDate), dateNumbers, timeNumbers, shortYear };
   localeDateTimes.set(key, text);
   return text;
 }
@@ -146,34 +171,42 @@ function atoms(text: string): Atom[] {
   return out;
 }
 
-const render = (list: Atom[]) => list.map((atom, index) => (index ? atom.gap : '') + atom.text).join('');
+/** The punctuation, symbols or spaces after the last number or letter of text. */
+const trailing = (text: string) => /[^\p{L}\p{M}\p{N}]*$/u.exec(fold(text))![0];
 
-/**
- * The date, when the year in its text is written as Intl writes a year, with
- * all its digits or its last two, so the hour of a time typed after a date
- * without a year, as "9" in "Oct 13 9 05 pm", is not taken for one.
- */
-const writesYear = (half: Atom[], date: Temporal.PlainDate | null) => {
-  if (!date) return null;
-  const year = String(date.year);
-  return half.some((atom) => atom.number && (atom.text === year || (atom.text.length === 2 && atom.text === year.slice(-2)))) ? date : null;
-};
+/** A gap with its spaces as one space. */
+const spaced = (gap: string) => gap.replace(/\s+/gu, ' ');
+
+/** The gaps between each two numbers that follow each other. */
+const numberGaps = (list: Atom[]) =>
+  list.flatMap((atom, index) => (index > 0 && atom.number && list[index - 1]!.number ? [spaced(atom.gap)] : []));
+
+/** The gap after the last number of a list of atoms, or `next` when the list ends with it. */
+function gapAfterNumbers(list: Atom[], next: string) {
+  let last = list.length - 1;
+  while (last >= 0 && !list[last]!.number) last--;
+  return last + 1 < list.length ? list[last + 1]!.gap : next;
+}
+
+const render = (list: Atom[]) => list.map((atom, index) => (index ? atom.gap : '') + atom.text).join('');
 
 const hasMark = (list: Atom[], marks: Set<string>) => list.some((atom, index) => index > 0 && [...atom.gap].some((char) => marks.has(char)));
 
 /**
  * The date and time in typed text, or `null` when the text is not one. It
- * reads a date as `parseDate` does, with its year in full or as its last two
- * digits, then a time as `parseTime` does, in the order the locale writes
- * them, with or without the words the locale writes between them, such as
- * `10/13/2026 9:30 pm` or `Oct 13, 2026 at 9:30 PM` in en-US. The time needs
- * its minutes, as in `21:30` or `2130`, or a word such as `pm`, so an hour
- * alone, as in `13.10.2026 21`, is not read. Text that reads as more than one
- * date and time is not read.
+ * reads a date as `parseDate` does, with its year in full, or in its last two
+ * digits in a date written as the locale writes one with a two-digit year,
+ * such as `10/13/26` in en-US, then a time as `parseTime` does, in the order
+ * the locale writes them, with or without the words the locale writes
+ * between them, such as `10/13/2026 9:30 pm` or `Oct 13, 2026 at 9:30 PM` in
+ * en-US. The time needs its minutes, as in `21:30` or `2130`, or a word such
+ * as `pm`, so an hour alone, as in `13.10.2026 21`, is not read. Text that
+ * reads as more than one date and time is not read.
  */
 export function parseDateTime(text: string, options: DateTimeTextOptions = {}): Temporal.PlainDateTime | null {
-  const { joiners, dateFirst, timeFirst, dateMarks, timeMarks, dateNumbers, timeNumbers } = localeDateTime(options.locale);
+  const { joiners, dateFirst, timeFirst, dateMarks, timeMarks, dateNumbers, timeNumbers, shortYear } = localeDateTime(options.locale);
   const list = atoms(text);
+  const end = trailing(text);
   // How many numbers come before each atom.
   const counts = [0];
   for (const atom of list) counts.push(counts.at(-1)! + (atom.number ? 1 : 0));
@@ -193,15 +226,59 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
     return words.slice(first, last).join(' ');
   };
   // A time has as many numbers as the locale writes in one, or one number with
-  // its minutes in it, as 2130, or with a word, as 9 pm.
-  const timeReads = (half: Atom[], timeText: string) => {
-    const numbers = half.filter((atom) => atom.number);
-    if (numbers.length === 1) return numbers[0]!.text.length >= 3 || /\p{L}/u.test(timeText);
+  // its minutes in it, as 2130, or with a word for the part of the day, as 9 pm.
+  const timeReads = (numbers: string[], timeText: string) => {
+    if (numbers.length === 1) return numbers[0]!.length >= 3 || hasDayPeriod(timeText, options);
     return timeNumbers.has(numbers.length);
   };
-  const read = (dateHalf: Atom[], dateText: string, timeHalf: Atom[], timeText: string, between: boolean) => {
-    if (hasMark(dateHalf, timeMarks) || !timeReads(timeHalf, timeText)) return;
-    const date = writesYear(dateHalf, parseDate(dateText, options));
+  // The date, when its year is written as Intl writes one: in full, or in its
+  // last two digits in a date written with the marks and spaces the locale
+  // writes in one with a two-digit year, so the hour of a time typed after a date without a year,
+  // as 11 in "Oct 13 11 05 pm" or 12 in "10/13 12 05 pm", is not taken for one.
+  const dated = (half: Atom[], dateText: string, next: string, timeHalf: Atom[], timeText: string, timeAfter: boolean) => {
+    const date = parseDate(dateText, options);
+    if (!date) return null;
+    const year = String(date.year);
+    const words = dateText.split(' ');
+    if (words.includes(year)) return date;
+    const gaps = numberGaps(half);
+    if (
+      gaps.length !== shortYear.gaps.length ||
+      gaps.some((gap, index) => gap !== shortYear.gaps[index]) ||
+      !spaced(gapAfterNumbers(half, next)).startsWith(shortYear.after) ||
+      words.some((word) => /\p{L}/u.test(word) && !shortYear.words.has(word))
+    ) {
+      return null;
+    }
+    // The number parseDate took for the year, and not a day or month with the same digits.
+    const isYear = (index: number) =>
+      words[index] === year.slice(-2) && parseDate(words.map((word, at) => (at === index ? year : word)).join(' '), options)?.equals(date) === true;
+    const years = words.flatMap((_, index) => (isYear(index) ? [index] : []));
+    if (years.length === 0) return null;
+    // Where the year is the number beside the time, with the same gap as
+    // between the time's numbers, the text may also be the month and day as
+    // the locale writes them without a year, and a time that starts or ends
+    // with the year's digits, as "13. 10. 11 05 15" in cs, which is also
+    // October 13 at 11:05:15: then it is not read.
+    const numbers = words.flatMap((word, index) => (/^\d+$/.test(word) ? [index] : []));
+    const at = timeAfter ? numbers.at(-1)! : numbers[0]!;
+    if (!years.includes(at)) return date;
+    const yearGap = spaced(timeAfter ? gapAfterNumbers(half, next) : half.find((atom) => atom.number)!.gap);
+    if (numberGaps(timeHalf).some((gap) => gap !== yearGap)) return date;
+    const time = timeAfter ? `${words[at]} ${timeText}` : `${timeText} ${words[at]}`;
+    const rest = numbers.filter((index) => index !== at).map((index) => Number(words[index]));
+    const yearless = monthDays.some((style) => {
+      const parts = new Intl.DateTimeFormat(options.locale, { ...style, calendar: 'gregory', timeZone: 'UTC', numberingSystem: 'latn' })
+        .formatToParts(Date.UTC(2000, date.month - 1, date.day))
+        .filter((part) => part.type === 'month' || part.type === 'day');
+      return parts.length === rest.length && parts.every((part, index) => Number(part.value) === rest[index]);
+    });
+    return yearless && timeReads(splitWords(time).filter((word) => /^\d+$/.test(word)), time) && parseTime(time, options) ? null : date;
+  };
+  const read = (dateHalf: Atom[], dateText: string, next: string, timeHalf: Atom[], timeText: string, between: boolean, timeAfter: boolean) => {
+    const numbers = timeHalf.flatMap((atom) => (atom.number ? [atom.text] : []));
+    if (hasMark(dateHalf, timeMarks) || !timeReads(numbers, timeText)) return;
+    const date = dated(dateHalf, dateText, next, timeHalf, timeText, timeAfter);
     const time = date && parseTime(timeText, options);
     if (!date || !time) return;
     const value = date.toPlainDateTime(time);
@@ -219,10 +296,10 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
       // Whether this pass left out a word between the halves.
       const between = strip && (trim(before, true, true) !== trim(before, true, false) || trim(rest, true, true) !== trim(rest, false, true));
       if (dateFirst && dateNumbers.has(counts[at]!)) {
-        read(head, trim(before, true, strip), tail, trim(rest, strip, true), between);
+        read(head, trim(before, true, strip), after.gap, tail, trim(rest, strip, true), between, true);
       }
       if (timeFirst && dateNumbers.has(total - counts[at]!)) {
-        read(tail, trim(rest, strip, true), head, trim(before, true, strip), between);
+        read(tail, trim(rest, strip, true), end, head, trim(before, true, strip), between, false);
       }
     }
   }

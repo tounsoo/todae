@@ -103,6 +103,7 @@ describe('parseDateTime', () => {
     expect(read('13. Oktober 2026 um 21:30', 'de')).toBe('2026-10-13T21:30:00');
     expect(read('2026. 10. 13. 오후 9:30', 'ko')).toBe('2026-10-13T21:30:00');
     expect(read('2026年10月13日21:30', 'ja')).toBe('2026-10-13T21:30:00');
+    expect(read('2026/10/13 21:30', 'zh-u-nu-hanidec')).toBe('2026-10-13T21:30:00');
   });
 
   it('reads a date and a time joined by punctuation where a word meets a number', () => {
@@ -111,7 +112,6 @@ describe('parseDateTime', () => {
     expect(read('2026年10月13日下午9:30', 'zh')).toBe('2026-10-13T21:30:00');
     expect(read('13.10.2026,21:30', 'de')).toBe('2026-10-13T21:30:00');
     expect(read('10/13/26 9:05', 'en-US')).toBe('2026-10-13T09:05:00');
-    expect(read('Oct 13 26 9:05', 'en-US')).toBe('2026-10-13T09:05:00');
   });
 
   it('reads a day that matches the last digits of the year, where the day ends the date', () => {
@@ -134,12 +134,6 @@ describe('parseDateTime', () => {
     expect(read('9 Ukw. 21 05', 'rw')).toBeNull();
   });
 
-  it('reads the date as parseDate reads it', () => {
-    // lmo writes a date as "2026 marz 10", so "10 marz 13" is March 13, 2010.
-    expect(read('10 marz 13 21:05', 'lmo')).toBe('2010-03-13T21:05:00');
-    expect(read('12. 10. 13. 21:05', 'ko')).toBe('2012-10-13T21:05:00');
-  });
-
   it('keeps the marks inside a date or a time from ending the date', () => {
     expect(read('13.10.23 21:30', 'ru')).toBe('2023-10-13T21:30:00');
     expect(read('13.10.23, 21:30', 'uk')).toBe('2023-10-13T21:30:00');
@@ -147,9 +141,13 @@ describe('parseDateTime', () => {
     expect(read('9:05 2.1.26', 'nb')).toBeNull();
   });
 
-  it("reads a two-digit year after a day and a month's name in the order the locale writes them", () => {
-    expect(read('23 Dip 13 21:30', 'tn')).toBe('2023-10-13T21:30:00');
-    expect(read('13. márc. 10. 21:05', 'hu')).toBe('2013-03-10T21:05:00');
+  it("doesn't read a two-digit year beside a month's name, which Intl writes only in full", () => {
+    expect(read('Oct 13 26 9:05', 'en-US')).toBeNull();
+    expect(read('23 Dip 13 21:30', 'tn')).toBeNull();
+    expect(read('13. márc. 10. 21:05', 'hu')).toBeNull();
+    // lmo writes a date as "2026 marz 10".
+    expect(read('10 marz 13 21:05', 'lmo')).toBeNull();
+    expect(read('13 Oct 26 21:05', 'en-GB')).toBeNull();
   });
 
   it("reads a date and a time joined by any mark that isn't only a date's or a time's", () => {
@@ -163,6 +161,9 @@ describe('parseDateTime', () => {
     expect(read('13.10.2026 21', 'de')).toBeNull();
     expect(read('13.10.2026 2130', 'de')).toBe('2026-10-13T21:30:00');
     expect(read('10/13/2026 9 pm', 'en-US')).toBe('2026-10-13T21:00:00');
+    // "h" is a word fr-CA writes in a time, not a part of the day.
+    expect(read('13 oct. 21 h 05', 'fr-CA')).toBeNull();
+    expect(read('13 oct. 2026 21 h 05', 'fr-CA')).toBe('2026-10-13T21:05:00');
   });
 
   it('does not read the hour of a time as the year of a date typed without one', () => {
@@ -192,8 +193,28 @@ describe('parseDateTime', () => {
 
   it('reads a two-digit year beside the time', () => {
     expect(read('26. 10. 13. 21:05', 'ko')).toBe('2026-10-13T21:05:00');
-    expect(read('21:05 13 10 26', 'vi')).toBe('2026-10-13T21:05:00');
-    expect(read('13 Oct 26 21:05', 'en-GB')).toBe('2026-10-13T21:05:00');
+    expect(read('21:05 13/10/26', 'vi')).toBe('2026-10-13T21:05:00');
+    expect(read('13/10/26 21:05', 'en-GB')).toBe('2026-10-13T21:05:00');
+    expect(read('13.10.26 г. 21:30', 'bg')).toBe('2026-10-13T21:30:00');
+    // kkj writes a date with a two-digit year as "13/10 26".
+    expect(read('13/10 26 21:30', 'kkj')).toBe('2026-10-13T21:30:00');
+    // Also October 12 at 13:21:05 when the year is left out, which is not read.
+    expect(read('12. 10. 13. 21:05', 'ko')).toBe('2012-10-13T21:05:00');
+  });
+
+  it("reads a two-digit year only where the locale's date with one has it, and not a year of one digit", () => {
+    expect(read('21:05 13 10 26', 'vi')).toBeNull();
+    expect(read('10/13 12 05 pm', 'en-US')).toBeNull();
+    expect(read('13.10 12.05.15', 'da')).toBeNull();
+    // The day 09 has the digits of 2009, but is not its year.
+    expect(read('Oct 09 9 05 pm', 'en-US')).toBeNull();
+    expect(read('05/13/5 9:30 pm', 'en-US')).toBeNull();
+    expect(read('10/13/6 9:30 pm', 'en-US')).toBeNull();
+    // Also October 13 at 11:05:15, the date as cs writes it without a year.
+    expect(read('13. 10. 11 05 15', 'cs')).toBeNull();
+    expect(read('12. 12. 12 12 12', 'cs')).toBeNull();
+    expect(read('10/13/12 09 05', 'en-US')).toBeNull();
+    expect(read('10/13/12 9:05', 'en-US')).toBe('2012-10-13T09:05:00');
   });
 
   it('does not read a date typed without a year, beside a time, in any locale the runtime has', () => {
@@ -208,6 +229,8 @@ describe('parseDateTime', () => {
       ['2026-03-04', '9 05'],
       ['2020-02-29', '20 05'],
       ['2009-10-13', '9 05'],
+      ['2026-10-13', '11 05 15'],
+      ['2026-10-13', '12 05 15'],
     ];
     for (const locale of ALL_LOCALES) {
       // The time goes where formatDateTime writes it: first when the hour comes before the year.
@@ -215,8 +238,13 @@ describe('parseDateTime', () => {
         .formatToParts(Date.UTC(2026, 9, 13, 21))
         .map((part) => part.type);
       const timeFirst = types.indexOf('hour') < types.indexOf('year');
+      // The locale's own time, with a word for the part of the day where it writes one, typed with spaces for its marks.
+      const own = new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit', hour12: true, ...gregory })
+        .format(Date.UTC(2026, 9, 13, 23, 5))
+        .replace(/[^\p{L}\p{M}\p{N}]+/gu, ' ')
+        .trim();
       for (const style of dates) {
-        for (const [day, time] of cases) {
+        for (const [day, time] of [...cases, ['2026-10-13', own] as [string, string]]) {
           const date = Temporal.PlainDate.from(day).toLocaleString(locale, { ...style, ...gregory });
           const text = timeFirst ? `${time} ${date}` : `${date} ${time}`;
           expect(read(text, locale), `${locale}: ${text}`).toBeNull();
