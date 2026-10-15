@@ -25,12 +25,10 @@ import { useFieldsetState } from './Fieldset.context';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Field.module.css';
 import { useGlyphs } from '../providers/GlyphsProvider';
-import { CalendarGlyph, ClockGlyph, glyphOr } from './glyphs';
+import { CalendarGlyph, glyphOr } from './glyphs';
 import { useStrings, type Strings } from '../providers/StringsProvider';
 import type { PopoverCloseReason } from '../hooks/usePopover';
 import { Popover } from './Popover';
-import { OptionList } from './OptionList';
-import { formatTime } from './timeText';
 import {
   Calendar as CalendarParts,
   CALENDAR_TAB_STOP,
@@ -38,20 +36,14 @@ import {
   isoDate,
   type CalendarFirstDayOfWeek,
 } from './Calendar';
-import {
-  createCountStore,
-  subscribeCount,
-  pickerToggles,
-  useFieldPicker,
-  htmlDateTime,
-  htmlTime,
-} from './Field.shared';
+import { createCountStore, subscribeCount, pickerToggles, useFieldPicker, htmlDateTime } from './Field.shared';
 import { TextInput } from './Field.TextInput';
 import { Textarea } from './Field.Textarea';
 import { ChipInput } from './Field.ChipInput';
 import { Select } from './Field.Select';
 import { ColorPicker } from './Field.ColorPicker';
 import { DatePicker } from './Field.DatePicker';
+import { timeSlots, TimeList, TimePicker } from './Field.TimePicker';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -254,209 +246,7 @@ export type { FieldChipInputProps } from './Field.ChipInput';
 export type { FieldSelectProps } from './Field.Select';
 export type { FieldColorPickerCloseReason, FieldColorPickerProps } from './Field.ColorPicker';
 export type { FieldDatePickerCloseReason, FieldDatePickerProps } from './Field.DatePicker';
-
-/** Why Field.TimePicker's list closed: a popover's reasons, a picked time, or the field became disabled. */
-export type FieldTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
-
-export type FieldTimePickerProps = {
-  /** The time, or null for none. */
-  value: Temporal.PlainTime | null;
-  /** Fires with the time picked in the list. */
-  onValueChange?: (value: Temporal.PlainTime) => void;
-  /** The earliest time the list offers. */
-  min?: Temporal.PlainTime;
-  /** The latest time the list offers. */
-  max?: Temporal.PlainTime;
-  /** Minutes between the times in the list, from midnight. Defaults to 30. */
-  step?: number;
-  /** The locale for the times' text, such as "ko". The browser's own when not set, so pass it when the picker renders on a server. */
-  locale?: string;
-  /** Shown on the button while there is no time, when showValue is true. */
-  placeholder?: string;
-  /** Whether the button shows the time, or the placeholder, beside its glyph. Set it to false beside a text input that shows the time. Defaults to true. */
-  showValue?: boolean;
-  /** Controlled open state of the list. Pass with onOpenChange. */
-  open?: boolean;
-  /** Initial open state when uncontrolled. */
-  defaultOpen?: boolean;
-  /** Fires when the list opens or closes, with why it closed. */
-  onOpenChange?: (open: boolean, reason: FieldTimePickerCloseReason) => void;
-} & Omit<
-  ComponentPropsWithRef<'button'>,
-  'value' | 'defaultValue' | 'children' | 'type' | 'onChange' | 'placeholder'
->;
-
-const MINUTES_PER_DAY = 24 * 60;
-
-/** The times every `step` minutes from midnight between `min` and `max`, with `value` among them when it is in range. */
-function timeSlots(step: number, min?: Temporal.PlainTime, max?: Temporal.PlainTime, value?: Temporal.PlainTime | null) {
-  const every = Number.isFinite(step) && step >= 1 ? Math.round(step) : 30;
-  const inRange = (time: Temporal.PlainTime) =>
-    (!min || Temporal.PlainTime.compare(time, min) >= 0) && (!max || Temporal.PlainTime.compare(time, max) <= 0);
-  const slots: Temporal.PlainTime[] = [];
-  for (let minutes = 0; minutes < MINUTES_PER_DAY; minutes += every) {
-    const time = new Temporal.PlainTime(Math.floor(minutes / 60), minutes % 60);
-    if (inRange(time)) slots.push(time);
-  }
-  if (value && inRange(value) && !slots.some((time) => time.equals(value))) {
-    slots.push(value);
-    slots.sort(Temporal.PlainTime.compare);
-  }
-  return slots;
-}
-
-const subscribeNothing = () => () => {};
-// Now, up to the next whole minute, as the list's times are whole minutes, as a string so the snapshot stays the same within a minute.
-const nowOnClient = () => Temporal.Now.plainTimeISO().round({ smallestUnit: 'minute', roundingMode: 'ceil' }).toString();
-const nowOnServer = () => null;
-
-// The list's times, in an OptionList. It starts at the time when the list
-// has it, or else at the next time from now, which a server render and
-// hydration do not know, or else at its first time.
-function TimeList({
-  value,
-  step,
-  min,
-  max,
-  locale,
-  label,
-  onPick,
-}: {
-  value: Temporal.PlainTime | null;
-  step: number;
-  min?: Temporal.PlainTime;
-  max?: Temporal.PlainTime;
-  locale?: string;
-  label: string;
-  onPick: (time: Temporal.PlainTime) => void;
-}) {
-  const slots = useMemo(() => timeSlots(step, min, max, value), [step, min, max, value]);
-  // Formatted once per list, which can hold 1,440 times. Keyed to the
-  // nanosecond, so a value between the steps stays as it is when picked.
-  const options = useMemo(
-    () => slots.map((time) => ({ time, key: time.toString(), label: formatTime(time, { locale }) })),
-    [slots, locale],
-  );
-  const nowText = useSyncExternalStore(subscribeNothing, nowOnClient, nowOnServer);
-  // Set once the user moves through the list.
-  const [moved, setMoved] = useState<string | null>(null);
-  const selected = value && slots.some((time) => time.equals(value)) ? value.toString() : null;
-  const start = useMemo(() => {
-    if (selected) return selected;
-    const now = nowText === null ? null : Temporal.PlainTime.from(nowText);
-    const next = (now && slots.find((time) => Temporal.PlainTime.compare(time, now) >= 0)) ?? slots[0];
-    return next ? next.toString() : null;
-  }, [selected, nowText, slots]);
-  return (
-    <OptionList.Root
-      aria-label={label}
-      value={selected}
-      onValueChange={(next) => {
-        const option = options.find((item) => item.key === next);
-        if (option) onPick(option.time);
-      }}
-      activeValue={moved ?? start}
-      onActiveValueChange={setMoved}
-    >
-      {options.map((option) => (
-        <OptionList.Option key={option.key} value={option.key}>
-          {option.label}
-        </OptionList.Option>
-      ))}
-    </OptionList.Root>
-  );
-}
-
-/**
- * A button that opens a list of times in a popover and closes it on a picked
- * time. On its own it is the field's control and shows the time, and a press
- * elsewhere in the field opens the list. Beside any other control but a
- * Field.ColorPicker, Field.DatePicker, Field.TimePicker or Field.DateTimePicker, such as a
- * Field.TextInput to type the time in, that control is the field's control
- * instead, and the button is named from the timePicker string. With
- * `showValue={false}` the button shows only a clock glyph.
- */
-function TimePicker({
-  value,
-  onValueChange,
-  min,
-  max,
-  step = 30,
-  locale,
-  placeholder,
-  showValue = true,
-  open,
-  defaultOpen,
-  onOpenChange,
-  className,
-  style,
-  'aria-describedby': describedBy,
-  ...props
-}: FieldTimePickerProps) {
-  const strings = useStrings();
-  const { clock } = useGlyphs();
-  const textId = useDomId();
-  // The button's name is not the time, so the time it shows is its description.
-  const picker = useFieldPicker<'select'>({
-    props: { ...props, 'aria-describedby': showValue ? mergeDescribedBy(describedBy, textId) : describedBy },
-    label: strings.timePicker,
-    open,
-    defaultOpen,
-    onOpenChange,
-    style,
-    // The list, which shows its active time.
-    focusSelector: '[role="listbox"]',
-    // A role-less popover around a named list of times.
-    haspopup: 'listbox',
-  });
-  return (
-    <>
-      <button
-        {...picker.triggerProps}
-        type="button"
-        data-todae-field-picker=""
-        data-glyph-only={showValue ? undefined : ''}
-        className={cx(styles.picker, className)}
-      >
-        {showValue ? (
-          <span id={textId} className={styles.pickerText} data-placeholder={value ? undefined : ''}>
-            {value ? formatTime(value, { locale }) : placeholder}
-          </span>
-        ) : null}
-        <span className={styles.pickerGlyph} data-todae-glyph="" aria-hidden="true">
-          {glyphOr(clock, <ClockGlyph />)}
-        </span>
-      </button>
-      {/* A button sends nothing with a form, so the value goes in a hidden input. */}
-      {picker.name ? (
-        <input
-          type="hidden"
-          name={picker.name}
-          value={value ? htmlTime(value) : ''}
-          disabled={picker.disabled}
-          form={picker.form}
-        />
-      ) : null}
-      {/* Mounted while open only: a form can hold many time pickers. */}
-      {picker.shown ? (
-        <Popover.Root {...picker.popover.getPopoverProps()}>
-          <TimeList
-            value={value}
-            step={step}
-            min={min}
-            max={max}
-            locale={locale}
-            label={strings.timePicker}
-            onPick={(next) => {
-              onValueChange?.(next);
-              picker.setOpen(false, 'select');
-            }}
-          />
-        </Popover.Root>
-      ) : null}
-    </>
-  );
-}
+export type { FieldTimePickerCloseReason, FieldTimePickerProps } from './Field.TimePicker';
 
 /** Why Field.DateTimePicker's popover closed: a popover's reasons, a pick that made the value, or the field became disabled. */
 export type FieldDateTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';
