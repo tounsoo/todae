@@ -1,11 +1,8 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import {
-  useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type ComponentPropsWithRef,
   type CSSProperties,
   type MouseEvent,
@@ -13,17 +10,11 @@ import {
   type Ref,
 } from 'react';
 import { useDomId } from './domId';
-import {
-  FIELD_CONTROL_SELECTOR,
-  FOCUSABLE_FIELD_CONTROL_SELECTOR,
-  FieldContext,
-  type FieldContextValue,
-} from './Field.context';
+import { FIELD_CONTROL_SELECTOR, FOCUSABLE_FIELD_CONTROL_SELECTOR, FieldContext } from './Field.context';
 import { useFieldsetState } from './Fieldset.context';
 import { composeHandlers, cx, useComposedRefs } from './props';
 import styles from './Field.module.css';
-import { useStrings, type Strings } from '../providers/StringsProvider';
-import { createCountStore, subscribeCount, pickerToggles } from './Field.shared';
+import { createCountStore, pickerToggles } from './Field.shared';
 import { TextInput } from './Field.TextInput';
 import { Textarea } from './Field.Textarea';
 import { ChipInput } from './Field.ChipInput';
@@ -32,6 +23,7 @@ import { ColorPicker } from './Field.ColorPicker';
 import { DatePicker } from './Field.DatePicker';
 import { TimePicker } from './Field.TimePicker';
 import { DateTimePicker } from './Field.DateTimePicker';
+import { Counter } from './Field.Counter';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -236,74 +228,7 @@ export type { FieldColorPickerCloseReason, FieldColorPickerProps } from './Field
 export type { FieldDatePickerCloseReason, FieldDatePickerProps } from './Field.DatePicker';
 export type { FieldTimePickerCloseReason, FieldTimePickerProps } from './Field.TimePicker';
 export type { FieldDateTimePickerCloseReason, FieldDateTimePickerProps } from './Field.DateTimePicker';
-
-export type FieldCounterProps = {
-  className?: string;
-  style?: CSSProperties;
-} & Omit<ComponentPropsWithRef<'span'>, 'children'>;
-
-let warnedNoInput = false;
-
-function liveCopy(remaining: number, strings: Strings) {
-  return remaining <= 0 ? strings.characterLimitReached : strings.charactersLeft(remaining);
-}
-
-function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: FieldContextValue }) {
-  const strings = useStrings();
-  const entry = useSyncExternalStore(
-    (listener) => subscribeCount(ctx.store, listener),
-    () => ctx.store.entry,
-    () => ctx.store.entry,
-  );
-  useEffect(() => {
-    ctx.store.counters += 1;
-    for (const listener of ctx.store.presence) listener();
-    return () => {
-      ctx.store.counters -= 1;
-      for (const listener of ctx.store.presence) listener();
-    };
-  }, [ctx.store]);
-  useEffect(() => {
-    if (ctx.store.entry || process.env.NODE_ENV === 'production' || warnedNoInput) return;
-    warnedNoInput = true;
-    console.warn('Field.Counter has no Field.TextInput or Field.Textarea');
-  });
-  if (!entry) return null;
-  const count = entry.value.length;
-  const max = entry.maxLength;
-  const atLimit = max !== undefined && count === max;
-  const over = max !== undefined && count > max;
-  const remaining = max === undefined ? undefined : max - count;
-  return (
-    <span
-      {...props}
-      data-todae-counter=""
-      data-limit={atLimit ? '' : undefined}
-      data-over={over ? '' : undefined}
-      data-invalid={ctx.invalid ? '' : undefined}
-      data-disabled={ctx.disabled ? '' : undefined}
-      className={cx(styles.counter, className)}
-    >
-      <span aria-hidden="true">{max === undefined ? String(count) : `${count} / ${max}`}</span>
-      {max === undefined ? null : (
-        <>
-          <span id={ctx.hintId} className={styles.srOnly}>
-            {strings.characterLimit(max)}
-          </span>
-          <span className={styles.srOnly} aria-live="polite">
-            {remaining !== undefined && remaining <= 20 ? liveCopy(remaining, strings) : ''}
-          </span>
-        </>
-      )}
-    </span>
-  );
-}
-
-function Counter(props: FieldCounterProps) {
-  const ctx = useContext(FieldContext);
-  if (!ctx) throw new Error('Field.Counter must render inside Field.Root');
-  return <CounterInner {...props} ctx={ctx} />;
-}
+export type { FieldCounterProps } from './Field.Counter';
 
 export type FieldRowProps = {
   children?: ReactNode;
