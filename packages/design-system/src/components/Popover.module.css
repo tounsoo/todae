@@ -15,6 +15,7 @@
     color: var(--todae-popover-fg);
     border: var(--todae-popover-border-width) solid var(--todae-popover-border);
     border-radius: var(--todae-popover-radius);
+    box-shadow: var(--todae-popover-shadow);
     pointer-events: auto;
   }
 

@@ -59,6 +59,7 @@ export const ENGLISH_PAGES: Record<string, () => Promise<{ default: ComponentTyp
   'recipes/combobox': () => import('../../app/(en)/recipes/combobox/page.mdx'),
   'recipes/command-palette': () => import('../../app/(en)/recipes/command-palette/page.mdx'),
   'recipes/file-upload': () => import('../../app/(en)/recipes/file-upload/page.mdx'),
+  'recipes/message-actions': () => import('../../app/(en)/recipes/message-actions/page.mdx'),
   'scroll-area': () => import('../../app/(en)/scroll-area/page.mdx'),
   'separator': () => import('../../app/(en)/separator/page.mdx'),
   'slider': () => import('../../app/(en)/slider/page.mdx'),

@@ -65,7 +65,7 @@ const BESIDE_NAMED = 2;
  * field's name. The server cannot know of one yet, so it reads 0 until
  * hydration.
  */
-export function usePickerPresence(store: CountStore) {
+function usePickerPresence(store: CountStore) {
   const subscribe = useCallback((listener: () => void) => subscribePresence(store, listener), [store]);
   return useSyncExternalStore(
     subscribe,
@@ -81,7 +81,7 @@ export function usePickerPresence(store: CountStore) {
  * `name`, else the field's name when no other control has it, and `disabled`
  * and `aria-invalid`, and is named `label`.
  */
-export function pickerControl<P extends PickerOwnProps>(
+function pickerControl<P extends PickerOwnProps>(
   presence: number,
   field: UseFieldResult,
   props: P,
@@ -132,9 +132,10 @@ export const htmlDateTime = (value: Temporal.PlainDateTime) =>
   toHtmlYear(value.withCalendar('iso8601').toString({ smallestUnit: timeUnit(value), calendarName: 'never' }));
 
 /**
- * What Field.DatePicker, Field.TimePicker and Field.DateTimePicker share: the button's control
- * props, the open state, which closes when the field is disabled, and the
- * popover, which focuses the element `focusSelector` finds when it opens.
+ * What Field.ColorPicker, Field.DatePicker, Field.TimePicker and Field.DateTimePicker share: the
+ * button's control props, the open state, which closes when the field is
+ * disabled, and the popover, which focuses the element `focusSelector` finds
+ * when it opens, or without one its first tabbable.
  */
 export function useFieldPicker<Reason extends string>({
   props,
@@ -152,7 +153,7 @@ export function useFieldPicker<Reason extends string>({
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean, reason: Reason | PopoverCloseReason | 'disabled') => void;
   style?: CSSProperties;
-  focusSelector: string;
+  focusSelector?: string;
   /** What the popover holds, for the button's aria-haspopup: a dialog by default. */
   haspopup?: PopoverHaspopup;
 }) {
@@ -177,11 +178,14 @@ export function useFieldPicker<Reason extends string>({
   }, [control.disabled, open]);
   const popoverRef = useRef<RefObject<HTMLElement | null> | null>(null);
   const initialFocusRef = useMemo(
-    () => ({
-      get current() {
-        return popoverRef.current?.current?.querySelector<HTMLElement>(focusSelector) ?? null;
-      },
-    }),
+    () =>
+      focusSelector === undefined
+        ? undefined
+        : {
+            get current() {
+              return popoverRef.current?.current?.querySelector<HTMLElement>(focusSelector) ?? null;
+            },
+          },
     [focusSelector],
   );
   const popover = usePopover({

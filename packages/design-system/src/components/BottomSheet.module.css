@@ -23,6 +23,7 @@
     border: var(--todae-sheet-border-width) solid var(--todae-sheet-border);
     border-bottom: 0;
     border-radius: var(--todae-sheet-radius) var(--todae-sheet-radius) 0 0;
+    box-shadow: var(--todae-sheet-shadow);
     transition:
       height var(--todae-sheet-motion-resize) var(--todae-overlay-motion-easing-enter),
       bottom var(--todae-sheet-motion-enter) var(--todae-overlay-motion-easing-enter);

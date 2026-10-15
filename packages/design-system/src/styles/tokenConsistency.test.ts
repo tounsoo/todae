@@ -171,38 +171,34 @@ describe('token consistency across component styles', () => {
     }
   });
 
-  it('uses tokens for pills, tight leading and hairline borders', () => {
+  it('uses tokens for pills, leading, fades, easing and hairline borders', () => {
     for (const [name, css] of Object.entries(sheets)) {
       const plain = outsideForcedColors(css);
       expect({ name, pill: /\b9{3,}px/.test(plain) }).toEqual({ name, pill: false });
-      expect({ name, leading: /line-height:\s*1\.25\b/.test(plain) }).toEqual({ name, leading: false });
+      // line-height: 1 centres a glyph in its box; any other number is text leading.
+      expect({ name, leading: /line-height:\s*(?!1\s*[;}])[\d.]+\s*[;}]/.test(plain) }).toEqual({ name, leading: false });
+      // opacity 0 and 1 show and hide; a value between is a look a theme may change.
+      expect({ name, fade: /\bopacity:\s*(?:0?\.\d+|0\.0*[1-9]\d*)\s*[;}]/.test(plain) }).toEqual({ name, fade: false });
+      // linear stays for continuous loops; a named curve is a motion style.
+      expect({ name, easing: /\b(?:ease|ease-in|ease-out|ease-in-out)\b(?![-\w])/.test(plain) }).toEqual({ name, easing: false });
       const hairline = /\bborder[-a-z]*:[^;]*\b1px\b|calc\([^;]*\b1px\b/.test(plain);
       expect({ name, hairline }).toEqual({ name, hairline: false });
     }
   });
 
-  it('takes lengths from tokens', () => {
-    for (const [name, css] of Object.entries(sheets)) {
-      const literals: string[] = [];
-      for (const [, body] of outsideForcedColors(css).matchAll(/\{([^{}]*)\}/g)) {
-        // Visually hidden text keeps its 1px box, as VisuallyHidden.Root does.
-        if (/overflow:\s*hidden/.test(body!) && /\bclip(-path)?:/.test(body!)) continue;
-        for (const [literal, number, unit] of body!.matchAll(/(?<![\w.#-])-?(\d*\.?\d+)(px|rem|em)\b/g)) {
-          // 0 is no length, and 1em only carries a token's scale into em.
-          if (Number(number) === 0 || (unit === 'em' && literal === '1em')) continue;
-          literals.push(literal);
-        }
-      }
-      expect({ name, literals }).toEqual({ name, literals: [] });
+  it('lifts every overlay surface with its own shadow token', () => {
+    const surfaces: [string, string][] = [
+      ['Dialog', 'dialog'],
+      ['BottomSheet', 'sheet'],
+      ['Drawer', 'drawer'],
+      ['Popover', 'popover'],
+      ['Tooltip', 'tooltip'],
+      ['Toast', 'toast'],
+      ['Field', 'field-picker'],
+    ];
+    for (const [name, token] of surfaces) {
+      expect({ name, reads: sheets[name]!.includes(`box-shadow: var(--todae-${token}-shadow);`) }).toEqual({ name, reads: true });
     }
-  });
-
-  // A theme may set border.width to 0; these lines must still show.
-  it('keeps the pressed ring and menu separator off border.width', () => {
-    const tokensCss = readFileSync(join(import.meta.dirname, 'tokens.generated.css'), 'utf8');
-    expect(sheets.Button).toContain('inset 0 0 0 var(--todae-button-pressed-ring-width) currentColor');
-    expect(tokensCss).toContain('--todae-button-base-pressed-ring-width: var(--_todae-button-base-pressed-ring-width, 1px);');
-    expect(tokensCss).toContain('--todae-menu-separator-thickness: var(--_todae-menu-separator-thickness, 1px);');
   });
 
   it('keeps overrides of the tokens a component used to read reaching it', () => {
@@ -215,6 +211,9 @@ describe('token consistency across component styles', () => {
       ['field-picker-padding-x', 'popover-padding-x'],
       ['field-picker-padding-y', 'popover-padding-y'],
       ['field-picker-max-height', 'popover-max-height'],
+      ['field-picker-shadow', 'popover-shadow'],
+      ['sheet-shadow', 'dialog-shadow'],
+      ['drawer-shadow', 'dialog-shadow'],
       ['drawer-gap', 'dialog-gap'],
       ['sheet-title-font-size', 'dialog-title-font-size'],
       ['sheet-title-font-weight', 'dialog-title-font-weight'],

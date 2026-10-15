@@ -219,6 +219,7 @@
     padding: var(--todae-toast-padding-y) var(--todae-toast-padding-x);
     border: var(--todae-toast-border-width) solid var(--_tone-border);
     border-radius: var(--todae-toast-radius);
+    box-shadow: var(--todae-toast-shadow);
     background: var(--_tone-bg);
     color: var(--_tone-fg);
     font-size: var(--todae-toast-font-size);
