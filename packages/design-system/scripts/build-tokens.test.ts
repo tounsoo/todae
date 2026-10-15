@@ -443,7 +443,13 @@ describe('committed token graph', () => {
   it('checks every Todae text pair with APCA in both appearances', async () => {
     const results = contrastResults(await resolveEntries(join(import.meta.dirname, '../tokens')));
     expect(new Set(results.map((r) => r.where))).toEqual(new Set(['appearance "light"', 'appearance "dark"']));
-    for (const r of results) expect(r.lc, `${r.fg} on ${r.bg} in ${r.where}`).toBeGreaterThanOrEqual(r.min);
+    for (const r of results) expect(r.lc, `${r.fg} on ${r.bg} over ${r.over} in ${r.where}`).toBeGreaterThanOrEqual(r.min);
+    // A translucent background is composited over each surface before measuring.
+    const lc = (fg: string, bg: string, over: string, where: string) =>
+      results.find((r) => r.fg === fg && r.bg === bg && r.over === over && r.where === where)?.lc.toFixed(1);
+    expect(lc('nav.item.fg.current', 'nav.item.bg.current', 'color.bg.canvas', 'appearance "light"')).toBe('75.5');
+    expect(lc('nav.item.fg.current', 'nav.item.bg.current', 'color.bg.subtle', 'appearance "light"')).toBe('71.1');
+    expect(lc('option.fg.selected', 'option.bg.selected-highlighted', 'popover.bg', 'appearance "light"')).toBe('67.4');
     const pairs = results.map((r) => `${r.fg} on ${r.bg}`);
     for (const pair of [
       'color.fg.default on color.bg.surface',
@@ -1314,6 +1320,34 @@ describe('company token build', () => {
     expect(error).toMatch(/^contrast: 2 pair\(s\) fail APCA/);
     expect(error).toContain('"field.fg.placeholder" on "field.bg.default" over "color.bg.subtle" in appearance "light" is Lc 57.9, below 60');
     expect(error).toContain('"field.fg.adornment" on "field.bg.default" over "color.bg.subtle" in appearance "light" is Lc 57.9, below 60');
+
+    // Re-listing the pairs from any of the company's entries replaces Todae's, wherever Todae declares them.
+    const retuned = await company((r) => {
+      const ch = (i: number) => ({ $ref: `#/color/bg/surface/$value/components/${i}` });
+      r.sets.contract = {
+        sources: [
+          { field: { bg: { default: { $type: 'color', $value: { colorSpace: 'oklch', components: [ch(0), ch(1), ch(2)], alpha: 0 } } } } },
+        ],
+        $extensions: { 'dev.todae': { layer: 'contract' } },
+      };
+      r.resolutionOrder.push({ $ref: '#/sets/contract' });
+      r.modifiers.appearance.$extensions['dev.todae'].contrast = [
+        { fg: 'field.fg.placeholder', bg: 'field.bg.default', min: 55 },
+        { fg: 'field.fg.adornment', bg: 'field.bg.default', min: 55 },
+      ];
+    });
+    await expect(buildCompanyTokens({ resolver: retuned, base: tokensDir })).resolves.toBeDefined();
+
+    // A retuned pair that lists no surfaces keeps Todae's, so its translucent background is still measured over them
+    // (acme's accent tints the selected row, so the Lc differs from Todae's).
+    const nav = (min: number) =>
+      company((r) => {
+        r.sets.brand.$extensions['dev.todae'].contrast = [{ fg: 'nav.item.fg.current', bg: 'nav.item.bg.current', min }];
+      });
+    await expect(buildCompanyTokens({ resolver: await nav(45), base: tokensDir })).resolves.toBeDefined();
+    const navError = await buildCompanyTokens({ resolver: await nav(76), base: tokensDir }).catch((e: Error) => e.message);
+    expect(navError).toMatch(/^contrast: 1 pair\(s\) fail APCA/);
+    expect(navError).toContain('"nav.item.fg.current" on "nav.item.bg.current" over "color.bg.subtle" in appearance "light" is Lc 75.3, below 76');
   });
 
   it('composites a translucent text color and checks a translucent background over its surfaces', async () => {

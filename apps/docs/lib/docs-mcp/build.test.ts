@@ -62,7 +62,7 @@ describe('token tools', () => {
     const onAccent = pairs.filter((pair) => pair.fg === 'color.on-accent' && pair.bg === 'color.accent.default');
     expect(onAccent.map((pair) => pair.where)).toEqual(['appearance "light"', 'appearance "dark"']);
     const selected = pairs.filter((pair) => pair.fg === 'nav.item.fg.current');
-    expect(selected.map((pair) => pair.over)).toEqual([...Array(2)].flatMap(() => ['color.bg.canvas', 'color.bg.surface', 'color.bg.subtle']));
+    expect(selected.map((pair) => pair.over)).toEqual([...Array(2)].flatMap(() => ['color.bg.canvas', 'color.bg.surface', 'color.bg.subtle', 'color.bg.elevated']));
     expect(onAccent.every((pair) => !('over' in pair))).toBe(true);
   });
 });

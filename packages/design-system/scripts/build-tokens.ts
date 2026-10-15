@@ -1005,11 +1005,20 @@ function parseContrast(contrast: unknown, loc: string): { contrast?: ContrastPai
   return { contrast: contrast as ContrastPair[] };
 }
 
-/** Upstream pairs plus the extension's own; a pair naming the same fg and bg replaces the upstream one. */
+const pairKey = (pair: ContrastPair) => `${pair.fg} on ${pair.bg}`;
+
+/** `pair`, keeping `upstream`'s surfaces when it lists none of its own. */
+function retune(pair: ContrastPair, upstream: ContrastPair | undefined): ContrastPair {
+  return pair.over === undefined && upstream?.over !== undefined ? { ...pair, over: upstream.over } : pair;
+}
+
+/**
+ * Upstream pairs plus the extension's own. A pair naming the same fg and bg
+ * replaces the upstream one, and keeps its `over` unless it lists its own.
+ */
 function mergeContrast(base: readonly ContrastPair[] = [], own: readonly ContrastPair[] = []): ContrastPair[] {
-  const key = (pair: ContrastPair) => `${pair.fg} on ${pair.bg}`;
-  const merged = new Map(base.map((pair) => [key(pair), pair]));
-  for (const pair of own) merged.set(key(pair), pair);
+  const merged = new Map(base.map((pair) => [pairKey(pair), pair]));
+  for (const pair of own) merged.set(pairKey(pair), retune(pair, merged.get(pairKey(pair))));
   return [...merged.values()];
 }
 
@@ -1320,7 +1329,39 @@ export function mergeEntries(
   }
   merged.push(...pending);
   company.push(...pending);
+  retuneAcrossEntries(base, extra, merged);
   return { merged, company, inherited };
+}
+
+/**
+ * A company pair naming the same fg and bg as one of Todae's replaces it
+ * wherever Todae declares it, so a company retunes a component pair from its
+ * appearance modifier or any set, not only from a set of the same name. The
+ * replacement keeps Todae's `over` unless it lists its own.
+ */
+function retuneAcrossEntries(base: ResolvedEntry[], extra: ResolvedEntry[], merged: ResolvedEntry[]): void {
+  const todae = new Map<string, ContrastPair>();
+  for (const entry of base) for (const pair of entry.extension.contrast ?? []) todae.set(pairKey(pair), pair);
+  // The company's own pairs: those its entries declare that aren't Todae's inherited ones.
+  const owner = new Map<string, string>();
+  for (const entry of extra) {
+    const upstream = base.find((candidate) => candidate.kind === entry.kind && candidate.name === entry.name);
+    const inherited = new Set(upstream?.extension.contrast ?? []);
+    for (const pair of entry.extension.contrast ?? []) {
+      if (!inherited.has(pair) && todae.has(pairKey(pair))) owner.set(pairKey(pair), `${entry.kind} ${entry.name}`);
+    }
+  }
+  if (owner.size === 0) return;
+  for (const [i, entry] of merged.entries()) {
+    const pairs = entry.extension.contrast;
+    if (!pairs) continue;
+    const here = `${entry.kind} ${entry.name}`;
+    const kept = pairs
+      .filter((pair) => owner.get(pairKey(pair)) === undefined || owner.get(pairKey(pair)) === here)
+      .map((pair) => (owner.get(pairKey(pair)) === here ? retune(pair, todae.get(pairKey(pair))) : pair));
+    const { contrast: _dropped, ...rest } = entry.extension;
+    merged[i] = { ...entry, extension: kept.length > 0 ? { ...rest, contrast: kept } : rest } as ResolvedEntry;
+  }
 }
 
 function entryTokens(entry: ResolvedEntry): FlatToken[] {
@@ -1596,8 +1637,8 @@ export type ContrastResult = Omit<ContrastPair, 'over'> & {
 /**
  * Measures every declared contrast pair. Each pair runs once per combination
  * of the declaring modifier's contexts and every color-scheme modifier's
- * contexts, so a set's pairs are checked in light and dark too. Other
- * modifiers stay at their defaults.
+ * contexts, so a set's pairs are checked in light and dark too, and once per
+ * `over` surface in each. Other modifiers stay at their defaults.
  */
 export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
   const results: ContrastResult[] = [];
