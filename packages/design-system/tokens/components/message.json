@@ -1,5 +1,6 @@
 {
   "message": {
+    "$description": "Message.Root: one chat message, with user and system variants.",
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
     "row-gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },

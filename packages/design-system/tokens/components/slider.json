@@ -1,5 +1,6 @@
 {
   "slider": {
+    "$description": "Slider.Root: a native range input tinted with the fill color, and its focus ring.",
     "fill": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
     "ring": {
       "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }

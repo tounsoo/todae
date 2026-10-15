@@ -1,5 +1,6 @@
 {
   "tree": {
+    "$description": "Tree.Root: a hierarchical list with expandable branches and a selected item.",
     "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
     "indent": { "$type": "dimension", "$value": { "$ref": "#/space/6/$value" } },
     "item": {

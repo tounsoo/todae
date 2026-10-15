@@ -6,7 +6,7 @@ import base from './vite.config';
 export default defineConfig({
   ...base,
   // Found mid-run, these would make Vite reload the page and load a second React.
-  optimizeDeps: { include: ['react-dom/client', 'react-dom/server'] },
+  optimizeDeps: { include: ['react/jsx-dev-runtime', 'react-dom/client', 'react-dom/server'] },
   test: {
     include: ['src/**/*.browser.test.tsx'],
     setupFiles: ['./src/test/browser-setup.ts'],

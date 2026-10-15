@@ -1,6 +1,7 @@
 {
   "button": {
     "ghost": {
+      "$description": "The ghost Button.Root variant: a quiet action with no fill until hovered. Colors per state.",
       "bg": {
         "default": { "$type": "color", "$value": { "$ref": "#/color/bg/transparent/$value" } },
         "hover": { "$type": "color", "$value": { "$ref": "#/color/bg/highlight/$value" } },

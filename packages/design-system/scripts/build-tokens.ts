@@ -100,6 +100,8 @@ export type Layer = keyof typeof LAYER_RANK;
 export type TokenNode = {
   $type?: string;
   $value: unknown;
+  /** The token's own `$description`, or the nearest group's. */
+  $description?: string;
 };
 
 export type TokenTree = { [key: string]: TokenNode | TokenTree };
@@ -123,6 +125,12 @@ export type FlatToken = {
   cssValue: string;
   layer: Layer;
   context?: string;
+  /**
+   * The token's `$description`, or the nearest enclosing group's in the same
+   * file; a later source file with neither keeps the earlier file's. Once settled (see `settleDescriptions`), the same on every context's
+   * row of a path.
+   */
+  description?: string;
 };
 
 export function fail(message: string): never {
@@ -156,19 +164,28 @@ function sortKeys(keys: string[]): string[] {
 
 export function flattenTokens(tree: TokenTree, inheritedType?: string): Map<string, TokenNode> {
   const out = new Map<string, TokenNode>();
-  function walk(node: unknown, path: string, type?: string) {
+  function describe(node: Record<string, unknown>, path: string, inherited?: string): string | undefined {
+    if (node.$description === undefined) return inherited;
+    if (typeof node.$description !== 'string' || node.$description.trim() === '') {
+      fail(`$description at "${path || '(root)'}" must be a non-empty string`);
+    }
+    return node.$description;
+  }
+  function walk(node: unknown, path: string, type?: string, description?: string) {
     if (!isRecord(node)) fail(`Token node at "${path || '(root)'}" must be an object`);
     if (isToken(node)) {
       if (!path) fail('Token is missing a path');
       const resolvedType = typeof node.$type === 'string' ? node.$type : type;
       if (!resolvedType) fail(`Token "${path}" is missing $type`);
-      out.set(path, { $type: resolvedType, $value: node.$value });
+      const own = describe(node, path, description);
+      out.set(path, own === undefined ? { $type: resolvedType, $value: node.$value } : { $type: resolvedType, $value: node.$value, $description: own });
       return;
     }
     const nextType = typeof node.$type === 'string' ? node.$type : type;
+    const nextDescription = describe(node, path, description);
     for (const key of sortKeys(Object.keys(node))) {
       if (key.startsWith('$')) continue;
-      walk(node[key], path ? `${path}.${key}` : key, nextType);
+      walk(node[key], path ? `${path}.${key}` : key, nextType, nextDescription);
     }
   }
   walk(tree, '', inheritedType);
@@ -654,6 +671,7 @@ export function layerTokens(
       cssValue,
       layer,
       context,
+      ...(node.$description === undefined ? {} : { description: node.$description }),
     });
   }
   return tokens;
@@ -781,7 +799,27 @@ export function emitCss(entries: ResolvedEntry[], options: EmitCssOptions = {}):
   return `${options.preamble ?? ''}@layer ${options.layer ?? 'todae.base'} {\n${blocks.join('\n\n')}\n}\n`;
 }
 
+/**
+ * Gives every row of a path one description: the first found in `sources`,
+ * in order, so a modifier token described once, in one context's file,
+ * carries it in every context. A company build passes its own tokens before
+ * Todae's, so its description wins in any context and Todae's is the fallback.
+ */
+export function settleDescriptions(tokens: FlatToken[], sources: FlatToken[][] = [tokens]): FlatToken[] {
+  const described = new Map<string, string>();
+  for (const source of sources) {
+    for (const token of source) if (token.description && !described.has(token.path)) described.set(token.path, token.description);
+  }
+  return tokens.map((token) => {
+    const description = described.get(token.path);
+    if (description === token.description) return token;
+    const { description: _, ...rest } = token;
+    return description === undefined ? rest : { ...rest, description };
+  });
+}
+
 export function emitCatalog(tokens: FlatToken[]): string {
+  const described = new Map(settleDescriptions(tokens).map((token) => [token.path, token.description]));
   const rows = tokens.map(({ path, type, cssVar, cssValue, ref, layer, context }) => ({
     path,
     type,
@@ -790,6 +828,7 @@ export function emitCatalog(tokens: FlatToken[]): string {
     ref,
     layer,
     context: context ?? null,
+    description: described.get(path) ?? null,
   }));
   return `${JSON.stringify({ version: 1, tokens: rows }, null, 2)}\n`;
 }
@@ -1098,7 +1137,12 @@ async function loadTokens(
 ): Promise<FlatToken[]> {
   const merged = new Map<string, TokenNode>();
   for (const source of await loadSources(sources, loc, tokensRoot)) {
-    for (const [path, node] of flattenTokens(source.tree)) merged.set(path, node);
+    // A later source's description wins; one with none (its own or a group's) keeps the
+    // earlier source's. Precedence across contexts and over Todae is settleDescriptions'.
+    for (const [path, node] of flattenTokens(source.tree)) {
+      const description = node.$description ?? merged.get(path)?.$description;
+      merged.set(path, description === undefined ? node : { ...node, $description: description });
+    }
   }
   const { layer, rules, slots } = extension;
   return layerTokens(merged, layer, context, { rules, slots, paints, inherited: tokenMapOf(inherited) });
@@ -1729,7 +1773,7 @@ export async function resolveEntries(tokensRoot: string): Promise<ResolvedEntry[
 
 export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensResult> {
   const entries = await resolveEntries(tokensRoot);
-  const all = checkGraph(entries);
+  const all = settleDescriptions(checkGraph(entries));
   validateContrast(entries);
   const pairs = entries.flatMap((entry) => entry.extension.contrast ?? []);
   return { css: emitCss(entries), json: emitCatalog(all), overrideKeys: emitOverrideKeys(all, pairs), tokens: all };
@@ -1767,7 +1811,8 @@ export async function buildCompanyTokens(options: { resolver: string; base?: str
   const extra = await loadResolver(options.resolver, upstream);
   const { merged, company, inherited } = mergeEntries(upstream, extra);
   validateEntries(merged);
-  const all = checkGraph(merged);
+  const own = company.flatMap(entryTokens);
+  const all = settleDescriptions(checkGraph(merged), [own, upstream.flatMap(entryTokens)]);
   validateContrast(merged);
   const css = emitCss(company, {
     layer: COMPANY_LAYER,
@@ -1775,7 +1820,6 @@ export async function buildCompanyTokens(options: { resolver: string; base?: str
     aliases: aliasGroups(merged),
     inherited,
   });
-  const own = company.flatMap(entryTokens);
   const types = new Map(own.map((token) => [token.path, token.type]));
   const overrideTypes = [
     '// Generated by todae-tokens. Do not edit.',

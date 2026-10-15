@@ -1,5 +1,6 @@
 {
   "nav": {
+    "$description": "Nav.Root: a vertical site navigation list, with groups, nested branches and the current page.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/6/$value" } },
     "list": {
       "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }

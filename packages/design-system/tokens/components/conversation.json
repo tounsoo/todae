@@ -1,5 +1,6 @@
 {
   "conversation": {
+    "$description": "Conversation.Root: the scrolling message list and its jump-to-latest button.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap-spacious/$value" } },
     "scroll-button": {
       "inset": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } }

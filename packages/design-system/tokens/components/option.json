@@ -1,5 +1,6 @@
 {
   "option": {
+    "$description": "OptionList.Root: a listbox of selectable options, inline or in a popover.",
     "list": {
       "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
     },

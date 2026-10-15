@@ -1,5 +1,6 @@
 {
   "table": {
+    "$description": "Table.Root and its parts: caption, header, body, footer, rows and cells.",
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
     "header": {

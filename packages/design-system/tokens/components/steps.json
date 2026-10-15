@@ -1,5 +1,6 @@
 {
   "steps": {
+    "$description": "Steps.Root: a numbered list of steps, each done, current, pending or in error.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
     "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },
     "fg": {

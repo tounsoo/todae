@@ -1,5 +1,6 @@
 {
   "pagination": {
+    "$description": "Pagination.Root: page number links with previous and next.",
     "gap": { "$type": "dimension", "$value": { "value": 0.25, "unit": "rem" } },
     "size": { "$type": "dimension", "$value": { "value": 2, "unit": "rem" } },
     "padding-x": { "$type": "dimension", "$value": { "$ref": "#/space/chip/x/$value" } },

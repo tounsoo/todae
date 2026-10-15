@@ -1,5 +1,6 @@
 {
   "code": {
+    "$description": "Code.Root: inline code and code blocks, tinted from the text color.",
     "tint": { "$type": "number", "$value": { "$ref": "#/opacity/10/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "font": {
@@ -19,6 +20,7 @@
     }
   },
   "kbd": {
+    "$description": "Kbd.Root: a keyboard key or shortcut.",
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },

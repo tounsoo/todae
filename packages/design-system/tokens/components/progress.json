@@ -1,5 +1,6 @@
 {
   "progress": {
+    "$description": "Progress.Root: a determinate or indeterminate progress bar.",
     "track": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },
     "fill": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
     "height": { "$type": "dimension", "$value": { "value": 0.5, "unit": "rem" } },
@@ -9,6 +10,7 @@
     }
   },
   "meter": {
+    "$description": "Meter.Root: a gauge for a known value in a range.",
     "fill": {
       "optimum": { "$type": "color", "$value": { "$ref": "#/color/status/success/fg/$value" } },
       "suboptimum": { "$type": "color", "$value": { "$ref": "#/color/status/warning/fg/$value" } },

@@ -1,36 +1,37 @@
 {
   "color": {
     "bg": {
-      "canvas": { "$type": "color", "$value": { "$ref": "#/color/gray/50/$value" } },
-      "surface": { "$type": "color", "$value": { "$ref": "#/color/gray/0/$value" } },
-      "subtle": { "$type": "color", "$value": { "$ref": "#/color/gray/100/$value" } },
-      "elevated": { "$type": "color", "$value": { "$ref": "#/color/gray/0/$value" } },
-      "scrim": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/gray/950/$value/components/0" }, { "$ref": "#/color/gray/950/$value/components/1" }, { "$ref": "#/color/gray/950/$value/components/2" }], "alpha": { "$ref": "#/opacity/45/$value" } } },
-      "transparent": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/gray/0/$value/components/0" }, { "$ref": "#/color/gray/0/$value/components/1" }, { "$ref": "#/color/gray/0/$value/components/2" }], "alpha": 0 } },
-      "highlight": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/fg/default/$value/components/0" }, { "$ref": "#/color/fg/default/$value/components/1" }, { "$ref": "#/color/fg/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/8/$value" } } },
-      "pressed": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/fg/default/$value/components/0" }, { "$ref": "#/color/fg/default/$value/components/1" }, { "$ref": "#/color/fg/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/14/$value" } } },
-      "selected": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/20/$value" } } }
+      "canvas": { "$description": "The page background behind every surface.", "$type": "color", "$value": { "$ref": "#/color/gray/50/$value" } },
+      "surface": { "$description": "The default background of content and controls, such as cards and fields.", "$type": "color", "$value": { "$ref": "#/color/gray/0/$value" } },
+      "subtle": { "$description": "A recessed background, for panels and disabled controls.", "$type": "color", "$value": { "$ref": "#/color/gray/100/$value" } },
+      "elevated": { "$description": "The background of floating surfaces: dialogs, sheets, drawers, popovers and tooltips.", "$type": "color", "$value": { "$ref": "#/color/gray/0/$value" } },
+      "scrim": { "$description": "The translucent veil behind a modal overlay.", "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/gray/950/$value/components/0" }, { "$ref": "#/color/gray/950/$value/components/1" }, { "$ref": "#/color/gray/950/$value/components/2" }], "alpha": { "$ref": "#/opacity/45/$value" } } },
+      "transparent": { "$description": "A fully transparent background that keeps the surface hue, so transitions from it don't flash gray.", "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/gray/0/$value/components/0" }, { "$ref": "#/color/gray/0/$value/components/1" }, { "$ref": "#/color/gray/0/$value/components/2" }], "alpha": 0 } },
+      "highlight": { "$description": "A translucent tint over an item that is hovered or keyboard-highlighted.", "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/fg/default/$value/components/0" }, { "$ref": "#/color/fg/default/$value/components/1" }, { "$ref": "#/color/fg/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/8/$value" } } },
+      "pressed": { "$description": "A translucent tint over an item that is being pressed.", "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/fg/default/$value/components/0" }, { "$ref": "#/color/fg/default/$value/components/1" }, { "$ref": "#/color/fg/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/14/$value" } } },
+      "selected": { "$description": "A translucent accent tint behind a selected or current item.", "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/20/$value" } } }
     },
     "fg": {
-      "default": { "$type": "color", "$value": { "$ref": "#/color/gray/900/$value" } },
-      "muted": { "$type": "color", "$value": { "$ref": "#/color/gray/600/$value" } },
-      "placeholder": { "$type": "color", "$value": { "$ref": "#/color/gray/500/$value" } }
+      "default": { "$description": "Body text and icons. Lc 75 or more on bg canvas, surface, subtle and elevated.", "$type": "color", "$value": { "$ref": "#/color/gray/900/$value" } },
+      "muted": { "$description": "Secondary text, such as descriptions and meta lines. Lc 60 or more on bg canvas, surface, subtle and elevated.", "$type": "color", "$value": { "$ref": "#/color/gray/600/$value" } },
+      "placeholder": { "$description": "Placeholder, adornment and disabled text. Lc 60 or more on bg.surface.", "$type": "color", "$value": { "$ref": "#/color/gray/500/$value" } }
     },
     "border": {
-      "default": { "$type": "color", "$value": { "$ref": "#/color/gray/500/$value" } },
-      "subtle": { "$type": "color", "$value": { "$ref": "#/color/gray/200/$value" } }
+      "default": { "$description": "Borders that mark a control's edge, such as fields and secondary buttons.", "$type": "color", "$value": { "$ref": "#/color/gray/500/$value" } },
+      "subtle": { "$description": "Decorative borders and rules, such as cards, tables and separators.", "$type": "color", "$value": { "$ref": "#/color/gray/200/$value" } }
     },
     "danger": {
-      "default": { "$type": "color", "$value": { "$ref": "#/color/red/600/$value" } }
+      "default": { "$description": "Error text and invalid borders.", "$type": "color", "$value": { "$ref": "#/color/red/600/$value" } }
     },
     "accent": {
-      "default": { "$type": "color", "$value": { "$ref": "#/color/gray/900/$value" } },
-      "hover": { "$type": "color", "$value": { "$ref": "#/color/gray/800/$value" } },
-      "active": { "$type": "color", "$value": { "$ref": "#/color/gray/950/$value" } },
-      "soft": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/12/$value" } } },
-      "soft-strong": { "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/28/$value" } } }
+      "default": { "$description": "The brand accent: primary buttons, checked controls and the focus ring. Set with hover, active and on-accent.", "$type": "color", "$value": { "$ref": "#/color/gray/900/$value" } },
+      "hover": { "$description": "The accent while hovered.", "$type": "color", "$value": { "$ref": "#/color/gray/800/$value" } },
+      "active": { "$description": "The accent while pressed.", "$type": "color", "$value": { "$ref": "#/color/gray/950/$value" } },
+      "soft": { "$description": "A light accent tint, for soft-toned surfaces in product code.", "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/12/$value" } } },
+      "soft-strong": { "$description": "A stronger accent tint, behind an option that is both selected and highlighted.", "$type": "color", "$value": { "colorSpace": "oklch", "components": [{ "$ref": "#/color/accent/default/$value/components/0" }, { "$ref": "#/color/accent/default/$value/components/1" }, { "$ref": "#/color/accent/default/$value/components/2" }], "alpha": { "$ref": "#/opacity/28/$value" } } }
     },
     "status": {
+      "$description": "Status tones, such as for Alert, Toast and Badge: fg on bg is Lc 75 or more, fg on bg.surface Lc 60 or more.",
       "info": {
         "fg": { "$type": "color", "$value": { "$ref": "#/color/gray/700/$value" } },
         "bg": { "$type": "color", "$value": { "$ref": "#/color/gray/100/$value" } },
@@ -53,6 +54,7 @@
       }
     },
     "category": {
+      "$description": "Eight category tones for tagging content with Chip, Badge and Avatar; fg on bg is Lc 75 or more.",
       "1": {
         "fg": { "$type": "color", "$value": { "$ref": "#/color/red/700/$value" } },
         "bg": { "$type": "color", "$value": { "$ref": "#/color/red/100/$value" } },
@@ -94,6 +96,6 @@
         "border": { "$type": "color", "$value": { "$ref": "#/color/pink/300/$value" } }
       }
     },
-    "on-accent": { "$type": "color", "$value": { "$ref": "#/color/gray/0/$value" } }
+    "on-accent": { "$description": "Text and icons on the accent. Lc 60 or more on accent default, hover and active.", "$type": "color", "$value": { "$ref": "#/color/gray/0/$value" } }
   }
 }

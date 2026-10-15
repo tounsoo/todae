@@ -89,6 +89,10 @@ Eight tones label categories such as tags or people: `color.category.1` to `colo
 }
 ```
 
+## Descriptions
+
+Todae's semantic and density tokens and each component's token group carry a DTCG `$description` that says what they are for. A token with no description of its own takes the nearest enclosing group's in the same file. The token catalog (`tokens.json`) and the MCP token tools return it as `description`. Describe a token that changes with appearance or density once, in one context's file. A company token package describes its own tokens the same way. Its description of a Todae token, in any context, replaces Todae's; an override with none keeps Todae's.
+
 ## Catalog
 
 <TokensCatalog />
