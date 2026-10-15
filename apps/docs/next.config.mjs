@@ -9,6 +9,7 @@ const REDIRECTS = [
   ['/recipes/chip-list', '/chip-list'],
   ['/field/date-input', '/field/date-picker'],
   ['/field/time-input', '/field/time-picker'],
+  ['/field/date-time-input', '/field/date-time-picker'],
   ['/spinner', '/loader'],
 ];
 
