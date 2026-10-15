@@ -1,35 +1,43 @@
 {
   "space": {
     "control": {
+      "$description": "Padding inside controls, such as buttons, fields, options and tabs; changes with density.",
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "stack": {
+      "$description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density.",
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
       "gap-condensed": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } },
       "gap-spacious": { "$type": "dimension", "$value": { "$ref": "#/space/6/$value" } }
     },
     "prose": {
+      "$description": "Spacing in long-form text: paragraph gap, space around headings and list items; changes with density.",
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/4/$value" } },
       "heading-before": { "$type": "dimension", "$value": { "$ref": "#/space/8/$value" } },
       "heading-after": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
       "item-gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "inline": {
+      "$description": "The gap between inline items, such as an icon and its label; changes with density.",
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "chip": {
+      "$description": "Compact padding, such as inside chips and badges; changes with density.",
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
     },
     "field": {
+      "$description": "Gaps inside a field's shell and between a fieldset's fields; changes with density.",
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "selection": {
+      "$description": "Checkbox, radio and switch size, and the gap to their label; changes with density.",
       "size": { "$type": "dimension", "$value": { "$ref": "#/space/5/$value" } },
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "overlay": {
+      "$description": "Padding and gap inside panels, such as dialogs, sheets, drawers, popovers and cards; changes with density.",
       "padding": { "$type": "dimension", "$value": { "$ref": "#/space/5/$value" } },
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } }
     }

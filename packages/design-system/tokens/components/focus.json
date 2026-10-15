@@ -1,5 +1,6 @@
 {
   "focus": {
+    "$description": "The focus ring every component draws; component ring.focus colors read focus.ring.color.",
     "ring": {
       "color": { "$type": "color", "$value": { "$ref": "#/color/accent/default/$value" } },
       "width": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },

@@ -1,5 +1,6 @@
 {
   "picker": {
+    "$description": "ColorPicker.Root, alone or in Field.ColorPicker: the color area, hue slider and their thumbs.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
     "width": { "$type": "dimension", "$value": { "value": 15, "unit": "rem" } },
     "area": {

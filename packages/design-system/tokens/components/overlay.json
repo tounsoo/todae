@@ -1,5 +1,6 @@
 {
   "overlay": {
+    "$description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they and Toast enter and exit with.",
     "scrim": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/scrim/$value" } }
     },

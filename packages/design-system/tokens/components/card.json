@@ -1,5 +1,6 @@
 {
   "card": {
+    "$description": "Card.Root: a bordered surface that groups related content.",
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/subtle/$value" } },

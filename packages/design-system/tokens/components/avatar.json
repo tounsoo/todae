@@ -1,5 +1,6 @@
 {
   "avatar": {
+    "$description": "Avatar.Root: a round image or initials, with category tones for its fallback colors.",
     "size": {
       "sm": { "$type": "dimension", "$value": { "value": 1.5, "unit": "rem" } },
       "md": { "$type": "dimension", "$value": { "value": 2, "unit": "rem" } },

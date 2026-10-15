@@ -1,5 +1,6 @@
 {
   "disclosure": {
+    "$description": "Disclosure.Root: a details/summary section that opens and closes, with its marker.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
     "padding": {
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }

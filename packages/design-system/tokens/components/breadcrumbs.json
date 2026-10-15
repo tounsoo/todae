@@ -1,5 +1,6 @@
 {
   "breadcrumbs": {
+    "$description": "Breadcrumbs.Root: the trail of links to the current page and the separator between them.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
     "font": {
       "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }

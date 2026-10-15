@@ -1,5 +1,6 @@
 {
   "sheet": {
+    "$description": "BottomSheet.Root: a modal panel that rises from the bottom edge, with a drag handle and snap points.",
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },

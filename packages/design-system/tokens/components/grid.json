@@ -1,5 +1,6 @@
 {
   "grid": {
+    "$description": "Grid.Root: a responsive grid of equal columns.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } }
   }
 }
