@@ -643,6 +643,7 @@
   --todae-dialog-padding-x: var(--_todae-dialog-padding-x, var(--todae-space-overlay-padding));
   --todae-dialog-padding-y: var(--_todae-dialog-padding-y, var(--todae-space-overlay-padding));
   --todae-dialog-radius: var(--_todae-dialog-radius, var(--todae-radius-lg));
+  --todae-dialog-shadow: var(--_todae-dialog-shadow, var(--todae-shadow-none));
   --todae-dialog-title-font-size: var(--_todae-dialog-title-font-size, var(--todae-font-size-4));
   --todae-dialog-title-font-weight: var(--_todae-dialog-title-font-weight, var(--todae-font-weight-medium));
   --todae-sheet-bg: var(--_todae-sheet-bg, var(--todae-color-bg-elevated));
@@ -662,6 +663,7 @@
   --todae-sheet-padding-y: var(--_todae-sheet-padding-y, var(--todae-space-overlay-padding));
   --todae-sheet-radius: var(--_todae-sheet-radius, var(--todae-radius-lg));
   --todae-sheet-ring-focus: var(--_todae-sheet-ring-focus, var(--todae-focus-ring-color));
+  --todae-sheet-shadow: var(--_todae-sheet-shadow, var(--todae-shadow-none));
   --todae-sheet-snap-full-inset: var(--_todae-sheet-snap-full-inset, var(--todae-space-6));
   --todae-sheet-snap-mid: var(--_todae-sheet-snap-mid, 0.5);
   --todae-sheet-title-font-size: var(--_todae-sheet-title-font-size, var(--todae-dialog-title-font-size));
@@ -676,6 +678,7 @@
   --todae-popover-padding-x: var(--_todae-popover-padding-x, var(--todae-space-overlay-padding));
   --todae-popover-padding-y: var(--_todae-popover-padding-y, var(--todae-space-overlay-padding));
   --todae-popover-radius: var(--_todae-popover-radius, var(--todae-radius-md));
+  --todae-popover-shadow: var(--_todae-popover-shadow, var(--todae-shadow-none));
   --todae-tooltip-bg: var(--_todae-tooltip-bg, var(--todae-color-bg-elevated));
   --todae-tooltip-border: var(--_todae-tooltip-border, var(--todae-color-border-default));
   --todae-tooltip-border-width: var(--_todae-tooltip-border-width, var(--todae-border-width));
@@ -685,6 +688,7 @@
   --todae-tooltip-padding-x: var(--_todae-tooltip-padding-x, var(--todae-space-2));
   --todae-tooltip-padding-y: var(--_todae-tooltip-padding-y, var(--todae-space-1));
   --todae-tooltip-radius: var(--_todae-tooltip-radius, var(--todae-radius-sm));
+  --todae-tooltip-shadow: var(--_todae-tooltip-shadow, var(--todae-shadow-none));
   --todae-option-bg-default: var(--_todae-option-bg-default, var(--todae-color-bg-transparent));
   --todae-option-bg-hover: var(--_todae-option-bg-hover, var(--todae-color-bg-highlight));
   --todae-option-bg-selected: var(--_todae-option-bg-selected, var(--todae-color-bg-selected));
@@ -800,6 +804,7 @@
   --todae-toast-peek: var(--_todae-toast-peek, var(--todae-space-3));
   --todae-toast-radius: var(--_todae-toast-radius, var(--todae-radius-md));
   --todae-toast-ring-focus: var(--_todae-toast-ring-focus, var(--todae-focus-ring-color));
+  --todae-toast-shadow: var(--_todae-toast-shadow, var(--todae-shadow-none));
   --todae-toast-stack-gap: var(--_todae-toast-stack-gap, var(--todae-space-2));
   --todae-toast-success-bg: var(--_todae-toast-success-bg, var(--todae-color-status-success-bg));
   --todae-toast-success-border: var(--_todae-toast-success-border, var(--todae-color-status-success-border));
@@ -996,6 +1001,7 @@
   --todae-drawer-motion-exit: var(--_todae-drawer-motion-exit, var(--todae-motion-duration-moderate));
   --todae-drawer-padding-x: var(--_todae-drawer-padding-x, var(--todae-space-overlay-padding));
   --todae-drawer-padding-y: var(--_todae-drawer-padding-y, var(--todae-space-overlay-padding));
+  --todae-drawer-shadow: var(--_todae-drawer-shadow, var(--todae-shadow-none));
   --todae-drawer-size: var(--_todae-drawer-size, 24rem);
   --todae-loader-motion-duration: var(--_todae-loader-motion-duration, 800ms);
   --todae-loader-size: var(--_todae-loader-size, 1.25rem);

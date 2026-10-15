@@ -11,6 +11,7 @@
     color: var(--todae-tooltip-fg);
     border: var(--todae-tooltip-border-width) solid var(--todae-tooltip-border);
     border-radius: var(--todae-tooltip-radius);
+    box-shadow: var(--todae-tooltip-shadow);
   }
 
   .content:not([data-open]) {

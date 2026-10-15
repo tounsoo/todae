@@ -55,6 +55,7 @@
     color: var(--todae-dialog-fg);
     border: var(--todae-dialog-border-width) solid var(--todae-dialog-border);
     border-radius: var(--todae-dialog-radius);
+    box-shadow: var(--todae-dialog-shadow);
     opacity: 0;
     transition: opacity var(--todae-dialog-motion-enter) var(--todae-overlay-motion-easing);
 

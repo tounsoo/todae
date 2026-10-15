@@ -4439,6 +4439,15 @@
       "context": null
     },
     {
+      "path": "dialog.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-dialog-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "dialog.title.font.size",
       "type": "dimension",
       "cssVar": "--todae-dialog-title-font-size",
@@ -4610,6 +4619,15 @@
       "context": null
     },
     {
+      "path": "sheet.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-sheet-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "sheet.snap.full-inset",
       "type": "dimension",
       "cssVar": "--todae-sheet-snap-full-inset",
@@ -4736,6 +4754,15 @@
       "context": null
     },
     {
+      "path": "popover.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-popover-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
+      "layer": "contract",
+      "context": null
+    },
+    {
       "path": "tooltip.bg",
       "type": "color",
       "cssVar": "--todae-tooltip-bg",
@@ -4813,6 +4840,15 @@
       "cssVar": "--todae-tooltip-radius",
       "cssValue": "var(--todae-radius-sm)",
       "ref": "radius.sm",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "tooltip.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-tooltip-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
       "layer": "contract",
       "context": null
     },
@@ -5848,6 +5884,15 @@
       "cssVar": "--todae-toast-ring-focus",
       "cssValue": "var(--todae-focus-ring-color)",
       "ref": "focus.ring.color",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "toast.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-toast-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
       "layer": "contract",
       "context": null
     },
@@ -7612,6 +7657,15 @@
       "cssVar": "--todae-drawer-padding-y",
       "cssValue": "var(--todae-space-overlay-padding)",
       "ref": "space.overlay.padding",
+      "layer": "contract",
+      "context": null
+    },
+    {
+      "path": "drawer.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-drawer-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
       "layer": "contract",
       "context": null
     },

@@ -61,6 +61,7 @@
     background: var(--todae-drawer-bg);
     border: 0 solid var(--todae-drawer-border);
     border-inline-end-width: var(--todae-drawer-border-width);
+    box-shadow: var(--todae-drawer-shadow);
     inset-inline-start: var(--_from);
     transition: inset-inline-start var(--todae-drawer-motion-enter) var(--todae-overlay-motion-easing);
   }

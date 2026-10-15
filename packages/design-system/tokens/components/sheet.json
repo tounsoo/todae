@@ -3,6 +3,7 @@
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+    "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } },
     "ring": {
       "focus": { "$type": "color", "$value": { "$ref": "#/focus/ring/color/$value" } }
     },
