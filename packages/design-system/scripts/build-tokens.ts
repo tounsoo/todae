@@ -924,8 +924,11 @@ const OVERRIDE_GROUPS = [
   ['COMPONENT_OVERRIDE_KEYS', ['contract']],
 ] as const;
 
-/** Emits the ThemeProvider override keys and their types, grouped by layer. */
-export function emitOverrideKeys(tokens: FlatToken[]): string {
+/**
+ * Emits the ThemeProvider override keys and their types, grouped by layer,
+ * and the contrast pairs it measures in development when overrides change.
+ */
+export function emitOverrideKeys(tokens: FlatToken[], pairs: readonly ContrastPair[] = []): string {
   const types = new Map<string, string>();
   for (const token of tokens) {
     const seen = types.get(token.path);
@@ -938,6 +941,15 @@ export function emitOverrideKeys(tokens: FlatToken[]): string {
     lines.push(`export const ${name} = [`, ...paths.map((path) => `  '${path}',`), '] as const;', '');
   }
   lines.push('export const THEME_OVERRIDE_TYPES = {', ...[...types].map(([path, type]) => `  '${path}': '${type}',`), '} as const;');
+  lines.push(
+    '',
+    'export const CONTRAST_PAIRS: readonly { fg: string; bg: string; min: number; over?: readonly string[] }[] = [',
+    ...pairs.map(({ fg, bg, min, over }) => {
+      const surfaces = over ? `, over: [${over.map((path) => `'${path}'`).join(', ')}]` : '';
+      return `  { fg: '${fg}', bg: '${bg}', min: ${min}${surfaces} },`;
+    }),
+    '];',
+  );
   return `${lines.join('\n')}\n`;
 }
 
@@ -946,9 +958,11 @@ export const TODAE_EXTENSION = 'dev.todae';
 /**
  * A text color and the background it sits on, checked with APCA in every
  * context of the set or modifier that declares it. `min` is the lowest
- * absolute Lc allowed.
+ * absolute Lc allowed. `over` lists the opaque surfaces a translucent `bg`
+ * may sit on; the pair is checked over each one. Without it, `bg` must be
+ * opaque.
  */
-export type ContrastPair = { fg: string; bg: string; min: number };
+export type ContrastPair = { fg: string; bg: string; min: number; over?: string[] };
 
 export type TodaeExtension = {
   layer: Layer;
@@ -1021,13 +1035,22 @@ function parseContrast(contrast: unknown, loc: string): { contrast?: ContrastPai
   const seen = new Set<string>();
   for (const [i, pair] of contrast.entries()) {
     const at = `${loc} contrast[${i}]`;
-    if (!isRecord(pair)) fail(`${at} must be { fg, bg, min }`);
-    const extra = Object.keys(pair).find((key) => !['fg', 'bg', 'min'].includes(key));
+    if (!isRecord(pair)) fail(`${at} must be { fg, bg, min, over? }`);
+    const extra = Object.keys(pair).find((key) => !['fg', 'bg', 'min', 'over'].includes(key));
     if (extra) fail(`${at} has unknown key "${extra}"`);
     for (const key of ['fg', 'bg'] as const) {
       if (typeof pair[key] !== 'string' || !PATH_RE.test(pair[key])) fail(`${at} ${key} must be a token path`);
     }
     if (!isFiniteNumber(pair.min) || pair.min <= 0 || pair.min > 108) fail(`${at} min must be an APCA Lc above 0 and at most 108`);
+    if (
+      pair.over !== undefined &&
+      (!Array.isArray(pair.over) ||
+        pair.over.length === 0 ||
+        pair.over.some((path) => typeof path !== 'string' || !PATH_RE.test(path)) ||
+        new Set(pair.over).size !== pair.over.length)
+    ) {
+      fail(`${at} over must list distinct token paths`);
+    }
     const key = `${pair.fg} on ${pair.bg}`;
     if (seen.has(key)) fail(`${at} repeats ${key}`);
     seen.add(key);
@@ -1035,11 +1058,20 @@ function parseContrast(contrast: unknown, loc: string): { contrast?: ContrastPai
   return { contrast: contrast as ContrastPair[] };
 }
 
-/** Upstream pairs plus the extension's own; a pair naming the same fg and bg replaces the upstream one. */
+const pairKey = (pair: ContrastPair) => `${pair.fg} on ${pair.bg}`;
+
+/** `pair`, keeping `upstream`'s surfaces when it lists none of its own. */
+function retune(pair: ContrastPair, upstream: ContrastPair | undefined): ContrastPair {
+  return pair.over === undefined && upstream?.over !== undefined ? { ...pair, over: upstream.over } : pair;
+}
+
+/**
+ * Upstream pairs plus the extension's own. A pair naming the same fg and bg
+ * replaces the upstream one, and keeps its `over` unless it lists its own.
+ */
 function mergeContrast(base: readonly ContrastPair[] = [], own: readonly ContrastPair[] = []): ContrastPair[] {
-  const key = (pair: ContrastPair) => `${pair.fg} on ${pair.bg}`;
-  const merged = new Map(base.map((pair) => [key(pair), pair]));
-  for (const pair of own) merged.set(key(pair), pair);
+  const merged = new Map(base.map((pair) => [pairKey(pair), pair]));
+  for (const pair of own) merged.set(pairKey(pair), retune(pair, merged.get(pairKey(pair))));
   return [...merged.values()];
 }
 
@@ -1355,7 +1387,45 @@ export function mergeEntries(
   }
   merged.push(...pending);
   company.push(...pending);
+  retuneAcrossEntries(base, extra, merged);
   return { merged, company, inherited };
+}
+
+/**
+ * A company pair naming the same fg and bg as one of Todae's replaces it
+ * wherever Todae declares it, so a company retunes a component pair from its
+ * appearance modifier or any set, not only from a set of the same name. The
+ * replacement keeps Todae's `over` unless it lists its own.
+ */
+function retuneAcrossEntries(base: ResolvedEntry[], extra: ResolvedEntry[], merged: ResolvedEntry[]): void {
+  const todae = new Map<string, ContrastPair>();
+  for (const entry of base) for (const pair of entry.extension.contrast ?? []) todae.set(pairKey(pair), pair);
+  // The company's own pairs: those its entries declare that aren't Todae's inherited ones.
+  // A company may re-list a key in several of its entries; each of them keeps it.
+  const owners = new Map<string, Set<string>>();
+  for (const entry of extra) {
+    const upstream = base.find((candidate) => candidate.kind === entry.kind && candidate.name === entry.name);
+    const inherited = new Set(upstream?.extension.contrast ?? []);
+    for (const pair of entry.extension.contrast ?? []) {
+      const key = pairKey(pair);
+      if (inherited.has(pair) || !todae.has(key)) continue;
+      owners.set(key, (owners.get(key) ?? new Set()).add(`${entry.kind} ${entry.name}`));
+    }
+  }
+  if (owners.size === 0) return;
+  for (const [i, entry] of merged.entries()) {
+    const pairs = entry.extension.contrast;
+    if (!pairs) continue;
+    const here = `${entry.kind} ${entry.name}`;
+    const kept: ContrastPair[] = [];
+    for (const pair of pairs) {
+      const owning = owners.get(pairKey(pair));
+      if (!owning) kept.push(pair);
+      else if (owning.has(here)) kept.push(retune(pair, todae.get(pairKey(pair))));
+    }
+    const { contrast: _dropped, ...rest } = entry.extension;
+    merged[i] = { ...entry, extension: kept.length > 0 ? { ...rest, contrast: kept } : rest } as ResolvedEntry;
+  }
 }
 
 function entryTokens(entry: ResolvedEntry): FlatToken[] {
@@ -1600,15 +1670,28 @@ function resolveNumber(path: string, view: Map<string, FlatToken>, stack: string
   return token.value as number;
 }
 
-/** APCA Lc of `fg` painted on `bg`. `bg` must be opaque; a translucent `fg` is composited over it. */
-export function contrastOf(fg: string, bg: string, view: Map<string, FlatToken>): number {
+/**
+ * APCA Lc of `fg` painted on `bg`. A translucent `fg` is composited over the
+ * background. `bg` must be opaque, unless `over` names the opaque surface it
+ * is composited over first.
+ */
+export function contrastOf(fg: string, bg: string, view: Map<string, FlatToken>, over?: string): number {
   const back = resolveOklch(bg, view);
-  if (back.alpha !== 1) fail(`contrast: background "${bg}" must be opaque`);
-  const base = oklchToSrgb(back);
+  let base: Rgb;
+  if (over === undefined) {
+    if (back.alpha !== 1) fail(`contrast: background "${bg}" must be opaque, or list the surfaces it sits on in "over"`);
+    base = oklchToSrgb(back);
+  } else {
+    const surface = resolveOklch(over, view);
+    if (surface.alpha !== 1) fail(`contrast: surface "${over}" under "${bg}" must be opaque`);
+    base = composite(back, oklchToSrgb(surface));
+  }
   return apcaContrast(composite(resolveOklch(fg, view), base), base);
 }
 
-export type ContrastResult = ContrastPair & {
+export type ContrastResult = Omit<ContrastPair, 'over'> & {
+  /** The surface under a translucent `bg`, one result per `over` entry. */
+  over?: string;
   /** The declaring set, or the modifier and context, e.g. `appearance "dark"`. */
   where: string;
   /** Absolute APCA Lc. */
@@ -1618,8 +1701,8 @@ export type ContrastResult = ContrastPair & {
 /**
  * Measures every declared contrast pair. Each pair runs once per combination
  * of the declaring modifier's contexts and every color-scheme modifier's
- * contexts, so a set's pairs are checked in light and dark too. Other
- * modifiers stay at their defaults.
+ * contexts, so a set's pairs are checked in light and dark too, and once per
+ * `over` surface in each. Other modifiers stay at their defaults.
  */
 export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
   const results: ContrastResult[] = [];
@@ -1649,7 +1732,12 @@ export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
         combo.size > 0
           ? [...combo].map(([entry, context]) => `${entry.name} "${context}"`).join(', ')
           : `${declaring.kind} "${declaring.name}"`;
-      for (const pair of pairs) results.push({ ...pair, where, lc: Math.abs(contrastOf(pair.fg, pair.bg, view)) });
+      for (const { over, ...pair } of pairs) {
+        for (const surface of over ?? [undefined]) {
+          const lc = Math.abs(contrastOf(pair.fg, pair.bg, view, surface));
+          results.push(surface === undefined ? { ...pair, where, lc } : { ...pair, over: surface, where, lc });
+        }
+      }
     }
   }
   return results;
@@ -1659,7 +1747,10 @@ export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
 export function validateContrast(entries: ResolvedEntry[]): void {
   const failures = contrastResults(entries)
     .filter((result) => result.lc < result.min)
-    .map(({ fg, bg, where, lc, min }) => `"${fg}" on "${bg}" in ${where} is Lc ${lc.toFixed(1)}, below ${min}`);
+    .map(
+      ({ fg, bg, over, where, lc, min }) =>
+        `"${fg}" on "${bg}"${over ? ` over "${over}"` : ''} in ${where} is Lc ${lc.toFixed(1)}, below ${min}`,
+    );
   if (failures.length > 0) fail(`contrast: ${failures.length} pair(s) fail APCA\n  ${failures.join('\n  ')}`);
 }
 
@@ -1673,7 +1764,8 @@ export async function buildTokensGraph(tokensRoot: string): Promise<BuildTokensR
   const entries = await resolveEntries(tokensRoot);
   const all = settleDescriptions(checkGraph(entries));
   validateContrast(entries);
-  return { css: emitCss(entries), json: emitCatalog(all), overrideKeys: emitOverrideKeys(all), tokens: all };
+  const pairs = entries.flatMap((entry) => entry.extension.contrast ?? []);
+  return { css: emitCss(entries), json: emitCatalog(all), overrideKeys: emitOverrideKeys(all, pairs), tokens: all };
 }
 
 /** Walks up from this file to the package that ships Todae's `tokens/resolver.json`. */

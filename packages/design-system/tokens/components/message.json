@@ -11,6 +11,18 @@
       },
       "space-after": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap-condensed/$value" } }
     },
+    "time": {
+      "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } },
+      "font": {
+        "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } }
+      }
+    },
+    "actions": {
+      "motion": {
+        "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
+        "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } }
+      }
+    },
     "user": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },

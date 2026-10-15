@@ -350,7 +350,7 @@
     "# Build your design system on Todae": "d56cd7be2b75",
     "## Token layers": "4b9cc0e80a6c",
     "## A company resolver": "871ad5179923",
-    "## Overrides: CSS or ThemeProvider": "f3c47c9be9f3",
+    "## Overrides: CSS or ThemeProvider": "212a915c83e6",
     "## Adding a variant or a density": "6a2f6e98c97b",
     "## Wrapping a component": "37193cebd631",
     "(section order)": "280102156fc8"
@@ -421,13 +421,14 @@
   },
   "message": {
     "(top)": "826be7492f3a",
-    "# Message": "2ddec1314bf0",
-    "## Parts": "81e7c521c8f3",
-    "## Streaming": "4a0bc45092d0",
-    "## Accessible composition": "51235c3f6e59",
+    "# Message": "8d3affca30b9",
+    "## Parts": "c2fb157f7424",
+    "## Time": "e262fbffa78a",
+    "## Streaming": "221b92871fd3",
+    "## Accessible composition": "465fea223a1d",
     "## When to use": "6bef71b8e38f",
-    "## Props": "ba3cc8b148e9",
-    "(section order)": "14fb55a9fab4"
+    "## Props": "852abac41463",
+    "(section order)": "173343c4a02b"
   },
   "nav": {
     "(top)": "2dd08ab95847",
@@ -532,6 +533,16 @@
     "## Uploading": "d43ef19d4d00",
     "## Accessible composition": "a51aedc3e4e1",
     "(section order)": "2ce6dd09df8f"
+  },
+  "recipes/message-actions": {
+    "(top)": "bbdcb5e29744",
+    "# Message actions": "392d9e0335fc",
+    "## Copy": "1de8503b7abf",
+    "## Regenerate and rate": "88352ed724ed",
+    "## Edit": "ebcd46bb2db8",
+    "## Accessible composition": "b737b3facda9",
+    "## When to use": "2320a958107a",
+    "(section order)": "6486b947abab"
   },
   "scroll-area": {
     "(top)": "a2750334232a",
@@ -641,7 +652,7 @@
     "### useAppearance": "8d5dfda228bf",
     "### useDensity": "49f8e7f1cea5",
     "### categoryTone": "0384942d3b71",
-    "## Contrast": "e3223e4198e2",
+    "## Contrast": "ada6a1a14d5f",
     "## References and opacity": "dbea45e0372e",
     "## Letter case": "beaf90851101",
     "## Status tones": "9db538465fa4",
