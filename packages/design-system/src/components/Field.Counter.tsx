@@ -4,6 +4,7 @@ import { cx } from './props';
 import styles from './Field.module.css';
 import { useStrings, type Strings } from '../providers/StringsProvider';
 import { subscribeCount } from './Field.shared';
+import { VisuallyHidden } from './VisuallyHidden';
 
 export type FieldCounterProps = {
   className?: string;
@@ -55,12 +56,10 @@ function CounterInner({ ctx, className, ...props }: FieldCounterProps & { ctx: F
       <span aria-hidden="true">{max === undefined ? String(count) : `${count} / ${max}`}</span>
       {max === undefined ? null : (
         <>
-          <span id={ctx.hintId} className={styles.srOnly}>
-            {strings.characterLimit(max)}
-          </span>
-          <span className={styles.srOnly} aria-live="polite">
+          <VisuallyHidden.Root id={ctx.hintId}>{strings.characterLimit(max)}</VisuallyHidden.Root>
+          <VisuallyHidden.Root aria-live="polite">
             {remaining !== undefined && remaining <= 20 ? liveCopy(remaining, strings) : ''}
-          </span>
+          </VisuallyHidden.Root>
         </>
       )}
     </span>
