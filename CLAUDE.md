@@ -39,7 +39,7 @@ Never run more than 5 rounds in all, before and after the pull request opens. If
 
 ## Waiting on CI
 
-A pull request subscription wakes the session only when GitHub reports a CI result, and some states never produce one. So never end a turn on the subscription alone:
+Some pull request states never produce a CI result, so never end a turn on the pull request subscription alone:
 
 - **A merge conflict means no CI run.** GitHub does not run the `pull_request` workflow on a pull request that conflicts with its base, and when the pull request was opened already conflicted, no event says so. Right before opening a pull request, pushing to it, or marking it ready, fetch `origin/main` and run `git merge-tree --write-tree HEAD origin/main`, which exits 1 on a conflict. On a conflict, merge `origin/main`, resolve it, and go back to step 1, where the reviewer runs `<base>..HEAD`. If that would be a sixth round, stop and report back as the round cap says.
 - **A draft's run is skipped.** Every job skips on a draft, so a run whose conclusion is `skipped` is not a result. Mark the pull request ready, unless the round cap says to keep it a draft, and wait for the run that starts then.
@@ -47,6 +47,6 @@ A pull request subscription wakes the session only when GitHub reports a CI resu
   - Green: report back as step 6 says.
   - Red: it is a blocking finding, as step 6 says.
   - `dirty`: a conflict, handled as above.
-  - Still running, `unknown`, or no run yet: schedule another check-in. If two check-ins in a row find no run for the head commit, tell the person what is missing rather than waiting silently.
+  - Still running, `unknown`, or no run yet: schedule another check-in. If two check-ins in a row find no result for the head commit, tell the person what is missing rather than waiting silently.
 
-  Once a CI event has settled the head commit, cancel any pending check-in with `delete_trigger` and the `trigger_id` that `send_later` returned.
+  Once the head commit has a result, cancel any pending check-in with `delete_trigger` and the `trigger_id` that `send_later` returned.
