@@ -602,6 +602,16 @@
       "description": null
     },
     {
+      "path": "font.leading.snug",
+      "type": "number",
+      "cssVar": "--todae-font-leading-snug",
+      "cssValue": "1.4",
+      "ref": null,
+      "layer": "core",
+      "context": null,
+      "description": null
+    },
+    {
       "path": "font.leading.tight",
       "type": "number",
       "cssVar": "--todae-font-leading-tight",
@@ -3432,16 +3442,6 @@
       "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
     },
     {
-      "path": "text.size.1",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-1",
-      "cssValue": "var(--todae-font-size-1)",
-      "ref": "font.size.1",
-      "layer": "contract",
-      "context": null,
-      "description": "Text.Root: body text and headings. text.font.family is not applied by Todae; products set it where they want it."
-    },
-    {
       "path": "text.size.2",
       "type": "dimension",
       "cssVar": "--todae-text-size-2",
@@ -3872,6 +3872,16 @@
       "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
     },
     {
+      "path": "field.description.leading",
+      "type": "number",
+      "cssVar": "--todae-field-description-leading",
+      "cssValue": "var(--todae-font-leading-snug)",
+      "ref": "font.leading.snug",
+      "layer": "contract",
+      "context": null,
+      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+    },
+    {
       "path": "field.error.fg",
       "type": "color",
       "cssVar": "--todae-field-error-fg",
@@ -3897,6 +3907,16 @@
       "cssVar": "--todae-field-error-font-weight",
       "cssValue": "var(--todae-font-weight-regular)",
       "ref": "font.weight.regular",
+      "layer": "contract",
+      "context": null,
+      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.error.leading",
+      "type": "number",
+      "cssVar": "--todae-field-error-leading",
+      "cssValue": "var(--todae-font-leading-snug)",
+      "ref": "font.leading.snug",
       "layer": "contract",
       "context": null,
       "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
@@ -4147,6 +4167,16 @@
       "cssVar": "--todae-field-picker-radius",
       "cssValue": "var(--todae-popover-radius)",
       "ref": "popover.radius",
+      "layer": "contract",
+      "context": null,
+      "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
+    },
+    {
+      "path": "field.picker.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-field-picker-shadow",
+      "cssValue": "var(--todae-popover-shadow)",
+      "ref": "popover.shadow",
       "layer": "contract",
       "context": null,
       "description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages."
@@ -4992,6 +5022,16 @@
       "description": "Dialog.Root: a modal panel centered over a scrim."
     },
     {
+      "path": "dialog.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-dialog-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
+      "layer": "contract",
+      "context": null,
+      "description": "Dialog.Root: a modal panel centered over a scrim."
+    },
+    {
       "path": "dialog.title.font.size",
       "type": "dimension",
       "cssVar": "--todae-dialog-title-font-size",
@@ -5182,6 +5222,16 @@
       "description": "BottomSheet.Root: a modal panel that rises from the bottom edge, with a drag handle and snap points."
     },
     {
+      "path": "sheet.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-sheet-shadow",
+      "cssValue": "var(--todae-dialog-shadow)",
+      "ref": "dialog.shadow",
+      "layer": "contract",
+      "context": null,
+      "description": "BottomSheet.Root: a modal panel that rises from the bottom edge, with a drag handle and snap points."
+    },
+    {
       "path": "sheet.snap.full-inset",
       "type": "dimension",
       "cssVar": "--todae-sheet-snap-full-inset",
@@ -5262,16 +5312,6 @@
       "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
     },
     {
-      "path": "popover.gap",
-      "type": "dimension",
-      "cssVar": "--todae-popover-gap",
-      "cssValue": "var(--todae-space-overlay-gap)",
-      "ref": "space.overlay.gap",
-      "layer": "contract",
-      "context": null,
-      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
-    },
-    {
       "path": "popover.max-height",
       "type": "dimension",
       "cssVar": "--todae-popover-max-height",
@@ -5317,6 +5357,16 @@
       "cssVar": "--todae-popover-radius",
       "cssValue": "var(--todae-radius-md)",
       "ref": "radius.md",
+      "layer": "contract",
+      "context": null,
+      "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
+    },
+    {
+      "path": "popover.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-popover-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
       "layer": "contract",
       "context": null,
       "description": "Popover.Root: a floating panel anchored to a trigger; Menu and the field pickers draw on it."
@@ -5427,6 +5477,16 @@
       "cssVar": "--todae-tooltip-radius",
       "cssValue": "var(--todae-radius-sm)",
       "ref": "radius.sm",
+      "layer": "contract",
+      "context": null,
+      "description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel."
+    },
+    {
+      "path": "tooltip.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-tooltip-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
       "layer": "contract",
       "context": null,
       "description": "Tooltip.Root: a short label shown on hover or focus, or an interactive panel."
@@ -6642,6 +6702,16 @@
       "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
     },
     {
+      "path": "toast.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-toast-shadow",
+      "cssValue": "var(--todae-shadow-none)",
+      "ref": "shadow.none",
+      "layer": "contract",
+      "context": null,
+      "description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones."
+    },
+    {
       "path": "toast.stack-gap",
       "type": "dimension",
       "cssVar": "--todae-toast-stack-gap",
@@ -7808,7 +7878,8 @@
       "cssValue": "var(--todae-motion-duration-normal)",
       "ref": "motion.duration.normal",
       "layer": "contract",
-      "context": null
+      "context": null,
+      "description": "Message.Root: one chat message, with user and system variants."
     },
     {
       "path": "message.actions.motion.easing",
@@ -7817,7 +7888,8 @@
       "cssValue": "var(--todae-motion-easing-standard)",
       "ref": "motion.easing.standard",
       "layer": "contract",
-      "context": null
+      "context": null,
+      "description": "Message.Root: one chat message, with user and system variants."
     },
     {
       "path": "message.fg",
@@ -7906,7 +7978,8 @@
       "cssValue": "var(--todae-color-fg-muted)",
       "ref": "color.fg.muted",
       "layer": "contract",
-      "context": null
+      "context": null,
+      "description": "Message.Root: one chat message, with user and system variants."
     },
     {
       "path": "message.time.font.size",
@@ -7915,7 +7988,8 @@
       "cssValue": "var(--todae-font-size-2)",
       "ref": "font.size.2",
       "layer": "contract",
-      "context": null
+      "context": null,
+      "description": "Message.Root: one chat message, with user and system variants."
     },
     {
       "path": "message.user.bg",
@@ -8648,6 +8722,16 @@
       "description": "Drawer.Root: a modal panel that slides in from the start or end edge."
     },
     {
+      "path": "drawer.shadow",
+      "type": "shadow",
+      "cssVar": "--todae-drawer-shadow",
+      "cssValue": "var(--todae-dialog-shadow)",
+      "ref": "dialog.shadow",
+      "layer": "contract",
+      "context": null,
+      "description": "Drawer.Root: a modal panel that slides in from the start or end edge."
+    },
+    {
       "path": "drawer.size",
       "type": "dimension",
       "cssVar": "--todae-drawer-size",
@@ -8712,6 +8796,26 @@
       "type": "duration",
       "cssVar": "--todae-skeleton-motion-duration",
       "cssValue": "1600ms",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "description": "Skeleton.Root: a pulsing placeholder in the shape of content that is still loading."
+    },
+    {
+      "path": "skeleton.motion.easing",
+      "type": "cubicBezier",
+      "cssVar": "--todae-skeleton-motion-easing",
+      "cssValue": "cubic-bezier(0.42, 0, 0.58, 1)",
+      "ref": null,
+      "layer": "contract",
+      "context": null,
+      "description": "Skeleton.Root: a pulsing placeholder in the shape of content that is still loading."
+    },
+    {
+      "path": "skeleton.pulse.opacity",
+      "type": "number",
+      "cssVar": "--todae-skeleton-pulse-opacity",
+      "cssValue": "0.5",
       "ref": null,
       "layer": "contract",
       "context": null,

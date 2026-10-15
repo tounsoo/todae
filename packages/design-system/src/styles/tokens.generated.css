@@ -60,6 +60,7 @@
   --todae-font-family-mono: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
   --todae-font-family-sans: ui-sans-serif, system-ui, "Segoe UI", "Roboto", sans-serif;
   --todae-font-leading-default: 1.5;
+  --todae-font-leading-snug: 1.4;
   --todae-font-leading-tight: 1.25;
   --todae-font-letter-spacing-default: 0rem;
   --todae-font-size-1: 0.75rem;
@@ -493,7 +494,6 @@
   --todae-text-font-family: var(--_todae-text-font-family, var(--todae-font-family-sans));
   --todae-text-leading-default: var(--_todae-text-leading-default, var(--todae-font-leading-default));
   --todae-text-leading-tight: var(--_todae-text-leading-tight, var(--todae-font-leading-tight));
-  --todae-text-size-1: var(--_todae-text-size-1, var(--todae-font-size-1));
   --todae-text-size-2: var(--_todae-text-size-2, var(--todae-font-size-2));
   --todae-text-size-3: var(--_todae-text-size-3, var(--todae-font-size-3));
   --todae-text-size-4: var(--_todae-text-size-4, var(--todae-font-size-4));
@@ -537,9 +537,11 @@
   --todae-field-description-fg: var(--_todae-field-description-fg, var(--todae-color-fg-muted));
   --todae-field-description-font-size: var(--_todae-field-description-font-size, var(--todae-font-size-2));
   --todae-field-description-font-weight: var(--_todae-field-description-font-weight, var(--todae-font-weight-regular));
+  --todae-field-description-leading: var(--_todae-field-description-leading, var(--todae-font-leading-snug));
   --todae-field-error-fg: var(--_todae-field-error-fg, var(--todae-color-danger-default));
   --todae-field-error-font-size: var(--_todae-field-error-font-size, var(--todae-font-size-2));
   --todae-field-error-font-weight: var(--_todae-field-error-font-weight, var(--todae-font-weight-regular));
+  --todae-field-error-leading: var(--_todae-field-error-leading, var(--todae-font-leading-snug));
   --todae-field-fg-adornment: var(--_todae-field-fg-adornment, var(--todae-color-fg-placeholder));
   --todae-field-fg-default: var(--_todae-field-fg-default, var(--todae-color-fg-default));
   --todae-field-fg-disabled: var(--_todae-field-fg-disabled, var(--todae-color-fg-placeholder));
@@ -565,6 +567,7 @@
   --todae-field-picker-padding-x: var(--_todae-field-picker-padding-x, var(--todae-popover-padding-x));
   --todae-field-picker-padding-y: var(--_todae-field-picker-padding-y, var(--todae-popover-padding-y));
   --todae-field-picker-radius: var(--_todae-field-picker-radius, var(--todae-popover-radius));
+  --todae-field-picker-shadow: var(--_todae-field-picker-shadow, var(--todae-popover-shadow));
   --todae-field-radius: var(--_todae-field-radius, var(--todae-radius-md));
   --todae-field-ring-focus: var(--_todae-field-ring-focus, var(--todae-focus-ring-color));
   --todae-field-ring-invalid: var(--_todae-field-ring-invalid, var(--todae-color-danger-default));
@@ -649,6 +652,7 @@
   --todae-dialog-padding-x: var(--_todae-dialog-padding-x, var(--todae-space-overlay-padding));
   --todae-dialog-padding-y: var(--_todae-dialog-padding-y, var(--todae-space-overlay-padding));
   --todae-dialog-radius: var(--_todae-dialog-radius, var(--todae-radius-lg));
+  --todae-dialog-shadow: var(--_todae-dialog-shadow, var(--todae-shadow-none));
   --todae-dialog-title-font-size: var(--_todae-dialog-title-font-size, var(--todae-font-size-4));
   --todae-dialog-title-font-weight: var(--_todae-dialog-title-font-weight, var(--todae-font-weight-medium));
   --todae-sheet-bg: var(--_todae-sheet-bg, var(--todae-color-bg-elevated));
@@ -668,6 +672,7 @@
   --todae-sheet-padding-y: var(--_todae-sheet-padding-y, var(--todae-space-overlay-padding));
   --todae-sheet-radius: var(--_todae-sheet-radius, var(--todae-radius-lg));
   --todae-sheet-ring-focus: var(--_todae-sheet-ring-focus, var(--todae-focus-ring-color));
+  --todae-sheet-shadow: var(--_todae-sheet-shadow, var(--todae-dialog-shadow));
   --todae-sheet-snap-full-inset: var(--_todae-sheet-snap-full-inset, var(--todae-space-6));
   --todae-sheet-snap-mid: var(--_todae-sheet-snap-mid, 0.5);
   --todae-sheet-title-font-size: var(--_todae-sheet-title-font-size, var(--todae-dialog-title-font-size));
@@ -676,12 +681,12 @@
   --todae-popover-border: var(--_todae-popover-border, var(--todae-color-border-default));
   --todae-popover-border-width: var(--_todae-popover-border-width, var(--todae-border-width));
   --todae-popover-fg: var(--_todae-popover-fg, var(--todae-color-fg-default));
-  --todae-popover-gap: var(--_todae-popover-gap, var(--todae-space-overlay-gap));
   --todae-popover-max-height: var(--_todae-popover-max-height, 20rem);
   --todae-popover-offset: var(--_todae-popover-offset, var(--todae-space-1));
   --todae-popover-padding-x: var(--_todae-popover-padding-x, var(--todae-space-overlay-padding));
   --todae-popover-padding-y: var(--_todae-popover-padding-y, var(--todae-space-overlay-padding));
   --todae-popover-radius: var(--_todae-popover-radius, var(--todae-radius-md));
+  --todae-popover-shadow: var(--_todae-popover-shadow, var(--todae-shadow-none));
   --todae-tooltip-bg: var(--_todae-tooltip-bg, var(--todae-color-bg-elevated));
   --todae-tooltip-border: var(--_todae-tooltip-border, var(--todae-color-border-default));
   --todae-tooltip-border-width: var(--_todae-tooltip-border-width, var(--todae-border-width));
@@ -693,6 +698,7 @@
   --todae-tooltip-padding-x: var(--_todae-tooltip-padding-x, var(--todae-space-2));
   --todae-tooltip-padding-y: var(--_todae-tooltip-padding-y, var(--todae-space-1));
   --todae-tooltip-radius: var(--_todae-tooltip-radius, var(--todae-radius-sm));
+  --todae-tooltip-shadow: var(--_todae-tooltip-shadow, var(--todae-shadow-none));
   --todae-option-bg-default: var(--_todae-option-bg-default, var(--todae-color-bg-transparent));
   --todae-option-bg-hover: var(--_todae-option-bg-hover, var(--todae-color-bg-highlight));
   --todae-option-bg-selected: var(--_todae-option-bg-selected, var(--todae-color-bg-selected));
@@ -814,6 +820,7 @@
   --todae-toast-peek: var(--_todae-toast-peek, var(--todae-space-3));
   --todae-toast-radius: var(--_todae-toast-radius, var(--todae-radius-md));
   --todae-toast-ring-focus: var(--_todae-toast-ring-focus, var(--todae-focus-ring-color));
+  --todae-toast-shadow: var(--_todae-toast-shadow, var(--todae-shadow-none));
   --todae-toast-stack-gap: var(--_todae-toast-stack-gap, var(--todae-space-2));
   --todae-toast-success-bg: var(--_todae-toast-success-bg, var(--todae-color-status-success-bg));
   --todae-toast-success-border: var(--_todae-toast-success-border, var(--todae-color-status-success-border));
@@ -1015,6 +1022,7 @@
   --todae-drawer-motion-exit: var(--_todae-drawer-motion-exit, var(--todae-motion-duration-moderate));
   --todae-drawer-padding-x: var(--_todae-drawer-padding-x, var(--todae-space-overlay-padding));
   --todae-drawer-padding-y: var(--_todae-drawer-padding-y, var(--todae-space-overlay-padding));
+  --todae-drawer-shadow: var(--_todae-drawer-shadow, var(--todae-dialog-shadow));
   --todae-drawer-size: var(--_todae-drawer-size, 24rem);
   --todae-loader-motion-duration: var(--_todae-loader-motion-duration, 800ms);
   --todae-loader-size: var(--_todae-loader-size, 1.25rem);
@@ -1022,6 +1030,8 @@
   --todae-loader-track-tint: var(--_todae-loader-track-tint, var(--todae-opacity-20));
   --todae-skeleton-bg: var(--_todae-skeleton-bg, var(--todae-color-bg-subtle));
   --todae-skeleton-motion-duration: var(--_todae-skeleton-motion-duration, 1600ms);
+  --todae-skeleton-motion-easing: var(--_todae-skeleton-motion-easing, cubic-bezier(0.42, 0, 0.58, 1));
+  --todae-skeleton-pulse-opacity: var(--_todae-skeleton-pulse-opacity, 0.5);
   --todae-skeleton-radius: var(--_todae-skeleton-radius, var(--todae-radius-sm));
   --todae-code-block-bg: var(--_todae-code-block-bg, var(--todae-color-bg-subtle));
   --todae-code-block-fg: var(--_todae-code-block-fg, var(--todae-color-fg-default));
