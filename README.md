@@ -110,8 +110,9 @@ When `main` has changesets, `.github/workflows/release.yml` opens or updates a "
 The workflow needs this setup:
 
 - In the repository settings, Actions › General › "Allow GitHub Actions to create and approve pull requests" is on.
-- An `npm` environment exists. Required reviewers on it hold each publish until one of them approves.
-- On npm, `@omsoo.design/todae` has a trusted publisher for this repository, the workflow `release.yml` and the environment `npm`. npm only takes a trusted publisher for a package that exists, so the first version is published by hand with `pnpm changeset publish`.
+- The repository is `omsoo-design/todae`, the repository that `package.json` and `.changeset/config.json` name. The changelog and npm's provenance check both use it.
+- Required reviewers on the `npm` environment hold each publish until one of them approves. GitHub creates the environment on the first run if it doesn't exist.
+- On npm, `@omsoo.design/todae` has a trusted publisher for this repository, the workflow `release.yml` and the environment `npm`. npm only takes a trusted publisher for a package that exists, so the first version is published by hand: after the first Version Packages pull request merges, run `pnpm changeset publish` on an up-to-date `main` and push the tag it creates with `git push --follow-tags`. The workflow's publish job for that merge can't publish yet, so it fails, or waits for approval if the environment has reviewers; reject it. Packing runs the package's `prepack` script, which builds it.
 
 ## Deploy docs
 

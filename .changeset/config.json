@@ -19,6 +19,8 @@
     "**",
     "!**/*.test.ts",
     "!**/*.test.tsx",
+    "!**/__snapshots__/**",
+    "!**/__fixtures__/**",
     "!src/test/**",
     "!vitest.browser.config.ts"
   ]
