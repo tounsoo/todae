@@ -3098,15 +3098,6 @@
       "context": null
     },
     {
-      "path": "text.size.1",
-      "type": "dimension",
-      "cssVar": "--todae-text-size-1",
-      "cssValue": "var(--todae-font-size-1)",
-      "ref": "font.size.1",
-      "layer": "contract",
-      "context": null
-    },
-    {
       "path": "text.size.2",
       "type": "dimension",
       "cssVar": "--todae-text-size-2",
@@ -4759,15 +4750,6 @@
       "cssVar": "--todae-popover-fg",
       "cssValue": "var(--todae-color-fg-default)",
       "ref": "color.fg.default",
-      "layer": "contract",
-      "context": null
-    },
-    {
-      "path": "popover.gap",
-      "type": "dimension",
-      "cssVar": "--todae-popover-gap",
-      "cssValue": "var(--todae-space-overlay-gap)",
-      "ref": "space.overlay.gap",
       "layer": "contract",
       "context": null
     },
