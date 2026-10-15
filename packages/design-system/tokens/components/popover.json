@@ -9,7 +9,6 @@
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } }
     },
-    "gap": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/gap/$value" } },
     "offset": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } },
     "max-height": { "$type": "dimension", "$value": { "value": 20, "unit": "rem" } }
   }

@@ -491,7 +491,6 @@
   --todae-text-font-family: var(--_todae-text-font-family, var(--todae-font-family-sans));
   --todae-text-leading-default: var(--_todae-text-leading-default, var(--todae-font-leading-default));
   --todae-text-leading-tight: var(--_todae-text-leading-tight, var(--todae-font-leading-tight));
-  --todae-text-size-1: var(--_todae-text-size-1, var(--todae-font-size-1));
   --todae-text-size-2: var(--_todae-text-size-2, var(--todae-font-size-2));
   --todae-text-size-3: var(--_todae-text-size-3, var(--todae-font-size-3));
   --todae-text-size-4: var(--_todae-text-size-4, var(--todae-font-size-4));
@@ -670,7 +669,6 @@
   --todae-popover-border: var(--_todae-popover-border, var(--todae-color-border-default));
   --todae-popover-border-width: var(--_todae-popover-border-width, var(--todae-border-width));
   --todae-popover-fg: var(--_todae-popover-fg, var(--todae-color-fg-default));
-  --todae-popover-gap: var(--_todae-popover-gap, var(--todae-space-overlay-gap));
   --todae-popover-max-height: var(--_todae-popover-max-height, 20rem);
   --todae-popover-offset: var(--_todae-popover-offset, var(--todae-space-1));
   --todae-popover-padding-x: var(--_todae-popover-padding-x, var(--todae-space-overlay-padding));
