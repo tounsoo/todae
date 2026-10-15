@@ -3,6 +3,9 @@ import { parseDate } from './dateText';
 import { formatDateTime, parseDateTime } from './dateTimeText';
 import { parseTime } from './timeText';
 
+// Lets the test runner hear from this test between locales, as each sweep runs for a while.
+const breathe = () => new Promise((resolve) => setTimeout(resolve));
+
 const at = (text: string) => Temporal.PlainDateTime.from(text);
 const read = (text: string, locale?: string) => parseDateTime(text, { locale })?.toString() ?? null;
 
@@ -49,8 +52,9 @@ const ALL_LOCALES = Intl.DateTimeFormat.supportedLocalesOf([
   ]);
 
 describe('parseDateTime', () => {
-  it('reads what formatDateTime writes in every locale', () => {
+  it('reads what formatDateTime writes in every locale', async () => {
     for (const locale of LOCALES) {
+      await breathe();
       for (const value of VALUES) {
         const text = formatDateTime(value, { locale });
         expect(read(text, locale), `${locale}: ${text}`).toBe(value.toString());
@@ -58,8 +62,9 @@ describe('parseDateTime', () => {
     }
   }, 60_000);
 
-  it("reads the locale's date and time styles in every locale", () => {
+  it("reads the locale's date and time styles in every locale", async () => {
     for (const locale of LOCALES) {
+      await breathe();
       for (const dateStyle of ['medium', 'long', 'full'] as const) {
         for (const timeStyle of ['short', 'medium'] as const) {
           for (const value of VALUES) {
@@ -72,7 +77,7 @@ describe('parseDateTime', () => {
     }
   }, 60_000);
 
-  it('reads a date and a time in the styles of every locale the runtime has, when it reads each alone', () => {
+  it('reads a date and a time in the styles of every locale the runtime has, when it reads each alone', async () => {
     const all = ALL_LOCALES;
     const gregory = { calendar: 'gregory', timeZone: 'UTC' } as const;
     const styles: [Intl.DateTimeFormatOptions, Intl.DateTimeFormatOptions][] = [
@@ -82,6 +87,7 @@ describe('parseDateTime', () => {
       ),
     ];
     for (const locale of all) {
+      await breathe();
       for (const value of [at('2026-10-13T21:30:15'), at('1999-01-02T09:05:59'), at('2023-10-23T21:30:15'), at('2012-12-12T12:12:12')]) {
         for (const [date, time] of styles) {
           const dateOnly = value.toPlainDate().toLocaleString(locale, { ...date, ...gregory });
@@ -224,15 +230,46 @@ describe('parseDateTime', () => {
     expect(read('13.10.12 05 15', 'de')).toBeNull();
     expect(read('13-10 11 05 15', 'af')).toBeNull();
     expect(read('13. Okt. 11 05 15', 'de')).toBeNull();
+    // 2015 has 2026's weekdays, and the month's other names read too.
+    expect(read('Tuesday Oct 13 15 05 30', 'en-US')).toBeNull();
+    expect(read('13 octubre 12 05 15', 'es')).toBeNull();
+    expect(read('13 октябрь 12 05 15', 'ru')).toBeNull();
+    // A time typed before the date, in a locale that writes the date first.
+    expect(read('05 06 07 04.03.09', 'de')).toBeNull();
+    expect(read('05 06 07 04/03/09', 'agq')).toBeNull();
+    expect(read('13.10. 21.30', 'de')).toBeNull();
     expect(read('10/13/12 9:05', 'en-US')).toBe('2012-10-13T09:05:00');
   });
 
-  it('does not read a date typed without a year, beside a time, in any locale the runtime has', () => {
+  it("reads a time written with a mark of the locale's dates, as 21.30, after a date", async () => {
+    expect(read('13.10.2026 21.30', 'de')).toBe('2026-10-13T21:30:00');
+    expect(read('13.10.2026 um 21.30', 'de')).toBe('2026-10-13T21:30:00');
+    expect(read('13.10.2026 21.30', 'ru')).toBe('2026-10-13T21:30:00');
+    expect(read('13.10.2026 21.30', 'nb')).toBe('2026-10-13T21:30:00');
+    expect(read('13.10.2026 г. 21.30', 'bg')).toBe('2026-10-13T21:30:00');
+    const gregory = { calendar: 'gregory', timeZone: 'UTC' } as const;
+    for (const locale of ALL_LOCALES) {
+      await breathe();
+      const date = Temporal.PlainDate.from('2026-10-13').toLocaleString(locale, { year: 'numeric', month: 'numeric', day: 'numeric', ...gregory });
+      for (const mark of ['.', '-', '/']) {
+        const time = `21${mark}30`;
+        if (!parseTime(time, { locale }) || !parseDate(date, { locale })) continue;
+        const text = `${date} ${time}`;
+        const value = read(text, locale);
+        // Read as 21:30 on the date, or not at all where the text also reads another way.
+        if (value !== null) expect(value, `${locale}: ${text}`).toBe('2026-10-13T21:30:00');
+      }
+    }
+  }, 60_000);
+
+  it('does not read a date typed without a year, beside a time, in any locale the runtime has', async () => {
     const gregory = { calendar: 'gregory', timeZone: 'UTC' } as const;
     const dates: Intl.DateTimeFormatOptions[] = [
       { month: 'numeric', day: 'numeric' },
       { month: 'short', day: 'numeric' },
       { weekday: 'long', month: 'long', day: 'numeric' },
+      { weekday: 'long', month: 'short', day: 'numeric' },
+      { month: 'long', day: 'numeric' },
     ];
     const cases: [string, string][] = [
       ['2026-10-09', '21 05'],
@@ -241,8 +278,11 @@ describe('parseDateTime', () => {
       ['2009-10-13', '9 05'],
       ['2026-10-13', '11 05 15'],
       ['2026-10-13', '12 05 15'],
+      ['2026-10-13', '15 05 30'],
+      ['2026-10-13', '20 05 30'],
     ];
     for (const locale of ALL_LOCALES) {
+      await breathe();
       // The time goes where formatDateTime writes it: first when the hour comes before the year.
       const types = new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', ...gregory })
         .formatToParts(Date.UTC(2026, 9, 13, 21))
@@ -263,7 +303,7 @@ describe('parseDateTime', () => {
         }
       }
     }
-  }, 60_000);
+  }, 120_000);
 
   it('reads a word with a letter of no one script', () => {
     const value = at('2026-10-13T00:00');

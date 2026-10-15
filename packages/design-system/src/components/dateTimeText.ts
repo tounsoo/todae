@@ -1,6 +1,6 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe date and time text for a text input beside Field.DateTimePicker: no hooks or context.
-import { fold, parseDate, type DateTextOptions } from './dateText';
+import { fold, isMonthDay, parseDate, type DateTextOptions } from './dateText';
 import { parseTime, splitWords } from './timeText';
 
 export type DateTimeTextOptions = DateTextOptions;
@@ -47,17 +47,13 @@ type LocaleDateTime = {
   /** How many numbers the locale writes in a date alone, such as 2 in "Oct 13, 2026" and 3 in "10/13/2026", and in a time alone. */
   dateNumbers: Set<number>;
   timeNumbers: Set<number>;
-  /**
-   * How the locale writes a month and a day without a year, such as "10/13"
-   * and "Oct 13" in en-US, for each month, by its words with "0" for the day,
-   * and the marks before and after it. Made when first needed.
-   */
-  yearless?: { month: number; words: string[]; start: string; end: string }[];
+  /** The marks the locale writes before and after a month and a day without a year, such as "." after "13. 10." in cs. */
+  yearlessEdges: { start: Set<string>; end: Set<string> };
 };
 
 const localeDateTimes = new Map<string, LocaleDateTime>();
 
-// How the locale may write a month and a day without a year.
+// How the locale may write a month and a day without a year, for the marks before and after them.
 const monthDays: Intl.DateTimeFormatOptions[] = [
   { month: 'numeric', day: 'numeric' },
   { month: '2-digit', day: '2-digit' },
@@ -65,23 +61,8 @@ const monthDays: Intl.DateTimeFormatOptions[] = [
   { month: 'long', day: 'numeric' },
   { weekday: 'short', month: 'short', day: 'numeric' },
   { weekday: 'long', month: 'long', day: 'numeric' },
+  { weekday: 'long', month: 'short', day: 'numeric' },
 ];
-
-function yearlessFormats(locale: string | undefined) {
-  const formats: NonNullable<LocaleDateTime['yearless']> = [];
-  for (const style of monthDays) {
-    const format = new Intl.DateTimeFormat(locale, { ...style, calendar: 'gregory', timeZone: 'UTC', numberingSystem: 'latn' });
-    for (let month = 1; month <= 12; month++) {
-      // Each weekday, where the style writes one.
-      for (let weekday = 0; weekday < (style.weekday ? 7 : 1); weekday++) {
-        const text = fold(join(format.formatToParts(Date.UTC(2000, month - 1, 13 + weekday)).map((part) => (part.type === 'day' ? { ...part, value: '0' } : part))));
-        // The marks before the first number or letter and after the last, such as "." after "Okt." in de.
-        formats.push({ month, words: splitWords(text), start: /^[^\p{L}\p{M}\p{N}]*/u.exec(text)![0].trim(), end: trailing(text).trim() });
-      }
-    }
-  }
-  return formats;
-}
 
 const PUNCTUATION = /[^\p{L}\p{M}\p{N}\s]/u;
 
@@ -163,8 +144,18 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
     atoms(join(written(locale, { ...style, numberingSystem: 'latn' }))).filter((atom) => atom.number).length;
   const dateNumbers = new Set(dateStyles.map(numbers));
   const timeNumbers = new Set(timeStyles.map(numbers));
+  const yearlessEdges = { start: new Set(['']), end: new Set(['']) };
+  for (const style of monthDays) {
+    const format = new Intl.DateTimeFormat(locale, { ...style, calendar: 'gregory', timeZone: 'UTC' });
+    // Every month, as some end their short names with a mark, as "кӑр." in cv.
+    for (let month = 0; month < 12; month++) {
+      const text = fold(format.format(Date.UTC(2026, month, 13)));
+      yearlessEdges.start.add(/^[^\p{L}\p{M}\p{N}]*/u.exec(text)![0].trim());
+      yearlessEdges.end.add(trailing(text).trim());
+    }
+  }
   const only = (marks: Set<string>, other: Set<string>) => new Set([...marks].filter((char) => !other.has(char) && !between.has(char)));
-  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, dateMarks: only(inNumericDate, inTime), timeMarks: only(inTime, inDate), dateNumbers, timeNumbers };
+  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, dateMarks: only(inNumericDate, inTime), timeMarks: only(inTime, inDate), dateNumbers, timeNumbers, yearlessEdges };
   localeDateTimes.set(key, text);
   return text;
 }
@@ -212,8 +203,7 @@ const hasMark = (list: Atom[], marks: Set<string>) => list.some((atom, index) =>
  * `10/13 12 05 pm` in en-US, is not read.
  */
 export function parseDateTime(text: string, options: DateTimeTextOptions = {}): Temporal.PlainDateTime | null {
-  const locale = localeDateTime(options.locale);
-  const { joiners, dateFirst, timeFirst, dateMarks, timeMarks, dateNumbers, timeNumbers } = locale;
+  const { joiners, dateFirst, timeFirst, dateMarks, timeMarks, dateNumbers, timeNumbers, yearlessEdges } = localeDateTime(options.locale);
   const list = atoms(text);
   // How many numbers come before each atom.
   const counts = [0];
@@ -251,46 +241,51 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
       words[index] === year.slice(-2) && parseDate(words.map((word, at) => (at === index ? year : word)).join(' '), options)?.equals(date) === true;
     return words.some((_, index) => isYear(index)) ? date : null;
   };
-  // Whether the text may also be a month and a day as the locale writes them
-  // without a year, and a time, as "10/13 12 05 pm" in en-US, which a date
-  // with a two-digit year, 2012, would also read, or "13. 10. 11 05 15" in cs:
-  // where the two meet, the gap may end the month and day, as "13. 10." in cs
-  // but not "10/13/" in en-US, and the time has one gap between its numbers.
+  // Readings whose time has a mark of the locale's dates, as "21.30" in de,
+  // which are read only when the text reads no other way.
+  const loose = new Map<string, Temporal.PlainDateTime>();
+  // Whether the text may also be a month and a day without a year, as
+  // isMonthDay reads it, and a time, in the order the locale writes them, as
+  // "10/13 12 05 pm" in en-US, which a date with a two-digit year, 2012, would
+  // also read, or "13. 10. 11 05 15" in cs. Where the two meet, the gap may
+  // end a month and day as the locale writes them, as "13. 10." in cs but not
+  // "10/13/" in en-US, and the time has one gap between its numbers.
   let alsoYearless = false;
-  const yearlessAt = (dateText: string, gap: string, timeHalf: Atom[], timeText: string, timeAfter: boolean) => {
-    const words = dateText.split(' ');
-    if (words.filter((word) => /^\d+$/.test(word)).length > 2) return false;
+  // Whether the text reads as a date and a time, or such a month and day and
+  // a time, in the order the locale doesn't write them.
+  let otherWay = false;
+  // isMonthDay for each text once, as each cut asks it of the same halves again.
+  const checked = new Map<string, boolean>();
+  const monthDay = (dateText: string) => {
+    let known = checked.get(dateText);
+    if (known === undefined) checked.set(dateText, (known = isMonthDay(dateText, options)));
+    return known;
+  };
+  const yearlessAt = (dateHalf: Atom[], dateText: string, gap: string, timeHalf: Atom[], timeText: string, timeAfter: boolean) => {
+    if (hasMark(dateHalf, timeMarks) || dateHalf.filter((atom) => atom.number).length > 2) return false;
     const gaps = numberGaps(timeHalf);
     if (gaps.some((other) => other !== gaps[0]) || hasMark(timeHalf, dateMarks)) return false;
     const numbers = timeHalf.flatMap((atom) => (atom.number ? [atom.text] : []));
-    if (!timeReads(numbers, timeText) || !parseTime(timeText, options)) return false;
+    if (!timeReads(numbers, timeText) || !parseTime(timeText, options) || !monthDay(dateText)) return false;
     const folded = fold(gap);
-    locale.yearless ??= yearlessFormats(options.locale);
-    const days = (month: number) => new Date(Date.UTC(2000, month, 0)).getUTCDate();
-    const entries = locale.yearless.filter(
-      (format) =>
-        format.words.length === words.length &&
-        format.words.every((word, index) => {
-          const typed = words[index]!;
-          if (word === '0') return /^\d+$/.test(typed) && Number(typed) >= 1 && Number(typed) <= days(format.month);
-          return /^\d+$/.test(word) ? Number(word) === Number(typed) : word === typed;
-        }),
-    );
-    return entries.some(({ start, end }) => {
+    const edges = timeAfter ? yearlessEdges.end : yearlessEdges.start;
+    return [...edges].some((edge) => {
       const left = timeAfter
-        ? folded.startsWith(end) ? folded.slice(end.length) : folded
-        : folded.endsWith(start) ? folded.slice(0, folded.length - start.length) : folded;
+        ? folded.startsWith(edge) ? folded.slice(edge.length) : folded
+        : folded.endsWith(edge) ? folded.slice(0, folded.length - edge.length) : folded;
       return ![...left].some((char) => dateMarks.has(char) || timeMarks.has(char));
     });
   };
-  const read = (dateHalf: Atom[], dateText: string, timeHalf: Atom[], timeText: string, between: boolean) => {
+  const read = (dateHalf: Atom[], dateText: string, timeHalf: Atom[], timeText: string, between: boolean, own: boolean) => {
     const numbers = timeHalf.flatMap((atom) => (atom.number ? [atom.text] : []));
-    if (hasMark(dateHalf, timeMarks) || hasMark(timeHalf, dateMarks) || !timeReads(numbers, timeText)) return;
+    if (hasMark(dateHalf, timeMarks) || !timeReads(numbers, timeText)) return;
     const date = dated(dateText);
     const time = date && parseTime(timeText, options);
     if (!date || !time) return;
     const value = date.toPlainDateTime(time);
-    (between ? joined : found).set(value.toString(), value);
+    const marked = hasMark(timeHalf, dateMarks);
+    if (!own) otherWay ||= !marked;
+    else (marked ? loose : between ? joined : found).set(value.toString(), value);
   };
   for (let at = 1; at < list.length; at++) {
     const after = list[at]!;
@@ -300,22 +295,24 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
     const tail = list.slice(at);
     const [before, rest] = [render(head), render(tail)];
     for (const strip of [false, true]) {
-      if (dateFirst && yearlessAt(trim(before, true, strip), after.gap, tail, trim(rest, strip, true), true)) alsoYearless = true;
-      if (timeFirst && yearlessAt(trim(rest, strip, true), after.gap, head, trim(before, true, strip), false)) alsoYearless = true;
+      if (yearlessAt(head, trim(before, true, strip), after.gap, tail, trim(rest, strip, true), true)) {
+        if (dateFirst) alsoYearless = true;
+        else otherWay = true;
+      }
+      if (yearlessAt(tail, trim(rest, strip, true), after.gap, head, trim(before, true, strip), false)) {
+        if (timeFirst) alsoYearless = true;
+        else otherWay = true;
+      }
     }
     if (list[at - 1]!.number && after.number && [...after.gap].some((char) => dateMarks.has(char) || timeMarks.has(char))) continue;
     for (const strip of [false, true]) {
       // Whether this pass left out a word between the halves.
       const between = strip && (trim(before, true, true) !== trim(before, true, false) || trim(rest, true, true) !== trim(rest, false, true));
-      if (dateFirst && dateNumbers.has(counts[at]!)) {
-        read(head, trim(before, true, strip), tail, trim(rest, strip, true), between);
-      }
-      if (timeFirst && dateNumbers.has(total - counts[at]!)) {
-        read(tail, trim(rest, strip, true), head, trim(before, true, strip), between);
-      }
+      if (dateNumbers.has(counts[at]!)) read(head, trim(before, true, strip), tail, trim(rest, strip, true), between, dateFirst);
+      if (dateNumbers.has(total - counts[at]!)) read(tail, trim(rest, strip, true), head, trim(before, true, strip), between, timeFirst);
     }
   }
-  const readings = joined.size > 0 ? joined : found;
+  const readings = joined.size > 0 ? joined : found.size > 0 ? found : otherWay ? new Map() : loose;
   if (readings.size !== 1 || alsoYearless) return null;
   return readings.values().next().value!;
 }

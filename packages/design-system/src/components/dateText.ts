@@ -72,6 +72,14 @@ const TEMPLATE_STYLES: Intl.DateTimeFormatOptions[] = [
   { dateStyle: 'long' },
   { dateStyle: 'full' },
 ];
+// The locale's styles for a month and day without a year.
+const MONTH_DAY_STYLES: Intl.DateTimeFormatOptions[] = [
+  { month: 'short', day: 'numeric' },
+  { month: 'long', day: 'numeric' },
+  { weekday: 'short', month: 'short', day: 'numeric' },
+  { weekday: 'long', month: 'long', day: 'numeric' },
+  { weekday: 'long', month: 'short', day: 'numeric' },
+];
 const NAME_STYLES: Intl.DateTimeFormatOptions[] = [
   ...TEMPLATE_STYLES,
   { day: 'numeric', month: 'short', year: 'numeric' },
@@ -82,6 +90,61 @@ const NAME_STYLES: Intl.DateTimeFormatOptions[] = [
   { weekday: 'short' },
 ];
 
+/**
+ * The date styles as patterns for each month, or, with `noYear`, the same
+ * patterns without the year.
+ */
+function templatesFor(
+  locale: string | undefined,
+  styles: Intl.DateTimeFormatOptions[],
+  monthNames: Set<string>[],
+  anyWeekday: string,
+  noYear: boolean,
+) {
+  const templates: Template[] = [];
+  const seen = new Set<string>();
+  for (const style of styles) {
+    const format = new Intl.DateTimeFormat(locale, { ...style, ...GREGORY });
+    for (let month = 1; month <= 12; month++) {
+      const pieces: string[] = [];
+      const slots: Slot[] = [];
+      let named = false;
+      for (const part of format.formatToParts(sample(month, 13))) {
+        const value = normalize(part.value);
+        if (part.type === 'year' && noYear) continue;
+        if (part.type === 'year' || part.type === 'day') {
+          pieces.push(NUMBER);
+          slots.push(part.type);
+        } else if (part.type === 'month' && !/\d/.test(value)) {
+          // Any of this month's names, so a name that is also a weekday's cannot be read as another month.
+          pieces.push(anyOf(monthNames[month]!));
+          named = true;
+        } else if (part.type === 'weekday') {
+          pieces.push(`(${anyWeekday})?`);
+          slots.push('weekday');
+        } else {
+          // A literal, an era, or a month written with its number, such as "tháng 10":
+          // its words may be left out, and its number is the month.
+          for (const bit of value.split(/(\d+)/)) {
+            if (/^\d+$/.test(bit)) {
+              pieces.push(NUMBER);
+              slots.push('month');
+            } else {
+              for (const word of bit.split(' ').filter(Boolean)) pieces.push(`(?:${escape(word)})?`);
+            }
+          }
+        }
+      }
+      const source = `^${pieces.join(' ?')}$`;
+      const id = `${source}|${slots.join()}|${named ? month : ''}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      templates.push({ regex: new RegExp(source, 'u'), slots, month: named ? month : undefined });
+    }
+  }
+  return templates;
+}
+
 /** A date style for one month, as a pattern over normalized text. */
 type Template = { regex: RegExp; slots: Slot[]; month?: number };
 
@@ -89,6 +152,10 @@ type LocaleText = {
   /** The order `formatDate` writes the year, month and day in. */
   order: Part[];
   templates: Template[];
+  /** The orders the locale writes a month and a day in numbers, without a year. */
+  monthDayOrders: Part[][];
+  /** The date styles, and the locale's styles without a year, with no year. */
+  monthDayTemplates: Template[];
   /** ISO weekdays (1 is Monday) by name, without spaces. */
   weekdays: Map<string, number[]>;
 };
@@ -129,52 +196,21 @@ function localeText(locale: string | undefined): LocaleText {
   });
   const anyWeekday = anyOf(weekdayNames.flatMap((names) => [...names]));
 
-  const templates: Template[] = [];
-  const seen = new Set<string>();
-  for (const style of TEMPLATE_STYLES) {
-    const format = new Intl.DateTimeFormat(locale, { ...style, ...GREGORY });
-    for (let month = 1; month <= 12; month++) {
-      const pieces: string[] = [];
-      const slots: Slot[] = [];
-      let named = false;
-      for (const part of format.formatToParts(sample(month, 13))) {
-        const value = normalize(part.value);
-        if (part.type === 'year' || part.type === 'day') {
-          pieces.push(NUMBER);
-          slots.push(part.type);
-        } else if (part.type === 'month' && !/\d/.test(value)) {
-          // Any of this month's names, so a name that is also a weekday's cannot be read as another month.
-          pieces.push(anyOf(monthNames[month]!));
-          named = true;
-        } else if (part.type === 'weekday') {
-          pieces.push(`(${anyWeekday})?`);
-          slots.push('weekday');
-        } else {
-          // A literal, an era, or a month written with its number, such as "tháng 10":
-          // its words may be left out, and its number is the month.
-          for (const bit of value.split(/(\d+)/)) {
-            if (/^\d+$/.test(bit)) {
-              pieces.push(NUMBER);
-              slots.push('month');
-            } else {
-              for (const word of bit.split(' ').filter(Boolean)) pieces.push(`(?:${escape(word)})?`);
-            }
-          }
-        }
-      }
-      const source = `^${pieces.join(' ?')}$`;
-      const id = `${source}|${slots.join()}|${named ? month : ''}`;
-      if (seen.has(id)) continue;
-      seen.add(id);
-      templates.push({ regex: new RegExp(source, 'u'), slots, month: named ? month : undefined });
-    }
-  }
+  const templates = templatesFor(locale, TEMPLATE_STYLES, monthNames, anyWeekday, false);
+  const monthDayTemplates = templatesFor(locale, [...TEMPLATE_STYLES, ...MONTH_DAY_STYLES], monthNames, anyWeekday, true);
 
   const order = new Intl.DateTimeFormat(locale, NUMERIC)
     .formatToParts(sample(10, 13))
     .map((part) => part.type)
     .filter((type): type is Part => type === 'year' || type === 'month' || type === 'day');
-  const text = { order, templates, weekdays };
+  const monthDayOrders = [
+    order.filter((part) => part !== 'year'),
+    new Intl.DateTimeFormat(locale, { month: 'numeric', day: 'numeric', ...GREGORY })
+      .formatToParts(sample(10, 13))
+      .map((part) => part.type)
+      .filter((type): type is Part => type === 'month' || type === 'day'),
+  ];
+  const text = { order, templates, weekdays, monthDayOrders, monthDayTemplates };
   localeTexts.set(key, text);
   return text;
 }
@@ -248,4 +284,39 @@ export function parseDate(text: string, options: DateTextOptions = {}): Temporal
     if (found.size > 1) return null;
   }
   return found.size === 1 ? found.values().next().value! : null;
+}
+
+/**
+ * Whether typed text is a month and a day without a year, as the locale
+ * writes one in numbers, or in one of its date styles with the year left out
+ * or its styles without a year, with any of the month's names and any
+ * weekday. Text `parseDate` reads with a two-digit year may also be one, as
+ * "10/13 12" is October 13 and the 12 of a time.
+ */
+export function isMonthDay(text: string, options: DateTextOptions = {}): boolean {
+  const { monthDayOrders, monthDayTemplates } = localeText(options.locale);
+  const input = normalize(text);
+  // February 29 too.
+  const valid = (month: number, day: number) =>
+    month >= 1 && month <= 12 && day >= 1 && day <= new Temporal.PlainYearMonth(2000, month).daysInMonth;
+  if (!/\p{L}/u.test(input)) {
+    const numbers = /^(\d{1,2}) (\d{1,2})$/.exec(input);
+    return (
+      numbers !== null &&
+      monthDayOrders.some((order) => {
+        const month = Number(numbers[order.indexOf('month') + 1]);
+        return valid(month, Number(numbers[order.indexOf('day') + 1]));
+      })
+    );
+  }
+  return monthDayTemplates.some((template) => {
+    const match = template.regex.exec(input);
+    if (!match) return false;
+    const fields: Fields = {};
+    template.slots.forEach((slot, index) => {
+      fields[slot] = match[index + 1];
+    });
+    const month = template.month ?? Number(fields.month);
+    return fields.day !== undefined && fields.day.length <= 2 && valid(month, Number(fields.day));
+  });
 }
