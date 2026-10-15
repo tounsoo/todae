@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, formatDateTime, formatTime, normalizeHex, parseDate, parseDateTime, parseTime, useChipField, useField } from '@omsoo.design/todae';
+import { Button, Composer, DensityProvider, Description, ErrorMessage, Field, Label, Text, ThemeProvider, formatDate, formatDateTime, formatTime, normalizeHex, parseDate, parseDateTime, parseTime, useChipField, useField } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 

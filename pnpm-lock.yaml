@@ -44,15 +44,15 @@ importers:
       '@next/mdx':
         specifier: ^15.2.4
         version: 15.5.25(@mdx-js/loader@3.1.1)(@mdx-js/react@3.1.1(@types/react@19.3.0)(react@19.3.0))
-      '@omsoo.design/todae':
-        specifier: workspace:*
-        version: link:../../packages/design-system
       '@phosphor-icons/react':
         specifier: 2.1.10
         version: 2.1.10(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@tabler/icons-react':
         specifier: 3.35.0
         version: 3.35.0(react@19.3.0)
+      '@tounsoo/todae':
+        specifier: workspace:*
+        version: link:../../packages/design-system
       lucide-react:
         specifier: 0.544.0
         version: 0.544.0(react@19.3.0)

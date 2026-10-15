@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, categoryTone, Stack, Text } from '@omsoo.design/todae';
+import { Avatar, categoryTone, Stack, Text } from '@tounsoo/todae';
 
 // A drawn portrait, inline so the demo needs no network.
 const PORTRAIT =

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Dialog, Stack, Toast, createToaster, type ToastLayout, type ToastTone } from '@omsoo.design/todae';
+import { Button, Dialog, Stack, Toast, createToaster, type ToastLayout, type ToastTone } from '@tounsoo/todae';
 import { useState } from 'react';
 
 // One store for the page. In an app, make it once at module scope.

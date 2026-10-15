@@ -1,6 +1,6 @@
 'use client';
 
-import { Description, Field, RadioGroup, Text } from '@omsoo.design/todae';
+import { Description, Field, RadioGroup, Text } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 export function RadioPlan() {

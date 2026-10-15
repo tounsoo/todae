@@ -38,13 +38,13 @@ A `nav` landmark around an ordered list of pages. `paginationRange` decides whic
 
 Give the control for the page you are on `aria-current="page"`, and it is drawn as the current page. Give a previous or next step with nowhere to go `aria-disabled="true"`, and it is drawn muted. With buttons, use `aria-disabled`, not `disabled`, so the button keeps focus when it reaches an end, as in the example above. A link with nowhere to go is `<a role="link" aria-disabled="true">` without `href`.
 
-`Pagination.Root` is named "Pagination" unless you pass a non-empty `aria-label` or `aria-labelledby`; that default is the `pagination` string of [StringsProvider](/utilities/strings-provider), English unless you set it, and always English from the `@omsoo.design/todae/pagination` server entry. Name it after what it pages through when a page has more than one. Restyle it through the `pagination` tokens.
+`Pagination.Root` is named "Pagination" unless you pass a non-empty `aria-label` or `aria-labelledby`; that default is the `pagination` string of [StringsProvider](/utilities/strings-provider), English unless you set it, and always English from the `@tounsoo/todae/pagination` server entry. Name it after what it pages through when a page has more than one. Restyle it through the `pagination` tokens.
 
-Server Components can import it from `@omsoo.design/todae/pagination`.
+Server Components can import it from `@tounsoo/todae/pagination`.
 
 ## Icons
 
-`Pagination.Ellipsis` with no content shows the `ellipsis` glyph from a [GlyphsProvider](/utilities/glyphs-provider), else `…`; the `@omsoo.design/todae/pagination` server entry always shows `…`. Previous and next are your own links or buttons, so an icon in them is yours too: hide it and name the control.
+`Pagination.Ellipsis` with no content shows the `ellipsis` glyph from a [GlyphsProvider](/utilities/glyphs-provider), else `…`; the `@tounsoo/todae/pagination` server entry always shows `…`. Previous and next are your own links or buttons, so an icon in them is yours too: hide it and name the control.
 
 ```tsx
 import { ChevronLeft, Ellipsis } from 'lucide-react';

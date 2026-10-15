@@ -1,4 +1,4 @@
-import { Link, type LinkRenderProps, type LinkRootProps } from '@omsoo.design/todae/link';
+import { Link, type LinkRenderProps, type LinkRootProps } from '@tounsoo/todae/link';
 import NextLink from 'next/link';
 
 /** Link.Root that moves within the site through next/link, so a same-site link keeps the page loaded and prefetches. */

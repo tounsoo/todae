@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Conversation, Message, Prose, Loader, Stack } from '@omsoo.design/todae';
+import { Button, Conversation, Message, Prose, Loader, Stack } from '@tounsoo/todae';
 import { useEffect, useRef, useState } from 'react';
 
 type Turn = { id: number; from: 'user' | 'assistant'; text: string; streaming?: boolean };

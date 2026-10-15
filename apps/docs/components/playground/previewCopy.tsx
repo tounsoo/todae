@@ -1,4 +1,4 @@
-import { Code, Kbd } from '@omsoo.design/todae';
+import { Code, Kbd } from '@tounsoo/todae';
 import type { ReactNode } from 'react';
 import type { Locale } from '../../lib/i18n/config';
 

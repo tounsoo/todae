@@ -7,7 +7,7 @@ Docs, live examples and a theme playground: [todae.omsoo.design](https://todae.o
 ## Install
 
 ```sh
-npm install @omsoo.design/todae
+npm install @tounsoo/todae
 ```
 
 Todae needs React 19.
@@ -17,11 +17,11 @@ Todae needs React 19.
 Import the stylesheet once, then use the components.
 
 ```css
-@import '@omsoo.design/todae/todae.css';
+@import '@tounsoo/todae/todae.css';
 ```
 
 ```tsx
-import { Button, ThemeProvider } from '@omsoo.design/todae';
+import { Button, ThemeProvider } from '@tounsoo/todae';
 
 export function App() {
   return (
@@ -36,12 +36,12 @@ export function App() {
 
 ## What's in the package
 
-- `@omsoo.design/todae`: components, headless hooks and providers.
-- `@omsoo.design/todae/<name>`, such as `@omsoo.design/todae/stack`: entries that a React Server Component can render.
-- `@omsoo.design/todae/todae.css`: the stylesheet, with every token as a CSS custom property.
-- `@omsoo.design/todae/tokens.json`: the token catalog.
-- `@omsoo.design/todae/schema/components.json`: each component's parts and props.
-- The `todae-tokens` CLI and `@omsoo.design/todae/tokens-builder`: build a company's tokens on top of Todae's. See [Build on Todae](https://todae.omsoo.design/guides/build-on-todae).
+- `@tounsoo/todae`: components, headless hooks and providers.
+- `@tounsoo/todae/<name>`, such as `@tounsoo/todae/stack`: entries that a React Server Component can render.
+- `@tounsoo/todae/todae.css`: the stylesheet, with every token as a CSS custom property.
+- `@tounsoo/todae/tokens.json`: the token catalog.
+- `@tounsoo/todae/schema/components.json`: each component's parts and props.
+- The `todae-tokens` CLI and `@tounsoo/todae/tokens-builder`: build a company's tokens on top of Todae's. See [Build on Todae](https://todae.omsoo.design/guides/build-on-todae).
 
 ## License
 

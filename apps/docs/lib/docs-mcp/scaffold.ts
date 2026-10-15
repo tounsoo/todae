@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { DOCS_ORIGIN } from '../origin';
-import { resolveEntries } from '@omsoo.design/todae/tokens-builder';
+import { resolveEntries } from '@tounsoo/todae/tokens-builder';
 import { buildTokenFiles, todaeTokensDir, type BuildResult } from './build';
 import { catalogTokens } from './tokens';
 
@@ -85,7 +85,7 @@ function quoteKey(name: string): string {
 }
 
 function declarations(variants: readonly string[], densities: readonly string[]): string {
-  const lines = ["// Lets TypeScript accept this design system's button variants and densities.", 'export {};', '', "declare module '@omsoo.design/todae' {"];
+  const lines = ["// Lets TypeScript accept this design system's button variants and densities.", 'export {};', '', "declare module '@tounsoo/todae' {"];
   if (variants.length > 0) {
     lines.push('  interface ButtonVariants {', ...variants.map((name) => `    ${quoteKey(name)}: true;`), '  }');
   }

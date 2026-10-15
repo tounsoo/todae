@@ -1,6 +1,6 @@
 'use client';
 
-import { OptionList } from '@omsoo.design/todae';
+import { OptionList } from '@tounsoo/todae';
 import { useState } from 'react';
 
 export function OptionListSingle() {

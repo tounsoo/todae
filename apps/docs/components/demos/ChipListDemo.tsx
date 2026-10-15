@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChipList } from '@omsoo.design/todae';
+import { ChipList } from '@tounsoo/todae';
 
 const TAGS = ['design', 'tokens', 'accessibility', 'a-very-long-tag-that-stays-put', 'react', 'density', 'dark mode', 'docs'];
 

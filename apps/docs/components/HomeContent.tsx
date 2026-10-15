@@ -1,4 +1,4 @@
-import { Stack } from '@omsoo.design/todae/stack';
+import { Stack } from '@tounsoo/todae/stack';
 import { DEFAULT_LOCALE, localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';
 import { HomeShowcase } from './HomeShowcase';

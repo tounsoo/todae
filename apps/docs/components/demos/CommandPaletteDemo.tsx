@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Dialog, Field, OptionList, Stack, Text, useCombobox, useHotkey, type ComboboxOption } from '@omsoo.design/todae';
+import { Button, Dialog, Field, OptionList, Stack, Text, useCombobox, useHotkey, type ComboboxOption } from '@tounsoo/todae';
 import { useState } from 'react';
 
 const COMMANDS: ComboboxOption[] = [

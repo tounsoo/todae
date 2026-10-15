@@ -15,7 +15,7 @@ import {
   useHighlight,
   useSheetPresentation,
   type ComboboxOption,
-} from '@omsoo.design/todae';
+} from '@tounsoo/todae';
 
 const FRAMEWORKS: ComboboxOption[] = [
   { value: 'react', label: 'React' },

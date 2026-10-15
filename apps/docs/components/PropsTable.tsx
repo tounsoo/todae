@@ -1,4 +1,4 @@
-import schema from '@omsoo.design/todae/schema/components.json';
+import schema from '@tounsoo/todae/schema/components.json';
 import { LOCALES, type Locale } from '../lib/i18n/config';
 import { propDescription } from '../lib/i18n/propDescriptions';
 import { PropsTableView, type PropDescription, type PropsTableRow } from './PropsTableView';

@@ -1,8 +1,8 @@
 'use client';
 
-import { Button, Code, Stack, Text, useClipboard } from '@omsoo.design/todae';
+import { Button, Code, Stack, Text, useClipboard } from '@tounsoo/todae';
 
-const command = 'pnpm add @omsoo.design/todae';
+const command = 'pnpm add @tounsoo/todae';
 
 export function CopyCommand() {
   const { copy, status } = useClipboard();

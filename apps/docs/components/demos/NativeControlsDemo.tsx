@@ -1,6 +1,6 @@
 'use client';
 
-import { Field, Label, Meter, Progress, Slider, Stack, Text } from '@omsoo.design/todae';
+import { Field, Label, Meter, Progress, Slider, Stack, Text } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 export function ProgressStates() {

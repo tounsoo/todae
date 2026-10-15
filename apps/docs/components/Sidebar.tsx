@@ -1,6 +1,6 @@
 'use client';
 
-import { ScrollArea } from '@omsoo.design/todae';
+import { ScrollArea } from '@tounsoo/todae';
 import type { Locale } from '../lib/i18n/config';
 import { SiteNav } from './SiteNav';
 

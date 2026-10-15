@@ -1,4 +1,4 @@
-import type { ThemeColorValue, ThemeDimensionValue, ThemeOverride, ThemeShadowLayer } from '@omsoo.design/todae';
+import type { ThemeColorValue, ThemeDimensionValue, ThemeOverride, ThemeShadowLayer } from '@tounsoo/todae';
 
 /** A playground starting point: one override set per appearance, since Todae's accent flips between light and dark. */
 export type ThemePreset = {

@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
-import { contrastResults, resolveEntries } from '@omsoo.design/todae/tokens-builder';
+import { contrastResults, resolveEntries } from '@tounsoo/todae/tokens-builder';
 
 const SOURCE = 'todae-docs' as const;
 
@@ -22,7 +22,7 @@ let running = 0;
 const FILE_RE = /^(?:[a-z0-9][a-z0-9._-]*\/)*[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9_-]+)*\.json$/i;
 
 function packageFile(cwd: string, ...path: string[]): string | undefined {
-  return [join(cwd, 'node_modules', '@omsoo.design', 'todae', ...path), join(cwd, '..', '..', 'packages', 'design-system', ...path)].find(
+  return [join(cwd, 'node_modules', '@tounsoo', 'todae', ...path), join(cwd, '..', '..', 'packages', 'design-system', ...path)].find(
     (file) => existsSync(file),
   );
 }
@@ -40,7 +40,7 @@ export function todaeTokensDir(cwd = process.cwd()): string {
 /** The built `todae-tokens` CLI, found the same way as the tokens directory. */
 export function todaeTokensCli(cwd = process.cwd()): string {
   const found = packageFile(cwd, 'dist', 'scripts', 'build-tokens.js');
-  if (!found) throw new Error('Could not find the todae-tokens CLI; build @omsoo.design/todae first');
+  if (!found) throw new Error('Could not find the todae-tokens CLI; build @tounsoo/todae first');
   return found;
 }
 

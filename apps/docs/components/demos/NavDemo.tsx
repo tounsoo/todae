@@ -1,6 +1,6 @@
 'use client';
 
-import { Nav } from '@omsoo.design/todae';
+import { Nav } from '@tounsoo/todae';
 import { CreditCard, House, Settings, Users } from 'lucide-react';
 import { useState, type MouseEvent, type ReactNode } from 'react';
 

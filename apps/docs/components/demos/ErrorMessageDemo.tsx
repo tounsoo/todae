@@ -1,6 +1,6 @@
 'use client';
 
-import { Description, ErrorMessage, Field, Label } from '@omsoo.design/todae';
+import { Description, ErrorMessage, Field, Label } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 export function ErrorMessageSibling() {
