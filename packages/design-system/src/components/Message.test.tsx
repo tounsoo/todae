@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Message } from './Message';
@@ -107,5 +109,13 @@ describe('Message', () => {
     );
     expect(screen.getByTestId('always').dataset.reveal).toBe('always');
     expect(screen.getByTestId('hover').dataset.reveal).toBe('hover');
+  });
+
+  // Browser tests can't turn hover emulation back on once touch emulation clears it, so this reads the sheet.
+  it('hides hover actions only on a screen that can hover', () => {
+    const css = readFileSync(join(import.meta.dirname, 'Message.module.css'), 'utf8');
+    const hiding = /@media \(hover: hover\) \{\s*\.root:not\(:hover, :focus-within\) > \.actions\[data-reveal='hover'\] \{\s*opacity: 0;/;
+    expect(css).toMatch(hiding);
+    expect(css.match(/opacity: 0/g)).toHaveLength(1);
   });
 });

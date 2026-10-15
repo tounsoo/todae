@@ -355,7 +355,7 @@ describe('Message.Root in a browser', () => {
     }
   });
 
-  it('shows hover actions while the message is hovered or holds focus, and always without hover', async () => {
+  it('shows hover actions while the message is hovered or holds focus', async () => {
     render(
       <div data-appearance="light" data-density="comfortable" style={{ inlineSize: '400px' }}>
         <Message.Root data-testid="message" aria-label="Assistant">
@@ -380,11 +380,7 @@ describe('Message.Root in a browser', () => {
       expect(opacity()).toBe('1');
       screen.getByRole('button', { name: 'Elsewhere' }).focus();
       expect(opacity()).toBe('0');
-      // A touch screen reports no hover.
-      await session().send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
-      expect(opacity()).toBe('1');
     } finally {
-      await session().send('Emulation.setTouchEmulationEnabled', { enabled: false });
       await emulateMedia([]);
     }
   });
