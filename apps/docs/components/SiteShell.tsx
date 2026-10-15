@@ -22,7 +22,7 @@ import { SITE_GROUPS } from './siteGroups';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import '../app/globals.css';
 
-const REPO = 'https://github.com/tounsoo/todae';
+const REPO = 'https://github.com/omsoo-design/todae';
 // The top bar's Components link opens the first page the sidebar lists under Components.
 const FIRST_COMPONENT = SITE_GROUPS.find((group) => group.id === 'components')?.links[0]?.[0] ?? '/';
 

@@ -45,4 +45,4 @@ export function App() {
 
 ## License
 
-[MIT](https://github.com/tounsoo/todae/blob/main/LICENSE)
+[MIT](https://github.com/omsoo-design/todae/blob/main/LICENSE)

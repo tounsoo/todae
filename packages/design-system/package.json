@@ -13,11 +13,11 @@
   "license": "MIT",
   "homepage": "https://todae.omsoo.design",
   "bugs": {
-    "url": "https://github.com/tounsoo/todae/issues"
+    "url": "https://github.com/omsoo-design/todae/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tounsoo/todae.git",
+    "url": "git+https://github.com/omsoo-design/todae.git",
     "directory": "packages/design-system"
   },
   "type": "module",
