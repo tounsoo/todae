@@ -3,7 +3,7 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "omsoo-design/todae"
+      "repo": "tounsoo/todae"
     }
   ],
   "commit": false,

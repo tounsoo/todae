@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 
-export const TRANSLATING_GUIDE = 'https://github.com/omsoo-design/todae/blob/main/apps/docs/TRANSLATING.md';
+export const TRANSLATING_GUIDE = 'https://github.com/tounsoo/todae/blob/main/apps/docs/TRANSLATING.md';
 
 /** An English page shown in another locale, marked as English so screen readers and search engines read it right. */
 export function UntranslatedPage({ locale, children }: { locale: Locale; children: ReactNode }) {

@@ -108,7 +108,7 @@ Pick the bump and write a line for the changelog. Before 1.0, a breaking change 
 `.github/workflows/release.yml` turns changesets on `main` into a "Version Packages" pull request that bumps the version and writes `packages/design-system/CHANGELOG.md`. Merging that pull request publishes the new version to npm through [trusted publishing](https://docs.npmjs.com/trusted-publishers), from the `npm` environment. It needs:
 
 - Actions › General › "Allow GitHub Actions to create and approve pull requests" turned on in the repository settings.
-- The repository at `omsoo-design/todae`, as `package.json` and `.changeset/config.json` name it.
+- The repository at `tounsoo/todae`, as `package.json` and `.changeset/config.json` name it.
 - A trusted publisher on npm for this repository, `release.yml` and the `npm` environment. npm only takes one for a package that exists, so the first version is published by hand; until then the publish job fails.
 
 ## Deploy docs

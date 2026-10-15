@@ -4,5 +4,5 @@ export const LICENSE = {
   id: 'MIT',
   year: 2026,
   holder: 'Ben Ho',
-  href: 'https://github.com/omsoo-design/todae/blob/main/LICENSE',
+  href: 'https://github.com/tounsoo/todae/blob/main/LICENSE',
 } as const;

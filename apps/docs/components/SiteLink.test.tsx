@@ -22,7 +22,7 @@ describe('SiteLink', () => {
         <SiteLink ref={ref} href="/tokens" aria-current="page" className="own">
           Tokens
         </SiteLink>
-        <SiteLink href="https://github.com/omsoo-design/todae">GitHub</SiteLink>
+        <SiteLink href="https://github.com/tounsoo/todae">GitHub</SiteLink>
         <SiteLink href="//example.com">Protocol-relative</SiteLink>
         <SiteLink href="#props">Props</SiteLink>
         <SiteLink>No href</SiteLink>
@@ -35,7 +35,7 @@ describe('SiteLink', () => {
     expect(tokens.getAttribute('aria-current')).toBe('page');
     expect(tokens.className).toMatch(/own/);
     expect(tokens.className).not.toBe('own');
-    expect(screen.getByRole('link', { name: 'GitHub' }).getAttribute('href')).toBe('https://github.com/omsoo-design/todae');
+    expect(screen.getByRole('link', { name: 'GitHub' }).getAttribute('href')).toBe('https://github.com/tounsoo/todae');
     expect(screen.getByRole('link', { name: 'Props' }).getAttribute('href')).toBe('#props');
     const bare = screen.getByText('No href');
     expect(bare.tagName).toBe('A');
