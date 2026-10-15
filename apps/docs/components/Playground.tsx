@@ -11,6 +11,7 @@ import {
   ScrollArea,
   SEMANTIC_OVERRIDE_KEYS,
   Stack,
+  StringsProvider,
   Tabs,
   ThemeProvider,
   ToggleGroup,
@@ -28,6 +29,7 @@ import {
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
+import { TODAE_STRINGS } from '../lib/i18n/todaeStrings';
 import { PRESETS, type ThemePreset } from './playground/presets';
 import { ICON_LIBRARIES } from './iconLibraries';
 import { Preview } from './playground/Preview';
@@ -224,7 +226,7 @@ function reserveBar(bar: HTMLElement | null) {
 
 /** The theme playground. Each locale's /playground page renders it. */
 export function Playground({ locale }: { locale: Locale }) {
-  // Option values, layer names and preset names are Todae's own names and stay in English.
+  // Option values, layer names and preset names are Todae's own names and stay in English; the preview follows the locale.
   const t = DICTIONARIES[locale].playground;
   const clipboard = useClipboard({ resetAfter: false, copiedMessage: t.copied, failedMessage: t.copyFailed });
   const stageRef = useRef<HTMLDivElement>(null);
@@ -462,7 +464,10 @@ export function Playground({ locale }: { locale: Locale }) {
           overrides={overrides}
           data-density={density}
         >
-          <Preview library={ICON_LIBRARIES.find((library) => library.id === iconsId)} />
+          {/* The preview is a product in the reader's language, so Todae's own text is too. */}
+          <StringsProvider strings={TODAE_STRINGS[locale]}>
+            <Preview locale={locale} library={ICON_LIBRARIES.find((library) => library.id === iconsId)} />
+          </StringsProvider>
         </ThemeProvider>
       </div>
       {narrow ? (

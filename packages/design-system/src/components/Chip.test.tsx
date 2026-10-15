@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Chip } from './Chip';
+import vhStyles from './VisuallyHidden.module.css';
 
 afterEach(cleanup);
 
@@ -75,7 +76,8 @@ describe('Chip', () => {
     expect(container.querySelector('button')).toBeNull();
     expect(container.querySelector('[tabindex]')).toBeNull();
     expect(container.querySelector('[data-overflow]')).not.toBeNull();
-    expect(screen.getByText('4 more')).toBeTruthy();
+    // VisuallyHidden.Root's rules, which hold over a class a product adds.
+    expect(screen.getByText('4 more').className).toBe(vhStyles.root);
     expect(screen.getByText('+4').getAttribute('aria-hidden')).not.toBeNull();
   });
 });

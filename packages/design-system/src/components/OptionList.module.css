@@ -77,7 +77,7 @@
   }
 
   .list[data-selection-mode='multiple'] .option {
-    padding-inline-start: calc(var(--todae-option-padding-x) + 1.25em);
+    padding-inline-start: calc(var(--todae-option-padding-x) + (var(--todae-option-check-scale) + var(--todae-option-check-gap)) * 1em);
   }
 
   .list[data-selection-mode='multiple'] .option::before {
@@ -88,7 +88,7 @@
     height: calc(var(--todae-option-check-scale) * 1em);
     box-sizing: border-box;
     border: var(--todae-option-check-border-width) solid var(--todae-option-check-border);
-    border-radius: 0.125em;
+    border-radius: var(--todae-option-check-radius);
     background: transparent;
   }
 
@@ -97,7 +97,7 @@
   }
 
   .list[data-selection-mode='single'] .option[data-selected] {
-    padding-inline-start: calc(var(--todae-option-padding-x) + 1.25em);
+    padding-inline-start: calc(var(--todae-option-padding-x) + (var(--todae-option-check-scale) + var(--todae-option-check-gap)) * 1em);
   }
 
   /* A selected option's check glyph, inside the box in a multiple list. */

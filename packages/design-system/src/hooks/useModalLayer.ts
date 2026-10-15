@@ -1,5 +1,6 @@
-import { useLayoutEffect, useState, type RefObject } from 'react';
+import type { RefObject } from 'react';
 import { useModalLayerElement } from '../overlay/useModalLayerElement';
+import { useRefElement } from '../overlay/useRefElement';
 
 /**
  * Puts a modal `<dialog>` in Todae's modal stack, the list of modals Todae
@@ -15,13 +16,5 @@ import { useModalLayerElement } from '../overlay/useModalLayerElement';
  * render the `<dialog>` in that component.
  */
 export function useModalLayer(ref: RefObject<HTMLDialogElement | null>, open: boolean): void {
-  const [node, setNode] = useState<HTMLDialogElement | null>(null);
-  // Every commit on purpose: a ref has no change signal, and the element can
-  // attach later or be replaced. The updater bails out when it is the same.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
-    const current = ref.current;
-    setNode((prev) => (prev === current ? prev : current));
-  });
-  useModalLayerElement(node, open);
+  useModalLayerElement(useRefElement(ref), open);
 }

@@ -49,6 +49,7 @@ const FRENCH: Strings = {
   colorPicker: 'Sélecteur de couleur',
   datePicker: 'Choisir une date',
   timePicker: 'Choisir une heure',
+  dateTimePicker: 'Choisir une date et une heure',
   previousMonth: 'Mois précédent',
   nextMonth: 'Mois suivant',
   previousYears: 'Années précédentes',
