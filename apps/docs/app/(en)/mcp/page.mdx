@@ -78,7 +78,7 @@ Tokens:
 
 Building a design system:
 
-- `build_tokens`: runs `todae-tokens build` on a company token package. Pass each `.json` file by its path inside the token folder, and name the resolver among them with `resolver` if it isn't `resolver.json`. It returns the theme CSS, the `THEME_OVERRIDE_TYPES` module and the contrast of every pair, or the build's error.
+- `build_tokens`: runs `todae-tokens build` on a company token package. Pass each `.json` file by its path inside the token folder, and name the resolver among them with `resolver` if it isn't `resolver.json`. It returns the theme CSS and the `THEME_OVERRIDE_TYPES` module, or the build's error, which lists any contrast pairs that fall short.
 - `scaffold_design_system`: drafts a company resolver and token files. It takes a `name`, and optionally appearance colors to replace (OKLCH channels for light and dark), new button variants, which start as copies of `secondary`, and new densities, which start as copies of `comfortable`. It returns the token files by path inside a `tokens` folder, in the shape `build_tokens` takes, and `src/todae.d.ts` declaring the new variant and density names, with the result of building the token files.
 - `get_guide`: the source of a docs page about building on Todae: `build-on-todae`, `tokens`, `css-layers`, `composition`, `platform` or `mcp`.
 
@@ -94,6 +94,6 @@ Then build the files in your project with the `todae-tokens` CLI, and load the C
 
 ## Limits
 
-`build_tokens` and `scaffold_design_system` write the token files to a temporary folder on the server and remove it when the call ends. `build_tokens` takes at most 64 files, 512 KB in all as compact JSON, and refuses a resolver that asks for an outsized build, such as one with more than 16 modifiers.
+`build_tokens` and `scaffold_design_system` write the token files to a temporary folder on the server and remove it when the call ends. `build_tokens` takes at most 64 files, 512 KB in all. A build that runs longer than 10 seconds is stopped.
 
 The component and guide tools read the English docs pages, so their copy is in English.

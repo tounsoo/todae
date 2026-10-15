@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DOCS_ORIGIN } from '../origin';
-import { MAX_MODIFIERS, baseContrast, buildTokenFiles, checkFiles, checkResolver, todaeTokensDir } from './build';
+import { baseContrast, buildTokenFiles, checkFiles, todaeTokensCli, todaeTokensDir } from './build';
 import { GUIDES, GUIDE_TOPICS, getGuide } from './guides';
 import { scaffoldDesignSystem } from './scaffold';
 import { catalogTokens, getToken, listTokens } from './tokens';
@@ -65,14 +65,12 @@ describe('token tools', () => {
 });
 
 describe('build_tokens', () => {
-  it('builds the acme example and returns its CSS, types and contrast', async () => {
+  it('builds the acme example and returns its CSS and types', async () => {
     const result = await buildTokenFiles(readTree(ACME));
     if (!result.ok) throw new Error(result.error);
     expect(result.css).toContain('@layer todae.theme');
     expect(result.css).toContain('--todae-brand-logo-size');
     expect(result.overrideTypes).toContain("'brand.logo.size': 'dimension'");
-    expect(result.tokenCount).toBeGreaterThan(0);
-    expect(result.contrast.some((pair) => pair.fg === 'color.on-accent' && pair.where === 'appearance "dark"')).toBe(true);
   });
 
   it('returns the build error, without the temporary folder', async () => {
@@ -106,59 +104,27 @@ describe('build_tokens', () => {
     expect(() => checkFiles({ ...resolver, 'resolver.json/x.json': {} })).toThrow('both a file and the folder');
     expect(() => checkFiles({ ...resolver, 'big.json': 'x'.repeat(600 * 1024) })).toThrow('at most');
     expect(checkFiles({ ...resolver, 'appearance/light.json': '{}' }).get('appearance/light.json')).toBe('{}');
-    // Objects count as compact JSON, as a client sends them.
     expect(checkFiles({ ...resolver, 'a.json': { a: { b: 1 } } }).get('a.json')).toBe('{"a":{"b":1}}');
-    expect(checkFiles({ ...resolver, 'a.json': '{\n  "a": 1\n}' }).get('a.json')).toBe('{"a":1}');
-    expect(() => checkFiles({ ...resolver, 'big.json': JSON.stringify({ a: 'x'.repeat(400 * 1024) }, null, 2) })).not.toThrow();
     expect(() => checkFiles({ 'tokens/resolver.json': {} }, 'tokens/resolver.json')).not.toThrow();
   });
 
-  it('refuses a resolver that asks for an outsized build', async () => {
-    // Each color-scheme modifier doubles the contexts every appearance pair runs in.
-    const ink = (i: number, l: number) => ({
-      brand: { [`s${i}`]: { ink: { $type: 'color', $value: { colorSpace: 'oklch', components: [l, 0, 0] } } } },
-    });
-    const schemes = (count: number) => {
-      const names = Array.from({ length: count }, (_, i) => i);
-      return {
-        $schema: 'https://www.designtokens.org/schemas/2025.10/resolver.json',
-        name: 'schemes',
-        version: '2025.10',
-        modifiers: Object.fromEntries(
-          names.map((i) => [
-            `s${i}`,
-            {
-              default: 'light',
-              contexts: { light: [ink(i, 0.2)], dark: [ink(i, 0.9)] },
-              $extensions: { 'dev.todae': { layer: 'appearance', attribute: `data-s${i}`, colorScheme: true } },
-            },
-          ]),
-        ),
-        resolutionOrder: names.map((i) => ({ $ref: `#/modifiers/s${i}` })),
-      };
+  it('stops a build that runs too long', async () => {
+    // Many aliases in many contexts: the builder's reference checks grow faster than linearly with them.
+    const many = Object.fromEntries(
+      Array.from({ length: 2000 }, (_, i) => [`t${i}`, { $type: 'color', $value: { $ref: '#/color/gray/900/$value' } }]),
+    );
+    const contexts = Object.fromEntries(Array.from({ length: 16 }, (_, i) => [`c${i}`, [{ $ref: './many.json' }]]));
+    const resolver = {
+      version: '2025.10',
+      modifiers: {
+        mood: { contexts, default: 'c0', $extensions: { 'dev.todae': { layer: 'appearance', attribute: 'data-mood' } } },
+      },
+      resolutionOrder: [{ $ref: '#/modifiers/mood' }],
     };
-    const one = await buildTokenFiles({ 'resolver.json': schemes(1) });
-    if (!one.ok) throw new Error(one.error);
-    const big = await buildTokenFiles({ 'resolver.json': schemes(8) });
-    expect(big.ok).toBe(false);
-    if (!big.ok) expect(big.error).toMatch(/^contrast: the resolver asks for \d+ pair checks/);
-
-    const many = { modifiers: Object.fromEntries(Array.from({ length: MAX_MODIFIERS + 1 }, (_, i) => [`m${i}`, {}])) };
-    const tooMany = await buildTokenFiles({ 'resolver.json': many });
-    expect(tooMany).toMatchObject({ ok: false, error: expect.stringContaining('modifiers') });
-    expect(() => checkResolver(JSON.stringify(many))).toThrow('modifiers');
-    const contexts = { modifiers: { m: { contexts: Object.fromEntries(Array.from({ length: 17 }, (_, i) => [`c${i}`, [{}]])) } } };
-    expect(() => checkResolver(JSON.stringify(contexts))).toThrow('contexts');
-    const refs = { sets: { a: { sources: Array.from({ length: 129 }, () => ({ $ref: './a.json' })) } } };
-    expect(() => checkResolver(JSON.stringify(refs))).toThrow('$refs');
-    const pairs = { sets: { a: { $extensions: { 'dev.todae': { contrast: Array.from({ length: 65 }, () => ({})) } } } } };
-    expect(() => checkResolver(JSON.stringify(pairs))).toThrow('contrast pairs');
-    // Todae's acme example is well inside the bounds; invalid JSON is the build's to report.
-    expect(() => checkResolver(JSON.stringify(readTree(ACME)['resolver.json']))).not.toThrow();
-    expect(() => checkResolver('{nope')).not.toThrow();
-    let deep: unknown = {};
-    for (let i = 0; i < 40; i++) deep = { a: deep };
-    expect(() => checkResolver(JSON.stringify({ sets: deep }))).toThrow('levels deep');
+    const started = performance.now();
+    const result = await buildTokenFiles({ 'resolver.json': resolver, 'many.json': { brand: many } }, { timeout: 500 });
+    expect(performance.now() - started).toBeLessThan(3000);
+    expect(result).toEqual({ ok: false, error: expect.stringContaining('was stopped'), source: 'todae-docs' });
   });
 
   it('builds a resolver that is not at the top level', async () => {
@@ -169,6 +135,8 @@ describe('build_tokens', () => {
   it("finds Todae's tokens folder", () => {
     expect(readdirSync(todaeTokensDir())).toContain('resolver.json');
     expect(() => todaeTokensDir(join(tmpdir(), 'no-such-docs-app'))).toThrow('Could not find');
+    expect(todaeTokensCli()).toMatch(/dist\/scripts\/build-tokens\.js$/);
+    expect(() => todaeTokensCli(join(tmpdir(), 'no-such-docs-app'))).toThrow('Could not find');
   });
 });
 
@@ -183,7 +151,7 @@ describe('scaffold_design_system', () => {
       buttonVariants: ['outline', 'soft-tint'],
       densities: ['roomy'],
     });
-    expect(result.build).toEqual({ ok: true, tokenCount: expect.any(Number) });
+    expect(result.build).toEqual({ ok: true });
     expect(result.tokensFolder).toBe('tokens');
     expect(Object.keys(result.tokenFiles)).toEqual([
       'resolver.json',

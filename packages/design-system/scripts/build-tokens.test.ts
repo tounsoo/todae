@@ -1011,28 +1011,6 @@ describe('company token build', () => {
     expect(css).not.toContain('--_todae-brand-ink');
   });
 
-  it("returns the company's own tokens and the contrast it measured", async () => {
-    const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
-    const own = new Set(result.companyTokens.map((token) => token.path));
-    expect(own).toContain('brand.logo.size');
-    expect(own).toContain('color.accent.default');
-    expect(own).not.toContain('color.fg.default');
-    const onAccent = result.contrast.filter((pair) => pair.fg === 'color.on-accent' && pair.bg === 'color.accent.default');
-    expect(onAccent.map((pair) => pair.where)).toEqual(['appearance "light"', 'appearance "dark"']);
-    expect(onAccent.every((pair) => pair.lc >= pair.min)).toBe(true);
-  });
-
-  it('counts contrast checks before measuring, and stops at maxContrastChecks', async () => {
-    const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
-    const checks = result.contrast.length;
-    await expect(
-      buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir, maxContrastChecks: checks }),
-    ).resolves.toBeDefined();
-    await expect(
-      buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir, maxContrastChecks: checks - 1 }),
-    ).rejects.toThrow(`asks for ${checks} pair checks`);
-  });
-
   it('emits only the company layer, after Todae\'s', async () => {
     const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
     expect(result.css.startsWith('@layer todae.reset, todae.base, todae.components, todae.theme;\n\n@layer todae.theme {')).toBe(

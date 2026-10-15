@@ -1493,24 +1493,6 @@ export type ContrastResult = ContrastPair & {
   lc: number;
 };
 
-function variedModifiers(entries: ResolvedEntry[], declaring: ResolvedEntry): Extract<ResolvedEntry, { kind: 'modifier' }>[] {
-  return entries.filter(
-    (entry): entry is Extract<ResolvedEntry, { kind: 'modifier' }> =>
-      entry.kind === 'modifier' && !entry.extension.alias && (entry === declaring || entry.extension.colorScheme === true),
-  );
-}
-
-/** How many results `contrastResults` would measure, without measuring them. */
-export function contrastCheckCount(entries: ResolvedEntry[]): number {
-  let count = 0;
-  for (const declaring of entries) {
-    const pairs = declaring.extension.contrast;
-    if (!pairs) continue;
-    count += variedModifiers(entries, declaring).reduce((product, modifier) => product * modifier.contexts.size, pairs.length);
-  }
-  return count;
-}
-
 /**
  * Measures every declared contrast pair. Each pair runs once per combination
  * of the declaring modifier's contexts and every color-scheme modifier's
@@ -1522,7 +1504,10 @@ export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
   for (const declaring of entries) {
     const pairs = declaring.extension.contrast;
     if (!pairs) continue;
-    const varied = variedModifiers(entries, declaring);
+    const varied = entries.filter(
+      (entry): entry is Extract<ResolvedEntry, { kind: 'modifier' }> =>
+        entry.kind === 'modifier' && !entry.extension.alias && (entry === declaring || entry.extension.colorScheme === true),
+    );
     let combos: Map<ResolvedEntry, string>[] = [new Map()];
     for (const modifier of varied) {
       combos = combos.flatMap((combo) => [...modifier.contexts.keys()].map((context) => new Map([...combo, [modifier, context]])));
@@ -1549,8 +1534,8 @@ export function contrastResults(entries: ResolvedEntry[]): ContrastResult[] {
 }
 
 /** Fails with every contrast pair below its minimum. */
-export function validateContrast(entries: ResolvedEntry[], results = contrastResults(entries)): void {
-  const failures = results
+export function validateContrast(entries: ResolvedEntry[]): void {
+  const failures = contrastResults(entries)
     .filter((result) => result.lc < result.min)
     .map(({ fg, bg, where, lc, min }) => `"${fg}" on "${bg}" in ${where} is Lc ${lc.toFixed(1)}, below ${min}`);
   if (failures.length > 0) fail(`contrast: ${failures.length} pair(s) fail APCA\n  ${failures.join('\n  ')}`);
@@ -1590,36 +1575,19 @@ export type CompanyTokensResult = {
   /** `THEME_OVERRIDE_TYPES` for the company's tokens, for ThemeProvider `overrideTypes`. */
   overrideTypes: string;
   tokens: FlatToken[];
-  /** The company's own tokens: those its resolver adds or replaces. */
-  companyTokens: FlatToken[];
-  /** Every contrast pair, measured on Todae's and the company's tokens together. */
-  contrast: ContrastResult[];
 };
 
 /**
  * Builds a company token package layered on Todae's: `resolver` is the
- * company's resolver.json, `base` Todae's tokens directory. With
- * `maxContrastChecks`, it fails before measuring when the contrast pairs,
- * times the contexts they run in, come to more than that.
+ * company's resolver.json, `base` Todae's tokens directory.
  */
-export async function buildCompanyTokens(options: {
-  resolver: string;
-  base?: string;
-  maxContrastChecks?: number;
-}): Promise<CompanyTokensResult> {
+export async function buildCompanyTokens(options: { resolver: string; base?: string }): Promise<CompanyTokensResult> {
   const upstream = await resolveEntries(options.base ?? todaeTokensRoot());
   const extra = await loadResolver(options.resolver, upstream);
   const { merged, company, inherited } = mergeEntries(upstream, extra);
-  if (options.maxContrastChecks !== undefined) {
-    const checks = contrastCheckCount(merged);
-    if (checks > options.maxContrastChecks) {
-      fail(`contrast: the resolver asks for ${checks} pair checks across its contexts, more than ${options.maxContrastChecks}`);
-    }
-  }
   validateEntries(merged);
   const all = checkGraph(merged);
-  const contrast = contrastResults(merged);
-  validateContrast(merged, contrast);
+  validateContrast(merged);
   const css = emitCss(company, {
     layer: COMPANY_LAYER,
     preamble: COMPANY_PREAMBLE,
@@ -1636,7 +1604,7 @@ export async function buildCompanyTokens(options: {
     '} as const;',
     '',
   ].join('\n');
-  return { css, json: emitCatalog(all), overrideTypes, tokens: all, companyTokens: own, contrast };
+  return { css, json: emitCatalog(all), overrideTypes, tokens: all };
 }
 
 export async function buildTokens(options: { check?: boolean; root?: string } = {}): Promise<BuildTokensResult> {

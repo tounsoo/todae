@@ -1,12 +1,12 @@
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
-import { MAX_BYTES, MAX_FILES, baseContrast, buildTokenFiles } from '../../../lib/docs-mcp/build';
+import { BUILD_TIMEOUT_MS, MAX_BYTES, MAX_FILES, baseContrast, buildTokenFiles } from '../../../lib/docs-mcp/build';
 import { GUIDE_TOPICS, getGuide } from '../../../lib/docs-mcp/guides';
 import { scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
 import { LAYERS, getToken, listTokens } from '../../../lib/docs-mcp/tokens';
 import { getComponent, listComponents, whenToUse } from '../../../lib/docs-mcp/tools';
 
-// A token build is bounded by the checks in build.ts; this stops a stuck call.
+// Longer than build_tokens' own time limit, so a stopped build can still report it.
 export const maxDuration = 30;
 
 const name = z.string().trim().min(1).max(80);
@@ -99,7 +99,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'build_tokens',
-      `Run todae-tokens build on a company token package layered on Todae's, with the same checks. \`files\` maps each .json file's path inside the token folder to its JSON, at most ${MAX_FILES} files and ${MAX_BYTES / 1024} KB as compact JSON. \`resolver\` is the resolver's path among them (default "resolver.json"); scaffold_design_system's tokenFiles fit as they are. Returns the theme CSS, the ThemeProvider override types and contrast results, or the build error. Nothing is stored.`,
+      `Run todae-tokens build on a company token package layered on Todae's, with the same checks. \`files\` maps each .json file's path inside the token folder to its JSON, at most ${MAX_FILES} files and ${MAX_BYTES / 1024} KB. \`resolver\` is the resolver's path among them (default "resolver.json"); scaffold_design_system's tokenFiles fit as they are. Returns the theme CSS and the ThemeProvider override types, or the build error, which lists any contrast pairs that fail. A build that runs longer than ${BUILD_TIMEOUT_MS / 1000} seconds is stopped. Nothing is stored.`,
       { files: z.record(z.string().max(200), z.unknown()), resolver: z.string().max(200).optional() },
       async ({ files, resolver }) => {
         try {

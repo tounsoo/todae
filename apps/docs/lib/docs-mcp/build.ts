@@ -1,42 +1,47 @@
+import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
-import { buildCompanyTokens, contrastResults, resolveEntries } from '@omsoo.design/todae/tokens-builder';
+import { contrastResults, resolveEntries } from '@omsoo.design/todae/tokens-builder';
 
 const SOURCE = 'todae-docs' as const;
 
 export const MAX_FILES = 64;
 export const MAX_BYTES = 512 * 1024;
-/** Bounds on a resolver, so one call can't ask for an outsized build. */
-export const MAX_MODIFIERS = 16;
-export const MAX_CONTEXTS = 16;
-export const MAX_SOURCES = 128;
-export const MAX_CONTRAST_PAIRS = 64;
-/** Contrast pairs times the contexts each is measured in, counted on Todae's and the company's entries merged. */
-export const MAX_CONTRAST_CHECKS = 2000;
-const MAX_DEPTH = 32;
+/** A build that runs longer is stopped. */
+export const BUILD_TIMEOUT_MS = 10_000;
+/** Theme CSS larger than this is not returned. */
+export const MAX_CSS_BYTES = 1024 * 1024;
+const BUILD_MEMORY_MB = 256;
 const FILE_RE = /^(?:[a-z0-9][a-z0-9._-]*\/)*[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9_-]+)*\.json$/i;
+
+function packageFile(cwd: string, ...path: string[]): string | undefined {
+  return [join(cwd, 'node_modules', '@omsoo.design', 'todae', ...path), join(cwd, '..', '..', 'packages', 'design-system', ...path)].find(
+    (file) => existsSync(file),
+  );
+}
 
 /**
  * Todae's own `tokens/` directory. The docs app's dependency link resolves in
  * development and tests; the workspace path is the one a deployment traces.
  */
 export function todaeTokensDir(cwd = process.cwd()): string {
-  const candidates = [
-    join(cwd, 'node_modules', '@omsoo.design', 'todae', 'tokens'),
-    join(cwd, '..', '..', 'packages', 'design-system', 'tokens'),
-  ];
-  const found = candidates.find((dir) => existsSync(join(dir, 'resolver.json')));
+  const found = packageFile(cwd, 'tokens', 'resolver.json');
   if (!found) throw new Error("Could not find Todae's tokens/resolver.json");
+  return dirname(found);
+}
+
+/** The built `todae-tokens` CLI, found the same way as the tokens directory. */
+export function todaeTokensCli(cwd = process.cwd()): string {
+  const found = packageFile(cwd, 'dist', 'scripts', 'build-tokens.js');
+  if (!found) throw new Error('Could not find the todae-tokens CLI; build @omsoo.design/todae first');
   return found;
 }
 
 /**
  * Throws unless every key is a relative `.json` path, no path is a folder of
  * another, the resolver is one of them and the files fit the size limit.
- * Values are measured as compact JSON: an object as it is, a string once
- * parsed. A string that isn't JSON is kept as given, for the build to report.
  */
 export function checkFiles(files: Record<string, unknown>, resolver = 'resolver.json'): Map<string, string> {
   const names = Object.keys(files);
@@ -51,65 +56,13 @@ export function checkFiles(files: Record<string, unknown>, resolver = 'resolver.
     const folder = names.find((other) => other.startsWith(`${name}/`));
     if (folder) throw new Error(`"${name}" can't be both a file and the folder of "${folder}"`);
     const value = files[name];
-    const text = typeof value === 'string' ? compact(value) : JSON.stringify(value);
+    const text = typeof value === 'string' ? value : JSON.stringify(value);
     if (text === undefined) throw new Error(`File "${name}" has no contents`);
     bytes += Buffer.byteLength(text, 'utf8');
     if (bytes > MAX_BYTES) throw new Error(`Files may total at most ${MAX_BYTES / 1024} KB`);
     out.set(name, text);
   }
   return out;
-}
-
-function compact(text: string): string {
-  try {
-    return JSON.stringify(JSON.parse(text));
-  } catch {
-    return text;
-  }
-}
-
-function record(value: unknown): Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
-}
-
-function countRefs(value: unknown, depth = 0): number {
-  if (depth > MAX_DEPTH) throw new Error(`A resolver may nest at most ${MAX_DEPTH} levels deep`);
-  if (Array.isArray(value)) return value.reduce<number>((sum, item) => sum + countRefs(item, depth + 1), 0);
-  const row = record(value);
-  return (
-    (typeof row.$ref === 'string' ? 1 : 0) +
-    Object.values(row).reduce<number>((sum, child) => sum + countRefs(child, depth + 1), 0)
-  );
-}
-
-/**
- * Throws when a resolver is larger than one call allows. How many contrast
- * checks it adds up to depends on how it merges with Todae's, so the build
- * counts those itself (`maxContrastChecks`). A resolver that isn't valid JSON
- * is left to the build to report.
- */
-export function checkResolver(text: string): void {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    return;
-  }
-  const resolver = record(parsed);
-  const modifiers = Object.entries(record(resolver.modifiers));
-  if (modifiers.length > MAX_MODIFIERS) throw new Error(`A resolver may declare at most ${MAX_MODIFIERS} modifiers`);
-  let pairs = 0;
-  const entries = [...Object.values(record(resolver.sets)), ...modifiers.map(([, modifier]) => modifier)];
-  for (const entry of entries) {
-    const contrast = record(record(record(entry).$extensions)['dev.todae']).contrast;
-    if (Array.isArray(contrast)) pairs += contrast.length;
-  }
-  if (pairs > MAX_CONTRAST_PAIRS) throw new Error(`A resolver may declare at most ${MAX_CONTRAST_PAIRS} contrast pairs`);
-  for (const [name, modifier] of modifiers) {
-    const contexts = Object.keys(record(record(modifier).contexts)).length;
-    if (contexts > MAX_CONTEXTS) throw new Error(`Modifier "${name}" may have at most ${MAX_CONTEXTS} contexts`);
-  }
-  if (countRefs(resolver) > MAX_SOURCES) throw new Error(`A resolver may hold at most ${MAX_SOURCES} $refs`);
 }
 
 /** Drops the temporary folder from a message, which may name files by absolute or cwd-relative path. */
@@ -122,44 +75,78 @@ function scrub(message: string, root: string): string {
 }
 
 export type BuildResult =
-  | {
-      ok: true;
-      css: string;
-      overrideTypes: string;
-      tokenCount: number;
-      contrast: { fg: string; bg: string; min: number; where: string; lc: number }[];
-      source: typeof SOURCE;
-    }
+  | { ok: true; css: string; overrideTypes: string; source: typeof SOURCE }
   | { ok: false; error: string; source: typeof SOURCE };
+
+type CliRun = { ok: true } | { ok: false; error: string };
+
+/** Runs the CLI in its own Node process, which is killed once `timeout` passes or its heap fills. */
+function runCli(cli: string, args: string[], cwd: string, timeout: number): Promise<CliRun> {
+  return new Promise((resolve) => {
+    execFile(
+      process.execPath,
+      [`--max-old-space-size=${BUILD_MEMORY_MB}`, cli, ...args],
+      { cwd, env: { NODE_ENV: 'production' }, timeout, killSignal: 'SIGKILL', maxBuffer: 64 * 1024 },
+      (error, _stdout, stderr) => {
+        if (!error) return resolve({ ok: true });
+        if (error.killed || error.signal) {
+          return resolve({ ok: false, error: `The build ran longer than ${timeout / 1000} seconds or ran out of memory, and was stopped` });
+        }
+        resolve({ ok: false, error: String(stderr).trim() || error.message });
+      },
+    );
+  });
+}
 
 /**
  * Runs `todae-tokens build` on a company's token files, given as contents by
  * path relative to the folder they sit in, with `resolver` naming the
- * resolver among them. The files go to a temporary folder that is removed
- * when the build ends.
+ * resolver among them. The build runs in a child process with a time and
+ * memory limit, in a temporary folder that is removed when it ends.
  */
 export async function buildTokenFiles(
   files: Record<string, unknown>,
-  { resolver = 'resolver.json', base = todaeTokensDir() }: { resolver?: string; base?: string } = {},
+  {
+    resolver = 'resolver.json',
+    base = todaeTokensDir(),
+    cli = todaeTokensCli(),
+    timeout = BUILD_TIMEOUT_MS,
+  }: { resolver?: string; base?: string; cli?: string; timeout?: number } = {},
 ): Promise<BuildResult> {
   const contents = checkFiles(files, resolver);
   const root = await mkdtemp(join(tmpdir(), 'todae-mcp-'));
+  const out = join(root, '.out');
   try {
-    checkResolver(contents.get(resolver) ?? '');
     for (const [name, text] of contents) {
       const file = join(root, name);
       await mkdir(dirname(file), { recursive: true });
       await writeFile(file, text);
     }
-    const result = await buildCompanyTokens({ resolver: join(root, resolver), base, maxContrastChecks: MAX_CONTRAST_CHECKS });
-    return {
-      ok: true,
-      css: result.css,
-      overrideTypes: result.overrideTypes,
-      tokenCount: new Set(result.companyTokens.map((token) => token.path)).size,
-      contrast: result.contrast.map(({ fg, bg, min, where, lc }) => ({ fg, bg, min, where, lc: Math.round(lc * 10) / 10 })),
-      source: SOURCE,
-    };
+    await mkdir(out);
+    const run = await runCli(
+      cli,
+      [
+        'build',
+        '--resolver',
+        resolver,
+        '--base',
+        base,
+        '--css',
+        join(out, 'theme.css'),
+        '--catalog',
+        join(out, 'catalog.json'),
+        '--types',
+        join(out, 'types.ts'),
+      ],
+      root,
+      timeout,
+    );
+    if (!run.ok) return { ok: false, error: scrub(run.error, root), source: SOURCE };
+    const css = await readFile(join(out, 'theme.css'), 'utf8');
+    if (Buffer.byteLength(css, 'utf8') > MAX_CSS_BYTES) {
+      return { ok: false, error: `The theme CSS is larger than ${MAX_CSS_BYTES / 1024} KB`, source: SOURCE };
+    }
+    return { ok: true, css, overrideTypes: await readFile(join(out, 'types.ts'), 'utf8'), source: SOURCE };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { ok: false, error: scrub(message, root), source: SOURCE };

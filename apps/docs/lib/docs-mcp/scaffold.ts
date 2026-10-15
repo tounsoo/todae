@@ -185,7 +185,7 @@ export async function scaffoldDesignSystem(options: ScaffoldOptions, base = toda
     tokensFolder: 'tokens',
     tokenFiles: tokens,
     otherFiles,
-    build: build.ok ? { ok: true as const, tokenCount: build.tokenCount } : { ok: false as const, error: build.error },
+    build: build.ok ? { ok: true as const } : { ok: false as const, error: build.error },
     command: 'todae-tokens build --resolver ./tokens/resolver.json',
     docsUrl: `${DOCS_ORIGIN}/guides/build-on-todae`,
     source: SOURCE,
