@@ -179,9 +179,10 @@ export async function buildTokenFiles(
 
 /** Todae's own contrast pairs, measured on its base theme. */
 export async function baseContrast(base = todaeTokensDir()) {
-  const pairs = contrastResults(await resolveEntries(base)).map(({ fg, bg, min, where, lc }) => ({
+  const pairs = contrastResults(await resolveEntries(base)).map(({ fg, bg, over, min, where, lc }) => ({
     fg,
     bg,
+    ...(over ? { over } : {}),
     min,
     where,
     lc: Math.round(lc * 10) / 10,
