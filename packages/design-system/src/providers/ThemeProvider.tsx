@@ -1,8 +1,13 @@
 'use client';
 
-import { createContext, useContext, useSyncExternalStore, type ComponentProps, type CSSProperties } from 'react';
+import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ComponentProps, type CSSProperties } from 'react';
+import { useComposedRefs } from '../components/props';
+import { warnOverrideContrast } from './overrideContrast';
 import {
+  cssVarName,
   themeOverrideStyle,
+  themeOverrideType,
+  isThemeOverrideKey,
   type ThemeOverride,
   type ThemeOverrideTypes,
   type ThemeOverrideValue,
@@ -19,6 +24,7 @@ export type ThemeProviderProps<Extra extends string = never> = {
 } & ComponentProps<'div'>;
 
 const QUERY = '(prefers-color-scheme: dark)';
+const DEV = process.env.NODE_ENV !== 'production';
 const AppearanceContext = createContext<ResolvedAppearance>('light');
 const ThemeVarsContext = createContext<Record<string, string>>({});
 
@@ -41,6 +47,7 @@ export function ThemeProvider<Extra extends string = never>({
   overrides,
   overrideTypes,
   style,
+  ref,
   ...props
 }: ThemeProviderProps<Extra>) {
   const system = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -50,11 +57,25 @@ export function ThemeProvider<Extra extends string = never>({
   // re-declared on every provider, read it first, so their overrides survive
   // nested providers; tokens that vary by appearance or density never read it.
   const inputs = Object.fromEntries(Object.entries(vars).map(([name, value]) => [`--_${name.slice(2)}`, value]));
+  const element = useRef<HTMLDivElement>(null);
+  const composedRef = useComposedRefs(element, ref);
+  // In development, measure Todae's contrast pairs whenever the color overrides change.
+  const colors = DEV
+    ? Object.keys(overrides ?? {})
+        .filter((key) => (isThemeOverrideKey(key) ? themeOverrideType(key) : overrideTypes?.[key as Extra]) === 'color')
+        .map((key) => `${key}:${vars[cssVarName(key)] ?? ''}`)
+        .join(';')
+    : '';
+  useEffect(() => {
+    if (!DEV || colors === '' || !element.current) return;
+    warnOverrideContrast(element.current, resolved);
+  }, [colors, resolved]);
   return (
     <AppearanceContext.Provider value={resolved}>
       <ThemeVarsContext.Provider value={vars}>
         <div
           {...props}
+          ref={composedRef}
           style={{ ...style, ...vars, ...inputs } as CSSProperties}
           // "system" resolves in CSS through prefers-color-scheme, so a
           // server-rendered page is dark from the first paint.

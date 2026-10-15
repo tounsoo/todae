@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, Card, Checkbox, DensityProvider, ThemeProvider } from '../index';
+import { measureContrast } from '../providers/overrideContrast';
 
 /** vitest types the session without its methods; Playwright's session has `send`. */
 function emulateMedia(features: { name: string; value: string }[]) {
@@ -237,5 +238,39 @@ describe('system appearance in a browser', () => {
     } finally {
       await emulateMedia([]);
     }
+  });
+});
+
+describe('ThemeProvider override contrast in development', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("passes every declared pair with Todae's own colors", () => {
+    for (const appearance of ['light', 'dark'] as const) {
+      render(<ThemeProvider appearance={appearance} data-testid={appearance} />);
+      expect(measureContrast(screen.getByTestId(appearance)), appearance).toEqual([]);
+    }
+  });
+
+  it('warns about each pair an override pushes below its minimum', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { rerender } = render(<ThemeProvider appearance="light" overrides={{ 'card.bg': { colorSpace: 'oklch', components: [0.6, 0.15, 30] } }} />);
+    expect(warn).not.toHaveBeenCalled();
+    // A light accent leaves white on-accent text unreadable.
+    rerender(<ThemeProvider appearance="light" overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.92, 0.05, 90] } }} />);
+    expect(warn).toHaveBeenCalledTimes(1);
+    const message = String(warn.mock.calls[0]![0]);
+    expect(message).toContain('in light');
+    expect(message).toMatch(/"color\.on-accent" on "color\.accent\.default" is Lc \d+\.\d, below 60/);
+    // The same overrides again don't warn twice.
+    rerender(<ThemeProvider appearance="light" overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.92, 0.05, 90] } }} />);
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('names the surface a translucent background fails over', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<ThemeProvider appearance="light" overrides={{ 'color.fg.placeholder': { colorSpace: 'oklch', components: [0.8, 0, 0] } }} />);
+    expect(String(warn.mock.calls[0]![0])).toMatch(/"field\.fg\.placeholder" on "field\.bg\.default" over "color\.bg\.subtle" is Lc/);
   });
 });

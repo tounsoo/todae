@@ -103,7 +103,7 @@ There are two ways to change a token for part of a page.
 
 Set it on an element that carries `data-appearance` or `data-density`. Contract tokens are computed there, so an override on a descendant does not reach them. Each of those elements computes the contract tokens again, so a contract-token override set in CSS must match every one of them, not only the outermost.
 
-**`ThemeProvider` `overrides`** is for values that arrive at runtime, such as a customer's brand color. It takes token paths and DTCG values, sets them as custom properties on its own element, and rejects unknown paths. The values are not contrast checked.
+**`ThemeProvider` `overrides`** is for values that arrive at runtime, such as a customer's brand color. It takes token paths and DTCG values, sets them as custom properties on its own element, and rejects unknown paths and invalid values: it throws in development and skips them in production. In development it also measures the APCA contrast pairs from Todae's resolver where it renders, whenever its color overrides change, and logs a `console.warn` for each pair that falls below its minimum. Production runs no contrast check.
 
 ```tsx
 <ThemeProvider overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.5, 0.15, 150] } }}>
