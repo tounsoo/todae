@@ -98,6 +98,11 @@ function announce(message: string, options?: AnnounceOptions): void {
   let chosen = host && regionIn(host, false);
   let grace = true;
   function attempt() {
+    // The page can go away while a write waits, as when a test environment is torn down.
+    if (typeof document === 'undefined') {
+      delete pending[politeness];
+      return;
+    }
     const now = performance.now();
     const late = now >= start + DEADLINE;
     const host = target(now);

@@ -2,9 +2,11 @@
 export {
   Message,
   type MessageActionsProps,
+  type MessageActionsReveal,
   type MessageAvatarProps,
   type MessageContentProps,
   type MessageFrom,
   type MessageHeaderProps,
   type MessageRootProps,
+  type MessageTimeProps,
 } from '../components/Message';

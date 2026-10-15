@@ -131,6 +131,30 @@
     gap: var(--todae-message-gap);
   }
 
+  /* Hidden rows stay in the tab order: focus inside the message shows them. */
+  .actions[data-reveal='hover'] {
+    transition: opacity var(--todae-message-actions-motion-duration) var(--todae-message-actions-motion-easing);
+  }
+
+  @media (hover: hover) {
+    .root:not(:hover, :focus-within) > .actions[data-reveal='hover'] {
+      opacity: 0;
+    }
+  }
+
+  .time {
+    color: var(--todae-message-time-fg);
+    font-size: var(--todae-message-time-font-size);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .actions[data-reveal='hover'] {
+      transition: none;
+    }
+  }
+
   @media (forced-colors: active) {
     .root[data-from='user'] > .content {
       border: var(--todae-message-user-border-width) solid CanvasText;
