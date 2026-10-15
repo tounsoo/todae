@@ -5,6 +5,9 @@ import type { Locale } from '../../lib/i18n/config';
 type Tone = 'success' | 'warning' | 'critical' | 'neutral';
 
 /** The preview's words in one language. Product, plan, customer and file names stay as they are. */
+/** A reply as the page shows it, and the markdown Copy puts on the clipboard. */
+export type PreviewReply = { content: ReactNode; source: string };
+
 export type PreviewCopy = {
   user: { name: string; initials: string };
   page: string;
@@ -48,9 +51,8 @@ export type PreviewCopy = {
   assistant: string;
   you: string;
   question: string;
-  answer: ReactNode;
-  /** The reply Regenerate swaps in. */
-  answerAlt: ReactNode;
+  /** The assistant's reply, then the one Regenerate swaps in. */
+  answers: readonly [PreviewReply, PreviewReply];
   replyActions: string;
   yourMessageActions: string;
   copy: string;
@@ -137,18 +139,26 @@ const EN: PreviewCopy = {
   assistant: 'Assistant',
   you: 'You',
   question: 'Can I export last quarter’s invoices?',
-  answer: (
-    <>
-      Yes. Open <strong>Billing</strong>, pick the range, then choose <Code.Root>Export CSV</Code.Root>. Here is last
-      quarter’s file.
-    </>
-  ),
-  answerAlt: (
-    <>
-      Yes. In <strong>Billing</strong>, set the range to last quarter and choose <Code.Root>Export CSV</Code.Root>. The
-      file is below.
-    </>
-  ),
+  answers: [
+    {
+      content: (
+        <>
+          Yes. Open <strong>Billing</strong>, pick the range, then choose <Code.Root>Export CSV</Code.Root>. Here is last
+          quarter’s file.
+        </>
+      ),
+      source: 'Yes. Open **Billing**, pick the range, then choose `Export CSV`. Here is last quarter’s file.',
+    },
+    {
+      content: (
+        <>
+          Yes. In <strong>Billing</strong>, set the range to last quarter and choose <Code.Root>Export CSV</Code.Root>.
+          The file is below.
+        </>
+      ),
+      source: 'Yes. In **Billing**, set the range to last quarter and choose `Export CSV`. The file is below.',
+    },
+  ],
   replyActions: 'Reply',
   yourMessageActions: 'Your message',
   copy: 'Copy',
@@ -232,18 +242,26 @@ const KO: PreviewCopy = {
   assistant: '어시스턴트',
   you: '나',
   question: '지난 분기 청구서를 내보낼 수 있나요?',
-  answer: (
-    <>
-      네. <strong>결제</strong>를 열고 기간을 고른 다음 <Code.Root>CSV 내보내기</Code.Root>를 선택하세요. 지난 분기
-      파일을 첨부했습니다.
-    </>
-  ),
-  answerAlt: (
-    <>
-      네. <strong>결제</strong>에서 기간을 지난 분기로 정하고 <Code.Root>CSV 내보내기</Code.Root>를 선택하세요. 파일은
-      아래에 있습니다.
-    </>
-  ),
+  answers: [
+    {
+      content: (
+        <>
+          네. <strong>결제</strong>를 열고 기간을 고른 다음 <Code.Root>CSV 내보내기</Code.Root>를 선택하세요. 지난 분기
+          파일을 첨부했습니다.
+        </>
+      ),
+      source: '네. **결제**를 열고 기간을 고른 다음 `CSV 내보내기`를 선택하세요. 지난 분기 파일을 첨부했습니다.',
+    },
+    {
+      content: (
+        <>
+          네. <strong>결제</strong>에서 기간을 지난 분기로 정하고 <Code.Root>CSV 내보내기</Code.Root>를 선택하세요.
+          파일은 아래에 있습니다.
+        </>
+      ),
+      source: '네. **결제**에서 기간을 지난 분기로 정하고 `CSV 내보내기`를 선택하세요. 파일은 아래에 있습니다.',
+    },
+  ],
   replyActions: '답변',
   yourMessageActions: '내 메시지',
   copy: '복사',

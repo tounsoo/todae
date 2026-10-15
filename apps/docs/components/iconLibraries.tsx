@@ -4,7 +4,7 @@
 // any of them. Todae ships no icons; the docs site installs these for its demos.
 import type { Glyphs } from '@omsoo.design/todae';
 import {
-  ArrowClockwise,
+  ArrowCounterClockwise,
   ArrowRight as PhArrowRight,
   ArrowUp as PhArrowUp,
   CalendarBlank,
@@ -147,7 +147,7 @@ export const ICON_LIBRARIES: readonly [IconLibrary, ...IconLibrary[]] = [
       info: <PhInfo />,
       warning: <Warning />,
       copy: <PhCopy />,
-      regenerate: <ArrowClockwise />,
+      regenerate: <ArrowCounterClockwise />,
       thumbsUp: <PhThumbsUp />,
       thumbsDown: <PhThumbsDown />,
     },

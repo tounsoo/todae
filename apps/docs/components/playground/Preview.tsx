@@ -39,7 +39,7 @@ import {
   useClipboard,
   type Glyphs,
 } from '@omsoo.design/todae';
-import { useId, useRef, useState, type FormEvent, type ReactNode, type RefObject } from 'react';
+import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import type { Locale } from '../../lib/i18n/config';
 import { ICON_LIBRARIES, type IconLibrary } from '../iconLibraries';
 import { PREVIEW_COPY } from './previewCopy';
@@ -48,23 +48,11 @@ const NO_GLYPHS: Glyphs = {};
 
 const SENT = '2026-10-14T09:41:00+09:00[Asia/Seoul]';
 
-/** Copies what the message shows. A product would copy the message's source text, such as its markdown. */
-function CopyButton({
-  label,
-  icon,
-  copiedIcon,
-  from,
-}: {
-  label: string;
-  icon: ReactNode;
-  copiedIcon: ReactNode;
-  from: RefObject<HTMLElement | null>;
-}) {
+function CopyButton({ label, icon, copiedIcon, text }: { label: string; icon: ReactNode; copiedIcon: ReactNode; text: string }) {
   const clipboard = useClipboard();
-  const text = from.current?.textContent ?? '';
   const copied = clipboard.status === 'copied' && clipboard.text === text;
   return (
-    <Button.Root variant="ghost" aria-label={label} onClick={() => clipboard.copy(from.current?.textContent ?? '')}>
+    <Button.Root variant="ghost" aria-label={label} onClick={() => clipboard.copy(text)}>
       <Button.Icon>{copied ? copiedIcon : icon}</Button.Icon>
     </Button.Root>
   );
@@ -96,8 +84,6 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
   const [asked, setAsked] = useState<string[]>([]);
   const [reply, setReply] = useState<0 | 1>(0);
   const [rating, setRating] = useState<string | null>(null);
-  const questionRef = useRef<HTMLDivElement>(null);
-  const answerRef = useRef<HTMLDivElement>(null);
   // Todae draws no icons, so with its own glyphs the actions take Lucide's.
   const actionLibrary = library ?? ICON_LIBRARIES[0];
   const actionIcons = actionLibrary.icons;
@@ -309,11 +295,11 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
             <Card.Body>
               <div className="preview-stack">
                 <Message.Root from="user" aria-label={copy.you}>
-                  <Message.Content ref={questionRef}>{copy.question}</Message.Content>
+                  <Message.Content>{copy.question}</Message.Content>
                   <Message.Actions reveal="hover">
                     <Message.Time value={sent} locale={locale} />
                     <Toolbar.Root aria-label={copy.yourMessageActions}>
-                      <CopyButton label={copy.copy} icon={actionIcons.copy} copiedIcon={actionLibrary.glyphs.check} from={questionRef} />
+                      <CopyButton label={copy.copy} icon={actionIcons.copy} copiedIcon={actionLibrary.glyphs.check} text={copy.question} />
                     </Toolbar.Root>
                   </Message.Actions>
                 </Message.Root>
@@ -327,14 +313,14 @@ export function Preview({ library, locale }: { library?: IconLibrary; locale: Lo
                     <strong>{copy.assistant}</strong>
                     <Message.Time value={sent.add({ seconds: 4 })} locale={locale} />
                   </Message.Header>
-                  <Message.Content ref={answerRef}>
+                  <Message.Content>
                     <Prose.Root>
-                      <p>{reply === 0 ? copy.answer : copy.answerAlt}</p>
+                      <p>{copy.answers[reply].content}</p>
                     </Prose.Root>
                   </Message.Content>
                   <Message.Actions>
                     <Toolbar.Root aria-label={copy.replyActions}>
-                      <CopyButton label={copy.copy} icon={actionIcons.copy} copiedIcon={actionLibrary.glyphs.check} from={answerRef} />
+                      <CopyButton label={copy.copy} icon={actionIcons.copy} copiedIcon={actionLibrary.glyphs.check} text={copy.answers[reply].source} />
                       <Button.Root
                         variant="ghost"
                         aria-label={copy.regenerate}
