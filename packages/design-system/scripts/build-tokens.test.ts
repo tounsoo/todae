@@ -1013,7 +1013,19 @@ describe('company token build', () => {
     const accent = rows.filter((row) => row.path === 'color.accent.default');
     expect(accent.map((row) => row.context)).toEqual(['light', 'dark']);
     for (const row of accent) expect(row.description).toMatch(/^The brand accent/);
-    expect(result.tokens.find((token) => token.path === 'color.accent.default' && token.context === 'light')?.description).toMatch(/^The brand accent/);
+    for (const token of result.tokens.filter((token) => token.path === 'color.accent.default')) {
+      expect(token.description, token.context).toMatch(/^The brand accent/);
+    }
+
+    // A company description in any context wins over Todae's in every context.
+    const described = await company(async (_, root) => {
+      const file = join(root, 'appearance/dark.json');
+      const dark = JSON.parse(await readFile(file, 'utf8'));
+      dark.color.accent.default.$description = 'Acme red.';
+      await writeFile(file, JSON.stringify(dark));
+    });
+    const acmeRows = JSON.parse((await buildCompanyTokens({ resolver: described, base: tokensDir })).json).tokens as typeof rows;
+    expect(acmeRows.filter((row) => row.path === 'color.accent.default').map((row) => row.description)).toEqual(['Acme red.', 'Acme red.']);
   });
 
   it('finds Todae tokens from the builder module', () => {

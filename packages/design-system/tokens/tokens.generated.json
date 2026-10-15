@@ -2229,7 +2229,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "compact",
-      "description": "Gaps inside fields and fieldsets, such as between a label and its control; changes with density."
+      "description": "Gaps inside a field's shell and between a fieldset's fields; changes with density."
     },
     {
       "path": "space.inline.gap",
@@ -2329,7 +2329,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "compact",
-      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
+      "description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-condensed",
@@ -2339,7 +2339,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "compact",
-      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
+      "description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-spacious",
@@ -2349,7 +2349,7 @@
       "ref": "space.4",
       "layer": "density",
       "context": "compact",
-      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
+      "description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.chip.x",
@@ -2399,7 +2399,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "comfortable",
-      "description": "Gaps inside fields and fieldsets, such as between a label and its control; changes with density."
+      "description": "Gaps inside a field's shell and between a fieldset's fields; changes with density."
     },
     {
       "path": "space.inline.gap",
@@ -2499,7 +2499,7 @@
       "ref": "space.3",
       "layer": "density",
       "context": "comfortable",
-      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
+      "description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-condensed",
@@ -2509,7 +2509,7 @@
       "ref": "space.1",
       "layer": "density",
       "context": "comfortable",
-      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
+      "description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-spacious",
@@ -2519,7 +2519,7 @@
       "ref": "space.6",
       "layer": "density",
       "context": "comfortable",
-      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
+      "description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.chip.x",
@@ -2569,7 +2569,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "spacious",
-      "description": "Gaps inside fields and fieldsets, such as between a label and its control; changes with density."
+      "description": "Gaps inside a field's shell and between a fieldset's fields; changes with density."
     },
     {
       "path": "space.inline.gap",
@@ -2669,7 +2669,7 @@
       "ref": "space.5",
       "layer": "density",
       "context": "spacious",
-      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
+      "description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-condensed",
@@ -2679,7 +2679,7 @@
       "ref": "space.2",
       "layer": "density",
       "context": "spacious",
-      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
+      "description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density."
     },
     {
       "path": "space.stack.gap-spacious",
@@ -2689,7 +2689,7 @@
       "ref": "space.8",
       "layer": "density",
       "context": "spacious",
-      "description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density."
+      "description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density."
     },
     {
       "path": "focus.ring.color",
@@ -5729,7 +5729,7 @@
       "ref": "color.bg.transparent",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.bg.hover",
@@ -5739,7 +5739,7 @@
       "ref": "color.bg.highlight",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.border",
@@ -5749,7 +5749,7 @@
       "ref": "color.border.subtle",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.border-width",
@@ -5759,7 +5759,7 @@
       "ref": "border.width",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.fg.default",
@@ -5769,7 +5769,7 @@
       "ref": "color.fg.muted",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.fg.disabled",
@@ -5779,7 +5779,7 @@
       "ref": "color.fg.placeholder",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.fg.hover",
@@ -5789,7 +5789,7 @@
       "ref": "color.fg.default",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.fg.selected",
@@ -5799,7 +5799,7 @@
       "ref": "color.fg.default",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.font.letter-spacing",
@@ -5809,7 +5809,7 @@
       "ref": "font.letter-spacing.default",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.font.size",
@@ -5819,7 +5819,7 @@
       "ref": "font.size.2",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.font.text-transform",
@@ -5829,7 +5829,7 @@
       "ref": "font.text-transform.default",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.font.weight",
@@ -5839,7 +5839,7 @@
       "ref": "font.weight.medium",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.gap",
@@ -5849,7 +5849,7 @@
       "ref": "space.inline.gap",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.indicator.color",
@@ -5859,7 +5859,7 @@
       "ref": "color.accent.default",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.indicator.size",
@@ -5869,7 +5869,7 @@
       "ref": null,
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.leading",
@@ -5879,7 +5879,7 @@
       "ref": "font.leading.tight",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.padding.x",
@@ -5889,7 +5889,7 @@
       "ref": "space.control.x",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.padding.y",
@@ -5899,7 +5899,7 @@
       "ref": "space.control.y",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.radius",
@@ -5909,7 +5909,7 @@
       "ref": "radius.sm",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "tabs.ring.focus",
@@ -5919,7 +5919,7 @@
       "ref": "focus.ring.color",
       "layer": "contract",
       "context": null,
-      "description": "Tabs.Root: a tab list and the indicator under the selected tab."
+      "description": "Tabs.Root: a tab list and the selected tab's indicator."
     },
     {
       "path": "selection.bg.checked",

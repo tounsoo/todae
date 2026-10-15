@@ -12,7 +12,7 @@ export type CatalogToken = {
   ref: string | null;
   layer: TokenLayer;
   context: string | null;
-  /** The token's `$description`, or its nearest group's. */
+  /** The token's `$description`, or its nearest group's in the same file; a company's wins over Todae's. */
   description: string | null;
 };
 

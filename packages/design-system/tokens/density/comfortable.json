@@ -6,7 +6,7 @@
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "stack": {
-      "$description": "Vertical gaps between stacked blocks, with condensed and spacious steps; changes with density.",
+      "$description": "Gaps between laid-out blocks, such as in Stack and Grid, with condensed and spacious steps; changes with density.",
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
       "gap-condensed": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } },
       "gap-spacious": { "$type": "dimension", "$value": { "$ref": "#/space/6/$value" } }
@@ -28,7 +28,7 @@
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/1/$value" } }
     },
     "field": {
-      "$description": "Gaps inside fields and fieldsets, such as between a label and its control; changes with density.",
+      "$description": "Gaps inside a field's shell and between a fieldset's fields; changes with density.",
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } }
     },
     "selection": {
