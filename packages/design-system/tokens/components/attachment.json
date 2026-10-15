@@ -1,5 +1,6 @@
 {
   "attachment": {
+    "$description": "Attachment.Root: a file chip with a preview, name and meta line, as in a chat composer.",
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": {

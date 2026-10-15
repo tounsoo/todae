@@ -78,8 +78,8 @@
     pointer-events: auto;
     opacity: 0;
     transition:
-      opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing),
-      inset-block-start var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+      opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing-enter),
+      inset-block-start var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing-enter);
   }
 
   .item[data-entered] {
@@ -90,6 +90,7 @@
   .item[data-todae-exiting] {
     opacity: 0;
     transition-duration: var(--todae-toast-motion-exit);
+    transition-timing-function: var(--todae-overlay-motion-easing-exit);
   }
 
   /* Stack: every toast in one grid cell, the newest in front and the rest
@@ -105,9 +106,9 @@
     inset-block-start: calc(var(--toast-dir) * var(--toast-index, 0) * var(--todae-toast-peek));
     margin-inline: calc(var(--toast-index, 0) * 2.5%);
     transition:
-      opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing),
-      inset-block-start var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing),
-      margin-inline var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+      opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing-enter),
+      inset-block-start var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing-enter),
+      margin-inline var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing-enter);
   }
 
   .region[data-layout='stack'][data-placement^='top'] .item {
@@ -149,7 +150,7 @@
   /* Hiding fades with the new toast in front fading in; showing is at once. */
   @media (prefers-reduced-motion: no-preference) {
     .region[data-layout='stack']:not([data-expanded]) .item:not([data-todae-exiting]) ~ .item .root > * {
-      transition: opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing);
+      transition: opacity var(--todae-toast-motion-enter) var(--todae-overlay-motion-easing-enter);
     }
   }
 
@@ -198,6 +199,7 @@
   .region[data-layout='stack'] .item[data-todae-exiting] {
     opacity: 0;
     transition-duration: var(--todae-toast-motion-exit);
+    transition-timing-function: var(--todae-overlay-motion-easing-exit);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -217,6 +219,7 @@
     padding: var(--todae-toast-padding-y) var(--todae-toast-padding-x);
     border: var(--todae-toast-border-width) solid var(--_tone-border);
     border-radius: var(--todae-toast-radius);
+    box-shadow: var(--todae-toast-shadow);
     background: var(--_tone-bg);
     color: var(--_tone-fg);
     font-size: var(--todae-toast-font-size);

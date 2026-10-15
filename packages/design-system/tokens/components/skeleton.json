@@ -1,9 +1,14 @@
 {
   "skeleton": {
+    "$description": "Skeleton.Root: a pulsing placeholder in the shape of content that is still loading.",
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/sm/$value" } },
     "motion": {
-      "duration": { "$type": "duration", "$value": { "value": 1600, "unit": "ms" } }
+      "duration": { "$type": "duration", "$value": { "value": 1600, "unit": "ms" } },
+      "easing": { "$type": "cubicBezier", "$value": [0.42, 0, 0.58, 1] }
+    },
+    "pulse": {
+      "opacity": { "$type": "number", "$value": 0.5 }
     }
   }
 }

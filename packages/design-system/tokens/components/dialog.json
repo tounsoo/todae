@@ -1,8 +1,10 @@
 {
   "dialog": {
+    "$description": "Dialog.Root: a modal panel centered over a scrim.",
     "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/elevated/$value" } },
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "border": { "$type": "color", "$value": { "$ref": "#/color/border/default/$value" } },
+    "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/lg/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "padding": {

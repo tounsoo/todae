@@ -17,7 +17,7 @@
     display: grid;
     place-items: center;
     opacity: 0;
-    transition: opacity var(--todae-dialog-motion-enter) var(--todae-overlay-motion-easing);
+    transition: opacity var(--todae-dialog-motion-enter) var(--todae-overlay-motion-easing-enter);
 
     @starting-style {
       opacity: 0;
@@ -31,6 +31,7 @@
   .dialog[open][data-todae-exiting] {
     opacity: 0;
     transition-duration: var(--todae-dialog-motion-exit);
+    transition-timing-function: var(--todae-overlay-motion-easing-exit);
   }
 
   .dialog::backdrop {
@@ -55,8 +56,9 @@
     color: var(--todae-dialog-fg);
     border: var(--todae-dialog-border-width) solid var(--todae-dialog-border);
     border-radius: var(--todae-dialog-radius);
+    box-shadow: var(--todae-dialog-shadow);
     opacity: 0;
-    transition: opacity var(--todae-dialog-motion-enter) var(--todae-overlay-motion-easing);
+    transition: opacity var(--todae-dialog-motion-enter) var(--todae-overlay-motion-easing-enter);
 
     @starting-style {
       opacity: 0;
@@ -70,6 +72,7 @@
   .dialog[open][data-todae-exiting] .panel {
     opacity: 0;
     transition-duration: var(--todae-dialog-motion-exit);
+    transition-timing-function: var(--todae-overlay-motion-easing-exit);
   }
 
   .title {

@@ -30,6 +30,7 @@ import {
   validatePaintPacks,
   type FlatToken,
   type TokenNode,
+  type TokenTree,
 } from './build-tokens';
 
 const color = (ref: string): TokenNode => ({ $type: 'color', $value: { $ref: pathToPointer(ref) } });
@@ -440,6 +441,32 @@ describe('committed token graph', () => {
     expect(apcaContrast(hex('777777'), hex('777777'))).toBe(0);
   });
 
+  it('carries $description from a token or its nearest group into the catalog', async () => {
+    const color = { $type: 'color', $value: { $ref: '#/color/gray/0/$value' } };
+    // A group's $description sits beside its tokens, which TokenTree's type leaves out.
+    const tree = (value: unknown) => value as TokenTree;
+    const flat = flattenTokens(
+      tree({ card: { $description: 'Card', bg: color, fg: { ...color, $description: 'Card text' }, edge: { $description: 'Edge', top: color } } }),
+    );
+    expect([...flat].map(([path, node]) => [path, node.$description])).toEqual([
+      ['card.bg', 'Card'],
+      ['card.edge.top', 'Edge'],
+      ['card.fg', 'Card text'],
+    ]);
+    expect(() => flattenTokens(tree({ card: { $description: 1, bg: color } }))).toThrow(/\$description at "card" must be a non-empty string/);
+    expect(() => flattenTokens({ card: { bg: { ...color, $description: ' ' } } })).toThrow(/\$description at "card\.bg"/);
+
+    // Every semantic, density and component token is described, in every context's catalog row.
+    const graph = await buildTokensGraph(join(import.meta.dirname, '../tokens'));
+    const rows = JSON.parse(graph.json).tokens as { path: string; layer: string; description: string | null }[];
+    const undescribed = rows.filter((row) => row.layer !== 'core' && !row.description);
+    expect(undescribed.map((row) => row.path)).toEqual([]);
+    expect(rows.filter((row) => row.path === 'color.bg.canvas').map((row) => row.description)).toEqual([
+      'The page background behind every surface.',
+      'The page background behind every surface.',
+    ]);
+  });
+
   it('checks every Todae text pair with APCA in both appearances', async () => {
     const results = contrastResults(await resolveEntries(join(import.meta.dirname, '../tokens')));
     expect(new Set(results.map((r) => r.where))).toEqual(new Set(['appearance "light"', 'appearance "dark"']));
@@ -597,6 +624,23 @@ describe('resolver-driven build', () => {
     expect(graph.tokens.find((t) => t.path === 'field.border.hover')?.cssValue).toBe('var(--todae-color-accent-default)');
   });
 
+  it("keeps an earlier source's description when a later source re-declares the token without one", async () => {
+    const root = await fixture((resolver) => {
+      (resolver.sets.button!.sources as unknown[]).push({
+        button: { base: { radius: { $type: 'dimension', $value: { value: 2, unit: 'px' } } } },
+      });
+      (resolver.sets.contract!.sources as unknown[]).push({
+        tooltip: { 'max-width': { $type: 'dimension', $value: { value: 20, unit: 'rem' }, $description: 'Widest tooltip.' } },
+      });
+    });
+    const graph = await buildTokensGraph(root);
+    const described = (path: string) => graph.tokens.find((t) => t.path === path)?.description;
+    // Kept from button.base.json's group description.
+    expect(described('button.base.radius')).toMatch(/^Button\.Root geometry/);
+    // A later source's own description wins.
+    expect(described('tooltip.max-width')).toBe('Widest tooltip.');
+  });
+
   it('emits consume aliases for sets declared on :root', async () => {
     const root = await fixture((resolver) => {
       const px = (value: number) => ({ $type: 'dimension', $value: { value, unit: 'px' } });
@@ -637,8 +681,8 @@ describe('resolver-driven build', () => {
     const root = await fixture((resolver) => {
       resolver.resolutionOrder = [
         { $ref: '#/sets/core' },
-        { $ref: '#/sets/button' },
         { $ref: '#/modifiers/appearance' },
+        { $ref: '#/sets/button' },
         { $ref: '#/sets/focus' },
         { $ref: '#/sets/contract' },
         { $ref: '#/modifiers/density' },
@@ -647,6 +691,17 @@ describe('resolver-driven build', () => {
     });
     await expect(buildTokensGraph(root)).rejects.toThrow(
       /token "button\.base\.[a-z.]+" references "space\.[a-z0-9.-]+" from modifier "density", which must come earlier/,
+    );
+  });
+
+  it('rejects an alias in a set declared only on :root', async () => {
+    const root = await fixture((resolver) => {
+      (resolver.sets.core!.sources as unknown[]).push({
+        motion: { easing: { exit: { $type: 'cubicBezier', $value: { $ref: '#/motion/easing/enter/$value' } } } },
+      });
+    });
+    await expect(buildTokensGraph(root)).rejects.toThrow(
+      'token "motion.easing.exit" is declared only on :root, so it can\'t reference "motion.easing.enter"',
     );
   });
 
@@ -999,6 +1054,27 @@ describe('company token build', () => {
       // No unconditional rule names system, so a light-only override never reaches a dark system.
       expect(catalogSelectors(result.css).filter((selector) => selector.includes('system'))).toEqual([]);
     }
+  });
+
+  it("keeps Todae's description on a token a company overrides without one", async () => {
+    const result = await buildCompanyTokens({ resolver: join(acme, 'resolver.json'), base: tokensDir });
+    const rows = JSON.parse(result.json).tokens as { path: string; context: string | null; description: string | null }[];
+    const accent = rows.filter((row) => row.path === 'color.accent.default');
+    expect(accent.map((row) => row.context)).toEqual(['light', 'dark']);
+    for (const row of accent) expect(row.description).toMatch(/^The brand accent/);
+    for (const token of result.tokens.filter((token) => token.path === 'color.accent.default')) {
+      expect(token.description, token.context).toMatch(/^The brand accent/);
+    }
+
+    // A company description in any context wins over Todae's in every context.
+    const described = await company(async (_, root) => {
+      const file = join(root, 'appearance/dark.json');
+      const dark = JSON.parse(await readFile(file, 'utf8'));
+      dark.color.accent.default.$description = 'Acme red.';
+      await writeFile(file, JSON.stringify(dark));
+    });
+    const acmeRows = JSON.parse((await buildCompanyTokens({ resolver: described, base: tokensDir })).json).tokens as typeof rows;
+    expect(acmeRows.filter((row) => row.path === 'color.accent.default').map((row) => row.description)).toEqual(['Acme red.', 'Acme red.']);
   });
 
   it('finds Todae tokens from the builder module', () => {

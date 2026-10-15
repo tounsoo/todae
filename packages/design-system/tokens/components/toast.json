@@ -1,11 +1,13 @@
 {
   "toast": {
+    "$description": "Toast.Region and Toast.Root: transient notifications, stacked or listed, with status tones.",
     "width": { "$type": "dimension", "$value": { "value": 22, "unit": "rem" } },
     "inset": { "$type": "dimension", "$value": { "$ref": "#/space/overlay/padding/$value" } },
     "stack-gap": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
     "peek": { "$type": "dimension", "$value": { "$ref": "#/space/3/$value" } },
     "enter-offset": { "$type": "dimension", "$value": { "$ref": "#/space/2/$value" } },
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
+    "shadow": { "$type": "shadow", "$value": { "$ref": "#/shadow/none/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "padding": {
       "x": { "$type": "dimension", "$value": { "$ref": "#/space/control/x/$value" } },

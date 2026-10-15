@@ -348,9 +348,9 @@
   },
   "guides/build-on-todae": {
     "# Build your design system on Todae": "d56cd7be2b75",
-    "## Token layers": "4b9cc0e80a6c",
+    "## Token layers": "9ec5daf020a5",
     "## A company resolver": "871ad5179923",
-    "## Overrides: CSS or ThemeProvider": "f3c47c9be9f3",
+    "## Overrides: CSS or ThemeProvider": "212a915c83e6",
     "## Adding a variant or a density": "6a2f6e98c97b",
     "## Wrapping a component": "37193cebd631",
     "(section order)": "280102156fc8"
@@ -389,7 +389,7 @@
     "# Loader and Skeleton": "c784256e6743",
     "## Loader": "d92bc23dc368",
     "### Dots": "2bc0a480e586",
-    "## Skeleton": "4b18ed84d21b",
+    "## Skeleton": "36a8bcabedfe",
     "## Accessible composition": "d76cd550ca68",
     "## When to use": "450ef0ffce4b",
     "## Props": "beb45b8d5394",
@@ -403,7 +403,7 @@
     "### Cursor": "01d7cbd759bf",
     "### VS Code": "dd718ab95089",
     "### Other clients": "be006917b24d",
-    "## Tools": "94ca86500a12",
+    "## Tools": "b06e20f327a1",
     "## Build a design system with an agent": "ac048cff758e",
     "## Limits": "09fbdacf6bf0",
     "(section order)": "6681a673118f"
@@ -652,14 +652,15 @@
     "### useAppearance": "8d5dfda228bf",
     "### useDensity": "49f8e7f1cea5",
     "### categoryTone": "0384942d3b71",
-    "## Contrast": "01f9fce94938",
+    "## Contrast": "ada6a1a14d5f",
     "## References and opacity": "dbea45e0372e",
     "## Letter case": "beaf90851101",
     "## Status tones": "9db538465fa4",
     "## Category tones": "66f99d412c6c",
     "## Focus ring": "d4f6cb5c0687",
+    "## Descriptions": "5d62059d2b28",
     "## Catalog": "fbadfcf96811",
-    "(section order)": "9cffcfa214fc"
+    "(section order)": "e004f4cd2cc4"
   },
   "toolbar": {
     "(top)": "65f7c00fa816",

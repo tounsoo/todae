@@ -1,5 +1,6 @@
 {
   "disclosure": {
+    "$description": "Disclosure.Root: a details/summary section that opens and closes, with its marker.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/inline/gap/$value" } },
     "padding": {
       "y": { "$type": "dimension", "$value": { "$ref": "#/space/control/y/$value" } }
@@ -23,7 +24,10 @@
     },
     "motion": {
       "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
-      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } }
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
+      }
     }
   }
 }

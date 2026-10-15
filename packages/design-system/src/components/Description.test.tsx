@@ -45,7 +45,7 @@ describe('Description', () => {
   it('owns control-to-message spacing', () => {
     expect(css).toMatch(/margin-block-start:\s*var\(--todae-field-label-gap\)/);
     expect(css).toMatch(/margin-block-end:\s*0/);
-    expect(css).toMatch(/line-height:\s*1\.4/);
+    expect(css).toMatch(/line-height:\s*var\(--todae-field-description-leading\)/);
   });
 
   it('does not use a docs .messages stack', () => {

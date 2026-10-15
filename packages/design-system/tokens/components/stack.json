@@ -1,5 +1,6 @@
 {
   "stack": {
+    "$description": "Stack.Root: the named gap steps (condensed, normal, spacious) between stacked items.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
     "gap-condensed": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap-condensed/$value" } },
     "gap-spacious": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap-spacious/$value" } }

@@ -1,5 +1,6 @@
 {
   "prose": {
+    "$description": "Prose.Root: long-form text such as rendered markdown, with headings and lists.",
     "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
     "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/3/$value" } },
     "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/default/$value" } },

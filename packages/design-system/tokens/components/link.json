@@ -1,5 +1,6 @@
 {
   "link": {
+    "$description": "Link.Root: an inline text link and its underline.",
     "fg": {
       "default": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },
       "hover": { "$type": "color", "$value": { "$ref": "#/color/fg/default/$value" } },

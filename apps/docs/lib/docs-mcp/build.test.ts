@@ -44,6 +44,9 @@ describe('token tools', () => {
     const accent = getToken('color.accent.default');
     expect(accent).toMatchObject({ type: 'color', layer: 'appearance', cssVar: '--todae-color-accent-default' });
     expect(accent.values.map((row) => row.context)).toEqual(['light', 'dark']);
+    expect(accent.description).toMatch(/brand accent/);
+    // A component token without its own description takes its group's.
+    expect(getToken('field.bg.default').description).toMatch(/^Field\.Root/);
     // A channel read (accent.soft) and a plain alias both count.
     expect(accent.referencedBy).toEqual(expect.arrayContaining(['color.accent.soft']));
     // A reader of space.10 is not a reader of space.1.

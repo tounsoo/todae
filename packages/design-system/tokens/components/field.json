@@ -1,5 +1,6 @@
 {
   "field": {
+    "$description": "Field.Root and its parts: text inputs, textarea, select, pickers, labels and messages.",
     "radius": { "$type": "dimension", "$value": { "$ref": "#/radius/md/$value" } },
     "border-width": { "$type": "dimension", "$value": { "$ref": "#/border/width/$value" } },
     "padding": {
@@ -55,6 +56,7 @@
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
       },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/snug/$value" } },
       "fg": { "$type": "color", "$value": { "$ref": "#/color/fg/muted/$value" } }
     },
     "error": {
@@ -62,6 +64,7 @@
         "size": { "$type": "dimension", "$value": { "$ref": "#/font/size/2/$value" } },
         "weight": { "$type": "fontWeight", "$value": { "$ref": "#/font/weight/regular/$value" } }
       },
+      "leading": { "$type": "number", "$value": { "$ref": "#/font/leading/snug/$value" } },
       "fg": { "$type": "color", "$value": { "$ref": "#/color/danger/default/$value" } }
     },
     "messages": {
@@ -87,7 +90,8 @@
         "x": { "$type": "dimension", "$value": { "$ref": "#/popover/padding/x/$value" } },
         "y": { "$type": "dimension", "$value": { "$ref": "#/popover/padding/y/$value" } }
       },
-      "max-height": { "$type": "dimension", "$value": { "$ref": "#/popover/max-height/$value" } }
+      "max-height": { "$type": "dimension", "$value": { "$ref": "#/popover/max-height/$value" } },
+      "shadow": { "$type": "shadow", "$value": { "$ref": "#/popover/shadow/$value" } }
     },
     "row": {
       "control": {

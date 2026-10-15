@@ -1,5 +1,6 @@
 {
   "fieldset": {
+    "$description": "Fieldset.Root: a group of related controls under a legend.",
     "gap": { "$type": "dimension", "$value": { "$ref": "#/space/field/gap/$value" } },
     "legend": {
       "gap": { "$type": "dimension", "$value": { "$ref": "#/space/field/gap/$value" } },

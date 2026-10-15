@@ -4,7 +4,7 @@ A company design system on Todae is three things: a token package layered on Tod
 
 ## Token layers
 
-Todae's tokens are DTCG 2025.10 files driven by `tokens/resolver.json`. Each set and modifier names its layer in `$extensions["dev.todae"].layer`, and a token may only reference tokens in a lower layer, or in its own layer when they come from the same set or modifier or from one earlier in `resolutionOrder`.
+Todae's tokens are DTCG 2025.10 files driven by `tokens/resolver.json`. Each set and modifier names its layer in `$extensions["dev.todae"].layer`, and a token may only reference tokens in a lower layer, or in its own layer when they come from the same set or modifier or from one earlier in `resolutionOrder`. A token in a set listed before the first scoped modifier, such as core, is declared only on `:root`, so it holds a literal value and references nothing.
 
 - `core`: raw scales, such as `color.gray.900` and `space.4`.
 - `appearance`: semantic colors for light and dark, such as `color.fg.muted` and `color.accent.default`.
@@ -103,7 +103,7 @@ There are two ways to change a token for part of a page.
 
 Set it on an element that carries `data-appearance` or `data-density`. Contract tokens are computed there, so an override on a descendant does not reach them. Each of those elements computes the contract tokens again, so a contract-token override set in CSS must match every one of them, not only the outermost.
 
-**`ThemeProvider` `overrides`** is for values that arrive at runtime, such as a customer's brand color. It takes token paths and DTCG values, sets them as custom properties on its own element, and rejects unknown paths. The values are not contrast checked.
+**`ThemeProvider` `overrides`** is for values that arrive at runtime, such as a customer's brand color. It takes token paths and DTCG values, sets them as custom properties on its own element, and rejects unknown paths and invalid values: it throws in development and skips them in production. In development it also checks the APCA contrast pairs from Todae's resolver where it renders, and logs a `console.warn` naming the pairs its overrides push below Todae's minimum. Production runs no contrast check.
 
 ```tsx
 <ThemeProvider overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.5, 0.15, 150] } }}>

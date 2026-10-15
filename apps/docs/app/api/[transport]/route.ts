@@ -59,7 +59,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'list_tokens',
-      "List Todae's tokens from its token catalog: path, type, layer, context, CSS custom property and CSS value. Filter by a path prefix such as \"color.accent\" or by layer. Returns 200 rows from offset 0 unless limit and offset say otherwise; hasMore says whether more match.",
+      "List Todae's tokens from its token catalog: path, type, layer, context, CSS custom property, CSS value and description. Filter by a path prefix such as \"color.accent\" or by layer. Returns 200 rows from offset 0 unless limit and offset say otherwise; hasMore says whether more match.",
       {
         prefix: tokenPath.optional(),
         layer: z.enum(LAYERS).optional(),
@@ -76,7 +76,7 @@ const handler = createMcpHandler(
     );
     server.tool(
       'get_token',
-      'Get one token: its value in each context (such as light and dark) and the tokens whose values read it.',
+      'Get one token: what it is for, its value in each context (such as light and dark) and the tokens whose values read it.',
       { path: tokenPath },
       async ({ path }) => {
         try {

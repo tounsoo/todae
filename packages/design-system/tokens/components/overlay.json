@@ -1,10 +1,14 @@
 {
   "overlay": {
+    "$description": "Shared by overlays: the scrim of Dialog, BottomSheet and Drawer, and the easing they and Toast enter and exit with.",
     "scrim": {
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/scrim/$value" } }
     },
     "motion": {
-      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } }
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
 {
   "tree": {
+    "$description": "Tree.Root: a hierarchical list with expandable branches and a selected item.",
     "gap": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } },
     "indent": { "$type": "dimension", "$value": { "$ref": "#/space/6/$value" } },
     "item": {
@@ -38,7 +39,10 @@
     },
     "motion": {
       "duration": { "$type": "duration", "$value": { "$ref": "#/motion/duration/normal/$value" } },
-      "easing": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/standard/$value" } }
+      "easing": {
+        "enter": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/enter/$value" } },
+        "exit": { "$type": "cubicBezier", "$value": { "$ref": "#/motion/easing/exit/$value" } }
+      }
     }
   }
 }

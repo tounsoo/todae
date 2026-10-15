@@ -12,6 +12,8 @@ export type CatalogToken = {
   ref: string | null;
   layer: TokenLayer;
   context: string | null;
+  /** The token's `$description`, or its nearest group's in the same file; a company's wins over Todae's. */
+  description: string | null;
 };
 
 const SOURCE = 'todae-docs' as const;
@@ -27,7 +29,8 @@ function isCatalogToken(value: unknown): value is CatalogToken {
     typeof row.cssValue === 'string' &&
     (row.ref === null || typeof row.ref === 'string') &&
     LAYERS.includes(row.layer as TokenLayer) &&
-    (row.context === null || typeof row.context === 'string')
+    (row.context === null || typeof row.context === 'string') &&
+    (row.description === null || typeof row.description === 'string')
   );
 }
 
@@ -83,6 +86,7 @@ export function getToken(path: string) {
     type: first.type,
     layer: first.layer,
     cssVar: first.cssVar,
+    description: first.description,
     values: rows.map(({ context, cssValue, ref }) => ({ context, cssValue, ref })),
     referencedBy,
     docsUrl: TOKENS_URL,
