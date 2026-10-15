@@ -41,11 +41,6 @@ type LocaleDateTime = {
   monthDay: Set<'md' | 'dm'>;
   /** Punctuation the locale writes between the date and the time, such as "/" in az. */
   marks: Set<string>;
-  /** The words of the locale's long and short weekday names. */
-  weekdayWords: Set<string>;
-  /** Punctuation the locale writes between the numbers of a date and not of a time, such as "/" in en-US, and the other way round. */
-  dateOnly: Set<string>;
-  timeOnly: Set<string>;
 };
 
 const localeDateTimes = new Map<string, LocaleDateTime>();
@@ -97,24 +92,7 @@ function localeDateTime(locale: string | undefined): LocaleDateTime {
       .map((part) => part.type);
     monthDay.add(types.indexOf('month') < types.indexOf('day') ? 'md' : 'dm');
   }
-  const weekdayWords = new Set<string>();
-  for (const weekday of ['long', 'short'] as const) {
-    const format = new Intl.DateTimeFormat(locale, { weekday, calendar: 'gregory', timeZone: 'UTC' });
-    for (let day = 12; day <= 18; day++) {
-      for (const word of splitWords(format.format(Date.UTC(2026, 9, day)))) if (/\p{L}/u.test(word)) weekdayWords.add(word);
-    }
-  }
-  const punctuation = (style: Intl.DateTimeFormatOptions) =>
-    new Set(
-      new Intl.DateTimeFormat(locale, { ...style, calendar: 'gregory', timeZone: 'UTC' })
-        .formatToParts(Date.UTC(2026, 9, 13, 21, 30, 15))
-        .flatMap((part) => (part.type === 'literal' ? [...fold(part.value)].filter((char) => PUNCTUATION.test(char)) : [])),
-    );
-  const dateMarks = punctuation({ year: 'numeric', month: 'numeric', day: 'numeric' });
-  const timeMarks = new Set([...punctuation({ hour: 'numeric', minute: '2-digit', second: '2-digit' }), ...punctuation({ hour: 'numeric', minute: '2-digit', hourCycle: 'h23' })]);
-  const dateOnly = new Set([...dateMarks].filter((char) => !timeMarks.has(char)));
-  const timeOnly = new Set([...timeMarks].filter((char) => !dateMarks.has(char)));
-  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, monthDay, marks, weekdayWords, dateOnly, timeOnly };
+  const text = { joiners, dateFirst: dateFirst || !timeFirst, timeFirst, monthDay, marks };
   localeDateTimes.set(key, text);
   return text;
 }
@@ -135,8 +113,6 @@ function atoms(text: string): Atom[] {
   }
   return out;
 }
-
-const PUNCTUATION = /[^\p{L}\p{M}\p{N}\s]/u;
 
 const SPACE_OR_COMMA = /[\s,，、،]/u;
 
@@ -168,7 +144,7 @@ const render = (list: Atom[]) => list.map((atom, index) => (index ? atom.gap : '
  * more than one date and time is not read.
  */
 export function parseDateTime(text: string, options: DateTimeTextOptions = {}): Temporal.PlainDateTime | null {
-  const { joiners, dateFirst, timeFirst, monthDay, marks, weekdayWords, dateOnly, timeOnly } = localeDateTime(options.locale);
+  const { joiners, dateFirst, timeFirst, monthDay, marks } = localeDateTime(options.locale);
   const list = atoms(text);
   const found = new Map<string, Temporal.PlainDateTime>();
   // Readings with a word the locale writes between the halves left out of
@@ -191,17 +167,11 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
     (between ? joined : found).set(value.toString(), value);
   };
   // Whether part of a date reads as a date without a year: two numbers that are
-  // a month and a day in an order the locale writes them in, with or without a
-  // weekday, or words that read as a date with a year put before, after or,
-  // beside one number, on either side of it, as "13 Ukw." in rw, which writes
-  // the year first and the day last.
+  // a month and a day in an order the locale writes them in, or words that read
+  // as a date with a year put before, after or, beside one number, on either
+  // side of it, as "13 Ukw." in rw, which writes the year first and the day last.
   const yearless = (half: string) => {
-    const numbers = /^(\d{1,2}) (\d{1,2})$/.exec(
-      half
-        .split(' ')
-        .filter((word) => !weekdayWords.has(word))
-        .join(' '),
-    );
+    const numbers = /^(\d{1,2}) (\d{1,2})$/.exec(half);
     if (!numbers) {
       const words = half.split(' ');
       const day = words.filter((word) => /^\d+$/.test(word));
@@ -217,23 +187,11 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
       return month >= 1 && month <= 12 && day >= 1 && day <= new Temporal.PlainYearMonth(2000, month).daysInMonth;
     });
   };
-  // Whether part of the text has punctuation between its numbers that only a
-  // date or only a time has, such as "/" or ":" in en-US.
-  const has = (part: Atom[], only: Set<string>) => part.slice(1).some((atom) => [...atom.gap].some((char) => only.has(char)));
-  // Text that reads as a date without a year and a time, in either order, is
-  // not read, as "21 05 10. 9." in ko, where 21 05 10 would be a year, a month
-  // and a day.
-  let yearlessReading = false;
   for (let at = 1; at < list.length; at++) {
     if (!canCut(list, at, marks)) continue;
     const before = render(list.slice(0, at));
     const after = render(list.slice(at));
     for (const strip of [false, true]) {
-      const first = trim(before, true, strip);
-      const second = trim(after, strip, true);
-      const [head, tail] = [list.slice(0, at), list.slice(at)];
-      if (!has(head, timeOnly) && !has(tail, dateOnly) && parseTime(second, options) && yearless(first)) yearlessReading = true;
-      if (!has(head, dateOnly) && !has(tail, timeOnly) && parseTime(first, options) && yearless(second)) yearlessReading = true;
       // A date typed without a year must not take a number of the time to make
       // one up, as "10/13 9 05" would read as 2009-10-13T05:00 in en-US and
       // "10. 9. 21 05" as 2010-09-21T05:00 in ko: when the date's number beside
@@ -271,6 +229,6 @@ export function parseDateTime(text: string, options: DateTimeTextOptions = {}): 
     }
   }
   const readings = joined.size > 0 ? joined : found;
-  if (yearlessReading || readings.size !== 1) return null;
+  if (readings.size !== 1) return null;
   return readings.values().next().value!;
 }
