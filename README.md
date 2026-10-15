@@ -103,7 +103,7 @@ pnpm typecheck
 pnpm changeset
 ```
 
-Pick the bump and write a line for the changelog. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change.
+Pick the bump and write a line for the changelog. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change. CI fails a pull request that changes `packages/design-system` outside its tests without one. If the change ships nothing, add an empty changeset with `pnpm changeset --empty`.
 
 When `main` has changesets, `.github/workflows/release.yml` opens or updates a "Version Packages" pull request. It bumps the version, writes `packages/design-system/CHANGELOG.md` and deletes the changesets it used. Merging it starts a publish job that runs in the `npm` environment, publishes the new version through [trusted publishing](https://docs.npmjs.com/trusted-publishers), and creates the git tag and a GitHub release.
 

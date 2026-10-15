@@ -10,7 +10,7 @@ The docs site is in English and Korean. A change to an English `page.mdx` in `ap
 
 ## Changesets
 
-A pull request that changes what `@omsoo.design/todae` ships adds a changeset, as the Releases section of `ARCHITECTURE.md` says. Write it with `pnpm changeset --patch @omsoo.design/todae -m "…"` (or `--minor` for a breaking change before 1.0), since `pnpm changeset` alone asks questions in a terminal.
+A pull request that changes what `@omsoo.design/todae` ships adds a changeset, as the Releases section of `ARCHITECTURE.md` says. Write it with `pnpm changeset --patch @omsoo.design/todae -m "…"` (or `--minor` for a breaking change before 1.0), since `pnpm changeset` alone asks questions in a terminal. A change that ships nothing but still trips the CI check gets `pnpm changeset --empty`.
 
 ## pstack skills
 

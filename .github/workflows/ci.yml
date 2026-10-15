@@ -20,7 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The changeset check compares the pull request with its base branch.
+          fetch-depth: 0
       - uses: ./.github/actions/setup
+      # Fails when the package changed outside its tests and no changeset was added.
+      # The Version Packages pull request deletes the changesets, so it skips the check.
+      - if: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/') }}
+        run: pnpm changeset status --since=origin/${{ github.base_ref }}
       - run: pnpm tokens:check
       - run: pnpm schema && git diff --exit-code -- packages/design-system/schema/components.json
       - run: pnpm typecheck
