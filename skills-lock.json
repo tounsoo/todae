@@ -259,12 +259,6 @@
       "skillPath": "skills/reflect/SKILL.md",
       "computedHash": "38e65ee5943073ad626e434eaf53e9ff44ded64e53f1a956c361391df07594c1"
     },
-    "setup-pstack": {
-      "source": "backnotprop/pstack",
-      "sourceType": "github",
-      "skillPath": "skills/setup-pstack/SKILL.md",
-      "computedHash": "2e1fbd88efe2092e66a305a7ccea0bffda74e8d08265547c0aec7bd84cb7480f"
-    },
     "sharpen": {
       "source": "backnotprop/pstack",
       "sourceType": "github",

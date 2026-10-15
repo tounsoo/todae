@@ -10,13 +10,13 @@ The docs site is in English and Korean. A change to an English `page.mdx` in `ap
 
 ## pstack skills
 
-`.claude/skills/` holds the [pstack](https://github.com/backnotprop/pstack) skills (MIT), installed with `npx skills add backnotprop/pstack --agent claude-code --copy` and pinned in `skills-lock.json`. Update them with `npx skills update -p`. `make-bot-ui` is left out: it targets Cursor's Grok bots and installs Tailscale with `sudo`.
+`.claude/skills/` holds the [pstack](https://github.com/backnotprop/pstack) skills, under the MIT license in `.claude/PSTACK-LICENSE`. `skills-lock.json` records a content hash per skill. Update them with `npx skills add backnotprop/pstack --agent claude-code --copy -y --skill $(ls .claude/skills)`, which keeps the copies in `.claude/skills`. Don't use `npx skills update`: it reinstalls as symlinks into `.agents/skills`, which `pnpm lint` checks. Two skills are left out. `make-bot-ui` targets Cursor's Grok bots and installs Tailscale with `sudo`. `setup-pstack` writes a model file to the home folder.
 
 Most pstack skills turn off model invocation, so the `Skill` tool can't start them. Where this file names one, read its `.claude/skills/<name>/SKILL.md` and follow it. A person can still run any of them as a slash command, such as `/poteto-mode`.
 
 pstack was written for Cursor. Where it and this file disagree, this file wins:
 
-- A subagent is an `Agent` call. A `claude-opus-5-5-<level>` slug means `model: opus` with `effort: <level>`. A `grok-*` slug runs on the session's own model, so leave `model` out. No `~/.agents/pstack-models.md` is kept, since the container does not keep it.
+- A subagent is an `Agent` call. A `claude-opus-5-5-<level>` slug means `model: opus` with `effort: <level>`. A `grok-*` slug runs on the session's own model, so leave `model` out and keep the slug's level as `effort`. Ignore `~/.agents/pstack-models.md` if one exists. A `poteto-agent` or `generalPurpose` subagent is a `general-purpose` one, set up as poteto-mode's Harness section says, and parameters `Agent` doesn't have, such as `readonly`, are dropped.
 - GitHub work uses the GitHub MCP tools, not `gh` or the `watch-pr` script in `poteto-mode/scripts`, which needs `gh` and runs `bun install`.
 - Reviews run `/code-review` at the rows of the review loop's table, not `interrogate`. Pull requests open as the review loop says, not as pstack's Opening a PR playbook says.
 - Merge conflicts are resolved as [Waiting on CI](#waiting-on-ci) says, not reported the way pstack's Babysit playbook does.
@@ -25,7 +25,7 @@ Before committing English docs prose or writing a pull request description, give
 
 ## Bug fixes
 
-A reported bug, or one found while working, follows steps 1 to 5 of pstack's Bug fix playbook, `.claude/skills/poteto-mode/playbooks/bug-fix.md`. Reproduce it yourself where it shows (a unit or browser test, or the docs app driven with Playwright), narrow the cause with runtime evidence rather than guesses, and read `principle-fix-root-causes` before choosing the fix. Commit the failing test before the fix, as `tdd` describes, when a cheap test path exists. The fix runs on the session's model, as in the review loop. The playbook's step 6 is the review loop below.
+A reported bug, or one found while working, follows steps 1 to 5 of pstack's Bug fix playbook, `.claude/skills/poteto-mode/playbooks/bug-fix.md`. Reproduce it yourself where it shows (a unit or browser test, or the docs app driven with Playwright), narrow the cause with runtime evidence rather than guesses, and read `principle-fix-root-causes` before choosing the fix. When `tdd` finds a cheap test path, commit the failing test before the fix, as the playbook's step 5 says. The fix runs on the session's model, as in the review loop. The playbook's step 6 is the review loop below.
 
 ## Pull request review loop
 
@@ -64,7 +64,7 @@ Some pull request states never produce a CI result, so never end a turn on the p
 - **A draft's run is skipped.** Every job skips on a draft, so a run whose conclusion is `skipped` is not a result. Mark the pull request ready, unless the round cap says to keep it a draft, and wait for the run that starts then.
 - **Check until the head commit has a result.** After opening a pull request, pushing to it, or marking it ready, schedule a check-in with `send_later` about 5 minutes out before ending the turn; CI takes about four. When it fires, read the pull request's `mergeable_state` and the head commit's check runs with the GitHub tools, then:
   - Green: report back as step 6 says.
-  - Red: it is a blocking finding, as step 6 says. Classify it first, as step 7 of pstack's Babysit playbook (`.claude/skills/poteto-mode/playbooks/babysit.md`) does: a failure in code the branch doesn't touch points to a stale base or a flake, and gets at most one re-run before it counts as real.
+  - Red: it is a blocking finding, as step 6 says. Classify it first, as step 7 of pstack's Babysit playbook (`.claude/skills/poteto-mode/playbooks/babysit.md`) does. A flake or infrastructure failure gets one re-run. A failure in code the branch doesn't touch usually means a stale base: if `origin/main` has moved past `<base>`, merge it as the conflict bullet below says, rather than fixing code outside the change.
   - `dirty`: a conflict, handled as above.
   - Still running, `unknown`, or no run yet: schedule another check-in. If two check-ins in a row find no result for the head commit, tell the person what is missing rather than waiting silently.
 
