@@ -43,7 +43,7 @@ const [invalid, setInvalid] = useState(false);
   <FieldTimePicked />
 </Example>
 
-Here a [Field.TextInput](/field/text-input) in the same field lets people type the time too, including one between the list's times, such as `9:07`. A picked time is written into the text with `formatTime`, and a typed time that `parseTime` reads shows in the list among its own when it is between `min` and `max`. Beside a `Field.TextInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. With `showValue={false}`, the button shows only a clock glyph. The button sends the time with a form under its own `name` if it has one, and otherwise under the field's `name`, unless a Field part or a control joined with [`useField`](/utilities/use-field), other than a `Field.ColorPicker`, `Field.DatePicker` or `Field.TimePicker`, has that `name`, as a `Field.TextInput` does when it has no `name` of its own. To send the time as `09:30` rather than the typed text, put `name` on the picker instead of the Root.
+Here a [Field.TextInput](/field/text-input) in the same field lets people type the time too, including one between the list's times, such as `9:07`. A picked time is written into the text with `formatTime`, and a typed time that `parseTime` reads shows in the list among its own when it is between `min` and `max`. Beside a `Field.TextInput`, that input is the field's control. It takes the field's `id`, `name` and description, and a press elsewhere in the field focuses it. With `showValue={false}`, the button shows only a clock glyph. The button sends the time with a form under its own `name` if it has one, and otherwise under the field's `name`, unless a Field part or a control joined with [`useField`](/utilities/use-field), other than a `Field.ColorPicker`, `Field.DatePicker`, `Field.TimePicker` or `Field.DateTimePicker`, has that `name`, as a `Field.TextInput` does when it has no `name` of its own. To send the time as `09:30` rather than the typed text, put `name` on the picker instead of the Root.
 
 ## Typed times
 
@@ -67,7 +67,7 @@ Todae ships no Temporal polyfill. The picker's values, `formatTime` and `parseTi
 
 ## Accessible composition
 
-**Todae handles:** On its own, the button takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). Its label names it, so the time it shows is added to its `aria-describedby`. Beside a Field part or a control joined with `useField`, other than a `Field.ColorPicker`, `Field.DatePicker` or another `Field.TimePicker`, such as a text input, that control takes the `id` and `aria-describedby` in its place, and the button keeps `disabled` and `aria-invalid` and is named from the `timePicker` string in [StringsProvider](/utilities/strings-provider) unless it has its own `aria-label`. The button gets `aria-haspopup="listbox"` and `aria-expanded`, and `aria-controls` while the list is open. The list is an [OptionList](/optionlist) named from the `timePicker` string, in a popover with no role of its own. Arrow keys, Home and End move through the times, and Enter or Space picks one. The glyph is `clock` from [GlyphsProvider](/utilities/glyphs-provider).
+**Todae handles:** On its own, the button takes `id`, `aria-label`, `aria-labelledby` and `aria-describedby` from `Field.Root`, and native `disabled` and `aria-invalid` from the Root or a surrounding [Fieldset](/fieldset). Its label names it, so the time it shows is added to its `aria-describedby`. Beside a Field part or a control joined with `useField`, other than a `Field.ColorPicker`, `Field.DatePicker`, `Field.DateTimePicker` or another `Field.TimePicker`, such as a text input, that control takes the `id` and `aria-describedby` in its place, and the button keeps `disabled` and `aria-invalid` and is named from the `timePicker` string in [StringsProvider](/utilities/strings-provider) unless it has its own `aria-label`. The button gets `aria-haspopup="listbox"` and `aria-expanded`, and `aria-controls` while the list is open. The list is an [OptionList](/optionlist) named from the `timePicker` string, in a popover with no role of its own. Arrow keys, Home and End move through the times, and Enter or Space picks one. The glyph is `clock` from [GlyphsProvider](/utilities/glyphs-provider).
 
 **You supply:** A name, through a [Label](/label) whose `htmlFor` is the Root `id` or `aria-label` / `aria-labelledby` on the Root. The same time for a text input and the picker beside it, written with `formatTime` and read with `parseTime`.
 
@@ -79,8 +79,24 @@ Todae ships no Temporal polyfill. The picker's values, `formatTime` and `parseTi
 
 **When:** A time of day, such as opening hours, a daily reminder or when a meeting starts.
 
-**When not:** A date and time in one value → [Field.DateTimeInput](/field/date-time-input). A duration → [Field.TextInput](/field/text-input) with `type="number"` and an `Affix` for the unit.
+**When not:** A date and time in one value → [Field.DateTimePicker](/field/date-time-picker). A duration → [Field.TextInput](/field/text-input) with `type="number"` and an `Affix` for the unit.
+
+### formatTime
+
+**When:** Writing a time as text for a locale, such as into a text input beside a picker.
+
+**When not:** A time in another style, such as with a time zone → `Intl.DateTimeFormat`.
+
+### parseTime
+
+**When:** Reading a time someone typed.
+
+**When not:** Text in a fixed format such as `09:30` → `Temporal.PlainTime.from`.
 
 ## Props
 
 <PropsTable name="Field.TimePicker" />
+
+<PropsTable name="formatTime" />
+
+<PropsTable name="parseTime" />

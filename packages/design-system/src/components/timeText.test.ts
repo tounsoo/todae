@@ -98,6 +98,12 @@ describe('parseTime', () => {
     expect(read('２１：３０')).toBe('21:30:00');
   });
 
+  it('reads a time with a format character or a compatibility form between its parts', () => {
+    expect(read('9\u200Epm', 'en-US')).toBe('21:00:00');
+    expect(read('٩:٣٠\u200Fم', 'ar')).toBe('21:30:00');
+    expect(read('9:30 ㏘', 'en-US')).toBe('21:30:00');
+  });
+
   it('returns null for text that is not a time', () => {
     for (const text of ['', ' ', 'noon', '24:00', '9:60', '9:5', '13 pm', '9:30:5', '1:2:3:4', '12345', 'am 9 pm', '9 30 xyz']) {
       expect(read(text, 'en-US'), text).toBeNull();

@@ -74,6 +74,12 @@
         "weight": { "$type": "fontWeight", "$value": 600 }
       }
     },
+    "date-time": {
+      "gap": { "$type": "dimension", "$value": { "$ref": "#/space/stack/gap/$value" } },
+      "list": {
+        "max-height": { "$type": "dimension", "$value": { "value": 18, "unit": "rem" } }
+      }
+    },
     "picker": {
       "bg": { "$type": "color", "$value": { "$ref": "#/popover/bg/$value" } },
       "fg": { "$type": "color", "$value": { "$ref": "#/popover/fg/$value" } },

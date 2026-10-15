@@ -78,7 +78,7 @@
   [role='menuitemradio'][aria-checked='true'] > .indicator::before {
     content: '';
     position: absolute;
-    inset: 0.3em;
+    inset: calc(var(--todae-menu-item-indicator-dot-inset) * 1em);
     border-radius: 50%;
     background: var(--todae-menu-item-check-fg);
   }
@@ -91,7 +91,7 @@
 
   .separator {
     flex: none;
-    height: 1px;
+    height: var(--todae-menu-separator-thickness);
     margin-block: var(--todae-menu-gap);
     background: var(--todae-menu-separator);
   }

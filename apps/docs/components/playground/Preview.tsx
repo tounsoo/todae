@@ -11,12 +11,10 @@ import {
   categoryTone,
   Checkbox,
   Chip,
-  Code,
   Composer,
   Disclosure,
   Field,
   GlyphsProvider,
-  Kbd,
   Label,
   Link,
   Loader,
@@ -40,24 +38,20 @@ import {
   type Glyphs,
 } from '@omsoo.design/todae';
 import { useId, useState, type FormEvent } from 'react';
+import type { Locale } from '../../lib/i18n/config';
 import type { IconLibrary } from '../iconLibraries';
+import { PREVIEW_COPY } from './previewCopy';
 
 const NO_GLYPHS: Glyphs = {};
-
-const INVOICES = [
-  { id: 'INV-1042', customer: 'Northwind', status: 'Paid', tone: 'success', amount: '$4,120.00' },
-  { id: 'INV-1043', customer: 'Globex', status: 'Due soon', tone: 'warning', amount: '$860.00' },
-  { id: 'INV-1039', customer: 'Initech', status: 'Overdue', tone: 'critical', amount: '$2,015.50' },
-  { id: 'INV-1044', customer: 'Umbrella', status: 'Draft', tone: 'neutral', amount: '$1,240.00' },
-] as const;
 
 /**
  * A product-like screen built from Todae parts. The playground's theme paints
  * it, and its icons and Todae's own glyphs come from `library` when one is
- * picked. Copy is English, like every demo. Nothing leaves the page.
+ * picked. Its words are in the page's language. Nothing leaves the page.
  */
-export function Preview({ library }: { library?: IconLibrary }) {
+export function Preview({ library, locale }: { library?: IconLibrary; locale: Locale }) {
   const icons = library?.icons;
+  const copy = PREVIEW_COPY[locale];
   const ids = {
     email: useId(),
     plan: useId(),
@@ -83,11 +77,11 @@ export function Preview({ library }: { library?: IconLibrary }) {
 
   return (
     <GlyphsProvider glyphs={library?.glyphs ?? NO_GLYPHS}>
-      <div className="preview" lang="en">
+      <div className="preview">
         <div className="preview-head">
           <div className="preview-user">
-            <Avatar.Root label="Ada Lovelace" tone={categoryTone('ada')}>
-              <Avatar.Fallback>AL</Avatar.Fallback>
+            <Avatar.Root label={copy.user.name} tone={categoryTone('ada')}>
+              <Avatar.Fallback>{copy.user.initials}</Avatar.Fallback>
             </Avatar.Root>
             <div>
               <Breadcrumbs.Root>
@@ -96,36 +90,36 @@ export function Preview({ library }: { library?: IconLibrary }) {
                     Acme
                   </Link.Root>
                 </Breadcrumbs.Item>
-                <Breadcrumbs.Item current>Billing</Breadcrumbs.Item>
+                <Breadcrumbs.Item current>{copy.page}</Breadcrumbs.Item>
               </Breadcrumbs.Root>
               <Text.Root as="h2" size="l">
-                Good morning, Ada
+                {copy.greeting}
               </Text.Root>
               <Text.Root tone="muted" size="s">
-                3 reviews wait on you today. Press <Kbd.Root>Ctrl</Kbd.Root> <Kbd.Root>K</Kbd.Root> to search.
+                {copy.searchHint}
               </Text.Root>
             </div>
           </div>
           <div className="preview-actions">
             <Button.Root variant="secondary">
               {icons ? <Button.Icon>{icons.mail}</Button.Icon> : null}
-              Invite
+              {copy.invite}
             </Button.Root>
             <Button.Root>
               {icons ? <Button.Icon>{icons.plus}</Button.Icon> : null}
-              New project
+              {copy.newProject}
             </Button.Root>
             <Menu.Root>
-              <Menu.Trigger variant="ghost">More</Menu.Trigger>
+              <Menu.Trigger variant="ghost">{copy.more}</Menu.Trigger>
               <Menu.Content>
-                <Menu.Item>Export CSV</Menu.Item>
-                <Menu.Item>Print</Menu.Item>
+                <Menu.Item>{copy.exportCsv}</Menu.Item>
+                <Menu.Item>{copy.print}</Menu.Item>
                 <Menu.Separator />
-                <Menu.Item disabled>Archive workspace</Menu.Item>
+                <Menu.Item disabled>{copy.archive}</Menu.Item>
               </Menu.Content>
             </Menu.Root>
             {icons ? (
-              <Button.Root variant="ghost" aria-label="Settings">
+              <Button.Root variant="ghost" aria-label={copy.settings}>
                 <Button.Icon>{icons.settings}</Button.Icon>
               </Button.Root>
             ) : null}
@@ -136,11 +130,11 @@ export function Preview({ library }: { library?: IconLibrary }) {
           <Card.Root className="preview-span-2">
             <Card.Header>
               <div className="preview-card-title">
-                <Text.Root as="h3">Revenue</Text.Root>
-                <ToggleGroup.Root aria-label="Range" value={range} onValueChange={setRange}>
-                  <ToggleGroup.Item value="day">Day</ToggleGroup.Item>
-                  <ToggleGroup.Item value="week">Week</ToggleGroup.Item>
-                  <ToggleGroup.Item value="month">Month</ToggleGroup.Item>
+                <Text.Root as="h3">{copy.revenue}</Text.Root>
+                <ToggleGroup.Root aria-label={copy.range} value={range} onValueChange={setRange}>
+                  <ToggleGroup.Item value="day">{copy.day}</ToggleGroup.Item>
+                  <ToggleGroup.Item value="week">{copy.week}</ToggleGroup.Item>
+                  <ToggleGroup.Item value="month">{copy.month}</ToggleGroup.Item>
                 </ToggleGroup.Root>
               </div>
             </Card.Header>
@@ -148,30 +142,30 @@ export function Preview({ library }: { library?: IconLibrary }) {
               <div className="preview-stats">
                 <div>
                   <Text.Root tone="muted" size="s">
-                    Booked
+                    {copy.booked}
                   </Text.Root>
                   <Text.Root size="2xl" weight="bold">
-                    $48,210
+                    {copy.bookedAmount}
                   </Text.Root>
                   <Badge.Root tone="success">+12.4%</Badge.Root>
                 </div>
                 <div>
                   <Text.Root tone="muted" size="s">
-                    Churned
+                    {copy.churned}
                   </Text.Root>
                   <Text.Root size="2xl" weight="bold">
-                    $2,380
+                    {copy.churnedAmount}
                   </Text.Root>
                   <Badge.Root tone="critical">+3.1%</Badge.Root>
                 </div>
                 <div>
                   <Text.Root tone="muted" size="s">
-                    Quota
+                    {copy.quota}
                   </Text.Root>
                   <Text.Root size="2xl" weight="bold">
                     72%
                   </Text.Root>
-                  <Progress.Root value={72} max={100} aria-label="Quota used" />
+                  <Progress.Root value={72} max={100} aria-label={copy.quotaUsed} />
                 </div>
               </div>
             </Card.Body>
@@ -179,19 +173,19 @@ export function Preview({ library }: { library?: IconLibrary }) {
 
           <Card.Root className="preview-tall">
             <Card.Header>
-              <Text.Root as="h3">Upgrade</Text.Root>
+              <Text.Root as="h3">{copy.upgrade}</Text.Root>
             </Card.Header>
             <Card.Body>
               <form className="preview-form" onSubmit={(event) => event.preventDefault()}>
                 <Field.Group>
-                  <Label.Root htmlFor={ids.email}>Work email</Label.Root>
+                  <Label.Root htmlFor={ids.email}>{copy.workEmail}</Label.Root>
                   <Field.Root id={ids.email}>
                     {icons ? <Field.Icon>{icons.mail}</Field.Icon> : null}
                     <Field.TextInput type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
                   </Field.Root>
                 </Field.Group>
                 <Field.Group>
-                  <Label.Root htmlFor={ids.plan}>Plan</Label.Root>
+                  <Label.Root htmlFor={ids.plan}>{copy.plan}</Label.Root>
                   <Field.Root id={ids.plan}>
                     <Field.Select value={plan} onValueChange={setPlan}>
                       <option value="starter">Starter</option>
@@ -201,49 +195,49 @@ export function Preview({ library }: { library?: IconLibrary }) {
                   </Field.Root>
                 </Field.Group>
                 <Field.Group>
-                  <Label.Root htmlFor={ids.start}>Start date</Label.Root>
+                  <Label.Root htmlFor={ids.start}>{copy.startDate}</Label.Root>
                   <Field.Root id={ids.start}>
-                    <Field.DatePicker value={start} onValueChange={setStart} />
+                    <Field.DatePicker value={start} onValueChange={setStart} locale={locale} />
                   </Field.Root>
                 </Field.Group>
                 <Field.Group>
-                  <Label.Root htmlFor={ids.seats}>Seats</Label.Root>
+                  <Label.Root htmlFor={ids.seats}>{copy.seats}</Label.Root>
                   <Slider.Root id={ids.seats} min={1} max={50} defaultValue={12} />
                 </Field.Group>
                 <Field.Group>
                   <Text.Root as="span" id={ids.billing} size="s" weight="medium">
-                    Billing
+                    {copy.billing}
                   </Text.Root>
                   <RadioGroup.Root aria-labelledby={ids.billing} defaultValue="yearly">
-                    <RadioGroup.Item value="monthly">Monthly</RadioGroup.Item>
-                    <RadioGroup.Item value="yearly">Yearly, save 20%</RadioGroup.Item>
+                    <RadioGroup.Item value="monthly">{copy.monthly}</RadioGroup.Item>
+                    <RadioGroup.Item value="yearly">{copy.yearly}</RadioGroup.Item>
                   </RadioGroup.Root>
                 </Field.Group>
-                <Checkbox.Root defaultChecked>Email me the invoice</Checkbox.Root>
-                <Button.Root type="submit">Upgrade to Pro</Button.Root>
+                <Checkbox.Root defaultChecked>{copy.emailInvoice}</Checkbox.Root>
+                <Button.Root type="submit">{copy.upgradeToPro}</Button.Root>
               </form>
             </Card.Body>
           </Card.Root>
 
           <Card.Root className="preview-span-2">
             <Card.Header>
-              <Text.Root as="h3">Invoices</Text.Root>
+              <Text.Root as="h3">{copy.invoices}</Text.Root>
             </Card.Header>
             <Card.Body>
-              <ScrollArea.Root axis="inline" aria-label="Invoices">
+              <ScrollArea.Root axis="inline" aria-label={copy.invoices}>
                 <Table.Root>
                   <Table.Head>
                     <Table.Row>
-                      <Table.HeaderCell scope="col">Invoice</Table.HeaderCell>
-                      <Table.HeaderCell scope="col">Customer</Table.HeaderCell>
-                      <Table.HeaderCell scope="col">Status</Table.HeaderCell>
+                      <Table.HeaderCell scope="col">{copy.invoice}</Table.HeaderCell>
+                      <Table.HeaderCell scope="col">{copy.customer}</Table.HeaderCell>
+                      <Table.HeaderCell scope="col">{copy.status}</Table.HeaderCell>
                       <Table.HeaderCell scope="col" className="preview-num">
-                        Amount
+                        {copy.amount}
                       </Table.HeaderCell>
                     </Table.Row>
                   </Table.Head>
                   <Table.Body>
-                    {INVOICES.map((invoice) => (
+                    {copy.invoiceRows.map((invoice) => (
                       <Table.Row key={invoice.id}>
                         <Table.HeaderCell scope="row">{invoice.id}</Table.HeaderCell>
                         <Table.Cell>{invoice.customer}</Table.Cell>
@@ -258,7 +252,7 @@ export function Preview({ library }: { library?: IconLibrary }) {
               </ScrollArea.Root>
             </Card.Body>
             <Card.Footer>
-              <Pagination.Root aria-label="Invoice pages">
+              <Pagination.Root aria-label={copy.invoicePages}>
                 {paginationRange({ page, count: 9 }).map((item) =>
                   typeof item === 'number' ? (
                     <Pagination.Item key={item}>
@@ -276,28 +270,25 @@ export function Preview({ library }: { library?: IconLibrary }) {
 
           <Card.Root className="preview-span-2">
             <Card.Header>
-              <Text.Root as="h3">Assistant</Text.Root>
+              <Text.Root as="h3">{copy.assistant}</Text.Root>
             </Card.Header>
             <Card.Body>
               <div className="preview-stack">
-                <Message.Root from="user" aria-label="You">
-                  <Message.Content>Can I export last quarter&apos;s invoices?</Message.Content>
+                <Message.Root from="user" aria-label={copy.you}>
+                  <Message.Content>{copy.question}</Message.Content>
                 </Message.Root>
-                <Message.Root aria-label="Assistant">
+                <Message.Root aria-label={copy.assistant}>
                   <Message.Avatar>
                     <Avatar.Root tone={categoryTone('assistant')}>
                       <Avatar.Fallback>A</Avatar.Fallback>
                     </Avatar.Root>
                   </Message.Avatar>
                   <Message.Header>
-                    <strong>Assistant</strong>
+                    <strong>{copy.assistant}</strong>
                   </Message.Header>
                   <Message.Content>
                     <Prose.Root>
-                      <p>
-                        Yes. Open <strong>Billing</strong>, pick the range, then choose <Code.Root>Export CSV</Code.Root>.
-                        Here is last quarter&apos;s file.
-                      </p>
+                      <p>{copy.answer}</p>
                     </Prose.Root>
                   </Message.Content>
                 </Message.Root>
@@ -306,16 +297,16 @@ export function Preview({ library }: { library?: IconLibrary }) {
                   <Attachment.Meta>48 KB</Attachment.Meta>
                 </Attachment.Root>
                 {asked.map((text, index) => (
-                  <Message.Root key={index} from="user" aria-label="You">
+                  <Message.Root key={index} from="user" aria-label={copy.you}>
                     <Message.Content>{text}</Message.Content>
                   </Message.Root>
                 ))}
                 <Composer.Root onSubmit={ask}>
-                  <Field.Root aria-label="Message">
+                  <Field.Root aria-label={copy.messageLabel}>
                     <Field.Textarea
                       value={draft}
                       onChange={(event) => setDraft(event.target.value)}
-                      placeholder="Ask about your billing"
+                      placeholder={copy.askPlaceholder}
                       autoGrow
                       maxRows={4}
                     />
@@ -330,22 +321,22 @@ export function Preview({ library }: { library?: IconLibrary }) {
 
           <Card.Root>
             <Card.Header>
-              <Text.Root as="h3">Notifications</Text.Root>
+              <Text.Root as="h3">{copy.notifications}</Text.Root>
             </Card.Header>
             <Card.Body>
               <div className="preview-stack">
-                <Switch.Root defaultChecked>Mentions</Switch.Root>
-                <Switch.Root defaultChecked>Weekly digest</Switch.Root>
-                <Switch.Root>Product news</Switch.Root>
+                <Switch.Root defaultChecked>{copy.mentions}</Switch.Root>
+                <Switch.Root defaultChecked>{copy.weeklyDigest}</Switch.Root>
+                <Switch.Root>{copy.productNews}</Switch.Root>
                 <div className="preview-chips">
                   {/* A mock, like the buttons: removing does nothing here. */}
                   <Chip.Root tone={categoryTone('design')} onRemove={() => undefined}>
-                    design
+                    {copy.chips.design}
                   </Chip.Root>
                   <Chip.Root tone={categoryTone('billing')} onRemove={() => undefined}>
-                    billing
+                    {copy.chips.billing}
                   </Chip.Root>
-                  <Chip.Root tone="critical">urgent</Chip.Root>
+                  <Chip.Root tone="critical">{copy.chips.urgent}</Chip.Root>
                 </div>
               </div>
             </Card.Body>
@@ -353,33 +344,33 @@ export function Preview({ library }: { library?: IconLibrary }) {
 
           <Card.Root>
             <Card.Header>
-              <Text.Root as="h3">Activity</Text.Root>
+              <Text.Root as="h3">{copy.activity}</Text.Root>
             </Card.Header>
             <Card.Body>
               <Tabs.Root defaultValue="all">
-                <Tabs.List aria-label="Activity">
-                  <Tabs.Tab value="all">All</Tabs.Tab>
-                  <Tabs.Tab value="mine">Mine</Tabs.Tab>
-                  <Tabs.Tab value="loading">Loading</Tabs.Tab>
+                <Tabs.List aria-label={copy.activity}>
+                  <Tabs.Tab value="all">{copy.all}</Tabs.Tab>
+                  <Tabs.Tab value="mine">{copy.mine}</Tabs.Tab>
+                  <Tabs.Tab value="loading">{copy.loading}</Tabs.Tab>
                 </Tabs.List>
                 <Tabs.Panel value="all">
                   <ul className="preview-list">
                     <li>
-                      <span>Grace paid INV-1042</span>
-                      <Badge.Root tone="success">Paid</Badge.Root>
+                      <span>{copy.paidEvent}</span>
+                      <Badge.Root tone="success">{copy.paid}</Badge.Root>
                     </li>
                     <li>
-                      <span>Reminder sent to Globex</span>
-                      <Badge.Root tone="info">Sent</Badge.Root>
+                      <span>{copy.reminderEvent}</span>
+                      <Badge.Root tone="info">{copy.sent}</Badge.Root>
                     </li>
                   </ul>
                 </Tabs.Panel>
                 <Tabs.Panel value="mine">
-                  <Text.Root tone="muted">Nothing assigned to you.</Text.Root>
+                  <Text.Root tone="muted">{copy.nothingAssigned}</Text.Root>
                 </Tabs.Panel>
                 <Tabs.Panel value="loading">
                   <div className="preview-loading">
-                    <Loader.Root aria-label="Loading activity" />
+                    <Loader.Root aria-label={copy.loadingActivity} />
                     <div className="preview-stack">
                       <Skeleton.Root />
                       <Skeleton.Root style={{ inlineSize: '60%' }} />
@@ -392,11 +383,11 @@ export function Preview({ library }: { library?: IconLibrary }) {
 
           <Card.Root>
             <Card.Header>
-              <Text.Root as="h3">Files</Text.Root>
+              <Text.Root as="h3">{copy.files}</Text.Root>
             </Card.Header>
             <Card.Body>
               <div className="preview-stack">
-                <Tree.Root aria-label="Files" defaultExpanded={['exports']}>
+                <Tree.Root aria-label={copy.files} defaultExpanded={['exports']}>
                   <Tree.Item value="exports">
                     <Tree.Label>exports</Tree.Label>
                     <Tree.Group>
@@ -413,7 +404,7 @@ export function Preview({ library }: { library?: IconLibrary }) {
                   </Tree.Item>
                 </Tree.Root>
                 <Field.Group>
-                  <Label.Root htmlFor={ids.storage}>Storage, 92 of 100 GB</Label.Root>
+                  <Label.Root htmlFor={ids.storage}>{copy.storage}</Label.Root>
                   <Meter.Root id={ids.storage} min={0} max={100} low={70} high={90} optimum={0} value={92} />
                 </Field.Group>
               </div>
@@ -422,31 +413,29 @@ export function Preview({ library }: { library?: IconLibrary }) {
 
           <Card.Root>
             <Card.Header>
-              <Text.Root as="h3">Questions</Text.Root>
+              <Text.Root as="h3">{copy.questions}</Text.Root>
             </Card.Header>
             <Card.Body>
-              <Disclosure.Root name={ids.faq} open>
-                <Disclosure.Summary>When am I billed?</Disclosure.Summary>
-                <Text.Root>On the first of each month, for the seats you used.</Text.Root>
-              </Disclosure.Root>
-              <Disclosure.Root name={ids.faq}>
-                <Disclosure.Summary>Can I change plans later?</Disclosure.Summary>
-                <Text.Root>Yes, any time. The new price starts on your next invoice.</Text.Root>
-              </Disclosure.Root>
+              {copy.faq.map((item, index) => (
+                <Disclosure.Root key={item.question} name={ids.faq} open={index === 0}>
+                  <Disclosure.Summary>{item.question}</Disclosure.Summary>
+                  <Text.Root>{item.answer}</Text.Root>
+                </Disclosure.Root>
+              ))}
             </Card.Body>
           </Card.Root>
 
           <div className="preview-span-3 preview-alerts">
             <Alert.Root tone="info" role="none">
               {icons ? <Alert.Icon>{icons.info}</Alert.Icon> : null}
-              <Alert.Title>Scheduled maintenance</Alert.Title>
-              <Alert.Description>Billing is read-only on Sunday from 02:00 to 03:00 UTC.</Alert.Description>
+              <Alert.Title>{copy.maintenance.title}</Alert.Title>
+              <Alert.Description>{copy.maintenance.body}</Alert.Description>
               <Alert.Close />
             </Alert.Root>
             <Alert.Root tone="warning" role="none">
               {icons ? <Alert.Icon>{icons.warning}</Alert.Icon> : null}
-              <Alert.Title>Card expires soon</Alert.Title>
-              <Alert.Description>Update it before 2026-11-01 to keep your plan.</Alert.Description>
+              <Alert.Title>{copy.cardExpiry.title}</Alert.Title>
+              <Alert.Description>{copy.cardExpiry.body}</Alert.Description>
               <Alert.Close />
             </Alert.Root>
           </div>
