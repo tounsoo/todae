@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
+import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button, Card, Checkbox, DensityProvider, ThemeProvider } from '../index';
 import { measureContrast } from '../providers/overrideContrast';
@@ -246,31 +247,77 @@ describe('ThemeProvider override contrast in development', () => {
     vi.restoreAllMocks();
   });
 
-  it("passes every declared pair with Todae's own colors", () => {
+  it("measures every declared pair and passes them with Todae's own colors", () => {
     for (const appearance of ['light', 'dark'] as const) {
       render(<ThemeProvider appearance={appearance} data-testid={appearance} />);
-      expect(measureContrast(screen.getByTestId(appearance)), appearance).toEqual([]);
+      expect(measureContrast(screen.getByTestId(appearance)), appearance).toEqual({ failures: [], skipped: [] });
     }
   });
 
-  it('warns about each pair an override pushes below its minimum', () => {
+  it('warns once about the pairs an override pushes below their minimum', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { rerender } = render(<ThemeProvider appearance="light" overrides={{ 'card.bg': { colorSpace: 'oklch', components: [0.6, 0.15, 30] } }} />);
     expect(warn).not.toHaveBeenCalled();
     // A light accent leaves white on-accent text unreadable.
-    rerender(<ThemeProvider appearance="light" overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.92, 0.05, 90] } }} />);
+    const light = { 'color.accent.default': { colorSpace: 'oklch', components: [0.92, 0.05, 90] } } as const;
+    rerender(<ThemeProvider appearance="light" overrides={light} />);
     expect(warn).toHaveBeenCalledTimes(1);
     const message = String(warn.mock.calls[0]![0]);
     expect(message).toContain('in light');
-    expect(message).toMatch(/"color\.on-accent" on "color\.accent\.default" is Lc \d+\.\d, below 60/);
-    // The same overrides again don't warn twice.
-    rerender(<ThemeProvider appearance="light" overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.92, 0.05, 90] } }} />);
+    expect(message).toMatch(/color\.on-accent on color\.accent\.default is Lc \d+\.\d, below 60/);
+    rerender(<ThemeProvider appearance="light" overrides={{ ...light }} />);
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('warns once under StrictMode', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      <StrictMode>
+        <ThemeProvider appearance="light" overrides={{ 'color.accent.default': { colorSpace: 'oklch', components: [0.92, 0.05, 90] } }} />
+      </StrictMode>,
+    );
     expect(warn).toHaveBeenCalledTimes(1);
   });
 
   it('names the surface a translucent background fails over', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    render(<ThemeProvider appearance="light" overrides={{ 'color.fg.placeholder': { colorSpace: 'oklch', components: [0.8, 0, 0] } }} />);
-    expect(String(warn.mock.calls[0]![0])).toMatch(/"field\.fg\.placeholder" on "field\.bg\.default" over "color\.bg\.subtle" is Lc/);
+    render(
+      <ThemeProvider
+        appearance="light"
+        overrides={{
+          'field.bg.default': { colorSpace: 'oklch', components: [0.5, 0, 0], alpha: 0.2 },
+          'color.fg.placeholder': { colorSpace: 'oklch', components: [0.75, 0, 0] },
+        }}
+      />,
+    );
+    expect(String(warn.mock.calls[0]![0])).toMatch(/field\.fg\.placeholder on field\.bg\.default over color\.bg\.subtle is Lc/);
+  });
+
+  it("doesn't blame a provider for a failure it didn't cause", () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      // Component tokens read an outer provider's overrides through nested providers.
+      <ThemeProvider appearance="light" overrides={{ 'nav.item.fg.current': { colorSpace: 'oklch', components: [0.9, 0, 0] } }}>
+        <ThemeProvider appearance="light" overrides={{ 'card.bg': { colorSpace: 'oklch', components: [0.6, 0.15, 30] } }} data-testid="inner" />
+      </ThemeProvider>,
+    );
+    // Only the outer provider, whose accent fails, warns.
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(measureContrast(screen.getByTestId('inner')).failures.length).toBeGreaterThan(0);
+  });
+
+  it("skips a pair whose tokens aren't defined, instead of reading the inherited color", () => {
+    // A page without Todae's CSS defines none of the tokens.
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    const host = frame.contentDocument!.body;
+    host.style.color = 'black';
+    try {
+      const { failures, skipped } = measureContrast(host);
+      expect(failures).toEqual([]);
+      expect(skipped.length).toBeGreaterThan(0);
+    } finally {
+      frame.remove();
+    }
   });
 });

@@ -74,6 +74,8 @@ export const BUTTON_BASE_PATHS = [
   'button.base.font.size',
   'button.base.font.weight',
   'button.base.gap',
+  'button.base.pressed-ring-width',
+  'button.base.border-width',
   'button.base.icon.size',
   'button.base.font.letter-spacing',
   'button.base.font.text-transform',
@@ -224,7 +226,7 @@ export function validateButtonBase(tokens: Map<string, TokenNode>, loc: string):
   const keys = [...tokens.keys()].filter((path) => path.startsWith('button.base.')).sort();
   const expected = [...BUTTON_BASE_PATHS].sort();
   if (keys.length !== expected.length || keys.some((key, i) => key !== expected[i])) {
-    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight/letter-spacing/text-transform, gap, icon.size`);
+    fail(`${loc} button.base must be radius, padding.x/y, font.size/weight/letter-spacing/text-transform, gap, border-width, pressed-ring-width, icon.size`);
   }
 }
 
@@ -883,12 +885,11 @@ const OVERRIDE_GROUPS = [
   ['COMPONENT_OVERRIDE_KEYS', ['contract']],
 ] as const;
 
-/** Emits the ThemeProvider override keys and their types, grouped by layer. */
 /**
- * The override keys and types ThemeProvider checks, and the contrast pairs it
- * measures in development when overrides change a color.
+ * Emits the ThemeProvider override keys and their types, grouped by layer,
+ * and the contrast pairs it measures in development when overrides change.
  */
-export function emitOverrideKeys(tokens: FlatToken[], pairs: readonly ContrastPair[] = []): string {
+export function emitOverrideKeys(tokens: FlatToken[], pairs: readonly ContrastPair[]): string {
   const types = new Map<string, string>();
   for (const token of tokens) {
     const seen = types.get(token.path);

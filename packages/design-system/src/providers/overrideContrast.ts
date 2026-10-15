@@ -1,3 +1,4 @@
+import { cssVarName } from './themeOverride';
 import { CONTRAST_PAIRS } from './themeOverrideKeys.generated';
 
 // The same APCA-W3 0.0.98G-4g math as the token build (scripts/build-tokens.ts),
@@ -82,40 +83,60 @@ export function parseComputedColor(value: string): Rgba | null {
     return [r, g, b, alpha];
   }
   const scale = fn === 'color' ? 1 : 255;
-  return [num(1, scale)! / scale, num(2, scale)! / scale, num(3, scale)! / scale, alpha];
+  // An out-of-gamut color(srgb …) can have channels past 0–1; a screen clips them.
+  return [clamp01(num(1, scale)! / scale), clamp01(num(2, scale)! / scale), clamp01(num(3, scale)! / scale), alpha];
 }
 
 export type ContrastFailure = { fg: string; bg: string; over?: string; min: number; lc: number };
 
+export type ContrastMeasure = {
+  failures: ContrastFailure[];
+  /** Pairs not measured: a color this check can't read, or a translucent background with no surface under it. */
+  skipped: string[];
+};
+
+const pairKey = ({ fg, bg, over }: { fg: string; bg: string; over?: string }) => `${fg} on ${bg}${over ? ` over ${over}` : ''}`;
+
 /**
  * Measures Todae's declared contrast pairs where `element` sits, from the
  * colors the browser computes there, so aliases, relative colors and
- * overrides all resolve as they render. Pairs with a color the browser
- * serializes in a space this check can't read are skipped.
+ * overrides all resolve as they render. A token not defined there, or a color
+ * in a space this check can't read, skips its pair.
  */
-export function measureContrast(element: HTMLElement): ContrastFailure[] {
+export function measureContrast(element: HTMLElement): ContrastMeasure {
   const probe = element.ownerDocument.createElement('span');
   probe.hidden = true;
+  // Forced colors would replace the probe's color with the system's.
+  probe.style.forcedColorAdjust = 'none';
   element.append(probe);
+  const defined = getComputedStyle(element);
   const colorOf = (path: string): Rgba | null => {
-    probe.style.color = `var(--todae-${path.replaceAll('.', '-')})`;
+    const name = cssVarName(path);
+    // An undefined custom property would leave the probe with the inherited text color.
+    if (defined.getPropertyValue(name).trim() === '') return null;
+    probe.style.color = `var(${name})`;
     return parseComputedColor(getComputedStyle(probe).color);
   };
   const failures: ContrastFailure[] = [];
+  const skipped: string[] = [];
   try {
     for (const { fg, bg, min, over } of CONTRAST_PAIRS) {
       const text = colorOf(fg);
       const back = colorOf(bg);
-      if (!text || !back) continue;
       for (const surface of over ?? [undefined]) {
-        let base: [number, number, number];
-        if (surface === undefined) {
-          if (back[3] !== 1) continue;
-          base = [back[0], back[1], back[2]];
-        } else {
-          const under = colorOf(surface);
-          if (!under || under[3] !== 1) continue;
-          base = composite(back, under);
+        const key = pairKey({ fg, bg, over: surface });
+        let base: [number, number, number] | null = null;
+        if (text && back) {
+          if (surface === undefined) {
+            if (back[3] === 1) base = [back[0], back[1], back[2]];
+          } else {
+            const under = colorOf(surface);
+            if (under && under[3] === 1) base = composite(back, under);
+          }
+        }
+        if (!text || !base) {
+          skipped.push(key);
+          continue;
         }
         const lc = Math.abs(apcaContrast(composite(text, base), base));
         if (lc < min) failures.push(surface === undefined ? { fg, bg, min, lc } : { fg, bg, over: surface, min, lc });
@@ -124,18 +145,37 @@ export function measureContrast(element: HTMLElement): ContrastFailure[] {
   } finally {
     probe.remove();
   }
-  return failures;
+  return { failures, skipped };
 }
 
-/** Warns, once per change of overrides, about each declared pair the overrides push below its minimum. */
-export function warnOverrideContrast(element: HTMLElement, appearance: string): void {
-  const failures = measureContrast(element);
-  if (failures.length === 0) return;
-  const lines = failures.map(
-    ({ fg, bg, over, min, lc }) => `"${fg}" on "${bg}"${over ? ` over "${over}"` : ''} is Lc ${lc.toFixed(1)}, below ${min}`,
-  );
-  console.warn(
-    `ThemeProvider overrides fail ${failures.length} APCA contrast pair(s) in ${appearance}:\n  ${lines.join('\n  ')}\n` +
-      'A company token build fails on these; overrides are only checked here, in development.',
+/**
+ * The pairs that fail where `element` sits but pass without its overrides:
+ * a baseline element with the same appearance, beside it rather than inside
+ * it, measures what the page gives without them. So only a failure the
+ * overrides cause is reported, whatever minimums a company's own build uses.
+ */
+export function overrideContrastFailures(element: HTMLElement, appearance: string): ContrastFailure[] {
+  const baseline = element.ownerDocument.createElement('div');
+  baseline.hidden = true;
+  baseline.setAttribute('data-appearance', appearance);
+  const density = element.closest('[data-density]')?.getAttribute('data-density');
+  if (density) baseline.setAttribute('data-density', density);
+  (element.parentElement ?? element.ownerDocument.body).append(baseline);
+  let before: Set<string>;
+  try {
+    before = new Set(measureContrast(baseline).failures.map(pairKey));
+  } finally {
+    baseline.remove();
+  }
+  return measureContrast(element).failures.filter((failure) => !before.has(pairKey(failure)));
+}
+
+/** The message for the pairs an override pushes below Todae's minimum, or null when none does. */
+export function overrideContrastMessage(failures: ContrastFailure[], appearance: string): string | null {
+  if (failures.length === 0) return null;
+  const lines = failures.map(({ fg, bg, over, min, lc }) => `${pairKey({ fg, bg, over })} is Lc ${lc.toFixed(1)}, below ${min}`);
+  return (
+    `ThemeProvider overrides push ${failures.length} of Todae's APCA contrast pairs below their minimum in ${appearance}:\n  ${lines.join('\n  ')}\n` +
+    'Overrides are only checked here, in development.'
   );
 }

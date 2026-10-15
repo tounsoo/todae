@@ -24,6 +24,8 @@ describe('override contrast math', () => {
     expect(parseComputedColor('oklch(1 0 0)')).toEqual([...builtOklch({ l: 1, c: 0, h: 0 }), 1]);
     expect(parseComputedColor('oklch(0.6 0.012 255 / 0.2)')).toEqual([...builtOklch({ l: 0.6, c: 0.012, h: 255 }), 0.2]);
     expect(parseComputedColor('oklch(0.5 none 0)')).toEqual([...builtOklch({ l: 0.5, c: 0, h: 0 }), 1]);
+    // Out-of-gamut channels clip, as a screen does, instead of turning into NaN.
+    expect(parseComputedColor('color(srgb 1.32 -0.45 -0.31)')).toEqual([1, 0, 0, 1]);
     expect(parseComputedColor('lab(50 20 30)')).toBeNull();
     expect(parseComputedColor('color(display-p3 1 0 0)')).toBeNull();
     expect(parseComputedColor('var(--todae-x)')).toBeNull();

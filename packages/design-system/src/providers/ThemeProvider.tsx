@@ -2,12 +2,9 @@
 
 import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ComponentProps, type CSSProperties } from 'react';
 import { useComposedRefs } from '../components/props';
-import { warnOverrideContrast } from './overrideContrast';
+import { overrideContrastFailures, overrideContrastMessage } from './overrideContrast';
 import {
-  cssVarName,
   themeOverrideStyle,
-  themeOverrideType,
-  isThemeOverrideKey,
   type ThemeOverride,
   type ThemeOverrideTypes,
   type ThemeOverrideValue,
@@ -59,17 +56,18 @@ export function ThemeProvider<Extra extends string = never>({
   const inputs = Object.fromEntries(Object.entries(vars).map(([name, value]) => [`--_${name.slice(2)}`, value]));
   const element = useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs(element, ref);
-  // In development, measure Todae's contrast pairs whenever the color overrides change.
-  const colors = DEV
-    ? Object.keys(overrides ?? {})
-        .filter((key) => (isThemeOverrideKey(key) ? themeOverrideType(key) : overrideTypes?.[key as Extra]) === 'color')
-        .map((key) => `${key}:${vars[cssVarName(key)] ?? ''}`)
-        .join(';')
-    : '';
+  // In development, measure Todae's contrast pairs whenever the overrides change.
+  const overridden = DEV ? Object.entries(vars).join(';') : '';
+  const warned = useRef<string | null>(null);
   useEffect(() => {
-    if (!DEV || colors === '' || !element.current) return;
-    warnOverrideContrast(element.current, resolved);
-  }, [colors, resolved]);
+    if (!DEV || overridden === '' || !element.current) return;
+    // During hydration `resolved` is still the server's guess, so read the appearance as it renders now.
+    const now = appearance === 'system' ? getSnapshot() : appearance;
+    const message = overrideContrastMessage(overrideContrastFailures(element.current, now), now);
+    // A ref survives StrictMode's second mount, so the same result warns once.
+    if (message && message !== warned.current) console.warn(message);
+    warned.current = message;
+  }, [overridden, appearance, resolved]);
   return (
     <AppearanceContext.Provider value={resolved}>
       <ThemeVarsContext.Provider value={vars}>

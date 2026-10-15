@@ -4,6 +4,7 @@ import { useGlyphs } from '../providers/GlyphsProvider';
 import { CrossGlyph, glyphOr } from './glyphs';
 import type { BadgeTone } from './Badge';
 import { cx } from './cx';
+import { VisuallyHidden } from './VisuallyHidden';
 import styles from './Chip.module.css';
 
 /** The same tones as Badge. */
@@ -82,7 +83,7 @@ function ChipOverflow({
       <span className={styles.label} aria-hidden>
         +{overflowCount}
       </span>
-      <span className={styles.vh}>{name}</span>
+      <VisuallyHidden.Root>{name}</VisuallyHidden.Root>
     </span>
   );
 }

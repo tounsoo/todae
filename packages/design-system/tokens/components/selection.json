@@ -34,7 +34,8 @@
       "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/subtle/$value" } }
     },
     "thumb": {
-      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } }
+      "bg": { "$type": "color", "$value": { "$ref": "#/color/bg/surface/$value" } },
+      "inset": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } }
     }
   }
 }
