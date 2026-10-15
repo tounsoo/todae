@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { apcaContrast as builtApca, oklchToSrgb as builtOklch } from '../../scripts/build-tokens';
-import { apcaContrast, oklchToSrgb, parseComputedColor } from './overrideContrast';
+import { apcaContrast as builtApca, composite as builtComposite, oklchToSrgb as builtOklch } from '../../scripts/build-tokens';
+import { apcaContrast, composite, oklchToSrgb, parseComputedColor } from './overrideContrast';
 
 describe('override contrast math', () => {
   it('measures exactly as the token build does', () => {
@@ -15,6 +15,12 @@ describe('override contrast math', () => {
     }
     const samples = [0, 0.2, 0.45, 0.6, 0.9, 1].map((v): [number, number, number] => [v, v * 0.9, v * 0.8]);
     for (const text of samples) for (const back of samples) expect(apcaContrast(text, back)).toBe(builtApca(text, back));
+    for (const alpha of [0, 0.2, 0.45, 1]) {
+      for (const back of samples) {
+        const top = { l: 0.6, c: 0.12, h: 250, alpha };
+        expect(composite([...builtOklch(top), alpha], back)).toEqual(builtComposite(top, back));
+      }
+    }
   });
 
   it('reads the color syntaxes browsers compute', () => {

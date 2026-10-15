@@ -889,7 +889,7 @@ const OVERRIDE_GROUPS = [
  * Emits the ThemeProvider override keys and their types, grouped by layer,
  * and the contrast pairs it measures in development when overrides change.
  */
-export function emitOverrideKeys(tokens: FlatToken[], pairs: readonly ContrastPair[]): string {
+export function emitOverrideKeys(tokens: FlatToken[], pairs: readonly ContrastPair[] = []): string {
   const types = new Map<string, string>();
   for (const token of tokens) {
     const seen = types.get(token.path);

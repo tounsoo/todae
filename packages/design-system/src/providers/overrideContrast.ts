@@ -51,7 +51,7 @@ export function apcaContrast(text: readonly number[], background: readonly numbe
 }
 
 /** Paints `top` with its alpha over an opaque `bottom`, as browsers composite. */
-function composite(top: Rgba, bottom: readonly number[]): [number, number, number] {
+export function composite(top: Rgba, bottom: readonly number[]): [number, number, number] {
   return [0, 1, 2].map((i) => top[i]! * top[3] + bottom[i]! * (1 - top[3])) as [number, number, number];
 }
 
@@ -110,12 +110,18 @@ export function measureContrast(element: HTMLElement): ContrastMeasure {
   probe.style.forcedColorAdjust = 'none';
   element.append(probe);
   const defined = getComputedStyle(element);
+  const colors = new Map<string, Rgba | null>();
   const colorOf = (path: string): Rgba | null => {
+    if (colors.has(path)) return colors.get(path)!;
     const name = cssVarName(path);
+    let color: Rgba | null = null;
     // An undefined custom property would leave the probe with the inherited text color.
-    if (defined.getPropertyValue(name).trim() === '') return null;
-    probe.style.color = `var(${name})`;
-    return parseComputedColor(getComputedStyle(probe).color);
+    if (defined.getPropertyValue(name).trim() !== '') {
+      probe.style.color = `var(${name})`;
+      color = parseComputedColor(getComputedStyle(probe).color);
+    }
+    colors.set(path, color);
+    return color;
   };
   const failures: ContrastFailure[] = [];
   const skipped: string[] = [];
@@ -149,30 +155,43 @@ export function measureContrast(element: HTMLElement): ContrastMeasure {
 }
 
 /**
- * The pairs that fail where `element` sits but pass without its overrides:
- * a baseline element with the same appearance, beside it rather than inside
- * it, measures what the page gives without them. So only a failure the
- * overrides cause is reported, whatever minimums a company's own build uses.
+ * The pairs that fail on `element` with its overrides but pass on the same
+ * element without them, so a failure from the page around it, a class, the
+ * caller's style or a company's own minimums isn't blamed on the overrides.
+ * `names` are the custom properties the overrides set on `element`'s inline
+ * style; `underneath` holds the caller's own value for any of those names,
+ * which an override replaced.
  */
-export function overrideContrastFailures(element: HTMLElement, appearance: string): ContrastFailure[] {
-  const baseline = element.ownerDocument.createElement('div');
-  baseline.hidden = true;
-  baseline.setAttribute('data-appearance', appearance);
-  const density = element.closest('[data-density]')?.getAttribute('data-density');
-  if (density) baseline.setAttribute('data-density', density);
-  (element.parentElement ?? element.ownerDocument.body).append(baseline);
+export function overrideContrastFailures(element: HTMLElement, names: readonly string[], underneath: Readonly<Record<string, string>>): ContrastFailure[] {
+  // Measure with the overrides first: that style flush is the one newly mounted
+  // elements take as their first style, so nothing transitions from the defaults.
+  const failures = measureContrast(element).failures;
+  if (failures.length === 0) return failures;
+  const saved = element.getAttribute('style');
   let before: Set<string>;
   try {
-    before = new Set(measureContrast(baseline).failures.map(pairKey));
+    for (const name of names) {
+      const value = underneath[name];
+      if (value === undefined) element.style.removeProperty(name);
+      else element.style.setProperty(name, value);
+    }
+    before = new Set(measureContrast(element).failures.map(pairKey));
   } finally {
-    baseline.remove();
+    if (saved === null) element.removeAttribute('style');
+    else element.setAttribute('style', saved);
+    // Flush again now, so a transition the baseline started ends where it began.
+    void getComputedStyle(element).color;
   }
-  return measureContrast(element).failures.filter((failure) => !before.has(pairKey(failure)));
+  return failures.filter((failure) => !before.has(pairKey(failure)));
 }
 
-/** The message for the pairs an override pushes below Todae's minimum, or null when none does. */
-export function overrideContrastMessage(failures: ContrastFailure[], appearance: string): string | null {
-  if (failures.length === 0) return null;
+/** A key for a set of failures, the same while the same pairs fail. */
+export function failureKey(failures: readonly ContrastFailure[]): string {
+  return failures.map(pairKey).sort().join('|');
+}
+
+/** The message naming the pairs the overrides push below Todae's minimum. */
+export function overrideContrastMessage(failures: ContrastFailure[], appearance: string): string {
   const lines = failures.map(({ fg, bg, over, min, lc }) => `${pairKey({ fg, bg, over })} is Lc ${lc.toFixed(1)}, below ${min}`);
   return (
     `ThemeProvider overrides push ${failures.length} of Todae's APCA contrast pairs below their minimum in ${appearance}:\n  ${lines.join('\n  ')}\n` +

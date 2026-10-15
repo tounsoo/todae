@@ -306,6 +306,72 @@ describe('ThemeProvider override contrast in development', () => {
     expect(measureContrast(screen.getByTestId('inner')).failures.length).toBeGreaterThan(0);
   });
 
+  const failingNav = 'oklch(0.9 0 0)';
+  const card: ThemeOverride = { 'card.bg': { colorSpace: 'oklch', components: [0.6, 0.15, 30] } };
+  const lightAccent = (l: number): ThemeOverride => ({ 'color.accent.default': { colorSpace: 'oklch', components: [l, 0.05, 90] } });
+
+  it("doesn't blame overrides for a failure from a class, the caller's style or a shadow root", () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const sheet = document.createElement('style');
+    sheet.textContent = `.brand { --todae-nav-item-fg-current: ${failingNav}; }`;
+    document.head.append(sheet);
+    try {
+      render(<ThemeProvider appearance="light" className="brand" overrides={card} />);
+      render(<ThemeProvider appearance="light" style={{ ['--todae-nav-item-fg-current' as string]: failingNav }} overrides={card} />);
+      const host = document.createElement('div');
+      document.body.append(host);
+      const shadow = host.attachShadow({ mode: 'open' });
+      shadow.innerHTML = `<style>div[data-appearance] { --todae-nav-item-fg-current: ${failingNav}; }</style><div></div>`;
+      render(<ThemeProvider appearance="light" overrides={card} />, { container: shadow.lastElementChild as HTMLElement });
+      expect(warn).not.toHaveBeenCalled();
+      // An override that does fail is still named, and the pair that failed already isn't.
+      render(<ThemeProvider appearance="light" className="brand" overrides={lightAccent(0.92)} />);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]![0])).toContain('color.on-accent on color.accent.default');
+      expect(String(warn.mock.calls[0]![0])).not.toContain('nav.item.fg.current');
+      host.remove();
+    } finally {
+      sheet.remove();
+    }
+  });
+
+  it("measures against the caller's own value for a token it also overrides", () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      <ThemeProvider
+        appearance="light"
+        style={{ ['--todae-color-accent-default' as string]: 'oklch(0.92 0.05 90)' }}
+        overrides={lightAccent(0.92)}
+      />,
+    );
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('warns again when failing overrides come back, and not while the same pairs fail', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { rerender } = render(<ThemeProvider appearance="light" overrides={lightAccent(0.92)} />);
+    rerender(<ThemeProvider appearance="light" overrides={lightAccent(0.93)} />);
+    expect(warn).toHaveBeenCalledTimes(1);
+    rerender(<ThemeProvider appearance="light" overrides={{}} />);
+    rerender(<ThemeProvider appearance="light" overrides={lightAccent(0.92)} />);
+    expect(warn).toHaveBeenCalledTimes(2);
+    rerender(<ThemeProvider appearance="light" overrides={lightAccent(0.3)} />);
+    rerender(<ThemeProvider appearance="light" overrides={lightAccent(0.92)} />);
+    expect(warn).toHaveBeenCalledTimes(3);
+  });
+
+  it('leaves the provider as it was, with no transition from the defaults', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      <ThemeProvider appearance="light" overrides={lightAccent(0.92)} data-testid="provider">
+        <span style={{ transition: 'color 100s', color: 'var(--todae-color-accent-default)' }}>Text</span>
+      </ThemeProvider>,
+    );
+    const provider = screen.getByTestId('provider');
+    expect(document.getAnimations()).toEqual([]);
+    expect(provider.style.getPropertyValue('--todae-color-accent-default')).not.toBe('');
+  });
+
   it("skips a pair whose tokens aren't defined, instead of reading the inherited color", () => {
     // A page without Todae's CSS defines none of the tokens.
     const frame = document.createElement('iframe');

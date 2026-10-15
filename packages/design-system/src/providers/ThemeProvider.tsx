@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ComponentProps, type CSSProperties } from 'react';
 import { useComposedRefs } from '../components/props';
-import { overrideContrastFailures, overrideContrastMessage } from './overrideContrast';
+import { failureKey, overrideContrastFailures, overrideContrastMessage } from './overrideContrast';
 import {
   themeOverrideStyle,
   type ThemeOverride,
@@ -39,6 +39,15 @@ function getServerSnapshot(): ResolvedAppearance {
   return 'light';
 }
 
+/** The custom properties the overrides set, with their values and the caller's own value for any they replace. */
+function contrastInputs(vars: Record<string, string>, inputs: Record<string, string>, style: CSSProperties | undefined) {
+  const names = [...Object.keys(vars), ...Object.keys(inputs)];
+  const own = (style ?? {}) as Record<string, unknown>;
+  const underneath: Record<string, string> = {};
+  for (const name of names) if (own[name] !== undefined) underneath[name] = String(own[name]);
+  return { names, values: vars, underneath };
+}
+
 export function ThemeProvider<Extra extends string = never>({
   appearance = 'system',
   overrides,
@@ -56,18 +65,25 @@ export function ThemeProvider<Extra extends string = never>({
   const inputs = Object.fromEntries(Object.entries(vars).map(([name, value]) => [`--_${name.slice(2)}`, value]));
   const element = useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs(element, ref);
-  // In development, measure Todae's contrast pairs whenever the overrides change.
-  const overridden = DEV ? Object.entries(vars).join(';') : '';
+  // In development, check Todae's contrast pairs whenever the overrides change. The
+  // key carries what the effect needs as one string, so it re-runs only on a change.
+  const contrastKey = DEV && Object.keys(vars).length > 0 ? JSON.stringify(contrastInputs(vars, inputs, style)) : '';
   const warned = useRef<string | null>(null);
   useEffect(() => {
-    if (!DEV || overridden === '' || !element.current) return;
+    if (!DEV || !element.current) return;
+    if (contrastKey === '') {
+      warned.current = null;
+      return;
+    }
+    const { names, underneath } = JSON.parse(contrastKey) as ReturnType<typeof contrastInputs>;
     // During hydration `resolved` is still the server's guess, so read the appearance as it renders now.
     const now = appearance === 'system' ? getSnapshot() : appearance;
-    const message = overrideContrastMessage(overrideContrastFailures(element.current, now), now);
-    // A ref survives StrictMode's second mount, so the same result warns once.
-    if (message && message !== warned.current) console.warn(message);
-    warned.current = message;
-  }, [overridden, appearance, resolved]);
+    const failures = overrideContrastFailures(element.current, names, underneath);
+    const key = failures.length === 0 ? null : `${now}:${failureKey(failures)}`;
+    // A ref survives StrictMode's second mount, so the same failing pairs warn once.
+    if (key && key !== warned.current) console.warn(overrideContrastMessage(failures, now));
+    warned.current = key;
+  }, [contrastKey, appearance, resolved]);
   return (
     <AppearanceContext.Provider value={resolved}>
       <ThemeVarsContext.Provider value={vars}>
