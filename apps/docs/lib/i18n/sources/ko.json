@@ -674,8 +674,8 @@
     "(section order)": "a507fd436fd2"
   },
   "utilities/compose-refs": {
-    "# composeRefs": "eaabc7780f63",
-    "## When to use": "0f97b2cac4ff",
+    "# composeRefs": "4b6b82815c66",
+    "## When to use": "bc476ad94d8b",
     "## Props": "d83af1624b33",
     "(section order)": "8da5a3f9ff32"
   },
@@ -686,7 +686,7 @@
     "## Accessible composition": "63d5e085e78a",
     "## When to use": "d57fe8233a0b",
     "### GlyphsProvider": "62ce17abb01f",
-    "### useGlyphs": "d4a549493111",
+    "### useGlyphs": "60c48260decd",
     "## Props": "9169ca6f0856",
     "(section order)": "ea7e5eb50a21"
   },
@@ -702,8 +702,8 @@
     "(section order)": "bf6c068e392e"
   },
   "utilities/theme-override-style": {
-    "# themeOverrideStyle": "1a6d9a502d1b",
-    "## When to use": "7f2943a94b22",
+    "# themeOverrideStyle": "eb5d8639f7ac",
+    "## When to use": "ef727144bb95",
     "## Props": "35105b6c4f4f",
     "(section order)": "498547eab27f"
   },
@@ -825,7 +825,7 @@
   },
   "utilities/use-sheet-presentation": {
     "(top)": "3a8163d5375e",
-    "# useSheetPresentation": "0e88077db182",
+    "# useSheetPresentation": "e0032f4eaecd",
     "## When to use": "fca42e377dfb",
     "## Props": "ab2f16f240ae",
     "(section order)": "6d31ec8b55f3"

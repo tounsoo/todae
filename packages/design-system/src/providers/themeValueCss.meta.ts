@@ -14,7 +14,7 @@ export const meta = {
       name: 'value',
       type: 'ThemeOverrideValue',
       required: true,
-      description: "A value of the key's type. A value of another type gives an empty string.",
+      description: "A value of the key's type. It is not checked, so read typed text with parseThemeValue first.",
     },
   ],
 } as const satisfies ComponentMeta;

@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'themeOverrideType',
-  description: "themeOverrideType(key) returns the DTCG $type of one of Todae's ThemeProvider override keys, such as color or dimension.",
+  description: "themeOverrideType(key) returns the $type of one of Todae's ThemeProvider override keys, such as color or dimension.",
   props: [
     {
       name: 'key',

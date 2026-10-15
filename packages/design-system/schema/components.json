@@ -2858,7 +2858,7 @@
     },
     {
       "name": "parseThemeColor",
-      "description": "parseThemeColor(text) returns an oklch ThemeColorValue for a six-digit #rrggbb color or an oklch() color, converting hex to oklch, or null for anything else.",
+      "description": "parseThemeColor(text) returns an oklch ThemeColorValue for a six-digit #rrggbb color or an oklch() color written in plain numbers, converting hex to oklch, or null for anything else.",
       "props": [
         {
           "name": "text",
@@ -3623,7 +3623,7 @@
     },
     {
       "name": "themeOverrideStyle",
-      "description": "themeOverrideStyle(overrides, overrideTypes) returns the custom properties ThemeProvider sets for overrides, as a style object such as { \"--todae-color-fg-default\": \"oklch(0.2 0 0)\" }. An unknown key or a value of the wrong type throws in development and is skipped in production.",
+      "description": "themeOverrideStyle(overrides, overrideTypes) returns the public --todae-* custom properties ThemeProvider sets for overrides, as a style object such as { \"--todae-color-fg-default\": \"oklch(0.2 0 0)\" }. An unknown key or a value of the wrong type throws in development and is skipped in production.",
       "props": [
         {
           "name": "overrides",
@@ -3641,7 +3641,7 @@
     },
     {
       "name": "themeOverrideType",
-      "description": "themeOverrideType(key) returns the DTCG $type of one of Todae's ThemeProvider override keys, such as color or dimension.",
+      "description": "themeOverrideType(key) returns the $type of one of Todae's ThemeProvider override keys, such as color or dimension.",
       "props": [
         {
           "name": "key",
@@ -3696,7 +3696,7 @@
           "name": "value",
           "type": "ThemeOverrideValue",
           "required": true,
-          "description": "A value of the key's type. A value of another type gives an empty string."
+          "description": "A value of the key's type. It is not checked, so read typed text with parseThemeValue first."
         }
       ]
     },
@@ -4178,7 +4178,7 @@
     },
     {
       "name": "useAppearance",
-      "description": "useAppearance() returns light or dark: the nearest ThemeProvider's appearance, with system resolved through prefers-color-scheme. It is light outside any ThemeProvider and when rendered on the server.",
+      "description": "useAppearance() returns light or dark: the nearest ThemeProvider's appearance, with system resolved through prefers-color-scheme. It is light outside any ThemeProvider, and with system it is light on the server and while hydrating.",
       "props": []
     },
     {
@@ -4739,7 +4739,7 @@
     },
     {
       "name": "useStrings",
-      "description": "useStrings() returns the strings in effect: the nearest StringsProvider's, merged over its parents', else English. Use it for text your own components write.",
+      "description": "useStrings() returns the strings in effect: the nearest StringsProvider's, merged over its parents', else English. Use it in your own components for text Todae's strings cover.",
       "props": []
     },
     {

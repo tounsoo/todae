@@ -3,7 +3,7 @@ import type { ComponentMeta } from '../meta.ts';
 export const meta = {
   name: 'themeOverrideStyle',
   description:
-    'themeOverrideStyle(overrides, overrideTypes) returns the custom properties ThemeProvider sets for overrides, as a style object such as { "--todae-color-fg-default": "oklch(0.2 0 0)" }. An unknown key or a value of the wrong type throws in development and is skipped in production.',
+    'themeOverrideStyle(overrides, overrideTypes) returns the public --todae-* custom properties ThemeProvider sets for overrides, as a style object such as { "--todae-color-fg-default": "oklch(0.2 0 0)" }. An unknown key or a value of the wrong type throws in development and is skipped in production.',
   props: [
     {
       name: 'overrides',

@@ -7,16 +7,16 @@ const popover = usePopover({ open, onOpenChange: setOpen });
 const mine = useRef<HTMLDivElement>(null);
 const { ref, ...props } = popover.getPopoverProps();
 
-<div {...props} ref={composeRefs(ref, mine)}>…</div>
+<Popover.Root {...props} ref={composeRefs(ref, mine)}>…</Popover.Root>
 ```
 
 Each call returns a new callback, so React detaches and reattaches it on every render.
 
 ## When to use
 
-**When:** Two or more refs on one element, such as your own and one from a Todae hook.
+**When:** Two or more refs on one element, such as your own and one from a prop getter that takes no props, like `getPopoverProps()`.
 
-**When not:** One ref → pass it as is.
+**When not:** One ref → pass it as is. A getter that takes your props, such as `getTriggerProps({ ref })` → pass your ref through it, which keeps it attached across renders.
 
 ## Props
 

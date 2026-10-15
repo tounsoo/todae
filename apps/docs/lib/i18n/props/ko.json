@@ -2651,8 +2651,8 @@
       "ko": "THEME_OVERRIDE_KEYS의 키."
     },
     "value": {
-      "en": "A value of the key's type. A value of another type gives an empty string.",
-      "ko": "키의 타입에 맞는 값. 다른 타입의 값이면 빈 문자열이 됩니다."
+      "en": "A value of the key's type. It is not checked, so read typed text with parseThemeValue first.",
+      "ko": "키의 타입에 맞는 값. 검사하지 않으므로, 입력된 텍스트는 먼저 parseThemeValue로 읽으세요."
     }
   },
   "themeColorCss": {

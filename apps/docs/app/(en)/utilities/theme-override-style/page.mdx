@@ -1,22 +1,22 @@
 # themeOverrideStyle
 
-`themeOverrideStyle(overrides, overrideTypes)` returns the custom properties [ThemeProvider](/tokens) sets for its `overrides`, as a style object. It takes the same arguments as ThemeProvider's `overrides` and `overrideTypes` props and checks them the same way: an unknown key or a value of the wrong type throws in development and is left out in production.
+`themeOverrideStyle(overrides, overrideTypes)` returns the public `--todae-*` custom properties [ThemeProvider](/tokens) sets for its `overrides`, as a style object. It takes the same arguments as ThemeProvider's `overrides` and `overrideTypes` props and checks them the same way: an unknown key or a value of the wrong type throws in development and is left out in production.
 
-```tsx
+```ts
 themeOverrideStyle({ 'color.fg.default': { colorSpace: 'oklch', components: [0.2, 0, 0] } });
 // { '--todae-color-fg-default': 'oklch(0.2 0 0)' }
 ```
 
 The other helpers here work on one key or value, for a tool that edits overrides as text, such as a theme editor:
 
-- `themeOverrideType(key)` returns the DTCG `$type` of one of Todae's override keys, such as `color` or `dimension`.
+- `themeOverrideType(key)` returns the `$type` of one of Todae's override keys, such as `color` or `dimension`.
 - `parseThemeValue(key, text)` reads text as a value of the key's type, such as `1.5rem` or `200ms`, and returns `null` when it is not one. `parseThemeColor(text)` reads a `#rrggbb` or `oklch()` color.
 - `themeValueCss(key, value)` and `themeColorCss(value)` write a value as CSS.
 - `cssVarName(path)` returns the custom property for a token path, such as `--todae-color-fg-default` for `color.fg.default`.
 
 ## When to use
 
-**When:** Theme overrides you build or edit yourself, such as a theme editor or your own provider, that must match what ThemeProvider writes.
+**When:** A tool that builds or edits theme overrides, such as a theme editor, and reads, checks or shows them as CSS.
 
 **When not:** Overrides for part of a page → [ThemeProvider](/tokens) `overrides`. Values known at build time → a company token package.
 
