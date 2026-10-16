@@ -1,5 +1,4 @@
 /// <reference types="@vitest/browser/providers/playwright" />
-import { Text } from '@tounsoo/todae/text';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { cdp, page, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
@@ -16,6 +15,7 @@ import { PropsTableView, type PropsTableRow } from './PropsTableView';
 import schema from '@tounsoo/todae/schema/components.json';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { Sidebar } from './Sidebar';
+import { SiteFooter } from './SiteFooter';
 import { clippedRings } from '../test/clippedRings';
 
 afterEach(cleanup);
@@ -135,16 +135,7 @@ describe('narrow screens', () => {
           <Playground locale={locale} />
         </main>
         {/* SiteShell's footer comes after the playground on every page. */}
-        <footer className="site-footer">
-          <div className="site-footer-inner">
-            <Text.Root size="s" tone="muted">
-              Todae is released under the <a href="#license">MIT License</a>.
-            </Text.Root>
-            <Text.Root size="s" tone="muted">
-              Copyright © 2026 Ben Ho
-            </Text.Root>
-          </div>
-        </footer>
+        <SiteFooter locale={locale} />
       </Providers>,
     );
     return {
@@ -257,8 +248,8 @@ describe('narrow screens', () => {
     expect(stage.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop() + 1);
     const footer = document.querySelector<HTMLElement>('.site-footer')!;
     expect(footer.getBoundingClientRect().bottom).toBeLessThanOrEqual(barTop() + 1);
-    // The footer's link, scrolled behind the bar, scrolls clear of it on focus.
-    const link = within(footer).getByRole('link');
+    // The footer's last link, scrolled behind the bar, scrolls clear of it on focus.
+    const link = within(footer).getByRole('link', { name: 'Changelog' });
     scrollBy(0, link.getBoundingClientRect().top - barTop() - 4);
     await frame();
     expect(link.getBoundingClientRect().top).toBeGreaterThan(barTop());
@@ -338,6 +329,42 @@ describe('narrow screens', () => {
     const sheet = await screen.findByRole('dialog', { name: '테마 컨트롤' });
     expect(within(sheet).getAllByRole('button', { name: '테마 컨트롤 크기 조절' })).toHaveLength(1);
     expect(within(sheet).getByRole('button', { name: '테마 컨트롤 닫기' })).toBeTruthy();
+  });
+});
+
+describe('site footer', () => {
+  const lines = () => {
+    const [license, release, copyright] = [...document.querySelectorAll<HTMLElement>('.site-footer-inner > *')].map((line) =>
+      line.getBoundingClientRect(),
+    );
+    const inner = document.querySelector<HTMLElement>('.site-footer-inner')!;
+    const padding = parseFloat(getComputedStyle(inner).paddingInlineEnd);
+    return { license: license!, release: release!, copyright: copyright!, end: inner.getBoundingClientRect().right - padding };
+  };
+
+  // A sweep, since where the lines wrap depends on the language and the version.
+  it('ends a shared line with the copyright, and starts the copyright’s own line, at every width', async () => {
+    const shared: string[] = [];
+    for (const locale of ['en', 'ko'] as const) {
+      render(<SiteFooter locale={locale} />);
+      for (let width = 320; width <= 1280; width += 40) {
+        await page.viewport(width, 600);
+        await frame();
+        const { license, release, copyright, end } = lines();
+        const at = `${locale} at ${width}px`;
+        if (copyright.top < release.bottom) {
+          shared.push(at);
+          expect(Math.abs(copyright.right - end), at).toBeLessThan(1);
+        } else {
+          expect(copyright.left, at).toBe(license.left);
+        }
+      }
+      cleanup();
+    }
+    // Both cases come up, the shared line on a screen narrower than a tablet too.
+    expect(shared).toContain('ko at 720px');
+    expect(shared).toContain('en at 1280px');
+    expect(shared).not.toContain('en at 320px');
   });
 });
 
