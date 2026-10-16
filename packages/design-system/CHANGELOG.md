@@ -1,5 +1,11 @@
 # @tounsoo/todae
 
+## 0.1.1
+
+### Patch Changes
+
+- [#175](https://github.com/tounsoo/todae/pull/175) [`bf812de`](https://github.com/tounsoo/todae/commit/bf812deab1a85e74410e271fd90ce9dab975ade7) Thanks [@tounsoo](https://github.com/tounsoo)! - The npm README now has a browser support section, with a note on Temporal.
+
 ## 0.1.0
 
 ### Minor Changes
