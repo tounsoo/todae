@@ -1,13 +1,10 @@
 import type { ReactNode } from 'react';
 import '@tounsoo/todae/todae.css';
 import { Stack } from '@tounsoo/todae/stack';
-import { Text } from '@tounsoo/todae/text';
 import { VisuallyHidden } from '@tounsoo/todae/visually-hidden';
 import { BrandMark } from '../lib/brand';
 import { localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
-import { LICENSE } from '../lib/license';
-import { RELEASE } from '../lib/version';
 // Reads the file system, so SiteShell renders on the server only.
 import { untranslatedByLocale } from '../lib/i18n/pages';
 import { GitHubIcon } from './icons';
@@ -18,6 +15,7 @@ import { MobileNav } from './MobileNav';
 import { APPEARANCE_SCRIPT } from './appearanceScript';
 import { Providers } from './Providers';
 import { Sidebar } from './Sidebar';
+import { SiteFooter } from './SiteFooter';
 import { SiteLink } from './SiteLink';
 import { SITE_GROUPS } from './siteGroups';
 import { ThemeSwitcher } from './ThemeSwitcher';
@@ -44,7 +42,6 @@ export function SiteShell({
     [FIRST_COMPONENT, dict.topLinks.components],
     ['/playground', dict.topLinks.playground],
   ] as const;
-  const [licenseBefore, licenseAfter] = dict.license.split('{license}');
   return (
     <html lang={locale}>
       <body>
@@ -89,22 +86,7 @@ export function SiteShell({
               {children}
             </main>
           </div>
-          <footer className="site-footer">
-            <div className="site-footer-inner">
-              <Text.Root size="s" tone="muted">
-                {licenseBefore}
-                <SiteLink href={LICENSE.href}>{dict.licenseName}</SiteLink>
-                {licenseAfter}
-              </Text.Root>
-              <Text.Root size="s" tone="muted">
-                {`${dict.version.replace('{version}', RELEASE.version)} · `}
-                <SiteLink href={RELEASE.changelogHref}>{dict.changelog}</SiteLink>
-              </Text.Root>
-              <Text.Root size="s" tone="muted">
-                {`Copyright © ${LICENSE.year} ${LICENSE.holder}`}
-              </Text.Root>
-            </div>
-          </footer>
+          <SiteFooter locale={locale} />
         </Providers>
       </body>
     </html>

@@ -414,12 +414,13 @@ describe('docs locales', () => {
 
   it('shows the package version and links the changelog in the footer, in each language', () => {
     for (const locale of LOCALES) {
-      const { version, changelog } = DICTIONARIES[locale];
-      expect(version.split('{version}'), locale).toHaveLength(2);
+      const { release, changelog } = DICTIONARIES[locale];
+      expect(release.split('{version}'), locale).toHaveLength(2);
+      expect(release.split('{changelog}'), locale).toHaveLength(2);
       const markup = renderToStaticMarkup(<SiteShell locale={locale}>x</SiteShell>);
       const footer = new DOMParser().parseFromString(markup, 'text/html').querySelector('footer');
       const releaseLine = footer?.querySelectorAll('p')[1];
-      expect(releaseLine?.textContent, locale).toBe(`${version.replace('{version}', RELEASE.version)} · ${changelog}`);
+      expect(releaseLine?.textContent, locale).toBe(release.replace('{version}', RELEASE.version).replace('{changelog}', changelog));
       const link = releaseLine?.querySelector('a');
       expect(link?.textContent, locale).toBe(changelog);
       expect(link?.getAttribute('href'), locale).toBe(RELEASE.changelogHref);
