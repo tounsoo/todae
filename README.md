@@ -53,11 +53,19 @@ The docs are in English and [Korean](https://todae.omsoo.design/ko).
 
 ## Browser support
 
-Todae uses current HTML, CSS and JavaScript features and ships no polyfills for them, so it has no list of browser versions. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
+Todae uses current HTML, CSS and JavaScript features and ships no polyfills for them, so its support follows those features rather than a list it maintains. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
 
 Calendar, `Field.DatePicker`, `Field.TimePicker`, `Field.DateTimePicker`, `parseDate`, `parseTime` and `parseDateTime` read the global [Temporal](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Temporal) object. Todae ships no Temporal polyfill. To support a browser without Temporal, install a polyfill globally in your app, such as `temporal-polyfill/global`.
 
-Todae's browser tests run in Chromium.
+Checked against public browser support data on 2026-10-16, these are the first versions that have CSS anchor positioning and every feature the Native platform page marks as needed:
+
+| Browser | All but the Temporal parts | Everything, Temporal included |
+| --- | --- | --- |
+| Chrome and Edge | 128 | 144 |
+| Firefox | 147 | 147 |
+| Safari and iOS Safari | 26 | Not shipped; load a polyfill |
+
+CSS anchor positioning sets the floor in every browser. In Chrome and Edge it is `position-try-fallbacks`, which Todae uses for its fallbacks and which arrived in 128. The versions are not pinned in code, and Todae's browser tests run in Chromium only.
 
 ## Contributing
 
