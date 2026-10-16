@@ -25,6 +25,9 @@ export type Dictionary = {
   /** The footer's license line; `{license}` is where the link to the license goes, and `licenseName` is its text. */
   license: string;
   licenseName: string;
+  /** The footer's release line; `{version}` is the package version, and `changelog` is the text of the link to the changelog after it. */
+  version: string;
+  changelog: string;
   /** The home page's opening section. */
   hero: Record<'eyebrow' | 'title' | 'lead' | 'start' | 'playground' | 'showcase', string>;
   /** One line under each section on the home page. */
@@ -92,6 +95,8 @@ const en: Dictionary = {
   github: 'Todae on GitHub',
   license: 'Todae is released under the {license}.',
   licenseName: 'MIT License',
+  version: 'Version {version}',
+  changelog: 'Changelog',
   hero: {
     eyebrow: 'Todae (토대) means foundation',
     title: 'The foundation your design system builds on.',
@@ -165,6 +170,8 @@ const ko: Dictionary = {
   github: 'GitHub의 Todae',
   license: 'Todae는 {license}로 배포됩니다.',
   licenseName: 'MIT 라이선스',
+  version: '버전 {version}',
+  changelog: '변경 내역',
   hero: {
     eyebrow: '디자인 시스템의 토대',
     title: '회사의 디자인 시스템을 그 위에 세우세요.',

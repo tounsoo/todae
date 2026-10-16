@@ -7,6 +7,7 @@ import { BrandMark } from '../lib/brand';
 import { localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { LICENSE } from '../lib/license';
+import { RELEASE } from '../lib/version';
 // Reads the file system, so SiteShell renders on the server only.
 import { untranslatedByLocale } from '../lib/i18n/pages';
 import { GitHubIcon } from './icons';
@@ -94,6 +95,10 @@ export function SiteShell({
                 {licenseBefore}
                 <SiteLink href={LICENSE.href}>{dict.licenseName}</SiteLink>
                 {licenseAfter}
+              </Text.Root>
+              <Text.Root size="s" tone="muted">
+                {`${dict.version.replace('{version}', RELEASE.version)} · `}
+                <SiteLink href={RELEASE.changelogHref}>{dict.changelog}</SiteLink>
               </Text.Root>
               <Text.Root size="s" tone="muted">
                 {`Copyright © ${LICENSE.year} ${LICENSE.holder}`}

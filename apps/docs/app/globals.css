@@ -236,11 +236,17 @@ body {
 .site-footer-inner {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   gap: 0.25rem 1.5rem;
   max-inline-size: 90rem;
   margin-inline: auto;
   padding: 1.5rem 1.25rem;
+}
+
+/* The license and release lines start the row and the copyright ends it, once all three fit on one line. */
+@media (min-width: 48rem) {
+  .site-footer-inner > :last-child {
+    margin-inline-start: auto;
+  }
 }
 
 /* The same inline padding as .layout on wide screens. */

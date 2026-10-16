@@ -20,6 +20,7 @@ import { UntranslatedPage } from '../../components/UntranslatedPage';
 import { COMPLETE_LOCALES, LOCALES, stripLocale } from './config';
 import { DICTIONARIES } from './dictionaries';
 import { LICENSE } from '../license';
+import { RELEASE } from '../version';
 import { DOCS_ORIGIN } from '../origin';
 import { ENGLISH_PAGES } from './englishPages';
 import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
@@ -401,7 +402,7 @@ describe('docs locales', () => {
       expect(licenseName, locale).toContain(LICENSE.id);
       const markup = renderToStaticMarkup(<SiteShell locale={locale}>x</SiteShell>);
       const footer = new DOMParser().parseFromString(markup, 'text/html').querySelector('footer');
-      const [licenseLine, copyright] = [...(footer?.querySelectorAll('p') ?? [])];
+      const [licenseLine, , copyright] = [...(footer?.querySelectorAll('p') ?? [])];
       expect(licenseLine?.textContent, locale).toBe(license.replace('{license}', licenseName));
       const link = licenseLine?.querySelector('a');
       expect(link?.textContent, locale).toBe(licenseName);
@@ -409,6 +410,20 @@ describe('docs locales', () => {
       expect(copyright?.textContent, locale).toBe(`Copyright © ${LICENSE.year} ${LICENSE.holder}`);
     }
     expect(DICTIONARIES.en.licenseName).toBe(`${LICENSE.id} License`);
+  });
+
+  it('shows the package version and links the changelog in the footer, in each language', () => {
+    for (const locale of LOCALES) {
+      const { version, changelog } = DICTIONARIES[locale];
+      expect(version.split('{version}'), locale).toHaveLength(2);
+      const markup = renderToStaticMarkup(<SiteShell locale={locale}>x</SiteShell>);
+      const footer = new DOMParser().parseFromString(markup, 'text/html').querySelector('footer');
+      const releaseLine = footer?.querySelectorAll('p')[1];
+      expect(releaseLine?.textContent, locale).toBe(`${version.replace('{version}', RELEASE.version)} · ${changelog}`);
+      const link = releaseLine?.querySelector('a');
+      expect(link?.textContent, locale).toBe(changelog);
+      expect(link?.getAttribute('href'), locale).toBe(RELEASE.changelogHref);
+    }
   });
 
   it('gives the shell each locale’s untranslated pages, and no alternates on a 404', () => {
