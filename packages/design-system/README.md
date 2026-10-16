@@ -43,6 +43,10 @@ export function App() {
 - `@tounsoo/todae/schema/components.json`: each component's parts and props.
 - The `todae-tokens` CLI and `@tounsoo/todae/tokens-builder`: build a company's tokens on top of Todae's. See [Build on Todae](https://todae.omsoo.design/guides/build-on-todae).
 
+## Browser support
+
+Todae uses current browser features, such as CSS anchor positioning, the Popover API and `<dialog>`, and ships no polyfills for them. Calendar, the date and time pickers, `parseDate`, `parseTime` and `parseDateTime` read the global `Temporal` object; to support a browser without it, install a Temporal polyfill globally. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
+
 ## License
 
 [MIT](https://github.com/tounsoo/todae/blob/main/LICENSE)
