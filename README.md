@@ -53,7 +53,7 @@ The docs are in English and [Korean](https://todae.omsoo.design/ko).
 
 ## Browser support
 
-Todae uses current HTML, CSS and JavaScript features and ships no polyfills for them, so it has no list of browser versions. Todae needs these features:
+Todae uses current HTML, CSS and JavaScript features and ships no polyfills for them, so it has no list of browser versions. Todae relies on these features:
 
 - CSS anchor positioning
 - The Popover API
@@ -64,9 +64,9 @@ Todae uses current HTML, CSS and JavaScript features and ships no polyfills for 
 - Relative color syntax
 - `dvh` units
 
-Calendar, `Field.DatePicker`, `Field.TimePicker`, `Field.DateTimePicker` and the date and time helpers, such as `formatDate` and `parseDate`, read the global [Temporal](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Temporal) object. Todae ships no Temporal polyfill. To support a browser without Temporal, install a polyfill globally in your app, such as `temporal-polyfill/global`.
+Calendar, `Field.DatePicker`, `Field.TimePicker`, `Field.DateTimePicker`, `parseDate`, `parseTime` and `parseDateTime` read the global [Temporal](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Temporal) object. Todae ships no Temporal polyfill. To support a browser without Temporal, install a polyfill globally in your app, such as `temporal-polyfill/global`.
 
-Without some other features, a part looks or behaves differently. [Native platform](https://todae.omsoo.design/platform) lists them and what happens without each one.
+Without some other features, a part looks or behaves differently. [Native platform](https://todae.omsoo.design/platform) says what happens without each feature it lists.
 
 Todae's browser tests run in Chromium.
 
