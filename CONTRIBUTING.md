@@ -98,7 +98,7 @@ pnpm test:browser
 ```
 
 - The docs unit tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
-- `pnpm test:browser` runs the `*.browser.test.tsx` files in both workspaces in Chromium through Playwright. Install Chromium once first with `pnpm --filter @tounsoo/todae exec playwright install chromium`. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
+- `pnpm test:browser` runs the `*.browser.test.tsx` files in both workspaces in Chromium through Playwright. Install Chromium once first with `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium`. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
 
 ## Changesets
 
