@@ -45,7 +45,7 @@ export function App() {
 
 ## Browser support
 
-Todae uses current browser features, such as CSS anchor positioning, the Popover API and `<dialog>`, with no JavaScript fallbacks. Calendar and the date and time pickers also need Temporal, and Todae ships no polyfill for it. [Native platform](https://todae.omsoo.design/platform) lists every feature Todae uses and what happens without it.
+Todae uses current browser features, such as CSS anchor positioning, the Popover API and `<dialog>`, and ships no polyfills for them. Calendar, the date and time pickers and the date and time helpers read the global `Temporal` object; to support a browser without it, install a Temporal polyfill globally. [Native platform](https://todae.omsoo.design/platform) lists the features Todae needs and what happens without the others.
 
 ## License
 

@@ -26,7 +26,7 @@ pnpm install
 
 ## Build the design system
 
-The docs import the built `dist/` files through the package's exports, so build the package first:
+The docs site compiles the package from source, but the docs unit tests, some docs browser tests and the MCP server's token tools import the built `dist/` files, so build the package first:
 
 ```sh
 pnpm build:ds
@@ -64,7 +64,7 @@ pnpm tokens
 pnpm tokens:check
 ```
 
-Commit both generated files. `tokens:check` fails when they are out of date.
+Commit both generated files, `tokens/tokens.generated.json` and `src/styles/tokens.generated.css`. `tokens:check` fails when they are out of date.
 
 The token layers apply in this order:
 
@@ -98,7 +98,7 @@ pnpm test:browser
 ```
 
 - The docs tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
-- `pnpm test:browser` runs `src/**/*.browser.test.tsx` in Chromium through Playwright. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
+- `pnpm test:browser` runs the package's `src/**/*.browser.test.tsx` and the docs demo tests, with axe, in Chromium through Playwright. Install Chromium once first with `pnpm --filter @tounsoo/todae exec playwright install --with-deps chromium`. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
 
 ## Changesets
 
