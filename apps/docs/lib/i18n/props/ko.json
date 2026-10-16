@@ -549,6 +549,22 @@
       "ko": "토글 텍스트. 스크린 리더에 디스클로저의 이름을 알려 줍니다."
     }
   },
+  "Drawer.Close": {
+    "aria-label": {
+      "en": "Accessible name. Text of two or more letters or digits, such as \"Cancel\", names the button by itself. Otherwise the close string from StringsProvider names it, Close in English.",
+      "ko": "접근 가능한 이름. \"Cancel\"처럼 글자나 숫자가 두 개 이상인 텍스트가 있으면 그 텍스트가 버튼의 이름이 됩니다. 그렇지 않으면 StringsProvider의 close 문자열이 이름이 되며, 영어로는 Close입니다."
+    },
+    "onClick": {
+      "en": "Runs before the close request. Call event.preventDefault() to keep the drawer open.",
+      "ko": "닫기 요청 전에 실행됩니다. 드로어를 열어 두려면 event.preventDefault()를 호출하세요."
+    }
+  },
+  "Drawer.Description": {
+    "children": {
+      "en": "Description text.",
+      "ko": "설명 텍스트."
+    }
+  },
   "Drawer.Root": {
     "open": {
       "en": "Controlled open state. Leave it out for an uncontrolled drawer.",
@@ -575,8 +591,14 @@
       "ko": "스크림 클릭이 onOpenChange(false, \"backdrop\")을 호출합니다."
     },
     "aria-label": {
-      "en": "Name when Dialog.Title is omitted.",
-      "ko": "Dialog.Title을 생략했을 때의 이름."
+      "en": "Name when Drawer.Title is omitted.",
+      "ko": "Drawer.Title을 생략했을 때의 이름."
+    }
+  },
+  "Drawer.Title": {
+    "children": {
+      "en": "Title text.",
+      "ko": "제목 텍스트."
     }
   },
   "ErrorMessage.Root": {

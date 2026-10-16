@@ -12,7 +12,7 @@ export function DialogBasic() {
       <Dialog.Root open={open} onOpenChange={setOpen} initialFocusRef={keepRef}>
         <Dialog.Header>
           <Dialog.Title>Discard draft?</Dialog.Title>
-          <Dialog.Close>Close</Dialog.Close>
+          <Dialog.Close />
         </Dialog.Header>
         <Dialog.Description>This cannot be undone.</Dialog.Description>
         <Dialog.Body>The dialog stays centered on every viewport. It does not become a sheet.</Dialog.Body>

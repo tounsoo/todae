@@ -114,6 +114,15 @@ const containers: [string, (content: ReactNode) => ReactNode, () => HTMLElement]
     ),
     panel,
   ],
+  [
+    'Drawer.Body',
+    (content) => (
+      <Drawer.Root open onOpenChange={() => undefined} aria-label="Edit">
+        <Drawer.Body data-testid="area">{content}</Drawer.Body>
+      </Drawer.Root>
+    ),
+    byTestId,
+  ],
   ['Popover.Root', (content) => <PopoverArea>{content}</PopoverArea>, byTestId],
 ];
 

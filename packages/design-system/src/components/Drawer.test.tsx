@@ -1,16 +1,15 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Dialog } from './Dialog.js';
 import { Drawer } from './Drawer.js';
 
 afterEach(cleanup);
 
 describe('Drawer', () => {
-  it('is a modal dialog pinned to the end edge by default, named by Dialog.Title', () => {
+  it('is a modal dialog pinned to the end edge by default, named by Drawer.Title', () => {
     const showModal = vi.spyOn(HTMLDialogElement.prototype, 'showModal');
     render(
       <Drawer.Root open onOpenChange={() => undefined}>
-        <Dialog.Title>Filters</Dialog.Title>
+        <Drawer.Title>Filters</Drawer.Title>
       </Drawer.Root>,
     );
     const drawer = screen.getByRole('dialog', { name: 'Filters' });
@@ -41,11 +40,11 @@ describe('Drawer', () => {
     }
   });
 
-  it('asks to close from Dialog.Close and Escape', () => {
+  it('asks to close from Drawer.Close and Escape', () => {
     const onOpenChange = vi.fn();
     render(
       <Drawer.Root open onOpenChange={onOpenChange} aria-label="d">
-        <Dialog.Close />
+        <Drawer.Close />
       </Drawer.Root>,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));

@@ -1,12 +1,23 @@
+import type { ComponentPropsWithRef } from 'react';
+import type { ButtonActionProps } from './Button.js';
 import { DRAWER_EXIT_MS } from '../overlay/useOverlayPresence.js';
-import { DialogShellRoot, type DialogRootProps, type DialogShell } from './Dialog.js';
+import {
+  DialogShellRoot,
+  ShellClose,
+  ShellDescription,
+  ShellTitle,
+  type DialogRootProps,
+  type DialogShell,
+} from './dialogShell.js';
+import { composeHandlers, cx } from './props.js';
+import { revealRing } from './revealRing.js';
 import styles from './Drawer.module.css';
 
 export type DrawerSide = 'start' | 'end';
 
 /**
- * A modal dialog pinned to the start or end edge, full height. It is a
- * `Dialog.Root` in every other way: build the inside from Dialog's parts.
+ * A modal dialog pinned to the start or end edge, full height. It takes
+ * `Dialog.Root`'s props, and its inside is built from Drawer's own parts.
  */
 export type DrawerRootProps = DialogRootProps & {
   /** The inline edge it is pinned to. Start and end follow text direction. */
@@ -28,4 +39,35 @@ function Root({ side = 'end', ...props }: DrawerRootProps) {
   return <DialogShellRoot {...props} shell={side === 'start' ? SHELLS.start : SHELLS.end} />;
 }
 
-export const Drawer = { Root } as const;
+function Title({ className, ...props }: ComponentPropsWithRef<'h2'>) {
+  return <ShellTitle {...props} className={cx(styles.title, className)} />;
+}
+
+function Description({ className, ...props }: ComponentPropsWithRef<'p'>) {
+  return <ShellDescription {...props} className={cx(styles.description, className)} />;
+}
+
+function Header({ className, ...props }: ComponentPropsWithRef<'div'>) {
+  return <div {...props} className={cx(styles.header, className)} />;
+}
+
+// The body is the drawer's scroll container, so it reveals rings cut at its own edges.
+function Body({ className, onFocus, ...props }: ComponentPropsWithRef<'div'>) {
+  return (
+    <div
+      {...props}
+      className={cx(styles.body, className)}
+      onFocus={composeHandlers(onFocus, (event) => revealRing(event.currentTarget, event.target))}
+    />
+  );
+}
+
+function Footer({ className, ...props }: ComponentPropsWithRef<'div'>) {
+  return <div {...props} className={cx(styles.footer, className)} />;
+}
+
+function Close(props: ButtonActionProps) {
+  return <ShellClose {...props} />;
+}
+
+export const Drawer = { Root, Header, Title, Description, Body, Footer, Close } as const;

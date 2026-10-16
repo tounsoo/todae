@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Drawer.Root',
-  description: 'Native modal dialog pinned to the start or end edge, full height. Uses Dialog parts inside.',
+  description: 'Native modal dialog pinned to the start or end edge, full height. Built from Drawer parts.',
   props: [
     {
       name: 'open',
@@ -48,7 +48,7 @@ export const meta = {
       name: 'aria-label',
       type: 'string',
       required: false,
-      description: 'Name when Dialog.Title is omitted.',
+      description: 'Name when Drawer.Title is omitted.',
     },
   ],
 } as const satisfies ComponentMeta;

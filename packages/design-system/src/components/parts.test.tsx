@@ -342,6 +342,19 @@ const cases: Case[] = [
       </Drawer.Root>
     ),
   ],
+  ...(['Title', 'Description', 'Header', 'Body', 'Footer', 'Close'] as const).map(
+    (part): Case => [
+      `Drawer.${part}`,
+      (p) => {
+        const Part = Drawer[part] as (props: Native) => ReactNode;
+        return (
+          <Drawer.Root open onOpenChange={noop} aria-label="d">
+            <Part {...p} />
+          </Drawer.Root>
+        );
+      },
+    ],
+  ),
   ['BottomSheet.Root', (p) => <BottomSheet.Root {...p} open onOpenChange={noop} aria-label="s" />],
   ...(['Grabber', 'Header', 'Title', 'Description', 'Body', 'Footer', 'Close'] as const).map(
     (part): Case => [
