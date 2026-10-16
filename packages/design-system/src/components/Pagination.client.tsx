@@ -1,7 +1,7 @@
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { useStrings } from '../providers/StringsProvider';
-import { glyphOr } from './glyphs';
-import { Pagination as ServerPagination, type PaginationEllipsisProps, type PaginationRootProps } from './Pagination';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { glyphOr } from './glyphs.js';
+import { Item, Pagination as ServerPagination, type PaginationEllipsisProps, type PaginationRootProps } from './Pagination.js';
 
 export {
   paginationRange,
@@ -10,7 +10,7 @@ export {
   type PaginationRangeItem,
   type PaginationRangeOptions,
   type PaginationRootProps,
-} from './Pagination';
+} from './Pagination.js';
 
 // The main entry's Root: the server one, named by StringsProvider.
 function Root(props: PaginationRootProps) {
@@ -24,4 +24,4 @@ function Ellipsis({ children, ...props }: PaginationEllipsisProps) {
   return <ServerPagination.Ellipsis {...props}>{children ?? glyphOr(ellipsis, '…')}</ServerPagination.Ellipsis>;
 }
 
-export const Pagination = { ...ServerPagination, Root, Ellipsis } as const;
+export const Pagination = { Root, Item, Ellipsis } as const;

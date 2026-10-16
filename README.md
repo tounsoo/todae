@@ -2,7 +2,7 @@
 
 What you need to do today.
 
-Todae is a pnpm workspace. `@omsoo.design/todae` is a private Vite library. `apps/docs` is a Next.js 15 app that renders live MDX examples from that library.
+Todae is a pnpm workspace. `@tounsoo/todae` is a Vite library, released to npm with Changesets (see [Release](#release)). `apps/docs` is a Next.js 15 app that renders live MDX examples from that library.
 
 ## Requirements
 
@@ -44,14 +44,14 @@ pnpm tokens:check
 
 Commit both generated files. `tokens:check` fails if they drift.
 
-Layers: core (`:root` literals) → appearance (`[data-appearance]`; light on a `:root` without that attribute) → density (`[data-density]`; comfortable on a `:root` without that attribute) → contract (`:root, [data-appearance], [data-density]`) → button variants (`[data-button-variant]`). Flatten `a.b.c` → `--todae-a-b-c`. Import the catalog as `@omsoo.design/todae/tokens.json`.
+Layers: core (`:root` literals) → appearance (`[data-appearance]`; light on a `:root` without that attribute) → density (`[data-density]`; comfortable on a `:root` without that attribute) → contract (`:root, [data-appearance], [data-density]`) → button variants (`[data-button-variant]`). Flatten `a.b.c` → `--todae-a-b-c`. Import the catalog as `@tounsoo/todae/tokens.json`.
 
 ## Providers
 
 Wrap the tree in `ThemeProvider` and `DensityProvider`. `appearance="system"` (default) writes `data-appearance="system"`, which follows `prefers-color-scheme` in CSS, so server-rendered HTML already matches the user's scheme. `useAppearance()` returns `light` or `dark` from `matchMedia`, and `light` on the server. `DensityProvider` writes `data-density` (`compact` | `comfortable` | `spacious`, default `comfortable`). Nested providers override. Both are optional: with neither, the page gets light and comfortable. Components read contract vars only.
 
 ```tsx
-import { DensityProvider, ThemeProvider, Button } from '@omsoo.design/todae';
+import { DensityProvider, ThemeProvider, Button } from '@tounsoo/todae';
 
 <ThemeProvider appearance="system">
   <DensityProvider density="comfortable">
@@ -95,9 +95,26 @@ pnpm test
 pnpm typecheck
 ```
 
+## Release
+
+[Changesets](https://github.com/changesets/changesets) versions and publishes `@tounsoo/todae`. A pull request that changes what the package ships adds a changeset:
+
+```sh
+pnpm changeset
+```
+
+Pick the bump and write a line for the changelog. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change. CI runs `changeset status`, which fails when the package changed and the pull request adds no changeset. `changedFilePatterns` in `.changeset/config.json` leaves out tests, fixtures and snapshots, and changesets doesn't count dotfiles. For a change that ships nothing, add an empty changeset with `pnpm changeset --empty`.
+
+`.github/workflows/release.yml` turns changesets on `main` into a "Version Packages" pull request that bumps the version and writes `packages/design-system/CHANGELOG.md`. Merging that pull request publishes the new version to npm through [trusted publishing](https://docs.npmjs.com/trusted-publishers), from the `npm` environment. It needs:
+
+- Actions › General › "Allow GitHub Actions to create and approve pull requests" turned on in the repository settings.
+- The repository at `tounsoo/todae`, as `package.json` and `.changeset/config.json` name it.
+- A GitHub App, so CI runs on the Version Packages pull request: GitHub starts no workflows for pushes made with the default `GITHUB_TOKEN`. Install the app on this repository with read and write access to contents and pull requests, then add its client ID as the Actions variable `RELEASE_APP_CLIENT_ID` and its private key as the secret `RELEASE_APP_PRIVATE_KEY`. Without them, the workflow opens the pull request with `GITHUB_TOKEN`.
+- A trusted publisher on npm for this repository, `release.yml` and the `npm` environment. npm only takes one for a package that exists, so the first version is published by hand; until then the publish job fails.
+
 ## Deploy docs
 
-Set the Vercel project Root Directory to `apps/docs`. `apps/docs/vercel.json` installs from the repo root, builds `@omsoo.design/todae`, then builds the docs app.
+Set the Vercel project Root Directory to `apps/docs`. `apps/docs/vercel.json` installs from the repo root, builds `@tounsoo/todae`, then builds the docs app.
 
 ## Docs MCP
 
@@ -109,9 +126,9 @@ Streamable HTTP MCP at `https://todae.omsoo.design/api/mcp` (`apps/docs/app/api/
 
 Tools, in `apps/docs/lib/docs-mcp`:
 
-- `list_components`, `get_component`, `when_to_use` read `@omsoo.design/todae/schema/components.json` and the English pages, `apps/docs/app/(en)/**/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
-- `list_tokens`, `get_token` read the token catalog, `@omsoo.design/todae/tokens.json`.
-- `get_contrast_pairs` runs `@omsoo.design/todae/tokens-builder` on Todae's `tokens/` folder. `build_tokens` and `scaffold_design_system` write token files to a temporary folder and run the built `todae-tokens` CLI on them in a child process, stopped after 10 seconds, then remove the folder; a server instance runs at most two builds at once. `next.config.mjs` traces the tokens folder and the CLI into the route. Both return results and write nothing to the caller's machine.
+- `list_components`, `get_component`, `when_to_use` read `@tounsoo/todae/schema/components.json` and the English pages, `apps/docs/app/(en)/**/page.mdx`. A missing "When to use" section returns `status: "missing"` and is not inferred.
+- `list_tokens`, `get_token` read the token catalog, `@tounsoo/todae/tokens.json`.
+- `get_contrast_pairs` runs `@tounsoo/todae/tokens-builder` on Todae's `tokens/` folder. `build_tokens` and `scaffold_design_system` write token files to a temporary folder and run the built `todae-tokens` CLI on them in a child process, stopped after 10 seconds, then remove the folder; a server instance runs at most two builds at once. `next.config.mjs` traces the tokens folder and the CLI into the route. Both return results and write nothing to the caller's machine.
 - `get_guide` returns the English source of the pages in `GUIDES` (`lib/docs-mcp/guides.ts`).
 
 ## Graft
@@ -128,7 +145,7 @@ pnpm graft:check
 
 ## Layout
 
-- `packages/design-system` is `@omsoo.design/todae`, a private Vite library.
+- `packages/design-system` is `@tounsoo/todae`, the Vite library released to npm. Its own [README](packages/design-system/README.md) is the package's npm page.
 - `apps/docs` is the Next.js 15 docs app with MDX examples.
 
 Before adding a component, hook, recipe or token, read [`ARCHITECTURE.md`](ARCHITECTURE.md) for the decisions they follow.

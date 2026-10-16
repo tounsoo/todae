@@ -69,7 +69,7 @@ export function useControlPresence(store: CountStore, counted: boolean): (node: 
   );
 }
 
-export const FieldContext = createContext<FieldContextValue | null>(null);
+export const FieldContext = /* @__PURE__ */ createContext<FieldContextValue | null>(null);
 
 export function useFieldContext(): FieldContextValue {
   const ctx = useContext(FieldContext);

@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Button, Card, Label, Table, Tabs, ThemeProvider, ToggleGroup, type ThemeOverride, type ThemeShadowLayer } from '../index';
+import { Button, Card, Label, Table, Tabs, ThemeProvider, ToggleGroup, type ThemeOverride, type ThemeShadowLayer } from '../index.js';
 
 afterEach(cleanup);
 

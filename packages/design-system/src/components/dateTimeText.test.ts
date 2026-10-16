@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { parseDate } from './dateText';
-import { formatDateTime, parseDateTime } from './dateTimeText';
-import { parseTime } from './timeText';
+import { parseDate } from './dateText.js';
+import { formatDateTime, parseDateTime } from './dateTimeText.js';
+import { parseTime } from './timeText.js';
 
 // Lets the test runner hear from this test between locales, as each sweep runs for a while.
 const breathe = () => new Promise((resolve) => setTimeout(resolve));

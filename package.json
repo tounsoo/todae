@@ -5,13 +5,13 @@
   "packageManager": "pnpm@10.33.3",
   "scripts": {
     "build": "pnpm -r --if-present build",
-    "build:ds": "pnpm --filter @omsoo.design/todae build",
-    "dev:ds": "pnpm --filter @omsoo.design/todae dev",
+    "build:ds": "pnpm --filter @tounsoo/todae build",
+    "dev:ds": "pnpm --filter @tounsoo/todae dev",
     "dev:docs": "pnpm --filter docs dev",
     "dev": "pnpm dev:docs",
-    "schema": "pnpm --filter @omsoo.design/todae schema",
-    "tokens": "pnpm --filter @omsoo.design/todae tokens",
-    "tokens:check": "pnpm --filter @omsoo.design/todae tokens:check",
+    "schema": "pnpm --filter @tounsoo/todae schema",
+    "tokens": "pnpm --filter @tounsoo/todae tokens",
+    "tokens:check": "pnpm --filter @tounsoo/todae tokens:check",
     "test": "pnpm -r --if-present test",
     "test:browser": "pnpm -r --if-present test:browser",
     "typecheck": "pnpm -r --if-present typecheck",
@@ -21,6 +21,8 @@
     "clean": "pnpm -r --if-present clean && rm -rf node_modules"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.3",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",

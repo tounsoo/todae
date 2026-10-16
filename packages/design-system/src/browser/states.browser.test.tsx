@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import { useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { usePopover } from '../hooks/usePopover';
+import { usePopover } from '../hooks/usePopover.js';
 import {
   BottomSheet,
   Button,
@@ -15,7 +15,7 @@ import {
   Switch,
   Tabs,
   Toolbar,
-} from '../index';
+} from '../index.js';
 
 function Themed({ children, dir }: { children: React.ReactNode; dir?: 'rtl' }) {
   return (

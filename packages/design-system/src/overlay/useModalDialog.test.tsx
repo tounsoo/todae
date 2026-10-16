@@ -1,7 +1,7 @@
 import { act, render } from '@testing-library/react';
 import { startTransition, Suspense, use, useCallback, useRef, useState } from 'react';
 import { describe, expect, it } from 'vitest';
-import { useModalDialog } from './useModalDialog';
+import { useModalDialog } from './useModalDialog.js';
 
 describe('useModalDialog', () => {
   it('closes the element from what React committed, not from a render it threw away', async () => {

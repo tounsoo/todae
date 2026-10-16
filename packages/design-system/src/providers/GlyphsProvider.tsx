@@ -1,9 +1,9 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import type { Glyphs } from './glyphs';
+import type { Glyphs } from './glyphs.js';
 
-export type { Glyphs } from './glyphs';
+export type { Glyphs } from './glyphs.js';
 
 export type GlyphsProviderProps = {
   /** The glyphs to change. Each key left out comes from the nearest GlyphsProvider above; null brings back Todae's own. */
@@ -11,9 +11,9 @@ export type GlyphsProviderProps = {
   children?: ReactNode;
 };
 
-const NO_GLYPHS: Readonly<Glyphs> = Object.freeze({});
+const NO_GLYPHS: Readonly<Glyphs> = /* @__PURE__ */ Object.freeze({});
 
-const GlyphsContext = createContext<Readonly<Glyphs>>(NO_GLYPHS);
+const GlyphsContext = /* @__PURE__ */ createContext<Readonly<Glyphs>>(NO_GLYPHS);
 
 /** Sets the glyphs Todae draws by itself, such as close crosses and check marks, for its subtree. Renders no element. */
 export function GlyphsProvider({ glyphs, children }: GlyphsProviderProps) {

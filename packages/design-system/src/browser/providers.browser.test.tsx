@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Button, Card, Checkbox, DensityProvider, ThemeProvider, type ThemeOverride } from '../index';
-import { measureContrast } from '../providers/overrideContrast';
+import { Button, Card, Checkbox, DensityProvider, ThemeProvider, type ThemeOverride } from '../index.js';
+import { measureContrast } from '../providers/overrideContrast.js';
 
 /** vitest types the session without its methods; Playwright's session has `send`. */
 function emulateMedia(features: { name: string; value: string }[]) {

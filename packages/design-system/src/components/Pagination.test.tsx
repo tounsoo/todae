@@ -2,7 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Pagination } from './Pagination';
+import { Pagination } from './Pagination.js';
 
 afterEach(cleanup);
 

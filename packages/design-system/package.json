@@ -1,15 +1,29 @@
 {
-  "name": "@omsoo.design/todae",
+  "name": "@tounsoo/todae",
   "version": "0.0.0",
-  "private": true,
+  "description": "A low-level React design system to build a company design system on: components, headless hooks and DTCG design tokens.",
+  "keywords": [
+    "design-system",
+    "react",
+    "components",
+    "design-tokens",
+    "dtcg",
+    "css"
+  ],
   "license": "MIT",
   "homepage": "https://todae.omsoo.design",
+  "bugs": {
+    "url": "https://github.com/tounsoo/todae/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tounsoo/todae.git",
     "directory": "packages/design-system"
   },
   "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
   "bin": {
     "todae-tokens": "./dist/scripts/build-tokens.js"
   },
@@ -127,11 +141,12 @@
     "tokens": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts self",
     "tokens:check": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/build-tokens.ts self --check",
     "build": "pnpm tokens && vite build && tsc -p tsconfig.build.json && tsc -p tsconfig.scripts.json",
+    "prepack": "pnpm build",
     "dev": "vite build --watch",
     "schema": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/generate-schema.ts",
     "test": "vitest run",
     "test:browser": "vitest run --config vitest.browser.config.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.build.json",
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
@@ -152,6 +167,7 @@
     "@types/react-dom": "^19.0.4",
     "@vitest/browser": "3.2.7",
     "axe-core": "^4.13.0",
+    "esbuild": "0.25.12",
     "jsdom": "^26.0.0",
     "playwright": "1.56.1",
     "react": "^19.0.0",

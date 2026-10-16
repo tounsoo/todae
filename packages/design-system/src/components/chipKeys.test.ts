@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firstKeys, nextKeys } from './chipKeys';
+import { firstKeys, nextKeys } from './chipKeys.js';
 
 describe('chip keys', () => {
   it('number twins so keys never collide', () => {

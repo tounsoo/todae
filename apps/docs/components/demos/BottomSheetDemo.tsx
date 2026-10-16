@@ -1,6 +1,6 @@
 'use client';
 
-import { BottomSheet, Button, Stack } from '@omsoo.design/todae';
+import { BottomSheet, Button, Stack } from '@tounsoo/todae';
 import { useState } from 'react';
 
 const OPTIONS = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta'];

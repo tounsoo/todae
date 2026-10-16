@@ -2,7 +2,7 @@
 
 // Three popular icon libraries, to show that Todae's glyphs and icon slots take
 // any of them. Todae ships no icons; the docs site installs these for its demos.
-import type { Glyphs } from '@omsoo.design/todae';
+import type { Glyphs } from '@tounsoo/todae';
 import {
   ArrowCounterClockwise,
   ArrowRight as PhArrowRight,

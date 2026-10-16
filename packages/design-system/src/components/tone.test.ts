@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CATEGORY_TONES, categoryTone } from './tone';
+import { CATEGORY_TONES, categoryTone } from './tone.js';
 
 describe('categoryTone', () => {
   it('gives the same key the same tone', () => {

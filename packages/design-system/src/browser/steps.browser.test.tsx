@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Steps } from '../index';
+import { Steps } from '../index.js';
 
 afterEach(cleanup);
 

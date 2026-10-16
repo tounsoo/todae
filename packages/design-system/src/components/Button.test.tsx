@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { createRef } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Button, type ButtonIconProps, type ButtonRootProps } from './Button';
-import * as api from '../index';
+import { Button, type ButtonIconProps, type ButtonRootProps } from './Button.js';
+import * as api from '../index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, 'Button.tsx'), 'utf8');
@@ -291,15 +291,15 @@ describe('Button auto-tip', () => {
   });
 
   it('wires one useTooltip machine and does not import Trigger', () => {
-    expect(source).toContain("from '../hooks/useTooltip'");
-    expect(source).toContain("from './Tooltip'");
+    expect(source).toContain("from '../hooks/useTooltip.js'");
+    expect(source).toContain("from './Tooltip.js'");
     expect(source).not.toContain('Tooltip.Trigger');
     expect(source).not.toContain('createIntent');
     // useControlledState holds the toggle's pressed state only; tip state lives in useTooltip.
     expect(source.match(/useControlledState\(/g)).toHaveLength(1);
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../hooks/useControlledState', '../hooks/useTooltip', './Button.module.css', './props', './cx', './Tooltip']),
+      new Set(['react', '../hooks/useControlledState.js', '../hooks/useTooltip.js', './Button.module.css', './props.js', './cx.js', './Tooltip.js']),
     );
   });
 

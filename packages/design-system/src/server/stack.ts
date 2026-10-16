@@ -7,4 +7,4 @@ export {
   type StackGap,
   type StackJustify,
   type StackRootProps,
-} from '../components/Stack';
+} from '../components/Stack.js';

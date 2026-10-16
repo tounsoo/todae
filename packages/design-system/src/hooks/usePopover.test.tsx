@@ -5,7 +5,7 @@ import {
   usePopover,
   type PopoverTriggerUserProps,
   type UsePopoverOptions,
-} from './usePopover';
+} from './usePopover.js';
 
 afterEach(cleanup);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, OptionList, Popover, Stack, usePopover } from '@omsoo.design/todae';
+import { Button, OptionList, Popover, Stack, usePopover } from '@tounsoo/todae';
 import { useState } from 'react';
 
 export function PopoverMenu() {

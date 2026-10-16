@@ -1,14 +1,14 @@
-import { Code } from '@omsoo.design/todae/code';
-import { Disclosure } from '@omsoo.design/todae/disclosure';
-import { Kbd } from '@omsoo.design/todae/kbd';
-import { Link } from '@omsoo.design/todae/link';
-import { Separator } from '@omsoo.design/todae/separator';
-import { Skeleton } from '@omsoo.design/todae/skeleton';
-import { Loader } from '@omsoo.design/todae/loader';
-import { Stack } from '@omsoo.design/todae/stack';
-import { Table } from '@omsoo.design/todae/table';
-import { Text } from '@omsoo.design/todae/text';
-import { VisuallyHidden } from '@omsoo.design/todae/visually-hidden';
+import { Code } from '@tounsoo/todae/code';
+import { Disclosure } from '@tounsoo/todae/disclosure';
+import { Kbd } from '@tounsoo/todae/kbd';
+import { Link } from '@tounsoo/todae/link';
+import { Separator } from '@tounsoo/todae/separator';
+import { Skeleton } from '@tounsoo/todae/skeleton';
+import { Loader } from '@tounsoo/todae/loader';
+import { Stack } from '@tounsoo/todae/stack';
+import { Table } from '@tounsoo/todae/table';
+import { Text } from '@tounsoo/todae/text';
+import { VisuallyHidden } from '@tounsoo/todae/visually-hidden';
 import { LocalizedLink } from '../LocalizedLink';
 
 export function LinkInText() {

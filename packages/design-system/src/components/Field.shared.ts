@@ -10,15 +10,15 @@ import {
   type CSSProperties,
   type RefObject,
 } from 'react';
-import { useFieldContext, type CountStore } from './Field.context';
-import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from '../hooks/useField';
-import { useControlledValue } from '../hooks/useControlledState';
+import { useFieldContext, type CountStore } from './Field.context.js';
+import { useFieldControl, type FieldControlUserProps, type UseFieldResult } from '../hooks/useField.js';
+import { useControlledValue } from '../hooks/useControlledState.js';
 import {
   usePopover,
   type PopoverCloseReason,
   type PopoverHaspopup,
   type PopoverTriggerUserProps,
-} from '../hooks/usePopover';
+} from '../hooks/usePopover.js';
 
 export function createCountStore(): CountStore {
   return { entry: null, counters: 0, controls: 0, named: 0, listeners: new Set(), presence: new Set() };
@@ -110,7 +110,7 @@ export function useTextEntry(store: CountStore, value: string, maxLength: number
 }
 
 // How the shell opens or closes each Field.ColorPicker's, Field.DatePicker's, Field.TimePicker's or Field.DateTimePicker's popover, by its button.
-export const pickerToggles = new WeakMap<HTMLButtonElement, () => void>();
+export const pickerToggles = /* @__PURE__ */ new WeakMap<HTMLButtonElement, () => void>();
 
 // A time for a hidden input stops at the smallest unit that is set.
 function timeUnit(value: Temporal.PlainTime | Temporal.PlainDateTime) {

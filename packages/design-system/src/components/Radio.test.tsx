@@ -2,8 +2,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { useState } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { RadioGroup, type RadioGroupItemProps, type RadioGroupRootProps } from './Radio';
-import * as api from '../index';
+import { RadioGroup, type RadioGroupItemProps, type RadioGroupRootProps } from './Radio.js';
+import * as api from '../index.js';
 
 afterEach(cleanup);
 

@@ -62,7 +62,7 @@ import {
   createToaster,
   usePopover,
   useTooltip,
-} from '../index';
+} from '../index.js';
 
 afterEach(cleanup);
 

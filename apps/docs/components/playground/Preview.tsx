@@ -38,7 +38,7 @@ import {
   Tree,
   useClipboard,
   type Glyphs,
-} from '@omsoo.design/todae';
+} from '@tounsoo/todae';
 import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import type { Locale } from '../../lib/i18n/config';
 import { ICON_LIBRARIES, type IconLibrary } from '../iconLibraries';

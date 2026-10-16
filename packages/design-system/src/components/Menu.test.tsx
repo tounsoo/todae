@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Profiler, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Menu, type MenuRootProps } from '../index';
+import { Menu, type MenuRootProps } from '../index.js';
 
 afterEach(cleanup);
 

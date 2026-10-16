@@ -10,7 +10,7 @@ import {
   useMentions,
   type MentionDraft,
   type MentionTrigger,
-} from '@omsoo.design/todae';
+} from '@tounsoo/todae';
 import { useState, type FormEvent } from 'react';
 
 const people = [

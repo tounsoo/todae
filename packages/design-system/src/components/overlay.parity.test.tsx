@@ -1,9 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRef, type ComponentProps, type ComponentType, type ReactNode, type RefObject } from 'react';
-import { BottomSheet } from './BottomSheet';
-import { Dialog } from './Dialog';
-import { Drawer } from './Drawer';
+import { BottomSheet } from './BottomSheet.js';
+import { Dialog } from './Dialog.js';
+import { Drawer } from './Drawer.js';
 
 afterEach(cleanup);
 

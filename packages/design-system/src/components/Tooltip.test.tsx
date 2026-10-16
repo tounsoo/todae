@@ -4,11 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState, type CSSProperties } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import * as api from '../index';
-import { useTooltip, type TooltipOpenReason, type UseTooltipOptions } from '../hooks/useTooltip';
-import { resetMatchMedia, setMatchMedia } from '../test/setup';
-import { Chip } from './Chip';
-import { Tooltip, type TooltipContentName, type TooltipRootProps } from './Tooltip';
+import * as api from '../index.js';
+import { useTooltip, type TooltipOpenReason, type UseTooltipOptions } from '../hooks/useTooltip.js';
+import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
+import { Chip } from './Chip.js';
+import { Tooltip, type TooltipContentName, type TooltipRootProps } from './Tooltip.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, 'Tooltip.tsx'), 'utf8');
@@ -345,12 +345,12 @@ describe('Tooltip', () => {
     expect(new Set(froms)).toEqual(
       new Set([
         'react',
-        '../overlay/usePopoverSync',
-        './Tooltip.surface',
-        './Tooltip.wire',
+        '../overlay/usePopoverSync.js',
+        './Tooltip.surface.js',
+        './Tooltip.wire.js',
         './Tooltip.module.css',
-        './props',
-        './cx',
+        './props.js',
+        './cx.js',
       ]),
     );
     expect(css).not.toContain('.trigger');

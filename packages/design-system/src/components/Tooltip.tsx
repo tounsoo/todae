@@ -6,18 +6,18 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { usePopoverSync } from '../overlay/usePopoverSync';
+import { usePopoverSync } from '../overlay/usePopoverSync.js';
 import {
   contentPolicyError,
   isMounted,
   resolveSurface,
   type PanelSurface,
   type TipSurface,
-} from './Tooltip.surface';
-import type { TooltipWire } from './Tooltip.wire';
-import { cx } from './cx';
+} from './Tooltip.surface.js';
+import type { TooltipWire } from './Tooltip.wire.js';
+import { cx } from './cx.js';
 import styles from './Tooltip.module.css';
-import { useComposedRefs } from './props';
+import { useComposedRefs } from './props.js';
 
 export type TooltipContentName =
   | { 'aria-label': string; 'aria-labelledby'?: never }

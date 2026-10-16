@@ -10,17 +10,17 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { useControlledState } from '../hooks/useControlledState';
-import { useTooltip } from '../hooks/useTooltip';
-import { cx } from './cx';
+import { useControlledState } from '../hooks/useControlledState.js';
+import { useTooltip } from '../hooks/useTooltip.js';
+import { cx } from './cx.js';
 import styles from './Button.module.css';
-import { composeHandlers, useComposedRefs } from './props';
-import { Tooltip } from './Tooltip';
+import { composeHandlers, useComposedRefs } from './props.js';
+import { Tooltip } from './Tooltip.js';
 
 /**
  * Button variants, one per `buttonVariant` context in the token resolver. A
  * company that adds a context declares it here too:
- * `declare module '@omsoo.design/todae' { interface ButtonVariants { outline: true } }`.
+ * `declare module '@tounsoo/todae' { interface ButtonVariants { outline: true } }`.
  */
 export interface ButtonVariants {
   primary: true;
@@ -62,7 +62,7 @@ const ICON_ATTR = 'data-todae-button-icon';
 
 // Media outside an icon is content too: an <img alt> or a spinner can name or
 // fill the button.
-const MEDIA = new Set(['IMG', 'SVG', 'svg', 'CANVAS', 'VIDEO', 'PICTURE', 'OBJECT', 'IFRAME', 'INPUT']);
+const MEDIA = /* @__PURE__ */ new Set(['IMG', 'SVG', 'svg', 'CANVAS', 'VIDEO', 'PICTURE', 'OBJECT', 'IFRAME', 'INPUT']);
 
 // Icons are found in the rendered button, not by component type, so a
 // Button.Icon inside a company's own icon wrapper still counts.

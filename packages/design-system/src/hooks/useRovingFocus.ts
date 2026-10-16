@@ -8,9 +8,9 @@ import {
   type KeyboardEvent,
   type Ref,
 } from 'react';
-import { useDomId } from '../components/domId';
-import { useStableComposedRef } from '../components/props';
-import { useControlledState } from './useControlledState';
+import { useDomId } from '../components/domId.js';
+import { useStableComposedRef } from '../components/props.js';
+import { useControlledState } from './useControlledState.js';
 
 export type RovingOrientation = 'horizontal' | 'vertical' | 'both';
 

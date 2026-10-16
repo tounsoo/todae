@@ -9,21 +9,21 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { useDomId } from './domId';
-import { FIELD_CONTROL_SELECTOR, FOCUSABLE_FIELD_CONTROL_SELECTOR, FieldContext } from './Field.context';
-import { useFieldsetState } from './Fieldset.context';
-import { composeHandlers, cx, useComposedRefs } from './props';
+import { useDomId } from './domId.js';
+import { FIELD_CONTROL_SELECTOR, FOCUSABLE_FIELD_CONTROL_SELECTOR, FieldContext } from './Field.context.js';
+import { useFieldsetState } from './Fieldset.context.js';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Field.module.css';
-import { createCountStore, pickerToggles } from './Field.shared';
-import { TextInput } from './Field.TextInput';
-import { Textarea } from './Field.Textarea';
-import { ChipInput } from './Field.ChipInput';
-import { Select } from './Field.Select';
-import { ColorPicker } from './Field.ColorPicker';
-import { DatePicker } from './Field.DatePicker';
-import { TimePicker } from './Field.TimePicker';
-import { DateTimePicker } from './Field.DateTimePicker';
-import { Counter } from './Field.Counter';
+import { createCountStore, pickerToggles } from './Field.shared.js';
+import { TextInput } from './Field.TextInput.js';
+import { Textarea } from './Field.Textarea.js';
+import { ChipInput } from './Field.ChipInput.js';
+import { Select } from './Field.Select.js';
+import { ColorPicker } from './Field.ColorPicker.js';
+import { DatePicker } from './Field.DatePicker.js';
+import { TimePicker } from './Field.TimePicker.js';
+import { DateTimePicker } from './Field.DateTimePicker.js';
+import { Counter } from './Field.Counter.js';
 
 /**
  * `id`, `name` and the three naming ARIA props go to the input; every other
@@ -219,16 +219,16 @@ function Root({
   );
 }
 
-export type { FieldTextInputType, FieldTextInputProps } from './Field.TextInput';
-export type { FieldTextareaHighlight } from './TextareaHighlights';
-export type { FieldTextareaProps } from './Field.Textarea';
-export type { FieldChipInputProps } from './Field.ChipInput';
-export type { FieldSelectProps } from './Field.Select';
-export type { FieldColorPickerCloseReason, FieldColorPickerProps } from './Field.ColorPicker';
-export type { FieldDatePickerCloseReason, FieldDatePickerProps } from './Field.DatePicker';
-export type { FieldTimePickerCloseReason, FieldTimePickerProps } from './Field.TimePicker';
-export type { FieldDateTimePickerCloseReason, FieldDateTimePickerProps } from './Field.DateTimePicker';
-export type { FieldCounterProps } from './Field.Counter';
+export type { FieldTextInputType, FieldTextInputProps } from './Field.TextInput.js';
+export type { FieldTextareaHighlight } from './TextareaHighlights.js';
+export type { FieldTextareaProps } from './Field.Textarea.js';
+export type { FieldChipInputProps } from './Field.ChipInput.js';
+export type { FieldSelectProps } from './Field.Select.js';
+export type { FieldColorPickerCloseReason, FieldColorPickerProps } from './Field.ColorPicker.js';
+export type { FieldDatePickerCloseReason, FieldDatePickerProps } from './Field.DatePicker.js';
+export type { FieldTimePickerCloseReason, FieldTimePickerProps } from './Field.TimePicker.js';
+export type { FieldDateTimePickerCloseReason, FieldDateTimePickerProps } from './Field.DateTimePicker.js';
+export type { FieldCounterProps } from './Field.Counter.js';
 
 export type FieldRowProps = {
   children?: ReactNode;

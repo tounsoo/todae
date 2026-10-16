@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Drawer } from './Drawer';
+import { Drawer } from './Drawer.js';
 
 afterEach(cleanup);
 

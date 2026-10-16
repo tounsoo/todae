@@ -1,9 +1,9 @@
 import { cleanup, render, renderHook, waitFor } from '@testing-library/react';
 import { useLayoutEffect } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { dropModal, heldModals, pushModal, subscribeModals } from './modalStack';
-import { TOAST_HOST_ATTRIBUTE } from './tabbables';
-import { useModalLayerElement } from './useModalLayerElement';
+import { dropModal, heldModals, pushModal, subscribeModals } from './modalStack.js';
+import { TOAST_HOST_ATTRIBUTE } from './tabbables.js';
+import { useModalLayerElement } from './useModalLayerElement.js';
 
 afterEach(() => {
   // Unmounts first, so a test that failed early leaves nothing in the stack.

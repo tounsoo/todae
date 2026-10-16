@@ -9,4 +9,4 @@ export {
   type MessageHeaderProps,
   type MessageRootProps,
   type MessageTimeProps,
-} from '../components/Message';
+} from '../components/Message.js';

@@ -4,10 +4,10 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
-import type { ButtonVariant, ButtonVariants } from '../components/Button';
-import { DensityProvider, useDensity, type Densities, type Density } from './DensityProvider';
-import { ThemeProvider, useAppearance } from './ThemeProvider';
-import { THEME_OVERRIDE_KEYS, parseThemeColor, parseThemeValue, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride';
+import type { ButtonVariant, ButtonVariants } from '../components/Button.js';
+import { DensityProvider, useDensity, type Densities, type Density } from './DensityProvider.js';
+import { ThemeProvider, useAppearance } from './ThemeProvider.js';
+import { THEME_OVERRIDE_KEYS, parseThemeColor, parseThemeValue, themeOverrideStyle, themeOverrideType, themeValueCss } from './themeOverride.js';
 
 function AppearanceLabel() {
   return <span>{useAppearance()}</span>;

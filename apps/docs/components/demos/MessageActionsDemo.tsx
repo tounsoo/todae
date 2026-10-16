@@ -10,7 +10,7 @@ import {
   ToggleGroup,
   Toolbar,
   useClipboard,
-} from '@omsoo.design/todae';
+} from '@tounsoo/todae';
 import { Check, Copy, Pencil, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';

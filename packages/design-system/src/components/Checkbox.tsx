@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes, ReactNode, Ref } from 'react';
-import { useControlledState } from '../hooks/useControlledState';
-import { SelectionControl } from './SelectionControl';
+import { useControlledState } from '../hooks/useControlledState.js';
+import { SelectionControl } from './SelectionControl.js';
 
 export type CheckboxRootProps = {
   children: ReactNode;

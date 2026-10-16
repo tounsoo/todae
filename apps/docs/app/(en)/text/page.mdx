@@ -1,4 +1,4 @@
-import { Text } from '@omsoo.design/todae/text';
+import { Text } from '@tounsoo/todae/text';
 import { TextHeadingSize, TextHeadings } from '../../../components/demos/TextDemo';
 
 # Text
@@ -7,7 +7,7 @@ Sizes `s` / `m` / `l` / `xl` / `2xl` map to `text.size.2` through `text.size.6`.
 
 The typeface lives in `text.font.family`, which reads `font.family.sans`. Todae does not set `font-family` from it; apply `var(--todae-text-font-family)` where you want it.
 
-Server Components can import it from `@omsoo.design/todae/text`. That entry has no `'use client'` and no hooks; the main `@omsoo.design/todae` entry is a client module.
+Server Components can import it from `@tounsoo/todae/text`. That entry has no `'use client'` and no hooks; the main `@tounsoo/todae` entry is a client module.
 
 ```tsx
 <Text.Root size="s" tone="muted">

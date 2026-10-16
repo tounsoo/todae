@@ -1,11 +1,11 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe time text for a text input beside Field.TimePicker: no hooks or context.
-import { normalize, type DateTextOptions } from './dateText';
+import { normalize, type DateTextOptions } from './dateText.js';
 
 export type TimeTextOptions = DateTextOptions;
 
 // One formatter per locale and style: a list of times formats hundreds at once.
-const formats = new Map<string, Intl.DateTimeFormat>();
+const formats = /* @__PURE__ */ new Map<string, Intl.DateTimeFormat>();
 
 const hasSeconds = (time: Temporal.PlainTime) =>
   time.second !== 0 || time.millisecond !== 0 || time.microsecond !== 0 || time.nanosecond !== 0;
@@ -39,7 +39,7 @@ type LocaleTime = {
   literals: Set<string>;
 };
 
-const localeTimes = new Map<string, LocaleTime>();
+const localeTimes = /* @__PURE__ */ new Map<string, LocaleTime>();
 
 // Spaces a letter from a digit beside it, so "9pm" and "21h30" read as words
 // and numbers, and a Latin letter from a letter of another script, so "AMకి"

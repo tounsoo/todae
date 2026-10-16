@@ -1,6 +1,6 @@
 'use client';
 
-import { ScrollArea } from '@omsoo.design/todae';
+import { ScrollArea } from '@tounsoo/todae';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';
 import { useLocale } from '../lib/i18n/useLocale';

@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
-import { useModalLayerElement } from '../overlay/useModalLayerElement';
-import { useRefElement } from '../overlay/useRefElement';
+import { useModalLayerElement } from '../overlay/useModalLayerElement.js';
+import { useRefElement } from '../overlay/useRefElement.js';
 
 /**
  * Puts a modal `<dialog>` in Todae's modal stack, the list of modals Todae

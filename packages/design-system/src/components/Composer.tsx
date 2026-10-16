@@ -11,12 +11,12 @@ import {
   type MouseEvent,
   type SubmitEvent as ReactSubmitEvent,
 } from 'react';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { useStrings } from '../providers/StringsProvider';
-import { Button, type ButtonActionProps } from './Button';
-import { useDismissLabel } from './dismissLabel';
-import { glyphOr, SendGlyph, StopGlyph } from './glyphs';
-import { composeHandlers, cx, useComposedRefs } from './props';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { Button, type ButtonActionProps } from './Button.js';
+import { useDismissLabel } from './dismissLabel.js';
+import { glyphOr, SendGlyph, StopGlyph } from './glyphs.js';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Composer.module.css';
 
 /**
@@ -38,7 +38,7 @@ export type ComposerSubmitProps = Omit<ButtonActionProps, 'type'> & {
 
 type ComposerContext = { busy: boolean };
 
-const Context = createContext<ComposerContext | null>(null);
+const Context = /* @__PURE__ */ createContext<ComposerContext | null>(null);
 
 function useComposer(part: string): ComposerContext {
   const context = useContext(Context);

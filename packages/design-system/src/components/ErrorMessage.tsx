@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
-import { cx } from './cx';
+import { cx } from './cx.js';
 import styles from './ErrorMessage.module.css';
 
 export type ErrorMessageRootProps = {

@@ -1,4 +1,4 @@
-import schema from '@omsoo.design/todae/schema/components.json';
+import schema from '@tounsoo/todae/schema/components.json';
 
 export type PropMeta = {
   name: string;

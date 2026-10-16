@@ -7,4 +7,4 @@ export {
   type PaginationRangeItem,
   type PaginationRangeOptions,
   type PaginationRootProps,
-} from '../components/Pagination';
+} from '../components/Pagination.js';

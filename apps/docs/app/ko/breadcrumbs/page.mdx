@@ -20,9 +20,9 @@ import { BreadcrumbsChevron, BreadcrumbsTrail } from '../../../components/demos/
   <BreadcrumbsTrail />
 </Example>
 
-Server Components는 `@omsoo.design/todae/breadcrumbs`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`도 훅도 없습니다. 메인 `@omsoo.design/todae` 엔트리는 클라이언트 모듈입니다.
+Server Components는 `@tounsoo/todae/breadcrumbs`에서 가져올 수 있습니다. 이 엔트리에는 `'use client'`도 훅도 없습니다. 메인 `@tounsoo/todae` 엔트리는 클라이언트 모듈입니다.
 
-랜드마크의 이름은 비어 있지 않은 `aria-label`이나 `aria-labelledby`를 주지 않으면 "Breadcrumb"입니다. 이 기본값은 [StringsProvider](/utilities/strings-provider)의 `breadcrumbs` 문자열이며, 설정하지 않으면 영어이고, `@omsoo.design/todae/breadcrumbs` 서버 진입점에서는 항상 영어입니다. 항목 사이에는 구분 기호가 그려지며, `separator`를 주거나 `separator` 글리프를 정하지 않으면(아래 아이콘 절 참고) `/`이고, 스크린 리더는 이를 건너뜁니다. 항목이 한 줄에 들어가지 않으면 여러 줄로 넘어갑니다.
+랜드마크의 이름은 비어 있지 않은 `aria-label`이나 `aria-labelledby`를 주지 않으면 "Breadcrumb"입니다. 이 기본값은 [StringsProvider](/utilities/strings-provider)의 `breadcrumbs` 문자열이며, 설정하지 않으면 영어이고, `@tounsoo/todae/breadcrumbs` 서버 진입점에서는 항상 영어입니다. 항목 사이에는 구분 기호가 그려지며, `separator`를 주거나 `separator` 글리프를 정하지 않으면(아래 아이콘 절 참고) `/`이고, 스크린 리더는 이를 건너뜁니다. 항목이 한 줄에 들어가지 않으면 여러 줄로 넘어갑니다.
 
 <Example>
   <BreadcrumbsChevron />
@@ -30,7 +30,7 @@ Server Components는 `@omsoo.design/todae/breadcrumbs`에서 가져올 수 있�
 
 ## 아이콘
 
-[GlyphsProvider](/utilities/glyphs-provider)에 `separator` 글리프가 있으면 각 항목은 구분 기호 텍스트 대신 그 아이콘을 그립니다. 왼쪽에서 오른쪽으로 읽는 페이지에서 다음 항목을 가리키게 그리세요. 오른쪽에서 왼쪽으로 읽는 페이지에서는 좌우가 뒤집힙니다. `Breadcrumbs.Root`의 `separator`가 이보다 우선하며, `@omsoo.design/todae/breadcrumbs` 서버 진입점은 provider를 읽지 않습니다.
+[GlyphsProvider](/utilities/glyphs-provider)에 `separator` 글리프가 있으면 각 항목은 구분 기호 텍스트 대신 그 아이콘을 그립니다. 왼쪽에서 오른쪽으로 읽는 페이지에서 다음 항목을 가리키게 그리세요. 오른쪽에서 왼쪽으로 읽는 페이지에서는 좌우가 뒤집힙니다. `Breadcrumbs.Root`의 `separator`가 이보다 우선하며, `@tounsoo/todae/breadcrumbs` 서버 진입점은 provider를 읽지 않습니다.
 
 ```tsx
 import { ChevronRight } from 'lucide-react';
@@ -44,7 +44,7 @@ import { ChevronRight } from 'lucide-react';
 
 **Todae가 맡는 것:** 이름이 붙은 `nav` 랜드마크가 `ol role="list"`를 감싸고, 각 `Breadcrumbs.Item`은 목록 항목입니다. `current`는 항목의 텍스트를 `aria-current="page"`를 가진 `span`으로 감쌉니다. 구분 기호는 대체 텍스트가 빈 CSS 콘텐츠이거나 항목 안에서 `aria-hidden`으로 숨긴 글리프이므로, 스크린 리더가 건너뛰고 목록 항목도 늘지 않습니다.
 
-**직접 제공할 것:** 마지막을 뺀 모든 항목에 링크를 넣고, 링크 텍스트는 이동할 페이지의 이름으로 하세요. 마지막 항목에는 일반 텍스트를 넣고 `current`로 표시하세요. 다른 언어의 페이지에서는 [StringsProvider](/utilities/strings-provider)로 번역한 이름을 주고, `@omsoo.design/todae/breadcrumbs` 서버 엔트리에서 가져올 때는 `aria-label`을 주세요.
+**직접 제공할 것:** 마지막을 뺀 모든 항목에 링크를 넣고, 링크 텍스트는 이동할 페이지의 이름으로 하세요. 마지막 항목에는 일반 텍스트를 넣고 `current`로 표시하세요. 다른 언어의 페이지에서는 [StringsProvider](/utilities/strings-provider)로 번역한 이름을 주고, `@tounsoo/todae/breadcrumbs` 서버 엔트리에서 가져올 때는 `aria-label`을 주세요.
 
 **주의할 점:** 항목 사이에 아이콘이나 `/` 같은 구분 기호를 직접 넣지 마세요. 소리 내어 읽히고, 항목 밖에 두면 목록 구조가 깨집니다. 대신 `separator`를 넘기거나 `separator` 글리프를 정하세요. `Breadcrumbs.Item`을 다른 요소로 감싸면 목록 안에 목록 항목이 아닌 것이 들어갑니다. `current` 없이 스타일만으로 현재 페이지를 표시하지 마세요.
 

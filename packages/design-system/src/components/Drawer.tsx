@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef } from 'react';
-import type { ButtonActionProps } from './Button';
-import { DRAWER_EXIT_MS } from '../overlay/useOverlayPresence';
+import type { ButtonActionProps } from './Button.js';
+import { DRAWER_EXIT_MS } from '../overlay/useOverlayPresence.js';
 import {
   DialogShellRoot,
   ShellClose,
@@ -8,9 +8,9 @@ import {
   ShellTitle,
   type DialogRootProps,
   type DialogShell,
-} from './dialogShell';
-import { composeHandlers, cx } from './props';
-import { revealRing } from './revealRing';
+} from './dialogShell.js';
+import { composeHandlers, cx } from './props.js';
+import { revealRing } from './revealRing.js';
 import styles from './Drawer.module.css';
 
 export type DrawerSide = 'start' | 'end';
@@ -33,7 +33,7 @@ const shellFor = (side: DrawerSide): DialogShell => ({
   exitProperty: 'background-color',
   attributes: { 'data-side': side },
 });
-const SHELLS = { start: shellFor('start'), end: shellFor('end') } as const;
+const SHELLS = { start: /* @__PURE__ */ shellFor('start'), end: /* @__PURE__ */ shellFor('end') } as const;
 
 function Root({ side = 'end', ...props }: DrawerRootProps) {
   return <DialogShellRoot {...props} shell={side === 'start' ? SHELLS.start : SHELLS.end} />;

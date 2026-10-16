@@ -1,4 +1,4 @@
-import catalog from '@omsoo.design/todae/tokens.json';
+import catalog from '@tounsoo/todae/tokens.json';
 import { DOCS_ORIGIN } from '../origin';
 
 export const LAYERS = ['core', 'appearance', 'density', 'contract'] as const;

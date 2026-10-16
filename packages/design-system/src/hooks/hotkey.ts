@@ -1,7 +1,6 @@
 // Inputs a key types nothing into.
-const UNTYPED_INPUTS = ['button', 'checkbox', 'color', 'file', 'image', 'radio', 'range', 'reset', 'submit']
-  .map((type) => `[type=${type}]`)
-  .join(', ');
+const UNTYPED_INPUTS =
+  '[type=button], [type=checkbox], [type=color], [type=file], [type=image], [type=radio], [type=range], [type=reset], [type=submit]';
 
 /** Whether a key pressed in `target` types there, so a typing hotkey leaves it alone. */
 export function typesIn(target: EventTarget | null, { key, modifiers }: Hotkey): boolean {
@@ -16,7 +15,7 @@ const MODIFIERS = ['alt', 'ctrl', 'meta', 'shift'] as const;
 type Modifier = (typeof MODIFIERS)[number];
 
 // The names people write for each modifier, such as macOS's Cmd and Option.
-const MODIFIER_NAMES = new Map<string, Modifier>([
+const MODIFIER_NAMES = /* @__PURE__ */ new Map<string, Modifier>([
   ['alt', 'alt'],
   ['option', 'alt'],
   ['opt', 'alt'],
@@ -29,7 +28,7 @@ const MODIFIER_NAMES = new Map<string, Modifier>([
 ]);
 
 // Keys whose name is not what they type.
-const KEY_NAMES = new Map([['space', ' ']]);
+const KEY_NAMES = /* @__PURE__ */ new Map([['space', ' ']]);
 
 export type Hotkey = { key: string; modifiers: ReadonlySet<Modifier> };
 

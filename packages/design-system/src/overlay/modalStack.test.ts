@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isModal } from './modalStack';
+import { isModal } from './modalStack.js';
 
 describe('isModal', () => {
   it('reads aria-modal without matching :modal where the engine has no :modal', () => {

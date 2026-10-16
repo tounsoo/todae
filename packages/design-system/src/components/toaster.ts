@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { AlertTone } from './Alert';
+import type { AlertTone } from './Alert.js';
 
 /** The same tones as Alert. */
 export type ToastTone = AlertTone;

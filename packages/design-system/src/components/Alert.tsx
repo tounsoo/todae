@@ -1,9 +1,9 @@
 import { type ComponentPropsWithRef, type ReactNode } from 'react';
-import { Button, type ButtonActionProps } from './Button';
-import { useStrings } from '../providers/StringsProvider';
-import { useDismissLabel } from './dismissLabel';
-import { useCloseGlyph } from './closeGlyph';
-import { cx } from './props';
+import { Button, type ButtonActionProps } from './Button.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { useDismissLabel } from './dismissLabel.js';
+import { useCloseGlyph } from './closeGlyph.js';
+import { cx } from './props.js';
 import styles from './Alert.module.css';
 
 export type AlertTone = 'info' | 'success' | 'warning' | 'critical';
@@ -24,7 +24,7 @@ export type AlertDescriptionProps = ComponentPropsWithRef<'div'>;
 export type AlertActionsProps = ComponentPropsWithRef<'div'>;
 export type AlertCloseProps = ButtonActionProps;
 
-const ASSERTIVE: ReadonlySet<AlertTone> = new Set(['warning', 'critical']);
+const ASSERTIVE: ReadonlySet<AlertTone> = /* @__PURE__ */ new Set(['warning', 'critical']);
 
 function Root({ tone = 'info', role, className, ...props }: AlertRootProps) {
   return (

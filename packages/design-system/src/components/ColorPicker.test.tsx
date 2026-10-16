@@ -1,8 +1,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ColorPicker, Fieldset, normalizeHex } from '../index';
-import { hexToHsv, hsvToHex } from './color';
+import { ColorPicker, Fieldset, normalizeHex } from '../index.js';
+import { hexToHsv, hsvToHex } from './color.js';
 
 afterEach(cleanup);
 

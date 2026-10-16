@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Button, Composer, Field } from '../index';
+import { Button, Composer, Field } from '../index.js';
 
 afterEach(cleanup);
 

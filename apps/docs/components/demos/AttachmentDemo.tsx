@@ -1,6 +1,6 @@
 'use client';
 
-import { Attachment, Button, Stack } from '@omsoo.design/todae';
+import { Attachment, Button, Stack } from '@tounsoo/todae';
 import { FileText, Image } from 'lucide-react';
 import { useEffect, useState } from 'react';
 

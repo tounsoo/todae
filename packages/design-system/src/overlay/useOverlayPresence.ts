@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { cssTimeMs } from './cssTime';
+import { cssTimeMs } from './cssTime.js';
 
 // Fallbacks for when the exit transition can't be read from computed style.
 // The real lengths come from the dialog, sheet and drawer motion tokens.

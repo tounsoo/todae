@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import createMDX from '@next/mdx';
 import remarkPageMetadata from './lib/remarkPageMetadata.mjs';
 
@@ -26,6 +27,15 @@ const nextConfig = {
   // only the prefixed form, and Lightning drops the prefix for newer Safari.
   experimental: { globalNotFound: true, useLightningcss: true },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+  // tsconfig paths point the package at its source, whose relative imports name the emitted .js
+  // files. The alias is scoped to that source, so dependencies resolve as they publish.
+  webpack: (config) => {
+    config.module.rules.push({
+      include: fileURLToPath(new URL('../../packages/design-system/src', import.meta.url)),
+      resolve: { extensionAlias: { '.js': ['.ts', '.tsx', '.js'] } },
+    });
+    return config;
+  },
   outputFileTracingIncludes: {
     // The MCP reads English pages only, and builds company tokens on Todae's token files with its CLI.
     '/api/[transport]': [

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { paginationRange, type PaginationRangeItem } from './paginationRange';
+import { paginationRange, type PaginationRangeItem } from './paginationRange.js';
 
 describe('paginationRange', () => {
   it('lists every page when they fit', () => {

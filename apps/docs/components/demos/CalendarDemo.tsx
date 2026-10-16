@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Code, Stack } from '@omsoo.design/todae';
+import { Calendar, Code, Stack } from '@tounsoo/todae';
 import { useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 

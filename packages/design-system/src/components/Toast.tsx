@@ -15,27 +15,27 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { frontModal, isModal, subscribeModals } from '../overlay/modalStack';
-import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence';
-import { isPopoverOpen, reshowHeldInside } from '../overlay/usePopoverSync';
-import { TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables';
-import { initialFocusTarget } from '../overlay/useInitialFocus';
-import { useFocusLeave } from '../overlay/useFocusLeave';
-import { eventInside } from '../overlay/eventInside';
-import { matchesParsed, parseHotkey, typesIn } from '../hooks/hotkey';
-import { Button, type ButtonActionProps } from './Button';
-import { useStrings } from '../providers/StringsProvider';
-import { useDismissLabel } from './dismissLabel';
-import { useCloseGlyph } from './closeGlyph';
-import { composeHandlers, cx, useComposedRefs } from './props';
-import type { Toaster, ToastRecord, ToastTone } from './toaster';
+import { frontModal, isModal, subscribeModals } from '../overlay/modalStack.js';
+import { useEntered, useOverlayPresence } from '../overlay/useOverlayPresence.js';
+import { isPopoverOpen, reshowHeldInside } from '../overlay/usePopoverSync.js';
+import { TOAST_HOST_ATTRIBUTE } from '../overlay/tabbables.js';
+import { initialFocusTarget } from '../overlay/useInitialFocus.js';
+import { useFocusLeave } from '../overlay/useFocusLeave.js';
+import { eventInside } from '../overlay/eventInside.js';
+import { matchesParsed, parseHotkey, typesIn } from '../hooks/hotkey.js';
+import { Button, type ButtonActionProps } from './Button.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { useDismissLabel } from './dismissLabel.js';
+import { useCloseGlyph } from './closeGlyph.js';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
+import type { Toaster, ToastRecord, ToastTone } from './toaster.js';
 import styles from './Toast.module.css';
-import { focusWithoutScroll } from './revealRing';
+import { focusWithoutScroll } from './revealRing.js';
 
-export { matchesHotkey } from '../hooks/hotkey';
+export { matchesHotkey } from '../hooks/hotkey.js';
 
 // The longest delay setTimeout takes; a longer one fires at once.
-const MAX_TIMEOUT_MS = 2 ** 31 - 1;
+const MAX_TIMEOUT_MS = 2_147_483_647; // 2 ** 31 - 1, written out since esbuild keeps `**` in unused code
 
 // Fallback for when the exit transition can't be read from computed style.
 // The real length comes from the toast.motion.exit token.
@@ -76,7 +76,7 @@ export type ToastCloseProps = ButtonActionProps;
 
 type ItemContextValue = { toast: ToastRecord; dismiss: () => void };
 
-const ItemContext = createContext<ItemContextValue | null>(null);
+const ItemContext = /* @__PURE__ */ createContext<ItemContextValue | null>(null);
 
 // One reference, so the server snapshot never changes.
 const NO_TOASTS: readonly never[] = [];

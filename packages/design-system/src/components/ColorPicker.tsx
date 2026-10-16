@@ -10,13 +10,13 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState';
-import { useStrings } from '../providers/StringsProvider';
-import { hexToHsv, hsvToHex, normalizeHex, type Hsv } from './color';
-import { useFieldsetState } from './Fieldset.context';
-import { composeHandlers, cx } from './props';
+import { useControlledValue } from '../hooks/useControlledState.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { hexToHsv, hsvToHex, normalizeHex, type Hsv } from './color.js';
+import { useFieldsetState } from './Fieldset.context.js';
+import { composeHandlers, cx } from './props.js';
 import styles from './ColorPicker.module.css';
-import { focusWithoutScroll } from './revealRing';
+import { focusWithoutScroll } from './revealRing.js';
 
 export type ColorPickerRootProps = {
   /** Controlled color as #rrggbb. Pass with onValueChange. */
@@ -43,7 +43,7 @@ type ColorPickerContextValue = {
   change: (next: Hsv) => void;
 };
 
-const ColorPickerContext = createContext<ColorPickerContextValue | null>(null);
+const ColorPickerContext = /* @__PURE__ */ createContext<ColorPickerContextValue | null>(null);
 
 function usePicker(part: string): ColorPickerContextValue {
   const ctx = useContext(ColorPickerContext);
@@ -51,7 +51,7 @@ function usePicker(part: string): ColorPickerContextValue {
   return ctx;
 }
 
-const BLACK = hsvToHex({ h: 0, s: 0, v: 0 });
+const BLACK = /* @__PURE__ */ hsvToHex({ h: 0, s: 0, v: 0 });
 const clamp = (n: number) => Math.min(1, Math.max(0, n));
 // One arrow key moves one percent; Shift or Page Up and Down move ten.
 const snap = (n: number) => clamp(Math.round(n * 100) / 100);

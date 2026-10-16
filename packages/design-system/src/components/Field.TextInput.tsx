@@ -1,9 +1,9 @@
 import type { ChangeEvent, InputHTMLAttributes, Ref } from 'react';
-import { mergeDescribedBy, useFieldContext } from './Field.context';
-import { cx } from './props';
+import { mergeDescribedBy, useFieldContext } from './Field.context.js';
+import { cx } from './props.js';
 import styles from './Field.module.css';
-import { useField } from '../hooks/useField';
-import { useTextEntry } from './Field.shared';
+import { useField } from '../hooks/useField.js';
+import { useTextEntry } from './Field.shared.js';
 
 /**
  * Input types that take a string value. The number type keeps its native
@@ -15,7 +15,7 @@ import { useTextEntry } from './Field.shared';
 export type FieldTextInputType = 'text' | 'search' | 'email' | 'url' | 'tel' | 'password' | 'number';
 
 // Browsers ignore maxLength on these, so no limit is shown or announced.
-const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = new Set(['number']);
+const NO_LENGTH_LIMIT: ReadonlySet<FieldTextInputType> = /* @__PURE__ */ new Set(['number']);
 
 export type FieldTextInputProps = {
   value: string;

@@ -1,17 +1,17 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import { useMemo, useState, useSyncExternalStore, type ComponentPropsWithRef } from 'react';
-import { useDomId } from './domId';
-import { mergeDescribedBy } from './Field.context';
-import { cx } from './props';
+import { useDomId } from './domId.js';
+import { mergeDescribedBy } from './Field.context.js';
+import { cx } from './props.js';
 import styles from './Field.module.css';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { ClockGlyph, glyphOr } from './glyphs';
-import { useStrings } from '../providers/StringsProvider';
-import type { PopoverCloseReason } from '../hooks/usePopover';
-import { Popover } from './Popover';
-import { OptionList } from './OptionList';
-import { formatTime } from './timeText';
-import { useFieldPicker, htmlTime } from './Field.shared';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { ClockGlyph, glyphOr } from './glyphs.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import type { PopoverCloseReason } from '../hooks/usePopover.js';
+import { Popover } from './Popover.js';
+import { OptionList } from './OptionList.js';
+import { formatTime } from './timeText.js';
+import { useFieldPicker, htmlTime } from './Field.shared.js';
 
 /** Why Field.TimePicker's list closed: a popover's reasons, a picked time, or the field became disabled. */
 export type FieldTimePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';

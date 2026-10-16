@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
-import { Nav } from '../components/Nav';
-import { ScrollArea } from '../components/ScrollArea';
+import { Nav } from '../components/Nav.js';
+import { ScrollArea } from '../components/ScrollArea.js';
 
 function Docs({ dir }: { dir?: 'rtl' }) {
   return (

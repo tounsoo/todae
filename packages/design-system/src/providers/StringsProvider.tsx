@@ -1,9 +1,9 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { DEFAULT_STRINGS, type Strings } from './strings';
+import { DEFAULT_STRINGS, type Strings } from './strings.js';
 
-export type { Strings } from './strings';
+export type { Strings } from './strings.js';
 
 export type StringsProviderProps = {
   /** The strings to change. Each key left out comes from the nearest StringsProvider above, else English. */
@@ -11,7 +11,7 @@ export type StringsProviderProps = {
   children?: ReactNode;
 };
 
-const StringsContext = createContext<Readonly<Strings>>(DEFAULT_STRINGS);
+const StringsContext = /* @__PURE__ */ createContext<Readonly<Strings>>(DEFAULT_STRINGS);
 
 /** Sets the text Todae writes by itself, such as default names, for its subtree. Renders no element. */
 export function StringsProvider({ strings, children }: StringsProviderProps) {

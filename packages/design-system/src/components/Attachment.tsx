@@ -9,15 +9,15 @@ import {
   type ComponentPropsWithRef,
   type MouseEvent,
 } from 'react';
-import { isReachable } from '../hooks/useRovingFocus';
-import { useStrings } from '../providers/StringsProvider';
-import { Button, type ButtonActionProps } from './Button';
-import { useCloseGlyph } from './closeGlyph';
-import { useDismissLabel } from './dismissLabel';
-import { useDomId } from './domId';
-import { Progress, type ProgressRootProps } from './Progress';
-import { cx, useComposedRefs } from './props';
-import { focusWithoutScroll } from './revealRing';
+import { isReachable } from '../hooks/useRovingFocus.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { Button, type ButtonActionProps } from './Button.js';
+import { useCloseGlyph } from './closeGlyph.js';
+import { useDismissLabel } from './dismissLabel.js';
+import { useDomId } from './domId.js';
+import { Progress, type ProgressRootProps } from './Progress.js';
+import { cx, useComposedRefs } from './props.js';
+import { focusWithoutScroll } from './revealRing.js';
 import styles from './Attachment.module.css';
 
 /** Where the file is: `ready` to send or open, `uploading`, or failed with an `error`. */
@@ -51,7 +51,7 @@ type AttachmentContext = {
   setNamed: (named: Named | undefined) => void;
 };
 
-const Context = createContext<AttachmentContext | null>(null);
+const Context = /* @__PURE__ */ createContext<AttachmentContext | null>(null);
 
 const ROOT_ATTR = 'data-todae-attachment';
 const REMOVE_ATTR = 'data-todae-attachment-remove';

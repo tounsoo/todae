@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Button } from './Button';
-import { ToggleGroup } from './ToggleGroup';
+import { Button } from './Button.js';
+import { ToggleGroup } from './ToggleGroup.js';
 
 afterEach(cleanup);
 

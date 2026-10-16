@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "tounsoo/todae"
+    }
+  ],
+  "commit": false,
+  "format": false,
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "privatePackages": {
+    "version": false,
+    "tag": false
+  },
+  "changedFilePatterns": [
+    "**",
+    "!**/*.test.ts",
+    "!**/*.test.tsx",
+    "!**/__snapshots__/**",
+    "!**/__fixtures__/**",
+    "!src/test/**",
+    "!vitest.browser.config.ts"
+  ]
+}

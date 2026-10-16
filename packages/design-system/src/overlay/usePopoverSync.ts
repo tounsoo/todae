@@ -1,5 +1,5 @@
 import { useLayoutEffect, type RefObject } from 'react';
-import { focusWithoutScroll } from '../components/revealRing';
+import { focusWithoutScroll } from '../components/revealRing.js';
 
 export function isPopoverOpen(el: HTMLElement): boolean {
   return el.matches(':popover-open') || el.hasAttribute('data-popover-open');
@@ -7,7 +7,7 @@ export function isPopoverOpen(el: HTMLElement): boolean {
 
 // The popovers React holds open, so a layer shown again can show them again
 // in front of it.
-const held = new WeakSet<HTMLElement>();
+const held = /* @__PURE__ */ new WeakSet<HTMLElement>();
 
 export function usePopoverSync(contentRef: RefObject<HTMLElement | null>, open: boolean): void {
   useLayoutEffect(() => {

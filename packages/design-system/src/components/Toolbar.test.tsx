@@ -2,12 +2,12 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
-import type { AlertCloseProps } from './Alert';
-import type { MenuTriggerProps } from './Menu';
-import { Button } from './Button';
-import { Menu } from './Menu';
-import { ToggleGroup } from './ToggleGroup';
-import { Toolbar } from './Toolbar';
+import type { AlertCloseProps } from './Alert.js';
+import type { MenuTriggerProps } from './Menu.js';
+import { Button } from './Button.js';
+import { Menu } from './Menu.js';
+import { ToggleGroup } from './ToggleGroup.js';
+import { Toolbar } from './Toolbar.js';
 
 afterEach(cleanup);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { GlyphsProvider, Nav } from '@omsoo.design/todae';
+import { GlyphsProvider, Nav } from '@tounsoo/todae';
 import { usePathname } from 'next/navigation';
 import type { Locale } from '../lib/i18n/config';
 import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';

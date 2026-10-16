@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useStrings } from '../providers/StringsProvider';
-import { useAnnouncer } from './useAnnouncer';
+import { useStrings } from '../providers/StringsProvider.js';
+import { useAnnouncer } from './useAnnouncer.js';
 
 export type ClipboardStatus = 'idle' | 'copied' | 'failed';
 
@@ -29,7 +29,7 @@ type State = { status: ClipboardStatus; text: string | null; settled: number; af
 
 const DEFAULT_RESET_AFTER = 2000;
 // setTimeout runs a longer delay at once, so a resetAfter past it never resets.
-const MAX_DELAY = 2 ** 31 - 1;
+const MAX_DELAY = 2_147_483_647; // 2 ** 31 - 1
 
 /**
  * Copies text with `navigator.clipboard.writeText`, keeps the outcome as

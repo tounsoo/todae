@@ -1,5 +1,5 @@
 import type { HTMLAttributes, Ref } from 'react';
-import { cx } from './cx';
+import { cx } from './cx.js';
 import styles from './Text.module.css';
 
 export type TextHeading = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';

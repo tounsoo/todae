@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { describe, expect, it } from 'vitest';
-import { Tree } from '../components/Tree';
+import { Tree } from '../components/Tree.js';
 
 function Files({ dir }: { dir?: 'rtl' }) {
   return (

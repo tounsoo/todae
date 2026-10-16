@@ -1,6 +1,6 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import type { ComponentPropsWithRef, ReactNode } from 'react';
-import { cx } from './cx';
+import { cx } from './cx.js';
 import styles from './Message.module.css';
 
 /** Who wrote the message. It sets layout and tokens only: a user's message sits at the end side in a bubble. */
@@ -71,7 +71,7 @@ function Actions({ className, reveal = 'always', ...props }: MessageActionsProps
 }
 
 // One formatter per locale, style and zone: a conversation formats many times on each render.
-const formats = new Map<string, Intl.DateTimeFormat>();
+const formats = /* @__PURE__ */ new Map<string, Intl.DateTimeFormat>();
 
 function format(value: Temporal.ZonedDateTime, locale: string | undefined, options: Intl.DateTimeFormatOptions) {
   const key = `${locale ?? ''}|${options.dateStyle ?? ''}|${options.timeStyle ?? ''}|${value.timeZoneId}`;

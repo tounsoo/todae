@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Stack, Steps, type StepsStatus } from '@omsoo.design/todae';
+import { Button, Stack, Steps, type StepsStatus } from '@tounsoo/todae';
 import { useEffect, useState } from 'react';
 
 const PLAN = ['Read the failing test', 'Find where the date is parsed', 'Write the fix', 'Run the test suite'];

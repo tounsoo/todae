@@ -1,8 +1,8 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import * as api from './index';
-import type { ComponentMeta } from './meta';
+import * as api from './index.js';
+import type { ComponentMeta } from './meta.js';
 
 // Every *.meta.ts in the package, which `pnpm schema` turns into schema/components.json.
 const files = readdirSync(import.meta.dirname, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.meta.ts'));

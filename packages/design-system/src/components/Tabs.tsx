@@ -11,11 +11,11 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState';
-import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus';
-import { useFocusLeave } from '../overlay/useFocusLeave';
-import { composeHandlers, cx, useComposedRefs } from './props';
-import { domSafe, useDomId } from './domId';
+import { useControlledValue } from '../hooks/useControlledState.js';
+import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
+import { useFocusLeave } from '../overlay/useFocusLeave.js';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { domSafe, useDomId } from './domId.js';
 import styles from './Tabs.module.css';
 
 export type TabsOrientation = 'horizontal' | 'vertical';
@@ -72,13 +72,13 @@ type TabsContextValue = {
   release: (value: string) => void;
 };
 
-const TabsContext = createContext<TabsContextValue | null>(null);
+const TabsContext = /* @__PURE__ */ createContext<TabsContextValue | null>(null);
 
 // Panels read only the selection, so arrowing through the list, which moves
 // the tab stop, does not render them.
 type TabsPanelContextValue = { baseId: string; value: string };
 
-const TabsPanelContext = createContext<TabsPanelContextValue | null>(null);
+const TabsPanelContext = /* @__PURE__ */ createContext<TabsPanelContextValue | null>(null);
 
 function useTabs(part: string): TabsContextValue {
   const ctx = useContext(TabsContext);

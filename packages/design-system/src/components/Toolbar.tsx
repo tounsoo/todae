@@ -7,13 +7,13 @@ import {
   type FocusEvent,
   type KeyboardEvent,
 } from 'react';
-import { useDomId } from './domId';
-import { isReachable, useRovingFocus } from '../hooks/useRovingFocus';
-import { cx } from './cx';
-import { useComposedRefs } from './props';
+import { useDomId } from './domId.js';
+import { isReachable, useRovingFocus } from '../hooks/useRovingFocus.js';
+import { cx } from './cx.js';
+import { useComposedRefs } from './props.js';
 import styles from './Toolbar.module.css';
-import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from './toolbarContext';
-import { focusWithoutScroll } from './revealRing';
+import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from './toolbarContext.js';
+import { focusWithoutScroll } from './revealRing.js';
 
 export type { ToolbarOrientation };
 
@@ -36,7 +36,7 @@ export type ToolbarGroupProps = ComponentPropsWithRef<'div'>;
 export type ToolbarSeparatorProps = Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
 // Everything Tab can reach. A negative tabindex is never an item.
-const FOCUSABLE = [
+const FOCUSABLE = /* @__PURE__ */ [
   'button',
   'a[href]',
   'input:not([type="hidden"])',
@@ -53,7 +53,7 @@ const FOCUSABLE = [
 const NOT_ITEM = 'summary, iframe, audio, video';
 
 // Roles whose widgets handle arrow keys themselves.
-const ARROW_ROLES = new Set([
+const ARROW_ROLES = /* @__PURE__ */ new Set([
   'combobox',
   'grid',
   'listbox',
@@ -66,7 +66,11 @@ const ARROW_ROLES = new Set([
   'tree',
   'treegrid',
 ]);
-const ARROW_COMPOSITES = [...ARROW_ROLES].map((role) => `[role="${role}"]`).join(', ');
+const ARROW_COMPOSITES = /* @__PURE__ */ roleSelector(ARROW_ROLES);
+
+function roleSelector(roles: ReadonlySet<string>): string {
+  return [...roles].map((role) => `[role="${role}"]`).join(', ');
+}
 
 // Controls whose own arrow keys move a caret or a value, and composites with
 // their own roving focus. They keep their own tab stop and keys, outside the

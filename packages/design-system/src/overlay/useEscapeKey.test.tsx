@@ -1,8 +1,8 @@
 import { cleanup, fireEvent, render } from '@testing-library/react';
 import { useRef } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { dropModal, pushModal } from './modalStack';
-import { useEscapeKey } from './useEscapeKey';
+import { dropModal, pushModal } from './modalStack.js';
+import { useEscapeKey } from './useEscapeKey.js';
 
 afterEach(cleanup);
 

@@ -2,8 +2,8 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState, type ReactNode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { GlyphsProvider } from '../providers/GlyphsProvider';
-import { Tree, type TreeRootProps } from './Tree';
+import { GlyphsProvider } from '../providers/GlyphsProvider.js';
+import { Tree, type TreeRootProps } from './Tree.js';
 
 afterEach(cleanup);
 

@@ -3,8 +3,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
-import { Description, type DescriptionRootProps } from './Description';
-import * as api from '../index';
+import { Description, type DescriptionRootProps } from './Description.js';
+import * as api from '../index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const css = readFileSync(join(here, 'Description.module.css'), 'utf8');

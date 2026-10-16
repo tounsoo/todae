@@ -5,7 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, paginationRange } from '../index';
+import { Avatar, Description, ErrorMessage, Field, Grid, Label, Pagination, RadioGroup, Stack, Text, paginationRange } from '../index.js';
 
 /** axe without its WCAG 2 contrast rule: Todae checks contrast with APCA when tokens build. */
 async function violations(): Promise<string[]> {

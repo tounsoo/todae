@@ -1,4 +1,4 @@
-import type { ComboboxOption } from './useCombobox.types';
+import type { ComboboxOption } from './useCombobox.types.js';
 
 export function defaultFilter(option: ComboboxOption, query: string): boolean {
   return option.label.toLowerCase().includes(query.trim().toLowerCase());

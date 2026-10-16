@@ -13,13 +13,13 @@ import {
   type MouseEvent,
   type RefObject,
 } from 'react';
-import { useControlledValue } from '../hooks/useControlledState';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { useStrings } from '../providers/StringsProvider';
-import { useDomId } from './domId';
-import { useFieldsetState } from './Fieldset.context';
-import { ChevronGlyph, glyphOr } from './glyphs';
-import { composeHandlers, cx, useComposedRefs } from './props';
+import { useControlledValue } from '../hooks/useControlledState.js';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { useDomId } from './domId.js';
+import { useFieldsetState } from './Fieldset.context.js';
+import { ChevronGlyph, glyphOr } from './glyphs.js';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Calendar.module.css';
 
 /** A day of the week as Temporal numbers it: 1 is Monday, 7 is Sunday. */
@@ -90,7 +90,7 @@ type CalendarContextValue = {
 
 type CalendarView = 'days' | 'years';
 
-const CalendarContext = createContext<CalendarContextValue | null>(null);
+const CalendarContext = /* @__PURE__ */ createContext<CalendarContextValue | null>(null);
 
 function useCalendar(part: string): CalendarContextValue {
   const ctx = useContext(CalendarContext);
@@ -421,7 +421,7 @@ const LAST_DAY = '+275760-08-31';
 /** The first year of the page of years that holds the year. */
 const yearPage = (year: number) => year - (((year % YEARS_PER_PAGE) + YEARS_PER_PAGE) % YEARS_PER_PAGE);
 
-const yearFormats = new Map<string, Intl.NumberFormat>();
+const yearFormats = /* @__PURE__ */ new Map<string, Intl.NumberFormat>();
 function yearFormat(locale: string) {
   let format = yearFormats.get(locale);
   if (!format) {

@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef } from 'react';
-import type { ButtonActionProps } from './Button';
-import { DIALOG_EXIT_MS } from '../overlay/useOverlayPresence';
+import type { ButtonActionProps } from './Button.js';
+import { DIALOG_EXIT_MS } from '../overlay/useOverlayPresence.js';
 import {
   DialogShellRoot,
   ShellClose,
@@ -8,11 +8,11 @@ import {
   ShellTitle,
   type DialogRootProps,
   type DialogShell,
-} from './dialogShell';
-import { cx } from './props';
+} from './dialogShell.js';
+import { cx } from './props.js';
 import styles from './Dialog.module.css';
 
-export type { DialogCloseReason, DialogRootProps } from './dialogShell';
+export type { DialogCloseReason, DialogRootProps } from './dialogShell.js';
 
 function DialogTitle({ className, ...props }: ComponentPropsWithRef<'h2'>) {
   return <ShellTitle {...props} className={cx(styles.title, className)} />;
@@ -38,12 +38,14 @@ function DialogClose(props: ButtonActionProps) {
   return <ShellClose {...props} />;
 }
 
-const DIALOG_SHELL: DialogShell = {
+// Built by a call, so bundlers can drop it with Dialog: esbuild keeps a top-level object that reads `styles`.
+const dialogShell = (): DialogShell => ({
   className: styles.dialog,
   panelClassName: styles.panel,
   exitMs: DIALOG_EXIT_MS,
   exitProperty: 'opacity',
-};
+});
+const DIALOG_SHELL = /* @__PURE__ */ dialogShell();
 
 function DialogRoot(props: DialogRootProps) {
   return <DialogShellRoot {...props} shell={DIALOG_SHELL} />;

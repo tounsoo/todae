@@ -1,9 +1,9 @@
 import { useCallback, useInsertionEffect, useLayoutEffect, useReducer, useRef, type FormEvent, type RefObject } from 'react';
-import { dropModal } from './modalStack';
-import { inToastHostWithin } from './tabbables';
-import { useModalLayerElement } from './useModalLayerElement';
-import { reshowHeldInside } from './usePopoverSync';
-import { focusWithoutScroll } from '../components/revealRing';
+import { dropModal } from './modalStack.js';
+import { inToastHostWithin } from './tabbables.js';
+import { useModalLayerElement } from './useModalLayerElement.js';
+import { reshowHeldInside } from './usePopoverSync.js';
+import { focusWithoutScroll } from '../components/revealRing.js';
 
 /** The close reasons a modal `<dialog>` reports by itself. */
 export type ModalDialogCloseReason = 'escape' | 'form' | 'native';

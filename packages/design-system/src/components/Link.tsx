@@ -1,5 +1,5 @@
 import type { ComponentPropsWithRef, ReactElement } from 'react';
-import { cx } from './cx';
+import { cx } from './cx.js';
 import styles from './Link.module.css';
 
 export type LinkRenderProps = ComponentPropsWithRef<'a'>;

@@ -1,4 +1,4 @@
-import { getTabbables } from '../overlay/tabbables';
+import { getTabbables } from '../overlay/tabbables.js';
 
 export type TipAttrs = {
   readonly id: string;

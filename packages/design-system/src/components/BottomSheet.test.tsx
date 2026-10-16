@@ -1,8 +1,8 @@
 import { Profiler, memo } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi, expectTypeOf } from 'vitest';
-import { heldModals } from '../overlay/modalStack';
-import { BottomSheet, type BottomSheetRootProps, type SheetCloseReason } from './BottomSheet';
+import { heldModals } from '../overlay/modalStack.js';
+import { BottomSheet, type BottomSheetRootProps, type SheetCloseReason } from './BottomSheet.js';
 
 afterEach(cleanup);
 

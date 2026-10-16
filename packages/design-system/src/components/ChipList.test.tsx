@@ -1,8 +1,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ChipTone } from './Chip';
-import { ChipList } from './ChipList';
+import type { ChipTone } from './Chip.js';
+import { ChipList } from './ChipList.js';
 
 afterEach(cleanup);
 

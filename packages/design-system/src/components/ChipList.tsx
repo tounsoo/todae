@@ -8,17 +8,17 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
-import { useChipListInternal } from '../hooks/useChipList';
-import { usePopover } from '../hooks/usePopover';
-import { isReachable } from '../hooks/useRovingFocus';
-import { getTabbables } from '../overlay/tabbables';
-import { useStrings } from '../providers/StringsProvider';
-import { Chip, type ChipTone } from './Chip';
-import { useChipKeys } from './chipKeys';
-import { Popover } from './Popover';
-import { cx } from './cx';
+import { useChipListInternal } from '../hooks/useChipList.js';
+import { usePopover } from '../hooks/usePopover.js';
+import { isReachable } from '../hooks/useRovingFocus.js';
+import { getTabbables } from '../overlay/tabbables.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { Chip, type ChipTone } from './Chip.js';
+import { useChipKeys } from './chipKeys.js';
+import { Popover } from './Popover.js';
+import { cx } from './cx.js';
 import styles from './ChipList.module.css';
-import { focusWithoutScroll } from './revealRing';
+import { focusWithoutScroll } from './revealRing.js';
 
 /**
  * A read-only or removable list of chips that folds the ones past `maxRows`

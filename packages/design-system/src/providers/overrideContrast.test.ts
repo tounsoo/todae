@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { apcaContrast as builtApca, composite as builtComposite, oklchToSrgb as builtOklch } from '../../scripts/build-tokens';
-import { apcaContrast, composite, oklchToSrgb, parseComputedColor } from './overrideContrast';
+import { apcaContrast as builtApca, composite as builtComposite, oklchToSrgb as builtOklch } from '../../scripts/build-tokens.js';
+import { apcaContrast, composite, oklchToSrgb, parseComputedColor } from './overrideContrast.js';
 
 describe('override contrast math', () => {
   it('measures exactly as the token build does', () => {

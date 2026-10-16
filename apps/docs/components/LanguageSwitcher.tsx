@@ -1,7 +1,7 @@
 'use client';
 
-import { Link } from '@omsoo.design/todae/link';
-import { Stack } from '@omsoo.design/todae/stack';
+import { Link } from '@tounsoo/todae/link';
+import { Stack } from '@tounsoo/todae/stack';
 import { usePathname } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
 import { LOCALE_NAMES, LOCALES, localizePath, type Locale } from '../lib/i18n/config';

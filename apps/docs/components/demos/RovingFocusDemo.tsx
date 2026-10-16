@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, useRovingFocus } from '@omsoo.design/todae';
+import { Button, useRovingFocus } from '@tounsoo/todae';
 
 // Actions, not toggles: a toggle would also need aria-pressed.
 const TOOLS = ['Cut', 'Copy', 'Paste', 'Delete'];

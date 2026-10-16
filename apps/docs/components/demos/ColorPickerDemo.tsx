@@ -1,6 +1,6 @@
 'use client';
 
-import { Code, ColorPicker, Stack } from '@omsoo.design/todae';
+import { Code, ColorPicker, Stack } from '@tounsoo/todae';
 import { useState } from 'react';
 
 export function ColorPickerInline() {

@@ -1,8 +1,8 @@
 import { useId, type ComponentPropsWithRef, type ReactElement, type ReactNode } from 'react';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { ChevronGlyph, glyphOr, hasGlyph } from './glyphs';
-import { cx } from './props';
-import type { LinkRenderProps } from './Link';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { ChevronGlyph, glyphOr, hasGlyph } from './glyphs.js';
+import { cx } from './props.js';
+import type { LinkRenderProps } from './Link.js';
 import styles from './Nav.module.css';
 
 /** A `nav` landmark. Name it with `aria-label` or `aria-labelledby` when the page has more than one. */

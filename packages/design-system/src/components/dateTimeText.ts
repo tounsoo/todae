@@ -1,7 +1,7 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 // Server-safe date and time text for a text input beside Field.DateTimePicker: no hooks or context.
-import { fold, isMonthDay, readDate, type DateTextOptions } from './dateText';
-import { parseTime, splitWords } from './timeText';
+import { fold, isMonthDay, readDate, type DateTextOptions } from './dateText.js';
+import { parseTime, splitWords } from './timeText.js';
 
 export type DateTimeTextOptions = DateTextOptions;
 
@@ -51,7 +51,7 @@ type LocaleDateTime = {
   yearlessEdges: { start: Set<string>; end: Set<string> };
 };
 
-const localeDateTimes = new Map<string, LocaleDateTime>();
+const localeDateTimes = /* @__PURE__ */ new Map<string, LocaleDateTime>();
 
 // How the locale may write a month and a day without a year, for the marks before and after them.
 const monthDays: Intl.DateTimeFormatOptions[] = [
@@ -74,8 +74,8 @@ const punctuation = (text: string) => [...fold(text)].filter((char) => PUNCTUATI
 
 const join = (parts: Intl.DateTimeFormatPart[]) => parts.map((part) => part.value).join('');
 
-const DATE_PARTS = new Set(['year', 'month', 'day', 'weekday', 'era', 'relatedYear', 'yearName']);
-const TIME_PARTS = new Set(['hour', 'minute', 'second', 'dayPeriod']);
+const DATE_PARTS = /* @__PURE__ */ new Set(['year', 'month', 'day', 'weekday', 'era', 'relatedYear', 'yearName']);
+const TIME_PARTS = /* @__PURE__ */ new Set(['hour', 'minute', 'second', 'dayPeriod']);
 
 function localeDateTime(locale: string | undefined): LocaleDateTime {
   const key = locale ?? '';

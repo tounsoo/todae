@@ -4,11 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState, type CSSProperties } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import * as api from '../index';
-import { usePopover, type PopoverCloseReason, type UsePopoverOptions } from '../hooks/usePopover';
-import { OptionList } from './OptionList';
-import { Popover, type PopoverRootProps } from './Popover';
-import type { PopoverWire } from './Popover.wire';
+import * as api from '../index.js';
+import { usePopover, type PopoverCloseReason, type UsePopoverOptions } from '../hooks/usePopover.js';
+import { OptionList } from './OptionList.js';
+import { Popover, type PopoverRootProps } from './Popover.js';
+import type { PopoverWire } from './Popover.wire.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, 'Popover.tsx'), 'utf8');
@@ -160,7 +160,7 @@ describe('Popover', () => {
     expect(source).not.toContain('Popover.Content');
     const froms = [...source.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
     expect(new Set(froms)).toEqual(
-      new Set(['react', '../overlay/usePopoverSync', './Popover.wire', './Popover.module.css', './props', './revealRing', './cx', './toolbarContext']),
+      new Set(['react', '../overlay/usePopoverSync.js', './Popover.wire.js', './Popover.module.css', './props.js', './revealRing.js', './cx.js', './toolbarContext.js']),
     );
     expect(css).not.toContain('.trigger');
     expect(css).toContain('anchor(');

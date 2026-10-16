@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, Button, Message, Prose, Loader, Stack } from '@omsoo.design/todae';
+import { Avatar, Button, Message, Prose, Loader, Stack } from '@tounsoo/todae';
 import { useState } from 'react';
 import { useLocale } from '../../lib/i18n/useLocale';
 

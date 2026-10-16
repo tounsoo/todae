@@ -7,10 +7,10 @@ import {
   useState,
   type ComponentPropsWithRef,
 } from 'react';
-import { cx } from './cx';
-import { useComposedRefs } from './props';
+import { cx } from './cx.js';
+import { useComposedRefs } from './props.js';
 import styles from './Avatar.module.css';
-import type { CategoryTone } from './tone';
+import type { CategoryTone } from './tone.js';
 
 export type AvatarSize = 'sm' | 'md' | 'lg';
 
@@ -52,7 +52,7 @@ type AvatarContextValue = {
   setStatus: (status: AvatarImageStatus) => void;
 };
 
-const AvatarContext = createContext<AvatarContextValue | null>(null);
+const AvatarContext = /* @__PURE__ */ createContext<AvatarContextValue | null>(null);
 
 function useAvatar(part: string): AvatarContextValue {
   const ctx = useContext(AvatarContext);

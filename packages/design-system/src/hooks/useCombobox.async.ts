@@ -1,4 +1,4 @@
-import type { ComboboxOption } from './useCombobox.types';
+import type { ComboboxOption } from './useCombobox.types.js';
 
 export type AsyncLoad = (
   query: string,

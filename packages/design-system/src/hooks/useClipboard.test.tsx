@@ -1,8 +1,8 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { Activity } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { StringsProvider } from '../providers/StringsProvider';
-import { useClipboard, type UseClipboardOptions, type UseClipboardResult } from './useClipboard';
+import { StringsProvider } from '../providers/StringsProvider.js';
+import { useClipboard, type UseClipboardOptions, type UseClipboardResult } from './useClipboard.js';
 
 const live = (politeness: 'polite' | 'assertive') =>
   document.querySelector<HTMLElement>(`[data-todae-announcer] [aria-live="${politeness}"]`)?.textContent ?? '';

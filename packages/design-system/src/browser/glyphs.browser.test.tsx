@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
-import { Alert, Breadcrumbs, Button, Checkbox, Disclosure, Field, GlyphsProvider } from '../index';
+import { Alert, Breadcrumbs, Button, Checkbox, Disclosure, Field, GlyphsProvider } from '../index.js';
 
 function Themed({ children }: { children: ReactNode }) {
   return (

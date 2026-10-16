@@ -1,5 +1,5 @@
 import { useLayoutEffect, type RefObject } from 'react';
-import { getTabbables } from './tabbables';
+import { getTabbables } from './tabbables.js';
 
 /** Where an overlay puts focus when it opens: initialFocusRef, else its first tabbable, else itself. */
 export function initialFocusTarget(

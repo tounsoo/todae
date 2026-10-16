@@ -21,10 +21,10 @@ import {
   Toast,
   useGlyphs,
   type Glyphs,
-} from '../index';
-import { Breadcrumbs as ServerBreadcrumbs } from '../server/breadcrumbs';
-import { Disclosure as ServerDisclosure } from '../server/disclosure';
-import { Pagination as ServerPagination } from '../server/pagination';
+} from '../index.js';
+import { Breadcrumbs as ServerBreadcrumbs } from '../server/breadcrumbs.js';
+import { Disclosure as ServerDisclosure } from '../server/disclosure.js';
+import { Pagination as ServerPagination } from '../server/pagination.js';
 
 afterEach(cleanup);
 

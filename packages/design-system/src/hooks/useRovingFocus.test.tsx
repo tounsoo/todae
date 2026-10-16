@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { Profiler, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useRovingFocus, type UseRovingFocusOptions } from './useRovingFocus';
+import { useRovingFocus, type UseRovingFocusOptions } from './useRovingFocus.js';
 
 afterEach(cleanup);
 

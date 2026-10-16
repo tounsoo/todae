@@ -24,7 +24,7 @@ import {
   usePopover,
   useTooltip,
   type ComboboxOption,
-} from '../index';
+} from '../index.js';
 
 /**
  * axe in a real browser, so roles, names and the top layer are what a screen

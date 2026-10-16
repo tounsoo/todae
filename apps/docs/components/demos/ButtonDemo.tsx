@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Stack } from '@omsoo.design/todae';
+import { Button, Stack } from '@tounsoo/todae';
 import { AlignCenter, AlignLeft, AlignRight, ArrowRight, Plus } from 'lucide-react';
 import { ICON_LIBRARIES } from '../iconLibraries';
 

@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import '@omsoo.design/todae/todae.css';
-import { Stack } from '@omsoo.design/todae/stack';
-import { Text } from '@omsoo.design/todae/text';
-import { VisuallyHidden } from '@omsoo.design/todae/visually-hidden';
+import '@tounsoo/todae/todae.css';
+import { Stack } from '@tounsoo/todae/stack';
+import { Text } from '@tounsoo/todae/text';
+import { VisuallyHidden } from '@tounsoo/todae/visually-hidden';
 import { BrandMark } from '../lib/brand';
 import { localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES } from '../lib/i18n/dictionaries';

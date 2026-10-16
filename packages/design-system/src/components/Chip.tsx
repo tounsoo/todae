@@ -1,10 +1,10 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react';
-import { useStrings } from '../providers/StringsProvider';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { CrossGlyph, glyphOr } from './glyphs';
-import type { BadgeTone } from './Badge';
-import { cx } from './cx';
-import { VisuallyHidden } from './VisuallyHidden';
+import { useStrings } from '../providers/StringsProvider.js';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { CrossGlyph, glyphOr } from './glyphs.js';
+import type { BadgeTone } from './Badge.js';
+import { cx } from './cx.js';
+import { VisuallyHidden } from './VisuallyHidden.js';
 import styles from './Chip.module.css';
 
 /** The same tones as Badge. */

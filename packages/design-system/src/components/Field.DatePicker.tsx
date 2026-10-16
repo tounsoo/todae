@@ -1,22 +1,22 @@
 /// <reference lib="esnext.temporal" preserve="true" />
 import type { ComponentPropsWithRef } from 'react';
-import { useDomId } from './domId';
-import { mergeDescribedBy } from './Field.context';
-import { cx } from './props';
+import { useDomId } from './domId.js';
+import { mergeDescribedBy } from './Field.context.js';
+import { cx } from './props.js';
 import styles from './Field.module.css';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { CalendarGlyph, glyphOr } from './glyphs';
-import { useStrings } from '../providers/StringsProvider';
-import type { PopoverCloseReason } from '../hooks/usePopover';
-import { Popover } from './Popover';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { CalendarGlyph, glyphOr } from './glyphs.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import type { PopoverCloseReason } from '../hooks/usePopover.js';
+import { Popover } from './Popover.js';
 import {
   Calendar as CalendarParts,
   CALENDAR_TAB_STOP,
   GREGORY,
   isoDate,
   type CalendarFirstDayOfWeek,
-} from './Calendar';
-import { useFieldPicker, htmlDate } from './Field.shared';
+} from './Calendar.js';
+import { useFieldPicker, htmlDate } from './Field.shared.js';
 
 /** Why Field.DatePicker's calendar closed: a popover's reasons, a picked date, or the field became disabled. */
 export type FieldDatePickerCloseReason = PopoverCloseReason | 'select' | 'disabled';

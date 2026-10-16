@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { userEvent } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Button, Menu, ToggleGroup, Toolbar } from '../index';
+import { Button, Menu, ToggleGroup, Toolbar } from '../index.js';
 
 afterEach(cleanup);
 

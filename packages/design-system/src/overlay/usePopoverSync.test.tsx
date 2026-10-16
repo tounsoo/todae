@@ -1,7 +1,7 @@
 import { cleanup, render } from '@testing-library/react';
 import { useRef, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { reshowHeldInside, usePopoverSync } from './usePopoverSync';
+import { reshowHeldInside, usePopoverSync } from './usePopoverSync.js';
 
 afterEach(() => {
   cleanup();

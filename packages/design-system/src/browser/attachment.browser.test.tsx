@@ -5,7 +5,7 @@ import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import axe from 'axe-core';
 import { describe, expect, it, vi } from 'vitest';
-import { Attachment, ScrollArea } from '../index';
+import { Attachment, ScrollArea } from '../index.js';
 
 function Icon() {
   return (

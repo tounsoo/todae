@@ -1,6 +1,6 @@
 'use client';
 
-import { Attachment, Button, Composer, Field, Message, Stack, useDropzone } from '@omsoo.design/todae';
+import { Attachment, Button, Composer, Field, Message, Stack, useDropzone } from '@tounsoo/todae';
 import { FileText, Paperclip } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 

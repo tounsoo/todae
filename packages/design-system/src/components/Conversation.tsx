@@ -13,15 +13,15 @@ import {
   type RefObject,
   type UIEvent,
 } from 'react';
-import { useAnnouncer } from '../hooks/useAnnouncer';
-import { reducedMotion } from '../overlay/useOverlayPresence';
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { useStrings } from '../providers/StringsProvider';
-import { Button, type ButtonActionProps } from './Button';
-import { ChevronGlyph, glyphOr } from './glyphs';
-import { composeHandlers, cx, useComposedRefs } from './props';
-import { focusWithoutScroll, revealRing } from './revealRing';
-import { useScrollTabStop } from './scrollTabStop';
+import { useAnnouncer } from '../hooks/useAnnouncer.js';
+import { reducedMotion } from '../overlay/useOverlayPresence.js';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { useStrings } from '../providers/StringsProvider.js';
+import { Button, type ButtonActionProps } from './Button.js';
+import { ChevronGlyph, glyphOr } from './glyphs.js';
+import { composeHandlers, cx, useComposedRefs } from './props.js';
+import { focusWithoutScroll, revealRing } from './revealRing.js';
+import { useScrollTabStop } from './scrollTabStop.js';
 import styles from './Conversation.module.css';
 
 export type ConversationRootProps = ComponentPropsWithRef<'div'> & {
@@ -59,7 +59,7 @@ type ConversationContext = {
   scrollToEnd: () => void;
 };
 
-const Context = createContext<ConversationContext | null>(null);
+const Context = /* @__PURE__ */ createContext<ConversationContext | null>(null);
 
 function useConversation(part: string): ConversationContext {
   const context = useContext(Context);

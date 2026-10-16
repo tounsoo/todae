@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import axe from 'axe-core';
 import { describe, expect, it } from 'vitest';
-import { Avatar, Message, Prose } from '../index';
+import { Avatar, Message, Prose } from '../index.js';
 
 /** vitest types the session without its methods; Playwright's session has `send`. */
 const session = () => cdp() as unknown as { send(method: string, params: object): Promise<unknown> };

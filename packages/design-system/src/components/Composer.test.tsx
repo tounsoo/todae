@@ -1,10 +1,10 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState, type FormEvent } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { StringsProvider } from '../providers/StringsProvider';
-import { Button } from './Button';
-import { Composer } from './Composer';
-import { Field } from './Field';
+import { StringsProvider } from '../providers/StringsProvider.js';
+import { Button } from './Button.js';
+import { Composer } from './Composer.js';
+import { Field } from './Field.js';
 
 afterEach(cleanup);
 

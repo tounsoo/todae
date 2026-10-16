@@ -1,4 +1,4 @@
-import type { OverlayCloseReason } from '../overlay/useControlledOpen';
+import type { OverlayCloseReason } from '../overlay/useControlledOpen.js';
 
 export type ComboboxOption = {
   value: string;
@@ -13,4 +13,4 @@ export type ComboboxItem =
 /** `form` and `native` come from the sheet and dialog presentations, which are a `<dialog>`; see SheetCloseReason and DialogCloseReason. */
 export type ComboboxCloseReason = OverlayCloseReason | 'select' | 'blur' | 'input-clear' | 'form' | 'native';
 
-export type { SheetPresentation } from './useSheetPresentation';
+export type { SheetPresentation } from './useSheetPresentation.js';

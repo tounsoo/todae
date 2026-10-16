@@ -1,8 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { StringsProvider } from '../providers/StringsProvider';
-import { Attachment } from './Attachment';
+import { StringsProvider } from '../providers/StringsProvider.js';
+import { Attachment } from './Attachment.js';
 
 afterEach(cleanup);
 

@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef } from 'react';
-import { dropModal, flushOpens, heldModals, isModal, pushModal, watchOpen } from './modalStack';
-import { inToastHostWithin } from './tabbables';
-import { initialFocusTarget } from './useInitialFocus';
-import { reshowHeldInside } from './usePopoverSync';
+import { dropModal, flushOpens, heldModals, isModal, pushModal, watchOpen } from './modalStack.js';
+import { inToastHostWithin } from './tabbables.js';
+import { initialFocusTarget } from './useInitialFocus.js';
+import { reshowHeldInside } from './usePopoverSync.js';
 
 /**
  * useModalLayer for a caller that already holds the element. `shownModal`

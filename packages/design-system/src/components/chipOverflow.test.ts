@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { planChipOverflow, rowsFor } from './chipOverflow';
+import { planChipOverflow, rowsFor } from './chipOverflow.js';
 
 describe('planChipOverflow', () => {
   it('shows every chip when maxRows is unset', () => {

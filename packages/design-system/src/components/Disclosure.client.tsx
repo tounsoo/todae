@@ -1,9 +1,9 @@
-import { useGlyphs } from '../providers/GlyphsProvider';
-import { Disclosure as ServerDisclosure, type DisclosureSummaryProps } from './Disclosure';
-import { hasGlyph } from './glyphs';
+import { useGlyphs } from '../providers/GlyphsProvider.js';
+import { Root, Disclosure as ServerDisclosure, type DisclosureSummaryProps } from './Disclosure.js';
+import { hasGlyph } from './glyphs.js';
 import styles from './Disclosure.module.css';
 
-export type { DisclosureRootProps, DisclosureSummaryProps } from './Disclosure';
+export type { DisclosureRootProps, DisclosureSummaryProps } from './Disclosure.js';
 
 // The main entry's Summary: the server one, drawing the chevron glyph from
 // GlyphsProvider in place of the browser's marker when one is set. The
@@ -23,4 +23,4 @@ function Summary({ children, ...props }: DisclosureSummaryProps) {
   );
 }
 
-export const Disclosure = { ...ServerDisclosure, Summary } as const;
+export const Disclosure = { Root, Summary } as const;

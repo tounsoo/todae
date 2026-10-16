@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getTabbables, TOAST_HOST_ATTRIBUTE } from './tabbables';
+import { getTabbables, TOAST_HOST_ATTRIBUTE } from './tabbables.js';
 
 describe('getTabbables', () => {
   it('skips toasts moved into the root, wherever they sit among its own content', () => {

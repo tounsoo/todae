@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, Badge, Button, Card, categoryTone, Field, Label, Stack, Switch, Tabs, Text, type CategoryTone } from '@omsoo.design/todae';
+import { Avatar, Badge, Button, Card, categoryTone, Field, Label, Stack, Switch, Tabs, Text, type CategoryTone } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 const MEMBERS = [

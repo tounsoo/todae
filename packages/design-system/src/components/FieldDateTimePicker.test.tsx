@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Field, GlyphsProvider, Label } from '../index';
+import { Field, GlyphsProvider, Label } from '../index.js';
 
 afterEach(cleanup);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Checkbox, ErrorMessage, Field } from '@omsoo.design/todae';
+import { Checkbox, ErrorMessage, Field } from '@tounsoo/todae';
 import { useId, useState } from 'react';
 
 export function CheckboxStates() {

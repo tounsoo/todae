@@ -1,6 +1,6 @@
-import { Button } from '../components/Button';
-import { Tooltip } from '../components/Tooltip';
-import { useTooltip } from '../hooks/useTooltip';
+import { Button } from '../components/Button.js';
+import { Tooltip } from '../components/Tooltip.js';
+import { useTooltip } from '../hooks/useTooltip.js';
 
 /** A button with a tip held open, as a controlled `useTooltip({ open })`. For browser tests. */
 export function HeldTip({ label, open = true }: { label: string; open?: boolean }) {

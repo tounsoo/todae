@@ -1,4 +1,4 @@
-import type { Strings } from '@omsoo.design/todae';
+import type { Strings } from '@tounsoo/todae';
 import type { Locale } from './config';
 
 /** Todae's own text in Korean, for the parts of the site that render in the reader's language, such as the playground's preview. */

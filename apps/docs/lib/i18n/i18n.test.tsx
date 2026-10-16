@@ -26,7 +26,7 @@ import { PAGE_FILES, untranslatedByLocale, untranslatedSlugs } from './pages';
 import { PROP_TRANSLATIONS, propDescription } from './propDescriptions';
 import { codeBlocks, links, sections, sourceRecord, staleSections } from './sections';
 import { stamp, type Sources } from './stamp';
-import schema from '@omsoo.design/todae/schema/components.json';
+import schema from '@tounsoo/todae/schema/components.json';
 
 const path = vi.hoisted(() => ({ current: '/ko/button' }));
 vi.mock('next/navigation', () => ({ usePathname: () => path.current }));

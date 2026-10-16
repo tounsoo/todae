@@ -3,7 +3,7 @@ import { userEvent } from '@vitest/browser/context';
 import { useState, type FormEvent } from 'react';
 import axe from 'axe-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Composer, Field, OptionList, Popover, useMentions, type MentionDraft, type MentionToken, type MentionTrigger } from '../index';
+import { Composer, Field, OptionList, Popover, useMentions, type MentionDraft, type MentionToken, type MentionTrigger } from '../index.js';
 
 afterEach(cleanup);
 

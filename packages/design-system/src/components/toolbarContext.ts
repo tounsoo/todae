@@ -12,7 +12,7 @@ type ToolbarContextValue = { orientation: ToolbarOrientation; id: string };
  * a toolbar (popovers, menus, dialogs) reset it to null. Read it with
  * useToolbar, which also checks the DOM.
  */
-export const ToolbarContext = createContext<ToolbarContextValue | null>(null);
+export const ToolbarContext = /* @__PURE__ */ createContext<ToolbarContextValue | null>(null);
 
 // A layer that opens from the toolbar keeps its own keyboard model.
 export const TOOLBAR_BOUNDARY = '[role="toolbar"], [popover], dialog';

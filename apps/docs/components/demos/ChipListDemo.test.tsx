@@ -5,7 +5,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { renderToString } from 'react-dom/server';
 import { StrictMode, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChipList, Field } from '@omsoo.design/todae';
+import { ChipList, Field } from '@tounsoo/todae';
 import { ChipListDemo } from './ChipListDemo';
 
 const require = createRequire(import.meta.url);
@@ -17,7 +17,7 @@ const PAD = 'calc(var(--todae-chip-ring-width) + var(--todae-chip-ring-offset))'
 
 // The built stylesheet's rules that name one of el's classes.
 function rulesFor(el: HTMLElement) {
-  const css = readFileSync(require.resolve('@omsoo.design/todae/todae.css'), 'utf8');
+  const css = readFileSync(require.resolve('@tounsoo/todae/todae.css'), 'utf8');
   return css
     .split('}')
     .filter((part) => [...el.classList].some((cls) => new RegExp(`\\.${cls}(?![\\w-])`).test(part)))
@@ -238,7 +238,7 @@ describe('chip list recipe', () => {
     expect(truncated.getAttribute('title')).toBeNull();
     const label = truncated.querySelector('span');
     expect(label?.textContent).toBe(full);
-    const css = readFileSync(require.resolve('@omsoo.design/todae/todae.css'), 'utf8');
+    const css = readFileSync(require.resolve('@tounsoo/todae/todae.css'), 'utf8');
     const cls = [...(label?.classList ?? [])].find((name) => name.includes('label'));
     expect(cls).toBeTruthy();
     const rule = css.slice(css.indexOf(`.${cls}`), css.indexOf('}', css.indexOf(`.${cls}`)));
