@@ -57,7 +57,7 @@ The docs are in English and Korean. English pages live in `apps/docs/app/(en)` a
 
 ## Tokens
 
-The DTCG token source lives in `packages/design-system/tokens/`. The build emits CSS custom property chains, not resolved values, and `tokens/tokens.generated.json`.
+The DTCG token source lives in `packages/design-system/tokens/`. The build emits CSS custom property chains, not resolved values, and a JSON token catalog.
 
 ```sh
 pnpm tokens
@@ -97,7 +97,7 @@ pnpm test
 pnpm test:browser
 ```
 
-- The docs tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
+- The docs unit tests import the built package, so run `pnpm build:ds` before `pnpm test` in a fresh checkout.
 - `pnpm test:browser` runs the `*.browser.test.tsx` files in both workspaces in Chromium through Playwright. Install Chromium once first with `pnpm --filter @tounsoo/todae exec playwright install chromium`. Behavior that needs real layout, focus or the top layer goes there. [`ARCHITECTURE.md`](ARCHITECTURE.md#tests) says where other tests go.
 
 ## Changesets
@@ -120,7 +120,7 @@ CI runs `changeset status`, which fails when the package changed and the pull re
 
 ## Releases
 
-Merging to `main` doesn't publish. `.github/workflows/release.yml` turns the changesets on `main` into a "Version Packages" pull request that bumps the version and writes `packages/design-system/CHANGELOG.md`. Merging that pull request publishes the new version to npm through [trusted publishing](https://docs.npmjs.com/trusted-publishers), from the `npm` environment. It needs:
+Merging a pull request with changesets doesn't publish. `.github/workflows/release.yml` turns the changesets on `main` into a "Version Packages" pull request that bumps the version and writes `packages/design-system/CHANGELOG.md`. Merging that pull request publishes the new version to npm through [trusted publishing](https://docs.npmjs.com/trusted-publishers), from the `npm` environment. It needs:
 
 - Actions › General › "Allow GitHub Actions to create and approve pull requests" turned on in the repository settings.
 - The repository at `tounsoo/todae`, as `package.json` and `.changeset/config.json` name it.
