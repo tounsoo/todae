@@ -19,7 +19,7 @@ export type FieldChipInputProps = {
   chips: readonly string[];
   inputValue: string;
   onInputValueChange: (value: string) => void;
-  /** Return `false` to leave the key to the input and its form, as when there was nothing to commit. */
+  /** Return `false` when there was nothing to commit: Enter then goes on to the input and its form, and other commit keys stay prevented. */
   onCommit: (value: string) => boolean | void;
   onChipRemove: (index: number, value: string) => void;
   commitKeys?: readonly ChipCommitKey[];
@@ -80,7 +80,8 @@ export function ChipInput({
     if (!keySet.has(event.key)) return;
     const trimmed = inputValue.trim();
     if (trimmed === '') return;
-    if (onCommit(trimmed) !== false) event.preventDefault();
+    // Only Enter goes on to the form; any other commit key would type its character.
+    if (onCommit(trimmed) !== false || event.key !== 'Enter') event.preventDefault();
   }
 
   const chipNodes = list.visible.map((chip, index) => (
