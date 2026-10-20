@@ -1455,6 +1455,32 @@ describe('useCombobox async create', () => {
     expect(result.current.value).toEqual(['a', 'b']);
   });
 
+  it('keeps both chips of a controlled owner when two creates settle in the same tick', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string[]>([]);
+      return useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        allowCreate: true,
+        presentation: 'popover',
+        defaultOpen: true,
+        value,
+        onValueChange: setValue,
+        onCreate,
+      });
+    });
+    type(result, 'a');
+    act(() => result.current.create());
+    type(result, 'b');
+    act(() => result.current.create());
+    await act(async () => {
+      calls[0]?.resolve('a');
+      calls[1]?.resolve('b');
+    });
+    expect(result.current.value).toEqual(['a', 'b']);
+  });
+
   it('reports a synchronous throw from onCreate in createError, like a rejection', () => {
     const failure = new Error('taken');
     const { result } = singleCreate(() => {
