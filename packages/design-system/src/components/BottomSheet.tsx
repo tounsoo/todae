@@ -293,7 +293,9 @@ function BottomSheetRoot({
     requestClose,
   });
   // After showModal, which focuses the first focusable element by itself.
-  useInitialFocus(sheetRef, open, initialFocusRef);
+  // Keyed on present too: opened after mount, present flips a commit after
+  // open, and until showModal runs the element can't take focus.
+  useInitialFocus(sheetRef, present && open, initialFocusRef);
   // A placed Grabber replaces the default one a commit after mount. If the
   // default one had focus, focus went with it; give it to the sheet again.
   useLayoutEffect(() => {

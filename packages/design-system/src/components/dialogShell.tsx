@@ -182,7 +182,9 @@ export function DialogShellRoot({
     requestClose,
   });
   // After showModal, which focuses the first focusable element by itself.
-  useInitialFocus(dialogRef, open, initialFocusRef);
+  // Keyed on present too: opened after mount, present flips a commit after
+  // open, and until showModal runs the element can't take focus.
+  useInitialFocus(dialogRef, present && open, initialFocusRef);
 
   return (
     <ShellContext.Provider value={{ requestClose, setLabelledBy, setDescribedBy }}>
