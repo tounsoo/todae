@@ -107,7 +107,7 @@ describe('getTabbables in a browser', () => {
     await waitFor(() => expect(screen.getByTestId('area').tabIndex).toBe(0));
   });
 
-  it('counts a control in a disabled fieldset legend as one Tab stops on', async () => {
+  it('skips the controls of a disabled fieldset but counts one in its legend', async () => {
     render(
       <ScrollArea.Root data-testid="area" aria-label="Notes" style={{ height: 40 }}>
         <fieldset disabled>
@@ -119,8 +119,50 @@ describe('getTabbables in a browser', () => {
         <div style={{ height: 400 }} />
       </ScrollArea.Root>,
     );
+    const area = screen.getByTestId('area');
+    expect(getTabbables(area)).toEqual([screen.getByRole('button', { name: 'Unlock' })]);
     await nextFrame();
-    expect(screen.getByTestId('area').tabIndex).not.toBe(0);
+    expect(area.tabIndex).not.toBe(0);
+  });
+
+  it('gives a ScrollArea its own Tab stop while a details holding its only control is closed', async () => {
+    function Notes({ open }: { open: boolean }) {
+      return (
+        <ScrollArea.Root data-testid="area" aria-label="Notes" style={{ height: 40 }}>
+          {/* A fixed height, so opening and closing resizes nothing. */}
+          <details open={open} style={{ height: 30 }}>
+            <summary tabIndex={-1}>More</summary>
+            <button type="button">Edit</button>
+          </details>
+          <div style={{ height: 400 }} />
+        </ScrollArea.Root>
+      );
+    }
+    const { rerender } = render(<Notes open />);
+    await nextFrame();
+    await nextFrame();
+    const area = screen.getByTestId('area');
+    expect(area.tabIndex).not.toBe(0);
+    rerender(<Notes open={false} />);
+    await waitFor(() => expect(area.tabIndex).toBe(0));
+    rerender(<Notes open />);
+    await waitFor(() => expect(area.tabIndex).not.toBe(0));
+  });
+
+  it('leaves out what sits behind an open modal', async () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <button type="button">Behind</button>
+        <Dialog.Root open onOpenChange={() => undefined}>
+          <Dialog.Title>Rename</Dialog.Title>
+          <button type="button">Inside</button>
+        </Dialog.Root>
+      </div>,
+    );
+    await waitFor(() => expect(document.querySelector('dialog')?.matches(':modal')).toBe(true));
+    const tabbables = getTabbables(document.body);
+    expect(tabbables).toContain(screen.getByRole('button', { name: 'Inside' }));
+    expect(tabbables).not.toContain(screen.getByRole('button', { name: 'Behind', hidden: true }));
   });
 
   it('flags a button in an interactive Tooltip that mounts closed', () => {

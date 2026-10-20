@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BottomSheet } from '../components/BottomSheet.js';
 import { Chip } from '../components/Chip.js';
 import { ChipList } from '../components/ChipList.js';
+import { Dialog } from '../components/Dialog.js';
 import { Field } from '../components/Field.js';
 import { StringsProvider } from '../providers/StringsProvider.js';
 
@@ -223,6 +224,36 @@ describe('ChipList focus never falls to the body in a browser', () => {
     expect(screen.getByRole('dialog')).toBeTruthy();
   });
 
+  it('keeps focus in a Dialog when Tab leaves the panel of its last control', async () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <Dialog.Root open onOpenChange={() => undefined}>
+          <Dialog.Title>Rename</Dialog.Title>
+          <div style={{ width: 320 }}>
+            <ChipList.Root
+              aria-label="Tags"
+              chips={WIDE}
+              maxRows={1}
+              overflowLabel={(n) => `+${n} more`}
+              onRemove={() => undefined}
+            />
+          </div>
+        </Dialog.Root>
+        <button type="button">Behind</button>
+      </div>,
+    );
+    const modal = screen.getByRole('dialog', { name: 'Rename' });
+    await waitFor(() => expect(more()).toBeTruthy());
+    await userEvent.click(more());
+    const panel = await screen.findByRole('dialog', { name: /more chips?$/ });
+    const chips = panel.querySelectorAll('button');
+    act(() => chips[chips.length - 1]!.focus());
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /more chips?$/ })).toBeNull());
+    expect(modal.contains(document.activeElement)).toBe(true);
+    expect(dropped).toEqual([]);
+  });
+
   it('draws no ring when a click lands on the list between chips', async () => {
     render(<Owner initial={['aa', 'bb']} />);
     const list = screen.getByRole('list', { name: 'Tags' });
@@ -266,7 +297,13 @@ describe('ChipList focus never falls to the body in a browser', () => {
           data-density="comfortable"
           style={{ width: 320, marginLeft: edge === 'right' ? 'calc(100vw - 340px)' : 0 }}
         >
-          <ChipList.Root aria-label="Tags" chips={WIDE} maxRows={1} overflowLabel={(n) => `+${n} more`} />
+          <ChipList.Root
+              aria-label="Tags"
+              chips={WIDE}
+              maxRows={1}
+              overflowLabel={(n) => `+${n} more`}
+              onRemove={() => undefined}
+            />
         </div>,
       );
       await waitFor(() => expect(more()).toBeTruthy());
