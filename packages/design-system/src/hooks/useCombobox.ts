@@ -102,7 +102,7 @@ export type UseComboboxResult = {
   /** The last load's failure, which `retry` loads again. A create's failure is in `createError`. */
   error: unknown | null;
   retry: () => void;
-  /** True while an async `onCreate` is pending, even one whose result no longer applies. */
+  /** True while an async `onCreate` is pending, until a pick, `clear()` or `reset()` drops it. */
   creating: boolean;
   /**
    * What `onCreate` last threw or rejected with, kept only while the text still asks for that label.
@@ -203,7 +203,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     run: runCreate,
     cancel: cancelCreates,
     clearError: clearCreateError,
-  } = useComboboxCreate(selectionMode === 'multiple', inputValue, singleValue, state);
+  } = useComboboxCreate(selectionMode === 'multiple', inputValue, state);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -349,6 +349,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       if (isDialog && !open) return;
       clearCreateError();
       if (selectionMode === 'single') {
+        // The pick replaces the value a pending create would set.
+        cancelCreates();
         apply({ value: raw, inputValue: labelFor(raw), open: false, reason: 'select' });
         return;
       }
@@ -356,7 +358,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       const next = current.includes(raw) ? current.filter((item) => item !== raw) : [...current, raw];
       apply({ value: next, inputValue: '' });
     },
-    [apply, create, clearCreateError, isDialog, labelFor, open, selectionMode, state],
+    [apply, cancelCreates, create, clearCreateError, isDialog, labelFor, open, selectionMode, state],
   );
 
   const remove = useCallback(

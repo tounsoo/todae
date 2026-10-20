@@ -1618,7 +1618,7 @@ describe('useCombobox async create', () => {
     act(() => result.current.select('react'));
     act(() => result.current.remove('react'));
     type(result, 'new');
-    expect(result.current.creating).toBe(true);
+    expect(result.current.creating).toBe(false);
     await act(async () => calls[0]?.resolve('new'));
     expect(result.current.value).toBeNull();
   });
