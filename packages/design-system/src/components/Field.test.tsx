@@ -16,6 +16,7 @@ import {
   type FieldRootProps,
   type FieldTextInputProps,
 } from './Field.js';
+import type { ChipCommitKey } from './commitKeys.js';
 import { useChipField } from '../hooks/useChipField.js';
 import { useField } from '../hooks/useField.js';
 import * as api from '../index.js';
@@ -739,6 +740,50 @@ describe('Field.ChipInput', () => {
     renderField({ inputValue: 'foo', commitKeys: ['Enter', ','], onCommit: () => false });
     expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: ',' })).toBe(false);
     expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })).toBe(true);
+  });
+
+  function HeldKey({ commitKeys, onCommit }: { commitKeys: ChipCommitKey[]; onCommit: (value: string) => void }) {
+    const [text, setText] = useState('foo');
+    return (
+      <Field.Root>
+        <Field.ChipInput
+          chips={[]}
+          inputValue={text}
+          onInputValueChange={setText}
+          onCommit={(value) => {
+            onCommit(value);
+            setText('');
+          }}
+          commitKeys={commitKeys}
+        />
+      </Field.Root>
+    );
+  }
+
+  it('commits a held Enter once and keeps its repeats from the form', () => {
+    const onCommit = vi.fn();
+    render(<HeldKey commitKeys={['Enter']} onCommit={onCommit} />);
+    const input = screen.getByRole('textbox');
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(false);
+    expect(fireEvent.keyDown(input, { key: 'Enter', repeat: true })).toBe(false);
+    expect(onCommit).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets the repeats of a held Tab move focus after it commits', () => {
+    const onCommit = vi.fn();
+    render(<HeldKey commitKeys={['Tab']} onCommit={onCommit} />);
+    const input = screen.getByRole('textbox');
+    expect(fireEvent.keyDown(input, { key: 'Tab' })).toBe(false);
+    expect(fireEvent.keyDown(input, { key: 'Tab', repeat: true })).toBe(true);
+    expect(onCommit).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a held Enter on an empty input to the form', () => {
+    const { onCommit } = renderField({ inputValue: '' });
+    const input = screen.getByRole('textbox');
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true);
+    expect(fireEvent.keyDown(input, { key: 'Enter', repeat: true })).toBe(true);
+    expect(onCommit).not.toHaveBeenCalled();
   });
 
   it('lets Tab move focus when onCommit returns false', () => {
