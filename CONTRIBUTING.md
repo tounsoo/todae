@@ -123,7 +123,7 @@ useCombobox names its listbox by the field's Label.
 - `getTriggerProps().ref` is a callback ref; read `cb.triggerRef` for the element.
 ```
 
-CI runs `changeset status`, which fails when the package changed and the pull request adds no changeset. `changedFilePatterns` in `.changeset/config.json` leaves out tests, fixtures and snapshots, and Changesets doesn't count dotfiles. For a change that ships nothing but still trips the check, add an empty changeset with `pnpm changeset --empty`.
+CI runs `changeset status`, which fails when the package changed and the pull request adds no changeset. `changedFilePatterns` in `.changeset/config.json` leaves out tests, fixtures, snapshots and `CHANGELOG.md`, and Changesets doesn't count dotfiles. For a change that ships nothing but still trips the check, add an empty changeset with `pnpm changeset --empty`.
 
 ## Pull requests
 

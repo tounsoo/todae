@@ -23,6 +23,7 @@
     "!**/__snapshots__/**",
     "!**/__fixtures__/**",
     "!src/test/**",
-    "!vitest.browser.config.ts"
+    "!vitest.browser.config.ts",
+    "!CHANGELOG.md"
   ]
 }
