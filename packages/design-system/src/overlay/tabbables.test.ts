@@ -12,4 +12,21 @@ describe('getTabbables', () => {
     expect(getTabbables(toast).map((el) => el.id)).toEqual(['toast']);
     root.remove();
   });
+
+  it('keeps the controls of a root that is itself hidden from assistive tech', () => {
+    const root = document.createElement('div');
+    root.setAttribute('aria-hidden', 'true');
+    root.innerHTML = '<button id="bold"></button><span aria-hidden="true"><button id="decor"></button></span>';
+    document.body.append(root);
+    expect(getTabbables(root).map((el) => el.id)).toEqual(['bold']);
+    root.remove();
+  });
+
+  it('skips a hidden input even with a tabindex', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<input type="hidden" tabindex="0" id="token"><button id="save"></button>';
+    document.body.append(root);
+    expect(getTabbables(root).map((el) => el.id)).toEqual(['save']);
+    root.remove();
+  });
 });

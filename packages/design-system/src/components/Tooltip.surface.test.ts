@@ -25,4 +25,21 @@ describe('Tooltip.surface', () => {
     el.innerHTML = '<a>Missing href</a>';
     expect(contentPolicyError(panel, el)).toBeNull();
   });
+
+  it('flags a control with a negative tabindex or under aria-hidden', () => {
+    const tip = resolveSurface(false, 'tip-1');
+    const panel = resolveSurface(true, 'panel-1');
+    const el = document.createElement('div');
+    for (const html of [
+      '<button type="button" tabindex="-1">Undo</button>',
+      '<button type="button" aria-hidden="true">Undo</button>',
+      '<span aria-hidden="true"><button type="button">Undo</button></span>',
+    ]) {
+      el.innerHTML = html;
+      expect(contentPolicyError(tip, el)).toBe(
+        'Tooltip is text-only. Use useTooltip({ interactive: true }) for a link.',
+      );
+      expect(contentPolicyError(panel, el)).toBe('Interactive Tooltip allows links only. Use Popover.');
+    }
+  });
 });

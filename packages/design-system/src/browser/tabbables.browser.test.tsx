@@ -219,6 +219,33 @@ describe('getTabbables in a browser', () => {
     expect(screen.getByTestId('area').tabIndex).not.toBe(0);
   });
 
+  it('takes no Tab stop once an ancestor that hid it with visibility is shown, when a control is inside', async () => {
+    function Page({ shown, control }: { shown: boolean; control: boolean }) {
+      return (
+        <div style={{ visibility: shown ? 'visible' : 'hidden' }}>
+          <ScrollArea.Root data-testid="area" aria-label="Notes" style={{ height: 40 }}>
+            {control && <button type="button">Edit</button>}
+            <div style={{ height: 400 }} />
+          </ScrollArea.Root>
+        </div>
+      );
+    }
+    const { rerender } = render(<Page shown={false} control />);
+    await nextFrame();
+    await nextFrame();
+    rerender(<Page shown control />);
+    await nextFrame();
+    await nextFrame();
+    expect(screen.getByTestId('area').tabIndex).not.toBe(0);
+    cleanup();
+    // With nothing focusable inside, it keeps its stop once shown.
+    const second = render(<Page shown={false} control={false} />);
+    await nextFrame();
+    await nextFrame();
+    second.rerender(<Page shown control={false} />);
+    await waitFor(() => expect(screen.getByTestId('area').tabIndex).toBe(0));
+  });
+
   it('flags a button in an interactive Tooltip that mounts closed', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     function Hint() {

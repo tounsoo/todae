@@ -250,6 +250,8 @@ describe('ChipList focus never falls to the body in a browser', () => {
     act(() => chips[chips.length - 1]!.focus());
     await userEvent.keyboard('{Tab}');
     await waitFor(() => expect(screen.queryByRole('dialog', { name: /more chips?$/ })).toBeNull());
+    // The button after it sits behind the modal, so focus stays on +N.
+    expect(document.activeElement).toBe(more());
     expect(modal.contains(document.activeElement)).toBe(true);
     expect(dropped).toEqual([]);
   });
