@@ -11,7 +11,7 @@ import {
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useRovingFocus, type UseRovingFocusResult } from '../hooks/useRovingFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
-import { Button, type ButtonRootProps } from './Button.js';
+import { Button, type ButtonNativeProps } from './Button.js';
 import buttonStyles from './Button.module.css';
 import { cx } from './cx.js';
 import { useComposedRefs } from './props.js';
@@ -48,7 +48,7 @@ export type ToggleGroupRootProps = ToggleGroupSingleProps | ToggleGroupMultipleP
 /** A toggle Button.Root. Its pressed state comes from the group. */
 export type ToggleGroupItemProps = {
   value: string;
-} & Omit<ButtonRootProps, 'pressed' | 'defaultPressed' | 'onPressedChange' | 'value'>;
+} & Omit<ButtonNativeProps, 'pressed' | 'defaultPressed' | 'onPressedChange' | 'value'>;
 
 type ToggleGroupContextValue = {
   pressed: ReadonlySet<string>;

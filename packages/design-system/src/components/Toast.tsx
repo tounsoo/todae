@@ -23,7 +23,7 @@ import { initialFocusTarget } from '../overlay/useInitialFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { eventInside } from '../overlay/eventInside.js';
 import { matchesParsed, parseHotkey, typesIn } from '../hooks/hotkey.js';
-import { Button, type ButtonActionProps } from './Button.js';
+import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useDismissLabel } from './dismissLabel.js';
 import { useCloseGlyph } from './closeGlyph.js';
@@ -71,7 +71,8 @@ export type ToastRootProps = {
 export type ToastIconProps = ComponentPropsWithRef<'span'>;
 export type ToastTitleProps = ComponentPropsWithRef<'p'>;
 export type ToastDescriptionProps = ComponentPropsWithRef<'div'>;
-export type ToastActionProps = ButtonActionProps;
+/** A Toast.Action can be a link, such as View, through Button.Root's `render`. */
+export type ToastActionProps = ButtonActionProps | ButtonRenderedProps;
 export type ToastCloseProps = ButtonActionProps;
 
 type ItemContextValue = { toast: ToastRecord; dismiss: () => void };

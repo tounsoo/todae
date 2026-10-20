@@ -11,7 +11,7 @@ import {
 import { useDomId } from '../components/domId.js';
 import { optionDomId } from '../components/OptionList.ids.js';
 import type { BottomSheetRootProps } from '../components/BottomSheet.js';
-import type { ButtonRootProps } from '../components/Button.js';
+import type { ButtonNativeProps } from '../components/Button.js';
 import type { DialogRootProps } from '../components/Dialog.js';
 import type { FieldChipInputProps, FieldRootProps, FieldTextInputProps } from '../components/Field.js';
 import type {
@@ -108,7 +108,7 @@ export type UseComboboxResult = {
   clear: () => void;
   create: () => void;
   reset: () => void;
-  getTriggerProps: () => ButtonRootProps & { ref: RefObject<HTMLButtonElement | null> };
+  getTriggerProps: () => ButtonNativeProps & { ref: RefObject<HTMLButtonElement | null> };
   getAnchorProps: () => Pick<FieldRootProps, 'id' | 'style' | 'disabled'> & {
     ref: RefObject<HTMLDivElement | null>;
   };
@@ -589,7 +589,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [activeId, ids.input, ids.listbox, open, options.disabled],
   );
 
-  const getTriggerProps = useCallback((): ButtonRootProps & {
+  const getTriggerProps = useCallback((): ButtonNativeProps & {
     ref: RefObject<HTMLButtonElement | null>;
   } => {
     if (process.env.NODE_ENV !== 'production' && !isModal) {

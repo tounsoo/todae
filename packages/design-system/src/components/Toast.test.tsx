@@ -103,6 +103,25 @@ describe('Toast', () => {
     expect(toaster.getSnapshot()[0]?.open ?? false).toBe(false);
   });
 
+  it('takes a link as its action and dismisses when it is followed', () => {
+    const toaster = createToaster();
+    render(
+      <Toast.Region toaster={toaster}>
+        {(toast) => (
+          <Toast.Root>
+            <Toast.Title>{toast.title}</Toast.Title>
+            <Toast.Action render={(props) => <a {...props} href="#report" />}>View</Toast.Action>
+          </Toast.Root>
+        )}
+      </Toast.Region>,
+    );
+    act(() => void toaster.add({ title: 'Report ready' }));
+    const view = screen.getByRole('link', { name: 'View' });
+    expect(view.getAttribute('data-button-variant')).toBe('secondary');
+    fireEvent.click(view);
+    expect(toaster.getSnapshot()[0]?.open ?? false).toBe(false);
+  });
+
   it('names Close "Dismiss" unless its text names it', () => {
     const toaster = createToaster();
     render(<Region toaster={toaster} />);

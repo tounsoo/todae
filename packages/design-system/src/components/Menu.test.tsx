@@ -182,6 +182,56 @@ describe('Menu', () => {
     expect(isOpen()).toBe(false);
   });
 
+  it('renders an item as a link that Enter follows, and a disabled one goes nowhere', async () => {
+    const onSelect = vi.fn();
+    // A click whose default nothing prevents is one the browser follows.
+    const clicks: MouseEvent[] = [];
+    const record = (event: MouseEvent) => clicks.push(event);
+    const followed = () => clicks.filter((event) => !event.defaultPrevented).map((event) => (event.target as Element).getAttribute('href'));
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Help</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item disabled render={(props) => <a {...props} href="#old" />}>
+            Old docs
+          </Menu.Item>
+          <Menu.Item onSelect={onSelect} render={(props) => <a {...props} href="#docs" />}>
+            Docs
+          </Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await raf();
+    const old = screen.getByRole('menuitem', { name: 'Old docs' });
+    const docs = screen.getByRole('menuitem', { name: 'Docs' });
+    expect(old.tagName).toBe('A');
+    for (const link of [old, docs]) link.addEventListener('click', record);
+    key('Enter', old);
+    fireEvent.click(old);
+    expect(followed()).toEqual([]);
+    expect(onSelect).not.toHaveBeenCalled();
+    key('Enter', docs);
+    expect(followed()).toEqual(['#docs']);
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(isOpen()).toBe(false);
+  });
+
+  it("runs an item's onClick when a key chooses it, as a click would", async () => {
+    const onClick = vi.fn();
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>File</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item onClick={onClick}>New</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await raf();
+    key(' ');
+    fireEvent.keyUp(document.activeElement!, { key: ' ' });
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
   it('toggles checkbox and radio items without closing', async () => {
     render(<Actions />);
     fireEvent.click(trigger());
