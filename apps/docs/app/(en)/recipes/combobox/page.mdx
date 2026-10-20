@@ -147,7 +147,7 @@ const cb = useCombobox({
 
 ## Empty and create
 
-No matches render a status row. `allowCreate` adds one `Create "{query}"` option in the same `OptionList` when the query has no case-insensitive label match. Click or Enter commits. Single selects and closes. Multi adds a chip and stays open. `onCreate` may return a canonical value and should append the new option to `options` so the list can show it selected. It may return a promise: `creating` is true until it settles, and a rejection lands in `createError`. Show both in a status element next to the create row, as the first create demo does; type `fail` there to see it.
+No matches render a status row. `allowCreate` adds one `Create "{query}"` option in the same `OptionList` when the query has no case-insensitive label match. Click or Enter commits. Single selects and closes. Multi adds a chip and stays open. `onCreate` may return a canonical value and should append the new option to `options` so the list can show it selected. It may return a promise: `creating` is true until it settles. What it throws or rejects with lands in `createError` while the text still asks for that label. Show both in a status element next to the create row, as the first create demo does; type `fail` there to see it.
 
 <Example block>
   <ComboboxEmpty />

@@ -1422,7 +1422,7 @@
           "name": "onCommit",
           "type": "(value: string) => boolean | void",
           "required": true,
-          "description": "Fires on a commit key with a trimmed non-empty value. Does not append chips. Return false to leave the key to the input and its form."
+          "description": "Fires on a commit key with a trimmed non-empty value. Does not append chips. Return false when there was nothing to commit: Enter then goes on to the input and its form, and other commit keys stay prevented."
         },
         {
           "name": "onChipRemove",
@@ -2871,7 +2871,7 @@
           "name": "disabled",
           "type": "boolean",
           "required": false,
-          "description": "Skips pointer and keyboard selection.",
+          "description": "Skips pointer and keyboard selection. Pass aria-disabled without it for an option that is unavailable for now but stays reachable.",
           "default": "false"
         }
       ]
