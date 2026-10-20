@@ -4,22 +4,6 @@ import { firstTabbable } from '../overlay/tabbables.js';
 /** The direction a scroll area scrolls in. */
 export type ScrollAxis = 'block' | 'inline' | 'both';
 
-// The attributes the tab-stop read depends on.
-const TAB_ATTRIBUTES = [
-  'class',
-  'style',
-  'hidden',
-  'inert',
-  'open',
-  'disabled',
-  'tabindex',
-  'href',
-  'type',
-  'controls',
-  'contenteditable',
-  'aria-hidden',
-];
-
 function overflows(el: HTMLElement, axis: ScrollAxis): boolean {
   const block = el.scrollHeight > el.clientHeight;
   const inline = el.scrollWidth > el.clientWidth;
@@ -57,8 +41,9 @@ export function useScrollTabStop(
     if (content.current) resize.observe(content.current);
     // A focusable scroller's stop turns only on overflow, which a resize shows.
     if (focusable === true) return () => resize.disconnect();
-    // Controls added, removed, or shown or hidden by an attribute inside the
-    // scroller, a class or a <details> open among them, without a resize.
+    // Controls added, removed, or shown or hidden by any attribute inside the
+    // scroller, such as a class, a data attribute a stylesheet keys on, or a
+    // <details> open, without a resize.
     // Not seen: a stylesheet rule or an ancestor outside the scroller hiding
     // one, short of a resize. Measured at most once a frame, as an animation
     // can change a class or style every frame.
@@ -70,7 +55,7 @@ export function useScrollTabStop(
       });
     };
     const mutations = new MutationObserver(schedule);
-    mutations.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: TAB_ATTRIBUTES });
+    mutations.observe(el, { childList: true, subtree: true, attributes: true });
     return () => {
       resize.disconnect();
       mutations.disconnect();
