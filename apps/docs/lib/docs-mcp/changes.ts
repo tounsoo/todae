@@ -15,21 +15,17 @@ const REF_RE = / \((?:\[#(\d+)\]\([^)]*\/pull\/\d+\)|\[`[0-9a-f]+`\]\([^)]*\/com
 export type ChangeEntry = { text: string; pullRequest?: number };
 export type Release = { version: string; breaking: ChangeEntry[]; other: ChangeEntry[] };
 
-function parts(version: string): number[] {
+function parts(version: string): [number, number, number] {
   const match = VERSION_RE.exec(version);
   if (!match) throw new Error(`Not a version: "${version}". Use one such as 0.2.0.`);
-  return match.slice(1).map(Number);
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
 }
 
 /** Orders two release versions. */
 export function compareVersions(a: string, b: string): number {
   const pa = parts(a);
   const pb = parts(b);
-  for (let i = 0; i < 3; i++) {
-    const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
-    if (diff !== 0) return diff;
-  }
-  return 0;
+  return pa[0] - pb[0] || pa[1] - pb[1] || pa[2] - pb[2];
 }
 
 function entry([head = '', ...rest]: string[]): ChangeEntry {
@@ -58,11 +54,11 @@ function entry([head = '', ...rest]: string[]): ChangeEntry {
 export function parseChangelog(markdown: string): Release[] {
   const releases: Release[] = [];
   let release: Release | undefined;
-  let section: string | undefined;
-  let breaking = false;
+  // Where the next entry goes: the release's breaking or other list, once a section heading picks one.
+  let bucket: ChangeEntry[] | undefined;
   let lines: string[] | undefined;
   const flush = () => {
-    if (release && lines) (breaking ? release.breaking : release.other).push(entry(lines));
+    if (bucket && lines) bucket.push(entry(lines));
     lines = undefined;
   };
   for (const line of markdown.replace(/\r\n/g, '\n').split('\n')) {
@@ -73,26 +69,29 @@ export function parseChangelog(markdown: string): Release[] {
       const next: Release = { version, breaking: [], other: [] };
       releases.push(next);
       release = next;
-      section = undefined;
+      bucket = undefined;
       continue;
     }
     const heading = /^### (Major|Minor|Patch) Changes\s*$/.exec(line)?.[1];
     if (heading !== undefined) {
       flush();
-      section = heading;
-      breaking = heading === 'Major' || (heading === 'Minor' && release !== undefined && parts(release.version)[0] === 0);
+      if (!release) throw new Error(`Changelog section before any release: "${line}"`);
+      const breaking = heading === 'Major' || (heading === 'Minor' && parts(release.version)[0] === 0);
+      bucket = breaking ? release.breaking : release.other;
       continue;
     }
     if (line.startsWith('- ')) {
       flush();
-      if (!release || !section) throw new Error(`Changelog entry outside a release's change section: "${line}"`);
+      if (!bucket) throw new Error(`Changelog entry outside a release's change section: "${line}"`);
       lines = [line.slice(2)];
     } else if (lines && (line.startsWith('  ') || line.trim() === '')) {
       lines.push(line);
     } else if (line.trim() !== '') {
       flush();
-      // The title, or a heading Changesets doesn't write.
-      if (release) throw new Error(`Unreadable changelog line "${line}"`);
+      // Before the first release is the title. Changesets writes this line for a release with no entries.
+      if (release && line.trim() !== 'No changes in this release.') {
+        throw new Error(`Unreadable changelog line "${line}"`);
+      }
     }
   }
   flush();

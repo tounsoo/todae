@@ -84,7 +84,7 @@ Building a design system:
 
 Upgrading:
 
-- `get_changes`: the changelog entries of each release after `from`, the version your project uses, up to `to`, or the latest release when you leave it out. Releases come oldest first, each with its breaking changes apart from the rest. Before 1.0, a minor release is the breaking one.
+- `get_changes`: the changelog entries of each release after `from`, the installed version, such as `0.2.0`, up to `to`, or the latest release when you leave it out. Releases come oldest first, each with its breaking changes apart from the rest. Before 1.0, a minor release is the breaking one.
 
 ## Build a design system with an agent
 
@@ -102,7 +102,7 @@ Ask your agent to upgrade, for example:
 
 > Using the todae MCP, upgrade @tounsoo/todae in this repository to the latest version and fix what the breaking changes need.
 
-An agent can read your installed version from `package.json`, call `get_changes` with it, and work through each release's breaking changes in order.
+An agent can find the installed version in `node_modules/@tounsoo/todae/package.json` or your lockfile (not the range in your own `package.json`, such as `^0.2.0`), call `get_changes` with it, and work through each release's breaking changes in order.
 
 ## Limits
 

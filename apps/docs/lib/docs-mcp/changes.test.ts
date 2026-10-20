@@ -1,7 +1,10 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it, vi } from 'vitest';
 import { compareVersions, getChanges, parseChangelog, type Release } from './changes';
+
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 
 const CHANGELOG = `# @tounsoo/todae
 
@@ -102,18 +105,66 @@ describe('get_changes', () => {
   });
 
   it('reads what the changelog generator writes with the repository config', async () => {
-    const config = JSON.parse(readFileSync(join(process.cwd(), '../../.changeset/config.json'), 'utf8'));
+    const config = JSON.parse(readFileSync(join(repoRoot, '.changeset/config.json'), 'utf8'));
     const [name, options] = config.changelog;
-    // The parser's REF_RE reads a pull request or commit link at the end of the first line, where this template puts {ref}.
-    expect(options.template).toBe('\n\n- {summary} {ref}');
     const { default: generator } = await import(/* @vite-ignore */ name);
-    const line = await generator.getReleaseLine(
-      { id: 'x', summary: 'Rename `Foo.Root`.\n\n- Replace `Foo.Root` with `Bar.Root`.', releases: [] },
-      'major',
-      options,
+    const sha = 'abc1234def5678abc1234def5678abc1234def56';
+    // The generator asks GitHub's GraphQL API for the links; answer as GitHub does.
+    vi.stubEnv('GITHUB_TOKEN', 'test');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({
+          data: {
+            repo__0: {
+              pull__12: {
+                url: 'https://github.com/tounsoo/todae/pull/12',
+                author: null,
+                mergeCommit: { commitUrl: `https://github.com/tounsoo/todae/commit/${sha}`, abbreviatedOid: sha.slice(0, 7) },
+              },
+              [`commit__${sha}`]: {
+                commitUrl: `https://github.com/tounsoo/todae/commit/${sha}`,
+                associatedPullRequests: { nodes: [] },
+                author: null,
+              },
+            },
+          },
+        }),
+      ),
     );
-    const [release] = parseChangelog(`## 1.0.0\n\n### Major Changes\n${line}\n`);
-    expect(release?.breaking).toEqual([{ text: 'Rename `Foo.Root`.\n\n- Replace `Foo.Root` with `Bar.Root`.' }]);
+    try {
+      const fromPull = await generator.getReleaseLine(
+        { id: 'a', summary: 'pr: #12\nRename `Foo.Root`.\n\n- Replace `Foo.Root` with `Bar.Root`.', releases: [] },
+        'major',
+        options,
+      );
+      const fromCommit = await generator.getReleaseLine(
+        { id: 'b', summary: 'Add `Baz.Root`', releases: [], commit: sha },
+        'patch',
+        options,
+      );
+      const [release] = parseChangelog(
+        `## 1.0.0\n\n### Major Changes\n${fromPull}\n\n### Patch Changes\n${fromCommit}\n`,
+      );
+      expect(release?.breaking).toEqual([
+        { text: 'Rename `Foo.Root`.\n\n- Replace `Foo.Root` with `Bar.Root`.', pullRequest: 12 },
+      ]);
+      expect(release?.other).toEqual([{ text: 'Add `Baz.Root`' }]);
+    } finally {
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('reads a release that Changesets wrote with no entries', () => {
+    expect(parseChangelog('## 1.0.0\n\nNo changes in this release.\n')).toEqual([
+      { version: '1.0.0', breaking: [], other: [] },
+    ]);
+  });
+
+  it('runs outside prerelease mode, whose versions it refuses', () => {
+    // Changesets' pre mode writes headings such as 1.0.0-next.0, which get_changes would fail on.
+    expect(existsSync(join(repoRoot, '.changeset/pre.json'))).toBe(false);
   });
 
   it("reads Todae's own changelog, whose latest release is the package version", async () => {
