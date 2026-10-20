@@ -6,10 +6,12 @@ import {
   useState,
   type ChangeEvent,
   type KeyboardEvent,
+  type RefCallback,
   type RefObject,
 } from 'react';
 import { useDomId } from '../components/domId.js';
 import { isImeKeyEvent } from '../components/ime.js';
+import { composeHandlers, useComposedRefs, useStableComposedRef } from '../components/props.js';
 import { optionDomId } from '../components/OptionList.ids.js';
 import type { BottomSheetRootProps } from '../components/BottomSheet.js';
 import type { ButtonRootProps } from '../components/Button.js';
@@ -109,7 +111,8 @@ export type UseComboboxResult = {
   clear: () => void;
   create: () => void;
   reset: () => void;
-  getTriggerProps: () => ButtonRootProps & { ref: RefObject<HTMLButtonElement | null> };
+  /** Merges the caller's props and ref; a click handler that calls `preventDefault()` skips the toggle. */
+  getTriggerProps: (props?: ButtonRootProps) => ButtonRootProps & { ref: RefCallback<HTMLButtonElement> };
   getAnchorProps: () => Pick<FieldRootProps, 'id' | 'style' | 'disabled'> & {
     ref: RefObject<HTMLDivElement | null>;
   };
@@ -603,24 +606,28 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [activeId, ids.input, ids.listbox, open, options.disabled],
   );
 
-  const getTriggerProps = useCallback((): ButtonRootProps & {
-    ref: RefObject<HTMLButtonElement | null>;
-  } => {
-    if (process.env.NODE_ENV !== 'production' && !isModal) {
-      console.warn(
-        'useCombobox: getTriggerProps is for sheet or dialog Button.Root. Popover mode uses getAnchorProps on Field.Root. Do not spread usePopover getTriggerProps.',
-      );
-    }
-    return {
-      id: ids.trigger,
-      ref: triggerRef,
-      disabled: options.disabled,
-      'aria-haspopup': 'dialog',
-      'aria-expanded': open,
-      'aria-controls': ids.listbox,
-      onClick: () => setOpen(!open, 'trigger'),
-    };
-  }, [ids.listbox, ids.trigger, isModal, open, options.disabled, setOpen]);
+  const setTrigger = useComposedRefs(triggerRef);
+  const triggerComposed = useStableComposedRef(setTrigger);
+  const getTriggerProps = useCallback(
+    (props: ButtonRootProps = {}): ButtonRootProps & { ref: RefCallback<HTMLButtonElement> } => {
+      if (process.env.NODE_ENV !== 'production' && !isModal) {
+        console.warn(
+          'useCombobox: getTriggerProps is for sheet or dialog Button.Root. Popover mode uses getAnchorProps on Field.Root. Do not spread usePopover getTriggerProps.',
+        );
+      }
+      return {
+        ...props,
+        id: ids.trigger,
+        ref: triggerComposed(props.ref),
+        disabled: options.disabled || props.disabled,
+        'aria-haspopup': 'dialog',
+        'aria-expanded': open,
+        'aria-controls': ids.listbox,
+        onClick: composeHandlers(props.onClick, () => setOpen(!open, 'trigger')),
+      };
+    },
+    [ids.listbox, ids.trigger, isModal, open, options.disabled, setOpen, triggerComposed],
+  );
 
   const getAnchorProps = useCallback(
     (): Pick<FieldRootProps, 'id' | 'style' | 'disabled'> & {
