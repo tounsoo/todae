@@ -735,6 +735,12 @@ describe('Field.ChipInput', () => {
     expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })).toBe(false);
   });
 
+  it('leaves only Enter to the input when onCommit returns false, so a comma is never typed', () => {
+    renderField({ inputValue: 'foo', commitKeys: ['Enter', ','], onCommit: () => false });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: ',' })).toBe(false);
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })).toBe(true);
+  });
+
   it('disables the chips and Backspace when the input itself is disabled', () => {
     const onChipRemove = vi.fn();
     render(

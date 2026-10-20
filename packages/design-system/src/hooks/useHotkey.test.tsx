@@ -60,12 +60,11 @@ describe('useHotkey', () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
-  it('skips a key an IME takes, which Safari sends without isComposing', () => {
+  it('runs on a key with keyCode 229 outside a composition, as Windows sends with an IME on', () => {
     const handler = vi.fn();
     renderHook(() => useHotkey('Control+K', handler));
-    expect(press({ key: 'Process', code: 'KeyK', ctrlKey: true })).toBe(true);
-    expect(press({ key: 'k', code: 'KeyK', ctrlKey: true, keyCode: 229 } as KeyboardEventInit)).toBe(true);
-    expect(handler).not.toHaveBeenCalled();
+    expect(press({ key: 'k', code: 'KeyK', ctrlKey: true, keyCode: 229 } as KeyboardEventInit)).toBe(false);
+    expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it('leaves a key that would type to the focused field', () => {

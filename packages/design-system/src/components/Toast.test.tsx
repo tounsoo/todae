@@ -516,10 +516,20 @@ describe('Toast', () => {
     };
     press({}, true);
     press({ isComposing: true });
-    press({ keyCode: 229 } as KeyboardEventInit);
     press({ repeat: true });
     expect(document.activeElement).not.toBe(region);
     press({});
+    expect(document.activeElement).toBe(region);
+  });
+
+  it('takes a hotkey with keyCode 229 outside a composition, as Windows sends with an IME on', () => {
+    const toaster = createToaster({ duration: Infinity });
+    render(<Region toaster={toaster} />);
+    act(() => void toaster.add({ title: 'Keys' }));
+    const region = screen.getByRole('region');
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'F8', code: 'F8', keyCode: 229, bubbles: true, cancelable: true } as KeyboardEventInit),
+    );
     expect(document.activeElement).toBe(region);
   });
 
