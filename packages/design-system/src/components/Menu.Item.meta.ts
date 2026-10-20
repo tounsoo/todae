@@ -42,5 +42,12 @@ export const meta = {
       required: false,
       description: 'Optional class.',
     },
+    {
+      name: 'render',
+      type: '(props: MenuItemRenderProps) => React.ReactElement',
+      required: false,
+      description:
+        'Renders the item on another element, such as an a or a router link that goes somewhere when chosen. It receives every prop, ref included, and must pass them on.',
+    },
   ],
 } as const satisfies ComponentMeta;

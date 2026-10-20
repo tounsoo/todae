@@ -66,7 +66,7 @@ Todae는 아이콘을 제공하지 않습니다. `Toast.Icon`은 [Alert](/alert)
 
 토스트는 `duration`이 지나면 스스로 닫힙니다. `createToaster()`나 `add()`에서 따로 정하지 않으면 5000밀리초입니다. `Infinity`면 닫을 때까지 남아 있습니다. 포인터가 영역 위에 있는 동안, 키보드 포커스가 안에 있는 동안, 손가락이나 호버 중이 아닌 펜이 영역을 누르는 동안, 영역을 탭한 뒤 밖을 누를 때까지, 페이지가 숨겨진 동안에는 모든 타이머가 멈춥니다.
 
-토스트는 누군가 닿기 전에 사라질 수 있으므로, 어떤 일을 할 수 있는 유일한 방법이 되어서는 안 됩니다. Undo를 다른 곳에도 두거나, 동작이 있는 토스트에는 `duration: Infinity`를 주세요. `Toast.Action`은 `onClick` 뒤에 토스트를 닫습니다. 열어 두려면 `event.preventDefault()`를 호출하세요. 동작으로 Dialog를 열면 토스트가 사라진 뒤 포커스가 돌아갈 곳이 없으므로, Dialog에 `restoreFocusRef`를 전달하세요.
+토스트는 누군가 닿기 전에 사라질 수 있으므로, 어떤 일을 할 수 있는 유일한 방법이 되어서는 안 됩니다. Undo를 다른 곳에도 두거나, 동작이 있는 토스트에는 `duration: Infinity`를 주세요. `Toast.Action`은 `onClick` 뒤에 토스트를 닫습니다. 열어 두려면 `event.preventDefault()`를 호출하세요. View처럼 어딘가로 가는 동작은 링크입니다. [Button](/button)처럼 `render`를 넘기세요. 동작으로 Dialog를 열면 토스트가 사라진 뒤 포커스가 돌아갈 곳이 없으므로, Dialog에 `restoreFocusRef`를 전달하세요.
 
 ## 키보드와 스크린 리더
 

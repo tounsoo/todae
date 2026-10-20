@@ -12,6 +12,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactElement,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
@@ -23,7 +24,7 @@ import { initialFocusTarget } from '../overlay/useInitialFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { eventInside } from '../overlay/eventInside.js';
 import { matchesParsed, parseHotkey, typesIn } from '../hooks/hotkey.js';
-import { Button, type ButtonActionProps } from './Button.js';
+import { Button, type ButtonActionProps, type ButtonRenderedProps } from './Button.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useDismissLabel } from './dismissLabel.js';
 import { useCloseGlyph } from './closeGlyph.js';
@@ -71,7 +72,8 @@ export type ToastRootProps = {
 export type ToastIconProps = ComponentPropsWithRef<'span'>;
 export type ToastTitleProps = ComponentPropsWithRef<'p'>;
 export type ToastDescriptionProps = ComponentPropsWithRef<'div'>;
-export type ToastActionProps = ButtonActionProps;
+/** A Toast.Action can be a link, such as View, through Button.Root's `render`. */
+export type ToastActionProps = ButtonActionProps | ButtonRenderedProps;
 export type ToastCloseProps = ButtonActionProps;
 
 type ItemContextValue = { toast: ToastRecord; dismiss: () => void };
@@ -728,14 +730,18 @@ function Description({ className, ...props }: ToastDescriptionProps) {
 }
 
 /** A secondary Button.Root that dismisses the toast after `onClick`, unless it calls `preventDefault()`. */
+function Action(props: ButtonRenderedProps): ReactElement;
+function Action(props: ButtonActionProps): ReactElement;
 function Action({ variant = 'secondary', onClick, className, ...props }: ToastActionProps) {
   const item = useContext(ItemContext);
+  // Button.Root's overloads take one shape at a time; Action passes either on.
+  const AnyButton = Button.Root as (props: ButtonActionProps | ButtonRenderedProps) => ReactElement;
   return (
-    <Button.Root
+    <AnyButton
       variant={variant}
       {...props}
       className={cx(styles.action, className)}
-      onClick={composeHandlers(onClick, () => item?.dismiss())}
+      onClick={composeHandlers(onClick as ((event: ReactMouseEvent<HTMLElement>) => void) | undefined, () => item?.dismiss())}
     />
   );
 }

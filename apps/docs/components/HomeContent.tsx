@@ -3,6 +3,7 @@ import { DEFAULT_LOCALE, localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';
 import { HomeShowcase } from './HomeShowcase';
 import { ArrowIcon } from './icons';
+import { SiteButtonLink } from './SiteButtonLink';
 import { SiteLink } from './SiteLink';
 
 export function HomeContent({ locale }: { locale: Locale }) {
@@ -15,13 +16,12 @@ export function HomeContent({ locale }: { locale: Locale }) {
           <h1 id="home-title">{dict.hero.title}</h1>
           <p className="hero-lead">{dict.hero.lead}</p>
           <Stack.Root className="hero-actions" direction="row" wrap>
-            <SiteLink className="docs-cta docs-cta-primary" href={localizePath('/guides/build-on-todae', locale)}>
+            <SiteButtonLink href={localizePath('/guides/build-on-todae', locale)} trailingIcon={<ArrowIcon />}>
               {dict.hero.start}
-              <ArrowIcon />
-            </SiteLink>
-            <SiteLink className="docs-cta" href={localizePath('/playground', locale)}>
+            </SiteButtonLink>
+            <SiteButtonLink variant="secondary" href={localizePath('/playground', locale)}>
               {dict.hero.playground}
-            </SiteLink>
+            </SiteButtonLink>
           </Stack.Root>
         </div>
         <div className="hero-showcase" role="group" aria-label={dict.hero.showcase}>

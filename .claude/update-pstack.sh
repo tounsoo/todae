@@ -46,6 +46,14 @@ for file in "$src"/agents/*.md "$src"/effort-agents/*.md; do
   cp "$file" "$root/.claude/agents/"
   echo ".claude/agents/$(basename "$file")" >> "$manifest"
 done
+# Fable runs only where pstack-models.md names it or the user approves it in
+# the run, so no skill default may name it, even when a sheet line is missing.
+for file in "$root"/.claude/skills/*/SKILL.md; do
+  sed -i.bak 's/`fable\([^`]*\)`/`opus\1`/g' "$file" && rm "$file.bak"
+done
+# Any other mention could be a default the rewrite missed, so list it to check.
+grep -rnio '.\{0,30\}fable.\{0,30\}' "$root/.claude/skills" "$root/.claude/agents" |
+  sed "s|^$root/|check for a Fable default: |" || true
 # The plugin's SessionStart hook prints this; .claude/settings.json does the same.
 cp "$src/hooks/session-start-context.md" "$root/.claude/pstack-session-start.md"
 echo "pstack-claude $(git -C "$tmp" rev-parse HEAD)"

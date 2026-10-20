@@ -27,6 +27,7 @@
     font-weight: var(--todae-menu-item-font-weight);
     line-height: var(--todae-menu-item-leading);
     text-align: start;
+    text-decoration: none;
     cursor: default;
     outline: none;
     user-select: none;

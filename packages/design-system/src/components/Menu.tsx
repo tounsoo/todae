@@ -8,10 +8,13 @@ import {
   useState,
   type ComponentPropsWithRef,
   type FocusEvent,
+  type HTMLAttributes,
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
+  type ReactElement,
   type ReactNode,
+  type RefCallback,
   type RefObject,
 } from 'react';
 import { useControlledValue } from '../hooks/useControlledState.js';
@@ -61,10 +64,18 @@ type ItemBase = {
   className?: string;
 } & Omit<ComponentPropsWithRef<'div'>, 'role' | 'children' | 'onSelect' | 'tabIndex'>;
 
+/** What Menu.Item hands `render`: its role, keyboard and focus wiring, to spread on the element it returns. */
+export type MenuItemRenderProps = HTMLAttributes<HTMLElement> & {
+  ref: RefCallback<HTMLElement>;
+  [data: `data-${string}`]: string | undefined;
+};
+
 export type MenuItemProps = ItemBase & {
   onSelect?: () => void;
   /** Close the menu after this item is chosen. */
   closeOnSelect?: boolean;
+  /** Renders the item on another element, such as an `a` that goes somewhere when chosen. */
+  render?: (props: MenuItemRenderProps) => ReactElement;
 };
 
 export type MenuCheckboxItemProps = ItemBase & {
@@ -374,8 +385,11 @@ function useItem(
     'aria-disabled': disabled || undefined,
     'data-disabled': disabled ? '' : undefined,
     className: cx(styles.item, className),
-    onClick: composeHandlers(onClick, () => {
-      if (!disabled) activate();
+    // Keys choose through a click too, so an item rendered as a link follows
+    // it, and a disabled one goes nowhere.
+    onClick: composeHandlers(onClick, (event: MouseEvent<HTMLDivElement>) => {
+      if (disabled) event.preventDefault();
+      else activate();
     }),
     // Enter chooses on keydown. Space chooses on keyup, like a native button:
     // choosing on keydown would close the menu and hand the keyup to the
@@ -387,7 +401,7 @@ function useItem(
       if (event.key === 'Enter') {
         event.preventDefault();
         // A held Enter chooses once; its repeats must not reach the trigger.
-        if (!disabled && !event.repeat) activate();
+        if (!event.repeat) event.currentTarget.click();
       } else if (event.key === ' ') {
         // Left unprevented while typing, so the menu's typeahead still sees it.
         spacePressed.current = !ctx.roving.isTypingAhead(event);
@@ -399,7 +413,7 @@ function useItem(
       event.preventDefault();
       const pressed = spacePressed.current;
       spacePressed.current = false;
-      if (pressed && !disabled) activate();
+      if (pressed) event.currentTarget.click();
     }),
     // A Space released on another item chooses nothing.
     onBlur: composeHandlers(onBlur, () => {
@@ -419,13 +433,13 @@ function useItem(
   };
 }
 
-function Item({ children, onSelect, closeOnSelect = true, ...props }: MenuItemProps) {
+function Item({ children, onSelect, closeOnSelect = true, render, ...props }: MenuItemProps) {
   const ctx = useMenu('Item');
   const item = useItem(ctx, 'menuitem', props, () => {
     onSelect?.();
     if (closeOnSelect) ctx.setOpen(false, 'select');
   });
-  return <div {...item}>{children}</div>;
+  return render ? render({ ...(item as MenuItemRenderProps), children }) : <div {...item}>{children}</div>;
 }
 
 function CheckboxItem({

@@ -25,13 +25,23 @@ import { MenuActions, MenuOptions } from '../../../components/demos/MenuDemo';
 
 ## 체크박스 항목과 라디오 항목
 
-ARIA가 `menuitem`에 대해 정의한 대로, 항목의 자식은 보조 기술에 표현용으로만 전달됩니다. 따라서 항목 안에 링크, 입력, 버튼을 넣지 마세요. 그 안에서 누른 키는 그대로 두지만, 그 안을 클릭하면 항목도 선택됩니다. `Menu.CheckboxItem`은 `aria-checked`를 토글합니다. `Menu.RadioGroup`은 자식 `Menu.RadioItem`들의 값 하나를 소유합니다. 둘 다 선택한 뒤에도 열린 채로 있어 한 번에 여러 설정을 바꿀 수 있습니다. 닫으려면 `closeOnSelect`를 설정하세요. `Menu.Group`과 `Menu.RadioGroup`에는 `aria-label`이나 `aria-labelledby`가 필요합니다.
+ARIA가 `menuitem`에 대해 정의한 대로, 항목의 자식은 보조 기술에 표현용으로만 전달됩니다. 따라서 항목 안에 링크, 입력, 버튼을 넣지 마세요(링크 섹션처럼 항목 자체는 링크가 될 수 있습니다). 그 안에서 누른 키는 그대로 두지만, 그 안을 클릭하면 항목도 선택됩니다. `Menu.CheckboxItem`은 `aria-checked`를 토글합니다. `Menu.RadioGroup`은 자식 `Menu.RadioItem`들의 값 하나를 소유합니다. 둘 다 선택한 뒤에도 열린 채로 있어 한 번에 여러 설정을 바꿀 수 있습니다. 닫으려면 `closeOnSelect`를 설정하세요. `Menu.Group`과 `Menu.RadioGroup`에는 `aria-label`이나 `aria-labelledby`가 필요합니다.
 
 <Example>
   <MenuOptions />
 </Example>
 
 `onOpenChange(open, reason)`은 `trigger`, `escape`, `outside`(밖을 누르거나 밖으로 포커스가 이동), `select`, `tab` 중 하나를 알립니다. 제어 `open`을 갱신하지 않으면 변경이 거부됩니다. 거부된 `outside`에서도 누른 동작은 그대로 전달되듯이, 거부된 `tab`에서도 포커스는 이동합니다. 하위 메뉴는 제공하지 않습니다.
+
+## 링크
+
+도움말이나 설정처럼 어딘가로 가는 항목은 링크입니다. `render`를 넘기고, 받은 props를 그대로 넘긴 링크를 반환하세요. 요소는 `role="menuitem"`과 메뉴의 키보드 동작을 그대로 가집니다. Enter, Space, 클릭은 링크를 따라가고, `onSelect`를 실행하고, 메뉴를 닫습니다. 비활성 항목은 선택할 수 없습니다. 가운데 클릭이나 브라우저의 새 탭에서 열기로도 따라가지 않도록 `href`도 빼세요.
+
+```tsx
+import NextLink from 'next/link';
+
+<Menu.Item render={(props) => <NextLink {...props} href="/settings" />}>Settings</Menu.Item>
+```
 
 ## 아이콘
 

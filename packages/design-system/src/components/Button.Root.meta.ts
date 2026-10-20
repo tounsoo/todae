@@ -2,7 +2,7 @@ import type { ComponentMeta } from '../meta.ts';
 
 export const meta = {
   name: 'Button.Root',
-  description: 'Native button. Owns variant, type, and disabled. Default type is button.',
+  description: 'Native button, or an a through render. Owns variant, type, and disabled. Default type is button.',
   props: [
     {
       name: 'variant',
@@ -62,6 +62,13 @@ export const meta = {
       type: 'React.ReactNode',
       required: false,
       description: 'Label and optional Button.Icon. Order is leading or trailing.',
+    },
+    {
+      name: 'render',
+      type: '(props: ButtonRenderProps) => React.ReactElement',
+      required: false,
+      description:
+        'Draws the button on another element, such as an a or a router link. It receives every prop, ref included, and must pass them to an a or a button. The element keeps its own role, so type, disabled and pressed are not allowed; an a without href looks disabled.',
     },
   ],
 } as const satisfies ComponentMeta;
