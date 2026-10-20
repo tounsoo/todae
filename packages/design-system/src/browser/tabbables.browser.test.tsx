@@ -219,7 +219,7 @@ describe('getTabbables in a browser', () => {
     expect(screen.getByTestId('area').tabIndex).not.toBe(0);
   });
 
-  it('takes no Tab stop once an ancestor that hid it with visibility is shown, when a control is inside', async () => {
+  it('takes a Tab stop by what it holds once an ancestor that hid it with visibility is shown', async () => {
     function Page({ shown, control }: { shown: boolean; control: boolean }) {
       return (
         <div style={{ visibility: shown ? 'visible' : 'hidden' }}>

@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
-import { firstTabbable } from '../overlay/tabbables.js';
+import { firstTabbable, getTabOrder } from '../overlay/tabbables.js';
 
 /** The direction a scroll area scrolls in. */
 export type ScrollAxis = 'block' | 'inline' | 'both';
@@ -31,9 +31,15 @@ export function useScrollTabStop(
       setTabStop(false);
       return;
     }
+    // While an ancestor hides the scroller, nothing inside is reachable, and
+    // showing it again is not seen; so judge by what it holds once shown.
+    const holdsControl = () =>
+      el.checkVisibility?.({ visibilityProperty: true, checkVisibilityCSS: true }) === false
+        ? getTabOrder(el).some((node) => !node.matches(':disabled'))
+        : firstTabbable(el) !== null;
     // What is inside decides first, as it stops at the first control Tab
     // reaches, before the overflow read lays the page out.
-    const measure = () => setTabStop((focusable === true || !firstTabbable(el)) && overflows(el, axis));
+    const measure = () => setTabStop((focusable === true || !holdsControl()) && overflows(el, axis));
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const resize = new ResizeObserver(measure);
