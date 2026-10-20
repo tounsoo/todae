@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { flushSync } from 'react-dom';
 import type { ComboboxFieldState } from './useCombobox.state.js';
 
 type CreateResult = string | void | Promise<string | void>;
@@ -89,7 +90,11 @@ export function useComboboxCreate(
       };
       void Promise.resolve(result).then(
         (canonical) => {
-          if (settle()) commit(canonical);
+          // Rendered at once, so a controlled owner's new value is what the next
+          // create to settle in this tick builds on.
+          flushSync(() => {
+            if (settle()) commit(canonical);
+          });
         },
         (reason: unknown) => {
           // Reported only while the text still asks for this label.
