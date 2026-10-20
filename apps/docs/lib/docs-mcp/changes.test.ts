@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { compareVersions, getChanges, parseChangelog, type Release } from './changes';
 
@@ -73,10 +75,45 @@ describe('get_changes', () => {
     expect(() => parseChangelog('## next\n')).toThrow('Unreadable changelog heading');
   });
 
-  it('orders prereleases before their release', () => {
-    expect(compareVersions('1.0.0-next.1', '1.0.0')).toBeLessThan(0);
-    expect(compareVersions('1.0.0-next.1', '1.0.0-next.2')).toBeLessThan(0);
+  it('refuses a from after to, or after the latest release', () => {
+    expect(() => getChanges({ from: '9.9.9' }, all)).toThrow('from 9.9.9 is after the latest release, 1.0.1');
+    expect(() => getChanges({ from: '1.0.1', to: '0.2.0' }, all)).toThrow('from 1.0.1 is after to, 0.2.0');
+  });
+
+  it('orders versions by number, and has no prereleases', () => {
     expect(compareVersions('0.10.0', '0.9.0')).toBeGreaterThan(0);
+    expect(() => compareVersions('1.0.0-next.1', '1.0.0')).toThrow('Not a version');
+    expect(() => parseChangelog('## 1.0.0-next.1\n')).toThrow('Unreadable changelog heading');
+  });
+
+  it('refuses lines it cannot place rather than dropping them', () => {
+    expect(() => parseChangelog('## 1.0.0\n\n- An entry before any section\n')).toThrow('outside a release');
+    expect(() => parseChangelog('## 1.0.0\n\n### Other Changes\n\n- Entry\n')).toThrow('Unreadable changelog line');
+    expect(() => parseChangelog('## 1.0.0\n\n### Patch Changes\n\n- Entry\nstray text\n')).toThrow(
+      'Unreadable changelog line "stray text"',
+    );
+  });
+
+  it('keeps an issue link that ends a summary in the text', () => {
+    const [release] = parseChangelog(
+      '## 1.0.0\n\n### Patch Changes\n\n- Fix the thing ([#5](https://github.com/tounsoo/todae/issues/5))\n',
+    );
+    expect(release?.other).toEqual([{ text: 'Fix the thing ([#5](https://github.com/tounsoo/todae/issues/5))' }]);
+  });
+
+  it('reads what the changelog generator writes with the repository config', async () => {
+    const config = JSON.parse(readFileSync(join(process.cwd(), '../../.changeset/config.json'), 'utf8'));
+    const [name, options] = config.changelog;
+    // The parser's REF_RE reads a pull request or commit link at the end of the first line, where this template puts {ref}.
+    expect(options.template).toBe('\n\n- {summary} {ref}');
+    const { default: generator } = await import(/* @vite-ignore */ name);
+    const line = await generator.getReleaseLine(
+      { id: 'x', summary: 'Rename `Foo.Root`.\n\n- Replace `Foo.Root` with `Bar.Root`.', releases: [] },
+      'major',
+      options,
+    );
+    const [release] = parseChangelog(`## 1.0.0\n\n### Major Changes\n${line}\n`);
+    expect(release?.breaking).toEqual([{ text: 'Rename `Foo.Root`.\n\n- Replace `Foo.Root` with `Bar.Root`.' }]);
   });
 
   it("reads Todae's own changelog, whose latest release is the package version", async () => {

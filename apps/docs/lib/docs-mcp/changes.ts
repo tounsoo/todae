@@ -1,32 +1,35 @@
 import { readFileSync } from 'node:fs';
-import { packageFile } from './build';
+import { packageFile } from './package-file';
 
 const SOURCE = 'todae-docs' as const;
 export const CHANGELOG_URL = 'https://github.com/tounsoo/todae/blob/main/packages/design-system/CHANGELOG.md';
 
-const VERSION_RE = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
+/** A release version. Todae has no prereleases, so a prerelease heading in the changelog is an error rather than misordered. */
+export const VERSION_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 // Entries written before the changelog template: "[#12](pr) [`abc1234`](commit) Thanks [@user](profile)! - summary".
 const OLD_PREFIX_RE = /^(?:\[#(\d+)\]\([^)]*\) )?(?:\[`[0-9a-f]+`\]\([^)]*\) )?(?:Thanks .+?! )?- /;
-// The template's ref at the end of the first line: "summary ([#12](pr))" or "summary ([`abc1234`](commit))".
-const REF_RE = / \(\[(?:#(\d+)|`[0-9a-f]+`)\]\([^)]*\)\)$/;
+// The template's ref at the end of the first line: "summary ([#12](…/pull/12))" or "summary ([`abc1234`](…/commit/abc1234…))".
+// Matching on the URL keeps an issue link that ends a summary, "([#5](…/issues/5))", in the text.
+const REF_RE = / \((?:\[#(\d+)\]\([^)]*\/pull\/\d+\)|\[`[0-9a-f]+`\]\([^)]*\/commit\/[0-9a-f]+\))\)$/;
 
 export type ChangeEntry = { text: string; pullRequest?: number };
 export type Release = { version: string; breaking: ChangeEntry[]; other: ChangeEntry[] };
 
-/** Orders two versions as semver does, leaving out build metadata, which Todae doesn't use. */
+function parts(version: string): number[] {
+  const match = VERSION_RE.exec(version);
+  if (!match) throw new Error(`Not a version: "${version}". Use one such as 0.2.0.`);
+  return match.slice(1).map(Number);
+}
+
+/** Orders two release versions. */
 export function compareVersions(a: string, b: string): number {
-  const [, ...pa] = VERSION_RE.exec(a) ?? [];
-  const [, ...pb] = VERSION_RE.exec(b) ?? [];
-  if (pa.length === 0 || pb.length === 0) throw new Error(`Not a version: "${pa.length === 0 ? a : b}"`);
+  const pa = parts(a);
+  const pb = parts(b);
   for (let i = 0; i < 3; i++) {
-    const diff = Number(pa[i]) - Number(pb[i]);
+    const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
     if (diff !== 0) return diff;
   }
-  // A prerelease comes before its release.
-  if (pa[3] === pb[3]) return 0;
-  if (pa[3] === undefined) return 1;
-  if (pb[3] === undefined) return -1;
-  return pa[3] < pb[3] ? -1 : 1;
+  return 0;
 }
 
 function entry([head = '', ...rest]: string[]): ChangeEntry {
@@ -55,6 +58,7 @@ function entry([head = '', ...rest]: string[]): ChangeEntry {
 export function parseChangelog(markdown: string): Release[] {
   const releases: Release[] = [];
   let release: Release | undefined;
+  let section: string | undefined;
   let breaking = false;
   let lines: string[] | undefined;
   const flush = () => {
@@ -69,21 +73,26 @@ export function parseChangelog(markdown: string): Release[] {
       const next: Release = { version, breaking: [], other: [] };
       releases.push(next);
       release = next;
+      section = undefined;
       continue;
     }
-    const section = /^### (\w+) Changes\s*$/.exec(line);
-    if (section) {
+    const heading = /^### (Major|Minor|Patch) Changes\s*$/.exec(line)?.[1];
+    if (heading !== undefined) {
       flush();
-      breaking = section[1] === 'Major' || (section[1] === 'Minor' && release?.version.startsWith('0.') === true);
+      section = heading;
+      breaking = heading === 'Major' || (heading === 'Minor' && release !== undefined && parts(release.version)[0] === 0);
       continue;
     }
     if (line.startsWith('- ')) {
       flush();
+      if (!release || !section) throw new Error(`Changelog entry outside a release's change section: "${line}"`);
       lines = [line.slice(2)];
     } else if (lines && (line.startsWith('  ') || line.trim() === '')) {
       lines.push(line);
     } else if (line.trim() !== '') {
       flush();
+      // The title, or a heading Changesets doesn't write.
+      if (release) throw new Error(`Unreadable changelog line "${line}"`);
     }
   }
   flush();
@@ -110,7 +119,9 @@ export function getChanges({ from, to }: { from: string; to?: string }, all: Rel
   const latest = all.at(-1)?.version;
   if (!latest) throw new Error('The changelog has no releases');
   const target = to ?? latest;
-  compareVersions(from, target);
+  if (compareVersions(from, target) > 0) {
+    throw new Error(`from ${from} is after ${to === undefined ? `the latest release, ${target}` : `to, ${target}`}`);
+  }
   if (!all.some((release) => release.version === target)) {
     throw new Error(`No release ${target}. The latest is ${latest}.`);
   }
