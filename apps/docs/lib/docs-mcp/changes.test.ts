@@ -80,7 +80,7 @@ describe('get_changes', () => {
 
   it('refuses a from after to, or after the latest release', () => {
     expect(() => getChanges({ from: '9.9.9' }, all)).toThrow('from 9.9.9 is after the latest release, 1.0.1');
-    expect(() => getChanges({ from: '1.0.1', to: '0.2.0' }, all)).toThrow('from 1.0.1 is after to, 0.2.0');
+    expect(() => getChanges({ from: '1.0.1', to: '0.2.0' }, all)).toThrow('from 1.0.1 is after to 0.2.0');
   });
 
   it('orders versions by number, and has no prereleases', () => {
@@ -91,6 +91,8 @@ describe('get_changes', () => {
 
   it('refuses lines it cannot place rather than dropping them', () => {
     expect(() => parseChangelog('## 1.0.0\n\n- An entry before any section\n')).toThrow('outside a release');
+    expect(() => parseChangelog('# title\n\nStray prose\n\n## 1.0.0\n')).toThrow('Unreadable changelog line "Stray prose"');
+    expect(() => parseChangelog('# title\n# another\n')).toThrow('Unreadable changelog line "# another"');
     expect(() => parseChangelog('## 1.0.0\n\n### Other Changes\n\n- Entry\n')).toThrow('Unreadable changelog line');
     expect(() => parseChangelog('## 1.0.0\n\n### Patch Changes\n\n- Entry\nstray text\n')).toThrow(
       'Unreadable changelog line "stray text"',

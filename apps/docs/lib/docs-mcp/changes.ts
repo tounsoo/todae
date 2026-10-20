@@ -54,6 +54,7 @@ function entry([head = '', ...rest]: string[]): ChangeEntry {
 export function parseChangelog(markdown: string): Release[] {
   const releases: Release[] = [];
   let release: Release | undefined;
+  let title = false;
   // Where the next entry goes: the release's breaking or other list, once a section heading picks one.
   let bucket: ChangeEntry[] | undefined;
   let lines: string[] | undefined;
@@ -88,38 +89,36 @@ export function parseChangelog(markdown: string): Release[] {
       lines.push(line);
     } else if (line.trim() !== '') {
       flush();
-      // Before the first release is the title. Changesets writes this line for a release with no entries.
-      if (release && line.trim() !== 'No changes in this release.') {
-        throw new Error(`Unreadable changelog line "${line}"`);
-      }
+      // The file's one title, before any release, and the line Changesets writes for a release with no entries.
+      if (!release && !title && line.startsWith('# ')) title = true;
+      else if (!release || line.trim() !== 'No changes in this release.') throw new Error(`Unreadable changelog line "${line}"`);
     }
   }
   flush();
   return releases.sort((a, b) => compareVersions(a.version, b.version));
 }
 
-let cached: Release[] | undefined;
-
-function releases(): Release[] {
-  if (!cached) {
-    const file = packageFile(process.cwd(), 'CHANGELOG.md');
-    if (!file) throw new Error("Could not find Todae's CHANGELOG.md");
-    cached = parseChangelog(readFileSync(file, 'utf8'));
-  }
-  return cached;
+function readReleases(): Release[] {
+  const file = packageFile(process.cwd(), 'CHANGELOG.md');
+  if (!file) throw new Error("Could not find Todae's CHANGELOG.md");
+  return parseChangelog(readFileSync(file, 'utf8'));
 }
+
+// Read when the module loads, so a changelog the parser refuses fails `next build`, which loads the route,
+// and the live deployment keeps serving the last one that parsed.
+const RELEASES = readReleases();
 
 /**
  * The released changes after `from` up to and including `to` (the latest
  * release unless given), oldest first, with each release's breaking changes
  * apart from the rest.
  */
-export function getChanges({ from, to }: { from: string; to?: string }, all: Release[] = releases()) {
+export function getChanges({ from, to }: { from: string; to?: string }, all: Release[] = RELEASES) {
   const latest = all.at(-1)?.version;
   if (!latest) throw new Error('The changelog has no releases');
   const target = to ?? latest;
   if (compareVersions(from, target) > 0) {
-    throw new Error(`from ${from} is after ${to === undefined ? `the latest release, ${target}` : `to, ${target}`}`);
+    throw new Error(`from ${from} is after ${to === undefined ? `the latest release, ${target}` : `to ${target}`}`);
   }
   if (!all.some((release) => release.version === target)) {
     throw new Error(`No release ${target}. The latest is ${latest}.`);
