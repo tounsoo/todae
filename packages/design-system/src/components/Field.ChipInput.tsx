@@ -63,8 +63,11 @@ export function ChipInput({
   const control = field.getControlProps({ ...props, ref: controlRef });
   // The Root's disabled or the input's own: the chips follow the input.
   const disabled = Boolean(control.disabled);
+  // The commit key whose press committed, while it may still be held.
+  const held = useRef<string | null>(null);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (!event.repeat) held.current = null;
     onKeyDownProp?.(event);
     if (event.defaultPrevented) return;
     if (disabled) return;
@@ -78,15 +81,19 @@ export function ChipInput({
       return;
     }
     if (!keySet.has(event.key)) return;
-    // A held key commits once; once the text is cleared, a repeated Enter would submit the form.
+    // A held key commits once. After a commit, Enter's repeats are held back, since they
+    // would submit the emptied input's form; Tab's still move focus. A character key's
+    // repeats never type it.
     if (event.repeat) {
-      event.preventDefault();
+      if ((held.current === event.key && event.key !== 'Tab') || event.key.length === 1) event.preventDefault();
       return;
     }
     const trimmed = inputValue.trim();
     if (trimmed === '') return;
+    const committed = onCommit(trimmed) !== false;
+    if (committed) held.current = event.key;
     // With nothing committed, only a key that would type its character is held back.
-    if (onCommit(trimmed) !== false || event.key.length === 1) event.preventDefault();
+    if (committed || event.key.length === 1) event.preventDefault();
   }
 
   const chipNodes = list.visible.map((chip, index) => (

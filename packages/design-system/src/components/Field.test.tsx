@@ -778,6 +778,13 @@ describe('Field.ChipInput', () => {
     expect(onCommit).toHaveBeenCalledTimes(1);
   });
 
+  it('never types a held comma whose commit onCommit refuses', () => {
+    renderField({ inputValue: 'foo', commitKeys: [','], onCommit: () => false });
+    const input = screen.getByRole('textbox');
+    expect(fireEvent.keyDown(input, { key: ',' })).toBe(false);
+    expect(fireEvent.keyDown(input, { key: ',', repeat: true })).toBe(false);
+  });
+
   it('leaves a held Enter on an empty input to the form', () => {
     const { onCommit } = renderField({ inputValue: '' });
     const input = screen.getByRole('textbox');
