@@ -232,6 +232,44 @@ describe('Menu', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
+  it('runs no onClick on a disabled item, from a key or a press', async () => {
+    const onClick = vi.fn();
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>File</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item disabled onClick={onClick}>
+            Old
+          </Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await raf();
+    const old = screen.getByRole('menuitem', { name: 'Old' });
+    key('Enter', old);
+    fireEvent.click(old);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it('passes the modifier keys of Enter on to the click, so a link item can open in a new tab', async () => {
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>Help</Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item render={(props) => <a {...props} href="#docs" />}>Docs</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    await raf();
+    const docs = screen.getByRole('menuitem', { name: 'Docs' });
+    const clicks: MouseEvent[] = [];
+    docs.addEventListener('click', (event) => clicks.push(event));
+    fireEvent.keyDown(docs, { key: 'Enter', ctrlKey: true, shiftKey: true });
+    expect(clicks.map(({ ctrlKey, shiftKey, metaKey }) => ({ ctrlKey, shiftKey, metaKey }))).toEqual([
+      { ctrlKey: true, shiftKey: true, metaKey: false },
+    ]);
+  });
+
   it('toggles checkbox and radio items without closing', async () => {
     render(<Actions />);
     fireEvent.click(trigger());

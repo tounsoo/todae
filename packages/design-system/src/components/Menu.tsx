@@ -357,6 +357,15 @@ function Content({
 
 type ItemRole = 'menuitem' | 'menuitemcheckbox' | 'menuitemradio';
 
+// A click carrying the key's modifiers, so Ctrl, Cmd or Shift with Enter
+// opens a link item in a new tab or window, as it would on a plain link.
+function clickWithKeys(event: KeyboardEvent<HTMLElement>) {
+  const { ctrlKey, metaKey, shiftKey, altKey } = event;
+  const target = event.currentTarget;
+  const view = target.ownerDocument.defaultView ?? window;
+  target.dispatchEvent(new view.MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey, metaKey, shiftKey, altKey }));
+}
+
 function useItem(
   ctx: MenuContextValue,
   role: ItemRole,
@@ -388,11 +397,11 @@ function useItem(
     'data-disabled': disabled ? '' : undefined,
     className: cx(styles.item, className),
     // Keys choose through a click too, so an item rendered as a link follows
-    // it, and a disabled one goes nowhere.
-    onClick: composeHandlers(onClick, (event: MouseEvent<HTMLDivElement>) => {
-      if (disabled) event.preventDefault();
-      else activate();
-    }),
+    // it. A disabled one goes nowhere and, like a disabled button, runs no
+    // onClick.
+    onClick: disabled
+      ? (event: MouseEvent<HTMLDivElement>) => event.preventDefault()
+      : composeHandlers(onClick, activate),
     // Enter chooses on keydown. Space chooses on keyup, like a native button:
     // choosing on keydown would close the menu and hand the keyup to the
     // trigger, which some browsers click, reopening the menu. A Space typed
@@ -403,7 +412,7 @@ function useItem(
       if (event.key === 'Enter') {
         event.preventDefault();
         // A held Enter chooses once; its repeats must not reach the trigger.
-        if (!event.repeat) event.currentTarget.click();
+        if (!event.repeat) clickWithKeys(event);
       } else if (event.key === ' ') {
         // Left unprevented while typing, so the menu's typeahead still sees it.
         spacePressed.current = !ctx.roving.isTypingAhead(event);
@@ -415,7 +424,7 @@ function useItem(
       event.preventDefault();
       const pressed = spacePressed.current;
       spacePressed.current = false;
-      if (pressed) event.currentTarget.click();
+      if (pressed) clickWithKeys(event);
     }),
     // A Space released on another item chooses nothing.
     onBlur: composeHandlers(onBlur, () => {
