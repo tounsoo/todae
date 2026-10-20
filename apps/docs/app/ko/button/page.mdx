@@ -108,7 +108,7 @@ import NextLink from 'next/link';
 </Button.Root>
 ```
 
-`Button.Root`는 클라이언트 컴포넌트이므로 서버 컴포넌트는 `render` 함수를 넘길 수 없습니다. 링크는 직접 만든 클라이언트 컴포넌트 안에 쓰고, 그 컴포넌트를 렌더링하세요.
+`Button.Root`는 클라이언트 컴포넌트이므로 서버 컴포넌트는 `render` 함수를 넘길 수 없습니다. 링크는 직접 만든 클라이언트 컴포넌트 안에 쓰고, 그 컴포넌트를 렌더링하세요. 그 컴포넌트의 props는 `Omit<ButtonRenderedProps, 'render'>`에 받을 `href`를 더한 타입으로 정하세요. 그러면 `Button.Root`의 다른 props가 모두 링크에 전달됩니다.
 
 <Example>
   <ButtonLinks />

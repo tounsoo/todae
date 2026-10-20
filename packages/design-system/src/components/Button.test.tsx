@@ -402,7 +402,11 @@ describe('Button auto-tip', () => {
     );
     void Wrapper;
     expectTypeOf<ComponentProps<typeof Button.Root>>().toEqualTypeOf<ButtonRootProps>();
-    expectTypeOf<ComponentProps<typeof api.Toast.Action>>().toEqualTypeOf<ButtonActionProps>();
+    expectTypeOf<ComponentProps<typeof api.Toast.Action>>().toEqualTypeOf<api.ToastActionProps>();
+    const ToastWrapper = (props: api.ToastActionProps) => <api.Toast.Action {...props} />;
+    void ToastWrapper;
+    void (<api.Toast.Action onClick={(event) => event.currentTarget.form?.reset()} />);
+    void (<api.Toast.Action render={link} onClick={(event) => event.currentTarget.blur()} />);
     expectTypeOf<api.MenuItemRenderProps>().toHaveProperty('ref');
   });
 });

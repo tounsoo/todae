@@ -108,7 +108,7 @@ import NextLink from 'next/link';
 </Button.Root>
 ```
 
-`Button.Root` is a client component, so a Server Component can't pass it a `render` function. Write the link in a client component of your own and render that.
+`Button.Root` is a client component, so a Server Component can't pass it a `render` function. Write the link in a client component of your own and render that. Type its props as `Omit<ButtonRenderedProps, 'render'>` plus the `href` it takes, so every other `Button.Root` prop still reaches the link.
 
 <Example>
   <ButtonLinks />
