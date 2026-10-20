@@ -1232,9 +1232,8 @@ describe('useCombobox async create', () => {
     act(() => result.current.setInputValue('new'));
     act(() => result.current.create());
     act(() => result.current.reset());
-    expect(result.current.creating).toBe(true);
-    await act(async () => calls[0]?.resolve('new'));
     expect(result.current.creating).toBe(false);
+    await act(async () => calls[0]?.resolve('new'));
     expect(result.current.value).toBe('react');
     expect(result.current.inputValue).toBe('React');
   });
@@ -1529,34 +1528,76 @@ describe('useCombobox async create', () => {
     type(result, 'new');
     act(() => result.current.create());
     act(() => result.current.select('react'));
-    expect(result.current.creating).toBe(true);
     await act(async () => calls[0]?.reject(new Error('taken')));
     expect(result.current.createError).toBeNull();
   });
 
-  it('runs a label once while its dropped single create is still pending, and again once it settles', async () => {
+  it('takes back a single create dropped by a pick when its label runs again, without a second onCreate', async () => {
     const { onCreate, calls } = deferredCreate();
     const { result } = singleCreate(onCreate);
     type(result, 'new');
     act(() => result.current.create());
     act(() => result.current.select('react'));
+    act(() => result.current.setOpen(true));
     type(result, 'new');
     const row = result.current.items.find((item) => item.kind === 'create');
-    expect(row && result.current.getOptionProps(row)['aria-disabled']).toBe(true);
-    expect(result.current.creating).toBe(true);
-    act(() => result.current.create());
-    expect(onCreate).toHaveBeenCalledTimes(1);
-    await act(async () => calls[0]?.resolve('new-1'));
-    expect(result.current.value).toBe('react');
+    expect(row && result.current.getOptionProps(row)['aria-disabled']).toBeUndefined();
     expect(result.current.creating).toBe(false);
-    act(() => result.current.create());
-    expect(onCreate).toHaveBeenCalledTimes(2);
-    await act(async () => calls[1]?.resolve('new-2'));
-    expect(result.current.value).toBe('new-2');
+    let handled = false;
+    act(() => {
+      handled = result.current.getChipInputProps().onCommit('new') !== false;
+    });
+    expect(handled).toBe(true);
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(result.current.creating).toBe(true);
+    await act(async () => calls[0]?.resolve('new-1'));
+    expect(result.current.value).toBe('new-1');
+    expect(result.current.creating).toBe(false);
   });
 
-  it('runs a label once while a create dropped by reset is still pending', async () => {
+  it('takes back a multiple create dropped by clear when its label runs again', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.clear());
+    expect(result.current.creating).toBe(false);
+    type(result, 'new');
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toEqual(['new']);
+  });
+
+  it.each([
+    ['reset()', (cb: UseComboboxResult) => cb.reset()],
+    ['clear()', (cb: UseComboboxResult) => cb.clear()],
+    ['a pick', (cb: UseComboboxResult) => cb.select('react')],
+  ])('stops reporting a single create as creating at once after %s', (_name, act_) => {
     const { onCreate } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    expect(result.current.creating).toBe(true);
+    act(() => act_(result.current));
+    expect(result.current.creating).toBe(false);
+  });
+
+  it('commits a single create when the text reads its label again before it settles', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    type(result, 'newer');
+    type(result, 'new');
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBe('new');
+  });
+
+  it('runs a label once while a create dropped by reset is still pending, and commits it when run again', async () => {
+    const { onCreate, calls } = deferredCreate();
     const { result } = singleCreate(onCreate);
     type(result, 'new');
     act(() => result.current.create());
@@ -1565,6 +1606,8 @@ describe('useCombobox async create', () => {
     type(result, 'new');
     act(() => result.current.create());
     expect(onCreate).toHaveBeenCalledTimes(1);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBe('new');
   });
 
   it('keeps a single create stale once the value changed, even when the text and value come back', async () => {
@@ -1622,8 +1665,8 @@ describe('useCombobox async create', () => {
     expect(result.current.createError).toBeNull();
   });
 
-  it('does not report creating forever after an Activity hides and shows the combobox', () => {
-    const { onCreate } = deferredCreate();
+  it('runs onCreate once across an Activity hiding and showing the combobox', async () => {
+    const { onCreate, calls } = deferredCreate();
     let cb!: UseComboboxResult;
     function Probe() {
       cb = useCombobox({ options: OPTIONS, allowCreate: true, presentation: 'popover', defaultOpen: true, onCreate });
@@ -1649,7 +1692,11 @@ describe('useCombobox async create', () => {
     );
     expect(cb.creating).toBe(false);
     act(() => cb.create());
-    expect(onCreate).toHaveBeenCalledTimes(2);
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(cb.creating).toBe(true);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(cb.value).toBe('new');
+    expect(cb.creating).toBe(false);
   });
 
   it('leaves a load error showing while a create runs', async () => {
