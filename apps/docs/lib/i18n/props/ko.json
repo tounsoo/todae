@@ -267,6 +267,10 @@
     "onPressedChange": {
       "en": "Called with the new state when a toggle is clicked. onClick runs first; preventDefault() there skips the change.",
       "ko": "토글을 클릭하면 새 상태로 호출됩니다. onClick이 먼저 실행되며, 거기서 preventDefault()를 부르면 바뀌지 않습니다."
+    },
+    "render": {
+      "en": "Draws the button on another element, such as an a or a router link. It receives every prop, ref included, and must pass them to an a or a button. The element keeps its own role, so type, disabled and pressed are not allowed; an a without href looks disabled.",
+      "ko": "버튼을 a나 라우터 링크 같은 다른 요소에 그립니다. ref를 포함한 모든 prop을 받으며, 그것을 a나 button에 넘겨야 합니다. 요소는 자기 역할을 그대로 가지므로 type, disabled, pressed는 쓸 수 없습니다. href가 없는 a는 비활성 모습으로 보입니다."
     }
   },
   "Card.Body": {
@@ -1125,6 +1129,10 @@
     "className": {
       "en": "Optional class.",
       "ko": "선택적 클래스."
+    },
+    "render": {
+      "en": "Renders the item on another element, such as an a or a router link that goes somewhere when chosen. It receives every prop, ref included, and must pass them on.",
+      "ko": "항목을 선택하면 어딘가로 가는 a나 라우터 링크 같은 다른 요소로 렌더링합니다. ref를 포함한 모든 prop을 받으며, 그것을 넘겨야 합니다."
     }
   },
   "Menu.RadioGroup": {
@@ -1829,6 +1837,10 @@
     "onClick": {
       "en": "Runs the action. Call event.preventDefault() to keep the toast open.",
       "ko": "동작을 실행합니다. 토스트를 열어 두려면 event.preventDefault()를 호출하세요."
+    },
+    "render": {
+      "en": "Draws the action on a link, such as View, as Button.Root's render does.",
+      "ko": "Button.Root의 render처럼 동작을 View 같은 링크에 그립니다."
     }
   },
   "Toast.Close": {

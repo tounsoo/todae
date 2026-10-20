@@ -7,8 +7,12 @@ import {
   useState,
   type ButtonHTMLAttributes,
   type ComponentPropsWithRef,
+  type HTMLAttributes,
+  type MouseEvent,
+  type ReactElement,
   type ReactNode,
   type Ref,
+  type RefCallback,
 } from 'react';
 import { useControlledState } from '../hooks/useControlledState.js';
 import { useTooltip } from '../hooks/useTooltip.js';
@@ -30,20 +34,48 @@ export interface ButtonVariants {
 
 export type ButtonVariant = keyof ButtonVariants;
 
+type ButtonOwnProps = {
+  variant?: ButtonVariant;
+  tooltip?: boolean;
+};
+
 /**
+ * Props of a Button.Root that renders its own `<button>`; one drawn on
+ * another element takes {@link ButtonRenderedProps}.
  * Passing `pressed` or `defaultPressed` makes the button a toggle: it sets
  * `aria-pressed` and flips on click, unless `onClick` calls `preventDefault()`.
  */
-export type ButtonRootProps = {
-  variant?: ButtonVariant;
-  tooltip?: boolean;
+export type ButtonRootProps = ButtonOwnProps & {
   pressed?: boolean;
   defaultPressed?: boolean;
   onPressedChange?: (pressed: boolean) => void;
+  render?: undefined;
   ref?: Ref<HTMLButtonElement | null>;
 } & ButtonHTMLAttributes<HTMLButtonElement>;
 
-/** Button.Root props for a button that is never a toggle, such as a close or menu trigger. */
+/** What Button.Root hands `render`: its look, content and handlers, to spread on the element it returns. */
+export type ButtonRenderProps = HTMLAttributes<HTMLElement> & {
+  ref: RefCallback<HTMLElement>;
+  [data: `data-${string}`]: string | undefined;
+};
+
+// Attributes only a <button> takes, so a rendered element can't be given them.
+type ButtonOnlyAttribute = Exclude<keyof ButtonHTMLAttributes<HTMLButtonElement>, keyof HTMLAttributes<HTMLButtonElement>>;
+
+/**
+ * A Button.Root drawn on another element, such as a link: `render` returns
+ * it, with the props it is handed. The element keeps its own role, so it
+ * can't be a toggle or take the attributes only a button has.
+ */
+export type ButtonRenderedProps = ButtonOwnProps & {
+  render: (props: ButtonRenderProps) => ReactElement;
+  pressed?: never;
+  defaultPressed?: never;
+  onPressedChange?: never;
+  ref?: Ref<HTMLElement | null>;
+} & { [K in ButtonOnlyAttribute]?: never } & HTMLAttributes<HTMLElement>;
+
+/** Button.Root props for a button that is never a toggle or another element, such as a close or menu trigger. */
 export type ButtonActionProps = Omit<ButtonRootProps, 'pressed' | 'defaultPressed' | 'onPressedChange'>;
 
 export type ButtonIconProps = {
@@ -108,10 +140,14 @@ function hint(children: ReactNode): { iconOnly: boolean; text: string } {
   };
 }
 
+// Overloads, not one union, so a handler passed with `render` still gets its event type.
+// The button one is last, since ComponentProps<typeof Button.Root> reads the last.
+function Root(props: ButtonRenderedProps): ReactElement;
+function Root(props: ButtonRootProps): ReactElement;
 function Root({
   variant = 'primary',
   className,
-  type = 'button',
+  type,
   tooltip = true,
   pressed: pressedProp,
   defaultPressed,
@@ -124,12 +160,13 @@ function Root({
   onPointerLeave,
   onFocus,
   onBlur,
+  render,
   ...props
-}: ButtonRootProps) {
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
+}: ButtonRootProps | ButtonRenderedProps) {
+  const buttonRef = useRef<HTMLElement | null>(null);
   const toggle = pressedProp !== undefined || defaultPressed !== undefined;
   const [pressed, setPressed] = useControlledState(pressedProp, defaultPressed ?? false);
-  const handleClick = composeHandlers(onClick, () => {
+  const handleClick = composeHandlers(onClick as ((event: MouseEvent<HTMLElement>) => void) | undefined, () => {
     if (!toggle) return;
     setPressed(!pressed);
     onPressedChange?.(!pressed);
@@ -212,6 +249,14 @@ function Root({
     console.error('Button.Root icon-only requires aria-label or aria-labelledby');
   }, [unnamed]);
 
+  const rendersElement = render !== undefined;
+  useLayoutEffect(() => {
+    if (process.env.NODE_ENV === 'production' || !rendersElement) return;
+    // A div or span would look like a button but take no keyboard or role.
+    const tag = buttonRef.current?.tagName;
+    if (tag !== 'A' && tag !== 'BUTTON') console.error('Button.Root render must pass its props, ref included, to an a or a button');
+  }, [rendersElement]);
+
   const textName = iconOnly ? null : direct.text;
   const tipText = !tooltip ? null : iconOnly ? iconName : overflowing && textName ? textName : null;
   const tip = useTooltip({ enabled: tipText != null });
@@ -241,19 +286,24 @@ function Root({
     return child;
   });
 
-  const button = (
+  const own = {
+    ...props,
+    ...trigger,
+    onClick: handleClick,
+    className: cx(styles.root, className),
+    'data-button-variant': variant === 'primary' ? undefined : variant,
+    'data-icon-only': iconOnly ? '' : undefined,
+    children: rendered,
+  };
+  const button = render ? (
+    render(own as ButtonRenderProps)
+  ) : (
     <button
-      {...props}
-      {...trigger}
-      type={type}
+      {...(own as ButtonHTMLAttributes<HTMLButtonElement>)}
+      ref={trigger.ref as Ref<HTMLButtonElement>}
+      type={type ?? 'button'}
       aria-pressed={toggle ? pressed : props['aria-pressed']}
-      onClick={handleClick}
-      className={cx(styles.root, className)}
-      data-button-variant={variant === 'primary' ? undefined : variant}
-      data-icon-only={iconOnly ? '' : undefined}
-    >
-      {rendered}
-    </button>
+    />
   );
 
   // One shape whether or not a tip shows, so gaining a tip never remounts

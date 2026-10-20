@@ -25,13 +25,23 @@ Enter, Space, a click or ArrowDown on the trigger opens the menu on its first it
 
 ## Checkbox and radio items
 
-An item's children are presentational to assistive technology, as ARIA defines for `menuitem`, so keep links, inputs and buttons out of items; keys pressed in one are left alone, but a click on it also chooses the item. `Menu.CheckboxItem` toggles `aria-checked`. `Menu.RadioGroup` owns one value for its `Menu.RadioItem` children. Both stay open after a choice so several settings can change in one visit; set `closeOnSelect` to close. `Menu.Group` and `Menu.RadioGroup` need `aria-label` or `aria-labelledby`.
+An item's children are presentational to assistive technology, as ARIA defines for `menuitem`, so keep links, inputs and buttons out of items (an item can be a link itself, as Links shows); keys pressed in one are left alone, but a click on it also chooses the item. `Menu.CheckboxItem` toggles `aria-checked`. `Menu.RadioGroup` owns one value for its `Menu.RadioItem` children. Both stay open after a choice so several settings can change in one visit; set `closeOnSelect` to close. `Menu.Group` and `Menu.RadioGroup` need `aria-label` or `aria-labelledby`.
 
 <Example>
   <MenuOptions />
 </Example>
 
 `onOpenChange(open, reason)` reports `trigger`, `escape`, `outside` (a press or focus outside), `select` or `tab`. A controlled `open` that is not updated vetoes the change; a vetoed `tab` still lets focus move on, the way a vetoed `outside` still lets the press land. Submenus are not shipped.
+
+## Links
+
+An item that goes somewhere, such as Help or Settings, is a link. Pass `render` and return the link with the props it is handed; the element keeps `role="menuitem"` and the menu's keyboard. Enter, Space or a click follows the link, runs `onSelect` and closes the menu. A disabled item can't be chosen; leave out its `href` too, so a middle click or the browser's Open in new tab can't follow it.
+
+```tsx
+import NextLink from 'next/link';
+
+<Menu.Item render={(props) => <NextLink {...props} href="/settings" />}>Settings</Menu.Item>
+```
 
 ## Icons
 

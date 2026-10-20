@@ -58,18 +58,19 @@
     "(section order)": "c4f257cb60ff"
   },
   "button": {
-    "(top)": "22a0a77f5821",
+    "(top)": "600ac73d282c",
     "# Button": "aae9c2136ae4",
     "## Toggle": "b7fa7b0a3692",
     "## Button.Group": "af74820aaed9",
     "## Icons": "030e0279e3e2",
-    "## Accessible composition": "9af0601a5457",
+    "## Links": "791abb61590f",
+    "## Accessible composition": "531147f6d13c",
     "## When to use": "d57fe8233a0b",
-    "### Button.Root": "dc5668e9f4d2",
+    "### Button.Root": "188c84737d40",
     "### Button.Icon": "0479470eb2ff",
     "### Button.Group": "b332e12d19f9",
     "## Props": "01a8223cf786",
-    "(section order)": "b674be3a6d01"
+    "(section order)": "5c8250327a77"
   },
   "calendar": {
     "(top)": "f59a557c8526",
@@ -412,12 +413,13 @@
     "(top)": "eac8bba851e2",
     "# Menu": "e7f09e8bde16",
     "## Keyboard": "9867469041ca",
-    "## Checkbox and radio items": "12e9d43400c3",
+    "## Checkbox and radio items": "3ee5d550ead1",
+    "## Links": "ede13f3623cf",
     "## Icons": "5a8e880339a4",
     "## Accessible composition": "36e13e1af2bf",
     "## When to use": "87f5e7618788",
     "## Props": "b96e6aef6f4c",
-    "(section order)": "cb3b9adc4188"
+    "(section order)": "4b378da7b66c"
   },
   "message": {
     "(top)": "826be7492f3a",
@@ -627,7 +629,7 @@
     "# Toast": "5ecb000f0dfa",
     "## Toasts and modal dialogs": "fe09d74b1564",
     "## Layouts": "75573fe700ef",
-    "## Timing": "0190702d1e9c",
+    "## Timing": "0d41a1543a4f",
     "## Keyboard and screen readers": "a035847bdda4",
     "## Icons": "cd98fd7f28ec",
     "## Accessible composition": "d3c8a6e48baa",

@@ -240,6 +240,53 @@ describe('state in forced colors', () => {
   });
 });
 
+describe('elements drawn as a button', () => {
+  it('give a link the button look, and an a without href the disabled one', () => {
+    render(
+      <Themed>
+        <Button.Root variant="secondary">Button</Button.Root>
+        <Button.Root variant="secondary" disabled>
+          Off
+        </Button.Root>
+        <Button.Root variant="secondary" render={(props) => <a {...props} href="/docs" />}>
+          Link
+        </Button.Root>
+        <Button.Root variant="secondary" render={(props) => <a {...props} />}>
+          Nowhere
+        </Button.Root>
+      </Themed>,
+    );
+    const button = getComputedStyle(screen.getByRole('button', { name: 'Button' }));
+    const off = getComputedStyle(screen.getByRole('button', { name: 'Off' }));
+    const link = getComputedStyle(screen.getByRole('link', { name: 'Link' }));
+    const nowhere = getComputedStyle(screen.getByText('Nowhere').closest('a')!);
+    for (const property of ['background-color', 'color', 'border-color', 'padding', 'border-radius'] as const) {
+      expect({ property, link: link.getPropertyValue(property) }).toEqual({ property, link: button.getPropertyValue(property) });
+      expect({ property, nowhere: nowhere.getPropertyValue(property) }).toEqual({ property, nowhere: off.getPropertyValue(property) });
+    }
+    expect(link.textDecorationLine).toBe('none');
+    expect(nowhere.cursor).toBe('not-allowed');
+  });
+
+  it('draw a menu item link like the other items', async () => {
+    render(
+      <Themed>
+        <Menu.Root defaultOpen>
+          <Menu.Trigger>File</Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>Rename</Menu.Item>
+            <Menu.Item render={(props) => <a {...props} href="#docs" />}>Docs</Menu.Item>
+          </Menu.Content>
+        </Menu.Root>
+      </Themed>,
+    );
+    const docs = await screen.findByRole('menuitem', { name: 'Docs' });
+    const rename = getComputedStyle(screen.getByRole('menuitem', { name: 'Rename' }));
+    expect(getComputedStyle(docs).textDecorationLine).toBe('none');
+    expect(getComputedStyle(docs).color).toBe(rename.color);
+  });
+});
+
 describe('switch in rtl', () => {
   it('moves the checked thumb toward the inline end, which is left', () => {
     render(

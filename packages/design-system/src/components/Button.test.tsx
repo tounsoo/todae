@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { createRef } from 'react';
+import { createRef, type ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { Button, type ButtonIconProps, type ButtonRootProps } from './Button.js';
+import { Button, type ButtonActionProps, type ButtonIconProps, type ButtonRenderProps, type ButtonRootProps } from './Button.js';
 import * as api from '../index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -314,5 +314,65 @@ describe('Button auto-tip', () => {
     const tip = screen.getByRole('tooltip');
     expect(tip.getAttribute('role')).toBe('tooltip');
     expect(tip.getAttribute('data-surface')).toBe('tip');
+  });
+
+  it('renders a link with the button look through render, keeping the link role', () => {
+    const ref = createRef<HTMLElement>();
+    render(
+      <Button.Root variant="secondary" ref={ref} render={(props) => <a {...props} href="/docs" />}>
+        Get started
+      </Button.Root>,
+    );
+    const link = screen.getByRole('link', { name: 'Get started' });
+    expect(link.getAttribute('href')).toBe('/docs');
+    expect(link.getAttribute('data-button-variant')).toBe('secondary');
+    expect(link.hasAttribute('type')).toBe(false);
+    expect(link.hasAttribute('aria-pressed')).toBe(false);
+    expect(ref.current).toBe(link);
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('names an icon-only link and tips its name', () => {
+    vi.useFakeTimers();
+    render(
+      <Button.Root aria-label="Settings" render={(props) => <a {...props} href="/settings" />}>
+        <Button.Icon>*</Button.Icon>
+      </Button.Root>,
+    );
+    const link = screen.getByRole('link', { name: 'Settings' });
+    expect(link.hasAttribute('data-icon-only')).toBe(true);
+    fireEvent.pointerEnter(link);
+    advance(300);
+    expect(screen.getByRole('tooltip').textContent).toBe('Settings');
+  });
+
+  it('logs in development when render does not pass its props to an a or a button', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(<Button.Root render={(props) => <a {...props} href="/" />}>Home</Button.Root>);
+    render(<Button.Root render={(props) => <button {...props} type="submit" />}>Send</Button.Root>);
+    expect(error).not.toHaveBeenCalled();
+    render(<Button.Root render={(props) => <div {...props} />}>Home</Button.Root>);
+    expect(error).toHaveBeenCalledWith('Button.Root render must pass its props, ref included, to an a or a button');
+  });
+
+  it('does not let a rendered element take button-only props or toggle', () => {
+    const link = (props: ButtonRenderProps) => <a {...props} href="/" />;
+    // @ts-expect-error a link can't be a toggle
+    void (<Button.Root render={link} pressed />);
+    // @ts-expect-error a link has no disabled
+    void (<Button.Root render={link} disabled />);
+    // @ts-expect-error a link has no button type
+    void (<Button.Root render={link} type="submit" />);
+    // @ts-expect-error close buttons and triggers stay buttons
+    expectTypeOf<ButtonActionProps>().toMatchTypeOf<{ render: typeof link }>();
+    void (<Button.Root render={link} onClick={(event) => event.currentTarget.blur()} />);
+    // A wrapper typed from ButtonRootProps, as the docs show, still passes its rest on.
+    const Wrapper = ({ label, ...props }: Omit<ButtonRootProps, 'aria-label'> & { label: string }) => (
+      <Button.Root {...props} aria-label={label} onClick={(event) => event.currentTarget.form?.reset()} />
+    );
+    void Wrapper;
+    expectTypeOf<ComponentProps<typeof Button.Root>>().toEqualTypeOf<ButtonRootProps>();
+    expectTypeOf<ComponentProps<typeof api.Toast.Action>>().toEqualTypeOf<ButtonActionProps>();
+    expectTypeOf<api.MenuItemRenderProps>().toHaveProperty('ref');
   });
 });
