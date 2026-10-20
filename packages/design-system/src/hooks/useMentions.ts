@@ -436,7 +436,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     // A key that moves the caret ends the wait for a pick the product never commits; edits end it in onChange.
     if (caretAfter && CARET_KEYS.has(event.key)) setCaretAfter(null);
     if (latest.current.disabled) return;
-    if (isImeKeyEvent(event)) return;
+    if (isImeKeyEvent(event, ['Enter', 'Tab'])) return;
     const plain = !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
     if (open) {
       // With nothing to move to, the arrows move the caret as usual.

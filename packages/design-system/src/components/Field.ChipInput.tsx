@@ -68,7 +68,7 @@ export function ChipInput({
     onKeyDownProp?.(event);
     if (event.defaultPrevented) return;
     if (disabled) return;
-    if (isImeKeyEvent(event)) return;
+    if (isImeKeyEvent(event, keys)) return;
     if (event.key === 'Backspace' && inputValue === '' && chips.length > 0 && removeOnBackspace) {
       const index = chips.length - 1;
       const value = chips[index];
