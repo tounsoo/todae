@@ -230,9 +230,12 @@ describe('useTooltip', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
-  it('stays open when the consumer prevents pointer leave or blur', () => {
+  it.each([
+    ['pointer leave', fireEvent.pointerEnter, fireEvent.pointerLeave],
+    ['blur', fireEvent.focus, fireEvent.blur],
+  ] as const)('closes on %s even when the consumer prevents it', (_label, acquire, release) => {
     function Harness() {
-      const tooltip = useTooltip({ defaultOpen: true });
+      const tooltip = useTooltip();
       return (
         <button
           type="button"
@@ -247,12 +250,27 @@ describe('useTooltip', () => {
     }
     render(<Harness />);
     const trigger = screen.getByRole('button');
-    fireEvent.pointerEnter(trigger);
-    fireEvent.focus(trigger);
-    fireEvent.pointerLeave(trigger);
-    fireEvent.blur(trigger);
+    acquire(trigger);
     advance(300);
     expect(trigger.textContent).toBe('Open');
+    release(trigger);
+    advance(300);
+    expect(trigger.textContent).toBe('Closed');
+  });
+
+  it("adds the tip's id once when the consumer already lists it", () => {
+    function Harness() {
+      const tooltip = useTooltip({ id: 'archive-tip' });
+      return (
+        <button type="button" {...tooltip.getTriggerProps({ 'aria-describedby': 'archive-note archive-tip' })}>
+          Hint
+        </button>
+      );
+    }
+    render(<Harness />);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    fireEvent.focus(trigger);
+    expect(trigger.getAttribute('aria-describedby')).toBe('archive-note archive-tip');
   });
 
   it('resets intent and commits close when enabled becomes false', () => {

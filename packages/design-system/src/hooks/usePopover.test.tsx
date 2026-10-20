@@ -52,6 +52,21 @@ describe('usePopover exports', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
   });
 
+  it('an <a href> trigger whose click prevents its default does not toggle', () => {
+    function Link() {
+      const popover = usePopover();
+      return (
+        <a href="#x" {...popover.getTriggerProps({ onClick: (event) => event.preventDefault() })}>
+          Open
+        </a>
+      );
+    }
+    render(<Link />);
+    const link = screen.getByText('Open');
+    fireEvent.click(link);
+    expect(link.getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('keeps each ref stable when the getter is used on two elements', () => {
     const a = vi.fn();
     const b = vi.fn();
