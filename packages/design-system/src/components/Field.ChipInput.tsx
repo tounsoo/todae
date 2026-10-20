@@ -19,7 +19,8 @@ export type FieldChipInputProps = {
   chips: readonly string[];
   inputValue: string;
   onInputValueChange: (value: string) => void;
-  onCommit: (value: string) => void;
+  /** Return `false` to leave the key to the input and its form, as when there was nothing to commit. */
+  onCommit: (value: string) => boolean | void;
   onChipRemove: (index: number, value: string) => void;
   commitKeys?: readonly ChipCommitKey[];
   maxRows?: number;
@@ -79,8 +80,7 @@ export function ChipInput({
     if (!keySet.has(event.key)) return;
     const trimmed = inputValue.trim();
     if (trimmed === '') return;
-    event.preventDefault();
-    onCommit(trimmed);
+    if (onCommit(trimmed) !== false) event.preventDefault();
   }
 
   const chipNodes = list.visible.map((chip, index) => (

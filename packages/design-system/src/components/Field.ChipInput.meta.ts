@@ -24,9 +24,9 @@ export const meta = {
     },
     {
       name: 'onCommit',
-      type: '(value: string) => void',
+      type: '(value: string) => boolean | void',
       required: true,
-      description: 'Fires on a commit key with a trimmed non-empty value. Does not append chips.',
+      description: 'Fires on a commit key with a trimmed non-empty value. Does not append chips. Return false to leave the key to the input and its form.',
     },
     {
       name: 'onChipRemove',

@@ -34,6 +34,7 @@ function SingleBox(props: Partial<UseComboboxSingleOptions> = {}) {
   const cb = useCombobox({ options: OPTIONS, presentation: 'popover', ...props });
   return (
     <div>
+      <label {...cb.getLabelProps()}>Field</label>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
       </Field.Root>
@@ -58,6 +59,7 @@ function MultiCreateBox({ onChange }: { onChange?: (value: string[]) => void } =
   });
   return (
     <div>
+      <label {...cb.getLabelProps()}>Field</label>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.ChipInput {...cb.getChipInputProps()} />
       </Field.Root>
@@ -1326,6 +1328,7 @@ describe('useCombobox keys', () => {
     const cb = useCombobox({ selectionMode: 'multiple', options: OPTIONS, presentation: 'popover', onValueChange: onChange });
     return (
       <div>
+        <label {...cb.getLabelProps()}>Field</label>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.ChipInput {...cb.getChipInputProps()} commitKeys={['Enter', ',']} />
         </Field.Root>
@@ -1480,7 +1483,20 @@ describe('useCombobox listbox name', () => {
   it('warns in development when the open list has no name', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     try {
-      render(<SingleBox defaultOpen />);
+      function Unnamed() {
+        const cb = useCombobox({ options: OPTIONS, presentation: 'popover', defaultOpen: true });
+        return (
+          <div>
+            <Field.Root {...cb.getAnchorProps()}>
+              <Field.TextInput {...cb.getInputProps()} />
+            </Field.Root>
+            <Popover.Root {...cb.getPopoverProps()}>
+              <OptionList.Root {...cb.getListboxProps()}>{null}</OptionList.Root>
+            </Popover.Root>
+          </div>
+        );
+      }
+      render(<Unnamed />);
       expect(warn).toHaveBeenCalledWith(expect.stringContaining('listbox has no name'));
       warn.mockClear();
       cleanup();
@@ -1493,7 +1509,7 @@ describe('useCombobox listbox name', () => {
               <Field.TextInput {...cb.getInputProps()} />
             </Field.Root>
             <Popover.Root {...cb.getPopoverProps()}>
-              <OptionList.Root {...cb.getListboxProps()} />
+              <OptionList.Root {...cb.getListboxProps()}>{null}</OptionList.Root>
             </Popover.Root>
           </div>
         );

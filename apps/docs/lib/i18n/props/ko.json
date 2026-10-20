@@ -635,8 +635,8 @@
       "ko": "입력 텍스트 변경."
     },
     "onCommit": {
-      "en": "Fires on a commit key with a trimmed non-empty value. Does not append chips.",
-      "ko": "확정 키를 누르고 공백을 제거한 값이 비어 있지 않을 때 호출됩니다. 칩을 추가하지는 않습니다."
+      "en": "Fires on a commit key with a trimmed non-empty value. Does not append chips. Return false to leave the key to the input and its form.",
+      "ko": "확정 키를 누르고 공백을 제거한 값이 비어 있지 않을 때 호출됩니다. 칩을 추가하지는 않습니다. false를 반환하면 키를 입력과 그 폼에 맡깁니다."
     },
     "onChipRemove": {
       "en": "Remove button click or Backspace on an empty input.",

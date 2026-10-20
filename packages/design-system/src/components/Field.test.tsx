@@ -727,6 +727,14 @@ describe('Field.ChipInput', () => {
     expect(screen.getByRole('textbox')).toHaveProperty('value', '  foo ');
   });
 
+  it('prevents a commit key only when onCommit does not return false', () => {
+    renderField({ inputValue: 'foo', onCommit: () => false });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })).toBe(true);
+    cleanup();
+    renderField({ inputValue: 'foo' });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })).toBe(false);
+  });
+
   it('disables the chips and Backspace when the input itself is disabled', () => {
     const onChipRemove = vi.fn();
     render(
