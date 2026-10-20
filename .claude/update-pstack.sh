@@ -46,6 +46,11 @@ for file in "$src"/agents/*.md "$src"/effort-agents/*.md; do
   cp "$file" "$root/.claude/agents/"
   echo ".claude/agents/$(basename "$file")" >> "$manifest"
 done
+# Fable runs only with the user's approval (see pstack-models.md), so no
+# skill default may name it, even when the sheet or one of its lines is missing.
+for file in "$root"/.claude/skills/*/SKILL.md; do
+  sed -i.bak 's/`fable`/`opus`/g' "$file" && rm "$file.bak"
+done
 # The plugin's SessionStart hook prints this; .claude/settings.json does the same.
 cp "$src/hooks/session-start-context.md" "$root/.claude/pstack-session-start.md"
 echo "pstack-claude $(git -C "$tmp" rev-parse HEAD)"

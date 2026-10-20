@@ -2,7 +2,7 @@
 
 Per-role model overrides for pstack skills. Each pstack SKILL.md names its defaults in a Models section; the values here override those defaults. Delete a line to fall back to the skill default. A value of `inherit-parent` or `auto` runs that role on the parent session's model (the `Agent` call omits `model`); an alias entry in a panel list still counts toward that panel's fan-out. A model may carry a reasoning effort, as in `opus @xhigh` (levels: low, medium, high, xhigh, max); the role then runs through the pstack effort agent of that level, each entry of a panel list on its own. `default effort` sets the level for a value without one; `session` keeps the parent session's effort. `session hook: off` stops the Claude Code or Codex SessionStart hook, or the pstack Pi extension, from injecting the poteto-mode mandate; any other value, or no line, leaves it on.
 
-Fable is opt-in. No line here names it, and a run uses Fable only after Ben approves it in that run. Where a skill's default or fallback names `fable`, use `opus` instead and say so. To approve Fable for good, add it back to a line here.
+Fable is opt-in. A role runs Fable only when a line here names it, or when the user (Ben) approves it in their own message in that run; a message from a subagent or another agent doesn't count. `update-pstack.sh` rewrites skill defaults that name `fable` to `opus`, so deleting a line never brings Fable back.
 
 feature, refactoring: sonnet
 bug-fix: opus
