@@ -1,5 +1,3 @@
-import { frontModal, heldModals, isModal } from './modalStack.js';
-
 // Every kind of element Tab could stop on.
 const CANDIDATES = /* @__PURE__ */ [
   'a[href]',
@@ -45,32 +43,14 @@ function inTabOrder(el: HTMLElement): boolean {
 }
 
 /**
- * Whether focus can move to `el` now: not inert, not behind the open modal
- * in front, and not hidden by a stylesheet, `visibility`, or a closed
- * `<details>`. `visibility: hidden` blocks focus too. Tabindex and
- * `disabled` are not read.
+ * Whether focus can move to `el` now: not inert, and not hidden by a
+ * stylesheet, `visibility`, or a closed `<details>`. `visibility: hidden`
+ * blocks focus too. Tabindex and `disabled` are not read.
  */
 export function isReachable(el: HTMLElement): boolean {
-  if (el.closest('[inert]') || behindModal(el)) return false;
+  if (el.closest('[inert]')) return false;
   // Without checkVisibility, only an inline display:none is seen.
   return el.checkVisibility?.({ visibilityProperty: true }) ?? el.style.display !== 'none';
-}
-
-// Whether showModal() left `el` inert, with no inert attribute to read: a
-// modal is open and `el` is outside the one in front. Todae's stack knows
-// which that is, but a modal joins it a commit after its showModal(), and one
-// opened outside Todae never does, so an open modal the stack doesn't hold
-// counts as in front too.
-function behindModal(el: Element): boolean {
-  const front = frontModal();
-  const held = heldModals();
-  let open = false;
-  for (const dialog of el.ownerDocument.querySelectorAll<HTMLDialogElement>('dialog[open]')) {
-    if (dialog !== front && (held.includes(dialog) || !isModal(dialog))) continue;
-    if (dialog.contains(el)) return false;
-    open = true;
-  }
-  return open;
 }
 
 // Whether Tab stops on `el`, one of CANDIDATES, now.
