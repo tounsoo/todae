@@ -27,7 +27,7 @@ import type { PopoverWire } from '../components/Popover.wire.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { createAsyncGate } from './useCombobox.async.js';
 import { readsLabel, useComboboxCreate } from './useCombobox.create.js';
-import { useComboboxState } from './useCombobox.state.js';
+import { isMultiple, useComboboxState } from './useCombobox.state.js';
 import { usePopoverInternal } from './usePopover.js';
 import { defaultFilter, filterOptions } from './useCombobox.filter.js';
 import type {
@@ -156,10 +156,6 @@ type ComboboxSheetProps = Pick<BottomSheetRootProps, 'initialFocusRef' | 'restor
 
 type ComboboxDialogProps = Pick<DialogRootProps, 'initialFocusRef' | 'restoreFocusRef' | 'aria-label'> &
   Required<Pick<DialogRootProps, 'open' | 'onOpenChange'>>;
-
-function isMultiple(options: UseComboboxOptions): options is UseComboboxMultipleOptions {
-  return options.selectionMode === 'multiple';
-}
 
 const EMPTY_OPTIONS: readonly ComboboxOption[] = [];
 

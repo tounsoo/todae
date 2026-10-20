@@ -17,7 +17,7 @@ export type ComboboxChanges = {
   inputValue?: string;
 } & ({ open?: undefined } | { open: boolean; reason: ComboboxCloseReason });
 
-function isMultiple(options: UseComboboxOptions): options is UseComboboxMultipleOptions {
+export function isMultiple(options: UseComboboxOptions): options is UseComboboxMultipleOptions {
   return options.selectionMode === 'multiple';
 }
 
