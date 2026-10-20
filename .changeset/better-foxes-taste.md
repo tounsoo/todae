@@ -1,5 +1,5 @@
 ---
-"@tounsoo/todae": patch
+"@tounsoo/todae": minor
 ---
 
-useCombobox: an async create runs once and keeps picks made while it is pending, and a rejected one lands in `error`; Enter on a closed list is left to the form; Safari's IME-ending Enter no longer picks an option or commits a Field.ChipInput chip; the listbox is named by the field's label through the new `ids.label`; `reset()` goes through the change callbacks, so a controlled combobox resets; and `getTriggerProps(props)` merges your props and ref and skips the toggle when your `onClick` calls `preventDefault()`.
+useCombobox now names its listbox by the field's Label, so spread the new `getLabelProps()` on that Label (or pass `aria-label` to `getListboxProps()`); `getTriggerProps(props)` merges your props with a callback `ref`, `reset()` calls the change callbacks with a `reset` reason, and the new `creating` and `createError` report an async create, which a later pick, clear, typing or reset now overrides. Enter and chip commit keys on a closed list are left to the form, and IME keys, Safari's included, are left to the input in useCombobox, Field.ChipInput, useHotkey and Toast.
