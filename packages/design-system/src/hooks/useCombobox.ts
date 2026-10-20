@@ -215,7 +215,13 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   // What an async create reads when it lands, after other picks or typing.
   const snapshot = useRef({ open, inputValue, singleValue, multiValue });
   snapshot.current = { open, inputValue, singleValue, multiValue };
-  const creates = useComboboxCreate();
+  const {
+    pending: pendingCreates,
+    error: createError,
+    run: runCreate,
+    cancel: cancelCreates,
+    clearError: clearCreateError,
+  } = useComboboxCreate();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -294,9 +300,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const enabledValues = useMemo(
     () =>
       items
-        .filter((item) => (item.kind === 'create' ? !creates.pending.has(item.value) : !item.option.disabled))
+        .filter((item) => (item.kind === 'create' ? !pendingCreates.has(item.value) : !item.option.disabled))
         .map((item) => (item.kind === 'create' ? CREATE_VALUE : item.option.value)),
-    [creates.pending, items],
+    [pendingCreates, items],
   );
   const resolvedActive =
     activeValue && enabledValues.includes(activeValue)
@@ -327,11 +333,11 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         setActiveValue(null);
         rememberReturnFocus();
       }
-      if (next && !open) creates.clearError();
+      if (next && !open) clearCreateError();
       setOpenState(next);
       latest.current.onOpenChange?.(next, reason);
     },
-    [creates.clearError, isDialog, open, rememberReturnFocus, setInputValue, setOpenState],
+    [clearCreateError, isDialog, open, rememberReturnFocus, setInputValue, setOpenState],
   );
 
   const highlight = useCallback((next: string | null) => {
@@ -386,9 +392,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       current.onInputValueChange?.(label);
       if (now.open) current.onOpenChange?.(false, 'select');
     };
-    creates.run(label, () => latest.current.onCreate?.(label), commit);
+    runCreate(label, () => latest.current.onCreate?.(label), commit);
   }, [
-    creates.run,
+    runCreate,
     isDialog,
     open,
     setInputState,
@@ -407,7 +413,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         return;
       }
       if (isDialog && !open) return;
-      creates.clearError();
+      clearCreateError();
       if (selectionMode === 'multiple') {
         const current = [...multiValue];
         const next = current.includes(raw) ? current.filter((item) => item !== raw) : [...current, raw];
@@ -423,7 +429,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       applyMulti,
       applySingle,
       create,
-      creates.clearError,
+      clearCreateError,
       isDialog,
       labelFor,
       multiValue,
@@ -438,31 +444,31 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     (raw: string) => {
       if (selectionMode !== 'multiple') {
         if (singleValue === raw) {
-          creates.clearError();
+          clearCreateError();
           applySingle(null);
           setInputValue('');
         }
         return;
       }
-      creates.clearError();
+      clearCreateError();
       applyMulti(multiValue.filter((item) => item !== raw));
     },
-    [applyMulti, applySingle, creates.clearError, multiValue, selectionMode, setInputValue, singleValue],
+    [applyMulti, applySingle, clearCreateError, multiValue, selectionMode, setInputValue, singleValue],
   );
 
   const clear = useCallback(() => {
-    creates.cancel();
-    creates.clearError();
+    cancelCreates();
+    clearCreateError();
     if (selectionMode === 'multiple') applyMulti([]);
     else applySingle(null);
     setInputValue('');
     setOpen(false, 'input-clear');
-  }, [applyMulti, applySingle, creates.cancel, creates.clearError, selectionMode, setInputValue, setOpen]);
+  }, [applyMulti, applySingle, cancelCreates, clearCreateError, selectionMode, setInputValue, setOpen]);
 
   const reset = useCallback(() => {
     const initial = latest.current;
-    creates.cancel();
-    creates.clearError();
+    cancelCreates();
+    clearCreateError();
     // Not setOpen: reopening a dialog there would clear the text reset puts back.
     const defaultOpen = initial.defaultOpen ?? false;
     if (defaultOpen !== open) {
@@ -495,8 +501,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   }, [
     applyMulti,
     applySingle,
-    creates.cancel,
-    creates.clearError,
+    cancelCreates,
+    clearCreateError,
     inputValue,
     isDialog,
     multiValue,
@@ -591,9 +597,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     if (resolvedActive === CREATE_VALUE) create();
     else if (resolvedActive) select(resolvedActive);
     // The create row of a pending label is disabled; its key does nothing.
-    else if (!(showCreate && creates.pending.has(trimmed))) return false;
+    else if (!(showCreate && pendingCreates.has(trimmed))) return false;
     return true;
-  }, [create, creates.pending, listIsCurrent, open, resolvedActive, select, showCreate, trimmed]);
+  }, [create, pendingCreates, listIsCurrent, open, resolvedActive, select, showCreate, trimmed]);
 
   const onInputKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
@@ -634,12 +640,12 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
 
   const changeInput = useCallback(
     (next: string) => {
-      creates.clearError();
+      clearCreateError();
       setInputValue(next);
       if (!open) setOpen(true, 'trigger');
       if (selectionMode === 'single' && next === '') applySingle(null);
     },
-    [applySingle, creates.clearError, open, selectionMode, setInputValue, setOpen],
+    [applySingle, clearCreateError, open, selectionMode, setInputValue, setOpen],
   );
 
   const onInputFocus = useCallback(() => {
@@ -850,7 +856,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const getOptionProps = useCallback(
     (item: ComboboxItem): OptionListOptionProps => {
       if (item.kind === 'create') {
-        return { value: CREATE_VALUE, children: item.label, disabled: creates.pending.has(item.value) };
+        return { value: CREATE_VALUE, children: item.label, disabled: pendingCreates.has(item.value) };
       }
       return {
         value: item.option.value,
@@ -858,7 +864,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         disabled: item.option.disabled,
       };
     },
-    [creates.pending],
+    [pendingCreates],
   );
 
   return {
@@ -877,8 +883,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     loading,
     error,
     retry,
-    creating: creates.pending.size > 0,
-    createError: creates.error,
+    creating: pendingCreates.size > 0,
+    createError,
     ids,
     inputRef,
     anchorRef,
