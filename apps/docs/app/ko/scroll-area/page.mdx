@@ -25,7 +25,7 @@ import { ScrollAreaLinks, ScrollAreaText } from '../../../components/demos/Scrol
 
 ## 컨트롤이 없는 콘텐츠의 Tab 정지점
 
-콘텐츠가 넘치는데 안에 포커스를 받을 요소가 없으면 키보드로는 나머지에 닿을 수 없습니다. 그래서 이때는 `region` 역할로 Tab 정지점이 되고, 화살표 키로 스크롤됩니다. `aria-label`이나 `aria-labelledby`로 이름을 붙이세요. 이름 없이 정지점이 되면 개발 중에 경고합니다. 자신의 링은 `scroll.ring.focus`로 가장자리 안쪽에 그립니다.
+콘텐츠가 넘치는데 안에 Tab 정지점이 없으면 키보드로는 나머지에 닿을 수 없습니다. 그래서 이때는 `region` 역할로 Tab 정지점이 되고, 화살표 키로 스크롤됩니다. `aria-label`이나 `aria-labelledby`로 이름을 붙이세요. 이름 없이 정지점이 되면 개발 중에 경고합니다. 자신의 링은 `scroll.ring.focus`로 가장자리 안쪽에 그립니다.
 
 ```tsx
 <ScrollArea.Root aria-label="Release notes" style={{ blockSize: '7rem' }}>
@@ -41,7 +41,7 @@ import { ScrollAreaLinks, ScrollAreaText } from '../../../components/demos/Scrol
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** 모든 가장자리에 포커스 링을 위한 여백을 두고, 포커스가 링 전체를 보이게 하도록 스크롤합니다. 콘텐츠가 넘치고 포커스를 받을 요소가 없는 동안 `region` 역할의 Tab 정지점이 되며, 포커스가 있는 동안에는 크기가 바뀌어도 포커스를 잃지 않도록 유지하고, 콘텐츠가 들어맞으면 없앱니다. 자신의 포커스 링은 가장자리 안쪽에 그립니다.
+**Todae가 맡는 것:** 모든 가장자리에 포커스 링을 위한 여백을 두고, 포커스가 링 전체를 보이게 하도록 스크롤합니다. 콘텐츠가 넘치고 안에 Tab 정지점이 없는 동안 `region` 역할의 Tab 정지점이 되며, 포커스가 있는 동안에는 크기가 바뀌어도 포커스를 잃지 않도록 유지하고, 콘텐츠가 들어맞으면 없앱니다. 자신의 포커스 링은 가장자리 안쪽에 그립니다.
 
 **직접 제공할 것:** Tab 정지점이 될 수 있을 때는 `aria-label`이나 `aria-labelledby`로 이름을 주세요. 스크롤이 생기도록 높이나 너비를 주세요.
 

@@ -41,7 +41,7 @@ Streamed text is not read as it arrives: the viewport is not a live region. Inst
 
 ## Accessible composition
 
-**Todae handles:** A region landmark for the conversation, with a default name. A Tab stop on the viewport while it overflows and holds nothing focusable, so a keyboard can scroll it. Announcements when a message starts and finishes. When `Conversation.ScrollButton` hides while it has focus, focus moves to the viewport rather than to the page.
+**Todae handles:** A region landmark for the conversation, with a default name. A Tab stop on the viewport while it overflows and nothing inside is a Tab stop, so a keyboard can scroll it. Announcements when a message starts and finishes. When `Conversation.ScrollButton` hides while it has focus, focus moves to the viewport rather than to the page.
 
 **You supply:** A name for each message that says who wrote it. A name for the viewport that says whose conversation it is, when the page has more than one. A failed message's error, in an element with `role="alert"`.
 

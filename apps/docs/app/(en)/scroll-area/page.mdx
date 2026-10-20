@@ -25,7 +25,7 @@ import { ScrollAreaLinks, ScrollAreaText } from '../../../components/demos/Scrol
 
 ## A Tab stop for content with no controls
 
-When its content overflows and nothing inside can take focus, a keyboard could not reach the rest. So it then takes a Tab stop with the `region` role, and the arrow keys scroll it. Name it with `aria-label` or `aria-labelledby`; it warns in development when it takes a stop without a name. Its own ring is drawn inside its edge from `scroll.ring.focus`.
+When its content overflows and nothing inside is a Tab stop, a keyboard could not reach the rest. So it then takes a Tab stop with the `region` role, and the arrow keys scroll it. Name it with `aria-label` or `aria-labelledby`; it warns in development when it takes a stop without a name. Its own ring is drawn inside its edge from `scroll.ring.focus`.
 
 ```tsx
 <ScrollArea.Root aria-label="Release notes" style={{ blockSize: '7rem' }}>
@@ -41,7 +41,7 @@ When its content overflows and nothing inside can take focus, a keyboard could n
 
 ## Accessible composition
 
-**Todae handles:** Room for focus rings at every edge, and scrolling so focus brings a whole ring into view. A Tab stop with the `region` role while the content overflows and holds nothing focusable, kept while focus is on it so a resize never drops focus, and removed once the content fits. Its own focus ring, inside its edge.
+**Todae handles:** Room for focus rings at every edge, and scrolling so focus brings a whole ring into view. A Tab stop with the `region` role while the content overflows and nothing inside is a Tab stop, kept while focus is on it so a resize never drops focus, and removed once the content fits. Its own focus ring, inside its edge.
 
 **You supply:** A name with `aria-label` or `aria-labelledby` whenever it can take a Tab stop. A height or width that makes it scroll.
 
