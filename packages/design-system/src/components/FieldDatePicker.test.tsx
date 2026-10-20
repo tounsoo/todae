@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Field, GlyphsProvider, Label, useField } from '../index.js';
@@ -210,6 +210,18 @@ describe('Field.DatePicker', () => {
       </GlyphsProvider>,
     );
     expect(screen.getByTestId('calendar').closest('[data-todae-glyph]')).toBeTruthy();
+  });
+
+  it('stays closed when the consumer prevents a click on its button', () => {
+    render(
+      <Field.Root aria-label="Start">
+        <Field.DatePicker value={null} onClick={(event) => event.preventDefault()} />
+      </Field.Root>,
+    );
+    const button = screen.getByRole('button', { name: 'Start' });
+    fireEvent.click(button);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('is disabled with the field', () => {

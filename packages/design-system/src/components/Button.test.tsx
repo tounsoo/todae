@@ -204,6 +204,20 @@ describe('Button auto-tip', () => {
     expect(button.getAttribute('aria-describedby')).toBe(screen.getByRole('tooltip').id);
   });
 
+  it.each([
+    ['pointer enter', 'onPointerEnter', fireEvent.pointerEnter],
+    ['focus', 'onFocus', fireEvent.focus],
+  ] as const)('shows no tip when the consumer prevents %s', (_label, handler, fire) => {
+    render(
+      <Button.Root aria-label="Archive" {...{ [handler]: (event: Event) => event.preventDefault() }}>
+        <Button.Icon>+</Button.Icon>
+      </Button.Root>,
+    );
+    fire(screen.getByRole('button', { name: 'Archive' }));
+    advance(300);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
   it("keeps the consumer's aria-describedby and joins the tip to it while open", () => {
     render(
       <>
