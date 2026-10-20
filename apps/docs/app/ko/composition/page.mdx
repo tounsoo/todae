@@ -53,7 +53,7 @@ Field 셸은 버튼이 아닙니다. 이런 트리는 절대 허용되지 않습
 const cb = useCombobox({ presentation: 'popover' })
 
 <Field.Group>
-	<Label.Root htmlFor={cb.ids.input}>Tags</Label.Root>
+	<Label.Root {...cb.getLabelProps()}>Tags</Label.Root>
 	<Field.Root {...cb.getAnchorProps()}>
 		<Field.Icon><Search /></Field.Icon>
 		<Field.ChipInput {...cb.getChipInputProps()} />
@@ -72,7 +72,10 @@ const cb = useCombobox({ presentation: 'popover' })
 ```tsx
 const cb = useCombobox({ presentation: 'sheet' })
 
-<Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
+<Field.Group>
+	<Label.Root {...cb.getLabelProps()}>Tags</Label.Root>
+	<Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
+</Field.Group>
 <BottomSheet.Root {...cb.getSheetProps()}>
 	<Field.Group>
 		<Label.Root htmlFor={cb.ids.input}>Search</Label.Root>
@@ -85,7 +88,7 @@ const cb = useCombobox({ presentation: 'sheet' })
 </BottomSheet.Root>
 ```
 
-터치 트리거는 `Button.Root`입니다.
+터치 트리거는 `Button.Root`입니다. 두 경우 모두 `getLabelProps()`는 필드의 Label에 둡니다. 이 Label이 listbox의 이름이 되며, 팝오버에서는 입력을, 시트에서는 트리거를 가리킵니다.
 
 ## 훅
 
@@ -98,6 +101,7 @@ const cb = useCombobox({ presentation: 'sheet' })
 - `getPopoverProps()`는 `Popover.Root`에
 - `getSheetProps()`는 `BottomSheet.Root`에
 - `getDialogProps()`는 `Dialog.Root`에
+- `getLabelProps()`는 필드의 `Label.Root`에
 - `getListboxProps()`는 `OptionList.Root`에
 
 Trigger 편의 컴포넌트는 없습니다. `Combobox.*` 외형도 없습니다. [Combobox](/recipes/combobox)를 보세요.

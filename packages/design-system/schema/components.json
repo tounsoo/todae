@@ -1426,9 +1426,9 @@
         },
         {
           "name": "onCommit",
-          "type": "(value: string) => void",
+          "type": "(value: string) => boolean | void",
           "required": true,
-          "description": "Fires on a commit key with a trimmed non-empty value. Does not append chips."
+          "description": "Fires on a commit key with a trimmed non-empty value. Does not append chips. Return false when there was nothing to commit: Enter then goes on to the form and Tab moves focus, while a character key such as , is still kept from typing."
         },
         {
           "name": "onChipRemove",
@@ -2883,7 +2883,7 @@
           "name": "disabled",
           "type": "boolean",
           "required": false,
-          "description": "Skips pointer and keyboard selection.",
+          "description": "Skips pointer and keyboard selection. Use aria-disabled instead of disabled for an option that is unavailable for now but stays reachable.",
           "default": "false"
         }
       ]

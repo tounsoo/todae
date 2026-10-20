@@ -60,6 +60,13 @@ describe('useHotkey', () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
+  it('runs on a key with keyCode 229 outside a composition, as Windows sends with an IME on', () => {
+    const handler = vi.fn();
+    renderHook(() => useHotkey('Control+K', handler));
+    expect(press({ key: 'k', code: 'KeyK', ctrlKey: true, keyCode: 229 } as KeyboardEventInit)).toBe(false);
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
   it('leaves a key that would type to the focused field', () => {
     const handler = vi.fn();
     renderHook(() => useHotkey(['Shift+A', 'Control+K', 'F2'], handler));

@@ -24,9 +24,9 @@ export const meta = {
     },
     {
       name: 'onCommit',
-      type: '(value: string) => void',
+      type: '(value: string) => boolean | void',
       required: true,
-      description: 'Fires on a commit key with a trimmed non-empty value. Does not append chips.',
+      description: 'Fires on a commit key with a trimmed non-empty value. Does not append chips. Return false when there was nothing to commit: Enter then goes on to the form and Tab moves focus, while a character key such as , is still kept from typing.',
     },
     {
       name: 'onChipRemove',

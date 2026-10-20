@@ -51,7 +51,7 @@ import { Check } from 'lucide-react';
 
 ## 접근성을 지키는 조합
 
-**Todae가 맡는 것:** `OptionList.Root`는 활성 옵션을 가리키는 `aria-activedescendant`를 가진 `role="listbox"`이고, 다중 모드에서는 `aria-multiselectable`도 가집니다. 각 `OptionList.Option`은 `aria-selected`를 가진 `role="option"`이며, 비활성이면 `aria-disabled`를 가지고, id는 목록의 `id`와 자기 `value`로 만들어집니다. 방향 키, Home, End는 비활성 옵션을 건너뛰고 양 끝에서 멈춥니다. 키보드로 옮겨 간 옵션은 자기 스크롤 상자 안에서 보이도록 스크롤됩니다. 포커스는 목록이나, 목록을 가진 입력에 머뭅니다.
+**Todae가 맡는 것:** `OptionList.Root`는 활성 옵션을 가리키는 `aria-activedescendant`를 가진 `role="listbox"`이고, 다중 모드에서는 `aria-multiselectable`도 가집니다. 각 `OptionList.Option`은 `aria-selected`를 가진 `role="option"`이며, 비활성이면 `aria-disabled`를 가지고, id는 목록의 `id`와 자기 `value`로 만들어집니다. 방향 키, Home, End는 비활성 옵션을 건너뛰고 양 끝에서 멈춥니다. `disabled` 없이 `aria-disabled`만 있는 옵션은 계속 닿을 수 있습니다. 키와 클릭으로 활성 옵션이 되지만 선택할 수는 없습니다. 키보드로 옮겨 간 옵션은 자기 스크롤 상자 안에서 보이도록 스크롤됩니다. 포커스는 목록이나, 목록을 가진 입력에 머뭅니다.
 
 **직접 제공할 것:** `aria-label`이나, 보이는 레이블을 가리키는 `aria-labelledby`로 이름을 주세요. 타입은 이를 요구하지 않습니다. 문자열이 옵션의 이름이 되므로, 옵션 텍스트는 그것만으로 뜻이 통해야 합니다. 입력이 포커스를 가지면 [useCombobox](/utilities/use-combobox)로 연결하세요. 이 훅은 목록에 `tabIndex={-1}`을 주고, 입력에 `aria-activedescendant`, `aria-controls`, `aria-expanded`를 둡니다.
 

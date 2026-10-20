@@ -16,6 +16,7 @@ import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useDismissLabel } from './dismissLabel.js';
 import { glyphOr, SendGlyph, StopGlyph } from './glyphs.js';
+import { isImeKeyEvent } from './ime.js';
 import { composeHandlers, cx, useComposedRefs } from './props.js';
 import styles from './Composer.module.css';
 
@@ -68,9 +69,8 @@ function Root({ busy = false, className, onKeyDown, onSubmit, ...props }: Compos
     const target = event.target;
     if (!(target instanceof HTMLTextAreaElement) || target.form !== event.currentTarget) return;
     if (event.key !== 'Enter' || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return;
-    // Enter that ends an IME composition, such as a Korean or Japanese word,
-    // only commits the word. Safari sends it after compositionend, with keyCode 229.
-    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+    // Enter that ends an IME composition only commits the word.
+    if (isImeKeyEvent(event)) return;
     if (event.defaultPrevented || target.readOnly || target.matches(':disabled')) return;
     event.preventDefault();
     // A held Enter sends once, even if busy is not set yet when it repeats.

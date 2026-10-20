@@ -7,6 +7,7 @@ import { Chip } from '../components/Chip.js';
 import { ChipList } from '../components/ChipList.js';
 import { Dialog } from '../components/Dialog.js';
 import { Field } from '../components/Field.js';
+import { useChipField } from '../hooks/useChipField.js';
 import { StringsProvider } from '../providers/StringsProvider.js';
 
 const TAGS = ['design', 'tokens', 'accessibility', 'react', 'density', 'dark mode', 'docs', 'motion', 'layout', 'forms'];
@@ -431,5 +432,37 @@ describe('Chip remove content in a browser', () => {
     expect(count).toBeGreaterThan(0);
     await userEvent.click(more);
     expect(await screen.findByRole('dialog', { name: `${count} puces de plus` })).toBeTruthy();
+  });
+});
+
+describe('Field.ChipInput held Enter in a browser', () => {
+  function TagForm({ onSubmit }: { onSubmit: () => void }) {
+    const field = useChipField();
+    return (
+      <form
+        data-appearance="light"
+        data-density="comfortable"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit();
+        }}
+      >
+        <Field.Root>
+          <Field.ChipInput aria-label="Tags" {...field.getChipInputProps()} />
+        </Field.Root>
+        <output>{field.chips.join(',')}</output>
+        <button type="submit">Save</button>
+      </form>
+    );
+  }
+
+  it('commits once and submits nothing', async () => {
+    let submits = 0;
+    render(<TagForm onSubmit={() => (submits += 1)} />);
+    await userEvent.click(screen.getByRole('textbox', { name: 'Tags' }));
+    await userEvent.keyboard('foo');
+    await userEvent.keyboard('{Enter>3}');
+    expect(screen.getByRole('status').textContent).toBe('foo');
+    expect(submits).toBe(0);
   });
 });

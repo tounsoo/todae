@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { Button } from '../components/Button.js';
 import { Field } from '../components/Field.js';
 import { OptionList } from '../components/OptionList.js';
 import { Popover } from '../components/Popover.js';
@@ -8,7 +9,7 @@ import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 import * as api from '../index.js';
 import type { BottomSheetRootProps } from '../components/BottomSheet.js';
 import type { DialogRootProps } from '../components/Dialog.js';
-import { useState, type KeyboardEvent, type ReactNode } from 'react';
+import { Activity, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { StringsProvider } from '../providers/StringsProvider.js';
 import {
   useCombobox,
@@ -33,6 +34,7 @@ function SingleBox(props: Partial<UseComboboxSingleOptions> = {}) {
   const cb = useCombobox({ options: OPTIONS, presentation: 'popover', ...props });
   return (
     <div>
+      <label {...cb.getLabelProps()}>Field</label>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
       </Field.Root>
@@ -57,6 +59,7 @@ function MultiCreateBox({ onChange }: { onChange?: (value: string[]) => void } =
   });
   return (
     <div>
+      <label {...cb.getLabelProps()}>Field</label>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.ChipInput {...cb.getChipInputProps()} />
       </Field.Root>
@@ -69,6 +72,25 @@ function MultiCreateBox({ onChange }: { onChange?: (value: string[]) => void } =
       </Popover.Root>
     </div>
   );
+}
+
+/** Runs `run` with Vitest's unhandled-rejection listeners set aside, and returns the reasons it left unhandled. */
+async function captureUnhandled(run: () => Promise<unknown>): Promise<unknown[]> {
+  const reasons: unknown[] = [];
+  const listeners = process.listeners('unhandledRejection');
+  process.removeAllListeners('unhandledRejection');
+  const onRejection = (reason: unknown) => {
+    reasons.push(reason);
+  };
+  process.on('unhandledRejection', onRejection);
+  try {
+    await run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  } finally {
+    process.off('unhandledRejection', onRejection);
+    for (const listener of listeners) process.on('unhandledRejection', listener);
+  }
+  return reasons;
 }
 
 function pointerSelect(option: HTMLElement) {
@@ -1077,5 +1099,956 @@ describe('useCombobox overlay names', () => {
     const { result } = renderHook(() => useCombobox({ options: OPTIONS, presentation: 'dialog' }), { wrapper });
     expect(result.current.getDialogProps()['aria-label']).toBe('Choix');
     expect(result.current.getSheetProps()['aria-label']).toBe('Choix');
+  });
+});
+
+describe('useCombobox async create', () => {
+  function deferredCreate() {
+    const calls: { resolve: (value: string) => void; reject: (reason: unknown) => void }[] = [];
+    const onCreate = vi.fn(
+      () =>
+        new Promise<string>((resolve, reject) => {
+          calls.push({ resolve, reject });
+        }),
+    );
+    return { onCreate, calls };
+  }
+
+  function multiCreate(onCreate: (label: string) => Promise<string>, onValueChange?: (value: string[]) => void) {
+    return renderHook(() =>
+      useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        allowCreate: true,
+        presentation: 'popover',
+        defaultOpen: true,
+        onCreate,
+        onValueChange,
+      }),
+    );
+  }
+
+  function singleCreate(onCreate: (label: string) => Promise<string>, extra: Partial<UseComboboxSingleOptions> = {}) {
+    return renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        allowCreate: true,
+        presentation: 'popover',
+        defaultOpen: true,
+        onCreate,
+        ...extra,
+      }),
+    );
+  }
+
+  function type(result: { current: UseComboboxResult }, text: string) {
+    act(() =>
+      result.current.getInputProps().onChange?.({ target: { value: text } } as never),
+    );
+  }
+
+  it('runs onCreate once while its promise is pending, and reports creating', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(result.current.creating).toBe(true);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toEqual(['new']);
+    expect(result.current.creating).toBe(false);
+  });
+
+  it('keeps a selection made while a multiple create is pending', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    act(() => result.current.select('react'));
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toEqual(['react', 'new']);
+  });
+
+  it('keeps text typed while a multiple create is pending', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    type(result, 'next');
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toEqual(['new']);
+    expect(result.current.inputValue).toBe('next');
+  });
+
+  it('drops a multiple create that resolves after clear', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    act(() => result.current.clear());
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toEqual([]);
+    expect(result.current.creating).toBe(false);
+  });
+
+  it('drops a single create that resolves after another pick', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    act(() => result.current.select('vue'));
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBe('vue');
+    expect(result.current.inputValue).toBe('Vue');
+    expect(result.current.creating).toBe(false);
+  });
+
+  it('drops a single create that resolves after clear', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    act(() => result.current.clear());
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBeNull();
+    expect(result.current.inputValue).toBe('');
+  });
+
+  it('drops a single create that resolves after the user types', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    type(result, 'other');
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBeNull();
+    expect(result.current.inputValue).toBe('other');
+  });
+
+  it('drops a create that resolves after reset', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate, { defaultValue: 'react' });
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    act(() => result.current.reset());
+    expect(result.current.creating).toBe(false);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBe('react');
+    expect(result.current.inputValue).toBe('React');
+  });
+
+  it('drops a create that resolves after unmount', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const onValueChange = vi.fn();
+    const { result, unmount } = singleCreate(onCreate, { onValueChange });
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    unmount();
+    await act(async () => calls[0]?.resolve('new'));
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it('reports a rejected create in createError, not error, and lets the user try again', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    const failure = new Error('taken');
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    await act(async () => calls[0]?.reject(failure));
+    expect(result.current.createError).toBe(failure);
+    expect(result.current.error).toBeNull();
+    expect(result.current.creating).toBe(false);
+    expect(result.current.value).toEqual([]);
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(2);
+    expect(result.current.createError).toBeNull();
+  });
+
+  it('clears createError on the next input change', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    await act(async () => calls[0]?.reject(new Error('taken')));
+    expect(result.current.createError).not.toBeNull();
+    type(result, 'newer');
+    expect(result.current.createError).toBeNull();
+  });
+
+  it('leaves a throw from onValueChange after a create to the consumer, not createError', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const failure = new Error('rejected by the store');
+    const onInputValueChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        allowCreate: true,
+        presentation: 'popover',
+        defaultOpen: true,
+        onCreate,
+        onInputValueChange,
+        onValueChange: () => {
+          throw failure;
+        },
+      }),
+    );
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    const unhandled = await captureUnhandled(() => act(async () => calls[0]?.resolve('new')));
+    expect(unhandled).toEqual([failure]);
+    expect(result.current.createError).toBeNull();
+    expect(result.current.value).toEqual(['new']);
+    expect(onInputValueChange).toHaveBeenLastCalledWith('');
+    expect(result.current.creating).toBe(false);
+  });
+
+  it('runs a create for another label while one is pending in multiple mode', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'a');
+    act(() => result.current.create());
+    type(result, 'b');
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(2);
+    await act(async () => calls[1]?.resolve('b'));
+    expect(result.current.creating).toBe(true);
+    await act(async () => calls[0]?.resolve('a'));
+    expect(result.current.value).toEqual(['b', 'a']);
+    expect(result.current.creating).toBe(false);
+  });
+
+  it('keeps the create row of a pending label active but disabled, and Enter does not run it again', async () => {
+    const { onCreate } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    const row = result.current.items.find((item) => item.kind === 'create');
+    expect(row && result.current.getOptionProps(row)['aria-disabled']).toBe(true);
+    expect(result.current.activeId).toBe(row?.id);
+    let handled = false;
+    act(() => {
+      handled = result.current.getChipInputProps().onCommit('new') !== false;
+    });
+    expect(handled).toBe(true);
+    expect(onCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops a single create that resolves after Escape clears the text of a closed list', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const onOpenChange = vi.fn();
+    const { result } = singleCreate(onCreate, { onOpenChange });
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.setOpen(false, 'escape'));
+    act(() => result.current.getInputProps().onKeyDown?.({ key: 'Escape', preventDefault() {} } as never));
+    onOpenChange.mockClear();
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBeNull();
+    expect(result.current.inputValue).toBe('');
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('drops a single create that resolves after the consumer sets other text', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.setInputValue(''));
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBeNull();
+    expect(result.current.inputValue).toBe('');
+  });
+
+  it('commits a single create after Escape closes the list, without closing it again', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const onOpenChange = vi.fn();
+    const { result } = singleCreate(onCreate, { onOpenChange });
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.setOpen(false, 'escape'));
+    onOpenChange.mockClear();
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBe('new');
+    expect(result.current.inputValue).toBe('new');
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('applies a single create in full when onValueChange throws, and runs the other callbacks', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const failure = new Error('rejected by the store');
+    const onInputValueChange = vi.fn();
+    const onOpenChange = vi.fn();
+    const { result } = singleCreate(onCreate, {
+      onInputValueChange,
+      onOpenChange,
+      onValueChange: () => {
+        throw failure;
+      },
+    });
+    type(result, 'new');
+    act(() => result.current.create());
+    const unhandled = await captureUnhandled(() => act(async () => calls[0]?.resolve('new')));
+    expect(unhandled).toEqual([failure]);
+    expect(result.current.createError).toBeNull();
+    expect(onInputValueChange).toHaveBeenLastCalledWith('new');
+    expect(onOpenChange).toHaveBeenLastCalledWith(false, 'select');
+    expect(result.current.value).toBe('new');
+    expect(result.current.inputValue).toBe('new');
+    expect(result.current.open).toBe(false);
+    expect(result.current.creating).toBe(false);
+  });
+
+  it.each([
+    ['a pick', (cb: UseComboboxResult) => cb.select('react')],
+    ['a removed chip', (cb: UseComboboxResult) => cb.remove('vue')],
+    ['clear()', (cb: UseComboboxResult) => cb.clear()],
+  ])('clears createError on %s', async (_name, act_) => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = renderHook(() =>
+      useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        allowCreate: true,
+        presentation: 'popover',
+        defaultOpen: true,
+        defaultValue: ['vue'],
+        onCreate,
+      }),
+    );
+    type(result, 'new');
+    act(() => result.current.create());
+    await act(async () => calls[0]?.reject(new Error('taken')));
+    expect(result.current.createError).not.toBeNull();
+    act(() => act_(result.current));
+    expect(result.current.createError).toBeNull();
+  });
+
+  it('clears createError when the list opens', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    await act(async () => calls[0]?.reject(new Error('taken')));
+    act(() => result.current.setOpen(false));
+    expect(result.current.createError).not.toBeNull();
+    act(() => result.current.setOpen(true));
+    expect(result.current.createError).toBeNull();
+  });
+
+  it('keeps both chips when two creates settle in the same tick', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const onValueChange = vi.fn();
+    const { result } = multiCreate(onCreate, onValueChange);
+    act(() => result.current.setInputValue('a'));
+    act(() => result.current.create());
+    act(() => result.current.setInputValue('b'));
+    act(() => result.current.create());
+    expect(calls).toHaveLength(2);
+    await act(async () => {
+      calls[0]?.resolve('a');
+      calls[1]?.resolve('b');
+    });
+    expect(onValueChange.mock.calls.map((call) => call[0])).toEqual([['a'], ['a', 'b']]);
+    expect(result.current.value).toEqual(['a', 'b']);
+  });
+
+  it('keeps both chips of a controlled owner when two creates settle in the same tick', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = renderHook(() => {
+      const [value, setValue] = useState<string[]>([]);
+      return useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        allowCreate: true,
+        presentation: 'popover',
+        defaultOpen: true,
+        value,
+        onValueChange: setValue,
+        onCreate,
+      });
+    });
+    type(result, 'a');
+    act(() => result.current.create());
+    type(result, 'b');
+    act(() => result.current.create());
+    await act(async () => {
+      calls[0]?.resolve('a');
+      calls[1]?.resolve('b');
+    });
+    expect(result.current.value).toEqual(['a', 'b']);
+  });
+
+  it('reports a synchronous throw from onCreate in createError, like a rejection', () => {
+    const failure = new Error('taken');
+    const { result } = singleCreate(() => {
+      throw failure;
+    });
+    type(result, 'new');
+    expect(() => act(() => result.current.create())).not.toThrow();
+    expect(result.current.createError).toBe(failure);
+    expect(result.current.creating).toBe(false);
+  });
+
+  it('throws a consumer callback\'s error out of a pick after running every callback', () => {
+    const failure = new Error('rejected by the store');
+    const onInputValueChange = vi.fn();
+    const onOpenChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        presentation: 'popover',
+        defaultOpen: true,
+        onInputValueChange,
+        onOpenChange,
+        onValueChange: () => {
+          throw failure;
+        },
+      }),
+    );
+    let thrown: unknown = null;
+    act(() => {
+      try {
+        result.current.select('react');
+      } catch (error) {
+        thrown = error;
+      }
+    });
+    expect(thrown).toBe(failure);
+    expect(onInputValueChange).toHaveBeenCalledWith('React');
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'select');
+    expect(result.current.value).toBe('react');
+    expect(result.current.open).toBe(false);
+  });
+
+  it.each(['single', 'multiple'] as const)('reports no createError for a %s create that fails after a pick', async (mode) => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = mode === 'single' ? singleCreate(onCreate) : multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.select('react'));
+    await act(async () => calls[0]?.reject(new Error('taken')));
+    expect(result.current.createError).toBeNull();
+  });
+
+  it('takes back a single create dropped by a pick when its label runs again, without a second onCreate', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.select('react'));
+    act(() => result.current.setOpen(true));
+    type(result, 'new');
+    const row = result.current.items.find((item) => item.kind === 'create');
+    expect(row && result.current.getOptionProps(row)['aria-disabled']).toBeUndefined();
+    expect(result.current.creating).toBe(false);
+    let handled = false;
+    act(() => {
+      handled = result.current.getChipInputProps().onCommit('new') !== false;
+    });
+    expect(handled).toBe(true);
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(result.current.creating).toBe(true);
+    await act(async () => calls[0]?.resolve('new-1'));
+    expect(result.current.value).toBe('new-1');
+    expect(result.current.creating).toBe(false);
+  });
+
+  it('takes back a multiple create dropped by clear when its label runs again', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.clear());
+    expect(result.current.creating).toBe(false);
+    type(result, 'new');
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toEqual(['new']);
+  });
+
+  it.each([
+    ['reset()', (cb: UseComboboxResult) => cb.reset()],
+    ['clear()', (cb: UseComboboxResult) => cb.clear()],
+    ['a pick', (cb: UseComboboxResult) => cb.select('react')],
+  ])('stops reporting a single create as creating at once after %s', (_name, act_) => {
+    const { onCreate } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    expect(result.current.creating).toBe(true);
+    act(() => act_(result.current));
+    expect(result.current.creating).toBe(false);
+  });
+
+  it('commits a single create when the text reads its label again before it settles', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    type(result, 'newer');
+    type(result, 'new');
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBe('new');
+  });
+
+  it('runs a label once while a create dropped by reset is still pending, and commits it when run again', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.reset());
+    act(() => result.current.setOpen(true));
+    type(result, 'new');
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBe('new');
+  });
+
+  it('keeps a single create stale once the value changed, even when the text and value come back', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.select('react'));
+    act(() => result.current.remove('react'));
+    type(result, 'new');
+    expect(result.current.creating).toBe(false);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBeNull();
+  });
+
+  it('treats a pending label as pending whatever its case', () => {
+    const { onCreate } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    type(result, 'New');
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears createError when the consumer sets the text', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    await act(async () => calls[0]?.reject(new Error('taken')));
+    expect(result.current.createError).not.toBeNull();
+    act(() => result.current.setInputValue('other'));
+    expect(result.current.createError).toBeNull();
+  });
+
+  it('clears createError when a controlled inputValue changes', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result, rerender } = renderHook(
+      ({ text }: { text: string }) =>
+        useCombobox({
+          options: OPTIONS,
+          allowCreate: true,
+          presentation: 'popover',
+          defaultOpen: true,
+          inputValue: text,
+          onCreate,
+        }),
+      { initialProps: { text: 'new' } },
+    );
+    act(() => result.current.create());
+    await act(async () => calls[0]?.reject(new Error('taken')));
+    expect(result.current.createError).not.toBeNull();
+    rerender({ text: 'other' });
+    expect(result.current.createError).toBeNull();
+  });
+
+  it('runs onCreate once across an Activity hiding and showing the combobox', async () => {
+    const { onCreate, calls } = deferredCreate();
+    let cb!: UseComboboxResult;
+    function Probe() {
+      cb = useCombobox({ options: OPTIONS, allowCreate: true, presentation: 'popover', defaultOpen: true, onCreate });
+      return null;
+    }
+    const { rerender } = render(
+      <Activity mode="visible">
+        <Probe />
+      </Activity>,
+    );
+    act(() => cb.setInputValue('new'));
+    act(() => cb.create());
+    expect(cb.creating).toBe(true);
+    rerender(
+      <Activity mode="hidden">
+        <Probe />
+      </Activity>,
+    );
+    rerender(
+      <Activity mode="visible">
+        <Probe />
+      </Activity>,
+    );
+    expect(cb.creating).toBe(false);
+    act(() => cb.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(cb.creating).toBe(true);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(cb.value).toBe('new');
+    expect(cb.creating).toBe(false);
+  });
+
+  it('leaves a load error showing while a create runs', async () => {
+    const onCreate = vi.fn(() => new Promise<string>(() => undefined));
+    const { result } = renderHook(() =>
+      useCombobox({
+        loadOptions: () => Promise.reject(new Error('offline')),
+        allowCreate: true,
+        presentation: 'popover',
+        defaultOpen: true,
+        defaultInputValue: 'new',
+        onCreate,
+      }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(result.current.error).toBeInstanceOf(Error);
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(result.current.error).toBeInstanceOf(Error);
+  });
+});
+
+describe('useCombobox keys', () => {
+  function CityBox({ onValueChange, onCreate }: { onValueChange: (value: string | null) => void; onCreate: (label: string) => Promise<string> }) {
+    const cb = useCombobox({
+      options: [
+        { value: 'newton', label: 'Newton' },
+        { value: 'newark', label: 'Newark' },
+      ],
+      allowCreate: true,
+      presentation: 'popover',
+      defaultOpen: true,
+      onValueChange,
+      onCreate,
+    });
+    return (
+      <div>
+        <label {...cb.getLabelProps()}>City</label>
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.TextInput {...cb.getInputProps()} />
+        </Field.Root>
+        <Popover.Root {...cb.getPopoverProps()}>
+          <OptionList.Root {...cb.getListboxProps()}>
+            {cb.items.map((item) => (
+              <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+            ))}
+          </OptionList.Root>
+        </Popover.Root>
+      </div>
+    );
+  }
+
+  it('holds a second Enter on a pending create row instead of picking an option', () => {
+    const onValueChange = vi.fn();
+    const onCreate = vi.fn(() => new Promise<string>(() => undefined));
+    render(<CityBox onValueChange={onValueChange} onCreate={onCreate} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.change(input, { target: { value: 'new' } });
+    fireEvent.keyDown(input, { key: 'End' });
+    const createId = input.getAttribute('aria-activedescendant');
+    expect(createId).toContain('create');
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(false);
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(input.getAttribute('aria-activedescendant')).toBe(createId);
+    const row = document.getElementById(createId!);
+    expect(row?.getAttribute('aria-disabled')).toBe('true');
+    expect(row?.hasAttribute('data-highlighted')).toBe(true);
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(false);
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onValueChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: 'ArrowUp' });
+    expect(input.getAttribute('aria-activedescendant')).not.toBe(createId);
+  });
+
+  it('moves on an ArrowDown with keyCode 229 outside a composition', () => {
+    render(<SingleBox defaultOpen />);
+    const input = screen.getByRole('combobox');
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, 'react'));
+    expect(fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 229 })).toBe(false);
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, 'redux'));
+  });
+
+  it('leaves the Enter that ends an IME composition in Safari to the input', () => {
+    const onChange = vi.fn();
+    render(<SingleBox defaultOpen onValueChange={onChange} />);
+    expect(fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Enter', keyCode: 229 })).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('leaves Enter to the form while a single list is closed', () => {
+    const onChange = vi.fn();
+    render(<SingleBox onValueChange={onChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('leaves Enter to the form on an open list with no row and no create row', () => {
+    render(<SingleBox defaultOpen />);
+    const input = screen.getByRole('combobox');
+    fireEvent.change(input, { target: { value: 'zzz' } });
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true);
+  });
+
+  it('does not toggle the last highlighted option with Enter while a multiple list is closed', () => {
+    const onChange = vi.fn();
+    render(<MultiCreateBox onChange={onChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 're' } });
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  function CommaBox({ onChange }: { onChange: (value: string[]) => void }) {
+    const cb = useCombobox({ selectionMode: 'multiple', options: OPTIONS, presentation: 'popover', onValueChange: onChange });
+    return (
+      <div>
+        <label {...cb.getLabelProps()}>Field</label>
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.ChipInput {...cb.getChipInputProps()} commitKeys={['Enter', ',']} />
+        </Field.Root>
+        <Popover.Root {...cb.getPopoverProps()}>
+          <OptionList.Root {...cb.getListboxProps()}>
+            {cb.items.map((item) => (
+              <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+            ))}
+          </OptionList.Root>
+        </Popover.Root>
+      </div>
+    );
+  }
+
+  it('keeps a comma from being typed while a chip list is closed, and commits the active row with it while open', () => {
+    const onChange = vi.fn();
+    render(<CommaBox onChange={onChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 're' } });
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(fireEvent.keyDown(input, { key: ',' })).toBe(false);
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+    expect(fireEvent.keyDown(input, { key: ',' })).toBe(false);
+    expect(onChange).toHaveBeenCalledWith(['react']);
+  });
+});
+
+describe('useCombobox reset', () => {
+  it('goes through the change callbacks, so a controlled combobox resets', () => {
+    const onValueChange = vi.fn();
+    const onInputValueChange = vi.fn();
+    const onOpenChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        presentation: 'popover',
+        value: 'react',
+        inputValue: 'React',
+        open: true,
+        onValueChange,
+        onInputValueChange,
+        onOpenChange,
+      }),
+    );
+    act(() => result.current.reset());
+    expect(onValueChange).toHaveBeenCalledWith(null);
+    expect(onInputValueChange).toHaveBeenCalledWith('');
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'reset');
+  });
+
+  it('calls no change callback for a value reset leaves as it was', () => {
+    const onValueChange = vi.fn();
+    const onInputValueChange = vi.fn();
+    const onOpenChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        presentation: 'popover',
+        defaultValue: 'react',
+        onValueChange,
+        onInputValueChange,
+        onOpenChange,
+      }),
+    );
+    act(() => result.current.setOpen(true));
+    onOpenChange.mockClear();
+    act(() => result.current.reset());
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'reset');
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(onInputValueChange).not.toHaveBeenCalled();
+  });
+
+  it('reopens a dialog with defaultOpen at its default text, without clearing it first', () => {
+    const onInputValueChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        presentation: 'dialog',
+        defaultOpen: true,
+        defaultInputValue: 'Re',
+        onInputValueChange,
+      }),
+    );
+    act(() => result.current.setOpen(false));
+    act(() => result.current.reset());
+    expect(result.current.open).toBe(true);
+    expect(result.current.inputValue).toBe('Re');
+    expect(onInputValueChange).not.toHaveBeenCalled();
+  });
+
+  it('resets a controlled multiple value through onValueChange', () => {
+    const onValueChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        presentation: 'popover',
+        value: ['react'],
+        onValueChange,
+      }),
+    );
+    act(() => result.current.reset());
+    expect(onValueChange).toHaveBeenCalledWith([]);
+  });
+});
+
+describe('useCombobox trigger props', () => {
+  function SheetTrigger({ onOpenChange }: { onOpenChange: () => void }) {
+    const ref = useRef<HTMLButtonElement | null>(null);
+    const cb = useCombobox({ options: OPTIONS, presentation: 'sheet', onOpenChange });
+    return (
+      <Button.Root
+        {...cb.getTriggerProps({ ref, onClick: (event) => event.preventDefault() })}
+        data-same-ref={String(ref.current !== null && ref.current === cb.triggerRef.current)}
+      >
+        Pick
+      </Button.Root>
+    );
+  }
+
+  it('skips the toggle when the caller prevents the click, and keeps the caller ref', () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<SheetTrigger onOpenChange={onOpenChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pick' }));
+    expect(onOpenChange).not.toHaveBeenCalled();
+    rerender(<SheetTrigger onOpenChange={onOpenChange} />);
+    expect(screen.getByRole('button', { name: 'Pick' }).getAttribute('data-same-ref')).toBe('true');
+  });
+});
+
+describe('useCombobox listbox name', () => {
+  it('points the label at the input in a popover and at the trigger in a sheet', () => {
+    const popover = renderHook(() => useCombobox({ options: OPTIONS, presentation: 'popover' })).result.current;
+    expect(popover.getLabelProps()).toEqual({ id: popover.ids.label, htmlFor: popover.ids.input });
+    const sheet = renderHook(() => useCombobox({ options: OPTIONS, presentation: 'sheet' })).result.current;
+    expect(sheet.getLabelProps()).toEqual({ id: sheet.ids.label, htmlFor: sheet.ids.trigger });
+  });
+
+  it('names the listbox by the label unless the caller names it', () => {
+    const { result } = renderHook(() => useCombobox({ options: OPTIONS, presentation: 'popover' }));
+    expect(result.current.getListboxProps()['aria-labelledby']).toBe(result.current.ids.label);
+    const named = result.current.getListboxProps({ 'aria-label': 'Commands' });
+    expect(named['aria-label']).toBe('Commands');
+    expect(named['aria-labelledby']).toBeUndefined();
+    expect(result.current.getListboxProps({ 'aria-labelledby': 'heading' })['aria-labelledby']).toBe('heading');
+  });
+
+  it('warns in development when the open list has no name', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      function Unnamed() {
+        const cb = useCombobox({ options: OPTIONS, presentation: 'popover', defaultOpen: true });
+        return (
+          <div>
+            <Field.Root {...cb.getAnchorProps()}>
+              <Field.TextInput {...cb.getInputProps()} />
+            </Field.Root>
+            <Popover.Root {...cb.getPopoverProps()}>
+              <OptionList.Root {...cb.getListboxProps()}>{null}</OptionList.Root>
+            </Popover.Root>
+          </div>
+        );
+      }
+      render(<Unnamed />);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('listbox has no name'));
+      warn.mockClear();
+      cleanup();
+      function Named() {
+        const cb = useCombobox({ options: OPTIONS, presentation: 'popover', defaultOpen: true });
+        return (
+          <div>
+            <label {...cb.getLabelProps()}>Framework</label>
+            <Field.Root {...cb.getAnchorProps()}>
+              <Field.TextInput {...cb.getInputProps()} />
+            </Field.Root>
+            <Popover.Root {...cb.getPopoverProps()}>
+              <OptionList.Root {...cb.getListboxProps()}>{null}</OptionList.Root>
+            </Popover.Root>
+          </div>
+        );
+      }
+      render(<Named />);
+      expect(warn).not.toHaveBeenCalledWith(expect.stringContaining('listbox has no name'));
+    } finally {
+      warn.mockRestore();
+    }
+  });
+});
+
+describe('useCombobox controlled owner that turns a change down', () => {
+  it('asks again on every ArrowDown while open stays false', () => {
+    const onOpenChange = vi.fn();
+    render(<SingleBox open={false} onOpenChange={onOpenChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(onOpenChange.mock.calls).toEqual([
+      [true, 'trigger'],
+      [true, 'trigger'],
+    ]);
+  });
+
+  it('builds the next change on the value it rendered, not on a value it turned down', () => {
+    const onValueChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        presentation: 'popover',
+        value: ['react', 'redux', 'vue'],
+        onValueChange,
+      }),
+    );
+    act(() => result.current.select('x'));
+    act(() => result.current.select('x'));
+    act(() => result.current.remove('react'));
+    expect(onValueChange.mock.calls).toEqual([
+      [['react', 'redux', 'vue', 'x']],
+      [['react', 'redux', 'vue', 'x']],
+      [['redux', 'vue']],
+    ]);
   });
 });

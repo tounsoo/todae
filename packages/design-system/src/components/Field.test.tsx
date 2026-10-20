@@ -16,6 +16,7 @@ import {
   type FieldRootProps,
   type FieldTextInputProps,
 } from './Field.js';
+import type { ChipCommitKey } from './commitKeys.js';
 import { useChipField } from '../hooks/useChipField.js';
 import { useField } from '../hooks/useField.js';
 import * as api from '../index.js';
@@ -727,6 +728,83 @@ describe('Field.ChipInput', () => {
     expect(screen.getByRole('textbox')).toHaveProperty('value', '  foo ');
   });
 
+  it('prevents a commit key only when onCommit does not return false', () => {
+    renderField({ inputValue: 'foo', onCommit: () => false });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })).toBe(true);
+    cleanup();
+    renderField({ inputValue: 'foo' });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })).toBe(false);
+  });
+
+  it('leaves only Enter to the input when onCommit returns false, so a comma is never typed', () => {
+    renderField({ inputValue: 'foo', commitKeys: ['Enter', ','], onCommit: () => false });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: ',' })).toBe(false);
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })).toBe(true);
+  });
+
+  function HeldKey({ commitKeys, onCommit }: { commitKeys: ChipCommitKey[]; onCommit: (value: string) => void }) {
+    const [text, setText] = useState('foo');
+    return (
+      <Field.Root>
+        <Field.ChipInput
+          chips={[]}
+          inputValue={text}
+          onInputValueChange={setText}
+          onCommit={(value) => {
+            onCommit(value);
+            setText('');
+          }}
+          commitKeys={commitKeys}
+          onChipRemove={() => {}}
+        />
+      </Field.Root>
+    );
+  }
+
+  it('commits a held Enter once and keeps its repeats from the form', () => {
+    const onCommit = vi.fn();
+    render(<HeldKey commitKeys={['Enter']} onCommit={onCommit} />);
+    const input = screen.getByRole('textbox');
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(false);
+    expect(fireEvent.keyDown(input, { key: 'Enter', repeat: true })).toBe(false);
+    expect(onCommit).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets the repeats of a held Tab move focus after it commits', () => {
+    const onCommit = vi.fn();
+    render(<HeldKey commitKeys={['Tab']} onCommit={onCommit} />);
+    const input = screen.getByRole('textbox');
+    expect(fireEvent.keyDown(input, { key: 'Tab' })).toBe(false);
+    expect(fireEvent.keyDown(input, { key: 'Tab', repeat: true })).toBe(true);
+    expect(onCommit).toHaveBeenCalledTimes(1);
+  });
+
+  it('never types a held comma whose commit onCommit refuses', () => {
+    renderField({ inputValue: 'foo', commitKeys: [','], onCommit: () => false });
+    const input = screen.getByRole('textbox');
+    expect(fireEvent.keyDown(input, { key: ',' })).toBe(false);
+    expect(fireEvent.keyDown(input, { key: ',', repeat: true })).toBe(false);
+  });
+
+  it('leaves a held Enter on an empty input to the form', () => {
+    const { onCommit } = renderField({ inputValue: '' });
+    const input = screen.getByRole('textbox');
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true);
+    expect(fireEvent.keyDown(input, { key: 'Enter', repeat: true })).toBe(true);
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it('lets Tab move focus when onCommit returns false', () => {
+    renderField({ inputValue: 'foo', commitKeys: ['Tab'], onCommit: () => false });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Tab' })).toBe(true);
+  });
+
+  it('removes the last chip on a Backspace with keyCode 229 outside a composition', () => {
+    const { onChipRemove } = renderField({ chips: ['Alpha', 'Beta'], inputValue: '' });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Backspace', keyCode: 229 })).toBe(false);
+    expect(onChipRemove).toHaveBeenCalledWith(1, 'Beta');
+  });
+
   it('disables the chips and Backspace when the input itself is disabled', () => {
     const onChipRemove = vi.fn();
     render(
@@ -810,6 +888,12 @@ describe('Field.ChipInput', () => {
     const { onCommit } = renderField({ inputValue: 'tag' });
     fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter', isComposing: true });
     fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Process' });
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it('leaves the Enter that ends an IME composition in Safari to the input', () => {
+    const { onCommit } = renderField({ inputValue: '한' });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter', keyCode: 229 })).toBe(true);
     expect(onCommit).not.toHaveBeenCalled();
   });
 

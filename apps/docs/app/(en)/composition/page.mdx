@@ -53,7 +53,7 @@ Desktop (`presentation="popover"`). The closed control is a real Field. Spread `
 const cb = useCombobox({ presentation: 'popover' })
 
 <Field.Group>
-	<Label.Root htmlFor={cb.ids.input}>Tags</Label.Root>
+	<Label.Root {...cb.getLabelProps()}>Tags</Label.Root>
 	<Field.Root {...cb.getAnchorProps()}>
 		<Field.Icon><Search /></Field.Icon>
 		<Field.ChipInput {...cb.getChipInputProps()} />
@@ -72,7 +72,10 @@ Touch (`presentation="sheet"`). The closed control is `Button.Root`. Search Fiel
 ```tsx
 const cb = useCombobox({ presentation: 'sheet' })
 
-<Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
+<Field.Group>
+	<Label.Root {...cb.getLabelProps()}>Tags</Label.Root>
+	<Button.Root {...cb.getTriggerProps()}>Pick…</Button.Root>
+</Field.Group>
 <BottomSheet.Root {...cb.getSheetProps()}>
 	<Field.Group>
 		<Label.Root htmlFor={cb.ids.input}>Search</Label.Root>
@@ -85,7 +88,7 @@ const cb = useCombobox({ presentation: 'sheet' })
 </BottomSheet.Root>
 ```
 
-The touch trigger is `Button.Root`.
+The touch trigger is `Button.Root`. In both, `getLabelProps()` goes on the field's Label: it names the listbox, and points at the input in a popover and at the trigger in a sheet.
 
 ## Hook
 
@@ -98,6 +101,7 @@ The touch trigger is `Button.Root`.
 - `getPopoverProps()` on `Popover.Root`
 - `getSheetProps()` on `BottomSheet.Root`
 - `getDialogProps()` on `Dialog.Root`
+- `getLabelProps()` on the field's `Label.Root`
 - `getListboxProps()` on `OptionList.Root`
 
 No Trigger sugar component. No `Combobox.*` chrome. See [Combobox](/recipes/combobox).

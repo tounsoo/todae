@@ -8,6 +8,7 @@ import {
   type Ref,
 } from 'react';
 import { Chip } from './Chip.js';
+import { isImeKeyEvent } from './ime.js';
 import { cx, useComposedRefs } from './props.js';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys.js';
 import styles from './Field.module.css';
@@ -18,7 +19,8 @@ export type FieldChipInputProps = {
   chips: readonly string[];
   inputValue: string;
   onInputValueChange: (value: string) => void;
-  onCommit: (value: string) => void;
+  /** Return `false` when there was nothing to commit: Enter then goes on to the form and Tab moves focus, while a character key such as `,` is still kept from typing. */
+  onCommit: (value: string) => boolean | void;
   onChipRemove: (index: number, value: string) => void;
   commitKeys?: readonly ChipCommitKey[];
   maxRows?: number;
@@ -61,12 +63,15 @@ export function ChipInput({
   const control = field.getControlProps({ ...props, ref: controlRef });
   // The Root's disabled or the input's own: the chips follow the input.
   const disabled = Boolean(control.disabled);
+  // The commit key whose press committed, while it may still be held.
+  const held = useRef<string | null>(null);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (!event.repeat) held.current = null;
     onKeyDownProp?.(event);
     if (event.defaultPrevented) return;
     if (disabled) return;
-    if (event.nativeEvent.isComposing || event.key === 'Process') return;
+    if (isImeKeyEvent(event, keys)) return;
     if (event.key === 'Backspace' && inputValue === '' && chips.length > 0 && removeOnBackspace) {
       const index = chips.length - 1;
       const value = chips[index];
@@ -76,10 +81,19 @@ export function ChipInput({
       return;
     }
     if (!keySet.has(event.key)) return;
+    // A held key commits once. After a commit, Enter's repeats are held back, since they
+    // would submit the emptied input's form; Tab's still move focus. A character key's
+    // repeats never type it.
+    if (event.repeat) {
+      if ((held.current === event.key && event.key !== 'Tab') || event.key.length === 1) event.preventDefault();
+      return;
+    }
     const trimmed = inputValue.trim();
     if (trimmed === '') return;
-    event.preventDefault();
-    onCommit(trimmed);
+    const committed = onCommit(trimmed) !== false;
+    if (committed) held.current = event.key;
+    // With nothing committed, only a key that would type its character is held back.
+    if (committed || event.key.length === 1) event.preventDefault();
   }
 
   const chipNodes = list.visible.map((chip, index) => (

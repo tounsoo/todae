@@ -37,7 +37,7 @@ import { ChevronDown } from 'lucide-react';
 const cb = useCombobox({ options, presentation: 'popover' });
 
 <Field.Group>
-  <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
+  <Label.Root {...cb.getLabelProps()}>Framework</Label.Root>
   <Field.Root {...cb.getAnchorProps()}>
     <Field.TextInput {...cb.getInputProps()} />
     <Field.Icon>
@@ -66,7 +66,7 @@ const cb = useCombobox({ options, presentation: 'popover' });
 const cb = useCombobox({ options, selectionMode: 'multiple', presentation: 'popover' });
 
 <Field.Group>
-  <Label.Root htmlFor={cb.ids.input}>Type</Label.Root>
+  <Label.Root {...cb.getLabelProps()}>Type</Label.Root>
   <Field.Root {...cb.getAnchorProps()}>
     <Field.ChipInput {...cb.getChipInputProps()} />
   </Field.Root>
@@ -86,14 +86,13 @@ const cb = useCombobox({ options, selectionMode: 'multiple', presentation: 'popo
 
 ```tsx
 const cb = useCombobox({ options, presentation: 'sheet' });
-const labelId = useId();
 const selected = options.find((option) => option.value === cb.value)?.label ?? 'Choose';
 
 <Field.Group>
-  <Label.Root id={labelId} htmlFor={cb.ids.trigger}>
+  <Label.Root {...cb.getLabelProps()}>
     City
   </Label.Root>
-  <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${labelId} ${cb.ids.trigger}`}>
+  <Button.Root {...cb.getTriggerProps()}>
     {selected}
   </Button.Root>
 </Field.Group>
@@ -148,7 +147,7 @@ const cb = useCombobox({
 
 ## 빈 결과와 생성
 
-일치하는 항목이 없으면 상태 행을 렌더링합니다. `allowCreate`는 쿼리와 대소문자 구분 없이 일치하는 레이블이 없을 때 같은 `OptionList`에 `Create "{query}"` 옵션 하나를 더합니다. 클릭하거나 Enter를 누르면 확정됩니다. 단일 선택은 선택하고 닫습니다. 다중 선택은 칩을 더하고 열린 채로 둡니다. `onCreate`는 정규화된 값을 반환할 수 있으며, 목록이 선택된 상태로 보여 줄 수 있도록 새 옵션을 `options`에 추가해야 합니다.
+일치하는 항목이 없으면 상태 행을 렌더링합니다. `allowCreate`는 쿼리와 대소문자 구분 없이 일치하는 레이블이 없을 때 같은 `OptionList`에 `Create "{query}"` 옵션 하나를 더합니다. 클릭하거나 Enter를 누르면 확정됩니다. 단일 선택은 선택하고 닫습니다. 다중 선택은 칩을 더하고 열린 채로 둡니다. `onCreate`는 정규화된 값을 반환할 수 있으며, 목록이 선택된 상태로 보여 줄 수 있도록 새 옵션을 `options`에 추가해야 합니다. 프로미스를 반환해도 됩니다. 그 프로미스가 끝날 때까지 `creating`이 true입니다. `onCreate`가 던지거나 거부한 이유는 텍스트가 여전히 그 레이블을 가리키는 동안 `createError`에 들어갑니다. 첫 번째 생성 데모처럼 둘 다 생성 행 옆의 상태 요소에 보여 주세요. 그 데모에서 `fail`을 입력하면 볼 수 있습니다.
 
 <Example block>
   <ComboboxEmpty />
@@ -188,7 +187,7 @@ const found = useHighlight({ name: 'search', query: cb.query });
 
 **Todae가 맡는 것:** [useCombobox](/utilities/use-combobox)는 입력을 `role="combobox"`로 만들어 `aria-controls`로 listbox를, `aria-activedescendant`로 활성 옵션을 가리키게 하고, 화살표 키, Home, End, Enter, Escape, Tab을 처리합니다. `OptionList`는 `role="listbox"`와 `aria-selected`, `aria-disabled`가 있는 `role="option"` 행을 렌더링하며, 다중 모드에서는 `aria-multiselectable`을 줍니다. `Popover`와 `BottomSheet`는 Escape로 닫히고 포커스를 돌려줍니다. 다중 모드에서 `Field.ChipInput`은 각 칩의 제거 버튼에 이름을 붙입니다.
 
-**직접 제공할 것:** 레이블을 주세요. `htmlFor={cb.ids.input}`인 [Label](/label)을 쓰거나, 시트 안의 `Field.Root`에 `aria-label`을 주세요. 시트 모드에서는 트리거의 이름이 필드와 현재 값을 말해야 합니다. 로딩, 오류, 빈 결과 텍스트는 `role="status"` 요소에 두세요. 방금 나타난 영역의 텍스트는 늘 읽히지는 않으므로, 그 요소는 마운트된 채로 두고 텍스트만 바꾸세요. Retry는 비동기 데모처럼 실제 버튼이어야 합니다.
+**직접 제공할 것:** 레이블을 주세요. [Label](/label)에 `{...cb.getLabelProps()}`를 주면 입력을, 시트 모드에서는 트리거를 가리키고, listbox가 이름을 가져오는 id를 받습니다. 시트 안에서는 검색 필드에도 이름을 주세요. 예를 들어 그 `Field.Root`에 `aria-label`을 줍니다. 보이는 레이블이 없으면 `getListboxProps()`에 `aria-label`을 넘기세요. 시트 모드에서는 트리거 텍스트가 값을 보여 줘야 합니다. 로딩, 오류, 생성 실패, 빈 결과 텍스트는 `role="status"` 요소에 두세요. 방금 나타난 영역의 텍스트는 늘 읽히지는 않으므로, 그 요소는 마운트된 채로 두고 텍스트만 바꾸세요. Retry는 비동기 데모처럼 실제 버튼이어야 합니다.
 
 **주의할 점:** 비어 있거나 로딩 중일 때 `OptionList.Root`를 마운트 해제하지 마세요. `aria-controls`가 계속 가리키도록 `hidden`을 지정하세요. getter 스프레드 뒤에 직접 `onKeyDown`, `onFocus`, `onBlur`를 주면 훅의 핸들러를 대체합니다. 일치 항목 강조만으로 알리지 마세요. 강조는 시각적일 뿐입니다.
 

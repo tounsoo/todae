@@ -63,7 +63,8 @@ type OptionListContextValue = {
   register: (entry: OptionEntry) => () => void;
 };
 
-type OptionEntry = { value: string; disabled: boolean; node: HTMLElement };
+/** `unavailable` (aria-disabled) keeps the option reachable; `disabled` also skips it. Neither can be selected. */
+type OptionEntry = { value: string; disabled: boolean; unavailable: boolean; node: HTMLElement };
 
 const OptionListContext = /* @__PURE__ */ createContext<OptionListContextValue | null>(null);
 
@@ -104,16 +105,18 @@ function OptionListOption({
   onMouseDown,
   onClick,
   ref,
+  'aria-disabled': ariaDisabled,
   ...props
 }: OptionListOptionProps) {
   const ctx = useOptionList();
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const refs = useComposedRefs(nodeRef, ref);
   const { register } = ctx;
+  const unavailable = ariaDisabled === true || ariaDisabled === 'true';
   useLayoutEffect(() => {
     if (!nodeRef.current) return;
-    return register({ value, disabled: Boolean(disabled), node: nodeRef.current });
-  }, [disabled, register, value]);
+    return register({ value, disabled: Boolean(disabled), unavailable, node: nodeRef.current });
+  }, [disabled, register, unavailable, value]);
   if (process.env.NODE_ENV !== 'production' && typeof children !== 'string') {
     console.error('OptionList.Option children must be a string');
   }
@@ -127,7 +130,7 @@ function OptionListOption({
       id={optionDomId(ctx.listId, value)}
       role="option"
       aria-selected={selected}
-      aria-disabled={disabled || undefined}
+      aria-disabled={disabled || unavailable || undefined}
       data-selected={selected ? '' : undefined}
       data-highlighted={ctx.highlighted === value ? '' : undefined}
       className={cx(styles.option, className)}
@@ -135,10 +138,7 @@ function OptionListOption({
         const list = event.currentTarget.closest('[role="listbox"]');
         if (list instanceof HTMLElement && list.tabIndex < 0) event.preventDefault();
       })}
-      onClick={composeHandlers(onClick, () => {
-        if (disabled) return;
-        ctx.select(value, true);
-      })}
+      onClick={composeHandlers(onClick, () => ctx.select(value, true))}
     >
       {selected ? (
         <span className={styles.check} data-todae-glyph="" aria-hidden="true">
@@ -220,12 +220,18 @@ function OptionListRoot(props: OptionListRootProps) {
 
   const select = useCallback(
     (value: string, fromPointer = false) => {
-      if (isMultiple(props)) {
-        props.onValueChange(
-          props.value.includes(value) ? props.value.filter((item) => item !== value) : [...props.value, value],
-        );
-      } else {
-        props.onValueChange(value);
+      // Click, Enter and Space all come here.
+      const entry = [...registered.current].find((option) => option.value === value);
+      if (entry?.disabled) return;
+      // An aria-disabled option is reachable, so it still becomes active, but it is never selected.
+      if (!entry?.unavailable) {
+        if (isMultiple(props)) {
+          props.onValueChange(
+            props.value.includes(value) ? props.value.filter((item) => item !== value) : [...props.value, value],
+          );
+        } else {
+          props.onValueChange(value);
+        }
       }
       setActive(value);
       setHighlighted(fromPointer ? null : value);
@@ -297,13 +303,16 @@ function OptionListRoot(props: OptionListRootProps) {
     // Settled once its option renders, hidden or not; a missing one is awaited.
     if (requested) pending.current = null;
     else if (!changed) return;
-    const usable = requested !== null && requested.getAttribute('aria-disabled') !== 'true';
+    // Skipped options only: one that is aria-disabled but reachable can be active.
+    const usable = requested !== null && ![...registered.current].some((entry) => entry.node === requested && entry.disabled);
     // A late option that arrives disabled does not move the active option.
     if (!changed && !usable) return;
     // A hidden list has no layout; a popover or dialog reveals its active
     // option when it opens (below).
     if (list.checkVisibility?.() === false) return;
-    const option = usable ? requested : list.querySelector<HTMLElement>('[role="option"]:not([aria-disabled="true"])');
+    const option = usable
+      ? requested
+      : [...registered.current].sort(byDocumentOrder).find((entry) => !entry.disabled)?.node;
     if (option) revealInScrollBox(option);
   });
   // Opening a popover or dialog lays the list out: reveal the active option then.

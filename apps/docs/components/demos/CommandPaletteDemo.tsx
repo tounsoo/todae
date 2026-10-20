@@ -38,7 +38,7 @@ export function CommandPalette({ onRun }: { onRun?: (value: string) => void } = 
         <Field.Root id={cb.ids.input} aria-label="Command">
           <Field.TextInput {...cb.getInputProps()} placeholder="Type a command" />
         </Field.Root>
-        <OptionList.Root {...cb.getListboxProps()} hidden={cb.isEmpty}>
+        <OptionList.Root {...cb.getListboxProps({ 'aria-label': 'Commands' })} hidden={cb.isEmpty}>
           {cb.items.map((item) => (
             <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
           ))}

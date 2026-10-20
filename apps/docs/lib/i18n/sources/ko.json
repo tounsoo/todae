@@ -153,8 +153,8 @@
     "# Composition": "5df38cfb773f",
     "## Placing something new": "7535f6400597",
     "## Components": "9db230c231a6",
-    "## Recipes": "fe3389573b71",
-    "## Hook": "8af7df6c27f7",
+    "## Recipes": "0ccacf69fdb0",
+    "## Hook": "4c2a5e2fd3a4",
     "## Never": "683d91a3b1f8",
     "(section order)": "5f36e5fc4a2e"
   },
@@ -241,7 +241,7 @@
     "## Rows": "9b376e3a521a",
     "## States": "c13eefed8eee",
     "## Icons": "00fd1faa869f",
-    "## Accessible composition": "642b50698733",
+    "## Accessible composition": "37bb9df73b33",
     "## When to use": "d57fe8233a0b",
     "### Field.ChipInput": "60917640f930",
     "## Props": "79a006629aa3",
@@ -446,7 +446,7 @@
     "(top)": "fc5bc6e35f0e",
     "# OptionList": "cd3a0a738656",
     "## Icons": "c64f640cde20",
-    "## Accessible composition": "8599bfab1214",
+    "## Accessible composition": "a0dafde4c209",
     "## When to use": "f5fbfd42f51c",
     "## Props": "5341a504c460",
     "(section order)": "1676be320e51"
@@ -509,22 +509,22 @@
     "(top)": "5c9493a206c8",
     "# Combobox": "bdfd58ac5cfe",
     "## Presentation": "58f8fe7fca53",
-    "## Popover · single": "69f4ac97d8a6",
-    "## Popover · multi": "e44788d3a52c",
-    "## Sheet": "74995ca1a533",
+    "## Popover · single": "2db8e41f25a5",
+    "## Popover · multi": "a55d142b0a39",
+    "## Sheet": "3c9b2eb57a32",
     "## Auto": "4eba42da06ea",
     "## Async": "1535a85f7a01",
-    "## Empty and create": "466ecda18e4d",
+    "## Empty and create": "e2b8272c60fa",
     "## Highlight matches": "30c2e008f88e",
     "## Composition rules": "6eb89b3bf8e3",
-    "## Accessible composition": "2876b46505fe",
+    "## Accessible composition": "adce8796fd84",
     "## Hooks": "3218ba8110b3",
     "(section order)": "b8b8a3257e63"
   },
   "recipes/command-palette": {
     "(top)": "b133afb40440",
-    "# Command palette": "7adc1fba52bb",
-    "## Accessible composition": "362e1cfca3f9",
+    "# Command palette": "81ae31d931c1",
+    "## Accessible composition": "0bca0504d409",
     "## When to use": "06c9b0d8a7e9",
     "(section order)": "46352d9bb2ec"
   },
@@ -736,7 +736,7 @@
   "utilities/use-chip-field": {
     "(top)": "5629127518fd",
     "# useChipField": "9f64affef382",
-    "## Accessible composition": "8f9103997416",
+    "## Accessible composition": "ecc22b2f53d4",
     "## When to use": "8397cb9fb880",
     "## Props": "dfc821979ea8",
     "(section order)": "8f63b9364d59"
@@ -759,8 +759,8 @@
   },
   "utilities/use-combobox": {
     "(top)": "e79476ff32f4",
-    "# useCombobox": "dd8c8f3ee64e",
-    "## Accessible composition": "47ddacf194b0",
+    "# useCombobox": "afbef647bfba",
+    "## Accessible composition": "ba92ea27c310",
     "## When to use": "cc4af763e6a8",
     "## Props": "f8b827f1b42b",
     "(section order)": "80890c96c652"

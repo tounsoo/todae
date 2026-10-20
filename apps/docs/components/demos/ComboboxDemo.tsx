@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown, Search } from 'lucide-react';
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import {
   BottomSheet,
   Button,
@@ -55,7 +55,7 @@ export function ComboboxSingle() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
+        <Label.Root {...cb.getLabelProps()}>Framework</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} />
           <Field.Icon>
@@ -78,7 +78,7 @@ export function ComboboxHighlight() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>City</Label.Root>
+        <Label.Root {...cb.getLabelProps()}>City</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} placeholder="Try “san”" />
           <Field.Icon>
@@ -106,7 +106,7 @@ export function ComboboxMulti() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Type</Label.Root>
+        <Label.Root {...cb.getLabelProps()}>Type</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.ChipInput {...cb.getChipInputProps()} />
           <Field.Icon>
@@ -129,16 +129,14 @@ export function ComboboxSheet() {
     presentation: 'sheet',
     defaultValue: 'sf',
   });
-  const labelId = useId();
   const selected = CITIES.find((city) => city.value === cb.value)?.label ?? 'Choose';
   return (
     <>
       <Field.Group>
-        <Label.Root id={labelId} htmlFor={cb.ids.trigger}>
+        <Label.Root {...cb.getLabelProps()}>
           City
         </Label.Root>
-        {/* Named by the label and its own text, so it reads "City, San Francisco". */}
-        <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${labelId} ${cb.ids.trigger}`} variant="secondary">
+        <Button.Root {...cb.getTriggerProps()} variant="secondary">
           {selected}
           <Button.Icon>
             <ChevronDown />
@@ -167,7 +165,6 @@ export function ComboboxSheet() {
 }
 
 export function ComboboxAuto() {
-  const labelId = useId();
   const cb = useCombobox({
     options: FRAMEWORKS,
     presentation: 'auto',
@@ -180,10 +177,10 @@ export function ComboboxAuto() {
       {cb.isSheet ? (
         <>
           <Field.Group>
-            <Label.Root id={labelId} htmlFor={cb.ids.trigger}>
+            <Label.Root {...cb.getLabelProps()}>
               Framework
             </Label.Root>
-            <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${labelId} ${cb.ids.trigger}`} variant="secondary">
+            <Button.Root {...cb.getTriggerProps()} variant="secondary">
               {FRAMEWORKS.find((item) => item.value === cb.value)?.label ?? 'Choose'}
             </Button.Root>
           </Field.Group>
@@ -201,7 +198,7 @@ export function ComboboxAuto() {
       ) : (
         <>
           <Field.Group>
-            <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
+            <Label.Root {...cb.getLabelProps()}>Framework</Label.Root>
             <Field.Root {...cb.getAnchorProps()}>
               <Field.TextInput {...cb.getInputProps()} />
             </Field.Root>
@@ -241,7 +238,7 @@ export function ComboboxAsync() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
+        <Label.Root {...cb.getLabelProps()}>Package</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} placeholder="Type to load" />
           <Field.Icon>
@@ -274,7 +271,7 @@ export function ComboboxEmpty() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
+        <Label.Root {...cb.getLabelProps()}>Package</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} />
           <Field.Icon>
@@ -298,6 +295,15 @@ function appendCreated(current: readonly ComboboxOption[], label: string): Combo
   return [...current, { value: label, label }];
 }
 
+function savePackage(label: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    window.setTimeout(() => {
+      if (label.includes('fail')) reject(new Error('Couldn’t create the package'));
+      else resolve(label);
+    }, 400);
+  });
+}
+
 export function ComboboxCreate() {
   const [options, setOptions] = useState(PACKAGES);
   const cb = useCombobox({
@@ -305,15 +311,16 @@ export function ComboboxCreate() {
     allowCreate: true,
     presentation: 'popover',
     createLabel: (query) => `+ Create "${query}"`,
-    onCreate: (label) => {
-      setOptions((current) => appendCreated(current, label));
-      return label;
+    onCreate: async (label) => {
+      const saved = await savePackage(label);
+      setOptions((current) => appendCreated(current, saved));
+      return saved;
     },
   });
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
+        <Label.Root {...cb.getLabelProps()}>Package</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} />
           <Field.Icon>
@@ -325,6 +332,10 @@ export function ComboboxCreate() {
         <OptionList.Root {...cb.getListboxProps()}>
           {optionNodes(cb.items, cb.getOptionProps)}
         </OptionList.Root>
+        {/* Under the create row; a load error would go in its own status. */}
+        <Text.Root role="status">
+          {cb.creating ? 'Creating…' : cb.createError ? 'Couldn’t create that package.' : ''}
+        </Text.Root>
       </Popover.Root>
     </>
   );
@@ -346,7 +357,7 @@ export function ComboboxCreateMulti() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Tags</Label.Root>
+        <Label.Root {...cb.getLabelProps()}>Tags</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.ChipInput {...cb.getChipInputProps()} />
           <Field.Icon>
