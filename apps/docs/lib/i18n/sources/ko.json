@@ -509,7 +509,7 @@
     "## Presentation": "58f8fe7fca53",
     "## Popover · single": "2db8e41f25a5",
     "## Popover · multi": "a55d142b0a39",
-    "## Sheet": "667a88b352f3",
+    "## Sheet": "3c9b2eb57a32",
     "## Auto": "4eba42da06ea",
     "## Async": "1535a85f7a01",
     "## Empty and create": "50d7e08dfc4b",
@@ -758,7 +758,7 @@
   "utilities/use-combobox": {
     "(top)": "e79476ff32f4",
     "# useCombobox": "afbef647bfba",
-    "## Accessible composition": "c585a211b7ae",
+    "## Accessible composition": "36020cb560ef",
     "## When to use": "cc4af763e6a8",
     "## Props": "f8b827f1b42b",
     "(section order)": "80890c96c652"

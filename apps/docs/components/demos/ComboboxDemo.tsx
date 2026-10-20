@@ -136,8 +136,7 @@ export function ComboboxSheet() {
         <Label.Root {...cb.getLabelProps()}>
           City
         </Label.Root>
-        {/* Named by the label and its own text, so it reads "City, San Francisco". */}
-        <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${cb.ids.label} ${cb.ids.trigger}`} variant="secondary">
+        <Button.Root {...cb.getTriggerProps()} variant="secondary">
           {selected}
           <Button.Icon>
             <ChevronDown />
@@ -181,7 +180,7 @@ export function ComboboxAuto() {
             <Label.Root {...cb.getLabelProps()}>
               Framework
             </Label.Root>
-            <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${cb.ids.label} ${cb.ids.trigger}`} variant="secondary">
+            <Button.Root {...cb.getTriggerProps()} variant="secondary">
               {FRAMEWORKS.find((item) => item.value === cb.value)?.label ?? 'Choose'}
             </Button.Root>
           </Field.Group>

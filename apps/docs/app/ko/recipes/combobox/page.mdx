@@ -92,7 +92,7 @@ const selected = options.find((option) => option.value === cb.value)?.label ?? '
   <Label.Root {...cb.getLabelProps()}>
     City
   </Label.Root>
-  <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${cb.ids.label} ${cb.ids.trigger}`}>
+  <Button.Root {...cb.getTriggerProps()}>
     {selected}
   </Button.Root>
 </Field.Group>
