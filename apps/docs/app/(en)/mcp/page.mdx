@@ -1,6 +1,6 @@
 # MCP server
 
-Todae runs a Model Context Protocol (MCP) server at `https://todae.omsoo.design/api/mcp`. An AI agent connected to it can look up Todae's components and tokens, check a company's token files with the same build `todae-tokens build` runs, and draft the starter files of a design system on Todae. It speaks Streamable HTTP and needs no sign-in or install.
+Todae runs a Model Context Protocol (MCP) server at `https://todae.omsoo.design/api/mcp`. An AI agent connected to it can look up Todae's components and tokens, find what changed between two versions, check a company's token files with the same build `todae-tokens build` runs, and draft the starter files of a design system on Todae. It speaks Streamable HTTP and needs no sign-in or install.
 
 ## Connect
 
@@ -82,6 +82,10 @@ Building a design system:
 - `scaffold_design_system`: drafts a company resolver and token files. It takes a `name`, and optionally appearance colors to replace (OKLCH channels for light and dark), new button variants, which start as copies of `secondary`, and new densities, which start as copies of `comfortable`. It returns the token files by path inside a `tokens` folder, in the shape `build_tokens` takes, and `src/todae.d.ts` declaring the new variant and density names, with the result of building the token files.
 - `get_guide`: the source of a docs page about building on Todae: `build-on-todae`, `tokens`, `css-layers`, `composition`, `platform` or `mcp`.
 
+Upgrading:
+
+- `get_changes`: the changelog entries of each release after `from`, the installed version, such as `0.2.0`, up to `to`, or the latest release when you leave it out. Releases come oldest first, each with its breaking changes apart from the rest. Before 1.0, a minor release is the breaking one.
+
 ## Build a design system with an agent
 
 Ask your agent for the design system you want, for example:
@@ -91,6 +95,14 @@ Ask your agent for the design system you want, for example:
 An agent with these tools can read [Build on Todae](/guides/build-on-todae) with `get_guide`, find the tokens to change with `list_tokens`, draft the files with `scaffold_design_system`, then edit them and check each change with `build_tokens` until the build passes. Your agent saves the files: the server writes nothing to your machine.
 
 Then build the files in your project with the `todae-tokens` CLI, and load the CSS after Todae's, as [Build on Todae](/guides/build-on-todae) describes.
+
+## Upgrade with an agent
+
+Ask your agent to upgrade, for example:
+
+> Using the todae MCP, upgrade @tounsoo/todae in this repository to the latest version and fix what the breaking changes need.
+
+An agent can find the installed version in `node_modules/@tounsoo/todae/package.json` or your lockfile (not the range in your own `package.json`, such as `^0.2.0`), call `get_changes` with it, and work through each release's breaking changes in order.
 
 ## Limits
 

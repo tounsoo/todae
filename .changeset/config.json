@@ -3,7 +3,8 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "tounsoo/todae"
+      "repo": "tounsoo/todae",
+      "template": "\n\n- {summary} {ref}"
     }
   ],
   "commit": false,
@@ -22,6 +23,7 @@
     "!**/__snapshots__/**",
     "!**/__fixtures__/**",
     "!src/test/**",
-    "!vitest.browser.config.ts"
+    "!vitest.browser.config.ts",
+    "!CHANGELOG.md"
   ]
 }

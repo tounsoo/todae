@@ -1,9 +1,9 @@
 import { execFile } from 'node:child_process';
-import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { contrastResults, resolveEntries } from '@tounsoo/todae/tokens-builder';
+import { packageFile } from './package-file';
 
 const SOURCE = 'todae-docs' as const;
 
@@ -20,12 +20,6 @@ export const MAX_ERROR_BYTES = 64 * 1024;
 export const MAX_CONCURRENT_BUILDS = 2;
 let running = 0;
 const FILE_RE = /^(?:[a-z0-9][a-z0-9._-]*\/)*[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9_-]+)*\.json$/i;
-
-function packageFile(cwd: string, ...path: string[]): string | undefined {
-  return [join(cwd, 'node_modules', '@tounsoo', 'todae', ...path), join(cwd, '..', '..', 'packages', 'design-system', ...path)].find(
-    (file) => existsSync(file),
-  );
-}
 
 /**
  * Todae's own `tokens/` directory. The docs app's dependency link resolves in

@@ -1,6 +1,7 @@
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
 import { BUILD_TIMEOUT_MS, MAX_BYTES, MAX_FILES, baseContrast, buildTokenFiles } from '../../../lib/docs-mcp/build';
+import { VERSION_RE, getChanges } from '../../../lib/docs-mcp/changes';
 import { GUIDE_TOPICS, getGuide } from '../../../lib/docs-mcp/guides';
 import { scaffoldDesignSystem } from '../../../lib/docs-mcp/scaffold';
 import { LAYERS, getToken, listTokens } from '../../../lib/docs-mcp/tokens';
@@ -14,6 +15,7 @@ const tokenPath = z.string().trim().min(1).max(120);
 const contextName = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/).max(40);
 const oklch = z.tuple([z.number().min(0).max(1), z.number().min(0).max(0.5), z.number().min(0).max(360)]);
 const colorMap = z.record(tokenPath, oklch);
+const version = z.string().trim().regex(VERSION_RE, 'Use a version such as 0.2.0');
 
 function ok(data: unknown) {
   return { content: [{ type: 'text' as const, text: JSON.stringify(data) }] };
@@ -133,6 +135,18 @@ const handler = createMcpHandler(
       async ({ topic }) => {
         try {
           return ok(getGuide(topic));
+        } catch (error) {
+          return fail(error);
+        }
+      },
+    );
+    server.tool(
+      'get_changes',
+      "What changed in @tounsoo/todae's released versions after `from` (the installed version, such as 0.2.0, not a range such as ^0.2.0), up to `to` (default: the latest release), from the package's changelog. Returns each release oldest first, with its breaking changes apart from the rest, so an agent upgrading a project can apply each break in order. Before 1.0 a minor release is the breaking one.",
+      { from: version, to: version.optional() },
+      async (options) => {
+        try {
+          return ok(getChanges(options));
         } catch (error) {
           return fail(error);
         }
