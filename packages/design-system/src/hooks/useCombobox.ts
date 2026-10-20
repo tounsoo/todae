@@ -188,6 +188,10 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   );
 
   const value = selectionMode === 'multiple' ? [...multiValue] : singleValue;
+  const multiValueRef = useRef(multiValue);
+  multiValueRef.current = multiValue;
+  // True while an async onCreate is pending, so a second Enter does not run it again.
+  const creating = useRef(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -324,12 +328,13 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
 
   const create = useCallback(() => {
     // A closing dialog stays live, so a second Enter or click would run it again.
-    if (!showCreate || (isDialog && !open)) return;
+    if (!showCreate || creating.current || (isDialog && !open)) return;
     const label = trimmed;
     const commit = (canonical: string | void) => {
       const next = canonical ?? label;
       if (selectionMode === 'multiple') {
-        const current = [...multiValue];
+        // Read now, not when create ran: an async create lands after other picks.
+        const current = [...multiValueRef.current];
         applyMulti(current.includes(next) ? current : [...current, next]);
         setInputValue('');
         return;
@@ -340,7 +345,13 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     };
     const pending = latest.current.onCreate?.(label);
     if (pending != null && typeof pending === 'object' && 'then' in pending) {
-      void Promise.resolve(pending).then(commit);
+      creating.current = true;
+      setError(null);
+      void Promise.resolve(pending)
+        .then(commit, (reason: unknown) => setError(reason))
+        .finally(() => {
+          creating.current = false;
+        });
       return;
     }
     commit(pending);
@@ -348,7 +359,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     applyMulti,
     applySingle,
     isDialog,
-    multiValue,
     open,
     selectionMode,
     setInputValue,
