@@ -108,7 +108,20 @@ pnpm test:browser
 pnpm changeset
 ```
 
-Pick the bump and write a line for the changelog, written for people who use Todae. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change.
+Pick the bump and write the changelog entry. Before 1.0, a breaking change is `minor` and everything else is `patch`. The changeset is a Markdown file in `.changeset/`; commit it with the change.
+
+Keep the entry short. The first line says what changed for people who use Todae, in one sentence that names the component, hook or token. Leave out why, how and edge cases: the pull request and the docs have those. A breaking change adds one bullet per break, saying what to change in your code:
+
+```md
+---
+'@tounsoo/todae': minor
+---
+
+useCombobox names its listbox by the field's Label.
+
+- Spread `getLabelProps()` on the Label, or pass `aria-label` to `getListboxProps()`.
+- `getTriggerProps().ref` is a callback ref; read `cb.triggerRef` for the element.
+```
 
 CI runs `changeset status`, which fails when the package changed and the pull request adds no changeset. `changedFilePatterns` in `.changeset/config.json` leaves out tests, fixtures and snapshots, and Changesets doesn't count dotfiles. For a change that ships nothing but still trips the check, add an empty changeset with `pnpm changeset --empty`.
 

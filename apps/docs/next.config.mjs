@@ -37,8 +37,9 @@ const nextConfig = {
     return config;
   },
   outputFileTracingIncludes: {
-    // The MCP reads English pages only, and builds company tokens on Todae's token files with its CLI.
+    // The MCP reads English pages only, builds company tokens on Todae's token files with its CLI, and reads the changelog.
     '/api/[transport]': [
+      '../../packages/design-system/CHANGELOG.md',
       './app/(en)/**/page.mdx',
       '../../packages/design-system/tokens/**/*.json',
       '../../packages/design-system/dist/scripts/**/*.js',

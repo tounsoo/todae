@@ -21,7 +21,8 @@ export const MAX_CONCURRENT_BUILDS = 2;
 let running = 0;
 const FILE_RE = /^(?:[a-z0-9][a-z0-9._-]*\/)*[a-z0-9][a-z0-9_-]*(?:\.[a-z0-9_-]+)*\.json$/i;
 
-function packageFile(cwd: string, ...path: string[]): string | undefined {
+/** A file in the `@tounsoo/todae` package: through the docs app's dependency link, or at the workspace path a deployment traces. */
+export function packageFile(cwd: string, ...path: string[]): string | undefined {
   return [join(cwd, 'node_modules', '@tounsoo', 'todae', ...path), join(cwd, '..', '..', 'packages', 'design-system', ...path)].find(
     (file) => existsSync(file),
   );
