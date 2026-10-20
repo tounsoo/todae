@@ -25,11 +25,12 @@ export function inToastHostWithin(el: Element, root: Element): boolean {
   return Boolean(host && host !== root && root.contains(host));
 }
 
-// Whether Tab would stop on `el`, one of CANDIDATES, were it enabled and
-// shown: not taken out by a negative tabindex, and not inside a `hidden` or
-// `aria-hidden` subtree. Both subtrees count as removed content on purpose.
-// Styles and `disabled` are not read.
-function inTabOrder(el: HTMLElement): boolean {
+// Whether Tab would stop on `el`, one of root's CANDIDATES, were it enabled
+// and shown: not taken out by a negative tabindex, and not inside a `hidden`
+// or `aria-hidden` subtree within root. Both subtrees count as removed content
+// on purpose; one around root is the page's business, not root's. Styles and
+// `disabled` are not read.
+function inTabOrder(el: HTMLElement, root: HTMLElement): boolean {
   // Engines differ on the default tabIndex of some candidates, such as
   // contenteditable, so only a tabindex that is set takes one out.
   if (el.hasAttribute('tabindex')) {
@@ -39,7 +40,8 @@ function inTabOrder(el: HTMLElement): boolean {
     const details = el.parentElement;
     if (details?.localName !== 'details' || details.querySelector(':scope > summary') !== el) return false;
   }
-  return !el.closest('[hidden], [aria-hidden="true"]');
+  const removed = el.closest('[hidden], [aria-hidden="true"]');
+  return !removed || !root.contains(removed);
 }
 
 /**
@@ -53,9 +55,9 @@ export function isReachable(el: HTMLElement): boolean {
   return el.checkVisibility?.({ visibilityProperty: true }) ?? el.style.display !== 'none';
 }
 
-// Whether Tab stops on `el`, one of CANDIDATES, now.
-function isTabStop(el: HTMLElement): boolean {
-  return inTabOrder(el) && !el.matches(':disabled') && isReachable(el);
+// Whether Tab stops on `el`, one of root's CANDIDATES, now.
+function isTabStop(el: HTMLElement, root: HTMLElement): boolean {
+  return inTabOrder(el, root) && !el.matches(':disabled') && isReachable(el);
 }
 
 // root's candidates in document order, less the toasts moved into it.
@@ -67,7 +69,7 @@ function* candidatesIn(root: HTMLElement): Generator<HTMLElement> {
 
 /** The elements in `root` that Tab stops on now, in document order. The one answer to "what can Tab reach". */
 export function getTabbables(root: HTMLElement): HTMLElement[] {
-  return [...candidatesIn(root)].filter(isTabStop);
+  return [...candidatesIn(root)].filter((el) => isTabStop(el, root));
 }
 
 /**
@@ -76,7 +78,7 @@ export function getTabbables(root: HTMLElement): HTMLElement[] {
  * what Tab reaches this moment, such as whether a closed panel holds a button.
  */
 export function getTabOrder(root: HTMLElement): HTMLElement[] {
-  return [...candidatesIn(root)].filter(inTabOrder);
+  return [...candidatesIn(root)].filter((el) => inTabOrder(el, root));
 }
 
 /**
@@ -85,7 +87,7 @@ export function getTabOrder(root: HTMLElement): HTMLElement[] {
  */
 export function firstTabbable(root: HTMLElement, accept?: (el: HTMLElement) => boolean): HTMLElement | null {
   for (const el of candidatesIn(root)) {
-    if ((!accept || accept(el)) && isTabStop(el)) return el;
+    if ((!accept || accept(el)) && isTabStop(el, root)) return el;
   }
   return null;
 }
