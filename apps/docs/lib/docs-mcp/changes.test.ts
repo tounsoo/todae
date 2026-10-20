@@ -93,10 +93,21 @@ describe('get_changes', () => {
     expect(() => parseChangelog('## 1.0.0\n\n- An entry before any section\n')).toThrow('outside a release');
     expect(() => parseChangelog('# title\n\nStray prose\n\n## 1.0.0\n')).toThrow('Unreadable changelog line "Stray prose"');
     expect(() => parseChangelog('# title\n# another\n')).toThrow('Unreadable changelog line "# another"');
+    expect(() => parseChangelog('## 1.0.0\n\n### Patch Changes\n\n- Entry\n\nNo changes in this release.\n')).toThrow(
+      'Unreadable changelog line "No changes in this release."',
+    );
+    expect(() => parseChangelog('## 1.0.0\n\n## 1.0.0\n')).toThrow('Changelog repeats release 1.0.0');
     expect(() => parseChangelog('## 1.0.0\n\n### Other Changes\n\n- Entry\n')).toThrow('Unreadable changelog line');
     expect(() => parseChangelog('## 1.0.0\n\n### Patch Changes\n\n- Entry\nstray text\n')).toThrow(
       'Unreadable changelog line "stray text"',
     );
+  });
+
+  it('keeps an issue link that starts a summary in the text', () => {
+    const [release] = parseChangelog(
+      '## 1.0.0\n\n### Patch Changes\n\n- [#5](https://github.com/tounsoo/todae/issues/5) - fix it ([#12](https://github.com/tounsoo/todae/pull/12))\n',
+    );
+    expect(release?.other).toEqual([{ text: '[#5](https://github.com/tounsoo/todae/issues/5) - fix it', pullRequest: 12 }]);
   });
 
   it('keeps an issue link that ends a summary in the text', () => {
@@ -111,7 +122,10 @@ describe('get_changes', () => {
     const [name, options] = config.changelog;
     const { default: generator } = await import(/* @vite-ignore */ name);
     const sha = 'abc1234def5678abc1234def5678abc1234def56';
-    // The generator asks GitHub's GraphQL API for the links; answer as GitHub does.
+    // Pushed to main with no pull request, so the entry links to the commit.
+    const direct = 'fedcba9876543210fedcba9876543210fedcba98';
+    // The generator asks GitHub's GraphQL API for the links; answer as GitHub does. The keys follow
+    // @changesets/get-github-info's query, so update them with the pinned @changesets/changelog-github.
     vi.stubEnv('GITHUB_TOKEN', 'test');
     vi.stubGlobal(
       'fetch',
@@ -126,6 +140,13 @@ describe('get_changes', () => {
               },
               [`commit__${sha}`]: {
                 commitUrl: `https://github.com/tounsoo/todae/commit/${sha}`,
+                associatedPullRequests: {
+                  nodes: [{ number: 13, url: 'https://github.com/tounsoo/todae/pull/13', mergedAt: '2026-10-20T00:00:00Z', author: null }],
+                },
+                author: null,
+              },
+              [`commit__${direct}`]: {
+                commitUrl: `https://github.com/tounsoo/todae/commit/${direct}`,
                 associatedPullRequests: { nodes: [] },
                 author: null,
               },
@@ -145,13 +166,20 @@ describe('get_changes', () => {
         'patch',
         options,
       );
+      const fromDirect = await generator.getReleaseLine(
+        { id: 'c', summary: 'Fix `Baz.Root`', releases: [], commit: direct },
+        'patch',
+        options,
+      );
+      expect(fromDirect).toContain(`/commit/${direct})`);
       const [release] = parseChangelog(
-        `## 1.0.0\n\n### Major Changes\n${fromPull}\n\n### Patch Changes\n${fromCommit}\n`,
+        `## 1.0.0\n\n### Major Changes\n${fromPull}\n\n### Patch Changes\n${fromCommit}\n${fromDirect}\n`,
       );
       expect(release?.breaking).toEqual([
         { text: 'Rename `Foo.Root`.\n\n- Replace `Foo.Root` with `Bar.Root`.', pullRequest: 12 },
       ]);
-      expect(release?.other).toEqual([{ text: 'Add `Baz.Root`' }]);
+      // A changeset's commit leads to its pull request, as on a release.
+      expect(release?.other).toEqual([{ text: 'Add `Baz.Root`', pullRequest: 13 }, { text: 'Fix `Baz.Root`' }]);
     } finally {
       vi.unstubAllGlobals();
       vi.unstubAllEnvs();
@@ -166,7 +194,7 @@ describe('get_changes', () => {
 
   it('runs outside prerelease mode, whose versions it refuses', () => {
     // Changesets' pre mode writes headings such as 1.0.0-next.0, which get_changes would fail on.
-    expect(existsSync(join(repoRoot, '.changeset/pre.json'))).toBe(false);
+    expect(existsSync(join(repoRoot, '.changeset/pre.json')), 'Pre mode writes headings such as 1.0.0-next.0, which get_changes refuses').toBe(false);
   });
 
   it("reads Todae's own changelog, whose latest release is the package version", async () => {

@@ -7,7 +7,7 @@ export const CHANGELOG_URL = 'https://github.com/tounsoo/todae/blob/main/package
 /** A release version. Todae has no prereleases, so a prerelease heading in the changelog is an error rather than misordered. */
 export const VERSION_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 // Entries written before the changelog template: "[#12](pr) [`abc1234`](commit) Thanks [@user](profile)! - summary".
-const OLD_PREFIX_RE = /^(?:\[#(\d+)\]\([^)]*\) )?(?:\[`[0-9a-f]+`\]\([^)]*\) )?(?:Thanks .+?! )?- /;
+const OLD_PREFIX_RE = /^(?:\[#(\d+)\]\([^)]*\/pull\/\d+\) )?\[`[0-9a-f]+`\]\([^)]*\/commit\/[0-9a-f]+\)(?: Thanks .+?!)? - /;
 // The template's ref at the end of the first line: "summary ([#12](…/pull/12))" or "summary ([`abc1234`](…/commit/abc1234…))".
 // Matching on the URL keeps an issue link that ends a summary, "([#5](…/issues/5))", in the text.
 const REF_RE = / \((?:\[#(\d+)\]\([^)]*\/pull\/\d+\)|\[`[0-9a-f]+`\]\([^)]*\/commit\/[0-9a-f]+\))\)$/;
@@ -31,16 +31,14 @@ export function compareVersions(a: string, b: string): number {
 function entry([head = '', ...rest]: string[]): ChangeEntry {
   let first = head;
   let pullRequest: number | undefined;
-  const old = OLD_PREFIX_RE.exec(first);
-  if (old) {
+  const ref = REF_RE.exec(first);
+  const old = ref ? null : OLD_PREFIX_RE.exec(first);
+  if (ref) {
+    first = first.slice(0, ref.index);
+    if (ref[1]) pullRequest = Number(ref[1]);
+  } else if (old) {
     first = first.slice(old[0].length);
     if (old[1]) pullRequest = Number(old[1]);
-  } else {
-    const ref = REF_RE.exec(first);
-    if (ref) {
-      first = first.slice(0, ref.index);
-      if (ref[1]) pullRequest = Number(ref[1]);
-    }
   }
   const text = [first, ...rest.map((line) => line.replace(/^ {2}/, ''))].join('\n').trim();
   return pullRequest === undefined ? { text } : { text, pullRequest };
@@ -54,7 +52,7 @@ function entry([head = '', ...rest]: string[]): ChangeEntry {
 export function parseChangelog(markdown: string): Release[] {
   const releases: Release[] = [];
   let release: Release | undefined;
-  let title = false;
+  let titled = false;
   // Where the next entry goes: the release's breaking or other list, once a section heading picks one.
   let bucket: ChangeEntry[] | undefined;
   let lines: string[] | undefined;
@@ -67,6 +65,7 @@ export function parseChangelog(markdown: string): Release[] {
     if (version !== undefined) {
       flush();
       if (!VERSION_RE.test(version)) throw new Error(`Unreadable changelog heading "${line}"`);
+      if (releases.some((seen) => seen.version === version)) throw new Error(`Changelog repeats release ${version}`);
       const next: Release = { version, breaking: [], other: [] };
       releases.push(next);
       release = next;
@@ -89,31 +88,35 @@ export function parseChangelog(markdown: string): Release[] {
       lines.push(line);
     } else if (line.trim() !== '') {
       flush();
-      // The file's one title, before any release, and the line Changesets writes for a release with no entries.
-      if (!release && !title && line.startsWith('# ')) title = true;
-      else if (!release || line.trim() !== 'No changes in this release.') throw new Error(`Unreadable changelog line "${line}"`);
+      const isTitle = !release && !titled && line.startsWith('# ');
+      // Changesets writes this under a release that has no change sections, so no entries.
+      const isEmptyRelease = release !== undefined && !bucket && line.trim() === 'No changes in this release.';
+      if (isTitle) titled = true;
+      else if (!isEmptyRelease) throw new Error(`Unreadable changelog line "${line}"`);
     }
   }
   flush();
   return releases.sort((a, b) => compareVersions(a.version, b.version));
 }
 
-function readReleases(): Release[] {
-  const file = packageFile(process.cwd(), 'CHANGELOG.md');
-  if (!file) throw new Error("Could not find Todae's CHANGELOG.md");
-  return parseChangelog(readFileSync(file, 'utf8'));
-}
+let cached: Release[] | undefined;
 
-// Read when the module loads, so a changelog the parser refuses fails `next build`, which loads the route,
-// and the live deployment keeps serving the last one that parsed.
-const RELEASES = readReleases();
+// Read on the first call, so a changelog the parser refuses fails get_changes alone, not the other tools or the docs build.
+function releases(): Release[] {
+  if (!cached) {
+    const file = packageFile(process.cwd(), 'CHANGELOG.md');
+    if (!file) throw new Error("Could not find Todae's CHANGELOG.md");
+    cached = parseChangelog(readFileSync(file, 'utf8'));
+  }
+  return cached;
+}
 
 /**
  * The released changes after `from` up to and including `to` (the latest
  * release unless given), oldest first, with each release's breaking changes
  * apart from the rest.
  */
-export function getChanges({ from, to }: { from: string; to?: string }, all: Release[] = RELEASES) {
+export function getChanges({ from, to }: { from: string; to?: string }, all: Release[] = releases()) {
   const latest = all.at(-1)?.version;
   if (!latest) throw new Error('The changelog has no releases');
   const target = to ?? latest;
