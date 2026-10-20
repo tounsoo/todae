@@ -37,7 +37,7 @@ import { ChevronDown } from 'lucide-react';
 const cb = useCombobox({ options, presentation: 'popover' });
 
 <Field.Group>
-  <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>Framework</Label.Root>
+  <Label.Root {...cb.getLabelProps()}>Framework</Label.Root>
   <Field.Root {...cb.getAnchorProps()}>
     <Field.TextInput {...cb.getInputProps()} />
     <Field.Icon>
@@ -66,7 +66,7 @@ const cb = useCombobox({ options, presentation: 'popover' });
 const cb = useCombobox({ options, selectionMode: 'multiple', presentation: 'popover' });
 
 <Field.Group>
-  <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>Type</Label.Root>
+  <Label.Root {...cb.getLabelProps()}>Type</Label.Root>
   <Field.Root {...cb.getAnchorProps()}>
     <Field.ChipInput {...cb.getChipInputProps()} />
   </Field.Root>
@@ -89,7 +89,7 @@ const cb = useCombobox({ options, presentation: 'sheet' });
 const selected = options.find((option) => option.value === cb.value)?.label ?? 'Choose';
 
 <Field.Group>
-  <Label.Root id={cb.ids.label} htmlFor={cb.ids.trigger}>
+  <Label.Root {...cb.getLabelProps()}>
     City
   </Label.Root>
   <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${cb.ids.label} ${cb.ids.trigger}`}>
@@ -147,7 +147,7 @@ const cb = useCombobox({
 
 ## Empty and create
 
-No matches render a status row. `allowCreate` adds one `Create "{query}"` option in the same `OptionList` when the query has no case-insensitive label match. Click or Enter commits. Single selects and closes. Multi adds a chip and stays open. `onCreate` may return a canonical value and should append the new option to `options` so the list can show it selected.
+No matches render a status row. `allowCreate` adds one `Create "{query}"` option in the same `OptionList` when the query has no case-insensitive label match. Click or Enter commits. Single selects and closes. Multi adds a chip and stays open. `onCreate` may return a canonical value and should append the new option to `options` so the list can show it selected. It may return a promise: `creating` is true until it settles, and a rejection lands in `createError`. Show both in a status element next to the create row, as the first create demo does; type `fail` there to see it.
 
 <Example block>
   <ComboboxEmpty />
@@ -187,7 +187,7 @@ const found = useHighlight({ name: 'search', query: cb.query });
 
 **Todae handles:** [useCombobox](/utilities/use-combobox) makes the input a `role="combobox"` that points at the listbox with `aria-controls` and at the active option with `aria-activedescendant`, and runs the arrow keys, Home, End, Enter, Escape and Tab. `OptionList` renders `role="listbox"` with `role="option"` rows carrying `aria-selected` and `aria-disabled`, and `aria-multiselectable` in multi mode. `Popover` and `BottomSheet` close on Escape and return focus. In multi mode, `Field.ChipInput` names each chip's remove button.
 
-**You supply:** The label: a [Label](/label) with `htmlFor={cb.ids.input}`, or `aria-label` on the `Field.Root` inside a sheet. Give the field's Label `id={cb.ids.label}`, as the blocks above do, since the listbox takes its name from it. In sheet mode, a trigger whose name says the field and its current value. Loading, error and empty text in a `role="status"` element; keep that element mounted and change its text, since text in a region that has just appeared is not always read. A Retry button that is a real button, as in the async demo.
+**You supply:** The label: a [Label](/label) with `{...cb.getLabelProps()}`, which points it at the input, or at the trigger in sheet mode, and gives it the id the listbox takes its name from. Inside a sheet, the search field's own name, such as `aria-label` on its `Field.Root`. With no visible label, pass `aria-label` to `getListboxProps()`. In sheet mode, a trigger whose name says the field and its current value. Loading, error, create failure and empty text in a `role="status"` element; keep that element mounted and change its text, since text in a region that has just appeared is not always read. A Retry button that is a real button, as in the async demo.
 
 **Watch for:** Unmounting `OptionList.Root` when it is empty or loading; set `hidden` so `aria-controls` still points at it. Your own `onKeyDown`, `onFocus` or `onBlur` after the getter's spread, which replaces the hook's handlers. The match highlight as the only cue: it is visual only.
 

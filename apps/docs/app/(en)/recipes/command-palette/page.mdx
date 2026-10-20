@@ -22,7 +22,7 @@ useHotkey(['Control+K', 'Meta+K'], () => !cb.open && cb.setOpen(true));
   <Field.Root id={cb.ids.input} aria-label="Command">
     <Field.TextInput {...cb.getInputProps()} placeholder="Type a command" />
   </Field.Root>
-  <OptionList.Root {...cb.getListboxProps()} aria-label="Commands" hidden={cb.isEmpty}>
+  <OptionList.Root {...cb.getListboxProps({ 'aria-label': 'Commands' })} hidden={cb.isEmpty}>
     {cb.items.map((item) => (
       <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
     ))}
@@ -41,7 +41,7 @@ The shortcut is [useHotkey](/utilities/use-hotkey), which opens the palette on C
 
 **Todae handles:** `Dialog` is a native modal `<dialog>`, so the page behind it is inert while it is open, and it closes and returns focus as described above. [useCombobox](/utilities/use-combobox) makes the input a `role="combobox"` with `aria-activedescendant` on the active command, moves it with the arrow keys, Home and End, and chooses it with Enter. `getTriggerProps()` gives the trigger `aria-haspopup="dialog"`, `aria-expanded` and `aria-controls`.
 
-**You supply:** A name for the dialog: `getDialogProps()` sets `aria-label` from the `options` string ("Options" by default), so pass your own after the spread, as `aria-label="Commands"` does above. A name for the input, here `aria-label` on `Field.Root`, and one for the list, here `aria-label` on `OptionList.Root`, since no visible label carries `cb.ids.label`. Visible trigger text, and `aria-keyshortcuts` for the shortcut. The empty message in a `role="status"` element that stays mounted. A result people can perceive after a command runs, such as a status message, when the command has no visible effect.
+**You supply:** A name for the dialog: `getDialogProps()` sets `aria-label` from the `options` string ("Options" by default), so pass your own after the spread, as `aria-label="Commands"` does above. A name for the input, here `aria-label` on `Field.Root`, and one for the list, here the `aria-label` passed to `getListboxProps()`, since no visible label carries `getLabelProps()`. Visible trigger text, and `aria-keyshortcuts` for the shortcut. The empty message in a `role="status"` element that stays mounted. A result people can perceive after a command runs, such as a status message, when the command has no visible effect.
 
 **Watch for:** Your `aria-label` placed before `{...cb.getDialogProps()}`: the spread's name then wins. Unmounting the list when nothing matches; hide it with `hidden`, so `aria-controls` still points at it. A palette reachable only by the shortcut.
 
