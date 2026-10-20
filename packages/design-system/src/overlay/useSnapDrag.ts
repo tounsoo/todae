@@ -99,6 +99,8 @@ export function useSnapDrag({
     let origin: 'handle' | 'body' | null = null;
     let startY = 0;
     let startHeight = 0;
+    // The height the last move set, read back at the release.
+    let lastHeight = 0;
     let armed = false;
     const samples: { t: number; y: number }[] = [];
 
@@ -131,6 +133,7 @@ export function useSnapDrag({
       const heights = sheetHeights(surface);
       const measured = surface.getBoundingClientRect().height;
       startHeight = measured > 0 ? measured : heights[snapRef.current];
+      lastHeight = startHeight;
       armed = false;
       samples.length = 0;
       samples.push({ t: event.timeStamp, y: event.clientY });
@@ -155,7 +158,8 @@ export function useSnapDrag({
       }
       const heights = sheetHeights(surface);
       const maxHeight = pointsRef.current.includes('full') ? heights.full : heights.mid;
-      setDrag(dragHeight(startHeight, dy, maxHeight), true);
+      lastHeight = dragHeight(startHeight, dy, maxHeight);
+      setDrag(lastHeight, true);
       samples.push({ t: event.timeStamp, y: event.clientY });
       while (samples.length > 1 && event.timeStamp - samples[0]!.t > 100) samples.shift();
     }
@@ -172,20 +176,18 @@ export function useSnapDrag({
         return;
       }
       const heights = sheetHeights(surface);
-      const height =
-        Number.parseFloat(surface.style.getPropertyValue('--_drag-height')) || startHeight;
       const first = samples[0];
       const last = samples[samples.length - 1];
       const dt = first && last ? Math.max(1, last.t - first.t) : 1;
       const velocity = first && last ? (last.y - first.y) / dt : 0;
       const next = resolveRelease({
-        height,
+        height: lastHeight,
         velocity,
         heights,
         snapPoints: pointsRef.current,
         dismissOnDrag: dismissRef.current,
       });
-      setDrag(height, false);
+      setDrag(lastHeight, false);
       if (next === 'dismiss') {
         onDismissRef.current();
         return;

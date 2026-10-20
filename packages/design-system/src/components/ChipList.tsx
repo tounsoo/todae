@@ -10,8 +10,7 @@ import {
 } from 'react';
 import { useChipListInternal } from '../hooks/useChipList.js';
 import { usePopover } from '../hooks/usePopover.js';
-import { isReachable } from '../hooks/useRovingFocus.js';
-import { getTabbables } from '../overlay/tabbables.js';
+import { firstTabbable, getTabbables } from '../overlay/tabbables.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Chip, type ChipTone } from './Chip.js';
 import { useChipKeys } from './chipKeys.js';
@@ -49,18 +48,13 @@ export type ChipListRootProps = {
   panelLabel?: (n: number) => string;
 } & Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-// The next tabbable control after +N, skipping its own panel. The costly
-// visibility check runs last, on candidates after +N only.
+// The next tabbable control after +N, skipping its own panel.
 function focusAfter(el: HTMLElement | null) {
   if (!el) return;
   const panel = document.getElementById(el.getAttribute('aria-controls') ?? '');
-  const next = getTabbables(document.body).find(
-    (node) =>
-      (el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 &&
-      !panel?.contains(node) &&
-      !node.closest('[aria-hidden="true"]') &&
-      // Not rendered, such as inside a closed popover.
-      isReachable(node),
+  const next = firstTabbable(
+    document.body,
+    (node) => (el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && !panel?.contains(node),
   );
   (next ?? el).focus();
 }
@@ -245,7 +239,7 @@ function Root({
       if (event.key !== 'Tab') return;
       const panel = popover.popoverRef.current;
       if (!(event.target instanceof Node) || !panel?.contains(event.target)) return;
-      const all = [...panel.querySelectorAll<HTMLElement>('button:not([disabled])')];
+      const all = getTabbables(panel);
       const edge = event.shiftKey ? all[0] : all[all.length - 1];
       // From the panel itself, Tab goes on to its first button as usual.
       if (event.target === panel ? all.length > 0 && !event.shiftKey : event.target !== edge) return;

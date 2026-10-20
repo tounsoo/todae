@@ -164,7 +164,7 @@
     "## Parts": "3856735bb597",
     "## Following the end": "8697c5241cf8",
     "## Announcements": "9bf761eb01e5",
-    "## Accessible composition": "dec9af823fa5",
+    "## Accessible composition": "f60bc14ebe6a",
     "## When to use": "cef56e92b729",
     "## Props": "6485f00fb242",
     "(section order)": "ff11ef39ec84"
@@ -549,8 +549,8 @@
   "scroll-area": {
     "(top)": "a2750334232a",
     "# ScrollArea": "ba2e630a84ac",
-    "## A Tab stop for content with no controls": "668734e0d9c4",
-    "## Accessible composition": "c798bbf50d31",
+    "## A Tab stop for content with no controls": "bc3fe096c4df",
+    "## Accessible composition": "db4c5063665c",
     "## When to use": "ca7297f65849",
     "## Props": "fc86f0416810",
     "(section order)": "5078874aa1c2"
@@ -666,7 +666,7 @@
   },
   "toolbar": {
     "(top)": "65f7c00fa816",
-    "# Toolbar": "526711f5fb79",
+    "# Toolbar": "5064a8aa9aee",
     "## Accessible composition": "2f687ca43832",
     "## When to use": "ca65a01ca6de",
     "## Props": "ba88e6e3c216",

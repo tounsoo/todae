@@ -1,10 +1,8 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
+import { firstTabbable, getTabOrder } from '../overlay/tabbables.js';
 
 /** The direction a scroll area scrolls in. */
 export type ScrollAxis = 'block' | 'inline' | 'both';
-
-const FOCUSABLE =
-  'a[href], button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), summary, iframe, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
 
 function overflows(el: HTMLElement, axis: ScrollAxis): boolean {
   const block = el.scrollHeight > el.clientHeight;
@@ -33,17 +31,41 @@ export function useScrollTabStop(
       setTabStop(false);
       return;
     }
-    const measure = () => setTabStop(overflows(el, axis) && (focusable === true || el.querySelector(FOCUSABLE) === null));
+    // While an ancestor hides the scroller, nothing inside is reachable, and
+    // showing it again is not seen; so judge by what it holds once shown.
+    const holdsControl = () =>
+      el.checkVisibility?.({ visibilityProperty: true, checkVisibilityCSS: true }) === false
+        ? getTabOrder(el).some((node) => !node.matches(':disabled'))
+        : firstTabbable(el) !== null;
+    // What is inside decides first, as it stops at the first control Tab
+    // reaches, before the overflow read lays the page out.
+    const measure = () => setTabStop((focusable === true || !holdsControl()) && overflows(el, axis));
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const resize = new ResizeObserver(measure);
     resize.observe(el);
     if (content.current) resize.observe(content.current);
-    const mutations = new MutationObserver(measure);
-    mutations.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'href', 'tabindex'] });
+    // A focusable scroller's stop turns only on overflow, which a resize shows.
+    if (focusable === true) return () => resize.disconnect();
+    // Controls added, removed, or shown or hidden by any attribute inside the
+    // scroller, such as a class, a data attribute a stylesheet keys on, or a
+    // <details> open, without a resize.
+    // Not seen: a stylesheet rule or an ancestor outside the scroller hiding
+    // one, short of a resize. Measured at most once a frame, as an animation
+    // can change a class or style every frame.
+    let frame = 0;
+    const schedule = () => {
+      frame ||= requestAnimationFrame(() => {
+        frame = 0;
+        measure();
+      });
+    };
+    const mutations = new MutationObserver(schedule);
+    mutations.observe(el, { childList: true, subtree: true, attributes: true });
     return () => {
       resize.disconnect();
       mutations.disconnect();
+      cancelAnimationFrame(frame);
     };
   }, [scroller, content, axis, focusable]);
 

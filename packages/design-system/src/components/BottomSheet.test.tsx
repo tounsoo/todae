@@ -4,7 +4,14 @@ import { afterEach, describe, expect, it, vi, expectTypeOf } from 'vitest';
 import { heldModals } from '../overlay/modalStack.js';
 import { BottomSheet, type BottomSheetRootProps, type SheetCloseReason } from './BottomSheet.js';
 
-afterEach(cleanup);
+const innerHeight = Object.getOwnPropertyDescriptor(window, 'innerHeight');
+
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+  if (innerHeight) Object.defineProperty(window, 'innerHeight', innerHeight);
+  else Reflect.deleteProperty(window, 'innerHeight');
+});
 
 describe('BottomSheet', () => {
   it('follows controlled snap and grabber arrows', () => {
@@ -77,6 +84,29 @@ describe('BottomSheet', () => {
     handle!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientY: 100 }));
     window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientY: 500 }));
     window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientY: 500 }));
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'drag');
+  });
+
+  it('dismisses from a slow drag all the way down', () => {
+    // jsdom stamps events with Date.now().
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const onOpenChange = vi.fn();
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
+    render(
+      <BottomSheet.Root open onOpenChange={onOpenChange}>
+        <BottomSheet.Title>Drag</BottomSheet.Title>
+        <BottomSheet.Body>list</BottomSheet.Body>
+      </BottomSheet.Root>,
+    );
+    const sheet = document.querySelector('dialog') as HTMLElement;
+    const handle = document.querySelector('[data-todae-sheet-drag-handle]');
+    handle!.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 3, clientY: 100 }));
+    window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 3, clientY: 700 }));
+    expect(sheet.style.getPropertyValue('--_drag-height')).toBe('0px');
+    // Held at the bottom, so the release carries no speed.
+    vi.setSystemTime(Date.now() + 150);
+    window.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 3, clientY: 700 }));
+    window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 3, clientY: 700 }));
     expect(onOpenChange).toHaveBeenCalledWith(false, 'drag');
   });
 

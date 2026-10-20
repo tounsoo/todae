@@ -9,7 +9,7 @@ import {
   type ComponentPropsWithRef,
   type MouseEvent,
 } from 'react';
-import { isReachable } from '../hooks/useRovingFocus.js';
+import { isReachable } from '../overlay/tabbables.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useCloseGlyph } from './closeGlyph.js';

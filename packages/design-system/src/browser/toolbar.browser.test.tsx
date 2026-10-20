@@ -55,6 +55,53 @@ describe('Toolbar in a browser', () => {
     expect(document.activeElement).toBe(button('Insert'));
   });
 
+  it('moves the arrow keys past a control under aria-hidden', async () => {
+    render(
+      <Toolbar.Root aria-label="Format">
+        <button type="button">Bold</button>
+        <span aria-hidden="true">
+          <button type="button">Decor</button>
+        </span>
+        <button type="button">Italic</button>
+      </Toolbar.Root>,
+    );
+    button('Bold').focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(document.activeElement).toBe(button('Italic'));
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(document.activeElement).toBe(button('Bold'));
+  });
+
+  it('keeps its arrow keys inside a wrapper under aria-hidden', async () => {
+    render(
+      <div aria-hidden="true">
+        <Toolbar.Root aria-label="Format">
+          <button type="button">Bold</button>
+          <button type="button">Italic</button>
+        </Toolbar.Root>
+      </div>,
+    );
+    const bold = screen.getByRole('button', { name: 'Bold', hidden: true });
+    const italic = screen.getByRole('button', { name: 'Italic', hidden: true });
+    bold.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(document.activeElement).toBe(italic);
+  });
+
+  it('keeps its arrow keys when the toolbar itself carries aria-hidden', async () => {
+    render(
+      <Toolbar.Root aria-label="Format" aria-hidden="true">
+        <button type="button">Bold</button>
+        <button type="button">Italic</button>
+      </Toolbar.Root>,
+    );
+    const bold = screen.getByRole('button', { name: 'Bold', hidden: true });
+    const italic = screen.getByRole('button', { name: 'Italic', hidden: true });
+    bold.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(document.activeElement).toBe(italic);
+  });
+
   it('draws the separator and marks a pressed toggle beyond its color', () => {
     render(
       <main data-appearance="light" data-density="comfortable">

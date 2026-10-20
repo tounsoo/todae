@@ -8,7 +8,8 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { useDomId } from './domId.js';
-import { isReachable, useRovingFocus } from '../hooks/useRovingFocus.js';
+import { useRovingFocus } from '../hooks/useRovingFocus.js';
+import { getTabbables, getTabOrder } from '../overlay/tabbables.js';
 import { cx } from './cx.js';
 import { useComposedRefs } from './props.js';
 import styles from './Toolbar.module.css';
@@ -35,20 +36,6 @@ export type ToolbarRootProps = {
 export type ToolbarGroupProps = ComponentPropsWithRef<'div'>;
 export type ToolbarSeparatorProps = Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-// Everything Tab can reach. A negative tabindex is never an item.
-const FOCUSABLE = /* @__PURE__ */ [
-  'button',
-  'a[href]',
-  'input:not([type="hidden"])',
-  'select',
-  'textarea',
-  'summary',
-  'iframe',
-  'audio[controls]',
-  'video[controls]',
-  '[contenteditable]:not([contenteditable="false"])',
-  '[tabindex]:not([tabindex^="-"])',
-].join(', ');
 // Reachable by Tab, but not an arrow-key item.
 const NOT_ITEM = 'summary, iframe, audio, video';
 
@@ -92,7 +79,6 @@ function isItem(el: HTMLElement, root: HTMLElement): boolean {
     !el.matches(TOOLBAR_BOUNDARY) &&
     el.parentElement?.closest(TOOLBAR_BOUNDARY) === root &&
     !el.matches(NOT_ITEM) &&
-    !el.matches('[tabindex^="-"]') &&
     !ownsArrows(el, root)
   );
 }
@@ -103,19 +89,17 @@ function isItem(el: HTMLElement, root: HTMLElement): boolean {
 // key press, so nothing goes stale.
 function runsOf(root: HTMLElement): HTMLElement[][] {
   const runs: HTMLElement[][] = [[]];
-  for (const el of root.querySelectorAll<HTMLElement>(FOCUSABLE)) {
-    if (el.matches(':disabled') || !isReachable(el)) continue;
+  for (const el of getTabbables(root)) {
     if (isItem(el, root)) runs[runs.length - 1]!.push(el);
-    // Only something Tab stops on splits a run.
-    else if (!el.matches('[tabindex^="-"]')) runs.push([]);
+    else runs.push([]);
   }
   return runs.filter((run) => run.length > 0);
 }
 
-// The arrow keys' items, disabled ones too: useRovingFocus skips those, and
-// moves on from one that became disabled while focused.
+// The arrow keys' items, disabled and CSS-hidden ones too: useRovingFocus
+// skips those, and moves on from one that became disabled while focused.
 function itemsOf(root: HTMLElement): HTMLElement[] {
-  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => isItem(el, root));
+  return getTabOrder(root).filter((el) => isItem(el, root));
 }
 
 function Root({

@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { useDomId } from '../components/domId.js';
 import { useStableComposedRef } from '../components/props.js';
+import { isReachable } from '../overlay/tabbables.js';
 import { useControlledState } from './useControlledState.js';
 
 export type RovingOrientation = 'horizontal' | 'vertical' | 'both';
@@ -113,10 +114,6 @@ const TYPEAHEAD_RESET_MS = 500;
 type KnownItems = { read: boolean; enabled: string[]; reachable: string[] };
 
 const NO_ITEMS: KnownItems = { read: false, enabled: [], reachable: [] };
-
-// `visibility: hidden` blocks focus too, so it counts as hidden.
-export const isReachable = (node: HTMLElement) =>
-  !node.closest('[inert]') && (node.checkVisibility?.({ visibilityProperty: true }) ?? true);
 
 const valueOf = (node: HTMLElement) => node.getAttribute('data-todae-roving-value') ?? '';
 
