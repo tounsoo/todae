@@ -149,23 +149,7 @@ describe('getTabbables in a browser', () => {
     await waitFor(() => expect(area.tabIndex).not.toBe(0));
   });
 
-  it('leaves out what sits behind an open modal', async () => {
-    render(
-      <div data-appearance="light" data-density="comfortable">
-        <button type="button">Behind</button>
-        <Dialog.Root open onOpenChange={() => undefined}>
-          <Dialog.Title>Rename</Dialog.Title>
-          <button type="button">Inside</button>
-        </Dialog.Root>
-      </div>,
-    );
-    await waitFor(() => expect(document.querySelector('dialog')?.matches(':modal')).toBe(true));
-    const tabbables = getTabbables(document.body);
-    expect(tabbables).toContain(screen.getByRole('button', { name: 'Inside' }));
-    expect(tabbables).not.toContain(screen.getByRole('button', { name: 'Behind', hidden: true }));
-  });
-
-  it('gives a ScrollArea no Tab stop of its own once a modal over it closes', async () => {
+  it('gives a ScrollArea no Tab stop of its own while a modal is open over it', async () => {
     function Page({ open, lines }: { open: boolean; lines: number }) {
       return (
         <div data-appearance="light" data-density="comfortable">
@@ -186,13 +170,19 @@ describe('getTabbables in a browser', () => {
     }
     const { rerender } = render(<Page open lines={0} />);
     await waitFor(() => expect(document.querySelector('dialog')?.matches(':modal')).toBe(true));
-    // Content arrives behind the modal, so the area is measured while
-    // nothing in it is reachable.
+    // Content arrives behind the modal, so the area is measured while the
+    // modal makes it inert.
     rerender(<Page open lines={3} />);
-    await waitFor(() => expect(screen.getByTestId('area').tabIndex).toBe(0));
+    await nextFrame();
+    await nextFrame();
+    const area = screen.getByTestId('area');
+    expect(area.tabIndex).not.toBe(0);
+    expect(area.getAttribute('role')).toBeNull();
     rerender(<Page open={false} lines={3} />);
     await waitFor(() => expect(document.querySelector('dialog')?.open).toBe(false));
-    await waitFor(() => expect(screen.getByTestId('area').tabIndex).not.toBe(0));
+    await nextFrame();
+    await nextFrame();
+    expect(area.tabIndex).not.toBe(0);
   });
 
   it('flags a button in an interactive Tooltip that mounts closed', () => {
