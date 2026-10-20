@@ -8,6 +8,7 @@ import {
   type Ref,
 } from 'react';
 import { Chip } from './Chip.js';
+import { isImeKeyEvent } from './ime.js';
 import { cx, useComposedRefs } from './props.js';
 import { resolveCommitKeys, type ChipCommitKey } from './commitKeys.js';
 import styles from './Field.module.css';
@@ -66,7 +67,7 @@ export function ChipInput({
     onKeyDownProp?.(event);
     if (event.defaultPrevented) return;
     if (disabled) return;
-    if (event.nativeEvent.isComposing || event.key === 'Process') return;
+    if (isImeKeyEvent(event)) return;
     if (event.key === 'Backspace' && inputValue === '' && chips.length > 0 && removeOnBackspace) {
       const index = chips.length - 1;
       const value = chips[index];

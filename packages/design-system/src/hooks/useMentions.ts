@@ -14,6 +14,7 @@ import {
   type SyntheticEvent,
 } from 'react';
 import { useDomId } from '../components/domId.js';
+import { isImeKeyEvent } from '../components/ime.js';
 import type { FieldTextareaHighlight, FieldTextareaProps } from '../components/Field.js';
 import type { OptionListOptionProps, OptionListSingleProps } from '../components/OptionList.js';
 import { optionDomId } from '../components/OptionList.ids.js';
@@ -435,7 +436,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsResult {
     // A key that moves the caret ends the wait for a pick the product never commits; edits end it in onChange.
     if (caretAfter && CARET_KEYS.has(event.key)) setCaretAfter(null);
     if (latest.current.disabled) return;
-    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+    if (isImeKeyEvent(event)) return;
     const plain = !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey;
     if (open) {
       // With nothing to move to, the arrows move the caret as usual.

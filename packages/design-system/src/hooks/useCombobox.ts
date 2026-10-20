@@ -9,6 +9,7 @@ import {
   type RefObject,
 } from 'react';
 import { useDomId } from '../components/domId.js';
+import { isImeKeyEvent } from '../components/ime.js';
 import { optionDomId } from '../components/OptionList.ids.js';
 import type { BottomSheetRootProps } from '../components/BottomSheet.js';
 import type { ButtonRootProps } from '../components/Button.js';
@@ -499,7 +500,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const onInputKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
       if (latest.current.disabled) return;
-      if (event.nativeEvent.isComposing || event.key === 'Process') return;
+      if (isImeKeyEvent(event)) return;
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End') {
         event.preventDefault();
         if (!open) {
