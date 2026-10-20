@@ -26,6 +26,7 @@ import type {
 import type { PopoverWire } from '../components/Popover.wire.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { createAsyncGate } from './useCombobox.async.js';
+import { useComboboxCreate } from './useCombobox.create.js';
 import { usePopoverInternal } from './usePopover.js';
 import { defaultFilter, filterOptions } from './useCombobox.filter.js';
 import type {
@@ -103,7 +104,7 @@ export type UseComboboxResult = {
   retry: () => void;
   /** True while an async `onCreate` is pending. */
   creating: boolean;
-  /** The last create's failure, cleared by the next input change or create. */
+  /** The last create's rejection, cleared by the next input change, pick, removal, clear, create or opening of the list. */
   createError: unknown | null;
   /** `label` is for the field's Label, through `getLabelProps()`: the listbox takes its name from it. */
   ids: { input: string; label: string; listbox: string; trigger: string };
@@ -120,7 +121,9 @@ export type UseComboboxResult = {
   reset: () => void;
   /**
    * Merges the caller's props and ref; the hook's `id` and `aria-*` props win over the caller's.
-   * A click handler that calls `preventDefault()` skips the toggle.
+   * Without the caller's `aria-label` or `aria-labelledby`, the trigger is named by the field's
+   * Label and its own text. A click handler that calls `preventDefault()` skips the toggle.
+   * Pass a stable `ref`: an inline callback ref is attached again on every render.
    */
   getTriggerProps: (props?: ButtonRootProps) => ButtonRootProps & { ref: RefCallback<HTMLButtonElement> };
   getAnchorProps: () => Pick<FieldRootProps, 'id' | 'style' | 'disabled'> & {
@@ -141,12 +144,6 @@ export type UseComboboxResult = {
 };
 
 type ComboboxListboxNameProps = Pick<AriaAttributes, 'aria-label' | 'aria-labelledby'>;
-
-/**
- * An async `onCreate` in flight. It commits only while it is still the hook's
- * pending create: anything that makes its result stale replaces or clears it.
- */
-type PendingCreate = { label: string };
 
 /** The hook always sets open and onOpenChange, so they are required here. */
 type ComboboxSheetProps = Pick<BottomSheetRootProps, 'initialFocusRef' | 'restoreFocusRef' | 'aria-label'> &
@@ -215,14 +212,10 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   );
 
   const value = selectionMode === 'multiple' ? [...multiValue] : singleValue;
-  // Read when an async create lands, after other picks or typing.
-  const multiValueRef = useRef(multiValue);
-  multiValueRef.current = multiValue;
-  const inputValueRef = useRef(inputValue);
-  inputValueRef.current = inputValue;
-  const pendingCreate = useRef<PendingCreate | null>(null);
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<unknown | null>(null);
+  // What an async create reads when it lands, after other picks or typing.
+  const snapshot = useRef({ open, inputValue, singleValue, multiValue });
+  snapshot.current = { open, inputValue, singleValue, multiValue };
+  const creates = useComboboxCreate();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -301,9 +294,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const enabledValues = useMemo(
     () =>
       items
-        .filter((item) => item.kind === 'create' || !item.option.disabled)
+        .filter((item) => (item.kind === 'create' ? !creates.pending.has(item.value) : !item.option.disabled))
         .map((item) => (item.kind === 'create' ? CREATE_VALUE : item.option.value)),
-    [items],
+    [creates.pending, items],
   );
   const resolvedActive =
     activeValue && enabledValues.includes(activeValue)
@@ -320,6 +313,11 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [setInputState],
   );
 
+  // Safari does not focus a clicked button, so a dialog opened with nothing focused returns focus to the trigger.
+  const rememberReturnFocus = useCallback(() => {
+    returnFocusRef.current = document.activeElement === document.body ? triggerRef.current : null;
+  }, []);
+
   const setOpen = useCallback(
     (next: boolean, reason: ComboboxCloseReason = 'trigger') => {
       // Each time the dialog opens, start from the full list with the top row active.
@@ -327,12 +325,13 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       if (next && isDialog && !open && !inputRef.current?.closest('dialog')?.contains(document.activeElement)) {
         setInputValue('');
         setActiveValue(null);
-        returnFocusRef.current = document.activeElement === document.body ? triggerRef.current : null;
+        rememberReturnFocus();
       }
+      if (next && !open) creates.clearError();
       setOpenState(next);
       latest.current.onOpenChange?.(next, reason);
     },
-    [isDialog, open, setInputValue, setOpenState],
+    [creates.clearError, isDialog, open, rememberReturnFocus, setInputValue, setOpenState],
   );
 
   const highlight = useCallback((next: string | null) => {
@@ -357,58 +356,47 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [setMultiState],
   );
 
-  const cancelCreate = useCallback(() => {
-    if (!pendingCreate.current) return;
-    pendingCreate.current = null;
-    setCreating(false);
-  }, []);
-
   const create = useCallback(() => {
     // A closing dialog stays live, so a second Enter or click would run it again.
-    if (!showCreate || pendingCreate.current || (isDialog && !open)) return;
+    if (!showCreate || (isDialog && !open)) return;
     const label = trimmed;
-    setCreateError(null);
+    const startValue = singleValue;
+    // All of the hook's state changes before any consumer callback runs, so a throw
+    // from one (which lands in createError) leaves the hook consistent.
     const commit = (canonical: string | void) => {
+      const now = snapshot.current;
       const next = canonical ?? label;
-      if (selectionMode === 'multiple') {
-        const current = [...multiValueRef.current];
-        applyMulti(current.includes(next) ? current : [...current, next]);
+      const current = latest.current;
+      if (isMultiple(current)) {
+        const value = now.multiValue.includes(next) ? [...now.multiValue] : [...now.multiValue, next];
         // Text typed while the create was pending stays.
-        if (inputValueRef.current.trim() === label) setInputValue('');
+        const clearText = now.inputValue.trim() === label;
+        setMultiState(value);
+        if (clearText) setInputState('');
+        current.onValueChange?.(value);
+        if (clearText) current.onInputValueChange?.('');
         return;
       }
-      applySingle(next);
-      setInputValue(label);
-      setOpen(false, 'select');
+      // Other text or another value since the create started makes its result stale.
+      if (now.inputValue.trim() !== label || !Object.is(now.singleValue, startValue)) return;
+      setSingleState(next);
+      setInputState(label);
+      if (now.open) setOpenState(false);
+      current.onValueChange?.(next);
+      current.onInputValueChange?.(label);
+      if (now.open) current.onOpenChange?.(false, 'select');
     };
-    const result = latest.current.onCreate?.(label);
-    if (result == null || typeof result !== 'object' || !('then' in result)) {
-      commit(result);
-      return;
-    }
-    const request: PendingCreate = { label };
-    pendingCreate.current = request;
-    setCreating(true);
-    void Promise.resolve(result)
-      .then((canonical) => {
-        if (pendingCreate.current === request) commit(canonical);
-      })
-      .catch((reason: unknown) => {
-        if (pendingCreate.current === request) setCreateError(reason);
-      })
-      .finally(() => {
-        if (pendingCreate.current === request) cancelCreate();
-      });
+    creates.run(label, () => latest.current.onCreate?.(label), commit);
   }, [
-    applyMulti,
-    applySingle,
-    cancelCreate,
+    creates.run,
     isDialog,
     open,
-    selectionMode,
-    setInputValue,
-    setOpen,
+    setInputState,
+    setMultiState,
+    setOpenState,
+    setSingleState,
     showCreate,
+    singleValue,
     trimmed,
   ]);
 
@@ -419,6 +407,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         return;
       }
       if (isDialog && !open) return;
+      creates.clearError();
       if (selectionMode === 'multiple') {
         const current = [...multiValue];
         const next = current.includes(raw) ? current.filter((item) => item !== raw) : [...current, raw];
@@ -426,8 +415,6 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         setInputValue('');
         return;
       }
-      // A pick replaces a single create's result.
-      cancelCreate();
       applySingle(raw);
       setInputValue(labelFor(raw));
       setOpen(false, 'select');
@@ -435,8 +422,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [
       applyMulti,
       applySingle,
-      cancelCreate,
       create,
+      creates.clearError,
       isDialog,
       labelFor,
       multiValue,
@@ -451,32 +438,35 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     (raw: string) => {
       if (selectionMode !== 'multiple') {
         if (singleValue === raw) {
-          cancelCreate();
+          creates.clearError();
           applySingle(null);
           setInputValue('');
         }
         return;
       }
+      creates.clearError();
       applyMulti(multiValue.filter((item) => item !== raw));
     },
-    [applyMulti, applySingle, cancelCreate, multiValue, selectionMode, setInputValue, singleValue],
+    [applyMulti, applySingle, creates.clearError, multiValue, selectionMode, setInputValue, singleValue],
   );
 
   const clear = useCallback(() => {
-    cancelCreate();
+    creates.cancel();
+    creates.clearError();
     if (selectionMode === 'multiple') applyMulti([]);
     else applySingle(null);
     setInputValue('');
     setOpen(false, 'input-clear');
-  }, [applyMulti, applySingle, cancelCreate, selectionMode, setInputValue, setOpen]);
+  }, [applyMulti, applySingle, creates.cancel, creates.clearError, selectionMode, setInputValue, setOpen]);
 
   const reset = useCallback(() => {
     const initial = latest.current;
-    cancelCreate();
-    setCreateError(null);
+    creates.cancel();
+    creates.clearError();
     // Not setOpen: reopening a dialog there would clear the text reset puts back.
     const defaultOpen = initial.defaultOpen ?? false;
     if (defaultOpen !== open) {
+      if (defaultOpen && isDialog) rememberReturnFocus();
       setOpenState(defaultOpen);
       initial.onOpenChange?.(defaultOpen, 'reset');
     }
@@ -505,10 +495,13 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   }, [
     applyMulti,
     applySingle,
-    cancelCreate,
+    creates.cancel,
+    creates.clearError,
     inputValue,
+    isDialog,
     multiValue,
     open,
+    rememberReturnFocus,
     setInputValue,
     setOpenState,
     singleValue,
@@ -548,10 +541,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
 
   useEffect(() => {
     const current = gate.current;
-    return () => {
-      current.abort();
-      pendingCreate.current = null;
-    };
+    return () => current.abort();
   }, []);
 
   useEffect(() => {
@@ -592,16 +582,18 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [enabledValues, resolvedActive],
   );
 
-  // What Enter, or a chip input's commit key, does. False when the list is
-  // closed: the key then belongs to the input and its form.
+  // What Enter, or a chip input's commit key, does. False when it has nothing to
+  // commit, as on a closed list: the key then belongs to the input and its form.
   const commitActive = useCallback((): boolean => {
     if (!open) return false;
-    // While the list is another query's, no row is active and showCreate is
-    // false until that list is in, so the key runs nothing.
-    if (resolvedActive === CREATE_VALUE || (showCreate && !resolvedActive)) create();
+    // Until this query's list is in, no row is active: hold the key rather than submit.
+    if (!listIsCurrent) return true;
+    if (resolvedActive === CREATE_VALUE) create();
     else if (resolvedActive) select(resolvedActive);
+    // The create row of a pending label is disabled; its key does nothing.
+    else if (!(showCreate && creates.pending.has(trimmed))) return false;
     return true;
-  }, [create, open, resolvedActive, select, showCreate]);
+  }, [create, creates.pending, listIsCurrent, open, resolvedActive, select, showCreate, trimmed]);
 
   const onInputKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
@@ -642,14 +634,12 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
 
   const changeInput = useCallback(
     (next: string) => {
-      // Typing replaces a single create's result; a multiple one still adds its chip.
-      if (selectionMode === 'single') cancelCreate();
-      setCreateError(null);
+      creates.clearError();
       setInputValue(next);
       if (!open) setOpen(true, 'trigger');
       if (selectionMode === 'single' && next === '') applySingle(null);
     },
-    [applySingle, cancelCreate, open, selectionMode, setInputValue, setOpen],
+    [applySingle, creates.clearError, open, selectionMode, setInputValue, setOpen],
   );
 
   const onInputFocus = useCallback(() => {
@@ -692,8 +682,10 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
           'useCombobox: getTriggerProps is for sheet or dialog Button.Root. Popover mode uses getAnchorProps on Field.Root. Do not spread usePopover getTriggerProps.',
         );
       }
+      const named = props['aria-label'] !== undefined || props['aria-labelledby'] !== undefined;
       return {
         ...props,
+        ...(named ? {} : { 'aria-labelledby': `${ids.label} ${ids.trigger}` }),
         id: ids.trigger,
         ref: triggerComposed(props.ref),
         disabled: options.disabled || props.disabled,
@@ -703,7 +695,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         onClick: composeHandlers(props.onClick, () => setOpen(!open, 'trigger')),
       };
     },
-    [ids.listbox, ids.trigger, isModal, open, options.disabled, setOpen, triggerComposed],
+    [ids.label, ids.listbox, ids.trigger, isModal, open, options.disabled, setOpen, triggerComposed],
   );
 
   const getAnchorProps = useCallback(
@@ -855,16 +847,19 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     [highlight, ids.label, ids.listbox, multiValue, resolvedActive, select, selectionMode, singleValue],
   );
 
-  const getOptionProps = useCallback((item: ComboboxItem): OptionListOptionProps => {
-    if (item.kind === 'create') {
-      return { value: CREATE_VALUE, children: item.label };
-    }
-    return {
-      value: item.option.value,
-      children: item.option.label,
-      disabled: item.option.disabled,
-    };
-  }, []);
+  const getOptionProps = useCallback(
+    (item: ComboboxItem): OptionListOptionProps => {
+      if (item.kind === 'create') {
+        return { value: CREATE_VALUE, children: item.label, disabled: creates.pending.has(item.value) };
+      }
+      return {
+        value: item.option.value,
+        children: item.option.label,
+        disabled: item.option.disabled,
+      };
+    },
+    [creates.pending],
+  );
 
   return {
     selectionMode,
@@ -882,8 +877,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
     loading,
     error,
     retry,
-    creating,
-    createError,
+    creating: creates.pending.size > 0,
+    createError: creates.error,
     ids,
     inputRef,
     anchorRef,
