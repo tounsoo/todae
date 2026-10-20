@@ -1,4 +1,5 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
+import { subscribeModals } from '../overlay/modalStack.js';
 import { firstTabbable } from '../overlay/tabbables.js';
 
 /** The direction a scroll area scrolls in. */
@@ -71,9 +72,13 @@ export function useScrollTabStop(
     };
     const mutations = new MutationObserver(schedule);
     mutations.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: TAB_ATTRIBUTES });
+    // A Todae modal in front leaves nothing behind it reachable, so one
+    // measured then is measured again once the modal closes.
+    const unsubscribe = subscribeModals(schedule);
     return () => {
       resize.disconnect();
       mutations.disconnect();
+      unsubscribe();
       cancelAnimationFrame(frame);
     };
   }, [scroller, content, axis, focusable]);

@@ -165,6 +165,36 @@ describe('getTabbables in a browser', () => {
     expect(tabbables).not.toContain(screen.getByRole('button', { name: 'Behind', hidden: true }));
   });
 
+  it('gives a ScrollArea no Tab stop of its own once a modal over it closes', async () => {
+    function Page({ open, lines }: { open: boolean; lines: number }) {
+      return (
+        <div data-appearance="light" data-density="comfortable">
+          {/* A fixed size, so the page's scroll lock resizes nothing in it. */}
+          <ScrollArea.Root data-testid="area" aria-label="Notes" style={{ height: 40, width: 200 }}>
+            <button type="button">Edit</button>
+            {Array.from({ length: lines }, (_, i) => (
+              <p key={i}>Line {i}</p>
+            ))}
+            <div style={{ height: 400 }} />
+          </ScrollArea.Root>
+          <Dialog.Root open={open} onOpenChange={() => undefined}>
+            <Dialog.Title>Rename</Dialog.Title>
+            <button type="button">Inside</button>
+          </Dialog.Root>
+        </div>
+      );
+    }
+    const { rerender } = render(<Page open lines={0} />);
+    await waitFor(() => expect(document.querySelector('dialog')?.matches(':modal')).toBe(true));
+    // Content arrives behind the modal, so the area is measured while
+    // nothing in it is reachable.
+    rerender(<Page open lines={3} />);
+    await waitFor(() => expect(screen.getByTestId('area').tabIndex).toBe(0));
+    rerender(<Page open={false} lines={3} />);
+    await waitFor(() => expect(document.querySelector('dialog')?.open).toBe(false));
+    await waitFor(() => expect(screen.getByTestId('area').tabIndex).not.toBe(0));
+  });
+
   it('flags a button in an interactive Tooltip that mounts closed', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     function Hint() {

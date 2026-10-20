@@ -62,3 +62,30 @@ describe('initialFocusRef on an overlay opened after mount', () => {
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Name' })));
   });
 });
+
+describe('initial focus in a modal opened from another modal', () => {
+  it('lands on the first control of a Dialog mounted open beside the one it opens from', async () => {
+    function Stacked() {
+      const [second, setSecond] = useState(false);
+      return (
+        <div data-appearance="light" data-density="comfortable">
+          <Dialog.Root open onOpenChange={() => undefined}>
+            <Dialog.Title>Rename</Dialog.Title>
+            <button type="button" onClick={() => setSecond(true)}>
+              Delete
+            </button>
+          </Dialog.Root>
+          {second && (
+            <Dialog.Root open onOpenChange={setSecond}>
+              <Dialog.Title>Confirm</Dialog.Title>
+              <button type="button">Keep</button>
+            </Dialog.Root>
+          )}
+        </div>
+      );
+    }
+    render(<Stacked />);
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Keep' })));
+  });
+});
