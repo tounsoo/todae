@@ -3,7 +3,7 @@ import type { UseComboboxMultipleOptions, UseComboboxOptions } from './useCombob
 import type { ComboboxCloseReason } from './useCombobox.types.js';
 import { useControlledState } from './useControlledState.js';
 
-/** The field as the last change left it, which can be ahead of the last render. */
+/** The field as the last change left it. Only the parts the hook owns can be ahead of the last render. */
 export type ComboboxFieldState = {
   open: boolean;
   inputValue: string;
@@ -47,7 +47,7 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
 
   const state = useRef<ComboboxFieldState>({ open, inputValue, single, multi });
   // Each render brings it back to what the field shows, so it follows a controlled
-  // owner's own changes and the changes it turned down.
+  // owner's own changes.
   useLayoutEffect(() => {
     state.current = { open, inputValue, single, multi };
   });
@@ -88,7 +88,16 @@ export function useComboboxState(options: UseComboboxOptions, latest: RefObject<
         setOpen(nextOpen);
         calls.push(() => current.onOpenChange?.(nextOpen, reason));
       }
-      state.current = next;
+      // A controlled part stays at what its owner rendered until the owner renders
+      // another, so a change it turns down is neither kept nor built on.
+      const single = !isMultiple(current) ? current.value : undefined;
+      const multi = isMultiple(current) ? current.value : undefined;
+      state.current = {
+        open: current.open ?? next.open,
+        inputValue: current.inputValue ?? next.inputValue,
+        single: single !== undefined ? single : next.single,
+        multi: multi ?? next.multi,
+      };
       let failure: { error: unknown } | null = null;
       for (const call of calls) {
         try {
