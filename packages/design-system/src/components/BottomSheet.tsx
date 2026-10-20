@@ -292,9 +292,10 @@ function BottomSheetRoot({
     onOpenChange,
     requestClose,
   });
-  // After showModal, which focuses the first focusable element by itself.
-  // Keyed on present too: opened after mount, present flips a commit after
-  // open, and until showModal runs the element can't take focus.
+  // Declared after useModalDialog, whose showModal runs first in the same
+  // commit and focuses the first focusable element by itself. Keyed on
+  // present too: the sheet renders nothing until present, which flips a
+  // commit after open when it opens after mount.
   useInitialFocus(sheetRef, present && open, initialFocusRef);
   // A placed Grabber replaces the default one a commit after mount. If the
   // default one had focus, focus went with it; give it to the sheet again.
