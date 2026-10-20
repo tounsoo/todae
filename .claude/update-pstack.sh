@@ -1,11 +1,11 @@
 #!/bin/sh
-# Copies the pstack Claude Code port into .claude/skills and .claude/agents at
-# one pinned commit. Cloud sessions don't load plugins, so the skills live in
+# Copies the pstack Claude Code port into .claude/skills and .claude/agents,
+# and its session-start routing text into .claude, at one pinned commit. Cloud sessions don't load plugins, so the skills live in
 # the repo instead. Usage: sh .claude/update-pstack.sh [commit]
 set -eu
 
 repo=https://github.com/michael-denyer/pstack-claude
-commit=${1:-94f5ce95abe8a9dec976967d79941f631cf477cd}
+commit=${1:-49b68501b075ec1eb2755dd0d22fbf2492d67e97}
 # Our CLAUDE.md and the session's GitHub tools already drive PRs, CI and
 # conflicts; setup-pstack writes a model sheet the container doesn't keep.
 skip='babysit fix-ci fix-merge-conflicts get-pr-comments setup-pstack'
@@ -46,4 +46,6 @@ for file in "$src"/agents/*.md "$src"/effort-agents/*.md; do
   cp "$file" "$root/.claude/agents/"
   echo ".claude/agents/$(basename "$file")" >> "$manifest"
 done
+# The plugin's SessionStart hook prints this; .claude/settings.json does the same.
+cp "$src/hooks/session-start-context.md" "$root/.claude/pstack-session-start.md"
 echo "pstack-claude $(git -C "$tmp" rev-parse HEAD)"

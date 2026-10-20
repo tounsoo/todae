@@ -5,12 +5,15 @@
 .claude/skills/blast-radius
 .claude/skills/bro
 .claude/skills/correct
+.claude/skills/create-formal-verification-skill
 .claude/skills/create-verification-skill
 .claude/skills/deslop
 .claude/skills/figure-it-out
 .claude/skills/how
+.claude/skills/in-your-own-words
 .claude/skills/interrogate
 .claude/skills/ketchup
+.claude/skills/maintain-formal-verification-skill
 .claude/skills/maintain-verification-skill
 .claude/skills/make-pr-easy-to-review
 .claude/skills/no-comments
@@ -42,6 +45,7 @@
 .claude/skills/principle-type-system-discipline
 .claude/skills/recall
 .claude/skills/reflect
+.claude/skills/sharpen
 .claude/skills/show-me-your-work
 .claude/skills/swarm
 .claude/skills/tdd
