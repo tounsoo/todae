@@ -755,6 +755,7 @@ describe('Field.ChipInput', () => {
             setText('');
           }}
           commitKeys={commitKeys}
+          onChipRemove={() => {}}
         />
       </Field.Root>
     );
