@@ -32,7 +32,7 @@ Launch all reviewers in a single message with the `Agent` tool, one per entry on
 | Subagent | Default model |
 |----------|---------------|
 | Reviewer A | `opus` |
-| Reviewer B | `fable` |
+| Reviewer B | `opus` |
 | Reviewer C | `sonnet` |
 | Reviewer D | `haiku` |
 
