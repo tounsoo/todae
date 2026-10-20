@@ -14,6 +14,7 @@ import { useComposedRefs } from './props.js';
 import styles from './Toolbar.module.css';
 import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from './toolbarContext.js';
 import { focusWithoutScroll } from './revealRing.js';
+import { TABBABLE_CANDIDATES } from '../overlay/tabbables.js';
 
 export type { ToolbarOrientation };
 
@@ -35,20 +36,6 @@ export type ToolbarRootProps = {
 export type ToolbarGroupProps = ComponentPropsWithRef<'div'>;
 export type ToolbarSeparatorProps = Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-// Everything Tab can reach. A negative tabindex is never an item.
-const FOCUSABLE = /* @__PURE__ */ [
-  'button',
-  'a[href]',
-  'input:not([type="hidden"])',
-  'select',
-  'textarea',
-  'summary',
-  'iframe',
-  'audio[controls]',
-  'video[controls]',
-  '[contenteditable]:not([contenteditable="false"])',
-  '[tabindex]:not([tabindex^="-"])',
-].join(', ');
 // Reachable by Tab, but not an arrow-key item.
 const NOT_ITEM = 'summary, iframe, audio, video';
 
@@ -103,7 +90,7 @@ function isItem(el: HTMLElement, root: HTMLElement): boolean {
 // key press, so nothing goes stale.
 function runsOf(root: HTMLElement): HTMLElement[][] {
   const runs: HTMLElement[][] = [[]];
-  for (const el of root.querySelectorAll<HTMLElement>(FOCUSABLE)) {
+  for (const el of root.querySelectorAll<HTMLElement>(TABBABLE_CANDIDATES)) {
     if (el.matches(':disabled') || !isReachable(el)) continue;
     if (isItem(el, root)) runs[runs.length - 1]!.push(el);
     // Only something Tab stops on splits a run.
@@ -115,7 +102,7 @@ function runsOf(root: HTMLElement): HTMLElement[][] {
 // The arrow keys' items, disabled ones too: useRovingFocus skips those, and
 // moves on from one that became disabled while focused.
 function itemsOf(root: HTMLElement): HTMLElement[] {
-  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => isItem(el, root));
+  return [...root.querySelectorAll<HTMLElement>(TABBABLE_CANDIDATES)].filter((el) => isItem(el, root));
 }
 
 function Root({

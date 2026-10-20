@@ -1,10 +1,12 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
+import { isTabbable, TABBABLE_CANDIDATES } from '../overlay/tabbables.js';
 
 /** The direction a scroll area scrolls in. */
 export type ScrollAxis = 'block' | 'inline' | 'both';
 
-const FOCUSABLE =
-  'a[href], button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), summary, iframe, [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])';
+function hasTabbable(el: HTMLElement): boolean {
+  return [...el.querySelectorAll<HTMLElement>(TABBABLE_CANDIDATES)].some((node) => isTabbable(node, el));
+}
 
 function overflows(el: HTMLElement, axis: ScrollAxis): boolean {
   const block = el.scrollHeight > el.clientHeight;
@@ -33,7 +35,7 @@ export function useScrollTabStop(
       setTabStop(false);
       return;
     }
-    const measure = () => setTabStop(overflows(el, axis) && (focusable === true || el.querySelector(FOCUSABLE) === null));
+    const measure = () => setTabStop(overflows(el, axis) && (focusable === true || !hasTabbable(el)));
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const resize = new ResizeObserver(measure);

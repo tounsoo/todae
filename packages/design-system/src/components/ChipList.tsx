@@ -10,8 +10,7 @@ import {
 } from 'react';
 import { useChipListInternal } from '../hooks/useChipList.js';
 import { usePopover } from '../hooks/usePopover.js';
-import { isReachable } from '../hooks/useRovingFocus.js';
-import { getTabbables } from '../overlay/tabbables.js';
+import { isTabbable, TABBABLE_CANDIDATES } from '../overlay/tabbables.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Chip, type ChipTone } from './Chip.js';
 import { useChipKeys } from './chipKeys.js';
@@ -49,18 +48,17 @@ export type ChipListRootProps = {
   panelLabel?: (n: number) => string;
 } & Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-// The next tabbable control after +N, skipping its own panel. The costly
-// visibility check runs last, on candidates after +N only.
+// The next tabbable control after +N, skipping its own panel. Cheap checks
+// first, so the costly ones run on candidates after +N only.
 function focusAfter(el: HTMLElement | null) {
   if (!el) return;
   const panel = document.getElementById(el.getAttribute('aria-controls') ?? '');
-  const next = getTabbables(document.body).find(
+  const next = [...document.body.querySelectorAll<HTMLElement>(TABBABLE_CANDIDATES)].find(
     (node) =>
       (el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 &&
       !panel?.contains(node) &&
       !node.closest('[aria-hidden="true"]') &&
-      // Not rendered, such as inside a closed popover.
-      isReachable(node),
+      isTabbable(node, document.body),
   );
   (next ?? el).focus();
 }
