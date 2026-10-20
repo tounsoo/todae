@@ -81,7 +81,7 @@ export function RowActions({ label, children }: { label: string; children: React
 }
 ```
 
-**주의할 점:** `label` prop을 받고도 `Menu.Trigger`에 넘기지 않는 래퍼는 트리거와 메뉴 모두 이름이 없게 만듭니다. 항목 안의 링크, 입력, 버튼은 항목의 내용이 표현용이라 컨트롤로 알려지지 않습니다. 체크나 라디오 표시를 숨기고 상태를 색만으로 나타내지 마세요.
+**주의할 점:** `label` prop을 받고도 `Menu.Trigger`에 넘기지 않는 래퍼는 트리거와 메뉴 모두 이름이 없게 만듭니다. 항목 안의 링크, 입력, 버튼은 항목의 내용이 표현용이라 컨트롤로 알려지지 않습니다. 체크나 라디오 표시를 숨기고 상태를 색만으로 나타내지 마세요. `Menu.Trigger`의 `onClick`에서 `preventDefault()`를 호출하면 트리거가 메뉴를 열거나 닫지 않습니다.
 
 ## 언제 쓰나요
 

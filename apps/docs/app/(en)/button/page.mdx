@@ -117,7 +117,7 @@ export function IconButton({ label, icon, ...props }: IconButtonProps) {
 }
 ```
 
-**Watch for:** A wrapper that drops the rest props, which loses `ref` and ARIA. A `Button.Root` inside a link, or a link inside a button: interactive content cannot nest. A toggle whose text flips, such as "Mute" to "Unmute", as `aria-pressed` changes; keep one label and let `pressed` carry the state. `tooltip={false}` on an icon-only button, which removes its only visible name.
+**Watch for:** A wrapper that drops the rest props, which loses `ref` and ARIA. A `Button.Root` inside a link, or a link inside a button: interactive content cannot nest. A toggle whose text flips, such as "Mute" to "Unmute", as `aria-pressed` changes; keep one label and let `pressed` carry the state. `tooltip={false}` on an icon-only button, which removes its only visible name. An `onPointerEnter` or `onFocus` that calls `preventDefault()`, which stops the automatic tooltip from showing; your `aria-describedby` stays, and the tip's id joins it while the tip shows.
 
 ## When to use
 

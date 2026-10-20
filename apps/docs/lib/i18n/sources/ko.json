@@ -63,7 +63,7 @@
     "## Toggle": "b7fa7b0a3692",
     "## Button.Group": "af74820aaed9",
     "## Icons": "030e0279e3e2",
-    "## Accessible composition": "9af0601a5457",
+    "## Accessible composition": "083a41a3b8bb",
     "## When to use": "d57fe8233a0b",
     "### Button.Root": "dc5668e9f4d2",
     "### Button.Icon": "0479470eb2ff",
@@ -414,7 +414,7 @@
     "## Keyboard": "9867469041ca",
     "## Checkbox and radio items": "12e9d43400c3",
     "## Icons": "5a8e880339a4",
-    "## Accessible composition": "36e13e1af2bf",
+    "## Accessible composition": "0982eb7067ba",
     "## When to use": "87f5e7618788",
     "## Props": "b96e6aef6f4c",
     "(section order)": "cb3b9adc4188"

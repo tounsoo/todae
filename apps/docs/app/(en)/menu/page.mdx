@@ -81,7 +81,7 @@ export function RowActions({ label, children }: { label: string; children: React
 }
 ```
 
-**Watch for:** A wrapper that takes a `label` prop but drops it before `Menu.Trigger`, leaving both the trigger and the menu unnamed. Links, inputs or buttons inside an item: its content is presentational, so they are not announced as controls. Hiding the check or radio indicator and showing the state with color alone.
+**Watch for:** A wrapper that takes a `label` prop but drops it before `Menu.Trigger`, leaving both the trigger and the menu unnamed. Links, inputs or buttons inside an item: its content is presentational, so they are not announced as controls. Hiding the check or radio indicator and showing the state with color alone. A `Menu.Trigger` `onClick` that calls `preventDefault()`, which stops the trigger from opening or closing the menu.
 
 ## When to use
 
