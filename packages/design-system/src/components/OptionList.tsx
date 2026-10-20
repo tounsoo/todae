@@ -222,13 +222,16 @@ function OptionListRoot(props: OptionListRootProps) {
     (value: string, fromPointer = false) => {
       // Click, Enter and Space all come here.
       const entry = [...registered.current].find((option) => option.value === value);
-      if (entry?.disabled || entry?.unavailable) return;
-      if (isMultiple(props)) {
-        props.onValueChange(
-          props.value.includes(value) ? props.value.filter((item) => item !== value) : [...props.value, value],
-        );
-      } else {
-        props.onValueChange(value);
+      if (entry?.disabled) return;
+      // An aria-disabled option is reachable, so it still becomes active, but it is never selected.
+      if (!entry?.unavailable) {
+        if (isMultiple(props)) {
+          props.onValueChange(
+            props.value.includes(value) ? props.value.filter((item) => item !== value) : [...props.value, value],
+          );
+        } else {
+          props.onValueChange(value);
+        }
       }
       setActive(value);
       setHighlighted(fromPointer ? null : value);
