@@ -363,7 +363,7 @@ function clickWithKeys(event: KeyboardEvent<HTMLElement>) {
   const { ctrlKey, metaKey, shiftKey, altKey } = event;
   const target = event.currentTarget;
   const view = target.ownerDocument.defaultView ?? window;
-  target.dispatchEvent(new view.MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey, metaKey, shiftKey, altKey }));
+  target.dispatchEvent(new view.MouseEvent('click', { bubbles: true, cancelable: true, composed: true, ctrlKey, metaKey, shiftKey, altKey }));
 }
 
 function useItem(
