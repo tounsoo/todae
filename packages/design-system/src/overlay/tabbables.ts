@@ -67,7 +67,11 @@ function* candidatesIn(root: HTMLElement): Generator<HTMLElement> {
   }
 }
 
-/** The elements in `root` that Tab stops on now, in document order. The one answer to "what can Tab reach". */
+/**
+ * The elements in `root` that Todae treats as tab stops now, in document
+ * order: the browser's tab order minus disabled, hidden, inert and
+ * aria-hidden content.
+ */
 export function getTabbables(root: HTMLElement): HTMLElement[] {
   return [...candidatesIn(root)].filter((el) => isTabStop(el, root));
 }
@@ -82,7 +86,8 @@ export function getTabOrder(root: HTMLElement): HTMLElement[] {
 }
 
 /**
- * The first element in `root` that Tab stops on now and `accept` takes. It
+ * The first element in `root` that Todae treats as a tab stop now, as
+ * getTabbables does, and `accept` takes. It
  * stops at the first match, and runs `accept` before the costlier checks.
  */
 export function firstTabbable(root: HTMLElement, accept?: (el: HTMLElement) => boolean): HTMLElement | null {
