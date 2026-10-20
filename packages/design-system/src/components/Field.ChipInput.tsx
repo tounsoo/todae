@@ -78,6 +78,11 @@ export function ChipInput({
       return;
     }
     if (!keySet.has(event.key)) return;
+    // A held key commits once; once the text is cleared, a repeated Enter would submit the form.
+    if (event.repeat) {
+      event.preventDefault();
+      return;
+    }
     const trimmed = inputValue.trim();
     if (trimmed === '') return;
     // Only Enter goes on to the form; any other commit key would type its character.

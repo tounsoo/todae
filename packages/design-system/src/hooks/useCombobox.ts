@@ -520,6 +520,11 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         return;
       }
       if (event.key === 'Enter') {
+        // A held Enter picks once; its repeats would toggle the pick or submit the form.
+        if (event.repeat) {
+          event.preventDefault();
+          return;
+        }
         if (commitActive()) event.preventDefault();
         return;
       }
