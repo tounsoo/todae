@@ -515,6 +515,8 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         return;
       }
       if (event.key === 'Enter') {
+        // With the list closed, the highlight is stale and Enter belongs to the form.
+        if (!open) return;
         event.preventDefault();
         // While the list is another query's, Enter with no active row runs nothing:
         // showCreate is false until that list is in.
@@ -643,6 +645,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         inputValue,
         onInputValueChange: changeInput,
         onCommit: () => {
+          if (!open) return;
           if (resolvedActive === CREATE_VALUE) create();
           else if (resolvedActive) select(resolvedActive);
           else if (showCreate) create();
@@ -666,6 +669,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       onInputBlur,
       onInputFocus,
       onInputKeyDown,
+      open,
       remove,
       resolvedActive,
       select,
