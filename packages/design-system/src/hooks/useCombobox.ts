@@ -411,26 +411,27 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
 
   const reset = useCallback(() => {
     const initial = latest.current;
-    setOpenState(initial.defaultOpen ?? false);
+    const defaultOpen = initial.defaultOpen ?? false;
+    if (defaultOpen !== open) setOpen(defaultOpen, 'input-clear');
     if (isMultiple(initial)) {
-      setInputState(initial.defaultInputValue ?? '');
-      setMultiState(initial.defaultValue ?? []);
+      setInputValue(initial.defaultInputValue ?? '');
+      applyMulti([...(initial.defaultValue ?? [])]);
     } else {
       const defaultValue = initial.defaultValue ?? null;
-      setInputState(
+      setInputValue(
         initial.defaultInputValue ??
           (defaultValue
             ? (initial.options ?? EMPTY_OPTIONS).find((option) => option.value === defaultValue)?.label ?? ''
             : ''),
       );
-      setSingleState(defaultValue);
+      applySingle(defaultValue);
     }
     setActiveValue(null);
     setAsyncOptions([]);
     setLoadedFor(null);
     setError(null);
     setReloads((count) => count + 1);
-  }, [setInputState, setMultiState, setOpenState, setSingleState]);
+  }, [applyMulti, applySingle, open, setInputValue, setOpen]);
 
   const runLoad = useCallback(
     (query: string) => {
