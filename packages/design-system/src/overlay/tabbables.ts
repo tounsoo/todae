@@ -25,13 +25,11 @@ export function inToastHostWithin(el: Element, root: Element): boolean {
   return Boolean(host && host !== root && root.contains(host));
 }
 
-/**
- * Whether Tab would stop on `el` were it enabled and shown: a kind of element
- * Tab stops on, not taken out by a negative tabindex, and not inside a
- * `hidden` or `aria-hidden` subtree. Styles and `disabled` are not read.
- */
-export function inTabOrder(el: HTMLElement): boolean {
-  if (!el.matches(CANDIDATES)) return false;
+// Whether Tab would stop on `el`, one of CANDIDATES, were it enabled and
+// shown: not taken out by a negative tabindex, and not inside a `hidden` or
+// `aria-hidden` subtree. Both subtrees count as removed content on purpose.
+// Styles and `disabled` are not read.
+function inTabOrder(el: HTMLElement): boolean {
   // Engines differ on the default tabIndex of some candidates, such as
   // contenteditable, so only a tabindex that is set takes one out.
   if (el.hasAttribute('tabindex')) {
@@ -46,28 +44,30 @@ export function inTabOrder(el: HTMLElement): boolean {
 
 /**
  * Whether focus can move to `el` now: not inert, and not hidden by a
- * stylesheet, `visibility`, or a closed `<details>`. `visibility: hidden`
- * blocks focus too. Tabindex and `disabled` are not read.
+ * stylesheet, `visibility`, or a closed `<details>`. `visibility: hidden` blocks focus too. Tabindex and
+ * `disabled` are not read.
  */
 export function isReachable(el: HTMLElement): boolean {
-  if (el.closest('[inert]')) return false;
+  if (el.closest('[inert]') ) return false;
   // Without checkVisibility, only an inline display:none is seen.
   return el.checkVisibility?.({ visibilityProperty: true }) ?? el.style.display !== 'none';
 }
 
-/** Whether Tab stops on `el` now. The one answer to "can Tab reach this". */
-export function isTabbable(el: HTMLElement): boolean {
+// Whether Tab stops on `el`, one of CANDIDATES, now.
+function isTabStop(el: HTMLElement): boolean {
   return inTabOrder(el) && !el.matches(':disabled') && isReachable(el);
 }
 
-// root's candidates, less the toasts moved into it.
-function candidatesIn(root: HTMLElement): HTMLElement[] {
-  return [...root.querySelectorAll<HTMLElement>(CANDIDATES)].filter((el) => !inToastHostWithin(el, root));
+// root's candidates in document order, less the toasts moved into it.
+function* candidatesIn(root: HTMLElement): Generator<HTMLElement> {
+  for (const el of root.querySelectorAll<HTMLElement>(CANDIDATES)) {
+    if (!inToastHostWithin(el, root)) yield el;
+  }
 }
 
-/** The elements in `root` that Tab stops on now, in document order. */
+/** The elements in `root` that Tab stops on now, in document order. The one answer to "what can Tab reach". */
 export function getTabbables(root: HTMLElement): HTMLElement[] {
-  return candidatesIn(root).filter(isTabbable);
+  return [...candidatesIn(root)].filter(isTabStop);
 }
 
 /**
@@ -76,7 +76,7 @@ export function getTabbables(root: HTMLElement): HTMLElement[] {
  * what Tab reaches this moment, such as whether a closed panel holds a button.
  */
 export function getTabOrder(root: HTMLElement): HTMLElement[] {
-  return candidatesIn(root).filter(inTabOrder);
+  return [...candidatesIn(root)].filter(inTabOrder);
 }
 
 /**
@@ -84,9 +84,8 @@ export function getTabOrder(root: HTMLElement): HTMLElement[] {
  * stops at the first match, and runs `accept` before the costlier checks.
  */
 export function firstTabbable(root: HTMLElement, accept?: (el: HTMLElement) => boolean): HTMLElement | null {
-  for (const el of root.querySelectorAll<HTMLElement>(CANDIDATES)) {
-    if (inToastHostWithin(el, root) || (accept && !accept(el))) continue;
-    if (isTabbable(el)) return el;
+  for (const el of candidatesIn(root)) {
+    if ((!accept || accept(el)) && isTabStop(el)) return el;
   }
   return null;
 }

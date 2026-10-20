@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { useChipListInternal } from '../hooks/useChipList.js';
 import { usePopover } from '../hooks/usePopover.js';
-import { firstTabbable } from '../overlay/tabbables.js';
+import { firstTabbable, getTabbables } from '../overlay/tabbables.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Chip, type ChipTone } from './Chip.js';
 import { useChipKeys } from './chipKeys.js';
@@ -239,7 +239,7 @@ function Root({
       if (event.key !== 'Tab') return;
       const panel = popover.popoverRef.current;
       if (!(event.target instanceof Node) || !panel?.contains(event.target)) return;
-      const all = [...panel.querySelectorAll<HTMLElement>('button:not([disabled])')];
+      const all = getTabbables(panel);
       const edge = event.shiftKey ? all[0] : all[all.length - 1];
       // From the panel itself, Tab goes on to its first button as usual.
       if (event.target === panel ? all.length > 0 && !event.shiftKey : event.target !== edge) return;

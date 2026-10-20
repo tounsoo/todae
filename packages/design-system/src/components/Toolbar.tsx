@@ -8,7 +8,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { useRovingFocus } from '../hooks/useRovingFocus.js';
-import { getTabOrder, isTabbable } from '../overlay/tabbables.js';
+import { getTabbables, getTabOrder } from '../overlay/tabbables.js';
 import { cx } from './cx.js';
 import { useDomId } from './domId.js';
 import { useComposedRefs } from './props.js';
@@ -89,16 +89,15 @@ function isItem(el: HTMLElement, root: HTMLElement): boolean {
 // key press, so nothing goes stale.
 function runsOf(root: HTMLElement): HTMLElement[][] {
   const runs: HTMLElement[][] = [[]];
-  for (const el of getTabOrder(root)) {
-    if (!isTabbable(el)) continue;
+  for (const el of getTabbables(root)) {
     if (isItem(el, root)) runs[runs.length - 1]!.push(el);
     else runs.push([]);
   }
   return runs.filter((run) => run.length > 0);
 }
 
-// The arrow keys' items, disabled and hidden ones too: useRovingFocus skips
-// those, and moves on from one that became disabled while focused.
+// The arrow keys' items, disabled and CSS-hidden ones too: useRovingFocus
+// skips those, and moves on from one that became disabled while focused.
 function itemsOf(root: HTMLElement): HTMLElement[] {
   return getTabOrder(root).filter((el) => isItem(el, root));
 }
