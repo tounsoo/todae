@@ -32,7 +32,7 @@ export function useChipField(options: UseChipFieldOptions = {}): UseChipFieldRes
   const onCommit = useCallback(
     (value: string) => {
       const next = transform ? transform(value) : value.trim() || null;
-      if (next == null) return;
+      if (next == null) return false;
       setChips((prev) => (dedupe && prev.includes(next) ? prev : [...prev, next]));
       setInputValue('');
     },
