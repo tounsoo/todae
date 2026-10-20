@@ -95,7 +95,7 @@ import { Plus, Settings } from 'lucide-react';
 
 ## Links
 
-A link that should look like a button is still a link: it goes somewhere, Enter follows it, and screen readers list it with the page's links. Pass `render` and return the link with the props it is handed, the way a router plugs into [Link](/link). The button keeps its look, its icons and its tips, and the element keeps its own role. `type`, `disabled` and `pressed` are not allowed with `render`, since a link takes none of them. An `a` without `href` goes nowhere and looks disabled. `render` must return an `a` or a `button`; anything else logs an error in development.
+A link that should look like a button is still a link: it goes somewhere, Enter follows it, and screen readers list it with the page's links. Pass `render` and return the link with the props it is handed, the way a router plugs into [Link](/link). The button keeps its look, its icons and its tips, and the element keeps its own role. `type`, `disabled` and `pressed` are not allowed with `render`, since a link takes none of them. An `a` without `href` goes nowhere and looks disabled. `render` must return an `a` or a `button`; anything else logs an error in development. A `button` it returns sets its own `type`.
 
 ```tsx
 import NextLink from 'next/link';

@@ -141,8 +141,9 @@ function hint(children: ReactNode): { iconOnly: boolean; text: string } {
 }
 
 // Overloads, not one union, so a handler passed with `render` still gets its event type.
-function Root(props: ButtonRootProps): ReactElement;
+// The button one is last, since ComponentProps<typeof Button.Root> reads the last.
 function Root(props: ButtonRenderedProps): ReactElement;
+function Root(props: ButtonRootProps): ReactElement;
 function Root({
   variant = 'primary',
   className,

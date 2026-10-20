@@ -6,7 +6,7 @@ import { renderSiteLink } from './SiteLink';
 
 type SiteButtonLinkProps = Omit<ButtonRenderedProps, 'render'> & {
   href: string;
-  /** Shown after the label in a Button.Icon, which a Server Component can't render itself. */
+  /** Shown after the label in a Button.Icon, which a Server Component can't reach through the client entry's Button object. */
   trailingIcon?: ReactNode;
 };
 

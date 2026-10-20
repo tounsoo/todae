@@ -730,8 +730,8 @@ function Description({ className, ...props }: ToastDescriptionProps) {
 }
 
 /** A secondary Button.Root that dismisses the toast after `onClick`, unless it calls `preventDefault()`. */
-function Action(props: ButtonActionProps): ReactElement;
 function Action(props: ButtonRenderedProps): ReactElement;
+function Action(props: ButtonActionProps): ReactElement;
 function Action({ variant = 'secondary', onClick, className, ...props }: ToastActionProps) {
   const item = useContext(ItemContext);
   // Button.Root's overloads take one shape at a time; Action passes either on.

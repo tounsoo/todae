@@ -118,6 +118,7 @@ export {
   type MenuContentProps,
   type MenuGroupProps,
   type MenuItemProps,
+  type MenuItemRenderProps,
   type MenuOpenChangeReason,
   type MenuRadioGroupProps,
   type MenuRadioItemProps,

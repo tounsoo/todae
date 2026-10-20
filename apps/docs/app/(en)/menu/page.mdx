@@ -35,7 +35,7 @@ An item's children are presentational to assistive technology, as ARIA defines f
 
 ## Links
 
-An item that goes somewhere, such as Help or Settings, is a link. Pass `render` and return the link with the props it is handed; the element keeps `role="menuitem"` and the menu's keyboard. Enter, Space or a click follows the link, runs `onSelect` and closes the menu. A disabled item goes nowhere.
+An item that goes somewhere, such as Help or Settings, is a link. Pass `render` and return the link with the props it is handed; the element keeps `role="menuitem"` and the menu's keyboard. Enter, Space or a click follows the link, runs `onSelect` and closes the menu. A disabled item can't be chosen; leave out its `href` too, so a middle click or the browser's Open in new tab can't follow it.
 
 ```tsx
 import NextLink from 'next/link';

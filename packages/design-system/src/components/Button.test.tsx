@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { createRef } from 'react';
+import { createRef, type ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { Button, type ButtonActionProps, type ButtonIconProps, type ButtonRenderProps, type ButtonRootProps } from './Button.js';
 import * as api from '../index.js';
@@ -371,5 +371,8 @@ describe('Button auto-tip', () => {
       <Button.Root {...props} aria-label={label} onClick={(event) => event.currentTarget.form?.reset()} />
     );
     void Wrapper;
+    expectTypeOf<ComponentProps<typeof Button.Root>>().toEqualTypeOf<ButtonRootProps>();
+    expectTypeOf<ComponentProps<typeof api.Toast.Action>>().toEqualTypeOf<ButtonActionProps>();
+    expectTypeOf<api.MenuItemRenderProps>().toHaveProperty('ref');
   });
 });
