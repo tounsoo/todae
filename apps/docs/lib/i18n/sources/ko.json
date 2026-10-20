@@ -64,7 +64,7 @@
     "## Button.Group": "af74820aaed9",
     "## Icons": "030e0279e3e2",
     "## Links": "efe167041072",
-    "## Accessible composition": "531147f6d13c",
+    "## Accessible composition": "c71c476a91d8",
     "## When to use": "d57fe8233a0b",
     "### Button.Root": "188c84737d40",
     "### Button.Icon": "0479470eb2ff",
@@ -416,7 +416,7 @@
     "## Checkbox and radio items": "3ee5d550ead1",
     "## Links": "ede13f3623cf",
     "## Icons": "5a8e880339a4",
-    "## Accessible composition": "36e13e1af2bf",
+    "## Accessible composition": "0982eb7067ba",
     "## When to use": "87f5e7618788",
     "## Props": "b96e6aef6f4c",
     "(section order)": "4b378da7b66c"
@@ -678,7 +678,7 @@
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "f729d4d99b51",
-    "## Accessible composition": "5bc1f940b882",
+    "## Accessible composition": "1509f4e1cfc9",
     "## When to use": "77a279496991",
     "## Props": "63a3bb317d94",
     "(section order)": "28600b829282"
@@ -828,7 +828,7 @@
   "utilities/use-popover": {
     "(top)": "312cb56df699",
     "# usePopover": "b093e5ad8527",
-    "## Accessible composition": "7e2e9d73e309",
+    "## Accessible composition": "50e073a8ea0d",
     "## When to use": "fdd59fc7e86b",
     "## Props": "7ba034ef8a21",
     "(section order)": "59d900639520"
@@ -851,7 +851,7 @@
   "utilities/use-tooltip": {
     "(top)": "6a88821fc13f",
     "# useTooltip": "06367727b548",
-    "## Accessible composition": "8cb577a4cfae",
+    "## Accessible composition": "3e48aa93d4d0",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",
     "(section order)": "292f5c8b4f13"

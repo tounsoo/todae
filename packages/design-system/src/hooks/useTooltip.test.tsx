@@ -190,6 +190,89 @@ describe('useTooltip', () => {
     expect(screen.getByRole('button').getAttribute('aria-describedby')).toBe('archive-tip');
   });
 
+  it("joins the tip's id to the trigger's own aria-describedby while open", () => {
+    function Harness() {
+      const tooltip = useTooltip({ id: 'archive-tip' });
+      return (
+        <button type="button" {...tooltip.getTriggerProps({ 'aria-describedby': 'archive-note' })}>
+          Hint
+        </button>
+      );
+    }
+    render(<Harness />);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    expect(trigger.getAttribute('aria-describedby')).toBe('archive-note');
+    fireEvent.focus(trigger);
+    expect(trigger.getAttribute('aria-describedby')).toBe('archive-note archive-tip');
+  });
+
+  it('does not open when the trigger handler the consumer passed prevents the event', () => {
+    const onOpenChange = vi.fn();
+    function Harness() {
+      const tooltip = useTooltip({ onOpenChange });
+      return (
+        <button
+          type="button"
+          {...tooltip.getTriggerProps({
+            onPointerEnter: (event) => event.preventDefault(),
+            onFocus: (event) => event.preventDefault(),
+          })}
+        >
+          Hint
+        </button>
+      );
+    }
+    render(<Harness />);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    fireEvent.pointerEnter(trigger);
+    fireEvent.focus(trigger);
+    advance(300);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['pointer leave', fireEvent.pointerEnter, fireEvent.pointerLeave],
+    ['blur', fireEvent.focus, fireEvent.blur],
+  ] as const)('still closes on %s when the consumer prevents it', (_label, acquire, release) => {
+    function Harness() {
+      const tooltip = useTooltip();
+      return (
+        <button
+          type="button"
+          {...tooltip.getTriggerProps({
+            onPointerLeave: (event) => event.preventDefault(),
+            onBlur: (event) => event.preventDefault(),
+          })}
+        >
+          {tooltip.open ? 'Open' : 'Closed'}
+        </button>
+      );
+    }
+    render(<Harness />);
+    const trigger = screen.getByRole('button');
+    acquire(trigger);
+    advance(300);
+    expect(trigger.textContent).toBe('Open');
+    release(trigger);
+    advance(300);
+    expect(trigger.textContent).toBe('Closed');
+  });
+
+  it("adds the tip's id once when the consumer already lists it", () => {
+    function Harness() {
+      const tooltip = useTooltip({ id: 'archive-tip' });
+      return (
+        <button type="button" {...tooltip.getTriggerProps({ 'aria-describedby': 'archive-note archive-tip' })}>
+          Hint
+        </button>
+      );
+    }
+    render(<Harness />);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    fireEvent.focus(trigger);
+    expect(trigger.getAttribute('aria-describedby')).toBe('archive-note archive-tip');
+  });
+
   it('resets intent and commits close when enabled becomes false', () => {
     const onOpenChange = vi.fn();
     const { rerender } = render(<TipHarness defaultOpen onOpenChange={onOpenChange} />);
