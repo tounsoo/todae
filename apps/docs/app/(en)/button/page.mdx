@@ -1,4 +1,4 @@
-import { ButtonGroupAlign, ButtonIconLibraries, ButtonIcons, ButtonOverflow, ButtonVariants } from '../../../components/demos/ButtonDemo';
+import { ButtonGroupAlign, ButtonIconLibraries, ButtonIcons, ButtonLinks, ButtonOverflow, ButtonVariants } from '../../../components/demos/ButtonDemo';
 import { ButtonToggle } from '../../../components/demos/ToggleGroupDemo';
 
 # Button
@@ -93,9 +93,30 @@ import { Plus, Settings } from 'lucide-react';
   <ButtonIconLibraries />
 </Example>
 
+## Links
+
+A link that should look like a button is still a link: it goes somewhere, Enter follows it, and screen readers list it with the page's links. Pass `render` and return the link with the props it is handed, the way a router plugs into [Link](/link). The button keeps its look, its icons and its tips, and the element keeps its own role. `type`, `disabled` and `pressed` are not allowed with `render`, since a link takes none of them. An `a` without `href` goes nowhere and looks disabled. `render` must return an `a` or a `button`; anything else logs an error in development.
+
+```tsx
+import NextLink from 'next/link';
+
+<Button.Root render={(props) => <NextLink {...props} href="/guides/build-on-todae" />}>
+  Get started
+</Button.Root>
+<Button.Root variant="secondary" render={(props) => <a {...props} href="https://github.com/tounsoo/todae" />}>
+  Source
+</Button.Root>
+```
+
+`Button.Root` is a client component, so a Server Component can't pass it a `render` function. Write the link in a client component of your own and render that.
+
+<Example>
+  <ButtonLinks />
+</Example>
+
 ## Accessible composition
 
-**Todae handles:** A native `<button>` with `type="button"`, so it keeps the browser's keyboard behaviour, and a focus ring on `:focus-visible`. `pressed` sets `aria-pressed`. `Button.Icon` is `aria-hidden`. An icon-only root shows its `aria-label` or `aria-labelledby` text as a tooltip, linked by `aria-describedby` while it shows, and logs an error in development when it has no name. `Button.Group` is always `role="group"`.
+**Todae handles:** A native `<button>` with `type="button"`, so it keeps the browser's keyboard behaviour, and a focus ring on `:focus-visible`. With `render`, the element keeps its own role; Todae adds none. `pressed` sets `aria-pressed`. `Button.Icon` is `aria-hidden`. An icon-only root shows its `aria-label` or `aria-labelledby` text as a tooltip, linked by `aria-describedby` while it shows, and logs an error in development when it has no name. `Button.Group` is always `role="group"`.
 
 **You supply:** A name for every icon-only button, and an `aria-label` for each `Button.Group`. A wrapper whose buttons can be icon-only should require the name in its props type, pass it as `aria-label`, and spread the rest so `ref` and `disabled` reach the button.
 
@@ -117,7 +138,7 @@ export function IconButton({ label, icon, ...props }: IconButtonProps) {
 }
 ```
 
-**Watch for:** A wrapper that drops the rest props, which loses `ref` and ARIA. A `Button.Root` inside a link, or a link inside a button: interactive content cannot nest. A toggle whose text flips, such as "Mute" to "Unmute", as `aria-pressed` changes; keep one label and let `pressed` carry the state. `tooltip={false}` on an icon-only button, which removes its only visible name.
+**Watch for:** A wrapper that drops the rest props, which loses `ref` and ARIA. A `Button.Root` inside a link, or a link inside a button: interactive content cannot nest, so draw the link as the button with `render` instead. A toggle whose text flips, such as "Mute" to "Unmute", as `aria-pressed` changes; keep one label and let `pressed` carry the state. `tooltip={false}` on an icon-only button, which removes its only visible name.
 
 ## When to use
 
@@ -125,7 +146,7 @@ export function IconButton({ label, icon, ...props }: IconButtonProps) {
 
 **When:** One action in a native button. Variants primary / secondary / ghost; default `type="button"`. Icon-only needs `aria-label`, which it auto-tips.
 
-**When not:** Navigation → [Link](/link). A setting that takes effect at once → Switch. A form choice → Checkbox. Selected segment → ToggleGroup (Button.Group has no selection).
+**When not:** Navigation in text → [Link](/link); navigation that looks like a button → `Button.Root` with `render`. A setting that takes effect at once → Switch. A form choice → Checkbox. Selected segment → ToggleGroup (Button.Group has no selection).
 
 ### Button.Icon
 

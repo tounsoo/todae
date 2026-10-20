@@ -552,38 +552,6 @@ table {
   margin-block-start: 2rem;
 }
 
-/* A link drawn as a button. Todae's Button is a <button>, so the docs paint
-   links from the button tokens. */
-.docs-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6875rem 1.125rem;
-  border: 1px solid var(--todae-color-border-default);
-  border-radius: var(--todae-button-base-radius);
-  background: var(--todae-color-bg-surface);
-  color: var(--todae-color-fg-default);
-  font-size: 0.9375rem;
-  font-weight: 550;
-  text-decoration: none;
-  transition: background-color 120ms, border-color 120ms;
-}
-
-.docs-cta:hover {
-  background: var(--todae-color-bg-highlight);
-}
-
-.docs-cta-primary {
-  border-color: var(--todae-button-primary-bg-default);
-  background: var(--todae-button-primary-bg-default);
-  color: var(--todae-button-primary-fg-default);
-}
-
-.docs-cta-primary:hover {
-  border-color: var(--todae-button-primary-bg-hover);
-  background: var(--todae-button-primary-bg-hover);
-}
-
 .hero-showcase {
   padding: clamp(1rem, 3vw, 2rem);
   border: 1px solid var(--todae-color-border-subtle);

@@ -12,6 +12,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactElement,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
@@ -729,14 +730,18 @@ function Description({ className, ...props }: ToastDescriptionProps) {
 }
 
 /** A secondary Button.Root that dismisses the toast after `onClick`, unless it calls `preventDefault()`. */
+function Action(props: ButtonActionProps): ReactElement;
+function Action(props: ButtonRenderedProps): ReactElement;
 function Action({ variant = 'secondary', onClick, className, ...props }: ToastActionProps) {
   const item = useContext(ItemContext);
+  // Button.Root's overloads take one shape at a time; Action passes either on.
+  const AnyButton = Button.Root as (props: ButtonActionProps | ButtonRenderedProps) => ReactElement;
   return (
-    <Button.Root
+    <AnyButton
       variant={variant}
       {...props}
       className={cx(styles.action, className)}
-      onClick={composeHandlers(onClick, () => item?.dismiss())}
+      onClick={composeHandlers(onClick as ((event: ReactMouseEvent<HTMLElement>) => void) | undefined, () => item?.dismiss())}
     />
   );
 }

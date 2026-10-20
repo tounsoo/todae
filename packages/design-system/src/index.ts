@@ -78,7 +78,6 @@ export {
   Button,
   type ButtonGroupProps,
   type ButtonIconProps,
-  type ButtonNativeProps,
   type ButtonRenderedProps,
   type ButtonRenderProps,
   type ButtonRootProps,

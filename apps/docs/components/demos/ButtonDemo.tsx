@@ -91,3 +91,23 @@ export function ButtonIconLibraries() {
     </Stack.Root>
   );
 }
+
+/** Links drawn as buttons through render. The one without href looks disabled. */
+export function ButtonLinks() {
+  return (
+    <>
+      <Button.Root render={(props) => <a {...props} href="#props" />}>
+        See the props
+        <Button.Icon>
+          <ArrowRight />
+        </Button.Icon>
+      </Button.Root>
+      <Button.Root variant="secondary" render={(props) => <a {...props} href="https://github.com/tounsoo/todae" />}>
+        Source
+      </Button.Root>
+      <Button.Root variant="secondary" render={(props) => <a {...props} />}>
+        Not yet available
+      </Button.Root>
+    </>
+  );
+}

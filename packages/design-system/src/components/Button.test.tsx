@@ -365,5 +365,11 @@ describe('Button auto-tip', () => {
     void (<Button.Root render={link} type="submit" />);
     // @ts-expect-error close buttons and triggers stay buttons
     expectTypeOf<ButtonActionProps>().toMatchTypeOf<{ render: typeof link }>();
+    void (<Button.Root render={link} onClick={(event) => event.currentTarget.blur()} />);
+    // A wrapper typed from ButtonRootProps, as the docs show, still passes its rest on.
+    const Wrapper = ({ label, ...props }: Omit<ButtonRootProps, 'aria-label'> & { label: string }) => (
+      <Button.Root {...props} aria-label={label} onClick={(event) => event.currentTarget.form?.reset()} />
+    );
+    void Wrapper;
   });
 });

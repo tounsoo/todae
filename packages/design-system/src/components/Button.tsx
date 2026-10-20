@@ -40,10 +40,12 @@ type ButtonOwnProps = {
 };
 
 /**
+ * Props of a Button.Root that renders its own `<button>`; one drawn on
+ * another element takes {@link ButtonRenderedProps}.
  * Passing `pressed` or `defaultPressed` makes the button a toggle: it sets
  * `aria-pressed` and flips on click, unless `onClick` calls `preventDefault()`.
  */
-export type ButtonNativeProps = ButtonOwnProps & {
+export type ButtonRootProps = ButtonOwnProps & {
   pressed?: boolean;
   defaultPressed?: boolean;
   onPressedChange?: (pressed: boolean) => void;
@@ -73,10 +75,8 @@ export type ButtonRenderedProps = ButtonOwnProps & {
   ref?: Ref<HTMLElement | null>;
 } & { [K in ButtonOnlyAttribute]?: never } & HTMLAttributes<HTMLElement>;
 
-export type ButtonRootProps = ButtonNativeProps | ButtonRenderedProps;
-
 /** Button.Root props for a button that is never a toggle or another element, such as a close or menu trigger. */
-export type ButtonActionProps = Omit<ButtonNativeProps, 'pressed' | 'defaultPressed' | 'onPressedChange'>;
+export type ButtonActionProps = Omit<ButtonRootProps, 'pressed' | 'defaultPressed' | 'onPressedChange'>;
 
 export type ButtonIconProps = {
   children?: ReactNode;
@@ -140,6 +140,9 @@ function hint(children: ReactNode): { iconOnly: boolean; text: string } {
   };
 }
 
+// Overloads, not one union, so a handler passed with `render` still gets its event type.
+function Root(props: ButtonRootProps): ReactElement;
+function Root(props: ButtonRenderedProps): ReactElement;
 function Root({
   variant = 'primary',
   className,
@@ -158,7 +161,7 @@ function Root({
   onBlur,
   render,
   ...props
-}: ButtonRootProps) {
+}: ButtonRootProps | ButtonRenderedProps) {
   const buttonRef = useRef<HTMLElement | null>(null);
   const toggle = pressedProp !== undefined || defaultPressed !== undefined;
   const [pressed, setPressed] = useControlledState(pressedProp, defaultPressed ?? false);

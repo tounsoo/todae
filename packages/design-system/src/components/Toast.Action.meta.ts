@@ -18,5 +18,11 @@ export const meta = {
       required: false,
       description: "Runs the action. Call event.preventDefault() to keep the toast open.",
     },
+    {
+      name: "render",
+      type: "(props: ButtonRenderProps) => React.ReactElement",
+      required: false,
+      description: "Draws the action on a link, such as View, as Button.Root's render does.",
+    },
   ],
 } as const satisfies ComponentMeta;
