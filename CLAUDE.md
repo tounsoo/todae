@@ -28,4 +28,4 @@ These lines adapt pstack to this environment:
 - A `<plugin>` path in a skill means `.claude/`.
 - `Agent` has no `readonly` parameter. Where a skill spawns a subagent with `readonly: true`, add a line to its prompt telling it not to edit files, commit, or push.
 - GitHub work uses the GitHub MCP tools, not `gh`, Origin, or the `watch-pr` script.
-- Fable runs only with Ben's approval, as the model sheet says. `update-pstack.sh` never touches the sheet, and it rewrites skill defaults that name `fable` to `opus`.
+- Fable runs only where the model sheet names it or Ben approves it in the run. `update-pstack.sh` never touches the sheet, and it rewrites skill defaults that name `fable` to `opus`.
