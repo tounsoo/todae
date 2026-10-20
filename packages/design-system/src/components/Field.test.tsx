@@ -813,6 +813,12 @@ describe('Field.ChipInput', () => {
     expect(onCommit).not.toHaveBeenCalled();
   });
 
+  it('leaves the Enter that ends an IME composition in Safari to the input', () => {
+    const { onCommit } = renderField({ inputValue: '한' });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter', keyCode: 229 })).toBe(true);
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
   it('removes the last chip on empty Backspace', () => {
     const { onChipRemove, rerender } = renderField({
       chips: ['Alpha', 'Beta', 'Gamma'],

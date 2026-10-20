@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { Button } from '../components/Button.js';
 import { Field } from '../components/Field.js';
 import { OptionList } from '../components/OptionList.js';
 import { Popover } from '../components/Popover.js';
@@ -8,7 +9,7 @@ import { resetMatchMedia, setMatchMedia } from '../test/setup.js';
 import * as api from '../index.js';
 import type { BottomSheetRootProps } from '../components/BottomSheet.js';
 import type { DialogRootProps } from '../components/Dialog.js';
-import { useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { StringsProvider } from '../providers/StringsProvider.js';
 import {
   useCombobox,
@@ -1077,5 +1078,160 @@ describe('useCombobox overlay names', () => {
     const { result } = renderHook(() => useCombobox({ options: OPTIONS, presentation: 'dialog' }), { wrapper });
     expect(result.current.getDialogProps()['aria-label']).toBe('Choix');
     expect(result.current.getSheetProps()['aria-label']).toBe('Choix');
+  });
+});
+
+describe('useCombobox async create', () => {
+  function deferredCreate() {
+    const calls: { resolve: (value: string) => void; reject: (reason: unknown) => void }[] = [];
+    const onCreate = vi.fn(
+      () =>
+        new Promise<string>((resolve, reject) => {
+          calls.push({ resolve, reject });
+        }),
+    );
+    return { onCreate, calls };
+  }
+
+  function multiCreate(onCreate: (label: string) => Promise<string>) {
+    return renderHook(() =>
+      useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        allowCreate: true,
+        presentation: 'popover',
+        defaultOpen: true,
+        onCreate,
+      }),
+    );
+  }
+
+  it('runs onCreate once while its promise is pending', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toEqual(['new']);
+  });
+
+  it('keeps a selection made while the create is pending', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    act(() => result.current.select('react'));
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toEqual(['react', 'new']);
+  });
+
+  it('reports a rejected create in error and lets the user try again', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    const failure = new Error('taken');
+    act(() => result.current.setInputValue('new'));
+    act(() => result.current.create());
+    await act(async () => calls[0]?.reject(failure));
+    expect(result.current.error).toBe(failure);
+    expect(result.current.value).toEqual([]);
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('useCombobox keys', () => {
+  it('leaves the Enter that ends an IME composition in Safari to the input', () => {
+    const onChange = vi.fn();
+    render(<SingleBox defaultOpen onValueChange={onChange} />);
+    expect(fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Enter', keyCode: 229 })).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('leaves Enter to the form while a single list is closed', () => {
+    const onChange = vi.fn();
+    render(<SingleBox onValueChange={onChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('does not toggle the last highlighted option with Enter while a multiple list is closed', () => {
+    const onChange = vi.fn();
+    render(<MultiCreateBox onChange={onChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 're' } });
+    fireEvent.keyDown(input, { key: 'Tab' });
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
+describe('useCombobox reset', () => {
+  it('goes through the change callbacks, so a controlled combobox resets', () => {
+    const onValueChange = vi.fn();
+    const onInputValueChange = vi.fn();
+    const onOpenChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({
+        options: OPTIONS,
+        presentation: 'popover',
+        value: 'react',
+        inputValue: 'React',
+        open: true,
+        onValueChange,
+        onInputValueChange,
+        onOpenChange,
+      }),
+    );
+    act(() => result.current.reset());
+    expect(onValueChange).toHaveBeenCalledWith(null);
+    expect(onInputValueChange).toHaveBeenCalledWith('');
+    expect(onOpenChange).toHaveBeenCalledWith(false, 'input-clear');
+  });
+
+  it('resets a controlled multiple value through onValueChange', () => {
+    const onValueChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        presentation: 'popover',
+        value: ['react'],
+        onValueChange,
+      }),
+    );
+    act(() => result.current.reset());
+    expect(onValueChange).toHaveBeenCalledWith([]);
+  });
+});
+
+describe('useCombobox trigger props', () => {
+  function SheetTrigger({ onOpenChange }: { onOpenChange: () => void }) {
+    const ref = useRef<HTMLButtonElement | null>(null);
+    const cb = useCombobox({ options: OPTIONS, presentation: 'sheet', onOpenChange });
+    return (
+      <Button.Root
+        {...cb.getTriggerProps({ ref, onClick: (event) => event.preventDefault() })}
+        data-same-ref={String(ref.current !== null && ref.current === cb.triggerRef.current)}
+      >
+        Pick
+      </Button.Root>
+    );
+  }
+
+  it('skips the toggle when the caller prevents the click, and keeps the caller ref', () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<SheetTrigger onOpenChange={onOpenChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pick' }));
+    expect(onOpenChange).not.toHaveBeenCalled();
+    rerender(<SheetTrigger onOpenChange={onOpenChange} />);
+    expect(screen.getByRole('button', { name: 'Pick' }).getAttribute('data-same-ref')).toBe('true');
   });
 });
