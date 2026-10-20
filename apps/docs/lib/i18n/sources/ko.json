@@ -515,7 +515,7 @@
     "## Empty and create": "e2b8272c60fa",
     "## Highlight matches": "30c2e008f88e",
     "## Composition rules": "6eb89b3bf8e3",
-    "## Accessible composition": "a38089d6e954",
+    "## Accessible composition": "adce8796fd84",
     "## Hooks": "3218ba8110b3",
     "(section order)": "b8b8a3257e63"
   },
@@ -734,7 +734,7 @@
   "utilities/use-chip-field": {
     "(top)": "5629127518fd",
     "# useChipField": "9f64affef382",
-    "## Accessible composition": "8f9103997416",
+    "## Accessible composition": "ecc22b2f53d4",
     "## When to use": "8397cb9fb880",
     "## Props": "dfc821979ea8",
     "(section order)": "8f63b9364d59"
@@ -758,7 +758,7 @@
   "utilities/use-combobox": {
     "(top)": "e79476ff32f4",
     "# useCombobox": "afbef647bfba",
-    "## Accessible composition": "1b38cfebcdfc",
+    "## Accessible composition": "5e6f1f2b9a94",
     "## When to use": "cc4af763e6a8",
     "## Props": "f8b827f1b42b",
     "(section order)": "80890c96c652"
