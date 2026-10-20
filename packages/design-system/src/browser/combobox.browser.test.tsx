@@ -1,7 +1,17 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { cdp, userEvent } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
-import { Field, Label, OptionList, Popover, useCombobox, type ComboboxOption } from '../index.js';
+import {
+  BottomSheet,
+  Button,
+  Dialog,
+  Field,
+  Label,
+  OptionList,
+  Popover,
+  useCombobox,
+  type ComboboxOption,
+} from '../index.js';
 
 /** vitest types the session without its methods; Playwright's session has `send`. */
 const session = () => cdp() as unknown as { send(method: string, params?: object): Promise<unknown> };
@@ -35,9 +45,7 @@ function LabelledBox() {
   const cb = useCombobox({ options: FRAMEWORKS, presentation: 'popover' });
   return (
     <div data-appearance="light" data-density="comfortable">
-      <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>
-        Framework
-      </Label.Root>
+      <Label.Root {...cb.getLabelProps()}>Framework</Label.Root>
       <Field.Root {...cb.getAnchorProps()}>
         <Field.TextInput {...cb.getInputProps()} />
       </Field.Root>
@@ -59,5 +67,63 @@ describe('useCombobox listbox name', () => {
     await userEvent.keyboard('re');
     await waitFor(() => expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('true'));
     await expect.poll(listboxNames).toEqual(['Framework']);
+  });
+});
+
+function SheetBox() {
+  const cb = useCombobox({ options: FRAMEWORKS, presentation: 'sheet' });
+  return (
+    <div data-appearance="light" data-density="comfortable">
+      <Label.Root {...cb.getLabelProps()}>Framework</Label.Root>
+      <Button.Root {...cb.getTriggerProps()}>Choose</Button.Root>
+      <BottomSheet.Root {...cb.getSheetProps()}>
+        <BottomSheet.Body>
+          <Field.Root id={cb.ids.input} aria-label="Search">
+            <Field.TextInput {...cb.getInputProps()} />
+          </Field.Root>
+          <OptionList.Root {...cb.getListboxProps()}>
+            {cb.items.map((item) => (
+              <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+            ))}
+          </OptionList.Root>
+        </BottomSheet.Body>
+      </BottomSheet.Root>
+    </div>
+  );
+}
+
+function PaletteBox() {
+  const cb = useCombobox({ options: FRAMEWORKS, presentation: 'dialog' });
+  return (
+    <div data-appearance="light" data-density="comfortable">
+      <Button.Root {...cb.getTriggerProps()}>Open palette</Button.Root>
+      <Dialog.Root {...cb.getDialogProps()} aria-label="Commands">
+        <Field.Root id={cb.ids.input} aria-label="Command">
+          <Field.TextInput {...cb.getInputProps()} />
+        </Field.Root>
+        <OptionList.Root {...cb.getListboxProps({ 'aria-label': 'Commands' })}>
+          {cb.items.map((item) => (
+            <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+          ))}
+        </OptionList.Root>
+      </Dialog.Root>
+    </div>
+  );
+}
+
+describe('useCombobox listbox name in a sheet or dialog', () => {
+  it('names a sheet\'s listbox by the label beside the trigger', async () => {
+    render(<SheetBox />);
+    await userEvent.click(screen.getByText('Choose'));
+    await waitFor(() => expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('true'));
+    await expect.poll(listboxNames).toEqual(['Framework']);
+  });
+
+  it('names a listbox with no visible label by the aria-label passed to getListboxProps', async () => {
+    render(<PaletteBox />);
+    await userEvent.click(screen.getByRole('button', { name: 'Open palette' }));
+    await waitFor(() => expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('true'));
+    await expect.poll(listboxNames).toEqual(['Commands']);
+    expect(document.querySelector('[role="listbox"]')?.hasAttribute('aria-labelledby')).toBe(false);
   });
 });

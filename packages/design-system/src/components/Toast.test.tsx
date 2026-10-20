@@ -516,6 +516,7 @@ describe('Toast', () => {
     };
     press({}, true);
     press({ isComposing: true });
+    press({ keyCode: 229 } as KeyboardEventInit);
     press({ repeat: true });
     expect(document.activeElement).not.toBe(region);
     press({});
