@@ -1270,6 +1270,132 @@ describe('useCombobox async create', () => {
     expect(result.current.creating).toBe(false);
   });
 
+  it('runs a create for another label while one is pending in multiple mode', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'a');
+    act(() => result.current.create());
+    type(result, 'b');
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(2);
+    await act(async () => calls[1]?.resolve('b'));
+    expect(result.current.creating).toBe(true);
+    await act(async () => calls[0]?.resolve('a'));
+    expect(result.current.value).toEqual(['b', 'a']);
+    expect(result.current.creating).toBe(false);
+  });
+
+  it('disables the create row of a pending label, so arrows skip it and Enter does not run it again', async () => {
+    const { onCreate } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    const row = result.current.items.find((item) => item.kind === 'create');
+    expect(row && result.current.getOptionProps(row).disabled).toBe(true);
+    expect(result.current.activeValue).toBeNull();
+    let handled = false;
+    act(() => {
+      handled = result.current.getChipInputProps().onCommit('new') !== false;
+    });
+    expect(handled).toBe(true);
+    expect(onCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops a single create that resolves after Escape clears the text of a closed list', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const onOpenChange = vi.fn();
+    const { result } = singleCreate(onCreate, { onOpenChange });
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.setOpen(false, 'escape'));
+    act(() => result.current.getInputProps().onKeyDown?.({ key: 'Escape', preventDefault() {} } as never));
+    onOpenChange.mockClear();
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBeNull();
+    expect(result.current.inputValue).toBe('');
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('drops a single create that resolves after the consumer sets other text', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.setInputValue(''));
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBeNull();
+    expect(result.current.inputValue).toBe('');
+  });
+
+  it('commits a single create after Escape closes the list, without closing it again', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const onOpenChange = vi.fn();
+    const { result } = singleCreate(onCreate, { onOpenChange });
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.setOpen(false, 'escape'));
+    onOpenChange.mockClear();
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.value).toBe('new');
+    expect(result.current.inputValue).toBe('new');
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('applies a single create in full when onValueChange throws, and reports the throw', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const failure = new Error('rejected by the store');
+    const { result } = singleCreate(onCreate, {
+      onValueChange: () => {
+        throw failure;
+      },
+    });
+    type(result, 'new');
+    act(() => result.current.create());
+    await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.createError).toBe(failure);
+    expect(result.current.value).toBe('new');
+    expect(result.current.inputValue).toBe('new');
+    expect(result.current.open).toBe(false);
+    expect(result.current.creating).toBe(false);
+  });
+
+  it.each([
+    ['a pick', (cb: UseComboboxResult) => cb.select('react')],
+    ['a removed chip', (cb: UseComboboxResult) => cb.remove('vue')],
+    ['clear()', (cb: UseComboboxResult) => cb.clear()],
+  ])('clears createError on %s', async (_name, act_) => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = renderHook(() =>
+      useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        allowCreate: true,
+        presentation: 'popover',
+        defaultOpen: true,
+        defaultValue: ['vue'],
+        onCreate,
+      }),
+    );
+    type(result, 'new');
+    act(() => result.current.create());
+    await act(async () => calls[0]?.reject(new Error('taken')));
+    expect(result.current.createError).not.toBeNull();
+    act(() => act_(result.current));
+    expect(result.current.createError).toBeNull();
+  });
+
+  it('clears createError when the list opens', async () => {
+    const { onCreate, calls } = deferredCreate();
+    const { result } = multiCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    await act(async () => calls[0]?.reject(new Error('taken')));
+    act(() => result.current.setOpen(false));
+    expect(result.current.createError).not.toBeNull();
+    act(() => result.current.setOpen(true));
+    expect(result.current.createError).toBeNull();
+  });
+
   it('leaves a load error showing while a create runs', async () => {
     const onCreate = vi.fn(() => new Promise<string>(() => undefined));
     const { result } = renderHook(() =>
@@ -1310,6 +1436,14 @@ describe('useCombobox keys', () => {
     expect(input.getAttribute('aria-expanded')).toBe('false');
     expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true);
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('leaves Enter to the form on an open list with no row and no create row', () => {
+    render(<SingleBox defaultOpen />);
+    const input = screen.getByRole('combobox');
+    fireEvent.change(input, { target: { value: 'zzz' } });
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true);
   });
 
   it('does not toggle the last highlighted option with Enter while a multiple list is closed', () => {

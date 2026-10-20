@@ -127,3 +127,105 @@ describe('useCombobox listbox name in a sheet or dialog', () => {
     expect(document.querySelector('[role="listbox"]')?.hasAttribute('aria-labelledby')).toBe(false);
   });
 });
+
+/** The name Chromium's own accessibility tree gives each node of a role, in every frame. */
+async function axNames(role: string): Promise<string[]> {
+  const { frameTree } = (await session().send('Page.getFrameTree')) as { frameTree: FrameTree };
+  const names: string[] = [];
+  for (const frameId of frameIds(frameTree)) {
+    const { nodes } = (await session().send('Accessibility.getFullAXTree', { frameId })) as { nodes: AXNode[] };
+    for (const node of nodes) if (node.role?.value === role) names.push(node.name?.value ?? '');
+  }
+  return names;
+}
+
+describe('useCombobox trigger name', () => {
+  it('names a sheet trigger by the label and its own text', async () => {
+    render(<SheetBox />);
+    await expect.poll(() => axNames('button')).toContain('Framework Choose');
+  });
+});
+
+describe('useCombobox Enter with nothing to commit', () => {
+  function FormBox({ onSubmit }: { onSubmit: () => void }) {
+    const cb = useCombobox({ options: FRAMEWORKS, presentation: 'popover' });
+    return (
+      <form
+        data-appearance="light"
+        data-density="comfortable"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit();
+        }}
+      >
+        <Label.Root {...cb.getLabelProps()}>Framework</Label.Root>
+        <Field.Root {...cb.getAnchorProps()}>
+          <Field.TextInput {...cb.getInputProps()} />
+        </Field.Root>
+        <Popover.Root {...cb.getPopoverProps()}>
+          <OptionList.Root {...cb.getListboxProps()}>
+            {cb.items.map((item) => (
+              <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+            ))}
+          </OptionList.Root>
+        </Popover.Root>
+        <button type="submit">Save</button>
+      </form>
+    );
+  }
+
+  it('submits the form from an open list with no rows', async () => {
+    let submits = 0;
+    render(<FormBox onSubmit={() => (submits += 1)} />);
+    await userEvent.click(screen.getByRole('combobox'));
+    await userEvent.keyboard('zzz');
+    expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('true');
+    await userEvent.keyboard('{Enter}');
+    expect(submits).toBe(1);
+  });
+});
+
+describe('useCombobox reset reopening a dialog', () => {
+  function ResetPalette() {
+    const cb = useCombobox({ options: FRAMEWORKS, presentation: 'dialog', defaultOpen: true });
+    return (
+      <div data-appearance="light" data-density="comfortable">
+        <Button.Root {...cb.getTriggerProps()}>Open palette</Button.Root>
+        <Button.Root onClick={() => cb.setOpen(true)}>Open from code</Button.Root>
+        <Button.Root onClick={() => cb.reset()}>Reset</Button.Root>
+        <Dialog.Root {...cb.getDialogProps()} aria-label="Commands">
+          <Field.Root id={cb.ids.input} aria-label="Command">
+            <Field.TextInput {...cb.getInputProps()} />
+          </Field.Root>
+          <OptionList.Root {...cb.getListboxProps({ 'aria-label': 'Commands' })}>
+            {cb.items.map((item) => (
+              <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
+            ))}
+          </OptionList.Root>
+        </Dialog.Root>
+      </div>
+    );
+  }
+
+  it('returns focus to what had it when reset reopened the dialog', async () => {
+    render(<ResetPalette />);
+    const combobox = () => screen.getByRole('combobox');
+    await waitFor(() => expect(document.activeElement).toBe(combobox()));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('combobox')).toBeNull());
+    // Nothing has focus when this open starts, so the hook sends focus back to the trigger.
+    (document.activeElement as HTMLElement | null)?.blur();
+    screen.getByRole('button', { name: 'Open from code' }).click();
+    await waitFor(() => expect(document.activeElement).toBe(combobox()));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Open palette' })));
+
+    const reset = screen.getByRole('button', { name: 'Reset' });
+    await userEvent.click(reset);
+    await waitFor(() => expect(document.activeElement).toBe(combobox()));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('combobox')).toBeNull());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(document.activeElement).toBe(reset);
+  });
+});
