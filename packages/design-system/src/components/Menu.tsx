@@ -209,6 +209,9 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
   const wire = ctx.popover.getTriggerProps({
     ...props,
     ref: refs,
+    onClick: composeHandlers(onClick, () => {
+      openEnd.current = null;
+    }),
     // A key's request for an end lasts while the trigger has focus, so one
     // the owner refused does not carry over to a later open from code. This
     // runs even when the consumer's handler prevents the event.
@@ -220,11 +223,6 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
   return (
     <Button.Root
       {...wire}
-      // A click the consumer prevents does not open the menu.
-      onClick={composeHandlers(onClick, (event: MouseEvent<HTMLButtonElement>) => {
-        openEnd.current = null;
-        wire.onClick(event);
-      })}
       id={ctx.triggerId}
       tooltip={tooltip}
       onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLButtonElement>) => {

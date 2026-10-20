@@ -23,11 +23,11 @@ const tooltip = useTooltip();
 
 ## Accessible composition
 
-**Todae handles:** `getTriggerProps` adds pointer and focus handlers and, while the tip is open, an `aria-describedby` that points at it. Focus opens the tip at once, so keyboard users get it too. `Tooltip.Root` adds `role="tooltip"`, or `role="dialog"` with `interactive: true`. Escape closes the tip, and from inside an interactive one sends focus back to the trigger.
+**Todae handles:** `getTriggerProps` adds pointer and focus handlers and, while the tip is open, adds the tip's id to the trigger's `aria-describedby`, after any ids you passed. Focus opens the tip at once, so keyboard users get it too. `Tooltip.Root` adds `role="tooltip"`, or `role="dialog"` with `interactive: true`. Escape closes the tip, and from inside an interactive one sends focus back to the trigger.
 
 **You supply:** A trigger that takes focus. The getter adds no `tabIndex` or role, so give a wrap that is not tabbable `tabIndex={0}`, as above. A name for the trigger itself: `aria-describedby` makes the tip a description, not a name, so an icon-only trigger needs `aria-label`. With `interactive: true`, exactly one of `aria-label` or `aria-labelledby` on `Tooltip.Root`, and only links inside.
 
-**Watch for:** While open, the getter's `aria-describedby` replaces one you passed instead of joining it, so that description is not read while the tip shows. Pass your own `onFocus`, `onBlur`, `onPointerEnter` and `onPointerLeave` through `getTriggerProps(props)`; put after the spread, they replace the tip's. Set `tooltip={false}` on a `Button.Root` when the hook owns its tip.
+**Watch for:** Pass your own `aria-describedby`, `onFocus`, `onBlur`, `onPointerEnter` and `onPointerLeave` through `getTriggerProps(props)`; put after the spread, they replace the tip's. Your handler runs first. Calling `event.preventDefault()` in your `onPointerEnter` or `onFocus` keeps the tip from opening; a prevented `onPointerLeave` or `onBlur` still closes it. Set `tooltip={false}` on a `Button.Root` when the hook owns its tip.
 
 ## When to use
 
