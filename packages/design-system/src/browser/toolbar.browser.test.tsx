@@ -72,6 +72,22 @@ describe('Toolbar in a browser', () => {
     expect(document.activeElement).toBe(button('Bold'));
   });
 
+  it('keeps its arrow keys inside a wrapper under aria-hidden', async () => {
+    render(
+      <div aria-hidden="true">
+        <Toolbar.Root aria-label="Format">
+          <button type="button">Bold</button>
+          <button type="button">Italic</button>
+        </Toolbar.Root>
+      </div>,
+    );
+    const bold = screen.getByRole('button', { name: 'Bold', hidden: true });
+    const italic = screen.getByRole('button', { name: 'Italic', hidden: true });
+    bold.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(document.activeElement).toBe(italic);
+  });
+
   it('draws the separator and marks a pressed toggle beyond its color', () => {
     render(
       <main data-appearance="light" data-density="comfortable">
