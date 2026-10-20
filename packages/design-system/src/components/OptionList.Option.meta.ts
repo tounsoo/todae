@@ -21,7 +21,7 @@ export const meta = {
       type: 'boolean',
       required: false,
       default: 'false',
-      description: 'Skips pointer and keyboard selection. Pass aria-disabled without it for an option that is unavailable for now but stays reachable.',
+      description: 'Skips pointer and keyboard selection. Use aria-disabled instead of disabled for an option that is unavailable for now but stays reachable.',
     },
   ],
 } as const satisfies ComponentMeta;

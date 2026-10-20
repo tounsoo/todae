@@ -51,7 +51,7 @@ import { Check } from 'lucide-react';
 
 ## Accessible composition
 
-**Todae handles:** `OptionList.Root` is a `role="listbox"` with `aria-activedescendant` on the active option, and `aria-multiselectable` in multiple mode. Each `OptionList.Option` is a `role="option"` with `aria-selected`, `aria-disabled` when disabled, and an id built from the list's `id` and its `value`. The arrow keys, Home and End skip disabled options and stop at the ends. An option the keyboard moves to scrolls into view inside its scroll box. Focus stays on the list, or on the input that owns it.
+**Todae handles:** `OptionList.Root` is a `role="listbox"` with `aria-activedescendant` on the active option, and `aria-multiselectable` in multiple mode. Each `OptionList.Option` is a `role="option"` with `aria-selected`, `aria-disabled` when disabled, and an id built from the list's `id` and its `value`. The arrow keys, Home and End skip disabled options and stop at the ends. An option with `aria-disabled` and no `disabled` stays reachable: the keys and a click make it active, but it cannot be selected. An option the keyboard moves to scrolls into view inside its scroll box. Focus stays on the list, or on the input that owns it.
 
 **You supply:** A name with `aria-label`, or `aria-labelledby` pointing at a visible label; the type does not require one. Option text that reads well on its own, since the string is the option's name. When an input owns focus, wire it with [useCombobox](/utilities/use-combobox), which gives the list `tabIndex={-1}` and puts `aria-activedescendant`, `aria-controls` and `aria-expanded` on the input.
 

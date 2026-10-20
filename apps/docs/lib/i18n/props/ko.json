@@ -1329,8 +1329,8 @@
       "ko": "보이는 레이블. 텍스트만 지원합니다."
     },
     "disabled": {
-      "en": "Skips pointer and keyboard selection. Pass aria-disabled without it for an option that is unavailable for now but stays reachable.",
-      "ko": "포인터와 키보드 선택에서 제외합니다. 지금은 쓸 수 없지만 계속 닿을 수 있는 옵션에는 이것 없이 aria-disabled를 넘기세요."
+      "en": "Skips pointer and keyboard selection. Use aria-disabled instead of disabled for an option that is unavailable for now but stays reachable.",
+      "ko": "포인터와 키보드 선택에서 제외합니다. 지금은 쓸 수 없지만 계속 닿을 수 있는 옵션에는 disabled 대신 aria-disabled를 쓰세요."
     }
   },
   "OptionList.Root": {

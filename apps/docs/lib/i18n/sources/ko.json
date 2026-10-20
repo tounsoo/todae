@@ -240,7 +240,7 @@
     "## Rows": "9b376e3a521a",
     "## States": "c13eefed8eee",
     "## Icons": "00fd1faa869f",
-    "## Accessible composition": "642b50698733",
+    "## Accessible composition": "37bb9df73b33",
     "## When to use": "d57fe8233a0b",
     "### Field.ChipInput": "60917640f930",
     "## Props": "79a006629aa3",
@@ -444,7 +444,7 @@
     "(top)": "fc5bc6e35f0e",
     "# OptionList": "cd3a0a738656",
     "## Icons": "c64f640cde20",
-    "## Accessible composition": "8599bfab1214",
+    "## Accessible composition": "a0dafde4c209",
     "## When to use": "f5fbfd42f51c",
     "## Props": "5341a504c460",
     "(section order)": "1676be320e51"
@@ -758,7 +758,7 @@
   "utilities/use-combobox": {
     "(top)": "e79476ff32f4",
     "# useCombobox": "afbef647bfba",
-    "## Accessible composition": "5e6f1f2b9a94",
+    "## Accessible composition": "ba92ea27c310",
     "## When to use": "cc4af763e6a8",
     "## Props": "f8b827f1b42b",
     "(section order)": "80890c96c652"
