@@ -1,8 +1,5 @@
-/**
- * Every element Tab could stop on, before the checks that it is enabled,
- * shown and not taken out of the order by a negative tabindex.
- */
-export const TABBABLE_CANDIDATES = /* @__PURE__ */ [
+// Every kind of element Tab could stop on.
+const CANDIDATES = /* @__PURE__ */ [
   'a[href]',
   'button',
   'input:not([type="hidden"])',
@@ -28,21 +25,68 @@ export function inToastHostWithin(el: Element, root: Element): boolean {
   return Boolean(host && host !== root && root.contains(host));
 }
 
-/** Whether Tab stops on `el`, one of `root`'s TABBABLE_CANDIDATES, rather than on a toast moved into `root`. */
-export function isTabbable(el: HTMLElement, root: HTMLElement): boolean {
+/**
+ * Whether Tab would stop on `el` were it enabled and shown: a kind of element
+ * Tab stops on, not taken out by a negative tabindex, and not inside a
+ * `hidden` or `aria-hidden` subtree. Styles and `disabled` are not read.
+ */
+export function inTabOrder(el: HTMLElement): boolean {
+  if (!el.matches(CANDIDATES)) return false;
   // Engines differ on the default tabIndex of some candidates, such as
   // contenteditable, so only a tabindex that is set takes one out.
-  if (el.hasAttribute('tabindex') && el.tabIndex < 0) return false;
-  if (el.closest('[disabled], [hidden]')) return false;
+  if (el.hasAttribute('tabindex')) {
+    if (el.tabIndex < 0) return false;
+  } else if (el.localName === 'summary') {
+    // Only a <details>'s own summary, its first summary child, takes focus.
+    const details = el.parentElement;
+    if (details?.localName !== 'details' || details.querySelector(':scope > summary') !== el) return false;
+  }
+  return !el.closest('[hidden], [aria-hidden="true"]');
+}
+
+/**
+ * Whether focus can move to `el` now: not inert, and not hidden by a
+ * stylesheet, `visibility`, or a closed `<details>`. `visibility: hidden`
+ * blocks focus too. Tabindex and `disabled` are not read.
+ */
+export function isReachable(el: HTMLElement): boolean {
   if (el.closest('[inert]')) return false;
-  if (el.getAttribute('aria-hidden') === 'true') return false;
-  if (inToastHostWithin(el, root)) return false;
-  // Hidden by a stylesheet, visibility, or a closed <details>. The costliest
-  // check, so last. Without checkVisibility, only an inline display:none is seen.
+  // Without checkVisibility, only an inline display:none is seen.
   return el.checkVisibility?.({ visibilityProperty: true }) ?? el.style.display !== 'none';
 }
 
-/** The elements in `root` that Tab stops on, in document order. */
+/** Whether Tab stops on `el` now. The one answer to "can Tab reach this". */
+export function isTabbable(el: HTMLElement): boolean {
+  return inTabOrder(el) && !el.matches(':disabled') && isReachable(el);
+}
+
+// root's candidates, less the toasts moved into it.
+function candidatesIn(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>(CANDIDATES)].filter((el) => !inToastHostWithin(el, root));
+}
+
+/** The elements in `root` that Tab stops on now, in document order. */
 export function getTabbables(root: HTMLElement): HTMLElement[] {
-  return [...root.querySelectorAll<HTMLElement>(TABBABLE_CANDIDATES)].filter((el) => isTabbable(el, root));
+  return candidatesIn(root).filter(isTabbable);
+}
+
+/**
+ * The elements in `root` that Tab stops on or would once shown, disabled ones
+ * too, in document order. For a question about what content holds rather than
+ * what Tab reaches this moment, such as whether a closed panel holds a button.
+ */
+export function getTabOrder(root: HTMLElement): HTMLElement[] {
+  return candidatesIn(root).filter(inTabOrder);
+}
+
+/**
+ * The first element in `root` that Tab stops on now and `accept` takes. It
+ * stops at the first match, and runs `accept` before the costlier checks.
+ */
+export function firstTabbable(root: HTMLElement, accept?: (el: HTMLElement) => boolean): HTMLElement | null {
+  for (const el of root.querySelectorAll<HTMLElement>(CANDIDATES)) {
+    if (inToastHostWithin(el, root) || (accept && !accept(el))) continue;
+    if (isTabbable(el)) return el;
+  }
+  return null;
 }

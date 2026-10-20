@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { useChipListInternal } from '../hooks/useChipList.js';
 import { usePopover } from '../hooks/usePopover.js';
-import { isTabbable, TABBABLE_CANDIDATES } from '../overlay/tabbables.js';
+import { firstTabbable } from '../overlay/tabbables.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { Chip, type ChipTone } from './Chip.js';
 import { useChipKeys } from './chipKeys.js';
@@ -48,17 +48,13 @@ export type ChipListRootProps = {
   panelLabel?: (n: number) => string;
 } & Omit<ComponentPropsWithRef<'div'>, 'children'>;
 
-// The next tabbable control after +N, skipping its own panel. Cheap checks
-// first, so the costly ones run on candidates after +N only.
+// The next tabbable control after +N, skipping its own panel.
 function focusAfter(el: HTMLElement | null) {
   if (!el) return;
   const panel = document.getElementById(el.getAttribute('aria-controls') ?? '');
-  const next = [...document.body.querySelectorAll<HTMLElement>(TABBABLE_CANDIDATES)].find(
-    (node) =>
-      (el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 &&
-      !panel?.contains(node) &&
-      !node.closest('[aria-hidden="true"]') &&
-      isTabbable(node, document.body),
+  const next = firstTabbable(
+    document.body,
+    (node) => (el.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && !panel?.contains(node),
   );
   (next ?? el).focus();
 }

@@ -1,4 +1,4 @@
-import { getTabbables } from '../overlay/tabbables.js';
+import { getTabOrder } from '../overlay/tabbables.js';
 
 export type TipAttrs = {
   readonly id: string;
@@ -55,7 +55,8 @@ export function isMounted(surface: TooltipSurface, open: boolean): boolean {
 }
 
 export function contentPolicyError(surface: TooltipSurface, el: HTMLElement): string | null {
-  const tabbables = getTabbables(el);
+  // What the content holds, not what Tab reaches now: a panel mounts closed.
+  const tabbables = getTabOrder(el).filter((node) => !node.matches(':disabled'));
   if (surface.kind === 'tip') {
     return tabbables.length > 0 ? 'Tooltip is text-only. Use useTooltip({ interactive: true }) for a link.' : null;
   }

@@ -1,12 +1,8 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
-import { isTabbable, TABBABLE_CANDIDATES } from '../overlay/tabbables.js';
+import { firstTabbable } from '../overlay/tabbables.js';
 
 /** The direction a scroll area scrolls in. */
 export type ScrollAxis = 'block' | 'inline' | 'both';
-
-function hasTabbable(el: HTMLElement): boolean {
-  return [...el.querySelectorAll<HTMLElement>(TABBABLE_CANDIDATES)].some((node) => isTabbable(node, el));
-}
 
 function overflows(el: HTMLElement, axis: ScrollAxis): boolean {
   const block = el.scrollHeight > el.clientHeight;
@@ -35,17 +31,23 @@ export function useScrollTabStop(
       setTabStop(false);
       return;
     }
-    const measure = () => setTabStop(overflows(el, axis) && (focusable === true || !hasTabbable(el)));
+    const measure = () => setTabStop(overflows(el, axis) && (focusable === true || !firstTabbable(el)));
     measure();
     if (typeof ResizeObserver === 'undefined') return;
     const resize = new ResizeObserver(measure);
     resize.observe(el);
     if (content.current) resize.observe(content.current);
+    // Any attribute can hide or show a control, a class among them, and
+    // firstTabbable stops at the first match, so every change is measured.
     const mutations = new MutationObserver(measure);
-    mutations.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'href', 'tabindex'] });
+    mutations.observe(el, { childList: true, subtree: true, attributes: true });
+    // A <details> opening or closing shows or hides what it holds. Its toggle
+    // event does not bubble.
+    el.addEventListener('toggle', measure, true);
     return () => {
       resize.disconnect();
       mutations.disconnect();
+      el.removeEventListener('toggle', measure, true);
     };
   }, [scroller, content, axis, focusable]);
 

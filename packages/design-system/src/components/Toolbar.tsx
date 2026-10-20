@@ -7,14 +7,14 @@ import {
   type FocusEvent,
   type KeyboardEvent,
 } from 'react';
-import { useDomId } from './domId.js';
-import { isReachable, useRovingFocus } from '../hooks/useRovingFocus.js';
+import { useRovingFocus } from '../hooks/useRovingFocus.js';
+import { getTabOrder, isTabbable } from '../overlay/tabbables.js';
 import { cx } from './cx.js';
+import { useDomId } from './domId.js';
 import { useComposedRefs } from './props.js';
+import { focusWithoutScroll } from './revealRing.js';
 import styles from './Toolbar.module.css';
 import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from './toolbarContext.js';
-import { focusWithoutScroll } from './revealRing.js';
-import { TABBABLE_CANDIDATES } from '../overlay/tabbables.js';
 
 export type { ToolbarOrientation };
 
@@ -79,7 +79,6 @@ function isItem(el: HTMLElement, root: HTMLElement): boolean {
     !el.matches(TOOLBAR_BOUNDARY) &&
     el.parentElement?.closest(TOOLBAR_BOUNDARY) === root &&
     !el.matches(NOT_ITEM) &&
-    !el.matches('[tabindex^="-"]') &&
     !ownsArrows(el, root)
   );
 }
@@ -90,19 +89,18 @@ function isItem(el: HTMLElement, root: HTMLElement): boolean {
 // key press, so nothing goes stale.
 function runsOf(root: HTMLElement): HTMLElement[][] {
   const runs: HTMLElement[][] = [[]];
-  for (const el of root.querySelectorAll<HTMLElement>(TABBABLE_CANDIDATES)) {
-    if (el.matches(':disabled') || !isReachable(el)) continue;
+  for (const el of getTabOrder(root)) {
+    if (!isTabbable(el)) continue;
     if (isItem(el, root)) runs[runs.length - 1]!.push(el);
-    // Only something Tab stops on splits a run.
-    else if (!el.matches('[tabindex^="-"]')) runs.push([]);
+    else runs.push([]);
   }
   return runs.filter((run) => run.length > 0);
 }
 
-// The arrow keys' items, disabled ones too: useRovingFocus skips those, and
-// moves on from one that became disabled while focused.
+// The arrow keys' items, disabled and hidden ones too: useRovingFocus skips
+// those, and moves on from one that became disabled while focused.
 function itemsOf(root: HTMLElement): HTMLElement[] {
-  return [...root.querySelectorAll<HTMLElement>(TABBABLE_CANDIDATES)].filter((el) => isItem(el, root));
+  return getTabOrder(root).filter((el) => isItem(el, root));
 }
 
 function Root({

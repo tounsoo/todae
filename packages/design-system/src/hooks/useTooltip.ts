@@ -19,7 +19,7 @@ import {
   type TooltipOpenReason,
 } from '../components/Tooltip.intent.js';
 import type { TooltipWire } from '../components/Tooltip.wire.js';
-import { getTabbables } from '../overlay/tabbables.js';
+import { firstTabbable } from '../overlay/tabbables.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useComposedRefs, useStableComposedRef } from '../components/props.js';
 import { useDomId } from '../components/domId.js';
@@ -203,7 +203,7 @@ export function useTooltip<I extends boolean = false>(
     if (restoreEpoch === 0 || open) return;
     const trigger = triggerRef.current;
     if (!trigger) return;
-    (getTabbables(trigger)[0] ?? trigger).focus();
+    (firstTabbable(trigger) ?? trigger).focus();
   }, [open, restoreEpoch]);
 
   useEffect(() => {
