@@ -1,5 +1,6 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ChipList } from '../components/ChipList.js';
 import { Dialog } from '../components/Dialog.js';
 import { ScrollArea } from '../components/ScrollArea.js';
 import { Tooltip } from '../components/Tooltip.js';
@@ -95,6 +96,23 @@ describe('getTabbables in a browser', () => {
     await waitFor(() => expect(screen.getByTestId('area').tabIndex).toBe(0));
   });
 
+  it('gives a ScrollArea its own Tab stop once a data attribute hides the only control inside', async () => {
+    render(
+      <ScrollArea.Root data-testid="area" aria-label="Notes" style={{ height: 40 }}>
+        <style>{'[data-folded] { visibility: hidden }'}</style>
+        <button type="button">Edit</button>
+        <div style={{ height: 400 }} />
+      </ScrollArea.Root>,
+    );
+    await nextFrame();
+    await nextFrame();
+    expect(screen.getByTestId('area').tabIndex).not.toBe(0);
+    // ChipList's data-measuring and a closed Tooltip's missing data-open hide
+    // controls the same way.
+    screen.getByText('Edit').setAttribute('data-folded', '');
+    await waitFor(() => expect(screen.getByTestId('area').tabIndex).toBe(0));
+  });
+
   it('gives a ScrollArea its own Tab stop when its only summary is outside a details', async () => {
     render(
       <ScrollArea.Root data-testid="area" aria-label="Notes" style={{ height: 40 }}>
@@ -183,6 +201,22 @@ describe('getTabbables in a browser', () => {
     await nextFrame();
     await nextFrame();
     expect(area.tabIndex).not.toBe(0);
+  });
+
+  it('gives a ScrollArea no Tab stop of its own once a ChipList inside has measured its rows', async () => {
+    render(
+      <div data-appearance="light" data-density="comfortable">
+        <ScrollArea.Root data-testid="area" aria-label="Notes" style={{ height: 40, width: 320 }}>
+          <ChipList.Root aria-label="Tags" chips={['aa', 'bb']} maxRows={1} onRemove={() => undefined} />
+          <div style={{ height: 400 }} />
+        </ScrollArea.Root>
+      </div>,
+    );
+    const list = screen.getByRole('list', { name: 'Tags' });
+    await waitFor(() => expect(list.hasAttribute('data-measuring')).toBe(false));
+    await nextFrame();
+    await nextFrame();
+    expect(screen.getByTestId('area').tabIndex).not.toBe(0);
   });
 
   it('flags a button in an interactive Tooltip that mounts closed', () => {
