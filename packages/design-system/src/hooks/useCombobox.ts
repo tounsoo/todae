@@ -99,7 +99,8 @@ export type UseComboboxResult = {
   loading: boolean;
   error: unknown | null;
   retry: () => void;
-  ids: { input: string; listbox: string; trigger: string };
+  /** `label` is for the field's Label: the listbox takes its name from it. */
+  ids: { input: string; label: string; listbox: string; trigger: string };
   inputRef: RefObject<HTMLInputElement | null>;
   anchorRef: RefObject<HTMLDivElement | null>;
   triggerRef: RefObject<HTMLButtonElement | null>;
@@ -155,6 +156,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
   const uid = options.id?.replaceAll(':', '') ?? autoId;
   const ids = {
     input: `todae-cb-input-${uid}`,
+    label: `todae-cb-label-${uid}`,
     listbox: `todae-cb-list-${uid}`,
     trigger: `todae-cb-trigger-${uid}`,
   };
@@ -749,7 +751,7 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
         activeValue: resolvedActive,
         onActiveValueChange: highlight,
         tabIndex: -1,
-        'aria-labelledby': ids.input,
+        'aria-labelledby': ids.label,
       };
     }
     return {
@@ -760,9 +762,9 @@ export function useCombobox(options: UseComboboxOptions = {}): UseComboboxResult
       activeValue: resolvedActive,
       onActiveValueChange: highlight,
       tabIndex: -1,
-      'aria-labelledby': ids.input,
+      'aria-labelledby': ids.label,
     };
-  }, [highlight, ids.input, ids.listbox, multiValue, resolvedActive, select, selectionMode, singleValue]);
+  }, [highlight, ids.label, ids.listbox, multiValue, resolvedActive, select, selectionMode, singleValue]);
 
   const getOptionProps = useCallback((item: ComboboxItem): OptionListOptionProps => {
     if (item.kind === 'create') {

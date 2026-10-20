@@ -152,7 +152,7 @@
     "# Composition": "5df38cfb773f",
     "## Placing something new": "7535f6400597",
     "## Components": "9db230c231a6",
-    "## Recipes": "fe3389573b71",
+    "## Recipes": "07acc3bb5eb4",
     "## Hook": "8af7df6c27f7",
     "## Never": "683d91a3b1f8",
     "(section order)": "5f36e5fc4a2e"
@@ -507,22 +507,22 @@
     "(top)": "5c9493a206c8",
     "# Combobox": "bdfd58ac5cfe",
     "## Presentation": "58f8fe7fca53",
-    "## Popover · single": "69f4ac97d8a6",
-    "## Popover · multi": "e44788d3a52c",
-    "## Sheet": "74995ca1a533",
+    "## Popover · single": "8c95155da218",
+    "## Popover · multi": "652f0ebe16e9",
+    "## Sheet": "13b242e82d40",
     "## Auto": "4eba42da06ea",
     "## Async": "1535a85f7a01",
     "## Empty and create": "466ecda18e4d",
     "## Highlight matches": "30c2e008f88e",
     "## Composition rules": "6eb89b3bf8e3",
-    "## Accessible composition": "2876b46505fe",
+    "## Accessible composition": "8f413762db4d",
     "## Hooks": "3218ba8110b3",
     "(section order)": "b8b8a3257e63"
   },
   "recipes/command-palette": {
     "(top)": "b133afb40440",
-    "# Command palette": "7adc1fba52bb",
-    "## Accessible composition": "362e1cfca3f9",
+    "# Command palette": "bac0a089420b",
+    "## Accessible composition": "cb2ea250621d",
     "## When to use": "06c9b0d8a7e9",
     "(section order)": "46352d9bb2ec"
   },
@@ -757,8 +757,8 @@
   },
   "utilities/use-combobox": {
     "(top)": "e79476ff32f4",
-    "# useCombobox": "dd8c8f3ee64e",
-    "## Accessible composition": "47ddacf194b0",
+    "# useCombobox": "3756f43ad167",
+    "## Accessible composition": "c87c143199cd",
     "## When to use": "cc4af763e6a8",
     "## Props": "f8b827f1b42b",
     "(section order)": "80890c96c652"

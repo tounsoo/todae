@@ -10,7 +10,7 @@ import { ComboboxSingle } from '../../../../components/demos/ComboboxDemo';
 const cb = useCombobox({ options, presentation: 'popover' });
 
 <Field.Group>
-  <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
+  <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>Framework</Label.Root>
   <Field.Root {...cb.getAnchorProps()}>
     <Field.TextInput {...cb.getInputProps()} />
   </Field.Root>
@@ -30,11 +30,11 @@ const cb = useCombobox({ options, presentation: 'popover' });
 
 ## Accessible composition
 
-**Todae handles:** `getInputProps()` and `getChipInputProps()` make the input a `role="combobox"` with `aria-expanded`, `aria-controls` (the listbox id), `aria-autocomplete="list"`, `autoComplete="off"`, and `aria-activedescendant` on the active option while open, so focus stays in the input. ArrowDown, ArrowUp, Home and End open the list and move the active option, skipping disabled ones. Enter selects or creates, Escape closes, and Tab closes. `getListboxProps()` gives `OptionList.Root` the listbox id and `tabIndex={-1}`. `getTriggerProps()` sets `aria-haspopup="dialog"`, `aria-expanded` and `aria-controls`. Escape in a popover returns focus to the input; a sheet returns it to the trigger when it closes.
+**Todae handles:** `getInputProps()` and `getChipInputProps()` make the input a `role="combobox"` with `aria-expanded`, `aria-controls` (the listbox id), `aria-autocomplete="list"`, `autoComplete="off"`, and `aria-activedescendant` on the active option while open, so focus stays in the input. ArrowDown, ArrowUp, Home and End open the list and move the active option, skipping disabled ones. Enter selects or creates while the list is open; while it is closed, Enter is left to the form. Escape closes, and Tab closes. Keys that belong to an IME composition, such as the Enter that ends a Korean word, are left to the input. While an async `onCreate` is pending, another Enter or click does not run it again, and a rejection lands in `error`. `getListboxProps()` gives `OptionList.Root` the listbox id, `tabIndex={-1}` and `aria-labelledby` set to `ids.label`. `getTriggerProps(props)` sets `aria-haspopup="dialog"`, `aria-expanded` and `aria-controls`, merges your props and ref, and runs your `onClick` first: calling `preventDefault()` there skips the toggle. Escape in a popover returns focus to the input; a sheet returns it to the trigger when it closes.
 
-**You supply:** The input's name: a [Label](/label) whose `htmlFor` is `ids.input`, or `aria-label` on `Field.Root` inside a sheet or dialog. Trigger text that names the field and its value. A more specific name for the sheet or dialog when needed: `getSheetProps()` and `getDialogProps()` use the `options` string ("Options" by default), and an `aria-label` after the spread replaces it. Status text: the hook reports `loading`, `error` and `isEmpty` but renders and announces none of them.
+**You supply:** The input's name: a [Label](/label) whose `htmlFor` is `ids.input`, or `aria-label` on `Field.Root` inside a sheet or dialog. The listbox's name: give the field's Label `id={ids.label}`, or with no visible label, put `aria-label` on `OptionList.Root`. Trigger text that names the field and its value. A more specific name for the sheet or dialog when needed: `getSheetProps()` and `getDialogProps()` use the `options` string ("Options" by default), and an `aria-label` after the spread replaces it. Status text: the hook reports `loading`, `error` and `isEmpty` but renders and announces none of them.
 
-**Watch for:** Unmounting `OptionList.Root` while it is empty or loading: `aria-controls` then points at nothing, so set `hidden` instead. Your own `onKeyDown`, `onFocus` or `onBlur` after the spread, which replaces the hook's handlers. Buttons or links inside an option.
+**Watch for:** Unmounting `OptionList.Root` while it is empty or loading: `aria-controls` then points at nothing, so set `hidden` instead. Your own `onKeyDown`, `onFocus` or `onBlur` after the spread, which replaces the hook's handlers. A trigger's handlers go into `getTriggerProps({ … })` instead. Buttons or links inside an option.
 
 ## When to use
 

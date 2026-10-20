@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown, Search } from 'lucide-react';
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import {
   BottomSheet,
   Button,
@@ -55,7 +55,7 @@ export function ComboboxSingle() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
+        <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>Framework</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} />
           <Field.Icon>
@@ -78,7 +78,7 @@ export function ComboboxHighlight() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>City</Label.Root>
+        <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>City</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} placeholder="Try “san”" />
           <Field.Icon>
@@ -106,7 +106,7 @@ export function ComboboxMulti() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Type</Label.Root>
+        <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>Type</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.ChipInput {...cb.getChipInputProps()} />
           <Field.Icon>
@@ -129,16 +129,15 @@ export function ComboboxSheet() {
     presentation: 'sheet',
     defaultValue: 'sf',
   });
-  const labelId = useId();
   const selected = CITIES.find((city) => city.value === cb.value)?.label ?? 'Choose';
   return (
     <>
       <Field.Group>
-        <Label.Root id={labelId} htmlFor={cb.ids.trigger}>
+        <Label.Root id={cb.ids.label} htmlFor={cb.ids.trigger}>
           City
         </Label.Root>
         {/* Named by the label and its own text, so it reads "City, San Francisco". */}
-        <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${labelId} ${cb.ids.trigger}`} variant="secondary">
+        <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${cb.ids.label} ${cb.ids.trigger}`} variant="secondary">
           {selected}
           <Button.Icon>
             <ChevronDown />
@@ -167,7 +166,6 @@ export function ComboboxSheet() {
 }
 
 export function ComboboxAuto() {
-  const labelId = useId();
   const cb = useCombobox({
     options: FRAMEWORKS,
     presentation: 'auto',
@@ -180,10 +178,10 @@ export function ComboboxAuto() {
       {cb.isSheet ? (
         <>
           <Field.Group>
-            <Label.Root id={labelId} htmlFor={cb.ids.trigger}>
+            <Label.Root id={cb.ids.label} htmlFor={cb.ids.trigger}>
               Framework
             </Label.Root>
-            <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${labelId} ${cb.ids.trigger}`} variant="secondary">
+            <Button.Root {...cb.getTriggerProps()} aria-labelledby={`${cb.ids.label} ${cb.ids.trigger}`} variant="secondary">
               {FRAMEWORKS.find((item) => item.value === cb.value)?.label ?? 'Choose'}
             </Button.Root>
           </Field.Group>
@@ -201,7 +199,7 @@ export function ComboboxAuto() {
       ) : (
         <>
           <Field.Group>
-            <Label.Root htmlFor={cb.ids.input}>Framework</Label.Root>
+            <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>Framework</Label.Root>
             <Field.Root {...cb.getAnchorProps()}>
               <Field.TextInput {...cb.getInputProps()} />
             </Field.Root>
@@ -241,7 +239,7 @@ export function ComboboxAsync() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
+        <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>Package</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} placeholder="Type to load" />
           <Field.Icon>
@@ -274,7 +272,7 @@ export function ComboboxEmpty() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
+        <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>Package</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} />
           <Field.Icon>
@@ -313,7 +311,7 @@ export function ComboboxCreate() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Package</Label.Root>
+        <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>Package</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.TextInput {...cb.getInputProps()} />
           <Field.Icon>
@@ -346,7 +344,7 @@ export function ComboboxCreateMulti() {
   return (
     <>
       <Field.Group>
-        <Label.Root htmlFor={cb.ids.input}>Tags</Label.Root>
+        <Label.Root id={cb.ids.label} htmlFor={cb.ids.input}>Tags</Label.Root>
         <Field.Root {...cb.getAnchorProps()}>
           <Field.ChipInput {...cb.getChipInputProps()} />
           <Field.Icon>

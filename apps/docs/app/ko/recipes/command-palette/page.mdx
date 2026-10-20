@@ -22,7 +22,7 @@ useHotkey(['Control+K', 'Meta+K'], () => !cb.open && cb.setOpen(true));
   <Field.Root id={cb.ids.input} aria-label="Command">
     <Field.TextInput {...cb.getInputProps()} placeholder="Type a command" />
   </Field.Root>
-  <OptionList.Root {...cb.getListboxProps()} hidden={cb.isEmpty}>
+  <OptionList.Root {...cb.getListboxProps()} aria-label="Commands" hidden={cb.isEmpty}>
     {cb.items.map((item) => (
       <OptionList.Option key={item.id} {...cb.getOptionProps(item)} />
     ))}
@@ -41,7 +41,7 @@ useHotkey(['Control+K', 'Meta+K'], () => !cb.open && cb.setOpen(true));
 
 **Todae가 맡는 것:** `Dialog`는 네이티브 모달 `<dialog>`이므로, 열려 있는 동안 뒤의 페이지는 inert 상태가 되고, 위에서 설명한 대로 닫히며 포커스를 돌려줍니다. [useCombobox](/utilities/use-combobox)는 입력을 `role="combobox"`로 만들어 `aria-activedescendant`로 활성 명령을 가리키고, 화살표 키, Home, End로 옮기며, Enter로 고릅니다. `getTriggerProps()`는 트리거에 `aria-haspopup="dialog"`, `aria-expanded`, `aria-controls`를 줍니다.
 
-**직접 제공할 것:** 대화 상자에 이름을 주세요. `getDialogProps()`는 `options` 문자열(기본값 "Options")로 `aria-label`을 설정하므로, 위의 `aria-label="Commands"`처럼 스프레드 뒤에 직접 주세요. 입력에도 이름이 필요합니다. 여기서는 `Field.Root`의 `aria-label`입니다. 트리거에는 보이는 텍스트와 단축키를 알리는 `aria-keyshortcuts`를 주세요. 빈 결과 메시지는 마운트된 채로 남는 `role="status"` 요소에 두세요. 명령이 보이는 효과를 남기지 않는다면, 실행 뒤에 상태 메시지처럼 알아챌 수 있는 결과를 주세요.
+**직접 제공할 것:** 대화 상자에 이름을 주세요. `getDialogProps()`는 `options` 문자열(기본값 "Options")로 `aria-label`을 설정하므로, 위의 `aria-label="Commands"`처럼 스프레드 뒤에 직접 주세요. 입력에도 이름이 필요합니다. 여기서는 `Field.Root`의 `aria-label`입니다. `cb.ids.label`을 단 보이는 레이블이 없으므로 목록에도 이름을 주세요. 여기서는 `OptionList.Root`의 `aria-label`입니다. 트리거에는 보이는 텍스트와 단축키를 알리는 `aria-keyshortcuts`를 주세요. 빈 결과 메시지는 마운트된 채로 남는 `role="status"` 요소에 두세요. 명령이 보이는 효과를 남기지 않는다면, 실행 뒤에 상태 메시지처럼 알아챌 수 있는 결과를 주세요.
 
 **주의할 점:** `aria-label`을 `{...cb.getDialogProps()}`보다 앞에 두면 스프레드의 이름이 이깁니다. 일치하는 항목이 없을 때 목록을 마운트 해제하지 마세요. `aria-controls`가 계속 가리키도록 `hidden`으로 숨기세요. 단축키로만 팔레트를 열 수 있게 하지 마세요.
 
