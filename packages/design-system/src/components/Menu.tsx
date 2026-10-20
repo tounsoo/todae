@@ -198,7 +198,7 @@ function Trigger({ tooltip = false, ref, onClick, onKeyDown, onBlur, ...props }:
   const wire = ctx.popover.getTriggerProps({
     ...props,
     ref: refs,
-    onClick: composeHandlers(onClick, (_event: MouseEvent<HTMLButtonElement>) => {
+    onClick: composeHandlers(onClick, () => {
       openEnd.current = null;
     }),
     // A key's request for an end lasts while the trigger has focus, so one

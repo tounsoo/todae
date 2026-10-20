@@ -676,7 +676,7 @@
     "## Examples": "b05e92ffd780",
     "## What goes where": "91a9e7b39130",
     "## Button sugar": "f729d4d99b51",
-    "## Accessible composition": "5bc1f940b882",
+    "## Accessible composition": "1509f4e1cfc9",
     "## When to use": "77a279496991",
     "## Props": "63a3bb317d94",
     "(section order)": "28600b829282"
@@ -826,7 +826,7 @@
   "utilities/use-popover": {
     "(top)": "312cb56df699",
     "# usePopover": "b093e5ad8527",
-    "## Accessible composition": "7edf8c518252",
+    "## Accessible composition": "50e073a8ea0d",
     "## When to use": "fdd59fc7e86b",
     "## Props": "7ba034ef8a21",
     "(section order)": "59d900639520"
@@ -849,7 +849,7 @@
   "utilities/use-tooltip": {
     "(top)": "6a88821fc13f",
     "# useTooltip": "06367727b548",
-    "## Accessible composition": "dbaa0e19f9aa",
+    "## Accessible composition": "3e48aa93d4d0",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",
     "(section order)": "292f5c8b4f13"

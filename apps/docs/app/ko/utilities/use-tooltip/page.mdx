@@ -27,7 +27,7 @@ const tooltip = useTooltip();
 
 **직접 제공할 것:** 포커스를 받는 트리거입니다. 게터는 `tabIndex`나 역할을 더하지 않으므로, 위처럼 탭할 수 없는 래퍼에는 `tabIndex={0}`을 주세요. 트리거 자체의 이름도 필요합니다. `aria-describedby`는 팁을 이름이 아니라 설명으로 만들므로, 아이콘 전용 트리거에는 `aria-label`이 필요합니다. `interactive: true`라면 `Tooltip.Root`에 `aria-label`과 `aria-labelledby` 중 정확히 하나를 주고, 안에는 링크만 두세요.
 
-**주의할 점:** 직접 쓰는 `aria-describedby`, `onFocus`, `onBlur`, `onPointerEnter`, `onPointerLeave`는 `getTriggerProps(props)`로 넘기세요. 스프레드 뒤에 두면 팁의 것을 덮어씁니다. 직접 넘긴 핸들러가 먼저 실행되고, 그 안에서 `event.preventDefault()`를 호출하면 그 이벤트에 대한 팁의 반응을 건너뜁니다. 훅이 `Button.Root`의 팁을 맡는다면 그 버튼에 `tooltip={false}`를 설정하세요.
+**주의할 점:** 직접 쓰는 `aria-describedby`, `onFocus`, `onBlur`, `onPointerEnter`, `onPointerLeave`는 `getTriggerProps(props)`로 넘기세요. 스프레드 뒤에 두면 팁의 것을 덮어씁니다. 직접 넘긴 핸들러가 먼저 실행됩니다. `onPointerEnter`나 `onFocus`에서 `event.preventDefault()`를 호출하면 팁이 열리지 않습니다. `onPointerLeave`나 `onBlur`에서 호출해도 팁은 닫힙니다. 훅이 `Button.Root`의 팁을 맡는다면 그 버튼에 `tooltip={false}`를 설정하세요.
 
 ## 언제 쓰나요
 

@@ -75,6 +75,12 @@ function tokenMs(node: Element | null, name: string): number | null {
   return ms === null ? null : Math.max(0, ms);
 }
 
+/** `ids` with `id` added at the end, unless it already lists it. */
+function joinId(ids: string | undefined, id: string): string {
+  const list = ids?.split(/\s+/).filter(Boolean) ?? [];
+  return list.includes(id) ? list.join(' ') : [...list, id].join(' ');
+}
+
 function tooltipStyle(anchorName: string): CSSProperties {
   return {
     ['--todae-tooltip-anchor' as string]: anchorName,
@@ -234,24 +240,27 @@ export function useTooltip<I extends boolean = false>(
         // Stable while the caller's ref is; see usePopover.
         ref: triggerComposed(user.ref),
         style: anchorTriggerStyle('--todae-tooltip-anchor', anchorName, user.style),
-        'aria-describedby':
-          open && enabled ? [user['aria-describedby'], contentId].filter(Boolean).join(' ') : user['aria-describedby'],
-        onPointerEnter: composeHandlers(user.onPointerEnter, (_event: PointerEvent<HTMLElement>) => {
+        'aria-describedby': open && enabled ? joinId(user['aria-describedby'], contentId) : user['aria-describedby'],
+        onPointerEnter: composeHandlers(user.onPointerEnter, () => {
           if (enabled) dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover' });
         }),
-        onPointerLeave: composeHandlers(user.onPointerLeave, (event: PointerEvent<HTMLElement>) => {
+        // Releases run even when the consumer's handler prevents the event,
+        // so a prevented leave or blur cannot strand the tip open.
+        onPointerLeave: (event: PointerEvent<HTMLElement>) => {
+          user.onPointerLeave?.(event);
           if (enabled && !pairContains(event.relatedTarget)) {
             dispatch({ kind: 'release', hold: 'hover' });
           }
-        }),
-        onFocus: composeHandlers(user.onFocus, (_event: FocusEvent<HTMLElement>) => {
+        },
+        onFocus: composeHandlers(user.onFocus, () => {
           if (enabled) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
         }),
-        onBlur: composeHandlers(user.onBlur, (event: FocusEvent<HTMLElement>) => {
+        onBlur: (event: FocusEvent<HTMLElement>) => {
+          user.onBlur?.(event);
           if (enabled && !pairContains(event.relatedTarget)) {
             dispatch({ kind: 'release', hold: 'focus' });
           }
-        }),
+        },
       };
     },
     [anchorName, contentId, dispatch, enabled, open, pairContains, triggerComposed],

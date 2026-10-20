@@ -189,7 +189,7 @@ export function usePopoverInternal(
         'aria-expanded': open,
         'aria-controls': contentId,
         'aria-haspopup': haspopup,
-        onClick: composeHandlers(user.onClick, (_event: MouseEvent<HTMLElement>) => {
+        onClick: composeHandlers(user.onClick, () => {
           if (enabled) setOpen(!open, 'trigger');
         }),
       };

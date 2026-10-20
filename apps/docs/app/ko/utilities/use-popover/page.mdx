@@ -30,7 +30,7 @@ const { getTriggerProps, getPopoverProps } = usePopover({ open, onOpenChange: se
 
 **Todae가 맡는 것:** `getTriggerProps`는 `aria-expanded`, 표면의 id를 담은 `aria-controls`, `aria-haspopup`(`haspopup`을 정하지 않으면 `dialog`), 그리고 열고 닫는 `onClick`을 더합니다. 열리면 포커스가 표면 안으로 옮겨 갑니다. `initialFocusRef`로, 없으면 첫 번째 탭 가능한 요소로, 그것도 없으면 표면 자체로 갑니다. Escape와 바깥 누르기는 닫기를 요청합니다. 닫히면 포커스는 `restoreFocusRef`로, 없으면 열기 전에 포커스가 있던 곳으로 돌아갑니다. 단, 사용자가 이미 다른 곳으로 옮겼다면 그대로 둡니다.
 
-**직접 제공할 것:** 트리거 요소입니다. `getTriggerProps`는 역할, `tabIndex`, 키 처리를 설정하지 않으므로 `<button>`이나 `Button.Root`에 스프레드하세요. 표면의 역할과 이름도 필요합니다. `haspopup: 'dialog'`라면 `role="dialog"`와 `aria-label`이나 `aria-labelledby`를 준 `Popover.Root`, `listbox`라면 위처럼 이름 붙은 `OptionList.Root`를 담은 역할 없는 표면입니다. 직접 쓰는 `onClick`, `ref`, `style`은 `getTriggerProps(props)`로 넘기면 합쳐집니다. 직접 넘긴 `onClick`이 먼저 실행되고, 그 안에서 `event.preventDefault()`를 호출하면 열고 닫기를 건너뜁니다.
+**직접 제공할 것:** 트리거 요소입니다. `getTriggerProps`는 역할, `tabIndex`, 키 처리를 설정하지 않으므로 `<button>`이나 `Button.Root`에 스프레드하세요. 표면의 역할과 이름도 필요합니다. `haspopup: 'dialog'`라면 `role="dialog"`와 `aria-label`이나 `aria-labelledby`를 준 `Popover.Root`, `listbox`라면 위처럼 이름 붙은 `OptionList.Root`를 담은 역할 없는 표면입니다. 직접 쓰는 `onClick`, `ref`, `style`은 `getTriggerProps(props)`로 넘기면 합쳐집니다. 직접 넘긴 `onClick`이 먼저 실행되고, 그 안에서 `event.preventDefault()`를 호출하면 열고 닫기를 건너뜁니다. 그래서 `<a href>` 트리거에서 이동을 막는 클릭 핸들러는 팝오버도 막습니다. 대신 `<button>`을 쓰세요.
 
 **주의할 점:** `getTriggerProps()` 스프레드 뒤에 둔 props는 그것이 설정한 것을 덮어씁니다. 뒤에 둔 `onClick`은 열고 닫기를 없앱니다. `enabled`가 false인 동안에도 트리거에는 `aria-expanded`와 `aria-haspopup`이 남으므로, 트리거도 비활성화하세요. 역할 없는 팝오버에 기본 `haspopup`을 그대로 두면 없는 대화 상자를 알립니다.
 
