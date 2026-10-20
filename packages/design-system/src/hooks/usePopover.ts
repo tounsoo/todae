@@ -14,7 +14,7 @@ import type { PopoverWire } from '../components/Popover.wire.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
 import { useFocusRestore } from '../overlay/useFocusRestore.js';
 import { useInitialFocus } from '../overlay/useInitialFocus.js';
-import { useComposedRefs, useStableComposedRef } from '../components/props.js';
+import { composeHandlers, useComposedRefs, useStableComposedRef } from '../components/props.js';
 import { useDomId } from '../components/domId.js';
 import { anchorTriggerStyle, mergeAnchorNames, removeAnchorName } from '../overlay/anchorName.js';
 import { useControlledValue } from './useControlledState.js';
@@ -189,11 +189,9 @@ export function usePopoverInternal(
         'aria-expanded': open,
         'aria-controls': contentId,
         'aria-haspopup': haspopup,
-        onClick: (event: MouseEvent<HTMLElement>) => {
-          user.onClick?.(event);
-          if (!enabled) return;
-          setOpen(!open, 'trigger');
-        },
+        onClick: composeHandlers(user.onClick, (_event: MouseEvent<HTMLElement>) => {
+          if (enabled) setOpen(!open, 'trigger');
+        }),
       };
     },
     [anchorName, contentId, enabled, haspopup, open, setOpen, triggerComposed],

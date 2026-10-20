@@ -826,7 +826,7 @@
   "utilities/use-popover": {
     "(top)": "312cb56df699",
     "# usePopover": "b093e5ad8527",
-    "## Accessible composition": "7e2e9d73e309",
+    "## Accessible composition": "7edf8c518252",
     "## When to use": "fdd59fc7e86b",
     "## Props": "7ba034ef8a21",
     "(section order)": "59d900639520"
@@ -849,7 +849,7 @@
   "utilities/use-tooltip": {
     "(top)": "6a88821fc13f",
     "# useTooltip": "06367727b548",
-    "## Accessible composition": "8cb577a4cfae",
+    "## Accessible composition": "dbaa0e19f9aa",
     "## When to use": "0c12ce715dbd",
     "## Props": "a321acab51e1",
     "(section order)": "292f5c8b4f13"

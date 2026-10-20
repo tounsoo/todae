@@ -221,6 +221,7 @@ function Root({
       ? tip.getTriggerProps({
           ref: refs as Ref<HTMLElement | null>,
           style,
+          'aria-describedby': props['aria-describedby'],
           onPointerEnter,
           onPointerLeave,
           onFocus,

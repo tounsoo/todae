@@ -21,7 +21,7 @@ import {
 import type { TooltipWire } from '../components/Tooltip.wire.js';
 import { getTabbables } from '../overlay/tabbables.js';
 import { useEscapeKey } from '../overlay/useEscapeKey.js';
-import { useComposedRefs, useStableComposedRef } from '../components/props.js';
+import { composeHandlers, useComposedRefs, useStableComposedRef } from '../components/props.js';
 import { useDomId } from '../components/domId.js';
 import { anchorTriggerStyle } from '../overlay/anchorName.js';
 import { cssTimeMs } from '../overlay/cssTime.js';
@@ -234,27 +234,24 @@ export function useTooltip<I extends boolean = false>(
         // Stable while the caller's ref is; see usePopover.
         ref: triggerComposed(user.ref),
         style: anchorTriggerStyle('--todae-tooltip-anchor', anchorName, user.style),
-        'aria-describedby': open && enabled ? contentId : user['aria-describedby'],
-        onPointerEnter: (event: PointerEvent<HTMLElement>) => {
-          user.onPointerEnter?.(event);
+        'aria-describedby':
+          open && enabled ? [user['aria-describedby'], contentId].filter(Boolean).join(' ') : user['aria-describedby'],
+        onPointerEnter: composeHandlers(user.onPointerEnter, (_event: PointerEvent<HTMLElement>) => {
           if (enabled) dispatch({ kind: 'acquire', hold: 'hover', reason: 'hover' });
-        },
-        onPointerLeave: (event: PointerEvent<HTMLElement>) => {
-          user.onPointerLeave?.(event);
+        }),
+        onPointerLeave: composeHandlers(user.onPointerLeave, (event: PointerEvent<HTMLElement>) => {
           if (enabled && !pairContains(event.relatedTarget)) {
             dispatch({ kind: 'release', hold: 'hover' });
           }
-        },
-        onFocus: (event: FocusEvent<HTMLElement>) => {
-          user.onFocus?.(event);
+        }),
+        onFocus: composeHandlers(user.onFocus, (_event: FocusEvent<HTMLElement>) => {
           if (enabled) dispatch({ kind: 'acquire', hold: 'focus', reason: 'focus' });
-        },
-        onBlur: (event: FocusEvent<HTMLElement>) => {
-          user.onBlur?.(event);
+        }),
+        onBlur: composeHandlers(user.onBlur, (event: FocusEvent<HTMLElement>) => {
           if (enabled && !pairContains(event.relatedTarget)) {
             dispatch({ kind: 'release', hold: 'focus' });
           }
-        },
+        }),
       };
     },
     [anchorName, contentId, dispatch, enabled, open, pairContains, triggerComposed],
