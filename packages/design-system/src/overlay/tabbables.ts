@@ -10,7 +10,7 @@ const CANDIDATES = /* @__PURE__ */ [
   'audio[controls]',
   'video[controls]',
   '[contenteditable]:not([contenteditable="false"])',
-  '[tabindex]',
+  '[tabindex]:not(input[type="hidden"])',
 ].join(', ');
 
 /**
@@ -27,9 +27,9 @@ export function inToastHostWithin(el: Element, root: Element): boolean {
 
 // Whether Tab would stop on `el`, one of root's CANDIDATES, were it enabled
 // and shown: not taken out by a negative tabindex, and not inside a `hidden`
-// or `aria-hidden` subtree within root. Both subtrees count as removed content
-// on purpose; one around root is the page's business, not root's. Styles and
-// `disabled` are not read.
+// or `aria-hidden` subtree strictly inside the queried root. Both subtrees
+// count as removed content on purpose; one on or around root is the page's
+// business, not root's. Styles and `disabled` are not read.
 function inTabOrder(el: HTMLElement, root: HTMLElement): boolean {
   // Engines differ on the default tabIndex of some candidates, such as
   // contenteditable, so only a tabindex that is set takes one out.
@@ -41,7 +41,7 @@ function inTabOrder(el: HTMLElement, root: HTMLElement): boolean {
     if (details?.localName !== 'details' || details.querySelector(':scope > summary') !== el) return false;
   }
   const removed = el.closest('[hidden], [aria-hidden="true"]');
-  return !removed || !root.contains(removed);
+  return !removed || removed === root || !root.contains(removed);
 }
 
 /**
@@ -52,7 +52,8 @@ function inTabOrder(el: HTMLElement, root: HTMLElement): boolean {
 export function isReachable(el: HTMLElement): boolean {
   if (el.closest('[inert]')) return false;
   // Without checkVisibility, only an inline display:none is seen.
-  return el.checkVisibility?.({ visibilityProperty: true }) ?? el.style.display !== 'none';
+  // checkVisibilityCSS is visibilityProperty's older name, which Safari 17.4 reads.
+  return el.checkVisibility?.({ visibilityProperty: true, checkVisibilityCSS: true }) ?? el.style.display !== 'none';
 }
 
 // Whether Tab stops on `el`, one of root's CANDIDATES, now.
@@ -68,8 +69,8 @@ function* candidatesIn(root: HTMLElement): Generator<HTMLElement> {
 }
 
 /**
- * The elements in `root` that Todae treats as tab stops now, in document
- * order: the browser's tab order minus disabled, hidden, inert and
+ * The elements in `root` that Todae treats as tab stops now: the candidates
+ * Todae recognizes, in document order, minus disabled, hidden, inert and
  * aria-hidden content.
  */
 export function getTabbables(root: HTMLElement): HTMLElement[] {
@@ -79,10 +80,20 @@ export function getTabbables(root: HTMLElement): HTMLElement[] {
 /**
  * The elements in `root` that Tab stops on or would once shown, disabled ones
  * too, in document order. For a question about what content holds rather than
- * what Tab reaches this moment, such as whether a closed panel holds a button.
+ * what Tab reaches this moment, such as which of a Toolbar's controls are its
+ * arrow keys' items.
  */
 export function getTabOrder(root: HTMLElement): HTMLElement[] {
   return [...candidatesIn(root)].filter((el) => inTabOrder(el, root));
+}
+
+/**
+ * Every candidate Todae recognizes in `root`, in document order, whatever its
+ * tabindex, `hidden`, `aria-hidden`, styles or `disabled`. For a rule about
+ * what kinds of control content holds, such as Tooltip's.
+ */
+export function getCandidates(root: HTMLElement): HTMLElement[] {
+  return [...candidatesIn(root)];
 }
 
 /**
