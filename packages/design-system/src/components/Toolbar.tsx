@@ -7,14 +7,14 @@ import {
   type FocusEvent,
   type KeyboardEvent,
 } from 'react';
+import { useDomId } from './domId.js';
 import { useRovingFocus } from '../hooks/useRovingFocus.js';
 import { getTabbables, getTabOrder } from '../overlay/tabbables.js';
 import { cx } from './cx.js';
-import { useDomId } from './domId.js';
 import { useComposedRefs } from './props.js';
-import { focusWithoutScroll } from './revealRing.js';
 import styles from './Toolbar.module.css';
 import { TOOLBAR_BOUNDARY, ToolbarContext, type ToolbarOrientation } from './toolbarContext.js';
+import { focusWithoutScroll } from './revealRing.js';
 
 export type { ToolbarOrientation };
 

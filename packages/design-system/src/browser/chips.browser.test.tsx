@@ -298,12 +298,12 @@ describe('ChipList focus never falls to the body in a browser', () => {
           style={{ width: 320, marginLeft: edge === 'right' ? 'calc(100vw - 340px)' : 0 }}
         >
           <ChipList.Root
-              aria-label="Tags"
-              chips={WIDE}
-              maxRows={1}
-              overflowLabel={(n) => `+${n} more`}
-              onRemove={() => undefined}
-            />
+            aria-label="Tags"
+            chips={WIDE}
+            maxRows={1}
+            overflowLabel={(n) => `+${n} more`}
+            onRemove={() => undefined}
+          />
         </div>,
       );
       await waitFor(() => expect(more()).toBeTruthy());

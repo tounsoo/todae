@@ -16,6 +16,8 @@ export function useInitialFocus(
 ): void {
   useLayoutEffect(() => {
     if (!active) return;
+    // A usePopover caller can mount its Popover frames after open, behind
+    // Suspense or an effect, so a missing container is retried.
     let tries = 0;
     let frame = 0;
     function go() {
