@@ -3,8 +3,8 @@ import type { ComboboxFieldState } from './useCombobox.state.js';
 
 type CreateResult = string | void | Promise<string | void>;
 
-/** An async create in flight, and the single value when it started. */
-type CreateRequest = { label: string; startValue: string | null };
+/** An async create in flight, the single value when it started, and whether it was dropped. */
+type CreateRequest = { label: string; startValue: string | null; dropped: boolean };
 
 const NONE: ReadonlyMap<string, CreateRequest> = new Map();
 
@@ -26,8 +26,9 @@ function holds(request: CreateRequest, text: string, single: string | null, mult
 
 /**
  * The async creates in flight, one per label, and the last one's failure. A request
- * settles only while it is still its label's entry, so `cancel` drops every request
- * at once, and a request that stops holding is dropped for good.
+ * stays in flight, blocking its label and counting in `creating`, until its promise
+ * settles. One that stops holding, or that `cancel` drops, is dropped for good: it
+ * settles without committing or reporting.
  */
 export function useComboboxCreate(
   multiple: boolean,
@@ -50,14 +51,10 @@ export function useComboboxCreate(
   }, []);
 
   useLayoutEffect(() => {
-    let dropped = false;
-    for (const [key, request] of requests.current) {
-      if (holds(request, inputValue, single, multiple)) continue;
-      requests.current.delete(key);
-      dropped = true;
+    for (const request of requests.current.values()) {
+      if (!holds(request, inputValue, single, multiple)) request.dropped = true;
     }
-    if (dropped) sync();
-  }, [inputValue, multiple, single, sync]);
+  }, [inputValue, multiple, single]);
 
   /**
    * Runs `start` unless a create for `label` is pending, and hands its result to
@@ -68,8 +65,7 @@ export function useComboboxCreate(
     (label: string, start: () => CreateResult | undefined, commit: (canonical: string | void) => void) => {
       const key = keyOf(label);
       const now = () => state.current;
-      const held = requests.current.get(key);
-      if (held && holds(held, now().inputValue, now().single, multiple)) return;
+      if (requests.current.has(key)) return;
       setError(null);
       let result: CreateResult | undefined;
       try {
@@ -82,14 +78,14 @@ export function useComboboxCreate(
         commit(result);
         return;
       }
-      const request: CreateRequest = { label, startValue: now().single };
+      const request: CreateRequest = { label, startValue: now().single, dropped: false };
       requests.current.set(key, request);
       sync();
       const settle = () => {
         if (requests.current.get(key) !== request) return false;
         requests.current.delete(key);
         sync();
-        return holds(request, now().inputValue, now().single, multiple);
+        return !request.dropped && holds(request, now().inputValue, now().single, multiple);
       };
       void Promise.resolve(result).then(
         (canonical) => {
@@ -105,10 +101,8 @@ export function useComboboxCreate(
   );
 
   const cancel = useCallback(() => {
-    if (requests.current.size === 0) return;
-    requests.current.clear();
-    sync();
-  }, [sync]);
+    for (const request of requests.current.values()) request.dropped = true;
+  }, []);
 
   const clearError = useCallback(() => setError(null), []);
 

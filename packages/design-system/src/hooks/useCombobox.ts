@@ -102,7 +102,7 @@ export type UseComboboxResult = {
   /** The last load's failure, which `retry` loads again. A create's failure is in `createError`. */
   error: unknown | null;
   retry: () => void;
-  /** True while an async `onCreate` is pending and its result still applies. */
+  /** True while an async `onCreate` is pending, even one whose result no longer applies. */
   creating: boolean;
   /**
    * What `onCreate` last threw or rejected with, kept only while the text still asks for that label.
