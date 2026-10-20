@@ -741,6 +741,17 @@ describe('Field.ChipInput', () => {
     expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' })).toBe(true);
   });
 
+  it('lets Tab move focus when onCommit returns false', () => {
+    renderField({ inputValue: 'foo', commitKeys: ['Tab'], onCommit: () => false });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Tab' })).toBe(true);
+  });
+
+  it('removes the last chip on a Backspace with keyCode 229 outside a composition', () => {
+    const { onChipRemove } = renderField({ chips: ['Alpha', 'Beta'], inputValue: '' });
+    expect(fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Backspace', keyCode: 229 })).toBe(false);
+    expect(onChipRemove).toHaveBeenCalledWith(1, 'Beta');
+  });
+
   it('disables the chips and Backspace when the input itself is disabled', () => {
     const onChipRemove = vi.fn();
     render(

@@ -136,8 +136,8 @@ describe('useCombobox trigger name', () => {
 });
 
 describe('useCombobox Enter with nothing to commit', () => {
-  function FormBox({ onSubmit }: { onSubmit: () => void }) {
-    const cb = useCombobox({ options: FRAMEWORKS, presentation: 'popover' });
+  function FormBox({ onSubmit, onValueChange }: { onSubmit: () => void; onValueChange?: (value: string | null) => void }) {
+    const cb = useCombobox({ options: FRAMEWORKS, presentation: 'popover', onValueChange });
     return (
       <form
         data-appearance="light"
@@ -162,6 +162,17 @@ describe('useCombobox Enter with nothing to commit', () => {
       </form>
     );
   }
+
+  it('picks once and submits nothing on a held Enter', async () => {
+    let submits = 0;
+    const picks: (string | null)[] = [];
+    render(<FormBox onSubmit={() => (submits += 1)} onValueChange={(value) => picks.push(value)} />);
+    await userEvent.click(screen.getByRole('combobox'));
+    await userEvent.keyboard('re');
+    await userEvent.keyboard('{Enter>3}');
+    expect(picks).toEqual(['react']);
+    expect(submits).toBe(0);
+  });
 
   it('submits the form from an open list with no rows', async () => {
     let submits = 0;

@@ -1232,8 +1232,9 @@ describe('useCombobox async create', () => {
     act(() => result.current.setInputValue('new'));
     act(() => result.current.create());
     act(() => result.current.reset());
-    expect(result.current.creating).toBe(false);
+    expect(result.current.creating).toBe(true);
     await act(async () => calls[0]?.resolve('new'));
+    expect(result.current.creating).toBe(false);
     expect(result.current.value).toBe('react');
     expect(result.current.inputValue).toBe('React');
   });
@@ -1502,12 +1503,12 @@ describe('useCombobox async create', () => {
     type(result, 'new');
     act(() => result.current.create());
     act(() => result.current.select('react'));
-    expect(result.current.creating).toBe(mode === 'multiple');
+    expect(result.current.creating).toBe(true);
     await act(async () => calls[0]?.reject(new Error('taken')));
     expect(result.current.createError).toBeNull();
   });
 
-  it('creates the same label again after a pick while the first single create is pending', async () => {
+  it('runs a label once while its dropped single create is still pending, and again once it settles', async () => {
     const { onCreate, calls } = deferredCreate();
     const { result } = singleCreate(onCreate);
     type(result, 'new');
@@ -1515,13 +1516,29 @@ describe('useCombobox async create', () => {
     act(() => result.current.select('react'));
     type(result, 'new');
     const row = result.current.items.find((item) => item.kind === 'create');
-    expect(row && result.current.getOptionProps(row)['aria-disabled']).toBeUndefined();
+    expect(row && result.current.getOptionProps(row)['aria-disabled']).toBe(true);
+    expect(result.current.creating).toBe(true);
     act(() => result.current.create());
-    expect(onCreate).toHaveBeenCalledTimes(2);
+    expect(onCreate).toHaveBeenCalledTimes(1);
     await act(async () => calls[0]?.resolve('new-1'));
     expect(result.current.value).toBe('react');
+    expect(result.current.creating).toBe(false);
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(2);
     await act(async () => calls[1]?.resolve('new-2'));
     expect(result.current.value).toBe('new-2');
+  });
+
+  it('runs a label once while a create dropped by reset is still pending', async () => {
+    const { onCreate } = deferredCreate();
+    const { result } = singleCreate(onCreate);
+    type(result, 'new');
+    act(() => result.current.create());
+    act(() => result.current.reset());
+    act(() => result.current.setOpen(true));
+    type(result, 'new');
+    act(() => result.current.create());
+    expect(onCreate).toHaveBeenCalledTimes(1);
   });
 
   it('keeps a single create stale once the value changed, even when the text and value come back', async () => {
@@ -1532,7 +1549,7 @@ describe('useCombobox async create', () => {
     act(() => result.current.select('react'));
     act(() => result.current.remove('react'));
     type(result, 'new');
-    expect(result.current.creating).toBe(false);
+    expect(result.current.creating).toBe(true);
     await act(async () => calls[0]?.resolve('new'));
     expect(result.current.value).toBeNull();
   });
@@ -1682,6 +1699,14 @@ describe('useCombobox keys', () => {
     expect(onValueChange).not.toHaveBeenCalled();
     fireEvent.keyDown(input, { key: 'ArrowUp' });
     expect(input.getAttribute('aria-activedescendant')).not.toBe(createId);
+  });
+
+  it('moves on an ArrowDown with keyCode 229 outside a composition', () => {
+    render(<SingleBox defaultOpen />);
+    const input = screen.getByRole('combobox');
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, 'react'));
+    expect(fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 229 })).toBe(false);
+    expect(input.getAttribute('aria-activedescendant')).toBe(optionDomId(input.getAttribute('aria-controls')!, 'redux'));
   });
 
   it('leaves the Enter that ends an IME composition in Safari to the input', () => {
@@ -1917,5 +1942,40 @@ describe('useCombobox listbox name', () => {
     } finally {
       warn.mockRestore();
     }
+  });
+});
+
+describe('useCombobox controlled owner that turns a change down', () => {
+  it('asks again on every ArrowDown while open stays false', () => {
+    const onOpenChange = vi.fn();
+    render(<SingleBox open={false} onOpenChange={onOpenChange} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(onOpenChange.mock.calls).toEqual([
+      [true, 'trigger'],
+      [true, 'trigger'],
+    ]);
+  });
+
+  it('builds the next change on the value it rendered, not on a value it turned down', () => {
+    const onValueChange = vi.fn();
+    const { result } = renderHook(() =>
+      useCombobox({
+        selectionMode: 'multiple',
+        options: OPTIONS,
+        presentation: 'popover',
+        value: ['react', 'redux', 'vue'],
+        onValueChange,
+      }),
+    );
+    act(() => result.current.select('x'));
+    act(() => result.current.select('x'));
+    act(() => result.current.remove('react'));
+    expect(onValueChange.mock.calls).toEqual([
+      [['react', 'redux', 'vue', 'x']],
+      [['react', 'redux', 'vue', 'x']],
+      [['redux', 'vue']],
+    ]);
   });
 });

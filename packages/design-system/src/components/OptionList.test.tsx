@@ -34,6 +34,33 @@ describe('OptionList', () => {
     expect(onChange).toHaveBeenCalledWith('c');
   });
 
+  it('keeps an aria-disabled option reachable but never selects it', () => {
+    const onChange = vi.fn();
+    render(
+      <OptionList.Root value={null} onValueChange={onChange} aria-label="Fruit">
+        <OptionList.Option value="a">A</OptionList.Option>
+        <OptionList.Option value="b" aria-disabled>
+          B
+        </OptionList.Option>
+        <OptionList.Option value="c" aria-disabled="false">
+          C
+        </OptionList.Option>
+      </OptionList.Root>,
+    );
+    const list = screen.getByRole('listbox');
+    const b = screen.getByRole('option', { name: 'B' });
+    fireEvent.keyDown(list, { key: 'ArrowDown' });
+    expect(list.getAttribute('aria-activedescendant')).toBe(b.id);
+    fireEvent.keyDown(list, { key: 'Enter' });
+    fireEvent.keyDown(list, { key: ' ' });
+    fireEvent.click(b);
+    expect(onChange).not.toHaveBeenCalled();
+    const c = screen.getByRole('option', { name: 'C' });
+    expect(c.hasAttribute('aria-disabled')).toBe(false);
+    fireEvent.click(c);
+    expect(onChange).toHaveBeenCalledWith('c');
+  });
+
   it('names OptionList.Root when an option renders outside it', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => render(<OptionList.Option value="a">A</OptionList.Option>)).toThrow(

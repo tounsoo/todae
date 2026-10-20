@@ -35,7 +35,12 @@ describe('useChipField', () => {
         transform: (raw) => (raw.includes('x') ? null : raw.trim()),
       }),
     );
-    act(() => result.current.getChipInputProps().onCommit('xray'));
+    let committed: boolean | void = undefined;
+    act(() => {
+      committed = result.current.getChipInputProps().onCommit('xray');
+    });
+    // False leaves Enter to the form, as Field.ChipInput's contract says.
+    expect(committed).toBe(false);
     expect(result.current.chips).toEqual(['Alpha', 'Beta']);
     act(() => result.current.getChipInputProps().onChipRemove(0, 'Alpha'));
     expect(result.current.chips).toEqual(['Beta']);
