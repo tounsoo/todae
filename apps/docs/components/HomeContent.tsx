@@ -1,4 +1,3 @@
-import { Button } from '@tounsoo/todae';
 import { Stack } from '@tounsoo/todae/stack';
 import { DEFAULT_LOCALE, localizePath, type Locale } from '../lib/i18n/config';
 import { DICTIONARIES, localizedGroups } from '../lib/i18n/dictionaries';
@@ -17,11 +16,8 @@ export function HomeContent({ locale }: { locale: Locale }) {
           <h1 id="home-title">{dict.hero.title}</h1>
           <p className="hero-lead">{dict.hero.lead}</p>
           <Stack.Root className="hero-actions" direction="row" wrap>
-            <SiteButtonLink href={localizePath('/guides/build-on-todae', locale)}>
+            <SiteButtonLink href={localizePath('/guides/build-on-todae', locale)} trailingIcon={<ArrowIcon />}>
               {dict.hero.start}
-              <Button.Icon>
-                <ArrowIcon />
-              </Button.Icon>
             </SiteButtonLink>
             <SiteButtonLink variant="secondary" href={localizePath('/playground', locale)}>
               {dict.hero.playground}

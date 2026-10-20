@@ -96,8 +96,8 @@ export function ButtonIconLibraries() {
 export function ButtonLinks() {
   return (
     <>
-      <Button.Root render={(props) => <a {...props} href="#props" />}>
-        See the props
+      <Button.Root render={(props) => <a {...props} href="https://www.npmjs.com/package/@tounsoo/todae" />}>
+        Install
         <Button.Icon>
           <ArrowRight />
         </Button.Icon>
