@@ -104,6 +104,7 @@ function OptionListOption({
   onMouseDown,
   onClick,
   ref,
+  'aria-disabled': ariaDisabled,
   ...props
 }: OptionListOptionProps) {
   const ctx = useOptionList();
@@ -127,7 +128,7 @@ function OptionListOption({
       id={optionDomId(ctx.listId, value)}
       role="option"
       aria-selected={selected}
-      aria-disabled={disabled || undefined}
+      aria-disabled={disabled || ariaDisabled || undefined}
       data-selected={selected ? '' : undefined}
       data-highlighted={ctx.highlighted === value ? '' : undefined}
       className={cx(styles.option, className)}
@@ -297,13 +298,16 @@ function OptionListRoot(props: OptionListRootProps) {
     // Settled once its option renders, hidden or not; a missing one is awaited.
     if (requested) pending.current = null;
     else if (!changed) return;
-    const usable = requested !== null && requested.getAttribute('aria-disabled') !== 'true';
+    // Skipped options only: one that is aria-disabled but reachable can be active.
+    const usable = requested !== null && ![...registered.current].some((entry) => entry.node === requested && entry.disabled);
     // A late option that arrives disabled does not move the active option.
     if (!changed && !usable) return;
     // A hidden list has no layout; a popover or dialog reveals its active
     // option when it opens (below).
     if (list.checkVisibility?.() === false) return;
-    const option = usable ? requested : list.querySelector<HTMLElement>('[role="option"]:not([aria-disabled="true"])');
+    const option = usable
+      ? requested
+      : [...registered.current].sort(byDocumentOrder).find((entry) => !entry.disabled)?.node;
     if (option) revealInScrollBox(option);
   });
   // Opening a popover or dialog lays the list out: reveal the active option then.

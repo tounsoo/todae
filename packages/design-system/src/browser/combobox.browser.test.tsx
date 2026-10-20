@@ -23,13 +23,13 @@ function frameIds(tree: FrameTree): string[] {
   return [tree.frame.id, ...(tree.childFrames ?? []).flatMap(frameIds)];
 }
 
-/** The name Chromium's own accessibility tree gives each listbox, in every frame. */
-async function listboxNames(): Promise<string[]> {
+/** The name Chromium's own accessibility tree gives each node of a role, in every frame. */
+async function axNames(role: string): Promise<string[]> {
   const { frameTree } = (await session().send('Page.getFrameTree')) as { frameTree: FrameTree };
   const names: string[] = [];
   for (const frameId of frameIds(frameTree)) {
     const { nodes } = (await session().send('Accessibility.getFullAXTree', { frameId })) as { nodes: AXNode[] };
-    for (const node of nodes) if (node.role?.value === 'listbox') names.push(node.name?.value ?? '');
+    for (const node of nodes) if (node.role?.value === role) names.push(node.name?.value ?? '');
   }
   return names;
 }
@@ -66,7 +66,7 @@ describe('useCombobox listbox name', () => {
     await userEvent.click(screen.getByRole('combobox'));
     await userEvent.keyboard('re');
     await waitFor(() => expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('true'));
-    await expect.poll(listboxNames).toEqual(['Framework']);
+    await expect.poll(() => axNames('listbox')).toEqual(['Framework']);
   });
 });
 
@@ -116,28 +116,17 @@ describe('useCombobox listbox name in a sheet or dialog', () => {
     render(<SheetBox />);
     await userEvent.click(screen.getByText('Choose'));
     await waitFor(() => expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('true'));
-    await expect.poll(listboxNames).toEqual(['Framework']);
+    await expect.poll(() => axNames('listbox')).toEqual(['Framework']);
   });
 
   it('names a listbox with no visible label by the aria-label passed to getListboxProps', async () => {
     render(<PaletteBox />);
     await userEvent.click(screen.getByRole('button', { name: 'Open palette' }));
     await waitFor(() => expect(screen.getByRole('combobox').getAttribute('aria-expanded')).toBe('true'));
-    await expect.poll(listboxNames).toEqual(['Commands']);
+    await expect.poll(() => axNames('listbox')).toEqual(['Commands']);
     expect(document.querySelector('[role="listbox"]')?.hasAttribute('aria-labelledby')).toBe(false);
   });
 });
-
-/** The name Chromium's own accessibility tree gives each node of a role, in every frame. */
-async function axNames(role: string): Promise<string[]> {
-  const { frameTree } = (await session().send('Page.getFrameTree')) as { frameTree: FrameTree };
-  const names: string[] = [];
-  for (const frameId of frameIds(frameTree)) {
-    const { nodes } = (await session().send('Accessibility.getFullAXTree', { frameId })) as { nodes: AXNode[] };
-    for (const node of nodes) if (node.role?.value === role) names.push(node.name?.value ?? '');
-  }
-  return names;
-}
 
 describe('useCombobox trigger name', () => {
   it('names a sheet trigger by the label and its own text', async () => {

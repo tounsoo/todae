@@ -1325,7 +1325,7 @@ describe('useCombobox async create', () => {
     type(result, 'new');
     act(() => result.current.create());
     const row = result.current.items.find((item) => item.kind === 'create');
-    expect(row && result.current.getOptionProps(row).disabled).toBe(true);
+    expect(row && result.current.getOptionProps(row)['aria-disabled']).toBe(true);
     expect(result.current.activeId).toBe(row?.id);
     let handled = false;
     act(() => {
@@ -1481,7 +1481,15 @@ describe('useCombobox async create', () => {
         },
       }),
     );
-    expect(() => act(() => result.current.select('react'))).toThrow(failure);
+    let thrown: unknown = null;
+    act(() => {
+      try {
+        result.current.select('react');
+      } catch (error) {
+        thrown = error;
+      }
+    });
+    expect(thrown).toBe(failure);
     expect(onInputValueChange).toHaveBeenCalledWith('React');
     expect(onOpenChange).toHaveBeenCalledWith(false, 'select');
     expect(result.current.value).toBe('react');
@@ -1507,7 +1515,7 @@ describe('useCombobox async create', () => {
     act(() => result.current.select('react'));
     type(result, 'new');
     const row = result.current.items.find((item) => item.kind === 'create');
-    expect(row && result.current.getOptionProps(row).disabled).toBe(false);
+    expect(row && result.current.getOptionProps(row)['aria-disabled']).toBeUndefined();
     act(() => result.current.create());
     expect(onCreate).toHaveBeenCalledTimes(2);
     await act(async () => calls[0]?.resolve('new-1'));
