@@ -233,7 +233,7 @@ describe('useTooltip', () => {
   it.each([
     ['pointer leave', fireEvent.pointerEnter, fireEvent.pointerLeave],
     ['blur', fireEvent.focus, fireEvent.blur],
-  ] as const)('closes on %s even when the consumer prevents it', (_label, acquire, release) => {
+  ] as const)('still closes on %s when the consumer prevents it', (_label, acquire, release) => {
     function Harness() {
       const tooltip = useTooltip();
       return (
