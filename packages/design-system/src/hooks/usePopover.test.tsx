@@ -35,19 +35,21 @@ function Harness({
 }
 
 describe('usePopover exports', () => {
-  it('a trigger whose own click prevents its default still toggles', () => {
-    function Link() {
-      const popover = usePopover();
+  it('a trigger click the consumer prevents does not toggle', () => {
+    const onOpenChange = vi.fn();
+    function Prevented() {
+      const popover = usePopover({ onOpenChange });
       return (
-        <a href="#x" {...popover.getTriggerProps({ onClick: (event) => event.preventDefault() })}>
+        <button type="button" {...popover.getTriggerProps({ onClick: (event) => event.preventDefault() })}>
           Open
-        </a>
+        </button>
       );
     }
-    render(<Link />);
-    const link = screen.getByText('Open');
-    fireEvent.click(link);
-    expect(link.getAttribute('aria-expanded')).toBe('true');
+    render(<Prevented />);
+    const trigger = screen.getByRole('button', { name: 'Open' });
+    fireEvent.click(trigger);
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('keeps each ref stable when the getter is used on two elements', () => {

@@ -190,6 +190,71 @@ describe('useTooltip', () => {
     expect(screen.getByRole('button').getAttribute('aria-describedby')).toBe('archive-tip');
   });
 
+  it("joins the tip's id to the trigger's own aria-describedby while open", () => {
+    function Harness() {
+      const tooltip = useTooltip({ id: 'archive-tip' });
+      return (
+        <button type="button" {...tooltip.getTriggerProps({ 'aria-describedby': 'archive-note' })}>
+          Hint
+        </button>
+      );
+    }
+    render(<Harness />);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    expect(trigger.getAttribute('aria-describedby')).toBe('archive-note');
+    fireEvent.focus(trigger);
+    expect(trigger.getAttribute('aria-describedby')).toBe('archive-note archive-tip');
+  });
+
+  it('does not open when the trigger handler the consumer passed prevents the event', () => {
+    const onOpenChange = vi.fn();
+    function Harness() {
+      const tooltip = useTooltip({ onOpenChange });
+      return (
+        <button
+          type="button"
+          {...tooltip.getTriggerProps({
+            onPointerEnter: (event) => event.preventDefault(),
+            onFocus: (event) => event.preventDefault(),
+          })}
+        >
+          Hint
+        </button>
+      );
+    }
+    render(<Harness />);
+    const trigger = screen.getByRole('button', { name: 'Hint' });
+    fireEvent.pointerEnter(trigger);
+    fireEvent.focus(trigger);
+    advance(300);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('stays open when the consumer prevents pointer leave or blur', () => {
+    function Harness() {
+      const tooltip = useTooltip({ defaultOpen: true });
+      return (
+        <button
+          type="button"
+          {...tooltip.getTriggerProps({
+            onPointerLeave: (event) => event.preventDefault(),
+            onBlur: (event) => event.preventDefault(),
+          })}
+        >
+          {tooltip.open ? 'Open' : 'Closed'}
+        </button>
+      );
+    }
+    render(<Harness />);
+    const trigger = screen.getByRole('button');
+    fireEvent.pointerEnter(trigger);
+    fireEvent.focus(trigger);
+    fireEvent.pointerLeave(trigger);
+    fireEvent.blur(trigger);
+    advance(300);
+    expect(trigger.textContent).toBe('Open');
+  });
+
   it('resets intent and commits close when enabled becomes false', () => {
     const onOpenChange = vi.fn();
     const { rerender } = render(<TipHarness defaultOpen onOpenChange={onOpenChange} />);

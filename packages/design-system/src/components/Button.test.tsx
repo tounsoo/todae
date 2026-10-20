@@ -204,6 +204,22 @@ describe('Button auto-tip', () => {
     expect(button.getAttribute('aria-describedby')).toBe(screen.getByRole('tooltip').id);
   });
 
+  it("keeps the consumer's aria-describedby and joins the tip to it while open", () => {
+    render(
+      <>
+        <span id="archive-note">Moves the thread out of the inbox</span>
+        <Button.Root aria-label="Archive" aria-describedby="archive-note">
+          <Button.Icon>+</Button.Icon>
+        </Button.Root>
+      </>,
+    );
+    const button = screen.getByRole('button', { name: 'Archive' });
+    expect(button.getAttribute('aria-describedby')).toBe('archive-note');
+    fireEvent.pointerEnter(button);
+    advance(300);
+    expect(button.getAttribute('aria-describedby')).toBe(`archive-note ${screen.getByRole('tooltip').id}`);
+  });
+
   it('tips an icon-only name from aria-labelledby text', () => {
     render(
       <>
