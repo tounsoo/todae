@@ -23,7 +23,6 @@ import { initialFocusTarget } from '../overlay/useInitialFocus.js';
 import { useFocusLeave } from '../overlay/useFocusLeave.js';
 import { eventInside } from '../overlay/eventInside.js';
 import { matchesParsed, parseHotkey, typesIn } from '../hooks/hotkey.js';
-import { isImeKeyEvent } from './ime.js';
 import { Button, type ButtonActionProps } from './Button.js';
 import { useStrings } from '../providers/StringsProvider.js';
 import { useDismissLabel } from './dismissLabel.js';
@@ -530,8 +529,8 @@ function Region<T extends object = object>({
     if (!doc) return;
     const onKey = (event: KeyboardEvent) => {
       const section = sectionRef.current;
-      // Not a key something else handled, an IME's, or a held key.
-      if (event.defaultPrevented || isImeKeyEvent(event) || event.repeat || typesIn(event.target, parsed)) return;
+      // Not a key something else handled, an IME composing, or a held key.
+      if (event.defaultPrevented || event.isComposing || event.repeat || typesIn(event.target, parsed)) return;
       // The key stays the page's when the region can't take focus, such as
       // under a modal outside Todae's stack.
       if (section && matchesParsed(event, parsed) && tryFocus(section)) event.preventDefault();

@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { matchesParsed, parseHotkey, typesIn, type Hotkey } from './hotkey.js';
-import { isImeKeyEvent } from '../components/ime.js';
 
 export type UseHotkeyOptions = {
   /** Listen only while true. */
@@ -36,8 +35,8 @@ export function useHotkey(
     const hotkeys = (JSON.parse(key) as string[]).map(parseHotkey).filter((parsed): parsed is Hotkey => parsed !== null);
     if (hotkeys.length === 0) return;
     const onKey = (event: KeyboardEvent) => {
-      // Not a key something else handled, an IME's, or a held key.
-      if (event.defaultPrevented || isImeKeyEvent(event) || event.repeat) return;
+      // Not a key something else handled, an IME composing, or a held key.
+      if (event.defaultPrevented || event.isComposing || event.repeat) return;
       const match = hotkeys.some((parsed) => matchesParsed(event, parsed) && !typesIn(event.target, parsed));
       if (!match) return;
       event.preventDefault();
