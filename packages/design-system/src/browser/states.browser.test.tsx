@@ -268,6 +268,29 @@ describe('elements drawn as a button', () => {
     expect(nowhere.cursor).toBe('not-allowed');
   });
 
+  it('join a link into a Button.Group like the buttons around it', () => {
+    render(
+      <Themed>
+        <Button.Group aria-label="Pages">
+          <Button.Root variant="secondary">First</Button.Root>
+          <Button.Root variant="secondary" render={(props) => <a {...props} href="#middle" />}>
+            Middle
+          </Button.Root>
+          <Button.Root variant="secondary" render={(props) => <a {...props} href="#last" />}>
+            Last
+          </Button.Root>
+        </Button.Group>
+      </Themed>,
+    );
+    const corners = (element: Element) => {
+      const style = getComputedStyle(element);
+      return [style.borderStartStartRadius, style.borderStartEndRadius, style.borderEndEndRadius, style.borderEndStartRadius].map((r) => r !== '0px');
+    };
+    expect(corners(screen.getByRole('button', { name: 'First' }))).toEqual([true, false, false, true]);
+    expect(corners(screen.getByRole('link', { name: 'Middle' }))).toEqual([false, false, false, false]);
+    expect(corners(screen.getByRole('link', { name: 'Last' }))).toEqual([false, true, true, false]);
+  });
+
   it('draw a menu item link like the other items', async () => {
     render(
       <Themed>
